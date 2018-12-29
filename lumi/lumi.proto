@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+package mondoo.lumi;
+option go_package = "lumi";
+
+// BASIC DATATYPES
+
+message Schema {
+  map<string, ResourceInfo> resources = 3;
+}
+
+message ResourceID {
+  string id = 1;
+  string name = 2;
+}
+
+message TypedArg {
+  string name = 1;
+  string type = 2;
+}
+
+message Init {
+  repeated TypedArg args = 1;
+}
+
+message ResourceInfo {
+  string id = 1;
+  string name = 2;
+  map<string, Field> fields = 3;
+  Init init = 20;
+  string list_type = 21;
+}
+
+message Field {
+  string name = 1;
+  string type = 2;
+  bool mandatory = 3;
+  repeated string refs = 4;
+}
