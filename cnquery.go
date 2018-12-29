@@ -1,0 +1,64 @@
+package cnquery
+
+// Version is set via ldflags
+var Version string
+
+// Build version is set via ldflags
+var Build string
+
+// Date is set via ldflags
+var Date string
+
+/*
+ versioning follows semver guidelines: https://semver.org/
+
+<valid semver> ::= <version core>
+                 | <version core> "-" <pre-release>
+                 | <version core> "+" <build>
+                 | <version core> "-" <pre-release> "+" <build>
+
+<version core> ::= <major> "." <minor> "." <patch>
+
+<major> ::= <numeric identifier>
+
+<minor> ::= <numeric identifier>
+
+<patch> ::= <numeric identifier>
+*/
+
+// GetVersion returns the version of the build
+// valid semver version including build version (e.g. 4.10.0+4900), where 4900 is a forward rolling int
+func GetVersion() string {
+	if Version == "" {
+		return "unstable"
+	}
+	return Version
+}
+
+// GetBuild returns the git sha of the build
+func GetBuild() string {
+	b := Build
+	if len(b) == 0 {
+		b = "development"
+	}
+	return b
+}
+
+// GetDate returns the date of this build
+func GetDate() string {
+	d := Date
+	if len(d) == 0 {
+		d = "unknown"
+	}
+	return d
+}
+
+// Info on this application with version and build
+func Info() string {
+	return "cnquery " + GetVersion() + " " + GetBuild() + " " + GetDate()
+}
+
+// LatestMQLVersion returns the current version of MQL
+func LatestMQLVersion() string {
+	return "v2"
+}
