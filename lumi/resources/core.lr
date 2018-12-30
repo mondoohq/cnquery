@@ -1,0 +1,14 @@
+file {
+  init(path string)
+  path string
+  content(path) string
+  exists() bool
+}
+
+sshd.config {
+  init(path string)
+  file() file
+  content(file) string
+  params(content) map[string]string
+}
+
