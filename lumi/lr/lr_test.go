@@ -1,0 +1,152 @@
+// copyright: 2019, Dominik Richter and Christoph Hartmann
+// author: Dominik Richter
+// author: Christoph Hartmann
+package lr
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func parse(t *testing.T, cmd string, f func(*LR)) {
+	res, err := Parse(cmd)
+	assert.Nil(t, err)
+	if err == nil {
+		f(res)
+	}
+}
+
+func TestParse(t *testing.T) {
+	t.Run("empty", func(t *testing.T) {
+		parse(t, "", func(res *LR) {
+			assert.Equal(t, &LR{}, res)
+		})
+	})
+
+	t.Run("empty resource", func(t *testing.T) {
+		parse(t, "name", func(res *LR) {
+			assert.Equal(t, []*Resource{&Resource{ID: "name"}}, res.Resources)
+		})
+	})
+
+	t.Run("empty resources", func(t *testing.T) {
+		parse(t, "one tw2 thr33", func(res *LR) {
+			assert.Equal(t, []*Resource{
+				&Resource{ID: "one"},
+				&Resource{ID: "tw2"},
+				&Resource{ID: "thr33"},
+			}, res.Resources)
+		})
+	})
+
+	t.Run("resource with a static field", func(t *testing.T) {
+		parse(t, "name {\nfield type\n}", func(res *LR) {
+			f := []*Field{
+				&Field{ID: "field", Args: nil, Type: Type{SimpleType: &SimpleType{"type"}}},
+			}
+			assert.Equal(t, "name", res.Resources[0].ID)
+			assert.Equal(t, f, res.Resources[0].Body.Fields)
+		})
+	})
+
+	t.Run("resource with a list type", func(t *testing.T) {
+		parse(t, "name {\nfield []type\n}", func(res *LR) {
+			f := []*Field{
+				&Field{ID: "field", Args: nil, Type: Type{ListType: &ListType{Type{SimpleType: &SimpleType{"type"}}}}},
+			}
+			assert.Equal(t, "name", res.Resources[0].ID)
+			assert.Equal(t, f, res.Resources[0].Body.Fields)
+		})
+	})
+
+	t.Run("resource with a map type", func(t *testing.T) {
+		parse(t, "name {\nfield map[a]b\n}", func(res *LR) {
+			f := []*Field{
+				&Field{ID: "field", Args: nil, Type: Type{
+					MapType: &MapType{SimpleType{"a"}, Type{SimpleType: &SimpleType{"b"}}},
+				}},
+			}
+			assert.Equal(t, "name", res.Resources[0].ID)
+			assert.Equal(t, f, res.Resources[0].Body.Fields)
+		})
+	})
+
+	t.Run("resource with a dependent field, no args", func(t *testing.T) {
+		parse(t, "name {\nfield() type\n}", func(res *LR) {
+			f := []*Field{
+				&Field{ID: "field", Args: &FieldArgs{}, Type: Type{SimpleType: &SimpleType{"type"}}},
+			}
+			assert.Equal(t, "name", res.Resources[0].ID)
+			assert.Equal(t, f, res.Resources[0].Body.Fields)
+		})
+	})
+
+	t.Run("resource with a dependent field, with args", func(t *testing.T) {
+		parse(t, "name {\nfield(one, two.three) type\n}", func(res *LR) {
+			f := []*Field{
+				&Field{ID: "field", Type: Type{SimpleType: &SimpleType{"type"}}, Args: &FieldArgs{
+					List: []SimpleType{SimpleType{"one"}, SimpleType{"two.three"}},
+				}},
+			}
+			assert.Equal(t, "name", res.Resources[0].ID)
+			assert.Equal(t, f, res.Resources[0].Body.Fields)
+		})
+	})
+
+	t.Run("resource with init, with args", func(t *testing.T) {
+		parse(t, "name {\ninit(one int, two string)\n}", func(res *LR) {
+			f := []*Init{
+				&Init{Args: []TypedArg{
+					TypedArg{ID: "one", Type: Type{SimpleType: &SimpleType{"int"}}},
+					TypedArg{ID: "two", Type: Type{SimpleType: &SimpleType{"string"}}},
+				}},
+			}
+			assert.Equal(t, "name", res.Resources[0].ID)
+			assert.Equal(t, f, res.Resources[0].Body.Inits)
+		})
+	})
+
+	t.Run("resource which is a list type", func(t *testing.T) {
+		parse(t, "name {\n[]base\n}", func(res *LR) {
+			lt := &SimplListType{Type: SimpleType{"base"}}
+			assert.Equal(t, "name", res.Resources[0].ID)
+			assert.Equal(t, lt, res.Resources[0].ListType)
+		})
+	})
+
+	t.Run("resource which is a list type based on resource chain", func(t *testing.T) {
+		parse(t, "name {\n[]base.type.name\n}", func(res *LR) {
+			lt := &SimplListType{Type: SimpleType{"base.type.name"}}
+			assert.Equal(t, "name", res.Resources[0].ID)
+			assert.Equal(t, lt, res.Resources[0].ListType)
+		})
+	})
+
+	t.Run("complex resource", func(t *testing.T) {
+		parse(t, `
+name.no {
+	init(i1 string, i2 map[int]int)
+	field map[string]int
+	call(resource.field) []int
+}`, func(res *LR) {
+			i := []*Init{
+				&Init{Args: []TypedArg{
+					TypedArg{ID: "i1", Type: Type{SimpleType: &SimpleType{"string"}}},
+					TypedArg{ID: "i2", Type: Type{MapType: &MapType{SimpleType{"int"}, Type{SimpleType: &SimpleType{"int"}}}}},
+				}},
+			}
+			f := []*Field{
+				&Field{ID: "field", Type: Type{MapType: &MapType{Key: SimpleType{"string"}, Value: Type{SimpleType: &SimpleType{"int"}}}}},
+				&Field{ID: "call",
+					Type: Type{ListType: &ListType{Type: Type{SimpleType: &SimpleType{"int"}}}},
+					Args: &FieldArgs{
+						List: []SimpleType{SimpleType{"resource.field"}},
+					}},
+			}
+			assert.Equal(t, "name.no", res.Resources[0].ID)
+			assert.Equal(t, i, res.Resources[0].Body.Inits)
+			assert.Equal(t, f, res.Resources[0].Body.Fields)
+		})
+	})
+}
