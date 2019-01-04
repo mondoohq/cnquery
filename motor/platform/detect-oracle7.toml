@@ -1,0 +1,32 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "4.9.87-linuxkit-aufs"
+
+[files."/etc/redhat-release"]
+content = "Red Hat Enterprise Linux Server release 7.5 (Maipo)"
+
+[files."/etc/oracle-release"]
+content = "Oracle Linux Server release 7.5"
+
+[files."/etc/os-release"]
+content = """
+NAME="Oracle Linux Server"
+VERSION="7.5"
+ID="ol"
+VERSION_ID="7.5"
+PRETTY_NAME="Oracle Linux Server 7.5"
+ANSI_COLOR="0;31"
+CPE_NAME="cpe:/o:oracle:linux:7:5:server"
+HOME_URL="https://linux.oracle.com/"
+BUG_REPORT_URL="https://bugzilla.oracle.com/"
+
+ORACLE_BUGZILLA_PRODUCT="Oracle Linux 7"
+ORACLE_BUGZILLA_PRODUCT_VERSION=7.5
+ORACLE_SUPPORT_PRODUCT="Oracle Linux"
+ORACLE_SUPPORT_PRODUCT_VERSION=7.5
+"""

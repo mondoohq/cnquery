@@ -1,0 +1,22 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "4.9.87-linuxkit-aufs"
+
+[files."/etc/gentoo-release"]
+content = "Gentoo Base System release 2.4.1"
+
+[files."/etc/os-release"]
+content = """
+NAME=Gentoo
+ID=gentoo
+PRETTY_NAME="Gentoo/Linux"
+ANSI_COLOR="1;32"
+HOME_URL="https://www.gentoo.org/"
+SUPPORT_URL="https://www.gentoo.org/support/"
+BUG_REPORT_URL="https://bugs.gentoo.org/"
+"""
