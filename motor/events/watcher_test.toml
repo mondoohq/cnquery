@@ -1,0 +1,9 @@
+[commands."hostname"]
+stdout = "mockland.local"
+
+[commands."bla"]
+stdout=""
+stderr="command not found: bla"
+
+[files."/tmp/test"]
+content = "test"
