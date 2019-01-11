@@ -1,0 +1,212 @@
+[files."/var/lib/dpkg/status"]
+content="""
+Package: fdisk
+Status: install ok installed
+Priority: important
+Section: utils
+Installed-Size: 427
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Architecture: amd64
+Multi-Arch: foreign
+Source: util-linux
+Version: 2.31.1-0.4ubuntu3.1
+Replaces: util-linux (<< 2.30.1-0ubuntu4~)
+Depends: libc6 (>= 2.14), libfdisk1 (>= 2.31.1), libmount1 (>= 2.24.2), libncursesw5 (>= 6), libsmartcols1 (>= 2.28~rc1), libtinfo5 (>= 6)
+Breaks: util-linux (<< 2.30.1-0ubuntu4~)
+Description: collection of partitioning utilities
+ This package contains the classic fdisk, sfdisk and cfdisk partitioning
+ utilities from the util-linux suite.
+ .
+ The utilities included in this package allow you to partition
+ your hard disk. The utilities supports both modern and legacy
+ partition tables (eg. GPT, MBR, etc).
+ .
+ The fdisk utility is the classical text-mode utility.
+ The cfdisk utilitity gives a more userfriendly curses based interface.
+ The sfdisk utility is mostly for automation and scripting uses.
+Important: yes
+Original-Maintainer: LaMont Jones <lamont@debian.org>
+
+Package: libpam-runtime
+Status: install ok installed
+Priority: required
+Section: admin
+Installed-Size: 300
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Architecture: all
+Multi-Arch: foreign
+Source: pam
+Version: 1.1.8-3.6ubuntu2
+Replaces: libpam0g-dev, libpam0g-util
+Depends: debconf (>= 0.5) | debconf-2.0, debconf (>= 1.5.19) | cdebconf, libpam-modules (>= 1.0.1-6)
+Conflicts: libpam0g-util
+Conffiles:
+ /etc/pam.conf 87fc76f18e98ee7d3848f6b81b3391e5
+ /etc/pam.d/other 31aa7f2181889ffb00b87df4126d1701
+Description: Runtime support for the PAM library
+ Contains configuration files and  directories required for
+ authentication  to work on Debian systems.  This package is required
+ on almost all installations.
+Homepage: http://www.linux-pam.org/
+Original-Maintainer: Steve Langasek <vorlon@debian.org>
+
+Package: libncurses5
+Status: install ok installed
+Priority: optional
+Section: libs
+Installed-Size: 283
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Architecture: amd64
+Multi-Arch: same
+Source: ncurses
+Version: 6.1-1ubuntu1
+Depends: libtinfo5 (= 6.1-1ubuntu1), libc6 (>= 2.14)
+Recommends: libgpm2
+Description: shared libraries for terminal handling
+ The ncurses library routines are a terminal-independent method of
+ updating character screens with reasonable optimization.
+ .
+ This package contains the shared libraries necessary to run programs
+ compiled with ncurses.
+Homepage: https://invisible-island.net/ncurses/
+Original-Maintainer: Craig Small <csmall@debian.org>
+
+Package: libapt-pkg5.0
+Status: install ok installed
+Priority: optional
+Section: libs
+Installed-Size: 3108
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Architecture: amd64
+Multi-Arch: same
+Source: apt
+Version: 1.6.1
+Provides: libapt-pkg (= 1.6.1)
+Depends: libbz2-1.0, libc6 (>= 2.27), libgcc1 (>= 1:3.0), liblz4-1 (>= 0.0~r127), liblzma5 (>= 5.1.1alpha+20120614), libstdc++6 (>= 5.2), libudev1 (>= 183), libzstd1 (>= 1.3.2), zlib1g (>= 1:1.2.2.3)
+Recommends: apt (>= 1.6.1)
+Breaks: appstream (<< 0.9.0-3~), apt (<< 1.1~exp14), libapt-inst1.5 (<< 0.9.9~)
+Description: package management runtime library
+ This library provides the common functionality for searching and
+ managing packages as well as information about packages.
+ Higher-level package managers can depend upon this library.
+ .
+ This includes:
+  * retrieval of information about packages from multiple sources
+  * retrieval of packages and all dependent packages
+    needed to satisfy a request either through an internal
+    solver or by interfacing with an external one
+  * authenticating the sources and validating the retrieved data
+  * installation and removal of packages in the system
+  * providing different transports to retrieve data over cdrom, ftp,
+    http(s), rsh as well as an interface to add more transports like
+    tor+http(s) (apt-transport-tor).
+Original-Maintainer: APT Development Team <deity@lists.debian.org>
+
+Package: libudev1
+Status: install ok installed
+Priority: optional
+Section: libs
+Installed-Size: 224
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Architecture: amd64
+Multi-Arch: same
+Source: systemd
+Version: 237-3ubuntu10
+Depends: libc6 (>= 2.25)
+Description: libudev shared library
+ This library provides access to udev device information.
+Homepage: https://www.freedesktop.org/wiki/Software/systemd
+Original-Maintainer: Debian systemd Maintainers <pkg-systemd-maintainers@lists.alioth.debian.org>
+
+Package: libunistring2
+Status: install ok installed
+Priority: optional
+Section: libs
+Installed-Size: 1569
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Architecture: amd64
+Multi-Arch: same
+Source: libunistring
+Version: 0.9.9-0ubuntu1
+Depends: libc6 (>= 2.14)
+Description: Unicode string library for C
+ The 'libunistring' library implements Unicode strings (in the UTF-8,
+ UTF-16, and UTF-32 encodings), together with functions for Unicode
+ characters (character names, classifications, properties) and
+ functions for string processing (formatted output, width, word
+ breaks, line breaks, normalization, case folding, regular
+ expressions).
+ .
+ This package contains the shared library.
+Original-Maintainer: Jörg Frings-Fürst <debian@jff.email>
+Homepage: http://www.gnu.org/software/libunistring/
+
+Package: libnettle6
+Status: install ok installed
+Priority: optional
+Section: libs
+Installed-Size: 373
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Architecture: amd64
+Multi-Arch: same
+Source: nettle
+Version: 3.4-1
+Depends: libc6 (>= 2.14)
+Description: low level cryptographic library (symmetric and one-way cryptos)
+ Nettle is a cryptographic library that is designed to fit easily in more or
+ less any context: In crypto toolkits for object-oriented languages (C++,
+ Python, Pike, ...), in applications like LSH or GNUPG, or even in kernel
+ space.
+ .
+ It tries to solve a problem of providing a common set of cryptographic
+ algorithms for higher-level applications by implementing a
+ context-independent set of cryptographic algorithms. In that light, Nettle
+ doesn't do any memory allocation or I/O, it simply provides the
+ cryptographic algorithms for the application to use in any environment and
+ in any way it needs.
+ .
+ This package contains the symmetric and one-way cryptographic
+ algorithms. To avoid having this package depend on libgmp, the
+ asymmetric cryptos reside in a separate library, libhogweed.
+Original-Maintainer: Magnus Holmgren <holmgren@debian.org>
+Homepage: http://www.lysator.liu.se/~nisse/nettle/
+
+Package: libattr1
+Status: install ok installed
+Priority: required
+Section: libs
+Installed-Size: 36
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Architecture: amd64
+Multi-Arch: same
+Source: attr
+Version: 1:2.4.47-2build1
+Depends: libc6 (>= 2.4)
+Conflicts: attr (<< 2.0.0)
+Description: Extended attribute shared library
+ Contains the runtime environment required by programs that make use
+ of extended attributes.
+Original-Maintainer: Anibal Monsalve Salazar <anibal@debian.org>
+Homepage: http://savannah.nongnu.org/projects/attr/
+
+Package: libss2
+Status: install ok installed
+Priority: optional
+Section: libs
+Installed-Size: 98
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Architecture: amd64
+Multi-Arch: same
+Source: e2fsprogs
+Version: 1.44.1-1
+Replaces: e2fsprogs (<< 1.34-1)
+Depends: libcom-err2, libc6 (>= 2.17)
+Description: command-line interface parsing library
+ libss provides a simple command-line interface parser which will
+ accept input from the user, parse the command into an argv argument
+ vector, and then dispatch it to a handler function.
+ .
+ It was originally inspired by the Multics SubSystem library.
+Original-Maintainer: Theodore Y. Ts'o <tytso@mit.edu>
+Homepage: http://e2fsprogs.sourceforge.net
+"""

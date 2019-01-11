@@ -1,0 +1,147 @@
+[commands."rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\\n'"]
+stdout="""
+tzdata 0:2018e-3.el7 noarch Timezone data
+ncurses-base 0:5.9-14.20130511.el7_4 noarch Descriptions of common terminals
+bash 0:4.2.46-30.el7 x86_64 The GNU Bourne Again shell
+chkconfig 0:1.7.4-1.el7 x86_64 A system tool for maintaining the /etc/rc*.d hierarchy
+setup 0:2.8.71-9.el7 noarch A set of system configuration and setup files
+basesystem 0:10.0-7.el7.centos noarch The skeleton package which defines a simple CentOS Linux system
+zlib 0:1.2.7-17.el7 x86_64 The compression and decompression library
+nss-util 0:3.36.0-1.el7_5 x86_64 Network Security Services Utilities Library
+libcom_err 0:1.42.9-12.el7_5 x86_64 Common error description library
+libattr 0:2.4.46-13.el7 x86_64 Dynamic library for extended attribute support
+libacl 0:2.2.51-14.el7 x86_64 Dynamic library for access control list support
+libstdc++ 0:4.8.5-28.el7_5.1 x86_64 GNU Standard C++ Library
+info 0:5.1-5.el7 x86_64 A stand-alone TTY-based reader for GNU texinfo documentation
+pcre 0:8.32-17.el7 x86_64 Perl-compatible regular expression library
+sed 0:4.2.2-5.el7 x86_64 A GNU stream text editor
+p11-kit 0:0.23.5-3.el7 x86_64 Library for loading and sharing PKCS#11 modules
+gmp 1:6.0.0-15.el7 x86_64 A GNU arbitrary precision library
+libtasn1 0:4.10-1.el7 x86_64 The ASN.1 library used in GNUTLS
+ca-certificates 0:2018.2.22-70.0.el7_5 noarch The Mozilla CA root certificate bundle
+coreutils 0:8.22-21.el7 x86_64 A set of basic GNU tools commonly used in shell scripts
+krb5-libs 0:1.15.1-19.el7 x86_64 The non-admin shared libraries used by Kerberos 5
+bzip2-libs 0:1.0.6-13.el7 x86_64 Libraries for applications using bzip2
+elfutils-libelf 0:0.170-4.el7 x86_64 Library to read and write ELF files
+libxml2 0:2.9.1-6.el7_2.3 x86_64 Library providing XML and HTML support
+readline 0:6.2-10.el7 x86_64 A library for editing typed command lines
+cpio 0:2.11-27.el7 x86_64 A GNU archiving program
+libblkid 0:2.23.2-52.el7 x86_64 Block device ID library
+glib2 0:2.54.2-2.el7 x86_64 A library of handy utility functions
+sqlite 0:3.7.17-8.el7 x86_64 Library that implements an embeddable SQL database engine
+cracklib 0:2.9.0-11.el7 x86_64 A password-checking library
+libidn 0:1.28-4.el7 x86_64 Internationalized Domain Name support library
+libcap-ng 0:0.7.5-4.el7 x86_64 An alternate posix capabilities library
+cracklib-dicts 0:2.9.0-11.el7 x86_64 The standard CrackLib dictionaries
+pam 0:1.1.8-22.el7 x86_64 An extensible library which provides authentication for applications
+nss-sysinit 0:3.36.0-5.el7_5 x86_64 System NSS Initialization
+nss-pem 0:1.0.3-4.el7 x86_64 PEM file reader for Network Security Services (NSS)
+xz 0:5.2.2-1.el7 x86_64 LZMA compression utilities
+lz4 0:1.7.5-2.el7 x86_64 Extremely fast compression algorithm
+nss-tools 0:3.36.0-5.el7_5 x86_64 Tools for the Network Security Services
+gobject-introspection 0:1.50.0-1.el7 x86_64 Introspection system for GObject-based libraries
+libdb-utils 0:5.3.21-24.el7 x86_64 Command line tools for managing Berkeley DB databases
+kmod-libs 0:20-21.el7 x86_64 Libraries to handle kernel module loading and unloading
+libcurl 0:7.29.0-46.el7 x86_64 A library for getting files from web servers
+rpm-libs 0:4.11.3-32.el7 x86_64 Libraries for manipulating RPM packages
+openldap 0:2.4.44-15.el7_5 x86_64 LDAP support libraries
+binutils 0:2.27-28.base.el7_5.1 x86_64 A GNU collection of binary utilities
+tar 2:1.26-34.el7 x86_64 A GNU file archiving program
+acl 0:2.2.51-14.el7 x86_64 Access control list utilities
+ustr 0:1.0.4-16.el7 x86_64 String library, very low memory overhead, simple to import
+shadow-utils 2:4.1.5.1-24.el7 x86_64 Utilities for managing accounts and shadow password files
+qrencode-libs 0:3.4.1-3.el7 x86_64 QR Code encoding library - Shared libraries
+python-libs 0:2.7.5-69.el7_5 x86_64 Runtime libraries for Python
+python-iniparse 0:0.4-9.el7 noarch Python Module for Accessing and Modifying Configuration Data in INI files
+yum-metadata-parser 0:1.1.4-10.el7 x86_64 A fast metadata parser for yum
+python-pycurl 0:7.19.0-19.el7 x86_64 A Python interface to libcurl
+pyxattr 0:0.5.1-5.el7 x86_64 Extended attributes library wrapper for Python
+python-kitchen 0:1.1.1-5.el7 noarch Small, useful pieces of code to make python coding easier
+hardlink 1:1.0-19.el7 x86_64 Create a tree of hardlinks
+device-mapper 7:1.02.146-4.el7 x86_64 Device mapper utility
+procps-ng 0:3.3.10-17.el7_5.2 x86_64 System and process monitoring utilities
+cryptsetup-libs 0:1.7.4-4.el7 x86_64 Cryptsetup shared library
+kmod 0:20-21.el7 x86_64 Linux kernel module management utilities
+systemd-libs 0:219-57.el7 x86_64 systemd libraries
+systemd 0:219-57.el7 x86_64 A System and Service Manager
+dbus 1:1.10.24-7.el7 x86_64 D-BUS message bus
+iputils 0:20160308-10.el7 x86_64 Network monitoring tools including ping
+dbus-glib 0:0.100-7.el7 x86_64 GLib bindings for D-Bus
+pth 0:2.0.7-23.el7 x86_64 The GNU Portable Threads library
+rpm-build-libs 0:4.11.3-32.el7 x86_64 Libraries for building and signing RPM packages
+gpgme 0:1.3.2-5.el7 x86_64 GnuPG Made Easy - high level crypto API
+yum-plugin-fastestmirror 0:1.1.31-46.el7_5 noarch Yum plugin which chooses fastest repository from a mirrorlist
+bind-license 32:9.9.4-61.el7 noarch License of the BIND DNS suite
+yum-plugin-ovl 0:1.1.31-46.el7_5 noarch Yum plugin to work around overlayfs issues
+vim-minimal 2:7.4.160-4.el7 x86_64 A minimal version of the VIM editor
+libgcc 0:4.8.5-28.el7_5.1 x86_64 GCC version 4.8 shared support library
+nss-softokn-freebl 0:3.36.0-5.el7_5 x86_64 Freebl library for the Network Security Services
+ncurses 0:5.9-14.20130511.el7_4 x86_64 Ncurses support utilities
+glibc-common 0:2.17-222.el7 x86_64 Common binaries and locale data for glibc
+filesystem 0:3.2-25.el7 x86_64 The basic directory layout for a Linux system
+glibc 0:2.17-222.el7 x86_64 The GNU libc libraries
+nspr 0:4.19.0-1.el7_5 x86_64 Netscape Portable Runtime
+popt 0:1.13-16.el7 x86_64 C library for parsing command line parameters
+libffi 0:3.0.13-18.el7 x86_64 A portable foreign function interface library
+libcap 0:2.22-9.el7 x86_64 Library for getting and setting POSIX.1e capabilities
+libsepol 0:2.5-8.1.el7 x86_64 SELinux binary policy manipulation library
+ncurses-libs 0:5.9-14.20130511.el7_4 x86_64 Ncurses libraries
+gawk 0:4.0.2-4.el7_3.1 x86_64 The GNU version of the awk text processing utility
+libselinux 0:2.5-12.el7 x86_64 SELinux library and simple utilities
+grep 0:2.20-3.el7 x86_64 Pattern matching utilities
+keyutils-libs 0:1.5.8-3.el7 x86_64 Key utilities library
+libverto 0:0.2.5-4.el7 x86_64 Main loop abstraction library
+p11-kit-trust 0:0.23.5-3.el7 x86_64 System trust module from p11-kit
+centos-release 0:7-5.1804.1.el7.centos x86_64 CentOS Linux release file
+openssl-libs 1:1.0.2k-12.el7 x86_64 A general purpose cryptography library with TLS implementation
+xz-libs 0:5.2.2-1.el7 x86_64 Libraries for decoding LZMA compression
+libdb 0:5.3.21-24.el7 x86_64 The Berkeley DB database library for C
+libgpg-error 0:1.12-3.el7 x86_64 Library for error values used by GnuPG components
+libgcrypt 0:1.5.3-14.el7 x86_64 A general-purpose cryptography library
+lua 0:5.1.4-15.el7 x86_64 Powerful light-weight programming language
+libuuid 0:2.23.2-52.el7 x86_64 Universally unique ID library
+libmount 0:2.23.2-52.el7 x86_64 Device mounting library
+shared-mime-info 0:1.8-4.el7 x86_64 Shared MIME information database
+gzip 0:1.5-10.el7 x86_64 The GNU data compression program
+findutils 1:4.5.11-5.el7 x86_64 The GNU versions of find utilities (find and xargs)
+diffutils 0:3.3-4.el7 x86_64 A GNU collection of diff utilities
+expat 0:2.1.0-10.el7_3 x86_64 An XML parser library
+audit-libs 0:2.8.1-3.el7 x86_64 Dynamic library for libaudit
+libpwquality 0:1.2.3-5.el7 x86_64 A library for password generation and password quality checking
+nss-softokn 0:3.36.0-5.el7_5 x86_64 Network Security Services Softoken Module
+nss 0:3.36.0-5.el7_5 x86_64 Network Security Services
+libassuan 0:2.1.0-3.el7 x86_64 GnuPG IPC library
+file-libs 0:5.11-33.el7 x86_64 Libraries for applications using libmagic
+pkgconfig 1:0.27.1-4.el7 x86_64 A tool for determining compilation options
+cyrus-sasl-lib 0:2.1.26-23.el7 x86_64 Shared libraries needed by applications which use Cyrus SASL
+libssh2 0:1.4.3-10.el7_2.1 x86_64 A library implementing the SSH2 protocol
+curl 0:7.29.0-46.el7 x86_64 A utility for getting files from remote servers (FTP, HTTP, and others)
+rpm 0:4.11.3-32.el7 x86_64 The RPM package management system
+libuser 0:0.60-9.el7 x86_64 A user and group account administration library
+pinentry 0:0.8.1-17.el7 x86_64 Collection of simple PIN or passphrase entry dialogs
+libsemanage 0:2.5-11.el7 x86_64 SELinux binary policy manipulation library
+libutempter 0:1.1.6-4.el7 x86_64 A privileged helper for utmp/wtmp updates
+gdbm 0:1.10-8.el7 x86_64 A GNU set of database routines which use extensible hashing
+python 0:2.7.5-69.el7_5 x86_64 An interpreted, interactive, object-oriented programming language
+libxml2-python 0:2.9.1-6.el7_2.3 x86_64 Python bindings for the libxml2 library
+python-gobject-base 0:3.22.0-1.el7_4.1 x86_64 Python 2 bindings for GObject Introspection base package
+pyliblzma 0:0.5.3-11.el7 x86_64 Python bindings for lzma
+python-urlgrabber 0:3.10-8.el7 noarch A high-level cross-protocol url-grabber
+python-chardet 0:2.2.1-1.el7_1 noarch Character encoding auto-detection in Python
+hostname 0:3.13-3.el7 x86_64 Utility to set/show the host name or domain name
+util-linux 0:2.23.2-52.el7 x86_64 A collection of basic system utilities
+kpartx 0:0.4.9-119.el7 x86_64 Partition device manager for device-mapper devices
+device-mapper-libs 7:1.02.146-4.el7 x86_64 Device-mapper shared library
+dracut 0:033-535.el7 x86_64 Initramfs generator using udev
+elfutils-libs 0:0.170-4.el7 x86_64 Libraries to handle compiled objects
+dbus-libs 1:1.10.24-7.el7 x86_64 Libraries for accessing D-BUS
+elfutils-default-yama-scope 0:0.170-4.el7 noarch Default yama attach scope sysctl setting
+dbus-python 0:1.1.1-9.el7 x86_64 D-Bus Python Bindings
+gnupg2 0:2.0.22-5.el7_5 x86_64 Utility for secure communication and data storage
+rpm-python 0:4.11.3-32.el7 x86_64 Python bindings for apps which will manipulate RPM packages
+pygpgme 0:0.3-9.el7 x86_64 Python module for working with OpenPGP messages
+yum 0:3.4.3-158.el7.centos noarch RPM package installer/updater/manager
+yum-utils 0:1.1.31-46.el7_5 noarch Utilities based around the yum package manager
+passwd 0:0.79-4.el7 x86_64 An utility for setting or changing passwords using PAM
+rootfiles 0:8.1-11.el7 noarch The basic required files for the root user's directory
+"""

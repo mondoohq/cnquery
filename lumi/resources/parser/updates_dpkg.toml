@@ -1,0 +1,35 @@
+[commands."DEBIAN_FRONTEND=noninteractive apt-get upgrade --dry-run"]
+stdout = """Reading package lists... Done
+Building dependency tree
+Reading state information... Done
+Calculating upgrade... Done
+The following packages will be upgraded:
+  apt base-files gpgv libapt-pkg5.0 libgcrypt20 libncurses5 libncursesw5 libsystemd0 libtinfo5 libudev1 ncurses-base ncurses-bin perl-base
+13 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+Inst base-files [10.1ubuntu2] (10.1ubuntu2.1 Ubuntu:18.04/bionic-updates [amd64])
+Conf base-files (10.1ubuntu2.1 Ubuntu:18.04/bionic-updates [amd64])
+Inst ncurses-bin [6.1-1ubuntu1] (6.1-1ubuntu1.18.04 Ubuntu:18.04/bionic-updates [amd64])
+Conf ncurses-bin (6.1-1ubuntu1.18.04 Ubuntu:18.04/bionic-updates [amd64])
+Inst perl-base [5.26.1-6] (5.26.1-6ubuntu0.2 Ubuntu:18.04/bionic-updates [amd64])
+Conf perl-base (5.26.1-6ubuntu0.2 Ubuntu:18.04/bionic-updates [amd64])
+Inst ncurses-base [6.1-1ubuntu1] (6.1-1ubuntu1.18.04 Ubuntu:18.04/bionic-updates [all])
+Conf ncurses-base (6.1-1ubuntu1.18.04 Ubuntu:18.04/bionic-updates [all])
+Inst libudev1 [237-3ubuntu10] (237-3ubuntu10.3 Ubuntu:18.04/bionic-updates [amd64])
+Conf libudev1 (237-3ubuntu10.3 Ubuntu:18.04/bionic-updates [amd64])
+Inst libapt-pkg5.0 [1.6.1] (1.6.3 Ubuntu:18.04/bionic-updates [amd64])
+Conf libapt-pkg5.0 (1.6.3 Ubuntu:18.04/bionic-updates [amd64])
+Inst libgcrypt20 [1.8.1-4ubuntu1] (1.8.1-4ubuntu1.1 Ubuntu:18.04/bionic-updates, Ubuntu:18.04/bionic-security [amd64])
+Conf libgcrypt20 (1.8.1-4ubuntu1.1 Ubuntu:18.04/bionic-updates, Ubuntu:18.04/bionic-security [amd64])
+Inst gpgv [2.2.4-1ubuntu1] (2.2.4-1ubuntu1.1 Ubuntu:18.04/bionic-updates, Ubuntu:18.04/bionic-security [amd64])
+Conf gpgv (2.2.4-1ubuntu1.1 Ubuntu:18.04/bionic-updates, Ubuntu:18.04/bionic-security [amd64])
+Inst apt [1.6.1] (1.6.3 Ubuntu:18.04/bionic-updates [amd64])
+Conf apt (1.6.3 Ubuntu:18.04/bionic-updates [amd64])
+Inst libsystemd0 [237-3ubuntu10] (237-3ubuntu10.3 Ubuntu:18.04/bionic-updates [amd64])
+Conf libsystemd0 (237-3ubuntu10.3 Ubuntu:18.04/bionic-updates [amd64])
+Inst libncurses5 [6.1-1ubuntu1] (6.1-1ubuntu1.18.04 Ubuntu:18.04/bionic-updates [amd64]) []
+Inst libtinfo5 [6.1-1ubuntu1] (6.1-1ubuntu1.18.04 Ubuntu:18.04/bionic-updates [amd64]) [libncursesw5:amd64 ]
+Conf libtinfo5 (6.1-1ubuntu1.18.04 Ubuntu:18.04/bionic-updates [amd64]) [libncursesw5:amd64 ]
+Inst libncursesw5 [6.1-1ubuntu1] (6.1-1ubuntu1.18.04 Ubuntu:18.04/bionic-updates [amd64])
+Conf libncursesw5 (6.1-1ubuntu1.18.04 Ubuntu:18.04/bionic-updates [amd64])
+Conf libncurses5 (6.1-1ubuntu1.18.04 Ubuntu:18.04/bionic-updates [amd64])
+"""
