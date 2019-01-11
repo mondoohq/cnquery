@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/types"
 )
 
@@ -118,11 +119,13 @@ type Observers struct {
 	list        CallbacksList
 	reverseList types.StringToStrings
 	hooks       map[string]func()
+	motor       *motor.Motor
 }
 
 // NewObservers creates an observers instance
-func NewObservers() *Observers {
+func NewObservers(motor *motor.Motor) *Observers {
 	return &Observers{
+		motor: motor,
 		hooks: make(map[string]func()),
 	}
 }
