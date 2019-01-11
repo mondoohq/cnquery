@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/motor"
 )
 
 // NewResource creates the base class for a new resource
@@ -55,12 +56,16 @@ type Runtime struct {
 	Registry  *Registry
 	cache     Cache
 	Observers *Observers
+	Motor     *motor.Motor
 }
 
 // NewRuntime creates a new runtime from a registry and motor backend
-func NewRuntime(registry *Registry) *Runtime {
+func NewRuntime(registry *Registry, motor *motor.Motor) *Runtime {
 	if registry == nil {
 		panic("Cannot initialize a lumi runtime without a registry")
+	}
+	if motor == nil {
+		panic("Cannot initialize a lumi runtime without a motor")
 	}
 
 	return &Runtime{
