@@ -19,21 +19,21 @@ type Motor struct {
 	watcher   types.Watcher
 }
 
-func (m *Motor) Platform() (*platform.Info, error) {
+func (m *Motor) Platform() (platform.Info, error) {
 	// check if platform is in cache
 	if m.platform != nil {
-		return m.platform, nil
+		return *m.platform, nil
 	}
 
 	detector := &platform.Detector{Transport: m.Transport}
 	resolved, di := detector.Resolve()
 	if !resolved {
-		return nil, errors.New("could not determine operating system")
+		return platform.Info{}, errors.New("could not determine operating system")
 	} else {
 		// cache value
 		m.platform = di
 	}
-	return di, nil
+	return *di, nil
 }
 
 func (m *Motor) Watcher() types.Watcher {
