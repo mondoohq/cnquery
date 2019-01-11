@@ -26,7 +26,7 @@ func Detect(motor *motor.Motor) ([]parser.Package, error) {
 	// we try to retrieve the available updates
 	availableList, err := pm.Available()
 	if err != nil {
-		log.Warn().Err(err).Msg("lumi[packages]> could not retrieve available updates")
+		log.Debug().Err(err).Msg("lumi[packages]> could not retrieve available updates")
 		availableList = []parser.PackageUpdate{}
 	}
 	log.Debug().Int("updates", len(availableList)).Msg("lumi[packages]> available updates")
