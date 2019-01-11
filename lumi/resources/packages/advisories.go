@@ -26,27 +26,39 @@ func GetAdvisory(id string) (*api.Advisory, error) {
 	return advisory, nil
 }
 
-// searches all advisories for given packages
-func Analyze(platform platform.Info, pkgs []parser.Package) ([]api.Advisory, error) {
-	request := api.Packages{}
-	request.Platform = &api.Platform{
+func ConvertPlatform(platform platform.Info) *api.Platform {
+	return &api.Platform{
 		Name:    platform.Name,
 		Release: platform.Release,
 		Arch:    platform.Arch,
 	}
+}
+
+func ConvertParserPackages(pkgs []parser.Package) []*api.Package {
+	apiPkgs := []*api.Package{}
+
 	for _, d := range pkgs {
-		request.Packages = append(request.Packages, &api.Package{
+		apiPkgs = append(apiPkgs, &api.Package{
 			Name:    d.Name,
 			Version: d.Version,
 			Arch:    d.Arch,
 		})
 	}
 
+	return apiPkgs
+}
+
+// searches all advisories for given packages
+func Analyze(platform *api.Platform, pkgs []*api.Package) ([]*api.Advisory, error) {
+	request := api.Packages{}
+	request.Platform = platform
+	request.Packages = pkgs
+
 	sa, err := api.NewSecuriyAdvisorClient(ADVISORY_SERVICE, &http.Client{})
 	if err != nil {
 		return nil, err
 	}
-	report, err := sa.Analyze(context.TODO(), &request)
+	report, err := sa.AnalysePackages(context.TODO(), &request)
 	if err != nil {
 		return nil, err
 	}
@@ -54,8 +66,8 @@ func Analyze(platform platform.Info, pkgs []parser.Package) ([]api.Advisory, err
 }
 
 // iterate over list and ask the vadvisor to download all
-func convertAdvisoryList(advisoryIds []*api.AdvisoryIdentifier) ([]api.Advisory, error) {
-	var advisories []api.Advisory
+func convertAdvisoryList(advisoryIds []*api.Advisory) ([]*api.Advisory, error) {
+	var advisories []*api.Advisory
 	for i := range advisoryIds {
 		advisoryID := advisoryIds[i]
 
@@ -64,12 +76,12 @@ func convertAdvisoryList(advisoryIds []*api.AdvisoryIdentifier) ([]api.Advisory,
 		if err != nil {
 			return nil, err
 		}
-		advisories = append(advisories, *advisory)
+		advisories = append(advisories, advisory)
 	}
 	return advisories, nil
 }
 
-func MaxCvss(advisories []api.Advisory) (api.CVSS, error) {
+func MaxCvss(advisories []*api.Advisory) (api.CVSS, error) {
 	list := []*cvss.Cvss{}
 	for i := range advisories {
 		advisory := advisories[i]
