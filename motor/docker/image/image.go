@@ -44,7 +44,7 @@ func LoadFromRegistry(tag name.Tag) (io.ReadCloser, error) {
 		return nil, err
 	}
 
-	fmt.Printf("%v\n", tag)
+	// fmt.Printf("%v\n", tag)
 	img, err := remote.Image(tag, remote.WithAuth(auth), remote.WithTransport(http.DefaultTransport))
 	if err != nil {
 		return nil, err
