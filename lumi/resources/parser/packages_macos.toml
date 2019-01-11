@@ -1,0 +1,78 @@
+[commands."system_profiler SPApplicationsDataType -xml"]
+stdout = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>_SPCommandLineArguments</key>
+		<array>
+			<string>/usr/sbin/system_profiler</string>
+			<string>-nospawn</string>
+			<string>-xml</string>
+			<string>SPApplicationsDataType</string>
+			<string>-detailLevel</string>
+			<string>full</string>
+		</array>
+		<key>_SPCompletionInterval</key>
+		<real>5.0262930393218994</real>
+		<key>_SPResponseTime</key>
+		<real>5.1298589706420898</real>
+		<key>_dataType</key>
+		<string>SPApplicationsDataType</string>
+		<key>_detailLevel</key>
+		<integer>1</integer>
+		<key>_items</key>
+		<array>
+			<dict>
+				<key>_name</key>
+				<string>Preview</string>
+				<key>has64BitIntelCode</key>
+				<string>yes</string>
+				<key>info</key>
+				<string>10.0, Copyright 2002-2016 Apple Inc.</string>
+				<key>lastModified</key>
+				<date>2017-12-19T19:04:25Z</date>
+				<key>obtained_from</key>
+				<string>apple</string>
+				<key>path</key>
+				<string>/Applications/Preview.app</string>
+				<key>runtime_environment</key>
+				<string>arch_x86</string>
+				<key>signed_by</key>
+				<array>
+					<string>Software Signing</string>
+					<string>Apple Code Signing Certification Authority</string>
+					<string>Apple Root CA</string>
+				</array>
+				<key>version</key>
+				<string>10.0</string>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>Contacts</string>
+				<key>has64BitIntelCode</key>
+				<string>yes</string>
+				<key>lastModified</key>
+				<date>2017-12-19T19:04:25Z</date>
+				<key>obtained_from</key>
+				<string>apple</string>
+				<key>path</key>
+				<string>/Applications/Contacts.app</string>
+				<key>runtime_environment</key>
+				<string>arch_x86</string>
+				<key>signed_by</key>
+				<array>
+					<string>Software Signing</string>
+					<string>Apple Code Signing Certification Authority</string>
+					<string>Apple Root CA</string>
+				</array>
+				<key>version</key>
+				<string>11.0</string>
+			</dict>
+		</array>
+		<key>_parentDataType</key>
+		<string>SPSoftwareDataType</string>
+	</dict>
+</array>
+</plist>
+"""

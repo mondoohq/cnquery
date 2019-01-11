@@ -1,0 +1,5 @@
+# apk update
+[commands."apk version -v -l '<'"]
+stdout = """Installed:                                Available:
+busybox-1.28.4-r0                       < 1.28.4-r1
+ssl_client-1.28.4-r0                    < 1.28.4-r1"""

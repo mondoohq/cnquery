@@ -1,0 +1,14 @@
+[commands."python"]
+stdout = """Loaded plugins: fastestmirror, ovl
+Loading mirror speeds from cached hostfile
+ * base: centos.mirror.net-d-sign.de
+ * extras: centos.mirror.net-d-sign.de
+ * updates: centos.mirrors.as250.net
+{"name":"python-libs", "available":"0:2.7.5-69.el7_5","arch":"x86_64","repo":"updates"}
+{"name":"binutils", "available":"0:2.27-28.base.el7_5.1","arch":"x86_64","repo":"updates"}
+{"name":"centos-release", "available":"0:7-5.1804.1.el7.centos","arch":"x86_64","repo":"updates"}
+{"name":"yum-plugin-ovl", "available":"0:1.1.31-46.el7_5","arch":"noarch","repo":"updates"}
+{"name":"yum-utils", "available":"0:1.1.31-46.el7_5","arch":"noarch","repo":"updates"}
+{"name":"yum-plugin-fastestmirror", "available":"0:1.1.31-46.el7_5","arch":"noarch","repo":"updates"}
+{"name":"python", "available":"0:2.7.5-69.el7_5","arch":"x86_64","repo":"updates"}
+{"name":"gnupg2", "available":"0:2.0.22-5.el7_5","arch":"x86_64","repo":"updates"}"""
