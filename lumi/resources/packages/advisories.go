@@ -3,6 +3,7 @@ package packages
 import (
 	"context"
 	"net/http"
+	"os"
 
 	"go.mondoo.io/mondoo/lumi/resources/parser"
 	"go.mondoo.io/mondoo/motor/platform"
@@ -10,12 +11,17 @@ import (
 	"go.mondoo.io/mondoo/vadvisor/cvss"
 )
 
-const (
-	ADVISORY_SERVICE = "http://localhost:8989"
-)
+var MONDOO_API = "https://api.mondoo.app"
+
+// allow overwrite of the API url by an environment variable
+func init() {
+	if len(os.Getenv("MONDOO_API")) > 0 {
+		MONDOO_API = os.Getenv("MONDOO_API")
+	}
+}
 
 func GetAdvisory(id string) (*api.Advisory, error) {
-	sa, err := api.NewSecuriyAdvisorClient(ADVISORY_SERVICE, &http.Client{})
+	sa, err := api.NewSecuriyAdvisorClient(MONDOO_API, &http.Client{})
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +60,7 @@ func Analyze(platform *api.Platform, pkgs []*api.Package) ([]*api.Advisory, erro
 	request.Platform = platform
 	request.Packages = pkgs
 
-	sa, err := api.NewSecuriyAdvisorClient(ADVISORY_SERVICE, &http.Client{})
+	sa, err := api.NewSecuriyAdvisorClient(MONDOO_API, &http.Client{})
 	if err != nil {
 		return nil, err
 	}
