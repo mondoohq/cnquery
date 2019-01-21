@@ -21,7 +21,7 @@ func init() {
 }
 
 func GetAdvisory(id string) (*api.Advisory, error) {
-	sa, err := api.NewSecuriyAdvisorClient(MONDOO_API, &http.Client{})
+	sa, err := api.NewSecurityAdvisorClient(MONDOO_API, &http.Client{})
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func Analyze(platform *api.Platform, pkgs []*api.Package) ([]*api.Advisory, erro
 	request.Platform = platform
 	request.Packages = pkgs
 
-	sa, err := api.NewSecuriyAdvisorClient(MONDOO_API, &http.Client{})
+	sa, err := api.NewSecurityAdvisorClient(MONDOO_API, &http.Client{})
 	if err != nil {
 		return nil, err
 	}
