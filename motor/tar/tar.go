@@ -101,6 +101,7 @@ func (m *Transport) Close() {
 	if m.CloseFN != nil {
 		m.CloseFN()
 	}
+
 }
 
 func (m *Transport) stat(header *tar.Header) (os.FileInfo, error) {

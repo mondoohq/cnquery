@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/google/go-containerregistry/pkg/authn"
@@ -34,7 +35,10 @@ func New(rc io.ReadCloser) (types.Transport, error) {
 
 // no cache file required, since the file is cached locally already
 func NewFromFile(filename string) (types.Transport, error) {
-	return tar.New(&types.Endpoint{Path: filename})
+	return tar.NewWithClose(&types.Endpoint{Path: filename}, func() {
+		// remove temporary file on stream close
+		os.Remove(filename)
+	})
 }
 
 func LoadFromRegistry(tag name.Tag) (io.ReadCloser, error) {
