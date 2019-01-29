@@ -8,6 +8,7 @@ import (
 	"go.mondoo.io/mondoo/motor/docker"
 	"go.mondoo.io/mondoo/motor/local"
 	"go.mondoo.io/mondoo/motor/mock"
+	"go.mondoo.io/mondoo/motor/ssh"
 	"go.mondoo.io/mondoo/motor/tar"
 	"go.mondoo.io/mondoo/motor/types"
 )
@@ -17,7 +18,6 @@ func New(endpoint *types.Endpoint) (*motor.Motor, error) {
 	if err != nil {
 		return nil, errors.New("could not resolve backend " + err.Error())
 	}
-
 	return motor.New(trans)
 }
 
@@ -58,6 +58,9 @@ func ResolveTransport(endpoint *types.Endpoint) (types.Transport, error) {
 	case "docker":
 		log.Debug().Msg("resolver> load docker transport")
 		trans, err = docker.New(endpoint)
+	case "ssh":
+		log.Debug().Msg("resolver> load ssh transport")
+		trans, err = ssh.New(endpoint)
 	default:
 		return nil, errors.New("resolver> unsupported endpoint '" + endpoint.Backend + "'")
 	}
