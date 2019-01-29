@@ -87,7 +87,7 @@ func convertAdvisoryList(advisoryIds []*api.Advisory) ([]*api.Advisory, error) {
 	return advisories, nil
 }
 
-func MaxCvss(advisories []*api.Advisory) (api.CVSS, error) {
+func MaxCvss(advisories []*api.Advisory) (*api.CVSS, error) {
 	list := []*cvss.Cvss{}
 	for i := range advisories {
 		advisory := advisories[i]
@@ -96,7 +96,7 @@ func MaxCvss(advisories []*api.Advisory) (api.CVSS, error) {
 		if maxScore != nil {
 			res, err := cvss.New(maxScore.Vector)
 			if err != nil {
-				return api.CVSS{}, err
+				return nil, err
 			}
 			list = append(list, res)
 		}
@@ -104,10 +104,10 @@ func MaxCvss(advisories []*api.Advisory) (api.CVSS, error) {
 
 	max, err := cvss.MaxScore(list)
 	if err != nil {
-		return api.CVSS{}, err
+		return nil, err
 	}
 
-	return api.CVSS{
+	return &api.CVSS{
 		Vector: max.Vector,
 	}, nil
 }
