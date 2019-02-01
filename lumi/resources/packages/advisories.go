@@ -68,23 +68,7 @@ func Analyze(platform *api.Platform, pkgs []*api.Package) ([]*api.Advisory, erro
 	if err != nil {
 		return nil, err
 	}
-	return convertAdvisoryList(report.Advisories)
-}
-
-// iterate over list and ask the vadvisor to download all
-func convertAdvisoryList(advisoryIds []*api.Advisory) ([]*api.Advisory, error) {
-	var advisories []*api.Advisory
-	for i := range advisoryIds {
-		advisoryID := advisoryIds[i]
-
-		advisory, err := GetAdvisory(advisoryID.Id)
-		advisory.Affected = advisoryID.Affected
-		if err != nil {
-			return nil, err
-		}
-		advisories = append(advisories, advisory)
-	}
-	return advisories, nil
+	return report.Advisories, nil
 }
 
 func MaxCvss(advisories []*api.Advisory) (*api.CVSS, error) {
