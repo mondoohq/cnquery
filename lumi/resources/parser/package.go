@@ -75,6 +75,8 @@ func ParseDpkgPackages(input io.Reader) ([]Package, error) {
 			pkg.Arch = strings.TrimSpace(m[2])
 		case key == "Status":
 			pkg.Status = strings.TrimSpace(m[2])
+		case key == "Source":
+			pkg.Origin = strings.TrimSpace(m[2])
 		// description supports multi-line statements, start desc
 		case key == "Description":
 			pkg.Description = strings.TrimSpace(m[2])
