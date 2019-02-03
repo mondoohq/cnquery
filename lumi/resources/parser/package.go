@@ -18,6 +18,11 @@ type Package struct {
 	Arch        string `json:"arch"`
 	Status      string `json:"status,omitempty"`
 	Description string `json:"description"`
+
+	// this may be the source package or an origin
+	// e.g. on alpine it is used for parent  packages
+	// o 	Package Origin - https://wiki.alpinelinux.org/wiki/Apk_spec
+	Origin string `json:"origin"`
 }
 
 var (
@@ -189,6 +194,8 @@ func ParseApkDbPackages(input io.Reader) []Package {
 			pkg.Arch = m[2] // architecture
 		case "t":
 			pkgEpoch = m[2] // epoch
+		case "o":
+			pkg.Origin = m[2] // origin
 		case "T":
 			pkg.Description = m[2] // description
 		}
