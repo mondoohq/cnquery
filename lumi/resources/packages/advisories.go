@@ -48,6 +48,7 @@ func ConvertParserPackages(pkgs []parser.Package) []*api.Package {
 			Name:    d.Name,
 			Version: d.Version,
 			Arch:    d.Arch,
+			Origin:  d.Origin,
 		})
 	}
 
