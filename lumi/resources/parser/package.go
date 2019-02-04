@@ -26,10 +26,11 @@ type Package struct {
 }
 
 var (
-	DPKG_REGEX   = regexp.MustCompile(`^(.+):\s(.+)$`)
-	RPM_REGEX    = regexp.MustCompile(`^([\w-+]*)\s(\d*):([\w\d-+.:]+)\s([\w\d]*|\(none\))\s(.*)$`)
-	PACMAN_REGEX = regexp.MustCompile(`^([\w-]*)\s([\w\d-+.:]+)$`)
-	APK_REGEX    = regexp.MustCompile(`^([A-Za-z]):(.*)$`)
+	DPKG_REGEX        = regexp.MustCompile(`^(.+):\s(.+)$`)
+	DPKG_ORIGIN_REGEX = regexp.MustCompile(`^\s*([^\(]*)(?:\((.*)\))?\s*$`)
+	RPM_REGEX         = regexp.MustCompile(`^([\w-+]*)\s(\d*):([\w\d-+.:]+)\s([\w\d]*|\(none\))\s(.*)$`)
+	PACMAN_REGEX      = regexp.MustCompile(`^([\w-]*)\s([\w\d-+.:]+)$`)
+	APK_REGEX         = regexp.MustCompile(`^([A-Za-z]):(.*)$`)
 )
 
 // parse the dpkg database content located in /var/lib/dpkg/status
@@ -76,7 +77,12 @@ func ParseDpkgPackages(input io.Reader) ([]Package, error) {
 		case key == "Status":
 			pkg.Status = strings.TrimSpace(m[2])
 		case key == "Source":
-			pkg.Origin = strings.TrimSpace(m[2])
+			o := DPKG_ORIGIN_REGEX.FindStringSubmatch(m[2])
+			if o != nil && len(o) >= 1 {
+				pkg.Origin = strings.TrimSpace(o[1])
+			} else {
+				log.Error().Str("origin", m[2]).Msg("cannot parse dpkg origin")
+			}
 		// description supports multi-line statements, start desc
 		case key == "Description":
 			pkg.Description = strings.TrimSpace(m[2])
