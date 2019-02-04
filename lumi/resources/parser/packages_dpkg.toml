@@ -209,4 +209,22 @@ Description: command-line interface parsing library
  It was originally inspired by the Multics SubSystem library.
 Original-Maintainer: Theodore Y. Ts'o <tytso@mit.edu>
 Homepage: http://e2fsprogs.sourceforge.net
+
+Package: libaudit1
+Status: install ok installed
+Priority: optional
+Section: libs
+Installed-Size: 157
+Maintainer: Laurent Bigonville <bigon@debian.org>
+Architecture: amd64
+Multi-Arch: same
+Source: audit (1:2.4-1)
+Version: 1:2.4-1+b1
+Depends: libaudit-common (>= 1:2.4-1), libc6 (>= 2.14)
+Pre-Depends: multiarch-support
+Description: Dynamic library for security auditing
+ The audit-libs package contains the dynamic libraries needed for
+ applications to use the audit framework. It is used to monitor systems for
+ security related events.
+Homepage: http://people.redhat.com/sgrubb/audit/
 """

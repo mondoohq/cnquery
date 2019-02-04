@@ -127,7 +127,7 @@ func TestDpkgParser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, 9, len(m), "detected the right amount of packages")
+	assert.Equal(t, 10, len(m), "detected the right amount of packages")
 
 	var p Package
 	p = Package{
@@ -149,6 +149,19 @@ The cfdisk utilitity gives a more userfriendly curses based interface.
 The sfdisk utility is mostly for automation and scripting uses.`,
 	}
 	assert.Contains(t, m, p, "fdisk detected")
+
+	p = Package{
+		Name:    "libaudit1",
+		Version: "1:2.4-1+b1",
+		Arch:    "amd64",
+		Status:  "install ok installed",
+		Origin:  "audit",
+		Description: `Dynamic library for security auditing
+The audit-libs package contains the dynamic libraries needed for
+applications to use the audit framework. It is used to monitor systems for
+security related events.`,
+	}
+	assert.Contains(t, m, p, "libaudit1 detected")
 }
 
 func TestMacOsXPackageParser(t *testing.T) {
