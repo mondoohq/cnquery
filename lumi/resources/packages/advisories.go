@@ -78,7 +78,7 @@ func MaxCvss(advisories []*api.Advisory) (*api.CVSS, error) {
 		advisory := advisories[i]
 		maxScore := advisory.MaxScore
 
-		if maxScore != nil {
+		if maxScore != nil && len(maxScore.Vector) > 0 {
 			res, err := cvss.New(maxScore.Vector)
 			if err != nil {
 				return nil, err
