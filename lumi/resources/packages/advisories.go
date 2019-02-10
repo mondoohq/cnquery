@@ -8,7 +8,6 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/parser"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/vadvisor/api"
-	"go.mondoo.io/mondoo/vadvisor/cvss"
 )
 
 var MONDOO_API = "https://api.mondoo.app"
@@ -56,43 +55,11 @@ func ConvertParserPackages(pkgs []parser.Package) []*api.Package {
 }
 
 // searches all advisories for given packages
-func Analyze(platform *api.Platform, pkgs []*api.Package) ([]*api.Advisory, error) {
-	request := api.Packages{}
-	request.Platform = platform
-	request.Packages = pkgs
-
+func Analyze(scanJob *api.ScanJob) (*api.Report, error) {
 	sa, err := api.NewSecurityAdvisorClient(MONDOO_API, &http.Client{})
 	if err != nil {
 		return nil, err
 	}
-	report, err := sa.AnalysePackages(context.TODO(), &request)
-	if err != nil {
-		return nil, err
-	}
-	return report.Advisories, nil
-}
 
-func MaxCvss(advisories []*api.Advisory) (*api.CVSS, error) {
-	list := []*cvss.Cvss{}
-	for i := range advisories {
-		advisory := advisories[i]
-		maxScore := advisory.MaxScore
-
-		if maxScore != nil && len(maxScore.Vector) > 0 {
-			res, err := cvss.New(maxScore.Vector)
-			if err != nil {
-				return nil, err
-			}
-			list = append(list, res)
-		}
-	}
-
-	max, err := cvss.MaxScore(list)
-	if err != nil {
-		return nil, err
-	}
-
-	return &api.CVSS{
-		Vector: max.Vector,
-	}, nil
+	return sa.Analyse(context.Background(), scanJob)
 }
