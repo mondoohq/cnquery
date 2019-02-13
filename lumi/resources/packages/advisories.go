@@ -24,11 +24,7 @@ func GetAdvisory(id string) (*api.Advisory, error) {
 	if err != nil {
 		return nil, err
 	}
-	advisory, err := sa.GetAdvisory(context.TODO(), &api.AdvisoryIdentifier{Id: id})
-	if err != nil {
-		return nil, err
-	}
-	return advisory, nil
+	return sa.GetAdvisory(context.TODO(), &api.AdvisoryIdentifier{Id: id})
 }
 
 func ConvertPlatform(platform platform.Info) *api.Platform {
