@@ -1,16 +1,44 @@
 package ssh
 
 import (
+	"errors"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/types"
 	"golang.org/x/crypto/ssh"
 )
 
+func VerifyConfig(endpoint *types.Endpoint) error {
+	if endpoint.Backend != "ssh" {
+		return errors.New("only ssh backend for ssh transport supported")
+	}
+	return nil
+}
+
+func DefaultConfig(endpoint *types.Endpoint) *types.Endpoint {
+	// use default port if port is 0
+	if endpoint.Port <= 0 {
+		endpoint.Port = 22
+	}
+	return endpoint
+}
+
 func New(endpoint *types.Endpoint) (*SSHTransport, error) {
+	// ensure all required configs are set
+	err := VerifyConfig(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	// set default config if required
+	endpoint = DefaultConfig(endpoint)
+
+	// establish connection
 	conn, err := sshClient(endpoint)
 	if err != nil {
 		return nil, err
 	}
+
 	log.Debug().Str("transport", "ssh").Msg("session established")
 	return &SSHTransport{Endpoint: endpoint, SSHClient: conn}, nil
 }
