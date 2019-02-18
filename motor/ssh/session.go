@@ -19,7 +19,7 @@ func sshClient(hostconfig *types.Endpoint) (*ssh.Client, error) {
 	}
 
 	if len(authMethods) == 0 {
-		return nil, errors.New("No authentication method defined")
+		return nil, errors.New("no authentication method defined")
 	}
 
 	sshConfig := &ssh.ClientConfig{
