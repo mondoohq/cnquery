@@ -45,6 +45,9 @@ func (m *Motor) Watcher() types.Watcher {
 }
 
 func (m *Motor) Close() {
+	if m == nil {
+		return
+	}
 	if m.Transport != nil {
 		m.Transport.Close()
 	}
