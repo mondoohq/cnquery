@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/resources/parser"
@@ -37,7 +38,7 @@ func ResolveSystemPkgManager(motor *motor.Motor) (OperatingSystemPkgManager, err
 		pm = &PacmanPkgManager{motor: motor}
 	case "ubuntu", "debian": // debian family
 		pm = &DebPkgManager{motor: motor}
-	case "redhat", "centos", "amzn", "ol", "", "scientific": // rhel family
+	case "redhat", "centos", "amzn", "ol", "scientific": // rhel family
 		pm = &RpmPkgManager{motor: motor}
 	case "opensuse": // suse handling
 		pm = &SusePkgManager{RpmPkgManager{motor: motor}}
@@ -149,15 +150,30 @@ func (rpm *RpmPkgManager) Available() ([]parser.PackageUpdate, error) {
 }
 
 func (rpm *RpmPkgManager) runtimeList() ([]parser.Package, error) {
-	// ATTENTION: EPOCHNUM is only available since RedHat 6 and Suse 12, if REDHAT 5 support is required at some point
-	// we need to use EPOCH
-	cmd, err := rpm.motor.Transport.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\\n'")
+	// ATTENTION: EPOCHNUM is only available since later version of rpm in RedHat 6 and Suse 12
+	// we can only expect if for rhel 7+, therefore we need to run an extra test for 5/6-based platforms
+
+	info, err := rpm.motor.Platform()
+	if err != nil {
+		return nil, err
+	}
+
+	command := "rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\\n'"
+	// fall-back to epoch instead of epochnum for 6 ish platforms, latest 6 platforms also support epochnum, but we
+	// save 1 call by not detecting the available keyword via rpm --querytags
+	i, err := strconv.ParseInt(info.Release, 0, 32)
+	if err != nil || i < 7 {
+		command = "rpm -qa --queryformat '%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\\n'"
+	}
+
+	cmd, err := rpm.motor.Transport.RunCommand(command)
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}
 	return parser.ParseRpmPackages(cmd.Stdout), nil
 }
 
+// fetch all available packages, is that working with centos 6?
 func (rpm *RpmPkgManager) runtimeAvailable() ([]parser.PackageUpdate, error) {
 	// python script:
 	// import sys;sys.path.insert(0, "/usr/share/yum-cli");import cli;list = cli.YumBaseCli().returnPkgLists(["updates"]);
