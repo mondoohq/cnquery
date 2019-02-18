@@ -212,9 +212,14 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 		Name:    "rhel",
 		Familiy: false,
 		Detect: func(p *PlatformResolver, di *Info) (bool, error) {
-			if di.Name == "redhat" {
+			// etc redhat release was parsed by the family already,
+			// we reuse that information here
+			// e.g. Red Hat Linux, Red Hat Enterprise Linux Server
+			if strings.Contains(di.Title, "Red Hat") || di.Name == "redhat" {
+				di.Name = "redhat"
 				return true, nil
 			}
+
 			return false, nil
 		},
 	}
@@ -494,12 +499,12 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			}
 
 			content := strings.TrimSpace(string(c))
-			name, release, err := parser.ParseRhelVersion(content)
-			log.Debug().Str("name", name).Str("release", release)
+			title, release, err := parser.ParseRhelVersion(content)
 			if err == nil {
+				log.Debug().Str("title", title).Str("release", release).Msg("detected rhelish platform")
 				// only set title if not already properly detected by lsb or os-release
 				if len(di.Title) == 0 {
-					di.Title = name
+					di.Title = title
 				}
 
 				// always override the version from the release file, since it is
