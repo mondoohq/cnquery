@@ -12,13 +12,13 @@ func Detect(motor *motor.Motor) ([]parser.Package, error) {
 	// find suitable package manager
 	pm, err := ResolveSystemPkgManager(motor)
 	if pm == nil || err != nil {
-		return nil, fmt.Errorf("Could not detect suiteable package manager for platform")
+		return nil, fmt.Errorf("could not detect suiteable package manager for platform")
 	}
 
 	// retrieve all system packages
 	packages, err := pm.List()
 	if err != nil {
-		return nil, fmt.Errorf("Could not retrieve package list for platform")
+		return nil, fmt.Errorf("could not retrieve package list for platform")
 	}
 	log.Debug().Int("packages", len(packages)).Msg("lumi[packages]> installed packages")
 

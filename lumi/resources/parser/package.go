@@ -28,7 +28,7 @@ type Package struct {
 var (
 	DPKG_REGEX        = regexp.MustCompile(`^(.+):\s(.+)$`)
 	DPKG_ORIGIN_REGEX = regexp.MustCompile(`^\s*([^\(]*)(?:\((.*)\))?\s*$`)
-	RPM_REGEX         = regexp.MustCompile(`^([\w-+]*)\s(\d*):([\w\d-+.:]+)\s([\w\d]*|\(none\))\s(.*)$`)
+	RPM_REGEX         = regexp.MustCompile(`^([\w-+]*)\s(\d*|\(none\)):([\w\d-+.:]+)\s([\w\d]*|\(none\))\s(.*)$`)
 	PACMAN_REGEX      = regexp.MustCompile(`^([\w-]*)\s([\w\d-+.:]+)$`)
 	APK_REGEX         = regexp.MustCompile(`^([A-Za-z]):(.*)$`)
 )
@@ -110,7 +110,7 @@ func ParseRpmPackages(input io.Reader) []Package {
 		if m != nil {
 			var version string
 			// only append the epoch if we have a non-zero value
-			if m[2] == "0" {
+			if m[2] == "0" || strings.TrimSpace(m[2]) == "(none)" {
 				version = m[3]
 			} else {
 				version = m[2] + ":" + m[3]

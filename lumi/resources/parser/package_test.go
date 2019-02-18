@@ -186,8 +186,8 @@ func TestMacOsXPackageParser(t *testing.T) {
 	assert.Equal(t, "11.0", m[1].Version, "pkg version detected")
 }
 
-func TestRPMParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "packages_rpm.toml"})
+func TestRedhat7Parser(t *testing.T) {
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "packages_redhat7.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -240,4 +240,52 @@ func TestRPMParser(t *testing.T) {
 		Description: "Libraries for accessing D-BUS",
 	}
 	assert.Contains(t, m, p, "gpg-pubkey detected")
+}
+
+func TestRedhat6Parser(t *testing.T) {
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "packages_redhat6.toml"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\\n'")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	m := ParseRpmPackages(c.Stdout)
+	assert.Equal(t, 8, len(m), "detected the right amount of packages")
+
+	var p Package
+	p = Package{
+		Name:        "ElectricFence",
+		Version:     "2.1-3",
+		Arch:        "i386",
+		Description: "A debugger which detects memory allocation violations.",
+	}
+	assert.Contains(t, m, p, "ElectricFence")
+
+	p = Package{
+		Name:        "shadow-utils",
+		Version:     "1:19990827-10",
+		Arch:        "i386",
+		Description: "Utilities for managing shadow password files and user/group accounts.",
+	}
+	assert.Contains(t, m, p, "shadow-utils")
+
+	p = Package{
+		Name:        "arpwatch",
+		Version:     "1:2.1a4-19",
+		Arch:        "i386",
+		Description: "Network monitoring tools for tracking IP addresses on a network.",
+	}
+	assert.Contains(t, m, p, "arpwatch")
+
+	p = Package{
+		Name:        "bash",
+		Version:     "1.14.7-22",
+		Arch:        "i386",
+		Description: "The GNU Bourne Again shell (bash) version 1.14.",
+	}
+	assert.Contains(t, m, p, "bash")
 }

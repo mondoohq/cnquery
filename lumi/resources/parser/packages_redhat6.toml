@@ -1,0 +1,11 @@
+[commands."rpm -qa --queryformat '%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\\n'"]
+stdout="""
+ElectricFence (none):2.1-3 i386 A debugger which detects memory allocation violations.
+glibc (none):2.1.3-15 i386 The GNU libc libraries.
+shadow-utils 1:19990827-10 i386 Utilities for managing shadow password files and user/group accounts.
+mktemp (none):1.5-2 i386 A small utility for safely making /tmp files.
+termcap (none):10.2.7-9 noarch The terminal feature database used by certain applications.
+libtermcap (none):2.0.8-20 i386 A basic system library for accessing the termcap database.
+bash (none):1.14.7-22 i386 The GNU Bourne Again shell (bash) version 1.14.
+arpwatch 1:2.1a4-19 i386 Network monitoring tools for tracking IP addresses on a network.
+"""
