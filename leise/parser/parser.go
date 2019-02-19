@@ -112,10 +112,11 @@ func (p *parser) error(msg string, in string) error {
 }
 
 // nextToken loads the next token into p.token
-func (p *parser) nextToken() {
+func (p *parser) nextToken() error {
 	if p.nextTokens == nil {
-		p.token = p.lex.Next()
-		return
+		var err error
+		p.token, err = p.lex.Next()
+		return err
 	}
 
 	p.token = p.nextTokens[0]
@@ -124,6 +125,8 @@ func (p *parser) nextToken() {
 	} else {
 		p.nextTokens = p.nextTokens[1:]
 	}
+
+	return nil
 }
 
 // rewind pushes the current token back on the stack and replaces it iwth the given token
@@ -463,15 +466,23 @@ func (p *parser) parseExpression() (*Expression, error) {
 
 // Parse an input string into an AST
 func Parse(input string) (*AST, error) {
-	lex := leiseLexer.Lex(strings.NewReader(input))
+	lex, err := leiseLexer.Lex(strings.NewReader(input))
+	if err != nil {
+		return nil, err
+	}
 	res := AST{}
+
+	token, err := lex.Next()
+	if err != nil {
+		return nil, err
+	}
+
 	thisParser := parser{
 		lex:   lex,
-		token: lex.Next(),
+		token: token,
 	}
 
 	var exp *Expression
-	var err error
 	for {
 		exp, err = thisParser.parseExpression()
 		if err != nil {
@@ -486,13 +497,24 @@ func Parse(input string) (*AST, error) {
 }
 
 // Lex the input leise string to a list of tokens
-func Lex(input string) []lexer.Token {
-	lex := leiseLexer.Lex(strings.NewReader(input))
+func Lex(input string) ([]lexer.Token, error) {
 	res := []lexer.Token{}
-	token := lex.Next()
+	lex, err := leiseLexer.Lex(strings.NewReader(input))
+	if err != nil {
+		return res, err
+	}
+
+	token, err := lex.Next()
+	if err != nil {
+		return res, err
+	}
+
 	for !token.EOF() {
 		res = append(res, token)
-		token = lex.Next()
+		token, err = lex.Next()
+		if err != nil {
+			return res, err
+		}
 	}
-	return res
+	return res, nil
 }

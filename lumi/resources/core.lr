@@ -1,3 +1,9 @@
+mondoo {
+  version() string
+  build() string
+  resources() []string
+}
+
 file {
   init(path string)
   path string
@@ -12,3 +18,65 @@ sshd.config {
   params(content) map[string]string
 }
 
+platform {
+  name string
+  title string
+  family []string
+  release string
+  arch string
+  uuid() string
+  hostname() string
+}
+
+package {
+  init(id string)
+
+  name string
+  version string
+  arch string
+  format string
+  status() string
+  description string
+
+  available string
+  outdated() bool
+
+  advisories() []advisory
+}
+
+packages {
+  []package
+  advisories() advisories
+}
+
+cvss {
+  vector string
+  source string
+  score() float
+}
+
+cve {
+  init(id string)
+  id string
+  cvss() cvss
+  scores() []cvss
+  summary() string
+}
+
+advisory {
+  init(id string)
+  id string
+  name() string
+  description() string
+  cves() []cve
+  cvss() cvss
+  affected []package
+  fixed() []package
+}
+
+advisories {
+  []advisory
+  packages packages
+  cves() []cve
+  maxcvss() cvss
+}
