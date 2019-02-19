@@ -1,0 +1,19 @@
+[commands."ioreg -rd1 -c IOPlatformExpertDevice"]
+stdout = """+-o MacBookPro14,2  <class IOPlatformExpertDevice, id 0x100000117, registered, matched, active, busy 0 (225393 ms), retain 41>
+    {
+      "compatible" = <"MacBookPro14,2">
+      "version" = <"1.0">
+      "IOInterruptSpecifiers" = (<0900000005000000>)
+      "platform-feature" = <1a00000000000000>
+       "IOInterruptControllers" = ("io-apic-0")
+      "IOPolledInterface" = "SMCPolledInterface is not serializable"
+      "target-type" = <"Mac">
+      "manufacturer" = <"Apple Inc.">
+      "IOPlatformUUID" = "5C09E2C7-07F2-5BEE-BE82-7CB70688E55C"
+      "system-type" = <02>
+      "product-name" = <"MacBookPro14,2">
+      "model" = <"MacBookPro14,2">
+      "name" = <"/">
+      "IOBusyInterest" = "IOCommand is not serializable"
+    }
+"""
