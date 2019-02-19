@@ -19,6 +19,18 @@ func init() {
 	}
 }
 
+func GetCve(id string) (*api.CVE, error) {
+	sa, err := api.NewSecurityAdvisorClient(MONDOO_API, &http.Client{})
+	if err != nil {
+		return nil, err
+	}
+	cve, err := sa.GetCVE(context.TODO(), &api.CveIdentifier{Id: id})
+	if err != nil {
+		return nil, err
+	}
+	return cve, nil
+}
+
 func GetAdvisory(id string) (*api.Advisory, error) {
 	sa, err := api.NewSecurityAdvisorClient(MONDOO_API, &http.Client{})
 	if err != nil {
