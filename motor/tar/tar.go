@@ -143,9 +143,21 @@ func (m *Transport) open(header *tar.Header) (types.FileStream, error) {
 // resolve symlink file
 func (m *Transport) resolveSymlink(header *tar.Header) string {
 	dest := header.Name
-	source := header.Linkname
-	path := filepath.Clean(filepath.Join(dest, "..", source))
-	log.Debug().Str("link", header.Linkname).Str("header", header.Name).Str("path", path).Msg("tar> is symlink")
+	link := header.Linkname
+
+	var path string
+	if filepath.IsAbs(link) {
+		var err error
+		// we need to remove the root / then
+		path, err = filepath.Rel("/", link)
+		if err != nil {
+			log.Error().Str("link", link).Msg("could not determine the relative root path")
+		}
+
+	} else {
+		path = filepath.Clean(filepath.Join(dest, "..", link))
+	}
+	log.Debug().Str("link", link).Str("file", dest).Str("path", path).Msg("tar> is symlink")
 	return path
 }
 

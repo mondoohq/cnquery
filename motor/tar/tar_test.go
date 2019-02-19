@@ -1,32 +1,34 @@
-package tar
+package tar_test
 
 import (
-	"context"
-	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
 
-	docker_types "github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
+	"github.com/google/go-containerregistry/pkg/v1/mutate"
+
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/motor/motorutil"
+	"go.mondoo.io/mondoo/motor/tar"
 	"go.mondoo.io/mondoo/motor/types"
+
+	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 )
 
 func TestTarCommand(t *testing.T) {
-	dc, _ := dockerClient()
-	err := exportContainer(dc)
+	err := cacheImageToTar()
 	assert.Equal(t, nil, err, "should create tar without error")
 	if err != nil {
 		return
 	}
 
-	filepath, _ := filepath.Abs("./centos-container.tar")
-	tarTransport, err := New(&types.Endpoint{Backend: "tar", Path: filepath})
+	filepath, _ := filepath.Abs("./alpine-container.tar")
+	tarTransport, err := tar.New(&types.Endpoint{Backend: "tar", Path: filepath})
 	assert.Equal(t, nil, err, "should create tar without error")
 
 	cmd, err := tarTransport.RunCommand("ls /")
@@ -40,125 +42,147 @@ func TestTarCommand(t *testing.T) {
 	}
 }
 func TestTarSymlinkFile(t *testing.T) {
-	dc, _ := dockerClient()
-	err := exportContainer(dc)
+	err := cacheImageToTar()
 	assert.Equal(t, nil, err, "should create tar without error")
 	if err != nil {
 		return
 	}
 
-	filepath, _ := filepath.Abs("./centos-container.tar")
-	tarTransport, err := New(&types.Endpoint{Backend: "tar", Path: filepath})
+	filepath, _ := filepath.Abs("./alpine-container.tar")
+	tarTransport, err := tar.New(&types.Endpoint{Backend: "tar", Path: filepath})
 	assert.Equal(t, nil, err, "should create tar without error")
 
-	f, err := tarTransport.File("/etc/redhat-release")
+	f, err := tarTransport.File("/bin/cat")
 
 	if assert.NotNil(t, f) {
 		assert.Equal(t, nil, err, "should execute without error")
 
 		p := f.Name()
-		assert.Equal(t, "/etc/redhat-release", p, "path should be correct")
+		assert.Equal(t, "/bin/cat", p, "path should be correct")
 
 		stat, err := f.Stat()
-		assert.Equal(t, int64(38), stat.Size(), "should read file size")
-		assert.Equal(t, nil, err, "should execute without error")
+		assert.Equal(t, nil, err, "should stat without error")
+		assert.Equal(t, int64(796240), stat.Size(), "should read file size")
 
 		reader, err := f.Open()
+		assert.Equal(t, nil, err, "should open without error")
 		content, err := ioutil.ReadAll(reader)
 		assert.Equal(t, nil, err, "should execute without error")
-		assert.Equal(t, 38, len(content), "should read the full content")
+		assert.Equal(t, 796240, len(content), "should read the full content")
 
 		// ensure the same works with tar()
 		content, err = motorutil.ReadFile(f)
-		assert.Equal(t, nil, err, "should execute without error")
-		assert.Equal(t, 38, len(content), "should read the full content")
+		assert.Equal(t, nil, err, "should read without error")
+		assert.Equal(t, 796240, len(content), "should read the full content")
 	}
 }
+
+// deactivate test for now for speedier testing
+// in contrast to alpine, the symlink on centos is pointinng to a relative target
+// and not an absolute one
+//
+// func TestTarSymlinkFileCentos(t *testing.T) {
+// 	err := cacheImageToTar()
+// 	assert.Equal(t, nil, err, "should create tar without error")
+// 	if err != nil {
+// 		return
+// 	}
+
+// 	filepath, _ := filepath.Abs("./centos-container.tar")
+// 	tarTransport, err := tar.New(&types.Endpoint{Backend: "tar", Path: filepath})
+// 	assert.Equal(t, nil, err, "should create tar without error")
+
+// 	f, err := tarTransport.File("/etc/redhat-release")
+
+// 	if assert.NotNil(t, f) {
+// 		assert.Equal(t, nil, err, "should execute without error")
+
+// 		p := f.Name()
+// 		assert.Equal(t, "/etc/redhat-release", p, "path should be correct")
+
+// 		stat, err := f.Stat()
+// 		assert.Equal(t, nil, err, "should stat without error")
+// 		assert.Equal(t, int64(38), stat.Size(), "should read file size")
+
+// 		reader, err := f.Open()
+// 		assert.Equal(t, nil, err, "should open without error")
+// 		content, err := ioutil.ReadAll(reader)
+// 		assert.Equal(t, nil, err, "should execute without error")
+// 		assert.Equal(t, 38, len(content), "should read the full content")
+
+// 		// ensure the same works with tar()
+// 		content, err = motorutil.ReadFile(f)
+// 		assert.Equal(t, nil, err, "should read without error")
+// 		assert.Equal(t, 38, len(content), "should read the full content")
+// 	}
+// }
 func TestTarFile(t *testing.T) {
-	dc, _ := dockerClient()
-	err := exportContainer(dc)
+	err := cacheImageToTar()
 	assert.Equal(t, nil, err, "should create tar without error")
 	if err != nil {
 		return
 	}
 
-	filepath, _ := filepath.Abs("./centos-container.tar")
-	tarTransport, err := New(&types.Endpoint{Backend: "tar", Path: filepath})
+	filepath, _ := filepath.Abs("./alpine-container.tar")
+	tarTransport, err := tar.New(&types.Endpoint{Backend: "tar", Path: filepath})
 	assert.Equal(t, nil, err, "should create tar without error")
 
-	f, err := tarTransport.File("/etc/centos-release")
+	f, err := tarTransport.File("/etc/alpine-release")
 
 	if assert.NotNil(t, f) {
 		assert.Equal(t, nil, err, "should execute without error")
 
 		p := f.Name()
-		assert.Equal(t, "/etc/centos-release", p, "path should be correct")
+		assert.Equal(t, "/etc/alpine-release", p, "path should be correct")
 
 		stat, err := f.Stat()
-		assert.Equal(t, int64(38), stat.Size(), "should read file size")
+		assert.Equal(t, int64(6), stat.Size(), "should read file size")
 		assert.Equal(t, nil, err, "should execute without error")
 
 		reader, err := f.Open()
 		content, err := ioutil.ReadAll(reader)
 		assert.Equal(t, nil, err, "should execute without error")
-		assert.Equal(t, 38, len(content), "should read the full content")
+		assert.Equal(t, 6, len(content), "should read the full content")
 	}
 }
 
-func dockerClient() (*client.Client, error) {
-	// set docker api version for macos
-	os.Setenv("DOCKER_API_VERSION", "1.26")
-	// Start new docker container
-	return client.NewEnvClient()
-}
+func cacheImageToTar() error {
 
-func exportContainer(dc *client.Client) error {
-	image := "centos:7"
-	filename := "./centos-container.tar"
-	containerName := "centos-container"
+	source := "alpine:3.9"
+	filename := "./alpine-container.tar"
 
-	if _, err := os.Stat(filename); err == nil {
-		fmt.Println("use cached container file")
+	// check if the cache is already there
+	_, err := os.Stat(filename)
+	if err == nil {
 		return nil
 	}
 
-	ctx := context.TODO()
-
-	// ensure the image is available
-	out, err := dc.ImagePull(ctx, image, docker_types.ImagePullOptions{})
-	if err != nil {
-		return err
-	}
-	io.Copy(os.Stdout, out)
-
-	// we ignore errors for container kill and remove
-	dc.ContainerKill(ctx, containerName, "SIGKILL")
-	dc.ContainerRemove(ctx, containerName, docker_types.ContainerRemoveOptions{Force: true})
-
-	// create a new container
-	resp, err := dc.ContainerCreate(ctx, &container.Config{
-		Image: image,
-		Cmd:   []string{},
-		Tty:   false,
-	}, nil, nil, containerName)
+	tag, err := name.NewTag(source, name.WeakValidation)
 	if err != nil {
 		return err
 	}
 
-	f, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	// store container locally
-	reader, err := dc.ContainerExport(ctx, resp.ID)
+	auth, err := authn.DefaultKeychain.Resolve(tag.Registry)
 	if err != nil {
 		return err
 	}
 
-	if _, err := io.Copy(f, reader); err != nil {
+	img, err := remote.Image(tag, remote.WithAuth(auth), remote.WithTransport(http.DefaultTransport))
+	if err != nil {
 		return err
 	}
-	return nil
+
+	// convert multi-layer image into a flatten container tar
+	rc := mutate.Extract(img)
+	defer rc.Close()
+
+	// write content to file
+	out, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+	_, err = io.Copy(out, rc)
+
+	return err
 }
