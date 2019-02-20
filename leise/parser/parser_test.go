@@ -25,7 +25,8 @@ func TestParser_Lex(t *testing.T) {
 		{Op, "+"},
 	}
 	for i := range tests {
-		res := Lex(tests[i].str)
+		res, err := Lex(tests[i].str)
+		assert.Nil(t, err)
 		assert.Equal(t, tests[i].typ, res[0].Type)
 	}
 }
