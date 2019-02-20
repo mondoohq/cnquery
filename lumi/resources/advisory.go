@@ -3,7 +3,7 @@ package resources
 import (
 	"errors"
 
-	"go.mondoo.io/mondoo/vadvisor/cvss"
+	"go.mondoo.io/mondoo/vadvisor/specs/cvss"
 
 	uuid "github.com/gofrs/uuid/v3"
 	"github.com/rs/zerolog/log"
