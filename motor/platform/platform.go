@@ -209,7 +209,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 	}
 
 	rhel := &PlatformResolver{
-		Name:    "rhel",
+		Name:    "redhat",
 		Familiy: false,
 		Detect: func(p *PlatformResolver, di *Info) (bool, error) {
 			// etc redhat release was parsed by the family already,
