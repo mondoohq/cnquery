@@ -149,23 +149,30 @@ func (rpm *RpmPkgManager) Available() ([]parser.PackageUpdate, error) {
 	}
 }
 
-func (rpm *RpmPkgManager) runtimeList() ([]parser.Package, error) {
-	// ATTENTION: EPOCHNUM is only available since later version of rpm in RedHat 6 and Suse 12
-	// we can only expect if for rhel 7+, therefore we need to run an extra test for 5/6-based platforms
-
-	info, err := rpm.motor.Platform()
-	if err != nil {
-		return nil, err
-	}
-
-	command := "rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\\n'"
+func (rpm *RpmPkgManager) queryFormat() string {
+	// this format should work everywhere
 	// fall-back to epoch instead of epochnum for 6 ish platforms, latest 6 platforms also support epochnum, but we
 	// save 1 call by not detecting the available keyword via rpm --querytags
-	i, err := strconv.ParseInt(info.Release, 0, 32)
-	if err != nil || i < 7 {
-		command = "rpm -qa --queryformat '%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\\n'"
+	format := "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\\n"
+
+	// ATTENTION: EPOCHNUM is only available since later version of rpm in RedHat 6 and Suse 12
+	// we can only expect if for rhel 7+, therefore we need to run an extra test
+	info, err := rpm.motor.Platform()
+	if err != nil {
+		return format
 	}
 
+	i, err := strconv.ParseInt(info.Release, 0, 32)
+	if err == nil && i >= 7 {
+		format = "%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\\n"
+	}
+
+	return format
+}
+
+func (rpm *RpmPkgManager) runtimeList() ([]parser.Package, error) {
+
+	command := fmt.Sprintf("rpm -qa --queryformat '%s'", rpm.queryFormat())
 	cmd, err := rpm.motor.Transport.RunCommand(command)
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
@@ -189,8 +196,15 @@ func (rpm *RpmPkgManager) runtimeAvailable() ([]parser.PackageUpdate, error) {
 }
 
 func (rpm *RpmPkgManager) staticList() ([]parser.Package, error) {
-	// fetch rpm database file and store it in local tmp file
-	f, err := rpm.motor.Transport.File("/var/lib/rpm/Packages")
+
+	rpmTmpDir, err := ioutil.TempDir(os.TempDir(), "mondoo-rpmdb")
+	if err != nil {
+		return nil, fmt.Errorf("could not read package list")
+	}
+	defer os.RemoveAll(rpmTmpDir)
+
+	// fetch rpm database files and store it in local tmp directory
+	f, err := rpm.motor.Transport.File("/var/lib/rpm")
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}
@@ -199,12 +213,6 @@ func (rpm *RpmPkgManager) staticList() ([]parser.Package, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}
-
-	rpmTmpDir, err := ioutil.TempDir(os.TempDir(), "mondoo-rpmdb")
-	if err != nil {
-		return nil, fmt.Errorf("could not read package list")
-	}
-	defer os.RemoveAll(rpmTmpDir)
 
 	fWriter, err := os.Create(filepath.Join(rpmTmpDir, "Packages"))
 	if err != nil {
@@ -220,7 +228,7 @@ func (rpm *RpmPkgManager) staticList() ([]parser.Package, error) {
 	log.Debug().Str("rpmdb", rpmTmpDir).Msg("cached rpm database locally")
 
 	// call local rpm tool to extract the packages
-	c := exec.Command("rpm", "--dbpath", rpmTmpDir, "-qa", "--queryformat", "%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\\n")
+	c := exec.Command("rpm", "--dbpath", rpmTmpDir, "-qa", "--queryformat", rpm.queryFormat())
 
 	stdoutBuffer := bytes.Buffer{}
 	stderrBuffer := bytes.Buffer{}
@@ -237,8 +245,10 @@ func (rpm *RpmPkgManager) staticList() ([]parser.Package, error) {
 	return parser.ParseRpmPackages(&stdoutBuffer), nil
 }
 
+// TODO: Available() not implemented for RpmFileSystemManager
+// for now this is not an error since we can easily determine available packages
 func (rpm *RpmPkgManager) staticAvailable() ([]parser.PackageUpdate, error) {
-	return nil, errors.New("Available() not implemented for RpmFileSystemManager")
+	return []parser.PackageUpdate{}, nil
 }
 
 // Suse, overwrites the Centos handler

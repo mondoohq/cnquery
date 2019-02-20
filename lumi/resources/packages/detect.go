@@ -18,6 +18,7 @@ func Detect(motor *motor.Motor) ([]parser.Package, error) {
 	// retrieve all system packages
 	packages, err := pm.List()
 	if err != nil {
+		log.Debug().Err(err).Msg("lumi[packages]> could not retrieve package list")
 		return nil, fmt.Errorf("could not retrieve package list for platform")
 	}
 	log.Debug().Int("packages", len(packages)).Msg("lumi[packages]> installed packages")
