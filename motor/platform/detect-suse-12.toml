@@ -1,0 +1,28 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "4.9.125-linuxkit"
+
+[files."/etc/os-release"]
+content = """
+NAME="SLES"
+VERSION="12-SP3"
+VERSION_ID="12.3"
+PRETTY_NAME="SUSE Linux Enterprise Server 12 SP3"
+ID="sles"
+ANSI_COLOR="0;32"
+CPE_NAME="cpe:/o:suse:sles:12:sp3"
+"""
+
+[files."/etc/SuSE-release"]
+content = """
+SUSE Linux Enterprise Server 12 (x86_64)
+VERSION = 12
+PATCHLEVEL = 3
+# This file is deprecated and will be removed in a future service pack or release.
+# Please check /etc/os-release for details about this release.
+"""

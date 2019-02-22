@@ -40,7 +40,7 @@ func ResolveSystemPkgManager(motor *motor.Motor) (OperatingSystemPkgManager, err
 		pm = &DebPkgManager{motor: motor}
 	case "redhat", "centos", "amzn", "ol", "scientific": // rhel family
 		pm = &RpmPkgManager{motor: motor}
-	case "opensuse": // suse handling
+	case "opensuse", "sles": // suse handling
 		pm = &SusePkgManager{RpmPkgManager{motor: motor}}
 	case "alpine": // alpine family
 		pm = &AlpinePkgManager{motor: motor}
@@ -162,8 +162,9 @@ func (rpm *RpmPkgManager) queryFormat() string {
 		return format
 	}
 
+	// be aware that this method is also used for non-redhat systems like suse
 	i, err := strconv.ParseInt(info.Release, 0, 32)
-	if err == nil && i >= 7 {
+	if err == nil && (info.Name == "centos" || info.Name == "redhat") && i >= 7 {
 		format = "%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\\n"
 	}
 

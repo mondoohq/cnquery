@@ -319,6 +319,16 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			return false, nil
 		},
 	}
+	sles := &PlatformResolver{
+		Name:    "sles",
+		Familiy: false,
+		Detect: func(p *PlatformResolver, di *Info) (bool, error) {
+			if di.Name == "sles" {
+				return true, nil
+			}
+			return false, nil
+		},
+	}
 	gentoo := &PlatformResolver{
 		Name:    "gentoo",
 		Familiy: false,
@@ -530,7 +540,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 	suseFamily := &PlatformResolver{
 		Name:     "suse",
 		Familiy:  true,
-		Children: []*PlatformResolver{opensuse},
+		Children: []*PlatformResolver{opensuse, sles},
 		Detect: func(p *PlatformResolver, di *Info) (bool, error) {
 			return true, nil
 		},
