@@ -27,5 +27,5 @@ func TestSSHPort(t *testing.T) {
 	endpoint = ssh.DefaultConfig(endpoint)
 
 	// if no port is provided, it needs to be 22
-	assert.Equal(t, 22, endpoint.Port)
+	assert.Equal(t, "22", endpoint.Port)
 }

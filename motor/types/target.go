@@ -8,12 +8,14 @@ import (
 
 // Endpoint that motor interacts with
 type Endpoint struct {
-	URI            string
-	Backend        string `json:"backend"`
-	User           string `json:"user"`
-	Password       string `json:"password"`
-	Host           string `json:"host"`
-	Port           int    `json:"port"`
+	URI      string
+	Backend  string `json:"backend"`
+	User     string `json:"user"`
+	Password string `json:"password"`
+	Host     string `json:"host"`
+	// Ports are not int by default, eg. docker://centos:latest parses a string as port
+	// Therefore it is up to the transport to convert the port to what they need
+	Port           string `json:"port"`
 	Path           string `json:"path"`
 	PrivateKeyPath string `json:"private_key"`
 }
@@ -44,15 +46,22 @@ func (t *Endpoint) ParseFromURI(uri string) error {
 		}
 	}
 
-	// try to extract port
-	port := u.Port()
-	if len(port) > 0 {
-		portInt, err := strconv.ParseInt(port, 10, 32)
-		if err != nil {
-			return errors.New("invalid port " + port)
-		}
-		t.Port = int(portInt)
-	}
-
+	t.Port = u.Port()
 	return nil
+}
+
+// returns the port number if parsable
+func (t *Endpoint) IntPort() (int, error) {
+	var port int
+	var err error
+
+	// try to extract port
+	if len(t.Port) > 0 {
+		portInt, err := strconv.ParseInt(t.Port, 10, 32)
+		if err != nil {
+			return port, errors.New("invalid port " + t.Port)
+		}
+		port = int(portInt)
+	}
+	return port, err
 }

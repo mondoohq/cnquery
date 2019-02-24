@@ -12,13 +12,20 @@ func VerifyConfig(endpoint *types.Endpoint) error {
 	if endpoint.Backend != "ssh" {
 		return errors.New("only ssh backend for ssh transport supported")
 	}
+
+	_, err := endpoint.IntPort()
+	if err != nil {
+		return errors.New("port is not a valid number " + endpoint.Port)
+	}
+
 	return nil
 }
 
 func DefaultConfig(endpoint *types.Endpoint) *types.Endpoint {
+	p, err := endpoint.IntPort()
 	// use default port if port is 0
-	if endpoint.Port <= 0 {
-		endpoint.Port = 22
+	if err == nil && p <= 0 {
+		endpoint.Port = "22"
 	}
 	return endpoint
 }
