@@ -6,10 +6,13 @@ import (
 	"io/ioutil"
 	"os"
 
+	"net"
+
 	"github.com/pkg/sftp"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/types"
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/agent"
 )
 
 func sshClient(hostconfig *types.Endpoint) (*ssh.Client, error) {
@@ -57,6 +60,11 @@ func authMethods(endpoint *types.Endpoint) ([]ssh.AuthMethod, error) {
 		auths = append(auths, ssh.Password(endpoint.Password))
 	}
 
+	agentAuth := sshAgent()
+	if agentAuth != nil {
+		auths = append(auths, agentAuth)
+	}
+
 	return auths, nil
 }
 
@@ -66,4 +74,11 @@ func sftpClient(sshClient *ssh.Client) (*sftp.Client, error) {
 		return nil, err
 	}
 	return c, nil
+}
+
+func sshAgent() ssh.AuthMethod {
+	if sshAgent, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK")); err == nil {
+		return ssh.PublicKeysCallback(agent.NewClient(sshAgent).Signers)
+	}
+	return nil
 }
