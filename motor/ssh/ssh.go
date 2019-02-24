@@ -3,10 +3,40 @@ package ssh
 import (
 	"errors"
 
+	"github.com/kevinburke/ssh_config"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/types"
 	"golang.org/x/crypto/ssh"
 )
+
+func ReadSSHConfig(endpoint *types.Endpoint) *types.Endpoint {
+	// optional step, tries to parse the ssh config to see if additional information
+	// is already available
+	if len(endpoint.User) == 0 {
+		endpoint.User = ssh_config.Get(endpoint.Host, "User")
+	}
+
+	if len(endpoint.Port) == 0 {
+		endpoint.Port = ssh_config.Get(endpoint.Host, "Port")
+	}
+
+	if len(endpoint.PrivateKeyPath) == 0 {
+		entry := ssh_config.Get(endpoint.Host, "IdentityFile")
+		// TODO: the ssh_config uses os/home but instead should be use go-homedir, could become a compile issue
+		// TODO: the problem is that the lib returns defaults and we cannot properly distingush
+		if ssh_config.Default("IdentityFile") != entry {
+			// commonly ssh config included paths like ~
+			expanded, err := homedir.Expand(entry)
+			if err == nil {
+				log.Debug().Str("key", expanded).Str("host", endpoint.Host).Msg("read ssh identity key from ssh config")
+				endpoint.PrivateKeyPath = expanded
+			}
+		}
+	}
+
+	return endpoint
+}
 
 func VerifyConfig(endpoint *types.Endpoint) error {
 	if endpoint.Backend != "ssh" {
@@ -31,6 +61,8 @@ func DefaultConfig(endpoint *types.Endpoint) *types.Endpoint {
 }
 
 func New(endpoint *types.Endpoint) (*SSHTransport, error) {
+	endpoint = ReadSSHConfig(endpoint)
+
 	// ensure all required configs are set
 	err := VerifyConfig(endpoint)
 	if err != nil {
