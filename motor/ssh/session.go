@@ -31,7 +31,7 @@ func sshClient(hostconfig *types.Endpoint) (*ssh.Client, error) {
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
-	return ssh.Dial("tcp", fmt.Sprintf("%s:%d", hostconfig.Host, hostconfig.Port), sshConfig)
+	return ssh.Dial("tcp", fmt.Sprintf("%s:%s", hostconfig.Host, hostconfig.Port), sshConfig)
 }
 
 func authMethods(endpoint *types.Endpoint) ([]ssh.AuthMethod, error) {
