@@ -2,6 +2,7 @@ package events
 
 import (
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/types"
 )
 
@@ -24,7 +25,7 @@ const (
 type FileObservable struct {
 	identifier string
 	FileOp     FileOp
-	File       types.File
+	File       afero.File
 }
 
 func (fo *FileObservable) Type() types.ObservableType {
