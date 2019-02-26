@@ -6,6 +6,7 @@ import (
 
 	"github.com/docker/docker/client"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/types"
 )
 
@@ -25,34 +26,41 @@ func New(container string) (types.Transport, error) {
 		return nil, errors.New("container " + data.ID + " is not running")
 	}
 
-	return &DockerTransport{
+	return &Transport{
 		dockerClient: dockerClient,
 		container:    container,
 	}, nil
 }
 
-type DockerTransport struct {
+type Transport struct {
 	dockerClient *client.Client
 	container    string
+	Fs           *FS
 }
 
-func (t *DockerTransport) RunCommand(command string) (*types.Command, error) {
+func (t *Transport) RunCommand(command string) (*types.Command, error) {
 	log.Debug().Str("command", command).Msg("docker> run command")
 	c := &Command{dockerClient: t.dockerClient, Container: t.container}
 	res, err := c.Exec(command)
 	return res, err
 }
 
-func (t *DockerTransport) File(path string) (types.File, error) {
-	log.Debug().Str("path", path).Msg("docker> fetch file")
-	f := &File{dockerClient: t.dockerClient, Container: t.container, filePath: path, Transport: t}
-	if !f.Exists() {
-		return nil, errors.New("no such file or directory")
+func (t *Transport) FS() afero.Fs {
+	if t.Fs == nil {
+		t.Fs = &FS{
+			dockerClient: t.dockerClient,
+			Container:    t.container,
+			Transport:    t,
+		}
 	}
-	return f, nil
+	return t.Fs
 }
 
-func (t *DockerTransport) Close() {
+func (t *Transport) File(path string) (afero.File, error) {
+	return t.FS().Open(path)
+}
+
+func (t *Transport) Close() {
 	t.dockerClient.Close()
 }
 

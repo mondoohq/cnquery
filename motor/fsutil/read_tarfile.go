@@ -1,25 +1,16 @@
-package motorutil
+package fsutil
 
-// Download is a helper method to load file content into memory
 import (
 	"archive/tar"
 	"bufio"
 	"bytes"
 	"io"
-
-	"go.mondoo.io/mondoo/motor/types"
 )
 
 // TODO: check size of file to ensure we do not crash the process
-func ReadFile(f types.File) ([]byte, error) {
+func ReadFileFromTarStream(r io.Reader) ([]byte, error) {
 	var fileBuffer bytes.Buffer
 	fileWriter := bufio.NewWriter(&fileBuffer)
-
-	r, err := f.Tar()
-	if err != nil {
-		return nil, err
-	}
-	defer r.Close()
 
 	// read stream tar, extract on the fly and put it on stdout
 	tr := tar.NewReader(r)
