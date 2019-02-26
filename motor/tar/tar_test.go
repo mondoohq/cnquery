@@ -26,7 +26,7 @@ func TestTarCommand(t *testing.T) {
 		return
 	}
 
-	filepath, _ := filepath.Abs("./alpine-container.tar")
+	filepath, _ := filepath.Abs("./testdata/alpine-container.tar")
 	tarTransport, err := tar.New(&types.Endpoint{Backend: "tar", Path: filepath})
 	assert.Equal(t, nil, err, "should create tar without error")
 
@@ -47,7 +47,7 @@ func TestTarSymlinkFile(t *testing.T) {
 		return
 	}
 
-	filepath, _ := filepath.Abs("./alpine-container.tar")
+	filepath, _ := filepath.Abs("./testdata/alpine-container.tar")
 	tarTransport, err := tar.New(&types.Endpoint{Backend: "tar", Path: filepath})
 	assert.Equal(t, nil, err, "should create tar without error")
 
@@ -63,15 +63,8 @@ func TestTarSymlinkFile(t *testing.T) {
 		assert.Equal(t, nil, err, "should stat without error")
 		assert.Equal(t, int64(796240), stat.Size(), "should read file size")
 
-		reader, err := f.Open()
-		assert.Equal(t, nil, err, "should open without error")
-		content, err := ioutil.ReadAll(reader)
+		content, err := ioutil.ReadAll(f)
 		assert.Equal(t, nil, err, "should execute without error")
-		assert.Equal(t, 796240, len(content), "should read the full content")
-
-		// ensure the same works with tar()
-		content, err = ioutil.ReadAll(f)
-		assert.Equal(t, nil, err, "should read without error")
 		assert.Equal(t, 796240, len(content), "should read the full content")
 	}
 }
@@ -122,7 +115,7 @@ func TestTarFile(t *testing.T) {
 		return
 	}
 
-	filepath, _ := filepath.Abs("./alpine-container.tar")
+	filepath, _ := filepath.Abs("./testdata/alpine-container.tar")
 	tarTransport, err := tar.New(&types.Endpoint{Backend: "tar", Path: filepath})
 	assert.Equal(t, nil, err, "should create tar without error")
 
@@ -138,8 +131,7 @@ func TestTarFile(t *testing.T) {
 		assert.Equal(t, int64(6), stat.Size(), "should read file size")
 		assert.Equal(t, nil, err, "should execute without error")
 
-		reader, err := f.Open()
-		content, err := ioutil.ReadAll(reader)
+		content, err := ioutil.ReadAll(f)
 		assert.Equal(t, nil, err, "should execute without error")
 		assert.Equal(t, 6, len(content), "should read the full content")
 	}
@@ -148,7 +140,7 @@ func TestTarFile(t *testing.T) {
 func cacheImageToTar() error {
 
 	source := "alpine:3.9"
-	filename := "./alpine-container.tar"
+	filename := "./testdata/alpine-container.tar"
 
 	// check if the cache is already there
 	_, err := os.Stat(filename)

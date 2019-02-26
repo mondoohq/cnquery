@@ -45,7 +45,7 @@ func StreamFileAsTar(
 	}
 }
 
-func ExtractFileFromTarStream(path string, tarReader io.Reader) (io.Reader, error) {
+func ExtractFileFromTarStream(path string, tarReader io.Reader) (*bufio.Reader, error) {
 	log.Debug().Str("path", path).Msg("fsutil> extract file from tar")
 	var fileBuffer bytes.Buffer
 	bufWriter := bufio.NewWriter(&fileBuffer)
