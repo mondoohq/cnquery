@@ -4,6 +4,7 @@ import (
 	"runtime"
 
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/types"
 )
 
@@ -23,6 +24,7 @@ func New() (*LocalTransport, error) {
 
 type LocalTransport struct {
 	shell []string
+	fs    afero.Fs
 }
 
 func (t *LocalTransport) RunCommand(command string) (*types.Command, error) {
@@ -34,11 +36,18 @@ func (t *LocalTransport) RunCommand(command string) (*types.Command, error) {
 	return res, err
 }
 
-func (t *LocalTransport) File(path string) (types.File, error) {
-	f := &File{filePath: path}
-	return f, nil
+func (t *LocalTransport) FS() afero.Fs {
+	if t.fs == nil {
+		t.fs = afero.NewOsFs()
+	}
+	return t.fs
 }
 
-func (tt *LocalTransport) Close() {
+func (t *LocalTransport) File(path string) (afero.File, error) {
+	return t.FS().Open(path)
+}
+
+func (t *LocalTransport) Close() {
 	// TODO: we need to close all commands and file handles
+
 }

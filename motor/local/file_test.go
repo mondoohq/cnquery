@@ -1,26 +1,34 @@
-package local
+package local_test
 
 import (
 	"io/ioutil"
 	"testing"
 
-	"go.mondoo.io/mondoo/motor/motorutil"
+	"github.com/spf13/afero"
+	"go.mondoo.io/mondoo/motor/local"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestFileResource(t *testing.T) {
+	path := "/tmp/test"
+
+	trans, err := local.New()
+	assert.Nil(t, err)
+
+	fs := trans.FS()
+	f, err := fs.Open(path)
+	assert.Nil(t, err)
+
+	afutil := afero.Afero{Fs: fs}
 
 	// create the file and set the content
-	f := &File{filePath: "/tmp/test"}
-
-	err := ioutil.WriteFile(f.filePath, []byte("hello world"), 0666)
+	err = ioutil.WriteFile(path, []byte("hello world"), 0666)
 	assert.Nil(t, err)
 
 	if assert.NotNil(t, f) {
-		assert.Equal(t, "/tmp/test", f.Name(), "they should be equal")
-
-		c, err := motorutil.ReadFile(f)
+		assert.Equal(t, path, f.Name(), "they should be equal")
+		c, err := afutil.ReadFile(f.Name())
 		assert.Nil(t, err)
 		assert.Equal(t, "hello world", string(c), "content should be equal")
 	}
