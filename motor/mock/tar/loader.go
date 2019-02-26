@@ -29,10 +29,10 @@ func Load(m *mock.Transport, stream io.Reader) error {
 			log.Debug().Str("file", h.Name).Str("content", string(content)).Msg("mock> content")
 		}
 		fi := h.FileInfo()
-		m.Filesystem.Files[h.Name] = &File{
+		m.Fs.Files[h.Name] = &mock.MockFileData{
 			Path:    h.Name,
 			Content: string(content),
-			Stat: FileInfo{
+			StatData: mock.FileInfo{
 				Mode:    fi.Mode(),
 				IsDir:   fi.IsDir(),
 				ModTime: fi.ModTime(),
