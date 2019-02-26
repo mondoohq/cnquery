@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/motorutil"
 	"go.mondoo.io/mondoo/motor/parser"
 )
 
@@ -88,7 +87,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 				return false, nil
 			}
 
-			c, err := motorutil.ReadFile(f)
+			c, err := ioutil.ReadAll(f)
 			if err != nil || len(c) == 0 {
 				return false, nil
 			}
@@ -128,7 +127,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 				return false, nil
 			}
 
-			c, err := motorutil.ReadFile(f)
+			c, err := ioutil.ReadAll(f)
 			if err != nil || len(c) == 0 {
 				return false, nil
 			}
@@ -179,7 +178,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 				return false, nil
 			}
 
-			c, err := motorutil.ReadFile(f)
+			c, err := ioutil.ReadAll(f)
 			if err != nil || len(c) == 0 {
 				return false, nil
 			}
@@ -247,7 +246,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 				return false, nil
 			}
 
-			c, err := motorutil.ReadFile(f)
+			c, err := ioutil.ReadAll(f)
 			if err != nil || len(c) == 0 {
 				return false, nil
 			}
@@ -275,7 +274,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 				return false, nil
 			}
 
-			c, err := motorutil.ReadFile(f)
+			c, err := ioutil.ReadAll(f)
 			if err != nil || len(c) == 0 {
 				return false, nil
 			}
@@ -346,7 +345,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 				return false, nil
 			}
 
-			c, err := motorutil.ReadFile(f)
+			c, err := ioutil.ReadAll(f)
 			if err != nil || len(c) == 0 {
 				log.Debug().Err(err)
 				return false, nil
@@ -510,7 +509,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 				return false, nil
 			}
 
-			c, err := motorutil.ReadFile(f)
+			c, err := ioutil.ReadAll(f)
 			if err != nil || len(c) == 0 {
 				log.Debug().Err(err)
 				return false, nil
@@ -563,7 +562,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			if err != nil {
 				return false, nil
 			}
-			c, err := motorutil.ReadFile(f)
+			c, err := ioutil.ReadAll(f)
 			if err != nil {
 				return false, nil
 			}

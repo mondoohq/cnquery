@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/motorutil"
 	"go.mondoo.io/mondoo/motor/parser"
 	"go.mondoo.io/mondoo/motor/types"
 )
@@ -87,7 +86,7 @@ func (d *Detector) osrelease() (map[string]string, error) {
 		return nil, err
 	}
 
-	content, err := motorutil.ReadFile(f)
+	content, err := ioutil.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +106,7 @@ func (d *Detector) lsbconfig() (map[string]string, error) {
 		return nil, err
 	}
 
-	content, err := motorutil.ReadFile(f)
+	content, err := ioutil.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +136,7 @@ func (d *Detector) macosSystemVersion() (map[string]string, error) {
 		return nil, err
 	}
 
-	content, err := motorutil.ReadFile(f)
+	content, err := ioutil.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
