@@ -6,6 +6,7 @@ import (
 	"github.com/kevinburke/ssh_config"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/types"
 	"golang.org/x/crypto/ssh"
 )
@@ -93,11 +94,19 @@ func (t *SSHTransport) RunCommand(command string) (*types.Command, error) {
 	return c.Exec(command)
 }
 
-func (t *SSHTransport) File(path string) (types.File, error) {
-	log.Debug().Str("path", path).Str("transport", "ssh").Msg("fetch file")
-	f := &File{SSHClient: t.SSHClient, filePath: path}
-	return f, nil
+func (t *SSHTransport) FS() afero.Fs {
+	return nil
 }
+
+func (t *SSHTransport) File(path string) (afero.File, error) {
+	return nil, errors.New("not implemented")
+}
+
+// func (t *SSHTransport) File(path string) (types.File, error) {
+// 	log.Debug().Str("path", path).Str("transport", "ssh").Msg("fetch file")
+// 	f := &File{SSHClient: t.SSHClient, filePath: path}
+// 	return f, nil
+// }
 
 func (t *SSHTransport) Close() {
 	if t.SSHClient != nil {
