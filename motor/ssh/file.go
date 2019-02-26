@@ -203,7 +203,7 @@ func (s *sftpStreamCloser) Close() error {
 }
 
 // opens a byte stream to a single file, the reader is responsible for closing the stream
-func (f *File) Open() (types.FileStream, error) {
+func (f *File) Open() (io.ReadCloser, error) {
 	c, err := sftpClient(f.SSHClient)
 	if err != nil {
 		return nil, fmt.Errorf("ssh> could not open client: %v", err)
