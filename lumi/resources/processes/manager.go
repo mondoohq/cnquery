@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/lumi/resources/procfs"
 	"go.mondoo.io/mondoo/motor"
 )
@@ -87,11 +88,8 @@ func (lpm *LinuxProcessManager) List() ([]*OSProcess, error) {
 func (lpm *LinuxProcessManager) Exists(pid int64) (bool, error) {
 	trans := lpm.motor.Transport
 	pidPath := filepath.Join("/proc", strconv.FormatInt(pid, 10))
-	f, err := trans.File(pidPath)
-	if err != nil {
-		return false, err
-	}
-	return f.Exists(), nil
+	afutil := afero.Afero{Fs: trans.FS()}
+	return afutil.Exists(pidPath)
 }
 
 func (lpm *LinuxProcessManager) Process(pid int64) (*OSProcess, error) {
@@ -111,14 +109,9 @@ func (lpm *LinuxProcessManager) Process(pid int64) (*OSProcess, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer cmdlinef.Close()
 
-	cmdlineData, err := cmdlinef.Open()
-	if err != nil {
-		return nil, err
-	}
-	defer cmdlineData.Close()
-
-	cmdline, err := procfs.ParseProcessCmdline(cmdlineData)
+	cmdline, err := procfs.ParseProcessCmdline(cmdlinef)
 	if err != nil {
 		return nil, err
 	}
@@ -127,14 +120,9 @@ func (lpm *LinuxProcessManager) Process(pid int64) (*OSProcess, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer statusf.Close()
 
-	statusData, err := statusf.Open()
-	if err != nil {
-		return nil, err
-	}
-	defer statusData.Close()
-
-	status, err := procfs.ParseProcessStatus(statusData)
+	status, err := procfs.ParseProcessStatus(statusf)
 	if err != nil {
 		return nil, err
 	}

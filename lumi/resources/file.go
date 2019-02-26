@@ -5,12 +5,13 @@
 package resources
 
 import (
+	"io/ioutil"
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/events"
-	"go.mondoo.io/mondoo/motor/motorutil"
 	"go.mondoo.io/mondoo/motor/types"
 )
 
@@ -35,7 +36,7 @@ func (s *lumiFile) GetContent(path string) (string, error) {
 		f := o.(*events.FileObservable)
 		if f.FileOp != events.Eonet {
 			// file is available, therefore we can stream the content
-			c, err := motorutil.ReadFile(f.File)
+			c, err := ioutil.ReadAll(f.File)
 			if err == nil {
 				content = string(c)
 			}
@@ -73,9 +74,9 @@ func (s *lumiFile) GetContent(path string) (string, error) {
 
 func (s *lumiFile) GetExists() (bool, error) {
 	path, _ := s.Path()
-	f, err := s.Runtime.Motor.Transport.File(path)
-	if err != nil {
-		return false, nil
-	}
-	return f.Exists(), nil
+
+	fs := s.Runtime.Motor.Transport.FS()
+
+	afs := &afero.Afero{Fs: fs}
+	return afs.Exists(path)
 }

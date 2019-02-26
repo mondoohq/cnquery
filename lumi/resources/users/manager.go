@@ -65,13 +65,8 @@ func (s *LinuxUserManager) List() ([]*User, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	r, err := f.Open()
-	if err != nil {
-		return nil, err
-	}
-	defer r.Close()
-	return ParseEtcPasswd(r)
+	defer f.Close()
+	return ParseEtcPasswd(f)
 }
 
 type OSXUserManager struct {
