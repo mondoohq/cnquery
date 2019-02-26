@@ -19,15 +19,9 @@ func TestParseEtcPasswd(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Nil(t, err)
+	defer f.Close()
 
-	r, err := f.Open()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer r.Close()
-	assert.Nil(t, err)
-
-	m, err := users.ParseEtcPasswd(r)
+	m, err := users.ParseEtcPasswd(f)
 	assert.Nil(t, err)
 	assert.Equal(t, 13, len(m), "detected the right amount of services")
 

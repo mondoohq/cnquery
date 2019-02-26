@@ -47,13 +47,13 @@ func TestAlpineApkdbParser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fi, err := mock.File("/lib/apk/db/installed")
+	f, err := mock.File("/lib/apk/db/installed")
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer f.Close()
 
-	fReader, err := fi.Open()
-	m := ParseApkDbPackages(fReader)
+	m := ParseApkDbPackages(f)
 	assert.Equal(t, 7, len(m), "detected the right amount of packages")
 
 	var p Package
@@ -117,13 +117,13 @@ func TestDpkgParser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fi, err := mock.File("/var/lib/dpkg/status")
+	f, err := mock.File("/var/lib/dpkg/status")
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer f.Close()
 
-	fReader, err := fi.Open()
-	m, err := ParseDpkgPackages(fReader)
+	m, err := ParseDpkgPackages(f)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -50,13 +50,9 @@ func (r *sshConfigResolver) Params(ctx context.Context, obj *gql.SSHConfig) ([]g
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 
-	sshConfigStream, err := f.Open()
-	if err != nil {
-		return nil, err
-	}
-
-	sshParams, err := sshd.Params(sshConfigStream)
+	sshParams, err := sshd.Params(f)
 	if err != nil {
 		return nil, err
 	}

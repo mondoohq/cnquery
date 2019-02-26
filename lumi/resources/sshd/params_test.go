@@ -13,17 +13,13 @@ func TestSSHParser(t *testing.T) {
 	path := "./sshd_config.toml"
 	trans, err := toml.New(&types.Endpoint{Backend: "mock", Path: path})
 
-	sshconfig, err := trans.File("/etc/ssh/sshd_config")
+	f, err := trans.File("/etc/ssh/sshd_config")
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer f.Close()
 
-	statusStream, err := sshconfig.Open()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	sshParams, err := sshd.Params(statusStream)
+	sshParams, err := sshd.Params(f)
 	if err != nil {
 		t.Fatalf("cannot request file %v", err)
 	}
