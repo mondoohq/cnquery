@@ -1,4 +1,4 @@
-package filesystem
+package fsutil
 
 import (
 	"archive/tar"

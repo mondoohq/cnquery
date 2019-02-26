@@ -1,15 +1,12 @@
 package mock
 
 import (
-	"archive/tar"
 	"bytes"
 	"errors"
-	"io"
-	"io/ioutil"
 	"os"
-	"time"
 
-	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
+
 	"go.mondoo.io/mondoo/motor/types"
 )
 
@@ -20,24 +17,11 @@ type Command struct {
 	ExitStatus int    `toml:"exit_status"`
 }
 
-type FileInfo struct {
-	Mode    os.FileMode `toml:"mode"`
-	ModTime time.Time   `toml:"time"`
-	IsDir   bool        `toml:"isdir"`
-}
-
-type File struct {
-	Path    string   `toml:"path"`
-	Content string   `toml:"content"`
-	Stat    FileInfo `toml:"stat"`
-	Enoent  bool     `toml:"enoent"`
-}
-
 // New creates a new Transport.
 func New() (*Transport, error) {
 	mt := &Transport{
 		Commands: make(map[string]*Command),
-		Files:    make(map[string]*File),
+		Fs:       NewMockFS(),
 	}
 
 	mt.Missing = make(map[string]map[string]bool)
@@ -49,8 +33,8 @@ func New() (*Transport, error) {
 // Transport holds the transport layer that runs on virtual data only
 type Transport struct {
 	Commands map[string]*Command
-	Files    map[string]*File
 	Missing  map[string]map[string]bool
+	Fs       *mockFS
 }
 
 // RunCommand returns the results of a command found in the nock registry
@@ -70,14 +54,19 @@ func (m *Transport) RunCommand(command string) (*types.Command, error) {
 	return &res, nil
 }
 
-// File will return the given path with a mocked file
-func (m *Transport) File(path string) (types.File, error) {
-	f, ok := m.Files[path]
-	if !ok || f.Enoent {
-		m.Missing["file"][path] = true
-		return nil, errors.New("no such file or directory")
+func (m *Transport) FS() afero.Fs {
+	if m.Fs == nil {
+		m.Fs = NewMockFS()
 	}
-	return &MockFile{file: f}, nil
+	return m.Fs
+}
+
+func (m *Transport) File(path string) (afero.File, error) {
+	f, err := m.FS().Open(path)
+	if err == os.ErrNotExist {
+		m.Missing["file"][path] = true
+	}
+	return f, err
 }
 
 // Close is used to terminate the connection, nothing for Transport
@@ -85,36 +74,26 @@ func (m *Transport) Close() {
 	// no op
 }
 
-// load files from a tar stream
-func (m *Transport) LoadFromTarStream(stream io.Reader) error {
-	tr := tar.NewReader(stream)
-	for {
-		h, err := tr.Next()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			log.Error().Err(err).Msg("error reading tar stream")
-			return err
-		}
+// // TODO, support directory streaming
+// func (mf *MockFile) Tar() (io.ReadCloser, error) {
+// 	if mf.file.Enoent {
+// 		return nil, errors.New("no such file or directory")
+// 	}
 
-		content, err := ioutil.ReadAll(tr)
-		if err != nil {
-			log.Error().Str("file", h.Name).Err(err).Msg("mock> could not load file data")
-		} else {
-			log.Debug().Str("file", h.Name).Str("content", string(content)).Msg("mock> content")
-		}
-		fi := h.FileInfo()
-		m.Files[h.Name] = &File{
-			Path:    h.Name,
-			Content: string(content),
-			Stat: FileInfo{
-				Mode:    fi.Mode(),
-				IsDir:   fi.IsDir(),
-				ModTime: fi.ModTime(),
-			},
-		}
-		log.Debug().Str("file", h.Name).Msg("mock> add file to mock backend")
-	}
-	return nil
-}
+// 	f := mf.file
+// 	fReader := ioutil.NopCloser(strings.NewReader(string(f.Content)))
+
+// 	stat, err := mf.Stat()
+// 	if err != nil {
+// 		return nil, errors.New("could not retrieve file stats")
+// 	}
+
+// 	// create a pipe
+// 	tarReader, tarWriter := io.Pipe()
+
+// 	// convert raw stream to tar stream
+// 	go fsutil.StreamFileAsTar(mf.Name(), stat, fReader, tarWriter)
+
+// 	// return the reader
+// 	return tarReader, nil
+// }

@@ -12,11 +12,11 @@ import (
 
 // Data holds the mocked data entries
 type TomlData struct {
-	Commands map[string]*mock.Command `toml:"commands"`
-	Files    map[string]*mock.File    `toml:"files"`
+	Commands map[string]*mock.Command      `toml:"commands"`
+	Files    map[string]*mock.MockFileData `toml:"files"`
 }
 
-func ParseToml(data string) (*TomlData, error) {
+func Parse(data string) (*TomlData, error) {
 	tomlContent := &TomlData{}
 	if _, err := toml.Decode(string(data), &tomlContent); err != nil {
 		return nil, errors.New("could not decode toml: " + err.Error())
@@ -32,19 +32,19 @@ func ParseToml(data string) (*TomlData, error) {
 	return tomlContent, nil
 }
 
-func LoadToml(mock *mock.Transport, data string) error {
-	tomlData, err := ParseToml(data)
+func Load(mock *mock.Transport, data string) error {
+	tomlData, err := Parse(data)
 	if err != nil {
 		return err
 	}
 
 	// copy references
 	mock.Commands = tomlData.Commands
-	mock.Files = tomlData.Files
+	mock.Fs.Files = tomlData.Files
 	return nil
 }
 
-func LoadTomlFile(mock *mock.Transport, path string) error {
+func LoadFile(mock *mock.Transport, path string) error {
 	log.Debug().Str("path", path).Msg("mock> load toml into mock backend")
 
 	data, err := ioutil.ReadFile(path)
@@ -52,26 +52,26 @@ func LoadTomlFile(mock *mock.Transport, path string) error {
 		return errors.New("could not open: " + path)
 	}
 
-	return LoadToml(mock, string(data))
+	return Load(mock, string(data))
 }
 
-// ExportToToml returns a struct that can be used to export toml
-func ExportToToml(mock *mock.Transport) (*TomlData, error) {
+// Export returns a struct that can be used to export toml
+func Export(mock *mock.Transport) (*TomlData, error) {
 	tomlData := &TomlData{}
 	tomlData.Commands = mock.Commands
-	tomlData.Files = mock.Files
+	tomlData.Files = mock.Fs.Files
 	return tomlData, nil
 }
 
 // New returns a mock backend and loads the toml file by default
-func New(endpoint *types.Endpoint) (types.Transport, error) {
+func New(endpoint *types.Endpoint) (*mock.Transport, error) {
 	transport, err := mock.New()
 	if err != nil {
 		return nil, err
 	}
 
 	if endpoint != nil && len(endpoint.Path) > 0 {
-		err := LoadTomlFile(transport, endpoint.Path)
+		err := LoadFile(transport, endpoint.Path)
 		if err != nil {
 			log.Error().Err(err).Str("toml", endpoint.Path).Msg("mock> could not load toml data")
 			return nil, err

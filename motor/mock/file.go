@@ -1,87 +1,89 @@
 package mock
 
 import (
-	"crypto/md5"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
-	"io"
-	"io/ioutil"
 	"os"
 	"strings"
+	"time"
 
-	"go.mondoo.io/mondoo/motor/motorutil"
 	"go.mondoo.io/mondoo/motor/types"
 )
 
+type FileInfo struct {
+	Mode    os.FileMode `toml:"mode"`
+	ModTime time.Time   `toml:"time"`
+	IsDir   bool        `toml:"isdir"`
+}
+
+type MockFileData struct {
+	Path     string   `toml:"path"`
+	Content  string   `toml:"content"`
+	StatData FileInfo `toml:"stat"`
+	Enoent   bool     `toml:"enoent"`
+}
+
 type MockFile struct {
-	file *File
+	data       *MockFileData
+	dataReader *strings.Reader
 }
 
 func (mf *MockFile) Name() string {
-	return mf.file.Path
+	return mf.data.Path
 }
 
 func (mf *MockFile) Stat() (os.FileInfo, error) {
-	if mf.file.Enoent {
-		return nil, errors.New("no such file or directory")
+	if mf.data.Enoent {
+		return nil, os.ErrNotExist
 	}
-
-	f := mf.file
-	stat := types.FileInfo{FSize: int64(len(f.Content)), FModTime: f.Stat.ModTime, FMode: f.Stat.Mode, FIsDir: f.Stat.IsDir}
-	return &stat, nil
+	return &types.FileInfo{
+		FSize:    int64(len(mf.data.Content)),
+		FModTime: mf.data.StatData.ModTime,
+		FMode:    mf.data.StatData.Mode,
+		FIsDir:   mf.data.StatData.IsDir,
+	}, nil
 }
 
-// TODO, support directory streaming
-func (mf *MockFile) Tar() (io.ReadCloser, error) {
-	if mf.file.Enoent {
-		return nil, errors.New("no such file or directory")
+func (mf *MockFile) reader() *strings.Reader {
+	if mf.dataReader == nil {
+		mf.dataReader = strings.NewReader(string(mf.data.Content))
 	}
-
-	f := mf.file
-	fReader := ioutil.NopCloser(strings.NewReader(string(f.Content)))
-
-	stat, err := mf.Stat()
-	if err != nil {
-		return nil, errors.New("could not retrieve file stats")
-	}
-
-	// create a pipe
-	tarReader, tarWriter := io.Pipe()
-
-	// convert raw stream to tar stream
-	go motorutil.StreamFileAsTar(mf.Name(), stat, fReader, tarWriter)
-
-	// return the reader
-	return tarReader, nil
+	return mf.dataReader
 }
 
-func (mf *MockFile) Open() (types.FileStream, error) {
-	if mf.file.Enoent {
-		return nil, errors.New("no such file or directory")
-	}
-
-	f := mf.file
-	fReader := ioutil.NopCloser(strings.NewReader(string(f.Content)))
-	return fReader, nil
+func (mf *MockFile) Read(p []byte) (n int, err error) {
+	return mf.reader().Read(p)
 }
 
-func (mf *MockFile) HashMd5() (string, error) {
-	f := mf.file
-	h := md5.New()
-	h.Write([]byte(f.Content))
-	return hex.EncodeToString(h.Sum(nil)), nil
+func (mf *MockFile) ReadAt(p []byte, off int64) (n int, err error) {
+	return mf.reader().ReadAt(p, off)
 }
 
-func (mf *MockFile) HashSha256() (string, error) {
-	f := mf.file
-	h := sha256.New()
-	h.Write([]byte(f.Content))
-	return hex.EncodeToString(h.Sum(nil)), nil
+func (mf *MockFile) Seek(offset int64, whence int) (int64, error) {
+	return mf.reader().Seek(offset, whence)
+}
+
+func (mf *MockFile) Sync() error {
+	return nil
+}
+
+func (mf *MockFile) Truncate(size int64) error {
+	return errors.New("not implemented")
+}
+
+func (mf *MockFile) Write(p []byte) (n int, err error) {
+	return 0, errors.New("not implemented")
+}
+
+func (mf *MockFile) WriteAt(p []byte, off int64) (n int, err error) {
+	return 0, errors.New("not implemented")
+}
+
+func (mf *MockFile) WriteString(s string) (ret int, err error) {
+	return 0, errors.New("not implemented")
 }
 
 func (mf *MockFile) Exists() bool {
-	return !mf.file.Enoent
+	return !mf.data.Enoent
 }
 
 func (f *MockFile) Delete() error {
@@ -94,4 +96,9 @@ func (f *MockFile) Readdir(n int) ([]os.FileInfo, error) {
 
 func (f *MockFile) Readdirnames(n int) ([]string, error) {
 	return nil, errors.New("not implemented yet")
+}
+
+func (f *MockFile) Close() error {
+	// nothing to do
+	return nil
 }
