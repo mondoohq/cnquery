@@ -1,4 +1,4 @@
-package filesystem
+package fsutil
 
 import (
 	"crypto/md5"
@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func HashMd5(f afero.File) (string, error) {
+func Md5(f afero.File) (string, error) {
 	h := md5.New()
 	if _, err := io.Copy(h, f); err != nil {
 		return "", err
@@ -18,7 +18,7 @@ func HashMd5(f afero.File) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 
 }
-func HashSha256(f afero.File) (string, error) {
+func Sha256(f afero.File) (string, error) {
 	h := sha256.New()
 	if _, err := io.Copy(h, f); err != nil {
 		return "", err
