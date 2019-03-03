@@ -197,15 +197,14 @@ func (rpm *RpmPkgManager) runtimeAvailable() ([]parser.PackageUpdate, error) {
 }
 
 func (rpm *RpmPkgManager) staticList() ([]parser.Package, error) {
-
 	rpmTmpDir, err := ioutil.TempDir(os.TempDir(), "mondoo-rpmdb")
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}
 	defer os.RemoveAll(rpmTmpDir)
 
-	// fetch rpm database files and store it in local tmp directory
-	f, err := rpm.motor.Transport.File("/var/lib/rpm")
+	// fetch rpm database file and store it in local tmp file
+	f, err := rpm.motor.Transport.File("/var/lib/rpm/Packages")
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}
