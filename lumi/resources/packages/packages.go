@@ -46,6 +46,8 @@ func ResolveSystemPkgManager(motor *motor.Motor) (OperatingSystemPkgManager, err
 		pm = &AlpinePkgManager{motor: motor}
 	case "mac_os_x": // mac os family
 		pm = &MacOSPkgManager{motor: motor}
+	case "windows":
+		pm = &WinPkgManager{motor: motor}
 	default:
 		return nil, errors.New("your platform is not supported by packages resource")
 	}
@@ -352,5 +354,36 @@ func (mpm *MacOSPkgManager) List() ([]parser.Package, error) {
 }
 
 func (mpm *MacOSPkgManager) Available() ([]parser.PackageUpdate, error) {
-	return nil, errors.New("Available() not implemented for MacOSPkgManager")
+	return nil, errors.New("cannot determine available packages for macOS")
+}
+
+type WinPkgManager struct {
+	motor *motor.Motor
+}
+
+func (win *WinPkgManager) Name() string {
+	return "Windows Package Manager"
+}
+
+func (win *WinPkgManager) Format() string {
+	return "win"
+}
+
+func (win *WinPkgManager) List() ([]parser.Package, error) {
+	cmd, err := win.motor.Transport.RunCommand("powershell -c \"Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstallDate, InstalledBy | ConvertTo-Json\"")
+	if err != nil {
+		return nil, fmt.Errorf("could not read package list")
+	}
+
+	return parser.ParseWinPackages(cmd.Stdout)
+}
+
+func (win *WinPkgManager) Available() ([]parser.PackageUpdate, error) {
+	// cmd, err := win.motor.Transport.RunCommand(parser.EncodePowershell(parser.WSUS_AVAILABLE))
+	// if err != nil {
+	// 	return nil, fmt.Errorf("could not read package list")
+	// }
+
+	// return parser.ParseWinUpdates(cmd.Stdout)
+	return nil, errors.New("cannot determine available packages for Windows")
 }
