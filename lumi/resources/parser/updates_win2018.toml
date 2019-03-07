@@ -1,0 +1,44 @@
+[commands."powershell.exe -EncodedCommand CgAkAFAAcgBvAGcAcgBlAHMAcwBQAHIAZQBmAGUAcgBlAG4AYwBlAD0AJwBTAGkAbABlAG4AdABsAHkAQwBvAG4AdABpAG4AdQBlACcAOwAKACQAdQBwAGQAYQB0AGUAUwBlAHMAcwBpAG8AbgAgAD0AIABuAGUAdwAtAG8AYgBqAGUAYwB0ACAALQBjAG8AbQAgACIATQBpAGMAcgBvAHMAbwBmAHQALgBVAHAAZABhAHQAZQAuAFMAZQBzAHMAaQBvAG4AIgAKACQAcwBlAGEAcgBjAGgAZQByAD0AJAB1AHAAZABhAHQAZQBTAGUAcwBzAGkAbwBuAC4AQwByAGUAYQB0AGUAdQBwAGQAYQB0AGUAUwBlAGEAcgBjAGgAZQByACgAKQAuAFMAZQBhAHIAYwBoACgAKAAiAEkAcwBJAG4AcwB0AGEAbABsAGUAZAA9ADAAIABhAG4AZAAgAFQAeQBwAGUAPQAnAFMAbwBmAHQAdwBhAHIAZQAnACIAKQApAAoAJAB1AHAAZABhAHQAZQBzACAAPQAgACQAcwBlAGEAcgBjAGgAZQByAC4AVQBwAGQAYQB0AGUAcwAgAHwAIABGAG8AcgBFAGEAYwBoAC0ATwBiAGoAZQBjAHQAIAB7AAoACQAkAHUAcABkAGEAdABlACAAPQAgACQAXwAKAAkAJAB2AGEAbAB1AGUAIAA9ACAATgBlAHcALQBPAGIAagBlAGMAdAAgAHAAcwBvAGIAagBlAGMAdAAgAC0AUAByAG8AcABlAHIAdAB5ACAAQAB7AAoACQAJACIAVQBwAGQAYQB0AGUASQBEACIAIAA9ACAAIAAkAHUAcABkAGEAdABlAC4ASQBkAGUAbgB0AGkAdAB5AC4AVQBwAGQAYQB0AGUASQBEADsACgAJAAkAIgBUAGkAdABsAGUAIgAgAD0AIAAkAHUAcABkAGEAdABlAC4AVABpAHQAbABlAAoACQAJACIATQBzAHIAYwBTAGUAdgBlAHIAaQB0AHkAIgAgAD0AIAAkAHUAcABkAGEAdABlAC4ATQBzAHIAYwBTAGUAdgBlAHIAaQB0AHkACgAJAAkAIgBSAGUAdgBpAHMAaQBvAG4ATgB1AG0AYgBlAHIAIgAgAD0AIAAgACQAdQBwAGQAYQB0AGUALgBJAGQAZQBuAHQAaQB0AHkALgBSAGUAdgBpAHMAaQBvAG4ATgB1AG0AYgBlAHIAOwAKAAkACQAiAEMAYQB0AGUAZwBvAHIAeQBJAEQAcwAiACAAPQAgAEAAKAAkAHUAcABkAGEAdABlAC4AQwBhAHQAZQBnAG8AcgBpAGUAcwAgAHwAIAAlACAAewAgACQAXwAuAEMAYQB0AGUAZwBvAHIAeQBJAEQAIAB9ACkACgAJAAkAIgBTAGUAYwB1AHIAaQB0AHkAQgB1AGwAbABlAHQAaQBuAEkARABzACIAIAA9ACAAJAB1AHAAZABhAHQAZQAuAFMAZQBjAHUAcgBpAHQAeQBCAHUAbABsAGUAdABpAG4ASQBEAHMACgAJAAkAIgBSAGUAYgBvAG8AdABSAGUAcQB1AGkAcgBlAGQAIgAgAD0AIAAkAHUAcABkAGEAdABlAC4AUgBlAGIAbwBvAHQAUgBlAHEAdQBpAHIAZQBkAAoACQAJACIASwBCAEEAcgB0AGkAYwBsAGUASQBEAHMAIgAgAD0AIAAkAHUAcABkAGEAdABlAC4ASwBCAEEAcgB0AGkAYwBsAGUASQBEAHMACgAJAAkAIgBDAHYAZQBJAEQAcwAiACAAPQAgAEAAKAAkAHUAcABkAGEAdABlAC4AQwB2AGUASQBEAHMAKQAKAAkAfQAKAAkAJAB2AGEAbAB1AGUACgB9AAoAQAAoACQAdQBwAGQAYQB0AGUAcwApACAAfAAgAEMAbwBuAHYAZQByAHQAVABvAC0ASgBzAG8AbgAKAAkA"]
+stdout="""
+[                                                                                                                                                                       
+    {                                                                                                                                                                   
+        "SecurityBulletinIDs":  [                                                                                                                                       
+                                                                                                                                                                        
+                                ],                                                                                                                                      
+        "RevisionNumber":  200,                                                                                                                                         
+        "UpdateID":  "83053fb3-5646-430f-ac8a-ede88c7eade2",                                                                                                            
+        "KBArticleIDs":  [                                                                                                                                              
+                             "2267602"                                                                                                                                  
+                         ],                                                                                                                                             
+        "RebootRequired":  false,                                                                                                                                       
+        "CveIDs":  [                                                                                                                                                    
+                                                                                                                                                                        
+                   ],                                                                                                                                                   
+        "MsrcSeverity":  null,                                                                                                                                          
+        "CategoryIDs":  [                                                                                                                                               
+                            "e0789628-ce08-4437-be74-2495b842f43b",                                                                                                     
+                            "8c3fcc84-7410-4a95-8b89-a166a0190486"                                                                                                      
+                        ],                                                                                                                                              
+        "Title":  "Definition Update for Windows Defender Antivirus - KB2267602 (Definition 1.289.646.0)"                                                               
+    },                                                                                                                                                                  
+    {                                                                                                                                                                   
+        "SecurityBulletinIDs":  [                                                                                                                                       
+                                                                                                                                                                        
+                                ],                                                                                                                                      
+        "RevisionNumber":  1,                                                                                                                                           
+        "UpdateID":  "6d0fb8fd-fa40-437b-99a9-08feb181db32",                                                                                                            
+        "KBArticleIDs":  [                                                                                                                                              
+                             "4487044"                                                                                                                                  
+                         ],                                                                                                                                             
+        "RebootRequired":  false,                                                                                                                                       
+        "CveIDs":  [                                                                                                                                                    
+                                                                                                                                                                        
+                   ],                                                                                                                                                   
+        "MsrcSeverity":  null,                                                                                                                                          
+        "CategoryIDs":  [                                                                                                                                               
+                            "0fa1201d-4330-4fa8-8ae9-b877473b6441"                                                                                                      
+                        ],                                                                                                                                              
+        "Title":  "2019-02 Cumulative Update for Windows Server 2019 (1809) for x64-based Systems (KB4487044)"                                                          
+    }                                                                                                                                                                   
+] 
+"""
