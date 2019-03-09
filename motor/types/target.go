@@ -40,10 +40,11 @@ func (t *Endpoint) ParseFromURI(uri string) error {
 	// extract username and password
 	if u.User != nil {
 		t.User = u.User.Username()
-		pwd, ok := u.User.Password()
-		if ok {
-			t.Password = pwd
-		}
+		// we do not support passwords encoded in the url
+		// pwd, ok := u.User.Password()
+		// if ok {
+		// 	t.Password = pwd
+		// }
 	}
 
 	t.Port = u.Port()
