@@ -167,7 +167,7 @@ func (a *lumiAdvisory) GetName() (string, error) {
 		return "", err
 	}
 
-	return advisory.Name, nil
+	return advisory.Title, nil
 }
 
 // TODO: do we need to cache the data for quick access?
