@@ -1,0 +1,40 @@
+# SLES Expanded Support platform for RHEL
+# https://www.suse.com/media/data-sheet/sles_with_expanded_support_data_sheet.pdf
+
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "4.9.125-linuxkit"
+        
+[files."/etc/redhat-release"]
+content = """
+Red Hat Enterprise Linux Server release 7.4 (Maipo)
+# This is a "SLES Expanded Support platform release 7.4"
+# The above "Red Hat Enterprise Linux Server" string is only used to
+# keep software compatibility.
+"""
+
+[files."/etc/os-release"]
+content = """          
+NAME="Red Hat Enterprise Linux Server"
+VERSION="7.4 (Maipo)"
+ID="rhel"
+ID_LIKE="fedora"
+VERSION_ID="7.4"
+PRETTY_NAME="Red Hat Enterprise Linux Server 7.4"
+ANSI_COLOR="0;31"
+CPE_NAME="cpe:/o:redhat:enterprise_linux:7.4:GA:server"
+HOME_URL="https://www.redhat.com/"
+BUG_REPORT_URL="https://bugzilla.redhat.com/"
+REDHAT_BUGZILLA_PRODUCT="Red Hat Enterprise Linux 7"
+REDHAT_BUGZILLA_PRODUCT_VERSION=7.4
+REDHAT_SUPPORT_PRODUCT="Red Hat Enterprise Linux"
+REDHAT_SUPPORT_PRODUCT_VERSION=7.4
+# This is a "SLES Expanded Support platform release 7.4"
+# The above "Red Hat Enterprise Linux Server" string is only used to
+# keep software compatibility.
+"""
