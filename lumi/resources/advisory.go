@@ -2,6 +2,7 @@ package resources
 
 import (
 	"errors"
+	"os"
 
 	"go.mondoo.io/mondoo/vadvisor/specs/cvss"
 
@@ -12,9 +13,21 @@ import (
 	"go.mondoo.io/mondoo/vadvisor/api"
 )
 
-const (
-	ADVISORY_SERVICE = "http://localhost:8989"
-)
+var Scanner *packages.Scanner
+
+// TODO: make this a harmonized approach with mondoo vuln command
+var MONDOO_API = "https://api.mondoo.app"
+
+// allow overwrite of the API url by an environment variable
+func init() {
+	if len(os.Getenv("MONDOO_API")) > 0 {
+		MONDOO_API = os.Getenv("MONDOO_API")
+	}
+
+	Scanner = &packages.Scanner{
+		MondooApiUrl: MONDOO_API,
+	}
+}
 
 func (c *lumiCvss) id() (string, error) {
 	return uuid.Must(uuid.NewV4()).String(), nil
@@ -40,7 +53,7 @@ func (c *lumiCve) GetScores() ([]interface{}, error) {
 		return nil, err
 	}
 
-	cve, err := packages.GetCve(id)
+	cve, err := Scanner.GetCve(id)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +151,7 @@ func (c *lumiCve) GetSummary() (string, error) {
 		return "", err
 	}
 
-	cve, err := packages.GetCve(id)
+	cve, err := Scanner.GetCve(id)
 	if err != nil {
 		return "", err
 	}
@@ -162,7 +175,7 @@ func (a *lumiAdvisory) GetName() (string, error) {
 		return "", err
 	}
 
-	advisory, err := packages.GetAdvisory(id)
+	advisory, err := Scanner.GetAdvisory(id)
 	if err != nil {
 		return "", err
 	}
@@ -177,7 +190,7 @@ func (a *lumiAdvisory) GetDescription() (string, error) {
 		return "", err
 	}
 
-	advisory, err := packages.GetAdvisory(id)
+	advisory, err := Scanner.GetAdvisory(id)
 	if err != nil {
 		return "", err
 	}
@@ -191,7 +204,7 @@ func (a *lumiAdvisory) GetFixed() ([]interface{}, error) {
 		return nil, err
 	}
 
-	advisory, err := packages.GetAdvisory(id)
+	advisory, err := Scanner.GetAdvisory(id)
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +267,7 @@ func (a *lumiAdvisory) GetCves() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	advisory, err := packages.GetAdvisory(id)
+	advisory, err := Scanner.GetAdvisory(id)
 	if err != nil {
 		return nil, err
 	}
@@ -415,7 +428,7 @@ func findAdvisories(runtime *lumi.Runtime, lumiPackages []Package) ([]interface{
 		})
 	}
 
-	report, err := packages.Analyze(&api.ScanJob{
+	report, err := Scanner.Analyze(&api.ScanJob{
 		Platform: &api.Platform{
 			Name:    platform.Name,
 			Release: platform.Release,
