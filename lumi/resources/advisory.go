@@ -9,11 +9,11 @@ import (
 	uuid "github.com/gofrs/uuid/v3"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/lumi/resources/packages"
+	"go.mondoo.io/mondoo/nexus/reporting"
 	"go.mondoo.io/mondoo/vadvisor/api"
 )
 
-var Scanner *packages.Scanner
+var Scanner *reporting.ScannerClient
 
 // TODO: make this a harmonized approach with mondoo vuln command
 var MONDOO_API = "https://api.mondoo.app"
