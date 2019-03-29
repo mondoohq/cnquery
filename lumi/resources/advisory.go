@@ -8,12 +8,13 @@ import (
 
 	uuid "github.com/gofrs/uuid/v3"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/falcon"
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/nexus/reporting"
+	"go.mondoo.io/mondoo/nexus/scanner"
 	"go.mondoo.io/mondoo/vadvisor/api"
 )
 
-var Scanner *reporting.ScannerClient
+var Scanner *scanner.Client
 
 // TODO: make this a harmonized approach with mondoo vuln command
 var MONDOO_API = "https://api.mondoo.app"
@@ -24,8 +25,9 @@ func init() {
 		MONDOO_API = os.Getenv("MONDOO_API")
 	}
 
-	Scanner = &packages.Scanner{
-		MondooApiUrl: MONDOO_API,
+	Scanner = &scanner.Client{
+		MondooAPI:  MONDOO_API,
+		HttpClient: falcon.DefaultHttpClient(),
 	}
 }
 
