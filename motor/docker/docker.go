@@ -42,7 +42,6 @@ import (
 // Therefore, this package will only implement the auto-discovery and
 // redirect to specific implementations once the disovery is completed
 func New(endpoint *types.Endpoint) (types.Transport, error) {
-
 	// 0. check if we have a tar as input
 	//    detect if the tar is a container image format -> container image
 	//    or a container snapshot format -> container snapshot
@@ -52,18 +51,22 @@ func New(endpoint *types.Endpoint) (types.Transport, error) {
 	// 3. check if we have an image id -> container image
 	// 4. check if we have a descriptor for a registry -> container image
 
+	if endpoint == nil || len(endpoint.Host) == 0 {
+		return nil, errors.New("no endpoint provided")
+	}
+
 	// TODO: check if we are pointing to a local file
-	localpath := endpoint.Host + endpoint.Path
-	_, err := os.Stat(localpath)
+	log.Debug().Str("docker", endpoint.Host).Msg("try to resolve the container or image source")
+	_, err := os.Stat(endpoint.Host)
 	if err == nil {
 		log.Debug().Msg("found local docker/image file")
-		_, err := tarball.ImageFromPath(localpath, nil)
+		_, err := tarball.ImageFromPath(endpoint.Host, nil)
 		if err == nil {
 			log.Debug().Msg("detected docker image")
-			return image.NewFromFile(localpath)
+			return image.NewFromFile(endpoint.Host)
 		} else {
 			log.Debug().Msg("detected docker container snapshot")
-			return snapshot.NewFromDirectory(localpath)
+			return snapshot.NewFromDirectory(endpoint.Host)
 		}
 
 		// TODO: detect file format
@@ -72,7 +75,7 @@ func New(endpoint *types.Endpoint) (types.Transport, error) {
 
 	// could be an image id/name, container id/name or a short reference to an image in docker engine
 	ded := NewDockerEngineDiscovery()
-	if ded.IsRunning() && len(endpoint.Host) > 0 && len(endpoint.Path) == 0 {
+	if ded.IsRunning() {
 		ci, err := ded.ContainerInfo(endpoint.Host)
 		if err == nil {
 			if ci.Running {
@@ -93,25 +96,20 @@ func New(endpoint *types.Endpoint) (types.Transport, error) {
 			}
 			return image.New(rc)
 		}
-		return nil, errors.New("not implemented yet")
-	} else {
-		// load container image from remote directoryload tar file into backend
-		search := endpoint.Host + endpoint.Path
-		tag, err := name.NewTag(search, name.WeakValidation)
-		if err == nil {
-			tag.TagStr()
-			log.Debug().Str("tag", tag.Name()).Msg("found valid container registry reference")
-			rc, err := image.LoadFromRegistry(tag)
-			if err != nil {
-				return nil, err
-			}
-			return image.New(rc)
-		} else {
-			log.Debug().Str("image", search).Msg("Could not detect a valid repository url")
+	}
+
+	// load container image from remote directoryload tar file into backend
+	tag, err := name.NewTag(endpoint.Host, name.WeakValidation)
+	if err == nil {
+		log.Debug().Str("tag", tag.Name()).Msg("found valid container registry reference")
+		rc, err := image.LoadFromRegistry(tag)
+		if err != nil {
 			return nil, err
 		}
-
-		return nil, errors.New("not implemented yet")
+		return image.New(rc)
+	} else {
+		log.Debug().Str("image", endpoint.Host).Msg("Could not detect a valid repository url")
+		return nil, err
 	}
 
 	// if we reached here, we assume we have a name of an image or container from a registry
