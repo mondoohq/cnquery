@@ -16,7 +16,7 @@ import (
 func New(endpoint *types.Endpoint) (*motor.Motor, error) {
 	trans, err := ResolveTransport(endpoint)
 	if err != nil {
-		return nil, errors.New("could not resolve backend " + err.Error())
+		return nil, err
 	}
 	return motor.New(trans)
 }
@@ -47,22 +47,24 @@ func ResolveTransport(endpoint *types.Endpoint) (types.Transport, error) {
 	var trans types.Transport
 	switch endpoint.Backend {
 	case "mock":
-		log.Debug().Msg("resolver> load mock transport")
+		log.Debug().Msg("connection> load mock transport")
 		trans, err = mock.New()
 	case "local":
-		log.Debug().Msg("resolver> load local transport")
+		log.Debug().Msg("connection> load local transport")
 		trans, err = local.New()
 	case "tar":
-		log.Debug().Msg("resolver> load tar transport")
+		log.Debug().Msg("connection> load tar transport")
 		trans, err = tar.New(endpoint)
 	case "docker":
-		log.Debug().Msg("resolver> load docker transport")
+		log.Debug().Msg("connection> load docker transport")
 		trans, err = docker.New(endpoint)
 	case "ssh":
-		log.Debug().Msg("resolver> load ssh transport")
+		log.Debug().Msg("connection> load ssh transport")
 		trans, err = ssh.New(endpoint)
+	case "":
+		return nil, errors.New("connection type is required, try `-t backend://` (docker://, local://, tar://, ssh://)")
 	default:
-		return nil, errors.New("resolver> unsupported endpoint '" + endpoint.Backend + "'")
+		return nil, errors.New("connection> unsupported backend, only docker://, local://, tar://, ssh:// are allowed'" + endpoint.Backend + "'")
 	}
 
 	return trans, err

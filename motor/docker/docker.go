@@ -95,18 +95,19 @@ func New(endpoint *types.Endpoint) (types.Transport, error) {
 		}
 		return nil, errors.New("not implemented yet")
 	} else {
-		// load container image from remote directory
-		log.Debug().Msg("Check " + endpoint.Host + endpoint.Path)
-		tag, err := name.NewTag(endpoint.Host+endpoint.Path, name.WeakValidation)
+		// load container image from remote directoryload tar file into backend
+		search := endpoint.Host + endpoint.Path
+		tag, err := name.NewTag(search, name.WeakValidation)
 		if err == nil {
-			log.Debug().Msg("found valid container registry reference")
+			tag.TagStr()
+			log.Debug().Str("tag", tag.Name()).Msg("found valid container registry reference")
 			rc, err := image.LoadFromRegistry(tag)
 			if err != nil {
 				return nil, err
 			}
 			return image.New(rc)
 		} else {
-			log.Debug().Msg("Could not detect a valid repository url")
+			log.Debug().Str("image", search).Msg("Could not detect a valid repository url")
 			return nil, err
 		}
 
