@@ -36,7 +36,7 @@ func New(rc io.ReadCloser) (types.Transport, error) {
 func NewFromFile(filename string) (types.Transport, error) {
 	return tar.NewWithClose(&types.Endpoint{Path: filename}, func() {
 		// remove temporary file on stream close
-		// os.Remove(filename)
+		os.Remove(filename)
 	})
 }
 
