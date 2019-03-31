@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 // Endpoint that motor interacts with
@@ -24,6 +25,13 @@ type Endpoint struct {
 // valid URIs are:
 // - local:// (default)
 func (t *Endpoint) ParseFromURI(uri string) error {
+	// special handling for docker
+	if strings.HasPrefix(uri, "docker://") {
+		t.Backend = "docker"
+		t.Host = strings.Replace(uri, "docker://", "", 1)
+		return nil
+	}
+
 	if uri == "" {
 		return errors.New("uri cannot be empty")
 	}
