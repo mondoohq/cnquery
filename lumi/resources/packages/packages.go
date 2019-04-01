@@ -90,7 +90,7 @@ func (dpm *DebPkgManager) Available() ([]parser.PackageUpdate, error) {
 
 	cmd, err := dpm.motor.Transport.RunCommand("DEBIAN_FRONTEND=noninteractive apt-get upgrade --dry-run")
 	if err != nil {
-		log.Error().Err(err).Msg("lumi[packages]> could not read package updates")
+		log.Debug().Err(err).Msg("lumi[packages]> could not read package updates")
 		return nil, fmt.Errorf("could not read package update list")
 	}
 	return parser.ParseDpkgUpdates(cmd.Stdout)
@@ -192,7 +192,7 @@ func (rpm *RpmPkgManager) runtimeAvailable() ([]parser.PackageUpdate, error) {
 
 	cmd, err := rpm.motor.Transport.RunCommand(script)
 	if err != nil {
-		log.Error().Err(err).Msg("lumi[packages]> could not read package updates")
+		log.Debug().Err(err).Msg("lumi[packages]> could not read package updates")
 		return nil, fmt.Errorf("could not read package update list")
 	}
 	return parser.ParseRpmUpdates(cmd.Stdout)
@@ -261,7 +261,7 @@ type SusePkgManager struct {
 func (spm *SusePkgManager) Available() ([]parser.PackageUpdate, error) {
 	cmd, err := spm.motor.Transport.RunCommand("zypper --xmlout list-updates")
 	if err != nil {
-		log.Error().Err(err).Msg("lumi[packages]> could not read package updates")
+		log.Debug().Err(err).Msg("lumi[packages]> could not read package updates")
 		return nil, fmt.Errorf("could not read package update list")
 	}
 	return parser.ParseZypperUpdates(cmd.Stdout)
@@ -325,7 +325,7 @@ func (apm *AlpinePkgManager) Available() ([]parser.PackageUpdate, error) {
 	// determine package updates
 	cmd, err := apm.motor.Transport.RunCommand("apk version -v -l '<'")
 	if err != nil {
-		log.Error().Err(err).Msg("lumi[packages]> could not read package updates")
+		log.Debug().Err(err).Msg("lumi[packages]> could not read package updates")
 		return nil, fmt.Errorf("could not read package update list")
 	}
 	return parser.ParseApkUpdates(cmd.Stdout)
