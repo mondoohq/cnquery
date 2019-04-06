@@ -23,14 +23,18 @@ import (
 //  provide a container image stream
 func New(rc io.ReadCloser) (types.Transport, error) {
 	// we cache the flattened image locally
-	filename := cache.RandomFile()
-	filename, err := cache.StreamToTmpFile(rc, filename)
+	f, err := cache.RandomFile()
+	if err != nil {
+		return nil, err
+	}
+
+	err = cache.StreamToTmpFile(rc, f)
 	if err != nil {
 		return nil, err
 	}
 
 	// we return a pure tar image
-	return NewFromFile(filename)
+	return NewFromFile(f.Name())
 }
 
 // no cache file required, since the file is cached locally already

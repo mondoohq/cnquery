@@ -12,15 +12,19 @@ import (
 
 func NewFromDockerEngine(containerid string) (types.Transport, error) {
 	// cache container on local disk
-	filename := cache.RandomFile()
-	err := Export(containerid, filename)
+	f, err := cache.RandomFile()
 	if err != nil {
 		return nil, err
 	}
 
-	return tar.NewWithClose(&types.Endpoint{Path: filename}, func() {
+	err = Export(containerid, f)
+	if err != nil {
+		return nil, err
+	}
+
+	return tar.NewWithClose(&types.Endpoint{Path: f.Name()}, func() {
 		// remove temporary file on stream close
-		os.Remove(filename)
+		os.Remove(f.Name())
 	})
 }
 
@@ -29,7 +33,7 @@ func NewFromDirectory(path string) (types.Transport, error) {
 }
 
 // exports a given container from docker engine to a tar file
-func Export(containerid string, filename string) error {
+func Export(containerid string, f *os.File) error {
 	dc, err := docker_engine.GetDockerClient()
 	if err != nil {
 		return err
@@ -40,6 +44,5 @@ func Export(containerid string, filename string) error {
 		return err
 	}
 
-	cache.StreamToTmpFile(rc, filename)
-	return nil
+	return cache.StreamToTmpFile(rc, f)
 }
