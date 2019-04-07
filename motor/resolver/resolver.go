@@ -11,6 +11,7 @@ import (
 	"go.mondoo.io/mondoo/motor/ssh"
 	"go.mondoo.io/mondoo/motor/tar"
 	"go.mondoo.io/mondoo/motor/types"
+	"go.mondoo.io/mondoo/motor/winrm"
 )
 
 func New(endpoint *types.Endpoint) (*motor.Motor, error) {
@@ -61,6 +62,9 @@ func ResolveTransport(endpoint *types.Endpoint) (types.Transport, error) {
 	case "ssh":
 		log.Debug().Msg("connection> load ssh transport")
 		trans, err = ssh.New(endpoint)
+	case "winrm":
+		log.Debug().Msg("connection> load winrm transport")
+		trans, err = winrm.New(endpoint)
 	case "":
 		return nil, errors.New("connection type is required, try `-t backend://` (docker://, local://, tar://, ssh://)")
 	default:
