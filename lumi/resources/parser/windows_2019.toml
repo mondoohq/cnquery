@@ -1,3 +1,233 @@
+# Packages
+[commands."powershell -c \"Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version  | ConvertTo-Json\""]
+stdout="""
+[
+    {
+        "Name":  "1527c705-839a-4832-9118-54d4Bd6a0c89",
+        "PackageFullName":  "1527c705-839a-4832-9118-54d4Bd6a0c89_10.0.17763.1_neutral_neutral_cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "10.0.17763.1"
+    },
+    {
+        "Name":  "c5e2524a-ea46-4f67-841f-6a9465d9d515",
+        "PackageFullName":  "c5e2524a-ea46-4f67-841f-6a9465d9d515_10.0.17763.1_neutral_neutral_cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "10.0.17763.1"
+    },
+    {
+        "Name":  "E2A4F912-2574-4A75-9BB0-0D023378592B",
+        "PackageFullName":  "E2A4F912-2574-4A75-9BB0-0D023378592B_10.0.17763.1_neutral_neutral_cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "10.0.17763.1"
+    },
+    {
+        "Name":  "F46D4000-FD22-4DB4-AC8E-4E1DDDE828FE",
+        "PackageFullName":  "F46D4000-FD22-4DB4-AC8E-4E1DDDE828FE_10.0.17763.1_neutral_neutral_cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "10.0.17763.1"
+    },
+    {
+        "Name":  "InputApp",
+        "PackageFullName":  "InputApp_1000.17763.1.0_neutral_neutral_cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "1000.17763.1.0"
+    },
+    {
+        "Name":  "Microsoft.AAD.BrokerPlugin",
+        "PackageFullName":  "Microsoft.AAD.BrokerPlugin_1000.17763.1.0_neutral_neutral_cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "1000.17763.1.0"
+    },
+    {
+        "Name":  "Microsoft.AccountsControl",
+        "PackageFullName":  "Microsoft.AccountsControl_10.0.17763.1_neutral__cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "10.0.17763.1"
+    },
+    {
+        "Name":  "Microsoft.AsyncTextService",
+        "PackageFullName":  "Microsoft.AsyncTextService_10.0.17763.1_neutral__8wekyb3d8bbwe",
+        "Architecture":  11,
+        "Version":  "10.0.17763.1"
+    },
+    {
+        "Name":  "Microsoft.BioEnrollment",
+        "PackageFullName":  "Microsoft.BioEnrollment_10.0.17763.1_neutral__cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "10.0.17763.1"
+    },
+    {
+        "Name":  "Microsoft.CredDialogHost",
+        "PackageFullName":  "Microsoft.CredDialogHost_10.0.17763.1_neutral__cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "10.0.17763.1"
+    },
+    {
+        "Name":  "Microsoft.ECApp",
+        "PackageFullName":  "Microsoft.ECApp_10.0.17763.1_neutral__8wekyb3d8bbwe",
+        "Architecture":  11,
+        "Version":  "10.0.17763.1"
+    },
+    {
+        "Name":  "Microsoft.LockApp",
+        "PackageFullName":  "Microsoft.LockApp_10.0.17763.1_neutral__cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "10.0.17763.1"
+    },
+    {
+        "Name":  "Microsoft.Win32WebViewHost",
+        "PackageFullName":  "Microsoft.Win32WebViewHost_10.0.17763.1_neutral_neutral_cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "10.0.17763.1"
+    },
+    {
+        "Name":  "Microsoft.Windows.Apprep.ChxApp",
+        "PackageFullName":  "Microsoft.Windows.Apprep.ChxApp_1000.17763.1.0_neutral_neutral_cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "1000.17763.1.0"
+    },
+    {
+        "Name":  "Microsoft.Windows.CapturePicker",
+        "PackageFullName":  "Microsoft.Windows.CapturePicker_10.0.17763.1_neutral__cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "10.0.17763.1"
+    },
+    {
+        "Name":  "Microsoft.Windows.CloudExperienceHost",
+        "PackageFullName":  "Microsoft.Windows.CloudExperienceHost_10.0.17763.1_neutral_neutral_cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "10.0.17763.1"
+    },
+    {
+        "Name":  "Microsoft.Windows.Cortana",
+        "PackageFullName":  "Microsoft.Windows.Cortana_1.11.5.17763_neutral_neutral_cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "1.11.5.17763"
+    },
+    {
+        "Name":  "Microsoft.Windows.NarratorQuickStart",
+        "PackageFullName":  "Microsoft.Windows.NarratorQuickStart_10.0.17763.1_neutral_neutral_8wekyb3d8bbwe",
+        "Architecture":  11,
+        "Version":  "10.0.17763.1"
+    },
+    {
+        "Name":  "Microsoft.Windows.OOBENetworkCaptivePortal",
+        "PackageFullName":  "Microsoft.Windows.OOBENetworkCaptivePortal_10.0.17763.1_neutral__cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "10.0.17763.1"
+    },
+    {
+        "Name":  "Microsoft.Windows.OOBENetworkConnectionFlow",
+        "PackageFullName":  "Microsoft.Windows.OOBENetworkConnectionFlow_10.0.17763.1_neutral__cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "10.0.17763.1"
+    },
+    {
+        "Name":  "Microsoft.Windows.PeopleExperienceHost",
+        "PackageFullName":  "Microsoft.Windows.PeopleExperienceHost_10.0.17763.1_neutral_neutral_cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "10.0.17763.1"
+    },
+    {
+        "Name":  "Microsoft.Windows.PinningConfirmationDialog",
+        "PackageFullName":  "Microsoft.Windows.PinningConfirmationDialog_1000.17763.1.0_neutral__cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "1000.17763.1.0"
+    },
+    {
+        "Name":  "Microsoft.Windows.SecHealthUI",
+        "PackageFullName":  "Microsoft.Windows.SecHealthUI_10.0.17763.1_neutral__cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "10.0.17763.1"
+    },
+    {
+        "Name":  "Microsoft.Windows.ShellExperienceHost",
+        "PackageFullName":  "Microsoft.Windows.ShellExperienceHost_10.0.17763.1_neutral_neutral_cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "10.0.17763.1"
+    },
+    {
+        "Name":  "Microsoft.Windows.XGpuEjectDialog",
+        "PackageFullName":  "Microsoft.Windows.XGpuEjectDialog_10.0.17763.1_neutral_neutral_cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "10.0.17763.1"
+    },
+    {
+        "Name":  "Windows.CBSPreview",
+        "PackageFullName":  "Windows.CBSPreview_10.0.17763.1_neutral_neutral_cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "10.0.17763.1"
+    },
+    {
+        "Name":  "windows.immersivecontrolpanel",
+        "PackageFullName":  "windows.immersivecontrolpanel_10.0.2.1000_neutral_neutral_cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "10.0.2.1000"
+    },
+    {
+        "Name":  "Windows.PrintDialog",
+        "PackageFullName":  "Windows.PrintDialog_6.2.1.0_neutral_neutral_cw5n1h2txyewy",
+        "Architecture":  11,
+        "Version":  "6.2.1.0"
+    }
+]
+"""
+
+# Hotfixes
+[commands."powershell -c \"Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstallDate, InstalledBy | ConvertTo-Json\""]
+stdout="""
+[{
+		"Status": null,
+		"Description": "Update",
+		"HotFixId": "KB4486553",
+		"Caption": "http://support.microsoft.com/?kbid=4486553",
+		"InstallDate": null,
+		"InstalledBy": "NT AUTHORITY\\\\SYSTEM"
+	},
+	{
+		"Status": null,
+		"Description": "Update",
+		"HotFixId": "KB4462930",
+		"Caption": "http://support.microsoft.com/?kbid=4462930",
+		"InstallDate": null,
+		"InstalledBy": "NT AUTHORITY\\\\SYSTEM"
+	},
+	{
+		"Status": null,
+		"Description": "Security Update",
+		"HotFixId": "KB4470788",
+		"Caption": "http://support.microsoft.com/?kbid=4470788",
+		"InstallDate": null,
+		"InstalledBy": "NT AUTHORITY\\\\SYSTEM"
+	},
+	{
+		"Status": null,
+		"Description": "Update",
+		"HotFixId": "KB4480056",
+		"Caption": "http://support.microsoft.com/?kbid=4480056",
+		"InstallDate": null,
+		"InstalledBy": "NT AUTHORITY\\\\SYSTEM"
+	},
+	{
+		"Status": null,
+		"Description": "Security Update",
+		"HotFixId": "KB4487038",
+		"Caption": "http://support.microsoft.com/?kbid=4487038",
+		"InstallDate": null,
+		"InstalledBy": "NT AUTHORITY\\\\SYSTEM"
+	},
+	{
+		"Status": null,
+		"Description": "Update",
+		"HotFixId": "KB4482887",
+		"Caption": "http://support.microsoft.com/?kbid=4482887",
+		"InstallDate": null,
+		"InstalledBy": "NT AUTHORITY\\\\SYSTEM"
+	}
+]
+"""
+
+# Updates
 [commands."powershell.exe -EncodedCommand CgAkAFAAcgBvAGcAcgBlAHMAcwBQAHIAZQBmAGUAcgBlAG4AYwBlAD0AJwBTAGkAbABlAG4AdABsAHkAQwBvAG4AdABpAG4AdQBlACcAOwAKACQAdQBwAGQAYQB0AGUAUwBlAHMAcwBpAG8AbgAgAD0AIABuAGUAdwAtAG8AYgBqAGUAYwB0ACAALQBjAG8AbQAgACIATQBpAGMAcgBvAHMAbwBmAHQALgBVAHAAZABhAHQAZQAuAFMAZQBzAHMAaQBvAG4AIgAKACQAcwBlAGEAcgBjAGgAZQByAD0AJAB1AHAAZABhAHQAZQBTAGUAcwBzAGkAbwBuAC4AQwByAGUAYQB0AGUAdQBwAGQAYQB0AGUAUwBlAGEAcgBjAGgAZQByACgAKQAuAFMAZQBhAHIAYwBoACgAKAAiAEkAcwBJAG4AcwB0AGEAbABsAGUAZAA9ADAAIABhAG4AZAAgAFQAeQBwAGUAPQAnAFMAbwBmAHQAdwBhAHIAZQAnACIAKQApAAoAJAB1AHAAZABhAHQAZQBzACAAPQAgACQAcwBlAGEAcgBjAGgAZQByAC4AVQBwAGQAYQB0AGUAcwAgAHwAIABGAG8AcgBFAGEAYwBoAC0ATwBiAGoAZQBjAHQAIAB7AAoACQAkAHUAcABkAGEAdABlACAAPQAgACQAXwAKAAkAJAB2AGEAbAB1AGUAIAA9ACAATgBlAHcALQBPAGIAagBlAGMAdAAgAHAAcwBvAGIAagBlAGMAdAAgAC0AUAByAG8AcABlAHIAdAB5ACAAQAB7AAoACQAJACIAVQBwAGQAYQB0AGUASQBEACIAIAA9ACAAIAAkAHUAcABkAGEAdABlAC4ASQBkAGUAbgB0AGkAdAB5AC4AVQBwAGQAYQB0AGUASQBEADsACgAJAAkAIgBUAGkAdABsAGUAIgAgAD0AIAAkAHUAcABkAGEAdABlAC4AVABpAHQAbABlAAoACQAJACIATQBzAHIAYwBTAGUAdgBlAHIAaQB0AHkAIgAgAD0AIAAkAHUAcABkAGEAdABlAC4ATQBzAHIAYwBTAGUAdgBlAHIAaQB0AHkACgAJAAkAIgBSAGUAdgBpAHMAaQBvAG4ATgB1AG0AYgBlAHIAIgAgAD0AIAAgACQAdQBwAGQAYQB0AGUALgBJAGQAZQBuAHQAaQB0AHkALgBSAGUAdgBpAHMAaQBvAG4ATgB1AG0AYgBlAHIAOwAKAAkACQAiAEMAYQB0AGUAZwBvAHIAeQBJAEQAcwAiACAAPQAgAEAAKAAkAHUAcABkAGEAdABlAC4AQwBhAHQAZQBnAG8AcgBpAGUAcwAgAHwAIAAlACAAewAgACQAXwAuAEMAYQB0AGUAZwBvAHIAeQBJAEQAIAB9ACkACgAJAAkAIgBTAGUAYwB1AHIAaQB0AHkAQgB1AGwAbABlAHQAaQBuAEkARABzACIAIAA9ACAAJAB1AHAAZABhAHQAZQAuAFMAZQBjAHUAcgBpAHQAeQBCAHUAbABsAGUAdABpAG4ASQBEAHMACgAJAAkAIgBSAGUAYgBvAG8AdABSAGUAcQB1AGkAcgBlAGQAIgAgAD0AIAAkAHUAcABkAGEAdABlAC4AUgBlAGIAbwBvAHQAUgBlAHEAdQBpAHIAZQBkAAoACQAJACIASwBCAEEAcgB0AGkAYwBsAGUASQBEAHMAIgAgAD0AIAAkAHUAcABkAGEAdABlAC4ASwBCAEEAcgB0AGkAYwBsAGUASQBEAHMACgAJAAkAIgBDAHYAZQBJAEQAcwAiACAAPQAgAEAAKAAkAHUAcABkAGEAdABlAC4AQwB2AGUASQBEAHMAKQAKAAkAfQAKAAkAJAB2AGEAbAB1AGUACgB9AAoAQAAoACQAdQBwAGQAYQB0AGUAcwApACAAfAAgAEMAbwBuAHYAZQByAHQAVABvAC0ASgBzAG8AbgAKAAkA"]
 stdout="""
 [                                                                                                                                                                       

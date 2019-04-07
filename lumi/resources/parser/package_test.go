@@ -289,27 +289,3 @@ func TestRedhat6Parser(t *testing.T) {
 	}
 	assert.Contains(t, m, p, "bash")
 }
-
-func TestWindowsParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "packages_win2018.toml"})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	c, err := mock.RunCommand("powershell -c \"Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstallDate, InstalledBy | ConvertTo-Json\"")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	m, err := ParseWinPackages(c.Stdout)
-	assert.Nil(t, err)
-	assert.Equal(t, 6, len(m), "detected the right amount of packages")
-
-	var p Package
-	p = Package{
-		Name:        "KB4486553",
-		Description: "Update",
-	}
-	assert.Contains(t, m, p)
-
-}

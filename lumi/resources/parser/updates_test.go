@@ -122,26 +122,3 @@ func TestZypperPatchParser(t *testing.T) {
 	assert.Equal(t, "moderate", m[0].Severity, "severity version detected")
 
 }
-
-func TestWinUpdatesParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "updates_win2018.toml"})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	cmd := EncodePowershell(WSUS_AVAILABLE)
-	c, err := mock.RunCommand(cmd)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	m, err := ParseWinUpdates(c.Stdout)
-	assert.Nil(t, err)
-	assert.Equal(t, 2, len(m), "detected the right amount of packages")
-
-	assert.Equal(t, "83053fb3-5646-430f-ac8a-ede88c7eade2", m[0].Name, "update id detected")
-	assert.Equal(t, "Definition Update for Windows Defender Antivirus - KB2267602 (Definition 1.289.646.0)", m[0].Description, "update title detected")
-
-	assert.Equal(t, "6d0fb8fd-fa40-437b-99a9-08feb181db32", m[1].Name, "update id detected")
-	assert.Equal(t, "2019-02 Cumulative Update for Windows Server 2019 (1809) for x64-based Systems (KB4487044)", m[1].Description, "update title detected")
-}

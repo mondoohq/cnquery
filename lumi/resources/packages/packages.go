@@ -369,21 +369,17 @@ func (win *WinPkgManager) Format() string {
 	return "win"
 }
 
+// returns installed hot fixes
 func (win *WinPkgManager) List() ([]parser.Package, error) {
-	cmd, err := win.motor.Transport.RunCommand("powershell -c \"Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstallDate, InstalledBy | ConvertTo-Json\"")
+
+	cmd, err := win.motor.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", parser.WINDOWS_QUERY_APPX_PACKAGES))
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}
 
-	return parser.ParseWinPackages(cmd.Stdout)
+	return parser.ParseWindowsAppxPackages(cmd.Stdout)
 }
 
 func (win *WinPkgManager) Available() ([]parser.PackageUpdate, error) {
-	// cmd, err := win.motor.Transport.RunCommand(parser.EncodePowershell(parser.WSUS_AVAILABLE))
-	// if err != nil {
-	// 	return nil, fmt.Errorf("could not read package list")
-	// }
-
-	// return parser.ParseWinUpdates(cmd.Stdout)
-	return nil, errors.New("cannot determine available packages for Windows")
+	return []parser.PackageUpdate{}, nil
 }

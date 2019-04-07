@@ -2,7 +2,6 @@ package parser
 
 import (
 	"bufio"
-	"encoding/json"
 	"errors"
 	"io"
 	"io/ioutil"
@@ -255,36 +254,5 @@ func ParseMacOSPackages(input io.Reader) ([]Package, error) {
 		pkgs[i].Version = entry.Version
 	}
 
-	return pkgs, nil
-}
-
-type powershellWinPkg struct {
-	Status      string `json:"Status"`
-	Description string `json:"Description"`
-	HotFixId    string `json:"HotFixId"`
-	Caption     string `json:"Caption"`
-	InstallDate string `json:"InstallDate"`
-	InstalledBy string `json:"InstalledBy"`
-}
-
-func ParseWinPackages(input io.Reader) ([]Package, error) {
-	data, err := ioutil.ReadAll(input)
-	if err != nil {
-		return nil, err
-	}
-
-	var powerShellPkgs []powershellWinPkg
-	err = json.Unmarshal(data, &powerShellPkgs)
-	if err != nil {
-		return nil, err
-	}
-
-	pkgs := make([]Package, len(powerShellPkgs))
-	for i := range powerShellPkgs {
-		pkgs[i] = Package{
-			Name:        powerShellPkgs[i].HotFixId,
-			Description: powerShellPkgs[i].Description,
-		}
-	}
 	return pkgs, nil
 }
