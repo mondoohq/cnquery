@@ -2,7 +2,12 @@ package parser
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
+
+	"github.com/rs/zerolog/log"
 )
 
 // base64 encoding for long powershell script
@@ -37,6 +42,10 @@ var (
 		"ebfc1fc5-71a4-4f7b-9aca-3b9a503104a0":  Drivers,
 		"8c3fcc84-7410-4a95-8b89-a166a0190486":  Defender,
 	}
+
+	appxArchitecture = map[int]string{
+		11: "noarch",
+	}
 )
 
 type WSUSClassification int
@@ -57,3 +66,128 @@ const (
 	Drivers
 	Defender
 )
+
+var WINDOWS_QUERY_APPX_PACKAGES = `Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version  | ConvertTo-Json`
+
+type powershellWinAppxPackages struct {
+	Name         string `json:"Name"`
+	FullName     string `json:"PackageFullName"`
+	Architecture int    `json:"Architecture"`
+	Version      string `json:"Version"`
+}
+
+// Good read: https://www.wintips.org/view-installed-apps-and-packages-in-windows-10-8-1-8-from-powershell/
+func ParseWindowsAppxPackages(input io.Reader) ([]Package, error) {
+	data, err := ioutil.ReadAll(input)
+	if err != nil {
+		return nil, err
+	}
+
+	var appxPackages []powershellWinAppxPackages
+	err = json.Unmarshal(data, &appxPackages)
+	if err != nil {
+		return nil, err
+	}
+
+	pkgs := make([]Package, len(appxPackages))
+	for i := range appxPackages {
+		arch, ok := appxArchitecture[appxPackages[i].Architecture]
+		if !ok {
+			log.Warn().Int("arch", appxPackages[i].Architecture).Msg("unknown architecture value for windows appx package")
+			arch = "unknown"
+		}
+
+		pkgs[i] = Package{
+			Name:    appxPackages[i].Name,
+			Version: appxPackages[i].Version,
+			Arch:    arch,
+		}
+	}
+	return pkgs, nil
+}
+
+var WINDOWS_QUERY_WSUS_AVAILABLE = `
+$ProgressPreference='SilentlyContinue';
+$updateSession = new-object -com "Microsoft.Update.Session"
+$searcher=$updateSession.CreateupdateSearcher().Search(("IsInstalled=0 and Type='Software'"))
+$updates = $searcher.Updates | ForEach-Object {
+	$update = $_
+	$value = New-Object psobject -Property @{
+		"UpdateID" =  $update.Identity.UpdateID;
+		"Title" = $update.Title
+		"MsrcSeverity" = $update.MsrcSeverity
+		"RevisionNumber" =  $update.Identity.RevisionNumber;
+		"CategoryIDs" = @($update.Categories | % { $_.CategoryID })
+		"SecurityBulletinIDs" = $update.SecurityBulletinIDs
+		"RebootRequired" = $update.RebootRequired
+		"KBArticleIDs" = $update.KBArticleIDs
+		"CveIDs" = @($update.CveIDs)
+	}
+	$value
+}
+@($updates) | ConvertTo-Json
+	`
+
+type powershellWinUpdate struct {
+	UpdateID    string   `json:"UpdateID"`
+	Title       string   `json:"Title"`
+	CategoryIDs []string `json:"CategoryIDs"`
+}
+
+func ParseWindowsUpdates(input io.Reader) ([]OperatingSystemUpdate, error) {
+	data, err := ioutil.ReadAll(input)
+	if err != nil {
+		return nil, err
+	}
+
+	var powerShellUpdates []powershellWinUpdate
+	err = json.Unmarshal(data, &powerShellUpdates)
+	if err != nil {
+		return nil, err
+	}
+
+	updates := make([]OperatingSystemUpdate, len(powerShellUpdates))
+	for i := range powerShellUpdates {
+		updates[i] = OperatingSystemUpdate{
+			Name:        powerShellUpdates[i].UpdateID,
+			Description: powerShellUpdates[i].Title,
+		}
+	}
+	return updates, nil
+}
+
+type powershellWinHotFix struct {
+	Status      string `json:"Status"`
+	Description string `json:"Description"`
+	HotFixId    string `json:"HotFixId"`
+	Caption     string `json:"Caption"`
+	InstallDate string `json:"InstallDate"`
+	InstalledBy string `json:"InstalledBy"`
+}
+
+func ParseWindowsHotfixes(input io.Reader) ([]Package, error) {
+	data, err := ioutil.ReadAll(input)
+	if err != nil {
+		return nil, err
+	}
+
+	// for empty result set do not get the '{}', therefore lets abort here
+	if len(data) == 0 {
+		return []Package{}, nil
+	}
+
+	var powershellWinHotFixPkgs []powershellWinHotFix
+	err = json.Unmarshal(data, &powershellWinHotFixPkgs)
+	if err != nil {
+		return nil, err
+	}
+
+	pkgs := make([]Package, len(powershellWinHotFixPkgs))
+	for i := range powershellWinHotFixPkgs {
+		pkgs[i] = Package{
+			Name:        powershellWinHotFixPkgs[i].HotFixId,
+			Description: powershellWinHotFixPkgs[i].Description,
+		}
+	}
+	return pkgs, nil
+}
