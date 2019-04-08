@@ -50,7 +50,7 @@ func ResolveTransport(endpoint *types.Endpoint) (types.Transport, error) {
 	case "mock":
 		log.Debug().Msg("connection> load mock transport")
 		trans, err = mock.New()
-	case "local":
+	case "local", "nodejs":
 		log.Debug().Msg("connection> load local transport")
 		trans, err = local.New()
 	case "tar":
