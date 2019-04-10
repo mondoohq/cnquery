@@ -72,7 +72,7 @@ func New(endpoint *types.Endpoint) (*WinrmTransport, error) {
 		return nil, err
 	}
 
-	log.Info().Msg("winrm> connection established")
+	log.Debug().Msg("winrm> connection established")
 	return &WinrmTransport{Endpoint: winrmEndpoint, Client: client}, nil
 }
 
