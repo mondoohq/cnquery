@@ -30,6 +30,10 @@ func UseJsonLogging() {
 	log.Logger = zerolog.New(os.Stderr).With().Timestamp().Logger()
 }
 
+func NoColorLogger() {
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, NoColor: true})
+}
+
 // Set will set up the logger
 func Set(prod bool, debug bool) {
 	Debug = debug
