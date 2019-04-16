@@ -1,0 +1,223 @@
+[commands."dscl . list /Users"]
+stdout = """_webauthserver
+_windowserver
+_www
+_wwwproxy
+_xserverdocs
+daemon
+Guest
+nobody
+root"""
+
+[commands."dscl -q . -read /Users/nobody NFSHomeDirectory PrimaryGroupID RecordName UniqueID UserShell"]
+stdout = """NFSHomeDirectory: /var/empty
+PrimaryGroupID: -2
+RecordName: nobody
+UniqueID: -2
+UserShell: /usr/bin/false"""
+
+[commands."dscl . -list /Users UserShell"]
+stdout = """_amavisd                /usr/bin/false
+_analyticsd             /usr/bin/false
+_appleevents            /usr/bin/false
+_applepay               /usr/bin/false
+_appowner               /usr/bin/false
+_appserver              /usr/bin/false
+_appstore               /usr/bin/false
+_ard                    /usr/bin/false
+_assetcache             /usr/bin/false
+_astris                 /usr/bin/false
+_atsserver              /usr/bin/false
+_avbdeviced             /usr/bin/false
+_calendar               /usr/bin/false
+_captiveagent           /usr/bin/false
+_ces                    /usr/bin/false
+_clamav                 /usr/bin/false
+_cmiodalassistants      /usr/bin/false
+_coreaudiod             /usr/bin/false
+_coremediaiod           /usr/bin/false
+_ctkd                   /usr/bin/false
+_cvmsroot               /usr/bin/false
+_cvs                    /usr/bin/false
+_cyrus                  /usr/bin/false
+_datadetectors          /usr/bin/false
+_devdocs                /usr/bin/false
+_devicemgr              /usr/bin/false
+_displaypolicyd         /usr/bin/false
+_distnote               /usr/bin/false
+_dovecot                /usr/bin/false
+_dovenull               /usr/bin/false
+_dpaudio                /usr/bin/false
+_eppc                   /usr/bin/false
+_findmydevice           /usr/bin/false
+_fpsd                   /usr/bin/false
+_ftp                    /usr/bin/false
+_gamecontrollerd        /usr/bin/false
+_geod                   /usr/bin/false
+_hidd                   /usr/bin/false
+_iconservices           /usr/bin/false
+_installassistant       /usr/bin/false
+_installer              /usr/bin/false
+_jabber                 /usr/bin/false
+_kadmin_admin           /usr/bin/false
+_kadmin_changepw        /usr/bin/false
+_krb_anonymous          /usr/bin/false
+_krb_changepw           /usr/bin/false
+_krb_kadmin             /usr/bin/false
+_krb_kerberos           /usr/bin/false
+_krb_krbtgt             /usr/bin/false
+_krbfast                /usr/bin/false
+_krbtgt                 /usr/bin/false
+_launchservicesd        /usr/bin/false
+_lda                    /usr/bin/false
+_locationd              /usr/bin/false
+_lp                     /usr/bin/false
+_mailman                /usr/bin/false
+_mbsetupuser            /bin/bash
+_mcxalr                 /usr/bin/false
+_mdnsresponder          /usr/bin/false
+_mobileasset            /usr/bin/false
+_mysql                  /usr/bin/false
+_netbios                /usr/bin/false
+_netstatistics          /usr/bin/false
+_networkd               /usr/bin/false
+_nsurlsessiond          /usr/bin/false
+_nsurlstoraged          /usr/bin/false
+_ondemand               /usr/bin/false
+_postfix                /usr/bin/false
+_postgres               /usr/bin/false
+_qtss                   /usr/bin/false
+_sandbox                /usr/bin/false
+_screensaver            /usr/bin/false
+_scsd                   /usr/bin/false
+_securityagent          /usr/bin/false
+_serialnumberd          /usr/bin/false
+_softwareupdate         /usr/bin/false
+_spotlight              /usr/bin/false
+_sshd                   /usr/bin/false
+_svn                    /usr/bin/false
+_taskgated              /usr/bin/false
+_teamsserver            /usr/bin/false
+_timed                  /usr/bin/false
+_timezone               /usr/bin/false
+_tokend                 /usr/bin/false
+_trustevaluationagent   /usr/bin/false
+_unknown                /usr/bin/false
+_update_sharing         /usr/bin/false
+_usbmuxd                /usr/bin/false
+_uucp                   /usr/sbin/uucico
+_warmd                  /usr/bin/false
+_webauthserver          /usr/bin/false
+_windowserver           /usr/bin/false
+_www                    /usr/bin/false
+_wwwproxy               /usr/bin/false
+_xserverdocs            /usr/bin/false
+chartmann               /bin/zsh
+daemon                  /usr/bin/false
+Guest                   /bin/bash
+nobody                  /usr/bin/false
+root                    /bin/sh
+"""
+
+[commands."dscl . -list /Users UniqueID"]
+stdout = """_amavisd                83
+_analyticsd             263
+_appleevents            55
+_applepay               260
+_appowner               87
+_appserver              79
+_appstore               33
+_ard                    67
+_assetcache             235
+_astris                 245
+_atsserver              97
+_avbdeviced             229
+_calendar               93
+_captiveagent           258
+_ces                    32
+_clamav                 82
+_cmiodalassistants      262
+_coreaudiod             202
+_coremediaiod           236
+_ctkd                   259
+_cvmsroot               212
+_cvs                    72
+_cyrus                  77
+_datadetectors          257
+_devdocs                59
+_devicemgr              220
+_displaypolicyd         244
+_distnote               241
+_dovecot                214
+_dovenull               227
+_dpaudio                215
+_eppc                   71
+_findmydevice           254
+_fpsd                   265
+_ftp                    98
+_gamecontrollerd        247
+_geod                   56
+_hidd                   261
+_iconservices           240
+_installassistant       25
+_installer              96
+_jabber                 84
+_kadmin_admin           218
+_kadmin_changepw        219
+_krb_anonymous          234
+_krb_changepw           232
+_krb_kadmin             231
+_krb_kerberos           233
+_krb_krbtgt             230
+_krbfast                246
+_krbtgt                 217
+_launchservicesd        239
+_lda                    211
+_locationd              205
+_lp                     26
+_mailman                78
+_mbsetupuser            248
+_mcxalr                 54
+_mdnsresponder          65
+_mobileasset            253
+_mysql                  74
+_netbios                222
+_netstatistics          228
+_networkd               24
+_nsurlsessiond          242
+_nsurlstoraged          243
+_ondemand               249
+_postfix                27
+_postgres               216
+_qtss                   76
+_sandbox                60
+_screensaver            203
+_scsd                   31
+_securityagent          92
+_serialnumberd          58
+_softwareupdate         200
+_spotlight              89
+_sshd                   75
+_svn                    73
+_taskgated              13
+_teamsserver            94
+_timed                  266
+_timezone               210
+_tokend                 91
+_trustevaluationagent   208
+_unknown                99
+_update_sharing         95
+_usbmuxd                213
+_uucp                   4
+_warmd                  224
+_webauthserver          221
+_windowserver           88
+_www                    70
+_wwwproxy               252
+_xserverdocs            251
+chartmann               501
+daemon                  1
+Guest                   201
+nobody                  -2
+root                    0
+"""
