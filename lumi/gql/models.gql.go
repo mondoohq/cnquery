@@ -2,7 +2,45 @@
 
 package gql
 
+type File struct {
+	Path    *string `json:"path"`
+	Content *string `json:"content"`
+	Exists  bool    `json:"exists"`
+}
+
+type KeyValue struct {
+	Key   *string `json:"key"`
+	Value *string `json:"value"`
+}
+
 type Mondoo struct {
 	Version string `json:"version"`
 	Build   string `json:"build"`
+}
+
+type Package struct {
+	Name        string `json:"name"`
+	Version     string `json:"version"`
+	Arch        string `json:"arch"`
+	Format      string `json:"format"`
+	Description string `json:"description"`
+	Status      string `json:"status"`
+}
+
+type Platform struct {
+	Name    string   `json:"name"`
+	Title   string   `json:"title"`
+	Family  []string `json:"family"`
+	Release string   `json:"release"`
+	Arch    string   `json:"arch"`
+}
+
+type SSHConfig struct {
+	Path   string     `json:"path"`
+	File   *File      `json:"file"`
+	Params []KeyValue `json:"params"`
+}
+
+type Sshd struct {
+	Config *SSHConfig `json:"config"`
 }

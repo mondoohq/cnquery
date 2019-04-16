@@ -1,8 +1,51 @@
 type Query {
   mondoo: Mondoo
+  sshd: Sshd
+  file(path: String): File
+  platform: Platform
+  packages: [Package!]!
 }
 
 type Mondoo {
   version: String!
   build: String!
+}
+
+type File {
+  path: String
+  content: String
+  exists: Boolean!
+}
+
+type Sshd {
+  config(path: String): SshConfig
+}
+
+# AHHH: maps are missing in graphql
+type SshConfig {
+  path: String!
+  file: File
+  params: [KeyValue!]!
+}
+
+type KeyValue {
+  key: String
+  value: String
+}
+
+type Platform {
+  name: String!
+  title: String!
+  family: [String!]!
+  release: String!
+  arch: String!
+}
+
+type Package {
+  name: String!
+  version: String!
+  arch: String!
+  format: String!
+  description: String!
+  status: String!
 }
