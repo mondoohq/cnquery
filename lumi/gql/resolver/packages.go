@@ -12,7 +12,6 @@ import (
 )
 
 func (r *queryResolver) Packages(ctx context.Context) ([]gql.Package, error) {
-
 	// find suitable package manager
 	pm, err := packages.ResolveSystemPkgManager(r.Runtime.Motor)
 	if pm == nil || err != nil {
@@ -26,7 +25,7 @@ func (r *queryResolver) Packages(ctx context.Context) ([]gql.Package, error) {
 	}
 	log.Debug().Int("packages", len(osPkgs)).Msg("lumi[packages]> installed packages")
 
-	// create lumi package resources for each package
+	// create graphql packages
 	pkgs := make([]gql.Package, len(osPkgs))
 	for i, osPkg := range osPkgs {
 		pkgs[i] = gql.Package{
@@ -38,8 +37,5 @@ func (r *queryResolver) Packages(ctx context.Context) ([]gql.Package, error) {
 			Format:      pm.Format(),
 		}
 	}
-
-	// return the packages as new entries
 	return pkgs, nil
-
 }

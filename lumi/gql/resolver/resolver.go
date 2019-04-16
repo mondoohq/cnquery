@@ -37,6 +37,10 @@ func (r *Resolver) Query() gql.QueryResolver {
 	return &queryResolver{r}
 }
 
+func (r *Resolver) Kernel() gql.KernelResolver {
+	return &kernelResolver{r}
+}
+
 func (r *Resolver) Sshd() gql.SshdResolver {
 	return &sshdResolver{r}
 }
