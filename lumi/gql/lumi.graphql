@@ -1,0 +1,8 @@
+type Query {
+  mondoo: Mondoo
+}
+
+type Mondoo {
+  version: String!
+  build: String!
+}

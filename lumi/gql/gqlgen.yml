@@ -1,0 +1,10 @@
+schema: lumi.graphql
+exec:
+  filename: lumi.gql.go
+model:
+  filename: models.gql.go
+
+resolver:
+  # Goal: copy&paste from generated file
+  filename: tmp/resolver.go
+  type: Resolver
