@@ -1,4 +1,4 @@
-package parser
+package packages
 
 import (
 	"encoding/base64"
