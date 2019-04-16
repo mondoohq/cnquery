@@ -8,7 +8,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/packages"
-	"go.mondoo.io/mondoo/lumi/resources/parser"
 )
 
 var (
@@ -86,52 +85,52 @@ func (p *lumiPackages) GetList() ([]interface{}, error) {
 	}
 
 	// retrieve all system packages
-	packages, err := pm.List()
+	osPkgs, err := pm.List()
 	if err != nil {
 		return nil, fmt.Errorf("Could not retrieve package list for platform")
 	}
-	log.Debug().Int("packages", len(packages)).Msg("lumi[packages]> installed packages")
+	log.Debug().Int("packages", len(osPkgs)).Msg("lumi[packages]> installed packages")
 
 	// TODO: do we really need to make this a blocking call, we could update available updates async
 	// we try to retrieve the available updates
-	availableList, err := pm.Available()
+	osAvailablePkgs, err := pm.Available()
 	if err != nil {
 		log.Warn().Err(err).Msg("lumi[packages]> could not retrieve available updates")
-		availableList = []parser.PackageUpdate{}
+		osAvailablePkgs = []packages.PackageUpdate{}
 	}
-	log.Debug().Int("updates", len(availableList)).Msg("lumi[packages]> available updates")
+	log.Debug().Int("updates", len(osAvailablePkgs)).Msg("lumi[packages]> available updates")
 
 	// make available updates easily findable
 	// we use packagename-arch as identifier
-	availableMap := make(map[string]parser.PackageUpdate)
-	for _, a := range availableList {
+	availableMap := make(map[string]packages.PackageUpdate)
+	for _, a := range osAvailablePkgs {
 		availableMap[a.Name+"/"+a.Arch] = a
 	}
 
 	// create lumi package resources for each package
-	pkgs := make([]interface{}, len(packages))
-	for i, sysPkg := range packages {
+	pkgs := make([]interface{}, len(osPkgs))
+	for i, osPkg := range osPkgs {
 
 		// set init arguments for the lumi package resource
 		args := make(lumi.Args)
-		args["name"] = sysPkg.Name
-		args["version"] = sysPkg.Version
-		args["arch"] = sysPkg.Arch
-		args["status"] = sysPkg.Status
-		args["description"] = sysPkg.Description
+		args["name"] = osPkg.Name
+		args["version"] = osPkg.Version
+		args["arch"] = osPkg.Arch
+		args["status"] = osPkg.Status
+		args["description"] = osPkg.Description
 		args["format"] = pm.Format()
 
 		// check if we found a newer version
 		args["available"] = ""
-		update, ok := availableMap[sysPkg.Name+"/"+sysPkg.Arch]
+		update, ok := availableMap[osPkg.Name+"/"+osPkg.Arch]
 		if ok {
 			args["available"] = update.Available
-			log.Debug().Str("package", sysPkg.Name).Str("available", update.Available).Msg("lumi[packages]> found newer version")
+			log.Debug().Str("package", osPkg.Name).Str("available", update.Available).Msg("lumi[packages]> found newer version")
 		}
 
 		e, err := newPackage(p.Runtime, &args)
 		if err != nil {
-			log.Error().Err(err).Str("package", sysPkg.Name).Msg("lumi[packages]> could not create package resource")
+			log.Error().Err(err).Str("package", osPkg.Name).Msg("lumi[packages]> could not create package resource")
 			continue
 		}
 		pkgs[i] = e.(Package)

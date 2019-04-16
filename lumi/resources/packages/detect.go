@@ -4,11 +4,12 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi/resources/parser"
 	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/vadvisor/api"
 )
 
-func Detect(motor *motor.Motor) ([]parser.Package, error) {
+func Detect(motor *motor.Motor) ([]Package, error) {
 	// find suitable package manager
 	pm, err := ResolveSystemPkgManager(motor)
 	if pm == nil || err != nil {
@@ -28,9 +29,32 @@ func Detect(motor *motor.Motor) ([]parser.Package, error) {
 	availableList, err := pm.Available()
 	if err != nil {
 		log.Debug().Err(err).Msg("lumi[packages]> could not retrieve available updates")
-		availableList = []parser.PackageUpdate{}
+		availableList = []PackageUpdate{}
 	}
 	log.Debug().Int("updates", len(availableList)).Msg("lumi[packages]> available updates")
 
 	return packages, nil
+}
+
+func ConvertPlatform(platform platform.Info) *api.Platform {
+	return &api.Platform{
+		Name:    platform.Name,
+		Release: platform.Release,
+		Arch:    platform.Arch,
+	}
+}
+
+func ConvertParserPackages(pkgs []Package) []*api.Package {
+	apiPkgs := []*api.Package{}
+
+	for _, d := range pkgs {
+		apiPkgs = append(apiPkgs, &api.Package{
+			Name:    d.Name,
+			Version: d.Version,
+			Arch:    d.Arch,
+			Origin:  d.Origin,
+		})
+	}
+
+	return apiPkgs
 }

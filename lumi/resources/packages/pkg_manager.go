@@ -12,15 +12,14 @@ import (
 	"strconv"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi/resources/parser"
 	"go.mondoo.io/mondoo/motor"
 )
 
 type OperatingSystemPkgManager interface {
 	Name() string
 	Format() string
-	List() ([]parser.Package, error)
-	Available() ([]parser.PackageUpdate, error)
+	List() ([]Package, error)
+	Available() ([]PackageUpdate, error)
 }
 
 // this will find the right package manager for the operating system
@@ -68,7 +67,7 @@ func (dpm *DebPkgManager) Format() string {
 	return "deb"
 }
 
-func (dpm *DebPkgManager) List() ([]parser.Package, error) {
+func (dpm *DebPkgManager) List() ([]Package, error) {
 	fi, err := dpm.motor.Transport.File("/var/lib/dpkg/status")
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
@@ -77,10 +76,10 @@ func (dpm *DebPkgManager) List() ([]parser.Package, error) {
 	fReader, err := fi.Open()
 	defer fReader.Close()
 
-	return parser.ParseDpkgPackages(fReader)
+	return ParseDpkgPackages(fReader)
 }
 
-func (dpm *DebPkgManager) Available() ([]parser.PackageUpdate, error) {
+func (dpm *DebPkgManager) Available() ([]PackageUpdate, error) {
 	// TODO: run this as a complete shell script in motor
 	// DEBIAN_FRONTEND=noninteractive apt-get update >/dev/null 2>&1
 	// readlock() { cat /proc/locks | awk '{print $5}' | grep -v ^0 | xargs -I {1} find /proc/{1}/fd -maxdepth 1 -exec readlink {} \; | grep '^/var/lib/dpkg/lock$'; }
@@ -93,7 +92,7 @@ func (dpm *DebPkgManager) Available() ([]parser.PackageUpdate, error) {
 		log.Debug().Err(err).Msg("lumi[packages]> could not read package updates")
 		return nil, fmt.Errorf("could not read package update list")
 	}
-	return parser.ParseDpkgUpdates(cmd.Stdout)
+	return ParseDpkgUpdates(cmd.Stdout)
 }
 
 // RpmPkgManager is the pacakge manager for Redhat, CentOS, Oracle and Suse
@@ -135,7 +134,7 @@ func (rpm *RpmPkgManager) isStaticAnalysis() bool {
 	return rpm.static
 }
 
-func (rpm *RpmPkgManager) List() ([]parser.Package, error) {
+func (rpm *RpmPkgManager) List() ([]Package, error) {
 	if rpm.isStaticAnalysis() {
 		return rpm.staticList()
 	} else {
@@ -143,7 +142,7 @@ func (rpm *RpmPkgManager) List() ([]parser.Package, error) {
 	}
 }
 
-func (rpm *RpmPkgManager) Available() ([]parser.PackageUpdate, error) {
+func (rpm *RpmPkgManager) Available() ([]PackageUpdate, error) {
 	if rpm.isStaticAnalysis() {
 		return rpm.staticAvailable()
 	} else {
@@ -173,18 +172,18 @@ func (rpm *RpmPkgManager) queryFormat() string {
 	return format
 }
 
-func (rpm *RpmPkgManager) runtimeList() ([]parser.Package, error) {
+func (rpm *RpmPkgManager) runtimeList() ([]Package, error) {
 
 	command := fmt.Sprintf("rpm -qa --queryformat '%s'", rpm.queryFormat())
 	cmd, err := rpm.motor.Transport.RunCommand(command)
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}
-	return parser.ParseRpmPackages(cmd.Stdout), nil
+	return ParseRpmPackages(cmd.Stdout), nil
 }
 
 // fetch all available packages, is that working with centos 6?
-func (rpm *RpmPkgManager) runtimeAvailable() ([]parser.PackageUpdate, error) {
+func (rpm *RpmPkgManager) runtimeAvailable() ([]PackageUpdate, error) {
 	// python script:
 	// import sys;sys.path.insert(0, "/usr/share/yum-cli");import cli;list = cli.YumBaseCli().returnPkgLists(["updates"]);
 	// print ''.join(["{\"name\":\""+x.name+"\", \"available\":\""+x.evr+"\",\"arch\":\""+x.arch+"\",\"repo\":\""+x.repo.id+"\"}\n" for x in list.updates]);
@@ -195,10 +194,10 @@ func (rpm *RpmPkgManager) runtimeAvailable() ([]parser.PackageUpdate, error) {
 		log.Debug().Err(err).Msg("lumi[packages]> could not read package updates")
 		return nil, fmt.Errorf("could not read package update list")
 	}
-	return parser.ParseRpmUpdates(cmd.Stdout)
+	return ParseRpmUpdates(cmd.Stdout)
 }
 
-func (rpm *RpmPkgManager) staticList() ([]parser.Package, error) {
+func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 	rpmTmpDir, err := ioutil.TempDir(os.TempDir(), "mondoo-rpmdb")
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
@@ -244,13 +243,13 @@ func (rpm *RpmPkgManager) staticList() ([]parser.Package, error) {
 		return nil, fmt.Errorf("could not read package list")
 	}
 
-	return parser.ParseRpmPackages(&stdoutBuffer), nil
+	return ParseRpmPackages(&stdoutBuffer), nil
 }
 
 // TODO: Available() not implemented for RpmFileSystemManager
 // for now this is not an error since we can easily determine available packages
-func (rpm *RpmPkgManager) staticAvailable() ([]parser.PackageUpdate, error) {
-	return []parser.PackageUpdate{}, nil
+func (rpm *RpmPkgManager) staticAvailable() ([]PackageUpdate, error) {
+	return []PackageUpdate{}, nil
 }
 
 // Suse, overwrites the Centos handler
@@ -258,13 +257,13 @@ type SusePkgManager struct {
 	RpmPkgManager
 }
 
-func (spm *SusePkgManager) Available() ([]parser.PackageUpdate, error) {
+func (spm *SusePkgManager) Available() ([]PackageUpdate, error) {
 	cmd, err := spm.motor.Transport.RunCommand("zypper --xmlout list-updates")
 	if err != nil {
 		log.Debug().Err(err).Msg("lumi[packages]> could not read package updates")
 		return nil, fmt.Errorf("could not read package update list")
 	}
-	return parser.ParseZypperUpdates(cmd.Stdout)
+	return ParseZypperUpdates(cmd.Stdout)
 }
 
 // Arch, Manjaro
@@ -280,16 +279,16 @@ func (ppm *PacmanPkgManager) Format() string {
 	return "pacman"
 }
 
-func (ppm *PacmanPkgManager) List() ([]parser.Package, error) {
+func (ppm *PacmanPkgManager) List() ([]Package, error) {
 	cmd, err := ppm.motor.Transport.RunCommand("pacman -Q")
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}
 
-	return parser.ParsePacmanPackages(cmd.Stdout), nil
+	return ParsePacmanPackages(cmd.Stdout), nil
 }
 
-func (ppm *PacmanPkgManager) Available() ([]parser.PackageUpdate, error) {
+func (ppm *PacmanPkgManager) Available() ([]PackageUpdate, error) {
 	return nil, errors.New("Available() not implemented for PacmanPkgManager")
 }
 
@@ -306,7 +305,7 @@ func (apm *AlpinePkgManager) Format() string {
 	return "apk"
 }
 
-func (apm *AlpinePkgManager) List() ([]parser.Package, error) {
+func (apm *AlpinePkgManager) List() ([]Package, error) {
 	fi, err := apm.motor.Transport.File("/lib/apk/db/installed")
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
@@ -315,10 +314,10 @@ func (apm *AlpinePkgManager) List() ([]parser.Package, error) {
 	fReader, err := fi.Open()
 	defer fReader.Close()
 
-	return parser.ParseApkDbPackages(fReader), nil
+	return ParseApkDbPackages(fReader), nil
 }
 
-func (apm *AlpinePkgManager) Available() ([]parser.PackageUpdate, error) {
+func (apm *AlpinePkgManager) Available() ([]PackageUpdate, error) {
 	// it only works if apk is updated
 	apm.motor.Transport.RunCommand("apk update")
 
@@ -328,7 +327,7 @@ func (apm *AlpinePkgManager) Available() ([]parser.PackageUpdate, error) {
 		log.Debug().Err(err).Msg("lumi[packages]> could not read package updates")
 		return nil, fmt.Errorf("could not read package update list")
 	}
-	return parser.ParseApkUpdates(cmd.Stdout)
+	return ParseApkUpdates(cmd.Stdout)
 }
 
 // MacOS
@@ -344,16 +343,16 @@ func (mpm *MacOSPkgManager) Format() string {
 	return "macos"
 }
 
-func (mpm *MacOSPkgManager) List() ([]parser.Package, error) {
+func (mpm *MacOSPkgManager) List() ([]Package, error) {
 	cmd, err := mpm.motor.Transport.RunCommand("system_profiler SPApplicationsDataType -xml")
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}
 
-	return parser.ParseMacOSPackages(cmd.Stdout)
+	return ParseMacOSPackages(cmd.Stdout)
 }
 
-func (mpm *MacOSPkgManager) Available() ([]parser.PackageUpdate, error) {
+func (mpm *MacOSPkgManager) Available() ([]PackageUpdate, error) {
 	return nil, errors.New("cannot determine available packages for macOS")
 }
 
@@ -370,16 +369,16 @@ func (win *WinPkgManager) Format() string {
 }
 
 // returns installed hot fixes
-func (win *WinPkgManager) List() ([]parser.Package, error) {
+func (win *WinPkgManager) List() ([]Package, error) {
 
-	cmd, err := win.motor.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", parser.WINDOWS_QUERY_APPX_PACKAGES))
+	cmd, err := win.motor.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", WINDOWS_QUERY_APPX_PACKAGES))
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}
 
-	return parser.ParseWindowsAppxPackages(cmd.Stdout)
+	return ParseWindowsAppxPackages(cmd.Stdout)
 }
 
-func (win *WinPkgManager) Available() ([]parser.PackageUpdate, error) {
-	return []parser.PackageUpdate{}, nil
+func (win *WinPkgManager) Available() ([]PackageUpdate, error) {
+	return []PackageUpdate{}, nil
 }
