@@ -3,17 +3,9 @@ package resolver
 import (
 	"go.mondoo.io/mondoo/lumi/gql"
 	"go.mondoo.io/mondoo/motor"
-	motor_resolver "go.mondoo.io/mondoo/motor/resolver"
-	"go.mondoo.io/mondoo/motor/types"
 )
 
-func New() (*Resolver, error) {
-	motor, err := motor_resolver.New(&types.Endpoint{
-		Backend: "local",
-	})
-	if err != nil {
-		return nil, err
-	}
+func New(motor *motor.Motor) (*Resolver, error) {
 	return &Resolver{
 		Runtime: &Runtime{
 			Motor: motor,
