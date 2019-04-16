@@ -8,6 +8,10 @@ type File struct {
 	Exists  bool    `json:"exists"`
 }
 
+type Kernel struct {
+	Parameters []KeyValue `json:"parameters"`
+}
+
 type KeyValue struct {
 	Key   *string `json:"key"`
 	Value *string `json:"value"`
@@ -33,6 +37,15 @@ type Platform struct {
 	Family  []string `json:"family"`
 	Release string   `json:"release"`
 	Arch    string   `json:"arch"`
+}
+
+type Service struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Installed   bool   `json:"installed"`
+	Running     bool   `json:"running"`
+	Enabled     bool   `json:"enabled"`
+	Type        string `json:"type"`
 }
 
 type SSHConfig struct {

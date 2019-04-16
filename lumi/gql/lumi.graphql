@@ -1,9 +1,24 @@
 type Query {
   mondoo: Mondoo
-  sshd: Sshd
-  file(path: String): File
+  
   platform: Platform
+  kernel: Kernel
+  file(path: String): File
   packages: [Package!]!
+ 
+  processes: [Process!]!
+  process(pid: Int!): Process
+
+  services: [Service!]!
+  service(name: String!): Service
+
+  users: [User!]!
+  user(uid: Int!): User
+
+  groups: [Group!]!
+  group(gid: Int!): Group
+
+  sshd: Sshd
 }
 
 type Mondoo {
@@ -48,4 +63,40 @@ type Package {
   format: String!
   description: String!
   status: String!
+}
+
+type Kernel {
+  parameters: [KeyValue!]!
+}
+
+type Process {
+  pid: Int!
+  state: String!
+  executable: String!
+  command: String!
+}
+
+type Service {
+  name: String!
+  description: String!
+  installed: Boolean!
+  running: Boolean!
+  enabled: Boolean!
+  type: String!
+}
+
+type User {
+  uid: Int!
+  gid: Int!
+  username: String!
+  home: String!
+  shell: String!
+  enabled: Boolean!
+  description: String!
+}
+
+type Group {
+  gid: Int!
+  name: String!
+  members: [User!]!
 }

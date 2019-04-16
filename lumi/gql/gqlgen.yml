@@ -26,3 +26,13 @@ models:
         resolver: true
       params:
         resolver: true
+  Kernel:
+    fields:
+      parameters:
+        resolver: true
+  Group:
+    model: go.mondoo.io/mondoo/lumi/gql.Group
+  User:
+    model: go.mondoo.io/mondoo/lumi/gql.User
+  Process:
+    model: go.mondoo.io/mondoo/lumi/gql.Process
