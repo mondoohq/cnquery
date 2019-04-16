@@ -2,10 +2,73 @@
 
 package gql
 
+type Docker struct {
+	Images    []DockerImage     `json:"images"`
+	Container []DockerContainer `json:"container"`
+}
+
+type DockerContainer struct {
+	ID      string     `json:"id"`
+	Command string     `json:"command"`
+	Image   string     `json:"image"`
+	Imageid string     `json:"imageid"`
+	Names   []string   `json:"names"`
+	State   string     `json:"state"`
+	Status  string     `json:"status"`
+	Labels  []KeyValue `json:"labels"`
+}
+
 type File struct {
 	Path    *string `json:"path"`
 	Content *string `json:"content"`
 	Exists  bool    `json:"exists"`
+}
+
+type GcpCompute struct {
+	Instances []GcpComputeInstance `json:"instances"`
+	Zones     []GcpZone            `json:"zones"`
+}
+
+type GcpComputeInstance struct {
+	Project string     `json:"project"`
+	Zone    string     `json:"zone"`
+	ID      string     `json:"id"`
+	Name    string     `json:"name"`
+	Kind    string     `json:"kind"`
+	Status  string     `json:"status"`
+	Labels  []KeyValue `json:"labels"`
+}
+
+type GcpProject struct {
+	Name   string     `json:"name"`
+	ID     string     `json:"id"`
+	Number string     `json:"number"`
+	Labels []KeyValue `json:"labels"`
+}
+
+type GcpStorage struct {
+	Buckets []GcpStorageBucket `json:"buckets"`
+}
+
+type GcpStorageBucket struct {
+	Project      string     `json:"project"`
+	ID           string     `json:"id"`
+	Name         string     `json:"name"`
+	Location     string     `json:"location"`
+	Storageclass string     `json:"storageclass"`
+	Labels       []KeyValue `json:"labels"`
+}
+
+type GcpZone struct {
+	Name   string `json:"name"`
+	Region string `json:"region"`
+	Status string `json:"status"`
+}
+
+type GoogleCloudPlatform struct {
+	Compute  *GcpCompute  `json:"compute"`
+	Storage  *GcpStorage  `json:"storage"`
+	Projects []GcpProject `json:"projects"`
 }
 
 type Kernel struct {

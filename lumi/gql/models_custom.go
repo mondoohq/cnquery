@@ -23,3 +23,11 @@ type User struct {
 	Enabled     bool   `json:"enabled"`
 	Description string `json:"description"`
 }
+
+type DockerImage struct {
+	ID          string     `json:"id"`
+	Size        int64      `json:"size"`
+	Virtualsize int64      `json:"virtualsize"`
+	Tags        []string   `json:"tags"`
+	Labels      []KeyValue `json:"labels"`
+}

@@ -19,6 +19,9 @@ type Query {
   group(gid: Int!): Group
 
   sshd: Sshd
+
+  gcp: GoogleCloudPlatform
+  docker: Docker
 }
 
 type Mondoo {
@@ -99,4 +102,75 @@ type Group {
   gid: Int!
   name: String!
   members: [User!]!
+}
+
+type Docker {
+  images: [DockerImage!]!
+  container: [DockerContainer!]!
+}
+
+type DockerImage {
+  id: String!
+  size: Int!
+  virtualsize: Int!
+  tags: [String!]!
+  labels: [KeyValue!]!
+}
+
+type DockerContainer {
+  id: String!
+  command: String!
+  image: String!
+  imageid: String!
+  names: [String!]!
+  state: String!
+  status: String!
+  labels: [KeyValue!]!
+}
+
+type GoogleCloudPlatform {
+  compute: GcpCompute
+  storage: GcpStorage
+  projects: [GcpProject!]!
+}
+
+type GcpZone {
+  name: String!
+  region: String!
+  status: String!
+}
+
+type GcpProject {
+  name: String!
+  id: String!
+  number: String!
+  labels: [KeyValue!]!
+}
+
+type GcpCompute {
+  instances(project: String, zone: String): [GcpComputeInstance!]!
+  zones(project: String): [GcpZone!]!
+}
+
+type GcpComputeInstance {
+  project: String!
+  zone: String!
+  id: String!
+  name: String!
+  kind: String!
+  status: String!
+  labels: [KeyValue!]!
+}
+
+type GcpStorage {
+  buckets(project: String): [GcpStorageBucket!]!
+}
+
+type GcpStorageBucket {
+  project: String!
+  id: String!
+  name: String!
+  location: String!
+  storageclass: String!
+  labels: [KeyValue!]!
 }

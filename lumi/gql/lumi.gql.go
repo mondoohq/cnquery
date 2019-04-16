@@ -33,7 +33,11 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Docker() DockerResolver
 	File() FileResolver
+	GcpCompute() GcpComputeResolver
+	GcpStorage() GcpStorageResolver
+	GoogleCloudPlatform() GoogleCloudPlatformResolver
 	Kernel() KernelResolver
 	Query() QueryResolver
 	SshConfig() SshConfigResolver
@@ -44,10 +48,81 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	Docker struct {
+		Container func(childComplexity int) int
+		Images    func(childComplexity int) int
+	}
+
+	DockerContainer struct {
+		Command func(childComplexity int) int
+		ID      func(childComplexity int) int
+		Image   func(childComplexity int) int
+		Imageid func(childComplexity int) int
+		Labels  func(childComplexity int) int
+		Names   func(childComplexity int) int
+		State   func(childComplexity int) int
+		Status  func(childComplexity int) int
+	}
+
+	DockerImage struct {
+		ID          func(childComplexity int) int
+		Labels      func(childComplexity int) int
+		Size        func(childComplexity int) int
+		Tags        func(childComplexity int) int
+		Virtualsize func(childComplexity int) int
+	}
+
 	File struct {
 		Content func(childComplexity int) int
 		Exists  func(childComplexity int) int
 		Path    func(childComplexity int) int
+	}
+
+	GcpCompute struct {
+		Instances func(childComplexity int, project *string, zone *string) int
+		Zones     func(childComplexity int, project *string) int
+	}
+
+	GcpComputeInstance struct {
+		ID      func(childComplexity int) int
+		Kind    func(childComplexity int) int
+		Labels  func(childComplexity int) int
+		Name    func(childComplexity int) int
+		Project func(childComplexity int) int
+		Status  func(childComplexity int) int
+		Zone    func(childComplexity int) int
+	}
+
+	GcpProject struct {
+		ID     func(childComplexity int) int
+		Labels func(childComplexity int) int
+		Name   func(childComplexity int) int
+		Number func(childComplexity int) int
+	}
+
+	GcpStorage struct {
+		Buckets func(childComplexity int, project *string) int
+	}
+
+	GcpStorageBucket struct {
+		ID           func(childComplexity int) int
+		Labels       func(childComplexity int) int
+		Location     func(childComplexity int) int
+		Name         func(childComplexity int) int
+		Project      func(childComplexity int) int
+		Storageclass func(childComplexity int) int
+	}
+
+	GcpZone struct {
+		Name   func(childComplexity int) int
+		Region func(childComplexity int) int
+		Status func(childComplexity int) int
+	}
+
+	GoogleCloudPlatform struct {
+		Compute  func(childComplexity int) int
+		Projects func(childComplexity int) int
+		Storage  func(childComplexity int) int
 	}
 
 	Group struct {
@@ -95,7 +170,9 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		Docker    func(childComplexity int) int
 		File      func(childComplexity int, path *string) int
+		Gcp       func(childComplexity int) int
 		Group     func(childComplexity int, gid int) int
 		Groups    func(childComplexity int) int
 		Kernel    func(childComplexity int) int
@@ -141,9 +218,23 @@ type ComplexityRoot struct {
 	}
 }
 
+type DockerResolver interface {
+	Images(ctx context.Context, obj *Docker) ([]DockerImage, error)
+	Container(ctx context.Context, obj *Docker) ([]DockerContainer, error)
+}
 type FileResolver interface {
 	Content(ctx context.Context, obj *File) (*string, error)
 	Exists(ctx context.Context, obj *File) (bool, error)
+}
+type GcpComputeResolver interface {
+	Instances(ctx context.Context, obj *GcpCompute, project *string, zone *string) ([]GcpComputeInstance, error)
+	Zones(ctx context.Context, obj *GcpCompute, project *string) ([]GcpZone, error)
+}
+type GcpStorageResolver interface {
+	Buckets(ctx context.Context, obj *GcpStorage, project *string) ([]GcpStorageBucket, error)
+}
+type GoogleCloudPlatformResolver interface {
+	Projects(ctx context.Context, obj *GoogleCloudPlatform) ([]GcpProject, error)
 }
 type KernelResolver interface {
 	Parameters(ctx context.Context, obj *Kernel) ([]KeyValue, error)
@@ -163,6 +254,8 @@ type QueryResolver interface {
 	Groups(ctx context.Context) ([]Group, error)
 	Group(ctx context.Context, gid int) (*Group, error)
 	Sshd(ctx context.Context) (*Sshd, error)
+	Gcp(ctx context.Context) (*GoogleCloudPlatform, error)
+	Docker(ctx context.Context) (*Docker, error)
 }
 type SshConfigResolver interface {
 	File(ctx context.Context, obj *SSHConfig) (*File, error)
@@ -187,6 +280,111 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "Docker.Container":
+		if e.complexity.Docker.Container == nil {
+			break
+		}
+
+		return e.complexity.Docker.Container(childComplexity), true
+
+	case "Docker.Images":
+		if e.complexity.Docker.Images == nil {
+			break
+		}
+
+		return e.complexity.Docker.Images(childComplexity), true
+
+	case "DockerContainer.Command":
+		if e.complexity.DockerContainer.Command == nil {
+			break
+		}
+
+		return e.complexity.DockerContainer.Command(childComplexity), true
+
+	case "DockerContainer.ID":
+		if e.complexity.DockerContainer.ID == nil {
+			break
+		}
+
+		return e.complexity.DockerContainer.ID(childComplexity), true
+
+	case "DockerContainer.Image":
+		if e.complexity.DockerContainer.Image == nil {
+			break
+		}
+
+		return e.complexity.DockerContainer.Image(childComplexity), true
+
+	case "DockerContainer.Imageid":
+		if e.complexity.DockerContainer.Imageid == nil {
+			break
+		}
+
+		return e.complexity.DockerContainer.Imageid(childComplexity), true
+
+	case "DockerContainer.Labels":
+		if e.complexity.DockerContainer.Labels == nil {
+			break
+		}
+
+		return e.complexity.DockerContainer.Labels(childComplexity), true
+
+	case "DockerContainer.Names":
+		if e.complexity.DockerContainer.Names == nil {
+			break
+		}
+
+		return e.complexity.DockerContainer.Names(childComplexity), true
+
+	case "DockerContainer.State":
+		if e.complexity.DockerContainer.State == nil {
+			break
+		}
+
+		return e.complexity.DockerContainer.State(childComplexity), true
+
+	case "DockerContainer.Status":
+		if e.complexity.DockerContainer.Status == nil {
+			break
+		}
+
+		return e.complexity.DockerContainer.Status(childComplexity), true
+
+	case "DockerImage.ID":
+		if e.complexity.DockerImage.ID == nil {
+			break
+		}
+
+		return e.complexity.DockerImage.ID(childComplexity), true
+
+	case "DockerImage.Labels":
+		if e.complexity.DockerImage.Labels == nil {
+			break
+		}
+
+		return e.complexity.DockerImage.Labels(childComplexity), true
+
+	case "DockerImage.Size":
+		if e.complexity.DockerImage.Size == nil {
+			break
+		}
+
+		return e.complexity.DockerImage.Size(childComplexity), true
+
+	case "DockerImage.Tags":
+		if e.complexity.DockerImage.Tags == nil {
+			break
+		}
+
+		return e.complexity.DockerImage.Tags(childComplexity), true
+
+	case "DockerImage.Virtualsize":
+		if e.complexity.DockerImage.Virtualsize == nil {
+			break
+		}
+
+		return e.complexity.DockerImage.Virtualsize(childComplexity), true
+
 	case "File.Content":
 		if e.complexity.File.Content == nil {
 			break
@@ -207,6 +405,203 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.File.Path(childComplexity), true
+
+	case "GcpCompute.Instances":
+		if e.complexity.GcpCompute.Instances == nil {
+			break
+		}
+
+		args, err := ec.field_GcpCompute_instances_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.GcpCompute.Instances(childComplexity, args["project"].(*string), args["zone"].(*string)), true
+
+	case "GcpCompute.Zones":
+		if e.complexity.GcpCompute.Zones == nil {
+			break
+		}
+
+		args, err := ec.field_GcpCompute_zones_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.GcpCompute.Zones(childComplexity, args["project"].(*string)), true
+
+	case "GcpComputeInstance.ID":
+		if e.complexity.GcpComputeInstance.ID == nil {
+			break
+		}
+
+		return e.complexity.GcpComputeInstance.ID(childComplexity), true
+
+	case "GcpComputeInstance.Kind":
+		if e.complexity.GcpComputeInstance.Kind == nil {
+			break
+		}
+
+		return e.complexity.GcpComputeInstance.Kind(childComplexity), true
+
+	case "GcpComputeInstance.Labels":
+		if e.complexity.GcpComputeInstance.Labels == nil {
+			break
+		}
+
+		return e.complexity.GcpComputeInstance.Labels(childComplexity), true
+
+	case "GcpComputeInstance.Name":
+		if e.complexity.GcpComputeInstance.Name == nil {
+			break
+		}
+
+		return e.complexity.GcpComputeInstance.Name(childComplexity), true
+
+	case "GcpComputeInstance.Project":
+		if e.complexity.GcpComputeInstance.Project == nil {
+			break
+		}
+
+		return e.complexity.GcpComputeInstance.Project(childComplexity), true
+
+	case "GcpComputeInstance.Status":
+		if e.complexity.GcpComputeInstance.Status == nil {
+			break
+		}
+
+		return e.complexity.GcpComputeInstance.Status(childComplexity), true
+
+	case "GcpComputeInstance.Zone":
+		if e.complexity.GcpComputeInstance.Zone == nil {
+			break
+		}
+
+		return e.complexity.GcpComputeInstance.Zone(childComplexity), true
+
+	case "GcpProject.ID":
+		if e.complexity.GcpProject.ID == nil {
+			break
+		}
+
+		return e.complexity.GcpProject.ID(childComplexity), true
+
+	case "GcpProject.Labels":
+		if e.complexity.GcpProject.Labels == nil {
+			break
+		}
+
+		return e.complexity.GcpProject.Labels(childComplexity), true
+
+	case "GcpProject.Name":
+		if e.complexity.GcpProject.Name == nil {
+			break
+		}
+
+		return e.complexity.GcpProject.Name(childComplexity), true
+
+	case "GcpProject.Number":
+		if e.complexity.GcpProject.Number == nil {
+			break
+		}
+
+		return e.complexity.GcpProject.Number(childComplexity), true
+
+	case "GcpStorage.Buckets":
+		if e.complexity.GcpStorage.Buckets == nil {
+			break
+		}
+
+		args, err := ec.field_GcpStorage_buckets_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.GcpStorage.Buckets(childComplexity, args["project"].(*string)), true
+
+	case "GcpStorageBucket.ID":
+		if e.complexity.GcpStorageBucket.ID == nil {
+			break
+		}
+
+		return e.complexity.GcpStorageBucket.ID(childComplexity), true
+
+	case "GcpStorageBucket.Labels":
+		if e.complexity.GcpStorageBucket.Labels == nil {
+			break
+		}
+
+		return e.complexity.GcpStorageBucket.Labels(childComplexity), true
+
+	case "GcpStorageBucket.Location":
+		if e.complexity.GcpStorageBucket.Location == nil {
+			break
+		}
+
+		return e.complexity.GcpStorageBucket.Location(childComplexity), true
+
+	case "GcpStorageBucket.Name":
+		if e.complexity.GcpStorageBucket.Name == nil {
+			break
+		}
+
+		return e.complexity.GcpStorageBucket.Name(childComplexity), true
+
+	case "GcpStorageBucket.Project":
+		if e.complexity.GcpStorageBucket.Project == nil {
+			break
+		}
+
+		return e.complexity.GcpStorageBucket.Project(childComplexity), true
+
+	case "GcpStorageBucket.Storageclass":
+		if e.complexity.GcpStorageBucket.Storageclass == nil {
+			break
+		}
+
+		return e.complexity.GcpStorageBucket.Storageclass(childComplexity), true
+
+	case "GcpZone.Name":
+		if e.complexity.GcpZone.Name == nil {
+			break
+		}
+
+		return e.complexity.GcpZone.Name(childComplexity), true
+
+	case "GcpZone.Region":
+		if e.complexity.GcpZone.Region == nil {
+			break
+		}
+
+		return e.complexity.GcpZone.Region(childComplexity), true
+
+	case "GcpZone.Status":
+		if e.complexity.GcpZone.Status == nil {
+			break
+		}
+
+		return e.complexity.GcpZone.Status(childComplexity), true
+
+	case "GoogleCloudPlatform.Compute":
+		if e.complexity.GoogleCloudPlatform.Compute == nil {
+			break
+		}
+
+		return e.complexity.GoogleCloudPlatform.Compute(childComplexity), true
+
+	case "GoogleCloudPlatform.Projects":
+		if e.complexity.GoogleCloudPlatform.Projects == nil {
+			break
+		}
+
+		return e.complexity.GoogleCloudPlatform.Projects(childComplexity), true
+
+	case "GoogleCloudPlatform.Storage":
+		if e.complexity.GoogleCloudPlatform.Storage == nil {
+			break
+		}
+
+		return e.complexity.GoogleCloudPlatform.Storage(childComplexity), true
 
 	case "Group.Gid":
 		if e.complexity.Group.Gid == nil {
@@ -369,6 +764,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Process.State(childComplexity), true
 
+	case "Query.Docker":
+		if e.complexity.Query.Docker == nil {
+			break
+		}
+
+		return e.complexity.Query.Docker(childComplexity), true
+
 	case "Query.File":
 		if e.complexity.Query.File == nil {
 			break
@@ -380,6 +782,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.File(childComplexity, args["path"].(*string)), true
+
+	case "Query.Gcp":
+		if e.complexity.Query.Gcp == nil {
+			break
+		}
+
+		return e.complexity.Query.Gcp(childComplexity), true
 
 	case "Query.Group":
 		if e.complexity.Query.Group == nil {
@@ -701,6 +1110,9 @@ var parsedSchema = gqlparser.MustLoadSchema(
   group(gid: Int!): Group
 
   sshd: Sshd
+
+  gcp: GoogleCloudPlatform
+  docker: Docker
 }
 
 type Mondoo {
@@ -782,12 +1194,132 @@ type Group {
   name: String!
   members: [User!]!
 }
-`},
+
+type Docker {
+  images: [DockerImage!]!
+  container: [DockerContainer!]!
+}
+
+type DockerImage {
+  id: String!
+  size: Int!
+  virtualsize: Int!
+  tags: [String!]!
+  labels: [KeyValue!]!
+}
+
+type DockerContainer {
+  id: String!
+  command: String!
+  image: String!
+  imageid: String!
+  names: [String!]!
+  state: String!
+  status: String!
+  labels: [KeyValue!]!
+}
+
+type GoogleCloudPlatform {
+  compute: GcpCompute
+  storage: GcpStorage
+  projects: [GcpProject!]!
+}
+
+type GcpZone {
+  name: String!
+  region: String!
+  status: String!
+}
+
+type GcpProject {
+  name: String!
+  id: String!
+  number: String!
+  labels: [KeyValue!]!
+}
+
+type GcpCompute {
+  instances(project: String, zone: String): [GcpComputeInstance!]!
+  zones(project: String): [GcpZone!]!
+}
+
+type GcpComputeInstance {
+  project: String!
+  zone: String!
+  id: String!
+  name: String!
+  kind: String!
+  status: String!
+  labels: [KeyValue!]!
+}
+
+type GcpStorage {
+  buckets(project: String): [GcpStorageBucket!]!
+}
+
+type GcpStorageBucket {
+  project: String!
+  id: String!
+  name: String!
+  location: String!
+  storageclass: String!
+  labels: [KeyValue!]!
+}`},
 )
 
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_GcpCompute_instances_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["project"]; ok {
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["project"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["zone"]; ok {
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["zone"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_GcpCompute_zones_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["project"]; ok {
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["project"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_GcpStorage_buckets_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["project"]; ok {
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["project"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -919,6 +1451,411 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _Docker_images(ctx context.Context, field graphql.CollectedField, obj *Docker) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "Docker",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Docker().Images(rctx, obj)
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]DockerImage)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNDockerImage2ᚕgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐDockerImage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Docker_container(ctx context.Context, field graphql.CollectedField, obj *Docker) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "Docker",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Docker().Container(rctx, obj)
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]DockerContainer)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNDockerContainer2ᚕgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐDockerContainer(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _DockerContainer_id(ctx context.Context, field graphql.CollectedField, obj *DockerContainer) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "DockerContainer",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _DockerContainer_command(ctx context.Context, field graphql.CollectedField, obj *DockerContainer) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "DockerContainer",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Command, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _DockerContainer_image(ctx context.Context, field graphql.CollectedField, obj *DockerContainer) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "DockerContainer",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Image, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _DockerContainer_imageid(ctx context.Context, field graphql.CollectedField, obj *DockerContainer) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "DockerContainer",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Imageid, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _DockerContainer_names(ctx context.Context, field graphql.CollectedField, obj *DockerContainer) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "DockerContainer",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Names, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2ᚕstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _DockerContainer_state(ctx context.Context, field graphql.CollectedField, obj *DockerContainer) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "DockerContainer",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.State, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _DockerContainer_status(ctx context.Context, field graphql.CollectedField, obj *DockerContainer) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "DockerContainer",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _DockerContainer_labels(ctx context.Context, field graphql.CollectedField, obj *DockerContainer) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "DockerContainer",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Labels, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]KeyValue)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNKeyValue2ᚕgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐKeyValue(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _DockerImage_id(ctx context.Context, field graphql.CollectedField, obj *DockerImage) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "DockerImage",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _DockerImage_size(ctx context.Context, field graphql.CollectedField, obj *DockerImage) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "DockerImage",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Size, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _DockerImage_virtualsize(ctx context.Context, field graphql.CollectedField, obj *DockerImage) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "DockerImage",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Virtualsize, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _DockerImage_tags(ctx context.Context, field graphql.CollectedField, obj *DockerImage) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "DockerImage",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Tags, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2ᚕstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _DockerImage_labels(ctx context.Context, field graphql.CollectedField, obj *DockerImage) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "DockerImage",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Labels, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]KeyValue)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNKeyValue2ᚕgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐKeyValue(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _File_path(ctx context.Context, field graphql.CollectedField, obj *File) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -992,6 +1929,723 @@ func (ec *executionContext) _File_exists(ctx context.Context, field graphql.Coll
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpCompute_instances(ctx context.Context, field graphql.CollectedField, obj *GcpCompute) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpCompute",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_GcpCompute_instances_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.GcpCompute().Instances(rctx, obj, args["project"].(*string), args["zone"].(*string))
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]GcpComputeInstance)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNGcpComputeInstance2ᚕgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGcpComputeInstance(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpCompute_zones(ctx context.Context, field graphql.CollectedField, obj *GcpCompute) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpCompute",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_GcpCompute_zones_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.GcpCompute().Zones(rctx, obj, args["project"].(*string))
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]GcpZone)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNGcpZone2ᚕgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGcpZone(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpComputeInstance_project(ctx context.Context, field graphql.CollectedField, obj *GcpComputeInstance) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpComputeInstance",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Project, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpComputeInstance_zone(ctx context.Context, field graphql.CollectedField, obj *GcpComputeInstance) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpComputeInstance",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Zone, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpComputeInstance_id(ctx context.Context, field graphql.CollectedField, obj *GcpComputeInstance) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpComputeInstance",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpComputeInstance_name(ctx context.Context, field graphql.CollectedField, obj *GcpComputeInstance) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpComputeInstance",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpComputeInstance_kind(ctx context.Context, field graphql.CollectedField, obj *GcpComputeInstance) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpComputeInstance",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Kind, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpComputeInstance_status(ctx context.Context, field graphql.CollectedField, obj *GcpComputeInstance) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpComputeInstance",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpComputeInstance_labels(ctx context.Context, field graphql.CollectedField, obj *GcpComputeInstance) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpComputeInstance",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Labels, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]KeyValue)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNKeyValue2ᚕgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐKeyValue(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpProject_name(ctx context.Context, field graphql.CollectedField, obj *GcpProject) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpProject",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpProject_id(ctx context.Context, field graphql.CollectedField, obj *GcpProject) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpProject",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpProject_number(ctx context.Context, field graphql.CollectedField, obj *GcpProject) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpProject",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Number, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpProject_labels(ctx context.Context, field graphql.CollectedField, obj *GcpProject) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpProject",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Labels, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]KeyValue)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNKeyValue2ᚕgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐKeyValue(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpStorage_buckets(ctx context.Context, field graphql.CollectedField, obj *GcpStorage) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpStorage",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_GcpStorage_buckets_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.GcpStorage().Buckets(rctx, obj, args["project"].(*string))
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]GcpStorageBucket)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNGcpStorageBucket2ᚕgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGcpStorageBucket(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpStorageBucket_project(ctx context.Context, field graphql.CollectedField, obj *GcpStorageBucket) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpStorageBucket",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Project, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpStorageBucket_id(ctx context.Context, field graphql.CollectedField, obj *GcpStorageBucket) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpStorageBucket",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpStorageBucket_name(ctx context.Context, field graphql.CollectedField, obj *GcpStorageBucket) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpStorageBucket",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpStorageBucket_location(ctx context.Context, field graphql.CollectedField, obj *GcpStorageBucket) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpStorageBucket",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Location, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpStorageBucket_storageclass(ctx context.Context, field graphql.CollectedField, obj *GcpStorageBucket) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpStorageBucket",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Storageclass, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpStorageBucket_labels(ctx context.Context, field graphql.CollectedField, obj *GcpStorageBucket) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpStorageBucket",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Labels, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]KeyValue)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNKeyValue2ᚕgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐKeyValue(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpZone_name(ctx context.Context, field graphql.CollectedField, obj *GcpZone) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpZone",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpZone_region(ctx context.Context, field graphql.CollectedField, obj *GcpZone) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpZone",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Region, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GcpZone_status(ctx context.Context, field graphql.CollectedField, obj *GcpZone) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GcpZone",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GoogleCloudPlatform_compute(ctx context.Context, field graphql.CollectedField, obj *GoogleCloudPlatform) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GoogleCloudPlatform",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Compute, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*GcpCompute)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOGcpCompute2ᚖgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGcpCompute(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GoogleCloudPlatform_storage(ctx context.Context, field graphql.CollectedField, obj *GoogleCloudPlatform) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GoogleCloudPlatform",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Storage, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*GcpStorage)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOGcpStorage2ᚖgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGcpStorage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GoogleCloudPlatform_projects(ctx context.Context, field graphql.CollectedField, obj *GoogleCloudPlatform) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GoogleCloudPlatform",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.GoogleCloudPlatform().Projects(rctx, obj)
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]GcpProject)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNGcpProject2ᚕgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGcpProject(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Group_gid(ctx context.Context, field graphql.CollectedField, obj *Group) graphql.Marshaler {
@@ -1993,6 +3647,54 @@ func (ec *executionContext) _Query_sshd(ctx context.Context, field graphql.Colle
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOSshd2ᚖgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐSshd(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_gcp(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Gcp(rctx)
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*GoogleCloudPlatform)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOGoogleCloudPlatform2ᚖgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGoogleCloudPlatform(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_docker(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Docker(rctx)
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*Docker)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalODocker2ᚖgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐDocker(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
@@ -3349,6 +5051,165 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** object.gotpl ****************************
 
+var dockerImplementors = []string{"Docker"}
+
+func (ec *executionContext) _Docker(ctx context.Context, sel ast.SelectionSet, obj *Docker) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, dockerImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Docker")
+		case "images":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Docker_images(ctx, field, obj)
+				if res == graphql.Null {
+					invalid = true
+				}
+				return res
+			})
+		case "container":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Docker_container(ctx, field, obj)
+				if res == graphql.Null {
+					invalid = true
+				}
+				return res
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var dockerContainerImplementors = []string{"DockerContainer"}
+
+func (ec *executionContext) _DockerContainer(ctx context.Context, sel ast.SelectionSet, obj *DockerContainer) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, dockerContainerImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DockerContainer")
+		case "id":
+			out.Values[i] = ec._DockerContainer_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "command":
+			out.Values[i] = ec._DockerContainer_command(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "image":
+			out.Values[i] = ec._DockerContainer_image(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "imageid":
+			out.Values[i] = ec._DockerContainer_imageid(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "names":
+			out.Values[i] = ec._DockerContainer_names(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "state":
+			out.Values[i] = ec._DockerContainer_state(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "status":
+			out.Values[i] = ec._DockerContainer_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "labels":
+			out.Values[i] = ec._DockerContainer_labels(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var dockerImageImplementors = []string{"DockerImage"}
+
+func (ec *executionContext) _DockerImage(ctx context.Context, sel ast.SelectionSet, obj *DockerImage) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, dockerImageImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DockerImage")
+		case "id":
+			out.Values[i] = ec._DockerImage_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "size":
+			out.Values[i] = ec._DockerImage_size(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "virtualsize":
+			out.Values[i] = ec._DockerImage_virtualsize(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "tags":
+			out.Values[i] = ec._DockerImage_tags(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "labels":
+			out.Values[i] = ec._DockerImage_labels(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
 var fileImplementors = []string{"File"}
 
 func (ec *executionContext) _File(ctx context.Context, sel ast.SelectionSet, obj *File) graphql.Marshaler {
@@ -3382,6 +5243,320 @@ func (ec *executionContext) _File(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._File_exists(ctx, field, obj)
+				if res == graphql.Null {
+					invalid = true
+				}
+				return res
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var gcpComputeImplementors = []string{"GcpCompute"}
+
+func (ec *executionContext) _GcpCompute(ctx context.Context, sel ast.SelectionSet, obj *GcpCompute) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, gcpComputeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("GcpCompute")
+		case "instances":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._GcpCompute_instances(ctx, field, obj)
+				if res == graphql.Null {
+					invalid = true
+				}
+				return res
+			})
+		case "zones":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._GcpCompute_zones(ctx, field, obj)
+				if res == graphql.Null {
+					invalid = true
+				}
+				return res
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var gcpComputeInstanceImplementors = []string{"GcpComputeInstance"}
+
+func (ec *executionContext) _GcpComputeInstance(ctx context.Context, sel ast.SelectionSet, obj *GcpComputeInstance) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, gcpComputeInstanceImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("GcpComputeInstance")
+		case "project":
+			out.Values[i] = ec._GcpComputeInstance_project(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "zone":
+			out.Values[i] = ec._GcpComputeInstance_zone(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "id":
+			out.Values[i] = ec._GcpComputeInstance_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "name":
+			out.Values[i] = ec._GcpComputeInstance_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "kind":
+			out.Values[i] = ec._GcpComputeInstance_kind(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "status":
+			out.Values[i] = ec._GcpComputeInstance_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "labels":
+			out.Values[i] = ec._GcpComputeInstance_labels(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var gcpProjectImplementors = []string{"GcpProject"}
+
+func (ec *executionContext) _GcpProject(ctx context.Context, sel ast.SelectionSet, obj *GcpProject) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, gcpProjectImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("GcpProject")
+		case "name":
+			out.Values[i] = ec._GcpProject_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "id":
+			out.Values[i] = ec._GcpProject_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "number":
+			out.Values[i] = ec._GcpProject_number(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "labels":
+			out.Values[i] = ec._GcpProject_labels(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var gcpStorageImplementors = []string{"GcpStorage"}
+
+func (ec *executionContext) _GcpStorage(ctx context.Context, sel ast.SelectionSet, obj *GcpStorage) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, gcpStorageImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("GcpStorage")
+		case "buckets":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._GcpStorage_buckets(ctx, field, obj)
+				if res == graphql.Null {
+					invalid = true
+				}
+				return res
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var gcpStorageBucketImplementors = []string{"GcpStorageBucket"}
+
+func (ec *executionContext) _GcpStorageBucket(ctx context.Context, sel ast.SelectionSet, obj *GcpStorageBucket) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, gcpStorageBucketImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("GcpStorageBucket")
+		case "project":
+			out.Values[i] = ec._GcpStorageBucket_project(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "id":
+			out.Values[i] = ec._GcpStorageBucket_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "name":
+			out.Values[i] = ec._GcpStorageBucket_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "location":
+			out.Values[i] = ec._GcpStorageBucket_location(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "storageclass":
+			out.Values[i] = ec._GcpStorageBucket_storageclass(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "labels":
+			out.Values[i] = ec._GcpStorageBucket_labels(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var gcpZoneImplementors = []string{"GcpZone"}
+
+func (ec *executionContext) _GcpZone(ctx context.Context, sel ast.SelectionSet, obj *GcpZone) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, gcpZoneImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("GcpZone")
+		case "name":
+			out.Values[i] = ec._GcpZone_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "region":
+			out.Values[i] = ec._GcpZone_region(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "status":
+			out.Values[i] = ec._GcpZone_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var googleCloudPlatformImplementors = []string{"GoogleCloudPlatform"}
+
+func (ec *executionContext) _GoogleCloudPlatform(ctx context.Context, sel ast.SelectionSet, obj *GoogleCloudPlatform) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, googleCloudPlatformImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("GoogleCloudPlatform")
+		case "compute":
+			out.Values[i] = ec._GoogleCloudPlatform_compute(ctx, field, obj)
+		case "storage":
+			out.Values[i] = ec._GoogleCloudPlatform_storage(ctx, field, obj)
+		case "projects":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._GoogleCloudPlatform_projects(ctx, field, obj)
 				if res == graphql.Null {
 					invalid = true
 				}
@@ -3854,6 +6029,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_sshd(ctx, field)
 				return res
 			})
+		case "gcp":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_gcp(ctx, field)
+				return res
+			})
+		case "docker":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_docker(ctx, field)
+				return res
+			})
 		case "__type":
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
@@ -4314,6 +6511,252 @@ func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interf
 
 func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.SelectionSet, v bool) graphql.Marshaler {
 	return graphql.MarshalBoolean(v)
+}
+
+func (ec *executionContext) marshalNDockerContainer2goᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐDockerContainer(ctx context.Context, sel ast.SelectionSet, v DockerContainer) graphql.Marshaler {
+	return ec._DockerContainer(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNDockerContainer2ᚕgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐDockerContainer(ctx context.Context, sel ast.SelectionSet, v []DockerContainer) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNDockerContainer2goᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐDockerContainer(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNDockerImage2goᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐDockerImage(ctx context.Context, sel ast.SelectionSet, v DockerImage) graphql.Marshaler {
+	return ec._DockerImage(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNDockerImage2ᚕgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐDockerImage(ctx context.Context, sel ast.SelectionSet, v []DockerImage) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNDockerImage2goᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐDockerImage(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNGcpComputeInstance2goᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGcpComputeInstance(ctx context.Context, sel ast.SelectionSet, v GcpComputeInstance) graphql.Marshaler {
+	return ec._GcpComputeInstance(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNGcpComputeInstance2ᚕgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGcpComputeInstance(ctx context.Context, sel ast.SelectionSet, v []GcpComputeInstance) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNGcpComputeInstance2goᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGcpComputeInstance(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNGcpProject2goᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGcpProject(ctx context.Context, sel ast.SelectionSet, v GcpProject) graphql.Marshaler {
+	return ec._GcpProject(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNGcpProject2ᚕgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGcpProject(ctx context.Context, sel ast.SelectionSet, v []GcpProject) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNGcpProject2goᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGcpProject(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNGcpStorageBucket2goᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGcpStorageBucket(ctx context.Context, sel ast.SelectionSet, v GcpStorageBucket) graphql.Marshaler {
+	return ec._GcpStorageBucket(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNGcpStorageBucket2ᚕgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGcpStorageBucket(ctx context.Context, sel ast.SelectionSet, v []GcpStorageBucket) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNGcpStorageBucket2goᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGcpStorageBucket(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNGcpZone2goᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGcpZone(ctx context.Context, sel ast.SelectionSet, v GcpZone) graphql.Marshaler {
+	return ec._GcpZone(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNGcpZone2ᚕgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGcpZone(ctx context.Context, sel ast.SelectionSet, v []GcpZone) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNGcpZone2goᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGcpZone(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
 }
 
 func (ec *executionContext) marshalNGroup2goᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGroup(ctx context.Context, sel ast.SelectionSet, v Group) graphql.Marshaler {
@@ -4852,6 +7295,17 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return ec.marshalOBoolean2bool(ctx, sel, *v)
 }
 
+func (ec *executionContext) marshalODocker2goᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐDocker(ctx context.Context, sel ast.SelectionSet, v Docker) graphql.Marshaler {
+	return ec._Docker(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalODocker2ᚖgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐDocker(ctx context.Context, sel ast.SelectionSet, v *Docker) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Docker(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalOFile2goᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐFile(ctx context.Context, sel ast.SelectionSet, v File) graphql.Marshaler {
 	return ec._File(ctx, sel, &v)
 }
@@ -4861,6 +7315,39 @@ func (ec *executionContext) marshalOFile2ᚖgoᚗmondooᚗioᚋmondooᚋlumiᚋg
 		return graphql.Null
 	}
 	return ec._File(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOGcpCompute2goᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGcpCompute(ctx context.Context, sel ast.SelectionSet, v GcpCompute) graphql.Marshaler {
+	return ec._GcpCompute(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOGcpCompute2ᚖgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGcpCompute(ctx context.Context, sel ast.SelectionSet, v *GcpCompute) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._GcpCompute(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOGcpStorage2goᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGcpStorage(ctx context.Context, sel ast.SelectionSet, v GcpStorage) graphql.Marshaler {
+	return ec._GcpStorage(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOGcpStorage2ᚖgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGcpStorage(ctx context.Context, sel ast.SelectionSet, v *GcpStorage) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._GcpStorage(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOGoogleCloudPlatform2goᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGoogleCloudPlatform(ctx context.Context, sel ast.SelectionSet, v GoogleCloudPlatform) graphql.Marshaler {
+	return ec._GoogleCloudPlatform(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOGoogleCloudPlatform2ᚖgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGoogleCloudPlatform(ctx context.Context, sel ast.SelectionSet, v *GoogleCloudPlatform) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._GoogleCloudPlatform(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOGroup2goᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐGroup(ctx context.Context, sel ast.SelectionSet, v Group) graphql.Marshaler {
