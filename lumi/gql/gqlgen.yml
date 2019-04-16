@@ -8,3 +8,21 @@ resolver:
   # Goal: copy&paste from generated file
   filename: tmp/resolver.go
   type: Resolver
+
+models:
+  File:
+    fields:
+      content:
+        resolver: true
+      exists:
+        resolver: true
+  Sshd:
+    fields:
+      config:
+        resolver: true
+  SshConfig:
+    fields:
+      file:
+        resolver: true
+      params:
+        resolver: true
