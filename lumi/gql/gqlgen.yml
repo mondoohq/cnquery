@@ -5,7 +5,6 @@ model:
   filename: models.gql.go
 
 resolver:
-  # Goal: copy&paste from generated file
   filename: tmp/resolver.go
   type: Resolver
 
@@ -36,3 +35,25 @@ models:
     model: go.mondoo.io/mondoo/lumi/gql.User
   Process:
     model: go.mondoo.io/mondoo/lumi/gql.Process
+  GoogleCloudPlatform:
+    fields:
+      projects:
+        resolver: true
+  GcpCompute:
+    fields:
+      instances:
+        resolver: true
+      zones:
+        resolver: true
+  GcpStorage:
+    fields:
+      buckets:
+        resolver: true
+  Docker:
+    fields:
+      images:
+        resolver: true
+      container:
+        resolver: true
+  DockerImage:
+    model: go.mondoo.io/mondoo/lumi/gql.DockerImage

@@ -49,4 +49,20 @@ func (r *Resolver) SshConfig() gql.SshConfigResolver {
 	return &sshConfigResolver{r}
 }
 
+func (r *Resolver) Docker() gql.DockerResolver {
+	return &dockerResolver{r}
+}
+
+func (r *Resolver) GoogleCloudPlatform() gql.GoogleCloudPlatformResolver {
+	return &googleCloudPlatformResolver{r}
+}
+
+func (r *Resolver) GcpCompute() gql.GcpComputeResolver {
+	return &gcpComputeResolver{r}
+}
+
+func (r *Resolver) GcpStorage() gql.GcpStorageResolver {
+	return &gcpStorageResolver{r}
+}
+
 type queryResolver struct{ *Resolver }
