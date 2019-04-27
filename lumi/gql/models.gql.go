@@ -3,8 +3,8 @@
 package gql
 
 type Docker struct {
-	Images    []DockerImage     `json:"images"`
-	Container []DockerContainer `json:"container"`
+	Images     []DockerImage     `json:"images"`
+	Containers []DockerContainer `json:"containers"`
 }
 
 type DockerContainer struct {

@@ -106,7 +106,7 @@ type Group {
 
 type Docker {
   images: [DockerImage!]!
-  container: [DockerContainer!]!
+  containers: [DockerContainer!]!
 }
 
 type DockerImage {
