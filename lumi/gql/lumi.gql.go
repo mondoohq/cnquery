@@ -49,8 +49,8 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Docker struct {
-		Container func(childComplexity int) int
-		Images    func(childComplexity int) int
+		Containers func(childComplexity int) int
+		Images     func(childComplexity int) int
 	}
 
 	DockerContainer struct {
@@ -220,7 +220,6 @@ type ComplexityRoot struct {
 
 type DockerResolver interface {
 	Images(ctx context.Context, obj *Docker) ([]DockerImage, error)
-	Container(ctx context.Context, obj *Docker) ([]DockerContainer, error)
 }
 type FileResolver interface {
 	Content(ctx context.Context, obj *File) (*string, error)
@@ -280,12 +279,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
-	case "Docker.Container":
-		if e.complexity.Docker.Container == nil {
+	case "Docker.Containers":
+		if e.complexity.Docker.Containers == nil {
 			break
 		}
 
-		return e.complexity.Docker.Container(childComplexity), true
+		return e.complexity.Docker.Containers(childComplexity), true
 
 	case "Docker.Images":
 		if e.complexity.Docker.Images == nil {
@@ -1197,7 +1196,7 @@ type Group {
 
 type Docker {
   images: [DockerImage!]!
-  container: [DockerContainer!]!
+  containers: [DockerContainer!]!
 }
 
 type DockerImage {
@@ -1478,20 +1477,20 @@ func (ec *executionContext) _Docker_images(ctx context.Context, field graphql.Co
 	return ec.marshalNDockerImage2ᚕgoᚗmondooᚗioᚋmondooᚋlumiᚋgqlᚐDockerImage(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Docker_container(ctx context.Context, field graphql.CollectedField, obj *Docker) graphql.Marshaler {
+func (ec *executionContext) _Docker_containers(ctx context.Context, field graphql.CollectedField, obj *Docker) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
 		Object:   "Docker",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Docker().Container(rctx, obj)
+		return obj.Containers, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -5076,20 +5075,11 @@ func (ec *executionContext) _Docker(ctx context.Context, sel ast.SelectionSet, o
 				}
 				return res
 			})
-		case "container":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Docker_container(ctx, field, obj)
-				if res == graphql.Null {
-					invalid = true
-				}
-				return res
-			})
+		case "containers":
+			out.Values[i] = ec._Docker_containers(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
