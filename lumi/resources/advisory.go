@@ -50,30 +50,31 @@ func (c *lumiCve) id() (string, error) {
 }
 
 func (c *lumiCve) GetScores() ([]interface{}, error) {
-	id, err := c.Id()
-	if err != nil {
-		return nil, err
-	}
+	// id, err := c.Id()
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	cve, err := Scanner.GetCve(id)
-	if err != nil {
-		return nil, err
-	}
+	// cve, err := Scanner.GetCve(id)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	scores := make([]interface{}, len(cve.Cvss))
-	for i := range cve.Cvss {
-		entry := cve.Cvss[i]
-		args := make(lumi.Args)
-		args["vector"] = entry.Vector
-		args["source"] = entry.Source
+	// scores := make([]interface{}, len(cve.Cvss))
+	// for i := range cve.Cvss {
+	// 	entry := cve.Cvss[i]
+	// 	args := make(lumi.Args)
+	// 	args["vector"] = entry.Vector
+	// 	args["source"] = entry.Source
 
-		e, err := newCvss(c.Runtime, &args)
-		if err != nil {
-			log.Error().Err(err).Str("cve", cve.Id).Msg("lumi[cve]> could not create cvss resource")
-			continue
-		}
-		scores[i] = e.(Cvss)
-	}
+	// 	e, err := newCvss(c.Runtime, &args)
+	// 	if err != nil {
+	// 		log.Error().Err(err).Str("cve", cve.Id).Msg("lumi[cve]> could not create cvss resource")
+	// 		continue
+	// 	}
+	// 	scores[i] = e.(Cvss)
+	// }
+	scores := make([]interface{}, 0)
 	return scores, nil
 }
 
@@ -148,17 +149,18 @@ func genLumiCvss(runtime *lumi.Runtime, cvss *api.CVSS) (Cvss, error) {
 }
 
 func (c *lumiCve) GetSummary() (string, error) {
-	id, err := c.Id()
-	if err != nil {
-		return "", err
-	}
+	// id, err := c.Id()
+	// if err != nil {
+	// 	return "", err
+	// }
 
-	cve, err := Scanner.GetCve(id)
-	if err != nil {
-		return "", err
-	}
+	// cve, err := Scanner.GetCve(id)
+	// if err != nil {
+	// 	return "", err
+	// }
 
-	return cve.Summary, nil
+	// return cve.Summary, nil
+	return "", errors.New("not implemented yet")
 }
 
 func (a *lumiAdvisory) init(args *lumi.Args) (*lumi.Args, error) {
@@ -172,61 +174,63 @@ func (a *lumiAdvisory) id() (string, error) {
 
 // TODO: do we need to cache the data for quick access?
 func (a *lumiAdvisory) GetName() (string, error) {
-	id, err := a.Id()
-	if err != nil {
-		return "", err
-	}
+	// id, err := a.Id()
+	// if err != nil {
+	// 	return "", err
+	// }
 
-	advisory, err := Scanner.GetAdvisory(id)
-	if err != nil {
-		return "", err
-	}
+	// advisory, err := Scanner.GetAdvisory(id)
+	// if err != nil {
+	// 	return "", err
+	// }
 
-	return advisory.Title, nil
+	// return advisory.Title, nil
+	return "", errors.New("not implemented yet")
 }
 
 // TODO: do we need to cache the data for quick access?
 func (a *lumiAdvisory) GetDescription() (string, error) {
-	id, err := a.Id()
-	if err != nil {
-		return "", err
-	}
+	// id, err := a.Id()
+	// if err != nil {
+	// 	return "", err
+	// }
 
-	advisory, err := Scanner.GetAdvisory(id)
-	if err != nil {
-		return "", err
-	}
-
-	return advisory.Description, nil
+	// advisory, err := Scanner.GetAdvisory(id)
+	// if err != nil {
+	// 	return "", err
+	// }
+	// return advisory.Description, nil
+	return "", errors.New("not implemented yet")
 }
 
 func (a *lumiAdvisory) GetFixed() ([]interface{}, error) {
-	id, err := a.Id()
-	if err != nil {
-		return nil, err
-	}
+	// id, err := a.Id()
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	advisory, err := Scanner.GetAdvisory(id)
-	if err != nil {
-		return nil, err
-	}
+	fixedPkgs := make([]interface{}, 0)
+	// advisory, err := Scanner.GetAdvisory(id)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	fixedPkgs := make([]interface{}, len(advisory.Fixed))
-	for i := range advisory.Fixed {
-		fixed := advisory.Fixed[i]
-		args := make(lumi.Args)
-		args["name"] = fixed.Name
-		args["version"] = fixed.Version
-		args["format"] = fixed.Format
-		args["arch"] = fixed.Arch
+	// fixedPkgs := make([]interface{}, len(advisory.Fixed))
+	// for i := range advisory.Fixed {
+	// 	fixed := advisory.Fixed[i]
+	// 	args := make(lumi.Args)
+	// 	args["name"] = fixed.Name
+	// 	args["version"] = fixed.Version
+	// 	args["format"] = fixed.Format
+	// 	args["arch"] = fixed.Arch
 
-		e, err := newPackage(a.Runtime, &args)
-		if err != nil {
-			log.Error().Err(err).Str("package", fixed.Name).Msg("lumi[advisories]> could not create package resource")
-			continue
-		}
-		fixedPkgs[i] = e.(Package)
-	}
+	// 	e, err := newPackage(a.Runtime, &args)
+	// 	if err != nil {
+	// 		log.Error().Err(err).Str("package", fixed.Name).Msg("lumi[advisories]> could not create package resource")
+	// 		continue
+	// 	}
+	// 	fixedPkgs[i] = e.(Package)
+	// }
 	return fixedPkgs, nil
 }
 
@@ -265,31 +269,32 @@ func (a *lumiAdvisory) GetCvss() (interface{}, error) {
 
 func (a *lumiAdvisory) GetCves() ([]interface{}, error) {
 
-	id, err := a.Id()
-	if err != nil {
-		return nil, err
-	}
-	advisory, err := Scanner.GetAdvisory(id)
-	if err != nil {
-		return nil, err
-	}
-
-	// we cannot create the list with len, since we may skip entries
+	// id, err := a.Id()
+	// if err != nil {
+	// 	return nil, err
+	// }
 	cveList := []interface{}{}
-	log.Debug().Str("id", id).Int("length", len(advisory.Cves)).Msg("found cves")
-	for i := range advisory.Cves {
-		cve := advisory.Cves[i]
-		args := make(lumi.Args)
-		args["id"] = cve.Id
-		args["summary"] = cve.Summary
 
-		e, err := newCve(a.Runtime, &args)
-		if err != nil {
-			log.Error().Err(err).Str("cve", cve.Id).Msg("lumi[packages]> could not create package resource")
-			continue
-		}
-		cveList = append(cveList, e.(Cve))
-	}
+	// // we cannot create the list with len, since we may skip entries
+	// advisory, err := Scanner.GetAdvisory(id)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// log.Debug().Str("id", id).Int("length", len(advisory.Cves)).Msg("found cves")
+	// for i := range advisory.Cves {
+	// 	cve := advisory.Cves[i]
+	// 	args := make(lumi.Args)
+	// 	args["id"] = cve.Id
+	// 	args["summary"] = cve.Summary
+
+	// 	e, err := newCve(a.Runtime, &args)
+	// 	if err != nil {
+	// 		log.Error().Err(err).Str("cve", cve.Id).Msg("lumi[packages]> could not create package resource")
+	// 		continue
+	// 	}
+	// 	cveList = append(cveList, e.(Cve))
+	// }
 
 	// TODO: sort list by criticality
 	return cveList, nil
@@ -410,72 +415,74 @@ func (p *lumiPackages) GetAdvisories() (interface{}, error) {
 
 // searches all advisories for given packages
 func findAdvisories(runtime *lumi.Runtime, lumiPackages []Package) ([]interface{}, error) {
-	platform, err := runtime.Motor.Platform()
-	if err != nil {
-		return nil, err
-	}
+	// platform, err := runtime.Motor.Platform()
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	pkgs := []*api.Package{}
-	for _, d := range lumiPackages {
-		name, _ := d.Name()
-		version, _ := d.Version()
-		format, _ := d.Format()
-		arch, _ := d.Arch()
+	lumiAdvisories := make([]interface{}, 0)
 
-		pkgs = append(pkgs, &api.Package{
-			Name:    name,
-			Version: version,
-			Format:  format,
-			Arch:    arch,
-		})
-	}
+	// pkgs := []*api.Package{}
+	// for _, d := range lumiPackages {
+	// 	name, _ := d.Name()
+	// 	version, _ := d.Version()
+	// 	format, _ := d.Format()
+	// 	arch, _ := d.Arch()
 
-	report, err := Scanner.Analyze(&api.ScanJob{
-		Platform: &api.Platform{
-			Name:    platform.Name,
-			Release: platform.Release,
-			Arch:    platform.Arch,
-		},
-		Packages: pkgs,
-	})
-	if err != nil {
-		return nil, err
-	}
+	// 	pkgs = append(pkgs, &api.Package{
+	// 		Name:    name,
+	// 		Version: version,
+	// 		Format:  format,
+	// 		Arch:    arch,
+	// 	})
+	// }
 
-	// iterate over results and create lumi advisory objects
-	lumiAdvisories := make([]interface{}, len(report.Advisories))
-	for i := range report.Advisories {
-		advisory := report.Advisories[i]
-		// set init arguments for the lumi package resource
-		args := make(lumi.Args)
-		args["id"] = advisory.Id
+	// report, err := Scanner.Analyze(&api.ScanJob{
+	// 	Platform: &api.Platform{
+	// 		Name:    platform.Name,
+	// 		Release: platform.Release,
+	// 		Arch:    platform.Arch,
+	// 	},
+	// 	Packages: pkgs,
+	// })
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-		// search for the affected packages
-		// TODO: should we do that with a dynamic query?
-		// TODO: we need to get rid of the epoch
-		var lumiAffectedPkgs []interface{}
-		for j := range advisory.Affected {
-			affected := advisory.Affected[j]
+	// // iterate over results and create lumi advisory objects
+	// lumiAdvisories := make([]interface{}, len(report.Advisories))
+	// for i := range report.Advisories {
+	// 	advisory := report.Advisories[i]
+	// 	// set init arguments for the lumi package resource
+	// 	args := make(lumi.Args)
+	// 	args["id"] = advisory.Id
 
-			// list over packages to find the instance
-			for _, p := range lumiPackages {
-				name, _ := p.Name()
-				// we already matched version via the api, therefore we do not need to do this here again
-				if name == affected.Name {
-					lumiAffectedPkgs = append(lumiAffectedPkgs, p)
-					break
-				}
-			}
-		}
-		args["affected"] = lumiAffectedPkgs
+	// 	// search for the affected packages
+	// 	// TODO: should we do that with a dynamic query?
+	// 	// TODO: we need to get rid of the epoch
+	// 	var lumiAffectedPkgs []interface{}
+	// 	for j := range advisory.Affected {
+	// 		affected := advisory.Affected[j]
 
-		e, err := newAdvisory(runtime, &args)
-		if err != nil {
-			log.Error().Err(err).Str("advisory", advisory.Id).Msg("lumi[advisory]> could not create advisory resource")
-			continue
-		}
-		lumiAdvisories[i] = e.(Advisory)
-	}
+	// 		// list over packages to find the instance
+	// 		for _, p := range lumiPackages {
+	// 			name, _ := p.Name()
+	// 			// we already matched version via the api, therefore we do not need to do this here again
+	// 			if name == affected.Name {
+	// 				lumiAffectedPkgs = append(lumiAffectedPkgs, p)
+	// 				break
+	// 			}
+	// 		}
+	// 	}
+	// 	args["affected"] = lumiAffectedPkgs
+
+	// 	e, err := newAdvisory(runtime, &args)
+	// 	if err != nil {
+	// 		log.Error().Err(err).Str("advisory", advisory.Id).Msg("lumi[advisory]> could not create advisory resource")
+	// 		continue
+	// 	}
+	// 	lumiAdvisories[i] = e.(Advisory)
+	// }
 
 	return lumiAdvisories, nil
 }
