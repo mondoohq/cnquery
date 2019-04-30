@@ -19,6 +19,14 @@ type PlatformResolver struct {
 	Detect   detect
 }
 
+// often used family names
+const (
+	FAMILY_UNIX    = "unix"
+	FAMILY_DARWIN  = "darwin"
+	FAMILY_LINUX   = "linux"
+	FAMILY_WINDOWS = "linux"
+)
+
 func (p *PlatformResolver) Resolve() (bool, *Info) {
 	// prepare detect info object
 	di := &Info{}
@@ -434,7 +442,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 
 	// Families
 	darwinFamily := &PlatformResolver{
-		Name:     "darwin",
+		Name:     FAMILY_DARWIN,
 		Familiy:  true,
 		Children: []*PlatformResolver{macOS, otherDarwin},
 		Detect: func(p *PlatformResolver, di *Info) (bool, error) {
@@ -567,7 +575,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 	}
 
 	linuxFamily := &PlatformResolver{
-		Name:     "linux",
+		Name:     FAMILY_LINUX,
 		Familiy:  true,
 		Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, amazonlinux, alpine, gentoo, busybox, defaultLinux},
 		Detect: func(p *PlatformResolver, di *Info) (bool, error) {
@@ -645,7 +653,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 	}
 
 	unixFamily := &PlatformResolver{
-		Name:     "unix",
+		Name:     FAMILY_UNIX,
 		Familiy:  true,
 		Children: []*PlatformResolver{bsdFamily, linuxFamily},
 		Detect: func(p *PlatformResolver, di *Info) (bool, error) {
@@ -656,7 +664,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 	}
 
 	windowsFamily := &PlatformResolver{
-		Name:     "windows",
+		Name:     FAMILY_WINDOWS,
 		Familiy:  true,
 		Children: []*PlatformResolver{windows},
 		Detect: func(p *PlatformResolver, di *Info) (bool, error) {
