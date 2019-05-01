@@ -5,17 +5,18 @@ import (
 	"io/ioutil"
 
 	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/platform"
 )
 
 func Hostname(motor *motor.Motor) (string, error) {
 	var hostname string
-	platform, err := motor.Platform()
+	pi, err := motor.Platform()
 	if err != nil {
 		return hostname, err
 	}
 
 	switch {
-	case platform.IsFamily("linux"):
+	case pi.IsFamily(platform.FAMILY_LINUX):
 		cmd, err := motor.Transport.RunCommand("hostname")
 		if err != nil {
 			return hostname, err
@@ -25,7 +26,7 @@ func Hostname(motor *motor.Motor) (string, error) {
 			return hostname, err
 		}
 		hostname = string(data)
-	case platform.IsFamily("windows"):
+	case pi.IsFamily(platform.FAMILY_WINDOWS):
 		cmd, err := motor.Transport.RunCommand("powershell -c \"$env:computername\"")
 		if err != nil {
 			return hostname, err
