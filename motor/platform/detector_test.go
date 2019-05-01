@@ -34,6 +34,7 @@ func (suite *OsDetectTestSuite) TestRhel6OSDetector() {
 	assert.Equal(suite.T(), "Red Hat Linux", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "6.2", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
 
 func (suite *OsDetectTestSuite) TestRhel7OSDetector() {
@@ -46,6 +47,7 @@ func (suite *OsDetectTestSuite) TestRhel7OSDetector() {
 	assert.Equal(suite.T(), "Red Hat Enterprise Linux Server", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "7.2", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
 
 func (suite *OsDetectTestSuite) TestRhel7SLESOSDetector() {
@@ -58,6 +60,7 @@ func (suite *OsDetectTestSuite) TestRhel7SLESOSDetector() {
 	assert.Equal(suite.T(), "Red Hat Enterprise Linux Server", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "7.4", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
 
 func (suite *OsDetectTestSuite) TestCentos7OSDetector() {
@@ -70,6 +73,7 @@ func (suite *OsDetectTestSuite) TestCentos7OSDetector() {
 	assert.Equal(suite.T(), "CentOS Linux", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "7.5.1804", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
 
 func (suite *OsDetectTestSuite) TestCentos6Detector() {
@@ -82,6 +86,7 @@ func (suite *OsDetectTestSuite) TestCentos6Detector() {
 	assert.Equal(suite.T(), "CentOS", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "6.9", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
 
 func (suite *OsDetectTestSuite) TestUbuntu1604Detector() {
@@ -94,6 +99,7 @@ func (suite *OsDetectTestSuite) TestUbuntu1604Detector() {
 	assert.Equal(suite.T(), "Ubuntu", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "16.04", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"debian", "linux", "unix", "os"}, di.Family)
 }
 
 func (suite *OsDetectTestSuite) TestDebian9Detector() {
@@ -106,6 +112,7 @@ func (suite *OsDetectTestSuite) TestDebian9Detector() {
 	assert.Equal(suite.T(), "Debian GNU/Linux", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "9.4", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"debian", "linux", "unix", "os"}, di.Family)
 }
 
 func (suite *OsDetectTestSuite) TestOpenSuseLeap42Detector() {
@@ -118,6 +125,7 @@ func (suite *OsDetectTestSuite) TestOpenSuseLeap42Detector() {
 	assert.Equal(suite.T(), "openSUSE Leap", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "42.3", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"suse", "linux", "unix", "os"}, di.Family)
 }
 
 func (suite *OsDetectTestSuite) TestSuse12Detector() {
@@ -130,6 +138,7 @@ func (suite *OsDetectTestSuite) TestSuse12Detector() {
 	assert.Equal(suite.T(), "SLES", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "12.3", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"suse", "linux", "unix", "os"}, di.Family)
 }
 
 func (suite *OsDetectTestSuite) TestAmazonLinuxDetector() {
@@ -142,6 +151,7 @@ func (suite *OsDetectTestSuite) TestAmazonLinuxDetector() {
 	assert.Equal(suite.T(), "Amazon Linux AMI", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "2017.09", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"linux", "unix", "os"}, di.Family)
 }
 
 func (suite *OsDetectTestSuite) TestScientificLinuxDetector() {
@@ -154,6 +164,7 @@ func (suite *OsDetectTestSuite) TestScientificLinuxDetector() {
 	assert.Equal(suite.T(), "Scientific Linux CERN SLC", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "6.9", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
 
 func (suite *OsDetectTestSuite) TestArchLinuxDetector() {
@@ -165,6 +176,7 @@ func (suite *OsDetectTestSuite) TestArchLinuxDetector() {
 	assert.Equal(suite.T(), "arch", di.Name, "os name should be identified")
 	assert.Equal(suite.T(), "Arch Linux", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"linux", "unix", "os"}, di.Family)
 }
 
 func (suite *OsDetectTestSuite) TestOracleLinux6Detector() {
@@ -177,6 +189,7 @@ func (suite *OsDetectTestSuite) TestOracleLinux6Detector() {
 	assert.Equal(suite.T(), "Oracle Linux Server", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "6.9", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
 
 func (suite *OsDetectTestSuite) TestOracleLinux7Detector() {
@@ -189,6 +202,7 @@ func (suite *OsDetectTestSuite) TestOracleLinux7Detector() {
 	assert.Equal(suite.T(), "Oracle Linux Server", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "7.5", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
 
 func (suite *OsDetectTestSuite) TestGentooLinuxDetector() {
@@ -201,6 +215,7 @@ func (suite *OsDetectTestSuite) TestGentooLinuxDetector() {
 	assert.Equal(suite.T(), "Gentoo", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "2.4.1", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"linux", "unix", "os"}, di.Family)
 }
 
 func (suite *OsDetectTestSuite) TestAlpineLinuxDetector() {
@@ -213,6 +228,7 @@ func (suite *OsDetectTestSuite) TestAlpineLinuxDetector() {
 	assert.Equal(suite.T(), "Alpine Linux", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "3.7.0", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"linux", "unix", "os"}, di.Family)
 }
 
 func (suite *OsDetectTestSuite) TestBusyboxLinuxDetector() {
@@ -225,6 +241,7 @@ func (suite *OsDetectTestSuite) TestBusyboxLinuxDetector() {
 	assert.Equal(suite.T(), "BusyBox", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "v1.28.4", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"linux", "unix", "os"}, di.Family)
 }
 
 func (suite *OsDetectTestSuite) TestWindowsDetector() {
@@ -237,6 +254,7 @@ func (suite *OsDetectTestSuite) TestWindowsDetector() {
 	assert.Equal(suite.T(), "Microsoft Windows Server 2016 Standard Evaluation", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "10.0.14393", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "64-bit", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"windows", "os"}, di.Family)
 }
 
 func (suite *OsDetectTestSuite) TestFamilies() {
