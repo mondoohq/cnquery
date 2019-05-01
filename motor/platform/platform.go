@@ -24,7 +24,7 @@ const (
 	FAMILY_UNIX    = "unix"
 	FAMILY_DARWIN  = "darwin"
 	FAMILY_LINUX   = "linux"
-	FAMILY_WINDOWS = "linux"
+	FAMILY_WINDOWS = "windows"
 )
 
 func (p *PlatformResolver) Resolve() (bool, *Info) {
@@ -65,7 +65,7 @@ func (p *PlatformResolver) resolvePlatform(di *Info) (bool, *Info) {
 
 	// return if the detect is true and we have a leaf
 	if detected && p.Familiy == false {
-		log.Debug().Str("platform", p.Name).Msg("platform> detected os")
+		log.Debug().Str("platform", p.Name).Strs("family", di.Family).Msg("platform> detected os")
 		return true, di
 	}
 

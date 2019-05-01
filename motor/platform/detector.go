@@ -19,8 +19,8 @@ type Info struct {
 }
 
 func (di *Info) IsFamily(family string) bool {
-	for _, entry := range di.Family {
-		if entry == family {
+	for i := range di.Family {
+		if di.Family[i] == family {
 			return true
 		}
 	}
@@ -32,9 +32,8 @@ type Detector struct {
 }
 
 func (d *Detector) Resolve() (bool, *Info) {
-	log.Debug().Msgf("detector> build up platfrom tree")
-	platforms, _ := d.buildPlatformTree()
 	log.Debug().Msg("detector> start resolving the platfrom")
+	platforms, _ := d.buildPlatformTree()
 	return platforms.Resolve()
 }
 
