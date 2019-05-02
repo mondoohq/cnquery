@@ -7,7 +7,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/types"
 )
 
@@ -36,9 +35,6 @@ func (c *Command) Exec(usercmd string, args []string) (*types.Command, error) {
 
 	// this only stores the user command, not the shell
 	c.Command.Command = usercmd + " " + strings.Join(args, " ")
-
-	log.Debug().Str("cmd", cmd).Str("args", strings.Join(cmdArgs, " ")).Msg("local> execute command")
-
 	c.cmdExecutor = exec.Command(cmd, cmdArgs...)
 
 	var stdoutBuffer bytes.Buffer
