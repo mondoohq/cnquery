@@ -6,3 +6,10 @@ events:
     ☐ https://github.com/rvoicilas/inotify-tools/blob/master/libinotifytools/src/inotifytools.c
   ☐ should we retrieve all the subitems if we just listen on a directory
   ☐ do not add symlinks, only the destinations, should we keep the symlink reference?
+
+refactor-afero:
+  ☐ tests tar filesystem
+  ☐ tests docker filesystem
+  ☐ tests mock filesystem 
+  ☐ tests local filesystem
+  ☐ filesystem for winrm
