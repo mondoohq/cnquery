@@ -7,6 +7,7 @@ import (
 
 	"github.com/masterzen/winrm"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/types"
 )
 
@@ -104,11 +105,15 @@ func (t *WinrmTransport) RunCommand(command string) (*types.Command, error) {
 	return mcmd, nil
 }
 
-func (t *WinrmTransport) File(path string) (types.File, error) {
+func (t *WinrmTransport) File(path string) (afero.File, error) {
 	log.Debug().Str("path", path).Str("transport", "ssh").Msg("winrm> fetch file")
 	return nil, errors.New("not implemented")
 }
 
-func (t *WinrmTransport) Close() {
+func (t *WinrmTransport) FS() afero.Fs {
+	return nil
+}
 
+func (t *WinrmTransport) Close() {
+	// nothing to do yet
 }
