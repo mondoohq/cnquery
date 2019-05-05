@@ -597,7 +597,9 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 
 			osr, err := d.osrelease()
 			// ignore os release if we have an error
-			if err == nil {
+			if err != nil {
+				log.Debug().Err(err).Msg("platform> cannot parse os-release on this linux system")
+			} else {
 				if len(osr["ID"]) > 0 {
 					di.Name = osr["ID"]
 				}
@@ -609,8 +611,6 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 				}
 
 				detected = true
-			} else {
-				log.Debug().Err(err).Msg("platform> cannot parse os-release on this linux system")
 			}
 
 			// Centos 6 does not include /etc/os-release or /etc/lsb-release, therefore any static analysis
