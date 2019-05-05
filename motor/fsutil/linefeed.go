@@ -1,4 +1,4 @@
-package motorutil
+package fsutil
 
 import "io"
 

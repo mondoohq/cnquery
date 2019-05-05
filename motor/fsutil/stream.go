@@ -46,7 +46,7 @@ func StreamFileAsTar(
 }
 
 func ExtractFileFromTarStream(path string, tarReader io.Reader) (io.Reader, error) {
-	log.Debug().Str("path", path).Msg("motorutil> extract file from tar")
+	log.Debug().Str("path", path).Msg("fsutil> extract file from tar")
 	var fileBuffer bytes.Buffer
 	bufWriter := bufio.NewWriter(&fileBuffer)
 
@@ -62,7 +62,7 @@ func ExtractFileFromTarStream(path string, tarReader io.Reader) (io.Reader, erro
 		}
 		// log.Debug().Msgf("File %s, Size: %d", h.Name, h.Size)
 		if h.Name == path {
-			log.Debug().Str("path", path).Msg("motorutil> found file")
+			log.Debug().Str("path", path).Msg("fsutil> found file")
 			if _, err := io.CopyN(bufWriter, tr, h.Size); err != nil {
 				return nil, err
 			}
