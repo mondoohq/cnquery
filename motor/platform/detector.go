@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/parser"
 	"go.mondoo.io/mondoo/motor/types"
 )
 
@@ -91,7 +90,7 @@ func (d *Detector) osrelease() (map[string]string, error) {
 		return nil, err
 	}
 
-	return parser.ParseOsRelease(string(content))
+	return ParseOsRelease(string(content))
 }
 
 // DISTRIB_ID=Ubuntu
@@ -111,7 +110,7 @@ func (d *Detector) lsbconfig() (map[string]string, error) {
 		return nil, err
 	}
 
-	return parser.ParseLsbRelease(string(content))
+	return ParseLsbRelease(string(content))
 }
 
 // darwin_swversion will call `/usr/bin/sw_vers` to identify the
@@ -126,7 +125,7 @@ func (d *Detector) darwin_swversion() (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return parser.ParseDarwinRelease(content)
+	return ParseDarwinRelease(content)
 }
 
 // macosSystemVersion is a specifc identifier for the operating system on macos
@@ -141,5 +140,5 @@ func (d *Detector) macosSystemVersion() (map[string]string, error) {
 		return nil, err
 	}
 
-	return parser.ParseMacOSSystemVersion(string(content))
+	return ParseMacOSSystemVersion(string(content))
 }
