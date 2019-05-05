@@ -1,12 +1,16 @@
 package ssh
 
 import (
-	"errors"
+	"os"
+
+	"github.com/pkg/errors"
 
 	"github.com/kevinburke/ssh_config"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+
+	"go.mondoo.io/mondoo/motor/ssh/scp"
 	"go.mondoo.io/mondoo/motor/ssh/sftp"
 	"go.mondoo.io/mondoo/motor/types"
 	"golang.org/x/crypto/ssh"
@@ -79,15 +83,26 @@ func New(endpoint *types.Endpoint) (*SSHTransport, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	log.Debug().Str("transport", "ssh").Msg("session established")
-	return &SSHTransport{Endpoint: endpoint, SSHClient: conn}, nil
+
+	activateScp := false
+	if os.Getenv("MONDOO_SSH_SCP") == "on" {
+		activateScp = true
+		log.Info().Str("transport", "ssh").Msg("ssh uses scp (beta) instead of sftp for file transfer")
+	}
+
+	return &SSHTransport{
+		Endpoint:             endpoint,
+		SSHClient:            conn,
+		UseBetaScpFilesystem: activateScp,
+	}, nil
 }
 
 type SSHTransport struct {
-	Endpoint  *types.Endpoint
-	SSHClient *ssh.Client
-	fs        afero.Fs
+	Endpoint             *types.Endpoint
+	SSHClient            *ssh.Client
+	fs                   afero.Fs
+	UseBetaScpFilesystem bool
 }
 
 func (t *SSHTransport) RunCommand(command string) (*types.Command, error) {
@@ -98,13 +113,31 @@ func (t *SSHTransport) RunCommand(command string) (*types.Command, error) {
 
 func (t *SSHTransport) FS() afero.Fs {
 	if t.fs == nil {
-		t.fs = sftp.New(t.SSHClient)
+		if t.UseBetaScpFilesystem {
+			conn, err := sshClient(t.Endpoint)
+			if err != nil {
+				log.Error().Err(err).Msg("error during scp initialization")
+			}
+			t.fs = scp.NewFs(conn)
+		} else {
+			fs, err := sftp.New(t.SSHClient)
+			if err != nil {
+				log.Error().Err(err).Msg("error during sftp initialization")
+			} else {
+				t.fs = fs
+			}
+		}
 	}
 	return t.fs
 }
 
 func (t *SSHTransport) File(path string) (afero.File, error) {
-	return t.FS().Open(path)
+	fs := t.FS()
+	if fs == nil {
+		return nil, errors.New("could not initialize the ssh filesystem")
+	}
+
+	return fs.Open(path)
 }
 
 func (t *SSHTransport) Close() {

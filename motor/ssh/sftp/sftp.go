@@ -17,8 +17,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/pkg/sftp"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"golang.org/x/crypto/ssh"
 )
@@ -31,13 +32,13 @@ type Fs struct {
 	client *sftp.Client
 }
 
-func New(client *ssh.Client) afero.Fs {
+func New(client *ssh.Client) (afero.Fs, error) {
 	ftpClient, err := sftpClient(client)
 	if err != nil {
-		log.Error().Err(err).Msg("could not initialize sftp backend")
+		return nil, errors.Wrap(err, "could not initialize sftp backend")
 	}
 
-	return &Fs{client: ftpClient}
+	return &Fs{client: ftpClient}, nil
 }
 
 func sftpClient(sshClient *ssh.Client) (*sftp.Client, error) {
@@ -125,7 +126,7 @@ func (s Fs) Remove(name string) error {
 func (s Fs) RemoveAll(path string) error {
 	// TODO have a look at os.RemoveAll
 	// https://github.com/golang/go/blob/master/src/os/path.go#L66
-	return nil
+	return errors.New("not implemented")
 }
 
 func (s Fs) Rename(oldname, newname string) error {
