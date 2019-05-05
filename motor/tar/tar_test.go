@@ -11,7 +11,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/motor/motorutil"
 	"go.mondoo.io/mondoo/motor/tar"
 	"go.mondoo.io/mondoo/motor/types"
 
@@ -71,7 +70,7 @@ func TestTarSymlinkFile(t *testing.T) {
 		assert.Equal(t, 796240, len(content), "should read the full content")
 
 		// ensure the same works with tar()
-		content, err = motorutil.ReadFile(f)
+		content, err = ioutil.ReadAll(f)
 		assert.Equal(t, nil, err, "should read without error")
 		assert.Equal(t, 796240, len(content), "should read the full content")
 	}
