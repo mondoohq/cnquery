@@ -8,7 +8,6 @@ import (
 
 	"net"
 
-	"github.com/pkg/sftp"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/types"
 	"golang.org/x/crypto/ssh"
@@ -66,14 +65,6 @@ func authMethods(endpoint *types.Endpoint) ([]ssh.AuthMethod, error) {
 	}
 
 	return auths, nil
-}
-
-func sftpClient(sshClient *ssh.Client) (*sftp.Client, error) {
-	c, err := sftp.NewClient(sshClient, sftp.MaxPacket(1<<15))
-	if err != nil {
-		return nil, err
-	}
-	return c, nil
 }
 
 func sshAgent() ssh.AuthMethod {

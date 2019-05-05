@@ -14,6 +14,8 @@
 package sftp
 
 import (
+	"errors"
+	"fmt"
 	"os"
 
 	"github.com/pkg/sftp"
@@ -21,6 +23,7 @@ import (
 
 type File struct {
 	fd *sftp.File
+	c  *sftp.Client
 }
 
 func FileOpen(s *sftp.Client, name string) (*File, error) {
@@ -28,7 +31,10 @@ func FileOpen(s *sftp.Client, name string) (*File, error) {
 	if err != nil {
 		return &File{}, err
 	}
-	return &File{fd: fd}, nil
+	return &File{
+		fd: fd,
+		c:  s,
+	}, nil
 }
 
 func FileCreate(s *sftp.Client, name string) (*File, error) {
@@ -36,7 +42,10 @@ func FileCreate(s *sftp.Client, name string) (*File, error) {
 	if err != nil {
 		return &File{}, err
 	}
-	return &File{fd: fd}, nil
+	return &File{
+		fd: fd,
+		c:  s,
+	}, nil
 }
 
 func (f *File) Close() error {
@@ -65,17 +74,24 @@ func (f *File) Read(b []byte) (n int, err error) {
 
 // TODO
 func (f *File) ReadAt(b []byte, off int64) (n int, err error) {
-	return 0, nil
+	return 0, errors.New("not implemented")
 }
 
-// TODO
 func (f *File) Readdir(count int) (res []os.FileInfo, err error) {
-	return nil, nil
+	return f.c.ReadDir(f.Name())
 }
 
-// TODO
 func (f *File) Readdirnames(n int) (names []string, err error) {
-	return nil, nil
+	dirFileInfos, err := f.c.ReadDir(f.Name())
+	if err != nil {
+		return nil, fmt.Errorf("ssh> could not read dirnames: %v", err)
+	}
+
+	dir := make([]string, len(dirFileInfos))
+	for i := range dirFileInfos {
+		dir[i] = dirFileInfos[i].Name()
+	}
+	return dir, nil
 }
 
 func (f *File) Seek(offset int64, whence int) (int64, error) {
@@ -88,7 +104,7 @@ func (f *File) Write(b []byte) (n int, err error) {
 
 // TODO
 func (f *File) WriteAt(b []byte, off int64) (n int, err error) {
-	return 0, nil
+	return 0, errors.New("not implemented")
 }
 
 func (f *File) WriteString(s string) (ret int, err error) {

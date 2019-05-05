@@ -247,7 +247,9 @@ func TestSftpCreate(t *testing.T) {
 	}
 	defer ctx.Disconnect()
 
-	var fs = New(ctx.sftpc)
+	var fs = Fs{
+		client: ctx.sftpc,
+	}
 
 	fs.MkdirAll("test/dir1/dir2/dir3", os.FileMode(0777))
 	fs.Mkdir("test/foo", os.FileMode(0000))

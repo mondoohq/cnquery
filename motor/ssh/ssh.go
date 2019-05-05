@@ -7,6 +7,7 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"go.mondoo.io/mondoo/motor/ssh/sftp"
 	"go.mondoo.io/mondoo/motor/types"
 	"golang.org/x/crypto/ssh"
 )
@@ -86,6 +87,7 @@ func New(endpoint *types.Endpoint) (*SSHTransport, error) {
 type SSHTransport struct {
 	Endpoint  *types.Endpoint
 	SSHClient *ssh.Client
+	fs        afero.Fs
 }
 
 func (t *SSHTransport) RunCommand(command string) (*types.Command, error) {
@@ -95,18 +97,15 @@ func (t *SSHTransport) RunCommand(command string) (*types.Command, error) {
 }
 
 func (t *SSHTransport) FS() afero.Fs {
-	return nil
+	if t.fs == nil {
+		t.fs = sftp.New(t.SSHClient)
+	}
+	return t.fs
 }
 
 func (t *SSHTransport) File(path string) (afero.File, error) {
-	return nil, errors.New("not implemented")
+	return t.FS().Open(path)
 }
-
-// func (t *SSHTransport) File(path string) (types.File, error) {
-// 	log.Debug().Str("path", path).Str("transport", "ssh").Msg("fetch file")
-// 	f := &File{SSHClient: t.SSHClient, filePath: path}
-// 	return f, nil
-// }
 
 func (t *SSHTransport) Close() {
 	if t.SSHClient != nil {

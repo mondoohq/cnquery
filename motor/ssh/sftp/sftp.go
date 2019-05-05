@@ -18,7 +18,9 @@ import (
 	"time"
 
 	"github.com/pkg/sftp"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"golang.org/x/crypto/ssh"
 )
 
 // Fs is a afero.Fs implementation that uses functions provided by the sftp package.
@@ -29,8 +31,21 @@ type Fs struct {
 	client *sftp.Client
 }
 
-func New(client *sftp.Client) afero.Fs {
-	return &Fs{client: client}
+func New(client *ssh.Client) afero.Fs {
+	ftpClient, err := sftpClient(client)
+	if err != nil {
+		log.Error().Err(err).Msg("could not initialize sftp backend")
+	}
+
+	return &Fs{client: ftpClient}
+}
+
+func sftpClient(sshClient *ssh.Client) (*sftp.Client, error) {
+	c, err := sftp.NewClient(sshClient, sftp.MaxPacket(1<<15))
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
 }
 
 func (s Fs) Name() string { return "sftpfs" }
