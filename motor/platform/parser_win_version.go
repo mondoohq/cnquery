@@ -1,4 +1,4 @@
-package parser
+package platform
 
 import (
 	"encoding/csv"
@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/motorutil"
+	"go.mondoo.io/mondoo/motor/fsutil"
 )
 
 type WmicOS struct {
@@ -79,7 +79,7 @@ type WmicOS struct {
 }
 
 func ParseWinWmicOS(csvData io.Reader) (*WmicOS, error) {
-	reader := csv.NewReader(motorutil.NewLineFeedReader(csvData))
+	reader := csv.NewReader(fsutil.NewLineFeedReader(csvData))
 	os := []*WmicOS{}
 	header := map[string]int{}
 

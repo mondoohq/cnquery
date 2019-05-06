@@ -1,4 +1,4 @@
-package parser
+package platform
 
 import (
 	"encoding/xml"
@@ -7,7 +7,7 @@ import (
 
 var DARWIN_RELEASE_REGEX = regexp.MustCompile(`(?m)^\s*(.+?)\s*:\s*(.+?)\s*$`)
 
-// parseDarwinRelease will parse the output of `/usr/bin/sw_vers`
+// ParseDarwinRelease will parse the output of `/usr/bin/sw_vers`
 func ParseDarwinRelease(content string) (map[string]string, error) {
 	return parseKeyValue(content, DARWIN_RELEASE_REGEX), nil
 }

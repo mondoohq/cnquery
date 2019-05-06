@@ -65,12 +65,8 @@ func (s *UnixGroupManager) List() ([]*Group, error) {
 		return nil, err
 	}
 
-	r, err := f.Open()
-	if err != nil {
-		return nil, err
-	}
-	defer r.Close()
-	return ParseEtcGroup(r)
+	defer f.Close()
+	return ParseEtcGroup(f)
 }
 
 type OSXGroupManager struct {

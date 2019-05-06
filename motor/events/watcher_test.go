@@ -9,7 +9,6 @@ import (
 
 	"go.mondoo.io/mondoo/motor/mock"
 	"go.mondoo.io/mondoo/motor/mock/toml"
-	"go.mondoo.io/mondoo/motor/motorutil"
 	"go.mondoo.io/mondoo/motor/types"
 
 	"github.com/stretchr/testify/assert"
@@ -71,7 +70,7 @@ func TestFileSubscribe(t *testing.T) {
 	})
 
 	wg.Wait()
-	content, err := motorutil.ReadFile(res.File)
+	content, err := ioutil.ReadAll(res.File)
 	assert.Nil(t, err, "file content was returned without any error")
 	assert.Equal(t, "test", string(content), "get the expected command output")
 
@@ -92,7 +91,7 @@ func TestFileChangeEvents(t *testing.T) {
 		switch x := fo.(type) {
 		case *FileObservable:
 			defer wg.Done()
-			content, err := motorutil.ReadFile(x.File)
+			content, err := ioutil.ReadAll(x.File)
 			if err == nil {
 				res = append(res, string(content))
 			}

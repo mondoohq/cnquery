@@ -72,11 +72,8 @@ func (dpm *DebPkgManager) List() ([]Package, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}
-
-	fReader, err := fi.Open()
-	defer fReader.Close()
-
-	return ParseDpkgPackages(fReader)
+	defer fi.Close()
+	return ParseDpkgPackages(fi)
 }
 
 func (dpm *DebPkgManager) Available() ([]PackageUpdate, error) {
@@ -210,17 +207,12 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 		return nil, fmt.Errorf("could not read package list")
 	}
 
-	fReader, err := f.Open()
-	if err != nil {
-		return nil, fmt.Errorf("could not read package list")
-	}
-
 	fWriter, err := os.Create(filepath.Join(rpmTmpDir, "Packages"))
 	if err != nil {
 		log.Error().Err(err).Msg("lumi[packages]> could not create tmp file for rpm database")
 		return nil, fmt.Errorf("could not read package list")
 	}
-	_, err = io.Copy(fWriter, fReader)
+	_, err = io.Copy(fWriter, f)
 	if err != nil {
 		log.Error().Err(err).Msg("lumi[packages]> could not copy rpm to tmp file")
 		return nil, fmt.Errorf("could not read package list")
@@ -306,15 +298,13 @@ func (apm *AlpinePkgManager) Format() string {
 }
 
 func (apm *AlpinePkgManager) List() ([]Package, error) {
-	fi, err := apm.motor.Transport.File("/lib/apk/db/installed")
+	fr, err := apm.motor.Transport.File("/lib/apk/db/installed")
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}
+	defer fr.Close()
 
-	fReader, err := fi.Open()
-	defer fReader.Close()
-
-	return ParseApkDbPackages(fReader), nil
+	return ParseApkDbPackages(fr), nil
 }
 
 func (apm *AlpinePkgManager) Available() ([]PackageUpdate, error) {

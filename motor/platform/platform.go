@@ -6,8 +6,6 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/motorutil"
-	"go.mondoo.io/mondoo/motor/parser"
 )
 
 type detect func(p *PlatformResolver, di *Info) (bool, error)
@@ -87,13 +85,14 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			if err != nil {
 				return false, nil
 			}
+			defer f.Close()
 
-			c, err := motorutil.ReadFile(f)
+			c, err := ioutil.ReadAll(f)
 			if err != nil || len(c) == 0 {
 				return false, nil
 			}
 
-			sv, err := parser.ParseMacOSSystemVersion(string(c))
+			sv, err := ParseMacOSSystemVersion(string(c))
 			if err != nil || len(c) == 0 {
 				return false, nil
 			}
@@ -127,8 +126,9 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			if err != nil {
 				return false, nil
 			}
+			defer f.Close()
 
-			c, err := motorutil.ReadFile(f)
+			c, err := ioutil.ReadAll(f)
 			if err != nil || len(c) == 0 {
 				return false, nil
 			}
@@ -178,8 +178,9 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			if err != nil {
 				return false, nil
 			}
+			defer f.Close()
 
-			c, err := motorutil.ReadFile(f)
+			c, err := ioutil.ReadAll(f)
 			if err != nil || len(c) == 0 {
 				return false, nil
 			}
@@ -246,8 +247,9 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			if err != nil {
 				return false, nil
 			}
+			defer f.Close()
 
-			c, err := motorutil.ReadFile(f)
+			c, err := ioutil.ReadAll(f)
 			if err != nil || len(c) == 0 {
 				return false, nil
 			}
@@ -274,8 +276,9 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			if err != nil {
 				return false, nil
 			}
+			defer f.Close()
 
-			c, err := motorutil.ReadFile(f)
+			c, err := ioutil.ReadAll(f)
 			if err != nil || len(c) == 0 {
 				return false, nil
 			}
@@ -345,15 +348,16 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			if err != nil {
 				return false, nil
 			}
+			defer f.Close()
 
-			c, err := motorutil.ReadFile(f)
+			c, err := ioutil.ReadAll(f)
 			if err != nil || len(c) == 0 {
 				log.Debug().Err(err)
 				return false, nil
 			}
 
 			content := strings.TrimSpace(string(c))
-			name, release, err := parser.ParseRhelVersion(content)
+			name, release, err := ParseRhelVersion(content)
 			if err == nil {
 				// only set title if not already properly detected by lsb or os-release
 				if len(di.Title) == 0 {
@@ -424,7 +428,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 				return false, nil
 			}
 
-			data, err := parser.ParseWinWmicOS(cmd.Stdout)
+			data, err := ParseWinWmicOS(cmd.Stdout)
 			if err != nil {
 				return false, nil
 			}
@@ -509,15 +513,16 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 				log.Debug().Err(err)
 				return false, nil
 			}
+			defer f.Close()
 
-			c, err := motorutil.ReadFile(f)
+			c, err := ioutil.ReadAll(f)
 			if err != nil || len(c) == 0 {
 				log.Debug().Err(err)
 				return false, nil
 			}
 
 			content := strings.TrimSpace(string(c))
-			title, release, err := parser.ParseRhelVersion(content)
+			title, release, err := ParseRhelVersion(content)
 			if err == nil {
 				log.Debug().Str("title", title).Str("release", release).Msg("detected rhelish platform")
 				// only set title if not already properly detected by lsb or os-release
@@ -563,7 +568,9 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			if err != nil {
 				return false, nil
 			}
-			c, err := motorutil.ReadFile(f)
+			defer f.Close()
+
+			c, err := ioutil.ReadAll(f)
 			if err != nil {
 				return false, nil
 			}
@@ -599,7 +606,9 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 
 			osr, err := d.osrelease()
 			// ignore os release if we have an error
-			if err == nil {
+			if err != nil {
+				log.Debug().Err(err).Msg("platform> cannot parse os-release on this linux system")
+			} else {
 				if len(osr["ID"]) > 0 {
 					di.Name = osr["ID"]
 				}
@@ -611,15 +620,17 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 				}
 
 				detected = true
-			} else {
-				log.Debug().Err(err).Msg("platform> cannot parse os-release on this linux system")
 			}
 
 			// Centos 6 does not include /etc/os-release or /etc/lsb-release, therefore any static analysis
 			// will not be able to detect the system, since the following unamem and unames mechanism is not
 			// available there. Instead the system can be identified by the availability of /etc/redhat-release
 			// If /etc/redhat-release is available, we know its a linux system.
-			_, err = d.Transport.File("/etc/redhat-release")
+			f, err := d.Transport.File("/etc/redhat-release")
+			if f != nil {
+				f.Close()
+			}
+
 			if err == nil {
 				detected = true
 			}

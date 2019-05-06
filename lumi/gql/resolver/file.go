@@ -3,9 +3,10 @@ package resolver
 import (
 	"context"
 	"errors"
+	"io/ioutil"
 
+	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/lumi/gql"
-	"go.mondoo.io/mondoo/motor/motorutil"
 )
 
 func (r *queryResolver) File(ctx context.Context, path *string) (*gql.File, error) {
@@ -27,7 +28,7 @@ func (r *fileResolver) Content(ctx context.Context, obj *gql.File) (*string, err
 		return nil, err
 	}
 
-	c, err := motorutil.ReadFile(f)
+	c, err := ioutil.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
@@ -42,9 +43,7 @@ func (r *fileResolver) Exists(ctx context.Context, obj *gql.File) (bool, error) 
 	}
 
 	path := *obj.Path
-	f, err := r.Runtime.Motor.Transport.File(path)
-	if err != nil {
-		return false, err
-	}
-	return f.Exists(), nil
+	trans := r.Runtime.Motor.Transport
+	afs := &afero.Afero{Fs: trans.FS()}
+	return afs.Exists(path)
 }

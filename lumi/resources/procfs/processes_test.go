@@ -13,17 +13,13 @@ func TestParseProcessStatus(t *testing.T) {
 	path := "./process-pid1.toml"
 	trans, err := toml.New(&types.Endpoint{Backend: "mock", Path: path})
 
-	statusf, err := trans.File("/proc/1/status")
+	f, err := trans.File("/proc/1/status")
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer f.Close()
 
-	statusStream, err := statusf.Open()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	processStatus, err := procfs.ParseProcessStatus(statusStream)
+	processStatus, err := procfs.ParseProcessStatus(f)
 	if err != nil {
 		t.Fatalf("cannot request file %v", err)
 	}
@@ -40,13 +36,9 @@ func TestParseProcessCmdline(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer f.Close()
 
-	cmdlineStream, err := f.Open()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	cmd, err := procfs.ParseProcessCmdline(cmdlineStream)
+	cmd, err := procfs.ParseProcessCmdline(f)
 	if err != nil {
 		t.Fatalf("cannot request file %v", err)
 	}

@@ -35,12 +35,7 @@ func (p *LinuxIdProvider) retrieveFile(path string) ([]byte, error) {
 		return nil, err
 	}
 
-	r, err := f.Open()
-	if err != nil {
-		return nil, err
-	}
-
-	content, err := ioutil.ReadAll(r)
+	content, err := ioutil.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
