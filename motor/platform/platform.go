@@ -85,6 +85,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			if err != nil {
 				return false, nil
 			}
+			defer f.Close()
 
 			c, err := ioutil.ReadAll(f)
 			if err != nil || len(c) == 0 {
@@ -125,6 +126,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			if err != nil {
 				return false, nil
 			}
+			defer f.Close()
 
 			c, err := ioutil.ReadAll(f)
 			if err != nil || len(c) == 0 {
@@ -176,6 +178,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			if err != nil {
 				return false, nil
 			}
+			defer f.Close()
 
 			c, err := ioutil.ReadAll(f)
 			if err != nil || len(c) == 0 {
@@ -244,6 +247,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			if err != nil {
 				return false, nil
 			}
+			defer f.Close()
 
 			c, err := ioutil.ReadAll(f)
 			if err != nil || len(c) == 0 {
@@ -272,6 +276,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			if err != nil {
 				return false, nil
 			}
+			defer f.Close()
 
 			c, err := ioutil.ReadAll(f)
 			if err != nil || len(c) == 0 {
@@ -343,6 +348,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			if err != nil {
 				return false, nil
 			}
+			defer f.Close()
 
 			c, err := ioutil.ReadAll(f)
 			if err != nil || len(c) == 0 {
@@ -507,6 +513,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 				log.Debug().Err(err)
 				return false, nil
 			}
+			defer f.Close()
 
 			c, err := ioutil.ReadAll(f)
 			if err != nil || len(c) == 0 {
@@ -561,6 +568,8 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			if err != nil {
 				return false, nil
 			}
+			defer f.Close()
+
 			c, err := ioutil.ReadAll(f)
 			if err != nil {
 				return false, nil
@@ -617,7 +626,11 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			// will not be able to detect the system, since the following unamem and unames mechanism is not
 			// available there. Instead the system can be identified by the availability of /etc/redhat-release
 			// If /etc/redhat-release is available, we know its a linux system.
-			_, err = d.Transport.File("/etc/redhat-release")
+			f, err := d.Transport.File("/etc/redhat-release")
+			if f != nil {
+				f.Close()
+			}
+
 			if err == nil {
 				detected = true
 			}
