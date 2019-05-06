@@ -84,6 +84,7 @@ func (d *Detector) osrelease() (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 
 	content, err := ioutil.ReadAll(f)
 	if err != nil {
@@ -104,6 +105,7 @@ func (d *Detector) lsbconfig() (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 
 	content, err := ioutil.ReadAll(f)
 	if err != nil {
@@ -134,6 +136,7 @@ func (d *Detector) macosSystemVersion() (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 
 	content, err := ioutil.ReadAll(f)
 	if err != nil {
