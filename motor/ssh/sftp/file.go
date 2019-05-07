@@ -49,15 +49,24 @@ func FileCreate(s *sftp.Client, name string) (*File, error) {
 }
 
 func (f *File) Close() error {
-	return f.fd.Close()
+	if f != nil && f.fd != nil {
+		return f.fd.Close()
+	}
+	return nil
 }
 
 func (f *File) Name() string {
-	return f.fd.Name()
+	if f != nil && f.fd != nil {
+		return f.fd.Name()
+	}
+	return ""
 }
 
 func (f *File) Stat() (os.FileInfo, error) {
-	return f.fd.Stat()
+	if f != nil && f.fd != nil {
+		return f.fd.Stat()
+	}
+	return nil, errors.New("cannot access file")
 }
 
 func (f *File) Sync() error {
