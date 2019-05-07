@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
@@ -19,6 +18,8 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 )
 
+const alpineContainerPath = "./alpine-container.tar"
+
 func TestTarCommand(t *testing.T) {
 	err := cacheImageToTar()
 	assert.Equal(t, nil, err, "should create tar without error")
@@ -26,11 +27,11 @@ func TestTarCommand(t *testing.T) {
 		return
 	}
 
-	filepath, _ := filepath.Abs("./testdata/alpine-container.tar")
-	tarTransport, err := tar.New(&types.Endpoint{Backend: "tar", Path: filepath})
+	tarTransport, err := tar.New(&types.Endpoint{Backend: "tar", Path: alpineContainerPath})
 	assert.Equal(t, nil, err, "should create tar without error")
 
 	cmd, err := tarTransport.RunCommand("ls /")
+	assert.Nil(t, err)
 	if assert.NotNil(t, cmd) {
 		assert.Equal(t, nil, err, "should execute without error")
 		assert.Equal(t, -1, cmd.ExitStatus, "command should not be executed")
@@ -47,12 +48,11 @@ func TestTarSymlinkFile(t *testing.T) {
 		return
 	}
 
-	filepath, _ := filepath.Abs("./testdata/alpine-container.tar")
-	tarTransport, err := tar.New(&types.Endpoint{Backend: "tar", Path: filepath})
+	tarTransport, err := tar.New(&types.Endpoint{Backend: "tar", Path: alpineContainerPath})
 	assert.Equal(t, nil, err, "should create tar without error")
 
 	f, err := tarTransport.File("/bin/cat")
-
+	assert.Nil(t, err)
 	if assert.NotNil(t, f) {
 		assert.Equal(t, nil, err, "should execute without error")
 
@@ -115,12 +115,11 @@ func TestTarFile(t *testing.T) {
 		return
 	}
 
-	filepath, _ := filepath.Abs("./testdata/alpine-container.tar")
-	tarTransport, err := tar.New(&types.Endpoint{Backend: "tar", Path: filepath})
+	tarTransport, err := tar.New(&types.Endpoint{Backend: "tar", Path: alpineContainerPath})
 	assert.Equal(t, nil, err, "should create tar without error")
 
 	f, err := tarTransport.File("/etc/alpine-release")
-
+	assert.Nil(t, err)
 	if assert.NotNil(t, f) {
 		assert.Equal(t, nil, err, "should execute without error")
 
@@ -140,7 +139,7 @@ func TestTarFile(t *testing.T) {
 func cacheImageToTar() error {
 
 	source := "alpine:3.9"
-	filename := "./testdata/alpine-container.tar"
+	filename := alpineContainerPath
 
 	// check if the cache is already there
 	_, err := os.Stat(filename)
