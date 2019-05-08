@@ -31,7 +31,9 @@ func (p *PlatformResolver) Resolve() (bool, *Info) {
 	di.Family = make([]string, 0)
 
 	// start recursive platform resolution
-	return p.resolvePlatform(di)
+	ok, pi := p.resolvePlatform(di)
+	log.Debug().Str("platform", pi.Name).Strs("family", pi.Family).Msg("platform> detected os")
+	return ok, pi
 }
 
 // Resolve tries to find recursively all
@@ -63,7 +65,6 @@ func (p *PlatformResolver) resolvePlatform(di *Info) (bool, *Info) {
 
 	// return if the detect is true and we have a leaf
 	if detected && p.Familiy == false {
-		log.Debug().Str("platform", p.Name).Strs("family", di.Family).Msg("platform> detected os")
 		return true, di
 	}
 
