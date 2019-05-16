@@ -5,7 +5,7 @@ stdout = "Linux"
 stdout = "x86_64"
 
 [commands."uname -r"]
-stdout = "4.9.87-linuxkit-aufs"
+stdout = "4.9.125-linuxkit"
 
 [files."/etc/redhat-release"]
 content = "CentOS Linux release 7.5.1804 (Core)"

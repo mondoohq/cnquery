@@ -325,9 +325,10 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 		Name:    "opensuse",
 		Familiy: false,
 		Detect: func(p *PlatformResolver, di *Info) (bool, error) {
-			if di.Name == "opensuse" {
+			if di.Name == "opensuse" || di.Name == "opensuse-leap" {
 				return true, nil
 			}
+
 			return false, nil
 		},
 	}

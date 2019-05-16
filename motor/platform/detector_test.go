@@ -129,7 +129,7 @@ func (suite *OsDetectTestSuite) TestDebian9Detector() {
 }
 
 func (suite *OsDetectTestSuite) TestOpenSuseLeap42Detector() {
-	detector, err := newDetector("detect-opensuse-42.3.toml")
+	detector, err := newDetector("detect-opensuse-leap-42.3.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -137,6 +137,19 @@ func (suite *OsDetectTestSuite) TestOpenSuseLeap42Detector() {
 	assert.Equal(suite.T(), "opensuse", di.Name, "os name should be identified")
 	assert.Equal(suite.T(), "openSUSE Leap", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "42.3", di.Release, "os version should be identified")
+	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"suse", "linux", "unix", "os"}, di.Family)
+}
+
+func (suite *OsDetectTestSuite) TestOpenSuseLeap15Detector() {
+	detector, err := newDetector("detect-opensuse-leap-15.toml")
+	assert.Nil(suite.T(), err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(suite.T(), true, resolved, "platform should be resolvable")
+	assert.Equal(suite.T(), "opensuse-leap", di.Name, "os name should be identified")
+	assert.Equal(suite.T(), "openSUSE Leap", di.Title, "os title should be identified")
+	assert.Equal(suite.T(), "15.0", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(suite.T(), []string{"suse", "linux", "unix", "os"}, di.Family)
 }
