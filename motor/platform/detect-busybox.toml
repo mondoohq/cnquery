@@ -5,7 +5,7 @@ stdout = "Linux"
 stdout = "x86_64"
 
 [commands."uname -r"]
-stdout = "4.9.87-linuxkit-aufs"
+stdout = "4.9.125-linuxkit"
 
 [commands."ls --help 2>&1 | head -1"]
 stdout = "BusyBox v1.28.4 (2018-05-22 17:00:17 UTC) multi-call binary."
