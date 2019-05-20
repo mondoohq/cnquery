@@ -11,7 +11,6 @@ import (
 	"go.mondoo.io/mondoo/falcon"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/nexus/scanner"
-	"go.mondoo.io/mondoo/vadvisor/api"
 )
 
 var Scanner *scanner.Client
@@ -42,7 +41,7 @@ func (c *lumiCvss) GetScore() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return score.Score, nil
+	return float64(score.Score), nil
 }
 
 func (c *lumiCve) id() (string, error) {
@@ -132,7 +131,7 @@ func maxCvssScore(cvsslist []interface{}) (Cvss, error) {
 	return max, nil
 }
 
-func genLumiCvss(runtime *lumi.Runtime, cvss *api.CVSS) (Cvss, error) {
+func genLumiCvss(runtime *lumi.Runtime, cvss *cvss.Cvss) (Cvss, error) {
 	if cvss == nil {
 		return nil, errors.New("cvss value needs to be set")
 	}
