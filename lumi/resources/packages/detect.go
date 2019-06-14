@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/nexus/assets"
 	"go.mondoo.io/mondoo/vadvisor/api"
 )
 
@@ -36,8 +37,8 @@ func Detect(motor *motor.Motor) ([]Package, error) {
 	return packages, nil
 }
 
-func ConvertPlatform(platform platform.Info) *api.Platform {
-	return &api.Platform{
+func ConvertPlatform(platform platform.Info) *assets.Platform {
+	return &assets.Platform{
 		Name:    platform.Name,
 		Release: platform.Release,
 		Arch:    platform.Arch,
