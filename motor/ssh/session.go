@@ -14,7 +14,7 @@ import (
 	"golang.org/x/crypto/ssh/agent"
 )
 
-func sshClient(hostconfig *types.Endpoint) (*ssh.Client, error) {
+func sshClientConnection(hostconfig *types.Endpoint, hostKeyCallback ssh.HostKeyCallback) (*ssh.Client, error) {
 	authMethods, err := authMethods(hostconfig)
 	if err != nil {
 		return nil, err
@@ -27,7 +27,7 @@ func sshClient(hostconfig *types.Endpoint) (*ssh.Client, error) {
 	sshConfig := &ssh.ClientConfig{
 		User:            hostconfig.User,
 		Auth:            authMethods,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		HostKeyCallback: hostKeyCallback,
 	}
 
 	return ssh.Dial("tcp", fmt.Sprintf("%s:%s", hostconfig.Host, hostconfig.Port), sshConfig)
