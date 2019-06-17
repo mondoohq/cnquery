@@ -1,4 +1,4 @@
-package docker
+package resolver
 
 import (
 	"errors"
@@ -11,6 +11,7 @@ import (
 	"go.mondoo.io/mondoo/motor/docker/docker_engine"
 	"go.mondoo.io/mondoo/motor/docker/image"
 	"go.mondoo.io/mondoo/motor/docker/snapshot"
+	motorcloud_docker "go.mondoo.io/mondoo/motor/motorcloud/docker"
 	"go.mondoo.io/mondoo/motor/types"
 )
 
@@ -41,7 +42,7 @@ import (
 //
 // Therefore, this package will only implement the auto-discovery and
 // redirect to specific implementations once the disovery is completed
-func New(endpoint *types.Endpoint) (types.Transport, error) {
+func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, string, error) {
 	// 0. check if we have a tar as input
 	//    detect if the tar is a container image format -> container image
 	//    or a container snapshot format -> container snapshot
@@ -52,25 +53,36 @@ func New(endpoint *types.Endpoint) (types.Transport, error) {
 	// 4. check if we have a descriptor for a registry -> container image
 
 	if endpoint == nil || len(endpoint.Host) == 0 {
-		return nil, errors.New("no endpoint provided")
+		return nil, "", errors.New("no endpoint provided")
 	}
 
-	// TODO: check if we are pointing to a local file
+	// TODO: check if we are pointing to a local tar file
 	log.Debug().Str("docker", endpoint.Host).Msg("try to resolve the container or image source")
 	_, err := os.Stat(endpoint.Host)
 	if err == nil {
 		log.Debug().Msg("found local docker/image file")
-		_, err := tarball.ImageFromPath(endpoint.Host, nil)
+
+		// try to load docker image tarball
+		img, err := tarball.ImageFromPath(endpoint.Host, nil)
 		if err == nil {
 			log.Debug().Msg("detected docker image")
-			return image.NewFromFile(endpoint.Host)
+			var identifier string
+			transport, err := image.NewFromFile(endpoint.Host)
+			if err != nil {
+				hash, err := img.Digest()
+				if err != nil {
+					identifier = motorcloud_docker.MondooContainerImageID(hash.String())
+				}
+			}
+			return transport, identifier, err
 		} else {
 			log.Debug().Msg("detected docker container snapshot")
-			return snapshot.NewFromDirectory(endpoint.Host)
+			transport, err := snapshot.NewFromDirectory(endpoint.Host)
+			return transport, "", err
 		}
 
 		// TODO: detect file format
-		return nil, errors.New("could not find the container reference")
+		return nil, "", errors.New("could not find the container reference")
 	}
 
 	// could be an image id/name, container id/name or a short reference to an image in docker engine
@@ -80,10 +92,12 @@ func New(endpoint *types.Endpoint) (types.Transport, error) {
 		if err == nil {
 			if ci.Running {
 				log.Debug().Msg("found running container " + ci.ID)
-				return docker_engine.New(ci.ID)
+				transport, err := docker_engine.New(ci.ID)
+				return transport, motorcloud_docker.MondooContainerID(ci.ID), err
 			} else {
 				log.Debug().Msg("found stopped container " + ci.ID)
-				return snapshot.NewFromDockerEngine(ci.ID)
+				transport, err := snapshot.NewFromDockerEngine(ci.ID)
+				return transport, motorcloud_docker.MondooContainerID(ci.ID), err
 			}
 		}
 
@@ -92,9 +106,10 @@ func New(endpoint *types.Endpoint) (types.Transport, error) {
 			log.Debug().Msg("found docker engine image " + ii.ID)
 			rc, err := image.LoadFromDockerEngine(ii.ID)
 			if err != nil {
-				return nil, err
+				return nil, "", err
 			}
-			return image.New(rc)
+			transport, err := image.New(rc)
+			return transport, motorcloud_docker.MondooContainerImageID(ii.ID), err
 		}
 	}
 
@@ -104,14 +119,15 @@ func New(endpoint *types.Endpoint) (types.Transport, error) {
 		log.Debug().Str("tag", tag.Name()).Msg("found valid container registry reference")
 		rc, err := image.LoadFromRegistry(tag)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
-		return image.New(rc)
+		transport, err := image.New(rc)
+		return transport, "", err
 	} else {
 		log.Debug().Str("image", endpoint.Host).Msg("Could not detect a valid repository url")
-		return nil, err
+		return nil, "", err
 	}
 
 	// if we reached here, we assume we have a name of an image or container from a registry
-	return nil, errors.New("could not find the container reference")
+	return nil, "", errors.New("could not find the container reference")
 }

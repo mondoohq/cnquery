@@ -9,7 +9,7 @@ import (
 )
 
 func TestParseParseEc2ReferenceId(t *testing.T) {
-	uri := "aws://ec2/v1/accounts/675173580680/regions/eu-west-1/instances/i-0e11b0762369fbefa"
+	uri := "//sytemidentifier.api.mondoo.app/runtime/aws/ec2/v1/accounts/675173580680/regions/eu-west-1/instances/i-0e11b0762369fbefa"
 
 	p := aws.ParseEc2ReferenceID(uri)
 	assert.NotNil(t, p)

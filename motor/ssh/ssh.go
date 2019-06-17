@@ -1,6 +1,7 @@
 package ssh
 
 import (
+	"net"
 	"os"
 
 	"github.com/pkg/errors"
@@ -79,10 +80,16 @@ func New(endpoint *types.Endpoint) (*SSHTransport, error) {
 	endpoint = DefaultConfig(endpoint)
 
 	// establish connection
-	conn, err := sshClient(endpoint)
+	var hostkey ssh.PublicKey
+	conn, err := sshClientConnection(endpoint, func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+		hostkey = key
+		// TODO: we may want to be more strict here
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
+
 	log.Debug().Str("transport", "ssh").Msg("session established")
 
 	activateScp := false
@@ -95,6 +102,7 @@ func New(endpoint *types.Endpoint) (*SSHTransport, error) {
 		Endpoint:             endpoint,
 		SSHClient:            conn,
 		UseBetaScpFilesystem: activateScp,
+		HostKey:              hostkey,
 	}, nil
 }
 
@@ -103,6 +111,7 @@ type SSHTransport struct {
 	SSHClient            *ssh.Client
 	fs                   afero.Fs
 	UseBetaScpFilesystem bool
+	HostKey              ssh.PublicKey
 }
 
 func (t *SSHTransport) RunCommand(command string) (*types.Command, error) {
@@ -114,11 +123,7 @@ func (t *SSHTransport) RunCommand(command string) (*types.Command, error) {
 func (t *SSHTransport) FS() afero.Fs {
 	if t.fs == nil {
 		if t.UseBetaScpFilesystem {
-			conn, err := sshClient(t.Endpoint)
-			if err != nil {
-				log.Error().Err(err).Msg("error during scp initialization")
-			}
-			t.fs = scp.NewFs(conn)
+			t.fs = scp.NewFs(t.SSHClient)
 		} else {
 			fs, err := sftp.New(t.SSHClient)
 			if err != nil {

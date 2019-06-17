@@ -75,7 +75,7 @@ func (a *Container) List() ([]*assets.Asset, error) {
 }
 
 func MondooContainerID(id string) string {
-	return "docker://container/" + id
+	return "//sytemidentifier.api.mondoo.app/runtime/docker/containers/" + id
 }
 
 func mapContainerState(state string) assets.State {

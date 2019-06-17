@@ -56,5 +56,5 @@ func (a *Images) List() ([]*assets.Asset, error) {
 
 func MondooContainerImageID(id string) string {
 	id = strings.Replace(id, "sha256:", "", -1)
-	return "docker://image/" + id
+	return "//sytemidentifier.api.mondoo.app/runtime/docker/images/" + id
 }

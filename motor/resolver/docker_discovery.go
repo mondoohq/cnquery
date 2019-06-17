@@ -1,4 +1,4 @@
-package docker
+package resolver
 
 import (
 	"context"
@@ -16,6 +16,7 @@ func dockerClient() (*client.Client, error) {
 	return cli, nil
 }
 
+// TODO: this implementation needs to be merged with motorcloud/docker
 func NewDockerEngineDiscovery() *dockerEngineDiscovery {
 	dc, err := dockerClient()
 
