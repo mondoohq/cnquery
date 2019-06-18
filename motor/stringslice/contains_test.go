@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/motor/motorcloud/stringslice"
+	"go.mondoo.io/mondoo/motor/stringslice"
 )
 
 func TestContains(t *testing.T) {

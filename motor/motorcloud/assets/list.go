@@ -6,7 +6,7 @@ import (
 	"go.mondoo.io/mondoo/motor/motorcloud/aws"
 	"go.mondoo.io/mondoo/motor/motorcloud/docker"
 	"go.mondoo.io/mondoo/motor/motorcloud/gcp"
-	"go.mondoo.io/mondoo/motor/motorcloud/stringslice"
+	"go.mondoo.io/mondoo/motor/stringslice"
 	"go.mondoo.io/mondoo/nexus/assets"
 )
 
