@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor"
+	motor "go.mondoo.io/mondoo/motor/motoros"
 	"go.mondoo.io/mondoo/types"
 )
 

@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor"
+	motor "go.mondoo.io/mondoo/motor/motoros"
 )
 
 // LinuxIdProvider read the following files to extract the machine id

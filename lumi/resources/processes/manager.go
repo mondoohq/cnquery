@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/lumi/resources/procfs"
-	"go.mondoo.io/mondoo/motor"
+	motor "go.mondoo.io/mondoo/motor/motoros"
 )
 
 func ResolveManager(motor *motor.Motor) (OSProcessManager, error) {

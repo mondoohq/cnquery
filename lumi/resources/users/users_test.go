@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/lumi/resources/users"
-	mock "go.mondoo.io/mondoo/motor/mock/toml"
-	"go.mondoo.io/mondoo/motor/types"
+	mock "go.mondoo.io/mondoo/motor/motoros/mock/toml"
+	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
 func TestParseEtcPasswd(t *testing.T) {

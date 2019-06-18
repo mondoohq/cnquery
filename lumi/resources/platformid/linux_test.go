@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/mock/toml"
-	"go.mondoo.io/mondoo/motor/types"
+	motor "go.mondoo.io/mondoo/motor/motoros"
+	"go.mondoo.io/mondoo/motor/motoros/mock/toml"
+	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
 func TestLinuxMachineId(t *testing.T) {

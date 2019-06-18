@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	mock "go.mondoo.io/mondoo/motor/mock/toml"
-	"go.mondoo.io/mondoo/motor/types"
+	mock "go.mondoo.io/mondoo/motor/motoros/mock/toml"
+	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
 func TestApkUpdateParser(t *testing.T) {

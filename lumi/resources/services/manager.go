@@ -3,7 +3,7 @@ package services
 import (
 	"errors"
 
-	"go.mondoo.io/mondoo/motor"
+	motor "go.mondoo.io/mondoo/motor/motoros"
 )
 
 func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
