@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor"
+	motor "go.mondoo.io/mondoo/motor/motoros"
 )
 
 // MacOSIdProvider read the operating system id by calling

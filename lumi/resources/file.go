@@ -11,8 +11,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/motor/events"
-	"go.mondoo.io/mondoo/motor/types"
+	"go.mondoo.io/mondoo/motor/motoros/events"
+	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
 func (s *lumiFile) id() (string, error) {

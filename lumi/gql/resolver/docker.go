@@ -9,7 +9,7 @@ import (
 	"github.com/docker/docker/client"
 
 	docker_types "github.com/docker/docker/api/types"
-	"go.mondoo.io/mondoo/motor/local"
+	"go.mondoo.io/mondoo/motor/motoros/local"
 )
 
 func getDockerClient() (*client.Client, error) {

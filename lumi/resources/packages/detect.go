@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/platform"
+	motor "go.mondoo.io/mondoo/motor/motoros"
+	"go.mondoo.io/mondoo/motor/motoros/platform"
 	"go.mondoo.io/mondoo/nexus/assets"
 	"go.mondoo.io/mondoo/vadvisor/api"
 )

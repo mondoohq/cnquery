@@ -2,7 +2,7 @@ package resolver
 
 import (
 	"go.mondoo.io/mondoo/lumi/gql"
-	"go.mondoo.io/mondoo/motor"
+	motor "go.mondoo.io/mondoo/motor/motoros"
 )
 
 func New(motor *motor.Motor) (*Resolver, error) {

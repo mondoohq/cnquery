@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/lumi/resources/procfs"
-	"go.mondoo.io/mondoo/motor/mock/toml"
-	"go.mondoo.io/mondoo/motor/types"
+	"go.mondoo.io/mondoo/motor/motoros/mock/toml"
+	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
 func TestParseProcessStatus(t *testing.T) {

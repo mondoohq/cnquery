@@ -4,8 +4,8 @@ import (
 	"errors"
 	"io/ioutil"
 
-	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/platform"
+	motor "go.mondoo.io/mondoo/motor/motoros"
+	"go.mondoo.io/mondoo/motor/motoros/platform"
 )
 
 func Hostname(motor *motor.Motor) (string, error) {

@@ -7,7 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/gql"
 	"go.mondoo.io/mondoo/lumi/resources/groups"
-	"go.mondoo.io/mondoo/motor"
+	motor "go.mondoo.io/mondoo/motor/motoros"
 )
 
 func osGroups(motor *motor.Motor) ([]*groups.Group, error) {

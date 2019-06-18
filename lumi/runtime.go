@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor"
+	motor "go.mondoo.io/mondoo/motor/motoros"
 )
 
 // NewResource creates the base class for a new resource

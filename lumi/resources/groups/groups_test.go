@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/lumi/resources/groups"
-	mock "go.mondoo.io/mondoo/motor/mock/toml"
-	"go.mondoo.io/mondoo/motor/types"
+	mock "go.mondoo.io/mondoo/motor/motoros/mock/toml"
+	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
 func TestParseEtcGroups(t *testing.T) {
