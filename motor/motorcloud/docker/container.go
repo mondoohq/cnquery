@@ -42,7 +42,7 @@ func (a *Container) List() ([]*assets.Asset, error) {
 		name := strings.Join(DockerDisplayNames(dContainer.Names), ",")
 
 		asset := &assets.Asset{
-			ReferenceID:       MondooContainerID(dContainer.ID),
+			ReferenceIDs:      []string{MondooContainerID(dContainer.ID)},
 			Name:              name,
 			ParentReferenceID: dContainer.ImageID,
 			Platform: &assets.Platform{
@@ -75,7 +75,7 @@ func (a *Container) List() ([]*assets.Asset, error) {
 }
 
 func MondooContainerID(id string) string {
-	return "//sytemidentifier.api.mondoo.app/runtime/docker/containers/" + id
+	return "//platformid.api.mondoo.app/runtime/docker/containers/" + id
 }
 
 func mapContainerState(state string) assets.State {

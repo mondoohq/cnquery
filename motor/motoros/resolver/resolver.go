@@ -70,7 +70,7 @@ func ResolveTransport(endpoint *types.Endpoint) (types.Transport, string, error)
 		if sshErr == nil && sshTrans != nil {
 			fingerprint := gossh.FingerprintSHA256(sshTrans.HostKey)
 			fingerprint = strings.Replace(fingerprint, ":", "-", 1)
-			identifier = "//sytemidentifier.api.mondoo.app/runtime/ssh/hostkey/" + fingerprint
+			identifier = "//platformid.api.mondoo.app/runtime/ssh/hostkey/" + fingerprint
 		}
 		trans = sshTrans
 		err = sshErr
