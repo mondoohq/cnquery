@@ -58,8 +58,8 @@ func (ec2i *Ec2Instances) List() ([]*assets.Asset, error) {
 			}
 
 			asset := &assets.Asset{
-				ReferenceID: MondooEc2InstanceID(account, ec2i.config.Region, *instance.InstanceId),
-				Name:        *instance.InstanceId,
+				ReferenceIDs: []string{MondooEc2InstanceID(account, ec2i.config.Region, *instance.InstanceId)},
+				Name:         *instance.InstanceId,
 				Platform: &assets.Platform{
 					Kind:    assets.Kind_KIND_VIRTUAL_MACHINE,
 					Runtime: "aws ec2",
@@ -106,7 +106,7 @@ func (ec2i *Ec2Instances) List() ([]*assets.Asset, error) {
 
 // aws://ec2/v1/accounts/{account}/regions/{region}/instances/{instanceid}
 func MondooEc2InstanceID(account string, region string, instanceid string) string {
-	return "//sytemidentifier.api.mondoo.app/runtime/aws/ec2/v1/accounts/" + account + "/regions/" + region + "/instances/" + instanceid
+	return "//platformid.api.mondoo.app/runtime/aws/ec2/v1/accounts/" + account + "/regions/" + region + "/instances/" + instanceid
 }
 
 type awsec2id struct {
@@ -117,7 +117,7 @@ type awsec2id struct {
 
 func ParseEc2ReferenceID(uri string) *awsec2id {
 	// aws://ec2/v1/accounts/{account}/regions/{region}/instances/{instanceid}
-	awsec2 := regexp.MustCompile(`^//sytemidentifier.api.mondoo.app/runtime/aws/ec2/v1/accounts/(.*)/regions/(.*)/instances/(.*)$`)
+	awsec2 := regexp.MustCompile(`^\/\/platformid.api.mondoo.app\/runtime\/aws\/ec2\/v1\/accounts\/(.*)\/regions\/(.*)\/instances\/(.*)$`)
 	m := awsec2.FindStringSubmatch(uri)
 	if len(m) == 0 {
 		return nil

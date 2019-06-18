@@ -77,8 +77,8 @@ func instancesPerZone(svc *compute.Service, project string, zone string) ([]*ass
 		// })
 
 		asset := &assets.Asset{
-			ReferenceID: MondooGcpInstanceID(project, zone, instance),
-			Name:        instance.Name,
+			ReferenceIDs: []string{MondooGcpInstanceID(project, zone, instance)},
+			Name:         instance.Name,
 			Platform: &assets.Platform{
 				Kind:    assets.Kind_KIND_VIRTUAL_MACHINE,
 				Runtime: "gcp compute",
@@ -103,7 +103,7 @@ func instancesPerZone(svc *compute.Service, project string, zone string) ([]*ass
 }
 
 func MondooGcpInstanceID(project string, zone string, instance *compute.Instance) string {
-	return "//sytemidentifier.api.mondoo.app/runtime/gcp/compute/v1/projects/" + project + "/zones/" + zone + "/instances/" + strconv.FormatUint(uint64(instance.Id), 10)
+	return "//platformid.api.mondoo.app/runtime/gcp/compute/v1/projects/" + project + "/zones/" + zone + "/instances/" + strconv.FormatUint(uint64(instance.Id), 10)
 }
 
 func mapInstanceState(state string) assets.State {

@@ -24,8 +24,8 @@ func (a *Images) List() ([]*assets.Asset, error) {
 	imgs := make([]*assets.Asset, len(dImages))
 	for i, dImg := range dImages {
 		asset := &assets.Asset{
-			ReferenceID: MondooContainerImageID(dImg.ID),
-			Name:        strings.Join(dImg.RepoTags, ","),
+			ReferenceIDs: []string{MondooContainerImageID(dImg.ID)},
+			Name:         strings.Join(dImg.RepoTags, ","),
 			Platform: &assets.Platform{
 				Kind:    assets.Kind_KIND_CONTAINER_IMAGE,
 				Runtime: "docker",
@@ -56,5 +56,5 @@ func (a *Images) List() ([]*assets.Asset, error) {
 
 func MondooContainerImageID(id string) string {
 	id = strings.Replace(id, "sha256:", "", -1)
-	return "//sytemidentifier.api.mondoo.app/runtime/docker/images/" + id
+	return "//platformid.api.mondoo.app/runtime/docker/images/" + id
 }
