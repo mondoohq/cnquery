@@ -1,8 +1,9 @@
-package system
+package hostname
 
 import (
 	"errors"
 	"io/ioutil"
+	"strings"
 
 	motor "go.mondoo.io/mondoo/motor/motoros"
 	"go.mondoo.io/mondoo/motor/motoros/platform"
@@ -16,7 +17,7 @@ func Hostname(motor *motor.Motor) (string, error) {
 	}
 
 	switch {
-	case pi.IsFamily(platform.FAMILY_LINUX):
+	case pi.IsFamily(platform.FAMILY_UNIX):
 		cmd, err := motor.Transport.RunCommand("hostname")
 		if err != nil {
 			return hostname, err
@@ -25,6 +26,7 @@ func Hostname(motor *motor.Motor) (string, error) {
 		if err != nil {
 			return hostname, err
 		}
+
 		hostname = string(data)
 	case pi.IsFamily(platform.FAMILY_WINDOWS):
 		cmd, err := motor.Transport.RunCommand("powershell -c \"$env:computername\"")
@@ -40,5 +42,5 @@ func Hostname(motor *motor.Motor) (string, error) {
 		return hostname, errors.New("your platform is not supported by hostname resource")
 	}
 
-	return hostname, nil
+	return strings.TrimSpace(hostname), nil
 }
