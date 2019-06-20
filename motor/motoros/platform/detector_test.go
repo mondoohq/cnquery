@@ -25,7 +25,7 @@ func newDetector(path string) (*Detector, error) {
 }
 
 func (suite *OsDetectTestSuite) TestRhel6OSDetector() {
-	detector, err := newDetector("detect-rhel6.toml")
+	detector, err := newDetector("./testdata/detect-rhel6.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -38,7 +38,7 @@ func (suite *OsDetectTestSuite) TestRhel6OSDetector() {
 }
 
 func (suite *OsDetectTestSuite) TestRhel7OSDetector() {
-	detector, err := newDetector("detect-rhel7.toml")
+	detector, err := newDetector("./testdata/detect-rhel7.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -51,7 +51,7 @@ func (suite *OsDetectTestSuite) TestRhel7OSDetector() {
 }
 
 func (suite *OsDetectTestSuite) TestRhel7SLESOSDetector() {
-	detector, err := newDetector("detect-rhel7-sles.toml")
+	detector, err := newDetector("./testdata/detect-rhel7-sles.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -64,7 +64,7 @@ func (suite *OsDetectTestSuite) TestRhel7SLESOSDetector() {
 }
 
 func (suite *OsDetectTestSuite) TestRhel8OSDetector() {
-	detector, err := newDetector("detect-rhel8.toml")
+	detector, err := newDetector("./testdata/detect-rhel8.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -77,7 +77,7 @@ func (suite *OsDetectTestSuite) TestRhel8OSDetector() {
 }
 
 func (suite *OsDetectTestSuite) TestCentos7OSDetector() {
-	detector, err := newDetector("detect-centos7.toml")
+	detector, err := newDetector("./testdata/detect-centos7.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -90,7 +90,7 @@ func (suite *OsDetectTestSuite) TestCentos7OSDetector() {
 }
 
 func (suite *OsDetectTestSuite) TestCentos6Detector() {
-	detector, err := newDetector("detect-centos6.toml")
+	detector, err := newDetector("./testdata/detect-centos6.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -103,7 +103,7 @@ func (suite *OsDetectTestSuite) TestCentos6Detector() {
 }
 
 func (suite *OsDetectTestSuite) TestUbuntu1604Detector() {
-	detector, err := newDetector("detect-ubuntu1604.toml")
+	detector, err := newDetector("./testdata/detect-ubuntu1604.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -116,7 +116,7 @@ func (suite *OsDetectTestSuite) TestUbuntu1604Detector() {
 }
 
 func (suite *OsDetectTestSuite) TestDebian9Detector() {
-	detector, err := newDetector("detect-debian9.toml")
+	detector, err := newDetector("./testdata/detect-debian9.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -129,7 +129,7 @@ func (suite *OsDetectTestSuite) TestDebian9Detector() {
 }
 
 func (suite *OsDetectTestSuite) TestOpenSuseLeap42Detector() {
-	detector, err := newDetector("detect-opensuse-leap-42.3.toml")
+	detector, err := newDetector("./testdata/detect-opensuse-leap-42.3.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -142,7 +142,7 @@ func (suite *OsDetectTestSuite) TestOpenSuseLeap42Detector() {
 }
 
 func (suite *OsDetectTestSuite) TestOpenSuseLeap15Detector() {
-	detector, err := newDetector("detect-opensuse-leap-15.toml")
+	detector, err := newDetector("./testdata/detect-opensuse-leap-15.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -155,7 +155,7 @@ func (suite *OsDetectTestSuite) TestOpenSuseLeap15Detector() {
 }
 
 func (suite *OsDetectTestSuite) TestSuse12Detector() {
-	detector, err := newDetector("detect-suse-12.toml")
+	detector, err := newDetector("./testdata/detect-suse-12.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -168,7 +168,7 @@ func (suite *OsDetectTestSuite) TestSuse12Detector() {
 }
 
 func (suite *OsDetectTestSuite) TestAmazonLinuxDetector() {
-	detector, err := newDetector("detect-amazonlinux-2017.09.toml")
+	detector, err := newDetector("./testdata/detect-amazonlinux-2017.09.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -181,7 +181,7 @@ func (suite *OsDetectTestSuite) TestAmazonLinuxDetector() {
 }
 
 func (suite *OsDetectTestSuite) TestScientificLinuxDetector() {
-	detector, err := newDetector("detect-scientific.toml")
+	detector, err := newDetector("./testdata/detect-scientific.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -194,7 +194,7 @@ func (suite *OsDetectTestSuite) TestScientificLinuxDetector() {
 }
 
 func (suite *OsDetectTestSuite) TestArchLinuxDetector() {
-	detector, err := newDetector("detect-arch.toml")
+	detector, err := newDetector("./testdata/detect-arch.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -206,7 +206,7 @@ func (suite *OsDetectTestSuite) TestArchLinuxDetector() {
 }
 
 func (suite *OsDetectTestSuite) TestOracleLinux6Detector() {
-	detector, err := newDetector("detect-oracle6.toml")
+	detector, err := newDetector("./testdata/detect-oracle6.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -219,7 +219,7 @@ func (suite *OsDetectTestSuite) TestOracleLinux6Detector() {
 }
 
 func (suite *OsDetectTestSuite) TestOracleLinux7Detector() {
-	detector, err := newDetector("detect-oracle7.toml")
+	detector, err := newDetector("./testdata/detect-oracle7.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -232,7 +232,7 @@ func (suite *OsDetectTestSuite) TestOracleLinux7Detector() {
 }
 
 func (suite *OsDetectTestSuite) TestGentooLinuxDetector() {
-	detector, err := newDetector("detect-gentoo.toml")
+	detector, err := newDetector("./testdata/detect-gentoo.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -245,7 +245,7 @@ func (suite *OsDetectTestSuite) TestGentooLinuxDetector() {
 }
 
 func (suite *OsDetectTestSuite) TestAlpineLinuxDetector() {
-	detector, err := newDetector("detect-alpine.toml")
+	detector, err := newDetector("./testdata/detect-alpine.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -258,7 +258,7 @@ func (suite *OsDetectTestSuite) TestAlpineLinuxDetector() {
 }
 
 func (suite *OsDetectTestSuite) TestBusyboxLinuxDetector() {
-	detector, err := newDetector("detect-busybox.toml")
+	detector, err := newDetector("./testdata/detect-busybox.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -271,7 +271,7 @@ func (suite *OsDetectTestSuite) TestBusyboxLinuxDetector() {
 }
 
 func (suite *OsDetectTestSuite) TestWindowsDetector() {
-	detector, err := newDetector("detect-windows2016.toml")
+	detector, err := newDetector("./testdata/detect-windows2016.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -281,6 +281,19 @@ func (suite *OsDetectTestSuite) TestWindowsDetector() {
 	assert.Equal(suite.T(), "10.0.14393", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "64-bit", di.Arch, "os arch should be identified")
 	assert.Equal(suite.T(), []string{"windows", "os"}, di.Family)
+}
+
+func (suite *OsDetectTestSuite) TestMacOSsDetector() {
+	detector, err := newDetector("./testdata/detect-macos.toml")
+	assert.Nil(suite.T(), err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(suite.T(), true, resolved, "platform should be resolvable")
+	assert.Equal(suite.T(), "mac_os_x", di.Name, "os name should be identified")
+	assert.Equal(suite.T(), "Mac OS X", di.Title, "os title should be identified")
+	assert.Equal(suite.T(), "10.14.5", di.Release, "os version should be identified")
+	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"darwin", "bsd", "unix", "os"}, di.Family)
 }
 
 func (suite *OsDetectTestSuite) TestFamilies() {
