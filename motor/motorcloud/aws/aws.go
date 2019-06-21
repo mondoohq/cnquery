@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"errors"
 
 	aws_sdk "github.com/aws/aws-sdk-go-v2/aws"
@@ -24,10 +25,11 @@ func CheckRegion(cfg aws_sdk.Config) error {
 	return nil
 }
 
-func CheckIam(cfg aws_sdk.Config) (*sts.GetCallerIdentityOutput, error) {
+func CheckIam(cfg aws_sdk.Config) (*sts.GetCallerIdentityResponse, error) {
+	ctx := context.Background()
 	stsSvr := sts.New(cfg)
 	req := stsSvr.GetCallerIdentityRequest(&sts.GetCallerIdentityInput{})
-	resp, err := req.Send()
+	resp, err := req.Send(ctx)
 	if err != nil {
 		return nil, err
 	} else if resp.Account == nil || resp.UserId == nil {
