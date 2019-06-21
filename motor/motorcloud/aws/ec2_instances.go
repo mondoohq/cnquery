@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -20,6 +21,7 @@ type Ec2Instances struct {
 }
 
 func (ec2i *Ec2Instances) List() ([]*assets.Asset, error) {
+	ctx := context.Background()
 	ec2svc := ec2.New(ec2i.config)
 
 	identity, err := CheckIam(ec2i.config)
@@ -31,7 +33,7 @@ func (ec2i *Ec2Instances) List() ([]*assets.Asset, error) {
 
 	log.Debug().Str("region", ec2i.config.Region).Msg("search ec2 instances")
 	req := ec2svc.DescribeInstancesRequest(&ec2.DescribeInstancesInput{})
-	resp, err := req.Send()
+	resp, err := req.Send(ctx)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to describe instances, %s", ec2i.config.Region)
 	}
