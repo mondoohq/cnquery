@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/pkg/errors"
+	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/nexus/assets"
 
 	"github.com/rs/zerolog/log"
@@ -60,7 +61,7 @@ func (ec2i *Ec2Instances) List() ([]*assets.Asset, error) {
 			}
 
 			asset := &assets.Asset{
-				ReferenceIDs: []string{MondooEc2InstanceID(account, ec2i.config.Region, *instance.InstanceId)},
+				ReferenceIDs: []string{awsec2.MondooInstanceID(account, ec2i.config.Region, *instance.InstanceId)},
 				Name:         *instance.InstanceId,
 				Platform: &assets.Platform{
 					Kind:    assets.Kind_KIND_VIRTUAL_MACHINE,
@@ -104,11 +105,6 @@ func (ec2i *Ec2Instances) List() ([]*assets.Asset, error) {
 
 	log.Debug().Int("instances", len(instances)).Msg("found ec2 instances")
 	return instances, nil
-}
-
-// aws://ec2/v1/accounts/{account}/regions/{region}/instances/{instanceid}
-func MondooEc2InstanceID(account string, region string, instanceid string) string {
-	return "//platformid.api.mondoo.app/runtime/aws/ec2/v1/accounts/" + account + "/regions/" + region + "/instances/" + instanceid
 }
 
 type awsec2id struct {
