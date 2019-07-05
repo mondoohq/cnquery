@@ -96,7 +96,7 @@ func (ec2i *Ec2Instances) List() ([]*assets.Asset, error) {
 				asset.Labels["mondoo.app/public-ip"] = *instance.PublicIpAddress
 			}
 			if instance.ImageId != nil {
-				asset.Labels["mondoo.app/image-id"] = *instance.ImageId
+				asset.Labels["mondoo.app/ami-id"] = *instance.ImageId
 			}
 
 			instances = append(instances, asset)
