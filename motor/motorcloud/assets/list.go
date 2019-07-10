@@ -15,9 +15,10 @@ type Plugin interface {
 }
 
 const (
-	RUNTIME_AWS_EC2     = "aws ec2"
-	RUNTIME_GCP_COMPUTE = "gcp compute"
-	RUNTIME_DOCKER      = "docker"
+	RUNTIME_AWS_EC2         = "aws ec2"
+	RUNTIME_AWS_SSM_MANAGED = "aws ssm-managed"
+	RUNTIME_GCP_COMPUTE     = "gcp compute"
+	RUNTIME_DOCKER          = "docker"
 )
 
 func ListAssets(runtimes ...string) ([]*assets.Asset, error) {
@@ -29,6 +30,18 @@ func ListAssets(runtimes ...string) ([]*assets.Asset, error) {
 			log.Warn().Err(err).Msg("skip aws assets")
 		} else {
 			plugin_aws, err := aws.NewEc2Discovery(cfg)
+			if err == nil {
+				askRuntimes = append(askRuntimes, plugin_aws)
+			}
+		}
+	}
+
+	if stringslice.Contains(runtimes, RUNTIME_AWS_SSM_MANAGED) {
+		cfg, err := external.LoadDefaultAWSConfig()
+		if err != nil {
+			log.Warn().Err(err).Msg("skip aws assets")
+		} else {
+			plugin_aws, err := aws.NewSSMManagedInstancesDiscovery(cfg)
 			if err == nil {
 				askRuntimes = append(askRuntimes, plugin_aws)
 			}
