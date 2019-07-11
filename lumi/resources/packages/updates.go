@@ -11,7 +11,9 @@ import (
 
 // extends Package to store available version
 type PackageUpdate struct {
-	Package
+	Name      string `json:"name"`
+	Version   string `json:"version"`
+	Arch      string `json:"arch"`
 	Available string `json:"available"`
 	Repo      string `json:"repo"`
 }
@@ -29,40 +31,42 @@ var (
 	DPKG_UPDATE_REGEX = regexp.MustCompile(`^Inst\s([a-zA-Z0-9.\-_]+)\s\[([a-zA-Z0-9.\-\+]+)\]\s\(([a-zA-Z0-9.\-\+]+)\s*(.*)\)(.*)$`)
 )
 
-func ParseApkUpdates(input io.Reader) ([]PackageUpdate, error) {
-	var pkgs []PackageUpdate
+func ParseApkUpdates(input io.Reader) (map[string]PackageUpdate, error) {
+	pkgs := map[string]PackageUpdate{}
 	scanner := bufio.NewScanner(input)
 	for scanner.Scan() {
 		line := scanner.Text()
 		m := APK_UPDATE_REGEX.FindStringSubmatch(line)
 		if m != nil {
-			pkgs = append(pkgs, PackageUpdate{
-				Package:   Package{Name: m[1], Version: m[2]},
+			pkgs[m[1]] = PackageUpdate{
+				Name:      m[1],
+				Version:   m[2],
 				Available: m[3],
-			})
+			}
 		}
 	}
 	return pkgs, nil
 }
 
-func ParseDpkgUpdates(input io.Reader) ([]PackageUpdate, error) {
-	var pkgs []PackageUpdate
+func ParseDpkgUpdates(input io.Reader) (map[string]PackageUpdate, error) {
+	pkgs := map[string]PackageUpdate{}
 	scanner := bufio.NewScanner(input)
 	for scanner.Scan() {
 		line := scanner.Text()
 		m := DPKG_UPDATE_REGEX.FindStringSubmatch(line)
 		if m != nil {
-			pkgs = append(pkgs, PackageUpdate{
-				Package:   Package{Name: m[1], Version: m[2]},
+			pkgs[m[1]] = PackageUpdate{
+				Name:      m[1],
+				Version:   m[2],
 				Available: m[3],
-			})
+			}
 		}
 	}
 	return pkgs, nil
 }
 
-func ParseRpmUpdates(input io.Reader) ([]PackageUpdate, error) {
-	var pkgs []PackageUpdate
+func ParseRpmUpdates(input io.Reader) (map[string]PackageUpdate, error) {
+	pkgs := map[string]PackageUpdate{}
 	scanner := bufio.NewScanner(input)
 	for scanner.Scan() {
 		line := scanner.Bytes()
@@ -74,7 +78,7 @@ func ParseRpmUpdates(input io.Reader) ([]PackageUpdate, error) {
 			// there are string lines that cannot be parsed
 			continue
 		}
-		pkgs = append(pkgs, pkg)
+		pkgs[pkg.Name] = pkg
 	}
 	return pkgs, nil
 }
@@ -104,23 +108,24 @@ type zypper struct {
 
 // for Suse, updates are package updates
 // parses the output of `zypper --xmlout list-updates`
-func ParseZypperUpdates(input io.Reader) ([]PackageUpdate, error) {
+func ParseZypperUpdates(input io.Reader) (map[string]PackageUpdate, error) {
+	pkgs := map[string]PackageUpdate{}
 	zypper, err := parseZypper(input)
 	if err != nil {
 		return nil, err
 	}
 
-	var pkgs []PackageUpdate
 	for _, u := range zypper.Updates {
 		// filter for kind package
 		if u.Kind != "package" {
 			continue
 		}
-
-		pkgs = append(pkgs, PackageUpdate{
-			Package:   Package{Name: u.Name, Version: u.OldEdition, Arch: u.Arch},
+		pkgs[u.Name] = PackageUpdate{
+			Name:      u.Name,
+			Version:   u.OldEdition,
+			Arch:      u.Arch,
 			Available: u.Edition,
-		})
+		}
 	}
 	return pkgs, nil
 }

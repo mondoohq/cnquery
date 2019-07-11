@@ -10,18 +10,18 @@ import (
 	"go.mondoo.io/mondoo/vadvisor/api"
 )
 
-func Detect(motor *motor.Motor) ([]Package, error) {
+func Detect(motor *motor.Motor) ([]Package, map[string]PackageUpdate, error) {
 	// find suitable package manager
 	pm, err := ResolveSystemPkgManager(motor)
 	if pm == nil || err != nil {
-		return nil, fmt.Errorf("could not detect suiteable package manager for platform")
+		return nil, nil, fmt.Errorf("could not detect suiteable package manager for platform")
 	}
 
 	// retrieve all system packages
 	packages, err := pm.List()
 	if err != nil {
 		log.Debug().Err(err).Msg("lumi[packages]> could not retrieve package list")
-		return nil, fmt.Errorf("could not retrieve package list for platform")
+		return nil, nil, fmt.Errorf("could not retrieve package list for platform")
 	}
 	log.Debug().Int("packages", len(packages)).Msg("lumi[packages]> installed packages")
 
@@ -30,11 +30,11 @@ func Detect(motor *motor.Motor) ([]Package, error) {
 	availableList, err := pm.Available()
 	if err != nil {
 		log.Debug().Err(err).Msg("lumi[packages]> could not retrieve available updates")
-		availableList = []PackageUpdate{}
+		availableList = map[string]PackageUpdate{}
 	}
 	log.Debug().Int("updates", len(availableList)).Msg("lumi[packages]> available updates")
 
-	return packages, nil
+	return packages, availableList, nil
 }
 
 func ConvertPlatform(platform platform.Info) *assets.Platform {
@@ -45,15 +45,23 @@ func ConvertPlatform(platform platform.Info) *assets.Platform {
 	}
 }
 
-func ConvertParserPackages(pkgs []Package) []*api.Package {
+func ConvertParserPackages(pkgs []Package, updates map[string]PackageUpdate) []*api.Package {
 	apiPkgs := []*api.Package{}
 
 	for _, d := range pkgs {
+
+		available := ""
+		update, ok := updates[d.Name]
+		if ok {
+			available = update.Available
+		}
+
 		apiPkgs = append(apiPkgs, &api.Package{
-			Name:    d.Name,
-			Version: d.Version,
-			Arch:    d.Arch,
-			Origin:  d.Origin,
+			Name:      d.Name,
+			Version:   d.Version,
+			Available: available,
+			Arch:      d.Arch,
+			Origin:    d.Origin,
 		})
 	}
 

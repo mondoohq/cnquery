@@ -19,7 +19,7 @@ type OperatingSystemPkgManager interface {
 	Name() string
 	Format() string
 	List() ([]Package, error)
-	Available() ([]PackageUpdate, error)
+	Available() (map[string]PackageUpdate, error)
 }
 
 // this will find the right package manager for the operating system
@@ -76,7 +76,7 @@ func (dpm *DebPkgManager) List() ([]Package, error) {
 	return ParseDpkgPackages(fi)
 }
 
-func (dpm *DebPkgManager) Available() ([]PackageUpdate, error) {
+func (dpm *DebPkgManager) Available() (map[string]PackageUpdate, error) {
 	// TODO: run this as a complete shell script in motor
 	// DEBIAN_FRONTEND=noninteractive apt-get update >/dev/null 2>&1
 	// readlock() { cat /proc/locks | awk '{print $5}' | grep -v ^0 | xargs -I {1} find /proc/{1}/fd -maxdepth 1 -exec readlink {} \; | grep '^/var/lib/dpkg/lock$'; }
@@ -139,7 +139,7 @@ func (rpm *RpmPkgManager) List() ([]Package, error) {
 	}
 }
 
-func (rpm *RpmPkgManager) Available() ([]PackageUpdate, error) {
+func (rpm *RpmPkgManager) Available() (map[string]PackageUpdate, error) {
 	if rpm.isStaticAnalysis() {
 		return rpm.staticAvailable()
 	} else {
@@ -180,7 +180,7 @@ func (rpm *RpmPkgManager) runtimeList() ([]Package, error) {
 }
 
 // fetch all available packages, is that working with centos 6?
-func (rpm *RpmPkgManager) runtimeAvailable() ([]PackageUpdate, error) {
+func (rpm *RpmPkgManager) runtimeAvailable() (map[string]PackageUpdate, error) {
 	// python script:
 	// import sys;sys.path.insert(0, "/usr/share/yum-cli");import cli;list = cli.YumBaseCli().returnPkgLists(["updates"]);
 	// print ''.join(["{\"name\":\""+x.name+"\", \"available\":\""+x.evr+"\",\"arch\":\""+x.arch+"\",\"repo\":\""+x.repo.id+"\"}\n" for x in list.updates]);
@@ -240,8 +240,8 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 
 // TODO: Available() not implemented for RpmFileSystemManager
 // for now this is not an error since we can easily determine available packages
-func (rpm *RpmPkgManager) staticAvailable() ([]PackageUpdate, error) {
-	return []PackageUpdate{}, nil
+func (rpm *RpmPkgManager) staticAvailable() (map[string]PackageUpdate, error) {
+	return map[string]PackageUpdate{}, nil
 }
 
 // Suse, overwrites the Centos handler
@@ -249,7 +249,7 @@ type SusePkgManager struct {
 	RpmPkgManager
 }
 
-func (spm *SusePkgManager) Available() ([]PackageUpdate, error) {
+func (spm *SusePkgManager) Available() (map[string]PackageUpdate, error) {
 	cmd, err := spm.motor.Transport.RunCommand("zypper --xmlout list-updates")
 	if err != nil {
 		log.Debug().Err(err).Msg("lumi[packages]> could not read package updates")
@@ -280,8 +280,8 @@ func (ppm *PacmanPkgManager) List() ([]Package, error) {
 	return ParsePacmanPackages(cmd.Stdout), nil
 }
 
-func (ppm *PacmanPkgManager) Available() ([]PackageUpdate, error) {
-	return nil, errors.New("Available() not implemented for PacmanPkgManager")
+func (ppm *PacmanPkgManager) Available() (map[string]PackageUpdate, error) {
+	return nil, errors.New("Available() not implemented for pacman")
 }
 
 // Arch, Manjaro
@@ -307,7 +307,7 @@ func (apm *AlpinePkgManager) List() ([]Package, error) {
 	return ParseApkDbPackages(fr), nil
 }
 
-func (apm *AlpinePkgManager) Available() ([]PackageUpdate, error) {
+func (apm *AlpinePkgManager) Available() (map[string]PackageUpdate, error) {
 	// it only works if apk is updated
 	apm.motor.Transport.RunCommand("apk update")
 
@@ -342,7 +342,7 @@ func (mpm *MacOSPkgManager) List() ([]Package, error) {
 	return ParseMacOSPackages(cmd.Stdout)
 }
 
-func (mpm *MacOSPkgManager) Available() ([]PackageUpdate, error) {
+func (mpm *MacOSPkgManager) Available() (map[string]PackageUpdate, error) {
 	return nil, errors.New("cannot determine available packages for macOS")
 }
 
@@ -369,6 +369,6 @@ func (win *WinPkgManager) List() ([]Package, error) {
 	return ParseWindowsAppxPackages(cmd.Stdout)
 }
 
-func (win *WinPkgManager) Available() ([]PackageUpdate, error) {
-	return []PackageUpdate{}, nil
+func (win *WinPkgManager) Available() (map[string]PackageUpdate, error) {
+	return map[string]PackageUpdate{}, nil
 }
