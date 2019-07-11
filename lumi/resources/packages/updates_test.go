@@ -23,13 +23,15 @@ func TestApkUpdateParser(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(m), "detected the right amount of package updates")
 
-	assert.Equal(t, "busybox", m[0].Name, "pkg name detected")
-	assert.Equal(t, "1.28.4-r0", m[0].Version, "pkg version detected")
-	assert.Equal(t, "1.28.4-r1", m[0].Available, "pkg available version detected")
+	update := m["busybox"]
+	assert.Equal(t, "busybox", update.Name, "pkg name detected")
+	assert.Equal(t, "1.28.4-r0", update.Version, "pkg version detected")
+	assert.Equal(t, "1.28.4-r1", update.Available, "pkg available version detected")
 
-	assert.Equal(t, "ssl_client", m[1].Name, "pkg name detected")
-	assert.Equal(t, "1.28.4-r0", m[1].Version, "pkg version detected")
-	assert.Equal(t, "1.28.4-r1", m[0].Available, "pkg available version detected")
+	update = m["ssl_client"]
+	assert.Equal(t, "ssl_client", update.Name, "pkg name detected")
+	assert.Equal(t, "1.28.4-r0", update.Version, "pkg version detected")
+	assert.Equal(t, "1.28.4-r1", update.Available, "pkg available version detected")
 }
 
 func TestDpkgUpdateParser(t *testing.T) {
@@ -47,13 +49,15 @@ func TestDpkgUpdateParser(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 13, len(m), "detected the right amount of package updates")
 
-	assert.Equal(t, "base-files", m[0].Name, "pkg name detected")
-	assert.Equal(t, "10.1ubuntu2", m[0].Version, "pkg version detected")
-	assert.Equal(t, "10.1ubuntu2.1", m[0].Available, "pkg available version detected")
+	update := m["base-files"]
+	assert.Equal(t, "base-files", update.Name, "pkg name detected")
+	assert.Equal(t, "10.1ubuntu2", update.Version, "pkg version detected")
+	assert.Equal(t, "10.1ubuntu2.1", update.Available, "pkg available version detected")
 
-	assert.Equal(t, "ncurses-bin", m[1].Name, "pkg name detected")
-	assert.Equal(t, "6.1-1ubuntu1", m[1].Version, "pkg version detected")
-	assert.Equal(t, "10.1ubuntu2.1", m[0].Available, "pkg available version detected")
+	update = m["ncurses-bin"]
+	assert.Equal(t, "ncurses-bin", update.Name, "pkg name detected")
+	assert.Equal(t, "6.1-1ubuntu1", update.Version, "pkg version detected")
+	assert.Equal(t, "6.1-1ubuntu1.18.04", update.Available, "pkg available version detected")
 }
 
 func TestRpmUpdateParser(t *testing.T) {
@@ -71,13 +75,15 @@ func TestRpmUpdateParser(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 8, len(m), "detected the right amount of package updates")
 
-	assert.Equal(t, "python-libs", m[0].Name, "pkg name detected")
-	assert.Equal(t, "", m[0].Version, "pkg version detected")
-	assert.Equal(t, "0:2.7.5-69.el7_5", m[0].Available, "pkg available version detected")
+	update := m["python-libs"]
+	assert.Equal(t, "python-libs", update.Name, "pkg name detected")
+	assert.Equal(t, "", update.Version, "pkg version detected")
+	assert.Equal(t, "0:2.7.5-69.el7_5", update.Available, "pkg available version detected")
 
-	assert.Equal(t, "binutils", m[1].Name, "pkg name detected")
-	assert.Equal(t, "", m[1].Version, "pkg version detected")
-	assert.Equal(t, "0:2.7.5-69.el7_5", m[0].Available, "pkg available version detected")
+	update = m["binutils"]
+	assert.Equal(t, "binutils", update.Name, "pkg name detected")
+	assert.Equal(t, "", update.Version, "pkg version detected")
+	assert.Equal(t, "0:2.27-28.base.el7_5.1", update.Available, "pkg available version detected")
 }
 
 func TestZypperUpdateParser(t *testing.T) {
@@ -95,11 +101,13 @@ func TestZypperUpdateParser(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 22, len(m), "detected the right amount of package updates")
 
-	assert.Equal(t, "aaa_base", m[0].Name, "pkg name detected")
-	assert.Equal(t, "13.2+git20140911.61c1681-28.3.1", m[0].Version, "pkg version detected")
+	update := m["aaa_base"]
+	assert.Equal(t, "aaa_base", update.Name, "pkg name detected")
+	assert.Equal(t, "13.2+git20140911.61c1681-28.3.1", update.Version, "pkg version detected")
 
-	assert.Equal(t, "bash", m[1].Name, "pkg name detected")
-	assert.Equal(t, "4.3-83.3.1", m[1].Version, "pkg version detected")
+	update = m["bash"]
+	assert.Equal(t, "bash", update.Name, "pkg name detected")
+	assert.Equal(t, "4.3-83.3.1", update.Version, "pkg version detected")
 }
 
 // SUSE OS updates
