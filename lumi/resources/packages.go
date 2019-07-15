@@ -96,7 +96,7 @@ func (p *lumiPackages) GetList() ([]interface{}, error) {
 	osAvailablePkgs, err := pm.Available()
 	if err != nil {
 		log.Warn().Err(err).Msg("lumi[packages]> could not retrieve available updates")
-		osAvailablePkgs = []packages.PackageUpdate{}
+		osAvailablePkgs = map[string]packages.PackageUpdate{}
 	}
 	log.Debug().Int("updates", len(osAvailablePkgs)).Msg("lumi[packages]> available updates")
 
