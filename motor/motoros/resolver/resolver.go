@@ -116,7 +116,9 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 		}
 
 		// TODO: can we make the id optional here, we may want to use an approach that is similar to ssh
-		identifier = append(identifier, id)
+		if len(id) > 0 {
+			identifier = append(identifier, id)
+		}
 	case "ssh":
 		log.Debug().Msg("connection> load ssh transport")
 		trans, err := ssh.New(endpoint)
@@ -168,7 +170,10 @@ func GatherIDs(m *motor.Motor, idDetectors []string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		ids = append(ids, id)
+
+		if len(id) > 0 {
+			ids = append(ids, id)
+		}
 	}
 
 	return ids, nil
