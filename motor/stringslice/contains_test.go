@@ -15,3 +15,9 @@ func TestContains(t *testing.T) {
 	assert.True(t, stringslice.Contains([]string{"hello", "world"}, "hello"))
 	assert.False(t, stringslice.Contains([]string{"hello", "world"}, "john"))
 }
+
+func TestRemoveEmpty(t *testing.T) {
+	assert.Equal(t, []string{"aa"}, stringslice.RemoveEmpty([]string{"", "aa"}))
+	assert.Equal(t, []string{"aa"}, stringslice.RemoveEmpty([]string{"aa", ""}))
+	assert.Equal(t, []string{"aa", "ab"}, stringslice.RemoveEmpty([]string{"", "aa", "", "ab", ""}))
+}

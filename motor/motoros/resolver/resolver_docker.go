@@ -104,12 +104,19 @@ func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, string, 
 		ii, err := ded.ImageInfo(endpoint.Host)
 		if err == nil {
 			log.Debug().Msg("found docker engine image " + ii.ID)
-			rc, err := image.LoadFromDockerEngine(ii.ID)
+			img, rc, err := image.LoadFromDockerEngine(ii.ID)
 			if err != nil {
 				return nil, "", err
 			}
+
+			var identifier string
+			hash, err := img.Digest()
+			if err == nil {
+				identifier = motorcloud_docker.MondooContainerImageID(hash.String())
+			}
+
 			transport, err := image.New(rc)
-			return transport, motorcloud_docker.MondooContainerImageID(ii.ID), err
+			return transport, identifier, err
 		}
 	}
 
@@ -117,12 +124,20 @@ func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, string, 
 	tag, err := name.NewTag(endpoint.Host, name.WeakValidation)
 	if err == nil {
 		log.Debug().Str("tag", tag.Name()).Msg("found valid container registry reference")
-		rc, err := image.LoadFromRegistry(tag)
+
+		img, rc, err := image.LoadFromRegistry(tag)
 		if err != nil {
 			return nil, "", err
 		}
+
+		var identifier string
+		hash, err := img.Digest()
+		if err == nil {
+			identifier = motorcloud_docker.MondooContainerImageID(hash.String())
+		}
+
 		transport, err := image.New(rc)
-		return transport, "", err
+		return transport, identifier, err
 	} else {
 		log.Debug().Str("image", endpoint.Host).Msg("Could not detect a valid repository url")
 		return nil, "", err

@@ -45,19 +45,19 @@ func NewFromFile(filename string) (types.Transport, error) {
 	})
 }
 
-func LoadFromRegistry(tag name.Tag) (io.ReadCloser, error) {
+func LoadFromRegistry(tag name.Tag) (v1.Image, io.ReadCloser, error) {
 	auth, err := authn.DefaultKeychain.Resolve(tag.Registry)
 	if err != nil {
 		fmt.Printf("getting creds for %q: %v", tag, err)
-		return nil, err
+		return nil, nil, err
 	}
 
 	// fmt.Printf("%v\n", tag)
 	img, err := remote.Image(tag, remote.WithAuth(auth), remote.WithTransport(http.DefaultTransport))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return mutate.Extract(img), nil
+	return img, mutate.Extract(img), nil
 }
 
 type ShaReference struct {
@@ -84,12 +84,12 @@ func (r ShaReference) Scope(scope string) string {
 	return ""
 }
 
-func LoadFromDockerEngine(sha string) (io.ReadCloser, error) {
+func LoadFromDockerEngine(sha string) (v1.Image, io.ReadCloser, error) {
 	img, err := daemon.Image(&ShaReference{SHA: strings.Replace(sha, "sha256:", "", -1)})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return mutate.Extract(img), nil
+	return img, mutate.Extract(img), nil
 }
 
 func ImageToTar(filename string, img v1.Image, baseName, imgName, tagName string) error {
