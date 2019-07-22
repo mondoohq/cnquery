@@ -124,7 +124,7 @@ func (m *FS) resolveSymlink(header *tar.Header) string {
 		}
 
 	} else {
-		path = filepath.Clean(filepath.Join(dest, "..", link))
+		path = Clean(join(dest, "..", link))
 	}
 	log.Debug().Str("link", link).Str("file", dest).Str("path", path).Msg("tar> is symlink")
 	return path
@@ -173,9 +173,4 @@ func (m *FS) tar(path string, header *tar.Header) (io.ReadCloser, error) {
 
 	// return the reader
 	return tarReader, nil
-}
-
-// docker images only use relative paths, we need to make them absolute here
-func Abs(path string) string {
-	return filepath.Join("/", path)
 }
