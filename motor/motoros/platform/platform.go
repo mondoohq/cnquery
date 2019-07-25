@@ -218,6 +218,17 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 		},
 	}
 
+	raspbian := &PlatformResolver{
+		Name:    "raspbian",
+		Familiy: false,
+		Detect: func(p *PlatformResolver, di *Info) (bool, error) {
+			if di.Name == "raspbian" {
+				return true, nil
+			}
+			return false, nil
+		},
+	}
+
 	rhel := &PlatformResolver{
 		Name:    "redhat",
 		Familiy: false,
@@ -546,7 +557,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 	debianFamily := &PlatformResolver{
 		Name:     "debian",
 		Familiy:  true,
-		Children: []*PlatformResolver{debian, ubuntu},
+		Children: []*PlatformResolver{debian, ubuntu, raspbian},
 		Detect: func(p *PlatformResolver, di *Info) (bool, error) {
 			return true, nil
 		},

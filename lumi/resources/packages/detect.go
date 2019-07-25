@@ -14,7 +14,7 @@ func Detect(motor *motor.Motor) ([]Package, map[string]PackageUpdate, error) {
 	// find suitable package manager
 	pm, err := ResolveSystemPkgManager(motor)
 	if pm == nil || err != nil {
-		return nil, nil, fmt.Errorf("could not detect suiteable package manager for platform")
+		return nil, nil, err
 	}
 
 	// retrieve all system packages
