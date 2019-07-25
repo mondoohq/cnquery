@@ -125,6 +125,18 @@ func (suite *OsDetectTestSuite) TestDebian9Detector() {
 	assert.Equal(suite.T(), "Debian GNU/Linux", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "9.4", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+}
+
+func (suite *OsDetectTestSuite) TestRaspian10Detector() {
+	detector, err := newDetector("./testdata/detect-raspbian.toml")
+	assert.Nil(suite.T(), err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(suite.T(), true, resolved, "platform should be resolvable")
+	assert.Equal(suite.T(), "raspbian", di.Name, "os name should be identified")
+	assert.Equal(suite.T(), "Raspbian GNU/Linux", di.Title, "os title should be identified")
+	assert.Equal(suite.T(), "10", di.Release, "os version should be identified")
+	assert.Equal(suite.T(), "armv7l", di.Arch, "os arch should be identified")
 	assert.Equal(suite.T(), []string{"debian", "linux", "unix", "os"}, di.Family)
 }
 
