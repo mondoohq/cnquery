@@ -27,7 +27,7 @@ func (r *queryResolver) Docker(ctx context.Context) (*gql.Docker, error) {
 
 type dockerResolver struct{ *Resolver }
 
-func (r *dockerResolver) Images(ctx context.Context, obj *gql.Docker) ([]gql.DockerImage, error) {
+func (r *dockerResolver) Images(ctx context.Context, obj *gql.Docker) ([]*gql.DockerImage, error) {
 	_, ok := r.Runtime.Motor.Transport.(*local.LocalTransport)
 	if !ok {
 		return nil, errors.New("docker is not support for this transport")
@@ -43,10 +43,10 @@ func (r *dockerResolver) Images(ctx context.Context, obj *gql.Docker) ([]gql.Doc
 		return nil, err
 	}
 
-	imgs := make([]gql.DockerImage, len(dImages))
+	imgs := make([]*gql.DockerImage, len(dImages))
 	for i := range dImages {
 		dImg := dImages[i]
-		imgs[i] = gql.DockerImage{
+		imgs[i] = &gql.DockerImage{
 			ID:          dImg.ID,
 			Size:        dImg.Size,
 			Virtualsize: dImg.VirtualSize,
@@ -97,11 +97,11 @@ func (r *dockerResolver) Container(ctx context.Context, obj *gql.Docker) ([]gql.
 			Status:  dContainer.Status,
 		}
 
-		labels := []gql.KeyValue{}
+		labels := []*gql.KeyValue{}
 		for k := range dContainer.Labels {
 			key := k
 			value := dContainer.Labels[key]
-			labels = append(labels, gql.KeyValue{
+			labels = append(labels, &gql.KeyValue{
 				Key:   &key,
 				Value: &value,
 			})

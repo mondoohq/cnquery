@@ -13,7 +13,7 @@ func (r *queryResolver) Kernel(ctx context.Context) (*gql.Kernel, error) {
 
 type kernelResolver struct{ *Resolver }
 
-func (r *kernelResolver) Parameters(ctx context.Context, obj *gql.Kernel) ([]gql.KeyValue, error) {
+func (r *kernelResolver) Parameters(ctx context.Context, obj *gql.Kernel) ([]*gql.KeyValue, error) {
 	if obj == nil {
 		return nil, errors.New("no parent object defined")
 	}

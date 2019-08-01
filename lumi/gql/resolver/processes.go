@@ -11,7 +11,7 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/processes"
 )
 
-func (r *queryResolver) Processes(ctx context.Context) ([]gql.Process, error) {
+func (r *queryResolver) Processes(ctx context.Context) ([]*gql.Process, error) {
 	// find suitable package manager
 	opm, err := processes.ResolveManager(r.Runtime.Motor)
 	if opm == nil || err != nil {
@@ -27,11 +27,11 @@ func (r *queryResolver) Processes(ctx context.Context) ([]gql.Process, error) {
 	}
 	log.Debug().Int("processes", len(processes)).Msg("lumi[processes]> running processes")
 
-	procs := []gql.Process{}
+	procs := []*gql.Process{}
 	for i := range processes {
 		process := processes[i]
 
-		procs = append(procs, gql.Process{
+		procs = append(procs, &gql.Process{
 			Pid:        process.Pid,
 			State:      process.State,
 			Executable: process.Executable,

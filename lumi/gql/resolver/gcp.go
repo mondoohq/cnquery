@@ -23,7 +23,7 @@ func (r *queryResolver) Gcp(ctx context.Context) (*gql.GoogleCloudPlatform, erro
 
 type googleCloudPlatformResolver struct{ *Resolver }
 
-func (r *googleCloudPlatformResolver) Projects(ctx context.Context, obj *gql.GoogleCloudPlatform) ([]gql.GcpProject, error) {
+func (r *googleCloudPlatformResolver) Projects(ctx context.Context, obj *gql.GoogleCloudPlatform) ([]*gql.GcpProject, error) {
 	client, err := gcpClient(compute.CloudPlatformScope)
 	resSrv, err := cloudresourcemanager.New(client)
 	if err != nil {
@@ -35,10 +35,10 @@ func (r *googleCloudPlatformResolver) Projects(ctx context.Context, obj *gql.Goo
 		return nil, err
 	}
 
-	projects := make([]gql.GcpProject, len(projectsResp.Projects))
+	projects := make([]*gql.GcpProject, len(projectsResp.Projects))
 	for i := range projectsResp.Projects {
 		gcpProject := projectsResp.Projects[i]
-		projects[i] = gql.GcpProject{
+		projects[i] = &gql.GcpProject{
 			ID:     gcpProject.ProjectId,
 			Name:   gcpProject.Name,
 			Number: strconv.FormatInt(gcpProject.ProjectNumber, 10),
@@ -49,7 +49,7 @@ func (r *googleCloudPlatformResolver) Projects(ctx context.Context, obj *gql.Goo
 
 type gcpComputeResolver struct{ *Resolver }
 
-func (r *gcpComputeResolver) Zones(ctx context.Context, obj *gql.GcpCompute, projectFilter *string) ([]gql.GcpZone, error) {
+func (r *gcpComputeResolver) Zones(ctx context.Context, obj *gql.GcpCompute, projectFilter *string) ([]*gql.GcpZone, error) {
 	if projectFilter == nil {
 		return nil, errors.New("project need to be provided")
 	}
@@ -66,10 +66,10 @@ func (r *gcpComputeResolver) Zones(ctx context.Context, obj *gql.GcpCompute, pro
 		return nil, err
 	}
 
-	zones := make([]gql.GcpZone, len(gpcZones.Items))
+	zones := make([]*gql.GcpZone, len(gpcZones.Items))
 	for i := range gpcZones.Items {
 		gcpZone := gpcZones.Items[i]
-		zones[i] = gql.GcpZone{
+		zones[i] = &gql.GcpZone{
 			Name:   gcpZone.Name,
 			Region: gcpZone.Region,
 			Status: gcpZone.Status,
@@ -79,7 +79,7 @@ func (r *gcpComputeResolver) Zones(ctx context.Context, obj *gql.GcpCompute, pro
 
 }
 
-func (r *gcpComputeResolver) Instances(ctx context.Context, obj *gql.GcpCompute, projectFilter *string, zoneFilter *string) ([]gql.GcpComputeInstance, error) {
+func (r *gcpComputeResolver) Instances(ctx context.Context, obj *gql.GcpCompute, projectFilter *string, zoneFilter *string) ([]*gql.GcpComputeInstance, error) {
 	if projectFilter == nil {
 		return nil, errors.New("project need to be provided")
 	}
@@ -106,11 +106,11 @@ func (r *gcpComputeResolver) Instances(ctx context.Context, obj *gql.GcpCompute,
 		return nil, err
 	}
 
-	instances := make([]gql.GcpComputeInstance, len(il.Items))
+	instances := make([]*gql.GcpComputeInstance, len(il.Items))
 	for i := range il.Items {
 		instance := il.Items[i]
 
-		instances[i] = gql.GcpComputeInstance{
+		instances[i] = &gql.GcpComputeInstance{
 			ID:     strconv.FormatUint(instance.Id, 10),
 			Kind:   instance.Kind,
 			Name:   instance.Name,
@@ -118,11 +118,11 @@ func (r *gcpComputeResolver) Instances(ctx context.Context, obj *gql.GcpCompute,
 			Zone:   instance.Zone,
 		}
 
-		labels := []gql.KeyValue{}
+		labels := []*gql.KeyValue{}
 		for k := range instance.Labels {
 			key := k
 			value := instance.Labels[key]
-			labels = append(labels, gql.KeyValue{
+			labels = append(labels, &gql.KeyValue{
 				Key:   &key,
 				Value: &value,
 			})
@@ -135,7 +135,7 @@ func (r *gcpComputeResolver) Instances(ctx context.Context, obj *gql.GcpCompute,
 
 type gcpStorageResolver struct{ *Resolver }
 
-func (r *gcpStorageResolver) Buckets(ctx context.Context, obj *gql.GcpStorage, projectFilter *string) ([]gql.GcpStorageBucket, error) {
+func (r *gcpStorageResolver) Buckets(ctx context.Context, obj *gql.GcpStorage, projectFilter *string) ([]*gql.GcpStorageBucket, error) {
 	client, err := gcpClient(storage.DevstorageReadOnlyScope)
 	if err != nil {
 		return nil, err
@@ -153,22 +153,22 @@ func (r *gcpStorageResolver) Buckets(ctx context.Context, obj *gql.GcpStorage, p
 		return nil, err
 	}
 
-	buckets := make([]gql.GcpStorageBucket, len(bl.Items))
+	buckets := make([]*gql.GcpStorageBucket, len(bl.Items))
 	for i := range bl.Items {
 		bucket := bl.Items[i]
 
-		buckets[i] = gql.GcpStorageBucket{
+		buckets[i] = &gql.GcpStorageBucket{
 			ID:           bucket.Id,
 			Name:         bucket.Name,
 			Location:     bucket.Location,
 			Storageclass: bucket.StorageClass,
 		}
 
-		labels := []gql.KeyValue{}
+		labels := []*gql.KeyValue{}
 		for k := range bucket.Labels {
 			key := k
 			value := bucket.Labels[key]
-			labels = append(labels, gql.KeyValue{
+			labels = append(labels, &gql.KeyValue{
 				Key:   &key,
 				Value: &value,
 			})
