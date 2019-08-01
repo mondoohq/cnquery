@@ -41,7 +41,7 @@ func (r *sshConfigResolver) File(ctx context.Context, obj *gql.SSHConfig) (*gql.
 	}, nil
 }
 
-func (r *sshConfigResolver) Params(ctx context.Context, obj *gql.SSHConfig) ([]gql.KeyValue, error) {
+func (r *sshConfigResolver) Params(ctx context.Context, obj *gql.SSHConfig) ([]*gql.KeyValue, error) {
 	if obj == nil {
 		return nil, errors.New("no parent object defined")
 	}
@@ -57,12 +57,12 @@ func (r *sshConfigResolver) Params(ctx context.Context, obj *gql.SSHConfig) ([]g
 		return nil, err
 	}
 
-	entries := []gql.KeyValue{}
+	entries := []*gql.KeyValue{}
 	for k := range sshParams {
 		// we need a local variable, otherwise go reuses the k pointer
 		key := k
 		val := sshParams[k]
-		entries = append(entries, gql.KeyValue{
+		entries = append(entries, &gql.KeyValue{
 			Key:   &key,
 			Value: &val,
 		})

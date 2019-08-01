@@ -11,7 +11,7 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/packages"
 )
 
-func (r *queryResolver) Packages(ctx context.Context) ([]gql.Package, error) {
+func (r *queryResolver) Packages(ctx context.Context) ([]*gql.Package, error) {
 	// find suitable package manager
 	pm, err := packages.ResolveSystemPkgManager(r.Runtime.Motor)
 	if pm == nil || err != nil {
@@ -26,9 +26,9 @@ func (r *queryResolver) Packages(ctx context.Context) ([]gql.Package, error) {
 	log.Debug().Int("packages", len(osPkgs)).Msg("lumi[packages]> installed packages")
 
 	// create graphql packages
-	pkgs := make([]gql.Package, len(osPkgs))
+	pkgs := make([]*gql.Package, len(osPkgs))
 	for i, osPkg := range osPkgs {
-		pkgs[i] = gql.Package{
+		pkgs[i] = &gql.Package{
 			Name:        osPkg.Name,
 			Version:     osPkg.Version,
 			Arch:        osPkg.Arch,

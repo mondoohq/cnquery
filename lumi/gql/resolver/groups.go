@@ -21,18 +21,18 @@ func osGroups(motor *motor.Motor) ([]*groups.Group, error) {
 	return gm.List()
 }
 
-func (r *queryResolver) Groups(ctx context.Context) ([]gql.Group, error) {
+func (r *queryResolver) Groups(ctx context.Context) ([]*gql.Group, error) {
 	groups, err := osGroups(r.Runtime.Motor)
 	if err != nil {
 		log.Warn().Err(err).Msg("lumi[groups]> could not retrieve groups list")
 		return nil, errors.New("could not retrieve groups list")
 	}
 
-	lumiGroups := []gql.Group{}
+	lumiGroups := []*gql.Group{}
 	for i := range groups {
 		group := groups[i]
 
-		lumiGroups = append(lumiGroups, gql.Group{
+		lumiGroups = append(lumiGroups, &gql.Group{
 			Name: group.Name,
 			Gid:  group.Gid,
 		})

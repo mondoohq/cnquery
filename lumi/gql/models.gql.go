@@ -3,19 +3,19 @@
 package gql
 
 type Docker struct {
-	Images     []DockerImage     `json:"images"`
-	Containers []DockerContainer `json:"containers"`
+	Images     []*DockerImage     `json:"images"`
+	Containers []*DockerContainer `json:"containers"`
 }
 
 type DockerContainer struct {
-	ID      string     `json:"id"`
-	Command string     `json:"command"`
-	Image   string     `json:"image"`
-	Imageid string     `json:"imageid"`
-	Names   []string   `json:"names"`
-	State   string     `json:"state"`
-	Status  string     `json:"status"`
-	Labels  []KeyValue `json:"labels"`
+	ID      string      `json:"id"`
+	Command string      `json:"command"`
+	Image   string      `json:"image"`
+	Imageid string      `json:"imageid"`
+	Names   []string    `json:"names"`
+	State   string      `json:"state"`
+	Status  string      `json:"status"`
+	Labels  []*KeyValue `json:"labels"`
 }
 
 type File struct {
@@ -25,38 +25,38 @@ type File struct {
 }
 
 type GcpCompute struct {
-	Instances []GcpComputeInstance `json:"instances"`
-	Zones     []GcpZone            `json:"zones"`
+	Instances []*GcpComputeInstance `json:"instances"`
+	Zones     []*GcpZone            `json:"zones"`
 }
 
 type GcpComputeInstance struct {
-	Project string     `json:"project"`
-	Zone    string     `json:"zone"`
-	ID      string     `json:"id"`
-	Name    string     `json:"name"`
-	Kind    string     `json:"kind"`
-	Status  string     `json:"status"`
-	Labels  []KeyValue `json:"labels"`
+	Project string      `json:"project"`
+	Zone    string      `json:"zone"`
+	ID      string      `json:"id"`
+	Name    string      `json:"name"`
+	Kind    string      `json:"kind"`
+	Status  string      `json:"status"`
+	Labels  []*KeyValue `json:"labels"`
 }
 
 type GcpProject struct {
-	Name   string     `json:"name"`
-	ID     string     `json:"id"`
-	Number string     `json:"number"`
-	Labels []KeyValue `json:"labels"`
+	Name   string      `json:"name"`
+	ID     string      `json:"id"`
+	Number string      `json:"number"`
+	Labels []*KeyValue `json:"labels"`
 }
 
 type GcpStorage struct {
-	Buckets []GcpStorageBucket `json:"buckets"`
+	Buckets []*GcpStorageBucket `json:"buckets"`
 }
 
 type GcpStorageBucket struct {
-	Project      string     `json:"project"`
-	ID           string     `json:"id"`
-	Name         string     `json:"name"`
-	Location     string     `json:"location"`
-	Storageclass string     `json:"storageclass"`
-	Labels       []KeyValue `json:"labels"`
+	Project      string      `json:"project"`
+	ID           string      `json:"id"`
+	Name         string      `json:"name"`
+	Location     string      `json:"location"`
+	Storageclass string      `json:"storageclass"`
+	Labels       []*KeyValue `json:"labels"`
 }
 
 type GcpZone struct {
@@ -66,13 +66,13 @@ type GcpZone struct {
 }
 
 type GoogleCloudPlatform struct {
-	Compute  *GcpCompute  `json:"compute"`
-	Storage  *GcpStorage  `json:"storage"`
-	Projects []GcpProject `json:"projects"`
+	Compute  *GcpCompute   `json:"compute"`
+	Storage  *GcpStorage   `json:"storage"`
+	Projects []*GcpProject `json:"projects"`
 }
 
 type Kernel struct {
-	Parameters []KeyValue `json:"parameters"`
+	Parameters []*KeyValue `json:"parameters"`
 }
 
 type KeyValue struct {
@@ -112,9 +112,9 @@ type Service struct {
 }
 
 type SSHConfig struct {
-	Path   string     `json:"path"`
-	File   *File      `json:"file"`
-	Params []KeyValue `json:"params"`
+	Path   string      `json:"path"`
+	File   *File       `json:"file"`
+	Params []*KeyValue `json:"params"`
 }
 
 type Sshd struct {

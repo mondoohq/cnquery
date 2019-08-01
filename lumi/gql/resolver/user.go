@@ -9,7 +9,7 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/users"
 )
 
-func (r *queryResolver) Users(ctx context.Context) ([]gql.User, error) {
+func (r *queryResolver) Users(ctx context.Context) ([]*gql.User, error) {
 	// find suitable user manager
 	um, err := users.ResolveManager(r.Runtime.Motor)
 	if um == nil || err != nil {
@@ -25,12 +25,12 @@ func (r *queryResolver) Users(ctx context.Context) ([]gql.User, error) {
 	}
 	log.Debug().Int("users", len(users)).Msg("lumi[users]> found users")
 
-	lumiUsers := []gql.User{}
+	lumiUsers := []*gql.User{}
 	for i := range users {
 		user := users[i]
 
 		if user != nil {
-			lumiUsers = append(lumiUsers, gql.User{
+			lumiUsers = append(lumiUsers, &gql.User{
 				Uid:         user.Uid,
 				Gid:         user.Gid,
 				Username:    user.Username,

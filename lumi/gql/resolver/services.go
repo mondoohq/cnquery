@@ -9,7 +9,7 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/services"
 )
 
-func (r *queryResolver) Services(ctx context.Context) ([]gql.Service, error) {
+func (r *queryResolver) Services(ctx context.Context) ([]*gql.Service, error) {
 	// find suitable service manager
 	osm, err := services.ResolveManager(r.Runtime.Motor)
 	if osm == nil || err != nil {
@@ -25,11 +25,11 @@ func (r *queryResolver) Services(ctx context.Context) ([]gql.Service, error) {
 	}
 	log.Debug().Int("services", len(services)).Msg("lumi[services]> running services")
 
-	lumiSrvs := []gql.Service{}
+	lumiSrvs := []*gql.Service{}
 	for i := range services {
 		srv := services[i]
 
-		lumiSrvs = append(lumiSrvs, gql.Service{
+		lumiSrvs = append(lumiSrvs, &gql.Service{
 			Name:        srv.Name,
 			Description: srv.Description,
 			Installed:   srv.Installed,
