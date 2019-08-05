@@ -34,11 +34,8 @@ func New(rc io.ReadCloser) (types.Transport, error) {
 	}
 
 	// we return a pure tar image
-	return NewFromFile(f.Name())
-}
+	filename := f.Name()
 
-// no cache file required, since the file is cached locally already
-func NewFromFile(filename string) (types.Transport, error) {
 	return tar.NewWithClose(&types.Endpoint{Path: filename}, func() {
 		// remove temporary file on stream close
 		os.Remove(filename)
