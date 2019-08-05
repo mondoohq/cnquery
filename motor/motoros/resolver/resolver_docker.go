@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/rs/zerolog/log"
 	motorcloud_docker "go.mondoo.io/mondoo/motor/motorcloud/docker"
@@ -67,7 +68,10 @@ func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, string, 
 		if err == nil {
 			log.Debug().Msg("detected docker image")
 			var identifier string
-			transport, err := image.NewFromFile(endpoint.Host)
+
+			rc := mutate.Extract(img)
+
+			transport, err := image.New(rc)
 			if err != nil {
 				hash, err := img.Digest()
 				if err != nil {
@@ -77,7 +81,7 @@ func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, string, 
 			return transport, identifier, err
 		} else {
 			log.Debug().Msg("detected docker container snapshot")
-			transport, err := snapshot.NewFromDirectory(endpoint.Host)
+			transport, err := snapshot.NewFromFile(endpoint.Host)
 			return transport, "", err
 		}
 

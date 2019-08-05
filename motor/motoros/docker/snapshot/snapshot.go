@@ -28,8 +28,8 @@ func NewFromDockerEngine(containerid string) (types.Transport, error) {
 	})
 }
 
-func NewFromDirectory(path string) (types.Transport, error) {
-	return tar.New(&types.Endpoint{Path: path})
+func NewFromFile(filename string) (types.Transport, error) {
+	return tar.New(&types.Endpoint{Path: filename})
 }
 
 // exports a given container from docker engine to a tar file
