@@ -69,15 +69,15 @@ func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, string, 
 			log.Debug().Msg("detected docker image")
 			var identifier string
 
-			rc := mutate.Extract(img)
-
-			transport, err := image.New(rc)
-			if err != nil {
-				hash, err := img.Digest()
-				if err != nil {
-					identifier = motorcloud_docker.MondooContainerImageID(hash.String())
-				}
+			hash, err := img.Digest()
+			if err == nil {
+				identifier = motorcloud_docker.MondooContainerImageID(hash.String())
+			} else {
+				log.Warn().Err(err).Msg("could not determine referenceid")
 			}
+
+			rc := mutate.Extract(img)
+			transport, err := image.New(rc)
 			return transport, identifier, err
 		} else {
 			log.Debug().Msg("detected docker container snapshot")
