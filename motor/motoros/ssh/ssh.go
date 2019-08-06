@@ -18,25 +18,32 @@ import (
 )
 
 func ReadSSHConfig(endpoint *types.Endpoint) *types.Endpoint {
+	host := endpoint.Host
+
 	// optional step, tries to parse the ssh config to see if additional information
 	// is already available
+	hostname := ssh_config.Get(host, "HostName")
+	if len(hostname) > 0 {
+		endpoint.Host = hostname
+	}
+
 	if len(endpoint.User) == 0 {
-		endpoint.User = ssh_config.Get(endpoint.Host, "User")
+		endpoint.User = ssh_config.Get(host, "User")
 	}
 
 	if len(endpoint.Port) == 0 {
-		endpoint.Port = ssh_config.Get(endpoint.Host, "Port")
+		endpoint.Port = ssh_config.Get(host, "Port")
 	}
 
 	if len(endpoint.PrivateKeyPath) == 0 {
-		entry := ssh_config.Get(endpoint.Host, "IdentityFile")
+		entry := ssh_config.Get(host, "IdentityFile")
 		// TODO: the ssh_config uses os/home but instead should be use go-homedir, could become a compile issue
 		// TODO: the problem is that the lib returns defaults and we cannot properly distingush
 		if ssh_config.Default("IdentityFile") != entry {
 			// commonly ssh config included paths like ~
 			expanded, err := homedir.Expand(entry)
 			if err == nil {
-				log.Debug().Str("key", expanded).Str("host", endpoint.Host).Msg("read ssh identity key from ssh config")
+				log.Debug().Str("key", expanded).Str("host", host).Msg("read ssh identity key from ssh config")
 				endpoint.PrivateKeyPath = expanded
 			}
 		}
