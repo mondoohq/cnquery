@@ -56,12 +56,16 @@ func authMethods(endpoint *types.Endpoint) ([]ssh.AuthMethod, error) {
 	}
 
 	if endpoint.Password != "" {
+		log.Debug().Msg("use password authentication")
 		auths = append(auths, ssh.Password(endpoint.Password))
 	}
 
 	agentAuth := sshAgent()
 	if agentAuth != nil {
+		log.Debug().Str("socket", os.Getenv("SSH_AUTH_SOCK")).Msg("enabled ssh agent authentication")
 		auths = append(auths, agentAuth)
+	} else {
+		log.Debug().Msg("could not find valud ssh agent authentication")
 	}
 
 	return auths, nil
