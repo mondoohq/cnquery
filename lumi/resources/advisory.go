@@ -15,7 +15,7 @@ import (
 
 var Scanner *scannerclient.Client
 
-// TODO: make this a harmonized approach with mondoo vuln command
+// TODO: make this a harmonized approach with mondoo scan command
 var MONDOO_API = "https://api.mondoo.app"
 
 // allow overwrite of the API url by an environment variable
