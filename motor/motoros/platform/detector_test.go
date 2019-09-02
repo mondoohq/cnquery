@@ -76,6 +76,19 @@ func (suite *OsDetectTestSuite) TestRhel8OSDetector() {
 	assert.Equal(suite.T(), []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
 
+func (suite *OsDetectTestSuite) TestCentos6Detector() {
+	detector, err := newDetector("./testdata/detect-centos6.toml")
+	assert.Nil(suite.T(), err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(suite.T(), true, resolved, "platform should be resolvable")
+	assert.Equal(suite.T(), "centos", di.Name, "os name should be identified")
+	assert.Equal(suite.T(), "CentOS", di.Title, "os title should be identified")
+	assert.Equal(suite.T(), "6.9", di.Release, "os version should be identified")
+	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"redhat", "linux", "unix", "os"}, di.Family)
+}
+
 func (suite *OsDetectTestSuite) TestCentos7OSDetector() {
 	detector, err := newDetector("./testdata/detect-centos7.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
@@ -89,17 +102,43 @@ func (suite *OsDetectTestSuite) TestCentos7OSDetector() {
 	assert.Equal(suite.T(), []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
 
-func (suite *OsDetectTestSuite) TestCentos6Detector() {
-	detector, err := newDetector("./testdata/detect-centos6.toml")
+func (suite *OsDetectTestSuite) TestCentos5Detector() {
+	detector, err := newDetector("./testdata/detect-centos5.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
 	assert.Equal(suite.T(), true, resolved, "platform should be resolvable")
 	assert.Equal(suite.T(), "centos", di.Name, "os name should be identified")
 	assert.Equal(suite.T(), "CentOS", di.Title, "os title should be identified")
-	assert.Equal(suite.T(), "6.9", di.Release, "os version should be identified")
+	assert.Equal(suite.T(), "5.11", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(suite.T(), []string{"redhat", "linux", "unix", "os"}, di.Family)
+}
+
+func (suite *OsDetectTestSuite) TestUbuntu1204Detector() {
+	detector, err := newDetector("./testdata/detect-ubuntu1204.toml")
+	assert.Nil(suite.T(), err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(suite.T(), true, resolved, "platform should be resolvable")
+	assert.Equal(suite.T(), "ubuntu", di.Name, "os name should be identified")
+	assert.Equal(suite.T(), "Ubuntu", di.Title, "os title should be identified")
+	assert.Equal(suite.T(), "12.04", di.Release, "os version should be identified")
+	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"debian", "linux", "unix", "os"}, di.Family)
+}
+
+func (suite *OsDetectTestSuite) TestUbuntu1404Detector() {
+	detector, err := newDetector("./testdata/detect-ubuntu1404.toml")
+	assert.Nil(suite.T(), err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(suite.T(), true, resolved, "platform should be resolvable")
+	assert.Equal(suite.T(), "ubuntu", di.Name, "os name should be identified")
+	assert.Equal(suite.T(), "Ubuntu", di.Title, "os title should be identified")
+	assert.Equal(suite.T(), "14.04", di.Release, "os version should be identified")
+	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"debian", "linux", "unix", "os"}, di.Family)
 }
 
 func (suite *OsDetectTestSuite) TestUbuntu1604Detector() {
@@ -115,6 +154,45 @@ func (suite *OsDetectTestSuite) TestUbuntu1604Detector() {
 	assert.Equal(suite.T(), []string{"debian", "linux", "unix", "os"}, di.Family)
 }
 
+func (suite *OsDetectTestSuite) TestUbuntu1804Detector() {
+	detector, err := newDetector("./testdata/detect-ubuntu1804.toml")
+	assert.Nil(suite.T(), err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(suite.T(), true, resolved, "platform should be resolvable")
+	assert.Equal(suite.T(), "ubuntu", di.Name, "os name should be identified")
+	assert.Equal(suite.T(), "Ubuntu", di.Title, "os title should be identified")
+	assert.Equal(suite.T(), "18.04", di.Release, "os version should be identified")
+	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"debian", "linux", "unix", "os"}, di.Family)
+}
+
+func (suite *OsDetectTestSuite) TestDebian7Detector() {
+	detector, err := newDetector("./testdata/detect-debian7.toml")
+	assert.Nil(suite.T(), err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(suite.T(), true, resolved, "platform should be resolvable")
+	assert.Equal(suite.T(), "debian", di.Name, "os name should be identified")
+	assert.Equal(suite.T(), "Debian GNU/Linux", di.Title, "os title should be identified")
+	assert.Equal(suite.T(), "7.11", di.Release, "os version should be identified")
+	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"debian", "linux", "unix", "os"}, di.Family)
+}
+
+func (suite *OsDetectTestSuite) TestDebian8Detector() {
+	detector, err := newDetector("./testdata/detect-debian8.toml")
+	assert.Nil(suite.T(), err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(suite.T(), true, resolved, "platform should be resolvable")
+	assert.Equal(suite.T(), "debian", di.Name, "os name should be identified")
+	assert.Equal(suite.T(), "Debian GNU/Linux", di.Title, "os title should be identified")
+	assert.Equal(suite.T(), "8.11", di.Release, "os version should be identified")
+	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"debian", "linux", "unix", "os"}, di.Family)
+}
+
 func (suite *OsDetectTestSuite) TestDebian9Detector() {
 	detector, err := newDetector("./testdata/detect-debian9.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
@@ -125,6 +203,20 @@ func (suite *OsDetectTestSuite) TestDebian9Detector() {
 	assert.Equal(suite.T(), "Debian GNU/Linux", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "9.4", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"debian", "linux", "unix", "os"}, di.Family)
+}
+
+func (suite *OsDetectTestSuite) TestDebian10Detector() {
+	detector, err := newDetector("./testdata/detect-debian10.toml")
+	assert.Nil(suite.T(), err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(suite.T(), true, resolved, "platform should be resolvable")
+	assert.Equal(suite.T(), "debian", di.Name, "os name should be identified")
+	assert.Equal(suite.T(), "Debian GNU/Linux", di.Title, "os title should be identified")
+	assert.Equal(suite.T(), "10.0", di.Release, "os version should be identified")
+	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"debian", "linux", "unix", "os"}, di.Family)
 }
 
 func (suite *OsDetectTestSuite) TestRaspian10Detector() {
@@ -239,6 +331,19 @@ func (suite *OsDetectTestSuite) TestOracleLinux7Detector() {
 	assert.Equal(suite.T(), "ol", di.Name, "os name should be identified")
 	assert.Equal(suite.T(), "Oracle Linux Server", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "7.5", di.Release, "os version should be identified")
+	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"redhat", "linux", "unix", "os"}, di.Family)
+}
+
+func (suite *OsDetectTestSuite) TestOracleLinux8Detector() {
+	detector, err := newDetector("./testdata/detect-oracle8.toml")
+	assert.Nil(suite.T(), err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(suite.T(), true, resolved, "platform should be resolvable")
+	assert.Equal(suite.T(), "ol", di.Name, "os name should be identified")
+	assert.Equal(suite.T(), "Oracle Linux Server", di.Title, "os title should be identified")
+	assert.Equal(suite.T(), "8.0", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(suite.T(), []string{"redhat", "linux", "unix", "os"}, di.Family)
 }

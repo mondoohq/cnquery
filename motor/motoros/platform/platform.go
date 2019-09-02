@@ -249,11 +249,15 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 		Name:    "centos",
 		Familiy: false,
 		Detect: func(p *PlatformResolver, di *Info) (bool, error) {
-			// works for centos 7+
-			if di.Name == "centos" {
+
+			log.Debug().Msgf("check centos %v", di)
+			// works for centos 5+
+			if strings.Contains(di.Title, "CentOS") || di.Name == "centos" {
+				di.Name = "centos"
 				return true, nil
 			}
 
+			// CentOS 5 does not have /etc/centos-release
 			// check if we have /etc/centos-release file
 			f, err := d.Transport.File("/etc/centos-release")
 			if err != nil {
