@@ -6,7 +6,7 @@ import (
 
 	"go.mondoo.io/mondoo/vadvisor/specs/cvss"
 
-	uuid "github.com/gofrs/uuid/v3"
+	uuid "github.com/gofrs/uuid"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/falcon"
 	"go.mondoo.io/mondoo/lumi"

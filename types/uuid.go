@@ -3,7 +3,7 @@ package types
 import (
 	"encoding/base64"
 
-	"github.com/gofrs/uuid/v3"
+	"github.com/gofrs/uuid"
 )
 
 // UUID generates a new string encoded UUID

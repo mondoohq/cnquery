@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"sync"
 
-	uuid "github.com/gofrs/uuid/v3"
+	uuid "github.com/gofrs/uuid"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/types"

@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	uuid "github.com/gofrs/uuid/v3"
+	uuid "github.com/gofrs/uuid"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
