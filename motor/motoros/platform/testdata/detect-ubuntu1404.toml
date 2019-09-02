@@ -10,22 +10,20 @@ stdout = "4.9.125-linuxkit"
 [files."/etc/os-release"]
 content = """
 NAME="Ubuntu"
-VERSION="16.04.4 LTS (Xenial Xerus)"
+VERSION="14.04.6 LTS, Trusty Tahr"
 ID=ubuntu
 ID_LIKE=debian
-PRETTY_NAME="Ubuntu 16.04.4 LTS"
-VERSION_ID="16.04"
+PRETTY_NAME="Ubuntu 14.04.6 LTS"
+VERSION_ID="14.04"
 HOME_URL="http://www.ubuntu.com/"
 SUPPORT_URL="http://help.ubuntu.com/"
 BUG_REPORT_URL="http://bugs.launchpad.net/ubuntu/"
-VERSION_CODENAME=xenial
-UBUNTU_CODENAME=xenial
 """
 
 [files."/etc/lsb-release"]
 content = """
 DISTRIB_ID=Ubuntu
-DISTRIB_RELEASE=16.04
-DISTRIB_CODENAME=xenial
-DISTRIB_DESCRIPTION="Ubuntu 16.04.4 LTS"
+DISTRIB_RELEASE=14.04
+DISTRIB_CODENAME=trusty
+DISTRIB_DESCRIPTION="Ubuntu 14.04.6 LTS"
 """
