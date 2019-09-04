@@ -249,8 +249,6 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 		Name:    "centos",
 		Familiy: false,
 		Detect: func(p *PlatformResolver, di *Info) (bool, error) {
-
-			log.Debug().Msgf("check centos %v", di)
 			// works for centos 5+
 			if strings.Contains(di.Title, "CentOS") || di.Name == "centos" {
 				di.Name = "centos"
@@ -260,6 +258,35 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			// CentOS 5 does not have /etc/centos-release
 			// check if we have /etc/centos-release file
 			f, err := d.Transport.File("/etc/centos-release")
+			if err != nil {
+				return false, nil
+			}
+			defer f.Close()
+
+			c, err := ioutil.ReadAll(f)
+			if err != nil || len(c) == 0 {
+				return false, nil
+			}
+
+			if len(di.Name) == 0 {
+				di.Name = "centos"
+			}
+
+			return true, nil
+		},
+	}
+
+	fedora := &PlatformResolver{
+		Name:    "fedora",
+		Familiy: false,
+		Detect: func(p *PlatformResolver, di *Info) (bool, error) {
+			if strings.Contains(di.Title, "Fedora") || di.Name == "fedora" {
+				di.Name = "fedora"
+				return true, nil
+			}
+
+			// check if we have /etc/fedora-release file
+			f, err := d.Transport.File("/etc/fedora-release")
 			if err != nil {
 				return false, nil
 			}
@@ -523,7 +550,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 	redhatFamily := &PlatformResolver{
 		Name:     "redhat",
 		Familiy:  true,
-		Children: []*PlatformResolver{rhel, centos, oracle, scientific},
+		Children: []*PlatformResolver{rhel, centos, fedora, oracle, scientific},
 		Detect: func(p *PlatformResolver, di *Info) (bool, error) {
 			f, err := d.Transport.File("/etc/redhat-release")
 			if err != nil {
