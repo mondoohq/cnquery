@@ -76,6 +76,19 @@ func (suite *OsDetectTestSuite) TestRhel8OSDetector() {
 	assert.Equal(suite.T(), []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
 
+func (suite *OsDetectTestSuite) TestFedora29OSDetector() {
+	detector, err := newDetector("./testdata/detect-fedora29.toml")
+	assert.Nil(suite.T(), err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(suite.T(), true, resolved, "platform should be resolvable")
+	assert.Equal(suite.T(), "fedora", di.Name, "os name should be identified")
+	assert.Equal(suite.T(), "Fedora", di.Title, "os title should be identified")
+	assert.Equal(suite.T(), "29", di.Release, "os version should be identified")
+	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"redhat", "linux", "unix", "os"}, di.Family)
+}
+
 func (suite *OsDetectTestSuite) TestCentos6Detector() {
 	detector, err := newDetector("./testdata/detect-centos6.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
