@@ -358,15 +358,28 @@ func (win *WinPkgManager) Format() string {
 	return "win"
 }
 
-// returns installed hot fixes
+// returns installed appx packages as well as hot fixes
 func (win *WinPkgManager) List() ([]Package, error) {
-
 	cmd, err := win.motor.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", WINDOWS_QUERY_APPX_PACKAGES))
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}
+	appxPkgs, err := ParseWindowsAppxPackages(cmd.Stdout)
+	if err != nil {
+		return nil, fmt.Errorf("could not read package list")
+	}
 
-	return ParseWindowsAppxPackages(cmd.Stdout)
+	cmd, err = win.motor.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", WINDOWS_QUERY_HOTFIXES))
+	if err != nil {
+		return nil, fmt.Errorf("could not read package list")
+	}
+
+	hotfixes, err := ParseWindowsHotfixes(cmd.Stdout)
+
+	pkgs := appxPkgs
+	pkgs = append(pkgs, hotfixes...)
+
+	return pkgs, nil
 }
 
 func (win *WinPkgManager) Available() (map[string]PackageUpdate, error) {

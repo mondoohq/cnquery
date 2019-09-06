@@ -67,7 +67,10 @@ const (
 	Defender
 )
 
-var WINDOWS_QUERY_APPX_PACKAGES = `Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version  | ConvertTo-Json`
+var (
+	WINDOWS_QUERY_HOTFIXES      = `Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstallDate, InstalledBy | ConvertTo-Json`
+	WINDOWS_QUERY_APPX_PACKAGES = `Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version  | ConvertTo-Json`
+)
 
 type powershellWinAppxPackages struct {
 	Name         string `json:"Name"`
@@ -101,6 +104,7 @@ func ParseWindowsAppxPackages(input io.Reader) ([]Package, error) {
 			Name:    appxPackages[i].Name,
 			Version: appxPackages[i].Version,
 			Arch:    arch,
+			Format:  "win/appx",
 		}
 	}
 	return pkgs, nil
@@ -129,12 +133,13 @@ $updates = $searcher.Updates | ForEach-Object {
 	`
 
 type powershellWinUpdate struct {
-	UpdateID    string   `json:"UpdateID"`
-	Title       string   `json:"Title"`
-	CategoryIDs []string `json:"CategoryIDs"`
+	UpdateID     string   `json:"UpdateID"`
+	Title        string   `json:"Title"`
+	CategoryIDs  []string `json:"CategoryIDs"`
+	KBArticleIDs []string `json:"KBArticleIDs"`
 }
 
-func ParseWindowsUpdates(input io.Reader) ([]OperatingSystemUpdate, error) {
+func ParseWindowsUpdates(input io.Reader) ([]Package, error) {
 	data, err := ioutil.ReadAll(input)
 	if err != nil {
 		return nil, err
@@ -146,11 +151,17 @@ func ParseWindowsUpdates(input io.Reader) ([]OperatingSystemUpdate, error) {
 		return nil, err
 	}
 
-	updates := make([]OperatingSystemUpdate, len(powerShellUpdates))
+	updates := make([]Package, len(powerShellUpdates))
 	for i := range powerShellUpdates {
-		updates[i] = OperatingSystemUpdate{
-			Name:        powerShellUpdates[i].UpdateID,
+		if len(powerShellUpdates[i].KBArticleIDs) == 0 {
+			log.Warn().Str("update", powerShellUpdates[i].UpdateID).Msg("ms update has no kb assigned")
+			continue
+		}
+		updates[i] = Package{
+			Name:        powerShellUpdates[i].KBArticleIDs[0],
+			Version:     powerShellUpdates[i].UpdateID,
 			Description: powerShellUpdates[i].Title,
+			Format:      "win/updates",
 		}
 	}
 	return updates, nil
@@ -187,6 +198,7 @@ func ParseWindowsHotfixes(input io.Reader) ([]Package, error) {
 		pkgs[i] = Package{
 			Name:        powershellWinHotFixPkgs[i].HotFixId,
 			Description: powershellWinHotFixPkgs[i].Description,
+			Format:      "win/mskb",
 		}
 	}
 	return pkgs, nil
