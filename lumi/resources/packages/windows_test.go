@@ -35,6 +35,7 @@ func TestWindowsAppxPackagesParser(t *testing.T) {
 		Name:    "Microsoft.Windows.Cortana",
 		Version: "1.11.5.17763",
 		Arch:    "noarch",
+		Format:  "windows/appx",
 	}
 	assert.Contains(t, m, p)
 
@@ -59,7 +60,7 @@ func TestWindowsHotFixParser(t *testing.T) {
 	p = Package{
 		Name:        "KB4486553",
 		Description: "Update",
-		Format:      "mskb",
+		Format:      "windows/hotfix",
 	}
 	assert.Contains(t, m, p)
 

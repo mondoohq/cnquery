@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	motor "go.mondoo.io/mondoo/motor/motoros"
@@ -360,23 +361,35 @@ func (win *WinPkgManager) Format() string {
 
 // returns installed appx packages as well as hot fixes
 func (win *WinPkgManager) List() ([]Package, error) {
-	cmd, err := win.motor.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", WINDOWS_QUERY_APPX_PACKAGES))
+
+	pf, err := win.motor.Platform()
 	if err != nil {
-		return nil, fmt.Errorf("could not read package list")
-	}
-	appxPkgs, err := ParseWindowsAppxPackages(cmd.Stdout)
-	if err != nil {
-		return nil, fmt.Errorf("could not read package list")
+		return nil, err
 	}
 
-	cmd, err = win.motor.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", WINDOWS_QUERY_HOTFIXES))
+	pkgs := []Package{}
+
+	// only win 10+ are compaatible with app x packages
+	if strings.HasPrefix(pf.Release, "10.") {
+		cmd, err := win.motor.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", WINDOWS_QUERY_APPX_PACKAGES))
+		if err != nil {
+			return nil, fmt.Errorf("could not read package list")
+		}
+		appxPkgs, err := ParseWindowsAppxPackages(cmd.Stdout)
+		if err != nil {
+			return nil, fmt.Errorf("could not read appx package list")
+		}
+		pkgs = append(pkgs, appxPkgs...)
+	}
+
+	cmd, err := win.motor.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", WINDOWS_QUERY_HOTFIXES))
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}
-
 	hotfixes, err := ParseWindowsHotfixes(cmd.Stdout)
-
-	pkgs := appxPkgs
+	if err != nil {
+		return nil, fmt.Errorf("could not read hotfix list")
+	}
 	pkgs = append(pkgs, hotfixes...)
 
 	return pkgs, nil
