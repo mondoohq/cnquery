@@ -62,6 +62,7 @@ func ConvertParserPackages(pkgs []Package, updates map[string]PackageUpdate) []*
 			Available: available,
 			Arch:      d.Arch,
 			Origin:    d.Origin,
+			Format:    d.Format,
 		})
 	}
 

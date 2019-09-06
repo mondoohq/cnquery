@@ -23,7 +23,7 @@ type Package struct {
 	// e.g. on alpine it is used for parent  packages
 	// o 	Package Origin - https://wiki.alpinelinux.org/wiki/Apk_spec
 	Origin string `json:"origin"`
-	Format string `json:"origin"`
+	Format string `json:"format"`
 }
 
 var (

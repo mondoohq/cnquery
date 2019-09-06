@@ -104,7 +104,7 @@ func ParseWindowsAppxPackages(input io.Reader) ([]Package, error) {
 			Name:    appxPackages[i].Name,
 			Version: appxPackages[i].Version,
 			Arch:    arch,
-			Format:  "win/appx",
+			Format:  "windows/appx",
 		}
 	}
 	return pkgs, nil
@@ -161,7 +161,7 @@ func ParseWindowsUpdates(input io.Reader) ([]Package, error) {
 			Name:        powerShellUpdates[i].KBArticleIDs[0],
 			Version:     powerShellUpdates[i].UpdateID,
 			Description: powerShellUpdates[i].Title,
-			Format:      "win/updates",
+			Format:      "windows/updates",
 		}
 	}
 	return updates, nil
@@ -198,7 +198,7 @@ func ParseWindowsHotfixes(input io.Reader) ([]Package, error) {
 		pkgs[i] = Package{
 			Name:        powershellWinHotFixPkgs[i].HotFixId,
 			Description: powershellWinHotFixPkgs[i].Description,
-			Format:      "win/mskb",
+			Format:      "windows/hotfix",
 		}
 	}
 	return pkgs, nil
