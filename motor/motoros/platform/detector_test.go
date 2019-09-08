@@ -400,7 +400,7 @@ func (suite *OsDetectTestSuite) TestBusyboxLinuxDetector() {
 	assert.Equal(suite.T(), []string{"linux", "unix", "os"}, di.Family)
 }
 
-func (suite *OsDetectTestSuite) TestWindowsDetector() {
+func (suite *OsDetectTestSuite) TestWindows2016Detector() {
 	detector, err := newDetector("./testdata/detect-windows2016.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
@@ -409,6 +409,19 @@ func (suite *OsDetectTestSuite) TestWindowsDetector() {
 	assert.Equal(suite.T(), "windows", di.Name, "os name should be identified")
 	assert.Equal(suite.T(), "Microsoft Windows Server 2016 Standard Evaluation", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "10.0.14393", di.Release, "os version should be identified")
+	assert.Equal(suite.T(), "64-bit", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"windows", "os"}, di.Family)
+}
+
+func (suite *OsDetectTestSuite) TestWindows2019Detector() {
+	detector, err := newDetector("./testdata/detect-windows2019.toml")
+	assert.Nil(suite.T(), err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(suite.T(), true, resolved, "platform should be resolvable")
+	assert.Equal(suite.T(), "windows", di.Name, "os name should be identified")
+	assert.Equal(suite.T(), "Microsoft Windows Server 2019 Datacenter Evaluation", di.Title, "os title should be identified")
+	assert.Equal(suite.T(), "10.0.17763", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "64-bit", di.Arch, "os arch should be identified")
 	assert.Equal(suite.T(), []string{"windows", "os"}, di.Family)
 }

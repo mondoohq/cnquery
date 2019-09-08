@@ -1,6 +1,7 @@
 package platform
 
 import (
+	"fmt"
 	"io/ioutil"
 	"regexp"
 	"strings"
@@ -468,7 +469,6 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			command := "wmic os get * /format:csv"
 			cmd, err := d.Transport.RunCommand(command)
 			if err != nil {
-				log.Debug().Err(err).Msg("platform> could not detect windows")
 				return false, nil
 			}
 
@@ -479,10 +479,22 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 
 			di.Name = "windows"
 			di.Title = data.Caption
+
+			// major.minor.build.ubr
 			di.Release = data.Version
 
 			// FIXME: we need to ask wmic cpu get architecture
 			di.Arch = data.OSArchitecture
+
+			// optional: try to get the ubr number (win 10 + 2019)
+			pscommand := "Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion' -Name CurrentBuild, UBR | ConvertTo-Json"
+			cmd, err = d.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", pscommand))
+			if err == nil {
+				current, err := ParseWinRegistryCurrentVersion(cmd.Stdout)
+				if err == nil && current.UBR > 0 {
+					di.Release = fmt.Sprintf("%s.%d", di.Release, current.UBR)
+				}
+			}
 
 			return true, nil
 		},

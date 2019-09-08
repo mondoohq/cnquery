@@ -2,8 +2,10 @@ package platform
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"errors"
 	"io"
+	"io/ioutil"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -125,4 +127,25 @@ func ParseWinWmicOS(csvData io.Reader) (*WmicOS, error) {
 	} else {
 		return nil, errors.New("could not parse wmic, retrieved unexpected amount of rows " + strconv.Itoa(len(os)))
 	}
+}
+
+type WindowsCurrentVersion struct {
+	CurrentBuild string `json:"CurrentBuild"`
+	// Update Build Revision
+	UBR int `json:"UBR"`
+}
+
+func ParseWinRegistryCurrentVersion(r io.Reader) (*WindowsCurrentVersion, error) {
+	data, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+
+	var winCurrentVersion WindowsCurrentVersion
+	err = json.Unmarshal(data, &winCurrentVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	return &winCurrentVersion, nil
 }
