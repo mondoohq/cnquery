@@ -493,6 +493,8 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 				current, err := ParseWinRegistryCurrentVersion(cmd.Stdout)
 				if err == nil && current.UBR > 0 {
 					di.Release = fmt.Sprintf("%s.%d", di.Release, current.UBR)
+				} else {
+					log.Debug().Err(err).Msg("could not parse windows current version")
 				}
 			}
 
