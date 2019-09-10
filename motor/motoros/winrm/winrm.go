@@ -93,7 +93,7 @@ func (t *WinrmTransport) RunCommand(command string) (*types.Command, error) {
 		return nil, err
 	}
 
-	log.Debug().Str("stdout", stdoutBuffer.String()).Str("stderr", stderrBuffer.String()).Int("exitcode", exitCode).Msg("winrm command executed")
+	// log.Debug().Str("stdout", stdoutBuffer.String()).Str("stderr", stderrBuffer.String()).Int("exitcode", exitCode).Msg("winrm command executed")
 
 	mcmd := &types.Command{
 		Command:    command,
