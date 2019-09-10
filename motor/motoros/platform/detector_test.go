@@ -1,4 +1,4 @@
-package platform
+package platform_test
 
 import (
 	"testing"
@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	mock "go.mondoo.io/mondoo/motor/motoros/mock/toml"
+	"go.mondoo.io/mondoo/motor/motoros/platform"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
@@ -15,12 +16,12 @@ type OsDetectTestSuite struct {
 
 func (suite *OsDetectTestSuite) SetupSuite() {}
 
-func newDetector(path string) (*Detector, error) {
+func newDetector(path string) (*platform.Detector, error) {
 	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: path})
 	if err != nil {
 		return nil, err
 	}
-	detector := &Detector{Transport: mock}
+	detector := &platform.Detector{Transport: mock}
 	return detector, nil
 }
 
@@ -421,7 +422,7 @@ func (suite *OsDetectTestSuite) TestWindows2019Detector() {
 	assert.Equal(suite.T(), true, resolved, "platform should be resolvable")
 	assert.Equal(suite.T(), "windows", di.Name, "os name should be identified")
 	assert.Equal(suite.T(), "Microsoft Windows Server 2019 Datacenter Evaluation", di.Title, "os title should be identified")
-	assert.Equal(suite.T(), "10.0.17763", di.Release, "os version should be identified")
+	assert.Equal(suite.T(), "10.0.17763.720", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "64-bit", di.Arch, "os arch should be identified")
 	assert.Equal(suite.T(), []string{"windows", "os"}, di.Family)
 }
@@ -441,7 +442,7 @@ func (suite *OsDetectTestSuite) TestMacOSsDetector() {
 
 func (suite *OsDetectTestSuite) TestFamilies() {
 
-	di := &Info{}
+	di := &platform.Info{}
 	di.Family = []string{"unix", "bsd", "darwin"}
 
 	assert.Equal(suite.T(), true, di.IsFamily("unix"), "unix should be a family")
