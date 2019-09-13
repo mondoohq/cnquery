@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/motor/motorid/hostname"
+	"go.mondoo.io/mondoo/motor/motorid/machineid"
 	motor "go.mondoo.io/mondoo/motor/motoros"
 	"go.mondoo.io/mondoo/motor/motoros/local"
 	"go.mondoo.io/mondoo/motor/motoros/mock"
@@ -90,7 +91,12 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 			return nil, nil, err
 		}
 
-		idDetectors = append(idDetectors, "hostname")
+		pi, err := m.Platform()
+		if err == nil && pi.IsFamily(platform.FAMILY_WINDOWS) {
+			idDetectors = append(idDetectors, "machineid")
+		} else {
+			idDetectors = append(idDetectors, "hostname")
+		}
 	case "tar":
 		log.Debug().Msg("connection> load tar transport")
 		// TODO: we need to generate an artifact id
@@ -130,6 +136,13 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 		if err != nil {
 			return nil, nil, err
 		}
+
+		// for windows, we also collect the machine id
+		pi, err := m.Platform()
+		if err == nil && pi.IsFamily(platform.FAMILY_WINDOWS) {
+			idDetectors = append(idDetectors, "machineid")
+		}
+
 		idDetectors = append(idDetectors, "ssh-hostkey")
 	case "winrm":
 		log.Debug().Msg("connection> load winrm transport")
@@ -143,7 +156,7 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 			return nil, nil, err
 		}
 
-		idDetectors = append(idDetectors, "hostname")
+		idDetectors = append(idDetectors, "machineid")
 	case "":
 		return nil, nil, errors.New("connection type is required, try `-t backend://` (docker://, local://, tar://, ssh://)")
 	default:
@@ -187,6 +200,11 @@ func GatherID(m *motor.Motor, idDetector string) (string, error) {
 		hostname, hostErr := hostname.Hostname(m)
 		if hostErr == nil && len(hostname) > 0 {
 			identifier = "//platformid.api.mondoo.app/hostname/" + hostname
+		}
+	case "machineid":
+		guid, hostErr := machineid.MachineId(m)
+		if hostErr == nil && len(guid) > 0 {
+			identifier = "//platformid.api.mondoo.app/machineid/" + guid
 		}
 	case "ssh-hostkey":
 		sshTrans, ok := m.Transport.(*ssh.SSHTransport)
