@@ -26,6 +26,7 @@ VAGRANT-2016,\\Device\\HarddiskVolume1,14393,Multiprocessor Free,Microsoft Windo
 	assert.Equal(t, "Microsoft Corporation", m.Manufacturer, "manufacturer should be parsed properly")
 	assert.Equal(t, "64-bit", m.OSArchitecture, "os architecture should be parsed properly")
 	assert.Equal(t, "18", m.OSType, "os type should be parsed properly")
+	// 1: workstation, 2: domain controller, 3: server
 	assert.Equal(t, "3", m.ProductType, "product type should be parsed properly")
 }
 
@@ -34,7 +35,9 @@ func TestParseWinRegistryCurrentVersion(t *testing.T) {
 
 	data := `{
     "CurrentBuild":  "17763",
-    "UBR":  720
+		"UBR":  720,
+		"EditionID": "ServerDatacenterEval",
+		"ReleaseId": "1809"
 	}`
 
 	m, err := platform.ParseWinRegistryCurrentVersion(strings.NewReader(data))
