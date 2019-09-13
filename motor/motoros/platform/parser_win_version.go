@@ -131,6 +131,8 @@ func ParseWinWmicOS(csvData io.Reader) (*WmicOS, error) {
 
 type WindowsCurrentVersion struct {
 	CurrentBuild string `json:"CurrentBuild"`
+	EditionID    string `json:"EditionID"`
+	ReleaseId    string `json:"ReleaseId"`
 	// Update Build Revision
 	UBR int `json:"UBR"`
 }

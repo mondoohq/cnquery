@@ -3,10 +3,11 @@ stdout = """Node,BootDevice,BuildNumber,BuildType,Caption,CodeSet,CountryCode,Cr
 VAGRANT,\\Device\\HarddiskVolume1,17763,Multiprocessor Free,Microsoft Windows Server 2019 Datacenter Evaluation,1252,1,Win32_OperatingSystem,Win32_ComputerSystem,,VAGRANT,-420,TRUE,TRUE,TRUE,3,FALSE,,FALSE,256,2,721716,979372,1922780,20190906065515.000000-420,,20190908011749.580533-420,20190908042731.608000-420,0409,Microsoft Corporation,4294967295,137438953344,{en-US},Microsoft Windows Server 2019 Datacenter Evaluation|C:\\Windows|\\Device\\Harddisk0\\Partition2,0,69,1,80,Vagrant,64-bit,1033,400,18,,,,,FALSE,TRUE,3,,00431-20000-00000-AA838,0,0,1179648,OK,400,\\Device\\HarddiskVolume2,C:\\Windows\\system32,C:,,3276340,2096692,10.0.17763,C:\\Windows
 """
 
-[commands."powershell -c \"Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion' -Name CurrentBuild, UBR | ConvertTo-Json\""]
+[commands."powershell -c \"Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion' -Name CurrentBuild, UBR, EditionID | ConvertTo-Json\""]
 stdout="""
 {
     "CurrentBuild":  "17763",
+    "EditionID":  "ServerDatacenterEval",
     "UBR":  720
 }
 """

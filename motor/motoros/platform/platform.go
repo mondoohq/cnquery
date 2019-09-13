@@ -487,7 +487,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			di.Arch = data.OSArchitecture
 
 			// optional: try to get the ubr number (win 10 + 2019)
-			pscommand := "Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion' -Name CurrentBuild, UBR | ConvertTo-Json"
+			pscommand := "Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion' -Name CurrentBuild, UBR, EditionID | ConvertTo-Json"
 			cmd, err = d.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", pscommand))
 			if err == nil {
 				current, err := ParseWinRegistryCurrentVersion(cmd.Stdout)
