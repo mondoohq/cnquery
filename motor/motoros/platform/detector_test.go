@@ -427,6 +427,45 @@ func (suite *OsDetectTestSuite) TestWindows2019Detector() {
 	assert.Equal(suite.T(), []string{"windows", "os"}, di.Family)
 }
 
+func (suite *OsDetectTestSuite) TestPhoton1Detector() {
+	detector, err := newDetector("./testdata/detect-photon1.toml")
+	assert.Nil(suite.T(), err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(suite.T(), true, resolved, "platform should be resolvable")
+	assert.Equal(suite.T(), "photon", di.Name, "os name should be identified")
+	assert.Equal(suite.T(), "VMware Photon", di.Title, "os title should be identified")
+	assert.Equal(suite.T(), "1.0", di.Release, "os version should be identified")
+	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"linux", "unix", "os"}, di.Family)
+}
+
+func (suite *OsDetectTestSuite) TestPhoton2Detector() {
+	detector, err := newDetector("./testdata/detect-photon2.toml")
+	assert.Nil(suite.T(), err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(suite.T(), true, resolved, "platform should be resolvable")
+	assert.Equal(suite.T(), "photon", di.Name, "os name should be identified")
+	assert.Equal(suite.T(), "VMware Photon OS", di.Title, "os title should be identified")
+	assert.Equal(suite.T(), "2.0", di.Release, "os version should be identified")
+	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"linux", "unix", "os"}, di.Family)
+}
+
+func (suite *OsDetectTestSuite) TestPhoton3Detector() {
+	detector, err := newDetector("./testdata/detect-photon3.toml")
+	assert.Nil(suite.T(), err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(suite.T(), true, resolved, "platform should be resolvable")
+	assert.Equal(suite.T(), "photon", di.Name, "os name should be identified")
+	assert.Equal(suite.T(), "VMware Photon OS", di.Title, "os title should be identified")
+	assert.Equal(suite.T(), "3.0", di.Release, "os version should be identified")
+	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"linux", "unix", "os"}, di.Family)
+}
+
 func (suite *OsDetectTestSuite) TestMacOSsDetector() {
 	detector, err := newDetector("./testdata/detect-macos.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")

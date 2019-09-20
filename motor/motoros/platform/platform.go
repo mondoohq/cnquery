@@ -364,6 +364,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			return false, nil
 		},
 	}
+
 	opensuse := &PlatformResolver{
 		Name:    "opensuse",
 		Familiy: false,
@@ -375,6 +376,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			return false, nil
 		},
 	}
+
 	sles := &PlatformResolver{
 		Name:    "sles",
 		Familiy: false,
@@ -385,6 +387,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			return false, nil
 		},
 	}
+
 	gentoo := &PlatformResolver{
 		Name:    "gentoo",
 		Familiy: false,
@@ -446,6 +449,17 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 				}
 			}
 
+			return false, nil
+		},
+	}
+
+	photon := &PlatformResolver{
+		Name:    "photon",
+		Familiy: false,
+		Detect: func(p *PlatformResolver, di *Info) (bool, error) {
+			if di.Name == "photon" {
+				return true, nil
+			}
 			return false, nil
 		},
 	}
@@ -642,7 +656,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 	linuxFamily := &PlatformResolver{
 		Name:     FAMILY_LINUX,
 		Familiy:  true,
-		Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, amazonlinux, alpine, gentoo, busybox, defaultLinux},
+		Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, amazonlinux, alpine, gentoo, busybox, photon, defaultLinux},
 		Detect: func(p *PlatformResolver, di *Info) (bool, error) {
 			detected := false
 
