@@ -746,6 +746,61 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 		},
 	}
 
+	esxi := &PlatformResolver{
+		Name:    "esxi",
+		Familiy: false,
+		Detect: func(p *PlatformResolver, di *Info) (bool, error) {
+			log.Debug().Msg("check for esxi system")
+			// at this point, we are already 99% its esxi
+			cmd, err := d.Transport.RunCommand("vmware -v")
+			if err != nil {
+				log.Debug().Err(err).Msg("could not run command")
+				return false, nil
+			}
+			vmware_info, err := ioutil.ReadAll(cmd.Stdout)
+			if err != nil {
+				log.Debug().Err(err).Msg("could not run command")
+				return false, err
+			}
+
+			version, err := ParseEsxiRelease(string(vmware_info))
+			if err != nil {
+				log.Debug().Err(err).Msg("could not run command")
+				return false, err
+			}
+
+			di.Release = version
+			return true, nil
+		},
+	}
+
+	esxFamily := &PlatformResolver{
+		Name:     "esx",
+		Familiy:  true,
+		Children: []*PlatformResolver{esxi},
+		Detect: func(p *PlatformResolver, di *Info) (bool, error) {
+			// check if we got vmkernel
+			unames, err := d.unames()
+			if err != nil {
+				return false, err
+			}
+
+			if strings.Contains(strings.ToLower(unames), "vmkernel") == false {
+				return false, nil
+			}
+
+			di.Name = "esxi"
+
+			// try to read the architecture
+			unamem, err := d.unamem()
+			if err == nil {
+				di.Arch = unamem
+			}
+
+			return true, nil
+		},
+	}
+
 	windowsFamily := &PlatformResolver{
 		Name:     FAMILY_WINDOWS,
 		Familiy:  true,
@@ -768,7 +823,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 	operatingSystem := &PlatformResolver{
 		Name:     "os",
 		Familiy:  true,
-		Children: []*PlatformResolver{windowsFamily, unixFamily, unknownOperatingSystem},
+		Children: []*PlatformResolver{windowsFamily, unixFamily, esxFamily, unknownOperatingSystem},
 		Detect: func(p *PlatformResolver, di *Info) (bool, error) {
 			return true, nil
 		},

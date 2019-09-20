@@ -1,0 +1,13 @@
+[commands."uname -s"]
+stdout = "VMkernel"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "6.7.0"
+
+[commands."vmware -v"]
+stdout = "VMware ESXi 6.7.0 build-13006603"
+
+
