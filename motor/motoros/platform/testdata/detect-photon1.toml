@@ -1,0 +1,26 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "4.9.125-linuxkit"
+
+[files."/etc/photon-release"]
+content = """
+VMware Photon Linux 1.0
+PHOTON_BUILD_NUMBER=62c543d
+"""
+
+[files."/etc/os-release"]
+content = """
+NAME="VMware Photon"
+VERSION="1.0"
+ID=photon
+VERSION_ID=1.0
+PRETTY_NAME="VMware Photon/Linux"
+ANSI_COLOR="1;34"
+HOME_URL="https://vmware.github.io/photon/"
+BUG_REPORT_URL="https://github.com/vmware/photon/issues"
+"""
