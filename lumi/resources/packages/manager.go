@@ -2,7 +2,6 @@ package packages
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -10,10 +9,12 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
-	"strings"
+
+	"github.com/pkg/errors"
 
 	"github.com/rs/zerolog/log"
 	motor "go.mondoo.io/mondoo/motor/motoros"
+	"go.mondoo.io/mondoo/motor/motoros/platform/winbuild"
 )
 
 type OperatingSystemPkgManager interface {
@@ -367,10 +368,12 @@ func (win *WinPkgManager) List() ([]Package, error) {
 		return nil, err
 	}
 
+	b, err := winbuild.Version(pf.Release)
+
 	pkgs := []Package{}
 
-	// only win 10+ are compaatible with app x packages
-	if strings.HasPrefix(pf.Release, "10.") {
+	// only win 10+ are compatible with app x packages
+	if b.Build > 10240 {
 		cmd, err := win.motor.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", WINDOWS_QUERY_APPX_PACKAGES))
 		if err != nil {
 			return nil, fmt.Errorf("could not read package list")
@@ -384,11 +387,11 @@ func (win *WinPkgManager) List() ([]Package, error) {
 
 	cmd, err := win.motor.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", WINDOWS_QUERY_HOTFIXES))
 	if err != nil {
-		return nil, fmt.Errorf("could not read package list")
+		return nil, errors.Wrap(err, "could not fetch hotfixes")
 	}
 	hotfixes, err := ParseWindowsHotfixes(cmd.Stdout)
 	if err != nil {
-		return nil, fmt.Errorf("could not read hotfix list")
+		return nil, errors.Wrapf(err, "could not parse hotfix result")
 	}
 	pkgs = append(pkgs, hotfixes...)
 

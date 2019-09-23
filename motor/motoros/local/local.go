@@ -14,7 +14,9 @@ func New() (*LocalTransport, error) {
 	shell := []string{"sh", "-c"}
 
 	if runtime.GOOS == "windows" {
-		shell = []string{"cmd", "/C"}
+		// It does not make any sense to use cmd as default shell
+		// shell = []string{"cmd", "/C"}
+		shell = []string{"powershell", "-c"}
 	}
 
 	return &LocalTransport{
