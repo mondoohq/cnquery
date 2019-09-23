@@ -409,7 +409,7 @@ func (suite *OsDetectTestSuite) TestWindows2016Detector() {
 	assert.Equal(suite.T(), true, resolved, "platform should be resolvable")
 	assert.Equal(suite.T(), "windows", di.Name, "os name should be identified")
 	assert.Equal(suite.T(), "Microsoft Windows Server 2016 Standard Evaluation", di.Title, "os title should be identified")
-	assert.Equal(suite.T(), "10.0.14393", di.Release, "os version should be identified")
+	assert.Equal(suite.T(), "14393", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "64-bit", di.Arch, "os arch should be identified")
 	assert.Equal(suite.T(), []string{"windows", "os"}, di.Family)
 }
@@ -422,7 +422,7 @@ func (suite *OsDetectTestSuite) TestWindows2019Detector() {
 	assert.Equal(suite.T(), true, resolved, "platform should be resolvable")
 	assert.Equal(suite.T(), "windows", di.Name, "os name should be identified")
 	assert.Equal(suite.T(), "Microsoft Windows Server 2019 Datacenter Evaluation", di.Title, "os title should be identified")
-	assert.Equal(suite.T(), "10.0.17763.720", di.Release, "os version should be identified")
+	assert.Equal(suite.T(), "17763.720", di.Release, "os version should be identified")
 	assert.Equal(suite.T(), "64-bit", di.Arch, "os arch should be identified")
 	assert.Equal(suite.T(), []string{"windows", "os"}, di.Family)
 }
