@@ -494,8 +494,9 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 			di.Name = "windows"
 			di.Title = data.Caption
 
-			// major.minor.build.ubr
-			di.Release = data.Version
+			// instead of using windows major.minor.build.ubr we just use build.ubr since
+			// major and minor can be derived from the build version
+			di.Release = data.BuildNumber
 
 			// FIXME: we need to ask wmic cpu get architecture
 			di.Arch = data.OSArchitecture
