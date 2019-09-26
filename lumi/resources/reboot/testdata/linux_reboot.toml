@@ -1,0 +1,34 @@
+[files."/var/run/reboot-required"]
+content="""
+*** System restart required ***
+"""
+
+[files."/var/run/reboot-required.pkgs"]
+content="""
+libssl1.1
+linux-base
+"""
+
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "4.9.125-linuxkit"
+
+[files."/etc/os-release"]
+content = """
+PRETTY_NAME="Debian GNU/Linux 8 (jessie)"
+NAME="Debian GNU/Linux"
+VERSION_ID="8"
+VERSION="8 (jessie)"
+ID=debian
+HOME_URL="http://www.debian.org/"
+SUPPORT_URL="http://www.debian.org/support"
+BUG_REPORT_URL="https://bugs.debian.org/"
+"""
+
+[files."/etc/debian_version"]
+content = "8.11"
