@@ -2,7 +2,12 @@ package uptime
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
 	"time"
+
+	motor "go.mondoo.io/mondoo/motor/motoros"
 )
 
 type WindowsUptime struct {
@@ -21,4 +26,31 @@ func ParseWindowsUptime(uptime string) (time.Duration, error) {
 
 	milli := winUptime.TotalMilliseconds * float64(time.Millisecond)
 	return time.Duration(int64(milli)), nil
+}
+
+const WindowsUptimeCmd = "(Get-Date) - (gcim Win32_OperatingSystem).LastBootUpTime | ConvertTo-Json"
+
+type Windows struct {
+	Motor *motor.Motor
+}
+
+func (s *Windows) Name() string {
+	return "Windoows Uptime"
+}
+
+func (s *Windows) Duration() (time.Duration, error) {
+	cmd, err := s.Motor.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", WindowsUptimeCmd))
+	if err != nil {
+		return 0, err
+	}
+
+	return s.parse(cmd.Stdout)
+}
+
+func (s *Windows) parse(r io.Reader) (time.Duration, error) {
+	content, err := ioutil.ReadAll(r)
+	if err != nil {
+		return 0, err
+	}
+	return ParseWindowsUptime(string(content))
 }
