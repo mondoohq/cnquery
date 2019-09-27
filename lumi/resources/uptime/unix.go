@@ -2,26 +2,31 @@ package uptime
 
 import (
 	"fmt"
+	"io"
+	"io/ioutil"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog/log"
+	motor "go.mondoo.io/mondoo/motor/motoros"
 )
 
 var (
-	UnixUptimeRegex = regexp.MustCompile(`^.*up[\s]*(\d+)\s(day[s]*|min),(?:\s+([\d:]+),)*\s+(\d+)\susers,\s+load\s+average[s]*:\s+([\d\.]+)[,\s]+([\d\.]+)[,\s]+([\d\.]+)$`)
+	UnixUptimeRegex = regexp.MustCompile(`^.*up[\s]*(\d+)\s(day[s]*|min[s]*),(?:\s+([\d:]+),\s)*\s*(?:(\d+)\susers,\s)*\s*load\s+average[s]*:\s+([\d\.]+)[,\s]+([\d\.]+)[,\s]+([\d\.]+)$`)
 )
 
-type UnixUptime struct {
-	Time               int64
+type UnixUptimeResult struct {
+	Duration           int64
 	Users              int
 	LoadOneMinute      float64
 	LoadFiveMinutes    float64
 	LoadFifteenMinutes float64
 }
 
-func ParseUnixUptime(uptime string) (*UnixUptime, error) {
-
+func ParseUnixUptime(uptime string) (*UnixUptimeResult, error) {
+	log.Debug().Str("uptime", uptime).Msg("parse")
 	m := UnixUptimeRegex.FindStringSubmatch(uptime)
 
 	if len(m) != 8 {
@@ -40,6 +45,8 @@ func ParseUnixUptime(uptime string) (*UnixUptime, error) {
 	case "days":
 		duration = duration * 24 * int64(time.Hour)
 	case "min":
+		fallthrough
+	case "mins":
 		duration = duration * int64(time.Minute)
 	}
 
@@ -65,9 +72,13 @@ func ParseUnixUptime(uptime string) (*UnixUptime, error) {
 
 	}
 
-	users, err := strconv.Atoi(m[4])
-	if err != nil {
-		return nil, err
+	// users is optional and is not returned on alpine
+	users := 0
+	if len(m[4]) > 0 {
+		users, err = strconv.Atoi(m[4])
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	loadOneMinute, err := strconv.ParseFloat(m[5], 64)
@@ -85,11 +96,43 @@ func ParseUnixUptime(uptime string) (*UnixUptime, error) {
 		return nil, err
 	}
 
-	return &UnixUptime{
-		Time:               duration,
+	return &UnixUptimeResult{
+		Duration:           duration,
 		Users:              users,
 		LoadOneMinute:      loadOneMinute,
 		LoadFiveMinutes:    loadFiveMinutes,
 		LoadFifteenMinutes: loadFifteenMinutes,
 	}, nil
+}
+
+type Unix struct {
+	Motor *motor.Motor
+}
+
+func (s *Unix) Name() string {
+	return "Unix Uptime"
+}
+
+func (s *Unix) Duration() (time.Duration, error) {
+
+	cmd, err := s.Motor.Transport.RunCommand("uptime")
+	if err != nil {
+		return 0, err
+	}
+
+	ut, err := s.parse(cmd.Stdout)
+	if err != nil {
+		return 0, err
+	}
+
+	return time.Duration(ut.Duration), nil
+}
+
+func (s *Unix) parse(r io.Reader) (*UnixUptimeResult, error) {
+	content, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseUnixUptime(string(content))
 }
