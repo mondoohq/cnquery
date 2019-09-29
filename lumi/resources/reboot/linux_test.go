@@ -24,7 +24,7 @@ func TestRebootLinux(t *testing.T) {
 	}
 
 	lb := reboot.LinuxReboot{Motor: m}
-	required, err := lb.RebootRequired()
+	required, err := lb.RebootPending()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,7 +45,7 @@ func TestNoRebootLinux(t *testing.T) {
 	}
 
 	lb := reboot.LinuxReboot{Motor: m}
-	required, err := lb.RebootRequired()
+	required, err := lb.RebootPending()
 	if err != nil {
 		t.Fatal(err)
 	}
