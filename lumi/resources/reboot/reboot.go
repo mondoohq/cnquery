@@ -9,7 +9,7 @@ import (
 
 type Reboot interface {
 	Name() string
-	RebootRequired() (bool, error)
+	RebootPending() (bool, error)
 }
 
 func New(motor *motor.Motor) (Reboot, error) {

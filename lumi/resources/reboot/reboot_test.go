@@ -28,7 +28,7 @@ func TestRebootOnLinux(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	required, err := lb.RebootRequired()
+	required, err := lb.RebootPending()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +53,7 @@ func TestRebootOnWindows(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	required, err := lb.RebootRequired()
+	required, err := lb.RebootPending()
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -27,7 +27,7 @@ func (s *WinReboot) Name() string {
 	return "Windows Reboot"
 }
 
-func (s *WinReboot) RebootRequired() (bool, error) {
+func (s *WinReboot) RebootPending() (bool, error) {
 	isRebootrequired := false
 
 	// Query the Component Based Servicing Reg Key

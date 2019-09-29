@@ -12,7 +12,7 @@ func (s *LinuxReboot) Name() string {
 	return "Linux Reboot"
 }
 
-func (s *LinuxReboot) RebootRequired() (bool, error) {
+func (s *LinuxReboot) RebootPending() (bool, error) {
 	// try to stat the file
 	_, err := s.Motor.Transport.FS().Stat(LinuxRebootFile)
 	if err != nil {
