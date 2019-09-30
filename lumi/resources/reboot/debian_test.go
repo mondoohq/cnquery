@@ -11,7 +11,7 @@ import (
 	"gotest.tools/assert"
 )
 
-func TestRebootOnUbuntu(t *testing.T) {
+func TestRebootLinux(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/ubuntu_reboot.toml")
 	trans, err := toml.New(&types.Endpoint{Backend: "mock", Path: filepath})
 	if err != nil {
@@ -23,11 +23,7 @@ func TestRebootOnUbuntu(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	lb, err := reboot.New(m)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	lb := reboot.DebianReboot{Motor: m}
 	required, err := lb.RebootPending()
 	if err != nil {
 		t.Fatal(err)
@@ -36,8 +32,8 @@ func TestRebootOnUbuntu(t *testing.T) {
 	assert.Equal(t, true, required)
 }
 
-func TestRebootOnRhel(t *testing.T) {
-	filepath, _ := filepath.Abs("./testdata/redhat_kernel_reboot.toml")
+func TestNoRebootLinux(t *testing.T) {
+	filepath, _ := filepath.Abs("./testdata/ubuntu_noreboot.toml")
 	trans, err := toml.New(&types.Endpoint{Backend: "mock", Path: filepath})
 	if err != nil {
 		t.Fatal(err)
@@ -48,40 +44,11 @@ func TestRebootOnRhel(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	lb, err := reboot.New(m)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	lb := reboot.DebianReboot{Motor: m}
 	required, err := lb.RebootPending()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, true, required)
-}
-
-func TestRebootOnWindows(t *testing.T) {
-	filepath, _ := filepath.Abs("./testdata/windows_reboot.toml")
-	trans, err := toml.New(&types.Endpoint{Backend: "mock", Path: filepath})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	m, err := motor.New(trans)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	lb, err := reboot.New(m)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	required, err := lb.RebootPending()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	assert.Equal(t, true, required)
+	assert.Equal(t, false, required)
 }
