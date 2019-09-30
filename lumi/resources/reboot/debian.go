@@ -4,15 +4,16 @@ import motor "go.mondoo.io/mondoo/motor/motoros"
 
 const LinuxRebootFile = "/var/run/reboot-required"
 
-type LinuxReboot struct {
+// DebianReboot works on Debian and Ubuntu
+type DebianReboot struct {
 	Motor *motor.Motor
 }
 
-func (s *LinuxReboot) Name() string {
+func (s *DebianReboot) Name() string {
 	return "Linux Reboot"
 }
 
-func (s *LinuxReboot) RebootPending() (bool, error) {
+func (s *DebianReboot) RebootPending() (bool, error) {
 	// try to stat the file
 	_, err := s.Motor.Transport.FS().Stat(LinuxRebootFile)
 	if err != nil {

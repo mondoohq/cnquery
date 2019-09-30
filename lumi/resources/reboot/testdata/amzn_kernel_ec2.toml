@@ -1,0 +1,26 @@
+[commands."rpm -q kernel --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\n'"]
+stdout = """
+kernel 0:4.14.123-111.109.amzn2 x86_64 The Linux kernel
+"""
+
+[commands."uname -r"]
+stdout = "4.14.123-111.109.amzn2.x86_64"
+
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[files."/etc/os-release"]
+content = """
+NAME="Amazon Linux"
+VERSION="2"
+ID="amzn"
+ID_LIKE="centos rhel fedora"
+VERSION_ID="2"
+PRETTY_NAME="Amazon Linux 2"
+ANSI_COLOR="0;33"
+CPE_NAME="cpe:2.3:o:amazon:amazon_linux:2"
+HOME_URL="https://amazonlinux.com/"
+"""
