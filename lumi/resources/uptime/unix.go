@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	UnixUptimeRegex = regexp.MustCompile(`^.*up[\s]*(\d+)\s(day[s]*|min[s]*),(?:\s+([\d:]+),\s)*\s*(?:(\d+)\suser[s]*,\s)*\s*load\s+average[s]*:\s+([\d\.]+)[,\s]+([\d\.]+)[,\s]+([\d\.]+)$`)
+	UnixUptimeRegex = regexp.MustCompile(`^.*up[\s]*(?:(\d+)\s(day[s]*|min[s]*),)*(?:\s+([\d:]+),\s)*\s*(?:(\d+)\suser[s]*,\s)*\s*load\s+average[s]*:\s+([\d\.]+)[,\s]+([\d\.]+)[,\s]+([\d\.]+)\s*$`)
 )
 
 type UnixUptimeResult struct {
@@ -33,43 +33,48 @@ func ParseUnixUptime(uptime string) (*UnixUptimeResult, error) {
 		return nil, fmt.Errorf("could not parse uptime: %s", uptime)
 	}
 
-	// caclulate the time x * days / minutes + hours ( m[1]*m[2] + m[3])
-	duration, err := strconv.ParseInt(m[1], 10, 64)
-	if err != nil {
-		return nil, err
-	}
+	var duration int64
+	var err error
 
-	switch m[2] {
-	case "day":
-		fallthrough
-	case "days":
-		duration = duration * 24 * int64(time.Hour)
-	case "min":
-		fallthrough
-	case "mins":
-		duration = duration * int64(time.Minute)
+	if len(m[2]) > 0 {
+		// caclulate the time x * days / minutes + hours ( m[1]*m[2] + m[3])
+		duration, err = strconv.ParseInt(m[1], 10, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		switch m[2] {
+		case "day":
+			fallthrough
+		case "days":
+			duration = duration * 24 * int64(time.Hour)
+		case "min":
+			fallthrough
+		case "mins":
+			duration = duration * int64(time.Minute)
+		}
 	}
 
 	// add optional hours
 	if len(m[3]) > 0 {
 		hours := strings.Split(m[3], ":")
 		if len(hours) == 2 {
+			log.Debug().Msg("parse hour")
 			hh, err := strconv.ParseInt(hours[0], 10, 64)
 			if err != nil {
 				return nil, err
 			}
 
+			log.Debug().Msg("parse minutes")
 			mm, err := strconv.ParseInt(hours[1], 10, 64)
 			if err != nil {
 				return nil, err
 			}
 
 			duration = duration + hh*int64(time.Hour) + mm*int64(time.Minute)
-
 		} else {
 			return nil, fmt.Errorf("could not parse uptime hours: %s", uptime)
 		}
-
 	}
 
 	// users is optional and is not returned on alpine
