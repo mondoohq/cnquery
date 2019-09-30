@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	UnixUptimeRegex = regexp.MustCompile(`^.*up[\s]*(\d+)\s(day[s]*|min[s]*),(?:\s+([\d:]+),\s)*\s*(?:(\d+)\susers,\s)*\s*load\s+average[s]*:\s+([\d\.]+)[,\s]+([\d\.]+)[,\s]+([\d\.]+)$`)
+	UnixUptimeRegex = regexp.MustCompile(`^.*up[\s]*(\d+)\s(day[s]*|min[s]*),(?:\s+([\d:]+),\s)*\s*(?:(\d+)\suser[s]*,\s)*\s*load\s+average[s]*:\s+([\d\.]+)[,\s]+([\d\.]+)[,\s]+([\d\.]+)$`)
 )
 
 type UnixUptimeResult struct {

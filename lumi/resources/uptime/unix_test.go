@@ -66,6 +66,21 @@ func TestDebianUptime(t *testing.T) {
 	assert.Equal(t, "21m0s", time.Duration(duration.Duration).String())
 }
 
+func TestRhelUptime(t *testing.T) {
+	// rehl
+	data := " 12:27:22 up 8 min,  1 user,  load average: 0.01, 0.02, 0.00"
+	duration, err := uptime.ParseUnixUptime(data)
+	assert.Nil(t, err)
+	assert.Equal(t, &uptime.UnixUptimeResult{
+		Duration:           480000000000,
+		Users:              1,
+		LoadOneMinute:      float64(0.01),
+		LoadFiveMinutes:    float64(0.02),
+		LoadFifteenMinutes: float64(0.00),
+	}, duration)
+	assert.Equal(t, "8m0s", time.Duration(duration.Duration).String())
+}
+
 func TestBusyboxUptime(t *testing.T) {
 	data := " 08:56:57 up 33 min,  0 users,  load average: 0.09, 0.09, 0.08"
 	duration, err := uptime.ParseUnixUptime(data)
