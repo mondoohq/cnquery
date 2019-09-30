@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/spf13/afero"
+	"go.mondoo.io/mondoo/motor/motoros/capabilities"
 )
 
 type Transport interface {
@@ -13,4 +14,6 @@ type Transport interface {
 	FS() afero.Fs
 	// Close closes the transport
 	Close()
+	// returns if this is a static asset that does not allow run command
+	Capabilities() []capabilities.Capability
 }

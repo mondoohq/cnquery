@@ -8,6 +8,7 @@ import (
 	"github.com/masterzen/winrm"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"go.mondoo.io/mondoo/motor/motoros/capabilities"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
@@ -116,4 +117,11 @@ func (t *WinrmTransport) FS() afero.Fs {
 
 func (t *WinrmTransport) Close() {
 	// nothing to do yet
+}
+
+func (t *WinrmTransport) Capabilities() []capabilities.Capability {
+	return []capabilities.Capability{
+		capabilities.RunCommand,
+		capabilities.File,
+	}
 }

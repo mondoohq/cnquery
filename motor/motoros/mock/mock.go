@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/afero"
 
+	"go.mondoo.io/mondoo/motor/motoros/capabilities"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
@@ -72,6 +73,13 @@ func (m *Transport) File(path string) (afero.File, error) {
 // Close is used to terminate the connection, nothing for Transport
 func (m *Transport) Close() {
 	// no op
+}
+
+func (t *Transport) Capabilities() []capabilities.Capability {
+	return []capabilities.Capability{
+		capabilities.RunCommand,
+		capabilities.File,
+	}
 }
 
 // // TODO, support directory streaming

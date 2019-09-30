@@ -3,6 +3,7 @@ package motor
 import (
 	"errors"
 
+	"go.mondoo.io/mondoo/motor/motoros/capabilities"
 	"go.mondoo.io/mondoo/motor/motoros/events"
 	"go.mondoo.io/mondoo/motor/motoros/platform"
 	"go.mondoo.io/mondoo/motor/motoros/types"
@@ -51,4 +52,14 @@ func (m *Motor) Close() {
 	if m.Transport != nil {
 		m.Transport.Close()
 	}
+}
+
+func (m *Motor) HasCapability(capability capabilities.Capability) bool {
+	list := m.Transport.Capabilities()
+	for i := range list {
+		if list[i] == capability {
+			return true
+		}
+	}
+	return false
 }
