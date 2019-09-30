@@ -43,7 +43,7 @@ zziplib 0.13.67-1`
 }
 
 func TestAlpineApkdbParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "packages_apk.toml"})
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/packages_apk.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,7 +113,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 }
 
 func TestDpkgParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "packages_dpkg.toml"})
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/packages_dpkg.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -165,7 +165,7 @@ security related events.`,
 }
 
 func TestMacOsXPackageParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "packages_macos.toml"})
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/packages_macos.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -187,7 +187,7 @@ func TestMacOsXPackageParser(t *testing.T) {
 }
 
 func TestRedhat7Parser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "packages_redhat7.toml"})
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/packages_redhat7.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -243,7 +243,7 @@ func TestRedhat7Parser(t *testing.T) {
 }
 
 func TestRedhat6Parser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "packages_redhat6.toml"})
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/packages_redhat6.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
