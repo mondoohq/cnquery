@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 
+	"go.mondoo.io/mondoo/motor/motoros/capabilities"
 	"go.mondoo.io/mondoo/motor/motoros/ssh/scp"
 	"go.mondoo.io/mondoo/motor/motoros/ssh/sftp"
 	"go.mondoo.io/mondoo/motor/motoros/types"
@@ -155,5 +156,12 @@ func (t *SSHTransport) File(path string) (afero.File, error) {
 func (t *SSHTransport) Close() {
 	if t.SSHClient != nil {
 		t.SSHClient.Close()
+	}
+}
+
+func (t *SSHTransport) Capabilities() []capabilities.Capability {
+	return []capabilities.Capability{
+		capabilities.RunCommand,
+		capabilities.File,
 	}
 }

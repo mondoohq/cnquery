@@ -6,6 +6,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"go.mondoo.io/mondoo/motor/motoros/capabilities"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 
 	"io"
@@ -55,6 +56,12 @@ func (t *Transport) File(path string) (afero.File, error) {
 func (t *Transport) Close() {
 	if t.CloseFN != nil {
 		t.CloseFN()
+	}
+}
+
+func (t *Transport) Capabilities() []capabilities.Capability {
+	return []capabilities.Capability{
+		capabilities.File,
 	}
 }
 

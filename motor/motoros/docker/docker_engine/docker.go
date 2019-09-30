@@ -7,6 +7,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"go.mondoo.io/mondoo/motor/motoros/capabilities"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
@@ -62,6 +63,13 @@ func (t *Transport) File(path string) (afero.File, error) {
 
 func (t *Transport) Close() {
 	t.dockerClient.Close()
+}
+
+func (t *Transport) Capabilities() []capabilities.Capability {
+	return []capabilities.Capability{
+		capabilities.RunCommand,
+		capabilities.File,
+	}
 }
 
 func GetDockerClient() (*client.Client, error) {
