@@ -5,8 +5,8 @@ import (
 	"errors"
 
 	"github.com/ghodss/yaml"
-	"go.mondoo.io/mondoo/db"
 	"go.mondoo.io/mondoo/leise"
+	"go.mondoo.io/mondoo/leise/db"
 	"go.mondoo.io/mondoo/llx"
 )
 
