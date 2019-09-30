@@ -79,6 +79,18 @@ func TestRhelUptime(t *testing.T) {
 		LoadFifteenMinutes: float64(0.00),
 	}, duration)
 	assert.Equal(t, "8m0s", time.Duration(duration.Duration).String())
+
+	data = "13:24:35 up  1:05,  2 users,  load average: 0.00, 0.00, 0.00"
+	duration, err = uptime.ParseUnixUptime(data)
+	assert.Nil(t, err)
+	assert.Equal(t, &uptime.UnixUptimeResult{
+		Duration:           3900000000000,
+		Users:              2,
+		LoadOneMinute:      float64(0.00),
+		LoadFiveMinutes:    float64(0.00),
+		LoadFifteenMinutes: float64(0.00),
+	}, duration)
+	assert.Equal(t, "1h5m0s", time.Duration(duration.Duration).String())
 }
 
 func TestBusyboxUptime(t *testing.T) {
