@@ -16,7 +16,7 @@ func TestPowershellEncoding(t *testing.T) {
 }
 
 func TestWindowsAppxPackagesParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "windows_2019.toml"})
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/windows_2019.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,7 +42,7 @@ func TestWindowsAppxPackagesParser(t *testing.T) {
 }
 
 func TestWindowsHotFixParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "windows_2019.toml"})
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/windows_2019.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +67,7 @@ func TestWindowsHotFixParser(t *testing.T) {
 }
 
 func TestWinOSUpdatesParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "windows_2019.toml"})
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/windows_2019.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

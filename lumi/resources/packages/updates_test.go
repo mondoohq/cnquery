@@ -9,7 +9,7 @@ import (
 )
 
 func TestApkUpdateParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "updates_apk.toml"})
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/updates_apk.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +35,7 @@ func TestApkUpdateParser(t *testing.T) {
 }
 
 func TestDpkgUpdateParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "updates_dpkg.toml"})
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/updates_dpkg.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -61,7 +61,7 @@ func TestDpkgUpdateParser(t *testing.T) {
 }
 
 func TestRpmUpdateParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "updates_rpm.toml"})
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/updates_rpm.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -87,7 +87,7 @@ func TestRpmUpdateParser(t *testing.T) {
 }
 
 func TestZypperUpdateParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "updates_zypper.toml"})
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/updates_zypper.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -112,7 +112,7 @@ func TestZypperUpdateParser(t *testing.T) {
 
 // SUSE OS updates
 func TestZypperPatchParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "updates_zypper.toml"})
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/updates_zypper.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
