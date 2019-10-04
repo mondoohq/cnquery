@@ -34,7 +34,7 @@ func TestWindowsAppxPackagesParser(t *testing.T) {
 	p = Package{
 		Name:    "Microsoft.Windows.Cortana",
 		Version: "1.11.5.17763",
-		Arch:    "noarch",
+		Arch:    "neutral",
 		Format:  "windows/appx",
 	}
 	assert.Contains(t, m, p)

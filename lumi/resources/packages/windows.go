@@ -24,6 +24,21 @@ func EncodePowershell(cmd string) string {
 	return fmt.Sprintf("powershell.exe -EncodedCommand %s", base64.StdEncoding.EncodeToString(input))
 }
 
+// ProcessorArchitecture Enum
+// https://docs.microsoft.com/en-us/uwp/api/windows.system.processorarchitecture
+// https://docs.microsoft.com/en-us/dotnet/api/system.reflection.processorarchitecture?redirectedfrom=MSDN&view=netframework-4.8
+// Microsoft.Windows.Appx.PackageManager.Commands.AppxPackage
+// https://github.com/tpn/winsdk-10/blob/master/Include/10.0.10240.0/um/appxpackaging.idl#L60-L67
+const (
+	WinArchX86     = 0
+	WinArchArm     = 5
+	WinArchX64     = 9
+	WinArchNeutral = 11
+	WinArchArm64   = 12
+	// The Arm64 processor architecture emulating the X86 architecture
+	WinArchX86OnArm64 = 14
+)
+
 // https://docs.microsoft.com/en-us/previous-versions/windows/desktop/ff357803(v=vs.85)
 var (
 	wsusClassificationGUID = map[string]WSUSClassification{
@@ -44,7 +59,12 @@ var (
 	}
 
 	appxArchitecture = map[int]string{
-		11: "noarch",
+		WinArchNeutral:    "neutral",
+		WinArchX86:        "x86",
+		WinArchX64:        "x64",
+		WinArchArm64:      "arm64",
+		WinArchArm:        "arm",
+		WinArchX86OnArm64: "x86onarm",
 	}
 )
 
