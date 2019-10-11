@@ -70,6 +70,9 @@ func (ec2i *Ec2Instances) List() ([]*assets.Asset, error) {
 				Connections: connections,
 				State:       mapEc2InstanceStateCode(instance.State),
 				Labels:      make(map[string]string),
+				ScannerMetadata: &assets.ScannerMetadata{
+					Unscored: true,
+				},
 			}
 
 			for k := range instance.Tags {

@@ -57,6 +57,9 @@ func (a *Container) List() ([]*assets.Asset, error) {
 			},
 			State:  mapContainerState(dContainer.State),
 			Labels: make(map[string]string),
+			ScannerMetadata: &assets.ScannerMetadata{
+				Unscored: true,
+			},
 		}
 
 		for key := range dContainer.Labels {
