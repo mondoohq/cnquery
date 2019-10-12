@@ -86,9 +86,6 @@ func instancesPerZone(svc *compute.Service, project string, zone string) ([]*ass
 			Connections: connections,
 			State:       mapInstanceState(instance.Status),
 			Labels:      make(map[string]string),
-			ScannerMetadata: &assets.ScannerMetadata{
-				Unscored: true,
-			},
 		}
 
 		for key := range instance.Labels {

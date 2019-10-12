@@ -38,9 +38,6 @@ func (a *Images) List() ([]*assets.Asset, error) {
 			},
 			State:  assets.State_STATE_ONLINE,
 			Labels: make(map[string]string),
-			ScannerMetadata: &assets.ScannerMetadata{
-				Unscored: true,
-			},
 		}
 
 		for key := range dImg.Labels {
