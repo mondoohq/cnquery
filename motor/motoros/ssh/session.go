@@ -5,10 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"strings"
-
-	"net"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/motoros/types"
@@ -22,6 +21,7 @@ func sshClientConnection(hostconfig *types.Endpoint, hostKeyCallback ssh.HostKey
 		return nil, err
 	}
 
+	log.Debug().Int("methods", len(authMethods)).Msg("discovered ssh auth methods")
 	if len(authMethods) == 0 {
 		return nil, errors.New("no authentication method defined")
 	}
@@ -35,7 +35,7 @@ func sshClientConnection(hostconfig *types.Endpoint, hostKeyCallback ssh.HostKey
 	return ssh.Dial("tcp", fmt.Sprintf("%s:%s", hostconfig.Host, hostconfig.Port), sshConfig)
 }
 
-func authPrivateKey(privateKeyPath string, password string) (ssh.AuthMethod, error) {
+func authPrivateKey(privateKeyPath string, password string) (ssh.Signer, error) {
 	log.Debug().Str("key", privateKeyPath).Msg("enabled ssh private key authentication")
 	if _, err := os.Stat(privateKeyPath); os.IsNotExist(err) {
 		return nil, errors.New("private key does not exist " + privateKeyPath)
@@ -67,7 +67,7 @@ func authPrivateKey(privateKeyPath string, password string) (ssh.AuthMethod, err
 		}
 	}
 
-	return ssh.PublicKeys(signer), nil
+	return signer, nil
 }
 
 // hasAgentLoadedKey returns if the ssh agent has loaded the key file
@@ -87,32 +87,35 @@ func hasAgentLoadedKey(list []*agent.Key, filename string) bool {
 func authMethods(endpoint *types.Endpoint) ([]ssh.AuthMethod, error) {
 	auths := []ssh.AuthMethod{}
 
-	sshAgentKeys := []*agent.Key{}
+	// only one public auth method is allowed, therefore multiple keys need to be encapsulated into one auth method
+	signers := []ssh.Signer{}
 
 	// enable ssh agent auth
 	if sshAgentConn, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK")); err == nil {
 		log.Debug().Str("socket", os.Getenv("SSH_AUTH_SOCK")).Msg("enabled ssh agent authentication")
 		sshAgentClient := agent.NewClient(sshAgentConn)
-		agentAuth := ssh.PublicKeysCallback(sshAgentClient.Signers)
-		auths = append(auths, agentAuth)
-
-		// includes all loaded keys
-		list, err := sshAgentClient.List()
+		sshAgentSigners, err := sshAgentClient.Signers()
 		if err == nil {
-			sshAgentKeys = list
+			signers = append(signers, sshAgentSigners...)
+		} else {
+			log.Error().Err(err).Msg("could not get public keys from ssh agent")
 		}
 	} else {
 		log.Debug().Msg("could not find valud ssh agent authentication")
 	}
 
 	// use key auth, only load if the key was not found in ssh agent
-	if endpoint.PrivateKeyPath != "" && !hasAgentLoadedKey(sshAgentKeys, endpoint.PrivateKeyPath) {
+	if endpoint.PrivateKeyPath != "" {
 		priv, err := authPrivateKey(endpoint.PrivateKeyPath, endpoint.Password)
 		if err != nil {
 			log.Warn().Err(err).Str("key", endpoint.PrivateKeyPath).Msg("could not load private key, fallback to ssh agent")
 		} else {
-			auths = append(auths, priv)
+			signers = append(signers, priv)
 		}
+	}
+
+	if len(signers) > 0 {
+		auths = append(auths, ssh.PublicKeys(signers...))
 	}
 
 	// use password auth
@@ -120,6 +123,5 @@ func authMethods(endpoint *types.Endpoint) ([]ssh.AuthMethod, error) {
 		log.Debug().Msg("enabled ssh password authentication")
 		auths = append(auths, ssh.Password(endpoint.Password))
 	}
-
 	return auths, nil
 }
