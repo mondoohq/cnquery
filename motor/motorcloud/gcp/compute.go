@@ -11,7 +11,13 @@ import (
 	"google.golang.org/api/compute/v1"
 )
 
-func (a *GcpCompute) List() ([]*assets.Asset, error) {
+func NewCompute() *Compute {
+	return &Compute{}
+}
+
+type Compute struct{}
+
+func (a *Compute) List() ([]*assets.Asset, error) {
 	client, err := gcpClient(compute.ComputeScope, compute.CloudPlatformScope)
 	svc, err := compute.New(client)
 	if err != nil {

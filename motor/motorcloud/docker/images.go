@@ -24,8 +24,17 @@ func (a *Images) List() ([]*assets.Asset, error) {
 
 	imgs := make([]*assets.Asset, len(dImages))
 	for i, dImg := range dImages {
+
+		// TODO: we need to use the digest sha
+		// docker does not always have a repo sha: docker images --digests
+		digest := digest(dImg.RepoDigests)
+		// fallback to docker id
+		if len(digest) == 0 {
+			digest = dImg.ID
+		}
+
 		asset := &assets.Asset{
-			ReferenceIDs: []string{MondooContainerImageID(dImg.ID)},
+			ReferenceIDs: []string{MondooContainerImageID(digest)},
 			Name:         strings.Join(dImg.RepoTags, ","),
 			Platform: &assets.Platform{
 				Kind:    assets.Kind_KIND_CONTAINER_IMAGE,
@@ -47,14 +56,27 @@ func (a *Images) List() ([]*assets.Asset, error) {
 
 		labels := map[string]string{}
 		labels["mondoo.app/image-id"] = dImg.ID
+		// project/repo:5e664d0e,gcr.io/project/repo:5e664d0e
 		labels["docker.io/tags"] = strings.Join(dImg.RepoTags, ",")
+		// gcr.io/project/repo@sha256:5248...2bee
 		labels["docker.io/digests"] = strings.Join(dImg.RepoDigests, ",")
 		asset.Labels = labels
-
 		imgs[i] = asset
 	}
 
 	return imgs, nil
+}
+
+func digest(repoDigest []string) string {
+	for i := range repoDigest {
+
+		m := strings.Split(repoDigest[i], "sha256:")
+		if len(m) == 2 {
+			return "sha256:" + m[1]
+		}
+	}
+
+	return ""
 }
 
 func MondooContainerImageID(id string) string {

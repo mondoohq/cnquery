@@ -15,46 +15,67 @@ type Plugin interface {
 }
 
 const (
-	RUNTIME_AWS_EC2         = "aws ec2"
-	RUNTIME_AWS_SSM_MANAGED = "aws ssm-managed"
-	RUNTIME_GCP_COMPUTE     = "gcp compute"
-	RUNTIME_DOCKER          = "docker"
+	RUNTIME_AWS_EC2          = "aws ec2"
+	RUNTIME_AWS_SSM_MANAGED  = "aws ssm-managed"
+	RUNTIME_AWS_ECR          = "aws ecr"
+	RUNTIME_GCP_COMPUTE      = "gcp compute"
+	RUNTIME_GCP_GCR          = "gcp gcr"
+	RUNTIME_DOCKER_CONTAINER = "docker container"
+	RUNTIME_DOCKER_IMAGE     = "docker image"
+	RUNTIME_DOCKER_REGISTRY  = "docker registry"
 )
 
 func ListAssets(runtimes ...string) ([]*assets.Asset, error) {
 	askRuntimes := []Plugin{}
 
-	if stringslice.Contains(runtimes, RUNTIME_AWS_EC2) {
+	if stringslice.Contains(runtimes, RUNTIME_AWS_EC2) ||
+		stringslice.Contains(runtimes, RUNTIME_AWS_SSM_MANAGED) ||
+		stringslice.Contains(runtimes, RUNTIME_AWS_ECR) {
 		cfg, err := external.LoadDefaultAWSConfig()
 		if err != nil {
 			log.Warn().Err(err).Msg("skip aws assets")
 		} else {
-			plugin_aws, err := aws.NewEc2Discovery(cfg)
-			if err == nil {
-				askRuntimes = append(askRuntimes, plugin_aws)
+			if stringslice.Contains(runtimes, RUNTIME_AWS_EC2) {
+				plugin_aws, err := aws.NewEc2Discovery(cfg)
+				if err == nil {
+					askRuntimes = append(askRuntimes, plugin_aws)
+				}
 			}
-		}
-	}
 
-	if stringslice.Contains(runtimes, RUNTIME_AWS_SSM_MANAGED) {
-		cfg, err := external.LoadDefaultAWSConfig()
-		if err != nil {
-			log.Warn().Err(err).Msg("skip aws assets")
-		} else {
-			plugin_aws, err := aws.NewSSMManagedInstancesDiscovery(cfg)
-			if err == nil {
-				askRuntimes = append(askRuntimes, plugin_aws)
+			if stringslice.Contains(runtimes, RUNTIME_AWS_SSM_MANAGED) {
+				plugin_aws, err := aws.NewSSMManagedInstancesDiscovery(cfg)
+				if err == nil {
+					askRuntimes = append(askRuntimes, plugin_aws)
+				}
+			}
+
+			if stringslice.Contains(runtimes, RUNTIME_AWS_ECR) {
+				plugin_aws, err := aws.NewEcrImages(cfg)
+				if err == nil {
+					askRuntimes = append(askRuntimes, plugin_aws)
+				}
 			}
 		}
 	}
 
 	if stringslice.Contains(runtimes, RUNTIME_GCP_COMPUTE) {
-		askRuntimes = append(askRuntimes, gcp.New())
+		askRuntimes = append(askRuntimes, gcp.NewCompute())
 	}
 
-	if stringslice.Contains(runtimes, RUNTIME_DOCKER) {
-		askRuntimes = append(askRuntimes, &docker.Images{})
+	if stringslice.Contains(runtimes, RUNTIME_GCP_GCR) {
+		askRuntimes = append(askRuntimes, gcp.NewGCRImages())
+	}
+
+	if stringslice.Contains(runtimes, RUNTIME_DOCKER_CONTAINER) {
 		askRuntimes = append(askRuntimes, &docker.Container{})
+	}
+
+	if stringslice.Contains(runtimes, RUNTIME_DOCKER_IMAGE) {
+		askRuntimes = append(askRuntimes, &docker.Images{})
+	}
+
+	if stringslice.Contains(runtimes, RUNTIME_DOCKER_REGISTRY) {
+		askRuntimes = append(askRuntimes, &docker.DockerRegistryImages{})
 	}
 
 	discoveredAssets := []*assets.Asset{}
