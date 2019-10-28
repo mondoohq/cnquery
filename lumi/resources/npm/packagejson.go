@@ -8,6 +8,7 @@ import (
 	"go.mondoo.io/mondoo/vadvisor/api"
 )
 
+// PackageJson allows parsing the package json file
 type PackageJson struct {
 	Name            string            `json:"name"`
 	Description     string            `json:"description"`
@@ -22,6 +23,7 @@ type PackageJsonLockEntry struct {
 	Dev     bool   `json:"dev"`
 }
 
+// PackageJsonLock is the struct to represent the package.lock file
 type PackageJsonLock struct {
 	Name         string                          `json:"name"`
 	Version      string                          `json:"version"`
