@@ -2,14 +2,46 @@ package resolver
 
 import (
 	"context"
+	"os"
 
+	dopts "github.com/docker/cli/opts"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
 
+// parseDockerCLI is doing a small part from client.FromEnv(c)
+// but it parses the DOCKER_HOST like the docker cli and not the docker go lib
+// DO NOT ASK why docker maintains two implementations
+func parseDockerCLIHost(c *client.Client) error {
+	if host := os.Getenv("DOCKER_HOST"); host != "" {
+		parsedHost, err := dopts.ParseHost(false, host)
+		if err != nil {
+			return err
+		}
+
+		log.Debug().Str("docker_host", parsedHost).Msg("parsed docker host")
+		if err := client.WithHost(parsedHost)(c); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func FromDockerEnv(c *client.Client) error {
+	err := client.FromEnv(c)
+	if err != nil {
+		return err
+	}
+
+	// The docker go client works different than the docker cli
+	// therefore we mimic the approach from the docker cli to make it easier for users
+	return parseDockerCLIHost(c)
+}
+
 func dockerClient() (*client.Client, error) {
-	cli, err := client.NewEnvClient()
+	cli, err := client.NewClientWithOpts(FromDockerEnv)
 	if err != nil {
 		return nil, err
 	}
@@ -18,32 +50,30 @@ func dockerClient() (*client.Client, error) {
 }
 
 // TODO: this implementation needs to be merged with motorcloud/docker
-func NewDockerEngineDiscovery() *dockerEngineDiscovery {
+func NewDockerEngineDiscovery() (*dockerEngineDiscovery, error) {
 	dc, err := dockerClient()
-
-	running := true
 	if err != nil {
-		log.Debug().Err(err).Msg("cannot connect to docker engine")
-		running = false
+		return nil, err
 	}
 
 	return &dockerEngineDiscovery{
-		Client:  dc,
-		Running: running,
-	}
+		Client: dc,
+	}, nil
 }
 
 type dockerEngineDiscovery struct {
-	Running bool
-	Client  *client.Client
+	Client *client.Client
 }
 
-func (e *dockerEngineDiscovery) IsRunning() bool {
-	return e.Running
+func (e *dockerEngineDiscovery) client() (*client.Client, error) {
+	if e.Client != nil {
+		return e.Client, nil
+	}
+	return nil, errors.New("docker client not initialized")
 }
 
 func (e *dockerEngineDiscovery) ContainerList() ([]string, error) {
-	dc, err := dockerClient()
+	dc, err := e.client()
 	if err != nil {
 		return []string{}, err
 	}
@@ -63,7 +93,7 @@ func (e *dockerEngineDiscovery) ContainerList() ([]string, error) {
 
 // be aware that images are prefixed with sha256:, while containers are not
 func (e *dockerEngineDiscovery) ImageList() ([]string, error) {
-	dc, err := dockerClient()
+	dc, err := e.client()
 	if err != nil {
 		return []string{}, err
 	}
@@ -89,7 +119,7 @@ type ContainerInfo struct {
 // will resolve name and id to a container id
 func (e *dockerEngineDiscovery) ContainerInfo(name string) (ContainerInfo, error) {
 	ci := ContainerInfo{}
-	dc, err := dockerClient()
+	dc, err := e.client()
 	if err != nil {
 		return ci, err
 	}
@@ -110,7 +140,7 @@ type ImageInfo struct {
 
 func (e *dockerEngineDiscovery) ImageInfo(name string) (ImageInfo, error) {
 	ii := ImageInfo{}
-	dc, err := dockerClient()
+	dc, err := e.client()
 	if err != nil {
 		return ii, err
 	}
