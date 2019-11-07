@@ -89,9 +89,10 @@ func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, string, 
 		return nil, "", errors.New("could not find the container reference")
 	}
 
+	log.Debug().Msg("try to connect to docker engine")
 	// could be an image id/name, container id/name or a short reference to an image in docker engine
-	ded := NewDockerEngineDiscovery()
-	if ded.IsRunning() {
+	ded, err := NewDockerEngineDiscovery()
+	if err == nil {
 		ci, err := ded.ContainerInfo(endpoint.Host)
 		if err == nil {
 			if ci.Running {
@@ -124,6 +125,7 @@ func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, string, 
 		}
 	}
 
+	log.Debug().Msg("try to download the image from docker registry")
 	// load container image from remote directoryload tar file into backend
 	tag, err := name.NewTag(endpoint.Host, name.WeakValidation)
 	if err == nil {
