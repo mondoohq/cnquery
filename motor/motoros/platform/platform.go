@@ -824,7 +824,7 @@ func (d *Detector) buildPlatformTree() (*PlatformResolver, error) {
 	operatingSystem := &PlatformResolver{
 		Name:     "os",
 		Familiy:  true,
-		Children: []*PlatformResolver{windowsFamily, unixFamily, esxFamily, unknownOperatingSystem},
+		Children: []*PlatformResolver{unixFamily, windowsFamily, esxFamily, unknownOperatingSystem},
 		Detect: func(p *PlatformResolver, di *Info) (bool, error) {
 			return true, nil
 		},
