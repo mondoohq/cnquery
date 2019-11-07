@@ -5,6 +5,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"github.com/rs/zerolog/log"
 )
 
 func dockerClient() (*client.Client, error) {
@@ -22,6 +23,7 @@ func NewDockerEngineDiscovery() *dockerEngineDiscovery {
 
 	running := true
 	if err != nil {
+		log.Debug().Err(err).Msg("cannot connect to docker engine")
 		running = false
 	}
 
