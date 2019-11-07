@@ -59,13 +59,13 @@ func ParseUnixUptime(uptime string) (*UnixUptimeResult, error) {
 	if len(m[3]) > 0 {
 		hours := strings.Split(m[3], ":")
 		if len(hours) == 2 {
-			log.Debug().Msg("parse hour")
+			// log.Debug().Msg("parse hour")
 			hh, err := strconv.ParseInt(hours[0], 10, 64)
 			if err != nil {
 				return nil, err
 			}
 
-			log.Debug().Msg("parse minutes")
+			// log.Debug().Msg("parse minutes")
 			mm, err := strconv.ParseInt(hours[1], 10, 64)
 			if err != nil {
 				return nil, err
