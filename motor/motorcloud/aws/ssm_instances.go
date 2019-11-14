@@ -38,8 +38,7 @@ func (ssmi *SSMManagedInstances) List() ([]*assets.Asset, error) {
 	resourceFilter := string(ssm.InstanceInformationFilterKeyResourceType)
 	isssmreq := ssmsvc.DescribeInstanceInformationRequest(&ssm.DescribeInstanceInformationInput{
 		Filters: []ssm.InstanceInformationStringFilter{
-			// TODO: we filter for linux instances until we support Windows
-			ssm.InstanceInformationStringFilter{Key: &platformFilter, Values: []string{string(ssm.PlatformTypeLinux)}},
+			ssm.InstanceInformationStringFilter{Key: &platformFilter, Values: []string{string(ssm.PlatformTypeLinux), string(ssm.PlatformTypeWindows)}},
 			// we only look for managed instanced
 			ssm.InstanceInformationStringFilter{Key: &resourceFilter, Values: []string{string(ssm.ResourceTypeManagedInstance)}},
 		},
