@@ -108,7 +108,7 @@ func authMethods(endpoint *types.Endpoint) ([]ssh.AuthMethod, error) {
 	if endpoint.PrivateKeyPath != "" {
 		priv, err := authPrivateKey(endpoint.PrivateKeyPath, endpoint.Password)
 		if err != nil {
-			log.Warn().Err(err).Str("key", endpoint.PrivateKeyPath).Msg("could not load private key, fallback to ssh agent")
+			log.Debug().Err(err).Str("key", endpoint.PrivateKeyPath).Msg("could not load private key, fallback to ssh agent")
 		} else {
 			signers = append(signers, priv)
 		}
