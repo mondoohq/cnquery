@@ -126,7 +126,7 @@ func (s Fs) Remove(name string) error {
 func (s Fs) RemoveAll(path string) error {
 	// TODO have a look at os.RemoveAll
 	// https://github.com/golang/go/blob/master/src/os/path.go#L66
-	return errors.New("not implemented")
+	return errors.New("removeall not implemented")
 }
 
 func (s Fs) Rename(oldname, newname string) error {

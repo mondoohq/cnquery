@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 
 	"github.com/rs/zerolog/log"
 	motor "go.mondoo.io/mondoo/motor/motoros"
@@ -70,12 +71,67 @@ func (dpm *DebPkgManager) Format() string {
 }
 
 func (dpm *DebPkgManager) List() ([]Package, error) {
-	fi, err := dpm.motor.Transport.File("/var/lib/dpkg/status")
-	if err != nil {
-		return nil, fmt.Errorf("could not read package list")
+	fs := dpm.motor.Transport.FS()
+	dpkgStatusFile := "/var/lib/dpkg/status"
+	dpkgStatusDir := "/var/lib/dpkg/status.d"
+	_, fErr := fs.Stat(dpkgStatusFile)
+	dStat, dErr := fs.Stat(dpkgStatusDir)
+
+	if fErr != nil && dErr != nil {
+		log.Debug().Err(fErr).Str("path", dpkgStatusFile).Msg("cannot find status file")
+		log.Debug().Err(dErr).Str("path", dpkgStatusDir).Msg("cannot find status dir")
+		return nil, fmt.Errorf("could not find dpkg package list")
 	}
-	defer fi.Close()
-	return ParseDpkgPackages(fi)
+
+	pkgList := []Package{}
+	// main pkg file for debian systems
+	if fErr == nil {
+		log.Debug().Str("file", dpkgStatusFile).Msg("parse dpkg status file")
+		fi, err := dpm.motor.Transport.File(dpkgStatusFile)
+		if err != nil {
+			return nil, fmt.Errorf("could not read dpkg package list")
+		}
+		defer fi.Close()
+
+		list, err := ParseDpkgPackages(fi)
+		if err != nil {
+			return nil, fmt.Errorf("could not parse dpkg package list")
+		}
+		pkgList = append(pkgList, list...)
+	}
+
+	// e.g. google distroless images stores their pkg data in /var/lib/dpkg/status.d/
+	if dErr == nil && dStat.IsDir() == true {
+		afutil := afero.Afero{Fs: fs}
+		err := afutil.Walk(dpkgStatusDir, func(path string, f os.FileInfo, err error) error {
+			if f == nil || f.IsDir() {
+				return nil
+			}
+
+			log.Debug().Str("path", path).Msg("walk file")
+			fi, err := dpm.motor.Transport.File(path)
+			if err != nil {
+				log.Debug().Err(err).Str("path", path).Msg("could open file")
+				return fmt.Errorf("could not read dpkg package list")
+			}
+
+			list, err := ParseDpkgPackages(fi)
+			fi.Close()
+			if err != nil {
+				log.Debug().Err(err).Str("path", path).Msg("could not parse")
+				return fmt.Errorf("could not parse dpkg package list")
+			}
+
+			log.Debug().Int("pkgs", len(list)).Msg("completed parsing")
+			pkgList = append(pkgList, list...)
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return pkgList, nil
 }
 
 func (dpm *DebPkgManager) Available() (map[string]PackageUpdate, error) {
