@@ -164,6 +164,37 @@ security related events.`,
 	assert.Contains(t, m, p, "libaudit1 detected")
 }
 
+func TestDpkgParserStatusD(t *testing.T) {
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/packages_dpkg_statusd.toml"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	f, err := mock.File("/var/lib/dpkg/status.d/base")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+
+	m, err := ParseDpkgPackages(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, 1, len(m), "detected the right amount of packages")
+
+	var p Package
+	p = Package{
+		Name:    "base-files",
+		Version: "9.9+deb9u11",
+		Arch:    "amd64",
+		Description: `Debian base system miscellaneous files
+This package contains the basic filesystem hierarchy of a Debian system, and
+several important miscellaneous files, such as /etc/debian_version,
+/etc/host.conf, /etc/issue, /etc/motd, /etc/profile, and others,
+and the text of several common licenses in use on Debian systems.`,
+	}
+	assert.Contains(t, m, p, "fdisk detected")
+}
+
 func TestMacOsXPackageParser(t *testing.T) {
 	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/packages_macos.toml"})
 	if err != nil {
