@@ -3,12 +3,12 @@ package resolver
 import (
 	"context"
 	"os"
+	"strings"
 
 	dopts "github.com/docker/cli/opts"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 // parseDockerCLI is doing a small part from client.FromEnv(c)
@@ -21,7 +21,6 @@ func parseDockerCLIHost(c *client.Client) error {
 			return err
 		}
 
-		log.Debug().Str("docker_host", parsedHost).Msg("parsed docker host")
 		if err := client.WithHost(parsedHost)(c); err != nil {
 			return err
 		}
@@ -31,7 +30,9 @@ func parseDockerCLIHost(c *client.Client) error {
 
 func FromDockerEnv(c *client.Client) error {
 	err := client.FromEnv(c)
-	if err != nil {
+
+	// we ignore the parse error since we are going to re-parse it anyway
+	if err != nil && !strings.Contains(err.Error(), "unable to parse docker host") {
 		return err
 	}
 
