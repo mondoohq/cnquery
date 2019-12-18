@@ -18,7 +18,7 @@ var Debug bool
 func init() {
 	Set(false, true)
 	// uses cli logger by default
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	CliNoColorLogger()
 }
 
 // SetWriter configures a log writer for the global logger
@@ -30,7 +30,11 @@ func UseJsonLogging() {
 	log.Logger = zerolog.New(os.Stderr).With().Timestamp().Logger()
 }
 
-func NoColorLogger() {
+func CliLogger() {
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+}
+
+func CliNoColorLogger() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, NoColor: true})
 }
 
