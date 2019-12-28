@@ -1,0 +1,92 @@
+package packages
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	mock "go.mondoo.io/mondoo/motor/motoros/mock/toml"
+	"go.mondoo.io/mondoo/motor/motoros/types"
+)
+
+func TestDpkgParser(t *testing.T) {
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/packages_dpkg.toml"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	f, err := mock.File("/var/lib/dpkg/status")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+
+	m, err := ParseDpkgPackages(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, 10, len(m), "detected the right amount of packages")
+
+	var p Package
+	p = Package{
+		Name:    "fdisk",
+		Version: "2.31.1-0.4ubuntu3.1",
+		Arch:    "amd64",
+		Status:  "install ok installed",
+		Origin:  "util-linux",
+		Description: `collection of partitioning utilities
+This package contains the classic fdisk, sfdisk and cfdisk partitioning
+utilities from the util-linux suite.
+.
+The utilities included in this package allow you to partition
+your hard disk. The utilities supports both modern and legacy
+partition tables (eg. GPT, MBR, etc).
+.
+The fdisk utility is the classical text-mode utility.
+The cfdisk utilitity gives a more userfriendly curses based interface.
+The sfdisk utility is mostly for automation and scripting uses.`,
+	}
+	assert.Contains(t, m, p, "fdisk detected")
+
+	p = Package{
+		Name:    "libaudit1",
+		Version: "1:2.4-1+b1",
+		Arch:    "amd64",
+		Status:  "install ok installed",
+		Origin:  "audit",
+		Description: `Dynamic library for security auditing
+The audit-libs package contains the dynamic libraries needed for
+applications to use the audit framework. It is used to monitor systems for
+security related events.`,
+	}
+	assert.Contains(t, m, p, "libaudit1 detected")
+}
+
+func TestDpkgParserStatusD(t *testing.T) {
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/packages_dpkg_statusd.toml"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	f, err := mock.File("/var/lib/dpkg/status.d/base")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+
+	m, err := ParseDpkgPackages(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, 1, len(m), "detected the right amount of packages")
+
+	var p Package
+	p = Package{
+		Name:    "base-files",
+		Version: "9.9+deb9u11",
+		Arch:    "amd64",
+		Description: `Debian base system miscellaneous files
+This package contains the basic filesystem hierarchy of a Debian system, and
+several important miscellaneous files, such as /etc/debian_version,
+/etc/host.conf, /etc/issue, /etc/motd, /etc/profile, and others,
+and the text of several common licenses in use on Debian systems.`,
+	}
+	assert.Contains(t, m, p, "fdisk detected")
+}
