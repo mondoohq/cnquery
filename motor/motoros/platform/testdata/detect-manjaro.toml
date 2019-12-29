@@ -1,0 +1,11 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "4.9.125-linuxkit"
+
+[files."/etc/arch-release"]
+content = "Manjaro Linux"
