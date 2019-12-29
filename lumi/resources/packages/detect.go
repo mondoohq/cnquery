@@ -37,7 +37,7 @@ func Detect(motor *motor.Motor) ([]Package, map[string]PackageUpdate, error) {
 	return packages, availableList, nil
 }
 
-func ConvertPlatform(platform platform.Info) *assets.Platform {
+func ConvertPlatform(platform platform.PlatformInfo) *assets.Platform {
 	return &assets.Platform{
 		Name:    platform.Name,
 		Release: platform.Release,
