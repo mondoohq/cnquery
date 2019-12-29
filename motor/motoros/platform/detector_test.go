@@ -481,7 +481,7 @@ func (suite *OsDetectTestSuite) TestMacOSsDetector() {
 
 func (suite *OsDetectTestSuite) TestFamilies() {
 
-	di := &platform.Info{}
+	di := &platform.PlatformInfo{}
 	di.Family = []string{"unix", "bsd", "darwin"}
 
 	assert.Equal(suite.T(), true, di.IsFamily("unix"), "unix should be a family")

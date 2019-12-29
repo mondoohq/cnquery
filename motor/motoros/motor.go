@@ -16,11 +16,11 @@ func New(trans types.Transport) (*Motor, error) {
 
 type Motor struct {
 	Transport types.Transport
-	platform  *platform.Info
+	platform  *platform.PlatformInfo
 	watcher   types.Watcher
 }
 
-func (m *Motor) Platform() (platform.Info, error) {
+func (m *Motor) Platform() (platform.PlatformInfo, error) {
 	// check if platform is in cache
 	if m.platform != nil {
 		return *m.platform, nil
@@ -29,7 +29,7 @@ func (m *Motor) Platform() (platform.Info, error) {
 	detector := &platform.Detector{Transport: m.Transport}
 	resolved, di := detector.Resolve()
 	if !resolved {
-		return platform.Info{}, errors.New("could not determine operating system")
+		return platform.PlatformInfo{}, errors.New("could not determine operating system")
 	} else {
 		// cache value
 		m.platform = di
