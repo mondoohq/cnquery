@@ -84,7 +84,7 @@ var alpine = &PlatformResolver{
 
 var arch = &PlatformResolver{
 	Name:    "arch",
-	Familiy: true,
+	Familiy: false,
 	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
 		if di.Name == "arch" {
 			return true, nil
@@ -573,6 +573,7 @@ var archFamily = &PlatformResolver{
 	Familiy:  true,
 	Children: []*PlatformResolver{arch, manjaro},
 	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
+		// if the file exists, we are on arch or one of its derivates
 		f, err := t.File("/etc/arch-release")
 		if err != nil {
 			return false, nil
@@ -583,8 +584,18 @@ var archFamily = &PlatformResolver{
 		if err != nil {
 			return false, nil
 		}
-		if len(c) == 0 {
-			return false, nil
+
+		// on arch containers, /etc/os-release may not be present
+		if len(di.Name) == 0 && strings.Contains(strings.ToLower(string(c)), "manjaro") {
+			di.Name = "manjaro"
+			di.Title = strings.TrimSpace(string(c))
+			return true, nil
+		}
+
+		if len(di.Name) == 0 {
+			// fallback to arch
+			di.Name = "arch"
+			di.Title = "Arch Linux"
 		}
 		return true, nil
 	},

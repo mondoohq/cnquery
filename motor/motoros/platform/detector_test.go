@@ -311,8 +311,8 @@ func (suite *OsDetectTestSuite) TestScientificLinuxDetector() {
 	assert.Equal(suite.T(), []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
 
-func (suite *OsDetectTestSuite) TestArchLinuxDetector() {
-	detector, err := newDetector("./testdata/detect-arch.toml")
+func (suite *OsDetectTestSuite) TestArchLinuxVmDetector() {
+	detector, err := newDetector("./testdata/detect-arch-vm.toml")
 	assert.Nil(suite.T(), err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -320,7 +320,31 @@ func (suite *OsDetectTestSuite) TestArchLinuxDetector() {
 	assert.Equal(suite.T(), "arch", di.Name, "os name should be identified")
 	assert.Equal(suite.T(), "Arch Linux", di.Title, "os title should be identified")
 	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
-	assert.Equal(suite.T(), []string{"linux", "unix", "os"}, di.Family)
+	assert.Equal(suite.T(), []string{"arch", "linux", "unix", "os"}, di.Family)
+}
+
+func (suite *OsDetectTestSuite) TestArchLinuxContainerDetector() {
+	detector, err := newDetector("./testdata/detect-arch-container.toml")
+	assert.Nil(suite.T(), err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(suite.T(), true, resolved, "platform should be resolvable")
+	assert.Equal(suite.T(), "arch", di.Name, "os name should be identified")
+	assert.Equal(suite.T(), "Arch Linux", di.Title, "os title should be identified")
+	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"arch", "linux", "unix", "os"}, di.Family)
+}
+
+func (suite *OsDetectTestSuite) TestManjaroLinuxContainerDetector() {
+	detector, err := newDetector("./testdata/detect-manjaro.toml")
+	assert.Nil(suite.T(), err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(suite.T(), true, resolved, "platform should be resolvable")
+	assert.Equal(suite.T(), "manjaro", di.Name, "os name should be identified")
+	assert.Equal(suite.T(), "Manjaro Linux", di.Title, "os title should be identified")
+	assert.Equal(suite.T(), "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(suite.T(), []string{"arch", "linux", "unix", "os"}, di.Family)
 }
 
 func (suite *OsDetectTestSuite) TestOracleLinux6Detector() {
