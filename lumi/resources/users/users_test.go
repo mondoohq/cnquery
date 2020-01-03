@@ -10,7 +10,7 @@ import (
 )
 
 func TestParseEtcPasswd(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "users_linux.toml"})
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/users_linux.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,7 +34,7 @@ func TestParseEtcPasswd(t *testing.T) {
 }
 
 func TestParseDsclListResult(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "users_osx.toml"})
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/users_osx.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

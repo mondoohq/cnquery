@@ -10,7 +10,7 @@ import (
 )
 
 func TestParseEtcGroups(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "groups_unix.toml"})
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/groups_unix.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +35,7 @@ func TestParseEtcGroups(t *testing.T) {
 }
 
 func TestParseDscacheutilResult(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "groups_osx.toml"})
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/groups_osx.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
