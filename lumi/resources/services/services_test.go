@@ -10,7 +10,7 @@ import (
 )
 
 func TestParseServiceSystemDUnitFilesx(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "services_systemd.toml"})
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/services_systemd.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +38,7 @@ func TestParseServiceSystemDUnitFilesx(t *testing.T) {
 }
 
 func TestParseServiceLaunchD(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "services_launchd.toml"})
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/services_launchd.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -10,7 +10,7 @@ import (
 )
 
 func TestPSProcessParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "processes_unix.toml"})
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/processes_unix.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

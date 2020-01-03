@@ -11,7 +11,7 @@ import (
 )
 
 func TestLinuxMachineId(t *testing.T) {
-	filepath, _ := filepath.Abs("./linux_test.toml")
+	filepath, _ := filepath.Abs("./testdata/linux_test.toml")
 	trans, err := toml.New(&types.Endpoint{Backend: "mock", Path: filepath})
 	if err != nil {
 		t.Fatal(err)
