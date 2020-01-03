@@ -5,6 +5,7 @@ import (
 
 	"go.mondoo.io/mondoo/motor/motoros/capabilities"
 	"go.mondoo.io/mondoo/motor/motoros/events"
+	"go.mondoo.io/mondoo/motor/motoros/local"
 	"go.mondoo.io/mondoo/motor/motoros/platform"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
@@ -62,4 +63,12 @@ func (m *Motor) HasCapability(capability capabilities.Capability) bool {
 		}
 	}
 	return false
+}
+
+func (m *Motor) IsLocalTransport() bool {
+	_, ok := m.Transport.(*local.LocalTransport)
+	if !ok {
+		return false
+	}
+	return true
 }
