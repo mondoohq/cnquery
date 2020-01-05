@@ -1,3 +1,6 @@
+refactor:
+  ☐ remove nexus/assets dependencies and move platform + asset into motor
+
 events:
   ☐ how would it work for a non-local file watcher
   ☐ should we inregrate inotify approaches like

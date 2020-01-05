@@ -3,6 +3,7 @@ package types
 import (
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/motoros/capabilities"
+	"go.mondoo.io/mondoo/nexus/assets"
 )
 
 type Transport interface {
@@ -16,4 +17,7 @@ type Transport interface {
 	Close()
 	// returns if this is a static asset that does not allow run command
 	Capabilities() []capabilities.Capability
+
+	Kind() assets.Kind
+	Runtime() string
 }

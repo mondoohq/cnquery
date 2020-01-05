@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/motoros/capabilities"
 	"go.mondoo.io/mondoo/motor/motoros/types"
+	"go.mondoo.io/mondoo/nexus/assets"
 
 	"io"
 	"os"
@@ -25,7 +26,7 @@ func NewWithClose(endpoint *types.Endpoint, close func()) (*Transport, error) {
 
 	var err error
 	if endpoint != nil && len(endpoint.Path) > 0 {
-		err := LoadFile(t, endpoint.Path)
+		err := t.LoadFile(endpoint.Path)
 		if err != nil {
 			log.Error().Err(err).Str("tar", endpoint.Path).Msg("tar> could not load tar file")
 			return nil, err
@@ -65,7 +66,15 @@ func (t *Transport) Capabilities() []capabilities.Capability {
 	}
 }
 
-func Load(t *Transport, stream io.Reader) error {
+func (t *Transport) Kind() assets.Kind {
+	return assets.Kind_KIND_UNKNOWN
+}
+
+func (t *Transport) Runtime() string {
+	return ""
+}
+
+func (t *Transport) Load(stream io.Reader) error {
 	tr := tar.NewReader(stream)
 	for {
 		h, err := tr.Next()
@@ -84,7 +93,7 @@ func Load(t *Transport, stream io.Reader) error {
 	return nil
 }
 
-func LoadFile(t *Transport, path string) error {
+func (t *Transport) LoadFile(path string) error {
 	log.Debug().Str("path", path).Msg("tar> load tar file into backend")
 
 	f, err := os.Open(path)
@@ -93,5 +102,5 @@ func LoadFile(t *Transport, path string) error {
 		return err
 	}
 
-	return Load(t, f)
+	return t.Load(f)
 }

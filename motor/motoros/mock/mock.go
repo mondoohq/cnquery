@@ -9,6 +9,7 @@ import (
 
 	"go.mondoo.io/mondoo/motor/motoros/capabilities"
 	"go.mondoo.io/mondoo/motor/motoros/types"
+	"go.mondoo.io/mondoo/nexus/assets"
 )
 
 type Command struct {
@@ -80,6 +81,14 @@ func (t *Transport) Capabilities() []capabilities.Capability {
 		capabilities.RunCommand,
 		capabilities.File,
 	}
+}
+
+func (t *Transport) Kind() assets.Kind {
+	return assets.Kind_KIND_UNKNOWN
+}
+
+func (t *Transport) Runtime() string {
+	return ""
 }
 
 // // TODO, support directory streaming

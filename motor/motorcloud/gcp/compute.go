@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/motor/runtime"
 	"go.mondoo.io/mondoo/nexus/assets"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
@@ -81,7 +82,7 @@ func instancesPerZone(svc *compute.Service, project string, zone string) ([]*ass
 			Name:         instance.Name,
 			Platform: &assets.Platform{
 				Kind:    assets.Kind_KIND_VIRTUAL_MACHINE,
-				Runtime: "gcp compute",
+				Runtime: runtime.RUNTIME_GCP_COMPUTE,
 			},
 			Connections: connections,
 			State:       mapInstanceState(instance.Status),

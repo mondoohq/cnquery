@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/motoros/capabilities"
 	"go.mondoo.io/mondoo/motor/motoros/types"
+	"go.mondoo.io/mondoo/nexus/assets"
 )
 
 func VerifyConfig(endpoint *types.Endpoint) (*winrm.Endpoint, error) {
@@ -124,4 +125,12 @@ func (t *WinrmTransport) Capabilities() []capabilities.Capability {
 		capabilities.RunCommand,
 		capabilities.File,
 	}
+}
+
+func (t *WinrmTransport) Kind() assets.Kind {
+	return assets.Kind_KIND_BARE_METAL
+}
+
+func (t *WinrmTransport) Runtime() string {
+	return ""
 }
