@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
+	"go.mondoo.io/mondoo/motor/runtime"
 	"go.mondoo.io/mondoo/nexus/assets"
 )
 
@@ -59,7 +60,7 @@ func (ssmi *SSMManagedInstances) List() ([]*assets.Asset, error) {
 			Name:         *instance.InstanceId,
 			Platform: &assets.Platform{
 				Kind:    assets.Kind_KIND_VIRTUAL_MACHINE,
-				Runtime: "aws ssm-managed",
+				Runtime: runtime.RUNTIME_AWS_SSM_MANAGED,
 			},
 			// Connections: connections,
 			State:  mapSmmManagedPingStateCode(instance.PingStatus),

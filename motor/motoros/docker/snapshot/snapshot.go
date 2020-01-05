@@ -4,13 +4,51 @@ import (
 	"context"
 	"os"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/motoros/docker/cache"
 	"go.mondoo.io/mondoo/motor/motoros/docker/docker_engine"
 	"go.mondoo.io/mondoo/motor/motoros/tar"
 	"go.mondoo.io/mondoo/motor/motoros/types"
+	"go.mondoo.io/mondoo/motor/runtime"
+	"go.mondoo.io/mondoo/nexus/assets"
 )
 
-func NewFromDockerEngine(containerid string) (types.Transport, error) {
+type DockerSnapshotTransport struct {
+	tar.Transport
+}
+
+func (t *DockerSnapshotTransport) Kind() assets.Kind {
+	return assets.Kind_KIND_CONTAINER
+}
+
+func (t *DockerSnapshotTransport) Runtime() string {
+	return runtime.RUNTIME_DOCKER
+}
+
+func new(endpoint *types.Endpoint) (*DockerSnapshotTransport, error) {
+	return newWithClose(endpoint, nil)
+}
+
+func newWithClose(endpoint *types.Endpoint, close func()) (*DockerSnapshotTransport, error) {
+	t := &DockerSnapshotTransport{
+		Transport: tar.Transport{
+			Fs:      tar.NewFs(endpoint.Path),
+			CloseFN: close,
+		},
+	}
+
+	var err error
+	if endpoint != nil && len(endpoint.Path) > 0 {
+		err := t.LoadFile(endpoint.Path)
+		if err != nil {
+			log.Error().Err(err).Str("tar", endpoint.Path).Msg("tar> could not load tar file")
+			return nil, err
+		}
+	}
+	return t, err
+}
+
+func NewFromDockerEngine(containerid string) (*DockerSnapshotTransport, error) {
 	// cache container on local disk
 	f, err := cache.RandomFile()
 	if err != nil {
@@ -22,14 +60,14 @@ func NewFromDockerEngine(containerid string) (types.Transport, error) {
 		return nil, err
 	}
 
-	return tar.NewWithClose(&types.Endpoint{Path: f.Name()}, func() {
+	return newWithClose(&types.Endpoint{Path: f.Name()}, func() {
 		// remove temporary file on stream close
 		os.Remove(f.Name())
 	})
 }
 
-func NewFromFile(filename string) (types.Transport, error) {
-	return tar.New(&types.Endpoint{Path: filename})
+func NewFromFile(filename string) (*DockerSnapshotTransport, error) {
+	return new(&types.Endpoint{Path: filename})
 }
 
 // exports a given container from docker engine to a tar file

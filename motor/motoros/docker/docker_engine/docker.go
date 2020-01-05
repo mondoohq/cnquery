@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/motoros/capabilities"
 	"go.mondoo.io/mondoo/motor/motoros/types"
+	"go.mondoo.io/mondoo/motor/runtime"
+	"go.mondoo.io/mondoo/nexus/assets"
 )
 
 func New(container string) (types.Transport, error) {
@@ -70,6 +72,14 @@ func (t *Transport) Capabilities() []capabilities.Capability {
 		capabilities.RunCommand,
 		capabilities.File,
 	}
+}
+
+func (t *Transport) Kind() assets.Kind {
+	return assets.Kind_KIND_CONTAINER
+}
+
+func (t *Transport) Runtime() string {
+	return runtime.RUNTIME_DOCKER
 }
 
 func GetDockerClient() (*client.Client, error) {

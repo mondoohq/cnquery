@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/pkg/errors"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
+	"go.mondoo.io/mondoo/motor/runtime"
 	"go.mondoo.io/mondoo/nexus/assets"
 
 	"github.com/rs/zerolog/log"
@@ -65,7 +66,7 @@ func (ec2i *Ec2Instances) List() ([]*assets.Asset, error) {
 				Name:         *instance.InstanceId,
 				Platform: &assets.Platform{
 					Kind:    assets.Kind_KIND_VIRTUAL_MACHINE,
-					Runtime: "aws ec2",
+					Runtime: runtime.RUNTIME_AWS_EC2,
 				},
 				Connections: connections,
 				State:       mapEc2InstanceStateCode(instance.State),

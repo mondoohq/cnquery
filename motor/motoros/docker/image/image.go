@@ -15,13 +15,47 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/motoros/docker/cache"
 	"go.mondoo.io/mondoo/motor/motoros/tar"
 	"go.mondoo.io/mondoo/motor/motoros/types"
+	"go.mondoo.io/mondoo/motor/runtime"
+	"go.mondoo.io/mondoo/nexus/assets"
 )
 
+type DockerImageTransport struct {
+	tar.Transport
+}
+
+func (t *DockerImageTransport) Kind() assets.Kind {
+	return assets.Kind_KIND_CONTAINER_IMAGE
+}
+
+func (t *DockerImageTransport) Runtime() string {
+	return runtime.RUNTIME_DOCKER
+}
+
+func newWithClose(endpoint *types.Endpoint, close func()) (*DockerImageTransport, error) {
+	t := &DockerImageTransport{
+		Transport: tar.Transport{
+			Fs:      tar.NewFs(endpoint.Path),
+			CloseFN: close,
+		},
+	}
+
+	var err error
+	if endpoint != nil && len(endpoint.Path) > 0 {
+		err := t.LoadFile(endpoint.Path)
+		if err != nil {
+			log.Error().Err(err).Str("tar", endpoint.Path).Msg("tar> could not load tar file")
+			return nil, err
+		}
+	}
+	return t, err
+}
+
 //  provide a container image stream
-func New(rc io.ReadCloser) (types.Transport, error) {
+func New(rc io.ReadCloser) (*DockerImageTransport, error) {
 	// we cache the flattened image locally
 	f, err := cache.RandomFile()
 	if err != nil {
@@ -36,7 +70,7 @@ func New(rc io.ReadCloser) (types.Transport, error) {
 	// we return a pure tar image
 	filename := f.Name()
 
-	return tar.NewWithClose(&types.Endpoint{Path: filename}, func() {
+	return newWithClose(&types.Endpoint{Path: filename}, func() {
 		// remove temporary file on stream close
 		os.Remove(filename)
 	})

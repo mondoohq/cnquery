@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/motoros/capabilities"
 	"go.mondoo.io/mondoo/motor/motoros/types"
+	"go.mondoo.io/mondoo/nexus/assets"
 )
 
 func New() (*LocalTransport, error) {
@@ -59,4 +60,12 @@ func (t *LocalTransport) Capabilities() []capabilities.Capability {
 		capabilities.RunCommand,
 		capabilities.File,
 	}
+}
+
+func (t *LocalTransport) Kind() assets.Kind {
+	return assets.Kind_KIND_BARE_METAL
+}
+
+func (t *LocalTransport) Runtime() string {
+	return ""
 }

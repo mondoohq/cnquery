@@ -6,6 +6,7 @@ import (
 
 	docker_types "github.com/docker/docker/api/types"
 	"go.mondoo.io/mondoo/nexus/assets"
+	"go.mondoo.io/mondoo/motor/runtime"
 )
 
 type Images struct{}
@@ -28,7 +29,7 @@ func (a *Images) List() ([]*assets.Asset, error) {
 			Name:         strings.Join(dImg.RepoTags, ","),
 			Platform: &assets.Platform{
 				Kind:    assets.Kind_KIND_CONTAINER_IMAGE,
-				Runtime: "docker",
+				Runtime: runtime.RUNTIME_DOCKER,
 			},
 			Connections: []*assets.Connection{
 				&assets.Connection{
