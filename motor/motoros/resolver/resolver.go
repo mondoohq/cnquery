@@ -160,7 +160,7 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 	case "":
 		return nil, nil, errors.New("connection type is required, try `-t backend://` (docker://, local://, tar://, ssh://)")
 	default:
-		return nil, nil, errors.New("connection> unsupported backend, only docker://, local://, tar://, ssh:// are allowed'" + endpoint.Backend + "'")
+		return nil, nil, fmt.Errorf("connection> unsupported backend '%s', only docker://, local://, tar://, ssh:// are allowed", endpoint.Backend)
 	}
 
 	ids, err := GatherIDs(m, idDetectors)
