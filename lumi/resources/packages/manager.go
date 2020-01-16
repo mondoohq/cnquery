@@ -38,7 +38,7 @@ func ResolveSystemPkgManager(motor *motor.Motor) (OperatingSystemPkgManager, err
 	switch platform.Name {
 	case "manjaro", "arch": // arch family
 		pm = &PacmanPkgManager{motor: motor}
-	case "ubuntu", "debian", "raspbian": // debian family
+	case "ubuntu", "debian", "raspbian", "kali": // debian family
 		pm = &DebPkgManager{motor: motor}
 	case "redhat", "centos", "fedora", "amzn", "ol", "scientific", "photon": // rhel family
 		pm = &RpmPkgManager{motor: motor}
@@ -51,7 +51,7 @@ func ResolveSystemPkgManager(motor *motor.Motor) (OperatingSystemPkgManager, err
 	case "windows":
 		pm = &WinPkgManager{motor: motor}
 	default:
-		return nil, errors.New("could not detect suiteable package manager for platform: " + platform.Name)
+		return nil, errors.New("could not detect suitable package manager for platform: " + platform.Name)
 	}
 
 	return pm, nil
