@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/ghodss/yaml"
+  "sigs.k8s.io/yaml"
 	"go.mondoo.io/mondoo/leise"
 	"go.mondoo.io/mondoo/leise/db"
 	"go.mondoo.io/mondoo/llx"
