@@ -1,7 +1,5 @@
 syntax = "proto3";
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
-
 package mondoo.llx;
 option go_package = "llx";
 
