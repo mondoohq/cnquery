@@ -103,7 +103,7 @@ func TestFileChangeEvents(t *testing.T) {
 	time.AfterFunc(time.Duration(1*time.Millisecond), func() {
 		// change file content
 		mt := wt.mock.(*mock.Transport)
-		mt.Files["/tmp/test"].Content = "newtest"
+		mt.Fs.Files["/tmp/test"].Content = "newtest"
 	})
 
 	wg.Wait()
