@@ -67,10 +67,10 @@ func arrayBlockList(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 		}
 		finished := false
 
-		blockResult := map[int32]interface{}{}
+		blockResult := map[string]interface{}{}
 		allResults[idx] = blockResult
 		err := c.runFunctionBlock(bind, fun, func(res *RawResult) {
-			blockResult[res.Ref] = res.Data
+			blockResult[res.CodeID] = res.Data
 			if len(blockResult) == len(fun.Entrypoints) && !finished {
 				finishedBlocks++
 			}

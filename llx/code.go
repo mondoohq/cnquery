@@ -8,6 +8,7 @@ import (
 
 // AddChunk to the list of chunks
 func (l *Code) AddChunk(c *Chunk) {
+	l.Checksums[int32(len(l.Code))] = c.Checksum(l.Checksums)
 	l.Code = append(l.Code, c)
 }
 
