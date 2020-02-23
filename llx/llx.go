@@ -21,7 +21,6 @@ var emptyFunction = Function{}
 type RawResult struct {
 	Data   *RawData
 	CodeID string
-	Ref    int32
 }
 
 type stepCache struct {
@@ -66,7 +65,7 @@ type LeiseExecutor struct {
 	blockExecutors []*LeiseExecutor
 	runtime        *lumi.Runtime
 	code           *Code
-	entrypoints    map[int32]struct{}
+	entrypoints    map[int32]string
 	callback       ResultCallback
 	cache          Cache
 	calls          Calls
@@ -77,17 +76,17 @@ func (c *LeiseExecutor) watcherUID(ref int32) string {
 	return c.id + "\x00" + strconv.FormatInt(int64(ref), 10)
 }
 
-func errorResult(err error, ref int32) *RawResult {
+func errorResult(err error, codeID string) *RawResult {
 	return &RawResult{
-		Data: &RawData{Error: err},
-		Ref:  ref,
+		Data:   &RawData{Error: err},
+		CodeID: codeID,
 	}
 }
 
-func errorResultMsg(msg string, ref int32) *RawResult {
+func errorResultMsg(msg string, codeID string) *RawResult {
 	return &RawResult{
-		Data: &RawData{Error: errors.New(msg)},
-		Ref:  ref,
+		Data:   &RawData{Error: errors.New(msg)},
+		CodeID: codeID,
 	}
 }
 
@@ -105,16 +104,20 @@ func NewExecutor(code *Code, runtime *lumi.Runtime, callback ResultCallback) (*L
 	res := &LeiseExecutor{
 		id:          uuid.Must(uuid.NewV4()).String(),
 		runtime:     runtime,
-		entrypoints: make(map[int32]struct{}),
+		entrypoints: make(map[int32]string),
 		code:        code,
 		callback:    callback,
 	}
 
-	for _, c := range code.Entrypoints {
-		if c < 1 {
-			return nil, errors.New("cannot build executor with an incorrect entrypoint")
+	for _, ref := range code.Entrypoints {
+		id := code.Checksums[ref]
+		if id == "" {
+			return nil, errors.New("llx.executor> cannot execute with invalid ref ID")
 		}
-		res.entrypoints[c] = struct{}{}
+		if ref < 1 {
+			return nil, errors.New("llx.executor> cannot execute with invalid ref number")
+		}
+		res.entrypoints[ref] = id
 	}
 
 	return res, nil
@@ -205,9 +208,9 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, ref int3
 		return nil, 0, errors.New("Block function is nil")
 	}
 
-	blockResult := map[int32]interface{}{}
+	blockResult := map[string]interface{}{}
 	err := c.runFunctionBlock(bind, fun, func(res *RawResult) {
-		blockResult[res.Ref] = res.Data
+		blockResult[res.CodeID] = res.Data
 		if len(blockResult) == len(fun.Entrypoints) {
 			c.cache.Store(ref, &stepCache{
 				Result: &RawData{
@@ -338,7 +341,7 @@ func (c *LeiseExecutor) runChain(start int32) {
 
 		// back out of errors directly
 		if err != nil {
-			c.callback(errorResult(err, curRef))
+			c.callback(errorResult(err, c.entrypoints[curRef]))
 			return
 		}
 
@@ -350,9 +353,9 @@ func (c *LeiseExecutor) runChain(start int32) {
 
 		// if this is a result for an existing entrypoint send it
 		if res != nil {
-			if _, ok := c.entrypoints[curRef]; ok {
+			if codeID, ok := c.entrypoints[curRef]; ok {
 				log.Debug().Int32("ref", curRef).Msgf("exec> chain callback")
-				c.callback(&RawResult{Data: res, Ref: curRef, CodeID: c.code.Id})
+				c.callback(&RawResult{Data: res, CodeID: codeID})
 			}
 		}
 
@@ -379,12 +382,13 @@ func (c *LeiseExecutor) triggerChain(ref int32) {
 		return
 	}
 
+	codeID := c.entrypoints[ref]
 	res, ok := c.cache.Load(ref)
 	if !ok {
-		c.callback(errorResultMsg("exec> Cannot find results to chunk reference "+strconv.FormatInt(int64(ref), 10), ref))
+		c.callback(errorResultMsg("exec> Cannot find results to chunk reference "+strconv.FormatInt(int64(ref), 10), codeID))
 		return
 	}
 
 	log.Debug().Int32("ref", ref).Msgf("exec> trigger callback")
-	c.callback(&RawResult{Data: res.Result, Ref: ref, CodeID: c.code.Id})
+	c.callback(&RawResult{Data: res.Result, CodeID: codeID})
 }

@@ -171,7 +171,6 @@ func (r *RawData) Result() *Result {
 func (r *RawResult) Result() *Result {
 	res := r.Data.Result()
 	res.CodeId = r.CodeID
-	res.Ref = r.Ref
 	return res
 }
 

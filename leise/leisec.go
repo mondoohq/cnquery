@@ -121,6 +121,9 @@ func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.T
 			Code: &llx.Code{
 				Id:         "binding",
 				Parameters: 1,
+				Checksums: map[int32]string{
+					0: c.Result.Code.Checksums[c.Result.Code.ChunkIndex()-1],
+				},
 				Code: []*llx.Chunk{&llx.Chunk{
 					Call:      llx.Chunk_PRIMITIVE,
 					Primitive: &llx.Primitive{Type: string(typ)},
@@ -602,8 +605,15 @@ func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 		}
 
 		l := len(c.Result.Code.Entrypoints)
-		if l == 0 || c.Result.Code.Entrypoints[l-1] != ref {
-			c.Result.Code.Entrypoints = append(c.Result.Code.Entrypoints, ref)
+		// if the last entrypoint already points to this ref, skip it
+		if l != 0 && c.Result.Code.Entrypoints[l-1] == ref {
+			continue
+		}
+
+		c.Result.Code.Entrypoints = append(c.Result.Code.Entrypoints, ref)
+
+		if c.Result.Code.Checksums[ref-1] == "" {
+			return errors.New("Failed to compile expression, ref returned empty checksum ID for ref " + strconv.FormatInt(int64(ref), 10))
 		}
 	}
 
@@ -637,7 +647,9 @@ func CompileAST(ast *parser.AST, schema *lumi.Schema) (*llx.CodeBundle, error) {
 	c := compiler{
 		Schema: validateSchema(schema),
 		Result: &llx.CodeBundle{
-			Code:   &llx.Code{},
+			Code: &llx.Code{
+				Checksums: map[int32]string{},
+			},
 			Labels: &llx.Labels{},
 		},
 	}

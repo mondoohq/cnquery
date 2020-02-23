@@ -1,9 +1,12 @@
 package llx
 
 import (
+	"encoding/base64"
+	"encoding/binary"
 	"fmt"
 
 	"go.mondoo.io/mondoo/types"
+	"golang.org/x/crypto/blake2b"
 )
 
 func (p *Primitive) typeString(typ types.Type, stack *Code) string {
@@ -36,6 +39,73 @@ func (c *Chunk) Type(stack *Code) types.Type {
 		return types.Any
 	}
 	return types.Type(c.Function.Type)
+}
+
+// Checksum computes the checksum of this chunk
+func (c *Chunk) Checksum(checksums map[int32]string) string {
+	data := []byte(c.Id)
+
+	b := make([]byte, 4)
+	binary.LittleEndian.PutUint32(b, uint32(c.Call))
+	data = append(data, b...)
+
+	if c.Primitive != nil {
+		cs := c.Primitive.checksum(checksums)
+		data = append(data, cs...)
+	}
+
+	if c.Function != nil {
+		data = append(data, c.Function.checksum(checksums)...)
+	}
+
+	hash := blake2b.Sum512(data)
+	return base64.StdEncoding.EncodeToString(hash[:])
+}
+
+func (f *Function) checksum(checksums map[int32]string) []byte {
+	res := []byte(f.Type)
+
+	if f.Binding != 0 {
+		ref := checksums[f.Binding-1]
+		if ref == "" {
+			panic("Cannot compute checksum for chunk, it doesn't seem to reference a function on the stack")
+		}
+		res = append(res, ref...)
+	}
+
+	for i := range f.Args {
+		cs := f.Args[i].checksum(checksums)
+		res = append(res, cs...)
+	}
+
+	return res
+}
+
+func (p *Primitive) checksum(checksums map[int32]string) []byte {
+	ref, ok := p.Ref()
+	if ok {
+		refChecksum, ok := checksums[int32(ref-1)]
+		if !ok {
+			panic("Cannot compute checksum for primitive, it doesn't seem to reference a function on the stack")
+		}
+
+		return []byte(refChecksum)
+	}
+
+	res := []byte(p.Type)
+	res = append(res, p.Value...)
+
+	for i := range p.Array {
+		entry := p.Array[i]
+		res = append(res, entry.checksum(checksums)...)
+	}
+
+	for k, v := range p.Map {
+		res = append(res, k...)
+		res = append(res, v.checksum(checksums)...)
+	}
+
+	return res
 }
 
 // turns any "ref" types into whatever they are referencing

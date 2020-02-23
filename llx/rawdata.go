@@ -116,4 +116,4 @@ type RawResultByRef []*RawResult
 
 func (a RawResultByRef) Len() int           { return len(a) }
 func (a RawResultByRef) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a RawResultByRef) Less(i, j int) bool { return a[i].Ref < a[j].Ref }
+func (a RawResultByRef) Less(i, j int) bool { return a[i].CodeID < a[j].CodeID }

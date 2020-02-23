@@ -227,7 +227,7 @@ func runResourceFunction(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int3
 	// watch this field in the resource
 	err := c.runtime.WatchAndUpdate(rr, chunk.Id, wid, func(fieldData interface{}, fieldError error) {
 		if fieldError != nil {
-			c.callback(errorResult(fieldError, ref))
+			c.callback(errorResult(fieldError, c.entrypoints[ref]))
 			return
 		}
 
