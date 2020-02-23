@@ -1,14 +1,8 @@
 package llx
 
-import (
-	"encoding/base64"
-
-	"golang.org/x/crypto/blake2b"
-)
-
 // AddChunk to the list of chunks
 func (l *Code) AddChunk(c *Chunk) {
-	l.Checksums[int32(len(l.Code))] = c.Checksum(l.Checksums)
+	l.Checksums[l.ChunkIndex()+1] = c.Checksum(l.Checksums)
 	l.Code = append(l.Code, c)
 }
 
@@ -33,18 +27,7 @@ func (l *Code) LastChunk() *Chunk {
 
 // checksum from this code
 func (l *Code) checksum() string {
-	originalID := l.Id
-	l.Id = ""
-
-	data, err := l.Marshal()
-	if err != nil {
-		panic("Failed to marshal LLX code for checksum calculation. Critical failure.")
-	}
-
-	l.Id = originalID
-
-	hash := blake2b.Sum512(data)
-	return base64.StdEncoding.EncodeToString(hash[:])
+	return l.Checksums[l.ChunkIndex()]
 }
 
 // UpdateID of the piece of code

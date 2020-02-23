@@ -66,7 +66,7 @@ func (f *Function) checksum(checksums map[int32]string) []byte {
 	res := []byte(f.Type)
 
 	if f.Binding != 0 {
-		ref := checksums[f.Binding-1]
+		ref := checksums[f.Binding]
 		if ref == "" {
 			panic("Cannot compute checksum for chunk, it doesn't seem to reference a function on the stack")
 		}
@@ -84,7 +84,7 @@ func (f *Function) checksum(checksums map[int32]string) []byte {
 func (p *Primitive) checksum(checksums map[int32]string) []byte {
 	ref, ok := p.Ref()
 	if ok {
-		refChecksum, ok := checksums[int32(ref-1)]
+		refChecksum, ok := checksums[int32(ref)]
 		if !ok {
 			panic("Cannot compute checksum for primitive, it doesn't seem to reference a function on the stack")
 		}

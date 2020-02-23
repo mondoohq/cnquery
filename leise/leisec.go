@@ -122,7 +122,9 @@ func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.T
 				Id:         "binding",
 				Parameters: 1,
 				Checksums: map[int32]string{
-					0: c.Result.Code.Checksums[c.Result.Code.ChunkIndex()-1],
+					// we must provide the first chunk, which is a reference to the caller
+					// and which will always be number 1
+					1: c.Result.Code.Checksums[c.Result.Code.ChunkIndex()],
 				},
 				Code: []*llx.Chunk{&llx.Chunk{
 					Call:      llx.Chunk_PRIMITIVE,
@@ -612,7 +614,7 @@ func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 
 		c.Result.Code.Entrypoints = append(c.Result.Code.Entrypoints, ref)
 
-		if c.Result.Code.Checksums[ref-1] == "" {
+		if c.Result.Code.Checksums[ref] == "" {
 			return errors.New("Failed to compile expression, ref returned empty checksum ID for ref " + strconv.FormatInt(int64(ref), 10))
 		}
 	}
