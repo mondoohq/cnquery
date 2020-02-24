@@ -1,6 +1,8 @@
 package llx
 
 import (
+	"strconv"
+
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/types"
 )
@@ -12,6 +14,26 @@ type RawData struct {
 	Type  types.Type
 	Value interface{}
 	Error error
+}
+
+func (r *RawData) String() string {
+	switch r.Type {
+	case types.Bool:
+		b := r.Value.(bool)
+		if b {
+			return "true"
+		} else {
+			return "false"
+		}
+	case types.Int:
+		return strconv.FormatInt(r.Value.(int64), 10)
+	case types.Float:
+		return strconv.FormatFloat(r.Value.(float64), 'E', -1, 64)
+	case types.String:
+		return r.Value.(string)
+	default:
+		return r.Value.(string)
+	}
 }
 
 // NilData for the nil value
