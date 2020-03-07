@@ -15,6 +15,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	motor "go.mondoo.io/mondoo/motor/motoros"
+	"go.mondoo.io/mondoo/motor/motoros/platform"
 	"go.mondoo.io/mondoo/motor/motoros/platform/winbuild"
 )
 
@@ -41,9 +42,9 @@ func ResolveSystemPkgManager(motor *motor.Motor) (OperatingSystemPkgManager, err
 	case "ubuntu", "debian", "raspbian", "kali": // debian family
 		pm = &DebPkgManager{motor: motor}
 	case "redhat", "centos", "fedora", "amzn", "ol", "scientific", "photon": // rhel family
-		pm = &RpmPkgManager{motor: motor}
-	case "opensuse", "sles": // suse handling
-		pm = &SusePkgManager{RpmPkgManager{motor: motor}}
+		pm = &RpmPkgManager{motor: motor, platform: &platform}
+	case "opensuse", "sles", "opensuse-leap", "opensuse-tumbleweed": // suse handling
+		pm = &SusePkgManager{RpmPkgManager{motor: motor, platform: &platform}}
 	case "alpine": // alpine family
 		pm = &AlpinePkgManager{motor: motor}
 	case "mac_os_x": // mac os family
@@ -157,6 +158,7 @@ func (dpm *DebPkgManager) Available() (map[string]PackageUpdate, error) {
 // one since more data need to copied. Therefore the runtime check should be preferred over the static analysis
 type RpmPkgManager struct {
 	motor         *motor.Motor
+	platform      *platform.PlatformInfo
 	staticChecked bool
 	static        bool
 }
@@ -232,7 +234,7 @@ func (rpm *RpmPkgManager) runtimeList() ([]Package, error) {
 	command := fmt.Sprintf("rpm -qa --queryformat '%s'", rpm.queryFormat())
 	cmd, err := rpm.motor.Transport.RunCommand(command)
 	if err != nil {
-		return nil, fmt.Errorf("could not read package list")
+		return nil, errors.Wrap(err, "could not read package list")
 	}
 	return ParseRpmPackages(cmd.Stdout), nil
 }
@@ -247,7 +249,7 @@ func (rpm *RpmPkgManager) runtimeAvailable() (map[string]PackageUpdate, error) {
 	cmd, err := rpm.motor.Transport.RunCommand(script)
 	if err != nil {
 		log.Debug().Err(err).Msg("lumi[packages]> could not read package updates")
-		return nil, fmt.Errorf("could not read package update list")
+		return nil, errors.Wrap(err, "could not read package update list")
 	}
 	return ParseRpmUpdates(cmd.Stdout)
 }
@@ -255,25 +257,33 @@ func (rpm *RpmPkgManager) runtimeAvailable() (map[string]PackageUpdate, error) {
 func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 	rpmTmpDir, err := ioutil.TempDir(os.TempDir(), "mondoo-rpmdb")
 	if err != nil {
-		return nil, fmt.Errorf("could not read package list")
+		return nil, errors.Wrap(err, "could not create local temp directory")
 	}
 	defer os.RemoveAll(rpmTmpDir)
 
 	// fetch rpm database file and store it in local tmp file
 	f, err := rpm.motor.Transport.File("/var/lib/rpm/Packages")
+
+	// on opensuse, the directory usr/lib/sysimage/rpm/Packages is used in tar
+	if err != nil && rpm.platform != nil && rpm.platform.IsFamily("suse") {
+		log.Debug().Msg("fallback to opensuse rpm package location")
+		f, err = rpm.motor.Transport.File("/usr/lib/sysimage/rpm/Packages")
+	}
+
+	// throw error if we stil couldn't find the packages file
 	if err != nil {
-		return nil, fmt.Errorf("could not read package list")
+		return nil, errors.Wrap(err, "could not fetch rpm package list")
 	}
 
 	fWriter, err := os.Create(filepath.Join(rpmTmpDir, "Packages"))
 	if err != nil {
 		log.Error().Err(err).Msg("lumi[packages]> could not create tmp file for rpm database")
-		return nil, fmt.Errorf("could not read package list")
+		return nil, errors.Wrap(err, "could not create local temp file")
 	}
 	_, err = io.Copy(fWriter, f)
 	if err != nil {
 		log.Error().Err(err).Msg("lumi[packages]> could not copy rpm to tmp file")
-		return nil, fmt.Errorf("could not read package list")
+		return nil, fmt.Errorf("could not cache rpm package list")
 	}
 
 	log.Debug().Str("rpmdb", rpmTmpDir).Msg("cached rpm database locally")
@@ -290,7 +300,7 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 	err = c.Run()
 	if err != nil {
 		log.Error().Err(err).Msg("lumi[packages]> could not execute rpm locally")
-		return nil, fmt.Errorf("could not read package list")
+		return nil, errors.Wrap(err, "could not read package list")
 	}
 
 	return ParseRpmPackages(&stdoutBuffer), nil
