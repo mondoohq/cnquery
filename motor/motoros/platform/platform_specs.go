@@ -314,7 +314,7 @@ var opensuse = &PlatformResolver{
 	Name:    "opensuse",
 	Familiy: false,
 	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
-		if di.Name == "opensuse" || di.Name == "opensuse-leap" {
+		if di.Name == "opensuse" || di.Name == "opensuse-leap" || di.Name == "opensuse-tumbleweed" {
 			return true, nil
 		}
 

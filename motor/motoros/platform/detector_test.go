@@ -252,6 +252,19 @@ func TestKaliRollingDetector(t *testing.T) {
 	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
 }
 
+func TestOpenSuse13Detector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-opensuse-13.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(t, true, resolved, "platform should be resolvable")
+	assert.Equal(t, "opensuse", di.Name, "os name should be identified")
+	assert.Equal(t, "openSUSE", di.Title, "os title should be identified")
+	assert.Equal(t, "13.2", di.Release, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"suse", "linux", "unix", "os"}, di.Family)
+}
+
 func TestOpenSuseLeap42Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-opensuse-leap-42.3.toml")
 	assert.Nil(t, err, "was able to create the transport")
@@ -278,8 +291,21 @@ func TestOpenSuseLeap15Detector(t *testing.T) {
 	assert.Equal(t, []string{"suse", "linux", "unix", "os"}, di.Family)
 }
 
+func TestOpenSuseTumbleweedDetector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-opensuse-tumbleweed.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(t, true, resolved, "platform should be resolvable")
+	assert.Equal(t, "opensuse-tumbleweed", di.Name, "os name should be identified")
+	assert.Equal(t, "openSUSE Tumbleweed", di.Title, "os title should be identified")
+	assert.Equal(t, "20200305", di.Release, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"suse", "linux", "unix", "os"}, di.Family)
+}
+
 func TestSuse12Detector(t *testing.T) {
-	detector, err := newDetector("./testdata/detect-suse-12.toml")
+	detector, err := newDetector("./testdata/detect-suse-sles-12.toml")
 	assert.Nil(t, err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
@@ -287,6 +313,32 @@ func TestSuse12Detector(t *testing.T) {
 	assert.Equal(t, "sles", di.Name, "os name should be identified")
 	assert.Equal(t, "SLES", di.Title, "os title should be identified")
 	assert.Equal(t, "12.3", di.Release, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"suse", "linux", "unix", "os"}, di.Family)
+}
+
+func TestSuse125Detector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-suse-sles-12.5.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(t, true, resolved, "platform should be resolvable")
+	assert.Equal(t, "sles", di.Name, "os name should be identified")
+	assert.Equal(t, "SLES", di.Title, "os title should be identified")
+	assert.Equal(t, "12.5", di.Release, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"suse", "linux", "unix", "os"}, di.Family)
+}
+
+func TestSuse15Detector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-suse-sles-15.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(t, true, resolved, "platform should be resolvable")
+	assert.Equal(t, "sles", di.Name, "os name should be identified")
+	assert.Equal(t, "SLES", di.Title, "os title should be identified")
+	assert.Equal(t, "15.1", di.Release, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"suse", "linux", "unix", "os"}, di.Family)
 }
