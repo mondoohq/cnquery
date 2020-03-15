@@ -2,9 +2,10 @@ package networkinterface
 
 import (
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"net"
 	"sort"
+
+	"github.com/rs/zerolog/log"
 )
 
 func filterNetworkInterface(interfaces []Interface, flagFilter func(flags net.Flags) bool) []Interface {

@@ -49,6 +49,7 @@ func (r *InterfaceResource) Interfaces() ([]Interface, error) {
 		return nil, err
 	}
 
+	log.Debug().Strs("families", pi.Family).Msg("check if platform is supported for network interface")
 	if r.motor.IsLocalTransport() {
 		handler := &GoNativeInterfaceHandler{}
 		return handler.Interfaces()
@@ -58,6 +59,7 @@ func (r *InterfaceResource) Interfaces() ([]Interface, error) {
 		}
 		return handler.Interfaces()
 	} else if pi.IsFamily(platform.FAMILY_LINUX) {
+		log.Debug().Msg("detected linux platform")
 		handler := &LinuxInterfaceHandler{
 			motor: r.motor,
 		}
@@ -127,7 +129,80 @@ type LinuxInterfaceHandler struct {
 }
 
 func (i *LinuxInterfaceHandler) Interfaces() ([]Interface, error) {
-	return nil, errors.New("network interfaces is not supported for linux")
+	// TODO: support extracting the information via /sys/class/net/, /proc/net/fib_trie
+	// fetch all network adapter via ip addr show
+	cmd, err := i.motor.Transport.RunCommand("ip -o addr show")
+	if err != nil {
+		return nil, errors.Wrap(err, "could not fetch macos network adapter")
+	}
+
+	return i.ParseIpAddr(cmd.Stdout)
+}
+
+func (i *LinuxInterfaceHandler) ParseIpAddr(r io.Reader) ([]Interface, error) {
+	interfaces := map[string]Interface{}
+
+	scanner := bufio.NewScanner(r)
+	ipaddrParse := regexp.MustCompile(`^(\d):\s(\w*)\s*(inet|inet6)\s([\w\d\./\:]+)\s(.*)$`)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		m := ipaddrParse.FindStringSubmatch(line)
+		name := m[2]
+
+		idx, err := strconv.Atoi(strings.TrimSpace(m[1]))
+		if err != nil {
+			log.Warn().Err(err).Msg("could not parse ip addr idx")
+			continue
+		}
+
+		inet, ok := interfaces[name]
+		if !ok {
+			inet = Interface{
+				Index: idx,
+				Name:  name,
+			}
+		}
+
+		var ip net.IP
+		if m[3] == "inet" {
+			ipv4Addr, _, err := net.ParseCIDR(m[4])
+			if err != nil {
+				log.Error().Err(err).Msg("could not parse ipv4")
+			}
+
+			ip = ipv4Addr
+		} else if m[3] == "inet6" {
+			ipv6Addr, _, err := net.ParseCIDR(m[4])
+			if err != nil {
+				log.Error().Err(err).Msg("could not parse ipv6")
+			}
+			ip = ipv6Addr
+		}
+
+		inet.Addrs = append(inet.Addrs, &ipAddr{IP: ip})
+
+		var flags net.Flags
+		flags |= net.FlagUp
+
+		if strings.Contains(m[5], "host") {
+			flags |= net.FlagLoopback
+		} else {
+			flags |= net.FlagBroadcast
+		}
+
+		inet.Flags = flags
+
+		interfaces[name] = inet
+	}
+
+	res := []Interface{}
+	for i := range interfaces {
+		res = append(res, interfaces[i])
+	}
+
+	return res, nil
 }
 
 type MacOSInterfaceHandler struct {
@@ -138,7 +213,7 @@ func (i *MacOSInterfaceHandler) Interfaces() ([]Interface, error) {
 	// fetch all network adapter
 	cmd, err := i.motor.Transport.RunCommand("ifconfig")
 	if err != nil {
-		return nil, errors.Wrap(err, "could not fetch windows network adapter")
+		return nil, errors.Wrap(err, "could not fetch macos network adapter")
 	}
 
 	return i.ParseMacOS(cmd.Stdout)
