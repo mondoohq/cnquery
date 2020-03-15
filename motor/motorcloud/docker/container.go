@@ -65,10 +65,12 @@ func (a *Container) List() ([]*assets.Asset, error) {
 		}
 
 		// fetch docker specific metadata
-		asset.Labels["mondoo.app/instance"] = dContainer.ID
-		asset.Labels["mondoo.app/image-id"] = dContainer.ImageID
-		asset.Labels["docker.io/image-name"] = dContainer.Image
-		asset.Labels["docker.io/names"] = name
+		labels := map[string]string{}
+		labels["mondoo.app/instance"] = dContainer.ID
+		labels["mondoo.app/image-id"] = dContainer.ImageID
+		labels["docker.io/image-name"] = dContainer.Image
+		labels["docker.io/names"] = name
+		asset.Labels = labels
 
 		container[i] = asset
 	}

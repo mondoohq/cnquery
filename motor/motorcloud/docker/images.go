@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	docker_types "github.com/docker/docker/api/types"
-	"go.mondoo.io/mondoo/nexus/assets"
 	"go.mondoo.io/mondoo/motor/runtime"
+	"go.mondoo.io/mondoo/nexus/assets"
 )
 
 type Images struct{}
@@ -45,9 +45,11 @@ func (a *Images) List() ([]*assets.Asset, error) {
 			asset.Labels[key] = dImg.Labels[key]
 		}
 
-		asset.Labels["mondoo.app/image-id"] = dImg.ID
-		asset.Labels["docker.io/tags"] = strings.Join(dImg.RepoTags, ",")
-		asset.Labels["docker.io/digests"] = strings.Join(dImg.RepoDigests, ",")
+		labels := map[string]string{}
+		labels["mondoo.app/image-id"] = dImg.ID
+		labels["docker.io/tags"] = strings.Join(dImg.RepoTags, ",")
+		labels["docker.io/digests"] = strings.Join(dImg.RepoDigests, ",")
+		asset.Labels = labels
 
 		imgs[i] = asset
 	}

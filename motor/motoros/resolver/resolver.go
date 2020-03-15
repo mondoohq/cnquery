@@ -22,37 +22,45 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 )
 
-func New(endpoint *types.Endpoint, idDetectors ...string) (*motor.Motor, []string, error) {
+func New(endpoint *types.Endpoint, idDetectors ...string) (*motor.Motor, MetaInfo, error) {
 	m, identifier, err := ResolveTransport(endpoint, idDetectors)
 	if err != nil {
-		return nil, nil, err
+		return nil, MetaInfo{}, err
 	}
 	return m, identifier, err
 }
 
-func NewFromUrl(uri string) (*motor.Motor, []string, error) {
+func NewFromUrl(uri string) (*motor.Motor, MetaInfo, error) {
 	t := &types.Endpoint{}
 	err := t.ParseFromURI(uri)
 	if err != nil {
-		return nil, nil, err
+		return nil, MetaInfo{}, err
 	}
 	return New(t)
 }
 
-func NewWithUrlAndKey(uri string, key string) (*motor.Motor, []string, error) {
+func NewWithUrlAndKey(uri string, key string) (*motor.Motor, MetaInfo, error) {
 	t := &types.Endpoint{
 		PrivateKeyPath: key,
 	}
 	err := t.ParseFromURI(uri)
 	if err != nil {
-		return nil, nil, err
+		return nil, MetaInfo{}, err
 	}
 	return New(t)
 }
 
-func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Motor, []string, error) {
+type MetaInfo struct {
+	Name         string
+	ReferenceIDs []string
+	Labels       map[string]string
+}
+
+func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Motor, MetaInfo, error) {
 	var m *motor.Motor
+	var name string
 	var identifier []string
+	var labels map[string]string
 	var err error
 
 	switch endpoint.Backend {
@@ -60,35 +68,35 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 		log.Debug().Msg("connection> load mock transport")
 		trans, err := mock.New()
 		if err != nil {
-			return nil, nil, err
+			return nil, MetaInfo{}, err
 		}
 
 		m, err = motor.New(trans)
 		if err != nil {
-			return nil, nil, err
+			return nil, MetaInfo{}, err
 		}
 	case "nodejs":
 		log.Debug().Msg("connection> load nodejs transport")
 		// NOTE: while similar to local transport, the ids are completely different
 		trans, err := local.New()
 		if err != nil {
-			return nil, nil, err
+			return nil, MetaInfo{}, err
 		}
 
 		m, err = motor.New(trans)
 		if err != nil {
-			return nil, nil, err
+			return nil, MetaInfo{}, err
 		}
 	case "local":
 		log.Debug().Msg("connection> load local transport")
 		trans, err := local.New()
 		if err != nil {
-			return nil, nil, err
+			return nil, MetaInfo{}, err
 		}
 
 		m, err = motor.New(trans)
 		if err != nil {
-			return nil, nil, err
+			return nil, MetaInfo{}, err
 		}
 
 		pi, err := m.Platform()
@@ -102,39 +110,41 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 		// TODO: we need to generate an artifact id
 		trans, err := tar.New(endpoint)
 		if err != nil {
-			return nil, nil, err
+			return nil, MetaInfo{}, err
 		}
 
 		m, err = motor.New(trans)
 		if err != nil {
-			return nil, nil, err
+			return nil, MetaInfo{}, err
 		}
 	case "docker":
 		log.Debug().Msg("connection> load docker transport")
-		var id string
-		trans, id, err := ResolveDockerTransport(endpoint)
+		trans, info, err := ResolveDockerTransport(endpoint)
 		if err != nil {
-			return nil, nil, err
+			return nil, MetaInfo{}, err
 		}
 		m, err = motor.New(trans)
 		if err != nil {
-			return nil, nil, err
+			return nil, MetaInfo{}, err
 		}
 
+		name = info.Name
+		labels = info.Labels
+
 		// TODO: can we make the id optional here, we may want to use an approach that is similar to ssh
-		if len(id) > 0 {
-			identifier = append(identifier, id)
+		if len(info.Identifier) > 0 {
+			identifier = append(identifier, info.Identifier)
 		}
 	case "ssh":
 		log.Debug().Msg("connection> load ssh transport")
 		trans, err := ssh.New(endpoint)
 		if err != nil {
-			return nil, nil, err
+			return nil, MetaInfo{}, err
 		}
 
 		m, err = motor.New(trans)
 		if err != nil {
-			return nil, nil, err
+			return nil, MetaInfo{}, err
 		}
 
 		// for windows, we also collect the machine id
@@ -148,19 +158,19 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 		log.Debug().Msg("connection> load winrm transport")
 		trans, err := winrm.New(endpoint)
 		if err != nil {
-			return nil, nil, err
+			return nil, MetaInfo{}, err
 		}
 
 		m, err = motor.New(trans)
 		if err != nil {
-			return nil, nil, err
+			return nil, MetaInfo{}, err
 		}
 
 		idDetectors = append(idDetectors, "machineid")
 	case "":
-		return nil, nil, errors.New("connection type is required, try `-t backend://` (docker://, local://, tar://, ssh://)")
+		return nil, MetaInfo{}, errors.New("connection type is required, try `-t backend://` (docker://, local://, tar://, ssh://)")
 	default:
-		return nil, nil, fmt.Errorf("connection> unsupported backend '%s', only docker://, local://, tar://, ssh:// are allowed", endpoint.Backend)
+		return nil, MetaInfo{}, fmt.Errorf("connection> unsupported backend '%s', only docker://, local://, tar://, ssh:// are allowed", endpoint.Backend)
 	}
 
 	ids, err := GatherIDs(m, idDetectors)
@@ -170,7 +180,11 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 		identifier = append(identifier, ids...)
 	}
 
-	return m, identifier, err
+	return m, MetaInfo{
+		Name:         name,
+		ReferenceIDs: identifier,
+		Labels:       labels,
+	}, err
 }
 
 func GatherIDs(m *motor.Motor, idDetectors []string) ([]string, error) {
