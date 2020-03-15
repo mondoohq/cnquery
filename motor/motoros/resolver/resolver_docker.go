@@ -16,6 +16,12 @@ import (
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
+type DockerInfo struct {
+	Name       string
+	Identifier string
+	Labels     map[string]string
+}
+
 // When we talk about Docker, users think at leasst of 3 different things:
 // - container runtime (e.g. docker engine)
 // - container image (eg. from docker engine or registry)
@@ -43,7 +49,7 @@ import (
 //
 // Therefore, this package will only implement the auto-discovery and
 // redirect to specific implementations once the disovery is completed
-func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, string, error) {
+func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, DockerInfo, error) {
 	// 0. check if we have a tar as input
 	//    detect if the tar is a container image format -> container image
 	//    or a container snapshot format -> container snapshot
@@ -54,7 +60,7 @@ func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, string, 
 	// 4. check if we have a descriptor for a registry -> container image
 
 	if endpoint == nil || len(endpoint.Host) == 0 {
-		return nil, "", errors.New("no endpoint provided")
+		return nil, DockerInfo{}, errors.New("no endpoint provided")
 	}
 
 	// TODO: check if we are pointing to a local tar file
@@ -78,15 +84,17 @@ func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, string, 
 
 			rc := mutate.Extract(img)
 			transport, err := image.New(rc)
-			return transport, identifier, err
+			return transport, DockerInfo{
+				Identifier: identifier,
+			}, err
 		} else {
 			log.Debug().Msg("detected docker container snapshot")
 			transport, err := snapshot.NewFromFile(endpoint.Host)
-			return transport, "", err
+			return transport, DockerInfo{}, err
 		}
 
 		// TODO: detect file format
-		return nil, "", errors.New("could not find the container reference")
+		return nil, DockerInfo{}, errors.New("could not find the container reference")
 	}
 
 	log.Debug().Msg("try to connect to docker engine")
@@ -98,11 +106,19 @@ func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, string, 
 			if ci.Running {
 				log.Debug().Msg("found running container " + ci.ID)
 				transport, err := docker_engine.New(ci.ID)
-				return transport, motorcloud_docker.MondooContainerID(ci.ID), err
+				return transport, DockerInfo{
+					Name:       ci.ID,
+					Identifier: motorcloud_docker.MondooContainerID(ci.ID),
+					Labels:     ci.Labels,
+				}, err
 			} else {
 				log.Debug().Msg("found stopped container " + ci.ID)
 				transport, err := snapshot.NewFromDockerEngine(ci.ID)
-				return transport, motorcloud_docker.MondooContainerID(ci.ID), err
+				return transport, DockerInfo{
+					Name:       ci.ID,
+					Identifier: motorcloud_docker.MondooContainerID(ci.ID),
+					Labels:     ci.Labels,
+				}, err
 			}
 		}
 
@@ -111,7 +127,7 @@ func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, string, 
 			log.Debug().Msg("found docker engine image " + ii.ID)
 			img, rc, err := image.LoadFromDockerEngine(ii.ID)
 			if err != nil {
-				return nil, "", err
+				return nil, DockerInfo{}, err
 			}
 
 			var identifier string
@@ -121,7 +137,11 @@ func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, string, 
 			}
 
 			transport, err := image.New(rc)
-			return transport, identifier, err
+			return transport, DockerInfo{
+				Name:       ii.Name,
+				Identifier: identifier,
+				Labels:     ii.Labels,
+			}, err
 		}
 	}
 
@@ -133,7 +153,7 @@ func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, string, 
 
 		img, rc, err := image.LoadFromRegistry(tag)
 		if err != nil {
-			return nil, "", err
+			return nil, DockerInfo{}, err
 		}
 
 		var identifier string
@@ -143,12 +163,14 @@ func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, string, 
 		}
 
 		transport, err := image.New(rc)
-		return transport, identifier, err
+		return transport, DockerInfo{
+			Identifier: identifier,
+		}, err
 	} else {
 		log.Debug().Str("image", endpoint.Host).Msg("Could not detect a valid repository url")
-		return nil, "", err
+		return nil, DockerInfo{}, err
 	}
 
 	// if we reached here, we assume we have a name of an image or container from a registry
-	return nil, "", errors.New("could not find the container reference")
+	return nil, DockerInfo{}, errors.New("could not find the container reference")
 }

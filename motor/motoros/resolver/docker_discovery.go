@@ -115,6 +115,8 @@ func (e *dockerEngineDiscovery) ImageList() ([]string, error) {
 type ContainerInfo struct {
 	ID      string
 	Running bool
+	Labels  map[string]string
+	Arch    string
 }
 
 // will resolve name and id to a container id
@@ -132,11 +134,24 @@ func (e *dockerEngineDiscovery) ContainerInfo(name string) (ContainerInfo, error
 
 	ci.ID = cdata.ID
 	ci.Running = cdata.State.Running
+
+	// fetch docker specific metadata
+	labels := map[string]string{}
+	labels["mondoo.app/instance"] = cdata.ID
+	// labels["mondoo.app/image-id"] = cdata.ImageID
+	labels["docker.io/image-name"] = cdata.Image
+	labels["docker.io/names"] = name
+
+	ci.Labels = labels
+
 	return ci, nil
 }
 
 type ImageInfo struct {
-	ID string
+	ID     string
+	Name   string
+	Labels map[string]string
+	Arch   string
 }
 
 func (e *dockerEngineDiscovery) ImageInfo(name string) (ImageInfo, error) {
@@ -151,6 +166,26 @@ func (e *dockerEngineDiscovery) ImageInfo(name string) (ImageInfo, error) {
 		return ii, err
 	}
 
+	switch res.Architecture {
+	case "amd64":
+		ii.Arch = "x86_64"
+	}
+
+	labels := map[string]string{}
+	labels["mondoo.app/image-id"] = res.ID
+	labels["docker.io/tags"] = strings.Join(res.RepoTags, ",")
+	labels["docker.io/digests"] = strings.Join(res.RepoDigests, ",")
+
+	ii.Name = ShortContainerImageID(res.ID)
 	ii.ID = res.ID
+	ii.Labels = labels
 	return ii, nil
+}
+
+func ShortContainerImageID(id string) string {
+	id = strings.Replace(id, "sha256:", "", -1)
+	if len(id) > 12 {
+		return id[0:12]
+	}
+	return id
 }
