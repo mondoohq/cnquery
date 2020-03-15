@@ -118,23 +118,41 @@ func TestMacOSRemoteInterface(t *testing.T) {
 	assert.Equal(t, "192.168.178.45", ip)
 }
 
-// func TestLinuxRemoteInterface(t *testing.T) {
-// 	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/linux.toml"})
-// 	require.NoError(t, err)
+func TestLinuxRemoteInterface(t *testing.T) {
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/linux_remote.toml"})
+	require.NoError(t, err)
 
-// 	m, err := motor.New(mock)
-// 	require.NoError(t, err)
+	m, err := motor.New(mock)
+	require.NoError(t, err)
 
-// 	ifaces := networkinterface.New(m)
-// 	list, err := ifaces.Interfaces()
-// 	require.NoError(t, err)
-// 	assert.True(t, len(list) > 0)
-// 	inet := list[0]
-// 	assert.Equal(t, "lo0", inet.Name)
-// 	assert.Equal(t, 1, inet.Index)
-// 	assert.Equal(t, 16384, inet.MTU)
-// 	assert.Equal(t, "up|loopback|multicast", inet.Flags.String())
-// 	assert.Equal(t, "", inet.HardwareAddr.String())
-// 	assert.True(t, len(inet.Addrs) > 0)
-// 	assert.True(t, len(inet.MulticastAddrs) > 0)
-// }
+	ifaces := networkinterface.New(m)
+	list, err := ifaces.Interfaces()
+	require.NoError(t, err)
+	assert.True(t, len(list) > 0)
+	inet := list[0]
+	assert.Equal(t, "lo", inet.Name)
+	assert.Equal(t, 1, inet.Index)
+	assert.Equal(t, 0, inet.MTU)
+	assert.Equal(t, "up|loopback", inet.Flags.String())
+	assert.Equal(t, "", inet.HardwareAddr.String())
+	assert.True(t, len(inet.Addrs) == 2)
+	assert.True(t, len(inet.MulticastAddrs) == 0)
+
+	inet = list[1]
+	assert.Equal(t, "eth0", inet.Name)
+	assert.Equal(t, 2, inet.Index)
+	assert.Equal(t, 0, inet.MTU)
+	assert.Equal(t, "up|broadcast", inet.Flags.String())
+	assert.Equal(t, "", inet.HardwareAddr.String())
+	assert.True(t, len(inet.Addrs) == 2)
+	assert.True(t, len(inet.MulticastAddrs) == 0)
+
+	inetAdapter, err := ifaces.InterfaceByName("eth0")
+	require.NoError(t, err)
+	assert.Equal(t, "eth0", inetAdapter.Name)
+	assert.Equal(t, "", inetAdapter.HardwareAddr.String())
+
+	ip, err := networkinterface.HostIP(list)
+	require.NoError(t, err)
+	assert.Equal(t, "10.128.0.4", ip)
+}
