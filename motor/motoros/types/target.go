@@ -19,6 +19,7 @@ type Endpoint struct {
 	Port           string `json:"port"`
 	Path           string `json:"path"`
 	PrivateKeyPath string `json:"private_key"`
+	Insecure       bool   `json:"insecure"` // disable ssl/tls checks
 }
 
 // ParseFromURI will pars a URI and return the proper endpoint
