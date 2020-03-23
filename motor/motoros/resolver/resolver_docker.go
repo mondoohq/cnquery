@@ -151,7 +151,7 @@ func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, DockerIn
 	if err == nil {
 		log.Debug().Str("tag", tag.Name()).Msg("found valid container registry reference")
 
-		img, rc, err := image.LoadFromRegistry(tag)
+		img, rc, err := image.LoadFromRegistry(tag, image.WithInsecure(endpoint.Insecure))
 		if err != nil {
 			return nil, DockerInfo{}, err
 		}

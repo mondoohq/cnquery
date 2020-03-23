@@ -1,12 +1,15 @@
 package image
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -76,15 +79,61 @@ func New(rc io.ReadCloser) (*DockerImageTransport, error) {
 	})
 }
 
-func LoadFromRegistry(tag name.Tag) (v1.Image, io.ReadCloser, error) {
+// Option is a functional option
+// see https://www.sohamkamani.com/golang/options-pattern/
+type Option func(*options) error
+
+type options struct {
+	insecure bool
+}
+
+func WithInsecure(insecure bool) Option {
+	return func(o *options) error {
+		o.insecure = insecure
+		return nil
+	}
+}
+
+func LoadFromRegistry(tag name.Tag, opts ...Option) (v1.Image, io.ReadCloser, error) {
 	auth, err := authn.DefaultKeychain.Resolve(tag.Registry)
 	if err != nil {
 		fmt.Printf("getting creds for %q: %v", tag, err)
 		return nil, nil, err
 	}
 
+	o := &options{
+		insecure: false,
+	}
+
+	for _, option := range opts {
+		if err := option(o); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	// mimic http.DefaultTransport
+	tr := &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+
+	if o.insecure {
+		tr.TLSClientConfig = &tls.Config{
+			InsecureSkipVerify: true,
+		}
+	}
+
 	// fmt.Printf("%v\n", tag)
-	img, err := remote.Image(tag, remote.WithAuth(auth), remote.WithTransport(http.DefaultTransport))
+	img, err := remote.Image(tag, remote.WithAuth(auth), remote.WithTransport(tr))
 	if err != nil {
 		return nil, nil, err
 	}
