@@ -38,7 +38,7 @@ func (a *Images) List() ([]*assets.Asset, error) {
 			Name:         strings.Join(dImg.RepoTags, ","),
 			Platform: &assets.Platform{
 				Kind:    assets.Kind_KIND_CONTAINER_IMAGE,
-				Runtime: runtime.RUNTIME_DOCKER,
+				Runtime: runtime.RUNTIME_DOCKER_IMAGE,
 			},
 			Connections: []*assets.Connection{
 				&assets.Connection{

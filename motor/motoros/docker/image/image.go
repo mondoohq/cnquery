@@ -35,7 +35,7 @@ func (t *DockerImageTransport) Kind() assets.Kind {
 }
 
 func (t *DockerImageTransport) Runtime() string {
-	return runtime.RUNTIME_DOCKER
+	return runtime.RUNTIME_DOCKER_IMAGE
 }
 
 func newWithClose(endpoint *types.Endpoint, close func()) (*DockerImageTransport, error) {
