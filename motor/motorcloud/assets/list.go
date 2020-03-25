@@ -6,6 +6,7 @@ import (
 	"go.mondoo.io/mondoo/motor/motorcloud/aws"
 	"go.mondoo.io/mondoo/motor/motorcloud/docker"
 	"go.mondoo.io/mondoo/motor/motorcloud/gcp"
+	"go.mondoo.io/mondoo/motor/runtime"
 	"go.mondoo.io/mondoo/motor/stringslice"
 	"go.mondoo.io/mondoo/nexus/assets"
 )
@@ -14,42 +15,31 @@ type Plugin interface {
 	List() ([]*assets.Asset, error)
 }
 
-const (
-	RUNTIME_AWS_EC2          = "aws ec2"
-	RUNTIME_AWS_SSM_MANAGED  = "aws ssm-managed"
-	RUNTIME_AWS_ECR          = "aws ecr"
-	RUNTIME_GCP_COMPUTE      = "gcp compute"
-	RUNTIME_GCP_GCR          = "gcp gcr"
-	RUNTIME_DOCKER_CONTAINER = "docker container"
-	RUNTIME_DOCKER_IMAGE     = "docker image"
-	RUNTIME_DOCKER_REGISTRY  = "docker registry"
-)
-
 func ListAssets(runtimes ...string) ([]*assets.Asset, error) {
 	askRuntimes := []Plugin{}
 
-	if stringslice.Contains(runtimes, RUNTIME_AWS_EC2) ||
-		stringslice.Contains(runtimes, RUNTIME_AWS_SSM_MANAGED) ||
-		stringslice.Contains(runtimes, RUNTIME_AWS_ECR) {
+	if stringslice.Contains(runtimes, runtime.RUNTIME_AWS_EC2) ||
+		stringslice.Contains(runtimes, runtime.RUNTIME_AWS_SSM_MANAGED) ||
+		stringslice.Contains(runtimes, runtime.RUNTIME_AWS_ECR) {
 		cfg, err := external.LoadDefaultAWSConfig()
 		if err != nil {
 			log.Warn().Err(err).Msg("skip aws assets")
 		} else {
-			if stringslice.Contains(runtimes, RUNTIME_AWS_EC2) {
+			if stringslice.Contains(runtimes, runtime.RUNTIME_AWS_EC2) {
 				plugin_aws, err := aws.NewEc2Discovery(cfg)
 				if err == nil {
 					askRuntimes = append(askRuntimes, plugin_aws)
 				}
 			}
 
-			if stringslice.Contains(runtimes, RUNTIME_AWS_SSM_MANAGED) {
+			if stringslice.Contains(runtimes, runtime.RUNTIME_AWS_SSM_MANAGED) {
 				plugin_aws, err := aws.NewSSMManagedInstancesDiscovery(cfg)
 				if err == nil {
 					askRuntimes = append(askRuntimes, plugin_aws)
 				}
 			}
 
-			if stringslice.Contains(runtimes, RUNTIME_AWS_ECR) {
+			if stringslice.Contains(runtimes, runtime.RUNTIME_AWS_ECR) {
 				plugin_aws, err := aws.NewEcrImages(cfg)
 				if err == nil {
 					askRuntimes = append(askRuntimes, plugin_aws)
@@ -58,23 +48,27 @@ func ListAssets(runtimes ...string) ([]*assets.Asset, error) {
 		}
 	}
 
-	if stringslice.Contains(runtimes, RUNTIME_GCP_COMPUTE) {
+	if stringslice.Contains(runtimes, runtime.RUNTIME_GCP_COMPUTE) {
 		askRuntimes = append(askRuntimes, gcp.NewCompute())
 	}
 
-	if stringslice.Contains(runtimes, RUNTIME_GCP_GCR) {
+	if stringslice.Contains(runtimes, runtime.RUNTIME_GCP_GCR) {
 		askRuntimes = append(askRuntimes, gcp.NewGCRImages())
 	}
 
-	if stringslice.Contains(runtimes, RUNTIME_DOCKER_CONTAINER) {
+	if stringslice.Contains(runtimes, runtime.RUNTIME_DOCKER_CONTAINER) {
 		askRuntimes = append(askRuntimes, &docker.Container{})
 	}
 
-	if stringslice.Contains(runtimes, RUNTIME_DOCKER_IMAGE) {
+	if stringslice.Contains(runtimes, runtime.RUNTIME_DOCKER_IMAGE) {
 		askRuntimes = append(askRuntimes, &docker.Images{})
 	}
 
-	if stringslice.Contains(runtimes, RUNTIME_DOCKER_REGISTRY) {
+	if stringslice.Contains(runtimes, runtime.RUNTIME_DOCKER_REGISTRY) {
+		askRuntimes = append(askRuntimes, &docker.DockerRegistryImages{})
+	}
+
+	if stringslice.Contains(runtimes, runtime.RUNTIME_DOCKER_REGISTRY) {
 		askRuntimes = append(askRuntimes, &docker.DockerRegistryImages{})
 	}
 

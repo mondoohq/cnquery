@@ -79,7 +79,7 @@ func (t *Transport) Kind() assets.Kind {
 }
 
 func (t *Transport) Runtime() string {
-	return runtime.RUNTIME_DOCKER
+	return runtime.RUNTIME_DOCKER_CONTAINER
 }
 
 func GetDockerClient() (*client.Client, error) {

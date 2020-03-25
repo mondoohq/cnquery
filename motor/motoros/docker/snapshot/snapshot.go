@@ -22,7 +22,7 @@ func (t *DockerSnapshotTransport) Kind() assets.Kind {
 }
 
 func (t *DockerSnapshotTransport) Runtime() string {
-	return runtime.RUNTIME_DOCKER
+	return runtime.RUNTIME_DOCKER_CONTAINER
 }
 
 func new(endpoint *types.Endpoint) (*DockerSnapshotTransport, error) {
