@@ -64,7 +64,7 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 	var err error
 
 	switch endpoint.Backend {
-	case "mock":
+	case types.BackendMock:
 		log.Debug().Msg("connection> load mock transport")
 		trans, err := mock.New()
 		if err != nil {
@@ -87,7 +87,7 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 		if err != nil {
 			return nil, MetaInfo{}, err
 		}
-	case "local":
+	case types.BackendLocal:
 		log.Debug().Msg("connection> load local transport")
 		trans, err := local.New()
 		if err != nil {
@@ -105,7 +105,7 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 		} else {
 			idDetectors = append(idDetectors, "hostname")
 		}
-	case "tar":
+	case types.BackendTAR:
 		log.Debug().Msg("connection> load tar transport")
 		// TODO: we need to generate an artifact id
 		trans, err := tar.New(endpoint)
@@ -117,8 +117,8 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 		if err != nil {
 			return nil, MetaInfo{}, err
 		}
-	case "docker":
-		log.Debug().Str("backend", endpoint.Backend).Str("host", endpoint.Host).Str("path", endpoint.Path).Msg("connection> load docker transport")
+	case types.BackendDocker:
+		log.Debug().Str("backend", endpoint.Backend.String()).Str("host", endpoint.Host).Str("path", endpoint.Path).Msg("connection> load docker transport")
 		trans, info, err := ResolveDockerTransport(endpoint)
 		if err != nil {
 			return nil, MetaInfo{}, err
@@ -135,7 +135,7 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 		if len(info.Identifier) > 0 {
 			identifier = append(identifier, info.Identifier)
 		}
-	case "ssh":
+	case types.BackendSSH:
 		log.Debug().Msg("connection> load ssh transport")
 		trans, err := ssh.New(endpoint)
 		if err != nil {
@@ -154,7 +154,7 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 		}
 
 		idDetectors = append(idDetectors, "ssh-hostkey")
-	case "winrm":
+	case types.BackendWinrm:
 		log.Debug().Msg("connection> load winrm transport")
 		trans, err := winrm.New(endpoint)
 		if err != nil {
