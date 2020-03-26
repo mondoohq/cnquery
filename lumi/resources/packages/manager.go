@@ -51,6 +51,8 @@ func ResolveSystemPkgManager(motor *motor.Motor) (OperatingSystemPkgManager, err
 		pm = &MacOSPkgManager{motor: motor}
 	case "windows":
 		pm = &WinPkgManager{motor: motor}
+	case "scratch":
+		pm = &ScratchPkgManager{motor: motor}
 	default:
 		return nil, errors.New("could not detect suitable package manager for platform: " + platform.Name)
 	}
@@ -465,5 +467,25 @@ func (win *WinPkgManager) List() ([]Package, error) {
 }
 
 func (win *WinPkgManager) Available() (map[string]PackageUpdate, error) {
+	return map[string]PackageUpdate{}, nil
+}
+
+type ScratchPkgManager struct {
+	motor *motor.Motor
+}
+
+func (dpm *ScratchPkgManager) Name() string {
+	return "Scratch Package Manager"
+}
+
+func (dpm *ScratchPkgManager) Format() string {
+	return "scratch"
+}
+
+func (dpm *ScratchPkgManager) List() ([]Package, error) {
+	return []Package{}, nil
+}
+
+func (dpm *ScratchPkgManager) Available() (map[string]PackageUpdate, error) {
 	return map[string]PackageUpdate{}, nil
 }

@@ -118,7 +118,7 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 			return nil, MetaInfo{}, err
 		}
 	case "docker":
-		log.Debug().Msg("connection> load docker transport")
+		log.Debug().Str("backend", endpoint.Backend).Str("host", endpoint.Host).Str("path", endpoint.Path).Msg("connection> load docker transport")
 		trans, info, err := ResolveDockerTransport(endpoint)
 		if err != nil {
 			return nil, MetaInfo{}, err

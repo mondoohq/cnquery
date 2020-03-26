@@ -3,6 +3,7 @@ package platform
 import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/motoros/types"
+	"go.mondoo.io/mondoo/motor/runtime"
 )
 
 type detect func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error)
@@ -20,9 +21,16 @@ func (p *PlatformResolver) Resolve(t types.Transport) (bool, *PlatformInfo) {
 	di.Family = make([]string, 0)
 
 	// start recursive platform resolution
-	ok, pi := p.resolvePlatform(di, t)
+	resolved, pi := p.resolvePlatform(di, t)
+
+	// if we have a docker image, we should fallback to the scratch operating system
+	if resolved && len(pi.Name) == 0 && t.Runtime() == runtime.RUNTIME_DOCKER_IMAGE {
+		di.Name = "scratch"
+		return true, di
+	}
+
 	log.Debug().Str("platform", pi.Name).Strs("family", pi.Family).Msg("platform> detected os")
-	return ok, pi
+	return resolved, pi
 }
 
 // Resolve tries to find recursively all
