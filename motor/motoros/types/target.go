@@ -7,13 +7,28 @@ import (
 	"strings"
 )
 
+type Backend string
+
+func (b Backend) String() string {
+	return string(b)
+}
+
+const (
+	BackendDocker Backend = "docker"
+	BackendSSH    Backend = "ssh"
+	BackendTAR    Backend = "tar"
+	BackendLocal  Backend = "local"
+	BackendWinrm  Backend = "winrm"
+	BackendMock   Backend = "mock"
+)
+
 // Endpoint that motor interacts with
 type Endpoint struct {
 	URI      string
-	Backend  string `json:"backend"`
-	User     string `json:"user"`
-	Password string `json:"password"`
-	Host     string `json:"host"`
+	Backend  Backend `json:"backend"`
+	User     string  `json:"user"`
+	Password string  `json:"password"`
+	Host     string  `json:"host"`
 	// Ports are not int by default, eg. docker://centos:latest parses a string as port
 	// Therefore it is up to the transport to convert the port to what they need
 	Port           string `json:"port"`
@@ -26,9 +41,9 @@ type Endpoint struct {
 // valid URIs are:
 // - local:// (default)
 func (t *Endpoint) ParseFromURI(uri string) error {
-	// special handling for docker
+	// special handling for docker since it is not a valid url
 	if strings.HasPrefix(uri, "docker://") {
-		t.Backend = "docker"
+		t.Backend = BackendDocker
 		t.Host = strings.Replace(uri, "docker://", "", 1)
 		return nil
 	}
@@ -42,7 +57,7 @@ func (t *Endpoint) ParseFromURI(uri string) error {
 		return err
 	}
 
-	t.Backend = u.Scheme
+	t.Backend = Backend(u.Scheme)
 	t.Path = u.Path
 	t.Host = u.Hostname()
 
