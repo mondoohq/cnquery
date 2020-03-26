@@ -94,10 +94,10 @@ func WithInsecure(insecure bool) Option {
 	}
 }
 
-func LoadFromRegistry(tag name.Tag, opts ...Option) (v1.Image, io.ReadCloser, error) {
-	auth, err := authn.DefaultKeychain.Resolve(tag.Registry)
+func LoadFromRegistry(ref name.Reference, opts ...Option) (v1.Image, io.ReadCloser, error) {
+	auth, err := authn.DefaultKeychain.Resolve(ref.Context())
 	if err != nil {
-		fmt.Printf("getting creds for %q: %v", tag, err)
+		fmt.Printf("getting creds for %q: %v", ref, err)
 		return nil, nil, err
 	}
 
@@ -132,8 +132,7 @@ func LoadFromRegistry(tag name.Tag, opts ...Option) (v1.Image, io.ReadCloser, er
 		}
 	}
 
-	// fmt.Printf("%v\n", tag)
-	img, err := remote.Image(tag, remote.WithAuth(auth), remote.WithTransport(tr))
+	img, err := remote.Image(ref, remote.WithAuth(auth), remote.WithTransport(tr))
 	if err != nil {
 		return nil, nil, err
 	}

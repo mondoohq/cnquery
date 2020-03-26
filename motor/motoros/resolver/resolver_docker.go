@@ -147,11 +147,12 @@ func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, DockerIn
 
 	log.Debug().Msg("try to download the image from docker registry")
 	// load container image from remote directoryload tar file into backend
-	tag, err := name.NewTag(endpoint.Host, name.WeakValidation)
-	if err == nil {
-		log.Debug().Str("tag", tag.Name()).Msg("found valid container registry reference")
 
-		img, rc, err := image.LoadFromRegistry(tag, image.WithInsecure(endpoint.Insecure))
+	ref, err := name.ParseReference(endpoint.Host, name.WeakValidation)
+	if err == nil {
+		log.Debug().Str("ref", ref.Name()).Msg("found valid container registry reference")
+
+		img, rc, err := image.LoadFromRegistry(ref, image.WithInsecure(endpoint.Insecure))
 		if err != nil {
 			return nil, DockerInfo{}, err
 		}
