@@ -1,4 +1,4 @@
-package discover
+package discovery
 
 import (
 	"github.com/aws/aws-sdk-go-v2/aws/external"
