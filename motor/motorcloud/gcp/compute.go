@@ -15,9 +15,51 @@ func NewCompute() *Compute {
 	return &Compute{}
 }
 
-type Compute struct{}
+type Compute struct {
+	// NOTE: is empty by default since we read the username from ssh config
+	// this would force a specific user
+	InstanceSSHUsername string
+}
 
-func (a *Compute) List() ([]*assets.Asset, error) {
+// TODO: try to auto-detect the current project, otherwise return an error
+func (a *Compute) ListInstancesInProject(project string) ([]*assets.Asset, error) {
+
+	client, err := gcpClient(compute.ComputeScope, compute.CloudPlatformScope)
+	svc, err := compute.New(client)
+	if err != nil {
+		return nil, err
+	}
+
+	var wg sync.WaitGroup
+	assets := []*assets.Asset{}
+
+	log.Debug().Str("project", project).Msg("search for instances")
+	zones, err := svc.Zones.List(project).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	// add zones
+	wg.Add(len(zones.Items))
+	mux := &sync.Mutex{}
+	for j := range zones.Items {
+		zone := zones.Items[j].Name
+		go func(svc *compute.Service, project string, zone string) {
+			zoneAssets, err := a.instancesPerZone(svc, project, zone)
+			if err == nil {
+				mux.Lock()
+				assets = append(assets, zoneAssets...)
+				mux.Unlock()
+			}
+			wg.Done()
+		}(svc, project, zone)
+	}
+
+	wg.Wait()
+	return assets, nil
+}
+
+func (a *Compute) ListInstances() ([]*assets.Asset, error) {
 	client, err := gcpClient(compute.ComputeScope, compute.CloudPlatformScope)
 	svc, err := compute.New(client)
 	if err != nil {
@@ -38,9 +80,11 @@ func (a *Compute) List() ([]*assets.Asset, error) {
 	assets := []*assets.Asset{}
 	for i := range projectsResp.Projects {
 		project := projectsResp.Projects[i].ProjectId
+		log.Debug().Str("project", project).Msg("search for instances")
 		zones, err := svc.Zones.List(project).Do()
 		if err != nil {
-			return nil, err
+			log.Warn().Err(err).Str("project", project).Msg("could not fetch zones in project")
+			continue
 		}
 
 		// add zones
@@ -49,7 +93,7 @@ func (a *Compute) List() ([]*assets.Asset, error) {
 		for j := range zones.Items {
 			zone := zones.Items[j].Name
 			go func(svc *compute.Service, project string, zone string) {
-				zoneAssets, err := instancesPerZone(svc, project, zone)
+				zoneAssets, err := a.instancesPerZone(svc, project, zone)
 				if err == nil {
 					mux.Lock()
 					assets = append(assets, zoneAssets...)
@@ -64,7 +108,7 @@ func (a *Compute) List() ([]*assets.Asset, error) {
 	return assets, nil
 }
 
-func instancesPerZone(svc *compute.Service, project string, zone string) ([]*assets.Asset, error) {
+func (a *Compute) instancesPerZone(svc *compute.Service, project string, zone string) ([]*assets.Asset, error) {
 	log.Debug().Str("project", project).Str("zone", zone).Msg("search gcp project for assets")
 	il, err := svc.Instances.List(project, zone).Do()
 	if err != nil {
@@ -77,11 +121,33 @@ func instancesPerZone(svc *compute.Service, project string, zone string) ([]*ass
 
 		connections := []*assets.Connection{}
 
-		// add ssh and ssm run command if the node is part of ssm
-		// connections = append(connections, &assets.Connection{
-		// 	Backend: assets.ConnectionBackend_SSH,
-		// 	Host:    instance.Name,
-		// })
+		// TODO: we may want to filter windows instances, use guestOsFeatures to identify the system
+		// "guestOsFeatures": [{
+		//     "type": "WINDOWS"
+		// }, {
+		//     "type": "VIRTIO_SCSI_MULTIQUEUE"
+		// }, {
+		//     "type": "MULTI_IP_SUBNET"
+		// }],
+		//
+		// data, _ := json.Marshal(instance)
+		// fmt.Println(string(data))
+
+		// add external ip networkInterfaces[].accessConfigs[].natIP
+		// https://cloud.google.com/compute/docs/reference/rest/v1/instances/get
+		for ni := range instance.NetworkInterfaces {
+			iface := instance.NetworkInterfaces[ni]
+			for ac := range iface.AccessConfigs {
+				if len(iface.AccessConfigs[ac].NatIP) > 0 {
+					log.Debug().Str("instance", instance.Name).Str("ip", iface.AccessConfigs[ac].NatIP).Msg("found public ip")
+					connections = append(connections, &assets.Connection{
+						Backend: assets.ConnectionBackend_CONNECTION_SSH,
+						User:    a.InstanceSSHUsername,
+						Host:    iface.AccessConfigs[ac].NatIP,
+					})
+				}
+			}
+		}
 
 		asset := &assets.Asset{
 			ReferenceIDs: []string{MondooGcpInstanceID(project, zone, instance)},
@@ -100,6 +166,7 @@ func instancesPerZone(svc *compute.Service, project string, zone string) ([]*ass
 		}
 
 		// fetch gcp specific metadata
+		asset.Labels["gcp.mondoo.app/project"] = project
 		asset.Labels["mondoo.app/region"] = zone
 		asset.Labels["mondoo.app/instance"] = strconv.FormatUint(uint64(instance.Id), 10)
 

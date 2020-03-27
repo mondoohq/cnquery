@@ -1,0 +1,27 @@
+{
+    "configuration": {
+      "active_configuration": "default",
+      "properties": {
+        "compute": {
+          "region": "us-central1",
+          "zone": "us-central1-a"
+        },
+        "core": {
+          "account": "chris@mondoo.io",
+          "disable_usage_reporting": "True",
+          "project": "mondoo-abc-12345"
+        },
+        "run": {
+          "region": "us-central1"
+        }
+      }
+    },
+    "credential": {
+      "access_token": "ya...eA",
+      "id_token": "ey...1Q",
+      "token_expiry": "2020-03-27T14:29:23Z"
+    },
+    "sentinels": {
+      "config_sentinel": "/Users/chris-rock/.config/gcloud/config_sentinel"
+    }
+  }
