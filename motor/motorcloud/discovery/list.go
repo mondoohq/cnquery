@@ -48,9 +48,9 @@ func ListAssets(runtimes ...string) ([]*assets.Asset, error) {
 		}
 	}
 
-	if stringslice.Contains(runtimes, runtime.RUNTIME_GCP_COMPUTE) {
-		askRuntimes = append(askRuntimes, gcp.NewCompute())
-	}
+	// if stringslice.Contains(runtimes, runtime.RUNTIME_GCP_COMPUTE) {
+	// 	askRuntimes = append(askRuntimes, gcp.NewCompute())
+	// }
 
 	if stringslice.Contains(runtimes, runtime.RUNTIME_GCP_GCR) {
 		askRuntimes = append(askRuntimes, gcp.NewGCRImages())

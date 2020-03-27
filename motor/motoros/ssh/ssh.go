@@ -122,7 +122,7 @@ func New(endpoint *types.Endpoint) (*SSHTransport, error) {
 		return nil
 	})
 	if err != nil {
-		log.Warn().Err(err).Str("transport", "ssh").Str("host", endpoint.Host).Str("port", endpoint.Port).Str("user", endpoint.User).Msg("could not establish ssh session")
+		log.Debug().Err(err).Str("transport", "ssh").Str("host", endpoint.Host).Str("port", endpoint.Port).Str("user", endpoint.User).Msg("could not establish ssh session")
 		return nil, err
 	}
 
