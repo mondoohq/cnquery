@@ -19,15 +19,15 @@ func NewGCRImages() *GcrImages {
 type GcrImages struct{}
 
 // lists a repository like "gcr.io/mondoo-base-infra"
-func (a *GcrImages) ListRepository(root string, recursive bool) ([]*assets.Asset, error) {
-	repo, err := name.NewRepository(root)
+func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*assets.Asset, error) {
+	repo, err := name.NewRepository(repository)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	auth, err := google.Keychain.Resolve(repo.Registry)
 	if err != nil {
-		log.Fatalf("getting auth for %q: %v", root, err)
+		log.Fatalf("getting auth for %q: %v", repository, err)
 	}
 
 	imgs := []*assets.Asset{}
@@ -39,6 +39,7 @@ func (a *GcrImages) ListRepository(root string, recursive bool) ([]*assets.Asset
 
 		for digest, manifest := range tags.Manifests {
 			repoURL := repo.String()
+			imageUrl := repoURL + "@" + digest
 
 			asset := &assets.Asset{
 				ReferenceIDs: []string{MondooContainerImageID(digest)},
@@ -50,7 +51,7 @@ func (a *GcrImages) ListRepository(root string, recursive bool) ([]*assets.Asset
 				Connections: []*assets.Connection{
 					&assets.Connection{
 						Backend: assets.ConnectionBackend_CONNECTION_DOCKER_REGISTRY,
-						Host:    repo.RegistryStr(),
+						Host:    imageUrl,
 					},
 				},
 				State:  assets.State_STATE_ONLINE,
@@ -68,7 +69,7 @@ func (a *GcrImages) ListRepository(root string, recursive bool) ([]*assets.Asset
 			asset.Labels["docker.io/tags"] = strings.Join(imageTags, ",")
 
 			// store repo digest
-			repoDigests := []string{repoURL + "@" + digest}
+			repoDigests := []string{imageUrl}
 			asset.Labels["docker.io/repo-digests"] = strings.Join(repoDigests, ",")
 
 			imgs = append(imgs, asset)
@@ -98,6 +99,7 @@ func (a *GcrImages) ListRepository(root string, recursive bool) ([]*assets.Asset
 	return imgs, nil
 }
 
+// List uses your GCP credentials to iterate over all your projects to identify protential repos
 func (a *GcrImages) List() ([]*assets.Asset, error) {
 	assets := []*assets.Asset{}
 	// repoAssets, err := a.ListRepository("index.docker.io/mondoolabs/mondoo", false)
