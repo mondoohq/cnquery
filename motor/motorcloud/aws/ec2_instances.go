@@ -19,7 +19,8 @@ func NewEc2Discovery(cfg aws.Config) (*Ec2Instances, error) {
 }
 
 type Ec2Instances struct {
-	config aws.Config
+	config              aws.Config
+	InstanceSSHUsername string
 }
 
 func (ec2i *Ec2Instances) List() ([]*assets.Asset, error) {
@@ -49,15 +50,16 @@ func (ec2i *Ec2Instances) List() ([]*assets.Asset, error) {
 			connections := []*assets.Connection{}
 
 			// add ssh and ssm run command if the node is part of ssm
-			connections = append(connections, &assets.Connection{
-				Backend: assets.ConnectionBackend_CONNECTION_AWS_SSM_RUN_COMMAND,
-				Host:    *instance.InstanceId,
-			})
+			// connections = append(connections, &assets.Connection{
+			// 	Backend: assets.ConnectionBackend_CONNECTION_AWS_SSM_RUN_COMMAND,
+			// 	Host:    *instance.InstanceId,
+			// })
 
 			if instance.PublicIpAddress != nil {
 				connections = append(connections, &assets.Connection{
 					Backend: assets.ConnectionBackend_CONNECTION_SSH,
-					Host:    "ec2-user@" + *instance.PublicIpAddress,
+					User:    ec2i.InstanceSSHUsername,
+					Host:    *instance.PublicIpAddress,
 				})
 			}
 
