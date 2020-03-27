@@ -64,13 +64,9 @@ func ListAssets(runtimes ...string) ([]*assets.Asset, error) {
 		askRuntimes = append(askRuntimes, &docker.Images{})
 	}
 
-	if stringslice.Contains(runtimes, runtime.RUNTIME_DOCKER_REGISTRY) {
-		askRuntimes = append(askRuntimes, &docker.DockerRegistryImages{})
-	}
-
-	if stringslice.Contains(runtimes, runtime.RUNTIME_DOCKER_REGISTRY) {
-		askRuntimes = append(askRuntimes, &docker.DockerRegistryImages{})
-	}
+	// if stringslice.Contains(runtimes, runtime.RUNTIME_DOCKER_REGISTRY) {
+	// 	askRuntimes = append(askRuntimes, &docker.DockerRegistryImages{})
+	// }
 
 	discoveredAssets := []*assets.Asset{}
 	for i := range askRuntimes {
