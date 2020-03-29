@@ -88,8 +88,28 @@ const (
 )
 
 var (
-	WINDOWS_QUERY_HOTFIXES      = `Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstallDate, InstalledBy | ConvertTo-Json`
-	WINDOWS_QUERY_APPX_PACKAGES = `Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version  | ConvertTo-Json`
+	WINDOWS_QUERY_HOTFIXES       = `Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstallDate, InstalledBy | ConvertTo-Json`
+	WINDOWS_QUERY_APPX_PACKAGES  = `Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version  | ConvertTo-Json`
+	WINDOWS_QUERY_WSUS_AVAILABLE = `
+$ProgressPreference='SilentlyContinue';
+$updateSession = new-object -com "Microsoft.Update.Session"
+$searcher=$updateSession.CreateupdateSearcher().Search(("IsInstalled=0 and Type='Software'"))
+$updates = $searcher.Updates | ForEach-Object {
+	$update = $_
+	$value = New-Object psobject -Property @{
+		"UpdateID" =  $update.Identity.UpdateID;
+		"Title" = $update.Title
+		"MsrcSeverity" = $update.MsrcSeverity
+		"RevisionNumber" =  $update.Identity.RevisionNumber;
+		"CategoryIDs" = @($update.Categories | % { $_.CategoryID })
+		"SecurityBulletinIDs" = $update.SecurityBulletinIDs
+		"RebootRequired" = $update.RebootRequired
+		"KBArticleIDs" = $update.KBArticleIDs
+		"CveIDs" = @($update.CveIDs)
+	}
+	$value
+}
+@($updates) | ConvertTo-Json`
 )
 
 type powershellWinAppxPackages struct {
@@ -130,28 +150,6 @@ func ParseWindowsAppxPackages(input io.Reader) ([]Package, error) {
 	return pkgs, nil
 }
 
-var WINDOWS_QUERY_WSUS_AVAILABLE = `
-$ProgressPreference='SilentlyContinue';
-$updateSession = new-object -com "Microsoft.Update.Session"
-$searcher=$updateSession.CreateupdateSearcher().Search(("IsInstalled=0 and Type='Software'"))
-$updates = $searcher.Updates | ForEach-Object {
-	$update = $_
-	$value = New-Object psobject -Property @{
-		"UpdateID" =  $update.Identity.UpdateID;
-		"Title" = $update.Title
-		"MsrcSeverity" = $update.MsrcSeverity
-		"RevisionNumber" =  $update.Identity.RevisionNumber;
-		"CategoryIDs" = @($update.Categories | % { $_.CategoryID })
-		"SecurityBulletinIDs" = $update.SecurityBulletinIDs
-		"RebootRequired" = $update.RebootRequired
-		"KBArticleIDs" = $update.KBArticleIDs
-		"CveIDs" = @($update.CveIDs)
-	}
-	$value
-}
-@($updates) | ConvertTo-Json
-	`
-
 type powershellWinUpdate struct {
 	UpdateID     string   `json:"UpdateID"`
 	Title        string   `json:"Title"`
@@ -177,6 +175,18 @@ func ParseWindowsUpdates(input io.Reader) ([]Package, error) {
 			log.Warn().Str("update", powerShellUpdates[i].UpdateID).Msg("ms update has no kb assigned")
 			continue
 		}
+
+		// todo: we may want to make that decision server-side, since it does not require us to update the agent
+		// therefore we need additional information to be transmitted via the packages eg. labels
+		// important := false
+		// for ci := range powerShellUpdates[i].CategoryIDs {
+		// 	id := powerShellUpdates[i].CategoryIDs[ci]
+		// 	classification := wsusClassificationGUID[strings.ToLower(id)]
+		// 	if classification == CriticalUpdates || classification == SecurityUpdates || classification == UpdateRollups {
+		// 		important = true
+		// 	}
+		// }
+
 		updates[i] = Package{
 			Name:        powerShellUpdates[i].KBArticleIDs[0],
 			Version:     powerShellUpdates[i].UpdateID,
