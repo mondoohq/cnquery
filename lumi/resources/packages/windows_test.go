@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	mock "go.mondoo.io/mondoo/motor/motoros/mock/toml"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
@@ -80,11 +82,25 @@ func TestWinOSUpdatesParser(t *testing.T) {
 
 	m, err := ParseWindowsUpdates(c.Stdout)
 	assert.Nil(t, err)
-	assert.Equal(t, 2, len(m), "detected the right amount of packages")
+	assert.Equal(t, 6, len(m), "detected the right amount of packages")
 
-	assert.Equal(t, "2267602", m[0].Name, "update id detected")
-	assert.Equal(t, "Definition Update for Windows Defender Antivirus - KB2267602 (Definition 1.289.646.0)", m[0].Description, "update title detected")
+	pkg, err := findKb(m, "890830")
+	require.NoError(t, err)
+	assert.Equal(t, "890830", pkg.Name, "update id detected")
+	assert.Equal(t, "Windows Malicious Software Removal Tool x64 - March 2020 (KB890830)", pkg.Description, "update title detected")
 
-	assert.Equal(t, "4487044", m[1].Name, "update id detected")
-	assert.Equal(t, "2019-02 Cumulative Update for Windows Server 2019 (1809) for x64-based Systems (KB4487044)", m[1].Description, "update title detected")
+	pkg, err = findKb(m, "4538461")
+	require.NoError(t, err)
+	assert.Equal(t, "4538461", pkg.Name, "update id detected")
+	assert.Equal(t, "2020-03 Cumulative Update for Windows Server 2019 (1809) for x64-based Systems (KB4538461)", pkg.Description, "update title detected")
+}
+
+func findKb(pkgs []Package, name string) (Package, error) {
+	for i := range pkgs {
+		if pkgs[i].Name == name {
+			return pkgs[i], nil
+		}
+	}
+
+	return Package{}, errors.New("not found")
 }
