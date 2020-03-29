@@ -10,4 +10,5 @@ const (
 	RUNTIME_DOCKER_IMAGE     = "docker image"
 	RUNTIME_DOCKER_REGISTRY  = "docker registry"
 	RUNTIME_KUBERNETES       = "k8s"
+	RUNTIME_AZ_COMPUTE       = "az compute"
 )
