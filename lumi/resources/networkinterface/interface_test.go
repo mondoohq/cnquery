@@ -128,8 +128,9 @@ func TestLinuxRemoteInterface(t *testing.T) {
 	ifaces := networkinterface.New(m)
 	list, err := ifaces.Interfaces()
 	require.NoError(t, err)
-	assert.True(t, len(list) > 0)
-	inet := list[0]
+	assert.True(t, len(list) == 2)
+
+	inet, err := ifaces.InterfaceByName("lo")
 	assert.Equal(t, "lo", inet.Name)
 	assert.Equal(t, 1, inet.Index)
 	assert.Equal(t, 0, inet.MTU)
@@ -138,7 +139,8 @@ func TestLinuxRemoteInterface(t *testing.T) {
 	assert.True(t, len(inet.Addrs) == 2)
 	assert.True(t, len(inet.MulticastAddrs) == 0)
 
-	inet = list[1]
+	inet, err = ifaces.InterfaceByName("eth0")
+	require.NoError(t, err)
 	assert.Equal(t, "eth0", inet.Name)
 	assert.Equal(t, 2, inet.Index)
 	assert.Equal(t, 0, inet.MTU)
@@ -146,11 +148,6 @@ func TestLinuxRemoteInterface(t *testing.T) {
 	assert.Equal(t, "", inet.HardwareAddr.String())
 	assert.True(t, len(inet.Addrs) == 2)
 	assert.True(t, len(inet.MulticastAddrs) == 0)
-
-	inetAdapter, err := ifaces.InterfaceByName("eth0")
-	require.NoError(t, err)
-	assert.Equal(t, "eth0", inetAdapter.Name)
-	assert.Equal(t, "", inetAdapter.HardwareAddr.String())
 
 	ip, err := networkinterface.HostIP(list)
 	require.NoError(t, err)
