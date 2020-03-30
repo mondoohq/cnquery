@@ -200,7 +200,7 @@ func (a *DockerRegistryImages) toAsset(repoName string, imgDigest string, tags [
 	imageUrl := repoName + "@" + imgDigest
 	asset := &assets.Asset{
 		ReferenceIDs: []string{MondooContainerImageID(imgDigest)},
-		// Name:         strings.Join(dImg.RepoTags, ","),
+		Name:         ShortContainerImageID(imgDigest),
 		Platform: &assets.Platform{
 			Kind:    assets.Kind_KIND_CONTAINER_IMAGE,
 			Runtime: runtime.RUNTIME_DOCKER_REGISTRY,
@@ -226,4 +226,12 @@ func (a *DockerRegistryImages) toAsset(repoName string, imgDigest string, tags [
 	// repoDigests := []string{repoURL + "@" + digest}
 	// asset.Labels["docker.io/repo-digests"] = strings.Join(repoDigests, ",")
 	return asset
+}
+
+func ShortContainerImageID(id string) string {
+	id = strings.Replace(id, "sha256:", "", -1)
+	if len(id) > 12 {
+		return id[0:12]
+	}
+	return id
 }
