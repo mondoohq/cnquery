@@ -143,12 +143,18 @@ func (i *LinuxInterfaceHandler) ParseIpAddr(r io.Reader) ([]Interface, error) {
 	interfaces := map[string]Interface{}
 
 	scanner := bufio.NewScanner(r)
-	ipaddrParse := regexp.MustCompile(`^(\d):\s(\w*)\s*(inet|inet6)\s([\w\d\./\:]+)\s(.*)$`)
+	ipaddrParse := regexp.MustCompile(`^(\d):\s([\w\d\./\:]+)\s*(inet|inet6)\s([\w\d\./\:]+)\s(.*)$`)
 
 	for scanner.Scan() {
 		line := scanner.Text()
 
 		m := ipaddrParse.FindStringSubmatch(line)
+
+		// check that we have a match
+		if len(m) < 4 {
+			return nil, fmt.Errorf("cannot parse ip: %s", line)
+		}
+
 		name := m[2]
 
 		idx, err := strconv.Atoi(strings.TrimSpace(m[1]))

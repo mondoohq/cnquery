@@ -153,3 +153,20 @@ func TestLinuxRemoteInterface(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "10.128.0.4", ip)
 }
+
+func TestLinuxRemoteInterfaceFlannel(t *testing.T) {
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/linux_flannel.toml"})
+	require.NoError(t, err)
+
+	m, err := motor.New(mock)
+	require.NoError(t, err)
+
+	ifaces := networkinterface.New(m)
+	list, err := ifaces.Interfaces()
+	require.NoError(t, err)
+	assert.True(t, len(list) == 4)
+
+	ip, err := networkinterface.HostIP(list)
+	require.NoError(t, err)
+	assert.Equal(t, "192.168.101.90", ip)
+}
