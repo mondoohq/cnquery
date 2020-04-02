@@ -25,10 +25,13 @@ type PodContainerImage struct {
 	Container     *string
 }
 
-func ListPodImages(context *string, namespaceFilter []string) ([]*assets.Asset, error) {
+func ListPodImages(context string, namespaceFilter []string, podFilter []string) ([]*assets.Asset, error) {
 	var configFlags *genericclioptions.ConfigFlags
 	configFlags = genericclioptions.NewConfigFlags(false)
-	configFlags.Context = context
+
+	if len(context) > 0 {
+		configFlags.Context = &context
+	}
 
 	config, err := configFlags.ToRESTConfig()
 	if err != nil {
@@ -48,7 +51,7 @@ func ListPodImages(context *string, namespaceFilter []string) ([]*assets.Asset, 
 	runningImages := []*assets.Asset{}
 	for i := range namespaces.Items {
 		namespace := namespaces.Items[i]
-		if !isNamespaceIncluded(namespace.Name, namespaceFilter) {
+		if !isIncluded(namespace.Name, namespaceFilter) {
 			continue
 		}
 
@@ -59,6 +62,11 @@ func ListPodImages(context *string, namespaceFilter []string) ([]*assets.Asset, 
 
 		for j := range pods.Items {
 			pod := pods.Items[j]
+
+			if !isIncluded(pod.Name, podFilter) {
+				continue
+			}
+
 			for ics := range pod.Status.InitContainerStatuses {
 				containerStatus := pod.Status.InitContainerStatuses[ics]
 				runningImages = append(runningImages, toAsset(pod, containerStatus))
@@ -74,13 +82,13 @@ func ListPodImages(context *string, namespaceFilter []string) ([]*assets.Asset, 
 	return runningImages, nil
 }
 
-func isNamespaceIncluded(namespace string, included []string) bool {
+func isIncluded(value string, included []string) bool {
 	if len(included) == 0 {
 		return true
 	}
 
 	for _, ex := range included {
-		if strings.ToLower(ex) == strings.ToLower(namespace) {
+		if strings.ToLower(ex) == strings.ToLower(value) {
 			return true
 		}
 	}
