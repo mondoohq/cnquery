@@ -107,7 +107,7 @@ func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, DockerIn
 				log.Debug().Msg("found running container " + ci.ID)
 				transport, err := docker_engine.New(ci.ID)
 				return transport, DockerInfo{
-					Name:       ci.ID,
+					Name:       motorcloud_docker.ShortContainerImageID(ci.ID),
 					Identifier: motorcloud_docker.MondooContainerID(ci.ID),
 					Labels:     ci.Labels,
 				}, err
@@ -115,7 +115,7 @@ func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, DockerIn
 				log.Debug().Msg("found stopped container " + ci.ID)
 				transport, err := snapshot.NewFromDockerEngine(ci.ID)
 				return transport, DockerInfo{
-					Name:       ci.ID,
+					Name:       motorcloud_docker.ShortContainerImageID(ci.ID),
 					Identifier: motorcloud_docker.MondooContainerID(ci.ID),
 					Labels:     ci.Labels,
 				}, err
@@ -165,6 +165,7 @@ func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, DockerIn
 
 		transport, err := image.New(rc)
 		return transport, DockerInfo{
+			Name:       motorcloud_docker.ShortContainerImageID(hash.String()),
 			Identifier: identifier,
 		}, err
 	} else {
