@@ -128,9 +128,8 @@ func toAsset(pod v1.Pod, status v1.ContainerStatus) *assets.Asset {
 		}
 	}
 
-	// NOTE: a pod in CreateContainerError may not have a parent image yet?
 	asset := &assets.Asset{
-		Name: pod.Namespace + "/" + pod.Name,
+		Name: pod.Name,
 
 		ReferenceIDs:      []string{MondooKubernetesPodID(string(pod.UID))},
 		ParentReferenceID: parentRef,
@@ -157,6 +156,7 @@ func toAsset(pod v1.Pod, status v1.ContainerStatus) *assets.Asset {
 	// fetch k8s specific metadata
 	asset.Labels["k8s.mondoo.app/name"] = pod.Name
 	asset.Labels["k8s.mondoo.app/namespace"] = pod.Namespace
+	asset.Labels["k8s.mondoo.app/cluster-name"] = pod.ClusterName
 	asset.Labels["k8s.mondoo.app/status/name"] = status.Name
 	asset.Labels["k8s.mondoo.app/status/image"] = status.Image
 	asset.Labels["docker.io/tags"] = tagName
