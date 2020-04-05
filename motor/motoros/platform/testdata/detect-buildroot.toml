@@ -1,0 +1,17 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "4.19.94"
+
+[files."/etc/os-release"]
+content = """
+NAME=Buildroot
+VERSION=2019.02.9
+ID=buildroot
+VERSION_ID=2019.02.9
+PRETTY_NAME="Buildroot 2019.02.9"
+"""

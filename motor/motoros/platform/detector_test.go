@@ -561,6 +561,19 @@ func TestMacOSsDetector(t *testing.T) {
 	assert.Equal(t, []string{"darwin", "bsd", "unix", "os"}, di.Family)
 }
 
+func TestBuildrootDetector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-buildroot.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(t, true, resolved, "platform should be resolvable")
+	assert.Equal(t, "buildroot", di.Name, "os name should be identified")
+	assert.Equal(t, "Buildroot", di.Title, "os title should be identified")
+	assert.Equal(t, "2019.02.9", di.Release, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
 func TestFamilies(t *testing.T) {
 	di := &platform.PlatformInfo{}
 	di.Family = []string{"unix", "bsd", "darwin"}
