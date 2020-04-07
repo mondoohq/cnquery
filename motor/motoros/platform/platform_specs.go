@@ -741,10 +741,59 @@ var linuxFamily = &PlatformResolver{
 var unixFamily = &PlatformResolver{
 	Name:     FAMILY_UNIX,
 	Familiy:  true,
-	Children: []*PlatformResolver{bsdFamily, linuxFamily},
+	Children: []*PlatformResolver{bsdFamily, linuxFamily, solaris},
 	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
 		// in order to support linux container image detection, we cannot run
 		// processes here, lets just read files to detect a system
+		return true, nil
+	},
+}
+
+var solaris = &PlatformResolver{
+	Name:    "solaris",
+	Familiy: false,
+	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
+		osrd := NewOSReleaseDetector(t)
+
+		// check if we got vmkernel
+		unames, err := osrd.unames()
+		if err != nil {
+			return false, err
+		}
+
+		if strings.Contains(strings.ToLower(unames), "sunos") == false {
+			return false, nil
+		}
+
+		// try to read the architecture
+		unamem, err := osrd.unamem()
+		if err == nil {
+			di.Arch = unamem
+		}
+
+		di.Name = "solaris"
+
+		// NOTE: we have only one solaris system here, since we only get here is the familiy is sunos, we pass
+
+		// try to read "/etc/release" for more details
+		f, err := t.File("/etc/release")
+		if err != nil {
+			return false, nil
+		}
+		defer f.Close()
+
+		c, err := ioutil.ReadAll(f)
+		if err != nil {
+			return false, nil
+		}
+
+		r, err := ParseSolarisRelease(string(c))
+		if err == nil {
+			di.Name = r.ID
+			di.Title = r.Title
+			di.Release = r.Release
+		}
+
 		return true, nil
 	},
 }
