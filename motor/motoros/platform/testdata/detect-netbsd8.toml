@@ -1,0 +1,8 @@
+[commands."uname -s"]
+stdout = "NetBSD"
+
+[commands."uname -m"]
+stdout = "amd64"
+
+[commands."uname -r"]
+stdout = "8.0"

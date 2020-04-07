@@ -652,6 +652,32 @@ func TestSolaris11Detector(t *testing.T) {
 	assert.Equal(t, []string{"unix", "os"}, di.Family)
 }
 
+func TestNetbsd8Detector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-netbsd8.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(t, true, resolved, "platform should be resolvable")
+	assert.Equal(t, "netbsd", di.Name, "os name should be identified")
+	assert.Equal(t, "NetBSD", di.Title, "os title should be identified")
+	assert.Equal(t, "8.0", di.Release, "os version should be identified")
+	assert.Equal(t, "amd64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"bsd", "unix", "os"}, di.Family)
+}
+
+func TestFreebsd12Detector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-freebsd12.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(t, true, resolved, "platform should be resolvable")
+	assert.Equal(t, "freebsd", di.Name, "os name should be identified")
+	assert.Equal(t, "FreeBSD", di.Title, "os title should be identified")
+	assert.Equal(t, "12.0-CURRENT", di.Release, "os version should be identified")
+	assert.Equal(t, "amd64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"bsd", "unix", "os"}, di.Family)
+}
+
 func TestFamilies(t *testing.T) {
 	di := &platform.PlatformInfo{}
 	di.Family = []string{"unix", "bsd", "darwin"}

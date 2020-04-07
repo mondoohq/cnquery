@@ -463,6 +463,42 @@ var defaultLinux = &PlatformResolver{
 	},
 }
 
+var netbsd = &PlatformResolver{
+	Name:    "netbsd",
+	Familiy: false,
+	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
+		if strings.Contains(strings.ToLower(di.Name), "netbsd") == false {
+			return false, nil
+		}
+
+		osrd := NewOSReleaseDetector(t)
+		r, err := osrd.unamer()
+		if err == nil {
+			di.Release = r
+		}
+
+		return true, nil
+	},
+}
+
+var freebsd = &PlatformResolver{
+	Name:    "freebsd",
+	Familiy: false,
+	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
+		if strings.Contains(strings.ToLower(di.Name), "freebsd") == false {
+			return false, nil
+		}
+
+		osrd := NewOSReleaseDetector(t)
+		r, err := osrd.unamer()
+		if err == nil {
+			di.Release = r
+		}
+
+		return true, nil
+	},
+}
+
 var windows = &PlatformResolver{
 	Name:    "windows",
 	Familiy: false,
@@ -511,23 +547,13 @@ var darwinFamily = &PlatformResolver{
 	Familiy:  true,
 	Children: []*PlatformResolver{macOS, otherDarwin},
 	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
-		osrd := NewOSReleaseDetector(t)
-		unames, err := osrd.unames()
-		if err != nil {
-			return false, err
-		}
-
-		if strings.Contains(strings.ToLower(unames), "darwin") == false {
+		if strings.Contains(strings.ToLower(di.Name), "darwin") == false {
 			return false, nil
 		}
-
 		// from here we know it is a darwin system
-		unamem, err := osrd.unamem()
-		if err == nil {
-			di.Arch = unamem
-		}
 
 		// read information from /usr/bin/sw_vers
+		osrd := NewOSReleaseDetector(t)
 		dsv, err := osrd.darwin_swversion()
 		// ignore dsv config if we got an error
 		if err == nil {
@@ -551,7 +577,7 @@ var darwinFamily = &PlatformResolver{
 var bsdFamily = &PlatformResolver{
 	Name:     "bsd",
 	Familiy:  true,
-	Children: []*PlatformResolver{darwinFamily},
+	Children: []*PlatformResolver{darwinFamily, netbsd, freebsd},
 	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
 		osrd := NewOSReleaseDetector(t)
 		unames, err := osrd.unames()
@@ -559,7 +585,14 @@ var bsdFamily = &PlatformResolver{
 			return false, err
 		}
 
+		unamem, err := osrd.unamem()
+		if err == nil {
+			di.Arch = unamem
+		}
+
 		if len(unames) > 0 {
+			di.Name = strings.ToLower(unames)
+			di.Title = unames
 			return true, nil
 		}
 		return false, nil
