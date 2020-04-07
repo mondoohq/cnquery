@@ -214,9 +214,9 @@ var centos = &PlatformResolver{
 			return false, nil
 		}
 
-		if len(di.Name) == 0 {
-			di.Name = "centos"
-		}
+		// if len(di.Name) == 0 {
+		// 	di.Name = "centos"
+		// }
 
 		return true, nil
 	},
@@ -243,9 +243,9 @@ var fedora = &PlatformResolver{
 			return false, nil
 		}
 
-		if len(di.Name) == 0 {
-			di.Name = "centos"
-		}
+		// if len(di.Name) == 0 {
+		// 	di.Name = "fedora"
+		// }
 
 		return true, nil
 	},
