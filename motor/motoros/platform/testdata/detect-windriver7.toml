@@ -1,0 +1,17 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "3.14.23-WR7.0.0.2_standard"
+
+[files."/etc/os-release"]
+content = """
+ID=wrlinux
+NAME=Wind River Linux
+VERSION=7.0.0.2
+VERSION_ID=7.0.0.2
+PRETTY_NAME=Wind River Linux 7.0.0.2
+"""
