@@ -419,6 +419,39 @@ var photon = &PlatformResolver{
 	},
 }
 
+var openwrt = &PlatformResolver{
+	Name:    "openwrt",
+	Familiy: false,
+	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
+		// No clue why they are not using either lsb-release or os-release
+		f, err := t.File("/etc/openwrt_release")
+		if err != nil {
+			return false, err
+		}
+		defer f.Close()
+
+		content, err := ioutil.ReadAll(f)
+		if err != nil {
+			return false, err
+		}
+
+		lsb, err := ParseLsbRelease(string(content))
+		if err == nil {
+			if len(lsb["DISTRIB_ID"]) > 0 {
+				di.Name = strings.ToLower(lsb["DISTRIB_ID"])
+				di.Title = lsb["DISTRIB_ID"]
+			}
+			if len(lsb["DISTRIB_RELEASE"]) > 0 {
+				di.Release = lsb["DISTRIB_RELEASE"]
+			}
+
+			return true, nil
+		}
+
+		return false, nil
+	},
+}
+
 // fallback linux detection, since we do not know the system, the family detection may not be correct
 var defaultLinux = &PlatformResolver{
 	Name:    "generic-linux",
@@ -625,7 +658,7 @@ var archFamily = &PlatformResolver{
 var linuxFamily = &PlatformResolver{
 	Name:     FAMILY_LINUX,
 	Familiy:  true,
-	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, amazonlinux, alpine, gentoo, busybox, photon, windriver, defaultLinux},
+	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, amazonlinux, alpine, gentoo, busybox, photon, windriver, openwrt, defaultLinux},
 	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
 		detected := false
 		osrd := NewOSReleaseDetector(t)
