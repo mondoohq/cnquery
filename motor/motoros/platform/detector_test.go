@@ -639,6 +639,19 @@ func TestBuildrootDetector(t *testing.T) {
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
 
+func TestSolaris11Detector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-solaris11.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(t, true, resolved, "platform should be resolvable")
+	assert.Equal(t, "solaris", di.Name, "os name should be identified")
+	assert.Equal(t, "Oracle Solaris", di.Title, "os title should be identified")
+	assert.Equal(t, "11.1", di.Release, "os version should be identified")
+	assert.Equal(t, "i86pc", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"unix", "os"}, di.Family)
+}
+
 func TestFamilies(t *testing.T) {
 	di := &platform.PlatformInfo{}
 	di.Family = []string{"unix", "bsd", "darwin"}

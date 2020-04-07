@@ -1,0 +1,15 @@
+[commands."uname -s"]
+stdout = "SunOS"
+
+[commands."uname -m"]
+stdout = "i86pc"
+
+[commands."uname -r"]
+stdout = "5.11"
+
+[files."/etc/release"]
+content = """
+                            Oracle Solaris 11.1 X86
+Copyright (c) 1983, 2012, Oracle and/or its affiliates.  All rights reserved.
+                         Assembled 19 September 2012
+"""
