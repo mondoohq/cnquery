@@ -6,64 +6,7 @@ import (
 	"encoding/xml"
 	"io"
 	"io/ioutil"
-	"regexp"
 )
-
-// extends Package to store available version
-type PackageUpdate struct {
-	Name      string `json:"name"`
-	Version   string `json:"version"`
-	Arch      string `json:"arch"`
-	Available string `json:"available"`
-	Repo      string `json:"repo"`
-}
-
-type OperatingSystemUpdate struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Severity    string `json:"severity"`
-	Category    string `json:"category"`
-	Restart     bool   `json:"restart"`
-}
-
-var (
-	APK_UPDATE_REGEX  = regexp.MustCompile(`^([a-zA-Z0-9._]+)-([a-zA-Z0-9.\-\+]+)\s+<\s([a-zA-Z0-9.\-\+]+)\s*$`)
-	DPKG_UPDATE_REGEX = regexp.MustCompile(`^Inst\s([a-zA-Z0-9.\-_]+)\s\[([a-zA-Z0-9.\-\+]+)\]\s\(([a-zA-Z0-9.\-\+]+)\s*(.*)\)(.*)$`)
-)
-
-func ParseApkUpdates(input io.Reader) (map[string]PackageUpdate, error) {
-	pkgs := map[string]PackageUpdate{}
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-		m := APK_UPDATE_REGEX.FindStringSubmatch(line)
-		if m != nil {
-			pkgs[m[1]] = PackageUpdate{
-				Name:      m[1],
-				Version:   m[2],
-				Available: m[3],
-			}
-		}
-	}
-	return pkgs, nil
-}
-
-func ParseDpkgUpdates(input io.Reader) (map[string]PackageUpdate, error) {
-	pkgs := map[string]PackageUpdate{}
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-		m := DPKG_UPDATE_REGEX.FindStringSubmatch(line)
-		if m != nil {
-			pkgs[m[1]] = PackageUpdate{
-				Name:      m[1],
-				Version:   m[2],
-				Available: m[3],
-			}
-		}
-	}
-	return pkgs, nil
-}
 
 func ParseRpmUpdates(input io.Reader) (map[string]PackageUpdate, error) {
 	pkgs := map[string]PackageUpdate{}

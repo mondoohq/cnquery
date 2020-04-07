@@ -1,11 +1,13 @@
 package packages
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"strings"
 
 	"github.com/pkg/errors"
+	motor "go.mondoo.io/mondoo/motor/motoros"
 	plist "howett.net/plist"
 )
 
@@ -50,4 +52,30 @@ func ParseMacOSPackages(input io.Reader) ([]Package, error) {
 	}
 
 	return pkgs, nil
+}
+
+// MacOS
+type MacOSPkgManager struct {
+	motor *motor.Motor
+}
+
+func (mpm *MacOSPkgManager) Name() string {
+	return "macOS Package Manager"
+}
+
+func (mpm *MacOSPkgManager) Format() string {
+	return "macos"
+}
+
+func (mpm *MacOSPkgManager) List() ([]Package, error) {
+	cmd, err := mpm.motor.Transport.RunCommand("system_profiler SPApplicationsDataType -xml")
+	if err != nil {
+		return nil, fmt.Errorf("could not read package list")
+	}
+
+	return ParseMacOSPackages(cmd.Stdout)
+}
+
+func (mpm *MacOSPkgManager) Available() (map[string]PackageUpdate, error) {
+	return nil, errors.New("cannot determine available packages for macOS")
 }

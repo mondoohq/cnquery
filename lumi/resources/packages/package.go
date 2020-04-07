@@ -13,3 +13,20 @@ type Package struct {
 	Origin string `json:"origin"`
 	Format string `json:"format"`
 }
+
+// extends Package to store available version
+type PackageUpdate struct {
+	Name      string `json:"name"`
+	Version   string `json:"version"`
+	Arch      string `json:"arch"`
+	Available string `json:"available"`
+	Repo      string `json:"repo"`
+}
+
+type OperatingSystemUpdate struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Severity    string `json:"severity"`
+	Category    string `json:"category"`
+	Restart     bool   `json:"restart"`
+}
