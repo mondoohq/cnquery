@@ -1,0 +1,40 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "5.5.8-200.fc31.x86_64"
+
+[files."/etc/redhat-release"]
+content = "Fedora release 31 (Thirty One)"
+
+[files."/etc/fedora-release"]
+content = "Fedora release 31 (Thirty One)"
+
+[files."/etc/os-release"]
+content = """
+NAME=Fedora
+VERSION="31.20200310.3.0 (CoreOS)"
+ID=fedora
+VERSION_ID=31
+VERSION_CODENAME=""
+PLATFORM_ID="platform:f31"
+PRETTY_NAME="Fedora CoreOS 31.20200310.3.0"
+ANSI_COLOR="0;34"
+LOGO=fedora-logo-icon
+CPE_NAME="cpe:/o:fedoraproject:fedora:31"
+HOME_URL="https://getfedora.org/coreos/"
+DOCUMENTATION_URL="https://docs.fedoraproject.org/en-US/fedora-coreos/"
+SUPPORT_URL="https://github.com/coreos/fedora-coreos-tracker/"
+BUG_REPORT_URL="https://github.com/coreos/fedora-coreos-tracker/"
+REDHAT_BUGZILLA_PRODUCT="Fedora"
+REDHAT_BUGZILLA_PRODUCT_VERSION=31
+REDHAT_SUPPORT_PRODUCT="Fedora"
+REDHAT_SUPPORT_PRODUCT_VERSION=31
+PRIVACY_POLICY_URL="https://fedoraproject.org/wiki/Legal:PrivacyPolicy"
+VARIANT="CoreOS"
+VARIANT_ID=coreos
+OSTREE_VERSION='31.20200310.3.0'
+"""

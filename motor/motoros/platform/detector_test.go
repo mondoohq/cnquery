@@ -83,6 +83,32 @@ func TestFedora29OSDetector(t *testing.T) {
 	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
 
+func TestFedoraCoreOSDetector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-coreos-fedora.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(t, true, resolved, "platform should be resolvable")
+	assert.Equal(t, "fedora", di.Name, "os name should be identified")
+	assert.Equal(t, "Fedora", di.Title, "os title should be identified")
+	assert.Equal(t, "31", di.Release, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
+}
+
+func TestCoreOSDetector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-coreos.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(t, true, resolved, "platform should be resolvable")
+	assert.Equal(t, "flatcar", di.Name, "os name should be identified")
+	assert.Equal(t, "Flatcar Container Linux by Kinvolk", di.Title, "os title should be identified")
+	assert.Equal(t, "2430.0.0", di.Release, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
 func TestCentos6Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-centos6.toml")
 	assert.Nil(t, err, "was able to create the transport")
