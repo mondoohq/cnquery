@@ -309,6 +309,16 @@ var amazonlinux = &PlatformResolver{
 		return false, nil
 	},
 }
+var windriver = &PlatformResolver{
+	Name:    "wrlinux",
+	Familiy: false,
+	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
+		if di.Name == "wrlinux" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
 
 var opensuse = &PlatformResolver{
 	Name:    "opensuse",
@@ -615,7 +625,7 @@ var archFamily = &PlatformResolver{
 var linuxFamily = &PlatformResolver{
 	Name:     FAMILY_LINUX,
 	Familiy:  true,
-	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, amazonlinux, alpine, gentoo, busybox, photon, defaultLinux},
+	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, amazonlinux, alpine, gentoo, busybox, photon, windriver, defaultLinux},
 	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
 		detected := false
 		osrd := NewOSReleaseDetector(t)

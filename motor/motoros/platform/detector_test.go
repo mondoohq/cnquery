@@ -187,6 +187,19 @@ func TestUbuntu2004Detector(t *testing.T) {
 	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
 }
 
+func TestWindriver7Detector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-windriver7.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(t, true, resolved, "platform should be resolvable")
+	assert.Equal(t, "wrlinux", di.Name, "os name should be identified")
+	assert.Equal(t, "Wind River Linux", di.Title, "os title should be identified")
+	assert.Equal(t, "7.0.0.2", di.Release, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
 func TestDebian7Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-debian7.toml")
 	assert.Nil(t, err, "was able to create the transport")
