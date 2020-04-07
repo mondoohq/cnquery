@@ -187,6 +187,23 @@ var rhel = &PlatformResolver{
 			return true, nil
 		}
 
+		// fallback to /etc/redhat-release file
+		f, err := t.File("/etc/redhat-release")
+		if err != nil {
+			return false, nil
+		}
+		defer f.Close()
+
+		c, err := ioutil.ReadAll(f)
+		if err != nil || len(c) == 0 {
+			return false, nil
+		}
+
+		if strings.Contains(string(c), "Red Hat") {
+			di.Name = "redhat"
+			return true, nil
+		}
+
 		return false, nil
 	},
 }
@@ -201,8 +218,8 @@ var centos = &PlatformResolver{
 			return true, nil
 		}
 
-		// CentOS 5 does not have /etc/centos-release
-		// check if we have /etc/centos-release file
+		// NOTE: CentOS 5 does not have /etc/centos-release
+		// fallback to /etc/centos-release file
 		f, err := t.File("/etc/centos-release")
 		if err != nil {
 			return false, nil
@@ -214,9 +231,9 @@ var centos = &PlatformResolver{
 			return false, nil
 		}
 
-		// if len(di.Name) == 0 {
-		// 	di.Name = "centos"
-		// }
+		if len(di.Name) == 0 {
+			di.Name = "centos"
+		}
 
 		return true, nil
 	},
@@ -231,7 +248,7 @@ var fedora = &PlatformResolver{
 			return true, nil
 		}
 
-		// check if we have /etc/fedora-release file
+		// fallback to /etc/fedora-release file
 		f, err := t.File("/etc/fedora-release")
 		if err != nil {
 			return false, nil
@@ -243,9 +260,9 @@ var fedora = &PlatformResolver{
 			return false, nil
 		}
 
-		// if len(di.Name) == 0 {
-		// 	di.Name = "fedora"
-		// }
+		if len(di.Name) == 0 {
+			di.Name = "fedora"
+		}
 
 		return true, nil
 	},
@@ -600,9 +617,11 @@ var bsdFamily = &PlatformResolver{
 }
 
 var redhatFamily = &PlatformResolver{
-	Name:     "redhat",
-	Familiy:  true,
-	Children: []*PlatformResolver{rhel, centos, fedora, oracle, scientific},
+	Name:    "redhat",
+	Familiy: true,
+	// NOTE: oracle pretents to be redhat with /etc/redhat-release and Red Hat Linux, therefore we
+	// want to check that platform before redhat
+	Children: []*PlatformResolver{oracle, rhel, centos, fedora, scientific},
 	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
 		f, err := t.File("/etc/redhat-release")
 		if err != nil {
@@ -621,6 +640,7 @@ var redhatFamily = &PlatformResolver{
 		title, release, err := ParseRhelVersion(content)
 		if err == nil {
 			log.Debug().Str("title", title).Str("release", release).Msg("detected rhelish platform")
+
 			// only set title if not already properly detected by lsb or os-release
 			if len(di.Title) == 0 {
 				di.Title = title
@@ -631,9 +651,11 @@ var redhatFamily = &PlatformResolver{
 			if len(release) > 0 {
 				di.Release = release
 			}
+
+			return true, nil
 		}
 
-		return true, nil
+		return false, nil
 	},
 }
 
@@ -695,6 +717,9 @@ var linuxFamily = &PlatformResolver{
 	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
 		detected := false
 		osrd := NewOSReleaseDetector(t)
+
+		di.Name = ""
+		di.Title = ""
 
 		lsb, err := osrd.lsbconfig()
 		// ignore lsb config if we got an error

@@ -13,7 +13,7 @@ content = "Fedora release 29 (Twenty Nine)"
 [files."/etc/fedora-release"]
 content = "Fedora release 29 (Twenty Nine)"
 
-[files."/etc/os-release "]
+[files."/etc/os-release"]
 content = """
 NAME=Fedora
 VERSION="29 (Container Image)"
