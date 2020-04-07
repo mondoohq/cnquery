@@ -1,9 +1,10 @@
-package packages
+package packages_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.mondoo.io/mondoo/lumi/resources/packages"
 	mock "go.mondoo.io/mondoo/motor/motoros/mock/toml"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
@@ -19,7 +20,7 @@ func TestMacOsXPackageParser(t *testing.T) {
 	}
 	assert.Nil(t, err)
 
-	m, err := ParseMacOSPackages(c.Stdout)
+	m, err := packages.ParseMacOSPackages(c.Stdout)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(m), "detected the right amount of packages")
 

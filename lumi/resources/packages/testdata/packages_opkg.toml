@@ -1,0 +1,89 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "4.9.125-linuxkit"
+
+[files."/etc/openwrt_release"]
+content = """
+DISTRIB_ID='OpenWrt'
+DISTRIB_RELEASE='Bleeding Edge'
+DISTRIB_REVISION='50072'
+DISTRIB_CODENAME='designated_driver'
+DISTRIB_TARGET='x86/64'
+DISTRIB_DESCRIPTION='OpenWrt Designated Driver 50072'
+DISTRIB_TAINTS=''
+"""
+
+[commands."opkg list"]
+stdout = """
+base-files - 169-50072
+busybox - 1.24.2-1
+dnsmasq - 2.78-1
+dropbear - 2017.75-1
+firewall - 2016-11-29-1
+fstools - 2016-07-24-addd7dc21fe99f2701c1d4708071578052af401d
+ip6tables - 1.4.21-2
+iptables - 1.4.21-2
+jshn - 2016-11-29-77a629375d7387a33a59509d9d751a8798134cab
+jsonfilter - 2016-07-02-dea067ad67d977c247c300c06676a06adf21e0c7
+kernel - 4.4.14-1-4ec01a617a47a5f764bc138d34453fb6
+kmod-button-hotplug - 4.4.14-3
+kmod-e1000 - 4.4.14-1
+kmod-e1000e - 4.4.14-1
+kmod-i2c-algo-bit - 4.4.14-1
+kmod-i2c-core - 4.4.14-1
+kmod-igb - 4.4.14-1
+kmod-input-core - 4.4.14-1
+kmod-ip6tables - 4.4.14-1
+kmod-ipt-conntrack - 4.4.14-1
+kmod-ipt-core - 4.4.14-1
+kmod-ipt-nat - 4.4.14-1
+kmod-lib-crc-ccitt - 4.4.14-1
+kmod-mii - 4.4.14-1
+kmod-nf-conntrack - 4.4.14-1
+kmod-nf-conntrack6 - 4.4.14-1
+kmod-nf-ipt - 4.4.14-1
+kmod-nf-ipt6 - 4.4.14-1
+kmod-nf-nat - 4.4.14-1
+kmod-ppp - 4.4.14-1
+kmod-pppoe - 4.4.14-1
+kmod-pppox - 4.4.14-1
+kmod-pps - 4.4.14-1
+kmod-ptp - 4.4.14-1
+kmod-r8169 - 4.4.14-1
+kmod-slhc - 4.4.14-1
+libblobmsg-json - 2016-11-29-77a629375d7387a33a59509d9d751a8798134cab
+libc - 1.1.16-1
+libexpat - 2.2.5-1
+libgcc - 5.3.0-1
+libip4tc - 1.4.21-2
+libip6tc - 1.4.21-2
+libjson-c - 0.12-1
+libjson-script - 2016-11-29-77a629375d7387a33a59509d9d751a8798134cab
+libnl-tiny - 0.1-5
+libubox - 2016-11-29-77a629375d7387a33a59509d9d751a8798134cab
+libubus - 2016-07-02-053be7df871e05478284235732f8b0608089512f
+libuci - 2016-07-04.1-1
+libuclient - 2016-01-28-2e0918c7e0612449024caaaa8d44fb2d7a33f5f3
+libxtables - 1.4.21-2
+logd - 2016-07-19-aead2c0cbffdda9b46d74a998a4c6aeef423b21a
+mtd - 21
+netifd - 2016-12-09-edc15caac6c6d3b2d8ea17f98ecbaba81ba573dc
+odhcp6c - 2016-02-08-7533a6243dc3ac5a747cf6ccbc4d0539dafd3e07
+odhcpd - 2016-10-09-801cfeea100ca7b211c9841f0fcb757b17f47860
+opkg - 9c97d5ecd795709c8584e972bfdf3aee3a5b846d-15
+ppp - 2.4.7-9
+ppp-mod-pppoe - 2.4.7-9
+procd - 2016-07-29-2c9f5d4af1559b840c42f1443ede9f9fe809c58b
+r8169-firmware - 2016-01-25-52442afee9907bc32a058f22bb3295d040677c26-1
+ubox - 2016-07-19-aead2c0cbffdda9b46d74a998a4c6aeef423b21a
+ubus - 2016-07-02-053be7df871e05478284235732f8b0608089512f
+ubusd - 2016-07-02-053be7df871e05478284235732f8b0608089512f
+uci - 2016-07-04.1-1
+uclient-fetch - 2016-01-28-2e0918c7e0612449024caaaa8d44fb2d7a33f5f3
+usign - 2016-07-04-ef6419142a3b0fbcddcccf536e3c1880302c6f89
+"""

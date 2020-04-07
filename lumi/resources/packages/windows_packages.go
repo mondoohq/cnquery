@@ -7,7 +7,10 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	motor "go.mondoo.io/mondoo/motor/motoros"
+	"go.mondoo.io/mondoo/motor/motoros/platform/winbuild"
 )
 
 // base64 encoding for long powershell script
@@ -232,4 +235,71 @@ func ParseWindowsHotfixes(input io.Reader) ([]Package, error) {
 		}
 	}
 	return pkgs, nil
+}
+
+type WinPkgManager struct {
+	motor *motor.Motor
+}
+
+func (win *WinPkgManager) Name() string {
+	return "Windows Package Manager"
+}
+
+func (win *WinPkgManager) Format() string {
+	return "win"
+}
+
+// returns installed appx packages as well as hot fixes
+func (win *WinPkgManager) List() ([]Package, error) {
+
+	pf, err := win.motor.Platform()
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := winbuild.Version(pf.Release)
+
+	pkgs := []Package{}
+
+	// only win 10+ are compatible with app x packages
+	if b.Build > 10240 {
+		cmd, err := win.motor.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", WINDOWS_QUERY_APPX_PACKAGES))
+		if err != nil {
+			return nil, fmt.Errorf("could not read package list")
+		}
+		appxPkgs, err := ParseWindowsAppxPackages(cmd.Stdout)
+		if err != nil {
+			return nil, fmt.Errorf("could not read appx package list")
+		}
+		pkgs = append(pkgs, appxPkgs...)
+	}
+
+	// try to read wsus updates
+	wsusCmd, err := win.motor.Transport.RunCommand(EncodePowershell(WINDOWS_QUERY_WSUS_AVAILABLE))
+	if err == nil {
+		wsusUpdates, err := ParseWindowsUpdates(wsusCmd.Stdout)
+		if err == nil {
+			pkgs = append(pkgs, wsusUpdates...)
+		} else {
+			log.Warn().Err(err).Msg("could not parse wsus results")
+		}
+	} else {
+		log.Warn().Err(err).Msg("could not fetch windows update services")
+	}
+
+	cmd, err := win.motor.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", WINDOWS_QUERY_HOTFIXES))
+	if err != nil {
+		return nil, errors.Wrap(err, "could not fetch hotfixes")
+	}
+	hotfixes, err := ParseWindowsHotfixes(cmd.Stdout)
+	if err != nil {
+		return nil, errors.Wrapf(err, "could not parse hotfix results")
+	}
+	pkgs = append(pkgs, hotfixes...)
+
+	return pkgs, nil
+}
+
+func (win *WinPkgManager) Available() (map[string]PackageUpdate, error) {
+	return map[string]PackageUpdate{}, nil
 }

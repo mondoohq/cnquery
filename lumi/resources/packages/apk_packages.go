@@ -2,10 +2,13 @@ package packages
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 
-	"github.com/rs/zerolog/log"
 	"regexp"
+
+	"github.com/rs/zerolog/log"
+	motor "go.mondoo.io/mondoo/motor/motoros"
 )
 
 var (
@@ -83,4 +86,59 @@ func ParseApkDbPackages(input io.Reader) []Package {
 	// if the last line is not an empty line we have things in flight, lets check it
 	add(pkg)
 	return pkgs
+}
+
+var APK_UPDATE_REGEX = regexp.MustCompile(`^([a-zA-Z0-9._]+)-([a-zA-Z0-9.\-\+]+)\s+<\s([a-zA-Z0-9.\-\+]+)\s*$`)
+
+func ParseApkUpdates(input io.Reader) (map[string]PackageUpdate, error) {
+	pkgs := map[string]PackageUpdate{}
+	scanner := bufio.NewScanner(input)
+	for scanner.Scan() {
+		line := scanner.Text()
+		m := APK_UPDATE_REGEX.FindStringSubmatch(line)
+		if m != nil {
+			pkgs[m[1]] = PackageUpdate{
+				Name:      m[1],
+				Version:   m[2],
+				Available: m[3],
+			}
+		}
+	}
+	return pkgs, nil
+}
+
+// Arch, Manjaro
+type AlpinePkgManager struct {
+	motor *motor.Motor
+}
+
+func (apm *AlpinePkgManager) Name() string {
+	return "Alpine Package Manager"
+}
+
+func (apm *AlpinePkgManager) Format() string {
+	return "apk"
+}
+
+func (apm *AlpinePkgManager) List() ([]Package, error) {
+	fr, err := apm.motor.Transport.File("/lib/apk/db/installed")
+	if err != nil {
+		return nil, fmt.Errorf("could not read package list")
+	}
+	defer fr.Close()
+
+	return ParseApkDbPackages(fr), nil
+}
+
+func (apm *AlpinePkgManager) Available() (map[string]PackageUpdate, error) {
+	// it only works if apk is updated
+	apm.motor.Transport.RunCommand("apk update")
+
+	// determine package updates
+	cmd, err := apm.motor.Transport.RunCommand("apk version -v -l '<'")
+	if err != nil {
+		log.Debug().Err(err).Msg("lumi[packages]> could not read package updates")
+		return nil, fmt.Errorf("could not read package update list")
+	}
+	return ParseApkUpdates(cmd.Stdout)
 }

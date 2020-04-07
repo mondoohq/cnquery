@@ -1,0 +1,166 @@
+[commands."uname -s"]
+stdout = "SunOS"
+
+[commands."uname -m"]
+stdout = "i86pc"
+
+[commands."uname -r"]
+stdout = "5.11"
+
+[files."/etc/release"]
+content = """
+                           Oracle Solaris 11.1 X86
+Copyright (c) 1983, 2012, Oracle and/or its affiliates.  All rights reserved.
+                         Assembled 19 September 2012
+"""
+
+[commands."pkg list -v"]
+stdout = """
+FMRI                                                                         IFO
+pkg://solaris/archiver/gnu-tar@1.26,5.11-0.175.1.0.0.24.0:20120904T170545Z   i--
+pkg://solaris/compress/bzip2@1.0.6,5.11-0.175.1.0.0.24.0:20120904T170602Z    i--
+pkg://solaris/compress/gzip@1.4,5.11-0.175.1.0.0.24.0:20120904T170603Z       i--
+pkg://solaris/compress/p7zip@9.20.1,5.11-0.175.1.0.0.24.0:20120904T170605Z   i--
+pkg://solaris/compress/unzip@6.0,5.11-0.175.1.0.0.24.0:20120904T170608Z      i--
+pkg://solaris/compress/xz@5.0.1,5.11-0.175.1.0.0.24.0:20120904T170609Z       i--
+pkg://solaris/compress/zip@3.0,5.11-0.175.1.0.0.24.0:20120904T170611Z        i--
+pkg://solaris/consolidation/SunVTS/SunVTS-incorporation@0.5.11,5.11-0.175.1.0.0.14.0:20120416T200729Z i--
+pkg://solaris/consolidation/X/X-incorporation@0.5.11,5.11-0.175.1.0.0.24.1317:20120904T175757Z i--
+pkg://solaris/consolidation/admin/admin-incorporation@0.5.11,5.11-0.175.1.0.0.5.0:20111212T232623Z i--
+pkg://solaris/consolidation/cacao/cacao-incorporation@0.5.11,5.11-0.175.1.0.0.11.0:20120305T152551Z i--
+pkg://solaris/consolidation/cde/cde-incorporation@0.5.11,5.11-0.175.0.0.0.0.0:20110927T191905Z i--
+pkg://solaris/consolidation/cns/cns-incorporation@0.5.11,5.11-0.175.1.0.0.23.0:20120820T162238Z i--
+pkg://solaris/consolidation/dbtg/dbtg-incorporation@0.5.11,5.11-0.175.1.0.0.15.0:20120501T214422Z i--
+pkg://solaris/consolidation/desktop/desktop-incorporation@0.5.11,5.11-0.175.1.0.0.24.2:20120919T183843Z i--
+pkg://solaris/consolidation/desktop/gnome-incorporation@0.5.11,5.11-0.175.1.0.0.22.0:20120806T171142Z i--
+pkg://solaris/consolidation/gfx/gfx-incorporation@0.5.11,5.11-0.175.1.0.0.5.0:20111212T232623Z i--
+pkg://solaris/consolidation/install/install-incorporation@0.5.11,5.11-0.175.1.0.0.24.1736:20120912T193249Z i--
+pkg://solaris/consolidation/ips/ips-incorporation@0.5.11,5.11-0.175.1.0.0.24.0:20120904T180327Z i--
+pkg://solaris/consolidation/java/java-incorporation@0.5.11,5.11-0.175.1.0.0.24.0:20120904T175431Z i--
+pkg://solaris/consolidation/jdmk/jdmk-incorporation@0.5.11,5.11-0.173.0.0.0.0.0:20110828T210111Z i--
+pkg://solaris/consolidation/l10n/l10n-incorporation@0.5.11,5.11-0.175.1.0.0.23.1134:20120820T154803Z i--
+pkg://solaris/consolidation/man/man-incorporation@0.5.11,5.11-0.175.1.0.0.21.0:20120723T163455Z i--
+pkg://solaris/consolidation/nspg/nspg-incorporation@0.5.11,5.11-0.175.1.0.0.5.0:20111212T232623Z i--
+pkg://solaris/consolidation/nvidia/nvidia-incorporation@0.5.11,5.11-0.175.1.0.0.22.0:20120806T175117Z i--
+pkg://solaris/consolidation/osnet/osnet-incorporation@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184141Z i--
+pkg://solaris/consolidation/sfw/sfw-incorporation@0.5.11,5.11-0.175.1.0.0.5.0:20111212T232623Z i--
+pkg://solaris/consolidation/sic_team/sic_team-incorporation@0.5.11,5.11-0.175.1.0.0.5.0:20111212T230120Z i--
+pkg://solaris/consolidation/solaris_re/solaris_re-incorporation@0.5.11,5.11-0.175.1.0.0.24.3:20120919T185316Z i--
+pkg://solaris/consolidation/sunpro/sunpro-incorporation@0.5.11,5.11-0.175.1.0.0.19.0:20120625T151735Z i--
+pkg://solaris/consolidation/ub_javavm/ub_javavm-incorporation@0.5.11,5.11-0.175.1.0.0.24.1:20120904T175215Z i--
+pkg://solaris/consolidation/userland/userland-incorporation@0.5.11,5.11-0.175.1.0.0.24.0:20120904T170613Z i--
+pkg://solaris/consolidation/vpanels/vpanels-incorporation@0.5.11,5.11-0.175.1.0.0.17.0:20120529T220223Z i-r
+pkg://solaris/consolidation/xvm/xvm-incorporation@0.5.11,5.11-0.175.1.0.0.5.0:20111212T232056Z i--
+pkg://solaris/crypto/ca-certificates@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184202Z i--
+pkg://solaris/crypto/pwgen@2.6,5.11-0.175.1.0.0.24.0:20120904T170620Z        i--
+pkg://solaris/data/docbook@2.30.0,5.11-0.175.0.0.0.0.0:20110927T081910Z      i-r
+pkg://solaris/data/docbook/docbook-dtds@1.0,5.11-0.175.1.0.0.4.0:20111130T044002Z i--
+pkg://solaris/data/docbook/docbook-style-dsssl@1.79,5.11-0.175.1.0.0.20.0:20120709T182930Z i--
+pkg://solaris/data/docbook/docbook-style-xsl@1.75.2,5.11-0.175.0.0.0.0.0:20110927T081858Z i--
+pkg://solaris/data/sgml-common@0.6.3,5.11-0.175.1.0.0.11.0:20120305T184308Z  i--
+pkg://solaris/data/xml-common@0.6.3,5.11-0.175.1.0.0.11.0:20120305T184311Z   i--
+pkg://solaris/database/berkeleydb-5@5.1.25,5.11-0.175.1.0.0.24.0:20120904T170621Z i--
+pkg://solaris/database/mysql-51/library@5.1.37,5.11-0.175.1.0.0.24.0:20120904T170747Z i--
+pkg://solaris/database/sqlite-3@3.7.11,5.11-0.175.1.0.0.15.0:20120501T194847Z i--
+pkg://solaris/developer/assembler@0.5.11,5.11-0.175.1.0.0.19.0:20120625T151738Z i--
+pkg://solaris/developer/base-developer-utilities@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184208Z i--
+pkg://solaris/developer/build/gnu-make@3.82,5.11-0.175.1.0.0.24.0:20120904T171231Z i--
+pkg://solaris/developer/build/make@0.5.11,5.11-0.175.1.0.0.19.0:20120625T151741Z i--
+pkg://solaris/developer/debug/mdb@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184217Z i--
+pkg://solaris/developer/library/xprofile@0.5.11,5.11-0.175.1.0.0.19.0:20120625T151744Z i--
+pkg://solaris/developer/macro/cpp@0.5.11,5.11-0.175.1.0.0.19.0:20120625T151749Z i--
+pkg://solaris/developer/versioning/sccs@0.5.11,5.11-0.175.1.0.0.19.0:20120625T151900Z i--
+pkg://solaris/diagnostic/acpidump@0.2007.11.16,5.11-0.175.1.0.0.24.0:20120904T171746Z i--
+pkg://solaris/diagnostic/cpu-counters@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184229Z i--
+pkg://solaris/diagnostic/ddu/data@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184232Z i--
+pkg://solaris/diagnostic/ddu/library@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184233Z i--
+pkg://solaris/diagnostic/ddu/locale@0.5.11,5.11-0.175.1.0.0.23.1134:20120820T154810Z i--
+pkg://solaris/diagnostic/ddu/text@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184234Z i--
+pkg://solaris/diagnostic/latencytop@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184238Z i--
+pkg://solaris/diagnostic/powertop@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184239Z i--
+pkg://solaris/diagnostic/scanpci@0.13.1,5.11-0.175.1.0.0.24.1317:20120904T175806Z i--
+pkg://solaris/diagnostic/snoop@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184239Z i--
+pkg://solaris/diagnostic/spray@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184240Z i--
+pkg://solaris/diagnostic/tcpdump@4.1.1,5.11-0.175.1.0.0.24.0:20120904T171758Z i--
+pkg://solaris/diagnostic/top@3.8,5.11-0.175.1.0.0.24.0:20120904T171759Z      i--
+pkg://solaris/driver/crypto/dca@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184247Z i--
+pkg://solaris/driver/crypto/tpm@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184248Z i--
+pkg://solaris/driver/fc/emlxs@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184249Z  i--
+pkg://solaris/driver/fc/qlc@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184250Z    i--
+pkg://solaris/driver/infiniband/connectx@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184259Z i--
+pkg://solaris/driver/management/bmc@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184259Z i--
+pkg://solaris/driver/management/ipmi@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184300Z i--
+pkg://solaris/driver/network/ethernet/afe@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184301Z i--
+pkg://solaris/driver/network/ethernet/amd8111s@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184301Z i--
+pkg://solaris/driver/network/ethernet/atge@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184302Z i--
+pkg://solaris/driver/network/ethernet/bfe@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184302Z i--
+pkg://solaris/driver/network/ethernet/bge@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184303Z i--
+pkg://solaris/driver/network/ethernet/bnx@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184303Z i--
+pkg://solaris/driver/network/ethernet/bnxe@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184304Z i--
+pkg://solaris/driver/network/ethernet/chxge@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184305Z i--
+pkg://solaris/driver/network/ethernet/cxge@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184306Z i--
+pkg://solaris/driver/network/ethernet/dmfe@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184306Z i--
+pkg://solaris/driver/network/ethernet/dnet@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184307Z i--
+pkg://solaris/driver/network/ethernet/e1000g@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184308Z i--
+pkg://solaris/driver/network/ethernet/elxl@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184308Z i--
+pkg://solaris/driver/network/ethernet/hme@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184309Z i--
+pkg://solaris/driver/network/ethernet/hxge@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184310Z i--
+pkg://solaris/driver/network/ethernet/igb@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184310Z i--
+pkg://solaris/driver/network/ethernet/iprb@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184311Z i--
+pkg://solaris/driver/network/ethernet/ixgb@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184312Z i--
+pkg://solaris/driver/network/ethernet/ixgbe@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184312Z i--
+pkg://solaris/driver/network/ethernet/mxfe@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184313Z i--
+pkg://solaris/driver/network/ethernet/myri10ge@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184314Z i--
+pkg://solaris/driver/network/ethernet/nge@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184315Z i--
+pkg://solaris/driver/network/ethernet/ntxn@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184315Z i--
+pkg://solaris/driver/network/ethernet/nxge@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184316Z i--
+pkg://solaris/driver/network/ethernet/pcn@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184316Z i--
+pkg://solaris/driver/network/ethernet/qlcnic@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184318Z i--
+pkg://solaris/driver/network/ethernet/rge@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184318Z i--
+pkg://solaris/driver/network/ethernet/rtls@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184319Z i--
+pkg://solaris/driver/network/ethernet/sfe@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184319Z i--
+pkg://solaris/driver/network/ethernet/sxge@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184320Z i--
+pkg://solaris/driver/network/ethernet/usbecm@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184321Z i--
+pkg://solaris/driver/network/ethernet/vr@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184321Z i--
+pkg://solaris/driver/network/ethernet/vxge@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184322Z i--
+pkg://solaris/driver/network/ethernet/xge@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184323Z i--
+pkg://solaris/driver/network/ethernet/yge@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184323Z i--
+pkg://solaris/driver/network/wlan/arn@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184324Z i--
+pkg://solaris/driver/network/wlan/ath@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184324Z i--
+pkg://solaris/driver/network/wlan/atu@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184325Z i--
+pkg://solaris/driver/network/wlan/ipw@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184326Z i--
+pkg://solaris/driver/network/wlan/iwh@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184326Z i--
+pkg://solaris/driver/network/wlan/iwi@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184327Z i--
+pkg://solaris/driver/network/wlan/iwk@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184327Z i--
+pkg://solaris/driver/network/wlan/iwp@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184328Z i--
+pkg://solaris/driver/network/wlan/mwl@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184329Z i--
+pkg://solaris/driver/network/wlan/pcan@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184329Z i--
+pkg://solaris/driver/network/wlan/pcwl@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184330Z i--
+pkg://solaris/driver/network/wlan/ral@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184331Z i--
+pkg://solaris/driver/network/wlan/rtw@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184331Z i--
+pkg://solaris/driver/network/wlan/rum@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184332Z i--
+pkg://solaris/driver/network/wlan/rwd@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184332Z i--
+pkg://solaris/driver/network/wlan/rwn@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184333Z i--
+pkg://solaris/driver/network/wlan/uath@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184333Z i--
+pkg://solaris/driver/network/wlan/ural@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184334Z i--
+pkg://solaris/driver/network/wlan/urtw@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184335Z i--
+pkg://solaris/driver/network/wlan/wpi@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184335Z i--
+pkg://solaris/driver/network/wlan/zyd@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184336Z i--
+pkg://solaris/driver/parallel/ecpp@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184336Z i--
+pkg://solaris/driver/pcmcia@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184337Z    i--
+pkg://solaris/driver/serial/asy@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184338Z i--
+pkg://solaris/driver/serial/pcser@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184338Z i--
+pkg://solaris/driver/serial/usbftdi@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184340Z i--
+pkg://solaris/driver/serial/usbsacm@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184340Z i--
+pkg://solaris/driver/serial/usbser@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184341Z i--
+pkg://solaris/driver/serial/usbser_edge@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184341Z i--
+pkg://solaris/driver/serial/usbsksp@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184343Z i--
+pkg://solaris/driver/serial/usbsksp/usbs49_fw@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184342Z i--
+pkg://solaris/driver/serial/usbsprl@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184343Z i--
+pkg://solaris/driver/storage/aac@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184344Z i--
+pkg://solaris/driver/storage/adpu320@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184344Z i--
+pkg://solaris/driver/storage/ahci@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184345Z i--
+pkg://solaris/driver/storage/arcmsr@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184345Z i--
+pkg://solaris/driver/storage/ata@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184346Z i--
+pkg://solaris/driver/storage/bcm_sata@0.5.11,5.11-0.175.1.0.0.24.2:20120919T184347Z i--
+"""
