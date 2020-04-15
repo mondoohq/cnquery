@@ -4,6 +4,14 @@ mondoo {
   resources() []string
 }
 
+command {
+  init(command string)
+  command string
+  stdout() string
+  stderr() string
+  exitcode() int
+}
+
 file {
   init(path string)
   path string
