@@ -80,3 +80,94 @@ advisories {
   cves() []cve
   maxcvss() cvss
 }
+
+kernel {
+  parameters() map[string]string
+}
+
+osupdate {
+  name string
+  category string
+  severity string
+  restart bool
+  format string
+}
+
+os.updates {
+  []osupdate
+}
+
+process {
+  init(pid int)
+  pid int
+  state() string
+  executable() string
+  command() string
+}
+
+processes {
+  []process
+}
+
+user {
+  init(uid int)
+  uid int
+  gid int
+  username() string
+  home() string
+  shell() string
+  enabled() bool
+}
+
+users {
+  []user
+}
+
+service {
+  init(name string)
+  name string
+  description() string
+  installed() bool
+  running() bool
+  enabled() bool
+  type() string
+}
+
+services {
+  []service
+}
+
+group {
+  init(gid int)
+  gid int
+  name() string
+  members() []user
+}
+
+groups {
+  []group
+}
+
+docker {
+  images() []docker_image
+  container() []docker_container
+}
+
+docker_image {
+  id string
+  size int
+  virtualsize int
+  tags []string
+  labels map[string]string
+}
+
+docker_container {
+  id string
+  command string
+  image string
+  imageid string
+  names []string
+  state string
+  status string
+  labels map[string]string
+}
