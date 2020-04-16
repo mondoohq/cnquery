@@ -23,7 +23,6 @@ dbus:x:81:
 sshd:x:74:
 vagrant:x:1000:vagrant"""
 
-
 [commands."uname -r"]
 stdout = "4.19.76-linuxkit"
 

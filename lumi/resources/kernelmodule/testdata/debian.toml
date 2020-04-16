@@ -1,0 +1,125 @@
+[commands."lsmod"]
+stdout = """Module                  Size  Used by
+sb_edac                24576  0
+edac_core              77824  1 sb_edac
+crct10dif_pclmul       16384  0
+crc32_pclmul           16384  0
+ghash_clmulni_intel    16384  0
+intel_rapl_perf        16384  0
+sg                     32768  0
+evdev                  24576  3
+serio_raw              16384  0
+virtio_rng             16384  0
+rng_core               16384  1 virtio_rng
+pvpanic                16384  0
+button                 16384  0
+ip_tables              24576  0
+x_tables               36864  1 ip_tables
+autofs4                40960  2
+ext4                  589824  1
+crc16                  16384  1 ext4
+jbd2                  106496  1 ext4
+crc32c_generic         16384  0
+fscrypto               28672  1 ext4
+ecb                    16384  0
+mbcache                16384  2 ext4
+sd_mod                 49152  2
+crc32c_intel           24576  2
+virtio_scsi            20480  1
+scsi_mod              225280  3 sd_mod,virtio_scsi,sg
+virtio_net             32768  0
+aesni_intel           167936  0
+aes_x86_64             20480  1 aesni_intel
+glue_helper            16384  1 aesni_intel
+lrw                    16384  1 aesni_intel
+gf128mul               16384  1 lrw
+ablk_helper            16384  1 aesni_intel
+cryptd                 24576  3 ablk_helper,ghash_clmulni_intel,aesni_intel
+psmouse               135168  0
+virtio_pci             24576  0
+virtio_ring            24576  4 virtio_net,virtio_rng,virtio_scsi,virtio_pci
+virtio                 16384  4 virtio_net,virtio_rng,virtio_scsi,virtio_pci
+i2c_piix4              24576  0
+"""
+
+[files."/etc/modprobe.d/blacklist.conf"]
+content = """
+# disable pc speaker and floppy
+blacklist pcspkr
+blacklist floppy
+"""
+
+[files."/etc/modprobe.d/gce-blacklist.conf"]
+content = """
+# nouveau does not work with GCE GPU's.
+blacklist nouveau
+
+# GCE does not have a floppy device.
+blacklist floppy
+"""
+
+[files."/proc/modules"]
+content = """
+sb_edac 24576 0 - Live 0xffffffffc0265000
+edac_core 77824 1 sb_edac, Live 0xffffffffc0249000
+crct10dif_pclmul 16384 0 - Live 0xffffffffc0235000
+crc32_pclmul 16384 0 - Live 0xffffffffc0087000
+ghash_clmulni_intel 16384 0 - Live 0xffffffffc01ff000
+intel_rapl_perf 16384 0 - Live 0xffffffffc0229000
+sg 32768 0 - Live 0xffffffffc0240000
+evdev 24576 3 - Live 0xffffffffc022e000
+serio_raw 16384 0 - Live 0xffffffffc0224000
+virtio_rng 16384 0 - Live 0xffffffffc021f000
+rng_core 16384 1 virtio_rng, Live 0xffffffffc0216000
+pvpanic 16384 0 - Live 0xffffffffc0211000
+button 16384 0 - Live 0xffffffffc005a000
+ip_tables 24576 0 - Live 0xffffffffc0206000
+x_tables 36864 1 ip_tables, Live 0xffffffffc01f5000
+autofs4 40960 2 - Live 0xffffffffc0154000
+ext4 589824 1 - Live 0xffffffffc0164000
+crc16 16384 1 ext4, Live 0xffffffffc015f000
+jbd2 106496 1 ext4, Live 0xffffffffc0139000
+crc32c_generic 16384 0 - Live 0xffffffffc00ee000
+fscrypto 28672 1 ext4, Live 0xffffffffc0131000
+ecb 16384 0 - Live 0xffffffffc0094000
+mbcache 16384 2 ext4, Live 0xffffffffc0082000
+sd_mod 49152 2 - Live 0xffffffffc004d000
+crc32c_intel 24576 2 - Live 0xffffffffc0046000
+virtio_scsi 20480 1 - Live 0xffffffffc012b000
+scsi_mod 225280 3 sg,sd_mod,virtio_scsi, Live 0xffffffffc00f3000
+virtio_net 32768 0 - Live 0xffffffffc00e5000
+aesni_intel 167936 0 - Live 0xffffffffc00bb000
+aes_x86_64 20480 1 aesni_intel, Live 0xffffffffc00b2000
+glue_helper 16384 1 aesni_intel, Live 0xffffffffc00ab000
+lrw 16384 1 aesni_intel, Live 0xffffffffc00a3000
+gf128mul 16384 1 lrw, Live 0xffffffffc009e000
+ablk_helper 16384 1 aesni_intel, Live 0xffffffffc0099000
+cryptd 24576 3 ghash_clmulni_intel,aesni_intel,ablk_helper, Live 0xffffffffc008d000
+psmouse 135168 0 - Live 0xffffffffc0060000
+virtio_pci 24576 0 - Live 0xffffffffc003f000
+virtio_ring 24576 4 virtio_rng,virtio_scsi,virtio_net,virtio_pci, Live 0xffffffffc0034000
+virtio 16384 4 virtio_rng,virtio_scsi,virtio_net,virtio_pci, Live 0xffffffffc002c000
+i2c_piix4 24576 0 - Live 0xffffffffc0021000
+"""
+
+[commands."uname -r"]
+stdout = "4.19.76-linuxkit"
+
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[files."/etc/os-release"]
+content = """
+PRETTY_NAME="Debian GNU/Linux 10 (buster)"
+NAME="Debian GNU/Linux"
+VERSION_ID="10"
+VERSION="10 (buster)"
+VERSION_CODENAME=buster
+ID=debian
+HOME_URL="https://www.debian.org/"
+SUPPORT_URL="https://www.debian.org/support"
+BUG_REPORT_URL="https://bugs.debian.org/"
+"""

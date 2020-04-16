@@ -56,6 +56,12 @@ packages {
 
 kernel {
   parameters() map[string]string
+  modules() []kernel_module
+}
+
+kernel_module {
+  name string
+  size string
 }
 
 osupdate {
