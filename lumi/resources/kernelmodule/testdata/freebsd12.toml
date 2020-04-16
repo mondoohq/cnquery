@@ -1,0 +1,16 @@
+[commands."kldstat"]
+stdout = """Id Refs Address                Size Name
+ 1    7 0xffffffff80200000  24bc3a8 kernel
+ 2    1 0xffffffff82819000    2df63 vboxguest.ko
+ 3    1 0xffffffff82847000     2468 intpm.ko
+ 4    1 0xffffffff8284a000      a30 smbus.ko
+"""
+
+[commands."uname -s"]
+stdout = "FreeBSD"
+
+[commands."uname -m"]
+stdout = "amd64"
+
+[commands."uname -r"]
+stdout = "12.0-CURRENT"
