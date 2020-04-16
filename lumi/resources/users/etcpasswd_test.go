@@ -9,8 +9,8 @@ import (
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
-func TestParseEtcPasswd(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/users_linux.toml"})
+func TestParseLinuxEtcPasswd(t *testing.T) {
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/debian.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -33,31 +33,26 @@ func TestParseEtcPasswd(t *testing.T) {
 	assert.Equal(t, "/bin/bash", m[0].Shell, "detected user shell")
 }
 
-func TestParseDsclListResult(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/users_osx.toml"})
+func TestParseFreebsdLinuxEtcPasswd(t *testing.T) {
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/freebsd12.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	// check user shells
-	c, err := mock.RunCommand("dscl . -list /Users UserShell")
+	f, err := mock.File("/etc/passwd")
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	m, err := users.ParseDsclListResult(c.Stdout)
 	assert.Nil(t, err)
-	assert.Equal(t, 100, len(m), "detected the right amount of users")
-	assert.Equal(t, "/usr/bin/false", m["_analyticsd"], "detected uid name")
+	defer f.Close()
 
-	// check uid
-	c, err = mock.RunCommand("dscl . -list /Users UniqueID")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	m, err = users.ParseDsclListResult(c.Stdout)
+	m, err := users.ParseEtcPasswd(f)
 	assert.Nil(t, err)
-	assert.Equal(t, 100, len(m), "detected the right amount of users")
-	assert.Equal(t, "263", m["_analyticsd"], "detected uid name")
+	assert.Equal(t, 28, len(m), "detected the right amount of services")
+
+	assert.Equal(t, "root", m[0].Username, "detected user name")
+	assert.Equal(t, int64(0), m[0].Uid, "detected uid")
+	assert.Equal(t, int64(0), m[0].Gid, "detected gid")
+	assert.Equal(t, "Charlie &", m[0].Description, "user description")
+	assert.Equal(t, "/root", m[0].Home, "detected user home")
+	assert.Equal(t, "/bin/csh", m[0].Shell, "detected user shell")
 }
