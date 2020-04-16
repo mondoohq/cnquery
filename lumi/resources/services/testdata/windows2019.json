@@ -1,0 +1,44 @@
+[
+    {
+        "Status":  4,
+        "Name":  "CoreMessagingRegistrar",
+        "DisplayName":  "CoreMessaging",
+        "StartType":  2
+    },
+    {
+        "Status":  4,
+        "Name":  "CryptSvc",
+        "DisplayName":  "Cryptographic Services",
+        "StartType":  2
+    },
+    {
+        "Status":  1,
+        "Name":  "PhoneSvc",
+        "DisplayName":  "Phone Service",
+        "StartType":  4
+    },
+    {
+        "Status":  4,
+        "Name":  "PlugPlay",
+        "DisplayName":  "Plug and Play",
+        "StartType":  3
+    },
+    {
+        "Status":  1,
+        "Name":  "PolicyAgent",
+        "DisplayName":  "IPsec Policy Agent",
+        "StartType":  3
+    },
+    {
+        "Status":  4,
+        "Name":  "Power",
+        "DisplayName":  "Power",
+        "StartType":  2
+    },
+    {
+        "Status":  1,
+        "Name":  "wuauserv",
+        "DisplayName":  "Windows Update",
+        "StartType":  3
+    }
+]

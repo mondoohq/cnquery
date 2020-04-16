@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/gosimple/slug"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
 	"go.mondoo.io/mondoo/motor/motoros/types"
@@ -576,8 +577,9 @@ var darwinFamily = &PlatformResolver{
 		// ignore dsv config if we got an error
 		if err == nil {
 			if len(dsv["ProductName"]) > 0 {
-				// TODO: name needs to be slugged
-				di.Name = strings.ToLower(dsv["ProductName"])
+				// name needs to be slugged
+				key := slug.Make(strings.ToLower(dsv["ProductName"]))
+				di.Name = strings.ReplaceAll(key, "-", "_")
 				di.Title = dsv["ProductName"]
 			}
 			if len(dsv["ProductVersion"]) > 0 {

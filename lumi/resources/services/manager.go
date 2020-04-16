@@ -6,6 +6,35 @@ import (
 	motor "go.mondoo.io/mondoo/motor/motoros"
 )
 
+type Service struct {
+	Name        string
+	Description string
+	State       State
+	Type        string
+	Installed   bool
+	Running     bool
+	Enabled     bool
+}
+
+type State string
+
+const (
+	ServiceContinuePending State = "ServiceContinuePending"
+	ServicePausePending    State = "ServicePausePending"
+	ServicePaused          State = "ServicePaused"
+	ServiceRunning         State = "ServiceRunning"
+	ServiceStartPending    State = "ServiceStartPending"
+	ServiceStopPending     State = "ServiceStopPending"
+	ServiceStopped         State = "ServiceStopped"
+	ServiceUnknown         State = "ServiceUnknown"
+)
+
+type OSServiceManager interface {
+	Name() string
+	Service(name string) (*Service, error)
+	List() ([]*Service, error)
+}
+
 func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 	var osm OSServiceManager
 
@@ -25,33 +54,21 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		osm = &SystemDServiceManager{motor: motor}
 	case "mac_os_x", "darwin":
 		osm = &LaunchDServiceManager{motor: motor}
+	case "freebsd":
+		osm = &BsdInitServiceManager{motor: motor}
+	case "windows":
+		osm = &WindowsServiceManager{motor: motor}
+	}
+
+	if osm == nil {
+		return nil, errors.New("could not detect suitable service manager for platform: " + platform.Name)
 	}
 
 	return osm, nil
 }
 
-type OSServiceManager interface {
-	Name() string
-	Service(name string) (*Service, error)
-	List() ([]*Service, error)
-}
-
-// Newer linux systems use systemd as service manager
-type SystemDServiceManager struct {
-	motor *motor.Motor
-}
-
-func (s *SystemDServiceManager) Name() string {
-	return "systemd Service Manager"
-}
-
-func (s *SystemDServiceManager) Service(name string) (*Service, error) {
-	services, err := s.List()
-	if err != nil {
-		return nil, err
-	}
-
-	// iterate over list and search for the service
+func findService(services []*Service, name string) (*Service, error) {
+	// search for name
 	for i := range services {
 		service := services[i]
 		if service.Name == name {
@@ -60,46 +77,4 @@ func (s *SystemDServiceManager) Service(name string) (*Service, error) {
 	}
 
 	return nil, errors.New("service> " + name + " does not exist")
-}
-
-func (s *SystemDServiceManager) List() ([]*Service, error) {
-	c, err := s.motor.Transport.RunCommand("systemctl --all list-units")
-	if err != nil {
-		return nil, err
-	}
-	return ParseServiceSystemDUnitFiles(c.Stdout)
-}
-
-// MacOS is using launchd as default service manager
-type LaunchDServiceManager struct {
-	motor *motor.Motor
-}
-
-func (s *LaunchDServiceManager) Name() string {
-	return "launchd Service Manager"
-}
-
-func (s *LaunchDServiceManager) Service(name string) (*Service, error) {
-	services, err := s.List()
-	if err != nil {
-		return nil, err
-	}
-
-	// iterate over list and search for the service
-	for i := range services {
-		service := services[i]
-		if service.Name == name {
-			return service, nil
-		}
-	}
-
-	return nil, errors.New("service> " + name + " does not exist")
-}
-
-func (s *LaunchDServiceManager) List() ([]*Service, error) {
-	c, err := s.motor.Transport.RunCommand("launchctl list")
-	if err != nil {
-		return nil, err
-	}
-	return ParseServiceLaunchD(c.Stdout)
 }

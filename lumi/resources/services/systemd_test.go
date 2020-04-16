@@ -10,7 +10,7 @@ import (
 )
 
 func TestParseServiceSystemDUnitFilesx(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/services_systemd.toml"})
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/linux_systemd.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,24 +35,4 @@ func TestParseServiceSystemDUnitFilesx(t *testing.T) {
 	assert.Equal(t, true, m[185].Running, "service is running")
 	assert.Equal(t, true, m[185].Installed, "service is installed")
 	assert.Equal(t, "systemd", m[185].Type, "service type is added")
-}
-
-func TestParseServiceLaunchD(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/services_launchd.toml"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	c, err := mock.RunCommand("launchctl list")
-	if err != nil {
-		t.Fatal(err)
-	}
-	assert.Nil(t, err)
-	m, err := services.ParseServiceLaunchD(c.Stdout)
-	assert.Nil(t, err)
-	assert.Equal(t, 369, len(m), "detected the right amount of services")
-
-	assert.Equal(t, "com.apple.SafariHistoryServiceAgent", m[0].Name, "service name detected")
-	assert.Equal(t, false, m[0].Running, "service is running")
-	assert.Equal(t, true, m[0].Installed, "service is installed")
-	assert.Equal(t, "launchd", m[0].Type, "service type is added")
 }

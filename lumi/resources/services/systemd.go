@@ -1,0 +1,67 @@
+package services
+
+import (
+	"io"
+	"io/ioutil"
+	"regexp"
+
+	motor "go.mondoo.io/mondoo/motor/motoros"
+)
+
+var (
+	SYSTEMD_LIST_UNITS_REGEX = regexp.MustCompile(`(?m)^(?:[^\S\n]{2}|●[^\S\n])(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(.+)$`)
+)
+
+// ^(?:[^\S\n]*[●]*)+(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(.+)$
+func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
+	var services []*Service
+	content, err := ioutil.ReadAll(input)
+	if err != nil {
+		return nil, err
+	}
+
+	m := SYSTEMD_LIST_UNITS_REGEX.FindAllStringSubmatch(string(content), -1)
+	for i := range m {
+		// ignore header
+		if i == 0 {
+			continue
+		}
+		s := &Service{
+			Name:      m[i][1],
+			Installed: m[i][2] == "loaded",
+			Running:   m[i][3] == "active",
+			// TODO: we may need to revist the enabled state
+			Enabled:     m[i][2] == "loaded",
+			Description: m[i][5],
+			Type:        "systemd",
+		}
+		services = append(services, s)
+	}
+	return services, nil
+}
+
+// Newer linux systems use systemd as service manager
+type SystemDServiceManager struct {
+	motor *motor.Motor
+}
+
+func (s *SystemDServiceManager) Name() string {
+	return "systemd Service Manager"
+}
+
+func (s *SystemDServiceManager) Service(id string) (*Service, error) {
+	services, err := s.List()
+	if err != nil {
+		return nil, err
+	}
+
+	return findService(services, id)
+}
+
+func (s *SystemDServiceManager) List() ([]*Service, error) {
+	c, err := s.motor.Transport.RunCommand("systemctl --all list-units")
+	if err != nil {
+		return nil, err
+	}
+	return ParseServiceSystemDUnitFiles(c.Stdout)
+}
