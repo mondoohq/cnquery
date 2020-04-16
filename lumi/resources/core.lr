@@ -192,3 +192,19 @@ mount_point {
   fstype string
   options map[string]string
 }
+
+shadow {
+  []shadow_entry
+}
+
+shadow_entry {
+  user string
+  password string
+  lastchanges string
+  mindays string
+  maxdays string
+  warndays string
+  inactivedays string
+  expirydates string
+  reserved string
+}
