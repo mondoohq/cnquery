@@ -1,0 +1,34 @@
+[commands."launchctl list"]
+stdout = """PID	Status	Label
+-	0	com.apple.SafariHistoryServiceAgent
+1093	0	com.apple.iTunesHelper.32380
+325	0	com.apple.Finder
+1100	0	com.apple.SafeEjectGPUAgent
+25474	0	com.apple.quicklook
+-	0	com.apple.parentalcontrols.check
+-	0	com.apple.PackageKit.InstallStatus
+698	0	com.apple.mediaremoteagent
+-	0	com.apple.FontWorker
+331	0	com.apple.bird
+-	0	com.apple.familycontrols.useragent
+-	0	com.apple.AssetCache.agent
+315	0	com.apple.xpc.launchd.oneshot.0x1000000a.Terminal
+-	0	com.apple.universalaccessAuthWarn
+353	0	com.apple.nsurlsessiond
+"""
+
+[commands."uname -s"]
+stdout = "Darwin"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "19.4.0"
+
+[commands."/usr/bin/sw_vers"]
+stdout = """
+ProductName:	Mac OS X
+ProductVersion:	10.15.4
+BuildVersion:	19E266
+"""

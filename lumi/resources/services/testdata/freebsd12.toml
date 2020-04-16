@@ -1,0 +1,36 @@
+[commands."service -e"]
+stdout = """/etc/rc.d/hostid
+/etc/rc.d/hostid_save
+/etc/rc.d/cleanvar
+/usr/local/etc/rc.d/vboxguest
+/etc/rc.d/kldxref
+/etc/rc.d/ip6addrctl
+/etc/rc.d/netif
+/etc/rc.d/devd
+/etc/rc.d/resolv
+/etc/rc.d/newsyslog
+/etc/rc.d/syslogd
+/etc/rc.d/savecore
+/etc/rc.d/dmesg
+/etc/rc.d/virecover
+/usr/local/etc/rc.d/vboxservice
+/usr/local/etc/rc.d/firstboot_pkgs
+/usr/local/etc/rc.d/firstboot_freebsd_update
+/etc/rc.d/motd
+/etc/rc.d/rctl
+/etc/rc.d/sshd
+/etc/rc.d/cron
+/etc/rc.d/mixer
+/etc/rc.d/gptboot
+/etc/rc.d/devmatch
+/etc/rc.d/bgfsck
+"""
+
+[commands."uname -s"]
+stdout = "FreeBSD"
+
+[commands."uname -m"]
+stdout = "amd64"
+
+[commands."uname -r"]
+stdout = "12.0-CURRENT"
