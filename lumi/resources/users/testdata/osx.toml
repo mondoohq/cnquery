@@ -1,0 +1,84 @@
+[commands."dscl . list /Users"]
+stdout = """_webauthserver
+_windowserver
+_www
+_wwwproxy
+daemon
+Guest
+nobody
+root"""
+
+[commands."dscl -q . -read /Users/nobody NFSHomeDirectory PrimaryGroupID RecordName UniqueID UserShell"]
+stdout = """NFSHomeDirectory: /var/empty
+PrimaryGroupID: -2
+RecordName: nobody
+UniqueID: -2
+UserShell: /usr/bin/false"""
+
+[commands."dscl . -list /Users UserShell"]
+stdout = """_webauthserver          /usr/bin/false
+_windowserver           /usr/bin/false
+_www                    /usr/bin/false
+_wwwproxy               /usr/bin/false
+daemon                  /usr/bin/false
+Guest                   /bin/bash
+nobody                  /usr/bin/false
+root                    /bin/sh
+"""
+
+[commands."dscl . -list /Users UniqueID"]
+stdout = """_webauthserver          221
+_windowserver           88
+_www                    70
+_wwwproxy               252
+daemon                  1
+Guest                   201
+nobody                  -2
+root                    0
+"""
+
+[commands."dscl . -list /Users NFSHomeDirectory"]
+stdout = """_webauthserver           /var/empty
+_windowserver            /var/empty
+_www                     /Library/WebServer
+_wwwproxy                /var/empty
+daemon                   /var/root
+nobody                   /var/empty
+root                     /var/root /private/var/root
+"""
+
+[commands."dscl . -list /Users RealName"]
+stdout = """_webauthserver           Web Auth Server
+_windowserver            WindowServer
+_www                     World Wide Web Server
+_wwwproxy                WWW Proxy
+daemon                   System Services
+nobody                   Unprivileged User
+root                     System Administrator
+"""
+
+[commands."dscl . -list /Users PrimaryGroupID"]
+stdout = """_webauthserver           221
+_windowserver            88
+_www                     70
+_wwwproxy                252
+daemon                   1
+nobody                   -2
+root                     0
+"""
+
+[commands."uname -s"]
+stdout = "Darwin"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "19.4.0"
+
+[commands."/usr/bin/sw_vers"]
+stdout = """
+ProductName:	Mac OS X
+ProductVersion:	10.15.4
+BuildVersion:	19E266
+"""

@@ -1,0 +1,102 @@
+[
+  {
+      "AccountExpires":  null,
+      "Description":  "Built-in account for administering the computer/domain",
+      "Enabled":  true,
+      "FullName":  "",
+      "PasswordChangeableDate":  "\/Date(1586981519962)\/",
+      "PasswordExpires":  "\/Date(1590610319962)\/",
+      "UserMayChangePassword":  true,
+      "PasswordRequired":  true,
+      "PasswordLastSet":  "\/Date(1586981519962)\/",
+      "LastLogon":  "\/Date(1587041759064)\/",
+      "Name":  "chris",
+      "SID":  {
+                  "BinaryLength":  28,
+                  "AccountDomainSid":  "S-1-5-21-2356735557-1575748656-448136971",
+                  "Value":  "S-1-5-21-2356735557-1575748656-448136971-500"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "User"
+  },
+  {
+      "AccountExpires":  null,
+      "Description":  "A user account managed by the system.",
+      "Enabled":  false,
+      "FullName":  "",
+      "PasswordChangeableDate":  null,
+      "PasswordExpires":  null,
+      "UserMayChangePassword":  true,
+      "PasswordRequired":  false,
+      "PasswordLastSet":  null,
+      "LastLogon":  null,
+      "Name":  "DefaultAccount",
+      "SID":  {
+                  "BinaryLength":  28,
+                  "AccountDomainSid":  "S-1-5-21-2356735557-1575748656-448136971",
+                  "Value":  "S-1-5-21-2356735557-1575748656-448136971-503"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "User"
+  },
+  {
+      "AccountExpires":  null,
+      "Description":  "Built-in account for guest access to the computer/domain",
+      "Enabled":  false,
+      "FullName":  "",
+      "PasswordChangeableDate":  null,
+      "PasswordExpires":  null,
+      "UserMayChangePassword":  false,
+      "PasswordRequired":  false,
+      "PasswordLastSet":  null,
+      "LastLogon":  null,
+      "Name":  "Guest",
+      "SID":  {
+                  "BinaryLength":  28,
+                  "AccountDomainSid":  "S-1-5-21-2356735557-1575748656-448136971",
+                  "Value":  "S-1-5-21-2356735557-1575748656-448136971-501"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "User"
+  },
+  {
+      "AccountExpires":  null,
+      "Description":  "",
+      "Enabled":  true,
+      "FullName":  "sshd",
+      "PasswordChangeableDate":  "\/Date(1586981772559)\/",
+      "PasswordExpires":  null,
+      "UserMayChangePassword":  true,
+      "PasswordRequired":  true,
+      "PasswordLastSet":  "\/Date(1586981772559)\/",
+      "LastLogon":  null,
+      "Name":  "sshd",
+      "SID":  {
+                  "BinaryLength":  28,
+                  "AccountDomainSid":  "S-1-5-21-2356735557-1575748656-448136971",
+                  "Value":  "S-1-5-21-2356735557-1575748656-448136971-1000"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "User"
+  },
+  {
+      "AccountExpires":  null,
+      "Description":  "A user account managed and used by the system for Windows Defender Application Guard scenarios.",
+      "Enabled":  false,
+      "FullName":  "",
+      "PasswordChangeableDate":  "\/Date(1583556884172)\/",
+      "PasswordExpires":  "\/Date(1587185684172)\/",
+      "UserMayChangePassword":  true,
+      "PasswordRequired":  true,
+      "PasswordLastSet":  "\/Date(1583556884172)\/",
+      "LastLogon":  null,
+      "Name":  "WDAGUtilityAccount",
+      "SID":  {
+                  "BinaryLength":  28,
+                  "AccountDomainSid":  "S-1-5-21-2356735557-1575748656-448136971",
+                  "Value":  "S-1-5-21-2356735557-1575748656-448136971-504"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "User"
+  }
+]

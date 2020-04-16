@@ -83,13 +83,15 @@ processes {
 }
 
 user {
-  init(uid int)
+  init(id string)
+  id string
   uid int
   gid int
-  username() string
-  home() string
-  shell() string
-  enabled() bool
+  sid string
+  username string
+  home string
+  shell string
+  enabled bool
 }
 
 users {
