@@ -1,0 +1,23 @@
+[commands."mount"]
+stdout = """/dev/disk1s5 on / (apfs, local, read-only, journaled)
+devfs on /dev (devfs, local, nobrowse)
+/dev/disk1s1 on /System/Volumes/Data (apfs, local, journaled, nobrowse)
+/dev/disk1s4 on /private/var/vm (apfs, local, journaled, nobrowse)
+map auto_home on /System/Volumes/Data/home (autofs, automounted, nobrowse)
+"""
+
+[commands."uname -s"]
+stdout = "Darwin"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "19.4.0"
+
+[commands."/usr/bin/sw_vers"]
+stdout = """
+ProductName:	Mac OS X
+ProductVersion:	10.15.4
+BuildVersion:	19E266
+"""
