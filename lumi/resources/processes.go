@@ -3,20 +3,22 @@ package resources
 import (
 	"errors"
 	"fmt"
-	"path/filepath"
 	"strconv"
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/processes"
-	"go.mondoo.io/mondoo/lumi/resources/procfs"
-	motor "go.mondoo.io/mondoo/motor/motoros"
 )
 
 func (p *lumiProcess) init(args *lumi.Args) (*lumi.Args, error) {
 	pidValue, ok := (*args)["pid"]
+
+	// do not try to resolve the process if we already go all parameters
+	// NOTE: this happens for a call like processes.list
+	if len(*args) > 2 {
+		return args, nil
+	}
 
 	// check if additional information is already provided,
 	// this let us abort testing if provided by a list
@@ -30,7 +32,7 @@ func (p *lumiProcess) init(args *lumi.Args) (*lumi.Args, error) {
 		}
 
 		// lets do minimal IO in initialize
-		opm, err := resolveOSProcessManager(p.Runtime.Motor)
+		opm, err := processes.ResolveManager(p.Runtime.Motor)
 		if err != nil {
 			return nil, errors.New("cannot find process manager")
 		}
@@ -112,7 +114,7 @@ func (p *lumiProcess) gatherProcessInfo(fn ProcessCallbackTrigger) error {
 		return errors.New("cannot gather pid")
 	}
 
-	opm, err := resolveOSProcessManager(p.Runtime.Motor)
+	opm, err := processes.ResolveManager(p.Runtime.Motor)
 	if err != nil {
 		return errors.New("cannot find process manager")
 	}
@@ -141,7 +143,7 @@ func (p *lumiProcesses) id() (string, error) {
 func (p *lumiProcesses) GetList() ([]interface{}, error) {
 
 	// find suitable package manager
-	opm, err := resolveOSProcessManager(p.Runtime.Motor)
+	opm, err := processes.ResolveManager(p.Runtime.Motor)
 	if opm == nil || err != nil {
 		log.Warn().Err(err).Msg("lumi[processes]> could not retrieve process list")
 		return nil, errors.New("cannot find process manager")
@@ -179,171 +181,4 @@ func (p *lumiProcesses) GetList() ([]interface{}, error) {
 
 	// return the processes as new entries
 	return procs, nil
-}
-
-func resolveOSProcessManager(motor *motor.Motor) (OSProcessManager, error) {
-	var pm OSProcessManager
-
-	platform, err := motor.Platform()
-	if err != nil {
-		return nil, err
-	}
-
-	for i := range platform.Family {
-		if platform.Family[i] == "linux" {
-			pm = &LinuxProcessManager{motor: motor}
-			break
-		} else if platform.Family[i] == "unix" {
-			pm = &UnixProcessManager{motor: motor}
-			break
-		}
-	}
-	return pm, nil
-}
-
-type OSProcess struct {
-	Pid        int64
-	Command    string
-	Executable string
-	State      string
-	Uid        int64
-}
-
-type OSProcessManager interface {
-	Name() string
-	Exists(pid int64) (bool, error)
-	Process(pid int64) (*OSProcess, error)
-	List() ([]*OSProcess, error)
-}
-
-type LinuxProcessManager struct {
-	motor *motor.Motor
-}
-
-func (lpm *LinuxProcessManager) Name() string {
-	return "Linux Process Manager"
-}
-
-func (lpm *LinuxProcessManager) List() ([]*OSProcess, error) {
-	// get all subdirectories of /proc, filter by nunbers
-	f, err := lpm.motor.Transport.File("/proc")
-	if err != nil {
-		return nil, err
-	}
-
-	dirs, err := f.Readdirnames(-1)
-
-	res := []*OSProcess{}
-	for i := range dirs {
-		// we only parse directories that are numbers
-		pid, err := strconv.ParseInt(dirs[i], 10, 64)
-		if err != nil {
-			continue
-		}
-
-		// collect process info
-		proc, err := lpm.Process(pid)
-		if err != nil {
-			log.Warn().Err(err).Int64("pid", pid).Msg("lumi[processes]> could not retrieve process information")
-			continue
-		}
-
-		res = append(res, proc)
-	}
-	return res, nil
-}
-
-// check that the pid directory exists
-func (lpm *LinuxProcessManager) Exists(pid int64) (bool, error) {
-	pidPath := filepath.Join("/proc", strconv.FormatInt(pid, 10))
-
-	fs := lpm.motor.Transport.FS()
-	afs := &afero.Afero{Fs: fs}
-	return afs.Exists(pidPath)
-}
-
-func (lpm *LinuxProcessManager) Process(pid int64) (*OSProcess, error) {
-	trans := lpm.motor.Transport
-	pidPath := filepath.Join("/proc", strconv.FormatInt(pid, 10))
-
-	exists, err := lpm.Exists(pid)
-	if err != nil {
-		return nil, err
-	}
-	if exists != true {
-		return nil, errors.New("process " + strconv.FormatInt(pid, 10) + " does not exist: " + pidPath)
-	}
-
-	// parse the cmdline
-	cmdlinef, err := trans.File(filepath.Join(pidPath, "cmdline"))
-	if err != nil {
-		return nil, err
-	}
-	defer cmdlinef.Close()
-
-	cmdline, err := procfs.ParseProcessCmdline(cmdlinef)
-	if err != nil {
-		return nil, err
-	}
-
-	statusf, err := trans.File(filepath.Join(pidPath, "status"))
-	if err != nil {
-		return nil, err
-	}
-	defer statusf.Close()
-
-	status, err := procfs.ParseProcessStatus(statusf)
-	if err != nil {
-		return nil, err
-	}
-
-	process := &OSProcess{
-		Pid:        pid,
-		Executable: status.Executable,
-		State:      status.State,
-		Command:    cmdline,
-	}
-
-	return process, nil
-}
-
-type UnixProcessManager struct {
-	motor *motor.Motor
-}
-
-func (upm *UnixProcessManager) Name() string {
-	return "Unix Process Manager"
-}
-
-func (upm *UnixProcessManager) List() ([]*OSProcess, error) {
-	c, err := upm.motor.Transport.RunCommand("ps axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command")
-	if err != nil {
-		return nil, fmt.Errorf("processes> could not run command")
-	}
-
-	entries, err := processes.ParseUnixPsResult(c.Stdout)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Debug().Int("processes", len(entries)).Msg("found processes")
-
-	var ps []*OSProcess
-	for i := range entries {
-		ps = append(ps, &OSProcess{
-			Pid:     entries[i].Pid,
-			Command: entries[i].Command,
-			State:   "",
-		})
-	}
-	return ps, nil
-}
-
-func (upm *UnixProcessManager) Exists(pid int64) (bool, error) {
-	return true, nil
-	// return false, errors.New("not implemented")
-}
-
-func (upm *UnixProcessManager) Process(pid int64) (*OSProcess, error) {
-	return nil, errors.New("not implemented")
 }

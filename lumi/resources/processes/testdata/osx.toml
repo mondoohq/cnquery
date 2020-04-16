@@ -1,0 +1,60 @@
+[commands."ps axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command"]
+stdout = """PID  %CPU %MEM      VSZ    RSS TTY      STAT     STIME      TIME   UID COMMAND
+  1   0.0  0.1  5015084  17948 ??       Ss     9:30.82  10:32.56     0 /sbin/launchd
+125   0.0  0.0  4613204    956 ??       Ss     0:04.97   0:07.76     0 /usr/sbin/syslogd
+126   0.0  0.0  5429272  10480 ??       Ss     0:12.04   0:22.26     0 /usr/libexec/UserEventAgent (System)
+129   0.0  0.0  4333288   2004 ??       Ss     0:02.39   0:03.28     0 /System/Library/PrivateFrameworks/Uninstall.framework/Resources/uninstalld
+130   0.0  0.0  5969408   3872 ??       Ss     0:06.94   0:13.06     0 /usr/libexec/kextd
+131   0.0  0.0  6403224   8540 ??       Ss     2:13.16   4:03.29     0 /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/FSEvents.framework/Versions/A/Support/fseventsd
+132   0.0  0.0  5430748  12616 ??       Ss     0:01.36   0:02.27     0 /System/Library/PrivateFrameworks/MediaRemote.framework/Support/mediaremoted
+135   0.0  0.0  4781412   6132 ??       Ss     0:24.74   0:34.40     0 /usr/sbin/systemstats --daemon
+136   0.0  0.0  5432088   6448 ??       Ss     0:09.52   0:16.84     0 /usr/libexec/configd
+137   0.0  0.0  4849132   1108 ??       Ss     0:00.01   0:00.03     0 endpointsecurityd
+138   0.0  0.0  5166200   7216 ??       Ss     0:30.36   1:06.06     0 /System/Library/CoreServices/powerd.bundle/powerd
+142   0.0  0.1  5537816  24000 ??       Ss     1:29.92   3:26.57     0 /usr/libexec/logd
+143   0.0  0.0  4481404   2844 ??       Ss     0:01.91   0:06.02     0 /usr/libexec/keybagd -t 15
+146   0.0  0.0  4350500   2788 ??       Ss     0:01.89   0:03.60     0 /usr/libexec/watchdogd
+150   0.0  0.1  6695480  24900 ??       Ss     3:31.46   6:21.71     0 /System/Library/Frameworks/CoreServices.framework/Frameworks/Metadata.framework/Support/mds
+151   0.0  0.0  4874744   2116 ??       Ss     0:00.11   0:00.16   240 /System/Library/CoreServices/iconservicesd
+152   0.0  0.0  5426448   4516 ??       Ss     0:06.62   0:18.00     0 /usr/libexec/diskarbitrationd
+155   0.0  0.0  5440900  15236 ??       Ss     0:05.89   0:23.30     0 /usr/libexec/coreduetd
+159   0.0  0.0  5450524   9304 ??       Ss     0:52.78   1:49.52     0 /usr/libexec/opendirectoryd
+161   0.0  0.0  5438484  11148 ??       Ss     0:02.91   0:06.57     0 /System/Library/PrivateFrameworks/ApplePushService.framework/apsd
+162   0.0  0.0  4417596   2780 ??       Ss     0:00.07   0:00.12     0 /Library/PrivilegedHelperTools/com.docker.vmnetd
+163   0.0  0.0  5440748  10092 ??       Ss     2:13.78   4:39.88     0 /System/Library/CoreServices/launchservicesd
+164   0.0  0.0  4640444   3792 ??       Ss     0:00.55   0:00.89   266 /usr/libexec/timed
+165   0.0  0.0  5033896   3784 ??       Ss     0:09.39   0:23.80   213 /System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/Resources/usbmuxd -launchd
+166   0.0  0.0  5429440   7116 ??       Ss     0:37.63   2:17.98     0 /usr/sbin/securityd -i
+169   0.0  0.0  5449860  11900 ??       Ss     0:13.55   0:49.38   205 /usr/libexec/locationd
+172   0.0  0.0  4464848   1532 ??       Ss     0:00.03   0:00.03     0 autofsd
+173   0.0  0.0  4745732   3796 ??       Ss     0:00.29   0:00.38   244 /usr/libexec/displaypolicyd -k 1
+175   0.0  0.0  5302024  11080 ??       Ss     0:09.20   0:29.29     0 /usr/libexec/dasd
+179   0.0  0.0  4350040   3396 ??       Ss     0:00.05   0:00.08     0 /System/Library/CoreServices/logind
+180   0.0  0.0  5428264   5356 ??       Ss     0:01.55   0:02.73     0 /System/Library/PrivateFrameworks/GenerationalStorage.framework/Versions/A/Support/revisiond
+181   0.0  0.0  4317680   1268 ??       Ss     0:00.03   0:00.05     0 /usr/sbin/KernelEventAgent
+183   0.0  0.0  5431748   9112 ??       Ss     0:55.99   1:54.36     0 /usr/sbin/bluetoothd
+184   0.2  0.0  4512656   8208 ??       Ss     5:49.90  14:58.93   261 /usr/libexec/hidd
+186   0.0  0.0  5295888   6856 ??       Ss     0:07.91   0:12.86     0 /usr/libexec/corebrightnessd --launchd
+187   0.0  0.0  5429220   7536 ??       Ss     0:12.15   0:22.79     0 /usr/libexec/AirPlayXPCHelper
+188   0.0  0.0  5398788   2000 ??       Ss     0:40.77   0:59.45     0 /usr/sbin/notifyd
+189   0.0  0.0  4743196   1816 ??       Ss     0:00.50   0:01.62   241 /usr/sbin/distnoted daemon
+190   0.0  0.0  5399732   3472 ??       Ss     0:13.47   0:22.97     0 /usr/sbin/cfprefsd daemon
+191   0.0  0.0  5436016  10460 ??       Ss     0:07.63   0:24.89     0 /System/Library/PrivateFrameworks/TCC.framework/Resources/tccd system
+195   0.0  0.0  4743416    344 ??       Ss     0:00.08   0:00.10     0 aslmanager"""
+
+
+[commands."uname -s"]
+stdout = "Darwin"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "19.4.0"
+
+[commands."/usr/bin/sw_vers"]
+stdout = """
+ProductName:	Mac OS X
+ProductVersion:	10.15.4
+BuildVersion:	19E266
+"""
