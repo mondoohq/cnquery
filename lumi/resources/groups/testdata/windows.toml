@@ -1,0 +1,338 @@
+[commands."powershell -c \"Get-LocalGroup | ConvertTo-Json\""]
+stdout = """
+[
+  {
+      "Description":  "Members of this group can remotely query authorization attributes and permissions for resources on this computer.",
+      "Name":  "Access Control Assistance Operators",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-579"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Administrators have complete and unrestricted access to the computer/domain",
+      "Name":  "Administrators",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-544"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Backup Operators can override security restrictions for the sole purpose of backing up or restoring files",
+      "Name":  "Backup Operators",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-551"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Members of this group are allowed to connect to Certification Authorities in the enterprise",
+      "Name":  "Certificate Service DCOM Access",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-574"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Members are authorized to perform cryptographic operations.",
+      "Name":  "Cryptographic Operators",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-569"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Members of this group can change system-wide settings.",
+      "Name":  "Device Owners",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-583"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Members are allowed to launch, activate and use Distributed COM objects on this machine.",
+      "Name":  "Distributed COM Users",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-562"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Members of this group can read event logs from local machine",
+      "Name":  "Event Log Readers",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-573"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Guests have the same access as members of the Users group by default, except for the Guest account which is further restricted",
+      "Name":  "Guests",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-546"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Members of this group have complete and unrestricted access to all features of Hyper-V.",
+      "Name":  "Hyper-V Administrators",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-578"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Built-in group used by Internet Information Services.",
+      "Name":  "IIS_IUSRS",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-568"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Members in this group can have some administrative privileges to manage configuration of networking features",
+      "Name":  "Network Configuration Operators",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-556"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Members of this group may schedule logging of performance counters, enable trace providers, and collect event traces both locally and via remote access to this computer",
+      "Name":  "Performance Log Users",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-559"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Members of this group can access performance counter data locally and remotely",
+      "Name":  "Performance Monitor Users",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-558"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Power Users are included for backwards compatibility and possess limited administrative powers",
+      "Name":  "Power Users",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-547"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Members can administer printers installed on domain controllers",
+      "Name":  "Print Operators",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-550"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Servers in this group run virtual machines and host sessions where users RemoteApp programs and personal virtual desktops run. This group needs to be populated on servers running RD Connection Broker. RD Session Host servers and RD Virtualization Host servers used in the deployment need to be in this group.",
+      "Name":  "RDS Endpoint Servers",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-576"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Servers in this group can perform routine administrative actions on servers running Remote Desktop Services. This group needs to be populated on all servers in a Remote Desktop Services deployment. The servers running the RDS Central Management service must be included in this group.",
+      "Name":  "RDS Management Servers",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-577"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Servers in this group enable users of RemoteApp programs and personal virtual desktops access to these resources. In Internet-facing deployments, these servers are typically deployed in an edge network. This group needs to be populated on servers running RD Connection Broker. RD Gateway servers and RD Web Access servers used in the deployment need to be in this group.",
+      "Name":  "RDS Remote Access Servers",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-575"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Members in this group are granted the right to logon remotely",
+      "Name":  "Remote Desktop Users",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-555"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Members of this group can access WMI resources over management protocols (such as WS-Management via the Windows Remote Management service). This applies only to WMI namespaces that grant access to the user.",
+      "Name":  "Remote Management Users",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-580"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Supports file replication in a domain",
+      "Name":  "Replicator",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-552"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Members of this group have complete and unrestricted access to all features of Storage Replica.",
+      "Name":  "Storage Replica Administrators",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-582"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Members of this group are managed by the system.",
+      "Name":  "System Managed Accounts Group",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-581"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  },
+  {
+      "Description":  "Users are prevented from making accidental or intentional system-wide changes and can run most applications",
+      "Name":  "Users",
+      "SID":  {
+                  "BinaryLength":  16,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-5-32-545"
+              },
+      "PrincipalSource":  1,
+      "ObjectClass":  "Group"
+  }
+]
+"""
+
+[commands."Get-LocalGroupMember -Group \"Users\" | ConvertTo-Json  "]
+stdout = """
+[
+    {
+        "Name":  "NT AUTHORITY\\Authenticated Users",
+        "SID":  {
+                    "BinaryLength":  12,
+                    "AccountDomainSid":  null,
+                    "Value":  "S-1-5-11"
+                },
+        "PrincipalSource":  0,
+        "ObjectClass":  "Group"
+    },
+    {
+        "Name":  "NT AUTHORITY\\INTERACTIVE",
+        "SID":  {
+                    "BinaryLength":  12,
+                    "AccountDomainSid":  null,
+                    "Value":  "S-1-5-4"
+                },
+        "PrincipalSource":  0,
+        "ObjectClass":  "Group"
+    }
+]
+"""
+
+[commands."Get-LocalGroupMember -Group \"Administrators\" | ConvertTo-Json"]
+stdout = """
+{
+    "Name":  "Test\\chris",
+    "SID":  {
+                "BinaryLength":  28,
+                "AccountDomainSid":  {
+                                         "BinaryLength":  24,
+                                         "AccountDomainSid":  "S-1-5-21-2356735557-1575748656-448136971",
+                                         "Value":  "S-1-5-21-2356735557-1575748656-448136971"
+                                     },
+                "Value":  "S-1-5-21-2356735557-1575748656-448136971-500"
+            },
+    "PrincipalSource":  1,
+    "ObjectClass":  "User"
+}
+"""
+
+[commands."wmic os get * /format:csv"]
+stdout = """Node,BootDevice,BuildNumber,BuildType,Caption,CodeSet,CountryCode,CreationClassName,CSCreationClassName,CSDVersion,CSName,CurrentTimeZone,DataExecutionPrevention_32BitApplications,DataExecutionPrevention_Available,DataExecutionPrevention_Drivers,DataExecutionPrevention_SupportPolicy,Debug,Description,Distributed,EncryptionLevel,ForegroundApplicationBoost,FreePhysicalMemory,FreeSpaceInPagingFiles,FreeVirtualMemory,InstallDate,LargeSystemCache,LastBootUpTime,LocalDateTime,Locale,Manufacturer,MaxNumberOfProcesses,MaxProcessMemorySize,MUILanguages,Name,NumberOfLicensedUsers,NumberOfProcesses,NumberOfUsers,OperatingSystemSKU,Organization,OSArchitecture,OSLanguage,OSProductSuite,OSType,OtherTypeDescription,PAEEnabled,PlusProductID,PlusVersionNumber,PortableOperatingSystem,Primary,ProductType,RegisteredUser,SerialNumber,ServicePackMajorVersion,ServicePackMinorVersion,SizeStoredInPagingFiles,Status,SuiteMask,SystemDevice,SystemDirectory,SystemDrive,TotalSwapSpaceSize,TotalVirtualMemorySize,TotalVisibleMemorySize,Version,WindowsDirectory
+VAGRANT,\\Device\\HarddiskVolume1,17763,Multiprocessor Free,Microsoft Windows Server 2019 Datacenter Evaluation,1252,1,Win32_OperatingSystem,Win32_ComputerSystem,,VAGRANT,-420,TRUE,TRUE,TRUE,3,FALSE,,FALSE,256,2,721716,979372,1922780,20190906065515.000000-420,,20190908011749.580533-420,20190908042731.608000-420,0409,Microsoft Corporation,4294967295,137438953344,{en-US},Microsoft Windows Server 2019 Datacenter Evaluation|C:\\Windows|\\Device\\Harddisk0\\Partition2,0,69,1,80,Vagrant,64-bit,1033,400,18,,,,,FALSE,TRUE,3,,00431-20000-00000-AA838,0,0,1179648,OK,400,\\Device\\HarddiskVolume2,C:\\Windows\\system32,C:,,3276340,2096692,10.0.17763,C:\\Windows
+"""
+
+[commands."powershell -c \"Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion' -Name CurrentBuild, UBR, EditionID | ConvertTo-Json\""]
+stdout="""
+{
+    "CurrentBuild":  "17763",
+    "EditionID":  "ServerDatacenterEval",
+    "UBR":  720
+}
+"""

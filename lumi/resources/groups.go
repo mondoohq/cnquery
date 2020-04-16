@@ -11,29 +11,68 @@ import (
 )
 
 const (
+	GROUP_CACHE_ID      = "id"
 	GROUP_CACHE_NAME    = "name"
 	GROUP_CACHE_GID     = "gid"
+	GROUP_CACHE_SID     = "sid"
 	GROUP_CACHE_MEMBERS = "members"
+
+	GROUPS_MAP_ID = "groups_map"
 )
 
 func (p *lumiGroup) init(args *lumi.Args) (*lumi.Args, error) {
+	if len(*args) > 2 {
+		return args, nil
+	}
+
+	id := (*args)["id"]
+	if id == nil {
+		return args, nil
+	}
+
+	idS, ok := id.(string)
+	if !ok {
+		return args, nil
+	}
+
+	// initialize groups resource
+	obj, err := p.Runtime.CreateResource("groups")
+	if err != nil {
+		return nil, err
+	}
+	groups := obj.(Groups)
+
+	_, err = groups.List()
+	if err != nil {
+		return nil, err
+	}
+
+	c, ok := groups.LumiResource().Cache.Load(GROUPS_MAP_ID)
+	if !ok {
+		return nil, errors.New("Cannot get map of packages")
+	}
+	cmap := c.Data.(map[string]Group)
+
+	group := cmap[idS]
+	if group == nil {
+		(*args)["gid"] = ""
+		(*args)["sid"] = ""
+		(*args)["name"] = ""
+		(*args)["members"] = ""
+	} else {
+		// TODO: do this instead of duplicating it!
+		// (*args)["id"] = pkg.LumiResource().Id
+		(*args)["gid"], _ = group.Gid()
+		(*args)["sid"], _ = group.Sid()
+		(*args)["name"], _ = group.Name()
+		(*args)["members"], _ = group.Members()
+	}
 	return args, nil
+
 }
 
 func (p *lumiGroup) id() (string, error) {
-	gid, err := p.Gid()
-	if err != nil {
-		return "", err
-	}
-	return strconv.FormatInt(gid, 10), nil
-}
-
-func (s *lumiGroup) GetName() (string, error) {
-	return "", errors.New("not implemented")
-}
-
-func (s *lumiGroup) GetMembers() ([]interface{}, error) {
-	return nil, errors.New("not implemented")
+	return p.Id()
 }
 
 func (p *lumiGroups) init(args *lumi.Args) (*lumi.Args, error) {
@@ -62,6 +101,8 @@ func (s *lumiGroups) GetList() ([]interface{}, error) {
 
 	// convert to ]interface{}{}
 	lumiGroups := []interface{}{}
+	namedMap := map[string]Group{}
+
 	for i := range groups {
 		group := groups[i]
 
@@ -78,14 +119,19 @@ func (s *lumiGroups) GetList() ([]interface{}, error) {
 		}
 
 		lumiGroups = append(lumiGroups, e.(Group))
+		namedMap[group.ID] = e.(Group)
 	}
+
+	s.Cache.Store(GROUPS_MAP_ID, &lumi.CacheEntry{Data: namedMap})
 
 	return lumiGroups, nil
 }
 
 func (s *lumiGroups) copyGroupDataToLumiArgs(group *groups.Group, args *lumi.Args) error {
+	(*args)[GROUP_CACHE_ID] = group.ID
 	(*args)[GROUP_CACHE_NAME] = group.Name
 	(*args)[GROUP_CACHE_GID] = group.Gid
+	(*args)[GROUP_CACHE_SID] = group.Sid
 
 	var members []interface{}
 	for i := range group.Members {
