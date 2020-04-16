@@ -1,0 +1,53 @@
+[commands."ps axo pid,pcpu,pmem,vsz,rss,tty,stat,time,uid,command"]
+stdout = """PID  %CPU %MEM   VSZ  RSS TTY   STAT     TIME  UID COMMAND
+0   0.0  0.0     0  240 -     DLs   0:00.82    0 [kernel]
+1   0.0  0.2 10056 1052 -     ILs   0:00.01    0 /sbin/init --
+2   0.0  0.0     0   16 -     DL    0:00.00    0 [crypto]
+3   0.0  0.0     0   16 -     DL    0:00.00    0 [crypto returns 0]
+4   0.0  0.0     0   32 -     DL    0:00.05    0 [cam]
+5   0.0  0.0     0   16 -     DL    0:00.00    0 [sctp_iterator]
+6   0.0  0.0     0   16 -     DL    0:00.62    0 [rand_harvestq]
+7   0.0  0.0     0   16 -     DL    0:00.00    0 [soaiod1]
+8   0.0  0.0     0   16 -     DL    0:00.00    0 [soaiod2]
+9   0.0  0.0     0   16 -     DL    0:00.00    0 [soaiod3]
+10   0.0  0.0     0   16 -     DL    0:00.00    0 [audit]
+11 100.0  0.0     0   16 -     RNL  29:27.38    0 [idle]
+12   0.0  0.0     0  192 -     WL    0:00.64    0 [intr]
+13   0.0  0.0     0   48 -     DL    0:00.02    0 [geom]
+14   0.0  0.0     0   16 -     DL    0:00.00    0 [soaiod4]
+15   0.0  0.0     0   48 -     DL    0:00.16    0 [pagedaemon]
+16   0.0  0.0     0   16 -     DL    0:00.00    0 [vmdaemon]
+17   0.0  0.0     0   48 -     DL    0:00.15    0 [bufdaemon]
+18   0.0  0.0     0   16 -     DL    0:00.03    0 [syncer]
+19   0.0  0.0     0   16 -     DL    0:00.01    0 [vnlru]
+88   0.0  0.0     0   16 -     DL    0:00.04    0 [Timer]
+236   0.0  0.5 11464 2632 -     Is    0:00.00    0 dhclient: system.syslog (dhclient)
+239   0.0  0.6 11672 2756 -     Is    0:00.00    0 dhclient: em0 [priv] (dhclient)
+302   0.0  0.6 11816 2784 -     ICs   0:00.00   65 dhclient: em0 (dhclient)
+419   0.0  0.3 10584 1516 -     Is    0:00.00    0 /sbin/devd
+490   0.0  0.6 11472 2724 -     Is    0:00.01    0 /usr/sbin/syslogd -s
+619   0.0  0.8 13848 4108 -     Is    0:00.16    0 /usr/local/sbin/VBoxService
+730   0.0  1.5 18204 7332 -     Is    0:00.00    0 /usr/sbin/sshd
+734   0.0  0.6 11484 2720 -     Ss    0:00.01    0 /usr/sbin/cron -s
+806   0.0  1.7 18800 8124 -     Is    0:00.01    0 sshd: vagrant [priv] (sshd)
+808   0.0  1.7 19176 8420 -     S     0:00.05 1001 sshd: vagrant@pts/0 (sshd)
+785   0.0  0.5 10948 2336 ttyv0 Is+   0:00.00    0 /usr/libexec/getty Pc ttyv0
+786   0.0  0.5 10948 2336 ttyv1 Is+   0:00.00    0 /usr/libexec/getty Pc ttyv1
+787   0.0  0.5 10948 2336 ttyv2 Is+   0:00.00    0 /usr/libexec/getty Pc ttyv2
+788   0.0  0.5 10948 2336 ttyv3 Is+   0:00.00    0 /usr/libexec/getty Pc ttyv3
+789   0.0  0.5 10948 2336 ttyv4 Is+   0:00.00    0 /usr/libexec/getty Pc ttyv4
+790   0.0  0.5 10948 2336 ttyv5 Is+   0:00.00    0 /usr/libexec/getty Pc ttyv5
+791   0.0  0.5 10948 2336 ttyv6 Is+   0:00.00    0 /usr/libexec/getty Pc ttyv6
+792   0.0  0.5 10948 2336 ttyv7 Is+   0:00.00    0 /usr/libexec/getty Pc ttyv7
+809   0.0  0.9 13164 4144 pts/0 Ss    0:00.03 1001 -csh (csh)
+878   0.0  0.6 11692 2884 pts/0 R+    0:00.00 1001 ps axo pid,pcpu,pmem,vsz,rss,tty,stat,time,uid,command
+"""
+
+[commands."uname -s"]
+stdout = "FreeBSD"
+
+[commands."uname -m"]
+stdout = "amd64"
+
+[commands."uname -r"]
+stdout = "12.0-CURRENT"
