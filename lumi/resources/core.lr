@@ -148,3 +148,23 @@ docker_container {
   status string
   labels map[string]string
 }
+
+auditpol {
+  entries() []auditpol_entry
+}
+
+auditpol_entry {
+  machinename      string
+	policytarget     string
+	subcategory      string
+	subcategoryguid  string
+	inclusionsetting string
+	exclusionsetting string
+}
+
+secpol {
+  systemaccess() map[string]string
+  eventaudit() map[string]string
+  registryvalues() map[string]string
+  privilegerights() map[string]string
+}
