@@ -168,3 +168,10 @@ secpol {
   registryvalues() map[string]string
   privilegerights() map[string]string
 }
+
+logindefs {
+  init(path string)
+  file() file
+  content(file) string
+  params(content) map[string]string
+}
