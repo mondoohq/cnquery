@@ -111,10 +111,12 @@ services {
 }
 
 group {
-  init(gid int)
+  init(id string)
+  id string
   gid int
-  name() string
-  members() []user
+  sid string
+  name string
+  members []user
 }
 
 groups {

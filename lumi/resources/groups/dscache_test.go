@@ -9,33 +9,8 @@ import (
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
-func TestParseEtcGroups(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/groups_unix.toml"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	f, err := mock.File("/etc/group")
-	if err != nil {
-		t.Fatal(err)
-	}
-	assert.Nil(t, err)
-	defer f.Close()
-
-	m, err := groups.ParseEtcGroup(f)
-	assert.Nil(t, err)
-	assert.Equal(t, 23, len(m), "detected the right amount of services")
-
-	assert.Equal(t, "root", m[0].Name, "detected user name")
-	assert.Equal(t, int64(0), m[0].Gid, "detected gid")
-	assert.Equal(t, []string{}, m[0].Members, "user description")
-
-	assert.Equal(t, "vagrant", m[22].Name, "detected user name")
-	assert.Equal(t, int64(1000), m[22].Gid, "detected gid")
-	assert.Equal(t, []string{"vagrant"}, m[22].Members, "user description")
-}
-
 func TestParseDscacheutilResult(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/groups_osx.toml"})
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/osx.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

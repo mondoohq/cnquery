@@ -1,0 +1,32 @@
+[commands."dscacheutil -q group"]
+stdout = """name: com.apple.access_ftp
+password: *
+gid: 395
+
+name: procmod
+password: *
+gid: 9
+users: root 
+
+name: _postgres
+password: *
+gid: 216
+users: _devicemgr _calendar _teamsserver _xserverdocs
+
+"""
+
+[commands."uname -s"]
+stdout = "Darwin"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "19.4.0"
+
+[commands."/usr/bin/sw_vers"]
+stdout = """
+ProductName:	Mac OS X
+ProductVersion:	10.15.4
+BuildVersion:	19E266
+"""
