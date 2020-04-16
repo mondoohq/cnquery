@@ -175,3 +175,14 @@ logindefs {
   content(file) string
   params(content) map[string]string
 }
+
+mount {
+  []mount_point
+}
+
+mount_point {
+  device string
+  path string
+  fstype string
+  options map[string]string
+}

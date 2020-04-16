@@ -1,0 +1,13 @@
+[commands."mount"]
+stdout = """/dev/gpt/rootfs on / (ufs, local, soft-updates)
+devfs on /dev (devfs, local, multilabel)
+"""
+
+[commands."uname -s"]
+stdout = "FreeBSD"
+
+[commands."uname -m"]
+stdout = "amd64"
+
+[commands."uname -r"]
+stdout = "12.0-CURRENT"
