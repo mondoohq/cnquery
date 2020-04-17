@@ -72,8 +72,11 @@ osupdate {
   format string
 }
 
-os.updates {
-  []osupdate
+os {
+  env() []string
+  uptime() string
+  updates() []osupdate
+  rebootpending() bool
 }
 
 process {

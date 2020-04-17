@@ -1,0 +1,4 @@
+[commands."uptime"]
+stdout = "11:58  up 3 days,  3:23, 10 users, load averages: 3.14 3.25 3.69"
+
+
