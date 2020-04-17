@@ -1,0 +1,11 @@
+[commands."uptime"]
+stdout = " 9:57AM  up 24 mins, 1 user, load averages: 0.64, 0.50, 0.37"
+
+[commands."uname -s"]
+stdout = "FreeBSD"
+
+[commands."uname -m"]
+stdout = "amd64"
+
+[commands."uname -r"]
+stdout = "12.0-CURRENT"

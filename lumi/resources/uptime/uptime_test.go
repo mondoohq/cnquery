@@ -1,62 +1,57 @@
 package uptime_test
 
 import (
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/lumi/resources/uptime"
 	motor "go.mondoo.io/mondoo/motor/motoros"
-	"go.mondoo.io/mondoo/motor/motoros/mock/toml"
+	mock "go.mondoo.io/mondoo/motor/motoros/mock/toml"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
 func TestUptimeOnLinux(t *testing.T) {
-	filepath, _ := filepath.Abs("./testdata/linux_uptime.toml")
-	trans, err := toml.New(&types.Endpoint{Backend: "mock", Path: filepath})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	m, err := motor.New(trans)
-	if err != nil {
-		t.Fatal(err)
-	}
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/linux.toml"})
+	require.NoError(t, err)
+	m, err := motor.New(mock)
+	require.NoError(t, err)
 
 	ut, err := uptime.New(m)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	required, err := ut.Duration()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	assert.Equal(t, "19m0s", required.String())
 }
 
-func TestUptimeOnWindows(t *testing.T) {
-	filepath, _ := filepath.Abs("./testdata/win_uptime.toml")
-	trans, err := toml.New(&types.Endpoint{Backend: "mock", Path: filepath})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	m, err := motor.New(trans)
-	if err != nil {
-		t.Fatal(err)
-	}
+func TestUptimeOnFreebsd(t *testing.T) {
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/freebsd12.toml"})
+	require.NoError(t, err)
+	m, err := motor.New(mock)
+	require.NoError(t, err)
 
 	ut, err := uptime.New(m)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	required, err := ut.Duration()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
+	assert.Equal(t, "24m0s", required.String())
+}
+
+func TestUptimeOnWindows(t *testing.T) {
+	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/windows.toml"})
+	require.NoError(t, err)
+	m, err := motor.New(mock)
+	require.NoError(t, err)
+
+	ut, err := uptime.New(m)
+	require.NoError(t, err)
+
+	required, err := ut.Duration()
+	require.NoError(t, err)
 
 	assert.Equal(t, "3m45.8270365s", required.String())
 }

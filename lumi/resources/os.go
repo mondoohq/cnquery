@@ -7,8 +7,37 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/packages"
-	motor "go.mondoo.io/mondoo/motor/motoros"
+	"go.mondoo.io/mondoo/lumi/resources/uptime"
 )
+
+func (p *lumiOs) id() (string, error) {
+	return "os", nil
+}
+
+func (p *lumiOs) GetRebootpending() ([]interface{}, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (p *lumiOs) GetEnv() ([]interface{}, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (p *lumiOs) GetUptime() (int64, error) {
+	uptime, err := uptime.New(p.Runtime.Motor)
+	if err != nil {
+		return 0, err
+	}
+
+	t, err := uptime.Duration()
+	if err != nil {
+		return 0, err
+	}
+	return int64(t), nil
+}
+
+// func (p *lumiOs) GetRebootpending() ([]interface{}, error) {
+// 	return nil, errors.New("not implemented")
+// }
 
 func (p *lumiOsupdate) init(args *lumi.Args) (*lumi.Args, error) {
 	return args, nil
@@ -19,15 +48,7 @@ func (p *lumiOsupdate) id() (string, error) {
 	return name, nil
 }
 
-func (p *lumiOsUpdates) init(args *lumi.Args) (*lumi.Args, error) {
-	return args, nil
-}
-
-func (p *lumiOsUpdates) id() (string, error) {
-	return "osupdates", nil
-}
-
-func (p *lumiOsUpdates) GetList() ([]interface{}, error) {
+func (p *lumiOs) GetUpdates() ([]interface{}, error) {
 	// find suitable system updates
 	um, err := p.resolveOperatingSystemUpdateManager()
 	if um == nil || err != nil {
@@ -66,8 +87,8 @@ func (p *lumiOsUpdates) GetList() ([]interface{}, error) {
 }
 
 // this will find the right package manager for the operating system
-func (p *lumiOsUpdates) resolveOperatingSystemUpdateManager() (OperatingSystemUpdateManager, error) {
-	var um OperatingSystemUpdateManager
+func (p *lumiOs) resolveOperatingSystemUpdateManager() (packages.OperatingSystemUpdateManager, error) {
+	var um packages.OperatingSystemUpdateManager
 
 	motor := p.Runtime.Motor
 	platform, err := motor.Platform()
@@ -78,35 +99,9 @@ func (p *lumiOsUpdates) resolveOperatingSystemUpdateManager() (OperatingSystemUp
 	// TODO: use OS family and select package manager
 	switch platform.Name {
 	case "opensuse": // suse family
-		um = &SuseUpdateManager{motor: motor}
+		um = &packages.SuseUpdateManager{Motor: motor}
 	default:
 		return nil, errors.New("your platform is not supported by os updates resource")
 	}
 	return um, nil
-}
-
-type OperatingSystemUpdateManager interface {
-	Name() string
-	Format() string
-	List() ([]packages.OperatingSystemUpdate, error)
-}
-
-type SuseUpdateManager struct {
-	motor *motor.Motor
-}
-
-func (sum *SuseUpdateManager) Name() string {
-	return "Suse Update Manager"
-}
-
-func (sum *SuseUpdateManager) Format() string {
-	return "suse"
-}
-
-func (sum *SuseUpdateManager) List() ([]packages.OperatingSystemUpdate, error) {
-	cmd, err := sum.motor.Transport.RunCommand("zypper --xmlout list-updates -t patch")
-	if err != nil {
-		return nil, fmt.Errorf("could not read package list")
-	}
-	return packages.ParseZypperPatches(cmd.Stdout)
 }
