@@ -5,10 +5,15 @@ import (
 	"os"
 
 	"github.com/hokaccha/go-prettyjson"
+	"github.com/rs/zerolog/log"
 )
 
-// DebugJson prints a prettified JSON of the data to CLI
-func DebugJson(obj interface{}) {
+// DebugJSON prints a prettified JSON of the data to CLI
+func DebugJSON(obj interface{}) {
+	if !log.Debug().Enabled() {
+		return
+	}
+
 	s, _ := prettyjson.Marshal(obj)
 	fmt.Fprintln(os.Stderr, string(s))
 }
