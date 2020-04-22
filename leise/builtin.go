@@ -23,19 +23,19 @@ var builtinFunctions map[types.Type]map[string]compileHandler
 
 func init() {
 	builtinFunctions = map[types.Type]map[string]compileHandler{
-		types.ArrayLike: map[string]compileHandler{
-			"[]":     compileHandler{typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
-			"{}":     compileHandler{typ: arrayBlockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"length": compileHandler{typ: intType, signature: FunctionSignature{}},
+		types.ArrayLike: {
+			"[]":     {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
+			"{}":     {typ: arrayBlockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"length": {typ: intType, signature: FunctionSignature{}},
 		},
-		types.MapLike: map[string]compileHandler{
-			"[]":     compileHandler{typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
-			"length": compileHandler{typ: intType, signature: FunctionSignature{}},
+		types.MapLike: {
+			"[]":     {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
+			"length": {typ: intType, signature: FunctionSignature{}},
 		},
-		types.ResourceLike: map[string]compileHandler{
+		types.ResourceLike: {
 			// "":       compileHandler{compile: compileResourceDefault},
-			"where":  compileHandler{compile: compileResourceWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"length": compileHandler{compile: compileResourceLength, signature: FunctionSignature{}},
+			"where":  {compile: compileResourceWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"length": {compile: compileResourceLength, signature: FunctionSignature{}},
 		},
 	}
 }
