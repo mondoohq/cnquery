@@ -5,6 +5,7 @@ import (
 
 	"os"
 
+	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
@@ -152,7 +153,14 @@ func ResolveDockerTransport(endpoint *types.Endpoint) (types.Transport, DockerIn
 	if err == nil {
 		log.Debug().Str("ref", ref.Name()).Msg("found valid container registry reference")
 
-		img, rc, err := image.LoadFromRegistry(ref, image.WithInsecure(endpoint.Insecure))
+		registryOpts := []image.Option{image.WithInsecure(endpoint.Insecure)}
+		if len(endpoint.BearerToken) > 0 {
+			log.Debug().Msg("enable bearer authentication for image")
+			registryOpts = append(registryOpts, image.WithAuthenticator(&authn.Bearer{Token: endpoint.BearerToken}))
+		}
+
+		// image.WithAuthenticator()
+		img, rc, err := image.LoadFromRegistry(ref, registryOpts...)
 		if err != nil {
 			return nil, DockerInfo{}, err
 		}
