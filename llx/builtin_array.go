@@ -109,7 +109,7 @@ func compileArrayOpArray(op string) func(types.Type, types.Type) (string, error)
 			return name, nil
 		}
 
-		return "", errors.New("Cannot find function to run " + left.Label() + " " + op + " " + right.Label())
+		return "<T>" + op + "<T>", nil
 	}
 }
 
@@ -139,6 +139,27 @@ func cmpArrayOne(leftArray *RawData, right *RawData, f func(interface{}, interfa
 }
 
 // []T -- []T
+
+func tArrayCmp(left *RawData, right *RawData) func(interface{}, interface{}) bool {
+	return func(a interface{}, b interface{}) bool {
+		if left.Type.Child() != right.Type.Child() {
+			return false
+		}
+		return a == b
+	}
+}
+
+func tarrayCmpTarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return rawdataOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+		return cmpArrays(left, right, tArrayCmp(left, right))
+	})
+}
+
+func tarrayNotTarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return rawdataNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+		return cmpArrays(left, right, tArrayCmp(left, right))
+	})
+}
 
 func boolarrayCmpBoolarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return rawdataOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
