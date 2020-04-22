@@ -309,7 +309,7 @@ func (c *compiler) compileBoundIdentifier(id string, binding *binding, call *par
 		}
 	}
 
-	h, _ := builtinFunction(typ.Underlying(), id)
+	h, _ := builtinFunction(typ, id)
 	if h != nil {
 		typ, err := c.compileBuiltinFunction(h, id, binding, call)
 		return true, typ, err
