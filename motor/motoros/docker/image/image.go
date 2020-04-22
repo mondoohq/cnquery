@@ -85,6 +85,7 @@ type Option func(*options) error
 
 type options struct {
 	insecure bool
+	auth     authn.Authenticator
 }
 
 func WithInsecure(insecure bool) Option {
@@ -94,13 +95,14 @@ func WithInsecure(insecure bool) Option {
 	}
 }
 
-func LoadFromRegistry(ref name.Reference, opts ...Option) (v1.Image, io.ReadCloser, error) {
-	auth, err := authn.DefaultKeychain.Resolve(ref.Context())
-	if err != nil {
-		fmt.Printf("getting creds for %q: %v", ref, err)
-		return nil, nil, err
+func WithAuthenticator(auth authn.Authenticator) Option {
+	return func(o *options) error {
+		o.auth = auth
+		return nil
 	}
+}
 
+func LoadFromRegistry(ref name.Reference, opts ...Option) (v1.Image, io.ReadCloser, error) {
 	o := &options{
 		insecure: false,
 	}
@@ -109,6 +111,15 @@ func LoadFromRegistry(ref name.Reference, opts ...Option) (v1.Image, io.ReadClos
 		if err := option(o); err != nil {
 			return nil, nil, err
 		}
+	}
+
+	if o.auth == nil {
+		auth, err := authn.DefaultKeychain.Resolve(ref.Context())
+		if err != nil {
+			fmt.Printf("getting creds for %q: %v", ref, err)
+			return nil, nil, err
+		}
+		o.auth = auth
 	}
 
 	// mimic http.DefaultTransport
@@ -132,7 +143,7 @@ func LoadFromRegistry(ref name.Reference, opts ...Option) (v1.Image, io.ReadClos
 		}
 	}
 
-	img, err := remote.Image(ref, remote.WithAuth(auth), remote.WithTransport(tr))
+	img, err := remote.Image(ref, remote.WithAuth(o.auth), remote.WithTransport(tr))
 	if err != nil {
 		return nil, nil, err
 	}

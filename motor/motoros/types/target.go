@@ -34,6 +34,7 @@ type Endpoint struct {
 	Port           string `json:"port"`
 	Path           string `json:"path"`
 	PrivateKeyPath string `json:"private_key"`
+	BearerToken    string `json:"bearer_token"`
 	Insecure       bool   `json:"insecure"` // disable ssl/tls checks
 }
 
