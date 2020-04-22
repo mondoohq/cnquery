@@ -40,6 +40,7 @@ func init() {
 	}
 }
 
+// Note: Call it with the full type, not just the underlying type
 func builtinFunction(typ types.Type, id string) (*compileHandler, error) {
 	fh, ok := builtinFunctions[typ.Underlying()]
 	if !ok {

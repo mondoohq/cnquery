@@ -177,6 +177,13 @@ func TestSuggestions(t *testing.T) {
 		assert.Equal(t, []string{"params"}, res.Suggestions)
 		assert.Equal(t, errors.New("Cannot find field or resource 'p' in block for type 'sshd.config'"), err)
 	})
+
+	t.Run("field suggestions on partial map", func(t *testing.T) {
+		res, err := Compile("sshd.config.params.l", nil)
+		assert.Nil(t, res.Code.Entrypoints)
+		assert.Equal(t, []string{"length"}, res.Suggestions)
+		assert.Equal(t, errors.New("Cannot find field 'l' in resource map[string]string"), err)
+	})
 }
 
 func assertFunction(t *testing.T, id string, f *llx.Function, chunk *llx.Chunk) {
