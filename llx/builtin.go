@@ -140,6 +140,9 @@ func init() {
 			"length": {f: arrayLength},
 			"==":     {Compiler: compileArrayOpArray("==")},
 			"!=":     {Compiler: compileArrayOpArray("!=")},
+			// special case: []<T> -- []<T>
+			"<T>==<T>": {f: tarrayCmpTarray, Label: "=="},
+			"<T>!=<T>": {f: tarrayNotTarray, Label: "!="},
 			// []T -- []T
 			string(types.Bool + "==" + types.Array(types.Bool)):     {f: boolarrayCmpBoolarray, Label: "=="},
 			string(types.Bool + "!=" + types.Array(types.Bool)):     {f: boolarrayNotBoolarray, Label: "!="},
