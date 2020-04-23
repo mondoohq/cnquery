@@ -1,4 +1,4 @@
-package llx
+package registry
 
 // These functions are needed to be located here to avoid dependency cycles
 // since resources --depends--> lumi
@@ -9,9 +9,9 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources"
 )
 
-// DefaultRegistry with core resources
-var DefaultRegistry = lumi.NewRegistry()
+// Default with core resources
+var Default = lumi.NewRegistry()
 
 func init() {
-	resources.Init(DefaultRegistry)
+	resources.Init(Default)
 }
