@@ -15,30 +15,73 @@ var (
 )
 
 func (p *lumiPackage) init(args *lumi.Args) (*lumi.Args, error) {
-	id := (*args)["id"]
-	if id != nil {
-		if identifier, ok := id.(string); ok {
-			// parse id and replace that with the real entries
-			// the id is composed of format://name/version/arch,
-			log.Error().Msg("intialized with id " + identifier)
-			m := PKG_IDENTIFIER.FindStringSubmatch(identifier)
-			if m == nil {
-				return nil, errors.New("cannot parse package identifier, needs to be 'name/version/arch'")
-			}
-
-			(*args)["name"] = m[2]
-			(*args)["version"] = m[3]
-			(*args)["arch"] = m[4]
-			(*args)["format"] = m[1]
-
-			// set values to pass resource creation step
-			(*args)["epoch"] = ""
-			(*args)["description"] = ""
-			(*args)["available"] = ""
-
-			delete(*args, "id")
-		}
+	if len(*args) > 2 {
+		return args, nil
 	}
+
+	name := (*args)["name"]
+	if name == nil {
+		return args, nil
+	}
+
+	nameS, ok := name.(string)
+	if !ok {
+		return args, nil
+	}
+
+	obj, err := p.Runtime.CreateResource("packages")
+	if err != nil {
+		return nil, err
+	}
+	packages := obj.(Packages)
+
+	_, err = packages.List()
+	if err != nil {
+		return nil, err
+	}
+
+	c, ok := packages.LumiResource().Cache.Load("_map")
+	if !ok {
+		return nil, errors.New("Cannot get map of packages")
+	}
+	cmap := c.Data.(map[string]Package)
+
+	pkg := cmap[nameS]
+	if pkg == nil {
+		(*args)["version"] = ""
+		(*args)["arch"] = ""
+		(*args)["format"] = ""
+		(*args)["epoch"] = ""
+		(*args)["description"] = ""
+		(*args)["available"] = ""
+		(*args)["installed"] = false
+	} else {
+		// TODO: do this instead of duplicating it!
+		// (*args)["id"] = pkg.LumiResource().Id
+
+		(*args)["version"], _ = pkg.Version()
+		(*args)["arch"], _ = pkg.Arch()
+		(*args)["format"], _ = pkg.Format()
+		(*args)["epoch"], _ = pkg.Epoch()
+		(*args)["description"], _ = pkg.Description()
+		(*args)["available"], _ = pkg.Available()
+		(*args)["installed"], _ = pkg.Installed()
+	}
+
+	// fmt.Println(logger.PrettyJSON(arr))
+
+	// (*args)["name"] = m[2]
+	// (*args)["version"] = m[3]
+	// (*args)["arch"] = m[4]
+	// (*args)["format"] = m[1]
+
+	// // set values to pass resource creation step
+	// (*args)["epoch"] = ""
+	// (*args)["description"] = ""
+	// (*args)["available"] = ""
+
+	// delete(*args, "id")
+
 	return args, nil
 }
 
@@ -109,6 +152,7 @@ func (p *lumiPackages) GetList() ([]interface{}, error) {
 
 	// create lumi package resources for each package
 	pkgs := make([]interface{}, len(osPkgs))
+	namedMap := map[string]Package{}
 	for i, osPkg := range osPkgs {
 
 		// set init arguments for the lumi package resource
@@ -119,6 +163,7 @@ func (p *lumiPackages) GetList() ([]interface{}, error) {
 		args["status"] = osPkg.Status
 		args["description"] = osPkg.Description
 		args["format"] = pm.Format()
+		args["installed"] = true
 
 		// check if we found a newer version
 		args["available"] = ""
@@ -133,8 +178,12 @@ func (p *lumiPackages) GetList() ([]interface{}, error) {
 			log.Error().Err(err).Str("package", osPkg.Name).Msg("lumi[packages]> could not create package resource")
 			continue
 		}
+
 		pkgs[i] = e.(Package)
+		namedMap[osPkg.Name] = e.(Package)
 	}
+
+	p.Cache.Store("_map", &lumi.CacheEntry{Data: namedMap})
 
 	// return the packages as new entries
 	return pkgs, nil

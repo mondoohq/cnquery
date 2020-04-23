@@ -37,16 +37,19 @@ platform {
 }
 
 package {
-  init(id string)
+  init(name string)
 
   name string
   version string
   arch string
+  epoch string
+
   format string
   status() string
   description string
 
   available string
+  installed bool
   outdated() bool
 }
 
