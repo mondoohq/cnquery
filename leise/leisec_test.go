@@ -11,12 +11,14 @@ import (
 	"go.mondoo.io/mondoo/types"
 )
 
+var schema = llx.DefaultRegistry.Schema()
+
 func init() {
 	logger.InitTestEnv()
 }
 
 func compile(t *testing.T, s string, f func(res *llx.CodeBundle)) {
-	res, err := Compile(s, nil)
+	res, err := Compile(s, schema)
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
 	if res != nil && res.Code != nil {
@@ -151,35 +153,35 @@ func TestCompiler_OperatorPrecedence(t *testing.T) {
 
 func TestSuggestions(t *testing.T) {
 	t.Run("no suggestions", func(t *testing.T) {
-		res, err := Compile("notthere", nil)
+		res, err := Compile("notthere", schema)
 		assert.Nil(t, res.Code.Entrypoints)
 		assert.Empty(t, res.Suggestions)
 		assert.Equal(t, errors.New("Cannot find resource for identifier 'notthere'"), err)
 	})
 
 	t.Run("resource suggestions", func(t *testing.T) {
-		res, err := Compile("ssh", nil)
+		res, err := Compile("ssh", schema)
 		assert.Nil(t, res.Code.Entrypoints)
 		assert.Equal(t, []string{"sshd", "sshd.config"}, res.Suggestions)
 		assert.Equal(t, errors.New("Cannot find resource for identifier 'ssh'"), err)
 	})
 
 	t.Run("field suggestions", func(t *testing.T) {
-		res, err := Compile("sshd.config.p", nil)
+		res, err := Compile("sshd.config.p", schema)
 		assert.Nil(t, res.Code.Entrypoints)
 		assert.Equal(t, []string{"params"}, res.Suggestions)
 		assert.Equal(t, errors.New("Cannot find field 'p' in resource sshd.config"), err)
 	})
 
 	t.Run("field in block suggestions", func(t *testing.T) {
-		res, err := Compile("sshd.config { p }", nil)
+		res, err := Compile("sshd.config { p }", schema)
 		assert.Nil(t, res.Code.Entrypoints)
 		assert.Equal(t, []string{"params"}, res.Suggestions)
 		assert.Equal(t, errors.New("Cannot find field or resource 'p' in block for type 'sshd.config'"), err)
 	})
 
 	t.Run("field suggestions on partial map", func(t *testing.T) {
-		res, err := Compile("sshd.config.params.l", nil)
+		res, err := Compile("sshd.config.params.l", schema)
 		assert.Nil(t, res.Code.Entrypoints)
 		assert.Equal(t, []string{"length"}, res.Suggestions)
 		assert.Equal(t, errors.New("Cannot find field 'l' in resource map[string]string"), err)

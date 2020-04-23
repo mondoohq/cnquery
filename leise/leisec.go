@@ -11,7 +11,6 @@ import (
 	"go.mondoo.io/mondoo/leise/parser"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/lumi/resources"
 	"go.mondoo.io/mondoo/types"
 )
 
@@ -634,20 +633,14 @@ func (c *compiler) CompileParsed(ast *parser.AST) error {
 	return nil
 }
 
-func validateSchema(schema *lumi.Schema) *lumi.Schema {
-	if schema != nil {
-		return schema
-	}
-
-	reg := lumi.NewRegistry()
-	resources.Init(reg)
-	return reg.Schema()
-}
-
 // CompileAST with a schema into a chunky code
 func CompileAST(ast *parser.AST, schema *lumi.Schema) (*llx.CodeBundle, error) {
+	if schema == nil {
+		return nil, errors.New("leise> please provide a schema to compile this code")
+	}
+
 	c := compiler{
-		Schema: validateSchema(schema),
+		Schema: schema,
 		Result: &llx.CodeBundle{
 			Code: &llx.Code{
 				Checksums: map[int32]string{},
