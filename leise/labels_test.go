@@ -5,10 +5,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/llx"
+	"go.mondoo.io/mondoo/llx/registry"
 )
 
 func label(t *testing.T, s string, f func(res *llx.Labels)) {
-	res, err := Compile(s, llx.DefaultRegistry.Schema())
+	res, err := Compile(s, registry.Default.Schema())
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
 	if res == nil {

@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 
-  "sigs.k8s.io/yaml"
 	"go.mondoo.io/mondoo/leise"
 	"go.mondoo.io/mondoo/leise/db"
 	"go.mondoo.io/mondoo/llx"
+	"go.mondoo.io/mondoo/llx/registry"
+	"sigs.k8s.io/yaml"
 )
 
 type collectionsDoc struct {
@@ -87,7 +88,7 @@ func (c *collectionsDoc) Convert() (*db.CollectionsBundle, error) {
 		yamlOrg := c.Queries[i]
 
 		// compile leise code
-		code, err := leise.Compile(yamlOrg.Code, llx.DefaultRegistry.Schema())
+		code, err := leise.Compile(yamlOrg.Code, registry.Default.Schema())
 		if err != nil {
 			return nil, err
 		}
