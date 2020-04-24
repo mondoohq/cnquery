@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/lumi/resources/powershell"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
@@ -544,7 +545,7 @@ var windows = &PlatformResolver{
 
 		// optional: try to get the ubr number (win 10 + 2019)
 		pscommand := "Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion' -Name CurrentBuild, UBR, EditionID | ConvertTo-Json"
-		cmd, err = t.RunCommand(fmt.Sprintf("powershell -c \"%s\"", pscommand))
+		cmd, err = t.RunCommand(powershell.Wrap(pscommand))
 		if err == nil {
 			current, err := ParseWinRegistryCurrentVersion(cmd.Stdout)
 			if err == nil && current.UBR > 0 {
