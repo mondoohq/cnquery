@@ -25,6 +25,10 @@ type Compute struct {
 func (a *Compute) ListInstancesInProject(project string) ([]*assets.Asset, error) {
 
 	client, err := gcpClient(compute.ComputeScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
 	svc, err := compute.New(client)
 	if err != nil {
 		return nil, err
