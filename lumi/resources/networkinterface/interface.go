@@ -14,6 +14,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 
+	"go.mondoo.io/mondoo/lumi/resources/powershell"
 	motor "go.mondoo.io/mondoo/motor/motoros"
 	"go.mondoo.io/mondoo/motor/motoros/platform"
 )
@@ -399,7 +400,7 @@ type WindowsInterfaceHandler struct {
 
 func (i *WindowsInterfaceHandler) Interfaces() ([]Interface, error) {
 	// fetch all network adapter
-	cmd, err := i.motor.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", WinGetNetAdapter))
+	cmd, err := i.motor.Transport.RunCommand(powershell.Wrap(WinGetNetAdapter))
 	if err != nil {
 		return nil, errors.Wrap(err, "could not fetch windows network adapter")
 	}
@@ -409,7 +410,7 @@ func (i *WindowsInterfaceHandler) Interfaces() ([]Interface, error) {
 	}
 
 	// fetch all ip adresses
-	cmd, err = i.motor.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", WinGetNetIPAddress))
+	cmd, err = i.motor.Transport.RunCommand(powershell.Wrap(WinGetNetIPAddress))
 	if err != nil {
 		return nil, errors.Wrap(err, "could not fetch windows ip adresses")
 	}

@@ -1,10 +1,10 @@
 package reboot
 
 import (
-	"fmt"
 	"io/ioutil"
 	"strings"
 
+	"go.mondoo.io/mondoo/lumi/resources/powershell"
 	motor "go.mondoo.io/mondoo/motor/motoros"
 )
 
@@ -31,7 +31,7 @@ func (s *WinReboot) RebootPending() (bool, error) {
 	isRebootrequired := false
 
 	// Query the Component Based Servicing Reg Key
-	cmd, err := s.Motor.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", WindowsTestComponentServicesReboot))
+	cmd, err := s.Motor.Transport.RunCommand(powershell.Wrap(WindowsTestComponentServicesReboot))
 	if err != nil {
 		return false, err
 	}
@@ -46,7 +46,7 @@ func (s *WinReboot) RebootPending() (bool, error) {
 	}
 
 	// Query WUAU from the registry
-	cmd, err = s.Motor.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", WindowsTestWsusReboot))
+	cmd, err = s.Motor.Transport.RunCommand(powershell.Wrap(WindowsTestWsusReboot))
 	if err != nil {
 		return false, err
 	}

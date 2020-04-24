@@ -1,21 +1,15 @@
 package packages
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.io/mondoo/lumi/resources/powershell"
 	mock "go.mondoo.io/mondoo/motor/motoros/mock/toml"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
-
-func TestPowershellEncoding(t *testing.T) {
-	expected := "powershell.exe -EncodedCommand ZABpAHIAIAAiAGMAOgBcAHAAcgBvAGcAcgBhAG0AIABmAGkAbABlAHMAIgAgAA=="
-	cmd := string("dir \"c:\\program files\" ")
-	assert.Equal(t, expected, EncodePowershell(cmd))
-}
 
 func TestWindowsAppxPackagesParser(t *testing.T) {
 	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/windows_2019.toml"})
@@ -23,7 +17,7 @@ func TestWindowsAppxPackagesParser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	c, err := mock.RunCommand(fmt.Sprintf("powershell -c \"%s\"", WINDOWS_QUERY_APPX_PACKAGES))
+	c, err := mock.RunCommand(powershell.Wrap(WINDOWS_QUERY_APPX_PACKAGES))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +43,7 @@ func TestWindowsHotFixParser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	c, err := mock.RunCommand(fmt.Sprintf("powershell -c \"%s\"", WINDOWS_QUERY_HOTFIXES))
+	c, err := mock.RunCommand(powershell.Wrap(WINDOWS_QUERY_HOTFIXES))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,7 +68,7 @@ func TestWinOSUpdatesParser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cmd := EncodePowershell(WINDOWS_QUERY_WSUS_AVAILABLE)
+	cmd := powershell.Encode(WINDOWS_QUERY_WSUS_AVAILABLE)
 	c, err := mock.RunCommand(cmd)
 	if err != nil {
 		t.Fatal(err)

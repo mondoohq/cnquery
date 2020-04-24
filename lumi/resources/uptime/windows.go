@@ -2,11 +2,11 @@ package uptime
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"time"
 
+	"go.mondoo.io/mondoo/lumi/resources/powershell"
 	motor "go.mondoo.io/mondoo/motor/motoros"
 )
 
@@ -39,7 +39,7 @@ func (s *Windows) Name() string {
 }
 
 func (s *Windows) Duration() (time.Duration, error) {
-	cmd, err := s.Motor.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", WindowsUptimeCmd))
+	cmd, err := s.Motor.Transport.RunCommand(powershell.Wrap(WindowsUptimeCmd))
 	if err != nil {
 		return 0, err
 	}

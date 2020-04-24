@@ -1,7 +1,6 @@
 package packages
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,23 +8,10 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/lumi/resources/powershell"
 	motor "go.mondoo.io/mondoo/motor/motoros"
 	"go.mondoo.io/mondoo/motor/motoros/platform/winbuild"
 )
-
-// base64 encoding for long powershell script
-func EncodePowershell(cmd string) string {
-
-	// powershall uses two bytes chars :-(
-	withSpaceCmd := ""
-	for _, b := range []byte(cmd) {
-		withSpaceCmd += string(b) + "\x00"
-	}
-
-	// encode the command as base64
-	input := []uint8(withSpaceCmd)
-	return fmt.Sprintf("powershell.exe -EncodedCommand %s", base64.StdEncoding.EncodeToString(input))
-}
 
 // ProcessorArchitecture Enum
 // https://docs.microsoft.com/en-us/uwp/api/windows.system.processorarchitecture
@@ -263,7 +249,7 @@ func (win *WinPkgManager) List() ([]Package, error) {
 
 	// only win 10+ are compatible with app x packages
 	if b.Build > 10240 {
-		cmd, err := win.motor.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", WINDOWS_QUERY_APPX_PACKAGES))
+		cmd, err := win.motor.Transport.RunCommand(powershell.Wrap(WINDOWS_QUERY_APPX_PACKAGES))
 		if err != nil {
 			return nil, fmt.Errorf("could not read package list")
 		}
@@ -275,7 +261,7 @@ func (win *WinPkgManager) List() ([]Package, error) {
 	}
 
 	// try to read wsus updates
-	wsusCmd, err := win.motor.Transport.RunCommand(EncodePowershell(WINDOWS_QUERY_WSUS_AVAILABLE))
+	wsusCmd, err := win.motor.Transport.RunCommand(powershell.Encode(WINDOWS_QUERY_WSUS_AVAILABLE))
 	if err == nil {
 		wsusUpdates, err := ParseWindowsUpdates(wsusCmd.Stdout)
 		if err == nil {
@@ -287,7 +273,7 @@ func (win *WinPkgManager) List() ([]Package, error) {
 		log.Warn().Err(err).Msg("could not fetch windows update services")
 	}
 
-	cmd, err := win.motor.Transport.RunCommand(fmt.Sprintf("powershell -c \"%s\"", WINDOWS_QUERY_HOTFIXES))
+	cmd, err := win.motor.Transport.RunCommand(powershell.Wrap(WINDOWS_QUERY_HOTFIXES))
 	if err != nil {
 		return nil, errors.Wrap(err, "could not fetch hotfixes")
 	}
