@@ -406,6 +406,13 @@ func TestCompiler_List(t *testing.T) {
 	})
 }
 
+func TestCompiler_EmptyWhere(t *testing.T) {
+	compile(t, "packages.where()", func(res *llx.CodeBundle) {
+		assertFunction(t, "packages", nil, res.Code.Code[0])
+		assert.Equal(t, 1, len(res.Code.Code))
+	})
+}
+
 func TestCompiler_Where(t *testing.T) {
 	compile(t, "packages.where(outdated)", func(res *llx.CodeBundle) {
 		assertFunction(t, "packages", nil, res.Code.Code[0])

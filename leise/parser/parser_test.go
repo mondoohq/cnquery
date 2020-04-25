@@ -135,6 +135,13 @@ func TestParser_ParseValues(t *testing.T) {
 				{Operand: &Operand{Value: vIdent("uid")}},
 			},
 		}}},
+		{"users.where()", &Expression{Operand: &Operand{
+			Value: vIdent("users"),
+			Calls: []*Call{
+				callIdent("where"),
+				{Function: []*Arg{}},
+			},
+		}}},
 		{"users.where(uid > 2).list { uid }", &Expression{Operand: &Operand{
 			Value: vIdent("users"),
 			Calls: []*Call{
