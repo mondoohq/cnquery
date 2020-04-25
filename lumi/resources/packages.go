@@ -46,41 +46,26 @@ func (p *lumiPackage) init(args *lumi.Args) (*lumi.Args, error) {
 	}
 	cmap := c.Data.(map[string]Package)
 
+	// TODO: this won't be necessary if we can reference the ID
+	(*args)["version"] = ""
+	(*args)["arch"] = ""
+	(*args)["format"] = ""
+	(*args)["epoch"] = ""
+	(*args)["description"] = ""
+	(*args)["available"] = ""
+	(*args)["installed"] = false
+
 	pkg := cmap[nameS]
-	if pkg == nil {
-		(*args)["version"] = ""
-		(*args)["arch"] = ""
-		(*args)["format"] = ""
-		(*args)["epoch"] = ""
-		(*args)["description"] = ""
-		(*args)["available"] = ""
-		(*args)["installed"] = false
-	} else {
+	if pkg != nil {
 		// TODO: do this instead of duplicating it!
 		// (*args)["id"] = pkg.LumiResource().Id
-
+		// Workaround: we fill in the fields we need to make the id() method
+		// generate the same ID
 		(*args)["version"], _ = pkg.Version()
 		(*args)["arch"], _ = pkg.Arch()
 		(*args)["format"], _ = pkg.Format()
 		(*args)["epoch"], _ = pkg.Epoch()
-		(*args)["description"], _ = pkg.Description()
-		(*args)["available"], _ = pkg.Available()
-		(*args)["installed"], _ = pkg.Installed()
 	}
-
-	// fmt.Println(logger.PrettyJSON(arr))
-
-	// (*args)["name"] = m[2]
-	// (*args)["version"] = m[3]
-	// (*args)["arch"] = m[4]
-	// (*args)["format"] = m[1]
-
-	// // set values to pass resource creation step
-	// (*args)["epoch"] = ""
-	// (*args)["description"] = ""
-	// (*args)["available"] = ""
-
-	// delete(*args, "id")
 
 	return args, nil
 }
@@ -154,33 +139,31 @@ func (p *lumiPackages) GetList() ([]interface{}, error) {
 	pkgs := make([]interface{}, len(osPkgs))
 	namedMap := map[string]Package{}
 	for i, osPkg := range osPkgs {
-
-		// set init arguments for the lumi package resource
-		args := make(lumi.Args)
-		args["name"] = osPkg.Name
-		args["version"] = osPkg.Version
-		args["arch"] = osPkg.Arch
-		args["status"] = osPkg.Status
-		args["description"] = osPkg.Description
-		args["format"] = pm.Format()
-		args["installed"] = true
-
 		// check if we found a newer version
-		args["available"] = ""
+		available := ""
 		update, ok := availableMap[osPkg.Name+"/"+osPkg.Arch]
 		if ok {
-			args["available"] = update.Available
+			available = update.Available
 			log.Debug().Str("package", osPkg.Name).Str("available", update.Available).Msg("lumi[packages]> found newer version")
 		}
 
-		e, err := newPackage(p.Runtime, &args)
+		pkg, err := p.Runtime.CreateResource("package",
+			"name", osPkg.Name,
+			"version", osPkg.Version,
+			"available", available,
+			"epoch", "", // TODO: support Epoch
+			"arch", osPkg.Arch,
+			"status", osPkg.Status,
+			"description", osPkg.Description,
+			"format", pm.Format(),
+			"installed", true,
+		)
 		if err != nil {
-			log.Error().Err(err).Str("package", osPkg.Name).Msg("lumi[packages]> could not create package resource")
-			continue
+			return nil, err
 		}
 
-		pkgs[i] = e.(Package)
-		namedMap[osPkg.Name] = e.(Package)
+		pkgs[i] = pkg
+		namedMap[osPkg.Name] = pkg.(Package)
 	}
 
 	p.Cache.Store("_map", &lumi.CacheEntry{Data: namedMap})
