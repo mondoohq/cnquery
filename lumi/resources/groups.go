@@ -8,16 +8,6 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/groups"
 )
 
-const (
-	GROUP_CACHE_ID      = "id"
-	GROUP_CACHE_NAME    = "name"
-	GROUP_CACHE_GID     = "gid"
-	GROUP_CACHE_SID     = "sid"
-	GROUP_CACHE_MEMBERS = "members"
-
-	GROUPS_MAP_ID = "groups_map"
-)
-
 func (g *lumiGroup) init(args *lumi.Args) (*lumi.Args, error) {
 	if len(*args) > 2 {
 		return args, nil
@@ -45,7 +35,7 @@ func (g *lumiGroup) init(args *lumi.Args) (*lumi.Args, error) {
 		return nil, err
 	}
 
-	c, ok := groups.LumiResource().Cache.Load(GROUPS_MAP_ID)
+	c, ok := groups.LumiResource().Cache.Load("_map")
 	if !ok {
 		return nil, errors.New("Cannot get map of packages")
 	}
@@ -120,11 +110,11 @@ func (g *lumiGroups) GetList() ([]interface{}, error) {
 		}
 
 		lumiGroup, err := g.Runtime.CreateResource("group",
-			GROUP_CACHE_ID, group.ID,
-			GROUP_CACHE_NAME, group.Name,
-			GROUP_CACHE_GID, group.Gid,
-			GROUP_CACHE_SID, group.Sid,
-			GROUP_CACHE_MEMBERS, members,
+			"id", group.ID,
+			"name", group.Name,
+			"gid", group.Gid,
+			"sid", group.Sid,
+			"members", members,
 		)
 		if err != nil {
 			return nil, err
@@ -134,7 +124,7 @@ func (g *lumiGroups) GetList() ([]interface{}, error) {
 		namedMap[group.ID] = lumiGroup.(Group)
 	}
 
-	g.Cache.Store(GROUPS_MAP_ID, &lumi.CacheEntry{Data: namedMap})
+	g.Cache.Store("_map", &lumi.CacheEntry{Data: namedMap})
 
 	return lumiGroups, nil
 }
