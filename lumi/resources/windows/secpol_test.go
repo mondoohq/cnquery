@@ -14,7 +14,7 @@ func TestParseSecpol(t *testing.T) {
 	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/secpol.toml"})
 	require.NoError(t, err)
 
-	f, err := mock.RunCommand("Get-Content out.cfg")
+	f, err := mock.RunCommand("powershell.exe -EncodedCommand CgBzAGUAYwBlAGQAaQB0ACAALwBlAHgAcABvAHIAdAAgAC8AYwBmAGcAIABvAHUAdAAuAGMAZgBnACAAIAB8ACAATwB1AHQALQBOAHUAbABsAAoAJAByAGEAdwAgAD0AIABHAGUAdAAtAEMAbwBuAHQAZQBuAHQAIABvAHUAdAAuAGMAZgBnAAoAUgBlAG0AbwB2AGUALQBJAHQAZQBtACAALgBcAG8AdQB0AC4AYwBmAGcAIAB8ACAATwB1AHQALQBOAHUAbABsAAoAVwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIAAkAHIAYQB3AAoA")
 	require.NoError(t, err)
 
 	secpol, err := windows.ParseSecpol(f.Stdout)

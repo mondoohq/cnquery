@@ -1,23 +1,81 @@
 package resources
 
-import "errors"
+import (
+	"fmt"
 
-func (p *lumiSecpol) id() (string, error) {
+	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/lumi/resources/powershell"
+	"go.mondoo.io/mondoo/lumi/resources/windows"
+)
+
+func (s *lumiSecpol) id() (string, error) {
 	return "secpol", nil
 }
 
-func (p *lumiSecpol) GetSystemaccess() ([]interface{}, error) {
-	return nil, errors.New("not implemented")
+func (s *lumiSecpol) policy() (*windows.Secpol, error) {
+	var policy *windows.Secpol
+	data, ok := s.Cache.Load("secpol")
+	if ok {
+		policy, ok := data.Data.(*windows.Secpol)
+		if ok {
+			return policy, nil
+		}
+	}
+
+	encoded := powershell.Encode(windows.SecpolScript)
+
+	cmd, err := s.Runtime.Motor.Transport.RunCommand(encoded)
+	if err != nil {
+		return nil, fmt.Errorf("could not run auditpol")
+	}
+
+	policy, err = windows.ParseSecpol(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+	s.Cache.Store("secpol", &lumi.CacheEntry{Data: policy})
+	return policy, nil
 }
 
-func (p *lumiSecpol) GetEventaudit() ([]interface{}, error) {
-	return nil, errors.New("not implemented")
+func (s *lumiSecpol) GetSystemaccess() (map[string]interface{}, error) {
+	policy, err := s.policy()
+	if err != nil {
+		return nil, err
+	}
+	return convertMap(policy.SystemAccess), nil
 }
 
-func (p *lumiSecpol) GetRegistryvalues() ([]interface{}, error) {
-	return nil, errors.New("not implemented")
+func (s *lumiSecpol) GetEventaudit() (map[string]interface{}, error) {
+	policy, err := s.policy()
+	if err != nil {
+		return nil, err
+	}
+	return convertMap(policy.EventAudit), nil
 }
 
-func (p *lumiSecpol) GetPrivilegerights() ([]interface{}, error) {
-	return nil, errors.New("not implemented")
+func (s *lumiSecpol) GetRegistryvalues() (map[string]interface{}, error) {
+	policy, err := s.policy()
+	if err != nil {
+		return nil, err
+	}
+	return convertMap(policy.RegistryValues), nil
+}
+
+func (s *lumiSecpol) GetPrivilegerights() (map[string]interface{}, error) {
+	policy, err := s.policy()
+	if err != nil {
+		return nil, err
+	}
+	return convertMap(policy.PrivilegeRights), nil
+}
+
+func convertMap(m map[string]string) map[string]interface{} {
+	if m == nil {
+		return nil
+	}
+	res := map[string]interface{}{}
+	for k := range m {
+		res[k] = m[k]
+	}
+	return res
 }

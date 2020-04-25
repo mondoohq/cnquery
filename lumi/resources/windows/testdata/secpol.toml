@@ -1,11 +1,4 @@
-[commands."secedit /export /cfg out.cfg"]
-stdout = """
-
-The task has completed successfully.
-See log %windir%\\security\\logs\\scesrv.log for detail info.
-"""
-
-[commands."Get-Content out.cfg"]
+[commands."powershell.exe -EncodedCommand CgBzAGUAYwBlAGQAaQB0ACAALwBlAHgAcABvAHIAdAAgAC8AYwBmAGcAIABvAHUAdAAuAGMAZgBnACAAIAB8ACAATwB1AHQALQBOAHUAbABsAAoAJAByAGEAdwAgAD0AIABHAGUAdAAtAEMAbwBuAHQAZQBuAHQAIABvAHUAdAAuAGMAZgBnAAoAUgBlAG0AbwB2AGUALQBJAHQAZQBtACAALgBcAG8AdQB0AC4AYwBmAGcAIAB8ACAATwB1AHQALQBOAHUAbABsAAoAVwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIAAkAHIAYQB3AAoA"]
 stdout = """[Unicode]
 Unicode=yes
 [System Access]
@@ -129,6 +122,3 @@ SeDelegateSessionUserImpersonatePrivilege = *S-1-5-32-544
 signature=\"$CHICAGO$\"
 Revision=1
 """
-
-[commands."Remove-Item .\\out.cfg"]
-stdout = ""
