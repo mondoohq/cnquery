@@ -125,7 +125,7 @@ func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.T
 					// and which will always be number 1
 					1: c.Result.Code.Checksums[c.Result.Code.ChunkIndex()],
 				},
-				Code: []*llx.Chunk{&llx.Chunk{
+				Code: []*llx.Chunk{{
 					Call:      llx.Chunk_PRIMITIVE,
 					Primitive: &llx.Primitive{Type: string(typ)},
 				}},

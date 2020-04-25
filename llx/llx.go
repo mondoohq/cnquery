@@ -214,7 +214,7 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, ref int3
 		if len(blockResult) == len(fun.Entrypoints) {
 			c.cache.Store(ref, &stepCache{
 				Result: &RawData{
-					Type:  types.Map(types.Int, types.Any),
+					Type:  types.Map(types.String, types.Any),
 					Value: blockResult,
 				},
 				IsStatic: true,

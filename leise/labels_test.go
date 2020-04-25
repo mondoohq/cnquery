@@ -72,7 +72,7 @@ func TestLabels(t *testing.T) {
 					2: "platform",
 				},
 				Functions: map[int32]*llx.Labels{
-					2: &llx.Labels{Labels: map[int32]string{
+					2: {Labels: map[int32]string{
 						2: "name",
 						3: "release",
 					}},
@@ -84,7 +84,7 @@ func TestLabels(t *testing.T) {
 					3: "users.list",
 				},
 				Functions: map[int32]*llx.Labels{
-					3: &llx.Labels{Labels: map[int32]string{
+					3: {Labels: map[int32]string{
 						2: "uid",
 					}},
 				},
@@ -103,7 +103,7 @@ func TestLabels(t *testing.T) {
 					4: "users.list[0]",
 				},
 				Functions: map[int32]*llx.Labels{
-					4: &llx.Labels{Labels: map[int32]string{
+					4: {Labels: map[int32]string{
 						2: "uid",
 					}},
 				},
