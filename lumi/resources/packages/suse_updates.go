@@ -6,13 +6,6 @@ import (
 	motor "go.mondoo.io/mondoo/motor/motoros"
 )
 
-// TODO: move code to packages
-type OperatingSystemUpdateManager interface {
-	Name() string
-	Format() string
-	List() ([]OperatingSystemUpdate, error)
-}
-
 type SuseUpdateManager struct {
 	Motor *motor.Motor
 }

@@ -19,7 +19,19 @@ const (
 	USER_CACHE_ENABLED  = "enabled"
 )
 
-func (p *lumiUser) init(args *lumi.Args) (*lumi.Args, error) {
+func copyUserDataToLumiArgs(user *users.User, args *lumi.Args) error {
+	(*args)[USER_CACHE_ID] = user.ID
+	(*args)[USER_CACHE_USERNAME] = user.Username
+	(*args)[USER_CACHE_UID] = user.Uid
+	(*args)[USER_CACHE_GID] = user.Gid
+	(*args)[USER_CACHE_SID] = user.Sid
+	(*args)[USER_CACHE_HOME] = user.Home
+	(*args)[USER_CACHE_SHELL] = user.Shell
+	(*args)[USER_CACHE_ENABLED] = user.Enabled
+	return nil
+}
+
+func (u *lumiUser) init(args *lumi.Args) (*lumi.Args, error) {
 	idValue, ok := (*args)[USER_CACHE_ID]
 
 	// check if additional userdata is provided
@@ -29,7 +41,7 @@ func (p *lumiUser) init(args *lumi.Args) (*lumi.Args, error) {
 	// if only uid was provided, lets collect the info for the user
 	if ok && !gok && !uok {
 		// lets do minimal IO in initialize
-		um, err := users.ResolveManager(p.Runtime.Motor)
+		um, err := users.ResolveManager(u.Runtime.Motor)
 		if err != nil {
 			return nil, errors.New("user> cannot find user manager")
 		}
@@ -52,7 +64,7 @@ func (p *lumiUser) init(args *lumi.Args) (*lumi.Args, error) {
 
 		// we go a username as an initizator, which eg. is used by the groups resource
 		// lets do minimal IO in initialize
-		um, err := users.ResolveManager(p.Runtime.Motor)
+		um, err := users.ResolveManager(u.Runtime.Motor)
 		if err != nil {
 			return nil, errors.New("user> cannot find user manager")
 		}
@@ -84,21 +96,21 @@ func (p *lumiUser) init(args *lumi.Args) (*lumi.Args, error) {
 	return args, nil
 }
 
-func (p *lumiUser) id() (string, error) {
-	return p.Id()
+func (u *lumiUser) id() (string, error) {
+	return u.Id()
 }
 
-func (p *lumiUsers) init(args *lumi.Args) (*lumi.Args, error) {
+func (u *lumiUsers) init(args *lumi.Args) (*lumi.Args, error) {
 	return args, nil
 }
 
-func (p *lumiUsers) id() (string, error) {
+func (u *lumiUsers) id() (string, error) {
 	return "users", nil
 }
 
-func (s *lumiUsers) GetList() ([]interface{}, error) {
+func (u *lumiUsers) GetList() ([]interface{}, error) {
 	// find suitable user manager
-	um, err := users.ResolveManager(s.Runtime.Motor)
+	um, err := users.ResolveManager(u.Runtime.Motor)
 	if um == nil || err != nil {
 		log.Warn().Err(err).Msg("lumi[users]> could not retrieve users list")
 		return nil, errors.New("cannot find users manager")
@@ -112,37 +124,27 @@ func (s *lumiUsers) GetList() ([]interface{}, error) {
 	}
 	log.Debug().Int("users", len(users)).Msg("lumi[users]> found users")
 
-	// convert to ]interface{}{}
+	// convert to interface{}{}
 	lumiUsers := []interface{}{}
 	for i := range users {
 		user := users[i]
 
-		// set init arguments for the lumi user resource
-		args := make(lumi.Args)
-
-		// copy parsed user info to lumi args
-		copyUserDataToLumiArgs(user, &args)
-
-		e, err := newUser(s.Runtime, &args)
+		lumiUser, err := u.Runtime.CreateResource("user",
+			USER_CACHE_ID, user.ID,
+			USER_CACHE_USERNAME, user.Username,
+			USER_CACHE_UID, user.Uid,
+			USER_CACHE_GID, user.Gid,
+			USER_CACHE_SID, user.Sid,
+			USER_CACHE_HOME, user.Home,
+			USER_CACHE_SHELL, user.Shell,
+			USER_CACHE_ENABLED, user.Enabled,
+		)
 		if err != nil {
-			log.Error().Err(err).Str("user", user.Username).Msg("lumi[users]> could not create user resource")
-			continue
+			return nil, err
 		}
 
-		lumiUsers = append(lumiUsers, e.(User))
+		lumiUsers = append(lumiUsers, lumiUser.(User))
 	}
 
 	return lumiUsers, nil
-}
-
-func copyUserDataToLumiArgs(user *users.User, args *lumi.Args) error {
-	(*args)[USER_CACHE_ID] = user.ID
-	(*args)[USER_CACHE_USERNAME] = user.Username
-	(*args)[USER_CACHE_UID] = user.Uid
-	(*args)[USER_CACHE_GID] = user.Gid
-	(*args)[USER_CACHE_SID] = user.Sid
-	(*args)[USER_CACHE_HOME] = user.Home
-	(*args)[USER_CACHE_SHELL] = user.Shell
-	(*args)[USER_CACHE_ENABLED] = user.Enabled
-	return nil
 }

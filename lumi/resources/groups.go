@@ -2,12 +2,10 @@ package resources
 
 import (
 	"errors"
-	"strconv"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/groups"
-	motor "go.mondoo.io/mondoo/motor/motoros"
 )
 
 const (
@@ -20,7 +18,7 @@ const (
 	GROUPS_MAP_ID = "groups_map"
 )
 
-func (p *lumiGroup) init(args *lumi.Args) (*lumi.Args, error) {
+func (g *lumiGroup) init(args *lumi.Args) (*lumi.Args, error) {
 	if len(*args) > 2 {
 		return args, nil
 	}
@@ -36,7 +34,7 @@ func (p *lumiGroup) init(args *lumi.Args) (*lumi.Args, error) {
 	}
 
 	// initialize groups resource
-	obj, err := p.Runtime.CreateResource("groups")
+	obj, err := g.Runtime.CreateResource("groups")
 	if err != nil {
 		return nil, err
 	}
@@ -71,21 +69,21 @@ func (p *lumiGroup) init(args *lumi.Args) (*lumi.Args, error) {
 
 }
 
-func (p *lumiGroup) id() (string, error) {
-	return p.Id()
+func (g *lumiGroup) id() (string, error) {
+	return g.Id()
 }
 
-func (p *lumiGroups) init(args *lumi.Args) (*lumi.Args, error) {
+func (g *lumiGroups) init(args *lumi.Args) (*lumi.Args, error) {
 	return args, nil
 }
 
-func (p *lumiGroups) id() (string, error) {
+func (g *lumiGroups) id() (string, error) {
 	return "groups", nil
 }
 
-func (s *lumiGroups) GetList() ([]interface{}, error) {
+func (g *lumiGroups) GetList() ([]interface{}, error) {
 	// find suitable groups manager
-	gm, err := resolveOSGroupManager(s.Runtime.Motor)
+	gm, err := groups.ResolveManager(g.Runtime.Motor)
 	if gm == nil || err != nil {
 		log.Warn().Err(err).Msg("lumi[groups]> could not retrieve groups list")
 		return nil, errors.New("cannot find groups manager")
@@ -99,150 +97,44 @@ func (s *lumiGroups) GetList() ([]interface{}, error) {
 	}
 	log.Debug().Int("groups", len(groups)).Msg("lumi[groups]> found groups")
 
-	// convert to ]interface{}{}
+	// convert to interface{}{}
 	lumiGroups := []interface{}{}
 	namedMap := map[string]Group{}
 
 	for i := range groups {
 		group := groups[i]
 
-		// set init arguments for the lumi group resource
-		args := make(lumi.Args)
+		// TODO: we may want to reconsider to do this here, it should be an async method members()
+		// therefore we may just want to store the references here
+		var members []interface{}
+		for i := range group.Members {
+			username := group.Members[i]
 
-		// copy parsed user info to lumi args
-		s.copyGroupDataToLumiArgs(group, &args)
-
-		e, err := newGroup(s.Runtime, &args)
-		if err != nil {
-			log.Error().Err(err).Str("group", group.Name).Msg("lumi[users]> could not create group resource")
-			continue
+			lumiUser, err := g.Runtime.CreateResource("user",
+				"username", username,
+			)
+			if err != nil {
+				return nil, err
+			}
+			members = append(members, lumiUser.(User))
 		}
 
-		lumiGroups = append(lumiGroups, e.(Group))
-		namedMap[group.ID] = e.(Group)
+		lumiGroup, err := g.Runtime.CreateResource("group",
+			GROUP_CACHE_ID, group.ID,
+			GROUP_CACHE_NAME, group.Name,
+			GROUP_CACHE_GID, group.Gid,
+			GROUP_CACHE_SID, group.Sid,
+			GROUP_CACHE_MEMBERS, members,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		lumiGroups = append(lumiGroups, lumiGroup.(Group))
+		namedMap[group.ID] = lumiGroup.(Group)
 	}
 
-	s.Cache.Store(GROUPS_MAP_ID, &lumi.CacheEntry{Data: namedMap})
+	g.Cache.Store(GROUPS_MAP_ID, &lumi.CacheEntry{Data: namedMap})
 
 	return lumiGroups, nil
-}
-
-func (s *lumiGroups) copyGroupDataToLumiArgs(group *groups.Group, args *lumi.Args) error {
-	(*args)[GROUP_CACHE_ID] = group.ID
-	(*args)[GROUP_CACHE_NAME] = group.Name
-	(*args)[GROUP_CACHE_GID] = group.Gid
-	(*args)[GROUP_CACHE_SID] = group.Sid
-
-	var members []interface{}
-	for i := range group.Members {
-		username := group.Members[i]
-		// convert group.members into lumi user objects
-		args := make(lumi.Args)
-		args[USER_CACHE_USERNAME] = username
-
-		e, err := newUser(s.Runtime, &args)
-		if err != nil {
-			log.Error().Err(err).Str("user", username).Msg("lumi[groups]> could not create user resource")
-			continue
-		}
-
-		members = append(members, e.(User))
-	}
-
-	(*args)[GROUP_CACHE_MEMBERS] = members
-	return nil
-}
-
-func resolveOSGroupManager(motor *motor.Motor) (OSGroupManager, error) {
-	var gm OSGroupManager
-
-	platform, err := motor.Platform()
-	if err != nil {
-		return nil, err
-	}
-
-	for i := range platform.Family {
-		if platform.Family[i] == "linux" {
-			gm = &UnixGroupManager{motor: motor}
-			break
-		} else if platform.Family[i] == "darwin" {
-			gm = &OSXGroupManager{motor: motor}
-			break
-		}
-	}
-
-	return gm, nil
-}
-
-type OSGroupManager interface {
-	Name() string
-	Group(gid int64) (*groups.Group, error)
-	List() ([]*groups.Group, error)
-}
-
-type UnixGroupManager struct {
-	motor *motor.Motor
-}
-
-func (s *UnixGroupManager) Name() string {
-	return "Unix Group Manager"
-}
-
-func (s *UnixGroupManager) Group(gid int64) (*groups.Group, error) {
-	groups, err := s.List()
-	if err != nil {
-		return nil, err
-	}
-
-	// search for gid
-	for i := range groups {
-		group := groups[i]
-		if group.Gid == gid {
-			return group, nil
-		}
-	}
-
-	return nil, errors.New("group> " + strconv.FormatInt(gid, 10) + " does not exist")
-}
-
-func (s *UnixGroupManager) List() ([]*groups.Group, error) {
-	f, err := s.motor.Transport.File("/etc/group")
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	return groups.ParseEtcGroup(f)
-}
-
-type OSXGroupManager struct {
-	motor *motor.Motor
-}
-
-func (s *OSXGroupManager) Name() string {
-	return "macOS Group Manager"
-}
-
-func (s *OSXGroupManager) Group(gid int64) (*groups.Group, error) {
-	groups, err := s.List()
-	if err != nil {
-		return nil, err
-	}
-
-	// search for gid
-	for i := range groups {
-		group := groups[i]
-		if group.Gid == gid {
-			return group, nil
-		}
-	}
-
-	return nil, errors.New("group> " + strconv.FormatInt(gid, 10) + " does not exist")
-}
-
-func (s *OSXGroupManager) List() ([]*groups.Group, error) {
-	c, err := s.motor.Transport.RunCommand("dscacheutil -q group")
-	if err != nil {
-		return nil, err
-	}
-	return groups.ParseDscacheutilResult(c.Stdout)
 }

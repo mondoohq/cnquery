@@ -13,6 +13,12 @@ type OperatingSystemPkgManager interface {
 	Available() (map[string]PackageUpdate, error)
 }
 
+type OperatingSystemUpdateManager interface {
+	Name() string
+	Format() string
+	List() ([]OperatingSystemUpdate, error)
+}
+
 // this will find the right package manager for the operating system
 func ResolveSystemPkgManager(motor *motor.Motor) (OperatingSystemPkgManager, error) {
 	var pm OperatingSystemPkgManager
@@ -51,22 +57,22 @@ func ResolveSystemPkgManager(motor *motor.Motor) (OperatingSystemPkgManager, err
 	return pm, nil
 }
 
-type ScratchPkgManager struct {
-	motor *motor.Motor
-}
+// TODO: harmonize with ResolveSystemPkgManager
+// this will find the right package manager for the operating system
+func ResolveSystemUpdateManager(motor *motor.Motor) (OperatingSystemUpdateManager, error) {
+	var um OperatingSystemUpdateManager
 
-func (dpm *ScratchPkgManager) Name() string {
-	return "Scratch Package Manager"
-}
+	platform, err := motor.Platform()
+	if err != nil {
+		return nil, err
+	}
 
-func (dpm *ScratchPkgManager) Format() string {
-	return "scratch"
-}
-
-func (dpm *ScratchPkgManager) List() ([]Package, error) {
-	return []Package{}, nil
-}
-
-func (dpm *ScratchPkgManager) Available() (map[string]PackageUpdate, error) {
-	return map[string]PackageUpdate{}, nil
+	// TODO: use OS family and select package manager
+	switch platform.Name {
+	case "opensuse": // suse family
+		um = &SuseUpdateManager{Motor: motor}
+	default:
+		return nil, errors.New("your platform is not supported by os updates resource")
+	}
+	return um, nil
 }

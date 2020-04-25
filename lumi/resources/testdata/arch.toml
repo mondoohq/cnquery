@@ -90,6 +90,7 @@ ncurses 6.2-1
 nettle 3.5.1-2
 npth 1.6-2
 openssl 1.1.1.f-1
+openssh 8.2p1-3
 p11-kit 0.23.20-3
 pacman 5.2.1-4
 pacman-mirrorlist 20200207-1
@@ -113,4 +114,125 @@ util-linux 2.35.1-1
 xz 5.2.5-1
 zlib 1:1.2.11-4
 zstd 1.4.4-1
+"""
+
+[files."/etc/ssh/sshd_config"]
+content = """
+/etc/ssh/sshd_config
+#	$OpenBSD: sshd_config,v 1.103 2018/04/09 20:41:22 tj Exp $
+# The default is to check both .ssh/authorized_keys and .ssh/authorized_keys2
+# but this is overridden so installations will only check .ssh/authorized_keys
+AuthorizedKeysFile	.ssh/authorized_keys
+
+# To disable tunneled clear text passwords, change to no here!
+#PasswordAuthentication yes
+#PermitEmptyPasswords no
+
+# Change to no to disable s/key passwords
+ChallengeResponseAuthentication no
+UsePAM yes
+PrintMotd no # pam does that
+Subsystem	sftp	/usr/lib/ssh/sftp-server
+"""
+
+
+[files."/etc/login.defs"]
+content = """FAIL_DELAY		3
+LOG_UNKFAIL_ENAB	no
+LOG_OK_LOGINS		no
+SYSLOG_SU_ENAB		yes
+SYSLOG_SG_ENAB		yes
+CONSOLE		/etc/securetty
+SU_NAME		su
+MAIL_DIR	/var/spool/mail
+HUSHLOGIN_FILE	.hushlogin
+ENV_SUPATH	PATH=/usr/local/sbin:/usr/local/bin:/usr/bin
+ENV_PATH	PATH=/usr/local/sbin:/usr/local/bin:/usr/bin
+TTYGROUP	tty
+TTYPERM		0600
+ERASECHAR	0177
+KILLCHAR	025
+UMASK		077
+PASS_MAX_DAYS	99999
+PASS_MIN_DAYS	0
+PASS_WARN_AGE	7
+UID_MIN			 1000
+UID_MAX			60000
+SYS_UID_MIN		  500
+SYS_UID_MAX		  999
+GID_MIN			 1000
+GID_MAX			60000
+SYS_GID_MIN		  500
+SYS_GID_MAX		  999
+LOGIN_RETRIES		5
+LOGIN_TIMEOUT		60
+CHFN_RESTRICT		rwh
+DEFAULT_HOME	yes
+USERGROUPS_ENAB yes
+MOTD_FILE
+ENCRYPT_METHOD	SHA512
+"""
+
+[commands."lsmod"]
+stdout = """Module                  Size  Used by
+xfrm_user              36864  1
+xfrm_algo              16384  1 xfrm_user
+bpfilter               16384  0
+vmw_vsock_virtio_transport    16384  14
+vmw_vsock_virtio_transport_common    24576  1 vmw_vsock_virtio_transport
+vsock                  36864  18 vmw_vsock_virtio_transport_common,vmw_vsock_virtio_transport
+"""
+
+[files."/etc/passwd"]
+content = """root:x:0:0::/root:/bin/bash
+bin:x:1:1::/:/usr/bin/nologin
+"""
+
+[files."/etc/group"]
+content = """
+cat /etc/group
+root:x:0:root
+network:x:90:
+wheel:x:998:
+tty:x:5:
+daemon:x:2:bin
+"""
+
+[files."/proc/sys/net/ipv4/ip_forward"]
+content = "1"
+
+[commands."mount"]
+stdout = """overlay on / type overlay (rw,relatime)
+proc on /proc type proc (rw,nosuid,nodev,noexec,relatime)
+tmpfs on /dev type tmpfs (rw,nosuid,size=65536k,mode=755)
+"""
+
+[files."/etc/shadow"]
+content = """root:!:14871::::::
+bin:!!:18360::::::
+"""
+
+[commands."systemctl --all list-units"]
+stdout = """UNIT                                                                                     LOAD      ACTIVE   SUB       DESCRIPTION
+  modprobe@drm.service                                                                     loaded    inactive dead      Load Kernel Module drm
+  pacman-init.service                                                                      loaded    active   exited    Initializes Pacman keyring
+● plymouth-quit-wait.service                                                               not-found inactive dead      plymouth-quit-wait.service
+● plymouth-start.service                                                                   not-found inactive dead      plymouth-start.service
+● reflector-init.service                                                                   loaded    failed   failed    Initializes mirrors for the VM
+  rescue.service                                                                           loaded    inactive dead      Rescue Shell
+  shadow.service                                                                           loaded    inactive dead      Verify integrity of password and group files
+  sshd.service                                                                             loaded    active   running   OpenSSH Daemon
+  sshdgenkeys.service                                                                      loaded    inactive dead      SSH Key Generation
+● syslog.service                                                                           not-found inactive dead      syslog.service
+"""
+
+[commands."ps axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command"]
+stdout = """    PID %CPU %MEM    VSZ   RSS TT       STAT STIME     TIME   UID COMMAND
+1  0.0  1.1  26904 11128 ?        Ss   15:10 00:00:00     0 /sbin/init
+2  0.0  0.0      0     0 ?        S    15:10 00:00:00     0 [kthreadd]
+3  0.0  0.0      0     0 ?        I<   15:10 00:00:00     0 [rcu_gp]
+4  0.0  0.0      0     0 ?        I<   15:10 00:00:00     0 [rcu_par_gp]
+772  0.0  0.4  10736  4980 ?        R    15:12 00:00:00  1000 sshd: vagrant@pts/0
+773  0.0  0.4   7476  4080 pts/0    Ss   15:12 00:00:00  1000 -bash
+974  0.0  0.3   8716  3100 pts/0    R+   16:24 00:00:00     0 ps axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command
 """

@@ -7,7 +7,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/services"
-	motor "go.mondoo.io/mondoo/motor/motoros"
 )
 
 const (
@@ -33,7 +32,7 @@ func (p *lumiService) init(args *lumi.Args) (*lumi.Args, error) {
 			return nil, errors.New("name has invalid type")
 		}
 
-		osm, err := resolveOSServiceManager(p.Runtime.Motor)
+		osm, err := services.ResolveManager(p.Runtime.Motor)
 		if err != nil {
 			return nil, errors.New("cannot find service manager")
 		}
@@ -122,7 +121,7 @@ func (p *lumiService) gatherServiceInfo(fn ServiceCallbackTrigger) error {
 		return errors.New("cannot gather service name")
 	}
 
-	osm, err := resolveOSServiceManager(p.Runtime.Motor)
+	osm, err := services.ResolveManager(p.Runtime.Motor)
 	if err != nil {
 		return errors.New("cannot find service manager")
 	}
@@ -157,7 +156,7 @@ func (p *lumiServices) id() (string, error) {
 
 func (s *lumiServices) GetList() ([]interface{}, error) {
 	// find suitable service manager
-	osm, err := resolveOSServiceManager(s.Runtime.Motor)
+	osm, err := services.ResolveManager(s.Runtime.Motor)
 	if osm == nil || err != nil {
 		log.Warn().Err(err).Msg("lumi[services]> could not retrieve services list")
 		return nil, errors.New("cannot find service manager")
@@ -171,126 +170,25 @@ func (s *lumiServices) GetList() ([]interface{}, error) {
 	}
 	log.Debug().Int("services", len(services)).Msg("lumi[services]> running services")
 
-	// convert to ]interface{}{}
+	// convert to interface{}{}
 	lumiSrvs := []interface{}{}
 	for i := range services {
 		srv := services[i]
 
-		// set init arguments for the lumi package resource
-		args := make(lumi.Args)
-		args["name"] = srv.Name
-		args["description"] = srv.Description
-		args["installed"] = srv.Installed
-		args["enabled"] = srv.Enabled
-		args["running"] = srv.Running
-		args["type"] = srv.Type
-
-		e, err := newService(s.Runtime, &args)
+		lumiSrv, err := s.Runtime.CreateResource("service",
+			"name", srv.Name,
+			"description", srv.Description,
+			"installed", srv.Installed,
+			"enabled", srv.Enabled,
+			"running", srv.Running,
+			"type", srv.Type,
+		)
 		if err != nil {
-			log.Error().Err(err).Str("service", srv.Name).Msg("lumi[services]> could not create service resource")
-			continue
+			return nil, err
 		}
 
-		lumiSrvs = append(lumiSrvs, e.(Service))
+		lumiSrvs = append(lumiSrvs, lumiSrv.(Service))
 	}
 
 	return lumiSrvs, nil
-}
-
-func resolveOSServiceManager(motor *motor.Motor) (OSServiceManager, error) {
-	var osm OSServiceManager
-
-	platform, err := motor.Platform()
-	if err != nil {
-		return nil, err
-	}
-
-	switch platform.Name {
-	case "manjaro", "arch": // arch family
-		osm = &SystemDServiceManager{motor: motor}
-	case "centos", "redhat": // redhat family
-		osm = &SystemDServiceManager{motor: motor}
-	case "ubuntu":
-		osm = &SystemDServiceManager{motor: motor}
-	case "debian":
-		osm = &SystemDServiceManager{motor: motor}
-	case "mac_os_x", "darwin":
-		osm = &LaunchDServiceManager{motor: motor}
-	}
-
-	return osm, nil
-}
-
-type OSServiceManager interface {
-	Name() string
-	Service(name string) (*services.Service, error)
-	List() ([]*services.Service, error)
-}
-
-// Newer linux systems use systemd as service manager
-type SystemDServiceManager struct {
-	motor *motor.Motor
-}
-
-func (s *SystemDServiceManager) Name() string {
-	return "systemd Service Manager"
-}
-
-func (s *SystemDServiceManager) Service(name string) (*services.Service, error) {
-	serviceList, err := s.List()
-	if err != nil {
-		return nil, err
-	}
-
-	// iterate over list and search for the service
-	for i := range serviceList {
-		service := serviceList[i]
-		if service.Name == name {
-			return service, nil
-		}
-	}
-
-	return nil, errors.New("service> " + name + " does not exist")
-}
-
-func (s *SystemDServiceManager) List() ([]*services.Service, error) {
-	c, err := s.motor.Transport.RunCommand("systemctl --all list-units")
-	if err != nil {
-		return nil, err
-	}
-	return services.ParseServiceSystemDUnitFiles(c.Stdout)
-}
-
-// MacOS is using launchd as default service manager
-type LaunchDServiceManager struct {
-	motor *motor.Motor
-}
-
-func (s *LaunchDServiceManager) Name() string {
-	return "launchd Service Manager"
-}
-
-func (s *LaunchDServiceManager) Service(name string) (*services.Service, error) {
-	services, err := s.List()
-	if err != nil {
-		return nil, err
-	}
-
-	// iterate over list and search for the service
-	for i := range services {
-		service := services[i]
-		if service.Name == name {
-			return service, nil
-		}
-	}
-
-	return nil, errors.New("service> " + name + " does not exist")
-}
-
-func (s *LaunchDServiceManager) List() ([]*services.Service, error) {
-	c, err := s.motor.Transport.RunCommand("launchctl list")
-	if err != nil {
-		return nil, err
-	}
-	return services.ParseServiceLaunchD(c.Stdout)
 }
