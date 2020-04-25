@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tj/assert"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi"
 	motor "go.mondoo.io/mondoo/motor/motoros"
@@ -42,8 +43,80 @@ func testQuery(t *testing.T, query string) []*llx.RawResult {
 
 	executor.AddCode(query)
 	if executor.WaitForResults(2*time.Second) == false {
-		t.Error("ran into timeout on testing query " + query)
+		t.Fatal("ran into timeout on testing query " + query)
 	}
 
 	return results
+}
+
+// StableTestRepetitions specifies the repetitions used in testing
+// to see if queries are deterministic
+var StableTestRepetitions = 5
+
+func stableResults(t *testing.T, query string) map[string]*llx.RawResult {
+	executor := initExecutor()
+	results := make([]map[string]*llx.RawResult, StableTestRepetitions)
+
+	for i := 0; i < StableTestRepetitions; i++ {
+		results[i] = map[string]*llx.RawResult{}
+		watcherID := "test"
+
+		executor.AddWatcher(watcherID, func(res *llx.RawResult) {
+			results[i][res.CodeID] = res
+		})
+
+		bundle, err := executor.AddCode(query)
+		if err != nil {
+			t.Fatal("failed to add code to executor: " + err.Error())
+			return nil
+		}
+		if executor.WaitForResults(2*time.Second) == false {
+			t.Fatal("ran into timeout on testing query " + query)
+			return nil
+		}
+
+		executor.RemoveWatcher(watcherID)
+		executor.Remove(bundle.Code.Id)
+	}
+
+	first := results[0]
+	for i := 1; i < StableTestRepetitions; i++ {
+		next := results[i]
+		for id, firstRes := range first {
+			nextRes := next[id]
+
+			if firstRes == nil {
+				t.Fatalf("received nil as the result for query '%s' codeID '%s'", query, id)
+				return nil
+			}
+
+			if nextRes == nil {
+				t.Fatalf("received nil as the result for query '%s' codeID '%s'", query, id)
+				return nil
+			}
+
+			firstData := firstRes.Data
+			nextData := nextRes.Data
+			if firstData.Value == nextData.Value && firstData.Error == nextData.Error {
+				continue
+			}
+
+			if firstData.Value != nextData.Value {
+				t.Errorf("unstable result for '%s'\n  first = %v\n  next = %v\n", query, firstData.Value, nextData.Value)
+			}
+			if firstData.Error != nextData.Error {
+				t.Errorf("unstable result error for '%s'\n  error1 = %v\n  error2 = %v\n", query, firstData.Error, nextData.Error)
+			}
+			break
+		}
+	}
+
+	return results[0]
+}
+
+func TestStableCore(t *testing.T) {
+	res := stableResults(t, "platform.name")
+	for _, v := range res {
+		assert.Equal(t, "arch", v.Data.Value)
+	}
 }
