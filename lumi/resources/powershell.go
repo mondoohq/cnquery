@@ -4,22 +4,27 @@ import (
 	"io/ioutil"
 
 	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/lumi/resources/powershell"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
-func (c *lumiCommand) id() (string, error) {
-	return c.Command()
+// TODO: consider sharing more code with command resource
+func (c *lumiPowershell) id() (string, error) {
+	return c.Script()
 }
 
-func (c *lumiCommand) execute() (*types.Command, error) {
+func (c *lumiPowershell) execute() (*types.Command, error) {
 	var executedCmd *types.Command
 
-	cmd, err := c.Command()
+	cmd, err := c.Script()
 	if err != nil {
 		return nil, err
 	}
 
-	data, ok := c.Cache.Load(cmd)
+	// encode the powershell command
+	encodedCmd := powershell.Encode(cmd)
+
+	data, ok := c.Cache.Load(encodedCmd)
 	if ok {
 		executedCmd, ok := data.Data.(*types.Command)
 		if ok {
@@ -27,16 +32,16 @@ func (c *lumiCommand) execute() (*types.Command, error) {
 		}
 	}
 
-	executedCmd, err = c.Runtime.Motor.Transport.RunCommand(cmd)
+	executedCmd, err = c.Runtime.Motor.Transport.RunCommand(encodedCmd)
 	if err != nil {
 		return nil, err
 	}
 
-	c.Cache.Store(cmd, &lumi.CacheEntry{Data: executedCmd})
+	c.Cache.Store(encodedCmd, &lumi.CacheEntry{Data: executedCmd})
 	return executedCmd, nil
 }
 
-func (c *lumiCommand) GetStdout() (string, error) {
+func (c *lumiPowershell) GetStdout() (string, error) {
 	executedCmd, err := c.execute()
 	if err != nil {
 		return "", err
@@ -50,7 +55,7 @@ func (c *lumiCommand) GetStdout() (string, error) {
 	return string(out), nil
 }
 
-func (c *lumiCommand) GetStderr() (string, error) {
+func (c *lumiPowershell) GetStderr() (string, error) {
 	executedCmd, err := c.execute()
 	if err != nil {
 		return "", err
@@ -64,7 +69,7 @@ func (c *lumiCommand) GetStderr() (string, error) {
 	return string(outErr), nil
 }
 
-func (c *lumiCommand) GetExitcode() (int64, error) {
+func (c *lumiPowershell) GetExitcode() (int64, error) {
 	executedCmd, err := c.execute()
 	if err != nil {
 		return 1, err
