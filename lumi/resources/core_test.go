@@ -17,7 +17,6 @@ func initExecutor() *executor.Executor {
 	Init(registry)
 
 	transport, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/arch.toml"})
-	// transport, err := local.New()
 	if err != nil {
 		panic(err.Error())
 	}
