@@ -41,5 +41,4 @@ func ParseAuditpol(r io.Reader) ([]AuditpolEntry, error) {
 	}
 
 	return res, nil
-
 }

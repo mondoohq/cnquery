@@ -69,3 +69,10 @@ func ParseSecpol(r io.Reader) (*Secpol, error) {
 
 	return res, nil
 }
+
+const SecpolScript = `
+secedit /export /cfg out.cfg  | Out-Null
+$raw = Get-Content out.cfg
+Remove-Item .\out.cfg | Out-Null
+Write-Output $raw
+`
