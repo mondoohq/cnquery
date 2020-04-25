@@ -43,3 +43,23 @@ zziplib 0.13.67-1`
 	}
 	assert.Contains(t, m, p, "pkg detected")
 }
+
+func TestPacmanWithWarningsParser(t *testing.T) {
+	pkgList := `warning: database file for 'core' does not exist (use '-Sy' to download)
+warning: database file for 'extra' does not exist (use '-Sy' to download)
+warning: database file for 'community' does not exist (use '-Sy' to download)
+acl 2.2.53-2
+archlinux-keyring 20200108-1
+argon2 20190702-2`
+
+	m := packages.ParsePacmanPackages(strings.NewReader(pkgList))
+
+	assert.Equal(t, 3, len(m), "detected the right amount of packages")
+	var p packages.Package
+	p = packages.Package{
+		Name:    "acl",
+		Version: "2.2.53-2",
+		Format:  "apk",
+	}
+	assert.Contains(t, m, p, "pkg detected")
+}
