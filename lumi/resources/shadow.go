@@ -32,24 +32,22 @@ func (s *lumiShadow) GetList() ([]interface{}, error) {
 	for i := range entries {
 		entry := entries[i]
 
-		// set init arguments for the lumi shadow entries resource
-		args := make(lumi.Args)
-		args["user"] = entry.User
-		args["password"] = entry.Password
-		args["lastchanges"] = entry.LastChanges
-		args["mindays"] = entry.MinDays
-		args["maxdays"] = entry.MaxDays
-		args["warndays"] = entry.WarnDays
-		args["inactivedays"] = entry.InactiveDays
-		args["expirydates"] = entry.ExpiryDates
-		args["reserved"] = entry.Reserved
-
-		e, err := newShadow_entry(s.Runtime, &args)
+		shadowEntry, err := s.Runtime.CreateResource("shadow_entry",
+			"user", entry.User,
+			"password", entry.Password,
+			"lastchanges", entry.LastChanges,
+			"mindays", entry.MinDays,
+			"maxdays", entry.MaxDays,
+			"warndays", entry.WarnDays,
+			"inactivedays", entry.InactiveDays,
+			"expirydates", entry.ExpiryDates,
+			"reserved", entry.Reserved,
+		)
 		if err != nil {
 			log.Error().Err(err).Str("shadow_entry", entry.User).Msg("lumi[shadow_entry]> could not create shadow entry resource")
-			continue
+			return nil, err
 		}
-		shadowEntryResources[i] = e.(Shadow_entry)
+		shadowEntryResources[i] = shadowEntry.(Shadow_entry)
 	}
 
 	return shadowEntryResources, nil

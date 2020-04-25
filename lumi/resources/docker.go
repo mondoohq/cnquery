@@ -7,7 +7,6 @@ import (
 
 	docker_types "github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
-	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/motoros/local"
 )
@@ -38,30 +37,28 @@ func (p *lumiDocker) GetImages() ([]interface{}, error) {
 
 	imgs := make([]interface{}, len(dImages))
 	for i, dImg := range dImages {
-
-		// set init arguments for the lumi package resource
-		args := make(lumi.Args)
-		args["id"] = dImg.ID
-		args["size"] = dImg.Size
-		args["virtualsize"] = dImg.VirtualSize
-
 		labels := make(map[string]interface{})
 		for key := range dImg.Labels {
 			labels[key] = dImg.Labels[key]
 		}
-		args["labels"] = labels
 
 		tags := []interface{}{}
 		for i := range dImg.RepoTags {
 			tags = append(tags, dImg.RepoTags[i])
 		}
-		args["tags"] = tags
-		e, err := newDocker_image(p.Runtime, &args)
+
+		lumiDockerImage, err := p.Runtime.CreateResource("docker_image",
+			"id", dImg.ID,
+			"size", dImg.Size,
+			"virtualsize", dImg.VirtualSize,
+			"labels", labels,
+			"tags", tags,
+		)
 		if err != nil {
-			log.Error().Err(err).Str("docker_image", dImg.ID).Msg("lumi[docker_image]> could not create docker image resource")
-			continue
+			return nil, err
 		}
-		imgs[i] = e.(Docker_image)
+
+		imgs[i] = lumiDockerImage.(Docker_image)
 	}
 
 	return imgs, nil
@@ -85,36 +82,31 @@ func (p *lumiDocker) GetContainer() ([]interface{}, error) {
 
 	container := make([]interface{}, len(dContainers))
 	for i, dContainer := range dContainers {
-
-		// set init arguments for the lumi package resource
-		args := make(lumi.Args)
-		args["id"] = dContainer.ID
-
-		args["image"] = dContainer.Image
-
-		args["imageid"] = dContainer.ImageID
-		args["command"] = dContainer.Command
-		args["state"] = dContainer.State
-		args["status"] = dContainer.Status
-
 		labels := make(map[string]interface{})
 		for key := range dContainer.Labels {
 			labels[key] = dContainer.Labels[key]
 		}
-		args["labels"] = labels
 
 		names := []interface{}{}
 		for i := range dContainer.Names {
 			names = append(names, dContainer.Names[i])
 		}
-		args["names"] = names
 
-		e, err := newDocker_container(p.Runtime, &args)
+		lumiDockerContainer, err := p.Runtime.CreateResource("docker_container",
+			"id", dContainer.ID,
+			"image", dContainer.Image,
+			"imageid", dContainer.ImageID,
+			"command", dContainer.Command,
+			"state", dContainer.State,
+			"status", dContainer.Status,
+			"labels", labels,
+			"names", names,
+		)
 		if err != nil {
-			log.Error().Err(err).Str("docker_container", dContainer.ID).Msg("lumi[docker_container]> could not create docker container resource")
-			continue
+			return nil, err
 		}
-		container[i] = e.(Docker_container)
+
+		container[i] = lumiDockerContainer.(Docker_container)
 	}
 
 	return container, nil

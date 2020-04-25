@@ -161,22 +161,17 @@ func (p *lumiProcesses) GetList() ([]interface{}, error) {
 	for i := range processes {
 		proc := processes[i]
 
-		// set init arguments for the lumi package resource
-		args := make(lumi.Args)
-		args["pid"] = proc.Pid
-
-		// TODO: harmonize with the mapping for individual packages
-		args["executable"] = proc.Executable
-		args["command"] = proc.Command
-		args["state"] = proc.State
-
-		e, err := newProcess(p.Runtime, &args)
+		lumiProcess, err := p.Runtime.CreateResource("process",
+			"pid", proc.Pid,
+			"executable", proc.Executable,
+			"command", proc.Command,
+			"state", proc.State,
+		)
 		if err != nil {
-			log.Error().Err(err).Int64("process", proc.Pid).Msg("lumi[processes]> could not create process resource")
-			continue
+			return nil, err
 		}
 
-		procs = append(procs, e.(Process))
+		procs = append(procs, lumiProcess.(Process))
 	}
 
 	// return the processes as new entries

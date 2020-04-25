@@ -50,7 +50,7 @@ func (p *lumiOsupdate) id() (string, error) {
 
 func (p *lumiOs) GetUpdates() ([]interface{}, error) {
 	// find suitable system updates
-	um, err := p.resolveOperatingSystemUpdateManager()
+	um, err := packages.ResolveSystemUpdateManager(p.Runtime.Motor)
 	if um == nil || err != nil {
 		return nil, fmt.Errorf("Could not detect suiteable update manager for platform")
 	}
@@ -66,42 +66,20 @@ func (p *lumiOs) GetUpdates() ([]interface{}, error) {
 	log.Debug().Int("updates", len(updates)).Msg("lumi[updates]> found system updates")
 	for i, update := range updates {
 
-		// set init arguments for the lumi updates resource
-		args := make(lumi.Args)
-		args["name"] = update.Name
-		args["severity"] = update.Severity
-		args["category"] = update.Category
-		args["restart"] = update.Restart
-		args["format"] = um.Format()
-
-		e, err := newOsupdate(p.Runtime, &args)
+		lumiOsUpdate, err := p.Runtime.CreateResource("update",
+			"name", update.Name,
+			"severity", update.Severity,
+			"category", update.Category,
+			"restart", update.Restart,
+			"format", um.Format(),
+		)
 		if err != nil {
-			log.Error().Err(err).Str("update", update.Name).Msg("lumi[updates]> could not create osupdate resource")
-			continue
+			return nil, err
 		}
-		osupdates[i] = e.(Osupdate)
+
+		osupdates[i] = lumiOsUpdate.(Osupdate)
 	}
 
 	// return the packages as new entries
 	return osupdates, nil
-}
-
-// this will find the right package manager for the operating system
-func (p *lumiOs) resolveOperatingSystemUpdateManager() (packages.OperatingSystemUpdateManager, error) {
-	var um packages.OperatingSystemUpdateManager
-
-	motor := p.Runtime.Motor
-	platform, err := motor.Platform()
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: use OS family and select package manager
-	switch platform.Name {
-	case "opensuse": // suse family
-		um = &packages.SuseUpdateManager{Motor: motor}
-	default:
-		return nil, errors.New("your platform is not supported by os updates resource")
-	}
-	return um, nil
 }
