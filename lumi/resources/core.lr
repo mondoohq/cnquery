@@ -12,6 +12,14 @@ command {
   exitcode() int
 }
 
+powershell {
+  init(script string)
+  script string
+  stdout() string
+  stderr() string
+  exitcode() int
+}
+
 file {
   init(path string)
   path string
