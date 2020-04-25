@@ -73,11 +73,11 @@ func TestParser_ParseValues(t *testing.T) {
 		{"/hi/", &Expression{Operand: &Operand{Value: vRegex("hi")}}},
 		{"[]", &Expression{Operand: &Operand{Value: &Value{Array: []*Expression{}}}}},
 		{"[1]", &Expression{Operand: &Operand{Value: &Value{Array: []*Expression{
-			&Expression{Operand: &Operand{Value: vInt(1)}},
+			{Operand: &Operand{Value: vInt(1)}},
 		}}}}},
 		{"[1,2.3]", &Expression{Operand: &Operand{Value: &Value{Array: []*Expression{
-			&Expression{Operand: &Operand{Value: vInt(1)}},
-			&Expression{Operand: &Operand{Value: vFloat(2.3)}},
+			{Operand: &Operand{Value: vInt(1)}},
+			{Operand: &Operand{Value: vFloat(2.3)}},
 		}}}}},
 		{"name.last", &Expression{Operand: &Operand{
 			Value: vIdent("name"),
@@ -85,38 +85,38 @@ func TestParser_ParseValues(t *testing.T) {
 		}}},
 		{"name[1]", &Expression{Operand: &Operand{
 			Value: vIdent("name"),
-			Calls: []*Call{&Call{Accessor: &Expression{Operand: &Operand{Value: vInt(1)}}}},
+			Calls: []*Call{{Accessor: &Expression{Operand: &Operand{Value: vInt(1)}}}},
 		}}},
 		{"name()", &Expression{Operand: &Operand{
 			Value: vIdent("name"),
-			Calls: []*Call{&Call{Function: []*Arg{}}},
+			Calls: []*Call{{Function: []*Arg{}}},
 		}}},
 		{"name(1)", &Expression{Operand: &Operand{
 			Value: vIdent("name"),
-			Calls: []*Call{&Call{Function: []*Arg{
-				&Arg{Value: &Expression{Operand: &Operand{Value: vInt(1)}}},
+			Calls: []*Call{{Function: []*Arg{
+				{Value: &Expression{Operand: &Operand{Value: vInt(1)}}},
 			}}},
 		}}},
 		{"name(arg)", &Expression{Operand: &Operand{
 			Value: vIdent("name"),
-			Calls: []*Call{&Call{Function: []*Arg{
-				&Arg{Value: &Expression{Operand: &Operand{Value: vIdent("arg")}}},
+			Calls: []*Call{{Function: []*Arg{
+				{Value: &Expression{Operand: &Operand{Value: vIdent("arg")}}},
 			}}},
 		}}},
 		{"name(uid: 1)", &Expression{Operand: &Operand{
 			Value: vIdent("name"),
-			Calls: []*Call{&Call{Function: []*Arg{
-				&Arg{Name: "uid", Value: &Expression{Operand: &Operand{Value: vInt(1)}}},
+			Calls: []*Call{{Function: []*Arg{
+				{Name: "uid", Value: &Expression{Operand: &Operand{Value: vInt(1)}}},
 			}}},
 		}}},
 		{"a(b(c,d))", &Expression{Operand: &Operand{
 			Value: vIdent("a"),
-			Calls: []*Call{&Call{Function: []*Arg{
-				&Arg{Value: &Expression{Operand: &Operand{
+			Calls: []*Call{{Function: []*Arg{
+				{Value: &Expression{Operand: &Operand{
 					Value: vIdent("b"),
-					Calls: []*Call{&Call{Function: []*Arg{
-						&Arg{Value: &Expression{Operand: &Operand{Value: vIdent("c")}}},
-						&Arg{Value: &Expression{Operand: &Operand{Value: vIdent("d")}}},
+					Calls: []*Call{{Function: []*Arg{
+						{Value: &Expression{Operand: &Operand{Value: vIdent("c")}}},
+						{Value: &Expression{Operand: &Operand{Value: vIdent("d")}}},
 					}}},
 				}}},
 			}}},
@@ -124,24 +124,24 @@ func TestParser_ParseValues(t *testing.T) {
 		{"user { name uid }", &Expression{Operand: &Operand{
 			Value: vIdent("user"),
 			Block: []*Expression{
-				&Expression{Operand: &Operand{Value: vIdent("name")}},
-				&Expression{Operand: &Operand{Value: vIdent("uid")}},
+				{Operand: &Operand{Value: vIdent("name")}},
+				{Operand: &Operand{Value: vIdent("uid")}},
 			},
 		}}},
 		{"users.list { uid }", &Expression{Operand: &Operand{
 			Value: vIdent("users"),
 			Calls: []*Call{callIdent("list")},
 			Block: []*Expression{
-				&Expression{Operand: &Operand{Value: vIdent("uid")}},
+				{Operand: &Operand{Value: vIdent("uid")}},
 			},
 		}}},
 		{"users.where(uid > 2).list { uid }", &Expression{Operand: &Operand{
 			Value: vIdent("users"),
 			Calls: []*Call{
 				callIdent("where"),
-				&Call{Function: []*Arg{&Arg{Value: &Expression{
+				{Function: []*Arg{{Value: &Expression{
 					Operand: &Operand{Value: vIdent("uid")},
-					Operations: []*Operation{&Operation{
+					Operations: []*Operation{{
 						Operator: OpGreater,
 						Operand:  &Operand{Value: vInt(2)},
 					}},
@@ -149,22 +149,22 @@ func TestParser_ParseValues(t *testing.T) {
 				callIdent("list"),
 			},
 			Block: []*Expression{
-				&Expression{Operand: &Operand{Value: vIdent("uid")}},
+				{Operand: &Operand{Value: vIdent("uid")}},
 			},
 		}}},
 		{"1 + 2 == 3", &Expression{
 			Operand: &Operand{Value: vInt(1)},
 			Operations: []*Operation{
-				&Operation{Operator: OpAdd, Operand: &Operand{Value: vInt(2)}},
-				&Operation{Operator: OpEqual, Operand: &Operand{Value: vInt(3)}},
+				{Operator: OpAdd, Operand: &Operand{Value: vInt(2)}},
+				{Operator: OpEqual, Operand: &Operand{Value: vInt(3)}},
 			},
 		}},
 		{"true + 'some'.length()", &Expression{
 			Operand: &Operand{Value: vBool(true)},
 			Operations: []*Operation{
-				&Operation{Operator: OpAdd, Operand: &Operand{
+				{Operator: OpAdd, Operand: &Operand{
 					Value: vString("some"),
-					Calls: []*Call{callIdent("length"), &Call{Function: []*Arg{}}},
+					Calls: []*Call{callIdent("length"), {Function: []*Arg{}}},
 				}},
 			},
 		}},
