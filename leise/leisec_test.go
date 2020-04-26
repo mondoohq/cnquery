@@ -258,6 +258,20 @@ func TestCompiler_ResourceArrayLength(t *testing.T) {
 	})
 }
 
+func TestCompiler_ResourceArrayImplicitLength(t *testing.T) {
+	compile(t, "packages.length", func(res *llx.CodeBundle) {
+		assertFunction(t, "list", &llx.Function{
+			Binding: 1,
+			Type:    string(types.Array(types.Resource("package"))),
+		}, res.Code.Code[1])
+		assertFunction(t, "length", &llx.Function{
+			Binding: 1,
+			Args:    []*llx.Primitive{llx.RefPrimitive(2)},
+			Type:    string(types.Int),
+		}, res.Code.Code[2])
+	})
+}
+
 func TestCompiler_ResourceFieldArrayAccessor(t *testing.T) {
 	compile(t, "sshd.config.params[\"Protocol\"]", func(res *llx.CodeBundle) {
 		assertFunction(t, "[]", &llx.Function{
