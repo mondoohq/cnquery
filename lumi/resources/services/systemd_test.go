@@ -14,7 +14,7 @@ func TestParseServiceSystemDUnitFilesx(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	c, err := mock.RunCommand("systemctl --all list-units")
+	c, err := mock.RunCommand("systemctl --all list-units --type service")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -22,17 +22,17 @@ func TestParseServiceSystemDUnitFilesx(t *testing.T) {
 
 	m, err := services.ParseServiceSystemDUnitFiles(c.Stdout)
 	assert.Nil(t, err)
-	assert.Equal(t, 186, len(m), "detected the right amount of services")
+	assert.Equal(t, 102, len(m), "detected the right amount of services")
 
 	// check first element
-	assert.Equal(t, "proc-sys-fs-binfmt_misc.automount", m[0].Name, "service name detected")
+	assert.Equal(t, "auditd", m[0].Name, "service name detected")
 	assert.Equal(t, true, m[0].Running, "service is running")
 	assert.Equal(t, true, m[0].Installed, "service is installed")
 	assert.Equal(t, "systemd", m[0].Type, "service type is added")
 
 	// check last element
-	assert.Equal(t, "systemd-tmpfiles-clean.timer", m[185].Name, "service name detected")
-	assert.Equal(t, true, m[185].Running, "service is running")
-	assert.Equal(t, true, m[185].Installed, "service is installed")
-	assert.Equal(t, "systemd", m[185].Type, "service type is added")
+	assert.Equal(t, "ypxfrd", m[101].Name, "service name detected")
+	assert.Equal(t, false, m[101].Running, "service is running")
+	assert.Equal(t, false, m[101].Installed, "service is installed")
+	assert.Equal(t, "systemd", m[101].Type, "service type is added")
 }

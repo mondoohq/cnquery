@@ -4,6 +4,7 @@ import (
 	"io"
 	"io/ioutil"
 	"regexp"
+	"strings"
 
 	motor "go.mondoo.io/mondoo/motor/motoros"
 )
@@ -26,8 +27,12 @@ func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 		if i == 0 {
 			continue
 		}
+
+		name := m[i][1]
+		name = strings.Replace(name, ".service", "", 1)
+
 		s := &Service{
-			Name:      m[i][1],
+			Name:      name,
 			Installed: m[i][2] == "loaded",
 			Running:   m[i][3] == "active",
 			// TODO: we may need to revist the enabled state
@@ -59,7 +64,7 @@ func (s *SystemDServiceManager) Service(id string) (*Service, error) {
 }
 
 func (s *SystemDServiceManager) List() ([]*Service, error) {
-	c, err := s.motor.Transport.RunCommand("systemctl --all list-units")
+	c, err := s.motor.Transport.RunCommand("systemctl --all list-units --type service")
 	if err != nil {
 		return nil, err
 	}
