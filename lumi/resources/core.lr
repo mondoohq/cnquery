@@ -186,7 +186,7 @@ secpol {
   systemaccess() map[string]string
   eventaudit() map[string]string
   registryvalues() map[string]string
-  privilegerights() map[string]string
+  privilegerights() map[string][]string
 }
 
 logindefs {

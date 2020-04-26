@@ -2,7 +2,7 @@ package windows
 
 import (
 	"io"
-	"strconv"
+	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -44,13 +44,7 @@ func ParseSecpol(r io.Reader) (*Secpol, error) {
 			continue
 		}
 
-		// try to parse the content
-		i, err := strconv.ParseInt(rawValue, 10, 64)
-		if err == nil {
-			res.SystemAccess[key] = i
-		} else {
-			res.SystemAccess[key] = rawValue
-		}
+		res.SystemAccess[key] = rawValue
 	}
 
 	eventAudit, err := cfg.GetSection("Event Audit")
@@ -62,12 +56,7 @@ func ParseSecpol(r io.Reader) (*Secpol, error) {
 		entry := keys[i]
 
 		rawValue := entry.Value()
-		i, err := strconv.ParseInt(rawValue, 10, 64)
-		if err == nil {
-			res.EventAudit[entry.Name()] = i
-		} else {
-			res.EventAudit[entry.Name()] = rawValue
-		}
+		res.EventAudit[entry.Name()] = rawValue
 	}
 
 	registryValues, err := cfg.GetSection("Registry Values")
@@ -88,10 +77,13 @@ func ParseSecpol(r io.Reader) (*Secpol, error) {
 	for i := range keys {
 		entry := keys[i]
 		rawValue := entry.Value()
-		values := strings.Split(rawValue, ",")
 
-		for i := range values {
-			val := values[i]
+		valuesT := strings.Split(rawValue, ",")
+		sort.Sort(sort.StringSlice(valuesT))
+
+		values := make([]interface{}, len(valuesT))
+		for i := range valuesT {
+			val := valuesT[i]
 			val = strings.Replace(val, "*S", "S", 1)
 			values[i] = val
 		}
