@@ -200,6 +200,9 @@ func compileResourceContains(c *compiler, typ types.Type, ref int32, id string, 
 		},
 	})
 
+	checksum := c.Result.Code.Checksums[c.Result.Code.ChunkIndex()]
+	c.Result.Labels.Labels[checksum] = typ.Name() + ".contains()"
+
 	return types.Bool, nil
 }
 

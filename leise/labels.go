@@ -71,7 +71,8 @@ func createLabel(code *llx.Code, ref int32, schema *lumi.Schema) (string, *llx.L
 		}
 
 		function := code.Functions[ref-1]
-		blockLabels, err = CreateLabels(function, schema)
+		blockLabels := &llx.Labels{}
+		err = UpdateLabels(function, blockLabels, schema)
 		if err != nil {
 			return "", nil, err
 		}
@@ -87,16 +88,15 @@ func createLabel(code *llx.Code, ref int32, schema *lumi.Schema) (string, *llx.L
 	return res, blockLabels, nil
 }
 
-// CreateLabels for the given code under the schema
-func CreateLabels(code *llx.Code, schema *lumi.Schema) (*llx.Labels, error) {
+// UpdateLabels for the given code under the schema
+func UpdateLabels(code *llx.Code, labels *llx.Labels, schema *lumi.Schema) error {
 	if code == nil {
-		return nil, errors.New("Cannot create labels without code")
+		return errors.New("Cannot create labels without code")
 	}
 
-	labels := &llx.Labels{}
-
-	if len(code.Entrypoints) > 0 {
-		labels.Labels = make(map[string]string)
+	if len(code.Entrypoints) == 0 {
+		labels.Labels = nil
+		return nil
 	}
 
 	var err error
@@ -104,12 +104,16 @@ func CreateLabels(code *llx.Code, schema *lumi.Schema) (*llx.Labels, error) {
 	for _, entrypoint := range code.Entrypoints {
 		checksum, ok := code.Checksums[entrypoint]
 		if !ok {
-			return nil, errors.New("failed to create labels, cannot find checksum for this entrypoint " + strconv.FormatUint(uint64(entrypoint), 10))
+			return errors.New("failed to create labels, cannot find checksum for this entrypoint " + strconv.FormatUint(uint64(entrypoint), 10))
+		}
+
+		if _, ok := labels.Labels[checksum]; ok {
+			continue
 		}
 
 		labels.Labels[checksum], blockLabels, err = createLabel(code, entrypoint, schema)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		if blockLabels != nil {
@@ -119,5 +123,5 @@ func CreateLabels(code *llx.Code, schema *lumi.Schema) (*llx.Labels, error) {
 		}
 	}
 
-	return labels, nil
+	return nil
 }

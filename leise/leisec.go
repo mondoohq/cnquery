@@ -645,9 +645,12 @@ func CompileAST(ast *parser.AST, schema *lumi.Schema) (*llx.CodeBundle, error) {
 			Code: &llx.Code{
 				Checksums: map[int32]string{},
 			},
-			Labels: &llx.Labels{},
+			Labels: &llx.Labels{
+				Labels: map[string]string{},
+			},
 		},
 	}
+
 	return c.Result, c.CompileParsed(ast)
 }
 
@@ -663,7 +666,7 @@ func Compile(input string, schema *lumi.Schema) (*llx.CodeBundle, error) {
 		return res, err
 	}
 
-	res.Labels, err = CreateLabels(res.Code, schema)
+	err = UpdateLabels(res.Code, res.Labels, schema)
 	if err != nil {
 		return res, err
 	}

@@ -453,3 +453,44 @@ func TestCompiler_Where(t *testing.T) {
 		assert.Equal(t, []int32{2}, res.Code.Functions[0].Entrypoints)
 	})
 }
+
+func TestCompiler_Contains(t *testing.T) {
+	compile(t, "packages.contains(outdated)", func(res *llx.CodeBundle) {
+		assertFunction(t, "packages", nil, res.Code.Code[0])
+		assertFunction(t, "list", &llx.Function{
+			Type:    string(types.Array(types.Resource("package"))),
+			Binding: 1,
+		}, res.Code.Code[1])
+		assertFunction(t, "where", &llx.Function{
+			Type:    string(types.Resource("packages")),
+			Binding: 1,
+			Args: []*llx.Primitive{
+				llx.RefPrimitive(2),
+				llx.FunctionPrimitive(1),
+			},
+		}, res.Code.Code[2])
+		assertFunction(t, "list", &llx.Function{
+			Type:    string(types.Array(types.Resource("package"))),
+			Binding: 3,
+		}, res.Code.Code[3])
+		assertFunction(t, "length", &llx.Function{
+			Type:    string(types.Int),
+			Binding: 3,
+			Args:    []*llx.Primitive{llx.RefPrimitive(4)},
+		}, res.Code.Code[4])
+		assertFunction(t, string("!="+types.Int), &llx.Function{
+			Type:    string(types.Bool),
+			Binding: 5,
+			Args:    []*llx.Primitive{llx.IntPrimitive(0)},
+		}, res.Code.Code[5])
+
+		assertPrimitive(t, &llx.Primitive{
+			Type: string(types.Resource("package")),
+		}, res.Code.Functions[0].Code[0])
+		assertFunction(t, "outdated", &llx.Function{
+			Type:    string(types.Bool),
+			Binding: 1,
+		}, res.Code.Functions[0].Code[1])
+		assert.Equal(t, []int32{2}, res.Code.Functions[0].Entrypoints)
+	})
+}
