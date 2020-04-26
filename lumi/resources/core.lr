@@ -170,7 +170,7 @@ docker_container {
 }
 
 auditpol {
-  entries() []auditpol_entry
+  []auditpol_entry
 }
 
 auditpol_entry {

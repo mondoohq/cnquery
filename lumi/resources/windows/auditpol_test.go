@@ -26,7 +26,7 @@ func TestParseAuditpol(t *testing.T) {
 		MachineName:      "Test",
 		PolicyTarget:     "System",
 		Subcategory:      "Kernel Object",
-		SubcategoryGUID:  "{0CCE921F-69AE-11D9-BED3-505054503030}",
+		SubcategoryGUID:  "0CCE921F-69AE-11D9-BED3-505054503030",
 		InclusionSetting: "No Auditing",
 		ExclusionSetting: "",
 	}
