@@ -164,7 +164,7 @@ func compileResourceLength(c *compiler, typ types.Type, ref int32, id string, ca
 		return types.Nil, errors.New("function " + id + " does not take arguments")
 	}
 
-	resource, err := listResource(c, typ)
+	_, err := listResource(c, typ)
 	if err != nil {
 		return types.Nil, errors.New("failed to compile " + id + ": " + err.Error())
 	}
@@ -181,7 +181,7 @@ func compileResourceLength(c *compiler, typ types.Type, ref int32, id string, ca
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
-			Type:    string(types.Resource(resource.Name)),
+			Type:    string(types.Int),
 			Binding: resourceRef,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(listRef),
