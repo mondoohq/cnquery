@@ -1,11 +1,10 @@
-package kernelmodule_test
+package kernel
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tj/assert"
-	"go.mondoo.io/mondoo/lumi/resources/kernelmodule"
 	mock "go.mondoo.io/mondoo/motor/motoros/mock/toml"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
@@ -17,10 +16,10 @@ func TestLsmodParser(t *testing.T) {
 	f, err := mock.RunCommand("lsmod")
 	require.NoError(t, err)
 
-	entries := kernelmodule.ParseLsmod(f.Stdout)
+	entries := ParseLsmod(f.Stdout)
 	assert.Equal(t, 40, len(entries))
 
-	expected := &kernelmodule.KernelModule{
+	expected := &KernelModule{
 		Name:   "cryptd",
 		Size:   "24576",
 		UsedBy: "3",
@@ -37,10 +36,10 @@ func TestLinuxProcModulesParser(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	entries := kernelmodule.ParseLinuxProcModules(f)
+	entries := ParseLinuxProcModules(f)
 	assert.Equal(t, 40, len(entries))
 
-	expected := &kernelmodule.KernelModule{
+	expected := &KernelModule{
 		Name:   "cryptd",
 		Size:   "24576",
 		UsedBy: "3",
@@ -56,10 +55,10 @@ func TestKldstatParser(t *testing.T) {
 	f, err := mock.RunCommand("kldstat")
 	require.NoError(t, err)
 
-	entries := kernelmodule.ParseKldstat(f.Stdout)
+	entries := ParseKldstat(f.Stdout)
 	assert.Equal(t, 4, len(entries))
 
-	expected := &kernelmodule.KernelModule{
+	expected := &KernelModule{
 		Name:   "smbus.ko",
 		Size:   "a30",
 		UsedBy: "1",
@@ -75,10 +74,10 @@ func TestKextstatParser(t *testing.T) {
 	f, err := mock.RunCommand("kextstat")
 	require.NoError(t, err)
 
-	entries := kernelmodule.ParseKextstat(f.Stdout)
+	entries := ParseKextstat(f.Stdout)
 	assert.Equal(t, 33, len(entries))
 
-	expected := &kernelmodule.KernelModule{
+	expected := &KernelModule{
 		Name:   "com.apple.kpi.mach",
 		Size:   "0x62e0",
 		UsedBy: "144",
@@ -87,7 +86,7 @@ func TestKextstatParser(t *testing.T) {
 	assert.Equal(t, expected, found)
 }
 
-func findModule(modules []*kernelmodule.KernelModule, name string) *kernelmodule.KernelModule {
+func findModule(modules []*KernelModule, name string) *KernelModule {
 	for i := range modules {
 		if modules[i].Name == name {
 			return modules[i]
