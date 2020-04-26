@@ -96,24 +96,27 @@ func CreateLabels(code *llx.Code, schema *lumi.Schema) (*llx.Labels, error) {
 	labels := &llx.Labels{}
 
 	if len(code.Entrypoints) > 0 {
-		labels.Labels = make(map[int32]string)
-		labels.Functions = make(map[int32]*llx.Labels)
+		labels.Labels = make(map[string]string)
 	}
 
 	var err error
 	var blockLabels *llx.Labels
 	for _, entrypoint := range code.Entrypoints {
-		labels.Labels[entrypoint], blockLabels, err = createLabel(code, entrypoint, schema)
+		checksum, ok := code.Checksums[entrypoint]
+		if !ok {
+			return nil, errors.New("failed to create labels, cannot find checksum for this entrypoint " + strconv.FormatUint(uint64(entrypoint), 10))
+		}
+
+		labels.Labels[checksum], blockLabels, err = createLabel(code, entrypoint, schema)
 		if err != nil {
 			return nil, err
 		}
-		if blockLabels != nil {
-			labels.Functions[entrypoint] = blockLabels
-		}
-	}
 
-	if len(labels.Functions) == 0 {
-		labels.Functions = nil
+		if blockLabels != nil {
+			for k, v := range blockLabels.Labels {
+				labels.Labels[k] = v
+			}
+		}
 	}
 
 	return labels, nil

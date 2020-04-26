@@ -45,8 +45,7 @@ message Code {
 }
 
 message Labels {
-  map<int32,string> labels = 1;
-  map<int32,Labels> functions = 2;
+  map<string,string> labels = 1;
 }
 
 message CodeBundle {
