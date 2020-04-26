@@ -50,3 +50,23 @@ ProductName:	Mac OS X
 ProductVersion:	10.15.4
 BuildVersion:	19E266
 """
+
+[commands."sysctl -a"]
+stdout = """net.inet6.ip6.tempvltime: 604800
+net.inet6.ip6.auto_linklocal: 1
+net.inet6.ip6.prefer_tempaddr: 1
+net.inet6.ip6.use_defaultzone: 0
+net.inet6.ip6.maxfrags: 4096
+net.inet6.ip6.mcast_pmtu: 0
+net.inet6.ip6.neighborgcthresh: 1024
+net.inet6.ip6.maxifprefixes: 16
+net.inet6.ip6.maxifdefrouters: 16
+net.inet6.ip6.maxdynroutes: 1024
+net.inet6.ip6.fragpackets: 0
+net.inet6.ip6.adj_clear_hwcksum: 0
+net.inet6.ip6.adj_partial_sum: 1
+net.inet6.ip6.input_perf: 0
+net.inet6.ip6.input_perf_bins: 0
+net.inet6.ip6.output_perf: 0
+net.inet6.ip6.output_perf_bins: 0
+"""

@@ -5,8 +5,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/lumi/resources/kernelmodule"
-	"go.mondoo.io/mondoo/lumi/resources/procfs"
+	"go.mondoo.io/mondoo/lumi/resources/kernel"
 	"go.mondoo.io/mondoo/motor/motoros/fsutil"
 )
 
@@ -34,6 +33,29 @@ func (s *lumiKernel) id() (string, error) {
 }
 
 func (k *lumiKernel) GetParameters() (map[string]interface{}, error) {
+	// find suitable kernel module manager
+	mm, err := kernel.ResolveManager(k.Runtime.Motor)
+	if mm == nil || err != nil {
+		return nil, errors.Wrap(err, "Could not detect suiteable kernel module manager for platform")
+	}
+
+	// retrieve all kernel modules
+	kernelParameters, err := mm.Parameters()
+	if err != nil {
+		return nil, err
+	}
+
+	// copy values to fulfill the interface
+	res := make(map[string]interface{})
+	for key, value := range kernelParameters {
+		res[key] = value
+	}
+
+	return res, nil
+}
+
+// TODO: something is going wrong with proc file fetching, get this back to work
+func (k *lumiKernel) getParametersFromProc() (map[string]interface{}, error) {
 	// TODO: consider registration for directory changes
 	sysctlPath := "/proc/sys/"
 
@@ -51,7 +73,7 @@ func (k *lumiKernel) GetParameters() (map[string]interface{}, error) {
 	}
 	defer tarStream.Close()
 
-	kernelParameters, err := procfs.ParseLinuxSysctl(sysctlPath, tarStream)
+	kernelParameters, err := kernel.ParseLinuxSysctlProc(sysctlPath, tarStream)
 	if err != nil {
 		return nil, err
 	}
@@ -67,13 +89,13 @@ func (k *lumiKernel) GetParameters() (map[string]interface{}, error) {
 
 func (k *lumiKernel) GetModules() ([]interface{}, error) {
 	// find suitable kernel module manager
-	mm, err := kernelmodule.ResolveManager(k.Runtime.Motor)
+	mm, err := kernel.ResolveManager(k.Runtime.Motor)
 	if mm == nil || err != nil {
 		return nil, errors.Wrap(err, "Could not detect suiteable kernel module manager for platform")
 	}
 
 	// retrieve all kernel modules
-	kernelModules, err := mm.List()
+	kernelModules, err := mm.Modules()
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not retrieve kernel module list for platform")
 	}

@@ -1,0 +1,40 @@
+[commands."kldstat"]
+stdout = """Id Refs Address                Size Name
+ 1    7 0xffffffff80200000  24bc3a8 kernel
+ 2    1 0xffffffff82819000    2df63 vboxguest.ko
+ 3    1 0xffffffff82847000     2468 intpm.ko
+ 4    1 0xffffffff8284a000      a30 smbus.ko
+"""
+
+[commands."uname -s"]
+stdout = "FreeBSD"
+
+[commands."uname -m"]
+stdout = "amd64"
+
+[commands."uname -r"]
+stdout = "12.0-CURRENT"
+
+
+[commands."sysctl -a"]
+stdout = """security.bsd.see_other_uids: 1
+security.bsd.unprivileged_mlock: 1
+security.bsd.suser_enabled: 1
+security.bsd.map_at_zero: 0
+security.jail.mount_devfs_allowed: 0
+security.jail.mount_procfs_allowed: 0
+security.jail.param.sysvshm.: 0
+security.jail.param.sysvsem.: 0
+security.jail.param.sysvmsg.: 0
+security.jail.param.allow.mount.devfs: 0
+security.jail.param.allow.mount.procfs: 0
+security.jail.param.allow.mount.: 0
+security.jail.param.allow.reserved_ports: 0
+security.jail.param.allow.mlock: 0
+security.jail.param.allow.socket_af: 0
+security.jail.param.allow.quotas: 0
+security.jail.param.allow.chflags: 0
+security.jail.param.allow.raw_sockets: 0
+security.jail.param.allow.sysvipc: 0
+security.jail.param.allow.set_hostname: 0
+"""
