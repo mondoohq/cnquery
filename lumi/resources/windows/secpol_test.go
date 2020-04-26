@@ -20,9 +20,9 @@ func TestParseSecpol(t *testing.T) {
 	secpol, err := windows.ParseSecpol(f.Stdout)
 	require.NoError(t, err)
 
-	assert.Equal(t, int64(42), secpol.SystemAccess["MaximumPasswordAge"])
+	assert.Equal(t, "42", secpol.SystemAccess["MaximumPasswordAge"])
 	assert.Equal(t, "chris", secpol.SystemAccess["NewAdministratorName"])
-	assert.Equal(t, int64(0), secpol.EventAudit["AuditLogonEvents"])
-	assert.Equal(t, []string{"S-1-1-0", "S-1-5-32-544", "S-1-5-32-545", "S-1-5-32-551"}, secpol.PrivilegeRights["SeNetworkLogonRight"])
+	assert.Equal(t, "0", secpol.EventAudit["AuditLogonEvents"])
+	assert.Equal(t, []interface{}{"S-1-1-0", "S-1-5-32-544", "S-1-5-32-545", "S-1-5-32-551"}, secpol.PrivilegeRights["SeNetworkLogonRight"])
 	assert.Equal(t, "3,0", secpol.RegistryValues["MACHINE\\System\\CurrentControlSet\\Control\\Lsa\\FullPrivilegeAuditing"])
 }
