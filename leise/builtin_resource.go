@@ -138,9 +138,9 @@ func compileResourceWhere(c *compiler, typ types.Type, ref int32, id string, cal
 
 	resourceRef := c.Result.Code.ChunkIndex()
 
-	t, err := compileResourceDefault(c, typ, ref, "list", nil)
+	listType, err := compileResourceDefault(c, typ, ref, "list", nil)
 	if err != nil {
-		return t, err
+		return listType, err
 	}
 	listRef := c.Result.Code.ChunkIndex()
 
@@ -157,6 +157,50 @@ func compileResourceWhere(c *compiler, typ types.Type, ref int32, id string, cal
 		},
 	})
 	return typ, nil
+}
+
+func compileResourceContains(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
+	// resource.where
+	_, err := compileResourceWhere(c, typ, ref, "where", call)
+	if err != nil {
+		return types.Nil, err
+	}
+	resourceRef := c.Result.Code.ChunkIndex()
+
+	// .list
+	t, err := compileResourceDefault(c, typ, resourceRef, "list", nil)
+	if err != nil {
+		return t, err
+	}
+	listRef := c.Result.Code.ChunkIndex()
+
+	// .length
+	c.Result.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "length",
+		Function: &llx.Function{
+			Type:    string(types.Int),
+			Binding: resourceRef,
+			Args: []*llx.Primitive{
+				llx.RefPrimitive(listRef),
+			},
+		},
+	})
+
+	// != 0
+	c.Result.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   string("!=" + types.Int),
+		Function: &llx.Function{
+			Type:    string(types.Bool),
+			Binding: c.Result.Code.ChunkIndex(),
+			Args: []*llx.Primitive{
+				llx.IntPrimitive(0),
+			},
+		},
+	})
+
+	return types.Bool, nil
 }
 
 func compileResourceLength(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {

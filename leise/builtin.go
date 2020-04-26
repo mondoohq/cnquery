@@ -34,8 +34,9 @@ func init() {
 		},
 		types.ResourceLike: {
 			// "":       compileHandler{compile: compileResourceDefault},
-			"where":  {compile: compileResourceWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"length": {compile: compileResourceLength, signature: FunctionSignature{}},
+			"where":    {compile: compileResourceWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"contains": {compile: compileResourceContains, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"length":   {compile: compileResourceLength, signature: FunctionSignature{}},
 		},
 	}
 }
