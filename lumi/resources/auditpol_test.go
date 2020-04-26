@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/llx"
 )
 
 func TestResource_Auditpol(t *testing.T) {
@@ -45,9 +44,8 @@ func TestResource_Auditpol(t *testing.T) {
 		res := testQuery(t, "auditpol.where(subcategory == 'Application Group Management').list { inclusionsetting == 'Success and Failure'}")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		listResults := res[0].Data.Value.([]interface{})
-		blockRes := listResults[0].(map[string]interface{})
-		qres := blockRes["iMFZaUEieakYM9UF7rZamtZd6a/JDV9Bo0xa4laKyH4Ksjiw1R+tXflOQaf15p9ARoRFfo9XuaFC+rzw2vFVrg=="].(*llx.RawData)
-		assert.Equal(t, false, qres.Value)
+		r, found := res[0].Data.IsTruthy()
+		assert.False(t, r)
+		assert.True(t, found)
 	})
 }

@@ -36,6 +36,83 @@ func (r *RawData) String() string {
 	}
 }
 
+// IsTruthy indicates how the query is scored.
+// the first return value gives true/false based on if the data indicates success/failure
+// the second value indicates if we were able to come to a decision based on the data
+// examples:
+//   truthy: true, 123, [true], "string"
+//   falsey: false
+func (r *RawData) IsTruthy() (bool, bool) {
+	return isTruthy(r.Value, r.Type)
+}
+
+func isTruthy(data interface{}, typ types.Type) (bool, bool) {
+	switch typ.Underlying() {
+	case types.Any:
+		if data == nil {
+			return false, false
+		}
+		if b, ok := data.(bool); ok {
+			return b, true
+		}
+		if d, ok := data.(*RawData); ok {
+			return isTruthy(d.Value, d.Type)
+		}
+		return false, false
+
+	case types.Bool:
+		return data.(bool), true
+
+	case types.ArrayLike:
+		arr := data.([]interface{})
+		found := false
+		res := false
+
+		for i := range arr {
+			t1, f1 := isTruthy(arr[i], typ.Child())
+			if f1 {
+				found = true
+				res = res && t1
+			}
+		}
+
+		return res, found
+
+	case types.MapLike:
+		found := false
+		res := false
+
+		if typ.Key() == types.String {
+			m := data.(map[string]interface{})
+			for _, v := range m {
+				t1, f1 := isTruthy(v, typ.Child())
+				if f1 {
+					found = true
+					res = res && t1
+				}
+			}
+			return res, found
+		}
+
+		if typ.Key() == types.Int {
+			m := data.(map[int]interface{})
+			for _, v := range m {
+				t1, f1 := isTruthy(v, typ.Child())
+				if f1 {
+					found = true
+					res = res && t1
+				}
+			}
+			return res, found
+		}
+
+		return false, false
+
+	default:
+		return false, false
+	}
+}
+
 // NilData for the nil value
 var NilData = &RawData{Type: types.Nil}
 
