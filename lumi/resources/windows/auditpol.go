@@ -30,11 +30,16 @@ func ParseAuditpol(r io.Reader) ([]AuditpolEntry, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		guid := strings.TrimSpace(record[3])
+		guid = strings.TrimPrefix(guid, "{")
+		guid = strings.TrimSuffix(guid, "}")
+
 		res = append(res, AuditpolEntry{
 			MachineName:      strings.TrimSpace(record[0]),
 			PolicyTarget:     strings.TrimSpace(record[1]),
 			Subcategory:      strings.TrimSpace(record[2]),
-			SubcategoryGUID:  strings.TrimSpace(record[3]),
+			SubcategoryGUID:  guid,
 			InclusionSetting: strings.TrimSpace(record[4]),
 			ExclusionSetting: strings.TrimSpace(record[5]),
 		})

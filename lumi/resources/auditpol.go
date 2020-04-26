@@ -10,7 +10,7 @@ func (p *lumiAuditpol) id() (string, error) {
 	return "auditpol", nil
 }
 
-func (p *lumiAuditpol) GetEntries() ([]interface{}, error) {
+func (p *lumiAuditpol) GetList() ([]interface{}, error) {
 	cmd, err := p.Runtime.Motor.Transport.RunCommand("auditpol /get /category:* /r")
 	if err != nil {
 		return nil, fmt.Errorf("could not run auditpol")
@@ -42,5 +42,5 @@ func (p *lumiAuditpol) GetEntries() ([]interface{}, error) {
 }
 
 func (p *lumiAuditpol_entry) id() (string, error) {
-	return "auditpol_entry", nil
+	return p.Subcategoryguid()
 }

@@ -2,24 +2,26 @@ package windows
 
 import (
 	"io"
+	"strconv"
+	"strings"
 
 	"github.com/pkg/errors"
 	"gopkg.in/ini.v1"
 )
 
 type Secpol struct {
-	SystemAccess    map[string]string
-	EventAudit      map[string]string
-	RegistryValues  map[string]string
-	PrivilegeRights map[string]string
+	SystemAccess    map[string]interface{}
+	EventAudit      map[string]interface{}
+	RegistryValues  map[string]interface{}
+	PrivilegeRights map[string]interface{}
 }
 
 func ParseSecpol(r io.Reader) (*Secpol, error) {
 	res := &Secpol{
-		SystemAccess:    map[string]string{},
-		EventAudit:      map[string]string{},
-		RegistryValues:  map[string]string{},
-		PrivilegeRights: map[string]string{},
+		SystemAccess:    map[string]interface{}{}, // except for NewAdministratorName & NewGuestName, parse everything as int64
+		EventAudit:      map[string]interface{}{}, // parse to int
+		RegistryValues:  map[string]interface{}{}, // keep strings
+		PrivilegeRights: map[string]interface{}{}, // split entries with ,
 	}
 
 	cfg, err := ini.Load(r)
@@ -34,7 +36,21 @@ func ParseSecpol(r io.Reader) (*Secpol, error) {
 	keys := sysAccess.Keys()
 	for i := range keys {
 		entry := keys[i]
-		res.SystemAccess[entry.Name()] = entry.Value()
+		key := entry.Name()
+		rawValue := entry.Value()
+
+		if key == "NewAdministratorName" || key == "NewGuestName" {
+			res.SystemAccess[key] = rawValue
+			continue
+		}
+
+		// try to parse the content
+		i, err := strconv.ParseInt(rawValue, 10, 64)
+		if err == nil {
+			res.SystemAccess[key] = i
+		} else {
+			res.SystemAccess[key] = rawValue
+		}
 	}
 
 	eventAudit, err := cfg.GetSection("Event Audit")
@@ -44,7 +60,14 @@ func ParseSecpol(r io.Reader) (*Secpol, error) {
 	keys = eventAudit.Keys()
 	for i := range keys {
 		entry := keys[i]
-		res.EventAudit[entry.Name()] = entry.Value()
+
+		rawValue := entry.Value()
+		i, err := strconv.ParseInt(rawValue, 10, 64)
+		if err == nil {
+			res.EventAudit[entry.Name()] = i
+		} else {
+			res.EventAudit[entry.Name()] = rawValue
+		}
 	}
 
 	registryValues, err := cfg.GetSection("Registry Values")
@@ -64,7 +87,16 @@ func ParseSecpol(r io.Reader) (*Secpol, error) {
 	keys = priviledgeRights.Keys()
 	for i := range keys {
 		entry := keys[i]
-		res.PrivilegeRights[entry.Name()] = entry.Value()
+		rawValue := entry.Value()
+		values := strings.Split(rawValue, ",")
+
+		for i := range values {
+			val := values[i]
+			val = strings.Replace(val, "*S", "S", 1)
+			values[i] = val
+		}
+
+		res.PrivilegeRights[entry.Name()] = values
 	}
 
 	return res, nil

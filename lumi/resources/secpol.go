@@ -42,7 +42,7 @@ func (s *lumiSecpol) GetSystemaccess() (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return convertMap(policy.SystemAccess), nil
+	return policy.SystemAccess, nil
 }
 
 func (s *lumiSecpol) GetEventaudit() (map[string]interface{}, error) {
@@ -50,7 +50,7 @@ func (s *lumiSecpol) GetEventaudit() (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return convertMap(policy.EventAudit), nil
+	return policy.EventAudit, nil
 }
 
 func (s *lumiSecpol) GetRegistryvalues() (map[string]interface{}, error) {
@@ -58,7 +58,7 @@ func (s *lumiSecpol) GetRegistryvalues() (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return convertMap(policy.RegistryValues), nil
+	return policy.RegistryValues, nil
 }
 
 func (s *lumiSecpol) GetPrivilegerights() (map[string]interface{}, error) {
@@ -66,16 +66,5 @@ func (s *lumiSecpol) GetPrivilegerights() (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return convertMap(policy.PrivilegeRights), nil
-}
-
-func convertMap(m map[string]string) map[string]interface{} {
-	if m == nil {
-		return nil
-	}
-	res := map[string]interface{}{}
-	for k := range m {
-		res[k] = m[k]
-	}
-	return res
+	return policy.PrivilegeRights, nil
 }
