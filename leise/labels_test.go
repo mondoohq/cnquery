@@ -30,108 +30,88 @@ func TestLabels(t *testing.T) {
 		labels *llx.Labels
 	}{
 		{"true",
-			&llx.Labels{Labels: map[int32]string{
-				1: "",
+			&llx.Labels{Labels: map[string]string{
+				"13VXYfnMnc74H8XVgiMbH6ZSHxTGQxkhJfUkIiYOBCfUDxHAIJWopMcsea7hXkBTFpbM9lCDnbDBev1z+uagBw==": "",
 			}}},
 		{"1",
-			&llx.Labels{Labels: map[int32]string{
-				1: "",
+			&llx.Labels{Labels: map[string]string{
+				"zcXMKiq4b4QGFVMCvyyFhLXFQKOYn7NKqbV/47XBrKcFwirRjWPgReFt4kdD9G7/ZZCJPsmS4pdCfM32VdTAiQ==": "",
 			}}},
 		{"1.23",
-			&llx.Labels{Labels: map[int32]string{
-				1: "",
+			&llx.Labels{Labels: map[string]string{
+				"wYfzvA9Xuue3Dr0AcPOM9Y8yyd9t+DWggiInRLU5bSoWOoQtxVrt+aNkeOAorYDYV26ni1v6nIGzL6/3EqxSqQ==": "",
 			}}},
 		{"\"string\"",
-			&llx.Labels{Labels: map[int32]string{
-				1: "",
+			&llx.Labels{Labels: map[string]string{
+				"YKg4KBZELSGbdx6hE2dqiH5YWTTjYQDYjVzgUsOxnZs9djRb3SHjCadjEsPq6KlmcRLwo9kpv2fPYEJoQJb2qw==": "",
 			}}},
 		{"sshd",
-			&llx.Labels{Labels: map[int32]string{
-				1: "sshd",
+			&llx.Labels{Labels: map[string]string{
+				"fAVT9TdeX6puAiM5lRS0Rd7jFmfKMI48wFngwRNW9Vbo220GbeDAxaIvXLSF/hZcU5749fc26y6fwAwFgg3agA==": "sshd",
 			}}},
 		{"sshd.config",
-			&llx.Labels{Labels: map[int32]string{
-				1: "sshd.config",
+			&llx.Labels{Labels: map[string]string{
+				"h1EPuzo5A02wYUOeDzbzv9YfwPO5Km0r1tmJ0UOceHGyO+M2vrEpnF3/XVJu0hOtyAITe0M4O6XOjLOTc8i8lA==": "sshd.config",
 			}}},
 		{"sshd.config.params",
-			&llx.Labels{Labels: map[int32]string{
-				2: "sshd.config.params",
+			&llx.Labels{Labels: map[string]string{
+				"actnqYQLWDh5cxtVy8rfK3l1fuNL/GKx7+AhXMz5p94+Owz53454WHYsJ/QHb0yNDae5vTjgKnpRFRVKXrOiBw==": "sshd.config.params",
 			}}},
 		{"sshd.config(\"/my/path\").params",
-			&llx.Labels{Labels: map[int32]string{
-				2: "sshd.config.params",
+			&llx.Labels{Labels: map[string]string{
+				"MM6K7Xt2myq6kCdTrfBpbWjR1+ehr4QjM+Kx6Y0cUWFmznjodWF7ALNZOa//9sZbjwrNK6cqlhYqCKyBDpF2XQ==": "sshd.config.params",
 			}}},
 		{"platform.name platform.release",
-			&llx.Labels{Labels: map[int32]string{
-				2: "platform.name",
-				4: "platform.release",
+			&llx.Labels{Labels: map[string]string{
+				"EpnHIF31KeNgY/3Z4KyBuKHQ0kk/i+MyYbTX+ZWiQIAvK6lv4P2Nlf9CKAIrn2KOfCWICteI96BN1e8GA6sNZA==": "platform.name",
+				"yUHOZ/pJzgQ3FLcnKAPphE4TgWqFptqPWA8GYl4e5Dqg0/YzQWcDml2cbrTEj3nj1rm0azm9povOYMRjTgSvZg==": "platform.release",
 			}}},
 		{"platform { name release }",
 			&llx.Labels{
-				Labels: map[int32]string{
-					2: "platform",
-				},
-				Functions: map[int32]*llx.Labels{
-					2: {Labels: map[int32]string{
-						2: "name",
-						3: "release",
-					}},
+				Labels: map[string]string{
+					"EpnHIF31KeNgY/3Z4KyBuKHQ0kk/i+MyYbTX+ZWiQIAvK6lv4P2Nlf9CKAIrn2KOfCWICteI96BN1e8GA6sNZA==": "name",
+					"UpRXfTD63QfpFyNfvH7TJ/CF+bDO2CqESiCTV9XuF546wjvHOugGZgcIO4D5WeG0Pi9UamXHHdvR6dSYLOD9ig==": "platform",
+					"yUHOZ/pJzgQ3FLcnKAPphE4TgWqFptqPWA8GYl4e5Dqg0/YzQWcDml2cbrTEj3nj1rm0azm9povOYMRjTgSvZg==": "release",
 				},
 			}},
 		{"users.list { uid }",
 			&llx.Labels{
-				Labels: map[int32]string{
-					3: "users.list",
-				},
-				Functions: map[int32]*llx.Labels{
-					3: {Labels: map[int32]string{
-						2: "uid",
-					}},
+				Labels: map[string]string{
+					"4h7OZX1jTtpWgTuqjJp73vpTkf7k7vVQcvZMdISm9MkYQm9gk56RWwlC71Yi7hQlu15PnzAYIOw+ImI2svggzA==": "users.list",
+					"PwdDaV8xrCNIvOSwTLwmNR301BKQRqkZa2q7ZLLPoblw5AuQfqqIfjpWt5nNh+FBnr+vu62u0aphsamJKX63cg==": "uid",
 				},
 			}},
 
 		{"users.list[0]",
 			&llx.Labels{
-				Labels: map[int32]string{
-					3: "users.list[0]",
+				Labels: map[string]string{
+					"JRBY9Hgf44wZCNyBMqI/3qnRI6Vn9okb5sBH1rm93GzmhMsxfgS5GOZ17hmuUK+ZAtTRlW+WL6KNs9+L9CEXfw==": "users.list[0]",
 				},
 			}},
 
 		{"users.list[0] { uid }",
 			&llx.Labels{
-				Labels: map[int32]string{
-					4: "users.list[0]",
-				},
-				Functions: map[int32]*llx.Labels{
-					4: {Labels: map[int32]string{
-						2: "uid",
-					}},
+				Labels: map[string]string{
+					"Z1wH0fz5+dDAba6WDkgqZS3N0F54QRWK56WBB5Sxem414Zdu+UwgJOTeZ+RL6YQJEK8C6ZBqvK7fGmhuuv90hA==": "users.list[0]",
+					"vXUmtyv5Thql2cXelEul3Xaa8v7oNbP8ve/kufi3J8reZNVvp2dnoKPW+av/wIL6x6ma2cCxB/UoHuovKwuypw==": "uid",
 				},
 			}},
 
 		{"sshd.config.params[\"UsePAM\"]",
 			&llx.Labels{
-				Labels: map[int32]string{
-					3: "sshd.config.params[UsePAM]",
+				Labels: map[string]string{
+					"ANn7ciWfTVSHM5K6f4zOlY6BhSEURGhlL0W+2T1aWWLDz4Lz4QCVntNNBUXr0xHTyMoYRuomj13o/LpNEf+VVQ==": "sshd.config.params[UsePAM]",
 				},
 			}},
 
-		// 	// FIXME: failes compilation right now vv
-		// {"sshd.config { file { path } }",
-		// 	&llx.Labels{
-		// 		Labels: map[int32]string{
-		// 			2: "sshd.config",
-		// 		},
-		// 		Functions: map[int32]*llx.Labels{
-		// 			2: &llx.Labels{
-		// 				Labels: map[int32]string{
-		// 					3: "file",
-		// 				},
-		// 				Functions: map[int32]*llx.Labels{
-		// 					3: &llx.Labels{Labels: map[int32]string{2: "path"}},
-		// 				}},
-		// 		},
-		// 	}},
+		{"sshd.config { file { path } }",
+			&llx.Labels{
+				Labels: map[string]string{
+					"F69q9PhHOLLAU1neoFO5RAMbY2agcl8BncuZ33gxnZO20h6YUFAyuLJFdwMbMrdy43fhmnL+SkfhrFXN5jLosA==": "sshd.config",
+					"a3QyKWgQre3Ei0LtpKKHxM9Kk9On89T6ePpKAL9320VDivPxuK4kLLTvwGVoo87q/wTv3K0Le5JeW98v8eKK/g==": "file",
+					"7UaqV74XSP+zpDe2jWCIK7knE3Oq+OWA79/8o/iQcBisCqUcafc878wFLOzGqDVOZZAiqGOKcSwZXVivDpnmjQ==": "path",
+				},
+			}},
 	}
 
 	for i := range tests {
