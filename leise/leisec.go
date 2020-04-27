@@ -670,6 +670,9 @@ func Compile(input string, schema *lumi.Schema) (*llx.CodeBundle, error) {
 	if err != nil {
 		return res, err
 	}
+	if len(res.Labels.Labels) == 0 {
+		res.Labels.Labels = nil
+	}
 
 	res.Source = input
 	return res, nil

@@ -94,11 +94,6 @@ func UpdateLabels(code *llx.Code, labels *llx.Labels, schema *lumi.Schema) error
 		return errors.New("Cannot create labels without code")
 	}
 
-	if len(code.Entrypoints) == 0 {
-		labels.Labels = nil
-		return nil
-	}
-
 	var err error
 	var blockLabels *llx.Labels
 	for _, entrypoint := range code.Entrypoints {
