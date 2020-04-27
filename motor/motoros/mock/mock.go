@@ -47,6 +47,7 @@ func (m *Transport) RunCommand(command string) (*types.Command, error) {
 	if !ok {
 		res.Stdout.Write([]byte(""))
 		res.Stderr.Write([]byte("command not found"))
+		res.ExitStatus = 1
 		m.Missing["command"][command] = true
 		return &res, errors.New("command not found: " + command)
 	}
