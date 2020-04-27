@@ -40,8 +40,14 @@ func testQuery(t *testing.T, query string) []*llx.RawResult {
 	executor.AddWatcher("test", func(res *llx.RawResult) {
 		results = append(results, res)
 	})
+	defer executor.RemoveWatcher("test")
 
-	executor.AddCode(query)
+	bundle, err := executor.AddCode(query)
+	if err != nil {
+		t.Fatal("failed to add code to executor: " + err.Error())
+	}
+	defer executor.Remove(bundle.Code.Id)
+
 	if executor.WaitForResults(2*time.Second) == false {
 		t.Fatal("ran into timeout on testing query " + query)
 	}
