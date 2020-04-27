@@ -9,28 +9,25 @@ import (
 	"go.mondoo.io/mondoo/types"
 )
 
-func createLabel(code *llx.Code, ref int32, schema *lumi.Schema) (string, *llx.Labels, error) {
+func createLabel(code *llx.Code, ref int32, labels *llx.Labels, schema *lumi.Schema) (string, error) {
 	chunk := code.Code[ref-1]
 
 	if chunk.Call == llx.Chunk_PRIMITIVE {
-		return "", nil, nil
+		return "", nil
 	}
 
 	id := chunk.Id
 	if chunk.Function == nil {
-		return id, nil, nil
+		return id, nil
 	}
 
 	if chunk.Function.Binding == 0 {
-		return id, nil, nil
+		return id, nil
 	}
 
-	parentLabel, blockLabels, err := createLabel(code, chunk.Function.Binding, schema)
+	parentLabel, err := createLabel(code, chunk.Function.Binding, labels, schema)
 	if err != nil {
-		return "", nil, err
-	}
-	if blockLabels != nil {
-		return "", nil, errors.New("Don't know how to handle parent block labels")
+		return "", err
 	}
 
 	var res string
@@ -71,10 +68,9 @@ func createLabel(code *llx.Code, ref int32, schema *lumi.Schema) (string, *llx.L
 		}
 
 		function := code.Functions[ref-1]
-		blockLabels := &llx.Labels{}
-		err = UpdateLabels(function, blockLabels, schema)
+		err = UpdateLabels(function, labels, schema)
 		if err != nil {
-			return "", nil, err
+			return "", err
 		}
 
 	default:
@@ -85,7 +81,7 @@ func createLabel(code *llx.Code, ref int32, schema *lumi.Schema) (string, *llx.L
 		}
 	}
 
-	return res, blockLabels, nil
+	return res, nil
 }
 
 // UpdateLabels for the given code under the schema
@@ -95,7 +91,6 @@ func UpdateLabels(code *llx.Code, labels *llx.Labels, schema *lumi.Schema) error
 	}
 
 	var err error
-	var blockLabels *llx.Labels
 	for _, entrypoint := range code.Entrypoints {
 		checksum, ok := code.Checksums[entrypoint]
 		if !ok {
@@ -106,15 +101,9 @@ func UpdateLabels(code *llx.Code, labels *llx.Labels, schema *lumi.Schema) error
 			continue
 		}
 
-		labels.Labels[checksum], blockLabels, err = createLabel(code, entrypoint, schema)
+		labels.Labels[checksum], err = createLabel(code, entrypoint, labels, schema)
 		if err != nil {
 			return err
-		}
-
-		if blockLabels != nil {
-			for k, v := range blockLabels.Labels {
-				labels.Labels[k] = v
-			}
 		}
 	}
 
