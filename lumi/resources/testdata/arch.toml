@@ -173,7 +173,7 @@ MOTD_FILE
 ENCRYPT_METHOD	SHA512
 """
 
-[commands."lsmod"]
+[commands."/sbin/lsmod"]
 stdout = """Module                  Size  Used by
 xfrm_user              36864  1
 xfrm_algo              16384  1 xfrm_user
@@ -212,7 +212,7 @@ content = """root:!:14871::::::
 bin:!!:18360::::::
 """
 
-[commands."systemctl --all list-units"]
+[commands."systemctl --all list-units --type service"]
 stdout = """UNIT                                                                                     LOAD      ACTIVE   SUB       DESCRIPTION
   modprobe@drm.service                                                                     loaded    inactive dead      Load Kernel Module drm
   pacman-init.service                                                                      loaded    active   exited    Initializes Pacman keyring

@@ -16,7 +16,7 @@ func TestResource_Services(t *testing.T) {
 		res := testQuery(t, "services.list[0].name")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, "pacman-init.service", res[0].Data.Value)
+		assert.Equal(t, "pacman-init", res[0].Data.Value)
 	})
 }
 
@@ -30,6 +30,6 @@ func TestResource_Service(t *testing.T) {
 		res := testQuery(t, "services.list[0].name")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, "pacman-init.service", res[0].Data.Value)
+		assert.Equal(t, "pacman-init", res[0].Data.Value)
 	})
 }
