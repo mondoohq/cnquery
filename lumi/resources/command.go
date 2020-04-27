@@ -27,10 +27,10 @@ func (c *lumiCommand) execute() (*types.Command, error) {
 		}
 	}
 
-	executedCmd, err = c.Runtime.Motor.Transport.RunCommand(cmd)
-	if err != nil {
-		return nil, err
-	}
+	// note: we ignore the error here, because we want to give all results
+	// (stdout/stderr/exitcode) to the user for handling. otherwise the command
+	// resource would be nil and you couldnt do `command('notme').exitcode`
+	executedCmd, _ = c.Runtime.Motor.Transport.RunCommand(cmd)
 
 	c.Cache.Store(cmd, &lumi.CacheEntry{Data: executedCmd})
 	return executedCmd, nil
