@@ -126,3 +126,19 @@ func TestStableCore(t *testing.T) {
 		assert.Equal(t, "arch", v.Data.Value)
 	}
 }
+
+func TestContains(t *testing.T) {
+	t.Run("users.contains", func(t *testing.T) {
+		res := testQuery(t, "users.contains(username == 'root')")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, true, res[0].Data.Value)
+	})
+
+	t.Run("users.where.contains", func(t *testing.T) {
+		res := testQuery(t, "users.where(uid < 100).contains(username == 'root')")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, true, res[0].Data.Value)
+	})
+}

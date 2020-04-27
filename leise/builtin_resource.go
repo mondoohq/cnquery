@@ -180,10 +180,7 @@ func compileResourceContains(c *compiler, typ types.Type, ref int32, id string, 
 		Id:   "length",
 		Function: &llx.Function{
 			Type:    string(types.Int),
-			Binding: resourceRef,
-			Args: []*llx.Primitive{
-				llx.RefPrimitive(listRef),
-			},
+			Binding: listRef,
 		},
 	})
 
