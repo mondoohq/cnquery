@@ -1,0 +1,26 @@
+[{
+  "path": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\ActiveDesktop",
+  "name": "ActiveDesktop",
+  "properties": ["NoAddingComponents", "NoComponents", "NoHTMLWallPaper"],
+  "children": 0
+}, {
+  "path": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\DataCollection",
+  "name": "DataCollection",
+  "properties": ["CommercialId", "AllowTelemetry"],
+  "children": 1
+}, {
+  "path": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\DataCollection\\Users",
+  "name": "Users",
+  "properties": [],
+  "children": 0
+}, {
+  "path": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\NonEnum",
+  "name": "NonEnum",
+  "properties": ["{0DF44EAA-FF21-4412-828E-260A8728E7F1}", "{6DFD7C5C-2451-11d3-A299-00C04F8EF6AF}", "{BDEADF00-C265-11D0-BCED-00A0C90AB50F}"],
+  "children": 0
+}, {
+  "path": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\UIPI\\Clipboard\\ExceptionFormats",
+  "name": "ExceptionFormats",
+  "properties": ["CF_BITMAP", "CF_DIB", "CF_DIBV5", "CF_OEMTEXT", "CF_PALETTE", "CF_TEXT", "CF_UNICODETEXT"],
+  "children": 0
+}]

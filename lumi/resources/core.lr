@@ -222,3 +222,11 @@ shadow_entry {
   expirydates string
   reserved string
 }
+
+registrykey {
+  init(path string)
+  path string
+  exists() bool
+  properties() map[string]string
+  children() []string
+}
