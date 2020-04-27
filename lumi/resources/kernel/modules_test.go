@@ -13,7 +13,7 @@ func TestLsmodParser(t *testing.T) {
 	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/debian.toml"})
 	require.NoError(t, err)
 
-	f, err := mock.RunCommand("lsmod")
+	f, err := mock.RunCommand("/sbin/lsmod")
 	require.NoError(t, err)
 
 	entries := ParseLsmod(f.Stdout)

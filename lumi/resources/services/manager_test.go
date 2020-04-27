@@ -22,7 +22,7 @@ func TestManagerDebian(t *testing.T) {
 	mounts, err := mm.List()
 	require.NoError(t, err)
 
-	assert.Equal(t, 186, len(mounts))
+	assert.Equal(t, 102, len(mounts))
 }
 
 func TestManagerMacos(t *testing.T) {
