@@ -20,6 +20,7 @@ func TestSysctlDebian(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, 32, len(entries))
+	assert.Equal(t, "10000", entries["net.ipv4.conf.all.igmpv2_unsolicited_report_interval"])
 }
 
 func TestSysctlMacos(t *testing.T) {
@@ -33,6 +34,7 @@ func TestSysctlMacos(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, 17, len(entries))
+	assert.Equal(t, "1024", entries["net.inet6.ip6.neighborgcthresh"])
 }
 
 func TestSysctlFreebsd(t *testing.T) {
@@ -46,4 +48,5 @@ func TestSysctlFreebsd(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, 20, len(entries))
+	assert.Equal(t, "1", entries["security.bsd.unprivileged_mlock"])
 }
