@@ -19,6 +19,13 @@ type Motor struct {
 	Transport types.Transport
 	platform  *platform.PlatformInfo
 	watcher   types.Watcher
+	Meta      MetaInfo
+}
+
+type MetaInfo struct {
+	Name       string
+	Identifier []string
+	Labels     map[string]string
 }
 
 func (m *Motor) Platform() (platform.PlatformInfo, error) {
