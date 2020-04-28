@@ -22,41 +22,31 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 )
 
-func New(endpoint *types.Endpoint, idDetectors ...string) (*motor.Motor, MetaInfo, error) {
-	m, identifier, err := ResolveTransport(endpoint, idDetectors)
-	if err != nil {
-		return nil, MetaInfo{}, err
-	}
-	return m, identifier, err
+func New(endpoint *types.Endpoint, idDetectors ...string) (*motor.Motor, error) {
+	return ResolveTransport(endpoint, idDetectors)
 }
 
-func NewFromUrl(uri string) (*motor.Motor, MetaInfo, error) {
+func NewFromUrl(uri string) (*motor.Motor, error) {
 	t := &types.Endpoint{}
 	err := t.ParseFromURI(uri)
 	if err != nil {
-		return nil, MetaInfo{}, err
+		return nil, err
 	}
 	return New(t)
 }
 
-func NewWithUrlAndKey(uri string, key string) (*motor.Motor, MetaInfo, error) {
+func NewWithUrlAndKey(uri string, key string) (*motor.Motor, error) {
 	t := &types.Endpoint{
 		PrivateKeyPath: key,
 	}
 	err := t.ParseFromURI(uri)
 	if err != nil {
-		return nil, MetaInfo{}, err
+		return nil, err
 	}
 	return New(t)
 }
 
-type MetaInfo struct {
-	Name         string
-	ReferenceIDs []string
-	Labels       map[string]string
-}
-
-func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Motor, MetaInfo, error) {
+func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Motor, error) {
 	var m *motor.Motor
 	var name string
 	var identifier []string
@@ -68,35 +58,35 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 		log.Debug().Msg("connection> load mock transport")
 		trans, err := mock.New()
 		if err != nil {
-			return nil, MetaInfo{}, err
+			return nil, err
 		}
 
 		m, err = motor.New(trans)
 		if err != nil {
-			return nil, MetaInfo{}, err
+			return nil, err
 		}
 	case "nodejs":
 		log.Debug().Msg("connection> load nodejs transport")
 		// NOTE: while similar to local transport, the ids are completely different
 		trans, err := local.New()
 		if err != nil {
-			return nil, MetaInfo{}, err
+			return nil, err
 		}
 
 		m, err = motor.New(trans)
 		if err != nil {
-			return nil, MetaInfo{}, err
+			return nil, err
 		}
 	case types.BackendLocal:
 		log.Debug().Msg("connection> load local transport")
 		trans, err := local.New()
 		if err != nil {
-			return nil, MetaInfo{}, err
+			return nil, err
 		}
 
 		m, err = motor.New(trans)
 		if err != nil {
-			return nil, MetaInfo{}, err
+			return nil, err
 		}
 
 		pi, err := m.Platform()
@@ -110,22 +100,22 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 		// TODO: we need to generate an artifact id
 		trans, err := tar.New(endpoint)
 		if err != nil {
-			return nil, MetaInfo{}, err
+			return nil, err
 		}
 
 		m, err = motor.New(trans)
 		if err != nil {
-			return nil, MetaInfo{}, err
+			return nil, err
 		}
 	case types.BackendDocker:
 		log.Debug().Str("backend", endpoint.Backend.String()).Str("host", endpoint.Host).Str("path", endpoint.Path).Msg("connection> load docker transport")
 		trans, info, err := ResolveDockerTransport(endpoint)
 		if err != nil {
-			return nil, MetaInfo{}, err
+			return nil, err
 		}
 		m, err = motor.New(trans)
 		if err != nil {
-			return nil, MetaInfo{}, err
+			return nil, err
 		}
 
 		name = info.Name
@@ -139,12 +129,12 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 		log.Debug().Msg("connection> load ssh transport")
 		trans, err := ssh.New(endpoint)
 		if err != nil {
-			return nil, MetaInfo{}, err
+			return nil, err
 		}
 
 		m, err = motor.New(trans)
 		if err != nil {
-			return nil, MetaInfo{}, err
+			return nil, err
 		}
 
 		// for windows, we also collect the machine id
@@ -158,19 +148,19 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 		log.Debug().Msg("connection> load winrm transport")
 		trans, err := winrm.New(endpoint)
 		if err != nil {
-			return nil, MetaInfo{}, err
+			return nil, err
 		}
 
 		m, err = motor.New(trans)
 		if err != nil {
-			return nil, MetaInfo{}, err
+			return nil, err
 		}
 
 		idDetectors = append(idDetectors, "machineid")
 	case "":
-		return nil, MetaInfo{}, errors.New("connection type is required, try `-t backend://` (docker://, local://, tar://, ssh://)")
+		return nil, errors.New("connection type is required, try `-t backend://` (docker://, local://, tar://, ssh://)")
 	default:
-		return nil, MetaInfo{}, fmt.Errorf("connection> unsupported backend '%s', only docker://, local://, tar://, ssh:// are allowed", endpoint.Backend)
+		return nil, fmt.Errorf("connection> unsupported backend '%s', only docker://, local://, tar://, ssh:// are allowed", endpoint.Backend)
 	}
 
 	ids, err := GatherIDs(m, idDetectors)
@@ -180,11 +170,13 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 		identifier = append(identifier, ids...)
 	}
 
-	return m, MetaInfo{
-		Name:         name,
-		ReferenceIDs: identifier,
-		Labels:       labels,
-	}, err
+	m.Meta = motor.MetaInfo{
+		Name:       name,
+		Identifier: identifier,
+		Labels:     labels,
+	}
+
+	return m, err
 }
 
 func GatherIDs(m *motor.Motor, idDetectors []string) ([]string, error) {
