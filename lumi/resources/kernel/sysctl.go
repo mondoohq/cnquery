@@ -19,7 +19,7 @@ func ParseSysctl(r io.Reader, sep string) (map[string]string, error) {
 		keyval := strings.Split(line, sep)
 
 		if len(keyval) == 2 {
-			kernelParameters[strings.TrimSpace(keyval[0])] = strings.TrimSpace(keyval[0])
+			kernelParameters[strings.TrimSpace(keyval[0])] = strings.TrimSpace(keyval[1])
 		} else {
 			log.Debug().Str("line", line).Msg("cannot parse sysctl line")
 			continue
