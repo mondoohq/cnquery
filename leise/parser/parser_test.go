@@ -121,7 +121,26 @@ func TestParser_ParseValues(t *testing.T) {
 				}}},
 			}}},
 		}}},
+		{"a(\nb(\nc,\nd\n)\n)", &Expression{Operand: &Operand{
+			Value: vIdent("a"),
+			Calls: []*Call{{Function: []*Arg{
+				{Value: &Expression{Operand: &Operand{
+					Value: vIdent("b"),
+					Calls: []*Call{{Function: []*Arg{
+						{Value: &Expression{Operand: &Operand{Value: vIdent("c")}}},
+						{Value: &Expression{Operand: &Operand{Value: vIdent("d")}}},
+					}}},
+				}}},
+			}}},
+		}}},
 		{"user { name uid }", &Expression{Operand: &Operand{
+			Value: vIdent("user"),
+			Block: []*Expression{
+				{Operand: &Operand{Value: vIdent("name")}},
+				{Operand: &Operand{Value: vIdent("uid")}},
+			},
+		}}},
+		{"user {\n  name\n  uid\n}", &Expression{Operand: &Operand{
 			Value: vIdent("user"),
 			Block: []*Expression{
 				{Operand: &Operand{Value: vIdent("name")}},
@@ -193,4 +212,20 @@ func TestParser_ParseValues(t *testing.T) {
 			assert.Equal(t, test.res, res.Expressions[0])
 		})
 	}
+}
+
+func TestParser_Multiline(t *testing.T) {
+	res, err := Parse("true\n1\n2\n")
+	if !assert.Nil(t, err) {
+		return
+	}
+	if !assert.NotNil(t, res) {
+		return
+	}
+
+	assert.Equal(t, []*Expression{
+		{Operand: &Operand{Value: vBool(true)}},
+		{Operand: &Operand{Value: vInt(1)}},
+		{Operand: &Operand{Value: vInt(2)}},
+	}, res.Expressions)
 }
