@@ -77,6 +77,13 @@ func TestCompiler_Simple(t *testing.T) {
 				llx.IntPrimitive(1),
 			},
 		}},
+		{"[\n  1.2,\n  1\n]", &llx.Primitive{
+			Type: string(types.Array(types.Any)),
+			Array: []*llx.Primitive{
+				llx.FloatPrimitive(1.2),
+				llx.IntPrimitive(1),
+			},
+		}},
 	}
 	for _, v := range data {
 		t.Run(v.code, func(t *testing.T) {
@@ -475,8 +482,7 @@ func TestCompiler_Contains(t *testing.T) {
 		}, res.Code.Code[3])
 		assertFunction(t, "length", &llx.Function{
 			Type:    string(types.Int),
-			Binding: 3,
-			Args:    []*llx.Primitive{llx.RefPrimitive(4)},
+			Binding: 4,
 		}, res.Code.Code[4])
 		assertFunction(t, string("!="+types.Int), &llx.Function{
 			Type:    string(types.Bool),
@@ -492,5 +498,11 @@ func TestCompiler_Contains(t *testing.T) {
 			Binding: 1,
 		}, res.Code.Functions[0].Code[1])
 		assert.Equal(t, []int32{2}, res.Code.Functions[0].Entrypoints)
+	})
+}
+
+func TestCompiler_Multiline(t *testing.T) {
+	compile(t, "1 < 2\n2 != 3", func(res *llx.CodeBundle) {
+		assert.Equal(t, 4, len(res.Code.Code))
 	})
 }
