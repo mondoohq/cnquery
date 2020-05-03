@@ -53,6 +53,14 @@ func RefPrimitive(v int32) *Primitive {
 	}
 }
 
+// ArrayPrimitive creates a primitive from an int value
+func ArrayPrimitive(v []*Primitive, childType types.Type) *Primitive {
+	return &Primitive{
+		Type:  string(types.Array(childType)),
+		Array: v,
+	}
+}
+
 // FunctionPrimitive points to a function in the call stack
 func FunctionPrimitive(v int32) *Primitive {
 	return &Primitive{

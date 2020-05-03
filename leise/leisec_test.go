@@ -147,25 +147,29 @@ func TestCompiler_LogicalOps(t *testing.T) {
 		"true":    llx.BoolPrimitive(true),
 		"\"str\"": llx.StringPrimitive("str"),
 		"/str/":   llx.RegexPrimitive("str"),
+		"[]":      llx.ArrayPrimitive([]*llx.Primitive{}, types.Any),
 	}
 	for _, op := range ops {
-		for val, valres := range vals {
-			if types.Type(valres.Type) != types.Int && types.Type(valres.Type) != types.Float && types.Type(valres.Type) != types.String {
-				continue
-			}
-			code := val + " " + op + " " + val
-			t.Run(code, func(t *testing.T) {
-				compile(t, code, func(res *llx.CodeBundle) {
-					o := res.Code.Code[0]
-					assert.Equal(t, valres, o.Primitive)
-					o = res.Code.Code[1]
-					assert.Equal(t, llx.Chunk_FUNCTION, o.Call)
-					assert.Equal(t, op+valres.Type, o.Id)
-					assert.Equal(t, int32(1), o.Function.Binding)
-					assert.Equal(t, string(types.Bool), o.Function.Type)
-					assert.Equal(t, valres, o.Function.Args[0])
+		for val1, valres1 := range vals {
+			for val2, valres2 := range vals {
+				code := val1 + " " + op + " " + val2
+				t.Run(code, func(t *testing.T) {
+					compile(t, code, func(res *llx.CodeBundle) {
+						l := res.Code.Code[0]
+						assert.Equal(t, valres1, l.Primitive)
+
+						r := res.Code.Code[1]
+						assert.Equal(t, llx.Chunk_FUNCTION, r.Call)
+						assert.Equal(t, int32(1), r.Function.Binding)
+						assert.Equal(t, string(types.Bool), r.Function.Type)
+						assert.Equal(t, valres2, r.Function.Args[0])
+
+						f, err := llx.BuiltinFunction(l.Type(res.Code), r.Id)
+						assert.NoError(t, err, "was able to find builtin function for llx execution")
+						assert.NotNil(t, f, "was able to get non-nil builtin function")
+					})
 				})
-			})
+			}
 		}
 	}
 }

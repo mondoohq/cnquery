@@ -200,8 +200,8 @@ func init() {
 			"length": {f: arrayLength},
 			"==":     {Compiler: compileArrayOpArray("==")},
 			"!=":     {Compiler: compileArrayOpArray("!=")},
-			"&&":     {Compiler: compileArrayLogicalOp(types.ArrayLike, "&&")},
-			"||":     {Compiler: compileArrayLogicalOp(types.ArrayLike, "||")},
+			"&&":     {Compiler: compileLogicalArrayOp(types.ArrayLike, "&&")},
+			"||":     {Compiler: compileLogicalArrayOp(types.ArrayLike, "||")},
 			// special case: []<T> -- []<T>
 			"<T>==<T>": {f: tarrayCmpTarray, Label: "=="},
 			"<T>!=<T>": {f: tarrayNotTarray, Label: "!="},

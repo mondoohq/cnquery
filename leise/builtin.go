@@ -45,13 +45,13 @@ func init() {
 func builtinFunction(typ types.Type, id string) (*compileHandler, error) {
 	fh, ok := builtinFunctions[typ.Underlying()]
 	if !ok {
-		return nil, errors.New("Cannot find any functions for type '" + typ.Label() + "'")
+		return nil, errors.New("Cannot find any functions for type '" + typ.Label() + "' during compile")
 	}
 	c, ok := fh[id]
 	if !ok {
 		c, ok = fh[""]
 		if !ok {
-			return nil, errors.New("Cannot find function '" + id + "' for type '" + typ.Label() + "'")
+			return nil, errors.New("Cannot find function '" + id + "' for type '" + typ.Label() + "' during compile")
 		}
 	}
 	return &c, nil
