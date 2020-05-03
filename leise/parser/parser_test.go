@@ -185,6 +185,13 @@ func TestParser_ParseValues(t *testing.T) {
 				{Operator: OpEqual, Operand: &Operand{Value: vInt(3)}},
 			},
 		}},
+		{"1 && 2 || 3", &Expression{
+			Operand: &Operand{Value: vInt(1)},
+			Operations: []*Operation{
+				{Operator: OpAnd, Operand: &Operand{Value: vInt(2)}},
+				{Operator: OpOr, Operand: &Operand{Value: vInt(3)}},
+			},
+		}},
 		{"true + 'some'.length()", &Expression{
 			Operand: &Operand{Value: vBool(true)},
 			Operations: []*Operation{

@@ -15,7 +15,7 @@ var (
 		`|(?P<Int>[-+]?\d+([eE][-+]?\d+)?)` +
 		`|(?P<String>'[^']*'|"[^"]*")` +
 		`|(?P<Regex>/([^/]+|\\.)*/)` +
-		`|(?P<Op>[-+*/%,:.=<>!|~])` +
+		`|(?P<Op>[-+*/%,:.=<>!|&~])` +
 		`|(?P<Call>[(){}\[\]])`,
 	))
 )
@@ -365,7 +365,7 @@ func (p *parser) parseOperation() (*Operation, error) {
 	case "|":
 		p.nextToken()
 		if p.token.Value == "|" {
-			res.Operator = OpAnd
+			res.Operator = OpOr
 			p.nextToken()
 		} else {
 			return nil, p.expected("||", "parseOperation")
