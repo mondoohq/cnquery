@@ -203,6 +203,26 @@ func compileResourceContains(c *compiler, typ types.Type, ref int32, id string, 
 	return types.Bool, nil
 }
 
+func compileResourceOne(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
+	res, err := compileResourceContains(c, typ, ref, id, call)
+	if err != nil {
+		return res, err
+	}
+
+	// all we need to do is change the last operation on contains, as it tests for
+	// where( .. ).list.length != 0
+	// and we want
+	// where( .. ).list.length == 1
+	lastOp := c.Result.Code.LastChunk()
+	lastOp.Id = string("==" + types.Int)
+	lastOp.Function.Args[0] = llx.IntPrimitive(1)
+
+	checksum := c.Result.Code.Checksums[c.Result.Code.ChunkIndex()]
+	c.Result.Labels.Labels[checksum] = typ.Name() + ".one()"
+
+	return res, err
+}
+
 func compileResourceAll(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
 	// resource.where
 	_, err := compileResourceWhere(c, typ, ref, "where", call)
