@@ -158,3 +158,19 @@ func TestAll(t *testing.T) {
 		assert.Equal(t, true, res[0].Data.Value)
 	})
 }
+
+func TestOne(t *testing.T) {
+	t.Run("users.one", func(t *testing.T) {
+		res := testQuery(t, "users.one(uid == 0)")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, true, res[0].Data.Value)
+	})
+
+	t.Run("users.where.one", func(t *testing.T) {
+		res := testQuery(t, "users.where(uid < 100).one(uid == 0)")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, true, res[0].Data.Value)
+	})
+}
