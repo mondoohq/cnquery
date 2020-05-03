@@ -177,18 +177,24 @@ func TestCompiler_LogicalOps(t *testing.T) {
 func TestCompiler_OperatorPrecedence(t *testing.T) {
 	data := []struct {
 		code   string
+		idx    int
 		first  string
 		second string
 	}{
-		// {"1 && 2 || 3", "&&", "||"},
+		{"1 || 2 && 3", 1, string("||" + types.Int), string("&&" + types.Int)},
+		{"1 && 2 || 3", 2, string("||" + types.Int), string("&&" + types.Bool)},
 	}
 
 	for _, d := range data {
 		t.Run(d.code, func(t *testing.T) {
 			compile(t, d.code, func(res *llx.CodeBundle) {
 				fmt.Printf("compiled: %#v\n", res)
-				o := res.Code.Code[0]
+
+				o := res.Code.Code[d.idx]
 				assert.Equal(t, d.first, o.Id)
+
+				o = res.Code.Code[d.idx+1]
+				assert.Equal(t, d.second, o.Id)
 			})
 		})
 	}

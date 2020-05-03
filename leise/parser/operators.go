@@ -97,13 +97,13 @@ func (e *Expression) processOperators() error {
 	}
 	matchOp := maxOp - (maxOp % 10)
 
-	first := []*Operation{&Operation{Operand: e.Operand}}
+	first := []*Operation{{Operand: e.Operand}}
 	allOps := append(first, e.Operations...)
 	nuOps := first
 	for idx := 1; idx < len(allOps); idx++ {
 		v := allOps[idx]
 		if int(v.Operator) < matchOp {
-			nuOps = append(nuOps, allOps[idx-1])
+			nuOps = append(nuOps, allOps[idx])
 			continue
 		}
 
@@ -114,9 +114,9 @@ func (e *Expression) processOperators() error {
 			Operator: prev.Operator,
 			Operand: &Operand{
 				Value: &Value{Ident: &op},
-				Calls: []*Call{&Call{Function: []*Arg{
-					&Arg{Value: &Expression{Operand: prev.Operand}},
-					&Arg{Value: &Expression{Operand: v.Operand}},
+				Calls: []*Call{{Function: []*Arg{
+					{Value: &Expression{Operand: prev.Operand}},
+					{Value: &Expression{Operand: v.Operand}},
 				}}},
 			},
 		}
