@@ -560,3 +560,407 @@ func stringGTEInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 		return err == nil && f >= right.(int64)
 	})
 }
+
+// ---------------------------------
+//       &&  AND        ||  OR
+// ---------------------------------
+
+// T &&/|| T
+
+func opBoolAndBool(left interface{}, right interface{}) bool {
+	return left.(bool) && right.(bool)
+}
+
+func boolAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opBoolAndBool)
+}
+
+func boolOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opBoolAndBool)
+}
+
+func opIntAndInt(left interface{}, right interface{}) bool {
+	return (left.(int64) != 0) && (right.(int64) != 0)
+}
+
+func intAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opIntAndInt)
+}
+
+func intOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opIntAndInt)
+}
+
+func opFloatAndFloat(left interface{}, right interface{}) bool {
+	return (left.(float64) != 0) && (right.(float64) != 0)
+}
+
+func floatAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opFloatAndFloat)
+}
+
+func floatOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opFloatAndFloat)
+}
+
+func opStringAndString(left interface{}, right interface{}) bool {
+	return (left.(string) != "") && (right.(string) != "")
+}
+
+func stringAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opStringAndString)
+}
+
+func stringOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opStringAndString)
+}
+
+func regexAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opStringAndString)
+}
+
+func regexOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opStringAndString)
+}
+
+func opArrayAndArray(left interface{}, right interface{}) bool {
+	return (len(left.([]interface{})) != 0) && (len(right.([]interface{})) != 0)
+}
+
+func arrayAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opStringAndString)
+}
+
+func arrayOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opStringAndString)
+}
+
+// bool &&/|| T
+
+func opBoolAndInt(left interface{}, right interface{}) bool {
+	return left.(bool) && (right.(int64) != 0)
+}
+
+func opIntAndBool(left interface{}, right interface{}) bool {
+	return right.(bool) && (left.(int64) != 0)
+}
+
+func boolAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opBoolAndInt)
+}
+
+func boolOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opBoolAndInt)
+}
+
+func intAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opIntAndBool)
+}
+
+func intOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opIntAndBool)
+}
+
+func opBoolAndFloat(left interface{}, right interface{}) bool {
+	return left.(bool) && (right.(float64) != 0)
+}
+
+func opFloatAndBool(left interface{}, right interface{}) bool {
+	return right.(bool) && (left.(float64) != 0)
+}
+
+func boolAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opBoolAndFloat)
+}
+
+func boolOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opBoolAndFloat)
+}
+
+func floatAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opFloatAndBool)
+}
+
+func floatOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opFloatAndBool)
+}
+
+func opBoolAndString(left interface{}, right interface{}) bool {
+	return left.(bool) && (right.(string) != "")
+}
+
+func opStringAndBool(left interface{}, right interface{}) bool {
+	return right.(bool) && (left.(string) != "")
+}
+
+func boolAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opBoolAndString)
+}
+
+func boolOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opBoolAndString)
+}
+
+func stringAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opStringAndBool)
+}
+
+func stringOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opStringAndBool)
+}
+
+func boolAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opBoolAndString)
+}
+
+func boolOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opBoolAndString)
+}
+
+func regexAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opStringAndBool)
+}
+
+func regexOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opStringAndBool)
+}
+
+func opBoolAndArray(left interface{}, right interface{}) bool {
+	return left.(bool) && (len(right.([]interface{})) != 0)
+}
+
+func opArrayAndBool(left interface{}, right interface{}) bool {
+	return right.(bool) && (len(left.([]interface{})) != 0)
+}
+
+func boolAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opBoolAndArray)
+}
+
+func boolOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opBoolAndArray)
+}
+
+func arrayAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opArrayAndBool)
+}
+
+func arrayOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opArrayAndBool)
+}
+
+// int &&/|| T
+
+func opIntAndFloat(left interface{}, right interface{}) bool {
+	return (left.(int64) != 0) && (right.(float64) != 0)
+}
+
+func opFloatAndInt(left interface{}, right interface{}) bool {
+	return (right.(int64) != 0) && (left.(float64) != 0)
+}
+
+func intAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opIntAndFloat)
+}
+
+func intOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opIntAndFloat)
+}
+
+func floatAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opFloatAndInt)
+}
+
+func floatOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opFloatAndInt)
+}
+
+func opIntAndString(left interface{}, right interface{}) bool {
+	return (left.(int64) != 0) && (right.(string) != "")
+}
+
+func opStringAndInt(left interface{}, right interface{}) bool {
+	return (right.(int64) != 0) && (left.(string) != "")
+}
+
+func intAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opIntAndString)
+}
+
+func intOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opIntAndString)
+}
+
+func stringAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opStringAndInt)
+}
+
+func stringOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opStringAndInt)
+}
+
+func intAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opIntAndString)
+}
+
+func intOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opIntAndString)
+}
+
+func regexAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opStringAndInt)
+}
+
+func regexOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opStringAndInt)
+}
+
+func opIntAndArray(left interface{}, right interface{}) bool {
+	return (left.(int64) != 0) && (len(right.([]interface{})) != 0)
+}
+
+func opArrayAndInt(left interface{}, right interface{}) bool {
+	return (right.(int64) != 0) && (len(left.([]interface{})) != 0)
+}
+
+func intAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opIntAndArray)
+}
+
+func intOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opIntAndArray)
+}
+
+func arrayAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opArrayAndInt)
+}
+
+func arrayOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opArrayAndInt)
+}
+
+// float &&/|| T
+
+func opFloatAndString(left interface{}, right interface{}) bool {
+	return (left.(float64) != 0) && (right.(string) != "")
+}
+
+func opStringAndFloat(left interface{}, right interface{}) bool {
+	return (right.(float64) != 0) && (left.(string) != "")
+}
+
+func floatAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opFloatAndString)
+}
+
+func floatOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opFloatAndString)
+}
+
+func stringAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opStringAndFloat)
+}
+
+func stringOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opStringAndFloat)
+}
+
+func floatAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opFloatAndString)
+}
+
+func floatOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opFloatAndString)
+}
+
+func regexAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opStringAndFloat)
+}
+
+func regexOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opStringAndFloat)
+}
+
+func opFloatAndArray(left interface{}, right interface{}) bool {
+	return (left.(float64) != 0) && (len(right.([]interface{})) != 0)
+}
+
+func opArrayAndFloat(left interface{}, right interface{}) bool {
+	return (right.(float64) != 0) && (len(left.([]interface{})) != 0)
+}
+
+func floatAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opFloatAndArray)
+}
+
+func floatOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opFloatAndArray)
+}
+
+func arrayAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opArrayAndFloat)
+}
+
+func arrayOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opArrayAndFloat)
+}
+
+// string &&/|| T
+
+func stringAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opStringAndString)
+}
+
+func stringOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opStringAndString)
+}
+
+func regexAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opStringAndString)
+}
+
+func regexOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opStringAndString)
+}
+
+func opStringAndArray(left interface{}, right interface{}) bool {
+	return (left.(float64) != 0) && (len(right.([]interface{})) != 0)
+}
+
+func opArrayAndString(left interface{}, right interface{}) bool {
+	return (right.(float64) != 0) && (len(left.([]interface{})) != 0)
+}
+
+func stringAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opStringAndArray)
+}
+
+func stringOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opStringAndArray)
+}
+
+func arrayAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opArrayAndString)
+}
+
+func arrayOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opArrayAndString)
+}
+
+// regex &&/|| T
+
+func regexAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opStringAndArray)
+}
+
+func regexOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opStringAndArray)
+}
+
+func arrayAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opArrayAndString)
+}
+
+func arrayOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opArrayAndString)
+}

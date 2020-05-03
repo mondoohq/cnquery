@@ -113,6 +113,18 @@ func compileArrayOpArray(op string) func(types.Type, types.Type) (string, error)
 	}
 }
 
+func compileArrayLogicalOp(underlying types.Type, op string) func(types.Type, types.Type) (string, error) {
+	return func(left types.Type, right types.Type) (string, error) {
+		name := string(types.Any) + op + string(right.Underlying())
+		af := BuiltinFunctions[underlying]
+		if _, ok := af[name]; ok {
+			return name, nil
+		}
+
+		return "", errors.New("cannot find operation for " + left.Label() + " " + op + " " + right.Label())
+	}
+}
+
 func cmpArrays(left *RawData, right *RawData, f func(interface{}, interface{}) bool) bool {
 	l := left.Value.([]interface{})
 	r := right.Value.([]interface{})
