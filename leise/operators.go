@@ -100,6 +100,10 @@ func compileComparable(c *compiler, id string, call *parser.Call, res *llx.CodeB
 		h, err = llx.BuiltinFunction(lt, id)
 	}
 	if err != nil {
+		name = id + string(rt.Underlying())
+		h, err = llx.BuiltinFunction(lt, name)
+	}
+	if err != nil {
 		return types.Nil, errors.New("cannot find operator handler: " + lt.Label() + " " + id + " " + types.Type(right.Type).Label())
 	}
 

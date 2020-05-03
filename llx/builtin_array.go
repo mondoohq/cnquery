@@ -113,7 +113,7 @@ func compileArrayOpArray(op string) func(types.Type, types.Type) (string, error)
 	}
 }
 
-func compileArrayLogicalOp(underlying types.Type, op string) func(types.Type, types.Type) (string, error) {
+func compileLogicalArrayOp(underlying types.Type, op string) func(types.Type, types.Type) (string, error) {
 	return func(left types.Type, right types.Type) (string, error) {
 		name := string(types.Any) + op + string(right.Underlying())
 		af := BuiltinFunctions[underlying]
