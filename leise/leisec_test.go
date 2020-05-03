@@ -139,6 +139,37 @@ func TestCompiler_Comparisons(t *testing.T) {
 	}
 }
 
+func TestCompiler_LogicalOps(t *testing.T) {
+	ops := []string{"&&", "||"}
+	vals := map[string]*llx.Primitive{
+		"1":       llx.IntPrimitive(1),
+		"1.2":     llx.FloatPrimitive(1.2),
+		"true":    llx.BoolPrimitive(true),
+		"\"str\"": llx.StringPrimitive("str"),
+		"/str/":   llx.RegexPrimitive("str"),
+	}
+	for _, op := range ops {
+		for val, valres := range vals {
+			if types.Type(valres.Type) != types.Int && types.Type(valres.Type) != types.Float && types.Type(valres.Type) != types.String {
+				continue
+			}
+			code := val + " " + op + " " + val
+			t.Run(code, func(t *testing.T) {
+				compile(t, code, func(res *llx.CodeBundle) {
+					o := res.Code.Code[0]
+					assert.Equal(t, valres, o.Primitive)
+					o = res.Code.Code[1]
+					assert.Equal(t, llx.Chunk_FUNCTION, o.Call)
+					assert.Equal(t, op+valres.Type, o.Id)
+					assert.Equal(t, int32(1), o.Function.Binding)
+					assert.Equal(t, string(types.Bool), o.Function.Type)
+					assert.Equal(t, valres, o.Function.Args[0])
+				})
+			})
+		}
+	}
+}
+
 func TestCompiler_OperatorPrecedence(t *testing.T) {
 	data := []struct {
 		code   string
