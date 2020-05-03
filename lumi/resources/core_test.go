@@ -121,9 +121,9 @@ func stableResults(t *testing.T, query string) map[string]*llx.RawResult {
 }
 
 func TestStableCore(t *testing.T) {
-	res := stableResults(t, "platform.name")
+	res := stableResults(t, "mondoo.version")
 	for _, v := range res {
-		assert.Equal(t, "arch", v.Data.Value)
+		assert.Equal(t, "unstable", v.Data.Value)
 	}
 }
 
