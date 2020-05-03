@@ -60,6 +60,7 @@ func dataNotOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(
 }
 
 // raw operator handling
+// ==   !=
 
 func opBoolCmpBool(left interface{}, right interface{}) bool {
 	return left.(bool) == right.(bool)
@@ -148,6 +149,7 @@ func opFloatCmpRegex(left interface{}, right interface{}) bool {
 }
 
 // same operator types
+// ==   !=
 
 func boolCmpBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opBoolCmpBool)
@@ -182,7 +184,7 @@ func stringNotString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (
 }
 
 // string vs other types
-// string -- bool
+// string ==/!= bool
 
 func stringCmpBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opStringCmpBool)
@@ -200,7 +202,7 @@ func boolNotString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	return dataNotOp(c, bind, chunk, ref, opBoolCmpString)
 }
 
-// string -- int
+// string ==/!= int
 
 func stringCmpInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opStringCmpInt)
@@ -218,7 +220,7 @@ func intNotString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 	return dataNotOp(c, bind, chunk, ref, opIntCmpString)
 }
 
-// string -- float
+// string ==/!= float
 
 func stringCmpFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opStringCmpFloat)
@@ -236,7 +238,7 @@ func floatNotString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 	return dataNotOp(c, bind, chunk, ref, opFloatCmpString)
 }
 
-// string -- regex
+// string ==/!= regex
 
 func stringCmpRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opStringCmpRegex)
@@ -255,7 +257,7 @@ func regexNotString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 }
 
 // regex vs other types
-// bool -- regex
+// bool ==/!= regex
 
 func boolCmpRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opBoolCmpRegex)
@@ -273,7 +275,7 @@ func regexNotBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 	return dataNotOp(c, bind, chunk, ref, opRegexCmpBool)
 }
 
-// int -- regex
+// int ==/!= regex
 
 func intCmpRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opIntCmpRegex)
@@ -291,7 +293,7 @@ func regexNotInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return dataNotOp(c, bind, chunk, ref, opRegexCmpInt)
 }
 
-// float -- regex
+// float ==/!= regex
 
 func floatCmpRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opFloatCmpRegex)
