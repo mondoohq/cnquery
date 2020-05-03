@@ -443,6 +443,28 @@ func TestCompiler_Block(t *testing.T) {
 	})
 }
 
+func TestCompiler_BlockWithSelf(t *testing.T) {
+	compile(t, "mondoo { _.version }", func(res *llx.CodeBundle) {
+		assertFunction(t, "mondoo", nil, res.Code.Code[0])
+		assertFunction(t, "{}", &llx.Function{
+			Type:    string(types.Any),
+			Binding: 1,
+			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
+		}, res.Code.Code[1])
+		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
+
+		assertPrimitive(t, &llx.Primitive{
+			Type: string(types.Resource("mondoo")),
+		}, res.Code.Functions[0].Code[0])
+		assertPrimitive(t, llx.RefPrimitive(1), res.Code.Functions[0].Code[1])
+		assertFunction(t, "version", &llx.Function{
+			Type:    string(types.String),
+			Binding: 2,
+		}, res.Code.Functions[0].Code[2])
+		assert.Equal(t, []int32{3}, res.Code.Functions[0].Entrypoints)
+	})
+}
+
 func TestCompiler_List(t *testing.T) {
 	compile(t, "packages.list { name }", func(res *llx.CodeBundle) {
 		assertFunction(t, "packages", nil, res.Code.Code[0])

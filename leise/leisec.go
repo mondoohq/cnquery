@@ -383,6 +383,21 @@ func (c *compiler) compileIdentifier(id string, binding *binding, calls []*parse
 	var err error
 	var found bool
 	if binding != nil {
+		// special handling for the `self` operator
+		if id == "_" {
+			if len(restCalls) == 0 {
+				// TODO: something is missing
+				return restCalls, binding.Type, nil
+			}
+
+			nextCall := restCalls[0]
+			found, typ, err = c.compileBoundIdentifier(*nextCall.Ident, binding, nextCall)
+			if found {
+				return restCalls[1:], typ, err
+			}
+			// return restCalls, binding.Type, nil
+		}
+
 		found, typ, err = c.compileBoundIdentifier(id, binding, call)
 		if found {
 			return restCalls, typ, err
