@@ -142,3 +142,19 @@ func TestContains(t *testing.T) {
 		assert.Equal(t, true, res[0].Data.Value)
 	})
 }
+
+func TestAll(t *testing.T) {
+	t.Run("users.all", func(t *testing.T) {
+		res := testQuery(t, "users.all(uid >= 0)")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, true, res[0].Data.Value)
+	})
+
+	t.Run("users.where.all", func(t *testing.T) {
+		res := testQuery(t, "users.where(uid < 100).all(uid >= 0)")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, true, res[0].Data.Value)
+	})
+}
