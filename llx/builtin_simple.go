@@ -575,8 +575,12 @@ func boolAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return dataOp(c, bind, chunk, ref, opBoolAndBool)
 }
 
+func opBoolOrBool(left interface{}, right interface{}) bool {
+	return left.(bool) || right.(bool)
+}
+
 func boolOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opBoolAndBool)
+	return dataOp(c, bind, chunk, ref, opBoolOrBool)
 }
 
 func opIntAndInt(left interface{}, right interface{}) bool {
@@ -587,8 +591,12 @@ func intAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDa
 	return dataOp(c, bind, chunk, ref, opIntAndInt)
 }
 
+func opIntOrInt(left interface{}, right interface{}) bool {
+	return (left.(int64) != 0) || (right.(int64) != 0)
+}
+
 func intOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opIntAndInt)
+	return dataOp(c, bind, chunk, ref, opIntOrInt)
 }
 
 func opFloatAndFloat(left interface{}, right interface{}) bool {
@@ -599,8 +607,12 @@ func floatAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	return dataOp(c, bind, chunk, ref, opFloatAndFloat)
 }
 
+func opFloatOrFloat(left interface{}, right interface{}) bool {
+	return (left.(float64) != 0) || (right.(float64) != 0)
+}
+
 func floatOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opFloatAndFloat)
+	return dataOp(c, bind, chunk, ref, opFloatOrFloat)
 }
 
 func opStringAndString(left interface{}, right interface{}) bool {
@@ -611,8 +623,12 @@ func stringAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (
 	return dataOp(c, bind, chunk, ref, opStringAndString)
 }
 
+func opStringOrString(left interface{}, right interface{}) bool {
+	return (left.(string) != "") || (right.(string) != "")
+}
+
 func stringOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opStringAndString)
+	return dataOp(c, bind, chunk, ref, opStringOrString)
 }
 
 func regexAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -620,7 +636,7 @@ func regexAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 }
 
 func regexOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opStringAndString)
+	return dataOp(c, bind, chunk, ref, opStringOrString)
 }
 
 func opArrayAndArray(left interface{}, right interface{}) bool {
@@ -628,11 +644,15 @@ func opArrayAndArray(left interface{}, right interface{}) bool {
 }
 
 func arrayAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opStringAndString)
+	return dataOp(c, bind, chunk, ref, opArrayAndArray)
+}
+
+func opArrayOrArray(left interface{}, right interface{}) bool {
+	return (len(left.([]interface{})) != 0) || (len(right.([]interface{})) != 0)
 }
 
 func arrayOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opStringAndString)
+	return dataOp(c, bind, chunk, ref, opArrayOrArray)
 }
 
 // bool &&/|| T
@@ -645,12 +665,20 @@ func opIntAndBool(left interface{}, right interface{}) bool {
 	return right.(bool) && (left.(int64) != 0)
 }
 
+func opBoolOrInt(left interface{}, right interface{}) bool {
+	return left.(bool) || (right.(int64) != 0)
+}
+
+func opIntOrBool(left interface{}, right interface{}) bool {
+	return right.(bool) || (left.(int64) != 0)
+}
+
 func boolAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opBoolAndInt)
 }
 
 func boolOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opBoolAndInt)
+	return dataOp(c, bind, chunk, ref, opBoolOrInt)
 }
 
 func intAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -658,7 +686,7 @@ func intAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 }
 
 func intOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opIntAndBool)
+	return dataOp(c, bind, chunk, ref, opIntOrBool)
 }
 
 func opBoolAndFloat(left interface{}, right interface{}) bool {
@@ -669,12 +697,20 @@ func opFloatAndBool(left interface{}, right interface{}) bool {
 	return right.(bool) && (left.(float64) != 0)
 }
 
+func opBoolOrFloat(left interface{}, right interface{}) bool {
+	return left.(bool) || (right.(float64) != 0)
+}
+
+func opFloatOrBool(left interface{}, right interface{}) bool {
+	return right.(bool) || (left.(float64) != 0)
+}
+
 func boolAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opBoolAndFloat)
 }
 
 func boolOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opBoolAndFloat)
+	return dataOp(c, bind, chunk, ref, opBoolOrFloat)
 }
 
 func floatAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -682,7 +718,7 @@ func floatAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 }
 
 func floatOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opFloatAndBool)
+	return dataOp(c, bind, chunk, ref, opFloatOrBool)
 }
 
 func opBoolAndString(left interface{}, right interface{}) bool {
@@ -693,12 +729,20 @@ func opStringAndBool(left interface{}, right interface{}) bool {
 	return right.(bool) && (left.(string) != "")
 }
 
+func opBoolOrString(left interface{}, right interface{}) bool {
+	return left.(bool) || (right.(string) != "")
+}
+
+func opStringOrBool(left interface{}, right interface{}) bool {
+	return right.(bool) || (left.(string) != "")
+}
+
 func boolAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opBoolAndString)
 }
 
 func boolOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opBoolAndString)
+	return dataOp(c, bind, chunk, ref, opBoolOrString)
 }
 
 func stringAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -706,7 +750,7 @@ func stringAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 }
 
 func stringOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opStringAndBool)
+	return dataOp(c, bind, chunk, ref, opStringOrBool)
 }
 
 func boolAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -714,7 +758,7 @@ func boolAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 }
 
 func boolOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opBoolAndString)
+	return dataOp(c, bind, chunk, ref, opBoolOrString)
 }
 
 func regexAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -722,7 +766,7 @@ func regexAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 }
 
 func regexOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opStringAndBool)
+	return dataOp(c, bind, chunk, ref, opStringOrBool)
 }
 
 func opBoolAndArray(left interface{}, right interface{}) bool {
@@ -733,12 +777,20 @@ func opArrayAndBool(left interface{}, right interface{}) bool {
 	return right.(bool) && (len(left.([]interface{})) != 0)
 }
 
+func opBoolOrArray(left interface{}, right interface{}) bool {
+	return left.(bool) || (len(right.([]interface{})) != 0)
+}
+
+func opArrayOrBool(left interface{}, right interface{}) bool {
+	return right.(bool) || (len(left.([]interface{})) != 0)
+}
+
 func boolAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opBoolAndArray)
 }
 
 func boolOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opBoolAndArray)
+	return dataOp(c, bind, chunk, ref, opBoolOrArray)
 }
 
 func arrayAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -746,7 +798,7 @@ func arrayAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 }
 
 func arrayOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opArrayAndBool)
+	return dataOp(c, bind, chunk, ref, opArrayOrBool)
 }
 
 // int &&/|| T
@@ -759,12 +811,20 @@ func opFloatAndInt(left interface{}, right interface{}) bool {
 	return (right.(int64) != 0) && (left.(float64) != 0)
 }
 
+func opIntOrFloat(left interface{}, right interface{}) bool {
+	return (left.(int64) != 0) || (right.(float64) != 0)
+}
+
+func opFloatOrInt(left interface{}, right interface{}) bool {
+	return (right.(int64) != 0) || (left.(float64) != 0)
+}
+
 func intAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opIntAndFloat)
 }
 
 func intOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opIntAndFloat)
+	return dataOp(c, bind, chunk, ref, opIntOrFloat)
 }
 
 func floatAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -772,7 +832,7 @@ func floatAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 }
 
 func floatOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opFloatAndInt)
+	return dataOp(c, bind, chunk, ref, opFloatOrInt)
 }
 
 func opIntAndString(left interface{}, right interface{}) bool {
@@ -783,12 +843,20 @@ func opStringAndInt(left interface{}, right interface{}) bool {
 	return (right.(int64) != 0) && (left.(string) != "")
 }
 
+func opIntOrString(left interface{}, right interface{}) bool {
+	return (left.(int64) != 0) || (right.(string) != "")
+}
+
+func opStringOrInt(left interface{}, right interface{}) bool {
+	return (right.(int64) != 0) || (left.(string) != "")
+}
+
 func intAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opIntAndString)
 }
 
 func intOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opIntAndString)
+	return dataOp(c, bind, chunk, ref, opIntOrString)
 }
 
 func stringAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -796,7 +864,7 @@ func stringAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 }
 
 func stringOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opStringAndInt)
+	return dataOp(c, bind, chunk, ref, opStringOrInt)
 }
 
 func intAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -804,7 +872,7 @@ func intAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 }
 
 func intOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opIntAndString)
+	return dataOp(c, bind, chunk, ref, opIntOrString)
 }
 
 func regexAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -812,7 +880,7 @@ func regexAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 }
 
 func regexOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opStringAndInt)
+	return dataOp(c, bind, chunk, ref, opStringOrInt)
 }
 
 func opIntAndArray(left interface{}, right interface{}) bool {
@@ -823,12 +891,20 @@ func opArrayAndInt(left interface{}, right interface{}) bool {
 	return (right.(int64) != 0) && (len(left.([]interface{})) != 0)
 }
 
+func opIntOrArray(left interface{}, right interface{}) bool {
+	return (left.(int64) != 0) || (len(right.([]interface{})) != 0)
+}
+
+func opArrayOrInt(left interface{}, right interface{}) bool {
+	return (right.(int64) != 0) || (len(left.([]interface{})) != 0)
+}
+
 func intAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opIntAndArray)
 }
 
 func intOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opIntAndArray)
+	return dataOp(c, bind, chunk, ref, opIntOrArray)
 }
 
 func arrayAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -836,7 +912,7 @@ func arrayAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 }
 
 func arrayOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opArrayAndInt)
+	return dataOp(c, bind, chunk, ref, opArrayOrInt)
 }
 
 // float &&/|| T
@@ -849,12 +925,20 @@ func opStringAndFloat(left interface{}, right interface{}) bool {
 	return (right.(float64) != 0) && (left.(string) != "")
 }
 
+func opFloatOrString(left interface{}, right interface{}) bool {
+	return (left.(float64) != 0) || (right.(string) != "")
+}
+
+func opStringOrFloat(left interface{}, right interface{}) bool {
+	return (right.(float64) != 0) || (left.(string) != "")
+}
+
 func floatAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opFloatAndString)
 }
 
 func floatOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opFloatAndString)
+	return dataOp(c, bind, chunk, ref, opFloatOrString)
 }
 
 func stringAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -862,7 +946,7 @@ func stringAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 }
 
 func stringOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opStringAndFloat)
+	return dataOp(c, bind, chunk, ref, opStringOrFloat)
 }
 
 func floatAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -870,7 +954,7 @@ func floatAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 }
 
 func floatOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opFloatAndString)
+	return dataOp(c, bind, chunk, ref, opFloatOrString)
 }
 
 func regexAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -878,7 +962,7 @@ func regexAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 }
 
 func regexOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opStringAndFloat)
+	return dataOp(c, bind, chunk, ref, opStringOrFloat)
 }
 
 func opFloatAndArray(left interface{}, right interface{}) bool {
@@ -889,12 +973,20 @@ func opArrayAndFloat(left interface{}, right interface{}) bool {
 	return (right.(float64) != 0) && (len(left.([]interface{})) != 0)
 }
 
+func opFloatOrArray(left interface{}, right interface{}) bool {
+	return (left.(float64) != 0) || (len(right.([]interface{})) != 0)
+}
+
+func opArrayOrFloat(left interface{}, right interface{}) bool {
+	return (right.(float64) != 0) || (len(left.([]interface{})) != 0)
+}
+
 func floatAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opFloatAndArray)
 }
 
 func floatOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opFloatAndArray)
+	return dataOp(c, bind, chunk, ref, opFloatOrArray)
 }
 
 func arrayAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -902,7 +994,7 @@ func arrayAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 }
 
 func arrayOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opArrayAndFloat)
+	return dataOp(c, bind, chunk, ref, opArrayOrFloat)
 }
 
 // string &&/|| T
@@ -912,7 +1004,7 @@ func stringAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 }
 
 func stringOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opStringAndString)
+	return dataOp(c, bind, chunk, ref, opStringOrString)
 }
 
 func regexAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -920,7 +1012,7 @@ func regexAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 }
 
 func regexOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opStringAndString)
+	return dataOp(c, bind, chunk, ref, opStringOrString)
 }
 
 func opStringAndArray(left interface{}, right interface{}) bool {
@@ -931,12 +1023,20 @@ func opArrayAndString(left interface{}, right interface{}) bool {
 	return (right.(float64) != 0) && (len(left.([]interface{})) != 0)
 }
 
+func opStringOrArray(left interface{}, right interface{}) bool {
+	return (left.(float64) != 0) || (len(right.([]interface{})) != 0)
+}
+
+func opArrayOrString(left interface{}, right interface{}) bool {
+	return (right.(float64) != 0) || (len(left.([]interface{})) != 0)
+}
+
 func stringAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opStringAndArray)
 }
 
 func stringOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opStringAndArray)
+	return dataOp(c, bind, chunk, ref, opStringOrArray)
 }
 
 func arrayAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -944,7 +1044,7 @@ func arrayAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 }
 
 func arrayOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opArrayAndString)
+	return dataOp(c, bind, chunk, ref, opArrayOrString)
 }
 
 // regex &&/|| T
@@ -954,7 +1054,7 @@ func regexAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 }
 
 func regexOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opStringAndArray)
+	return dataOp(c, bind, chunk, ref, opStringOrArray)
 }
 
 func arrayAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -962,5 +1062,5 @@ func arrayAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 }
 
 func arrayOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opArrayAndString)
+	return dataOp(c, bind, chunk, ref, opArrayOrString)
 }
