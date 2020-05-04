@@ -24,10 +24,11 @@ var builtinFunctions map[types.Type]map[string]compileHandler
 func init() {
 	builtinFunctions = map[types.Type]map[string]compileHandler{
 		types.ArrayLike: {
-			"[]":     {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
-			"{}":     {typ: arrayBlockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"length": {typ: intType, signature: FunctionSignature{}},
-			"where":  {compile: compileArrayWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"[]":       {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
+			"{}":       {typ: arrayBlockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"length":   {typ: intType, signature: FunctionSignature{}},
+			"where":    {compile: compileArrayWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"contains": {compile: compileArrayContains, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 		},
 		types.MapLike: {
 			"[]":     {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},

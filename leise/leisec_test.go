@@ -504,6 +504,40 @@ func TestCompiler_ArrayEmptyWhere(t *testing.T) {
 	})
 }
 
+func TestCompiler_ArrayContains(t *testing.T) {
+	compile(t, "[1,2,3].contains(_ == 2)", func(res *llx.CodeBundle) {
+		assertPrimitive(t, &llx.Primitive{
+			Type: string(types.Array(types.Int)),
+			Array: []*llx.Primitive{
+				llx.IntPrimitive(1),
+				llx.IntPrimitive(2),
+				llx.IntPrimitive(3),
+			},
+		}, res.Code.Code[0])
+
+		assertFunction(t, "where", &llx.Function{
+			Type:    string(types.Array(types.Int)),
+			Binding: 1,
+			Args: []*llx.Primitive{
+				llx.RefPrimitive(1),
+				llx.FunctionPrimitive(1),
+			},
+		}, res.Code.Code[1])
+
+		assertFunction(t, "length", &llx.Function{
+			Type:    string(types.Int),
+			Binding: 2,
+		}, res.Code.Code[2])
+		assertFunction(t, string("!="+types.Int), &llx.Function{
+			Type:    string(types.Bool),
+			Binding: 3,
+			Args:    []*llx.Primitive{llx.IntPrimitive(0)},
+		}, res.Code.Code[3])
+
+		assert.Equal(t, 4, len(res.Code.Code))
+	})
+}
+
 func TestCompiler_ResourceEmptyWhere(t *testing.T) {
 	compile(t, "packages.where()", func(res *llx.CodeBundle) {
 		assertFunction(t, "packages", nil, res.Code.Code[0])

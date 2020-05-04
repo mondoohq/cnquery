@@ -144,6 +144,10 @@ func TestArray_Where(t *testing.T) {
 			"[1,2,3].where(_ >= 2)",
 			[]interface{}{int64(2), int64(3)},
 		},
+		{
+			"[1,2,3].contains(_ >= 2)",
+			true,
+		},
 	}
 
 	for i := range tests {
