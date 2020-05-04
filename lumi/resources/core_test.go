@@ -148,6 +148,10 @@ func TestArray_Where(t *testing.T) {
 			"[1,2,3].contains(_ >= 2)",
 			true,
 		},
+		{
+			"[1,2,3].one(_ == 2)",
+			true,
+		},
 	}
 
 	for i := range tests {
