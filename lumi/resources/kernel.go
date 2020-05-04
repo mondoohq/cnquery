@@ -103,9 +103,10 @@ func (k *lumiKernel) GetModules() ([]interface{}, error) {
 
 	// create lumi kernel module entry resources for each entry
 	moduleEntries := make([]interface{}, len(kernelModules))
+	namedMap := make(map[string]KernelModule, len(kernelModules))
 	for i, kernelModule := range kernelModules {
 
-		lumiKernelModule, err := k.Runtime.CreateResource("kernel_module",
+		lumiKernelModule, err := k.Runtime.CreateResource("kernel.module",
 			"name", kernelModule.Name,
 			"size", kernelModule.Size,
 		)
@@ -113,13 +114,61 @@ func (k *lumiKernel) GetModules() ([]interface{}, error) {
 			return nil, err
 		}
 
-		moduleEntries[i] = lumiKernelModule.(Kernel_module)
+		moduleEntries[i] = lumiKernelModule.(KernelModule)
+		namedMap[kernelModule.Name] = lumiKernelModule.(KernelModule)
 	}
+
+	k.Cache.Store("_modules", &lumi.CacheEntry{Data: namedMap})
 
 	// return the kernel modules as new entries
 	return moduleEntries, nil
 }
 
-func (k *lumiKernel_module) id() (string, error) {
+func (k *lumiKernelModule) init(args *lumi.Args) (*lumi.Args, error) {
+	// TODO: look at the args and determine if we init all or ask for listing of all modules
+	if len(*args) > 2 {
+		return args, nil
+	}
+
+	nameRaw := (*args)["name"]
+	if nameRaw == nil {
+		return args, nil
+	}
+	name := nameRaw.(string)
+
+	obj, err := k.Runtime.CreateResource("kernel")
+	if err != nil {
+		return nil, err
+	}
+	kernel := obj.(Kernel)
+
+	_, err = kernel.Modules()
+	if err != nil {
+		return nil, err
+	}
+
+	c, ok := kernel.LumiResource().Cache.Load("_modules")
+	if !ok {
+		return nil, errors.New("Cannot get map of packages")
+	}
+	cmap := c.Data.(map[string]KernelModule)
+
+	// TODO: this won't be necessary if we can reference the ID
+	(*args)["name"] = name
+	(*args)["size"] = ""
+
+	item := cmap[name]
+	if item != nil {
+		// TODO: do this instead of duplicating it!
+		// (*args)["id"] = pkg.LumiResource().Id
+		// Workaround: we fill in the fields we need to make the id() method
+		// generate the same ID
+		(*args)["size"], _ = item.Size()
+	}
+
+	return args, nil
+}
+
+func (k *lumiKernelModule) id() (string, error) {
 	return k.Name()
 }

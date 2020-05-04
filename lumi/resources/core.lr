@@ -70,7 +70,8 @@ kernel {
   modules() []kernel_module
 }
 
-kernel_module {
+kernel.module {
+  init(name string)
   name string
   size string
 }
