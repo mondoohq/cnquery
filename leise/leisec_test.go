@@ -490,14 +490,28 @@ func TestCompiler_List(t *testing.T) {
 	})
 }
 
-func TestCompiler_EmptyWhere(t *testing.T) {
+func TestCompiler_ArrayEmptyWhere(t *testing.T) {
+	compile(t, "[1,2,3].where()", func(res *llx.CodeBundle) {
+		assertPrimitive(t, &llx.Primitive{
+			Type: string(types.Array(types.Int)),
+			Array: []*llx.Primitive{
+				llx.IntPrimitive(1),
+				llx.IntPrimitive(2),
+				llx.IntPrimitive(3),
+			},
+		}, res.Code.Code[0])
+		assert.Equal(t, 1, len(res.Code.Code))
+	})
+}
+
+func TestCompiler_ResourceEmptyWhere(t *testing.T) {
 	compile(t, "packages.where()", func(res *llx.CodeBundle) {
 		assertFunction(t, "packages", nil, res.Code.Code[0])
 		assert.Equal(t, 1, len(res.Code.Code))
 	})
 }
 
-func TestCompiler_Where(t *testing.T) {
+func TestCompiler_ResourceWhere(t *testing.T) {
 	compile(t, "packages.where(outdated)", func(res *llx.CodeBundle) {
 		assertFunction(t, "packages", nil, res.Code.Code[0])
 		assertFunction(t, "list", &llx.Function{
@@ -524,7 +538,7 @@ func TestCompiler_Where(t *testing.T) {
 	})
 }
 
-func TestCompiler_Contains(t *testing.T) {
+func TestCompiler_ResourceContains(t *testing.T) {
 	compile(t, "packages.contains(outdated)", func(res *llx.CodeBundle) {
 		assertFunction(t, "packages", nil, res.Code.Code[0])
 		assertFunction(t, "list", &llx.Function{

@@ -549,7 +549,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 			found, resType, err = c.compileBoundIdentifier(id, &binding{Type: typ, Ref: ref}, call)
 			if !found {
 				addFieldSuggestions(availableFields(c, typ), id, c.Result)
-				return nil, errors.New("Cannot find field '" + id + "' in resource " + typ.Label() + "")
+				return nil, errors.New("Cannot find field '" + id + "' in " + typ.Label() + "")
 			}
 
 			typ = resType

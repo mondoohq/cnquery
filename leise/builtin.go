@@ -27,6 +27,7 @@ func init() {
 			"[]":     {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
 			"{}":     {typ: arrayBlockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"length": {typ: intType, signature: FunctionSignature{}},
+			"where":  {compile: compileArrayWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 		},
 		types.MapLike: {
 			"[]":     {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
