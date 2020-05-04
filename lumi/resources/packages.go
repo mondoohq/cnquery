@@ -19,12 +19,12 @@ func (p *lumiPackage) init(args *lumi.Args) (*lumi.Args, error) {
 		return args, nil
 	}
 
-	name := (*args)["name"]
-	if name == nil {
+	nameRaw := (*args)["name"]
+	if nameRaw == nil {
 		return args, nil
 	}
 
-	nameS, ok := name.(string)
+	name, ok := nameRaw.(string)
 	if !ok {
 		return args, nil
 	}
@@ -55,7 +55,7 @@ func (p *lumiPackage) init(args *lumi.Args) (*lumi.Args, error) {
 	(*args)["available"] = ""
 	(*args)["installed"] = false
 
-	pkg := cmap[nameS]
+	pkg := cmap[name]
 	if pkg != nil {
 		// TODO: do this instead of duplicating it!
 		// (*args)["id"] = pkg.LumiResource().Id
