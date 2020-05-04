@@ -127,6 +127,35 @@ func TestStableCore(t *testing.T) {
 	}
 }
 
+func TestArray_Where(t *testing.T) {
+	tests := []struct {
+		code         string
+		expectations interface{}
+	}{
+		{
+			"[1,2,3].where()",
+			[]interface{}{int64(1), int64(2), int64(3)},
+		},
+		{
+			"[1,2,3].where(_ > 2)",
+			[]interface{}{int64(3)},
+		},
+		{
+			"[1,2,3].where(_ >= 2)",
+			[]interface{}{int64(2), int64(3)},
+		},
+	}
+
+	for i := range tests {
+		cur := tests[i]
+		t.Run(cur.code, func(t *testing.T) {
+			res := testQuery(t, cur.code)
+			assert.NotEmpty(t, res)
+			assert.Equal(t, cur.expectations, res[0].Data.Value)
+		})
+	}
+}
+
 func TestContains(t *testing.T) {
 	t.Run("users.contains", func(t *testing.T) {
 		res := testQuery(t, "users.contains(username == 'root')")
