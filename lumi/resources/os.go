@@ -3,6 +3,7 @@ package resources
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
@@ -18,8 +19,29 @@ func (p *lumiOs) GetRebootpending() ([]interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (p *lumiOs) GetEnv() ([]interface{}, error) {
-	return nil, errors.New("not implemented")
+func (p *lumiOs) GetEnv() (map[string]interface{}, error) {
+	rawCmd, err := p.Runtime.CreateResource("command", "command", "env")
+	if err != nil {
+		return nil, err
+	}
+	cmd := rawCmd.(Command)
+
+	out, err := cmd.Stdout()
+	if err != nil {
+		return nil, err
+	}
+
+	res := map[string]interface{}{}
+	lines := strings.Split(out, "\n")
+	for i := range lines {
+		parts := strings.SplitN(lines[i], "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		res[parts[0]] = parts[1]
+	}
+
+	return res, nil
 }
 
 func (p *lumiOs) GetUptime() (int64, error) {
