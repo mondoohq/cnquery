@@ -44,6 +44,27 @@ func (p *lumiOs) GetEnv() (map[string]interface{}, error) {
 	return res, nil
 }
 
+func (p *lumiOs) GetPath() ([]interface{}, error) {
+	env, err := p.Env()
+	if err != nil {
+		return nil, err
+	}
+
+	rawPath, ok := env["PATH"]
+	if !ok {
+		return []interface{}{}, nil
+	}
+
+	path := rawPath.(string)
+	parts := strings.Split(path, ":")
+	res := make([]interface{}, len(parts))
+	for i := range parts {
+		res[i] = parts[i]
+	}
+
+	return res, nil
+}
+
 func (p *lumiOs) GetUptime() (int64, error) {
 	uptime, err := uptime.New(p.Runtime.Motor)
 	if err != nil {

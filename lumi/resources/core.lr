@@ -85,6 +85,7 @@ osupdate {
 
 os {
   env() map[string]string
+  path() []string
   uptime() string
   updates() []osupdate
   rebootpending() bool
