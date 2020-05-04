@@ -572,6 +572,45 @@ func TestCompiler_ArrayOne(t *testing.T) {
 	})
 }
 
+func TestCompiler_ArrayAll(t *testing.T) {
+	compile(t, "[1,2,3].all(_ < 9)", func(res *llx.CodeBundle) {
+		assertPrimitive(t, &llx.Primitive{
+			Type: string(types.Array(types.Int)),
+			Array: []*llx.Primitive{
+				llx.IntPrimitive(1),
+				llx.IntPrimitive(2),
+				llx.IntPrimitive(3),
+			},
+		}, res.Code.Code[0])
+
+		assertFunction(t, "where", &llx.Function{
+			Type:    string(types.Array(types.Int)),
+			Binding: 1,
+			Args: []*llx.Primitive{
+				llx.RefPrimitive(1),
+				llx.FunctionPrimitive(1),
+			},
+		}, res.Code.Code[1])
+
+		assertFunction(t, "length", &llx.Function{
+			Type:    string(types.Int),
+			Binding: 1,
+		}, res.Code.Code[2])
+
+		assertFunction(t, "length", &llx.Function{
+			Type:    string(types.Int),
+			Binding: 2,
+		}, res.Code.Code[3])
+		assertFunction(t, string("=="+types.Int), &llx.Function{
+			Type:    string(types.Bool),
+			Binding: 4,
+			Args:    []*llx.Primitive{llx.RefPrimitive(3)},
+		}, res.Code.Code[4])
+
+		assert.Equal(t, 5, len(res.Code.Code))
+	})
+}
+
 func TestCompiler_ResourceEmptyWhere(t *testing.T) {
 	compile(t, "packages.where()", func(res *llx.CodeBundle) {
 		assertFunction(t, "packages", nil, res.Code.Code[0])

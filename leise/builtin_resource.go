@@ -259,7 +259,7 @@ func compileResourceAll(c *compiler, typ types.Type, ref int32, id string, call 
 		},
 	})
 
-	// '== allLen'
+	// == allLen
 	c.Result.Code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   string("==" + types.Int),
