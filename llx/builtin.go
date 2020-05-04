@@ -198,6 +198,7 @@ func init() {
 			"[]":     {f: arrayGetIndex},
 			"{}":     {f: arrayBlockList},
 			"length": {f: arrayLength},
+			"where":  {f: arrayWhere},
 			"==":     {Compiler: compileArrayOpArray("==")},
 			"!=":     {Compiler: compileArrayOpArray("!=")},
 			"&&":     {Compiler: compileLogicalArrayOp(types.ArrayLike, "&&")},

@@ -93,6 +93,62 @@ func arrayBlockList(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 	return nil, 0, nil
 }
 
+func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	// where(array, function)
+	itemsRef := chunk.Function.Args[0]
+	items, rref, err := c.resolveValue(itemsRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	arg1 := chunk.Function.Args[1]
+	fref, ok := arg1.Ref()
+	if !ok {
+		return nil, 0, errors.New("Failed to retrieve function reference of 'where' call")
+	}
+
+	f := c.code.Functions[fref-1]
+	list := items.Value.([]interface{})
+	ct := items.Type.Child()
+	filteredList := map[int]interface{}{}
+	finishedResults := 0
+	for i := range list {
+		c.runFunctionBlock(&RawData{Type: ct, Value: list[i]}, f, func(res *RawResult) {
+			_, ok := filteredList[i]
+			if !ok {
+				finishedResults++
+			}
+
+			if res.Data.Value.(bool) {
+				filteredList[i] = list[i]
+			} else {
+				filteredList[i] = nil
+			}
+
+			if finishedResults == len(list) {
+				resList := []interface{}{}
+				for j := 0; j < len(filteredList); j++ {
+					k := filteredList[j]
+					if k != nil {
+						resList = append(resList, k)
+					}
+				}
+
+				c.cache.Store(ref, &stepCache{
+					Result: &RawData{
+						Type:  bind.Type,
+						Value: resList,
+					},
+					IsStatic: false,
+				})
+				c.triggerChain(ref)
+			}
+		})
+	}
+
+	return nil, 0, nil
+}
+
 func arrayLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	arr, ok := bind.Value.([]interface{})
 	if !ok {
