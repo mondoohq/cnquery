@@ -219,7 +219,7 @@ func TestSuggestions(t *testing.T) {
 		res, err := Compile("sshd.config.p", schema)
 		assert.Nil(t, res.Code.Entrypoints)
 		assert.Equal(t, []string{"params"}, res.Suggestions)
-		assert.Equal(t, errors.New("Cannot find field 'p' in resource sshd.config"), err)
+		assert.Equal(t, errors.New("Cannot find field 'p' in sshd.config"), err)
 	})
 
 	t.Run("field in block suggestions", func(t *testing.T) {
@@ -233,7 +233,7 @@ func TestSuggestions(t *testing.T) {
 		res, err := Compile("sshd.config.params.l", schema)
 		assert.Nil(t, res.Code.Entrypoints)
 		assert.Equal(t, []string{"length"}, res.Suggestions)
-		assert.Equal(t, errors.New("Cannot find field 'l' in resource map[string]string"), err)
+		assert.Equal(t, errors.New("Cannot find field 'l' in map[string]string"), err)
 	})
 }
 
@@ -456,12 +456,11 @@ func TestCompiler_BlockWithSelf(t *testing.T) {
 		assertPrimitive(t, &llx.Primitive{
 			Type: string(types.Resource("mondoo")),
 		}, res.Code.Functions[0].Code[0])
-		assertPrimitive(t, llx.RefPrimitive(1), res.Code.Functions[0].Code[1])
 		assertFunction(t, "version", &llx.Function{
 			Type:    string(types.String),
-			Binding: 2,
-		}, res.Code.Functions[0].Code[2])
-		assert.Equal(t, []int32{3}, res.Code.Functions[0].Entrypoints)
+			Binding: 1,
+		}, res.Code.Functions[0].Code[1])
+		assert.Equal(t, []int32{2}, res.Code.Functions[0].Entrypoints)
 	})
 }
 
