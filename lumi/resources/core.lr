@@ -526,3 +526,77 @@ aristaeos.ipinterface {
   address string
   mtu string
 }
+
+aws.iam {
+  users() []aws.iam.user
+  roles() []aws.iam.role
+  groups() []aws.iam.group
+  policies() []aws.iam.policy
+  credentialreport() []aws.iam.usercredentialreportentry
+  accountpasswordpolicy() map[string]string
+  accountsummary() map[string]int
+  virtualmfadevices() []aws.iam.virtualmfadevice
+}
+
+aws.iam.usercredentialreportentry {
+  init(properties map[string]string)
+  properties map[string]string
+}
+
+aws.iam.user {
+  arn string
+  id string
+  name string
+  createdate int
+  passwordlastused int
+  tags map[string]string
+  policies() []string
+  attachedpolicies() []aws.iam.policy
+}
+
+aws.iam.policy {
+  arn string
+  id() string
+  name() string
+  description() string
+  isattachable() bool
+  attachmentcount() int
+  createdate() int
+  updatedate() int
+  scope() string
+  versions() []aws.iam.policyversion
+
+  attachedusers() []aws.iam.user
+  attachedroles() []aws.iam.role
+  attachedgroups() []aws.iam.group
+}
+
+aws.iam.policyversion {
+  arn string
+  versionid string
+  isdefaultversion bool
+  document() string
+  createdate int
+}
+
+aws.iam.role {
+  arn string
+  id string
+  name string
+  description string
+  tags map[string]string
+  createdate int
+}
+
+aws.iam.group {
+  arn string
+  id string
+  name string
+  createdate int
+}
+
+aws.iam.virtualmfadevice {
+  serialnumber string
+  enabledate int
+  user aws.iam.user
+}
