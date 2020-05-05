@@ -2,6 +2,7 @@ package llx
 
 import (
 	"strconv"
+	"strings"
 
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/types"
@@ -16,24 +17,62 @@ type RawData struct {
 	Error error
 }
 
-func (r *RawData) String() string {
-	switch r.Type {
+func rawDataString(typ types.Type, value interface{}) string {
+	switch typ.Underlying() {
 	case types.Bool:
-		b := r.Value.(bool)
+		b := value.(bool)
 		if b {
 			return "true"
 		} else {
 			return "false"
 		}
 	case types.Int:
-		return strconv.FormatInt(r.Value.(int64), 10)
+		return strconv.FormatInt(value.(int64), 10)
 	case types.Float:
-		return strconv.FormatFloat(r.Value.(float64), 'E', -1, 64)
+		return strconv.FormatFloat(value.(float64), 'f', -1, 64)
 	case types.String:
-		return r.Value.(string)
+		return "\"" + value.(string) + "\""
+	case types.Regex:
+		return "/" + value.(string) + "/"
+	case types.ArrayLike:
+		var res strings.Builder
+		arr := value.([]interface{})
+		res.WriteString("[")
+		for i := range arr {
+			res.WriteString(rawDataString(typ.Child(), arr[i]))
+			if i != len(arr)-1 {
+				res.WriteString(",")
+			}
+		}
+		res.WriteString("]")
+		return res.String()
+	case types.MapLike:
+		switch typ.Key() {
+		case types.String:
+			var res strings.Builder
+			m := value.(map[string]interface{})
+			var i int
+			res.WriteString("{")
+			for k, v := range m {
+				res.WriteString("\"" + k + "\":")
+				res.WriteString(rawDataString(typ.Child(), v))
+				if i != len(m)-1 {
+					res.WriteString(",")
+				}
+				i++
+			}
+			res.WriteString("}")
+			return res.String()
+		default:
+			return "map[?]?"
+		}
 	default:
-		return r.Value.(string)
+		return value.(string)
 	}
+}
+
+func (r *RawData) String() string {
+	return rawDataString(r.Type, r.Value)
 }
 
 // IsTruthy indicates how the query is scored.
