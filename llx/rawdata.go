@@ -67,7 +67,7 @@ func rawDataString(typ types.Type, value interface{}) string {
 			return "map[?]?"
 		}
 	default:
-		return value.(string)
+		return "?value?"
 	}
 }
 
