@@ -4,6 +4,7 @@
 package lr
 
 import (
+	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -149,4 +150,24 @@ name.no {
 			assert.Equal(t, f, res.Resources[0].Body.Fields)
 		})
 	})
+}
+
+func TestParseCoreLR(t *testing.T) {
+	path := "../resources/core.lr"
+	raw, err := ioutil.ReadFile(path)
+	if err != nil {
+		t.Fatal("failed to load core.lr: " + err.Error())
+	}
+
+	res, err := Parse(string(raw))
+	if err != nil {
+		t.Fatal("failed to compile core.lr: " + err.Error())
+	}
+
+	godata, err := Go(res, NewCollector(path))
+	if err != nil {
+		t.Fatal("failed to go-convert core.lr: " + err.Error())
+	}
+
+	assert.NotEmpty(t, godata)
 }

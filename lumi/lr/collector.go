@@ -57,12 +57,15 @@ func (c *Collector) collect() error {
 		}
 
 		for k, v := range regexMaps {
-			m := v.FindSubmatch(res)
-			if len(m) == 0 {
-				continue
+			matches := v.FindAllSubmatch(res, -1)
+			for mi := range matches {
+				m := matches[mi]
+				if len(m) == 0 {
+					continue
+				}
+				log.Debug().Msg("found " + k + " in " + file.Name() + " for " + string(m[1]))
+				c.data.Store(k, string(m[1]))
 			}
-			log.Debug().Msg("found " + k + " in " + file.Name() + " for " + string(m[1]))
-			c.data.Store(k, string(m[1]))
 		}
 	}
 
