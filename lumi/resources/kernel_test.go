@@ -27,10 +27,17 @@ func TestResource_KernelModules(t *testing.T) {
 		assert.NotEmpty(t, res)
 	})
 
-	t.Run("test a specific kernel module's name", func(t *testing.T) {
+	t.Run("grab one kernel module", func(t *testing.T) {
 		res := testQuery(t, "kernel.modules[0].name")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, "xfrm_user", res[0].Data.Value)
+	})
+
+	t.Run("grab a kernel module by name", func(t *testing.T) {
+		res := testQuery(t, "kernel.module('xfrm_user').size")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, "36864", res[0].Data.Value)
 	})
 }

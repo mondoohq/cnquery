@@ -109,6 +109,7 @@ func (k *lumiKernel) GetModules() ([]interface{}, error) {
 		lumiKernelModule, err := k.Runtime.CreateResource("kernel.module",
 			"name", kernelModule.Name,
 			"size", kernelModule.Size,
+			"loaded", true,
 		)
 		if err != nil {
 			return nil, err
@@ -156,6 +157,7 @@ func (k *lumiKernelModule) init(args *lumi.Args) (*lumi.Args, error) {
 	// TODO: this won't be necessary if we can reference the ID
 	(*args)["name"] = name
 	(*args)["size"] = ""
+	(*args)["loaded"] = false
 
 	item := cmap[name]
 	if item != nil {
@@ -164,6 +166,7 @@ func (k *lumiKernelModule) init(args *lumi.Args) (*lumi.Args, error) {
 		// Workaround: we fill in the fields we need to make the id() method
 		// generate the same ID
 		(*args)["size"], _ = item.Size()
+		(*args)["loaded"] = true
 	}
 
 	return args, nil

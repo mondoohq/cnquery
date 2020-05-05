@@ -67,13 +67,15 @@ packages {
 
 kernel {
   parameters() map[string]string
-  modules() []kernel_module
+  modules() []kernel.module
 }
 
 kernel.module {
   init(name string)
+
   name string
   size string
+  loaded bool
 }
 
 osupdate {
