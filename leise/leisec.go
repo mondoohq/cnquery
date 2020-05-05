@@ -130,7 +130,7 @@ func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.T
 					Primitive: &llx.Primitive{Type: string(typ)},
 				}},
 			},
-			Labels: &llx.Labels{},
+			Labels: c.Result.Labels,
 		},
 		Binding: &binding{Type: typ, Ref: 1},
 	}
