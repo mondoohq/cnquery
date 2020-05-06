@@ -468,7 +468,7 @@ func (c *compiler) compileValue(val *parser.Value) (*llx.Primitive, error) {
 		}, nil
 	}
 
-	return nil, errors.New("Compile value was called with nothing. Internal error, this should not happen")
+	return llx.NilPrimitive, nil
 }
 
 func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, error) {

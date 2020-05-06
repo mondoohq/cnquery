@@ -36,6 +36,7 @@ func TestCompiler_Simple(t *testing.T) {
 		code string
 		res  *llx.Primitive
 	}{
+		{"null", llx.NilPrimitive},
 		{"false", llx.BoolPrimitive(false)},
 		{"true", llx.BoolPrimitive(true)},
 		{"123", llx.IntPrimitive(123)},
