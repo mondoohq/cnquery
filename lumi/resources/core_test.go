@@ -55,6 +55,18 @@ func testQuery(t *testing.T, query string) []*llx.RawResult {
 	return results
 }
 
+func testResultsErrors(t *testing.T, r []*llx.RawResult) bool {
+	var found bool
+	for i := range r {
+		err := r[i].Data.Error
+		if err != nil {
+			t.Error("result has error: " + err.Error())
+			found = true
+		}
+	}
+	return found
+}
+
 // StableTestRepetitions specifies the repetitions used in testing
 // to see if queries are deterministic
 var StableTestRepetitions = 5
