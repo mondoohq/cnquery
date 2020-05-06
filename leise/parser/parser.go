@@ -138,16 +138,15 @@ func (p *parser) rewind(token lexer.Token) {
 func (p *parser) parseValue() *Value {
 	switch p.token.Type {
 	case Ident:
-		if p.token.Value == "true" {
+		switch p.token.Value {
+		case "true":
 			return &trueValue
-		}
-
-		if p.token.Value == "false" {
+		case "false":
 			return &falseValue
+		default:
+			v := p.token.Value
+			return &Value{Ident: &v}
 		}
-
-		v := p.token.Value
-		return &Value{Ident: &v}
 
 	case Float:
 		v, err := strconv.ParseFloat(p.token.Value, 64)
