@@ -27,6 +27,13 @@ file {
   exists() bool
 }
 
+files.find {
+  []file
+  from string
+  xdev() bool
+  type() string
+}
+
 sshd.config {
   init(path string)
   file() file
