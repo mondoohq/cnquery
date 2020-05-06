@@ -90,11 +90,12 @@ func (r *RawData) IsTruthy() (bool, bool) {
 }
 
 func isTruthy(data interface{}, typ types.Type) (bool, bool) {
+	if data == nil && typ.Underlying().IsResource() == false {
+		return false, true
+	}
+
 	switch typ.Underlying() {
 	case types.Any:
-		if data == nil {
-			return false, false
-		}
 		if b, ok := data.(bool); ok {
 			return b, true
 		}
@@ -102,6 +103,9 @@ func isTruthy(data interface{}, typ types.Type) (bool, bool) {
 			return isTruthy(d.Value, d.Type)
 		}
 		return false, false
+
+	case types.Nil:
+		return false, true
 
 	case types.Bool:
 		return data.(bool), true

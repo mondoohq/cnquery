@@ -21,7 +21,7 @@ func TestRawData_String(t *testing.T) {
 		{RegexData("ex"), "/ex/"},
 		{ArrayData([]interface{}{"a", "b"}, types.String), "[\"a\",\"b\"]"},
 		{MapData(map[string]interface{}{"a": "b"}, types.String), "{\"a\":\"b\"}"},
-		// a few casses of implicit nil:
+		// implicit nil:
 		{&RawData{types.String, nil, nil}, "<null>"},
 	}
 
@@ -35,6 +35,7 @@ func TestTruthy(t *testing.T) {
 		data *RawData
 		res  bool
 	}{
+		{NilData, false},
 		{BoolTrue, true},
 		{BoolFalse, false},
 		{IntData(0), false},
@@ -52,6 +53,8 @@ func TestTruthy(t *testing.T) {
 		{MapData(map[string]interface{}{"a": false}, types.Bool), false},
 		{MapData(map[string]interface{}{"a": true}, types.Bool), true},
 		{ResourceData(nil, "something"), true},
+		// implicit nil:
+		{&RawData{types.String, nil, nil}, false},
 	}
 
 	for i := range tests {
