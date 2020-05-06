@@ -18,6 +18,10 @@ type RawData struct {
 }
 
 func rawDataString(typ types.Type, value interface{}) string {
+	if value == nil {
+		return "<null>"
+	}
+
 	switch typ.Underlying() {
 	case types.Bool:
 		b := value.(bool)
