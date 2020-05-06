@@ -78,20 +78,6 @@ func opStringCmpString(left interface{}, right interface{}) bool {
 	return left.(string) == right.(string)
 }
 
-func opStringCmpBool(left interface{}, right interface{}) bool {
-	if right.(bool) == true {
-		return left.(string) == "true"
-	}
-	return left.(string) == "false"
-}
-
-func opBoolCmpString(left interface{}, right interface{}) bool {
-	if left.(bool) == true {
-		return right.(string) == "true"
-	}
-	return right.(string) == "false"
-}
-
 func opStringCmpInt(left interface{}, right interface{}) bool {
 	return left.(string) == strconv.FormatInt(right.(int64), 10)
 }
@@ -184,7 +170,47 @@ func stringNotString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (
 }
 
 // string vs other types
+// string ==/!= nil
+
+func opStringCmpNil(left interface{}, right interface{}) bool {
+	return left == nil
+}
+
+func opNilCmpString(left interface{}, right interface{}) bool {
+	return right == nil
+}
+
+func stringCmpNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opStringCmpNil)
+}
+
+func stringNotNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opStringCmpNil)
+}
+
+func nilCmpString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opNilCmpString)
+}
+
+func nilNotString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opNilCmpString)
+}
+
 // string ==/!= bool
+
+func opStringCmpBool(left interface{}, right interface{}) bool {
+	if right.(bool) == true {
+		return left.(string) == "true"
+	}
+	return left.(string) == "false"
+}
+
+func opBoolCmpString(left interface{}, right interface{}) bool {
+	if left.(bool) == true {
+		return right.(string) == "true"
+	}
+	return right.(string) == "false"
+}
 
 func stringCmpBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opStringCmpBool)
@@ -309,6 +335,84 @@ func regexCmpFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 
 func regexNotFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataNotOp(c, bind, chunk, ref, opRegexCmpFloat)
+}
+
+// bool ==/!= nil
+
+func opBoolCmpNil(left interface{}, right interface{}) bool {
+	return left == nil
+}
+
+func opNilCmpBool(left interface{}, right interface{}) bool {
+	return right == nil
+}
+
+func boolCmpNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opBoolCmpNil)
+}
+
+func boolNotNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opBoolCmpNil)
+}
+
+func nilCmpBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opNilCmpBool)
+}
+
+func nilNotBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opNilCmpBool)
+}
+
+// int ==/!= nil
+
+func opIntCmpNil(left interface{}, right interface{}) bool {
+	return left == nil
+}
+
+func opNilCmpInt(left interface{}, right interface{}) bool {
+	return right == nil
+}
+
+func intCmpNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opIntCmpNil)
+}
+
+func intNotNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opIntCmpNil)
+}
+
+func nilCmpInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opNilCmpInt)
+}
+
+func nilNotInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opNilCmpInt)
+}
+
+// float ==/!= nil
+
+func opFloatCmpNil(left interface{}, right interface{}) bool {
+	return left == nil
+}
+
+func opNilCmpFloat(left interface{}, right interface{}) bool {
+	return right == nil
+}
+
+func floatCmpNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opFloatCmpNil)
+}
+
+func floatNotNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opFloatCmpNil)
+}
+
+func nilCmpFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opNilCmpFloat)
+}
+
+func nilNotFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opNilCmpFloat)
 }
 
 // string </>/<=/>= string
