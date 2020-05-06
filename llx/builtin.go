@@ -21,6 +21,8 @@ var BuiltinFunctions map[types.Type]map[string]chunkHandler
 func init() {
 	BuiltinFunctions = map[types.Type]map[string]chunkHandler{
 		types.Bool: {
+			string("==" + types.Nil):                 {f: boolCmpNil, Label: "=="},
+			string("!=" + types.Nil):                 {f: boolNotNil, Label: "!="},
 			string("==" + types.Bool):                {f: boolCmpBool, Label: "=="},
 			string("!=" + types.Bool):                {f: boolNotBool, Label: "!="},
 			string("==" + types.String):              {f: boolCmpString, Label: "=="},
@@ -45,6 +47,8 @@ func init() {
 			string("||" + types.ArrayLike):           {f: boolOrArray, Label: "||"},
 		},
 		types.Int: {
+			string("==" + types.Nil):                 {f: intCmpNil, Label: "=="},
+			string("!=" + types.Nil):                 {f: intNotNil, Label: "!="},
 			string("==" + types.Int):                 {f: intCmpInt, Label: "=="},
 			string("!=" + types.Int):                 {f: intNotInt, Label: "!="},
 			string("==" + types.String):              {f: intCmpString, Label: "=="},
@@ -81,6 +85,8 @@ func init() {
 			string("||" + types.ArrayLike):           {f: intOrArray, Label: "||"},
 		},
 		types.Float: {
+			string("==" + types.Nil):                 {f: floatCmpNil, Label: "=="},
+			string("!=" + types.Nil):                 {f: floatNotNil, Label: "!="},
 			string("==" + types.Float):               {f: floatCmpFloat, Label: "=="},
 			string("!=" + types.Float):               {f: floatNotFloat, Label: "!="},
 			string("==" + types.String):              {f: floatCmpString, Label: "=="},
@@ -117,6 +123,8 @@ func init() {
 			string("||" + types.ArrayLike):           {f: floatOrArray, Label: "||"},
 		},
 		types.String: {
+			string("==" + types.Nil):                 {f: stringCmpNil, Label: "=="},
+			string("!=" + types.Nil):                 {f: stringNotNil, Label: "!="},
 			string("==" + types.String):              {f: stringCmpString, Label: "=="},
 			string("!=" + types.String):              {f: stringNotString, Label: "!="},
 			string("==" + types.Regex):               {f: stringCmpRegex, Label: "=="},
@@ -161,6 +169,8 @@ func init() {
 			string("||" + types.ArrayLike):           {f: stringOrArray, Label: "||"},
 		},
 		types.Regex: {
+			string("==" + types.Nil):                 {f: stringCmpNil, Label: "=="},
+			string("!=" + types.Nil):                 {f: stringNotNil, Label: "!="},
 			string("==" + types.Regex):               {f: stringCmpString, Label: "=="},
 			string("!=" + types.Regex):               {f: stringNotString, Label: "!="},
 			string("==" + types.Bool):                {f: regexCmpBool, Label: "=="},
