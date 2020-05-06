@@ -102,50 +102,61 @@ func isTruthy(data interface{}, typ types.Type) (bool, bool) {
 	case types.Bool:
 		return data.(bool), true
 
+	case types.Int:
+		return data.(int64) != 0, true
+
+	case types.Float:
+		return data.(float64) != 0, true
+
+	case types.String:
+		return data.(string) != "", true
+
+	case types.Regex:
+		return data.(string) != "", true
+
 	case types.ArrayLike:
 		arr := data.([]interface{})
-		found := false
-		res := false
+		res := true
 
 		for i := range arr {
 			t1, f1 := isTruthy(arr[i], typ.Child())
 			if f1 {
-				found = true
 				res = res && t1
 			}
 		}
 
-		return res, found
+		return res, true
 
 	case types.MapLike:
-		found := false
-		res := false
+		res := true
 
-		if typ.Key() == types.String {
+		switch typ.Key() {
+		case types.String:
 			m := data.(map[string]interface{})
 			for _, v := range m {
 				t1, f1 := isTruthy(v, typ.Child())
 				if f1 {
-					found = true
 					res = res && t1
 				}
 			}
-			return res, found
-		}
 
-		if typ.Key() == types.Int {
+		case types.Int:
 			m := data.(map[int]interface{})
 			for _, v := range m {
 				t1, f1 := isTruthy(v, typ.Child())
 				if f1 {
-					found = true
 					res = res && t1
 				}
 			}
-			return res, found
+
+		default:
+			return false, false
 		}
 
-		return false, false
+		return res, true
+
+	case types.ResourceLike:
+		return true, true
 
 	default:
 		return false, false
