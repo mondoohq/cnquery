@@ -7,6 +7,11 @@ stdout = "x86_64"
 [commands."uname -r"]
 stdout = "4.19.76-linuxkit"
 
+[commands."find \"/etc\" -xdev"]
+stdout = """/etc/arch-release
+/etc/ssh/sshd_config
+"""
+
 [files."/etc/arch-release"]
 content = ""
 
