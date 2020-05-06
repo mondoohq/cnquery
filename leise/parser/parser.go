@@ -90,6 +90,7 @@ var trueBool = true
 var falseBool = false
 var trueValue = Value{Bool: &trueBool}
 var falseValue = Value{Bool: &falseBool}
+var nilValue = Value{}
 
 type parser struct {
 	token      lexer.Token
@@ -143,6 +144,8 @@ func (p *parser) parseValue() *Value {
 			return &trueValue
 		case "false":
 			return &falseValue
+		case "null":
+			return &nilValue
 		default:
 			v := p.token.Value
 			return &Value{Ident: &v}

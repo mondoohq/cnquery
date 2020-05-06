@@ -63,6 +63,7 @@ func TestParser_ParseValues(t *testing.T) {
 		code string
 		res  *Expression
 	}{
+		{"null", &Expression{Operand: &Operand{Value: &nilValue}}},
 		{"true", &Expression{Operand: &Operand{Value: vBool(true)}}},
 		{"false", &Expression{Operand: &Operand{Value: vBool(false)}}},
 		{"name", &Expression{Operand: &Operand{Value: vIdent("name")}}},
