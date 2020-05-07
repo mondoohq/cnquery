@@ -45,6 +45,11 @@ const (
 	FunctionLike = Type(byteFunction)
 )
 
+// IsEmpty returns true if the type has no information
+func (typ Type) IsEmpty() bool {
+	return typ == ""
+}
+
 // Array for list of values
 func Array(typ Type) Type {
 	return Type(byteArray) + typ
