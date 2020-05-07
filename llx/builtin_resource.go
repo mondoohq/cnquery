@@ -44,6 +44,8 @@ func resourceWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 				filteredList[i] = nil
 			}
 
+			// log.Debug().Int("cur", finishedResults).Int("max", len(list)).Msg("finished one where-result")
+
 			if finishedResults == len(list) {
 				resList := []interface{}{}
 				for j := 0; j < len(filteredList); j++ {
@@ -58,15 +60,15 @@ func resourceWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 					c.cache.Store(ref, &stepCache{Result: &RawData{
 						Error: errors.New("Failed to create filter result resource: " + err.Error()),
 					}})
-					return
+				} else {
+					c.cache.Store(ref, &stepCache{
+						Result: &RawData{
+							Type:  bind.Type,
+							Value: resResource,
+						},
+						IsStatic: false,
+					})
 				}
-				c.cache.Store(ref, &stepCache{
-					Result: &RawData{
-						Type:  bind.Type,
-						Value: resResource,
-					},
-					IsStatic: false,
-				})
 				c.triggerChain(ref)
 			}
 		})
