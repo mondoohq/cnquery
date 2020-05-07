@@ -76,7 +76,6 @@ func (s *lumiFile) GetExists() (bool, error) {
 	path, _ := s.Path()
 
 	fs := s.Runtime.Motor.Transport.FS()
-
 	afs := &afero.Afero{Fs: fs}
 	return afs.Exists(path)
 }
@@ -88,12 +87,9 @@ func (s *lumiFile) GetPermissions() (FilePermissions, error) {
 		return nil, err
 	}
 
-	file, err := s.Runtime.Motor.Transport.File(path)
-	if err != nil {
-		return nil, err
-	}
-
-	stat, err := file.Stat()
+	fs := s.Runtime.Motor.Transport.FS()
+	afs := &afero.Afero{Fs: fs}
+	stat, err := afs.Stat(path)
 	if err != nil {
 		return nil, err
 	}
