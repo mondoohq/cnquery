@@ -80,3 +80,78 @@ func (s *lumiFile) GetExists() (bool, error) {
 	afs := &afero.Afero{Fs: fs}
 	return afs.Exists(path)
 }
+
+func (s *lumiFile) GetPermissions() (FilePermissions, error) {
+	// TODO: this is a one-off right now, turn it into a watcher
+	path, err := s.Path()
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := s.Runtime.Motor.Transport.File(path)
+	if err != nil {
+		return nil, err
+	}
+
+	stat, err := file.Stat()
+	if err != nil {
+		return nil, err
+	}
+	mode := stat.Mode()
+
+	res, err := s.Runtime.CreateResource("file.permissions",
+		"user_readable", mode&00400 != 0,
+		"user_writeable", mode&00200 != 0,
+		"user_executable", mode&00100 != 0,
+		"group_readable", mode&00040 != 0,
+		"group_writeable", mode&00020 != 0,
+		"group_executable", mode&00010 != 0,
+		"other_readable", mode&00004 != 0,
+		"other_writeable", mode&00002 != 0,
+		"other_executable", mode&00001 != 0,
+		"suid", mode&04000 != 0,
+		"sgid", mode&02000 != 0,
+		"sticky", mode&01000 != 0,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.(FilePermissions), nil
+}
+
+func (l *lumiFilePermissions) id() (string, error) {
+	res := []byte("---------")
+
+	if i, _ := l.User_readable(); i {
+		res[0] = 'r'
+	}
+	if i, _ := l.User_writeable(); i {
+		res[1] = 'w'
+	}
+	if i, _ := l.User_executable(); i {
+		res[2] = 'x'
+	}
+
+	if i, _ := l.Group_readable(); i {
+		res[3] = 'r'
+	}
+	if i, _ := l.Group_writeable(); i {
+		res[4] = 'w'
+	}
+	if i, _ := l.Group_executable(); i {
+		res[5] = 'x'
+	}
+
+	if i, _ := l.Other_readable(); i {
+		res[6] = 'r'
+	}
+	if i, _ := l.Other_writeable(); i {
+		res[7] = 'w'
+	}
+	if i, _ := l.Other_executable(); i {
+		res[8] = 'x'
+	}
+
+	return string(res), nil
+}

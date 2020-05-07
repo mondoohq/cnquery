@@ -25,6 +25,22 @@ file {
   path string
   content(path) string
   exists() bool
+  permissions() file.permissions
+}
+
+file.permissions {
+  user_readable bool
+  user_writeable bool
+  user_executable bool
+  group_readable bool
+  group_writeable bool
+  group_executable bool
+  other_readable bool
+  other_writeable bool
+  other_executable bool
+  suid bool
+  sgid bool
+  sticky bool
 }
 
 files.find {
