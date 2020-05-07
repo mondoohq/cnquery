@@ -145,10 +145,16 @@ func new` + r.interfaceName() + `(runtime *lumi.Runtime, args *lumi.Args) (inter
 	// User hooks
 	var err error
 	res := ` + r.structName() + `{runtime.NewResource("` + r.ID + `")}
-	` + initcall + `// assign all named fields
+	` + initcall + `// check if an ID was provided to look up an existing resource
+	if id, ok := (*args)["__id"]; ok {
+		res.Resource.Id = id.(string)
+		return &res, nil
+	}
+
+	// assign all named fields
 	for name, val := range *args {
 		switch name {
-` + args + `	default:
+` + args + `		default:
 			return nil, errors.New("Initialized ` + r.ID + ` with unknown argument " + name)
 		}
 		res.Cache.Store(name, &lumi.CacheEntry{Data: val, Valid: true, Timestamp: time.Now().Unix()})
