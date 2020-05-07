@@ -17,7 +17,7 @@ func resourceWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 		return nil, rref, err
 	}
 
-	resource := bind.Value.(lumi.ResourceType).LumiResource()
+	resource := bind.Value.(lumi.ResourceType)
 
 	arg1 := chunk.Function.Args[1]
 	fref, ok := arg1.Ref()
@@ -55,7 +55,21 @@ func resourceWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 					}
 				}
 
-				resResource, err := c.runtime.CreateResourceWithID(resource.Name, f.Id, "list", resList)
+				// get all mandatory args
+				lumiResource := resource.LumiResource()
+				resourceInfo := lumiResource.Runtime.Registry.Resources[lumiResource.Name]
+				args := []interface{}{
+					"list", resList, "__id", f.Id,
+				}
+				for k, v := range resourceInfo.Fields {
+					if k != "list" && v.Mandatory {
+						if v, err := resource.Field(k); err == nil {
+							args = append(args, k, v)
+						}
+					}
+				}
+
+				resResource, err := c.runtime.CreateResourceWithID(lumiResource.Name, f.Id, args...)
 				if err != nil {
 					c.cache.Store(ref, &stepCache{Result: &RawData{
 						Error: errors.New("Failed to create filter result resource: " + err.Error()),
