@@ -111,7 +111,6 @@ func (b *goBuilder) goFactory(r *Resource) {
 			if _, ok := val.(%s); !ok {
 				return nil, errors.New("Failed to initialize \"%s\", its \"%s\" argument has the wrong type (expected type \"%s\")")
 			}
-			break
 `, f.ID, f.Type.goType(), r.ID, f.ID, f.Type.goType())
 	}
 
@@ -150,19 +149,29 @@ func new` + r.interfaceName() + `(runtime *lumi.Runtime, args *lumi.Args) (inter
 	var err error
 	res := ` + r.structName() + `{runtime.NewResource("` + r.ID + `")}
 	` + initcall + `// assign all named fields
+	var id string
 	for name, val := range *args {
 		switch name {
-` + args + `		default:
+` + args + `		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"` + r.ID + `\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
 			return nil, errors.New("Initialized ` + r.ID + ` with unknown argument " + name)
 		}
 		res.Cache.Store(name, &lumi.CacheEntry{Data: val, Valid: true, Timestamp: time.Now().Unix()})
 	}
 
 	// Get the ID
-	res.Resource.Id, err = res.id()
-	if err != nil {
-		return nil, err
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	return &res, nil
 }
 
