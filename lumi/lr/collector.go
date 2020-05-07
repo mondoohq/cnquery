@@ -33,7 +33,7 @@ func NewCollector(lrFile string) *Collector {
 }
 
 var regexMaps = map[string]*regexp.Regexp{
-	"init": regexp.MustCompile("func \\(\\S+ \\*(lumi\\S+)\\) init\\(\\S+ \\*lumi.Args\\) \\(\\*lumi.Args, error\\) {"),
+	"init": regexp.MustCompile("func \\(\\S+ \\*(lumi\\S+)\\) init\\(\\S+ \\*lumi.Args\\) \\(\\*lumi.Args, \\S+, error\\) {"),
 }
 
 func (c *Collector) collect() error {
