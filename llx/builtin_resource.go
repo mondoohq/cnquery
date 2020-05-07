@@ -37,7 +37,8 @@ func resourceWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 				finishedResults++
 			}
 
-			if res.Data.Value.(bool) {
+			isTruthy, _ := res.Data.IsTruthy()
+			if isTruthy {
 				filteredList[i] = list[i]
 			} else {
 				filteredList[i] = nil
