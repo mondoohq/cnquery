@@ -14,39 +14,44 @@ var (
 	PKG_IDENTIFIER = regexp.MustCompile(`^(.*):\/\/(.*)\/(.*)\/(.*)$`)
 )
 
-func (p *lumiPackage) init(args *lumi.Args) (*lumi.Args, error) {
+func (p *lumiPackage) init(args *lumi.Args) (*lumi.Args, Package, error) {
 	if len(*args) > 2 {
-		return args, nil
+		return args, nil, nil
 	}
 
 	nameRaw := (*args)["name"]
 	if nameRaw == nil {
-		return args, nil
+		return args, nil, nil
 	}
 
 	name, ok := nameRaw.(string)
 	if !ok {
-		return args, nil
+		return args, nil, nil
 	}
 
 	obj, err := p.Runtime.CreateResource("packages")
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	packages := obj.(Packages)
 
 	_, err = packages.List()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	c, ok := packages.LumiResource().Cache.Load("_map")
 	if !ok {
-		return nil, errors.New("Cannot get map of packages")
+		return nil, nil, errors.New("Cannot get map of packages")
 	}
 	cmap := c.Data.(map[string]Package)
 
-	// TODO: this won't be necessary if we can reference the ID
+	pkg := cmap[name]
+	if pkg != nil {
+		return nil, pkg, nil
+	}
+
+	// if the package cannot be found, we init it as an empty package
 	(*args)["version"] = ""
 	(*args)["arch"] = ""
 	(*args)["format"] = ""
@@ -55,19 +60,7 @@ func (p *lumiPackage) init(args *lumi.Args) (*lumi.Args, error) {
 	(*args)["available"] = ""
 	(*args)["installed"] = false
 
-	pkg := cmap[name]
-	if pkg != nil {
-		// TODO: do this instead of duplicating it!
-		// (*args)["id"] = pkg.LumiResource().Id
-		// Workaround: we fill in the fields we need to make the id() method
-		// generate the same ID
-		(*args)["version"], _ = pkg.Version()
-		(*args)["arch"], _ = pkg.Arch()
-		(*args)["format"], _ = pkg.Format()
-		(*args)["epoch"], _ = pkg.Epoch()
-	}
-
-	return args, nil
+	return args, nil, nil
 }
 
 // A system package cannot be installed twice but there are edge cases:
@@ -94,10 +87,6 @@ func (p *lumiPackage) GetOutdated() (bool, error) {
 		return true, nil
 	}
 	return false, nil
-}
-
-func (p *lumiPackages) init(args *lumi.Args) (*lumi.Args, error) {
-	return args, nil
 }
 
 func (p *lumiPackages) id() (string, error) {

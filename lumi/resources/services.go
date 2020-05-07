@@ -17,7 +17,7 @@ const (
 	SERVICE_CACHE_ENABLED     = "enabled"
 )
 
-func (p *lumiService) init(args *lumi.Args) (*lumi.Args, error) {
+func (p *lumiService) init(args *lumi.Args) (*lumi.Args, Service, error) {
 	// verify that a service with that name exist
 	nameValue, ok := (*args)["name"]
 
@@ -29,20 +29,20 @@ func (p *lumiService) init(args *lumi.Args) (*lumi.Args, error) {
 	if ok && !iok {
 		name, ok := nameValue.(string)
 		if !ok {
-			return nil, errors.New("name has invalid type")
+			return nil, nil, errors.New("name has invalid type")
 		}
 
 		osm, err := services.ResolveManager(p.Runtime.Motor)
 		if err != nil {
-			return nil, errors.New("cannot find service manager")
+			return nil, nil, errors.New("cannot find service manager")
 		}
 
 		_, err = osm.Service(name)
 		if err != nil {
-			return nil, errors.New("service " + name + " does not exist")
+			return nil, nil, errors.New("service " + name + " does not exist")
 		}
 	}
-	return args, nil
+	return args, nil, nil
 }
 
 func (p *lumiService) id() (string, error) {
@@ -144,10 +144,6 @@ func (p *lumiService) gatherServiceInfo(fn ServiceCallbackTrigger) error {
 	}
 
 	return nil
-}
-
-func (p *lumiServices) init(args *lumi.Args) (*lumi.Args, error) {
-	return args, nil
 }
 
 func (p *lumiServices) id() (string, error) {

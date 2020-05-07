@@ -11,13 +11,13 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/processes"
 )
 
-func (p *lumiProcess) init(args *lumi.Args) (*lumi.Args, error) {
+func (p *lumiProcess) init(args *lumi.Args) (*lumi.Args, Process, error) {
 	pidValue, ok := (*args)["pid"]
 
 	// do not try to resolve the process if we already go all parameters
 	// NOTE: this happens for a call like processes.list
 	if len(*args) > 2 {
-		return args, nil
+		return args, nil, nil
 	}
 
 	// check if additional information is already provided,
@@ -28,22 +28,22 @@ func (p *lumiProcess) init(args *lumi.Args) (*lumi.Args, error) {
 	if ok {
 		pid, ok := pidValue.(int64)
 		if !ok {
-			return nil, errors.New("pid has invalid type")
+			return nil, nil, errors.New("pid has invalid type")
 		}
 
 		// lets do minimal IO in initialize
 		opm, err := processes.ResolveManager(p.Runtime.Motor)
 		if err != nil {
-			return nil, errors.New("cannot find process manager")
+			return nil, nil, errors.New("cannot find process manager")
 		}
 
 		// check that the PID exists
 		exists, err := opm.Exists(pid)
 		if err != nil || exists != true {
-			return nil, errors.New("process " + strconv.FormatInt(pid, 10) + " does not exist")
+			return nil, nil, errors.New("process " + strconv.FormatInt(pid, 10) + " does not exist")
 		}
 	}
-	return args, nil
+	return args, nil, nil
 }
 
 func (p *lumiProcess) id() (string, error) {
@@ -52,10 +52,6 @@ func (p *lumiProcess) id() (string, error) {
 		return "", err
 	}
 	return strconv.FormatInt(pid, 10), nil
-}
-
-func (p *lumiProcesses) init(args *lumi.Args) (*lumi.Args, error) {
-	return args, nil
 }
 
 func (p *lumiProcess) GetState() (string, error) {

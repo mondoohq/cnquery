@@ -12,22 +12,22 @@ import (
 	"go.mondoo.io/mondoo/lumi"
 )
 
-func (s *lumiSshdConfig) init(args *lumi.Args) (*lumi.Args, error) {
+func (s *lumiSshdConfig) init(args *lumi.Args) (*lumi.Args, SshdConfig, error) {
 	if x, ok := (*args)["path"]; ok {
 		path, ok := x.(string)
 		if !ok {
-			return nil, errors.New("Wrong type for 'path' in sshd.config initialization, it must be a string")
+			return nil, nil, errors.New("Wrong type for 'path' in sshd.config initialization, it must be a string")
 		}
 
 		f, err := s.Runtime.CreateResource("file", "path", path)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		(*args)["file"] = f
 		delete(*args, "path")
 	}
 
-	return args, nil
+	return args, nil, nil
 }
 
 const defaultSshdConfig = "/etc/ssh/sshd_config"

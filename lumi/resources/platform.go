@@ -13,7 +13,7 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/platformid"
 )
 
-func (s *lumiPlatform) init(args *lumi.Args) (*lumi.Args, error) {
+func (s *lumiPlatform) init(args *lumi.Args) (*lumi.Args, Platform, error) {
 	platform, err := s.Runtime.Motor.Platform()
 	if err == nil {
 		(*args)["name"] = platform.Name
@@ -30,7 +30,7 @@ func (s *lumiPlatform) init(args *lumi.Args) (*lumi.Args, error) {
 	} else {
 		log.Error().Err(err).Msg("could not determine platform")
 	}
-	return args, nil
+	return args, nil, nil
 }
 
 func (s *lumiPlatform) id() (string, error) {
