@@ -132,9 +132,13 @@ func (b *goBuilder) goFactory(r *Resource) {
 
 	initcall := ""
 	if b.collector.HasInit(r.structName()) {
-		initcall = `args, err = res.init(args)
+		initcall = `var existing ` + r.interfaceName() + `
+	args, existing, err = res.init(args)
 	if err != nil {
 		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
 	}
 
 	`
@@ -145,13 +149,7 @@ func new` + r.interfaceName() + `(runtime *lumi.Runtime, args *lumi.Args) (inter
 	// User hooks
 	var err error
 	res := ` + r.structName() + `{runtime.NewResource("` + r.ID + `")}
-	` + initcall + `// check if an ID was provided to look up an existing resource
-	if id, ok := (*args)["__id"]; ok {
-		res.Resource.Id = id.(string)
-		return &res, nil
-	}
-
-	// assign all named fields
+	` + initcall + `// assign all named fields
 	for name, val := range *args {
 		switch name {
 ` + args + `		default:

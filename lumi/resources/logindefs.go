@@ -9,22 +9,22 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/logindefs"
 )
 
-func (s *lumiLogindefs) init(args *lumi.Args) (*lumi.Args, error) {
+func (s *lumiLogindefs) init(args *lumi.Args) (*lumi.Args, Logindefs, error) {
 	if x, ok := (*args)["path"]; ok {
 		path, ok := x.(string)
 		if !ok {
-			return nil, errors.New("Wrong type for 'path' in logindefs initialization, it must be a string")
+			return nil, nil, errors.New("Wrong type for 'path' in logindefs initialization, it must be a string")
 		}
 
 		f, err := s.Runtime.CreateResource("file", "path", path)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		(*args)["file"] = f
 		delete(*args, "path")
 	}
 
-	return args, nil
+	return args, nil, nil
 }
 
 const defaultLoginDefsConfig = "/etc/login.defs"

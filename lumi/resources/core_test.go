@@ -139,7 +139,7 @@ func TestStableCore(t *testing.T) {
 	}
 }
 
-func TestArray_Where(t *testing.T) {
+func TestArray_Block(t *testing.T) {
 	tests := []struct {
 		code         string
 		expectations interface{}

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/packages"
 	"go.mondoo.io/mondoo/lumi/resources/uptime"
 )
@@ -81,10 +80,6 @@ func (p *lumiOs) GetUptime() (int64, error) {
 // func (p *lumiOs) GetRebootpending() ([]interface{}, error) {
 // 	return nil, errors.New("not implemented")
 // }
-
-func (p *lumiOsupdate) init(args *lumi.Args) (*lumi.Args, error) {
-	return args, nil
-}
 
 func (p *lumiOsupdate) id() (string, error) {
 	name, _ := p.Name()

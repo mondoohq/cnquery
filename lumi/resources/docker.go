@@ -7,13 +7,8 @@ import (
 
 	docker_types "github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
-	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/motoros/local"
 )
-
-func (p *lumiDocker) init(args *lumi.Args) (*lumi.Args, error) {
-	return args, nil
-}
 
 func (p *lumiDocker) id() (string, error) {
 	return "docker", nil
@@ -112,17 +107,9 @@ func (p *lumiDocker) GetContainer() ([]interface{}, error) {
 	return container, nil
 }
 
-func (p *lumiDocker_image) init(args *lumi.Args) (*lumi.Args, error) {
-	return args, nil
-}
-
 func (p *lumiDocker_image) id() (string, error) {
 	id, _ := p.Id()
 	return id, nil
-}
-
-func (p *lumiDocker_container) init(args *lumi.Args) (*lumi.Args, error) {
-	return args, nil
 }
 
 func (p *lumiDocker_container) id() (string, error) {

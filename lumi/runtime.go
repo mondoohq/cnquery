@@ -130,6 +130,8 @@ func (ctx *Runtime) CreateResourceWithID(name string, id string, args ...interfa
 		return ctx.createMockResource(name, r)
 	}
 
+	// factory not only creates a resource, but may also provide an empty resource
+	// with the `Id` field set to look up an existing resource
 	res, err := r.Factory(ctx, argsMap)
 	if err != nil {
 		return nil, errors.New("Failed to create resource '" + name + "': " + err.Error())

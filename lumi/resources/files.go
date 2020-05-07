@@ -20,12 +20,12 @@ var findTypes = map[string]string{
 	"link":      "l",
 }
 
-func (l *lumiFilesFind) init(args *lumi.Args) (*lumi.Args, error) {
+func (l *lumiFilesFind) init(args *lumi.Args) (*lumi.Args, FilesFind, error) {
 	if ((*args)["xdev"]) == nil {
 		(*args)["xdev"] = false
 	}
 
-	return args, nil
+	return args, nil, nil
 }
 
 func (l *lumiFilesFind) id() (string, error) {

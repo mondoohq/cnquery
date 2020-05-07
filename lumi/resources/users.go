@@ -31,7 +31,7 @@ func copyUserDataToLumiArgs(user *users.User, args *lumi.Args) error {
 	return nil
 }
 
-func (u *lumiUser) init(args *lumi.Args) (*lumi.Args, error) {
+func (u *lumiUser) init(args *lumi.Args) (*lumi.Args, User, error) {
 	idValue, ok := (*args)[USER_CACHE_ID]
 
 	// check if additional userdata is provided
@@ -43,7 +43,7 @@ func (u *lumiUser) init(args *lumi.Args) (*lumi.Args, error) {
 		// lets do minimal IO in initialize
 		um, err := users.ResolveManager(u.Runtime.Motor)
 		if err != nil {
-			return nil, errors.New("user> cannot find user manager")
+			return nil, nil, errors.New("user> cannot find user manager")
 		}
 
 		id := idValue.(string)
@@ -51,7 +51,7 @@ func (u *lumiUser) init(args *lumi.Args) (*lumi.Args, error) {
 		// search for the user
 		user, err := um.User(id)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		// copy parsed user info to lumi args
@@ -59,19 +59,19 @@ func (u *lumiUser) init(args *lumi.Args) (*lumi.Args, error) {
 	} else if uok && !ok {
 		username, ok := usernameValue.(string)
 		if !ok {
-			return nil, errors.New("user> username has invalid type")
+			return nil, nil, errors.New("user> username has invalid type")
 		}
 
 		// we go a username as an initizator, which eg. is used by the groups resource
 		// lets do minimal IO in initialize
 		um, err := users.ResolveManager(u.Runtime.Motor)
 		if err != nil {
-			return nil, errors.New("user> cannot find user manager")
+			return nil, nil, errors.New("user> cannot find user manager")
 		}
 
 		userList, err := um.List()
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		var foundUser *users.User
@@ -86,22 +86,18 @@ func (u *lumiUser) init(args *lumi.Args) (*lumi.Args, error) {
 		}
 
 		if foundUser == nil {
-			return nil, errors.New("user> " + username + " does not exist")
+			return nil, nil, errors.New("user> " + username + " does not exist")
 		}
 
 		// copy parsed user info to lumi args
 		copyUserDataToLumiArgs(foundUser, args)
 	}
 
-	return args, nil
+	return args, nil, nil
 }
 
 func (u *lumiUser) id() (string, error) {
 	return u.Id()
-}
-
-func (u *lumiUsers) init(args *lumi.Args) (*lumi.Args, error) {
-	return args, nil
 }
 
 func (u *lumiUsers) id() (string, error) {

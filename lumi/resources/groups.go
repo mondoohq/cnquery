@@ -8,63 +8,55 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/groups"
 )
 
-func (g *lumiGroup) init(args *lumi.Args) (*lumi.Args, error) {
+func (g *lumiGroup) init(args *lumi.Args) (*lumi.Args, Group, error) {
 	if len(*args) > 2 {
-		return args, nil
+		return args, nil, nil
 	}
 
 	id := (*args)["id"]
 	if id == nil {
-		return args, nil
+		return args, nil, nil
 	}
 
 	idS, ok := id.(string)
 	if !ok {
-		return args, nil
+		return args, nil, nil
 	}
 
 	// initialize groups resource
 	obj, err := g.Runtime.CreateResource("groups")
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	groups := obj.(Groups)
 
 	_, err = groups.List()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	c, ok := groups.LumiResource().Cache.Load("_map")
 	if !ok {
-		return nil, errors.New("Cannot get map of packages")
+		return nil, nil, errors.New("Cannot get map of packages")
 	}
 	cmap := c.Data.(map[string]Group)
 
 	group := cmap[idS]
-	if group == nil {
-		(*args)["gid"] = ""
-		(*args)["sid"] = ""
-		(*args)["name"] = ""
-		(*args)["members"] = ""
-	} else {
-		// TODO: do this instead of duplicating it!
-		// (*args)["id"] = pkg.LumiResource().Id
-		(*args)["gid"], _ = group.Gid()
-		(*args)["sid"], _ = group.Sid()
-		(*args)["name"], _ = group.Name()
-		(*args)["members"], _ = group.Members()
+	if group != nil {
+		return nil, group, nil
 	}
-	return args, nil
+
+	(*args)["gid"] = ""
+	(*args)["sid"] = ""
+	(*args)["name"] = ""
+	(*args)["members"] = ""
+
+	return args, nil, nil
 
 }
 
 func (g *lumiGroup) id() (string, error) {
 	return g.Id()
-}
-
-func (g *lumiGroups) init(args *lumi.Args) (*lumi.Args, error) {
-	return args, nil
 }
 
 func (g *lumiGroups) id() (string, error) {

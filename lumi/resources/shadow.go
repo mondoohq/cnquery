@@ -2,7 +2,6 @@ package resources
 
 import (
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/shadow"
 )
 
@@ -10,10 +9,6 @@ const defaultShadowConfig = "/etc/shadow"
 
 func (s *lumiShadow) id() (string, error) {
 	return defaultShadowConfig, nil
-}
-
-func (se *lumiShadow) init(args *lumi.Args) (*lumi.Args, error) {
-	return args, nil
 }
 
 func (s *lumiShadow) GetList() ([]interface{}, error) {
@@ -56,8 +51,4 @@ func (s *lumiShadow) GetList() ([]interface{}, error) {
 func (se *lumiShadow_entry) id() (string, error) {
 	id, _ := se.User()
 	return id, nil
-}
-
-func (se *lumiShadow_entry) init(args *lumi.Args) (*lumi.Args, error) {
-	return args, nil
 }

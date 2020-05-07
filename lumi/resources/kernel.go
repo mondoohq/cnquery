@@ -9,11 +9,11 @@ import (
 	"go.mondoo.io/mondoo/motor/motoros/fsutil"
 )
 
-func (k *lumiKernel) init(args *lumi.Args) (*lumi.Args, error) {
+func (k *lumiKernel) init(args *lumi.Args) (*lumi.Args, Kernel, error) {
 	// this resource is only supported on linux
 	platform, err := k.Runtime.Motor.Platform()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	supported := false
@@ -22,13 +22,13 @@ func (k *lumiKernel) init(args *lumi.Args) (*lumi.Args, error) {
 	}
 
 	if supported == false {
-		return nil, errors.New("kernel resource is only supported for linux platforms")
+		return nil, nil, errors.New("kernel resource is only supported for linux platforms")
 	}
 
-	return args, nil
+	return args, nil, nil
 }
 
-func (s *lumiKernel) id() (string, error) {
+func (k *lumiKernel) id() (string, error) {
 	return "kernel", nil
 }
 
@@ -125,32 +125,32 @@ func (k *lumiKernel) GetModules() ([]interface{}, error) {
 	return moduleEntries, nil
 }
 
-func (k *lumiKernelModule) init(args *lumi.Args) (*lumi.Args, error) {
+func (k *lumiKernelModule) init(args *lumi.Args) (*lumi.Args, KernelModule, error) {
 	// TODO: look at the args and determine if we init all or ask for listing of all modules
 	if len(*args) > 2 {
-		return args, nil
+		return args, nil, nil
 	}
 
 	nameRaw := (*args)["name"]
 	if nameRaw == nil {
-		return args, nil
+		return args, nil, nil
 	}
 	name := nameRaw.(string)
 
 	obj, err := k.Runtime.CreateResource("kernel")
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	kernel := obj.(Kernel)
 
 	_, err = kernel.Modules()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	c, ok := kernel.LumiResource().Cache.Load("_modules")
 	if !ok {
-		return nil, errors.New("Cannot get map of packages")
+		return nil, nil, errors.New("Cannot get map of packages")
 	}
 	cmap := c.Data.(map[string]KernelModule)
 
@@ -169,7 +169,7 @@ func (k *lumiKernelModule) init(args *lumi.Args) (*lumi.Args, error) {
 		(*args)["loaded"] = true
 	}
 
-	return args, nil
+	return args, nil, nil
 }
 
 func (k *lumiKernelModule) id() (string, error) {
