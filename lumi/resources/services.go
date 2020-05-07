@@ -19,29 +19,36 @@ const (
 
 func (p *lumiService) init(args *lumi.Args) (*lumi.Args, Service, error) {
 	// verify that a service with that name exist
-	nameValue, ok := (*args)["name"]
+	rawName, ok := (*args)["name"]
+	if !ok {
+		return args, nil, nil
+	}
+	name, ok := rawName.(string)
+	if !ok {
+		return args, nil, errors.New("name has invalid type")
+	}
 
 	// check if additional information is already provided,
 	// this let us abort testing if provided by a list
-	_, iok := (*args)["installed"]
-
-	// if ame was provided, lets collect the info
-	if ok && !iok {
-		name, ok := nameValue.(string)
-		if !ok {
-			return nil, nil, errors.New("name has invalid type")
-		}
-
-		osm, err := services.ResolveManager(p.Runtime.Motor)
-		if err != nil {
-			return nil, nil, errors.New("cannot find service manager")
-		}
-
-		_, err = osm.Service(name)
-		if err != nil {
-			return nil, nil, errors.New("service " + name + " does not exist")
-		}
+	if _, iok := (*args)["installed"]; iok {
+		return args, nil, nil
 	}
+
+	osm, err := services.ResolveManager(p.Runtime.Motor)
+	if err != nil {
+		return args, nil, errors.New("cannot find service manager")
+	}
+
+	// if the service doesn't exist, init it to empty
+	_, err = osm.Service(name)
+	if err != nil {
+		(*args)["description"] = ""
+		(*args)["installed"] = false
+		(*args)["running"] = false
+		(*args)["enabled"] = false
+		(*args)["type"] = ""
+	}
+
 	return args, nil, nil
 }
 
