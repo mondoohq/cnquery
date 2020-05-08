@@ -15,7 +15,7 @@ func TestWindowsRegistryKeyItemParser(t *testing.T) {
 
 	items, err := ParseRegistryKeyItems(data)
 	assert.Nil(t, err)
-	assert.Equal(t, 7, len(items))
+	assert.Equal(t, 10, len(items))
 	assert.Equal(t, "ConsentPromptBehaviorAdmin", items[0].Key)
 	assert.Equal(t, 4, items[0].Value.Kind)
 	assert.Equal(t, int64(5), items[0].Value.Number)
