@@ -36,4 +36,16 @@ func TestParseDsclListResult(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 8, len(m), "detected the right amount of users")
 	assert.Equal(t, "70", m["_www"], "detected uid name")
+
+	// check user home
+	c, err = mock.RunCommand("dscl . -list /Users NFSHomeDirectory")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	m, err = users.ParseDsclListResult(c.Stdout)
+	assert.Nil(t, err)
+	assert.Equal(t, 7, len(m), "detected the right amount of users")
+	assert.Equal(t, "/Library/WebServer", m["_www"], "detected uid name")
+	assert.Equal(t, "/var/root /private/var/root", m["root"], "detected root name")
 }

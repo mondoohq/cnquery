@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	USER_OSX_DSCL_REGEX = regexp.MustCompile(`(?m)^(\S*)\s*(\S*)$`)
+	USER_OSX_DSCL_REGEX = regexp.MustCompile(`(?m)^(\S*)\s*(.*)$`)
 )
 
 func ParseDsclListResult(input io.Reader) (map[string]string, error) {
@@ -84,6 +84,7 @@ func (s *OSXUserManager) List() ([]*User, error) {
 		}
 
 		users[k] = &User{
+			ID:       m[k],
 			Username: k,
 			Uid:      uid,
 		}
