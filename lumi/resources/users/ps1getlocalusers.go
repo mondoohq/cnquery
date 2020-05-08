@@ -69,7 +69,7 @@ func (s *WindowsUserManager) User(id string) (*User, error) {
 }
 
 func (s *WindowsUserManager) List() ([]*User, error) {
-	powershellCmd := "Get-LocalUsers | ConvertTo-Json"
+	powershellCmd := "Get-LocalUser | ConvertTo-Json"
 	c, err := s.motor.Transport.RunCommand(powershell.Wrap(powershellCmd))
 	if err != nil {
 		return nil, err
