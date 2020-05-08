@@ -1,4 +1,4 @@
-[commands."powershell -c \"Get-LocalUsers | ConvertTo-Json\""]
+[commands."powershell -c \"Get-LocalUser | ConvertTo-Json\""]
 stdout = """
 [
   {
