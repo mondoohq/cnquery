@@ -35,7 +35,7 @@ func (g *lumiGroup) init(args *lumi.Args) (*lumi.Args, Group, error) {
 		return nil, nil, err
 	}
 
-	c, ok := groups.LumiResource().Cache.Load("_map")
+	c, ok := groups.LumiResource().Cache.Load("_members")
 	if !ok {
 		return nil, nil, errors.New("Cannot get map of packages")
 	}
@@ -57,6 +57,60 @@ func (g *lumiGroup) init(args *lumi.Args) (*lumi.Args, Group, error) {
 
 func (g *lumiGroup) id() (string, error) {
 	return g.Id()
+}
+
+func (g *lumiGroup) GetMembers() ([]interface{}, error) {
+
+	// get cached users list
+	obj, err := g.Runtime.CreateResource("users")
+	if err != nil {
+		return nil, err
+	}
+	users := obj.(Users)
+
+	_, err = users.List()
+	if err != nil {
+		return nil, err
+	}
+
+	c, ok := users.LumiResource().Cache.Load("_map")
+	if !ok {
+		return nil, errors.New("Cannot get map of packages")
+	}
+	cmap := c.Data.(map[string]User)
+
+	// read members for this groups
+	m, ok := g.LumiResource().Cache.Load("_members")
+	if !ok {
+		return nil, errors.New("cannot get map of group members")
+	}
+	groupMembers := m.Data.([]string)
+
+	log.Warn().Strs("members", groupMembers).Msg("call members")
+
+	// TODO: we may want to reconsider to do this here, it should be an async method members()
+	// therefore we may just want to store the references here
+	var members []interface{}
+	for i := range groupMembers {
+		username := groupMembers[i]
+
+		usr := cmap[username]
+		if usr != nil {
+			members = append(members, usr)
+			continue
+		}
+
+		// if the user cannot be found, we init it as an empty user
+		lumiUser, err := g.Runtime.CreateResource("user",
+			"username", username,
+		)
+		if err != nil {
+			return nil, err
+		}
+		members = append(members, lumiUser.(User))
+	}
+
+	return members, nil
 }
 
 func (g *lumiGroups) id() (string, error) {
@@ -86,33 +140,21 @@ func (g *lumiGroups) GetList() ([]interface{}, error) {
 	for i := range groups {
 		group := groups[i]
 
-		// TODO: we may want to reconsider to do this here, it should be an async method members()
-		// therefore we may just want to store the references here
-		var members []interface{}
-		for i := range group.Members {
-			username := group.Members[i]
-
-			lumiUser, err := g.Runtime.CreateResource("user",
-				"username", username,
-			)
-			if err != nil {
-				return nil, err
-			}
-			members = append(members, lumiUser.(User))
-		}
-
 		lumiGroup, err := g.Runtime.CreateResource("group",
 			"id", group.ID,
 			"name", group.Name,
 			"gid", group.Gid,
 			"sid", group.Sid,
-			"members", members,
 		)
 		if err != nil {
 			return nil, err
 		}
 
-		lumiGroups = append(lumiGroups, lumiGroup.(Group))
+		// store group members into group resources for later access
+		lg := lumiGroup.(Group)
+		lg.LumiResource().Cache.Store("_members", &lumi.CacheEntry{Data: group.Members})
+
+		lumiGroups = append(lumiGroups, lg)
 		namedMap[group.ID] = lumiGroup.(Group)
 	}
 

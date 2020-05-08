@@ -122,6 +122,7 @@ func (u *lumiUsers) GetList() ([]interface{}, error) {
 
 	// convert to interface{}{}
 	lumiUsers := []interface{}{}
+	namedMap := map[string]User{}
 	for i := range users {
 		user := users[i]
 
@@ -140,7 +141,9 @@ func (u *lumiUsers) GetList() ([]interface{}, error) {
 		}
 
 		lumiUsers = append(lumiUsers, lumiUser.(User))
+		namedMap[user.Username] = lumiUser.(User)
 	}
 
+	u.Cache.Store("_map", &lumi.CacheEntry{Data: namedMap})
 	return lumiUsers, nil
 }

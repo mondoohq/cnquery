@@ -22,7 +22,7 @@ func TestParseDscacheutilResult(t *testing.T) {
 
 	m, err := groups.ParseDscacheutilResult(c.Stdout)
 	assert.Nil(t, err)
-	// assert.Equal(t, 3, len(m), "detected the right amount of groups")
+	assert.Equal(t, 3, len(m), "detected the right amount of groups")
 
 	grp := findGroup(m, "395")
 	assert.Equal(t, int64(395), grp.Gid, "detected group id")
