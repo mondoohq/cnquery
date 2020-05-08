@@ -40,4 +40,22 @@
     "kind": 4,
     "data": 1
   }
+}, {
+  "key": "CachedLogonsCount",
+  "value": {
+    "kind": 1,
+    "data": "10"
+  }
+}, {
+  "key": "LastLogOffEndTimePerfCounter",
+  "value": {
+    "kind": 11,
+    "data": 456809433767
+  }
+}, {
+  "key": "Machine",
+  "value": {
+    "kind": 7,
+    "data": "System\\CurrentControlSet\\Control\\ProductOptions System\\CurrentControlSet\\Control\\Server Applications Software\\Microsoft\\Windows NT\\CurrentVersion"
+  }
 }]

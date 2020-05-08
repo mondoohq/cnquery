@@ -1,10 +1,12 @@
 package windows
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -115,7 +117,7 @@ func (k *RegistryKeyValue) UnmarshalJSON(b []byte) error {
 	case EXPAND_SZ: // A string that can contain environment variables that are dynamically expanded
 		k.String = raw.Data.(string)
 	case BINARY: // Binary data
-		k.Binary = raw.Data.([]byte)
+		k.Binary = []byte(raw.Data.(string))
 	case DWORD: // A number that is a valid UInt32
 		data := raw.Data.(float64)
 		number := int64(data)
@@ -135,7 +137,10 @@ func (k *RegistryKeyValue) UnmarshalJSON(b []byte) error {
 	case RESOURCE_REQUIREMENTS_LIST:
 		log.Warn().Msg("RESOURCE_REQUIREMENTS_LIST for registry key is not supported")
 	case QWORD: // 8 bytes of binary data
-		k.Binary = raw.Data.([]byte)
+		f := raw.Data.(float64)
+		buf := make([]byte, 8)
+		binary.LittleEndian.PutUint64(buf[:], math.Float64bits(f))
+		k.Binary = buf
 	}
 	return nil
 }
