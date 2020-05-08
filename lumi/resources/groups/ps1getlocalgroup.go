@@ -72,9 +72,10 @@ func (s *WindowsGroupManager) List() ([]*Group, error) {
 
 func winToGroup(g WindowsLocalGroup) *Group {
 	return &Group{
-		ID:   g.SID.Value,
-		Sid:  g.SID.Value,
-		Gid:  -1, // TODO: not its suboptimal, but lets make sure to avoid runtime conflicts for now
-		Name: g.Name,
+		ID:      g.SID.Value,
+		Sid:     g.SID.Value,
+		Gid:     -1, // TODO: not its suboptimal, but lets make sure to avoid runtime conflicts for now
+		Name:    g.Name,
+		Members: []string{},
 	}
 }

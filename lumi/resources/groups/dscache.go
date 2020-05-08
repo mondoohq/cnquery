@@ -17,13 +17,14 @@ var (
 
 func ParseDscacheutilResult(input io.Reader) ([]*Group, error) {
 
-	groups := []*Group{}
+	groups := map[string]*Group{}
 
 	add := func(group Group) {
 		// a group must have a username, otherwise it is not valid
 		// this will happen at least for the last item, where we got an empty row
-		if len(group.Name) != 0 {
-			groups = append(groups, &group)
+		// we also need to eliminate duplicates, it happens on macos with dscacheutil -q group
+		if len(group.ID) != 0 {
+			groups[group.ID] = &group
 		}
 	}
 
@@ -69,7 +70,13 @@ func ParseDscacheutilResult(input io.Reader) ([]*Group, error) {
 
 	// if the last line is not an empty line we have things in flight, lets check it
 	add(group)
-	return groups, nil
+
+	res := []*Group{}
+	for k := range groups {
+		res = append(res, groups[k])
+	}
+
+	return res, nil
 }
 
 type OSXGroupManager struct {
