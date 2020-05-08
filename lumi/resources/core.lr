@@ -165,7 +165,7 @@ group {
   gid int
   sid string
   name string
-  members []user
+  members() []user
 }
 
 groups {
