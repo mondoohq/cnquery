@@ -139,6 +139,39 @@ func TestStableCore(t *testing.T) {
 	}
 }
 
+func TestString_Methods(t *testing.T) {
+	tests := []struct {
+		code         string
+		expectations interface{}
+	}{
+		{
+			"'hello'.contains('ll')",
+			true,
+		},
+		{
+			"'hello'.contains('lloo')",
+			false,
+		},
+		{
+			"'hello'.contains(['lo', 'la'])",
+			true,
+		},
+		{
+			"'hello'.contains(['lu', 'la'])",
+			false,
+		},
+	}
+
+	for i := range tests {
+		cur := tests[i]
+		t.Run(cur.code, func(t *testing.T) {
+			res := testQuery(t, cur.code)
+			assert.NotEmpty(t, res)
+			assert.Equal(t, cur.expectations, res[0].Data.Value)
+		})
+	}
+}
+
 func TestArray_Block(t *testing.T) {
 	tests := []struct {
 		code         string

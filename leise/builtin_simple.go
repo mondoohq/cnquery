@@ -13,21 +13,38 @@ func compileStringContains(c *compiler, typ types.Type, ref int32, id string, ca
 		return types.Nil, errors.New("function " + id + " needs one argument")
 	}
 
-	val := call.Function[0].Value.Operand.Value
-	if val.String != nil {
+	valRaw := call.Function[0].Value.Operand.Value
+	val, err := c.compileValue(valRaw)
+	if err != nil {
+		return types.Nil, err
+	}
+
+	switch types.Type(val.Type) {
+	case types.String:
 		c.Result.Code.AddChunk(&llx.Chunk{
 			Call: llx.Chunk_FUNCTION,
-			Id:   "containsString",
+			Id:   "contains" + string(types.String),
 			Function: &llx.Function{
 				Type:    string(types.Bool),
 				Binding: ref,
-				Args: []*llx.Primitive{
-					llx.StringPrimitive(*val.String),
-				},
+				Args:    []*llx.Primitive{val},
 			},
 		})
 		return types.Bool, nil
-	}
 
-	return types.Nil, errors.New("cannot find #string.contains for this call")
+	case types.Array(types.String):
+		c.Result.Code.AddChunk(&llx.Chunk{
+			Call: llx.Chunk_FUNCTION,
+			Id:   "contains" + string(types.Array(types.String)),
+			Function: &llx.Function{
+				Type:    string(types.Bool),
+				Binding: ref,
+				Args:    []*llx.Primitive{val},
+			},
+		})
+		return types.Bool, nil
+
+	default:
+		return types.Nil, errors.New("cannot find #string.contains for this call")
+	}
 }
