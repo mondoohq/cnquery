@@ -213,6 +213,22 @@ func TestArray_Block(t *testing.T) {
 	}
 }
 
+func TestWhere(t *testing.T) {
+	t.Run("users.where", func(t *testing.T) {
+		res := testQuery(t, "users.where(username == 'root').length")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, int64(1), res[0].Data.Value)
+	})
+
+	t.Run("users.where.list + block on empty", func(t *testing.T) {
+		res := testQuery(t, "users.where(username == 'rooot').list { uid }")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, []interface{}{}, res[0].Data.Value)
+	})
+}
+
 func TestContains(t *testing.T) {
 	t.Run("users.contains", func(t *testing.T) {
 		res := testQuery(t, "users.contains(username == 'root')")
