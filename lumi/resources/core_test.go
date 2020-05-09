@@ -132,6 +132,23 @@ func stableResults(t *testing.T, query string) map[string]*llx.RawResult {
 	return results[0]
 }
 
+type simpleTest struct {
+	code        string
+	expectation interface{}
+}
+
+func runSimpleTests(t *testing.T, tests []simpleTest) {
+	for i := range tests {
+		cur := tests[i]
+		t.Run(cur.code, func(t *testing.T) {
+			res := testQuery(t, cur.code)
+			assert.NotEmpty(t, res)
+			assert.NotNil(t, res[0].Result().Error)
+			assert.Equal(t, cur.expectation, res[0].Data.Value)
+		})
+	}
+}
+
 func TestStableCore(t *testing.T) {
 	res := stableResults(t, "mondoo.version")
 	for _, v := range res {
@@ -140,10 +157,7 @@ func TestStableCore(t *testing.T) {
 }
 
 func TestString_Methods(t *testing.T) {
-	tests := []struct {
-		code         string
-		expectations interface{}
-	}{
+	runSimpleTests(t, []simpleTest{
 		{
 			"'hello'.contains('ll')",
 			true,
@@ -160,23 +174,11 @@ func TestString_Methods(t *testing.T) {
 			"'hello'.contains(['lu', 'la'])",
 			false,
 		},
-	}
-
-	for i := range tests {
-		cur := tests[i]
-		t.Run(cur.code, func(t *testing.T) {
-			res := testQuery(t, cur.code)
-			assert.NotEmpty(t, res)
-			assert.Equal(t, cur.expectations, res[0].Data.Value)
-		})
-	}
+	})
 }
 
 func TestArray_Block(t *testing.T) {
-	tests := []struct {
-		code         string
-		expectations interface{}
-	}{
+	runSimpleTests(t, []simpleTest{
 		{
 			"[1,2,3].where()",
 			[]interface{}{int64(1), int64(2), int64(3)},
@@ -201,78 +203,61 @@ func TestArray_Block(t *testing.T) {
 			"[1,2,3].all(_ < 9)",
 			true,
 		},
-	}
-
-	for i := range tests {
-		cur := tests[i]
-		t.Run(cur.code, func(t *testing.T) {
-			res := testQuery(t, cur.code)
-			assert.NotEmpty(t, res)
-			assert.Equal(t, cur.expectations, res[0].Data.Value)
-		})
-	}
-}
-
-func TestWhere(t *testing.T) {
-	t.Run("users.where", func(t *testing.T) {
-		res := testQuery(t, "users.where(username == 'root').length")
-		assert.NotEmpty(t, res)
-		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, int64(1), res[0].Data.Value)
-	})
-
-	t.Run("users.where.list + block on empty", func(t *testing.T) {
-		res := testQuery(t, "users.where(username == 'rooot').list { uid }")
-		assert.NotEmpty(t, res)
-		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, []interface{}{}, res[0].Data.Value)
 	})
 }
 
-func TestContains(t *testing.T) {
-	t.Run("users.contains", func(t *testing.T) {
-		res := testQuery(t, "users.contains(username == 'root')")
-		assert.NotEmpty(t, res)
-		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, true, res[0].Data.Value)
-	})
-
-	t.Run("users.where.contains", func(t *testing.T) {
-		res := testQuery(t, "users.where(uid < 100).contains(username == 'root')")
-		assert.NotEmpty(t, res)
-		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, true, res[0].Data.Value)
-	})
-}
-
-func TestAll(t *testing.T) {
-	t.Run("users.all", func(t *testing.T) {
-		res := testQuery(t, "users.all(uid >= 0)")
-		assert.NotEmpty(t, res)
-		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, true, res[0].Data.Value)
-	})
-
-	t.Run("users.where.all", func(t *testing.T) {
-		res := testQuery(t, "users.where(uid < 100).all(uid >= 0)")
-		assert.NotEmpty(t, res)
-		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, true, res[0].Data.Value)
+func TestResource_Where(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"users.where(username == 'root').length",
+			int64(1),
+		},
+		{
+			"users.where(username == 'rooot').list { uid }",
+			[]interface{}{},
+		},
+		{
+			"users.where(uid > 0).where(uid < 0).list",
+			[]interface{}{},
+		},
 	})
 }
 
-func TestOne(t *testing.T) {
-	t.Run("users.one", func(t *testing.T) {
-		res := testQuery(t, "users.one(uid == 0)")
-		assert.NotEmpty(t, res)
-		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, true, res[0].Data.Value)
+func TestResource_Contains(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"users.contains(username == 'root')",
+			true,
+		},
+		{
+			"users.where(uid < 100).contains(username == 'root')",
+			true,
+		},
 	})
+}
 
-	t.Run("users.where.one", func(t *testing.T) {
-		res := testQuery(t, "users.where(uid < 100).one(uid == 0)")
-		assert.NotEmpty(t, res)
-		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, true, res[0].Data.Value)
+func TestResource_All(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"users.all(uid >= 0)",
+			true,
+		},
+		{
+			"users.where(uid < 100).all(uid >= 0)",
+			true,
+		},
+	})
+}
+
+func TestResource_One(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"users.one(uid == 0)",
+			true,
+		},
+		{
+			"users.where(uid < 100).one(uid == 0)",
+			true,
+		},
 	})
 }

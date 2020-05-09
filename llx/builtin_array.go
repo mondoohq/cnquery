@@ -104,6 +104,10 @@ func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 	if err != nil || rref > 0 {
 		return nil, rref, err
 	}
+	list := items.Value.([]interface{})
+	if len(list) == 0 {
+		return items, 0, nil
+	}
 
 	arg1 := chunk.Function.Args[1]
 	fref, ok := arg1.Ref()
@@ -112,7 +116,6 @@ func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 	}
 
 	f := c.code.Functions[fref-1]
-	list := items.Value.([]interface{})
 	ct := items.Type.Child()
 	filteredList := map[int]interface{}{}
 	finishedResults := 0
