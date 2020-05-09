@@ -45,6 +45,10 @@ func arrayBlockList(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 		return nil, 0, errors.New("failed to typecast into " + bind.Type.Label())
 	}
 
+	if len(arr) == 0 {
+		return bind, 0, nil
+	}
+
 	prim := chunk.Function.Args[0]
 	if !types.Type(prim.Type).IsFunction() {
 		return nil, 0, errors.New("Called block with wrong function type")
