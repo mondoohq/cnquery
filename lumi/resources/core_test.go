@@ -180,6 +180,14 @@ func TestString_Methods(t *testing.T) {
 func TestArray_Block(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
+			"[1,2,3] { _ == 2 }",
+			[]interface{}{
+				map[string]interface{}{"H1/Sy2Mih0/ZbyAPVrYJgUuJH09rTBHw1CnafKZFa3wIrZzZsHEwKqr+bgBy6ymTjc1JW94vshmwLLW8kb4CtQ==": llx.BoolFalse},
+				map[string]interface{}{"H1/Sy2Mih0/ZbyAPVrYJgUuJH09rTBHw1CnafKZFa3wIrZzZsHEwKqr+bgBy6ymTjc1JW94vshmwLLW8kb4CtQ==": llx.BoolTrue},
+				map[string]interface{}{"H1/Sy2Mih0/ZbyAPVrYJgUuJH09rTBHw1CnafKZFa3wIrZzZsHEwKqr+bgBy6ymTjc1JW94vshmwLLW8kb4CtQ==": llx.BoolFalse},
+			},
+		},
+		{
 			"[1,2,3].where()",
 			[]interface{}{int64(1), int64(2), int64(3)},
 		},

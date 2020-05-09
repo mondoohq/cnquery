@@ -591,9 +591,21 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 	}
 
 	if operand.Block != nil {
-		if types.Type(res.Type) != types.Ref {
-			return nil, errors.New("Cannot call block on simple type '" + types.Type(res.Type).Label() + "' yet")
+		// for starters, we need the primitive to exist on the stack,
+		// so add it if it's missing
+		ref := c.Result.Code.ChunkIndex()
+		if ref == 0 {
+			val, err := c.compileValue(operand.Value)
+			if err != nil {
+				return nil, err
+			}
+			c.Result.Code.AddChunk(&llx.Chunk{
+				Call: llx.Chunk_PRIMITIVE,
+				// no ID for standalone
+				Primitive: val,
+			})
 		}
+
 		typ, err = c.compileBlock(operand.Block, typ)
 		if err != nil {
 			return nil, err
