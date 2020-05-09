@@ -26,6 +26,7 @@ file {
   content(path) string
   exists() bool
   permissions() file.permissions
+  size() int
 }
 
 file.permissions {
