@@ -70,7 +70,11 @@ func TestParser_ParseValues(t *testing.T) {
 		{"1.23", &Expression{Operand: &Operand{Value: vFloat(1.23)}}},
 		{"123", &Expression{Operand: &Operand{Value: vInt(123)}}},
 		{"'hi'", &Expression{Operand: &Operand{Value: vString("hi")}}},
+		{"'h\\ni'", &Expression{Operand: &Operand{Value: vString("h\\ni")}}},
+		{"'h\\i'", &Expression{Operand: &Operand{Value: vString("h\\i")}}},
 		{"\"hi\"", &Expression{Operand: &Operand{Value: vString("hi")}}},
+		{"\"h\\ni\"", &Expression{Operand: &Operand{Value: vString("h\ni")}}},
+		{"\"h\\i\"", &Expression{Operand: &Operand{Value: vString("hi")}}},
 		{"/hi/", &Expression{Operand: &Operand{Value: vRegex("hi")}}},
 		{"[]", &Expression{Operand: &Operand{Value: &Value{Array: []*Expression{}}}}},
 		{"[1]", &Expression{Operand: &Operand{Value: &Value{Array: []*Expression{

@@ -2,6 +2,7 @@ package parser
 
 import (
 	"errors"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -136,6 +137,16 @@ func (p *parser) rewind(token lexer.Token) {
 	p.token = token
 }
 
+var reUnescape = regexp.MustCompile("\\\\.")
+var unescapeMap = map[string]string{
+	"\\n": "\n",
+	"\\t": "\t",
+	"\\v": "\v",
+	"\\b": "\b",
+	"\\f": "\f",
+	"\\0": "\x00",
+}
+
 func (p *parser) parseValue() *Value {
 	switch p.token.Type {
 	case Ident:
@@ -167,8 +178,18 @@ func (p *parser) parseValue() *Value {
 
 	case String:
 		v := p.token.Value
-		// TODO: handling of escape sequences
+
 		vv := v[1 : len(v)-1]
+
+		if v[0] == '"' {
+			vv = reUnescape.ReplaceAllStringFunc(vv, func(match string) string {
+				if found := unescapeMap[match]; found != "" {
+					return found
+				}
+				return string(match[1])
+			})
+		}
+
 		return &Value{String: &vv}
 
 	case Regex:
