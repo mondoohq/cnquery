@@ -232,6 +232,18 @@ func TestMap_Block(t *testing.T) {
 func TestResource_Where(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
+			`users.where(username == 'root').list {
+				uid == 0
+				gid == 0
+			}`,
+			[]interface{}{
+				map[string]interface{}{
+					"98EVbqIfATuZs8wtEzGFWvJdaJ2B9FgGyrTVSMXqqbghwCfeIR2a8KjY+dsXMu7TlebG0cbV43MSpK5WfPMGqw==": llx.BoolTrue,
+					"OojsW+S377qoakihk/EPTYbyb1jzYzF+scDJsLkpXxKCCp0yP6YJSp9yjfINvzzD4pEtB/yDFZldL8YSds5Sjg==": llx.BoolTrue,
+				},
+			},
+		},
+		{
 			"users.where(username == 'root').length",
 			int64(1),
 		},
