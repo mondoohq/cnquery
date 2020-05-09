@@ -25,7 +25,7 @@ var builtinFunctions map[types.Type]map[string]compileHandler
 func init() {
 	builtinFunctions = map[types.Type]map[string]compileHandler{
 		types.String: {
-			"containsString": {typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
+			"contains": {compile: compileStringContains, typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
 		},
 		types.ArrayLike: {
 			"[]":       {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
