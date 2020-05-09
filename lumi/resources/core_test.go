@@ -203,6 +203,10 @@ func TestArray_Block(t *testing.T) {
 			"[1,2,3].all(_ < 9)",
 			true,
 		},
+		{
+			"[].where(_ > 0).where(_ > 0)",
+			[]interface{}{},
+		},
 	})
 }
 
