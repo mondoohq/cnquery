@@ -210,6 +210,17 @@ func TestArray_Block(t *testing.T) {
 	})
 }
 
+func TestMap_Block(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"sshd.config.params { _['Protocol'] != 1 }",
+			map[string]interface{}{
+				"wY2itjYLEbmP9L3U2Z24a7jlTpJxpHoit+s8zoaBkbHW4itI+GhHF1lazZSPjH42eqY106gEXgr/IHV2Q5vB8g==": llx.BoolTrue,
+			},
+		},
+	})
+}
+
 func TestResource_Where(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
