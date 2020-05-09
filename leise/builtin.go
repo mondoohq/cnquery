@@ -17,6 +17,7 @@ type compileHandler struct {
 
 var childType = func(t types.Type) types.Type { return t.Child() }
 var arrayBlockType = func(t types.Type) types.Type { return types.Array(types.Map(types.Int, types.Any)) }
+var mapBlockType = func(t types.Type) types.Type { return types.Map(types.String, types.Any) }
 var intType = func(t types.Type) types.Type { return types.Int }
 var boolType = func(t types.Type) types.Type { return types.Bool }
 
@@ -38,6 +39,7 @@ func init() {
 		},
 		types.MapLike: {
 			"[]":     {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
+			"{}":     {typ: mapBlockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"length": {typ: intType, signature: FunctionSignature{}},
 		},
 		types.ResourceLike: {

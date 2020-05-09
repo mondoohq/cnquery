@@ -46,3 +46,7 @@ func mapLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDa
 	}
 	return IntData(int64(len(arr))), 0, nil
 }
+
+func mapBlockCall(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return c.runBlock(bind, chunk.Function.Args[0], ref)
+}

@@ -280,6 +280,7 @@ func init() {
 		types.MapLike: {
 			"[]":     {f: mapGetIndex},
 			"length": {f: mapLength},
+			"{}":     {f: mapBlockCall},
 		},
 		types.ResourceLike: {
 			"where":  {f: resourceWhere},
