@@ -371,7 +371,7 @@ func (c *compiler) addResource(id string, resource *lumi.ResourceInfo, call *par
 // 2. global rsc: sshd, sshd.config
 // 3. bound field: user { name }
 // x. called field: user.name <= not in this scope
-func (c *compiler) compileIdentifier(id string, binding *binding, calls []*parser.Call) ([]*parser.Call, types.Type, error) {
+func (c *compiler) compileIdentifier(id string, callBinding *binding, calls []*parser.Call) ([]*parser.Call, types.Type, error) {
 	var call *parser.Call
 	restCalls := calls
 	if len(calls) > 0 && calls[0].Function != nil {
@@ -382,23 +382,48 @@ func (c *compiler) compileIdentifier(id string, binding *binding, calls []*parse
 	var typ types.Type
 	var err error
 	var found bool
-	if binding != nil {
+	if callBinding != nil {
 		// special handling for the `self` operator
 		if id == "_" {
 			if len(restCalls) == 0 {
 				// TODO: something is missing
-				return restCalls, binding.Type, nil
+				return restCalls, callBinding.Type, nil
 			}
 
 			nextCall := restCalls[0]
-			found, typ, err = c.compileBoundIdentifier(*nextCall.Ident, binding, nextCall)
-			if found {
-				return restCalls[1:], typ, err
+
+			if nextCall.Ident != nil {
+				found, typ, err = c.compileBoundIdentifier(*nextCall.Ident, callBinding, nextCall)
+				if found {
+					return restCalls[1:], typ, err
+				}
+				return nil, types.Nil, errors.New("could not find call _." + (*nextCall.Ident))
 			}
-			// return restCalls, binding.Type, nil
+
+			if nextCall.Accessor != nil {
+				// turn accessor into a regular function and call that
+				fCall := &parser.Call{Function: []*parser.Arg{{Value: nextCall.Accessor}}}
+				// accessors are aways builtin functions
+				h, _ := builtinFunction(callBinding.Type.Underlying(), "[]")
+				if h == nil {
+					return nil, types.Nil, errors.New("Cannot find '[]' function on type " + callBinding.Type.Label())
+				}
+				typ, err = c.compileBuiltinFunction(h, "[]", &binding{Type: callBinding.Type, Ref: callBinding.Ref}, fCall)
+				if err != nil {
+					return nil, types.Nil, err
+				}
+
+				if call != nil && len(calls) > 0 {
+					calls = calls[1:]
+				}
+
+				return restCalls[1:], typ, nil
+			}
+
+			return nil, types.Nil, errors.New("not sure how to handle implicit calls around `_`")
 		}
 
-		found, typ, err = c.compileBoundIdentifier(id, binding, call)
+		found, typ, err = c.compileBoundIdentifier(id, callBinding, call)
 		if found {
 			return restCalls, typ, err
 		}
@@ -416,11 +441,11 @@ func (c *compiler) compileIdentifier(id string, binding *binding, calls []*parse
 	}
 
 	// suggestions
-	if binding == nil {
+	if callBinding == nil {
 		addResourceSuggestions(c.Schema.Resources, id, c.Result)
 		return nil, types.Nil, errors.New("Cannot find resource for identifier '" + id + "'")
 	}
-	addFieldSuggestions(availableFields(c, binding.Type), id, c.Result)
+	addFieldSuggestions(availableFields(c, callBinding.Type), id, c.Result)
 	return nil, types.Nil, errors.New("Cannot find field or resource '" + id + "' in block for type '" + c.Binding.Type.Label() + "'")
 }
 
@@ -516,7 +541,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 
 		if call.Accessor != nil {
 			// turn accessor into a regular function and call that
-			fCall := &parser.Call{Function: []*parser.Arg{&parser.Arg{Value: call.Accessor}}}
+			fCall := &parser.Call{Function: []*parser.Arg{{Value: call.Accessor}}}
 			// accessors are aways builtin functions
 			h, _ := builtinFunction(typ.Underlying(), "[]")
 			if h == nil {
