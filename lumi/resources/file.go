@@ -81,21 +81,35 @@ func (s *lumiFile) GetExists() (bool, error) {
 }
 
 func (s *lumiFile) GetPermissions() (FilePermissions, error) {
+	perm, size, err := s.stat()
+	// cache the other computed fields
+	s.Cache.Store("size", &lumi.CacheEntry{Data: size, Valid: true, Timestamp: time.Now().Unix()})
+	return perm, err
+}
+
+func (s *lumiFile) GetSize() (int64, error) {
+	perm, size, err := s.stat()
+	// cache the other computed fields
+	s.Cache.Store("permissions", &lumi.CacheEntry{Data: perm, Valid: true, Timestamp: time.Now().Unix()})
+	return size, err
+}
+
+func (s *lumiFile) stat() (FilePermissions, int64, error) {
 	// TODO: this is a one-off right now, turn it into a watcher
 	path, err := s.Path()
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	fs := s.Runtime.Motor.Transport.FS()
 	afs := &afero.Afero{Fs: fs}
 	stat, err := afs.Stat(path)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	mode := stat.Mode()
 
-	res, err := s.Runtime.CreateResource("file.permissions",
+	permRaw, err := s.Runtime.CreateResource("file.permissions",
 		"user_readable", mode&00400 != 0,
 		"user_writeable", mode&00200 != 0,
 		"user_executable", mode&00100 != 0,
@@ -110,10 +124,13 @@ func (s *lumiFile) GetPermissions() (FilePermissions, error) {
 		"sticky", mode&01000 != 0,
 	)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return res.(FilePermissions), nil
+	perm := permRaw.(FilePermissions)
+	size := stat.Size()
+
+	return perm, size, nil
 }
 
 func (l *lumiFilePermissions) id() (string, error) {
