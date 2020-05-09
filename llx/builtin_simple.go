@@ -3,6 +3,7 @@ package llx
 import (
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 func rawdataOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(*RawData, *RawData) bool) (*RawData, int32, error) {
@@ -1167,4 +1168,17 @@ func arrayAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 
 func arrayOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opArrayOrString)
+}
+
+// string methods
+
+func stringContainsString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	argRef := chunk.Function.Args[0]
+	arg, rref, err := c.resolveValue(argRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	ok := strings.Contains(bind.Value.(string), arg.Value.(string))
+	return BoolData(ok), 0, nil
 }

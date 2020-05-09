@@ -167,6 +167,7 @@ func init() {
 			string("||" + types.Regex):               {f: stringOrRegex, Label: "||"},
 			string("&&" + types.ArrayLike):           {f: stringAndArray, Label: "&&"},
 			string("||" + types.ArrayLike):           {f: stringOrArray, Label: "||"},
+			string("containsString"):                 {f: stringContainsString, Label: "contains"},
 		},
 		types.Regex: {
 			string("==" + types.Nil):                 {f: stringCmpNil, Label: "=="},

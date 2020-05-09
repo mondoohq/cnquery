@@ -18,11 +18,15 @@ type compileHandler struct {
 var childType = func(t types.Type) types.Type { return t.Child() }
 var arrayBlockType = func(t types.Type) types.Type { return types.Array(types.Map(types.Int, types.Any)) }
 var intType = func(t types.Type) types.Type { return types.Int }
+var boolType = func(t types.Type) types.Type { return types.Bool }
 
 var builtinFunctions map[types.Type]map[string]compileHandler
 
 func init() {
 	builtinFunctions = map[types.Type]map[string]compileHandler{
+		types.String: {
+			"containsString": {typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
+		},
 		types.ArrayLike: {
 			"[]":       {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
 			"{}":       {typ: arrayBlockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
