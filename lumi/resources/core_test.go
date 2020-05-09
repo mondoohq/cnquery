@@ -204,7 +204,7 @@ func TestArray_Block(t *testing.T) {
 			true,
 		},
 		{
-			"[].where(_ > 0).where(_ > 0)",
+			"[0].where(_ > 0).where(_ > 0)",
 			[]interface{}{},
 		},
 	})
