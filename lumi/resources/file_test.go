@@ -27,4 +27,12 @@ func TestResource_File(t *testing.T) {
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, int64(58), res[0].Data.Value)
 	})
+
+	t.Run("test a file permissions", func(t *testing.T) {
+		res := testQuery(t, "file(\"/etc/passwd\").permissions.mode")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		// TODO: we need good test data for this, not sure how
+		assert.Equal(t, int64(0), res[0].Data.Value)
+	})
 }

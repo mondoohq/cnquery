@@ -110,6 +110,7 @@ func (s *lumiFile) stat() (FilePermissions, int64, error) {
 	mode := stat.Mode()
 
 	permRaw, err := s.Runtime.CreateResource("file.permissions",
+		"mode", int64(uint32(mode)&07777),
 		"user_readable", mode&00400 != 0,
 		"user_writeable", mode&00200 != 0,
 		"user_executable", mode&00100 != 0,

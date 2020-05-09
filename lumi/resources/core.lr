@@ -30,6 +30,7 @@ file {
 }
 
 file.permissions {
+  mode int
   user_readable bool
   user_writeable bool
   user_executable bool
