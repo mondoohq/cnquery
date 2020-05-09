@@ -40,6 +40,11 @@ func (c *Command) Exec(command string) (*types.Command, error) {
 	err = session.Run(c.Command.Command)
 	c.Command.Stats.Duration = time.Since(c.Command.Stats.Start)
 	if err != nil {
+		var e *ssh.ExitError
+		match := errors.As(err, &e)
+		if match {
+			c.Command.ExitStatus = e.ExitStatus()
+		}
 		return &c.Command, err
 	}
 	return &c.Command, nil
