@@ -1182,3 +1182,23 @@ func stringContainsString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int
 	ok := strings.Contains(bind.Value.(string), arg.Value.(string))
 	return BoolData(ok), 0, nil
 }
+
+func stringContainsArrayString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	argRef := chunk.Function.Args[0]
+	arg, rref, err := c.resolveValue(argRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	var ok bool
+	arr := arg.Value.([]interface{})
+	for i := range arr {
+		v := arr[i].(string)
+		ok = strings.Contains(bind.Value.(string), v)
+		if ok {
+			return BoolData(ok), 0, nil
+		}
+	}
+
+	return BoolData(false), 0, nil
+}
