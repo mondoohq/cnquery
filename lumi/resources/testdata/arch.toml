@@ -439,3 +439,18 @@ stdout="""
 stdout="""
 [{"path":"HKEY_LOCAL_MACHINE\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Policies\\\\System\\\\Audit","name":"Audit","properties":[],"children":0}]
 """
+
+[files."/etc/ntp.conf"]
+content="""
+# --- GENERAL CONFIGURATION ---
+restrict default ignore
+restrict 66.187.224.4 mask 255.255.255.255 nomodify notrap noquery
+restrict 18.26.4.105 mask 255.255.255.255 nomodify notrap noquery
+restrict 128.249.1.10 mask 255.255.255.255 nomodify notrap noquery
+# Server config
+server 127.127.1.0 # local clock
+fudge 127.127.1.0 stratum 10
+server 66.187.224.4
+server 18.26.4.105
+server 128.249.1.10
+"""

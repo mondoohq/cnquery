@@ -103,6 +103,16 @@ kernel.module {
   loaded bool
 }
 
+ntp.conf {
+  init(path string)
+  file() file
+  content(file) string
+  settings(content) []string
+  servers(settings) []string
+  restrict(settings) []string
+  fudge(settings) []string
+}
+
 osupdate {
   name string
   category string
