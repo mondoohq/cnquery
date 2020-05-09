@@ -16,6 +16,10 @@ func resourceWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	if err != nil || rref > 0 {
 		return nil, rref, err
 	}
+	list := items.Value.([]interface{})
+	if len(list) == 0 {
+		return bind, 0, nil
+	}
 
 	resource := bind.Value.(lumi.ResourceType)
 
@@ -26,7 +30,6 @@ func resourceWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	}
 
 	f := c.code.Functions[fref-1]
-	list := items.Value.([]interface{})
 	ct := items.Type.Child()
 	filteredList := map[int]interface{}{}
 	finishedResults := 0
