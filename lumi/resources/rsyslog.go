@@ -13,15 +13,15 @@ func (s *lumiRsyslogConf) init(args *lumi.Args) (*lumi.Args, RsyslogConf, error)
 	if x, ok := (*args)["path"]; ok {
 		path, ok := x.(string)
 		if !ok {
-			return nil, nil, errors.New("Wrong type for 'path' in rsyslog.conf initialization, it must be a string")
+			return nil, nil, errors.New("Wrong type for 'path' in initialization, it must be a string")
 		}
 
-		f, err := s.Runtime.CreateResource("file", "path", path)
+		files, err := s.getFiles(path)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		(*args)["file"] = f
+		(*args)["files"] = files
 		delete(*args, "path")
 	}
 
@@ -29,7 +29,6 @@ func (s *lumiRsyslogConf) init(args *lumi.Args) (*lumi.Args, RsyslogConf, error)
 }
 
 const defaultRsyslogConf = "/etc/rsyslog.conf"
-const defaultRsyslogD = "/etc/rsyslog.d/"
 
 func (s *lumiRsyslogConf) id() (string, error) {
 	files, err := s.Files()
@@ -49,13 +48,18 @@ func (s *lumiRsyslogConf) id() (string, error) {
 	return checksum2string(checksum), nil
 }
 
-func (s *lumiRsyslogConf) GetFiles() ([]interface{}, error) {
-	f, err := s.Runtime.CreateResource("file", "path", defaultRsyslogConf)
+func (s *lumiRsyslogConf) getFiles(confPath string) ([]interface{}, error) {
+	if !strings.HasSuffix(confPath, ".conf") {
+		return nil, nil, errors.New("Failed to initialize, path must end in `.conf` so we can find files in `.d` directory.")
+	}
+
+	f, err := s.Runtime.CreateResource("file", "path", confPath)
 	if err != nil {
 		return nil, err
 	}
 
-	files, err := s.Runtime.CreateResource("files.find", "from", "/etc/rsyslog.d", "type", "file")
+	confD := confPath[0:len(confPath)-5] + ".d"
+	files, err := s.Runtime.CreateResource("files.find", "from", confD, "type", "file")
 	if err != nil {
 		return nil, err
 	}
@@ -67,6 +71,10 @@ func (s *lumiRsyslogConf) GetFiles() ([]interface{}, error) {
 
 	list = append([]interface{}{f.(File)}, list...)
 	return list, nil
+}
+
+func (s *lumiRsyslogConf) GetFiles() ([]interface{}, error) {
+	return s.getFiles(defaultRsyslogConf)
 }
 
 func (s *lumiRsyslogConf) GetContent(files []interface{}) (string, error) {
