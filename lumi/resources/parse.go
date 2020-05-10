@@ -35,7 +35,22 @@ func (s *lumiParseIni) id() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return r.Path()
+
+	path, err := r.Path()
+	if err != nil {
+		return "", err
+	}
+
+	del, err := s.Delimiter()
+	if err != nil {
+		return "", err
+	}
+
+	return path + del, nil
+}
+
+func (s *lumiParseIni) GetDelimiter() (string, error) {
+	return "=", nil
 }
 
 func (s *lumiParseIni) GetFile() (File, error) {
@@ -58,8 +73,8 @@ func (s *lumiParseIni) GetContent(file File) (string, error) {
 	return file.Content()
 }
 
-func (s *lumiParseIni) GetSections(content string) (map[string]interface{}, error) {
-	ini := parsers.ParseIni(content)
+func (s *lumiParseIni) GetSections(content string, delimiter string) (map[string]interface{}, error) {
+	ini := parsers.ParseIni(content, delimiter)
 
 	res := make(map[string]interface{}, len(ini.Fields))
 	for k, v := range ini.Fields {

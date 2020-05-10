@@ -10,13 +10,13 @@ func TestIni(t *testing.T) {
 	tests := []struct {
 		title   string
 		content string
-		res     map[string]map[string]string
+		res     map[string]interface{}
 	}{
 		{
 			"simple assignment",
 			"key = value",
-			map[string]map[string]string{
-				"": {
+			map[string]interface{}{
+				"": map[string]interface{}{
 					"key": "value",
 				},
 			},
@@ -24,8 +24,8 @@ func TestIni(t *testing.T) {
 		{
 			"no assignment",
 			"key and value",
-			map[string]map[string]string{
-				"": {
+			map[string]interface{}{
+				"": map[string]interface{}{
 					"key and value": "",
 				},
 			},
@@ -33,8 +33,8 @@ func TestIni(t *testing.T) {
 		{
 			"newline comment",
 			"key\n# comment\n  # more comment\n\t# and one more\nvalue",
-			map[string]map[string]string{
-				"": {
+			map[string]interface{}{
+				"": map[string]interface{}{
 					"key":   "",
 					"value": "",
 				},
@@ -43,11 +43,11 @@ func TestIni(t *testing.T) {
 		{
 			"groups",
 			"key\n[some group]\nkey2=value",
-			map[string]map[string]string{
-				"": {
+			map[string]interface{}{
+				"": map[string]interface{}{
 					"key": "",
 				},
-				"some group": {
+				"some group": map[string]interface{}{
 					"key2": "value",
 				},
 			},
@@ -57,7 +57,7 @@ func TestIni(t *testing.T) {
 	for i := range tests {
 		cur := tests[i]
 		t.Run(cur.title, func(t *testing.T) {
-			res := ParseIni(cur.content)
+			res := ParseIni(cur.content, "=")
 			assert.Equal(t, cur.res, res.Fields)
 		})
 	}

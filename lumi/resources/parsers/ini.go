@@ -8,7 +8,7 @@ type Ini struct {
 }
 
 // ParseIni parses the raw text contents of an ini-style file
-func ParseIni(raw string) *Ini {
+func ParseIni(raw string, delimiter string) *Ini {
 	res := Ini{
 		Fields: map[string]interface{}{},
 	}
@@ -36,7 +36,7 @@ func ParseIni(raw string) *Ini {
 			continue
 		}
 
-		kv := strings.SplitN(line, "=", 2)
+		kv := strings.SplitN(line, delimiter, 2)
 		k := strings.Trim(kv[0], " \t\r")
 		if k == "" {
 			continue
