@@ -36,6 +36,13 @@ func ParseIni(raw string, delimiter string) *Ini {
 			continue
 		}
 
+		// this is a common accurance on space-separated files
+		// we pre-process tabs to make things easier on the tester and allow for
+		// space-split mechanisms to still work
+		if delimiter != "\t" {
+			line = strings.ReplaceAll(line, "\t", "    ")
+		}
+
 		kv := strings.SplitN(line, delimiter, 2)
 		k := strings.Trim(kv[0], " \t\r")
 		if k == "" {
