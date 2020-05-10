@@ -12,6 +12,7 @@ func checksum2string(checksum uint64) string {
 	binary.LittleEndian.PutUint64(b, checksum)
 	return base64.StdEncoding.EncodeToString(b)
 }
+
 func checksumStrings(strings ...string) string {
 	checksum := fnv1a.Init64
 	for i := range strings {
