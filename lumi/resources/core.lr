@@ -62,10 +62,11 @@ files.find {
 }
 
 parse.ini {
-  init(path string)
+  init(path string, delimiter string)
+  delimiter() string
   file() file
   content(file) string
-  sections(content) map[string]map[string]string
+  sections(content, delimiter) map[string]map[string]string
   params(sections) map[string]string
 }
 
