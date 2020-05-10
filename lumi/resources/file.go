@@ -6,6 +6,7 @@ package resources
 
 import (
 	"io/ioutil"
+	"path"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -78,6 +79,14 @@ func (s *lumiFile) GetExists() (bool, error) {
 	fs := s.Runtime.Motor.Transport.FS()
 	afs := &afero.Afero{Fs: fs}
 	return afs.Exists(path)
+}
+
+func (s *lumiFile) GetBasename(fullPath string) (string, error) {
+	return path.Base(fullPath), nil
+}
+
+func (s *lumiFile) GetDirname(fullPath string) (string, error) {
+	return path.Dir(fullPath), nil
 }
 
 func (s *lumiFile) GetPermissions() (FilePermissions, error) {
