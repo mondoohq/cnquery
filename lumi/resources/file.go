@@ -20,7 +20,11 @@ func (s *lumiFile) id() (string, error) {
 	return s.Path()
 }
 
-func (s *lumiFile) GetContent(path string) (string, error) {
+func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
+	if !exists {
+		return "", nil
+	}
+
 	_, ok := s.Cache.Load("content")
 	if ok {
 		return "", lumi.NotReadyError{}
@@ -74,6 +78,7 @@ func (s *lumiFile) GetContent(path string) (string, error) {
 }
 
 func (s *lumiFile) GetExists() (bool, error) {
+	// TODO: we need to tell motor to watch this for us
 	path, _ := s.Path()
 
 	fs := s.Runtime.Motor.Transport.FS()
