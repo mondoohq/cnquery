@@ -39,6 +39,7 @@ func (s *lumiParseIni) id() (string, error) {
 }
 
 func (s *lumiParseIni) GetFile() (File, error) {
+	// TODO: all of this is a placeholder, in case we initialize the ini resource with content instead of a file
 	f, err := s.Runtime.CreateResource("file", "path", "/")
 	if err != nil {
 		return nil, err
