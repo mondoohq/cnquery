@@ -121,6 +121,13 @@ ntp.conf {
   fudge(settings) []string
 }
 
+rsyslog.conf {
+  init(path string)
+  files() []file
+  content(files) string
+  settings(content) []string
+}
+
 osupdate {
   name string
   category string
