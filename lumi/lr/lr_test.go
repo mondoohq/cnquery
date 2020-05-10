@@ -27,16 +27,16 @@ func TestParse(t *testing.T) {
 
 	t.Run("empty resource", func(t *testing.T) {
 		parse(t, "name", func(res *LR) {
-			assert.Equal(t, []*Resource{&Resource{ID: "name"}}, res.Resources)
+			assert.Equal(t, []*Resource{{ID: "name"}}, res.Resources)
 		})
 	})
 
 	t.Run("empty resources", func(t *testing.T) {
 		parse(t, "one tw2 thr33", func(res *LR) {
 			assert.Equal(t, []*Resource{
-				&Resource{ID: "one"},
-				&Resource{ID: "tw2"},
-				&Resource{ID: "thr33"},
+				{ID: "one"},
+				{ID: "tw2"},
+				{ID: "thr33"},
 			}, res.Resources)
 		})
 	})
@@ -44,7 +44,7 @@ func TestParse(t *testing.T) {
 	t.Run("resource with a static field", func(t *testing.T) {
 		parse(t, "name {\nfield type\n}", func(res *LR) {
 			f := []*Field{
-				&Field{ID: "field", Args: nil, Type: Type{SimpleType: &SimpleType{"type"}}},
+				{ID: "field", Args: nil, Type: Type{SimpleType: &SimpleType{"type"}}},
 			}
 			assert.Equal(t, "name", res.Resources[0].ID)
 			assert.Equal(t, f, res.Resources[0].Body.Fields)
@@ -54,7 +54,7 @@ func TestParse(t *testing.T) {
 	t.Run("resource with a list type", func(t *testing.T) {
 		parse(t, "name {\nfield []type\n}", func(res *LR) {
 			f := []*Field{
-				&Field{ID: "field", Args: nil, Type: Type{ListType: &ListType{Type{SimpleType: &SimpleType{"type"}}}}},
+				{ID: "field", Args: nil, Type: Type{ListType: &ListType{Type{SimpleType: &SimpleType{"type"}}}}},
 			}
 			assert.Equal(t, "name", res.Resources[0].ID)
 			assert.Equal(t, f, res.Resources[0].Body.Fields)
@@ -64,7 +64,7 @@ func TestParse(t *testing.T) {
 	t.Run("resource with a map type", func(t *testing.T) {
 		parse(t, "name {\nfield map[a]b\n}", func(res *LR) {
 			f := []*Field{
-				&Field{ID: "field", Args: nil, Type: Type{
+				{ID: "field", Args: nil, Type: Type{
 					MapType: &MapType{SimpleType{"a"}, Type{SimpleType: &SimpleType{"b"}}},
 				}},
 			}
@@ -76,7 +76,7 @@ func TestParse(t *testing.T) {
 	t.Run("resource with a dependent field, no args", func(t *testing.T) {
 		parse(t, "name {\nfield() type\n}", func(res *LR) {
 			f := []*Field{
-				&Field{ID: "field", Args: &FieldArgs{}, Type: Type{SimpleType: &SimpleType{"type"}}},
+				{ID: "field", Args: &FieldArgs{}, Type: Type{SimpleType: &SimpleType{"type"}}},
 			}
 			assert.Equal(t, "name", res.Resources[0].ID)
 			assert.Equal(t, f, res.Resources[0].Body.Fields)
@@ -86,8 +86,8 @@ func TestParse(t *testing.T) {
 	t.Run("resource with a dependent field, with args", func(t *testing.T) {
 		parse(t, "name {\nfield(one, two.three) type\n}", func(res *LR) {
 			f := []*Field{
-				&Field{ID: "field", Type: Type{SimpleType: &SimpleType{"type"}}, Args: &FieldArgs{
-					List: []SimpleType{SimpleType{"one"}, SimpleType{"two.three"}},
+				{ID: "field", Type: Type{SimpleType: &SimpleType{"type"}}, Args: &FieldArgs{
+					List: []SimpleType{{"one"}, {"two.three"}},
 				}},
 			}
 			assert.Equal(t, "name", res.Resources[0].ID)
@@ -98,9 +98,9 @@ func TestParse(t *testing.T) {
 	t.Run("resource with init, with args", func(t *testing.T) {
 		parse(t, "name {\ninit(one int, two string)\n}", func(res *LR) {
 			f := []*Init{
-				&Init{Args: []TypedArg{
-					TypedArg{ID: "one", Type: Type{SimpleType: &SimpleType{"int"}}},
-					TypedArg{ID: "two", Type: Type{SimpleType: &SimpleType{"string"}}},
+				{Args: []TypedArg{
+					{ID: "one", Type: Type{SimpleType: &SimpleType{"int"}}},
+					{ID: "two", Type: Type{SimpleType: &SimpleType{"string"}}},
 				}},
 			}
 			assert.Equal(t, "name", res.Resources[0].ID)
@@ -132,17 +132,17 @@ name.no {
 	call(resource.field) []int
 }`, func(res *LR) {
 			i := []*Init{
-				&Init{Args: []TypedArg{
-					TypedArg{ID: "i1", Type: Type{SimpleType: &SimpleType{"string"}}},
-					TypedArg{ID: "i2", Type: Type{MapType: &MapType{SimpleType{"int"}, Type{SimpleType: &SimpleType{"int"}}}}},
+				{Args: []TypedArg{
+					{ID: "i1", Type: Type{SimpleType: &SimpleType{"string"}}},
+					{ID: "i2", Type: Type{MapType: &MapType{SimpleType{"int"}, Type{SimpleType: &SimpleType{"int"}}}}},
 				}},
 			}
 			f := []*Field{
-				&Field{ID: "field", Type: Type{MapType: &MapType{Key: SimpleType{"string"}, Value: Type{SimpleType: &SimpleType{"int"}}}}},
-				&Field{ID: "call",
+				{ID: "field", Type: Type{MapType: &MapType{Key: SimpleType{"string"}, Value: Type{SimpleType: &SimpleType{"int"}}}}},
+				{ID: "call",
 					Type: Type{ListType: &ListType{Type: Type{SimpleType: &SimpleType{"int"}}}},
 					Args: &FieldArgs{
-						List: []SimpleType{SimpleType{"resource.field"}},
+						List: []SimpleType{{"resource.field"}},
 					}},
 			}
 			assert.Equal(t, "name.no", res.Resources[0].ID)
