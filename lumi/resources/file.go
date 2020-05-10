@@ -22,6 +22,13 @@ func (s *lumiFile) id() (string, error) {
 
 func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
 	if !exists {
+		log.Debug().Str("file", path).Msg("[file]> update content, empty, file doesn't exist")
+		s.Cache.Store("content", &lumi.CacheEntry{Data: "", Valid: true, Timestamp: time.Now().Unix()})
+
+		err := s.Runtime.Observers.Trigger(s.LumiResource().FieldUID("content"))
+		if err != nil {
+			log.Error().Err(err).Msg("[file]> failed to trigger content")
+		}
 		return "", nil
 	}
 
