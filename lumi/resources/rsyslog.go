@@ -50,7 +50,7 @@ func (s *lumiRsyslogConf) id() (string, error) {
 
 func (s *lumiRsyslogConf) getFiles(confPath string) ([]interface{}, error) {
 	if !strings.HasSuffix(confPath, ".conf") {
-		return nil, nil, errors.New("Failed to initialize, path must end in `.conf` so we can find files in `.d` directory.")
+		return nil, errors.New("failed to initialize, path must end in `.conf` so we can find files in `.d` directory")
 	}
 
 	f, err := s.Runtime.CreateResource("file", "path", confPath)
@@ -78,27 +78,33 @@ func (s *lumiRsyslogConf) GetFiles() ([]interface{}, error) {
 }
 
 func (s *lumiRsyslogConf) GetContent(files []interface{}) (string, error) {
-	var content strings.Builder
+	var res strings.Builder
+	var notReadyError error = nil
 
 	// TODO: this can be heavily improved once we do it right, since this is constantly
 	// re-registered as the file changes
 	for i := range files {
 		file := files[i].(File)
+
 		err := s.Runtime.WatchAndCompute(file, "content", s, "content")
 		if err != nil {
-			log.Error().Err(err).Msg("npt.conf> watch+compute failed")
+			log.Error().Err(err).Msg("[rsyslog.conf]> watch+compute failed for file.content")
 		}
 
-		c, err := file.Content()
+		content, err := file.Content()
 		if err != nil {
-			return "", err
+			notReadyError = lumi.NotReadyError{}
 		}
 
-		content.WriteString(c)
-		content.WriteString("\n")
+		res.WriteString(content)
+		res.WriteString("\n")
 	}
 
-	return content.String(), nil
+	if notReadyError != nil {
+		return "", notReadyError
+	}
+
+	return res.String(), nil
 }
 
 func (s *lumiRsyslogConf) GetSettings(content string) ([]interface{}, error) {

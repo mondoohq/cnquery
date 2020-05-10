@@ -12,6 +12,13 @@ command {
   exitcode() int
 }
 
+pam.conf {
+  init(path string)
+  files() []file
+  content(files) string
+  services(files) map[string][]string
+}
+
 powershell {
   init(script string)
   script string
@@ -25,7 +32,7 @@ file {
   path string
   basename(path) string
   dirname(path) string
-  content(path) string
+  content(path, exists) string
   exists() bool
   permissions() file.permissions
   size() int

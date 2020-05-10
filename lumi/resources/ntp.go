@@ -12,7 +12,7 @@ func (s *lumiNtpConf) init(args *lumi.Args) (*lumi.Args, NtpConf, error) {
 	if x, ok := (*args)["path"]; ok {
 		path, ok := x.(string)
 		if !ok {
-			return nil, nil, errors.New("Wrong type for 'path' in npt.conf initialization, it must be a string")
+			return nil, nil, errors.New("Wrong type for 'path' in ntp.conf initialization, it must be a string")
 		}
 
 		f, err := s.Runtime.CreateResource("file", "path", path)
@@ -49,7 +49,7 @@ func (s *lumiNtpConf) GetContent(file File) (string, error) {
 	// re-registered as the file changes
 	err := s.Runtime.WatchAndCompute(file, "content", s, "content")
 	if err != nil {
-		log.Error().Err(err).Msg("npt.conf> watch+compute failed")
+		log.Error().Err(err).Msg("ntp.conf> watch+compute failed")
 	}
 
 	return file.Content()
