@@ -23,6 +23,8 @@ powershell {
 file {
   init(path string)
   path string
+  basename(path) string
+  dirname(path) string
   content(path) string
   exists() bool
   permissions() file.permissions
