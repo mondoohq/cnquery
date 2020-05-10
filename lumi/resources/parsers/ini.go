@@ -4,17 +4,17 @@ import "strings"
 
 // Ini contains the parsed contents of an ini-style file
 type Ini struct {
-	Fields map[string]map[string]string
+	Fields map[string]interface{}
 }
 
 // ParseIni parses the raw text contents of an ini-style file
 func ParseIni(raw string) *Ini {
 	res := Ini{
-		Fields: map[string]map[string]string{},
+		Fields: map[string]interface{}{},
 	}
 
 	curGroup := ""
-	res.Fields[curGroup] = map[string]string{}
+	res.Fields[curGroup] = map[string]interface{}{}
 
 	lines := strings.Split(raw, "\n")
 	for i := range lines {
@@ -31,7 +31,7 @@ func ParseIni(raw string) *Ini {
 			gEnd := strings.Index(line, "]")
 			if gEnd > 0 {
 				curGroup = line[1:gEnd]
-				res.Fields[curGroup] = map[string]string{}
+				res.Fields[curGroup] = map[string]interface{}{}
 			}
 			continue
 		}
@@ -47,7 +47,7 @@ func ParseIni(raw string) *Ini {
 			v = strings.Trim(kv[1], " \t\r")
 		}
 
-		res.Fields[curGroup][k] = v
+		res.Fields[curGroup].(map[string]interface{})[k] = v
 	}
 
 	return &res

@@ -52,6 +52,14 @@ files.find {
   type() string
 }
 
+parse.ini {
+  init(path string)
+  file() file
+  content(file) string
+  sections(content) map[string]map[string]string
+  params(sections) map[string]string
+}
+
 sshd.config {
   init(path string)
   file() file
