@@ -155,14 +155,32 @@ const Card = styled.div`
   margin: 0 24px 24px 0;
   padding: 15px 24px 24px 24px;
   background: ${props => props.theme.colors.bgDarker};
+
+  &:hover {
+    box-shadow: 3px 3px 10px #111;
+  }
 `
 const Name = styled.span`
   color: ${props => props.theme.colors.primary};
 `
 
-const FieldName = styled.span`
-  color: ${props => props.theme.colors.secondary};
+const Inits = styled.span`
+  font-size: 16px;
 `
+
+const FieldName = styled.span`
+  color: inherit;
+  cursor: pointer;
+
+  &:hover {
+    color: ${props => props.theme.colors.secondary};
+  }
+`
+
+const FieldType = styled.span`
+  font-size: 16px;
+  color: #aaa;
+`;
 
 type ResourceProps = {
   resource: LrResource
@@ -182,7 +200,7 @@ export class Resource extends React.Component<ResourceProps, {}> {
     return (
       <Card>
         <div>
-          <Name>{resource.ID}</Name>{inits}
+          <Name>{resource.ID}</Name> <Inits>{inits}</Inits>
         </div>
         {listType}
         {fields}
@@ -213,7 +231,7 @@ export class Resource extends React.Component<ResourceProps, {}> {
   renderField(field: LrField): React.ReactElement {
     return (
       <div>
-        <FieldName>{field.ID}</FieldName> {renderLrType(field.Type)}
+        <FieldName>{field.ID}</FieldName> <FieldType>{renderLrType(field.Type)}</FieldType>
       </div>
     )
   }
