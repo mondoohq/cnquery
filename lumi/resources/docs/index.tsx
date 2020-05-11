@@ -12,6 +12,9 @@ const theme = {
     bg: "#444",
     bgDarker: "#2b2b2b",
   },
+  shadows: {
+    default: "3px 3px 10px #111",
+  },
 };
 
 const Background = styled.div`
