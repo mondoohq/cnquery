@@ -72,8 +72,23 @@ export class LrDocs extends React.Component<{}, LrDocsState> {
       return "loading..."
     }
 
+    let versions = this.state.metadata.map(x => x.version).sort().reverse();
+    let { selected } = this.state;
+
     return (
-      <Resources snapshot={this.state.selected} />
+      <SiteStructure>
+        <Versions
+          versions={versions}
+          selected={selected.version}
+          onSelect={(version) => {
+            let selected = this.state.metadata.find(v => v.version == version)
+            this.setState({
+              selected,
+            })
+          }}
+        />
+        <Resources snapshot={selected} />
+      </SiteStructure>
     )
   }
 
@@ -98,6 +113,43 @@ export class LrDocs extends React.Component<{}, LrDocsState> {
   }
 }
 
+const SiteStructure = styled.div`
+  display: flex;
+`
+
+const Nav = styled.div`
+  padding: 18px;
+  background: ${props => props.theme.colors.bgDarker};
+  box-shadow: ${props => props.theme.shadows.default};
+  margin-right: 12px;
+`
+
+const NavItem = styled.div<{
+  selected: boolean
+}>`
+  color: ${props => props.selected ? props.theme.colors.primary : "inherit"};
+  cursor: pointer;
+`
+
+type VersionsProps = {
+  versions: string[]
+  selected: string
+  onSelect: (string) => void
+}
+export class Versions extends React.Component<VersionsProps, {}> {
+  render() {
+    return (
+      <Nav>
+        {this.props.versions.map(v => (
+          <NavItem key={v}
+            selected={v == this.props.selected}
+            onClick={() => this.props.onSelect(v)}
+          >{v}</NavItem>
+        ))}
+      </Nav>
+    )
+  }
+}
 
 const Container = styled.div`
   padding: 24px;
@@ -157,7 +209,7 @@ const Card = styled.div`
   background: ${props => props.theme.colors.bgDarker};
 
   &:hover {
-    box-shadow: 3px 3px 10px #111;
+    box-shadow: ${props => props.theme.shadows.default};
   }
 `
 const Name = styled.span`
