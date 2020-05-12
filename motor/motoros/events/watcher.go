@@ -2,14 +2,42 @@ package events
 
 import (
 	"errors"
+	"sync"
 	"time"
 
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
+// Subscriptions is a map to store all watcher subscriptions
+type Subscriptions struct{ sync.Map }
+
+// Store a new subscription
+func (c *Subscriptions) Store(k string, v *WatcherSubscription) {
+	c.Map.Store(k, v)
+}
+
+// Load a subscription
+func (c *Subscriptions) Load(k string) (*WatcherSubscription, bool) {
+	res, ok := c.Map.Load(k)
+	if !ok {
+		return nil, ok
+	}
+	return res.(*WatcherSubscription), ok
+}
+
+func (c *Subscriptions) Delete(k string) {
+	c.Map.Delete(k)
+}
+
+func (c *Subscriptions) Range(f func(string, *WatcherSubscription) bool) {
+	c.Map.Range(func(key interface{}, value interface{}) bool {
+		return f(key.(string), value.(*WatcherSubscription))
+	})
+}
+
 type Watcher struct {
 	transport     types.Transport
-	subscriptions map[string]*WatcherSubscription
+	subscriptions Subscriptions
 	jm            *JobManager
 	SleepDuration time.Duration
 }
@@ -22,7 +50,6 @@ type WatcherSubscription struct {
 func NewWatcher(transport types.Transport) *Watcher {
 	w := &Watcher{transport: transport}
 	w.transport = transport
-	w.subscriptions = make(map[string]*WatcherSubscription)
 	w.jm = NewJobManager(transport)
 	w.SleepDuration = time.Duration(10 * time.Second)
 	return w
@@ -40,7 +67,7 @@ func (w *Watcher) Subscribe(typ string, id string, observable func(types.Observa
 	sid := w.subscriberId(typ, id)
 
 	// throw an error if the id is already registered
-	_, ok := w.subscriptions[sid]
+	_, ok := w.subscriptions.Load(sid)
 	if ok {
 		return errors.New("resource " + typ + " with " + id + " is already registered")
 	}
@@ -89,10 +116,10 @@ func (w *Watcher) Subscribe(typ string, id string, observable func(types.Observa
 	}
 
 	// store the subscription
-	w.subscriptions[sid] = &WatcherSubscription{
+	w.subscriptions.Store(sid, &WatcherSubscription{
 		typ:        typ,
 		observable: observable,
-	}
+	})
 
 	return nil
 }
@@ -111,15 +138,16 @@ func (w *Watcher) unsubscribe(sid string) error {
 	}
 
 	// remove the subscription and un-register the jobs
-	delete(w.subscriptions, sid)
+	w.subscriptions.Delete(sid)
 	return nil
 }
 
 func (w *Watcher) TearDown() error {
 	// remove all subscriptions
-	for sid, _ := range w.subscriptions {
-		w.unsubscribe(sid)
-	}
+	w.subscriptions.Range(func(k string, v *WatcherSubscription) bool {
+		w.unsubscribe(k)
+		return true
+	})
 
 	// tear down job manager, all subscriptions should be stopped already
 	w.jm.TearDown()
