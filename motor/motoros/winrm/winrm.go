@@ -112,6 +112,10 @@ func (t *WinrmTransport) File(path string) (afero.File, error) {
 	return nil, errors.New("not implemented")
 }
 
+func (t *WinrmTransport) FileInfo(path string) (types.FileInfoDetails, error) {
+	return types.FileInfoDetails{}, errors.New("not implemented")
+}
+
 func (t *WinrmTransport) FS() afero.Fs {
 	return nil
 }
