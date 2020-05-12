@@ -114,11 +114,26 @@ func (c *CallbacksList) Load(key string) (*Callbacks, bool) {
 	return v.(*Callbacks), true
 }
 
+// Hooks is a map of func
+type Hooks struct{ sync.Map }
+
+func (c *Hooks) Store(k string, v func()) {
+	c.Map.Store(k, v)
+}
+
+func (c *Hooks) Load(k string) (func(), bool) {
+	res, ok := c.Map.Load(k)
+	if !ok {
+		return nil, ok
+	}
+	return res.(func()), ok
+}
+
 // Observers manages all the observers
 type Observers struct {
 	list        CallbacksList
 	reverseList types.StringToStrings
-	hooks       map[string]func()
+	hooks       Hooks
 	motor       *motor.Motor
 }
 
@@ -126,7 +141,6 @@ type Observers struct {
 func NewObservers(motor *motor.Motor) *Observers {
 	return &Observers{
 		motor: motor,
-		hooks: make(map[string]func()),
 	}
 }
 
@@ -167,7 +181,7 @@ func (ctx *Observers) Unwatch(resourceFieldUID string, watcherUID string) (bool,
 
 // OnUnwatch will trigger the given handler once the watcher is removed
 func (ctx *Observers) OnUnwatch(watcherUID string, f func()) {
-	ctx.hooks["unwatch\x00"+watcherUID] = f
+	ctx.hooks.Store("unwatch\x00"+watcherUID, f)
 }
 
 // UnwatchAll the references that this watcher is looking at. If it finds
@@ -176,7 +190,7 @@ func (ctx *Observers) OnUnwatch(watcherUID string, f func()) {
 func (ctx *Observers) UnwatchAll(watcherUID string) error {
 	log.Debug().Str("watcher", watcherUID).Msg("observer> unwatch all")
 
-	h, ok := ctx.hooks["unwatch\x00"+watcherUID]
+	h, ok := ctx.hooks.Load("unwatch\x00" + watcherUID)
 	if ok {
 		h()
 	}
