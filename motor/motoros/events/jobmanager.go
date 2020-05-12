@@ -78,11 +78,7 @@ func (j *Job) isPending() bool {
 
 func NewJobManager(transport types.Transport) *JobManager {
 	jm := &JobManager{transport: transport}
-
-	// stores all callbacks for by subscriber
-	jm.jobs = make(map[string]*Job)
-	jm.jobMutex = &sync.Mutex{}
-
+	jm.jobSelectionMutex = &sync.Mutex{}
 	jm.Serve()
 	return jm
 }
@@ -91,12 +87,48 @@ type JobManagerMetrics struct {
 	Jobs int
 }
 
+// Jobs is a map to store all jobs
+type Jobs struct{ sync.Map }
+
+// Store a new job
+func (c *Jobs) Store(k string, v *Job) {
+	c.Map.Store(k, v)
+}
+
+// Load a job
+func (c *Jobs) Load(k string) (*Job, bool) {
+	res, ok := c.Map.Load(k)
+	if !ok {
+		return nil, ok
+	}
+	return res.(*Job), ok
+}
+
+func (c *Jobs) Range(f func(string, *Job) bool) {
+	c.Map.Range(func(key interface{}, value interface{}) bool {
+		return f(key.(string), value.(*Job))
+	})
+}
+
+func (c *Jobs) Len() int {
+	i := 0
+	c.Range(func(k string, j *Job) bool {
+		i++
+		return true
+	})
+	return i
+}
+
+func (c *Jobs) Delete(k string) {
+	c.Map.Delete(k)
+}
+
 type JobManager struct {
-	transport  types.Transport
-	quit       chan bool
-	jobs       map[string]*Job
-	jobMutex   *sync.Mutex
-	jobMetrics JobManagerMetrics
+	transport         types.Transport
+	quit              chan bool
+	jobSelectionMutex *sync.Mutex
+	jobs              Jobs
+	jobMetrics        JobManagerMetrics
 }
 
 // Schedule stores the job in the run list and sanitize the job before execution
@@ -110,35 +142,28 @@ func (jm *JobManager) Schedule(job *Job) (string, error) {
 	log.Debug().Str("jobid", job.ID).Msg("motor.job> schedule new job")
 
 	// store job, with a mutex
-	jm.jobMutex.Lock()
-	jm.jobs[job.ID] = job
-	jm.jobMutex.Unlock()
+	jm.jobs.Store(job.ID, job)
 
 	// return job id
 	return job.ID, nil
 }
 
 func (jm *JobManager) GetJob(jobid string) (*Job, error) {
-	jm.jobMutex.Lock()
-	job, ok := jm.jobs[jobid]
-	jm.jobMutex.Unlock()
+	job, ok := jm.jobs.Load(jobid)
 	if !ok {
 		return nil, errors.New("job " + jobid + " does not exist")
 	}
-
 	return job, nil
 }
 
 func (jm *JobManager) Delete(jobid string) error {
 	log.Debug().Str("jobid", jobid).Msg("motor.job> delete job")
-	jm.jobMutex.Lock()
-	delete(jm.jobs, jobid)
-	jm.jobMutex.Unlock()
+	jm.jobs.Delete(jobid)
 	return nil
 }
 
 func (jm *JobManager) Metrics() *JobManagerMetrics {
-	jm.jobMetrics.Jobs = len(jm.jobs)
+	jm.jobMetrics.Jobs = jm.jobs.Len()
 	return &jm.jobMetrics
 }
 
@@ -225,22 +250,22 @@ func (jm *JobManager) nextJob() (*Job, error) {
 	oldest := time.Date(9999, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	// iterate over list of jobs of pending jobs and find the oldest one
-	jm.jobMutex.Lock()
+	jm.jobSelectionMutex.Lock()
 	now := time.Now()
-	for _, job := range jm.jobs {
+
+	jm.jobs.Range(func(k string, job *Job) bool {
 		if job.State == Job_PENDING && oldest.After(job.ScheduledFor) && job.ScheduledFor.Before(now) {
 			oldest = job.ScheduledFor
 			oldestJob = job
 		}
-	}
+		return true
+	})
 
-	// set the job to running to ensure other parallel go routines do not fetch
-	// the same job
+	// set the job to running to ensure other parallel go routines do not fetch the same job
 	if oldestJob != nil {
 		oldestJob.State = Job_RUNNING
 	}
-
-	jm.jobMutex.Unlock()
+	jm.jobSelectionMutex.Unlock()
 
 	if oldestJob == nil {
 		return nil, errors.New("no job available")
