@@ -33,6 +33,7 @@ type LrField = {
   }
   ID: string
   Type: LrType
+  updated?: boolean
 }
 
 type LrListResource = {
@@ -52,6 +53,7 @@ type LrResource = {
   }
   ID: string
   ListType?: LrListResource
+  updated?: boolean
 }
 
 type LrSnapshot = {
@@ -72,8 +74,14 @@ export class LrDocs extends React.Component<{}, LrDocsState> {
       return "loading..."
     }
 
-    let versions = this.state.metadata.map(x => x.version).sort().reverse();
+    let versions = this.state.metadata.map(x => x.version);
     let { selected } = this.state;
+
+    let idx = versions.indexOf(selected.version);
+    let prev = selected;
+    if (idx <= versions.length-2) {
+      prev = this.state.metadata[idx+1]
+    }
 
     return (
       <SiteStructure>
@@ -87,7 +95,7 @@ export class LrDocs extends React.Component<{}, LrDocsState> {
             })
           }}
         />
-        <Resources snapshot={selected} />
+        <Resources snapshot={selected} prev={prev} />
       </SiteStructure>
     )
   }
@@ -100,9 +108,11 @@ export class LrDocs extends React.Component<{}, LrDocsState> {
       let res = data[v] as LrSnapshot;
       res.version = v;
       return res
-    })
+    }).sort(
+      (a,b) => a.version > b.version ? -1 : 1
+    )
     
-    let selected = metadata[metadata.length-1];
+    let selected = metadata[0];
 
     setTimeout(() => {
       this.setState({
@@ -122,6 +132,7 @@ const Nav = styled.div`
   background: ${props => props.theme.colors.bgDarker};
   box-shadow: ${props => props.theme.shadows.default};
   margin-right: 12px;
+  min-height: 100vh;
 `
 
 const NavItem = styled.div<{
@@ -166,6 +177,7 @@ const InfoLine = styled.div`
 
 type ResourcesProps = {
   snapshot: LrSnapshot
+  prev: LrSnapshot
 }
 export class Resources extends React.Component<ResourcesProps, {}> {
   render() {
@@ -173,6 +185,7 @@ export class Resources extends React.Component<ResourcesProps, {}> {
     window.SNAP = snap; // yeah yeah TODO: remove me
 
     let resources = snap.Resources.sort((a,b) => (a.ID > b.ID) ? 1 : -1 )
+    // resources = this.computeUpdatedResources(resources, this.props.prev.Resources)
 
     let cards = resources.map((resource, idx) => {
       return <Resource resource={resource} key={idx} />
@@ -189,6 +202,42 @@ export class Resources extends React.Component<ResourcesProps, {}> {
         </Cards>
       </Container>
     )
+  }
+
+  computeUpdatedResources(resources: LrResource[], prevResources: LrResource[]): LrResource[] {
+    let prev = {}
+    prevResources.map(x => prev[x.ID] = x)
+
+    let updatedResources = []
+    resources.forEach(resource => {
+      let prevResource = prev[resource.ID]
+      if (prevResource == null) {
+        resource.updated = true
+        resource.Body.Fields.forEach(field => field.updated = true)
+        updatedResources.push(resource)
+        return
+      }
+
+      if (resource.Body.Fields == null) {
+        return
+      }
+
+      let hasUpdates = false
+      resource.Body.Fields.forEach((field) => {
+        let updated = prevResource.Body.Fields.find(f => f.ID == field.ID) == null;
+        if (updated) {
+          field.updated = true
+          hasUpdates = true
+        }
+      })
+
+      if (hasUpdates) {
+        updatedResources.push(resource)
+        resource.updated = false
+      }
+    })
+
+    return updatedResources
   }
 }
 
@@ -212,16 +261,20 @@ const Card = styled.div`
     box-shadow: ${props => props.theme.shadows.default};
   }
 `
-const Name = styled.span`
-  color: ${props => props.theme.colors.primary};
+const Name = styled.span<{
+  updated?: boolean
+}>`
+  color: ${props => (props.updated !== false) ? props.theme.colors.primary : "white"};
 `
 
 const Inits = styled.span`
   font-size: 16px;
 `
 
-const FieldName = styled.span`
-  color: inherit;
+const FieldName = styled.span<{
+  updated?: boolean
+}>`
+  color: ${props => (props.updated === true) ? props.theme.colors.primary : "inherit"};
   cursor: pointer;
 
   &:hover {
@@ -252,7 +305,7 @@ export class Resource extends React.Component<ResourceProps, {}> {
     return (
       <Card>
         <div>
-          <Name>{resource.ID}</Name> <Inits>{inits}</Inits>
+          <Name updated={resource.updated}>{resource.ID}</Name> <Inits>{inits}</Inits>
         </div>
         {listType}
         {fields}
@@ -282,8 +335,8 @@ export class Resource extends React.Component<ResourceProps, {}> {
 
   renderField(field: LrField): React.ReactElement {
     return (
-      <div>
-        <FieldName>{field.ID}</FieldName> <FieldType>{renderLrType(field.Type)}</FieldType>
+      <div key={field.ID}>
+        <FieldName updated={field.updated}>{field.ID}</FieldName> <FieldType>{renderLrType(field.Type)}</FieldType>
       </div>
     )
   }
