@@ -201,6 +201,16 @@ func TestCompiler_OperatorPrecedence(t *testing.T) {
 	}
 }
 
+func TestChecksums(t *testing.T) {
+	t.Run("no duplicates", func(t *testing.T) {
+		a, err := Compile("users.list { uid == 1 }", schema)
+		assert.NoError(t, err)
+		b, err := Compile("users.list { uid == 2 }", schema)
+		assert.NoError(t, err)
+		assert.NotEqual(t, a.Code.Id, b.Code.Id)
+	})
+}
+
 func TestSuggestions(t *testing.T) {
 	t.Run("no suggestions", func(t *testing.T) {
 		res, err := Compile("notthere", schema)
