@@ -24,7 +24,7 @@ func (p *lumiAuditpol) GetList() ([]interface{}, error) {
 	auditPolEntries := make([]interface{}, len(entries))
 	for i := range entries {
 		entry := entries[i]
-		lumiAuditpolEntry, err := p.Runtime.CreateResource("auditpol_entry",
+		lumiAuditpolEntry, err := p.Runtime.CreateResource("auditpol.entry",
 			"machinename", entry.MachineName,
 			"policytarget", entry.PolicyTarget,
 			"subcategory", entry.Subcategory,
@@ -35,12 +35,12 @@ func (p *lumiAuditpol) GetList() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		auditPolEntries[i] = lumiAuditpolEntry.(Auditpol_entry)
+		auditPolEntries[i] = lumiAuditpolEntry.(AuditpolEntry)
 	}
 
 	return auditPolEntries, nil
 }
 
-func (p *lumiAuditpol_entry) id() (string, error) {
+func (p *lumiAuditpolEntry) id() (string, error) {
 	return p.Subcategoryguid()
 }

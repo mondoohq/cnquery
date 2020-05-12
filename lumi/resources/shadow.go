@@ -27,7 +27,7 @@ func (s *lumiShadow) GetList() ([]interface{}, error) {
 	for i := range entries {
 		entry := entries[i]
 
-		shadowEntry, err := s.Runtime.CreateResource("shadow_entry",
+		shadowEntry, err := s.Runtime.CreateResource("shadow.entry",
 			"user", entry.User,
 			"password", entry.Password,
 			"lastchanges", entry.LastChanges,
@@ -42,13 +42,13 @@ func (s *lumiShadow) GetList() ([]interface{}, error) {
 			log.Error().Err(err).Str("shadow_entry", entry.User).Msg("lumi[shadow_entry]> could not create shadow entry resource")
 			return nil, err
 		}
-		shadowEntryResources[i] = shadowEntry.(Shadow_entry)
+		shadowEntryResources[i] = shadowEntry.(ShadowEntry)
 	}
 
 	return shadowEntryResources, nil
 }
 
-func (se *lumiShadow_entry) id() (string, error) {
+func (se *lumiShadowEntry) id() (string, error) {
 	id, _ := se.User()
 	return id, nil
 }
