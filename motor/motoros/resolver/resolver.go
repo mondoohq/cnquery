@@ -22,15 +22,27 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 )
 
+type EndpointOption func(endpoint *types.Endpoint)
+
+func WithIdentityFile(identityFile string) EndpointOption {
+	return func(endpoint *types.Endpoint) {
+		endpoint.PrivateKeyPath = identityFile
+	}
+}
+
 func New(endpoint *types.Endpoint, idDetectors ...string) (*motor.Motor, error) {
 	return ResolveTransport(endpoint, idDetectors)
 }
 
-func NewFromUrl(uri string) (*motor.Motor, error) {
+func NewFromUrl(uri string, opts ...EndpointOption) (*motor.Motor, error) {
 	t := &types.Endpoint{}
 	err := t.ParseFromURI(uri)
 	if err != nil {
 		return nil, err
+	}
+
+	for i := range opts {
+		opts[i](t)
 	}
 	return New(t)
 }
