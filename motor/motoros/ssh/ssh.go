@@ -18,6 +18,8 @@ import (
 	"go.mondoo.io/mondoo/motor/motoros/types"
 	"go.mondoo.io/mondoo/nexus/assets"
 	"golang.org/x/crypto/ssh"
+
+	rawsftp "github.com/pkg/sftp"
 )
 
 func ReadSSHConfig(endpoint *types.Endpoint) *types.Endpoint {
@@ -184,6 +186,35 @@ func (t *SSHTransport) File(path string) (afero.File, error) {
 	}
 
 	return fs.Open(path)
+}
+
+func (t *SSHTransport) FileInfo(path string) (types.FileInfoDetails, error) {
+	fs := t.FS()
+	afs := &afero.Afero{Fs: fs}
+	stat, err := afs.Stat(path)
+	if err != nil {
+		return types.FileInfoDetails{}, err
+	}
+
+	uid := int64(-1)
+	gid := int64(-1)
+
+	if t.UseScpFilesystem {
+		// scp does not preserve uid and gid
+	} else {
+		if stat, ok := stat.Sys().(*rawsftp.FileStat); ok {
+			uid = int64(stat.UID)
+			gid = int64(stat.GID)
+		}
+	}
+	mode := stat.Mode()
+
+	return types.FileInfoDetails{
+		Mode: types.FileModeDetails{mode},
+		Size: stat.Size(),
+		Uid:  uid,
+		Gid:  gid,
+	}, nil
 }
 
 func (t *SSHTransport) Close() {

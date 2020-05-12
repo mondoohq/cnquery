@@ -13,6 +13,8 @@ type FileInfo struct {
 	Mode    os.FileMode `toml:"mode"`
 	ModTime time.Time   `toml:"time"`
 	IsDir   bool        `toml:"isdir"`
+	Uid     int64       `toml:"uid"`
+	Gid     int64       `toml:"gid"`
 }
 
 type MockFileData struct {
@@ -40,6 +42,8 @@ func (mf *MockFile) Stat() (os.FileInfo, error) {
 		FModTime: mf.data.StatData.ModTime,
 		FMode:    mf.data.StatData.Mode,
 		FIsDir:   mf.data.StatData.IsDir,
+		Uid:      mf.data.StatData.Uid,
+		Gid:      mf.data.StatData.Uid,
 	}, nil
 }
 

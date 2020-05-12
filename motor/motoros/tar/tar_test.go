@@ -10,6 +10,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/motoros/tar"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 
@@ -110,10 +111,7 @@ func TestTarSymlinkFile(t *testing.T) {
 // }
 func TestTarFile(t *testing.T) {
 	err := cacheImageToTar()
-	assert.Equal(t, nil, err, "should create tar without error")
-	if err != nil {
-		return
-	}
+	require.NoError(t, err)
 
 	tarTransport, err := tar.New(&types.Endpoint{Backend: "tar", Path: alpineContainerPath})
 	assert.Equal(t, nil, err, "should create tar without error")
@@ -134,6 +132,58 @@ func TestTarFile(t *testing.T) {
 		assert.Equal(t, nil, err, "should execute without error")
 		assert.Equal(t, 6, len(content), "should read the full content")
 	}
+}
+
+func TestFilePermissions(t *testing.T) {
+	err := cacheImageToTar()
+	require.NoError(t, err)
+
+	trans, err := tar.New(&types.Endpoint{Backend: "tar", Path: alpineContainerPath})
+	require.NoError(t, err)
+
+	path := "/etc/alpine-release"
+	details, err := trans.FileInfo(path)
+	require.NoError(t, err)
+	assert.Equal(t, int64(0), details.Uid)
+	assert.Equal(t, int64(0), details.Gid)
+	assert.True(t, details.Size >= 0)
+	assert.Equal(t, false, details.Mode.IsDir())
+	assert.Equal(t, true, details.Mode.IsRegular())
+	assert.Equal(t, "-rw-r--r--", details.Mode.String())
+	assert.True(t, details.Mode.UserReadable())
+	assert.True(t, details.Mode.UserWriteable())
+	assert.False(t, details.Mode.UserExecutable())
+	assert.True(t, details.Mode.GroupReadable())
+	assert.False(t, details.Mode.GroupWriteable())
+	assert.False(t, details.Mode.GroupExecutable())
+	assert.True(t, details.Mode.OtherReadable())
+	assert.False(t, details.Mode.OtherWriteable())
+	assert.False(t, details.Mode.OtherExecutable())
+	assert.False(t, details.Mode.Suid())
+	assert.False(t, details.Mode.Sgid())
+	assert.False(t, details.Mode.Sticky())
+
+	path = "/etc"
+	details, err = trans.FileInfo(path)
+	require.NoError(t, err)
+	assert.Equal(t, int64(0), details.Uid)
+	assert.Equal(t, int64(0), details.Gid)
+	assert.True(t, details.Size >= 0)
+	assert.True(t, details.Mode.IsDir())
+	assert.False(t, details.Mode.IsRegular())
+	assert.Equal(t, "drwxr-xr-x", details.Mode.String())
+	assert.True(t, details.Mode.UserReadable())
+	assert.True(t, details.Mode.UserWriteable())
+	assert.True(t, details.Mode.UserExecutable())
+	assert.True(t, details.Mode.GroupReadable())
+	assert.False(t, details.Mode.GroupWriteable())
+	assert.True(t, details.Mode.GroupExecutable())
+	assert.True(t, details.Mode.OtherReadable())
+	assert.False(t, details.Mode.OtherWriteable())
+	assert.True(t, details.Mode.OtherExecutable())
+	assert.False(t, details.Mode.Suid())
+	assert.False(t, details.Mode.Sgid())
+	assert.False(t, details.Mode.Sticky())
 }
 
 func cacheImageToTar() error {

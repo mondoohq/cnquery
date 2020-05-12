@@ -11,6 +11,8 @@ type Transport interface {
 	RunCommand(command string) (*Command, error)
 	// File opens a specific file
 	File(path string) (afero.File, error)
+	// returns file permissions and ownership
+	FileInfo(path string) (FileInfoDetails, error)
 	// FS provides access to the file system of the target system
 	FS() afero.Fs
 	// Close closes the transport
