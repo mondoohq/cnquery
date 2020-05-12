@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"github.com/segmentio/fasthash/fnv1a"
+	"go.mondoo.io/mondoo/checksums"
 	"go.mondoo.io/mondoo/lumi"
 )
 
@@ -36,16 +36,16 @@ func (s *lumiRsyslogConf) id() (string, error) {
 		return "", err
 	}
 
-	checksum := fnv1a.Init64
+	checksum := checksums.New
 	for i := range files {
 		c, err := files[i].(File).Path()
 		if err != nil {
 			return "", err
 		}
-		checksum = fnv1a.AddString64(checksum, c)
+		checksum = checksum.Add(c)
 	}
 
-	return checksum2string(checksum), nil
+	return checksum.String(), nil
 }
 
 func (s *lumiRsyslogConf) getFiles(confPath string) ([]interface{}, error) {
