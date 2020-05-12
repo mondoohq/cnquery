@@ -210,11 +210,11 @@ groups {
 }
 
 docker {
-  images() []docker_image
-  container() []docker_container
+  images() []docker.image
+  container() []docker.container
 }
 
-docker_image {
+docker.image {
   id string
   size int
   virtualsize int
@@ -222,7 +222,7 @@ docker_image {
   labels map[string]string
 }
 
-docker_container {
+docker.container {
   id string
   command string
   image string
@@ -234,10 +234,10 @@ docker_container {
 }
 
 auditpol {
-  []auditpol_entry
+  []auditpol.entry
 }
 
-auditpol_entry {
+auditpol.entry {
   machinename      string
 	policytarget     string
 	subcategory      string
@@ -261,10 +261,10 @@ logindefs {
 }
 
 mount {
-  []mount_point
+  []mount.point
 }
 
-mount_point {
+mount.point {
   device string
   path string
   fstype string
@@ -272,10 +272,10 @@ mount_point {
 }
 
 shadow {
-  []shadow_entry
+  []shadow.entry
 }
 
-shadow_entry {
+shadow.entry {
   user string
   password string
   lastchanges string

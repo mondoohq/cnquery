@@ -34,7 +34,7 @@ func (m *lumiMount) GetList() ([]interface{}, error) {
 			opts[k] = osMount.Options[k]
 		}
 
-		lumiMountEntry, err := m.Runtime.CreateResource("mount_point",
+		lumiMountEntry, err := m.Runtime.CreateResource("mount.point",
 			"device", osMount.Device,
 			"path", osMount.MountPoint,
 			"fstype", osMount.FSType,
@@ -44,13 +44,13 @@ func (m *lumiMount) GetList() ([]interface{}, error) {
 			return nil, err
 		}
 
-		mountEntries[i] = lumiMountEntry.(Mount_point)
+		mountEntries[i] = lumiMountEntry.(MountPoint)
 	}
 
 	// return the mounts as new entries
 	return mountEntries, nil
 }
 
-func (m *lumiMount_point) id() (string, error) {
+func (m *lumiMountPoint) id() (string, error) {
 	return m.Path()
 }

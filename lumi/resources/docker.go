@@ -42,7 +42,7 @@ func (p *lumiDocker) GetImages() ([]interface{}, error) {
 			tags = append(tags, dImg.RepoTags[i])
 		}
 
-		lumiDockerImage, err := p.Runtime.CreateResource("docker_image",
+		lumiDockerImage, err := p.Runtime.CreateResource("docker.image",
 			"id", dImg.ID,
 			"size", dImg.Size,
 			"virtualsize", dImg.VirtualSize,
@@ -53,7 +53,7 @@ func (p *lumiDocker) GetImages() ([]interface{}, error) {
 			return nil, err
 		}
 
-		imgs[i] = lumiDockerImage.(Docker_image)
+		imgs[i] = lumiDockerImage.(DockerImage)
 	}
 
 	return imgs, nil
@@ -87,7 +87,7 @@ func (p *lumiDocker) GetContainer() ([]interface{}, error) {
 			names = append(names, dContainer.Names[i])
 		}
 
-		lumiDockerContainer, err := p.Runtime.CreateResource("docker_container",
+		lumiDockerContainer, err := p.Runtime.CreateResource("docker.container",
 			"id", dContainer.ID,
 			"image", dContainer.Image,
 			"imageid", dContainer.ImageID,
@@ -101,18 +101,18 @@ func (p *lumiDocker) GetContainer() ([]interface{}, error) {
 			return nil, err
 		}
 
-		container[i] = lumiDockerContainer.(Docker_container)
+		container[i] = lumiDockerContainer.(DockerContainer)
 	}
 
 	return container, nil
 }
 
-func (p *lumiDocker_image) id() (string, error) {
+func (p *lumiDockerImage) id() (string, error) {
 	id, _ := p.Id()
 	return id, nil
 }
 
-func (p *lumiDocker_container) id() (string, error) {
+func (p *lumiDockerContainer) id() (string, error) {
 	id, _ := p.Id()
 	return id, nil
 }
