@@ -187,6 +187,13 @@ export class Resources extends React.Component<ResourcesProps, {}> {
     let resources = snap.Resources.sort((a,b) => (a.ID > b.ID) ? 1 : -1 )
     // resources = this.computeUpdatedResources(resources, this.props.prev.Resources)
 
+    let fieldsCnt = 0
+    resources.forEach(r => {
+      if (r.Body.Fields != null) {
+        fieldsCnt += r.Body.Fields.length
+      }
+    })
+
     let cards = resources.map((resource, idx) => {
       return <Resource resource={resource} key={idx} />
     })
@@ -196,6 +203,7 @@ export class Resources extends React.Component<ResourcesProps, {}> {
         <InfoLine>
           <span>Version: {snap.version}</span>
           <span>Resources: {snap.Resources.length}</span>
+          <span>Fields: {fieldsCnt}</span>
         </InfoLine>
         <Cards>
           {cards}
