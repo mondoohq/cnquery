@@ -122,35 +122,32 @@ func (s *lumiFile) stat() (FilePermissions, int64, error) {
 		return nil, 0, err
 	}
 
-	fs := s.Runtime.Motor.Transport.FS()
-	afs := &afero.Afero{Fs: fs}
-	stat, err := afs.Stat(path)
+	fi, err := s.Runtime.Motor.Transport.FileInfo(path)
 	if err != nil {
 		return nil, 0, err
 	}
-	mode := stat.Mode()
 
 	permRaw, err := s.Runtime.CreateResource("file.permissions",
-		"mode", int64(uint32(mode)&07777),
-		"user_readable", mode&00400 != 0,
-		"user_writeable", mode&00200 != 0,
-		"user_executable", mode&00100 != 0,
-		"group_readable", mode&00040 != 0,
-		"group_writeable", mode&00020 != 0,
-		"group_executable", mode&00010 != 0,
-		"other_readable", mode&00004 != 0,
-		"other_writeable", mode&00002 != 0,
-		"other_executable", mode&00001 != 0,
-		"suid", mode&04000 != 0,
-		"sgid", mode&02000 != 0,
-		"sticky", mode&01000 != 0,
+		"mode", int64(uint32(fi.Mode.FileMode)&07777),
+		"user_readable", fi.Mode.UserReadable(),
+		"user_writeable", fi.Mode.UserWriteable(),
+		"user_executable", fi.Mode.UserExecutable(),
+		"group_readable", fi.Mode.GroupReadable(),
+		"group_writeable", fi.Mode.GroupWriteable(),
+		"group_executable", fi.Mode.GroupExecutable(),
+		"other_readable", fi.Mode.OtherReadable(),
+		"other_writeable", fi.Mode.OtherWriteable(),
+		"other_executable", fi.Mode.OtherExecutable(),
+		"suid", fi.Mode.Suid(),
+		"sgid", fi.Mode.Sgid(),
+		"sticky", fi.Mode.Sticky(),
 	)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	perm := permRaw.(FilePermissions)
-	size := stat.Size()
+	size := fi.Size
 
 	return perm, size, nil
 }
