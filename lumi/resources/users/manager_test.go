@@ -27,7 +27,7 @@ func TestManagerDebian(t *testing.T) {
 	assert.Equal(t, int64(0), usr.Uid)
 	assert.Equal(t, int64(0), usr.Gid)
 	assert.Equal(t, "/root", usr.Home)
-	assert.Equal(t, "root", usr.Username)
+	assert.Equal(t, "root", usr.Name)
 	assert.Equal(t, "/bin/bash", usr.Shell)
 
 	assert.Equal(t, 13, len(userList))
@@ -49,7 +49,7 @@ func TestManagerMacos(t *testing.T) {
 	assert.Equal(t, int64(0), usr.Uid)
 	assert.Equal(t, int64(0), usr.Gid)
 	assert.Equal(t, "/var/root /private/var/root", usr.Home)
-	assert.Equal(t, "root", usr.Username)
+	assert.Equal(t, "root", usr.Name)
 	assert.Equal(t, "/bin/sh", usr.Shell)
 
 	assert.Equal(t, 8, len(userList))
@@ -71,7 +71,7 @@ func TestManagerFreebsd(t *testing.T) {
 	assert.Equal(t, int64(0), usr.Uid)
 	assert.Equal(t, int64(0), usr.Gid)
 	assert.Equal(t, "/root", usr.Home)
-	assert.Equal(t, "root", usr.Username)
+	assert.Equal(t, "root", usr.Name)
 	assert.Equal(t, "/bin/csh", usr.Shell)
 
 	assert.Equal(t, 28, len(userList))
@@ -93,7 +93,7 @@ func TestManagerWindows(t *testing.T) {
 	assert.Equal(t, int64(-1), usr.Uid)
 	assert.Equal(t, int64(-1), usr.Gid)
 	assert.Equal(t, "", usr.Home)
-	assert.Equal(t, "chris", usr.Username)
+	assert.Equal(t, "chris", usr.Name)
 	assert.Equal(t, "", usr.Shell)
 
 	assert.Equal(t, 5, len(userList))

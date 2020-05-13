@@ -11,7 +11,7 @@ type User struct {
 	Uid         int64
 	Gid         int64
 	Sid         string
-	Username    string
+	Name        string
 	Description string
 	Shell       string
 	Home        string
