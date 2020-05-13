@@ -102,6 +102,27 @@ func (p *lumiProcess) GetCommand() (string, error) {
 	return "", lumi.NotReadyError{}
 }
 
+func (p *lumiProcess) GetFlags() (map[string]interface{}, error) {
+
+	cmd, err := p.Command()
+	if err != nil {
+		return nil, err
+	}
+
+	fs := processes.FlagSet{}
+	err = fs.ParseCommand(cmd)
+	if err != nil {
+		return nil, err
+	}
+	flags := fs.Map()
+
+	res := map[string]interface{}{}
+	for k := range flags {
+		res[k] = flags[k]
+	}
+	return res, nil
+}
+
 type ProcessCallbackTrigger func()
 
 func (p *lumiProcess) gatherProcessInfo(fn ProcessCallbackTrigger) error {
@@ -137,7 +158,6 @@ func (p *lumiProcesses) id() (string, error) {
 }
 
 func (p *lumiProcesses) GetList() ([]interface{}, error) {
-
 	// find suitable package manager
 	opm, err := processes.ResolveManager(p.Runtime.Motor)
 	if opm == nil || err != nil {

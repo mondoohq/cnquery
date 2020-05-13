@@ -162,6 +162,7 @@ process {
   state() string
   executable() string
   command() string
+  flags() map[string]string
 }
 
 processes {
