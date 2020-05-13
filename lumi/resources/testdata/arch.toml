@@ -192,6 +192,10 @@ vsock                  36864  18 vmw_vsock_virtio_transport_common,vmw_vsock_vir
 content = """root:x:0:0::/root:/bin/bash
 bin:x:1:1::/:/usr/bin/nologin
 """
+[files."/etc/passwd".stat]
+mode = 420
+uid = 0
+gid = 0
 
 [files."/etc/group"]
 content = """

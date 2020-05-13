@@ -36,6 +36,8 @@ file {
   exists() bool
   permissions() file.permissions
   size() int
+  user() user
+  group() group
 }
 
 file.permissions {

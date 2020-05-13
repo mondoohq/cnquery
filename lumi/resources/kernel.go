@@ -150,7 +150,7 @@ func (k *lumiKernelModule) init(args *lumi.Args) (*lumi.Args, KernelModule, erro
 
 	c, ok := kernel.LumiResource().Cache.Load("_modules")
 	if !ok {
-		return nil, nil, errors.New("Cannot get map of packages")
+		return nil, nil, errors.New("Cannot get map of kernel modules")
 	}
 	cmap := c.Data.(map[string]KernelModule)
 
