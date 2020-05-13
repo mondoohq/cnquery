@@ -27,9 +27,8 @@ func TestResource_File(t *testing.T) {
 			int64(58),
 		},
 		{
-			// TODO: we need good test data for this, not sure how
 			"file(\"/etc/passwd\").permissions.mode",
-			int64(0),
+			int64(420),
 		},
 		{
 			"file(\"/etc/passwd\").content",

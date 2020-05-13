@@ -7,6 +7,7 @@ package resources
 import (
 	"io/ioutil"
 	"path"
+	"strconv"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -115,6 +116,60 @@ func (s *lumiFile) GetSize() (int64, error) {
 	return size, err
 }
 
+func (s *lumiFile) GetUser() (interface{}, error) {
+	path, err := s.Path()
+	if err != nil {
+		return nil, err
+	}
+
+	fi, err := s.Runtime.Motor.Transport.FileInfo(path)
+	if err != nil {
+		return nil, err
+	}
+
+	// handle case where we have no gid available
+	// TODO: do we have a better approach than checking for -1?
+	if fi.Uid < 0 {
+		return nil, nil
+	}
+
+	lumiUser, err := s.Runtime.CreateResource("user",
+		"id", strconv.FormatInt(fi.Uid, 10),
+		"uid", fi.Uid,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return lumiUser.(User), nil
+}
+
+func (s *lumiFile) GetGroup() (interface{}, error) {
+	path, err := s.Path()
+	if err != nil {
+		return nil, err
+	}
+
+	fi, err := s.Runtime.Motor.Transport.FileInfo(path)
+	if err != nil {
+		return nil, err
+	}
+
+	// handle case where we have no gid available
+	// TODO: do we have a better approach than checking for -1?
+	if fi.Gid < 0 {
+		return nil, nil
+	}
+
+	lumiUser, err := s.Runtime.CreateResource("group",
+		"id", strconv.FormatInt(fi.Gid, 10),
+		"gid", fi.Gid,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return lumiUser.(Group), nil
+}
+
 func (s *lumiFile) stat() (FilePermissions, int64, error) {
 	// TODO: this is a one-off right now, turn it into a watcher
 	path, err := s.Path()
@@ -127,8 +182,10 @@ func (s *lumiFile) stat() (FilePermissions, int64, error) {
 		return nil, 0, err
 	}
 
+	mode := fi.Mode.FileMode
+
 	permRaw, err := s.Runtime.CreateResource("file.permissions",
-		"mode", int64(uint32(fi.Mode.FileMode)&07777),
+		"mode", int64(uint32(mode)&07777),
 		"user_readable", fi.Mode.UserReadable(),
 		"user_writeable", fi.Mode.UserWriteable(),
 		"user_executable", fi.Mode.UserExecutable(),

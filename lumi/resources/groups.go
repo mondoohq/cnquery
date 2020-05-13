@@ -35,9 +35,9 @@ func (g *lumiGroup) init(args *lumi.Args) (*lumi.Args, Group, error) {
 		return nil, nil, err
 	}
 
-	c, ok := groups.LumiResource().Cache.Load("_members")
+	c, ok := groups.LumiResource().Cache.Load("_map")
 	if !ok {
-		return nil, nil, errors.New("Cannot get map of packages")
+		return nil, nil, errors.New("Cannot get map of groups")
 	}
 	cmap := c.Data.(map[string]Group)
 
@@ -75,7 +75,7 @@ func (g *lumiGroup) GetMembers() ([]interface{}, error) {
 
 	c, ok := users.LumiResource().Cache.Load("_map")
 	if !ok {
-		return nil, errors.New("Cannot get map of packages")
+		return nil, errors.New("Cannot get map of groups")
 	}
 	cmap := c.Data.(map[string]User)
 
