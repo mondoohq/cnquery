@@ -1,10 +1,8 @@
 package llx
 
-import "go.mondoo.io/mondoo/checksums"
-
 // AddChunk to the list of chunks
 func (l *Code) AddChunk(c *Chunk) {
-	l.Checksums[l.ChunkIndex()+1] = c.Checksum(l.Checksums)
+	l.Checksums[l.ChunkIndex()+1] = c.Checksum(l)
 	l.Code = append(l.Code, c)
 }
 
@@ -29,14 +27,7 @@ func (l *Code) LastChunk() *Chunk {
 
 // checksum from this code
 func (l *Code) checksum() string {
-	checksum := checksums.New
-	for i := range l.Entrypoints {
-		checksum = checksum.Add(l.Checksums[l.Entrypoints[i]])
-	}
-	for i := range l.Functions {
-		checksum = checksum.Add(l.Functions[i].Id)
-	}
-	return checksum.String()
+	return l.Checksums[l.ChunkIndex()]
 }
 
 // UpdateID of the piece of code

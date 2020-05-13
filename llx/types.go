@@ -42,7 +42,7 @@ func (c *Chunk) Type(stack *Code) types.Type {
 }
 
 // Checksum computes the checksum of this chunk
-func (c *Chunk) Checksum(checksums map[int32]string) string {
+func (c *Chunk) Checksum(code *Code) string {
 	data := []byte(c.Id)
 
 	b := make([]byte, 4)
@@ -50,23 +50,23 @@ func (c *Chunk) Checksum(checksums map[int32]string) string {
 	data = append(data, b...)
 
 	if c.Primitive != nil {
-		cs := c.Primitive.checksum(checksums)
+		cs := c.Primitive.checksum(code)
 		data = append(data, cs...)
 	}
 
 	if c.Function != nil {
-		data = append(data, c.Function.checksum(checksums)...)
+		data = append(data, c.Function.checksum(code)...)
 	}
 
 	hash := blake2b.Sum512(data)
 	return base64.StdEncoding.EncodeToString(hash[:])
 }
 
-func (f *Function) checksum(checksums map[int32]string) []byte {
+func (f *Function) checksum(code *Code) []byte {
 	res := []byte(f.Type)
 
 	if f.Binding != 0 {
-		ref := checksums[f.Binding]
+		ref := code.Checksums[f.Binding]
 		if ref == "" {
 			panic("Cannot compute checksum for chunk, it doesn't seem to reference a function on the stack")
 		}
@@ -74,22 +74,36 @@ func (f *Function) checksum(checksums map[int32]string) []byte {
 	}
 
 	for i := range f.Args {
-		cs := f.Args[i].checksum(checksums)
+		cs := f.Args[i].checksum(code)
 		res = append(res, cs...)
 	}
 
 	return res
 }
 
-func (p *Primitive) checksum(checksums map[int32]string) []byte {
+func (p *Primitive) checksum(code *Code) []byte {
 	ref, ok := p.Ref()
 	if ok {
-		refChecksum, ok := checksums[int32(ref)]
-		if !ok {
-			panic("Cannot compute checksum for primitive, it doesn't seem to reference a function on the stack")
+		typ := types.Type(p.Type)
+		if typ == types.Ref {
+			refChecksum, ok := code.Checksums[int32(ref)]
+			if !ok {
+				panic("llx> Cannot compute checksum for primitive, it doesn't seem to reference a variable on the stack")
+			}
+
+			return []byte(refChecksum)
 		}
 
-		return []byte(refChecksum)
+		if typ.Underlying() == types.FunctionLike {
+			refFunction := code.Functions[int32(ref)-1]
+			if !ok {
+				panic("llx> Cannot compute checksum for primitive, it doesn't seem to reference a function on the stack")
+			}
+
+			return []byte(refFunction.Id)
+		}
+
+		panic("llx> received a reference of an unknown type in trying to calculate the checksum")
 	}
 
 	res := []byte(p.Type)
@@ -97,12 +111,12 @@ func (p *Primitive) checksum(checksums map[int32]string) []byte {
 
 	for i := range p.Array {
 		entry := p.Array[i]
-		res = append(res, entry.checksum(checksums)...)
+		res = append(res, entry.checksum(code)...)
 	}
 
 	for k, v := range p.Map {
 		res = append(res, k...)
-		res = append(res, v.checksum(checksums)...)
+		res = append(res, v.checksum(code)...)
 	}
 
 	return res

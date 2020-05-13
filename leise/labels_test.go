@@ -70,14 +70,14 @@ func TestLabels(t *testing.T) {
 			&llx.Labels{
 				Labels: map[string]string{
 					"EpnHIF31KeNgY/3Z4KyBuKHQ0kk/i+MyYbTX+ZWiQIAvK6lv4P2Nlf9CKAIrn2KOfCWICteI96BN1e8GA6sNZA==": "name",
-					"UpRXfTD63QfpFyNfvH7TJ/CF+bDO2CqESiCTV9XuF546wjvHOugGZgcIO4D5WeG0Pi9UamXHHdvR6dSYLOD9ig==": "platform",
+					"mTunkQvf2+3hvQXOVe9aZvuyULh8FAY9UERpZnawCtDF0FLgQ06M17OE7sKCjE1JwsmB3Hl57YvT6Brk1JKZEw==": "platform",
 					"yUHOZ/pJzgQ3FLcnKAPphE4TgWqFptqPWA8GYl4e5Dqg0/YzQWcDml2cbrTEj3nj1rm0azm9povOYMRjTgSvZg==": "release",
 				},
 			}},
 		{"users.list { uid }",
 			&llx.Labels{
 				Labels: map[string]string{
-					"4h7OZX1jTtpWgTuqjJp73vpTkf7k7vVQcvZMdISm9MkYQm9gk56RWwlC71Yi7hQlu15PnzAYIOw+ImI2svggzA==": "users.list",
+					"puRCaea3UwDYUekHCB0RwC+ezqX7ENxHZXtCP1sox6O177ZGNbyShvkKadiYamiVGnhsn2EvGWqA3KBKkcT6gg==": "users.list",
 					"PwdDaV8xrCNIvOSwTLwmNR301BKQRqkZa2q7ZLLPoblw5AuQfqqIfjpWt5nNh+FBnr+vu62u0aphsamJKX63cg==": "uid",
 				},
 			}},
@@ -92,7 +92,7 @@ func TestLabels(t *testing.T) {
 		{"users.list[0] { uid }",
 			&llx.Labels{
 				Labels: map[string]string{
-					"Z1wH0fz5+dDAba6WDkgqZS3N0F54QRWK56WBB5Sxem414Zdu+UwgJOTeZ+RL6YQJEK8C6ZBqvK7fGmhuuv90hA==": "users.list[0]",
+					"iZXN2sEhIQ4vBZtKqztQP9GdO8nYwFcrbNnI4TJ2W5mY3lUuKuQZJN36oyentTUFo9GL1GDG+b6ELfULFrhdPA==": "users.list[0]",
 					"vXUmtyv5Thql2cXelEul3Xaa8v7oNbP8ve/kufi3J8reZNVvp2dnoKPW+av/wIL6x6ma2cCxB/UoHuovKwuypw==": "uid",
 				},
 			}},
@@ -107,8 +107,8 @@ func TestLabels(t *testing.T) {
 		{"sshd.config { file { path } }",
 			&llx.Labels{
 				Labels: map[string]string{
-					"F69q9PhHOLLAU1neoFO5RAMbY2agcl8BncuZ33gxnZO20h6YUFAyuLJFdwMbMrdy43fhmnL+SkfhrFXN5jLosA==": "sshd.config",
-					"a3QyKWgQre3Ei0LtpKKHxM9Kk9On89T6ePpKAL9320VDivPxuK4kLLTvwGVoo87q/wTv3K0Le5JeW98v8eKK/g==": "file",
+					"U/wvYhMvx+9ErgRV+fkYjf3gSMF6dJdxiCb8bti9qWTmkoS0QGWlID5QaUbBtNlrQeYfiUI5fcVtssOUHeWD+A==": "sshd.config",
+					"ttBFT/PXbbh/0LvFg94+cPLCfyDljxab2tjh/BFj03HoqRhK6AsX8mGGhAA0pTqNjyTAXv9OwSC236ojlnVjhQ==": "file",
 					"7UaqV74XSP+zpDe2jWCIK7knE3Oq+OWA79/8o/iQcBisCqUcafc878wFLOzGqDVOZZAiqGOKcSwZXVivDpnmjQ==": "path",
 				},
 			}},
