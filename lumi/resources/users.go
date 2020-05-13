@@ -11,7 +11,7 @@ import (
 const (
 	USER_CACHE_ID       = "id"
 	USER_CACHE_UID      = "uid"
-	USER_CACHE_USERNAME = "username"
+	USER_CACHE_USERNAME = "name"
 	USER_CACHE_GID      = "gid"
 	USER_CACHE_SID      = "sid"
 	USER_CACHE_HOME     = "home"
@@ -21,7 +21,7 @@ const (
 
 func copyUserDataToLumiArgs(user *users.User, args *lumi.Args) error {
 	(*args)[USER_CACHE_ID] = user.ID
-	(*args)[USER_CACHE_USERNAME] = user.Username
+	(*args)[USER_CACHE_USERNAME] = user.Name
 	(*args)[USER_CACHE_UID] = user.Uid
 	(*args)[USER_CACHE_GID] = user.Gid
 	(*args)[USER_CACHE_SID] = user.Sid
@@ -79,7 +79,7 @@ func (u *lumiUser) init(args *lumi.Args) (*lumi.Args, User, error) {
 		// search for username
 		for i := range userList {
 			user := userList[i]
-			if user.Username == username {
+			if user.Name == username {
 				foundUser = user
 				break
 			}
@@ -128,7 +128,7 @@ func (u *lumiUsers) GetList() ([]interface{}, error) {
 
 		lumiUser, err := u.Runtime.CreateResource("user",
 			USER_CACHE_ID, user.ID,
-			USER_CACHE_USERNAME, user.Username,
+			USER_CACHE_USERNAME, user.Name,
 			USER_CACHE_UID, user.Uid,
 			USER_CACHE_GID, user.Gid,
 			USER_CACHE_SID, user.Sid,
@@ -141,7 +141,7 @@ func (u *lumiUsers) GetList() ([]interface{}, error) {
 		}
 
 		lumiUsers = append(lumiUsers, lumiUser.(User))
-		namedMap[user.Username] = lumiUser.(User)
+		namedMap[user.Name] = lumiUser.(User)
 	}
 
 	u.Cache.Store("_map", &lumi.CacheEntry{Data: namedMap})

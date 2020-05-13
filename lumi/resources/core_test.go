@@ -232,23 +232,23 @@ func TestMap_Block(t *testing.T) {
 func TestResource_Where(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
-			`users.where(username == 'root').list {
+			`users.where(name == 'root').list {
 				uid == 0
 				gid == 0
 			}`,
 			[]interface{}{
 				map[string]interface{}{
-					"T4G3rAriW+M0CTOhsgn05G1B+NPhlGrrvJ6QvGffdd3po4V9KYMAkqDYqX0dEhLfhfQQyELuBkH2WcAQHq+t4w==": llx.BoolTrue,
-					"xD7cKrdx2BCRH57uSAkkS5MjVFEgzDHQCscsUY/y2oepVfXd1CE6WmY1SVDxmOp4+AVp+JhG8qUT+83alVjSqg==": llx.BoolTrue,
+					"EtSzTi88c9WwiEktUbAkZsAsxgCS2QC41bzYenltgWd8P4dRp/qwSp3WAIHTHX6DYWq62z/uCYZXVcgX/HQxxA==": llx.BoolTrue,
+					"sdUOWQ+qEVsKrHNTYrjSlA5aCoZFSWvkY9ed3tuCFP0Cza5K+ckOD23swleUelCi2wdX3Grn0vfk2Z2hiIuRcA==": llx.BoolTrue,
 				},
 			},
 		},
 		{
-			"users.where(username == 'root').length",
+			"users.where(name == 'root').length",
 			int64(1),
 		},
 		{
-			"users.where(username == 'rooot').list { uid }",
+			"users.where(name == 'rooot').list { uid }",
 			[]interface{}{},
 		},
 		{
@@ -261,11 +261,11 @@ func TestResource_Where(t *testing.T) {
 func TestResource_Contains(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
-			"users.contains(username == 'root')",
+			"users.contains(name == 'root')",
 			true,
 		},
 		{
-			"users.where(uid < 100).contains(username == 'root')",
+			"users.where(uid < 100).contains(name == 'root')",
 			true,
 		},
 	})

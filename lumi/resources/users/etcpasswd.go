@@ -39,7 +39,7 @@ func ParseEtcPasswd(input io.Reader) ([]*User, error) {
 			// bin:x:1:1:bin:/bin:/sbin/nologin
 			users = append(users, &User{
 				ID:          m[2],
-				Username:    m[0],
+				Name:        m[0],
 				Uid:         uid,
 				Gid:         gid,
 				Description: m[4],

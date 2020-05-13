@@ -25,7 +25,7 @@ func TestParseLinuxEtcPasswd(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 13, len(m), "detected the right amount of services")
 
-	assert.Equal(t, "root", m[0].Username, "detected user name")
+	assert.Equal(t, "root", m[0].Name, "detected user name")
 	assert.Equal(t, int64(0), m[0].Uid, "detected uid")
 	assert.Equal(t, int64(0), m[0].Gid, "detected gid")
 	assert.Equal(t, "root", m[0].Description, "user description")
@@ -49,7 +49,7 @@ func TestParseFreebsdLinuxEtcPasswd(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 28, len(m), "detected the right amount of services")
 
-	assert.Equal(t, "root", m[0].Username, "detected user name")
+	assert.Equal(t, "root", m[0].Name, "detected user name")
 	assert.Equal(t, int64(0), m[0].Uid, "detected uid")
 	assert.Equal(t, int64(0), m[0].Gid, "detected gid")
 	assert.Equal(t, "Charlie &", m[0].Description, "user description")

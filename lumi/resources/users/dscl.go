@@ -84,9 +84,9 @@ func (s *OSXUserManager) List() ([]*User, error) {
 		}
 
 		users[k] = &User{
-			ID:       m[k],
-			Username: k,
-			Uid:      uid,
+			ID:   m[k],
+			Name: k,
+			Uid:  uid,
 		}
 	}
 

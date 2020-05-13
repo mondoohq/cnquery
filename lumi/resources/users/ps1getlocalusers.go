@@ -86,11 +86,11 @@ func (s *WindowsUserManager) List() ([]*User, error) {
 func winToUser(g WindowsLocalUser) *User {
 	// TODO: consider to store additional attributes in key-value pairs
 	return &User{
-		ID:       g.SID.Value,
-		Sid:      g.SID.Value,
-		Uid:      -1, // TODO: not its suboptimal, but lets make sure to avoid runtime conflicts for now
-		Gid:      -1,
-		Username: g.Name,
-		Enabled:  g.Enabled,
+		ID:      g.SID.Value,
+		Sid:     g.SID.Value,
+		Uid:     -1, // TODO: not its suboptimal, but lets make sure to avoid runtime conflicts for now
+		Gid:     -1,
+		Name:    g.Name,
+		Enabled: g.Enabled,
 	}
 }
