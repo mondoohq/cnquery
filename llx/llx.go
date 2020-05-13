@@ -336,7 +336,7 @@ func (c *LeiseExecutor) runChain(start int32) {
 
 	for nextRef != 0 {
 		curRef = nextRef
-		log.Debug().Int32("ref", curRef).Msg("exec> run chain")
+		// log.Debug().Int32("ref", curRef).Msg("exec> run chain")
 
 		res, nextRef, err = c.runRef(curRef)
 
@@ -355,7 +355,7 @@ func (c *LeiseExecutor) runChain(start int32) {
 		// if this is a result for an existing entrypoint send it
 		if res != nil {
 			if codeID, ok := c.entrypoints[curRef]; ok {
-				log.Debug().Int32("ref", curRef).Msgf("exec> chain callback")
+				// log.Debug().Int32("ref", curRef).Msgf("exec> chain callback")
 				c.callback(&RawResult{Data: res, CodeID: codeID})
 			}
 		}
