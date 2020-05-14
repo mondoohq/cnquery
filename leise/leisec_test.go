@@ -202,12 +202,34 @@ func TestCompiler_OperatorPrecedence(t *testing.T) {
 }
 
 func TestChecksums(t *testing.T) {
-	t.Run("no duplicates", func(t *testing.T) {
-		a, err := Compile("users.list { uid == 1 }", schema)
-		assert.NoError(t, err)
-		b, err := Compile("users.list { uid == 2 }", schema)
-		assert.NoError(t, err)
-		assert.NotEqual(t, a.Code.Id, b.Code.Id)
+	t.Run("no duplicate code IDs", func(t *testing.T) {
+		dupes := []struct {
+			qa string
+			qb string
+		}{
+			{
+				"users.list { uid == 1 }",
+				"users.list { uid == 2 }",
+			},
+			{
+				"platform.name\nplatform.release",
+				"platform.name",
+			},
+			{
+				"platform.name\nplatform.release",
+				"platform.release",
+			},
+		}
+
+		for i := range dupes {
+			t.Run(dupes[i].qa+" != "+dupes[i].qb, func(t *testing.T) {
+				a, err := Compile(dupes[i].qa, schema)
+				assert.NoError(t, err)
+				b, err := Compile(dupes[i].qb, schema)
+				assert.NoError(t, err)
+				assert.NotEqual(t, a.Code.Id, b.Code.Id)
+			})
+		}
 	})
 }
 
