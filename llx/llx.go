@@ -342,7 +342,7 @@ func (c *LeiseExecutor) runChain(start int32) {
 
 		// back out of errors directly
 		if err != nil {
-			c.callback(errorResult(err, c.entrypoints[curRef]))
+			c.callback(errorResult(err, c.entrypoints[start]))
 			return
 		}
 
