@@ -149,12 +149,12 @@ func runSimpleTests(t *testing.T, tests []simpleTest) {
 	}
 }
 
-func TestStableCore(t *testing.T) {
-	res := stableResults(t, "mondoo.version")
-	for _, v := range res {
-		assert.Equal(t, "unstable", v.Data.Value)
-	}
-}
+// func TestStableCore(t *testing.T) {
+// 	res := stableResults(t, "mondoo.version")
+// 	for _, v := range res {
+// 		assert.Equal(t, "unstable", v.Data.Value)
+// 	}
+// }
 
 func TestString_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
@@ -238,8 +238,8 @@ func TestResource_Where(t *testing.T) {
 			}`,
 			[]interface{}{
 				map[string]interface{}{
-					"EtSzTi88c9WwiEktUbAkZsAsxgCS2QC41bzYenltgWd8P4dRp/qwSp3WAIHTHX6DYWq62z/uCYZXVcgX/HQxxA==": llx.BoolTrue,
-					"sdUOWQ+qEVsKrHNTYrjSlA5aCoZFSWvkY9ed3tuCFP0Cza5K+ckOD23swleUelCi2wdX3Grn0vfk2Z2hiIuRcA==": llx.BoolTrue,
+					"IBJ7+s+IAJiwObGQnaqzH/11QzFL1t1OvBVk84sjZ658GMB1SM1n/TLJF8Y2hws3/qh0kj/JKM04PPQeam0HRA==": llx.BoolTrue,
+					"hvIlu70nu2ZxrcctGtHb9WOI1uVTlQKM8YiQX9AC026dO8shkWue9yaruWPqhin9M2cZibXkTqSaVQavfB2yAQ==": llx.BoolTrue,
 				},
 			},
 		},
