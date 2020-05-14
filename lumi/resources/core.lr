@@ -297,3 +297,9 @@ registrykey {
   properties() map[string]string
   children() []string
 }
+
+yaml.path {
+  filepath string
+  jsonpath string
+  result() string
+}

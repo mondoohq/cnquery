@@ -467,3 +467,9 @@ write_logs = yes
 log_file = /var/log/audit/audit.log
 log_group = root
 """
+
+[files."/root/pod.yaml"]
+content="""
+apiVersion: v1
+kind: Pod
+"""
