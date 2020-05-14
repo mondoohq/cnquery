@@ -313,7 +313,7 @@ func runResourceFunction(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int3
 
 	// record this watcher on the executors watcher IDs
 	wid := c.watcherUID(ref)
-	log.Debug().Str("wid", wid).Msg("exec> add watcher id ")
+	// log.Debug().Str("wid", wid).Msg("exec> add watcher id ")
 	c.watcherIds.Store(wid)
 
 	// watch this field in the resource

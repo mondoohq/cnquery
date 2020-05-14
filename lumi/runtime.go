@@ -204,10 +204,10 @@ func (ctx *Runtime) Set(name string, id string, resource interface{}) {
 // WatchAndUpdate a resource field and call the function if it changes with its current value
 func (ctx *Runtime) WatchAndUpdate(r ResourceType, field string, watcherUID string, callback func(res interface{}, err error)) error {
 	resource := r.LumiResource()
-	log.Debug().
-		Str("src", resource.Name+"\x00"+resource.Id+"\x00"+field).
-		Str("watcher", watcherUID).
-		Msg("w+u> watch and update")
+	// log.Debug().
+	// 	Str("src", resource.Name+"\x00"+resource.Id+"\x00"+field).
+	// 	Str("watcher", watcherUID).
+	// 	Msg("w+u> watch and update")
 
 	// FIXME: calling resource.Fields instead of vv breaks everything!! Make it impossible to do so maybe?
 	fieldObj, err := ctx.Registry.Fields(resource.Name)
