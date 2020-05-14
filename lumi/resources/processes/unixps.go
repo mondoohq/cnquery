@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/kballard/go-shellquote"
 	"github.com/rs/zerolog/log"
 	motor "go.mondoo.io/mondoo/motor/motoros"
 	"go.mondoo.io/mondoo/motor/motoros/platform"
@@ -32,10 +33,17 @@ type ProcessEntry struct {
 }
 
 func (p ProcessEntry) ToOSProcess() *OSProcess {
+	executable := ""
+	args, err := shellquote.Split(p.Command)
+	if err == nil && len(args) > 0 {
+		executable = args[0]
+	}
+
 	return &OSProcess{
-		Pid:     p.Pid,
-		Command: p.Command,
-		State:   "",
+		Pid:        p.Pid,
+		Command:    p.Command,
+		Executable: executable,
+		State:      "",
 	}
 }
 
