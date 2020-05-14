@@ -74,7 +74,10 @@ func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	s.Cache.Store("content", &lumi.CacheEntry{})
+
+	// note: make sure to set the content to "", otherwise it will be nil and may
+	// screw up downstream calls that expect it to be a string
+	s.Cache.Store("content", &lumi.CacheEntry{Data: "", Valid: false})
 
 	s.Runtime.Observers.OnUnwatch(s.FieldUID("content"), func() {
 		s.Cache.Delete("content")
