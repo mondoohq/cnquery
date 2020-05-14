@@ -2,7 +2,6 @@ package local
 
 import (
 	"runtime"
-	"syscall"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -60,14 +59,9 @@ func (t *LocalTransport) FileInfo(path string) (types.FileInfoDetails, error) {
 		return types.FileInfoDetails{}, err
 	}
 
-	uid := int64(-1)
-	gid := int64(-1)
-	if stat, ok := stat.Sys().(*syscall.Stat_t); ok {
-		uid = int64(stat.Uid)
-		gid = int64(stat.Gid)
-	}
-	mode := stat.Mode()
+	uid, gid := t.fileowner(stat)
 
+	mode := stat.Mode()
 	return types.FileInfoDetails{
 		Mode: types.FileModeDetails{mode},
 		Size: stat.Size(),
