@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/kevinburke/ssh_config"
 	homedir "github.com/mitchellh/go-homedir"
@@ -70,6 +71,13 @@ func ReadSSHConfig(endpoint *types.Endpoint) *types.Endpoint {
 		}
 	}
 
+	// handle disable of strict hostkey checking:
+	// Host *
+	// StrictHostKeyChecking no
+	entry, err := cfg.Get(host, "StrictHostKeyChecking")
+	if err == nil && strings.ToLower(entry) == "no" {
+		endpoint.Insecure = true
+	}
 	return endpoint
 }
 
