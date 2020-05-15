@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 	"time"
 
 	"io"
@@ -96,11 +98,11 @@ func (fs *FS) Chtimes(name string, atime time.Time, mtime time.Time) error {
 	return errors.New("chtimes not implemented")
 }
 
-func (m *FS) stat(header *tar.Header) (os.FileInfo, error) {
+func (fs *FS) stat(header *tar.Header) (os.FileInfo, error) {
 	statHeader := header
 	if header.Typeflag == tar.TypeSymlink {
-		path := m.resolveSymlink(header)
-		h, ok := m.FileMap[Abs(path)]
+		path := fs.resolveSymlink(header)
+		h, ok := fs.FileMap[Abs(path)]
 		if !ok {
 			return nil, errors.New("could not find " + path)
 		}
@@ -110,7 +112,7 @@ func (m *FS) stat(header *tar.Header) (os.FileInfo, error) {
 }
 
 // resolve symlink file
-func (m *FS) resolveSymlink(header *tar.Header) string {
+func (fs *FS) resolveSymlink(header *tar.Header) string {
 	dest := header.Name
 	link := header.Linkname
 
@@ -130,11 +132,11 @@ func (m *FS) resolveSymlink(header *tar.Header) string {
 	return path
 }
 
-func (m *FS) open(header *tar.Header) (*bufio.Reader, error) {
+func (fs *FS) open(header *tar.Header) (*bufio.Reader, error) {
 	log.Debug().Str("file", header.Name).Msg("tar> load file content")
 
 	// open tar file
-	f, err := os.Open(m.Source)
+	f, err := os.Open(fs.Source)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +144,7 @@ func (m *FS) open(header *tar.Header) (*bufio.Reader, error) {
 
 	path := header.Name
 	if header.Typeflag == tar.TypeSymlink {
-		path = m.resolveSymlink(header)
+		path = fs.resolveSymlink(header)
 	}
 
 	// extract file from tar stream
@@ -153,8 +155,8 @@ func (m *FS) open(header *tar.Header) (*bufio.Reader, error) {
 	return reader, nil
 }
 
-func (m *FS) tar(path string, header *tar.Header) (io.ReadCloser, error) {
-	fReader, err := m.open(header)
+func (fs *FS) tar(path string, header *tar.Header) (io.ReadCloser, error) {
+	fReader, err := fs.open(header)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +165,7 @@ func (m *FS) tar(path string, header *tar.Header) (io.ReadCloser, error) {
 	tarReader, tarWriter := io.Pipe()
 
 	// get file info, header my just include symlink fileinfo
-	fi, err := m.stat(header)
+	fi, err := fs.stat(header)
 	if err != nil {
 		return nil, err
 	}
@@ -173,4 +175,23 @@ func (m *FS) tar(path string, header *tar.Header) (io.ReadCloser, error) {
 
 	// return the reader
 	return tarReader, nil
+}
+
+// searches for files and returns the file info
+func (fs *FS) Find(from string, r *regexp.Regexp, typ string) ([]string, error) {
+	list := []string{}
+	for k := range fs.FileMap {
+		p := strings.HasPrefix(k, from)
+		m := r.MatchString(k)
+		log.Debug().Str("path", k).Str("from", from).Str("prefix", from).Bool("prefix", p).Bool("m", m).Msg("check if matches")
+		if p && m {
+			entry := fs.FileMap[k]
+			if (typ == "directory" && entry.Typeflag == tar.TypeDir) || (typ == "file" && entry.Typeflag == tar.TypeReg) {
+				list = append(list, k)
+				log.Debug().Msg("matches")
+				continue
+			}
+		}
+	}
+	return list, nil
 }

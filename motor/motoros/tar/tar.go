@@ -87,6 +87,7 @@ func (t *Transport) Close() {
 func (t *Transport) Capabilities() capabilities.Capabilities {
 	return capabilities.Capabilities{
 		capabilities.File,
+		capabilities.FileSearch,
 	}
 }
 

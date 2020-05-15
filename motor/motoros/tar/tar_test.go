@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
@@ -225,4 +226,21 @@ func cacheImageToTar() error {
 	_, err = io.Copy(out, rc)
 
 	return err
+}
+
+func TestTarFileFind(t *testing.T) {
+	err := cacheImageToTar()
+	require.NoError(t, err)
+
+	trans, err := tar.New(&types.Endpoint{Backend: "tar", Path: alpineContainerPath})
+	assert.Equal(t, nil, err, "should create tar without error")
+
+	fs := trans.FS()
+
+	fSearch := fs.(*tar.FS)
+
+	infos, err := fSearch.Find("/", regexp.MustCompile(`alpine-release`), "file")
+	require.NoError(t, err)
+
+	assert.Equal(t, 1, len(infos))
 }
