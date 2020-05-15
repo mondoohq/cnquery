@@ -105,10 +105,14 @@ func authMethods(endpoint *types.Endpoint) ([]ssh.AuthMethod, error) {
 	}
 
 	// use key auth, only load if the key was not found in ssh agent
-	if endpoint.PrivateKeyPath != "" {
-		priv, err := authPrivateKey(endpoint.PrivateKeyPath, endpoint.Password)
+	for i := range endpoint.IdentityFiles {
+		identityKey := endpoint.IdentityFiles[i]
+		if len(identityKey) == 0 {
+			continue
+		}
+		priv, err := authPrivateKey(identityKey, endpoint.Password)
 		if err != nil {
-			log.Debug().Err(err).Str("key", endpoint.PrivateKeyPath).Msg("could not load private key, fallback to ssh agent")
+			log.Warn().Err(err).Str("key", identityKey).Msg("could not load private key, ignore the file")
 		} else {
 			signers = append(signers, priv)
 		}

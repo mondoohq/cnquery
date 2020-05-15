@@ -26,7 +26,7 @@ type EndpointOption func(endpoint *types.Endpoint)
 
 func WithIdentityFile(identityFile string) EndpointOption {
 	return func(endpoint *types.Endpoint) {
-		endpoint.PrivateKeyPath = identityFile
+		endpoint.IdentityFiles = append(endpoint.IdentityFiles, identityFile)
 	}
 }
 
@@ -49,7 +49,7 @@ func NewFromUrl(uri string, opts ...EndpointOption) (*motor.Motor, error) {
 
 func NewWithUrlAndKey(uri string, key string) (*motor.Motor, error) {
 	t := &types.Endpoint{
-		PrivateKeyPath: key,
+		IdentityFiles: []string{key},
 	}
 	err := t.ParseFromURI(uri)
 	if err != nil {

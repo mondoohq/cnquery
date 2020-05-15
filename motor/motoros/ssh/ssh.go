@@ -3,12 +3,9 @@ package ssh
 import (
 	"net"
 	"os"
-	"path/filepath"
 
 	"github.com/pkg/errors"
 
-	"github.com/kevinburke/ssh_config"
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 
@@ -22,88 +19,6 @@ import (
 	rawsftp "github.com/pkg/sftp"
 )
 
-func ReadSSHConfig(endpoint *types.Endpoint) *types.Endpoint {
-	host := endpoint.Host
-
-	home, err := homedir.Dir()
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to determine user home directory")
-		return endpoint
-	}
-
-	sshUserConfigPath := filepath.Join(home, ".ssh", "config")
-	f, err := os.Open(sshUserConfigPath)
-	if err != nil {
-		log.Debug().Err(err).Str("file", sshUserConfigPath).Msg("Could not read ssh config")
-		return endpoint
-	}
-
-	cfg, err := ssh_config.Decode(f)
-	if err != nil {
-		log.Debug().Err(err).Str("file", sshUserConfigPath).Msg("Could not parse ssh config")
-		return endpoint
-	}
-
-	// optional step, tries to parse the ssh config to see if additional information
-	// is already available
-	hostname, err := cfg.Get(host, "HostName")
-	if err == nil && len(hostname) > 0 {
-		endpoint.Host = hostname
-	}
-
-	if len(endpoint.User) == 0 {
-		user, err := cfg.Get(host, "User")
-		if err == nil {
-			endpoint.User = user
-		}
-	}
-
-	if len(endpoint.Port) == 0 {
-		port, err := cfg.Get(host, "Port")
-		if err == nil {
-			endpoint.Port = port
-		}
-	}
-
-	if len(endpoint.PrivateKeyPath) == 0 {
-		entry, err := cfg.Get(host, "IdentityFile")
-		// TODO: the ssh_config uses os/home but instead should be use go-homedir, could become a compile issue
-		// TODO: the problem is that the lib returns defaults and we cannot properly distingush
-		if err == nil && ssh_config.Default("IdentityFile") != entry {
-			// commonly ssh config included paths like ~
-			expanded, err := homedir.Expand(entry)
-			if err == nil {
-				log.Debug().Str("key", expanded).Str("host", host).Msg("read ssh identity key from ssh config")
-				endpoint.PrivateKeyPath = expanded
-			}
-		}
-	}
-
-	return endpoint
-}
-
-func VerifyConfig(endpoint *types.Endpoint) error {
-	if endpoint.Backend != "ssh" {
-		return errors.New("only ssh backend for ssh transport supported")
-	}
-
-	_, err := endpoint.IntPort()
-	if err != nil {
-		return errors.New("port is not a valid number " + endpoint.Port)
-	}
-
-	return nil
-}
-
-func DefaultConfig(endpoint *types.Endpoint) *types.Endpoint {
-	p, err := endpoint.IntPort()
-	// use default port if port is 0
-	if err == nil && p <= 0 {
-		endpoint.Port = "22"
-	}
-	return endpoint
-}
-
 func New(endpoint *types.Endpoint) (*SSHTransport, error) {
 	endpoint = ReadSSHConfig(endpoint)
 
@@ -116,13 +31,35 @@ func New(endpoint *types.Endpoint) (*SSHTransport, error) {
 	// set default config if required
 	endpoint = DefaultConfig(endpoint)
 
-	// establish connection
+	// load known hosts and track the fingerprint of the ssh server for later identification
+	// TODO: we may need to properly err if the host is not known
+	// TODO: does this fail if the known hostkey file is not there?
+	// TODO: CHECK if the ssh config disables the known host key check
+	// ssh config:
+	// Host *
+	// StrictHostKeyChecking no
+	//
+	// disable checking for hostkey if the insecure flag is set
+	knownHostsCallback, err := KnownHostsCallback()
+	if err != nil {
+		return nil, errors.Wrap(err, "could not read hostkey file")
+	}
+
 	var hostkey ssh.PublicKey
-	conn, err := sshClientConnection(endpoint, func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+	hostkeyCallback := func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+		// store the hostkey for later identification
 		hostkey = key
-		// TODO: we may want to be more strict here
-		return nil
-	})
+
+		// ignore hostkey check if the user provided an insecure flag
+		if endpoint.Insecure {
+			return nil
+		}
+
+		return knownHostsCallback(hostname, remote, key)
+	}
+
+	// establish connection
+	conn, err := sshClientConnection(endpoint, hostkeyCallback)
 	if err != nil {
 		log.Debug().Err(err).Str("transport", "ssh").Str("host", endpoint.Host).Str("port", endpoint.Port).Str("user", endpoint.User).Msg("could not establish ssh session")
 		return nil, err
