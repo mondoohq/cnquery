@@ -74,8 +74,8 @@ func (t *LocalTransport) Close() {
 	// TODO: we need to close all commands and file handles
 }
 
-func (t *LocalTransport) Capabilities() []capabilities.Capability {
-	return []capabilities.Capability{
+func (t *LocalTransport) Capabilities() capabilities.Capabilities {
+	return capabilities.Capabilities{
 		capabilities.RunCommand,
 		capabilities.File,
 	}

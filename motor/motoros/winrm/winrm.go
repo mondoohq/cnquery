@@ -124,8 +124,8 @@ func (t *WinrmTransport) Close() {
 	// nothing to do yet
 }
 
-func (t *WinrmTransport) Capabilities() []capabilities.Capability {
-	return []capabilities.Capability{
+func (t *WinrmTransport) Capabilities() capabilities.Capabilities {
+	return capabilities.Capabilities{
 		capabilities.RunCommand,
 		capabilities.File,
 	}
