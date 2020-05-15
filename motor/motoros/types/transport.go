@@ -1,6 +1,8 @@
 package types
 
 import (
+	"regexp"
+
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/motoros/capabilities"
 	"go.mondoo.io/mondoo/nexus/assets"
@@ -22,4 +24,8 @@ type Transport interface {
 
 	Kind() assets.Kind
 	Runtime() string
+}
+
+type FileSearch interface {
+	Find(from string, r *regexp.Regexp, typ string) ([]string, error)
 }

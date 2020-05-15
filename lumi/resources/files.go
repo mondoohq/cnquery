@@ -5,10 +5,14 @@
 package resources
 
 import (
+	"errors"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/motor/motoros/capabilities"
+	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
 var findTypes = map[string]string{
@@ -44,6 +48,11 @@ func (l *lumiFilesFind) id() (string, error) {
 		return "", err
 	}
 
+	regex, err := l.Regex()
+	if err != nil {
+		return "", err
+	}
+
 	var id strings.Builder
 	id.WriteString(from)
 	if !xdev {
@@ -51,6 +60,10 @@ func (l *lumiFilesFind) id() (string, error) {
 	}
 	if typ != "" {
 		id.WriteString(" type=" + typ)
+	}
+
+	if typ != "" {
+		id.WriteString(" regex=" + regex)
 	}
 
 	return id.String(), nil
@@ -61,6 +74,10 @@ func (l *lumiFilesFind) GetXdev() (bool, error) {
 }
 
 func (l *lumiFilesFind) GetType() (string, error) {
+	return "", nil
+}
+
+func (l *lumiFilesFind) GetRegex() (string, error) {
 	return "", nil
 }
 
@@ -80,36 +97,73 @@ func (l *lumiFilesFind) GetList() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var call strings.Builder
-	call.WriteString("find ")
-	call.WriteString(strconv.Quote(path))
-	if !xdev {
-		call.WriteString(" -xdev")
+	var compiledRegexp *regexp.Regexp
+	regex, err := l.Regex()
+	if err != nil {
+		return nil, err
 	}
-	if typ != "" {
-		t, ok := findTypes[typ]
-		if ok {
-			call.WriteString(" -type " + t)
+	if len(regex) > 0 {
+		compiledRegexp, err = regexp.Compile(regex)
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	rawCmd, err := l.Runtime.CreateResource("command", "command", call.String())
-	if err != nil {
-		return nil, err
+	var foundFiles []string
+	caps := l.Runtime.Motor.Transport.Capabilities()
+	if caps.HasCapability(capabilities.FileSearch) {
+		fs := l.Runtime.Motor.Transport.FS()
+
+		fsSearch, ok := fs.(types.FileSearch)
+		if !ok {
+			return nil, errors.New("find is not supported for your platform")
+		}
+
+		foundFiles, err = fsSearch.Find(path, compiledRegexp, typ)
+		if err != nil {
+			return nil, err
+		}
+	} else if caps.HasCapability(capabilities.RunCommand) {
+		var call strings.Builder
+		call.WriteString("find ")
+		call.WriteString(strconv.Quote(path))
+		if !xdev {
+			call.WriteString(" -xdev")
+		}
+		if typ != "" {
+			t, ok := findTypes[typ]
+			if ok {
+				call.WriteString(" -type " + t)
+			}
+		}
+		if regex != "" {
+			// TODO: we need to escape regex here
+			call.WriteString(" -regex '")
+			call.WriteString(regex)
+			call.WriteString("'")
+		}
+
+		rawCmd, err := l.Runtime.CreateResource("command", "command", call.String())
+		if err != nil {
+			return nil, err
+		}
+
+		cmd := rawCmd.(Command)
+		out, err := cmd.Stdout()
+		if err != nil {
+			return nil, err
+		}
+
+		foundFiles = strings.Split(strings.Trim(out, " \t\n"), "\n")
+	} else {
+		return nil, errors.New("find is not supported for your platform")
 	}
 
-	cmd := rawCmd.(Command)
-	out, err := cmd.Stdout()
-	if err != nil {
-		return nil, err
-	}
-
-	lines := strings.Split(strings.Trim(out, " \t\n"), "\n")
-	files := make([]interface{}, len(lines))
-	var line string
-	for i := range lines {
-		line = lines[i]
-		files[i], err = l.Runtime.CreateResource("file", "path", line)
+	files := make([]interface{}, len(foundFiles))
+	var filepath string
+	for i := range foundFiles {
+		filepath = foundFiles[i]
+		files[i], err = l.Runtime.CreateResource("file", "path", filepath)
 		if err != nil {
 			return nil, err
 		}

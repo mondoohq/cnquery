@@ -61,6 +61,7 @@ files.find {
   from string
   xdev() bool
   type() string
+  regex() string
 }
 
 parse.ini {

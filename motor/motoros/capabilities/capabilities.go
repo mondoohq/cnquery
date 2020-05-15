@@ -5,6 +5,7 @@ type Capability int
 const (
 	RunCommand Capability = iota
 	File
+	FileSearch
 )
 
 type Capabilities []Capability
