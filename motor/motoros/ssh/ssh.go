@@ -32,14 +32,6 @@ func New(endpoint *types.Endpoint) (*SSHTransport, error) {
 	endpoint = DefaultConfig(endpoint)
 
 	// load known hosts and track the fingerprint of the ssh server for later identification
-	// TODO: we may need to properly err if the host is not known
-	// TODO: does this fail if the known hostkey file is not there?
-	// TODO: CHECK if the ssh config disables the known host key check
-	// ssh config:
-	// Host *
-	// StrictHostKeyChecking no
-	//
-	// disable checking for hostkey if the insecure flag is set
 	knownHostsCallback, err := KnownHostsCallback()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read hostkey file")
