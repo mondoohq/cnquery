@@ -31,11 +31,11 @@ type Endpoint struct {
 	Host     string  `json:"host"`
 	// Ports are not int by default, eg. docker://centos:latest parses a string as port
 	// Therefore it is up to the transport to convert the port to what they need
-	Port           string `json:"port"`
-	Path           string `json:"path"`
-	PrivateKeyPath string `json:"private_key"`
-	BearerToken    string `json:"bearer_token"`
-	Insecure       bool   `json:"insecure"` // disable ssl/tls checks
+	Port          string   `json:"port"`
+	Path          string   `json:"path"`
+	IdentityFiles []string `json:"identity_files"`
+	BearerToken   string   `json:"bearer_token"`
+	Insecure      bool     `json:"insecure"` // disable ssl/tls checks
 }
 
 // ParseFromURI will pars a URI and return the proper endpoint
