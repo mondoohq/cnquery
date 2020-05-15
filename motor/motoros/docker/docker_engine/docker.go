@@ -87,8 +87,8 @@ func (t *Transport) Close() {
 	t.dockerClient.Close()
 }
 
-func (t *Transport) Capabilities() []capabilities.Capability {
-	return []capabilities.Capability{
+func (t *Transport) Capabilities() capabilities.Capabilities {
+	return capabilities.Capabilities{
 		capabilities.RunCommand,
 		capabilities.File,
 	}

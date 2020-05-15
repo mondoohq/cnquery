@@ -102,8 +102,8 @@ func (m *Transport) Close() {
 	// no op
 }
 
-func (t *Transport) Capabilities() []capabilities.Capability {
-	return []capabilities.Capability{
+func (t *Transport) Capabilities() capabilities.Capabilities {
+	return capabilities.Capabilities{
 		capabilities.RunCommand,
 		capabilities.File,
 	}

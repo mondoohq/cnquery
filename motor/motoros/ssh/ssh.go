@@ -152,8 +152,8 @@ func (t *SSHTransport) Close() {
 	}
 }
 
-func (t *SSHTransport) Capabilities() []capabilities.Capability {
-	return []capabilities.Capability{
+func (t *SSHTransport) Capabilities() capabilities.Capabilities {
+	return capabilities.Capabilities{
 		capabilities.RunCommand,
 		capabilities.File,
 	}
