@@ -30,6 +30,12 @@ func WithIdentityFile(identityFile string) EndpointOption {
 	}
 }
 
+func WithInsecure() EndpointOption {
+	return func(endpoint *types.Endpoint) {
+		endpoint.Insecure = true
+	}
+}
+
 func New(endpoint *types.Endpoint, idDetectors ...string) (*motor.Motor, error) {
 	return ResolveTransport(endpoint, idDetectors)
 }
