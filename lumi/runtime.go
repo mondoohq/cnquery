@@ -4,6 +4,7 @@ import (
 	"errors"
 	fmt "fmt"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	motor "go.mondoo.io/mondoo/motor/motoros"
@@ -31,6 +32,7 @@ type CacheEntry struct {
 	Timestamp int64
 	Valid     bool
 	Data      interface{}
+	Error     error
 }
 
 // Cache is a map containing CacheEntry values
@@ -224,13 +226,16 @@ func (ctx *Runtime) WatchAndUpdate(r ResourceType, field string, watcherUID stri
 			Str("src", resource.Name+"\x00"+resource.Id+"\x00"+field).
 			Str("watcher", watcherUID).
 			Msg("w+u> process field result")
+
 		data, ok := resource.Cache.Load(field)
 		if !ok {
 			callback(nil, errors.New("Couldn't retrieve value of field \""+field+"\" in resource \""+resource.UID()+"\""))
 			return
 		}
-		callback(data.Data, nil)
+
+		callback(data.Data, data.Error)
 	}
+
 	isInitial, exists, err := ctx.Observers.Watch(fieldUID, watcherUID, processResult)
 	if err != nil {
 		return err
@@ -252,10 +257,16 @@ func (ctx *Runtime) WatchAndUpdate(r ResourceType, field string, watcherUID stri
 		if _, ok := err.(NotReadyError); ok {
 			return nil
 		}
+
 		// typical errors
 		if err != nil {
-			return err
+			resource.Cache.Store(field, &CacheEntry{
+				Timestamp: time.Now().Unix(),
+				Valid:     true,
+				Error:     err,
+			})
 		}
+
 		// final case: it is computed and ready to go
 		log.Debug().Msg("w+u> initial process result")
 		processResult()
@@ -264,7 +275,7 @@ func (ctx *Runtime) WatchAndUpdate(r ResourceType, field string, watcherUID stri
 
 	data, ok := resource.Cache.Load(field)
 	if ok {
-		callback(data.Data, nil)
+		callback(data.Data, data.Error)
 	}
 
 	return nil
