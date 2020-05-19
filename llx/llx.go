@@ -393,3 +393,26 @@ func (c *LeiseExecutor) triggerChain(ref int32) {
 	log.Debug().Int32("ref", ref).Msgf("exec> trigger callback")
 	c.callback(&RawResult{Data: res.Result, CodeID: codeID})
 }
+
+func (c *LeiseExecutor) triggerChainError(ref int32, err error) {
+	cur := ref
+	for cur > 0 {
+		if codeID, ok := c.entrypoints[cur]; ok {
+			c.callback(&RawResult{
+				Data: &RawData{
+					Error: err,
+				},
+				CodeID: codeID,
+			})
+		}
+
+		nxt, ok := c.calls.Load(cur)
+		if !ok {
+			break
+		}
+		if nxt < 1 {
+			panic("internal state error: cannot trigger next call on chain because it points to a zero ref")
+		}
+		cur = nxt
+	}
+}

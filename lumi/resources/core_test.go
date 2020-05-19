@@ -156,6 +156,32 @@ func runSimpleTests(t *testing.T, tests []simpleTest) {
 // 	}
 // }
 
+func testTimeout(t *testing.T, code string) {
+	t.Run(code, func(t *testing.T) {
+		executor := initExecutor()
+		code, err := executor.AddCode(code)
+		if err != nil {
+			t.Error("failed to compile: " + err.Error())
+			return
+		}
+		defer executor.Remove(code.Code.Id)
+
+		var timeoutTime = 5
+		if !executor.WaitForResults(time.Duration(timeoutTime) * time.Second) {
+			t.Error("ran into timeout after ", timeoutTime, " seconds")
+			return
+		}
+	})
+}
+
+func TestErroneousLlxChains(t *testing.T) {
+	testTimeout(t, `file("/etc/crontab") {
+		permissions.group_readable == false
+		permissions.group_writeable == false
+		permissions.group_executable == false
+	}`)
+}
+
 func TestString_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
