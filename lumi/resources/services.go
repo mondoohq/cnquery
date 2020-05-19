@@ -95,7 +95,7 @@ func (p *lumiService) GetEnabled() (bool, error) {
 		return false, lumi.NotReadyError{}
 	}
 
-	p.gatherServiceInfo(p.createCallback(SERVICE_CACHE_RUNNING))
+	p.gatherServiceInfo(p.createCallback(SERVICE_CACHE_ENABLED))
 
 	return false, lumi.NotReadyError{}
 }
@@ -115,7 +115,7 @@ func (p *lumiService) createCallback(field string) ServiceCallbackTrigger {
 	return func() {
 		err := p.Runtime.Observers.Trigger(p.LumiResource().FieldUID(field))
 		if err != nil {
-			log.Error().Err(err).Msg("[service]> failed to trigger " + field)
+			log.Error().Err(err).Msg("[service]> failed to trigger field '" + field + "'")
 		}
 	}
 }
@@ -157,9 +157,9 @@ func (p *lumiServices) id() (string, error) {
 	return "services", nil
 }
 
-func (s *lumiServices) GetList() ([]interface{}, error) {
+func (p *lumiServices) GetList() ([]interface{}, error) {
 	// find suitable service manager
-	osm, err := services.ResolveManager(s.Runtime.Motor)
+	osm, err := services.ResolveManager(p.Runtime.Motor)
 	if osm == nil || err != nil {
 		log.Warn().Err(err).Msg("lumi[services]> could not retrieve services list")
 		return nil, errors.New("cannot find service manager")
@@ -178,7 +178,7 @@ func (s *lumiServices) GetList() ([]interface{}, error) {
 	for i := range services {
 		srv := services[i]
 
-		lumiSrv, err := s.Runtime.CreateResource("service",
+		lumiSrv, err := p.Runtime.CreateResource("service",
 			"name", srv.Name,
 			"description", srv.Description,
 			"installed", srv.Installed,
