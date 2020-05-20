@@ -27,12 +27,20 @@ func arrayGetIndex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	}
 	// ^^ TODO
 
-	key := bytes2int(args[0].Value)
+	key := int(bytes2int(args[0].Value))
 
 	arr, ok := bind.Value.([]interface{})
 	if !ok {
 		return nil, 0, errors.New("failed to typecast into " + bind.Type.Label())
 	}
+
+	if key < 0 {
+		return nil, 0, errors.New("array index out of bound (trying to access element " + strconv.Itoa(key) + ")")
+	}
+	if key >= len(arr) {
+		return nil, 0, errors.New("array index out of bound (trying to access element " + strconv.Itoa(key) + ", max: " + strconv.Itoa(len(arr)-1) + ")")
+	}
+
 	return &RawData{
 		Type:  bind.Type[1:],
 		Value: arr[key],

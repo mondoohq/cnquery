@@ -149,6 +149,18 @@ func runSimpleTests(t *testing.T, tests []simpleTest) {
 	}
 }
 
+func runSimpleErrorTests(t *testing.T, tests []simpleTest) {
+	for i := range tests {
+		cur := tests[i]
+		t.Run(cur.code, func(t *testing.T) {
+			res := testQuery(t, cur.code)
+			assert.NotEmpty(t, res)
+			assert.Equal(t, cur.expectation, res[0].Result().Error)
+			assert.Nil(t, res[0].Data.Value)
+		})
+	}
+}
+
 // func TestStableCore(t *testing.T) {
 // 	res := stableResults(t, "mondoo.version")
 // 	for _, v := range res {
@@ -199,6 +211,15 @@ func TestString_Methods(t *testing.T) {
 		{
 			"'hello'.contains(['lu', 'la'])",
 			false,
+		},
+	})
+}
+
+func TestArray_Access(t *testing.T) {
+	runSimpleErrorTests(t, []simpleTest{
+		{
+			"[0,1,2][100000]",
+			"array index out of bound (trying to access element 100000, max: 2)",
 		},
 	})
 }
