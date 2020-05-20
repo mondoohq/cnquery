@@ -64,7 +64,11 @@ func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
 		}
 
 		log.Debug().Str("file", path).Msg("[file]> update content")
-		s.Cache.Store("content", &lumi.CacheEntry{Data: content, Valid: true, Timestamp: time.Now().Unix()})
+		s.Cache.Store("content", &lumi.CacheEntry{
+			Data:      content,
+			Valid:     true,
+			Timestamp: time.Now().Unix(),
+		})
 
 		err := s.Runtime.Observers.Trigger(s.LumiResource().FieldUID("content"))
 		if err != nil {
