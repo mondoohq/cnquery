@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
@@ -64,6 +65,7 @@ func (w *Watcher) subscriberId(typ string, id string) string {
 func (w *Watcher) Subscribe(typ string, id string, observable func(types.Observable)) error {
 	var job *Job
 
+	log.Debug().Str("id", id).Str("typ", typ).Msg("motor.watcher> subscribe")
 	sid := w.subscriberId(typ, id)
 
 	// throw an error if the id is already registered
@@ -125,6 +127,7 @@ func (w *Watcher) Subscribe(typ string, id string, observable func(types.Observa
 }
 
 func (w *Watcher) Unsubscribe(typ string, id string) error {
+	log.Debug().Str("id", id).Str("typ", typ).Msg("motor.watcher> unsubscribe")
 	// gather internal id
 	sid := w.subscriberId(typ, id)
 	return w.unsubscribe(sid)
@@ -143,6 +146,7 @@ func (w *Watcher) unsubscribe(sid string) error {
 }
 
 func (w *Watcher) TearDown() error {
+	log.Debug().Msg("motor.watcher> teardown")
 	// remove all subscriptions
 	w.subscriptions.Range(func(k string, v *WatcherSubscription) bool {
 		w.unsubscribe(k)

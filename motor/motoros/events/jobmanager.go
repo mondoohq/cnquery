@@ -277,6 +277,7 @@ func (jm *JobManager) nextJob() (*Job, error) {
 
 // TeadDown deletes all
 func (jm *JobManager) TearDown() {
+	log.Debug().Msg("motor.job> tear down")
 	// ensures the go routines are canceled
 	jm.quit <- true
 }
