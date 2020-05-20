@@ -45,6 +45,7 @@ func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
 	watcher.(*events.Watcher).SleepDuration = 1 * time.Second
 
 	err := watcher.Subscribe("file", path, func(o types.Observable) {
+		log.Debug().Str("file", path).Msg("[file]> got observable")
 		content := ""
 		f := o.(*events.FileObservable)
 		if f.FileOp != events.Eonet {
