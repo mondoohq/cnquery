@@ -198,6 +198,16 @@ func compileLogicalArrayOp(underlying types.Type, op string) func(types.Type, ty
 }
 
 func cmpArrays(left *RawData, right *RawData, f func(interface{}, interface{}) bool) bool {
+	if left.Value == nil {
+		if right.Value == nil {
+			return true
+		}
+		return false
+	}
+	if right.Value == nil {
+		return false
+	}
+
 	l := left.Value.([]interface{})
 	r := right.Value.([]interface{})
 
