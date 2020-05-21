@@ -11,6 +11,10 @@ import (
 var mapFunctions map[string]chunkHandler
 
 func mapGetIndex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type.Child()}, 0, nil
+	}
+
 	args := chunk.Function.Args
 
 	// TODO: all this needs to go into the compile phase
@@ -40,6 +44,10 @@ func mapGetIndex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 }
 
 func mapLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Int}, 0, nil
+	}
+
 	arr, ok := bind.Value.(map[string]interface{})
 	if !ok {
 		return nil, 0, errors.New("failed to typecast into " + bind.Type.Label())

@@ -13,6 +13,10 @@ var arrayBlockType = types.Array(types.Map(types.String, types.Any))
 var arrayFunctions map[string]chunkHandler
 
 func arrayGetIndex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type[1:]}, 0, nil
+	}
+
 	args := chunk.Function.Args
 	// TODO: all this needs to go into the compile phase
 	if len(args) < 1 {
@@ -166,6 +170,10 @@ func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 }
 
 func arrayLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Int}, 0, nil
+	}
+
 	arr, ok := bind.Value.([]interface{})
 	if !ok {
 		return nil, 0, errors.New("failed to typecast into " + bind.Type.Label())

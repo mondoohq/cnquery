@@ -29,6 +29,9 @@ func dataOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(int
 	if bind.Value == nil {
 		return BoolData(v.Value == nil), 0, nil
 	}
+	if v.Value == nil {
+		return BoolData(false), 0, nil
+	}
 
 	return BoolData(f(bind.Value, v.Value)), 0, nil
 }
@@ -55,6 +58,9 @@ func dataNotOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(
 
 	if bind.Value == nil {
 		return BoolData(v.Value != nil), 0, nil
+	}
+	if v.Value == nil {
+		return BoolData(true), 0, nil
 	}
 
 	return BoolData(!f(bind.Value, v.Value)), 0, nil
