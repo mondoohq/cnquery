@@ -722,3 +722,32 @@ func TestCompiler_Multiline(t *testing.T) {
 		assert.Equal(t, 4, len(res.Code.Code))
 	})
 }
+
+func TestCompiler_Entrypoints(t *testing.T) {
+	tests := []struct {
+		code        string
+		entrypoints []int32
+	}{
+		{
+			"1",
+			[]int32{1},
+		},
+		{
+			"mondoo.version == 1",
+			[]int32{2, 3},
+		},
+		{
+			"mondoo.version == mondoo.build",
+			[]int32{2, 4, 5},
+		},
+	}
+
+	for i := range tests {
+		test := tests[i]
+		t.Run(test.code, func(t *testing.T) {
+			compile(t, test.code, func(res *llx.CodeBundle) {
+				assert.Equal(t, test.entrypoints, res.Code.Entrypoints)
+			})
+		})
+	}
+}
