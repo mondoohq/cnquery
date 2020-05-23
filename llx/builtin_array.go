@@ -116,6 +116,11 @@ func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 	if err != nil || rref > 0 {
 		return nil, rref, err
 	}
+
+	if items.Value == nil {
+		return &RawData{Type: items.Type}, 0, nil
+	}
+
 	list := items.Value.([]interface{})
 	if len(list) == 0 {
 		return items, 0, nil
