@@ -66,10 +66,10 @@ func compileArrayContains(c *compiler, typ types.Type, ref int32, id string, cal
 		},
 	})
 
-	// != 0
+	// > 0
 	c.Result.Code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
-		Id:   string("!=" + types.Int),
+		Id:   string(">" + types.Int),
 		Function: &llx.Function{
 			Type:    string(types.Bool),
 			Binding: c.Result.Code.ChunkIndex(),

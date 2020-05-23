@@ -184,10 +184,10 @@ func compileResourceContains(c *compiler, typ types.Type, ref int32, id string, 
 		},
 	})
 
-	// != 0
+	// > 0
 	c.Result.Code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
-		Id:   string("!=" + types.Int),
+		Id:   string(">" + types.Int),
 		Function: &llx.Function{
 			Type:    string(types.Bool),
 			Binding: c.Result.Code.ChunkIndex(),
@@ -210,7 +210,7 @@ func compileResourceOne(c *compiler, typ types.Type, ref int32, id string, call 
 	}
 
 	// all we need to do is change the last operation on contains, as it tests for
-	// where( .. ).list.length != 0
+	// where( .. ).list.length > 0
 	// and we want
 	// where( .. ).list.length == 1
 	lastOp := c.Result.Code.LastChunk()
