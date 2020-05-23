@@ -681,8 +681,100 @@ func (c *compiler) CompileParsed(ast *parser.AST) error {
 	}
 
 	c.Result.Code.UpdateID()
+	c.UpdateEntrypoints()
 
 	return nil
+}
+
+var comparableOperations = map[string]struct{}{
+	"==": {},
+	"!=": {},
+	">":  {},
+	"<":  {},
+	">=": {},
+	"<=": {},
+	"&&": {},
+	"||": {},
+}
+
+func (c *compiler) isChunkStatic(chunk *llx.Chunk) bool {
+	if chunk.Call != llx.Chunk_PRIMITIVE {
+		return false
+	}
+
+	if types.Type(chunk.Primitive.Type) == types.Ref {
+		return false
+	}
+
+	return true
+}
+
+func (c *compiler) UpdateEntrypoints() {
+	// 1. potentially clean up all inherited entrypoints
+	// TODO: unclear if this is necessary because the condition may never be met
+	entrypoints := map[int32]struct{}{}
+	for _, ref := range c.Result.Code.Entrypoints {
+		entrypoints[ref] = struct{}{}
+		chunk := c.Result.Code.Code[ref-1]
+		if chunk.Function != nil {
+			delete(entrypoints, chunk.Function.Binding)
+		}
+	}
+
+	// 2. resolve operators
+	for ref := range entrypoints {
+		chunk := c.Result.Code.Code[ref-1]
+
+		// nothing to do for primitives (unclear if we need to investigate refs here)
+		if chunk.Call != llx.Chunk_FUNCTION || chunk.Function == nil {
+			continue
+		}
+
+		// now we need to see if the ID is one of our comparables
+		if chunk.Id == "" {
+			continue
+		}
+		if _, ok := comparableOperations[chunk.Id[0:1]]; !ok {
+			if len(chunk.Id) == 1 {
+				continue
+			}
+			if _, ok := comparableOperations[chunk.Id[0:2]]; !ok {
+				continue
+			}
+		}
+
+		// at this point we have a comparable
+		// so 2 jobs: check the left, check the right. if it's static, ignore. if not, add
+		left := chunk.Function.Binding
+		if left != 0 {
+			leftChunk := c.Result.Code.Code[left-1]
+			if leftChunk != nil && !c.isChunkStatic(leftChunk) {
+				entrypoints[left] = struct{}{}
+			}
+		}
+
+		if len(chunk.Function.Args) != 0 {
+			rightPrim := chunk.Function.Args[0]
+			if rightPrim != nil && types.Type(rightPrim.Type) == types.Ref {
+				right, ok := rightPrim.Ref()
+				if ok {
+					entrypoints[right] = struct{}{}
+				}
+			}
+		}
+	}
+
+	// done
+	res := make([]int32, len(entrypoints))
+	var idx int
+	for ref := range entrypoints {
+		res[idx] = ref
+		idx++
+	}
+	sort.Slice(res, func(i, j int) bool {
+		return res[i] < res[j]
+	})
+	c.Result.Code.Entrypoints = res
 }
 
 // CompileAST with a schema into a chunky code

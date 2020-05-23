@@ -37,10 +37,10 @@ func init() {
 
 func resolveType(chunk *llx.Chunk, code *llx.Code) types.Type {
 	var typ types.Type
-	var ref int64
+	var ref int32
 	if chunk.Function != nil {
 		typ = types.Type(chunk.Function.Type)
-		ref = int64(chunk.Function.Binding)
+		ref = chunk.Function.Binding
 	} else if chunk.Primitive != nil {
 		typ = types.Type(chunk.Primitive.Type)
 		ref, _ = chunk.Primitive.Ref()

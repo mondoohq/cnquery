@@ -71,10 +71,10 @@ func FunctionPrimitive(v int32) *Primitive {
 }
 
 // Ref will return the ref value unless this is not a ref type
-func (p *Primitive) Ref() (int64, bool) {
+func (p *Primitive) Ref() (int32, bool) {
 	typ := types.Type(p.Type)
 	if typ != types.Ref && typ.Underlying() != types.FunctionLike {
 		return 0, false
 	}
-	return bytes2int(p.Value), true
+	return int32(bytes2int(p.Value)), true
 }
