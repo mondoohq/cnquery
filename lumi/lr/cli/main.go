@@ -10,7 +10,7 @@ import (
 )
 
 func init() {
-	logger.Set(true, true)
+	logger.Set("debug")
 }
 
 func main() {
