@@ -299,6 +299,14 @@ registrykey {
   children() []string
 }
 
+registrykey.property {
+  init(path string, name string)
+  path string
+  name string
+  value() string
+  exists() bool
+}
+
 yaml.path {
   filepath string
   jsonpath string
