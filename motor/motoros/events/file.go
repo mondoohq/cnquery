@@ -17,8 +17,9 @@ const (
 	Rename
 	Chmod
 	Modify // is this the same of rewrite
-	Eonet
+	Enoent
 	// TODO: distingush between file content and file metadata modify
+	Error
 )
 
 // file events handling
@@ -26,6 +27,7 @@ type FileObservable struct {
 	identifier string
 	FileOp     FileOp
 	File       afero.File
+	Error      error
 }
 
 func (fo *FileObservable) Type() types.ObservableType {
@@ -44,10 +46,13 @@ func NewFileRunnable(path string) func(m types.Transport) (types.Observable, err
 	return func(m types.Transport) (types.Observable, error) {
 		fileop := Modify
 		file, err := m.File(path)
+
+		// TODO: we may want to distingush further, but it does not make sense to do transport specific error handling here
+		// therefore we may need common types similar to https://github.com/golang/go/blob/master/src/os/error.go#L22-L23
 		if err != nil {
 			log.Debug().Err(err).Msg("watch on non-existing file")
-			fileop = Eonet
+			fileop = Error
 		}
-		return &FileObservable{File: file, FileOp: fileop}, nil
+		return &FileObservable{File: file, FileOp: fileop, Error: err}, nil
 	}
 }
