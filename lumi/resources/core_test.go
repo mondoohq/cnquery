@@ -206,7 +206,7 @@ func TestString_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"'hello'.contains",
-			"hello",
+			0, "hello",
 		},
 		{
 			"'hello'.contains('ll')",
@@ -226,7 +226,7 @@ func TestString_Methods(t *testing.T) {
 		},
 		{
 			"'HeLlO'.downcase",
-			"hello",
+			0, "hello",
 		},
 	})
 }
