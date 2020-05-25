@@ -48,28 +48,35 @@ func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
 		log.Debug().Str("file", path).Msg("[file]> got observable")
 		content := ""
 		f := o.(*events.FileObservable)
-		if f.FileOp != events.Eonet {
+		if f.FileOp != events.Enoent && f.FileOp != events.Error {
 			// file is available, therefore we can stream the content
 			c, err := ioutil.ReadAll(f.File)
 			if err == nil {
 				content = string(c)
 			}
+
+			old, ok := s.Cache.Load("content")
+			if ok && old.Valid && old.Data.(string) == content {
+				// nothing to be done
+				return
+			}
+
+			log.Debug().Str("file", path).Msg("[file]> update content")
+			s.Cache.Store("content", &lumi.CacheEntry{
+				Data:      content,
+				Valid:     true,
+				Timestamp: time.Now().Unix(),
+			})
+
 		} else {
 			log.Debug().Str("file", path).Msg("[file]> file does not exist")
+			s.Cache.Store("content", &lumi.CacheEntry{
+				Data:      "",
+				Valid:     true,
+				Timestamp: time.Now().Unix(),
+				Error:     f.Error,
+			})
 		}
-
-		old, ok := s.Cache.Load("content")
-		if ok && old.Valid && old.Data.(string) == content {
-			// nothing to be done
-			return
-		}
-
-		log.Debug().Str("file", path).Msg("[file]> update content")
-		s.Cache.Store("content", &lumi.CacheEntry{
-			Data:      content,
-			Valid:     true,
-			Timestamp: time.Now().Unix(),
-		})
 
 		err := s.Runtime.Observers.Trigger(s.LumiResource().FieldUID("content"))
 		if err != nil {
