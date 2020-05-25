@@ -294,6 +294,11 @@ func (c *LeiseExecutor) runFunction(chunk *Chunk, ref int32) (*RawData, int32, e
 	if !ok {
 		return c.connectRef(f.Binding, ref)
 	}
+
+	if res.Result.Error != nil {
+		return nil, 0, res.Result.Error
+	}
+
 	return c.runBoundFunction(res.Result, chunk, ref)
 }
 
