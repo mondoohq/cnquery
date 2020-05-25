@@ -205,6 +205,10 @@ func TestErroneousLlxChains(t *testing.T) {
 func TestString_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
+			"'hello'.contains",
+			"hello",
+		},
+		{
 			"'hello'.contains('ll')",
 			0, true,
 		},

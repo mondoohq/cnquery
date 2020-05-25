@@ -9,11 +9,16 @@ import (
 )
 
 func compileStringContains(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
-	if call != nil && len(call.Function) != 1 {
+	if call == nil || len(call.Function) != 1 {
 		return types.Nil, errors.New("function " + id + " needs one argument")
 	}
 
-	valRaw := call.Function[0].Value.Operand.Value
+	f := call.Function[0]
+	if f.Value == nil || f.Value.Operand == nil {
+		return types.Nil, errors.New("function " + id + " needs one argument")
+	}
+
+	valRaw := f.Value.Operand.Value
 	val, err := c.compileValue(valRaw)
 	if err != nil {
 		return types.Nil, err
