@@ -18,12 +18,4 @@ func TestResource_Groups(t *testing.T) {
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, "root", res[0].Data.Value)
 	})
-
-	// TODO: this test produces a panic in llx
-	// t.Run("fetch all group names", func(t *testing.T) {
-	// 	res := testQuery(t, "groups.list { name }")
-	// 	assert.NotEmpty(t, res)
-	// 	assert.Empty(t, res[0].Result().Error)
-	// 	assert.Equal(t, "root", res[0].Data.Value)
-	// })
 }

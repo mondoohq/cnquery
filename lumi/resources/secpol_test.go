@@ -13,10 +13,10 @@ func TestResource_Secpol(t *testing.T) {
 	})
 
 	t.Run("test a specific secpol systemaccess entry", func(t *testing.T) {
-		res := testQuery(t, "secpol.systemaccess['PasswordHistorySize'] == 0")
+		res := testQuery(t, "secpol.systemaccess['PasswordHistorySize']")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, true, res[0].Data.Value)
+		assert.Equal(t, "0", res[0].Data.Value)
 	})
 
 	t.Run("test a specific secpol systemaccess entry", func(t *testing.T) {

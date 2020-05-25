@@ -560,7 +560,7 @@ func TestCompiler_ArrayContains(t *testing.T) {
 			Type:    string(types.Int),
 			Binding: 2,
 		}, res.Code.Code[2])
-		assertFunction(t, string("!="+types.Int), &llx.Function{
+		assertFunction(t, string(">"+types.Int), &llx.Function{
 			Type:    string(types.Bool),
 			Binding: 3,
 			Args:    []*llx.Primitive{llx.IntPrimitive(0)},
@@ -700,7 +700,7 @@ func TestCompiler_ResourceContains(t *testing.T) {
 			Type:    string(types.Int),
 			Binding: 4,
 		}, res.Code.Code[4])
-		assertFunction(t, string("!="+types.Int), &llx.Function{
+		assertFunction(t, string(">"+types.Int), &llx.Function{
 			Type:    string(types.Bool),
 			Binding: 5,
 			Args:    []*llx.Primitive{llx.IntPrimitive(0)},

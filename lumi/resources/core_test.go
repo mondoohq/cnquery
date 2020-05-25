@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"strconv"
 	"testing"
 	"time"
 
@@ -134,6 +135,7 @@ func stableResults(t *testing.T, query string) map[string]*llx.RawResult {
 
 type simpleTest struct {
 	code        string
+	resultIndex int
 	expectation interface{}
 }
 
@@ -143,8 +145,14 @@ func runSimpleTests(t *testing.T, tests []simpleTest) {
 		t.Run(cur.code, func(t *testing.T) {
 			res := testQuery(t, cur.code)
 			assert.NotEmpty(t, res)
-			assert.NotNil(t, res[0].Result().Error)
-			assert.Equal(t, cur.expectation, res[0].Data.Value)
+
+			if len(res) <= cur.resultIndex {
+				t.Error("insufficient results, looking for result idx " + strconv.Itoa(cur.resultIndex))
+				return
+			}
+
+			assert.NotNil(t, res[cur.resultIndex].Result().Error)
+			assert.Equal(t, cur.expectation, res[cur.resultIndex].Data.Value)
 		})
 	}
 }
@@ -198,19 +206,19 @@ func TestString_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"'hello'.contains('ll')",
-			true,
+			0, true,
 		},
 		{
 			"'hello'.contains('lloo')",
-			false,
+			0, false,
 		},
 		{
 			"'hello'.contains(['lo', 'la'])",
-			true,
+			0, true,
 		},
 		{
 			"'hello'.contains(['lu', 'la'])",
-			false,
+			0, false,
 		},
 	})
 }
@@ -219,7 +227,7 @@ func TestArray_Access(t *testing.T) {
 	runSimpleErrorTests(t, []simpleTest{
 		{
 			"[0,1,2][100000]",
-			"array index out of bound (trying to access element 100000, max: 2)",
+			0, "array index out of bound (trying to access element 100000, max: 2)",
 		},
 	})
 }
@@ -228,7 +236,7 @@ func TestArray_Block(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"[1,2,3] { _ == 2 }",
-			[]interface{}{
+			0, []interface{}{
 				map[string]interface{}{"H1/Sy2Mih0/ZbyAPVrYJgUuJH09rTBHw1CnafKZFa3wIrZzZsHEwKqr+bgBy6ymTjc1JW94vshmwLLW8kb4CtQ==": llx.BoolFalse},
 				map[string]interface{}{"H1/Sy2Mih0/ZbyAPVrYJgUuJH09rTBHw1CnafKZFa3wIrZzZsHEwKqr+bgBy6ymTjc1JW94vshmwLLW8kb4CtQ==": llx.BoolTrue},
 				map[string]interface{}{"H1/Sy2Mih0/ZbyAPVrYJgUuJH09rTBHw1CnafKZFa3wIrZzZsHEwKqr+bgBy6ymTjc1JW94vshmwLLW8kb4CtQ==": llx.BoolFalse},
@@ -236,31 +244,31 @@ func TestArray_Block(t *testing.T) {
 		},
 		{
 			"[1,2,3].where()",
-			[]interface{}{int64(1), int64(2), int64(3)},
+			0, []interface{}{int64(1), int64(2), int64(3)},
 		},
 		{
 			"[1,2,3].where(_ > 2)",
-			[]interface{}{int64(3)},
+			0, []interface{}{int64(3)},
 		},
 		{
 			"[1,2,3].where(_ >= 2)",
-			[]interface{}{int64(2), int64(3)},
+			0, []interface{}{int64(2), int64(3)},
 		},
 		{
 			"[1,2,3].contains(_ >= 2)",
-			true,
+			1, true,
 		},
 		{
 			"[1,2,3].one(_ == 2)",
-			true,
+			1, true,
 		},
 		{
 			"[1,2,3].all(_ < 9)",
-			true,
+			2, true,
 		},
 		{
 			"[0].where(_ > 0).where(_ > 0)",
-			[]interface{}{},
+			0, []interface{}{},
 		},
 	})
 }
@@ -269,7 +277,7 @@ func TestMap_Block(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"sshd.config.params { _['Protocol'] != 1 }",
-			map[string]interface{}{
+			0, map[string]interface{}{
 				"wY2itjYLEbmP9L3U2Z24a7jlTpJxpHoit+s8zoaBkbHW4itI+GhHF1lazZSPjH42eqY106gEXgr/IHV2Q5vB8g==": llx.BoolTrue,
 			},
 		},
@@ -283,7 +291,7 @@ func TestResource_Where(t *testing.T) {
 				uid == 0
 				gid == 0
 			}`,
-			[]interface{}{
+			0, []interface{}{
 				map[string]interface{}{
 					"IBJ7+s+IAJiwObGQnaqzH/11QzFL1t1OvBVk84sjZ658GMB1SM1n/TLJF8Y2hws3/qh0kj/JKM04PPQeam0HRA==": llx.BoolTrue,
 					"hvIlu70nu2ZxrcctGtHb9WOI1uVTlQKM8YiQX9AC026dO8shkWue9yaruWPqhin9M2cZibXkTqSaVQavfB2yAQ==": llx.BoolTrue,
@@ -292,15 +300,15 @@ func TestResource_Where(t *testing.T) {
 		},
 		{
 			"users.where(name == 'root').length",
-			int64(1),
+			0, int64(1),
 		},
 		{
 			"users.where(name == 'rooot').list { uid }",
-			[]interface{}{},
+			0, []interface{}{},
 		},
 		{
 			"users.where(uid > 0).where(uid < 0).list",
-			[]interface{}{},
+			0, []interface{}{},
 		},
 	})
 }
@@ -309,11 +317,11 @@ func TestResource_Contains(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"users.contains(name == 'root')",
-			true,
+			1, true,
 		},
 		{
 			"users.where(uid < 100).contains(name == 'root')",
-			true,
+			1, true,
 		},
 	})
 }
@@ -322,11 +330,11 @@ func TestResource_All(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"users.all(uid >= 0)",
-			true,
+			2, true,
 		},
 		{
 			"users.where(uid < 100).all(uid >= 0)",
-			true,
+			2, true,
 		},
 	})
 }
@@ -335,11 +343,11 @@ func TestResource_One(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"users.one(uid == 0)",
-			true,
+			1, true,
 		},
 		{
 			"users.where(uid < 100).one(uid == 0)",
-			true,
+			1, true,
 		},
 	})
 }

@@ -12,27 +12,27 @@ func TestResource_File(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"file(\"/etc/passwd\").exists",
-			true,
+			0, true,
 		},
 		{
 			"file(\"/etc/passwd\").basename",
-			"passwd",
+			0, "passwd",
 		},
 		{
 			"file(\"/etc/passwd\").dirname",
-			"/etc",
+			0, "/etc",
 		},
 		{
 			"file(\"/etc/passwd\").size",
-			int64(58),
+			0, int64(58),
 		},
 		{
 			"file(\"/etc/passwd\").permissions.mode",
-			int64(420),
+			0, int64(420),
 		},
 		{
 			"file(\"/etc/passwd\").content",
-			passwdContent,
+			0, passwdContent,
 		},
 	})
 }
