@@ -22,6 +22,12 @@ const (
 	BackendMock   Backend = "mock"
 )
 
+type Sudo struct {
+	Active bool   `json:"active"`
+	User   string `json:"user"`
+	Shell  string `json:"shell"`
+}
+
 // Endpoint that motor interacts with
 type Endpoint struct {
 	URI      string
@@ -36,6 +42,7 @@ type Endpoint struct {
 	IdentityFiles []string `json:"identity_files"`
 	BearerToken   string   `json:"bearer_token"`
 	Insecure      bool     `json:"insecure"` // disable ssl/tls checks
+	Sudo          *Sudo    `json:"sudo"`
 }
 
 // ParseFromURI will pars a URI and return the proper endpoint

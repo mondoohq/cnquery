@@ -36,6 +36,14 @@ func WithPassword(password string) EndpointOption {
 	}
 }
 
+func WithSudo() EndpointOption {
+	return func(endpoint *types.Endpoint) {
+		endpoint.Sudo = &types.Sudo{
+			Active: true,
+		}
+	}
+}
+
 func WithInsecure() EndpointOption {
 	return func(endpoint *types.Endpoint) {
 		endpoint.Insecure = true
