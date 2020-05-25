@@ -30,6 +30,12 @@ func WithIdentityFile(identityFile string) EndpointOption {
 	}
 }
 
+func WithPassword(password string) EndpointOption {
+	return func(endpoint *types.Endpoint) {
+		endpoint.Password = password
+	}
+}
+
 func WithInsecure() EndpointOption {
 	return func(endpoint *types.Endpoint) {
 		endpoint.Insecure = true
