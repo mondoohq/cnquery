@@ -1,7 +1,10 @@
 package resources
 
 import (
+	"errors"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const passwdContent = `root:x:0:0::/root:/bin/bash
@@ -35,4 +38,9 @@ func TestResource_File(t *testing.T) {
 			0, passwdContent,
 		},
 	})
+}
+
+func TestResource_File_NotExist(t *testing.T) {
+	res := testQuery(t, "file('Nope').content")
+	assert.Equal(t, errors.New("file 'Nope' does not exist"), res[0].Data.Error)
 }
