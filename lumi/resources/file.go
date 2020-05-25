@@ -5,6 +5,7 @@
 package resources
 
 import (
+	"errors"
 	"io/ioutil"
 	"path"
 	"strconv"
@@ -23,14 +24,20 @@ func (s *lumiFile) id() (string, error) {
 
 func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
 	if !exists {
-		log.Debug().Str("file", path).Msg("[file]> update content, empty, file doesn't exist")
-		s.Cache.Store("content", &lumi.CacheEntry{Data: "", Valid: true, Timestamp: time.Now().Unix()})
+		log.Debug().Str("file", path).Msg("[file]> file does not exist")
 
-		err := s.Runtime.Observers.Trigger(s.LumiResource().FieldUID("content"))
-		if err != nil {
-			log.Error().Err(err).Msg("[file]> failed to trigger content")
-		}
-		return "", nil
+		// store the result in cache as we don't expect the file to improve
+		// unless it starts existing
+		resErr := errors.New("file '" + path + "' does not exist")
+		s.Cache.Store("content", &lumi.CacheEntry{
+			Data:      "",
+			Valid:     true,
+			Error:     resErr,
+			Timestamp: time.Now().Unix(),
+		})
+
+		// returning the error will prevent a cache overwrite
+		return "", resErr
 	}
 
 	_, ok := s.Cache.Load("content")
@@ -69,12 +76,14 @@ func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
 			})
 
 		} else {
+
 			log.Debug().Str("file", path).Msg("[file]> file does not exist")
+			resErr := errors.New("file '" + path + "' does not exist: " + f.Error.Error())
 			s.Cache.Store("content", &lumi.CacheEntry{
 				Data:      "",
 				Valid:     true,
 				Timestamp: time.Now().Unix(),
-				Error:     f.Error,
+				Error:     resErr,
 			})
 		}
 
@@ -83,6 +92,8 @@ func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
 			log.Error().Err(err).Msg("[file]> failed to trigger content")
 		}
 	})
+
+	// make sure the watcher is established before doing any these remaining steps
 	if err != nil {
 		return "", err
 	}
