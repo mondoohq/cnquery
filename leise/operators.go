@@ -45,7 +45,9 @@ func resolveType(chunk *llx.Chunk, code *llx.Code) types.Type {
 		typ = types.Type(chunk.Primitive.Type)
 		ref, _ = chunk.Primitive.Ref()
 	} else {
-		panic("Cannot find the function or primitive of reference")
+		// if it compiled and we have a name with an ID that is not a ref then
+		// it's a resource with that id
+		typ = types.Resource(chunk.Id)
 	}
 
 	if typ != types.Ref {
