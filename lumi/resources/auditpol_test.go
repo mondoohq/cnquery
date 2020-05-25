@@ -20,10 +20,10 @@ func TestResource_Auditpol(t *testing.T) {
 	})
 
 	t.Run("test a specific secpol systemaccess entry", func(t *testing.T) {
-		res := testQuery(t, "auditpol.where(subcategory == 'Credential Validation').list != []")
+		res := testQuery(t, "auditpol.where(subcategory == 'Credential Validation').list.length")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, true, res[0].Data.Value)
+		assert.Equal(t, int64(1), res[0].Data.Value)
 	})
 
 	t.Run("test a specific secpol systemaccess entry", func(t *testing.T) {
@@ -31,13 +31,6 @@ func TestResource_Auditpol(t *testing.T) {
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, "Success", res[0].Data.Value)
-	})
-
-	t.Run("test a specific secpol systemaccess entry", func(t *testing.T) {
-		res := testQuery(t, "auditpol.where(subcategory == 'Credential Validation').list[0].inclusionsetting == 'Success and Failure'")
-		assert.NotEmpty(t, res)
-		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, false, res[0].Data.Value)
 	})
 
 	t.Run("test a specific secpol systemaccess entry", func(t *testing.T) {
