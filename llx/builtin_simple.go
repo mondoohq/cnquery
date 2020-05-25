@@ -1208,3 +1208,12 @@ func stringContainsArrayString(c *LeiseExecutor, bind *RawData, chunk *Chunk, re
 
 	return BoolData(false), 0, nil
 }
+
+func stringDowncase(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type}, 0, nil
+	}
+
+	res := strings.ToLower(bind.Value.(string))
+	return StringData(res), 0, nil
+}

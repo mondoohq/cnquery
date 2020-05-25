@@ -220,6 +220,10 @@ func TestString_Methods(t *testing.T) {
 			"'hello'.contains(['lu', 'la'])",
 			0, false,
 		},
+		{
+			"'HeLlO'.downcase",
+			"hello",
+		},
 	})
 }
 
