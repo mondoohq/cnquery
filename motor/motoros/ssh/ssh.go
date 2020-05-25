@@ -10,6 +10,8 @@ import (
 	"github.com/spf13/afero"
 
 	"go.mondoo.io/mondoo/motor/motoros/capabilities"
+	"go.mondoo.io/mondoo/motor/motoros/cmd"
+	"go.mondoo.io/mondoo/motor/motoros/ssh/cat"
 	"go.mondoo.io/mondoo/motor/motoros/ssh/scp"
 	"go.mondoo.io/mondoo/motor/motoros/ssh/sftp"
 	"go.mondoo.io/mondoo/motor/motoros/types"
@@ -63,11 +65,18 @@ func New(endpoint *types.Endpoint) (*SSHTransport, error) {
 		activateScp = true
 	}
 
+	var s cmd.Wrapper
+	if endpoint.Sudo != nil && endpoint.Sudo.Active {
+		log.Debug().Msg("activated sudo for ssh connection")
+		s = cmd.NewSudo()
+	}
+
 	return &SSHTransport{
 		Endpoint:         endpoint,
 		SSHClient:        conn,
 		UseScpFilesystem: activateScp,
 		HostKey:          hostkey,
+		Sudo:             s,
 	}, nil
 }
 
@@ -77,9 +86,14 @@ type SSHTransport struct {
 	fs               afero.Fs
 	UseScpFilesystem bool
 	HostKey          ssh.PublicKey
+	Sudo             cmd.Wrapper
 }
 
 func (t *SSHTransport) RunCommand(command string) (*types.Command, error) {
+	if t.Sudo != nil {
+		command = t.Sudo.Build(command)
+	}
+
 	log.Debug().Str("command", command).Str("transport", "ssh").Msg("run command")
 	c := &Command{SSHClient: t.SSHClient}
 	return c.Exec(command)
@@ -87,6 +101,12 @@ func (t *SSHTransport) RunCommand(command string) (*types.Command, error) {
 
 func (t *SSHTransport) FS() afero.Fs {
 	if t.fs == nil {
+		// if any priviledge elevation is used, we have no other chance as to use command-based file transfer
+		if t.Sudo != nil {
+			t.fs = cat.New(t)
+			return t.fs
+		}
+
 		// we always try to use sftp first (if scp is not user-enforced)
 		// and we also fallback to scp if sftp does not work
 		if !t.UseScpFilesystem {
@@ -128,7 +148,12 @@ func (t *SSHTransport) FileInfo(path string) (types.FileInfoDetails, error) {
 	uid := int64(-1)
 	gid := int64(-1)
 
-	if t.UseScpFilesystem {
+	if t.Sudo != nil {
+		if stat, ok := stat.Sys().(*types.FileInfo); ok {
+			uid = int64(stat.Uid)
+			gid = int64(stat.Gid)
+		}
+	} else if t.UseScpFilesystem {
 		// scp does not preserve uid and gid
 	} else {
 		if stat, ok := stat.Sys().(*rawsftp.FileStat); ok {
