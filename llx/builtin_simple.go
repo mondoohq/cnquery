@@ -1179,10 +1179,18 @@ func arrayOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 // string methods
 
 func stringContainsString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
 	argRef := chunk.Function.Args[0]
 	arg, rref, err := c.resolveValue(argRef, ref)
 	if err != nil || rref > 0 {
 		return nil, rref, err
+	}
+
+	if arg.Value == nil {
+		return BoolFalse, 0, nil
 	}
 
 	ok := strings.Contains(bind.Value.(string), arg.Value.(string))
@@ -1190,10 +1198,18 @@ func stringContainsString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int
 }
 
 func stringContainsArrayString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
 	argRef := chunk.Function.Args[0]
 	arg, rref, err := c.resolveValue(argRef, ref)
 	if err != nil || rref > 0 {
 		return nil, rref, err
+	}
+
+	if arg.Value == nil {
+		return BoolFalse, 0, nil
 	}
 
 	var ok bool
