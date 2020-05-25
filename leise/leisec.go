@@ -710,6 +710,9 @@ func (c *compiler) isChunkStatic(chunk *llx.Chunk) bool {
 }
 
 func (c *compiler) UpdateEntrypoints() {
+	// 0. prep: everything that's an entrypoint is a scoringpoint later on
+	c.Result.Code.Scorepoints = c.Result.Code.Entrypoints
+
 	// 1. potentially clean up all inherited entrypoints
 	// TODO: unclear if this is necessary because the condition may never be met
 	entrypoints := map[int32]struct{}{}
