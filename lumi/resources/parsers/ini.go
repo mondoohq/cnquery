@@ -19,6 +19,7 @@ func ParseIni(raw string, delimiter string) *Ini {
 	lines := strings.Split(raw, "\n")
 	for i := range lines {
 		line := lines[i]
+		line = strings.TrimSpace(line)
 		if idx := strings.Index(line, "#"); idx >= 0 {
 			line = line[0:idx]
 		}
@@ -55,6 +56,12 @@ func ParseIni(raw string, delimiter string) *Ini {
 		}
 
 		res.Fields[curGroup].(map[string]interface{})[k] = v
+	}
+
+	// check if group "" really contains entries
+	defaultGroup := res.Fields[""].(map[string]interface{})
+	if len(defaultGroup) == 0 {
+		delete(res.Fields, "")
 	}
 
 	return &res

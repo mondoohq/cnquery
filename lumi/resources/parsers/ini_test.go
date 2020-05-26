@@ -128,3 +128,19 @@ func TestIni_SpaceDelim(t *testing.T) {
 		})
 	}
 }
+
+func TestJournalD(t *testing.T) {
+	data := `
+[Journal]
+Storage=auto
+Compress=yes
+#Seal=yes
+`
+	res := ParseIni(data, "=")
+	assert.Equal(t, map[string]interface{}{
+		"Journal": map[string]interface{}{
+			"Storage":  "auto",
+			"Compress": "yes",
+		},
+	}, res.Fields)
+}
