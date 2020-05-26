@@ -86,8 +86,6 @@ func (g *lumiGroup) GetMembers() ([]interface{}, error) {
 	}
 	groupMembers := m.Data.([]string)
 
-	log.Warn().Strs("members", groupMembers).Msg("call members")
-
 	// TODO: we may want to reconsider to do this here, it should be an async method members()
 	// therefore we may just want to store the references here
 	var members []interface{}
