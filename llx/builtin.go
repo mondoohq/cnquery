@@ -321,13 +321,20 @@ func runResourceFunction(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int3
 
 	// watch this field in the resource
 	err := c.runtime.WatchAndUpdate(rr, chunk.Id, wid, func(fieldData interface{}, fieldError error) {
+		data := &RawData{
+			Type:  types.Type(resource.Fields[chunk.Id].Type),
+			Value: fieldData,
+			Error: fieldError,
+		}
+
 		c.cache.Store(ref, &stepCache{
-			Result: &RawData{
-				Type:  types.Type(resource.Fields[chunk.Id].Type),
-				Value: fieldData,
-				Error: fieldError,
-			},
+			Result: data,
 		})
+
+		codeID, ok := c.entrypoints[ref]
+		if ok {
+			c.callback(&RawResult{Data: data, CodeID: codeID})
+		}
 
 		if fieldError != nil {
 			c.triggerChainError(ref, fieldError)
