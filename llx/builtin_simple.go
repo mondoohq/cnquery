@@ -4,6 +4,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"go.mondoo.io/mondoo/types"
 )
 
 func rawdataOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(*RawData, *RawData) bool) (*RawData, int32, error) {
@@ -1232,4 +1234,28 @@ func stringDowncase(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 
 	res := strings.ToLower(bind.Value.(string))
 	return StringData(res), 0, nil
+}
+
+func stringLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Int}, 0, nil
+	}
+
+	l := len(bind.Value.(string))
+	return IntData(int64(l)), 0, nil
+}
+
+func stringLines(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Array(types.String)}, 0, nil
+	}
+
+	s := bind.Value.(string)
+	lines := strings.Split(s, "\n")
+	res := make([]interface{}, len(lines))
+	for i := range lines {
+		res[i] = lines[i]
+	}
+
+	return ArrayData(res, types.String), 0, nil
 }

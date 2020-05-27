@@ -21,6 +21,7 @@ var mapBlockType = func(t types.Type) types.Type { return types.Map(types.String
 var boolType = func(t types.Type) types.Type { return types.Bool }
 var intType = func(t types.Type) types.Type { return types.Int }
 var stringType = func(t types.Type) types.Type { return types.String }
+var stringArrayType = func(t types.Type) types.Type { return types.Array(types.String) }
 
 var builtinFunctions map[types.Type]map[string]compileHandler
 
@@ -29,6 +30,8 @@ func init() {
 		types.String: {
 			"contains": {compile: compileStringContains, typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
 			"downcase": {typ: stringType, signature: FunctionSignature{}},
+			"length":   {typ: intType, signature: FunctionSignature{}},
+			"lines":    {typ: stringArrayType, signature: FunctionSignature{}},
 		},
 		types.ArrayLike: {
 			"[]":       {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
