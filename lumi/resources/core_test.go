@@ -228,6 +228,14 @@ func TestString_Methods(t *testing.T) {
 			"'HeLlO'.downcase",
 			0, "hello",
 		},
+		{
+			"'hello'.length",
+			0, int64(5),
+		},
+		{
+			"'he\nll\no'.lines",
+			0, []interface{}{"he", "ll", "o"},
+		},
 	})
 }
 
