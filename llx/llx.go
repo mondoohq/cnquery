@@ -296,6 +296,7 @@ func (c *LeiseExecutor) runFunction(chunk *Chunk, ref int32) (*RawData, int32, e
 	}
 
 	if res.Result.Error != nil {
+		c.cache.Store(ref, &stepCache{Result: res.Result})
 		return nil, 0, res.Result.Error
 	}
 
