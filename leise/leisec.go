@@ -367,10 +367,10 @@ func (c *compiler) addResource(id string, resource *lumi.ResourceInfo, call *par
 }
 
 // compileIdentifier within a context of a binding
-// 1. global f(): expect, ...
-// 2. global rsc: sshd, sshd.config
-// 3. bound field: user { name }
-// x. called field: user.name <= not in this scope
+// 1. global f(): 			expect, ...
+// 2. global resource: 	sshd, sshd.config
+// 3. bound field: 			user { name }
+// x. called field: 		user.name <= not in this scope
 func (c *compiler) compileIdentifier(id string, callBinding *binding, calls []*parser.Call) ([]*parser.Call, types.Type, error) {
 	var call *parser.Call
 	restCalls := calls
@@ -512,6 +512,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 			return nil, err
 		}
 		typ = types.Type(res.Type)
+
 		if len(calls) > 0 {
 			c.Result.Code.AddChunk(&llx.Chunk{
 				Call: llx.Chunk_PRIMITIVE,
@@ -572,6 +573,9 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 			}
 
 			found, resType, err = c.compileBoundIdentifier(id, &binding{Type: typ, Ref: ref}, call)
+			if err != nil {
+				return nil, err
+			}
 			if !found {
 				addFieldSuggestions(availableFields(c, typ), id, c.Result)
 				return nil, errors.New("Cannot find field '" + id + "' in " + typ.Label() + "")
