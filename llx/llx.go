@@ -345,15 +345,9 @@ func (c *LeiseExecutor) runChain(start int32) {
 
 		res, nextRef, err = c.runRef(curRef)
 
-		// back out of errors directly
-		if err != nil {
-			c.callback(errorResult(err, c.entrypoints[start]))
-			return
-		}
-
 		// stop this chain of execution, if it didn't return anything
 		// we need more data ie an event to provide info
-		if res == nil && nextRef == 0 {
+		if res == nil && nextRef == 0 && err == nil {
 			return
 		}
 
@@ -362,6 +356,10 @@ func (c *LeiseExecutor) runChain(start int32) {
 			if codeID, ok := c.entrypoints[curRef]; ok {
 				// log.Debug().Int32("ref", curRef).Msgf("exec> chain callback")
 				c.callback(&RawResult{Data: res, CodeID: codeID})
+			}
+		} else if err != nil {
+			if codeID, ok := c.entrypoints[curRef]; ok {
+				c.callback(errorResult(err, codeID))
 			}
 		}
 
