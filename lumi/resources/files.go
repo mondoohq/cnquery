@@ -6,6 +6,7 @@ package resources
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -25,11 +26,23 @@ var findTypes = map[string]string{
 }
 
 func (l *lumiFilesFind) init(args *lumi.Args) (*lumi.Args, FilesFind, error) {
-	if ((*args)["xdev"]) == nil {
+	if (*args)["xdev"] == nil {
 		(*args)["xdev"] = false
 	}
 
+	if (*args)["name"] == nil {
+		(*args)["name"] = ""
+	}
+
+	if (*args)["permissions"] == nil {
+		(*args)["permissions"] = 0777
+	}
+
 	return args, nil, nil
+}
+
+func octal2string(o int64) string {
+	return fmt.Sprintf("%o", o)
 }
 
 func (l *lumiFilesFind) id() (string, error) {
@@ -53,6 +66,16 @@ func (l *lumiFilesFind) id() (string, error) {
 		return "", err
 	}
 
+	name, err := l.Name()
+	if err != nil {
+		return "", err
+	}
+
+	permissions, err := l.Permissions()
+	if err != nil {
+		return "", err
+	}
+
 	var id strings.Builder
 	id.WriteString(from)
 	if !xdev {
@@ -64,6 +87,14 @@ func (l *lumiFilesFind) id() (string, error) {
 
 	if typ != "" {
 		id.WriteString(" regex=" + regex)
+	}
+
+	if name != "" {
+		id.WriteString(" name=" + name)
+	}
+
+	if permissions != 0777 {
+		id.WriteString(" permissions=" + octal2string(permissions))
 	}
 
 	return id.String(), nil
@@ -79,6 +110,14 @@ func (l *lumiFilesFind) GetType() (string, error) {
 
 func (l *lumiFilesFind) GetRegex() (string, error) {
 	return "", nil
+}
+
+func (l *lumiFilesFind) GetName() (string, error) {
+	return "", nil
+}
+
+func (l *lumiFilesFind) GetPermissions() (int64, error) {
+	return 0, nil
 }
 
 func (l *lumiFilesFind) GetList() ([]interface{}, error) {
@@ -109,6 +148,16 @@ func (l *lumiFilesFind) GetList() ([]interface{}, error) {
 		}
 	}
 
+	perm, err := l.Permissions()
+	if err != nil {
+		return nil, err
+	}
+
+	name, err := l.Name()
+	if err != nil {
+		return nil, err
+	}
+
 	var foundFiles []string
 	caps := l.Runtime.Motor.Transport.Capabilities()
 	if caps.HasCapability(capabilities.FileSearch) {
@@ -127,20 +176,33 @@ func (l *lumiFilesFind) GetList() ([]interface{}, error) {
 		var call strings.Builder
 		call.WriteString("find ")
 		call.WriteString(strconv.Quote(path))
+
 		if !xdev {
 			call.WriteString(" -xdev")
 		}
+
 		if typ != "" {
 			t, ok := findTypes[typ]
 			if ok {
 				call.WriteString(" -type " + t)
 			}
 		}
+
 		if regex != "" {
 			// TODO: we need to escape regex here
 			call.WriteString(" -regex '")
 			call.WriteString(regex)
 			call.WriteString("'")
+		}
+
+		if perm != 0777 {
+			call.WriteString(" -perm -")
+			call.WriteString(octal2string(perm))
+		}
+
+		if name != "" {
+			call.WriteString(" -name ")
+			call.WriteString(name)
 		}
 
 		rawCmd, err := l.Runtime.CreateResource("command", "command", call.String())
