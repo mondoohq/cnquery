@@ -50,6 +50,6 @@ func compileStringContains(c *compiler, typ types.Type, ref int32, id string, ca
 		return types.Bool, nil
 
 	default:
-		return types.Nil, errors.New("cannot find #string.contains for this call")
+		return types.Nil, errors.New("cannot find #string.contains with this type " + types.Type(val.Type).Label())
 	}
 }

@@ -497,6 +497,25 @@ func TestCompiler_BlockWithSelf(t *testing.T) {
 	})
 }
 
+func TestCompiler_CallWithResource(t *testing.T) {
+	compile(t, "'hello'.contains(platform.family)", func(res *llx.CodeBundle) {
+		assertPrimitive(t, llx.StringPrimitive("hello"), res.Code.Code[0])
+		assertFunction(t, "platform", nil, res.Code.Code[1])
+		assertFunction(t, "family", &llx.Function{
+			Type:    string(types.Array(types.String)),
+			Binding: 2,
+			Args:    []*llx.Primitive{},
+		}, res.Code.Code[2])
+		assertFunction(t, "contains", &llx.Function{
+			Type:    string(types.Bool),
+			Binding: 1,
+			Args:    []*llx.Primitive{llx.RefPrimitive(2)},
+		}, res.Code.Code[3])
+
+		assert.Equal(t, []int32{4}, res.Code.Entrypoints)
+	})
+}
+
 func TestCompiler_List(t *testing.T) {
 	compile(t, "packages.list { name }", func(res *llx.CodeBundle) {
 		assertFunction(t, "packages", nil, res.Code.Code[0])
