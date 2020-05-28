@@ -31,7 +31,7 @@ func dataOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(int
 	if bind.Value == nil {
 		return BoolData(v.Value == nil), 0, nil
 	}
-	if v.Value == nil {
+	if v == nil || v.Value == nil {
 		return BoolData(false), 0, nil
 	}
 
