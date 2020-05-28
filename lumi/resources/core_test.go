@@ -176,22 +176,25 @@ func runSimpleErrorTests(t *testing.T, tests []simpleTest) {
 // 	}
 // }
 
-func testTimeout(t *testing.T, code string) {
-	t.Run(code, func(t *testing.T) {
-		executor := initExecutor()
-		code, err := executor.AddCode(code)
-		if err != nil {
-			t.Error("failed to compile: " + err.Error())
-			return
-		}
-		defer executor.RemoveCode(code.Code.Id)
+func testTimeout(t *testing.T, codes ...string) {
+	executor := initExecutor()
+	for i := range codes {
+		code := codes[i]
+		t.Run(code, func(t *testing.T) {
+			code, err := executor.AddCode(code)
+			if err != nil {
+				t.Error("failed to compile: " + err.Error())
+				return
+			}
+			defer executor.RemoveCode(code.Code.Id)
 
-		var timeoutTime = 5
-		if !executor.WaitForResults(time.Duration(timeoutTime) * time.Second) {
-			t.Error("ran into timeout after ", timeoutTime, " seconds")
-			return
-		}
-	})
+			var timeoutTime = 5
+			if !executor.WaitForResults(time.Duration(timeoutTime) * time.Second) {
+				t.Error("ran into timeout after ", timeoutTime, " seconds")
+				return
+			}
+		})
+	}
 }
 
 func TestErroneousLlxChains(t *testing.T) {
@@ -200,6 +203,11 @@ func TestErroneousLlxChains(t *testing.T) {
 		permissions.group_writeable == false
 		permissions.group_executable == false
 	}`)
+
+	testTimeout(t,
+		`file("/etc/profile").content.contains("umask 027") || file("/etc/bashrc").content.contains("umask 027")`,
+		`file("/etc/profile").content.contains("umask 027") || file("/etc/bashrc").content.contains("umask 027")`,
+	)
 }
 
 func TestString_Methods(t *testing.T) {
