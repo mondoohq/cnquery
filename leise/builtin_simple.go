@@ -18,13 +18,17 @@ func compileStringContains(c *compiler, typ types.Type, ref int32, id string, ca
 		return types.Nil, errors.New("function " + id + " needs one argument")
 	}
 
-	valRaw := f.Value.Operand.Value
-	val, err := c.compileValue(valRaw)
+	val, err := c.compileOperand(f.Value.Operand)
 	if err != nil {
 		return types.Nil, err
 	}
 
-	switch types.Type(val.Type) {
+	valType, err := c.dereferenceType(val)
+	if err != nil {
+		return types.Nil, err
+	}
+
+	switch valType {
 	case types.String:
 		c.Result.Code.AddChunk(&llx.Chunk{
 			Call: llx.Chunk_FUNCTION,

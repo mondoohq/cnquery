@@ -504,12 +504,11 @@ func TestCompiler_CallWithResource(t *testing.T) {
 		assertFunction(t, "family", &llx.Function{
 			Type:    string(types.Array(types.String)),
 			Binding: 2,
-			Args:    []*llx.Primitive{},
 		}, res.Code.Code[2])
-		assertFunction(t, "contains", &llx.Function{
+		assertFunction(t, "contains"+string(types.Array(types.String)), &llx.Function{
 			Type:    string(types.Bool),
 			Binding: 1,
-			Args:    []*llx.Primitive{llx.RefPrimitive(2)},
+			Args:    []*llx.Primitive{llx.RefPrimitive(3)},
 		}, res.Code.Code[3])
 
 		assert.Equal(t, []int32{4}, res.Code.Entrypoints)
