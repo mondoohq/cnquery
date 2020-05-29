@@ -161,6 +161,22 @@ func (c *compiler) blockExpressions(expressions []*parser.Expression, typ types.
 	return c.blockOnResource(expressions, typ)
 }
 
+func (c *compiler) dereferenceType(val *llx.Primitive) (types.Type, error) {
+	valType := types.Type(val.Type)
+	if types.Type(val.Type) != types.Ref {
+		return valType, nil
+	}
+
+	ref, ok := val.Ref()
+	if !ok {
+		return types.Nil, errors.New("found a reference type that doesn't return a reference value")
+	}
+
+	chunk := c.Result.Code.Code[ref-1]
+	valType = chunk.Type(c.Result.Code)
+	return valType, nil
+}
+
 func (c *compiler) unnamedResourceArgs(resource *lumi.ResourceInfo, args []*parser.Arg) ([]*llx.Primitive, error) {
 	init := resource.Init
 	if init == nil {
