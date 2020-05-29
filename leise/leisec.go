@@ -200,17 +200,21 @@ func (c *compiler) unnamedResourceArgs(resource *lumi.ResourceInfo, args []*pars
 		if err != nil {
 			return nil, errors.New("addResourceCall error: " + err.Error())
 		}
-		if types.Type(v.Type) == types.Ref {
-			return nil, errors.New("Cannot handle refs in function calls just yet")
+
+		vType := types.Type(v.Type)
+		if vType == types.Ref {
+			vType, err = c.dereferenceType(v)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		expected := init.Args[idx]
 		expectedType := types.Type(expected.Type)
-		typ := types.Type(v.Type)
-		if typ != expectedType {
+		if vType != expectedType {
 			return nil, errors.New("Incorrect type on argument " + strconv.Itoa(idx) +
 				" in resource " + resource.Name + ": expected " + expectedType.Label() +
-				", got: " + typ.Label())
+				", got: " + vType.Label())
 		}
 
 		res[idx*2] = llx.StringPrimitive(expected.Name)
@@ -243,7 +247,7 @@ func (c *compiler) resourceArgs(resource *lumi.ResourceInfo, args []*parser.Arg)
 		}
 		vt := types.Type(v.Type)
 		if vt == types.Ref {
-			return nil, errors.New("Cannot handle refs in function calls just yet")
+			return nil, errors.New("cannot handle refs in function args just yet")
 		}
 		ft := types.Type(field.Type)
 		if vt != ft {

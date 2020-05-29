@@ -210,6 +210,19 @@ func TestErroneousLlxChains(t *testing.T) {
 	)
 }
 
+func TestResource_InitWithResource(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"command(platform.name).stdout",
+			0, "",
+		},
+		{
+			"'linux'.contains(platform.family)",
+			0, true,
+		},
+	})
+}
+
 func TestString_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{

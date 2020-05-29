@@ -497,7 +497,7 @@ func TestCompiler_BlockWithSelf(t *testing.T) {
 	})
 }
 
-func TestCompiler_CallWithResource(t *testing.T) {
+func TestCompiler_ContainsWithResource(t *testing.T) {
 	compile(t, "'hello'.contains(platform.family)", func(res *llx.CodeBundle) {
 		assertPrimitive(t, llx.StringPrimitive("hello"), res.Code.Code[0])
 		assertFunction(t, "platform", nil, res.Code.Code[1])
@@ -512,6 +512,38 @@ func TestCompiler_CallWithResource(t *testing.T) {
 		}, res.Code.Code[3])
 
 		assert.Equal(t, []int32{4}, res.Code.Entrypoints)
+	})
+}
+
+func TestCompiler_CallWithResource(t *testing.T) {
+	compile(t, "users.list { file(home) }", func(res *llx.CodeBundle) {
+		assertFunction(t, "users", nil, res.Code.Code[0])
+		assertFunction(t, "list", &llx.Function{
+			Type:    string(types.Array(types.Resource("user"))),
+			Binding: 1,
+		}, res.Code.Code[1])
+		assertFunction(t, "{}", &llx.Function{
+			Type:    string(types.Array(types.Any)),
+			Binding: 2,
+			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
+		}, res.Code.Code[2])
+		assert.Equal(t, 3, len(res.Code.Code))
+
+		assertPrimitive(t, &llx.Primitive{
+			Type: string(types.Resource("user")),
+		}, res.Code.Functions[0].Code[0])
+		assertFunction(t, "home", &llx.Function{
+			Type:    string(types.String),
+			Binding: 1,
+		}, res.Code.Functions[0].Code[1])
+		assertFunction(t, "file", &llx.Function{
+			Type:    string(types.Resource("file")),
+			Binding: 0,
+			Args: []*llx.Primitive{
+				llx.StringPrimitive("path"),
+				llx.RefPrimitive(2),
+			},
+		}, res.Code.Functions[0].Code[2])
 	})
 }
 
