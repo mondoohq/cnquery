@@ -35,7 +35,7 @@ func (l *lumiFilesFind) init(args *lumi.Args) (*lumi.Args, FilesFind, error) {
 	}
 
 	if (*args)["permissions"] == nil {
-		(*args)["permissions"] = 0777
+		(*args)["permissions"] = int64(0777)
 	}
 
 	return args, nil, nil
