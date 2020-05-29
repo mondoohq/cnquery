@@ -203,7 +203,8 @@ func pregex2raw(p *Primitive) *RawData {
 }
 
 func parray2raw(p *Primitive) *RawData {
-	d, err := args2resourceargs(p.Array)
+	// FIXME: needs handover for referenced values...
+	d, _, err := args2resourceargs(nil, 0, p.Array)
 	return &RawData{Value: d, Error: err, Type: types.Type(p.Type)}
 }
 
@@ -240,20 +241,32 @@ func (p *Primitive) RawData() *RawData {
 	return c(p)
 }
 
-func args2resourceargs(args []*Primitive) ([]interface{}, error) {
+func args2resourceargs(c *LeiseExecutor, ref int32, args []*Primitive) ([]interface{}, int32, error) {
 	if args == nil {
-		return []interface{}{}, nil
+		return []interface{}{}, 0, nil
 	}
 
 	res := make([]interface{}, len(args))
 	for i := range args {
-		cur := args[i].RawData()
+		var cur *RawData
+
+		if types.Type(args[i].Type) == types.Ref {
+			var rref int32
+			var err error
+			cur, rref, err = c.resolveValue(args[i], ref)
+			if rref > 0 || err != nil {
+				return nil, rref, err
+			}
+		} else {
+			cur = args[i].RawData()
+		}
+
 		if cur.Error != nil {
-			return nil, cur.Error
+			return nil, 0, cur.Error
 		}
 		res[i] = cur.Value
 	}
-	return res, nil
+	return res, 0, nil
 }
 
 func primitive2map(m map[string]*Primitive) (map[string]interface{}, error) {

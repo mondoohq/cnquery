@@ -228,9 +228,9 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, ref int3
 }
 
 func (c *LeiseExecutor) createResource(name string, f *Function, ref int32) (*RawData, int32, error) {
-	args, err := args2resourceargs(f.Args)
-	if err != nil {
-		return nil, 0, err
+	args, rref, err := args2resourceargs(c, ref, f.Args)
+	if err != nil || rref != 0 {
+		return nil, rref, err
 	}
 
 	resource, err := c.runtime.CreateResource(name, args...)
