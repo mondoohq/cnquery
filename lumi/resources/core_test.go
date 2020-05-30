@@ -226,10 +226,6 @@ func TestResource_InitWithResource(t *testing.T) {
 func TestString_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
-			"'hello'.contains",
-			0, "hello",
-		},
-		{
 			"'hello'.contains('ll')",
 			0, true,
 		},
