@@ -12,7 +12,7 @@ const (
 	byteFloat
 	byteString
 	byteRegex
-	byteArray = 1<<4 + iota
+	byteArray = 1<<4 + iota // 24
 	byteMap
 	byteResource
 	byteFunction
