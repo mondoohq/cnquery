@@ -33,7 +33,7 @@ UsePAM yes
 """
 
 
-[commands."sudo stat -L /etc/ssh/sshd_config 2>/dev/null --printf '%s\n%f\n%u\n%g\n%X\n%Y\n%C'"]
+[commands."sudo stat -L /etc/ssh/sshd_config --printf '%s\n%f\n%u\n%g\n%X\n%Y\n%C'"]
 stdout = """4317
 8180
 0
