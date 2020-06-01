@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/motoros/types"
@@ -73,13 +74,16 @@ func (cat *CatFs) Stat(name string) (os.FileInfo, error) {
 	sb.WriteString(lstat)
 	sb.WriteString(" ")
 	sb.WriteString(path)
-	sb.WriteString(" 2>/dev/null ")
+	sb.WriteString(" ")
 	sb.WriteString(format)
 	sb.WriteString(" '%s\n%f\n%u\n%g\n%X\n%Y\n%C'")
 
+	// NOTE: handling the exit code here does not work for all cases
+	// sometimes stat returns something like: failed to get security context of '/etc/ssh/sshd_config': No data available
+	// Therefore we continue after this command and try to parse the result and focus on making the parsing more robust
 	cmd, err := cat.commandRunner.RunCommand(sb.String())
 	if err != nil {
-		return nil, os.ErrNotExist
+		log.Debug().Err(err).Str("file", name).Msg("could not stat the file")
 	}
 
 	data, err := ioutil.ReadAll(cmd.Stdout)
@@ -89,7 +93,8 @@ func (cat *CatFs) Stat(name string) (os.FileInfo, error) {
 
 	statsData := strings.Split(string(data), "\n")
 	if len(statsData) != 7 {
-		return nil, errors.New("could not stat " + name)
+		log.Error().Str("name", name).Msg("could not stat the file")
+		return nil, os.ErrNotExist
 	}
 
 	size, err := strconv.Atoi(statsData[0])
