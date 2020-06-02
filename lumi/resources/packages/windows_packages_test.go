@@ -7,12 +7,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
-	mock "go.mondoo.io/mondoo/motor/motoros/mock/toml"
+	"go.mondoo.io/mondoo/motor/motoros/mock"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
 func TestWindowsAppxPackagesParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/windows_2019.toml"})
+	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/windows_2019.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +38,7 @@ func TestWindowsAppxPackagesParser(t *testing.T) {
 }
 
 func TestWindowsHotFixParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/windows_2019.toml"})
+	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/windows_2019.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,7 +63,7 @@ func TestWindowsHotFixParser(t *testing.T) {
 }
 
 func TestWinOSUpdatesParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/windows_2019.toml"})
+	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/windows_2019.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

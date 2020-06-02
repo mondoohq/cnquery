@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"go.mondoo.io/mondoo/motor/motoros/mock"
-	"go.mondoo.io/mondoo/motor/motoros/mock/toml"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 
 	"github.com/stretchr/testify/assert"
@@ -21,7 +20,7 @@ type WatcherTester struct {
 
 func SetupWatcherTest() *WatcherTester {
 	filepath, _ := filepath.Abs("./watcher_test.toml")
-	trans, _ := toml.New(&types.Endpoint{Backend: "mock", Path: filepath})
+	trans, _ := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: filepath})
 	return &WatcherTester{watcher: NewWatcher(trans), mock: trans}
 }
 

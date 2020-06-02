@@ -6,12 +6,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/motor/motorid/hostname"
 	motor "go.mondoo.io/mondoo/motor/motoros"
-	"go.mondoo.io/mondoo/motor/motoros/mock/toml"
+	"go.mondoo.io/mondoo/motor/motoros/mock"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
 func TestHostnameLinux(t *testing.T) {
-	trans, err := toml.New(&types.Endpoint{Backend: "mock", Path: "./testdata/hostname_linux.toml"})
+	trans, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/hostname_linux.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -30,7 +30,7 @@ func TestHostnameLinux(t *testing.T) {
 }
 
 func TestHostnameWindows(t *testing.T) {
-	trans, err := toml.New(&types.Endpoint{Backend: "mock", Path: "./testdata/hostname_windows.toml"})
+	trans, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/hostname_windows.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +49,7 @@ func TestHostnameWindows(t *testing.T) {
 }
 
 func TestHostnameMacos(t *testing.T) {
-	trans, err := toml.New(&types.Endpoint{Backend: "mock", Path: "./testdata/hostname_macos.toml"})
+	trans, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/hostname_macos.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,4 +1,4 @@
-package toml
+package mock
 
 import (
 	"errors"
@@ -6,14 +6,13 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/motoros/mock"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
 // Data holds the mocked data entries
 type TomlData struct {
-	Commands map[string]*mock.Command      `toml:"commands"`
-	Files    map[string]*mock.MockFileData `toml:"files"`
+	Commands map[string]*Command      `toml:"commands"`
+	Files    map[string]*MockFileData `toml:"files"`
 }
 
 func Parse(data string) (*TomlData, error) {
@@ -32,7 +31,7 @@ func Parse(data string) (*TomlData, error) {
 	return tomlContent, nil
 }
 
-func Load(mock *mock.Transport, data string) error {
+func Load(mock *Transport, data string) error {
 	tomlData, err := Parse(data)
 	if err != nil {
 		return err
@@ -44,7 +43,7 @@ func Load(mock *mock.Transport, data string) error {
 	return nil
 }
 
-func LoadFile(mock *mock.Transport, path string) error {
+func LoadFile(mock *Transport, path string) error {
 	log.Debug().Str("path", path).Msg("mock> load toml into mock backend")
 
 	data, err := ioutil.ReadFile(path)
@@ -56,7 +55,7 @@ func LoadFile(mock *mock.Transport, path string) error {
 }
 
 // Export returns a struct that can be used to export toml
-func Export(mock *mock.Transport) (*TomlData, error) {
+func Export(mock *Transport) (*TomlData, error) {
 	tomlData := &TomlData{}
 	tomlData.Commands = mock.Commands
 	tomlData.Files = mock.Fs.Files
@@ -64,8 +63,8 @@ func Export(mock *mock.Transport) (*TomlData, error) {
 }
 
 // New returns a mock backend and loads the toml file by default
-func New(endpoint *types.Endpoint) (*mock.Transport, error) {
-	transport, err := mock.New()
+func NewFromToml(endpoint *types.Endpoint) (*Transport, error) {
+	transport, err := New()
 	if err != nil {
 		return nil, err
 	}

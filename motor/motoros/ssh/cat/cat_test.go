@@ -10,14 +10,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/motoros/cmd"
-	"go.mondoo.io/mondoo/motor/motoros/mock/toml"
+	"go.mondoo.io/mondoo/motor/motoros/mock"
 	"go.mondoo.io/mondoo/motor/motoros/ssh/cat"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
 func TestCatFs(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/cat.toml")
-	trans, err := toml.New(&types.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: filepath})
 	require.NoError(t, err)
 
 	cw := &CommandWrapper{

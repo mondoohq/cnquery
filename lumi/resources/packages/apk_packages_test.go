@@ -5,12 +5,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/lumi/resources/packages"
-	mock "go.mondoo.io/mondoo/motor/motoros/mock/toml"
+	"go.mondoo.io/mondoo/motor/motoros/mock"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
 func TestAlpineApkdbParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/packages_apk.toml"})
+	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/packages_apk.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,7 +80,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 }
 
 func TestApkUpdateParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/updates_apk.toml"})
+	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/updates_apk.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

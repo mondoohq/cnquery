@@ -7,12 +7,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/lumi/resources/mount"
-	mock "go.mondoo.io/mondoo/motor/motoros/mock/toml"
+	"go.mondoo.io/mondoo/motor/motoros/mock"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
 func TestMountLinuxParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/debian.toml"})
+	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/debian.toml"})
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("mount")
@@ -37,7 +37,7 @@ func TestMountLinuxParser(t *testing.T) {
 }
 
 func TestMountMacosParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/osx.toml"})
+	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/osx.toml"})
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("mount")
@@ -63,7 +63,7 @@ func TestMountMacosParser(t *testing.T) {
 }
 
 func TestMountFreeBsdParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/freebsd12.toml"})
+	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/freebsd12.toml"})
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("mount")
@@ -87,7 +87,7 @@ func TestMountFreeBsdParser(t *testing.T) {
 }
 
 func TestProcModulesParser(t *testing.T) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: "./testdata/debian.toml"})
+	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/debian.toml"})
 	require.NoError(t, err)
 
 	f, err := mock.File("/proc/mounts")

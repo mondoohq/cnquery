@@ -8,13 +8,13 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/motor/motoros/fsutil"
-	"go.mondoo.io/mondoo/motor/motoros/mock/toml"
+	"go.mondoo.io/mondoo/motor/motoros/mock"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
 func TestMockCommand(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/mock.toml")
-	trans, err := toml.New(&types.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: filepath})
 	assert.Equal(t, nil, err, "should create mock without error")
 
 	cmd, err := trans.RunCommand("ls /")
@@ -30,7 +30,7 @@ func TestMockCommand(t *testing.T) {
 
 func TestMockFile(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/mock.toml")
-	trans, err := toml.New(&types.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: filepath})
 	assert.Equal(t, nil, err, "should create mock without error")
 
 	f, err := trans.File("/etc/ssh/sshd_config")
