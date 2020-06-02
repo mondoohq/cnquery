@@ -31,6 +31,23 @@ func compile(t *testing.T, s string, f func(res *llx.CodeBundle)) {
 	}
 }
 
+func assertFunction(t *testing.T, id string, f *llx.Function, chunk *llx.Chunk) {
+	assert.Equal(t, llx.Chunk_FUNCTION, chunk.Call)
+	assert.Equal(t, id, chunk.Id, "chunk.Id")
+	assert.Nil(t, chunk.Primitive, "it is not a primitive")
+	assert.Equal(t, f, chunk.Function, "chunk.Function")
+}
+
+func assertPrimitive(t *testing.T, p *llx.Primitive, chunk *llx.Chunk) {
+	assert.Equal(t, llx.Chunk_PRIMITIVE, chunk.Call)
+	assert.Nil(t, chunk.Function)
+	assert.Equal(t, p, chunk.Primitive)
+}
+
+//    ===========================
+//   👋   VALUES + OPERATIONS   🍹
+//    ===========================
+
 func TestCompiler_Simple(t *testing.T) {
 	data := []struct {
 		code string
@@ -201,87 +218,134 @@ func TestCompiler_OperatorPrecedence(t *testing.T) {
 	}
 }
 
-func TestChecksums(t *testing.T) {
-	t.Run("no duplicate code IDs", func(t *testing.T) {
-		dupes := []struct {
-			qa string
-			qb string
-		}{
-			{
-				"users.list { uid == 1 }",
-				"users.list { uid == 2 }",
+//    =======================
+//   👋   ARRAYS and MAPS   🍹
+//    =======================
+
+func TestCompiler_ArrayEmptyWhere(t *testing.T) {
+	compile(t, "[1,2,3].where()", func(res *llx.CodeBundle) {
+		assertPrimitive(t, &llx.Primitive{
+			Type: string(types.Array(types.Int)),
+			Array: []*llx.Primitive{
+				llx.IntPrimitive(1),
+				llx.IntPrimitive(2),
+				llx.IntPrimitive(3),
 			},
-			{
-				"platform.name\nplatform.release",
-				"platform.name",
+		}, res.Code.Code[0])
+		assert.Equal(t, 1, len(res.Code.Code))
+	})
+}
+
+func TestCompiler_ArrayContains(t *testing.T) {
+	compile(t, "[1,2,3].contains(_ == 2)", func(res *llx.CodeBundle) {
+		assertPrimitive(t, &llx.Primitive{
+			Type: string(types.Array(types.Int)),
+			Array: []*llx.Primitive{
+				llx.IntPrimitive(1),
+				llx.IntPrimitive(2),
+				llx.IntPrimitive(3),
 			},
-			{
-				"platform.name\nplatform.release",
-				"platform.release",
+		}, res.Code.Code[0])
+
+		assertFunction(t, "where", &llx.Function{
+			Type:    string(types.Array(types.Int)),
+			Binding: 1,
+			Args: []*llx.Primitive{
+				llx.RefPrimitive(1),
+				llx.FunctionPrimitive(1),
 			},
-		}
+		}, res.Code.Code[1])
 
-		for i := range dupes {
-			t.Run(dupes[i].qa+" != "+dupes[i].qb, func(t *testing.T) {
-				a, err := Compile(dupes[i].qa, schema)
-				assert.NoError(t, err)
-				b, err := Compile(dupes[i].qb, schema)
-				assert.NoError(t, err)
-				assert.NotEqual(t, a.Code.Id, b.Code.Id)
-			})
-		}
+		assertFunction(t, "length", &llx.Function{
+			Type:    string(types.Int),
+			Binding: 2,
+		}, res.Code.Code[2])
+		assertFunction(t, string(">"+types.Int), &llx.Function{
+			Type:    string(types.Bool),
+			Binding: 3,
+			Args:    []*llx.Primitive{llx.IntPrimitive(0)},
+		}, res.Code.Code[3])
+
+		assert.Equal(t, 4, len(res.Code.Code))
 	})
 }
 
-func TestSuggestions(t *testing.T) {
-	t.Run("no suggestions", func(t *testing.T) {
-		res, err := Compile("notthere", schema)
-		assert.Nil(t, res.Code.Entrypoints)
-		assert.Empty(t, res.Suggestions)
-		assert.Equal(t, errors.New("Cannot find resource for identifier 'notthere'"), err)
-	})
+func TestCompiler_ArrayOne(t *testing.T) {
+	compile(t, "[1,2,3].one(_ == 2)", func(res *llx.CodeBundle) {
+		assertPrimitive(t, &llx.Primitive{
+			Type: string(types.Array(types.Int)),
+			Array: []*llx.Primitive{
+				llx.IntPrimitive(1),
+				llx.IntPrimitive(2),
+				llx.IntPrimitive(3),
+			},
+		}, res.Code.Code[0])
 
-	t.Run("resource suggestions", func(t *testing.T) {
-		res, err := Compile("ssh", schema)
-		assert.Nil(t, res.Code.Entrypoints)
-		assert.Equal(t, []string{"sshd", "sshd.config"}, res.Suggestions)
-		assert.Equal(t, errors.New("Cannot find resource for identifier 'ssh'"), err)
-	})
+		assertFunction(t, "where", &llx.Function{
+			Type:    string(types.Array(types.Int)),
+			Binding: 1,
+			Args: []*llx.Primitive{
+				llx.RefPrimitive(1),
+				llx.FunctionPrimitive(1),
+			},
+		}, res.Code.Code[1])
 
-	t.Run("field suggestions", func(t *testing.T) {
-		res, err := Compile("sshd.config.p", schema)
-		assert.Nil(t, res.Code.Entrypoints)
-		assert.Equal(t, []string{"params"}, res.Suggestions)
-		assert.Equal(t, errors.New("Cannot find field 'p' in sshd.config"), err)
-	})
+		assertFunction(t, "length", &llx.Function{
+			Type:    string(types.Int),
+			Binding: 2,
+		}, res.Code.Code[2])
+		assertFunction(t, string("=="+types.Int), &llx.Function{
+			Type:    string(types.Bool),
+			Binding: 3,
+			Args:    []*llx.Primitive{llx.IntPrimitive(1)},
+		}, res.Code.Code[3])
 
-	t.Run("field in block suggestions", func(t *testing.T) {
-		res, err := Compile("sshd.config { p }", schema)
-		assert.Nil(t, res.Code.Entrypoints)
-		assert.Equal(t, []string{"params"}, res.Suggestions)
-		assert.Equal(t, errors.New("Cannot find field or resource 'p' in block for type 'sshd.config'"), err)
-	})
-
-	t.Run("field suggestions on partial map", func(t *testing.T) {
-		res, err := Compile("sshd.config.params.l", schema)
-		assert.Nil(t, res.Code.Entrypoints)
-		assert.Equal(t, []string{"length"}, res.Suggestions)
-		assert.Equal(t, errors.New("Cannot find field 'l' in map[string]string"), err)
+		assert.Equal(t, 4, len(res.Code.Code))
 	})
 }
 
-func assertFunction(t *testing.T, id string, f *llx.Function, chunk *llx.Chunk) {
-	assert.Equal(t, llx.Chunk_FUNCTION, chunk.Call)
-	assert.Equal(t, id, chunk.Id, "chunk.Id")
-	assert.Nil(t, chunk.Primitive, "it is not a primitive")
-	assert.Equal(t, f, chunk.Function, "chunk.Function")
+func TestCompiler_ArrayAll(t *testing.T) {
+	compile(t, "[1,2,3].all(_ < 9)", func(res *llx.CodeBundle) {
+		assertPrimitive(t, &llx.Primitive{
+			Type: string(types.Array(types.Int)),
+			Array: []*llx.Primitive{
+				llx.IntPrimitive(1),
+				llx.IntPrimitive(2),
+				llx.IntPrimitive(3),
+			},
+		}, res.Code.Code[0])
+
+		assertFunction(t, "where", &llx.Function{
+			Type:    string(types.Array(types.Int)),
+			Binding: 1,
+			Args: []*llx.Primitive{
+				llx.RefPrimitive(1),
+				llx.FunctionPrimitive(1),
+			},
+		}, res.Code.Code[1])
+
+		assertFunction(t, "length", &llx.Function{
+			Type:    string(types.Int),
+			Binding: 1,
+		}, res.Code.Code[2])
+
+		assertFunction(t, "length", &llx.Function{
+			Type:    string(types.Int),
+			Binding: 2,
+		}, res.Code.Code[3])
+		assertFunction(t, string("=="+types.Int), &llx.Function{
+			Type:    string(types.Bool),
+			Binding: 4,
+			Args:    []*llx.Primitive{llx.RefPrimitive(3)},
+		}, res.Code.Code[4])
+
+		assert.Equal(t, 5, len(res.Code.Code))
+	})
 }
 
-func assertPrimitive(t *testing.T, p *llx.Primitive, chunk *llx.Chunk) {
-	assert.Equal(t, llx.Chunk_PRIMITIVE, chunk.Call)
-	assert.Nil(t, chunk.Function)
-	assert.Equal(t, p, chunk.Primitive)
-}
+//    =================
+//   👋   RESOURCES   🍹
+//    =================
 
 func TestCompiler_Resource(t *testing.T) {
 	compile(t, "sshd", func(res *llx.CodeBundle) {
@@ -572,127 +636,6 @@ func TestCompiler_List(t *testing.T) {
 	})
 }
 
-func TestCompiler_ArrayEmptyWhere(t *testing.T) {
-	compile(t, "[1,2,3].where()", func(res *llx.CodeBundle) {
-		assertPrimitive(t, &llx.Primitive{
-			Type: string(types.Array(types.Int)),
-			Array: []*llx.Primitive{
-				llx.IntPrimitive(1),
-				llx.IntPrimitive(2),
-				llx.IntPrimitive(3),
-			},
-		}, res.Code.Code[0])
-		assert.Equal(t, 1, len(res.Code.Code))
-	})
-}
-
-func TestCompiler_ArrayContains(t *testing.T) {
-	compile(t, "[1,2,3].contains(_ == 2)", func(res *llx.CodeBundle) {
-		assertPrimitive(t, &llx.Primitive{
-			Type: string(types.Array(types.Int)),
-			Array: []*llx.Primitive{
-				llx.IntPrimitive(1),
-				llx.IntPrimitive(2),
-				llx.IntPrimitive(3),
-			},
-		}, res.Code.Code[0])
-
-		assertFunction(t, "where", &llx.Function{
-			Type:    string(types.Array(types.Int)),
-			Binding: 1,
-			Args: []*llx.Primitive{
-				llx.RefPrimitive(1),
-				llx.FunctionPrimitive(1),
-			},
-		}, res.Code.Code[1])
-
-		assertFunction(t, "length", &llx.Function{
-			Type:    string(types.Int),
-			Binding: 2,
-		}, res.Code.Code[2])
-		assertFunction(t, string(">"+types.Int), &llx.Function{
-			Type:    string(types.Bool),
-			Binding: 3,
-			Args:    []*llx.Primitive{llx.IntPrimitive(0)},
-		}, res.Code.Code[3])
-
-		assert.Equal(t, 4, len(res.Code.Code))
-	})
-}
-
-func TestCompiler_ArrayOne(t *testing.T) {
-	compile(t, "[1,2,3].one(_ == 2)", func(res *llx.CodeBundle) {
-		assertPrimitive(t, &llx.Primitive{
-			Type: string(types.Array(types.Int)),
-			Array: []*llx.Primitive{
-				llx.IntPrimitive(1),
-				llx.IntPrimitive(2),
-				llx.IntPrimitive(3),
-			},
-		}, res.Code.Code[0])
-
-		assertFunction(t, "where", &llx.Function{
-			Type:    string(types.Array(types.Int)),
-			Binding: 1,
-			Args: []*llx.Primitive{
-				llx.RefPrimitive(1),
-				llx.FunctionPrimitive(1),
-			},
-		}, res.Code.Code[1])
-
-		assertFunction(t, "length", &llx.Function{
-			Type:    string(types.Int),
-			Binding: 2,
-		}, res.Code.Code[2])
-		assertFunction(t, string("=="+types.Int), &llx.Function{
-			Type:    string(types.Bool),
-			Binding: 3,
-			Args:    []*llx.Primitive{llx.IntPrimitive(1)},
-		}, res.Code.Code[3])
-
-		assert.Equal(t, 4, len(res.Code.Code))
-	})
-}
-
-func TestCompiler_ArrayAll(t *testing.T) {
-	compile(t, "[1,2,3].all(_ < 9)", func(res *llx.CodeBundle) {
-		assertPrimitive(t, &llx.Primitive{
-			Type: string(types.Array(types.Int)),
-			Array: []*llx.Primitive{
-				llx.IntPrimitive(1),
-				llx.IntPrimitive(2),
-				llx.IntPrimitive(3),
-			},
-		}, res.Code.Code[0])
-
-		assertFunction(t, "where", &llx.Function{
-			Type:    string(types.Array(types.Int)),
-			Binding: 1,
-			Args: []*llx.Primitive{
-				llx.RefPrimitive(1),
-				llx.FunctionPrimitive(1),
-			},
-		}, res.Code.Code[1])
-
-		assertFunction(t, "length", &llx.Function{
-			Type:    string(types.Int),
-			Binding: 1,
-		}, res.Code.Code[2])
-
-		assertFunction(t, "length", &llx.Function{
-			Type:    string(types.Int),
-			Binding: 2,
-		}, res.Code.Code[3])
-		assertFunction(t, string("=="+types.Int), &llx.Function{
-			Type:    string(types.Bool),
-			Binding: 4,
-			Args:    []*llx.Primitive{llx.RefPrimitive(3)},
-		}, res.Code.Code[4])
-
-		assert.Equal(t, 5, len(res.Code.Code))
-	})
-}
-
 func TestCompiler_ResourceEmptyWhere(t *testing.T) {
 	compile(t, "packages.where()", func(res *llx.CodeBundle) {
 		assertFunction(t, "packages", nil, res.Code.Code[0])
@@ -764,6 +707,79 @@ func TestCompiler_ResourceContains(t *testing.T) {
 			Binding: 1,
 		}, res.Code.Functions[0].Code[1])
 		assert.Equal(t, []int32{2}, res.Code.Functions[0].Entrypoints)
+	})
+}
+
+//    ================
+//   👋   INTERNAL   🍹
+//    ================
+
+func TestChecksums(t *testing.T) {
+	t.Run("no duplicate code IDs", func(t *testing.T) {
+		dupes := []struct {
+			qa string
+			qb string
+		}{
+			{
+				"users.list { uid == 1 }",
+				"users.list { uid == 2 }",
+			},
+			{
+				"platform.name\nplatform.release",
+				"platform.name",
+			},
+			{
+				"platform.name\nplatform.release",
+				"platform.release",
+			},
+		}
+
+		for i := range dupes {
+			t.Run(dupes[i].qa+" != "+dupes[i].qb, func(t *testing.T) {
+				a, err := Compile(dupes[i].qa, schema)
+				assert.NoError(t, err)
+				b, err := Compile(dupes[i].qb, schema)
+				assert.NoError(t, err)
+				assert.NotEqual(t, a.Code.Id, b.Code.Id)
+			})
+		}
+	})
+}
+
+func TestSuggestions(t *testing.T) {
+	t.Run("no suggestions", func(t *testing.T) {
+		res, err := Compile("notthere", schema)
+		assert.Nil(t, res.Code.Entrypoints)
+		assert.Empty(t, res.Suggestions)
+		assert.Equal(t, errors.New("Cannot find resource for identifier 'notthere'"), err)
+	})
+
+	t.Run("resource suggestions", func(t *testing.T) {
+		res, err := Compile("ssh", schema)
+		assert.Nil(t, res.Code.Entrypoints)
+		assert.Equal(t, []string{"sshd", "sshd.config"}, res.Suggestions)
+		assert.Equal(t, errors.New("Cannot find resource for identifier 'ssh'"), err)
+	})
+
+	t.Run("field suggestions", func(t *testing.T) {
+		res, err := Compile("sshd.config.p", schema)
+		assert.Nil(t, res.Code.Entrypoints)
+		assert.Equal(t, []string{"params"}, res.Suggestions)
+		assert.Equal(t, errors.New("Cannot find field 'p' in sshd.config"), err)
+	})
+
+	t.Run("field in block suggestions", func(t *testing.T) {
+		res, err := Compile("sshd.config { p }", schema)
+		assert.Nil(t, res.Code.Entrypoints)
+		assert.Equal(t, []string{"params"}, res.Suggestions)
+		assert.Equal(t, errors.New("Cannot find field or resource 'p' in block for type 'sshd.config'"), err)
+	})
+
+	t.Run("field suggestions on partial map", func(t *testing.T) {
+		res, err := Compile("sshd.config.params.l", schema)
+		assert.Nil(t, res.Code.Entrypoints)
+		assert.Equal(t, []string{"length"}, res.Suggestions)
+		assert.Equal(t, errors.New("Cannot find field 'l' in map[string]string"), err)
 	})
 }
 
