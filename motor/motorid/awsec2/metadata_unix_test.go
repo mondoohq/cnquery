@@ -7,12 +7,12 @@ import (
 
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	motor "go.mondoo.io/mondoo/motor/motoros"
-	"go.mondoo.io/mondoo/motor/motoros/mock/toml"
+	"go.mondoo.io/mondoo/motor/motoros/mock"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
 func TestEC2RoleProviderInstanceIdentityUnix(t *testing.T) {
-	trans, err := toml.New(&types.Endpoint{Backend: "mock", Path: "./testdata/instance-identity_document_linux.toml"})
+	trans, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/instance-identity_document_linux.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

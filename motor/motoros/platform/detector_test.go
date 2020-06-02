@@ -4,13 +4,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	mock "go.mondoo.io/mondoo/motor/motoros/mock/toml"
+	"go.mondoo.io/mondoo/motor/motoros/mock"
 	"go.mondoo.io/mondoo/motor/motoros/platform"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
 func newDetector(path string) (*platform.Detector, error) {
-	mock, err := mock.New(&types.Endpoint{Backend: "mock", Path: path})
+	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: path})
 	if err != nil {
 		return nil, err
 	}

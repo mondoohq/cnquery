@@ -6,13 +6,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	motor "go.mondoo.io/mondoo/motor/motoros"
-	"go.mondoo.io/mondoo/motor/motoros/mock/toml"
+	"go.mondoo.io/mondoo/motor/motoros/mock"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
 func TestMacOSMachineId(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/osx_test.toml")
-	trans, err := toml.New(&types.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: filepath})
 	if err != nil {
 		t.Fatal(err)
 	}

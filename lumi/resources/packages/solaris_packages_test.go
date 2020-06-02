@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/lumi/resources/packages"
 	motor "go.mondoo.io/mondoo/motor/motoros"
-	"go.mondoo.io/mondoo/motor/motoros/mock/toml"
+	"go.mondoo.io/mondoo/motor/motoros/mock"
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
@@ -86,7 +86,7 @@ pkg://solaris/compress/p7zip@9.20.1,5.11-0.175.1.0.0.24.0:20120904T170605Z   i--
 
 func TestSolarisManager(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/packages_solaris11.toml")
-	trans, err := toml.New(&types.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: filepath})
 	require.NoError(t, err)
 
 	m, err := motor.New(trans)
