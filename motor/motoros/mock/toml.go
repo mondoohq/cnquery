@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"bytes"
 	"errors"
 	"io/ioutil"
 
@@ -60,6 +61,18 @@ func Export(mock *Transport) (*TomlData, error) {
 	tomlData.Commands = mock.Commands
 	tomlData.Files = mock.Fs.Files
 	return tomlData, nil
+}
+
+func ExportData(mock *Transport) ([]byte, error) {
+	data, err := Export(mock)
+	if err != nil {
+		return nil, err
+	}
+
+	var buf bytes.Buffer
+	e := toml.NewEncoder(&buf)
+	err = e.Encode(data)
+	return buf.Bytes(), err
 }
 
 // New returns a mock backend and loads the toml file by default
