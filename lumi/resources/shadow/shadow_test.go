@@ -14,7 +14,7 @@ func TestParseShadow(t *testing.T) {
 	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/debian.toml"})
 	require.NoError(t, err)
 
-	f, err := mock.File("/etc/shadow")
+	f, err := mock.FS().Open("/etc/shadow")
 	require.NoError(t, err)
 	defer f.Close()
 

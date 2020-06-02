@@ -45,7 +45,7 @@ func (fo *FileObservable) Op() FileOp {
 func NewFileRunnable(path string) func(m types.Transport) (types.Observable, error) {
 	return func(m types.Transport) (types.Observable, error) {
 		fileop := Modify
-		file, err := m.File(path)
+		file, err := m.FS().Open(path)
 
 		// TODO: we may want to distingush further, but it does not make sense to do transport specific error handling here
 		// therefore we may need common types similar to https://github.com/golang/go/blob/master/src/os/error.go#L22-L23

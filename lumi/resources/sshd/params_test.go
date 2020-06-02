@@ -13,7 +13,7 @@ func TestSSHParser(t *testing.T) {
 	path := "./testdata/sshd_config.toml"
 	trans, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: path})
 
-	f, err := trans.File("/etc/ssh/sshd_config")
+	f, err := trans.FS().Open("/etc/ssh/sshd_config")
 	if err != nil {
 		t.Fatal(err)
 	}

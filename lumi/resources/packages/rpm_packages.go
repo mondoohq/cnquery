@@ -169,12 +169,12 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 	defer os.RemoveAll(rpmTmpDir)
 
 	// fetch rpm database file and store it in local tmp file
-	f, err := rpm.motor.Transport.File("/var/lib/rpm/Packages")
+	f, err := rpm.motor.Transport.FS().Open("/var/lib/rpm/Packages")
 
 	// on opensuse, the directory usr/lib/sysimage/rpm/Packages is used in tar
 	if err != nil && rpm.platform != nil && rpm.platform.IsFamily("suse") {
 		log.Debug().Msg("fallback to opensuse rpm package location")
-		f, err = rpm.motor.Transport.File("/usr/lib/sysimage/rpm/Packages")
+		f, err = rpm.motor.Transport.FS().Open("/usr/lib/sysimage/rpm/Packages")
 	}
 
 	// throw error if we stil couldn't find the packages file

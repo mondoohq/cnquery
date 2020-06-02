@@ -70,7 +70,7 @@ func (s *UnixUserManager) User(id string) (*User, error) {
 }
 
 func (s *UnixUserManager) List() ([]*User, error) {
-	f, err := s.motor.Transport.File("/etc/passwd")
+	f, err := s.motor.Transport.FS().Open("/etc/passwd")
 	if err != nil {
 		return nil, err
 	}

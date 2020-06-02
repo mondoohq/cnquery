@@ -27,7 +27,7 @@ func TestLoadFile(t *testing.T) {
 	trans, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: filepath})
 	assert.Equal(t, nil, err, "should create mock without error")
 
-	f, err := trans.File("/etc/os-release")
+	f, err := trans.FS().Open("/etc/os-release")
 	assert.Nil(t, err)
 
 	data, err := ioutil.ReadAll(f)

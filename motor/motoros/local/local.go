@@ -47,10 +47,6 @@ func (t *LocalTransport) FS() afero.Fs {
 	return t.fs
 }
 
-func (t *LocalTransport) File(path string) (afero.File, error) {
-	return t.FS().Open(path)
-}
-
 func (t *LocalTransport) FileInfo(path string) (types.FileInfoDetails, error) {
 	fs := t.FS()
 	afs := &afero.Afero{Fs: fs}

@@ -43,7 +43,7 @@ func (l *lumiYamlPath) GetResult() (string, error) {
 	}
 
 	// TODO: I could not get this running with lumi file resource, the content was never returned
-	f, err := l.Runtime.Motor.Transport.File(filepath)
+	f, err := l.Runtime.Motor.Transport.FS().Open(filepath)
 	if err != nil {
 		return "", err
 	}

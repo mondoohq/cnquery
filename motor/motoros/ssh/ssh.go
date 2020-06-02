@@ -128,15 +128,6 @@ func (t *SSHTransport) FS() afero.Fs {
 	return t.fs
 }
 
-func (t *SSHTransport) File(path string) (afero.File, error) {
-	fs := t.FS()
-	if fs == nil {
-		return nil, errors.New("could not initialize the ssh filesystem")
-	}
-
-	return fs.Open(path)
-}
-
 func (t *SSHTransport) FileInfo(path string) (types.FileInfoDetails, error) {
 	fs := t.FS()
 	afs := &afero.Afero{Fs: fs}

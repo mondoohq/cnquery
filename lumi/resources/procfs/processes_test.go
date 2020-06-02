@@ -13,7 +13,7 @@ func TestParseProcessStatus(t *testing.T) {
 	path := "./testdata/process-pid1.toml"
 	trans, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: path})
 
-	f, err := trans.File("/proc/1/status")
+	f, err := trans.FS().Open("/proc/1/status")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -32,7 +32,7 @@ func TestParseProcessCmdline(t *testing.T) {
 	path := "./testdata/process-pid1.toml"
 	trans, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: path})
 
-	f, err := trans.File("/proc/1/cmdline")
+	f, err := trans.FS().Open("/proc/1/cmdline")
 	if err != nil {
 		t.Fatal(err)
 	}

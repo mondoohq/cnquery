@@ -14,7 +14,7 @@ func TestLoginDefsParser(t *testing.T) {
 	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/debian.toml"})
 	require.NoError(t, err)
 
-	f, err := mock.File("/etc/login.defs")
+	f, err := mock.FS().Open("/etc/login.defs")
 	require.NoError(t, err)
 	defer f.Close()
 

@@ -30,7 +30,7 @@ func (p *LinuxIdProvider) ID() (string, error) {
 }
 
 func (p *LinuxIdProvider) retrieveFile(path string) ([]byte, error) {
-	f, err := p.Motor.Transport.File(path)
+	f, err := p.Motor.Transport.FS().Open(path)
 	if err != nil {
 		return nil, err
 	}

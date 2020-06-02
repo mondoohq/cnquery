@@ -3,7 +3,6 @@ package mock
 import (
 	"bytes"
 	"errors"
-	"os"
 
 	"github.com/spf13/afero"
 
@@ -62,14 +61,6 @@ func (m *Transport) FS() afero.Fs {
 		m.Fs = NewMockFS()
 	}
 	return m.Fs
-}
-
-func (m *Transport) File(path string) (afero.File, error) {
-	f, err := m.FS().Open(path)
-	if err == os.ErrNotExist {
-		m.Missing["file"][path] = true
-	}
-	return f, err
 }
 
 func (m *Transport) FileInfo(path string) (types.FileInfoDetails, error) {

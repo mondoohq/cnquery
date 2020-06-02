@@ -33,7 +33,7 @@ func TestMockFile(t *testing.T) {
 	trans, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: filepath})
 	assert.Equal(t, nil, err, "should create mock without error")
 
-	f, err := trans.File("/etc/ssh/sshd_config")
+	f, err := trans.FS().Open("/etc/ssh/sshd_config")
 	assert.Nil(t, err, "should execute without error")
 	assert.NotNil(t, f)
 	defer f.Close()

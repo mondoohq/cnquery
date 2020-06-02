@@ -53,7 +53,7 @@ func TestTarSymlinkFile(t *testing.T) {
 	tarTransport, err := tar.New(&types.Endpoint{Backend: "tar", Path: alpineContainerPath})
 	assert.Equal(t, nil, err, "should create tar without error")
 
-	f, err := tarTransport.File("/bin/cat")
+	f, err := tarTransport.FS().Open("/bin/cat")
 	assert.Nil(t, err)
 	if assert.NotNil(t, f) {
 		assert.Equal(t, nil, err, "should execute without error")
@@ -117,7 +117,7 @@ func TestTarFile(t *testing.T) {
 	tarTransport, err := tar.New(&types.Endpoint{Backend: "tar", Path: alpineContainerPath})
 	assert.Equal(t, nil, err, "should create tar without error")
 
-	f, err := tarTransport.File("/etc/alpine-release")
+	f, err := tarTransport.FS().Open("/etc/alpine-release")
 	assert.Nil(t, err)
 	if assert.NotNil(t, f) {
 		assert.Equal(t, nil, err, "should execute without error")
