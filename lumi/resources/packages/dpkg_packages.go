@@ -135,7 +135,7 @@ func (dpm *DebPkgManager) List() ([]Package, error) {
 	// main pkg file for debian systems
 	if fErr == nil {
 		log.Debug().Str("file", dpkgStatusFile).Msg("parse dpkg status file")
-		fi, err := dpm.motor.Transport.File(dpkgStatusFile)
+		fi, err := dpm.motor.Transport.FS().Open(dpkgStatusFile)
 		if err != nil {
 			return nil, fmt.Errorf("could not read dpkg package list")
 		}
@@ -157,7 +157,7 @@ func (dpm *DebPkgManager) List() ([]Package, error) {
 			}
 
 			log.Debug().Str("path", path).Msg("walk file")
-			fi, err := dpm.motor.Transport.File(path)
+			fi, err := dpm.motor.Transport.FS().Open(path)
 			if err != nil {
 				log.Debug().Err(err).Str("path", path).Msg("could open file")
 				return fmt.Errorf("could not read dpkg package list")

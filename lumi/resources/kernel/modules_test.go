@@ -32,7 +32,7 @@ func TestLinuxProcModulesParser(t *testing.T) {
 	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/debian.toml"})
 	require.NoError(t, err)
 
-	f, err := mock.File("/proc/modules")
+	f, err := mock.FS().Open("/proc/modules")
 	require.NoError(t, err)
 	defer f.Close()
 

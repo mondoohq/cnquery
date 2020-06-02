@@ -27,7 +27,7 @@ var macOS = &PlatformResolver{
 	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
 		// when we reach here, we know it is darwin
 		// check xml /System/Library/CoreServices/SystemVersion.plist
-		f, err := t.File("/System/Library/CoreServices/SystemVersion.plist")
+		f, err := t.FS().Open("/System/Library/CoreServices/SystemVersion.plist")
 		if err != nil {
 			return false, nil
 		}
@@ -68,7 +68,7 @@ var alpine = &PlatformResolver{
 			return true, nil
 		}
 
-		f, err := t.File("/etc/alpine-release")
+		f, err := t.FS().Open("/etc/alpine-release")
 		if err != nil {
 			return false, nil
 		}
@@ -112,7 +112,7 @@ var debian = &PlatformResolver{
 	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
 		osrd := NewOSReleaseDetector(t)
 
-		f, err := t.File("/etc/debian_version")
+		f, err := t.FS().Open("/etc/debian_version")
 		if err != nil {
 			return false, nil
 		}
@@ -190,7 +190,7 @@ var rhel = &PlatformResolver{
 		}
 
 		// fallback to /etc/redhat-release file
-		f, err := t.File("/etc/redhat-release")
+		f, err := t.FS().Open("/etc/redhat-release")
 		if err != nil {
 			return false, nil
 		}
@@ -222,7 +222,7 @@ var centos = &PlatformResolver{
 
 		// NOTE: CentOS 5 does not have /etc/centos-release
 		// fallback to /etc/centos-release file
-		f, err := t.File("/etc/centos-release")
+		f, err := t.FS().Open("/etc/centos-release")
 		if err != nil {
 			return false, nil
 		}
@@ -251,7 +251,7 @@ var fedora = &PlatformResolver{
 		}
 
 		// fallback to /etc/fedora-release file
-		f, err := t.File("/etc/fedora-release")
+		f, err := t.FS().Open("/etc/fedora-release")
 		if err != nil {
 			return false, nil
 		}
@@ -280,7 +280,7 @@ var oracle = &PlatformResolver{
 		}
 
 		// check if we have /etc/centos-release file
-		f, err := t.File("/etc/oracle-release")
+		f, err := t.FS().Open("/etc/oracle-release")
 		if err != nil {
 			return false, nil
 		}
@@ -366,7 +366,7 @@ var gentoo = &PlatformResolver{
 	Name:    "gentoo",
 	Familiy: false,
 	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
-		f, err := t.File("/etc/gentoo-release")
+		f, err := t.FS().Open("/etc/gentoo-release")
 		if err != nil {
 			return false, nil
 		}
@@ -443,7 +443,7 @@ var openwrt = &PlatformResolver{
 	Familiy: false,
 	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
 		// No clue why they are not using either lsb-release or os-release
-		f, err := t.File("/etc/openwrt_release")
+		f, err := t.FS().Open("/etc/openwrt_release")
 		if err != nil {
 			return false, err
 		}
@@ -626,7 +626,7 @@ var redhatFamily = &PlatformResolver{
 	// want to check that platform before redhat
 	Children: []*PlatformResolver{oracle, rhel, centos, fedora, scientific},
 	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
-		f, err := t.File("/etc/redhat-release")
+		f, err := t.FS().Open("/etc/redhat-release")
 		if err != nil {
 			log.Debug().Err(err)
 			return false, nil
@@ -686,7 +686,7 @@ var archFamily = &PlatformResolver{
 	Children: []*PlatformResolver{arch, manjaro},
 	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
 		// if the file exists, we are on arch or one of its derivates
-		f, err := t.File("/etc/arch-release")
+		f, err := t.FS().Open("/etc/arch-release")
 		if err != nil {
 			return false, nil
 		}
@@ -762,7 +762,7 @@ var linuxFamily = &PlatformResolver{
 		// will not be able to detect the system, since the following unamem and unames mechanism is not
 		// available there. Instead the system can be identified by the availability of /etc/redhat-release
 		// If /etc/redhat-release is available, we know its a linux system.
-		f, err := t.File("/etc/redhat-release")
+		f, err := t.FS().Open("/etc/redhat-release")
 		if f != nil {
 			f.Close()
 		}
@@ -837,7 +837,7 @@ var solaris = &PlatformResolver{
 		// NOTE: we have only one solaris system here, since we only get here is the familiy is sunos, we pass
 
 		// try to read "/etc/release" for more details
-		f, err := t.File("/etc/release")
+		f, err := t.FS().Open("/etc/release")
 		if err != nil {
 			return false, nil
 		}

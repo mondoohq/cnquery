@@ -90,7 +90,7 @@ func TestProcModulesParser(t *testing.T) {
 	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/debian.toml"})
 	require.NoError(t, err)
 
-	f, err := mock.File("/proc/mounts")
+	f, err := mock.FS().Open("/proc/mounts")
 	require.NoError(t, err)
 	defer f.Close()
 

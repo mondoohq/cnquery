@@ -14,7 +14,7 @@ func TestDpkgParser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	f, err := mock.File("/var/lib/dpkg/status")
+	f, err := mock.FS().Open("/var/lib/dpkg/status")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,7 +68,7 @@ func TestDpkgParserStatusD(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	f, err := mock.File("/var/lib/dpkg/status.d/base")
+	f, err := mock.FS().Open("/var/lib/dpkg/status.d/base")
 	if err != nil {
 		t.Fatal(err)
 	}

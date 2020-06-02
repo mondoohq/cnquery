@@ -121,7 +121,7 @@ func (apm *AlpinePkgManager) Format() string {
 }
 
 func (apm *AlpinePkgManager) List() ([]Package, error) {
-	fr, err := apm.motor.Transport.File("/lib/apk/db/installed")
+	fr, err := apm.motor.Transport.FS().Open("/lib/apk/db/installed")
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}

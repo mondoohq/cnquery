@@ -107,11 +107,6 @@ func (t *WinrmTransport) RunCommand(command string) (*types.Command, error) {
 	return mcmd, nil
 }
 
-func (t *WinrmTransport) File(path string) (afero.File, error) {
-	log.Debug().Str("path", path).Str("transport", "ssh").Msg("winrm> fetch file")
-	return nil, errors.New("not implemented")
-}
-
 func (t *WinrmTransport) FileInfo(path string) (types.FileInfoDetails, error) {
 	return types.FileInfoDetails{}, errors.New("not implemented")
 }

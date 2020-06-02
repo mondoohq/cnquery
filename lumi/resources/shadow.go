@@ -13,7 +13,7 @@ func (s *lumiShadow) id() (string, error) {
 
 func (s *lumiShadow) GetList() ([]interface{}, error) {
 	// TODO: we may want to create a real mondoo file resource
-	f, err := s.Runtime.Motor.Transport.File(defaultShadowConfig)
+	f, err := s.Runtime.Motor.Transport.FS().Open(defaultShadowConfig)
 	if err != nil {
 		return nil, err
 	}

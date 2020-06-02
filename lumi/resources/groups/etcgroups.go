@@ -70,7 +70,7 @@ func (s *UnixGroupManager) Group(id string) (*Group, error) {
 }
 
 func (s *UnixGroupManager) List() ([]*Group, error) {
-	f, err := s.motor.Transport.File("/etc/group")
+	f, err := s.motor.Transport.FS().Open("/etc/group")
 	if err != nil {
 		return nil, err
 	}

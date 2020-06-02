@@ -21,7 +21,7 @@ func (lpm *LinuxProcManager) Name() string {
 
 func (lpm *LinuxProcManager) List() ([]*OSProcess, error) {
 	// get all subdirectories of /proc, filter by nunbers
-	f, err := lpm.motor.Transport.File("/proc")
+	f, err := lpm.motor.Transport.FS().Open("/proc")
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (lpm *LinuxProcManager) Process(pid int64) (*OSProcess, error) {
 	}
 
 	// parse the cmdline
-	cmdlinef, err := trans.File(filepath.Join(pidPath, "cmdline"))
+	cmdlinef, err := trans.FS().Open(filepath.Join(pidPath, "cmdline"))
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (lpm *LinuxProcManager) Process(pid int64) (*OSProcess, error) {
 		return nil, err
 	}
 
-	statusf, err := trans.File(filepath.Join(pidPath, "status"))
+	statusf, err := trans.FS().Open(filepath.Join(pidPath, "status"))
 	if err != nil {
 		return nil, err
 	}

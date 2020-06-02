@@ -14,7 +14,7 @@ func TestParseLinuxEtcGroups(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	f, err := mock.File("/etc/group")
+	f, err := mock.FS().Open("/etc/group")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,7 +43,7 @@ func TestParseFreebsd12EtcGroups(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	f, err := mock.File("/etc/group")
+	f, err := mock.FS().Open("/etc/group")
 	if err != nil {
 		t.Fatal(err)
 	}

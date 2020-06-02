@@ -61,7 +61,7 @@ func (k *lumiKernel) getParametersFromProc() (map[string]interface{}, error) {
 
 	fs := k.Runtime.Motor.Transport.FS()
 
-	f, err := k.Runtime.Motor.Transport.File(sysctlPath)
+	f, err := fs.Open(sysctlPath)
 	if err != nil {
 		return nil, err
 	}

@@ -14,7 +14,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	f, err := mock.File("/lib/apk/db/installed")
+	f, err := mock.FS().Open("/lib/apk/db/installed")
 	if err != nil {
 		t.Fatal(err)
 	}

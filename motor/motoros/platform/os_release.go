@@ -63,7 +63,7 @@ func (d *OSReleaseDetector) unamem() (string, error) {
 // UBUNTU_CODENAME=xenial
 
 func (d *OSReleaseDetector) osrelease() (map[string]string, error) {
-	f, err := d.Transport.File("/etc/os-release")
+	f, err := d.Transport.FS().Open("/etc/os-release")
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (d *OSReleaseDetector) osrelease() (map[string]string, error) {
 // lsb release is not the default on newer systems, but can still be used
 // as a fallback mechanism
 func (d *OSReleaseDetector) lsbconfig() (map[string]string, error) {
-	f, err := d.Transport.File("/etc/lsb-release")
+	f, err := d.Transport.FS().Open("/etc/lsb-release")
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (d *OSReleaseDetector) darwin_swversion() (map[string]string, error) {
 
 // macosSystemVersion is a specifc identifier for the operating system on macos
 func (d *OSReleaseDetector) macosSystemVersion() (map[string]string, error) {
-	f, err := d.Transport.File("/System/Library/CoreServices/SystemVersion.plist")
+	f, err := d.Transport.FS().Open("/System/Library/CoreServices/SystemVersion.plist")
 	if err != nil {
 		return nil, err
 	}

@@ -149,7 +149,7 @@ func TestFileJob(t *testing.T) {
 		ScheduledFor: time.Now(),
 		Interval:     time.Duration(10 * time.Second),
 		Runnable: func(m types.Transport) (types.Observable, error) {
-			file, _ := m.File(path)
+			file, _ := m.FS().Open(path)
 			return &FileObservable{File: file, FileOp: Modify}, nil
 		},
 		Callback: []func(o types.Observable){

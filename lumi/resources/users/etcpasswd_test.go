@@ -14,7 +14,7 @@ func TestParseLinuxEtcPasswd(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	f, err := mock.File("/etc/passwd")
+	f, err := mock.FS().Open("/etc/passwd")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +38,7 @@ func TestParseFreebsdLinuxEtcPasswd(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	f, err := mock.File("/etc/passwd")
+	f, err := mock.FS().Open("/etc/passwd")
 	if err != nil {
 		t.Fatal(err)
 	}
