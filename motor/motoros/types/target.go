@@ -43,6 +43,7 @@ type Endpoint struct {
 	BearerToken   string   `json:"bearer_token"`
 	Insecure      bool     `json:"insecure"` // disable ssl/tls checks
 	Sudo          *Sudo    `json:"sudo"`
+	Record        bool     `json:"record"`
 }
 
 // ParseFromURI will pars a URI and return the proper endpoint

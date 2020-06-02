@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/motoros/capabilities"
 	"go.mondoo.io/mondoo/motor/motoros/types"
@@ -31,8 +30,16 @@ type RecordTransport struct {
 	mock    *Transport
 }
 
+func (t *RecordTransport) Watched() types.Transport {
+	return t.observe
+}
+
 func (t *RecordTransport) Export() (*TomlData, error) {
 	return Export(t.mock)
+}
+
+func (t *RecordTransport) ExportData() ([]byte, error) {
+	return ExportData(t.mock)
 }
 
 func (t *RecordTransport) RunCommand(command string) (*types.Command, error) {
@@ -74,7 +81,7 @@ func (t *RecordTransport) FS() afero.Fs {
 }
 
 func (t *RecordTransport) FileInfo(path string) (types.FileInfoDetails, error) {
-	return types.FileInfoDetails{}, errors.New("not implemented")
+	return t.observe.FileInfo(path)
 }
 
 func (t *RecordTransport) Capabilities() capabilities.Capabilities {
@@ -126,13 +133,15 @@ func (fs recordFS) Open(name string) (afero.File, error) {
 	content := ""
 
 	f, err := fs.observe.Open(name)
+
 	if err == os.ErrNotExist {
 		enonet = true
-	} else {
+	} else if err != nil {
 		return nil, err
 	}
 
 	data, err := ioutil.ReadAll(f)
+	defer f.Close()
 	if err == nil {
 		content = string(data)
 	}

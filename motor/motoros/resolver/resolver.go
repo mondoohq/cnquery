@@ -88,7 +88,7 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 	switch endpoint.Backend {
 	case types.BackendMock:
 		log.Debug().Msg("connection> load mock transport")
-		trans, err := mock.New()
+		trans, err := mock.NewFromToml(endpoint)
 		if err != nil {
 			return nil, err
 		}
@@ -96,6 +96,9 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 		m, err = motor.New(trans)
 		if err != nil {
 			return nil, err
+		}
+		if endpoint.Record {
+			m.ActivateRecorder()
 		}
 	case "nodejs":
 		log.Debug().Msg("connection> load nodejs transport")
@@ -109,6 +112,9 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 		if err != nil {
 			return nil, err
 		}
+		if endpoint.Record {
+			m.ActivateRecorder()
+		}
 	case types.BackendLocal:
 		log.Debug().Msg("connection> load local transport")
 		trans, err := local.New()
@@ -119,6 +125,10 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 		m, err = motor.New(trans)
 		if err != nil {
 			return nil, err
+		}
+
+		if endpoint.Record {
+			m.ActivateRecorder()
 		}
 
 		pi, err := m.Platform()
@@ -139,6 +149,10 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 		if err != nil {
 			return nil, err
 		}
+
+		if endpoint.Record {
+			m.ActivateRecorder()
+		}
 	case types.BackendDocker:
 		log.Debug().Str("backend", endpoint.Backend.String()).Str("host", endpoint.Host).Str("path", endpoint.Path).Msg("connection> load docker transport")
 		trans, info, err := ResolveDockerTransport(endpoint)
@@ -148,6 +162,10 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 		m, err = motor.New(trans)
 		if err != nil {
 			return nil, err
+		}
+
+		if endpoint.Record {
+			m.ActivateRecorder()
 		}
 
 		name = info.Name
@@ -169,6 +187,10 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 			return nil, err
 		}
 
+		if endpoint.Record {
+			m.ActivateRecorder()
+		}
+
 		// for windows, we also collect the machine id
 		pi, err := m.Platform()
 		if err == nil && pi.IsFamily(platform.FAMILY_WINDOWS) {
@@ -186,6 +208,10 @@ func ResolveTransport(endpoint *types.Endpoint, idDetectors []string) (*motor.Mo
 		m, err = motor.New(trans)
 		if err != nil {
 			return nil, err
+		}
+
+		if endpoint.Record {
+			m.ActivateRecorder()
 		}
 
 		idDetectors = append(idDetectors, "machineid")
@@ -231,6 +257,14 @@ func GatherIDs(m *motor.Motor, idDetectors []string) ([]string, error) {
 }
 
 func GatherID(m *motor.Motor, idDetector string) (string, error) {
+
+	transport := m.Transport
+	// helper for recoding transport to extract the original transport
+	recT, ok := transport.(*mock.RecordTransport)
+	if ok {
+		transport = recT.Watched()
+	}
+
 	var identifier string
 	switch idDetector {
 	case "hostname":
@@ -245,7 +279,7 @@ func GatherID(m *motor.Motor, idDetector string) (string, error) {
 			identifier = "//platformid.api.mondoo.app/machineid/" + guid
 		}
 	case "ssh-hostkey":
-		sshTrans, ok := m.Transport.(*ssh.SSHTransport)
+		sshTrans, ok := transport.(*ssh.SSHTransport)
 		if !ok {
 			return "", errors.New("ssh-hostkey id detector is not supported for the transport")
 		}
@@ -255,7 +289,7 @@ func GatherID(m *motor.Motor, idDetector string) (string, error) {
 			identifier = "//platformid.api.mondoo.app/runtime/ssh/hostkey/" + fingerprint
 		}
 	case "awsec2":
-		_, ok := m.Transport.(*local.LocalTransport)
+		_, ok := transport.(*local.LocalTransport)
 		if ok {
 			cfg, err := external.LoadDefaultAWSConfig()
 			if err != nil {
