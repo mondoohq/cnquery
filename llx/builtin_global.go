@@ -27,7 +27,26 @@ var globalFunctions map[string]handleFunction
 func init() {
 	globalFunctions = map[string]handleFunction{
 		"expect": expect,
+		"if":     ifCall,
 		"{}":     block,
+	}
+}
+
+func ifCall(c *LeiseExecutor, f *Function, ref int32) (*RawData, int32, error) {
+	if len(f.Args) != 2 {
+		return nil, 0, errors.New("Called if with " + strconv.Itoa(len(f.Args)) + " arguments, expected 2")
+	}
+
+	res, dref, err := c.resolveValue(f.Args[0], ref)
+	if err != nil || dref != 0 || res == nil {
+		return res, dref, err
+	}
+
+	if truthy, _ := res.IsTruthy(); truthy {
+		res, dref, err = c.runBlock(nil, f.Args[1], ref)
+		return res, dref, err
+	} else {
+		return NilData, 0, nil
 	}
 }
 
