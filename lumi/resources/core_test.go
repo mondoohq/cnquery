@@ -223,6 +223,19 @@ func TestResource_InitWithResource(t *testing.T) {
 	})
 }
 
+func TestCore_If(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"if ( mondoo.version != null ) { 123 }",
+			2, int64(123),
+		},
+		{
+			"if ( mondoo.version == null ) { 123 }",
+			2, nil,
+		},
+	})
+}
+
 func TestString_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
