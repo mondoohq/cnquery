@@ -21,13 +21,19 @@ func createLabel(code *llx.Code, ref int32, labels *llx.Labels, schema *lumi.Sch
 		return id, nil
 	}
 
-	if chunk.Function.Binding == 0 {
+	// TODO: workaround to get past the builtin global call
+	// this needs proper handling for global calls
+	if chunk.Function.Binding == 0 && id != "if" {
 		return id, nil
 	}
 
-	parentLabel, err := createLabel(code, chunk.Function.Binding, labels, schema)
-	if err != nil {
-		return "", err
+	var parentLabel string
+	var err error
+	if chunk.Function.Binding != 0 {
+		parentLabel, err = createLabel(code, chunk.Function.Binding, labels, schema)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	var res string
@@ -58,6 +64,28 @@ func createLabel(code *llx.Code, ref int32, labels *llx.Labels, schema *lumi.Sch
 		}
 
 		fref := chunk.Function.Args[0]
+		if !types.Type(fref.Type).IsFunction() {
+			panic("Don't know how to extract label data when argument is not a function: " + types.Type(fref.Type).Label())
+		}
+
+		ref, ok := fref.Ref()
+		if !ok {
+			panic("Cannot find function reference for data extraction")
+		}
+
+		function := code.Functions[ref-1]
+		err = UpdateLabels(function, labels, schema)
+		if err != nil {
+			return "", err
+		}
+
+	case "if":
+		res = "if"
+		if len(chunk.Function.Args) != 2 {
+			panic("Don't know how to extract label data from more than one arg!")
+		}
+
+		fref := chunk.Function.Args[1]
 		if !types.Type(fref.Type).IsFunction() {
 			panic("Don't know how to extract label data when argument is not a function: " + types.Type(fref.Type).Label())
 		}
