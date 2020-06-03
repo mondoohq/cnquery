@@ -218,6 +218,34 @@ func TestCompiler_OperatorPrecedence(t *testing.T) {
 	}
 }
 
+func TestCompiler_If(t *testing.T) {
+	compile(t, "if ( mondoo.version != null ) { 123 }", func(res *llx.CodeBundle) {
+		assertFunction(t, "mondoo", nil, res.Code.Code[0])
+		assertFunction(t, "version", &llx.Function{
+			Type:    string(types.String),
+			Binding: 1,
+		}, res.Code.Code[1])
+		assertFunction(t, "!=\x02", &llx.Function{
+			Type:    string(types.Bool),
+			Binding: 2,
+			Args:    []*llx.Primitive{llx.NilPrimitive},
+		}, res.Code.Code[2])
+
+		assertFunction(t, "if", &llx.Function{
+			Type:    string(types.Nil),
+			Binding: 0,
+			Args: []*llx.Primitive{
+				llx.RefPrimitive(3),
+				llx.FunctionPrimitive(1),
+			},
+		}, res.Code.Code[3])
+		assert.Equal(t, []int32{2, 4}, res.Code.Entrypoints)
+
+		assertPrimitive(t, llx.IntPrimitive(123), res.Code.Functions[0].Code[0])
+		assert.Equal(t, []int32{1}, res.Code.Functions[0].Entrypoints)
+	})
+}
+
 //    =======================
 //   👋   ARRAYS and MAPS   🍹
 //    =======================

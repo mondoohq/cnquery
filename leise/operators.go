@@ -31,6 +31,7 @@ func init() {
 		"=":      nil,
 		"||":     compileComparable,
 		"&&":     compileComparable,
+		"if":     compileIf,
 		"expect": compileExpect,
 	}
 }
@@ -160,6 +161,41 @@ func generateEntrypoints(arg *llx.Primitive, res *llx.CodeBundle) error {
 		}
 	}
 	return nil
+}
+
+func compileIf(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
+	if call == nil {
+		return types.Nil, errors.New("need conditional arguments for if-clause")
+	}
+	if call == nil || len(call.Function) < 1 {
+		return types.Nil, errors.New("missing parameters for '" + id + "', it requires 1")
+	}
+
+	arg := call.Function[0]
+	if arg.Name != "" {
+		return types.Nil, errors.New("called '" + id + "' with a named argument, which is not supported")
+	}
+
+	argValue, err := c.compileExpression(arg.Value)
+	if err != nil {
+		return types.Nil, err
+	}
+
+	if err = generateEntrypoints(argValue, res); err != nil {
+		return types.Nil, err
+	}
+
+	res.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   id,
+		Function: &llx.Function{
+			Type: string(types.Nil),
+			Args: []*llx.Primitive{argValue},
+		},
+	})
+	res.Code.Entrypoints = append(res.Code.Entrypoints, res.Code.ChunkIndex())
+
+	return types.Nil, nil
 }
 
 func compileExpect(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {

@@ -18,6 +18,10 @@ func (l *Code) ChunkIndex() int32 {
 	return int32(len(l.Code))
 }
 
+func (l *Code) FunctionsIndex() int32 {
+	return int32(len(l.Functions))
+}
+
 // LastChunk is the last chunk in the list or nil
 func (l *Code) LastChunk() *Chunk {
 	tl := len(l.Code)

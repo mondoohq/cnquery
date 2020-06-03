@@ -111,6 +111,39 @@ func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type
 	return resultType, nil
 }
 
+func (c *compiler) compileUnboundBlock(expressions []*parser.Expression, chunk *llx.Chunk) (types.Type, error) {
+	if chunk.Id != "if" {
+		return types.Nil, errors.New("don't know how to compile unbound block on call `" + chunk.Id + "`")
+	}
+
+	blockCompiler := &compiler{
+		Schema: c.Schema,
+		Result: &llx.CodeBundle{
+			Code: &llx.Code{
+				Id:         chunk.Id,
+				Parameters: 0,
+				Checksums:  map[int32]string{},
+				Code:       []*llx.Chunk{},
+			},
+			Labels: c.Result.Labels,
+		},
+	}
+
+	err := blockCompiler.compileExpressions(expressions)
+	c.Result.Suggestions = append(c.Result.Suggestions, blockCompiler.Result.Suggestions...)
+	if err != nil {
+		return types.Nil, err
+	}
+
+	code := blockCompiler.Result.Code
+	code.UpdateID()
+	c.Result.Code.Functions = append(c.Result.Code.Functions, code)
+
+	chunk.Function.Args = append(chunk.Function.Args, llx.FunctionPrimitive(c.Result.Code.FunctionsIndex()))
+
+	return types.Nil, nil
+}
+
 // evaluates the given expressions on a non-array resource
 // and creates a function, whose reference is returned
 func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.Type) (int32, error) {
@@ -144,7 +177,7 @@ func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.T
 	code := blockCompiler.Result.Code
 	code.UpdateID()
 	c.Result.Code.Functions = append(c.Result.Code.Functions, code)
-	return int32(len(c.Result.Code.Functions)), nil
+	return c.Result.Code.FunctionsIndex(), nil
 }
 
 // blockExpressions evaluates the given expressions as if called by a block and
@@ -630,7 +663,11 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 			})
 		}
 
-		typ, err = c.compileBlock(operand.Block, typ)
+		if typ == types.Nil {
+			_, err = c.compileUnboundBlock(operand.Block, c.Result.Code.LastChunk())
+		} else {
+			_, err = c.compileBlock(operand.Block, typ)
+		}
 		if err != nil {
 			return nil, err
 		}
