@@ -187,10 +187,14 @@ func (c *LeiseExecutor) runFunctionBlock(bind *RawData, code *Code, cb ResultCal
 		return err
 	}
 	c.blockExecutors = append(c.blockExecutors, executor)
-	executor.cache.Store(1, &stepCache{
-		Result:   bind,
-		IsStatic: true,
-	})
+
+	if bind != nil {
+		executor.cache.Store(1, &stepCache{
+			Result:   bind,
+			IsStatic: true,
+		})
+	}
+
 	executor.Run()
 	return nil
 }
