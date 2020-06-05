@@ -118,8 +118,10 @@ func UpdateLabels(code *llx.Code, labels *llx.Labels, schema *lumi.Schema) error
 		return errors.New("Cannot create labels without code")
 	}
 
+	labelrefs := append(code.Entrypoints, code.Datapoints...)
+
 	var err error
-	for _, entrypoint := range code.Entrypoints {
+	for _, entrypoint := range labelrefs {
 		checksum, ok := code.Checksums[entrypoint]
 		if !ok {
 			return errors.New("failed to create labels, cannot find checksum for this entrypoint " + strconv.FormatUint(uint64(entrypoint), 10))
