@@ -331,7 +331,7 @@ func runResourceFunction(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int3
 			Result: data,
 		})
 
-		codeID, ok := c.entrypoints[ref]
+		codeID, ok := c.callbackPoints[ref]
 		if ok {
 			c.callback(&RawResult{Data: data, CodeID: codeID})
 		}
