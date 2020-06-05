@@ -227,11 +227,13 @@ func TestCore_If(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"if ( mondoo.version != null ) { 123 }",
-			2, int64(123),
+			1, map[string]interface{}{
+				"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
+			},
 		},
 		{
 			"if ( mondoo.version == null ) { 123 }",
-			2, nil,
+			1, nil,
 		},
 	})
 }
