@@ -81,8 +81,13 @@ func createLabel(code *llx.Code, ref int32, labels *llx.Labels, schema *lumi.Sch
 
 	case "if":
 		res = "if"
-		if len(chunk.Function.Args) != 2 {
+		if len(chunk.Function.Args) > 2 {
 			panic("Don't know how to extract label data from more than one arg!")
+		}
+
+		// if there are no labels yet
+		if len(chunk.Function.Args) != 2 {
+			return "if", nil
 		}
 
 		fref := chunk.Function.Args[1]
