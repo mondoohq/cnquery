@@ -40,7 +40,7 @@ message Code {
   repeated Chunk code = 2;
   int32 parameters = 3;
   repeated int32 entrypoints = 4;
-  repeated int32 scorepoints = 5;
+  repeated int32 datapoints = 5;
   map<int32,string> checksums = 6;
   repeated Code functions = 7;
 }

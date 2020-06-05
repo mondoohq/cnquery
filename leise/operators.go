@@ -181,10 +181,6 @@ func compileIf(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (
 		return types.Nil, err
 	}
 
-	if err = generateEntrypoints(argValue, res); err != nil {
-		return types.Nil, err
-	}
-
 	res.Code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,

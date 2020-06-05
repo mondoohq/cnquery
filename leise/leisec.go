@@ -772,7 +772,7 @@ func (c *compiler) isChunkStatic(chunk *llx.Chunk) bool {
 
 func (c *compiler) UpdateEntrypoints() {
 	// 0. prep: everything that's an entrypoint is a scoringpoint later on
-	c.Result.Code.Scorepoints = c.Result.Code.Entrypoints
+	datapoints := map[int32]struct{}{}
 
 	// 1. potentially clean up all inherited entrypoints
 	// TODO: unclear if this is necessary because the condition may never be met
@@ -789,15 +789,24 @@ func (c *compiler) UpdateEntrypoints() {
 	for ref := range entrypoints {
 		chunk := c.Result.Code.Code[ref-1]
 
+		if chunk.Id == "if" && chunk.Function != nil && len(chunk.Function.Args) != 0 {
+			var ok bool
+			ref, ok = chunk.Function.Args[0].Ref()
+			if !ok {
+				continue
+			}
+			chunk = c.Result.Code.Code[ref-1]
+		}
+
+		if chunk.Id == "" {
+			continue
+		}
+
 		// nothing to do for primitives (unclear if we need to investigate refs here)
 		if chunk.Call != llx.Chunk_FUNCTION || chunk.Function == nil {
 			continue
 		}
 
-		// now we need to see if the ID is one of our comparables
-		if chunk.Id == "" {
-			continue
-		}
 		if _, ok := comparableOperations[chunk.Id[0:1]]; !ok {
 			if len(chunk.Id) == 1 {
 				continue
@@ -813,7 +822,7 @@ func (c *compiler) UpdateEntrypoints() {
 		if left != 0 {
 			leftChunk := c.Result.Code.Code[left-1]
 			if leftChunk != nil && !c.isChunkStatic(leftChunk) {
-				entrypoints[left] = struct{}{}
+				datapoints[left] = struct{}{}
 			}
 		}
 
@@ -822,23 +831,23 @@ func (c *compiler) UpdateEntrypoints() {
 			if rightPrim != nil && types.Type(rightPrim.Type) == types.Ref {
 				right, ok := rightPrim.Ref()
 				if ok {
-					entrypoints[right] = struct{}{}
+					datapoints[right] = struct{}{}
 				}
 			}
 		}
 	}
 
 	// done
-	res := make([]int32, len(entrypoints))
+	res := make([]int32, len(datapoints))
 	var idx int
-	for ref := range entrypoints {
+	for ref := range datapoints {
 		res[idx] = ref
 		idx++
 	}
 	sort.Slice(res, func(i, j int) bool {
 		return res[i] < res[j]
 	})
-	c.Result.Code.Entrypoints = res
+	c.Result.Code.Datapoints = res
 }
 
 // CompileAST with a schema into a chunky code

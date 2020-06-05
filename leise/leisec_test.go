@@ -239,7 +239,8 @@ func TestCompiler_If(t *testing.T) {
 				llx.FunctionPrimitive(1),
 			},
 		}, res.Code.Code[3])
-		assert.Equal(t, []int32{2, 4}, res.Code.Entrypoints)
+		assert.Equal(t, []int32{4}, res.Code.Entrypoints)
+		assert.Equal(t, []int32{2}, res.Code.Datapoints)
 
 		assertPrimitive(t, llx.IntPrimitive(123), res.Code.Functions[0].Code[0])
 		assert.Equal(t, []int32{1}, res.Code.Functions[0].Entrypoints)
@@ -820,19 +821,20 @@ func TestCompiler_Multiline(t *testing.T) {
 func TestCompiler_Entrypoints(t *testing.T) {
 	tests := []struct {
 		code        string
+		datapoints  []int32
 		entrypoints []int32
 	}{
 		{
 			"1",
-			[]int32{1},
+			[]int32{}, []int32{1},
 		},
 		{
 			"mondoo.version == 1",
-			[]int32{2, 3},
+			[]int32{2}, []int32{3},
 		},
 		{
 			"mondoo.version == mondoo.build",
-			[]int32{2, 4, 5},
+			[]int32{2, 4}, []int32{5},
 		},
 	}
 
@@ -841,6 +843,7 @@ func TestCompiler_Entrypoints(t *testing.T) {
 		t.Run(test.code, func(t *testing.T) {
 			compile(t, test.code, func(res *llx.CodeBundle) {
 				assert.Equal(t, test.entrypoints, res.Code.Entrypoints)
+				assert.Equal(t, test.datapoints, res.Code.Datapoints)
 			})
 		})
 	}
