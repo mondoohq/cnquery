@@ -141,15 +141,15 @@ func NewExecutor(code *Code, runtime *lumi.Runtime, callback ResultCallback) (*L
 // Run code with a runtime and return results
 func (c *LeiseExecutor) Run() {
 	// work down all entrypoints
-	entrypoints := make([]int32, len(c.entrypoints))
+	refs := make([]int32, len(c.callbackPoints))
 	i := 0
-	for ref := range c.entrypoints {
-		entrypoints[i] = ref
+	for ref := range c.callbackPoints {
+		refs[i] = ref
 		i++
 	}
-	sort.Slice(entrypoints, func(i, j int) bool { return entrypoints[i] < entrypoints[j] })
+	sort.Slice(refs, func(i, j int) bool { return refs[i] < refs[j] })
 
-	for _, ref := range entrypoints {
+	for _, ref := range refs {
 		// if this entrypoint is already connected, don't add it again
 		if _, ok := c.calls.Load(ref); ok {
 			continue
