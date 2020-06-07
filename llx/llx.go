@@ -70,6 +70,7 @@ type LeiseExecutor struct {
 	callbackPoints map[int32]string
 	callback       ResultCallback
 	cache          Cache
+	stepTracker    Cache
 	calls          Calls
 	starts         []int32
 }
@@ -147,11 +148,11 @@ func (c *LeiseExecutor) Run() {
 		refs[i] = ref
 		i++
 	}
-	sort.Slice(refs, func(i, j int) bool { return refs[i] < refs[j] })
+	sort.Slice(refs, func(i, j int) bool { return refs[i] > refs[j] })
 
 	for _, ref := range refs {
 		// if this entrypoint is already connected, don't add it again
-		if _, ok := c.calls.Load(ref); ok {
+		if _, ok := c.stepTracker.Load(ref); ok {
 			continue
 		}
 
@@ -360,6 +361,7 @@ func (c *LeiseExecutor) runChain(start int32) {
 
 	for nextRef != 0 {
 		curRef = nextRef
+		c.stepTracker.Store(curRef, nil)
 		// log.Debug().Int32("ref", curRef).Msg("exec> run chain")
 
 		res, nextRef, err = c.runRef(curRef)
