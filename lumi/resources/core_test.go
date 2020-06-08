@@ -1,4 +1,4 @@
-package resources
+package resources_test
 
 import (
 	"strconv"
@@ -8,6 +8,7 @@ import (
 	"github.com/tj/assert"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/lumi/resources"
 	motor "go.mondoo.io/mondoo/motor/motoros"
 	"go.mondoo.io/mondoo/motor/motoros/mock"
 	"go.mondoo.io/mondoo/motor/motoros/types"
@@ -16,7 +17,7 @@ import (
 
 func initExecutor() *executor.Executor {
 	registry := lumi.NewRegistry()
-	Init(registry)
+	resources.Init(registry)
 
 	transport, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/arch.toml"})
 	if err != nil {
