@@ -266,6 +266,10 @@ func TestString_Methods(t *testing.T) {
 			0, int64(5),
 		},
 		{
+			"'hello world'.split(' ')",
+			0, []interface{}{"hello", "world"},
+		},
+		{
 			"'he\nll\no'.lines",
 			0, []interface{}{"he", "ll", "o"},
 		},

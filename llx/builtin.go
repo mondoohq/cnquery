@@ -172,6 +172,7 @@ func init() {
 			string("downcase"):                             {f: stringDowncase, Label: "downcase"},
 			string("length"):                               {f: stringLength, Label: "length"},
 			string("lines"):                                {f: stringLines, Label: "lines"},
+			string("split"):                                {f: stringSplit, Label: "split"},
 		},
 		types.Regex: {
 			string("==" + types.Nil):                 {f: stringCmpNil, Label: "=="},
