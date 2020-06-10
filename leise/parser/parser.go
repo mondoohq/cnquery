@@ -170,7 +170,14 @@ func (p *parser) parseValue() *Value {
 		return &Value{Float: &v}
 
 	case Int:
-		v, err := strconv.ParseInt(p.token.Value, 10, 64)
+		var v int64
+		var err error
+		if p.token.Value[0] == '0' {
+			v, err = strconv.ParseInt(p.token.Value, 8, 64)
+		} else {
+			v, err = strconv.ParseInt(p.token.Value, 10, 64)
+		}
+
 		if err != nil {
 			panic("Failed to parse integer: " + err.Error())
 		}

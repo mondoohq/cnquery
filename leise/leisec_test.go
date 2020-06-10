@@ -57,6 +57,7 @@ func TestCompiler_Simple(t *testing.T) {
 		{"false", llx.BoolPrimitive(false)},
 		{"true", llx.BoolPrimitive(true)},
 		{"123", llx.IntPrimitive(123)},
+		{"010", llx.IntPrimitive(8)},
 		{"12.3", llx.FloatPrimitive(12.3)},
 		{"\"hi\"", llx.StringPrimitive("hi")},
 		{"/hi/", llx.RegexPrimitive("hi")},
