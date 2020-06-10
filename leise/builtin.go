@@ -32,6 +32,7 @@ func init() {
 			"downcase": {typ: stringType, signature: FunctionSignature{}},
 			"length":   {typ: intType, signature: FunctionSignature{}},
 			"lines":    {typ: stringArrayType, signature: FunctionSignature{}},
+			"split":    {typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
 		},
 		types.ArrayLike: {
 			"[]":       {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},

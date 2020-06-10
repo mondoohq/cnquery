@@ -1,6 +1,7 @@
 package llx
 
 import (
+	"errors"
 	"regexp"
 	"strconv"
 	"strings"
@@ -1255,6 +1256,34 @@ func stringLines(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	res := make([]interface{}, len(lines))
 	for i := range lines {
 		res[i] = lines[i]
+	}
+
+	return ArrayData(res, types.String), 0, nil
+}
+
+func stringSplit(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Array(types.String)}, 0, nil
+	}
+
+	argRef := chunk.Function.Args[0]
+	arg, rref, err := c.resolveValue(argRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	if arg.Value == nil {
+		return &RawData{
+			Type:  types.Array(types.String),
+			Value: nil,
+			Error: errors.New("failed to split string, seperator was null"),
+		}, 0, nil
+	}
+
+	splits := strings.Split(bind.Value.(string), arg.Value.(string))
+	res := make([]interface{}, len(splits))
+	for i := range splits {
+		res[i] = splits[i]
 	}
 
 	return ArrayData(res, types.String), 0, nil
