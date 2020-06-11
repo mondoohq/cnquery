@@ -332,3 +332,60 @@ authorizedkeys.entry {
   options() []string
   file file
 }
+
+os.rootcertificates {
+  []certificate
+}
+
+parse.certificates {
+  []certificate(content, path)
+  init(path string)
+  path string
+  file() file
+  content(file) string
+}
+
+pkix.name {
+  id string
+  dn string
+  serialnumber string
+  commonname string
+  country []string
+  organization []string
+  organizationalunit []string
+	locality []string
+  province []string
+	streetaddress []string
+  postalcode []string
+	names      map[string]string
+	extranames map[string]string
+}
+
+pkix.extension {
+  identifier string
+  critical bool
+  value string
+}
+
+certificate {
+  pem string
+  hashs() map[string]string
+  serial() string
+  subjectkeyid() string
+  authoritykeyid() string
+  subject() pkix.name
+  issuer() pkix.name
+  version() int
+  notbefore() int
+  notafter() int
+  signature() string
+  signingalgorithm() string
+  isca() bool
+  keyusage() []string
+  extendedkeyusage() []string
+  extensions() []pkix.extension
+  policyidentifier() []string
+  crldistributionpoints() []string
+  ocspserver() []string
+  issuingcertificateurl() []string
+}
