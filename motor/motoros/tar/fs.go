@@ -179,6 +179,9 @@ func (fs *FS) tar(path string, header *tar.Header) (io.ReadCloser, error) {
 
 // searches for files and returns the file info
 func (fs *FS) Find(from string, r *regexp.Regexp, typ string) ([]string, error) {
+	if r == nil {
+		return nil, errors.New("tar fs> regex cannot be empty")
+	}
 	list := []string{}
 	for k := range fs.FileMap {
 		p := strings.HasPrefix(k, from)
