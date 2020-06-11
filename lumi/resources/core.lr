@@ -182,6 +182,7 @@ user {
   home string
   shell string
   enabled bool
+  authorizedkeys() authorizedkeys
 }
 
 users {
@@ -313,4 +314,21 @@ yaml.path {
   filepath string
   jsonpath string
   result() string
+}
+
+authorizedkeys {
+  []authorizedkeys.entry
+  init(path string)
+  path string
+  file() file
+  content(file) string
+}
+
+authorizedkeys.entry {
+  line int
+  type string
+  key string
+  label() string
+  options() []string
+  path string
 }

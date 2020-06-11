@@ -190,6 +190,7 @@ vsock                  36864  18 vmw_vsock_virtio_transport_common,vmw_vsock_vir
 
 [files."/etc/passwd"]
 content = """root:x:0:0::/root:/bin/bash
+chris:x:1000:1001::/home/chris:/bin/bash
 bin:x:1:1::/:/usr/bin/nologin
 """
 [files."/etc/passwd".stat]
@@ -201,6 +202,7 @@ gid = 0
 content = """
 cat /etc/group
 root:x:0:root
+chris:x:1001:
 network:x:90:
 wheel:x:998:
 tty:x:5:
@@ -218,6 +220,7 @@ tmpfs on /dev type tmpfs (rw,nosuid,size=65536k,mode=755)
 
 [files."/etc/shadow"]
 content = """root:!:14871::::::
+chris:*:18421:0:99999:7:::
 bin:!!:18360::::::
 """
 
@@ -472,4 +475,10 @@ log_group = root
 content="""
 apiVersion: v1
 kind: Pod
+"""
+
+[files."/home/chris/.ssh/authorized_keys"]
+content="""
+# Comment
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDYuKamN4JXNYmolm+A9hM+xYanupG1VgbM/k0NwPiIPUdiU82IPbP7bunsngnOatSDyCrKrhL9FV3wuHFFBX0QE9KpS8bcIcT3ySsi3wgYV95P7anb7YhliDDx2w/QB97kCnAKjGFS1yphS6px0i9B29tGVJa22ODs/hebIKUCYKC9/+fnZ+bIqte1HctDP2lDBzMa/7j8BUXSwnTDXtAuEz5eSMIpv1ZdUdaSuO8xFbB0xrBHQJKuqboLPo3NSOCg6uhopO6GucZuNLJnqVLkyEPTKH0nv/8smz/q3v1GOGz8ZS0DIpkretKZmRB1VDhNqsAiOAWUTmg56xO7VZnlEvQRtyG8qyQHjlj6SDGtvxPDY58lz5nhIV9K6L7gHrOIcbSif5ZCt0e4DrKGaYXgH+mwIh2TMC2OCU6Xr6FRVQ9fBhilqMXuFIIezShN0hZb6mUCLkLVOzBBRKuz17S2a8twsuxix7ixqJPsIF3sI88tbxrFkSGSM02dhrmyZbkMr586rktVBB4T+8A28HJr4l9jkU0uk3l3le5bMcXhEuDkJUBnwEXEXfZa8Lw4sg2VuFgw0Ah0kw0/mAorpsFahXstNgrHhy3HoPKDCw/a/sXL4+fE72I1L96Lb7HOxTrdhEGnd65W4mPlTnbGW9YDQqTfZgRlpuffqQuWWYXolw== chris@lollyrock.com
 """
