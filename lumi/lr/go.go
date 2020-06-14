@@ -49,13 +49,21 @@ func Init(registry *lumi.Registry) {
 func (b *goBuilder) goResource(r *Resource) error {
 	if r.ListType != nil {
 		t := r.ListType.Type.Type
-		r.Body.Fields = append(r.Body.Fields,
-			&Field{
-				ID:   "list",
-				Args: &FieldArgs{},
-				Type: Type{ListType: &ListType{Type: Type{SimpleType: &SimpleType{t}}}},
-			},
-		)
+		args := r.ListType.Args
+
+		// args of nil tell the compiler that this field needs to be pre-populated
+		// however for list we don't have this logic, it is always computed
+		if args == nil {
+			args = &FieldArgs{}
+		}
+
+		field := &Field{
+			ID:   "list",
+			Args: args,
+			Type: Type{ListType: &ListType{Type: Type{SimpleType: &SimpleType{t}}}},
+		}
+
+		r.Body.Fields = append(r.Body.Fields, field)
 	}
 
 	b.goInterface(r)
