@@ -116,6 +116,19 @@ func TestParse(t *testing.T) {
 		})
 	})
 
+	t.Run("resource which is a list type, with args", func(t *testing.T) {
+		parse(t, "name {\n[]base(content)\ncontent string\n}", func(res *LR) {
+			lt := &SimplListType{
+				Type: SimpleType{"base"},
+				Args: &FieldArgs{
+					List: []SimpleType{{Type: "content"}},
+				},
+			}
+			assert.Equal(t, "name", res.Resources[0].ID)
+			assert.Equal(t, lt, res.Resources[0].ListType)
+		})
+	})
+
 	t.Run("resource which is a list type based on resource chain", func(t *testing.T) {
 		parse(t, "name {\n[]base.type.name\n}", func(res *LR) {
 			lt := &SimplListType{Type: SimpleType{"base.type.name"}}

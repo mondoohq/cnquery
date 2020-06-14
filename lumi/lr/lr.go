@@ -49,6 +49,7 @@ type Type struct {
 
 type SimplListType struct {
 	Type SimpleType `'[' ']' @@`
+	Args *FieldArgs `[ '(' @@ ')' ]`
 }
 
 type ListType struct {
