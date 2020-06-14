@@ -108,22 +108,9 @@ func (a *lumiAuthorizedkeys) GetContent(file File) (string, error) {
 	return file.Content()
 }
 
-func (a *lumiAuthorizedkeys) GetList() ([]interface{}, error) {
+func (a *lumiAuthorizedkeys) GetList(content string, path string) ([]interface{}, error) {
 
-	content, err := a.Content()
-	if err != nil {
-		return nil, err
-	}
-
-	f, err := a.File()
-	if err != nil {
-		return nil, err
-	}
-
-	path, err := f.Path()
-	if err != nil {
-		return nil, err
-	}
+	log.Debug().Msg("autorizedkeys> list...")
 
 	res := []interface{}{}
 	entries, err := authorizedkeys.Parse(strings.NewReader(content))
