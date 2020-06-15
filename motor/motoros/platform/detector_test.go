@@ -408,7 +408,7 @@ func TestSuse15Detector(t *testing.T) {
 	assert.Equal(t, []string{"suse", "linux", "unix", "os"}, di.Family)
 }
 
-func TestAmazonLinuxDetector(t *testing.T) {
+func TestAmazon1LinuxDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-amazonlinux-2017.09.toml")
 	assert.Nil(t, err, "was able to create the transport")
 	resolved, di := detector.Resolve()
@@ -417,6 +417,19 @@ func TestAmazonLinuxDetector(t *testing.T) {
 	assert.Equal(t, "amzn", di.Name, "os name should be identified")
 	assert.Equal(t, "Amazon Linux AMI", di.Title, "os title should be identified")
 	assert.Equal(t, "2017.09", di.Release, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
+func TestAmazon2LinuxDetector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-amzn2.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(t, true, resolved, "platform should be resolvable")
+	assert.Equal(t, "amzn", di.Name, "os name should be identified")
+	assert.Equal(t, "Amazon Linux", di.Title, "os title should be identified")
+	assert.Equal(t, "2", di.Release, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
