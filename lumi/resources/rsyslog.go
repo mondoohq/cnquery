@@ -89,6 +89,7 @@ func (s *lumiRsyslogConf) GetContent(files []interface{}) (string, error) {
 		err := s.Runtime.WatchAndCompute(file, "content", s, "content")
 		if err != nil {
 			log.Error().Err(err).Msg("[rsyslog.conf]> watch+compute failed for file.content")
+			return "", err
 		}
 
 		content, err := file.Content()
