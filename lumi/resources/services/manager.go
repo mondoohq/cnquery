@@ -46,7 +46,8 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 	switch platform.Name {
 	case "manjaro", "arch": // arch family
 		osm = &SystemDServiceManager{motor: motor}
-	case "centos", "redhat": // redhat family
+	case "centos", "redhat", "amzn", "ol":
+		// TODO: centos6 and amaz1 do not use systemd
 		osm = &SystemDServiceManager{motor: motor}
 	case "ubuntu":
 		osm = &SystemDServiceManager{motor: motor}
