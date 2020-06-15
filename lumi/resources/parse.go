@@ -68,6 +68,7 @@ func (s *lumiParseIni) GetContent(file File) (string, error) {
 	err := s.Runtime.WatchAndCompute(file, "content", s, "content")
 	if err != nil {
 		log.Error().Err(err).Msg("parse.ini> watch+compute failed")
+		return "", err
 	}
 
 	return file.Content()
