@@ -344,6 +344,18 @@ func runResourceFunction(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int3
 		c.triggerChain(ref)
 	})
 
+	if err != nil {
+		if _, ok := err.(lumi.NotReadyError); !ok {
+			c.cache.Store(ref, &stepCache{
+				Result: &RawData{
+					Type:  types.Type(resource.Fields[chunk.Id].Type),
+					Value: nil,
+					Error: err,
+				},
+			})
+		}
+	}
+
 	// we are done executing this chain
 	return nil, 0, err
 }

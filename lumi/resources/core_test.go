@@ -282,6 +282,10 @@ func TestArray_Access(t *testing.T) {
 			"[0,1,2][100000]",
 			0, "array index out of bound (trying to access element 100000, max: 2)",
 		},
+		{
+			"sshd.config('1').params['2'] == '3'",
+			0, "file '1' does not exist",
+		},
 	})
 }
 
