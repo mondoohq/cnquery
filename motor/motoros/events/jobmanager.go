@@ -77,7 +77,7 @@ func (j *Job) isPending() bool {
 }
 
 func NewJobManager(transport types.Transport) *JobManager {
-	jm := &JobManager{transport: transport}
+	jm := &JobManager{transport: transport, jobs: &Jobs{}}
 	jm.jobSelectionMutex = &sync.Mutex{}
 	jm.Serve()
 	return jm
@@ -127,7 +127,7 @@ type JobManager struct {
 	transport         types.Transport
 	quit              chan bool
 	jobSelectionMutex *sync.Mutex
-	jobs              Jobs
+	jobs              *Jobs
 	jobMetrics        JobManagerMetrics
 }
 

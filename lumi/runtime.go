@@ -56,7 +56,7 @@ func (c *Cache) Delete(key string) { c.Map.Delete(key) }
 // Runtime of all initialized resources
 type Runtime struct {
 	Registry  *Registry
-	cache     Cache
+	cache     *Cache
 	Observers *Observers
 	Motor     *motor.Motor
 }
@@ -74,6 +74,7 @@ func NewRuntime(registry *Registry, motor *motor.Motor) *Runtime {
 		Registry:  registry,
 		Observers: NewObservers(motor),
 		Motor:     motor,
+		cache:     &Cache{},
 	}
 }
 
