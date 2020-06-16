@@ -62,16 +62,16 @@ func (c *Cache) Load(k int32) (*stepCache, bool) {
 // LeiseExecutor is the runtime of a leise/llx codestructure
 type LeiseExecutor struct {
 	id             string
-	watcherIds     types.StringSet
+	watcherIds     *types.StringSet
 	blockExecutors []*LeiseExecutor
 	runtime        *lumi.Runtime
 	code           *Code
 	entrypoints    map[int32]struct{}
 	callbackPoints map[int32]string
 	callback       ResultCallback
-	cache          Cache
-	stepTracker    Cache
-	calls          Calls
+	cache          *Cache
+	stepTracker    *Cache
+	calls          *Calls
 	starts         []int32
 }
 
@@ -111,6 +111,10 @@ func NewExecutor(code *Code, runtime *lumi.Runtime, callback ResultCallback) (*L
 		callbackPoints: make(map[int32]string),
 		code:           code,
 		callback:       callback,
+		cache:          &Cache{},
+		stepTracker:    &Cache{},
+		calls:          &Calls{},
+		watcherIds:     &types.StringSet{},
 	}
 
 	for _, ref := range code.Entrypoints {

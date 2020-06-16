@@ -38,7 +38,7 @@ func (c *Subscriptions) Range(f func(string, *WatcherSubscription) bool) {
 
 type Watcher struct {
 	transport     types.Transport
-	subscriptions Subscriptions
+	subscriptions *Subscriptions
 	jm            *JobManager
 	SleepDuration time.Duration
 }
@@ -49,7 +49,7 @@ type WatcherSubscription struct {
 }
 
 func NewWatcher(transport types.Transport) *Watcher {
-	w := &Watcher{transport: transport}
+	w := &Watcher{transport: transport, subscriptions: &Subscriptions{}}
 	w.transport = transport
 	w.jm = NewJobManager(transport)
 	w.SleepDuration = time.Duration(10 * time.Second)

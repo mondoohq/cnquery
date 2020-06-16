@@ -132,15 +132,17 @@ func (c *Hooks) Load(k string) (func(), bool) {
 // Observers manages all the observers
 type Observers struct {
 	list        CallbacksList
-	reverseList types.StringToStrings
-	hooks       Hooks
+	reverseList *types.StringToStrings
+	hooks       *Hooks
 	motor       *motor.Motor
 }
 
 // NewObservers creates an observers instance
 func NewObservers(motor *motor.Motor) *Observers {
 	return &Observers{
-		motor: motor,
+		motor:       motor,
+		hooks:       &Hooks{},
+		reverseList: &types.StringToStrings{},
 	}
 }
 

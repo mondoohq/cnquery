@@ -5,6 +5,7 @@ import (
 
 	uuid "github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
+	"go.mondoo.io/mondoo/types"
 )
 
 func TestCallbacksList(t *testing.T) {
@@ -24,7 +25,10 @@ func TestCallbacksList(t *testing.T) {
 }
 
 func TestObservers(t *testing.T) {
-	o := Observers{}
+	o := Observers{
+		hooks:       &Hooks{},
+		reverseList: &types.StringToStrings{},
+	}
 	a := uuid.Must(uuid.NewV4()).String()
 	b := uuid.Must(uuid.NewV4()).String()
 
