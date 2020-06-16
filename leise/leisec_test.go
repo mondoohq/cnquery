@@ -762,6 +762,10 @@ func TestChecksums(t *testing.T) {
 				"platform.name\nplatform.release",
 				"platform.release",
 			},
+			{
+				"if (true) { 2 }",
+				"if (true) { 3 }",
+			},
 		}
 
 		for i := range dupes {
