@@ -8,6 +8,22 @@ func (l *Code) AddChunk(c *Chunk) {
 	l.Code = append(l.Code, c)
 }
 
+// RefreshChunkChecksum if something changed about it
+func (l *Code) RefreshChunkChecksum(c *Chunk) {
+	var ref int32 = -1
+
+	for i := len(l.Code) - 1; i >= 0; i-- {
+		if l.Code[i] == c {
+			ref = int32(i)
+			break
+		}
+	}
+
+	if ref != -1 {
+		l.Checksums[ref+1] = c.Checksum(l)
+	}
+}
+
 // RemoveLastChunk from the current code
 func (l *Code) RemoveLastChunk() {
 	l.Code = l.Code[:len(l.Code)-1]

@@ -140,6 +140,7 @@ func (c *compiler) compileUnboundBlock(expressions []*parser.Expression, chunk *
 	c.Result.Code.Functions = append(c.Result.Code.Functions, code)
 
 	chunk.Function.Args = append(chunk.Function.Args, llx.FunctionPrimitive(c.Result.Code.FunctionsIndex()))
+	c.Result.Code.RefreshChunkChecksum(chunk)
 
 	return types.Nil, nil
 }
