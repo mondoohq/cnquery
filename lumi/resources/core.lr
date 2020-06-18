@@ -1941,3 +1941,23 @@ windows.firewall.rule {
   // describes the type of policy store where this rule originally came from
   policyStoreSourceType int
 }
+
+yum {
+  vars() map[string]string
+  repos() []yum.repo
+}
+
+yum.repo {
+  init(id string)
+  id string
+  name string
+  status string
+  baseurl []string
+  expire string
+  filename string
+  revision string
+  pkgs string
+  size string
+  mirrors string
+  enabled() bool
+}

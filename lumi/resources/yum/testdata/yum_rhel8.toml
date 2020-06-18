@@ -1,0 +1,302 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "4.18.0-193.19.1.el8_2.x86_64"
+
+[files."/etc/yum.conf"]
+content="""
+[main]
+gpgcheck=1
+installonly_limit=3
+clean_requirements_on_remove=True
+best=True
+skip_if_unavailable=False
+ip_resolve=4
+"""
+
+[commands."/usr/libexec/platform-python -c 'import dnf, json; db = dnf.dnf.Base(); print(json.dumps(db.conf.substitutions))'"]
+stdout = """{"arch": "x86_64", "basearch": "x86_64", "releasever": "8"}"""
+
+[commands."yum -v repolist all"]
+stdout="""
+Loaded plugins: builddep, changelog, config-manager, copr, debug, debuginfo-install, download, generate_completion_cache, needs-restarting, playground, repoclosure, repodiff, repograph, repomanage, reposync
+YUM version: 4.2.17
+cachedir: /var/cache/dnf
+User-Agent: constructed: 'libdnf (Red Hat Enterprise Linux 8.2; generic; Linux.x86_64)'
+repo: downloading from remote: google-compute-engine
+Google Compute Engine                                                                                             12 kB/s | 6.9 kB     00:00
+google-compute-engine: using metadata from Mon 03 Jul 2023 09:42:14 AM UTC.
+repo: downloading from remote: google-cloud-sdk
+Google Cloud SDK                                                                                                  17 MB/s |  18 MB     00:01
+google-cloud-sdk: using metadata from Tue 05 Jun 1934 04:20:44 PM UTC.
+repo: downloading from remote: rhui-codeready-builder-for-rhel-8-x86_64-rhui-debug-rpms
+Red Hat CodeReady Linux Builder for RHEL 8 x86_64 (Debug RPMs) from RHUI                                         2.3 MB/s | 8.6 MB     00:03
+rhui-codeready-builder-for-rhel-8-x86_64-rhui-debug-rpms: using metadata from Thu 10 Sep 2020 05:51:33 PM UTC.
+repo: downloading from remote: rhui-codeready-builder-for-rhel-8-x86_64-rhui-rpms
+Red Hat CodeReady Linux Builder for RHEL 8 x86_64 (RPMs) from RHUI                                               471 kB/s | 3.8 MB     00:08
+rhui-codeready-builder-for-rhel-8-x86_64-rhui-rpms: using metadata from Thu 10 Sep 2020 05:50:15 PM UTC.
+repo: downloading from remote: rhui-codeready-builder-for-rhel-8-x86_64-rhui-source-rpms
+Red Hat CodeReady Linux Builder for RHEL 8 x86_64 (Source RPMs) from RHUI                                         49 kB/s | 218 kB     00:04
+rhui-codeready-builder-for-rhel-8-x86_64-rhui-source-rpms: using metadata from Tue 08 Sep 2020 11:49:47 AM UTC.
+repo: downloading from remote: rhui-rhel-8-for-x86_64-appstream-rhui-debug-rpms
+Red Hat Enterprise Linux 8 for x86_64 - AppStream from RHUI (Debug RPMs)                                         3.0 MB/s |  19 MB     00:06
+rhui-rhel-8-for-x86_64-appstream-rhui-debug-rpms: using metadata from Thu 10 Sep 2020 04:04:58 PM UTC.
+repo: downloading from remote: rhui-rhel-8-for-x86_64-appstream-rhui-rpms
+Red Hat Enterprise Linux 8 for x86_64 - AppStream from RHUI (RPMs)                                               4.7 MB/s |  19 MB     00:04
+rhui-rhel-8-for-x86_64-appstream-rhui-rpms: using metadata from Thu 10 Sep 2020 05:56:46 PM UTC.
+repo: downloading from remote: rhui-rhel-8-for-x86_64-appstream-rhui-source-rpms
+Red Hat Enterprise Linux 8 for x86_64 - AppStream from RHUI (Source RPMs)                                        754 kB/s | 1.7 MB     00:02
+rhui-rhel-8-for-x86_64-appstream-rhui-source-rpms: using metadata from Thu 10 Sep 2020 03:58:33 PM UTC.
+repo: downloading from remote: rhui-rhel-8-for-x86_64-baseos-rhui-debug-rpms
+Red Hat Enterprise Linux 8 for x86_64 - BaseOS from RHUI (Debug RPMs)                                            1.4 MB/s | 9.0 MB     00:06
+rhui-rhel-8-for-x86_64-baseos-rhui-debug-rpms: using metadata from Wed 09 Sep 2020 10:04:40 PM UTC.
+repo: downloading from remote: rhui-rhel-8-for-x86_64-baseos-rhui-rpms
+Red Hat Enterprise Linux 8 for x86_64 - BaseOS from RHUI (RPMs)                                                  4.2 MB/s |  21 MB     00:05
+rhui-rhel-8-for-x86_64-baseos-rhui-rpms: using metadata from Wed 09 Sep 2020 11:59:31 PM UTC.
+repo: downloading from remote: rhui-rhel-8-for-x86_64-baseos-rhui-source-rpms
+uname -rRed Hat Enterprise Linux 8 for x86_64 - BaseOS from R100% [====================================================] 2.0 MB/s | 669 kB     00Red Hat Enterprise Linux 8 for x86_64 - BaseOS from RHUI (Source RPMs)                                           179 kB/s | 669 kB     00:03
+rhui-rhel-8-for-x86_64-baseos-rhui-source-rpms: using metadata from Tue 08 Sep 2020 09:59:07 AM UTC.
+repo: downloading from remote: rhui-rhel-8-for-x86_64-highavailability-debug-rhui-rpms
+Red Hat Enterprise Linux 8 for x86_64 - High Availability (Debug RPMs) from RHUI                                  58 kB/s | 236 kB     00:04
+rhui-rhel-8-for-x86_64-highavailability-debug-rhui-rpms: using metadata from Tue 08 Sep 2020 09:56:59 AM UTC.
+repo: downloading from remote: rhui-rhel-8-for-x86_64-highavailability-rhui-rpms
+Red Hat Enterprise Linux 8 for x86_64 - High Availability (RPMs) from RHUI                                       241 kB/s | 1.8 MB     00:07
+rhui-rhel-8-for-x86_64-highavailability-rhui-rpms: using metadata from Tue 08 Sep 2020 11:51:18 AM UTC.
+repo: downloading from remote: rhui-rhel-8-for-x86_64-highavailability-source-rhui-rpms
+Red Hat Enterprise Linux 8 for x86_64 - High Availability (Source RPMs) from RHUI                                5.5 kB/s |  15 kB     00:02
+rhui-rhel-8-for-x86_64-highavailability-source-rhui-rpms: using metadata from Tue 08 Sep 2020 09:56:48 AM UTC.
+repo: downloading from remote: rhui-rhel-8-for-x86_64-supplementary-rhui-debug-rpms
+Red Hat Enterprise Linux 8 for x86_64 - Supplementary (Debug RPMs) from RHUI                                     117  B/s | 512  B     00:04
+rhui-rhel-8-for-x86_64-supplementary-rhui-debug-rpms: using metadata from Fri 24 Apr 2020 01:54:23 AM UTC.
+repo: downloading from remote: rhui-rhel-8-for-x86_64-supplementary-rhui-rpms
+Red Hat Enterprise Linux 8 for x86_64 - Supplementary (RPMs) from RHUI                                            63 kB/s | 157 kB     00:02
+rhui-rhel-8-for-x86_64-supplementary-rhui-rpms: using metadata from Mon 10 Aug 2020 05:48:31 PM UTC.
+repo: downloading from remote: rhui-rhel-8-for-x86_64-supplementary-rhui-source-rpms
+Red Hat Enterprise Linux 8 for x86_64 - Supplementary (Source RPMs) from RHUI                                    837  B/s | 1.8 kB     00:02
+rhui-rhel-8-for-x86_64-supplementary-rhui-source-rpms: using metadata from Fri 24 Apr 2020 01:54:23 AM UTC.
+Completion plugin: Generating completion cache...
+
+Repo-id            : google-cloud-sdk
+Repo-name          : Google Cloud SDK
+Repo-status        : enabled
+Repo-revision      : 1599839835398876
+Repo-updated       : Tue 05 Jun 1934 04:20:44 PM UTC
+Repo-pkgs          : 670
+Repo-available-pkgs: 670
+Repo-size          : 13 G
+Repo-baseurl       : https://packages.cloud.google.com/yum/repos/cloud-sdk-el8-x86_64
+Repo-expire        : 172,800 second(s) (last: Sun 13 Sep 2020 03:39:23 PM UTC)
+Repo-filename      : /etc/yum.repos.d/google-cloud.repo
+
+Repo-id            : google-compute-engine
+Repo-name          : Google Compute Engine
+Repo-status        : enabled
+Repo-revision      : 1599761042020342
+Repo-updated       : Mon 03 Jul 2023 09:42:14 AM UTC
+Repo-pkgs          : 8
+Repo-available-pkgs: 8
+Repo-size          : 14 M
+Repo-baseurl       : https://packages.cloud.google.com/yum/repos/google-compute-engine-el8-x86_64-stable
+Repo-expire        : 172,800 second(s) (last: Sun 13 Sep 2020 03:39:23 PM UTC)
+Repo-filename      : /etc/yum.repos.d/google-cloud.repo
+
+Repo-id            : rhui-codeready-builder-for-rhel-8-x86_64-rhui-debug-rpms
+Repo-name          : Red Hat CodeReady Linux Builder for RHEL 8 x86_64 (Debug RPMs) from RHUI
+Repo-status        : enabled
+Repo-revision      : 1599760249
+Repo-updated       : Thu 10 Sep 2020 05:51:33 PM UTC
+Repo-pkgs          : 3,506
+Repo-available-pkgs: 3,288
+Repo-size          : 28 G
+Repo-mirrors       : https://cds.rhel.updates.googlecloud.com/pulp/mirror//content/dist/rhel8/rhui/8/x86_64/codeready-builder/debug
+Repo-baseurl       : https://cds.rhel.updates.googlecloud.com/pulp/repos/content/dist/rhel8/rhui/8/x86_64/codeready-builder/debug (0 more)
+Repo-expire        : 172,800 second(s) (last: Sun 13 Sep 2020 03:39:30 PM UTC)
+Repo-filename      : /etc/yum.repos.d/rh-cloud.repo
+
+Repo-id            : rhui-codeready-builder-for-rhel-8-x86_64-rhui-rpms
+Repo-name          : Red Hat CodeReady Linux Builder for RHEL 8 x86_64 (RPMs) from RHUI
+Repo-status        : enabled
+Repo-revision      : 1599760198
+Repo-updated       : Thu 10 Sep 2020 05:50:15 PM UTC
+Repo-pkgs          : 3,015
+Repo-available-pkgs: 2,223
+Repo-size          : 1.9 G
+Repo-mirrors       : https://cds.rhel.updates.googlecloud.com/pulp/mirror//content/dist/rhel8/rhui/8/x86_64/codeready-builder/os
+Repo-baseurl       : https://cds.rhel.updates.googlecloud.com/pulp/repos/content/dist/rhel8/rhui/8/x86_64/codeready-builder/os (0 more)
+Repo-expire        : 172,800 second(s) (last: Sun 13 Sep 2020 03:39:39 PM UTC)
+Repo-filename      : /etc/yum.repos.d/rh-cloud.repo
+
+Repo-id            : rhui-codeready-builder-for-rhel-8-x86_64-rhui-source-rpms
+Repo-name          : Red Hat CodeReady Linux Builder for RHEL 8 x86_64 (Source RPMs) from RHUI
+Repo-status        : enabled
+Repo-revision      : 1599565787
+Repo-updated       : Tue 08 Sep 2020 11:49:47 AM UTC
+Repo-pkgs          : 520
+Repo-available-pkgs: 477
+Repo-size          : 1.0 G
+Repo-mirrors       : https://cds.rhel.updates.googlecloud.com/pulp/mirror//content/dist/rhel8/rhui/8/x86_64/codeready-builder/source/SRPMS
+Repo-baseurl       : https://cds.rhel.updates.googlecloud.com/pulp/repos/content/dist/rhel8/rhui/8/x86_64/codeready-builder/source/SRPMS (0 more)
+Repo-expire        : 172,800 second(s) (last: Sun 13 Sep 2020 03:39:44 PM UTC)
+Repo-filename      : /etc/yum.repos.d/rh-cloud.repo
+
+Repo-id            : rhui-rhel-8-for-x86_64-appstream-rhui-debug-rpms
+Repo-name          : Red Hat Enterprise Linux 8 for x86_64 - AppStream from RHUI (Debug RPMs)
+Repo-status        : enabled
+Repo-revision      : 1599753846
+Repo-updated       : Thu 10 Sep 2020 04:04:58 PM UTC
+Repo-pkgs          : 10,708
+Repo-available-pkgs: 9,921
+Repo-size          : 60 G
+Repo-mirrors       : https://cds.rhel.updates.googlecloud.com/pulp/mirror//content/dist/rhel8/rhui/8/x86_64/appstream/debug
+Repo-baseurl       : https://cds.rhel.updates.googlecloud.com/pulp/repos/content/dist/rhel8/rhui/8/x86_64/appstream/debug (0 more)
+Repo-expire        : 172,800 second(s) (last: Sun 13 Sep 2020 03:39:52 PM UTC)
+Repo-filename      : /etc/yum.repos.d/rh-cloud.repo
+
+Repo-id            : rhui-rhel-8-for-x86_64-appstream-rhui-rpms
+Repo-name          : Red Hat Enterprise Linux 8 for x86_64 - AppStream from RHUI (RPMs)
+Repo-status        : enabled
+Repo-revision      : 1599760545
+Repo-updated       : Thu 10 Sep 2020 05:56:46 PM UTC
+Repo-pkgs          : 12,166
+Repo-available-pkgs: 11,091
+Repo-size          : 26 G
+Repo-mirrors       : https://cds.rhel.updates.googlecloud.com/pulp/mirror//content/dist/rhel8/rhui/8/x86_64/appstream/os
+Repo-baseurl       : https://cds.rhel.updates.googlecloud.com/pulp/repos/content/dist/rhel8/rhui/8/x86_64/appstream/os (0 more)
+Repo-expire        : 172,800 second(s) (last: Sun 13 Sep 2020 03:40:00 PM UTC)
+Repo-filename      : /etc/yum.repos.d/rh-cloud.repo
+
+Repo-id            : rhui-rhel-8-for-x86_64-appstream-rhui-source-rpms
+Repo-name          : Red Hat Enterprise Linux 8 for x86_64 - AppStream from RHUI (Source RPMs)
+Repo-status        : enabled
+Repo-revision      : 1599753510
+Repo-updated       : Thu 10 Sep 2020 03:58:33 PM UTC
+Repo-pkgs          : 3,463
+Repo-available-pkgs: 2,809
+Repo-size          : 71 G
+Repo-mirrors       : https://cds.rhel.updates.googlecloud.com/pulp/mirror//content/dist/rhel8/rhui/8/x86_64/appstream/source/SRPMS
+Repo-baseurl       : https://cds.rhel.updates.googlecloud.com/pulp/repos/content/dist/rhel8/rhui/8/x86_64/appstream/source/SRPMS (0 more)
+Repo-expire        : 172,800 second(s) (last: Sun 13 Sep 2020 03:40:09 PM UTC)
+Repo-filename      : /etc/yum.repos.d/rh-cloud.repo
+
+Repo-id            : rhui-rhel-8-for-x86_64-baseos-rhui-debug-rpms
+Repo-name          : Red Hat Enterprise Linux 8 for x86_64 - BaseOS from RHUI (Debug RPMs)
+Repo-status        : enabled
+Repo-revision      : 1599689027
+Repo-updated       : Wed 09 Sep 2020 10:04:40 PM UTC
+Repo-pkgs          : 5,320
+Repo-available-pkgs: 5,310
+Repo-size          : 24 G
+Repo-mirrors       : https://cds.rhel.updates.googlecloud.com/pulp/mirror//content/dist/rhel8/rhui/8/x86_64/baseos/debug
+Repo-baseurl       : https://cds.rhel.updates.googlecloud.com/pulp/repos/content/dist/rhel8/rhui/8/x86_64/baseos/debug (0 more)
+Repo-expire        : 172,800 second(s) (last: Sun 13 Sep 2020 03:40:16 PM UTC)
+Repo-filename      : /etc/yum.repos.d/rh-cloud.repo
+
+Repo-id            : rhui-rhel-8-for-x86_64-baseos-rhui-rpms
+Repo-name          : Red Hat Enterprise Linux 8 for x86_64 - BaseOS from RHUI (RPMs)
+Repo-status        : enabled
+Repo-revision      : 1599695867
+Repo-updated       : Wed 09 Sep 2020 11:59:31 PM UTC
+Repo-pkgs          : 5,059
+Repo-available-pkgs: 5,056
+Repo-size          : 6.7 G
+Repo-mirrors       : https://cds.rhel.updates.googlecloud.com/pulp/mirror//content/dist/rhel8/rhui/8/x86_64/baseos/os
+Repo-baseurl       : https://cds.rhel.updates.googlecloud.com/pulp/repos/content/dist/rhel8/rhui/8/x86_64/baseos/os (0 more)
+Repo-expire        : 172,800 second(s) (last: Sun 13 Sep 2020 03:40:21 PM UTC)
+Repo-filename      : /etc/yum.repos.d/rh-cloud.repo
+
+Repo-id            : rhui-rhel-8-for-x86_64-baseos-rhui-source-rpms
+Repo-name          : Red Hat Enterprise Linux 8 for x86_64 - BaseOS from RHUI (Source RPMs)
+Repo-status        : enabled
+Repo-revision      : 1599559141
+Repo-updated       : Tue 08 Sep 2020 09:59:07 AM UTC
+Repo-pkgs          : 1,044
+Repo-available-pkgs: 1,022
+Repo-size          : 6.5 G
+Repo-mirrors       : https://cds.rhel.updates.googlecloud.com/pulp/mirror//content/dist/rhel8/rhui/8/x86_64/baseos/source/SRPMS
+Repo-baseurl       : https://cds.rhel.updates.googlecloud.com/pulp/repos/content/dist/rhel8/rhui/8/x86_64/baseos/source/SRPMS (0 more)
+Repo-expire        : 172,800 second(s) (last: Sun 13 Sep 2020 03:40:31 PM UTC)
+Repo-filename      : /etc/yum.repos.d/rh-cloud.repo
+
+Repo-id            : rhui-rhel-8-for-x86_64-highavailability-debug-rhui-rpms
+Repo-name          : Red Hat Enterprise Linux 8 for x86_64 - High Availability (Debug RPMs) from RHUI
+Repo-status        : enabled
+Repo-revision      : 1599559017
+Repo-updated       : Tue 08 Sep 2020 09:56:59 AM UTC
+Repo-pkgs          : 265
+Repo-available-pkgs: 265
+Repo-size          : 73 M
+Repo-mirrors       : https://cds.rhel.updates.googlecloud.com/pulp/mirror//content/dist/rhel8/rhui/8/x86_64/highavailability/debug
+Repo-baseurl       : https://cds.rhel.updates.googlecloud.com/pulp/repos/content/dist/rhel8/rhui/8/x86_64/highavailability/debug (0 more)
+Repo-expire        : 172,800 second(s) (last: Sun 13 Sep 2020 03:40:35 PM UTC)
+Repo-filename      : /etc/yum.repos.d/rh-cloud.repo
+
+Repo-id            : rhui-rhel-8-for-x86_64-highavailability-rhui-rpms
+Repo-name          : Red Hat Enterprise Linux 8 for x86_64 - High Availability (RPMs) from RHUI
+Repo-status        : enabled
+Repo-revision      : 1599565874
+Repo-updated       : Tue 08 Sep 2020 11:51:18 AM UTC
+Repo-pkgs          : 233
+Repo-available-pkgs: 232
+Repo-size          : 332 M
+Repo-mirrors       : https://cds.rhel.updates.googlecloud.com/pulp/mirror//content/dist/rhel8/rhui/8/x86_64/highavailability/os
+Repo-baseurl       : https://cds.rhel.updates.googlecloud.com/pulp/repos/content/dist/rhel8/rhui/8/x86_64/highavailability/os (0 more)
+Repo-expire        : 172,800 second(s) (last: Sun 13 Sep 2020 03:40:45 PM UTC)
+Repo-filename      : /etc/yum.repos.d/rh-cloud.repo
+
+Repo-id            : rhui-rhel-8-for-x86_64-highavailability-source-rhui-rpms
+Repo-name          : Red Hat Enterprise Linux 8 for x86_64 - High Availability (Source RPMs) from RHUI
+Repo-status        : enabled
+Repo-revision      : 1599559007
+Repo-updated       : Tue 08 Sep 2020 09:56:48 AM UTC
+Repo-pkgs          : 38
+Repo-available-pkgs: 37
+Repo-size          : 692 M
+Repo-mirrors       : https://cds.rhel.updates.googlecloud.com/pulp/mirror//content/dist/rhel8/rhui/8/x86_64/highavailability/source/SRPMS
+Repo-baseurl       : https://cds.rhel.updates.googlecloud.com/pulp/repos/content/dist/rhel8/rhui/8/x86_64/highavailability/source/SRPMS (0 more)
+Repo-expire        : 172,800 second(s) (last: Sun 13 Sep 2020 03:40:48 PM UTC)
+Repo-filename      : /etc/yum.repos.d/rh-cloud.repo
+
+Repo-id            : rhui-rhel-8-for-x86_64-supplementary-rhui-debug-rpms
+Repo-name          : Red Hat Enterprise Linux 8 for x86_64 - Supplementary (Debug RPMs) from RHUI
+Repo-status        : enabled
+Repo-revision      : 1587693263
+Repo-updated       : Fri 24 Apr 2020 01:54:23 AM UTC
+Repo-pkgs          : 0
+Repo-available-pkgs: 0
+Repo-size          : 0
+Repo-mirrors       : https://cds.rhel.updates.googlecloud.com/pulp/mirror//content/dist/rhel8/rhui/8/x86_64/supplementary/debug
+Repo-baseurl       : https://cds.rhel.updates.googlecloud.com/pulp/repos/content/dist/rhel8/rhui/8/x86_64/supplementary/debug (0 more)
+Repo-expire        : 172,800 second(s) (last: Sun 13 Sep 2020 03:40:50 PM UTC)
+Repo-filename      : /etc/yum.repos.d/rh-cloud.repo
+
+Repo-id            : rhui-rhel-8-for-x86_64-supplementary-rhui-rpms
+Repo-name          : Red Hat Enterprise Linux 8 for x86_64 - Supplementary (RPMs) from RHUI
+Repo-status        : enabled
+Repo-revision      : 1597081710
+Repo-updated       : Mon 10 Aug 2020 05:48:31 PM UTC
+Repo-pkgs          : 60
+Repo-available-pkgs: 60
+Repo-size          : 1.1 G
+Repo-mirrors       : https://cds.rhel.updates.googlecloud.com/pulp/mirror//content/dist/rhel8/rhui/8/x86_64/supplementary/os
+Repo-baseurl       : https://cds.rhel.updates.googlecloud.com/pulp/repos/content/dist/rhel8/rhui/8/x86_64/supplementary/os (0 more)
+Repo-expire        : 172,800 second(s) (last: Sun 13 Sep 2020 03:40:55 PM UTC)
+Repo-filename      : /etc/yum.repos.d/rh-cloud.repo
+
+Repo-id            : rhui-rhel-8-for-x86_64-supplementary-rhui-source-rpms
+Repo-name          : Red Hat Enterprise Linux 8 for x86_64 - Supplementary (Source RPMs) from RHUI
+Repo-status        : enabled
+Repo-revision      : 1587693263
+Repo-updated       : Fri 24 Apr 2020 01:54:23 AM UTC
+Repo-pkgs          : 2
+Repo-available-pkgs: 2
+Repo-size          : 4.5 M
+Repo-mirrors       : https://cds.rhel.updates.googlecloud.com/pulp/mirror//content/dist/rhel8/rhui/8/x86_64/supplementary/source/SRPMS
+Repo-baseurl       : https://cds.rhel.updates.googlecloud.com/pulp/repos/content/dist/rhel8/rhui/8/x86_64/supplementary/source/SRPMS (0 more)
+Repo-expire        : 172,800 second(s) (last: Sun 13 Sep 2020 03:40:58 PM UTC)
+Repo-filename      : /etc/yum.repos.d/rh-cloud.repo
+Total packages: 46,077
+"""
