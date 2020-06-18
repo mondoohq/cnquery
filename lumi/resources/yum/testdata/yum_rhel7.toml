@@ -1,0 +1,218 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "3.10.0-1127.10.1.el7.x86_64"
+
+[files."/etc/yum.conf"]
+content="""
+[main]
+cachedir=/var/cache/yum/$basearch/$releasever
+keepcache=0
+debuglevel=2
+logfile=/var/log/yum.log
+exactarch=1
+obsoletes=1
+gpgcheck=1
+plugins=1
+installonly_limit=3
+
+#  This is the default, if you make this bigger yum won't see if the metadata
+# is newer on the remote and so you'll "gain" the bandwidth of not having to
+# download the new metadata and "pay" for it by yum not having correct
+# information.
+#  It is esp. important, to have correct metadata, for distributions like
+# Fedora which don't keep old packages around. If you don't like this checking
+# interupting your command line usage, it's much better to have something
+# manually check the metadata once an hour (yum-updatesd will do this).
+# metadata_expire=90m
+
+# PUT YOUR REPOS HERE OR IN separate files named file.repo
+# in /etc/yum.repos.d
+ip_resolve=4
+"""
+
+[commands."python -c 'import yum, json; yb = yum.YumBase(); print json.dumps(yb.conf.yumvar)'"]
+stdout = """{"releasever": "7Server", "basearch": "x86_64", "arch": "ia32e", "uuid": "d409e585-1356-4d85-b510-21ec65a2f468"}"""
+
+[commands."yum -v repolist all"]
+stdout="""
+Failed to set locale, defaulting to C
+Config time: 0.005
+Yum version: 3.4.3
+Setting up Package Sacks
+pkgsack time: 0.398
+Repo-id      : epel/x86_64
+Repo-name    : Extra Packages for Enterprise Linux 7 - x86_64
+Repo-status  : enabled
+Repo-revision: 1599930221
+Repo-updated : Sat Sep 12 17:05:04 2020
+Repo-pkgs    : 13446
+Repo-size    : 15 G
+Repo-metalink: https://mirrors.fedoraproject.org/metalink?repo=epel-7&arch=x86_64&infra=$infra&content=$contentdir
+  Updated    : Sat Sep 12 17:05:04 2020
+Repo-baseurl : http://mirror.pit.teraswitch.com/fedora/epel/7/x86_64/ (45 more)
+Repo-expire  : 21600 second(s) (last: Sun Sep 13 15:06:44 2020)
+  Filter     : read-only:present
+Repo-filename: /etc/yum.repos.d/epel.repo
+
+Repo-id      : epel-debuginfo/x86_64
+Repo-name    : Extra Packages for Enterprise Linux 7 - x86_64 - Debug
+Repo-status  : disabled
+Repo-metalink: https://mirrors.fedoraproject.org/metalink?repo=epel-debug-7&arch=x86_64&infra=$infra&content=$contentdir
+Repo-expire  : 21600 second(s) (last: Unknown)
+  Filter     : read-only:present
+Repo-filename: /etc/yum.repos.d/epel.repo
+
+Repo-id      : epel-source/x86_64
+Repo-name    : Extra Packages for Enterprise Linux 7 - x86_64 - Source
+Repo-status  : disabled
+Repo-metalink: https://mirrors.fedoraproject.org/metalink?repo=epel-source-7&arch=x86_64&infra=$infra&content=$contentdir
+Repo-expire  : 21600 second(s) (last: Unknown)
+  Filter     : read-only:present
+Repo-filename: /etc/yum.repos.d/epel.repo
+
+Repo-id      : epel-testing/x86_64
+Repo-name    : Extra Packages for Enterprise Linux 7 - Testing - x86_64
+Repo-status  : disabled
+Repo-metalink: https://mirrors.fedoraproject.org/metalink?repo=testing-epel7&arch=x86_64&infra=$infra&content=$contentdir
+Repo-expire  : 21600 second(s) (last: Unknown)
+  Filter     : read-only:present
+Repo-filename: /etc/yum.repos.d/epel-testing.repo
+
+Repo-id      : epel-testing-debuginfo/x86_64
+Repo-name    : Extra Packages for Enterprise Linux 7 - Testing - x86_64 - Debug
+Repo-status  : disabled
+Repo-metalink: https://mirrors.fedoraproject.org/metalink?repo=testing-debug-epel7&arch=x86_64&infra=$infra&content=$contentdir
+Repo-expire  : 21600 second(s) (last: Unknown)
+  Filter     : read-only:present
+Repo-filename: /etc/yum.repos.d/epel-testing.repo
+
+Repo-id      : epel-testing-source/x86_64
+Repo-name    : Extra Packages for Enterprise Linux 7 - Testing - x86_64 - Source
+Repo-status  : disabled
+Repo-metalink: https://mirrors.fedoraproject.org/metalink?repo=testing-source-epel7&arch=x86_64&infra=$infra&content=$contentdir
+Repo-expire  : 21600 second(s) (last: Unknown)
+  Filter     : read-only:present
+Repo-filename: /etc/yum.repos.d/epel-testing.repo
+
+Repo-id      : google-cloud-sdk
+Repo-name    : Google Cloud SDK
+Repo-status  : enabled
+Repo-revision: 1599839834412163
+Repo-updated : Sun Mar  1 03:22:43 50698876
+Repo-pkgs    : 670
+Repo-size    : 13 G
+Repo-baseurl : https://packages.cloud.google.com/yum/repos/cloud-sdk-el7-x86_64
+Repo-expire  : 21600 second(s) (last: Sun Sep 13 15:06:44 2020)
+  Filter     : read-only:present
+Repo-filename: /etc/yum.repos.d/google-cloud.repo
+
+Repo-id      : google-compute-engine
+Repo-name    : Google Compute Engine
+Repo-status  : enabled
+Repo-revision: 1599761168007319
+Repo-updated : Sat Apr 30 08:15:19 50696383
+Repo-pkgs    : 12
+Repo-size    : 12 M
+Repo-baseurl : https://packages.cloud.google.com/yum/repos/google-compute-engine-el7-x86_64-stable
+Repo-expire  : 21600 second(s) (last: Sun Sep 13 15:06:45 2020)
+  Filter     : read-only:present
+Repo-filename: /etc/yum.repos.d/google-cloud.repo
+
+Repo-id      : mondoo/x86_64
+Repo-name    : Mondoo Repository
+Repo-status  : enabled
+Repo-revision: 1599740051
+Repo-updated : Thu Sep 10 12:14:13 2020
+Repo-pkgs    : 2
+Repo-size    : 55 M
+Repo-baseurl : https://releases.mondoo.io/rpm/x86_64/
+Repo-expire  : 21600 second(s) (last: Sun Sep 13 15:06:45 2020)
+  Filter     : read-only:present
+Repo-filename: /etc/yum.repos.d/mondoo.repo
+
+Repo-id      : rhui-rhel-7-server-rhui-extras-rpms/x86_64
+Repo-name    : Red Hat Enterprise Linux 7 Server - Extras from RHUI (RPMs)
+Repo-status  : enabled
+Repo-revision: 1597191178
+Repo-updated : Wed Aug 12 00:13:07 2020
+Repo-pkgs    : 1303
+Repo-size    : 3.2 G
+Repo-mirrors : https://cds.rhel.updates.googlecloud.com/pulp/mirror//content/dist/rhel/rhui/server/7/7Server/x86_64/extras/os
+Repo-baseurl : https://cds.rhel.updates.googlecloud.com/pulp/repos/content/dist/rhel/rhui/server/7/7Server/x86_64/extras/os/
+Repo-expire  : 21600 second(s) (last: Sun Sep 13 15:06:46 2020)
+  Filter     : read-only:present
+Repo-filename: /etc/yum.repos.d/rh-cloud.repo
+
+Repo-id      : rhui-rhel-7-server-rhui-optional-rpms/7Server/x86_64
+Repo-name    : Red Hat Enterprise Linux 7 Server - Optional from RHUI (RPMs)
+Repo-status  : enabled
+Repo-revision: 1599504299
+Repo-updated : Mon Sep  7 18:48:32 2020
+Repo-pkgs    : 21417
+Repo-size    : 57 G
+Repo-mirrors : https://cds.rhel.updates.googlecloud.com/pulp/mirror//content/dist/rhel/rhui/server/7/7Server/x86_64/optional/os
+Repo-baseurl : https://cds.rhel.updates.googlecloud.com/pulp/repos/content/dist/rhel/rhui/server/7/7Server/x86_64/optional/os/
+Repo-expire  : 21600 second(s) (last: Sun Sep 13 15:06:46 2020)
+  Filter     : read-only:present
+Repo-filename: /etc/yum.repos.d/rh-cloud.repo
+
+Repo-id      : rhui-rhel-7-server-rhui-rh-common-rpms/7Server/x86_64
+Repo-name    : Red Hat Enterprise Linux 7 Server - RH Common from RHUI (RPMs)
+Repo-status  : enabled
+Repo-revision: 1592031210
+Repo-updated : Sat Jun 13 06:53:32 2020
+Repo-pkgs    : 243
+Repo-size    : 4.5 G
+Repo-mirrors : https://cds.rhel.updates.googlecloud.com/pulp/mirror//content/dist/rhel/rhui/server/7/7Server/x86_64/rh-common/os
+Repo-baseurl : https://cds.rhel.updates.googlecloud.com/pulp/repos/content/dist/rhel/rhui/server/7/7Server/x86_64/rh-common/os/
+Repo-expire  : 21600 second(s) (last: Sun Sep 13 15:06:47 2020)
+  Filter     : read-only:present
+Repo-filename: /etc/yum.repos.d/rh-cloud.repo
+
+Repo-id      : rhui-rhel-7-server-rhui-rpms/7Server/x86_64
+Repo-name    : Red Hat Enterprise Linux 7 Server from RHUI (RPMs)
+Repo-status  : enabled
+Repo-revision: 1599159458
+Repo-updated : Thu Sep  3 19:06:12 2020
+Repo-pkgs    : 29431
+Repo-size    : 46 G
+Repo-mirrors : https://cds.rhel.updates.googlecloud.com/pulp/mirror//content/dist/rhel/rhui/server/7/7Server/x86_64/os
+Repo-baseurl : https://cds.rhel.updates.googlecloud.com/pulp/repos/content/dist/rhel/rhui/server/7/7Server/x86_64/os/
+Repo-expire  : 21600 second(s) (last: Sun Sep 13 15:06:47 2020)
+  Filter     : read-only:present
+Repo-excluded: 1
+Repo-filename: /etc/yum.repos.d/rh-cloud.repo
+
+Repo-id      : rhui-rhel-7-server-rhui-supplementary-rpms/7Server/x86_64
+Repo-name    : Red Hat Enterprise Linux 7 Server - Supplementary from RHUI (RPMs)
+Repo-status  : enabled
+Repo-revision: 1597104150
+Repo-updated : Tue Aug 11 00:02:33 2020
+Repo-pkgs    : 382
+Repo-size    : 9.4 G
+Repo-mirrors : https://cds.rhel.updates.googlecloud.com/pulp/mirror//content/dist/rhel/rhui/server/7/7Server/x86_64/supplementary/os
+Repo-baseurl : https://cds.rhel.updates.googlecloud.com/pulp/repos/content/dist/rhel/rhui/server/7/7Server/x86_64/supplementary/os/
+Repo-expire  : 21600 second(s) (last: Sun Sep 13 15:06:48 2020)
+  Filter     : read-only:present
+Repo-filename: /etc/yum.repos.d/rh-cloud.repo
+
+Repo-id      : rhui-rhel-server-rhui-rhscl-7-rpms/7Server/x86_64
+Repo-name    : Red Hat Software Collections RPMs for Red Hat Enterprise Linux 7 Server from RHUI
+Repo-status  : enabled
+Repo-revision: 1599201250
+Repo-updated : Fri Sep  4 06:35:12 2020
+Repo-pkgs    : 12745
+Repo-size    : 12 G
+Repo-mirrors : https://cds.rhel.updates.googlecloud.com/pulp/mirror//content/dist/rhel/rhui/server/7/7Server/x86_64/rhscl/1/os
+Repo-baseurl : https://cds.rhel.updates.googlecloud.com/pulp/repos/content/dist/rhel/rhui/server/7/7Server/x86_64/rhscl/1/os/
+Repo-expire  : 21600 second(s) (last: Sun Sep 13 15:06:48 2020)
+  Filter     : read-only:present
+Repo-filename: /etc/yum.repos.d/rh-cloud.repo
+
+repolist: 79651
+"""
