@@ -183,6 +183,7 @@ user {
   shell string
   enabled bool
   authorizedkeys() authorizedkeys
+  sshkeys() []privatekey
 }
 
 users {
@@ -390,4 +391,10 @@ certificate {
   crldistributionpoints() []string
   ocspserver() []string
   issuingcertificateurl() []string
+}
+
+privatekey {
+  pem string
+  path() string
+  encrypted() bool
 }
