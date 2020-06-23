@@ -128,7 +128,7 @@ func (ctx *Runtime) CreateResourceWithID(name string, id string, args ...interfa
 
 	if r.Factory == nil {
 		if len(args) > 0 {
-			return nil, errors.New("Mock resources don't take any arguments. The resource '" + name + "' doesn't have a resource factory/")
+			return nil, errors.New("Mock resources don't take any arguments. The resource '" + name + "' doesn't have a resource factory")
 		}
 		return ctx.createMockResource(name, r)
 	}
