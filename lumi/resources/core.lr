@@ -317,7 +317,7 @@ yaml.path {
 }
 
 authorizedkeys {
-  []authorizedkeys.entry(content, path)
+  []authorizedkeys.entry(file, content)
   init(path string)
   path string
   file() file
@@ -330,5 +330,5 @@ authorizedkeys.entry {
   key string
   label() string
   options() []string
-  path string
+  file file
 }

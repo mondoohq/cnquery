@@ -25,7 +25,12 @@ func (u *lumiUser) GetAuthorizedkeys() (Authorizedkeys, error) {
 }
 
 func (ake *lumiAuthorizedkeysEntry) id() (string, error) {
-	path, err := ake.Path()
+	file, err := ake.File()
+	if err != nil {
+		return "", err
+	}
+
+	path, err := file.Path()
 	if err != nil {
 		return "", err
 	}
@@ -98,9 +103,18 @@ func (a *lumiAuthorizedkeys) GetFile() (File, error) {
 }
 
 func (a *lumiAuthorizedkeys) GetContent(file File) (string, error) {
+	exists, err := file.Exists()
+	if err != nil {
+		return "", err
+	}
+
+	if !exists {
+		return "", nil
+	}
+
 	// TODO: this can be heavily improved once we do it right, since this is constantly
 	// re-registered as the file changes
-	err := a.Runtime.WatchAndCompute(file, "content", a, "content")
+	err = a.Runtime.WatchAndCompute(file, "content", a, "content")
 	if err != nil {
 		log.Error().Err(err).Msg("authorizedkeys> watch+compute failed")
 	}
@@ -108,11 +122,20 @@ func (a *lumiAuthorizedkeys) GetContent(file File) (string, error) {
 	return file.Content()
 }
 
-func (a *lumiAuthorizedkeys) GetList(content string, path string) ([]interface{}, error) {
+func (a *lumiAuthorizedkeys) GetList(file File, content string) ([]interface{}, error) {
+	res := []interface{}{}
+
+	exists, err := file.Exists()
+	if err != nil {
+		return res, err
+	}
+
+	if !exists {
+		return res, nil
+	}
 
 	log.Debug().Msg("autorizedkeys> list...")
 
-	res := []interface{}{}
 	entries, err := authorizedkeys.Parse(strings.NewReader(content))
 	if err != nil {
 		return nil, err
@@ -132,7 +155,7 @@ func (a *lumiAuthorizedkeys) GetList(content string, path string) ([]interface{}
 			"key", entry.Base64Key(),
 			"label", entry.Label,
 			"options", opts,
-			"path", path,
+			"file", file,
 		)
 		if err != nil {
 			return nil, err
