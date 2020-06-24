@@ -334,7 +334,9 @@ authorizedkeys.entry {
 }
 
 os.rootcertificates {
-  []certificate
+  []certificate(content)
+  files() []file
+  content(files) []string
 }
 
 parse.certificates {

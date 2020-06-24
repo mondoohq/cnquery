@@ -119,3 +119,11 @@ func TestResource_ParseCertificates(t *testing.T) {
 		assert.Equal(t, []interface{}{}, res[0].Data.Value)
 	})
 }
+
+func TestResource_OSRootCertificates(t *testing.T) {
+	t.Run("list root certificates", func(t *testing.T) {
+		res := testQuery(t, "os.rootcertificates().length")
+		assert.NotEmpty(t, res)
+		assert.Equal(t, int64(1), res[0].Data.Value.(int64))
+	})
+}

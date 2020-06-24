@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/certificates"
+	"go.mondoo.io/mondoo/motor/motoros/platform"
 )
 
 func (s *lumiParseCertificates) init(args *lumi.Args) (*lumi.Args, Authorizedkeys, error) {
@@ -128,23 +129,30 @@ func strSliceToInterface(value []string) []interface{} {
 }
 
 func (p *lumiParseCertificates) GetList(content string, path string) ([]interface{}, error) {
-
 	certs, err := certificates.ParseCertFromPEM(strings.NewReader(content))
 	if err != nil {
 		return nil, err
 	}
 
+	return certificatesToLumiCertificates(p.Runtime, certs)
+}
+
+func certificatesToLumiCertificates(runtime *lumi.Runtime, certs []*x509.Certificate) ([]interface{}, error) {
 	res := []interface{}{}
 	// to create certificate resources
 	for i := range certs {
 		cert := certs[i]
+
+		if cert == nil {
+			continue
+		}
 
 		certdata, err := certificates.EncodeCertAsPEM(cert)
 		if err != nil {
 			return nil, err
 		}
 
-		lumiCert, err := p.Runtime.CreateResource("certificate",
+		lumiCert, err := runtime.CreateResource("certificate",
 			"pem", string(certdata),
 			// NOTE: if we do not set the hash here, it will generate the cache content before we can store it
 			// we are using the hashs for the id, therefore it is required during creation
@@ -377,21 +385,93 @@ func (s *lumiCertificate) GetIssuingcertificateurl() ([]interface{}, error) {
 	return strSliceToInterface(cert.IssuingCertificateURL), nil
 }
 
-const defaultCertLocation = ""
-
-func (s *lumiOsRootcertificates) id() (string, error) {
-	return defaultCertLocation, nil
-}
-
-func (p *lumiOsRootcertificates) GetList() ([]interface{}, error) {
-	// search for specific file
-	return nil, errors.New("not implemented")
-}
-
 func (r *lumiPkixName) id() (string, error) {
 	return r.Id()
 }
 
 func (r *lumiPkixExtension) id() (string, error) {
 	return r.Identifier()
+}
+
+func (s *lumiOsRootcertificates) id() (string, error) {
+	return "osrootcertificates", nil
+}
+
+func (s *lumiOsRootcertificates) init(args *lumi.Args) (*lumi.Args, OsRootcertificates, error) {
+
+	pi, err := s.Runtime.Motor.Platform()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	files := []string{}
+	if pi.IsFamily(platform.FAMILY_LINUX) {
+		files = certificates.LinuxCertFiles
+	} else if pi.IsFamily(platform.FAMILY_BSD) {
+		files = certificates.BsdCertFiles
+	} else {
+		return nil, nil, errors.New("root certificates are not unsupported on this platform: " + pi.Name + " " + pi.Release)
+	}
+
+	// search the first file that exists, it mimics the behavior go is doing
+	lumiFiles := []interface{}{}
+	for i := range files {
+		log.Trace().Str("path", files[i]).Msg("os.rootcertificates> check root certificate path")
+		fileInfo, err := s.Runtime.Motor.Transport.FS().Stat(files[i])
+		if err != nil {
+			log.Trace().Err(err).Str("path", files[i]).Msg("os.rootcertificates> file does not exist")
+			continue
+		}
+		log.Debug().Str("path", files[i]).Msg("os.rootcertificates> found root certificate bundle path")
+		if !fileInfo.IsDir() {
+			f, err := s.Runtime.CreateResource("file", "path", files[i])
+			if err != nil {
+				return nil, nil, err
+			}
+			lumiFiles = append(lumiFiles, f.(File))
+			break
+		}
+	}
+
+	(*args)["files"] = lumiFiles
+	return args, nil, nil
+}
+
+func (s *lumiOsRootcertificates) GetFiles() ([]interface{}, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (s *lumiOsRootcertificates) GetContent(files []interface{}) ([]interface{}, error) {
+	contents := []interface{}{}
+
+	for i := range files {
+		file := files[i].(File)
+
+		// TODO: this can be heavily improved once we do it right, since this is constantly
+		// re-registered as the file changes
+		err := s.Runtime.WatchAndCompute(file, "content", s, "content")
+		if err != nil {
+			log.Error().Err(err).Msg("os.rootcertificates> watch+compute failed")
+		}
+
+		content, err := file.Content()
+		if err != nil {
+			return nil, err
+		}
+		contents = append(contents, content)
+	}
+
+	return contents, nil
+}
+
+func (s *lumiOsRootcertificates) GetList(content []interface{}) ([]interface{}, error) {
+	certificateList := []*x509.Certificate{}
+	for i := range content {
+		certs, err := certificates.ParseCertFromPEM(strings.NewReader(content[i].(string)))
+		if err != nil {
+			return nil, err
+		}
+		certificateList = append(certificateList, certs...)
+	}
+	return certificatesToLumiCertificates(s.Runtime, certificateList)
 }
