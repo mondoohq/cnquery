@@ -1,0 +1,8 @@
+[commands."uname -s"]
+stdout = "DragonFly"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "5.8-RELEASE"
