@@ -52,7 +52,11 @@ func (fs *FS) Rename(oldname, newname string) error {
 }
 
 func (fs *FS) Stat(name string) (os.FileInfo, error) {
-	return nil, errors.New("stat not implemented")
+	f, err := FileOpen(fs.dockerClient, name, fs.Container, fs.Transport)
+	if err != nil {
+		return nil, err
+	}
+	return f.Stat()
 }
 
 func (fs *FS) Chmod(name string, mode os.FileMode) error {
