@@ -2,6 +2,8 @@ package services
 
 import (
 	"errors"
+	"regexp"
+	"strconv"
 
 	motor "go.mondoo.io/mondoo/motor/motoros"
 )
@@ -35,6 +37,8 @@ type OSServiceManager interface {
 	List() ([]*Service, error)
 }
 
+var amazonlinux1version = regexp.MustCompile(`^20\d\d`)
+
 func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 	var osm OSServiceManager
 
@@ -46,16 +50,70 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 	switch platform.Name {
 	case "manjaro", "arch": // arch family
 		osm = &SystemDServiceManager{motor: motor}
-	case "centos", "redhat", "amzn", "ol":
-		// TODO: centos6 and amaz1 do not use systemd
-		osm = &SystemDServiceManager{motor: motor}
+	case "amzn":
+		if amazonlinux1version.MatchString(platform.Release) {
+			osm = &UpstartServiceManager{SysVServiceManager{motor: motor}}
+		} else {
+			osm = &SystemDServiceManager{motor: motor}
+		}
+	case "centos", "redhat", "scientific", "ol":
+		v, err := strconv.ParseFloat(platform.Release, 32)
+		if err != nil {
+			return nil, errors.New("unknown redhat version: " + platform.Release)
+		}
+		if v < 7 {
+			osm = &UpstartServiceManager{SysVServiceManager{motor: motor}}
+		} else {
+			osm = &SystemDServiceManager{motor: motor}
+		}
+	case "fedora":
+		v, err := strconv.ParseFloat(platform.Release, 32)
+		if err != nil {
+			return nil, errors.New("unknown fedora version: " + platform.Release)
+		}
+
+		if v < 15 {
+			// upstart is only used since fedora 11 but we do not support those older versions
+			osm = &UpstartServiceManager{SysVServiceManager{motor: motor}}
+		} else {
+			osm = &SystemDServiceManager{motor: motor}
+		}
 	case "ubuntu":
-		osm = &SystemDServiceManager{motor: motor}
+		v, err := strconv.ParseFloat(platform.Release, 32)
+		if err != nil {
+			return nil, errors.New("unknown ubuntu version: " + platform.Release)
+		}
+
+		if v < 15.04 {
+			osm = &UpstartServiceManager{SysVServiceManager{motor: motor}}
+		} else {
+			osm = &SystemDServiceManager{motor: motor}
+		}
 	case "debian":
-		osm = &SystemDServiceManager{motor: motor}
+		v, err := strconv.ParseFloat(platform.Release, 32)
+		if err != nil {
+			return nil, errors.New("unknown debian version: " + platform.Release)
+		}
+
+		if v < 7 {
+			osm = &SysVServiceManager{motor: motor}
+		} else {
+			osm = &SystemDServiceManager{motor: motor}
+		}
+	case "suse", "opensuse":
+		v, err := strconv.ParseFloat(platform.Release, 32)
+		if err != nil {
+			return nil, errors.New("unknown suse version: " + platform.Release)
+		}
+
+		if v < 12 {
+			osm = &SysVServiceManager{motor: motor}
+		} else {
+			osm = &SystemDServiceManager{motor: motor}
+		}
 	case "mac_os_x", "darwin":
 		osm = &LaunchDServiceManager{motor: motor}
-	case "freebsd":
+	case "freebsd", "netbsd", "openbsd", "dragonflybsd":
 		osm = &BsdInitServiceManager{motor: motor}
 	case "windows":
 		osm = &WindowsServiceManager{motor: motor}

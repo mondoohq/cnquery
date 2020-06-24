@@ -1,0 +1,52 @@
+[commands."ls -1 /etc/init.d/"]
+stdout = """
+cron
+rc
+ssh
+"""
+
+[commands."find /etc/rc*.d -name 'S*'"]
+stdout = """
+"""
+
+[commands."initctl list"]
+stdout = """
+mountall-net stop/waiting
+rc stop/waiting
+rsyslog start/running, process 950
+upstart-udev-bridge start/running, process 374
+systemd-logind start/running, process 926
+upstart-socket-bridge start/running, process 560
+network-interface-security (network-interface/eth0) start/running
+"""
+
+[commands."service ssh status"]
+stdout = "ssh start/running, process 27259"
+
+[commands."service rc status"]
+stdout = "rc stop/waiting"
+
+[commands."service rsyslog status"]
+stdout = "rsyslog start/running, process 950"
+
+[commands."uname -r"]
+stdout = "3.13.0-170-generic"
+
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[files."/etc/os-release"]
+content = """
+NAME="Ubuntu"
+VERSION="14.04.6 LTS, Trusty Tahr"
+ID=ubuntu
+ID_LIKE=debian
+PRETTY_NAME="Ubuntu 14.04.6 LTS"
+VERSION_ID="14.04"
+HOME_URL="http://www.ubuntu.com/"
+SUPPORT_URL="http://help.ubuntu.com/"
+BUG_REPORT_URL="http://bugs.launchpad.net/ubuntu/"
+"""
