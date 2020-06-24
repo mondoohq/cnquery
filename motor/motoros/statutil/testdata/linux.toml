@@ -1,0 +1,14 @@
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."stat -L /etc/ssh/sshd_config --printf '%s\n%f\n%u\n%g\n%X\n%Y\n%C'"]
+stdout = """4317
+8180
+0
+0
+1590420240
+1590418792
+"""
