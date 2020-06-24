@@ -36,7 +36,7 @@ func (f *FileInfo) IsDir() bool {
 }
 
 func (f *FileInfo) Sys() interface{} {
-	return nil
+	return f
 }
 
 type FileModeDetails struct {

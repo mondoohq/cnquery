@@ -1,0 +1,8 @@
+[commands."uname -m"]
+stdout = "amd64"
+
+[commands."uname -s"]
+stdout = "OpenBSD"
+
+[commands."stat -L -f '%z:%p:%u:%g:%a:%m' /etc/ssh/sshd_config"]
+stdout = "2259:100644:0:0:1592996018:1591446696"
