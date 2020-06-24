@@ -1,0 +1,8 @@
+[commands."uname -s"]
+stdout = "OpenBSD"
+
+[commands."uname -m"]
+stdout = "amd64"
+
+[commands."uname -r"]
+stdout = "6.7"

@@ -17,6 +17,7 @@ var (
 	FAMILY_UNIX    = "unix"
 	FAMILY_DARWIN  = "darwin"
 	FAMILY_LINUX   = "linux"
+	FAMILY_BSD     = "bsd"
 	FAMILY_WINDOWS = "windows"
 )
 
@@ -518,6 +519,43 @@ var freebsd = &PlatformResolver{
 	},
 }
 
+var openbsd = &PlatformResolver{
+	Name:    "openbsd",
+	Familiy: false,
+	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
+		if strings.Contains(strings.ToLower(di.Name), "openbsd") == false {
+			return false, nil
+		}
+
+		osrd := NewOSReleaseDetector(t)
+		r, err := osrd.unamer()
+		if err == nil {
+			di.Release = r
+		}
+
+		return true, nil
+	},
+}
+
+var dragonflybsd = &PlatformResolver{
+	Name:    "dragonflybsd",
+	Familiy: false,
+	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
+		if strings.Contains(strings.ToLower(di.Name), "dragonfly") == false {
+			return false, nil
+		}
+
+		di.Name = "dragonflybsd"
+		osrd := NewOSReleaseDetector(t)
+		r, err := osrd.unamer()
+		if err == nil {
+			di.Release = r
+		}
+
+		return true, nil
+	},
+}
+
 var windows = &PlatformResolver{
 	Name:    "windows",
 	Familiy: false,
@@ -595,9 +633,9 @@ var darwinFamily = &PlatformResolver{
 }
 
 var bsdFamily = &PlatformResolver{
-	Name:     "bsd",
+	Name:     FAMILY_BSD,
 	Familiy:  true,
-	Children: []*PlatformResolver{darwinFamily, netbsd, freebsd},
+	Children: []*PlatformResolver{darwinFamily, netbsd, freebsd, openbsd, dragonflybsd},
 	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
 		osrd := NewOSReleaseDetector(t)
 		unames, err := osrd.unames()
