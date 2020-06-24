@@ -25,6 +25,51 @@ func TestManagerDebian(t *testing.T) {
 	assert.Equal(t, 102, len(mounts))
 }
 
+func TestManagerAmzn1(t *testing.T) {
+	// tests fallback to upstart service
+	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/amzn1.toml"})
+	require.NoError(t, err)
+	m, err := motor.New(mock)
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(m)
+	require.NoError(t, err)
+	mounts, err := mm.List()
+	require.NoError(t, err)
+
+	assert.Equal(t, 16, len(mounts))
+}
+
+func TestManagerCentos6(t *testing.T) {
+	// tests fallback to upstart service
+	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/centos6.toml"})
+	require.NoError(t, err)
+	m, err := motor.New(mock)
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(m)
+	require.NoError(t, err)
+	mounts, err := mm.List()
+	require.NoError(t, err)
+
+	assert.Equal(t, 15, len(mounts))
+}
+
+func TestManagerUbuntu1404(t *testing.T) {
+	// tests fallback to upstart service
+	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/ubuntu1404.toml"})
+	require.NoError(t, err)
+	m, err := motor.New(mock)
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(m)
+	require.NoError(t, err)
+	mounts, err := mm.List()
+	require.NoError(t, err)
+
+	assert.Equal(t, 9, len(mounts))
+}
+
 func TestManagerMacos(t *testing.T) {
 	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/osx.toml"})
 	require.NoError(t, err)

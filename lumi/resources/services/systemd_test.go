@@ -9,7 +9,7 @@ import (
 	"go.mondoo.io/mondoo/motor/motoros/types"
 )
 
-func TestParseServiceSystemDUnitFilesx(t *testing.T) {
+func TestParseServiceSystemDUnitFiles(t *testing.T) {
 	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/linux_systemd.toml"})
 	if err != nil {
 		t.Fatal(err)

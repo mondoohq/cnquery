@@ -1,0 +1,70 @@
+[commands."ls -1 /etc/init.d/"]
+stdout = """
+acpid
+nfs
+ntpd
+sshd
+"""
+
+[commands."find /etc/rc*.d -name 'S*'"]
+stdout = """/etc/rc.d/rc4.d/S58ntpd
+/etc/rc.d/rc4.d/S55sshd
+/etc/rc.d/rc4.d/S26acpid
+/etc/rc.d/rc5.d/S58ntpd
+/etc/rc.d/rc5.d/S55sshd
+/etc/rc.d/rc5.d/S26acpid
+/etc/rc.d/rc3.d/S58ntpd
+/etc/rc.d/rc3.d/S55sshd
+/etc/rc.d/rc3.d/S26acpid
+/etc/rc.d/rc2.d/S58ntpd
+/etc/rc.d/rc2.d/S55sshd
+/etc/rc.d/rc2.d/S26acpid
+"""
+
+[commands."initctl list"]
+stdout = """
+rc stop/waiting
+tty (/dev/tty3) start/running, process 1908
+tty (/dev/tty2) start/running, process 1905
+tty (/dev/tty1) start/running, process 1902
+tty (/dev/tty6) start/running, process 1914
+tty (/dev/tty5) start/running, process 1912
+tty (/dev/tty4) start/running, process 1910
+update-motd stop/waiting
+elastic-network-interfaces stop/waiting
+start-ttys stop/waiting
+rcS-sulogin stop/waiting
+serial stop/waiting
+"""
+
+[commands."service acpid status"]
+stdout = "acpid is stopped"
+exit_status = 3
+
+[commands."service sshd status"]
+stdout = "openssh-daemon (pid  18921) is running..."
+
+[commands."service ntpd status"]
+stdout = "ntpd (pid  18977) is running..."
+
+[commands."uname -r"]
+stdout = "4.4.44-39.55.amzn1.x86_64"
+
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[files."/etc/os-release"]
+content = """
+NAME="Amazon Linux AMI"
+VERSION="2018.03"
+ID="amzn"
+ID_LIKE="rhel fedora"
+VERSION_ID="2018.03"
+PRETTY_NAME="Amazon Linux AMI 2018.03"
+ANSI_COLOR="0;33"
+CPE_NAME="cpe:/o:amazon:linux:2018.03:ga"
+HOME_URL="http://aws.amazon.com/amazon-linux-ami/"
+"""

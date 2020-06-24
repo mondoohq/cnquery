@@ -34,6 +34,7 @@ func (p *lumiService) init(args *lumi.Args) (*lumi.Args, Service, error) {
 		return args, nil, nil
 	}
 
+	// TODO: this is highly inefficient, use services resource
 	osm, err := services.ResolveManager(p.Runtime.Motor)
 	if err != nil {
 		return args, nil, errors.New("cannot find service manager")
