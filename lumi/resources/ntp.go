@@ -4,7 +4,6 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 )
 
@@ -49,7 +48,6 @@ func (s *lumiNtpConf) GetContent(file File) (string, error) {
 	// re-registered as the file changes
 	err := s.Runtime.WatchAndCompute(file, "content", s, "content")
 	if err != nil {
-		log.Error().Err(err).Msg("ntp.conf> watch+compute failed")
 		return "", err
 	}
 

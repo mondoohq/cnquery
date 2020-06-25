@@ -190,7 +190,7 @@ func (ctx *Observers) OnUnwatch(watcherUID string, f func()) {
 // any resourceFieldUID that isn't watched by anyone anymore it will recursively
 // do the same to this watcher.
 func (ctx *Observers) UnwatchAll(watcherUID string) error {
-	log.Debug().Str("watcher", watcherUID).Msg("observer> unwatch all")
+	log.Trace().Str("watcher", watcherUID).Msg("observer> unwatch all")
 
 	h, ok := ctx.hooks.Load("unwatch\x00" + watcherUID)
 	if ok {

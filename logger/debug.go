@@ -17,6 +17,14 @@ func DebugJSON(obj interface{}) {
 	fmt.Fprintln(os.Stderr, PrettyJSON(obj))
 }
 
+func TraceJSON(obj interface{}) {
+	if !log.Trace().Enabled() {
+		return
+	}
+
+	fmt.Fprintln(os.Stderr, PrettyJSON(obj))
+}
+
 // PrettyJSON turns any object into its prettified json representation
 func PrettyJSON(obj interface{}) string {
 	s, _ := prettyjson.Marshal(obj)

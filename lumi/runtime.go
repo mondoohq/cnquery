@@ -284,7 +284,7 @@ func (ctx *Runtime) WatchAndUpdate(r ResourceType, field string, watcherUID stri
 
 // Unregister will remove all watcher UIDs
 func (ctx *Runtime) Unregister(watcherUID string) error {
-	log.Debug().Str("watchers", watcherUID).Msg("w+u> unregister")
+	log.Trace().Str("watchers", watcherUID).Msg("w+u> unregister")
 	return ctx.Observers.UnwatchAll(watcherUID)
 }
 
@@ -314,7 +314,7 @@ func (ctx *Runtime) WatchAndCompute(src ResourceType, sfield string, dst Resourc
 			return
 		}
 	})
-	log.Debug().
+	log.Trace().
 		Str("src", sid).
 		Str("dst", fid).
 		Bool("initial", isInitial).
@@ -340,7 +340,7 @@ func (ctx *Runtime) WatchAndCompute(src ResourceType, sfield string, dst Resourc
 		err = src.Compute(sfield)
 		if err != nil {
 			if _, ok := err.(NotReadyError); !ok {
-				log.Error().Err(err).Msg("w+c> initial compute failed")
+				log.Debug().Err(err).Msg("w+c> initial compute failed")
 				return err
 			}
 		}

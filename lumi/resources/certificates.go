@@ -67,7 +67,7 @@ func (a *lumiParseCertificates) GetContent(file File) (string, error) {
 	// re-registered as the file changes
 	err := a.Runtime.WatchAndCompute(file, "content", a, "content")
 	if err != nil {
-		log.Error().Err(err).Msg("authorizedkeys> watch+compute failed")
+		return "", err
 	}
 
 	return file.Content()
@@ -451,7 +451,7 @@ func (s *lumiOsRootcertificates) GetContent(files []interface{}) ([]interface{},
 		// re-registered as the file changes
 		err := s.Runtime.WatchAndCompute(file, "content", s, "content")
 		if err != nil {
-			log.Error().Err(err).Msg("os.rootcertificates> watch+compute failed")
+			return nil, err
 		}
 
 		content, err := file.Content()
