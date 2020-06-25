@@ -116,7 +116,7 @@ func (a *lumiAuthorizedkeys) GetContent(file File) (string, error) {
 	// re-registered as the file changes
 	err = a.Runtime.WatchAndCompute(file, "content", a, "content")
 	if err != nil {
-		log.Error().Err(err).Msg("authorizedkeys> watch+compute failed")
+		return "", err
 	}
 
 	return file.Content()

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/checksums"
 	"go.mondoo.io/mondoo/lumi"
 )
@@ -88,7 +87,7 @@ func (s *lumiPamConf) GetContent(files []interface{}) (string, error) {
 
 		err := s.Runtime.WatchAndCompute(file, "content", s, "content")
 		if err != nil {
-			log.Error().Err(err).Msg("[pam.conf]> watch+compute failed for file.content")
+			return "", err
 		}
 
 		content, err := file.Content()
@@ -116,12 +115,10 @@ func (s *lumiPamConf) GetServices(files []interface{}) (map[string]interface{}, 
 
 		err := s.Runtime.WatchAndCompute(file, "content", s, "services")
 		if err != nil {
-			log.Error().Err(err).Msg("[pam.conf]> watch+compute failed for file.content")
 			return nil, err
 		}
 		err = s.Runtime.WatchAndCompute(file, "basename", s, "services")
 		if err != nil {
-			log.Error().Err(err).Msg("[pam.conf]> watch+compute failed for file.basename")
 			return nil, err
 		}
 

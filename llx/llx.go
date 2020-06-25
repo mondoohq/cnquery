@@ -167,7 +167,7 @@ func (c *LeiseExecutor) Run() {
 
 // Unregister an execution chain from receiving any further updates
 func (c *LeiseExecutor) Unregister() error {
-	log.Debug().Str("id", c.id).Msg("exec> unregister")
+	log.Trace().Str("id", c.id).Msg("exec> unregister")
 	// clear out the callback, we don't want it to be called now anymore
 	c.callback = func(_ *RawResult) {
 		log.Warn().Str("id", c.id).Msg("exec> Decomissioned callback called on exec.LeiseExecutor")

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/checksums"
 	"go.mondoo.io/mondoo/lumi"
 )
@@ -88,7 +87,6 @@ func (s *lumiRsyslogConf) GetContent(files []interface{}) (string, error) {
 
 		err := s.Runtime.WatchAndCompute(file, "content", s, "content")
 		if err != nil {
-			log.Error().Err(err).Msg("[rsyslog.conf]> watch+compute failed for file.content")
 			return "", err
 		}
 

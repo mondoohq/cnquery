@@ -7,7 +7,6 @@ package resources
 import (
 	"errors"
 
-	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/parsers"
 )
@@ -67,7 +66,6 @@ func (s *lumiParseIni) GetContent(file File) (string, error) {
 	// re-registered as the file changes
 	err := s.Runtime.WatchAndCompute(file, "content", s, "content")
 	if err != nil {
-		log.Error().Err(err).Msg("parse.ini> watch+compute failed")
 		return "", err
 	}
 

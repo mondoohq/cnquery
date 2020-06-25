@@ -52,6 +52,8 @@ func Set(level string) {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	case "debug":
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	case "trace":
+		zerolog.SetGlobalLevel(zerolog.TraceLevel)
 	case "":
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	default:

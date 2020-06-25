@@ -4,7 +4,6 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/logindefs"
 )
@@ -51,7 +50,6 @@ func (s *lumiLogindefs) GetContent(file File) (string, error) {
 	// re-registered as the file changes
 	err := s.Runtime.WatchAndCompute(file, "content", s, "content")
 	if err != nil {
-		log.Error().Err(err).Msg("logindefs.config> watch+compute failed")
 		return "", err
 	}
 
