@@ -34,21 +34,29 @@ func (p *lumiService) init(args *lumi.Args) (*lumi.Args, Service, error) {
 		return args, nil, nil
 	}
 
-	// TODO: this is highly inefficient, use services resource
-	osm, err := services.ResolveManager(p.Runtime.Motor)
+	obj, err := p.Runtime.CreateResource("services")
 	if err != nil {
-		return args, nil, errors.New("cannot find service manager")
+		return nil, nil, err
+	}
+	services := obj.(Services)
+
+	c, ok := services.LumiResource().Cache.Load("_map")
+	if !ok {
+		return nil, nil, errors.New("Cannot get map of packages")
+	}
+	cmap := c.Data.(map[string]Service)
+
+	srv := cmap[name]
+	if srv != nil {
+		return nil, srv, nil
 	}
 
 	// if the service doesn't exist, init it to empty
-	_, err = osm.Service(name)
-	if err != nil {
-		(*args)["description"] = ""
-		(*args)["installed"] = false
-		(*args)["running"] = false
-		(*args)["enabled"] = false
-		(*args)["type"] = ""
-	}
+	(*args)["description"] = ""
+	(*args)["installed"] = false
+	(*args)["running"] = false
+	(*args)["enabled"] = false
+	(*args)["type"] = ""
 
 	return args, nil, nil
 }
@@ -176,6 +184,7 @@ func (p *lumiServices) GetList() ([]interface{}, error) {
 
 	// convert to interface{}{}
 	lumiSrvs := []interface{}{}
+	namedMap := map[string]Service{}
 	for i := range services {
 		srv := services[i]
 
@@ -192,7 +201,10 @@ func (p *lumiServices) GetList() ([]interface{}, error) {
 		}
 
 		lumiSrvs = append(lumiSrvs, lumiSrv.(Service))
+		namedMap[srv.Name] = lumiSrv.(Service)
 	}
+
+	p.Cache.Store("_map", &lumi.CacheEntry{Data: namedMap})
 
 	return lumiSrvs, nil
 }
