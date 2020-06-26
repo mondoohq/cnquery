@@ -127,15 +127,6 @@ func (s *WindowsServiceManager) Name() string {
 	return "Windows Service Manager"
 }
 
-func (s *WindowsServiceManager) Service(name string) (*Service, error) {
-	services, err := s.List()
-	if err != nil {
-		return nil, err
-	}
-
-	return findService(services, name)
-}
-
 func (s *WindowsServiceManager) List() ([]*Service, error) {
 	c, err := s.motor.Transport.RunCommand(powershell.Wrap("Get-Service | Select-Object -Property Status, Name, DisplayName, StartType | ConvertTo-Json"))
 	if err != nil {

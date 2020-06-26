@@ -45,15 +45,6 @@ func (s *LaunchDServiceManager) Name() string {
 	return "launchd Service Manager"
 }
 
-func (s *LaunchDServiceManager) Service(name string) (*Service, error) {
-	services, err := s.List()
-	if err != nil {
-		return nil, err
-	}
-
-	return findService(services, name)
-}
-
 func (s *LaunchDServiceManager) List() ([]*Service, error) {
 	c, err := s.motor.Transport.RunCommand("launchctl list")
 	if err != nil {

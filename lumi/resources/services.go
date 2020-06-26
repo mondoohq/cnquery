@@ -40,9 +40,14 @@ func (p *lumiService) init(args *lumi.Args) (*lumi.Args, Service, error) {
 	}
 	services := obj.(Services)
 
+	_, err = services.List()
+	if err != nil {
+		return nil, nil, err
+	}
+
 	c, ok := services.LumiResource().Cache.Load("_map")
 	if !ok {
-		return nil, nil, errors.New("Cannot get map of packages")
+		return nil, nil, errors.New("cannot get map of services")
 	}
 	cmap := c.Data.(map[string]Service)
 
@@ -72,7 +77,6 @@ func (p *lumiService) GetDescription() (string, error) {
 	}
 
 	p.gatherServiceInfo(p.createCallback(SERVICE_CACHE_DESCRIPTION))
-
 	return "", lumi.NotReadyError{}
 }
 
@@ -83,7 +87,6 @@ func (p *lumiService) GetInstalled() (bool, error) {
 	}
 
 	p.gatherServiceInfo(p.createCallback(SERVICE_CACHE_INSTALLED))
-
 	return false, lumi.NotReadyError{}
 }
 
@@ -94,7 +97,6 @@ func (p *lumiService) GetRunning() (bool, error) {
 	}
 
 	p.gatherServiceInfo(p.createCallback(SERVICE_CACHE_RUNNING))
-
 	return false, lumi.NotReadyError{}
 }
 
@@ -105,7 +107,6 @@ func (p *lumiService) GetEnabled() (bool, error) {
 	}
 
 	p.gatherServiceInfo(p.createCallback(SERVICE_CACHE_ENABLED))
-
 	return false, lumi.NotReadyError{}
 }
 
@@ -116,7 +117,6 @@ func (p *lumiService) GetType() (string, error) {
 	}
 
 	p.gatherServiceInfo(p.createCallback(SERVICE_CACHE_TYPE))
-
 	return "", lumi.NotReadyError{}
 }
 
@@ -134,25 +134,32 @@ type ServiceCallbackTrigger func()
 func (p *lumiService) gatherServiceInfo(fn ServiceCallbackTrigger) error {
 	name, err := p.Name()
 	if err != nil {
-		return errors.New("cannot gather service name")
+		return err
 	}
 
-	osm, err := services.ResolveManager(p.Runtime.Motor)
+	obj, err := p.Runtime.CreateResource("services")
 	if err != nil {
-		return errors.New("cannot find service manager")
+		return err
+	}
+	services := obj.(Services)
+
+	c, ok := services.LumiResource().Cache.Load("_map")
+	if !ok {
+		return errors.New("cannot get map of services")
+	}
+	cmap := c.Data.(map[string]Service)
+
+	srv := cmap[name]
+	if srv != nil {
+		return errors.New("service does not exist")
 	}
 
-	service, err := osm.Service(name)
-	if err != nil {
-		return errors.New("cannot gather service details")
-	}
-
-	p.Cache.Store("name", &lumi.CacheEntry{Data: service.Name, Valid: true, Timestamp: time.Now().Unix()})
-	p.Cache.Store("description", &lumi.CacheEntry{Data: service.Description, Valid: true, Timestamp: time.Now().Unix()})
-	p.Cache.Store("installed", &lumi.CacheEntry{Data: service.Installed, Valid: true, Timestamp: time.Now().Unix()})
-	p.Cache.Store("enabled", &lumi.CacheEntry{Data: service.Enabled, Valid: true, Timestamp: time.Now().Unix()})
-	p.Cache.Store("running", &lumi.CacheEntry{Data: service.Running, Valid: true, Timestamp: time.Now().Unix()})
-	p.Cache.Store("type", &lumi.CacheEntry{Data: service.Type, Valid: true, Timestamp: time.Now().Unix()})
+	p.Cache.Store("name", &lumi.CacheEntry{Data: srv.Name, Valid: true, Timestamp: time.Now().Unix()})
+	p.Cache.Store("description", &lumi.CacheEntry{Data: srv.Description, Valid: true, Timestamp: time.Now().Unix()})
+	p.Cache.Store("installed", &lumi.CacheEntry{Data: srv.Installed, Valid: true, Timestamp: time.Now().Unix()})
+	p.Cache.Store("enabled", &lumi.CacheEntry{Data: srv.Enabled, Valid: true, Timestamp: time.Now().Unix()})
+	p.Cache.Store("running", &lumi.CacheEntry{Data: srv.Running, Valid: true, Timestamp: time.Now().Unix()})
+	p.Cache.Store("type", &lumi.CacheEntry{Data: srv.Type, Valid: true, Timestamp: time.Now().Unix()})
 
 	// call callback trigger
 	if fn != nil {

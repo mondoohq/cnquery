@@ -54,15 +54,6 @@ func (s *SystemDServiceManager) Name() string {
 	return "systemd Service Manager"
 }
 
-func (s *SystemDServiceManager) Service(id string) (*Service, error) {
-	services, err := s.List()
-	if err != nil {
-		return nil, err
-	}
-
-	return findService(services, id)
-}
-
 func (s *SystemDServiceManager) List() ([]*Service, error) {
 	c, err := s.motor.Transport.RunCommand("systemctl --all list-units --type service")
 	if err != nil {
