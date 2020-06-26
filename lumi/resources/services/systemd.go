@@ -10,10 +10,10 @@ import (
 )
 
 var (
-	SYSTEMD_LIST_UNITS_REGEX = regexp.MustCompile(`(?m)^(?:[^\S\n]{2}|●[^\S\n])(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(.+)$`)
+	SYSTEMD_LIST_UNITS_REGEX = regexp.MustCompile(`(?m)^(?:[^\S\n]{2}|●[^\S\n]|)(\S+)(?:[^\S\n])+(loaded|not-found)(?:[^\S\n])+(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(.+)$`)
 )
 
-// ^(?:[^\S\n]*[●]*)+(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(.+)$
+// a line may be prefixed with nothing, whitespace or a dot
 func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 	var services []*Service
 	content, err := ioutil.ReadAll(input)
@@ -23,11 +23,6 @@ func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 
 	m := SYSTEMD_LIST_UNITS_REGEX.FindAllStringSubmatch(string(content), -1)
 	for i := range m {
-		// ignore header
-		if i == 0 {
-			continue
-		}
-
 		name := m[i][1]
 		name = strings.Replace(name, ".service", "", 1)
 
