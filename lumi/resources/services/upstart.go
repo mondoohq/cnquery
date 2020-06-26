@@ -17,15 +17,6 @@ func (s *UpstartServiceManager) Name() string {
 	return "Upstart Service Manager"
 }
 
-func (s *UpstartServiceManager) Service(id string) (*Service, error) {
-	services, err := s.List()
-	if err != nil {
-		return nil, err
-	}
-
-	return findService(services, id)
-}
-
 func (s *UpstartServiceManager) List() ([]*Service, error) {
 
 	// gather sysv-managed services

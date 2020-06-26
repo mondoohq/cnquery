@@ -33,15 +33,6 @@ func (s *BsdInitServiceManager) Name() string {
 	return "Bsd Init Service Manager"
 }
 
-func (s *BsdInitServiceManager) Service(name string) (*Service, error) {
-	services, err := s.List()
-	if err != nil {
-		return nil, err
-	}
-
-	return findService(services, name)
-}
-
 func (s *BsdInitServiceManager) List() ([]*Service, error) {
 	c, err := s.motor.Transport.RunCommand("service -e")
 	if err != nil {

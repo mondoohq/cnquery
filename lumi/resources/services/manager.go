@@ -33,7 +33,6 @@ const (
 
 type OSServiceManager interface {
 	Name() string
-	Service(name string) (*Service, error)
 	List() ([]*Service, error)
 }
 
@@ -126,7 +125,7 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 	return osm, nil
 }
 
-func findService(services []*Service, name string) (*Service, error) {
+func FindService(services []*Service, name string) (*Service, error) {
 	// search for name
 	for i := range services {
 		service := services[i]

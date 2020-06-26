@@ -19,19 +19,9 @@ func (s *SysVServiceManager) Name() string {
 	return "SysV Service Manager"
 }
 
-func (s *SysVServiceManager) Service(id string) (*Service, error) {
-	services, err := s.List()
-	if err != nil {
-		return nil, err
-	}
-
-	return findService(services, id)
-}
-
 func (s *SysVServiceManager) List() ([]*Service, error) {
 
 	// 1. gather all services
-
 	services, err := s.services()
 	if err != nil {
 		return nil, err
