@@ -33,12 +33,16 @@ func UseJSONLogging() {
 
 // CliLogger sets the global logger to the console logger with color
 func CliLogger() {
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	log.Logger = NewConsoleWriter(os.Stderr, false, false)
+}
+
+func CliCompactLogger() {
+	log.Logger = NewConsoleWriter(os.Stderr, false, true)
 }
 
 // CliNoColorLogger sets the global logger to the console logger without color
 func CliNoColorLogger() {
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, NoColor: true})
+	log.Logger = NewConsoleWriter(os.Stderr, true, false)
 }
 
 // Set will set up the logger
