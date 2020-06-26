@@ -1,0 +1,66 @@
+[commands."systemctl --all list-units --type service"]
+stdout = """
+UNIT                                 LOAD      ACTIVE   SUB     DESCRIPTION
+after-local.service                  loaded    active   exited  /etc/init.d/after.local Compatibility
+apparmor.service                     not-found inactive dead    apparmor.service
+auditd.service                       loaded    inactive dead    Security Auditing Service
+basic.service                        not-found inactive dead    basic.service
+rdma.service                         not-found inactive dead    rdma.service
+rescue.service                       loaded    inactive dead    Rescue Shell
+rpcbind.service                      loaded    inactive dead    RPC Bind
+sendmail.service                     not-found inactive dead    sendmail.service
+sshd.service                         loaded    active   running OpenSSH Daemon
+SuSEfirewall2.service                loaded    inactive dead    SuSEfirewall2 phase 2
+SuSEfirewall2_init.service           loaded    inactive dead    SuSEfirewall2 phase 1
+syslog.service                       not-found inactive dead    syslog.service
+systemd-ask-password-console.service loaded    inactive dead    Dispatch Password Requests to Console
+systemd-binfmt.service               loaded    inactive dead    Set Up Additional Binary Formats
+systemd-fsck-root.service            loaded    inactive dead    File System Check on Root Device
+systemd-initctl.service              loaded    inactive dead    /dev/initctl Compatibility Daemon
+systemd-journal-flush.service        loaded    inactive dead    Trigger Flushing of Journal to Persistent Storage
+systemd-journald.service             loaded    active   running Journal Service
+user@1000.service                    loaded    active   running User Manager for UID 1000
+vboxadd-service.service              loaded    active   running vboxadd-service.service
+vboxadd-x11.service                  loaded    active   exited  vboxadd-x11.service
+vboxadd.service                      loaded    active   exited  vboxadd.service
+wicked.service                       loaded    active   exited  wicked managed network interfaces
+wickedd-auto4.service                loaded    active   running wicked AutoIPv4 supplicant service
+wickedd-dhcp4.service                loaded    active   running wicked DHCPv4 supplicant service
+wickedd-dhcp6.service                loaded    active   running wicked DHCPv6 supplicant service
+wickedd-nanny.service                loaded    active   running wicked network nanny service
+wickedd.service                      loaded    active   running wicked network management service daemon
+YaST2-Firstboot.service              loaded    inactive dead    YaST2 Firstboot
+YaST2-Second-Stage.service           loaded    inactive dead    YaST2 Second Stage
+ypbind.service                       not-found inactive dead    ypbind.service
+
+LOAD   = Reflects whether the unit definition was properly loaded.
+ACTIVE = The high-level unit activation state, i.e. generalization of SUB.
+SUB    = The low-level unit activation state, values depend on unit type.
+
+78 loaded units listed.
+To show all installed unit files use 'systemctl list-unit-files'.
+"""
+
+
+[commands."uname -r"]
+stdout = "3.16.7-53-default"
+
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[files."/etc/os-release"]
+content = """
+NAME=openSUSE
+VERSION="13.2 (Harlequin)"
+VERSION_ID="13.2"
+PRETTY_NAME="openSUSE 13.2 (Harlequin) (x86_64)"
+ID=opensuse
+ANSI_COLOR="0;32"
+CPE_NAME="cpe:/o:opensuse:opensuse:13.2"
+BUG_REPORT_URL="https://bugs.opensuse.org"
+HOME_URL="https://opensuse.org/"
+ID_LIKE="suse"
+"""

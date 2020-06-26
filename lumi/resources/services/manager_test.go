@@ -70,6 +70,21 @@ func TestManagerUbuntu1404(t *testing.T) {
 	assert.Equal(t, 9, len(mounts))
 }
 
+func TestManagerOpensuse13(t *testing.T) {
+	// tests fallback to upstart service
+	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/opensuse13.toml"})
+	require.NoError(t, err)
+	m, err := motor.New(mock)
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(m)
+	require.NoError(t, err)
+	mounts, err := mm.List()
+	require.NoError(t, err)
+
+	assert.Equal(t, 31, len(mounts))
+}
+
 func TestManagerMacos(t *testing.T) {
 	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/osx.toml"})
 	require.NoError(t, err)

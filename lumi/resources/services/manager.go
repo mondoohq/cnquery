@@ -99,12 +99,13 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		} else {
 			osm = &SystemDServiceManager{motor: motor}
 		}
-	case "suse", "opensuse":
+	case "suse", "opensuse", "opensuse-tumbleweed":
 		v, err := strconv.ParseFloat(platform.Release, 32)
 		if err != nil {
 			return nil, errors.New("unknown suse version: " + platform.Release)
 		}
 
+		// NOTE: opensuse-tumbleweed uses version numbers like 20200622
 		if v < 12 {
 			osm = &SysVServiceManager{motor: motor}
 		} else {
