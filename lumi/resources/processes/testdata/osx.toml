@@ -1,4 +1,4 @@
-[commands."ps axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command"]
+[commands."ps Axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command"]
 stdout = """PID  %CPU %MEM      VSZ    RSS TTY      STAT     STIME      TIME   UID COMMAND
   1   0.0  0.1  5015084  17948 ??       Ss     9:30.82  10:32.56     0 /sbin/launchd
 125   0.0  0.0  4613204    956 ??       Ss     0:04.97   0:07.76     0 /usr/sbin/syslogd
