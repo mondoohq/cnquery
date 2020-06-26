@@ -38,7 +38,7 @@ func TestOSxPSProcessParser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	c, err := mock.RunCommand("ps axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command")
+	c, err := mock.RunCommand("ps Axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command")
 	if err != nil {
 		t.Fatal(err)
 	}

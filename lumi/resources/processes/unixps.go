@@ -144,8 +144,20 @@ func (upm *UnixProcessManager) Name() string {
 func (upm *UnixProcessManager) List() ([]*OSProcess, error) {
 	var entries []*ProcessEntry
 	// NOTE: improve proc parser instead of supporting multiple ps commands
-	if upm.platform.IsFamily("linux") || upm.platform.IsFamily("darwin") {
+	if upm.platform.IsFamily("linux") {
 		c, err := upm.motor.Transport.RunCommand("ps axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command")
+		if err != nil {
+			return nil, fmt.Errorf("processes> could not run command")
+		}
+
+		entries, err = ParseLinuxPsResult(c.Stdout)
+		if err != nil {
+			return nil, err
+		}
+	} else if upm.platform.IsFamily("darwin") {
+		// NOTE: special case on darwin is that the ps axo only shows processes for users with terminals
+		// TODO: the same applies to OpenBSD and may result in missing processes
+		c, err := upm.motor.Transport.RunCommand("ps Axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command")
 		if err != nil {
 			return nil, fmt.Errorf("processes> could not run command")
 		}
