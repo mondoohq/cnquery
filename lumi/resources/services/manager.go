@@ -112,8 +112,10 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		}
 	case "mac_os_x", "darwin":
 		osm = &LaunchDServiceManager{motor: motor}
-	case "freebsd", "netbsd", "openbsd", "dragonflybsd":
+	case "freebsd", "dragonflybsd", "netbsd":
 		osm = &BsdInitServiceManager{motor: motor}
+	case "openbsd":
+		osm = &OpenBsdRcctlServiceManager{motor: motor}
 	case "windows":
 		osm = &WindowsServiceManager{motor: motor}
 	}

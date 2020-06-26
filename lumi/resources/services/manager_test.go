@@ -98,6 +98,34 @@ func TestManagerFreebsd(t *testing.T) {
 	assert.Equal(t, 25, len(mounts))
 }
 
+func TestManagerDragonflybsd5(t *testing.T) {
+	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/dragonfly5.toml"})
+	require.NoError(t, err)
+	m, err := motor.New(mock)
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(m)
+	require.NoError(t, err)
+	mounts, err := mm.List()
+	require.NoError(t, err)
+
+	assert.Equal(t, 11, len(mounts))
+}
+
+func TestManagerOpenBsd6(t *testing.T) {
+	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/openbsd6.toml"})
+	require.NoError(t, err)
+	m, err := motor.New(mock)
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(m)
+	require.NoError(t, err)
+	mounts, err := mm.List()
+	require.NoError(t, err)
+
+	assert.Equal(t, 70, len(mounts))
+}
+
 func TestManagerWindows(t *testing.T) {
 	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/windows2019.toml"})
 	require.NoError(t, err)

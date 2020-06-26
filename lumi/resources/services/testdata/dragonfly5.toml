@@ -1,0 +1,22 @@
+[commands."service -e"]
+stdout = """/etc/rc.d/ip6addrctl
+/etc/rc.d/netif
+/etc/rc.d/devd
+/etc/rc.d/syslogd
+/etc/rc.d/dmesg
+/etc/rc.d/rpcbind
+/etc/rc.d/dntpd
+/etc/rc.d/sshd
+/etc/rc.d/sendmail
+/etc/rc.d/cron
+/etc/rc.d/mixer
+"""
+
+[commands."uname -s"]
+stdout = "DragonFly"
+
+[commands."uname -m"]
+stdout = "amd64"
+
+[commands."uname -r"]
+stdout = "5.8-RELEASE"
