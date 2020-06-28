@@ -133,16 +133,16 @@ func (fs recordFS) Open(name string) (afero.File, error) {
 	content := ""
 
 	f, err := fs.observe.Open(name)
-
 	if err == os.ErrNotExist {
 		enonet = true
 	} else if err != nil {
 		return nil, err
-	}
-
-	data, err := ioutil.ReadAll(f)
-	defer f.Close()
-	if err == nil {
+	} else {
+		data, err := ioutil.ReadAll(f)
+		defer f.Close()
+		if err != nil {
+			return nil, err
+		}
 		content = string(data)
 	}
 
