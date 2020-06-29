@@ -151,3 +151,147 @@ func (l *Code) RefDatapoints(ref int32) []int32 {
 
 	return res
 }
+
+func (l *Code) entrypoint2assessment(bundle *CodeBundle, results map[string]*RawResult, ref int32) *AssessmentItem {
+	checksum := bundle.Code.Checksums[ref]
+
+	result, ok := results[checksum]
+	if !ok {
+		return nil
+	}
+
+	truthy, _ := result.Data.IsTruthy()
+
+	res := AssessmentItem{
+		Checksum:   checksum,
+		Entrypoint: ref,
+		Success:    truthy,
+	}
+
+	chunk := l.Code[ref-1]
+
+	if chunk.Id == "if" && chunk.Function != nil && len(chunk.Function.Args) != 0 {
+		var ok bool
+		ref, ok = chunk.Function.Args[0].Ref()
+		if !ok {
+			// TODO: we might want to add error-handling around this case, even if it's rare
+			return nil
+		}
+		chunk = l.Code[ref-1]
+	}
+
+	if chunk.Call == Chunk_PRIMITIVE {
+		res.Actual = chunk.Primitive
+		return &res
+	}
+
+	if chunk.Call != Chunk_FUNCTION {
+		res.Error = "unknown type of chunk"
+		return &res
+	}
+
+	if chunk.Function == nil {
+		res.Error = "chunk function cannot be nil"
+		return &res
+	}
+
+	if chunk.Id == "" {
+		res.Error = "chunk has unknown identifier"
+		return &res
+	}
+
+	if _, ok := comparableOperations[chunk.Id[0:1]]; !ok {
+		if len(chunk.Id) == 1 {
+			res.Actual = result.Result().Data
+			return &res
+		}
+		if _, ok := comparableOperations[chunk.Id[0:2]]; !ok {
+			res.Actual = result.Result().Data
+			return &res
+		}
+	}
+
+	res.Comparable = true
+
+	// at this point we have a comparable
+	// so 2 jobs: check the left, check the right. if it's static, ignore. if not, add
+	left := chunk.Function.Binding
+	if left != 0 {
+		leftChunk := l.Code[left-1]
+		if leftChunk == nil {
+			res.Actual = &Primitive{
+				Type:  string(types.Any),
+				Value: []byte("< unknown expected value >"),
+			}
+		}
+
+		if leftChunk.isStatic() {
+			res.Actual = leftChunk.Primitive
+		} else {
+			leftSum := bundle.Code.Checksums[left]
+			leftRes, ok := results[leftSum]
+			if !ok {
+				res.Actual = nil
+			} else {
+				res.Actual = leftRes.Result().Data
+			}
+		}
+	}
+
+	if len(chunk.Function.Args) == 0 {
+		return &res
+	}
+
+	rightPrim := chunk.Function.Args[0]
+	if rightPrim == nil {
+		res.Expected = &Primitive{
+			Type:  string(types.Any),
+			Value: []byte("< unknown actual value >"),
+		}
+	}
+
+	if types.Type(rightPrim.Type) != types.Ref {
+		res.Expected = rightPrim
+	} else {
+		right, ok := rightPrim.Ref()
+		if !ok {
+			res.Expected = &Primitive{
+				Type:  string(types.Any),
+				Value: []byte("< unknown actual value >"),
+			}
+		} else {
+			rightSum := bundle.Code.Checksums[right]
+			rightRes, ok := results[rightSum]
+			if !ok {
+				res.Expected = nil
+			} else {
+				res.Expected = rightRes.Result().Data
+			}
+		}
+	}
+
+	return &res
+}
+
+// Results2Assessment converts a list of raw results into an assessment for the query
+func (l *Code) Results2Assessment(bundle *CodeBundle, results map[string]*RawResult) *Assessment {
+	var res Assessment
+	res.Success = true
+
+	for i := range bundle.Code.Entrypoints {
+		ep := bundle.Code.Entrypoints[i]
+		cur := l.entrypoint2assessment(bundle, results, ep)
+		if cur != nil {
+			res.Results = append(res.Results, cur)
+		}
+
+		if !cur.Success {
+			res.Success = false
+		}
+		if cur.Comparable {
+			res.Comparable = true
+		}
+	}
+
+	return &res
+}
