@@ -209,6 +209,10 @@ func TestErroneousLlxChains(t *testing.T) {
 		`file("/etc/profile").content.contains("umask 027") || file("/etc/bashrc").content.contains("umask 027")`,
 		`file("/etc/profile").content.contains("umask 027") || file("/etc/bashrc").content.contains("umask 027")`,
 	)
+
+	testTimeout(t,
+		`ntp.conf { settings.contains("a") settings.contains("b") }`,
+	)
 }
 
 func TestResource_InitWithResource(t *testing.T) {

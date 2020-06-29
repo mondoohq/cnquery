@@ -3,6 +3,7 @@ package llx
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
@@ -346,6 +347,15 @@ func runResourceFunction(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int3
 
 	if err != nil {
 		if _, ok := err.(lumi.NotReadyError); !ok {
+			// TODO: Deduplicate storage between cache and resource storage
+			// This will take some work, but clearly we don't need both
+
+			info.Cache.Store(chunk.Id, &lumi.CacheEntry{
+				Timestamp: time.Now().Unix(),
+				Valid:     true,
+				Error:     err,
+			})
+
 			c.cache.Store(ref, &stepCache{
 				Result: &RawData{
 					Type:  types.Type(resource.Fields[chunk.Id].Type),
