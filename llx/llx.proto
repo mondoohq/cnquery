@@ -70,3 +70,19 @@ message Rating {
   int32 trend = 5;
   string date = 6;
 }
+
+message AssessmentItem {
+  bool success = 1;
+  string checksum = 2;
+  int32 entrypoint = 3;
+  Primitive expected = 4;
+  Primitive actual = 5;
+  string error = 6;
+  bool comparable = 7;
+}
+
+message Assessment {
+  bool success = 1;
+  bool comparable = 2;
+  repeated AssessmentItem results = 3;
+}
