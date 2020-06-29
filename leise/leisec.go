@@ -748,29 +748,6 @@ func (c *compiler) CompileParsed(ast *parser.AST) error {
 	return nil
 }
 
-var comparableOperations = map[string]struct{}{
-	"==": {},
-	"!=": {},
-	">":  {},
-	"<":  {},
-	">=": {},
-	"<=": {},
-	"&&": {},
-	"||": {},
-}
-
-func (c *compiler) isChunkStatic(chunk *llx.Chunk) bool {
-	if chunk.Call != llx.Chunk_PRIMITIVE {
-		return false
-	}
-
-	if types.Type(chunk.Primitive.Type) == types.Ref {
-		return false
-	}
-
-	return true
-}
-
 func (c *compiler) UpdateEntrypoints() {
 	// 0. prep: everything that's an entrypoint is a scoringpoint later on
 	datapoints := map[int32]struct{}{}
@@ -788,52 +765,10 @@ func (c *compiler) UpdateEntrypoints() {
 
 	// 2. resolve operators
 	for ref := range entrypoints {
-		chunk := c.Result.Code.Code[ref-1]
-
-		if chunk.Id == "if" && chunk.Function != nil && len(chunk.Function.Args) != 0 {
-			var ok bool
-			ref, ok = chunk.Function.Args[0].Ref()
-			if !ok {
-				continue
-			}
-			chunk = c.Result.Code.Code[ref-1]
-		}
-
-		if chunk.Id == "" {
-			continue
-		}
-
-		// nothing to do for primitives (unclear if we need to investigate refs here)
-		if chunk.Call != llx.Chunk_FUNCTION || chunk.Function == nil {
-			continue
-		}
-
-		if _, ok := comparableOperations[chunk.Id[0:1]]; !ok {
-			if len(chunk.Id) == 1 {
-				continue
-			}
-			if _, ok := comparableOperations[chunk.Id[0:2]]; !ok {
-				continue
-			}
-		}
-
-		// at this point we have a comparable
-		// so 2 jobs: check the left, check the right. if it's static, ignore. if not, add
-		left := chunk.Function.Binding
-		if left != 0 {
-			leftChunk := c.Result.Code.Code[left-1]
-			if leftChunk != nil && !c.isChunkStatic(leftChunk) {
-				datapoints[left] = struct{}{}
-			}
-		}
-
-		if len(chunk.Function.Args) != 0 {
-			rightPrim := chunk.Function.Args[0]
-			if rightPrim != nil && types.Type(rightPrim.Type) == types.Ref {
-				right, ok := rightPrim.Ref()
-				if ok {
-					datapoints[right] = struct{}{}
-				}
+		dps := c.Result.Code.RefDatapoints(ref)
+		if dps != nil {
+			for i := range dps {
+				datapoints[dps[i]] = struct{}{}
 			}
 		}
 	}
