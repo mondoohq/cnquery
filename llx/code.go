@@ -200,12 +200,16 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, results map[string]*Raw
 		return &res
 	}
 
-	if _, ok := comparableOperations[chunk.Id[0:1]]; !ok {
+	if _, ok := comparableOperations[chunk.Id[0:1]]; ok {
+		res.Operation = chunk.Id[0:1]
+	} else {
 		if len(chunk.Id) == 1 {
 			res.Actual = result.Result().Data
 			return &res
 		}
-		if _, ok := comparableOperations[chunk.Id[0:2]]; !ok {
+		if _, ok := comparableOperations[chunk.Id[0:2]]; ok {
+			res.Operation = chunk.Id[0:2]
+		} else {
 			res.Actual = result.Result().Data
 			return &res
 		}
