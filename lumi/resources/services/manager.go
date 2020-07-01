@@ -3,9 +3,9 @@ package services
 import (
 	"errors"
 	"regexp"
-	"strconv"
 
 	motor "go.mondoo.io/mondoo/motor/motoros"
+	"go.mondoo.io/mondoo/motor/motoros/platform"
 )
 
 type Service struct {
@@ -41,24 +41,25 @@ var amazonlinux1version = regexp.MustCompile(`^20\d\d`)
 func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 	var osm OSServiceManager
 
-	platform, err := motor.Platform()
+	pi, err := motor.Platform()
 	if err != nil {
 		return nil, err
 	}
 
-	switch platform.Name {
+	switch pi.Name {
 	case "manjaro", "arch": // arch family
 		osm = &SystemDServiceManager{motor: motor}
 	case "amzn":
-		if amazonlinux1version.MatchString(platform.Release) {
+		if amazonlinux1version.MatchString(pi.Release) {
 			osm = &UpstartServiceManager{SysVServiceManager{motor: motor}}
 		} else {
 			osm = &SystemDServiceManager{motor: motor}
 		}
 	case "centos", "redhat", "scientific", "ol":
-		v, err := strconv.ParseFloat(platform.Release, 32)
+		rv := platform.ParseOsVersion(pi.Release)
+		v, err := rv.MajorAtoi()
 		if err != nil {
-			return nil, errors.New("unknown redhat version: " + platform.Release)
+			return nil, errors.New("unknown redhat version: " + pi.Release)
 		}
 		if v < 7 {
 			osm = &UpstartServiceManager{SysVServiceManager{motor: motor}}
@@ -66,9 +67,10 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 			osm = &SystemDServiceManager{motor: motor}
 		}
 	case "fedora":
-		v, err := strconv.ParseFloat(platform.Release, 32)
+		rv := platform.ParseOsVersion(pi.Release)
+		v, err := rv.MajorAtoi()
 		if err != nil {
-			return nil, errors.New("unknown fedora version: " + platform.Release)
+			return nil, errors.New("unknown fedora version: " + pi.Release)
 		}
 
 		if v < 15 {
@@ -78,20 +80,22 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 			osm = &SystemDServiceManager{motor: motor}
 		}
 	case "ubuntu":
-		v, err := strconv.ParseFloat(platform.Release, 32)
+		rv := platform.ParseOsVersion(pi.Release)
+		v, err := rv.MajorAtoi()
 		if err != nil {
-			return nil, errors.New("unknown ubuntu version: " + platform.Release)
+			return nil, errors.New("unknown ubuntu version: " + pi.Release)
 		}
 
-		if v < 15.04 {
+		if v < 15 {
 			osm = &UpstartServiceManager{SysVServiceManager{motor: motor}}
 		} else {
 			osm = &SystemDServiceManager{motor: motor}
 		}
 	case "debian":
-		v, err := strconv.ParseFloat(platform.Release, 32)
+		rv := platform.ParseOsVersion(pi.Release)
+		v, err := rv.MajorAtoi()
 		if err != nil {
-			return nil, errors.New("unknown debian version: " + platform.Release)
+			return nil, errors.New("unknown debian version: " + pi.Release)
 		}
 
 		if v < 7 {
@@ -99,10 +103,11 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		} else {
 			osm = &SystemDServiceManager{motor: motor}
 		}
-	case "suse", "opensuse", "opensuse-tumbleweed":
-		v, err := strconv.ParseFloat(platform.Release, 32)
+	case "sles", "opensuse", "opensuse-tumbleweed":
+		rv := platform.ParseOsVersion(pi.Release)
+		v, err := rv.MajorAtoi()
 		if err != nil {
-			return nil, errors.New("unknown suse version: " + platform.Release)
+			return nil, errors.New("unknown suse version: " + pi.Release)
 		}
 
 		// NOTE: opensuse-tumbleweed uses version numbers like 20200622
@@ -122,7 +127,7 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 	}
 
 	if osm == nil {
-		return nil, errors.New("could not detect suitable service manager for platform: " + platform.Name)
+		return nil, errors.New("could not detect suitable service manager for platform: " + pi.Name)
 	}
 
 	return osm, nil
