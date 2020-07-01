@@ -77,8 +77,9 @@ message AssessmentItem {
   int32 entrypoint = 3;
   Primitive expected = 4;
   Primitive actual = 5;
-  string error = 6;
-  bool comparable = 7;
+  string operation = 6;
+  string error = 7;
+  bool comparable = 8;
 }
 
 message Assessment {
