@@ -2,6 +2,8 @@ package platform
 
 import (
 	"io/ioutil"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -127,4 +129,26 @@ func (d *OSReleaseDetector) macosSystemVersion() (map[string]string, error) {
 	}
 
 	return ParseMacOSSystemVersion(string(content))
+}
+
+var majorminor = regexp.MustCompile(`^(\d+)(?:.(\d*)){0,1}(?:.(.*)){0,1}`)
+
+type ReleaseVersion struct {
+	Major string
+	Minor string
+	Other string
+}
+
+func (v ReleaseVersion) MajorAtoi() (int, error) {
+	return strconv.Atoi(v.Major)
+}
+
+func ParseOsVersion(v string) ReleaseVersion {
+
+	m := majorminor.FindStringSubmatch(v)
+	if len(m) == 0 {
+		return ReleaseVersion{Major: v}
+	}
+
+	return ReleaseVersion{Major: m[1], Minor: m[2], Other: m[3]}
 }

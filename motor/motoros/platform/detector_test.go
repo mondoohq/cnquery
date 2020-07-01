@@ -109,6 +109,19 @@ func TestCoreOSDetector(t *testing.T) {
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
 
+func TestCentos5Detector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-centos5.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	resolved, di := detector.Resolve()
+
+	assert.Equal(t, true, resolved, "platform should be resolvable")
+	assert.Equal(t, "centos", di.Name, "os name should be identified")
+	assert.Equal(t, "CentOS", di.Title, "os title should be identified")
+	assert.Equal(t, "5.11", di.Release, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
+}
+
 func TestCentos6Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-centos6.toml")
 	assert.Nil(t, err, "was able to create the transport")
@@ -135,15 +148,15 @@ func TestCentos7OSDetector(t *testing.T) {
 	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
 
-func TestCentos5Detector(t *testing.T) {
-	detector, err := newDetector("./testdata/detect-centos5.toml")
+func TestCentos8OSDetector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-centos8.toml")
 	assert.Nil(t, err, "was able to create the transport")
 	resolved, di := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "centos", di.Name, "os name should be identified")
-	assert.Equal(t, "CentOS", di.Title, "os title should be identified")
-	assert.Equal(t, "5.11", di.Release, "os version should be identified")
+	assert.Equal(t, "CentOS Linux", di.Title, "os title should be identified")
+	assert.Equal(t, "8.2.2004", di.Release, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
