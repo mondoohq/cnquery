@@ -88,7 +88,3 @@ message Assessment {
   bool comparable = 3;
   repeated AssessmentItem results = 4;
 }
-
-message Assessments {
-  map<string,Assessment> assessments = 1;
-}
