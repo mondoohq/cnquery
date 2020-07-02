@@ -152,10 +152,10 @@ func (l *Code) RefDatapoints(ref int32) []int32 {
 	return res
 }
 
-func (l *Code) entrypoint2assessment(bundle *CodeBundle, results map[string]*RawResult, ref int32) *AssessmentItem {
+func (l *Code) entrypoint2assessment(bundle *CodeBundle, lookup func(s string) (*RawResult, bool), ref int32) *AssessmentItem {
 	checksum := bundle.Code.Checksums[ref]
 
-	result, ok := results[checksum]
+	result, ok := lookup(checksum)
 	if !ok {
 		return nil
 	}
@@ -233,7 +233,7 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, results map[string]*Raw
 			res.Actual = leftChunk.Primitive
 		} else {
 			leftSum := bundle.Code.Checksums[left]
-			leftRes, ok := results[leftSum]
+			leftRes, ok := lookup(leftSum)
 			if !ok {
 				res.Actual = nil
 			} else {
@@ -265,7 +265,7 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, results map[string]*Raw
 			}
 		} else {
 			rightSum := bundle.Code.Checksums[right]
-			rightRes, ok := results[rightSum]
+			rightRes, ok := lookup(rightSum)
 			if !ok {
 				res.Expected = nil
 			} else {
@@ -278,7 +278,15 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, results map[string]*Raw
 }
 
 // Results2Assessment converts a list of raw results into an assessment for the query
-func (l *Code) Results2Assessment(bundle *CodeBundle, results map[string]*RawResult) *Assessment {
+func Results2Assessment(bundle *CodeBundle, results map[string]*RawResult) *Assessment {
+	return Results2AssessmentAsync(bundle, func(s string) (*RawResult, bool) {
+		r, ok := results[s]
+		return r, ok
+	})
+}
+
+// Results2AssessmentAsync creates an assessment for a bundle using a lookup hook to get all results
+func Results2AssessmentAsync(bundle *CodeBundle, f func(s string) (*RawResult, bool)) *Assessment {
 	res := Assessment{
 		Success:  true,
 		Checksum: bundle.Code.Id,
@@ -287,11 +295,12 @@ func (l *Code) Results2Assessment(bundle *CodeBundle, results map[string]*RawRes
 
 	for i := range bundle.Code.Entrypoints {
 		ep := bundle.Code.Entrypoints[i]
-		cur := l.entrypoint2assessment(bundle, results, ep)
-		if cur != nil {
-			res.Results = append(res.Results, cur)
+		cur := bundle.Code.entrypoint2assessment(bundle, f, ep)
+		if cur == nil {
+			continue
 		}
 
+		res.Results = append(res.Results, cur)
 		if !cur.Success {
 			res.Success = false
 		}
