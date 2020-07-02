@@ -279,7 +279,10 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, results map[string]*Raw
 
 // Results2Assessment converts a list of raw results into an assessment for the query
 func (l *Code) Results2Assessment(bundle *CodeBundle, results map[string]*RawResult) *Assessment {
-	var res Assessment
+	res := Assessment{
+		Success:  true,
+		Checksum: bundle.Code.Id,
+	}
 	res.Success = true
 
 	for i := range bundle.Code.Entrypoints {
