@@ -155,12 +155,12 @@ func (l *Code) RefDatapoints(ref int32) []int32 {
 func (l *Code) entrypoint2assessment(bundle *CodeBundle, lookup func(s string) (*RawResult, bool), ref int32) *AssessmentItem {
 	checksum := bundle.Code.Checksums[ref]
 
-	result, ok := lookup(checksum)
+	checksumRes, ok := lookup(checksum)
 	if !ok {
 		return nil
 	}
 
-	truthy, _ := result.Data.IsTruthy()
+	truthy, _ := checksumRes.Data.IsTruthy()
 
 	res := AssessmentItem{
 		Checksum:   checksum,
@@ -204,13 +204,13 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, lookup func(s string) (
 		res.Operation = chunk.Id[0:1]
 	} else {
 		if len(chunk.Id) == 1 {
-			res.Actual = result.Result().Data
+			res.Actual = checksumRes.Result().Data
 			return &res
 		}
 		if _, ok := comparableOperations[chunk.Id[0:2]]; ok {
 			res.Operation = chunk.Id[0:2]
 		} else {
-			res.Actual = result.Result().Data
+			res.Actual = checksumRes.Result().Data
 			return &res
 		}
 	}
