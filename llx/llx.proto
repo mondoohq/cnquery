@@ -83,7 +83,12 @@ message AssessmentItem {
 }
 
 message Assessment {
-  bool success = 1;
-  bool comparable = 2;
-  repeated AssessmentItem results = 3;
+  string checksum = 1;
+  bool success = 2;
+  bool comparable = 3;
+  repeated AssessmentItem results = 4;
+}
+
+message Assessments {
+  map<string,Assessment> assessments = 1;
 }
