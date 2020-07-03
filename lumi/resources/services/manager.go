@@ -49,7 +49,7 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 	switch pi.Name {
 	case "manjaro", "arch": // arch family
 		osm = &SystemDServiceManager{motor: motor}
-	case "amzn":
+	case "amazonlinux":
 		if amazonlinux1version.MatchString(pi.Release) {
 			osm = &UpstartServiceManager{SysVServiceManager{motor: motor}}
 		} else {

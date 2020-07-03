@@ -427,7 +427,7 @@ func TestAmazon1LinuxDetector(t *testing.T) {
 	resolved, di := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
-	assert.Equal(t, "amzn", di.Name, "os name should be identified")
+	assert.Equal(t, "amazonlinux", di.Name, "os name should be identified")
 	assert.Equal(t, "Amazon Linux AMI", di.Title, "os title should be identified")
 	assert.Equal(t, "2017.09", di.Release, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
@@ -440,7 +440,7 @@ func TestAmazon2LinuxDetector(t *testing.T) {
 	resolved, di := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
-	assert.Equal(t, "amzn", di.Name, "os name should be identified")
+	assert.Equal(t, "amazonlinux", di.Name, "os name should be identified")
 	assert.Equal(t, "Amazon Linux", di.Title, "os title should be identified")
 	assert.Equal(t, "2", di.Release, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
