@@ -23,7 +23,7 @@ func New(motor *motor.Motor) (Reboot, error) {
 	switch {
 	case pi.IsFamily("debian"):
 		return &DebianReboot{Motor: motor}, nil
-	case pi.Name == "amzn":
+	case pi.Name == "amazonlinux":
 		fallthrough
 	case pi.IsFamily("redhat"):
 		return &RpmNewestKernel{Motor: motor}, nil

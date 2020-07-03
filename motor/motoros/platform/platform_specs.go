@@ -320,10 +320,11 @@ var scientific = &PlatformResolver{
 }
 
 var amazonlinux = &PlatformResolver{
-	Name:    "amzn",
+	Name:    "amazonlinux",
 	Familiy: false,
 	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
 		if di.Name == "amzn" {
+			di.Name = "amazonlinux"
 			return true, nil
 		}
 		return false, nil
