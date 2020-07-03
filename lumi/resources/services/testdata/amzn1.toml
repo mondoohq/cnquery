@@ -21,7 +21,7 @@ stdout = """/etc/rc.d/rc4.d/S58ntpd
 /etc/rc.d/rc2.d/S26acpid
 """
 
-[commands."initctl list"]
+[commands."/sbin/initctl list"]
 stdout = """
 rc stop/waiting
 tty (/dev/tty3) start/running, process 1908

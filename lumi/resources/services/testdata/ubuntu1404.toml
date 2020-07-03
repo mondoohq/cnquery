@@ -9,7 +9,7 @@ ssh
 stdout = """
 """
 
-[commands."initctl list"]
+[commands."/sbin/initctl list"]
 stdout = """
 mountall-net stop/waiting
 rc stop/waiting
