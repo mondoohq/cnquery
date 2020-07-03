@@ -40,7 +40,7 @@ func ResolveSystemPkgManager(motor *motor.Motor) (OperatingSystemPkgManager, err
 		pm = &SusePkgManager{RpmPkgManager{motor: motor, platform: &platform}}
 	case "alpine": // alpine family
 		pm = &AlpinePkgManager{motor: motor}
-	case "mac_os_x": // mac os family
+	case "macos": // mac os family
 		pm = &MacOSPkgManager{motor: motor}
 	case "windows":
 		pm = &WinPkgManager{motor: motor}

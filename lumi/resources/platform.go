@@ -61,7 +61,7 @@ func (s *lumiPlatform) GetUuid() (string, error) {
 		}
 	}
 
-	if uuidProvider == nil && platform.Name == "mac_os_x" {
+	if uuidProvider == nil && platform.Name == "macos" {
 		uuidProvider = &platformid.MacOSIdProvider{Motor: s.Runtime.Motor}
 	}
 

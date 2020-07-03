@@ -54,7 +54,7 @@ func (r *InterfaceResource) Interfaces() ([]Interface, error) {
 	if r.motor.IsLocalTransport() {
 		handler := &GoNativeInterfaceHandler{}
 		return handler.Interfaces()
-	} else if pi.Name == "mac_os_x" {
+	} else if pi.Name == "macos" {
 		handler := &MacOSInterfaceHandler{
 			motor: r.motor,
 		}

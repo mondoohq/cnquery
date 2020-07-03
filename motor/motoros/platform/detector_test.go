@@ -645,7 +645,7 @@ func TestMacOSsDetector(t *testing.T) {
 	resolved, di := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
-	assert.Equal(t, "mac_os_x", di.Name, "os name should be identified")
+	assert.Equal(t, "macos", di.Name, "os name should be identified")
 	assert.Equal(t, "Mac OS X", di.Title, "os title should be identified")
 	assert.Equal(t, "10.14.5", di.Release, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")

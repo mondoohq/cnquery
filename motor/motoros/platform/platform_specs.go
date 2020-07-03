@@ -44,7 +44,7 @@ var macOS = &PlatformResolver{
 			return false, nil
 		}
 
-		di.Name = "mac_os_x"
+		di.Name = "macos"
 		di.Title = sv["ProductName"]
 		di.Release = sv["ProductVersion"]
 
@@ -619,6 +619,9 @@ var darwinFamily = &PlatformResolver{
 				// name needs to be slugged
 				key := slug.Make(strings.ToLower(dsv["ProductName"]))
 				di.Name = strings.ReplaceAll(key, "-", "_")
+				if di.Name == "mac_os_x" {
+					di.Name = "macos"
+				}
 				di.Title = dsv["ProductName"]
 			}
 			if len(dsv["ProductVersion"]) > 0 {
