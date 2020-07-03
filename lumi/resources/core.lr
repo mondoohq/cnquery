@@ -80,6 +80,9 @@ sshd.config {
   file() file
   content(file) string
   params(content) map[string]string
+  ciphers(params) []string
+  macs(params) []string
+  kexs(params) []string
 }
 
 platform {

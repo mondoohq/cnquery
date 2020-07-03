@@ -123,21 +123,178 @@ zstd 1.4.4-1
 
 [files."/etc/ssh/sshd_config"]
 content = """
-/etc/ssh/sshd_config
-#	$OpenBSD: sshd_config,v 1.103 2018/04/09 20:41:22 tj Exp $
-# The default is to check both .ssh/authorized_keys and .ssh/authorized_keys2
-# but this is overridden so installations will only check .ssh/authorized_keys
-AuthorizedKeysFile	.ssh/authorized_keys
+# #
+# Ansible managed
+#
 
-# To disable tunneled clear text passwords, change to no here!
-#PasswordAuthentication yes
-#PermitEmptyPasswords no
+# This is the ssh client system-wide configuration file.
+# See sshd_config(5) for more information on any settings used. Comments will be added only to clarify why a configuration was chosen.
 
-# Change to no to disable s/key passwords
-ChallengeResponseAuthentication no
+
+# Basic configuration
+# ===================
+
+# Either disable or only allow root login via certificates.
+PermitRootLogin no
+
+# Define which port sshd should listen to. Default to `22`.
+Port 22
+
+# Address family should always be limited to the active network configuration.
+AddressFamily inet
+
+# Define which addresses sshd should listen to. Default to `0.0.0.0`, ie make sure you put your desired address in here, since otherwise sshd will listen to everyone.
+ListenAddress 0.0.0.0
+
+# List HostKeys here.
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+
+# Specifies the host key algorithms that the server offers.
+#
+# HostKeyAlgorithms
+#
+
+# Security configuration
+# ======================
+
+# Set the protocol version to 2 for security reasons. Disables legacy support.
+Protocol 2
+
+# Make sure sshd checks file modes and ownership before accepting logins. This prevents accidental misconfiguration.
+StrictModes yes
+
+# Logging, obsoletes QuietMode and FascistLogging
+SyslogFacility AUTH
+LogLevel VERBOSE
+
+# Cryptography
+# ------------
+
+# **Ciphers** -- If your clients don't support CTR (eg older versions), cbc will be added
+# CBC: is true if you want to connect with OpenSSL-base libraries
+# eg ruby Net::SSH::Transport::CipherFactory requires cbc-versions of the given openssh ciphers to work
+# -- see: (http://net-ssh.github.com/net-ssh/classes/Net/SSH/Transport/CipherFactory.html)
+#
+
+Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
+
+# **Hash algorithms** -- Make sure not to use SHA1 for hashing, unless it is really necessary.
+# Weak HMAC is sometimes required if older package versions are used
+# eg Ruby's Net::SSH at around 2.2.* doesn't support sha2 for hmac, so this will have to be set true in this case.
+#
+
+MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256
+
+# Alternative setting, if OpenSSH version is below v5.9
+#MACs hmac-ripemd160
+
+# **Key Exchange Algorithms** -- Make sure not to use SHA1 for kex, unless it is really necessary
+# Weak kex is sometimes required if older package versions are used
+# eg ruby's Net::SSH at around 2.2.* doesn't support sha2 for kex, so this will have to be set true in this case.
+# based on: https://bettercrypto.org/static/applied-crypto-hardening.pdf
+
+KexAlgorithms curve25519-sha256@libssh.org,diffie-hellman-group-exchange-sha256
+
+# Authentication
+# --------------
+
+# Secure Login directives.
+
+LoginGraceTime 30s
+MaxAuthTries 2
+MaxSessions 10
+MaxStartups 10:30:60
+
+# Enable public key authentication
+PubkeyAuthentication yes
+
+# Never use host-based authentication. It can be exploited.
+IgnoreRhosts yes
+IgnoreUserKnownHosts yes
+HostbasedAuthentication no
+
+# Enable PAM to enforce system wide rules
 UsePAM yes
-PrintMotd no # pam does that
-Subsystem	sftp	/usr/lib/ssh/sftp-server
+
+# Set AuthenticationMethods per default to publickey
+# AuthenticationMethods was introduced in OpenSSH 6.2 - https://www.openssh.com/txt/release-6.2
+AuthenticationMethods publickey
+
+# Disable password-based authentication, it can allow for potentially easier brute-force attacks.
+PasswordAuthentication no
+PermitEmptyPasswords no
+ChallengeResponseAuthentication no
+
+# Only enable Kerberos authentication if it is configured.
+KerberosAuthentication no
+KerberosOrLocalPasswd no
+KerberosTicketCleanup yes
+#KerberosGetAFSToken no
+
+# Only enable GSSAPI authentication if it is configured.
+GSSAPIAuthentication no
+GSSAPICleanupCredentials yes
+
+# In case you don't use PAM (`UsePAM no`), you can alternatively restrict users and groups here. For key-based authentication this is not necessary, since all keys must be explicitely enabled.
+
+
+
+
+
+
+# Network
+# -------
+
+# Disable TCP keep alive since it is spoofable. Use ClientAlive messages instead, they use the encrypted channel
+TCPKeepAlive no
+
+# Manage `ClientAlive..` signals via interval and maximum count. This will periodically check up to a `..CountMax` number of times within `..Interval` timeframe, and abort the connection once these fail.
+ClientAliveInterval 300
+ClientAliveCountMax 3
+
+# Disable tunneling
+PermitTunnel no
+
+# Disable forwarding tcp connections.
+# no real advantage without denied shell access
+AllowTcpForwarding no
+
+# Disable agent forwarding, since local agent could be accessed through forwarded connection.
+# no real advantage without denied shell access
+AllowAgentForwarding no
+
+# Do not allow remote port forwardings to bind to non-loopback addresses.
+GatewayPorts no
+
+# Disable X11 forwarding, since local X11 display could be accessed through forwarded connection.
+X11Forwarding no
+X11UseLocalhost yes
+
+# User environment configuration
+# ==============================
+
+PermitUserEnvironment no
+
+
+# Misc. configuration
+# ===================
+
+Compression no
+
+UseDNS no
+
+PrintMotd no
+
+PrintLastLog no
+
+Banner none
+
+
+# Reject keys that are explicitly blacklisted
+RevokedKeys /etc/ssh/revoked_keys
+
 """
 
 
