@@ -54,12 +54,12 @@ func (s *UpstartServiceManager) List() ([]*Service, error) {
 }
 
 func (s *UpstartServiceManager) upstartservices() (map[string]*Service, error) {
-	c, err := s.motor.Transport.RunCommand("initctl list")
+	// NOTE: without /sbin prefix this command would fail on Amazon Linux 1
+	c, err := s.motor.Transport.RunCommand("/sbin/initctl list")
 	if err != nil {
 		return nil, err
 	}
 	return ParseUpstartServices(c.Stdout)
-
 }
 
 var upstartServiceRegex = regexp.MustCompile(`^(.*?)\s(stop/waiting|start/running)(?:, process (\d+)){0,1}$`)

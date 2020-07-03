@@ -31,7 +31,7 @@ stdout = """
 /etc/rc.d/rc2.d/S90crond
 """
 
-[commands."initctl list"]
+[commands."/sbin/initctl list"]
 stdout = """
 rc stop/waiting
 tty (/dev/tty3) start/running, process 1635
