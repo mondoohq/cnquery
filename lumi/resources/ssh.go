@@ -7,6 +7,7 @@ package resources
 import (
 	"errors"
 	"regexp"
+	"strings"
 
 	"go.mondoo.io/mondoo/lumi"
 )
@@ -67,4 +68,47 @@ func (s *lumiSshdConfig) GetParams(content string) (map[string]interface{}, erro
 	}
 
 	return res, nil
+}
+
+func (s *lumiSshdConfig) parseConfigEntrySlice(raw interface{}) ([]interface{}, error) {
+	strCipher, ok := raw.(string)
+	if !ok {
+		return nil, errors.New("value is not a valid string")
+	}
+
+	res := []interface{}{}
+	entries := strings.Split(strCipher, ",")
+	for i := range entries {
+		val := strings.TrimSpace(entries[i])
+		res = append(res, val)
+	}
+
+	return res, nil
+}
+
+func (s *lumiSshdConfig) GetCiphers(params map[string]interface{}) ([]interface{}, error) {
+	rawCiphers, ok := params["Ciphers"]
+	if !ok {
+		return nil, nil
+	}
+
+	return s.parseConfigEntrySlice(rawCiphers)
+}
+
+func (s *lumiSshdConfig) GetMacs(params map[string]interface{}) ([]interface{}, error) {
+	rawMacs, ok := params["MACs"]
+	if !ok {
+		return nil, nil
+	}
+
+	return s.parseConfigEntrySlice(rawMacs)
+}
+
+func (s *lumiSshdConfig) GetKexs(params map[string]interface{}) ([]interface{}, error) {
+	rawkexs, ok := params["KexAlgorithms"]
+	if !ok {
+		return nil, nil
+	}
+
+	return s.parseConfigEntrySlice(rawkexs)
 }
