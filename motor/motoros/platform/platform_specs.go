@@ -277,6 +277,7 @@ var oracle = &PlatformResolver{
 	Detect: func(p *PlatformResolver, di *PlatformInfo, t types.Transport) (bool, error) {
 		// works for oracle 7+
 		if di.Name == "ol" {
+			di.Name = "oraclelinux"
 			return true, nil
 		}
 
@@ -293,7 +294,7 @@ var oracle = &PlatformResolver{
 		}
 
 		if len(di.Name) == 0 {
-			di.Name = "ol"
+			di.Name = "oraclelinux"
 		}
 
 		return true, nil

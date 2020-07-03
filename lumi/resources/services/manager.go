@@ -55,7 +55,7 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		} else {
 			osm = &SystemDServiceManager{motor: motor}
 		}
-	case "centos", "redhat", "scientific", "ol":
+	case "centos", "redhat", "scientific", "oraclelinux":
 		rv := platform.ParseOsVersion(pi.Release)
 		v, err := rv.MajorAtoi()
 		if err != nil {
