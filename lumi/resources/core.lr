@@ -401,3 +401,62 @@ privatekey {
   path() string
   encrypted() bool
 }
+
+vsphere {
+  licenses() []vsphere.license
+  datacenters() []vsphere.datacenter
+  computeclusters() []vsphere.computecluster
+}
+
+vsphere.datacenter {
+  moid string
+  name string
+  inventorypath string
+  hosts() []vsphere.host
+}
+
+vsphere.license {
+  name string
+  total int
+  used int
+}
+
+vsphere.computecluster {
+  moid string
+  name string
+  folder string
+  hosts() []vsphere.host
+  vms() []vsphere.vm
+  haenabled bool
+}
+
+vsphere.host {
+  datacenter string
+  cluster string
+  clustermanaged bool
+  hostname string
+  username string
+  thumbprint string
+  license string
+  force bool
+  connected bool
+  maintenance bool
+  lockdown string
+}
+
+vsphere.vm {
+  datacenter string
+  guestid string
+  firmware string
+  numcpus int
+  memory int
+  cpulimit int
+  memorylimit int
+  size int
+}
+
+vsphere.vnic {
+  mac string
+  mtu string
+  netstack string
+}
