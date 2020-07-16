@@ -405,7 +405,6 @@ privatekey {
 vsphere {
   licenses() []vsphere.license
   datacenters() []vsphere.datacenter
-  computeclusters() []vsphere.computecluster
 }
 
 vsphere.datacenter {
@@ -421,30 +420,18 @@ vsphere.license {
   used int
 }
 
-vsphere.computecluster {
+vsphere.host {
   moid string
   name string
-  folder string
-  hosts() []vsphere.host
-  vms() []vsphere.vm
-  haenabled bool
-}
-
-vsphere.host {
-  datacenter string
-  cluster string
-  clustermanaged bool
-  hostname string
-  username string
-  thumbprint string
-  license string
-  force bool
-  connected bool
-  maintenance bool
-  lockdown string
+  inventorypath string
+  properties map[string]string
+  standardvswitch() []vsphere.vswitch
+  adapters() []vsphere.vmnic
+  vmknics() []vsphere.vmknic
 }
 
 vsphere.vm {
+  moid string
   datacenter string
   guestid string
   firmware string
@@ -455,8 +442,17 @@ vsphere.vm {
   size int
 }
 
-vsphere.vnic {
-  mac string
-  mtu string
-  netstack string
+vsphere.vswitch {
+  name string
+  properties map[string]string
+}
+
+vsphere.vmnic {
+  name string
+  properties map[string]string
+}
+
+vsphere.vmknic {
+  name string
+  properties map[string]string
 }
