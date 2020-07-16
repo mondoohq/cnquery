@@ -4,18 +4,42 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/vsphere"
 )
 
+func (v *lumiVsphereLicense) id() (string, error) {
+	return v.Name()
+}
+
+func (v *lumiVsphereVm) id() (string, error) {
+	return v.Moid()
+}
+
+func (v *lumiVsphereVswitch) id() (string, error) {
+	return v.Name()
+}
+
+func (v *lumiVsphereHost) id() (string, error) {
+	return v.Moid()
+}
+
+func (v *lumiVsphereVmnic) id() (string, error) {
+	return v.Name()
+}
+
+func (v *lumiVsphereVmknic) id() (string, error) {
+	return v.Name()
+}
+
 func (v *lumiVsphere) id() (string, error) {
 	return "vsphere", nil
 }
 
-func (v *lumiVsphere) GetDatacenters() ([]interface{}, error) {
-	cfg := &vsphere.Config{
-		VSphereServerHost: "127.0.0.1:8989",
-		User:              "user",
-		Password:          "pass",
-	}
+var defaultCfg = &vsphere.Config{
+	VSphereServerHost: "192.168.56.102",
+	User:              "root",
+	Password:          "password1!",
+}
 
-	client, err := vsphere.New(cfg)
+func (v *lumiVsphere) GetDatacenters() ([]interface{}, error) {
+	client, err := vsphere.New(defaultCfg)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +56,7 @@ func (v *lumiVsphere) GetDatacenters() ([]interface{}, error) {
 		lumiDc, err := v.Runtime.CreateResource("vsphere.datacenter",
 			"moid", dc.Reference().Value,
 			"name", dc.Name(),
-			"inventorypath", dc.InventoryPath()
+			"inventorypath", dc.InventoryPath,
 		)
 		if err != nil {
 			return nil, err
@@ -45,13 +69,7 @@ func (v *lumiVsphere) GetDatacenters() ([]interface{}, error) {
 }
 
 func (v *lumiVsphere) GetLicenses() ([]interface{}, error) {
-	cfg := &vsphere.Config{
-		VSphereServerHost: "127.0.0.1:8989",
-		User:              "user",
-		Password:          "pass",
-	}
-
-	client, err := vsphere.New(cfg)
+	client, err := vsphere.New(defaultCfg)
 	if err != nil {
 		return nil, err
 	}
@@ -84,6 +102,157 @@ func (v *lumiVsphereDatacenter) id() (string, error) {
 	return v.Moid()
 }
 
-func (v *lumiVsphereLicense) id() (string, error) {
-	return v.Name()
+func (v *lumiVsphereDatacenter) GetHosts() ([]interface{}, error) {
+	client, err := vsphere.New(defaultCfg)
+	if err != nil {
+		return nil, err
+	}
+
+	path, err := v.Inventorypath()
+	if err != nil {
+		return nil, err
+	}
+
+	dc, err := client.Datacenter(path)
+	if err != nil {
+		return nil, err
+	}
+
+	vhosts, err := client.ListHosts(dc)
+	if err != nil {
+		return nil, err
+	}
+
+	lumiHosts := make([]interface{}, len(vhosts))
+	for i, h := range vhosts {
+
+		props, err := client.HostProperties(h)
+		if err != nil {
+			return nil, err
+		}
+
+		lumiHost, err := v.Runtime.CreateResource("vsphere.host",
+			"moid", h.Reference().Value,
+			"name", h.Name(),
+			"properties", props,
+			"inventorypath", h.InventoryPath,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		lumiHosts[i] = lumiHost
+	}
+
+	return lumiHosts, nil
+}
+
+func (v *lumiVsphereHost) GetStandardvswitch() ([]interface{}, error) {
+	client, err := vsphere.New(defaultCfg)
+	if err != nil {
+		return nil, err
+	}
+
+	path, err := v.Inventorypath()
+	if err != nil {
+		return nil, err
+	}
+
+	host, err := client.Host(path)
+	if err != nil {
+		return nil, err
+	}
+
+	vswitches, err := vsphere.EsxiVswitchStandard(client.Client, host)
+	if err != nil {
+		return nil, err
+	}
+
+	lumiVswitches := make([]interface{}, len(vswitches))
+	for i, s := range vswitches {
+		lumiVswitch, err := v.Runtime.CreateResource("vsphere.vswitch",
+			"name", s["Name"],
+			"properties", map[string]interface{}(s),
+		)
+		if err != nil {
+			return nil, err
+		}
+		lumiVswitches[i] = lumiVswitch
+	}
+
+	return lumiVswitches, nil
+}
+
+func (v *lumiVsphereHost) GetAdapters() ([]interface{}, error) {
+	client, err := vsphere.New(defaultCfg)
+	if err != nil {
+		return nil, err
+	}
+
+	path, err := v.Inventorypath()
+	if err != nil {
+		return nil, err
+	}
+
+	host, err := client.Host(path)
+	if err != nil {
+		return nil, err
+	}
+
+	adapters, err := vsphere.EsxiAdapters(client.Client, host)
+	if err != nil {
+		return nil, err
+	}
+
+	lumiAdapters := make([]interface{}, len(adapters))
+	for i, a := range adapters {
+		lumiVswitch, err := v.Runtime.CreateResource("vsphere.vmnic",
+			"name", a["Name"],
+			"properties", map[string]interface{}(a),
+		)
+		if err != nil {
+			return nil, err
+		}
+		lumiAdapters[i] = lumiVswitch
+	}
+
+	return lumiAdapters, nil
+}
+
+func (v *lumiVsphereHost) GetVmknics() ([]interface{}, error) {
+	client, err := vsphere.New(defaultCfg)
+	if err != nil {
+		return nil, err
+	}
+
+	path, err := v.Inventorypath()
+	if err != nil {
+		return nil, err
+	}
+
+	host, err := client.Host(path)
+	if err != nil {
+		return nil, err
+	}
+
+	vmknics, err := vsphere.EsxiVmknics(client.Client, host)
+	if err != nil {
+		return nil, err
+	}
+
+	lumiVmknics := make([]interface{}, len(vmknics))
+	for i, n := range vmknics {
+		lumiVswitch, err := v.Runtime.CreateResource("vsphere.vmnic",
+			"name", n.Properties["Name"],
+			"properties", map[string]interface{}(n.Properties),
+		)
+		if err != nil {
+			return nil, err
+		}
+		lumiVmknics[i] = lumiVswitch
+	}
+
+	return lumiVmknics, nil
+
+	return nil, nil
 }
