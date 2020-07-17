@@ -3,8 +3,8 @@ package vsphere
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gotest.tools/assert"
 )
 
 func TestVSphere(t *testing.T) {
@@ -95,6 +95,11 @@ func TestESXi(t *testing.T) {
 		// package acceptance level
 		acceptance, err := e.SoftwareAcceptance()
 		require.NoError(t, err)
-		assert.Equal(t, "CommunitySupported", acceptance)
+		assert.Equal(t, "PartnerSupported", acceptance)
+
+		// list kernel modules
+		modules, err := e.KernelModules()
+		require.NoError(t, err)
+		assert.Equal(t, 136, len(modules))
 	}
 }

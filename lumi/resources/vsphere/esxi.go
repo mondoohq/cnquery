@@ -268,3 +268,166 @@ func (esxi *Esxi) SoftwareAcceptance() (string, error) {
 
 	return "", errors.New("unknown software acceptance level")
 }
+
+type EsxiKernelModule struct {
+	Module               string
+	ModuleFile           string
+	ProvidedNamespaces   string
+	RequiredNamespaces   string
+	BuildType            string
+	ContainingVIB        string
+	FileVersion          string
+	License              string
+	Version              string
+	SignatureDigest      string
+	SignatureFingerPrint string
+	SignatureIssuer      string
+	SignedStatus         string
+	VIBAcceptanceLevel   string
+	Enabled              bool
+	Loaded               bool
+}
+
+// ($ESXCli).system.module.list()
+// IsEnabled IsLoaded Name
+// --------- -------- ----
+// true      true     vmkernel
+// true      true     chardevs
+// true      true     user
+// true      true     procfs
+func (esxi *Esxi) KernelModules() ([]*EsxiKernelModule, error) {
+	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := e.Run([]string{"system", "module", "list"})
+	if err != nil {
+		return nil, err
+	}
+
+	kernelmodules := []*EsxiKernelModule{}
+	for _, val := range res.Values {
+		var modulename string
+		loaded := false
+		enabled := false
+
+		for k := range val {
+			if len(val[k]) == 1 {
+				value := val[k][0]
+
+				switch k {
+				case "IsEnabled":
+					if value == "true" {
+						enabled = true
+					}
+				case "IsLoaded":
+					if value == "true" {
+						loaded = true
+					}
+				case "Name":
+					modulename = value
+				}
+			} else {
+				log.Error().Str("key", k).Msg("Vibs> unsupported key")
+			}
+		}
+
+		// gather module additional details
+		// NOTE: not sure why but not all list entries have module details
+		// e.g "vmkernel", "user" do not return any results
+		module, err := esxi.KernelModuleDetails(modulename)
+		if err == nil {
+			module.Enabled = enabled
+			module.Loaded = loaded
+			kernelmodules = append(kernelmodules, module)
+		} else {
+			module = &EsxiKernelModule{
+				Module:  modulename,
+				Enabled: enabled,
+				Loaded:  loaded,
+			}
+			kernelmodules = append(kernelmodules, module)
+		}
+	}
+	return kernelmodules, nil
+}
+
+// $ESXCli.system.module.get("swapobj")
+//
+// BuildType            :
+// ContainingVIB        : esx-base
+// FileVersion          :
+// License              : VMware
+// Module               : swapobj
+// ModuleFile           : /usr/lib/vmware/vmkmod/swapobj
+// ProvidedNamespaces   : com.vmware.swapobj@0
+// RequiredNamespaces   : {com.vmware.vmkapi@v2_5_0_0, com.vmware.vmkapi.incompat@v2_5_0_0, com.vmware.vmklinkmpi@0, vmkernel@nover}
+// SignatureDigest      : 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
+// SignatureFingerPrint : 0000 0000 0000 0000 0000 0000 0000 0000
+// SignatureIssuer      :
+// SignedStatus         : Unsigned
+// VIBAcceptanceLevel   : certified
+// Version              :
+func (esxi *Esxi) KernelModuleDetails(modulename string) (*EsxiKernelModule, error) {
+	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
+	if err != nil {
+		return nil, err
+	}
+
+	// NOTE: do not use the powershell syntax, stick with the plain esxcli syntax
+	// esxcli <conn_options> system module get --module=module_name
+	res, err := e.Run([]string{"system", "module", "get", "--module", modulename})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(res.Values) == 0 {
+		return nil, errors.New("could not find esxi kernel module " + modulename)
+	}
+
+	if len(res.Values) > 1 {
+		return nil, errors.New("ambiguous esxi kernel module name" + modulename)
+	}
+
+	module := EsxiKernelModule{}
+	val := res.Values[0]
+
+	for k := range val {
+		if len(val[k]) == 1 {
+			value := val[k][0]
+
+			switch k {
+			case "BuildType":
+				module.BuildType = value
+			case "ContainingVIB":
+				module.ContainingVIB = value
+			case "FileVersion":
+				module.ContainingVIB = value
+			case "License":
+				module.License = value
+			case "Module":
+				module.Module = value
+			case "ModuleFile":
+				module.ModuleFile = value
+			case "ProvidedNamespaces":
+				module.ProvidedNamespaces = value
+			case "SignatureDigest":
+				module.SignatureDigest = value
+			case "SignatureFingerPrint":
+				module.SignatureFingerPrint = value
+			case "SignatureIssuer":
+				module.SignatureIssuer = value
+			case "SignedStatus":
+				module.SignedStatus = value
+			case "VIBAcceptanceLevel":
+				module.VIBAcceptanceLevel = value
+			case "Version":
+				module.Version = value
+			}
+		} else {
+			log.Error().Str("key", k).Msg("kernelmodule> unsupported key")
+		}
+	}
+	return &module, nil
+}
