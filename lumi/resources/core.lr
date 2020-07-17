@@ -433,6 +433,8 @@ vsphere.host {
   kernelmodules() []esxi.kernelmodule
   advancedsettings() []esxi.advancedsetting
   services() []esxi.service
+  timezone() esxi.timezone
+  ntp() esxi.ntpconfig
 }
 
 vsphere.vm {
@@ -498,4 +500,17 @@ esxi.service {
   running bool
   ruleset []string
   policy string
+}
+
+esxi.timezone {
+  key string
+  name string
+  description string
+  offset int
+}
+
+esxi.ntpconfig {
+  id string
+  server []string
+  config []string
 }
