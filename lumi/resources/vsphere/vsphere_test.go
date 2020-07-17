@@ -62,25 +62,29 @@ func TestESXi(t *testing.T) {
 
 	// list hosts
 	for _, dc := range dcs {
-		hosts, err := client.ListHosts(dc)
-		require.NoError(t, err)
-		assert.Equal(t, 1, len(hosts))
-
-		switches, err := EsxiVswitchStandard(client.Client, hosts[0])
-		require.NoError(t, err)
-		assert.Equal(t, 2, len(switches))
-
-		switches, err = EsxiVswitchDvs(client.Client, hosts[0])
-		require.NoError(t, err)
-		assert.Equal(t, 0, len(switches))
-
-		nics, err := EsxiVmknics(client.Client, hosts[0])
-		require.NoError(t, err)
-		assert.Equal(t, 1, len(nics))
-
 		// list vms
 		vms, err := client.ListVirtualMachines(dc)
 		require.NoError(t, err)
 		assert.Equal(t, 0, len(vms))
+
+		// list hosts
+		hosts, err := client.ListHosts(dc)
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(hosts))
+
+		// test the first host
+		e := Esxi{c: client.Client, host: hosts[0]}
+
+		switches, err := e.VswitchStandard()
+		require.NoError(t, err)
+		assert.Equal(t, 2, len(switches))
+
+		switches, err = e.VswitchDvs()
+		require.NoError(t, err)
+		assert.Equal(t, 0, len(switches))
+
+		nics, err := e.Vmknics()
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(nics))
 	}
 }

@@ -1,17 +1,31 @@
 package vsphere
 
 import (
+	"errors"
+
 	"github.com/rs/zerolog/log"
 	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/govc/host/esxcli"
 	"github.com/vmware/govmomi/object"
 )
 
+func NewEsxiClient(c *govmomi.Client, host *object.HostSystem) *Esxi {
+	return &Esxi{
+		c:    c,
+		host: host,
+	}
+}
+
+type Esxi struct {
+	c    *govmomi.Client
+	host *object.HostSystem
+}
+
 type VSwitch map[string]interface{}
 
 // (Get - EsxCli).network.vswitch.standard.list()
-func EsxiVswitchStandard(c *govmomi.Client, host *object.HostSystem) ([]VSwitch, error) {
-	e, err := esxcli.NewExecutor(c.Client, host)
+func (esxi *Esxi) VswitchStandard() ([]VSwitch, error) {
+	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
 	if err != nil {
 		return nil, err
 	}
@@ -37,8 +51,8 @@ func EsxiVswitchStandard(c *govmomi.Client, host *object.HostSystem) ([]VSwitch,
 }
 
 // (Get-EsxCli).network.vswitch.dvs.vmware.list()
-func EsxiVswitchDvs(c *govmomi.Client, host *object.HostSystem) ([]VSwitch, error) {
-	e, err := esxcli.NewExecutor(c.Client, host)
+func (esxi *Esxi) VswitchDvs() ([]VSwitch, error) {
+	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
 	if err != nil {
 		return nil, err
 	}
@@ -66,8 +80,8 @@ func EsxiVswitchDvs(c *govmomi.Client, host *object.HostSystem) ([]VSwitch, erro
 type Adapter map[string]interface{}
 
 // (Get-EsxCli).network.nic.list.Invoke()
-func EsxiAdapters(c *govmomi.Client, host *object.HostSystem) ([]Adapter, error) {
-	e, err := esxcli.NewExecutor(c.Client, host)
+func (esxi *Esxi) Adapters() ([]Adapter, error) {
+	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
 	if err != nil {
 		return nil, err
 	}
@@ -99,8 +113,8 @@ type VmKernelNic struct {
 }
 
 // (Get-EsxCli).network.ip.interface.list()
-func EsxiVmknics(c *govmomi.Client, host *object.HostSystem) ([]VmKernelNic, error) {
-	e, err := esxcli.NewExecutor(c.Client, host)
+func (esxi *Esxi) Vmknics() ([]VmKernelNic, error) {
+	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
 	if err != nil {
 		return nil, err
 	}
@@ -127,14 +141,14 @@ func EsxiVmknics(c *govmomi.Client, host *object.HostSystem) ([]VmKernelNic, err
 		netstack := val["NetstackInstance"][0]
 
 		// gather ipv4 information
-		ipv4Params, err := EsxiVmknixIp(c, host, name, netstack, "ipv4")
+		ipv4Params, err := esxi.VmknixIp(name, netstack, "ipv4")
 		if err != nil {
 			return nil, err
 		}
 		nic.Ipv4 = ipv4Params
 
 		// gather ipv6 information
-		ipv6Params, err := EsxiVmknixIp(c, host, name, netstack, "ipv6")
+		ipv6Params, err := esxi.VmknixIp(name, netstack, "ipv6")
 		if err != nil {
 			return nil, err
 		}
@@ -146,8 +160,8 @@ func EsxiVmknics(c *govmomi.Client, host *object.HostSystem) ([]VmKernelNic, err
 }
 
 // (Get-EsxCli).network.ip.interface.ipv4.get('vmk0', 'defaultTcpipStack')
-func EsxiVmknixIp(c *govmomi.Client, host *object.HostSystem, interfacename string, netstack string, ipprotocol string) (map[string]interface{}, error) {
-	e, err := esxcli.NewExecutor(c.Client, host)
+func (esxi *Esxi) VmknixIp(interfacename string, netstack string, ipprotocol string) (map[string]interface{}, error) {
+	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
 	if err != nil {
 		return nil, err
 	}
