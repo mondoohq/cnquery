@@ -32,6 +32,10 @@ func (v *lumiEsxiVib) id() (string, error) {
 	return v.Id()
 }
 
+func (v *lumiEsxiKernelmodule) id() (string, error) {
+	return v.Name()
+}
+
 func (v *lumiVsphere) id() (string, error) {
 	return "vsphere", nil
 }
@@ -284,4 +288,36 @@ func (v *lumiVsphereHost) GetAcceptancelevel() (string, error) {
 		return "", err
 	}
 	return esxiClient.SoftwareAcceptance()
+}
+
+func (v *lumiVsphereHost) GetKernelmodules() ([]interface{}, error) {
+	esxiClient, err := v.esxiClient()
+	if err != nil {
+		return nil, err
+	}
+	modules, err := esxiClient.KernelModules()
+	if err != nil {
+		return nil, err
+	}
+
+	lumiModules := make([]interface{}, len(modules))
+	for i, m := range modules {
+		lumiModule, err := v.Runtime.CreateResource("esxi.kernelmodule",
+			"name", m.Module,
+			"modulefile", m.ModuleFile,
+			"version", m.Version,
+			"loaded", m.Loaded,
+			"enabled", m.Enabled,
+			"signedstatus", m.SignedStatus,
+			"signaturedigest", m.SignatureDigest,
+			"signaturefingerprint", m.SignatureFingerPrint,
+			"vibacceptancelevel", m.VIBAcceptanceLevel,
+		)
+		if err != nil {
+			return nil, err
+		}
+		lumiModules[i] = lumiModule
+	}
+
+	return lumiModules, nil
 }

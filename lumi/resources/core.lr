@@ -430,6 +430,7 @@ vsphere.host {
   vmknics() []vsphere.vmknic
   packages() []esxi.vib
   acceptancelevel() string
+  kernelmodules() []esxi.kernelmodule
 }
 
 vsphere.vm {
@@ -468,4 +469,16 @@ esxi.vib {
 	status string
 	vendor string
 	version string
+}
+
+esxi.kernelmodule {
+	name string
+	modulefile string
+	version string
+	loaded bool
+  enabled bool
+  signedstatus string
+	signaturedigest string
+	signaturefingerprint string
+  vibacceptancelevel string
 }
