@@ -183,3 +183,88 @@ func (esxi *Esxi) VmknixIp(interfacename string, netstack string, ipprotocol str
 	}
 	return properties, nil
 }
+
+type EsxiVib struct {
+	ID              string
+	Name            string
+	AcceptanceLevel string
+	CreationDate    string
+	InstallDate     string
+	Status          string
+	Vendor          string
+	Version         string
+}
+
+// ($ESXCli).software.vib.list()
+// AcceptanceLevel : VMwareCertified
+// CreationDate    : 2018-04-03
+// ID              : VMware_bootbank_vmware-esx-esxcli-nvme-plugin_1.2.0.32-0.0.8169922
+// InstallDate     : 2020-07-16
+// Name            : vmware-esx-esxcli-nvme-plugin
+// Status          :
+// Vendor          : VMware
+// Version         : 1.2.0.32-0.0.8169922
+func (esxi *Esxi) Vibs() ([]EsxiVib, error) {
+	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := e.Run([]string{"software", "vib", "list"})
+	if err != nil {
+		return nil, err
+	}
+
+	vibs := []EsxiVib{}
+	for _, val := range res.Values {
+		vib := EsxiVib{}
+		for k := range val {
+			if len(val[k]) == 1 {
+				value := val[k][0]
+				switch k {
+				case "AcceptanceLevel":
+					vib.AcceptanceLevel = value
+				case "CreationDate":
+					vib.CreationDate = value
+				case "ID":
+					vib.ID = value
+				case "InstallDate":
+					vib.InstallDate = value
+				case "Name":
+					vib.Name = value
+				case "Status":
+					vib.Status = value
+				case "Vendor":
+					vib.Vendor = value
+				case "Version":
+					vib.Version = value
+				}
+			} else {
+				log.Error().Str("key", k).Msg("Vibs> unsupported key")
+			}
+		}
+		vibs = append(vibs, vib)
+	}
+	return vibs, nil
+}
+
+// ($ESXCli).software.acceptance.get()
+func (esxi *Esxi) SoftwareAcceptance() (string, error) {
+	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
+	if err != nil {
+		return "", err
+	}
+
+	res, err := e.Run([]string{"software", "acceptance", "get"})
+	if err != nil {
+		return "", err
+	}
+
+	if len(res.Values) == 0 {
+		if res.String != "" {
+			return res.String, nil
+		}
+	}
+
+	return "", errors.New("unknown software acceptance level")
+}

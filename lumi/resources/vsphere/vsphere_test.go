@@ -86,5 +86,15 @@ func TestESXi(t *testing.T) {
 		nics, err := e.Vmknics()
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(nics))
+
+		// list packages
+		vibs, err := e.Vibs()
+		require.NoError(t, err)
+		assert.Equal(t, 136, len(vibs))
+
+		// package acceptance level
+		acceptance, err := e.SoftwareAcceptance()
+		require.NoError(t, err)
+		assert.Equal(t, "CommunitySupported", acceptance)
 	}
 }
