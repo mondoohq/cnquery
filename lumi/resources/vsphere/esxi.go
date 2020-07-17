@@ -2,6 +2,7 @@ package vsphere
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/vmware/govmomi"
@@ -392,7 +393,6 @@ func (esxi *Esxi) KernelModuleDetails(modulename string) (*EsxiKernelModule, err
 
 	module := EsxiKernelModule{}
 	val := res.Values[0]
-
 	for k := range val {
 		if len(val[k]) == 1 {
 			value := val[k][0]
@@ -430,4 +430,164 @@ func (esxi *Esxi) KernelModuleDetails(modulename string) (*EsxiKernelModule, err
 		}
 	}
 	return &module, nil
+}
+
+type EsxiAdvancedSetting struct {
+	Key         string
+	Path        string
+	Description string
+	Default     string
+	Value       string
+}
+
+func (s EsxiAdvancedSetting) Overridden() bool {
+	return s.Default != s.Value
+}
+
+// $ESXCli.system.settings.advanced.list()
+// DefaultIntValue    : 1
+// DefaultStringValue :
+// Description        : Enable hardware accelerated VMFS data movement (requires compliant hardware)
+// IntValue           : 1
+// MaxValue           : 1
+// MinValue           : 0
+// Path               : /DataMover/HardwareAcceleratedMove
+// StringValue        :
+// Type               : integer
+// ValidCharacters    :
+//
+// supported types are `integer` and `string`, both are converted to string
+func (esxi *Esxi) AdvancedSettings() ([]EsxiAdvancedSetting, error) {
+	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
+	if err != nil {
+		return nil, err
+	}
+
+	// fetch system settings
+	res, err := e.Run([]string{"system", "settings", "advanced", "list"})
+	if err != nil {
+		return nil, err
+	}
+
+	settings := []EsxiAdvancedSetting{}
+	for _, val := range res.Values {
+		setting := EsxiAdvancedSetting{}
+
+		for k := range val {
+			if len(val[k]) == 1 {
+				value := val[k][0]
+				switch k {
+				case "Path":
+					setting.Path = value
+					setting.Key = strings.ReplaceAll(strings.TrimPrefix(value, "/"), "/", ".")
+				case "Description":
+					setting.Description = value
+				case "DefaultIntValue":
+					setting.Default = value
+				case "DefaultStringValue":
+					setting.Default = value
+				case "StringValue":
+					setting.Value = value
+				case "IntValue":
+					setting.Value = value
+				}
+			} else {
+				log.Error().Str("key", k).Msg("Vibs> unsupported key")
+			}
+		}
+		settings = append(settings, setting)
+	}
+
+	// fetch kernel settings
+	// $ESXCli.system.settings.kernel.list()
+	res, err = e.Run([]string{"system", "settings", "kernel", "list"})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, val := range res.Values {
+		setting := EsxiAdvancedSetting{}
+
+		for k := range val {
+			if len(val[k]) == 1 {
+				value := val[k][0]
+				switch k {
+				case "Name":
+					setting.Path = value
+					setting.Key = "VMkernel.Boot." + value
+				case "Description":
+					setting.Description = value
+				case "Default":
+					setting.Default = value
+				case "Configured":
+					setting.Value = value
+				}
+			} else {
+				log.Error().Str("key", k).Msg("Vibs> unsupported key")
+			}
+		}
+		settings = append(settings, setting)
+	}
+
+	return settings, nil
+}
+
+type EsxiSystemVersion struct {
+	Build   string
+	Patch   string
+	Product string
+	Update  string
+	Version string
+}
+
+// $ESXCli.system.version.get()
+// Build   : Releasebuild-8169922
+// Patch   : 0
+// Product : VMware ESXi
+// Update  : 0
+// Version : 6.7.0
+func (esxi *Esxi) SystemVersion() (*EsxiSystemVersion, error) {
+	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
+	if err != nil {
+		return nil, err
+	}
+
+	// NOTE: do not use the powershell syntax, stick with the plain esxcli syntax
+	// esxcli <conn_options> system module get --module=module_name
+	res, err := e.Run([]string{"system", "version", "get"})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(res.Values) == 0 {
+		return nil, errors.New("could not detect esxi system version ")
+	}
+
+	if len(res.Values) > 1 {
+		return nil, errors.New("ambiguous esxi system version")
+	}
+
+	version := EsxiSystemVersion{}
+	val := res.Values[0]
+	for k := range val {
+		if len(val[k]) == 1 {
+			value := val[k][0]
+
+			switch k {
+			case "Build":
+				version.Build = value
+			case "Patch":
+				version.Patch = value
+			case "Product":
+				version.Product = value
+			case "Update":
+				version.Update = value
+			case "Version":
+				version.Version = value
+			}
+		} else {
+			log.Error().Str("key", k).Msg("system version> unsupported key")
+		}
+	}
+	return &version, nil
 }

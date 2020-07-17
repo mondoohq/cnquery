@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/vmware/govmomi/license"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25"
-	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 )
 
@@ -126,30 +124,6 @@ func (c *Client) ListHosts(dc *object.Datacenter) ([]*object.HostSystem, error) 
 func (c *Client) Host(path string) (*object.HostSystem, error) {
 	finder := find.NewFinder(c.Client.Client, true)
 	return finder.HostSystem(context.Background(), path)
-}
-
-func hostProperties(host *object.HostSystem) (*mo.HostSystem, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), DefaultAPITimeout)
-	defer cancel()
-	var props mo.HostSystem
-	if err := host.Properties(ctx, host.Reference(), nil, &props); err != nil {
-		return nil, err
-	}
-	return &props, nil
-}
-
-func (c *Client) HostProperties(host *object.HostSystem) (map[string]interface{}, error) {
-	props, err := hostProperties(host)
-	if err != nil {
-		return nil, err
-	}
-
-	dataProps := map[string]interface{}{}
-	dataProps["PowerState"] = string(props.Runtime.PowerState)
-	dataProps["ConnectionState"] = string(props.Runtime.ConnectionState)
-	dataProps["InMaintenanceMode"] = strconv.FormatBool(props.Runtime.InMaintenanceMode)
-	dataProps["LockdownMode"] = hostLockdownString(props.Config.LockdownMode)
-	return dataProps, nil
 }
 
 func HostLicenses(client *vim25.Client, hostID string) ([]types.LicenseManagerLicenseInfo, error) {

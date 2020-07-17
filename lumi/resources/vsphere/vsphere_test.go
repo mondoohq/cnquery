@@ -75,6 +75,10 @@ func TestESXi(t *testing.T) {
 		// test the first host
 		e := Esxi{c: client.Client, host: hosts[0]}
 
+		systemVersion, err := e.SystemVersion()
+		require.NoError(t, err)
+		assert.Equal(t, "VMware ESXi", systemVersion.Product)
+
 		switches, err := e.VswitchStandard()
 		require.NoError(t, err)
 		assert.Equal(t, 2, len(switches))
@@ -100,6 +104,17 @@ func TestESXi(t *testing.T) {
 		// list kernel modules
 		modules, err := e.KernelModules()
 		require.NoError(t, err)
-		assert.Equal(t, 136, len(modules))
+		assert.Equal(t, 98, len(modules))
+
+		// list advanced settings
+		settings, err := e.AdvancedSettings()
+		require.NoError(t, err)
+		// TODO: the ui displays 1043, we need to find the difference
+		assert.Equal(t, 1069, len(settings))
+
+		// all host options (overlaps with the advanced settings)
+		settings, err = HostOptions(hosts[0])
+		require.NoError(t, err)
+		assert.Equal(t, 1045, len(settings))
 	}
 }

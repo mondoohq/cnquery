@@ -36,6 +36,14 @@ func (v *lumiEsxiKernelmodule) id() (string, error) {
 	return v.Name()
 }
 
+func (v *lumiEsxiAdvancedsetting) id() (string, error) {
+	return v.Key()
+}
+
+func (v *lumiEsxiService) id() (string, error) {
+	return v.Key()
+}
+
 func (v *lumiVsphere) id() (string, error) {
 	return "vsphere", nil
 }
@@ -320,4 +328,85 @@ func (v *lumiVsphereHost) GetKernelmodules() ([]interface{}, error) {
 	}
 
 	return lumiModules, nil
+}
+
+func (v *lumiVsphereHost) GetAdvancedsettings() ([]interface{}, error) {
+	client, err := vsphere.New(defaultCfg)
+	if err != nil {
+		return nil, err
+	}
+
+	path, err := v.Inventorypath()
+	if err != nil {
+		return nil, err
+	}
+
+	host, err := client.Host(path)
+	if err != nil {
+		return nil, err
+	}
+
+	settings, err := vsphere.HostOptions(host)
+	if err != nil {
+		return nil, err
+	}
+	lumiSettings := make([]interface{}, len(settings))
+	for i, s := range settings {
+		lumiSetting, err := v.Runtime.CreateResource("esxi.advancedsetting",
+			"key", s.Key,
+			"value", s.Value,
+		)
+		if err != nil {
+			return nil, err
+		}
+		lumiSettings[i] = lumiSetting
+	}
+	return lumiSettings, nil
+}
+
+func (v *lumiVsphereHost) GetServices() ([]interface{}, error) {
+	client, err := vsphere.New(defaultCfg)
+	if err != nil {
+		return nil, err
+	}
+
+	path, err := v.Inventorypath()
+	if err != nil {
+		return nil, err
+	}
+
+	host, err := client.Host(path)
+	if err != nil {
+		return nil, err
+	}
+
+	services, err := vsphere.HostServices(host)
+	if err != nil {
+		return nil, err
+	}
+	lumiServices := make([]interface{}, len(services))
+	for i, s := range services {
+		lumiService, err := v.Runtime.CreateResource("esxi.service",
+			"key", s.Key,
+			"label", s.Label,
+			"required", s.Required,
+			"uninstallable", s.Uninstallable,
+			"running", s.Running,
+			"ruleset", sliceInterface(s.Ruleset),
+			"policy", s.Policy, // on, off, automatic
+		)
+		if err != nil {
+			return nil, err
+		}
+		lumiServices[i] = lumiService
+	}
+	return lumiServices, nil
+}
+
+func sliceInterface(slice []string) []interface{} {
+	res := make([]interface{}, len(slice))
+	for i := range slice {
+		res[i] = slice[i]
+	}
+	return res
 }
