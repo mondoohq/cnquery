@@ -589,3 +589,35 @@ func (esxi *Esxi) SystemVersion() (*EsxiSystemVersion, error) {
 	}
 	return &version, nil
 }
+
+func (esxi *Esxi) Snmp() (map[string]interface{}, error) {
+	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := e.Run([]string{"system", "snmp", "get"})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(res.Values) == 0 {
+		return nil, errors.New("could not detect esxi system version ")
+	}
+
+	if len(res.Values) > 1 {
+		return nil, errors.New("ambiguous esxi system version")
+	}
+
+	snmp := map[string]interface{}{}
+	val := res.Values[0]
+	for k := range val {
+		if len(val[k]) == 1 {
+			value := val[k][0]
+			snmp[k] = value
+		} else {
+			log.Error().Str("key", k).Msg("snmp> unsupported key")
+		}
+	}
+	return snmp, nil
+}
