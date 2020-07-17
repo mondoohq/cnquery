@@ -431,6 +431,8 @@ vsphere.host {
   packages() []esxi.vib
   acceptancelevel() string
   kernelmodules() []esxi.kernelmodule
+  advancedsettings() []esxi.advancedsetting
+  services() []esxi.service
 }
 
 vsphere.vm {
@@ -481,4 +483,19 @@ esxi.kernelmodule {
 	signaturedigest string
 	signaturefingerprint string
   vibacceptancelevel string
+}
+
+esxi.advancedsetting {
+  key string
+  value string
+}
+
+esxi.service {
+  key string
+  label string
+  required bool
+  uninstallable bool
+  running bool
+  ruleset []string
+  policy string
 }
