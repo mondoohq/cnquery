@@ -435,6 +435,7 @@ vsphere.host {
   services() []esxi.service
   timezone() esxi.timezone
   ntp() esxi.ntpconfig
+  snmp() map[string]string
 }
 
 vsphere.vm {

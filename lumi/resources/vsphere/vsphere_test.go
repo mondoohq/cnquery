@@ -116,5 +116,10 @@ func TestESXi(t *testing.T) {
 		settings, err = HostOptions(hosts[0])
 		require.NoError(t, err)
 		assert.Equal(t, 1045, len(settings))
+
+		// get snmp settings
+		snmpSettings, err := e.Snmp()
+		require.NoError(t, err)
+		assert.Equal(t, 10, len(snmpSettings))
 	}
 }

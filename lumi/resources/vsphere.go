@@ -485,3 +485,11 @@ func (v *lumiVsphereHost) GetNtp() (interface{}, error) {
 
 	return lumiNtpConfig, nil
 }
+
+func (v *lumiVsphereHost) GetSnmp() (map[string]interface{}, error) {
+	esxiClient, err := v.esxiClient()
+	if err != nil {
+		return nil, err
+	}
+	return esxiClient.Snmp()
+}
