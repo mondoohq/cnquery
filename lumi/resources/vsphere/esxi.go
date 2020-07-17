@@ -552,8 +552,6 @@ func (esxi *Esxi) SystemVersion() (*EsxiSystemVersion, error) {
 		return nil, err
 	}
 
-	// NOTE: do not use the powershell syntax, stick with the plain esxcli syntax
-	// esxcli <conn_options> system module get --module=module_name
 	res, err := e.Run([]string{"system", "version", "get"})
 	if err != nil {
 		return nil, err
