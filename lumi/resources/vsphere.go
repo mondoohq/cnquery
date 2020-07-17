@@ -44,6 +44,14 @@ func (v *lumiEsxiService) id() (string, error) {
 	return v.Key()
 }
 
+func (v *lumiEsxiTimezone) id() (string, error) {
+	return v.Key()
+}
+
+func (v *lumiEsxiNtpconfig) id() (string, error) {
+	return v.Id()
+}
+
 func (v *lumiVsphere) id() (string, error) {
 	return "vsphere", nil
 }
@@ -409,4 +417,71 @@ func sliceInterface(slice []string) []interface{} {
 		res[i] = slice[i]
 	}
 	return res
+}
+
+func (v *lumiVsphereHost) GetTimezone() (interface{}, error) {
+	client, err := vsphere.New(defaultCfg)
+	if err != nil {
+		return nil, err
+	}
+
+	path, err := v.Inventorypath()
+	if err != nil {
+		return nil, err
+	}
+
+	host, err := client.Host(path)
+	if err != nil {
+		return nil, err
+	}
+
+	datetimeinfo, err := vsphere.HostDateTime(host)
+	if err != nil {
+		return nil, err
+	}
+
+	lumiTimezone, err := v.Runtime.CreateResource("esxi.timezone",
+		"key", datetimeinfo.TimeZone.Key,
+		"name", datetimeinfo.TimeZone.Name,
+		"offset", int64(datetimeinfo.TimeZone.GmtOffset),
+		"description", datetimeinfo.TimeZone.Description,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return lumiTimezone, nil
+}
+
+func (v *lumiVsphereHost) GetNtp() (interface{}, error) {
+	client, err := vsphere.New(defaultCfg)
+	if err != nil {
+		return nil, err
+	}
+
+	path, err := v.Inventorypath()
+	if err != nil {
+		return nil, err
+	}
+
+	host, err := client.Host(path)
+	if err != nil {
+		return nil, err
+	}
+
+	datetimeinfo, err := vsphere.HostDateTime(host)
+	if err != nil {
+		return nil, err
+	}
+
+	lumiNtpConfig, err := v.Runtime.CreateResource("esxi.ntpconfig",
+		"id", "ntp "+host.InventoryPath,
+		"server", sliceInterface(datetimeinfo.NtpConfig.Server),
+		"config", sliceInterface(datetimeinfo.NtpConfig.ConfigFile),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return lumiNtpConfig, nil
 }
