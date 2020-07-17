@@ -245,6 +245,43 @@ func (v *lumiVsphereHost) GetVmknics() ([]interface{}, error) {
 	}
 
 	return lumiVmknics, nil
+}
 
-	return nil, nil
+func (v *lumiVsphereHost) GetPackages() ([]interface{}, error) {
+	esxiClient, err := v.esxiClient()
+	if err != nil {
+		return nil, err
+	}
+	vibs, err := esxiClient.Vibs()
+	if err != nil {
+		return nil, err
+	}
+
+	lumiPackages := make([]interface{}, len(vibs))
+	for i, vib := range vibs {
+		lumiVib, err := v.Runtime.CreateResource("esxi.vib",
+			"id", vib.ID,
+			"name", vib.Name,
+			"acceptancelevel", vib.AcceptanceLevel,
+			"creationdate", vib.CreationDate,
+			"installdate", vib.InstallDate,
+			"status", vib.Status,
+			"vendor", vib.Vendor,
+			"version", vib.Version,
+		)
+		if err != nil {
+			return nil, err
+		}
+		lumiPackages[i] = lumiVib
+	}
+
+	return lumiPackages, nil
+}
+
+func (v *lumiVsphereHost) GetAcceptancelevel() (string, error) {
+	esxiClient, err := v.esxiClient()
+	if err != nil {
+		return "", err
+	}
+	return esxiClient.SoftwareAcceptance()
 }

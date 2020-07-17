@@ -428,6 +428,8 @@ vsphere.host {
   standardvswitch() []vsphere.vswitch
   adapters() []vsphere.vmnic
   vmknics() []vsphere.vmknic
+  packages() []esxi.vib
+  acceptancelevel() string
 }
 
 vsphere.vm {
@@ -455,4 +457,15 @@ vsphere.vmnic {
 vsphere.vmknic {
   name string
   properties map[string]string
+}
+
+esxi.vib {
+  id string
+	name string
+	acceptancelevel string
+	creationdate string
+	installdate string
+	status string
+	vendor string
+	version string
 }
