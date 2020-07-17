@@ -28,6 +28,10 @@ func (v *lumiVsphereVmknic) id() (string, error) {
 	return v.Name()
 }
 
+func (v *lumiEsxiVib) id() (string, error) {
+	return v.Id()
+}
+
 func (v *lumiVsphere) id() (string, error) {
 	return "vsphere", nil
 }
@@ -147,7 +151,7 @@ func (v *lumiVsphereDatacenter) GetHosts() ([]interface{}, error) {
 	return lumiHosts, nil
 }
 
-func (v *lumiVsphereHost) GetStandardvswitch() ([]interface{}, error) {
+func (v *lumiVsphereHost) esxiClient() (*vsphere.Esxi, error) {
 	client, err := vsphere.New(defaultCfg)
 	if err != nil {
 		return nil, err
@@ -163,7 +167,17 @@ func (v *lumiVsphereHost) GetStandardvswitch() ([]interface{}, error) {
 		return nil, err
 	}
 
-	vswitches, err := vsphere.EsxiVswitchStandard(client.Client, host)
+	esxi := vsphere.NewEsxiClient(client.Client, host)
+	return esxi, nil
+}
+
+func (v *lumiVsphereHost) GetStandardvswitch() ([]interface{}, error) {
+	esxiClient, err := v.esxiClient()
+	if err != nil {
+		return nil, err
+	}
+
+	vswitches, err := esxiClient.VswitchStandard()
 	if err != nil {
 		return nil, err
 	}
@@ -184,22 +198,11 @@ func (v *lumiVsphereHost) GetStandardvswitch() ([]interface{}, error) {
 }
 
 func (v *lumiVsphereHost) GetAdapters() ([]interface{}, error) {
-	client, err := vsphere.New(defaultCfg)
+	esxiClient, err := v.esxiClient()
 	if err != nil {
 		return nil, err
 	}
-
-	path, err := v.Inventorypath()
-	if err != nil {
-		return nil, err
-	}
-
-	host, err := client.Host(path)
-	if err != nil {
-		return nil, err
-	}
-
-	adapters, err := vsphere.EsxiAdapters(client.Client, host)
+	adapters, err := esxiClient.Adapters()
 	if err != nil {
 		return nil, err
 	}
@@ -220,22 +223,11 @@ func (v *lumiVsphereHost) GetAdapters() ([]interface{}, error) {
 }
 
 func (v *lumiVsphereHost) GetVmknics() ([]interface{}, error) {
-	client, err := vsphere.New(defaultCfg)
+	esxiClient, err := v.esxiClient()
 	if err != nil {
 		return nil, err
 	}
-
-	path, err := v.Inventorypath()
-	if err != nil {
-		return nil, err
-	}
-
-	host, err := client.Host(path)
-	if err != nil {
-		return nil, err
-	}
-
-	vmknics, err := vsphere.EsxiVmknics(client.Client, host)
+	vmknics, err := esxiClient.Vmknics()
 	if err != nil {
 		return nil, err
 	}
