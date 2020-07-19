@@ -166,6 +166,11 @@ func (c *Client) ListVirtualMachines(dc *object.Datacenter) ([]*object.VirtualMa
 	return res, nil
 }
 
+func (c *Client) VirtualMachine(path string) (*object.VirtualMachine, error) {
+	finder := find.NewFinder(c.Client.Client, true)
+	return finder.VirtualMachine(context.Background(), path)
+}
+
 // IsNotFound returns a boolean indicating whether the error is a not found error.
 func IsNotFound(err error) bool {
 	if err == nil {
