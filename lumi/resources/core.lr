@@ -507,3 +507,15 @@ esxi.ntpconfig {
   server []string
   config []string
 }
+
+aristaeos {
+  runningconfig() string
+  systemconfig() map[string]string
+  ipinterfaces() []aristaeos.ipinterface
+}
+
+aristaeos.ipinterface {
+  name string
+  address string
+  mtu string
+}
