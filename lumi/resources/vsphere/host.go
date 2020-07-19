@@ -34,7 +34,7 @@ func (c *Client) HostProperties(host *object.HostSystem) (map[string]interface{}
 	return dataProps, nil
 }
 
-func HostOptions(host *object.HostSystem) ([]EsxiAdvancedSetting, error) {
+func HostOptions(host *object.HostSystem) (map[string]interface{}, error) {
 	ctx := context.Background()
 	m, err := host.ConfigManager().OptionManager(ctx)
 	if err != nil {
@@ -43,15 +43,15 @@ func HostOptions(host *object.HostSystem) ([]EsxiAdvancedSetting, error) {
 
 	var om mo.OptionManager
 	err = m.Properties(ctx, m.Reference(), []string{"setting"}, &om)
-	res := make([]EsxiAdvancedSetting, len(om.Setting))
+
+	advancedProps := map[string]interface{}{}
 	for i := range om.Setting {
-		setting := om.Setting[i]
-		res[i] = EsxiAdvancedSetting{
-			Key:   setting.GetOptionValue().Key,
-			Value: fmt.Sprintf("%v", setting.GetOptionValue().Value),
-		}
+		prop := om.Setting[i]
+		key := prop.GetOptionValue().Key
+		value := fmt.Sprintf("%v", prop.GetOptionValue().Value)
+		advancedProps[key] = value
 	}
-	return res, nil
+	return advancedProps, nil
 }
 
 func HostServices(host *object.HostSystem) ([]types.HostService, error) {

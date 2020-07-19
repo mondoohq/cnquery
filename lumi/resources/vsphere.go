@@ -36,10 +36,6 @@ func (v *lumiEsxiKernelmodule) id() (string, error) {
 	return v.Name()
 }
 
-func (v *lumiEsxiAdvancedsetting) id() (string, error) {
-	return v.Key()
-}
-
 func (v *lumiEsxiService) id() (string, error) {
 	return v.Key()
 }
@@ -338,7 +334,7 @@ func (v *lumiVsphereHost) GetKernelmodules() ([]interface{}, error) {
 	return lumiModules, nil
 }
 
-func (v *lumiVsphereHost) GetAdvancedsettings() ([]interface{}, error) {
+func (v *lumiVsphereHost) GetAdvancedsettings() (map[string]interface{}, error) {
 	client, err := vsphere.New(defaultCfg)
 	if err != nil {
 		return nil, err
@@ -354,22 +350,7 @@ func (v *lumiVsphereHost) GetAdvancedsettings() ([]interface{}, error) {
 		return nil, err
 	}
 
-	settings, err := vsphere.HostOptions(host)
-	if err != nil {
-		return nil, err
-	}
-	lumiSettings := make([]interface{}, len(settings))
-	for i, s := range settings {
-		lumiSetting, err := v.Runtime.CreateResource("esxi.advancedsetting",
-			"key", s.Key,
-			"value", s.Value,
-		)
-		if err != nil {
-			return nil, err
-		}
-		lumiSettings[i] = lumiSetting
-	}
-	return lumiSettings, nil
+	return vsphere.HostOptions(host)
 }
 
 func (v *lumiVsphereHost) GetServices() ([]interface{}, error) {
@@ -492,4 +473,69 @@ func (v *lumiVsphereHost) GetSnmp() (map[string]interface{}, error) {
 		return nil, err
 	}
 	return esxiClient.Snmp()
+}
+
+func (v *lumiVsphereDatacenter) GetVms() ([]interface{}, error) {
+	client, err := vsphere.New(defaultCfg)
+	if err != nil {
+		return nil, err
+	}
+
+	path, err := v.Inventorypath()
+	if err != nil {
+		return nil, err
+	}
+
+	dc, err := client.Datacenter(path)
+	if err != nil {
+		return nil, err
+	}
+
+	vms, err := client.ListVirtualMachines(dc)
+	if err != nil {
+		return nil, err
+	}
+
+	lumiVms := make([]interface{}, len(vms))
+	for i, vm := range vms {
+
+		props, err := vsphere.VmProperties(vm)
+		if err != nil {
+			return nil, err
+		}
+
+		lumiVm, err := v.Runtime.CreateResource("vsphere.vm",
+			"moid", vm.Reference().Value,
+			"name", vm.Name(),
+			"properties", props,
+			"inventorypath", vm.InventoryPath,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		lumiVms[i] = lumiVm
+	}
+
+	return lumiVms, nil
+}
+
+func (v *lumiVsphereVm) GetAdvancedsettings() (map[string]interface{}, error) {
+
+	client, err := vsphere.New(defaultCfg)
+	if err != nil {
+		return nil, err
+	}
+
+	path, err := v.Inventorypath()
+	if err != nil {
+		return nil, err
+	}
+
+	vm, err := client.VirtualMachine(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return vsphere.AdvancedSettings(vm)
 }

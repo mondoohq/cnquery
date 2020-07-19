@@ -412,6 +412,7 @@ vsphere.datacenter {
   name string
   inventorypath string
   hosts() []vsphere.host
+  vms() []vsphere.vm
 }
 
 vsphere.license {
@@ -431,7 +432,7 @@ vsphere.host {
   packages() []esxi.vib
   acceptancelevel() string
   kernelmodules() []esxi.kernelmodule
-  advancedsettings() []esxi.advancedsetting
+  advancedsettings() map[string]string
   services() []esxi.service
   timezone() esxi.timezone
   ntp() esxi.ntpconfig
@@ -440,14 +441,10 @@ vsphere.host {
 
 vsphere.vm {
   moid string
-  datacenter string
-  guestid string
-  firmware string
-  numcpus int
-  memory int
-  cpulimit int
-  memorylimit int
-  size int
+  name string
+  inventorypath string
+  properties map[string]string
+  advancedsettings() map[string]string
 }
 
 vsphere.vswitch {
@@ -486,11 +483,6 @@ esxi.kernelmodule {
 	signaturedigest string
 	signaturefingerprint string
   vibacceptancelevel string
-}
-
-esxi.advancedsetting {
-  key string
-  value string
 }
 
 esxi.service {

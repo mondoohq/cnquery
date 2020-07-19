@@ -62,11 +62,6 @@ func TestESXi(t *testing.T) {
 
 	// list hosts
 	for _, dc := range dcs {
-		// list vms
-		vms, err := client.ListVirtualMachines(dc)
-		require.NoError(t, err)
-		assert.Equal(t, 0, len(vms))
-
 		// list hosts
 		hosts, err := client.ListHosts(dc)
 		require.NoError(t, err)
@@ -121,5 +116,15 @@ func TestESXi(t *testing.T) {
 		snmpSettings, err := e.Snmp()
 		require.NoError(t, err)
 		assert.Equal(t, 10, len(snmpSettings))
+
+		// list vms
+		vms, err := client.ListVirtualMachines(dc)
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(vms))
+
+		vm := vms[0]
+		vsettings, err := client.AdvancedSettings(vm)
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(vsettings))
 	}
 }
