@@ -159,6 +159,13 @@ func (r *RawData) Result() *Result {
 			Error: r.Error.Error(),
 		}
 	}
+
+	if r.Value == nil {
+		return &Result{Data: &Primitive{
+			Type: string(r.Type),
+		}}
+	}
+
 	data, err := raw2primitive(r.Value, r.Type)
 	if err != nil {
 		return &Result{Error: err.Error()}
