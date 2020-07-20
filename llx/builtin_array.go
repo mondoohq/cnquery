@@ -74,17 +74,24 @@ func arrayBlockList(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 		return nil, 0, errors.New("Block function is nil")
 	}
 
-	finishedBlocks := 0
+	// pre-init everything to avoid concurrency issues with long list
 	allResults := make([]interface{}, len(arr))
 	for idx := range arr {
+		blockResult := map[string]interface{}{}
+		allResults[idx] = blockResult
+	}
+
+	finishedBlocks := 0
+
+	for idx := range arr {
+		blockResult := allResults[idx].(map[string]interface{})
+
 		bind := &RawData{
 			Type:  bind.Type.Child(),
 			Value: arr[idx],
 		}
-		finished := false
 
-		blockResult := map[string]interface{}{}
-		allResults[idx] = blockResult
+		finished := false
 		err := c.runFunctionBlock(bind, fun, func(res *RawResult) {
 			blockResult[res.CodeID] = res.Data
 			if len(blockResult) == len(fun.Entrypoints) && !finished {
