@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"go.mondoo.io/mondoo/motor/motorcloud/aws"
+	"go.mondoo.io/mondoo/motor/discovery/aws"
 )
 
 func TestParseParseEc2ReferenceId(t *testing.T) {

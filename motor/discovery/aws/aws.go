@@ -11,7 +11,7 @@ import (
 //go:generate packr2 --ignore-imports
 
 const MISSING_REGION_MSG = `
-The AWS region must be set for the deployment. Please use environment variables 
+The AWS region must be set for the deployment. Please use environment variables
 or AWS profiles. Further details are available at:
 - https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
 - https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html

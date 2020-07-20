@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/pkg/errors"
-	"go.mondoo.io/mondoo/motor/motorcloud/docker"
+	"go.mondoo.io/mondoo/motor/discovery/docker"
 	"go.mondoo.io/mondoo/motor/runtime"
 	"go.mondoo.io/mondoo/nexus/assets"
 	v1 "k8s.io/api/core/v1"

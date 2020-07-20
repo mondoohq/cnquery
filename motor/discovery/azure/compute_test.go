@@ -5,7 +5,7 @@ package azure_test
 // 	"testing"
 
 // 	"github.com/stretchr/testify/require"
-// 	"go.mondoo.io/mondoo/motor/motorcloud/azure"
+// 	"go.mondoo.io/mondoo/motor/discovery/azure"
 // 	"gotest.tools/assert"
 // )
 

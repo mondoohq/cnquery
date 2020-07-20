@@ -3,9 +3,9 @@ package discovery
 import (
 	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/motorcloud/aws"
-	"go.mondoo.io/mondoo/motor/motorcloud/docker"
-	"go.mondoo.io/mondoo/motor/motorcloud/gcp"
+	"go.mondoo.io/mondoo/motor/discovery/aws"
+	"go.mondoo.io/mondoo/motor/discovery/docker"
+	"go.mondoo.io/mondoo/motor/discovery/gcp"
 	"go.mondoo.io/mondoo/motor/runtime"
 	"go.mondoo.io/mondoo/motor/stringslice"
 	"go.mondoo.io/mondoo/nexus/assets"

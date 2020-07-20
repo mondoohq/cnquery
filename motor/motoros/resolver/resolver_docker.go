@@ -10,7 +10,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/rs/zerolog/log"
-	motorcloud_docker "go.mondoo.io/mondoo/motor/motorcloud/docker"
+	motorcloud_docker "go.mondoo.io/mondoo/motor/discovery/docker"
 	"go.mondoo.io/mondoo/motor/motoros/docker/docker_engine"
 	"go.mondoo.io/mondoo/motor/motoros/docker/image"
 	"go.mondoo.io/mondoo/motor/motoros/docker/snapshot"
