@@ -3,7 +3,7 @@ package processes
 import (
 	"errors"
 
-	motor "go.mondoo.io/mondoo/motor/motoros"
+	"go.mondoo.io/mondoo/motor"
 )
 
 type OSProcess struct {

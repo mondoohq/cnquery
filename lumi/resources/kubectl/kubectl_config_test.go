@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/lumi/resources/kubectl"
-	motor "go.mondoo.io/mondoo/motor/motoros"
-	"go.mondoo.io/mondoo/motor/motoros/mock"
-	"go.mondoo.io/mondoo/motor/motoros/types"
+	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestKubectlConfigParser(t *testing.T) {
@@ -37,7 +37,7 @@ func TestKubectlConfigParser(t *testing.T) {
 }
 
 func TestKubectlExecuter(t *testing.T) {
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/linux_kubeclt.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/linux_kubeclt.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

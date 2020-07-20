@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	motor "go.mondoo.io/mondoo/motor/motoros"
-	"go.mondoo.io/mondoo/motor/motoros/platform"
+	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/platform"
 )
 
 type Uptime interface {

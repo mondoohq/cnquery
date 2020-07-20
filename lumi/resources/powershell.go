@@ -5,7 +5,7 @@ import (
 
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
-	"go.mondoo.io/mondoo/motor/motoros/types"
+	"go.mondoo.io/mondoo/motor/transports"
 )
 
 // TODO: consider sharing more code with command resource
@@ -13,8 +13,8 @@ func (c *lumiPowershell) id() (string, error) {
 	return c.Script()
 }
 
-func (c *lumiPowershell) execute() (*types.Command, error) {
-	var executedCmd *types.Command
+func (c *lumiPowershell) execute() (*transports.Command, error) {
+	var executedCmd *transports.Command
 
 	cmd, err := c.Script()
 	if err != nil {
@@ -26,7 +26,7 @@ func (c *lumiPowershell) execute() (*types.Command, error) {
 
 	data, ok := c.Cache.Load(encodedCmd)
 	if ok {
-		executedCmd, ok := data.Data.(*types.Command)
+		executedCmd, ok := data.Data.(*transports.Command)
 		if ok {
 			return executedCmd, nil
 		}

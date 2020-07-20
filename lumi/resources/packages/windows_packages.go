@@ -9,8 +9,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
-	motor "go.mondoo.io/mondoo/motor/motoros"
-	"go.mondoo.io/mondoo/motor/motoros/platform/winbuild"
+	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/platform/winbuild"
 )
 
 // ProcessorArchitecture Enum

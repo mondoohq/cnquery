@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/lumi/resources/packages"
-	motor "go.mondoo.io/mondoo/motor/motoros"
-	"go.mondoo.io/mondoo/motor/motoros/mock"
-	"go.mondoo.io/mondoo/motor/motoros/types"
+	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestOpkgParser(t *testing.T) {
@@ -48,7 +48,7 @@ firewall - 2016-11-29-1`
 
 func TestOpkgManager(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/packages_opkg.toml")
-	trans, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: filepath})
 	require.NoError(t, err)
 
 	m, err := motor.New(trans)

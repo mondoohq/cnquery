@@ -3,7 +3,7 @@ package groups
 import (
 	"errors"
 
-	motor "go.mondoo.io/mondoo/motor/motoros"
+	"go.mondoo.io/mondoo/motor"
 )
 
 func ResolveManager(motor *motor.Motor) (OSGroupManager, error) {

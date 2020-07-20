@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
-	motor "go.mondoo.io/mondoo/motor/motoros"
+	"go.mondoo.io/mondoo/motor"
 )
 
 type WindowsUptime struct {

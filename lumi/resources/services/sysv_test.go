@@ -5,13 +5,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	motor "go.mondoo.io/mondoo/motor/motoros"
-	"go.mondoo.io/mondoo/motor/motoros/mock"
-	"go.mondoo.io/mondoo/motor/motoros/types"
+	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestParseSysvServices(t *testing.T) {
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/amzn1.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/amzn1.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -26,7 +26,7 @@ func TestParseSysvServices(t *testing.T) {
 }
 
 func TestParseSysvServicesRunlevel(t *testing.T) {
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/amzn1.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/amzn1.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -44,7 +44,7 @@ func TestParseSysvServicesRunlevel(t *testing.T) {
 }
 
 func TestParseSysvServicesRunning(t *testing.T) {
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/amzn1.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/amzn1.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

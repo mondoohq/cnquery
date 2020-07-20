@@ -3,8 +3,8 @@ package reboot
 import (
 	"errors"
 
-	motor "go.mondoo.io/mondoo/motor/motoros"
-	"go.mondoo.io/mondoo/motor/motoros/platform"
+	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/platform"
 )
 
 type Reboot interface {

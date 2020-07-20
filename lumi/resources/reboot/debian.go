@@ -1,6 +1,6 @@
 package reboot
 
-import motor "go.mondoo.io/mondoo/motor/motoros"
+import "go.mondoo.io/mondoo/motor"
 
 const LinuxRebootFile = "/var/run/reboot-required"
 

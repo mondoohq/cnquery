@@ -10,7 +10,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	motor "go.mondoo.io/mondoo/motor/motoros"
+	"go.mondoo.io/mondoo/motor"
 )
 
 var (

@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/certificates"
-	"go.mondoo.io/mondoo/motor/motoros/platform"
+	"go.mondoo.io/mondoo/motor/platform"
 )
 
 func (s *lumiParseCertificates) init(args *lumi.Args) (*lumi.Args, Authorizedkeys, error) {

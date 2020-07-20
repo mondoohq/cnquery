@@ -5,7 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	motor "go.mondoo.io/mondoo/motor/motoros"
+	"go.mondoo.io/mondoo/motor"
 	"sigs.k8s.io/yaml"
 )
 

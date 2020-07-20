@@ -4,15 +4,15 @@ import (
 	"io/ioutil"
 
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/motor/motoros/types"
+	"go.mondoo.io/mondoo/motor/transports"
 )
 
 func (c *lumiCommand) id() (string, error) {
 	return c.Command()
 }
 
-func (c *lumiCommand) execute() (*types.Command, error) {
-	var executedCmd *types.Command
+func (c *lumiCommand) execute() (*transports.Command, error) {
+	var executedCmd *transports.Command
 
 	cmd, err := c.Command()
 	if err != nil {
@@ -21,7 +21,7 @@ func (c *lumiCommand) execute() (*types.Command, error) {
 
 	data, ok := c.Cache.Load(cmd)
 	if ok {
-		executedCmd, ok := data.Data.(*types.Command)
+		executedCmd, ok := data.Data.(*transports.Command)
 		if ok {
 			return executedCmd, nil
 		}

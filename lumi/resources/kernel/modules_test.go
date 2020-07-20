@@ -5,12 +5,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tj/assert"
-	"go.mondoo.io/mondoo/motor/motoros/mock"
-	"go.mondoo.io/mondoo/motor/motoros/types"
+	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestLsmodParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/debian.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/debian.toml"})
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("/sbin/lsmod")
@@ -29,7 +29,7 @@ func TestLsmodParser(t *testing.T) {
 }
 
 func TestLinuxProcModulesParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/debian.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/debian.toml"})
 	require.NoError(t, err)
 
 	f, err := mock.FS().Open("/proc/modules")
@@ -49,7 +49,7 @@ func TestLinuxProcModulesParser(t *testing.T) {
 }
 
 func TestKldstatParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/freebsd12.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/freebsd12.toml"})
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("kldstat")
@@ -68,7 +68,7 @@ func TestKldstatParser(t *testing.T) {
 }
 
 func TestKextstatParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/osx.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/osx.toml"})
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("kextstat")

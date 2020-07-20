@@ -4,12 +4,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/motor/motoros/mock"
-	"go.mondoo.io/mondoo/motor/motoros/types"
+	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestRpmUpdateParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/updates_rpm.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/updates_rpm.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +35,7 @@ func TestRpmUpdateParser(t *testing.T) {
 }
 
 func TestZypperUpdateParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/updates_zypper.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/updates_zypper.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,7 +60,7 @@ func TestZypperUpdateParser(t *testing.T) {
 
 // SUSE OS updates
 func TestZypperPatchParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/updates_zypper.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/updates_zypper.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
