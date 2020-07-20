@@ -5,12 +5,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/lumi/resources/packages"
-	"go.mondoo.io/mondoo/motor/motoros/mock"
-	"go.mondoo.io/mondoo/motor/motoros/types"
+	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestDpkgParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/packages_dpkg.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/packages_dpkg.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,7 +64,7 @@ security related events.`,
 }
 
 func TestDpkgParserStatusD(t *testing.T) {
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/packages_dpkg_statusd.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/packages_dpkg_statusd.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -96,7 +96,7 @@ and the text of several common licenses in use on Debian systems.`,
 }
 
 func TestDpkgUpdateParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/updates_dpkg.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/updates_dpkg.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

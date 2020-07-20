@@ -3,7 +3,7 @@ package packages
 import (
 	"fmt"
 
-	motor "go.mondoo.io/mondoo/motor/motoros"
+	"go.mondoo.io/mondoo/motor"
 )
 
 type SuseUpdateManager struct {

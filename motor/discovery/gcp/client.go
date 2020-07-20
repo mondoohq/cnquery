@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/pkg/errors"
-	"go.mondoo.io/mondoo/motor/motoros/local"
+	"go.mondoo.io/mondoo/motor/transports/local"
 	"golang.org/x/oauth2/google"
 )
 

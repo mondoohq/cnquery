@@ -9,8 +9,8 @@ import (
 
 	"github.com/kballard/go-shellquote"
 	"github.com/rs/zerolog/log"
-	motor "go.mondoo.io/mondoo/motor/motoros"
-	"go.mondoo.io/mondoo/motor/motoros/platform"
+	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/platform"
 )
 
 var (

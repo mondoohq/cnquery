@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"go.mondoo.io/mondoo/lumi/resources/packages"
-	motor "go.mondoo.io/mondoo/motor/motoros"
-	"go.mondoo.io/mondoo/motor/motoros/capabilities"
+	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/vadvisor/versions/rpm"
 )
 
@@ -21,7 +21,7 @@ func (s *RpmNewestKernel) Name() string {
 
 func (s *RpmNewestKernel) RebootPending() (bool, error) {
 	// if it is a static asset, no reboot is pending
-	if !s.Motor.HasCapability(capabilities.RunCommand) {
+	if !s.Motor.HasCapability(transports.Cabability_RunCommand) {
 		return false, nil
 	}
 

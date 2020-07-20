@@ -8,8 +8,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/aws/aws-sdk-go-v2/aws/ec2metadata"
-	motor "go.mondoo.io/mondoo/motor/motoros"
-	"go.mondoo.io/mondoo/motor/motoros/platform"
+	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/platform"
 )
 
 func NewUnix(m *motor.Motor) *UnixInstanceMetadata {

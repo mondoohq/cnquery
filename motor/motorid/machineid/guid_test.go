@@ -3,15 +3,15 @@ package machineid_test
 import (
 	"testing"
 
+	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/motorid/machineid"
-	motor "go.mondoo.io/mondoo/motor/motoros"
-	"go.mondoo.io/mondoo/motor/motoros/mock"
-	"go.mondoo.io/mondoo/motor/motoros/types"
+	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/mock"
 	"gotest.tools/assert"
 )
 
 func TestGuidWindows(t *testing.T) {
-	trans, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/guid_windows.toml"})
+	trans, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/guid_windows.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

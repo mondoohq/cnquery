@@ -12,8 +12,7 @@ import (
 	"strings"
 
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/motor/motoros/capabilities"
-	"go.mondoo.io/mondoo/motor/motoros/types"
+	"go.mondoo.io/mondoo/motor/transports"
 )
 
 var findTypes = map[string]string{
@@ -160,10 +159,10 @@ func (l *lumiFilesFind) GetList() ([]interface{}, error) {
 
 	var foundFiles []string
 	caps := l.Runtime.Motor.Transport.Capabilities()
-	if caps.HasCapability(capabilities.FileSearch) {
+	if caps.HasCapability(transports.Cabability_FileSearch) {
 		fs := l.Runtime.Motor.Transport.FS()
 
-		fsSearch, ok := fs.(types.FileSearch)
+		fsSearch, ok := fs.(transports.FileSearch)
 		if !ok {
 			return nil, errors.New("find is not supported for your platform")
 		}
@@ -172,7 +171,7 @@ func (l *lumiFilesFind) GetList() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-	} else if caps.HasCapability(capabilities.RunCommand) {
+	} else if caps.HasCapability(transports.Cabability_RunCommand) {
 		var call strings.Builder
 		call.WriteString("find ")
 		call.WriteString(strconv.Quote(path))

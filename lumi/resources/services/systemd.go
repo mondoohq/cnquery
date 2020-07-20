@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	motor "go.mondoo.io/mondoo/motor/motoros"
+	"go.mondoo.io/mondoo/motor"
 )
 
 var (

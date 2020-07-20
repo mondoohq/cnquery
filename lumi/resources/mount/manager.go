@@ -2,7 +2,7 @@ package mount
 
 import (
 	"github.com/pkg/errors"
-	motor "go.mondoo.io/mondoo/motor/motoros"
+	"go.mondoo.io/mondoo/motor"
 )
 
 type MountPoint struct {

@@ -6,13 +6,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/lumi/resources/services"
-	motor "go.mondoo.io/mondoo/motor/motoros"
-	"go.mondoo.io/mondoo/motor/motoros/mock"
-	"go.mondoo.io/mondoo/motor/motoros/types"
+	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestManagerDebian(t *testing.T) {
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/linux_systemd.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/linux_systemd.toml"})
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -27,7 +27,7 @@ func TestManagerDebian(t *testing.T) {
 
 func TestManagerAmzn1(t *testing.T) {
 	// tests fallback to upstart service
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/amzn1.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/amzn1.toml"})
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -42,7 +42,7 @@ func TestManagerAmzn1(t *testing.T) {
 
 func TestManagerCentos6(t *testing.T) {
 	// tests fallback to upstart service
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/centos6.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/centos6.toml"})
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -57,7 +57,7 @@ func TestManagerCentos6(t *testing.T) {
 
 func TestManagerUbuntu1404(t *testing.T) {
 	// tests fallback to upstart service
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/ubuntu1404.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/ubuntu1404.toml"})
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -72,7 +72,7 @@ func TestManagerUbuntu1404(t *testing.T) {
 
 func TestManagerOpensuse13(t *testing.T) {
 	// tests fallback to upstart service
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/opensuse13.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/opensuse13.toml"})
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -86,7 +86,7 @@ func TestManagerOpensuse13(t *testing.T) {
 }
 
 func TestManagerMacos(t *testing.T) {
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/osx.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/osx.toml"})
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -100,7 +100,7 @@ func TestManagerMacos(t *testing.T) {
 }
 
 func TestManagerFreebsd(t *testing.T) {
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/freebsd12.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/freebsd12.toml"})
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -114,7 +114,7 @@ func TestManagerFreebsd(t *testing.T) {
 }
 
 func TestManagerDragonflybsd5(t *testing.T) {
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/dragonfly5.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/dragonfly5.toml"})
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -128,7 +128,7 @@ func TestManagerDragonflybsd5(t *testing.T) {
 }
 
 func TestManagerOpenBsd6(t *testing.T) {
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/openbsd6.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/openbsd6.toml"})
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -142,7 +142,7 @@ func TestManagerOpenBsd6(t *testing.T) {
 }
 
 func TestManagerWindows(t *testing.T) {
-	mock, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/windows2019.toml"})
+	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/windows2019.toml"})
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)

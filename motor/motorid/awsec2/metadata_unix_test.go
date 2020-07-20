@@ -5,14 +5,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
-	motor "go.mondoo.io/mondoo/motor/motoros"
-	"go.mondoo.io/mondoo/motor/motoros/mock"
-	"go.mondoo.io/mondoo/motor/motoros/types"
+	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestEC2RoleProviderInstanceIdentityUnix(t *testing.T) {
-	trans, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/instance-identity_document_linux.toml"})
+	trans, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/instance-identity_document_linux.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

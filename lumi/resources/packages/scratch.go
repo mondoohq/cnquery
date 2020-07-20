@@ -1,6 +1,6 @@
 package packages
 
-import motor "go.mondoo.io/mondoo/motor/motoros"
+import "go.mondoo.io/mondoo/motor"
 
 type ScratchPkgManager struct {
 	motor *motor.Motor

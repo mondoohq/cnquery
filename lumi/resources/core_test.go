@@ -9,9 +9,9 @@ import (
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources"
-	motor "go.mondoo.io/mondoo/motor/motoros"
-	"go.mondoo.io/mondoo/motor/motoros/mock"
-	"go.mondoo.io/mondoo/motor/motoros/types"
+	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/mock"
 	"go.mondoo.io/mondoo/policy/executor"
 )
 
@@ -19,7 +19,7 @@ func initExecutor() *executor.Executor {
 	registry := lumi.NewRegistry()
 	resources.Init(registry)
 
-	transport, err := mock.NewFromToml(&types.Endpoint{Backend: "mock", Path: "./testdata/arch.toml"})
+	transport, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/arch.toml"})
 	if err != nil {
 		panic(err.Error())
 	}
