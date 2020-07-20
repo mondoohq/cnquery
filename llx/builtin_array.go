@@ -94,9 +94,12 @@ func arrayBlockList(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 		finished := false
 		err := c.runFunctionBlock(bind, fun, func(res *RawResult) {
 			blockResult[res.CodeID] = res.Data
+
 			if len(blockResult) == len(fun.Entrypoints) && !finished {
 				finishedBlocks++
+				finished = true
 			}
+
 			if finishedBlocks >= len(arr) {
 				c.cache.Store(ref, &stepCache{
 					Result: &RawData{
