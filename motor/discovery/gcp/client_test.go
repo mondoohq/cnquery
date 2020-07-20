@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/motorcloud/gcp"
+	"go.mondoo.io/mondoo/motor/discovery/gcp"
 )
 
 func TestParseGcloudConfig(t *testing.T) {
