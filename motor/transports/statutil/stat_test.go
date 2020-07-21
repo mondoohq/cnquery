@@ -8,14 +8,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestLinuxStatCmd(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/linux.toml")
-	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: filepath})
+	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: filepath})
 	require.NoError(t, err)
 
 	statHelper := New(trans)
@@ -32,7 +31,7 @@ func TestLinuxStatCmd(t *testing.T) {
 
 func TestOpenbsdStatCmd(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/openbsd.toml")
-	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: filepath})
+	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: filepath})
 	require.NoError(t, err)
 
 	statHelper := New(trans)

@@ -6,8 +6,8 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/pkg/errors"
 	"go.mondoo.io/mondoo/motor/discovery/docker"
-	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/runtime"
+	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/nexus/assets"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -140,9 +140,9 @@ func toAsset(pod v1.Pod, status v1.ContainerStatus) *assets.Asset {
 			Runtime: runtime.RUNTIME_KUBERNETES,
 		},
 
-		Connections: []*motorapi.TransportConfig{
-			&motorapi.TransportConfig{
-				Backend: motorapi.TransportBackend_CONNECTION_DOCKER_IMAGE,
+		Connections: []*transports.TransportConfig{
+			&transports.TransportConfig{
+				Backend: transports.TransportBackend_CONNECTION_DOCKER_IMAGE,
 				Host:    connection,
 			},
 		},

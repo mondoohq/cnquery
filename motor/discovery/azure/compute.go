@@ -9,8 +9,8 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/runtime"
+	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/nexus/assets"
 )
 
@@ -147,7 +147,7 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*assets.Asset, error) {
 		// data, _ := json.Marshal(instance)
 		// fmt.Println(string(data))
 
-		connections := []*motorapi.TransportConfig{}
+		connections := []*transports.TransportConfig{}
 
 		interfaces := *instance.NetworkProfile.NetworkInterfaces
 		for ni := range interfaces {
@@ -164,8 +164,8 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*assets.Asset, error) {
 
 				if ipResp.IPAddress != nil {
 					ip := *ipResp.IPAddress
-					connections = append(connections, &motorapi.TransportConfig{
-						Backend: motorapi.TransportBackend_CONNECTION_SSH,
+					connections = append(connections, &transports.TransportConfig{
+						Backend: transports.TransportBackend_CONNECTION_SSH,
 						User:    *instance.OsProfile.AdminUsername,
 						Host:    ip,
 					})

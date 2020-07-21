@@ -6,13 +6,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/motor/motorapi"
+	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestGlobCommand(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/mock.toml")
-	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: filepath})
+	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: filepath})
 	assert.Equal(t, nil, err, "should create mock without error")
 
 	filesystem := trans.Fs
@@ -24,7 +24,7 @@ func TestGlobCommand(t *testing.T) {
 
 func TestLoadFile(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/mock.toml")
-	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: filepath})
+	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: filepath})
 	assert.Equal(t, nil, err, "should create mock without error")
 
 	f, err := trans.FS().Open("/etc/os-release")

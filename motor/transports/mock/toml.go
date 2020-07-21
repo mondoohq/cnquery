@@ -7,7 +7,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/motorapi"
+	"go.mondoo.io/mondoo/motor/transports"
 )
 
 // Data holds the mocked data entries
@@ -76,7 +76,7 @@ func ExportData(mock *Transport) ([]byte, error) {
 }
 
 // New returns a mock backend and loads the toml file by default
-func NewFromToml(endpoint *motorapi.TransportConfig) (*Transport, error) {
+func NewFromToml(endpoint *transports.TransportConfig) (*Transport, error) {
 	transport, err := New()
 	if err != nil {
 		return nil, err

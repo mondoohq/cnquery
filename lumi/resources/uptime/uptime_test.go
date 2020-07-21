@@ -7,12 +7,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/lumi/resources/uptime"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/motorapi"
+	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestUptimeOnLinux(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/linux.toml"})
+	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/linux.toml"})
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -27,7 +27,7 @@ func TestUptimeOnLinux(t *testing.T) {
 }
 
 func TestUptimeOnFreebsd(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/freebsd12.toml"})
+	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/freebsd12.toml"})
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -42,7 +42,7 @@ func TestUptimeOnFreebsd(t *testing.T) {
 }
 
 func TestUptimeOnWindows(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/windows.toml"})
+	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/windows.toml"})
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)

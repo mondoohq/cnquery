@@ -8,14 +8,13 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func SetupTest() *JobManager {
 	filepath, _ := filepath.Abs("./watcher_test.toml")
-	trans, _ := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: filepath})
+	trans, _ := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: filepath})
 	return NewJobManager(trans)
 }
 

@@ -9,12 +9,12 @@ import (
 	"github.com/kevinburke/ssh_config"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/motorapi"
+	"go.mondoo.io/mondoo/motor/transports"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/knownhosts"
 )
 
-func ReadSSHConfig(endpoint *motorapi.TransportConfig) *motorapi.TransportConfig {
+func ReadSSHConfig(endpoint *transports.TransportConfig) *transports.TransportConfig {
 	host := endpoint.Host
 
 	home, err := homedir.Dir()
@@ -81,8 +81,8 @@ func ReadSSHConfig(endpoint *motorapi.TransportConfig) *motorapi.TransportConfig
 	return endpoint
 }
 
-func VerifyConfig(endpoint *motorapi.TransportConfig) error {
-	if endpoint.Backend != motorapi.TransportBackend_CONNECTION_SSH {
+func VerifyConfig(endpoint *transports.TransportConfig) error {
+	if endpoint.Backend != transports.TransportBackend_CONNECTION_SSH {
 		return errors.New("only ssh backend for ssh transport supported")
 	}
 
@@ -94,7 +94,7 @@ func VerifyConfig(endpoint *motorapi.TransportConfig) error {
 	return nil
 }
 
-func DefaultConfig(endpoint *motorapi.TransportConfig) *motorapi.TransportConfig {
+func DefaultConfig(endpoint *transports.TransportConfig) *transports.TransportConfig {
 	p, err := endpoint.IntPort()
 	// use default port if port is 0
 	if err == nil && p <= 0 {

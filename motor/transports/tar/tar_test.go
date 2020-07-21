@@ -12,7 +12,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/motorapi"
+	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/tar"
 
 	"github.com/google/go-containerregistry/pkg/authn"
@@ -29,7 +29,7 @@ func TestTarCommand(t *testing.T) {
 		return
 	}
 
-	tarTransport, err := tar.New(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_TAR, Path: alpineContainerPath})
+	tarTransport, err := tar.New(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_TAR, Path: alpineContainerPath})
 	assert.Equal(t, nil, err, "should create tar without error")
 
 	cmd, err := tarTransport.RunCommand("ls /")
@@ -50,7 +50,7 @@ func TestTarSymlinkFile(t *testing.T) {
 		return
 	}
 
-	tarTransport, err := tar.New(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_TAR, Path: alpineContainerPath})
+	tarTransport, err := tar.New(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_TAR, Path: alpineContainerPath})
 	assert.Equal(t, nil, err, "should create tar without error")
 
 	f, err := tarTransport.FS().Open("/bin/cat")
@@ -83,7 +83,7 @@ func TestTarSymlinkFile(t *testing.T) {
 // 	}
 
 // 	filepath, _ := filepath.Abs("./centos-container.tar")
-// 	tarTransport, err := tar.New(&motorapi.TransportConfig{Backend: "tar", Path: filepath})
+// 	tarTransport, err := tar.New(&transports.TransportConfig{Backend: "tar", Path: filepath})
 // 	assert.Equal(t, nil, err, "should create tar without error")
 
 // 	f, err := tarTransport.File("/etc/redhat-release")
@@ -114,7 +114,7 @@ func TestTarFile(t *testing.T) {
 	err := cacheImageToTar()
 	require.NoError(t, err)
 
-	tarTransport, err := tar.New(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_TAR, Path: alpineContainerPath})
+	tarTransport, err := tar.New(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_TAR, Path: alpineContainerPath})
 	assert.Equal(t, nil, err, "should create tar without error")
 
 	f, err := tarTransport.FS().Open("/etc/alpine-release")
@@ -139,7 +139,7 @@ func TestFilePermissions(t *testing.T) {
 	err := cacheImageToTar()
 	require.NoError(t, err)
 
-	trans, err := tar.New(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_TAR, Path: alpineContainerPath})
+	trans, err := tar.New(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_TAR, Path: alpineContainerPath})
 	require.NoError(t, err)
 
 	path := "/etc/alpine-release"
@@ -232,7 +232,7 @@ func TestTarFileFind(t *testing.T) {
 	err := cacheImageToTar()
 	require.NoError(t, err)
 
-	trans, err := tar.New(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_TAR, Path: alpineContainerPath})
+	trans, err := tar.New(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_TAR, Path: alpineContainerPath})
 	assert.Equal(t, nil, err, "should create tar without error")
 
 	fs := trans.FS()
