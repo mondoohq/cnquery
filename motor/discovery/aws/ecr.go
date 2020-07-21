@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/nexus/assets"
 )
 
@@ -52,9 +53,9 @@ func (a *EcrImages) List() ([]*assets.Asset, error) {
 					Kind:    assets.Kind_KIND_CONTAINER_IMAGE,
 					Runtime: "aws ecr",
 				},
-				Connections: []*assets.Connection{
-					&assets.Connection{
-						Backend: assets.ConnectionBackend_CONNECTION_DOCKER_REGISTRY,
+				Connections: []*motorapi.Connection{
+					&motorapi.Connection{
+						Backend: motorapi.ConnectionBackend_CONNECTION_DOCKER_REGISTRY,
 						Host:    registryURL,
 					},
 				},
