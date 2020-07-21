@@ -11,7 +11,7 @@ import (
 )
 
 func TestGuidWindows(t *testing.T) {
-	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/guid_windows.toml"})
+	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/guid_windows.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

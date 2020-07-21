@@ -9,12 +9,12 @@ import (
 )
 
 func TestSSHBackendError(t *testing.T) {
-	_, err := ssh.New(&motorapi.Endpoint{Backend: "ssh2", Host: "example.local"})
+	_, err := ssh.New(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_LOCAL_OS, Host: "example.local"})
 	assert.Equal(t, "only ssh backend for ssh transport supported", err.Error())
 }
 
 func TestSSHAuthError(t *testing.T) {
-	_, err := ssh.New(&motorapi.Endpoint{Backend: "ssh", Host: "example.local"})
+	_, err := ssh.New(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_SSH, Host: "example.local"})
 
 	assert.True(t,
 		// local testing if ssh agent is available
@@ -25,7 +25,7 @@ func TestSSHAuthError(t *testing.T) {
 
 func TestSSHPort(t *testing.T) {
 
-	endpoint := &motorapi.Endpoint{Backend: "ssh", Host: "example.local", Password: "example"}
+	endpoint := &motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_SSH, Host: "example.local", Password: "example"}
 	err := ssh.VerifyConfig(endpoint)
 	assert.Nil(t, err)
 

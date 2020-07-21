@@ -76,7 +76,7 @@ func ExportData(mock *Transport) ([]byte, error) {
 }
 
 // New returns a mock backend and loads the toml file by default
-func NewFromToml(endpoint *motorapi.Endpoint) (*Transport, error) {
+func NewFromToml(endpoint *motorapi.TransportConfig) (*Transport, error) {
 	transport, err := New()
 	if err != nil {
 		return nil, err

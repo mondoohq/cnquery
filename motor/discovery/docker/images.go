@@ -41,9 +41,9 @@ func (a *Images) List() ([]*assets.Asset, error) {
 				Kind:    assets.Kind_KIND_CONTAINER_IMAGE,
 				Runtime: runtime.RUNTIME_DOCKER_IMAGE,
 			},
-			Connections: []*motorapi.Connection{
-				&motorapi.Connection{
-					Backend: motorapi.ConnectionBackend_CONNECTION_DOCKER_IMAGE,
+			Connections: []*motorapi.TransportConfig{
+				&motorapi.TransportConfig{
+					Backend: motorapi.TransportBackend_CONNECTION_DOCKER_IMAGE,
 					Host:    dImg.ID,
 				},
 			},

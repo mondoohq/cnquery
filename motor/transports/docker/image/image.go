@@ -38,7 +38,7 @@ func (t *DockerImageTransport) Runtime() string {
 	return runtime.RUNTIME_DOCKER_IMAGE
 }
 
-func newWithClose(endpoint *motorapi.Endpoint, close func()) (*DockerImageTransport, error) {
+func newWithClose(endpoint *motorapi.TransportConfig, close func()) (*DockerImageTransport, error) {
 	t := &DockerImageTransport{
 		Transport: tar.Transport{
 			Fs:      tar.NewFs(endpoint.Path),
@@ -73,7 +73,7 @@ func New(rc io.ReadCloser) (*DockerImageTransport, error) {
 	// we return a pure tar image
 	filename := f.Name()
 
-	return newWithClose(&motorapi.Endpoint{Path: filename}, func() {
+	return newWithClose(&motorapi.TransportConfig{Path: filename}, func() {
 		// remove temporary file on stream close
 		os.Remove(filename)
 	})

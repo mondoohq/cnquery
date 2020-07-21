@@ -11,7 +11,7 @@ import (
 )
 
 func TestParseUpstartServicesRunning(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/ubuntu1404.toml"})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/ubuntu1404.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

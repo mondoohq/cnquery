@@ -15,7 +15,7 @@ import (
 
 func TestLinuxStatCmd(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/linux.toml")
-	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: filepath})
 	require.NoError(t, err)
 
 	statHelper := New(trans)
@@ -32,7 +32,7 @@ func TestLinuxStatCmd(t *testing.T) {
 
 func TestOpenbsdStatCmd(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/openbsd.toml")
-	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: filepath})
 	require.NoError(t, err)
 
 	statHelper := New(trans)

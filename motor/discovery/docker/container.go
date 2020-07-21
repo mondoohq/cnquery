@@ -51,9 +51,9 @@ func (a *Container) List() ([]*assets.Asset, error) {
 				Kind:    assets.Kind_KIND_CONTAINER,
 				Runtime: runtime.RUNTIME_DOCKER_CONTAINER,
 			},
-			Connections: []*motorapi.Connection{
-				&motorapi.Connection{
-					Backend: motorapi.ConnectionBackend_CONNECTION_DOCKER_CONTAINER,
+			Connections: []*motorapi.TransportConfig{
+				&motorapi.TransportConfig{
+					Backend: motorapi.TransportBackend_CONNECTION_DOCKER_CONTAINER,
 					Host:    dContainer.ID,
 				},
 			},

@@ -13,8 +13,8 @@ import (
 	"go.mondoo.io/mondoo/nexus/assets"
 )
 
-func VerifyConfig(endpoint *motorapi.Endpoint) (*winrm.Endpoint, error) {
-	if endpoint.Backend != "winrm" {
+func VerifyConfig(endpoint *motorapi.TransportConfig) (*winrm.Endpoint, error) {
+	if endpoint.Backend != motorapi.TransportBackend_CONNECTION_WINRM {
 		return nil, errors.New("only winrm backend for winrm transport supported")
 	}
 
@@ -43,7 +43,7 @@ func DefaultConfig(endpoint *winrm.Endpoint) *winrm.Endpoint {
 }
 
 // New creates a winrm client and establishes a connection to verify the connection
-func New(endpoint *motorapi.Endpoint) (*WinrmTransport, error) {
+func New(endpoint *motorapi.TransportConfig) (*WinrmTransport, error) {
 
 	// ensure all required configs are set
 	winrmEndpoint, err := VerifyConfig(endpoint)

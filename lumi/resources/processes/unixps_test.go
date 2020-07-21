@@ -10,7 +10,7 @@ import (
 )
 
 func TestLinuxPSProcessParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/debian.toml"})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/debian.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,7 +34,7 @@ func TestLinuxPSProcessParser(t *testing.T) {
 }
 
 func TestOSxPSProcessParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/osx.toml"})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/osx.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,7 +58,7 @@ func TestOSxPSProcessParser(t *testing.T) {
 }
 
 func TestUnixPSProcessParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/freebsd12.toml"})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/freebsd12.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

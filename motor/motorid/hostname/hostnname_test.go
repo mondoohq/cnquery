@@ -11,7 +11,7 @@ import (
 )
 
 func TestHostnameLinux(t *testing.T) {
-	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/hostname_linux.toml"})
+	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/hostname_linux.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -30,7 +30,7 @@ func TestHostnameLinux(t *testing.T) {
 }
 
 func TestHostnameWindows(t *testing.T) {
-	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/hostname_windows.toml"})
+	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/hostname_windows.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +49,7 @@ func TestHostnameWindows(t *testing.T) {
 }
 
 func TestHostnameMacos(t *testing.T) {
-	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/hostname_macos.toml"})
+	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/hostname_macos.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

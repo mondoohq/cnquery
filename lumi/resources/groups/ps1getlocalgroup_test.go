@@ -11,7 +11,7 @@ import (
 )
 
 func TestWindowsGroupsParserFromMock(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/windows.toml"})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/windows.toml"})
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("powershell -c \"Get-LocalGroup | ConvertTo-Json\"")

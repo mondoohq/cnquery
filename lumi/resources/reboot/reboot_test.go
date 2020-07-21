@@ -13,7 +13,7 @@ import (
 
 func TestRebootOnUbuntu(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/ubuntu_reboot.toml")
-	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: filepath})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +38,7 @@ func TestRebootOnUbuntu(t *testing.T) {
 
 func TestRebootOnRhel(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/redhat_kernel_reboot.toml")
-	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: filepath})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,7 +63,7 @@ func TestRebootOnRhel(t *testing.T) {
 
 func TestRebootOnWindows(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/windows_reboot.toml")
-	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: filepath})
 	if err != nil {
 		t.Fatal(err)
 	}

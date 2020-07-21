@@ -21,7 +21,7 @@ type WatcherTester struct {
 
 func SetupWatcherTest() *WatcherTester {
 	filepath, _ := filepath.Abs("./watcher_test.toml")
-	trans, _ := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: filepath})
+	trans, _ := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: filepath})
 	return &WatcherTester{watcher: NewWatcher(trans), mock: trans}
 }
 

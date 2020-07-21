@@ -11,7 +11,7 @@ import (
 )
 
 func TestParseOpenbsdServicesRunning(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/openbsd6.toml"})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/openbsd6.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

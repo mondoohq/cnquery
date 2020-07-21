@@ -10,7 +10,7 @@ import (
 )
 
 func TestDpkgParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/packages_dpkg.toml"})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/packages_dpkg.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,7 +64,7 @@ security related events.`,
 }
 
 func TestDpkgParserStatusD(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/packages_dpkg_statusd.toml"})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/packages_dpkg_statusd.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -96,7 +96,7 @@ and the text of several common licenses in use on Debian systems.`,
 }
 
 func TestDpkgUpdateParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/updates_dpkg.toml"})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/updates_dpkg.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

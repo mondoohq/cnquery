@@ -206,9 +206,9 @@ func (a *DockerRegistryImages) toAsset(repoName string, imgDigest string, tags [
 			Kind:    assets.Kind_KIND_CONTAINER_IMAGE,
 			Runtime: runtime.RUNTIME_DOCKER_REGISTRY,
 		},
-		Connections: []*motorapi.Connection{
-			&motorapi.Connection{
-				Backend: motorapi.ConnectionBackend_CONNECTION_DOCKER_IMAGE,
+		Connections: []*motorapi.TransportConfig{
+			&motorapi.TransportConfig{
+				Backend: motorapi.TransportBackend_CONNECTION_DOCKER_IMAGE,
 				Host:    imageUrl,
 			},
 		},

@@ -48,17 +48,17 @@ func (ec2i *Ec2Instances) List() ([]*assets.Asset, error) {
 		for j := range reservation.Instances {
 			instance := reservation.Instances[j]
 
-			connections := []*motorapi.Connection{}
+			connections := []*motorapi.TransportConfig{}
 
 			// add ssh and ssm run command if the motorapi.Connectionsm
-			// connections = append(connections, &motorapi.Connection{
-			// 	Backend: motorapi.ConnectionBackend_CONNECTION_AWS_SSM_RUN_COMMAND,
+			// connections = append(connections, &motorapi.TransportConfig{
+			// 	Backend: motorapi.TransportConfigBackend_CONNECTION_AWS_SSM_RUN_COMMAND,
 			// 	Host:    *instance.InstanceId,
 			// })
 
 			if instance.PublicIpAddress != nil {
-				connections = append(connections, &motorapi.Connection{
-					Backend: motorapi.ConnectionBackend_CONNECTION_SSH,
+				connections = append(connections, &motorapi.TransportConfig{
+					Backend: motorapi.TransportBackend_CONNECTION_SSH,
 					User:    ec2i.InstanceSSHUsername,
 					Host:    *instance.PublicIpAddress,
 				})

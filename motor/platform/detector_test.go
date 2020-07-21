@@ -10,7 +10,7 @@ import (
 )
 
 func newDetector(path string) (*platform.Detector, error) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: path})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: path})
 	if err != nil {
 		return nil, err
 	}

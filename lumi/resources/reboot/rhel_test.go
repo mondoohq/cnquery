@@ -13,7 +13,7 @@ import (
 
 func TestRhelKernelLatest(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/redhat_kernel_reboot.toml")
-	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: filepath})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,7 +34,7 @@ func TestRhelKernelLatest(t *testing.T) {
 
 func TestAmznContainerWithoutKernel(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/amzn_kernel_container.toml")
-	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: filepath})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +55,7 @@ func TestAmznContainerWithoutKernel(t *testing.T) {
 
 func TestAmznEc2Kernel(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/amzn_kernel_ec2.toml")
-	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: filepath})
 	if err != nil {
 		t.Fatal(err)
 	}

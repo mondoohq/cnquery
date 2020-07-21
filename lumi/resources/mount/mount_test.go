@@ -12,7 +12,7 @@ import (
 )
 
 func TestMountLinuxParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/debian.toml"})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/debian.toml"})
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("mount")
@@ -37,7 +37,7 @@ func TestMountLinuxParser(t *testing.T) {
 }
 
 func TestMountMacosParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/osx.toml"})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/osx.toml"})
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("mount")
@@ -63,7 +63,7 @@ func TestMountMacosParser(t *testing.T) {
 }
 
 func TestMountFreeBsdParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/freebsd12.toml"})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/freebsd12.toml"})
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("mount")
@@ -87,7 +87,7 @@ func TestMountFreeBsdParser(t *testing.T) {
 }
 
 func TestProcModulesParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/debian.toml"})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/debian.toml"})
 	require.NoError(t, err)
 
 	f, err := mock.FS().Open("/proc/mounts")

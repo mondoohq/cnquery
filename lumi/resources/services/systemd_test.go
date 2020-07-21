@@ -10,7 +10,7 @@ import (
 )
 
 func TestParseServiceSystemDUnitFiles(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/linux_systemd.toml"})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/linux_systemd.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

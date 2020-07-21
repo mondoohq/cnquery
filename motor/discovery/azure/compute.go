@@ -147,7 +147,7 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*assets.Asset, error) {
 		// data, _ := json.Marshal(instance)
 		// fmt.Println(string(data))
 
-		connections := []*motorapi.Connection{}
+		connections := []*motorapi.TransportConfig{}
 
 		interfaces := *instance.NetworkProfile.NetworkInterfaces
 		for ni := range interfaces {
@@ -164,8 +164,8 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*assets.Asset, error) {
 
 				if ipResp.IPAddress != nil {
 					ip := *ipResp.IPAddress
-					connections = append(connections, &motorapi.Connection{
-						Backend: motorapi.ConnectionBackend_CONNECTION_SSH,
+					connections = append(connections, &motorapi.TransportConfig{
+						Backend: motorapi.TransportBackend_CONNECTION_SSH,
 						User:    *instance.OsProfile.AdminUsername,
 						Host:    ip,
 					})

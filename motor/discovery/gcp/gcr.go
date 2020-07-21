@@ -50,9 +50,9 @@ func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*assets
 					Kind:    assets.Kind_KIND_CONTAINER_IMAGE,
 					Runtime: "gcp gcr",
 				},
-				Connections: []*motorapi.Connection{
-					&motorapi.Connection{
-						Backend: motorapi.ConnectionBackend_CONNECTION_DOCKER_REGISTRY,
+				Connections: []*motorapi.TransportConfig{
+					&motorapi.TransportConfig{
+						Backend: motorapi.TransportBackend_CONNECTION_DOCKER_REGISTRY,
 						Host:    imageUrl,
 					},
 				},
