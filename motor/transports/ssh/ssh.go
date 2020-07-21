@@ -14,7 +14,6 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/ssh/cat"
 	"go.mondoo.io/mondoo/motor/transports/ssh/scp"
 	"go.mondoo.io/mondoo/motor/transports/ssh/sftp"
-	"go.mondoo.io/mondoo/nexus/assets"
 	"golang.org/x/crypto/ssh"
 
 	rawsftp "github.com/pkg/sftp"
@@ -174,8 +173,8 @@ func (t *SSHTransport) Capabilities() transports.Capabilities {
 	}
 }
 
-func (t *SSHTransport) Kind() assets.Kind {
-	return assets.Kind_KIND_BARE_METAL
+func (t *SSHTransport) Kind() transports.Kind {
+	return transports.Kind_KIND_BARE_METAL
 }
 
 func (t *SSHTransport) Runtime() string {

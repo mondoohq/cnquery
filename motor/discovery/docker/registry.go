@@ -203,7 +203,7 @@ func (a *DockerRegistryImages) toAsset(repoName string, imgDigest string, tags [
 		ReferenceIDs: []string{MondooContainerImageID(imgDigest)},
 		Name:         ShortContainerImageID(imgDigest),
 		Platform: &assets.Platform{
-			Kind:    assets.Kind_KIND_CONTAINER_IMAGE,
+			Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
 			Runtime: runtime.RUNTIME_DOCKER_REGISTRY,
 		},
 		Connections: []*transports.TransportConfig{

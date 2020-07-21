@@ -10,15 +10,14 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/docker/cache"
 	"go.mondoo.io/mondoo/motor/transports/docker/docker_engine"
 	"go.mondoo.io/mondoo/motor/transports/tar"
-	"go.mondoo.io/mondoo/nexus/assets"
 )
 
 type DockerSnapshotTransport struct {
 	tar.Transport
 }
 
-func (t *DockerSnapshotTransport) Kind() assets.Kind {
-	return assets.Kind_KIND_CONTAINER
+func (t *DockerSnapshotTransport) Kind() transports.Kind {
+	return transports.Kind_KIND_CONTAINER
 }
 
 func (t *DockerSnapshotTransport) Runtime() string {

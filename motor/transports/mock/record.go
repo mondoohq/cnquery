@@ -7,7 +7,6 @@ import (
 
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/nexus/assets"
 )
 
 func NewRecordTransport(trans transports.Transport) (*RecordTransport, error) {
@@ -91,7 +90,7 @@ func (t *RecordTransport) Close() {
 	t.observe.Close()
 }
 
-func (t *RecordTransport) Kind() assets.Kind {
+func (t *RecordTransport) Kind() transports.Kind {
 	return t.observe.Kind()
 }
 

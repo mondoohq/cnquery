@@ -3,6 +3,23 @@ syntax = "proto3";
 package mondoo.motor.transports.v1;
 option go_package = "go.mondoo.io/mondoo/motor/transports";
 
+enum Kind {
+  KIND_UNKNOWN = 0;
+
+  // at rest
+  KIND_VIRTUAL_MACHINE_IMAGE = 1;
+  KIND_CONTAINER_IMAGE = 2;
+  KIND_CODE = 3;
+  KIND_PACKAGE = 4;
+
+  // in motion
+  KIND_VIRTUAL_MACHINE = 5;
+  KIND_CONTAINER = 6;
+  KIND_PROCESS = 7;
+  KIND_API = 8;
+  KIND_BARE_METAL = 9;
+}
+
 enum TransportBackend {
   CONNECTION_LOCAL_OS = 0;
   CONNECTION_DOCKER_IMAGE = 1;

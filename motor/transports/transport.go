@@ -6,7 +6,6 @@ import (
 	"regexp"
 
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/nexus/assets"
 )
 
 type Transport interface {
@@ -21,7 +20,7 @@ type Transport interface {
 	// returns if this is a static asset that does not allow run command
 	Capabilities() Capabilities
 
-	Kind() assets.Kind
+	Kind() Kind
 	Runtime() string
 }
 

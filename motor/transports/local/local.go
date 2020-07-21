@@ -6,7 +6,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/nexus/assets"
 )
 
 func New() (*LocalTransport, error) {
@@ -76,8 +75,8 @@ func (t *LocalTransport) Capabilities() transports.Capabilities {
 	}
 }
 
-func (t *LocalTransport) Kind() assets.Kind {
-	return assets.Kind_KIND_BARE_METAL
+func (t *LocalTransport) Kind() transports.Kind {
+	return transports.Kind_KIND_BARE_METAL
 }
 
 func (t *LocalTransport) Runtime() string {

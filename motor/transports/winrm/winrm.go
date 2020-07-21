@@ -9,7 +9,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/nexus/assets"
 )
 
 func VerifyConfig(endpoint *transports.TransportConfig) (*winrm.Endpoint, error) {
@@ -125,8 +124,8 @@ func (t *WinrmTransport) Capabilities() transports.Capabilities {
 	}
 }
 
-func (t *WinrmTransport) Kind() assets.Kind {
-	return assets.Kind_KIND_BARE_METAL
+func (t *WinrmTransport) Kind() transports.Kind {
+	return transports.Kind_KIND_BARE_METAL
 }
 
 func (t *WinrmTransport) Runtime() string {
