@@ -38,7 +38,7 @@ func (a *Images) List() ([]*assets.Asset, error) {
 			ReferenceIDs: []string{MondooContainerImageID(digest)},
 			Name:         strings.Join(dImg.RepoTags, ","),
 			Platform: &assets.Platform{
-				Kind:    assets.Kind_KIND_CONTAINER_IMAGE,
+				Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
 				Runtime: runtime.RUNTIME_DOCKER_IMAGE,
 			},
 			Connections: []*transports.TransportConfig{

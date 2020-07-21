@@ -7,7 +7,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/nexus/assets"
 
 	"io"
 	"os"
@@ -86,8 +85,8 @@ func (t *Transport) Capabilities() transports.Capabilities {
 	}
 }
 
-func (t *Transport) Kind() assets.Kind {
-	return assets.Kind_KIND_UNKNOWN
+func (t *Transport) Kind() transports.Kind {
+	return transports.Kind_KIND_UNKNOWN
 }
 
 func (t *Transport) Runtime() string {

@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/runtime"
 	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/nexus/assets"
 )
 
 func New(container string) (transports.Transport, error) {
@@ -89,8 +88,8 @@ func (t *Transport) Capabilities() transports.Capabilities {
 	}
 }
 
-func (t *Transport) Kind() assets.Kind {
-	return assets.Kind_KIND_CONTAINER
+func (t *Transport) Kind() transports.Kind {
+	return transports.Kind_KIND_CONTAINER
 }
 
 func (t *Transport) Runtime() string {

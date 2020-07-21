@@ -177,7 +177,7 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*assets.Asset, error) {
 			// ReferenceIDs: []string{MondooGcpInstanceID(project, zone, instance)},
 			Name: *instance.Name,
 			Platform: &assets.Platform{
-				Kind:    assets.Kind_KIND_VIRTUAL_MACHINE,
+				Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
 				Runtime: runtime.RUNTIME_AZ_COMPUTE,
 			},
 			Connections: connections,
