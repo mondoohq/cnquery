@@ -371,6 +371,10 @@ func TestResource_Where(t *testing.T) {
 			"users.where(uid > 0).where(uid < 0).list",
 			0, []interface{}{},
 		},
+		{
+			"os.rootcertificates.where(  subject.commonname == '' ).length",
+			0, int64(0),
+		},
 	})
 }
 

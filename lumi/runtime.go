@@ -245,6 +245,18 @@ func (ctx *Runtime) WatchAndUpdate(r ResourceType, field string, watcherUID stri
 		return nil
 	}
 
+	// TODO: this is very special handling for when we create a copy of a list
+	// resource. in those cases its content (list) has already been filled,
+	// but without this block here it will try to compute the entire list from
+	// the ground up. It's more of a workaround right now and needs a better
+	// solution (eg an indicator for the copied resource?)
+	if field == "list" && isInitial {
+		data, ok := resource.Cache.Load(field)
+		if ok {
+			callback(data.Data, data.Error)
+		}
+	}
+
 	// if the field wasnt registered in the chain of watchers yet,
 	// pull all its dependencies in
 	if isInitial {
