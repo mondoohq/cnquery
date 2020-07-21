@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/runtime"
+	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/docker/cache"
 	"go.mondoo.io/mondoo/motor/transports/docker/docker_engine"
 	"go.mondoo.io/mondoo/motor/transports/tar"
@@ -25,11 +25,11 @@ func (t *DockerSnapshotTransport) Runtime() string {
 	return runtime.RUNTIME_DOCKER_CONTAINER
 }
 
-func new(endpoint *motorapi.TransportConfig) (*DockerSnapshotTransport, error) {
+func new(endpoint *transports.TransportConfig) (*DockerSnapshotTransport, error) {
 	return newWithClose(endpoint, nil)
 }
 
-func newWithClose(endpoint *motorapi.TransportConfig, close func()) (*DockerSnapshotTransport, error) {
+func newWithClose(endpoint *transports.TransportConfig, close func()) (*DockerSnapshotTransport, error) {
 	t := &DockerSnapshotTransport{
 		Transport: tar.Transport{
 			Fs:      tar.NewFs(endpoint.Path),
@@ -60,14 +60,14 @@ func NewFromDockerEngine(containerid string) (*DockerSnapshotTransport, error) {
 		return nil, err
 	}
 
-	return newWithClose(&motorapi.TransportConfig{Path: f.Name()}, func() {
+	return newWithClose(&transports.TransportConfig{Path: f.Name()}, func() {
 		// remove temporary file on stream close
 		os.Remove(f.Name())
 	})
 }
 
 func NewFromFile(filename string) (*DockerSnapshotTransport, error) {
-	return new(&motorapi.TransportConfig{Path: filename})
+	return new(&transports.TransportConfig{Path: filename})
 }
 
 // exports a given container from docker engine to a tar file

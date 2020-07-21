@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/lumi/resources/packages"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/motorapi"
+	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
@@ -48,7 +48,7 @@ firewall - 2016-11-29-1`
 
 func TestOpkgManager(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/packages_opkg.toml")
-	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: filepath})
+	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: filepath})
 	require.NoError(t, err)
 
 	m, err := motor.New(trans)

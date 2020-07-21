@@ -5,12 +5,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/lumi/resources/packages"
-	"go.mondoo.io/mondoo/motor/motorapi"
+	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestRedhat7Parser(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/packages_redhat7.toml"})
+	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/packages_redhat7.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,7 +71,7 @@ func TestRedhat7Parser(t *testing.T) {
 }
 
 func TestRedhat6Parser(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/packages_redhat6.toml"})
+	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/packages_redhat6.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

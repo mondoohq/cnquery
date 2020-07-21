@@ -4,17 +4,17 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/motor/motorapi"
+	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/ssh"
 )
 
 func TestSSHBackendError(t *testing.T) {
-	_, err := ssh.New(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_LOCAL_OS, Host: "example.local"})
+	_, err := ssh.New(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_LOCAL_OS, Host: "example.local"})
 	assert.Equal(t, "only ssh backend for ssh transport supported", err.Error())
 }
 
 func TestSSHAuthError(t *testing.T) {
-	_, err := ssh.New(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_SSH, Host: "example.local"})
+	_, err := ssh.New(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_SSH, Host: "example.local"})
 
 	assert.True(t,
 		// local testing if ssh agent is available
@@ -25,7 +25,7 @@ func TestSSHAuthError(t *testing.T) {
 
 func TestSSHPort(t *testing.T) {
 
-	endpoint := &motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_SSH, Host: "example.local", Password: "example"}
+	endpoint := &transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_SSH, Host: "example.local", Password: "example"}
 	err := ssh.VerifyConfig(endpoint)
 	assert.Nil(t, err)
 

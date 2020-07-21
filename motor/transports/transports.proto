@@ -1,7 +1,7 @@
 syntax = "proto3";
 
-package mondoo.motor.v1;
-option go_package = "go.mondoo.io/mondoo/motor/motorapi";
+package mondoo.motor.transports.v1;
+option go_package = "go.mondoo.io/mondoo/motor/transports";
 
 enum TransportBackend {
   CONNECTION_LOCAL_OS = 0;

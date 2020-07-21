@@ -1,4 +1,4 @@
-package motorapi
+package transports
 
 import (
 	"errors"

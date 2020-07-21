@@ -5,13 +5,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/lumi/resources/procfs"
-	"go.mondoo.io/mondoo/motor/motorapi"
+	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestParseProcessStatus(t *testing.T) {
 	path := "./testdata/process-pid1.toml"
-	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: path})
+	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: path})
 
 	f, err := trans.FS().Open("/proc/1/status")
 	if err != nil {
@@ -30,7 +30,7 @@ func TestParseProcessStatus(t *testing.T) {
 
 func TestParseProcessCmdline(t *testing.T) {
 	path := "./testdata/process-pid1.toml"
-	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: path})
+	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: path})
 
 	f, err := trans.FS().Open("/proc/1/cmdline")
 	if err != nil {

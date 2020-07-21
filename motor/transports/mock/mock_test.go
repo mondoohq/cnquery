@@ -7,14 +7,14 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/motor/motorapi"
+	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestMockCommand(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/mock.toml")
-	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: filepath})
+	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: filepath})
 	assert.Equal(t, nil, err, "should create mock without error")
 
 	cmd, err := trans.RunCommand("ls /")
@@ -30,7 +30,7 @@ func TestMockCommand(t *testing.T) {
 
 func TestMockFile(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/mock.toml")
-	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: filepath})
+	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: filepath})
 	assert.Equal(t, nil, err, "should create mock without error")
 
 	f, err := trans.FS().Open("/etc/ssh/sshd_config")

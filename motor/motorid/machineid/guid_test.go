@@ -5,13 +5,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/motorid/machineid"
+	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestGuidWindows(t *testing.T) {
-	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/guid_windows.toml"})
+	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/guid_windows.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

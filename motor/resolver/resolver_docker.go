@@ -11,7 +11,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/rs/zerolog/log"
 	motorcloud_docker "go.mondoo.io/mondoo/motor/discovery/docker"
-	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/docker/docker_engine"
 	"go.mondoo.io/mondoo/motor/transports/docker/image"
@@ -51,7 +50,7 @@ type DockerInfo struct {
 //
 // Therefore, this package will only implement the auto-discovery and
 // redirect to specific implementations once the disovery is completed
-func ResolveDockerTransport(endpoint *motorapi.TransportConfig) (transports.Transport, DockerInfo, error) {
+func ResolveDockerTransport(endpoint *transports.TransportConfig) (transports.Transport, DockerInfo, error) {
 	// 0. check if we have a tar as input
 	//    detect if the tar is a container image format -> container image
 	//    or a container snapshot format -> container snapshot

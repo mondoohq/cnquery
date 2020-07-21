@@ -6,7 +6,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/nexus/assets"
 
@@ -14,11 +13,11 @@ import (
 	"os"
 )
 
-func New(endpoint *motorapi.TransportConfig) (*Transport, error) {
+func New(endpoint *transports.TransportConfig) (*Transport, error) {
 	return NewWithClose(endpoint, nil)
 }
 
-func NewWithClose(endpoint *motorapi.TransportConfig, close func()) (*Transport, error) {
+func NewWithClose(endpoint *transports.TransportConfig, close func()) (*Transport, error) {
 	t := &Transport{
 		Fs:      NewFs(endpoint.Path),
 		CloseFN: close,

@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/pkg/errors"
-	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/motor/runtime"
+	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/nexus/assets"
 
 	"github.com/rs/zerolog/log"
@@ -48,17 +48,17 @@ func (ec2i *Ec2Instances) List() ([]*assets.Asset, error) {
 		for j := range reservation.Instances {
 			instance := reservation.Instances[j]
 
-			connections := []*motorapi.TransportConfig{}
+			connections := []*transports.TransportConfig{}
 
-			// add ssh and ssm run command if the motorapi.Connectionsm
-			// connections = append(connections, &motorapi.TransportConfig{
-			// 	Backend: motorapi.TransportConfigBackend_CONNECTION_AWS_SSM_RUN_COMMAND,
+			// add ssh and ssm run command if the transports.Connectionsm
+			// connections = append(connections, &transports.TransportConfig{
+			// 	Backend: transports.TransportConfigBackend_CONNECTION_AWS_SSM_RUN_COMMAND,
 			// 	Host:    *instance.InstanceId,
 			// })
 
 			if instance.PublicIpAddress != nil {
-				connections = append(connections, &motorapi.TransportConfig{
-					Backend: motorapi.TransportBackend_CONNECTION_SSH,
+				connections = append(connections, &transports.TransportConfig{
+					Backend: transports.TransportBackend_CONNECTION_SSH,
 					User:    ec2i.InstanceSSHUsername,
 					Host:    *instance.PublicIpAddress,
 				})

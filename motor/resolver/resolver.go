@@ -8,11 +8,11 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/motor/motorid/hostname"
 	"go.mondoo.io/mondoo/motor/motorid/machineid"
 	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/local"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 	"go.mondoo.io/mondoo/motor/transports/ssh"
@@ -21,40 +21,40 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 )
 
-type EndpointOption func(endpoint *motorapi.TransportConfig)
+type EndpointOption func(endpoint *transports.TransportConfig)
 
 func WithIdentityFile(identityFile string) EndpointOption {
-	return func(endpoint *motorapi.TransportConfig) {
+	return func(endpoint *transports.TransportConfig) {
 		endpoint.IdentityFiles = append(endpoint.IdentityFiles, identityFile)
 	}
 }
 
 func WithPassword(password string) EndpointOption {
-	return func(endpoint *motorapi.TransportConfig) {
+	return func(endpoint *transports.TransportConfig) {
 		endpoint.Password = password
 	}
 }
 
 func WithSudo() EndpointOption {
-	return func(endpoint *motorapi.TransportConfig) {
-		endpoint.Sudo = &motorapi.Sudo{
+	return func(endpoint *transports.TransportConfig) {
+		endpoint.Sudo = &transports.Sudo{
 			Active: true,
 		}
 	}
 }
 
 func WithInsecure() EndpointOption {
-	return func(endpoint *motorapi.TransportConfig) {
+	return func(endpoint *transports.TransportConfig) {
 		endpoint.Insecure = true
 	}
 }
 
-func New(endpoint *motorapi.TransportConfig, idDetectors ...string) (*motor.Motor, error) {
+func New(endpoint *transports.TransportConfig, idDetectors ...string) (*motor.Motor, error) {
 	return ResolveTransport(endpoint, idDetectors)
 }
 
 func NewFromUrl(uri string, opts ...EndpointOption) (*motor.Motor, error) {
-	t := &motorapi.TransportConfig{}
+	t := &transports.TransportConfig{}
 	err := t.ParseFromURI(uri)
 	if err != nil {
 		return nil, err
@@ -67,7 +67,7 @@ func NewFromUrl(uri string, opts ...EndpointOption) (*motor.Motor, error) {
 }
 
 func NewWithUrlAndKey(uri string, key string) (*motor.Motor, error) {
-	t := &motorapi.TransportConfig{
+	t := &transports.TransportConfig{
 		IdentityFiles: []string{key},
 	}
 	err := t.ParseFromURI(uri)
@@ -77,7 +77,7 @@ func NewWithUrlAndKey(uri string, key string) (*motor.Motor, error) {
 	return New(t)
 }
 
-func ResolveTransport(endpoint *motorapi.TransportConfig, idDetectors []string) (*motor.Motor, error) {
+func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string) (*motor.Motor, error) {
 	var m *motor.Motor
 	var name string
 	var identifier []string
@@ -85,7 +85,7 @@ func ResolveTransport(endpoint *motorapi.TransportConfig, idDetectors []string) 
 	var err error
 
 	switch endpoint.Backend {
-	case motorapi.TransportBackend_CONNECTION_MOCK:
+	case transports.TransportBackend_CONNECTION_MOCK:
 		log.Debug().Msg("connection> load mock transport")
 		trans, err := mock.NewFromToml(endpoint)
 		if err != nil {
@@ -114,7 +114,7 @@ func ResolveTransport(endpoint *motorapi.TransportConfig, idDetectors []string) 
 	// 	if endpoint.Record {
 	// 		m.ActivateRecorder()
 	// 	}
-	case motorapi.TransportBackend_CONNECTION_LOCAL_OS:
+	case transports.TransportBackend_CONNECTION_LOCAL_OS:
 		log.Debug().Msg("connection> load local transport")
 		trans, err := local.New()
 		if err != nil {
@@ -136,7 +136,7 @@ func ResolveTransport(endpoint *motorapi.TransportConfig, idDetectors []string) 
 		} else {
 			idDetectors = append(idDetectors, "hostname")
 		}
-	case motorapi.TransportBackend_CONNECTION_TAR:
+	case transports.TransportBackend_CONNECTION_TAR:
 		log.Debug().Msg("connection> load tar transport")
 		// TODO: we need to generate an artifact id
 		trans, err := tar.New(endpoint)
@@ -152,11 +152,11 @@ func ResolveTransport(endpoint *motorapi.TransportConfig, idDetectors []string) 
 		if endpoint.Record {
 			m.ActivateRecorder()
 		}
-	case motorapi.TransportBackend_CONNECTION_DOCKER_CONTAINER:
+	case transports.TransportBackend_CONNECTION_DOCKER_CONTAINER:
 		fallthrough
-	case motorapi.TransportBackend_CONNECTION_DOCKER_REGISTRY:
+	case transports.TransportBackend_CONNECTION_DOCKER_REGISTRY:
 		fallthrough
-	case motorapi.TransportBackend_CONNECTION_DOCKER_IMAGE:
+	case transports.TransportBackend_CONNECTION_DOCKER_IMAGE:
 		log.Debug().Str("backend", endpoint.Backend.String()).Str("host", endpoint.Host).Str("path", endpoint.Path).Msg("connection> load docker transport")
 		trans, info, err := ResolveDockerTransport(endpoint)
 		if err != nil {
@@ -178,7 +178,7 @@ func ResolveTransport(endpoint *motorapi.TransportConfig, idDetectors []string) 
 		if len(info.Identifier) > 0 {
 			identifier = append(identifier, info.Identifier)
 		}
-	case motorapi.TransportBackend_CONNECTION_SSH:
+	case transports.TransportBackend_CONNECTION_SSH:
 		log.Debug().Msg("connection> load ssh transport")
 		trans, err := ssh.New(endpoint)
 		if err != nil {
@@ -201,7 +201,7 @@ func ResolveTransport(endpoint *motorapi.TransportConfig, idDetectors []string) 
 		}
 
 		idDetectors = append(idDetectors, "ssh-hostkey")
-	case motorapi.TransportBackend_CONNECTION_WINRM:
+	case transports.TransportBackend_CONNECTION_WINRM:
 		log.Debug().Msg("connection> load winrm transport")
 		trans, err := winrm.New(endpoint)
 		if err != nil {

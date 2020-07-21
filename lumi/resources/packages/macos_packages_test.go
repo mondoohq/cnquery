@@ -5,12 +5,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/lumi/resources/packages"
-	"go.mondoo.io/mondoo/motor/motorapi"
+	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestMacOsXPackageParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/packages_macos.toml"})
+	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/packages_macos.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}
