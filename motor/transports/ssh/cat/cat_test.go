@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/cmd"
 	"go.mondoo.io/mondoo/motor/transports/mock"
@@ -17,7 +18,7 @@ import (
 
 func TestCatFs(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/cat.toml")
-	trans, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: filepath})
 	require.NoError(t, err)
 
 	cw := &CommandWrapper{

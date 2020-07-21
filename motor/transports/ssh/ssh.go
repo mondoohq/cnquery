@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 
+	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/cmd"
 	"go.mondoo.io/mondoo/motor/transports/ssh/cat"
@@ -20,7 +21,7 @@ import (
 	rawsftp "github.com/pkg/sftp"
 )
 
-func New(endpoint *transports.Endpoint) (*SSHTransport, error) {
+func New(endpoint *motorapi.Endpoint) (*SSHTransport, error) {
 	endpoint = ReadSSHConfig(endpoint)
 
 	// ensure all required configs are set
@@ -80,7 +81,7 @@ func New(endpoint *transports.Endpoint) (*SSHTransport, error) {
 }
 
 type SSHTransport struct {
-	Endpoint         *transports.Endpoint
+	Endpoint         *motorapi.Endpoint
 	SSHClient        *ssh.Client
 	fs               afero.Fs
 	UseScpFilesystem bool

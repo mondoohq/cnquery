@@ -3,7 +3,7 @@ package cmd
 import (
 	"testing"
 
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSudo(t *testing.T) {

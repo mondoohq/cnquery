@@ -3,15 +3,15 @@ package machineid_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/motorid/machineid"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
-	"gotest.tools/assert"
 )
 
 func TestGuidWindows(t *testing.T) {
-	trans, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/guid_windows.toml"})
+	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/guid_windows.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

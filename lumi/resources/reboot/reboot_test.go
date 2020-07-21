@@ -4,16 +4,16 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/lumi/resources/reboot"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/transports/mock"
-	"gotest.tools/assert"
 )
 
 func TestRebootOnUbuntu(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/ubuntu_reboot.toml")
-	trans, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: filepath})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +38,7 @@ func TestRebootOnUbuntu(t *testing.T) {
 
 func TestRebootOnRhel(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/redhat_kernel_reboot.toml")
-	trans, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: filepath})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,7 +63,7 @@ func TestRebootOnRhel(t *testing.T) {
 
 func TestRebootOnWindows(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/windows_reboot.toml")
-	trans, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: filepath})
 	if err != nil {
 		t.Fatal(err)
 	}

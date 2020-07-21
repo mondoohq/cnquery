@@ -6,7 +6,7 @@ package azure_test
 
 // 	"github.com/stretchr/testify/require"
 // 	"go.mondoo.io/mondoo/motor/discovery/azure"
-// 	"gotest.tools/assert"
+// 	"github.com/stretchr/testify/assert"
 // )
 
 // func TestAzureInstanceFetch(t *testing.T) {
