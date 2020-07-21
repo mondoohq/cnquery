@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/pkg/errors"
+	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/motor/runtime"
 	"go.mondoo.io/mondoo/nexus/assets"
@@ -47,17 +48,17 @@ func (ec2i *Ec2Instances) List() ([]*assets.Asset, error) {
 		for j := range reservation.Instances {
 			instance := reservation.Instances[j]
 
-			connections := []*assets.Connection{}
+			connections := []*motorapi.Connection{}
 
-			// add ssh and ssm run command if the node is part of ssm
-			// connections = append(connections, &assets.Connection{
-			// 	Backend: assets.ConnectionBackend_CONNECTION_AWS_SSM_RUN_COMMAND,
+			// add ssh and ssm run command if the motorapi.Connectionsm
+			// connections = append(connections, &motorapi.Connection{
+			// 	Backend: motorapi.ConnectionBackend_CONNECTION_AWS_SSM_RUN_COMMAND,
 			// 	Host:    *instance.InstanceId,
 			// })
 
 			if instance.PublicIpAddress != nil {
-				connections = append(connections, &assets.Connection{
-					Backend: assets.ConnectionBackend_CONNECTION_SSH,
+				connections = append(connections, &motorapi.Connection{
+					Backend: motorapi.ConnectionBackend_CONNECTION_SSH,
 					User:    ec2i.InstanceSSHUsername,
 					Host:    *instance.PublicIpAddress,
 				})

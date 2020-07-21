@@ -14,6 +14,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/runtime"
 	"go.mondoo.io/mondoo/nexus/assets"
 )
@@ -205,9 +206,9 @@ func (a *DockerRegistryImages) toAsset(repoName string, imgDigest string, tags [
 			Kind:    assets.Kind_KIND_CONTAINER_IMAGE,
 			Runtime: runtime.RUNTIME_DOCKER_REGISTRY,
 		},
-		Connections: []*assets.Connection{
-			&assets.Connection{
-				Backend: assets.ConnectionBackend_CONNECTION_DOCKER_IMAGE,
+		Connections: []*motorapi.Connection{
+			&motorapi.Connection{
+				Backend: motorapi.ConnectionBackend_CONNECTION_DOCKER_IMAGE,
 				Host:    imageUrl,
 			},
 		},

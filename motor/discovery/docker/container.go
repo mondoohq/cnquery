@@ -6,6 +6,7 @@ import (
 
 	docker_types "github.com/docker/docker/api/types"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/runtime"
 	"go.mondoo.io/mondoo/nexus/assets"
 )
@@ -50,9 +51,9 @@ func (a *Container) List() ([]*assets.Asset, error) {
 				Kind:    assets.Kind_KIND_CONTAINER,
 				Runtime: runtime.RUNTIME_DOCKER_CONTAINER,
 			},
-			Connections: []*assets.Connection{
-				&assets.Connection{
-					Backend: assets.ConnectionBackend_CONNECTION_DOCKER_CONTAINER,
+			Connections: []*motorapi.Connection{
+				&motorapi.Connection{
+					Backend: motorapi.ConnectionBackend_CONNECTION_DOCKER_CONTAINER,
 					Host:    dContainer.ID,
 				},
 			},

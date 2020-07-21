@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/runtime"
 	"go.mondoo.io/mondoo/nexus/assets"
 	"google.golang.org/api/cloudresourcemanager/v1"
@@ -123,7 +124,7 @@ func (a *Compute) instancesPerZone(svc *compute.Service, project string, zone st
 	for i := range il.Items {
 		instance := il.Items[i]
 
-		connections := []*assets.Connection{}
+		connections := []*motorapi.Connection{}
 
 		// TODO: we may want to filter windows instances, use guestOsFeatures to identify the system
 		// "guestOsFeatures": [{
@@ -144,8 +145,8 @@ func (a *Compute) instancesPerZone(svc *compute.Service, project string, zone st
 			for ac := range iface.AccessConfigs {
 				if len(iface.AccessConfigs[ac].NatIP) > 0 {
 					log.Debug().Str("instance", instance.Name).Str("ip", iface.AccessConfigs[ac].NatIP).Msg("found public ip")
-					connections = append(connections, &assets.Connection{
-						Backend: assets.ConnectionBackend_CONNECTION_SSH,
+					connections = append(connections, &motorapi.Connection{
+						Backend: motorapi.ConnectionBackend_CONNECTION_SSH,
 						User:    a.InstanceSSHUsername,
 						Host:    iface.AccessConfigs[ac].NatIP,
 					})

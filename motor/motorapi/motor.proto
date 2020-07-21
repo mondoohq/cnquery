@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package mondoo.motor.v1;
+option go_package = "go.mondoo.io/mondoo/motor/motorapi";
+
+enum ConnectionBackend {
+  CONNECTION_LOCAL_OS = 0;
+  CONNECTION_DOCKER_IMAGE = 1;
+  CONNECTION_DOCKER_CONTAINER = 2;
+  CONNECTION_SSH = 3;
+  CONNECTION_WINRM = 4;
+  CONNECTION_AWS_SSM_RUN_COMMAND = 5;
+  CONNECTION_DOCKER_REGISTRY = 6;
+  CONNECTION_TAR = 7;
+  CONNECTION_MOCK = 8;
+}
+
+message Connection {
+  ConnectionBackend Backend = 1;
+  string Host = 2;
+  string Port = 3;
+  string Path = 4;
+  string User = 5;
+  string IdentityFile = 6;
+  string Password = 7;
+  bool Insecure = 8;
+  string BearerToken = 9;
+  bool Sudo = 20;
+}
