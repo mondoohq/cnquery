@@ -14,11 +14,11 @@ import (
 	"os"
 )
 
-func New(endpoint *motorapi.Endpoint) (*Transport, error) {
+func New(endpoint *motorapi.TransportConfig) (*Transport, error) {
 	return NewWithClose(endpoint, nil)
 }
 
-func NewWithClose(endpoint *motorapi.Endpoint, close func()) (*Transport, error) {
+func NewWithClose(endpoint *motorapi.TransportConfig, close func()) (*Transport, error) {
 	t := &Transport{
 		Fs:      NewFs(endpoint.Path),
 		CloseFN: close,

@@ -11,7 +11,7 @@ import (
 )
 
 func TestParseAuditpol(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/auditpol.toml"})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/auditpol.toml"})
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("auditpol /get /category:* /r")

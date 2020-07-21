@@ -3,7 +3,7 @@ syntax = "proto3";
 package mondoo.motor.v1;
 option go_package = "go.mondoo.io/mondoo/motor/motorapi";
 
-enum ConnectionBackend {
+enum TransportBackend {
   CONNECTION_LOCAL_OS = 0;
   CONNECTION_DOCKER_IMAGE = 1;
   CONNECTION_DOCKER_CONTAINER = 2;
@@ -15,15 +15,24 @@ enum ConnectionBackend {
   CONNECTION_MOCK = 8;
 }
 
-message Connection {
-  ConnectionBackend Backend = 1;
+message TransportConfig {
+  TransportBackend Backend = 1;
   string Host = 2;
+  // Ports are not int by default, eg. docker://centos:latest parses a string as port
+	// Therefore it is up to the transport to convert the port to what they need
   string Port = 3;
   string Path = 4;
   string User = 5;
-  string IdentityFile = 6;
+  repeated string IdentityFiles = 6;
   string Password = 7;
-  bool Insecure = 8;
+  bool Insecure = 8;  // disable ssl/tls checks
   string BearerToken = 9;
-  bool Sudo = 20;
+  Sudo Sudo = 20;
+  bool Record = 21;
+}
+
+message Sudo {
+  bool active = 1;
+  string user = 2;
+  string shell = 3;
 }

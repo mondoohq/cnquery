@@ -10,7 +10,7 @@ import (
 )
 
 func TestParseServiceLaunchD(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/osx.toml"})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/osx.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -37,7 +37,7 @@ func TestKubectlConfigParser(t *testing.T) {
 }
 
 func TestKubectlExecuter(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/linux_kubeclt.toml"})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/linux_kubeclt.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

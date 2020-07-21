@@ -12,7 +12,7 @@ import (
 
 func TestLinuxMachineId(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/linux_test.toml")
-	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: filepath})
 	if err != nil {
 		t.Fatal(err)
 	}

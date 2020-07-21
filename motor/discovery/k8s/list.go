@@ -140,9 +140,9 @@ func toAsset(pod v1.Pod, status v1.ContainerStatus) *assets.Asset {
 			Runtime: runtime.RUNTIME_KUBERNETES,
 		},
 
-		Connections: []*motorapi.Connection{
-			&motorapi.Connection{
-				Backend: motorapi.ConnectionBackend_CONNECTION_DOCKER_IMAGE,
+		Connections: []*motorapi.TransportConfig{
+			&motorapi.TransportConfig{
+				Backend: motorapi.TransportBackend_CONNECTION_DOCKER_IMAGE,
 				Host:    connection,
 			},
 		},

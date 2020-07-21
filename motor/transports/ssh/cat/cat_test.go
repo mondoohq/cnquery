@@ -18,7 +18,7 @@ import (
 
 func TestCatFs(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/cat.toml")
-	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: filepath})
 	require.NoError(t, err)
 
 	cw := &CommandWrapper{

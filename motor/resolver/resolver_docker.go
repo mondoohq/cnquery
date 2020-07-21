@@ -51,7 +51,7 @@ type DockerInfo struct {
 //
 // Therefore, this package will only implement the auto-discovery and
 // redirect to specific implementations once the disovery is completed
-func ResolveDockerTransport(endpoint *motorapi.Endpoint) (transports.Transport, DockerInfo, error) {
+func ResolveDockerTransport(endpoint *motorapi.TransportConfig) (transports.Transport, DockerInfo, error) {
 	// 0. check if we have a tar as input
 	//    detect if the tar is a container image format -> container image
 	//    or a container snapshot format -> container snapshot

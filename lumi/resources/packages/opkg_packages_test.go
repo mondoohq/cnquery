@@ -48,7 +48,7 @@ firewall - 2016-11-29-1`
 
 func TestOpkgManager(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/packages_opkg.toml")
-	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: filepath})
 	require.NoError(t, err)
 
 	m, err := motor.New(trans)

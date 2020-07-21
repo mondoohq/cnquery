@@ -11,7 +11,7 @@ import (
 
 func TestSSHParser(t *testing.T) {
 	path := "./testdata/sshd_config.toml"
-	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: path})
+	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: path})
 
 	f, err := trans.FS().Open("/etc/ssh/sshd_config")
 	if err != nil {

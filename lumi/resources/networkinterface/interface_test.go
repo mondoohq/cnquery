@@ -51,7 +51,7 @@ import (
 // }
 
 func TestWindowsRemoteInterface(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/windows.toml"})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/windows.toml"})
 	require.NoError(t, err)
 
 	m, err := motor.New(mock)
@@ -89,7 +89,7 @@ func TestMacOsRegex(t *testing.T) {
 }
 
 func TestMacOSRemoteInterface(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/macos.toml"})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/macos.toml"})
 	require.NoError(t, err)
 
 	m, err := motor.New(mock)
@@ -119,7 +119,7 @@ func TestMacOSRemoteInterface(t *testing.T) {
 }
 
 func TestLinuxRemoteInterface(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/linux_remote.toml"})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/linux_remote.toml"})
 	require.NoError(t, err)
 
 	m, err := motor.New(mock)
@@ -155,7 +155,7 @@ func TestLinuxRemoteInterface(t *testing.T) {
 }
 
 func TestLinuxRemoteInterfaceFlannel(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/linux_flannel.toml"})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/linux_flannel.toml"})
 	require.NoError(t, err)
 
 	m, err := motor.New(mock)

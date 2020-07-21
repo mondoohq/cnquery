@@ -10,7 +10,7 @@ import (
 )
 
 func TestMacOsXPackageParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/packages_macos.toml"})
+	mock, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/packages_macos.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

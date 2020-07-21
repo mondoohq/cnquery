@@ -19,7 +19,7 @@ func initExecutor() *executor.Executor {
 	registry := lumi.NewRegistry()
 	resources.Init(registry)
 
-	transport, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/arch.toml"})
+	transport, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/arch.toml"})
 	if err != nil {
 		panic(err.Error())
 	}

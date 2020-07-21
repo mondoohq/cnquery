@@ -11,7 +11,7 @@ import (
 
 func TestParseProcessStatus(t *testing.T) {
 	path := "./testdata/process-pid1.toml"
-	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: path})
+	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: path})
 
 	f, err := trans.FS().Open("/proc/1/status")
 	if err != nil {
@@ -30,7 +30,7 @@ func TestParseProcessStatus(t *testing.T) {
 
 func TestParseProcessCmdline(t *testing.T) {
 	path := "./testdata/process-pid1.toml"
-	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: path})
+	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: path})
 
 	f, err := trans.FS().Open("/proc/1/cmdline")
 	if err != nil {

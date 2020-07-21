@@ -53,9 +53,9 @@ func (a *EcrImages) List() ([]*assets.Asset, error) {
 					Kind:    assets.Kind_KIND_CONTAINER_IMAGE,
 					Runtime: "aws ecr",
 				},
-				Connections: []*motorapi.Connection{
-					&motorapi.Connection{
-						Backend: motorapi.ConnectionBackend_CONNECTION_DOCKER_REGISTRY,
+				Connections: []*motorapi.TransportConfig{
+					&motorapi.TransportConfig{
+						Backend: motorapi.TransportBackend_CONNECTION_DOCKER_REGISTRY,
 						Host:    registryURL,
 					},
 				},

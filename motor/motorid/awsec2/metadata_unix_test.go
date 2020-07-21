@@ -12,7 +12,7 @@ import (
 )
 
 func TestEC2RoleProviderInstanceIdentityUnix(t *testing.T) {
-	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/instance-identity_document_linux.toml"})
+	trans, err := mock.NewFromToml(&motorapi.TransportConfig{Backend: motorapi.TransportBackend_CONNECTION_MOCK, Path: "./testdata/instance-identity_document_linux.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

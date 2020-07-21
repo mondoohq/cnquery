@@ -21,7 +21,7 @@ import (
 	rawsftp "github.com/pkg/sftp"
 )
 
-func New(endpoint *motorapi.Endpoint) (*SSHTransport, error) {
+func New(endpoint *motorapi.TransportConfig) (*SSHTransport, error) {
 	endpoint = ReadSSHConfig(endpoint)
 
 	// ensure all required configs are set
@@ -81,7 +81,7 @@ func New(endpoint *motorapi.Endpoint) (*SSHTransport, error) {
 }
 
 type SSHTransport struct {
-	Endpoint         *motorapi.Endpoint
+	Endpoint         *motorapi.TransportConfig
 	SSHClient        *ssh.Client
 	fs               afero.Fs
 	UseScpFilesystem bool

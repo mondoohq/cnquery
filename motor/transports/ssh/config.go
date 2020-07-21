@@ -14,7 +14,7 @@ import (
 	"golang.org/x/crypto/ssh/knownhosts"
 )
 
-func ReadSSHConfig(endpoint *motorapi.Endpoint) *motorapi.Endpoint {
+func ReadSSHConfig(endpoint *motorapi.TransportConfig) *motorapi.TransportConfig {
 	host := endpoint.Host
 
 	home, err := homedir.Dir()
@@ -81,8 +81,8 @@ func ReadSSHConfig(endpoint *motorapi.Endpoint) *motorapi.Endpoint {
 	return endpoint
 }
 
-func VerifyConfig(endpoint *motorapi.Endpoint) error {
-	if endpoint.Backend != "ssh" {
+func VerifyConfig(endpoint *motorapi.TransportConfig) error {
+	if endpoint.Backend != motorapi.TransportBackend_CONNECTION_SSH {
 		return errors.New("only ssh backend for ssh transport supported")
 	}
 
@@ -94,7 +94,7 @@ func VerifyConfig(endpoint *motorapi.Endpoint) error {
 	return nil
 }
 
-func DefaultConfig(endpoint *motorapi.Endpoint) *motorapi.Endpoint {
+func DefaultConfig(endpoint *motorapi.TransportConfig) *motorapi.TransportConfig {
 	p, err := endpoint.IntPort()
 	// use default port if port is 0
 	if err == nil && p <= 0 {
