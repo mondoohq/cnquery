@@ -5,13 +5,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/lumi/resources/sshd"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestSSHParser(t *testing.T) {
 	path := "./testdata/sshd_config.toml"
-	trans, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: path})
+	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: path})
 
 	f, err := trans.FS().Open("/etc/ssh/sshd_config")
 	if err != nil {

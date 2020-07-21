@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 
@@ -20,7 +21,7 @@ type WatcherTester struct {
 
 func SetupWatcherTest() *WatcherTester {
 	filepath, _ := filepath.Abs("./watcher_test.toml")
-	trans, _ := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: filepath})
+	trans, _ := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: filepath})
 	return &WatcherTester{watcher: NewWatcher(trans), mock: trans}
 }
 

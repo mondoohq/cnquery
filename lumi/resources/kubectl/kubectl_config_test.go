@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/lumi/resources/kubectl"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
@@ -37,7 +37,7 @@ func TestKubectlConfigParser(t *testing.T) {
 }
 
 func TestKubectlExecuter(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/linux_kubeclt.toml"})
+	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/linux_kubeclt.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

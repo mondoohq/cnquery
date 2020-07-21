@@ -4,16 +4,16 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/lumi/resources/reboot"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/transports/mock"
-	"gotest.tools/assert"
 )
 
 func TestRhelKernelLatest(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/redhat_kernel_reboot.toml")
-	trans, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: filepath})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,7 +34,7 @@ func TestRhelKernelLatest(t *testing.T) {
 
 func TestAmznContainerWithoutKernel(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/amzn_kernel_container.toml")
-	trans, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: filepath})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +55,7 @@ func TestAmznContainerWithoutKernel(t *testing.T) {
 
 func TestAmznEc2Kernel(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/amzn_kernel_ec2.toml")
-	trans, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: filepath})
+	trans, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: filepath})
 	if err != nil {
 		t.Fatal(err)
 	}

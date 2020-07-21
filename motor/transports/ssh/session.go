@@ -10,12 +10,12 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/motorapi"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 )
 
-func sshClientConnection(hostconfig *transports.Endpoint, hostKeyCallback ssh.HostKeyCallback) (*ssh.Client, error) {
+func sshClientConnection(hostconfig *motorapi.Endpoint, hostKeyCallback ssh.HostKeyCallback) (*ssh.Client, error) {
 	authMethods, err := authMethods(hostconfig)
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func hasAgentLoadedKey(list []*agent.Key, filename string) bool {
 	return false
 }
 
-func authMethods(endpoint *transports.Endpoint) ([]ssh.AuthMethod, error) {
+func authMethods(endpoint *motorapi.Endpoint) ([]ssh.AuthMethod, error) {
 	auths := []ssh.AuthMethod{}
 
 	// only one public auth method is allowed, therefore multiple keys need to be encapsulated into one auth method

@@ -5,12 +5,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/lumi/resources/users"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestParseDsclListResult(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/osx.toml"})
+	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/osx.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

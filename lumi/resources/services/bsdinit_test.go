@@ -5,12 +5,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/lumi/resources/services"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestParseBsdInit(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/freebsd12.toml"})
+	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/freebsd12.toml"})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -6,12 +6,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/lumi/resources/windows"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/motorapi"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestParseSecpol(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.Endpoint{Backend: "mock", Path: "./testdata/secpol.toml"})
+	mock, err := mock.NewFromToml(&motorapi.Endpoint{Backend: "mock", Path: "./testdata/secpol.toml"})
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("powershell.exe -EncodedCommand CgBzAGUAYwBlAGQAaQB0ACAALwBlAHgAcABvAHIAdAAgAC8AYwBmAGcAIABvAHUAdAAuAGMAZgBnACAAIAB8ACAATwB1AHQALQBOAHUAbABsAAoAJAByAGEAdwAgAD0AIABHAGUAdAAtAEMAbwBuAHQAZQBuAHQAIABvAHUAdAAuAGMAZgBnAAoAUgBlAG0AbwB2AGUALQBJAHQAZQBtACAALgBcAG8AdQB0AC4AYwBmAGcAIAB8ACAATwB1AHQALQBOAHUAbABsAAoAVwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIAAkAHIAYQB3AAoA")
