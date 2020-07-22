@@ -97,11 +97,17 @@ func (conn *TransportConfig) ToUrl() string {
 	case TransportBackend_CONNECTION_SSH:
 		return "ssh://" + conn.Host
 	case TransportBackend_CONNECTION_DOCKER_CONTAINER:
-		return "docker://" + conn.Host[:12]
+		if len(conn.Host) > 12 {
+			return "docker://" + conn.Host[:12]
+		}
+		return "docker://" + conn.Host
 	case TransportBackend_CONNECTION_DOCKER_IMAGE:
 		if strings.HasPrefix(conn.Host, "sha256:") {
 			host := strings.Replace(conn.Host, "sha256:", "", -1)
-			return "docker://" + host[:12]
+			if len(host) > 12 {
+				return "docker://" + host[:12]
+			}
+			return "docker://" + host
 		}
 		// eg. docker://centos:8
 		return "docker://" + conn.Host
