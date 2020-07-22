@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/pkg/errors"
+	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/docker"
 	"go.mondoo.io/mondoo/motor/runtime"
 	"go.mondoo.io/mondoo/motor/transports"
@@ -136,7 +137,7 @@ func toAsset(pod v1.Pod, status v1.ContainerStatus) *assets.Asset {
 		ParentReferenceID: parentRef,
 
 		Platform: &assets.Platform{
-			Kind:    transports.Kind_KIND_CONTAINER,
+			Kind:    asset.Kind_KIND_CONTAINER,
 			Runtime: runtime.RUNTIME_KUBERNETES,
 		},
 

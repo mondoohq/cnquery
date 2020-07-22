@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/motor/runtime"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/nexus/assets"
 )
 
@@ -60,7 +60,7 @@ func (ssmi *SSMManagedInstances) List() ([]*assets.Asset, error) {
 			ReferenceIDs: []string{awsec2.MondooInstanceID(account, ssmi.config.Region, *instance.InstanceId)},
 			Name:         *instance.InstanceId,
 			Platform: &assets.Platform{
-				Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
+				Kind:    asset.Kind_KIND_VIRTUAL_MACHINE,
 				Runtime: runtime.RUNTIME_AWS_SSM_MANAGED,
 			},
 			// Connections: connections,

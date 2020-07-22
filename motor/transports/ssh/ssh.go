@@ -172,11 +172,3 @@ func (t *SSHTransport) Capabilities() transports.Capabilities {
 		transports.Cabability_File,
 	}
 }
-
-func (t *SSHTransport) Kind() transports.Kind {
-	return transports.Kind_KIND_BARE_METAL
-}
-
-func (t *SSHTransport) Runtime() string {
-	return ""
-}

@@ -19,7 +19,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/runtime"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/docker/cache"
 	"go.mondoo.io/mondoo/motor/transports/tar"
@@ -27,14 +26,6 @@ import (
 
 type DockerImageTransport struct {
 	tar.Transport
-}
-
-func (t *DockerImageTransport) Kind() transports.Kind {
-	return transports.Kind_KIND_CONTAINER_IMAGE
-}
-
-func (t *DockerImageTransport) Runtime() string {
-	return runtime.RUNTIME_DOCKER_IMAGE
 }
 
 func newWithClose(endpoint *transports.TransportConfig, close func()) (*DockerImageTransport, error) {

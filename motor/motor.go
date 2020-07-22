@@ -1,8 +1,6 @@
 package motor
 
 import (
-	"errors"
-
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
@@ -12,13 +10,16 @@ import (
 )
 
 func New(trans transports.Transport) (*Motor, error) {
-	c := &Motor{Transport: trans}
+	c := &Motor{
+		Transport: trans,
+		detector:  &platform.Detector{Transport: trans},
+	}
 	return c, nil
 }
 
 type Motor struct {
 	Transport transports.Transport
-	platform  *platform.PlatformInfo
+	detector  *platform.Detector
 	watcher   transports.Watcher
 	Meta      MetaInfo
 	recording bool
@@ -30,21 +31,8 @@ type MetaInfo struct {
 	Labels     map[string]string
 }
 
-func (m *Motor) Platform() (platform.PlatformInfo, error) {
-	// check if platform is in cache
-	if m.platform != nil {
-		return *m.platform, nil
-	}
-
-	detector := &platform.Detector{Transport: m.Transport}
-	resolved, di := detector.Resolve()
-	if !resolved {
-		return platform.PlatformInfo{}, errors.New("could not determine operating system")
-	} else {
-		// cache value
-		m.platform = di
-	}
-	return *di, nil
+func (m *Motor) Platform() (*platform.Platform, error) {
+	return m.detector.Platform()
 }
 
 func (m *Motor) Watcher() transports.Watcher {

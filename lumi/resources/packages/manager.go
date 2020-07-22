@@ -35,9 +35,9 @@ func ResolveSystemPkgManager(motor *motor.Motor) (OperatingSystemPkgManager, err
 	case "ubuntu", "debian", "raspbian", "kali": // debian family
 		pm = &DebPkgManager{motor: motor}
 	case "redhat", "centos", "fedora", "amazonlinux", "oraclelinux", "scientific", "photon", "wrlinux": // rhel family
-		pm = &RpmPkgManager{motor: motor, platform: &platform}
+		pm = &RpmPkgManager{motor: motor, platform: platform}
 	case "opensuse", "sles", "opensuse-leap", "opensuse-tumbleweed": // suse handling
-		pm = &SusePkgManager{RpmPkgManager{motor: motor, platform: &platform}}
+		pm = &SusePkgManager{RpmPkgManager{motor: motor, platform: platform}}
 	case "alpine": // alpine family
 		pm = &AlpinePkgManager{motor: motor}
 	case "macos": // mac os family

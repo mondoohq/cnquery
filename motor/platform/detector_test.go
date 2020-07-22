@@ -21,7 +21,7 @@ func newDetector(path string) (*platform.Detector, error) {
 func TestRhel6OSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-rhel6.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "redhat", di.Name, "os name should be identified")
@@ -34,7 +34,7 @@ func TestRhel6OSDetector(t *testing.T) {
 func TestRhel7OSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-rhel7.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "redhat", di.Name, "os name should be identified")
@@ -47,7 +47,7 @@ func TestRhel7OSDetector(t *testing.T) {
 func TestRhel7SLESOSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-rhel7-sles.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "redhat", di.Name, "os name should be identified")
@@ -60,7 +60,7 @@ func TestRhel7SLESOSDetector(t *testing.T) {
 func TestRhel8OSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-rhel8.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "redhat", di.Name, "os name should be identified")
@@ -73,7 +73,7 @@ func TestRhel8OSDetector(t *testing.T) {
 func TestFedora29OSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-fedora29.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "fedora", di.Name, "os name should be identified")
@@ -86,7 +86,7 @@ func TestFedora29OSDetector(t *testing.T) {
 func TestFedoraCoreOSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-coreos-fedora.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "fedora", di.Name, "os name should be identified")
@@ -99,7 +99,7 @@ func TestFedoraCoreOSDetector(t *testing.T) {
 func TestCoreOSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-coreos.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "flatcar", di.Name, "os name should be identified")
@@ -112,7 +112,7 @@ func TestCoreOSDetector(t *testing.T) {
 func TestCentos5Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-centos5.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "centos", di.Name, "os name should be identified")
@@ -125,7 +125,7 @@ func TestCentos5Detector(t *testing.T) {
 func TestCentos6Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-centos6.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "centos", di.Name, "os name should be identified")
@@ -138,7 +138,7 @@ func TestCentos6Detector(t *testing.T) {
 func TestCentos7OSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-centos7.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "centos", di.Name, "os name should be identified")
@@ -151,7 +151,7 @@ func TestCentos7OSDetector(t *testing.T) {
 func TestCentos8OSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-centos8.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "centos", di.Name, "os name should be identified")
@@ -164,7 +164,7 @@ func TestCentos8OSDetector(t *testing.T) {
 func TestUbuntu1204Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-ubuntu1204.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "ubuntu", di.Name, "os name should be identified")
@@ -177,7 +177,7 @@ func TestUbuntu1204Detector(t *testing.T) {
 func TestUbuntu1404Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-ubuntu1404.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "ubuntu", di.Name, "os name should be identified")
@@ -190,7 +190,7 @@ func TestUbuntu1404Detector(t *testing.T) {
 func TestUbuntu1604Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-ubuntu1604.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "ubuntu", di.Name, "os name should be identified")
@@ -203,7 +203,7 @@ func TestUbuntu1604Detector(t *testing.T) {
 func TestUbuntu1804Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-ubuntu1804.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "ubuntu", di.Name, "os name should be identified")
@@ -216,7 +216,7 @@ func TestUbuntu1804Detector(t *testing.T) {
 func TestUbuntu2004Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-ubuntu2004.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "ubuntu", di.Name, "os name should be identified")
@@ -229,7 +229,7 @@ func TestUbuntu2004Detector(t *testing.T) {
 func TestWindriver7Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-windriver7.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "wrlinux", di.Name, "os name should be identified")
@@ -242,7 +242,7 @@ func TestWindriver7Detector(t *testing.T) {
 func TestOpenWrtDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-openwrt.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "openwrt", di.Name, "os name should be identified")
@@ -255,7 +255,7 @@ func TestOpenWrtDetector(t *testing.T) {
 func TestDebian7Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-debian7.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "debian", di.Name, "os name should be identified")
@@ -268,7 +268,7 @@ func TestDebian7Detector(t *testing.T) {
 func TestDebian8Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-debian8.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "debian", di.Name, "os name should be identified")
@@ -281,7 +281,7 @@ func TestDebian8Detector(t *testing.T) {
 func TestDebian9Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-debian9.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "debian", di.Name, "os name should be identified")
@@ -294,7 +294,7 @@ func TestDebian9Detector(t *testing.T) {
 func TestDebian10Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-debian10.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "debian", di.Name, "os name should be identified")
@@ -307,7 +307,7 @@ func TestDebian10Detector(t *testing.T) {
 func TestRaspian10Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-raspbian.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "raspbian", di.Name, "os name should be identified")
@@ -320,7 +320,7 @@ func TestRaspian10Detector(t *testing.T) {
 func TestKaliRollingDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-kalirolling.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "kali", di.Name, "os name should be identified")
@@ -333,7 +333,7 @@ func TestKaliRollingDetector(t *testing.T) {
 func TestOpenSuse13Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-opensuse-13.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "opensuse", di.Name, "os name should be identified")
@@ -346,7 +346,7 @@ func TestOpenSuse13Detector(t *testing.T) {
 func TestOpenSuseLeap42Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-opensuse-leap-42.3.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "opensuse", di.Name, "os name should be identified")
@@ -359,7 +359,7 @@ func TestOpenSuseLeap42Detector(t *testing.T) {
 func TestOpenSuseLeap15Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-opensuse-leap-15.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "opensuse-leap", di.Name, "os name should be identified")
@@ -372,7 +372,7 @@ func TestOpenSuseLeap15Detector(t *testing.T) {
 func TestOpenSuseTumbleweedDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-opensuse-tumbleweed.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "opensuse-tumbleweed", di.Name, "os name should be identified")
@@ -385,7 +385,7 @@ func TestOpenSuseTumbleweedDetector(t *testing.T) {
 func TestSuse12Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-suse-sles-12.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "sles", di.Name, "os name should be identified")
@@ -398,7 +398,7 @@ func TestSuse12Detector(t *testing.T) {
 func TestSuse125Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-suse-sles-12.5.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "sles", di.Name, "os name should be identified")
@@ -411,7 +411,7 @@ func TestSuse125Detector(t *testing.T) {
 func TestSuse15Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-suse-sles-15.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "sles", di.Name, "os name should be identified")
@@ -424,7 +424,7 @@ func TestSuse15Detector(t *testing.T) {
 func TestAmazon1LinuxDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-amazonlinux-2017.09.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "amazonlinux", di.Name, "os name should be identified")
@@ -437,7 +437,7 @@ func TestAmazon1LinuxDetector(t *testing.T) {
 func TestAmazon2LinuxDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-amzn2.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "amazonlinux", di.Name, "os name should be identified")
@@ -450,7 +450,7 @@ func TestAmazon2LinuxDetector(t *testing.T) {
 func TestScientificLinuxDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-scientific.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "scientific", di.Name, "os name should be identified")
@@ -463,7 +463,7 @@ func TestScientificLinuxDetector(t *testing.T) {
 func TestArchLinuxVmDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-arch-vm.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "arch", di.Name, "os name should be identified")
@@ -475,7 +475,7 @@ func TestArchLinuxVmDetector(t *testing.T) {
 func TestArchLinuxContainerDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-arch-container.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "arch", di.Name, "os name should be identified")
@@ -487,7 +487,7 @@ func TestArchLinuxContainerDetector(t *testing.T) {
 func TestManjaroLinuxContainerDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-manjaro.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "manjaro", di.Name, "os name should be identified")
@@ -499,7 +499,7 @@ func TestManjaroLinuxContainerDetector(t *testing.T) {
 func TestOracleLinux6Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-oracle6.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "oraclelinux", di.Name, "os name should be identified")
@@ -512,7 +512,7 @@ func TestOracleLinux6Detector(t *testing.T) {
 func TestOracleLinux7Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-oracle7.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "oraclelinux", di.Name, "os name should be identified")
@@ -525,7 +525,7 @@ func TestOracleLinux7Detector(t *testing.T) {
 func TestOracleLinux8Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-oracle8.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "oraclelinux", di.Name, "os name should be identified")
@@ -538,7 +538,7 @@ func TestOracleLinux8Detector(t *testing.T) {
 func TestGentooLinuxDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-gentoo.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "gentoo", di.Name, "os name should be identified")
@@ -551,7 +551,7 @@ func TestGentooLinuxDetector(t *testing.T) {
 func TestAlpineLinuxDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-alpine.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "alpine", di.Name, "os name should be identified")
@@ -564,7 +564,7 @@ func TestAlpineLinuxDetector(t *testing.T) {
 func TestBusyboxLinuxDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-busybox.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "busybox", di.Name, "os name should be identified")
@@ -577,7 +577,7 @@ func TestBusyboxLinuxDetector(t *testing.T) {
 func TestWindows2016Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-windows2016.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "windows", di.Name, "os name should be identified")
@@ -590,7 +590,7 @@ func TestWindows2016Detector(t *testing.T) {
 func TestWindows2019Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-windows2019.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "windows", di.Name, "os name should be identified")
@@ -603,7 +603,7 @@ func TestWindows2019Detector(t *testing.T) {
 func TestPhoton1Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-photon1.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "photon", di.Name, "os name should be identified")
@@ -616,7 +616,7 @@ func TestPhoton1Detector(t *testing.T) {
 func TestPhoton2Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-photon2.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "photon", di.Name, "os name should be identified")
@@ -629,7 +629,7 @@ func TestPhoton2Detector(t *testing.T) {
 func TestPhoton3Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-photon3.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "photon", di.Name, "os name should be identified")
@@ -642,7 +642,7 @@ func TestPhoton3Detector(t *testing.T) {
 func TestMacOSsDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-macos.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "macos", di.Name, "os name should be identified")
@@ -655,7 +655,7 @@ func TestMacOSsDetector(t *testing.T) {
 func TestBuildrootDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-buildroot.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "buildroot", di.Name, "os name should be identified")
@@ -668,7 +668,7 @@ func TestBuildrootDetector(t *testing.T) {
 func TestSolaris11Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-solaris11.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "solaris", di.Name, "os name should be identified")
@@ -681,7 +681,7 @@ func TestSolaris11Detector(t *testing.T) {
 func TestNetbsd8Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-netbsd8.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "netbsd", di.Name, "os name should be identified")
@@ -694,7 +694,7 @@ func TestNetbsd8Detector(t *testing.T) {
 func TestFreebsd12Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-freebsd12.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "freebsd", di.Name, "os name should be identified")
@@ -707,7 +707,7 @@ func TestFreebsd12Detector(t *testing.T) {
 func TestOpenBsd6Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-openbsd6.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "openbsd", di.Name, "os name should be identified")
@@ -720,7 +720,7 @@ func TestOpenBsd6Detector(t *testing.T) {
 func TestDragonFlyBsd5Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-dragonflybsd5.toml")
 	assert.Nil(t, err, "was able to create the transport")
-	resolved, di := detector.Resolve()
+	di, resolved := detector.Resolve()
 
 	assert.Equal(t, true, resolved, "platform should be resolvable")
 	assert.Equal(t, "dragonflybsd", di.Name, "os name should be identified")
@@ -731,7 +731,7 @@ func TestDragonFlyBsd5Detector(t *testing.T) {
 }
 
 func TestFamilies(t *testing.T) {
-	di := &platform.PlatformInfo{}
+	di := &platform.Platform{}
 	di.Family = []string{"unix", "bsd", "darwin"}
 
 	assert.Equal(t, true, di.IsFamily("unix"), "unix should be a family")

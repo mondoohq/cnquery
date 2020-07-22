@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/pkg/errors"
+	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/motor/runtime"
 	"go.mondoo.io/mondoo/motor/transports"
@@ -68,7 +69,7 @@ func (ec2i *Ec2Instances) List() ([]*assets.Asset, error) {
 				ReferenceIDs: []string{awsec2.MondooInstanceID(account, ec2i.config.Region, *instance.InstanceId)},
 				Name:         *instance.InstanceId,
 				Platform: &assets.Platform{
-					Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
+					Kind:    asset.Kind_KIND_VIRTUAL_MACHINE,
 					Runtime: runtime.RUNTIME_AWS_EC2,
 				},
 				Connections: connections,

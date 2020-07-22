@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/nexus/assets"
 )
@@ -50,7 +51,7 @@ func (a *EcrImages) List() ([]*assets.Asset, error) {
 				ReferenceIDs: []string{MondooContainerImageID(digest)},
 				// Name:         strings.Join(dImg.RepoTags, ","),
 				Platform: &assets.Platform{
-					Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
+					Kind:    asset.Kind_KIND_CONTAINER_IMAGE,
 					Runtime: "aws ecr",
 				},
 				Connections: []*transports.TransportConfig{

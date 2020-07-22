@@ -99,14 +99,6 @@ func (t *Transport) Capabilities() transports.Capabilities {
 	}
 }
 
-func (t *Transport) Kind() transports.Kind {
-	return transports.Kind_KIND_UNKNOWN
-}
-
-func (t *Transport) Runtime() string {
-	return ""
-}
-
 // // TODO, support directory streaming
 // func (mf *MockFile) Tar() (io.ReadCloser, error) {
 // 	if mf.file.Enoent {
