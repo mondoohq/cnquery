@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package mondoo.motor.platform.v1;
+option go_package = "go.mondoo.io/mondoo/motor/platform";
+
+message Platform {
+  string name = 1;
+  string release = 2;
+  string arch = 3;
+  string title = 4;
+  repeated string family = 5;
+}

@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/runtime"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/nexus/assets"
@@ -158,7 +159,7 @@ func (a *Compute) instancesPerZone(svc *compute.Service, project string, zone st
 			ReferenceIDs: []string{MondooGcpInstanceID(project, zone, instance)},
 			Name:         instance.Name,
 			Platform: &assets.Platform{
-				Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
+				Kind:    asset.Kind_KIND_VIRTUAL_MACHINE,
 				Runtime: runtime.RUNTIME_GCP_COMPUTE,
 			},
 			Connections: connections,

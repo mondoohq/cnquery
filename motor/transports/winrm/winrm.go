@@ -123,11 +123,3 @@ func (t *WinrmTransport) Capabilities() transports.Capabilities {
 		transports.Cabability_File,
 	}
 }
-
-func (t *WinrmTransport) Kind() transports.Kind {
-	return transports.Kind_KIND_BARE_METAL
-}
-
-func (t *WinrmTransport) Runtime() string {
-	return ""
-}

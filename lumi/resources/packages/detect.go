@@ -5,8 +5,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/nexus/assets"
 	"go.mondoo.io/mondoo/vadvisor/api"
 )
 
@@ -35,14 +33,6 @@ func Detect(motor *motor.Motor) ([]Package, map[string]PackageUpdate, error) {
 	log.Debug().Int("updates", len(availableList)).Msg("lumi[packages]> available updates")
 
 	return packages, availableList, nil
-}
-
-func ConvertPlatform(platform platform.PlatformInfo) *assets.Platform {
-	return &assets.Platform{
-		Name:    platform.Name,
-		Release: platform.Release,
-		Arch:    platform.Arch,
-	}
 }
 
 func ConvertParserPackages(pkgs []Package, updates map[string]PackageUpdate) []*api.Package {

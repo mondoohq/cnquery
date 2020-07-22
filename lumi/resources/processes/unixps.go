@@ -134,7 +134,7 @@ func ParseUnixPsResult(input io.Reader) ([]*ProcessEntry, error) {
 
 type UnixProcessManager struct {
 	motor    *motor.Motor
-	platform platform.PlatformInfo
+	platform *platform.Platform
 }
 
 func (upm *UnixProcessManager) Name() string {

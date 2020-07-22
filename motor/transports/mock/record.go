@@ -90,14 +90,6 @@ func (t *RecordTransport) Close() {
 	t.observe.Close()
 }
 
-func (t *RecordTransport) Kind() transports.Kind {
-	return t.observe.Kind()
-}
-
-func (t *RecordTransport) Runtime() string {
-	return t.observe.Runtime()
-}
-
 func NewRecordFS(observe afero.Fs, mockfs *mockFS) *recordFS {
 	return &recordFS{
 		observe: observe,

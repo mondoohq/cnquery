@@ -65,7 +65,7 @@ func ParseRpmPackages(input io.Reader) []Package {
 // one since more data need to copied. Therefore the runtime check should be preferred over the static analysis
 type RpmPkgManager struct {
 	motor         *motor.Motor
-	platform      *platform.PlatformInfo
+	platform      *platform.Platform
 	staticChecked bool
 	static        bool
 }

@@ -7,7 +7,6 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/motor/runtime"
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
@@ -86,14 +85,6 @@ func (t *Transport) Capabilities() transports.Capabilities {
 		transports.Cabability_RunCommand,
 		transports.Cabability_File,
 	}
-}
-
-func (t *Transport) Kind() transports.Kind {
-	return transports.Kind_KIND_CONTAINER
-}
-
-func (t *Transport) Runtime() string {
-	return runtime.RUNTIME_DOCKER_CONTAINER
 }
 
 func GetDockerClient() (*client.Client, error) {

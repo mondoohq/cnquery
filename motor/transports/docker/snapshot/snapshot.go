@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/runtime"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/docker/cache"
 	"go.mondoo.io/mondoo/motor/transports/docker/docker_engine"
@@ -14,14 +13,6 @@ import (
 
 type DockerSnapshotTransport struct {
 	tar.Transport
-}
-
-func (t *DockerSnapshotTransport) Kind() transports.Kind {
-	return transports.Kind_KIND_CONTAINER
-}
-
-func (t *DockerSnapshotTransport) Runtime() string {
-	return runtime.RUNTIME_DOCKER_CONTAINER
 }
 
 func new(endpoint *transports.TransportConfig) (*DockerSnapshotTransport, error) {

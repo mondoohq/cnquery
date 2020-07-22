@@ -19,9 +19,6 @@ type Transport interface {
 	Close()
 	// returns if this is a static asset that does not allow run command
 	Capabilities() Capabilities
-
-	Kind() Kind
-	Runtime() string
 }
 
 type FileSearch interface {

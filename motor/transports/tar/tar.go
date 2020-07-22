@@ -85,14 +85,6 @@ func (t *Transport) Capabilities() transports.Capabilities {
 	}
 }
 
-func (t *Transport) Kind() transports.Kind {
-	return transports.Kind_KIND_UNKNOWN
-}
-
-func (t *Transport) Runtime() string {
-	return ""
-}
-
 func (t *Transport) Load(stream io.Reader) error {
 	tr := tar.NewReader(stream)
 	for {

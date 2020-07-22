@@ -1,32 +1,38 @@
 package platform
 
 import (
+	"errors"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
-type PlatformInfo struct {
-	Name    string   `json:"name"`
-	Title   string   `json:"title"`
-	Family  []string `json:"family"`
-	Release string   `json:"release"`
-	Arch    string   `json:"arch"`
-}
-
-func (di *PlatformInfo) IsFamily(family string) bool {
-	for i := range di.Family {
-		if di.Family[i] == family {
-			return true
-		}
-	}
-	return false
-}
-
 type Detector struct {
 	Transport transports.Transport
+	cache     *Platform
 }
 
-func (d *Detector) Resolve() (bool, *PlatformInfo) {
+func (d *Detector) Resolve() (*Platform, bool) {
 	log.Debug().Msg("detector> start resolving the platfrom")
 	return operatingSystems.Resolve(d.Transport)
+}
+
+func (d *Detector) Platform() (*Platform, error) {
+	if d.Transport == nil {
+		return nil, errors.New("cannot detect platform without a transport")
+	}
+
+	// check if platform is in cache
+	if d.cache != nil {
+		return d.cache, nil
+	}
+
+	di, resolved := d.Resolve()
+	if !resolved {
+		return nil, errors.New("could not determine operating system")
+	}
+
+	// cache value
+	d.cache = di
+	return di, nil
 }

@@ -124,7 +124,7 @@ func (conn *TransportConfig) ToUrl() string {
 	case TransportBackend_CONNECTION_MOCK:
 		return "mock://" + conn.Path
 	default:
-		log.Warn().Str("backend", conn.Backend.String()).Msg("backend is not supported yet")
+		log.Warn().Str("backend", conn.Backend.String()).Msg("cannot render backend config")
 		return ""
 	}
 }
