@@ -33,6 +33,8 @@ enum TransportBackend {
 }
 
 message TransportConfig {
+  reserved 20;
+
   TransportBackend Backend = 1;
   string Host = 2;
   // Ports are not int by default, eg. docker://centos:latest parses a string as port
@@ -44,8 +46,9 @@ message TransportConfig {
   string Password = 7;
   bool Insecure = 8;  // disable ssl/tls checks
   string BearerToken = 9;
-  Sudo Sudo = 20;
-  bool Record = 21;
+  
+  Sudo Sudo = 21;
+  bool Record = 22;
 }
 
 message Sudo {
