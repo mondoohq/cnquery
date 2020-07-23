@@ -8,31 +8,29 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/aws/aws-sdk-go-v2/aws/ec2metadata"
-	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/transports"
 )
 
-func NewUnix(m *motor.Motor) *UnixInstanceMetadata {
-	return &UnixInstanceMetadata{motor: m}
+func NewUnix(t transports.Transport, p *platform.Platform) *UnixInstanceMetadata {
+	return &UnixInstanceMetadata{
+		transport: t,
+		platform:  p,
+	}
 }
 
 type UnixInstanceMetadata struct {
-	motor *motor.Motor
+	transport transports.Transport
+	platform  *platform.Platform
 }
 
 func (m *UnixInstanceMetadata) InstanceID() (string, error) {
-	motor := m.motor
 	identityUrl := "http://169.254.169.254/latest/dynamic/instance-identity/document"
-
-	pi, err := motor.Platform()
-	if err != nil {
-		return "", err
-	}
 
 	var instanceDocument string
 	switch {
-	case pi.IsFamily(platform.FAMILY_UNIX):
-		cmd, err := motor.Transport.RunCommand("curl " + identityUrl)
+	case m.platform.IsFamily(platform.FAMILY_UNIX):
+		cmd, err := m.transport.RunCommand("curl " + identityUrl)
 		if err != nil {
 			return "", err
 		}

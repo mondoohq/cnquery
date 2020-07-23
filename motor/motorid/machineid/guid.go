@@ -5,20 +5,16 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/transports"
 )
 
-func MachineId(motor *motor.Motor) (string, error) {
+func MachineId(t transports.Transport, p *platform.Platform) (string, error) {
 	var guid string
-	pi, err := motor.Platform()
-	if err != nil {
-		return guid, err
-	}
 
 	switch {
-	case pi.IsFamily(platform.FAMILY_WINDOWS):
-		cmd, err := motor.Transport.RunCommand("powershell -c \"Get-WmiObject Win32_ComputerSystemProduct  | Select-Object -ExpandProperty UUID\"")
+	case p.IsFamily(platform.FAMILY_WINDOWS):
+		cmd, err := t.RunCommand("powershell -c \"Get-WmiObject Win32_ComputerSystemProduct  | Select-Object -ExpandProperty UUID\"")
 		if err != nil {
 			return guid, err
 		}
