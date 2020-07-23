@@ -220,6 +220,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 		if err != nil {
 			return nil, err
 		}
+
 		m, err = motor.New(trans)
 		if err != nil {
 			return nil, err
@@ -228,6 +229,18 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 		if endpoint.Record {
 			m.ActivateRecorder()
 		}
+
+		// determine identifier
+		if !trans.Client().IsVC() {
+			// TODO: cache per connection
+			version, err := trans.EsxiSystemVersion()
+			if err != nil {
+				return nil, err
+			}
+			log.Info().Str("moid", version.Moid).Msg("identify vsphere")
+			identifier = append(identifier, version.Moid)
+		}
+		// TODO: handle identifier for vsphere
 	case transports.TransportBackend_CONNECTION_ARISTAEOS:
 		log.Debug().Msg("connection> load aristaeos transport")
 		trans, err := arista.New(endpoint)
@@ -252,10 +265,10 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 	}
 
 	ids, err := motorid.GatherIDs(m.Transport, p, idDetectors)
-	if err != nil {
-		log.Error().Err(err).Msg("could not gather the requested platform identifier")
-	} else {
+	if err == nil {
 		identifier = append(identifier, ids...)
+	} else {
+		log.Error().Err(err).Msg("could not gather the requested platform identifier")
 	}
 
 	m.Meta = motor.MetaInfo{
