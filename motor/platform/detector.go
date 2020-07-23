@@ -5,6 +5,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/arista"
+	"go.mondoo.io/mondoo/motor/transports/vsphere"
 )
 
 func NewDetector(t transports.Transport) *Detector {
@@ -34,7 +36,29 @@ func (d *Detector) Platform() (*Platform, error) {
 	}
 
 	var pi *Platform
-	switch d.transport.(type) {
+	switch pt := d.transport.(type) {
+	case *vsphere.Transport:
+		if pt.Client().IsVC() {
+			return &Platform{
+				Name:  "vmware-vsphere",
+				Title: "VMware vSphere",
+			}, nil
+		} else {
+			sv, err := pt.EsxiSystemVersion()
+			if err != nil {
+				return nil, err
+			}
+			return &Platform{
+				Name:    "vmware-esxi",
+				Title:   "VMware ESXi",
+				Release: sv.Version,
+			}, nil
+		}
+
+	case *arista.Transport:
+		return &Platform{
+			Name: "arista-eos",
+		}, nil
 	default:
 		var resolved bool
 		pi, resolved = d.resolveOS()

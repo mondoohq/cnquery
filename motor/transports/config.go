@@ -71,6 +71,10 @@ func backend(scheme string) (TransportBackend, error) {
 		return TransportBackend_CONNECTION_TAR, nil
 	case "mock":
 		return TransportBackend_CONNECTION_MOCK, nil
+	case "vsphere":
+		return TransportBackend_CONNECTION_VSPHERE, nil
+	case "aristaeos":
+		return TransportBackend_CONNECTION_ARISTAEOS, nil
 	}
 
 	return TransportBackend_CONNECTION_LOCAL_OS, errors.New("unknown connection scheme: " + scheme)
@@ -123,6 +127,10 @@ func (conn *TransportConfig) ToUrl() string {
 		return "tar://" + conn.Path
 	case TransportBackend_CONNECTION_MOCK:
 		return "mock://" + conn.Path
+	case TransportBackend_CONNECTION_VSPHERE:
+		return "vsphere://" + conn.Host
+	case TransportBackend_CONNECTION_ARISTAEOS:
+		return "aristaeos://" + conn.Host
 	default:
 		log.Warn().Str("backend", conn.Backend.String()).Msg("cannot render backend config")
 		return ""

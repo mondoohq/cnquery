@@ -1,130 +1,134 @@
 package vsphere
 
-import (
-	"testing"
+// TODO: include vsphere simulator to test the parser
+// import (
+// 	"context"
+// 	"net/url"
+// 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-)
+// 	"github.com/stretchr/testify/assert"
+// 	"github.com/stretchr/testify/require"
+// 	"github.com/vmware/govmomi"
+// )
 
-func TestVSphere(t *testing.T) {
-	cfg := &Config{
-		VSphereServerHost: "127.0.0.1:8990",
-		User:              "user",
-		Password:          "pass",
-	}
+// func newClient(host string, user string, password string) (*Client, error) {
+// 	u, err := url.Parse("https://" + host + "/sdk")
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	u.User = url.UserPassword(user, password)
 
-	client, err := New(cfg)
-	require.NoError(t, err)
+// 	ctx := context.Background()
+// 	vc, err := govmomi.NewClient(ctx, u, true)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	// fetch datacenters
-	dcs, err := client.ListDatacenters()
-	require.NoError(t, err)
-	assert.Equal(t, 1, len(dcs))
+// 	return New(vc), nil
+// }
 
-	// fetch license
-	lcs, err := client.ListLicenses()
-	require.NoError(t, err)
-	assert.Equal(t, 1, len(lcs))
+// func TestVSphere(t *testing.T) {
+// 	client, err := newClient("127.0.0.1:8990", "user", "pass")
+// 	require.NoError(t, err)
 
-	for _, dc := range dcs {
-		// list hosts
-		hosts, err := client.ListHosts(dc)
-		require.NoError(t, err)
-		assert.Equal(t, 3, len(hosts))
+// 	// fetch datacenters
+// 	dcs, err := client.ListDatacenters()
+// 	require.NoError(t, err)
+// 	assert.Equal(t, 1, len(dcs))
 
-		// list vms
-		vms, err := client.ListVirtualMachines(dc)
-		require.NoError(t, err)
-		assert.Equal(t, 3, len(vms))
-	}
-}
+// 	// fetch license
+// 	lcs, err := client.ListLicenses()
+// 	require.NoError(t, err)
+// 	assert.Equal(t, 1, len(lcs))
 
-func TestESXi(t *testing.T) {
-	cfg := &Config{
-		VSphereServerHost: "192.168.56.102",
-		User:              "root",
-		Password:          "password1!",
-	}
+// 	for _, dc := range dcs {
+// 		// list hosts
+// 		hosts, err := client.ListHosts(dc)
+// 		require.NoError(t, err)
+// 		assert.Equal(t, 3, len(hosts))
 
-	client, err := New(cfg)
-	require.NoError(t, err)
+// 		// list vms
+// 		vms, err := client.ListVirtualMachines(dc)
+// 		require.NoError(t, err)
+// 		assert.Equal(t, 3, len(vms))
+// 	}
+// }
 
-	// fetch datacenters
-	dcs, err := client.ListDatacenters()
-	require.NoError(t, err)
-	assert.Equal(t, 1, len(dcs))
+// func TestESXi(t *testing.T) {
+// 	client, err := newClient("192.168.56.102", "root", "password1!")
+// 	require.NoError(t, err)
 
-	// // fetch license
-	// lcs, err := client.ListLicenses()
-	// require.NoError(t, err)
-	// assert.Equal(t, 1, len(lcs))
+// 	// fetch datacenters
+// 	dcs, err := client.ListDatacenters()
+// 	require.NoError(t, err)
+// 	assert.Equal(t, 1, len(dcs))
 
-	// list hosts
-	for _, dc := range dcs {
-		// list hosts
-		hosts, err := client.ListHosts(dc)
-		require.NoError(t, err)
-		assert.Equal(t, 1, len(hosts))
+// 	// // fetch license
+// 	// lcs, err := client.ListLicenses()
+// 	// require.NoError(t, err)
+// 	// assert.Equal(t, 1, len(lcs))
 
-		// test the first host
-		e := Esxi{c: client.Client, host: hosts[0]}
+// 	// list hosts
+// 	for _, dc := range dcs {
+// 		// list hosts
+// 		hosts, err := client.ListHosts(dc)
+// 		require.NoError(t, err)
+// 		assert.Equal(t, 1, len(hosts))
 
-		systemVersion, err := e.SystemVersion()
-		require.NoError(t, err)
-		assert.Equal(t, "VMware ESXi", systemVersion.Product)
+// 		// test the first host
+// 		e := Esxi{c: client.Client, host: hosts[0]}
 
-		switches, err := e.VswitchStandard()
-		require.NoError(t, err)
-		assert.Equal(t, 2, len(switches))
+// 		switches, err := e.VswitchStandard()
+// 		require.NoError(t, err)
+// 		assert.Equal(t, 2, len(switches))
 
-		switches, err = e.VswitchDvs()
-		require.NoError(t, err)
-		assert.Equal(t, 0, len(switches))
+// 		switches, err = e.VswitchDvs()
+// 		require.NoError(t, err)
+// 		assert.Equal(t, 0, len(switches))
 
-		nics, err := e.Vmknics()
-		require.NoError(t, err)
-		assert.Equal(t, 1, len(nics))
+// 		nics, err := e.Vmknics()
+// 		require.NoError(t, err)
+// 		assert.Equal(t, 1, len(nics))
 
-		// list packages
-		vibs, err := e.Vibs()
-		require.NoError(t, err)
-		assert.Equal(t, 136, len(vibs))
+// 		// list packages
+// 		vibs, err := e.Vibs()
+// 		require.NoError(t, err)
+// 		assert.Equal(t, 136, len(vibs))
 
-		// package acceptance level
-		acceptance, err := e.SoftwareAcceptance()
-		require.NoError(t, err)
-		assert.Equal(t, "PartnerSupported", acceptance)
+// 		// package acceptance level
+// 		acceptance, err := e.SoftwareAcceptance()
+// 		require.NoError(t, err)
+// 		assert.Equal(t, "PartnerSupported", acceptance)
 
-		// list kernel modules
-		modules, err := e.KernelModules()
-		require.NoError(t, err)
-		assert.Equal(t, 98, len(modules))
+// 		// list kernel modules
+// 		modules, err := e.KernelModules()
+// 		require.NoError(t, err)
+// 		assert.Equal(t, 98, len(modules))
 
-		// list advanced settings
-		settings, err := e.AdvancedSettings()
-		require.NoError(t, err)
-		// TODO: the ui displays 1043, we need to find the difference
-		assert.Equal(t, 1069, len(settings))
+// 		// list advanced settings
+// 		settings, err := e.AdvancedSettings()
+// 		require.NoError(t, err)
+// 		// TODO: the ui displays 1043, we need to find the difference
+// 		assert.Equal(t, 1069, len(settings))
 
-		// all host options (overlaps with the advanced settings)
-		settings, err = HostOptions(hosts[0])
-		require.NoError(t, err)
-		assert.Equal(t, 1045, len(settings))
+// 		// all host options (overlaps with the advanced settings)
+// 		hostoptions, err := HostOptions(hosts[0])
+// 		require.NoError(t, err)
+// 		assert.Equal(t, 1045, len(hostoptions))
 
-		// get snmp settings
-		snmpSettings, err := e.Snmp()
-		require.NoError(t, err)
-		assert.Equal(t, 10, len(snmpSettings))
+// 		// get snmp settings
+// 		snmpSettings, err := e.Snmp()
+// 		require.NoError(t, err)
+// 		assert.Equal(t, 10, len(snmpSettings))
 
-		// list vms
-		vms, err := client.ListVirtualMachines(dc)
-		require.NoError(t, err)
-		assert.Equal(t, 1, len(vms))
+// 		// list vms
+// 		vms, err := client.ListVirtualMachines(dc)
+// 		require.NoError(t, err)
+// 		assert.Equal(t, 1, len(vms))
 
-		vm := vms[0]
-		vsettings, err := client.AdvancedSettings(vm)
-		require.NoError(t, err)
-		assert.Equal(t, 1, len(vsettings))
-	}
-}
+// 		vm := vms[0]
+// 		vsettings, err := AdvancedSettings(vm)
+// 		require.NoError(t, err)
+// 		assert.Equal(t, 23, len(vsettings))
+// 	}
+// }
