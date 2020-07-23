@@ -23,7 +23,8 @@ type OSReleaseDetector struct {
 func (d *OSReleaseDetector) command(command string) (string, error) {
 	cmd, err := d.Transport.RunCommand(command)
 	if err != nil {
-		log.Debug().Err(err)
+		log.Debug().Err(err).Msg("could not execute os release detection command")
+		return "", err
 	}
 
 	content, err := ioutil.ReadAll(cmd.Stdout)
