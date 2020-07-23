@@ -18,6 +18,7 @@ type EsxiSystemVersion struct {
 	Product string
 	Update  string
 	Version string
+	Moid    string
 }
 
 func listDatacenters(c *govmomi.Client) ([]*object.Datacenter, error) {
@@ -144,6 +145,8 @@ func (t *Transport) EsxiSystemVersion() (*EsxiSystemVersion, error) {
 			log.Error().Str("key", k).Msg("system version> unsupported key")
 		}
 	}
+
+	version.Moid = host.Reference().Value
 	return &version, nil
 }
 
