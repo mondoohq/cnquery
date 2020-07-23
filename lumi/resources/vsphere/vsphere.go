@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 	"time"
 
@@ -18,42 +17,13 @@ import (
 
 const DefaultAPITimeout = time.Minute * 5
 
-type Config struct {
-	User              string
-	Password          string
-	VSphereServerHost string
-}
-
-func (c *Config) vSphereURL() (*url.URL, error) {
-	u, err := url.Parse("https://" + c.VSphereServerHost + "/sdk")
-	if err != nil {
-		return nil, err
-	}
-	u.User = url.UserPassword(c.User, c.Password)
-	return u, nil
-}
-
-func New(cfg *Config) (*Client, error) {
-	vsphereUrl, err := cfg.vSphereURL()
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := context.Background()
-	client, err := govmomi.NewClient(ctx, vsphereUrl, true)
-	if err != nil {
-		return nil, err
-	}
-
-	instance := &Client{
-		cfg:    cfg,
+func New(client *govmomi.Client) *Client {
+	return &Client{
 		Client: client,
 	}
-	return instance, nil
 }
 
 type Client struct {
-	cfg    *Config
 	Client *govmomi.Client
 }
 

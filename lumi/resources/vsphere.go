@@ -1,8 +1,22 @@
 package resources
 
 import (
+	"errors"
+
 	"go.mondoo.io/mondoo/lumi/resources/vsphere"
+	"go.mondoo.io/mondoo/motor/transports"
+	vsphere_transport "go.mondoo.io/mondoo/motor/transports/vsphere"
 )
+
+func getClientInstance(t transports.Transport) (*vsphere.Client, error) {
+	vt, ok := t.(*vsphere_transport.Transport)
+	if !ok {
+		return nil, errors.New("vsphere resource is not supported on this transport")
+	}
+
+	cl := vsphere.New(vt.Client())
+	return cl, nil
+}
 
 func (v *lumiVsphereLicense) id() (string, error) {
 	return v.Name()
@@ -52,14 +66,8 @@ func (v *lumiVsphere) id() (string, error) {
 	return "vsphere", nil
 }
 
-var defaultCfg = &vsphere.Config{
-	VSphereServerHost: "192.168.56.102",
-	User:              "root",
-	Password:          "password1!",
-}
-
 func (v *lumiVsphere) GetDatacenters() ([]interface{}, error) {
-	client, err := vsphere.New(defaultCfg)
+	client, err := getClientInstance(v.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +97,7 @@ func (v *lumiVsphere) GetDatacenters() ([]interface{}, error) {
 }
 
 func (v *lumiVsphere) GetLicenses() ([]interface{}, error) {
-	client, err := vsphere.New(defaultCfg)
+	client, err := getClientInstance(v.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +131,7 @@ func (v *lumiVsphereDatacenter) id() (string, error) {
 }
 
 func (v *lumiVsphereDatacenter) GetHosts() ([]interface{}, error) {
-	client, err := vsphere.New(defaultCfg)
+	client, err := getClientInstance(v.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +176,7 @@ func (v *lumiVsphereDatacenter) GetHosts() ([]interface{}, error) {
 }
 
 func (v *lumiVsphereHost) esxiClient() (*vsphere.Esxi, error) {
-	client, err := vsphere.New(defaultCfg)
+	client, err := getClientInstance(v.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -335,7 +343,7 @@ func (v *lumiVsphereHost) GetKernelmodules() ([]interface{}, error) {
 }
 
 func (v *lumiVsphereHost) GetAdvancedsettings() (map[string]interface{}, error) {
-	client, err := vsphere.New(defaultCfg)
+	client, err := getClientInstance(v.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -354,7 +362,7 @@ func (v *lumiVsphereHost) GetAdvancedsettings() (map[string]interface{}, error) 
 }
 
 func (v *lumiVsphereHost) GetServices() ([]interface{}, error) {
-	client, err := vsphere.New(defaultCfg)
+	client, err := getClientInstance(v.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -401,7 +409,7 @@ func sliceInterface(slice []string) []interface{} {
 }
 
 func (v *lumiVsphereHost) GetTimezone() (interface{}, error) {
-	client, err := vsphere.New(defaultCfg)
+	client, err := getClientInstance(v.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -435,7 +443,7 @@ func (v *lumiVsphereHost) GetTimezone() (interface{}, error) {
 }
 
 func (v *lumiVsphereHost) GetNtp() (interface{}, error) {
-	client, err := vsphere.New(defaultCfg)
+	client, err := getClientInstance(v.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -476,7 +484,7 @@ func (v *lumiVsphereHost) GetSnmp() (map[string]interface{}, error) {
 }
 
 func (v *lumiVsphereDatacenter) GetVms() ([]interface{}, error) {
-	client, err := vsphere.New(defaultCfg)
+	client, err := getClientInstance(v.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -521,8 +529,7 @@ func (v *lumiVsphereDatacenter) GetVms() ([]interface{}, error) {
 }
 
 func (v *lumiVsphereVm) GetAdvancedsettings() (map[string]interface{}, error) {
-
-	client, err := vsphere.New(defaultCfg)
+	client, err := getClientInstance(v.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}

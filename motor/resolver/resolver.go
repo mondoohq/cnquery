@@ -8,10 +8,12 @@ import (
 	"go.mondoo.io/mondoo/motor/motorid"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/arista"
 	"go.mondoo.io/mondoo/motor/transports/local"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 	"go.mondoo.io/mondoo/motor/transports/ssh"
 	"go.mondoo.io/mondoo/motor/transports/tar"
+	"go.mondoo.io/mondoo/motor/transports/vsphere"
 	"go.mondoo.io/mondoo/motor/transports/winrm"
 )
 
@@ -212,6 +214,34 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 		}
 
 		idDetectors = append(idDetectors, "machineid")
+	case transports.TransportBackend_CONNECTION_VSPHERE:
+		log.Debug().Msg("connection> load vsphere transport")
+		trans, err := vsphere.New(endpoint)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(trans)
+		if err != nil {
+			return nil, err
+		}
+
+		if endpoint.Record {
+			m.ActivateRecorder()
+		}
+	case transports.TransportBackend_CONNECTION_ARISTAEOS:
+		log.Debug().Msg("connection> load aristaeos transport")
+		trans, err := arista.New(endpoint)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(trans)
+		if err != nil {
+			return nil, err
+		}
+
+		if endpoint.Record {
+			m.ActivateRecorder()
+		}
 	default:
 		return nil, fmt.Errorf("connection> unsupported backend '%s', only docker://, local://, tar://, ssh:// are allowed", endpoint.Backend)
 	}

@@ -1,8 +1,10 @@
 package resources
 
 import (
-	"github.com/aristanetworks/goeapi"
+	"errors"
+
 	"go.mondoo.io/mondoo/lumi/resources/arista"
+	arista_transport "go.mondoo.io/mondoo/motor/transports/arista"
 )
 
 func (a *lumiAristaeos) id() (string, error) {
@@ -13,17 +15,18 @@ func (v *lumiAristaeosIpinterface) id() (string, error) {
 	return v.Name()
 }
 
-func (a *lumiAristaeos) getInstance() (*arista.Eos, error) {
-	node, err := goeapi.Connect("http", "localhost", "admin", "", 8080)
-	if err != nil {
-		return nil, err
+func (a *lumiAristaeos) getClientInstance() (*arista.Eos, error) {
+	at, ok := a.Runtime.Motor.Transport.(*arista_transport.Transport)
+	if !ok {
+		return nil, errors.New("aristaeos resource is not supported on this transport")
 	}
-	eos := arista.NewEos(node)
+
+	eos := arista.NewEos(at.Client())
 	return eos, nil
 }
 
 func (a *lumiAristaeos) GetRunningconfig() (string, error) {
-	eos, err := a.getInstance()
+	eos, err := a.getClientInstance()
 	if err != nil {
 		return "", err
 	}
@@ -31,7 +34,7 @@ func (a *lumiAristaeos) GetRunningconfig() (string, error) {
 }
 
 func (a *lumiAristaeos) GetSystemconfig() (map[string]interface{}, error) {
-	eos, err := a.getInstance()
+	eos, err := a.getClientInstance()
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +49,7 @@ func (a *lumiAristaeos) GetSystemconfig() (map[string]interface{}, error) {
 }
 
 func (a *lumiAristaeos) GetIpinterfaces() ([]interface{}, error) {
-	eos, err := a.getInstance()
+	eos, err := a.getClientInstance()
 	if err != nil {
 		return nil, err
 	}

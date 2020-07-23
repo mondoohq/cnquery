@@ -14,6 +14,8 @@ enum TransportBackend {
   CONNECTION_DOCKER_REGISTRY = 6;
   CONNECTION_TAR = 7;
   CONNECTION_MOCK = 8;
+  CONNECTION_VSPHERE = 9;
+  CONNECTION_ARISTAEOS = 10;
 }
 
 message TransportConfig {
