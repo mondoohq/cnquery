@@ -12,7 +12,7 @@ import (
 func New(trans transports.Transport) (*Motor, error) {
 	c := &Motor{
 		Transport: trans,
-		detector:  &platform.Detector{Transport: trans},
+		detector:  platform.NewDetector(trans),
 	}
 	return c, nil
 }
