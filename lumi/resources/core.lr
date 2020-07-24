@@ -407,6 +407,10 @@ vsphere {
   datacenters() []vsphere.datacenter
 }
 
+esxi {
+  host() vsphere.host
+}
+
 vsphere.datacenter {
   moid string
   name string

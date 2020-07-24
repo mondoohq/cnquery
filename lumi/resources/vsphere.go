@@ -546,3 +546,60 @@ func (v *lumiVsphereVm) GetAdvancedsettings() (map[string]interface{}, error) {
 
 	return vsphere.AdvancedSettings(vm)
 }
+
+func (v *lumiEsxi) id() (string, error) {
+	return "esxi", nil
+}
+
+func (v *lumiEsxi) GetHost() (interface{}, error) {
+	t := v.Runtime.Motor.Transport
+	vt, ok := t.(*vsphere_transport.Transport)
+	if !ok {
+		return nil, errors.New("esxi resource is not supported on this transport")
+	}
+
+	vClient := vt.Client()
+	if vClient.IsVC() {
+		return nil, errors.New("esxi resource is only supported for esxi connections, not vsphere connections")
+	}
+
+	cl := vsphere.New(vClient)
+	dcs, err := cl.ListDatacenters()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(dcs) != 1 {
+		return nil, errors.New("could not find single esxi datacenter")
+	}
+
+	dc := dcs[0]
+
+	hosts, err := cl.ListHosts(dc)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(hosts) != 1 {
+		return nil, errors.New("could not find single esxi host")
+	}
+
+	h := hosts[0]
+
+	// todo sync with GetHosts
+	props, err := cl.HostProperties(h)
+	if err != nil {
+		return nil, err
+	}
+
+	lumiHost, err := v.Runtime.CreateResource("vsphere.host",
+		"moid", h.Reference().Value,
+		"name", h.Name(),
+		"properties", props,
+		"inventorypath", h.InventoryPath,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return lumiHost, nil
+}
