@@ -1,4 +1,4 @@
-package runtime
+package asset
 
 const (
 	RUNTIME_AWS_EC2          = "aws ec2"
@@ -11,4 +11,6 @@ const (
 	RUNTIME_DOCKER_REGISTRY  = "docker registry"
 	RUNTIME_KUBERNETES       = "k8s"
 	RUNTIME_AZ_COMPUTE       = "az compute"
+	RUNTIME_VSPHERE_HOSTS    = "vsphere host"
+	RUNTIME_VSPHERE_VM       = "vsphere vm"
 )
