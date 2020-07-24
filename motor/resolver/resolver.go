@@ -230,17 +230,10 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			m.ActivateRecorder()
 		}
 
-		// determine identifier
-		if !trans.Client().IsVC() {
-			// TODO: cache per connection
-			version, err := trans.EsxiSystemVersion()
-			if err != nil {
-				return nil, err
-			}
-			log.Info().Str("moid", version.Moid).Msg("identify vsphere")
-			identifier = append(identifier, version.Moid)
+		ids, err := trans.Identifier()
+		if err == nil && len(ids) > 0 {
+			identifier = append(identifier, ids...)
 		}
-		// TODO: handle identifier for vsphere
 	case transports.TransportBackend_CONNECTION_ARISTAEOS:
 		log.Debug().Msg("connection> load aristaeos transport")
 		trans, err := arista.New(endpoint)

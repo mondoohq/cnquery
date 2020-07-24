@@ -39,12 +39,18 @@ func (d *Detector) Platform() (*Platform, error) {
 	switch pt := d.transport.(type) {
 	case *vsphere.Transport:
 		if pt.Client().IsVC() {
+			about := pt.Client().ServiceContent.About
 			return &Platform{
-				Name:  "vmware-vsphere",
-				Title: "VMware vSphere",
+				Name:    "vmware-vsphere",
+				Title:   about.Name,
+				Release: about.Version,
 			}, nil
 		} else {
-			sv, err := pt.EsxiSystemVersion()
+			host, err := pt.GetHost()
+			if err != nil {
+				return nil, err
+			}
+			sv, err := pt.EsxiSystemVersion(host)
 			if err != nil {
 				return nil, err
 			}
