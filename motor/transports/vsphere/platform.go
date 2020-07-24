@@ -83,28 +83,7 @@ func IsNotFound(err error) bool {
 // Update  : 0
 // Version : 6.7.0
 // see https://kb.vmware.com/s/article/2143832 for version and build number mapping
-func (t *Transport) EsxiSystemVersion() (*EsxiSystemVersion, error) {
-
-	dcs, err := listDatacenters(t.client)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(dcs) != 1 {
-		return nil, errors.New("esxi version only supported on esxi connection, found zero or multiple datacenters")
-	}
-	dc := dcs[0]
-
-	hosts, err := listHosts(t.client, dc)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(hosts) != 1 {
-		return nil, errors.New("esxi version only supported on esxi connection, found zero or multiple hosts")
-	}
-	host := hosts[0]
-
+func (t *Transport) EsxiSystemVersion(host *object.HostSystem) (*EsxiSystemVersion, error) {
 	e, err := esxcli.NewExecutor(t.client.Client, host)
 	if err != nil {
 		return nil, err
@@ -150,20 +129,59 @@ func (t *Transport) EsxiSystemVersion() (*EsxiSystemVersion, error) {
 	return &version, nil
 }
 
-func (t *Transport) VsphereVersion() error {
-	// c := rest.NewClient(t.client.Client)
+func (t *Transport) GetHost() (*object.HostSystem, error) {
+	dcs, err := listDatacenters(t.client)
+	if err != nil {
+		return nil, err
+	}
 
-	// ctx := context.Background()
-	// session, err := c.Session(ctx)
-	// if err != nil {
-	// 	return err
-	// }
+	if len(dcs) != 1 {
+		return nil, errors.New("esxi version only supported on esxi connection, found zero or multiple datacenters")
+	}
+	dc := dcs[0]
 
-	// if session != nil {
-	// 	return err
-	// }
+	hosts, err := listHosts(t.client, dc)
+	if err != nil {
+		return nil, err
+	}
 
-	// c.
-	// 	session.Resource()
-	return nil
+	if len(hosts) != 1 {
+		return nil, errors.New("esxi version only supported on esxi connection, found zero or multiple hosts")
+	}
+	host := hosts[0]
+	return host, nil
+}
+
+// TODO: handle case where we have a vsphere connection with multiple hosts
+// in those cases we make the vsphere resources available, but return the esxi host
+// version as the platform name
+func (t *Transport) Identifier() ([]string, error) {
+	identifier := []string{}
+
+	// determine identifier
+	if !t.Client().IsVC() {
+		host, err := t.GetHost()
+		if err != nil {
+			return nil, err
+		}
+
+		// TODO: cache per connection
+		version, err := t.EsxiSystemVersion(host)
+		if err != nil {
+			return nil, err
+		}
+		identifier = append(identifier, esxid(version.Moid))
+	} else {
+		v := t.Client().ServiceContent.About
+		identifier = append(identifier, vsphereid(v.InstanceUuid))
+	}
+	return identifier, nil
+}
+
+func esxid(id string) string {
+	return "//platformid.api.mondoo.app/runtime/esxi/moid/" + id
+}
+
+func vsphereid(id string) string {
+	return "//platformid.api.mondoo.app/runtime/vsphere/uuid/" + id
 }
