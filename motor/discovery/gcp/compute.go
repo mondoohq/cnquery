@@ -6,7 +6,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/runtime"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/nexus/assets"
 	"google.golang.org/api/cloudresourcemanager/v1"
@@ -160,7 +159,7 @@ func (a *Compute) instancesPerZone(svc *compute.Service, project string, zone st
 			Name:         instance.Name,
 			Platform: &assets.Platform{
 				Kind:    asset.Kind_KIND_VIRTUAL_MACHINE,
-				Runtime: runtime.RUNTIME_GCP_COMPUTE,
+				Runtime: asset.RUNTIME_GCP_COMPUTE,
 			},
 			Connections: connections,
 			State:       mapInstanceState(instance.Status),

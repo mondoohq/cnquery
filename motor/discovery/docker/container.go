@@ -7,7 +7,6 @@ import (
 	docker_types "github.com/docker/docker/api/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/runtime"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/nexus/assets"
 )
@@ -50,7 +49,7 @@ func (a *Container) List() ([]*assets.Asset, error) {
 			ParentReferenceID: dContainer.ImageID,
 			Platform: &assets.Platform{
 				Kind:    asset.Kind_KIND_CONTAINER,
-				Runtime: runtime.RUNTIME_DOCKER_CONTAINER,
+				Runtime: asset.RUNTIME_DOCKER_CONTAINER,
 			},
 			Connections: []*transports.TransportConfig{
 				&transports.TransportConfig{

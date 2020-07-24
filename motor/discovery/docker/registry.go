@@ -15,7 +15,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/runtime"
+
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/nexus/assets"
 )
@@ -205,7 +205,7 @@ func (a *DockerRegistryImages) toAsset(repoName string, imgDigest string, tags [
 		Name:         ShortContainerImageID(imgDigest),
 		Platform: &assets.Platform{
 			Kind:    asset.Kind_KIND_CONTAINER_IMAGE,
-			Runtime: runtime.RUNTIME_DOCKER_REGISTRY,
+			Runtime: asset.RUNTIME_DOCKER_REGISTRY,
 		},
 		Connections: []*transports.TransportConfig{
 			&transports.TransportConfig{

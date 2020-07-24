@@ -7,7 +7,6 @@ import (
 	"github.com/pkg/errors"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/docker"
-	"go.mondoo.io/mondoo/motor/runtime"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/nexus/assets"
 	v1 "k8s.io/api/core/v1"
@@ -138,7 +137,7 @@ func toAsset(pod v1.Pod, status v1.ContainerStatus) *assets.Asset {
 
 		Platform: &assets.Platform{
 			Kind:    asset.Kind_KIND_CONTAINER,
-			Runtime: runtime.RUNTIME_KUBERNETES,
+			Runtime: asset.RUNTIME_KUBERNETES,
 		},
 
 		Connections: []*transports.TransportConfig{
