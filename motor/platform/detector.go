@@ -50,7 +50,7 @@ func (d *Detector) Platform() (*Platform, error) {
 			if err != nil {
 				return nil, err
 			}
-			sv, err := pt.EsxiSystemVersion(host)
+			sv, err := pt.EsxiVersion(host)
 			if err != nil {
 				return nil, err
 			}

@@ -10,16 +10,8 @@ import (
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/govc/host/esxcli"
 	"github.com/vmware/govmomi/object"
+	"github.com/vmware/govmomi/vim25/types"
 )
-
-type EsxiSystemVersion struct {
-	Build   string
-	Patch   string
-	Product string
-	Update  string
-	Version string
-	Moid    string
-}
 
 func listDatacenters(c *govmomi.Client) ([]*object.Datacenter, error) {
 	finder := find.NewFinder(c.Client, true)
@@ -83,8 +75,21 @@ func IsNotFound(err error) bool {
 // Update  : 0
 // Version : 6.7.0
 // see https://kb.vmware.com/s/article/2143832 for version and build number mapping
-func (t *Transport) EsxiSystemVersion(host *object.HostSystem) (*EsxiSystemVersion, error) {
-	e, err := esxcli.NewExecutor(t.client.Client, host)
+func (t *Transport) EsxiVersion(host *object.HostSystem) (*EsxiSystemVersion, error) {
+	return EsxiVersion(host)
+}
+
+type EsxiSystemVersion struct {
+	Build   string
+	Patch   string
+	Product string
+	Update  string
+	Version string
+	Moid    string
+}
+
+func EsxiVersion(host *object.HostSystem) (*EsxiSystemVersion, error) {
+	e, err := esxcli.NewExecutor(host.Client(), host)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +171,7 @@ func (t *Transport) Identifier() ([]string, error) {
 		}
 
 		// TODO: cache per connection
-		version, err := t.EsxiSystemVersion(host)
+		version, err := t.EsxiVersion(host)
 		if err != nil {
 			return nil, err
 		}
@@ -176,6 +181,18 @@ func (t *Transport) Identifier() ([]string, error) {
 		identifier = append(identifier, vsphereid(v.InstanceUuid))
 	}
 	return identifier, nil
+}
+
+type Info struct {
+	types.AboutInfo
+	Identifier string
+}
+
+// Info returns the connection information
+func (t *Transport) Info() Info {
+	v := t.Client().ServiceContent.About
+	identifier := vsphereid(v.InstanceUuid)
+	return Info{AboutInfo: v, Identifier: identifier}
 }
 
 func esxid(id string) string {
