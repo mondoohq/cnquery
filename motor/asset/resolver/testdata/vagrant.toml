@@ -1,0 +1,44 @@
+[commands."vagrant ssh-config debian10"]
+stdout = """Host debian10
+  HostName 127.0.0.1
+  User vagrant
+  Port 2222
+  UserKnownHostsFile /dev/null
+  StrictHostKeyChecking no
+  PasswordAuthentication no
+  IdentityFile .vagrant/machines/debian10/virtualbox/private_key
+  IdentitiesOnly yes
+  LogLevel FATAL
+"""
+
+[commands."vagrant ssh-config ubuntu2004"]
+stdout = """Host ubuntu2004
+  HostName 127.0.0.1
+  User vagrant
+  Port 2202
+  UserKnownHostsFile /dev/null
+  StrictHostKeyChecking no
+  PasswordAuthentication no
+  IdentityFile .vagrant/machines/ubuntu2004/virtualbox/private_key
+  IdentitiesOnly yes
+  LogLevel FATAL
+"""
+
+[commands."vagrant status"]
+stdout = """Current machine states:
+
+centos6                   not created (virtualbox)
+centos7                   not created (virtualbox)
+centos8                   not created (virtualbox)
+debian8                   not created (virtualbox)
+debian9                   not created (virtualbox)
+debian10                  running (virtualbox)
+ubuntu1604                not created (virtualbox)
+ubuntu1804                not created (virtualbox)
+ubuntu2004                running (virtualbox)
+
+This environment represents multiple VMs. The VMs are all listed
+above with their current state. For more information about a specific
+VM, run `vagrant status NAME`.
+
+"""

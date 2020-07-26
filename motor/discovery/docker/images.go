@@ -7,12 +7,11 @@ import (
 	docker_types "github.com/docker/docker/api/types"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/nexus/assets"
 )
 
 type Images struct{}
 
-func (a *Images) List() ([]*assets.Asset, error) {
+func (a *Images) List() ([]*asset.Asset, error) {
 	cl, err := GetDockerClient()
 	if err != nil {
 		return nil, err
@@ -23,7 +22,7 @@ func (a *Images) List() ([]*assets.Asset, error) {
 		return nil, err
 	}
 
-	imgs := make([]*assets.Asset, len(dImages))
+	imgs := make([]*asset.Asset, len(dImages))
 	for i, dImg := range dImages {
 
 		// TODO: we need to use the digest sha
@@ -34,20 +33,18 @@ func (a *Images) List() ([]*assets.Asset, error) {
 			digest = dImg.ID
 		}
 
-		asset := &assets.Asset{
+		asset := &asset.Asset{
 			ReferenceIDs: []string{MondooContainerImageID(digest)},
 			Name:         strings.Join(dImg.RepoTags, ","),
-			Platform: &assets.Platform{
-				Kind:    asset.Kind_KIND_CONTAINER_IMAGE,
-				Runtime: asset.RUNTIME_DOCKER_IMAGE,
-			},
+			Kind:         asset.Kind_KIND_CONTAINER_IMAGE,
+			Runtime:      asset.RUNTIME_DOCKER_IMAGE,
 			Connections: []*transports.TransportConfig{
 				&transports.TransportConfig{
 					Backend: transports.TransportBackend_CONNECTION_DOCKER_IMAGE,
 					Host:    dImg.ID,
 				},
 			},
-			State:  assets.State_STATE_ONLINE,
+			State:  asset.State_STATE_ONLINE,
 			Labels: make(map[string]string),
 		}
 

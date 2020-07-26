@@ -7,7 +7,7 @@ import (
 
 	"github.com/docker/docker/client"
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/motor/resolver"
+	"go.mondoo.io/mondoo/motor/transports/resolver"
 )
 
 func resetEnv(env []string) {

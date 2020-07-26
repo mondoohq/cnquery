@@ -8,14 +8,13 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/docker"
 	"go.mondoo.io/mondoo/motor/discovery/gcp"
 	"go.mondoo.io/mondoo/motor/stringslice"
-	"go.mondoo.io/mondoo/nexus/assets"
 )
 
 type Plugin interface {
-	List() ([]*assets.Asset, error)
+	List() ([]*asset.Asset, error)
 }
 
-func ListAssets(runtimes ...string) ([]*assets.Asset, error) {
+func ListAssets(runtimes ...string) ([]*asset.Asset, error) {
 	askRuntimes := []Plugin{}
 
 	if stringslice.Contains(runtimes, asset.RUNTIME_AWS_EC2) ||
@@ -68,7 +67,7 @@ func ListAssets(runtimes ...string) ([]*assets.Asset, error) {
 	// 	askRuntimes = append(askRuntimes, &docker.DockerRegistryImages{})
 	// }
 
-	discoveredAssets := []*assets.Asset{}
+	discoveredAssets := []*asset.Asset{}
 	for i := range askRuntimes {
 		pluginAssets, err := askRuntimes[i].List()
 		if err == nil {

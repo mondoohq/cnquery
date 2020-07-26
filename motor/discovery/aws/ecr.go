@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/nexus/assets"
 )
 
 func NewEcrImages(cfg aws.Config) (*EcrImages, error) {
@@ -22,7 +21,7 @@ type EcrImages struct {
 
 var aws_ecr_registry_pattern = "https://%s.dkr.ecr.%s.amazonaws.com"
 
-func (a *EcrImages) List() ([]*assets.Asset, error) {
+func (a *EcrImages) List() ([]*asset.Asset, error) {
 	ctx := context.Background()
 	svc := ecr.New(a.config)
 
@@ -31,7 +30,7 @@ func (a *EcrImages) List() ([]*assets.Asset, error) {
 	if err != nil {
 		return nil, err
 	}
-	imgs := []*assets.Asset{}
+	imgs := []*asset.Asset{}
 	for i := range repoResp.Repositories {
 		repoName := repoResp.Repositories[i].RepositoryName
 		reqImages := svc.DescribeImagesRequest(&ecr.DescribeImagesInput{
@@ -47,20 +46,18 @@ func (a *EcrImages) List() ([]*assets.Asset, error) {
 			repoURL := registryURL + "/" + *imageResp.ImageDetails[i].RepositoryName
 			digest := *imageResp.ImageDetails[i].ImageDigest
 
-			asset := &assets.Asset{
+			asset := &asset.Asset{
 				ReferenceIDs: []string{MondooContainerImageID(digest)},
 				// Name:         strings.Join(dImg.RepoTags, ","),
-				Platform: &assets.Platform{
-					Kind:    asset.Kind_KIND_CONTAINER_IMAGE,
-					Runtime: "aws ecr",
-				},
+				Kind:    asset.Kind_KIND_CONTAINER_IMAGE,
+				Runtime: "aws ecr",
 				Connections: []*transports.TransportConfig{
 					&transports.TransportConfig{
 						Backend: transports.TransportBackend_CONNECTION_DOCKER_REGISTRY,
 						Host:    registryURL,
 					},
 				},
-				State:  assets.State_STATE_ONLINE,
+				State:  asset.State_STATE_ONLINE,
 				Labels: make(map[string]string),
 			}
 

@@ -10,7 +10,6 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/nexus/assets"
 
 	"github.com/rs/zerolog/log"
 )
@@ -24,7 +23,7 @@ type Ec2Instances struct {
 	InstanceSSHUsername string
 }
 
-func (ec2i *Ec2Instances) List() ([]*assets.Asset, error) {
+func (ec2i *Ec2Instances) List() ([]*asset.Asset, error) {
 	ctx := context.Background()
 	ec2svc := ec2.New(ec2i.config)
 
@@ -42,7 +41,7 @@ func (ec2i *Ec2Instances) List() ([]*assets.Asset, error) {
 		return nil, errors.Wrapf(err, "failed to describe instances, %s", ec2i.config.Region)
 	}
 
-	instances := []*assets.Asset{}
+	instances := []*asset.Asset{}
 	for i := range resp.Reservations {
 		reservation := resp.Reservations[i]
 		for j := range reservation.Instances {
@@ -64,16 +63,14 @@ func (ec2i *Ec2Instances) List() ([]*assets.Asset, error) {
 				})
 			}
 
-			asset := &assets.Asset{
+			asset := &asset.Asset{
 				ReferenceIDs: []string{awsec2.MondooInstanceID(account, ec2i.config.Region, *instance.InstanceId)},
 				Name:         *instance.InstanceId,
-				Platform: &assets.Platform{
-					Kind:    asset.Kind_KIND_VIRTUAL_MACHINE,
-					Runtime: asset.RUNTIME_AWS_EC2,
-				},
-				Connections: connections,
-				State:       mapEc2InstanceStateCode(instance.State),
-				Labels:      make(map[string]string),
+				Kind:         asset.Kind_KIND_VIRTUAL_MACHINE,
+				Runtime:      asset.RUNTIME_AWS_EC2,
+				Connections:  connections,
+				State:        mapEc2InstanceStateCode(instance.State),
+				Labels:       make(map[string]string),
 			}
 
 			for k := range instance.Tags {
@@ -132,25 +129,25 @@ func ParseEc2ReferenceID(uri string) *awsec2id {
 	}
 }
 
-func mapEc2InstanceStateCode(state *ec2.InstanceState) assets.State {
+func mapEc2InstanceStateCode(state *ec2.InstanceState) asset.State {
 	if state == nil {
-		return assets.State_STATE_UNKNOWN
+		return asset.State_STATE_UNKNOWN
 	}
 	switch *state.Code {
 	case 16:
-		return assets.State_STATE_RUNNING
+		return asset.State_STATE_RUNNING
 	case 0:
-		return assets.State_STATE_PENDING
+		return asset.State_STATE_PENDING
 	case 32:
-		return assets.State_STATE_STOPPING
+		return asset.State_STATE_STOPPING
 	case 64:
-		return assets.State_STATE_STOPPING
+		return asset.State_STATE_STOPPING
 	case 80:
-		return assets.State_STATE_STOPPED
+		return asset.State_STATE_STOPPED
 	case 48:
-		return assets.State_STATE_TERMINATED
+		return asset.State_STATE_TERMINATED
 	default:
 		log.Warn().Str("state", state.String()).Msg("unknown ec2 state")
-		return assets.State_STATE_UNKNOWN
+		return asset.State_STATE_UNKNOWN
 	}
 }

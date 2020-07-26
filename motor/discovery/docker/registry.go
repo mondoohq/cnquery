@@ -17,7 +17,6 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 
 	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/nexus/assets"
 )
 
 func NewDockerRegistryImages() *DockerRegistryImages {
@@ -124,7 +123,7 @@ func (a *DockerRegistryImages) Repository(repo name.Repository) (map[string][]st
 
 // ListRegistry tries to iterate over all repositores in one registry
 // eg. 1234567.dkr.ecr.us-east-1.amazonaws.com
-func (a *DockerRegistryImages) ListRegistry(registry string) ([]*assets.Asset, error) {
+func (a *DockerRegistryImages) ListRegistry(registry string) ([]*asset.Asset, error) {
 	reg, err := name.NewRegistry(registry)
 	if err != nil {
 		return nil, errors.Wrap(err, "resolve registry")
@@ -135,7 +134,7 @@ func (a *DockerRegistryImages) ListRegistry(registry string) ([]*assets.Asset, e
 		return nil, err
 	}
 
-	assets := []*assets.Asset{}
+	assets := []*asset.Asset{}
 	for i := range repos {
 		repoName := reg.RegistryStr() + "/" + repos[i]
 		log.Debug().Str("repository", repoName).Msg("discovered repository")
@@ -163,8 +162,8 @@ func (a *DockerRegistryImages) ListRegistry(registry string) ([]*assets.Asset, e
 // index.docker.io/mondoolabs/mondoo
 // harbor.yourdomain.com/library
 // harbor.yourdomain.com/library/ubuntu
-func (a *DockerRegistryImages) ListRepository(repoName string) ([]*assets.Asset, error) {
-	assets := []*assets.Asset{}
+func (a *DockerRegistryImages) ListRepository(repoName string) ([]*asset.Asset, error) {
+	assets := []*asset.Asset{}
 
 	repo, err := name.NewRepository(repoName)
 	if err != nil {
@@ -183,7 +182,7 @@ func (a *DockerRegistryImages) ListRepository(repoName string) ([]*assets.Asset,
 }
 
 // ListImages either takes a registry or a repository and tries to fetch as many images as possible
-func (a *DockerRegistryImages) ListImages(repoName string) ([]*assets.Asset, error) {
+func (a *DockerRegistryImages) ListImages(repoName string) ([]*asset.Asset, error) {
 	url, err := url.Parse("//" + repoName)
 	if err != nil {
 		return nil, fmt.Errorf("registries must be valid RFC 3986 URI authorities: %s", repoName)
@@ -198,22 +197,20 @@ func (a *DockerRegistryImages) ListImages(repoName string) ([]*assets.Asset, err
 	}
 }
 
-func (a *DockerRegistryImages) toAsset(repoName string, imgDigest string, tags []string) *assets.Asset {
+func (a *DockerRegistryImages) toAsset(repoName string, imgDigest string, tags []string) *asset.Asset {
 	imageUrl := repoName + "@" + imgDigest
-	asset := &assets.Asset{
+	asset := &asset.Asset{
 		ReferenceIDs: []string{MondooContainerImageID(imgDigest)},
 		Name:         ShortContainerImageID(imgDigest),
-		Platform: &assets.Platform{
-			Kind:    asset.Kind_KIND_CONTAINER_IMAGE,
-			Runtime: asset.RUNTIME_DOCKER_REGISTRY,
-		},
+		Kind:         asset.Kind_KIND_CONTAINER_IMAGE,
+		Runtime:      asset.RUNTIME_DOCKER_REGISTRY,
 		Connections: []*transports.TransportConfig{
 			&transports.TransportConfig{
 				Backend: transports.TransportBackend_CONNECTION_DOCKER_IMAGE,
 				Host:    imageUrl,
 			},
 		},
-		State:  assets.State_STATE_ONLINE,
+		State:  asset.State_STATE_ONLINE,
 		Labels: make(map[string]string),
 	}
 
