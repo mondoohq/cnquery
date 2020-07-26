@@ -35,6 +35,8 @@ message TransportConfig {
   
   Sudo Sudo = 21;
   bool Record = 22;
+
+  map<string,string> options = 23;
 }
 
 message Sudo {

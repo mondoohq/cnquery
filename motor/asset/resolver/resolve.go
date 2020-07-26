@@ -32,7 +32,7 @@ func init() {
 	resolver["ec2"] = &awsResolver{}
 	resolver["vagrant"] = &vagrantResolver{}
 	resolver["mock"] = &mockResolver{}
-	resolver["vsphere"] = &instanceResolver{}
+	resolver["vsphere"] = &vsphereResolver{}
 	resolver["aristaeos"] = &instanceResolver{}
 }
 

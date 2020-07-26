@@ -11,7 +11,12 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
 )
 
-func vSphereURL(host string, user string, password string) (*url.URL, error) {
+func vSphereURL(hostname string, port string, user string, password string) (*url.URL, error) {
+	host := hostname
+	if len(port) > 0 {
+		host = hostname + ":" + port
+	}
+
 	u, err := url.Parse("https://" + host + "/sdk")
 	if err != nil {
 		return nil, err
@@ -22,7 +27,7 @@ func vSphereURL(host string, user string, password string) (*url.URL, error) {
 
 func New(endpoint *transports.TransportConfig) (*Transport, error) {
 	// derive vsphere connection url from Transport Config
-	vsphereUrl, err := vSphereURL(endpoint.Host, endpoint.User, endpoint.Password)
+	vsphereUrl, err := vSphereURL(endpoint.Host, endpoint.Port, endpoint.User, endpoint.Password)
 	if err != nil {
 		return nil, err
 	}

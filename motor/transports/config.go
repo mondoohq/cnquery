@@ -6,8 +6,16 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/rs/zerolog/log"
 )
+
+func (conn *TransportConfig) Clone() *TransportConfig {
+	if conn == nil {
+		return nil
+	}
+	return proto.Clone(conn).(*TransportConfig)
+}
 
 // ParseFromURI will pars a URI and return the proper endpoint
 // valid URIs are:
