@@ -10,7 +10,6 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/docker"
 	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/nexus/assets"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
 )
@@ -22,7 +21,7 @@ func NewGCRImages() *GcrImages {
 type GcrImages struct{}
 
 // lists a repository like "gcr.io/mondoo-base-infra"
-func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*assets.Asset, error) {
+func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*asset.Asset, error) {
 	repo, err := name.NewRepository(repository)
 	if err != nil {
 		log.Fatalln(err)
@@ -33,7 +32,7 @@ func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*assets
 		log.Fatalf("getting auth for %q: %v", repository, err)
 	}
 
-	imgs := []*assets.Asset{}
+	imgs := []*asset.Asset{}
 
 	toAssetFunc := func(repo name.Repository, tags *google.Tags, err error) error {
 		if err != nil {
@@ -44,20 +43,18 @@ func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*assets
 			repoURL := repo.String()
 			imageUrl := repoURL + "@" + digest
 
-			asset := &assets.Asset{
+			asset := &asset.Asset{
 				ReferenceIDs: []string{MondooContainerImageID(digest)},
 				Name:         docker.ShortContainerImageID(digest),
-				Platform: &assets.Platform{
-					Kind:    asset.Kind_KIND_CONTAINER_IMAGE,
-					Runtime: "gcp gcr",
-				},
+				Kind:         asset.Kind_KIND_CONTAINER_IMAGE,
+				Runtime:      "gcp gcr",
 				Connections: []*transports.TransportConfig{
 					&transports.TransportConfig{
 						Backend: transports.TransportBackend_CONNECTION_DOCKER_REGISTRY,
 						Host:    imageUrl,
 					},
 				},
-				State:  assets.State_STATE_ONLINE,
+				State:  asset.State_STATE_ONLINE,
 				Labels: make(map[string]string),
 			}
 
@@ -103,8 +100,8 @@ func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*assets
 }
 
 // List uses your GCP credentials to iterate over all your projects to identify protential repos
-func (a *GcrImages) List() ([]*assets.Asset, error) {
-	assets := []*assets.Asset{}
+func (a *GcrImages) List() ([]*asset.Asset, error) {
+	assets := []*asset.Asset{}
 	// repoAssets, err := a.ListRepository("index.docker.io/mondoolabs/mondoo", false)
 	// if err == nil && repoAssets != nil {
 	// 	assets = append(assets, repoAssets...)

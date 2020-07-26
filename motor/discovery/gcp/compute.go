@@ -7,7 +7,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/nexus/assets"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
 )
@@ -23,7 +22,7 @@ type Compute struct {
 }
 
 // TODO: try to auto-detect the current project, otherwise return an error
-func (a *Compute) ListInstancesInProject(project string) ([]*assets.Asset, error) {
+func (a *Compute) ListInstancesInProject(project string) ([]*asset.Asset, error) {
 
 	client, err := gcpClient(compute.ComputeScope, compute.CloudPlatformScope)
 	if err != nil {
@@ -36,7 +35,7 @@ func (a *Compute) ListInstancesInProject(project string) ([]*assets.Asset, error
 	}
 
 	var wg sync.WaitGroup
-	assets := []*assets.Asset{}
+	assets := []*asset.Asset{}
 
 	log.Debug().Str("project", project).Msg("search for instances")
 	zones, err := svc.Zones.List(project).Do()
@@ -64,7 +63,7 @@ func (a *Compute) ListInstancesInProject(project string) ([]*assets.Asset, error
 	return assets, nil
 }
 
-func (a *Compute) ListInstances() ([]*assets.Asset, error) {
+func (a *Compute) ListInstances() ([]*asset.Asset, error) {
 	client, err := gcpClient(compute.ComputeScope, compute.CloudPlatformScope)
 	svc, err := compute.New(client)
 	if err != nil {
@@ -82,7 +81,7 @@ func (a *Compute) ListInstances() ([]*assets.Asset, error) {
 	}
 
 	var wg sync.WaitGroup
-	assets := []*assets.Asset{}
+	assets := []*asset.Asset{}
 	for i := range projectsResp.Projects {
 		project := projectsResp.Projects[i].ProjectId
 		log.Debug().Str("project", project).Msg("search for instances")
@@ -113,14 +112,14 @@ func (a *Compute) ListInstances() ([]*assets.Asset, error) {
 	return assets, nil
 }
 
-func (a *Compute) instancesPerZone(svc *compute.Service, project string, zone string) ([]*assets.Asset, error) {
+func (a *Compute) instancesPerZone(svc *compute.Service, project string, zone string) ([]*asset.Asset, error) {
 	log.Debug().Str("project", project).Str("zone", zone).Msg("search gcp project for assets")
 	il, err := svc.Instances.List(project, zone).Do()
 	if err != nil {
 		return nil, err
 	}
 
-	instances := make([]*assets.Asset, len(il.Items))
+	instances := make([]*asset.Asset, len(il.Items))
 	for i := range il.Items {
 		instance := il.Items[i]
 
@@ -154,16 +153,14 @@ func (a *Compute) instancesPerZone(svc *compute.Service, project string, zone st
 			}
 		}
 
-		asset := &assets.Asset{
+		asset := &asset.Asset{
 			ReferenceIDs: []string{MondooGcpInstanceID(project, zone, instance)},
 			Name:         instance.Name,
-			Platform: &assets.Platform{
-				Kind:    asset.Kind_KIND_VIRTUAL_MACHINE,
-				Runtime: asset.RUNTIME_GCP_COMPUTE,
-			},
-			Connections: connections,
-			State:       mapInstanceState(instance.Status),
-			Labels:      make(map[string]string),
+			Kind:         asset.Kind_KIND_VIRTUAL_MACHINE,
+			Runtime:      asset.RUNTIME_GCP_COMPUTE,
+			Connections:  connections,
+			State:        mapInstanceState(instance.Status),
+			Labels:       make(map[string]string),
 		}
 
 		for key := range instance.Labels {
@@ -185,26 +182,26 @@ func MondooGcpInstanceID(project string, zone string, instance *compute.Instance
 	return "//platformid.api.mondoo.app/runtime/gcp/compute/v1/projects/" + project + "/zones/" + zone + "/instances/" + strconv.FormatUint(uint64(instance.Id), 10)
 }
 
-func mapInstanceState(state string) assets.State {
+func mapInstanceState(state string) asset.State {
 	switch state {
 	case "RUNNING":
-		return assets.State_STATE_RUNNING
+		return asset.State_STATE_RUNNING
 	case "PROVISIONING":
-		return assets.State_STATE_PENDING
+		return asset.State_STATE_PENDING
 	case "STAGING":
-		return assets.State_STATE_PENDING
+		return asset.State_STATE_PENDING
 	case "STOPPED":
-		return assets.State_STATE_STOPPED
+		return asset.State_STATE_STOPPED
 	case "STOPPING":
-		return assets.State_STATE_STOPPING
+		return asset.State_STATE_STOPPING
 	case "SUSPENDED":
-		return assets.State_STATE_STOPPED
+		return asset.State_STATE_STOPPED
 	case "SUSPENDING":
-		return assets.State_STATE_STOPPING
+		return asset.State_STATE_STOPPING
 	case "TERMINATED":
-		return assets.State_STATE_TERMINATED
+		return asset.State_STATE_TERMINATED
 	default:
 		log.Warn().Str("state", state).Msg("unknown gcp instance state")
-		return assets.State_STATE_UNKNOWN
+		return asset.State_STATE_UNKNOWN
 	}
 }

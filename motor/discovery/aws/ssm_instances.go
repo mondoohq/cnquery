@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
-	"go.mondoo.io/mondoo/nexus/assets"
 )
 
 func NewSSMManagedInstancesDiscovery(cfg aws.Config) (*SSMManagedInstances, error) {
@@ -21,7 +20,7 @@ type SSMManagedInstances struct {
 	config aws.Config
 }
 
-func (ssmi *SSMManagedInstances) List() ([]*assets.Asset, error) {
+func (ssmi *SSMManagedInstances) List() ([]*asset.Asset, error) {
 	ctx := context.Background()
 	ssmsvc := ssm.New(ssmi.config)
 
@@ -51,17 +50,15 @@ func (ssmi *SSMManagedInstances) List() ([]*assets.Asset, error) {
 
 	log.Debug().Msgf("%+v\n", *isssmresp)
 
-	instances := []*assets.Asset{}
+	instances := []*asset.Asset{}
 	for i := range isssmresp.InstanceInformationList {
 		instance := isssmresp.InstanceInformationList[i]
 
-		asset := &assets.Asset{
+		asset := &asset.Asset{
 			ReferenceIDs: []string{awsec2.MondooInstanceID(account, ssmi.config.Region, *instance.InstanceId)},
 			Name:         *instance.InstanceId,
-			Platform: &assets.Platform{
-				Kind:    asset.Kind_KIND_VIRTUAL_MACHINE,
-				Runtime: asset.RUNTIME_AWS_SSM_MANAGED,
-			},
+			Kind:         asset.Kind_KIND_VIRTUAL_MACHINE,
+			Runtime:      asset.RUNTIME_AWS_SSM_MANAGED,
 			// Connections: connections,
 			State:  mapSmmManagedPingStateCode(instance.PingStatus),
 			Labels: make(map[string]string),
@@ -106,15 +103,15 @@ func (ssmi *SSMManagedInstances) List() ([]*assets.Asset, error) {
 	return instances, nil
 }
 
-func mapSmmManagedPingStateCode(pingStatus ssm.PingStatus) assets.State {
+func mapSmmManagedPingStateCode(pingStatus ssm.PingStatus) asset.State {
 	switch pingStatus {
 	case ssm.PingStatusOnline:
-		return assets.State_STATE_RUNNING
+		return asset.State_STATE_RUNNING
 	case ssm.PingStatusConnectionLost:
-		return assets.State_STATE_PENDING
+		return asset.State_STATE_PENDING
 	case ssm.PingStatusInactive:
-		return assets.State_STATE_STOPPED
+		return asset.State_STATE_STOPPED
 	default:
-		return assets.State_STATE_UNKNOWN
+		return asset.State_STATE_UNKNOWN
 	}
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/nexus/assets"
 )
 
 type Container struct{}
@@ -28,7 +27,7 @@ func DockerDisplayNames(names []string) []string {
 	return displayNames
 }
 
-func (a *Container) List() ([]*assets.Asset, error) {
+func (a *Container) List() ([]*asset.Asset, error) {
 	cl, err := GetDockerClient()
 	if err != nil {
 		return nil, err
@@ -39,18 +38,16 @@ func (a *Container) List() ([]*assets.Asset, error) {
 		return nil, err
 	}
 
-	container := make([]*assets.Asset, len(dContainers))
+	container := make([]*asset.Asset, len(dContainers))
 	for i, dContainer := range dContainers {
 		name := strings.Join(DockerDisplayNames(dContainer.Names), ",")
 
-		asset := &assets.Asset{
-			ReferenceIDs:      []string{MondooContainerID(dContainer.ID)},
-			Name:              name,
-			ParentReferenceID: dContainer.ImageID,
-			Platform: &assets.Platform{
-				Kind:    asset.Kind_KIND_CONTAINER,
-				Runtime: asset.RUNTIME_DOCKER_CONTAINER,
-			},
+		asset := &asset.Asset{
+			ReferenceIDs: []string{MondooContainerID(dContainer.ID)},
+			Name:         name,
+			// ParentReferenceID: dContainer.ImageID,
+			Kind:    asset.Kind_KIND_CONTAINER,
+			Runtime: asset.RUNTIME_DOCKER_CONTAINER,
 			Connections: []*transports.TransportConfig{
 				&transports.TransportConfig{
 					Backend: transports.TransportBackend_CONNECTION_DOCKER_CONTAINER,
@@ -82,22 +79,22 @@ func MondooContainerID(id string) string {
 	return "//platformid.api.mondoo.app/runtime/docker/containers/" + id
 }
 
-func mapContainerState(state string) assets.State {
+func mapContainerState(state string) asset.State {
 	switch state {
 	case "running":
-		return assets.State_STATE_RUNNING
+		return asset.State_STATE_RUNNING
 	case "created":
-		return assets.State_STATE_PENDING
+		return asset.State_STATE_PENDING
 	case "paused":
-		return assets.State_STATE_STOPPED
+		return asset.State_STATE_STOPPED
 	case "exited":
-		return assets.State_STATE_TERMINATED
+		return asset.State_STATE_TERMINATED
 	case "restarting":
-		return assets.State_STATE_PENDING
+		return asset.State_STATE_PENDING
 	case "dead":
-		return assets.State_STATE_ERROR
+		return asset.State_STATE_ERROR
 	default:
 		log.Warn().Str("state", state).Msg("unknown container state")
-		return assets.State_STATE_UNKNOWN
+		return asset.State_STATE_UNKNOWN
 	}
 }

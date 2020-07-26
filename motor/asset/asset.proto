@@ -1,5 +1,8 @@
 syntax = "proto3";
 
+import "go.mondoo.io/mondoo/motor/platform/platform.proto";
+import "go.mondoo.io/mondoo/motor/transports/transports.proto";
+
 package mondoo.motor.asset.v1;
 option go_package = "go.mondoo.io/mondoo/motor/asset";
 
@@ -18,4 +21,54 @@ enum Kind {
   KIND_PROCESS = 7;
   KIND_API = 8;
   KIND_BARE_METAL = 9;
+}
+
+enum State {
+  STATE_UNKNOWN = 0;
+  // eg. permission or io error
+  STATE_ERROR = 1;
+
+  // run time states
+  STATE_PENDING = 2;
+  STATE_RUNNING = 3;
+  STATE_STOPPING = 4;
+  STATE_STOPPED = 5;
+  STATE_SHUTDOWN = 6;
+  STATE_TERMINATED = 7;
+  STATE_REBOOT = 8;
+
+  // static states
+  STATE_ONLINE = 9;
+  STATE_OFFLINE = 10;
+
+  // the asset is marked as deleted
+  STATE_DELETED = 11;
+}
+
+message Asset {
+  string mrn = 1;
+  string name = 2;
+
+  // 3rd-party asset id eg. amazon arn org gcp resource name
+  repeated string ReferenceIDs = 3;
+
+  // asset state
+  State state = 4;
+
+  Kind kind = 5;
+  string runtime = 6;
+
+  mondoo.motor.platform.v1.Platform platform = 8;
+
+  // key is a lower case string of connection type
+  repeated mondoo.motor.transports.v1.TransportConfig connections = 17;
+
+  // labeled assets can be searched by labels
+  map<string, string> labels = 18;
+
+  // additional information that is not touched by the system
+  map<string, string> annotations = 19;
+
+  // relationships
+  string ParentReferenceID = 30;
 }

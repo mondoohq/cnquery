@@ -6,9 +6,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/pkg/errors"
 	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/discovery/docker"
 	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/nexus/assets"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -26,7 +24,7 @@ type PodContainerImage struct {
 	Container     *string
 }
 
-func ListPodImages(context string, namespaceFilter []string, podFilter []string) ([]*assets.Asset, error) {
+func ListPodImages(context string, namespaceFilter []string, podFilter []string) ([]*asset.Asset, error) {
 	var configFlags *genericclioptions.ConfigFlags
 	configFlags = genericclioptions.NewConfigFlags(false)
 
@@ -49,7 +47,7 @@ func ListPodImages(context string, namespaceFilter []string, podFilter []string)
 		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
 	}
 
-	runningImages := []*assets.Asset{}
+	runningImages := []*asset.Asset{}
 	for i := range namespaces.Items {
 		namespace := namespaces.Items[i]
 		if !isIncluded(namespace.Name, namespaceFilter) {
@@ -98,27 +96,27 @@ func isIncluded(value string, included []string) bool {
 }
 
 // TODO: should we ignore pods with CreateContainerError
-func toAsset(pod v1.Pod, status v1.ContainerStatus) *assets.Asset {
+func toAsset(pod v1.Pod, status v1.ContainerStatus) *asset.Asset {
 	resolvedImage := status.ImageID
 	if strings.HasPrefix(resolvedImage, dockerPullablePrefix) {
 		resolvedImage = strings.TrimPrefix(resolvedImage, dockerPullablePrefix)
 	}
 
 	connection := resolvedImage
-	parentRef := ""
+	// parentRef := ""
 
 	// stopped pods may not include the resolved image
 	if len(resolvedImage) == 0 {
 		connection = status.Image
 	}
 
-	// parse resolved image to extract the digest
-	if len(resolvedImage) > 0 {
-		digest, err := name.NewDigest(resolvedImage, name.WeakValidation)
-		if err == nil {
-			parentRef = docker.MondooContainerImageID(digest.DigestStr())
-		}
-	}
+	// // parse resolved image to extract the digest
+	// if len(resolvedImage) > 0 {
+	// 	digest, err := name.NewDigest(resolvedImage, name.WeakValidation)
+	// 	if err == nil {
+	// 		parentRef = docker.MondooContainerImageID(digest.DigestStr())
+	// 	}
+	// }
 
 	// parse image name to extract tags
 	tagName := ""
@@ -129,16 +127,14 @@ func toAsset(pod v1.Pod, status v1.ContainerStatus) *assets.Asset {
 		}
 	}
 
-	asset := &assets.Asset{
+	asset := &asset.Asset{
 		Name: pod.Name,
 
-		ReferenceIDs:      []string{MondooKubernetesPodID(string(pod.UID))},
-		ParentReferenceID: parentRef,
+		ReferenceIDs: []string{MondooKubernetesPodID(string(pod.UID))},
+		// ParentReferenceID: parentRef,
 
-		Platform: &assets.Platform{
-			Kind:    asset.Kind_KIND_CONTAINER,
-			Runtime: asset.RUNTIME_KUBERNETES,
-		},
+		Kind:    asset.Kind_KIND_CONTAINER,
+		Runtime: asset.RUNTIME_KUBERNETES,
 
 		Connections: []*transports.TransportConfig{
 			&transports.TransportConfig{
@@ -164,20 +160,20 @@ func toAsset(pod v1.Pod, status v1.ContainerStatus) *assets.Asset {
 	return asset
 }
 
-func mapPodStatus(status v1.PodStatus) assets.State {
+func mapPodStatus(status v1.PodStatus) asset.State {
 	switch status.Phase {
 	case v1.PodPending:
-		return assets.State_STATE_PENDING
+		return asset.State_STATE_PENDING
 	case v1.PodFailed:
-		return assets.State_STATE_ERROR
+		return asset.State_STATE_ERROR
 	case v1.PodRunning:
-		return assets.State_STATE_RUNNING
+		return asset.State_STATE_RUNNING
 	case v1.PodSucceeded:
-		return assets.State_STATE_PENDING
+		return asset.State_STATE_PENDING
 	case v1.PodUnknown:
-		return assets.State_STATE_UNKNOWN
+		return asset.State_STATE_UNKNOWN
 	default:
-		return assets.State_STATE_UNKNOWN
+		return asset.State_STATE_UNKNOWN
 	}
 }
 
