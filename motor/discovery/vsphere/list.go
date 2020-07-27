@@ -72,10 +72,11 @@ func hostsToAssetList(hosts []*object.HostSystem) ([]*asset.Asset, error) {
 				Name:    "vmware-esxi",
 				Title:   "VMware ESXi",
 				Release: esxi_version,
+				Runtime: platform.RUNTIME_VSPHERE_HOSTS,
+				Kind:    platform.Kind_KIND_BARE_METAL,
 			},
-			Runtime: asset.RUNTIME_VSPHERE_HOSTS,
-			Kind:    asset.Kind_KIND_BARE_METAL,
-			State:   mapHostPowerstateToState(props.Runtime.PowerState),
+
+			State: mapHostPowerstateToState(props.Runtime.PowerState),
 			Labels: map[string]string{
 				"vsphere.vmware.com/reference-type": host.Reference().Type,
 				"vsphere.vmware.com/inventorypath":  host.InventoryPath,
@@ -143,10 +144,12 @@ func vmsToAssetList(vms []*object.VirtualMachine) ([]*asset.Asset, error) {
 			return nil, err
 		}
 		ha := &asset.Asset{
-			Name:    vm.Name(),
-			Runtime: asset.RUNTIME_VSPHERE_VM,
-			Kind:    asset.Kind_KIND_VIRTUAL_MACHINE,
-			State:   mapVmGuestState(props.Guest.GuestState),
+			Name: vm.Name(),
+			Platform: &platform.Platform{
+				Runtime: platform.RUNTIME_VSPHERE_VM,
+				Kind:    platform.Kind_KIND_VIRTUAL_MACHINE,
+			},
+			State: mapVmGuestState(props.Guest.GuestState),
 			Labels: map[string]string{
 				"vsphere.vmware.com/reference-type": vm.Reference().Type,
 				"vsphere.vmware.com/inventorypath":  vm.InventoryPath,

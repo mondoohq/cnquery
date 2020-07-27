@@ -4,6 +4,16 @@ mondoo {
   resources() []string
 }
 
+platform {
+  name string
+  title string
+  family []string
+  release string
+  arch string
+  kind string
+  execenv string
+}
+
 command {
   init(command string)
   command string
@@ -83,16 +93,6 @@ sshd.config {
   ciphers(params) []string
   macs(params) []string
   kexs(params) []string
-}
-
-platform {
-  name string
-  title string
-  family []string
-  release string
-  arch string
-  kind string
-  execenv string
 }
 
 package {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
@@ -156,11 +157,13 @@ func (a *Compute) instancesPerZone(svc *compute.Service, project string, zone st
 		asset := &asset.Asset{
 			ReferenceIDs: []string{MondooGcpInstanceID(project, zone, instance)},
 			Name:         instance.Name,
-			Kind:         asset.Kind_KIND_VIRTUAL_MACHINE,
-			Runtime:      asset.RUNTIME_GCP_COMPUTE,
-			Connections:  connections,
-			State:        mapInstanceState(instance.Status),
-			Labels:       make(map[string]string),
+			Platform: &platform.Platform{
+				Kind:    platform.Kind_KIND_VIRTUAL_MACHINE,
+				Runtime: platform.RUNTIME_GCP_COMPUTE,
+			},
+			Connections: connections,
+			State:       mapInstanceState(instance.Status),
+			Labels:      make(map[string]string),
 		}
 
 		for key := range instance.Labels {

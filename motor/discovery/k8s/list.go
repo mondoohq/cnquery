@@ -6,6 +6,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/pkg/errors"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -133,8 +134,10 @@ func toAsset(pod v1.Pod, status v1.ContainerStatus) *asset.Asset {
 		ReferenceIDs: []string{MondooKubernetesPodID(string(pod.UID))},
 		// ParentReferenceID: parentRef,
 
-		Kind:    asset.Kind_KIND_CONTAINER,
-		Runtime: asset.RUNTIME_KUBERNETES,
+		Platform: &platform.Platform{
+			Kind:    platform.Kind_KIND_CONTAINER,
+			Runtime: platform.RUNTIME_KUBERNETES,
+		},
 
 		Connections: []*transports.TransportConfig{
 			&transports.TransportConfig{

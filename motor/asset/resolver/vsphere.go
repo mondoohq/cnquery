@@ -48,9 +48,9 @@ func (v *vsphereResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnO
 			Name:    "vmware-vsphere",
 			Title:   info.FullName,
 			Release: info.Version,
+			Kind:    platform.Kind_KIND_API,
+			Runtime: platform.RUNTIME_VSPHERE,
 		},
-		Kind:        asset.Kind_KIND_API,
-		Runtime:     asset.RUNTIME_VSPHERE,
 		Connections: []*transports.TransportConfig{t}, // pass-in the current config
 	})
 

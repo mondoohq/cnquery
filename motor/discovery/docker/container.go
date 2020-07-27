@@ -7,6 +7,7 @@ import (
 	docker_types "github.com/docker/docker/api/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
@@ -46,8 +47,10 @@ func (a *Container) List() ([]*asset.Asset, error) {
 			ReferenceIDs: []string{MondooContainerID(dContainer.ID)},
 			Name:         name,
 			// ParentReferenceID: dContainer.ImageID,
-			Kind:    asset.Kind_KIND_CONTAINER,
-			Runtime: asset.RUNTIME_DOCKER_CONTAINER,
+			Platform: &platform.Platform{
+				Kind:    platform.Kind_KIND_CONTAINER,
+				Runtime: platform.RUNTIME_DOCKER_CONTAINER,
+			},
 			Connections: []*transports.TransportConfig{
 				&transports.TransportConfig{
 					Backend: transports.TransportBackend_CONNECTION_DOCKER_CONTAINER,
