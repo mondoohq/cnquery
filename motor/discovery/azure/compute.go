@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
@@ -174,9 +175,11 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*asset.Asset, error) {
 
 		asset := &asset.Asset{
 			// ReferenceIDs: []string{MondooGcpInstanceID(project, zone, instance)},
-			Name:        *instance.Name,
-			Kind:        asset.Kind_KIND_VIRTUAL_MACHINE,
-			Runtime:     asset.RUNTIME_AZ_COMPUTE,
+			Name: *instance.Name,
+			Platform: &platform.Platform{
+				Kind:    platform.Kind_KIND_VIRTUAL_MACHINE,
+				Runtime: platform.RUNTIME_AZ_COMPUTE,
+			},
 			Connections: connections,
 			// State:       mapInstanceState(instance.Status),
 			Labels: make(map[string]string),

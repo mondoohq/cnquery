@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
+	"go.mondoo.io/mondoo/motor/platform"
 )
 
 func NewSSMManagedInstancesDiscovery(cfg aws.Config) (*SSMManagedInstances, error) {
@@ -57,8 +58,11 @@ func (ssmi *SSMManagedInstances) List() ([]*asset.Asset, error) {
 		asset := &asset.Asset{
 			ReferenceIDs: []string{awsec2.MondooInstanceID(account, ssmi.config.Region, *instance.InstanceId)},
 			Name:         *instance.InstanceId,
-			Kind:         asset.Kind_KIND_VIRTUAL_MACHINE,
-			Runtime:      asset.RUNTIME_AWS_SSM_MANAGED,
+			Platform: &platform.Platform{
+				Kind:    platform.Kind_KIND_VIRTUAL_MACHINE,
+				Runtime: platform.RUNTIME_AWS_SSM_MANAGED,
+			},
+
 			// Connections: connections,
 			State:  mapSmmManagedPingStateCode(instance.PingStatus),
 			Labels: make(map[string]string),

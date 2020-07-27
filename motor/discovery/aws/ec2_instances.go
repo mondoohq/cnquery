@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
+	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 
 	"github.com/rs/zerolog/log"
@@ -66,11 +67,13 @@ func (ec2i *Ec2Instances) List() ([]*asset.Asset, error) {
 			asset := &asset.Asset{
 				ReferenceIDs: []string{awsec2.MondooInstanceID(account, ec2i.config.Region, *instance.InstanceId)},
 				Name:         *instance.InstanceId,
-				Kind:         asset.Kind_KIND_VIRTUAL_MACHINE,
-				Runtime:      asset.RUNTIME_AWS_EC2,
-				Connections:  connections,
-				State:        mapEc2InstanceStateCode(instance.State),
-				Labels:       make(map[string]string),
+				Platform: &platform.Platform{
+					Kind:    platform.Kind_KIND_VIRTUAL_MACHINE,
+					Runtime: platform.RUNTIME_AWS_EC2,
+				},
+				Connections: connections,
+				State:       mapEc2InstanceStateCode(instance.State),
+				Labels:      make(map[string]string),
 			}
 
 			for k := range instance.Tags {

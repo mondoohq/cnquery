@@ -6,23 +6,6 @@ import "go.mondoo.io/mondoo/motor/transports/transports.proto";
 package mondoo.motor.asset.v1;
 option go_package = "go.mondoo.io/mondoo/motor/asset";
 
-enum Kind {
-  KIND_UNKNOWN = 0;
-
-  // at rest
-  KIND_VIRTUAL_MACHINE_IMAGE = 1;
-  KIND_CONTAINER_IMAGE = 2;
-  KIND_CODE = 3;
-  KIND_PACKAGE = 4;
-
-  // in motion
-  KIND_VIRTUAL_MACHINE = 5;
-  KIND_CONTAINER = 6;
-  KIND_PROCESS = 7;
-  KIND_API = 8;
-  KIND_BARE_METAL = 9;
-}
-
 enum State {
   STATE_UNKNOWN = 0;
   // eg. permission or io error
@@ -55,10 +38,7 @@ message Asset {
   // asset state
   State state = 4;
 
-  Kind kind = 5;
-  string runtime = 6;
-
-  mondoo.motor.platform.v1.Platform platform = 8;
+  mondoo.motor.platform.v1.Platform platform = 5;
 
   // key is a lower case string of connection type
   repeated mondoo.motor.transports.v1.TransportConfig connections = 17;
