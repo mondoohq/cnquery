@@ -1,17 +1,17 @@
-package platform
+package transports
 
 func (x Kind) Name() string {
 	switch x {
 	case Kind_KIND_VIRTUAL_MACHINE_IMAGE:
-		return "virtual machine image"
+		return "virtualmachine-image"
 	case Kind_KIND_CONTAINER_IMAGE:
-		return "container image"
+		return "container-image"
 	case Kind_KIND_CODE:
 		return "code"
 	case Kind_KIND_PACKAGE:
 		return "package"
 	case Kind_KIND_VIRTUAL_MACHINE:
-		return "virtual machine"
+		return "virtualmachine"
 	case Kind_KIND_CONTAINER:
 		return "container"
 	case Kind_KIND_PROCESS:
@@ -19,7 +19,7 @@ func (x Kind) Name() string {
 	case Kind_KIND_API:
 		return "api"
 	case Kind_KIND_BARE_METAL:
-		return "bare metal"
+		return "baremetal"
 	case Kind_KIND_UNKNOWN:
 		fallthrough
 	default:

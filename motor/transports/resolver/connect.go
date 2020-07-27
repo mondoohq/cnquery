@@ -30,5 +30,7 @@ func ConnectAsset(assetObj *asset.Asset, record bool) (*motor.Motor, error) {
 
 	// TODO: we may want to allow multiple connection trials later
 	tc := assetObj.Connections[0]
+	tc.Kind = assetObj.Platform.Kind
+	tc.Runtime = assetObj.Platform.Runtime
 	return Connect(tc, "", tc.Insecure, record)
 }

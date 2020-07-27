@@ -16,12 +16,16 @@ func New(endpoint *transports.TransportConfig) (*Transport, error) {
 	}
 
 	return &Transport{
-		node: node,
+		node:    node,
+		kind:    endpoint.Kind,
+		runtime: endpoint.Runtime,
 	}, nil
 }
 
 type Transport struct {
-	node *goeapi.Node
+	node    *goeapi.Node
+	kind    transports.Kind
+	runtime string
 }
 
 func (t *Transport) RunCommand(command string) (*transports.Command, error) {
@@ -44,4 +48,12 @@ func (t *Transport) Capabilities() transports.Capabilities {
 
 func (t *Transport) Client() *goeapi.Node {
 	return t.node
+}
+
+func (t *Transport) Kind() transports.Kind {
+	return t.kind
+}
+
+func (t *Transport) Runtime() string {
+	return t.runtime
 }

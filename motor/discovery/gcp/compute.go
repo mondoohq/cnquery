@@ -158,7 +158,7 @@ func (a *Compute) instancesPerZone(svc *compute.Service, project string, zone st
 			ReferenceIDs: []string{MondooGcpInstanceID(project, zone, instance)},
 			Name:         instance.Name,
 			Platform: &platform.Platform{
-				Kind:    platform.Kind_KIND_VIRTUAL_MACHINE,
+				Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
 				Runtime: platform.RUNTIME_GCP_COMPUTE,
 			},
 			Connections: connections,

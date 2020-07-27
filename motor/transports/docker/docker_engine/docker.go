@@ -36,6 +36,8 @@ type Transport struct {
 	dockerClient *client.Client
 	container    string
 	Fs           *FS
+	kind         transports.Kind
+	runtime      string
 }
 
 func (t *Transport) RunCommand(command string) (*transports.Command, error) {
@@ -94,4 +96,12 @@ func GetDockerClient() (*client.Client, error) {
 	}
 	cli.NegotiateAPIVersion(context.Background())
 	return cli, nil
+}
+
+func (t *Transport) Kind() transports.Kind {
+	return t.kind
+}
+
+func (t *Transport) Runtime() string {
+	return t.runtime
 }

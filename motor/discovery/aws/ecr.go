@@ -51,7 +51,7 @@ func (a *EcrImages) List() ([]*asset.Asset, error) {
 				ReferenceIDs: []string{MondooContainerImageID(digest)},
 				// Name:         strings.Join(dImg.RepoTags, ","),
 				Platform: &platform.Platform{
-					Kind:    platform.Kind_KIND_CONTAINER_IMAGE,
+					Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
 					Runtime: platform.RUNTIME_AWS_ECR,
 				},
 				Connections: []*transports.TransportConfig{

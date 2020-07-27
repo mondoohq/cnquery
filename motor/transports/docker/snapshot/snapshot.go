@@ -22,8 +22,10 @@ func new(endpoint *transports.TransportConfig) (*DockerSnapshotTransport, error)
 func newWithClose(endpoint *transports.TransportConfig, close func()) (*DockerSnapshotTransport, error) {
 	t := &DockerSnapshotTransport{
 		Transport: tar.Transport{
-			Fs:      tar.NewFs(endpoint.Path),
-			CloseFN: close,
+			Fs:              tar.NewFs(endpoint.Path),
+			CloseFN:         close,
+			PlatformKind:    endpoint.Kind,
+			PlatformRuntime: endpoint.Runtime,
 		},
 	}
 

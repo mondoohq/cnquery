@@ -18,8 +18,10 @@ func New(endpoint *transports.TransportConfig) (*Transport, error) {
 
 func NewWithClose(endpoint *transports.TransportConfig, close func()) (*Transport, error) {
 	t := &Transport{
-		Fs:      NewFs(endpoint.Path),
-		CloseFN: close,
+		Fs:              NewFs(endpoint.Path),
+		CloseFN:         close,
+		PlatformKind:    endpoint.Kind,
+		PlatformRuntime: endpoint.Runtime,
 	}
 
 	var err error
@@ -37,6 +39,9 @@ func NewWithClose(endpoint *transports.TransportConfig, close func()) (*Transpor
 type Transport struct {
 	Fs      *FS
 	CloseFN func()
+	// fields are exposed since the tar backend is re-used for the docker backend
+	PlatformKind    transports.Kind
+	PlatformRuntime string
 }
 
 func (m *Transport) RunCommand(command string) (*transports.Command, error) {
@@ -114,4 +119,12 @@ func (t *Transport) LoadFile(path string) error {
 	}
 
 	return t.Load(f)
+}
+
+func (t *Transport) Kind() transports.Kind {
+	return t.PlatformKind
+}
+
+func (t *Transport) Runtime() string {
+	return t.PlatformRuntime
 }

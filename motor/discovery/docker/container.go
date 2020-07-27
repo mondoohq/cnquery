@@ -48,7 +48,7 @@ func (a *Container) List() ([]*asset.Asset, error) {
 			Name:         name,
 			// ParentReferenceID: dContainer.ImageID,
 			Platform: &platform.Platform{
-				Kind:    platform.Kind_KIND_CONTAINER,
+				Kind:    transports.Kind_KIND_CONTAINER,
 				Runtime: platform.RUNTIME_DOCKER_CONTAINER,
 			},
 			Connections: []*transports.TransportConfig{
