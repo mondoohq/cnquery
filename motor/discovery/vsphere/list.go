@@ -81,6 +81,7 @@ func hostsToAssetList(hosts []*object.HostSystem) ([]*asset.Asset, error) {
 				"vsphere.vmware.com/reference-type": host.Reference().Type,
 				"vsphere.vmware.com/inventorypath":  host.InventoryPath,
 			},
+			ReferenceIDs: []string{vsphere_transport.VsphereResourceID(host.Reference().Type, host.InventoryPath)},
 		}
 		res = append(res, ha)
 	}
@@ -154,6 +155,7 @@ func vmsToAssetList(vms []*object.VirtualMachine) ([]*asset.Asset, error) {
 				"vsphere.vmware.com/reference-type": vm.Reference().Type,
 				"vsphere.vmware.com/inventorypath":  vm.InventoryPath,
 			},
+			ReferenceIDs: []string{vsphere_transport.VsphereResourceID(vm.Reference().Type, vm.InventoryPath)},
 		}
 		res = append(res, ha)
 	}

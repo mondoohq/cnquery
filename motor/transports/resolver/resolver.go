@@ -230,9 +230,9 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			m.ActivateRecorder()
 		}
 
-		ids, err := trans.Identifier()
-		if err == nil && len(ids) > 0 {
-			identifier = append(identifier, ids...)
+		id, err := trans.Identifier()
+		if err == nil && len(id) > 0 {
+			identifier = append(identifier, id)
 		}
 	case transports.TransportBackend_CONNECTION_ARISTAEOS:
 		log.Debug().Msg("connection> load aristaeos transport")
