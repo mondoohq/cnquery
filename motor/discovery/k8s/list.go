@@ -135,7 +135,7 @@ func toAsset(pod v1.Pod, status v1.ContainerStatus) *asset.Asset {
 		// ParentReferenceID: parentRef,
 
 		Platform: &platform.Platform{
-			Kind:    platform.Kind_KIND_CONTAINER,
+			Kind:    transports.Kind_KIND_CONTAINER,
 			Runtime: platform.RUNTIME_KUBERNETES,
 		},
 

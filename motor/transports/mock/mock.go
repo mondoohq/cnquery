@@ -34,6 +34,8 @@ type Transport struct {
 	Commands map[string]*Command
 	Missing  map[string]map[string]bool
 	Fs       *mockFS
+	kind     transports.Kind
+	runtime  string
 }
 
 // RunCommand returns the results of a command found in the nock registry
@@ -122,3 +124,11 @@ func (t *Transport) Capabilities() transports.Capabilities {
 // 	// return the reader
 // 	return tarReader, nil
 // }
+
+func (t *Transport) Kind() transports.Kind {
+	return t.kind
+}
+
+func (t *Transport) Runtime() string {
+	return t.runtime
+}

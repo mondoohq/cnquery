@@ -68,7 +68,7 @@ func (ec2i *Ec2Instances) List() ([]*asset.Asset, error) {
 				ReferenceIDs: []string{awsec2.MondooInstanceID(account, ec2i.config.Region, *instance.InstanceId)},
 				Name:         *instance.InstanceId,
 				Platform: &platform.Platform{
-					Kind:    platform.Kind_KIND_VIRTUAL_MACHINE,
+					Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
 					Runtime: platform.RUNTIME_AWS_EC2,
 				},
 				Connections: connections,

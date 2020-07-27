@@ -73,12 +73,19 @@ func New(endpoint *transports.TransportConfig) (*WinrmTransport, error) {
 	}
 
 	log.Debug().Msg("winrm> connection established")
-	return &WinrmTransport{Endpoint: winrmEndpoint, Client: client}, nil
+	return &WinrmTransport{
+		Endpoint: winrmEndpoint,
+		Client:   client,
+		kind:     endpoint.Kind,
+		runtime:  endpoint.Runtime,
+	}, nil
 }
 
 type WinrmTransport struct {
 	Endpoint *winrm.Endpoint
 	Client   *winrm.Client
+	kind     transports.Kind
+	runtime  string
 }
 
 func (t *WinrmTransport) RunCommand(command string) (*transports.Command, error) {
@@ -122,4 +129,12 @@ func (t *WinrmTransport) Capabilities() transports.Capabilities {
 		transports.Cabability_RunCommand,
 		transports.Cabability_File,
 	}
+}
+
+func (t *WinrmTransport) Kind() transports.Kind {
+	return t.kind
+}
+
+func (t *WinrmTransport) Runtime() string {
+	return t.runtime
 }

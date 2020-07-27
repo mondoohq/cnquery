@@ -48,7 +48,7 @@ func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*asset.
 				ReferenceIDs: []string{MondooContainerImageID(digest)},
 				Name:         docker.ShortContainerImageID(digest),
 				Platform: &platform.Platform{
-					Kind:    platform.Kind_KIND_CONTAINER_IMAGE,
+					Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
 					Runtime: platform.RUNTIME_GCP_GCR,
 				},
 

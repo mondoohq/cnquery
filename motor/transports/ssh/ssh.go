@@ -75,6 +75,8 @@ func New(endpoint *transports.TransportConfig) (*SSHTransport, error) {
 		UseScpFilesystem: activateScp,
 		HostKey:          hostkey,
 		Sudo:             s,
+		kind:             endpoint.Kind,
+		runtime:          endpoint.Runtime,
 	}, nil
 }
 
@@ -85,6 +87,8 @@ type SSHTransport struct {
 	UseScpFilesystem bool
 	HostKey          ssh.PublicKey
 	Sudo             cmd.Wrapper
+	kind             transports.Kind
+	runtime          string
 }
 
 func (t *SSHTransport) RunCommand(command string) (*transports.Command, error) {
@@ -171,4 +175,12 @@ func (t *SSHTransport) Capabilities() transports.Capabilities {
 		transports.Cabability_RunCommand,
 		transports.Cabability_File,
 	}
+}
+
+func (t *SSHTransport) Kind() transports.Kind {
+	return t.kind
+}
+
+func (t *SSHTransport) Runtime() string {
+	return t.runtime
 }

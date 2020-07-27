@@ -12,6 +12,7 @@ import (
 	"github.com/vmware/govmomi/vim25/types"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/transports"
 	vsphere_transport "go.mondoo.io/mondoo/motor/transports/vsphere"
 )
 
@@ -73,7 +74,7 @@ func hostsToAssetList(hosts []*object.HostSystem) ([]*asset.Asset, error) {
 				Title:   "VMware ESXi",
 				Release: esxi_version,
 				Runtime: platform.RUNTIME_VSPHERE_HOSTS,
-				Kind:    platform.Kind_KIND_BARE_METAL,
+				Kind:    transports.Kind_KIND_BARE_METAL,
 			},
 
 			State: mapHostPowerstateToState(props.Runtime.PowerState),
@@ -148,7 +149,7 @@ func vmsToAssetList(vms []*object.VirtualMachine) ([]*asset.Asset, error) {
 			Name: vm.Name(),
 			Platform: &platform.Platform{
 				Runtime: platform.RUNTIME_VSPHERE_VM,
-				Kind:    platform.Kind_KIND_VIRTUAL_MACHINE,
+				Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
 			},
 			State: mapVmGuestState(props.Guest.GuestState),
 			Labels: map[string]string{

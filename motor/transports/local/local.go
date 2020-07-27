@@ -21,12 +21,16 @@ func New() (*LocalTransport, error) {
 
 	return &LocalTransport{
 		shell: shell,
+		// kind:    endpoint.Kind,
+		// runtime: endpoint.Runtime,
 	}, nil
 }
 
 type LocalTransport struct {
-	shell []string
-	fs    afero.Fs
+	shell   []string
+	fs      afero.Fs
+	kind    transports.Kind
+	runtime string
 }
 
 func (t *LocalTransport) RunCommand(command string) (*transports.Command, error) {
@@ -73,4 +77,12 @@ func (t *LocalTransport) Capabilities() transports.Capabilities {
 		transports.Cabability_RunCommand,
 		transports.Cabability_File,
 	}
+}
+
+func (t *LocalTransport) Kind() transports.Kind {
+	return t.kind
+}
+
+func (t *LocalTransport) Runtime() string {
+	return t.runtime
 }

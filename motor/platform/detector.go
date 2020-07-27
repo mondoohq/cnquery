@@ -44,6 +44,8 @@ func (d *Detector) Platform() (*Platform, error) {
 				Name:    "vmware-vsphere",
 				Title:   about.Name,
 				Release: about.Version,
+				Kind:    d.transport.Kind(),
+				Runtime: d.transport.Runtime(),
 			}, nil
 		} else {
 			host, err := pt.GetHost()
@@ -58,12 +60,16 @@ func (d *Detector) Platform() (*Platform, error) {
 				Name:    "vmware-esxi",
 				Title:   "VMware ESXi",
 				Release: sv.Version,
+				Kind:    d.transport.Kind(),
+				Runtime: d.transport.Runtime(),
 			}, nil
 		}
 
 	case *arista.Transport:
 		return &Platform{
-			Name: "arista-eos",
+			Name:    "arista-eos",
+			Kind:    d.transport.Kind(),
+			Runtime: d.transport.Runtime(),
 		}, nil
 	default:
 		var resolved bool
@@ -71,6 +77,8 @@ func (d *Detector) Platform() (*Platform, error) {
 		if !resolved {
 			return nil, errors.New("could not determine operating system")
 		}
+		pi.Kind = d.transport.Kind()
+		pi.Runtime = d.transport.Runtime()
 	}
 
 	// cache value

@@ -11,6 +11,7 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/transports"
 )
 
 func NewSSMManagedInstancesDiscovery(cfg aws.Config) (*SSMManagedInstances, error) {
@@ -59,7 +60,7 @@ func (ssmi *SSMManagedInstances) List() ([]*asset.Asset, error) {
 			ReferenceIDs: []string{awsec2.MondooInstanceID(account, ssmi.config.Region, *instance.InstanceId)},
 			Name:         *instance.InstanceId,
 			Platform: &platform.Platform{
-				Kind:    platform.Kind_KIND_VIRTUAL_MACHINE,
+				Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
 				Runtime: platform.RUNTIME_AWS_SSM_MANAGED,
 			},
 

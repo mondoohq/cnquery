@@ -31,8 +31,10 @@ type DockerImageTransport struct {
 func newWithClose(endpoint *transports.TransportConfig, close func()) (*DockerImageTransport, error) {
 	t := &DockerImageTransport{
 		Transport: tar.Transport{
-			Fs:      tar.NewFs(endpoint.Path),
-			CloseFN: close,
+			Fs:              tar.NewFs(endpoint.Path),
+			CloseFN:         close,
+			PlatformKind:    endpoint.Kind,
+			PlatformRuntime: endpoint.Runtime,
 		},
 	}
 

@@ -18,6 +18,23 @@ enum TransportBackend {
   CONNECTION_ARISTAEOS = 10;
 }
 
+enum Kind {
+  KIND_UNKNOWN = 0;
+
+  // at rest
+  KIND_VIRTUAL_MACHINE_IMAGE = 1;
+  KIND_CONTAINER_IMAGE = 2;
+  KIND_CODE = 3;
+  KIND_PACKAGE = 4;
+
+  // in motion
+  KIND_VIRTUAL_MACHINE = 5;
+  KIND_CONTAINER = 6;
+  KIND_PROCESS = 7;
+  KIND_API = 8;
+  KIND_BARE_METAL = 9;
+}
+
 message TransportConfig {
   reserved 20;
 
@@ -37,6 +54,10 @@ message TransportConfig {
   bool Record = 22;
 
   map<string,string> options = 23;
+
+  // additional platform information, passed-through
+  Kind kind = 24;
+  string runtime = 25;
 }
 
 message Sudo {
