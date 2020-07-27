@@ -37,11 +37,16 @@ func (v *vsphereResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnO
 	client := trans.Client()
 	discoveryClient := vsphere_discovery.New(client)
 
+	identifier, err := trans.Identifier()
+	if err != nil {
+		return nil, err
+	}
+
 	info := trans.Info()
 
 	// add asset for the api itself
 	resolved = append(resolved, &asset.Asset{
-		ReferenceIDs: []string{info.InstanceUuid},
+		ReferenceIDs: []string{identifier},
 		Name:         info.Name,
 		// TODO: we have the same thing in the detector (can we leverage the detector here)
 		Platform: &platform.Platform{

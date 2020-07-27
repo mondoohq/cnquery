@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 
 	"github.com/rs/zerolog/log"
 	"github.com/vmware/govmomi"
@@ -157,48 +158,38 @@ func (t *Transport) GetHost() (*object.HostSystem, error) {
 	return host, nil
 }
 
-// TODO: handle case where we have a vsphere connection with multiple hosts
-// in those cases we make the vsphere resources available, but return the esxi host
-// version as the platform name
-func (t *Transport) Identifier() ([]string, error) {
-	identifier := []string{}
-
-	// determine identifier
+// Identifier will only identify the connection
+func (t *Transport) Identifier() (string, error) {
+	// determine identifier since ESXI connections do not return an InstanceUuid
 	if !t.Client().IsVC() {
 		host, err := t.GetHost()
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 
-		// TODO: cache per connection
-		version, err := t.EsxiVersion(host)
-		if err != nil {
-			return nil, err
-		}
-		identifier = append(identifier, esxid(version.Moid))
-	} else {
-		v := t.Client().ServiceContent.About
-		identifier = append(identifier, vsphereid(v.InstanceUuid))
+		// NOTE: we do not use the ESXi host identifier here to distingush between the API and the host itself
+		return VsphereID(host.Reference().Value), nil
 	}
-	return identifier, nil
-}
 
-type Info struct {
-	types.AboutInfo
-	Identifier string
+	v := t.Client().ServiceContent.About
+	return VsphereID(v.InstanceUuid), nil
 }
 
 // Info returns the connection information
-func (t *Transport) Info() Info {
-	v := t.Client().ServiceContent.About
-	identifier := vsphereid(v.InstanceUuid)
-	return Info{AboutInfo: v, Identifier: identifier}
+func (t *Transport) Info() types.AboutInfo {
+	return t.Client().ServiceContent.About
 }
 
-func esxid(id string) string {
+// use in combination with host.Reference().Value
+func EsxiID(id string) string {
 	return "//platformid.api.mondoo.app/runtime/esxi/moid/" + id
 }
 
-func vsphereid(id string) string {
+func VsphereResourceID(typ string, inventorypath string) string {
+	return "//platformid.api.mondoo.app/runtime/vsphere/type/" + typ + "/inventorypath/" + url.QueryEscape(inventorypath)
+}
+
+// use in combination with Client.ServiceContent.About.InstanceUuid
+func VsphereID(id string) string {
 	return "//platformid.api.mondoo.app/runtime/vsphere/uuid/" + id
 }
