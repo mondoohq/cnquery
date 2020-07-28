@@ -11,8 +11,6 @@ import (
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
 	vsphere_transport "go.mondoo.io/mondoo/motor/transports/vsphere"
 )
 
@@ -52,15 +50,6 @@ func hostsToAssetList(hosts []*object.HostSystem) ([]*asset.Asset, error) {
 	res := []*asset.Asset{}
 	for i := range hosts {
 		host := hosts[i]
-
-		// TODO: Determine full platform information eg. esxi
-		esxi_version := ""
-		// we do not abort in case of error because the simulator does not support esxi interface for the host
-		ver, err := vsphere_transport.EsxiVersion(host)
-		if err == nil {
-			esxi_version = ver.Version
-		}
-
 		props, err := hostProperties(host)
 		if err != nil {
 			return nil, err
@@ -68,15 +57,7 @@ func hostsToAssetList(hosts []*object.HostSystem) ([]*asset.Asset, error) {
 
 		ha := &asset.Asset{
 			Name: host.Name(),
-			// TODO: sync with detector
-			Platform: &platform.Platform{
-				Name:    "vmware-esxi",
-				Title:   "VMware ESXi",
-				Release: esxi_version,
-				Runtime: platform.RUNTIME_VSPHERE_HOSTS,
-				Kind:    transports.Kind_KIND_BARE_METAL,
-			},
-
+			// NOTE: platform information is filled by the resolver
 			State: mapHostPowerstateToState(props.Runtime.PowerState),
 			Labels: map[string]string{
 				"vsphere.vmware.com/reference-type": host.Reference().Type,
@@ -147,10 +128,7 @@ func vmsToAssetList(vms []*object.VirtualMachine) ([]*asset.Asset, error) {
 		}
 		ha := &asset.Asset{
 			Name: vm.Name(),
-			Platform: &platform.Platform{
-				Runtime: platform.RUNTIME_VSPHERE_VM,
-				Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
-			},
+			// NOTE: platform information is filled by the resolver
 			State: mapVmGuestState(props.Guest.GuestState),
 			Labels: map[string]string{
 				"vsphere.vmware.com/reference-type": vm.Reference().Type,
@@ -258,12 +236,12 @@ func IsNotFound(err error) bool {
 	return errors.As(err, &e)
 }
 
-func (c *VSphere) Host(path string) (*object.HostSystem, error) {
-	finder := find.NewFinder(c.Client.Client, true)
-	return finder.HostSystem(context.Background(), path)
-}
+// func (c *VSphere) Host(path string) (*object.HostSystem, error) {
+// 	finder := find.NewFinder(c.Client.Client, true)
+// 	return finder.HostSystem(context.Background(), path)
+// }
 
-func (c *VSphere) VirtualMachine(path string) (*object.VirtualMachine, error) {
-	finder := find.NewFinder(c.Client.Client, true)
-	return finder.VirtualMachine(context.Background(), path)
-}
+// func (c *VSphere) VirtualMachine(path string) (*object.VirtualMachine, error) {
+// 	finder := find.NewFinder(c.Client.Client, true)
+// 	return finder.VirtualMachine(context.Background(), path)
+// }

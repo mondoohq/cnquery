@@ -161,6 +161,11 @@ func (t *Transport) GetHost() (*object.HostSystem, error) {
 }
 
 // Identifier will only identify the connection
+// see https://blogs.vmware.com/vsphere/2012/02/uniquely-identifying-virtual-machines-in-vsphere-and-vcloud-part-1-overview.html
+// To match the vm with the guest, we would need to extract the vm uuid from bios
+// https://kb.vmware.com/s/article/1009458
+// /usr/sbin/dmidecode | grep UUID https://communities.vmware.com/thread/420420
+// wmic bios get name,serialnumber,version  https://communities.vmware.com/thread/582729/
 func (t *Transport) Identifier() (string, error) {
 	// a specific resource id was passed into the transport eg. for a esxi host or esxi vm
 	if len(t.resid) > 0 {
@@ -227,4 +232,14 @@ func VsphereID(id string) string {
 
 func IsVsphereID(mrn string) bool {
 	return strings.HasPrefix(mrn, "//platformid.api.mondoo.app/runtime/vsphere/uuid/")
+}
+
+func (c *Transport) Host(path string) (*object.HostSystem, error) {
+	finder := find.NewFinder(c.Client().Client, true)
+	return finder.HostSystem(context.Background(), path)
+}
+
+func (c *Transport) VirtualMachine(path string) (*object.VirtualMachine, error) {
+	finder := find.NewFinder(c.Client().Client, true)
+	return finder.VirtualMachine(context.Background(), path)
 }
