@@ -42,6 +42,8 @@ func New(endpoint *transports.TransportConfig) (*Transport, error) {
 		client:  client,
 		kind:    endpoint.Kind,
 		runtime: endpoint.Runtime,
+		opts:    endpoint.Options,
+		resid:   endpoint.Resourceid,
 	}, nil
 }
 
@@ -49,6 +51,8 @@ type Transport struct {
 	client  *govmomi.Client
 	kind    transports.Kind
 	runtime string
+	opts    map[string]string
+	resid   string
 }
 
 func (t *Transport) RunCommand(command string) (*transports.Command, error) {
@@ -71,6 +75,10 @@ func (t *Transport) Capabilities() transports.Capabilities {
 
 func (t *Transport) Client() *govmomi.Client {
 	return t.client
+}
+
+func (t *Transport) Options() map[string]string {
+	return t.opts
 }
 
 func (t *Transport) Kind() transports.Kind {

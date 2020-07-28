@@ -411,6 +411,7 @@ vsphere {
 
 esxi {
   host() vsphere.host
+  vm() vsphere.vm
 }
 
 vsphere.datacenter {

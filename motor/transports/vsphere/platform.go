@@ -2,9 +2,10 @@ package vsphere
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
-	"net/url"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/vmware/govmomi"
@@ -12,6 +13,7 @@ import (
 	"github.com/vmware/govmomi/govc/host/esxcli"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/types"
+	"go.mondoo.io/mondoo/nexus/mrn"
 )
 
 func listDatacenters(c *govmomi.Client) ([]*object.Datacenter, error) {
@@ -160,6 +162,11 @@ func (t *Transport) GetHost() (*object.HostSystem, error) {
 
 // Identifier will only identify the connection
 func (t *Transport) Identifier() (string, error) {
+	// a specific resource id was passed into the transport eg. for a esxi host or esxi vm
+	if len(t.resid) > 0 {
+		return t.resid, nil
+	}
+
 	// determine identifier since ESXI connections do not return an InstanceUuid
 	if !t.Client().IsVC() {
 		host, err := t.GetHost()
@@ -180,16 +187,44 @@ func (t *Transport) Info() types.AboutInfo {
 	return t.Client().ServiceContent.About
 }
 
-// use in combination with host.Reference().Value
-func EsxiID(id string) string {
-	return "//platformid.api.mondoo.app/runtime/esxi/moid/" + id
+func VsphereResourceID(typ string, inventorypath string) string {
+	return "//platformid.api.mondoo.app/runtime/vsphere/type/" + typ + "/inventorypath/" + base64.StdEncoding.EncodeToString([]byte(inventorypath))
 }
 
-func VsphereResourceID(typ string, inventorypath string) string {
-	return "//platformid.api.mondoo.app/runtime/vsphere/type/" + typ + "/inventorypath/" + url.QueryEscape(inventorypath)
+func ParseVsphereResourceID(id string) (string, string, error) {
+	parsed, err := mrn.NewMRN(id)
+	if err != nil {
+		return "", "", err
+	}
+
+	typ := parsed.ResourceID("type")
+	if typ == nil {
+		return "", "", errors.New("vsphere platform id has invalid type")
+	}
+	inventoryPath := parsed.ResourceID("inventorypath")
+
+	var decodedPath []byte
+	if inventoryPath != nil {
+		base64path := *inventoryPath
+		decodedPath, err = base64.StdEncoding.DecodeString(base64path)
+		if err != nil {
+			return "", "", errors.New("vsphere platform id has invalid inventorypath")
+		}
+	}
+
+	return *typ, string(decodedPath), nil
+
+}
+
+func IsVsphereResourceID(mrn string) bool {
+	return strings.HasPrefix(mrn, "//platformid.api.mondoo.app/runtime/vsphere/type/") && strings.Contains(mrn, "/inventorypath/")
 }
 
 // use in combination with Client.ServiceContent.About.InstanceUuid
 func VsphereID(id string) string {
 	return "//platformid.api.mondoo.app/runtime/vsphere/uuid/" + id
+}
+
+func IsVsphereID(mrn string) bool {
+	return strings.HasPrefix(mrn, "//platformid.api.mondoo.app/runtime/vsphere/uuid/")
 }

@@ -32,5 +32,11 @@ func ConnectAsset(assetObj *asset.Asset, record bool) (*motor.Motor, error) {
 	tc := assetObj.Connections[0]
 	tc.Kind = assetObj.Platform.Kind
 	tc.Runtime = assetObj.Platform.Runtime
+
+	// parse reference id and restore options
+	if len(assetObj.ReferenceIDs) > 0 {
+		tc.Resourceid = assetObj.ReferenceIDs[0]
+	}
+
 	return Connect(tc, "", tc.Insecure, record)
 }
