@@ -168,8 +168,8 @@ func (t *Transport) GetHost() (*object.HostSystem, error) {
 // wmic bios get name,serialnumber,version  https://communities.vmware.com/thread/582729/
 func (t *Transport) Identifier() (string, error) {
 	// a specific resource id was passed into the transport eg. for a esxi host or esxi vm
-	if len(t.resid) > 0 {
-		return t.resid, nil
+	if len(t.selectedPlatformID) > 0 {
+		return t.selectedPlatformID, nil
 	}
 
 	// determine identifier since ESXI connections do not return an InstanceUuid
