@@ -11,6 +11,7 @@ import (
 )
 
 func New(container string) (transports.Transport, error) {
+	// TODO: harmonize docker client establishment with docker engine discovery
 	dockerClient, err := GetDockerClient()
 	if err != nil {
 		return nil, err
