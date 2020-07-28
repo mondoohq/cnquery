@@ -6,7 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/apps/mondoo/cmd/options"
 	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/discovery/docker"
+	"go.mondoo.io/mondoo/motor/discovery/container_registry"
 )
 
 type containerRegistryResolver struct{}
@@ -16,7 +16,7 @@ func (k *containerRegistryResolver) Resolve(in *options.VulnOptsAsset, opts *opt
 
 	repository := strings.TrimPrefix(in.Connection, "cr://")
 	log.Debug().Str("registry", repository).Msg("fetch meta information from docker registry")
-	r := docker.NewDockerRegistryImages()
+	r := container_registry.NewDockerRegistryImages()
 	// to support self-signed certs
 	r.Insecure = opts.Insecure
 

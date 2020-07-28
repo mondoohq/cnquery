@@ -10,7 +10,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/rs/zerolog/log"
-	motorcloud_docker "go.mondoo.io/mondoo/motor/discovery/docker"
+	docker_discovery "go.mondoo.io/mondoo/motor/discovery/docker_engine"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/docker/docker_engine"
 	"go.mondoo.io/mondoo/motor/transports/docker/image"
@@ -78,7 +78,7 @@ func ResolveDockerTransport(endpoint *transports.TransportConfig) (transports.Tr
 
 			hash, err := img.Digest()
 			if err == nil {
-				identifier = motorcloud_docker.MondooContainerImageID(hash.String())
+				identifier = docker_discovery.MondooContainerImageID(hash.String())
 			} else {
 				log.Warn().Err(err).Msg("could not determine referenceid")
 			}
@@ -100,7 +100,7 @@ func ResolveDockerTransport(endpoint *transports.TransportConfig) (transports.Tr
 
 	log.Debug().Msg("try to connect to docker engine")
 	// could be an image id/name, container id/name or a short reference to an image in docker engine
-	ded, err := NewDockerEngineDiscovery()
+	ded, err := docker_discovery.NewDockerEngineDiscovery()
 	if err == nil {
 		ci, err := ded.ContainerInfo(endpoint.Host)
 		if err == nil {
@@ -108,16 +108,16 @@ func ResolveDockerTransport(endpoint *transports.TransportConfig) (transports.Tr
 				log.Debug().Msg("found running container " + ci.ID)
 				transport, err := docker_engine.New(ci.ID)
 				return transport, DockerInfo{
-					Name:       motorcloud_docker.ShortContainerImageID(ci.ID),
-					Identifier: motorcloud_docker.MondooContainerID(ci.ID),
+					Name:       docker_discovery.ShortContainerImageID(ci.ID),
+					Identifier: docker_discovery.MondooContainerID(ci.ID),
 					Labels:     ci.Labels,
 				}, err
 			} else {
 				log.Debug().Msg("found stopped container " + ci.ID)
 				transport, err := snapshot.NewFromDockerEngine(ci.ID)
 				return transport, DockerInfo{
-					Name:       motorcloud_docker.ShortContainerImageID(ci.ID),
-					Identifier: motorcloud_docker.MondooContainerID(ci.ID),
+					Name:       docker_discovery.ShortContainerImageID(ci.ID),
+					Identifier: docker_discovery.MondooContainerID(ci.ID),
 					Labels:     ci.Labels,
 				}, err
 			}
@@ -134,7 +134,7 @@ func ResolveDockerTransport(endpoint *transports.TransportConfig) (transports.Tr
 			var identifier string
 			hash, err := img.Digest()
 			if err == nil {
-				identifier = motorcloud_docker.MondooContainerImageID(hash.String())
+				identifier = docker_discovery.MondooContainerImageID(hash.String())
 			}
 
 			transport, err := image.New(rc)
@@ -168,12 +168,12 @@ func ResolveDockerTransport(endpoint *transports.TransportConfig) (transports.Tr
 		var identifier string
 		hash, err := img.Digest()
 		if err == nil {
-			identifier = motorcloud_docker.MondooContainerImageID(hash.String())
+			identifier = docker_discovery.MondooContainerImageID(hash.String())
 		}
 
 		transport, err := image.New(rc)
 		return transport, DockerInfo{
-			Name:       motorcloud_docker.ShortContainerImageID(hash.String()),
+			Name:       docker_discovery.ShortContainerImageID(hash.String()),
 			Identifier: identifier,
 		}, err
 	} else {

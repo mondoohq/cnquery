@@ -1,4 +1,4 @@
-package docker
+package container_registry
 
 import (
 	"crypto/tls"
@@ -15,6 +15,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/discovery/docker_engine"
 	"go.mondoo.io/mondoo/motor/platform"
 
 	"go.mondoo.io/mondoo/motor/transports"
@@ -201,8 +202,8 @@ func (a *DockerRegistryImages) ListImages(repoName string) ([]*asset.Asset, erro
 func (a *DockerRegistryImages) toAsset(repoName string, imgDigest string, tags []string) *asset.Asset {
 	imageUrl := repoName + "@" + imgDigest
 	asset := &asset.Asset{
-		ReferenceIDs: []string{MondooContainerImageID(imgDigest)},
-		Name:         ShortContainerImageID(imgDigest),
+		ReferenceIDs: []string{docker_engine.MondooContainerImageID(imgDigest)},
+		Name:         docker_engine.ShortContainerImageID(imgDigest),
 		Platform: &platform.Platform{
 			Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
 			Runtime: platform.RUNTIME_DOCKER_REGISTRY,

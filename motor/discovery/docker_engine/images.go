@@ -1,28 +1,44 @@
-package docker
+package docker_engine
 
 import (
 	"context"
 	"strings"
 
-	docker_types "github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
-type Images struct{}
-
-func (a *Images) List() ([]*asset.Asset, error) {
-	cl, err := GetDockerClient()
+// be aware that images are prefixed with sha256:, while containers are not
+func (e *dockerEngineDiscovery) imageList() ([]types.ImageSummary, error) {
+	dc, err := e.client()
 	if err != nil {
 		return nil, err
 	}
 
-	dImages, err := cl.ImageList(context.Background(), docker_types.ImageListOptions{})
+	return dc.ImageList(context.Background(), types.ImageListOptions{})
+}
+
+func (e *dockerEngineDiscovery) ListImageShas() ([]string, error) {
+	images, err := e.imageList()
+	if err != nil {
+		return []string{}, err
+	}
+
+	imagesShas := []string{}
+	for i := range images {
+		imagesShas = append(imagesShas, images[i].ID)
+	}
+
+	return imagesShas, nil
+}
+
+func (e *dockerEngineDiscovery) ListImages() ([]*asset.Asset, error) {
+	dImages, err := e.imageList()
 	if err != nil {
 		return nil, err
 	}
-
 	imgs := make([]*asset.Asset, len(dImages))
 	for i, dImg := range dImages {
 

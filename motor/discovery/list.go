@@ -5,7 +5,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/aws"
-	"go.mondoo.io/mondoo/motor/discovery/docker"
 	"go.mondoo.io/mondoo/motor/discovery/gcp"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/stringslice"
@@ -56,13 +55,13 @@ func ListAssets(runtimes ...string) ([]*asset.Asset, error) {
 		askRuntimes = append(askRuntimes, gcp.NewGCRImages())
 	}
 
-	if stringslice.Contains(runtimes, platform.RUNTIME_DOCKER_CONTAINER) {
-		askRuntimes = append(askRuntimes, &docker.Container{})
-	}
+	// if stringslice.Contains(runtimes, platform.RUNTIME_DOCKER_CONTAINER) {
+	// 	askRuntimes = append(askRuntimes, &docker.Container{})
+	// }
 
-	if stringslice.Contains(runtimes, platform.RUNTIME_DOCKER_IMAGE) {
-		askRuntimes = append(askRuntimes, &docker.Images{})
-	}
+	// if stringslice.Contains(runtimes, platform.RUNTIME_DOCKER_IMAGE) {
+	// 	askRuntimes = append(askRuntimes, &docker.Images{})
+	// }
 
 	// if stringslice.Contains(runtimes, asset.RUNTIME_DOCKER_REGISTRY) {
 	// 	askRuntimes = append(askRuntimes, &docker.DockerRegistryImages{})
