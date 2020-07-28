@@ -141,7 +141,7 @@ func toAsset(pod v1.Pod, status v1.ContainerStatus) *asset.Asset {
 
 		Connections: []*transports.TransportConfig{
 			&transports.TransportConfig{
-				Backend: transports.TransportBackend_CONNECTION_DOCKER_IMAGE,
+				Backend: transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY,
 				Host:    connection,
 			},
 		},

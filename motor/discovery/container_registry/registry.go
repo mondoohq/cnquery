@@ -210,7 +210,7 @@ func (a *DockerRegistryImages) toAsset(repoName string, imgDigest string, tags [
 		},
 		Connections: []*transports.TransportConfig{
 			&transports.TransportConfig{
-				Backend: transports.TransportBackend_CONNECTION_DOCKER_IMAGE,
+				Backend: transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY,
 				Host:    imageUrl,
 			},
 		},

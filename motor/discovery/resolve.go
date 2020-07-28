@@ -21,7 +21,7 @@ func init() {
 	resolver["local"] = &instanceResolver{}
 	resolver["winrm"] = &instanceResolver{}
 	resolver["ssh"] = &instanceResolver{}
-	resolver["docker"] = &instanceResolver{}
+	resolver["docker"] = &dockerResolver{}
 	resolver["mock"] = &instanceResolver{}
 	resolver["tar"] = &instanceResolver{}
 	resolver["k8s"] = &k8sResolver{}

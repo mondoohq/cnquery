@@ -124,7 +124,7 @@ func (e *dockerEngineDiscovery) ListContainer() ([]*asset.Asset, error) {
 			},
 			Connections: []*transports.TransportConfig{
 				&transports.TransportConfig{
-					Backend: transports.TransportBackend_CONNECTION_DOCKER_CONTAINER,
+					Backend: transports.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER,
 					Host:    dContainer.ID,
 				},
 			},

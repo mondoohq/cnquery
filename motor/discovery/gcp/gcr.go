@@ -54,7 +54,7 @@ func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*asset.
 
 				Connections: []*transports.TransportConfig{
 					&transports.TransportConfig{
-						Backend: transports.TransportBackend_CONNECTION_DOCKER_REGISTRY,
+						Backend: transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY,
 						Host:    imageUrl,
 					},
 				},
