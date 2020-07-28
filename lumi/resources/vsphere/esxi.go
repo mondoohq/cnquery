@@ -394,7 +394,7 @@ func (esxi *Esxi) KernelModuleDetails(modulename string) (*EsxiKernelModule, err
 	module := EsxiKernelModule{}
 	val := res.Values[0]
 	for k := range val {
-		if len(val[k]) == 1 {
+		if len(val[k]) >= 1 {
 			value := val[k][0]
 
 			switch k {
@@ -424,6 +424,8 @@ func (esxi *Esxi) KernelModuleDetails(modulename string) (*EsxiKernelModule, err
 				module.VIBAcceptanceLevel = value
 			case "Version":
 				module.Version = value
+			case "RequiredNamespaces":
+				module.RequiredNamespaces = strings.Join(val[k], ",")
 			}
 		} else {
 			log.Error().Str("key", k).Msg("kernelmodule> unsupported key")
