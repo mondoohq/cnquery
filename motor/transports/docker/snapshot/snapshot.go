@@ -59,7 +59,11 @@ func NewFromDockerEngine(containerid string) (*DockerSnapshotTransport, error) {
 }
 
 func NewFromFile(filename string) (*DockerSnapshotTransport, error) {
-	return new(&transports.TransportConfig{Path: filename})
+	return new(&transports.TransportConfig{
+		Path:    filename,
+		Kind:    transports.Kind_KIND_CONTAINER,
+		Runtime: transports.RUNTIME_DOCKER_CONTAINER,
+	})
 }
 
 // exports a given container from docker engine to a tar file

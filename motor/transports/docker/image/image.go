@@ -65,7 +65,11 @@ func New(rc io.ReadCloser) (*DockerImageTransport, error) {
 	// we return a pure tar image
 	filename := f.Name()
 
-	return newWithClose(&transports.TransportConfig{Path: filename}, func() {
+	return newWithClose(&transports.TransportConfig{
+		Path:    filename,
+		Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
+		Runtime: transports.RUNTIME_DOCKER_IMAGE,
+	}, func() {
 		// remove temporary file on stream close
 		os.Remove(filename)
 	})
