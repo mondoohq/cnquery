@@ -61,7 +61,7 @@ func (ssmi *SSMManagedInstances) List() ([]*asset.Asset, error) {
 			Name:         *instance.InstanceId,
 			Platform: &platform.Platform{
 				Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
-				Runtime: platform.RUNTIME_AWS_SSM_MANAGED,
+				Runtime: transports.RUNTIME_AWS_SSM_MANAGED,
 			},
 
 			// Connections: connections,

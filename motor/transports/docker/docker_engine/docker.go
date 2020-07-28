@@ -29,6 +29,8 @@ func New(container string) (transports.Transport, error) {
 	return &Transport{
 		dockerClient: dockerClient,
 		container:    container,
+		kind:         transports.Kind_KIND_CONTAINER,
+		runtime:      transports.RUNTIME_DOCKER_CONTAINER,
 	}, nil
 }
 

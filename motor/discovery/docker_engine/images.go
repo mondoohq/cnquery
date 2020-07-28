@@ -55,7 +55,7 @@ func (e *dockerEngineDiscovery) ListImages() ([]*asset.Asset, error) {
 			Name:         strings.Join(dImg.RepoTags, ","),
 			Platform: &platform.Platform{
 				Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
-				Runtime: platform.RUNTIME_DOCKER_IMAGE,
+				Runtime: transports.RUNTIME_DOCKER_IMAGE,
 			},
 			Connections: []*transports.TransportConfig{
 				&transports.TransportConfig{

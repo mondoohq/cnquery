@@ -1,4 +1,4 @@
-package platform
+package transports
 
 const (
 	RUNTIME_AWS_EC2          = "aws ec2"

@@ -35,14 +35,14 @@ func VspherePlatform(t *vsphere.Transport, identifier string) (*Platform, error)
 				Name:    "vmware-esxi",
 				Title:   "VMware ESXi",
 				Release: esxi_version,
-				Runtime: RUNTIME_VSPHERE_HOSTS,
+				Runtime: transports.RUNTIME_VSPHERE_HOSTS,
 				Kind:    transports.Kind_KIND_BARE_METAL,
 			}, nil
 
 		case "VirtualMachine":
 			// vm
 			return &Platform{
-				Runtime: RUNTIME_VSPHERE_VM,
+				Runtime: transports.RUNTIME_VSPHERE_VM,
 				Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
 			}, nil
 		default:
@@ -56,6 +56,6 @@ func VspherePlatform(t *vsphere.Transport, identifier string) (*Platform, error)
 		Title:   info.FullName,
 		Release: info.Version,
 		Kind:    transports.Kind_KIND_API,
-		Runtime: RUNTIME_VSPHERE,
+		Runtime: transports.RUNTIME_VSPHERE,
 	}, nil
 }

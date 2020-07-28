@@ -49,7 +49,7 @@ func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*asset.
 				Name:         docker_discovery.ShortContainerImageID(digest),
 				Platform: &platform.Platform{
 					Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
-					Runtime: platform.RUNTIME_GCP_GCR,
+					Runtime: transports.RUNTIME_GCP_GCR,
 				},
 
 				Connections: []*transports.TransportConfig{

@@ -206,7 +206,7 @@ func (a *DockerRegistryImages) toAsset(repoName string, imgDigest string, tags [
 		Name:         docker_engine.ShortContainerImageID(imgDigest),
 		Platform: &platform.Platform{
 			Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
-			Runtime: platform.RUNTIME_DOCKER_REGISTRY,
+			Runtime: transports.RUNTIME_DOCKER_REGISTRY,
 		},
 		Connections: []*transports.TransportConfig{
 			&transports.TransportConfig{

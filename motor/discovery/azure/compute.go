@@ -178,7 +178,7 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*asset.Asset, error) {
 			Name: *instance.Name,
 			Platform: &platform.Platform{
 				Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
-				Runtime: platform.RUNTIME_AZ_COMPUTE,
+				Runtime: transports.RUNTIME_AZ_COMPUTE,
 			},
 			Connections: connections,
 			// State:       mapInstanceState(instance.Status),
