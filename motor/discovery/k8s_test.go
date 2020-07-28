@@ -1,4 +1,4 @@
-package resolver
+package discovery
 
 import (
 	"testing"
