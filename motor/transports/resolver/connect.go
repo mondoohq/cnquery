@@ -30,8 +30,13 @@ func ConnectAsset(assetObj *asset.Asset, record bool) (*motor.Motor, error) {
 
 	// TODO: we may want to allow multiple connection trials later
 	tc := assetObj.Connections[0]
-	tc.Kind = assetObj.Platform.Kind
-	tc.Runtime = assetObj.Platform.Runtime
+
+	// some transports have their own kind/runtime information already
+	// NOTE: going forward we may want to enforce that assets have at least kind and runtime information
+	if assetObj.Platform != nil {
+		tc.Kind = assetObj.Platform.Kind
+		tc.Runtime = assetObj.Platform.Runtime
+	}
 
 	// parse reference id and restore options
 	if len(assetObj.ReferenceIDs) > 0 {
