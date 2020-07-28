@@ -3,6 +3,7 @@ package resources
 import (
 	"errors"
 
+	"github.com/vmware/govmomi/object"
 	"go.mondoo.io/mondoo/lumi/resources/vsphere"
 	"go.mondoo.io/mondoo/motor/transports"
 	vsphere_transport "go.mondoo.io/mondoo/motor/transports/vsphere"
@@ -558,33 +559,52 @@ func (v *lumiEsxi) GetHost() (interface{}, error) {
 		return nil, errors.New("esxi resource is not supported on this transport")
 	}
 
+	var h *object.HostSystem
 	vClient := vt.Client()
-	if vClient.IsVC() {
-		return nil, errors.New("esxi resource is only supported for esxi connections, not vsphere connections")
-	}
-
 	cl := vsphere.New(vClient)
-	dcs, err := cl.ListDatacenters()
-	if err != nil {
-		return nil, err
+	if !vClient.IsVC() {
+		// ESXi connections only have one host
+		dcs, err := cl.ListDatacenters()
+		if err != nil {
+			return nil, err
+		}
+
+		if len(dcs) != 1 {
+			return nil, errors.New("could not find single esxi datacenter")
+		}
+
+		dc := dcs[0]
+
+		hosts, err := cl.ListHosts(dc)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(hosts) != 1 {
+			return nil, errors.New("could not find single esxi host")
+		}
+
+		h = hosts[0]
+	} else {
+
+		// check if the the connection was initialized with a specific host
+		identifier, err := vt.Identifier()
+		if err != nil || !vsphere_transport.IsVsphereResourceID(identifier) {
+			return nil, errors.New("esxi resource is only supported for esxi connections or vsphere vm connections")
+		}
+
+		// extract type and inventory
+		typ, inventoryPath, err := vsphere_transport.ParseVsphereResourceID(identifier)
+
+		if typ != "HostSystem" {
+			return nil, errors.New("esxi resource is not supported for vsphere type " + typ)
+		}
+
+		h, err = cl.Host(inventoryPath)
+		if err != nil {
+			return nil, errors.New("could not find the esxi host via platform id: " + identifier)
+		}
 	}
-
-	if len(dcs) != 1 {
-		return nil, errors.New("could not find single esxi datacenter")
-	}
-
-	dc := dcs[0]
-
-	hosts, err := cl.ListHosts(dc)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(hosts) != 1 {
-		return nil, errors.New("could not find single esxi host")
-	}
-
-	h := hosts[0]
 
 	// todo sync with GetHosts
 	props, err := cl.HostProperties(h)
@@ -602,4 +622,50 @@ func (v *lumiEsxi) GetHost() (interface{}, error) {
 		return nil, err
 	}
 	return lumiHost, nil
+}
+
+func (v *lumiEsxi) GetVm() (interface{}, error) {
+	t := v.Runtime.Motor.Transport
+	vt, ok := t.(*vsphere_transport.Transport)
+	if !ok {
+		return nil, errors.New("esxi resource is not supported on this transport")
+	}
+
+	vClient := vt.Client()
+	cl := vsphere.New(vClient)
+
+	// check if the the connection was initialized with a specific host
+	identifier, err := vt.Identifier()
+	if err != nil || !vsphere_transport.IsVsphereResourceID(identifier) {
+		return nil, errors.New("esxi resource is only supported for esxi connections or vsphere vm connections")
+	}
+
+	// extract type and inventory
+	typ, inventoryPath, err := vsphere_transport.ParseVsphereResourceID(identifier)
+
+	if typ != "VirtualMachine" {
+		return nil, errors.New("esxi resource is not supported for vsphere type " + typ)
+	}
+
+	vm, err := cl.VirtualMachine(inventoryPath)
+	if err != nil {
+		return nil, errors.New("could not find the esxi vm via platform id: " + identifier)
+	}
+
+	props, err := vsphere.VmProperties(vm)
+	if err != nil {
+		return nil, err
+	}
+
+	lumiVm, err := v.Runtime.CreateResource("vsphere.vm",
+		"moid", vm.Reference().Value,
+		"name", vm.Name(),
+		"properties", props,
+		"inventorypath", vm.InventoryPath,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return lumiVm, nil
 }
