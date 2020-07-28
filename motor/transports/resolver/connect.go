@@ -40,7 +40,7 @@ func ConnectAsset(assetObj *asset.Asset, record bool) (*motor.Motor, error) {
 
 	// parse reference id and restore options
 	if len(assetObj.ReferenceIDs) > 0 {
-		tc.Resourceid = assetObj.ReferenceIDs[0]
+		tc.Platformid = assetObj.ReferenceIDs[0]
 	}
 
 	return Connect(tc, "", tc.Insecure, record)

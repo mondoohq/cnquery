@@ -59,8 +59,8 @@ message TransportConfig {
   Kind kind = 24;
   string runtime = 25;
 
-  // configuration to uniquly identify an asset eg. via api
-  string resourceid = 26;
+  // configuration to uniquly identify an specific asset for multi-asset api connection
+  string platformid = 26;
 }
 
 message Sudo {

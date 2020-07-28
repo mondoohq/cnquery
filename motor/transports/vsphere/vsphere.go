@@ -39,20 +39,20 @@ func New(endpoint *transports.TransportConfig) (*Transport, error) {
 	}
 
 	return &Transport{
-		client:  client,
-		kind:    endpoint.Kind,
-		runtime: endpoint.Runtime,
-		opts:    endpoint.Options,
-		resid:   endpoint.Resourceid,
+		client:             client,
+		kind:               endpoint.Kind,
+		runtime:            endpoint.Runtime,
+		opts:               endpoint.Options,
+		selectedPlatformID: endpoint.Platformid,
 	}, nil
 }
 
 type Transport struct {
-	client  *govmomi.Client
-	kind    transports.Kind
-	runtime string
-	opts    map[string]string
-	resid   string
+	client             *govmomi.Client
+	kind               transports.Kind
+	runtime            string
+	opts               map[string]string
+	selectedPlatformID string
 }
 
 func (t *Transport) RunCommand(command string) (*transports.Command, error) {
