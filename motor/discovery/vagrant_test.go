@@ -1,11 +1,11 @@
-package resolver_test
+package discovery_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/asset/resolver"
+	"go.mondoo.io/mondoo/motor/discovery"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
@@ -17,7 +17,7 @@ func TestVagrantSshConfigParsing(t *testing.T) {
 	cmd, err := mock.RunCommand("vagrant ssh-config debian10")
 	require.NoError(t, err)
 
-	config, err := resolver.ParseVagrantSshConfig(cmd.Stdout)
+	config, err := discovery.ParseVagrantSshConfig(cmd.Stdout)
 	require.NoError(t, err)
 
 	assert.Equal(t, 1, len(config))
@@ -34,7 +34,7 @@ func TestVagrantStatusParsing(t *testing.T) {
 	cmd, err := mock.RunCommand("vagrant status")
 	require.NoError(t, err)
 
-	vms, err := resolver.ParseVagrantStatus(cmd.Stdout)
+	vms, err := discovery.ParseVagrantStatus(cmd.Stdout)
 	require.NoError(t, err)
 
 	assert.Equal(t, 9, len(vms))
