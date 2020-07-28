@@ -120,7 +120,7 @@ func (e *dockerEngineDiscovery) ListContainer() ([]*asset.Asset, error) {
 			// ParentReferenceID: dContainer.ImageID,
 			Platform: &platform.Platform{
 				Kind:    transports.Kind_KIND_CONTAINER,
-				Runtime: platform.RUNTIME_DOCKER_CONTAINER,
+				Runtime: transports.RUNTIME_DOCKER_CONTAINER,
 			},
 			Connections: []*transports.TransportConfig{
 				&transports.TransportConfig{

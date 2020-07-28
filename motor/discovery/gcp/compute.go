@@ -159,7 +159,7 @@ func (a *Compute) instancesPerZone(svc *compute.Service, project string, zone st
 			Name:         instance.Name,
 			Platform: &platform.Platform{
 				Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
-				Runtime: platform.RUNTIME_GCP_COMPUTE,
+				Runtime: transports.RUNTIME_GCP_COMPUTE,
 			},
 			Connections: connections,
 			State:       mapInstanceState(instance.Status),

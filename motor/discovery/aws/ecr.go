@@ -52,7 +52,7 @@ func (a *EcrImages) List() ([]*asset.Asset, error) {
 				// Name:         strings.Join(dImg.RepoTags, ","),
 				Platform: &platform.Platform{
 					Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
-					Runtime: platform.RUNTIME_AWS_ECR,
+					Runtime: transports.RUNTIME_AWS_ECR,
 				},
 				Connections: []*transports.TransportConfig{
 					&transports.TransportConfig{
