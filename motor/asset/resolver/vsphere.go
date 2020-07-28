@@ -42,21 +42,20 @@ func (v *vsphereResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnO
 		return nil, err
 	}
 
-	info := trans.Info()
+	// detect platform info for the asset
+	detector := platform.NewDetector(trans)
+	pf, err := detector.Platform()
+	if err != nil {
+		return nil, err
+	}
 
 	// add asset for the api itself
+	info := trans.Info()
 	resolved = append(resolved, &asset.Asset{
 		ReferenceIDs: []string{identifier},
 		Name:         info.Name,
-		// TODO: we have the same thing in the detector (can we leverage the detector here)
-		Platform: &platform.Platform{
-			Name:    "vmware-vsphere",
-			Title:   info.FullName,
-			Release: info.Version,
-			Kind:    transports.Kind_KIND_API,
-			Runtime: platform.RUNTIME_VSPHERE,
-		},
-		Connections: []*transports.TransportConfig{t}, // pass-in the current config
+		Platform:     pf,
+		Connections:  []*transports.TransportConfig{t}, // pass-in the current config
 	})
 
 	// resolve esxi hosts
@@ -72,6 +71,13 @@ func (v *vsphereResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnO
 		// pass-through "vsphere.vmware.com/reference-type" and "vsphere.vmware.com/inventorypath"
 		ht.Options = host.Annotations
 		host.Connections = append(host.Connections, ht)
+
+		pf, err := platform.VspherePlatform(trans, host.ReferenceIDs[0])
+		if err == nil {
+			host.Platform = pf
+		} else {
+			log.Error().Err(err).Msg("could not determine platform information for esxi host")
+		}
 
 		resolved = append(resolved, host)
 	}
@@ -89,6 +95,14 @@ func (v *vsphereResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnO
 		// pass-through "vsphere.vmware.com/reference-type" and "vsphere.vmware.com/inventorypath"
 		vt.Options = vm.Annotations
 		vm.Connections = append(vm.Connections, vt)
+
+		pf, err := platform.VspherePlatform(trans, vm.ReferenceIDs[0])
+		if err == nil {
+			vm.Platform = pf
+		} else {
+			log.Error().Err(err).Msg("could not determine platform information for esxi vm")
+		}
+
 		resolved = append(resolved, vm)
 	}
 

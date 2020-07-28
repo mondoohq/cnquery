@@ -38,33 +38,11 @@ func (d *Detector) Platform() (*Platform, error) {
 	var pi *Platform
 	switch pt := d.transport.(type) {
 	case *vsphere.Transport:
-		if pt.Client().IsVC() {
-			about := pt.Client().ServiceContent.About
-			return &Platform{
-				Name:    "vmware-vsphere",
-				Title:   about.Name,
-				Release: about.Version,
-				Kind:    d.transport.Kind(),
-				Runtime: d.transport.Runtime(),
-			}, nil
-		} else {
-			host, err := pt.GetHost()
-			if err != nil {
-				return nil, err
-			}
-			sv, err := pt.EsxiVersion(host)
-			if err != nil {
-				return nil, err
-			}
-			return &Platform{
-				Name:    "vmware-esxi",
-				Title:   "VMware ESXi",
-				Release: sv.Version,
-				Kind:    d.transport.Kind(),
-				Runtime: d.transport.Runtime(),
-			}, nil
+		identifier, err := pt.Identifier()
+		if err != nil {
+			return nil, err
 		}
-
+		return VspherePlatform(pt, identifier)
 	case *arista.Transport:
 		return &Platform{
 			Name:    "arista-eos",
