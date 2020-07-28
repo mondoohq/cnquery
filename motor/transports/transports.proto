@@ -5,17 +5,17 @@ option go_package = "go.mondoo.io/mondoo/motor/transports";
 
 enum TransportBackend {
   CONNECTION_LOCAL_OS = 0;
-  CONNECTION_DOCKER_IMAGE = 1;
-  CONNECTION_DOCKER_CONTAINER = 2;
+  CONNECTION_DOCKER_ENGINE_IMAGE = 1;
+  CONNECTION_DOCKER_ENGINE_CONTAINER = 2;
   CONNECTION_SSH = 3;
   CONNECTION_WINRM = 4;
   CONNECTION_AWS_SSM_RUN_COMMAND = 5;
-  // TODO: docker registry does not belong here, since this is only for asset resolution
-  CONNECTION_DOCKER_REGISTRY = 6;
+  CONNECTION_CONTAINER_REGISTRY = 6;
   CONNECTION_TAR = 7;
   CONNECTION_MOCK = 8;
   CONNECTION_VSPHERE = 9;
   CONNECTION_ARISTAEOS = 10;
+  CONNECTION_CONTAINER_TAR = 11;
 }
 
 enum Kind {

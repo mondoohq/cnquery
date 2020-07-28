@@ -56,7 +56,7 @@ func (a *EcrImages) List() ([]*asset.Asset, error) {
 				},
 				Connections: []*transports.TransportConfig{
 					&transports.TransportConfig{
-						Backend: transports.TransportBackend_CONNECTION_DOCKER_REGISTRY,
+						Backend: transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY,
 						Host:    registryURL,
 					},
 				},

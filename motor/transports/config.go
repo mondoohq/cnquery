@@ -21,13 +21,6 @@ func (conn *TransportConfig) Clone() *TransportConfig {
 // valid URIs are:
 // - local:// (default)
 func (t *TransportConfig) ParseFromURI(uri string) error {
-	// special handling for docker since it is not a valid url
-	if strings.HasPrefix(uri, "docker://") {
-		t.Backend = TransportBackend_CONNECTION_DOCKER_CONTAINER
-		t.Host = strings.Replace(uri, "docker://", "", 1)
-		return nil
-	}
-
 	if uri == "" {
 		return errors.New("uri cannot be empty")
 	}
@@ -64,11 +57,6 @@ func backend(scheme string) (TransportBackend, error) {
 	switch scheme {
 	case "ssh":
 		return TransportBackend_CONNECTION_SSH, nil
-	case "docker":
-		// TODO: lets figure out if this is good enough
-		// NOTE: this only works because they all convert back to the same types Backend
-		// TODO: this may be dangerous and may lead to unexpected behaviour
-		return TransportBackend_CONNECTION_DOCKER_IMAGE, nil
 	case "local":
 		return TransportBackend_CONNECTION_LOCAL_OS, nil
 	case "winrm":
@@ -108,12 +96,12 @@ func (conn *TransportConfig) ToUrl() string {
 	switch conn.Backend {
 	case TransportBackend_CONNECTION_SSH:
 		return "ssh://" + conn.Host
-	case TransportBackend_CONNECTION_DOCKER_CONTAINER:
+	case TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER:
 		if len(conn.Host) > 12 {
 			return "docker://" + conn.Host[:12]
 		}
 		return "docker://" + conn.Host
-	case TransportBackend_CONNECTION_DOCKER_IMAGE:
+	case TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE:
 		if strings.HasPrefix(conn.Host, "sha256:") {
 			host := strings.Replace(conn.Host, "sha256:", "", -1)
 			if len(host) > 12 {
@@ -129,7 +117,7 @@ func (conn *TransportConfig) ToUrl() string {
 		return "winrm://" + conn.Host
 	case TransportBackend_CONNECTION_AWS_SSM_RUN_COMMAND:
 		return "aws-ssm://" + conn.Host
-	case TransportBackend_CONNECTION_DOCKER_REGISTRY:
+	case TransportBackend_CONNECTION_CONTAINER_REGISTRY:
 		return "docker://" + conn.Host + conn.Path
 	case TransportBackend_CONNECTION_TAR:
 		return "tar://" + conn.Path

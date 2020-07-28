@@ -3,12 +3,20 @@ package resolver
 import (
 	"fmt"
 
+	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/mutate"
+	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor"
+	docker_discovery "go.mondoo.io/mondoo/motor/discovery/docker_engine"
 	"go.mondoo.io/mondoo/motor/motorid"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/arista"
+	"go.mondoo.io/mondoo/motor/transports/docker/docker_engine"
+	"go.mondoo.io/mondoo/motor/transports/docker/image"
+	"go.mondoo.io/mondoo/motor/transports/docker/snapshot"
 	"go.mondoo.io/mondoo/motor/transports/local"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 	"go.mondoo.io/mondoo/motor/transports/ssh"
@@ -95,21 +103,6 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 		if endpoint.Record {
 			m.ActivateRecorder()
 		}
-	// case "nodejs":
-	// 	log.Debug().Msg("connection> load nodejs transport")
-	// 	// NOTE: while similar to local transport, the ids are completely different
-	// 	trans, err := local.New()
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-
-	// 	m, err = motor.New(trans)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	if endpoint.Record {
-	// 		m.ActivateRecorder()
-	// 	}
 	case transports.TransportBackend_CONNECTION_LOCAL_OS:
 		log.Debug().Msg("connection> load local transport")
 		trans, err := local.New()
@@ -148,13 +141,71 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 		if endpoint.Record {
 			m.ActivateRecorder()
 		}
-	case transports.TransportBackend_CONNECTION_DOCKER_CONTAINER:
-		fallthrough
-	case transports.TransportBackend_CONNECTION_DOCKER_REGISTRY:
-		fallthrough
-	case transports.TransportBackend_CONNECTION_DOCKER_IMAGE:
-		log.Debug().Str("backend", endpoint.Backend.String()).Str("host", endpoint.Host).Str("path", endpoint.Path).Msg("connection> load docker transport")
-		trans, info, err := ResolveDockerTransport(endpoint)
+	case transports.TransportBackend_CONNECTION_CONTAINER_TAR:
+		trans, info, err := containertar(endpoint)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(trans)
+		if err != nil {
+			return nil, err
+		}
+
+		if endpoint.Record {
+			m.ActivateRecorder()
+		}
+
+		name = info.Name
+		labels = info.Labels
+
+		// TODO: can we make the id optional here, we may want to use an approach that is similar to ssh
+		if len(info.Identifier) > 0 {
+			identifier = append(identifier, info.Identifier)
+		}
+	case transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY:
+		trans, info, err := containerregistry(endpoint)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(trans)
+		if err != nil {
+			return nil, err
+		}
+
+		if endpoint.Record {
+			m.ActivateRecorder()
+		}
+
+		name = info.Name
+		labels = info.Labels
+
+		// TODO: can we make the id optional here, we may want to use an approach that is similar to ssh
+		if len(info.Identifier) > 0 {
+			identifier = append(identifier, info.Identifier)
+		}
+	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER:
+		trans, info, err := dockerenginecontainer(endpoint)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(trans)
+		if err != nil {
+			return nil, err
+		}
+
+		if endpoint.Record {
+			m.ActivateRecorder()
+		}
+
+		name = info.Name
+		labels = info.Labels
+
+		// TODO: can we make the id optional here, we may want to use an approach that is similar to ssh
+		if len(info.Identifier) > 0 {
+			identifier = append(identifier, info.Identifier)
+		}
+	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE:
+		trans, info, err := dockerengineimage(endpoint)
 		if err != nil {
 			return nil, err
 		}
@@ -271,4 +322,136 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 	}
 
 	return m, err
+}
+
+// TODO: move individual docker handling to specific transport
+type DockerInfo struct {
+	Name       string
+	Identifier string
+	Labels     map[string]string
+}
+
+func containerregistry(endpoint *transports.TransportConfig) (transports.Transport, DockerInfo, error) {
+	// load container image from remote directoryload tar file into backend
+	ref, err := name.ParseReference(endpoint.Host, name.WeakValidation)
+	if err == nil {
+		log.Debug().Str("ref", ref.Name()).Msg("found valid container registry reference")
+
+		registryOpts := []image.Option{image.WithInsecure(endpoint.Insecure)}
+		if len(endpoint.BearerToken) > 0 {
+			log.Debug().Msg("enable bearer authentication for image")
+			registryOpts = append(registryOpts, image.WithAuthenticator(&authn.Bearer{Token: endpoint.BearerToken}))
+		}
+
+		// image.WithAuthenticator()
+		img, rc, err := image.LoadFromRegistry(ref, registryOpts...)
+		if err != nil {
+			return nil, DockerInfo{}, err
+		}
+
+		var identifier string
+		hash, err := img.Digest()
+		if err == nil {
+			identifier = docker_discovery.MondooContainerImageID(hash.String())
+		}
+
+		transport, err := image.New(rc)
+		return transport, DockerInfo{
+			Name:       docker_discovery.ShortContainerImageID(hash.String()),
+			Identifier: identifier,
+		}, err
+	}
+	log.Debug().Str("image", endpoint.Host).Msg("Could not detect a valid repository url")
+	return nil, DockerInfo{}, err
+}
+
+func dockerenginecontainer(endpoint *transports.TransportConfig) (transports.Transport, DockerInfo, error) {
+	// could be an image id/name, container id/name or a short reference to an image in docker engine
+	ded, err := docker_discovery.NewDockerEngineDiscovery()
+	if err != nil {
+		return nil, DockerInfo{}, err
+	}
+
+	ci, err := ded.ContainerInfo(endpoint.Host)
+	if err != nil {
+		return nil, DockerInfo{}, err
+	}
+
+	if ci.Running {
+		log.Debug().Msg("found running container " + ci.ID)
+		transport, err := docker_engine.New(ci.ID)
+		return transport, DockerInfo{
+			Name:       docker_discovery.ShortContainerImageID(ci.ID),
+			Identifier: docker_discovery.MondooContainerID(ci.ID),
+			Labels:     ci.Labels,
+		}, err
+	} else {
+		log.Debug().Msg("found stopped container " + ci.ID)
+		transport, err := snapshot.NewFromDockerEngine(ci.ID)
+		return transport, DockerInfo{
+			Name:       docker_discovery.ShortContainerImageID(ci.ID),
+			Identifier: docker_discovery.MondooContainerID(ci.ID),
+			Labels:     ci.Labels,
+		}, err
+	}
+}
+
+func dockerengineimage(endpoint *transports.TransportConfig) (transports.Transport, DockerInfo, error) {
+	// could be an image id/name, container id/name or a short reference to an image in docker engine
+	ded, err := docker_discovery.NewDockerEngineDiscovery()
+	if err != nil {
+		return nil, DockerInfo{}, err
+	}
+
+	ii, err := ded.ImageInfo(endpoint.Host)
+	if err != nil {
+		return nil, DockerInfo{}, err
+	}
+
+	log.Debug().Msg("found docker engine image " + ii.ID)
+	img, rc, err := image.LoadFromDockerEngine(ii.ID)
+	if err != nil {
+		return nil, DockerInfo{}, err
+	}
+
+	var identifier string
+	hash, err := img.Digest()
+	if err == nil {
+		identifier = docker_discovery.MondooContainerImageID(hash.String())
+	}
+
+	transport, err := image.New(rc)
+	return transport, DockerInfo{
+		Name:       ii.Name,
+		Identifier: identifier,
+		Labels:     ii.Labels,
+	}, err
+}
+
+func containertar(endpoint *transports.TransportConfig) (transports.Transport, DockerInfo, error) {
+	log.Debug().Msg("found local docker/image file")
+
+	// try to load docker image tarball
+	img, err := tarball.ImageFromPath(endpoint.Host, nil)
+	if err == nil {
+		log.Debug().Msg("detected docker image")
+		var identifier string
+
+		hash, err := img.Digest()
+		if err == nil {
+			identifier = docker_discovery.MondooContainerImageID(hash.String())
+		} else {
+			log.Warn().Err(err).Msg("could not determine referenceid")
+		}
+
+		rc := mutate.Extract(img)
+		transport, err := image.New(rc)
+		return transport, DockerInfo{
+			Identifier: identifier,
+		}, err
+	}
+
+	log.Debug().Msg("detected docker container snapshot")
+	transport, err := snapshot.NewFromFile(endpoint.Host)
+	return transport, DockerInfo{}, err
 }
