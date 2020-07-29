@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.mondoo.io/mondoo/types"
 )
@@ -86,6 +87,12 @@ func opFloatCmpFloat(left interface{}, right interface{}) bool {
 
 func opStringCmpString(left interface{}, right interface{}) bool {
 	return left.(string) == right.(string)
+}
+
+func opTimeCmpTime(left interface{}, right interface{}) bool {
+	l := left.(time.Time)
+	r := right.(time.Time)
+	return l.Equal(r)
 }
 
 func opStringCmpInt(left interface{}, right interface{}) bool {
@@ -177,6 +184,14 @@ func stringCmpString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (
 
 func stringNotString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataNotOp(c, bind, chunk, ref, opStringCmpString)
+}
+
+func timeCmpTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opTimeCmpTime)
+}
+
+func timeNotTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opTimeCmpTime)
 }
 
 // string vs other types
@@ -425,6 +440,32 @@ func nilNotFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return dataNotOp(c, bind, chunk, ref, opNilCmpFloat)
 }
 
+// time ==/!= nil
+
+func opTimeCmpNil(left interface{}, right interface{}) bool {
+	return left == nil
+}
+
+func opNilCmpTime(left interface{}, right interface{}) bool {
+	return right == nil
+}
+
+func timeCmpNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opTimeCmpNil)
+}
+
+func timeNotNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opTimeCmpNil)
+}
+
+func nilCmpTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opNilCmpTime)
+}
+
+func nilNotTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opNilCmpTime)
+}
+
 // string </>/<=/>= string
 
 func stringLTString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -500,6 +541,40 @@ func floatGTFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 func floatGTEFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
 		return left.(float64) >= right.(float64)
+	})
+}
+
+// time </>/<=/>= time
+
+func timeLTTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+		l := left.(time.Time)
+		r := right.(time.Time)
+		return l.Before(r)
+	})
+}
+
+func timeLTETime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+		l := left.(time.Time)
+		r := right.(time.Time)
+		return l.Before(r) || l.Equal(r)
+	})
+}
+
+func timeGTTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+		l := left.(time.Time)
+		r := right.(time.Time)
+		return l.After(r)
+	})
+}
+
+func timeGTETime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+		l := left.(time.Time)
+		r := right.(time.Time)
+		return l.After(r) || l.Equal(r)
 	})
 }
 
@@ -881,6 +956,38 @@ func regexAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 
 func regexOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opStringOrBool)
+}
+
+func opBoolAndTime(left interface{}, right interface{}) bool {
+	return left.(bool) && (!right.(time.Time).IsZero())
+}
+
+func opTimeAndBool(left interface{}, right interface{}) bool {
+	return right.(bool) && (!left.(time.Time).IsZero())
+}
+
+func opBoolOrTime(left interface{}, right interface{}) bool {
+	return left.(bool) || (!right.(time.Time).IsZero())
+}
+
+func opTimeOrBool(left interface{}, right interface{}) bool {
+	return right.(bool) || (!left.(time.Time).IsZero())
+}
+
+func boolAndTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opBoolAndTime)
+}
+
+func boolOrTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opBoolOrTime)
+}
+
+func timeAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opTimeAndBool)
+}
+
+func timeOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opTimeOrBool)
 }
 
 func opBoolAndArray(left interface{}, right interface{}) bool {
