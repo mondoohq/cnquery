@@ -563,6 +563,8 @@ func (t *SimpleType) mondooTypeItems() string {
 		return "types.String"
 	case "regex":
 		return "types.Regex"
+	case "time":
+		return "types.Time"
 	default:
 		return "types.Resource(\"" + t.Type + "\")"
 	}
