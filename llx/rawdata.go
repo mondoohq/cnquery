@@ -3,6 +3,7 @@ package llx
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/types"
@@ -38,6 +39,8 @@ func rawDataString(typ types.Type, value interface{}) string {
 		return "\"" + value.(string) + "\""
 	case types.Regex:
 		return "/" + value.(string) + "/"
+	case types.Time:
+		return value.(time.Time).String()
 	case types.ArrayLike:
 		var res strings.Builder
 		arr := value.([]interface{})
@@ -122,6 +125,9 @@ func isTruthy(data interface{}, typ types.Type) (bool, bool) {
 
 	case types.Regex:
 		return data.(string) != "", true
+
+	case types.Time:
+		return !data.(time.Time).IsZero(), true
 
 	case types.ArrayLike:
 		arr := data.([]interface{})
@@ -218,6 +224,14 @@ func RegexData(r string) *RawData {
 	return &RawData{
 		Type:  types.Regex,
 		Value: r,
+	}
+}
+
+// TimeData creates a rawdata struct from a go time
+func TimeData(t time.Time) *RawData {
+	return &RawData{
+		Type:  types.Time,
+		Value: t,
 	}
 }
 

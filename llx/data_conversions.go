@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/types"
@@ -24,6 +25,7 @@ func init() {
 		types.Float:        float2result,
 		types.String:       string2result,
 		types.Regex:        regex2result,
+		types.Time:         time2result,
 		types.ArrayLike:    array2result,
 		types.MapLike:      map2result,
 		types.ResourceLike: resource2result,
@@ -38,6 +40,7 @@ func init() {
 		types.Float:        pfloat2raw,
 		types.String:       pstring2raw,
 		types.Regex:        pregex2raw,
+		types.Time:         ptime2raw,
 		types.ArrayLike:    parray2raw,
 		types.MapLike:      pmap2raw,
 		types.ResourceLike: presource2raw,
@@ -71,6 +74,10 @@ func string2result(value interface{}, typ types.Type) (*Primitive, error) {
 
 func regex2result(value interface{}, typ types.Type) (*Primitive, error) {
 	return RegexPrimitive(value.(string)), nil
+}
+
+func time2result(value interface{}, typ types.Type) (*Primitive, error) {
+	return TimePrimitive(value.(time.Time)), nil
 }
 
 func array2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -207,6 +214,10 @@ func pstring2raw(p *Primitive) *RawData {
 
 func pregex2raw(p *Primitive) *RawData {
 	return RegexData(string(p.Value))
+}
+
+func ptime2raw(p *Primitive) *RawData {
+	return TimeData(bytes2time(p.Value))
 }
 
 func parray2raw(p *Primitive) *RawData {

@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"math"
+	"time"
 )
 
 func bool2bytes(b bool) []byte {
@@ -41,4 +42,10 @@ func float2bytes(f float64) []byte {
 
 func bytes2float(b []byte) float64 {
 	return math.Float64frombits(binary.LittleEndian.Uint64(b))
+}
+
+func bytes2time(b []byte) time.Time {
+	secs := int64(binary.LittleEndian.Uint64(b[0:8]))
+	nanos := int64(binary.LittleEndian.Uint32(b[8:]))
+	return time.Unix(secs, nanos)
 }
