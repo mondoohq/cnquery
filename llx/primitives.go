@@ -1,6 +1,11 @@
 package llx
 
-import "go.mondoo.io/mondoo/types"
+import (
+	"encoding/binary"
+	"time"
+
+	"go.mondoo.io/mondoo/types"
+)
 
 // NilPrimitive is the empty primitive
 var NilPrimitive = &Primitive{Type: string(types.Nil)}
@@ -42,6 +47,26 @@ func RegexPrimitive(r string) *Primitive {
 	return &Primitive{
 		Type:  string(types.Regex),
 		Value: []byte(r),
+	}
+}
+
+// borrowed from time library.
+// these will help with representing everything
+const nsecMask = 1<<30 - 1
+const nsecShift = 30
+
+// TimePrimitive creates a primitive from a time value
+func TimePrimitive(t time.Time) *Primitive {
+	seconds := t.Unix()
+	nanos := int32(t.UnixNano() % 1e9)
+
+	v := make([]byte, 12)
+	binary.LittleEndian.PutUint64(v, uint64(seconds))
+	binary.LittleEndian.PutUint32(v[8:], uint32(nanos))
+
+	return &Primitive{
+		Type:  string(types.Time),
+		Value: v,
 	}
 }
 

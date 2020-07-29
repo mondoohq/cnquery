@@ -12,7 +12,8 @@ const (
 	byteFloat
 	byteString
 	byteRegex
-	byteArray = 1<<4 + iota // 24
+	byteTime
+	byteArray = 1<<4 + iota - 1 // set to 24 to avoid breaking changes
 	byteMap
 	byteResource
 	byteFunction
@@ -35,6 +36,8 @@ const (
 	String = Type(byteString)
 	// Regex for regular expressions
 	Regex = Type(byteRegex)
+	// Time for date and time
+	Time = Type(byteTime)
 	// ArrayLike is the underlying type of all arrays
 	ArrayLike = Type(byteArray)
 	// MapLike is the underlying type of all arrays
@@ -139,6 +142,7 @@ var labels = map[byte]string{
 	byteFloat:  "float",
 	byteString: "string",
 	byteRegex:  "regex",
+	byteTime:   "time",
 }
 
 var labelfun map[byte]func(Type) string
