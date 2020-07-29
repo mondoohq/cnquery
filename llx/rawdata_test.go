@@ -2,10 +2,13 @@ package llx
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/types"
 )
+
+var now = time.Now()
 
 func TestRawData_String(t *testing.T) {
 	tests := []struct {
@@ -19,6 +22,7 @@ func TestRawData_String(t *testing.T) {
 		{FloatData(123), "123"},
 		{StringData("yo"), "\"yo\""},
 		{RegexData("ex"), "/ex/"},
+		{TimeData(now), now.String()},
 		{ArrayData([]interface{}{"a", "b"}, types.String), "[\"a\",\"b\"]"},
 		{MapData(map[string]interface{}{"a": "b"}, types.String), "{\"a\":\"b\"}"},
 		// implicit nil:
@@ -46,6 +50,8 @@ func TestTruthy(t *testing.T) {
 		{StringData("b"), true},
 		{RegexData(""), false},
 		{RegexData("r"), true},
+		{TimeData(time.Time{}), false},
+		{TimeData(now), true},
 		{ArrayData([]interface{}{}, types.Any), true},
 		{ArrayData([]interface{}{false}, types.Bool), false},
 		{ArrayData([]interface{}{true}, types.Bool), true},
