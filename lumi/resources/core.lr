@@ -600,3 +600,34 @@ aws.iam.virtualmfadevice {
   enabledate int
   user aws.iam.user
 }
+
+aws.cloudtrail {
+  trails() []aws.cloudtrail.trail
+}
+
+aws.cloudtrail.trail {
+  Arn string
+  Name string
+  IsMultiRegionTrail bool
+  IsOrganizationTrail bool
+  LogFileValidationEnabled bool
+  IncludeGlobalServiceEvents bool
+  S3BucketName string
+  SnsTopicARN string
+  status() aws.cloudtrail.trailstatus
+}
+
+aws.cloudtrail.trailstatus {
+  Arn string
+  IsLogging bool
+  LatestCloudWatchLogsDeliveryError string
+  LatestCloudWatchLogsDeliveryTime int
+  LatestDeliveryError string
+  LatestDeliveryTime int
+  LatestDigestDeliveryError string
+  LatestDigestDeliveryTime int
+  LatestNotificationError string
+  LatestNotificationTime int
+  StartLoggingTime int
+  StopLoggingTime int
+}
