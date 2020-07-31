@@ -633,18 +633,29 @@ aws.cloudtrail.trailstatus {
 }
 
 aws.s3 {
-  buckets []aws.s3.bucket
+  buckets() []aws.s3.bucket
 }
 
 aws.s3.bucket {
   name string
-  creationDate int
   policy() string
-  tags map[string]string
+  tags() map[string]string
+  acl() []aws.s3.bucket.grant
+  owner() map[string]string
+  public() bool
   cors() []aws.s3.bucket.corsrule
+  location() string
+}
+
+aws.s3.bucket.grant {
+  id string
+  name string
+  permission string
+  grantee map[string]string
 }
 
 aws.s3.bucket.corsrule {
+  name string
   allowedHeaders []string
   allowedMethods []string
   allowedOrigins []string
