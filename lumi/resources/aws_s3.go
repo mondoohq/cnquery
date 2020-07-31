@@ -2,12 +2,15 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws/endpoints"
 	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/lumi/resources/awspolicy"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
@@ -65,15 +68,15 @@ func (p *lumiAwsS3Bucket) id() (string, error) {
 	return p.Name()
 }
 
-func (p *lumiAwsS3Bucket) GetPolicy() (string, error) {
+func (p *lumiAwsS3Bucket) GetPolicy() (interface{}, error) {
 	bucketname, err := p.Name()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	location, err := p.Location()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	ctx := context.Background()
@@ -85,16 +88,26 @@ func (p *lumiAwsS3Bucket) GetPolicy() (string, error) {
 	isAwsErr, code := IsAwsCode(err)
 	// aws code NoSuchBucketPolicy in case no policy exists
 	if err != nil && isAwsErr && code == "NoSuchBucketPolicy" {
-		return "", nil
+		return nil, errors.New("the specified bucket does not have a bucket policy")
 	} else if err != nil {
 		log.Error().Err(err).Msg("could not retrieve bucket policy")
-		return "", err
+		return nil, err
 	}
 
 	if policy != nil && policy.Policy != nil {
-		return *policy.Policy, nil
+		// create the plicy resource
+		lumiS3BucketPolicy, err := p.Runtime.CreateResource("aws.s3.bucket.policy",
+			"name", bucketname,
+			"document", toString(policy.Policy),
+		)
+		if err != nil {
+			return nil, err
+		}
+		return lumiS3BucketPolicy, nil
 	}
-	return "", nil
+
+	// no bucket policy found
+	return nil, errors.New("the specified bucket does not have a bucket policy")
 }
 
 func (p *lumiAwsS3Bucket) GetTags() (map[string]interface{}, error) {
@@ -304,4 +317,90 @@ func (p *lumiAwsS3BucketCorsrule) id() (string, error) {
 		return "", err
 	}
 	return "s3.bucket.corsrule " + name, nil
+}
+
+func (p *lumiAwsS3BucketPolicy) id() (string, error) {
+	return p.Name()
+}
+
+func (p *lumiAwsS3BucketPolicy) parsePolicyDocument() (*awspolicy.S3BucketPolicy, error) {
+	data, err := p.Document()
+	if err != nil {
+		return nil, err
+	}
+
+	var policy awspolicy.S3BucketPolicy
+	err = json.Unmarshal([]byte(data), &policy)
+	if err != nil {
+		return nil, err
+	}
+
+	return &policy, nil
+}
+
+func (p *lumiAwsS3BucketPolicy) GetVersion() (string, error) {
+	policy, err := p.parsePolicyDocument()
+	if err != nil {
+		return "", err
+	}
+	return policy.Version, nil
+}
+
+func (p *lumiAwsS3BucketPolicy) GetId() (string, error) {
+	policy, err := p.parsePolicyDocument()
+	if err != nil {
+		return "", err
+	}
+	return policy.Id, nil
+}
+
+func (p *lumiAwsS3BucketPolicy) GetStatements() ([]interface{}, error) {
+	bucketname, err := p.Name()
+	if err != nil {
+		return nil, err
+	}
+
+	policy, err := p.parsePolicyDocument()
+	if err != nil {
+		return nil, err
+	}
+
+	res := []interface{}{}
+
+	for i := range policy.Statements {
+		statement := policy.Statements[i]
+
+		principal := map[string]interface{}{}
+		for k := range statement.Principal {
+			val := statement.Principal[k]
+			principal[k] = strSliceToInterface(val.Value())
+		}
+		notPrincipal := map[string]interface{}{}
+		for k := range statement.NotPrincipal {
+			val := statement.NotPrincipal[k]
+			notPrincipal[k] = strSliceToInterface(val.Value())
+		}
+
+		lumiStatement, err := p.Runtime.CreateResource("aws.s3.bucket.policystatement",
+			"id", bucketname+"-"+strconv.Itoa(i),
+			"sid", statement.Sid,
+			"effect", statement.Effect,
+			"principal", principal,
+			"notPrincipal", notPrincipal,
+			"action", strSliceToInterface(statement.Action),
+			"notAction", strSliceToInterface(statement.NotAction),
+			"grantResource", strSliceToInterface(statement.Resource),
+			"denyResource", strSliceToInterface(statement.NotResource),
+			"condition", string(statement.Condition),
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, lumiStatement)
+	}
+	return res, nil
+}
+
+func (p *lumiAwsS3BucketPolicystatement) id() (string, error) {
+	return p.Id()
 }

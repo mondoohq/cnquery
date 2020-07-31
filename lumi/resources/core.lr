@@ -638,7 +638,7 @@ aws.s3 {
 
 aws.s3.bucket {
   name string
-  policy() string
+  policy() aws.s3.bucket.policy
   tags() map[string]string
   acl() []aws.s3.bucket.grant
   owner() map[string]string
@@ -661,4 +661,25 @@ aws.s3.bucket.corsrule {
   allowedOrigins []string
   exposeHeaders []string
   maxAgeSeconds int
+}
+
+aws.s3.bucket.policy {
+  name string
+  document string
+  version() string
+  id() string
+  statements() []aws.s3.bucket.policystatement
+}
+
+aws.s3.bucket.policystatement {
+  id string
+  sid string
+  effect string
+  principal map[string][]string
+  notPrincipal map[string][]string
+  action []string
+  notAction []string
+  grantResource []string
+  denyResource []string
+  condition string
 }
