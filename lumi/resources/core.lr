@@ -631,3 +631,23 @@ aws.cloudtrail.trailstatus {
   StartLoggingTime int
   StopLoggingTime int
 }
+
+aws.s3 {
+  buckets []aws.s3.bucket
+}
+
+aws.s3.bucket {
+  name string
+  creationDate int
+  policy() string
+  tags map[string]string
+  cors() []aws.s3.bucket.corsrule
+}
+
+aws.s3.bucket.corsrule {
+  allowedHeaders []string
+  allowedMethods []string
+  allowedOrigins []string
+  exposeHeaders []string
+  maxAgeSeconds int
+}
