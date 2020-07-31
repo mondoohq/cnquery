@@ -24,7 +24,7 @@ func cloudtrailClient() *cloudtrail.Client {
 }
 
 func (t *lumiAwsCloudtrail) id() (string, error) {
-	return "lumiAwsCloudtrail", nil
+	return "aws.cloudtrail", nil
 }
 
 func (t *lumiAwsCloudtrail) GetTrails() ([]interface{}, error) {
