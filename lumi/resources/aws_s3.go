@@ -307,6 +307,99 @@ func (p *lumiAwsS3Bucket) GetCors() ([]interface{}, error) {
 	return res, nil
 }
 
+func (p *lumiAwsS3Bucket) GetLogging() (map[string]interface{}, error) {
+	bucketname, err := p.Name()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	svc := s3client("")
+
+	logging, err := svc.GetBucketLoggingRequest(&s3.GetBucketLoggingInput{
+		Bucket: &bucketname,
+	}).Send(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res := map[string]interface{}{}
+
+	if logging != nil && logging.LoggingEnabled != nil {
+		if logging.LoggingEnabled.TargetPrefix != nil {
+			res["TargetPrefix"] = *logging.LoggingEnabled.TargetPrefix
+		}
+
+		if logging.LoggingEnabled.TargetBucket != nil {
+			res["TargetBucket"] = *logging.LoggingEnabled.TargetBucket
+		}
+
+		// it is becoming a more complex object similar to aws.s3.bucket.grant
+		// if logging.LoggingEnabled.TargetGrants != nil {
+		// 	res["TargetGrants"] = *logging.LoggingEnabled.TargetGrants
+		// }
+	}
+
+	return res, nil
+}
+
+func (p *lumiAwsS3Bucket) GetVersioning() (map[string]interface{}, error) {
+	bucketname, err := p.Name()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	svc := s3client("")
+
+	versioning, err := svc.GetBucketVersioningRequest(&s3.GetBucketVersioningInput{
+		Bucket: &bucketname,
+	}).Send(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res := map[string]interface{}{}
+
+	if versioning != nil {
+		res["MFADelete"] = string(versioning.MFADelete)
+		res["Status"] = string(versioning.Status)
+	}
+
+	return res, nil
+}
+
+func (p *lumiAwsS3Bucket) GetStaticWebsiteHosting() (map[string]interface{}, error) {
+	bucketname, err := p.Name()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	svc := s3client("")
+
+	website, err := svc.GetBucketWebsiteRequest(&s3.GetBucketWebsiteInput{
+		Bucket: &bucketname,
+	}).Send(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res := map[string]interface{}{}
+
+	if website != nil {
+		if website.ErrorDocument != nil {
+			res["ErrorDocument"] = toString(website.ErrorDocument.Key)
+		}
+
+		if website.IndexDocument != nil {
+			res["IndexDocument"] = toString(website.IndexDocument.Suffix)
+		}
+	}
+
+	return res, nil
+}
+
 func (p *lumiAwsS3BucketGrant) id() (string, error) {
 	return p.Id()
 }

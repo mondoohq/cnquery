@@ -648,6 +648,9 @@ aws.s3.bucket {
   public() bool
   cors() []aws.s3.bucket.corsrule
   location() string
+  versioning() map[string]string
+  logging() map[string]string
+  staticWebsiteHosting() map[string]string
 }
 
 aws.s3.bucket.grant {
