@@ -48,7 +48,7 @@ func toInt64(i *int64) int64 {
 }
 
 func (p *lumiAwsIam) id() (string, error) {
-	return "awsiam", nil
+	return "aws.iam", nil
 }
 
 func IsAwsCode(err error) (bool, string) {
