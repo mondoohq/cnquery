@@ -689,3 +689,26 @@ aws.s3.bucket.policystatement {
   denyResource []string
   condition string
 }
+
+aws.ec2 {
+  securityGroups() []aws.ec2.securitygroup
+}
+
+aws.ec2.securitygroup {
+  id string
+  name string
+  description string
+  tag map[string]string
+  vpcid string
+  ipPermissions []aws.ec2.securitygroup.ippermission
+  ipPermissionsEgress []aws.ec2.securitygroup.ippermission
+}
+
+aws.ec2.securitygroup.ippermission {
+  id string
+  fromPort int
+  toPort int
+  ipProtocol string
+  ipRanges []string
+  ipv6Ranges []string
+}

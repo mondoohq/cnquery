@@ -1,0 +1,121 @@
+package resources
+
+import (
+	"context"
+	"strconv"
+
+	"github.com/aws/aws-sdk-go-v2/aws/endpoints"
+	"github.com/aws/aws-sdk-go-v2/aws/external"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+)
+
+func awsEc2Client() *ec2.Client {
+	// TODO: cfg needs to come from the transport
+	cfg, err := external.LoadDefaultAWSConfig(external.WithSharedConfigProfile("mondoo-inc"))
+	// cfg, err := external.LoadDefaultAWSConfig()
+	if err != nil {
+		panic(err)
+	}
+	cfg.Region = endpoints.UsEast1RegionID
+
+	// iterate over each region?
+	svc := ec2.New(cfg)
+	return svc
+}
+
+func (e *lumiAwsEc2) id() (string, error) {
+	return "aws.ec2", nil
+}
+
+func ec2TagsToMap(tags []ec2.Tag) map[string]interface{} {
+	var tagsMap map[string]interface{}
+
+	if len(tags) > 0 {
+		tagsMap := map[string]interface{}{}
+		for i := range tags {
+			tag := tags[i]
+			tagsMap[toString(tag.Key)] = toString(tag.Value)
+		}
+	}
+
+	return tagsMap
+}
+
+func (s *lumiAwsEc2) GetSecurityGroups() ([]interface{}, error) {
+
+	// iterate over each region?
+	svc := awsEc2Client()
+	ctx := context.Background()
+
+	securityGroups, err := svc.DescribeSecurityGroupsRequest(&ec2.DescribeSecurityGroupsInput{}).Send(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res := []interface{}{}
+	for i := range securityGroups.SecurityGroups {
+		group := securityGroups.SecurityGroups[i]
+
+		lumiIpPermissions := []interface{}{}
+		for p := range group.IpPermissions {
+			permission := group.IpPermissions[p]
+
+			ipRanges := []interface{}{}
+			for r := range permission.IpRanges {
+				iprange := permission.IpRanges[r]
+				if iprange.CidrIp != nil {
+					ipRanges = append(ipRanges, *iprange.CidrIp)
+				}
+			}
+
+			ipv6Ranges := []interface{}{}
+			for r := range permission.Ipv6Ranges {
+				iprange := permission.Ipv6Ranges[r]
+				if iprange.CidrIpv6 != nil {
+					ipRanges = append(ipRanges, *iprange.CidrIpv6)
+				}
+			}
+
+			lumiSecurityGroupIpPermission, err := s.Runtime.CreateResource("aws.ec2.securitygroup.ippermission",
+				"id", toString(group.GroupId)+"-"+strconv.Itoa(p),
+				"fromPort", toInt64(permission.FromPort),
+				"toPort", toInt64(permission.ToPort),
+				"ipProtocol", toString(permission.IpProtocol),
+				"ipRanges", ipRanges,
+				"ipv6Ranges", ipv6Ranges,
+				// prefixListIds
+				// userIdGroupPairs
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			lumiIpPermissions = append(lumiIpPermissions, lumiSecurityGroupIpPermission)
+		}
+
+		lumiS3SecurityGroup, err := s.Runtime.CreateResource("aws.ec2.securitygroup",
+			"id", toString(group.GroupId),
+			"name", toString(group.GroupName),
+			"description", toString(group.Description),
+			"tag", ec2TagsToMap(group.Tags),
+			// TODO: reference to vpc
+			"vpcid", toString(group.VpcId),
+			"ipPermissions", lumiIpPermissions,
+			"ipPermissionsEgress", []interface{}{},
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, lumiS3SecurityGroup)
+	}
+
+	return res, nil
+}
+
+func (s *lumiAwsEc2Securitygroup) id() (string, error) {
+	return s.Id()
+}
+
+func (s *lumiAwsEc2SecuritygroupIppermission) id() (string, error) {
+	return s.Id()
+}
