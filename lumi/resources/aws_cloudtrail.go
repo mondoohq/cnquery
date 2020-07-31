@@ -30,6 +30,7 @@ func (t *lumiAwsCloudtrail) id() (string, error) {
 func (t *lumiAwsCloudtrail) GetTrails() ([]interface{}, error) {
 	svc := cloudtrailClient()
 	ctx := context.Background()
+
 	trailsResp, err := svc.DescribeTrailsRequest(&cloudtrail.DescribeTrailsInput{}).Send(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not gather aws iam virtual-mfa-devices")
@@ -54,12 +55,17 @@ func (t *lumiAwsCloudtrail) GetTrails() ([]interface{}, error) {
 		lumiAwsCloudtrailTrail, err := t.Runtime.CreateResource("aws.cloudtrail.trail",
 			"arn", toString(trail.TrailARN),
 			"name", toString(trail.Name),
+			"kmsKeyId", toString(trail.KmsKeyId),
 			"isMultiRegionTrail", toBool(trail.IsMultiRegionTrail),
 			"isOrganizationTrail", toBool(trail.IsOrganizationTrail),
 			"logFileValidationEnabled", toBool(trail.LogFileValidationEnabled),
 			"includeGlobalServiceEvents", toBool(trail.IncludeGlobalServiceEvents),
 			"s3bucket", s3Bucket,
 			"snsTopicARN", toString(trail.SnsTopicARN),
+			// TODO: link to log group
+			"cloudWatchLogsLogGroupArn", toString(trail.CloudWatchLogsLogGroupArn),
+			// TODO: link to watch logs grou
+			"cloudWatchLogsRoleArn", toString(trail.CloudWatchLogsRoleArn),
 		)
 		if err != nil {
 			return nil, err

@@ -608,6 +608,7 @@ aws.cloudtrail {
 aws.cloudtrail.trail {
   arn string
   name string
+  kmsKeyId string
   isMultiRegionTrail bool
   isOrganizationTrail bool
   logFileValidationEnabled bool
@@ -615,6 +616,8 @@ aws.cloudtrail.trail {
   s3bucket aws.s3.bucket
   snsTopicARN string
   status() aws.cloudtrail.trailstatus
+  cloudWatchLogsLogGroupArn string
+  cloudWatchLogsRoleArn string
 }
 
 aws.cloudtrail.trailstatus {
