@@ -58,7 +58,7 @@ func (t *lumiAwsCloudtrail) GetTrails() ([]interface{}, error) {
 			"isOrganizationTrail", toBool(trail.IsOrganizationTrail),
 			"logFileValidationEnabled", toBool(trail.LogFileValidationEnabled),
 			"includeGlobalServiceEvents", toBool(trail.IncludeGlobalServiceEvents),
-			"s3Bucket", s3Bucket,
+			"s3bucket", s3Bucket,
 			"snsTopicARN", toString(trail.SnsTopicARN),
 		)
 		if err != nil {

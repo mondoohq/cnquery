@@ -612,7 +612,7 @@ aws.cloudtrail.trail {
   isOrganizationTrail bool
   logFileValidationEnabled bool
   includeGlobalServiceEvents bool
-  s3Bucket aws.s3.bucket
+  s3bucket aws.s3.bucket
   snsTopicARN string
   status() aws.cloudtrail.trailstatus
 }
