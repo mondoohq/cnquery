@@ -247,7 +247,7 @@ func (c *lumiAwsIam) GetUsers() ([]interface{}, error) {
 	return res, nil
 }
 
-func tagsToMap(tags []iam.Tag) map[string]interface{} {
+func iamTagsToMap(tags []iam.Tag) map[string]interface{} {
 	var tagsMap map[string]interface{}
 
 	if len(tags) > 0 {
@@ -272,7 +272,7 @@ func (c *lumiAwsIam) createIamUser(usr *iam.User) (lumi.ResourceType, error) {
 		"name", toString(usr.UserName),
 		"createdate", toTime(usr.CreateDate),
 		"passwordlastused", toTime(usr.PasswordLastUsed),
-		"tags", tagsToMap(usr.Tags),
+		"tags", iamTagsToMap(usr.Tags),
 	)
 }
 
@@ -393,7 +393,7 @@ func (c *lumiAwsIam) GetRoles() ([]interface{}, error) {
 				"id", toString(role.RoleId),
 				"name", toString(role.RoleName),
 				"description", toString(role.Description),
-				"tags", tagsToMap(role.Tags),
+				"tags", iamTagsToMap(role.Tags),
 				"createdate", toTime(role.CreateDate),
 			)
 			if err != nil {
@@ -486,7 +486,7 @@ func (p *lumiAwsIamUser) init(args *lumi.Args) (*lumi.Args, AwsIamUser, error) {
 		(*args)["name"] = toString(usr.UserName)
 		(*args)["createdate"] = toTime(usr.CreateDate)
 		(*args)["passwordlastused"] = toTime(usr.PasswordLastUsed)
-		(*args)["tags"] = tagsToMap(usr.Tags)
+		(*args)["tags"] = iamTagsToMap(usr.Tags)
 
 		return args, nil, nil
 	}
@@ -936,7 +936,7 @@ func (p *lumiAwsIamRole) init(args *lumi.Args) (*lumi.Args, AwsIamRole, error) {
 		(*args)["id"] = toString(role.RoleId)
 		(*args)["name"] = toString(role.RoleName)
 		(*args)["description"] = toString(role.Description)
-		(*args)["tags"] = tagsToMap(role.Tags)
+		(*args)["tags"] = iamTagsToMap(role.Tags)
 		(*args)["createdate"] = toTime(role.CreateDate)
 
 		return args, nil, nil
