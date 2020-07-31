@@ -606,30 +606,30 @@ aws.cloudtrail {
 }
 
 aws.cloudtrail.trail {
-  Arn string
-  Name string
-  IsMultiRegionTrail bool
-  IsOrganizationTrail bool
-  LogFileValidationEnabled bool
-  IncludeGlobalServiceEvents bool
-  S3BucketName string
-  SnsTopicARN string
+  arn string
+  name string
+  isMultiRegionTrail bool
+  isOrganizationTrail bool
+  logFileValidationEnabled bool
+  includeGlobalServiceEvents bool
+  s3Bucket aws.s3.bucket
+  snsTopicARN string
   status() aws.cloudtrail.trailstatus
 }
 
 aws.cloudtrail.trailstatus {
-  Arn string
-  IsLogging bool
-  LatestCloudWatchLogsDeliveryError string
-  LatestCloudWatchLogsDeliveryTime int
-  LatestDeliveryError string
-  LatestDeliveryTime int
-  LatestDigestDeliveryError string
-  LatestDigestDeliveryTime int
-  LatestNotificationError string
-  LatestNotificationTime int
-  StartLoggingTime int
-  StopLoggingTime int
+  arn string
+  isLogging bool
+  latestCloudWatchLogsDeliveryError string
+  latestCloudWatchLogsDeliveryTime int
+  latestDeliveryError string
+  latestDeliveryTime int
+  latestDigestDeliveryError string
+  latestDigestDeliveryTime int
+  latestNotificationError string
+  latestNotificationTime int
+  startLoggingTime int
+  stopLoggingTime int
 }
 
 aws.s3 {
