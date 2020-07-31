@@ -39,15 +39,27 @@ func (t *lumiAwsCloudtrail) GetTrails() ([]interface{}, error) {
 	for i := range trailsResp.TrailList {
 		trail := trailsResp.TrailList[i]
 
+		// trail.S3BucketName
+		var s3Bucket interface{}
+		if trail.S3BucketName != nil {
+			lumiAwsS3Bucket, err := t.Runtime.CreateResource("aws.s3.bucket",
+				"name", toString(trail.S3BucketName),
+			)
+			if err != nil {
+				return nil, err
+			}
+			s3Bucket = lumiAwsS3Bucket
+		}
+
 		lumiAwsCloudtrailTrail, err := t.Runtime.CreateResource("aws.cloudtrail.trail",
-			"Arn", toString(trail.TrailARN),
-			"Name", toString(trail.Name),
-			"IsMultiRegionTrail", toBool(trail.IsMultiRegionTrail),
-			"IsOrganizationTrail", toBool(trail.IsOrganizationTrail),
-			"LogFileValidationEnabled", toBool(trail.LogFileValidationEnabled),
-			"IncludeGlobalServiceEvents", toBool(trail.IncludeGlobalServiceEvents),
-			"S3BucketName", toString(trail.S3BucketName),
-			"SnsTopicARN", toString(trail.SnsTopicARN),
+			"arn", toString(trail.TrailARN),
+			"name", toString(trail.Name),
+			"isMultiRegionTrail", toBool(trail.IsMultiRegionTrail),
+			"isOrganizationTrail", toBool(trail.IsOrganizationTrail),
+			"logFileValidationEnabled", toBool(trail.LogFileValidationEnabled),
+			"includeGlobalServiceEvents", toBool(trail.IncludeGlobalServiceEvents),
+			"s3Bucket", s3Bucket,
+			"snsTopicARN", toString(trail.SnsTopicARN),
 		)
 		if err != nil {
 			return nil, err
@@ -79,18 +91,18 @@ func (t *lumiAwsCloudtrailTrail) GetStatus() (interface{}, error) {
 	}
 
 	lumiAwsCloudtrailTrailStatus, err := t.Runtime.CreateResource("aws.cloudtrail.trailstatus",
-		"Arn", arnValue,
-		"IsLogging", toBool(trailstatus.IsLogging),
-		"LatestCloudWatchLogsDeliveryError", toString(trailstatus.LatestCloudWatchLogsDeliveryError),
-		"LatestCloudWatchLogsDeliveryTime", toTime(trailstatus.LatestCloudWatchLogsDeliveryTime),
-		"LatestDeliveryError", toString(trailstatus.LatestDeliveryError),
-		"LatestDeliveryTime", toTime(trailstatus.LatestDeliveryTime),
-		"LatestDigestDeliveryError", toString(trailstatus.LatestDigestDeliveryError),
-		"LatestDigestDeliveryTime", toTime(trailstatus.LatestDigestDeliveryTime),
-		"LatestNotificationError", toString(trailstatus.LatestNotificationError),
-		"LatestNotificationTime", toTime(trailstatus.LatestNotificationTime),
-		"StartLoggingTime", toTime(trailstatus.StartLoggingTime),
-		"StopLoggingTime", toTime(trailstatus.StopLoggingTime),
+		"arn", arnValue,
+		"isLogging", toBool(trailstatus.IsLogging),
+		"latestCloudWatchLogsDeliveryError", toString(trailstatus.LatestCloudWatchLogsDeliveryError),
+		"latestCloudWatchLogsDeliveryTime", toTime(trailstatus.LatestCloudWatchLogsDeliveryTime),
+		"latestDeliveryError", toString(trailstatus.LatestDeliveryError),
+		"latestDeliveryTime", toTime(trailstatus.LatestDeliveryTime),
+		"latestDigestDeliveryError", toString(trailstatus.LatestDigestDeliveryError),
+		"latestDigestDeliveryTime", toTime(trailstatus.LatestDigestDeliveryTime),
+		"latestNotificationError", toString(trailstatus.LatestNotificationError),
+		"latestNotificationTime", toTime(trailstatus.LatestNotificationTime),
+		"startLoggingTime", toTime(trailstatus.StartLoggingTime),
+		"stopLoggingTime", toTime(trailstatus.StopLoggingTime),
 	)
 	if err != nil {
 		return nil, err
