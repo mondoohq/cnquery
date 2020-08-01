@@ -10,42 +10,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/aws/awserr"
-	"github.com/aws/aws-sdk-go-v2/aws/endpoints"
-	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/awsiam"
 )
-
-func toString(i *string) string {
-	if i == nil {
-		return ""
-	}
-	return *i
-}
-
-func toBool(i *bool) bool {
-	if i == nil {
-		return false
-	}
-	return *i
-}
-
-func toTime(i *time.Time) int64 {
-	if i == nil {
-		return 0
-	}
-	return i.UnixNano()
-}
-
-func toInt64(i *int64) int64 {
-	if i == nil {
-		return 0
-	}
-	return *i
-}
 
 func (p *lumiAwsIam) id() (string, error) {
 	return "aws.iam", nil
@@ -58,22 +28,13 @@ func IsAwsCode(err error) (bool, string) {
 	return false, ""
 }
 
-func iamClient() *iam.Client {
-	// TODO: cfg needs to come from the transport
-	cfg, err := external.LoadDefaultAWSConfig(external.WithSharedConfigProfile("mondoo-inc"))
-	// cfg, err := external.LoadDefaultAWSConfig()
-	if err != nil {
-		panic(err)
-	}
-	cfg.Region = endpoints.UsEast1RegionID
-
-	// iterate over each region?
-	svc := iam.New(cfg)
-	return svc
-}
-
 func (c *lumiAwsIam) GetCredentialreport() ([]interface{}, error) {
-	svc := iamClient()
+	at, err := awstransport(c.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.Iam()
 	ctx := context.Background()
 
 	var data []byte
@@ -154,9 +115,14 @@ func (p *lumiAwsIamUsercredentialreportentry) id() (string, error) {
 }
 
 func (c *lumiAwsIam) GetAccountpasswordpolicy() (map[string]interface{}, error) {
+	at, err := awstransport(c.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 
-	svc := iamClient()
+	svc := at.Iam()
 	ctx := context.Background()
+
 	resp, err := svc.GetAccountPasswordPolicyRequest(&iam.GetAccountPasswordPolicyInput{}).Send(ctx)
 	isAwsCode, code := IsAwsCode(err)
 	if err != nil && (!isAwsCode) {
@@ -207,8 +173,14 @@ func (c *lumiAwsIam) GetAccountpasswordpolicy() (map[string]interface{}, error) 
 }
 
 func (c *lumiAwsIam) GetAccountsummary() (map[string]interface{}, error) {
-	svc := iamClient()
+	at, err := awstransport(c.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.Iam()
 	ctx := context.Background()
+
 	resp, err := svc.GetAccountSummaryRequest(&iam.GetAccountSummaryInput{}).Send(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not gather aws iam account-summary")
@@ -224,8 +196,14 @@ func (c *lumiAwsIam) GetAccountsummary() (map[string]interface{}, error) {
 }
 
 func (c *lumiAwsIam) GetUsers() ([]interface{}, error) {
-	svc := iamClient()
+	at, err := awstransport(c.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.Iam()
 	ctx := context.Background()
+
 	usersResp, err := svc.ListUsersRequest(&iam.ListUsersInput{}).Send(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not gather aws iam users")
@@ -277,8 +255,14 @@ func (c *lumiAwsIam) createIamUser(usr *iam.User) (lumi.ResourceType, error) {
 }
 
 func (c *lumiAwsIam) GetVirtualmfadevices() ([]interface{}, error) {
-	svc := iamClient()
+	at, err := awstransport(c.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.Iam()
 	ctx := context.Background()
+
 	devicesResp, err := svc.ListVirtualMFADevicesRequest(&iam.ListVirtualMFADevicesInput{}).Send(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not gather aws iam virtual-mfa-devices")
@@ -339,11 +323,15 @@ func (c *lumiAwsIam) lumiPolicies(policies []iam.Policy) ([]interface{}, error) 
 }
 
 func (c *lumiAwsIam) GetPolicies() ([]interface{}, error) {
-	res := []interface{}{}
+	at, err := awstransport(c.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 
-	svc := iamClient()
+	svc := at.Iam()
 	ctx := context.Background()
 
+	res := []interface{}{}
 	var marker *string
 	for {
 		// TODO: implement pagination
@@ -371,10 +359,15 @@ func (c *lumiAwsIam) GetPolicies() ([]interface{}, error) {
 }
 
 func (c *lumiAwsIam) GetRoles() ([]interface{}, error) {
-	res := []interface{}{}
+	at, err := awstransport(c.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 
-	svc := iamClient()
+	svc := at.Iam()
 	ctx := context.Background()
+
+	res := []interface{}{}
 
 	var marker *string
 	for {
@@ -413,10 +406,15 @@ func (c *lumiAwsIam) GetRoles() ([]interface{}, error) {
 }
 
 func (c *lumiAwsIam) GetGroups() ([]interface{}, error) {
-	res := []interface{}{}
+	at, err := awstransport(c.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 
-	svc := iamClient()
+	svc := at.Iam()
 	ctx := context.Background()
+
+	res := []interface{}{}
 
 	var marker *string
 	for {
@@ -466,8 +464,14 @@ func (p *lumiAwsIamUser) init(args *lumi.Args) (*lumi.Args, AwsIamUser, error) {
 	}
 
 	// TODO: avoid reloading if all groups have been loaded already
-	svc := iamClient()
+	at, err := awstransport(p.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	svc := at.Iam()
 	ctx := context.Background()
+
 	// TODO: handle arn and extract the name
 	// if (*args)["arn"] != nil { }
 
@@ -507,14 +511,18 @@ func (u *lumiAwsIamUser) id() (string, error) {
 }
 
 func (u *lumiAwsIamUser) GetPolicies() ([]interface{}, error) {
+	at, err := awstransport(u.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.Iam()
+	ctx := context.Background()
 
 	username, err := u.Name()
 	if err != nil {
 		return nil, err
 	}
-
-	svc := iamClient()
-	ctx := context.Background()
 
 	userPolicies, err := svc.ListUserPoliciesRequest(&iam.ListUserPoliciesInput{
 		UserName: &username,
@@ -532,13 +540,18 @@ func (u *lumiAwsIamUser) GetPolicies() ([]interface{}, error) {
 }
 
 func (u *lumiAwsIamUser) GetAttachedpolicies() ([]interface{}, error) {
-	username, err := u.Name()
+	at, err := awstransport(u.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := iamClient()
+	svc := at.Iam()
 	ctx := context.Background()
+
+	username, err := u.Name()
+	if err != nil {
+		return nil, err
+	}
 
 	userAttachedPolicies, err := svc.ListAttachedUserPoliciesRequest(&iam.ListAttachedUserPoliciesInput{
 		UserName: &username,
@@ -576,8 +589,14 @@ func (u *lumiAwsIamPolicy) loadPolicy(arn string) (*iam.Policy, error) {
 	}
 
 	// if its not in the cache, fetch it
-	svc := iamClient()
+	at, err := awstransport(u.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.Iam()
 	ctx := context.Background()
+
 	policy, err := svc.GetPolicyRequest(&iam.GetPolicyInput{PolicyArn: &arn}).Send(ctx)
 	if err != nil {
 		return nil, err
@@ -709,13 +728,18 @@ func (u *lumiAwsIamPolicy) listAttachedEntities(arn string) (attachedEntities, e
 		log.Info().Msg("use attached entities from cache")
 		return c.Data.(attachedEntities), nil
 	}
+	var res attachedEntities
 
 	// if its not in the cache, fetch it
-	svc := iamClient()
+	at, err := awstransport(u.Runtime.Motor.Transport)
+	if err != nil {
+		return res, err
+	}
+
+	svc := at.Iam()
 	ctx := context.Background()
 
 	var marker *string
-	var res attachedEntities
 	for {
 		entities, err := svc.ListEntitiesForPolicyRequest(&iam.ListEntitiesForPolicyInput{
 			Marker:    marker,
@@ -828,13 +852,19 @@ func (u *lumiAwsIamPolicy) GetAttachedgroups() ([]interface{}, error) {
 }
 
 func (u *lumiAwsIamPolicy) GetVersions() ([]interface{}, error) {
+	at, err := awstransport(u.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.Iam()
+	ctx := context.Background()
+
 	arn, err := u.Arn()
 	if err != nil {
 		return nil, err
 	}
 
-	svc := iamClient()
-	ctx := context.Background()
 	policyVersions, err := svc.ListPolicyVersionsRequest(&iam.ListPolicyVersionsInput{PolicyArn: &arn}).Send(ctx)
 	if err != nil {
 		return nil, err
@@ -875,6 +905,14 @@ func (u *lumiAwsIamPolicyversion) id() (string, error) {
 }
 
 func (u *lumiAwsIamPolicyversion) GetDocument() (string, error) {
+	at, err := awstransport(u.Runtime.Motor.Transport)
+	if err != nil {
+		return "", err
+	}
+
+	svc := at.Iam()
+	ctx := context.Background()
+
 	arn, err := u.Arn()
 	if err != nil {
 		return "", err
@@ -885,8 +923,6 @@ func (u *lumiAwsIamPolicyversion) GetDocument() (string, error) {
 		return "", err
 	}
 
-	svc := iamClient()
-	ctx := context.Background()
 	policyVersion, err := svc.GetPolicyVersionRequest(&iam.GetPolicyVersionInput{
 		PolicyArn: &arn,
 		VersionId: &versionid,
@@ -917,8 +953,14 @@ func (p *lumiAwsIamRole) init(args *lumi.Args) (*lumi.Args, AwsIamRole, error) {
 	}
 
 	// TODO: avoid reloading if all groups have been loaded already
-	svc := iamClient()
+	at, err := awstransport(p.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	svc := at.Iam()
 	ctx := context.Background()
+
 	// TODO: handle arn and extract the name
 	// if (*args)["arn"] != nil { }
 
@@ -967,8 +1009,14 @@ func (p *lumiAwsIamGroup) init(args *lumi.Args) (*lumi.Args, AwsIamGroup, error)
 	}
 
 	// TODO: avoid reloading if all groups have been loaded already
-	svc := iamClient()
+	at, err := awstransport(p.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	svc := at.Iam()
 	ctx := context.Background()
+
 	// TODO: handle arn and extract the name
 	// if (*args)["arn"] != nil { }
 

@@ -12,6 +12,7 @@ import (
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func NewSSMManagedInstancesDiscovery(cfg aws.Config) (*SSMManagedInstances, error) {
@@ -26,7 +27,7 @@ func (ssmi *SSMManagedInstances) List() ([]*asset.Asset, error) {
 	ctx := context.Background()
 	ssmsvc := ssm.New(ssmi.config)
 
-	identity, err := CheckIam(ssmi.config)
+	identity, err := aws_transport.CheckIam(ssmi.config)
 	if err != nil {
 		return nil, err
 	}

@@ -5,11 +5,13 @@ import (
 
 	"go.mondoo.io/mondoo/apps/mondoo/cmd/options"
 
-	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/aws"
+	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/transports"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 type Ec2Config struct {
@@ -18,12 +20,13 @@ type Ec2Config struct {
 	Profile string
 }
 
-func ParseEc2InstanceContext(ec2Url string) Ec2Config {
+func ParseAwsContext(awsUrl string) Ec2Config {
 	var config Ec2Config
 
-	ec2Url = strings.TrimPrefix(ec2Url, "ec2://")
+	awsUrl = strings.TrimPrefix(awsUrl, "aws://")
+	awsUrl = strings.TrimPrefix(awsUrl, "ec2://")
 
-	keyValues := strings.Split(ec2Url, "/")
+	keyValues := strings.Split(awsUrl, "/")
 	for i := 0; i < len(keyValues); {
 		if keyValues[i] == "user" {
 			if i+1 < len(keyValues) {
@@ -52,23 +55,50 @@ func (k *awsResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts)
 	resolved := []*asset.Asset{}
 
 	// parse context from url
-	config := ParseEc2InstanceContext(in.Connection)
+	config := ParseAwsContext(in.Connection)
 
-	configs := []external.Config{}
-	if len(config.Profile) > 0 {
-		configs = append(configs, external.WithSharedConfigProfile(config.Profile))
+	t := &transports.TransportConfig{
+		Backend: transports.TransportBackend_CONNECTION_AWS,
+		Options: map[string]string{
+			"profile": config.Profile,
+			"region":  config.Region,
+		},
 	}
 
-	cfg, err := external.LoadDefaultAWSConfig(configs...)
+	// add aws api as asset
+	trans, err := aws_transport.New(t)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not load aws configuration")
+		return nil, err
 	}
 
-	if len(config.Region) > 0 {
-		cfg.Region = config.Region
+	identifier, err := trans.Identifier()
+	if err != nil {
+		return nil, err
 	}
 
-	r, err := aws.NewEc2Discovery(cfg)
+	// detect platform info for the asset
+	detector := platform.NewDetector(trans)
+	pf, err := detector.Platform()
+	if err != nil {
+		return nil, err
+	}
+
+	// add asset for the api itself
+	info, err := trans.Account()
+	if err != nil {
+		return nil, err
+	}
+
+	resolved = append(resolved, &asset.Asset{
+		ReferenceIDs: []string{identifier},
+		Name:         "AWS Account " + info.Name + "(" + info.ID + ")",
+		Platform:     pf,
+		Connections:  []*transports.TransportConfig{t}, // pass-in the current config
+	})
+
+	// discover ec2 instances
+	// TODO: rewrite ec2 discovert to use the aws transport
+	r, err := aws.NewEc2Discovery(trans.Config())
 	if err != nil {
 		return nil, errors.Wrap(err, "could not initialize aws ec2 discovery")
 	}

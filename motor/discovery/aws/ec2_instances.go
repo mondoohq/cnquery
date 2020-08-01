@@ -11,6 +11,7 @@ import (
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 
 	"github.com/rs/zerolog/log"
 )
@@ -28,7 +29,7 @@ func (ec2i *Ec2Instances) List() ([]*asset.Asset, error) {
 	ctx := context.Background()
 	ec2svc := ec2.New(ec2i.config)
 
-	identity, err := CheckIam(ec2i.config)
+	identity, err := aws_transport.CheckIam(ec2i.config)
 	if err != nil {
 		return nil, err
 	}

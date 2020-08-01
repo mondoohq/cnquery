@@ -1,7 +1,8 @@
 package transports
 
 const (
-	RUNTIME_AWS_EC2          = "aws ec2"
+	RUNTIME_AWS              = "aws"     // api
+	RUNTIME_AWS_EC2          = "aws ec2" // ec2 instances
 	RUNTIME_AWS_SSM_MANAGED  = "aws ssm-managed"
 	RUNTIME_AWS_ECR          = "aws ecr"
 	RUNTIME_GCP_COMPUTE      = "gcp compute"

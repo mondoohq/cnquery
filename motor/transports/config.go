@@ -127,6 +127,8 @@ func (conn *TransportConfig) ToUrl() string {
 		return "vsphere://" + conn.Host
 	case TransportBackend_CONNECTION_ARISTAEOS:
 		return "aristaeos://" + conn.Host
+	case TransportBackend_CONNECTION_AWS:
+		return "aws://"
 	default:
 		log.Warn().Str("backend", conn.Backend.String()).Msg("cannot render backend config")
 		return ""

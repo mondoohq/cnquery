@@ -4,24 +4,8 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go-v2/aws/endpoints"
-	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 )
-
-func awsEc2Client() *ec2.Client {
-	// TODO: cfg needs to come from the transport
-	cfg, err := external.LoadDefaultAWSConfig(external.WithSharedConfigProfile("mondoo-inc"))
-	// cfg, err := external.LoadDefaultAWSConfig()
-	if err != nil {
-		panic(err)
-	}
-	cfg.Region = endpoints.UsEast1RegionID
-
-	// iterate over each region?
-	svc := ec2.New(cfg)
-	return svc
-}
 
 func (e *lumiAwsEc2) id() (string, error) {
 	return "aws.ec2", nil
@@ -42,11 +26,15 @@ func ec2TagsToMap(tags []ec2.Tag) map[string]interface{} {
 }
 
 func (s *lumiAwsEc2) GetSecurityGroups() ([]interface{}, error) {
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 
-	// iterate over each region?
-	svc := awsEc2Client()
+	svc := at.Ec2()
 	ctx := context.Background()
 
+	// TODO: iterate over each region?
 	securityGroups, err := svc.DescribeSecurityGroupsRequest(&ec2.DescribeSecurityGroupsInput{}).Send(ctx)
 	if err != nil {
 		return nil, err

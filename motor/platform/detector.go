@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/arista"
+	"go.mondoo.io/mondoo/motor/transports/aws"
 	"go.mondoo.io/mondoo/motor/transports/vsphere"
 )
 
@@ -48,6 +49,12 @@ func (d *Detector) Platform() (*Platform, error) {
 			Name:    "arista-eos",
 			Kind:    d.transport.Kind(),
 			Runtime: d.transport.Runtime(),
+		}, nil
+	case *aws.Transport:
+		return &Platform{
+			Name:    "aws",
+			Kind:    transports.Kind_KIND_API,
+			Runtime: transports.RUNTIME_AWS,
 		}, nil
 	default:
 		var resolved bool

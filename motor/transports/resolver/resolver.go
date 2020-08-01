@@ -14,6 +14,7 @@ import (
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/arista"
+	"go.mondoo.io/mondoo/motor/transports/aws"
 	"go.mondoo.io/mondoo/motor/transports/docker/docker_engine"
 	"go.mondoo.io/mondoo/motor/transports/docker/image"
 	"go.mondoo.io/mondoo/motor/transports/docker/snapshot"
@@ -298,6 +299,25 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 
 		if endpoint.Record {
 			m.ActivateRecorder()
+		}
+	case transports.TransportBackend_CONNECTION_AWS:
+		log.Debug().Msg("connection> load aws transport")
+		trans, err := aws.New(endpoint)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(trans)
+		if err != nil {
+			return nil, err
+		}
+
+		if endpoint.Record {
+			m.ActivateRecorder()
+		}
+
+		id, err := trans.Identifier()
+		if err == nil && len(id) > 0 {
+			identifier = append(identifier, id)
 		}
 	default:
 		return nil, fmt.Errorf("connection> unsupported backend '%s', only docker://, local://, tar://, ssh:// are allowed", endpoint.Backend)
