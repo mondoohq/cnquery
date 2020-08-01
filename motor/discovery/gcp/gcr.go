@@ -11,6 +11,7 @@ import (
 	docker_discovery "go.mondoo.io/mondoo/motor/discovery/docker_engine"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
+	gcp_transport "go.mondoo.io/mondoo/motor/transports/gcp"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
 )
@@ -112,7 +113,7 @@ func (a *GcrImages) List() ([]*asset.Asset, error) {
 	// }
 	// return assets, nil
 
-	client, err := gcpClient(compute.CloudPlatformScope)
+	client, err := gcp_transport.Client(compute.CloudPlatformScope)
 	resSrv, err := cloudresourcemanager.New(client)
 	if err != nil {
 		return nil, err

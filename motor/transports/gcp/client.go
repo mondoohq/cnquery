@@ -1,21 +1,13 @@
 package gcp
 
 import (
-	"context"
 	"encoding/json"
 	"io"
 	"io/ioutil"
-	"net/http"
 
 	"github.com/pkg/errors"
 	"go.mondoo.io/mondoo/motor/transports/local"
-	"golang.org/x/oauth2/google"
 )
-
-func gcpClient(scope ...string) (*http.Client, error) {
-	ctx := context.Background()
-	return google.DefaultClient(ctx, scope...)
-}
 
 // https://github.com/golang/oauth2/issues/241
 // shells out to `gcloud config config-helper --format json` to determine

@@ -8,6 +8,9 @@ import (
 	"go.mondoo.io/mondoo/apps/mondoo/cmd/options"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/gcp"
+	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/transports"
+	gcp_transport "go.mondoo.io/mondoo/motor/transports/gcp"
 )
 
 type GcpConfig struct {
@@ -73,13 +76,48 @@ func (k *gcpResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts)
 	// check if we got a project or try to determine it
 	if len(config.Project) == 0 {
 		// try to determine current project
-		projectid, err := gcp.GetCurrentProject()
+		projectid, err := gcp_transport.GetCurrentProject()
 
 		if err != nil || len(projectid) == 0 {
 			return nil, errors.New("gcp: no project id provided")
 		}
 		config.Project = projectid
 	}
+
+	// add gcp api as asset
+	t := &transports.TransportConfig{
+		Backend: transports.TransportBackend_CONNECTION_GCP,
+		Options: map[string]string{
+			// TODO: support organization scanning as well
+			"project": config.Project,
+		},
+	}
+
+	trans, err := gcp_transport.New(t)
+	if err != nil {
+		return nil, err
+	}
+
+	identifier, err := trans.Identifier()
+	if err != nil {
+		return nil, err
+	}
+
+	// detect platform info for the asset
+	detector := platform.NewDetector(trans)
+	pf, err := detector.Platform()
+	if err != nil {
+		return nil, err
+	}
+
+	resolved = append(resolved, &asset.Asset{
+		ReferenceIDs: []string{identifier},
+		Name:         "GCP project " + config.Project,
+		Platform:     pf,
+		Connections:  []*transports.TransportConfig{t}, // pass-in the current config
+	})
+
+	// discover compute instances
 
 	// we may want to pass a specific user, otherwise it will fallback to ssh config
 	if len(config.User) > 0 {
