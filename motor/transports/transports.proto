@@ -17,6 +17,7 @@ enum TransportBackend {
   CONNECTION_ARISTAEOS = 10;
   CONNECTION_CONTAINER_TAR = 11;
   CONNECTION_AWS = 12;
+  CONNECTION_GCP = 13;
 }
 
 enum Kind {

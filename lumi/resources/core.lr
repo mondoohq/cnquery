@@ -761,3 +761,90 @@ aws.ec2.securitygroup.ippermission {
   ipRanges []string
   ipv6Ranges []string
 }
+
+gcloud.organization {
+  id() string
+  name() string
+  lifecycleState() string
+  iamPolicy() []gcloud.resourcemanager.binding
+}
+
+gcloud.project {
+  id() string
+  name() string
+  number() string
+  lifecycleState() string
+  createTime() int
+  labels() map[string]string
+  iamPolicy() []gcloud.resourcemanager.binding
+}
+
+gcloud.resourcemanager.binding {
+  id string
+  members []string
+  role string
+}
+
+gcloud.compute {
+  instances() []gcloud.compute.instance
+}
+
+gcloud.compute.instance {
+  id string
+  name string
+  cpuPlatform string
+  deletionProtection bool
+  description string
+  hostname string
+  labels map[string]string
+  status string
+  statusMessage string
+  tags []string
+  metadata map[string]string
+  serviceAccounts []gcloud.compute.serviceaccount
+}
+
+gcloud.compute.serviceaccount {
+  email string
+  scopes []string
+}
+
+gcloud.storage {
+  buckets() []gcloud.storage.bucket
+}
+
+gcloud.storage.bucket {
+  id string
+  name string
+  kind string
+  labels map[string]string
+  location string
+  locationType string
+  projectNumber string
+  storageClass string
+  created time
+  updated time
+  iamPolicy() []gcloud.resourcemanager.binding
+  iamConfiguration dict
+}
+
+gcloud.sql {
+  instances() []gcloud.sql.instance
+}
+
+gcloud.sql.instance {
+  name string
+  backendType string
+  connectionName string
+  databaseVersion string
+  gceZone string
+  instanceType string
+  kind string
+  currentDiskSize int
+  maxDiskSize int
+  state string
+  project string
+  region string
+  serviceAccountEmailAddress string
+  settings dict
+}

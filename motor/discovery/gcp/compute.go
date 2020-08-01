@@ -8,6 +8,7 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
+	gcp_transport "go.mondoo.io/mondoo/motor/transports/gcp"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
 )
@@ -25,7 +26,7 @@ type Compute struct {
 // TODO: try to auto-detect the current project, otherwise return an error
 func (a *Compute) ListInstancesInProject(project string) ([]*asset.Asset, error) {
 
-	client, err := gcpClient(compute.ComputeScope, compute.CloudPlatformScope)
+	client, err := gcp_transport.Client(compute.ComputeScope, compute.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +66,7 @@ func (a *Compute) ListInstancesInProject(project string) ([]*asset.Asset, error)
 }
 
 func (a *Compute) ListInstances() ([]*asset.Asset, error) {
-	client, err := gcpClient(compute.ComputeScope, compute.CloudPlatformScope)
+	client, err := gcp_transport.Client(compute.ComputeScope, compute.CloudPlatformScope)
 	svc, err := compute.New(client)
 	if err != nil {
 		return nil, err
