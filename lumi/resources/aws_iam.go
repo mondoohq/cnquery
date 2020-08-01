@@ -131,7 +131,7 @@ func (c *lumiAwsIam) GetCredentialreport() ([]interface{}, error) {
 
 	res := []interface{}{}
 	for i := range entries {
-		userEntry, err := c.Runtime.CreateResource("awsiam.usercredentialreportentry",
+		userEntry, err := c.Runtime.CreateResource("aws.iam.usercredentialreportentry",
 			"properties", entries[i],
 		)
 		if err != nil {
