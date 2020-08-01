@@ -26,6 +26,10 @@ func vSphereURL(hostname string, port string, user string, password string) (*ur
 }
 
 func New(endpoint *transports.TransportConfig) (*Transport, error) {
+	if endpoint.Backend != transports.TransportBackend_CONNECTION_VSPHERE {
+		return nil, errors.New("backend is not supported for vSphere transport")
+	}
+
 	// derive vsphere connection url from Transport Config
 	vsphereUrl, err := vSphereURL(endpoint.Host, endpoint.Port, endpoint.User, endpoint.Password)
 	if err != nil {

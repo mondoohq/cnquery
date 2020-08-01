@@ -7,41 +7,25 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go-v2/aws/endpoints"
-	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/resources/awspolicy"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
-func s3client(region string) *s3.Client {
-	// TODO: cfg needs to come from the transport
-	cfg, err := external.LoadDefaultAWSConfig(external.WithSharedConfigProfile("mondoo-inc"))
-	// cfg, err := external.LoadDefaultAWSConfig()
-	if err != nil {
-		panic(err)
-	}
-
-	if region == "" {
-		cfg.Region = endpoints.UsEast1RegionID
-	} else {
-		// NOTE: for s3 buckets, we need to switch the region to gather the policy documents
-		cfg.Region = region
-	}
-
-	// iterate over each region?
-	svc := s3.New(cfg)
-	return svc
-}
-
 func (p *lumiAwsS3) id() (string, error) {
 	return "aws.s3", nil
 }
 
 func (p *lumiAwsS3) GetBuckets() ([]interface{}, error) {
+	at, err := awstransport(p.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.S3("")
 	ctx := context.Background()
-	svc := s3client("")
+
 	buckets, err := svc.ListBucketsRequest(&s3.ListBucketsInput{}).Send(ctx)
 	if err != nil {
 		return nil, err
@@ -79,8 +63,13 @@ func (p *lumiAwsS3Bucket) GetPolicy() (interface{}, error) {
 		return nil, err
 	}
 
+	at, err := awstransport(p.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.S3(location)
 	ctx := context.Background()
-	svc := s3client(location)
 
 	policy, err := svc.GetBucketPolicyRequest(&s3.GetBucketPolicyInput{
 		Bucket: &bucketname,
@@ -116,8 +105,13 @@ func (p *lumiAwsS3Bucket) GetTags() (map[string]interface{}, error) {
 		return nil, err
 	}
 
+	at, err := awstransport(p.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.S3("")
 	ctx := context.Background()
-	svc := s3client("")
 
 	tags, err := svc.GetBucketTaggingRequest(&s3.GetBucketTaggingInput{
 		Bucket: &bucketname,
@@ -145,8 +139,13 @@ func (p *lumiAwsS3Bucket) GetLocation() (string, error) {
 		return "", err
 	}
 
+	at, err := awstransport(p.Runtime.Motor.Transport)
+	if err != nil {
+		return "", err
+	}
+
+	svc := at.S3("")
 	ctx := context.Background()
-	svc := s3client("")
 
 	location, err := svc.GetBucketLocationRequest(&s3.GetBucketLocationInput{
 		Bucket: &bucketname,
@@ -170,8 +169,13 @@ func (p *lumiAwsS3Bucket) gatherAcl() (*s3.GetBucketAclOutput, error) {
 		return nil, err
 	}
 
+	at, err := awstransport(p.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.S3("")
 	ctx := context.Background()
-	svc := s3client("")
 
 	acl, err := svc.GetBucketAclRequest(&s3.GetBucketAclInput{
 		Bucket: &bucketname,
@@ -272,8 +276,13 @@ func (p *lumiAwsS3Bucket) GetCors() ([]interface{}, error) {
 		return nil, err
 	}
 
+	at, err := awstransport(p.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.S3("")
 	ctx := context.Background()
-	svc := s3client("")
 
 	cors, err := svc.GetBucketCorsRequest(&s3.GetBucketCorsInput{
 		Bucket: &bucketname,
@@ -313,8 +322,13 @@ func (p *lumiAwsS3Bucket) GetLogging() (map[string]interface{}, error) {
 		return nil, err
 	}
 
+	at, err := awstransport(p.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.S3("")
 	ctx := context.Background()
-	svc := s3client("")
 
 	logging, err := svc.GetBucketLoggingRequest(&s3.GetBucketLoggingInput{
 		Bucket: &bucketname,
@@ -349,8 +363,13 @@ func (p *lumiAwsS3Bucket) GetVersioning() (map[string]interface{}, error) {
 		return nil, err
 	}
 
+	at, err := awstransport(p.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.S3("")
 	ctx := context.Background()
-	svc := s3client("")
 
 	versioning, err := svc.GetBucketVersioningRequest(&s3.GetBucketVersioningInput{
 		Bucket: &bucketname,
@@ -375,8 +394,13 @@ func (p *lumiAwsS3Bucket) GetStaticWebsiteHosting() (map[string]interface{}, err
 		return nil, err
 	}
 
+	at, err := awstransport(p.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.S3("")
 	ctx := context.Background()
-	svc := s3client("")
 
 	website, err := svc.GetBucketWebsiteRequest(&s3.GetBucketWebsiteInput{
 		Bucket: &bucketname,

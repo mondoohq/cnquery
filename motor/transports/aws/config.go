@@ -8,8 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 )
 
-//go:generate packr2 --ignore-imports
-
 const MISSING_REGION_MSG = `
 The AWS region must be set for the deployment. Please use environment variables
 or AWS profiles. Further details are available at:
