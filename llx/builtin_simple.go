@@ -2,7 +2,6 @@ package llx
 
 import (
 	"errors"
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -1424,18 +1423,7 @@ func stringSplit(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 // time methods
 
 // ZeroTimeOffset to help convert unix times into base times that start at the year 0
-var ZeroTimeOffset int64
-
-func init() {
-	zeroTime, err := time.Parse("2006-01-02", "0000-01-01")
-	if err != nil {
-		panic("failed to initialize zero time: " + err.Error())
-	}
-	ZeroTimeOffset = zeroTime.Unix()
-
-	res := time.Unix(ZeroTimeOffset, 0)
-	fmt.Println(res.String())
-}
+const ZeroTimeOffset int64 = -62167219200
 
 func timeSeconds(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
