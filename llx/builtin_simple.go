@@ -1447,3 +1447,13 @@ func timeDays(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDat
 	raw := (t.Unix() - zeroTimeOffset) / (60 * 60 * 24)
 	return IntData(int64(raw)), 0, nil
 }
+
+func timeUnix(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Array(types.Time)}, 0, nil
+	}
+
+	t := bind.Value.(time.Time)
+	raw := t.Unix()
+	return IntData(int64(raw)), 0, nil
+}

@@ -39,6 +39,7 @@ func init() {
 			"minutes": {typ: intType, signature: FunctionSignature{}},
 			"hours":   {typ: intType, signature: FunctionSignature{}},
 			"days":    {typ: intType, signature: FunctionSignature{}},
+			"unix":    {typ: intType, signature: FunctionSignature{}},
 		},
 		types.ArrayLike: {
 			"[]":       {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},

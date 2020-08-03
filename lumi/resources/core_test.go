@@ -298,6 +298,10 @@ func TestTime_Methods(t *testing.T) {
 			"parse.date('0000-01-11T02:03:04Z').days",
 			0, int64(10),
 		},
+		{
+			"parse.date('1970-01-01T01:02:03Z').unix",
+			0, int64(1*60*60 + 02*60 + 03),
+		},
 	})
 }
 
