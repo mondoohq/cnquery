@@ -34,6 +34,12 @@ func init() {
 			"lines":    {typ: stringArrayType, signature: FunctionSignature{}},
 			"split":    {typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
 		},
+		types.Time: {
+			"seconds": {typ: intType, signature: FunctionSignature{}},
+			"minutes": {typ: intType, signature: FunctionSignature{}},
+			"hours":   {typ: intType, signature: FunctionSignature{}},
+			"days":    {typ: intType, signature: FunctionSignature{}},
+		},
 		types.ArrayLike: {
 			"[]":       {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
 			"{}":       {typ: arrayBlockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
