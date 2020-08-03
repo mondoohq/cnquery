@@ -230,6 +230,7 @@ func init() {
 			string("minutes"): {f: timeMinutes, Label: "minutes"},
 			string("hours"):   {f: timeHours, Label: "hours"},
 			string("days"):    {f: timeDays, Label: "days"},
+			string("unix"):    {f: timeUnix, Label: "unix"},
 		},
 		types.ArrayLike: {
 			"[]":     {f: arrayGetIndex},
