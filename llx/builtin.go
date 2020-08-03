@@ -225,6 +225,7 @@ func init() {
 			string("<=" + types.Time): {f: timeLTETime, Label: "<="},
 			string(">" + types.Time):  {f: timeGTTime, Label: ">"},
 			string(">=" + types.Time): {f: timeGTETime, Label: ">="},
+			string("-" + types.Time):  {f: timeMinusTime, Label: "-"},
 			// fields
 			string("seconds"): {f: timeSeconds, Label: "seconds"},
 			string("minutes"): {f: timeMinutes, Label: "minutes"},

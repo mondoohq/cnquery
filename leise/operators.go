@@ -23,10 +23,10 @@ func init() {
 		">":      compileComparable,
 		"<=":     compileComparable,
 		"<":      compileComparable,
-		"+":      nil,
-		"-":      nil,
-		"*":      nil,
-		"/":      nil,
+		"+":      compileTransformation,
+		"-":      compileTransformation,
+		"*":      compileTransformation,
+		"/":      compileTransformation,
 		"%":      nil,
 		"=":      nil,
 		"||":     compileComparable,
@@ -57,41 +57,49 @@ func resolveType(chunk *llx.Chunk, code *llx.Code) types.Type {
 	return resolveType(code.Code[ref-1], code)
 }
 
-func compileComparable(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
+// compile the operation between two operands A and B
+// examples: A && B, A - B, ...
+func compileABOperation(c *compiler, id string, call *parser.Call) (int32, *llx.Chunk, *llx.Primitive, error) {
 	if call == nil {
-		return types.Nil, errors.New("comparable needs a function call")
+		return 0, nil, nil, errors.New("operation needs a function call")
 	}
 
 	if call.Function == nil {
-		return types.Nil, errors.New("comparable needs a function call")
+		return 0, nil, nil, errors.New("operation needs a function call")
 	}
 	if len(call.Function) != 2 {
-		if len(call.Function) != 2 {
-			return types.Nil, errors.New("missing arguments")
+		if len(call.Function) < 2 {
+			return 0, nil, nil, errors.New("missing arguments")
 		}
-		return types.Nil, errors.New("too many arguments")
+		return 0, nil, nil, errors.New("too many arguments")
 	}
 
 	a := call.Function[0]
 	b := call.Function[1]
 	if a.Name != "" || b.Name != "" {
-		return types.Nil, errors.New("calling operations with named arguments is not supported")
+		return 0, nil, nil, errors.New("calling operations with named arguments is not supported")
 	}
 
 	leftRef, err := c.compileAndAddExpression(a.Value)
 	if err != nil {
-		return types.Nil, err
+		return 0, nil, nil, err
 	}
 	left := c.Result.Code.Code[leftRef-1]
 
 	right, err := c.compileExpression(b.Value)
 	if err != nil {
-		return types.Nil, err
+		return 0, nil, nil, err
 	}
 
 	if left == nil {
 		log.Fatal().Msgf("left is nil: %d %#v", leftRef, c.Result.Code.Code[leftRef-1])
 	}
+
+	return leftRef, left, right, nil
+}
+
+func compileComparable(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
+	leftRef, left, right, err := compileABOperation(c, id, call)
 
 	// find specialized or generalized builtin function
 	lt := left.Type(res.Code).Underlying()
@@ -128,6 +136,46 @@ func compileComparable(c *compiler, id string, call *parser.Call, res *llx.CodeB
 	})
 
 	return types.Bool, nil
+}
+
+func compileTransformation(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
+	leftRef, left, right, err := compileABOperation(c, id, call)
+
+	// find specialized or generalized builtin function
+	lt := left.Type(res.Code).Underlying()
+	rt := resolveType(&llx.Chunk{Primitive: right}, res.Code)
+
+	name := id + string(rt)
+	h, err := llx.BuiltinFunction(lt, name)
+	if err != nil {
+		h, err = llx.BuiltinFunction(lt, id)
+	}
+	if err != nil {
+		name = id + string(rt.Underlying())
+		h, err = llx.BuiltinFunction(lt, name)
+	}
+	if err != nil {
+		return types.Nil, errors.New("cannot find operator handler: " + lt.Label() + " " + id + " " + types.Type(right.Type).Label())
+	}
+
+	if h.Compiler != nil {
+		name, err = h.Compiler(left.Type(res.Code), types.Type(right.Type))
+		if err != nil {
+			return types.Nil, err
+		}
+	}
+
+	res.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   name,
+		Function: &llx.Function{
+			Type:    string(lt),
+			Binding: leftRef,
+			Args:    []*llx.Primitive{right},
+		},
+	})
+
+	return lt, nil
 }
 
 func generateEntrypoints(arg *llx.Primitive, res *llx.CodeBundle) error {
