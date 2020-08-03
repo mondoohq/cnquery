@@ -56,23 +56,36 @@ func init() {
 			"one":      {compile: compileResourceOne, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"all":      {compile: compileResourceAll, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 		},
+		// TODO: [#32] unique builtin fields that need a long-term support in LR
+		types.Resource("parse"): {
+			"date": {compile: compileResourceParseDate, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String, types.String}}},
+		},
 	}
 }
 
 // Note: Call it with the full type, not just the underlying type
 func builtinFunction(typ types.Type, id string) (*compileHandler, error) {
-	fh, ok := builtinFunctions[typ.Underlying()]
-	if !ok {
-		return nil, errors.New("Cannot find any functions for type '" + typ.Label() + "' during compile")
-	}
-	c, ok := fh[id]
-	if !ok {
-		c, ok = fh[""]
-		if !ok {
-			return nil, errors.New("Cannot find function '" + id + "' for type '" + typ.Label() + "' during compile")
+	// TODO: [#32] special handlers for specific types, which are builtin and should
+	// be removed long-term, one the resource is native in LR
+	fh, ok := builtinFunctions[typ]
+	if ok {
+		c, ok := fh[id]
+		if ok {
+			return &c, nil
 		}
 	}
-	return &c, nil
+
+	fh, ok = builtinFunctions[typ.Underlying()]
+	if ok {
+		c, ok := fh[id]
+		if ok {
+			return &c, nil
+		}
+	} else {
+		return nil, errors.New("Cannot find any functions for type '" + typ.Label() + "' during compile")
+	}
+
+	return nil, errors.New("Cannot find function '" + id + "' for type '" + typ.Label() + "' during compile")
 }
 
 func fieldNames(resource *lumi.ResourceInfo) []string {

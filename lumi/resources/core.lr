@@ -4,6 +4,20 @@ mondoo {
   resources() []string
 }
 
+parse {
+  // builtin functions:
+  // date(value, format) time
+}
+
+parse.ini {
+  init(path string, delimiter string)
+  delimiter() string
+  file() file
+  content(file) string
+  sections(content, delimiter) map[string]map[string]string
+  params(sections) map[string]string
+}
+
 platform {
   name string
   title string
@@ -74,15 +88,6 @@ files.find {
   regex() string
   permissions() int
   name() string
-}
-
-parse.ini {
-  init(path string, delimiter string)
-  delimiter() string
-  file() file
-  content(file) string
-  sections(content, delimiter) map[string]map[string]string
-  params(sections) map[string]string
 }
 
 sshd.config {
