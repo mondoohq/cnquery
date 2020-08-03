@@ -28,7 +28,7 @@ func IsAwsCode(err error) (bool, string) {
 	return false, ""
 }
 
-func (c *lumiAwsIam) GetCredentialreport() ([]interface{}, error) {
+func (c *lumiAwsIam) GetCredentialReport() ([]interface{}, error) {
 	at, err := awstransport(c.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
@@ -114,7 +114,7 @@ func (p *lumiAwsIamUsercredentialreportentry) id() (string, error) {
 	return "aws/iam/credentialreport/" + userid, nil
 }
 
-func (c *lumiAwsIam) GetAccountpasswordpolicy() (map[string]interface{}, error) {
+func (c *lumiAwsIam) GetAccountPasswordPolicy() (map[string]interface{}, error) {
 	at, err := awstransport(c.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
@@ -172,7 +172,7 @@ func (c *lumiAwsIam) GetAccountpasswordpolicy() (map[string]interface{}, error) 
 	return res, nil
 }
 
-func (c *lumiAwsIam) GetAccountsummary() (map[string]interface{}, error) {
+func (c *lumiAwsIam) GetAccountSummary() (map[string]interface{}, error) {
 	at, err := awstransport(c.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
@@ -248,13 +248,13 @@ func (c *lumiAwsIam) createIamUser(usr *iam.User) (lumi.ResourceType, error) {
 		"arn", toString(usr.Arn),
 		"id", toString(usr.UserId),
 		"name", toString(usr.UserName),
-		"createdate", toTime(usr.CreateDate),
-		"passwordlastused", toTime(usr.PasswordLastUsed),
+		"createDate", toTime(usr.CreateDate),
+		"passwordLastUsed", toTime(usr.PasswordLastUsed),
 		"tags", iamTagsToMap(usr.Tags),
 	)
 }
 
-func (c *lumiAwsIam) GetVirtualmfadevices() ([]interface{}, error) {
+func (c *lumiAwsIam) GetVirtualMfaDevices() ([]interface{}, error) {
 	at, err := awstransport(c.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
@@ -283,8 +283,8 @@ func (c *lumiAwsIam) GetVirtualmfadevices() ([]interface{}, error) {
 		}
 
 		lumiAwsIamMfaDevice, err := c.Runtime.CreateResource("aws.iam.virtualmfadevice",
-			"serialnumber", toString(device.SerialNumber),
-			"enabledate", toTime(device.EnableDate),
+			"serialNumber", toString(device.SerialNumber),
+			"enableDate", toTime(device.EnableDate),
 			"user", lumiAwsIamUser,
 		)
 		if err != nil {
@@ -309,10 +309,10 @@ func (c *lumiAwsIam) lumiPolicies(policies []iam.Policy) ([]interface{}, error) 
 			"id", toString(policy.PolicyId),
 			"name", toString(policy.PolicyName),
 			"description", toString(policy.Description),
-			"isattachable", toBool(policy.IsAttachable),
-			"attachmentcount", toInt64(policy.AttachmentCount),
-			"createdate", toTime(policy.CreateDate),
-			"updatedate", toTime(policy.UpdateDate),
+			"isAttachable", toBool(policy.IsAttachable),
+			"attachmentCount", toInt64(policy.AttachmentCount),
+			"createDate", toTime(policy.CreateDate),
+			"updateDate", toTime(policy.UpdateDate),
 		)
 		if err != nil {
 			return nil, err
@@ -387,7 +387,7 @@ func (c *lumiAwsIam) GetRoles() ([]interface{}, error) {
 				"name", toString(role.RoleName),
 				"description", toString(role.Description),
 				"tags", iamTagsToMap(role.Tags),
-				"createdate", toTime(role.CreateDate),
+				"createDate", toTime(role.CreateDate),
 			)
 			if err != nil {
 				return nil, err
@@ -432,7 +432,7 @@ func (c *lumiAwsIam) GetGroups() ([]interface{}, error) {
 				"arn", toString(grp.Arn),
 				"id", toString(grp.GroupId),
 				"name", toString(grp.GroupName),
-				"createdate", toTime(grp.CreateDate),
+				"createDate", toTime(grp.CreateDate),
 			)
 			if err != nil {
 				return nil, err
@@ -451,7 +451,7 @@ func (c *lumiAwsIam) GetGroups() ([]interface{}, error) {
 }
 
 func (u *lumiAwsIamVirtualmfadevice) id() (string, error) {
-	return u.Serialnumber()
+	return u.SerialNumber()
 }
 
 func (p *lumiAwsIamUser) init(args *lumi.Args) (*lumi.Args, AwsIamUser, error) {
@@ -488,8 +488,8 @@ func (p *lumiAwsIamUser) init(args *lumi.Args) (*lumi.Args, AwsIamUser, error) {
 		(*args)["arn"] = toString(usr.Arn)
 		(*args)["id"] = toString(usr.UserId)
 		(*args)["name"] = toString(usr.UserName)
-		(*args)["createdate"] = toTime(usr.CreateDate)
-		(*args)["passwordlastused"] = toTime(usr.PasswordLastUsed)
+		(*args)["createDate"] = toTime(usr.CreateDate)
+		(*args)["passwordLastUsed"] = toTime(usr.PasswordLastUsed)
 		(*args)["tags"] = iamTagsToMap(usr.Tags)
 
 		return args, nil, nil
@@ -499,8 +499,8 @@ func (p *lumiAwsIamUser) init(args *lumi.Args) (*lumi.Args, AwsIamUser, error) {
 	(*args)["arn"] = ""
 	(*args)["id"] = ""
 	(*args)["name"] = ""
-	(*args)["createdate"] = int64(0)
-	(*args)["passwordlastused"] = int64(0)
+	(*args)["createDate"] = toTime(nil)
+	(*args)["passwordLastUsed"] = toTime(nil)
 	(*args)["tags"] = nil
 
 	return args, nil, nil
@@ -539,7 +539,7 @@ func (u *lumiAwsIamUser) GetPolicies() ([]interface{}, error) {
 	return res, nil
 }
 
-func (u *lumiAwsIamUser) GetAttachedpolicies() ([]interface{}, error) {
+func (u *lumiAwsIamUser) GetAttachedPolicies() ([]interface{}, error) {
 	at, err := awstransport(u.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
@@ -646,7 +646,7 @@ func (u *lumiAwsIamPolicy) GetDescription() (string, error) {
 	return toString(policy.Description), nil
 }
 
-func (u *lumiAwsIamPolicy) GetIsattachable() (bool, error) {
+func (u *lumiAwsIamPolicy) GetIsAttachable() (bool, error) {
 	arn, err := u.Arn()
 	if err != nil {
 		return false, err
@@ -659,7 +659,7 @@ func (u *lumiAwsIamPolicy) GetIsattachable() (bool, error) {
 	return toBool(policy.IsAttachable), nil
 }
 
-func (u *lumiAwsIamPolicy) GetAttachmentcount() (int64, error) {
+func (u *lumiAwsIamPolicy) GetAttachmentCount() (int64, error) {
 	arn, err := u.Arn()
 	if err != nil {
 		return int64(0), err
@@ -672,28 +672,28 @@ func (u *lumiAwsIamPolicy) GetAttachmentcount() (int64, error) {
 	return toInt64(policy.AttachmentCount), nil
 }
 
-func (u *lumiAwsIamPolicy) GetCreatedate() (int64, error) {
+func (u *lumiAwsIamPolicy) GetCreateDate() (time.Time, error) {
 	arn, err := u.Arn()
 	if err != nil {
-		return int64(0), err
+		return toTime(nil), err
 	}
 
 	policy, err := u.loadPolicy(arn)
 	if err != nil {
-		return int64(0), err
+		return toTime(nil), err
 	}
 	return toTime(policy.CreateDate), nil
 }
 
-func (u *lumiAwsIamPolicy) GetUpdatedate() (int64, error) {
+func (u *lumiAwsIamPolicy) GetUpdateDate() (time.Time, error) {
 	arn, err := u.Arn()
 	if err != nil {
-		return int64(0), err
+		return toTime(nil), err
 	}
 
 	policy, err := u.loadPolicy(arn)
 	if err != nil {
-		return int64(0), err
+		return toTime(nil), err
 	}
 	return toTime(policy.UpdateDate), nil
 }
@@ -773,7 +773,7 @@ func (u *lumiAwsIamPolicy) listAttachedEntities(arn string) (attachedEntities, e
 
 }
 
-func (u *lumiAwsIamPolicy) GetAttachedusers() ([]interface{}, error) {
+func (u *lumiAwsIamPolicy) GetAttachedUsers() ([]interface{}, error) {
 	arn, err := u.Arn()
 	if err != nil {
 		return nil, err
@@ -799,7 +799,7 @@ func (u *lumiAwsIamPolicy) GetAttachedusers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (u *lumiAwsIamPolicy) GetAttachedroles() ([]interface{}, error) {
+func (u *lumiAwsIamPolicy) GetAttachedRoles() ([]interface{}, error) {
 	arn, err := u.Arn()
 	if err != nil {
 		return nil, err
@@ -825,7 +825,7 @@ func (u *lumiAwsIamPolicy) GetAttachedroles() ([]interface{}, error) {
 	return res, nil
 }
 
-func (u *lumiAwsIamPolicy) GetAttachedgroups() ([]interface{}, error) {
+func (u *lumiAwsIamPolicy) GetAttachedGroups() ([]interface{}, error) {
 	arn, err := u.Arn()
 	if err != nil {
 		return nil, err
@@ -876,9 +876,9 @@ func (u *lumiAwsIamPolicy) GetVersions() ([]interface{}, error) {
 
 		lumiAwsIamPolicyVersion, err := u.Runtime.CreateResource("aws.iam.policyversion",
 			"arn", arn,
-			"versionid", toString(policyversion.VersionId),
-			"isdefaultversion", toBool(policyversion.IsDefaultVersion),
-			"createdate", toTime(policyversion.CreateDate),
+			"versionId", toString(policyversion.VersionId),
+			"isDefaultVersion", toBool(policyversion.IsDefaultVersion),
+			"createDate", toTime(policyversion.CreateDate),
 		)
 		if err != nil {
 			return nil, err
@@ -896,7 +896,7 @@ func (u *lumiAwsIamPolicyversion) id() (string, error) {
 		return "", err
 	}
 
-	versionid, err := u.Versionid()
+	versionid, err := u.VersionId()
 	if err != nil {
 		return "", err
 	}
@@ -918,7 +918,7 @@ func (u *lumiAwsIamPolicyversion) GetDocument() (string, error) {
 		return "", err
 	}
 
-	versionid, err := u.Versionid()
+	versionid, err := u.VersionId()
 	if err != nil {
 		return "", err
 	}
@@ -979,7 +979,7 @@ func (p *lumiAwsIamRole) init(args *lumi.Args) (*lumi.Args, AwsIamRole, error) {
 		(*args)["name"] = toString(role.RoleName)
 		(*args)["description"] = toString(role.Description)
 		(*args)["tags"] = iamTagsToMap(role.Tags)
-		(*args)["createdate"] = toTime(role.CreateDate)
+		(*args)["createDate"] = toTime(role.CreateDate)
 
 		return args, nil, nil
 	}
@@ -990,7 +990,7 @@ func (p *lumiAwsIamRole) init(args *lumi.Args) (*lumi.Args, AwsIamRole, error) {
 	(*args)["name"] = ""
 	(*args)["description"] = ""
 	(*args)["tags"] = nil
-	(*args)["createdate"] = int64(0)
+	(*args)["createDate"] = toTime(nil)
 
 	return args, nil, nil
 }
@@ -1033,7 +1033,7 @@ func (p *lumiAwsIamGroup) init(args *lumi.Args) (*lumi.Args, AwsIamGroup, error)
 		(*args)["arn"] = toString(grp.Arn)
 		(*args)["id"] = toString(grp.GroupId)
 		(*args)["name"] = toString(grp.GroupName)
-		(*args)["createdate"] = toTime(grp.CreateDate)
+		(*args)["createDate"] = toTime(grp.CreateDate)
 
 		return args, nil, nil
 	}
@@ -1042,7 +1042,7 @@ func (p *lumiAwsIamGroup) init(args *lumi.Args) (*lumi.Args, AwsIamGroup, error)
 	(*args)["arn"] = ""
 	(*args)["id"] = ""
 	(*args)["name"] = ""
-	(*args)["createdate"] = int64(0)
+	(*args)["createDate"] = toTime(nil)
 
 	return args, nil, nil
 }

@@ -552,10 +552,10 @@ aws.iam {
   roles() []aws.iam.role
   groups() []aws.iam.group
   policies() []aws.iam.policy
-  credentialreport() []aws.iam.usercredentialreportentry
-  accountpasswordpolicy() map[string]string
-  accountsummary() map[string]int
-  virtualmfadevices() []aws.iam.virtualmfadevice
+  credentialReport() []aws.iam.usercredentialreportentry
+  accountPasswordPolicy() map[string]string
+  accountSummary() map[string]int
+  virtualMfaDevices() []aws.iam.virtualmfadevice
 }
 
 aws.iam.usercredentialreportentry {
@@ -567,11 +567,11 @@ aws.iam.user {
   arn string
   id string
   name string
-  createdate int
-  passwordlastused int
+  createDate time
+  passwordLastUsed time
   tags map[string]string
   policies() []string
-  attachedpolicies() []aws.iam.policy
+  attachedPolicies() []aws.iam.policy
 }
 
 aws.iam.policy {
@@ -579,24 +579,24 @@ aws.iam.policy {
   id() string
   name() string
   description() string
-  isattachable() bool
-  attachmentcount() int
-  createdate() int
-  updatedate() int
+  isAttachable() bool
+  attachmentCount() int
+  createDate() time
+  updateDate() time
   scope() string
   versions() []aws.iam.policyversion
 
-  attachedusers() []aws.iam.user
-  attachedroles() []aws.iam.role
-  attachedgroups() []aws.iam.group
+  attachedUsers() []aws.iam.user
+  attachedRoles() []aws.iam.role
+  attachedGroups() []aws.iam.group
 }
 
 aws.iam.policyversion {
   arn string
-  versionid string
-  isdefaultversion bool
+  versionId string
+  isDefaultVersion bool
   document() string
-  createdate int
+  createdate time
 }
 
 aws.iam.role {
@@ -605,19 +605,19 @@ aws.iam.role {
   name string
   description string
   tags map[string]string
-  createdate int
+  createdate time
 }
 
 aws.iam.group {
   arn string
   id string
   name string
-  createdate int
+  createdate time
 }
 
 aws.iam.virtualmfadevice {
-  serialnumber string
-  enabledate int
+  serialNumber string
+  enableDate time
   user aws.iam.user
 }
 
@@ -644,13 +644,13 @@ aws.cloudtrail.trailstatus {
   arn string
   isLogging bool
   latestCloudWatchLogsDeliveryError string
-  latestCloudWatchLogsDeliveryTime int
+  latestCloudWatchLogsDeliveryTime time
   latestDeliveryError string
-  latestDeliveryTime int
+  latestDeliveryTime time
   latestDigestDeliveryError string
-  latestDigestDeliveryTime int
+  latestDigestDeliveryTime time
   latestNotificationError string
-  latestNotificationTime int
+  latestNotificationTime time
   startLoggingTime int
   stopLoggingTime int
 }

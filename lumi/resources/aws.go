@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/motor/transports"
 	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
@@ -30,11 +31,11 @@ func toBool(i *bool) bool {
 	return *i
 }
 
-func toTime(i *time.Time) int64 {
+func toTime(i *time.Time) time.Time {
 	if i == nil {
-		return 0
+		return time.Unix(llx.ZeroTimeOffset, 0)
 	}
-	return i.UnixNano()
+	return *i
 }
 
 func toInt64(i *int64) int64 {
