@@ -211,14 +211,9 @@ func (c *compiler) dereferenceType(val *llx.Primitive) (types.Type, error) {
 	return valType, nil
 }
 
-func (c *compiler) unnamedResourceArgs(resource *lumi.ResourceInfo, args []*parser.Arg) ([]*llx.Primitive, error) {
-	init := resource.Init
-	if init == nil {
-		return nil, errors.New("cannot find init call for resource " + resource.Id)
-	}
-
+func (c *compiler) unnamedArgs(callerLabel string, init *lumi.Init, args []*parser.Arg) ([]*llx.Primitive, error) {
 	if len(args) > len(init.Args) {
-		return nil, errors.New("Called resource " + resource.Name +
+		return nil, errors.New("Called " + callerLabel +
 			" with too many arguments (expected " + strconv.Itoa(len(init.Args)) +
 			" but got " + strconv.Itoa(len(args)) + ")")
 	}
@@ -247,7 +242,7 @@ func (c *compiler) unnamedResourceArgs(resource *lumi.ResourceInfo, args []*pars
 		expectedType := types.Type(expected.Type)
 		if vType != expectedType {
 			return nil, errors.New("Incorrect type on argument " + strconv.Itoa(idx) +
-				" in resource " + resource.Name + ": expected " + expectedType.Label() +
+				" in " + callerLabel + ": expected " + expectedType.Label() +
 				", got: " + vType.Label())
 		}
 
@@ -256,6 +251,14 @@ func (c *compiler) unnamedResourceArgs(resource *lumi.ResourceInfo, args []*pars
 	}
 
 	return res, nil
+}
+
+func (c *compiler) unnamedResourceArgs(resource *lumi.ResourceInfo, args []*parser.Arg) ([]*llx.Primitive, error) {
+	if resource.Init == nil {
+		return nil, errors.New("cannot find init call for resource " + resource.Id)
+	}
+
+	return c.unnamedArgs("resource "+resource.Name, resource.Init, args)
 }
 
 // resourceArgs turns the list of arguments for the resource into a list of

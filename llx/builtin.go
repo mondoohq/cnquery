@@ -307,6 +307,8 @@ func init() {
 			"{}": {f: func(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 				return c.runBlock(bind, chunk.Function.Args[0], ref)
 			}},
+			// TODO: [#32] unique builtin fields that need a long-term support in LR
+			string(types.Resource("parse") + ".date"): {f: resourceDate},
 		},
 	}
 }

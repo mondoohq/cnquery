@@ -309,3 +309,39 @@ func compileResourceLength(c *compiler, typ types.Type, ref int32, id string, ca
 	})
 	return typ, nil
 }
+
+func compileResourceParseDate(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
+	// if call != nil && len(call.Function) > 0 {
+	// 	return types.Nil, errors.New("function " + id + " does not take arguments")
+	// }
+
+	// resourceRef := c.Result.Code.ChunkIndex()
+	functionID := string(typ) + "." + id
+
+	init := &lumi.Init{
+		Args: []*lumi.TypedArg{
+			{Name: "value", Type: string(types.String)},
+			{Name: "format", Type: string(types.String)},
+		},
+	}
+	args, err := c.unnamedArgs("parse."+id, init, call.Function)
+	if err != nil {
+		return types.Nil, err
+	}
+
+	rawArgs := make([]*llx.Primitive, len(call.Function))
+	for i := range call.Function {
+		rawArgs[i] = args[i*2+1]
+	}
+
+	c.Result.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   functionID,
+		Function: &llx.Function{
+			Type:    string(types.Time),
+			Binding: ref,
+			Args:    rawArgs,
+		},
+	})
+	return types.Time, nil
+}

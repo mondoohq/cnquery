@@ -11,6 +11,10 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/parsers"
 )
 
+func (s *lumiParse) id() (string, error) {
+	return "", nil
+}
+
 func (s *lumiParseIni) init(args *lumi.Args) (*lumi.Args, ParseIni, error) {
 	if x, ok := (*args)["path"]; ok {
 		path, ok := x.(string)

@@ -2,6 +2,7 @@ package llx
 
 import (
 	"errors"
+	"time"
 
 	"go.mondoo.io/mondoo/lumi"
 )
@@ -104,4 +105,29 @@ func resourceLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 
 	list := items.Value.([]interface{})
 	return IntData(int64(len(list))), 0, nil
+}
+
+func resourceDate(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	args, rref, err := args2resourceargs(c, ref, chunk.Function.Args)
+	if err != nil || rref != 0 {
+		return nil, rref, err
+	}
+
+	format := time.RFC3339
+	if len(args) >= 2 {
+		format = args[1].(string)
+	}
+
+	var timeParseFormat string
+	switch format {
+	default:
+		timeParseFormat = format
+	}
+
+	parsed, err := time.Parse(timeParseFormat, args[0].(string))
+	if err != nil {
+		return nil, 0, errors.New("failed to parse time: " + err.Error())
+	}
+
+	return TimeData(parsed), 0, nil
 }
