@@ -280,6 +280,27 @@ func TestString_Methods(t *testing.T) {
 	})
 }
 
+func TestTime_Methods(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"parse.date('0000-01-01T02:03:04Z').seconds",
+			0, int64(4 + 3*60 + 2*60*60),
+		},
+		{
+			"parse.date('0000-01-01T02:03:04Z').minutes",
+			0, int64(3 + 2*60),
+		},
+		{
+			"parse.date('0000-01-01T02:03:04Z').hours",
+			0, int64(2),
+		},
+		{
+			"parse.date('0000-01-11T02:03:04Z').days",
+			0, int64(10),
+		},
+	})
+}
+
 func TestArray_Access(t *testing.T) {
 	runSimpleErrorTests(t, []simpleTest{
 		{

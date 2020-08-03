@@ -311,11 +311,6 @@ func compileResourceLength(c *compiler, typ types.Type, ref int32, id string, ca
 }
 
 func compileResourceParseDate(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
-	// if call != nil && len(call.Function) > 0 {
-	// 	return types.Nil, errors.New("function " + id + " does not take arguments")
-	// }
-
-	// resourceRef := c.Result.Code.ChunkIndex()
 	functionID := string(typ) + "." + id
 
 	init := &lumi.Init{

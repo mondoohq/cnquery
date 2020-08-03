@@ -1395,3 +1395,55 @@ func stringSplit(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 
 	return ArrayData(res, types.String), 0, nil
 }
+
+// time methods
+
+var zeroTimeOffset int64
+
+func init() {
+	zeroTime, err := time.Parse("2006-01-02", "0000-01-01")
+	if err != nil {
+		panic("failed to initialize zero time: " + err.Error())
+	}
+	zeroTimeOffset = zeroTime.Unix()
+}
+
+func timeSeconds(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Array(types.Time)}, 0, nil
+	}
+
+	t := bind.Value.(time.Time)
+	raw := t.Unix() - zeroTimeOffset
+	return IntData(int64(raw)), 0, nil
+}
+
+func timeMinutes(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Array(types.Time)}, 0, nil
+	}
+
+	t := bind.Value.(time.Time)
+	raw := (t.Unix() - zeroTimeOffset) / 60
+	return IntData(int64(raw)), 0, nil
+}
+
+func timeHours(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Array(types.Time)}, 0, nil
+	}
+
+	t := bind.Value.(time.Time)
+	raw := (t.Unix() - zeroTimeOffset) / (60 * 60)
+	return IntData(int64(raw)), 0, nil
+}
+
+func timeDays(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Array(types.Time)}, 0, nil
+	}
+
+	t := bind.Value.(time.Time)
+	raw := (t.Unix() - zeroTimeOffset) / (60 * 60 * 24)
+	return IntData(int64(raw)), 0, nil
+}
