@@ -603,6 +603,7 @@ var primitiveTypes = map[string]string{
 	"bool":   "bool",
 	"int":    "int64",
 	"float":  "float64",
+	"time":   "time.Time",
 	"any":    "interface{}",
 }
 
@@ -628,6 +629,7 @@ var primitiveZeros = map[string]string{
 	"bool":   "false",
 	"int":    "0",
 	"float":  "0.0",
+	"time":   "time.Time{}",
 	"any":    "nil",
 }
 

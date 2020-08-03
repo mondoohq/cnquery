@@ -9,6 +9,10 @@ parse {
   // date(value, format) time
 }
 
+time {
+  now() time
+}
+
 parse.ini {
   init(path string, delimiter string)
   delimiter() string
