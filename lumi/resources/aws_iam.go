@@ -75,6 +75,8 @@ func (c *lumiAwsIam) GetCredentialReport() ([]interface{}, error) {
 			break
 		}
 
+		log.Error().Err(err).Msgf("resp %v, err: %v", rresp, err)
+
 		isAwsCode, code = IsAwsCode(err)
 		if !isAwsCode || isAwsCode && code != iam.ErrCodeNoSuchEntityException {
 			return nil, errors.Wrap(err, "could not gather aws iam credential report")
@@ -101,17 +103,6 @@ func (c *lumiAwsIam) GetCredentialReport() ([]interface{}, error) {
 		res = append(res, userEntry)
 	}
 	return res, nil
-}
-
-func (p *lumiAwsIamUsercredentialreportentry) id() (string, error) {
-	props, err := p.Properties()
-	if err != nil {
-		return "", err
-	}
-
-	userid := props["arn"].(string)
-
-	return "aws/iam/credentialreport/" + userid, nil
 }
 
 func (c *lumiAwsIam) GetAccountPasswordPolicy() (map[string]interface{}, error) {
@@ -448,6 +439,222 @@ func (c *lumiAwsIam) GetGroups() ([]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) id() (string, error) {
+	props, err := p.Properties()
+	if err != nil {
+		return "", err
+	}
+
+	userid := props["arn"].(string)
+
+	return "aws/iam/credentialreport/" + userid, nil
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) GetArn() (string, error) {
+	props, err := p.Properties()
+	if err != nil {
+		return "", err
+	}
+
+	if props == nil {
+		return "", errors.New("could not read the credentials report")
+	}
+
+	val, ok := props["arn"].(string)
+	if !ok {
+		return "", errors.New("arn is not a string value")
+	}
+
+	return val, nil
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) getBoolValue(key string) (bool, error) {
+	props, err := p.Properties()
+	if err != nil {
+		return false, err
+	}
+
+	if props == nil {
+		return false, errors.New("could not read the credentials report")
+	}
+
+	val, ok := props[key].(string)
+	if !ok {
+		return false, errors.New(key + " is not a string value")
+	}
+
+	// handle "N/A" and "not_supported" value
+	// some accounts do not support specific values eg. root_account does not support password_enabled
+	if val == "not_supported" {
+		return false, nil
+	}
+
+	return strconv.ParseBool(val)
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) getStringValue(key string) (string, error) {
+	props, err := p.Properties()
+	if err != nil {
+		return "", err
+	}
+
+	if props == nil {
+		return "", errors.New("could not read the credentials report")
+	}
+
+	val, ok := props[key].(string)
+	if !ok {
+		return "", errors.New(key + " is not a string value")
+	}
+
+	return val, nil
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) getTimeValue(key string) (time.Time, error) {
+	log.Info().Msgf("gather time value for %v", key)
+	props, err := p.Properties()
+	if err != nil {
+		return toTime(nil), err
+	}
+
+	if props == nil {
+		log.Info().Msgf("could not retrieve key")
+		return toTime(nil), errors.New("could not read the credentials report")
+	}
+
+	val, ok := props[key].(string)
+	if !ok {
+		log.Info().Msgf("key is not a string")
+		return toTime(nil), errors.New(key + " is not a valid string value")
+	}
+
+	// handle "N/A" and "not_supported" value
+	// some accounts do not support specific values eg. root_account does not support password_last_changed or password_next_rotation
+	if val == "N/A" || val == "not_supported" {
+		return toTime(nil), nil
+	}
+
+	log.Info().Msgf("parse %v", err)
+	// parse iso 8601  "2020-07-15T14:52:00+00:00"
+	format := "2006-01-02T15:04:05-07:00"
+	parsed, err := time.Parse(format, val)
+	if err != nil {
+		log.Error().Err(err).Msg("could not parse the time")
+		return toTime(nil), errors.New("failed to parse time: " + err.Error())
+	}
+
+	return parsed, nil
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey1Active() (bool, error) {
+	return p.getBoolValue("access_key_1_active")
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey1LastRotated() (time.Time, error) {
+	return p.getTimeValue("access_key_1_last_rotated")
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey1LastUsedDate() (time.Time, error) {
+	return p.getTimeValue("access_key_1_last_used_date")
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey1LastUsedRegion() (string, error) {
+	return p.getStringValue("access_key_1_last_used_region")
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey1LastUsedService() (string, error) {
+	return p.getStringValue("access_key_1_last_used_service")
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey2Active() (bool, error) {
+	return p.getBoolValue("access_key_1_active")
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey2LastRotated() (time.Time, error) {
+	return p.getTimeValue("access_key_2_last_rotated")
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey2LastUsedDate() (time.Time, error) {
+	return p.getTimeValue("access_key_2_last_used_date")
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey2LastUsedRegion() (string, error) {
+	return p.getStringValue("access_key_2_last_used_region")
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey2LastUsedService() (string, error) {
+	return p.getStringValue("access_key_2_last_used_service")
+}
+
+// TODO: update keys
+
+func (p *lumiAwsIamUsercredentialreportentry) GetCert1Active() (bool, error) {
+	return p.getBoolValue("cert_1_active")
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) GetCert1LastRotated() (time.Time, error) {
+	return p.getTimeValue("cert_1_last_rotated")
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) GetCert2Active() (bool, error) {
+	return p.getBoolValue("cert_2_active")
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) GetCert2LastRotated() (time.Time, error) {
+	return p.getTimeValue("cert_2_last_rotated")
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) GetMfaActive() (bool, error) {
+	return p.getBoolValue("mfa_active")
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) GetPasswordEnabled() (bool, error) {
+	return p.getBoolValue("password_enabled")
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) GetPasswordLastChanged() (time.Time, error) {
+	return p.getTimeValue("password_last_changed")
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) GetPasswordLastUsed() (time.Time, error) {
+	return p.getTimeValue("password_last_used")
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) GetPasswordNextRotation() (time.Time, error) {
+	return p.getTimeValue("password_next_rotation")
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) GetUser() (interface{}, error) {
+
+	props, err := p.Properties()
+	if err != nil {
+		return toTime(nil), err
+	}
+
+	if props == nil {
+		log.Info().Msgf("could not retrieve key")
+		return toTime(nil), errors.New("could not read the credentials report")
+	}
+
+	// handle special case for the root account since that user does not exist
+	if props["user"] == "<root_account>" {
+		return nil, nil
+	}
+
+	lumiUser, err := p.Runtime.CreateResource("aws.iam.user",
+		"name", props["user"],
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return lumiUser, nil
+}
+
+func (p *lumiAwsIamUsercredentialreportentry) GetUserCreationTime() (time.Time, error) {
+	return p.getTimeValue("user_creation_time")
 }
 
 func (u *lumiAwsIamVirtualmfadevice) id() (string, error) {
