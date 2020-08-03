@@ -20,5 +20,9 @@ func TestParse_Date(t *testing.T) {
 			"parse.date('2023/12/23', '2006/01/02')",
 			0, simpleDate,
 		},
+		{
+			"parse.date('Mon Dec 23 00:00:00 2023', 'ansic')",
+			0, simpleDate,
+		},
 	})
 }

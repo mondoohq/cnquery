@@ -2,6 +2,7 @@ package llx
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"go.mondoo.io/mondoo/lumi"
@@ -107,6 +108,18 @@ func resourceLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 	return IntData(int64(len(list))), 0, nil
 }
 
+var timeFormats = map[string]string{
+	"ansic":    time.ANSIC,
+	"rfc822":   time.RFC822,
+	"rfc822z":  time.RFC822Z,
+	"rfc850":   time.RFC850,
+	"rfc1123":  time.RFC1123,
+	"rfc1123z": time.RFC1123Z,
+	"rfc3339":  time.RFC3339,
+	"kitchen":  time.Kitchen,
+	"stamp":    time.Stamp,
+}
+
 func resourceDate(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	args, rref, err := args2resourceargs(c, ref, chunk.Function.Args)
 	if err != nil || rref != 0 {
@@ -119,8 +132,8 @@ func resourceDate(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 	}
 
 	var timeParseFormat string
-	switch format {
-	default:
+	timeParseFormat, ok := timeFormats[strings.ToLower(format)]
+	if !ok {
 		timeParseFormat = format
 	}
 
