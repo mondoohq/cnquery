@@ -283,6 +283,10 @@ func TestString_Methods(t *testing.T) {
 func TestTime_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
+			"time.now.unix",
+			0, time.Now().Unix(),
+		},
+		{
 			"parse.date('0000-01-01T02:03:04Z').seconds",
 			0, int64(4 + 3*60 + 2*60*60),
 		},
