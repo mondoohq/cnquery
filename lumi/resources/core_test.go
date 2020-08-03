@@ -306,6 +306,10 @@ func TestTime_Methods(t *testing.T) {
 			"parse.date('1970-01-01T01:02:03Z').unix",
 			0, int64(1*60*60 + 02*60 + 03),
 		},
+		{
+			"parse.date('1970-01-01T01:02:04Z') - parse.date('1970-01-01T01:02:03Z')",
+			0, time.Unix(1+llx.ZeroTimeOffset, 0),
+		},
 	})
 }
 

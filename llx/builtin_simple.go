@@ -2,6 +2,7 @@ package llx
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -576,6 +577,30 @@ func timeGTETime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 		r := right.(time.Time)
 		return l.After(r) || l.Equal(r)
 	})
+}
+
+func timeMinusTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	v, dref, err := c.resolveValue(chunk.Function.Args[0], ref)
+	if err != nil {
+		return nil, 0, err
+	}
+	if dref != 0 {
+		return nil, dref, nil
+	}
+
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type}, 0, nil
+	}
+	if v == nil || v.Value == nil {
+		return &RawData{Type: bind.Type}, 0, nil
+	}
+
+	l := bind.Value.(time.Time)
+	r := v.Value.(time.Time)
+	diff := l.Unix() - r.Unix()
+	res := time.Unix(diff+ZeroTimeOffset, 0)
+
+	return TimeData(res), 0, nil
 }
 
 // int </>/<=/>= float
@@ -1398,14 +1423,18 @@ func stringSplit(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 
 // time methods
 
-var zeroTimeOffset int64
+// ZeroTimeOffset to help convert unix times into base times that start at the year 0
+var ZeroTimeOffset int64
 
 func init() {
 	zeroTime, err := time.Parse("2006-01-02", "0000-01-01")
 	if err != nil {
 		panic("failed to initialize zero time: " + err.Error())
 	}
-	zeroTimeOffset = zeroTime.Unix()
+	ZeroTimeOffset = zeroTime.Unix()
+
+	res := time.Unix(ZeroTimeOffset, 0)
+	fmt.Println(res.String())
 }
 
 func timeSeconds(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -1414,7 +1443,7 @@ func timeSeconds(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	}
 
 	t := bind.Value.(time.Time)
-	raw := t.Unix() - zeroTimeOffset
+	raw := t.Unix() - ZeroTimeOffset
 	return IntData(int64(raw)), 0, nil
 }
 
@@ -1424,7 +1453,7 @@ func timeMinutes(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	}
 
 	t := bind.Value.(time.Time)
-	raw := (t.Unix() - zeroTimeOffset) / 60
+	raw := (t.Unix() - ZeroTimeOffset) / 60
 	return IntData(int64(raw)), 0, nil
 }
 
@@ -1434,7 +1463,7 @@ func timeHours(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDa
 	}
 
 	t := bind.Value.(time.Time)
-	raw := (t.Unix() - zeroTimeOffset) / (60 * 60)
+	raw := (t.Unix() - ZeroTimeOffset) / (60 * 60)
 	return IntData(int64(raw)), 0, nil
 }
 
@@ -1444,7 +1473,7 @@ func timeDays(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDat
 	}
 
 	t := bind.Value.(time.Time)
-	raw := (t.Unix() - zeroTimeOffset) / (60 * 60 * 24)
+	raw := (t.Unix() - ZeroTimeOffset) / (60 * 60 * 24)
 	return IntData(int64(raw)), 0, nil
 }
 
