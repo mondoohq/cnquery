@@ -565,6 +565,8 @@ func (t *SimpleType) mondooTypeItems() string {
 		return "types.Regex"
 	case "time":
 		return "types.Time"
+	case "dict":
+		return "types.Dict"
 	default:
 		return "types.Resource(\"" + t.Type + "\")"
 	}
@@ -604,6 +606,7 @@ var primitiveTypes = map[string]string{
 	"int":    "int64",
 	"float":  "float64",
 	"time":   "time.Time",
+	"dict":   "map[string]interface{}",
 	"any":    "interface{}",
 }
 
@@ -630,6 +633,7 @@ var primitiveZeros = map[string]string{
 	"int":    "0",
 	"float":  "0.0",
 	"time":   "time.Time{}",
+	"dict":   "nil",
 	"any":    "nil",
 }
 

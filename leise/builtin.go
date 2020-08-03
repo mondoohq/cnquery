@@ -22,6 +22,7 @@ var boolType = func(t types.Type) types.Type { return types.Bool }
 var intType = func(t types.Type) types.Type { return types.Int }
 var stringType = func(t types.Type) types.Type { return types.String }
 var stringArrayType = func(t types.Type) types.Type { return types.Array(types.String) }
+var dictType = func(t types.Type) types.Type { return types.Dict }
 
 var builtinFunctions map[types.Type]map[string]compileHandler
 
@@ -40,6 +41,11 @@ func init() {
 			"hours":   {typ: intType, signature: FunctionSignature{}},
 			"days":    {typ: intType, signature: FunctionSignature{}},
 			"unix":    {typ: intType, signature: FunctionSignature{}},
+		},
+		types.Dict: {
+			"[]":     {typ: dictType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
+			"{}":     {typ: dictType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"length": {typ: intType, signature: FunctionSignature{}},
 		},
 		types.ArrayLike: {
 			"[]":       {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},

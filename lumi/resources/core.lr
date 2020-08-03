@@ -26,6 +26,13 @@ parse.ini {
   params(sections) map[string]string
 }
 
+parse.json {
+  init(path string)
+  file() file
+  content(file) string
+  params(content) dict
+}
+
 platform {
   name string
   title string
