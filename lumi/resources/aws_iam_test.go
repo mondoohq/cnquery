@@ -1,5 +1,12 @@
 package resources_test
 
+import (
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/require"
+)
+
 // import (
 // 	"context"
 // 	"fmt"
@@ -98,3 +105,16 @@ package resources_test
 // 	assert.Equal(t, "", decodedValue)
 
 // }
+
+func TestParseAwsIso8601Parser(t *testing.T) {
+	timestamps := []string{
+		"2019-06-11T19:04:54+00:00",
+		"2019-08-08T10:36:33+00:00",
+	}
+
+	for i := range timestamps {
+		format := "2006-01-02T15:04:05-07:00"
+		_, err := time.Parse(format, timestamps[i])
+		require.NoError(t, err)
+	}
+}

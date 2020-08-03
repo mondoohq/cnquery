@@ -561,6 +561,35 @@ aws.iam {
 aws.iam.usercredentialreportentry {
   init(properties map[string]string)
   properties map[string]string
+
+  arn() string
+
+  accessKey1Active() bool
+  accessKey1LastRotated() time
+  accessKey1LastUsedDate() time
+  accessKey1LastUsedRegion() string
+  accessKey1LastUsedService() string
+
+  accessKey2Active() bool
+  accessKey2LastRotated() time
+  accessKey2LastUsedDate() time
+  accessKey2LastUsedRegion() string
+  accessKey2LastUsedService() string
+
+  cert1Active() bool
+  cert1LastRotated() time
+
+  cert2Active() bool
+  cert2LastRotated() time
+
+  mfaActive() bool
+  passwordEnabled() bool
+  passwordLastChanged() time
+  passwordLastUsed() time
+  passwordNextRotation() time
+
+  user() aws.iam.user
+  userCreationTime() time
 }
 
 aws.iam.user {
