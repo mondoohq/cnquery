@@ -107,3 +107,63 @@ func dictLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 func dictBlockCall(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return c.runBlock(bind, chunk.Function.Args[0], ref)
 }
+
+// dict ==/!= nil
+
+func opDictCmpNil(left interface{}, right interface{}) bool {
+	return left == nil
+}
+
+func opNilCmpDict(left interface{}, right interface{}) bool {
+	return right == nil
+}
+
+func dictCmpNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictCmpNil)
+}
+
+func dictNotNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opDictCmpNil)
+}
+
+func nilCmpDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opNilCmpDict)
+}
+
+func nilNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opNilCmpDict)
+}
+
+// dict ==/!= string
+
+func opDictCmpString(left interface{}, right interface{}) bool {
+	l, ok := left.(string)
+	if !ok {
+		return false
+	}
+	return l == right.(string)
+}
+
+func opStringCmpDict(left interface{}, right interface{}) bool {
+	r, ok := right.(string)
+	if !ok {
+		return false
+	}
+	return r == left.(string)
+}
+
+func dictCmpString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictCmpString)
+}
+
+func dictNotString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opDictCmpString)
+}
+
+func stringCmpDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opStringCmpDict)
+}
+
+func stringNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opStringCmpDict)
+}
