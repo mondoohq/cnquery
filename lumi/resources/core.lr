@@ -848,3 +848,55 @@ gcloud.sql.instance {
   serviceAccountEmailAddress string
   settings dict
 }
+
+msgraph {
+  users []msgraph.user
+}
+
+msgraph.user {
+  id string
+  name string
+  givenName string
+  surname string
+  userPrincipalName string
+  accountEnabled bool
+  mail string
+  userType string
+}
+
+azurerm {
+  sqlservers []azurerm.sqlserver
+  vms []azurerm.vm
+}
+
+azurerm.compute.vm {
+  id string
+  name string
+  location string
+  tags map[string]string
+  properties dict
+}
+
+azurerm.storage.account {
+
+}
+
+azurerm.storage.blob {
+
+}
+
+azurerm.mssql.server {
+
+}
+
+azurerm.mssql.database {
+
+}
+
+azurerm.postgresql.server {
+
+}
+
+azurerm.postgresql.database {
+
+}
