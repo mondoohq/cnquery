@@ -849,24 +849,58 @@ gcloud.sql.instance {
   settings dict
 }
 
-msgraph {
-  users []msgraph.user
+azuread {
+  users() []azuread.user
+  groups() []azuread.group
+  domains() []azuread.domain
+  applications() []azuread.application
+  servicePrincipals() []azuread.serviceprincipal
 }
 
-msgraph.user {
+azuread.user {
   id string
-  name string
+  displayName string
   givenName string
   surname string
   userPrincipalName string
   accountEnabled bool
+  mailNickname string
   mail string
+  objectType string
   userType string
 }
 
+azuread.group {
+  id string
+  displayName string
+  securityEnabled bool
+  mailEnabled bool
+  mailNickname string
+  mail string
+  properties dict
+  objectType string
+  members() []azuread.user
+}
+
+azuread.domain {
+  name string
+  isVerified bool
+  isDefault bool
+  properties dict
+}
+
+azuread.application {
+  id string
+}
+
+azuread.serviceprincipal {
+  id string
+}
+
 azurerm {
-  sqlservers []azurerm.sqlserver
-  vms []azurerm.vm
+  vms() []azurerm.vm
+  sqlServers() []azurerm.mssql.server
+  postgresqlServers() []azurerm.postgresql.server
 }
 
 azurerm.compute.vm {
@@ -874,29 +908,35 @@ azurerm.compute.vm {
   name string
   location string
   tags map[string]string
+  type string
   properties dict
 }
 
 azurerm.storage.account {
-
+  id string
 }
 
 azurerm.storage.blob {
-
+  id string
 }
 
 azurerm.mssql.server {
-
+  id string
 }
 
 azurerm.mssql.database {
-
+  id string
 }
 
 azurerm.postgresql.server {
-
+  id string
+  name string
+  location string
+  tags map[string]string
+  type string
+  properties dict
 }
 
 azurerm.postgresql.database {
-
+  id string
 }
