@@ -239,6 +239,7 @@ func init() {
 		types.Dict: {
 			"[]":     {f: dictGetIndex},
 			"length": {f: dictLength},
+			"{}":     {f: dictBlockCall},
 		},
 		types.ArrayLike: {
 			"[]":     {f: arrayGetIndex},
