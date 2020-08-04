@@ -91,3 +91,15 @@ func dictGetIndex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 		Value: m[key],
 	}, 0, nil
 }
+
+func dictLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type}, 0, nil
+	}
+
+	arr, ok := bind.Value.(map[string]interface{})
+	if !ok {
+		return nil, 0, errors.New("failed to typecast into " + bind.Type.Label())
+	}
+	return IntData(int64(len(arr))), 0, nil
+}
