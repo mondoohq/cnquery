@@ -103,3 +103,7 @@ func dictLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 	}
 	return IntData(int64(len(arr))), 0, nil
 }
+
+func dictBlockCall(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return c.runBlock(bind, chunk.Function.Args[0], ref)
+}
