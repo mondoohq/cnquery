@@ -314,6 +314,22 @@ func TestTime_Methods(t *testing.T) {
 			"parse.date('0000-01-01T00:00:03Z') * 3",
 			0, time.Unix(9+llx.ZeroTimeOffset, 0),
 		},
+		{
+			"3 * time.second",
+			0, time.Unix(3+llx.ZeroTimeOffset, 0),
+		},
+		{
+			"3 * time.minute",
+			0, time.Unix(3*60+llx.ZeroTimeOffset, 0),
+		},
+		{
+			"3 * time.hour",
+			0, time.Unix(3*60*60+llx.ZeroTimeOffset, 0),
+		},
+		{
+			"3 * time.day",
+			0, time.Unix(3*60*60*24+llx.ZeroTimeOffset, 0),
+		},
 	})
 }
 

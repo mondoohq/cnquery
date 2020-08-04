@@ -11,6 +11,10 @@ parse {
 
 time {
   now() time
+  second() time
+  minute() time
+  hour() time
+  day() time
 }
 
 parse.ini {
