@@ -165,11 +165,16 @@ func compileTransformation(c *compiler, id string, call *parser.Call, res *llx.C
 		}
 	}
 
+	returnType := h.Typ
+	if returnType == types.Unspecified {
+		returnType = lt
+	}
+
 	res.Code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   name,
 		Function: &llx.Function{
-			Type:    string(lt),
+			Type:    string(returnType),
 			Binding: leftRef,
 			Args:    []*llx.Primitive{right},
 		},

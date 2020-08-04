@@ -14,6 +14,7 @@ type chunkHandler struct {
 	Compiler func(types.Type, types.Type) (string, error)
 	f        func(*LeiseExecutor, *RawData, *Chunk, int32) (*RawData, int32, error)
 	Label    string
+	Typ      types.Type
 }
 
 // BuiltinFunctions for all builtin types
@@ -86,7 +87,7 @@ func init() {
 			string("||" + types.Regex):               {f: intOrRegex, Label: "||"},
 			string("&&" + types.ArrayLike):           {f: intAndArray, Label: "&&"},
 			string("||" + types.ArrayLike):           {f: intOrArray, Label: "||"},
-			string("*" + types.Time):                 {f: intTimesTime, Label: "*"},
+			string("*" + types.Time):                 {f: intTimesTime, Label: "*", Typ: types.Time},
 		},
 		types.Float: {
 			string("==" + types.Nil):                 {f: floatCmpNil, Label: "=="},
@@ -218,16 +219,16 @@ func init() {
 		types.Time: {
 			string("==" + types.Nil):  {f: timeCmpNil, Label: "=="},
 			string("!=" + types.Nil):  {f: timeNotNil, Label: "!="},
-			string("==" + types.Time): {f: timeCmpTime, Label: "=="},
-			string("!=" + types.Time): {f: timeNotTime, Label: "!="},
 			string("&&" + types.Bool): {f: timeAndBool, Label: "&&"},
 			string("||" + types.Bool): {f: timeOrBool, Label: "||"},
+			string("==" + types.Time): {f: timeCmpTime, Label: "=="},
+			string("!=" + types.Time): {f: timeNotTime, Label: "!="},
 			string("<" + types.Time):  {f: timeLTTime, Label: "<"},
 			string("<=" + types.Time): {f: timeLTETime, Label: "<="},
 			string(">" + types.Time):  {f: timeGTTime, Label: ">"},
 			string(">=" + types.Time): {f: timeGTETime, Label: ">="},
 			string("-" + types.Time):  {f: timeMinusTime, Label: "-"},
-			string("*" + types.Int):   {f: timeTimesInt, Label: "*"},
+			string("*" + types.Int):   {f: timeTimesInt, Label: "*", Typ: types.Time},
 			// fields
 			string("seconds"): {f: timeSeconds, Label: "seconds"},
 			string("minutes"): {f: timeMinutes, Label: "minutes"},

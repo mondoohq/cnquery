@@ -3,6 +3,9 @@ package types
 // Type information
 type Type string
 
+// Unspecified indicates that this type has not been specified
+const Unspecified Type = ""
+
 const (
 	byteAny byte = 1 + iota
 	byteNil
