@@ -898,7 +898,7 @@ azuread.serviceprincipal {
 }
 
 azurerm {
-  vms() []azurerm.vm
+  vms() []azurerm.compute.vm
   sqlServers() []azurerm.mssql.server
   postgresqlServers() []azurerm.postgresql.server
 }
