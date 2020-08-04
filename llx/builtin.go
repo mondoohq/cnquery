@@ -86,6 +86,7 @@ func init() {
 			string("||" + types.Regex):               {f: intOrRegex, Label: "||"},
 			string("&&" + types.ArrayLike):           {f: intAndArray, Label: "&&"},
 			string("||" + types.ArrayLike):           {f: intOrArray, Label: "||"},
+			string("*" + types.Time):                 {f: intTimesTime, Label: "*"},
 		},
 		types.Float: {
 			string("==" + types.Nil):                 {f: floatCmpNil, Label: "=="},
@@ -226,6 +227,7 @@ func init() {
 			string(">" + types.Time):  {f: timeGTTime, Label: ">"},
 			string(">=" + types.Time): {f: timeGTETime, Label: ">="},
 			string("-" + types.Time):  {f: timeMinusTime, Label: "-"},
+			string("*" + types.Int):   {f: timeTimesInt, Label: "*"},
 			// fields
 			string("seconds"): {f: timeSeconds, Label: "seconds"},
 			string("minutes"): {f: timeMinutes, Label: "minutes"},
