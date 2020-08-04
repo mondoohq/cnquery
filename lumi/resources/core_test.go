@@ -330,6 +330,10 @@ func TestTime_Methods(t *testing.T) {
 			"3 * time.day",
 			0, time.Unix(3*60*60*24+llx.ZeroTimeOffset, 0),
 		},
+		{
+			"1 * time.day > 3 * time.hour",
+			2, true,
+		},
 	})
 }
 
