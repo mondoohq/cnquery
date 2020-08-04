@@ -602,6 +602,54 @@ func timeMinusTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	return TimeData(res), 0, nil
 }
 
+func timeTimesInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	v, dref, err := c.resolveValue(chunk.Function.Args[0], ref)
+	if err != nil {
+		return nil, 0, err
+	}
+	if dref != 0 {
+		return nil, dref, nil
+	}
+
+	if bind.Value == nil {
+		return &RawData{Type: types.Time}, 0, nil
+	}
+	if v == nil || v.Value == nil {
+		return &RawData{Type: types.Time}, 0, nil
+	}
+
+	l := bind.Value.(time.Time)
+	r := v.Value.(int64)
+	diff := (l.Unix() - ZeroTimeOffset) * r
+	res := time.Unix(diff+ZeroTimeOffset, 0)
+
+	return TimeData(res), 0, nil
+}
+
+func intTimesTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	v, dref, err := c.resolveValue(chunk.Function.Args[0], ref)
+	if err != nil {
+		return nil, 0, err
+	}
+	if dref != 0 {
+		return nil, dref, nil
+	}
+
+	if bind.Value == nil {
+		return &RawData{Type: types.Time}, 0, nil
+	}
+	if v == nil || v.Value == nil {
+		return &RawData{Type: types.Time}, 0, nil
+	}
+
+	l := bind.Value.(int64)
+	r := v.Value.(time.Time)
+	diff := (r.Unix() - ZeroTimeOffset) * l
+	res := time.Unix(diff+ZeroTimeOffset, 0)
+
+	return TimeData(res), 0, nil
+}
+
 // int </>/<=/>= float
 
 func intLTFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
