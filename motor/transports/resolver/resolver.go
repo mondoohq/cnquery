@@ -15,6 +15,7 @@ import (
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/arista"
 	"go.mondoo.io/mondoo/motor/transports/aws"
+	"go.mondoo.io/mondoo/motor/transports/azure"
 	"go.mondoo.io/mondoo/motor/transports/docker/docker_engine"
 	"go.mondoo.io/mondoo/motor/transports/docker/image"
 	"go.mondoo.io/mondoo/motor/transports/docker/snapshot"
@@ -323,6 +324,25 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 	case transports.TransportBackend_CONNECTION_GCP:
 		log.Debug().Msg("connection> load gcp transport")
 		trans, err := gcp.New(endpoint)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(trans)
+		if err != nil {
+			return nil, err
+		}
+
+		if endpoint.Record {
+			m.ActivateRecorder()
+		}
+
+		id, err := trans.Identifier()
+		if err == nil && len(id) > 0 {
+			identifier = append(identifier, id)
+		}
+	case transports.TransportBackend_CONNECTION_AZURE:
+		log.Debug().Msg("connection> load azure transport")
+		trans, err := azure.New(endpoint)
 		if err != nil {
 			return nil, err
 		}
