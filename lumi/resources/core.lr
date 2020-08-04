@@ -680,8 +680,8 @@ aws.cloudtrail.trailstatus {
   latestDigestDeliveryTime time
   latestNotificationError string
   latestNotificationTime time
-  startLoggingTime int
-  stopLoggingTime int
+  startLoggingTime time
+  stopLoggingTime time
 }
 
 aws.s3 {

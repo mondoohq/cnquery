@@ -513,7 +513,6 @@ func (p *lumiAwsIamUsercredentialreportentry) getStringValue(key string) (string
 }
 
 func (p *lumiAwsIamUsercredentialreportentry) getTimeValue(key string) (time.Time, error) {
-	log.Info().Msgf("gather time value for %v", key)
 	props, err := p.Properties()
 	if err != nil {
 		return toTime(nil), err
@@ -536,7 +535,6 @@ func (p *lumiAwsIamUsercredentialreportentry) getTimeValue(key string) (time.Tim
 		return toTime(nil), nil
 	}
 
-	log.Info().Msgf("parse %v", err)
 	// parse iso 8601  "2020-07-15T14:52:00+00:00"
 	format := "2006-01-02T15:04:05-07:00"
 	parsed, err := time.Parse(format, val)

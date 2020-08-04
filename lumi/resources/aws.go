@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/motor/transports"
 	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
@@ -33,7 +32,7 @@ func toBool(i *bool) bool {
 
 func toTime(i *time.Time) time.Time {
 	if i == nil {
-		return time.Unix(llx.ZeroTimeOffset, 0)
+		return time.Time{}
 	}
 	return *i
 }
