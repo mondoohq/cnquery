@@ -29,6 +29,7 @@ func init() {
 	resolver["gcp"] = &gcpResolver{}
 	resolver["cr"] = &containerRegistryResolver{}
 	resolver["az"] = &azureResolver{}
+	resolver["azure"] = &azureResolver{}
 	resolver["aws"] = &awsResolver{}
 	resolver["ec2"] = &awsResolver{}
 	resolver["vagrant"] = &vagrantResolver{}

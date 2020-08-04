@@ -11,6 +11,7 @@ const (
 	RUNTIME_DOCKER_IMAGE     = "docker image"
 	RUNTIME_DOCKER_REGISTRY  = "docker registry"
 	RUNTIME_KUBERNETES       = "k8s"
+	RUNTIME_AZ               = "az" // api
 	RUNTIME_AZ_COMPUTE       = "az compute"
 	RUNTIME_VSPHERE          = "vsphere"      // api
 	RUNTIME_VSPHERE_HOSTS    = "vsphere host" // esxi instances

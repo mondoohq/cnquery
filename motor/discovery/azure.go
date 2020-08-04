@@ -1,15 +1,15 @@
 package discovery
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/apps/mondoo/cmd/options"
 	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/discovery/azure"
+	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/transports"
+	azure_transport "go.mondoo.io/mondoo/motor/transports/azure"
 )
 
 type AzureConfig struct {
@@ -70,29 +70,68 @@ type azureResolver struct{}
 func (k *azureResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
-	config := ParseAzureInstanceContext(in.Connection)
+	// TODO: do not require resource groups
+	// config := ParseAzureInstanceContext(in.Connection)
 
-	err := config.Validate()
+	// err := config.Validate()
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// TODO: remove or read from `az account show --output json`
+	subscriptionID := "d13c8331-50af-4496-b9d2-3ff8e72d22b9"
+	tenantID := "039ce72a-f3e7-41f4-9ab4-2475a5283017"
+
+	// add azure api as asset
+	t := &transports.TransportConfig{
+		Backend: transports.TransportBackend_CONNECTION_AZURE,
+		Options: map[string]string{
+			"subscriptionID": subscriptionID,
+			"tenantID":       tenantID,
+		},
+	}
+
+	trans, err := azure_transport.New(t)
 	if err != nil {
 		return nil, err
 	}
 
-	r, err := azure.NewCompute(config.ResourceID())
+	identifier, err := trans.Identifier()
 	if err != nil {
-		return nil, errors.Wrap(err, "could not initialize azure compute discovery")
+		return nil, err
 	}
 
-	ctx := context.Background()
-	assetList, err := r.ListInstances(ctx)
+	// detect platform info for the asset
+	detector := platform.NewDetector(trans)
+	pf, err := detector.Platform()
 	if err != nil {
-		return nil, errors.Wrap(err, "could not fetch azure compute instances")
+		return nil, err
 	}
-	log.Debug().Int("instances", len(assetList)).Msg("completed instance search")
 
-	for i := range assetList {
-		log.Debug().Str("name", assetList[i].Name).Msg("resolved azure compute instance")
-		resolved = append(resolved, assetList[i])
-	}
+	resolved = append(resolved, &asset.Asset{
+		ReferenceIDs: []string{identifier},
+		Name:         "Azure subscription " + subscriptionID,
+		Platform:     pf,
+		Connections:  []*transports.TransportConfig{t}, // pass-in the current config
+	})
+
+	// // get all compute instances
+	// r, err := azure.NewCompute(config.ResourceID())
+	// if err != nil {
+	// 	return nil, errors.Wrap(err, "could not initialize azure compute discovery")
+	// }
+
+	// ctx := context.Background()
+	// assetList, err := r.ListInstances(ctx)
+	// if err != nil {
+	// 	return nil, errors.Wrap(err, "could not fetch azure compute instances")
+	// }
+	// log.Debug().Int("instances", len(assetList)).Msg("completed instance search")
+
+	// for i := range assetList {
+	// 	log.Debug().Str("name", assetList[i].Name).Msg("resolved azure compute instance")
+	// 	resolved = append(resolved, assetList[i])
+	// }
 
 	return resolved, nil
 }
