@@ -145,10 +145,47 @@ func (a *lumiAzurerm) GetPostgresqlServers() ([]interface{}, error) {
 	return res, nil
 }
 
+func (a *lumiAzurermPostgresqlServer) id() (string, error) {
+	return a.Id()
+}
+
+func (a *lumiAzurermPostgresqlServer) GetConfiguration() (map[string]interface{}, error) {
+
+	id, err := a.Id()
+	if err != nil {
+		return nil, err
+	}
+
+	settings := make(map[string](interface{}))
+
+	dbConfClient := postgresql.NewConfigurationsClient(subscriptionID)
+	dbConfClient.Authorizer = authorizer
+
+	config, err := dbConfClient.ListByServer(ctx, "demo", "pg11-test")
+
+	return settings, nil
+}
+
+func (a *lumiAzurermPostgresqlDatabase) id() (string, error) {
+	return a.Id()
+}
+
 func (a *lumiAzurermComputeVm) id() (string, error) {
 	return a.Id()
 }
 
 func (a *lumiAzurermStorageAccount) id() (string, error) {
+	return a.Id()
+}
+
+func (a *lumiAzurermStorageBlob) id() (string, error) {
+	return a.Id()
+}
+
+func (a *lumiAzurermMssqlServer) id() (string, error) {
+	return a.Id()
+}
+
+func (a *lumiAzurermMssqlDatabase) id() (string, error) {
 	return a.Id()
 }

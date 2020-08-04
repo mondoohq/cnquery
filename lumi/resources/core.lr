@@ -868,6 +868,7 @@ azuread.user {
   mail string
   objectType string
   userType string
+  properties dict
 }
 
 azuread.group {
@@ -877,8 +878,8 @@ azuread.group {
   mailEnabled bool
   mailNickname string
   mail string
-  properties dict
   objectType string
+  properties dict
   members() []azuread.user
 }
 
@@ -886,6 +887,7 @@ azuread.domain {
   name string
   isVerified bool
   isDefault bool
+  authenticationType string
   properties dict
 }
 
@@ -935,6 +937,7 @@ azurerm.postgresql.server {
   tags map[string]string
   type string
   properties dict
+  configuration() dict
 }
 
 azurerm.postgresql.database {

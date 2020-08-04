@@ -1,21 +1,188 @@
 package resources
 
-import "errors"
+import (
+	"context"
+	"encoding/json"
+	"errors"
+
+	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+)
 
 func (a *lumiAzuread) id() (string, error) {
 	return "azuread", nil
 }
 
 func (a *lumiAzuread) GetUsers() ([]interface{}, error) {
-	return nil, errors.New("not implemented")
+	at, err := azuretransport(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	authorizer, err := at.GraphAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	usersClient := graphrbac.NewUsersClient(at.TenantID())
+	usersClient.Authorizer = authorizer
+
+	ctx := context.Background()
+	userList, err := usersClient.List(ctx, "", "")
+	if err != nil {
+		return nil, err
+	}
+
+	res := []interface{}{}
+	for i := range userList.Values() {
+		usr := userList.Values()[i]
+
+		properties := make(map[string](interface{}))
+
+		data, err := json.Marshal(usr.AdditionalProperties)
+		if err != nil {
+			return nil, err
+		}
+
+		err = json.Unmarshal([]byte(data), &properties)
+		if err != nil {
+			return nil, err
+		}
+
+		lumiAzureAdUser, err := a.Runtime.CreateResource("azuread.user",
+			"id", toString(usr.ObjectID),
+			"displayName", toString(usr.DisplayName),
+			"givenName", toString(usr.GivenName),
+			"surname", toString(usr.Surname),
+			"userPrincipalName", toString(usr.UserPrincipalName),
+			"accountEnabled", toBool(usr.AccountEnabled),
+			"mailNickname", toString(usr.MailNickname),
+			"mail", toString(usr.Mail),
+			"objectType", string(usr.ObjectType),
+			"userType", string(usr.UserType),
+			"properties", properties,
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, lumiAzureAdUser)
+	}
+
+	return res, nil
 }
 
 func (a *lumiAzuread) GetGroups() ([]interface{}, error) {
-	return nil, errors.New("not implemented")
+	at, err := azuretransport(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	authorizer, err := at.GraphAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	groupsClient := graphrbac.NewGroupsClient(at.TenantID())
+	groupsClient.Authorizer = authorizer
+
+	ctx := context.Background()
+	grpList, err := groupsClient.List(ctx, "")
+	if err != nil {
+		return nil, err
+	}
+
+	res := []interface{}{}
+	for i := range grpList.Values() {
+		grp := grpList.Values()[i]
+
+		properties := make(map[string](interface{}))
+
+		data, err := json.Marshal(grp.AdditionalProperties)
+		if err != nil {
+			return nil, err
+		}
+
+		err = json.Unmarshal([]byte(data), &properties)
+		if err != nil {
+			return nil, err
+		}
+
+		lumiAzureAdGroup, err := a.Runtime.CreateResource("azuread.group",
+			"id", toString(grp.ObjectID),
+			"displayName", toString(grp.DisplayName),
+			"securityEnabled", toBool(grp.SecurityEnabled),
+			"mailEnabled", toBool(grp.MailEnabled),
+			"mailNickname", toString(grp.MailNickname),
+			"mail", toString(grp.Mail),
+			"mailNickname", toString(grp.MailNickname),
+			"mail", toString(grp.Mail),
+			"objectType", string(grp.ObjectType),
+			"properties", properties,
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, lumiAzureAdGroup)
+	}
+
+	return res, nil
 }
 
 func (a *lumiAzuread) GetDomains() ([]interface{}, error) {
-	return nil, errors.New("not implemented")
+	at, err := azuretransport(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	authorizer, err := at.GraphAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	domainClient := graphrbac.NewDomainsClient(at.TenantID())
+	domainClient.Authorizer = authorizer
+
+	ctx := context.Background()
+	domainList, err := domainClient.List(ctx, "")
+	if err != nil {
+		return nil, err
+	}
+
+	res := []interface{}{}
+
+	if domainList.Value == nil {
+		return res, nil
+	}
+
+	list := *domainList.Value
+	for i := range list {
+		domain := list[i]
+
+		properties := make(map[string](interface{}))
+
+		data, err := json.Marshal(domain.AdditionalProperties)
+		if err != nil {
+			return nil, err
+		}
+
+		err = json.Unmarshal([]byte(data), &properties)
+		if err != nil {
+			return nil, err
+		}
+
+		lumiAzureAdDomain, err := a.Runtime.CreateResource("azuread.domain",
+			"name", toString(domain.Name),
+			"isVerified", toBool(domain.IsVerified),
+			"isDefault", toBool(domain.IsDefault),
+			"authenticationType", toString(domain.AuthenticationType),
+			"properties", properties,
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, lumiAzureAdDomain)
+	}
+
+	return res, nil
 }
 
 func (a *lumiAzuread) GetApplications() ([]interface{}, error) {
@@ -47,25 +214,5 @@ func (a *lumiAzureadApplication) id() (string, error) {
 }
 
 func (a *lumiAzureadServiceprincipal) id() (string, error) {
-	return a.Id()
-}
-
-func (a *lumiAzurermStorageBlob) id() (string, error) {
-	return a.Id()
-}
-
-func (a *lumiAzurermMssqlServer) id() (string, error) {
-	return a.Id()
-}
-
-func (a *lumiAzurermMssqlDatabase) id() (string, error) {
-	return a.Id()
-}
-
-func (a *lumiAzurermPostgresqlServer) id() (string, error) {
-	return a.Id()
-}
-
-func (a *lumiAzurermPostgresqlDatabase) id() (string, error) {
 	return a.Id()
 }
