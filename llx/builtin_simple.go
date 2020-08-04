@@ -597,7 +597,7 @@ func timeMinusTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	l := bind.Value.(time.Time)
 	r := v.Value.(time.Time)
 	diff := l.Unix() - r.Unix()
-	res := time.Unix(diff+ZeroTimeOffset, 0)
+	res := DurationToTime(diff)
 
 	return TimeData(res), 0, nil
 }
@@ -620,8 +620,8 @@ func timeTimesInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 
 	l := bind.Value.(time.Time)
 	r := v.Value.(int64)
-	diff := (l.Unix() - ZeroTimeOffset) * r
-	res := time.Unix(diff+ZeroTimeOffset, 0)
+	diff := TimeToDuration(l) * r
+	res := DurationToTime(diff)
 
 	return TimeData(res), 0, nil
 }
@@ -644,8 +644,8 @@ func intTimesTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 
 	l := bind.Value.(int64)
 	r := v.Value.(time.Time)
-	diff := (r.Unix() - ZeroTimeOffset) * l
-	res := time.Unix(diff+ZeroTimeOffset, 0)
+	diff := TimeToDuration(r) * l
+	res := DurationToTime(diff)
 
 	return TimeData(res), 0, nil
 }
@@ -1470,8 +1470,18 @@ func stringSplit(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 
 // time methods
 
-// ZeroTimeOffset to help convert unix times into base times that start at the year 0
-const ZeroTimeOffset int64 = -62167219200
+// zeroTimeOffset to help convert unix times into base times that start at the year 0
+const zeroTimeOffset int64 = -62167219200
+
+// TimeToDuration takes a regular time object and treats it as a duration and gets the duration in seconds
+func TimeToDuration(t time.Time) int64 {
+	return t.Unix() - zeroTimeOffset
+}
+
+// DurationToTime takes a duration in seconds and turns it into a time object
+func DurationToTime(i int64) time.Time {
+	return time.Unix(i+zeroTimeOffset, 0)
+}
 
 func timeSeconds(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
@@ -1479,7 +1489,7 @@ func timeSeconds(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	}
 
 	t := bind.Value.(time.Time)
-	raw := t.Unix() - ZeroTimeOffset
+	raw := TimeToDuration(t)
 	return IntData(int64(raw)), 0, nil
 }
 
@@ -1489,7 +1499,7 @@ func timeMinutes(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	}
 
 	t := bind.Value.(time.Time)
-	raw := (t.Unix() - ZeroTimeOffset) / 60
+	raw := TimeToDuration(t) / 60
 	return IntData(int64(raw)), 0, nil
 }
 
@@ -1499,7 +1509,7 @@ func timeHours(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDa
 	}
 
 	t := bind.Value.(time.Time)
-	raw := (t.Unix() - ZeroTimeOffset) / (60 * 60)
+	raw := TimeToDuration(t) / (60 * 60)
 	return IntData(int64(raw)), 0, nil
 }
 
@@ -1509,7 +1519,7 @@ func timeDays(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDat
 	}
 
 	t := bind.Value.(time.Time)
-	raw := (t.Unix() - ZeroTimeOffset) / (60 * 60 * 24)
+	raw := TimeToDuration(t) / (60 * 60 * 24)
 	return IntData(int64(raw)), 0, nil
 }
 

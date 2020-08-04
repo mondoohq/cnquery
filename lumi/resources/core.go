@@ -16,10 +16,10 @@ func (p *lumiTime) GetNow() (time.Time, error) {
 }
 
 var (
-	second = time.Unix(1+llx.ZeroTimeOffset, 0)
-	minute = time.Unix(60+llx.ZeroTimeOffset, 0)
-	hour   = time.Unix(60*60+llx.ZeroTimeOffset, 0)
-	day    = time.Unix(24*60*60+llx.ZeroTimeOffset, 0)
+	second = llx.DurationToTime(1)
+	minute = llx.DurationToTime(60)
+	hour   = llx.DurationToTime(60 * 60)
+	day    = llx.DurationToTime(24 * 60 * 60)
 )
 
 func (p *lumiTime) GetSecond() (time.Time, error) {
