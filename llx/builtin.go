@@ -236,6 +236,9 @@ func init() {
 			string("days"):    {f: timeDays, Label: "days"},
 			string("unix"):    {f: timeUnix, Label: "unix"},
 		},
+		types.Dict: {
+			"[]": {f: dictGetIndex},
+		},
 		types.ArrayLike: {
 			"[]":     {f: arrayGetIndex},
 			"{}":     {f: arrayBlockList},
