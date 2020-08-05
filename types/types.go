@@ -17,7 +17,7 @@ const (
 	byteRegex
 	byteTime
 	byteDict
-	byteArray = 1<<4 + iota - 1 // set to 24 to avoid breaking changes
+	byteArray = 1<<4 + iota - 2 // set to 24 to avoid breaking changes
 	byteMap
 	byteResource
 	byteFunction
