@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/sql/mgmt/sql"
+	preview_sql "github.com/Azure/azure-sdk-for-go/services/preview/sql/mgmt/2017-03-01-preview/sql"
 	"github.com/rs/zerolog/log"
 )
 
@@ -363,6 +364,45 @@ func (a *lumiAzurermSqlServer) GetConnectionPolicy() (map[string]interface{}, er
 	return jsonToDict(policy)
 }
 
+func (a *lumiAzurermSqlServer) GetAuditingPolicy() (map[string]interface{}, error) {
+	at, err := azuretransport(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	// id is a azure resource od
+	id, err := a.Id()
+	if err != nil {
+		return nil, err
+	}
+
+	resourceID, err := at.ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	server, err := resourceID.Component("servers")
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	authorizer, err := at.Authorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	auditClient := preview_sql.NewServerBlobAuditingPoliciesClient(resourceID.SubscriptionID)
+	auditClient.Authorizer = authorizer
+
+	policy, err := auditClient.Get(ctx, resourceID.ResourceGroup, server)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonToDict(policy.ServerBlobAuditingPolicyProperties)
+}
+
 func (a *lumiAzurermSqlDatabase) id() (string, error) {
 	return a.Id()
 }
@@ -594,6 +634,50 @@ func (a *lumiAzurermSqlDatabase) GetConnectionPolicy() (map[string]interface{}, 
 	}
 
 	return jsonToDict(policy)
+}
+
+func (a *lumiAzurermSqlDatabase) GetAuditingPolicy() (map[string]interface{}, error) {
+	at, err := azuretransport(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	// id is a azure resource od
+	id, err := a.Id()
+	if err != nil {
+		return nil, err
+	}
+
+	resourceID, err := at.ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	server, err := resourceID.Component("servers")
+	if err != nil {
+		return nil, err
+	}
+
+	database, err := resourceID.Component("databases")
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	authorizer, err := at.Authorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	auditClient := preview_sql.NewDatabaseBlobAuditingPoliciesClient(resourceID.SubscriptionID)
+	auditClient.Authorizer = authorizer
+
+	policy, err := auditClient.Get(ctx, resourceID.ResourceGroup, server, database)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonToDict(policy.DatabaseBlobAuditingPolicyProperties)
 }
 
 func (a *lumiAzurermSqlServerAdministrator) id() (string, error) {
