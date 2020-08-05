@@ -12,6 +12,7 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
+	azure_transport "go.mondoo.io/mondoo/motor/transports/azure"
 )
 
 // calls az to get azure token
@@ -48,7 +49,7 @@ func (c *AzureClient) PublicIPAddressesClient() network.PublicIPAddressesClient 
 // az://subscriptions/20192456-09dd-4782-8046-8cdfede4026a/resourceGroups/Demo"
 func NewCompute(azureResource string) (*Compute, error) {
 
-	resource, err := ParseResourceID(azureResource)
+	resource, err := azure_transport.ParseResourceID(azureResource)
 	if err != nil {
 		return nil, errors.Wrap(err, "invalid azure resource e.g. use /subscriptions/1234/resourceGroups/Name")
 	}
@@ -80,7 +81,7 @@ type Compute struct {
 // "/subscriptions/20192456-09dd-4782-8046-8cdfede4026a/resourceGroups/Demo/providers/Microsoft.Network/networkInterfaces/test35"
 func (c *Compute) getPublicIp(ctx context.Context, resourceID string) ([]network.PublicIPAddress, error) {
 
-	resource, err := ParseResourceID(resourceID)
+	resource, err := azure_transport.ParseResourceID(resourceID)
 	if err != nil {
 		return nil, errors.Wrap(err, "invalid network resource")
 	}
@@ -111,7 +112,7 @@ func (c *Compute) getPublicIp(ctx context.Context, resourceID string) ([]network
 
 			publicIPID := *publicIP.ID
 
-			publicIpResource, err := ParseResourceID(publicIPID)
+			publicIpResource, err := azure_transport.ParseResourceID(publicIPID)
 			if err != nil {
 				return nil, errors.New("invalid network information for resource " + publicIPID)
 			}
