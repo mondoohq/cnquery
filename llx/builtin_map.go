@@ -119,19 +119,19 @@ func opNilCmpDict(left interface{}, right interface{}) bool {
 }
 
 func dictCmpNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictCmpNil)
+	return boolOp(c, bind, chunk, ref, opDictCmpNil)
 }
 
 func dictNotNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opDictCmpNil)
+	return boolNotOp(c, bind, chunk, ref, opDictCmpNil)
 }
 
 func nilCmpDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opNilCmpDict)
+	return boolOp(c, bind, chunk, ref, opNilCmpDict)
 }
 
 func nilNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opNilCmpDict)
+	return boolNotOp(c, bind, chunk, ref, opNilCmpDict)
 }
 
 // dict ==/!= bool
@@ -159,19 +159,19 @@ func opBoolCmpDict(left interface{}, right interface{}) bool {
 }
 
 func dictCmpBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictCmpBool)
+	return boolOp(c, bind, chunk, ref, opDictCmpBool)
 }
 
 func dictNotBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opDictCmpBool)
+	return boolNotOp(c, bind, chunk, ref, opDictCmpBool)
 }
 
 func boolCmpDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opBoolCmpDict)
+	return boolOp(c, bind, chunk, ref, opBoolCmpDict)
 }
 
 func boolNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opBoolCmpDict)
+	return boolNotOp(c, bind, chunk, ref, opBoolCmpDict)
 }
 
 // dict ==/!= int   (embedded: string + float)
@@ -203,19 +203,19 @@ func opIntCmpDict(left interface{}, right interface{}) bool {
 }
 
 func dictCmpInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictCmpInt)
+	return boolOp(c, bind, chunk, ref, opDictCmpInt)
 }
 
 func dictNotInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opDictCmpInt)
+	return boolNotOp(c, bind, chunk, ref, opDictCmpInt)
 }
 
 func intCmpDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opIntCmpDict)
+	return boolOp(c, bind, chunk, ref, opIntCmpDict)
 }
 
 func intNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opIntCmpDict)
+	return boolNotOp(c, bind, chunk, ref, opIntCmpDict)
 }
 
 // dict ==/!= float
@@ -247,19 +247,19 @@ func opFloatCmpDict(left interface{}, right interface{}) bool {
 }
 
 func dictCmpFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictCmpFloat)
+	return boolOp(c, bind, chunk, ref, opDictCmpFloat)
 }
 
 func dictNotFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opDictCmpFloat)
+	return boolNotOp(c, bind, chunk, ref, opDictCmpFloat)
 }
 
 func floatCmpDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opFloatCmpDict)
+	return boolOp(c, bind, chunk, ref, opFloatCmpDict)
 }
 
 func floatNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opFloatCmpDict)
+	return boolNotOp(c, bind, chunk, ref, opFloatCmpDict)
 }
 
 // dict ==/!= string
@@ -295,19 +295,19 @@ func opStringCmpDict(left interface{}, right interface{}) bool {
 }
 
 func dictCmpString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictCmpString)
+	return boolOp(c, bind, chunk, ref, opDictCmpString)
 }
 
 func dictNotString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opDictCmpString)
+	return boolNotOp(c, bind, chunk, ref, opDictCmpString)
 }
 
 func stringCmpDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opStringCmpDict)
+	return boolOp(c, bind, chunk, ref, opStringCmpDict)
 }
 
 func stringNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opStringCmpDict)
+	return boolNotOp(c, bind, chunk, ref, opStringCmpDict)
 }
 
 // dict ==/!= regex
@@ -343,19 +343,19 @@ func opRegexCmpDict(left interface{}, right interface{}) bool {
 }
 
 func dictCmpRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictCmpRegex)
+	return boolOp(c, bind, chunk, ref, opDictCmpRegex)
 }
 
 func dictNotRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opDictCmpRegex)
+	return boolNotOp(c, bind, chunk, ref, opDictCmpRegex)
 }
 
 func regexCmpDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opRegexCmpDict)
+	return boolOp(c, bind, chunk, ref, opRegexCmpDict)
 }
 
 func regexNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opRegexCmpDict)
+	return boolNotOp(c, bind, chunk, ref, opRegexCmpDict)
 }
 
 // dict ==/!= dict
@@ -376,11 +376,11 @@ func opDictCmpDict(left interface{}, right interface{}) bool {
 }
 
 func dictCmpDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictCmpDict)
+	return boolOp(c, bind, chunk, ref, opDictCmpDict)
 }
 
 func dictNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataNotOp(c, bind, chunk, ref, opDictCmpDict)
+	return boolNotOp(c, bind, chunk, ref, opDictCmpDict)
 }
 
 // dict && / || ...
@@ -423,19 +423,19 @@ func opDictOrBool(left interface{}, right interface{}) bool {
 }
 
 func boolAndDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opBoolAndDict)
+	return boolOp(c, bind, chunk, ref, opBoolAndDict)
 }
 
 func boolOrDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opBoolOrDict)
+	return boolOp(c, bind, chunk, ref, opBoolOrDict)
 }
 
 func dictAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictAndBool)
+	return boolOp(c, bind, chunk, ref, opDictAndBool)
 }
 
 func dictOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictOrBool)
+	return boolOp(c, bind, chunk, ref, opDictOrBool)
 }
 
 // ... int
@@ -457,19 +457,19 @@ func opDictOrInt(left interface{}, right interface{}) bool {
 }
 
 func intAndDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opIntAndDict)
+	return boolOp(c, bind, chunk, ref, opIntAndDict)
 }
 
 func intOrDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opIntOrDict)
+	return boolOp(c, bind, chunk, ref, opIntOrDict)
 }
 
 func dictAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictAndInt)
+	return boolOp(c, bind, chunk, ref, opDictAndInt)
 }
 
 func dictOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictOrInt)
+	return boolOp(c, bind, chunk, ref, opDictOrInt)
 }
 
 // ... float
@@ -491,19 +491,19 @@ func opDictOrFloat(left interface{}, right interface{}) bool {
 }
 
 func floatAndDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opFloatAndDict)
+	return boolOp(c, bind, chunk, ref, opFloatAndDict)
 }
 
 func floatOrDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opFloatOrDict)
+	return boolOp(c, bind, chunk, ref, opFloatOrDict)
 }
 
 func dictAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictAndFloat)
+	return boolOp(c, bind, chunk, ref, opDictAndFloat)
 }
 
 func dictOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictOrFloat)
+	return boolOp(c, bind, chunk, ref, opDictOrFloat)
 }
 
 // ... string
@@ -525,19 +525,19 @@ func opDictOrString(left interface{}, right interface{}) bool {
 }
 
 func stringAndDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opStringAndDict)
+	return boolOp(c, bind, chunk, ref, opStringAndDict)
 }
 
 func stringOrDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opStringOrDict)
+	return boolOp(c, bind, chunk, ref, opStringOrDict)
 }
 
 func dictAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictAndString)
+	return boolOp(c, bind, chunk, ref, opDictAndString)
 }
 
 func dictOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictOrString)
+	return boolOp(c, bind, chunk, ref, opDictOrString)
 }
 
 // ... regex
@@ -559,19 +559,19 @@ func opDictOrRegex(left interface{}, right interface{}) bool {
 }
 
 func regexAndDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opRegexAndDict)
+	return boolOp(c, bind, chunk, ref, opRegexAndDict)
 }
 
 func regexOrDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opRegexOrDict)
+	return boolOp(c, bind, chunk, ref, opRegexOrDict)
 }
 
 func dictAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictAndRegex)
+	return boolOp(c, bind, chunk, ref, opDictAndRegex)
 }
 
 func dictOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictOrRegex)
+	return boolOp(c, bind, chunk, ref, opDictOrRegex)
 }
 
 // ... time
@@ -594,19 +594,19 @@ func opDictOrTime(left interface{}, right interface{}) bool {
 }
 
 func timeAndDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opTimeAndDict)
+	return boolOp(c, bind, chunk, ref, opTimeAndDict)
 }
 
 func timeOrDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opTimeOrDict)
+	return boolOp(c, bind, chunk, ref, opTimeOrDict)
 }
 
 func dictAndTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictAndTime)
+	return boolOp(c, bind, chunk, ref, opDictAndTime)
 }
 
 func dictOrTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictOrTime)
+	return boolOp(c, bind, chunk, ref, opDictOrTime)
 }
 
 // ... dict
@@ -620,11 +620,11 @@ func opDictOrDict(left interface{}, right interface{}) bool {
 }
 
 func dictAndDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictAndDict)
+	return boolOp(c, bind, chunk, ref, opDictAndDict)
 }
 
 func dictOrDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictOrDict)
+	return boolOp(c, bind, chunk, ref, opDictOrDict)
 }
 
 // ... array
@@ -646,17 +646,17 @@ func opArrayOrDict(left interface{}, right interface{}) bool {
 }
 
 func dictAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictAndArray)
+	return boolOp(c, bind, chunk, ref, opDictAndArray)
 }
 
 func dictOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opDictOrArray)
+	return boolOp(c, bind, chunk, ref, opDictOrArray)
 }
 
 func arrayAndDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opArrayAndDict)
+	return boolOp(c, bind, chunk, ref, opArrayAndDict)
 }
 
 func arrayOrDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opArrayOrDict)
+	return boolOp(c, bind, chunk, ref, opArrayOrDict)
 }
