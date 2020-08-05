@@ -901,7 +901,9 @@ azuread.serviceprincipal {
 
 azurerm {
   vms() []azurerm.compute.vm
-  sqlServers() []azurerm.mssql.server
+  sqlServers() []azurerm.sql.server
+  mysqlServers() []azurerm.mysql.server
+  mariadbServers() []azurerm.mariadb.server
   postgresqlServers() []azurerm.postgresql.server
 }
 
@@ -922,12 +924,75 @@ azurerm.storage.blob {
   id string
 }
 
-azurerm.mssql.server {
+azurerm.sql.server {
   id string
+  name string
+  location string
+  tags map[string]string
+  type string
+  properties dict
+  databases() []azurerm.sql.database
+  firewallRules() []azurerm.sql.firewallrule
+  administrators() []azurerm.sql.server.administrator
+  connectionPolicy() dict
 }
 
-azurerm.mssql.database {
+azurerm.sql.server.administrator {
   id string
+  name string
+  type string
+  administratorType string
+  login string
+  sid string
+  tenantId string
+}
+
+azurerm.sql.database {
+  id string
+  name string
+  type string
+  collation string
+  creationDate time
+  containmentState int
+  currentServiceObjectiveId string
+  databaseId string
+  earliestRestoreDate time
+  createMode string
+  sourceDatabaseId string
+  sourceDatabaseDeletionDate time
+  restorePointInTime time
+  recoveryServicesRecoveryPointResourceId string
+  edition string
+  maxSizeBytes string
+  requestedServiceObjectiveId string
+  requestedServiceObjectiveName string
+  serviceLevelObjective string
+  status string
+  elasticPoolName string
+  defaultSecondaryLocation string
+  serviceTierAdvisors dict
+  transparentDataEncryption dict
+  recommendedIndex dict
+  failoverGroupId string
+  readScale string
+  sampleName string
+  zoneRedundant bool
+
+  advisor() []dict
+  threadDetectionPolicy() dict
+  connectionPolicy() dict
+  usage() []azurerm.sql.databaseusage
+}
+
+azurerm.sql.databaseusage {
+  id string
+  name string
+  resourceName string
+  displayName string
+  currentValue int
+  limit int
+  unit string
+  nextResetTime time
 }
 
 azurerm.postgresql.server {
@@ -937,12 +1002,60 @@ azurerm.postgresql.server {
   tags map[string]string
   type string
   properties dict
-  configuration() []azurerm.configuration
+  configuration() []azurerm.sql.configuration
   databases() []azurerm.postgresql.database
-  firewallRules() []azurerm.postgresql.firewallrule
+  firewallRules() []azurerm.sql.firewallrule
 }
 
-azurerm.configuration {
+azurerm.postgresql.database {
+  id string
+  name string
+  type string
+  charset string
+  collation string
+}
+
+azurerm.mysql.server {
+  id string
+  name string
+  location string
+  tags map[string]string
+  type string
+  properties dict
+  configuration() []azurerm.sql.configuration
+  databases() []azurerm.mysql.database
+  firewallRules() []azurerm.sql.firewallrule
+}
+
+azurerm.mysql.database {
+  id string
+  name string
+  type string
+  charset string
+  collation string
+}
+
+azurerm.mariadb.server {
+  id string
+  name string
+  location string
+  tags map[string]string
+  type string
+  properties dict
+  configuration() []azurerm.sql.configuration
+  databases() []azurerm.mariadb.database
+  firewallRules() []azurerm.sql.firewallrule
+}
+
+azurerm.mariadb.database {
+  id string
+  name string
+  type string
+  charset string
+  collation string
+}
+
+azurerm.sql.configuration {
   id string
   name string
   type string
@@ -954,15 +1067,7 @@ azurerm.configuration {
   source string
 }
 
-azurerm.postgresql.database {
-  id string
-  name string
-  type string
-  charset string
-  collation string
-}
-
-azurerm.postgresql.firewallrule {
+azurerm.sql.firewallrule {
   id string
   name string
   type string
