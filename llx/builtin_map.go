@@ -134,6 +134,46 @@ func nilNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 	return dataNotOp(c, bind, chunk, ref, opNilCmpDict)
 }
 
+// dict ==/!= bool
+
+func opDictCmpBool(left interface{}, right interface{}) bool {
+	switch x := left.(type) {
+	case bool:
+		return x == right.(bool)
+	case string:
+		return opStringCmpBool(x, right)
+	default:
+		return false
+	}
+}
+
+func opBoolCmpDict(left interface{}, right interface{}) bool {
+	switch x := right.(type) {
+	case bool:
+		return left.(bool) == x
+	case string:
+		return opBoolCmpString(left, x)
+	default:
+		return false
+	}
+}
+
+func dictCmpBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictCmpBool)
+}
+
+func dictNotBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opDictCmpBool)
+}
+
+func boolCmpDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opBoolCmpDict)
+}
+
+func boolNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opBoolCmpDict)
+}
+
 // dict ==/!= int   (embedded: string + float)
 
 func opDictCmpInt(left interface{}, right interface{}) bool {
@@ -228,6 +268,8 @@ func opDictCmpString(left interface{}, right interface{}) bool {
 	switch x := left.(type) {
 	case string:
 		return x == right.(string)
+	case bool:
+		return opBoolCmpString(x, right)
 	case int64:
 		return opIntCmpString(x, right)
 	case float64:
@@ -241,6 +283,8 @@ func opStringCmpDict(left interface{}, right interface{}) bool {
 	switch x := right.(type) {
 	case string:
 		return left.(string) == x
+	case bool:
+		return opStringCmpBool(left, x)
 	case int64:
 		return opStringCmpInt(left, x)
 	case float64:
@@ -270,6 +314,8 @@ func stringNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 
 func opDictCmpDict(left interface{}, right interface{}) bool {
 	switch x := left.(type) {
+	case bool:
+		return opBoolCmpDict(x, right)
 	case int64:
 		return opIntCmpDict(x, right)
 	case float64:
