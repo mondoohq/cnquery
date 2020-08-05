@@ -255,3 +255,26 @@ func stringCmpDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 func stringNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataNotOp(c, bind, chunk, ref, opStringCmpDict)
 }
+
+// dict ==/!= string
+
+func opDictCmpDict(left interface{}, right interface{}) bool {
+	switch x := left.(type) {
+	case int64:
+		return opIntCmpDict(x, right)
+	case float64:
+		return opFloatCmpDict(x, right)
+	case string:
+		return opStringCmpDict(x, right)
+	default:
+		return false
+	}
+}
+
+func dictCmpDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictCmpDict)
+}
+
+func dictNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opDictCmpDict)
+}
