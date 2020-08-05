@@ -937,9 +937,35 @@ azurerm.postgresql.server {
   tags map[string]string
   type string
   properties dict
-  configuration() dict
+  configuration() []azurerm.configuration
+  databases() []azurerm.postgresql.database
+  firewallRules() []azurerm.postgresql.firewallrule
+}
+
+azurerm.configuration {
+  id string
+  name string
+  type string
+  value string
+  description string
+  defaultValue string
+  dataType string
+  allowedValues string
+  source string
 }
 
 azurerm.postgresql.database {
   id string
+  name string
+  type string
+  charset string
+  collation string
+}
+
+azurerm.postgresql.firewallrule {
+  id string
+  name string
+  type string
+  startIpAddress string
+  endIpAddress string
 }

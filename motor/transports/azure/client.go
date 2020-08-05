@@ -13,3 +13,7 @@ func (t *Transport) Authorizer() (autorest.Authorizer, error) {
 func (t *Transport) GraphAuthorizer() (autorest.Authorizer, error) {
 	return auth.NewAuthorizerFromCLIWithResource(azure.PublicCloud.ResourceIdentifiers.Graph)
 }
+
+func (t *Transport) ParseResourceID(id string) (*ResourceID, error) {
+	return ParseResourceID(id)
+}
