@@ -141,7 +141,7 @@ func opDictCmpInt(left interface{}, right interface{}) bool {
 	case int64:
 		return x == right.(int64)
 	case float64:
-		return x == float64(left.(int64))
+		return x == float64(right.(int64))
 	case string:
 		return opStringCmpInt(x, right)
 	default:
@@ -225,19 +225,29 @@ func floatNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 // dict ==/!= string
 
 func opDictCmpString(left interface{}, right interface{}) bool {
-	l, ok := left.(string)
-	if !ok {
+	switch x := left.(type) {
+	case string:
+		return x == right.(string)
+	case int64:
+		return opIntCmpString(x, right)
+	case float64:
+		return opFloatCmpString(x, right)
+	default:
 		return false
 	}
-	return l == right.(string)
 }
 
 func opStringCmpDict(left interface{}, right interface{}) bool {
-	r, ok := right.(string)
-	if !ok {
+	switch x := right.(type) {
+	case string:
+		return left.(string) == x
+	case int64:
+		return opStringCmpInt(left, x)
+	case float64:
+		return opStringCmpFloat(left, x)
+	default:
 		return false
 	}
-	return r == left.(string)
 }
 
 func dictCmpString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
