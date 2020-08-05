@@ -70,6 +70,25 @@ func boolNotOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(
 	return BoolData(!f(bind.Value, v.Value)), 0, nil
 }
 
+func dataOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, typ types.Type, f func(interface{}, interface{}) *RawData) (*RawData, int32, error) {
+	v, dref, err := c.resolveValue(chunk.Function.Args[0], ref)
+	if err != nil {
+		return nil, 0, err
+	}
+	if dref != 0 {
+		return nil, dref, nil
+	}
+
+	if bind.Value == nil {
+		return &RawData{Type: typ}, 0, nil
+	}
+	if v == nil || v.Value == nil {
+		return &RawData{Type: typ}, 0, nil
+	}
+
+	return f(bind.Value, v.Value), 0, nil
+}
+
 // raw operator handling
 // ==   !=
 
@@ -579,75 +598,27 @@ func timeGTETime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 }
 
 func timeMinusTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	v, dref, err := c.resolveValue(chunk.Function.Args[0], ref)
-	if err != nil {
-		return nil, 0, err
-	}
-	if dref != 0 {
-		return nil, dref, nil
-	}
-
-	if bind.Value == nil {
-		return &RawData{Type: bind.Type}, 0, nil
-	}
-	if v == nil || v.Value == nil {
-		return &RawData{Type: bind.Type}, 0, nil
-	}
-
-	l := bind.Value.(time.Time)
-	r := v.Value.(time.Time)
-	diff := l.Unix() - r.Unix()
-	res := DurationToTime(diff)
-
-	return TimeData(res), 0, nil
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		diff := left.(time.Time).Unix() - right.(time.Time).Unix()
+		res := DurationToTime(diff)
+		return TimeData(res)
+	})
 }
 
 func timeTimesInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	v, dref, err := c.resolveValue(chunk.Function.Args[0], ref)
-	if err != nil {
-		return nil, 0, err
-	}
-	if dref != 0 {
-		return nil, dref, nil
-	}
-
-	if bind.Value == nil {
-		return &RawData{Type: types.Time}, 0, nil
-	}
-	if v == nil || v.Value == nil {
-		return &RawData{Type: types.Time}, 0, nil
-	}
-
-	l := bind.Value.(time.Time)
-	r := v.Value.(int64)
-	diff := TimeToDuration(l) * r
-	res := DurationToTime(diff)
-
-	return TimeData(res), 0, nil
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		diff := TimeToDuration(left.(time.Time)) * right.(int64)
+		res := DurationToTime(diff)
+		return TimeData(res)
+	})
 }
 
 func intTimesTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	v, dref, err := c.resolveValue(chunk.Function.Args[0], ref)
-	if err != nil {
-		return nil, 0, err
-	}
-	if dref != 0 {
-		return nil, dref, nil
-	}
-
-	if bind.Value == nil {
-		return &RawData{Type: types.Time}, 0, nil
-	}
-	if v == nil || v.Value == nil {
-		return &RawData{Type: types.Time}, 0, nil
-	}
-
-	l := bind.Value.(int64)
-	r := v.Value.(time.Time)
-	diff := TimeToDuration(r) * l
-	res := DurationToTime(diff)
-
-	return TimeData(res), 0, nil
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		diff := left.(int64) * TimeToDuration(right.(time.Time))
+		res := DurationToTime(diff)
+		return TimeData(res)
+	})
 }
 
 // int </>/<=/>= float
