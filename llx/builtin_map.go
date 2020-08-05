@@ -3,6 +3,7 @@ package llx
 import (
 	"errors"
 	"strconv"
+	"time"
 
 	"go.mondoo.io/mondoo/types"
 )
@@ -381,4 +382,247 @@ func dictCmpDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 
 func dictNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataNotOp(c, bind, chunk, ref, opDictCmpDict)
+}
+
+// dict && / || ...
+
+func truthyDict(value interface{}) bool {
+	switch x := value.(type) {
+	case bool:
+		return x
+	case int64:
+		return x != 0
+	case float64:
+		return x != 0
+	case string:
+		return x != ""
+	case []interface{}:
+		return len(x) != 0
+	case map[string]interface{}:
+		return len(x) != 0
+	default:
+		return false
+	}
+}
+
+// ... bool
+
+func opBoolAndDict(left interface{}, right interface{}) bool {
+	return left.(bool) && truthyDict(right)
+}
+
+func opBoolOrDict(left interface{}, right interface{}) bool {
+	return left.(bool) || truthyDict(right)
+}
+
+func opDictAndBool(left interface{}, right interface{}) bool {
+	return truthyDict(left) && right.(bool)
+}
+
+func opDictOrBool(left interface{}, right interface{}) bool {
+	return truthyDict(left) || right.(bool)
+}
+
+func boolAndDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opBoolAndDict)
+}
+
+func boolOrDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opBoolOrDict)
+}
+
+func dictAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictAndBool)
+}
+
+func dictOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictOrBool)
+}
+
+// ... int
+
+func opIntAndDict(left interface{}, right interface{}) bool {
+	return left.(int64) != 0 && truthyDict(right)
+}
+
+func opIntOrDict(left interface{}, right interface{}) bool {
+	return left.(int64) != 0 || truthyDict(right)
+}
+
+func opDictAndInt(left interface{}, right interface{}) bool {
+	return truthyDict(left) && right.(int64) != 0
+}
+
+func opDictOrInt(left interface{}, right interface{}) bool {
+	return truthyDict(left) || right.(int64) != 0
+}
+
+func intAndDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opIntAndDict)
+}
+
+func intOrDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opIntOrDict)
+}
+
+func dictAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictAndInt)
+}
+
+func dictOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictOrInt)
+}
+
+// ... float
+
+func opFloatAndDict(left interface{}, right interface{}) bool {
+	return left.(float64) != 0 && truthyDict(right)
+}
+
+func opFloatOrDict(left interface{}, right interface{}) bool {
+	return left.(float64) != 0 || truthyDict(right)
+}
+
+func opDictAndFloat(left interface{}, right interface{}) bool {
+	return truthyDict(left) && right.(float64) != 0
+}
+
+func opDictOrFloat(left interface{}, right interface{}) bool {
+	return truthyDict(left) || right.(float64) != 0
+}
+
+func floatAndDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opFloatAndDict)
+}
+
+func floatOrDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opFloatOrDict)
+}
+
+func dictAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictAndFloat)
+}
+
+func dictOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictOrFloat)
+}
+
+// ... string
+
+func opStringAndDict(left interface{}, right interface{}) bool {
+	return left.(string) != "" && truthyDict(right)
+}
+
+func opStringOrDict(left interface{}, right interface{}) bool {
+	return left.(string) != "" || truthyDict(right)
+}
+
+func opDictAndString(left interface{}, right interface{}) bool {
+	return truthyDict(left) && right.(string) != ""
+}
+
+func opDictOrString(left interface{}, right interface{}) bool {
+	return truthyDict(left) || right.(string) != ""
+}
+
+func stringAndDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opStringAndDict)
+}
+
+func stringOrDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opStringOrDict)
+}
+
+func dictAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictAndString)
+}
+
+func dictOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictOrString)
+}
+
+// ... regex
+
+func opRegexAndDict(left interface{}, right interface{}) bool {
+	return left.(string) != "" && truthyDict(right)
+}
+
+func opRegexOrDict(left interface{}, right interface{}) bool {
+	return left.(string) != "" || truthyDict(right)
+}
+
+func opDictAndRegex(left interface{}, right interface{}) bool {
+	return truthyDict(left) && right.(string) != ""
+}
+
+func opDictOrRegex(left interface{}, right interface{}) bool {
+	return truthyDict(left) || right.(string) != ""
+}
+
+func regexAndDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opRegexAndDict)
+}
+
+func regexOrDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opRegexOrDict)
+}
+
+func dictAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictAndRegex)
+}
+
+func dictOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictOrRegex)
+}
+
+// ... time
+
+func opTimeAndDict(left interface{}, right interface{}) bool {
+	return left.(time.Time) != 0 && truthyDict(right)
+}
+
+func opTimeOrDict(left interface{}, right interface{}) bool {
+	return left.(time.Time) != 0 || truthyDict(right)
+}
+
+func opDictAndTime(left interface{}, right interface{}) bool {
+	return truthyDict(left) && right.(time.Time) != 0
+}
+
+func opDictOrTime(left interface{}, right interface{}) bool {
+	return truthyDict(left) || right.(time.Time) != 0
+}
+
+func timeAndDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opTimeAndDict)
+}
+
+func timeOrDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opTimeOrDict)
+}
+
+func dictAndTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictAndTime)
+}
+
+func dictOrTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictOrTime)
+}
+
+// ... dict
+
+func opDictAndDict(left interface{}, right interface{}) bool {
+	return truthyDict(left) && truthyDict(right)
+}
+
+func opDictOrDict(left interface{}, right interface{}) bool {
+	return truthyDict(left) || truthyDict(right)
+}
+
+func dictAndDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictAndDict)
+}
+
+func dictOrDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictOrDict)
 }
