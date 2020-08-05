@@ -3,7 +3,6 @@ package llx
 import (
 	"errors"
 	"strconv"
-	"time"
 
 	"go.mondoo.io/mondoo/types"
 )
@@ -576,21 +575,22 @@ func dictOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 }
 
 // ... time
+// note: time cannot be falsy
 
 func opTimeAndDict(left interface{}, right interface{}) bool {
-	return left.(time.Time) != 0 && truthyDict(right)
+	return truthyDict(right)
 }
 
 func opTimeOrDict(left interface{}, right interface{}) bool {
-	return left.(time.Time) != 0 || truthyDict(right)
+	return true
 }
 
 func opDictAndTime(left interface{}, right interface{}) bool {
-	return truthyDict(left) && right.(time.Time) != 0
+	return truthyDict(left)
 }
 
 func opDictOrTime(left interface{}, right interface{}) bool {
-	return truthyDict(left) || right.(time.Time) != 0
+	return true
 }
 
 func timeAndDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -625,4 +625,38 @@ func dictAndDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 
 func dictOrDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opDictOrDict)
+}
+
+// ... array
+
+func opDictAndArray(left interface{}, right interface{}) bool {
+	return truthyDict(left) && (len(right.([]interface{})) != 0)
+}
+
+func opArrayAndDict(left interface{}, right interface{}) bool {
+	return truthyDict(right) && (len(left.([]interface{})) != 0)
+}
+
+func opDictOrArray(left interface{}, right interface{}) bool {
+	return truthyDict(left) || (len(right.([]interface{})) != 0)
+}
+
+func opArrayOrDict(left interface{}, right interface{}) bool {
+	return truthyDict(right) || (len(left.([]interface{})) != 0)
+}
+
+func dictAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictAndArray)
+}
+
+func dictOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictOrArray)
+}
+
+func arrayAndDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opArrayAndDict)
+}
+
+func arrayOrDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opArrayOrDict)
 }

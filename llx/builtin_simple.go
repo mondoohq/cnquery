@@ -1030,38 +1030,6 @@ func regexOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return dataOp(c, bind, chunk, ref, opStringOrBool)
 }
 
-func opBoolAndTime(left interface{}, right interface{}) bool {
-	return left.(bool) && (!right.(time.Time).IsZero())
-}
-
-func opTimeAndBool(left interface{}, right interface{}) bool {
-	return right.(bool) && (!left.(time.Time).IsZero())
-}
-
-func opBoolOrTime(left interface{}, right interface{}) bool {
-	return left.(bool) || (!right.(time.Time).IsZero())
-}
-
-func opTimeOrBool(left interface{}, right interface{}) bool {
-	return right.(bool) || (!left.(time.Time).IsZero())
-}
-
-func boolAndTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opBoolAndTime)
-}
-
-func boolOrTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opBoolOrTime)
-}
-
-func timeAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opTimeAndBool)
-}
-
-func timeOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, opTimeOrBool)
-}
-
 func opBoolAndArray(left interface{}, right interface{}) bool {
 	return left.(bool) && (len(right.([]interface{})) != 0)
 }
@@ -1356,6 +1324,161 @@ func arrayAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 
 func arrayOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, opArrayOrString)
+}
+
+// time &&/|| T
+// note: time is always truthy
+
+func opBoolAndTime(left interface{}, right interface{}) bool {
+	return left.(bool)
+}
+
+func opTimeAndBool(left interface{}, right interface{}) bool {
+	return right.(bool)
+}
+
+func boolAndTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opBoolAndTime)
+}
+
+func boolOrTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return BoolTrue, 0, nil
+}
+
+func timeAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opTimeAndBool)
+}
+
+func timeOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return BoolTrue, 0, nil
+}
+
+func opIntAndTime(left interface{}, right interface{}) bool {
+	return left.(int64) != 0
+}
+
+func opTimeAndInt(left interface{}, right interface{}) bool {
+	return right.(int64) != 0
+}
+
+func intAndTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opIntAndTime)
+}
+
+func intOrTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return BoolTrue, 0, nil
+}
+
+func timeAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opTimeAndInt)
+}
+
+func timeOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return BoolTrue, 0, nil
+}
+
+func opFloatAndTime(left interface{}, right interface{}) bool {
+	return left.(float64) != 0
+}
+
+func opTimeAndFloat(left interface{}, right interface{}) bool {
+	return right.(float64) != 0
+}
+
+func floatAndTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opFloatAndTime)
+}
+
+func floatOrTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return BoolTrue, 0, nil
+}
+
+func timeAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opTimeAndFloat)
+}
+
+func timeOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return BoolTrue, 0, nil
+}
+
+func opStringAndTime(left interface{}, right interface{}) bool {
+	return left.(string) != ""
+}
+
+func opTimeAndString(left interface{}, right interface{}) bool {
+	return right.(string) != ""
+}
+
+func stringAndTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opStringAndTime)
+}
+
+func stringOrTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return BoolTrue, 0, nil
+}
+
+func timeAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opTimeAndString)
+}
+
+func timeOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return BoolTrue, 0, nil
+}
+
+func opRegexAndTime(left interface{}, right interface{}) bool {
+	return left.(string) != ""
+}
+
+func opTimeAndRegex(left interface{}, right interface{}) bool {
+	return right.(string) != ""
+}
+
+func regexAndTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opRegexAndTime)
+}
+
+func regexOrTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return BoolTrue, 0, nil
+}
+
+func timeAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opTimeAndRegex)
+}
+
+func timeOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return BoolTrue, 0, nil
+}
+
+func timeAndTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return BoolTrue, 0, nil
+}
+
+func timeOrTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return BoolTrue, 0, nil
+}
+
+func opTimeAndArray(left interface{}, right interface{}) bool {
+	return len(right.([]interface{})) != 0
+}
+
+func opArrayAndTime(left interface{}, right interface{}) bool {
+	return len(left.([]interface{})) != 0
+}
+
+func timeAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opTimeAndArray)
+}
+
+func timeOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return BoolTrue, 0, nil
+}
+
+func arrayAndTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opArrayAndTime)
+}
+
+func arrayOrTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return BoolTrue, 0, nil
 }
 
 // string methods
