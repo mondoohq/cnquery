@@ -134,6 +134,94 @@ func nilNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 	return dataNotOp(c, bind, chunk, ref, opNilCmpDict)
 }
 
+// dict ==/!= int   (embedded: string + float)
+
+func opDictCmpInt(left interface{}, right interface{}) bool {
+	switch x := left.(type) {
+	case int64:
+		return x == right.(int64)
+	case float64:
+		return x == float64(left.(int64))
+	case string:
+		return opStringCmpInt(x, right)
+	default:
+		return false
+	}
+}
+
+func opIntCmpDict(left interface{}, right interface{}) bool {
+	switch x := right.(type) {
+	case int64:
+		return left.(int64) == x
+	case float64:
+		return float64(left.(int64)) == x
+	case string:
+		return opIntCmpString(left, x)
+	default:
+		return false
+	}
+}
+
+func dictCmpInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictCmpInt)
+}
+
+func dictNotInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opDictCmpInt)
+}
+
+func intCmpDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opIntCmpDict)
+}
+
+func intNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opIntCmpDict)
+}
+
+// dict ==/!= float
+
+func opDictCmpFloat(left interface{}, right interface{}) bool {
+	switch x := left.(type) {
+	case int64:
+		return float64(x) == right.(float64)
+	case float64:
+		return x == right.(float64)
+	case string:
+		return opStringCmpFloat(x, right)
+	default:
+		return false
+	}
+}
+
+func opFloatCmpDict(left interface{}, right interface{}) bool {
+	switch x := right.(type) {
+	case int64:
+		return left.(float64) == float64(x)
+	case float64:
+		return left.(float64) == x
+	case string:
+		return opFloatCmpString(left, x)
+	default:
+		return false
+	}
+}
+
+func dictCmpFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictCmpFloat)
+}
+
+func dictNotFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opDictCmpFloat)
+}
+
+func floatCmpDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opFloatCmpDict)
+}
+
+func floatNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opFloatCmpDict)
+}
+
 // dict ==/!= string
 
 func opDictCmpString(left interface{}, right interface{}) bool {
