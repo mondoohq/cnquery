@@ -278,6 +278,50 @@ func compileResourceAll(c *compiler, typ types.Type, ref int32, id string, call 
 	return types.Bool, nil
 }
 
+func compileResourceAny(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
+	// resource.where
+	_, err := compileResourceWhere(c, typ, ref, "where", call)
+	if err != nil {
+		return types.Nil, err
+	}
+	resourceRef := c.Result.Code.ChunkIndex()
+
+	// .list
+	t, err := compileResourceDefault(c, typ, resourceRef, "list", nil)
+	if err != nil {
+		return t, err
+	}
+	listRef := c.Result.Code.ChunkIndex()
+
+	// .length
+	c.Result.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "length",
+		Function: &llx.Function{
+			Type:    string(types.Int),
+			Binding: listRef,
+		},
+	})
+
+	// == allLen
+	c.Result.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   string("!=" + types.Int),
+		Function: &llx.Function{
+			Type:    string(types.Bool),
+			Binding: c.Result.Code.ChunkIndex(),
+			Args: []*llx.Primitive{
+				llx.IntPrimitive(0),
+			},
+		},
+	})
+
+	checksum := c.Result.Code.Checksums[c.Result.Code.ChunkIndex()]
+	c.Result.Labels.Labels[checksum] = typ.Name() + ".all()"
+
+	return types.Bool, nil
+}
+
 func compileResourceLength(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
 	if call != nil && len(call.Function) > 0 {
 		return types.Nil, errors.New("function " + id + " does not take arguments")

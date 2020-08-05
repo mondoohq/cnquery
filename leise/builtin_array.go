@@ -166,3 +166,39 @@ func compileArrayAll(c *compiler, typ types.Type, ref int32, id string, call *pa
 
 	return types.Bool, nil
 }
+
+func compileArrayAny(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
+	_, err := compileArrayWhere(c, typ, ref, "where", call)
+	if err != nil {
+		return types.Nil, err
+	}
+	listRef := c.Result.GetCode().ChunkIndex()
+
+	// .length ==> after where clause
+	c.Result.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "length",
+		Function: &llx.Function{
+			Type:    string(types.Int),
+			Binding: listRef,
+		},
+	})
+
+	// == allLen
+	c.Result.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   string("!=" + types.Int),
+		Function: &llx.Function{
+			Type:    string(types.Bool),
+			Binding: c.Result.Code.ChunkIndex(),
+			Args: []*llx.Primitive{
+				llx.IntPrimitive(0),
+			},
+		},
+	})
+
+	checksum := c.Result.Code.Checksums[c.Result.Code.ChunkIndex()]
+	c.Result.Labels.Labels[checksum] = "[].any()"
+
+	return types.Bool, nil
+}
