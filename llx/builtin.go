@@ -248,6 +248,8 @@ func init() {
 			string("!=" + types.Int):    {f: dictNotInt, Label: "!="},
 			string("==" + types.Float):  {f: dictCmpFloat, Label: "=="},
 			string("!=" + types.Float):  {f: dictNotFloat, Label: "!="},
+			string("==" + types.Dict):   {f: dictCmpDict, Label: "=="},
+			string("!=" + types.Dict):   {f: dictNotDict, Label: "!="},
 			string("==" + types.String): {f: dictCmpString, Label: "=="},
 			string("!=" + types.String): {f: dictNotString, Label: "!="},
 		},
