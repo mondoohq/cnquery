@@ -310,7 +310,55 @@ func stringNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	return dataNotOp(c, bind, chunk, ref, opStringCmpDict)
 }
 
-// dict ==/!= string
+// dict ==/!= regex
+
+func opDictCmpRegex(left interface{}, right interface{}) bool {
+	switch x := left.(type) {
+	case string:
+		return opStringCmpRegex(x, right)
+	case bool:
+		return opBoolCmpRegex(x, right)
+	case int64:
+		return opIntCmpRegex(x, right)
+	case float64:
+		return opFloatCmpRegex(x, right)
+	default:
+		return false
+	}
+}
+
+func opRegexCmpDict(left interface{}, right interface{}) bool {
+	switch x := right.(type) {
+	case string:
+		return opRegexCmpString(left, x)
+	case bool:
+		return opRegexCmpBool(left, x)
+	case int64:
+		return opRegexCmpInt(left, x)
+	case float64:
+		return opRegexCmpFloat(left, x)
+	default:
+		return false
+	}
+}
+
+func dictCmpRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opDictCmpRegex)
+}
+
+func dictNotRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opDictCmpRegex)
+}
+
+func regexCmpDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, opRegexCmpDict)
+}
+
+func regexNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataNotOp(c, bind, chunk, ref, opRegexCmpDict)
+}
+
+// dict ==/!= dict
 
 func opDictCmpDict(left interface{}, right interface{}) bool {
 	switch x := left.(type) {

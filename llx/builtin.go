@@ -199,6 +199,8 @@ func init() {
 			string("!=" + types.Int):                 {f: regexNotInt, Label: "!="},
 			string("==" + types.Float):               {f: regexCmpFloat, Label: "=="},
 			string("!=" + types.Float):               {f: regexNotFloat, Label: "!="},
+			string("==" + types.Dict):                {f: regexCmpDict, Label: "=="},
+			string("!=" + types.Dict):                {f: regexNotDict, Label: "!="},
 			string("==" + types.String):              {f: regexCmpString, Label: "=="},
 			string("!=" + types.String):              {f: regexNotString, Label: "!="},
 			string("==" + types.Array(types.Regex)):  {f: stringCmpStringarray, Label: "=="},
@@ -260,6 +262,8 @@ func init() {
 			string("!=" + types.Dict):   {f: dictNotDict, Label: "!="},
 			string("==" + types.String): {f: dictCmpString, Label: "=="},
 			string("!=" + types.String): {f: dictNotString, Label: "!="},
+			string("==" + types.Regex):  {f: dictCmpRegex, Label: "=="},
+			string("!=" + types.Regex):  {f: dictNotRegex, Label: "!="},
 		},
 		types.ArrayLike: {
 			"[]":     {f: arrayGetIndex},
