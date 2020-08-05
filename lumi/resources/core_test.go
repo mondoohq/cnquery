@@ -385,6 +385,10 @@ func TestArray_Block(t *testing.T) {
 			2, true,
 		},
 		{
+			"[1,2,3].any(_ > 1)",
+			2, true,
+		},
+		{
 			"[0].where(_ > 0).where(_ > 0)",
 			0, []interface{}{},
 		},
@@ -469,6 +473,19 @@ func TestResource_One(t *testing.T) {
 		},
 		{
 			"users.where(uid < 100).one(uid == 0)",
+			1, true,
+		},
+	})
+}
+
+func TestResource_Any(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"users.any(uid < 100)",
+			2, true,
+		},
+		{
+			"users.where(uid < 100).any(uid < 50)",
 			1, true,
 		},
 	})
