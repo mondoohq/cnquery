@@ -935,6 +935,7 @@ azurerm.sql.server {
   firewallRules() []azurerm.sql.firewallrule
   administrators() []azurerm.sql.server.administrator
   connectionPolicy() dict
+  auditingPolicy() dict
 }
 
 azurerm.sql.server.administrator {
@@ -981,6 +982,7 @@ azurerm.sql.database {
   advisor() []dict
   threadDetectionPolicy() dict
   connectionPolicy() dict
+  auditingPolicy() dict
   usage() []azurerm.sql.databaseusage
 }
 
