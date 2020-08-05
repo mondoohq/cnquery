@@ -147,6 +147,18 @@ func TestParseResourceID(t *testing.T) {
 			},
 			false,
 		},
+		{
+			"/subscriptions/3bbaebfd-abfe-485c-8902-4391ad93a962/resourceGroups/demo/providers/Microsoft.DBforPostgreSQL/servers/pg11-test",
+			&ResourceID{
+				SubscriptionID: "3bbaebfd-abfe-485c-8902-4391ad93a962",
+				ResourceGroup:  "demo",
+				Provider:       "Microsoft.DBforPostgreSQL",
+				Path: map[string]string{
+					"servers": "pg11-test",
+				},
+			},
+			false,
+		},
 	}
 
 	for _, test := range tests {
