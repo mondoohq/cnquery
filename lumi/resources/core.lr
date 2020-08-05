@@ -936,6 +936,7 @@ azurerm.sql.server {
   administrators() []azurerm.sql.server.administrator
   connectionPolicy() dict
   auditingPolicy() dict
+  securityAlertPolicy() dict
 }
 
 azurerm.sql.server.administrator {

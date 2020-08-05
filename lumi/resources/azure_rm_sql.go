@@ -403,6 +403,45 @@ func (a *lumiAzurermSqlServer) GetAuditingPolicy() (map[string]interface{}, erro
 	return jsonToDict(policy.ServerBlobAuditingPolicyProperties)
 }
 
+func (a *lumiAzurermSqlServer) GetSecurityAlertPolicy() (map[string]interface{}, error) {
+	at, err := azuretransport(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	// id is a azure resource od
+	id, err := a.Id()
+	if err != nil {
+		return nil, err
+	}
+
+	resourceID, err := at.ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	server, err := resourceID.Component("servers")
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	authorizer, err := at.Authorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	auditClient := preview_sql.NewServerSecurityAlertPoliciesClient(resourceID.SubscriptionID)
+	auditClient.Authorizer = authorizer
+
+	policy, err := auditClient.Get(ctx, resourceID.ResourceGroup, server)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonToDict(policy.SecurityAlertPolicyProperties)
+}
+
 func (a *lumiAzurermSqlDatabase) id() (string, error) {
 	return a.Id()
 }
