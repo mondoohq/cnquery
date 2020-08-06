@@ -973,13 +973,13 @@ azurerm.sql.database {
   elasticPoolName string
   defaultSecondaryLocation string
   serviceTierAdvisors dict
-  transparentDataEncryption dict
   recommendedIndex dict
   failoverGroupId string
   readScale string
   sampleName string
   zoneRedundant bool
 
+  transparentDataEncryption() dict
   advisor() []dict
   threadDetectionPolicy() dict
   connectionPolicy() dict
