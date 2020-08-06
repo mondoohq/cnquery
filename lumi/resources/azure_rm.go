@@ -70,10 +70,6 @@ func jsonToDict(v interface{}) (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (a *lumiAzurermStorageAccount) id() (string, error) {
-	return a.Id()
-}
-
 func (a *lumiAzurermStorageBlob) id() (string, error) {
 	return a.Id()
 }

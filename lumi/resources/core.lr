@@ -909,6 +909,7 @@ azurerm {
   mysqlServers() []azurerm.mysql.server
   mariadbServers() []azurerm.mariadb.server
   postgresqlServers() []azurerm.postgresql.server
+  storageAccounts() []azurerm.storage.account
 }
 
 azurerm.compute.vm {
@@ -980,6 +981,14 @@ azurerm.network.watcher {
 
 azurerm.storage.account {
   id string
+  name string
+  location string
+  tags map[string]string
+  type string
+  properties dict
+  identity dict
+  sku dict
+  kind string
 }
 
 azurerm.storage.blob {
