@@ -933,10 +933,11 @@ azurerm.sql.server {
   properties dict
   databases() []azurerm.sql.database
   firewallRules() []azurerm.sql.firewallrule
-  administrators() []azurerm.sql.server.administrator
+  azureAdAdministrators() []azurerm.sql.server.administrator
   connectionPolicy() dict
   auditingPolicy() dict
   securityAlertPolicy() dict
+  encryptionProtector() dict
 }
 
 azurerm.sql.server.administrator {

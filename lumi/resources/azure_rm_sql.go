@@ -254,7 +254,7 @@ func (a *lumiAzurermSqlServer) GetFirewallRules() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *lumiAzurermSqlServer) GetAdministrators() ([]interface{}, error) {
+func (a *lumiAzurermSqlServer) GetAzureAdAdministrators() ([]interface{}, error) {
 	at, err := azuretransport(a.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
@@ -433,6 +433,45 @@ func (a *lumiAzurermSqlServer) GetSecurityAlertPolicy() (map[string]interface{},
 	}
 
 	return jsonToDict(policy.SecurityAlertPolicyProperties)
+}
+
+func (a *lumiAzurermSqlServer) GetEncryptionProtector() (map[string]interface{}, error) {
+	at, err := azuretransport(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	// id is a azure resource od
+	id, err := a.Id()
+	if err != nil {
+		return nil, err
+	}
+
+	resourceID, err := at.ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	server, err := resourceID.Component("servers")
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	authorizer, err := at.Authorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	client := preview_sql.NewEncryptionProtectorsClient(resourceID.SubscriptionID)
+	client.Authorizer = authorizer
+
+	policy, err := client.Get(ctx, resourceID.ResourceGroup, server)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonToDict(policy.EncryptionProtectorProperties)
 }
 
 func (a *lumiAzurermSqlDatabase) id() (string, error) {
