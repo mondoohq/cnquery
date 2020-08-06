@@ -84,10 +84,14 @@ func (f *FunctionSignature) Validate(args []*llx.Primitive) error {
 
 	for i := range args {
 		req := f.Args[i]
+		argT := types.Type(args[i].Type)
+
 		// TODO: find out the real type from these REF types
-		if types.Type(args[i].Type) != req {
-			return errors.New("incorrect argument " + strconv.Itoa(i) + ": expected " + req.Label() + " got an array")
+		if argT == req || req == types.Any {
+			continue
 		}
+
+		return errors.New("incorrect argument " + strconv.Itoa(i) + ": expected " + req.Label() + " got " + argT.Label())
 	}
 	return nil
 }

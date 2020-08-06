@@ -291,9 +291,6 @@ func init() {
 			string("unix"):    {f: timeUnix, Label: "unix"},
 		},
 		types.Dict: {
-			"[]":                           {f: dictGetIndex},
-			"length":                       {f: dictLength},
-			"{}":                           {f: dictBlockCall},
 			string("==" + types.Nil):       {f: dictCmpNil, Label: "=="},
 			string("!=" + types.Nil):       {f: dictNotNil, Label: "!="},
 			string("==" + types.Bool):      {f: dictCmpBool, Label: "=="},
@@ -340,6 +337,15 @@ func init() {
 			string("||" + types.Dict):      {f: dictOrDict, Label: "||"},
 			string("&&" + types.ArrayLike): {f: dictAndArray, Label: "&&"},
 			string("||" + types.ArrayLike): {f: dictOrArray, Label: "||"},
+			// fields
+			"[]":                              {f: dictGetIndex},
+			"length":                          {f: dictLength},
+			"{}":                              {f: dictBlockCall},
+			"downcase":                        {f: dictDowncase, Label: "downcase"},
+			"lines":                           {f: dictLines, Label: "lines"},
+			"split":                           {f: dictSplit, Label: "split"},
+			string("contains" + types.String): {f: dictContainsString, Label: "contains"},
+			string("contains" + types.Array(types.String)): {f: dictContainsArrayString, Label: "contains"},
 		},
 		types.ArrayLike: {
 			"[]":     {f: arrayGetIndex},

@@ -64,32 +64,53 @@ func dictGetIndex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 		return &RawData{Type: bind.Type}, 0, nil
 	}
 
-	args := chunk.Function.Args
+	switch x := bind.Value.(type) {
+	case []interface{}:
+		args := chunk.Function.Args
 
-	// TODO: all this needs to go into the compile phase
-	if len(args) < 1 {
-		return nil, 0, errors.New("Called [] with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
-	}
-	if len(args) > 1 {
-		return nil, 0, errors.New("Called [] with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
-	}
-	t := types.Type(args[0].Type)
-	if t != types.String {
-		return nil, 0, errors.New("Called [] with wrong type " + t.Label())
-	}
-	// ^^ TODO
+		// TODO: all this needs to go into the compile phase
+		if len(args) < 1 {
+			return nil, 0, errors.New("Called [] with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
+		}
+		if len(args) > 1 {
+			return nil, 0, errors.New("Called [] with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
+		}
+		t := types.Type(args[0].Type)
+		if t != types.Int {
+			return nil, 0, errors.New("Called [] with wrong type " + t.Label())
+		}
+		// ^^ TODO
 
-	key := string(args[0].Value)
+		key := int(bytes2int(args[0].Value))
+		return &RawData{
+			Value: x[key],
+			Type:  bind.Type,
+		}, 0, nil
 
-	m, ok := bind.Value.(map[string]interface{})
-	if !ok {
-		return nil, 0, errors.New("Failed to typecast into " + bind.Type.Label())
+	case map[string]interface{}:
+		args := chunk.Function.Args
+
+		// TODO: all this needs to go into the compile phase
+		if len(args) < 1 {
+			return nil, 0, errors.New("Called [] with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
+		}
+		if len(args) > 1 {
+			return nil, 0, errors.New("Called [] with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
+		}
+		t := types.Type(args[0].Type)
+		if t != types.String {
+			return nil, 0, errors.New("Called [] with wrong type " + t.Label())
+		}
+		// ^^ TODO
+
+		key := string(args[0].Value)
+		return &RawData{
+			Value: x[key],
+			Type:  bind.Type,
+		}, 0, nil
+	default:
+		return nil, 0, errors.New("dict value does not support accessor `[]`")
 	}
-
-	return &RawData{
-		Type:  bind.Type,
-		Value: m[key],
-	}, 0, nil
 }
 
 func dictLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -97,15 +118,65 @@ func dictLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 		return &RawData{Type: bind.Type}, 0, nil
 	}
 
-	arr, ok := bind.Value.(map[string]interface{})
-	if !ok {
-		return nil, 0, errors.New("failed to typecast into " + bind.Type.Label())
+	switch x := bind.Value.(type) {
+	case string:
+		return IntData(int64(len(x))), 0, nil
+	case []interface{}:
+		return IntData(int64(len(x))), 0, nil
+	case map[string]interface{}:
+		return IntData(int64(len(x))), 0, nil
+	default:
+		return nil, 0, errors.New("dict value does not support field `length`")
 	}
-	return IntData(int64(len(arr))), 0, nil
 }
 
 func dictBlockCall(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return c.runBlock(bind, chunk.Function.Args[0], ref)
+}
+
+func dictDowncase(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	_, ok := bind.Value.(string)
+	if !ok {
+		return nil, 0, errors.New("dict value does not support field `downcase`")
+	}
+
+	return stringDowncase(c, bind, chunk, ref)
+}
+
+func dictLines(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	_, ok := bind.Value.(string)
+	if !ok {
+		return nil, 0, errors.New("dict value does not support field `lines`")
+	}
+
+	return stringLines(c, bind, chunk, ref)
+}
+
+func dictSplit(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	_, ok := bind.Value.(string)
+	if !ok {
+		return nil, 0, errors.New("dict value does not support field `split`")
+	}
+
+	return stringSplit(c, bind, chunk, ref)
+}
+
+func dictContainsString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	switch bind.Value.(type) {
+	case string:
+		return stringContainsString(c, bind, chunk, ref)
+	default:
+		return nil, 0, errors.New("dict value does not support field `contains`")
+	}
+}
+
+func dictContainsArrayString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	switch bind.Value.(type) {
+	case string:
+		return stringContainsArrayString(c, bind, chunk, ref)
+	default:
+		return nil, 0, errors.New("dict value does not support field `contains`")
+	}
 }
 
 // dict ==/!= nil

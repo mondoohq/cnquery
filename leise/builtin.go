@@ -43,7 +43,7 @@ func init() {
 			"unix":    {typ: intType, signature: FunctionSignature{}},
 		},
 		types.Dict: {
-			"[]":     {typ: dictType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
+			"[]":     {typ: dictType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Any}}},
 			"{}":     {typ: dictType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"length": {typ: intType, signature: FunctionSignature{}},
 		},
