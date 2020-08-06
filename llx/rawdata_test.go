@@ -23,6 +23,11 @@ func TestRawData_String(t *testing.T) {
 		{StringData("yo"), "\"yo\""},
 		{RegexData("ex"), "/ex/"},
 		{TimeData(now), now.String()},
+		{DictData(int64(1)), "1"},
+		{DictData(float64(1.2)), "1.2"},
+		{DictData(string("yo")), "\"yo\""},
+		{DictData([]interface{}{int64(1)}), "[1]"},
+		{DictData(map[string]interface{}{"a": "b"}), "{\"a\":\"b\"}"},
 		{ArrayData([]interface{}{"a", "b"}, types.String), "[\"a\",\"b\"]"},
 		{MapData(map[string]interface{}{"a": "b"}, types.String), "{\"a\":\"b\"}"},
 		// implicit nil:
