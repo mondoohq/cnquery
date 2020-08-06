@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/sql/mgmt/sql"
 	preview_sql "github.com/Azure/azure-sdk-for-go/services/preview/sql/mgmt/2017-03-01-preview/sql"
@@ -53,14 +52,7 @@ func (a *lumiAzurerm) GetSqlServers() ([]interface{}, error) {
 	for i := range dbServers {
 		dbServer := dbServers[i]
 
-		properties := make(map[string](interface{}))
-
-		data, err := json.Marshal(dbServer.ServerProperties)
-		if err != nil {
-			return nil, err
-		}
-
-		err = json.Unmarshal([]byte(data), &properties)
+		properties, err := jsonToDict(dbServer.ServerProperties)
 		if err != nil {
 			return nil, err
 		}
@@ -132,22 +124,12 @@ func (a *lumiAzurermSqlServer) GetDatabases() ([]interface{}, error) {
 	for i := range list {
 		entry := list[i]
 
-		recommendedIndex := make(map[string](interface{}))
-		data, err := json.Marshal(entry.RecommendedIndex)
-		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal([]byte(data), &recommendedIndex)
+		recommendedIndex, err := jsonToDict(entry.RecommendedIndex)
 		if err != nil {
 			return nil, err
 		}
 
-		serviceTierAdvisors := make(map[string](interface{}))
-		data, err = json.Marshal(entry.ServiceTierAdvisors)
-		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal([]byte(data), &serviceTierAdvisors)
+		serviceTierAdvisors, err := jsonToDict(entry.ServiceTierAdvisors)
 		if err != nil {
 			return nil, err
 		}
