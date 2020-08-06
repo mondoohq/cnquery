@@ -902,6 +902,9 @@ azuread.serviceprincipal {
 azurerm {
   vms() []azurerm.compute.vm
   disks() []azurerm.compute.disk
+  networkInterfaces() []azurerm.network.interface
+  securityGroups() []azurerm.network.securitygroup
+  networkWatcher() []azurerm.network.watcher
   sqlServers() []azurerm.sql.server
   mysqlServers() []azurerm.mysql.server
   mariadbServers() []azurerm.mariadb.server
@@ -930,6 +933,48 @@ azurerm.compute.disk {
   managedByExtended []string
   zones []string
   sku dict
+  properties dict
+}
+
+azurerm.network.interface {
+  id string
+  name string
+  location string
+  tags map[string]string
+  type string
+  etag string
+  properties dict
+  vm() azurerm.compute.vm
+}
+
+azurerm.network.securitygroup {
+  id string
+  name string
+  location string
+  tags map[string]string
+  type string
+  etag string
+  properties dict
+  interfaces []azure.network.interface
+	securityRules []azurerm.network.securityrule
+  defaultSecurityRules []azurerm.network.securityrule
+}
+
+azurerm.network.securityrule {
+  id string
+  name string
+  etag string
+  properties dict
+  destinationPortRange []dict
+}
+
+azurerm.network.watcher {
+  id string
+  name string
+  location string
+  tags map[string]string
+  type string
+  etag string
   properties dict
 }
 
