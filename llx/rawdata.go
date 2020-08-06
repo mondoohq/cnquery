@@ -18,6 +18,50 @@ type RawData struct {
 	Error error
 }
 
+func dictRawDataString(value interface{}) string {
+	switch x := value.(type) {
+	case bool:
+		if x {
+			return "true"
+		} else {
+			return "false"
+		}
+	case int64:
+		return strconv.FormatInt(x, 10)
+	case float64:
+		return strconv.FormatFloat(x, 'f', -1, 64)
+	case string:
+		return "\"" + x + "\""
+	case []interface{}:
+		var res strings.Builder
+		res.WriteString("[")
+		for i := range x {
+			res.WriteString(dictRawDataString(x[i]))
+			if i != len(x)-1 {
+				res.WriteString(",")
+			}
+		}
+		res.WriteString("]")
+		return res.String()
+	case map[string]interface{}:
+		var res strings.Builder
+		var i int
+		res.WriteString("{")
+		for k, v := range x {
+			res.WriteString("\"" + k + "\":")
+			res.WriteString(dictRawDataString(v))
+			if i != len(x)-1 {
+				res.WriteString(",")
+			}
+			i++
+		}
+		res.WriteString("}")
+		return res.String()
+	default:
+		return "?value?"
+	}
+}
+
 func rawDataString(typ types.Type, value interface{}) string {
 	if value == nil {
 		return "<null>"
@@ -41,6 +85,8 @@ func rawDataString(typ types.Type, value interface{}) string {
 		return "/" + value.(string) + "/"
 	case types.Time:
 		return value.(time.Time).String()
+	case types.Dict:
+		return dictRawDataString(value)
 	case types.ArrayLike:
 		var res strings.Builder
 		arr := value.([]interface{})
@@ -232,6 +278,14 @@ func TimeData(t time.Time) *RawData {
 	return &RawData{
 		Type:  types.Time,
 		Value: t,
+	}
+}
+
+// DictData creates a rawdata struct from raw dict data
+func DictData(r interface{}) *RawData {
+	return &RawData{
+		Type:  types.Dict,
+		Value: r,
 	}
 }
 
