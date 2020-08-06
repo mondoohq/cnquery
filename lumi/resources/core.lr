@@ -989,6 +989,15 @@ azurerm.storage.account {
   identity dict
   sku dict
   kind string
+  containers() []azurerm.storage.container
+}
+
+azurerm.storage.container {
+  id string
+  name string
+  type string
+  etag string
+  properties dict
 }
 
 azurerm.storage.blob {
