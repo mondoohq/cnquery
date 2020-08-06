@@ -18,6 +18,10 @@ func (a *lumiAzurermSqlFirewallrule) id() (string, error) {
 	return a.Id()
 }
 
+func (a *lumiAzurermSqlServerAdministrator) id() (string, error) {
+	return a.Id()
+}
+
 func (a *lumiAzurerm) GetSqlServers() ([]interface{}, error) {
 	at, err := azuretransport(a.Runtime.Motor.Transport)
 	if err != nil {
@@ -129,18 +133,8 @@ func (a *lumiAzurermSqlServer) GetDatabases() ([]interface{}, error) {
 	for i := range list {
 		entry := list[i]
 
-		transparentDataEncryption := make(map[string](interface{}))
-		data, err := json.Marshal(entry.TransparentDataEncryption)
-		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal([]byte(data), &transparentDataEncryption)
-		if err != nil {
-			return nil, err
-		}
-
 		recommendedIndex := make(map[string](interface{}))
-		data, err = json.Marshal(entry.RecommendedIndex)
+		data, err := json.Marshal(entry.RecommendedIndex)
 		if err != nil {
 			return nil, err
 		}
@@ -183,7 +177,6 @@ func (a *lumiAzurermSqlServer) GetDatabases() ([]interface{}, error) {
 			"elasticPoolName", toString(entry.ElasticPoolName),
 			"defaultSecondaryLocation", toString(entry.DefaultSecondaryLocation),
 			"serviceTierAdvisors", serviceTierAdvisors,
-			"transparentDataEncryption", transparentDataEncryption,
 			"recommendedIndex", recommendedIndex,
 			"failoverGroupId", toString(entry.FailoverGroupID),
 			"readScale", string(entry.ReadScale),
@@ -719,6 +712,46 @@ func (a *lumiAzurermSqlDatabase) GetAuditingPolicy() (map[string]interface{}, er
 	return jsonToDict(policy.DatabaseBlobAuditingPolicyProperties)
 }
 
-func (a *lumiAzurermSqlServerAdministrator) id() (string, error) {
-	return a.Id()
+func (a *lumiAzurermSqlDatabase) GetTransparentDataEncryption() (map[string]interface{}, error) {
+	at, err := azuretransport(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	// id is a azure resource od
+	id, err := a.Id()
+	if err != nil {
+		return nil, err
+	}
+
+	resourceID, err := at.ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	server, err := resourceID.Component("servers")
+	if err != nil {
+		return nil, err
+	}
+
+	database, err := resourceID.Component("databases")
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	authorizer, err := at.Authorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	client := sql.NewTransparentDataEncryptionsClient(resourceID.SubscriptionID)
+	client.Authorizer = authorizer
+
+	policy, err := client.Get(ctx, resourceID.ResourceGroup, server, database)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonToDict(policy.TransparentDataEncryptionProperties)
 }
