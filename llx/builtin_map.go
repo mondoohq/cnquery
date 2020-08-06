@@ -383,6 +383,342 @@ func dictNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return boolNotOp(c, bind, chunk, ref, opDictCmpDict)
 }
 
+// dict </>/<=/>= int
+
+func opDictLTInt(left interface{}, right interface{}) bool {
+	switch x := left.(type) {
+	case int64:
+		return x < right.(int64)
+	case float64:
+		return x < float64(right.(int64))
+	case string:
+		f, err := strconv.ParseInt(x, 10, 64)
+		return err == nil && f < right.(int64)
+	default:
+		return false
+	}
+}
+
+func opDictLTEInt(left interface{}, right interface{}) bool {
+	switch x := left.(type) {
+	case int64:
+		return x <= right.(int64)
+	case float64:
+		return x <= float64(right.(int64))
+	case string:
+		f, err := strconv.ParseInt(x, 10, 64)
+		return err == nil && f <= right.(int64)
+	default:
+		return false
+	}
+}
+
+func dictLTInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opDictLTInt)
+}
+
+func dictLTEInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opDictLTEInt)
+}
+
+func dictGTInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolNotOp(c, bind, chunk, ref, opDictLTEInt)
+}
+
+func dictGTEInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolNotOp(c, bind, chunk, ref, opDictLTInt)
+}
+
+func opIntLTDict(left interface{}, right interface{}) bool {
+	switch x := right.(type) {
+	case int64:
+		return left.(int64) < x
+	case float64:
+		return float64(left.(int64)) < x
+	case string:
+		f, err := strconv.ParseInt(x, 10, 64)
+		return err == nil && left.(int64) < f
+	default:
+		return false
+	}
+}
+
+func opIntLTEDict(left interface{}, right interface{}) bool {
+	switch x := right.(type) {
+	case int64:
+		return left.(int64) <= x
+	case float64:
+		return float64(left.(int64)) <= x
+	case string:
+		f, err := strconv.ParseInt(x, 10, 64)
+		return err == nil && left.(int64) <= f
+	default:
+		return false
+	}
+}
+
+func intLTDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opIntLTDict)
+}
+
+func intLTEDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opIntLTEDict)
+}
+
+func intGTDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolNotOp(c, bind, chunk, ref, opIntLTEDict)
+}
+
+func intGTEDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolNotOp(c, bind, chunk, ref, opIntLTDict)
+}
+
+// dict </>/<=/>= float
+
+func opDictLTFloat(left interface{}, right interface{}) bool {
+	switch x := left.(type) {
+	case int64:
+		return float64(x) < right.(float64)
+	case float64:
+		return x < right.(float64)
+	case string:
+		f, err := strconv.ParseFloat(x, 64)
+		return err == nil && f < right.(float64)
+	default:
+		return false
+	}
+}
+
+func opDictLTEFloat(left interface{}, right interface{}) bool {
+	switch x := left.(type) {
+	case int64:
+		return float64(x) <= right.(float64)
+	case float64:
+		return x <= right.(float64)
+	case string:
+		f, err := strconv.ParseFloat(x, 64)
+		return err == nil && f <= right.(float64)
+	default:
+		return false
+	}
+}
+
+func dictLTFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opDictLTFloat)
+}
+
+func dictLTEFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opDictLTEFloat)
+}
+
+func dictGTFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolNotOp(c, bind, chunk, ref, opDictLTEFloat)
+}
+
+func dictGTEFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolNotOp(c, bind, chunk, ref, opDictLTFloat)
+}
+
+func opFloatLTDict(left interface{}, right interface{}) bool {
+	switch x := right.(type) {
+	case int64:
+		return left.(float64) < float64(x)
+	case float64:
+		return left.(float64) < x
+	case string:
+		f, err := strconv.ParseFloat(x, 64)
+		return err == nil && left.(float64) < f
+	default:
+		return false
+	}
+}
+
+func opFloatLTEDict(left interface{}, right interface{}) bool {
+	switch x := right.(type) {
+	case int64:
+		return left.(float64) <= float64(x)
+	case float64:
+		return left.(float64) <= x
+	case string:
+		f, err := strconv.ParseFloat(x, 64)
+		return err == nil && left.(float64) <= f
+	default:
+		return false
+	}
+}
+
+func floatLTDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opFloatLTDict)
+}
+
+func floatLTEDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opFloatLTEDict)
+}
+
+func floatGTDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolNotOp(c, bind, chunk, ref, opFloatLTEDict)
+}
+
+func floatGTEDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolNotOp(c, bind, chunk, ref, opFloatLTDict)
+}
+
+// dict </>/<=/>= string
+
+func opDictLTString(left interface{}, right interface{}) bool {
+	switch x := left.(type) {
+	case int64:
+		f, err := strconv.ParseInt(right.(string), 10, 64)
+		return err == nil && x < f
+	case float64:
+		f, err := strconv.ParseFloat(right.(string), 64)
+		return err == nil && x < f
+	case string:
+		return x < right.(string)
+	default:
+		return false
+	}
+}
+
+func opDictLTEString(left interface{}, right interface{}) bool {
+	switch x := left.(type) {
+	case int64:
+		f, err := strconv.ParseInt(right.(string), 10, 64)
+		return err == nil && x <= f
+	case float64:
+		f, err := strconv.ParseFloat(right.(string), 64)
+		return err == nil && x <= f
+	case string:
+		return x <= right.(string)
+	default:
+		return false
+	}
+}
+
+func dictLTString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opDictLTString)
+}
+
+func dictLTEString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opDictLTEString)
+}
+
+func dictGTString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolNotOp(c, bind, chunk, ref, opDictLTEString)
+}
+
+func dictGTEString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolNotOp(c, bind, chunk, ref, opDictLTString)
+}
+
+func opStringLTDict(left interface{}, right interface{}) bool {
+	switch x := right.(type) {
+	case int64:
+		f, err := strconv.ParseInt(left.(string), 10, 64)
+		return err == nil && f < x
+	case float64:
+		f, err := strconv.ParseFloat(left.(string), 64)
+		return err == nil && f < x
+	case string:
+		return left.(string) < x
+	default:
+		return false
+	}
+}
+
+func opStringLTEDict(left interface{}, right interface{}) bool {
+	switch x := right.(type) {
+	case int64:
+		f, err := strconv.ParseInt(left.(string), 10, 64)
+		return err == nil && f <= x
+	case float64:
+		f, err := strconv.ParseFloat(left.(string), 64)
+		return err == nil && f <= x
+	case string:
+		return left.(string) <= x
+	default:
+		return false
+	}
+}
+
+func stringLTDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opStringLTDict)
+}
+
+func stringLTEDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opStringLTEDict)
+}
+
+func stringGTDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolNotOp(c, bind, chunk, ref, opStringLTEDict)
+}
+
+func stringGTEDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolNotOp(c, bind, chunk, ref, opStringLTDict)
+}
+
+// dict </>/<=/>= dict
+
+func dictLTDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+		switch x := right.(type) {
+		case int64:
+			return opDictLTInt(left, x)
+		case float64:
+			return opDictLTFloat(left, x)
+		case string:
+			return opDictLTString(left, x)
+		default:
+			return false
+		}
+	})
+}
+
+func dictLTEDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+		switch x := right.(type) {
+		case int64:
+			return opDictLTEInt(left, x)
+		case float64:
+			return opDictLTEFloat(left, x)
+		case string:
+			return opDictLTEString(left, x)
+		default:
+			return false
+		}
+	})
+}
+
+func dictGTDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolNotOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+		switch x := right.(type) {
+		case int64:
+			return opDictLTEInt(left, x)
+		case float64:
+			return opDictLTEFloat(left, x)
+		case string:
+			return opDictLTString(left, x)
+		default:
+			return false
+		}
+	})
+}
+
+func dictGTEDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolNotOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+		switch x := right.(type) {
+		case int64:
+			return opDictLTInt(left, x)
+		case float64:
+			return opDictLTFloat(left, x)
+		case string:
+			return opDictLTString(left, x)
+		default:
+			return false
+		}
+	})
+}
+
 // dict && / || ...
 
 func truthyDict(value interface{}) bool {
