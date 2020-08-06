@@ -901,6 +901,7 @@ azuread.serviceprincipal {
 
 azurerm {
   vms() []azurerm.compute.vm
+  disks() []azurerm.compute.disk
   sqlServers() []azurerm.sql.server
   mysqlServers() []azurerm.mysql.server
   mariadbServers() []azurerm.mariadb.server
@@ -913,6 +914,22 @@ azurerm.compute.vm {
   location string
   tags map[string]string
   type string
+  properties dict
+  extensions() []dict
+  osDisk() azurerm.compute.disk
+  dataDisks() []azurerm.compute.disk
+}
+
+azurerm.compute.disk {
+  id string
+  name string
+  location string
+  tags map[string]string
+  type string
+  managedBy string
+  managedByExtended []string
+  zones []string
+  sku dict
   properties dict
 }
 
