@@ -35,6 +35,20 @@ func toFloat64(i *float64) int64 {
 	return int64(*i)
 }
 
+func toStringSlice(in *[]string) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
+	slice := *in
+
+	res := []interface{}{}
+	for i := range slice {
+		res = append(res, slice[i])
+	}
+
+	return res
+}
+
 func uuidToString(u *uuid.UUID) string {
 	if u == nil {
 		return ""
