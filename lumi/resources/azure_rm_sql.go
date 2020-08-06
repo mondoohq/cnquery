@@ -3,7 +3,6 @@ package resources
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/sql/mgmt/sql"
 	preview_sql "github.com/Azure/azure-sdk-for-go/services/preview/sql/mgmt/2017-03-01-preview/sql"
@@ -529,8 +528,6 @@ func (a *lumiAzurermSqlDatabase) GetUsage() ([]interface{}, error) {
 
 	for i := range list {
 		entry := list[i]
-
-		fmt.Printf("%v\n", entry)
 
 		lumiAzureSqlUsage, err := a.Runtime.CreateResource("azurerm.sql.databaseusage",
 			"id", id+"/metrics/"+toString(entry.Name),
