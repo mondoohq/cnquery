@@ -95,7 +95,7 @@ func (a *lumiAzurerm) GetSecurityGroups() ([]interface{}, error) {
 }
 
 // see https://github.com/Azure/azure-sdk-for-go/issues/8224
-type SecurityGroupPropertiesFormat network.SecurityGroupPropertiesFormat
+type AzureSecurityGroupPropertiesFormat network.SecurityGroupPropertiesFormat
 
 func azureSecGroupToLumi(runtime *lumi.Runtime, secGroup network.SecurityGroup) (lumi.ResourceType, error) {
 
@@ -106,8 +106,8 @@ func azureSecGroupToLumi(runtime *lumi.Runtime, secGroup network.SecurityGroup) 
 	var err error
 	if secGroup.SecurityGroupPropertiesFormat != nil {
 		// avoid using the azure sdk SecurityGroupPropertiesFormat MarshalJSON
-		var j SecurityGroupPropertiesFormat
-		j = SecurityGroupPropertiesFormat(*secGroup.SecurityGroupPropertiesFormat)
+		var j AzureSecurityGroupPropertiesFormat
+		j = AzureSecurityGroupPropertiesFormat(*secGroup.SecurityGroupPropertiesFormat)
 
 		properties, err = jsonToDict(j)
 		if err != nil {
