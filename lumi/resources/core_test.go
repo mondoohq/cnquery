@@ -490,3 +490,16 @@ func TestResource_Any(t *testing.T) {
 		},
 	})
 }
+
+func TestDict_Methods(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"parse.json('/dummy.json').params { _['b'] == _['c'] }",
+			1, true,
+		},
+		{
+			"parse.json('/dummy.json').params['d'] { _ }",
+			1, true,
+		},
+	})
+}
