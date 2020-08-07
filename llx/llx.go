@@ -368,7 +368,22 @@ func (c *LeiseExecutor) runChain(start int32) {
 		c.stepTracker.Store(curRef, nil)
 		// log.Debug().Int32("ref", curRef).Msg("exec> run chain")
 
-		res, nextRef, err = c.runRef(curRef)
+		// Try to load the result from cache if it already exists. This was added
+		// so that blocks that are called on top of a binding, where the results
+		// for the binding are pre-loaded, are actually read from cache. Typically
+		// follow-up calls would try to load from cache and would get the correct
+		// value, however if there are no follow-up calls we still want to return
+		// the correct value.
+		// This may be optimized in a way that we don't have to check loading it
+		// on every call.
+		cached, ok := c.cache.Load(curRef)
+		if ok {
+			res = cached.Result
+			nextRef = 0
+			err = nil
+		} else {
+			res, nextRef, err = c.runRef(curRef)
+		}
 
 		// stop this chain of execution, if it didn't return anything
 		// we need more data ie an event to provide info
