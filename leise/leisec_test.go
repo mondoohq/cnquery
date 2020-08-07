@@ -589,6 +589,40 @@ func TestCompiler_BlockWithSelf(t *testing.T) {
 		}, res.Code.Functions[0].Code[1])
 		assert.Equal(t, []int32{2}, res.Code.Functions[0].Entrypoints)
 	})
+
+	compile(t, "sshd.config.params { _['A'] != _['B'] }", func(res *llx.CodeBundle) {
+		assertFunction(t, "sshd.config", nil, res.Code.Code[0])
+		assertFunction(t, "params", &llx.Function{
+			Type:    string(types.Map(types.String, types.String)),
+			Binding: 1,
+		}, res.Code.Code[1])
+		assertFunction(t, "{}", &llx.Function{
+			Type:    string(types.Any),
+			Binding: 2,
+			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
+		}, res.Code.Code[2])
+		assert.Equal(t, []int32{3}, res.Code.Entrypoints)
+
+		assertPrimitive(t, &llx.Primitive{
+			Type: string(types.Map(types.String, types.String)),
+		}, res.Code.Functions[0].Code[0])
+		assertFunction(t, "[]", &llx.Function{
+			Type:    string(types.String),
+			Binding: 1,
+			Args:    []*llx.Primitive{llx.StringPrimitive("A")},
+		}, res.Code.Functions[0].Code[1])
+		assertFunction(t, "[]", &llx.Function{
+			Type:    string(types.String),
+			Binding: 1,
+			Args:    []*llx.Primitive{llx.StringPrimitive("B")},
+		}, res.Code.Functions[0].Code[2])
+		assertFunction(t, string("!="+types.String), &llx.Function{
+			Type:    string(types.Bool),
+			Binding: 2,
+			Args:    []*llx.Primitive{llx.RefPrimitive(3)},
+		}, res.Code.Functions[0].Code[3])
+		assert.Equal(t, []int32{4}, res.Code.Functions[0].Entrypoints)
+	})
 }
 
 func TestCompiler_ContainsWithResource(t *testing.T) {

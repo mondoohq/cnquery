@@ -330,7 +330,7 @@ func (c *compiler) compileBuiltinFunction(h *compileHandler, id string, binding 
 		Id:   id,
 		Function: &llx.Function{
 			Type:    string(resType),
-			Binding: c.Result.Code.ChunkIndex(),
+			Binding: binding.Ref,
 			Args:    args,
 		},
 	})
