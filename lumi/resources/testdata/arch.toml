@@ -664,3 +664,20 @@ o/ufQJVtMVT8QtPHRh8jrdkPSHCa2XV4cdFyQzR1bldZwgJcJmApzyMZFo6IQ6XU
 rqXRfboQnoZsG4q5WTP468SQvvG5
 -----END CERTIFICATE-----
 """
+
+[files."/dummy.json"]
+content="""
+{
+  "_": null,
+  "a": true,
+  "b": 1,
+  "c": 1.0,
+  "d": [1,2,3],
+  "e": {
+    "ee": 3
+  },
+  "f": [{"ff": 3}],
+  "g": ["a", "b", "c"],
+  "h": "hello"
+}
+"""
