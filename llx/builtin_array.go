@@ -35,7 +35,7 @@ func arrayGetIndex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 
 	arr, ok := bind.Value.([]interface{})
 	if !ok {
-		return nil, 0, errors.New("failed to typecast into " + bind.Type.Label())
+		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into array")
 	}
 
 	if key < 0 {
@@ -54,7 +54,7 @@ func arrayGetIndex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 func arrayBlockList(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	arr, ok := bind.Value.([]interface{})
 	if !ok {
-		return nil, 0, errors.New("failed to typecast into " + bind.Type.Label())
+		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into array")
 	}
 
 	if len(arr) == 0 {
@@ -191,7 +191,7 @@ func arrayLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 
 	arr, ok := bind.Value.([]interface{})
 	if !ok {
-		return nil, 0, errors.New("failed to typecast into " + bind.Type.Label())
+		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into array")
 	}
 	return IntData(int64(len(arr))), 0, nil
 }

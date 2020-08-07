@@ -35,7 +35,7 @@ func mapGetIndex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 
 	m, ok := bind.Value.(map[string]interface{})
 	if !ok {
-		return nil, 0, errors.New("Failed to typecast into " + bind.Type.Label())
+		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into map")
 	}
 	childType := bind.Type.Child()
 	return &RawData{
@@ -51,7 +51,7 @@ func mapLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDa
 
 	arr, ok := bind.Value.(map[string]interface{})
 	if !ok {
-		return nil, 0, errors.New("failed to typecast into " + bind.Type.Label())
+		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into map")
 	}
 	return IntData(int64(len(arr))), 0, nil
 }
