@@ -17,15 +17,13 @@ func (a *lumiAzurerm) GetPostgresqlServers() ([]interface{}, error) {
 		return nil, err
 	}
 
-	subscriptionID := at.SubscriptionID()
-
 	ctx := context.Background()
 	authorizer, err := at.Authorizer()
 	if err != nil {
 		return nil, err
 	}
 
-	dbClient := postgresql.NewServersClient(subscriptionID)
+	dbClient := postgresql.NewServersClient(at.SubscriptionID())
 	dbClient.Authorizer = authorizer
 
 	servers, err := dbClient.List(ctx)

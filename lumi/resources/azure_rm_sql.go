@@ -26,15 +26,13 @@ func (a *lumiAzurerm) GetSqlServers() ([]interface{}, error) {
 		return nil, err
 	}
 
-	subscriptionID := at.SubscriptionID()
-
 	ctx := context.Background()
 	authorizer, err := at.Authorizer()
 	if err != nil {
 		return nil, err
 	}
 
-	dbClient := sql.NewServersClient(subscriptionID)
+	dbClient := sql.NewServersClient(at.SubscriptionID())
 	dbClient.Authorizer = authorizer
 
 	servers, err := dbClient.List(ctx)
