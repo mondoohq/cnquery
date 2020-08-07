@@ -6,6 +6,9 @@ import (
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
 )
 
+// see https://github.com/Azure/azure-sdk-for-go/issues/8224
+type AzureStorageAccountProperties storage.AccountProperties
+
 func (a *lumiAzurerm) GetStorageAccounts() ([]interface{}, error) {
 	at, err := azuretransport(a.Runtime.Motor.Transport)
 	if err != nil {
@@ -33,9 +36,13 @@ func (a *lumiAzurerm) GetStorageAccounts() ([]interface{}, error) {
 	for i := range accounts.Values() {
 		account := accounts.Values()[i]
 
-		properties, err := jsonToDict(account.AccountProperties)
-		if err != nil {
-			return nil, err
+		var properties map[string]interface{}
+		var err error
+		if account.AccountProperties != nil {
+			properties, err = jsonToDict(AzureStorageAccountProperties(*account.AccountProperties))
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		identity, err := jsonToDict(account.Identity)
