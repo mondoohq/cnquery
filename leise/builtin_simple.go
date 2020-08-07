@@ -10,7 +10,7 @@ import (
 
 func compileStringContains(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
 	if call == nil || len(call.Function) != 1 {
-		return types.Nil, errors.New("function " + id + " needs one argument")
+		return types.Nil, errors.New("function " + id + " needs one argument (function missing)")
 	}
 
 	f := call.Function[0]

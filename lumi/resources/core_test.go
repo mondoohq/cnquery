@@ -501,5 +501,9 @@ func TestDict_Methods(t *testing.T) {
 			"parse.json('/dummy.json').params['d'] { _ }",
 			1, true,
 		},
+		{
+			"parse.json('/dummy.json').params['h'] { _.contains('llo') }",
+			1, true,
+		},
 	})
 }
