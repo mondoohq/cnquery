@@ -1000,8 +1000,43 @@ azurerm.storage.container {
   properties dict
 }
 
-azurerm.storage.blob {
+azurerm.web {
+  apps() []azurerm.web.appsite
+  availableRuntimes() []dict
+}
+
+azurerm.web.appsite {
   id string
+  name string
+  kind string
+  location string
+  type string
+  tags map[string]string
+  properties dict
+  identity dict
+
+  configuration() azurerm.web.appsiteconfig
+  authenticationSettings() azurerm.web.appsiteauthsettings
+  metadata() dict
+  applicationSettings() dict
+  connectionSettings() dict
+  stack() dict
+}
+
+azurerm.web.appsiteauthsettings {
+  id string
+  name string
+  kind string
+  type string
+  properties dict
+}
+
+azurerm.web.appsiteconfig {
+  id string
+  name string
+  kind string
+  type string
+  properties dict
 }
 
 azurerm.sql.server {
