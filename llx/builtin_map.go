@@ -3,6 +3,7 @@ package llx
 import (
 	"errors"
 	"strconv"
+	"strings"
 
 	"go.mondoo.io/mondoo/types"
 )
@@ -161,13 +162,39 @@ func dictSplit(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDa
 	return stringSplit(c, bind, chunk, ref)
 }
 
-func dictContainsString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	switch bind.Value.(type) {
-	case string:
-		return stringContainsString(c, bind, chunk, ref)
-	default:
-		return nil, 0, errors.New("dict value does not support field `contains`")
+func anyContainsString(an interface{}, s string) bool {
+	if an == nil {
+		return false
 	}
+
+	switch x := an.(type) {
+	case string:
+		return strings.Contains(x, s)
+	case []interface{}:
+		for i := range x {
+			if anyContainsString(x[i], s) {
+				return true
+			}
+		}
+		return false
+	default:
+		return false
+	}
+}
+
+func dictContainsString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	argRef := chunk.Function.Args[0]
+	arg, rref, err := c.resolveValue(argRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	if arg.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
+	ok := anyContainsString(bind.Value, arg.Value.(string))
+	return BoolData(ok), 0, nil
 }
 
 func dictContainsArrayString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {

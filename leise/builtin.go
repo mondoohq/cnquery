@@ -43,9 +43,13 @@ func init() {
 			"unix":    {typ: intType, signature: FunctionSignature{}},
 		},
 		types.Dict: {
-			"[]":     {typ: dictType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Any}}},
-			"{}":     {typ: dictType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"length": {typ: intType, signature: FunctionSignature{}},
+			"[]":       {typ: dictType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Any}}},
+			"{}":       {typ: dictType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"length":   {typ: intType, signature: FunctionSignature{}},
+			"contains": {compile: compileStringContains, typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
+			"downcase": {typ: stringType, signature: FunctionSignature{}},
+			"lines":    {typ: stringArrayType, signature: FunctionSignature{}},
+			"split":    {typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
 		},
 		types.ArrayLike: {
 			"[]":       {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
