@@ -132,7 +132,12 @@ func dictLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 }
 
 func dictBlockCall(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return c.runBlock(bind, chunk.Function.Args[0], ref)
+	switch bind.Value.(type) {
+	case []interface{}:
+		return arrayBlockList(c, bind, chunk, ref)
+	default:
+		return c.runBlock(bind, chunk.Function.Args[0], ref)
+	}
 }
 
 func dictDowncase(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
