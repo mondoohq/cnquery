@@ -450,8 +450,17 @@ func (c *compiler) compileIdentifier(id string, callBinding *binding, calls []*p
 			nextCall := restCalls[0]
 
 			if nextCall.Ident != nil {
-				found, typ, err = c.compileBoundIdentifier(*nextCall.Ident, callBinding, nextCall)
+				calls = restCalls[1:]
+				call = nil
+				if len(calls) > 0 && calls[0].Function != nil {
+					call = calls[0]
+				}
+
+				found, typ, err = c.compileBoundIdentifier(*nextCall.Ident, callBinding, call)
 				if found {
+					if call != nil {
+						return restCalls[2:], typ, err
+					}
 					return restCalls[1:], typ, err
 				}
 				return nil, types.Nil, errors.New("could not find call _." + (*nextCall.Ident))
