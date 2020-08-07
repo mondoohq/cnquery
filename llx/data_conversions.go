@@ -26,6 +26,7 @@ func init() {
 		types.String:       string2result,
 		types.Regex:        regex2result,
 		types.Time:         time2result,
+		types.Dict:         dict2result,
 		types.ArrayLike:    array2result,
 		types.MapLike:      map2result,
 		types.ResourceLike: resource2result,
@@ -41,6 +42,7 @@ func init() {
 		types.String:       pstring2raw,
 		types.Regex:        pregex2raw,
 		types.Time:         ptime2raw,
+		types.Dict:         pdict2raw,
 		types.ArrayLike:    parray2raw,
 		types.MapLike:      pmap2raw,
 		types.ResourceLike: presource2raw,
@@ -78,6 +80,48 @@ func regex2result(value interface{}, typ types.Type) (*Primitive, error) {
 
 func time2result(value interface{}, typ types.Type) (*Primitive, error) {
 	return TimePrimitive(value.(time.Time)), nil
+}
+
+func dict2result(value interface{}, typ types.Type) (*Primitive, error) {
+	if value == nil {
+		return NilPrimitive, nil
+	}
+
+	switch x := value.(type) {
+	case int64:
+		return IntPrimitive(x), nil
+	case float64:
+		return FloatPrimitive(x), nil
+	case string:
+		return StringPrimitive(x), nil
+	case []interface{}:
+		res := make([]*Primitive, len(x))
+		var err error
+		for i := range x {
+			res[i], err = dict2result(x[i], typ)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return &Primitive{Type: string(types.Array(types.Dict)), Array: res}, nil
+	case map[string]interface{}:
+		res := make(map[string]*Primitive, len(x))
+		var err error
+		for k, v := range x {
+			res[k], err = dict2result(v, typ)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return &Primitive{Type: string(types.Map(types.String, types.Dict)), Map: res}, nil
+
+	default:
+		return &Primitive{
+			Type: string(types.Dict),
+		}, errors.New("failed to convert dict to primitive, unsupported child type")
+	}
 }
 
 func array2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -218,6 +262,34 @@ func pregex2raw(p *Primitive) *RawData {
 
 func ptime2raw(p *Primitive) *RawData {
 	return TimeData(bytes2time(p.Value))
+}
+
+func pdict2raw(p *Primitive) *RawData {
+	if p.Value == nil && p.Map == nil && p.Array == nil {
+		return NilData
+	}
+
+	if p.Map != nil {
+		res := make(map[string]interface{}, len(p.Map))
+		for k, v := range p.Map {
+			res[k] = pdict2raw(v).Value
+		}
+		return &RawData{Value: res, Error: nil, Type: types.Map(types.String, types.Dict)}
+	}
+
+	if p.Array != nil {
+		res := make([]interface{}, len(p.Array))
+		for i := range p.Array {
+			res[i] = pdict2raw(p.Array[i]).Value
+		}
+		return &RawData{Value: res, Error: nil, Type: types.Array(types.Dict)}
+	}
+
+	// FIXME: we can't figure out what the real data is that is embedded if the primitive is dict
+	return &RawData{
+		Error: errors.New("failed to convert dict to raw, unsupported child type"),
+		Type:  types.Dict,
+	}
 }
 
 func parray2raw(p *Primitive) *RawData {
