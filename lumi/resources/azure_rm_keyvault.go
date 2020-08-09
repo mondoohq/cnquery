@@ -10,6 +10,9 @@ import (
 	keyvault7 "github.com/Azure/azure-sdk-for-go/services/keyvault/v7.0/keyvault"
 )
 
+// see https://github.com/Azure/azure-sdk-for-go/issues/8224
+// type AzureStorageAccountProperties keyvault_vault.KeyPermissions
+
 func (a *lumiAzurermKeyvault) id() (string, error) {
 	return "azure.keyvault", nil
 }
@@ -59,7 +62,7 @@ func (a *lumiAzurermKeyvaultVault) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurermKeyvaultVault) GetUri() (string, error) {
+func (a *lumiAzurermKeyvaultVault) GetVaultUri() (string, error) {
 	name, err := a.VaultName()
 	if err != nil {
 		return "", err
@@ -76,7 +79,7 @@ func (a *lumiAzurermKeyvaultVault) GetKeys() ([]interface{}, error) {
 		return nil, err
 	}
 
-	KVUri, err := a.GetUri()
+	KVUri, err := a.GetVaultUri()
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +129,7 @@ func (a *lumiAzurermKeyvaultVault) GetCertificates() ([]interface{}, error) {
 		return nil, err
 	}
 
-	KVUri, err := a.GetUri()
+	KVUri, err := a.GetVaultUri()
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +184,7 @@ func (a *lumiAzurermKeyvaultVault) GetSecrets() ([]interface{}, error) {
 		return nil, err
 	}
 
-	KVUri, err := a.GetUri()
+	KVUri, err := a.GetVaultUri()
 	if err != nil {
 		return nil, err
 	}
@@ -222,6 +225,46 @@ func (a *lumiAzurermKeyvaultVault) GetSecrets() ([]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func (a *lumiAzurermKeyvaultVault) GetProperties() (map[string]interface{}, error) {
+
+	at, err := azuretransport(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	// id is a azure resource od
+	id, err := a.Id()
+	if err != nil {
+		return nil, err
+	}
+
+	resourceID, err := at.ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	vaultName, err := resourceID.Component("vaults")
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	authorizer, err := at.Authorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	client := keyvault_vault.NewVaultsClient(at.SubscriptionID())
+	client.Authorizer = authorizer
+
+	vault, err := client.Get(ctx, resourceID.ResourceGroup, vaultName)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonToDict(vault.Properties)
 }
 
 func (a *lumiAzurermKeyvaultKey) id() (string, error) {
