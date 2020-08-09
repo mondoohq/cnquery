@@ -1193,3 +1193,70 @@ azurerm.sql.firewallrule {
   startIpAddress string
   endIpAddress string
 }
+
+azurerm.keyvault {
+  vaults() []azurerm.keyvault.vault
+}
+
+azurerm.keyvault.vault {
+  id string
+  vaultName string
+  type string
+  location string
+  tags map[string]string
+  uri() string 
+  keys() []azurerm.keyvault.key
+  certificates() []azurerm.keyvault.certificate
+  secrets() []azurerm.keyvault.secret
+}
+
+azurerm.keyvault.key {
+  kid string
+  tags map[string]string
+  managed bool
+
+  enabled bool
+  notBefore time
+  expires time
+  created time
+  updated time
+  recoveryLevel string
+
+  keyName() string
+  version() string
+  versions() []azurerm.keyvault.key
+}
+
+azurerm.keyvault.certificate {
+  id string
+  tags map[string]string
+  x5t string
+
+  enabled bool
+  notBefore time
+  expires time
+  created time
+  updated time
+  recoveryLevel string
+
+  certName() string
+  version() string
+  versions() []azurerm.keyvault.certificate
+}
+
+azurerm.keyvault.secret {
+  id string
+  tags map[string]string
+  contentType string
+  managed bool
+
+  enabled bool
+  notBefore time
+  expires time
+  created time
+  updated time
+
+  secretName() string
+  version() string
+  versions() []azurerm.keyvault.secret
+}
