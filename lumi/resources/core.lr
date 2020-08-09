@@ -1295,6 +1295,7 @@ azurerm.monitor.logprofile {
   type string
   tags map[string]string
   properties dict
+  storageAccount azurerm.storage.account
 }
 
 azurerm.monitor.diagnosticsetting {
