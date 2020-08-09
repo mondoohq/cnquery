@@ -8,7 +8,7 @@ import (
 	"go.mondoo.io/mondoo/types"
 )
 
-func compileArrayWhere(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
+func compileWhere(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
 	if call == nil {
 		return types.Nil, errors.New("missing filter argument for calling '" + id + "'")
 	}
@@ -51,7 +51,7 @@ func compileArrayWhere(c *compiler, typ types.Type, ref int32, id string, call *
 }
 
 func compileArrayContains(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
-	_, err := compileArrayWhere(c, typ, ref, "where", call)
+	_, err := compileWhere(c, typ, ref, "where", call)
 	if err != nil {
 		return types.Nil, err
 	}
@@ -86,7 +86,7 @@ func compileArrayContains(c *compiler, typ types.Type, ref int32, id string, cal
 }
 
 func compileArrayOne(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
-	_, err := compileArrayWhere(c, typ, ref, "where", call)
+	_, err := compileWhere(c, typ, ref, "where", call)
 	if err != nil {
 		return types.Nil, err
 	}
@@ -121,7 +121,7 @@ func compileArrayOne(c *compiler, typ types.Type, ref int32, id string, call *pa
 }
 
 func compileArrayAll(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
-	_, err := compileArrayWhere(c, typ, ref, "where", call)
+	_, err := compileWhere(c, typ, ref, "where", call)
 	if err != nil {
 		return types.Nil, err
 	}
@@ -168,7 +168,7 @@ func compileArrayAll(c *compiler, typ types.Type, ref int32, id string, call *pa
 }
 
 func compileArrayAny(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
-	_, err := compileArrayWhere(c, typ, ref, "where", call)
+	_, err := compileWhere(c, typ, ref, "where", call)
 	if err != nil {
 		return types.Nil, err
 	}

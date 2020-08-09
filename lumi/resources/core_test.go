@@ -494,6 +494,22 @@ func TestResource_Any(t *testing.T) {
 func TestDict_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
+			"parse.json('/dummy.json').params['g'].where(_ == 'a')",
+			0, []interface{}{"a"},
+		},
+		{
+			"parse.json('/dummy.json').params['g'].one(_ == 'a')",
+			1, true,
+		},
+		{
+			"parse.json('/dummy.json').params['g'].all(_ != 'z')",
+			2, true,
+		},
+		{
+			"parse.json('/dummy.json').params['g'].any(_ != 'a')",
+			1, true,
+		},
+		{
 			"parse.json('/dummy.json').params { _['b'] == _['c'] }",
 			1, true,
 		},
