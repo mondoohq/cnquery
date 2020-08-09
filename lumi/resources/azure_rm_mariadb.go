@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/mariadb/mgmt/mariadb"
 )
@@ -47,14 +46,7 @@ func (a *lumiAzurerm) GetMariadbServers() ([]interface{}, error) {
 	for i := range dbServers {
 		dbServer := dbServers[i]
 
-		properties := make(map[string](interface{}))
-
-		data, err := json.Marshal(dbServer.ServerProperties)
-		if err != nil {
-			return nil, err
-		}
-
-		err = json.Unmarshal([]byte(data), &properties)
+		properties, err := jsonToDict(dbServer.ServerProperties)
 		if err != nil {
 			return nil, err
 		}

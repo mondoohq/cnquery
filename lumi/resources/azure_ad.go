@@ -6,7 +6,10 @@ import (
 	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/Azure/go-autorest/autorest/azure"
 )
+
+var azureGraphAudience = azure.PublicCloud.ResourceIdentifiers.Graph
 
 func (a *lumiAzuread) id() (string, error) {
 	return "azuread", nil
@@ -18,7 +21,7 @@ func (a *lumiAzuread) GetUsers() ([]interface{}, error) {
 		return nil, err
 	}
 
-	authorizer, err := at.GraphAuthorizer()
+	authorizer, err := at.AuthorizerWithAudience(azureGraphAudience)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +79,7 @@ func (a *lumiAzuread) GetGroups() ([]interface{}, error) {
 		return nil, err
 	}
 
-	authorizer, err := at.GraphAuthorizer()
+	authorizer, err := at.AuthorizerWithAudience(azureGraphAudience)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +136,7 @@ func (a *lumiAzuread) GetDomains() ([]interface{}, error) {
 		return nil, err
 	}
 
-	authorizer, err := at.GraphAuthorizer()
+	authorizer, err := at.AuthorizerWithAudience(azureGraphAudience)
 	if err != nil {
 		return nil, err
 	}
