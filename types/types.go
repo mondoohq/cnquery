@@ -114,6 +114,8 @@ func (typ Type) Underlying() Type {
 // Child returns the child type of arrays and maps
 func (typ Type) Child() Type {
 	switch typ[0] {
+	case byteDict:
+		return Dict
 	case byteArray:
 		return typ[1:]
 	case byteMap:

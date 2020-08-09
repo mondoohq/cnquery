@@ -344,6 +344,7 @@ func init() {
 			"downcase":                        {f: dictDowncase, Label: "downcase"},
 			"lines":                           {f: dictLines, Label: "lines"},
 			"split":                           {f: dictSplit, Label: "split"},
+			"where":                           {f: dictWhere, Label: "where"},
 			string("contains" + types.String): {f: dictContainsString, Label: "contains"},
 			string("contains" + types.Array(types.String)): {f: dictContainsArrayString, Label: "contains"},
 		},
