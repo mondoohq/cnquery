@@ -1230,6 +1230,7 @@ azurerm.keyvault.vault {
   keys() []azurerm.keyvault.key
   certificates() []azurerm.keyvault.certificate
   secrets() []azurerm.keyvault.secret
+  diagnosticSettings() []azurerm.monitor.diagnosticsetting
 }
 
 azurerm.keyvault.key {
@@ -1281,4 +1282,25 @@ azurerm.keyvault.secret {
   secretName() string
   version() string
   versions() []azurerm.keyvault.secret
+}
+
+azurerm.monitor {
+  logProfiles() []azurerm.monitor.logprofile
+}
+
+azurerm.monitor.logprofile {
+  id string
+  name string
+  location string
+  type string
+  tags map[string]string
+  properties dict
+}
+
+azurerm.monitor.diagnosticsetting {
+  id string
+  name string
+  type string
+  properties dict
+  storageAccount azurerm.storage.account
 }

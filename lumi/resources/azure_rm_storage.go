@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
+	"go.mondoo.io/mondoo/lumi"
 )
 
 // see https://github.com/Azure/azure-sdk-for-go/issues/8224
@@ -77,6 +78,85 @@ func (a *lumiAzurerm) GetStorageAccounts() ([]interface{}, error) {
 
 func (a *lumiAzurermStorageAccount) id() (string, error) {
 	return a.Id()
+}
+
+func (a *lumiAzurermStorageAccount) init(args *lumi.Args) (*lumi.Args, AzurermStorageAccount, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	idRaw := (*args)["id"]
+	if idRaw == nil {
+		return args, nil, nil
+	}
+
+	id, ok := idRaw.(string)
+	if !ok {
+		return args, nil, nil
+	}
+
+	at, err := azuretransport(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	subscriptionID := at.SubscriptionID()
+
+	ctx := context.Background()
+	authorizer, err := at.Authorizer()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	client := storage.NewAccountsClient(subscriptionID)
+	client.Authorizer = authorizer
+
+	// parse the id
+	resourceID, err := at.ParseResourceID(id)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	accountName, err := resourceID.Component("storageAccounts")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	account, err := client.GetProperties(ctx, resourceID.ResourceGroup, accountName, "")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// todo: harmonize with GetStorageAccounts
+	var properties map[string]interface{}
+	if account.AccountProperties != nil {
+		properties, err = jsonToDict(AzureStorageAccountProperties(*account.AccountProperties))
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	identity, err := jsonToDict(account.Identity)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	sku, err := jsonToDict(account.Sku)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["id"] = toString(account.ID)
+	(*args)["name"] = toString(account.Name)
+	(*args)["location"] = toString(account.Location)
+	(*args)["tags"] = azureTagsToInterface(account.Tags)
+	(*args)["type"] = toString(account.Type)
+	(*args)["properties"] = properties
+	(*args)["identity"] = identity
+	(*args)["sku"] = sku
+	(*args)["kind"] = string(account.Kind)
+
+	return args, nil, nil
 }
 
 func (a *lumiAzurermStorageAccount) GetContainers() ([]interface{}, error) {
