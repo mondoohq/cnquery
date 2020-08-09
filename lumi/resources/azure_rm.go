@@ -27,6 +27,14 @@ func azureRmTime(d *date.Time) time.Time {
 	return d.Time
 }
 
+func azureRmUnixTime(d *date.UnixTime) time.Time {
+	if d == nil {
+		return time.Time{}
+	}
+
+	return time.Time(*d)
+}
+
 // TODO: double-check if lumi supports float
 func toFloat64(i *float64) int64 {
 	if i == nil {
