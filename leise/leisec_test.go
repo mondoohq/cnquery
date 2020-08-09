@@ -851,6 +851,14 @@ func TestSuggestions(t *testing.T) {
 	})
 }
 
+func TestCompiler_Error(t *testing.T) {
+	t.Run("unknown term", func(t *testing.T) {
+		_, err := Compile("sshd.config.params == enabled", schema)
+		// assert.Nil(t, res)
+		assert.EqualError(t, err, "Failed to compile: Cannot find resource for identifier 'enabled'")
+	})
+}
+
 func TestCompiler_Multiline(t *testing.T) {
 	compile(t, "1 < 2\n2 != 3", func(res *llx.CodeBundle) {
 		assert.Equal(t, 4, len(res.Code.Code))
