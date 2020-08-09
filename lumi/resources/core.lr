@@ -910,6 +910,25 @@ azurerm {
   mariadbServers() []azurerm.mariadb.server
   postgresqlServers() []azurerm.postgresql.server
   storageAccounts() []azurerm.storage.account
+  resources() []azurerm.resource
+}
+
+azurerm.resource {
+  id string
+  name string
+  kind string
+  location string
+  tags map[string]string
+  type string
+
+  managedBy string
+  sku dict
+  plan dict
+  identity dict
+
+  provisioningState string
+  createdTime time
+  changedTime time
 }
 
 azurerm.compute.vm {
@@ -1204,7 +1223,10 @@ azurerm.keyvault.vault {
   type string
   location string
   tags map[string]string
-  uri() string 
+
+  vaultUri() string
+  properties() dict
+
   keys() []azurerm.keyvault.key
   certificates() []azurerm.keyvault.certificate
   secrets() []azurerm.keyvault.secret
