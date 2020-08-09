@@ -267,6 +267,17 @@ func (a *lumiAzurermKeyvaultVault) GetProperties() (map[string]interface{}, erro
 	return jsonToDict(vault.Properties)
 }
 
+func (a *lumiAzurermKeyvaultVault) GetDiagnosticSettings() ([]interface{}, error) {
+	// id is a azure resource od
+	id, err := a.Id()
+	if err != nil {
+		return nil, err
+	}
+
+	// NOTE diagnostics are fetched in the init of azurerm.monitor.diagnosticsettings
+	return diagnosticsSettings(a.Runtime, id)
+}
+
 func (a *lumiAzurermKeyvaultKey) id() (string, error) {
 	return a.Kid()
 }
