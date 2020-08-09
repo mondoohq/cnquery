@@ -825,22 +825,22 @@ func TestSuggestions(t *testing.T) {
 	t.Run("resource suggestions", func(t *testing.T) {
 		res, err := Compile("ssh", schema)
 		assert.Nil(t, res.Code.Entrypoints)
-		assert.Equal(t, []string{"sshd", "sshd.config"}, res.Suggestions)
+		assert.Equal(t, []string{"sshd", "sshd.config", "vsphere.vswitch"}, res.Suggestions)
 		assert.Equal(t, errors.New("Cannot find resource for identifier 'ssh'"), err)
 	})
 
 	t.Run("field suggestions", func(t *testing.T) {
-		res, err := Compile("sshd.config.p", schema)
+		res, err := Compile("sshd.config.para", schema)
 		assert.Nil(t, res.Code.Entrypoints)
 		assert.Equal(t, []string{"params"}, res.Suggestions)
-		assert.Equal(t, errors.New("Cannot find field 'p' in sshd.config"), err)
+		assert.Equal(t, errors.New("Cannot find field 'para' in sshd.config"), err)
 	})
 
 	t.Run("field in block suggestions", func(t *testing.T) {
-		res, err := Compile("sshd.config { p }", schema)
+		res, err := Compile("sshd.config { para }", schema)
 		assert.Nil(t, res.Code.Entrypoints)
 		assert.Equal(t, []string{"params"}, res.Suggestions)
-		assert.Equal(t, errors.New("Cannot find field or resource 'p' in block for type 'sshd.config'"), err)
+		assert.Equal(t, errors.New("Cannot find field or resource 'para' in block for type 'sshd.config'"), err)
 	})
 
 	t.Run("field suggestions on partial map", func(t *testing.T) {
