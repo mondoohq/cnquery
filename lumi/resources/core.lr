@@ -40,6 +40,7 @@ platform {
   release string
   arch string
   kind string
+  // TODO: rename to runtime
   execenv string
 }
 
@@ -625,7 +626,7 @@ aws.iam.policyversion {
   versionId string
   isDefaultVersion bool
   document() string
-  createdate time
+  createDate time
 }
 
 aws.iam.role {
@@ -634,14 +635,14 @@ aws.iam.role {
   name string
   description string
   tags map[string]string
-  createdate time
+  createDate time
 }
 
 aws.iam.group {
   arn string
   id string
   name string
-  createdate time
+  createDate time
 }
 
 aws.iam.virtualmfadevice {
