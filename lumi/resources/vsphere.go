@@ -85,7 +85,7 @@ func (v *lumiVsphere) GetDatacenters() ([]interface{}, error) {
 		lumiDc, err := v.Runtime.CreateResource("vsphere.datacenter",
 			"moid", dc.Reference().Value,
 			"name", dc.Name(),
-			"inventorypath", dc.InventoryPath,
+			"inventoryPath", dc.InventoryPath,
 		)
 		if err != nil {
 			return nil, err
@@ -137,7 +137,7 @@ func (v *lumiVsphereDatacenter) GetHosts() ([]interface{}, error) {
 		return nil, err
 	}
 
-	path, err := v.Inventorypath()
+	path, err := v.InventoryPath()
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +164,7 @@ func (v *lumiVsphereDatacenter) GetHosts() ([]interface{}, error) {
 			"moid", h.Reference().Value,
 			"name", h.Name(),
 			"properties", props,
-			"inventorypath", h.InventoryPath,
+			"inventoryPath", h.InventoryPath,
 		)
 		if err != nil {
 			return nil, err
@@ -182,7 +182,7 @@ func (v *lumiVsphereHost) esxiClient() (*vsphere.Esxi, error) {
 		return nil, err
 	}
 
-	path, err := v.Inventorypath()
+	path, err := v.InventoryPath()
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +196,7 @@ func (v *lumiVsphereHost) esxiClient() (*vsphere.Esxi, error) {
 	return esxi, nil
 }
 
-func (v *lumiVsphereHost) GetStandardvswitch() ([]interface{}, error) {
+func (v *lumiVsphereHost) GetStandardVswitch() ([]interface{}, error) {
 	esxiClient, err := v.esxiClient()
 	if err != nil {
 		return nil, err
@@ -287,9 +287,9 @@ func (v *lumiVsphereHost) GetPackages() ([]interface{}, error) {
 		lumiVib, err := v.Runtime.CreateResource("esxi.vib",
 			"id", vib.ID,
 			"name", vib.Name,
-			"acceptancelevel", vib.AcceptanceLevel,
-			"creationdate", vib.CreationDate,
-			"installdate", vib.InstallDate,
+			"acceptanceLevel", vib.AcceptanceLevel,
+			"creationDate", vib.CreationDate,
+			"installDate", vib.InstallDate,
 			"status", vib.Status,
 			"vendor", vib.Vendor,
 			"version", vib.Version,
@@ -303,7 +303,7 @@ func (v *lumiVsphereHost) GetPackages() ([]interface{}, error) {
 	return lumiPackages, nil
 }
 
-func (v *lumiVsphereHost) GetAcceptancelevel() (string, error) {
+func (v *lumiVsphereHost) GetAcceptanceLevel() (string, error) {
 	esxiClient, err := v.esxiClient()
 	if err != nil {
 		return "", err
@@ -311,7 +311,7 @@ func (v *lumiVsphereHost) GetAcceptancelevel() (string, error) {
 	return esxiClient.SoftwareAcceptance()
 }
 
-func (v *lumiVsphereHost) GetKernelmodules() ([]interface{}, error) {
+func (v *lumiVsphereHost) GetKernelModules() ([]interface{}, error) {
 	esxiClient, err := v.esxiClient()
 	if err != nil {
 		return nil, err
@@ -343,13 +343,13 @@ func (v *lumiVsphereHost) GetKernelmodules() ([]interface{}, error) {
 	return lumiModules, nil
 }
 
-func (v *lumiVsphereHost) GetAdvancedsettings() (map[string]interface{}, error) {
+func (v *lumiVsphereHost) GetAdvancedSettings() (map[string]interface{}, error) {
 	client, err := getClientInstance(v.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
 
-	path, err := v.Inventorypath()
+	path, err := v.InventoryPath()
 	if err != nil {
 		return nil, err
 	}
@@ -368,7 +368,7 @@ func (v *lumiVsphereHost) GetServices() ([]interface{}, error) {
 		return nil, err
 	}
 
-	path, err := v.Inventorypath()
+	path, err := v.InventoryPath()
 	if err != nil {
 		return nil, err
 	}
@@ -415,7 +415,7 @@ func (v *lumiVsphereHost) GetTimezone() (interface{}, error) {
 		return nil, err
 	}
 
-	path, err := v.Inventorypath()
+	path, err := v.InventoryPath()
 	if err != nil {
 		return nil, err
 	}
@@ -449,7 +449,7 @@ func (v *lumiVsphereHost) GetNtp() (interface{}, error) {
 		return nil, err
 	}
 
-	path, err := v.Inventorypath()
+	path, err := v.InventoryPath()
 	if err != nil {
 		return nil, err
 	}
@@ -490,7 +490,7 @@ func (v *lumiVsphereDatacenter) GetVms() ([]interface{}, error) {
 		return nil, err
 	}
 
-	path, err := v.Inventorypath()
+	path, err := v.InventoryPath()
 	if err != nil {
 		return nil, err
 	}
@@ -517,7 +517,7 @@ func (v *lumiVsphereDatacenter) GetVms() ([]interface{}, error) {
 			"moid", vm.Reference().Value,
 			"name", vm.Name(),
 			"properties", props,
-			"inventorypath", vm.InventoryPath,
+			"inventoryPath", vm.InventoryPath,
 		)
 		if err != nil {
 			return nil, err
@@ -529,13 +529,13 @@ func (v *lumiVsphereDatacenter) GetVms() ([]interface{}, error) {
 	return lumiVms, nil
 }
 
-func (v *lumiVsphereVm) GetAdvancedsettings() (map[string]interface{}, error) {
+func (v *lumiVsphereVm) GetAdvancedSettings() (map[string]interface{}, error) {
 	client, err := getClientInstance(v.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
 
-	path, err := v.Inventorypath()
+	path, err := v.InventoryPath()
 	if err != nil {
 		return nil, err
 	}
@@ -616,7 +616,7 @@ func (v *lumiEsxi) GetHost() (interface{}, error) {
 		"moid", h.Reference().Value,
 		"name", h.Name(),
 		"properties", props,
-		"inventorypath", h.InventoryPath,
+		"inventoryPath", h.InventoryPath,
 	)
 	if err != nil {
 		return nil, err
@@ -661,7 +661,7 @@ func (v *lumiEsxi) GetVm() (interface{}, error) {
 		"moid", vm.Reference().Value,
 		"name", vm.Name(),
 		"properties", props,
-		"inventorypath", vm.InventoryPath,
+		"inventoryPath", vm.InventoryPath,
 	)
 	if err != nil {
 		return nil, err
