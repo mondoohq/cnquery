@@ -6,6 +6,10 @@ import (
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/mariadb/mgmt/mariadb"
 )
 
+func (a *lumiAzurermMariadb) id() (string, error) {
+	return "azurerm.mariadb", nil
+}
+
 func (a *lumiAzurermMariadbServer) id() (string, error) {
 	return a.Id()
 }
@@ -14,7 +18,7 @@ func (a *lumiAzurermMariadbDatabase) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurerm) GetMariadbServers() ([]interface{}, error) {
+func (a *lumiAzurermMariadb) GetServers() ([]interface{}, error) {
 	at, err := azuretransport(a.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err

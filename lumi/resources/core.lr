@@ -900,16 +900,6 @@ azuread.serviceprincipal {
 }
 
 azurerm {
-  vms() []azurerm.compute.vm
-  disks() []azurerm.compute.disk
-  networkInterfaces() []azurerm.network.interface
-  securityGroups() []azurerm.network.securitygroup
-  networkWatcher() []azurerm.network.watcher
-  sqlServers() []azurerm.sql.server
-  mysqlServers() []azurerm.mysql.server
-  mariadbServers() []azurerm.mariadb.server
-  postgresqlServers() []azurerm.postgresql.server
-  storageAccounts() []azurerm.storage.account
   resources() []azurerm.resource
 }
 
@@ -929,6 +919,11 @@ azurerm.resource {
   provisioningState string
   createdTime time
   changedTime time
+}
+
+azurerm.compute {
+  vms() []azurerm.compute.vm
+  disks() []azurerm.compute.disk
 }
 
 azurerm.compute.vm {
@@ -954,6 +949,12 @@ azurerm.compute.disk {
   zones []string
   sku dict
   properties dict
+}
+
+azurerm.network {
+  interfaces() []azurerm.network.interface
+  securityGroups() []azurerm.network.securitygroup
+  watchers() []azurerm.network.watcher
 }
 
 azurerm.network.interface {
@@ -996,6 +997,10 @@ azurerm.network.watcher {
   type string
   etag string
   properties dict
+}
+
+azurerm.storage {
+  accounts() []azurerm.storage.account
 }
 
 azurerm.storage.account {
@@ -1056,6 +1061,10 @@ azurerm.web.appsiteconfig {
   kind string
   type string
   properties dict
+}
+
+azurerm.sql {
+  servers() []azurerm.sql.server
 }
 
 azurerm.sql.server {
@@ -1133,6 +1142,10 @@ azurerm.sql.databaseusage {
   nextResetTime time
 }
 
+azurerm.postgresql {
+   servers() []azurerm.postgresql.server
+}
+
 azurerm.postgresql.server {
   id string
   name string
@@ -1153,6 +1166,10 @@ azurerm.postgresql.database {
   collation string
 }
 
+azurerm.mysql {
+  servers() []azurerm.mysql.server
+}
+
 azurerm.mysql.server {
   id string
   name string
@@ -1171,6 +1188,10 @@ azurerm.mysql.database {
   type string
   charset string
   collation string
+}
+
+azurerm.mariadb {
+  servers() []azurerm.mariadb.server
 }
 
 azurerm.mariadb.server {

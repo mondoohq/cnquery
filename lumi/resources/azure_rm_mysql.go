@@ -6,6 +6,10 @@ import (
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/mysql/mgmt/mysql"
 )
 
+func (a *lumiAzurermMysql) id() (string, error) {
+	return "azurerm.mysql", nil
+}
+
 func (a *lumiAzurermMysqlServer) id() (string, error) {
 	return a.Id()
 }
@@ -14,7 +18,7 @@ func (a *lumiAzurermMysqlDatabase) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurerm) GetMysqlServers() ([]interface{}, error) {
+func (a *lumiAzurermMysql) GetServers() ([]interface{}, error) {
 	at, err := azuretransport(a.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
