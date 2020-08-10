@@ -3,6 +3,8 @@ package azure
 import (
 	"errors"
 
+	"github.com/Azure/go-autorest/autorest"
+	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
@@ -62,4 +64,20 @@ func (t *Transport) Kind() transports.Kind {
 
 func (t *Transport) Runtime() string {
 	return transports.RUNTIME_AZ
+}
+
+func GetAuthorizer() (autorest.Authorizer, error) {
+	return auth.NewAuthorizerFromCLI()
+}
+
+func (t *Transport) Authorizer() (autorest.Authorizer, error) {
+	return GetAuthorizer()
+}
+
+func (t *Transport) AuthorizerWithAudience(audience string) (autorest.Authorizer, error) {
+	return auth.NewAuthorizerFromCLIWithResource(audience)
+}
+
+func (t *Transport) ParseResourceID(id string) (*ResourceID, error) {
+	return ParseResourceID(id)
 }
