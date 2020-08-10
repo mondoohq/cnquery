@@ -189,6 +189,12 @@ func function2result(value interface{}, typ types.Type) (*Primitive, error) {
 }
 
 func raw2primitive(value interface{}, typ types.Type) (*Primitive, error) {
+	if value == nil {
+		return &Primitive{
+			Type: string(typ),
+		}, nil
+	}
+
 	utyp := typ.Underlying()
 	c, ok := dataConverters[utyp]
 	if !ok {
