@@ -537,13 +537,35 @@ esxi.ntpconfig {
   config []string
 }
 
-aristaeos {
+arista.eos {
   runningConfig() string
   systemConfig() map[string]string
-  ipInterfaces() []aristaeos.ipinterface
+  ipInterfaces() []arista.eos.ipinterface
+  interfaces() []arista.eos.interface
+  version() dict
 }
 
-aristaeos.ipinterface {
+arista.eos.interface {
+  name string
+  bandwidth int
+  burnedInAddress string
+  description string
+  forwardingModel string
+  hardware string
+  interfaceAddress []dict
+  interfaceCounters dict
+  interfaceMembership string
+  interfaceStatistics dict
+  interfaceStatus string
+  l2Mtu int
+  lastStatusChangeTimestamp int
+  lineProtocolStatus string
+  mtu int
+  physicalAddress string
+  status() dict
+}
+
+arista.eos.ipinterface {
   name string
   address string
   mtu string
