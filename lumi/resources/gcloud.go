@@ -171,12 +171,13 @@ func (g *lumiGcloudProject) init(args *lumi.Args) (*lumi.Args, GcloudProject, er
 	(*args)["name"] = project.Name
 	(*args)["number"] = strconv.FormatInt(project.ProjectNumber, 10)
 	(*args)["lifecycleState"] = project.LifecycleState
-	// TODO: parse time and add number
-	// TODO: use time data type
-	(*args)["createTime"] = int64(0) // project.CreateTime
+	createTime, err := time.Parse(time.RFC3339, project.CreateTime)
+	if err != nil {
+		return nil, nil, errors.New("could not parse gcloud.project create time: " + project.CreateTime)
+	}
+	(*args)["createTime"] = createTime
 	(*args)["labels"] = strMapToInterface(project.Labels)
 	// TODO: add organization gcloud.organization
-
 	return args, nil, nil
 }
 
