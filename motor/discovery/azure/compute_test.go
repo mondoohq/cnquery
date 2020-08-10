@@ -10,7 +10,7 @@ package azure_test
 // )
 
 // func TestAzureInstanceFetch(t *testing.T) {
-// 	subscriptionid := "/subscriptions/123456/resourceGroups/name"
+// 	subscriptionid := "1234"
 
 // 	client, err := azure.NewCompute(subscriptionid)
 // 	require.NoError(t, err)

@@ -6,7 +6,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/compute/mgmt/compute"
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/network/mgmt/network"
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
@@ -14,13 +13,6 @@ import (
 	"go.mondoo.io/mondoo/motor/transports"
 	azure_transport "go.mondoo.io/mondoo/motor/transports/azure"
 )
-
-// calls az to get azure token
-func getAuthorizer() (autorest.Authorizer, error) {
-	// create an authorizer from env vars or Azure Managed Service Idenity
-	// authorizer, err := auth.NewAuthorizerFromEnvironment()
-	return auth.NewAuthorizerFromCLI()
-}
 
 type AzureClient struct {
 	Subscription string
@@ -45,36 +37,27 @@ func (c *AzureClient) PublicIPAddressesClient() network.PublicIPAddressesClient 
 	return publicIPclient
 }
 
-// call `az account list` -> account.json -> gather default subscription
-// az://subscriptions/20192456-09dd-4782-8046-8cdfede4026a/resourceGroups/Demo"
-func NewCompute(azureResource string) (*Compute, error) {
+func NewCompute(subscriptionID string) (*Compute, error) {
 
-	resource, err := azure_transport.ParseResourceID(azureResource)
-	if err != nil {
-		return nil, errors.Wrap(err, "invalid azure resource e.g. use /subscriptions/1234/resourceGroups/Name")
-	}
-
-	a, err := getAuthorizer()
+	a, err := azure_transport.GetAuthorizer()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not detect az authentication")
 	}
 
 	ac := &AzureClient{
-		Subscription: resource.SubscriptionID,
+		Subscription: subscriptionID,
 		Authorizer:   a,
 	}
 
 	return &Compute{
-		Subscription:  resource.SubscriptionID,
-		ResourceGroup: resource.ResourceGroup,
-		AzureClient:   ac,
+		Subscription: subscriptionID,
+		AzureClient:  ac,
 	}, nil
 }
 
 type Compute struct {
-	Subscription  string
-	ResourceGroup string
-	AzureClient   *AzureClient
+	Subscription string
+	AzureClient  *AzureClient
 }
 
 // getPublicIp reads the public ip by using its resource identifier
@@ -138,15 +121,13 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*asset.Asset, error) {
 
 	// fetch all instances in resource group
 	vmClient := c.AzureClient.VirtualMachinesClient()
-	res, err := vmClient.List(ctx, c.ResourceGroup)
+	res, err := vmClient.ListAll(ctx, "")
 	if err != nil {
 		return nil, err
 	}
 	values := res.Values()
 	for i := range values {
 		instance := values[i]
-		// data, _ := json.Marshal(instance)
-		// fmt.Println(string(data))
 
 		connections := []*transports.TransportConfig{}
 
@@ -174,20 +155,29 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*asset.Asset, error) {
 			}
 		}
 
+		// TODO: derive platform information from azure instance
+
 		asset := &asset.Asset{
-			// ReferenceIDs: []string{MondooGcpInstanceID(project, zone, instance)},
-			Name: *instance.Name,
+			ReferenceIDs: []string{MondooAzureInstanceID(*instance.ID)},
+			Name:         *instance.Name,
 			Platform: &platform.Platform{
 				Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
 				Runtime: transports.RUNTIME_AZ_COMPUTE,
 			},
 			Connections: connections,
-			// State:       mapInstanceState(instance.Status),
+			// NOTE: this is really not working in azure, see https://github.com/Azure/azure-sdk-for-python/issues/573
+			// we''ll update this later when each individual machine is scanned
+			State:  asset.State_STATE_UNKNOWN,
 			Labels: make(map[string]string),
 		}
 
 		// gather details about the instances
-		details, err := vmClient.Get(ctx, c.ResourceGroup, *instance.Name, compute.InstanceView)
+		res, err := azure_transport.ParseResourceID(*instance.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		details, err := vmClient.Get(ctx, res.ResourceGroup, *instance.Name, compute.InstanceView)
 		if err != nil {
 			return nil, err
 		}
@@ -201,8 +191,9 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*asset.Asset, error) {
 		}
 
 		// fetch azure specific metadata
-		asset.Labels["azure.mondoo.app/subscription"] = "project"
-		asset.Labels["azure.mondoo.app/resourcegroup"] = "project"
+		asset.Labels["azure.mondoo.app/subscription"] = res.SubscriptionID
+		asset.Labels["azure.mondoo.app/resourcegroup"] = res.ResourceGroup
+		asset.Labels["azure.mondoo.app/computername"] = *instance.OsProfile.ComputerName
 		asset.Labels["mondoo.app/region"] = *instance.Location
 		asset.Labels["mondoo.app/instance"] = *instance.VMID
 
@@ -210,4 +201,8 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*asset.Asset, error) {
 	}
 
 	return assetList, nil
+}
+
+func MondooAzureInstanceID(instanceID string) string {
+	return "//platformid.api.mondoo.app/runtime/azure" + instanceID
 }
