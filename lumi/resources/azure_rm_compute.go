@@ -91,12 +91,10 @@ func (a *lumiAzurermCompute) GetVms() ([]interface{}, error) {
 	subscriptionID := at.SubscriptionID()
 
 	// list compute instances
-	// TODO: iterate over all resource groups
-	resourceGroup := "demo"
 	vmClient := compute.NewVirtualMachinesClient(subscriptionID)
 	vmClient.Authorizer = authorizer
 
-	virtualMachines, err := vmClient.List(ctx, resourceGroup)
+	virtualMachines, err := vmClient.ListAll(ctx, "")
 	if err != nil {
 		return nil, err
 	}
