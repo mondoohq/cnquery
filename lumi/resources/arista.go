@@ -25,7 +25,7 @@ func (a *lumiAristaeos) getClientInstance() (*arista.Eos, error) {
 	return eos, nil
 }
 
-func (a *lumiAristaeos) GetRunningconfig() (string, error) {
+func (a *lumiAristaeos) GetRunningConfig() (string, error) {
 	eos, err := a.getClientInstance()
 	if err != nil {
 		return "", err
@@ -33,7 +33,7 @@ func (a *lumiAristaeos) GetRunningconfig() (string, error) {
 	return eos.RunningConfig(), nil
 }
 
-func (a *lumiAristaeos) GetSystemconfig() (map[string]interface{}, error) {
+func (a *lumiAristaeos) GetSystemConfig() (map[string]interface{}, error) {
 	eos, err := a.getClientInstance()
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func (a *lumiAristaeos) GetSystemconfig() (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (a *lumiAristaeos) GetIpinterfaces() ([]interface{}, error) {
+func (a *lumiAristaeos) GetIpInterfaces() ([]interface{}, error) {
 	eos, err := a.getClientInstance()
 	if err != nil {
 		return nil, err
