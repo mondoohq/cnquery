@@ -774,7 +774,7 @@ gcloud.project {
   name() string
   number() string
   lifecycleState() string
-  createTime() int
+  createTime() time
   labels() map[string]string
   iamPolicy() []gcloud.resourcemanager.binding
 }
