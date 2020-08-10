@@ -438,7 +438,7 @@ esxi {
 vsphere.datacenter {
   moid string
   name string
-  inventorypath string
+  inventoryPath string
   hosts() []vsphere.host
   vms() []vsphere.vm
 }
@@ -452,15 +452,15 @@ vsphere.license {
 vsphere.host {
   moid string
   name string
-  inventorypath string
+  inventoryPath string
   properties map[string]string
-  standardvswitch() []vsphere.vswitch
+  standardVswitch() []vsphere.vswitch
   adapters() []vsphere.vmnic
   vmknics() []vsphere.vmknic
   packages() []esxi.vib
-  acceptancelevel() string
-  kernelmodules() []esxi.kernelmodule
-  advancedsettings() map[string]string
+  acceptanceLevel() string
+  kernelModules() []esxi.kernelmodule
+  advancedSettings() map[string]string
   services() []esxi.service
   timezone() esxi.timezone
   ntp() esxi.ntpconfig
@@ -470,9 +470,9 @@ vsphere.host {
 vsphere.vm {
   moid string
   name string
-  inventorypath string
+  inventoryPath string
   properties map[string]string
-  advancedsettings() map[string]string
+  advancedSettings() map[string]string
 }
 
 vsphere.vswitch {
@@ -493,9 +493,10 @@ vsphere.vmknic {
 esxi.vib {
   id string
 	name string
-	acceptancelevel string
-	creationdate string
-	installdate string
+	acceptanceLevel string
+  // TODO: use time here
+	creationDate string
+	installDate string
 	status string
 	vendor string
 	version string
@@ -507,10 +508,10 @@ esxi.kernelmodule {
 	version string
 	loaded bool
   enabled bool
-  signedstatus string
-	signaturedigest string
-	signaturefingerprint string
-  vibacceptancelevel string
+  signedStatus string
+	signatureDigest string
+	signatureFingerprint string
+  vibAcceptanceLevel string
 }
 
 esxi.service {
@@ -537,9 +538,9 @@ esxi.ntpconfig {
 }
 
 aristaeos {
-  runningconfig() string
-  systemconfig() map[string]string
-  ipinterfaces() []aristaeos.ipinterface
+  runningConfig() string
+  systemConfig() map[string]string
+  ipInterfaces() []aristaeos.ipinterface
 }
 
 aristaeos.ipinterface {
