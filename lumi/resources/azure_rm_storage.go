@@ -7,10 +7,14 @@ import (
 	"go.mondoo.io/mondoo/lumi"
 )
 
+func (a *lumiAzurermStorage) id() (string, error) {
+	return "azurerm.storage", nil
+}
+
 // see https://github.com/Azure/azure-sdk-for-go/issues/8224
 type AzureStorageAccountProperties storage.AccountProperties
 
-func (a *lumiAzurerm) GetStorageAccounts() ([]interface{}, error) {
+func (a *lumiAzurermStorage) GetAccounts() ([]interface{}, error) {
 	at, err := azuretransport(a.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err

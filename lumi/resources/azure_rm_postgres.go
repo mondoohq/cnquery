@@ -7,11 +7,15 @@ import (
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/postgresql/mgmt/postgresql"
 )
 
+func (a *lumiAzurermPostgresql) id() (string, error) {
+	return "azurerm.postgresql", nil
+}
+
 func (a *lumiAzurermPostgresqlDatabase) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurerm) GetPostgresqlServers() ([]interface{}, error) {
+func (a *lumiAzurermPostgresql) GetServers() ([]interface{}, error) {
 	at, err := azuretransport(a.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err

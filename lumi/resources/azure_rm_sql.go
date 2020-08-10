@@ -8,6 +8,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+func (a *lumiAzurermSql) id() (string, error) {
+	return "azurerm.sql", nil
+}
+
 func (a *lumiAzurermSqlConfiguration) id() (string, error) {
 	return a.Id()
 }
@@ -20,7 +24,7 @@ func (a *lumiAzurermSqlServerAdministrator) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurerm) GetSqlServers() ([]interface{}, error) {
+func (a *lumiAzurermSql) GetServers() ([]interface{}, error) {
 	at, err := azuretransport(a.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err

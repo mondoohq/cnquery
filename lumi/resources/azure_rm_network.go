@@ -9,7 +9,11 @@ import (
 	"go.mondoo.io/mondoo/lumi"
 )
 
-func (a *lumiAzurerm) GetNetworkInterfaces() ([]interface{}, error) {
+func (a *lumiAzurermNetwork) id() (string, error) {
+	return "azurerm.network", nil
+}
+
+func (a *lumiAzurermNetwork) GetInterfaces() ([]interface{}, error) {
 	at, err := azuretransport(a.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
@@ -60,7 +64,7 @@ func azureIfaceToLumi(runtime *lumi.Runtime, iface network.Interface) (lumi.Reso
 	)
 }
 
-func (a *lumiAzurerm) GetSecurityGroups() ([]interface{}, error) {
+func (a *lumiAzurermNetwork) GetSecurityGroups() ([]interface{}, error) {
 	at, err := azuretransport(a.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
@@ -232,7 +236,7 @@ func (a *lumiAzurermNetworkSecurityrule) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurerm) GetNetworkWatcher() ([]interface{}, error) {
+func (a *lumiAzurermNetwork) GetWatchers() ([]interface{}, error) {
 	at, err := azuretransport(a.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
