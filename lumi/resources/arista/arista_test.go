@@ -1,10 +1,12 @@
 package arista
 
 // import (
+// 	"fmt"
 // 	"testing"
 
 // 	"github.com/aristanetworks/goeapi"
 // 	"github.com/stretchr/testify/assert"
+// 	"github.com/stretchr/testify/require"
 // )
 
 // func TestAristaConnection(t *testing.T) {
@@ -25,4 +27,12 @@ package arista
 
 // 	ifaces := eos.IPInterfaces()
 // 	assert.Equal(t, 2, len(ifaces))
+
+// 	res, err := eos.Stp()
+// 	require.NoError(t, err)
+// 	fmt.Printf("%v", res)
+
+// 	res2, err := eos.StpInterfaceDetails("0", "Ethernet1")
+// 	require.NoError(t, err)
+// 	fmt.Printf("%v", res2)
 // }

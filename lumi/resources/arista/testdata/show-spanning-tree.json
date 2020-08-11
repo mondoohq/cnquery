@@ -1,0 +1,71 @@
+{
+  "jsonrpc": "2.0",
+  "id": "EapiExplorer-1",
+  "result": [
+    {
+      "spanningTreeInstances": {
+        "MST0": {
+          "protocol": "mstp",
+          "bridge": {
+            "priority": 32768,
+            "macAddress": "08:00:27:67:e5:98",
+            "systemIdExtension": 0,
+            "forwardDelay": 15,
+            "helloTime": 2,
+            "maxAge": 20
+          },
+          "interfaces": {
+            "Ethernet2": {
+              "priority": 128,
+              "linkType": "p2p",
+              "state": "forwarding",
+              "cost": 2000,
+              "role": "designated",
+              "inconsistentFeatures": {
+                "loopGuard": false,
+                "rootGuard": false,
+                "mstPvstBorder": false,
+                "bridgeAssurance": false
+              },
+              "portNumber": 2,
+              "isEdgePort": true,
+              "boundaryType": "none"
+            },
+            "Ethernet3": {
+              "priority": 128,
+              "linkType": "p2p",
+              "state": "forwarding",
+              "cost": 2000,
+              "role": "designated",
+              "inconsistentFeatures": {
+                "loopGuard": false,
+                "rootGuard": false,
+                "mstPvstBorder": false,
+                "bridgeAssurance": false
+              },
+              "portNumber": 3,
+              "isEdgePort": true,
+              "boundaryType": "none"
+            },
+            "Ethernet1": {
+              "priority": 128,
+              "linkType": "p2p",
+              "state": "forwarding",
+              "cost": 2000,
+              "role": "designated",
+              "inconsistentFeatures": {
+                "loopGuard": false,
+                "rootGuard": false,
+                "mstPvstBorder": false,
+                "bridgeAssurance": false
+              },
+              "portNumber": 1,
+              "isEdgePort": true,
+              "boundaryType": "none"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

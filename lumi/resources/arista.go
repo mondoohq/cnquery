@@ -2,6 +2,7 @@ package resources
 
 import (
 	"errors"
+	"regexp"
 
 	"go.mondoo.io/mondoo/lumi/resources/arista"
 	"go.mondoo.io/mondoo/motor/transports"
@@ -77,7 +78,10 @@ func (a *lumiAristaEos) GetVersion() (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	version := eos.ShowVersion()
+	version, err := eos.ShowVersion()
+	if err != nil {
+		return nil, err
+	}
 	return jsonToDict(version)
 }
 
@@ -164,4 +168,151 @@ func (a *lumiAristaEosInterface) GetStatus() (map[string]interface{}, error) {
 	}
 
 	return jsonToDict(entry)
+}
+
+func (a *lumiAristaEosStp) id() (string, error) {
+	return "arista.eos.stp", nil
+}
+
+var aristaMstInstanceID = regexp.MustCompile(`(\d+)$`)
+
+func (a *lumiAristaEosStp) GetMstInstances() ([]interface{}, error) {
+	eos, err := aristaClientInstance(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	mstInstances, err := eos.Stp()
+	if err != nil {
+		return nil, err
+	}
+
+	res := []interface{}{}
+
+	for mstk := range mstInstances {
+		mstInstance := mstInstances[mstk]
+
+		m := aristaMstInstanceID.FindStringSubmatch(mstk)
+
+		bridge, err := jsonToDict(mstInstance.Bridge)
+		if err != nil {
+			return nil, err
+		}
+
+		rootBridge, err := jsonToDict(mstInstance.RootBridge)
+		if err != nil {
+			return nil, err
+		}
+
+		regionalRootBridge, err := jsonToDict(mstInstance.RegionalRootBridge)
+		if err != nil {
+			return nil, err
+		}
+
+		sptmstInterfaces := []interface{}{}
+		for ifacek := range mstInstance.Interfaces {
+			iface := mstInstance.Interfaces[ifacek]
+
+			inconsistentFeatures, err := jsonToDict(mstInstance.Bridge)
+			if err != nil {
+				return nil, err
+			}
+
+			detail, err := jsonToDict(mstInstance.Bridge)
+			if err != nil {
+				return nil, err
+			}
+
+			lumiArista, err := a.Runtime.CreateResource("arista.eos.spt.mstinterface",
+				"id", mstk+"/"+ifacek,
+				"mstInstanceId", m[1],
+				"name", ifacek,
+				"priority", iface.Priority,
+				"linkType", iface.LinkType,
+				"state", iface.State,
+				"cost", int64(iface.Cost),
+				"role", iface.Role,
+				"inconsistentFeatures", inconsistentFeatures,
+				"portNumber", int64(iface.PortNumber),
+				"isEdgePort", iface.IsEdgePort,
+				"detail", detail,
+				"boundaryType", iface.State,
+			)
+			if err != nil {
+				return nil, err
+			}
+			sptmstInterfaces = append(sptmstInterfaces, lumiArista)
+		}
+
+		lumiArista, err := a.Runtime.CreateResource("arista.eos.stp.mst",
+			"instanceId", m[1],
+			"name", mstk,
+			"protocol", mstInstance.Protocol,
+			"bridge", bridge,
+			"rootBridge", rootBridge,
+			"regionalRootBridge", regionalRootBridge,
+			"interfaces", sptmstInterfaces,
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, lumiArista)
+	}
+	return res, nil
+}
+
+func (a *lumiAristaEosStpMst) id() (string, error) {
+	return a.Name()
+}
+
+func (a *lumiAristaEosSptMstinterface) id() (string, error) {
+	return a.Id()
+}
+
+func (a *lumiAristaEosSptMstinterface) GetCounters() (map[string]interface{}, error) {
+	eos, err := aristaClientInstance(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	mstInstanceId, err := a.MstInstanceId()
+	if err != nil {
+		return nil, err
+	}
+
+	name, err := a.Name()
+	if err != nil {
+		return nil, err
+	}
+
+	mstInstanceDetails, err := eos.StpInterfaceDetails(mstInstanceId, name)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonToDict(mstInstanceDetails.Counters)
+}
+
+func (a *lumiAristaEosSptMstinterface) GetFeatures() (map[string]interface{}, error) {
+	eos, err := aristaClientInstance(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	mstInstanceId, err := a.MstInstanceId()
+	if err != nil {
+		return nil, err
+	}
+
+	name, err := a.Name()
+	if err != nil {
+		return nil, err
+	}
+
+	mstInstanceDetails, err := eos.StpInterfaceDetails(mstInstanceId, name)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonToDict(mstInstanceDetails.Features)
 }
