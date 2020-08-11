@@ -57,3 +57,7 @@ func (t *Transport) Kind() transports.Kind {
 func (t *Transport) Runtime() string {
 	return t.runtime
 }
+
+func (t *Transport) GetVersion() (ShowVersion, error) {
+	return GetVersion(t.node)
+}
