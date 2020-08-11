@@ -2,7 +2,6 @@ package resources
 
 import (
 	"errors"
-	"time"
 
 	"go.mondoo.io/mondoo/motor/transports"
 	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
@@ -26,13 +25,6 @@ func toString(i *string) string {
 func toBool(i *bool) bool {
 	if i == nil {
 		return false
-	}
-	return *i
-}
-
-func toTime(i *time.Time) time.Time {
-	if i == nil {
-		return time.Time{}
 	}
 	return *i
 }
