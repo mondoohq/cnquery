@@ -20,19 +20,21 @@ func azureTagsToInterface(data map[string]*string) map[string]interface{} {
 	return labels
 }
 
-func azureRmTime(d *date.Time) time.Time {
+func azureRmTime(d *date.Time) *time.Time {
 	if d == nil {
-		return time.Time{}
+		return nil
 	}
-	return d.Time
+	return &d.Time
 }
 
-func azureRmUnixTime(d *date.UnixTime) time.Time {
+func azureRmUnixTime(d *date.UnixTime) *time.Time {
 	if d == nil {
-		return time.Time{}
+		return nil
 	}
 
-	return time.Time(*d)
+	// cast
+	stamp := time.Time(*d)
+	return &stamp
 }
 
 // TODO: double-check if lumi supports float

@@ -95,15 +95,15 @@ func (t *lumiAwsCloudtrailTrail) GetStatus() (interface{}, error) {
 		"arn", arnValue,
 		"isLogging", toBool(trailstatus.IsLogging),
 		"latestCloudWatchLogsDeliveryError", toString(trailstatus.LatestCloudWatchLogsDeliveryError),
-		"latestCloudWatchLogsDeliveryTime", toTime(trailstatus.LatestCloudWatchLogsDeliveryTime),
+		"latestCloudWatchLogsDeliveryTime", trailstatus.LatestCloudWatchLogsDeliveryTime,
 		"latestDeliveryError", toString(trailstatus.LatestDeliveryError),
-		"latestDeliveryTime", toTime(trailstatus.LatestDeliveryTime),
+		"latestDeliveryTime", trailstatus.LatestDeliveryTime,
 		"latestDigestDeliveryError", toString(trailstatus.LatestDigestDeliveryError),
-		"latestDigestDeliveryTime", toTime(trailstatus.LatestDigestDeliveryTime),
+		"latestDigestDeliveryTime", trailstatus.LatestDigestDeliveryTime,
 		"latestNotificationError", toString(trailstatus.LatestNotificationError),
-		"latestNotificationTime", toTime(trailstatus.LatestNotificationTime),
-		"startLoggingTime", toTime(trailstatus.StartLoggingTime),
-		"stopLoggingTime", toTime(trailstatus.StopLoggingTime),
+		"latestNotificationTime", trailstatus.LatestNotificationTime,
+		"startLoggingTime", trailstatus.StartLoggingTime,
+		"stopLoggingTime", trailstatus.StopLoggingTime,
 	)
 	if err != nil {
 		return nil, err

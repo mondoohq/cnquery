@@ -171,9 +171,12 @@ func (g *lumiGcloudProject) init(args *lumi.Args) (*lumi.Args, GcloudProject, er
 	(*args)["name"] = project.Name
 	(*args)["number"] = strconv.FormatInt(project.ProjectNumber, 10)
 	(*args)["lifecycleState"] = project.LifecycleState
-	createTime, err := time.Parse(time.RFC3339, project.CreateTime)
+	var createTime *time.Time
+	parsedTime, err := time.Parse(time.RFC3339, project.CreateTime)
 	if err != nil {
 		return nil, nil, errors.New("could not parse gcloud.project create time: " + project.CreateTime)
+	} else {
+		createTime = &parsedTime
 	}
 	(*args)["createTime"] = createTime
 	(*args)["labels"] = strMapToInterface(project.Labels)
@@ -386,16 +389,20 @@ func (g *lumiGcloudStorage) GetBuckets() ([]interface{}, error) {
 	for i := range buckets.Items {
 		bucket := buckets.Items[i]
 
+		var created *time.Time
 		// parse created and updated time properly "2019-06-12T21:14:13.190Z"
 		parsedCreated, err := time.Parse(time.RFC3339, bucket.TimeCreated)
 		if err != nil {
 			return nil, err
 		}
+		created = &parsedCreated
 
+		var updated *time.Time
 		parsedUpdated, err := time.Parse(time.RFC3339, bucket.Updated)
 		if err != nil {
 			return nil, err
 		}
+		updated = &parsedUpdated
 
 		iamConfigurationDict := map[string]interface{}{}
 
@@ -442,8 +449,8 @@ func (g *lumiGcloudStorage) GetBuckets() ([]interface{}, error) {
 			"locationType", bucket.LocationType,
 			"projectNumber", strconv.FormatUint(bucket.ProjectNumber, 10),
 			"storageClass", bucket.StorageClass,
-			"created", parsedCreated,
-			"updated", parsedUpdated,
+			"created", created,
+			"updated", updated,
 			"iamConfiguration", iamConfigurationDict,
 		)
 		if err != nil {

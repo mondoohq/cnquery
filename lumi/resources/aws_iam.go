@@ -239,8 +239,8 @@ func (c *lumiAwsIam) createIamUser(usr *iam.User) (lumi.ResourceType, error) {
 		"arn", toString(usr.Arn),
 		"id", toString(usr.UserId),
 		"name", toString(usr.UserName),
-		"createDate", toTime(usr.CreateDate),
-		"passwordLastUsed", toTime(usr.PasswordLastUsed),
+		"createDate", usr.CreateDate,
+		"passwordLastUsed", usr.PasswordLastUsed,
 		"tags", iamTagsToMap(usr.Tags),
 	)
 }
@@ -275,7 +275,7 @@ func (c *lumiAwsIam) GetVirtualMfaDevices() ([]interface{}, error) {
 
 		lumiAwsIamMfaDevice, err := c.Runtime.CreateResource("aws.iam.virtualmfadevice",
 			"serialNumber", toString(device.SerialNumber),
-			"enableDate", toTime(device.EnableDate),
+			"enableDate", device.EnableDate,
 			"user", lumiAwsIamUser,
 		)
 		if err != nil {
@@ -302,8 +302,8 @@ func (c *lumiAwsIam) lumiPolicies(policies []iam.Policy) ([]interface{}, error) 
 			"description", toString(policy.Description),
 			"isAttachable", toBool(policy.IsAttachable),
 			"attachmentCount", toInt64(policy.AttachmentCount),
-			"createDate", toTime(policy.CreateDate),
-			"updateDate", toTime(policy.UpdateDate),
+			"createDate", policy.CreateDate,
+			"updateDate", policy.UpdateDate,
 		)
 		if err != nil {
 			return nil, err
@@ -378,7 +378,7 @@ func (c *lumiAwsIam) GetRoles() ([]interface{}, error) {
 				"name", toString(role.RoleName),
 				"description", toString(role.Description),
 				"tags", iamTagsToMap(role.Tags),
-				"createDate", toTime(role.CreateDate),
+				"createDate", role.CreateDate,
 			)
 			if err != nil {
 				return nil, err
@@ -423,7 +423,7 @@ func (c *lumiAwsIam) GetGroups() ([]interface{}, error) {
 				"arn", toString(grp.Arn),
 				"id", toString(grp.GroupId),
 				"name", toString(grp.GroupName),
-				"createDate", toTime(grp.CreateDate),
+				"createDate", grp.CreateDate,
 			)
 			if err != nil {
 				return nil, err
@@ -512,27 +512,27 @@ func (p *lumiAwsIamUsercredentialreportentry) getStringValue(key string) (string
 	return val, nil
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) getTimeValue(key string) (time.Time, error) {
+func (p *lumiAwsIamUsercredentialreportentry) getTimeValue(key string) (*time.Time, error) {
 	props, err := p.Properties()
 	if err != nil {
-		return toTime(nil), err
+		return nil, err
 	}
 
 	if props == nil {
 		log.Info().Msgf("could not retrieve key")
-		return toTime(nil), errors.New("could not read the credentials report")
+		return nil, errors.New("could not read the credentials report")
 	}
 
 	val, ok := props[key].(string)
 	if !ok {
 		log.Info().Msgf("key is not a string")
-		return toTime(nil), errors.New(key + " is not a valid string value")
+		return nil, errors.New(key + " is not a valid string value")
 	}
 
 	// handle "N/A" and "not_supported" value
 	// some accounts do not support specific values eg. root_account does not support password_last_changed or password_next_rotation
 	if val == "N/A" || val == "not_supported" {
-		return toTime(nil), nil
+		return nil, nil
 	}
 
 	// parse iso 8601  "2020-07-15T14:52:00+00:00"
@@ -540,21 +540,21 @@ func (p *lumiAwsIamUsercredentialreportentry) getTimeValue(key string) (time.Tim
 	parsed, err := time.Parse(format, val)
 	if err != nil {
 		log.Error().Err(err).Msg("could not parse the time")
-		return toTime(nil), errors.New("failed to parse time: " + err.Error())
+		return nil, errors.New("failed to parse time: " + err.Error())
 	}
 
-	return parsed, nil
+	return &parsed, nil
 }
 
 func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey1Active() (bool, error) {
 	return p.getBoolValue("access_key_1_active")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey1LastRotated() (time.Time, error) {
+func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey1LastRotated() (*time.Time, error) {
 	return p.getTimeValue("access_key_1_last_rotated")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey1LastUsedDate() (time.Time, error) {
+func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey1LastUsedDate() (*time.Time, error) {
 	return p.getTimeValue("access_key_1_last_used_date")
 }
 
@@ -570,11 +570,11 @@ func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey2Active() (bool, error
 	return p.getBoolValue("access_key_1_active")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey2LastRotated() (time.Time, error) {
+func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey2LastRotated() (*time.Time, error) {
 	return p.getTimeValue("access_key_2_last_rotated")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey2LastUsedDate() (time.Time, error) {
+func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey2LastUsedDate() (*time.Time, error) {
 	return p.getTimeValue("access_key_2_last_used_date")
 }
 
@@ -592,7 +592,7 @@ func (p *lumiAwsIamUsercredentialreportentry) GetCert1Active() (bool, error) {
 	return p.getBoolValue("cert_1_active")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetCert1LastRotated() (time.Time, error) {
+func (p *lumiAwsIamUsercredentialreportentry) GetCert1LastRotated() (*time.Time, error) {
 	return p.getTimeValue("cert_1_last_rotated")
 }
 
@@ -600,7 +600,7 @@ func (p *lumiAwsIamUsercredentialreportentry) GetCert2Active() (bool, error) {
 	return p.getBoolValue("cert_2_active")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetCert2LastRotated() (time.Time, error) {
+func (p *lumiAwsIamUsercredentialreportentry) GetCert2LastRotated() (*time.Time, error) {
 	return p.getTimeValue("cert_2_last_rotated")
 }
 
@@ -612,15 +612,15 @@ func (p *lumiAwsIamUsercredentialreportentry) GetPasswordEnabled() (bool, error)
 	return p.getBoolValue("password_enabled")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetPasswordLastChanged() (time.Time, error) {
+func (p *lumiAwsIamUsercredentialreportentry) GetPasswordLastChanged() (*time.Time, error) {
 	return p.getTimeValue("password_last_changed")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetPasswordLastUsed() (time.Time, error) {
+func (p *lumiAwsIamUsercredentialreportentry) GetPasswordLastUsed() (*time.Time, error) {
 	return p.getTimeValue("password_last_used")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetPasswordNextRotation() (time.Time, error) {
+func (p *lumiAwsIamUsercredentialreportentry) GetPasswordNextRotation() (*time.Time, error) {
 	return p.getTimeValue("password_next_rotation")
 }
 
@@ -628,12 +628,12 @@ func (p *lumiAwsIamUsercredentialreportentry) GetUser() (interface{}, error) {
 
 	props, err := p.Properties()
 	if err != nil {
-		return toTime(nil), err
+		return nil, err
 	}
 
 	if props == nil {
 		log.Info().Msgf("could not retrieve key")
-		return toTime(nil), errors.New("could not read the credentials report")
+		return nil, errors.New("could not read the credentials report")
 	}
 
 	// handle special case for the root account since that user does not exist
@@ -651,7 +651,7 @@ func (p *lumiAwsIamUsercredentialreportentry) GetUser() (interface{}, error) {
 	return lumiUser, nil
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetUserCreationTime() (time.Time, error) {
+func (p *lumiAwsIamUsercredentialreportentry) GetUserCreationTime() (*time.Time, error) {
 	return p.getTimeValue("user_creation_time")
 }
 
@@ -693,8 +693,8 @@ func (p *lumiAwsIamUser) init(args *lumi.Args) (*lumi.Args, AwsIamUser, error) {
 		(*args)["arn"] = toString(usr.Arn)
 		(*args)["id"] = toString(usr.UserId)
 		(*args)["name"] = toString(usr.UserName)
-		(*args)["createDate"] = toTime(usr.CreateDate)
-		(*args)["passwordLastUsed"] = toTime(usr.PasswordLastUsed)
+		(*args)["createDate"] = usr.CreateDate
+		(*args)["passwordLastUsed"] = usr.PasswordLastUsed
 		(*args)["tags"] = iamTagsToMap(usr.Tags)
 
 		return args, nil, nil
@@ -704,8 +704,8 @@ func (p *lumiAwsIamUser) init(args *lumi.Args) (*lumi.Args, AwsIamUser, error) {
 	(*args)["arn"] = ""
 	(*args)["id"] = ""
 	(*args)["name"] = ""
-	(*args)["createDate"] = toTime(nil)
-	(*args)["passwordLastUsed"] = toTime(nil)
+	(*args)["createDate"] = nil
+	(*args)["passwordLastUsed"] = nil
 	(*args)["tags"] = nil
 
 	return args, nil, nil
@@ -877,30 +877,30 @@ func (u *lumiAwsIamPolicy) GetAttachmentCount() (int64, error) {
 	return toInt64(policy.AttachmentCount), nil
 }
 
-func (u *lumiAwsIamPolicy) GetCreateDate() (time.Time, error) {
+func (u *lumiAwsIamPolicy) GetCreateDate() (*time.Time, error) {
 	arn, err := u.Arn()
 	if err != nil {
-		return toTime(nil), err
+		return nil, err
 	}
 
 	policy, err := u.loadPolicy(arn)
 	if err != nil {
-		return toTime(nil), err
+		return nil, err
 	}
-	return toTime(policy.CreateDate), nil
+	return policy.CreateDate, nil
 }
 
-func (u *lumiAwsIamPolicy) GetUpdateDate() (time.Time, error) {
+func (u *lumiAwsIamPolicy) GetUpdateDate() (*time.Time, error) {
 	arn, err := u.Arn()
 	if err != nil {
-		return toTime(nil), err
+		return nil, err
 	}
 
 	policy, err := u.loadPolicy(arn)
 	if err != nil {
-		return toTime(nil), err
+		return nil, err
 	}
-	return toTime(policy.UpdateDate), nil
+	return policy.UpdateDate, nil
 }
 
 func (u *lumiAwsIamPolicy) GetScope() (string, error) {
@@ -1083,7 +1083,7 @@ func (u *lumiAwsIamPolicy) GetVersions() ([]interface{}, error) {
 			"arn", arn,
 			"versionId", toString(policyversion.VersionId),
 			"isDefaultVersion", toBool(policyversion.IsDefaultVersion),
-			"createDate", toTime(policyversion.CreateDate),
+			"createDate", policyversion.CreateDate,
 		)
 		if err != nil {
 			return nil, err
@@ -1184,7 +1184,7 @@ func (p *lumiAwsIamRole) init(args *lumi.Args) (*lumi.Args, AwsIamRole, error) {
 		(*args)["name"] = toString(role.RoleName)
 		(*args)["description"] = toString(role.Description)
 		(*args)["tags"] = iamTagsToMap(role.Tags)
-		(*args)["createDate"] = toTime(role.CreateDate)
+		(*args)["createDate"] = role.CreateDate
 
 		return args, nil, nil
 	}
@@ -1195,7 +1195,7 @@ func (p *lumiAwsIamRole) init(args *lumi.Args) (*lumi.Args, AwsIamRole, error) {
 	(*args)["name"] = ""
 	(*args)["description"] = ""
 	(*args)["tags"] = nil
-	(*args)["createDate"] = toTime(nil)
+	(*args)["createDate"] = nil
 
 	return args, nil, nil
 }
@@ -1238,7 +1238,7 @@ func (p *lumiAwsIamGroup) init(args *lumi.Args) (*lumi.Args, AwsIamGroup, error)
 		(*args)["arn"] = toString(grp.Arn)
 		(*args)["id"] = toString(grp.GroupId)
 		(*args)["name"] = toString(grp.GroupName)
-		(*args)["createDate"] = toTime(grp.CreateDate)
+		(*args)["createDate"] = grp.CreateDate
 
 		return args, nil, nil
 	}
@@ -1247,7 +1247,7 @@ func (p *lumiAwsIamGroup) init(args *lumi.Args) (*lumi.Args, AwsIamGroup, error)
 	(*args)["arn"] = ""
 	(*args)["id"] = ""
 	(*args)["name"] = ""
-	(*args)["createDate"] = toTime(nil)
+	(*args)["createDate"] = nil
 
 	return args, nil, nil
 }
