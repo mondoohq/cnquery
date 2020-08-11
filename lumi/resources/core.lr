@@ -494,9 +494,8 @@ esxi.vib {
   id string
 	name string
 	acceptanceLevel string
-  // TODO: use time here
-	creationDate string
-	installDate string
+	creationDate time
+	installDate time
 	status string
 	vendor string
 	version string
