@@ -1,0 +1,125 @@
+{
+  "jsonrpc": "2.0",
+  "id": "EapiExplorer-1",
+  "result": [
+    {
+      "spanningTreeMstInstances": {
+        "MST0": {
+          "bridge": {
+            "priority": 32768,
+            "macAddress": "08:00:27:67:e5:98",
+            "systemIdExtension": 0
+          },
+          "rootBridge": {
+            "priority": 32768,
+            "macAddress": "08:00:27:67:e5:98",
+            "systemIdExtension": 0
+          },
+          "mappedVlans": {
+            "vlans": [
+              1,
+              2
+            ]
+          },
+          "interfaces": {
+            "Ethernet2": {
+              "priority": 128,
+              "linkType": "p2p",
+              "state": "forwarding",
+              "cost": 2000,
+              "role": "designated",
+              "inconsistentFeatures": {
+                "loopGuard": false,
+                "rootGuard": false,
+                "mstPvstBorder": false,
+                "bridgeAssurance": false
+              },
+              "portNumber": 2,
+              "isEdgePort": true,
+              "detail": {
+                "designatedBridgePriority": 32768,
+                "regionalRootPriority": 32768,
+                "regionalRootAddress": "08:00:27:67:e5:98",
+                "designatedRootPriority": 32768,
+                "designatedPortNumber": 2,
+                "designatedBridgeAddress": "08:00:27:67:e5:98",
+                "designatedPortPriority": 128,
+                "designatedPathCost": {
+                  "internalCost": 0,
+                  "externalCost": 0
+                },
+                "designatedRootAddress": "08:00:27:67:e5:98"
+              },
+              "boundaryType": "none"
+            },
+            "Ethernet3": {
+              "priority": 128,
+              "linkType": "p2p",
+              "state": "forwarding",
+              "cost": 2000,
+              "role": "designated",
+              "inconsistentFeatures": {
+                "loopGuard": false,
+                "rootGuard": false,
+                "mstPvstBorder": false,
+                "bridgeAssurance": false
+              },
+              "portNumber": 3,
+              "isEdgePort": true,
+              "detail": {
+                "designatedBridgePriority": 32768,
+                "regionalRootPriority": 32768,
+                "regionalRootAddress": "08:00:27:67:e5:98",
+                "designatedRootPriority": 32768,
+                "designatedPortNumber": 3,
+                "designatedBridgeAddress": "08:00:27:67:e5:98",
+                "designatedPortPriority": 128,
+                "designatedPathCost": {
+                  "internalCost": 0,
+                  "externalCost": 0
+                },
+                "designatedRootAddress": "08:00:27:67:e5:98"
+              },
+              "boundaryType": "none"
+            },
+            "Ethernet1": {
+              "priority": 128,
+              "linkType": "p2p",
+              "state": "forwarding",
+              "cost": 2000,
+              "role": "designated",
+              "inconsistentFeatures": {
+                "loopGuard": false,
+                "rootGuard": false,
+                "mstPvstBorder": false,
+                "bridgeAssurance": false
+              },
+              "portNumber": 1,
+              "isEdgePort": true,
+              "detail": {
+                "designatedBridgePriority": 32768,
+                "regionalRootPriority": 32768,
+                "regionalRootAddress": "08:00:27:67:e5:98",
+                "designatedRootPriority": 32768,
+                "designatedPortNumber": 1,
+                "designatedBridgeAddress": "08:00:27:67:e5:98",
+                "designatedPortPriority": 128,
+                "designatedPathCost": {
+                  "internalCost": 0,
+                  "externalCost": 0
+                },
+                "designatedRootAddress": "08:00:27:67:e5:98"
+              },
+              "boundaryType": "none"
+            }
+          },
+          "regionalRootBridge": {
+            "priority": 32768,
+            "macAddress": "08:00:27:67:e5:98",
+            "systemIdExtension": 0
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "jsonrpc": "2.0",
+  "id": "EapiExplorer-1",
+  "result": [
+    {
+      "spanningTreeMstInterface": {
+        "isEdgePort": true,
+        "features": {
+          "linkType": {
+            "default": true,
+            "value": "p2p"
+          },
+          "bpduGuard": {
+            "default": false,
+            "value": "disabled"
+          },
+          "bpduFilter": {
+            "default": false,
+            "value": "disabled"
+          }
+        },
+        "interfaceName": "Ethernet1",
+        "mstInstances": {
+          "MST0": {
+            "linkType": "p2p",
+            "isEdgePort": true,
+            "detail": {
+              "designatedBridgePriority": 32768,
+              "regionalRootPriority": 32768,
+              "regionalRootAddress": "08:00:27:67:e5:98",
+              "designatedRootPriority": 32768,
+              "designatedPortNumber": 1,
+              "designatedBridgeAddress": "08:00:27:67:e5:98",
+              "designatedPortPriority": 128,
+              "designatedPathCost": {
+                "internalCost": 0,
+                "externalCost": 0
+              },
+              "designatedRootAddress": "08:00:27:67:e5:98"
+            },
+            "boundaryType": "none",
+            "priority": 128,
+            "state": "forwarding",
+            "cost": 2000,
+            "role": "designated",
+            "inconsistentFeatures": {
+              "loopGuard": false,
+              "rootGuard": false,
+              "mstPvstBorder": false,
+              "bridgeAssurance": false
+            },
+            "portNumber": 1,
+            "mappedVlans": {
+              "vlans": [
+                1,
+                2
+              ]
+            }
+          }
+        },
+        "counters": {
+          "bpduRateLimitCount": 0,
+          "bpduOtherError": 0,
+          "bpduReceived": 0,
+          "bpduTaggedError": 0,
+          "bpduSent": 2062
+        }
+      }
+    }
+  ]
+}

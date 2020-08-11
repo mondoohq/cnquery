@@ -571,6 +571,38 @@ arista.eos.ipinterface {
   mtu string
 }
 
+arista.eos.stp {
+  mstInstances() []arista.eos.stp.mst
+}
+
+arista.eos.stp.mst {
+  instanceId string
+  name string
+  protocol string
+  bridge dict
+  rootBridge dict
+  regionalRootBridge dict
+  interfaces []arista.eos.spt.mstinterface
+}
+
+arista.eos.spt.mstinterface {
+  id string
+  mstInstanceId string
+  name string
+  priority int
+  linkType string
+  state string
+  cost int
+  role string
+  inconsistentFeatures dict
+  portNumber int
+  isEdgePort bool
+  detail dict
+  boundaryType string
+  counters() dict
+  features() dict
+}
+
 aws.iam {
   users() []aws.iam.user
   roles() []aws.iam.role

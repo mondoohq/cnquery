@@ -17,6 +17,10 @@ https://www.youtube.com/watch?v=nbDF7hzBPM0
 Configure SSH
 https://www.youtube.com/watch?v=QEmHqHpeoZM
 
+```
+ssh -p 2221 admin@localhost
+```
+
 Enable the eosAPI
 
 ```
