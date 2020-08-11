@@ -47,8 +47,15 @@ func (d *Detector) Platform() (*Platform, error) {
 		}
 		return VspherePlatform(pt, identifier)
 	case *arista.Transport:
+
+		v, err := pt.GetVersion()
+		if err != nil {
+			return nil, errors.New("cannot determine arista version")
+		}
+
 		return &Platform{
 			Name:    "arista-eos",
+			Release: v.Version,
 			Kind:    d.transport.Kind(),
 			Runtime: d.transport.Runtime(),
 		}, nil

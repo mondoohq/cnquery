@@ -302,6 +302,11 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 		if endpoint.Record {
 			m.ActivateRecorder()
 		}
+
+		id, err := trans.Identifier()
+		if err == nil && len(id) > 0 {
+			identifier = append(identifier, id)
+		}
 	case transports.TransportBackend_CONNECTION_AWS:
 		log.Debug().Msg("connection> load aws transport")
 		trans, err := aws.New(endpoint)
