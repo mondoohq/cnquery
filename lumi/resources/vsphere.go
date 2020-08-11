@@ -2,6 +2,7 @@ package resources
 
 import (
 	"errors"
+	"time"
 
 	"github.com/vmware/govmomi/object"
 	"go.mondoo.io/mondoo/lumi/resources/vsphere"
@@ -284,12 +285,29 @@ func (v *lumiVsphereHost) GetPackages() ([]interface{}, error) {
 
 	lumiPackages := make([]interface{}, len(vibs))
 	for i, vib := range vibs {
+
+		// parse timestamps in format "2020-07-16"
+		format := "2006-01-02"
+		var creationDate *time.Time
+		parsedCreation, err := time.Parse(format, vib.CreationDate)
+		if err != nil {
+			return nil, errors.New("cannot parse vib creationDate: " + vib.CreationDate)
+		}
+		creationDate = &parsedCreation
+
+		var installDate *time.Time
+		parsedInstall, err := time.Parse(format, vib.InstallDate)
+		if err != nil {
+			return nil, errors.New("cannot parse vib installDate: " + vib.InstallDate)
+		}
+		installDate = &parsedInstall
+
 		lumiVib, err := v.Runtime.CreateResource("esxi.vib",
 			"id", vib.ID,
 			"name", vib.Name,
 			"acceptanceLevel", vib.AcceptanceLevel,
-			"creationDate", vib.CreationDate,
-			"installDate", vib.InstallDate,
+			"creationDate", creationDate,
+			"installDate", installDate,
 			"status", vib.Status,
 			"vendor", vib.Vendor,
 			"version", vib.Version,
