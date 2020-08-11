@@ -42,7 +42,8 @@ func TestPrimitiveRegex(t *testing.T) {
 
 func TestPrimitiveTime(t *testing.T) {
 	a := &Primitive{Type: string(types.Time), Value: []byte{0x15, 0xcd, 0x5b, 0x07, 0x00, 0x00, 0x00, 0x00, 0x15, 0xcd, 0x5b, 0x07}}
-	assert.Equal(t, a, TimePrimitive(time.Unix(123456789, 123456789)))
+	ut := time.Unix(123456789, 123456789)
+	assert.Equal(t, a, TimePrimitive(&ut))
 }
 
 func TestPrimitiveRef(t *testing.T) {

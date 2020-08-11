@@ -79,7 +79,7 @@ func regex2result(value interface{}, typ types.Type) (*Primitive, error) {
 }
 
 func time2result(value interface{}, typ types.Type) (*Primitive, error) {
-	return TimePrimitive(value.(time.Time)), nil
+	return TimePrimitive(value.(*time.Time)), nil
 }
 
 func dict2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -267,7 +267,8 @@ func pregex2raw(p *Primitive) *RawData {
 }
 
 func ptime2raw(p *Primitive) *RawData {
-	return TimeData(bytes2time(p.Value))
+	t := bytes2time(p.Value)
+	return TimeData(&t)
 }
 
 func pdict2raw(p *Primitive) *RawData {

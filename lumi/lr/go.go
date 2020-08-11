@@ -605,7 +605,7 @@ var primitiveTypes = map[string]string{
 	"bool":   "bool",
 	"int":    "int64",
 	"float":  "float64",
-	"time":   "time.Time",
+	"time":   "*time.Time",
 	"dict":   "map[string]interface{}",
 	"any":    "interface{}",
 }
@@ -632,7 +632,7 @@ var primitiveZeros = map[string]string{
 	"bool":   "false",
 	"int":    "0",
 	"float":  "0.0",
-	"time":   "time.Time{}",
+	"time":   "nil",
 	"dict":   "nil",
 	"any":    "nil",
 }

@@ -10,9 +10,10 @@ func (p *lumiTime) id() (string, error) {
 	return "time", nil
 }
 
-func (p *lumiTime) GetNow() (time.Time, error) {
+func (p *lumiTime) GetNow() (*time.Time, error) {
 	// TODO: needs a ticking event where the time gets updated
-	return time.Now(), nil
+	res := time.Now()
+	return &res, nil
 }
 
 var (
@@ -22,18 +23,18 @@ var (
 	day    = llx.DurationToTime(24 * 60 * 60)
 )
 
-func (p *lumiTime) GetSecond() (time.Time, error) {
+func (p *lumiTime) GetSecond() (*time.Time, error) {
 	return second, nil
 }
 
-func (p *lumiTime) GetMinute() (time.Time, error) {
+func (p *lumiTime) GetMinute() (*time.Time, error) {
 	return minute, nil
 }
 
-func (p *lumiTime) GetHour() (time.Time, error) {
+func (p *lumiTime) GetHour() (*time.Time, error) {
 	return hour, nil
 }
 
-func (p *lumiTime) GetDay() (time.Time, error) {
+func (p *lumiTime) GetDay() (*time.Time, error) {
 	return day, nil
 }

@@ -84,7 +84,7 @@ func rawDataString(typ types.Type, value interface{}) string {
 	case types.Regex:
 		return "/" + value.(string) + "/"
 	case types.Time:
-		return value.(time.Time).String()
+		return value.(*time.Time).String()
 	case types.Dict:
 		return dictRawDataString(value)
 	case types.ArrayLike:
@@ -173,7 +173,7 @@ func isTruthy(data interface{}, typ types.Type) (bool, bool) {
 		return data.(string) != "", true
 
 	case types.Time:
-		return !data.(time.Time).IsZero(), true
+		return !data.(*time.Time).IsZero(), true
 
 	case types.ArrayLike:
 		arr := data.([]interface{})
@@ -274,7 +274,7 @@ func RegexData(r string) *RawData {
 }
 
 // TimeData creates a rawdata struct from a go time
-func TimeData(t time.Time) *RawData {
+func TimeData(t *time.Time) *RawData {
 	return &RawData{
 		Type:  types.Time,
 		Value: t,

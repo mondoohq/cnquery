@@ -56,7 +56,7 @@ const nsecMask = 1<<30 - 1
 const nsecShift = 30
 
 // TimePrimitive creates a primitive from a time value
-func TimePrimitive(t time.Time) *Primitive {
+func TimePrimitive(t *time.Time) *Primitive {
 	seconds := t.Unix()
 	nanos := int32(t.UnixNano() % 1e9)
 
