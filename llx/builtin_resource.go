@@ -142,5 +142,5 @@ func resourceDate(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 		return nil, 0, errors.New("failed to parse time: " + err.Error())
 	}
 
-	return TimeData(&parsed), 0, nil
+	return TimeData(parsed), 0, nil
 }

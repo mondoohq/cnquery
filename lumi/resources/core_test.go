@@ -280,6 +280,11 @@ func TestString_Methods(t *testing.T) {
 	})
 }
 
+func duration(i int64) *time.Time {
+	res := llx.DurationToTime(i)
+	return &res
+}
+
 func TestTime_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
@@ -308,27 +313,27 @@ func TestTime_Methods(t *testing.T) {
 		},
 		{
 			"parse.date('1970-01-01T01:02:04Z') - parse.date('1970-01-01T01:02:03Z')",
-			0, llx.DurationToTime(1),
+			0, duration(1),
 		},
 		{
 			"parse.date('0000-01-01T00:00:03Z') * 3",
-			0, llx.DurationToTime(9),
+			0, duration(9),
 		},
 		{
 			"3 * time.second",
-			0, llx.DurationToTime(3),
+			0, duration(3),
 		},
 		{
 			"3 * time.minute",
-			0, llx.DurationToTime(3 * 60),
+			0, duration(3 * 60),
 		},
 		{
 			"3 * time.hour",
-			0, llx.DurationToTime(3 * 60 * 60),
+			0, duration(3 * 60 * 60),
 		},
 		{
 			"3 * time.day",
-			0, llx.DurationToTime(3 * 60 * 60 * 24),
+			0, duration(3 * 60 * 60 * 24),
 		},
 		{
 			"1 * time.day > 3 * time.hour",

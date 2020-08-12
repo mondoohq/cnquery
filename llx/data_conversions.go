@@ -267,8 +267,7 @@ func pregex2raw(p *Primitive) *RawData {
 }
 
 func ptime2raw(p *Primitive) *RawData {
-	t := bytes2time(p.Value)
-	return TimeData(&t)
+	return TimeData(bytes2time(p.Value))
 }
 
 func pdict2raw(p *Primitive) *RawData {

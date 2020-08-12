@@ -24,17 +24,17 @@ var (
 )
 
 func (p *lumiTime) GetSecond() (*time.Time, error) {
-	return second, nil
+	return &second, nil
 }
 
 func (p *lumiTime) GetMinute() (*time.Time, error) {
-	return minute, nil
+	return &minute, nil
 }
 
 func (p *lumiTime) GetHour() (*time.Time, error) {
-	return hour, nil
+	return &hour, nil
 }
 
 func (p *lumiTime) GetDay() (*time.Time, error) {
-	return day, nil
+	return &day, nil
 }
