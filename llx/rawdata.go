@@ -139,8 +139,10 @@ func (r *RawData) IsTruthy() (bool, bool) {
 }
 
 func isTruthy(data interface{}, typ types.Type) (bool, bool) {
-	if data == nil &&
-		(typ.IsEmpty() || !typ.Underlying().IsResource()) {
+	if data == nil {
+		if !typ.IsEmpty() && typ.Underlying().IsResource() {
+			return true, true
+		}
 		return false, true
 	}
 
