@@ -288,6 +288,10 @@ func duration(i int64) *time.Time {
 func TestTime_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
+			"time.now",
+			1, true,
+		},
+		{
 			"time.now.unix",
 			0, time.Now().Unix(),
 		},

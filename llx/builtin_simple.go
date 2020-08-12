@@ -111,6 +111,13 @@ func opStringCmpString(left interface{}, right interface{}) bool {
 func opTimeCmpTime(left interface{}, right interface{}) bool {
 	l := left.(*time.Time)
 	r := right.(*time.Time)
+	if l == nil {
+		return r == nil
+	}
+	if r == nil {
+		return false
+	}
+
 	return (*l).Equal(*r)
 }
 
@@ -569,6 +576,13 @@ func timeLTTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
 		l := left.(*time.Time)
 		r := right.(*time.Time)
+		if l == nil {
+			return r == nil
+		}
+		if r == nil {
+			return false
+		}
+
 		return (*l).Before(*r)
 	})
 }
@@ -577,6 +591,13 @@ func timeLTETime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
 		l := left.(*time.Time)
 		r := right.(*time.Time)
+		if l == nil {
+			return r == nil
+		}
+		if r == nil {
+			return false
+		}
+
 		return (*l).Before(*r) || (*l).Equal(*r)
 	})
 }
@@ -585,6 +606,13 @@ func timeGTTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
 		l := left.(*time.Time)
 		r := right.(*time.Time)
+		if l == nil {
+			return r == nil
+		}
+		if r == nil {
+			return false
+		}
+
 		return (*l).After(*r)
 	})
 }
@@ -593,13 +621,26 @@ func timeGTETime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
 		l := left.(*time.Time)
 		r := right.(*time.Time)
+		if l == nil {
+			return r == nil
+		}
+		if r == nil {
+			return false
+		}
+
 		return (*l).After(*r) || (*l).Equal(*r)
 	})
 }
 
 func timeMinusTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
-		diff := left.(*time.Time).Unix() - right.(*time.Time).Unix()
+		l := left.(*time.Time)
+		r := right.(*time.Time)
+		if l == nil || r == nil {
+			return &RawData{Type: types.Time}
+		}
+
+		diff := l.Unix() - r.Unix()
 		res := DurationToTime(diff)
 		return TimeData(res)
 	})
@@ -607,7 +648,12 @@ func timeMinusTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 
 func timeTimesInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
-		diff := TimeToDuration(left.(*time.Time)) * right.(int64)
+		l := left.(*time.Time)
+		if l == nil {
+			return &RawData{Type: types.Time}
+		}
+
+		diff := TimeToDuration(l) * right.(int64)
 		res := DurationToTime(diff)
 		return TimeData(res)
 	})
@@ -615,7 +661,12 @@ func timeTimesInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 
 func intTimesTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
-		diff := left.(int64) * TimeToDuration(right.(*time.Time))
+		r := right.(*time.Time)
+		if r == nil {
+			return &RawData{Type: types.Time}
+		}
+
+		diff := left.(int64) * TimeToDuration(r)
 		res := DurationToTime(diff)
 		return TimeData(res)
 	})
@@ -1578,51 +1629,51 @@ func DurationToTime(i int64) time.Time {
 }
 
 func timeSeconds(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	if bind.Value == nil {
+	t := bind.Value.(*time.Time)
+	if t == nil {
 		return &RawData{Type: types.Array(types.Time)}, 0, nil
 	}
 
-	t := bind.Value.(*time.Time)
 	raw := TimeToDuration(t)
 	return IntData(int64(raw)), 0, nil
 }
 
 func timeMinutes(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	if bind.Value == nil {
+	t := bind.Value.(*time.Time)
+	if t == nil {
 		return &RawData{Type: types.Array(types.Time)}, 0, nil
 	}
 
-	t := bind.Value.(*time.Time)
 	raw := TimeToDuration(t) / 60
 	return IntData(int64(raw)), 0, nil
 }
 
 func timeHours(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	if bind.Value == nil {
+	t := bind.Value.(*time.Time)
+	if t == nil {
 		return &RawData{Type: types.Array(types.Time)}, 0, nil
 	}
 
-	t := bind.Value.(*time.Time)
 	raw := TimeToDuration(t) / (60 * 60)
 	return IntData(int64(raw)), 0, nil
 }
 
 func timeDays(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	if bind.Value == nil {
+	t := bind.Value.(*time.Time)
+	if t == nil {
 		return &RawData{Type: types.Array(types.Time)}, 0, nil
 	}
 
-	t := bind.Value.(*time.Time)
 	raw := TimeToDuration(t) / (60 * 60 * 24)
 	return IntData(int64(raw)), 0, nil
 }
 
 func timeUnix(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	if bind.Value == nil {
+	t := bind.Value.(*time.Time)
+	if t == nil {
 		return &RawData{Type: types.Array(types.Time)}, 0, nil
 	}
 
-	t := bind.Value.(*time.Time)
 	raw := t.Unix()
 	return IntData(int64(raw)), 0, nil
 }

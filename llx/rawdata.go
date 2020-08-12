@@ -139,10 +139,8 @@ func (r *RawData) IsTruthy() (bool, bool) {
 }
 
 func isTruthy(data interface{}, typ types.Type) (bool, bool) {
-	if data == nil {
-		if !typ.IsEmpty() && typ.Underlying().IsResource() {
-			return true, true
-		}
+	if data == nil &&
+		(typ.IsEmpty() || !typ.Underlying().IsResource()) {
 		return false, true
 	}
 
@@ -175,7 +173,14 @@ func isTruthy(data interface{}, typ types.Type) (bool, bool) {
 		return data.(string) != "", true
 
 	case types.Time:
-		return !data.(*time.Time).IsZero(), true
+		dt := data.(*time.Time)
+
+		// needs separate testing due to: https://golang.org/doc/faq#nil_error
+		if dt == nil {
+			return false, true
+		}
+
+		return !dt.IsZero(), true
 
 	case types.ArrayLike:
 		arr := data.([]interface{})
