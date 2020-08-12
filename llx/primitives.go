@@ -57,6 +57,10 @@ const nsecShift = 30
 
 // TimePrimitive creates a primitive from a time value
 func TimePrimitive(t *time.Time) *Primitive {
+	if t == nil {
+		return NilPrimitive
+	}
+
 	seconds := t.Unix()
 	nanos := int32(t.UnixNano() % 1e9)
 
