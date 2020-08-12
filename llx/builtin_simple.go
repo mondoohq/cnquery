@@ -1573,9 +1573,8 @@ func TimeToDuration(t *time.Time) int64 {
 }
 
 // DurationToTime takes a duration in seconds and turns it into a time object
-func DurationToTime(i int64) *time.Time {
-	res := time.Unix(i+zeroTimeOffset, 0)
-	return &res
+func DurationToTime(i int64) time.Time {
+	return time.Unix(i+zeroTimeOffset, 0)
 }
 
 func timeSeconds(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
