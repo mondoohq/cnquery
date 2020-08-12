@@ -84,6 +84,10 @@ func (c *lumiAwsIam) GetCredentialReport() ([]interface{}, error) {
 		time.Sleep(100 * time.Millisecond)
 	}
 
+	if rresp == nil {
+		return nil, errors.Wrap(err, "could not gather aws iam credential report")
+	}
+
 	data = rresp.Content
 
 	// parse csv output
