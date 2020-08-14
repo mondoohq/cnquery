@@ -246,3 +246,31 @@ func (eos *Eos) StpInterfaceDetails(mstInstanceID string, iface string) (SptMest
 
 	return shRsp.SpanningTreeMstInterface, nil
 }
+
+type showHostname struct {
+	Fqdn     string `json:"fqdn"`
+	Hostname string `json:"hostname"`
+}
+
+func (s *showHostname) GetCmd() string {
+	return "show hostname"
+}
+
+func (eos *Eos) ShowHostname() (*showHostname, error) {
+	shIntRsp := &showHostname{}
+
+	handle, err := eos.node.GetHandle("json")
+	if err != nil {
+		return nil, err
+	}
+	err = handle.AddCommand(shIntRsp)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := handle.Call(); err != nil {
+		return nil, err
+	}
+
+	return shIntRsp, nil
+}
