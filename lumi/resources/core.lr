@@ -542,6 +542,8 @@ arista.eos {
   ipInterfaces() []arista.eos.ipinterface
   interfaces() []arista.eos.interface
   version() dict
+  hostname() string
+  fqdn() string
 }
 
 arista.eos.interface {

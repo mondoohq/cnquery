@@ -85,6 +85,34 @@ func (a *lumiAristaEos) GetVersion() (map[string]interface{}, error) {
 	return jsonToDict(version)
 }
 
+func (a *lumiAristaEos) GetHostname() (string, error) {
+	eos, _, err := aristaClientInstance(a.Runtime.Motor.Transport)
+	if err != nil {
+		return "", err
+	}
+
+	hostname, err := eos.ShowHostname()
+	if err != nil {
+		return "", err
+	}
+
+	return hostname.Hostname, nil
+}
+
+func (a *lumiAristaEos) GetFqdn() (string, error) {
+	eos, _, err := aristaClientInstance(a.Runtime.Motor.Transport)
+	if err != nil {
+		return "", err
+	}
+
+	hostname, err := eos.ShowHostname()
+	if err != nil {
+		return "", err
+	}
+
+	return hostname.Fqdn, nil
+}
+
 func (a *lumiAristaEos) GetInterfaces() ([]interface{}, error) {
 	eos, _, err := aristaClientInstance(a.Runtime.Motor.Transport)
 	if err != nil {
