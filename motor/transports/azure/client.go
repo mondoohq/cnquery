@@ -9,16 +9,20 @@ import (
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/resources/mgmt/subscriptions"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/pkg/errors"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/local"
 )
 
-func isAzInstalled(t transports.Transport) (bool, error) {
-	_, err := t.RunCommand("az")
+func IsAzInstalled() error {
+	t, err := local.New()
 	if err != nil {
-		return false, errors.Wrap(err, "could not find az command")
+		return err
 	}
-	return true, nil
+
+	_, err = t.RunCommand("az")
+	if err != nil {
+		return errors.New("could not find az command")
+	}
+	return nil
 }
 
 // shells out to `az account show --output json` to determine the default account
@@ -27,14 +31,6 @@ func GetAccount() (*AzureAccount, error) {
 	t, err := local.New()
 	if err != nil {
 		return nil, err
-	}
-
-	ok, err := isAzInstalled(t)
-	if err != nil {
-		return nil, err
-	}
-	if !ok {
-		return nil, errors.New("az command not installed")
 	}
 
 	cmd, err := t.RunCommand("az account show --output json")
