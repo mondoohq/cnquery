@@ -16,7 +16,6 @@ import (
 
 type AzureConfig struct {
 	SubscriptionID string
-	TenantID       string
 	User           string
 }
 
@@ -31,6 +30,7 @@ func ParseAzureInstanceContext(azureUrl string) *AzureConfig {
 	var config AzureConfig
 
 	azureUrl = strings.TrimPrefix(azureUrl, "az://")
+	azureUrl = strings.TrimPrefix(azureUrl, "azure://")
 
 	keyValues := strings.Split(azureUrl, "/")
 	for i := 0; i < len(keyValues); {
@@ -43,12 +43,6 @@ func ParseAzureInstanceContext(azureUrl string) *AzureConfig {
 		if keyValues[i] == "subscriptions" {
 			if i+1 < len(keyValues) {
 				config.SubscriptionID = keyValues[i+1]
-			}
-		}
-
-		if keyValues[i] == "tenants" {
-			if i+1 < len(keyValues) {
-				config.TenantID = keyValues[i+1]
 			}
 		}
 
@@ -85,7 +79,7 @@ func (k *azureResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpt
 	// Verify the subscription and get the details to ensure we have access
 	subscription, err := azure_transport.VerifySubscription(config.SubscriptionID)
 	if err != nil || subscription.TenantID == nil {
-		return nil, errors.New("could not fetch azure subscription details for: " + config.SubscriptionID)
+		return nil, errors.Wrap(err, "could not fetch azure subscription details for: "+config.SubscriptionID)
 	}
 
 	// add azure api as asset
