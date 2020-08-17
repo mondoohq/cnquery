@@ -59,6 +59,12 @@ func (k *azureResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpt
 
 	config := ParseAzureInstanceContext(in.Connection)
 
+	// TODO: for now we only support the azure cli authentication
+	err := azure_transport.IsAzInstalled()
+	if err != nil {
+		return nil, err
+	}
+
 	// if we have no subscription, try to ask azure cli
 	if len(config.SubscriptionID) == 0 {
 		log.Debug().Msg("no subscription id provided, fallback to azure cli")
@@ -71,7 +77,7 @@ func (k *azureResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpt
 		// if an error happens, the following config validation will catch the missing subscription id
 	}
 
-	err := config.Validate()
+	err = config.Validate()
 	if err != nil {
 		return nil, err
 	}
