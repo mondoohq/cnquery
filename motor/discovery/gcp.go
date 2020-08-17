@@ -118,21 +118,22 @@ func (k *gcpResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts)
 	})
 
 	// discover compute instances
+	if opts.DiscoverInstances {
+		// we may want to pass a specific user, otherwise it will fallback to ssh config
+		if len(config.User) > 0 {
+			r.InstanceSSHUsername = config.User
+		}
 
-	// we may want to pass a specific user, otherwise it will fallback to ssh config
-	if len(config.User) > 0 {
-		r.InstanceSSHUsername = config.User
-	}
+		assetList, err := r.ListInstancesInProject(config.Project)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not fetch gcp compute instances")
+		}
+		log.Debug().Int("instances", len(assetList)).Msg("completed instance search")
 
-	assetList, err := r.ListInstancesInProject(config.Project)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not fetch gcp compute instances")
-	}
-	log.Debug().Int("instances", len(assetList)).Msg("completed instance search")
-
-	for i := range assetList {
-		log.Debug().Str("name", assetList[i].Name).Msg("resolved gcp compute instance")
-		resolved = append(resolved, assetList[i])
+		for i := range assetList {
+			log.Debug().Str("name", assetList[i].Name).Msg("resolved gcp compute instance")
+			resolved = append(resolved, assetList[i])
+		}
 	}
 
 	return resolved, nil
