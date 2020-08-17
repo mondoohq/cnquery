@@ -97,29 +97,31 @@ func (k *awsResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts)
 	})
 
 	// discover ec2 instances
-	// TODO: rewrite ec2 discovert to use the aws transport
-	r, err := aws.NewEc2Discovery(trans.Config())
-	if err != nil {
-		return nil, errors.Wrap(err, "could not initialize aws ec2 discovery")
-	}
-
-	// we may want to pass a specific user, otherwise it will fallback to ssh config
-	if len(config.User) > 0 {
-		r.InstanceSSHUsername = config.User
-	}
-
-	assetList, err := r.List()
-	if err != nil {
-		return nil, errors.Wrap(err, "could not fetch ec2 instances")
-	}
-	log.Debug().Int("instances", len(assetList)).Msg("completed instance search")
-	for i := range assetList {
-		log.Debug().Str("name", assetList[i].Name).Msg("resolved ec2 instance")
-		if assetList[i].State != asset.State_STATE_RUNNING {
-			log.Warn().Str("name", assetList[i].Name).Msg("skip instance that is not running")
-			continue
+	if opts.DiscoverInstances {
+		// TODO: rewrite ec2 discovert to use the aws transport
+		r, err := aws.NewEc2Discovery(trans.Config())
+		if err != nil {
+			return nil, errors.Wrap(err, "could not initialize aws ec2 discovery")
 		}
-		resolved = append(resolved, assetList[i])
+
+		// we may want to pass a specific user, otherwise it will fallback to ssh config
+		if len(config.User) > 0 {
+			r.InstanceSSHUsername = config.User
+		}
+
+		assetList, err := r.List()
+		if err != nil {
+			return nil, errors.Wrap(err, "could not fetch ec2 instances")
+		}
+		log.Debug().Int("instances", len(assetList)).Msg("completed instance search")
+		for i := range assetList {
+			log.Debug().Str("name", assetList[i].Name).Msg("resolved ec2 instance")
+			if assetList[i].State != asset.State_STATE_RUNNING {
+				log.Warn().Str("name", assetList[i].Name).Msg("skip instance that is not running")
+				continue
+			}
+			resolved = append(resolved, assetList[i])
+		}
 	}
 
 	return resolved, nil

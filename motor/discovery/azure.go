@@ -131,21 +131,23 @@ func (k *azureResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpt
 	})
 
 	// get all compute instances
-	r, err := azure.NewCompute(config.SubscriptionID)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not initialize azure compute discovery")
-	}
+	if opts.DiscoverInstances {
+		r, err := azure.NewCompute(config.SubscriptionID)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not initialize azure compute discovery")
+		}
 
-	ctx := context.Background()
-	assetList, err := r.ListInstances(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not fetch azure compute instances")
-	}
-	log.Debug().Int("instances", len(assetList)).Msg("completed instance search")
+		ctx := context.Background()
+		assetList, err := r.ListInstances(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not fetch azure compute instances")
+		}
+		log.Debug().Int("instances", len(assetList)).Msg("completed instance search")
 
-	for i := range assetList {
-		log.Debug().Str("name", assetList[i].Name).Msg("resolved azure compute instance")
-		resolved = append(resolved, assetList[i])
+		for i := range assetList {
+			log.Debug().Str("name", assetList[i].Name).Msg("resolved azure compute instance")
+			resolved = append(resolved, assetList[i])
+		}
 	}
 
 	return resolved, nil
