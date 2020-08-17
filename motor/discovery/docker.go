@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/apps/mondoo/cmd/options"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/platform"
 
 	docker_discovery "go.mondoo.io/mondoo/motor/discovery/docker_engine"
 	"go.mondoo.io/mondoo/motor/transports"
@@ -86,6 +87,11 @@ func (k *dockerResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOp
 		t.Backend = transports.TransportBackend_CONNECTION_CONTAINER_TAR
 		resolvedAsset = &asset.Asset{
 			Connections: []*transports.TransportConfig{t},
+			Platform: &platform.Platform{
+				// TODO: this is temporary, decide if we want to move the detection logic for image/container here
+				Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
+				Runtime: transports.RUNTIME_DOCKER_IMAGE,
+			},
 		}
 		return []*asset.Asset{resolvedAsset}, nil
 	}
@@ -99,6 +105,10 @@ func (k *dockerResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOp
 			t.Backend = transports.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER
 			resolvedAsset = &asset.Asset{
 				Connections: []*transports.TransportConfig{t},
+				Platform: &platform.Platform{
+					Kind:    transports.Kind_KIND_CONTAINER,
+					Runtime: transports.RUNTIME_DOCKER_CONTAINER,
+				},
 			}
 			return []*asset.Asset{resolvedAsset}, nil
 		}
@@ -108,6 +118,10 @@ func (k *dockerResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOp
 			t.Backend = transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE
 			resolvedAsset = &asset.Asset{
 				Connections: []*transports.TransportConfig{t},
+				Platform: &platform.Platform{
+					Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
+					Runtime: transports.RUNTIME_DOCKER_IMAGE,
+				},
 			}
 			return []*asset.Asset{resolvedAsset}, nil
 		}
@@ -119,6 +133,10 @@ func (k *dockerResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOp
 		t.Backend = transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY
 		resolvedAsset = &asset.Asset{
 			Connections: []*transports.TransportConfig{t},
+			Platform: &platform.Platform{
+				Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
+				Runtime: transports.RUNTIME_DOCKER_REGISTRY,
+			},
 		}
 		return []*asset.Asset{resolvedAsset}, nil
 	}

@@ -5,6 +5,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/apps/mondoo/cmd/options"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
@@ -48,6 +49,10 @@ func (k *instanceResolver) Resolve(in *options.VulnOptsAsset, opts *options.Vuln
 	t.BearerToken = in.BearerToken
 
 	assetInfo.Connections = []*transports.TransportConfig{t}
+
+	assetInfo.Platform = &platform.Platform{
+		Kind: transports.Kind_KIND_UNKNOWN,
+	}
 
 	if in != nil && len(in.AssetMrn) > 0 {
 		assetInfo.Mrn = in.AssetMrn
