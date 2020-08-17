@@ -12,6 +12,7 @@ import (
 	"go.mondoo.io/mondoo/apps/mondoo/cmd/options"
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/local"
 )
@@ -214,6 +215,9 @@ func vagrantToAsset(sshConfig *VagrantVmSSHConfig, opts *options.VulnOpts) *asse
 				Active: opts.Sudo.Active,
 			},
 		}},
+		Platform: &platform.Platform{
+			Kind: transports.Kind_KIND_VIRTUAL_MACHINE,
+		},
 	}
 }
 
