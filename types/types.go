@@ -25,33 +25,33 @@ const (
 
 const (
 	// Any type indicating an untyped value that can have any type
-	Any = Type(byteAny)
+	Any = Type(rune(byteAny))
 	// Nil for the empty type
-	Nil = Type(byteNil)
+	Nil = Type(rune(byteNil))
 	// Ref for internal code chunk references
-	Ref = Type(byteRef)
+	Ref = Type(rune(byteRef))
 	// Bool for the booleans true and false
-	Bool = Type(byteBool)
+	Bool = Type(rune(byteBool))
 	// Int for integers
-	Int = Type(byteInt)
+	Int = Type(rune(byteInt))
 	// Float for any decimal values
-	Float = Type(byteFloat)
+	Float = Type(rune(byteFloat))
 	// String for strings
-	String = Type(byteString)
+	String = Type(rune(byteString))
 	// Regex for regular expressions
-	Regex = Type(byteRegex)
+	Regex = Type(rune(byteRegex))
 	// Time for date and time
-	Time = Type(byteTime)
+	Time = Type(rune(byteTime))
 	// Dict for storing hierarchical simple key-value assignemnts
-	Dict = Type(byteDict)
+	Dict = Type(rune(byteDict))
 	// ArrayLike is the underlying type of all arrays
-	ArrayLike = Type(byteArray)
+	ArrayLike = Type(rune(byteArray))
 	// MapLike is the underlying type of all arrays
-	MapLike = Type(byteMap)
+	MapLike = Type(rune(byteMap))
 	// ResourceLike is the underlying type of all arrays
-	ResourceLike = Type(byteResource)
+	ResourceLike = Type(rune(byteResource))
 	// FunctionLike is the underlying type of all arrays
-	FunctionLike = Type(byteFunction)
+	FunctionLike = Type(rune(byteFunction))
 )
 
 // IsEmpty returns true if the type has no information
@@ -61,7 +61,7 @@ func (typ Type) IsEmpty() bool {
 
 // Array for list of values
 func Array(typ Type) Type {
-	return Type(byteArray) + typ
+	return ArrayLike + typ
 }
 
 // IsArray checks if this type is an array
@@ -74,7 +74,7 @@ func Map(key, value Type) Type {
 	if key != String && key != Int {
 		panic("Unsupported map on key type " + key.Label())
 	}
-	return Type(byteMap) + key + value
+	return MapLike + key + value
 }
 
 // IsMap checks if this type is a map
@@ -84,7 +84,7 @@ func (typ Type) IsMap() bool {
 
 // Resource for complex data structures
 func Resource(name string) Type {
-	return Type(byteResource) + Type(name)
+	return ResourceLike + Type(name)
 }
 
 // IsResource checks if this type is a map
@@ -98,7 +98,7 @@ func Function(required rune, args []Type) Type {
 	for _, arg := range args {
 		sig += string(arg) + "\x00"
 	}
-	return Type(byteFunction) + Type(required) + Type(sig)
+	return FunctionLike + Type(required) + Type(sig)
 }
 
 // IsFunction checks if this type is a map
