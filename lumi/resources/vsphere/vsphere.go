@@ -12,6 +12,7 @@ import (
 	"github.com/vmware/govmomi/license"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25"
+	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 )
 
@@ -77,6 +78,43 @@ func getDatacenter(c *govmomi.Client, dc string) (*object.Datacenter, error) {
 		return finder.DefaultDatacenter(context.Background())
 	}
 	return nil, fmt.Errorf("unsupported ApiType: %s", t)
+}
+
+func (c *Client) ListClusters(dc *object.Datacenter) ([]*object.ClusterComputeResource, error) {
+	finder := find.NewFinder(c.Client.Client, true)
+	finder.SetDatacenter(dc)
+
+	l, err := finder.ClusterComputeResourceList(context.Background(), "*")
+	if err != nil && IsNotFound(err) {
+		return []*object.ClusterComputeResource{}, nil
+	} else if err != nil {
+		return nil, err
+	}
+	return l, nil
+}
+
+func (c *Client) Cluster(path string) (*object.ClusterComputeResource, error) {
+	finder := find.NewFinder(c.Client.Client, true)
+	return finder.ClusterComputeResource(context.Background(), path)
+}
+
+func clusterProperties(cluster *object.ClusterComputeResource) (*mo.ClusterComputeResource, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), DefaultAPITimeout)
+	defer cancel()
+	var props mo.ClusterComputeResource
+	if err := cluster.Properties(ctx, cluster.Reference(), nil, &props); err != nil {
+		return nil, err
+	}
+	return &props, nil
+}
+
+func (c *Client) ClusterProperties(cluster *object.ClusterComputeResource) (map[string]interface{}, error) {
+	props, err := clusterProperties(cluster)
+	if err != nil {
+		return nil, err
+	}
+
+	return PropertiesToDict(props)
 }
 
 func (c *Client) ListHosts(dc *object.Datacenter) ([]*object.HostSystem, error) {
