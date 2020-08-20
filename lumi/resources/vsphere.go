@@ -347,10 +347,10 @@ func (v *lumiVsphereHost) GetKernelModules() ([]interface{}, error) {
 			"version", m.Version,
 			"loaded", m.Loaded,
 			"enabled", m.Enabled,
-			"signedstatus", m.SignedStatus,
-			"signaturedigest", m.SignatureDigest,
-			"signaturefingerprint", m.SignatureFingerPrint,
-			"vibacceptancelevel", m.VIBAcceptanceLevel,
+			"signedStatus", m.SignedStatus,
+			"signatureDigest", m.SignatureDigest,
+			"signatureFingerprint", m.SignatureFingerPrint,
+			"vibAcceptanceLevel", m.VIBAcceptanceLevel,
 		)
 		if err != nil {
 			return nil, err
