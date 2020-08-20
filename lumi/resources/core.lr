@@ -430,6 +430,12 @@ vsphere {
   datacenters() []vsphere.datacenter
 }
 
+vsphere.license {
+  name string
+  total int
+  used int
+}
+
 esxi {
   host() vsphere.host
   vm() vsphere.vm
@@ -441,12 +447,15 @@ vsphere.datacenter {
   inventoryPath string
   hosts() []vsphere.host
   vms() []vsphere.vm
+  clusters() []vsphere.cluster
 }
 
-vsphere.license {
+vsphere.cluster {
+  moid string
   name string
-  total int
-  used int
+  inventoryPath string
+  properties dict
+  hosts() []vsphere.host
 }
 
 vsphere.host {

@@ -177,6 +177,63 @@ func (v *lumiVsphereDatacenter) GetHosts() ([]interface{}, error) {
 	return lumiHosts, nil
 }
 
+func (v *lumiVsphereDatacenter) GetClusters() ([]interface{}, error) {
+	client, err := getClientInstance(v.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	path, err := v.InventoryPath()
+	if err != nil {
+		return nil, err
+	}
+
+	dc, err := client.Datacenter(path)
+	if err != nil {
+		return nil, err
+	}
+
+	vCluster, err := client.ListClusters(dc)
+	if err != nil {
+		return nil, err
+	}
+
+	lumiClusters := make([]interface{}, len(vCluster))
+	for i, c := range vCluster {
+
+		props, err := client.ClusterProperties(c)
+		if err != nil {
+			return nil, err
+		}
+
+		lumiCluster, err := v.Runtime.CreateResource("vsphere.cluster",
+			"moid", c.Reference().Value,
+			"name", c.Name(),
+			"properties", props,
+			"inventoryPath", c.InventoryPath,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		lumiClusters[i] = lumiCluster
+	}
+
+	return lumiClusters, nil
+}
+
+func (v *lumiVsphereCluster) id() (string, error) {
+	return v.Moid()
+}
+
+func (v *lumiVsphereCluster) GetHosts() ([]interface{}, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (v *lumiVsphereCluster) GetVms() ([]interface{}, error) {
+	return nil, errors.New("not implemented")
+}
+
 func (v *lumiVsphereHost) esxiClient() (*vsphere.Esxi, error) {
 	client, err := getClientInstance(v.Runtime.Motor.Transport)
 	if err != nil {
