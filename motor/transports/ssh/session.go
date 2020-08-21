@@ -112,7 +112,7 @@ func authMethods(endpoint *transports.TransportConfig) ([]ssh.AuthMethod, error)
 		}
 		priv, err := authPrivateKey(identityKey, endpoint.Password)
 		if err != nil {
-			log.Warn().Err(err).Str("key", identityKey).Msg("could not load private key, ignore the file")
+			log.Debug().Err(err).Str("key", identityKey).Msg("could not load private key, ignore the file")
 		} else {
 			signers = append(signers, priv)
 		}
