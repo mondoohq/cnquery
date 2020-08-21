@@ -1202,8 +1202,8 @@ azurerm.sql.databaseusage {
   name string
   resourceName string
   displayName string
-  currentValue int
-  limit int
+  currentValue float
+  limit float
   unit string
   nextResetTime time
 }
@@ -1391,4 +1391,23 @@ azurerm.monitor.diagnosticsetting {
   type string
   properties dict
   storageAccount azurerm.storage.account
+}
+
+msgraph.beta.security {
+  secureScores() []msgraph.beta.security.securityscore
+  latestSecureScores() msgraph.beta.security.securityscore
+}
+
+msgraph.beta.security.securityscore {
+  id string
+  activeUserCount int
+  averageComparativeScores []dict
+  azureTenantId string
+  controlScores []dict
+  createdDateTime time
+  currentScore float
+  enabledServices []string
+  licensedUserCount int
+  maxScore float
+  vendorInformation dict
 }
