@@ -38,11 +38,11 @@ func azureRmUnixTime(d *date.UnixTime) *time.Time {
 }
 
 // TODO: double-check if lumi supports float
-func toFloat64(i *float64) int64 {
+func toFloat64(i *float64) float64 {
 	if i == nil {
 		return 0
 	}
-	return int64(*i)
+	return float64(*i)
 }
 
 func toStringSlice(in *[]string) []interface{} {

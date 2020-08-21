@@ -35,3 +35,10 @@ func toInt64(i *int64) int64 {
 	}
 	return *i
 }
+
+func toInt(i *int) int64 {
+	if i == nil {
+		return int64(0)
+	}
+	return int64(*i)
+}
