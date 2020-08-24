@@ -1,6 +1,6 @@
 package vsphere
 
-// TODO: include vsphere simulator to test the parser
+// // TODO: include vsphere simulator to test the parser
 // import (
 // 	"context"
 // 	"fmt"
@@ -44,7 +44,7 @@ package vsphere
 
 // 	for _, dc := range dcs {
 // 		// list hosts
-// 		hosts, err := client.ListHosts(dc)
+// 		hosts, err := client.ListHosts(dc, nil)
 // 		require.NoError(t, err)
 // 		assert.Equal(t, 4, len(hosts))
 
@@ -62,6 +62,10 @@ package vsphere
 // 		props, err := client.ClusterProperties(cluster)
 // 		require.NoError(t, err)
 // 		fmt.Printf("%v", props)
+
+// 		hosts, err = client.ListHosts(dc, cluster)
+// 		require.NoError(t, err)
+// 		assert.Equal(t, 3, len(hosts))
 // 	}
 // }
 

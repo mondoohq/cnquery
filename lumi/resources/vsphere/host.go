@@ -75,10 +75,22 @@ func HostDateTime(host *object.HostSystem) (*types.HostDateTimeInfo, error) {
 	return &hs.DateTimeInfo, nil
 }
 
-func (c *Client) ListHosts(dc *object.Datacenter) ([]*object.HostSystem, error) {
+func (c *Client) ListHosts(dc *object.Datacenter, cluster *object.ClusterComputeResource) ([]*object.HostSystem, error) {
 	finder := find.NewFinder(c.Client.Client, true)
-	finder.SetDatacenter(dc)
-	res, err := finder.HostSystemList(context.Background(), "*")
+
+	// if we set a datacenter, use that as base path
+	if dc != nil {
+		finder.SetDatacenter(dc)
+	}
+
+	path := "*"
+
+	// a cluster path will replace the  datacenter path, since it includes the datacenter
+	if cluster != nil {
+		path = cluster.InventoryPath + "/*"
+	}
+
+	res, err := finder.HostSystemList(context.Background(), path)
 	if err != nil && IsNotFound(err) {
 		return []*object.HostSystem{}, nil
 	} else if err != nil {
