@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/vmware/govmomi/object"
+	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/vsphere"
 	"go.mondoo.io/mondoo/motor/transports"
 	vsphere_transport "go.mondoo.io/mondoo/motor/transports/vsphere"
@@ -128,6 +129,31 @@ func (v *lumiVsphere) GetLicenses() ([]interface{}, error) {
 	return licenses, nil
 }
 
+func vsphereHosts(client *vsphere.Client, runtime *lumi.Runtime, vhosts []*object.HostSystem) ([]interface{}, error) {
+	lumiHosts := make([]interface{}, len(vhosts))
+	for i, h := range vhosts {
+
+		props, err := client.HostProperties(h)
+		if err != nil {
+			return nil, err
+		}
+
+		lumiHost, err := runtime.CreateResource("vsphere.host",
+			"moid", h.Reference().Value,
+			"name", h.Name(),
+			"properties", props,
+			"inventoryPath", h.InventoryPath,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		lumiHosts[i] = lumiHost
+	}
+
+	return lumiHosts, nil
+}
+
 func (v *lumiVsphereDatacenter) id() (string, error) {
 	return v.Moid()
 }
@@ -148,33 +174,11 @@ func (v *lumiVsphereDatacenter) GetHosts() ([]interface{}, error) {
 		return nil, err
 	}
 
-	vhosts, err := client.ListHosts(dc)
+	vhosts, err := client.ListHosts(dc, nil)
 	if err != nil {
 		return nil, err
 	}
-
-	lumiHosts := make([]interface{}, len(vhosts))
-	for i, h := range vhosts {
-
-		props, err := client.HostProperties(h)
-		if err != nil {
-			return nil, err
-		}
-
-		lumiHost, err := v.Runtime.CreateResource("vsphere.host",
-			"moid", h.Reference().Value,
-			"name", h.Name(),
-			"properties", props,
-			"inventoryPath", h.InventoryPath,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		lumiHosts[i] = lumiHost
-	}
-
-	return lumiHosts, nil
+	return vsphereHosts(client, v.Runtime, vhosts)
 }
 
 func (v *lumiVsphereDatacenter) GetClusters() ([]interface{}, error) {
@@ -227,11 +231,26 @@ func (v *lumiVsphereCluster) id() (string, error) {
 }
 
 func (v *lumiVsphereCluster) GetHosts() ([]interface{}, error) {
-	return nil, errors.New("not implemented")
-}
+	client, err := getClientInstance(v.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 
-func (v *lumiVsphereCluster) GetVms() ([]interface{}, error) {
-	return nil, errors.New("not implemented")
+	path, err := v.InventoryPath()
+	if err != nil {
+		return nil, err
+	}
+
+	cluster, err := client.Cluster(path)
+	if err != nil {
+		return nil, err
+	}
+
+	vhosts, err := client.ListHosts(nil, cluster)
+	if err != nil {
+		return nil, err
+	}
+	return vsphereHosts(client, v.Runtime, vhosts)
 }
 
 func (v *lumiVsphereHost) esxiClient() (*vsphere.Esxi, error) {
@@ -650,7 +669,7 @@ func (v *lumiEsxi) GetHost() (interface{}, error) {
 
 		dc := dcs[0]
 
-		hosts, err := cl.ListHosts(dc)
+		hosts, err := cl.ListHosts(dc, nil)
 		if err != nil {
 			return nil, err
 		}
