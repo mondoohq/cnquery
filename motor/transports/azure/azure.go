@@ -37,11 +37,11 @@ type Transport struct {
 }
 
 func (t *Transport) RunCommand(command string) (*transports.Command, error) {
-	return nil, errors.New("gcp does not implement RunCommand")
+	return nil, errors.New("azure does not implement RunCommand")
 }
 
 func (t *Transport) FileInfo(path string) (transports.FileInfoDetails, error) {
-	return transports.FileInfoDetails{}, errors.New("gcp does not implement FileInfo")
+	return transports.FileInfoDetails{}, errors.New("azure does not implement FileInfo")
 }
 
 func (t *Transport) FS() afero.Fs {

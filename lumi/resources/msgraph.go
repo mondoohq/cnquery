@@ -4,32 +4,16 @@ import (
 	"context"
 	"errors"
 
-	msgraph "github.com/yaegashi/msgraph.go/beta"
-	msgraphbeta "github.com/yaegashi/msgraph.go/beta"
-	"github.com/yaegashi/msgraph.go/msauth"
-	"golang.org/x/oauth2"
+	"go.mondoo.io/mondoo/motor/transports"
+	ms365_transport "go.mondoo.io/mondoo/motor/transports/ms365"
 )
 
-func graphClient() (*msgraph.GraphServiceRequestBuilder, *msgraphbeta.GraphServiceRequestBuilder, error) {
-	// mondoo inc
-	tenantID := "<tenant_id>"
-	clientID := "<application_id>"
-	clientSecret := "<application_secret>"
-
-	var scopes = []string{msauth.DefaultMSGraphScope}
-
-	ctx := context.Background()
-	m := msauth.NewManager()
-	ts, err := m.ClientCredentialsGrant(ctx, tenantID, clientID, clientSecret, scopes)
-	if err != nil {
-		return nil, nil, err
+func ms365transport(t transports.Transport) (*ms365_transport.Transport, error) {
+	at, ok := t.(*ms365_transport.Transport)
+	if !ok {
+		return nil, errors.New("ms365 resource is not supported on this transport")
 	}
-
-	httpClient := oauth2.NewClient(ctx, ts)
-	graphClient := msgraph.NewClient(httpClient)
-	graphBetaClient := msgraphbeta.NewClient(httpClient)
-
-	return graphClient, graphBetaClient, nil
+	return at, nil
 }
 
 func (m *lumiMsgraphBetaSecurity) id() (string, error) {
@@ -41,8 +25,12 @@ func (m *lumiMsgraphBetaSecurity) GetLatestSecureScores() (interface{}, error) {
 }
 
 func (m *lumiMsgraphBetaSecurity) GetSecureScores() ([]interface{}, error) {
+	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 
-	_, graphBetaClient, err := graphClient()
+	graphBetaClient, err := mt.GraphBetaClient()
 	if err != nil {
 		return nil, err
 	}
