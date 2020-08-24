@@ -3,9 +3,12 @@ package vsphere
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"strings"
 
+	"github.com/vmware/govmomi/find"
+	"github.com/vmware/govmomi/license"
 	"github.com/vmware/govmomi/object"
+	"github.com/vmware/govmomi/vim25"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 )
@@ -26,12 +29,7 @@ func (c *Client) HostProperties(host *object.HostSystem) (map[string]interface{}
 		return nil, err
 	}
 
-	dataProps := map[string]interface{}{}
-	dataProps["PowerState"] = string(props.Runtime.PowerState)
-	dataProps["ConnectionState"] = string(props.Runtime.ConnectionState)
-	dataProps["InMaintenanceMode"] = strconv.FormatBool(props.Runtime.InMaintenanceMode)
-	dataProps["LockdownMode"] = hostLockdownString(props.Config.LockdownMode)
-	return dataProps, nil
+	return PropertiesToDict(props)
 }
 
 func HostOptions(host *object.HostSystem) (map[string]interface{}, error) {
@@ -75,4 +73,49 @@ func HostDateTime(host *object.HostSystem) (*types.HostDateTimeInfo, error) {
 		return nil, err
 	}
 	return &hs.DateTimeInfo, nil
+}
+
+func (c *Client) ListHosts(dc *object.Datacenter) ([]*object.HostSystem, error) {
+	finder := find.NewFinder(c.Client.Client, true)
+	finder.SetDatacenter(dc)
+	res, err := finder.HostSystemList(context.Background(), "*")
+	if err != nil && IsNotFound(err) {
+		return []*object.HostSystem{}, nil
+	} else if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (c *Client) Host(path string) (*object.HostSystem, error) {
+	finder := find.NewFinder(c.Client.Client, true)
+	return finder.HostSystem(context.Background(), path)
+}
+
+func HostLicenses(client *vim25.Client, hostID string) ([]types.LicenseManagerLicenseInfo, error) {
+	ctx := context.Background()
+	lm := license.NewManager(client)
+	am, err := lm.AssignmentManager(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	assignedLicenses, err := am.QueryAssigned(ctx, hostID)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]types.LicenseManagerLicenseInfo, len(assignedLicenses))
+	for i := range assignedLicenses {
+		res[i] = assignedLicenses[0].AssignedLicense
+	}
+	return res, nil
+}
+
+func hostLockdownString(lockdownMode types.HostLockdownMode) string {
+	var shortMode string
+	shortMode = string(lockdownMode)
+	shortMode = strings.ToLower(shortMode)
+	shortMode = strings.TrimPrefix(shortMode, "lockdown")
+	return shortMode
 }

@@ -2,8 +2,10 @@ package vsphere
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
 )
@@ -23,11 +25,7 @@ func VmProperties(vm *object.VirtualMachine) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	dataProps := map[string]interface{}{}
-	dataProps["PowerState"] = string(props.Runtime.PowerState)
-	dataProps["ConnectionState"] = string(props.Runtime.ConnectionState)
-	return dataProps, nil
+	return PropertiesToDict(props)
 }
 
 func AdvancedSettings(vm *object.VirtualMachine) (map[string]interface{}, error) {
@@ -44,4 +42,30 @@ func AdvancedSettings(vm *object.VirtualMachine) (map[string]interface{}, error)
 		advancedProps[key] = value
 	}
 	return advancedProps, nil
+}
+
+func (c *Client) ListVirtualMachines(dc *object.Datacenter) ([]*object.VirtualMachine, error) {
+	finder := find.NewFinder(c.Client.Client, true)
+	finder.SetDatacenter(dc)
+	res, err := finder.VirtualMachineList(context.Background(), "*")
+	if err != nil && IsNotFound(err) {
+		return []*object.VirtualMachine{}, nil
+	} else if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (c *Client) VirtualMachine(path string) (*object.VirtualMachine, error) {
+	finder := find.NewFinder(c.Client.Client, true)
+	return finder.VirtualMachine(context.Background(), path)
+}
+
+// IsNotFound returns a boolean indicating whether the error is a not found error.
+func IsNotFound(err error) bool {
+	if err == nil {
+		return false
+	}
+	var e *find.NotFoundError
+	return errors.As(err, &e)
 }
