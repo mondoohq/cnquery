@@ -51,7 +51,7 @@ func (k *instanceResolver) Resolve(in *options.VulnOptsAsset, opts *options.Vuln
 	assetInfo.Connections = []*transports.TransportConfig{t}
 
 	assetInfo.Platform = &platform.Platform{
-		Kind: transports.Kind_KIND_UNKNOWN,
+		Kind: transports.Kind_KIND_BARE_METAL,
 	}
 
 	if in != nil && len(in.AssetMrn) > 0 {
