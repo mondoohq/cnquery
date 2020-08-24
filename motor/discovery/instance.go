@@ -40,6 +40,9 @@ func (k *instanceResolver) Resolve(in *options.VulnOptsAsset, opts *options.Vuln
 		t.Password = in.Password
 	}
 
+	// use hostname as name for now
+	assetInfo.Name = t.Host
+
 	t.Sudo = &transports.Sudo{
 		Active: opts.Sudo.Active,
 	}
