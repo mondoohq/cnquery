@@ -16,4 +16,5 @@ const (
 	RUNTIME_VSPHERE          = "vsphere"      // api
 	RUNTIME_VSPHERE_HOSTS    = "vsphere host" // esxi instances
 	RUNTIME_VSPHERE_VM       = "vsphere vm"   // vms running on esxi
+	RUNTIME_MICROSOFT_GRAPH  = "ms graph"     // api
 )

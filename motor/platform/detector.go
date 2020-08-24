@@ -9,6 +9,7 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/aws"
 	"go.mondoo.io/mondoo/motor/transports/azure"
 	"go.mondoo.io/mondoo/motor/transports/gcp"
+	"go.mondoo.io/mondoo/motor/transports/ms365"
 	"go.mondoo.io/mondoo/motor/transports/vsphere"
 )
 
@@ -76,6 +77,12 @@ func (d *Detector) Platform() (*Platform, error) {
 			Name:    "azure",
 			Kind:    transports.Kind_KIND_API,
 			Runtime: transports.RUNTIME_AZ,
+		}, nil
+	case *ms365.Transport:
+		return &Platform{
+			Name:    "microsoft365",
+			Kind:    transports.Kind_KIND_API,
+			Runtime: transports.RUNTIME_MICROSOFT_GRAPH,
 		}, nil
 	default:
 		var resolved bool
