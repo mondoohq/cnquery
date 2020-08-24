@@ -462,7 +462,7 @@ vsphere.host {
   moid string
   name string
   inventoryPath string
-  properties map[string]string
+  properties dict
   standardVswitch() []vsphere.vswitch
   adapters() []vsphere.vmnic
   vmknics() []vsphere.vmknic
@@ -480,7 +480,7 @@ vsphere.vm {
   moid string
   name string
   inventoryPath string
-  properties map[string]string
+  properties dict
   advancedSettings() map[string]string
 }
 
