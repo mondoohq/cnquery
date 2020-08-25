@@ -80,8 +80,8 @@ func jsonToDict(v interface{}) (map[string]interface{}, error) {
 	return res, nil
 }
 
-func jsonToDictSlice(v interface{}) ([]map[string]interface{}, error) {
-	res := []map[string]interface{}{}
+func jsonToDictSlice(v interface{}) ([]interface{}, error) {
+	res := []interface{}{}
 
 	data, err := json.Marshal(v)
 	if err != nil {

@@ -555,6 +555,7 @@ arista.eos {
   fqdn() string
   users() []arista.eos.user
   roles() []arista.eos.role
+  snmp() arista.eos.snmpsetting
 }
 
 arista.eos.user {
@@ -571,6 +572,11 @@ arista.eos.role {
   name string
   default bool
   rules []dict
+}
+
+arista.eos.snmpsetting {
+  enabled bool
+  notifications() []dict
 }
 
 arista.eos.interface {
