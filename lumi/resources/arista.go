@@ -27,6 +27,14 @@ func (v *lumiAristaEosIpinterface) id() (string, error) {
 	return v.Name()
 }
 
+func (v *lumiAristaEosUser) id() (string, error) {
+	return v.Name()
+}
+
+func (v *lumiAristaEosRole) id() (string, error) {
+	return v.Name()
+}
+
 func (a *lumiAristaEos) GetRunningConfig() (string, error) {
 	eos, _, err := aristaClientInstance(a.Runtime.Motor.Transport)
 	if err != nil {
@@ -48,6 +56,64 @@ func (a *lumiAristaEos) GetSystemConfig() (map[string]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func (a *lumiAristaEos) GetUsers() ([]interface{}, error) {
+	eos, _, err := aristaClientInstance(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	users := eos.Users()
+
+	lumiUsers := make([]interface{}, len(users))
+	for i, user := range users {
+		lumiUser, err := a.Runtime.CreateResource("arista.eos.user",
+			"name", user.UserName(),
+			"privilege", user.Privilege(),
+			"role", user.Role(),
+			"nopassword", user.Nopassword(),
+			"format", user.Format(),
+			"secret", user.Secret(),
+			"sshkey", user.SSHKey(),
+		)
+		if err != nil {
+			return nil, err
+		}
+		lumiUsers[i] = lumiUser
+	}
+
+	return lumiUsers, nil
+}
+
+func (a *lumiAristaEos) GetRoles() ([]interface{}, error) {
+	eos, _, err := aristaClientInstance(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	roles, err := eos.Roles()
+	if err != nil {
+		return nil, err
+	}
+
+	lumRoles := make([]interface{}, len(roles))
+	for i, role := range roles {
+
+		rules, err := jsonToDictSlice(role.Rules)
+		if err != nil {
+			return nil, err
+		}
+
+		lumiRole, err := a.Runtime.CreateResource("arista.eos.role",
+			"name", role.Name,
+			"default", role.Default,
+			"rules", rules,
+		)
+		if err != nil {
+			return nil, err
+		}
+		lumRoles[i] = lumiRole
+	}
+	return lumRoles, nil
 }
 
 func (a *lumiAristaEos) GetIpInterfaces() ([]interface{}, error) {
