@@ -547,22 +547,22 @@ esxi.ntpconfig {
 
 arista.eos {
   systemConfig() map[string]string
-  ipInterfaces() []arista.eos.ipinterface
+  ipInterfaces() []arista.eos.ipInterface
   interfaces() []arista.eos.interface
   version() dict
   hostname() string
   fqdn() string
   users() []arista.eos.user
   roles() []arista.eos.role
-  snmp() arista.eos.snmpsetting
-  ntp() arista.eos.ntpsetting
+  snmp() arista.eos.snmpSetting
+  ntp() arista.eos.ntpSetting
 }
 
-arista.eos.runningconfig {
+arista.eos.runningConfig {
   content() string
 }
 
-arista.eos.runningconfig.section {
+arista.eos.runningConfig.section {
   name string
   content() string
 }
@@ -583,12 +583,12 @@ arista.eos.role {
   rules []dict
 }
 
-arista.eos.snmpsetting {
+arista.eos.snmpSetting {
   enabled bool
   notifications() []dict
 }
 
-arista.eos.ntpsetting {
+arista.eos.ntpSetting {
   status string
 }
 
@@ -612,7 +612,7 @@ arista.eos.interface {
   status() dict
 }
 
-arista.eos.ipinterface {
+arista.eos.ipInterface {
   name string
   address string
   mtu string
@@ -629,10 +629,10 @@ arista.eos.stp.mst {
   bridge dict
   rootBridge dict
   regionalRootBridge dict
-  interfaces []arista.eos.spt.mstinterface
+  interfaces []arista.eos.spt.mstInterface
 }
 
-arista.eos.spt.mstinterface {
+arista.eos.spt.mstInterface {
   id string
   mstInstanceId string
   name string
