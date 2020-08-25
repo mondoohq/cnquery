@@ -1,0 +1,66 @@
+! Command: show running-config all
+! device: sw4 (vEOS, EOS-4.24.1.1F)
+!
+! boot system flash:/vEOS-lab.swi
+!
+cloud provider aws
+   no proxy
+   no secret access-key
+   no region
+   no access-key-id
+!
+cloud provider azure
+   no active-directory credential
+   no proxy
+   no sdk authentication credential-file
+!
+cvx
+   shutdown
+   port 9979
+   heartbeat-interval 20
+   heartbeat-timeout 60
+   no ssl profile
+   no connection state preserve
+   no peer host
+   no source-interface
+   peer timeout 10
+   !
+   service bug-alert
+      shutdown
+   !
+   service openstack
+      shutdown
+      grace-period 60
+      network type-driver vlan default
+      name-resolution interval 21600
+   !
+   service pcs
+      shutdown
+      controller 0.0.0.0 443
+   !
+   service vxlan
+      shutdown
+      vtep mac-learning control-plane
+      vtep vni mapping vlan
+      resync-period 300
+      redistribute bgp evpn vxlan
+      no flood vtep
+      no vni flood vtep
+      no arp reply relay vtep 
+!
+no dcbx application
+management telnet
+   shutdown
+   idle-timeout 0
+   session-limit 20
+   session-limit per-host 20
+!
+management xmpp
+   shutdown
+   no connection unencrypted permit
+   vrf default
+   session privilege 1
+   no source-interface
+   qos dscp 0
+!
+end

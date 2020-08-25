@@ -546,7 +546,6 @@ esxi.ntpconfig {
 }
 
 arista.eos {
-  runningConfig() string
   systemConfig() map[string]string
   ipInterfaces() []arista.eos.ipinterface
   interfaces() []arista.eos.interface
@@ -556,6 +555,15 @@ arista.eos {
   users() []arista.eos.user
   roles() []arista.eos.role
   snmp() arista.eos.snmpsetting
+}
+
+arista.eos.runningconfig {
+  content() string
+}
+
+arista.eos.runningconfig.section {
+  name string
+  content() string
 }
 
 arista.eos.user {
