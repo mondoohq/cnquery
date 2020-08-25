@@ -3,6 +3,7 @@ package resources
 import (
 	"errors"
 	"regexp"
+	"strings"
 
 	"go.mondoo.io/mondoo/lumi/resources/arista"
 	"go.mondoo.io/mondoo/motor/transports"
@@ -35,12 +36,42 @@ func (v *lumiAristaEosRole) id() (string, error) {
 	return v.Name()
 }
 
-func (a *lumiAristaEos) GetRunningConfig() (string, error) {
+func (v *lumiAristaEosRunningconfig) id() (string, error) {
+	return "arista.eos.runningconfig", nil
+}
+
+func (a *lumiAristaEosRunningconfig) GetContent() (string, error) {
 	eos, _, err := aristaClientInstance(a.Runtime.Motor.Transport)
 	if err != nil {
 		return "", err
 	}
+
 	return eos.RunningConfig(), nil
+}
+
+func (a *lumiAristaEosRunningconfigSection) id() (string, error) {
+	name, err := a.Name()
+	if err != nil {
+		return "", err
+	}
+	return "arista.eos.runningconfig.section " + name, nil
+}
+
+func (a *lumiAristaEosRunningconfigSection) GetContent() (string, error) {
+	eos, _, err := aristaClientInstance(a.Runtime.Motor.Transport)
+	if err != nil {
+		return "", err
+	}
+
+	name, err := a.Name()
+	if err != nil {
+		return "", err
+	}
+
+	// todo: use content from arista.eos.runningconfig
+	content := eos.RunningConfig()
+
+	return arista.GetSection(strings.NewReader(content), name), nil
 }
 
 func (a *lumiAristaEos) GetSystemConfig() (map[string]interface{}, error) {
