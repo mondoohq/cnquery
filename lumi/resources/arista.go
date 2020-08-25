@@ -24,7 +24,7 @@ func (a *lumiAristaEos) id() (string, error) {
 	return "arista.eos", nil
 }
 
-func (v *lumiAristaEosIpinterface) id() (string, error) {
+func (v *lumiAristaEosIpInterface) id() (string, error) {
 	return v.Name()
 }
 
@@ -36,11 +36,11 @@ func (v *lumiAristaEosRole) id() (string, error) {
 	return v.Name()
 }
 
-func (v *lumiAristaEosRunningconfig) id() (string, error) {
-	return "arista.eos.runningconfig", nil
+func (v *lumiAristaEosRunningConfig) id() (string, error) {
+	return "arista.eos.runningConfig", nil
 }
 
-func (a *lumiAristaEosRunningconfig) GetContent() (string, error) {
+func (a *lumiAristaEosRunningConfig) GetContent() (string, error) {
 	eos, _, err := aristaClientInstance(a.Runtime.Motor.Transport)
 	if err != nil {
 		return "", err
@@ -49,15 +49,15 @@ func (a *lumiAristaEosRunningconfig) GetContent() (string, error) {
 	return eos.RunningConfig(), nil
 }
 
-func (a *lumiAristaEosRunningconfigSection) id() (string, error) {
+func (a *lumiAristaEosRunningConfigSection) id() (string, error) {
 	name, err := a.Name()
 	if err != nil {
 		return "", err
 	}
-	return "arista.eos.runningconfig.section " + name, nil
+	return "arista.eos.runningConfig.section " + name, nil
 }
 
-func (a *lumiAristaEosRunningconfigSection) GetContent() (string, error) {
+func (a *lumiAristaEosRunningConfigSection) GetContent() (string, error) {
 	eos, _, err := aristaClientInstance(a.Runtime.Motor.Transport)
 	if err != nil {
 		return "", err
@@ -158,13 +158,13 @@ func (a *lumiAristaEos) GetNtp() (interface{}, error) {
 		return nil, err
 	}
 
-	return a.Runtime.CreateResource("arista.eos.ntpsetting",
+	return a.Runtime.CreateResource("arista.eos.ntpSetting",
 		"status", ntp.Status,
 	)
 }
 
-func (v *lumiAristaEosNtpsetting) id() (string, error) {
-	return "arista.eos.ntpsetting", nil
+func (v *lumiAristaEosNtpSetting) id() (string, error) {
+	return "arista.eos.ntpSetting", nil
 }
 
 func (a *lumiAristaEos) GetSnmp() (interface{}, error) {
@@ -178,16 +178,16 @@ func (a *lumiAristaEos) GetSnmp() (interface{}, error) {
 		return nil, err
 	}
 
-	return a.Runtime.CreateResource("arista.eos.snmpsetting",
+	return a.Runtime.CreateResource("arista.eos.snmpSetting",
 		"enabled", snmp.Enabled,
 	)
 }
 
-func (v *lumiAristaEosSnmpsetting) id() (string, error) {
-	return "arista.eos.snmpsetting", nil
+func (v *lumiAristaEosSnmpSetting) id() (string, error) {
+	return "arista.eos.snmpSetting", nil
 }
 
-func (a *lumiAristaEosSnmpsetting) GetNotifications() ([]interface{}, error) {
+func (a *lumiAristaEosSnmpSetting) GetNotifications() ([]interface{}, error) {
 	eos, _, err := aristaClientInstance(a.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
@@ -209,7 +209,7 @@ func (a *lumiAristaEos) GetIpInterfaces() ([]interface{}, error) {
 
 	lumiIfaces := make([]interface{}, len(ifaces))
 	for i, iface := range ifaces {
-		lumiService, err := a.Runtime.CreateResource("arista.eos.ipinterface",
+		lumiService, err := a.Runtime.CreateResource("arista.eos.ipInterface",
 			"name", iface.Name(),
 			"address", iface.Address(),
 			"mtu", iface.Mtu(),
@@ -401,7 +401,7 @@ func (a *lumiAristaEosStp) GetMstInstances() ([]interface{}, error) {
 				return nil, err
 			}
 
-			lumiArista, err := a.Runtime.CreateResource("arista.eos.spt.mstinterface",
+			lumiArista, err := a.Runtime.CreateResource("arista.eos.spt.mstInterface",
 				"id", mstk+"/"+ifacek,
 				"mstInstanceId", m[1],
 				"name", ifacek,
@@ -443,11 +443,11 @@ func (a *lumiAristaEosStpMst) id() (string, error) {
 	return a.Name()
 }
 
-func (a *lumiAristaEosSptMstinterface) id() (string, error) {
+func (a *lumiAristaEosSptMstInterface) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAristaEosSptMstinterface) GetCounters() (map[string]interface{}, error) {
+func (a *lumiAristaEosSptMstInterface) GetCounters() (map[string]interface{}, error) {
 	eos, _, err := aristaClientInstance(a.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
@@ -471,7 +471,7 @@ func (a *lumiAristaEosSptMstinterface) GetCounters() (map[string]interface{}, er
 	return jsonToDict(mstInstanceDetails.Counters)
 }
 
-func (a *lumiAristaEosSptMstinterface) GetFeatures() (map[string]interface{}, error) {
+func (a *lumiAristaEosSptMstInterface) GetFeatures() (map[string]interface{}, error) {
 	eos, _, err := aristaClientInstance(a.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
