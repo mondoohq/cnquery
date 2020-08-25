@@ -553,6 +553,24 @@ arista.eos {
   version() dict
   hostname() string
   fqdn() string
+  users() []arista.eos.user
+  roles() []arista.eos.role
+}
+
+arista.eos.user {
+  name string
+  privilege string
+  role string
+  nopassword string
+  format string
+  secret string
+  sshkey string
+}
+
+arista.eos.role {
+  name string
+  default bool
+  rules []dict
 }
 
 arista.eos.interface {

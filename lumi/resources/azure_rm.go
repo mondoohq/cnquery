@@ -67,7 +67,21 @@ func uuidToString(u *uuid.UUID) string {
 }
 
 func jsonToDict(v interface{}) (map[string]interface{}, error) {
-	res := make(map[string](interface{}))
+	res := make(map[string]interface{})
+
+	data, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal([]byte(data), &res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func jsonToDictSlice(v interface{}) ([]map[string]interface{}, error) {
+	res := []map[string]interface{}{}
 
 	data, err := json.Marshal(v)
 	if err != nil {
