@@ -147,6 +147,26 @@ func (a *lumiAristaEos) GetRoles() ([]interface{}, error) {
 	return lumRoles, nil
 }
 
+func (a *lumiAristaEos) GetNtp() (interface{}, error) {
+	eos, _, err := aristaClientInstance(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	ntp, err := eos.NtpStatus()
+	if err != nil {
+		return nil, err
+	}
+
+	return a.Runtime.CreateResource("arista.eos.ntpsetting",
+		"status", ntp.Status,
+	)
+}
+
+func (v *lumiAristaEosNtpsetting) id() (string, error) {
+	return "arista.eos.ntpsetting", nil
+}
+
 func (a *lumiAristaEos) GetSnmp() (interface{}, error) {
 	eos, _, err := aristaClientInstance(a.Runtime.Motor.Transport)
 	if err != nil {

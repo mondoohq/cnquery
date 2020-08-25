@@ -555,6 +555,7 @@ arista.eos {
   users() []arista.eos.user
   roles() []arista.eos.role
   snmp() arista.eos.snmpsetting
+  ntp() arista.eos.ntpsetting
 }
 
 arista.eos.runningconfig {
@@ -585,6 +586,10 @@ arista.eos.role {
 arista.eos.snmpsetting {
   enabled bool
   notifications() []dict
+}
+
+arista.eos.ntpsetting {
+  status string
 }
 
 arista.eos.interface {
