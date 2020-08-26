@@ -243,6 +243,27 @@ func TestCore_If(t *testing.T) {
 	})
 }
 
+func TestBooleans(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"true || false || false",
+			1, true,
+		},
+	})
+	runSimpleTests(t, []simpleTest{
+		{
+			"false || true || false",
+			1, true,
+		},
+	})
+	runSimpleTests(t, []simpleTest{
+		{
+			"false || false || true",
+			1, true,
+		},
+	})
+}
+
 func TestString_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
