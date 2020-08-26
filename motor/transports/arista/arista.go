@@ -1,7 +1,9 @@
 package arista
 
 import (
-	"errors"
+	"strconv"
+
+	"github.com/pkg/errors"
 
 	"github.com/aristanetworks/goeapi"
 	"github.com/spf13/afero"
@@ -10,7 +12,21 @@ import (
 )
 
 func New(endpoint *transports.TransportConfig) (*Transport, error) {
-	node, err := goeapi.Connect("http", "localhost", "admin", "", 8080)
+
+	port := goeapi.UseDefaultPortNum
+	if len(endpoint.Port) > 0 {
+		p, err := strconv.Atoi(endpoint.Port)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not parse port")
+		}
+		port = p
+	}
+
+	// NOTE: we explicitly do not support http, since there is no real reason to support http
+	// NOTE: the goeapi is always running in insecure mode since it does not verify the server
+	// setup which allows potential man-in-the-middle attacks, consider opening a PR
+	// https://github.com/aristanetworks/goeapi/blob/7944bcedaf212bb60e5f9baaf471469f49113f47/eapilib.go#L527
+	node, err := goeapi.Connect("https", endpoint.Host, endpoint.User, endpoint.Password, port)
 	if err != nil {
 		return nil, err
 	}
