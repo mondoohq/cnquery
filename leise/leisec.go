@@ -443,7 +443,6 @@ func (c *compiler) compileIdentifier(id string, callBinding *binding, calls []*p
 		// special handling for the `self` operator
 		if id == "_" {
 			if len(restCalls) == 0 {
-				// TODO: something is missing
 				return restCalls, callBinding.Type, nil
 			}
 
@@ -590,11 +589,17 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 		}
 	} else {
 		id := *operand.Value.Ident
+		orgcalls := calls
 		calls, typ, err = c.compileIdentifier(id, c.Binding, calls)
 		if err != nil {
 			return nil, err
 		}
+
 		ref = c.Result.Code.ChunkIndex()
+		if id == "_" && len(orgcalls) == 0 {
+			ref = 1
+		}
+
 		res = llx.RefPrimitive(ref)
 	}
 
@@ -705,14 +710,16 @@ func (c *compiler) compileAndAddExpression(expression *parser.Expression) (int32
 	}
 
 	if types.Type(valc.Type) == types.Ref {
+		ref, _ := valc.Ref()
+		return ref, nil
 		// nothing to do, the last call was added to the compiled chain
-	} else {
-		c.Result.Code.AddChunk(&llx.Chunk{
-			Call: llx.Chunk_PRIMITIVE,
-			// no id for standalone values
-			Primitive: valc,
-		})
 	}
+
+	c.Result.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_PRIMITIVE,
+		// no id for standalone values
+		Primitive: valc,
+	})
 
 	return c.Result.Code.ChunkIndex(), nil
 }
