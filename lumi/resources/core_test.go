@@ -283,6 +283,10 @@ func TestString_Methods(t *testing.T) {
 			0, false,
 		},
 		{
+			"'hello bob'.find(/he\\w*\\s?[bo]+/)",
+			0, []interface{}{"hello bob"},
+		},
+		{
 			"'HeLlO'.downcase",
 			0, "hello",
 		},

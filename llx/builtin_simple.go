@@ -1552,6 +1552,36 @@ func stringContainsArrayString(c *LeiseExecutor, bind *RawData, chunk *Chunk, re
 	return BoolData(false), 0, nil
 }
 
+func stringFind(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return ArrayData([]interface{}{}, types.String), 0, nil
+	}
+
+	argRef := chunk.Function.Args[0]
+	arg, rref, err := c.resolveValue(argRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	if arg.Value == nil {
+		return ArrayData([]interface{}{}, types.String), 0, nil
+	}
+
+	reContent := arg.Value.(string)
+	re, err := regexp.Compile(reContent)
+	if err != nil {
+		return nil, 0, errors.New("Failed to compile regular expression: " + reContent)
+	}
+
+	list := re.FindAllString(bind.Value.(string), -1)
+	res := make([]interface{}, len(list))
+	for i := range list {
+		res[i] = list[i]
+	}
+
+	return ArrayData(res, types.String), 0, nil
+}
+
 func stringDowncase(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type}, 0, nil

@@ -30,6 +30,7 @@ func init() {
 	builtinFunctions = map[types.Type]map[string]compileHandler{
 		types.String: {
 			"contains": {compile: compileStringContains, typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
+			"find":     {typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Regex}}},
 			"downcase": {typ: stringType, signature: FunctionSignature{}},
 			"length":   {typ: intType, signature: FunctionSignature{}},
 			"lines":    {typ: stringArrayType, signature: FunctionSignature{}},
