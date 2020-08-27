@@ -31,6 +31,16 @@ func compile(t *testing.T, s string, f func(res *llx.CodeBundle)) {
 	}
 }
 
+func compileEmpty(t *testing.T, s string, f func(res *llx.CodeBundle)) {
+	res, err := Compile(s, schema)
+	assert.Nil(t, err)
+	assert.NotNil(t, res)
+	if res != nil && res.Code != nil {
+		assert.Nil(t, res.Suggestions)
+		f(res)
+	}
+}
+
 func assertFunction(t *testing.T, id string, f *llx.Function, chunk *llx.Chunk) {
 	assert.Equal(t, llx.Chunk_FUNCTION, chunk.Call)
 	assert.Equal(t, id, chunk.Id, "chunk.Id")
@@ -47,6 +57,22 @@ func assertPrimitive(t *testing.T, p *llx.Primitive, chunk *llx.Chunk) {
 //    ===========================
 //   👋   VALUES + OPERATIONS   🍹
 //    ===========================
+
+func TestCompiler_Basics(t *testing.T) {
+	data := []struct {
+		code string
+		res  []*llx.Chunk
+	}{
+		{"", nil},
+	}
+	for _, v := range data {
+		t.Run(v.code, func(t *testing.T) {
+			compileEmpty(t, v.code, func(res *llx.CodeBundle) {
+				assert.Equal(t, v.res, res.Code.Code)
+			})
+		})
+	}
+}
 
 func TestCompiler_Simple(t *testing.T) {
 	data := []struct {
