@@ -89,66 +89,66 @@ package vsphere
 // 	// assert.Equal(t, 1, len(lcs))
 
 // 	// list hosts
-// 	// for _, dc := range dcs {
-// 	// 	// list hosts
-// 	// 	hosts, err := client.ListHosts(dc)
-// 	// 	require.NoError(t, err)
-// 	// 	assert.Equal(t, 1, len(hosts))
+// 	for _, dc := range dcs {
+// 		// list hosts
+// 		hosts, err := client.ListHosts(dc, nil)
+// 		require.NoError(t, err)
+// 		assert.Equal(t, 1, len(hosts))
 
-// 	// 	// test the first host
-// 	// 	e := Esxi{c: client.Client, host: hosts[0]}
+// 		// test the first host
+// 		e := Esxi{c: client.Client, host: hosts[0]}
 
-// 	// 	switches, err := e.VswitchStandard()
-// 	// 	require.NoError(t, err)
-// 	// 	assert.Equal(t, 2, len(switches))
+// 		switches, err := e.VswitchStandard()
+// 		require.NoError(t, err)
+// 		assert.Equal(t, 2, len(switches))
 
-// 	// 	switches, err = e.VswitchDvs()
-// 	// 	require.NoError(t, err)
-// 	// 	assert.Equal(t, 0, len(switches))
+// 		switches, err = e.VswitchDvs()
+// 		require.NoError(t, err)
+// 		assert.Equal(t, 0, len(switches))
 
-// 	// 	nics, err := e.Vmknics()
-// 	// 	require.NoError(t, err)
-// 	// 	assert.Equal(t, 1, len(nics))
+// 		nics, err := e.Vmknics()
+// 		require.NoError(t, err)
+// 		assert.Equal(t, 1, len(nics))
 
-// 	// 	// list packages
-// 	// 	vibs, err := e.Vibs()
-// 	// 	require.NoError(t, err)
-// 	// 	assert.Equal(t, 136, len(vibs))
+// 		// 	// list packages
+// 		// 	vibs, err := e.Vibs()
+// 		// 	require.NoError(t, err)
+// 		// 	assert.Equal(t, 136, len(vibs))
 
-// 	// 	// package acceptance level
-// 	// 	acceptance, err := e.SoftwareAcceptance()
-// 	// 	require.NoError(t, err)
-// 	// 	assert.Equal(t, "PartnerSupported", acceptance)
+// 		// 	// package acceptance level
+// 		// 	acceptance, err := e.SoftwareAcceptance()
+// 		// 	require.NoError(t, err)
+// 		// 	assert.Equal(t, "PartnerSupported", acceptance)
 
-// 	// 	// list kernel modules
-// 	// 	modules, err := e.KernelModules()
-// 	// 	require.NoError(t, err)
-// 	// 	assert.Equal(t, 98, len(modules))
+// 		// 	// list kernel modules
+// 		// 	modules, err := e.KernelModules()
+// 		// 	require.NoError(t, err)
+// 		// 	assert.Equal(t, 98, len(modules))
 
-// 	// 	// list advanced settings
-// 	// 	settings, err := e.AdvancedSettings()
-// 	// 	require.NoError(t, err)
-// 	// 	// TODO: the ui displays 1043, we need to find the difference
-// 	// 	assert.Equal(t, 1069, len(settings))
+// 		// 	// list advanced settings
+// 		// 	settings, err := e.AdvancedSettings()
+// 		// 	require.NoError(t, err)
+// 		// 	// TODO: the ui displays 1043, we need to find the difference
+// 		// 	assert.Equal(t, 1069, len(settings))
 
-// 	// 	// all host options (overlaps with the advanced settings)
-// 	// 	hostoptions, err := HostOptions(hosts[0])
-// 	// 	require.NoError(t, err)
-// 	// 	assert.Equal(t, 1045, len(hostoptions))
+// 		// 	// all host options (overlaps with the advanced settings)
+// 		// 	hostoptions, err := HostOptions(hosts[0])
+// 		// 	require.NoError(t, err)
+// 		// 	assert.Equal(t, 1045, len(hostoptions))
 
-// 	// 	// get snmp settings
-// 	// 	snmpSettings, err := e.Snmp()
-// 	// 	require.NoError(t, err)
-// 	// 	assert.Equal(t, 10, len(snmpSettings))
+// 		// 	// get snmp settings
+// 		// 	snmpSettings, err := e.Snmp()
+// 		// 	require.NoError(t, err)
+// 		// 	assert.Equal(t, 10, len(snmpSettings))
 
-// 	// 	// list vms
-// 	// 	vms, err := client.ListVirtualMachines(dc)
-// 	// 	require.NoError(t, err)
-// 	// 	assert.Equal(t, 1, len(vms))
+// 		// 	// list vms
+// 		// 	vms, err := client.ListVirtualMachines(dc)
+// 		// 	require.NoError(t, err)
+// 		// 	assert.Equal(t, 1, len(vms))
 
-// 	// 	vm := vms[0]
-// 	// 	vsettings, err := AdvancedSettings(vm)
-// 	// 	require.NoError(t, err)
-// 	// 	assert.Equal(t, 23, len(vsettings))
-// 	// }
+// 		// 	vm := vms[0]
+// 		// 	vsettings, err := AdvancedSettings(vm)
+// 		// 	require.NoError(t, err)
+// 		// 	assert.Equal(t, 23, len(vsettings))
+// 	}
 // }
