@@ -6,13 +6,13 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"strings"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/resources/packages"
 	"go.mondoo.io/mondoo/lumi/resources/platformid"
 	"go.mondoo.io/mondoo/lumi/resources/uptime"
+	"go.mondoo.io/mondoo/motor/motorid/hostname"
 )
 
 func (p *lumiOs) id() (string, error) {
@@ -128,13 +128,12 @@ func (p *lumiOs) GetUpdates() ([]interface{}, error) {
 }
 
 func (s *lumiOs) GetHostname() (string, error) {
-	c, err := s.Runtime.Motor.Transport.RunCommand("hostname")
-	if err != nil || c.ExitStatus != 0 {
-		return "", errors.New("lumi[platform]> cannot determine hostname")
+	platform, err := s.Runtime.Motor.Platform()
+	if err != nil {
+		return "", errors.New("cannot determine platform uuid")
 	}
 
-	res, err := ioutil.ReadAll(c.Stdout)
-	return strings.TrimSpace(string(res)), nil
+	return hostname.Hostname(s.Runtime.Motor.Transport, platform)
 }
 
 // returns the OS native machine UUID/GUID
