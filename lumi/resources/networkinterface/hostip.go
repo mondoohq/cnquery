@@ -102,5 +102,5 @@ func GetOutboundIP() (net.IP, error) {
 		return nil, errors.New("could not determine outbound ip")
 	}
 
-	return localAddr.IP
+	return localAddr.IP, nil
 }
