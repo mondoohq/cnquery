@@ -1,4 +1,4 @@
-[commands."powershell -c \"$env:computername\""]
+[commands."hostname"]
 stdout="WIN-ABCDEFGVHLD"
 
 [commands."wmic os get * /format:csv"]
