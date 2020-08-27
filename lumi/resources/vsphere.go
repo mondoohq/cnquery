@@ -273,7 +273,7 @@ func (v *lumiVsphereHost) esxiClient() (*vsphere.Esxi, error) {
 	return esxi, nil
 }
 
-func (v *lumiVsphereHost) GetStandardVswitch() ([]interface{}, error) {
+func (v *lumiVsphereHost) GetStandardSwitch() ([]interface{}, error) {
 	esxiClient, err := v.esxiClient()
 	if err != nil {
 		return nil, err
@@ -299,7 +299,7 @@ func (v *lumiVsphereHost) GetStandardVswitch() ([]interface{}, error) {
 	return lumiVswitches, nil
 }
 
-func (v *lumiVsphereHost) GetDvsVswitch() ([]interface{}, error) {
+func (v *lumiVsphereHost) GetDistributedSwitch() ([]interface{}, error) {
 	esxiClient, err := v.esxiClient()
 	if err != nil {
 		return nil, err

@@ -463,8 +463,8 @@ vsphere.host {
   name string
   inventoryPath string
   properties dict
-  standardVswitch() []vsphere.vswitch
-  dvsVswitch() []vsphere.vswitch
+  standardSwitch() []vsphere.vswitch
+  distributedSwitch() []vsphere.vswitch
   adapters() []vsphere.vmnic
   vmknics() []vsphere.vmknic
   packages() []esxi.vib
