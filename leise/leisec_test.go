@@ -64,6 +64,8 @@ func TestCompiler_Basics(t *testing.T) {
 		res  []*llx.Chunk
 	}{
 		{"", nil},
+		{"// some comment", nil},
+		{"// some comment\n", nil},
 	}
 	for _, v := range data {
 		t.Run(v.code, func(t *testing.T) {
