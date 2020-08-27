@@ -464,6 +464,7 @@ vsphere.host {
   inventoryPath string
   properties dict
   standardVswitch() []vsphere.vswitch
+  dvsVswitch() []vsphere.vswitch
   adapters() []vsphere.vmnic
   vmknics() []vsphere.vmknic
   packages() []esxi.vib
@@ -486,17 +487,19 @@ vsphere.vm {
 
 vsphere.vswitch {
   name string
-  properties map[string]string
+  properties dict
 }
 
 vsphere.vmnic {
   name string
-  properties map[string]string
+  properties dict
 }
 
 vsphere.vmknic {
   name string
-  properties map[string]string
+  properties dict
+  ipv4 dict
+  ipv6 dict
 }
 
 esxi.vib {

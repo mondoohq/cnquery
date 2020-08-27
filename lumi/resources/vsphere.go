@@ -288,7 +288,33 @@ func (v *lumiVsphereHost) GetStandardVswitch() ([]interface{}, error) {
 	for i, s := range vswitches {
 		lumiVswitch, err := v.Runtime.CreateResource("vsphere.vswitch",
 			"name", s["Name"],
-			"properties", map[string]interface{}(s),
+			"properties", s,
+		)
+		if err != nil {
+			return nil, err
+		}
+		lumiVswitches[i] = lumiVswitch
+	}
+
+	return lumiVswitches, nil
+}
+
+func (v *lumiVsphereHost) GetDvsVswitch() ([]interface{}, error) {
+	esxiClient, err := v.esxiClient()
+	if err != nil {
+		return nil, err
+	}
+
+	vswitches, err := esxiClient.VswitchDvs()
+	if err != nil {
+		return nil, err
+	}
+
+	lumiVswitches := make([]interface{}, len(vswitches))
+	for i, s := range vswitches {
+		lumiVswitch, err := v.Runtime.CreateResource("vsphere.vswitch",
+			"name", s["Name"],
+			"properties", s,
 		)
 		if err != nil {
 			return nil, err
@@ -313,7 +339,7 @@ func (v *lumiVsphereHost) GetAdapters() ([]interface{}, error) {
 	for i, a := range adapters {
 		lumiVswitch, err := v.Runtime.CreateResource("vsphere.vmnic",
 			"name", a["Name"],
-			"properties", map[string]interface{}(a),
+			"properties", a,
 		)
 		if err != nil {
 			return nil, err
@@ -335,10 +361,12 @@ func (v *lumiVsphereHost) GetVmknics() ([]interface{}, error) {
 	}
 
 	lumiVmknics := make([]interface{}, len(vmknics))
-	for i, n := range vmknics {
-		lumiVswitch, err := v.Runtime.CreateResource("vsphere.vmnic",
-			"name", n.Properties["Name"],
-			"properties", map[string]interface{}(n.Properties),
+	for i, entry := range vmknics {
+		lumiVswitch, err := v.Runtime.CreateResource("vsphere.vmknic",
+			"name", entry.Properties["Name"],
+			"properties", entry.Properties,
+			"ipv4", entry.Ipv4,
+			"ipv6", entry.Ipv6,
 		)
 		if err != nil {
 			return nil, err

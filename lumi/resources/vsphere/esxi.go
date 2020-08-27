@@ -22,10 +22,30 @@ type Esxi struct {
 	host *object.HostSystem
 }
 
-type VSwitch map[string]interface{}
+// NOTE: we do not change the case of the keys here, since they are returned in upper case
+func esxiValuesToDict(val esxcli.Values) map[string]interface{} {
+	dict := map[string]interface{}{}
+	for k := range val {
+		if len(val[k]) == 1 {
+			dict[k] = val[k][0]
+		} else {
+			dict[k] = val[k]
+		}
+	}
+	return dict
+}
+
+// NOTE: we do not change the case of the keys here, since they are returned in upper case
+func esxiValuesSliceToDict(values []esxcli.Values) []map[string]interface{} {
+	dicts := make([]map[string]interface{}, len(values))
+	for i, val := range values {
+		dicts[i] = esxiValuesToDict(val)
+	}
+	return dicts
+}
 
 // (Get - EsxCli).network.vswitch.standard.list()
-func (esxi *Esxi) VswitchStandard() ([]VSwitch, error) {
+func (esxi *Esxi) VswitchStandard() ([]map[string]interface{}, error) {
 	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
 	if err != nil {
 		return nil, err
@@ -36,23 +56,11 @@ func (esxi *Esxi) VswitchStandard() ([]VSwitch, error) {
 		return nil, err
 	}
 
-	vswitches := make([]VSwitch, len(res.Values))
-	for i, val := range res.Values {
-		vswitch := VSwitch{}
-		for k := range val {
-			if len(val[k]) == 1 {
-				vswitch[k] = val[k][0]
-			} else {
-				log.Error().Str("key", k).Msg("EsxiVswitchStandard> unsupported key")
-			}
-		}
-		vswitches[i] = vswitch
-	}
-	return vswitches, nil
+	return esxiValuesSliceToDict(res.Values), nil
 }
 
 // (Get-EsxCli).network.vswitch.dvs.vmware.list()
-func (esxi *Esxi) VswitchDvs() ([]VSwitch, error) {
+func (esxi *Esxi) VswitchDvs() ([]map[string]interface{}, error) {
 	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
 	if err != nil {
 		return nil, err
@@ -63,25 +71,11 @@ func (esxi *Esxi) VswitchDvs() ([]VSwitch, error) {
 		return nil, err
 	}
 
-	vswitches := make([]VSwitch, len(res.Values))
-	for i, val := range res.Values {
-		vswitch := VSwitch{}
-		for k := range val {
-			if len(val[k]) == 1 {
-				vswitch[k] = val[k][0]
-			} else {
-				log.Error().Str("key", k).Msg("EsxiVswitchDvs> unsupported key")
-			}
-		}
-		vswitches[i] = vswitch
-	}
-	return vswitches, nil
+	return esxiValuesSliceToDict(res.Values), nil
 }
 
-type Adapter map[string]interface{}
-
 // (Get-EsxCli).network.nic.list.Invoke()
-func (esxi *Esxi) Adapters() ([]Adapter, error) {
+func (esxi *Esxi) Adapters() ([]map[string]interface{}, error) {
 	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
 	if err != nil {
 		return nil, err
@@ -92,19 +86,7 @@ func (esxi *Esxi) Adapters() ([]Adapter, error) {
 		return nil, err
 	}
 
-	nics := make([]Adapter, len(res.Values))
-	for i, val := range res.Values {
-		nic := Adapter{}
-		for k := range val {
-			if len(val[k]) == 1 {
-				nic[k] = val[k][0]
-			} else {
-				log.Error().Str("key", k).Msg("EsxiAdapters> unsupported key")
-			}
-		}
-		nics[i] = nic
-	}
-	return nics, nil
+	return esxiValuesSliceToDict(res.Values), nil
 }
 
 type VmKernelNic struct {
@@ -128,32 +110,25 @@ func (esxi *Esxi) Vmknics() ([]VmKernelNic, error) {
 	vmknics := make([]VmKernelNic, len(res.Values))
 	for i, val := range res.Values {
 		nic := VmKernelNic{
-			Properties: map[string]interface{}{},
-		}
-		for k := range val {
-			if len(val[k]) == 1 {
-				nic.Properties[k] = val[k][0]
-			} else {
-				log.Error().Str("key", k).Msg("EsxiVmknics> unsupported key")
-			}
+			Properties: esxiValuesToDict(val),
 		}
 
 		name := val["Name"][0]
 		netstack := val["NetstackInstance"][0]
 
 		// gather ipv4 information
-		ipv4Params, err := esxi.VmknixIp(name, netstack, "ipv4")
+		ipv4Params, err := esxi.VmknicIp(name, netstack, "ipv4")
 		if err != nil {
 			return nil, err
 		}
 		nic.Ipv4 = ipv4Params
 
 		// gather ipv6 information
-		ipv6Params, err := esxi.VmknixIp(name, netstack, "ipv6")
+		ipv6Params, err := esxi.VmknicIp(name, netstack, "ipv6")
 		if err != nil {
 			return nil, err
 		}
-		nic.Ipv4 = ipv6Params
+		nic.Ipv6 = ipv6Params
 
 		vmknics[i] = nic
 	}
@@ -161,7 +136,7 @@ func (esxi *Esxi) Vmknics() ([]VmKernelNic, error) {
 }
 
 // (Get-EsxCli).network.ip.interface.ipv4.get('vmk0', 'defaultTcpipStack')
-func (esxi *Esxi) VmknixIp(interfacename string, netstack string, ipprotocol string) (map[string]interface{}, error) {
+func (esxi *Esxi) VmknicIp(interfacename string, netstack string, ipprotocol string) (map[string]interface{}, error) {
 	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
 	if err != nil {
 		return nil, err
@@ -172,17 +147,15 @@ func (esxi *Esxi) VmknixIp(interfacename string, netstack string, ipprotocol str
 		return nil, err
 	}
 
-	properties := map[string]interface{}{}
-	for _, val := range res.Values {
-		for k := range val {
-			if len(val[k]) == 1 {
-				properties[k] = val[k][0]
-			} else {
-				log.Error().Str("key", k).Msg("EsxiVmknixIp> unsupported key")
-			}
-		}
+	if len(res.Values) == 0 {
+		return nil, nil
 	}
-	return properties, nil
+
+	if len(res.Values) > 1 {
+		return nil, errors.New("vmknic ip returns more than one entry, this is unsupported")
+	}
+
+	return esxiValuesToDict(res.Values[0]), nil
 }
 
 type EsxiVib struct {
