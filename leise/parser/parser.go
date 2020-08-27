@@ -15,28 +15,31 @@ var (
 		`|(?P<Float>[-+]?\d*\.\d+([eE][-+]?\d+)?)` +
 		`|(?P<Int>[-+]?\d+([eE][-+]?\d+)?)` +
 		`|(?P<String>'[^']*'|"[^"]*")` +
-		`|(?P<Regex>/([^\\/]+|\\.)*/)` +
+		`|(?P<Comment>//[^\n]*(\n|\z))` +
+		`|(?P<Regex>/([^\\/]+|\\.)+/)` +
 		`|(?P<Op>[-+*/%,:.=<>!|&~])` +
 		`|(?P<Call>[(){}\[\]])`,
 	))
 )
 
 const (
-	Ident  rune = -3
-	Float  rune = -4
-	Int    rune = -6
-	String rune = -8
-	Regex  rune = -9
-	Op     rune = -11
+	Ident   rune = -3
+	Float   rune = -4
+	Int     rune = -6
+	String  rune = -8
+	Comment rune = -9
+	Regex   rune = -11
+	Op      rune = -13
 )
 
 var tokenNames = map[rune]string{
-	Ident:  "identifier",
-	Float:  "float",
-	Int:    "number",
-	String: "string",
-	Regex:  "regex",
-	Op:     "operator",
+	Ident:   "identifier",
+	Float:   "float",
+	Int:     "number",
+	String:  "string",
+	Comment: "comment",
+	Regex:   "regex",
+	Op:      "operator",
 }
 
 // Expression at the root of leise
@@ -117,8 +120,18 @@ func (p *parser) error(msg string, in string) error {
 func (p *parser) nextToken() error {
 	if p.nextTokens == nil {
 		var err error
-		p.token, err = p.lex.Next()
-		return err
+
+		for {
+			p.token, err = p.lex.Next()
+			if err != nil {
+				return err
+			}
+			if p.token.Type != Comment {
+				break
+			}
+		}
+
+		return nil
 	}
 
 	p.token = p.nextTokens[0]
@@ -502,9 +515,18 @@ func Parse(input string) (*AST, error) {
 	}
 	res := AST{}
 
-	token, err := lex.Next()
-	if err != nil {
-		return nil, err
+	var token lexer.Token
+	for {
+		token, err = lex.Next()
+		if err != nil {
+			return nil, err
+		}
+		if token.EOF() {
+			return &res, nil
+		}
+		if token.Type != Comment {
+			break
+		}
 	}
 
 	thisParser := parser{
@@ -540,7 +562,10 @@ func Lex(input string) ([]lexer.Token, error) {
 	}
 
 	for !token.EOF() {
-		res = append(res, token)
+		if token.Type != Comment {
+			res = append(res, token)
+		}
+
 		token, err = lex.Next()
 		if err != nil {
 			return res, err
