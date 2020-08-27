@@ -209,10 +209,11 @@ func init() {
 			// fields
 			string("contains" + types.String):              {f: stringContainsString, Label: "contains"},
 			string("contains" + types.Array(types.String)): {f: stringContainsArrayString, Label: "contains"},
-			string("downcase"):                             {f: stringDowncase, Label: "downcase"},
-			string("length"):                               {f: stringLength, Label: "length"},
-			string("lines"):                                {f: stringLines, Label: "lines"},
-			string("split"):                                {f: stringSplit, Label: "split"},
+			string("find"):     {f: stringFind, Label: "find"},
+			string("downcase"): {f: stringDowncase, Label: "downcase"},
+			string("length"):   {f: stringLength, Label: "length"},
+			string("lines"):    {f: stringLines, Label: "lines"},
+			string("split"):    {f: stringSplit, Label: "split"},
 		},
 		types.Regex: {
 			string("==" + types.Nil):                 {f: stringCmpNil, Label: "=="},
