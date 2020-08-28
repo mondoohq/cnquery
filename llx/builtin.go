@@ -345,6 +345,8 @@ func init() {
 			"downcase":                        {f: dictDowncase, Label: "downcase"},
 			"lines":                           {f: dictLines, Label: "lines"},
 			"split":                           {f: dictSplit, Label: "split"},
+			"keys":                            {f: dictKeys, Label: "keys"},
+			"values":                          {f: dictValues, Label: "values"},
 			"where":                           {f: dictWhere, Label: "where"},
 			string("contains" + types.String): {f: dictContainsString, Label: "contains"},
 			string("contains" + types.Array(types.String)): {f: dictContainsArrayString, Label: "contains"},
@@ -424,6 +426,8 @@ func init() {
 			"[]":     {f: mapGetIndex},
 			"length": {f: mapLength},
 			"{}":     {f: mapBlockCall},
+			"keys":   {f: mapKeys, Label: "keys"},
+			"values": {f: mapValues, Label: "values"},
 		},
 		types.ResourceLike: {
 			"where":  {f: resourceWhere},

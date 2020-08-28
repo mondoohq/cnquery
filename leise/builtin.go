@@ -23,6 +23,7 @@ var intType = func(t types.Type) types.Type { return types.Int }
 var stringType = func(t types.Type) types.Type { return types.String }
 var stringArrayType = func(t types.Type) types.Type { return types.Array(types.String) }
 var dictType = func(t types.Type) types.Type { return types.Dict }
+var dictArrayType = func(t types.Type) types.Type { return types.Array(types.Dict) }
 
 var builtinFunctions map[types.Type]map[string]compileHandler
 
@@ -57,6 +58,9 @@ func init() {
 			"one":      {compile: compileArrayOne, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"all":      {compile: compileArrayAll, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"any":      {compile: compileArrayAny, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			// map-ish
+			"keys":   {typ: stringArrayType, signature: FunctionSignature{}},
+			"values": {typ: dictArrayType, signature: FunctionSignature{}},
 		},
 		types.ArrayLike: {
 			"[]":       {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Int}}},
@@ -72,6 +76,8 @@ func init() {
 			"[]":     {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
 			"{}":     {typ: mapBlockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"length": {typ: intType, signature: FunctionSignature{}},
+			"keys":   {typ: stringArrayType, signature: FunctionSignature{}},
+			"values": {typ: dictArrayType, signature: FunctionSignature{}},
 		},
 		types.ResourceLike: {
 			// "":       compileHandler{compile: compileResourceDefault},
