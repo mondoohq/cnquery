@@ -60,6 +60,46 @@ func mapBlockCall(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 	return c.runBlock(bind, chunk.Function.Args[0], ref)
 }
 
+func mapKeys(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return nil, 0, nil
+	}
+
+	m, ok := bind.Value.(map[string]interface{})
+	if !ok {
+		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into map")
+	}
+
+	res := make([]interface{}, len(m))
+	var i int
+	for key := range m {
+		res[i] = key
+		i++
+	}
+
+	return ArrayData(res, types.String), 0, nil
+}
+
+func mapValues(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return nil, 0, nil
+	}
+
+	m, ok := bind.Value.(map[string]interface{})
+	if !ok {
+		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into map")
+	}
+
+	res := make([]interface{}, len(m))
+	var i int
+	for _, value := range m {
+		res[i] = value
+		i++
+	}
+
+	return ArrayData(res, types.Dict), 0, nil
+}
+
 func dictGetIndex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type}, 0, nil
@@ -165,6 +205,46 @@ func dictSplit(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDa
 	}
 
 	return stringSplit(c, bind, chunk, ref)
+}
+
+func dictKeys(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return nil, 0, nil
+	}
+
+	m, ok := bind.Value.(map[string]interface{})
+	if !ok {
+		return nil, 0, errors.New("dict value does not support field `keys`")
+	}
+
+	res := make([]interface{}, len(m))
+	var i int
+	for key := range m {
+		res[i] = key
+		i++
+	}
+
+	return ArrayData(res, types.String), 0, nil
+}
+
+func dictValues(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return nil, 0, nil
+	}
+
+	m, ok := bind.Value.(map[string]interface{})
+	if !ok {
+		return nil, 0, errors.New("dict value does not support field `values`")
+	}
+
+	res := make([]interface{}, len(m))
+	var i int
+	for _, value := range m {
+		res[i] = value
+		i++
+	}
+
+	return ArrayData(res, types.Dict), 0, nil
 }
 
 func dictWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {

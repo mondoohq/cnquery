@@ -429,13 +429,25 @@ func TestArray_Block(t *testing.T) {
 	})
 }
 
-func TestMap_Block(t *testing.T) {
+func TestMap(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"sshd.config.params { _['Protocol'] != 1 }",
 			0, map[string]interface{}{
 				"wY2itjYLEbmP9L3U2Z24a7jlTpJxpHoit+s8zoaBkbHW4itI+GhHF1lazZSPjH42eqY106gEXgr/IHV2Q5vB8g==": llx.BoolTrue,
 			},
+		},
+		{
+			"sshd.config.params.length",
+			0, int64(44),
+		},
+		{
+			"sshd.config.params.keys.length",
+			0, int64(44),
+		},
+		{
+			"sshd.config.params.values.length",
+			0, int64(44),
 		},
 	})
 }
@@ -554,6 +566,18 @@ func TestDict_Methods(t *testing.T) {
 		{
 			"parse.json('/dummy.json').params['h'] { _.contains('llo') }",
 			1, true,
+		},
+		{
+			"parse.json('/dummy.json').params['e'].length",
+			0, int64(3),
+		},
+		{
+			"parse.json('/dummy.json').params['e'].keys.length",
+			0, int64(3),
+		},
+		{
+			"parse.json('/dummy.json').params['e'].values.length",
+			0, int64(3),
 		},
 	})
 }
