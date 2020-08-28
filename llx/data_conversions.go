@@ -202,7 +202,7 @@ func raw2primitive(value interface{}, typ types.Type) (*Primitive, error) {
 		if ok {
 			return raw2primitive(rdata.Value, rdata.Type)
 		}
-		return nil, errors.New("Cannot serialize data type " + typ.Label())
+		return nil, errors.New("cannot serialize data type " + typ.Label())
 	}
 	return c(value, typ)
 }
@@ -332,7 +332,7 @@ func (p *Primitive) RawData() *RawData {
 	typ := types.Type(p.Type)
 	c, ok := primitiveConverters[typ.Underlying()]
 	if !ok {
-		return &RawData{Error: errors.New("Cannot convert primitive to value for primitive type " + typ.Label())}
+		return &RawData{Error: errors.New("cannot convert primitive to value for primitive type " + typ.Label())}
 	}
 	return c(p)
 }

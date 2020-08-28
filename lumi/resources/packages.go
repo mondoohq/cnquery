@@ -42,7 +42,7 @@ func (p *lumiPackage) init(args *lumi.Args) (*lumi.Args, Package, error) {
 
 	c, ok := packages.LumiResource().Cache.Load("_map")
 	if !ok {
-		return nil, nil, errors.New("Cannot get map of packages")
+		return nil, nil, errors.New("cannot get map of packages")
 	}
 	cmap := c.Data.(map[string]Package)
 
@@ -98,13 +98,13 @@ func (p *lumiPackages) GetList() ([]interface{}, error) {
 	// find suitable package manager
 	pm, err := packages.ResolveSystemPkgManager(p.Runtime.Motor)
 	if pm == nil || err != nil {
-		return nil, fmt.Errorf("Could not detect suiteable package manager for platform")
+		return nil, fmt.Errorf("could not detect suiteable package manager for platform")
 	}
 
 	// retrieve all system packages
 	osPkgs, err := pm.List()
 	if err != nil {
-		return nil, fmt.Errorf("Could not retrieve package list for platform")
+		return nil, fmt.Errorf("could not retrieve package list for platform")
 	}
 	log.Debug().Int("packages", len(osPkgs)).Msg("lumi[packages]> installed packages")
 

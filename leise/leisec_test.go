@@ -882,35 +882,35 @@ func TestSuggestions(t *testing.T) {
 		res, err := Compile("notthere", schema)
 		assert.Nil(t, res.Code.Entrypoints)
 		assert.Empty(t, res.Suggestions)
-		assert.Equal(t, errors.New("Cannot find resource for identifier 'notthere'"), err)
+		assert.Equal(t, errors.New("cannot find resource for identifier 'notthere'"), err)
 	})
 
 	t.Run("resource suggestions", func(t *testing.T) {
 		res, err := Compile("ssh", schema)
 		assert.Nil(t, res.Code.Entrypoints)
 		assert.Equal(t, []string{"sshd", "sshd.config", "vsphere.vswitch"}, res.Suggestions)
-		assert.Equal(t, errors.New("Cannot find resource for identifier 'ssh'"), err)
+		assert.Equal(t, errors.New("cannot find resource for identifier 'ssh'"), err)
 	})
 
 	t.Run("field suggestions", func(t *testing.T) {
 		res, err := Compile("sshd.config.para", schema)
 		assert.Nil(t, res.Code.Entrypoints)
 		assert.Equal(t, []string{"params"}, res.Suggestions)
-		assert.Equal(t, errors.New("Cannot find field 'para' in sshd.config"), err)
+		assert.Equal(t, errors.New("cannot find field 'para' in sshd.config"), err)
 	})
 
 	t.Run("field in block suggestions", func(t *testing.T) {
 		res, err := Compile("sshd.config { para }", schema)
 		assert.Nil(t, res.Code.Entrypoints)
 		assert.Equal(t, []string{"params"}, res.Suggestions)
-		assert.Equal(t, errors.New("Cannot find field or resource 'para' in block for type 'sshd.config'"), err)
+		assert.Equal(t, errors.New("cannot find field or resource 'para' in block for type 'sshd.config'"), err)
 	})
 
 	t.Run("field suggestions on partial map", func(t *testing.T) {
 		res, err := Compile("sshd.config.params.l", schema)
 		assert.Nil(t, res.Code.Entrypoints)
 		assert.Equal(t, []string{"length"}, res.Suggestions)
-		assert.Equal(t, errors.New("Cannot find field 'l' in map[string]string"), err)
+		assert.Equal(t, errors.New("cannot find field 'l' in map[string]string"), err)
 	})
 }
 
@@ -918,7 +918,7 @@ func TestCompiler_Error(t *testing.T) {
 	t.Run("unknown term", func(t *testing.T) {
 		_, err := Compile("sshd.config.params == enabled", schema)
 		// assert.Nil(t, res)
-		assert.EqualError(t, err, "Failed to compile: Cannot find resource for identifier 'enabled'")
+		assert.EqualError(t, err, "failed to compile: cannot find resource for identifier 'enabled'")
 	})
 }
 

@@ -114,10 +114,10 @@ func builtinFunction(typ types.Type, id string) (*compileHandler, error) {
 			return &c, nil
 		}
 	} else {
-		return nil, errors.New("Cannot find any functions for type '" + typ.Label() + "' during compile")
+		return nil, errors.New("cannot find any functions for type '" + typ.Label() + "' during compile")
 	}
 
-	return nil, errors.New("Cannot find function '" + id + "' for type '" + typ.Label() + "' during compile")
+	return nil, errors.New("cannot find function '" + id + "' for type '" + typ.Label() + "' during compile")
 }
 
 func fieldNames(resource *lumi.ResourceInfo) []string {

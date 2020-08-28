@@ -247,7 +247,7 @@ func (i *MacOSInterfaceHandler) ParseMacOS(r io.Reader) ([]Interface, error) {
 			var err error
 			mtu, err = strconv.Atoi(strings.TrimSpace(m[4]))
 			if err != nil {
-				return nil, errors.Wrap(err, "Cannot parse macos ifconfig mtu")
+				return nil, errors.Wrap(err, "cannot parse macos ifconfig mtu")
 			}
 
 			var flags net.Flags

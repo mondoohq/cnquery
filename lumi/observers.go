@@ -157,7 +157,7 @@ func (ctx *Observers) List() (map[string][]string, map[string][]string) {
 // false => not the first watcher
 func (ctx *Observers) Watch(resourceFieldUID string, watcherUID string, callback Callback) (bool, bool, error) {
 	if watcherUID == "" {
-		return false, false, errors.New("Cannot register observer with empty watcher UID")
+		return false, false, errors.New("cannot register observer with empty watcher UID")
 	}
 
 	initial, exists := ctx.list.Store(resourceFieldUID, watcherUID, callback)
@@ -172,7 +172,7 @@ func (ctx *Observers) Watch(resourceFieldUID string, watcherUID string, callback
 // false => there are still watchers on this resource field
 func (ctx *Observers) Unwatch(resourceFieldUID string, watcherUID string) (bool, error) {
 	if watcherUID == "" {
-		return false, errors.New("Cannot unwatch observer with empty watcher UID")
+		return false, errors.New("cannot unwatch observer with empty watcher UID")
 	}
 
 	listIsEmpty := ctx.list.Delete(resourceFieldUID, watcherUID)
@@ -218,7 +218,7 @@ func (ctx *Observers) UnwatchAll(watcherUID string) error {
 func (ctx *Observers) Trigger(resourceFieldUID string) error {
 	f, ok := ctx.list.Load(resourceFieldUID)
 	if !ok {
-		return errors.New("Cannot find field " + resourceFieldUID + " to trigger its change.")
+		return errors.New("cannot find field " + resourceFieldUID + " to trigger its change.")
 	}
 	f.Range(func(_ string, cb Callback) bool {
 		cb()

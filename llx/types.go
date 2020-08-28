@@ -68,7 +68,7 @@ func (f *Function) checksum(code *Code) []byte {
 	if f.Binding != 0 {
 		ref := code.Checksums[f.Binding]
 		if ref == "" {
-			panic("Cannot compute checksum for chunk, it doesn't seem to reference a function on the stack")
+			panic("cannot compute checksum for chunk, it doesn't seem to reference a function on the stack")
 		}
 		res = append(res, ref...)
 	}
@@ -88,7 +88,7 @@ func (p *Primitive) checksum(code *Code) []byte {
 		if typ == types.Ref {
 			refChecksum, ok := code.Checksums[int32(ref)]
 			if !ok {
-				panic("llx> Cannot compute checksum for primitive, it doesn't seem to reference a variable on the stack")
+				panic("llx> cannot compute checksum for primitive, it doesn't seem to reference a variable on the stack")
 			}
 
 			return []byte(refChecksum)
@@ -97,7 +97,7 @@ func (p *Primitive) checksum(code *Code) []byte {
 		if typ.Underlying() == types.FunctionLike {
 			refFunction := code.Functions[int32(ref)-1]
 			if !ok {
-				panic("llx> Cannot compute checksum for primitive, it doesn't seem to reference a function on the stack")
+				panic("llx> cannot compute checksum for primitive, it doesn't seem to reference a function on the stack")
 			}
 
 			return []byte(refFunction.Id)

@@ -471,7 +471,7 @@ func (c *compiler) compileIdentifier(id string, callBinding *binding, calls []*p
 				// accessors are aways builtin functions
 				h, _ := builtinFunction(callBinding.Type.Underlying(), "[]")
 				if h == nil {
-					return nil, types.Nil, errors.New("Cannot find '[]' function on type " + callBinding.Type.Label())
+					return nil, types.Nil, errors.New("cannot find '[]' function on type " + callBinding.Type.Label())
 				}
 				typ, err = c.compileBuiltinFunction(h, "[]", &binding{Type: callBinding.Type, Ref: callBinding.Ref}, fCall)
 				if err != nil {
@@ -508,10 +508,10 @@ func (c *compiler) compileIdentifier(id string, callBinding *binding, calls []*p
 	// suggestions
 	if callBinding == nil {
 		addResourceSuggestions(c.Schema.Resources, id, c.Result)
-		return nil, types.Nil, errors.New("Cannot find resource for identifier '" + id + "'")
+		return nil, types.Nil, errors.New("cannot find resource for identifier '" + id + "'")
 	}
 	addFieldSuggestions(availableFields(c, callBinding.Type), id, c.Result)
-	return nil, types.Nil, errors.New("Cannot find field or resource '" + id + "' in block for type '" + c.Binding.Type.Label() + "'")
+	return nil, types.Nil, errors.New("cannot find field or resource '" + id + "' in block for type '" + c.Binding.Type.Label() + "'")
 }
 
 // compileValue takes an AST value and compiles it
@@ -608,7 +608,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 	for len(calls) > 0 {
 		call := calls[0]
 		if call.Function != nil {
-			return nil, errors.New("Don't know how to compile chained functions just yet")
+			return nil, errors.New("don't know how to compile chained functions just yet")
 		}
 
 		if call.Accessor != nil {
@@ -617,7 +617,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 			// accessors are aways builtin functions
 			h, _ := builtinFunction(typ.Underlying(), "[]")
 			if h == nil {
-				return nil, errors.New("Cannot find '[]' function on type " + typ.Label())
+				return nil, errors.New("cannot find '[]' function on type " + typ.Label())
 			}
 			typ, err = c.compileBuiltinFunction(h, "[]", &binding{Type: typ, Ref: ref}, fCall)
 			if err != nil {
@@ -649,7 +649,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 			}
 			if !found {
 				addFieldSuggestions(availableFields(c, typ), id, c.Result)
-				return nil, errors.New("Cannot find field '" + id + "' in " + typ.Label() + "")
+				return nil, errors.New("cannot find field '" + id + "' in " + typ.Label() + "")
 			}
 
 			typ = resType
@@ -747,7 +747,7 @@ func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 		c.Result.Code.Entrypoints = append(c.Result.Code.Entrypoints, ref)
 
 		if c.Result.Code.Checksums[ref] == "" {
-			return errors.New("Failed to compile expression, ref returned empty checksum ID for ref " + strconv.FormatInt(int64(ref), 10))
+			return errors.New("failed to compile expression, ref returned empty checksum ID for ref " + strconv.FormatInt(int64(ref), 10))
 		}
 	}
 

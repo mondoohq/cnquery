@@ -121,13 +121,13 @@ func (typ Type) Child() Type {
 	case byteMap:
 		return typ[2:]
 	}
-	panic("Cannot determine child type of " + typ.Label())
+	panic("cannot determine child type of " + typ.Label())
 }
 
 // Key returns the key type of a map
 func (typ Type) Key() Type {
 	if typ[0] != byteMap {
-		panic("Cannot retrieve key type of non-map type " + typ.Label())
+		panic("cannot retrieve key type of non-map type " + typ.Label())
 	}
 	return Type(typ[1])
 }
@@ -138,7 +138,7 @@ func (typ Type) Name() string {
 	case byteResource:
 		return string(typ[1:])
 	}
-	panic("Cannot determine type name of " + typ.Label())
+	panic("cannot determine type name of " + typ.Label())
 }
 
 var labels = map[byte]string{
@@ -174,14 +174,14 @@ func (typ Type) Label() string {
 	if typ[0]&'\xf0' == '\x00' {
 		h, ok := labels[typ[0]]
 		if !ok {
-			panic("Cannot find label for simple type " + typ)
+			panic("cannot find label for simple type " + typ)
 		}
 		return h
 	}
 
 	h, ok := labelfun[typ[0]]
 	if !ok {
-		panic("Cannot find label for complex type " + typ)
+		panic("cannot find label for complex type " + typ)
 	}
 	return h(typ[1:])
 }

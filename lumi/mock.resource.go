@@ -32,7 +32,7 @@ func (m MockResource) Fields() []*Field {
 func (m MockResource) Field(name string) (interface{}, error) {
 	f, ok := m.StaticFields[name]
 	if !ok {
-		return nil, errors.New("Cannot find field " + name)
+		return nil, errors.New("cannot find field " + name)
 	}
 	return f, nil
 }
@@ -41,7 +41,7 @@ func (m MockResource) Field(name string) (interface{}, error) {
 func (m MockResource) Register(field string) error {
 	_, ok := m.StaticFields[field]
 	if !ok {
-		return errors.New("Cannot find field " + field)
+		return errors.New("cannot find field " + field)
 	}
 	return m.StaticResource.Runtime.Observers.Trigger(m.LumiResource().FieldUID(field))
 }
@@ -50,7 +50,7 @@ func (m MockResource) Register(field string) error {
 func (m MockResource) Compute(field string) error {
 	_, ok := m.StaticFields[field]
 	if !ok {
-		return errors.New("Cannot find field " + field)
+		return errors.New("cannot find field " + field)
 	}
 	return nil
 }

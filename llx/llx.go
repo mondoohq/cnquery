@@ -221,15 +221,15 @@ func (c *LeiseExecutor) runFunctionBlock(bind *RawData, code *Code, cb ResultCal
 func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, ref int32) (*RawData, int32, error) {
 	typ := types.Type(functionRef.Type)
 	if !typ.IsFunction() {
-		return nil, 0, errors.New("Called block with wrong function type")
+		return nil, 0, errors.New("called block with wrong function type")
 	}
 	fref, ok := functionRef.Ref()
 	if !ok {
-		return nil, 0, errors.New("Cannot retrieve function reference on block call")
+		return nil, 0, errors.New("cannot retrieve function reference on block call")
 	}
 	fun := c.code.Functions[fref-1]
 	if fun == nil {
-		return nil, 0, errors.New("Block function is nil")
+		return nil, 0, errors.New("block function is nil")
 	}
 
 	blockResult := map[string]interface{}{}
@@ -428,7 +428,7 @@ func (c *LeiseExecutor) triggerChain(ref int32) {
 	codeID := c.callbackPoints[ref]
 	res, ok := c.cache.Load(ref)
 	if !ok {
-		c.callback(errorResultMsg("exec> Cannot find results to chunk reference "+strconv.FormatInt(int64(ref), 10), codeID))
+		c.callback(errorResultMsg("exec> cannot find results to chunk reference "+strconv.FormatInt(int64(ref), 10), codeID))
 		return
 	}
 

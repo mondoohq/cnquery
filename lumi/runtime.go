@@ -64,10 +64,10 @@ type Runtime struct {
 // NewRuntime creates a new runtime from a registry and motor backend
 func NewRuntime(registry *Registry, motor *motor.Motor) *Runtime {
 	if registry == nil {
-		panic("Cannot initialize a lumi runtime without a registry")
+		panic("cannot initialize a lumi runtime without a registry")
 	}
 	if motor == nil {
-		panic("Cannot initialize a lumi runtime without a motor")
+		panic("cannot initialize a lumi runtime without a motor")
 	}
 
 	return &Runtime{
@@ -118,7 +118,7 @@ func (ctx *Runtime) CreateResourceWithID(name string, id string, args ...interfa
 
 	r, ok := ctx.Registry.Resources[name]
 	if !ok {
-		return nil, errors.New("Cannot find resource '" + name + "'")
+		return nil, errors.New("cannot find resource '" + name + "'")
 	}
 
 	argsMap, err := args2map(args)
@@ -128,7 +128,7 @@ func (ctx *Runtime) CreateResourceWithID(name string, id string, args ...interfa
 
 	if r.Factory == nil {
 		if len(args) > 0 {
-			return nil, errors.New("Mock resources don't take any arguments. The resource '" + name + "' doesn't have a resource factory")
+			return nil, errors.New("ock resources don't take any arguments. The resource '" + name + "' doesn't have a resource factory")
 		}
 		return ctx.createMockResource(name, r)
 	}
@@ -137,10 +137,10 @@ func (ctx *Runtime) CreateResourceWithID(name string, id string, args ...interfa
 	// with the `Id` field set to look up an existing resource
 	res, err := r.Factory(ctx, argsMap)
 	if err != nil {
-		return nil, errors.New("Failed to create resource '" + name + "': " + err.Error())
+		return nil, errors.New("failed to create resource '" + name + "': " + err.Error())
 	}
 	if res == nil {
-		return nil, errors.New("Resource factory produced a nil result for resource '" + name + "'")
+		return nil, errors.New("resource factory produced a nil result for resource '" + name + "'")
 	}
 
 	resResource := res.(ResourceType)
@@ -156,7 +156,7 @@ func (ctx *Runtime) CreateResourceWithID(name string, id string, args ...interfa
 		resResource = ex
 	} else {
 		if err := resResource.Validate(); err != nil {
-			return nil, errors.New("Failed to create resource '" + name + "': " + err.Error())
+			return nil, errors.New("failed to create resource '" + name + "': " + err.Error())
 		}
 		ctx.Set(name, id, res)
 	}
@@ -182,11 +182,11 @@ func (ctx *Runtime) getRawResource(name string, id string) (interface{}, bool) {
 func (ctx *Runtime) GetResource(name string, id string) (ResourceType, error) {
 	c, ok := ctx.getRawResource(name, id)
 	if !ok {
-		return nil, errors.New("Cannot find cached resource " + name + " ID: " + id)
+		return nil, errors.New("cannot find cached resource " + name + " ID: " + id)
 	}
 	res, ok := c.(ResourceType)
 	if !ok {
-		return nil, errors.New("Cached resource is not of ResourceType for " + name + " ID: " + id)
+		return nil, errors.New("cached resource is not of ResourceType for " + name + " ID: " + id)
 	}
 	return res, nil
 }
@@ -230,7 +230,7 @@ func (ctx *Runtime) WatchAndUpdate(r ResourceType, field string, watcherUID stri
 
 		data, ok := resource.Cache.Load(field)
 		if !ok {
-			callback(nil, errors.New("Couldn't retrieve value of field \""+field+"\" in resource \""+resource.UID()+"\""))
+			callback(nil, errors.New("couldn't retrieve value of field \""+field+"\" in resource \""+resource.UID()+"\""))
 			return
 		}
 
