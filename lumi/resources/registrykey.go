@@ -116,7 +116,6 @@ func (p *lumiRegistrykeyProperty) id() (string, error) {
 }
 
 func (p *lumiRegistrykeyProperty) init(args *lumi.Args) (*lumi.Args, RegistrykeyProperty, error) {
-	log.Debug().Msg("reg key property")
 	pathRaw := (*args)["path"]
 	if pathRaw == nil {
 		return args, nil, nil
@@ -144,7 +143,7 @@ func (p *lumiRegistrykeyProperty) init(args *lumi.Args) (*lumi.Args, Registrykey
 	}
 	registryKey := obj.(Registrykey)
 
-	log.Debug().Msg("reg key property, parent exists")
+	log.Debug().Str("path", path).Msg("registrykey.property> parent exists")
 	exists, err := registryKey.Exists()
 	if err != nil {
 		return nil, nil, err
@@ -156,7 +155,6 @@ func (p *lumiRegistrykeyProperty) init(args *lumi.Args) (*lumi.Args, Registrykey
 
 	// path exists
 	if exists {
-		log.Debug().Msg("reg key property, get properties")
 		properties, err := registryKey.Properties()
 		if err != nil {
 			return nil, nil, err

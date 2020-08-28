@@ -14,7 +14,7 @@ func compileResourceDefault(c *compiler, typ types.Type, ref int32, id string, c
 	name := typ.Name()
 	resource := c.Schema.Resources[name]
 	if resource == nil {
-		return types.Nil, errors.New("Cannot find resource '" + name + "' when compiling field '" + id + "'")
+		return types.Nil, errors.New("cannot find resource '" + name + "' when compiling field '" + id + "'")
 	}
 
 	// special case that we can optimize: the previous call was a resource
@@ -33,7 +33,7 @@ func compileResourceDefault(c *compiler, typ types.Type, ref int32, id string, c
 	fieldinfo := resource.Fields[id]
 	if fieldinfo == nil {
 		addFieldSuggestions(fieldNames(resource), id, c.Result)
-		return "", errors.New("Cannot find field '" + id + "' in resource " + resource.Name)
+		return "", errors.New("cannot find field '" + id + "' in resource " + resource.Name)
 	}
 
 	c.Result.Code.AddChunk(&llx.Chunk{

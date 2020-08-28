@@ -15,13 +15,13 @@ func (m *lumiMount) GetList() ([]interface{}, error) {
 	// find suitable mount manager
 	mm, err := mount.ResolveManager(m.Runtime.Motor)
 	if mm == nil || err != nil {
-		return nil, fmt.Errorf("Could not detect suiteable mount manager for platform")
+		return nil, fmt.Errorf("could not detect suiteable mount manager for platform")
 	}
 
 	// retrieve all system packages
 	osMounts, err := mm.List()
 	if err != nil {
-		return nil, fmt.Errorf("Could not retrieve mount list for platform")
+		return nil, fmt.Errorf("could not retrieve mount list for platform")
 	}
 	log.Debug().Int("mounts", len(osMounts)).Msg("lumi[mount]> mounted volumes")
 

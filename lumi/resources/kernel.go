@@ -36,7 +36,7 @@ func (k *lumiKernel) GetParameters() (map[string]interface{}, error) {
 	// find suitable kernel module manager
 	mm, err := kernel.ResolveManager(k.Runtime.Motor)
 	if mm == nil || err != nil {
-		return nil, errors.Wrap(err, "Could not detect suiteable kernel module manager for platform")
+		return nil, errors.Wrap(err, "could not detect suiteable kernel module manager for platform")
 	}
 
 	// retrieve all kernel modules
@@ -91,13 +91,13 @@ func (k *lumiKernel) GetModules() ([]interface{}, error) {
 	// find suitable kernel module manager
 	mm, err := kernel.ResolveManager(k.Runtime.Motor)
 	if mm == nil || err != nil {
-		return nil, errors.Wrap(err, "Could not detect suiteable kernel module manager for platform")
+		return nil, errors.Wrap(err, "could not detect suiteable kernel module manager for platform")
 	}
 
 	// retrieve all kernel modules
 	kernelModules, err := mm.Modules()
 	if err != nil {
-		return nil, errors.Wrap(err, "Could not retrieve kernel module list for platform")
+		return nil, errors.Wrap(err, "could not retrieve kernel module list for platform")
 	}
 	log.Debug().Int("modules", len(kernelModules)).Msg("lumi[kernel.modules]> modules")
 
@@ -150,7 +150,7 @@ func (k *lumiKernelModule) init(args *lumi.Args) (*lumi.Args, KernelModule, erro
 
 	c, ok := kernel.LumiResource().Cache.Load("_modules")
 	if !ok {
-		return nil, nil, errors.New("Cannot get map of kernel modules")
+		return nil, nil, errors.New("cannot get map of kernel modules")
 	}
 	cmap := c.Data.(map[string]KernelModule)
 

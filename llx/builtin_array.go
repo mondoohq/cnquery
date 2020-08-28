@@ -63,15 +63,15 @@ func arrayBlockList(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 
 	prim := chunk.Function.Args[0]
 	if !types.Type(prim.Type).IsFunction() {
-		return nil, 0, errors.New("Called block with wrong function type")
+		return nil, 0, errors.New("called block with wrong function type")
 	}
 	fref, ok := prim.Ref()
 	if !ok {
-		return nil, 0, errors.New("Cannot retrieve function reference on block call")
+		return nil, 0, errors.New("cannot retrieve function reference on block call")
 	}
 	fun := c.code.Functions[fref-1]
 	if fun == nil {
-		return nil, 0, errors.New("Block function is nil")
+		return nil, 0, errors.New("block function is nil")
 	}
 
 	// pre-init everything to avoid concurrency issues with long list

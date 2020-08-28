@@ -40,7 +40,7 @@ func createLabel(code *llx.Code, ref int32, labels *llx.Labels, schema *lumi.Sch
 	switch id {
 	case "[]":
 		if len(chunk.Function.Args) != 1 {
-			panic("Don't know how to extract label data from array access without args")
+			panic("don't know how to extract label data from array access without args")
 		}
 
 		arg := chunk.Function.Args[0].RawData()
@@ -52,7 +52,7 @@ func createLabel(code *llx.Code, ref int32, labels *llx.Labels, schema *lumi.Sch
 		case types.String:
 			res = "[" + idx.(string) + "]"
 		default:
-			panic("Cannot label array index of type " + arg.Type.Label())
+			panic("cannot label array index of type " + arg.Type.Label())
 		}
 		if parentLabel != "" {
 			res = parentLabel + res
@@ -60,17 +60,17 @@ func createLabel(code *llx.Code, ref int32, labels *llx.Labels, schema *lumi.Sch
 	case "{}":
 		res = parentLabel
 		if len(chunk.Function.Args) != 1 {
-			panic("Don't know how to extract label data from more than one arg!")
+			panic("don't know how to extract label data from more than one arg!")
 		}
 
 		fref := chunk.Function.Args[0]
 		if !types.Type(fref.Type).IsFunction() {
-			panic("Don't know how to extract label data when argument is not a function: " + types.Type(fref.Type).Label())
+			panic("don't know how to extract label data when argument is not a function: " + types.Type(fref.Type).Label())
 		}
 
 		ref, ok := fref.Ref()
 		if !ok {
-			panic("Cannot find function reference for data extraction")
+			panic("cannot find function reference for data extraction")
 		}
 
 		function := code.Functions[ref-1]
@@ -82,7 +82,7 @@ func createLabel(code *llx.Code, ref int32, labels *llx.Labels, schema *lumi.Sch
 	case "if":
 		res = "if"
 		if len(chunk.Function.Args) > 2 {
-			panic("Don't know how to extract label data from more than one arg!")
+			panic("don't know how to extract label data from more than one arg!")
 		}
 
 		// if there are no labels yet
@@ -92,12 +92,12 @@ func createLabel(code *llx.Code, ref int32, labels *llx.Labels, schema *lumi.Sch
 
 		fref := chunk.Function.Args[1]
 		if !types.Type(fref.Type).IsFunction() {
-			panic("Don't know how to extract label data when argument is not a function: " + types.Type(fref.Type).Label())
+			panic("don't know how to extract label data when argument is not a function: " + types.Type(fref.Type).Label())
 		}
 
 		ref, ok := fref.Ref()
 		if !ok {
-			panic("Cannot find function reference for data extraction")
+			panic("cannot find function reference for data extraction")
 		}
 
 		function := code.Functions[ref-1]
@@ -120,7 +120,7 @@ func createLabel(code *llx.Code, ref int32, labels *llx.Labels, schema *lumi.Sch
 // UpdateLabels for the given code under the schema
 func UpdateLabels(code *llx.Code, labels *llx.Labels, schema *lumi.Schema) error {
 	if code == nil {
-		return errors.New("Cannot create labels without code")
+		return errors.New("cannot create labels without code")
 	}
 
 	labelrefs := append(code.Entrypoints, code.Datapoints...)

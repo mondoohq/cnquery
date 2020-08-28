@@ -452,12 +452,12 @@ func runResourceFunction(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int3
 	info := rr.LumiResource()
 	// resource := c.runtime.Registry.Resources[bind.Type]
 	if info == nil {
-		return nil, 0, errors.New("Cannot retrieve resource from the binding to run the raw function")
+		return nil, 0, errors.New("cannot retrieve resource from the binding to run the raw function")
 	}
 
 	resource, ok := c.runtime.Registry.Resources[info.Name]
 	if !ok || resource == nil {
-		return nil, 0, errors.New("Cannot retrieve resource definition for resource '" + info.Name + "'")
+		return nil, 0, errors.New("cannot retrieve resource definition for resource '" + info.Name + "'")
 	}
 
 	// record this watcher on the executors watcher IDs

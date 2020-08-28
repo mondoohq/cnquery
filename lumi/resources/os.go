@@ -95,13 +95,13 @@ func (p *lumiOs) GetUpdates() ([]interface{}, error) {
 	// find suitable system updates
 	um, err := packages.ResolveSystemUpdateManager(p.Runtime.Motor)
 	if um == nil || err != nil {
-		return nil, fmt.Errorf("Could not detect suiteable update manager for platform")
+		return nil, fmt.Errorf("could not detect suiteable update manager for platform")
 	}
 
 	// retrieve all system updates
 	updates, err := um.List()
 	if err != nil {
-		return nil, fmt.Errorf("Could not retrieve updates list for platform")
+		return nil, fmt.Errorf("could not retrieve updates list for platform")
 	}
 
 	// create lumi update resources for each update
