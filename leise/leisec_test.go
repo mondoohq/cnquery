@@ -906,6 +906,14 @@ func TestSuggestions(t *testing.T) {
 		assert.Equal(t, errors.New("cannot find field or resource 'para' in block for type 'sshd.config'"), err)
 	})
 
+	t.Run("field in partial block suggestions", func(t *testing.T) {
+		res, err := Compile("sshd.config { para", schema)
+		assert.Error(t, err)
+		assert.NotNil(t, res.Code)
+		assert.Equal(t, []string{"params"}, res.Suggestions)
+		assert.Equal(t, errors.New("cannot find field or resource 'para' in block for type 'sshd.config'"), err)
+	})
+
 	t.Run("field suggestions on partial map", func(t *testing.T) {
 		res, err := Compile("sshd.config.params.l", schema)
 		assert.Nil(t, res.Code.Entrypoints)

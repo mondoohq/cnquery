@@ -829,8 +829,19 @@ func CompileAST(ast *parser.AST, schema *lumi.Schema) (*llx.CodeBundle, error) {
 // Compile a code piece against a schema into chunky code
 func Compile(input string, schema *lumi.Schema) (*llx.CodeBundle, error) {
 	ast, err := parser.Parse(input)
-	if err != nil {
+	if ast == nil {
 		return nil, err
+	}
+
+	// Special handling for parser errors: We still try to compile it because
+	// we want to get any compiler suggestions for auto-complete / fixing it.
+	// That said, we must return an error either way.
+	if err != nil {
+		res, err2 := CompileAST(ast, schema)
+		if err2 == nil {
+			return res, err
+		}
+		return res, err2
 	}
 
 	res, err := CompileAST(ast, schema)
