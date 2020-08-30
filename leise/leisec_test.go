@@ -922,10 +922,10 @@ func TestSuggestions(t *testing.T) {
 	})
 
 	t.Run("field suggestions on partial map", func(t *testing.T) {
-		res, err := Compile("sshd.config.params.l", schema)
+		res, err := Compile("sshd.config.params.leng", schema)
 		assert.Nil(t, res.Code.Entrypoints)
 		assert.Equal(t, []string{"length"}, res.Suggestions)
-		assert.Equal(t, errors.New("cannot find field 'l' in map[string]string"), err)
+		assert.Equal(t, errors.New("cannot find field 'leng' in map[string]string"), err)
 	})
 }
 

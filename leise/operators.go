@@ -101,7 +101,7 @@ func compileABOperation(c *compiler, id string, call *parser.Call) (int32, *llx.
 func compileComparable(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
 	leftRef, left, right, err := compileABOperation(c, id, call)
 	if err != nil {
-		return types.Nil, errors.New("Failed to compile: " + err.Error())
+		return types.Nil, errors.New("failed to compile: " + err.Error())
 	}
 
 	// find specialized or generalized builtin function

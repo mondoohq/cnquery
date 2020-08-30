@@ -241,7 +241,7 @@ func (p *parser) parseArg() (*Arg, error) {
 	if err != nil {
 		return nil, err
 	}
-	if exp == nil {
+	if exp == nil || (exp.Operand == nil && exp.Operations == nil) {
 		if res.Name != "" {
 			return nil, p.expected("argument", "parseArgument")
 		}
@@ -370,7 +370,7 @@ func (p *parser) parseOperand() (*Operand, error) {
 				if err != nil {
 					return nil, err
 				}
-				if exp == nil {
+				if exp == nil || (exp.Operand == nil && exp.Operations == nil) {
 					break
 				}
 				block = append(block, exp)
