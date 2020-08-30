@@ -376,11 +376,12 @@ func (p *parser) parseOperand() (*Operand, error) {
 				block = append(block, exp)
 			}
 
+			res.Block = block
+
 			if p.token.Value != "}" {
-				return nil, p.expected("'}'", "parseOperand-block")
+				return &res, p.expected("'}'", "parseOperand-block")
 			}
 
-			res.Block = block
 			p.nextToken()
 
 		default:
@@ -492,8 +493,8 @@ func (p *parser) parseExpression() (*Expression, error) {
 
 	// expression:   operand [ op operand ]+
 	res.Operand, err = p.parseOperand()
-	if res.Operand == nil {
-		return nil, err
+	if err != nil {
+		return &res, err
 	}
 
 	var operation *Operation
@@ -537,15 +538,16 @@ func Parse(input string) (*AST, error) {
 	var exp *Expression
 	for {
 		exp, err = thisParser.parseExpression()
-		if err != nil {
-			return nil, err
-		}
 		if exp == nil {
 			break
 		}
+
 		res.Expressions = append(res.Expressions, exp)
+		if err != nil {
+			break
+		}
 	}
-	return &res, nil
+	return &res, err
 }
 
 // Lex the input leise string to a list of tokens
