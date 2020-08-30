@@ -130,11 +130,15 @@ func (e *Expression) processOperators() error {
 
 // processChildOperators of all block, accessor, and function child calls
 func (e *Expression) processChildOperators() error {
-	ops := append([]*Operation{&Operation{Operand: e.Operand}}, e.Operations...)
+	ops := append([]*Operation{{Operand: e.Operand}}, e.Operations...)
 
 	// tackle all command calls recursively
 	for i := range ops {
 		v := ops[i].Operand
+		if v == nil {
+			return errors.New("missing operand in child block")
+		}
+
 		for fi := range v.Block {
 			v.Block[fi].ProcessOperators()
 		}

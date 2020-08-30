@@ -892,6 +892,13 @@ func TestSuggestions(t *testing.T) {
 		assert.Equal(t, errors.New("cannot find resource for identifier 'ssh'"), err)
 	})
 
+	t.Run("type as you go", func(t *testing.T) {
+		res, err := Compile("sshd.", schema)
+		assert.Nil(t, res.Code.Entrypoints)
+		assert.Equal(t, []string(nil), res.Suggestions)
+		assert.Equal(t, errors.New("missing operand in child block"), err)
+	})
+
 	t.Run("field suggestions", func(t *testing.T) {
 		res, err := Compile("sshd.config.para", schema)
 		assert.Nil(t, res.Code.Entrypoints)
