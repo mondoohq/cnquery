@@ -637,6 +637,14 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 			var resType types.Type
 			id := *call.Ident
 
+			// We get this from the parser if the user called the dot-accessor
+			// but didn't provide any values at all. It equates a not found and
+			// we can now just suggest all fields
+			if id == "." {
+				addFieldSuggestions(availableFields(c, typ), "", c.Result)
+				return nil, errors.New("missing field name in accessing " + typ.Label())
+			}
+
 			calls = calls[1:]
 			call = nil
 			if len(calls) > 0 && calls[0].Function != nil {
@@ -649,7 +657,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 			}
 			if !found {
 				addFieldSuggestions(availableFields(c, typ), id, c.Result)
-				return nil, errors.New("cannot find field '" + id + "' in " + typ.Label() + "")
+				return nil, errors.New("cannot find field '" + id + "' in " + typ.Label())
 			}
 
 			typ = resType

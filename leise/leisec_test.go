@@ -895,8 +895,15 @@ func TestSuggestions(t *testing.T) {
 	t.Run("type as you go", func(t *testing.T) {
 		res, err := Compile("sshd.", schema)
 		assert.Nil(t, res.Code.Entrypoints)
-		assert.Equal(t, []string(nil), res.Suggestions)
-		assert.Equal(t, errors.New("missing operand in child block"), err)
+		assert.Equal(t, []string{"config"}, res.Suggestions)
+		assert.Equal(t, errors.New("missing field name in accessing sshd"), err)
+	})
+
+	t.Run("type as you go on list resource", func(t *testing.T) {
+		res, err := Compile("users.", schema)
+		assert.Nil(t, res.Code.Entrypoints)
+		assert.Equal(t, []string{"all", "any", "contains", "length", "list", "one", "where"}, res.Suggestions)
+		assert.Equal(t, errors.New("missing field name in accessing users"), err)
 	})
 
 	t.Run("field suggestions", func(t *testing.T) {
