@@ -310,7 +310,9 @@ func (p *parser) parseOperand() (*Operand, error) {
 		case ".":
 			p.nextToken()
 			if p.token.Type != Ident {
-				return nil, p.expected("identifier", "parseOperand-call")
+				v := "."
+				res.Calls = append(res.Calls, &Call{Ident: &v})
+				return &res, p.expected("identifier", "parseOperand-call")
 			}
 			v := p.token.Value
 			res.Calls = append(res.Calls, &Call{Ident: &v})

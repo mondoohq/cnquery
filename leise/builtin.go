@@ -131,6 +131,23 @@ func fieldNames(resource *lumi.ResourceInfo) []string {
 }
 
 func availableFields(c *compiler, typ types.Type) []string {
+	// resources maintain their own fields and may be list resources
+	if typ.IsResource() {
+		res := fieldNames(c.Schema.Resources[typ.Name()])
+
+		_, err := listResource(c, typ)
+		if err == nil {
+			m := builtinFunctions[typ.Underlying()]
+			for k := range m {
+				res = append(res, k)
+			}
+		}
+
+		sort.Strings(res)
+		return res
+	}
+
+	// everything else
 	m, ok := builtinFunctions[typ.Underlying()]
 	if !ok {
 		return nil
@@ -143,10 +160,6 @@ func availableFields(c *compiler, typ types.Type) []string {
 		idx++
 	}
 
-	if typ.IsResource() {
-		fieldNames := fieldNames(c.Schema.Resources[typ.Name()])
-		res = append(res, fieldNames...)
-	}
 	sort.Strings(res)
 
 	return res
