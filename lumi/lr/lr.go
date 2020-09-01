@@ -85,7 +85,7 @@ type TypedArg struct {
 // Field definition of a resource
 type Field struct {
 	Comments []string   `{ @Comment }`
-	ID       string     `@Ident`
+	ID       string     `@Ident?`
 	Args     *FieldArgs `[ '(' @@ ')' ]`
 	Type     Type       `[ @@ ]`
 }
@@ -129,5 +129,30 @@ func Parse(input string) (*LR, error) {
 	)
 
 	err := parser.Parse(strings.NewReader(input), res)
+
+	// clean up the parsed results
+	for i := range res.Resources {
+		resource := res.Resources[i]
+		if resource.Body == nil {
+			continue
+		}
+		if len(resource.Body.Fields) == 0 {
+			continue
+		}
+
+		// eliminate fields that are comment-only (no ID)
+		arr := resource.Body.Fields
+		ptr := len(arr)
+		for j := 0; j < ptr; j++ {
+			if arr[j].ID == "" {
+				arr[j], arr[ptr-1] = arr[ptr-1], arr[j]
+				ptr--
+			}
+		}
+		if ptr < len(arr) {
+			resource.Body.Fields = arr[:ptr]
+		}
+	}
+
 	return res, err
 }
