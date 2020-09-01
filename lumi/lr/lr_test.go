@@ -42,11 +42,28 @@ func TestParse(t *testing.T) {
 	})
 
 	t.Run("resource with a static field", func(t *testing.T) {
-		parse(t, "name {\nfield type\n}", func(res *LR) {
-			f := []*Field{
-				{ID: "field", Args: nil, Type: Type{SimpleType: &SimpleType{"type"}}},
-			}
+		parse(t, `
+		// resource-docs
+		// with multiline
+		name {
+			// field docs...
+			field type
+		}
+		`, func(res *LR) {
 			assert.Equal(t, "name", res.Resources[0].ID)
+			assert.Equal(t, []string{
+				"// resource-docs",
+				"// with multiline",
+			}, res.Resources[0].Comments)
+
+			f := []*Field{
+				{
+					ID:       "field",
+					Args:     nil,
+					Type:     Type{SimpleType: &SimpleType{"type"}},
+					Comments: []string{"// field docs..."},
+				},
+			}
 			assert.Equal(t, f, res.Resources[0].Body.Fields)
 		})
 	})
@@ -139,11 +156,11 @@ func TestParse(t *testing.T) {
 
 	t.Run("complex resource", func(t *testing.T) {
 		parse(t, `
-name.no {
-	init(i1 string, i2 map[int]int)
-	field map[string]int
-	call(resource.field) []int
-}`, func(res *LR) {
+	name.no {
+		init(i1 string, i2 map[int]int)
+		field map[string]int
+		call(resource.field) []int
+	}`, func(res *LR) {
 			i := []*Init{
 				{Args: []TypedArg{
 					{ID: "i1", Type: Type{SimpleType: &SimpleType{"string"}}},
