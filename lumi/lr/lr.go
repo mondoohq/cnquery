@@ -5,13 +5,12 @@
 package lr
 
 import (
+	"io"
 	"strings"
+	"text/scanner"
 
 	"github.com/alecthomas/participle"
-)
-
-var (
-	parser = participle.MustBuild(&LR{})
+	"github.com/alecthomas/participle/lexer"
 )
 
 // Int number type
@@ -36,6 +35,7 @@ type LR struct {
 
 // Resource in LR
 type Resource struct {
+	Comments []string       `{ @Comment }`
 	ID       string         `@Ident { @'.' @Ident }`
 	ListType *SimplListType `[ '{' [ @@ ]`
 	Body     *ResourceDef   `@@ '}' ]`
@@ -84,9 +84,10 @@ type TypedArg struct {
 
 // Field definition of a resource
 type Field struct {
-	ID   string     `@Ident`
-	Args *FieldArgs `[ '(' @@ ')' ]`
-	Type Type       `[ @@ ]`
+	Comments []string   `{ @Comment }`
+	ID       string     `@Ident`
+	Args     *FieldArgs `[ '(' @@ ')' ]`
+	Type     Type       `[ @@ ]`
 }
 
 // Args list of arguments
@@ -94,9 +95,39 @@ type FieldArgs struct {
 	List []SimpleType `[ @@ { ',' @@ } ]`
 }
 
+// LEXER
+
+type lrLexer struct{}
+
+func (l *lrLexer) Lex(r io.Reader) (lexer.Lexer, error) {
+	var scannerObj scanner.Scanner
+	lexerObj := lexer.LexWithScanner(r, &scannerObj)
+	scannerObj.Mode ^= scanner.SkipComments
+	return lexerObj, nil
+}
+
+func (l *lrLexer) Symbols() map[string]rune {
+	return map[string]rune{
+		"EOF":       scanner.EOF,
+		"Char":      scanner.Char,
+		"Ident":     scanner.Ident,
+		"Int":       scanner.Int,
+		"Float":     scanner.Float,
+		"String":    scanner.String,
+		"RawString": scanner.RawString,
+		"Comment":   scanner.Comment,
+	}
+}
+
 // Parse the input leise string to an AST
 func Parse(input string) (*LR, error) {
 	res := &LR{}
+
+	var lexer lrLexer
+	parser := participle.MustBuild(&LR{},
+		participle.Lexer(&lexer),
+	)
+
 	err := parser.Parse(strings.NewReader(input), res)
 	return res, err
 }
