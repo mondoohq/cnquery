@@ -108,11 +108,17 @@ files.find {
 
 sshd.config {
   init(path string)
+  // file reference for this SSH server config
   file() file
+  // raw content of this SSH server config
   content(file) string
+  // configuration values of this SSH server
   params(content) map[string]string
+  // Ciphers configured for this SSH server
   ciphers(params) []string
+  // MACs configured for this SSH server
   macs(params) []string
+  // Key Exchange Algorithms configured for this SSH server
   kexs(params) []string
 }
 

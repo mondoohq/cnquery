@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -192,12 +193,28 @@ func (s *` + r.structName() + `) Validate() error {
 `
 }
 
+func extractComments(raw []string) (string, string) {
+	if len(raw) == 0 {
+		return "\"\"", "\"\""
+	}
+
+	for i := range raw {
+		raw[i] = strings.Trim(raw[i][2:], " \t\n")
+	}
+
+	title, rest := raw[0], raw[1:]
+	desc := strings.Join(rest, " ")
+
+	return strconv.Quote(title), strconv.Quote(desc)
+}
+
 func (b *goBuilder) goInitInfo(r *Resource) error {
 	fields := ""
 	fieldsMap := make(map[string]*Field)
 	for _, f := range r.Body.Fields {
 		fieldsMap[f.ID] = f
 		refs := "nil"
+
 		if f.Args != nil && len(f.Args.List) > 0 {
 			arglist := []string{}
 			for _, arg := range f.Args.List {
@@ -205,9 +222,12 @@ func (b *goBuilder) goInitInfo(r *Resource) error {
 			}
 			refs = "[]string{" + strings.Join(arglist, ", ") + "}"
 		}
+
+		title, desc := extractComments(f.Comments)
+
 		fields += fmt.Sprintf(
-			`	fields["%s"] = &lumi.Field{Name: "%s", Type: string(%s), Mandatory: %t, Refs: %s}
-`, f.ID, f.ID, f.Type.mondooType(), f.isStatic(), refs)
+			`	fields["%s"] = &lumi.Field{Name: "%s", Type: string(%s), Mandatory: %t, Refs: %s, Title: %s, Desc: %s}
+`, f.ID, f.ID, f.Type.mondooType(), f.isStatic(), refs, title, desc)
 	}
 
 	if len(r.Body.Inits) > 1 {

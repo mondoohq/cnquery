@@ -36,4 +36,6 @@ message Field {
   string type = 2;
   bool mandatory = 3;
   repeated string refs = 4;
+  string title = 20;
+  string desc = 21;
 }
