@@ -17,7 +17,7 @@ var (
 		`|(?P<String>'[^']*'|"[^"]*")` +
 		`|(?P<Comment>//[^\n]*(\n|\z))` +
 		`|(?P<Regex>/([^\\/]+|\\.)+/)` +
-		`|(?P<Op>[-+*/%,:.=<>!|&~])` +
+		`|(?P<Op>[-+*/%,:.=<>!|&~#])` +
 		`|(?P<Call>[(){}\[\]])`,
 	))
 )
@@ -469,6 +469,8 @@ func (p *parser) parseOperation() (*Operation, error) {
 	case "%":
 		res.Operator = OpRemainder
 		p.nextToken()
+	case "#":
+		return nil, errors.New("unknown symbol '#' is not supported")
 	default:
 		return nil, nil
 	}
