@@ -23,13 +23,14 @@ var (
 )
 
 const (
-	Ident   rune = -3
-	Float   rune = -4
-	Int     rune = -6
-	String  rune = -8
-	Comment rune = -9
-	Regex   rune = -11
-	Op      rune = -13
+	Ident    rune = -3
+	Float    rune = -4
+	Int      rune = -6
+	String   rune = -8
+	Comment  rune = -9
+	Regex    rune = -11
+	Op       rune = -13
+	CallType rune = -14
 )
 
 var tokenNames = map[rune]string{
@@ -469,10 +470,8 @@ func (p *parser) parseOperation() (*Operation, error) {
 	case "%":
 		res.Operator = OpRemainder
 		p.nextToken()
-	case "#":
-		return nil, errors.New("unknown symbol '#' is not supported")
 	default:
-		return nil, nil
+		return nil, errors.New("found unexpected operation '" + p.token.Value + "'")
 	}
 
 	op, err := p.parseOperand()
@@ -503,6 +502,10 @@ func (p *parser) parseExpression() (*Expression, error) {
 
 	var operation *Operation
 	for {
+		if p.token.Value == "," {
+			break
+		}
+
 		operation, err = p.parseOperation()
 		if operation == nil {
 			break
@@ -549,6 +552,10 @@ func Parse(input string) (*AST, error) {
 		res.Expressions = append(res.Expressions, exp)
 		if err != nil {
 			break
+		}
+
+		if thisParser.token.Value != "" && thisParser.token.Type == CallType {
+			return &res, errors.New("mismatched symbol '" + thisParser.token.Value + "' at the end of expression")
 		}
 	}
 	return &res, err

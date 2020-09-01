@@ -88,7 +88,24 @@ func TestCompiler_Buggy(t *testing.T) {
 		}, nil},
 		{`mondoo # mondoo`, []*llx.Chunk{
 			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
-		}, errors.New("unknown symbol '#' is not supported")},
+		}, errors.New("found unexpected operation '#'")},
+		{`mondoo }`, []*llx.Chunk{
+			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
+		}, errors.New("mismatched symbol '}' at the end of expression")},
+		{`mondoo ]`, []*llx.Chunk{
+			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
+		}, errors.New("mismatched symbol ']' at the end of expression")},
+		{`mondoo )`, []*llx.Chunk{
+			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
+		}, errors.New("mismatched symbol ')' at the end of expression")},
+		{`mondoo { version }`, []*llx.Chunk{
+			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
+			{Id: "{}", Call: llx.Chunk_FUNCTION, Function: &llx.Function{
+				Type:    string(types.Any),
+				Binding: 1,
+				Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
+			}},
+		}, nil},
 	}
 	for _, v := range data {
 		t.Run(v.code, func(t *testing.T) {
