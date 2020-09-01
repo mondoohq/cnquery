@@ -76,6 +76,33 @@ func TestCompiler_Basics(t *testing.T) {
 	}
 }
 
+func TestCompiler_Buggy(t *testing.T) {
+	data := []struct {
+		code string
+		res  []*llx.Chunk
+		err  error
+	}{
+		{`mondoo mondoo`, []*llx.Chunk{
+			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
+			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
+		}, nil},
+		{`mondoo # mondoo`, []*llx.Chunk{
+			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
+		}, errors.New("unknown symbol '#' is not supported")},
+	}
+	for _, v := range data {
+		t.Run(v.code, func(t *testing.T) {
+			res, err := Compile(v.code, schema)
+			assert.Equal(t, v.err, err)
+			if res.Code != nil {
+				assert.Equal(t, v.res, res.Code.Code)
+			} else {
+				assert.Nil(t, v.res)
+			}
+		})
+	}
+}
+
 func TestCompiler_Simple(t *testing.T) {
 	data := []struct {
 		code string
