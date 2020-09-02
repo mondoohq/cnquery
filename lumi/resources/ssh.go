@@ -12,6 +12,10 @@ import (
 	"go.mondoo.io/mondoo/lumi"
 )
 
+func (s *lumiSshd) id() (string, error) {
+	return "sshd", nil
+}
+
 func (s *lumiSshdConfig) init(args *lumi.Args) (*lumi.Args, SshdConfig, error) {
 	if x, ok := (*args)["path"]; ok {
 		path, ok := x.(string)
