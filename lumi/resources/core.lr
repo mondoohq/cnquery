@@ -281,7 +281,7 @@ rsyslog.conf {
   settings(content) []string
 }
 
-osupdate {
+os.update {
   name string
   category string
   severity string
@@ -298,13 +298,19 @@ os {
   // current uptime
   uptime() string
   // list of available OS updates
-  updates() []osupdate
+  updates() []os.update
   // indicates if a reboot is pending
   rebootpending() bool
   // hostname for this OS
   hostname() string
   // machine ID for this OS
   machineid() string
+}
+
+os.rootcertificates {
+  []certificate(content)
+  files() []file
+  content(files) []string
 }
 
 // a running process
@@ -482,12 +488,6 @@ authorizedkeys.entry {
   label() string
   options() []string
   file file
-}
-
-os.rootcertificates {
-  []certificate(content)
-  files() []file
-  content(files) []string
 }
 
 parse.certificates {

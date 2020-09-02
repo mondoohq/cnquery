@@ -86,7 +86,7 @@ func (p *lumiOs) GetUptime() (int64, error) {
 // 	return nil, errors.New("not implemented")
 // }
 
-func (p *lumiOsupdate) id() (string, error) {
+func (p *lumiOsUpdate) id() (string, error) {
 	name, _ := p.Name()
 	return name, nil
 }
@@ -109,7 +109,7 @@ func (p *lumiOs) GetUpdates() ([]interface{}, error) {
 	log.Debug().Int("updates", len(updates)).Msg("lumi[updates]> found system updates")
 	for i, update := range updates {
 
-		lumiOsUpdate, err := p.Runtime.CreateResource("update",
+		lumiOsUpdate, err := p.Runtime.CreateResource("os.update",
 			"name", update.Name,
 			"severity", update.Severity,
 			"category", update.Category,
@@ -120,7 +120,7 @@ func (p *lumiOs) GetUpdates() ([]interface{}, error) {
 			return nil, err
 		}
 
-		osupdates[i] = lumiOsUpdate.(Osupdate)
+		osupdates[i] = lumiOsUpdate.(OsUpdate)
 	}
 
 	// return the packages as new entries

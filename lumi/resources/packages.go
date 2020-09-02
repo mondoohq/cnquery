@@ -1,9 +1,10 @@
 package resources
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
+
+	"github.com/pkg/errors"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
@@ -104,7 +105,7 @@ func (p *lumiPackages) GetList() ([]interface{}, error) {
 	// retrieve all system packages
 	osPkgs, err := pm.List()
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve package list for platform")
+		return nil, errors.Wrap(err, "could not retrieve package list for platform")
 	}
 	log.Debug().Int("packages", len(osPkgs)).Msg("lumi[packages]> installed packages")
 

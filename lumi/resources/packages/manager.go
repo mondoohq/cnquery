@@ -69,7 +69,7 @@ func ResolveSystemUpdateManager(motor *motor.Motor) (OperatingSystemUpdateManage
 
 	// TODO: use OS family and select package manager
 	switch platform.Name {
-	case "opensuse": // suse family
+	case "opensuse", "sles", "opensuse-leap", "opensuse-tumbleweed": // suse family
 		um = &SuseUpdateManager{Motor: motor}
 	default:
 		return nil, errors.New("your platform is not supported by os updates resource")
