@@ -1,115 +1,192 @@
+// provide contextual info about the mondoo client and environment
 mondoo {
+  // version of mondoo the client is running
   version() string
+  // the build of the mondoo client (e.g. production, development)
   build() string
+  // all resources supported by the language
   resources() []string
 }
 
+// parse provides common parsers (json, ini, certs, etc)
 parse {
   // builtin functions:
   // date(value, format) time
 }
 
+// date and time functions
 time {
+  // the current time on the local system
   now() time
+  // one second, used for durations
   second() time
+  // one minute, used for durations
   minute() time
+  // one hour, used for durations
   hour() time
+  // one day, used for durations
   day() time
 }
 
+// parse INI files
 parse.ini {
   init(path string, delimiter string)
+  // symbol that is separating keys and values
   delimiter() string
+  // file that is being parsed
   file() file
+  // raw content of the file that is parsed
   content(file) string
+  // a map of sections and key-value pairs
   sections(content, delimiter) map[string]map[string]string
+  // a map of parameters that don't belong to sections
   params(sections) map[string]string
 }
 
+// parse JSON files
 parse.json {
   init(path string)
+  // file that is being parsed
   file() file
+  // raw content of the file that is parsed
   content(file) string
+  // the parsed parameters that are defined in this file
   params(content) dict
 }
 
+// common platform information (OS, API, Service)
 platform {
+  // name of the platform or OS
   name string
+  // human-readable name of the platform or OS
   title string
+  // list of platform families that we belong to
   family []string
+  // release or version of the platform or OS
   release string
+  // architecture this OS is running on
   arch string
+  // kind of this platform (API, code, image, package, etc)
   kind string
+  // contextual information about the runtime (bare-metal, cloud, container, etc)
   // TODO: rename to runtime
   execenv string
 }
 
+// results of running a command on the system
 command {
   init(command string)
+  // raw contents of the command
   command string
+  // standard output from running the command
   stdout() string
+  // standard error output from running the command
   stderr() string
+  // exit code the command returned
   exitcode() int
 }
 
-pam.conf {
-  init(path string)
-  files() []file
-  content(files) string
-  services(files) map[string][]string
-}
-
+// results of running a powershell script on the system
 powershell {
   init(script string)
+  // raw contents of the script
   script string
+  // standard output from running the script
   stdout() string
+  // standard error output from running the script
   stderr() string
+  // exit code the script returned
   exitcode() int
 }
 
+// file on the system
 file {
   init(path string)
+  // location of the file on the system
   path string
+  // filename without path prefix of this file
   basename(path) string
+  // path to the folder containing this file
   dirname(path) string
+  // contents of this file
   content(path, exists) string
+  // indicator if this file exists on the system
   exists() bool
+  // permissions for this file
   permissions() file.permissions
+  // size of this file on disk
   size() int
+  // ownership information about the user
   user() user
+  // ownership information about the group
   group() group
 }
 
+// access permissions for a given file
 file.permissions {
+  // raw POSIX mode for the permissions
   mode int
+  // indicator if this file is readable by its owner
   user_readable bool
+  // indicator if this file is writeable by its owner
   user_writeable bool
+  // indicator if this file is executable by its owner
   user_executable bool
+  // indicator if this file is readable by members of the group
   group_readable bool
+  // indicator if this file is writeable by members of the group
   group_writeable bool
+  // indicator if this file is executable by members of the group
   group_executable bool
+  // indicator if this file is readable by others
   other_readable bool
+  // indicator if this file is writeable by others
   other_writeable bool
+  // indicator if this file is executable by others
   other_executable bool
+  // SUID bit indicator
   suid bool
+  // SGID bit indicator
   sgid bool
+  // Sticky bit indicator
   sticky bool
 }
 
+// find files on the system efficiently
 files.find {
   []file
+  // from sets the starting point for the search operation
   from string
+  // xdev indicates if other devices will be searched
   xdev() bool
+  // what types of files will be listed (directories, files, devices, etc)
   type() string
+  // a regular expression for the file search
   regex() string
+  // what permissions the file matches
   permissions() int
+  // search name of the name
   name() string
 }
+
+// PAM configuration (Pluggable Authentication Module)
+pam.conf {
+  init(path string)
+  // a list of files that make up the PAM configuration
+  files() []file
+  // the raw PAM configuration (across all files)
+  content(files) string
+  // a list of services that are configured via PAM
+  services(files) map[string][]string
+}
+
+// SSH server resource
+sshd {}
 
 // SSH server configuration
 sshd.config {
   init(path string)
-  // file reference for this SSH server config
+  // file of this SSH server configuration
   file() file
   // raw content of this SSH server config
   content(file) string
@@ -123,54 +200,84 @@ sshd.config {
   kexs(params) []string
 }
 
+// package on the platform or OS
 package {
   init(name string)
 
+  // name of the package
   name string
+  // current version of the package
   version string
+  // architecture of this package
   arch string
+  // epoch of this package
   epoch string
 
+  // format of this package (e.g. rpm, deb)
   format string
+  // status of this package (e.g. if it is needed)
   status() string
+  // package description
   description string
 
+  // available version
   available string
+  // indicates if this package is installed
   installed bool
+  // indicates if this package is outdated
   outdated() bool
 }
 
+// list of packages on this system
 packages {
   []package
 }
 
+// kernel information for this OS
 kernel {
+  // kernel parameters map
   parameters() map[string]string
+  // list of kernel modules
   modules() []kernel.module
 }
 
+// kernel module information
 kernel.module {
   init(name string)
 
+  // name of the kernel module
   name string
+  // size of the kernel module
   size string
+  // indicates if this module is loaded
   loaded bool
 }
 
+// NTP service configuration
 ntp.conf {
   init(path string)
+  // file of this NTP service configuration
   file() file
+  // raw contents of this NTP service configuration
   content(file) string
+  // list of settings for this NTP service
   settings(content) []string
+  // list of servers for this NTP service
   servers(settings) []string
+  // list of access control restrictions for this NTP service
   restrict(settings) []string
+  // additional information for clock drivers
   fudge(settings) []string
 }
 
+// Rsyslog service configuration
 rsyslog.conf {
   init(path string)
+  // files that make up this Rsyslog service configuration
   files() []file
+  // raw contents of this Rsyslog service configuration
   content(files) string
+  // list of settings for this Rsyslog service
   settings(content) []string
 }
 
@@ -182,18 +289,28 @@ osupdate {
   format string
 }
 
+// Operating System information
 os {
+  // ENV variable contents
   env() map[string]string
+  // PATH variable contents
   path() []string
+  // current uptime
   uptime() string
+  // list of available OS updates
   updates() []osupdate
+  // indicates if a reboot is pending
   rebootpending() bool
+  // hostname for this OS
   hostname() string
+  // machine ID for this OS
   machineid() string
 }
 
+// a running process
 process {
   init(pid int)
+  // PID (process ID)
   pid int
   state() string
   executable() string
@@ -432,11 +549,13 @@ privatekey {
   encrypted() bool
 }
 
+// VMware vSphere resource
 vsphere {
   licenses() []vsphere.license
   datacenters() []vsphere.datacenter
 }
 
+// vSphere license information
 vsphere.license {
   name string
   total int
@@ -448,6 +567,7 @@ esxi {
   vm() vsphere.vm
 }
 
+// vSphere datacenter inventory
 vsphere.datacenter {
   moid string
   name string
@@ -457,6 +577,7 @@ vsphere.datacenter {
   clusters() []vsphere.cluster
 }
 
+// vSphere cluster resource
 vsphere.cluster {
   moid string
   name string
@@ -465,6 +586,7 @@ vsphere.cluster {
   hosts() []vsphere.host
 }
 
+// vSphere host resource
 vsphere.host {
   moid string
   name string
@@ -484,6 +606,7 @@ vsphere.host {
   snmp() map[string]string
 }
 
+// vSphere VM resource
 vsphere.vm {
   moid string
   name string
@@ -492,6 +615,7 @@ vsphere.vm {
   advancedSettings() map[string]string
 }
 
+// vSphere virtual switch resource
 vsphere.vswitch {
   name string
   properties dict
