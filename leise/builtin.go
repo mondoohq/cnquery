@@ -120,10 +120,10 @@ func builtinFunction(typ types.Type, id string) (*compileHandler, error) {
 	return nil, errors.New("cannot find function '" + id + "' for type '" + typ.Label() + "' during compile")
 }
 
-func fieldsInfo(resourceInfo *lumi.ResourceInfo) map[string]llx.Suggestion {
-	res := map[string]llx.Suggestion{}
+func fieldsInfo(resourceInfo *lumi.ResourceInfo) map[string]llx.Documentation {
+	res := map[string]llx.Documentation{}
 	for k, v := range resourceInfo.Fields {
-		res[k] = llx.Suggestion{
+		res[k] = llx.Documentation{
 			Field: k,
 			Title: v.Title,
 			Desc:  v.Desc,
@@ -133,7 +133,7 @@ func fieldsInfo(resourceInfo *lumi.ResourceInfo) map[string]llx.Suggestion {
 	return res
 }
 
-func availableFields(c *compiler, typ types.Type) map[string]llx.Suggestion {
+func availableFields(c *compiler, typ types.Type) map[string]llx.Documentation {
 	// resources maintain their own fields and may be list resources
 	if typ.IsResource() {
 		resourceInfo := c.Schema.Resources[typ.Name()]
@@ -143,7 +143,7 @@ func availableFields(c *compiler, typ types.Type) map[string]llx.Suggestion {
 		if err == nil {
 			m := builtinFunctions[typ.Underlying()]
 			for k := range m {
-				res[k] = llx.Suggestion{
+				res[k] = llx.Documentation{
 					Field: k,
 				}
 			}
@@ -158,10 +158,10 @@ func availableFields(c *compiler, typ types.Type) map[string]llx.Suggestion {
 		return nil
 	}
 
-	res := make(map[string]llx.Suggestion, len(m))
+	res := make(map[string]llx.Documentation, len(m))
 	idx := 0
 	for k := range m {
-		res[k] = llx.Suggestion{
+		res[k] = llx.Documentation{
 			Field: k,
 		}
 		idx++

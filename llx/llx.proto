@@ -49,7 +49,7 @@ message Labels {
   map<string,string> labels = 1;
 }
 
-message Suggestion {
+message Documentation {
   string field = 1;
   string title = 2;
   string desc = 3;
@@ -57,7 +57,7 @@ message Suggestion {
 
 message CodeBundle {
   Code code = 1;
-  repeated Suggestion suggestions = 2;
+  repeated Documentation suggestions = 2;
   string source = 3;
   Labels labels = 4;
 }
