@@ -34,19 +34,19 @@ func addResourceSuggestions(resources map[string]*lumi.ResourceInfo, name string
 	}
 
 	suggestedNames := fuzzy.Find(name, names)
-	res.Suggestions = make([]*llx.Suggestion, len(suggestedNames))
+	res.Suggestions = make([]*llx.Documentation, len(suggestedNames))
 	var info *lumi.ResourceInfo
 	for i := range suggestedNames {
 		field := suggestedNames[i]
 		info = resources[field]
 		if info != nil {
-			res.Suggestions[i] = &llx.Suggestion{
+			res.Suggestions[i] = &llx.Documentation{
 				Field: field,
 				Title: info.Title,
 				Desc:  info.Desc,
 			}
 		} else {
-			res.Suggestions[i] = &llx.Suggestion{
+			res.Suggestions[i] = &llx.Documentation{
 				Field: field,
 			}
 		}
@@ -55,7 +55,7 @@ func addResourceSuggestions(resources map[string]*lumi.ResourceInfo, name string
 	sort.SliceStable(res.Suggestions, func(i, j int) bool { return res.Suggestions[i].Field < res.Suggestions[j].Field })
 }
 
-func addFieldSuggestions(fields map[string]llx.Suggestion, fieldName string, res *llx.CodeBundle) {
+func addFieldSuggestions(fields map[string]llx.Documentation, fieldName string, res *llx.CodeBundle) {
 	names := make([]string, len(fields))
 	i := 0
 	for key := range fields {
@@ -64,7 +64,7 @@ func addFieldSuggestions(fields map[string]llx.Suggestion, fieldName string, res
 	}
 
 	suggestedNames := fuzzy.Find(fieldName, names)
-	res.Suggestions = make([]*llx.Suggestion, len(suggestedNames))
+	res.Suggestions = make([]*llx.Documentation, len(suggestedNames))
 	for i := range suggestedNames {
 		info := fields[suggestedNames[i]]
 		res.Suggestions[i] = &info
