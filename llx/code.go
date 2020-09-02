@@ -67,11 +67,6 @@ func (l *Code) UpdateID() {
 	l.Id = l.checksum()
 }
 
-// AddSuggestion to CodeBundle
-func (l *CodeBundle) AddSuggestion(msg string) {
-	l.Suggestions = append(l.Suggestions, msg)
-}
-
 var comparableOperations = map[string]struct{}{
 	"==": {},
 	"!=": {},

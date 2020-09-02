@@ -29,6 +29,8 @@ message ResourceInfo {
   map<string, Field> fields = 3;
   Init init = 20;
   string list_type = 21;
+  string title = 22;
+  string desc = 23;
 }
 
 message Field {
