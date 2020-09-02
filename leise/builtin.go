@@ -2,9 +2,9 @@ package leise
 
 import (
 	"errors"
-	"sort"
 
 	"go.mondoo.io/mondoo/leise/parser"
+	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/types"
 )
@@ -120,30 +120,35 @@ func builtinFunction(typ types.Type, id string) (*compileHandler, error) {
 	return nil, errors.New("cannot find function '" + id + "' for type '" + typ.Label() + "' during compile")
 }
 
-func fieldNames(resource *lumi.ResourceInfo) []string {
-	res := make([]string, len(resource.Fields))
-	idx := 0
-	for k := range resource.Fields {
-		res[idx] = k
-		idx++
+func fieldsInfo(resourceInfo *lumi.ResourceInfo) map[string]llx.Suggestion {
+	res := map[string]llx.Suggestion{}
+	for k, v := range resourceInfo.Fields {
+		res[k] = llx.Suggestion{
+			Field: k,
+			Title: v.Title,
+			Desc:  v.Desc,
+		}
 	}
+
 	return res
 }
 
-func availableFields(c *compiler, typ types.Type) []string {
+func availableFields(c *compiler, typ types.Type) map[string]llx.Suggestion {
 	// resources maintain their own fields and may be list resources
 	if typ.IsResource() {
-		res := fieldNames(c.Schema.Resources[typ.Name()])
+		resourceInfo := c.Schema.Resources[typ.Name()]
+		res := fieldsInfo(resourceInfo)
 
 		_, err := listResource(c, typ)
 		if err == nil {
 			m := builtinFunctions[typ.Underlying()]
 			for k := range m {
-				res = append(res, k)
+				res[k] = llx.Suggestion{
+					Field: k,
+				}
 			}
 		}
 
-		sort.Strings(res)
 		return res
 	}
 
@@ -153,14 +158,14 @@ func availableFields(c *compiler, typ types.Type) []string {
 		return nil
 	}
 
-	res := make([]string, len(m))
+	res := make(map[string]llx.Suggestion, len(m))
 	idx := 0
 	for k := range m {
-		res[idx] = k
+		res[k] = llx.Suggestion{
+			Field: k,
+		}
 		idx++
 	}
-
-	sort.Strings(res)
 
 	return res
 }

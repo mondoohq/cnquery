@@ -32,7 +32,7 @@ func compileResourceDefault(c *compiler, typ types.Type, ref int32, id string, c
 
 	fieldinfo := resource.Fields[id]
 	if fieldinfo == nil {
-		addFieldSuggestions(fieldNames(resource), id, c.Result)
+		addFieldSuggestions(fieldsInfo(resource), id, c.Result)
 		return "", errors.New("cannot find field '" + id + "' in resource " + resource.Name)
 	}
 

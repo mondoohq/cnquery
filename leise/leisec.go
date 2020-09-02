@@ -25,6 +25,20 @@ type compiler struct {
 	Binding *binding
 }
 
+type suggestions []*llx.Suggestion
+
+func (s suggestions) Len() int {
+	return len(s)
+}
+
+func (s suggestions) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+func (s suggestions) Less(i, j int) bool {
+	return s[i].Title < s[j].Title
+}
+
 func addResourceSuggestions(resources map[string]*lumi.ResourceInfo, name string, res *llx.CodeBundle) {
 	names := make([]string, len(resources))
 	i := 0
@@ -33,13 +47,43 @@ func addResourceSuggestions(resources map[string]*lumi.ResourceInfo, name string
 		i++
 	}
 
-	res.Suggestions = fuzzy.Find(name, names)
-	sort.Strings(res.Suggestions)
+	suggestedNames := fuzzy.Find(name, names)
+	res.Suggestions = make([]*llx.Suggestion, len(names))
+	var info *lumi.ResourceInfo
+	for i := range suggestedNames {
+		field := suggestedNames[i]
+		info = resources[field]
+		if info != nil {
+			res.Suggestions[i] = &llx.Suggestion{
+				Field: field,
+				Title: info.Title,
+				Desc:  info.Desc,
+			}
+		}
+	}
+
+	var list suggestions = res.Suggestions
+	sort.Sort(list)
 }
 
-func addFieldSuggestions(fields []string, fieldName string, res *llx.CodeBundle) {
-	res.Suggestions = fuzzy.Find(fieldName, fields)
-	sort.Strings(res.Suggestions)
+func addFieldSuggestions(fields map[string]llx.Suggestion, fieldName string, res *llx.CodeBundle) {
+	names := make([]string, len(fields))
+	i := 0
+	for key := range fields {
+		names[i] = key
+		i++
+	}
+
+	suggestedNames := fuzzy.Find(fieldName, names)
+	res.Suggestions = make([]*llx.Suggestion, len(suggestedNames))
+	var info llx.Suggestion
+	for i := range suggestedNames {
+		info = fields[suggestedNames[i]]
+		res.Suggestions[i] = &info
+	}
+
+	var list suggestions = res.Suggestions
+	sort.Sort(list)
 }
 
 // func (c *compiler) addAccessor(call *Call, typ types.Type) types.Type {

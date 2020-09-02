@@ -49,9 +49,15 @@ message Labels {
   map<string,string> labels = 1;
 }
 
+message Suggestion {
+  string field = 1;
+  string title = 2;
+  string desc = 3;
+}
+
 message CodeBundle {
   Code code = 1;
-  repeated string suggestions = 2;
+  repeated Suggestion suggestions = 2;
   string source = 3;
   Labels labels = 4;
 }

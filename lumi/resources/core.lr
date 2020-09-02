@@ -106,6 +106,7 @@ files.find {
   name() string
 }
 
+// SSH server configuration
 sshd.config {
   init(path string)
   // file reference for this SSH server config

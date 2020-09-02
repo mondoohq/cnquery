@@ -264,6 +264,8 @@ func (b *goBuilder) goInitInfo(r *Resource) error {
 		listType = `string(types.Resource("` + r.ListType.Type.Type + `"))`
 	}
 
+	title, desc := extractComments(r.Comments)
+
 	b.data += `// initInfo contains all information needed for the resource registration
 func (s *` + r.structName() + `) initInfo() *lumi.ResourceCls {
 	fields := make(map[string]*lumi.Field)
@@ -273,6 +275,8 @@ func (s *` + r.structName() + `) initInfo() *lumi.ResourceCls {
 		Init: ` + init + `,
 		Fields: fields,
 		ListType: ` + listType + `,
+		Title: ` + title + `,
+		Desc: ` + desc + `,
 	}
 	return &lumi.ResourceCls{
 		Factory:      new` + r.interfaceName() + `,
