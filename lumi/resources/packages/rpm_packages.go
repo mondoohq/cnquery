@@ -15,6 +15,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/platform"
 )
@@ -166,15 +167,39 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "could not create local temp directory")
 	}
-	defer os.RemoveAll(rpmTmpDir)
+	// defer os.RemoveAll(rpmTmpDir)
+
+	fs := rpm.motor.Transport.FS()
 
 	// fetch rpm database file and store it in local tmp file
-	f, err := rpm.motor.Transport.FS().Open("/var/lib/rpm/Packages")
+	f, err := fs.Open("/var/lib/rpm/Packages")
 
 	// on opensuse, the directory usr/lib/sysimage/rpm/Packages is used in tar
 	if err != nil && rpm.platform != nil && rpm.platform.IsFamily("suse") {
 		log.Debug().Msg("fallback to opensuse rpm package location")
-		f, err = rpm.motor.Transport.FS().Open("/usr/lib/sysimage/rpm/Packages")
+
+		// iterate over file paths to check if one exists
+		// NOTE: I've seen discussions where those paths are also used for other rpm bases systems
+		// NOTE: It seems like tumbleweed uses a new directory layout. Therefore we would need to copy more?
+		files := []string{
+			"/var/lib/rpm/Packages",
+			"/usr/lib/sysimage/rpm/Packages",
+		}
+		afs := &afero.Afero{Fs: fs}
+		detectedPath := ""
+		for i := range files {
+			ok, err := afs.Exists(files[i])
+			if err == nil && ok {
+				detectedPath = files[i]
+				break
+			}
+		}
+
+		if len(detectedPath) == 0 {
+			return nil, errors.Wrap(err, "could not find rpm packages on suse system")
+		}
+
+		f, err = fs.Open(detectedPath)
 	}
 
 	// throw error if we stil couldn't find the packages file
