@@ -28,7 +28,7 @@ func init() {
 		"*":      compileTransformation,
 		"/":      compileTransformation,
 		"%":      nil,
-		"=":      nil,
+		"=":      compileAssignment,
 		"||":     compileComparable,
 		"&&":     compileComparable,
 		"if":     compileIf,
@@ -96,6 +96,46 @@ func compileABOperation(c *compiler, id string, call *parser.Call) (int32, *llx.
 	}
 
 	return leftRef, left, right, nil
+}
+
+func compileAssignment(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
+	if call == nil {
+		return types.Nil, errors.New("operation needs a function call")
+	}
+
+	if call.Function == nil {
+		return types.Nil, errors.New("operation needs a function call")
+	}
+	if len(call.Function) != 2 {
+		if len(call.Function) < 2 {
+			return types.Nil, errors.New("missing arguments")
+		}
+		return types.Nil, errors.New("too many arguments")
+	}
+
+	varIdent := call.Function[0]
+	varValue := call.Function[1]
+	if varIdent.Name != "" || varValue.Name != "" {
+		return types.Nil, errors.New("calling operations with named arguments is not supported")
+	}
+
+	if varIdent.Value == nil || varIdent.Value.Operand == nil || varIdent.Value.Operand.Value == nil ||
+		varIdent.Value.Operand.Value.Ident == nil {
+		return types.Nil, errors.New("variable name is not defined")
+	}
+	name := *varIdent.Value.Operand.Value.Ident
+
+	ref, err := c.compileAndAddExpression(varValue.Value)
+	if err != nil {
+		return types.Nil, err
+	}
+
+	c.vars[name] = variable{
+		ref: ref,
+		typ: c.Result.Code.Code[ref-1].Type(c.Result.Code),
+	}
+
+	return types.Nil, nil
 }
 
 func compileComparable(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {

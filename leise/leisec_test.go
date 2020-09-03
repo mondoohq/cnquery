@@ -292,6 +292,17 @@ func TestCompiler_OperatorPrecedence(t *testing.T) {
 	}
 }
 
+func TestCompiler_Assignment(t *testing.T) {
+	compile(t, "a = 123", func(res *llx.CodeBundle) {
+		assertPrimitive(t, llx.IntPrimitive(123), res.Code.Code[0])
+		assert.Equal(t, []int32{}, res.Code.Entrypoints)
+	})
+	compile(t, "a = 123\na", func(res *llx.CodeBundle) {
+		assertPrimitive(t, llx.RefPrimitive(1), res.Code.Code[1])
+		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
+	})
+}
+
 func TestCompiler_If(t *testing.T) {
 	compile(t, "if ( mondoo.version != null ) { 123 }", func(res *llx.CodeBundle) {
 		assertFunction(t, "mondoo", nil, res.Code.Code[0])

@@ -19,10 +19,17 @@ type binding struct {
 	Ref  int32
 }
 
+type variable struct {
+	ref int32
+	typ types.Type
+}
+
 type compiler struct {
 	Schema  *lumi.Schema
 	Result  *llx.CodeBundle
 	Binding *binding
+	vars    map[string]variable
+	parent  *compiler
 }
 
 func addResourceSuggestions(resources map[string]*lumi.ResourceInfo, name string, res *llx.CodeBundle) {
@@ -158,6 +165,8 @@ func (c *compiler) compileUnboundBlock(expressions []*parser.Expression, chunk *
 			},
 			Labels: c.Result.Labels,
 		},
+		vars:   map[string]variable{},
+		parent: c,
 	}
 
 	err := blockCompiler.compileExpressions(expressions)
@@ -198,6 +207,8 @@ func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.T
 			Labels: c.Result.Labels,
 		},
 		Binding: &binding{Type: typ, Ref: 1},
+		vars:    map[string]variable{},
+		parent:  c,
 	}
 
 	err := blockCompiler.compileExpressions(expressions)
@@ -531,6 +542,15 @@ func (c *compiler) compileIdentifier(id string, callBinding *binding, calls []*p
 		return restCalls, typ, err
 	}
 
+	variable, ok := c.vars[id]
+	if ok {
+		c.Result.Code.AddChunk(&llx.Chunk{
+			Call:      llx.Chunk_PRIMITIVE,
+			Primitive: llx.RefPrimitive(variable.ref),
+		})
+		return restCalls, variable.typ, nil
+	}
+
 	found, restCalls, typ, err = c.compileResource(id, calls)
 	if found {
 		return restCalls, typ, err
@@ -811,7 +831,25 @@ func (c *compiler) UpdateEntrypoints() {
 	// 0. prep: everything that's an entrypoint is a scoringpoint later on
 	datapoints := map[int32]struct{}{}
 
-	// 1. potentially clean up all inherited entrypoints
+	// 1. remove variable definitions from entrypoints
+	varsByRef := make(map[int32]variable, len(c.vars))
+	for _, v := range c.vars {
+		varsByRef[v.ref] = v
+	}
+
+	max := len(c.Result.Code.Entrypoints)
+	for i := 0; i < max; i++ {
+		ref := c.Result.Code.Entrypoints[i]
+		if _, ok := varsByRef[ref]; ok {
+			c.Result.Code.Entrypoints[i], c.Result.Code.Entrypoints[max-1] = c.Result.Code.Entrypoints[max-1], c.Result.Code.Entrypoints[i]
+			max--
+		}
+	}
+	if max != len(c.Result.Code.Entrypoints) {
+		c.Result.Code.Entrypoints = c.Result.Code.Entrypoints[:max]
+	}
+
+	// 2. potentially clean up all inherited entrypoints
 	// TODO: unclear if this is necessary because the condition may never be met
 	entrypoints := map[int32]struct{}{}
 	for _, ref := range c.Result.Code.Entrypoints {
@@ -822,7 +860,7 @@ func (c *compiler) UpdateEntrypoints() {
 		}
 	}
 
-	// 2. resolve operators
+	// 3. resolve operators
 	for ref := range entrypoints {
 		dps := c.Result.Code.RefDatapoints(ref)
 		if dps != nil {
@@ -861,6 +899,8 @@ func CompileAST(ast *parser.AST, schema *lumi.Schema) (*llx.CodeBundle, error) {
 				Labels: map[string]string{},
 			},
 		},
+		vars:   map[string]variable{},
+		parent: nil,
 	}
 
 	return c.Result, c.CompileParsed(ast)
