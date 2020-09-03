@@ -327,6 +327,10 @@ func (c *LeiseExecutor) runFunction(chunk *Chunk, ref int32) (*RawData, int32, e
 }
 
 func (c *LeiseExecutor) runPrimitive(chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if chunk.Primitive.Type == string(types.Ref) {
+		return c.resolveValue(chunk.Primitive, ref)
+	}
+
 	return chunk.Primitive.RawData(), 0, nil
 }
 
