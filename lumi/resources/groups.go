@@ -61,7 +61,18 @@ func (g *lumiGroup) id() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return strconv.FormatInt(gid, 10), nil
+
+	sid, err := g.Sid()
+	if err != nil {
+		return "", err
+	}
+
+	id := strconv.FormatInt(gid, 10)
+	if len(sid) > 0 {
+		id = sid
+	}
+
+	return "group/" + id, nil
 }
 
 func (g *lumiGroup) GetMembers() ([]interface{}, error) {
@@ -144,7 +155,6 @@ func (g *lumiGroups) GetList() ([]interface{}, error) {
 		group := groups[i]
 
 		lumiGroup, err := g.Runtime.CreateResource("group",
-			"id", group.ID,
 			"name", group.Name,
 			"gid", group.Gid,
 			"sid", group.Sid,
