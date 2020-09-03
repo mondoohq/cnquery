@@ -70,7 +70,7 @@ package vsphere
 // }
 
 // func TestESXi(t *testing.T) {
-// 	client, err := newClient("192.168.56.104", "root", "password1!")
+// 	client, err := newClient("192.168.56.102", "root", "password1!")
 // 	require.NoError(t, err)
 
 // 	// fetch datacenters
@@ -98,17 +98,25 @@ package vsphere
 // 		// test the first host
 // 		e := Esxi{c: client.Client, host: hosts[0]}
 
-// 		switches, err := e.VswitchStandard()
-// 		require.NoError(t, err)
-// 		assert.Equal(t, 2, len(switches))
+// 		// switches, err := e.VswitchStandard()
+// 		// require.NoError(t, err)
+// 		// assert.Equal(t, 2, len(switches))
 
-// 		switches, err = e.VswitchDvs()
-// 		require.NoError(t, err)
-// 		assert.Equal(t, 0, len(switches))
+// 		// switches, err = e.VswitchDvs()
+// 		// require.NoError(t, err)
+// 		// assert.Equal(t, 0, len(switches))
 
 // 		nics, err := e.Vmknics()
 // 		require.NoError(t, err)
 // 		assert.Equal(t, 1, len(nics))
+
+// 		adapters, err := e.Adapters()
+// 		require.NoError(t, err)
+// 		assert.Equal(t, 1, len(adapters))
+
+// 		pauseParams, err := e.ListNicPauseParams()
+// 		require.NoError(t, err)
+// 		assert.Equal(t, 1, len(pauseParams))
 
 // 		// 	// list packages
 // 		// 	vibs, err := e.Vibs()

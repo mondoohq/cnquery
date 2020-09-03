@@ -335,11 +335,27 @@ func (v *lumiVsphereHost) GetAdapters() ([]interface{}, error) {
 		return nil, err
 	}
 
+	pParams, err := esxiClient.ListNicPauseParams()
+	if err != nil {
+		return nil, err
+	}
+
+	pauseParams := map[string]map[string]interface{}{}
+	// sort pause params by nic
+	for i, p := range pParams {
+		nicName := pParams[i]["NIC"].(string)
+		pauseParams[nicName] = p
+	}
+
 	lumiAdapters := make([]interface{}, len(adapters))
 	for i, a := range adapters {
+		nicName := a["Name"].(string)
+		pParams := pauseParams[nicName]
+
 		lumiVswitch, err := v.Runtime.CreateResource("vsphere.vmnic",
-			"name", a["Name"],
+			"name", nicName,
 			"properties", a,
+			"pauseParams", pParams,
 		)
 		if err != nil {
 			return nil, err

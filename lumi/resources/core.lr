@@ -659,6 +659,7 @@ vsphere.vswitch {
 vsphere.vmnic {
   name string
   properties dict
+  pauseParams dict
 }
 
 vsphere.vmknic {
