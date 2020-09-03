@@ -426,7 +426,7 @@ func (p *parser) parseOperation() (*Operation, error) {
 			res.Operator = OpCmp
 			p.nextToken()
 		} else {
-			return nil, p.expected("== or =~", "parseOperation")
+			res.Operator = OpAssignment
 		}
 	case "!":
 		p.nextToken()
