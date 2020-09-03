@@ -1,148 +1,148 @@
-// provide contextual info about the mondoo client and environment
+// Provide contextual info about the mondoo client and environment
 mondoo {
-  // version of mondoo the client is running
+  // Version of mondoo the client is running
   version() string
-  // the build of the mondoo client (e.g. production, development)
+  // The build of the mondoo client (e.g. production, development)
   build() string
-  // all resources supported by the language
+  // All resources supported by the language
   resources() []string
 }
 
-// parse provides common parsers (json, ini, certs, etc)
+// Parse provides common parsers (json, ini, certs, etc)
 parse {
-  // builtin functions:
-  // date(value, format) time
+  // Builtin functions:
+  // Date(value, format) time
 }
 
-// date and time functions
+// Date and time functions
 time {
-  // the current time on the local system
+  // The current time on the local system
   now() time
-  // one second, used for durations
+  // One second, used for durations
   second() time
-  // one minute, used for durations
+  // One minute, used for durations
   minute() time
-  // one hour, used for durations
+  // One hour, used for durations
   hour() time
-  // one day, used for durations
+  // One day, used for durations
   day() time
 }
 
-// parse INI files
+// Parse INI files
 parse.ini {
   init(path string, delimiter string)
-  // symbol that is separating keys and values
+  // Symbol that is separating keys and values
   delimiter() string
-  // file that is being parsed
+  // File that is being parsed
   file() file
-  // raw content of the file that is parsed
+  // Raw content of the file that is parsed
   content(file) string
-  // a map of sections and key-value pairs
+  // A map of sections and key-value pairs
   sections(content, delimiter) map[string]map[string]string
-  // a map of parameters that don't belong to sections
+  // A map of parameters that don't belong to sections
   params(sections) map[string]string
 }
 
-// parse JSON files
+// Parse JSON files
 parse.json {
   init(path string)
-  // file that is being parsed
+  // File that is being parsed
   file() file
-  // raw content of the file that is parsed
+  // Raw content of the file that is parsed
   content(file) string
-  // the parsed parameters that are defined in this file
+  // The parsed parameters that are defined in this file
   params(content) dict
 }
 
-// common platform information (OS, API, Service)
+// Common platform information (OS, API, Service)
 platform {
-  // name of the platform or OS
+  // Name of the platform or OS
   name string
-  // human-readable name of the platform or OS
+  // Human-readable name of the platform or OS
   title string
-  // list of platform families that we belong to
+  // List of platform families that we belong to
   family []string
-  // release or version of the platform or OS
+  // Release or version of the platform or OS
   release string
-  // architecture this OS is running on
+  // Architecture this OS is running on
   arch string
-  // kind of this platform (API, code, image, package, etc)
+  // Kind of this platform (API, code, image, package, etc)
   kind string
-  // contextual information about the runtime (bare-metal, cloud, container, etc)
+  // Contextual information about the runtime (bare-metal, cloud, container, etc)
   // TODO: rename to runtime
   execenv string
 }
 
-// results of running a command on the system
+// Results of running a command on the system
 command {
   init(command string)
-  // raw contents of the command
+  // Raw contents of the command
   command string
-  // standard output from running the command
+  // Standard output from running the command
   stdout() string
-  // standard error output from running the command
+  // Standard error output from running the command
   stderr() string
-  // exit code the command returned
+  // Exit code the command returned
   exitcode() int
 }
 
-// results of running a powershell script on the system
+// Results of running a powershell script on the system
 powershell {
   init(script string)
-  // raw contents of the script
+  // Raw contents of the script
   script string
-  // standard output from running the script
+  // Standard output from running the script
   stdout() string
-  // standard error output from running the script
+  // Standard error output from running the script
   stderr() string
-  // exit code the script returned
+  // Exit code the script returned
   exitcode() int
 }
 
-// file on the system
+// File on the system
 file {
   init(path string)
-  // location of the file on the system
+  // Location of the file on the system
   path string
-  // filename without path prefix of this file
+  // Filename without path prefix of this file
   basename(path) string
-  // path to the folder containing this file
+  // Path to the folder containing this file
   dirname(path) string
-  // contents of this file
+  // Contents of this file
   content(path, exists) string
-  // indicator if this file exists on the system
+  // Indicator if this file exists on the system
   exists() bool
-  // permissions for this file
+  // Permissions for this file
   permissions() file.permissions
-  // size of this file on disk
+  // Size of this file on disk
   size() int
-  // ownership information about the user
+  // Ownership information about the user
   user() user
-  // ownership information about the group
+  // Ownership information about the group
   group() group
 }
 
-// access permissions for a given file
+// Access permissions for a given file
 file.permissions {
-  // raw POSIX mode for the permissions
+  // Raw POSIX mode for the permissions
   mode int
-  // indicator if this file is readable by its owner
+  // Indicator if this file is readable by its owner
   user_readable bool
-  // indicator if this file is writeable by its owner
+  // Indicator if this file is writeable by its owner
   user_writeable bool
-  // indicator if this file is executable by its owner
+  // Indicator if this file is executable by its owner
   user_executable bool
-  // indicator if this file is readable by members of the group
+  // Indicator if this file is readable by members of the group
   group_readable bool
-  // indicator if this file is writeable by members of the group
+  // Indicator if this file is writeable by members of the group
   group_writeable bool
-  // indicator if this file is executable by members of the group
+  // Indicator if this file is executable by members of the group
   group_executable bool
-  // indicator if this file is readable by others
+  // Indicator if this file is readable by others
   other_readable bool
-  // indicator if this file is writeable by others
+  // Indicator if this file is writeable by others
   other_writeable bool
-  // indicator if this file is executable by others
+  // Indicator if this file is executable by others
   other_executable bool
   // SUID bit indicator
   suid bool
@@ -152,31 +152,31 @@ file.permissions {
   sticky bool
 }
 
-// find files on the system efficiently
+// Find files on the system efficiently
 files.find {
   []file
-  // from sets the starting point for the search operation
+  // From sets the starting point for the search operation
   from string
   // xdev indicates if other devices will be searched
   xdev() bool
-  // what types of files will be listed (directories, files, devices, etc)
+  // What types of files will be listed (directories, files, devices, etc)
   type() string
-  // a regular expression for the file search
+  // A regular expression for the file search
   regex() string
-  // what permissions the file matches
+  // What permissions the file matches
   permissions() int
-  // search name of the name
+  // Search name of the name
   name() string
 }
 
 // PAM configuration (Pluggable Authentication Module)
 pam.conf {
   init(path string)
-  // a list of files that make up the PAM configuration
+  // A list of files that make up the PAM configuration
   files() []file
-  // the raw PAM configuration (across all files)
+  // The raw PAM configuration (across all files)
   content(files) string
-  // a list of services that are configured via PAM
+  // A list of services that are configured via PAM
   services(files) map[string][]string
 }
 
@@ -186,11 +186,11 @@ sshd {}
 // SSH server configuration
 sshd.config {
   init(path string)
-  // file of this SSH server configuration
+  // File of this SSH server configuration
   file() file
-  // raw content of this SSH server config
+  // Raw content of this SSH server config
   content(file) string
-  // configuration values of this SSH server
+  // Configuration values of this SSH server
   params(content) map[string]string
   // Ciphers configured for this SSH server
   ciphers(params) []string
@@ -200,84 +200,84 @@ sshd.config {
   kexs(params) []string
 }
 
-// package on the platform or OS
+// Package on the platform or OS
 package {
   init(name string)
 
-  // name of the package
+  // Name of the package
   name string
-  // current version of the package
+  // Current version of the package
   version string
-  // architecture of this package
+  // Architecture of this package
   arch string
-  // epoch of this package
+  // Epoch of this package
   epoch string
 
-  // format of this package (e.g. rpm, deb)
+  // Format of this package (e.g. rpm, deb)
   format string
-  // status of this package (e.g. if it is needed)
+  // Status of this package (e.g. if it is needed)
   status() string
-  // package description
+  // Package description
   description string
 
-  // available version
+  // Available version
   available string
-  // indicates if this package is installed
+  // Indicates if this package is installed
   installed bool
-  // indicates if this package is outdated
+  // Indicates if this package is outdated
   outdated() bool
 }
 
-// list of packages on this system
+// List of packages on this system
 packages {
   []package
 }
 
-// kernel information for this OS
+// Kernel information for this OS
 kernel {
-  // kernel parameters map
+  // Kernel parameters map
   parameters() map[string]string
-  // list of kernel modules
+  // List of kernel modules
   modules() []kernel.module
 }
 
-// kernel module information
+// Kernel module information
 kernel.module {
   init(name string)
 
-  // name of the kernel module
+  // Name of the kernel module
   name string
-  // size of the kernel module
+  // Size of the kernel module
   size string
-  // indicates if this module is loaded
+  // Indicates if this module is loaded
   loaded bool
 }
 
 // NTP service configuration
 ntp.conf {
   init(path string)
-  // file of this NTP service configuration
+  // File of this NTP service configuration
   file() file
-  // raw contents of this NTP service configuration
+  // Raw contents of this NTP service configuration
   content(file) string
-  // list of settings for this NTP service
+  // List of settings for this NTP service
   settings(content) []string
-  // list of servers for this NTP service
+  // List of servers for this NTP service
   servers(settings) []string
-  // list of access control restrictions for this NTP service
+  // List of access control restrictions for this NTP service
   restrict(settings) []string
-  // additional information for clock drivers
+  // Additional information for clock drivers
   fudge(settings) []string
 }
 
 // Rsyslog service configuration
 rsyslog.conf {
   init(path string)
-  // files that make up this Rsyslog service configuration
+  // Files that make up this Rsyslog service configuration
   files() []file
-  // raw contents of this Rsyslog service configuration
+  // Raw contents of this Rsyslog service configuration
   content(files) string
-  // list of settings for this Rsyslog service
+  // List of settings for this Rsyslog service
   settings(content) []string
 }
 
@@ -287,88 +287,124 @@ os {
   env() map[string]string
   // PATH variable contents
   path() []string
-  // current uptime
+  // Current uptime
   uptime() string
-  // list of available OS updates
+  // List of available OS updates
   updates() []os.update
-  // indicates if a reboot is pending
+  // Indicates if a reboot is pending
   rebootpending() bool
-  // hostname for this OS
+  // Hostname for this OS
   hostname() string
-  // machine ID for this OS
+  // Machine ID for this OS
   machineid() string
 }
 
+// Operating System update information
 os.update {
+  // Name of the update
   name string
+  // Category of the update
   category string
+  // Severity of the update
   severity string
+  // Indicates if a restart is required
   restart bool
+  // Package format for this update
   format string
 }
 
+// Operating System root certificates
 os.rootcertificates {
   []certificate(content)
+  // List of files that define these certificates
   files() []file
   content(files) []string
 }
 
-// a running process
+// Process on this system
 process {
   init(pid int)
   // PID (process ID)
   pid int
+  // State of the process (sleeping, running, etc)
   state() string
+  // Executable that is running this process
   executable() string
+  // Full command used to run this process
   command() string
+  // Map of additional flags
   flags() map[string]string
 }
 
+// Processes available on this system
 processes {
   []process
 }
 
+// User on this system
 user {
   init(id string)
-  id string
+  // User ID
   uid int
+  // User's Group ID
   gid int
+  // User's Security Identifier (Windows)
   sid string
+  // Name of the user
   name string
+  // Home folder
   home string
+  // Default shell configured
   shell string
+  // Indicates if the user is enabled
   enabled bool
+  // List of authorized keys
   authorizedkeys() authorizedkeys
+  // List of SSH keys
   sshkeys() []privatekey
 }
 
+// Users configured on this system
 users {
   []user
 }
 
+// Service on this system
 service {
   init(name string)
+  // Name of this service
   name string
+  // Service description
   description() string
+  // Is it installed?
   installed() bool
+  // Is it running?
   running() bool
+  // Is it enabled? (start at boot)
   enabled() bool
+  // Type information
   type() string
 }
 
+// Services configured on this system
 services {
   []service
 }
 
+// Group on this system
 group {
   init(id string)
-  id string
+  // Group ID
   gid int
+  // Group's Security Identifier (Windows)
   sid string
+  // Name of this group
   name string
+  // Users who are members of this group
   members() []user
 }
 
+// Groups configured on this system
 groups {
   []group
 }

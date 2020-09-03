@@ -2,6 +2,7 @@ package resources
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
@@ -97,7 +98,11 @@ func (u *lumiUser) init(args *lumi.Args) (*lumi.Args, User, error) {
 }
 
 func (u *lumiUser) id() (string, error) {
-	return u.Id()
+	uid, err := u.Uid()
+	if err != nil {
+		return "", err
+	}
+	return strconv.FormatInt(uid, 10), nil
 }
 
 func (u *lumiUsers) id() (string, error) {
