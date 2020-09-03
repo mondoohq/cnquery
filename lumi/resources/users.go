@@ -10,7 +10,6 @@ import (
 )
 
 const (
-	USER_CACHE_ID       = "id"
 	USER_CACHE_UID      = "uid"
 	USER_CACHE_USERNAME = "name"
 	USER_CACHE_GID      = "gid"
@@ -21,7 +20,6 @@ const (
 )
 
 func copyUserDataToLumiArgs(user *users.User, args *lumi.Args) error {
-	(*args)[USER_CACHE_ID] = user.ID
 	(*args)[USER_CACHE_USERNAME] = user.Name
 	(*args)[USER_CACHE_UID] = user.Uid
 	(*args)[USER_CACHE_GID] = user.Gid
@@ -33,7 +31,20 @@ func copyUserDataToLumiArgs(user *users.User, args *lumi.Args) error {
 }
 
 func (u *lumiUser) init(args *lumi.Args) (*lumi.Args, User, error) {
-	idValue, ok := (*args)[USER_CACHE_ID]
+	idValue := ""
+	uidValue, uidOk := (*args)[USER_CACHE_UID]
+	if uidOk {
+		idValue = strconv.FormatInt(uidValue.(int64), 10)
+	}
+	// NOTE: windows send uid -1 therefore the value is set, but linux does not return a value for sid
+	sidValue, sidOk := (*args)[USER_CACHE_SID]
+	if sidOk {
+		sid := sidValue.(string)
+		if len(sid) > 0 {
+			idValue = sid
+		}
+	}
+	ok := uidOk || sidOk
 
 	// check if additional userdata is provided
 	_, gok := (*args)[USER_CACHE_GID]
@@ -47,7 +58,7 @@ func (u *lumiUser) init(args *lumi.Args) (*lumi.Args, User, error) {
 			return nil, nil, errors.New("user> cannot find user manager")
 		}
 
-		id := idValue.(string)
+		id := idValue
 
 		// search for the user
 		user, err := um.User(id)
@@ -102,7 +113,18 @@ func (u *lumiUser) id() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return strconv.FormatInt(uid, 10), nil
+
+	sid, err := u.Sid()
+	if err != nil {
+		return "", err
+	}
+
+	id := strconv.FormatInt(uid, 10)
+	if len(sid) > 0 {
+		id = sid
+	}
+
+	return "user/" + id, nil
 }
 
 func (u *lumiUsers) id() (string, error) {
@@ -132,7 +154,6 @@ func (u *lumiUsers) GetList() ([]interface{}, error) {
 		user := users[i]
 
 		lumiUser, err := u.Runtime.CreateResource("user",
-			USER_CACHE_ID, user.ID,
 			USER_CACHE_USERNAME, user.Name,
 			USER_CACHE_UID, user.Uid,
 			USER_CACHE_GID, user.Gid,

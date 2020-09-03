@@ -343,7 +343,6 @@ processes {
 
 // User on this system
 user {
-  init(id string)
   // User ID
   uid int
   // User's Group ID
