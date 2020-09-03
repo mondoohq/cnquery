@@ -74,6 +74,7 @@ func (esxi *Esxi) VswitchDvs() ([]map[string]interface{}, error) {
 	return esxiValuesSliceToDict(res.Values), nil
 }
 
+// Adapters will list the Physical NICs currently installed and loaded on the system.
 // (Get-EsxCli).network.nic.list.Invoke()
 func (esxi *Esxi) Adapters() ([]map[string]interface{}, error) {
 	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
@@ -82,6 +83,22 @@ func (esxi *Esxi) Adapters() ([]map[string]interface{}, error) {
 	}
 
 	res, err := e.Run([]string{"network", "nic", "list"})
+	if err != nil {
+		return nil, err
+	}
+
+	return esxiValuesSliceToDict(res.Values), nil
+}
+
+// List pause parameters of all NICs
+// Usage esxcli network nic pauseParams list
+func (esxi *Esxi) ListNicPauseParams() ([]map[string]interface{}, error) {
+	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := e.Run([]string{"network", "nic", "pauseParams", "list"})
 	if err != nil {
 		return nil, err
 	}
