@@ -2,6 +2,7 @@ package resources
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
@@ -56,7 +57,11 @@ func (g *lumiGroup) init(args *lumi.Args) (*lumi.Args, Group, error) {
 }
 
 func (g *lumiGroup) id() (string, error) {
-	return g.Id()
+	gid, err := g.Gid()
+	if err != nil {
+		return "", err
+	}
+	return strconv.FormatInt(gid, 10), nil
 }
 
 func (g *lumiGroup) GetMembers() ([]interface{}, error) {
