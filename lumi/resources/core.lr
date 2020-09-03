@@ -281,14 +281,6 @@ rsyslog.conf {
   settings(content) []string
 }
 
-os.update {
-  name string
-  category string
-  severity string
-  restart bool
-  format string
-}
-
 // Operating System information
 os {
   // ENV variable contents
@@ -305,6 +297,14 @@ os {
   hostname() string
   // machine ID for this OS
   machineid() string
+}
+
+os.update {
+  name string
+  category string
+  severity string
+  restart bool
+  format string
 }
 
 os.rootcertificates {
