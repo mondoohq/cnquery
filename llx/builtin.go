@@ -22,7 +22,35 @@ var BuiltinFunctions map[types.Type]map[string]chunkHandler
 
 func init() {
 	BuiltinFunctions = map[types.Type]map[string]chunkHandler{
+		types.Nil: {
+			//
+			string("==" + types.Nil):          {f: chunkEqTrue, Label: "=="},
+			string("!=" + types.Nil):          {f: chunkNeqFalse, Label: "!="},
+			string("==" + types.Bool):         {f: chunkEqFalse, Label: "=="},
+			string("!=" + types.Bool):         {f: chunkNeqTrue, Label: "!="},
+			string("==" + types.Int):          {f: chunkEqFalse, Label: "=="},
+			string("!=" + types.Int):          {f: chunkNeqTrue, Label: "!="},
+			string("==" + types.Float):        {f: chunkEqFalse, Label: "=="},
+			string("!=" + types.Float):        {f: chunkNeqTrue, Label: "!="},
+			string("==" + types.String):       {f: chunkEqFalse, Label: "=="},
+			string("!=" + types.String):       {f: chunkNeqTrue, Label: "!="},
+			string("==" + types.Regex):        {f: chunkEqFalse, Label: "=="},
+			string("!=" + types.Regex):        {f: chunkNeqTrue, Label: "!="},
+			string("==" + types.Time):         {f: chunkEqFalse, Label: "=="},
+			string("!=" + types.Time):         {f: chunkNeqTrue, Label: "!="},
+			string("==" + types.Dict):         {f: chunkEqFalse, Label: "=="},
+			string("!=" + types.Dict):         {f: chunkNeqTrue, Label: "!="},
+			string("==" + types.ArrayLike):    {f: chunkEqFalse, Label: "=="},
+			string("!=" + types.ArrayLike):    {f: chunkNeqTrue, Label: "!="},
+			string("==" + types.MapLike):      {f: chunkEqFalse, Label: "=="},
+			string("!=" + types.MapLike):      {f: chunkNeqTrue, Label: "!="},
+			string("==" + types.ResourceLike): {f: chunkEqFalse, Label: "=="},
+			string("!=" + types.ResourceLike): {f: chunkNeqTrue, Label: "!="},
+			string("==" + types.FunctionLike): {f: chunkEqFalse, Label: "=="},
+			string("!=" + types.FunctionLike): {f: chunkNeqTrue, Label: "!="},
+		},
 		types.Bool: {
+			//
 			string("==" + types.Nil):                 {f: boolCmpNil, Label: "=="},
 			string("!=" + types.Nil):                 {f: boolNotNil, Label: "!="},
 			string("==" + types.Bool):                {f: boolCmpBool, Label: "=="},

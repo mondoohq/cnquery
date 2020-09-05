@@ -89,6 +89,33 @@ func dataOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, typ types.
 	return f(bind.Value, v.Value), 0, nil
 }
 
+// for equality and inequality checks that are pre-determined
+// we need to catch the case where both values end up nil
+
+func chunkEqTrue(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, func(a interface{}, b interface{}) bool {
+		return true
+	})
+}
+
+func chunkEqFalse(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, func(a interface{}, b interface{}) bool {
+		return false
+	})
+}
+
+func chunkNeqFalse(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolNotOp(c, bind, chunk, ref, func(a interface{}, b interface{}) bool {
+		return true
+	})
+}
+
+func chunkNeqTrue(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolNotOp(c, bind, chunk, ref, func(a interface{}, b interface{}) bool {
+		return false
+	})
+}
+
 // raw operator handling
 // ==   !=
 
