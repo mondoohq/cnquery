@@ -593,11 +593,12 @@ func (c *compiler) compileValue(val *parser.Value) (*llx.Primitive, error) {
 }
 
 func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, error) {
-	calls := operand.Calls
 	var err error
 	var res *llx.Primitive
 	var typ types.Type
 	var ref int32
+
+	calls := operand.Calls
 
 	// value:        bool | string | regex | number | array | map | ident
 	// so all simple values are compiled into primitives and identifiers
