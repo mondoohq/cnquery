@@ -106,6 +106,7 @@ func TestCompiler_Buggy(t *testing.T) {
 				Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
 			}},
 		}, nil},
+		{`users.list[]`, nil, errors.New("missing operand in child block")},
 	}
 	for _, v := range data {
 		t.Run(v.code, func(t *testing.T) {

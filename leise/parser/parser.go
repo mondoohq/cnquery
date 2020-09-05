@@ -242,7 +242,7 @@ func (p *parser) parseArg() (*Arg, error) {
 	if err != nil {
 		return nil, err
 	}
-	if exp == nil || (exp.Operand == nil && exp.Operations == nil) {
+	if exp == nil {
 		if res.Name != "" {
 			return nil, p.expected("argument", "parseArgument")
 		}
@@ -512,6 +512,11 @@ func (p *parser) parseExpression() (*Expression, error) {
 		}
 		res.Operations = append(res.Operations, operation)
 	}
+
+	if res.Operand == nil && res.Operations == nil {
+		return nil, nil
+	}
+
 	return &res, err
 }
 
