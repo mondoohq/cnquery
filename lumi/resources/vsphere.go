@@ -466,6 +466,7 @@ func (v *lumiVsphereHost) GetKernelModules() ([]interface{}, error) {
 			"modulefile", m.ModuleFile,
 			"version", m.Version,
 			"loaded", m.Loaded,
+			"license", m.License,
 			"enabled", m.Enabled,
 			"signedStatus", m.SignedStatus,
 			"signatureDigest", m.SignatureDigest,
