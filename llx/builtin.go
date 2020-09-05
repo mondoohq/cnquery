@@ -23,7 +23,7 @@ var BuiltinFunctions map[types.Type]map[string]chunkHandler
 func init() {
 	BuiltinFunctions = map[types.Type]map[string]chunkHandler{
 		types.Nil: {
-			//
+			// == / !=
 			string("==" + types.Nil):          {f: chunkEqTrue, Label: "=="},
 			string("!=" + types.Nil):          {f: chunkNeqFalse, Label: "!="},
 			string("==" + types.Bool):         {f: chunkEqFalse, Label: "=="},
@@ -50,39 +50,55 @@ func init() {
 			string("!=" + types.FunctionLike): {f: chunkNeqTrue, Label: "!="},
 		},
 		types.Bool: {
-			//
+			// == / !=
 			string("==" + types.Nil):                 {f: boolCmpNil, Label: "=="},
 			string("!=" + types.Nil):                 {f: boolNotNil, Label: "!="},
 			string("==" + types.Bool):                {f: boolCmpBool, Label: "=="},
 			string("!=" + types.Bool):                {f: boolNotBool, Label: "!="},
+			string("==" + types.Int):                 {f: chunkEqFalse, Label: "=="},
+			string("!=" + types.Int):                 {f: chunkNeqTrue, Label: "!="},
+			string("==" + types.Float):               {f: chunkEqFalse, Label: "=="},
+			string("!=" + types.Float):               {f: chunkNeqTrue, Label: "!="},
 			string("==" + types.String):              {f: boolCmpString, Label: "=="},
 			string("!=" + types.String):              {f: boolNotString, Label: "!="},
 			string("==" + types.Regex):               {f: boolCmpRegex, Label: "=="},
 			string("!=" + types.Regex):               {f: boolNotRegex, Label: "!="},
+			string("==" + types.Time):                {f: chunkEqFalse, Label: "=="},
+			string("!=" + types.Time):                {f: chunkNeqTrue, Label: "!="},
 			string("==" + types.Dict):                {f: boolCmpDict, Label: "=="},
 			string("!=" + types.Dict):                {f: boolNotDict, Label: "!="},
+			string("==" + types.ArrayLike):           {f: chunkEqFalse, Label: "=="},
+			string("!=" + types.ArrayLike):           {f: chunkNeqTrue, Label: "!="},
 			string("==" + types.Array(types.Bool)):   {f: boolCmpBoolarray, Label: "=="},
 			string("!=" + types.Array(types.Bool)):   {f: boolNotBoolarray, Label: "!="},
 			string("==" + types.Array(types.String)): {f: boolCmpStringarray, Label: "=="},
 			string("!=" + types.Array(types.String)): {f: boolNotStringarray, Label: "!="},
-			string("&&" + types.Bool):                {f: boolAndBool, Label: "&&"},
-			string("||" + types.Bool):                {f: boolOrBool, Label: "||"},
-			string("&&" + types.Int):                 {f: boolAndInt, Label: "&&"},
-			string("||" + types.Int):                 {f: boolOrInt, Label: "||"},
-			string("&&" + types.Float):               {f: boolAndFloat, Label: "&&"},
-			string("||" + types.Float):               {f: boolOrFloat, Label: "||"},
-			string("&&" + types.String):              {f: boolAndString, Label: "&&"},
-			string("||" + types.String):              {f: boolOrString, Label: "||"},
-			string("&&" + types.Regex):               {f: boolAndRegex, Label: "&&"},
-			string("||" + types.Regex):               {f: boolOrRegex, Label: "||"},
-			string("&&" + types.Time):                {f: boolAndTime, Label: "&&"},
-			string("||" + types.Time):                {f: boolOrTime, Label: "||"},
-			string("&&" + types.Dict):                {f: boolAndDict, Label: "&&"},
-			string("||" + types.Dict):                {f: boolOrDict, Label: "||"},
-			string("&&" + types.ArrayLike):           {f: boolAndArray, Label: "&&"},
-			string("||" + types.ArrayLike):           {f: boolOrArray, Label: "||"},
+			string("==" + types.MapLike):             {f: chunkEqFalse, Label: "=="},
+			string("!=" + types.MapLike):             {f: chunkNeqTrue, Label: "!="},
+			string("==" + types.ResourceLike):        {f: chunkEqFalse, Label: "=="},
+			string("!=" + types.ResourceLike):        {f: chunkNeqTrue, Label: "!="},
+			string("==" + types.FunctionLike):        {f: chunkEqFalse, Label: "=="},
+			string("!=" + types.FunctionLike):        {f: chunkNeqTrue, Label: "!="},
+			//
+			string("&&" + types.Bool):      {f: boolAndBool, Label: "&&"},
+			string("||" + types.Bool):      {f: boolOrBool, Label: "||"},
+			string("&&" + types.Int):       {f: boolAndInt, Label: "&&"},
+			string("||" + types.Int):       {f: boolOrInt, Label: "||"},
+			string("&&" + types.Float):     {f: boolAndFloat, Label: "&&"},
+			string("||" + types.Float):     {f: boolOrFloat, Label: "||"},
+			string("&&" + types.String):    {f: boolAndString, Label: "&&"},
+			string("||" + types.String):    {f: boolOrString, Label: "||"},
+			string("&&" + types.Regex):     {f: boolAndRegex, Label: "&&"},
+			string("||" + types.Regex):     {f: boolOrRegex, Label: "||"},
+			string("&&" + types.Time):      {f: boolAndTime, Label: "&&"},
+			string("||" + types.Time):      {f: boolOrTime, Label: "||"},
+			string("&&" + types.Dict):      {f: boolAndDict, Label: "&&"},
+			string("||" + types.Dict):      {f: boolOrDict, Label: "||"},
+			string("&&" + types.ArrayLike): {f: boolAndArray, Label: "&&"},
+			string("||" + types.ArrayLike): {f: boolOrArray, Label: "||"},
 		},
 		types.Int: {
+			// == / !=
 			string("==" + types.Nil):                 {f: intCmpNil, Label: "=="},
 			string("!=" + types.Nil):                 {f: intNotNil, Label: "!="},
 			string("==" + types.Int):                 {f: intCmpInt, Label: "=="},
@@ -132,6 +148,7 @@ func init() {
 			string("*" + types.Time):                 {f: intTimesTime, Label: "*", Typ: types.Time},
 		},
 		types.Float: {
+			// == / !=
 			string("==" + types.Nil):                 {f: floatCmpNil, Label: "=="},
 			string("!=" + types.Nil):                 {f: floatNotNil, Label: "!="},
 			string("==" + types.Float):               {f: floatCmpFloat, Label: "=="},
@@ -180,6 +197,7 @@ func init() {
 			string("||" + types.ArrayLike):           {f: floatOrArray, Label: "||"},
 		},
 		types.String: {
+			// == / !=
 			string("==" + types.Nil):                 {f: stringCmpNil, Label: "=="},
 			string("!=" + types.Nil):                 {f: stringNotNil, Label: "!="},
 			string("==" + types.String):              {f: stringCmpString, Label: "=="},
@@ -244,6 +262,7 @@ func init() {
 			string("split"):    {f: stringSplit, Label: "split"},
 		},
 		types.Regex: {
+			// == / !=
 			string("==" + types.Nil):                 {f: stringCmpNil, Label: "=="},
 			string("!=" + types.Nil):                 {f: stringNotNil, Label: "!="},
 			string("==" + types.Regex):               {f: stringCmpString, Label: "=="},
