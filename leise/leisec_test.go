@@ -3,6 +3,7 @@ package leise
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -934,62 +935,62 @@ func TestChecksums(t *testing.T) {
 }
 
 func TestSuggestions(t *testing.T) {
-	t.Run("no suggestions", func(t *testing.T) {
-		res, err := Compile("notthere", schema)
-		assert.Nil(t, res.Code.Entrypoints)
-		assert.Empty(t, res.Suggestions)
-		assert.Equal(t, errors.New("cannot find resource for identifier 'notthere'"), err)
-	})
+	tests := []struct {
+		code        string
+		suggestions []string
+		err         error
+	}{
+		{
+			"does_not_get_suggestions", []string{},
+			errors.New("cannot find resource for identifier 'does_not_get_suggestions'"),
+		},
+		{
+			// resource suggestions
+			"ssh", []string{"sshd", "sshd.config", "vsphere.vswitch"},
+			errors.New("cannot find resource for identifier 'ssh'"),
+		},
+		{
+			// resource with empty field call
+			"sshd.", []string{"config"},
+			errors.New("missing field name in accessing sshd"),
+		},
+		{
+			// list resource with empty field call
+			"users.", []string{"all", "any", "contains", "length", "list", "one", "where"},
+			errors.New("missing field name in accessing users"),
+		},
+		{
+			// resource with partial field call
+			"sshd.config.para", []string{"params"},
+			errors.New("cannot find field 'para' in sshd.config"),
+		},
+		{
+			// resource with partial field call in block
+			"sshd.config { para }", []string{"params"},
+			errors.New("cannot find field or resource 'para' in block for type 'sshd.config'"),
+		},
+		{
+			// native type function call
+			"sshd.config.params.leng", []string{"length"},
+			errors.New("cannot find field 'leng' in map[string]string"),
+		},
+	}
 
-	t.Run("resource suggestions", func(t *testing.T) {
-		res, err := Compile("ssh", schema)
-		assert.Nil(t, res.Code.Entrypoints)
-		assert.Equal(t, []string{"sshd", "sshd.config", "vsphere.vswitch"}, res.Suggestions)
-		assert.Equal(t, errors.New("cannot find resource for identifier 'ssh'"), err)
-	})
+	for i := range tests {
+		cur := tests[i]
+		t.Run(cur.code, func(t *testing.T) {
+			res, err := Compile(cur.code, schema)
+			assert.Nil(t, res.Code.Entrypoints)
+			assert.Equal(t, cur.err, err)
 
-	t.Run("type as you go", func(t *testing.T) {
-		res, err := Compile("sshd.", schema)
-		assert.Nil(t, res.Code.Entrypoints)
-		assert.Equal(t, []string{"config"}, res.Suggestions)
-		assert.Equal(t, errors.New("missing field name in accessing sshd"), err)
-	})
-
-	t.Run("type as you go on list resource", func(t *testing.T) {
-		res, err := Compile("users.", schema)
-		assert.Nil(t, res.Code.Entrypoints)
-		assert.Equal(t, []string{"all", "any", "contains", "length", "list", "one", "where"}, res.Suggestions)
-		assert.Equal(t, errors.New("missing field name in accessing users"), err)
-	})
-
-	t.Run("field suggestions", func(t *testing.T) {
-		res, err := Compile("sshd.config.para", schema)
-		assert.Nil(t, res.Code.Entrypoints)
-		assert.Equal(t, []string{"params"}, res.Suggestions)
-		assert.Equal(t, errors.New("cannot find field 'para' in sshd.config"), err)
-	})
-
-	t.Run("field in block suggestions", func(t *testing.T) {
-		res, err := Compile("sshd.config { para }", schema)
-		assert.Nil(t, res.Code.Entrypoints)
-		assert.Equal(t, []string{"params"}, res.Suggestions)
-		assert.Equal(t, errors.New("cannot find field or resource 'para' in block for type 'sshd.config'"), err)
-	})
-
-	t.Run("field in partial block suggestions", func(t *testing.T) {
-		res, err := Compile("sshd.config { para", schema)
-		assert.Error(t, err)
-		assert.NotNil(t, res.Code)
-		assert.Equal(t, []string{"params"}, res.Suggestions)
-		assert.Equal(t, errors.New("cannot find field or resource 'para' in block for type 'sshd.config'"), err)
-	})
-
-	t.Run("field suggestions on partial map", func(t *testing.T) {
-		res, err := Compile("sshd.config.params.leng", schema)
-		assert.Nil(t, res.Code.Entrypoints)
-		assert.Equal(t, []string{"length"}, res.Suggestions)
-		assert.Equal(t, errors.New("cannot find field 'leng' in map[string]string"), err)
-	})
+			suggestions := make([]string, len(res.Suggestions))
+			for i := range res.Suggestions {
+				suggestions[i] = res.Suggestions[i].Field
+			}
+			sort.Strings(suggestions)
+			assert.Equal(t, cur.suggestions, suggestions)
+		})
+	}
 }
 
 func TestCompiler_Error(t *testing.T) {
