@@ -279,6 +279,8 @@ type EsxiKernelModule struct {
 	Loaded               bool
 }
 
+// KernelModules
+//
 // ($ESXCli).system.module.list()
 // IsEnabled IsLoaded Name
 // --------- -------- ----
