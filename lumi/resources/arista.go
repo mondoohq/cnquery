@@ -391,12 +391,12 @@ func (a *lumiAristaEosStp) GetMstInstances() ([]interface{}, error) {
 		for ifacek := range mstInstance.Interfaces {
 			iface := mstInstance.Interfaces[ifacek]
 
-			inconsistentFeatures, err := jsonToDict(mstInstance.Bridge)
+			inconsistentFeatures, err := jsonToDict(iface.InconsistentFeatures)
 			if err != nil {
 				return nil, err
 			}
 
-			detail, err := jsonToDict(mstInstance.Bridge)
+			detail, err := jsonToDict(iface.Detail)
 			if err != nil {
 				return nil, err
 			}
