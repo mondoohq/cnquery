@@ -1276,6 +1276,7 @@ azurerm.resource {
 
 azurerm.compute {
   vms() []azurerm.compute.vm
+  // lists all the disks under a subscription
   disks() []azurerm.compute.disk
 }
 
@@ -1291,16 +1292,27 @@ azurerm.compute.vm {
   dataDisks() []azurerm.compute.disk
 }
 
+// Azure disk resource
 azurerm.compute.disk {
+  // Disk resource id
   id string
+  // Disk resource name
   name string
+  // Disk resource location
   location string
+  // Disk resource tags
   tags map[string]string
+  // Disk resource type
   type string
+  // A relative URI containing the ID of the VM that has the disk attached
   managedBy string
+  // List of relative URIs containing the IDs of the VMs that have the disk attached
   managedByExtended []string
+  // The logical zone list for disk
   zones []string
+  // The disk sku name and tier
   sku dict
+  // Disk resource properties
   properties dict
 }
 
