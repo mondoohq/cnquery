@@ -715,108 +715,188 @@ esxi.ntpconfig {
   config []string
 }
 
+// Arista EOS resource
 arista.eos {
+  // EOS system configuration
   systemConfig() map[string]string
+  // IP interfaces
   ipInterfaces() []arista.eos.ipInterface
+  // Details related to interfaces
   interfaces() []arista.eos.interface
+  // Software and hardware versions
   version() dict
+  // The system hostname
   hostname() string
+  // The systems fqdn
   fqdn() string
+  // Local user configuration
   users() []arista.eos.user
+  // All user-defined and built-in roles
   roles() []arista.eos.role
+  // Details on SNMP operation
   snmp() arista.eos.snmpSetting
+  // Show NTP status
   ntp() arista.eos.ntpSetting
 }
 
+// Arista EOS system’s operating configuration
 arista.eos.runningConfig {
+  // returns EOS running-config
   content() string
 }
 
+// Arista EOS system’s operating configuration for a sepecific section
 arista.eos.runningConfig.section {
+  // section name
   name string
+  // returns the section from EOS running-config
   content() string
 }
 
+// User on the local Arista EOS system
 arista.eos.user {
+  // The name of the user
   name string
+  // Indicates if the user is able to authenticate without a password
   privilege string
+  // User's assigned role
   role string
+  // If the user is not password protected
   nopassword string
+  // Specifies how the secret is encoded
   format string
+  // The secret (password) assigned to this user
   secret string
+  // User's sshkey
   sshkey string
 }
 
+// Arista EOS role resource
 arista.eos.role {
+  // Name of role
   name string
+  // Flag for default role
   default bool
+  // List of rules that restricts access to specified commands
   rules []dict
 }
 
+// Arista EOS SNMP information resource
 arista.eos.snmpSetting {
+  // SNMP logging status
   enabled bool
+  // SNMP trap generation information
   notifications() []dict
 }
 
+// Arista EOS NTP information resource
 arista.eos.ntpSetting {
+  // Status of NTP on the switch
   status string
 }
 
+// Arista EOS interface resource
 arista.eos.interface {
+  // Interface name, link status, vlan, duplex, speed, and type of the specified interfaces
   name string
+  // Interface bandwidth
   bandwidth int
+  // 'burned in' address of the interface
   burnedInAddress string
+  // Interface description
   description string
+  // Forwarding mode
   forwardingModel string
+  // Hardware Name
   hardware string
+  // Interface address information
   interfaceAddress []dict
+  // Traffic count information
   interfaceCounters dict
+  // Interface membership
   interfaceMembership string
+  // Interface statisctics
   interfaceStatistics dict
+  // Interface status
   interfaceStatus string
+  // Layer 2 MTU
   l2Mtu int
+  // Last interface change timestamp
   lastStatusChangeTimestamp int
+  // Interface protocol status
   lineProtocolStatus string
+  // MTU
   mtu int
+  // MAC address of the interface
   physicalAddress string
+  // Interface link status, vlan, duplex, speed, and type
   status() dict
 }
 
+// Arista EOS IP interfacea
 arista.eos.ipInterface {
+  // Interface Name
   name string
+  // IP Address
   address string
+  // MTU
   mtu string
 }
 
+// Arista Spanning Tree Protocol (STP) resource
 arista.eos.stp {
+  // Multiple Spanning Tree Protocol (MST) instances
   mstInstances() []arista.eos.stp.mst
 }
 
+// Arista Multiple Spanning Tree Protocol (MSTP) resource instance
 arista.eos.stp.mst {
+  // MST instance number
   instanceId string
+  // MST instance name
   name string
+  // SPT protocol
   protocol string
+  // Detailed bridge information (Forward Delay, MAC, Priority)
   bridge dict
+  // Root bridge information
   rootBridge dict
+  // Regional root bridge information
   regionalRootBridge dict
+  // interfaces on the specified MST instances
   interfaces []arista.eos.spt.mstInterface
 }
 
+// Multiple Spanning Tree Protocol (MSTP) information for a specified interface
 arista.eos.spt.mstInterface {
   id string
+  // MST instance number
   mstInstanceId string
+  // Name of STP instance
   name string
+  // Interface priority
   priority int
+  // Link type
   linkType string
+  // Interface state
   state string
+  // Cost value for the interface
   cost int
+  // Rort role
   role string
+  // Interface inconsistent features 
   inconsistentFeatures dict
+  // Port Number
   portNumber int
+  // Flag if it is an edge port
   isEdgePort bool
+  // Details about Designated root, Designated bridge and Designated port
   detail dict
+  // Interface Boundary Type
   boundaryType string
+  // Number of BPDU transactions on this interface 
   counters() dict
+  // Interface features: BPDU filter, specifies the BPDU reception rate & link type of the interface
   features() dict
 }
 
