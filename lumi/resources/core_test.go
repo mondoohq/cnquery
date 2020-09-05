@@ -264,6 +264,54 @@ func TestBooleans(t *testing.T) {
 	})
 }
 
+func TestOperations_Equality(t *testing.T) {
+	vals := []string{
+		"null",
+		"true", "false",
+		"0", "1",
+		"1.0", "1.5",
+		"'1'", "'1.0'", "'a'",
+		"/1/", "/a/", "/nope/",
+		"[1]", "[null]",
+	}
+
+	extraEquality := map[string]map[string]struct{}{
+		"1": {
+			"1.0":   struct{}{},
+			"'1'":   struct{}{},
+			"'1.0'": struct{}{},
+		},
+	}
+
+	simpleTests := []simpleTest{}
+
+	for i := 0; i < len(vals); i++ {
+		for j := i; j < len(vals); j++ {
+			a := vals[i]
+			b := vals[j]
+			res := a == b
+
+			if _, ok := extraEquality[a]; ok {
+				if _, ok := extraEquality[b]; ok {
+					res = true
+				}
+			}
+			if _, ok := extraEquality[b]; ok {
+				if _, ok := extraEquality[a]; ok {
+					res = true
+				}
+			}
+
+			simpleTests = append(simpleTests, []simpleTest{
+				{a + " == " + b, 0, res},
+				{a + " != " + b, 0, !res},
+			}...)
+		}
+	}
+
+	runSimpleTests(t, simpleTests)
+}
+
 func TestString_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
