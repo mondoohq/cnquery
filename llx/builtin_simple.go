@@ -233,6 +233,33 @@ func timeNotTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return boolNotOp(c, bind, chunk, ref, opTimeCmpTime)
 }
 
+// int vs float
+// int ==/!= float
+
+func opIntCmpFloat(left interface{}, right interface{}) bool {
+	return float64(left.(int64)) == right.(float64)
+}
+
+func opFloatCmpInt(left interface{}, right interface{}) bool {
+	return left.(float64) == float64(right.(int64))
+}
+
+func intCmpFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opIntCmpFloat)
+}
+
+func intNotFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolNotOp(c, bind, chunk, ref, opIntCmpFloat)
+}
+
+func floatCmpInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opFloatCmpInt)
+}
+
+func floatNotInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolNotOp(c, bind, chunk, ref, opFloatCmpInt)
+}
+
 // string vs other types
 // string ==/!= nil
 
@@ -383,6 +410,7 @@ func regexNotFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	return boolNotOp(c, bind, chunk, ref, opRegexCmpFloat)
 }
 
+// null vs other types
 // bool ==/!= nil
 
 func opBoolCmpNil(left interface{}, right interface{}) bool {
