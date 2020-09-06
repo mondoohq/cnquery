@@ -144,6 +144,15 @@ func compileComparable(c *compiler, id string, call *parser.Call, res *llx.CodeB
 		return types.Nil, errors.New("failed to compile: " + err.Error())
 	}
 
+	for left.Type(res.Code) == types.Ref {
+		var ok bool
+		leftRef, ok = left.Primitive.Ref()
+		if !ok {
+			return types.Nil, errors.New("failed to get reference entry of left operand to " + id + ", this should not happen")
+		}
+		left = res.Code.Code[leftRef-1]
+	}
+
 	// find specialized or generalized builtin function
 	lt := left.Type(res.Code).Underlying()
 	rt := resolveType(&llx.Chunk{Primitive: right}, res.Code)
