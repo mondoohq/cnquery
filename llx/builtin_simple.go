@@ -174,20 +174,6 @@ func opRegexCmpString(left interface{}, right interface{}) bool {
 	return r.Match([]byte(right.(string)))
 }
 
-func opRegexCmpBool(left interface{}, right interface{}) bool {
-	if right.(bool) == true {
-		return opStringCmpRegex("true", left.(string))
-	}
-	return opStringCmpRegex("false", left.(string))
-}
-
-func opBoolCmpRegex(left interface{}, right interface{}) bool {
-	if left.(bool) == true {
-		return opStringCmpRegex("true", right.(string))
-	}
-	return opStringCmpRegex("false", right.(string))
-}
-
 func opRegexCmpInt(left interface{}, right interface{}) bool {
 	return opStringCmpRegex(strconv.FormatInt(right.(int64), 10), left.(string))
 }
@@ -361,24 +347,6 @@ func regexNotString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 }
 
 // regex vs other types
-// bool ==/!= regex
-
-func boolCmpRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opBoolCmpRegex)
-}
-
-func boolNotRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opBoolCmpRegex)
-}
-
-func regexCmpBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opRegexCmpBool)
-}
-
-func regexNotBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opRegexCmpBool)
-}
-
 // int ==/!= regex
 
 func intCmpRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {

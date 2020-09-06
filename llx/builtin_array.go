@@ -611,30 +611,6 @@ func stringarrayNotRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int3
 	})
 }
 
-func regexCmpBoolarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
-		return cmpArrayOne(right, left, opBoolCmpRegex)
-	})
-}
-
-func regexNotBoolarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
-		return cmpArrayOne(right, left, opBoolCmpRegex)
-	})
-}
-
-func boolarrayCmpRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
-		return cmpArrayOne(left, right, opBoolCmpRegex)
-	})
-}
-
-func boolarrayNotRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
-		return cmpArrayOne(left, right, opBoolCmpRegex)
-	})
-}
-
 func regexCmpIntarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opIntCmpRegex)
