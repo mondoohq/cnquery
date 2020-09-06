@@ -17,7 +17,7 @@ var (
 		`|(?P<String>'[^']*'|"[^"]*")` +
 		`|(?P<Comment>//[^\n]*(\n|\z))` +
 		`|(?P<Regex>/([^\\/]+|\\.)+/)` +
-		`|(?P<Op>[-+*/%,:.=<>!|&~#])` +
+		`|(?P<Op>[-+*/%,:.=<>!|&~#;])` +
 		`|(?P<Call>[(){}\[\]])`,
 	))
 )
@@ -400,7 +400,8 @@ func (p *parser) parseOperation() (*Operation, error) {
 
 	res := Operation{}
 	switch p.token.Value {
-	// TODO:	"=":  OpAssignment,
+	case ";":
+		return nil, nil
 	case "&":
 		p.nextToken()
 		if p.token.Value == "&" {
@@ -559,7 +560,14 @@ func Parse(input string) (*AST, error) {
 			break
 		}
 
-		if thisParser.token.Value != "" && thisParser.token.Type == CallType {
+		if thisParser.token.Value == ";" {
+			err = thisParser.nextToken()
+			if err != nil {
+				return &res, err
+			}
+		}
+
+		if thisParser.token.Value != "" && thisParser.token.Type == CallType && thisParser.token.Value != "[" {
 			return &res, errors.New("mismatched symbol '" + thisParser.token.Value + "' at the end of expression")
 		}
 	}
