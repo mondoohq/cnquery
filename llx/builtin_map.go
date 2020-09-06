@@ -568,8 +568,6 @@ func opDictCmpRegex(left interface{}, right interface{}) bool {
 	switch x := left.(type) {
 	case string:
 		return opStringCmpRegex(x, right)
-	case bool:
-		return opBoolCmpRegex(x, right)
 	case int64:
 		return opIntCmpRegex(x, right)
 	case float64:
@@ -583,8 +581,6 @@ func opRegexCmpDict(left interface{}, right interface{}) bool {
 	switch x := right.(type) {
 	case string:
 		return opRegexCmpString(left, x)
-	case bool:
-		return opRegexCmpBool(left, x)
 	case int64:
 		return opRegexCmpInt(left, x)
 	case float64:
