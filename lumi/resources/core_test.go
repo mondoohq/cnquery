@@ -279,7 +279,26 @@ func TestOperations_Equality(t *testing.T) {
 		"1": {
 			"1.0":   struct{}{},
 			"'1'":   struct{}{},
+			"/1/":   struct{}{},
+			"[1]":   struct{}{},
+			"[1.0]": struct{}{},
+		},
+		"1.0": {
+			"[1]": struct{}{},
+		},
+		"'a'": {
+			"/a/": struct{}{},
+		},
+		"'1'": {
+			"1.0": struct{}{},
+			"[1]": struct{}{},
+		},
+		"/1/": {
+			"1.0":   struct{}{},
+			"'1'":   struct{}{},
 			"'1.0'": struct{}{},
+			"[1]":   struct{}{},
+			"1.5":   struct{}{},
 		},
 	}
 
@@ -291,13 +310,13 @@ func TestOperations_Equality(t *testing.T) {
 			b := vals[j]
 			res := a == b
 
-			if _, ok := extraEquality[a]; ok {
-				if _, ok := extraEquality[b]; ok {
+			if sub, ok := extraEquality[a]; ok {
+				if _, ok := sub[b]; ok {
 					res = true
 				}
 			}
-			if _, ok := extraEquality[b]; ok {
-				if _, ok := extraEquality[a]; ok {
+			if sub, ok := extraEquality[b]; ok {
+				if _, ok := sub[a]; ok {
 					res = true
 				}
 			}

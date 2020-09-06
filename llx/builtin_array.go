@@ -433,6 +433,56 @@ func stringNotStringarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int
 	})
 }
 
+// int/float -- []T
+
+func intCmpFloatarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+		return cmpArrayOne(right, left, opFloatCmpInt)
+	})
+}
+
+func intNotFloatarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+		return cmpArrayOne(right, left, opFloatCmpInt)
+	})
+}
+
+func floatCmpIntarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+		return cmpArrayOne(right, left, opIntCmpFloat)
+	})
+}
+
+func floatNotIntarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+		return cmpArrayOne(right, left, opIntCmpFloat)
+	})
+}
+
+func intarrayCmpFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+		return cmpArrayOne(left, right, opIntCmpFloat)
+	})
+}
+
+func intarrayNotFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+		return cmpArrayOne(left, right, opIntCmpFloat)
+	})
+}
+
+func floatarrayCmpInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+		return cmpArrayOne(left, right, opFloatCmpInt)
+	})
+}
+
+func floatarrayNotInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+		return cmpArrayOne(left, right, opFloatCmpInt)
+	})
+}
+
 // string -- []T
 
 func stringCmpBoolarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
