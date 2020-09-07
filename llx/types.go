@@ -32,13 +32,22 @@ func (p *Primitive) TypeString(stack *Code) string {
 // Type for the dereferenced type of this chunk
 // Finds the real type after looking at either the primitive or function
 func (c *Chunk) Type(stack *Code) types.Type {
+	// call: primitive
 	if c.Call == Chunk_PRIMITIVE {
 		return types.Type(c.Primitive.Type)
 	}
-	if c.Function == nil {
-		return types.Any
+
+	// call: function
+	if c.Function != nil {
+		return types.Type(c.Function.Type)
 	}
-	return types.Type(c.Function.Type)
+
+	// call: property
+	if c.Primitive != nil {
+		return types.Type(c.Primitive.Type)
+	}
+
+	return types.Any
 }
 
 // Checksum computes the checksum of this chunk

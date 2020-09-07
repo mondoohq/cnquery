@@ -9,7 +9,7 @@ import (
 )
 
 func label(t *testing.T, s string, f func(res *llx.Labels)) {
-	res, err := Compile(s, registry.Default.Schema())
+	res, err := Compile(s, registry.Default.Schema(), nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
 	if res == nil {

@@ -3,7 +3,6 @@ package leise
 import (
 	"errors"
 	"fmt"
-	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -19,8 +18,8 @@ func init() {
 	logger.InitTestEnv()
 }
 
-func compile(t *testing.T, s string, f func(res *llx.CodeBundle)) {
-	res, err := Compile(s, schema)
+func compileProps(t *testing.T, s string, props map[string]types.Type, f func(res *llx.CodeBundle)) {
+	res, err := Compile(s, schema, props)
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
 	if res != nil && res.Code != nil {
@@ -32,14 +31,24 @@ func compile(t *testing.T, s string, f func(res *llx.CodeBundle)) {
 	}
 }
 
+func compile(t *testing.T, s string, f func(res *llx.CodeBundle)) {
+	compileProps(t, s, nil, f)
+}
+
 func compileEmpty(t *testing.T, s string, f func(res *llx.CodeBundle)) {
-	res, err := Compile(s, schema)
+	res, err := Compile(s, schema, nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
 	if res != nil && res.Code != nil {
 		assert.Nil(t, res.Suggestions)
 		f(res)
 	}
+}
+
+func assertPrimitive(t *testing.T, p *llx.Primitive, chunk *llx.Chunk) {
+	assert.Equal(t, llx.Chunk_PRIMITIVE, chunk.Call)
+	assert.Nil(t, chunk.Function)
+	assert.Equal(t, p, chunk.Primitive)
 }
 
 func assertFunction(t *testing.T, id string, f *llx.Function, chunk *llx.Chunk) {
@@ -49,10 +58,10 @@ func assertFunction(t *testing.T, id string, f *llx.Function, chunk *llx.Chunk) 
 	assert.Equal(t, f, chunk.Function, "chunk.Function")
 }
 
-func assertPrimitive(t *testing.T, p *llx.Primitive, chunk *llx.Chunk) {
-	assert.Equal(t, llx.Chunk_PRIMITIVE, chunk.Call)
-	assert.Nil(t, chunk.Function)
-	assert.Equal(t, p, chunk.Primitive)
+func assertProperty(t *testing.T, name string, typ types.Type, chunk *llx.Chunk) {
+	assert.Equal(t, llx.Chunk_PROPERTY, chunk.Call)
+	assert.Equal(t, name, chunk.Id, "property name is set")
+	assert.Equal(t, &llx.Primitive{Type: string(typ)}, chunk.Primitive, "property type is set")
 }
 
 //    ===========================
@@ -112,7 +121,7 @@ func TestCompiler_Buggy(t *testing.T) {
 	}
 	for _, v := range data {
 		t.Run(v.code, func(t *testing.T) {
-			res, err := Compile(v.code, schema)
+			res, err := Compile(v.code, schema, nil)
 			assert.Equal(t, v.err, err)
 			if res.Code != nil {
 				assert.Equal(t, v.res, res.Code.Code)
@@ -302,6 +311,43 @@ func TestCompiler_Assignment(t *testing.T) {
 	compile(t, "a = 123\na", func(res *llx.CodeBundle) {
 		assertPrimitive(t, llx.RefPrimitive(1), res.Code.Code[1])
 		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
+	})
+}
+
+func TestCompiler_Props(t *testing.T) {
+	compileProps(t, "props.name", map[string]types.Type{
+		"name": types.String,
+	}, func(res *llx.CodeBundle) {
+		assertProperty(t, "name", types.String, res.Code.Code[0])
+		assert.Equal(t, []int32{1}, res.Code.Entrypoints)
+		assert.Equal(t, map[string]string{"name": string(types.String)}, res.Props)
+	})
+
+	compileProps(t, "props.name == 'bob'", map[string]types.Type{
+		"name": types.String,
+	}, func(res *llx.CodeBundle) {
+		assertProperty(t, "name", types.String, res.Code.Code[0])
+		assertFunction(t, "=="+string(types.String), &llx.Function{
+			Type:    string(types.Bool),
+			Binding: 1,
+			Args:    []*llx.Primitive{llx.StringPrimitive("bob")},
+		}, res.Code.Code[1])
+		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
+		assert.Equal(t, map[string]string{"name": string(types.String)}, res.Props)
+	})
+
+	compileProps(t, "props.name == props.name", map[string]types.Type{
+		"name": types.String,
+	}, func(res *llx.CodeBundle) {
+		assertProperty(t, "name", types.String, res.Code.Code[0])
+		assertProperty(t, "name", types.String, res.Code.Code[1])
+		assertFunction(t, "=="+string(types.String), &llx.Function{
+			Type:    string(types.Bool),
+			Binding: 1,
+			Args:    []*llx.Primitive{llx.RefPrimitive(2)},
+		}, res.Code.Code[2])
+		assert.Equal(t, []int32{3}, res.Code.Entrypoints)
+		assert.Equal(t, map[string]string{"name": string(types.String)}, res.Props)
 	})
 }
 
@@ -925,9 +971,9 @@ func TestChecksums(t *testing.T) {
 
 		for i := range dupes {
 			t.Run(dupes[i].qa+" != "+dupes[i].qb, func(t *testing.T) {
-				a, err := Compile(dupes[i].qa, schema)
+				a, err := Compile(dupes[i].qa, schema, nil)
 				assert.NoError(t, err)
-				b, err := Compile(dupes[i].qb, schema)
+				b, err := Compile(dupes[i].qb, schema, nil)
 				assert.NoError(t, err)
 				assert.NotEqual(t, a.Code.Id, b.Code.Id)
 			})
@@ -996,7 +1042,7 @@ func TestSuggestions(t *testing.T) {
 
 func TestCompiler_Error(t *testing.T) {
 	t.Run("unknown term", func(t *testing.T) {
-		_, err := Compile("sshd.config.params == enabled", schema)
+		_, err := Compile("sshd.config.params == enabled", schema, nil)
 		// assert.Nil(t, res)
 		assert.EqualError(t, err, "failed to compile: cannot find resource for identifier 'enabled'")
 	})

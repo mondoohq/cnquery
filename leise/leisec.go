@@ -30,6 +30,7 @@ type compiler struct {
 	Binding *binding
 	vars    map[string]variable
 	parent  *compiler
+	props   map[string]types.Type
 }
 
 func addResourceSuggestions(resources map[string]*lumi.ResourceInfo, name string, res *llx.CodeBundle) {
@@ -164,9 +165,11 @@ func (c *compiler) compileUnboundBlock(expressions []*parser.Expression, chunk *
 				Code:       []*llx.Chunk{},
 			},
 			Labels: c.Result.Labels,
+			Props:  c.Result.Props,
 		},
 		vars:   map[string]variable{},
 		parent: c,
+		props:  c.props,
 	}
 
 	err := blockCompiler.compileExpressions(expressions)
@@ -205,10 +208,12 @@ func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.T
 				}},
 			},
 			Labels: c.Result.Labels,
+			Props:  c.Result.Props,
 		},
 		Binding: &binding{Type: typ, Ref: 1},
 		vars:    map[string]variable{},
 		parent:  c,
+		props:   c.props,
 	}
 
 	err := blockCompiler.compileExpressions(expressions)
@@ -544,6 +549,10 @@ func (c *compiler) compileIdentifier(id string, callBinding *binding, calls []*p
 		if found {
 			return restCalls, typ, err
 		}
+	} // end bound functions
+
+	if id == "props" {
+		return c.compileProps(call, restCalls, c.Result)
 	}
 
 	f := operatorsCompilers[id]
@@ -573,6 +582,53 @@ func (c *compiler) compileIdentifier(id string, callBinding *binding, calls []*p
 	}
 	addFieldSuggestions(availableFields(c, callBinding.Type), id, c.Result)
 	return nil, types.Nil, errors.New("cannot find field or resource '" + id + "' in block for type '" + c.Binding.Type.Label() + "'")
+}
+
+// compileProps handles built-in properties for this code
+// we will use any properties defined at the compiler-level as type-indicators
+func (c *compiler) compileProps(call *parser.Call, calls []*parser.Call, res *llx.CodeBundle) ([]*parser.Call, types.Type, error) {
+	if call != nil && len(call.Function) != 0 {
+		return nil, types.Nil, errors.New("'props' is not a function")
+	}
+
+	if len(calls) == 0 {
+		return nil, types.Nil, errors.New("called 'props' without a property, please provide the name you are trying to access")
+	}
+
+	nextCall := calls[0]
+	restCalls := calls[1:]
+
+	if nextCall.Ident == nil {
+		return nil, types.Nil, errors.New("please call 'props' with the name of the property you are trying to access")
+	}
+
+	name := *nextCall.Ident
+	typ, ok := c.props[name]
+	if !ok {
+		keys := make(map[string]llx.Documentation, len(c.props))
+		for key, typ := range c.props {
+			keys[key] = llx.Documentation{
+				Field: key,
+				Title: key + " (" + typ.Label() + ")",
+			}
+		}
+
+		addFieldSuggestions(keys, name, res)
+
+		return nil, types.Nil, errors.New("cannot find property '" + name + "', please define it first")
+	}
+
+	c.Result.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_PROPERTY,
+		Id:   name,
+		Primitive: &llx.Primitive{
+			Type: string(typ),
+		},
+	})
+
+	res.Props[name] = string(typ)
+
+	return restCalls, typ, nil
 }
 
 // compileValue takes an AST value and compiles it
@@ -894,9 +950,13 @@ func (c *compiler) UpdateEntrypoints() {
 }
 
 // CompileAST with a schema into a chunky code
-func CompileAST(ast *parser.AST, schema *lumi.Schema) (*llx.CodeBundle, error) {
+func CompileAST(ast *parser.AST, schema *lumi.Schema, props map[string]types.Type) (*llx.CodeBundle, error) {
 	if schema == nil {
 		return nil, errors.New("leise> please provide a schema to compile this code")
+	}
+
+	if props == nil {
+		props = map[string]types.Type{}
 	}
 
 	c := compiler{
@@ -908,16 +968,18 @@ func CompileAST(ast *parser.AST, schema *lumi.Schema) (*llx.CodeBundle, error) {
 			Labels: &llx.Labels{
 				Labels: map[string]string{},
 			},
+			Props: map[string]string{},
 		},
 		vars:   map[string]variable{},
 		parent: nil,
+		props:  props,
 	}
 
 	return c.Result, c.CompileParsed(ast)
 }
 
 // Compile a code piece against a schema into chunky code
-func Compile(input string, schema *lumi.Schema) (*llx.CodeBundle, error) {
+func Compile(input string, schema *lumi.Schema, props map[string]types.Type) (*llx.CodeBundle, error) {
 	// remove leading whitespace
 	input = Dedent(input)
 
@@ -930,14 +992,14 @@ func Compile(input string, schema *lumi.Schema) (*llx.CodeBundle, error) {
 	// we want to get any compiler suggestions for auto-complete / fixing it.
 	// That said, we must return an error either way.
 	if err != nil {
-		res, err2 := CompileAST(ast, schema)
+		res, err2 := CompileAST(ast, schema, props)
 		if err2 == nil {
 			return res, err
 		}
 		return res, err2
 	}
 
-	res, err := CompileAST(ast, schema)
+	res, err := CompileAST(ast, schema, props)
 	if err != nil {
 		return res, err
 	}
@@ -955,8 +1017,8 @@ func Compile(input string, schema *lumi.Schema) (*llx.CodeBundle, error) {
 }
 
 // MustCompile a code piece that should not fail (otherwise panic)
-func MustCompile(input string, schema *lumi.Schema) *llx.CodeBundle {
-	res, err := Compile(input, schema)
+func MustCompile(input string, schema *lumi.Schema, props map[string]types.Type) *llx.CodeBundle {
+	res, err := Compile(input, schema, props)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to compile")
 	}

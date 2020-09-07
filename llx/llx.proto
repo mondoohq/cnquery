@@ -28,6 +28,7 @@ message Chunk {
   enum Call {
     PRIMITIVE = 0;
     FUNCTION = 1;
+    PROPERTY = 2;
   }
   Call call = 1;
   string id = 2;
@@ -60,6 +61,7 @@ message CodeBundle {
   repeated Documentation suggestions = 2;
   string source = 3;
   Labels labels = 4;
+  map<string,string> props = 5; // name + type
 }
 
 message Result {
