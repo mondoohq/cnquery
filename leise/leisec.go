@@ -30,7 +30,7 @@ type compiler struct {
 	Binding *binding
 	vars    map[string]variable
 	parent  *compiler
-	props   map[string]types.Type
+	props   map[string]*llx.Primitive
 }
 
 func addResourceSuggestions(resources map[string]*lumi.ResourceInfo, name string, res *llx.CodeBundle) {
@@ -603,13 +603,13 @@ func (c *compiler) compileProps(call *parser.Call, calls []*parser.Call, res *ll
 	}
 
 	name := *nextCall.Ident
-	typ, ok := c.props[name]
+	prim, ok := c.props[name]
 	if !ok {
 		keys := make(map[string]llx.Documentation, len(c.props))
-		for key, typ := range c.props {
+		for key, prim := range c.props {
 			keys[key] = llx.Documentation{
 				Field: key,
-				Title: key + " (" + typ.Label() + ")",
+				Title: key + " (" + types.Type(prim.Type).Label() + ")",
 			}
 		}
 
@@ -622,13 +622,13 @@ func (c *compiler) compileProps(call *parser.Call, calls []*parser.Call, res *ll
 		Call: llx.Chunk_PROPERTY,
 		Id:   name,
 		Primitive: &llx.Primitive{
-			Type: string(typ),
+			Type: prim.Type,
 		},
 	})
 
-	res.Props[name] = string(typ)
+	res.Props[name] = prim.Type
 
-	return restCalls, typ, nil
+	return restCalls, types.Type(prim.Type), nil
 }
 
 // compileValue takes an AST value and compiles it
@@ -950,13 +950,13 @@ func (c *compiler) UpdateEntrypoints() {
 }
 
 // CompileAST with a schema into a chunky code
-func CompileAST(ast *parser.AST, schema *lumi.Schema, props map[string]types.Type) (*llx.CodeBundle, error) {
+func CompileAST(ast *parser.AST, schema *lumi.Schema, props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
 	if schema == nil {
 		return nil, errors.New("leise> please provide a schema to compile this code")
 	}
 
 	if props == nil {
-		props = map[string]types.Type{}
+		props = map[string]*llx.Primitive{}
 	}
 
 	c := compiler{
@@ -979,7 +979,7 @@ func CompileAST(ast *parser.AST, schema *lumi.Schema, props map[string]types.Typ
 }
 
 // Compile a code piece against a schema into chunky code
-func Compile(input string, schema *lumi.Schema, props map[string]types.Type) (*llx.CodeBundle, error) {
+func Compile(input string, schema *lumi.Schema, props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
 	// remove leading whitespace
 	input = Dedent(input)
 
@@ -1017,7 +1017,7 @@ func Compile(input string, schema *lumi.Schema, props map[string]types.Type) (*l
 }
 
 // MustCompile a code piece that should not fail (otherwise panic)
-func MustCompile(input string, schema *lumi.Schema, props map[string]types.Type) *llx.CodeBundle {
+func MustCompile(input string, schema *lumi.Schema, props map[string]*llx.Primitive) *llx.CodeBundle {
 	res, err := Compile(input, schema, props)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to compile")
