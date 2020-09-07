@@ -35,14 +35,14 @@ func initExecutor(motor *motor.Motor) *executor.Executor {
 	return executor
 }
 
-func testQueryWithExecutor(executor *executor.Executor, t *testing.T, query string) []*llx.RawResult {
+func testQueryWithExecutor(executor *executor.Executor, t *testing.T, query string, props map[string]*llx.Primitive) []*llx.RawResult {
 	var results []*llx.RawResult
 	executor.AddWatcher("test", func(res *llx.RawResult) {
 		results = append(results, res)
 	})
 	defer executor.RemoveWatcher("test")
 
-	bundle, err := executor.AddCode(query)
+	bundle, err := executor.AddCode(query, props)
 	if err != nil {
 		t.Fatal("failed to add code to executor: " + err.Error())
 	}
@@ -62,7 +62,7 @@ func testQuery(t *testing.T, query string) []*llx.RawResult {
 	}
 
 	executor := initExecutor(motor)
-	return testQueryWithExecutor(executor, t, query)
+	return testQueryWithExecutor(executor, t, query, nil)
 }
 
 func testResultsErrors(t *testing.T, r []*llx.RawResult) bool {
@@ -97,7 +97,7 @@ func stableResults(t *testing.T, query string) map[string]*llx.RawResult {
 			results[i][res.CodeID] = res
 		})
 
-		bundle, err := executor.AddCode(query)
+		bundle, err := executor.AddCode(query, nil)
 		if err != nil {
 			t.Fatal("failed to add code to executor: " + err.Error())
 			return nil
@@ -198,7 +198,7 @@ func testTimeout(t *testing.T, codes ...string) {
 	for i := range codes {
 		code := codes[i]
 		t.Run(code, func(t *testing.T) {
-			code, err := executor.AddCode(code)
+			code, err := executor.AddCode(code, nil)
 			if err != nil {
 				t.Error("failed to compile: " + err.Error())
 				return
@@ -248,6 +248,47 @@ func TestResource_InitWithResource(t *testing.T) {
 	})
 }
 
+//
+// Core Language constructs
+// ------------------------
+
+func TestCore_Props(t *testing.T) {
+	tests := []struct {
+		code        string
+		props       map[string]*llx.Primitive
+		resultIndex int
+		expectation interface{}
+		err         error
+	}{
+		{
+			`props.name`,
+			map[string]*llx.Primitive{"name": llx.StringPrimitive("bob")},
+			0, "bob", nil,
+		},
+		{
+			`props.name == 'bob'`,
+			map[string]*llx.Primitive{"name": llx.StringPrimitive("bob")},
+			1, true, nil,
+		},
+	}
+
+	for i := range tests {
+		cur := tests[i]
+		t.Run(cur.code, func(t *testing.T) {
+			res := testQueryProps(t, cur.code, cur.props)
+			assert.NotEmpty(t, res)
+
+			if len(res) <= cur.resultIndex {
+				t.Error("insufficient results, looking for result idx " + strconv.Itoa(cur.resultIndex))
+				return
+			}
+
+			assert.NotNil(t, res[cur.resultIndex].Result().Error)
+			assert.Equal(t, cur.expectation, res[cur.resultIndex].Data.Value)
+		})
+	}
+}
+
 func TestCore_If(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
@@ -272,6 +313,10 @@ func TestCore_Vars(t *testing.T) {
 	})
 }
 
+//
+// Base types and operations
+// -------------------------
+
 func TestBooleans(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
@@ -293,6 +338,7 @@ func TestBooleans(t *testing.T) {
 	})
 }
 
+// tests operations + vars
 func TestOperations_Equality(t *testing.T) {
 	vals := []string{
 		"null",

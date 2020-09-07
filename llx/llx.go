@@ -73,6 +73,7 @@ type LeiseExecutor struct {
 	stepTracker    *Cache
 	calls          *Calls
 	starts         []int32
+	props          map[string]*Primitive
 }
 
 func (c *LeiseExecutor) watcherUID(ref int32) string {
@@ -95,7 +96,7 @@ func errorResultMsg(msg string, codeID string) *RawResult {
 
 // NewExecutor will create a code runner from code, running in a runtime, calling
 // callback whenever we get a result
-func NewExecutor(code *Code, runtime *lumi.Runtime, callback ResultCallback) (*LeiseExecutor, error) {
+func NewExecutor(code *Code, runtime *lumi.Runtime, props map[string]*Primitive, callback ResultCallback) (*LeiseExecutor, error) {
 	if runtime == nil {
 		return nil, errors.New("cannot exec leise without a runtime")
 	}
@@ -115,6 +116,7 @@ func NewExecutor(code *Code, runtime *lumi.Runtime, callback ResultCallback) (*L
 		stepTracker:    &Cache{},
 		calls:          &Calls{},
 		watcherIds:     &types.StringSet{},
+		props:          props,
 	}
 
 	for _, ref := range code.Entrypoints {
@@ -201,7 +203,7 @@ func (c *LeiseExecutor) registerPrimitive(val *Primitive) {
 }
 
 func (c *LeiseExecutor) runFunctionBlock(bind *RawData, code *Code, cb ResultCallback) error {
-	executor, err := NewExecutor(code, c.runtime, cb)
+	executor, err := NewExecutor(code, c.runtime, c.props, cb)
 	if err != nil {
 		return err
 	}
@@ -340,25 +342,40 @@ func (c *LeiseExecutor) runFunction(chunk *Chunk, ref int32) (*RawData, int32, e
 	return c.runBoundFunction(res.Result, chunk, ref)
 }
 
-func (c *LeiseExecutor) runPrimitive(chunk *Chunk, ref int32) (*RawData, int32, error) {
-	if chunk.Primitive.Type == string(types.Ref) {
-		return c.resolveValue(chunk.Primitive, ref)
+func (c *LeiseExecutor) runPrimitive(primitive *Primitive, ref int32) (*RawData, int32, error) {
+	if primitive.Type == string(types.Ref) {
+		return c.resolveValue(primitive, ref)
 	}
 
-	return chunk.Primitive.RawData(), 0, nil
+	return primitive.RawData(), 0, nil
 }
 
 func (c *LeiseExecutor) runChunk(chunk *Chunk, ref int32) (*RawData, int32, error) {
 	switch chunk.Call {
 	case Chunk_PRIMITIVE:
-		res, dref, err := c.runPrimitive(chunk, ref)
+		res, dref, err := c.runPrimitive(chunk.Primitive, ref)
 		if dref != 0 || err != nil {
 			return res, dref, err
 		}
 		c.cache.Store(ref, &stepCache{Result: res})
 		return res, dref, err
+
 	case Chunk_FUNCTION:
 		return c.runFunction(chunk, ref)
+
+	case Chunk_PROPERTY:
+		property, ok := c.props[chunk.Id]
+		if !ok {
+			return nil, 0, errors.New("cannot find property '" + chunk.Id + "'")
+		}
+
+		res, dref, err := c.runPrimitive(property, ref)
+		if dref != 0 || err != nil {
+			return res, dref, err
+		}
+		c.cache.Store(ref, &stepCache{Result: res})
+		return res, dref, err
+
 	default:
 		return nil, 0, errors.New("Tried to run a chunk which has an unknown type: " + chunk.Call.String())
 	}

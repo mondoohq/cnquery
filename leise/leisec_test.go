@@ -18,7 +18,7 @@ func init() {
 	logger.InitTestEnv()
 }
 
-func compileProps(t *testing.T, s string, props map[string]types.Type, f func(res *llx.CodeBundle)) {
+func compileProps(t *testing.T, s string, props map[string]*llx.Primitive, f func(res *llx.CodeBundle)) {
 	res, err := Compile(s, schema, props)
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
@@ -315,16 +315,16 @@ func TestCompiler_Assignment(t *testing.T) {
 }
 
 func TestCompiler_Props(t *testing.T) {
-	compileProps(t, "props.name", map[string]types.Type{
-		"name": types.String,
+	compileProps(t, "props.name", map[string]*llx.Primitive{
+		"name": {Type: string(types.String)},
 	}, func(res *llx.CodeBundle) {
 		assertProperty(t, "name", types.String, res.Code.Code[0])
 		assert.Equal(t, []int32{1}, res.Code.Entrypoints)
 		assert.Equal(t, map[string]string{"name": string(types.String)}, res.Props)
 	})
 
-	compileProps(t, "props.name == 'bob'", map[string]types.Type{
-		"name": types.String,
+	compileProps(t, "props.name == 'bob'", map[string]*llx.Primitive{
+		"name": {Type: string(types.String)},
 	}, func(res *llx.CodeBundle) {
 		assertProperty(t, "name", types.String, res.Code.Code[0])
 		assertFunction(t, "=="+string(types.String), &llx.Function{
@@ -336,8 +336,8 @@ func TestCompiler_Props(t *testing.T) {
 		assert.Equal(t, map[string]string{"name": string(types.String)}, res.Props)
 	})
 
-	compileProps(t, "props.name == props.name", map[string]types.Type{
-		"name": types.String,
+	compileProps(t, "props.name == props.name", map[string]*llx.Primitive{
+		"name": {Type: string(types.String)},
 	}, func(res *llx.CodeBundle) {
 		assertProperty(t, "name", types.String, res.Code.Code[0])
 		assertProperty(t, "name", types.String, res.Code.Code[1])
