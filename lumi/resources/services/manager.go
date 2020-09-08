@@ -79,7 +79,7 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		} else {
 			osm = &SystemDServiceManager{motor: motor}
 		}
-	case "ubuntu":
+	case "ubuntu", "linuxmint":
 		rv := platform.ParseOsVersion(pi.Release)
 		v, err := rv.MajorAtoi()
 		if err != nil {

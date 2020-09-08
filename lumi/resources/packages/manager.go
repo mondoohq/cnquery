@@ -32,7 +32,7 @@ func ResolveSystemPkgManager(motor *motor.Motor) (OperatingSystemPkgManager, err
 	switch platform.Name {
 	case "manjaro", "arch": // arch family
 		pm = &PacmanPkgManager{motor: motor}
-	case "ubuntu", "debian", "raspbian", "kali": // debian family
+	case "ubuntu", "debian", "raspbian", "kali", "linuxmint": // debian family
 		pm = &DebPkgManager{motor: motor}
 	case "redhat", "centos", "fedora", "amazonlinux", "oraclelinux", "scientific", "photon", "wrlinux": // rhel family
 		pm = &RpmPkgManager{motor: motor, platform: platform}
