@@ -731,6 +731,19 @@ func TestDragonFlyBsd5Detector(t *testing.T) {
 	assert.Equal(t, []string{"bsd", "unix", "os"}, di.Family)
 }
 
+func TestMint20Detector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-mint20.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	di, err := detector.Platform()
+	require.NoError(t, err)
+
+	assert.Equal(t, "linuxmint", di.Name, "os name should be identified")
+	assert.Equal(t, "Linux Mint", di.Title, "os title should be identified")
+	assert.Equal(t, "20", di.Release, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
+}
+
 func TestFamilies(t *testing.T) {
 	di := &platform.Platform{}
 	di.Family = []string{"unix", "bsd", "darwin"}

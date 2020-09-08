@@ -1,0 +1,32 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "5.4.0-40-generic"
+
+[files."/etc/os-release"]
+content = """
+NAME="Linux Mint"
+VERSION="20 (Ulyana)"
+ID=linuxmint
+ID_LIKE=ubuntu
+PRETTY_NAME="Linux Mint 20"
+VERSION_ID="20"
+HOME_URL="https://www.linuxmint.com/"
+SUPPORT_URL="https://forums.ubuntu.com/"
+BUG_REPORT_URL="http://linuxmint-troubleshooting-guide.readthedocs.io/en/latest/"
+PRIVACY_POLICY_URL="https://www.linuxmint.com/"
+VERSION_CODENAME=ulyana
+UBUNTU_CODENAME=focal
+"""
+
+[files."/etc/lsb-release"]
+content = """
+DISTRIB_ID=LinuxMint
+DISTRIB_RELEASE=20
+DISTRIB_CODENAME=ulyana
+DISTRIB_DESCRIPTION="Linux Mint 20 Ulyana"
+"""

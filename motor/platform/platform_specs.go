@@ -178,6 +178,17 @@ var kali = &PlatformResolver{
 	},
 }
 
+var linuxmint = &PlatformResolver{
+	Name:    "linuxmint",
+	Familiy: false,
+	Detect: func(p *PlatformResolver, di *Platform, t transports.Transport) (bool, error) {
+		if di.Name == "linuxmint" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
 var rhel = &PlatformResolver{
 	Name:    "redhat",
 	Familiy: false,
@@ -708,7 +719,7 @@ var redhatFamily = &PlatformResolver{
 var debianFamily = &PlatformResolver{
 	Name:     "debian",
 	Familiy:  true,
-	Children: []*PlatformResolver{debian, ubuntu, raspbian, kali},
+	Children: []*PlatformResolver{debian, ubuntu, raspbian, kali, linuxmint},
 	Detect: func(p *PlatformResolver, di *Platform, t transports.Transport) (bool, error) {
 		return true, nil
 	},
