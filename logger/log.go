@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/mattn/go-colorable"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -33,16 +34,22 @@ func UseJSONLogging() {
 
 // CliLogger sets the global logger to the console logger with color
 func CliLogger() {
-	log.Logger = NewConsoleWriter(os.Stderr, false, false)
+	// we use colerable to support color output on windows
+	stderr := colorable.NewColorableStderr()
+	log.Logger = NewConsoleWriter(stderr, false, false)
 }
 
 func CliCompactLogger() {
-	log.Logger = NewConsoleWriter(os.Stderr, false, true)
+	// we use colerable to support color output on windows
+	stderr := colorable.NewColorableStderr()
+	log.Logger = NewConsoleWriter(stderr, false, true)
 }
 
 // CliNoColorLogger sets the global logger to the console logger without color
 func CliNoColorLogger() {
-	log.Logger = NewConsoleWriter(os.Stderr, true, false)
+	// we use colerable to support color output on windows
+	stderr := colorable.NewColorableStderr()
+	log.Logger = NewConsoleWriter(stderr, true, false)
 }
 
 // Set will set up the logger

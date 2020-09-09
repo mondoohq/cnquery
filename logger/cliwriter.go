@@ -3,6 +3,7 @@ package logger
 import (
 	"fmt"
 	"io"
+	"runtime"
 	"strings"
 
 	"github.com/fatih/color"
@@ -22,6 +23,14 @@ func NewConsoleWriter(out io.Writer, nocolor bool, compact bool) zerolog.Logger 
 }
 
 func consoleFormatLevel(noColor bool) zerolog.Formatter {
+
+	errorIcon := "𐄂"
+	// support ansi cmd on windows
+	// TODO: detect if we have a utf console
+	if runtime.GOOS == "windows" {
+		errorIcon = "x"
+	}
+
 	return func(i interface{}) string {
 		var l string
 		if ll, ok := i.(string); ok {
@@ -31,11 +40,11 @@ func consoleFormatLevel(noColor bool) zerolog.Formatter {
 			case "debug":
 				l = colorize("DBG", color.FgHiYellow, noColor)
 			case "info":
-				l = colorize("→", color.FgHiCyan, noColor)
+				l = colorize("→", color.FgCyan, noColor)
 			case "warn":
-				l = colorize("𐄂", color.FgHiYellow, noColor)
+				l = colorize(errorIcon, color.FgHiYellow, noColor)
 			case "error":
-				l = colorize(colorize("𐄂", color.FgRed, noColor), color.Bold, noColor)
+				l = colorize(colorize(errorIcon, color.FgRed, noColor), color.Bold, noColor)
 			case "fatal":
 				l = colorize(colorize("FTL", color.FgRed, noColor), color.Bold, noColor)
 			case "panic":
