@@ -24,7 +24,7 @@ func VerifyConfig(endpoint *transports.TransportConfig) (*winrm.Endpoint, error)
 	winrmEndpoint := &winrm.Endpoint{
 		Host:     endpoint.Host,
 		Port:     p,
-		Insecure: false,
+		Insecure: endpoint.Insecure,
 		HTTPS:    false,
 		Timeout:  time.Duration(0),
 	}
