@@ -117,7 +117,7 @@ func (t *WinrmTransport) FileInfo(path string) (transports.FileInfoDetails, erro
 }
 
 func (t *WinrmTransport) FS() afero.Fs {
-	return nil
+	return NewWinrmFS()
 }
 
 func (t *WinrmTransport) Close() {
