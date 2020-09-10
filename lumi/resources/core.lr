@@ -1797,3 +1797,12 @@ msgraph.beta.security.securityscore {
   maxScore float
   vendorInformation dict
 }
+
+
+// Windows-specific resource to get operating system details
+windows {
+  // Gets a consolidated object of system and operating system properties
+  // 
+  // see https://docs.microsoft.com/en-us/dotnet/api/microsoft.powershell.commands.computerinfo?view=powershellsdk-1.1.0 for more information
+  computerInfo() dict
+}

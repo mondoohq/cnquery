@@ -1,0 +1,135 @@
+{                                                                                                                                                         
+  "WindowsBuildLabEx":  "18362.1.amd64fre.19h1_release.190318-1202",                                                                                    
+  "WindowsCurrentVersion":  "6.3",                                                                                                                      
+  "WindowsEditionId":  "ServerDatacenterACor",                                                                                                          
+  "WindowsInstallationType":  "Server Core",                                                                                                            
+  "WindowsInstallDateFromRegistry":  "\/Date(1599768223000)\/",                                                                                                                                                                                             
+  "WindowsProductName":  "Windows Server Datacenter",                                                                                                                                                                                                    
+  "WindowsRegisteredOwner":  "EC2",                                                                                                                     
+  "WindowsSystemRoot":  "C:\\Windows",                                                                                                                  
+  "WindowsVersion":  "1909",                                                                                                                            
+  "BiosCharacteristics":  [                                                                                                                             
+                              7,                                                                                                                        
+                              19,                                                                                                                       
+                              42                                                                                                                        
+                          ],                                                                                                                            
+  "BiosBIOSVersion":  [                                                                                                                                 
+                          "Xen - 0",                                                                                                                    
+                          "Revision: 1.221 "                                                                                                            
+                      ],                                                                                                                                                                                                                                              
+  "OsName":  "Microsoft Windows Server Datacenter",                                                                                                     
+  "OsType":  18,                                                                                                                                        
+  "OsOperatingSystemSKU":  145,                                                                                                                         
+  "OsVersion":  "10.0.18363",                                                                                                                           
+  "OsCSDVersion":  null,                                                                                                                                
+  "OsBuildNumber":  "18363",                                                                                                                            
+  "OsHotFixes":  [                                                                                                                                      
+                     {                                                                                                                                  
+                         "Description":  "Update",                                                                                                      
+                         "FixComments":  "",                                                                                                            
+                         "HotFixID":  "KB4569751",                                                                                                      
+                         "InstalledOn":  "8/12/2020"                                                                                                    
+                     },                                                                                                                                 
+                     {                                                                                                                                  
+                         "Description":  "Update",                                                                                                      
+                         "FixComments":  "",                                                                                                            
+                         "HotFixID":  "KB4497165",                                                                                                      
+                         "InstalledOn":  "3/12/2020"                                                                                                    
+                     },                                                                                                                                 
+                     {                                                                                                                                  
+                         "Description":  "Update",                                                                                                      
+                         "FixComments":  "",                                                                                                            
+                         "HotFixID":  "KB4513661",                                                                                                      
+                         "InstalledOn":  "10/7/2019"                                                                                                    
+                     },                                                                                                                                 
+                     {                                                                                                                                  
+                         "Description":  "Update",                                                                                                      
+                         "FixComments":  "",                                                                                                            
+                         "HotFixID":  "KB4517245",                                                                                                      
+                         "InstalledOn":  "10/7/2019"                                                                                                    
+                     },                                                                                                                                 
+                     {                                                                                                                                  
+                         "Description":  "Security Update",                                                                                             
+                         "FixComments":  "",                                                                                                            
+                         "HotFixID":  "KB4521863",                                                                                                      
+                         "InstalledOn":  "10/7/2019"                                                                                                    
+                     },                                                                                                                                 
+                     {                                                                                                                                  
+                         "Description":  "Security Update",                                                                                             
+                         "FixComments":  "",                                                                                                            
+                         "HotFixID":  "KB4524569",                                                                                                      
+                         "InstalledOn":  "11/13/2019"                                                                                                   
+                     },                                                                                                                                 
+                     {                                                                                                                                  
+                         "Description":  "Security Update",                                                                                             
+                         "FixComments":  "",                                                                                                            
+                         "HotFixID":  "KB4528759",                                                                                                      
+                         "InstalledOn":  "1/15/2020"                                                                                                    
+                     },                                                                                                                                 
+                     {                                                                                                                                  
+                         "Description":  "Security Update",                                                                                             
+                         "FixComments":  "",                                                                                                            
+                         "HotFixID":  "KB4541338",                                                                                                      
+                         "InstalledOn":  "3/12/2020"                                                                                                    
+                     },                                                                                                                                 
+                     {                                                                                                                                  
+                         "Description":  "Security Update",                                                                                             
+                         "FixComments":  "",                                                                                                            
+                         "HotFixID":  "KB4552152",                                                                                                      
+                         "InstalledOn":  "4/15/2020"                                                                                                    
+                     },                                                                                                                                 
+                     {                                                                                                                                  
+                         "Description":  "Security Update",                                                                                             
+                         "FixComments":  "",                                                                                                            
+                         "HotFixID":  "KB4560959",                                                                                                      
+                         "InstalledOn":  "6/10/2020"                                                                                                    
+                     },                                                                                                                                 
+                     {                                                                                                                                  
+                         "Description":  "Security Update",                                                                                             
+                         "FixComments":  "",                                                                                                            
+                         "HotFixID":  "KB4565554",                                                                                                      
+                         "InstalledOn":  "7/15/2020"                                                                                                    
+                     },                                                                                                                                 
+                     {                                                                                                                                  
+                         "Description":  "Security Update",                                                                                             
+                         "FixComments":  "",                                                                                                            
+                         "HotFixID":  "KB4569073",                                                                                                      
+                         "InstalledOn":  "8/12/2020"                                                                                                    
+                     },                                                                                                                                 
+                     {                                                                                                                                  
+                         "Description":  "Update",                                                                                                      
+                         "FixComments":  "",                                                                                                            
+                         "HotFixID":  "KB4565351",                                                                                                      
+                         "InstalledOn":  "8/12/2020"                                                                                                    
+                     }                                                                                                                                  
+                 ],                                                                                                                                                                                                                                              
+  "OsBuildType":  "Multiprocessor Free",                                                                                                                
+  "OsCodeSet":  "1252",                                                                                                                                                                                                                                     
+  "OsMaxNumberOfProcesses":  4294967295,                                                                                                                
+  "OsMaxProcessMemorySize":  137438953344,                                                                                                              
+  "OsMuiLanguages":  [                                                                                                                                  
+                         "en-US"                                                                                                                        
+                     ],                                                                                                                                 
+  "OsNumberOfLicensedUsers":  0,                                                                                                                        
+  "OsNumberOfProcesses":  56,                                                                                                                           
+  "OsNumberOfUsers":  1,                                                                                                                                                                                                                                                  
+  "OsArchitecture":  "64-bit",                                                                                                                          
+  "OsLanguage":  "en-US",                                                                                                                               
+  "OsProductSuites":  [                                                                                                                                 
+                          256                                                                                                                           
+                      ],                                                                                                                                
+  "OsOtherTypeDescription":  null,                                                                                                                      
+  "OsPAEEnabled":  null,                                                                                                                                
+  "OsPortableOperatingSystem":  false,                                                                                                                  
+  "OsPrimary":  true,                                                                                                                                   
+  "OsProductType":  3,                                                                                                                                  
+  "OsRegisteredUser":  "EC2",                                                                                                                                                                                                                                
+  "OsServicePackMajorVersion":  0,                                                                                                                      
+  "OsServicePackMinorVersion":  0,                                                                                                                      
+  "OsStatus":  "OK",                                                                                                                                                                                                                                                                    
+  "OsServerLevel":  2,                                                                                                                                  
+  "KeyboardLayout":  "en-US",                                                                                                                           
+  "TimeZone":  "(UTC) Coordinated Universal Time",                                                                                                      
+  "LogonServer":  null,                                                                                                                                 
+  "PowerPlatformRole":  1                                                                                                                          
+}        
