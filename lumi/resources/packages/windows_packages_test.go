@@ -1,6 +1,7 @@
 package packages
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -35,6 +36,10 @@ func TestWindowsAppxPackagesParser(t *testing.T) {
 	}
 	assert.Contains(t, m, p)
 
+	// check empty return
+	m, err = ParseWindowsAppxPackages(strings.NewReader(""))
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(m), "detected the right amount of packages")
 }
 
 func TestWindowsHotFixParser(t *testing.T) {
@@ -60,6 +65,10 @@ func TestWindowsHotFixParser(t *testing.T) {
 	}
 	assert.Contains(t, m, p)
 
+	// check empty return
+	m, err = ParseWindowsHotfixes(strings.NewReader(""))
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(m), "detected the right amount of packages")
 }
 
 func TestWinOSUpdatesParser(t *testing.T) {
@@ -87,6 +96,11 @@ func TestWinOSUpdatesParser(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "4538461", pkg.Name, "update id detected")
 	assert.Equal(t, "2020-03 Cumulative Update for Windows Server 2019 (1809) for x64-based Systems (KB4538461)", pkg.Description, "update title detected")
+
+	// check empty return
+	m, err = ParseWindowsUpdates(strings.NewReader(""))
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(m), "detected the right amount of packages")
 }
 
 func findKb(pkgs []Package, name string) (Package, error) {

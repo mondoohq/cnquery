@@ -116,6 +116,12 @@ func ParseWindowsAppxPackages(input io.Reader) ([]Package, error) {
 	}
 
 	var appxPackages []powershellWinAppxPackages
+
+	// handle case where no packages are installed
+	if len(data) == 0 {
+		return []Package{}, nil
+	}
+
 	err = json.Unmarshal(data, &appxPackages)
 	if err != nil {
 		return nil, err
@@ -150,6 +156,11 @@ func ParseWindowsUpdates(input io.Reader) ([]Package, error) {
 	data, err := ioutil.ReadAll(input)
 	if err != nil {
 		return nil, err
+	}
+
+	// handle case where no packages are installed
+	if len(data) == 0 {
+		return []Package{}, nil
 	}
 
 	var powerShellUpdates []powershellWinUpdate
