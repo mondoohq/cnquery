@@ -25,6 +25,10 @@ type Ec2Instances struct {
 	InstanceSSHUsername string
 }
 
+func (ec2i *Ec2Instances) Name() string {
+	return "AWS EC2 Discover"
+}
+
 func (ec2i *Ec2Instances) List() ([]*asset.Asset, error) {
 	ctx := context.Background()
 	ec2svc := ec2.New(ec2i.config)

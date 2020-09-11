@@ -51,6 +51,10 @@ func ParseAwsContext(awsUrl string) Ec2Config {
 
 type awsResolver struct{}
 
+func (k *awsResolver) Name() string {
+	return "AWS EC2 Resolver"
+}
+
 func (k *awsResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 

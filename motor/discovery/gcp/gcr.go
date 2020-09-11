@@ -22,6 +22,10 @@ func NewGCRImages() *GcrImages {
 
 type GcrImages struct{}
 
+func (a *GcrImages) Name() string {
+	return "GCP Container Registry Discover"
+}
+
 // lists a repository like "gcr.io/mondoo-base-infra"
 func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*asset.Asset, error) {
 	repo, err := name.NewRepository(repository)

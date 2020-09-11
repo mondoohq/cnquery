@@ -11,6 +11,10 @@ import (
 
 type containerRegistryResolver struct{}
 
+func (k *containerRegistryResolver) Name() string {
+	return "Container Registry Discover"
+}
+
 func (k *containerRegistryResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 

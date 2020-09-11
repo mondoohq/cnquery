@@ -11,6 +11,7 @@ import (
 )
 
 type Plugin interface {
+	Name() string
 	List() ([]*asset.Asset, error)
 }
 
@@ -69,12 +70,12 @@ func ListAssets(runtimes ...string) ([]*asset.Asset, error) {
 
 	discoveredAssets := []*asset.Asset{}
 	for i := range askRuntimes {
-		pluginAssets, err := askRuntimes[i].List()
+		plugin := askRuntimes[i]
+		pluginAssets, err := plugin.List()
 		if err == nil {
 			discoveredAssets = append(discoveredAssets, pluginAssets...)
 		} else {
-			// TODO: write plugin name
-			log.Error().Err(err).Msg("could not load assets from plugin")
+			log.Error().Err(err).Msgf("could not load assets from %s", plugin.Name())
 		}
 	}
 

@@ -25,6 +25,10 @@ type DockerInfo struct {
 
 type dockerResolver struct{}
 
+func (k *dockerResolver) Name() string {
+	return "Docker Resolver"
+}
+
 // When we talk about Docker, users think at leasst of 3 different things:
 // - container runtime (e.g. docker engine)
 // - container image (eg. from docker engine or registry)

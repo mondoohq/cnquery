@@ -23,6 +23,10 @@ type SSMManagedInstances struct {
 	config aws.Config
 }
 
+func (ssmi *SSMManagedInstances) Name() string {
+	return "AWS SSM Discover"
+}
+
 func (ssmi *SSMManagedInstances) List() ([]*asset.Asset, error) {
 	ctx := context.Background()
 	ssmsvc := ssm.New(ssmi.config)

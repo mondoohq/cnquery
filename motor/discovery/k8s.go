@@ -48,6 +48,10 @@ func ParseK8SContext(k8sUrl string) K8sConfig {
 
 type k8sResolver struct{}
 
+func (k *k8sResolver) Name() string {
+	return "Kubernetes Resolver"
+}
+
 func (k *k8sResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 	namespacesFilter := []string{}

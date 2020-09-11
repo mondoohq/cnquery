@@ -13,6 +13,10 @@ import (
 
 type vsphereResolver struct{}
 
+func (k *vsphereResolver) Name() string {
+	return "VMware vSphere Resolver"
+}
+
 func (v *vsphereResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 

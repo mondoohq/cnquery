@@ -54,6 +54,10 @@ func ParseAzureInstanceContext(azureUrl string) *AzureConfig {
 
 type azureResolver struct{}
 
+func (k *azureResolver) Name() string {
+	return "Azure Compute Resolver"
+}
+
 func (k *azureResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
