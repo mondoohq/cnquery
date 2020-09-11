@@ -77,8 +77,8 @@ const (
 )
 
 var (
-	WINDOWS_QUERY_HOTFIXES       = `Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstallDate, InstalledBy | ConvertTo-Json`
-	WINDOWS_QUERY_APPX_PACKAGES  = `Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version  | ConvertTo-Json`
+	WINDOWS_QUERY_HOTFIXES       = `Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstallDate, InstalledBy | ConvertTo-Json -AsArray`
+	WINDOWS_QUERY_APPX_PACKAGES  = `Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version  | ConvertTo-Json -AsArray`
 	WINDOWS_QUERY_WSUS_AVAILABLE = `
 $ProgressPreference='SilentlyContinue';
 $updateSession = new-object -com "Microsoft.Update.Session"
