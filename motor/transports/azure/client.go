@@ -8,7 +8,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/resources/mgmt/subscriptions"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/motor/transports/local"
 )
 

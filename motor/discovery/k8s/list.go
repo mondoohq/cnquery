@@ -3,8 +3,8 @@ package k8s
 import (
 	"strings"
 
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-containerregistry/pkg/name"
-	"github.com/pkg/errors"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"

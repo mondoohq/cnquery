@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 )
 
 func (t *lumiAwsCloudtrail) id() (string, error) {

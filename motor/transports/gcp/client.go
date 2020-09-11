@@ -5,7 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/motor/transports/local"
 )
 

@@ -17,7 +17,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 
 	"github.com/pkg/sftp"
 	"github.com/spf13/afero"

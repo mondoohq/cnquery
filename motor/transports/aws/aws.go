@@ -1,7 +1,7 @@
 package aws
 
 import (
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 
 	aws_sdk "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/external"

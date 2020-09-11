@@ -5,7 +5,7 @@ import (
 	"net"
 	"sort"
 
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 )
 

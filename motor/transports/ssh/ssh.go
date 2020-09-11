@@ -4,7 +4,7 @@ import (
 	"net"
 	"os"
 
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
