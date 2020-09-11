@@ -3,7 +3,7 @@ package arista
 import (
 	"strconv"
 
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 
 	"github.com/aristanetworks/goeapi"
 	"github.com/spf13/afero"

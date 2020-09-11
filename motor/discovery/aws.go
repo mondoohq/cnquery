@@ -5,7 +5,7 @@ import (
 
 	"go.mondoo.io/mondoo/apps/mondoo/cmd/options"
 
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/aws"

@@ -1,7 +1,7 @@
 package resources
 
 import (
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"

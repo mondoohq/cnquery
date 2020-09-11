@@ -6,7 +6,7 @@ import (
 	"io"
 	"regexp"
 
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/motor"
 )
 

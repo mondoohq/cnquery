@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 
 	"github.com/aws/aws-sdk-go-v2/aws/ec2metadata"
 	"go.mondoo.io/mondoo/motor/platform"

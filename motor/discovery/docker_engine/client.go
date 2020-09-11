@@ -5,9 +5,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/cockroachdb/errors"
 	dopts "github.com/docker/cli/opts"
 	"github.com/docker/docker/client"
-	"github.com/pkg/errors"
 )
 
 // parseDockerCLI is doing a small part from client.FromEnv(c)

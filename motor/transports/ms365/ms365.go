@@ -3,7 +3,7 @@ package ms365
 import (
 	"os"
 
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
