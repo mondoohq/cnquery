@@ -43,6 +43,10 @@ func ParseGcpInstanceContext(gcpUrl string) GcpConfig {
 
 type gcrResolver struct{}
 
+func (k *gcrResolver) Name() string {
+	return "GCP Container Registry Resolver"
+}
+
 func (k *gcrResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
@@ -64,6 +68,10 @@ func (k *gcrResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts)
 }
 
 type gcpResolver struct{}
+
+func (k *gcpResolver) Name() string {
+	return "GCP Compute Resolver"
+}
 
 func (k *gcpResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}

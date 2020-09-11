@@ -22,6 +22,10 @@ type EcrImages struct {
 
 var aws_ecr_registry_pattern = "https://%s.dkr.ecr.%s.amazonaws.com"
 
+func (k *EcrImages) Name() string {
+	return "AWS ECR Discover"
+}
+
 func (a *EcrImages) List() ([]*asset.Asset, error) {
 	ctx := context.Background()
 	svc := ecr.New(a.config)

@@ -11,6 +11,10 @@ import (
 
 type instanceResolver struct{}
 
+func (k *instanceResolver) Name() string {
+	return "Instance Resolver"
+}
+
 func (k *instanceResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 

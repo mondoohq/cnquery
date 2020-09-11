@@ -109,6 +109,10 @@ func ParseVagrantStatus(r io.Reader) (map[string]bool, error) {
 
 type vagrantResolver struct{}
 
+func (k *vagrantResolver) Name() string {
+	return "Vagrant Resolver"
+}
+
 type vagrantContext struct {
 	Host string
 }

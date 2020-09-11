@@ -23,6 +23,10 @@ type Compute struct {
 	InstanceSSHUsername string
 }
 
+func (a *Compute) Name() string {
+	return "GCP Compute Discover"
+}
+
 // TODO: try to auto-detect the current project, otherwise return an error
 func (a *Compute) ListInstancesInProject(project string) ([]*asset.Asset, error) {
 

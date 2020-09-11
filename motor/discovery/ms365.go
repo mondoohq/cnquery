@@ -10,6 +10,10 @@ import (
 
 type ms365Resolver struct{}
 
+func (k *ms365Resolver) Name() string {
+	return "Microsoft 365 Resolver"
+}
+
 func (k *ms365Resolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
