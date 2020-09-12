@@ -12,6 +12,7 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/packages"
 	"go.mondoo.io/mondoo/lumi/resources/platformid"
 	"go.mondoo.io/mondoo/lumi/resources/uptime"
+	"go.mondoo.io/mondoo/lumi/resources/windows"
 	"go.mondoo.io/mondoo/motor/motorid/hostname"
 )
 
@@ -23,7 +24,7 @@ func (p *lumiOs) GetRebootpending() ([]interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (p *lumiOs) GetEnv() (map[string]interface{}, error) {
+func (p *lumiOs) getUnixEnv() (map[string]interface{}, error) {
 	rawCmd, err := p.Runtime.CreateResource("command", "command", "env")
 	if err != nil {
 		return nil, err
@@ -46,6 +47,38 @@ func (p *lumiOs) GetEnv() (map[string]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func (p *lumiOs) getWindowsEnv() (map[string]interface{}, error) {
+	rawCmd, err := p.Runtime.CreateResource("powershell",
+		"script", "Get-ChildItem Env:* | ConvertTo-Json",
+	)
+	if err != nil {
+		return nil, err
+	}
+	cmd := rawCmd.(Powershell)
+
+	out, err := cmd.Stdout()
+	if err != nil {
+		return nil, err
+	}
+
+	return windows.ParseEnv(strings.NewReader(out))
+}
+
+func (p *lumiOs) GetEnv() (map[string]interface{}, error) {
+	pf, err := p.Runtime.Motor.Platform()
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range pf.Family {
+		if pf.Family[i] == "windows" {
+			return p.getWindowsEnv()
+		}
+	}
+
+	return p.getUnixEnv()
 }
 
 func (p *lumiOs) GetPath() ([]interface{}, error) {
