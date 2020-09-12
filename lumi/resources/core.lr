@@ -1844,3 +1844,96 @@ windows.feature {
   // feature installation state
   installState int
 }
+
+// Windows firewall resource
+windows.firewall {
+  // global firewall settings
+  settings() dict
+
+  // settings that apply to the per-profile configurations of the Windows Firewall with Advanced Security
+  profiles() []windows.firewall.profile
+
+  // firewall rules
+  rules() []windows.firewall.rule
+}
+
+// windows firewall profile entry
+// https://docs.microsoft.com/en-us/previous-versions/windows/desktop/wfascimprov/msft-netfirewallprofile
+windows.firewall.profile {
+  instanceID string
+  // name of the profile
+  name string
+  // whether the firewall is enabled on this profile
+  enabled int
+  // default action for inbound traffic
+  defaultInboundAction int
+  // default action for outbound traffic
+  defaultOutboundAction int
+  // if this is true, administrators will be able to create firewall rules which allow unsolicited inbound traffic to be accepted if this is false, such rules will be ignored
+  allowInboundRules int
+  // determines whether local firewall rules should be merged into the effective policy along with group policy settings
+  allowLocalFirewallRules int
+  // determines whether local IPsec rules should be merged into the effective policy along with rules from group policy
+  allowLocalIPsecRules int
+  // whether to respect user allowed applications created in the legacy firewall
+  allowUserApps int
+  // whether to respect globally opened ports created in the legacy firewall
+  allowUserPorts int
+  // whether to allow unicast responses to multicast traffic
+  allowUnicastResponseToMulticast int
+  // if true, users will be notified when an application listens on a port that is close
+  notifyOnListen int
+  // whether to use stealth mode for IPsec-protected traffic
+  enableStealthModeForIPsec int
+  // maximum size the log file can reach before being rotated
+  logMaxSizeKilobytes int
+  // whether to log allowed packets
+  logAllowed int
+  // whether to log blocked traffic
+  logBlocked int
+  // whether to log an event when rules are ignored
+  logIgnored int
+  // lfilename in which to store the firewall log
+  logFileName string
+}
+
+// windows firewall rule entry
+// https://docs.microsoft.com/en-us/previous-versions/windows/desktop/wfascimprov/msft-netfirewallrule
+windows.firewall.rule {
+  // a string that uniquely identifies this instance within the PolicyStore
+  instanceID string
+  // name of the rule
+  name string
+  // localized name of this rule
+  displayName string
+  // brief description of the rule
+  description string
+  // the group that this rule belongs to
+  displayGroup string
+  // indicates whether this rule is administratively enabled or disabled
+  // values: enabled (1), disabled (2)
+  enabled int
+  // specifies which direction of traffic to match with this rule
+  // values: inbound (1), outbound (2)
+  direction int
+  // specifies the action to take on traffic that matches this rule
+  action int
+  // specifies how this firewall rule will handle edge traversal cases
+  // values: block (0), allow (1), defer to user (2), defer to app (3)
+  edgeTraversalPolicy int
+  // whether to group UDP packets into conversations based upon the local address, local port, and remote port
+  looseSourceMapping bool
+  // whether to group UDP packets into conversations based only upon the local address and port
+  localOnlyMapping bool
+  // PrimaryStatus provides a high level status value
+  // values: unknown (0), ok (1), degraded (2), error (3)
+  primaryStatus int
+  // detailed status of the rule
+  status string
+  // if this object is retrieved from the ActiveStore
+  enforcementStatus string
+  // contains the path to the policy store where this rule originally came from
+  policyStoreSource string
+  // describes the type of policy store where this rule originally came from
+  policyStoreSourceType int
+}

@@ -1,0 +1,77 @@
+[{
+    "CimClass": {
+      "CimSuperClassName": "CIM_ManagedElement",
+      "CimSuperClass": "ROOT/standardcimv2:CIM_ManagedElement",
+      "CimClassProperties": "",                               
+      "CimClassQualifiers": "",
+      "CimClassMethods": "",
+      "CimSystemProperties": "Microsoft.Management.Infrastructure.CimSystemProperties"
+    },
+    "CimInstanceProperties": [],
+    "CimSystemProperties": {},
+    "Profile": "Private",
+    "Enabled": 1,
+    "DefaultInboundAction": 0,
+    "DefaultOutboundAction": 0,
+    "AllowInboundRules": 2,
+    "AllowLocalFirewallRules": 2,
+    "AllowLocalIPsecRules": 2,
+    "AllowUserApps": 2,
+    "AllowUserPorts": 2,
+    "AllowUnicastResponseToMulticast": 2,
+    "NotifyOnListen": 0,
+    "EnableStealthModeForIPsec": 2,
+    "LogMaxSizeKilobytes": 4096,
+    "LogAllowed": 0,
+    "LogBlocked": 0,
+    "LogIgnored": 2,
+    "Caption": null,
+    "Description": null,
+    "ElementName": "",
+    "InstanceID": "MSFT|FW|FirewallProfile|Private",
+    "DisabledInterfaceAliases": [
+      "NotConfigured"
+    ],
+    "LogFileName": "%systemroot%\\system32\\LogFiles\\Firewall\\pfirewall.log",
+    "Name": "Private",
+    "PSComputerName": null
+  },
+  {
+    "CimClass": {
+      "CimSuperClassName": "CIM_ManagedElement",
+      "CimSuperClass": "ROOT/standardcimv2:CIM_ManagedElement",
+      "CimClassProperties": "",                               
+      "CimClassQualifiers": "",
+      "CimClassMethods": "",
+      "CimSystemProperties": "Microsoft.Management.Infrastructure.CimSystemProperties"
+    },
+    "CimInstanceProperties": [],
+    "CimSystemProperties": {},
+    "Profile": "Public",
+    "Enabled": 1,
+    "DefaultInboundAction": 0,
+    "DefaultOutboundAction": 0,
+    "AllowInboundRules": 2,
+    "AllowLocalFirewallRules": 2,
+    "AllowLocalIPsecRules": 2,
+    "AllowUserApps": 2,
+    "AllowUserPorts": 2,
+    "AllowUnicastResponseToMulticast": 2,
+    "NotifyOnListen": 0,
+    "EnableStealthModeForIPsec": 2,
+    "LogMaxSizeKilobytes": 4096,
+    "LogAllowed": 0,
+    "LogBlocked": 0,
+    "LogIgnored": 2,
+    "Caption": null,
+    "Description": null,
+    "ElementName": "",
+    "InstanceID": "MSFT|FW|FirewallProfile|Public",
+    "DisabledInterfaceAliases": [
+      "NotConfigured"
+    ],
+    "LogFileName": "%systemroot%\\system32\\LogFiles\\Firewall\\pfirewall.log",
+    "Name": "Public",
+    "PSComputerName": null
+  }
+]
