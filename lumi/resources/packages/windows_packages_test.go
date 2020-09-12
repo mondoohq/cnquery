@@ -53,22 +53,26 @@ func TestWindowsHotFixParser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	m, err := ParseWindowsHotfixes(c.Stdout)
+	hotfixes, err := ParseWindowsHotfixes(c.Stdout)
 	assert.Nil(t, err)
-	assert.Equal(t, 6, len(m), "detected the right amount of packages")
+	assert.Equal(t, 6, len(hotfixes), "detected the right amount of packages")
 
+	timestamp := hotfixes[0].InstalledOnTime()
+	assert.NotNil(t, timestamp)
+
+	pkgs := HotFixesToPackages(hotfixes)
 	var p Package
 	p = Package{
 		Name:        "KB4486553",
 		Description: "Update",
 		Format:      "windows/hotfix",
 	}
-	assert.Contains(t, m, p)
+	assert.Contains(t, pkgs, p)
 
 	// check empty return
-	m, err = ParseWindowsHotfixes(strings.NewReader(""))
+	hotfixes, err = ParseWindowsHotfixes(strings.NewReader(""))
 	assert.Nil(t, err)
-	assert.Equal(t, 0, len(m), "detected the right amount of packages")
+	assert.Equal(t, 0, len(hotfixes), "detected the right amount of packages")
 }
 
 func TestWinOSUpdatesParser(t *testing.T) {

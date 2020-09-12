@@ -174,14 +174,17 @@ stdout="""
 """
 
 # Hotfixes
-[commands."powershell -c \"Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstallDate, InstalledBy | ConvertTo-Json\""]
+[commands."powershell -c \"Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstalledOn, InstalledBy | ConvertTo-Json\""]
 stdout="""
 [{
 		"Status": null,
 		"Description": "Update",
 		"HotFixId": "KB4486553",
 		"Caption": "http://support.microsoft.com/?kbid=4486553",
-		"InstallDate": null,
+		"InstalledOn":  {                                                                                                                        
+            "value":  "\\/Date(1599609600000)\\/",                                                                                 
+            "DateTime":  "Wednesday, September 9, 2020 12:00:00 AM"                                                              
+        },
 		"InstalledBy": "NT AUTHORITY\\\\SYSTEM"
 	},
 	{
@@ -189,7 +192,10 @@ stdout="""
 		"Description": "Update",
 		"HotFixId": "KB4462930",
 		"Caption": "http://support.microsoft.com/?kbid=4462930",
-		"InstallDate": null,
+		"InstalledOn":  {                                                                                                                        
+            "value":  "\\/Date(1599609600000)\\/",                                                                                 
+            "DateTime":  "Wednesday, September 9, 2020 12:00:00 AM"                                                              
+        },
 		"InstalledBy": "NT AUTHORITY\\\\SYSTEM"
 	},
 	{
@@ -197,7 +203,10 @@ stdout="""
 		"Description": "Security Update",
 		"HotFixId": "KB4470788",
 		"Caption": "http://support.microsoft.com/?kbid=4470788",
-		"InstallDate": null,
+		"InstalledOn":  {                                                                                                                        
+            "value":  "\\/Date(1599609600000)\\/",                                                                                 
+            "DateTime":  "Wednesday, September 9, 2020 12:00:00 AM"                                                              
+        },
 		"InstalledBy": "NT AUTHORITY\\\\SYSTEM"
 	},
 	{
@@ -205,7 +214,10 @@ stdout="""
 		"Description": "Update",
 		"HotFixId": "KB4480056",
 		"Caption": "http://support.microsoft.com/?kbid=4480056",
-		"InstallDate": null,
+		"InstalledOn":  {                                                                                                                        
+            "value":  "\\/Date(1599609600000)\\/",                                                                                 
+            "DateTime":  "Wednesday, September 9, 2020 12:00:00 AM"                                                              
+        },
 		"InstalledBy": "NT AUTHORITY\\\\SYSTEM"
 	},
 	{
@@ -213,7 +225,10 @@ stdout="""
 		"Description": "Security Update",
 		"HotFixId": "KB4487038",
 		"Caption": "http://support.microsoft.com/?kbid=4487038",
-		"InstallDate": null,
+		"InstalledOn":  {                                                                                                                        
+            "value":  "\\/Date(1599609600000)\\/",                                                                                 
+            "DateTime":  "Wednesday, September 9, 2020 12:00:00 AM"                                                              
+        },
 		"InstalledBy": "NT AUTHORITY\\\\SYSTEM"
 	},
 	{
@@ -221,7 +236,10 @@ stdout="""
 		"Description": "Update",
 		"HotFixId": "KB4482887",
 		"Caption": "http://support.microsoft.com/?kbid=4482887",
-		"InstallDate": null,
+		"InstalledOn":  {                                                                                                                        
+            "value":  "\\/Date(1599609600000)\\/",                                                                                 
+            "DateTime":  "Wednesday, September 9, 2020 12:00:00 AM"                                                              
+        },
 		"InstalledBy": "NT AUTHORITY\\\\SYSTEM"
 	}
 ]

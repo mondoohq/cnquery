@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"regexp"
+	"strconv"
+	"time"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -77,7 +80,7 @@ const (
 )
 
 var (
-	WINDOWS_QUERY_HOTFIXES       = `Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstallDate, InstalledBy | ConvertTo-Json`
+	WINDOWS_QUERY_HOTFIXES       = `Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstalledOn, InstalledBy | ConvertTo-Json`
 	WINDOWS_QUERY_APPX_PACKAGES  = `Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version  | ConvertTo-Json`
 	WINDOWS_QUERY_WSUS_AVAILABLE = `
 $ProgressPreference='SilentlyContinue';
@@ -197,16 +200,36 @@ func ParseWindowsUpdates(input io.Reader) ([]Package, error) {
 	return updates, nil
 }
 
-type powershellWinHotFix struct {
+type PowershellWinHotFix struct {
 	Status      string `json:"Status"`
 	Description string `json:"Description"`
 	HotFixId    string `json:"HotFixId"`
 	Caption     string `json:"Caption"`
-	InstallDate string `json:"InstallDate"`
+	InstalledOn struct {
+		Value    string `json:"value"`
+		DateTime string `json:"DateTime"`
+	} `json:"InstalledOn"`
 	InstalledBy string `json:"InstalledBy"`
 }
 
-func ParseWindowsHotfixes(input io.Reader) ([]Package, error) {
+var powershellTimestamp = regexp.MustCompile(`Date\((\d+)\)`)
+
+func (hf PowershellWinHotFix) InstalledOnTime() *time.Time {
+	// extract unix seconds
+	m := powershellTimestamp.FindStringSubmatch(hf.InstalledOn.Value)
+	if len(m) > 0 {
+		i, err := strconv.ParseInt(m[1], 10, 64)
+		if err != nil {
+			return nil
+		}
+
+		tm := time.Unix(0, i*int64(time.Millisecond))
+		return &tm
+	}
+	return nil
+}
+
+func ParseWindowsHotfixes(input io.Reader) ([]PowershellWinHotFix, error) {
 	data, err := ioutil.ReadAll(input)
 	if err != nil {
 		return nil, err
@@ -214,24 +237,28 @@ func ParseWindowsHotfixes(input io.Reader) ([]Package, error) {
 
 	// for empty result set do not get the '{}', therefore lets abort here
 	if len(data) == 0 {
-		return []Package{}, nil
+		return []PowershellWinHotFix{}, nil
 	}
 
-	var powershellWinHotFixPkgs []powershellWinHotFix
+	var powershellWinHotFixPkgs []PowershellWinHotFix
 	err = json.Unmarshal(data, &powershellWinHotFixPkgs)
 	if err != nil {
 		return nil, err
 	}
 
-	pkgs := make([]Package, len(powershellWinHotFixPkgs))
-	for i := range powershellWinHotFixPkgs {
+	return powershellWinHotFixPkgs, nil
+}
+
+func HotFixesToPackages(hotfixes []PowershellWinHotFix) []Package {
+	pkgs := make([]Package, len(hotfixes))
+	for i := range hotfixes {
 		pkgs[i] = Package{
-			Name:        powershellWinHotFixPkgs[i].HotFixId,
-			Description: powershellWinHotFixPkgs[i].Description,
+			Name:        hotfixes[i].HotFixId,
+			Description: hotfixes[i].Description,
 			Format:      "windows/hotfix",
 		}
 	}
-	return pkgs, nil
+	return pkgs
 }
 
 type WinPkgManager struct {
@@ -292,7 +319,9 @@ func (win *WinPkgManager) List() ([]Package, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not parse hotfix results")
 	}
-	pkgs = append(pkgs, hotfixes...)
+	hotfixAsPkgs := HotFixesToPackages(hotfixes)
+
+	pkgs = append(pkgs, hotfixAsPkgs...)
 
 	return pkgs, nil
 }
