@@ -1,0 +1,91 @@
+[{
+    "Path": "Windows PowerShell",
+    "Name": "PowerShellRoot",
+    "DisplayName": "Windows PowerShell",
+    "Description": "Windows PowerShell enables you to automate local and remote Windows administration. This task-based command-line shell and scripting language is built on the Microsoft.NET Framework.It includes hundreds of built - in commands and lets you write and distribute your own commands and scripts.",                                                                                                                      
+    "Installed": true,
+    "InstallState": 1,
+    "FeatureType": "Feature",
+    "DependsOn": [
+
+    ],
+    "Parent": null,
+    "SubFeatures": [
+      "PowerShell",
+      "PowerShell-V2",
+      "DSC-Service",
+      "WindowsPowerShellWebAccess"
+    ]
+  },
+  {
+    "Path": "Windows PowerShell\\Windows PowerShell 5.1",
+    "Name": "PowerShell",
+    "DisplayName": "Windows PowerShell 5.1",
+    "Description": "Windows PowerShell enables you to automate local and remote Windows administration. This task-based command-line shell and scripting language is built on the Microsoft.NET Framework.It includes hundreds of built - in commands and lets you write and distribute your own commands and scripts.",                                                                                                                      
+    "Installed": true,
+    "InstallState": 1,
+    "FeatureType": "Feature",
+    "DependsOn": [
+      "NET-Framework-45-Core"
+    ],
+    "Parent": "PowerShellRoot",
+    "SubFeatures": [
+
+    ]
+  },
+  {
+    "Path": "Windows PowerShell\\Windows PowerShell 2.0 Engine",
+    "Name": "PowerShell-V2",
+    "DisplayName": "Windows PowerShell 2.0 Engine",
+    "Description": "Windows PowerShell 2.0 Engine includes the core components from Windows PowerShell 2.0 for backward compatibility with existing Windows PowerShell host applications.",                                                                                                  
+    "Installed": false,
+    "InstallState": 5,
+    "FeatureType": "Feature",
+    "DependsOn": [
+      "PowerShell",
+      "NET-Framework-Core"
+    ],
+    "Parent": "PowerShellRoot",
+    "SubFeatures": [
+
+    ]
+  },
+  {
+    "Path": "Windows PowerShell\\Windows PowerShell Desired State Configuration Service",
+    "Name": "DSC-Service",
+    "DisplayName": "Windows PowerShell Desired State Configuration Service",
+    "Description": "Windows PowerShell Desired State Configuration Service supports configuration management of multiple nodes from a single repository.",                                                                                                                                   
+    "Installed": false,
+    "InstallState": 0,
+    "FeatureType": "Feature",
+    "DependsOn": [
+      "ManagementOdata"
+    ],
+    "Parent": "PowerShellRoot",
+    "SubFeatures": [
+
+    ]
+  },
+  {
+    "Path": "Windows PowerShell\\Windows PowerShell Web Access",
+    "Name": "WindowsPowerShellWebAccess",
+    "DisplayName": "Windows PowerShell Web Access",
+    "Description": "Windows PowerShell Web Access lets a server act as a web gateway, through which an organization\u0027s users can manage remote computers by running Windows PowerShell sessions in a web browser.After Windows PowerShell Web Access is installed, an administrator completes the gateway configuration in the Web Server(IIS) management console.",                                                                    
+    "Installed": false,
+    "InstallState": 0,
+    "FeatureType": "Feature",
+    "DependsOn": [
+      "PowerShell",
+      "Web-Static-Content",
+      "Web-Default-Doc",
+      "Web-Filtering",
+      "Web-Http-Errors",
+      "Web-Http-Redirect",
+      "Web-Asp-Net45"
+    ],
+    "Parent": "PowerShellRoot",
+    "SubFeatures": [
+
+    ]
+  }
+]
