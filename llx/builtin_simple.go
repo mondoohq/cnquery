@@ -1353,6 +1353,17 @@ func arrayOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	return boolOp(c, bind, chunk, ref, opArrayOrString)
 }
 
+// string + T
+
+func stringPlusString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		l := left.(string)
+		r := right.(string)
+
+		return StringData(l + r)
+	})
+}
+
 // regex &&/|| T
 
 func regexAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {

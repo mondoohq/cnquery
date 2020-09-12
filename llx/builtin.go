@@ -264,6 +264,7 @@ func init() {
 			string("||" + types.Dict):                {f: stringOrDict, Label: "||"},
 			string("&&" + types.ArrayLike):           {f: stringAndArray, Label: "&&"},
 			string("||" + types.ArrayLike):           {f: stringOrArray, Label: "||"},
+			string("+" + types.String):               {f: stringPlusString, Label: "+"},
 			// fields
 			string("contains" + types.String):              {f: stringContainsString, Label: "contains"},
 			string("contains" + types.Array(types.String)): {f: stringContainsArrayString, Label: "contains"},
