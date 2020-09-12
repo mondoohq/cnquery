@@ -1805,4 +1805,22 @@ windows {
   // 
   // see https://docs.microsoft.com/en-us/dotnet/api/microsoft.powershell.commands.computerinfo?view=powershellsdk-1.1.0 for more information
   computerInfo() dict
+
+  // Gets the hotfixes that are installed on the computer
+  hotfixes() []windows.hotfix
+}
+
+// Windows hotfix resource
+windows.hotfix {
+  init(hotfixId string)
+  // hotfix id
+  hotfixId string
+  // type of hotfix eg. `Update` or `Security Update`
+  description string
+  // reference to knowledge base
+  caption string
+  // date the hotfix was installed on
+  installedOn time
+  // user that installed the hotfix
+  installedBy string
 }
