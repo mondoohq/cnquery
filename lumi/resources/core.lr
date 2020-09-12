@@ -1808,6 +1808,9 @@ windows {
 
   // Gets the hotfixes that are installed on the computer
   hotfixes() []windows.hotfix
+
+  // Gets information about Windows Server roles, role services, and features that are available for installation and installed on a specified server.
+  features() []windows.feature
 }
 
 // Windows hotfix resource
@@ -1823,4 +1826,21 @@ windows.hotfix {
   installedOn time
   // user that installed the hotfix
   installedBy string
+}
+
+// Windows feature resource
+windows.feature {
+  init(name string)
+  // feature full path 
+  path string
+  // command IDs of role, role service, or feature
+  name string
+  // feature name
+  displayName string
+  // feature description
+  description string
+  // flag indicates whether the feature is installed
+  installed bool
+  // feature installation state
+  installState int
 }

@@ -101,3 +101,80 @@ func (w *lumiWindows) GetHotfixes() ([]interface{}, error) {
 
 	return lumiHotFixes, nil
 }
+
+func (wh *lumiWindowsFeature) id() (string, error) {
+	return wh.Path()
+}
+
+func (p *lumiWindowsFeature) init(args *lumi.Args) (*lumi.Args, WindowsFeature, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	nameRaw := (*args)["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+
+	name, ok := nameRaw.(string)
+	if !ok {
+		return args, nil, nil
+	}
+
+	obj, err := p.Runtime.CreateResource("windows")
+	if err != nil {
+		return nil, nil, err
+	}
+	winResource := obj.(Windows)
+
+	features, err := winResource.Features()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for i := range features {
+		hf := features[i].(WindowsFeature)
+		id, err := hf.Name()
+		if err == nil && id == name {
+			return nil, hf, nil
+		}
+	}
+
+	// if the feature cannot be found we return an error
+	return nil, nil, errors.New("could not find feature " + name)
+}
+
+func (w *lumiWindows) GetFeatures() ([]interface{}, error) {
+	// query features
+	encodedCmd := powershell.Encode(windows.QUERY_FEATURES)
+	executedCmd, err := w.Runtime.Motor.Transport.RunCommand(encodedCmd)
+	if err != nil {
+		return nil, err
+	}
+
+	features, err := windows.ParseWindowsFeatures(executedCmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	// convert features to lumi resource
+	lumiFeatures := make([]interface{}, len(features))
+	for i, feature := range features {
+
+		lumiFeature, err := w.Runtime.CreateResource("windows.feature",
+			"path", feature.Path,
+			"name", feature.Name,
+			"displayName", feature.DisplayName,
+			"description", feature.Description,
+			"installed", feature.Installed,
+			"installState", feature.InstallState,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		lumiFeatures[i] = lumiFeature.(WindowsFeature)
+	}
+
+	return lumiFeatures, nil
+}
