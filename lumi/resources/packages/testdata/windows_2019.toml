@@ -1,5 +1,5 @@
 # Packages
-[commands."powershell -c \"Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version  | ConvertTo-Json -AsArray\""]
+[commands."powershell -c \"Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version  | ConvertTo-Json\""]
 stdout="""
 [
     {
@@ -174,7 +174,7 @@ stdout="""
 """
 
 # Hotfixes
-[commands."powershell -c \"Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstallDate, InstalledBy | ConvertTo-Json -AsArray\""]
+[commands."powershell -c \"Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstallDate, InstalledBy | ConvertTo-Json\""]
 stdout="""
 [{
 		"Status": null,
