@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/tj/assert"
+	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/lumi/resources/services"
 )
 

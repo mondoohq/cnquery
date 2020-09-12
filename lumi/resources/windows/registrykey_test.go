@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/tj/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestWindowsRegistryKeyItemParser(t *testing.T) {
