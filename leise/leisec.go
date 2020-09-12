@@ -249,6 +249,14 @@ func (c *compiler) dereferenceType(val *llx.Primitive) (types.Type, error) {
 	}
 
 	chunk := c.Result.Code.Code[ref-1]
+	if chunk.Primitive == val {
+		return types.Nil, errors.New("recursive reference connections detected")
+	}
+
+	if chunk.Primitive != nil {
+		return c.dereferenceType(chunk.Primitive)
+	}
+
 	valType = chunk.Type(c.Result.Code)
 	return valType, nil
 }
@@ -324,10 +332,12 @@ func (c *compiler) resourceArgs(resource *lumi.ResourceInfo, args []*parser.Arg)
 		if err != nil {
 			return nil, errors.New("resourceArgs error: " + err.Error())
 		}
-		vt := types.Type(v.Type)
-		if vt == types.Ref {
-			return nil, errors.New("cannot handle refs in function args just yet")
+
+		vt, err := c.dereferenceType(v)
+		if err != nil {
+			return nil, err
 		}
+
 		ft := types.Type(field.Type)
 		if vt != ft {
 			return nil, errors.New("Wrong type for field " + arg.Name + " in resource " + resource.Name + ": expected " + ft.Label() + ", got " + vt.Label())
