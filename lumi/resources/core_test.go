@@ -243,6 +243,15 @@ func TestCore_If(t *testing.T) {
 	})
 }
 
+func TestCore_Vars(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"p = file('/etc/ssh/sshd_config'); sshd.config(file: p)",
+			1, true,
+		},
+	})
+}
+
 func TestBooleans(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
