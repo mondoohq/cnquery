@@ -375,6 +375,10 @@ func TestString_Methods(t *testing.T) {
 			"'he\nll\no'.lines",
 			0, []interface{}{"he", "ll", "o"},
 		},
+		{
+			"'hello ' + 'world'",
+			0, "hello world",
+		},
 	})
 }
 
