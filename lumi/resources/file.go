@@ -224,6 +224,8 @@ func (s *lumiFile) stat() (FilePermissions, int64, error) {
 		"suid", fi.Mode.Suid(),
 		"sgid", fi.Mode.Sgid(),
 		"sticky", fi.Mode.Sticky(),
+		"isDirectory", fi.Mode.IsDir(),
+		"isFile", fi.Mode.IsRegular(),
 	)
 	if err != nil {
 		return nil, 0, err
