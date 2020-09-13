@@ -662,6 +662,14 @@ func TestDict_Methods(t *testing.T) {
 			1, true,
 		},
 		{
+			"parse.json('/dummy.json').params['h'] + ' world'",
+			0, "hello world",
+		},
+		{
+			"parse.json('/dummy.json').params['h'].trim('ho')",
+			0, "ell",
+		},
+		{
 			"parse.json('/dummy.json').params['h'] { _.contains('llo') }",
 			1, true,
 		},

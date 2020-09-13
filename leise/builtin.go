@@ -53,6 +53,7 @@ func init() {
 			"downcase": {typ: stringType, signature: FunctionSignature{}},
 			"lines":    {typ: stringArrayType, signature: FunctionSignature{}},
 			"split":    {typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
+			"trim":     {typ: stringType, signature: FunctionSignature{Required: 0, Args: []types.Type{types.String}}},
 			// array-ish
 			"where":    {compile: compileWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"contains": {compile: compileStringContains, typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
