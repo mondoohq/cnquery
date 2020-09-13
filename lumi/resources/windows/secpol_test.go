@@ -1,11 +1,11 @@
-package windows_test
+package windows
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/lumi/resources/windows"
+	"go.mondoo.io/mondoo/lumi/resources/powershell"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
@@ -14,10 +14,11 @@ func TestParseSecpol(t *testing.T) {
 	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/secpol.toml"})
 	require.NoError(t, err)
 
-	f, err := mock.RunCommand("powershell.exe -EncodedCommand CgBzAGUAYwBlAGQAaQB0ACAALwBlAHgAcABvAHIAdAAgAC8AYwBmAGcAIABvAHUAdAAuAGMAZgBnACAAIAB8ACAATwB1AHQALQBOAHUAbABsAAoAJAByAGEAdwAgAD0AIABHAGUAdAAtAEMAbwBuAHQAZQBuAHQAIABvAHUAdAAuAGMAZgBnAAoAUgBlAG0AbwB2AGUALQBJAHQAZQBtACAALgBcAG8AdQB0AC4AYwBmAGcAIAB8ACAATwB1AHQALQBOAHUAbABsAAoAVwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIAAkAHIAYQB3AAoA")
+	encoded := powershell.Encode(SecpolScript)
+	f, err := mock.RunCommand(encoded)
 	require.NoError(t, err)
 
-	secpol, err := windows.ParseSecpol(f.Stdout)
+	secpol, err := ParseSecpol(f.Stdout)
 	require.NoError(t, err)
 
 	assert.Equal(t, "42", secpol.SystemAccess["MaximumPasswordAge"])
