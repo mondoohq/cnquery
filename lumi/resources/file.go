@@ -148,6 +148,20 @@ func (s *lumiFile) GetUser() (interface{}, error) {
 		return nil, err
 	}
 
+	platform, err := s.Runtime.Motor.Platform()
+	if err != nil {
+		return nil, err
+	}
+
+	// special handling for windows
+	// NOTE: on windows an owner can also be a group, therefore we need to be very careful in implementing it here
+	// Probably we are better of in implementing a windows.file resource that deals with specific behavior on windows
+	// see https://devblogs.microsoft.com/scripting/hey-scripting-guy-how-can-i-use-windows-powershell-to-determine-the-owner-of-a-file/
+	if platform.IsFamily("windows") {
+		return nil, errors.New("user is not supported on windows")
+	}
+
+	// handle unix
 	fi, err := s.Runtime.Motor.Transport.FileInfo(path)
 	if err != nil {
 		return nil, err
@@ -160,7 +174,6 @@ func (s *lumiFile) GetUser() (interface{}, error) {
 	}
 
 	lumiUser, err := s.Runtime.CreateResource("user",
-		"id", strconv.FormatInt(fi.Uid, 10),
 		"uid", fi.Uid,
 	)
 	if err != nil {
@@ -173,6 +186,15 @@ func (s *lumiFile) GetGroup() (interface{}, error) {
 	path, err := s.Path()
 	if err != nil {
 		return nil, err
+	}
+
+	platform, err := s.Runtime.Motor.Platform()
+	if err != nil {
+		return nil, err
+	}
+
+	if platform.IsFamily("windows") {
+		return nil, errors.New("group is not supported on windows")
 	}
 
 	fi, err := s.Runtime.Motor.Transport.FileInfo(path)
