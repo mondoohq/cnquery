@@ -207,6 +207,15 @@ func dictSplit(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDa
 	return stringSplit(c, bind, chunk, ref)
 }
 
+func dictTrim(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	_, ok := bind.Value.(string)
+	if !ok {
+		return nil, 0, errors.New("dict value does not support field `trim`")
+	}
+
+	return stringTrim(c, bind, chunk, ref)
+}
+
 func dictKeys(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
 		return nil, 0, nil
@@ -1243,4 +1252,42 @@ func arrayAndDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 
 func arrayOrDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOp(c, bind, chunk, ref, opArrayOrDict)
+}
+
+// dict +
+
+func dictPlusString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		r := right.(string)
+
+		switch l := left.(type) {
+		case string:
+			return StringData(l + r)
+		default:
+			return &RawData{
+				Type:  types.Nil,
+				Value: nil,
+				Error: errors.New("dict value does not support `+` operation with string"),
+			}
+		}
+
+	})
+}
+
+func stringPlusDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		l := left.(string)
+
+		switch r := right.(type) {
+		case string:
+			return StringData(l + r)
+		default:
+			return &RawData{
+				Type:  types.Nil,
+				Value: nil,
+				Error: errors.New("dict value does not support `+` operation with string"),
+			}
+		}
+
+	})
 }

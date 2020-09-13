@@ -399,6 +399,7 @@ func init() {
 			string("||" + types.Dict):      {f: dictOrDict, Label: "||"},
 			string("&&" + types.ArrayLike): {f: dictAndArray, Label: "&&"},
 			string("||" + types.ArrayLike): {f: dictOrArray, Label: "||"},
+			string("+" + types.String):     {f: dictPlusString, Label: "+"},
 			// fields
 			"[]":                              {f: dictGetIndex},
 			"length":                          {f: dictLength},
@@ -406,6 +407,7 @@ func init() {
 			"downcase":                        {f: dictDowncase, Label: "downcase"},
 			"lines":                           {f: dictLines, Label: "lines"},
 			"split":                           {f: dictSplit, Label: "split"},
+			"trim":                            {f: dictTrim, Label: "trim"},
 			"keys":                            {f: dictKeys, Label: "keys"},
 			"values":                          {f: dictValues, Label: "values"},
 			"where":                           {f: dictWhere, Label: "where"},
