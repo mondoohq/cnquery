@@ -150,6 +150,10 @@ file.permissions {
   sgid bool
   // Sticky bit indicator
   sticky bool
+  // whether the file describes a directory
+  isDirectory bool
+  // whether the file describes a regular file
+  isFile bool
 }
 
 // Find files on the system efficiently
