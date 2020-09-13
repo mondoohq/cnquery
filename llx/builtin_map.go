@@ -369,6 +369,15 @@ func dictContainsArrayString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref 
 	}
 }
 
+func dictFind(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	switch bind.Value.(type) {
+	case string:
+		return stringFind(c, bind, chunk, ref)
+	default:
+		return nil, 0, errors.New("dict value does not support field `find`")
+	}
+}
+
 // dict ==/!= nil
 
 func opDictCmpNil(left interface{}, right interface{}) bool {
@@ -613,6 +622,93 @@ func regexCmpDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 
 func regexNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolNotOp(c, bind, chunk, ref, opRegexCmpDict)
+}
+
+// dict ==/!= arrays
+
+func opDictCmpArray(left interface{}, right interface{}) bool {
+	switch left.(type) {
+	case string:
+		return false
+	default:
+		return false
+	}
+}
+
+func dictCmpArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opDictCmpArray)
+}
+
+func dictNotArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolNotOp(c, bind, chunk, ref, opDictCmpArray)
+}
+
+func opDictCmpStringarray(left *RawData, right *RawData) bool {
+	switch left.Value.(type) {
+	case string:
+		return cmpArrayOne(right, left, opStringCmpString)
+	default:
+		return false
+	}
+}
+
+func dictCmpStringarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return rawboolOp(c, bind, chunk, ref, opDictCmpStringarray)
+}
+
+func dictNotStringarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return rawboolNotOp(c, bind, chunk, ref, opDictCmpStringarray)
+}
+
+func opDictCmpBoolarray(left *RawData, right *RawData) bool {
+	switch left.Value.(type) {
+	case string:
+		return cmpArrayOne(right, left, opBoolCmpString)
+	default:
+		return false
+	}
+}
+
+func dictCmpBoolarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return rawboolOp(c, bind, chunk, ref, opDictCmpStringarray)
+}
+
+func dictNotBoolarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return rawboolNotOp(c, bind, chunk, ref, opDictCmpStringarray)
+}
+
+func opDictCmpIntarray(left *RawData, right *RawData) bool {
+	switch left.Value.(type) {
+	case string:
+		return cmpArrayOne(right, left, opIntCmpString)
+	default:
+		return false
+	}
+}
+
+func dictCmpIntarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return rawboolOp(c, bind, chunk, ref, opDictCmpIntarray)
+}
+
+func dictNotIntarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return rawboolNotOp(c, bind, chunk, ref, opDictCmpIntarray)
+}
+
+func opDictCmpFloatarray(left *RawData, right *RawData) bool {
+	switch left.Value.(type) {
+	case string:
+		return cmpArrayOne(right, left, opFloatCmpString)
+	default:
+		return false
+	}
+}
+
+func dictCmpFloatarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return rawboolOp(c, bind, chunk, ref, opDictCmpFloatarray)
+}
+
+func dictNotFloatarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return rawboolNotOp(c, bind, chunk, ref, opDictCmpFloatarray)
 }
 
 // dict ==/!= dict
