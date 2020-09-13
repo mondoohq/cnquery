@@ -24,7 +24,7 @@ func NewConsoleWriter(out io.Writer, nocolor bool, compact bool) zerolog.Logger 
 
 func consoleFormatLevel(noColor bool) zerolog.Formatter {
 
-	errorIcon := "𐄂"
+	errorIcon := "✗"
 	// support ansi cmd on windows
 	// TODO: detect if we have a utf console
 	if runtime.GOOS == "windows" {
