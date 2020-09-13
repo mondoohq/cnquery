@@ -258,6 +258,20 @@ func (c *LeiseExecutor) createResource(name string, f *Function, ref int32) (*Ra
 
 	resource, err := c.runtime.CreateResource(name, args...)
 	if err != nil {
+		// in case it's not something that requires later loading, store the error
+		// so that consecutive steps can retrieve it cached
+		if _, ok := err.(lumi.NotReadyError); !ok {
+			res := stepCache{
+				Result: &RawData{
+					Type:  types.Resource(name),
+					Value: nil,
+					Error: err,
+				},
+				IsStatic: true,
+			}
+			c.cache.Store(ref, &res)
+		}
+
 		return nil, 0, err
 	}
 
