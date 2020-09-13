@@ -1682,7 +1682,7 @@ func stringTrim(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 		return &RawData{Type: bind.Type}, 0, nil
 	}
 
-	cutset := " \t\n"
+	cutset := " \t\n\r"
 
 	if len(chunk.Function.Args) != 0 {
 		argRef := chunk.Function.Args[0]
