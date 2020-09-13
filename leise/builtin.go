@@ -36,6 +36,7 @@ func init() {
 			"length":   {typ: intType, signature: FunctionSignature{}},
 			"lines":    {typ: stringArrayType, signature: FunctionSignature{}},
 			"split":    {typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
+			"trim":     {typ: stringType, signature: FunctionSignature{Required: 0, Args: []types.Type{types.String}}},
 		},
 		types.Time: {
 			"seconds": {typ: intType, signature: FunctionSignature{}},

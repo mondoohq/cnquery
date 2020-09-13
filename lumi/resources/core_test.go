@@ -385,6 +385,14 @@ func TestString_Methods(t *testing.T) {
 			0, []interface{}{"he", "ll", "o"},
 		},
 		{
+			"' \n\t yo \t \n   '.trim",
+			0, "yo",
+		},
+		{
+			"'  \tyo  \n   '.trim(' \n')",
+			0, "\tyo",
+		},
+		{
 			"'hello ' + 'world'",
 			0, "hello world",
 		},
