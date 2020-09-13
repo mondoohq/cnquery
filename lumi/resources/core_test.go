@@ -213,6 +213,10 @@ func TestErroneousLlxChains(t *testing.T) {
 	testTimeout(t,
 		`ntp.conf { settings.contains("a") settings.contains("b") }`,
 	)
+
+	testTimeout(t,
+		`user(name: 'i_definitely_dont_exist').authorizedkeys`,
+	)
 }
 
 func TestResource_InitWithResource(t *testing.T) {

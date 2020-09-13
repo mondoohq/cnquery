@@ -98,7 +98,7 @@ func (u *lumiUser) init(args *lumi.Args) (*lumi.Args, User, error) {
 		}
 
 		if foundUser == nil {
-			return nil, nil, errors.New("user> " + username + " does not exist")
+			return nil, nil, errors.New("user '" + username + "' does not exist")
 		}
 
 		// copy parsed user info to lumi args
