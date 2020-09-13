@@ -505,6 +505,39 @@ func init() {
 			string(types.Resource("parse") + ".date"): {f: resourceDate},
 		},
 	}
+
+	validateBuiltinFunctions()
+}
+
+func validateBuiltinFunctions() {
+	missing := []string{}
+
+	// dict must have all string methods supported
+	dictFun := BuiltinFunctions[types.Dict]
+	if dictFun == nil {
+		dictFun = map[string]chunkHandler{}
+	}
+
+	stringFun := BuiltinFunctions[types.String]
+	if stringFun == nil {
+		stringFun = map[string]chunkHandler{}
+	}
+
+	for id := range stringFun {
+		if _, ok := dictFun[id]; !ok {
+			missing = append(missing, fmt.Sprintf("dict> missing dict counterpart of string function %#v", id))
+		}
+	}
+
+	// finalize
+	if len(missing) == 0 {
+		return
+	}
+	fmt.Println("Missing functions:")
+	for _, msg := range missing {
+		fmt.Println(msg)
+	}
+	panic("missing functions must be added")
 }
 
 func runResourceFunction(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
