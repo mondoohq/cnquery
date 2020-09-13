@@ -1,8 +1,7 @@
 package resources
 
 import (
-	"fmt"
-
+	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
 	"go.mondoo.io/mondoo/lumi/resources/windows"
@@ -26,7 +25,7 @@ func (s *lumiSecpol) policy() (*windows.Secpol, error) {
 
 	cmd, err := s.Runtime.Motor.Transport.RunCommand(encoded)
 	if err != nil {
-		return nil, fmt.Errorf("could not run auditpol")
+		return nil, errors.Wrap(err, "could not run secpol script")
 	}
 
 	policy, err = windows.ParseSecpol(cmd.Stdout)
