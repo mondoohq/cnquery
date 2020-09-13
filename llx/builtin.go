@@ -273,6 +273,7 @@ func init() {
 			string("length"):   {f: stringLength, Label: "length"},
 			string("lines"):    {f: stringLines, Label: "lines"},
 			string("split"):    {f: stringSplit, Label: "split"},
+			string("trim"):     {f: stringTrim, Label: "trim"},
 		},
 		types.Regex: {
 			// == / !=

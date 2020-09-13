@@ -1677,6 +1677,36 @@ func stringSplit(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return ArrayData(res, types.String), 0, nil
 }
 
+func stringTrim(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type}, 0, nil
+	}
+
+	cutset := " \t\n"
+
+	if len(chunk.Function.Args) != 0 {
+		argRef := chunk.Function.Args[0]
+		arg, rref, err := c.resolveValue(argRef, ref)
+		if err != nil || rref > 0 {
+			return nil, rref, err
+		}
+
+		if arg.Value == nil {
+			return &RawData{
+				Type:  bind.Type,
+				Value: nil,
+				Error: errors.New("failed to trim string, cutset was null"),
+			}, 0, nil
+		}
+
+		cutset = arg.Value.(string)
+	}
+
+	res := strings.Trim(bind.Value.(string), cutset)
+
+	return StringData(res), 0, nil
+}
+
 // time methods
 
 // zeroTimeOffset to help convert unix times into base times that start at the year 0
