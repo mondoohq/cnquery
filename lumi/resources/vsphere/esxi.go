@@ -108,8 +108,8 @@ func (esxi *Esxi) ListNicPauseParams() ([]map[string]interface{}, error) {
 
 type VmKernelNic struct {
 	Properties map[string]interface{}
-	Ipv4       map[string]interface{}
-	Ipv6       map[string]interface{}
+	Ipv4       []interface{}
+	Ipv6       []interface{}
 }
 
 // (Get-EsxCli).network.ip.interface.list()
@@ -153,26 +153,27 @@ func (esxi *Esxi) Vmknics() ([]VmKernelNic, error) {
 }
 
 // (Get-EsxCli).network.ip.interface.ipv4.get('vmk0', 'defaultTcpipStack')
-func (esxi *Esxi) VmknicIp(interfacename string, netstack string, ipprotocol string) (map[string]interface{}, error) {
+func (esxi *Esxi) VmknicIp(interfacename string, netstack string, ipprotocol string) ([]interface{}, error) {
 	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := e.Run([]string{"network", "ip", "interface", ipprotocol, "get"})
+	resp, err := e.Run([]string{"network", "ip", "interface", ipprotocol, "get"})
 	if err != nil {
 		return nil, err
 	}
 
-	if len(res.Values) == 0 {
+	if len(resp.Values) == 0 {
 		return nil, nil
 	}
 
-	if len(res.Values) > 1 {
-		return nil, errors.New("vmknic ip returns more than one entry, this is unsupported")
+	res := []interface{}{}
+	for i := range resp.Values {
+		entry := esxiValuesToDict(resp.Values[i])
+		res = append(res, entry)
 	}
-
-	return esxiValuesToDict(res.Values[0]), nil
+	return res, nil
 }
 
 type EsxiVib struct {
