@@ -719,9 +719,9 @@ vsphere.vmknic {
   // Interface properties
   properties dict
   // IPv4 information
-  ipv4 dict
+  ipv4 []dict
   // IPv6 information
-  ipv6 dict
+  ipv6 []dict
 }
 
 // vSphere installation bundle resource
