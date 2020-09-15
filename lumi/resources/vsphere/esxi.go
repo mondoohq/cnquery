@@ -110,6 +110,7 @@ type VmKernelNic struct {
 	Properties map[string]interface{}
 	Ipv4       []interface{}
 	Ipv6       []interface{}
+	Tags       []string
 }
 
 // (Get-EsxCli).network.ip.interface.list()
@@ -147,6 +148,13 @@ func (esxi *Esxi) Vmknics() ([]VmKernelNic, error) {
 		}
 		nic.Ipv6 = ipv6Params
 
+		// gather tags
+		tags, err := esxi.VmknicTags(name)
+		if err != nil {
+			return nil, err
+		}
+		nic.Tags = tags
+
 		vmknics[i] = nic
 	}
 	return vmknics, nil
@@ -159,7 +167,7 @@ func (esxi *Esxi) VmknicIp(interfacename string, netstack string, ipprotocol str
 		return nil, err
 	}
 
-	resp, err := e.Run([]string{"network", "ip", "interface", ipprotocol, "get"})
+	resp, err := e.Run([]string{"network", "ip", "interface", ipprotocol, "get", "--interface-name", interfacename, "--netstack", netstack})
 	if err != nil {
 		return nil, err
 	}
@@ -174,6 +182,33 @@ func (esxi *Esxi) VmknicIp(interfacename string, netstack string, ipprotocol str
 		res = append(res, entry)
 	}
 	return res, nil
+}
+
+// (Get-EsxCli).network.ip.interface.tag.get('vmk0')
+// see https://blogs.vmware.com/vsphere/2012/12/tagging-vmkernel-traffic-types-using-esxcli-5-1.html
+// see https://kb.vmware.com/s/article/65184
+func (esxi *Esxi) VmknicTags(interfacename string) ([]string, error) {
+	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := e.Run([]string{"network", "ip", "interface", "tag", "get", "--interface-name", interfacename})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(resp.Values) == 0 {
+		return nil, nil
+	}
+
+	if len(resp.Values) > 1 {
+		return nil, errors.New("network.ip.interface.tag returns more than one value, this is unexpected")
+	}
+
+	val := resp.Values[0]
+	tags := val["Tags"]
+	return tags, nil
 }
 
 type EsxiVib struct {
