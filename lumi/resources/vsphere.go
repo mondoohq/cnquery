@@ -383,6 +383,7 @@ func (v *lumiVsphereHost) GetVmknics() ([]interface{}, error) {
 			"properties", entry.Properties,
 			"ipv4", entry.Ipv4,
 			"ipv6", entry.Ipv6,
+			"tags", sliceInterface(entry.Tags),
 		)
 		if err != nil {
 			return nil, err

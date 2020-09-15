@@ -722,6 +722,8 @@ vsphere.vmknic {
   ipv4 []dict
   // IPv6 information
   ipv6 []dict
+  // network interface tag
+  tags []string
 }
 
 // vSphere installation bundle resource
