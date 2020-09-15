@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"strings"
 
 	msgraphbeta "github.com/yaegashi/msgraph.go/beta"
 	"go.mondoo.io/mondoo/lumi"
@@ -71,6 +72,11 @@ func (m *lumiMsgraphBetaSecurity) GetLatestSecureScores() (interface{}, error) {
 		return nil, err
 	}
 
+	missingPermissions := mt.MissingRoles("SecurityEvents.Read.All")
+	if len(missingPermissions) > 0 {
+		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
+	}
+
 	graphBetaClient, err := mt.GraphBetaClient()
 	if err != nil {
 		return nil, err
@@ -97,10 +103,16 @@ func (m *lumiMsgraphBetaSecurity) GetLatestSecureScores() (interface{}, error) {
 	return msSecureScoreToLumi(m.Runtime, latestScore)
 }
 
+// see https://docs.microsoft.com/en-us/graph/api/securescore-get?view=graph-rest-1.0&tabs=http
 func (m *lumiMsgraphBetaSecurity) GetSecureScores() ([]interface{}, error) {
 	mt, err := ms365transport(m.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
+	}
+
+	missingPermissions := mt.MissingRoles("SecurityEvents.Read.All")
+	if len(missingPermissions) > 0 {
+		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
 	graphBetaClient, err := mt.GraphBetaClient()

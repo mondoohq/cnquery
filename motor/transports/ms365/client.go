@@ -14,10 +14,10 @@ import (
 	msgraphbeta "github.com/yaegashi/msgraph.go/beta"
 )
 
-func (t *Transport) GraphClient() (*msgraph.GraphServiceRequestBuilder, error) {
-	var scopes = []string{msauth.DefaultMSGraphScope}
+var DefaultMSGraphScopes = []string{msauth.DefaultMSGraphScope}
 
-	httpClient, err := graphHttpClient(t.tenantID, t.clientID, t.clientSecret, scopes)
+func (t *Transport) GraphClient() (*msgraph.GraphServiceRequestBuilder, error) {
+	httpClient, err := graphHttpClient(t.tenantID, t.clientID, t.clientSecret, DefaultMSGraphScopes)
 	if err != nil {
 		return nil, err
 	}
@@ -27,9 +27,7 @@ func (t *Transport) GraphClient() (*msgraph.GraphServiceRequestBuilder, error) {
 }
 
 func (t *Transport) GraphBetaClient() (*msgraphbeta.GraphServiceRequestBuilder, error) {
-	var scopes = []string{msauth.DefaultMSGraphScope}
-
-	httpClient, err := graphHttpClient(t.tenantID, t.clientID, t.clientSecret, scopes)
+	httpClient, err := graphHttpClient(t.tenantID, t.clientID, t.clientSecret, DefaultMSGraphScopes)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +46,6 @@ func graphHttpClient(tenantID string, clientID string, clientSecret string, scop
 
 	httpClient := oauth2.NewClient(ctx, ts)
 	return httpClient, nil
-
 }
 
 func ParseMicrosoftAuth(r io.Reader) (*MicrosoftAuth, error) {
