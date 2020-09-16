@@ -17,7 +17,7 @@ import (
 var DefaultMSGraphScopes = []string{msauth.DefaultMSGraphScope}
 
 func (t *Transport) GraphClient() (*msgraph.GraphServiceRequestBuilder, error) {
-	httpClient, err := graphHttpClient(t.tenantID, t.clientID, t.clientSecret, DefaultMSGraphScopes)
+	httpClient, err := t.httpClient()
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +27,7 @@ func (t *Transport) GraphClient() (*msgraph.GraphServiceRequestBuilder, error) {
 }
 
 func (t *Transport) GraphBetaClient() (*msgraphbeta.GraphServiceRequestBuilder, error) {
-	httpClient, err := graphHttpClient(t.tenantID, t.clientID, t.clientSecret, DefaultMSGraphScopes)
+	httpClient, err := t.httpClient()
 	if err != nil {
 		return nil, err
 	}
@@ -36,10 +36,11 @@ func (t *Transport) GraphBetaClient() (*msgraphbeta.GraphServiceRequestBuilder, 
 	return graphBetaClient, nil
 }
 
-func graphHttpClient(tenantID string, clientID string, clientSecret string, scopes []string) (*http.Client, error) {
+// httpClient prepares the agent client with oauth2 bearer token
+func (t *Transport) httpClient() (*http.Client, error) {
 	ctx := context.Background()
 	m := msauth.NewManager()
-	ts, err := m.ClientCredentialsGrant(ctx, tenantID, clientID, clientSecret, scopes)
+	ts, err := m.ClientCredentialsGrant(ctx, t.tenantID, t.clientID, t.clientSecret, DefaultMSGraphScopes)
 	if err != nil {
 		return nil, err
 	}
