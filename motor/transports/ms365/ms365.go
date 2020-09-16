@@ -15,6 +15,15 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
 )
 
+// New create a new Microsoft 365 transport
+//
+// At this point, this transports only supports application permissions
+// because we are not able to get the user consent on cli yet. Seems like
+// Microsoft is workin on some Powershell features that may make it happen.
+//
+// [How to recognize differences between delegated and application permissions](https://docs.microsoft.com/en-us/azure/active-directory/develop/delegated-and-app-perms)
+// [Authentication and authorization basics for Microsoft Graph](https://docs.microsoft.com/en-us/graph/auth/auth-concepts)
+// [Always check permissions in tokens in an Azure AD protected API](https://joonasw.net/view/always-check-token-permissions-in-aad-protected-api)
 func New(tc *transports.TransportConfig) (*Transport, error) {
 	if tc.Backend != transports.TransportBackend_CONNECTION_MS365 {
 		return nil, errors.New("backend is not supported for ms365 transport")
@@ -66,6 +75,10 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 		rolesMap[claims.Roles[i]] = struct{}{}
 	}
 	t.rolesMap = rolesMap
+
+	if len(rolesMap) == 0 {
+		log.Warn().Msg("your credentials do not include any permissions. please ensure you are using application permissions.")
+	}
 
 	data, err := json.Marshal(claims)
 	if err == nil {
