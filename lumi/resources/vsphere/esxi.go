@@ -10,32 +10,55 @@ import (
 	"github.com/vmware/govmomi/object"
 )
 
-func NewEsxiClient(c *govmomi.Client, host *object.HostSystem) *Esxi {
+func NewEsxiClient(c *govmomi.Client, inventoryPath string, host *object.HostSystem) *Esxi {
 	return &Esxi{
-		c:    c,
-		host: host,
+		c:             c,
+		InventoryPath: inventoryPath,
+		host:          host,
 	}
 }
 
 type Esxi struct {
-	c    *govmomi.Client
-	host *object.HostSystem
+	InventoryPath string
+	c             *govmomi.Client
+	host          *object.HostSystem
 }
 
-// NOTE: we do not change the case of the keys here, since they are returned in upper case
+var sliceKeys = []string{"Uplinks", "Portgroups"}
+
+// isSliceKey implements special handling for keys where we always want to return a slice
+// The issue is that esxcli.Values always return []string values although that does not make
+// any sense for most values. We want to avoid to expose this as a bad user experience
+func isSliceKey(key string) bool {
+	for i := range sliceKeys {
+		if sliceKeys[i] == key {
+			return true
+		}
+	}
+	return false
+}
+
+func sliceInterface(slice []string) []interface{} {
+	res := make([]interface{}, len(slice))
+	for i := range slice {
+		res[i] = slice[i]
+	}
+	return res
+}
+
 func esxiValuesToDict(val esxcli.Values) map[string]interface{} {
 	dict := map[string]interface{}{}
 	for k := range val {
-		if len(val[k]) == 1 {
+		if len(val[k]) == 1 && !isSliceKey(k) {
 			dict[k] = val[k][0]
 		} else {
-			dict[k] = val[k]
+			// convert to []interface
+			dict[k] = sliceInterface(val[k])
 		}
 	}
 	return dict
 }
 
-// NOTE: we do not change the case of the keys here, since they are returned in upper case
 func esxiValuesSliceToDict(values []esxcli.Values) []map[string]interface{} {
 	dicts := make([]map[string]interface{}, len(values))
 	for i, val := range values {
@@ -57,6 +80,75 @@ func (esxi *Esxi) VswitchStandard() ([]map[string]interface{}, error) {
 	}
 
 	return esxiValuesSliceToDict(res.Values), nil
+}
+
+// (Get-ESXCli).network.vswitch.standard.policy.shaping.get('vSwitch0')
+func (esxi *Esxi) VswitchStandardShapingPolicy(standardSwitchName string) (map[string]interface{}, error) {
+	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := e.Run([]string{"network", "vswitch", "standard", "policy", "shaping", "get", "--vswitch-name", standardSwitchName})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(resp.Values) == 0 {
+		return nil, nil
+	}
+
+	if len(resp.Values) > 1 {
+		return nil, errors.New("vsphere network.vswitch.standard.policy.shaping returns more than one value, this is unexpected")
+	}
+
+	return esxiValuesToDict(resp.Values[0]), nil
+}
+
+// (Get-ESXCli).network.vswitch.standard.policy.failover.get('vSwitch0')
+func (esxi *Esxi) VswitchStandardFailoverPolicy(standardSwitchName string) (map[string]interface{}, error) {
+	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := e.Run([]string{"network", "vswitch", "standard", "policy", "failover", "get", "--vswitch-name", standardSwitchName})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(resp.Values) == 0 {
+		return nil, nil
+	}
+
+	if len(resp.Values) > 1 {
+		return nil, errors.New("vsphere network.vswitch.standard.policy.failover returns more than one value, this is unexpected")
+	}
+
+	return esxiValuesToDict(resp.Values[0]), nil
+}
+
+// (Get-ESXCli).network.vswitch.standard.policy.security.get('vSwitch0')
+func (esxi *Esxi) VswitchStandardSecurityPolicy(standardSwitchName string) (map[string]interface{}, error) {
+	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := e.Run([]string{"network", "vswitch", "standard", "policy", "security", "get", "--vswitch-name", standardSwitchName})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(resp.Values) == 0 {
+		return nil, nil
+	}
+
+	if len(resp.Values) > 1 {
+		return nil, errors.New("vsphere network.vswitch.standard.policy.security returns more than one value, this is unexpected")
+	}
+
+	return esxiValuesToDict(resp.Values[0]), nil
 }
 
 // (Get-EsxCli).network.vswitch.dvs.vmware.list()

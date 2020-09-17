@@ -96,11 +96,11 @@ func (s *lumiParseIni) GetParams(sections map[string]interface{}) (map[string]in
 	return res.(map[string]interface{}), nil
 }
 
-func (s *lumiParseJson) init(args *lumi.Args) (*lumi.Args, ParseIni, error) {
+func (s *lumiParseJson) init(args *lumi.Args) (*lumi.Args, ParseJson, error) {
 	if x, ok := (*args)["path"]; ok {
 		path, ok := x.(string)
 		if !ok {
-			return nil, nil, errors.New("Wrong type for 'path' in parse.json initialization, it must be a string")
+			return nil, nil, errors.New("wrong type for 'path' in parse.json initialization, it must be a string")
 		}
 
 		f, err := s.Runtime.CreateResource("file", "path", path)
@@ -109,6 +109,8 @@ func (s *lumiParseJson) init(args *lumi.Args) (*lumi.Args, ParseIni, error) {
 		}
 		(*args)["file"] = f
 		delete(*args, "path")
+	} else {
+		return nil, nil, errors.New("missing 'path' argument for parse.json initialization")
 	}
 
 	return args, nil, nil
