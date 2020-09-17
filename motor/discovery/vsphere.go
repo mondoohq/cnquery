@@ -62,52 +62,56 @@ func (v *vsphereResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnO
 		Connections:  []*transports.TransportConfig{t}, // pass-in the current config
 	})
 
-	// resolve esxi hosts
-	hosts, err := discoveryClient.ListEsxiHosts()
-	if err != nil {
-		return nil, err
-	}
-
-	// add transport config for each host
-	for i := range hosts {
-		host := hosts[i]
-		ht := t.Clone()
-		// pass-through "vsphere.vmware.com/reference-type" and "vsphere.vmware.com/inventorypath"
-		ht.Options = host.Annotations
-		host.Connections = append(host.Connections, ht)
-
-		pf, err := platform.VspherePlatform(trans, host.ReferenceIDs[0])
-		if err == nil {
-			host.Platform = pf
-		} else {
-			log.Error().Err(err).Msg("could not determine platform information for esxi host")
+	if opts.DiscoverHostMachines {
+		// resolve esxi hosts
+		hosts, err := discoveryClient.ListEsxiHosts()
+		if err != nil {
+			return nil, err
 		}
 
-		resolved = append(resolved, host)
+		// add transport config for each host
+		for i := range hosts {
+			host := hosts[i]
+			ht := t.Clone()
+			// pass-through "vsphere.vmware.com/reference-type" and "vsphere.vmware.com/inventorypath"
+			ht.Options = host.Annotations
+			host.Connections = append(host.Connections, ht)
+
+			pf, err := platform.VspherePlatform(trans, host.ReferenceIDs[0])
+			if err == nil {
+				host.Platform = pf
+			} else {
+				log.Error().Err(err).Msg("could not determine platform information for esxi host")
+			}
+
+			resolved = append(resolved, host)
+		}
 	}
 
-	// resolve vms
-	vms, err := discoveryClient.ListVirtualMachines()
-	if err != nil {
-		return nil, err
-	}
-
-	// add transport config for each vm
-	for i := range vms {
-		vm := vms[i]
-		vt := t.Clone()
-		// pass-through "vsphere.vmware.com/reference-type" and "vsphere.vmware.com/inventorypath"
-		vt.Options = vm.Annotations
-		vm.Connections = append(vm.Connections, vt)
-
-		pf, err := platform.VspherePlatform(trans, vm.ReferenceIDs[0])
-		if err == nil {
-			vm.Platform = pf
-		} else {
-			log.Error().Err(err).Msg("could not determine platform information for esxi vm")
+	if opts.DiscoverInstances {
+		// resolve vms
+		vms, err := discoveryClient.ListVirtualMachines()
+		if err != nil {
+			return nil, err
 		}
 
-		resolved = append(resolved, vm)
+		// add transport config for each vm
+		for i := range vms {
+			vm := vms[i]
+			vt := t.Clone()
+			// pass-through "vsphere.vmware.com/reference-type" and "vsphere.vmware.com/inventorypath"
+			vt.Options = vm.Annotations
+			vm.Connections = append(vm.Connections, vt)
+
+			pf, err := platform.VspherePlatform(trans, vm.ReferenceIDs[0])
+			if err == nil {
+				vm.Platform = pf
+			} else {
+				log.Error().Err(err).Msg("could not determine platform information for esxi vm")
+			}
+
+			resolved = append(resolved, vm)
+		}
 	}
 
 	return resolved, nil
