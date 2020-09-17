@@ -655,9 +655,9 @@ vsphere.host {
   // ESXi properties
   properties dict
   // Lists of standard virtual switches
-  standardSwitch() []vsphere.vswitch
+  standardSwitch() []vsphere.vswitch.standard
   // Lists of distributed virtual switches
-  distributedSwitch() []vsphere.vswitch
+  distributedSwitch() []vsphere.vswitch.dvs
   // Lists physical NICs currently installed and loaded on the system
   adapters() []vsphere.vmnic
   // Lists of virtual network interface that is used by the VMKernel
@@ -694,12 +694,30 @@ vsphere.vm {
   advancedSettings() map[string]string
 }
 
-// vSphere virtual switch resource
-vsphere.vswitch {
+// vSphere standard virtual switch 
+vsphere.vswitch.standard {
   // Virtual switch name
   name string
   // Virtual switch properties
   properties dict
+  // NIC teaming policy
+  failoverPolicy() dict
+  // Security policy
+  securityPolicy() dict
+  // Shaping policy
+  shapingPolicy() dict
+  // List of physical NICs currently configured as uplinks 
+  uplinks() []vsphere.vmnic
+}
+
+// vSphere distributed virtual switch
+vsphere.vswitch.dvs {
+  // Virtual switch name
+  name string
+  // Virtual switch properties
+  properties dict
+  // List of physical NICs currently configured as uplinks 
+  uplinks() []vsphere.vmnic
 }
 
 // vSphere ESXi physical network interface resource

@@ -15,19 +15,19 @@ import (
 	"go.mondoo.io/mondoo/policy/executor"
 )
 
-func initExecutor() *executor.Executor {
-	registry := lumi.NewRegistry()
-	resources.Init(registry)
-
+func mockTransport() (*motor.Motor, error) {
 	transport, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/arch.toml"})
 	if err != nil {
 		panic(err.Error())
 	}
 
-	motor, err := motor.New(transport)
-	if err != nil {
-		panic(err.Error())
-	}
+	return motor.New(transport)
+}
+
+func initExecutor(motor *motor.Motor) *executor.Executor {
+	registry := lumi.NewRegistry()
+	resources.Init(registry)
+
 	runtime := lumi.NewRuntime(registry, motor)
 
 	executor := executor.New(registry.Schema(), runtime)
@@ -35,9 +35,7 @@ func initExecutor() *executor.Executor {
 	return executor
 }
 
-func testQuery(t *testing.T, query string) []*llx.RawResult {
-	executor := initExecutor()
-
+func testQueryWithExecutor(executor *executor.Executor, t *testing.T, query string) []*llx.RawResult {
 	var results []*llx.RawResult
 	executor.AddWatcher("test", func(res *llx.RawResult) {
 		results = append(results, res)
@@ -57,6 +55,16 @@ func testQuery(t *testing.T, query string) []*llx.RawResult {
 	return results
 }
 
+func testQuery(t *testing.T, query string) []*llx.RawResult {
+	motor, err := mockTransport()
+	if err != nil {
+		panic(err.Error())
+	}
+
+	executor := initExecutor(motor)
+	return testQueryWithExecutor(executor, t, query)
+}
+
 func testResultsErrors(t *testing.T, r []*llx.RawResult) bool {
 	var found bool
 	for i := range r {
@@ -74,7 +82,11 @@ func testResultsErrors(t *testing.T, r []*llx.RawResult) bool {
 var StableTestRepetitions = 5
 
 func stableResults(t *testing.T, query string) map[string]*llx.RawResult {
-	executor := initExecutor()
+	motor, err := mockTransport()
+	if err != nil {
+		panic(err.Error())
+	}
+	executor := initExecutor(motor)
 	results := make([]map[string]*llx.RawResult, StableTestRepetitions)
 
 	for i := 0; i < StableTestRepetitions; i++ {
@@ -178,7 +190,11 @@ func runSimpleErrorTests(t *testing.T, tests []simpleTest) {
 // }
 
 func testTimeout(t *testing.T, codes ...string) {
-	executor := initExecutor()
+	motor, err := mockTransport()
+	if err != nil {
+		panic(err.Error())
+	}
+	executor := initExecutor(motor)
 	for i := range codes {
 		code := codes[i]
 		t.Run(code, func(t *testing.T) {

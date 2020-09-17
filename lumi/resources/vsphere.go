@@ -2,6 +2,7 @@ package resources
 
 import (
 	"errors"
+	"reflect"
 	"time"
 
 	"github.com/vmware/govmomi/object"
@@ -21,16 +22,27 @@ func getClientInstance(t transports.Transport) (*vsphere.Client, error) {
 	return cl, nil
 }
 
+func esxiClient(t transports.Transport, path string) (*vsphere.Esxi, error) {
+	client, err := getClientInstance(t)
+	if err != nil {
+		return nil, err
+	}
+
+	host, err := client.Host(path)
+	if err != nil {
+		return nil, err
+	}
+
+	esxi := vsphere.NewEsxiClient(client.Client, path, host)
+	return esxi, nil
+}
+
 func (v *lumiVsphereLicense) id() (string, error) {
 	return v.Name()
 }
 
 func (v *lumiVsphereVm) id() (string, error) {
 	return v.Moid()
-}
-
-func (v *lumiVsphereVswitch) id() (string, error) {
-	return v.Name()
 }
 
 func (v *lumiVsphereHost) id() (string, error) {
@@ -254,23 +266,12 @@ func (v *lumiVsphereCluster) GetHosts() ([]interface{}, error) {
 }
 
 func (v *lumiVsphereHost) esxiClient() (*vsphere.Esxi, error) {
-	client, err := getClientInstance(v.Runtime.Motor.Transport)
-	if err != nil {
-		return nil, err
-	}
-
 	path, err := v.InventoryPath()
 	if err != nil {
 		return nil, err
 	}
 
-	host, err := client.Host(path)
-	if err != nil {
-		return nil, err
-	}
-
-	esxi := vsphere.NewEsxiClient(client.Client, host)
-	return esxi, nil
+	return esxiClient(v.Runtime.Motor.Transport, path)
 }
 
 func (v *lumiVsphereHost) GetStandardSwitch() ([]interface{}, error) {
@@ -286,13 +287,18 @@ func (v *lumiVsphereHost) GetStandardSwitch() ([]interface{}, error) {
 
 	lumiVswitches := make([]interface{}, len(vswitches))
 	for i, s := range vswitches {
-		lumiVswitch, err := v.Runtime.CreateResource("vsphere.vswitch",
+		lumiVswitch, err := v.Runtime.CreateResource("vsphere.vswitch.standard",
 			"name", s["Name"],
 			"properties", s,
 		)
 		if err != nil {
 			return nil, err
 		}
+
+		// store host inventory path, so that sub resources can use that to quickly query more
+		lumiVswitch.LumiResource().Cache.Store("_host_inventory_path", &lumi.CacheEntry{Data: esxiClient.InventoryPath})
+		lumiVswitch.LumiResource().Cache.Store("_parent_resource", &lumi.CacheEntry{Data: v})
+
 		lumiVswitches[i] = lumiVswitch
 	}
 
@@ -312,13 +318,18 @@ func (v *lumiVsphereHost) GetDistributedSwitch() ([]interface{}, error) {
 
 	lumiVswitches := make([]interface{}, len(vswitches))
 	for i, s := range vswitches {
-		lumiVswitch, err := v.Runtime.CreateResource("vsphere.vswitch",
+		lumiVswitch, err := v.Runtime.CreateResource("vsphere.vswitch.dvs",
 			"name", s["Name"],
 			"properties", s,
 		)
 		if err != nil {
 			return nil, err
 		}
+
+		// store host inventory path, so that sub resources can use that to quickly query more
+		lumiVswitch.LumiResource().Cache.Store("_host_inventory_path", &lumi.CacheEntry{Data: esxiClient.InventoryPath})
+		lumiVswitch.LumiResource().Cache.Store("_parent_resource", &lumi.CacheEntry{Data: v})
+
 		lumiVswitches[i] = lumiVswitch
 	}
 
@@ -808,4 +819,136 @@ func (v *lumiEsxi) GetVm() (interface{}, error) {
 	}
 
 	return lumiVm, nil
+}
+
+func (v *lumiVsphereVswitchStandard) id() (string, error) {
+	return v.Name()
+}
+
+func (v *lumiVsphereVswitchStandard) esxiClient() (*vsphere.Esxi, error) {
+	c, ok := v.LumiResource().Cache.Load("_host_inventory_path")
+	if !ok {
+		return nil, errors.New("cannot get esxi host inventory path")
+	}
+	inventoryPath := c.Data.(string)
+	return esxiClient(v.Runtime.Motor.Transport, inventoryPath)
+}
+
+func (v *lumiVsphereVswitchStandard) GetFailoverPolicy() (map[string]interface{}, error) {
+	name, err := v.Name()
+	if err != nil {
+		return nil, err
+	}
+
+	esxiClient, err := v.esxiClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return esxiClient.VswitchStandardFailoverPolicy(name)
+}
+
+func (v *lumiVsphereVswitchStandard) GetSecurityPolicy() (map[string]interface{}, error) {
+	name, err := v.Name()
+	if err != nil {
+		return nil, err
+	}
+
+	esxiClient, err := v.esxiClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return esxiClient.VswitchStandardSecurityPolicy(name)
+}
+
+func (v *lumiVsphereVswitchStandard) GetShapingPolicy() (map[string]interface{}, error) {
+	name, err := v.Name()
+	if err != nil {
+		return nil, err
+	}
+
+	esxiClient, err := v.esxiClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return esxiClient.VswitchStandardShapingPolicy(name)
+}
+
+func (v *lumiVsphereVswitchStandard) GetUplinks() ([]interface{}, error) {
+	properties, err := v.Properties()
+	if err != nil {
+		return nil, err
+	}
+
+	uplinksRaw := properties["Uplinks"]
+	uplinkNames, ok := uplinksRaw.([]interface{})
+	if !ok {
+		return nil, errors.New("unexpected type for vsphere switch uplinks " + reflect.ValueOf(uplinksRaw).Type().Name())
+	}
+
+	// get the esxi.host parent resource
+	c, ok := v.LumiResource().Cache.Load("_parent_resource")
+	if !ok {
+		return nil, errors.New("cannot get esxi host inventory path")
+	}
+
+	// get all host adapter
+	host := c.Data.(VsphereHost)
+	return findHostAdapter(host, uplinkNames)
+}
+
+func findHostAdapter(host VsphereHost, uplinkNames []interface{}) ([]interface{}, error) {
+	adapters, err := host.Adapters()
+	if err != nil {
+		return nil, errors.New("cannot retrieve esxi host adapters")
+	}
+
+	// gather all adapters on that host so that we can find the adapter by name
+	lumiUplinks := []interface{}{}
+	for i := range adapters {
+		adapter := adapters[i].(VsphereVmnic)
+		for i := range uplinkNames {
+			uplinkName := uplinkNames[i].(string)
+
+			name, err := adapter.Name()
+			if err != nil {
+				return nil, errors.New("cannot retrieve esxi adapter name")
+			}
+
+			if name == uplinkName {
+				lumiUplinks = append(lumiUplinks, adapter)
+			}
+		}
+	}
+
+	return lumiUplinks, nil
+}
+
+func (v *lumiVsphereVswitchDvs) id() (string, error) {
+	return v.Name()
+}
+
+func (v *lumiVsphereVswitchDvs) GetUplinks() ([]interface{}, error) {
+	properties, err := v.Properties()
+	if err != nil {
+		return nil, err
+	}
+
+	uplinksRaw := properties["Uplinks"]
+	uplinkNames, ok := uplinksRaw.([]interface{})
+	if !ok {
+		return nil, errors.New("unexpected type for vsphere switch uplinks " + reflect.ValueOf(uplinksRaw).Type().Name())
+	}
+
+	// get the esxi.host parent resource
+	c, ok := v.LumiResource().Cache.Load("_parent_resource")
+	if !ok {
+		return nil, errors.New("cannot get esxi host inventory path")
+	}
+
+	// get all host adapter
+	host := c.Data.(VsphereHost)
+	return findHostAdapter(host, uplinkNames)
 }
