@@ -13,7 +13,7 @@ func (s *lumiPlatform) init(args *lumi.Args) (*lumi.Args, Platform, error) {
 		(*args)["arch"] = platform.Arch
 		(*args)["release"] = platform.Release
 		(*args)["kind"] = platform.Kind.Name()
-		(*args)["execenv"] = platform.Runtime
+		(*args)["runtimeEnv"] = platform.Runtime
 
 		families := []interface{}{}
 		for _, f := range platform.Family {
