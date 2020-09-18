@@ -6,6 +6,8 @@ mondoo {
   build() string
   // All resources supported by the language
   resources() []string
+  // Returns the agent execution environment
+  jobEnvironment() dict
 }
 
 // Parse provides common parsers (json, ini, certs, etc)
