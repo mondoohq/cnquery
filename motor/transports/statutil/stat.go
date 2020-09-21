@@ -136,17 +136,23 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
-	mode := os.FileMode(uint32(mask) & 07777)
-
 	mtime, err := strconv.ParseInt(statsData[4], 10, 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
+	// extract file modes
+	mapMode := os.FileMode(uint32(mask) & 07777)
+
+	// eg mask is 40755 and octal 40000 indicates a directory
+	if mask&040000 == 040000 {
+		mapMode = mapMode | os.ModeDir
+	}
+
 	return &transports.FileInfo{
 		FSize:    int64(size),
-		FMode:    mode,
-		FIsDir:   mode.IsDir(),
+		FMode:    mapMode,
+		FIsDir:   mapMode.IsDir(),
 		FModTime: time.Unix(mtime, 0),
 		Uid:      uid,
 		Gid:      gid,
@@ -204,6 +210,7 @@ func (s *statHelper) unix(name string) (os.FileInfo, error) {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
+	// TODO: we may need to support a similar behavior as in linux to map the directory flag
 	mode := os.FileMode(uint32(mask) & 07777)
 
 	mtime, err := strconv.ParseInt(statsData[4], 10, 64)

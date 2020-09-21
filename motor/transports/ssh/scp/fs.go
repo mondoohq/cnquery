@@ -2,25 +2,28 @@ package scp
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
 	"time"
 
 	scp_client "github.com/hnakamur/go-scp"
 	"github.com/spf13/afero"
+	"go.mondoo.io/mondoo/motor/transports/ssh/cat"
+	"go.mondoo.io/mondoo/motor/transports/statutil"
 	"golang.org/x/crypto/ssh"
 )
 
-func NewFs(client *ssh.Client) *Fs {
+func NewFs(commandRunner cat.CommandRunner, client *ssh.Client) *Fs {
 	return &Fs{
-		sshClient: client,
-		scpClient: scp_client.NewSCP(client),
+		sshClient:     client,
+		scpClient:     scp_client.NewSCP(client),
+		commandRunner: commandRunner,
 	}
 }
 
 type Fs struct {
-	sshClient *ssh.Client
-	scpClient *scp_client.SCP
+	sshClient     *ssh.Client
+	scpClient     *scp_client.SCP
+	commandRunner cat.CommandRunner
 }
 
 func (s Fs) Name() string { return "scpfs" }
@@ -58,7 +61,8 @@ func (s Fs) Rename(oldname, newname string) error {
 }
 
 func (s Fs) Stat(path string) (os.FileInfo, error) {
-	return s.scpClient.Receive(path, ioutil.Discard)
+	// NOTE we cannot use s.scpClient.Receive(path, ioutil.Discard) since it would not work with directories
+	return statutil.New(s.commandRunner).Stat(path)
 }
 
 func (s Fs) Lstat(p string) (os.FileInfo, error) {

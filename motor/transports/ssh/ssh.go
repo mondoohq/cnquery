@@ -124,7 +124,7 @@ func (t *SSHTransport) FS() afero.Fs {
 
 		if t.UseScpFilesystem {
 			log.Info().Str("transport", "ssh").Msg("ssh uses scp (beta) instead of sftp for file transfer")
-			t.fs = scp.NewFs(t.SSHClient)
+			t.fs = scp.NewFs(t, t.SSHClient)
 		}
 	}
 	return t.fs
