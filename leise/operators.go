@@ -192,6 +192,9 @@ func compileComparable(c *compiler, id string, call *parser.Call, res *llx.CodeB
 
 func compileTransformation(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
 	leftRef, left, right, err := compileABOperation(c, id, call)
+	if err != nil {
+		return types.Nil, err
+	}
 
 	// find specialized or generalized builtin function
 	lt := left.Type(res.Code).Underlying()

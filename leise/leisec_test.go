@@ -108,6 +108,7 @@ func TestCompiler_Buggy(t *testing.T) {
 			}},
 		}, nil},
 		{`users.list[]`, nil, errors.New("missing operand in child block")},
+		{`file(not-there)`, nil, errors.New("addResourceCall error: cannot find resource for identifier 'not'")},
 	}
 	for _, v := range data {
 		t.Run(v.code, func(t *testing.T) {
