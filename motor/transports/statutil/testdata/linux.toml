@@ -12,3 +12,7 @@ stdout = """4317
 1590420240
 1590418792
 """
+
+
+[commands."test -e /etc/ssh/sshd_config"]
+stdout = ""

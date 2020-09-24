@@ -83,9 +83,17 @@ func (s *statHelper) Stat(name string) (os.FileInfo, error) {
 }
 
 func (s *statHelper) linux(name string) (os.FileInfo, error) {
+	path := ShellEscape(name)
+
+	// check if file exists
+	cmd, err := s.commandRunner.RunCommand("test -e " + path)
+	if err != nil || cmd.ExitStatus != 0 {
+		return nil, os.ErrNotExist
+	}
+
+	// run stat
 	lstat := "-L"
 	format := "--printf"
-	path := ShellEscape(name)
 
 	var sb strings.Builder
 
@@ -100,7 +108,7 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 	// NOTE: handling the exit code here does not work for all cases
 	// sometimes stat returns something like: failed to get security context of '/etc/ssh/sshd_config': No data available
 	// Therefore we continue after this command and try to parse the result and focus on making the parsing more robust
-	cmd, err := s.commandRunner.RunCommand(sb.String())
+	cmd, err = s.commandRunner.RunCommand(sb.String())
 
 	// we get stderr content in cases where we could not gather the security context via failed to get security context of
 	// it could also include: No such file or directory
@@ -119,7 +127,7 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 		// TODO: we may need to parse the returing error to better distingush between a real error and file not found
 		// if we are going to check for file not found, we probably run into the issue that the error message is returned in
 		// multiple languages
-		return nil, os.ErrNotExist
+		return nil, errors.New("could not parse file stat: " + name)
 	}
 
 	size, err := strconv.Atoi(statsData[0])
