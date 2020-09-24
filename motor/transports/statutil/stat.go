@@ -58,7 +58,7 @@ func (s *statHelper) Stat(name string) (os.FileInfo, error) {
 	if !s.detected {
 		cmd, err := s.commandRunner.RunCommand("uname -s")
 		if err != nil {
-			log.Debug().Err(err).Str("file", name).Msg("could not stat the file")
+			log.Debug().Err(err).Str("file", name).Msg("could not detect plaform for file stat")
 		}
 
 		data, err := ioutil.ReadAll(cmd.Stdout)
@@ -101,8 +101,11 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 	// sometimes stat returns something like: failed to get security context of '/etc/ssh/sshd_config': No data available
 	// Therefore we continue after this command and try to parse the result and focus on making the parsing more robust
 	cmd, err := s.commandRunner.RunCommand(sb.String())
+
+	// we get stderr content in cases where we could not gather the security context via failed to get security context of
+	// it could also include: No such file or directory
 	if err != nil {
-		log.Debug().Err(err).Str("file", name).Msg("could not stat the file")
+		log.Debug().Err(err).Send()
 	}
 
 	data, err := ioutil.ReadAll(cmd.Stdout)
@@ -112,7 +115,10 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 
 	statsData := strings.Split(string(data), "\n")
 	if len(statsData) != 7 {
-		log.Error().Str("name", name).Msg("could not stat the file")
+		log.Error().Str("name", name).Msg("could not parse file stat information")
+		// TODO: we may need to parse the returing error to better distingush between a real error and file not found
+		// if we are going to check for file not found, we probably run into the issue that the error message is returned in
+		// multiple languages
 		return nil, os.ErrNotExist
 	}
 
@@ -175,7 +181,7 @@ func (s *statHelper) unix(name string) (os.FileInfo, error) {
 
 	cmd, err := s.commandRunner.RunCommand(sb.String())
 	if err != nil {
-		log.Debug().Err(err).Str("file", name).Msg("could not stat the file")
+		log.Debug().Err(err).Send()
 	}
 
 	data, err := ioutil.ReadAll(cmd.Stdout)
@@ -185,7 +191,8 @@ func (s *statHelper) unix(name string) (os.FileInfo, error) {
 
 	statsData := strings.Split(string(data), ":")
 	if len(statsData) != 6 {
-		log.Error().Str("name", name).Msg("could parse stat response")
+		log.Error().Str("name", name).Msg("could not parse file stat information")
+		// TODO: there are likely cases where the file exist but we could still not parse it
 		return nil, os.ErrNotExist
 	}
 
