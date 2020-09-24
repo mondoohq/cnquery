@@ -141,13 +141,11 @@ func (t *SSHTransport) FileInfo(path string) (transports.FileInfoDetails, error)
 	uid := int64(-1)
 	gid := int64(-1)
 
-	if t.Sudo != nil {
+	if t.Sudo != nil || t.UseScpFilesystem {
 		if stat, ok := stat.Sys().(*transports.FileInfo); ok {
 			uid = int64(stat.Uid)
 			gid = int64(stat.Gid)
 		}
-	} else if t.UseScpFilesystem {
-		// scp does not preserve uid and gid
 	} else {
 		if stat, ok := stat.Sys().(*rawsftp.FileStat); ok {
 			uid = int64(stat.UID)
