@@ -4,6 +4,9 @@ stdout = "x86_64"
 [commands."uname -s"]
 stdout = "Linux"
 
+[commands."sudo uname -s"]
+stdout = "Linux"
+
 [commands."cat /etc/os-release"]
 stdout = """
 NAME="CentOS Linux"
@@ -22,6 +25,9 @@ CENTOS_MANTISBT_PROJECT_VERSION="7"
 REDHAT_SUPPORT_PRODUCT="centos"
 REDHAT_SUPPORT_PRODUCT_VERSION="7"
 """
+
+[commands."sudo test -e /etc/ssh/sshd_config"]
+stdout = ""
 
 [commands."sudo cat /etc/ssh/sshd_config"]
 stdout = """
