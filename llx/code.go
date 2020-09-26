@@ -161,6 +161,7 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, lookup func(s string) (
 		Checksum:   checksum,
 		Entrypoint: ref,
 		Success:    truthy,
+		Error:      checksumRes.Data.Result().Error,
 	}
 
 	chunk := l.Code[ref-1]
