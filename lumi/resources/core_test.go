@@ -35,7 +35,7 @@ func initExecutor(motor *motor.Motor) *executor.Executor {
 	return executor
 }
 
-func testQueryWithExecutor(executor *executor.Executor, t *testing.T, query string, props map[string]*llx.Primitive) []*llx.RawResult {
+func testQueryWithExecutor(t *testing.T, executor *executor.Executor, query string, props map[string]*llx.Primitive) []*llx.RawResult {
 	var results []*llx.RawResult
 	executor.AddWatcher("test", func(res *llx.RawResult) {
 		results = append(results, res)
@@ -66,7 +66,7 @@ func mockExecutor() *executor.Executor {
 }
 
 func testQuery(t *testing.T, query string) []*llx.RawResult {
-	return testQueryWithExecutor(mockExecutor(), t, query, nil)
+	return testQueryWithExecutor(t, mockExecutor(), query, nil)
 }
 
 func testResultsErrors(t *testing.T, r []*llx.RawResult) bool {
@@ -273,7 +273,7 @@ func TestCore_Props(t *testing.T) {
 	for i := range tests {
 		cur := tests[i]
 		t.Run(cur.code, func(t *testing.T) {
-			res := testQueryWithExecutor(mockExecutor(), t, cur.code, cur.props)
+			res := testQueryWithExecutor(t, mockExecutor(), cur.code, cur.props)
 			assert.NotEmpty(t, res)
 
 			if len(res) <= cur.resultIndex {
