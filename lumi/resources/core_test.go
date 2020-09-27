@@ -55,14 +55,18 @@ func testQueryWithExecutor(executor *executor.Executor, t *testing.T, query stri
 	return results
 }
 
-func testQuery(t *testing.T, query string) []*llx.RawResult {
+func mockExecutor() *executor.Executor {
 	motor, err := mockTransport()
 	if err != nil {
 		panic(err.Error())
 	}
 
 	executor := initExecutor(motor)
-	return testQueryWithExecutor(executor, t, query, nil)
+	return executor
+}
+
+func testQuery(t *testing.T, query string) []*llx.RawResult {
+	return testQueryWithExecutor(mockExecutor(), t, query, nil)
 }
 
 func testResultsErrors(t *testing.T, r []*llx.RawResult) bool {
@@ -82,11 +86,8 @@ func testResultsErrors(t *testing.T, r []*llx.RawResult) bool {
 var StableTestRepetitions = 5
 
 func stableResults(t *testing.T, query string) map[string]*llx.RawResult {
-	motor, err := mockTransport()
-	if err != nil {
-		panic(err.Error())
-	}
-	executor := initExecutor(motor)
+	executor := mockExecutor()
+
 	results := make([]map[string]*llx.RawResult, StableTestRepetitions)
 
 	for i := 0; i < StableTestRepetitions; i++ {
@@ -190,11 +191,8 @@ func runSimpleErrorTests(t *testing.T, tests []simpleTest) {
 // }
 
 func testTimeout(t *testing.T, codes ...string) {
-	motor, err := mockTransport()
-	if err != nil {
-		panic(err.Error())
-	}
-	executor := initExecutor(motor)
+	executor := mockExecutor()
+
 	for i := range codes {
 		code := codes[i]
 		t.Run(code, func(t *testing.T) {
@@ -275,7 +273,7 @@ func TestCore_Props(t *testing.T) {
 	for i := range tests {
 		cur := tests[i]
 		t.Run(cur.code, func(t *testing.T) {
-			res := testQueryProps(t, cur.code, cur.props)
+			res := testQueryWithExecutor(mockExecutor(), t, cur.code, cur.props)
 			assert.NotEmpty(t, res)
 
 			if len(res) <= cur.resultIndex {
