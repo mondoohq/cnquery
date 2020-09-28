@@ -918,6 +918,9 @@ func CompileAST(ast *parser.AST, schema *lumi.Schema) (*llx.CodeBundle, error) {
 
 // Compile a code piece against a schema into chunky code
 func Compile(input string, schema *lumi.Schema) (*llx.CodeBundle, error) {
+	// remove leading whitespace
+	input = Dedent(input)
+
 	ast, err := parser.Parse(input)
 	if ast == nil {
 		return nil, err
