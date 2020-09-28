@@ -3,6 +3,7 @@ package leise
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -1026,7 +1027,7 @@ func TestSuggestions(t *testing.T) {
 	for i := range tests {
 		cur := tests[i]
 		t.Run(cur.code, func(t *testing.T) {
-			res, err := Compile(cur.code, schema)
+			res, err := Compile(cur.code, schema, nil)
 			assert.Nil(t, res.Code.Entrypoints)
 			assert.Equal(t, cur.err, err)
 
