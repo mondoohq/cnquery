@@ -8,6 +8,7 @@ import (
 
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo"
 	"go.mondoo.io/mondoo/leise/parser"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi"
@@ -968,7 +969,8 @@ func CompileAST(ast *parser.AST, schema *lumi.Schema, props map[string]*llx.Prim
 			Labels: &llx.Labels{
 				Labels: map[string]string{},
 			},
-			Props: map[string]string{},
+			Props:   map[string]string{},
+			Version: mondoo.Version + "-" + mondoo.Build,
 		},
 		vars:   map[string]variable{},
 		parent: nil,
