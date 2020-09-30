@@ -62,6 +62,7 @@ message CodeBundle {
   string source = 3;
   Labels labels = 4;
   map<string,string> props = 5; // name + type
+  string version = 20;
 }
 
 message Result {
