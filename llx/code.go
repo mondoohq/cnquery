@@ -199,6 +199,7 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, lookup func(s string) (
 		return &res
 	}
 
+	// ID: <T>==<T> ==> [0:1] = '<T' which is NOT a comparable
 	if _, ok := comparableOperations[chunk.Id[0:1]]; ok {
 		res.Operation = chunk.Id[0:1]
 	} else {
