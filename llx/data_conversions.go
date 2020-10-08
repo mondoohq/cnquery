@@ -329,6 +329,11 @@ func pfunction2raw(p *Primitive) *RawData {
 // RawData converts the primtiive into the internal go-representation of the
 // data that can be used for computations
 func (p *Primitive) RawData() *RawData {
+	// FIXME: This is a stopgap. It points to an underlying problem that exists and needs fixing.
+	if p.Type == "" {
+		return &RawData{Error: errors.New("cannot convert primitive with NO type information")}
+	}
+
 	typ := types.Type(p.Type)
 	c, ok := primitiveConverters[typ.Underlying()]
 	if !ok {
