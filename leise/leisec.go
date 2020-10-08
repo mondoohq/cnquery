@@ -970,7 +970,7 @@ func CompileAST(ast *parser.AST, schema *lumi.Schema, props map[string]*llx.Prim
 				Labels: map[string]string{},
 			},
 			Props:   map[string]string{},
-			Version: mondoo.Version + "-" + mondoo.Build,
+			Version: mondoo.ApiVersion(),
 		},
 		vars:   map[string]variable{},
 		parent: nil,
