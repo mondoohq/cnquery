@@ -134,7 +134,11 @@ func (r *RawData) String() string {
 // examples:
 //   truthy: true, 123, [true], "string"
 //   falsey: false
+// if the data includes an error, it is falsey
 func (r *RawData) IsTruthy() (bool, bool) {
+	if r.Error != nil {
+		return false, false
+	}
 	return isTruthy(r.Value, r.Type)
 }
 
