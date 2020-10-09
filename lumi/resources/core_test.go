@@ -15,8 +15,8 @@ import (
 	"go.mondoo.io/mondoo/policy/executor"
 )
 
-func mockTransport() (*motor.Motor, error) {
-	transport, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/arch.toml"})
+func mockTransport(path string) (*motor.Motor, error) {
+	transport, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: path})
 	if err != nil {
 		panic(err.Error())
 	}
@@ -55,8 +55,8 @@ func testQueryWithExecutor(t *testing.T, executor *executor.Executor, query stri
 	return results
 }
 
-func mockExecutor() *executor.Executor {
-	motor, err := mockTransport()
+func mockExecutor(path string) *executor.Executor {
+	motor, err := mockTransport(path)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -65,8 +65,17 @@ func mockExecutor() *executor.Executor {
 	return executor
 }
 
+func linuxMockExecutor() *executor.Executor {
+	const linuxMockFile = "./testdata/arch.toml"
+	return mockExecutor(linuxMockFile)
+}
+
 func testQuery(t *testing.T, query string) []*llx.RawResult {
-	return testQueryWithExecutor(t, mockExecutor(), query, nil)
+	return testQueryWithExecutor(t, linuxMockExecutor(), query, nil)
+}
+
+func testWindowsQuery(t *testing.T, query string) []*llx.RawResult {
+	return testQueryWithExecutor(t, mockExecutor("./testdata/windows.toml"), query, nil)
 }
 
 func testResultsErrors(t *testing.T, r []*llx.RawResult) bool {
@@ -86,7 +95,7 @@ func testResultsErrors(t *testing.T, r []*llx.RawResult) bool {
 var StableTestRepetitions = 5
 
 func stableResults(t *testing.T, query string) map[string]*llx.RawResult {
-	executor := mockExecutor()
+	executor := linuxMockExecutor()
 
 	results := make([]map[string]*llx.RawResult, StableTestRepetitions)
 
@@ -191,7 +200,7 @@ func runSimpleErrorTests(t *testing.T, tests []simpleTest) {
 // }
 
 func testTimeout(t *testing.T, codes ...string) {
-	executor := mockExecutor()
+	executor := linuxMockExecutor()
 
 	for i := range codes {
 		code := codes[i]
@@ -273,7 +282,7 @@ func TestCore_Props(t *testing.T) {
 	for i := range tests {
 		cur := tests[i]
 		t.Run(cur.code, func(t *testing.T) {
-			res := testQueryWithExecutor(t, mockExecutor(), cur.code, cur.props)
+			res := testQueryWithExecutor(t, linuxMockExecutor(), cur.code, cur.props)
 			assert.NotEmpty(t, res)
 
 			if len(res) <= cur.resultIndex {
