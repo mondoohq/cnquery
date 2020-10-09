@@ -23,15 +23,25 @@ func (k *lumiRegistrykey) GetExists() (bool, error) {
 	script := powershell.Encode(windows.GetRegistryKeyItemScript(path))
 	lumiCmd, err := k.Runtime.CreateResource("command", "command", script)
 	if err != nil {
+		log.Error().Err(err).Msg("could not create resource")
 		return false, err
 	}
 	cmd := lumiCmd.(Command)
 	exitcode, err := cmd.Exitcode()
-	if exitcode == 0 && err == nil {
-		return true, nil
+	if err != nil {
+		return false, err
 	}
+	if exitcode != 0 {
+		stderr, err := cmd.Stderr()
+		// this would be an expected error and would ensure that we do not throw an error on windows systems
+		// TODO: revist how this is handled for non-english systems
+		if err == nil && strings.Contains(stderr, "because it does not exist") {
+			return false, nil
+		}
 
-	return false, nil
+		return false, errors.New("could to retrieve registry key")
+	}
+	return true, nil
 }
 
 func (k *lumiRegistrykey) GetProperties() (map[string]interface{}, error) {
@@ -44,24 +54,29 @@ func (k *lumiRegistrykey) GetProperties() (map[string]interface{}, error) {
 	script := powershell.Encode(windows.GetRegistryKeyItemScript(path))
 	lumiCmd, err := k.Runtime.CreateResource("command", "command", script)
 	if err != nil {
-		return res, err
+		return nil, err
 	}
 	cmd := lumiCmd.(Command)
 	exitcode, err := cmd.Exitcode()
-	if exitcode == 0 && err == nil {
-		stdout, err := cmd.Stdout()
-		if err != nil {
-			return res, err
-		}
-		entries, err := windows.ParseRegistryKeyItems(strings.NewReader(stdout))
-		if err != nil {
-			return nil, err
-		}
+	if err != nil {
+		return nil, err
+	}
+	if exitcode != 0 {
+		return nil, errors.New("could to retrieve registry key")
+	}
 
-		for i := range entries {
-			rkey := entries[i]
-			res[rkey.Key] = rkey.GetValue()
-		}
+	stdout, err := cmd.Stdout()
+	if err != nil {
+		return res, err
+	}
+	entries, err := windows.ParseRegistryKeyItems(strings.NewReader(stdout))
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range entries {
+		rkey := entries[i]
+		res[rkey.Key] = rkey.GetValue()
 	}
 
 	return res, nil
@@ -82,20 +97,25 @@ func (k *lumiRegistrykey) GetChildren() ([]interface{}, error) {
 	}
 	cmd := lumiCmd.(Command)
 	exitcode, err := cmd.Exitcode()
-	if exitcode == 0 && err == nil {
-		stdout, err := cmd.Stdout()
-		if err != nil {
-			return res, err
-		}
-		children, err := windows.ParseRegistryKeyChildren(strings.NewReader(stdout))
-		if err != nil {
-			return nil, err
-		}
+	if err != nil {
+		return nil, err
+	}
+	if exitcode != 0 {
+		return nil, errors.New("could to retrieve registry key")
+	}
 
-		for i := range children {
-			child := children[i]
-			res = append(res, child.Path)
-		}
+	stdout, err := cmd.Stdout()
+	if err != nil {
+		return res, err
+	}
+	children, err := windows.ParseRegistryKeyChildren(strings.NewReader(stdout))
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range children {
+		child := children[i]
+		res = append(res, child.Path)
 	}
 
 	return res, nil
@@ -143,7 +163,6 @@ func (p *lumiRegistrykeyProperty) init(args *lumi.Args) (*lumi.Args, Registrykey
 	}
 	registryKey := obj.(Registrykey)
 
-	log.Debug().Str("path", path).Msg("registrykey.property> parent exists")
 	exists, err := registryKey.Exists()
 	if err != nil {
 		return nil, nil, err

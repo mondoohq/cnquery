@@ -1,0 +1,250 @@
+[commands."wmic os get * /format:csv"]
+stdout = """Node,BootDevice,BuildNumber,BuildType,Caption,CodeSet,CountryCode,CreationClassName,CSCreationClassName,CSDVersion,CSName,CurrentTimeZone,DataExecutionPrevention_32BitApplications,DataExecutionPrevention_Available,DataExecutionPrevention_Drivers,DataExecutionPrevention_SupportPolicy,Debug,Description,Distributed,EncryptionLevel,ForegroundApplicationBoost,FreePhysicalMemory,FreeSpaceInPagingFiles,FreeVirtualMemory,InstallDate,LargeSystemCache,LastBootUpTime,LocalDateTime,Locale,Manufacturer,MaxNumberOfProcesses,MaxProcessMemorySize,MUILanguages,Name,NumberOfLicensedUsers,NumberOfProcesses,NumberOfUsers,OperatingSystemSKU,Organization,OSArchitecture,OSLanguage,OSProductSuite,OSType,OtherTypeDescription,PAEEnabled,PlusProductID,PlusVersionNumber,PortableOperatingSystem,Primary,ProductType,RegisteredUser,SerialNumber,ServicePackMajorVersion,ServicePackMinorVersion,SizeStoredInPagingFiles,Status,SuiteMask,SystemDevice,SystemDirectory,SystemDrive,TotalSwapSpaceSize,TotalVirtualMemorySize,TotalVisibleMemorySize,Version,WindowsDirectory
+VAGRANT,\\Device\\HarddiskVolume1,17763,Multiprocessor Free,Microsoft Windows Server 2019 Datacenter Evaluation,1252,1,Win32_OperatingSystem,Win32_ComputerSystem,,VAGRANT,-420,TRUE,TRUE,TRUE,3,FALSE,,FALSE,256,2,721716,979372,1922780,20190906065515.000000-420,,20190908011749.580533-420,20190908042731.608000-420,0409,Microsoft Corporation,4294967295,137438953344,{en-US},Microsoft Windows Server 2019 Datacenter Evaluation|C:\\Windows|\\Device\\Harddisk0\\Partition2,0,69,1,80,Vagrant,64-bit,1033,400,18,,,,,FALSE,TRUE,3,,00431-20000-00000-AA838,0,0,1179648,OK,400,\\Device\\HarddiskVolume2,C:\\Windows\\system32,C:,,3276340,2096692,10.0.17763,C:\\Windows
+"""
+
+[commands."powershell -c \"Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion' -Name CurrentBuild, UBR, EditionID | ConvertTo-Json\""]
+stdout="""
+{
+    "CurrentBuild":  "17763",
+    "EditionID":  "ServerDatacenterEval",
+    "UBR":  720
+}
+"""
+
+[commands."powershell.exe -NoProfile -EncodedCommand JABQAHIAbwBnAHIAZQBzAHMAUAByAGUAZgBlAHIAZQBuAGMAZQA9ACcAUwBpAGwAZQBuAHQAbAB5AEMAbwBuAHQAaQBuAHUAZQAnADsACgAkAHAAYQB0AGgAIAA9ACAAJwBIAEsARQBZAF8ATABPAEMAQQBMAF8ATQBBAEMASABJAE4ARQBcAFMAbwBmAHQAdwBhAHIAZQBcAFAAbwBsAGkAYwBpAGUAcwBcAE0AaQBjAHIAbwBzAG8AZgB0AFwAVwBpAG4AZABvAHcAcwBcAFAAZQByAHMAbwBuAGEAbABpAHoAYQB0AGkAbwBuACcACgAkAHIAZQBnACAAPQAgAEcAZQB0AC0ASQB0AGUAbQAgACgAJwBSAGUAZwBpAHMAdAByAHkAOgA6ACcAIAArACAAJABwAGEAdABoACkACgBpAGYAIAAoACQAcgBlAGcAIAAtAGUAcQAgACQAbgB1AGwAbAApACAAewAKACAAIABXAHIAaQB0AGUALQBFAHIAcgBvAHIAIAAiAEMAbwB1AGwAZAAgAG4AbwB0ACAAZgBpAG4AZAAgAHIAZQBnAGkAcwB0AHIAeQAgAGsAZQB5ACIACgAgACAAZQB4AGkAdAAgADEACgB9AAoAJABwAHIAbwBwAGUAcgB0AGkAZQBzACAAPQAgAEAAKAApAAoAJAByAGUAZwAuAFAAcgBvAHAAZQByAHQAeQAgAHwAIABGAG8AcgBFAGEAYwBoAC0ATwBiAGoAZQBjAHQAIAB7AAoAIAAgACAAIAAkAGYAZQB0AGMAaABLAGUAeQBWAGEAbAB1AGUAIAA9ACAAJABfAAoAIAAgACAAIABpAGYAIAAoACIAKABkAGUAZgBhAHUAbAB0ACkAIgAuAEUAcQB1AGEAbABzACgAJABrAGUAeQApACkAIAB7ACAAJABmAGUAdABjAGgASwBlAHkAVgBhAGwAdQBlACAAPQAgACcAJwAgAH0ACgAgACAAIAAgACQAZQBuAHQAcgB5ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIABwAHMAbwBiAGoAZQBjAHQAIAAtAFAAcgBvAHAAZQByAHQAeQAgAEAAewAKACAAIAAgACAAIAAgACIAawBlAHkAIgAgAD0AIAAkAF8ACgAgACAAIAAgACAAIAAiAHYAYQBsAHUAZQAiACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIABwAHMAbwBiAGoAZQBjAHQAIAAtAFAAcgBvAHAAZQByAHQAeQAgAEAAewAKACAAIAAgACAAIAAgACAAIAAiAGQAYQB0AGEAIgAgAD0AIAAgACQAKABHAGUAdAAtAEkAdABlAG0AUAByAG8AcABlAHIAdAB5ACAAKAAnAFIAZQBnAGkAcwB0AHIAeQA6ADoAJwAgACsAIAAkAHAAYQB0AGgAKQApAC4AJABfADsACgAgACAAIAAgACAAIAAgACAAIgBrAGkAbgBkACIAIAAgAD0AIAAkAHIAZQBnAC4ARwBlAHQAVgBhAGwAdQBlAEsAaQBuAGQAKAAkAGYAZQB0AGMAaABLAGUAeQBWAGEAbAB1AGUAKQA7AAoAIAAgACAAIAAgACAAfQAKACAAIAAgACAAfQAKACAAIAAgACAAJABwAHIAbwBwAGUAcgB0AGkAZQBzACAAKwA9ACAAJABlAG4AdAByAHkACgB9AAoAQwBvAG4AdgBlAHIAdABUAG8ALQBKAHMAbwBuACAALQBDAG8AbQBwAHIAZQBzAHMAIAAkAHAAcgBvAHAAZQByAHQAaQBlAHMACgA="]
+stdout = ""
+stderr = """
+Get-Item : Cannot find path 'HKEY_LOCAL_MACHINE\\Software\\Policies\\Microsoft\\Windows\\Personalization' because it does not exist.             
+At line:3 char:8                                                                                                                                 
++ $reg = Get-Item ('Registry::' + $path)                                                                                                         
++        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                                                                                         
+    + CategoryInfo          : ObjectNotFound: (HKEY_LOCAL_MACH...Personalization:String) [Get-Item], ItemNotFoundException                       
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetItemCommand                                                          
+                                                                                                                                                 
+$ProgressPreference='SilentlyContinue';                                                                                                          
+$path = 'HKEY_LOCAL_MACHINE\\Software\\Policies\\Microsoft\\Windows\\Personalization'                                                            
+$reg = Get-Item ('Registry::' + $path)                                                                                                           
+if ($reg -eq $null) {                                                                                                                            
+  Write-Error "Could not find registry key"                                                                                                      
+  exit 1                                                                                                                                         
+}                                                                                                                                                
+$properties = @()                                                                                                                                
+$reg.Property | ForEach-Object {                                                                                                                 
+    $fetchKeyValue = $_                                                                                                                          
+    if ("(default)".Equals($key)) { $fetchKeyValue = '' }                                                                                        
+    $entry = New-Object psobject -Property @{                                                                                                    
+      "key" = $_                                                                                                                                 
+      "value" = New-Object psobject -Property @{                                                                                                 
+        "data" =  $(Get-ItemProperty ('Registry::' + $path)).$_;                                                                                 
+        "kind"  = $reg.GetValueKind($fetchKeyValue);                                                                                             
+      }                                                                                                                                          
+    }                                                                                                                                            
+    $properties += $entry                                                                                                                        
+}                                                                                                                                                
+ConvertTo-Json -Compress $properties                                                                                                             
+ : Could not find registry key                                                                                                                   
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException                                                               
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException 
+"""
+exit_status = 1
+
+
+
+[commands."powershell.exe -NoProfile -EncodedCommand JABQAHIAbwBnAHIAZQBzAHMAUAByAGUAZgBlAHIAZQBuAGMAZQA9ACcAUwBpAGwAZQBuAHQAbAB5AEMAbwBuAHQAaQBuAHUAZQAnADsACgBzAGUAYwBlAGQAaQB0ACAALwBlAHgAcABvAHIAdAAgAC8AYwBmAGcAIABvAHUAdAAuAGMAZgBnACAAIAB8ACAATwB1AHQALQBOAHUAbABsAAoAJAByAGEAdwAgAD0AIABHAGUAdAAtAEMAbwBuAHQAZQBuAHQAIABvAHUAdAAuAGMAZgBnAAoAUgBlAG0AbwB2AGUALQBJAHQAZQBtACAALgBcAG8AdQB0AC4AYwBmAGcAIAB8ACAATwB1AHQALQBOAHUAbABsAAoAVwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIAAkAHIAYQB3AAoA"]
+stdout = """[Unicode]
+Unicode=yes
+[System Access]
+MinimumPasswordAge = 0
+MaximumPasswordAge = 42
+MinimumPasswordLength = 0
+PasswordComplexity = 1
+PasswordHistorySize = 0
+LockoutBadCount = 0
+RequireLogonToChangePassword = 0
+ForceLogoffWhenHourExpire = 0
+NewAdministratorName = \"chris\"
+NewGuestName = \"Guest\"
+ClearTextPassword = 0
+LSAAnonymousNameLookup = 0
+EnableAdminAccount = 1
+EnableGuestAccount = 0
+[Event Audit]
+AuditSystemEvents = 0
+AuditLogonEvents = 0
+AuditObjectAccess = 0
+AuditPrivilegeUse = 0
+AuditPolicyChange = 0
+AuditAccountManage = 0
+AuditProcessTracking = 0
+AuditDSAccess = 0
+AuditAccountLogon = 0
+[Registry Values]
+MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Setup\\RecoveryConsole\\SecurityLevel=4,0
+MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Setup\\RecoveryConsole\\SetCommand=4,0
+MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\CachedLogonsCount=1,"10"
+MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\ForceUnlockLogon=4,0
+MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\PasswordExpiryWarning=4,5
+MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\ScRemoveOption=1,"0"
+MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\ConsentPromptBehaviorAdmin=4,5
+MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\ConsentPromptBehaviorUser=4,3
+MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\DisableCAD=4,0
+MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\DontDisplayLastUserName=4,0
+MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\EnableInstallerDetection=4,1
+MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\EnableLUA=4,1
+MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\EnableSecureUIAPaths=4,1
+MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\EnableUIADesktopToggle=4,0
+MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\EnableVirtualization=4,1
+MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\LegalNoticeCaption=1,""
+MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\LegalNoticeText=7,
+MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\PromptOnSecureDesktop=4,1
+MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\ScForceOption=4,0
+MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\ShutdownWithoutLogon=4,0
+MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\UndockWithoutLogon=4,1
+MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\ValidateAdminCodeSignatures=4,0
+MACHINE\\Software\\Policies\\Microsoft\\Windows\\Safer\\CodeIdentifiers\\AuthenticodeEnabled=4,0
+MACHINE\\System\\CurrentControlSet\\Control\\Lsa\\AuditBaseObjects=4,0
+MACHINE\\System\\CurrentControlSet\\Control\\Lsa\\CrashOnAuditFail=4,0
+MACHINE\\System\\CurrentControlSet\\Control\\Lsa\\DisableDomainCreds=4,0
+MACHINE\\System\\CurrentControlSet\\Control\\Lsa\\EveryoneIncludesAnonymous=4,0
+MACHINE\\System\\CurrentControlSet\\Control\\Lsa\\FIPSAlgorithmPolicy\\Enabled=4,0
+MACHINE\\System\\CurrentControlSet\\Control\\Lsa\\ForceGuest=4,0
+MACHINE\\System\\CurrentControlSet\\Control\\Lsa\\FullPrivilegeAuditing=3,0
+MACHINE\\System\\CurrentControlSet\\Control\\Lsa\\LimitBlankPasswordUse=4,1
+MACHINE\\System\\CurrentControlSet\\Control\\Lsa\\MSV1_0\\NTLMMinClientSec=4,536870912
+MACHINE\\System\\CurrentControlSet\\Control\\Lsa\\MSV1_0\\NTLMMinServerSec=4,536870912
+MACHINE\\System\\CurrentControlSet\\Control\\Lsa\\NoLMHash=4,1
+MACHINE\\System\\CurrentControlSet\\Control\\Lsa\\RestrictAnonymous=4,0
+MACHINE\\System\\CurrentControlSet\\Control\\Lsa\\RestrictAnonymousSAM=4,1
+MACHINE\\System\\CurrentControlSet\\Control\\Print\\Providers\\LanMan Print Services\\Servers\\AddPrinterDrivers=4,1
+MACHINE\\System\\CurrentControlSet\\Control\\SecurePipeServers\\Winreg\\AllowedExactPaths\\Machine=7,System\\CurrentControlSet\\Control\\ProductOptions,System\\CurrentControlSet\\Control\\Server Applications,Software\\Microsoft\\Windows NT\\CurrentVersion
+MACHINE\\System\\CurrentControlSet\\Control\\SecurePipeServers\\Winreg\\AllowedPaths\\Machine=7,System\\CurrentControlSet\\Control\\Print\\Printers,System\\CurrentControlSet\\Services\\Eventlog,Software\\Microsoft\\OLAP Server,Software\\Microsoft\\Windows NT\\CurrentVersion\\Print,Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows,System\\CurrentControlSet\\Control\\ContentIndex,System\\CurrentControlSet\\Control\\Terminal Server,System\\CurrentControlSet\\Control\\Terminal Server\\UserConfig,System\\CurrentControlSet\\Control\\Terminal Server\\DefaultUserConfiguration,Software\\Microsoft\\Windows NT\\CurrentVersion\\Perflib,System\\CurrentControlSet\\Services\\SysmonLog
+MACHINE\\System\\CurrentControlSet\\Control\\Session Manager\\Kernel\\ObCaseInsensitive=4,1
+MACHINE\\System\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\ClearPageFileAtShutdown=4,0
+MACHINE\\System\\CurrentControlSet\\Control\\Session Manager\\ProtectionMode=4,1
+MACHINE\\System\\CurrentControlSet\\Control\\Session Manager\\SubSystems\\optional=7,
+MACHINE\\System\\CurrentControlSet\\Services\\LanManServer\\Parameters\\AutoDisconnect=4,15
+MACHINE\\System\\CurrentControlSet\\Services\\LanManServer\\Parameters\\EnableForcedLogOff=4,1
+MACHINE\\System\\CurrentControlSet\\Services\\LanManServer\\Parameters\\EnableSecuritySignature=4,0
+MACHINE\\System\\CurrentControlSet\\Services\\LanManServer\\Parameters\\NullSessionPipes=7,
+MACHINE\\System\\CurrentControlSet\\Services\\LanManServer\\Parameters\\RequireSecuritySignature=4,0
+MACHINE\\System\\CurrentControlSet\\Services\\LanManServer\\Parameters\\RestrictNullSessAccess=4,1
+MACHINE\\System\\CurrentControlSet\\Services\\LanmanWorkstation\\Parameters\\EnablePlainTextPassword=4,0
+MACHINE\\System\\CurrentControlSet\\Services\\LanmanWorkstation\\Parameters\\EnableSecuritySignature=4,1
+MACHINE\\System\\CurrentControlSet\\Services\\LanmanWorkstation\\Parameters\\RequireSecuritySignature=4,0
+MACHINE\\System\\CurrentControlSet\\Services\\LDAP\\LDAPClientIntegrity=4,1
+MACHINE\\System\\CurrentControlSet\\Services\\Netlogon\\Parameters\\DisablePasswordChange=4,0
+MACHINE\\System\\CurrentControlSet\\Services\\Netlogon\\Parameters\\MaximumPasswordAge=4,30
+MACHINE\\System\\CurrentControlSet\\Services\\Netlogon\\Parameters\\RequireSignOrSeal=4,1
+MACHINE\\System\\CurrentControlSet\\Services\\Netlogon\\Parameters\\RequireStrongKey=4,1
+MACHINE\\System\\CurrentControlSet\\Services\\Netlogon\\Parameters\\SealSecureChannel=4,1
+MACHINE\\System\\CurrentControlSet\\Services\\Netlogon\\Parameters\\SignSecureChannel=4,1
+[Privilege Rights]
+SeNetworkLogonRight = *S-1-1-0,*S-1-5-32-544,*S-1-5-32-545,*S-1-5-32-551
+SeBackupPrivilege = *S-1-5-32-544,*S-1-5-32-551
+SeChangeNotifyPrivilege = *S-1-1-0,*S-1-5-19,*S-1-5-20,*S-1-5-32-544,*S-1-5-32-545,*S-1-5-32-551
+SeSystemtimePrivilege = *S-1-5-19,*S-1-5-32-544
+SeCreatePagefilePrivilege = *S-1-5-32-544
+SeDebugPrivilege = *S-1-5-32-544
+SeRemoteShutdownPrivilege = *S-1-5-32-544
+SeAuditPrivilege = *S-1-5-19,*S-1-5-20
+SeIncreaseQuotaPrivilege = *S-1-5-19,*S-1-5-20,*S-1-5-32-544
+SeIncreaseBasePriorityPrivilege = *S-1-5-32-544,*S-1-5-90-0
+SeLoadDriverPrivilege = *S-1-5-32-544
+SeBatchLogonRight = *S-1-5-32-544,*S-1-5-32-551,*S-1-5-32-559
+SeServiceLogonRight = *S-1-5-80-0
+SeInteractiveLogonRight = *S-1-5-32-544,*S-1-5-32-545,*S-1-5-32-551
+SeSecurityPrivilege = *S-1-5-32-544
+SeSystemEnvironmentPrivilege = *S-1-5-32-544
+SeProfileSingleProcessPrivilege = *S-1-5-32-544
+SeSystemProfilePrivilege = *S-1-5-32-544,*S-1-5-80-3139157870-2983391045-3678747466-658725712-1809340420
+SeAssignPrimaryTokenPrivilege = *S-1-5-19,*S-1-5-20
+SeRestorePrivilege = *S-1-5-32-544,*S-1-5-32-551
+SeShutdownPrivilege = *S-1-5-32-544,*S-1-5-32-551
+SeTakeOwnershipPrivilege = *S-1-5-32-544
+SeUndockPrivilege = *S-1-5-32-544
+SeManageVolumePrivilege = *S-1-5-32-544
+SeRemoteInteractiveLogonRight = *S-1-5-32-544,*S-1-5-32-555
+SeImpersonatePrivilege = *S-1-5-19,*S-1-5-20,*S-1-5-32-544,*S-1-5-6
+SeCreateGlobalPrivilege = *S-1-5-19,*S-1-5-20,*S-1-5-32-544,*S-1-5-6
+SeIncreaseWorkingSetPrivilege = *S-1-5-32-545
+SeTimeZonePrivilege = *S-1-5-19,*S-1-5-32-544
+SeCreateSymbolicLinkPrivilege = *S-1-5-32-544
+SeDelegateSessionUserImpersonatePrivilege = *S-1-5-32-544
+[Version]
+signature=\"$CHICAGO$\"
+Revision=1
+"""
+
+[commands."auditpol /get /category:* /r"]
+stdout = """Machine Name,Policy Target,Subcategory,Subcategory GUID,Inclusion Setting,Exclusion Setting
+Test,System,Security System Extension,{0CCE9211-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,System Integrity,{0CCE9212-69AE-11D9-BED3-505054503030},Success and Failure,
+Test,System,IPsec Driver,{0CCE9213-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Other System Events,{0CCE9214-69AE-11D9-BED3-505054503030},Success and Failure,
+Test,System,Security State Change,{0CCE9210-69AE-11D9-BED3-505054503030},Success,
+Test,System,Logon,{0CCE9215-69AE-11D9-BED3-505054503030},Success and Failure,
+Test,System,Logoff,{0CCE9216-69AE-11D9-BED3-505054503030},Success,
+Test,System,Account Lockout,{0CCE9217-69AE-11D9-BED3-505054503030},Success,
+Test,System,IPsec Main Mode,{0CCE9218-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,IPsec Quick Mode,{0CCE9219-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,IPsec Extended Mode,{0CCE921A-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Special Logon,{0CCE921B-69AE-11D9-BED3-505054503030},Success,
+Test,System,Other Logon/Logoff Events,{0CCE921C-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Network Policy Server,{0CCE9243-69AE-11D9-BED3-505054503030},Success and Failure,
+Test,System,User / Device Claims,{0CCE9247-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Group Membership,{0CCE9249-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,File System,{0CCE921D-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Registry,{0CCE921E-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Kernel Object,{0CCE921F-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,SAM,{0CCE9220-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Certification Services,{0CCE9221-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Application Generated,{0CCE9222-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Handle Manipulation,{0CCE9223-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,File Share,{0CCE9224-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Filtering Platform Packet Drop,{0CCE9225-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Filtering Platform Connection,{0CCE9226-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Other Object Access Events,{0CCE9227-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Detailed File Share,{0CCE9244-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Removable Storage,{0CCE9245-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Central Policy Staging,{0CCE9246-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Non Sensitive Privilege Use,{0CCE9229-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Other Privilege Use Events,{0CCE922A-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Sensitive Privilege Use,{0CCE9228-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Process Creation,{0CCE922B-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Process Termination,{0CCE922C-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,DPAPI Activity,{0CCE922D-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,RPC Events,{0CCE922E-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Plug and Play Events,{0CCE9248-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Token Right Adjusted Events,{0CCE924A-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Audit Policy Change,{0CCE922F-69AE-11D9-BED3-505054503030},Success,
+Test,System,Authentication Policy Change,{0CCE9230-69AE-11D9-BED3-505054503030},Success,
+Test,System,Authorization Policy Change,{0CCE9231-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,MPSSVC Rule-Level Policy Change,{0CCE9232-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Filtering Platform Policy Change,{0CCE9233-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Other Policy Change Events,{0CCE9234-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Computer Account Management,{0CCE9236-69AE-11D9-BED3-505054503030},Success,
+Test,System,Security Group Management,{0CCE9237-69AE-11D9-BED3-505054503030},Success,
+Test,System,Distribution Group Management,{0CCE9238-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Application Group Management,{0CCE9239-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Other Account Management Events,{0CCE923A-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,User Account Management,{0CCE9235-69AE-11D9-BED3-505054503030},Success,
+Test,System,Directory Service Access,{0CCE923B-69AE-11D9-BED3-505054503030},Success,
+Test,System,Directory Service Changes,{0CCE923C-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Directory Service Replication,{0CCE923D-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Detailed Directory Service Replication,{0CCE923E-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Kerberos Service Ticket Operations,{0CCE9240-69AE-11D9-BED3-505054503030},Success,
+Test,System,Other Account Logon Events,{0CCE9241-69AE-11D9-BED3-505054503030},No Auditing,
+Test,System,Kerberos Authentication Service,{0CCE9242-69AE-11D9-BED3-505054503030},Success,
+Test,System,Credential Validation,{0CCE923F-69AE-11D9-BED3-505054503030},Success,
+"""
+
+[commands."powershell.exe -NoProfile -EncodedCommand JABQAHIAbwBnAHIAZQBzAHMAUAByAGUAZgBlAHIAZQBuAGMAZQA9ACcAUwBpAGwAZQBuAHQAbAB5AEMAbwBuAHQAaQBuAHUAZQAnADsACgAkAHAAYQB0AGgAIAA9ACAAJwBIAEsARQBZAF8ATABPAEMAQQBMAF8ATQBBAEMASABJAE4ARQBcAFMATwBGAFQAVwBBAFIARQBcAE0AaQBjAHIAbwBzAG8AZgB0AFwAVwBpAG4AZABvAHcAcwBcAEMAdQByAHIAZQBuAHQAVgBlAHIAcwBpAG8AbgBcAFAAbwBsAGkAYwBpAGUAcwBcAFMAeQBzAHQAZQBtACcACgAkAHIAZQBnACAAPQAgAEcAZQB0AC0ASQB0AGUAbQAgACgAJwBSAGUAZwBpAHMAdAByAHkAOgA6ACcAIAArACAAJABwAGEAdABoACkACgBpAGYAIAAoACQAcgBlAGcAIAAtAGUAcQAgACQAbgB1AGwAbAApACAAewAKACAAIABXAHIAaQB0AGUALQBFAHIAcgBvAHIAIAAiAEMAbwB1AGwAZAAgAG4AbwB0ACAAZgBpAG4AZAAgAHIAZQBnAGkAcwB0AHIAeQAgAGsAZQB5ACIACgAgACAAZQB4AGkAdAAgADEACgB9AAoAJABwAHIAbwBwAGUAcgB0AGkAZQBzACAAPQAgAEAAKAApAAoAJAByAGUAZwAuAFAAcgBvAHAAZQByAHQAeQAgAHwAIABGAG8AcgBFAGEAYwBoAC0ATwBiAGoAZQBjAHQAIAB7AAoAIAAgACAAIAAkAGYAZQB0AGMAaABLAGUAeQBWAGEAbAB1AGUAIAA9ACAAJABfAAoAIAAgACAAIABpAGYAIAAoACIAKABkAGUAZgBhAHUAbAB0ACkAIgAuAEUAcQB1AGEAbABzACgAJABrAGUAeQApACkAIAB7ACAAJABmAGUAdABjAGgASwBlAHkAVgBhAGwAdQBlACAAPQAgACcAJwAgAH0ACgAgACAAIAAgACQAZQBuAHQAcgB5ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIABwAHMAbwBiAGoAZQBjAHQAIAAtAFAAcgBvAHAAZQByAHQAeQAgAEAAewAKACAAIAAgACAAIAAgACIAawBlAHkAIgAgAD0AIAAkAF8ACgAgACAAIAAgACAAIAAiAHYAYQBsAHUAZQAiACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIABwAHMAbwBiAGoAZQBjAHQAIAAtAFAAcgBvAHAAZQByAHQAeQAgAEAAewAKACAAIAAgACAAIAAgACAAIAAiAGQAYQB0AGEAIgAgAD0AIAAgACQAKABHAGUAdAAtAEkAdABlAG0AUAByAG8AcABlAHIAdAB5ACAAKAAnAFIAZQBnAGkAcwB0AHIAeQA6ADoAJwAgACsAIAAkAHAAYQB0AGgAKQApAC4AJABfADsACgAgACAAIAAgACAAIAAgACAAIgBrAGkAbgBkACIAIAAgAD0AIAAkAHIAZQBnAC4ARwBlAHQAVgBhAGwAdQBlAEsAaQBuAGQAKAAkAGYAZQB0AGMAaABLAGUAeQBWAGEAbAB1AGUAKQA7AAoAIAAgACAAIAAgACAAfQAKACAAIAAgACAAfQAKACAAIAAgACAAJABwAHIAbwBwAGUAcgB0AGkAZQBzACAAKwA9ACAAJABlAG4AdAByAHkACgB9AAoAQwBvAG4AdgBlAHIAdABUAG8ALQBKAHMAbwBuACAALQBDAG8AbQBwAHIAZQBzAHMAIAAkAHAAcgBvAHAAZQByAHQAaQBlAHMACgA="]
+stdout="""
+[{"key":"ConsentPromptBehaviorAdmin","value":{"kind":4,"data":5}},{"key":"ConsentPromptBehaviorUser","value":{"kind":4,"data":3}},{"key":"DelayedDesktopSwitchTimeout","value":{"kind":4,"data":0}},{"key":"DisableAutomaticRestartSignOn","value":{"kind":4,"data":1}},{"key":"DSCAutomationHostEnabled","value":{"kind":4,"data":2}},{"key":"EnableCursorSuppression","value":{"kind":4,"data":1}},{"key":"EnableFullTrustStartupTasks","value":{"kind":4,"data":2}},{"key":"EnableInstallerDetection","value":{"kind":4,"data":1}},{"key":"EnableLUA","value":{"kind":4,"data":1}},{"key":"EnableSecureUIAPaths","value":{"kind":4,"data":1}},{"key":"EnableUIADesktopToggle","value":{"kind":4,"data":0}},{"key":"EnableUwpStartupTasks","value":{"kind":4,"data":2}},{"key":"EnableVirtualization","value":{"kind":4,"data":1}},{"key":"PromptOnSecureDesktop","value":{"kind":4,"data":1}},{"key":"SupportFullTrustStartupTasks","value":{"kind":4,"data":1}},{"key":"SupportUwpStartupTasks","value":{"kind":4,"data":1}},{"key":"ValidateAdminCodeSignatures","value":{"kind":4,"data":0}},{"key":"disablecad","value":{"kind":4,"data":0}},{"key":"dontdisplaylastusername","value":{"kind":4,"data":0}},{"key":"legalnoticecaption","value":{"kind":1,"data":""}},{"key":"legalnoticetext","value":{"kind":1,"data":""}},{"key":"scforceoption","value":{"kind":4,"data":0}},{"key":"shutdownwithoutlogon","value":{"kind":4,"data":0}},{"key":"undockwithoutlogon","value":{"kind":4,"data":1}}]
+"""
+
+[commands."powershell.exe -NoProfile -EncodedCommand JABQAHIAbwBnAHIAZQBzAHMAUAByAGUAZgBlAHIAZQBuAGMAZQA9ACcAUwBpAGwAZQBuAHQAbAB5AEMAbwBuAHQAaQBuAHUAZQAnADsACgAkAHAAYQB0AGgAIAA9ACAAJwBIAEsARQBZAF8ATABPAEMAQQBMAF8ATQBBAEMASABJAE4ARQBcAFMATwBGAFQAVwBBAFIARQBcAE0AaQBjAHIAbwBzAG8AZgB0AFwAVwBpAG4AZABvAHcAcwBcAEMAdQByAHIAZQBuAHQAVgBlAHIAcwBpAG8AbgBcAFAAbwBsAGkAYwBpAGUAcwBcAFMAeQBzAHQAZQBtACcACgAkAGMAaABpAGwAZAByAGUAbgAgAD0AIABHAGUAdAAtAEMAaABpAGwAZABJAHQAZQBtACAALQBQAGEAdABoACAAKAAnAFIAZQBnAGkAcwB0AHIAeQA6ADoAJwAgACsAIAAkAHAAYQB0AGgAKQAgAC0AcgBlAGMAIAAtAGUAYQAgAFMAaQBsAGUAbgB0AGwAeQBDAG8AbgB0AGkAbgB1AGUACgAKACQAcAByAG8AcABlAHIAdABpAGUAcwAgAD0AIABAACgAKQAKACQAYwBoAGkAbABkAHIAZQBuACAAfAAgAEYAbwByAEUAYQBjAGgALQBPAGIAagBlAGMAdAAgAHsACgAgACAAJABlAG4AdAByAHkAIAA9ACAATgBlAHcALQBPAGIAagBlAGMAdAAgAHAAcwBvAGIAagBlAGMAdAAgAC0AUAByAG8AcABlAHIAdAB5ACAAQAB7AAoAIAAgACAAIAAiAG4AYQBtAGUAIgAgAD0AIAAkAF8ALgBQAFMAQwBoAGkAbABkAE4AYQBtAGUACgAgACAAIAAgACIAcABhAHQAaAAiACAAPQAgACQAXwAuAE4AYQBtAGUACgAgACAAIAAgACIAcAByAG8AcABlAHIAdABpAGUAcwAiACAAPQAgACQAXwAuAFAAcgBvAHAAZQByAHQAeQAKACAAIAAgACAAIgBjAGgAaQBsAGQAcgBlAG4AIgAgAD0AIAAkAF8ALgBTAHUAYgBLAGUAeQBDAG8AdQBuAHQACgAgACAAfQAKACAAIAAkAHAAcgBvAHAAZQByAHQAaQBlAHMAIAArAD0AIAAkAGUAbgB0AHIAeQAKAH0ACgBDAG8AbgB2AGUAcgB0AFQAbwAtAEoAcwBvAG4AIAAtAGMAbwBtAHAAcgBlAHMAcwAgACQAcAByAG8AcABlAHIAdABpAGUAcwAKAA=="]
+stdout="""
+[{"path":"HKEY_LOCAL_MACHINE\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Policies\\\\System\\\\Audit","name":"Audit","properties":[],"children":0}]
+"""
