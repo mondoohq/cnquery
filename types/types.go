@@ -1,7 +1,31 @@
 package types
 
+import (
+	"encoding/json"
+	"strings"
+)
+
 // Type information
 type Type string
+
+// MarshalJSON generates escapes the \u0000 string for postgres
+// Otherwise we are not able to store the compile code as json blob in pg since
+// llx and type use \x00 or \u0000. This is not allowed in Postgres json blobs
+// see https://www.postgresql.org/docs/9.4/release-9-4-1.html
+func (t Type) MarshalJSON() ([]byte, error) {
+	newVal := strings.ReplaceAll(string(t), "\u0000", "\\u0000")
+	return json.Marshal(newVal)
+}
+
+func (t *Type) UnmarshalJSON(data []byte) error {
+	var d string
+	if err := json.Unmarshal(data, &d); err != nil {
+		return err
+	}
+	reverted := strings.ReplaceAll(d, "\\u0000", "\u0000")
+	*t = Type(reverted)
+	return nil
+}
 
 // Unspecified indicates that this type has not been specified
 const Unspecified Type = ""
