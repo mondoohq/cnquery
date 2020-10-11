@@ -181,7 +181,7 @@ func compileComparable(c *compiler, id string, call *parser.Call, res *llx.CodeB
 		Call: llx.Chunk_FUNCTION,
 		Id:   name,
 		Function: &llx.Function{
-			Type:    string(types.Bool),
+			Type:    types.Bool,
 			Binding: leftRef,
 			Args:    []*llx.Primitive{right},
 		},
@@ -229,7 +229,7 @@ func compileTransformation(c *compiler, id string, call *parser.Call, res *llx.C
 		Call: llx.Chunk_FUNCTION,
 		Id:   name,
 		Function: &llx.Function{
-			Type:    string(returnType),
+			Type:    returnType,
 			Binding: leftRef,
 			Args:    []*llx.Primitive{right},
 		},
@@ -293,7 +293,7 @@ func compileIf(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
-			Type: string(types.Nil),
+			Type: types.Nil,
 			Args: []*llx.Primitive{argValue},
 		},
 	})
@@ -329,7 +329,7 @@ func compileExpect(c *compiler, id string, call *parser.Call, res *llx.CodeBundl
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
-			Type: string(typ),
+			Type: typ,
 			Args: []*llx.Primitive{argValue},
 		},
 	})

@@ -8,12 +8,12 @@ import (
 )
 
 // NilPrimitive is the empty primitive
-var NilPrimitive = &Primitive{Type: string(types.Nil)}
+var NilPrimitive = &Primitive{Type: types.Nil}
 
 // BoolPrimitive creates a primitive from a boolean value
 func BoolPrimitive(v bool) *Primitive {
 	return &Primitive{
-		Type:  string(types.Bool),
+		Type:  types.Bool,
 		Value: bool2bytes(v),
 	}
 }
@@ -21,7 +21,7 @@ func BoolPrimitive(v bool) *Primitive {
 // IntPrimitive creates a primitive from an int value
 func IntPrimitive(v int64) *Primitive {
 	return &Primitive{
-		Type:  string(types.Int),
+		Type:  types.Int,
 		Value: int2bytes(v),
 	}
 }
@@ -29,7 +29,7 @@ func IntPrimitive(v int64) *Primitive {
 // FloatPrimitive creates a primitive from a float value
 func FloatPrimitive(v float64) *Primitive {
 	return &Primitive{
-		Type:  string(types.Float),
+		Type:  types.Float,
 		Value: float2bytes(v),
 	}
 }
@@ -37,7 +37,7 @@ func FloatPrimitive(v float64) *Primitive {
 // StringPrimitive creates a primitive from a string value
 func StringPrimitive(s string) *Primitive {
 	return &Primitive{
-		Type:  string(types.String),
+		Type:  types.String,
 		Value: []byte(s),
 	}
 }
@@ -45,7 +45,7 @@ func StringPrimitive(s string) *Primitive {
 // RegexPrimitive creates a primitive from a regex in string shape
 func RegexPrimitive(r string) *Primitive {
 	return &Primitive{
-		Type:  string(types.Regex),
+		Type:  types.Regex,
 		Value: []byte(r),
 	}
 }
@@ -69,7 +69,7 @@ func TimePrimitive(t *time.Time) *Primitive {
 	binary.LittleEndian.PutUint32(v[8:], uint32(nanos))
 
 	return &Primitive{
-		Type:  string(types.Time),
+		Type:  types.Time,
 		Value: v,
 	}
 }
@@ -77,7 +77,7 @@ func TimePrimitive(t *time.Time) *Primitive {
 // RefPrimitive creates a primitive from an int value
 func RefPrimitive(v int32) *Primitive {
 	return &Primitive{
-		Type:  string(types.Ref),
+		Type:  types.Ref,
 		Value: int2bytes(int64(v)),
 	}
 }
@@ -85,7 +85,7 @@ func RefPrimitive(v int32) *Primitive {
 // ArrayPrimitive creates a primitive from an int value
 func ArrayPrimitive(v []*Primitive, childType types.Type) *Primitive {
 	return &Primitive{
-		Type:  string(types.Array(childType)),
+		Type:  types.Array(childType),
 		Array: v,
 	}
 }
@@ -94,7 +94,7 @@ func ArrayPrimitive(v []*Primitive, childType types.Type) *Primitive {
 func FunctionPrimitive(v int32) *Primitive {
 	return &Primitive{
 		// TODO: function signature
-		Type:  string(types.Function(0, nil)),
+		Type:  types.Function(0, nil),
 		Value: int2bytes(int64(v)),
 	}
 }

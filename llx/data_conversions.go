@@ -104,7 +104,7 @@ func dict2result(value interface{}, typ types.Type) (*Primitive, error) {
 			}
 		}
 
-		return &Primitive{Type: string(types.Array(types.Dict)), Array: res}, nil
+		return &Primitive{Type: types.Array(types.Dict), Array: res}, nil
 	case map[string]interface{}:
 		res := make(map[string]*Primitive, len(x))
 		var err error
@@ -115,11 +115,11 @@ func dict2result(value interface{}, typ types.Type) (*Primitive, error) {
 			}
 		}
 
-		return &Primitive{Type: string(types.Map(types.String, types.Dict)), Map: res}, nil
+		return &Primitive{Type: types.Map(types.String, types.Dict), Map: res}, nil
 
 	default:
 		return &Primitive{
-			Type: string(types.Dict),
+			Type: types.Dict,
 		}, errors.New("failed to convert dict to primitive, unsupported child type")
 	}
 }
@@ -135,7 +135,7 @@ func array2result(value interface{}, typ types.Type) (*Primitive, error) {
 			return nil, err
 		}
 	}
-	return &Primitive{Type: string(typ), Array: res}, nil
+	return &Primitive{Type: typ, Array: res}, nil
 }
 
 func stringmap2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -149,7 +149,7 @@ func stringmap2result(value interface{}, typ types.Type) (*Primitive, error) {
 			return nil, err
 		}
 	}
-	return &Primitive{Type: string(typ), Map: res}, nil
+	return &Primitive{Type: typ, Map: res}, nil
 }
 
 func intmap2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -163,7 +163,7 @@ func intmap2result(value interface{}, typ types.Type) (*Primitive, error) {
 			return nil, err
 		}
 	}
-	return &Primitive{Type: string(typ), Map: res}, nil
+	return &Primitive{Type: typ, Map: res}, nil
 }
 
 func map2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -181,7 +181,7 @@ func resource2result(value interface{}, typ types.Type) (*Primitive, error) {
 	m := value.(lumi.ResourceType)
 	r := m.LumiResource()
 	v := r.Name + "\x00" + r.Id
-	return &Primitive{Type: string(typ), Value: []byte(v)}, nil
+	return &Primitive{Type: typ, Value: []byte(v)}, nil
 }
 
 func function2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -191,7 +191,7 @@ func function2result(value interface{}, typ types.Type) (*Primitive, error) {
 func raw2primitive(value interface{}, typ types.Type) (*Primitive, error) {
 	if value == nil {
 		return &Primitive{
-			Type: string(typ),
+			Type: typ,
 		}, nil
 	}
 
@@ -219,7 +219,7 @@ func (r *RawData) Result() *Result {
 
 	if r.Value == nil {
 		return &Result{Data: &Primitive{
-			Type: string(r.Type),
+			Type: r.Type,
 		}}
 	}
 

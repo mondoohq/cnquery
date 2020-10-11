@@ -141,7 +141,7 @@ func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type
 		Call: llx.Chunk_FUNCTION,
 		Id:   "{}",
 		Function: &llx.Function{
-			Type:    string(resultType),
+			Type:    resultType,
 			Binding: c.Result.Code.ChunkIndex(),
 			Args:    []*llx.Primitive{llx.FunctionPrimitive(fref)},
 		},
@@ -205,7 +205,7 @@ func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.T
 				},
 				Code: []*llx.Chunk{{
 					Call:      llx.Chunk_PRIMITIVE,
-					Primitive: &llx.Primitive{Type: string(typ)},
+					Primitive: &llx.Primitive{Type: typ},
 				}},
 			},
 			Labels: c.Result.Labels,
@@ -387,7 +387,7 @@ func (c *compiler) compileBuiltinFunction(h *compileHandler, id string, binding 
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
-			Type:    string(resType),
+			Type:    resType,
 			Binding: binding.Ref,
 			Args:    args,
 		},
@@ -466,7 +466,7 @@ func (c *compiler) addResource(id string, resource *lumi.ResourceInfo, call *par
 	typ := types.Resource(id)
 
 	if call != nil && len(call.Function) > 0 {
-		function = &llx.Function{Type: string(typ)}
+		function = &llx.Function{Type: typ}
 		function.Args, err = c.resourceArgs(resource, call.Function)
 		if err != nil {
 			return types.Nil, err
@@ -627,7 +627,7 @@ func (c *compiler) compileProps(call *parser.Call, calls []*parser.Call, res *ll
 		},
 	})
 
-	res.Props[name] = prim.Type
+	res.Props[name] = string(prim.Type)
 
 	return restCalls, types.Type(prim.Type), nil
 }
@@ -671,7 +671,7 @@ func (c *compiler) compileValue(val *parser.Value) (*llx.Primitive, error) {
 		}
 
 		return &llx.Primitive{
-			Type:  string(llx.ArrayType(arr, c.Result.Code)),
+			Type:  llx.ArrayType(arr, c.Result.Code),
 			Array: arr,
 		}, nil
 	}

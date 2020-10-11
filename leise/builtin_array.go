@@ -39,7 +39,7 @@ func compileWhere(c *compiler, typ types.Type, ref int32, id string, call *parse
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
-			Type:    string(typ),
+			Type:    typ,
 			Binding: ref,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(ref),
@@ -61,7 +61,7 @@ func compileArrayContains(c *compiler, typ types.Type, ref int32, id string, cal
 		Call: llx.Chunk_FUNCTION,
 		Id:   "length",
 		Function: &llx.Function{
-			Type:    string(types.Int),
+			Type:    types.Int,
 			Binding: c.Result.GetCode().ChunkIndex(),
 		},
 	})
@@ -71,7 +71,7 @@ func compileArrayContains(c *compiler, typ types.Type, ref int32, id string, cal
 		Call: llx.Chunk_FUNCTION,
 		Id:   string(">" + types.Int),
 		Function: &llx.Function{
-			Type:    string(types.Bool),
+			Type:    types.Bool,
 			Binding: c.Result.Code.ChunkIndex(),
 			Args: []*llx.Primitive{
 				llx.IntPrimitive(0),
@@ -96,7 +96,7 @@ func compileArrayOne(c *compiler, typ types.Type, ref int32, id string, call *pa
 		Call: llx.Chunk_FUNCTION,
 		Id:   "length",
 		Function: &llx.Function{
-			Type:    string(types.Int),
+			Type:    types.Int,
 			Binding: c.Result.GetCode().ChunkIndex(),
 		},
 	})
@@ -106,7 +106,7 @@ func compileArrayOne(c *compiler, typ types.Type, ref int32, id string, call *pa
 		Call: llx.Chunk_FUNCTION,
 		Id:   string("==" + types.Int),
 		Function: &llx.Function{
-			Type:    string(types.Bool),
+			Type:    types.Bool,
 			Binding: c.Result.Code.ChunkIndex(),
 			Args: []*llx.Primitive{
 				llx.IntPrimitive(1),
@@ -132,7 +132,7 @@ func compileArrayAll(c *compiler, typ types.Type, ref int32, id string, call *pa
 		Call: llx.Chunk_FUNCTION,
 		Id:   "length",
 		Function: &llx.Function{
-			Type:    string(types.Int),
+			Type:    types.Int,
 			Binding: ref,
 		},
 	})
@@ -143,7 +143,7 @@ func compileArrayAll(c *compiler, typ types.Type, ref int32, id string, call *pa
 		Call: llx.Chunk_FUNCTION,
 		Id:   "length",
 		Function: &llx.Function{
-			Type:    string(types.Int),
+			Type:    types.Int,
 			Binding: listRef,
 		},
 	})
@@ -153,7 +153,7 @@ func compileArrayAll(c *compiler, typ types.Type, ref int32, id string, call *pa
 		Call: llx.Chunk_FUNCTION,
 		Id:   string("==" + types.Int),
 		Function: &llx.Function{
-			Type:    string(types.Bool),
+			Type:    types.Bool,
 			Binding: c.Result.Code.ChunkIndex(),
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(allLengthRef),
@@ -179,7 +179,7 @@ func compileArrayAny(c *compiler, typ types.Type, ref int32, id string, call *pa
 		Call: llx.Chunk_FUNCTION,
 		Id:   "length",
 		Function: &llx.Function{
-			Type:    string(types.Int),
+			Type:    types.Int,
 			Binding: listRef,
 		},
 	})
@@ -189,7 +189,7 @@ func compileArrayAny(c *compiler, typ types.Type, ref int32, id string, call *pa
 		Call: llx.Chunk_FUNCTION,
 		Id:   string("!=" + types.Int),
 		Function: &llx.Function{
-			Type:    string(types.Bool),
+			Type:    types.Bool,
 			Binding: c.Result.Code.ChunkIndex(),
 			Args: []*llx.Primitive{
 				llx.IntPrimitive(0),
