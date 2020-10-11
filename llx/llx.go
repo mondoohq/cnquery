@@ -343,7 +343,7 @@ func (c *LeiseExecutor) runFunction(chunk *Chunk, ref int32) (*RawData, int32, e
 }
 
 func (c *LeiseExecutor) runPrimitive(primitive *Primitive, ref int32) (*RawData, int32, error) {
-	if primitive.Type == string(types.Ref) {
+	if primitive.Type == types.Ref {
 		return c.resolveValue(primitive, ref)
 	}
 

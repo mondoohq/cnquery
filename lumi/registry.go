@@ -48,7 +48,7 @@ func (ctx *Registry) ensureResourceChain(name string) {
 
 		o.Fields[parts[i+1]] = &Field{
 			Name:      parts[i+1],
-			Type:      string(types.Resource(next)),
+			Type:      types.Resource(next),
 			Mandatory: false,
 			Refs:      []string{},
 		}

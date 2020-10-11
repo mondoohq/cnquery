@@ -152,7 +152,7 @@ func compileResourceWhere(c *compiler, typ types.Type, ref int32, id string, cal
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
-			Type:    string(types.Resource(resource.Name)),
+			Type:    types.Resource(resource.Name),
 			Binding: resourceRef,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(listRef),
@@ -183,7 +183,7 @@ func compileResourceContains(c *compiler, typ types.Type, ref int32, id string, 
 		Call: llx.Chunk_FUNCTION,
 		Id:   "length",
 		Function: &llx.Function{
-			Type:    string(types.Int),
+			Type:    types.Int,
 			Binding: listRef,
 		},
 	})
@@ -193,7 +193,7 @@ func compileResourceContains(c *compiler, typ types.Type, ref int32, id string, 
 		Call: llx.Chunk_FUNCTION,
 		Id:   string(">" + types.Int),
 		Function: &llx.Function{
-			Type:    string(types.Bool),
+			Type:    types.Bool,
 			Binding: c.Result.Code.ChunkIndex(),
 			Args: []*llx.Primitive{
 				llx.IntPrimitive(0),
@@ -240,7 +240,7 @@ func compileResourceAll(c *compiler, typ types.Type, ref int32, id string, call 
 		Call: llx.Chunk_FUNCTION,
 		Id:   "length",
 		Function: &llx.Function{
-			Type:    string(types.Int),
+			Type:    types.Int,
 			Binding: resourceRef - 1, // since the resource calls list right before processing the block
 		},
 	})
@@ -258,7 +258,7 @@ func compileResourceAll(c *compiler, typ types.Type, ref int32, id string, call 
 		Call: llx.Chunk_FUNCTION,
 		Id:   "length",
 		Function: &llx.Function{
-			Type:    string(types.Int),
+			Type:    types.Int,
 			Binding: listRef,
 		},
 	})
@@ -268,7 +268,7 @@ func compileResourceAll(c *compiler, typ types.Type, ref int32, id string, call 
 		Call: llx.Chunk_FUNCTION,
 		Id:   string("==" + types.Int),
 		Function: &llx.Function{
-			Type:    string(types.Bool),
+			Type:    types.Bool,
 			Binding: c.Result.Code.ChunkIndex(),
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(allLengthRef),
@@ -302,7 +302,7 @@ func compileResourceAny(c *compiler, typ types.Type, ref int32, id string, call 
 		Call: llx.Chunk_FUNCTION,
 		Id:   "length",
 		Function: &llx.Function{
-			Type:    string(types.Int),
+			Type:    types.Int,
 			Binding: listRef,
 		},
 	})
@@ -312,7 +312,7 @@ func compileResourceAny(c *compiler, typ types.Type, ref int32, id string, call 
 		Call: llx.Chunk_FUNCTION,
 		Id:   string("!=" + types.Int),
 		Function: &llx.Function{
-			Type:    string(types.Bool),
+			Type:    types.Bool,
 			Binding: c.Result.Code.ChunkIndex(),
 			Args: []*llx.Primitive{
 				llx.IntPrimitive(0),
@@ -348,7 +348,7 @@ func compileResourceLength(c *compiler, typ types.Type, ref int32, id string, ca
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
-			Type:    string(types.Int),
+			Type:    types.Int,
 			Binding: resourceRef,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(listRef),
@@ -363,8 +363,8 @@ func compileResourceParseDate(c *compiler, typ types.Type, ref int32, id string,
 
 	init := &lumi.Init{
 		Args: []*lumi.TypedArg{
-			{Name: "value", Type: string(types.String)},
-			{Name: "format", Type: string(types.String)},
+			{Name: "value", Type: types.String},
+			{Name: "format", Type: types.String},
 		},
 	}
 	args, err := c.unnamedArgs("parse."+id, init, call.Function)
@@ -381,7 +381,7 @@ func compileResourceParseDate(c *compiler, typ types.Type, ref int32, id string,
 		Call: llx.Chunk_FUNCTION,
 		Id:   functionID,
 		Function: &llx.Function{
-			Type:    string(types.Time),
+			Type:    types.Time,
 			Binding: ref,
 			Args:    rawArgs,
 		},
