@@ -46,6 +46,14 @@ func compileEmpty(t *testing.T, s string, f func(res *llx.CodeBundle)) {
 	}
 }
 
+func compileErroneous(t *testing.T, s string, expectedError error, f func(res *llx.CodeBundle)) {
+	res, err := Compile(s, schema, nil)
+	assert.Equal(t, expectedError, err)
+	if f != nil {
+		f(res)
+	}
+}
+
 func assertPrimitive(t *testing.T, p *llx.Primitive, chunk *llx.Chunk) {
 	assert.Equal(t, llx.Chunk_PRIMITIVE, chunk.Call)
 	assert.Nil(t, chunk.Function)
@@ -120,15 +128,16 @@ func TestCompiler_Buggy(t *testing.T) {
 		{`users.list[]`, nil, errors.New("missing operand in child block")},
 		{`file(not-there)`, nil, errors.New("addResourceCall error: cannot find resource for identifier 'not'")},
 	}
+
 	for _, v := range data {
 		t.Run(v.code, func(t *testing.T) {
-			res, err := Compile(v.code, schema, nil)
-			assert.Equal(t, v.err, err)
-			if res.Code != nil {
-				assert.Equal(t, v.res, res.Code.Code)
-			} else {
-				assert.Nil(t, v.res)
-			}
+			compileErroneous(t, v.code, v.err, func(res *llx.CodeBundle) {
+				if res.Code != nil {
+					assert.Equal(t, v.res, res.Code.Code)
+				} else {
+					assert.Nil(t, v.res)
+				}
+			})
 		})
 	}
 }
@@ -396,6 +405,30 @@ func TestCompiler_ArrayEmptyWhere(t *testing.T) {
 			},
 		}, res.Code.Code[0])
 		assert.Equal(t, 1, len(res.Code.Code))
+	})
+}
+
+func TestCompiler_ArrayWhereStatic(t *testing.T) {
+	compileErroneous(t, "[1,2,3].where(2)", errors.New("called 'where' with wrong type; please write it as a true/false expression (e.g. \"_ == 123\")"), func(res *llx.CodeBundle) {
+		assertPrimitive(t, &llx.Primitive{
+			Type: types.Array(types.Int),
+			Array: []*llx.Primitive{
+				llx.IntPrimitive(1),
+				llx.IntPrimitive(2),
+				llx.IntPrimitive(3),
+			},
+		}, res.Code.Code[0])
+
+		// assertFunction(t, "where", &llx.Function{
+		// 	Type:    types.Array(types.Int),
+		// 	Binding: 1,
+		// 	Args: []*llx.Primitive{
+		// 		llx.RefPrimitive(1),
+		// 		llx.IntPrimitive(1),
+		// 	},
+		// }, res.Code.Code[1])
+
+		// assert.Equal(t, 2, len(res.Code.Code))
 	})
 }
 

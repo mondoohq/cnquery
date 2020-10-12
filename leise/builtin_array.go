@@ -24,7 +24,7 @@ func compileWhere(c *compiler, typ types.Type, ref int32, id string, call *parse
 
 	arg := call.Function[0]
 	if arg.Name != "" {
-		return types.Nil, errors.New("called '" + id + "' function with a named parameter, which is not supported")
+		return types.Nil, errors.New("called '" + id + "' with a named parameter, which is not supported")
 	}
 
 	functionRef, err := c.blockExpressions([]*parser.Expression{arg.Value}, typ)
@@ -32,7 +32,16 @@ func compileWhere(c *compiler, typ types.Type, ref int32, id string, call *parse
 		return types.Nil, err
 	}
 	if functionRef == 0 {
-		return types.Nil, errors.New("called '" + id + "' clause without a function block")
+		return types.Nil, errors.New("called '" + id + "' without a function block")
+	}
+
+	t, err := c.functionBlockType(functionRef)
+	if err != nil {
+		return types.Nil, err
+	}
+
+	if t != types.Bool {
+		return types.Nil, errors.New("called '" + id + "' with wrong type; please write it as a true/false expression (e.g. \"_ == 123\")")
 	}
 
 	c.Result.Code.AddChunk(&llx.Chunk{
