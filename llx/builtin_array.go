@@ -144,6 +144,22 @@ func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 	}
 
 	arg1 := chunk.Function.Args[1]
+	if arg1.Type.Underlying() != types.FunctionLike {
+		right := arg1.RawData().Value
+		var res []interface{}
+		for i := range list {
+			left := list[i]
+			if left == right {
+				res = append(res, left)
+			}
+		}
+
+		return &RawData{
+			Type:  items.Type,
+			Value: res,
+		}, 0, nil
+	}
+
 	fref, ok := arg1.Ref()
 	if !ok {
 		return nil, 0, errors.New("Failed to retrieve function reference of 'where' call")
