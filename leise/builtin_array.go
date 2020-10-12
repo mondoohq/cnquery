@@ -34,14 +34,24 @@ func compileWhere(c *compiler, typ types.Type, ref int32, id string, call *parse
 	if functionRef == 0 {
 		return types.Nil, errors.New("called '" + id + "' without a function block")
 	}
+	argExpectation := llx.FunctionPrimitive(functionRef)
 
 	t, err := c.functionBlockType(functionRef)
 	if err != nil {
 		return types.Nil, err
 	}
-
 	if t != types.Bool {
-		return types.Nil, errors.New("called '" + id + "' with wrong type; please write it as a true/false expression (e.g. \"_ == 123\")")
+		childType := typ.Child()
+		if t != childType {
+			return types.Nil, errors.New("called '" + id + "' with wrong type; either provide a type " + childType.Label() + " value or write it as an expression (e.g. \"_ == 123\")")
+		}
+
+		c.Result.Code.Functions = c.Result.Code.Functions[0 : len(c.Result.Code.Functions)-1]
+		val, err := c.compileOperand(arg.Value.Operand)
+		if err != nil {
+			return types.Nil, err
+		}
+		argExpectation = val
 	}
 
 	c.Result.Code.AddChunk(&llx.Chunk{
@@ -52,7 +62,7 @@ func compileWhere(c *compiler, typ types.Type, ref int32, id string, call *parse
 			Binding: ref,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(ref),
-				llx.FunctionPrimitive(functionRef),
+				argExpectation,
 			},
 		},
 	})

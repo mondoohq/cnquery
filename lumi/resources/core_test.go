@@ -566,6 +566,10 @@ func TestArray_Block(t *testing.T) {
 			0, []interface{}{int64(1), int64(2), int64(3)},
 		},
 		{
+			"[1,2,3].where(2)",
+			0, []interface{}{int64(2)},
+		},
+		{
 			"[1,2,3].where(_ > 2)",
 			0, []interface{}{int64(3)},
 		},

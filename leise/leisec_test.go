@@ -409,7 +409,18 @@ func TestCompiler_ArrayEmptyWhere(t *testing.T) {
 }
 
 func TestCompiler_ArrayWhereStatic(t *testing.T) {
-	compileErroneous(t, "[1,2,3].where(2)", errors.New("called 'where' with wrong type; please write it as a true/false expression (e.g. \"_ == 123\")"), func(res *llx.CodeBundle) {
+	compileErroneous(t, "[1,2,3].where(1.0)", errors.New("called 'where' with wrong type; either provide a type int value or write it as an expression (e.g. \"_ == 123\")"), func(res *llx.CodeBundle) {
+		assertPrimitive(t, &llx.Primitive{
+			Type: types.Array(types.Int),
+			Array: []*llx.Primitive{
+				llx.IntPrimitive(1),
+				llx.IntPrimitive(2),
+				llx.IntPrimitive(3),
+			},
+		}, res.Code.Code[0])
+	})
+
+	compile(t, "[1,2,3].where(2)", func(res *llx.CodeBundle) {
 		assertPrimitive(t, &llx.Primitive{
 			Type: types.Array(types.Int),
 			Array: []*llx.Primitive{
@@ -419,16 +430,16 @@ func TestCompiler_ArrayWhereStatic(t *testing.T) {
 			},
 		}, res.Code.Code[0])
 
-		// assertFunction(t, "where", &llx.Function{
-		// 	Type:    types.Array(types.Int),
-		// 	Binding: 1,
-		// 	Args: []*llx.Primitive{
-		// 		llx.RefPrimitive(1),
-		// 		llx.IntPrimitive(1),
-		// 	},
-		// }, res.Code.Code[1])
+		assertFunction(t, "where", &llx.Function{
+			Type:    types.Array(types.Int),
+			Binding: 1,
+			Args: []*llx.Primitive{
+				llx.RefPrimitive(1),
+				llx.IntPrimitive(2),
+			},
+		}, res.Code.Code[1])
 
-		// assert.Equal(t, 2, len(res.Code.Code))
+		assert.Equal(t, 2, len(res.Code.Code))
 	})
 }
 
