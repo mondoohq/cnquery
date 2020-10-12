@@ -243,6 +243,23 @@ func (c *compiler) blockExpressions(expressions []*parser.Expression, typ types.
 	return c.blockOnResource(expressions, typ)
 }
 
+// returns the type of the given funciton block references
+// error if the block has multiple entrypoints
+func (c *compiler) functionBlockType(ref int32) (types.Type, error) {
+	if len(c.Result.Code.Functions) < int(ref) {
+		return types.Nil, errors.New("canot find function block with ref " + strconv.Itoa(int(ref)))
+	}
+
+	f := c.Result.Code.Functions[ref-1]
+	if len(f.Entrypoints) != 1 {
+		return types.Nil, errors.New("function block should only return 1 value (got: " + strconv.Itoa(len(f.Entrypoints)) + ")")
+	}
+
+	ep := f.Entrypoints[0]
+	chunk := f.Code[ep-1]
+	return chunk.Type(c.Result.Code), nil
+}
+
 func (c *compiler) dereferenceType(val *llx.Primitive) (types.Type, error) {
 	valType := types.Type(val.Type)
 	if types.Type(val.Type) != types.Ref {
