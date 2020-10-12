@@ -197,27 +197,26 @@ func VsphereResourceID(typ string, inventorypath string) string {
 }
 
 func ParseVsphereResourceID(id string) (string, string, error) {
+	var decodedPath []byte
 	parsed, err := mrn.NewMRN(id)
 	if err != nil {
 		return "", "", err
 	}
-
-	typ := parsed.ResourceID("type")
-	if typ == nil {
+	typ, err := parsed.ResourceID("type")
+	if err != nil {
 		return "", "", errors.New("vsphere platform id has invalid type")
 	}
-	inventoryPath := parsed.ResourceID("inventorypath")
-
-	var decodedPath []byte
-	if inventoryPath != nil {
-		base64path := *inventoryPath
-		decodedPath, err = base64.StdEncoding.DecodeString(base64path)
-		if err != nil {
-			return "", "", errors.New("vsphere platform id has invalid inventorypath")
-		}
+	inventoryPath, err := parsed.ResourceID("inventorypath")
+	if err != nil {
+		return "", "", errors.New("vsphere platform id has invalid inventorypath")
 	}
 
-	return *typ, string(decodedPath), nil
+	decodedPath, err = base64.StdEncoding.DecodeString(inventoryPath)
+	if err != nil {
+		return "", "", errors.New("vsphere platform id has invalid inventorypath")
+	}
+
+	return typ, string(decodedPath), nil
 
 }
 
