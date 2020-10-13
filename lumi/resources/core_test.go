@@ -566,6 +566,14 @@ func TestArray_Block(t *testing.T) {
 			0, []interface{}{int64(1), int64(2), int64(3)},
 		},
 		{
+			"[true, true, false].where(true)",
+			0, []interface{}{true, true},
+		},
+		{
+			"[false, true, false].where(false)",
+			0, []interface{}{false, false},
+		},
+		{
 			"[1,2,3].where(2)",
 			0, []interface{}{int64(2)},
 		},

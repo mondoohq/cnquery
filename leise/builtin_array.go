@@ -27,7 +27,7 @@ func compileWhere(c *compiler, typ types.Type, ref int32, id string, call *parse
 		return types.Nil, errors.New("called '" + id + "' with a named parameter, which is not supported")
 	}
 
-	functionRef, err := c.blockExpressions([]*parser.Expression{arg.Value}, typ)
+	functionRef, standalone, err := c.blockExpressions([]*parser.Expression{arg.Value}, typ)
 	if err != nil {
 		return types.Nil, err
 	}
@@ -36,11 +36,14 @@ func compileWhere(c *compiler, typ types.Type, ref int32, id string, call *parse
 	}
 	argExpectation := llx.FunctionPrimitive(functionRef)
 
-	t, err := c.functionBlockType(functionRef)
-	if err != nil {
-		return types.Nil, err
-	}
-	if t != types.Bool {
+	// if we have a standalone body in the where clause, then we need to check if
+	// it's a value, in which case we need to compare the array value to it
+	if standalone {
+		t, err := c.functionBlockType(functionRef)
+		if err != nil {
+			return types.Nil, err
+		}
+
 		childType := typ.Child()
 		if t != childType {
 			return types.Nil, errors.New("called '" + id + "' with wrong type; either provide a type " + childType.Label() + " value or write it as an expression (e.g. \"_ == 123\")")
