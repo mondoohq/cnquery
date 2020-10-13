@@ -132,7 +132,7 @@ func compileResourceWhere(c *compiler, typ types.Type, ref int32, id string, cal
 		return types.Nil, errors.New("called '" + id + "' function with a named parameter, which is not supported")
 	}
 
-	functionRef, err := c.blockExpressions([]*parser.Expression{arg.Value}, types.Array(types.Type(resource.ListType)))
+	functionRef, _, err := c.blockExpressions([]*parser.Expression{arg.Value}, types.Array(types.Type(resource.ListType)))
 	if err != nil {
 		return types.Nil, err
 	}

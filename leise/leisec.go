@@ -32,6 +32,12 @@ type compiler struct {
 	vars    map[string]variable
 	parent  *compiler
 	props   map[string]*llx.Primitive
+
+	// a standalone code is one that doesn't call any of its bindings
+	// examples:
+	//   file(xyz).content          is standalone
+	//   file(xyz).content == _     is not
+	standalone bool
 }
 
 func addResourceSuggestions(resources map[string]*lumi.ResourceInfo, name string, res *llx.CodeBundle) {
@@ -124,7 +130,7 @@ func addFieldSuggestions(fields map[string]llx.Documentation, fieldName string, 
 
 // compileBlock on a context
 func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type) (types.Type, error) {
-	fref, err := c.blockExpressions(expressions, typ)
+	fref, _, err := c.blockExpressions(expressions, typ)
 	if err != nil {
 		return types.Nil, err
 	}
@@ -168,9 +174,10 @@ func (c *compiler) compileUnboundBlock(expressions []*parser.Expression, chunk *
 			Labels: c.Result.Labels,
 			Props:  c.Result.Props,
 		},
-		vars:   map[string]variable{},
-		parent: c,
-		props:  c.props,
+		vars:       map[string]variable{},
+		parent:     c,
+		props:      c.props,
+		standalone: true,
 	}
 
 	err := blockCompiler.compileExpressions(expressions)
@@ -191,7 +198,7 @@ func (c *compiler) compileUnboundBlock(expressions []*parser.Expression, chunk *
 
 // evaluates the given expressions on a non-array resource
 // and creates a function, whose reference is returned
-func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.Type) (int32, error) {
+func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.Type) (int32, bool, error) {
 	blockCompiler := &compiler{
 		Schema: c.Schema,
 		Result: &llx.CodeBundle{
@@ -211,29 +218,30 @@ func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.T
 			Labels: c.Result.Labels,
 			Props:  c.Result.Props,
 		},
-		Binding: &binding{Type: typ, Ref: 1},
-		vars:    map[string]variable{},
-		parent:  c,
-		props:   c.props,
+		Binding:    &binding{Type: typ, Ref: 1},
+		vars:       map[string]variable{},
+		parent:     c,
+		props:      c.props,
+		standalone: true,
 	}
 
 	err := blockCompiler.compileExpressions(expressions)
 	c.Result.Suggestions = append(c.Result.Suggestions, blockCompiler.Result.Suggestions...)
 	if err != nil {
-		return 0, err
+		return 0, false, err
 	}
 
 	code := blockCompiler.Result.Code
 	code.UpdateID()
 	c.Result.Code.Functions = append(c.Result.Code.Functions, code)
-	return c.Result.Code.FunctionsIndex(), nil
+	return c.Result.Code.FunctionsIndex(), blockCompiler.standalone, nil
 }
 
 // blockExpressions evaluates the given expressions as if called by a block and
 // returns the compiled function reference
-func (c *compiler) blockExpressions(expressions []*parser.Expression, typ types.Type) (int32, error) {
+func (c *compiler) blockExpressions(expressions []*parser.Expression, typ types.Type) (int32, bool, error) {
 	if len(expressions) == 0 {
-		return 0, nil
+		return 0, false, nil
 	}
 
 	if typ.IsArray() {
@@ -517,6 +525,8 @@ func (c *compiler) compileIdentifier(id string, callBinding *binding, calls []*p
 	if callBinding != nil {
 		// special handling for the `self` operator
 		if id == "_" {
+			c.standalone = false
+
 			if len(restCalls) == 0 {
 				return restCalls, callBinding.Type, nil
 			}
@@ -989,9 +999,10 @@ func CompileAST(ast *parser.AST, schema *lumi.Schema, props map[string]*llx.Prim
 			Props:   map[string]string{},
 			Version: mondoo.ApiVersion(),
 		},
-		vars:   map[string]variable{},
-		parent: nil,
-		props:  props,
+		vars:       map[string]variable{},
+		parent:     nil,
+		props:      props,
+		standalone: true,
 	}
 
 	return c.Result, c.CompileParsed(ast)
