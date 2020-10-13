@@ -46,12 +46,22 @@ func compileWhere(c *compiler, typ types.Type, ref int32, id string, call *parse
 			return types.Nil, errors.New("called '" + id + "' with wrong type; either provide a type " + childType.Label() + " value or write it as an expression (e.g. \"_ == 123\")")
 		}
 
-		c.Result.Code.Functions = c.Result.Code.Functions[0 : len(c.Result.Code.Functions)-1]
-		val, err := c.compileOperand(arg.Value.Operand)
-		if err != nil {
-			return types.Nil, err
-		}
-		argExpectation = val
+		functionCode := c.Result.Code.Functions[functionRef-1]
+		valueRef := functionCode.Entrypoints[len(functionCode.Entrypoints)-1]
+
+		functionCode.AddChunk(&llx.Chunk{
+			Call: llx.Chunk_FUNCTION,
+			Id:   "==" + string(childType),
+			Function: &llx.Function{
+				Type:    types.Bool,
+				Binding: 1,
+				Args: []*llx.Primitive{
+					llx.RefPrimitive(valueRef),
+				},
+			},
+		})
+
+		functionCode.Entrypoints = []int32{functionCode.ChunkIndex()}
 	}
 
 	c.Result.Code.AddChunk(&llx.Chunk{

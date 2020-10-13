@@ -435,7 +435,7 @@ func TestCompiler_ArrayWhereStatic(t *testing.T) {
 			Binding: 1,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(1),
-				llx.IntPrimitive(2),
+				llx.FunctionPrimitive(1),
 			},
 		}, res.Code.Code[1])
 
