@@ -650,6 +650,10 @@ func TestResource_Where(t *testing.T) {
 			0, int64(1),
 		},
 		{
+			"users.list.where(name == 'root').length",
+			0, int64(1),
+		},
+		{
 			"users.where(name == 'rooot').list { uid }",
 			0, []interface{}{},
 		},

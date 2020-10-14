@@ -575,6 +575,7 @@ func (c *compiler) compileIdentifier(id string, callBinding *binding, calls []*p
 
 		found, typ, err = c.compileBoundIdentifier(id, callBinding, call)
 		if found {
+			c.standalone = false
 			return restCalls, typ, err
 		}
 	} // end bound functions
