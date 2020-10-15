@@ -1983,3 +1983,12 @@ yum.repo {
   mirrors string
   enabled() bool
 }
+
+ipmi {
+  deviceID() dict
+}
+
+ipmi.chassis {
+  status() dict
+  systemBootOptions() dict
+}
