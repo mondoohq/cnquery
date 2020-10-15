@@ -1,0 +1,71 @@
+package resources
+
+import (
+	"errors"
+
+	"go.mondoo.io/mondoo/lumi/resources/ipmi"
+	"go.mondoo.io/mondoo/motor/transports"
+	ipmi_transport "go.mondoo.io/mondoo/motor/transports/ipmi"
+)
+
+func getIpmiInstance(t transports.Transport) (*ipmi.IpmiClient, error) {
+	it, ok := t.(*ipmi_transport.Transport)
+	if !ok {
+		return nil, errors.New("ipmi resource is not supported on this transport")
+	}
+
+	return it.Client(), nil
+}
+
+func (a *lumiIpmi) id() (string, error) {
+	return "ipmi", nil
+}
+
+func (a *lumiIpmi) GetDeviceID() (map[string]interface{}, error) {
+
+	client, err := getIpmiInstance(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.DeviceID()
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonToDict(resp)
+}
+
+func (a *lumiIpmiChassis) id() (string, error) {
+	return "ipmi.chassis", nil
+}
+
+func (a *lumiIpmiChassis) GetStatus() (map[string]interface{}, error) {
+
+	client, err := getIpmiInstance(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.ChassisStatus()
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonToDict(resp)
+}
+
+func (a *lumiIpmiChassis) GetSystemBootOptions() (map[string]interface{}, error) {
+
+	client, err := getIpmiInstance(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.ChassisSystemBootOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonToDict(resp)
+}
