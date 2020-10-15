@@ -152,3 +152,187 @@ func (c *IpmiClient) DeviceID() (*DeviceID, error) {
 		},
 	}, nil
 }
+
+// chassisStatusRequest per section 28.2
+type chassisStatusRequest struct{}
+
+// chassisStatusResponse per section 28.2
+type chassisStatusResponse struct {
+	ipmiTransport.CompletionCode
+	PowerState     uint8
+	LastPowerEvent uint8
+	State          uint8
+	// FrontControlPanel uint8
+}
+
+type ChassisStatus struct {
+	SystemPower        bool                  `json:"systemPower"`
+	PowerOverload      bool                  `json:"powerOverload"`
+	PowerInterlock     bool                  `json:"powerInterlock"`
+	MainPowerFault     bool                  `json:"mainPowerFault"`
+	PowerControlFault  bool                  `json:"powerControlFault"`
+	PowerRestorePolicy string                `json:"powerRestorePolicy"`
+	LastPowerEvent     ChassisLastPowerEvent `json:"lastPowerEvent"`
+	ChassisIntrusion   bool                  `json:"chassisIntrusion"`
+	FrontPanelLockout  bool                  `json:"frontPanelLockout"`
+	DriveFault         bool                  `json:"driveFault"`
+	CoolingFanFault    bool                  `json:"coolingFanFault"`
+}
+
+type ChassisLastPowerEvent struct {
+	AcFailed  bool `json:"ac-failed"`
+	Overload  bool `json:"overload"`
+	Interlock bool `json:"interlock"`
+	Fault     bool `json:"fault"`
+	Command   bool `json:"command"`
+}
+
+// ChassisStatus - 28.2 Get Chassis Status Command
+func (c *IpmiClient) ChassisStatus() (*ChassisStatus, error) {
+
+	req := &ipmiTransport.Request{
+		ipmiTransport.NetworkFunctionChassis,
+		ipmiTransport.CommandChassisStatus,
+		&chassisStatusRequest{},
+	}
+
+	res := &chassisStatusResponse{}
+	err := c.Client.Send(req, res)
+	if err != nil {
+		return nil, err
+	}
+
+	policy := ""
+	switch (res.PowerState & 0x60) >> 5 {
+	case 0x0:
+		policy = "always-off"
+	case 0x1:
+		policy = "previous"
+	case 0x2:
+		policy = "always-on"
+	default:
+		policy = "unknown"
+	}
+
+	return &ChassisStatus{
+		SystemPower:        res.PowerState&0x1 != 0,
+		PowerOverload:      res.PowerState&0x2 != 0,
+		PowerInterlock:     res.PowerState&0x4 != 0,
+		MainPowerFault:     res.PowerState&0x8 != 0,
+		PowerControlFault:  res.PowerState&0x10 != 0,
+		PowerRestorePolicy: policy,
+		LastPowerEvent: ChassisLastPowerEvent{
+			AcFailed:  res.LastPowerEvent&0x1 != 0,
+			Overload:  res.LastPowerEvent&0x2 != 0,
+			Interlock: res.LastPowerEvent&0x4 != 0,
+			Fault:     res.LastPowerEvent&0x8 != 0,
+			Command:   res.LastPowerEvent&0x8 != 0,
+		},
+		ChassisIntrusion:  res.State&0x1 != 0,
+		FrontPanelLockout: res.State&0x2 != 0,
+		DriveFault:        res.State&0x4 != 0,
+		CoolingFanFault:   res.State&0x8 != 0,
+	}, nil
+}
+
+type ChassisSystemBootOptions struct {
+	ParameterVersion       int64                         `json:"parameterVersion"`
+	ParameterValidUnlocked bool                          `json:"parameterValidUnlocked"`
+	BootFlags              ChassisSystemBootOptionsFlags `json:"bootFlags"`
+}
+
+type ChassisSystemBootOptionsFlags struct {
+	BootFlagsValid         bool   `json:"biosFlagsValid"`
+	ApplyToNextBootOnly    bool   `json:"applyToNextBootOnly"`
+	LegacyBootType         bool   `json:"legacyBootType"`
+	BootDeviceSelector     string `json:"bootDeviceSelector"`
+	CmosClear              bool   `json:"cmosClear"`
+	LockKeyboard           bool   `json:"lockKeyboard"`
+	ScreenBlank            bool   `json:"screenBlank"`
+	LockOutResetButton     bool   `json:"lockOutResetButton"`
+	LockOutPowerButton     bool   `json:"lockOutPowerButton"`
+	LockOutSleepButton     bool   `json:"lockOutSleepButton"`
+	UserPasswordBypass     bool   `json:"userPasswordBypass"`
+	ForceProgressEventTrap bool   `json:"forceProgressEventTrap"`
+	BIOSVerbosity          string `json:"biosVerbosity"`
+	ConsoleRedirection     string `json:"consoleRedirection"`
+	BIOSMuxControlOverride string `json:"biosMuxControlOverride"`
+	BIOSSharedModeOverride bool   `json:"biosSharedModeOverride"`
+}
+
+// ChassisStatus - 28.13 Get System Boot Options Command
+func (c *IpmiClient) ChassisSystemBootOptions() (*ChassisSystemBootOptions, error) {
+	req := &ipmiTransport.Request{
+		ipmiTransport.NetworkFunctionChassis,
+		ipmiTransport.CommandGetSystemBootOptions,
+		&ipmiTransport.SystemBootOptionsRequest{
+			Param: ipmiTransport.BootParamBootFlags,
+		},
+	}
+
+	res := &ipmiTransport.SystemBootOptionsResponse{}
+	err := c.Client.Send(req, res)
+	if err != nil {
+		return nil, err
+	}
+	bootDevice := res.BootDeviceSelector()
+
+	consoleRedirection := ""
+	switch res.Data[2] & 0x3 {
+	case 0x0:
+		consoleRedirection = "bios"
+	case 0x1:
+		consoleRedirection = "skip"
+	case 0x2:
+		consoleRedirection = "redirected"
+	default:
+		consoleRedirection = "reserved"
+	}
+
+	biosVerbosity := ""
+	switch res.Data[2] & 0x3 >> 5 {
+	case 0x0:
+		biosVerbosity = "default"
+	case 0x1:
+		biosVerbosity = "quiet"
+	case 0x2:
+		biosVerbosity = "verbose"
+	default:
+		biosVerbosity = "reserved"
+	}
+
+	biosMuxControlOverride := ""
+	switch res.Data[3] & 0x3 {
+	case 0x0:
+		biosMuxControlOverride = "recommended"
+	case 0x1:
+		biosMuxControlOverride = "force-bmc"
+	case 0x2:
+		biosMuxControlOverride = "force-system"
+	default:
+		biosMuxControlOverride = "reserved"
+	}
+
+	return &ChassisSystemBootOptions{
+		ParameterVersion:       int64(res.Version),
+		ParameterValidUnlocked: res.Param&0x80 == 0,
+		BootFlags: ChassisSystemBootOptionsFlags{
+			BootFlagsValid:         res.Data[0]&0x80 != 0,
+			ApplyToNextBootOnly:    res.Data[0]&0x40 == 0,
+			LegacyBootType:         res.Data[0]&0x20 == 0,
+			BootDeviceSelector:     bootDevice.String(),
+			CmosClear:              res.Data[1]&0x80 != 0,
+			LockKeyboard:           res.Data[1]&0x40 != 0,
+			ScreenBlank:            res.Data[1]&0x2 != 0,
+			LockOutResetButton:     res.Data[1]&0x1 != 0,
+			ConsoleRedirection:     consoleRedirection,
+			LockOutSleepButton:     res.Data[2]&0x4 != 0,
+			UserPasswordBypass:     res.Data[2]&0x8 != 0,
+			ForceProgressEventTrap: res.Data[2]&0x10 != 0,
+			BIOSVerbosity:          biosVerbosity,
+			LockOutPowerButton:     res.Data[2]&0x80 != 0,
+			BIOSMuxControlOverride: biosMuxControlOverride,
+			BIOSSharedModeOverride: res.Data[3]&0x8 != 0,
+		},
+	}, nil
+}

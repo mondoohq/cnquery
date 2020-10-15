@@ -8,13 +8,12 @@ package ipmi
 // )
 
 // func TestIpmiDockerSimulator(t *testing.T) {
-// 	c := &Connection{Hostname: "127.0.0.1", Port: 623, Username: "ADMIN", Password: "ADMIN", Interface: "lanplus"}
+// 	c := &Connection{Hostname: "127.0.0.1", Port: 623, Username: "ADMIN", Password: "ADMIN", Interface: "lan"}
 // 	client, err := NewIpmiClient(c)
 // 	require.NoError(t, err)
 // 	err = client.Open()
 
 // 	id, err := client.DeviceID()
-
 // 	expected := &DeviceID{
 // 		DeviceID:           int64(0),
 // 		DeviceRevision:     int64(3),
@@ -36,4 +35,47 @@ package ipmi
 // 		},
 // 	}
 // 	assert.Equal(t, expected, id)
+
+// 	status, err := client.ChassisStatus()
+// 	expectedStatus := &ChassisStatus{
+// 		SystemPower:        true,
+// 		PowerOverload:      false,
+// 		PowerInterlock:     false,
+// 		MainPowerFault:     false,
+// 		PowerControlFault:  false,
+// 		PowerRestorePolicy: "always-off",
+// 		LastPowerEvent: ChassisLastPowerEvent{
+// 			AcFailed:  false,
+// 			Overload:  false,
+// 			Fault:     false,
+// 			Interlock: false,
+// 			Command:   false,
+// 		},
+// 		ChassisIntrusion:  false,
+// 		FrontPanelLockout: false,
+// 		DriveFault:        false,
+// 		CoolingFanFault:   false,
+// 	}
+// 	assert.Equal(t, expectedStatus, status)
+
+// 	bootOptions, err := client.ChassisSystemBootOptions()
+// 	expectedBootOptions := &ChassisSystemBootOptions{
+// 		ParameterVersion:       1,
+// 		ParameterValidUnlocked: true,
+// 		BootFlags: ChassisSystemBootOptionsFlags{
+// 			BootFlagsValid:         false,
+// 			ApplyToNextBootOnly:    true,
+// 			LegacyBootType:         true,
+// 			BootDeviceSelector:     "pxe",
+// 			CmosClear:              false,
+// 			LockKeyboard:           false,
+// 			LockOutResetButton:     false,
+// 			ScreenBlank:            false,
+// 			BIOSVerbosity:          "default",
+// 			ConsoleRedirection:     "bios",
+// 			BIOSMuxControlOverride: "recommended",
+// 			BIOSSharedModeOverride: false,
+// 		},
+// 	}
+// 	assert.Equal(t, expectedBootOptions, bootOptions)
 // }
