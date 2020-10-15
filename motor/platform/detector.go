@@ -9,6 +9,7 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/aws"
 	"go.mondoo.io/mondoo/motor/transports/azure"
 	"go.mondoo.io/mondoo/motor/transports/gcp"
+	ipmi "go.mondoo.io/mondoo/motor/transports/ipmi"
 	"go.mondoo.io/mondoo/motor/transports/ms365"
 	"go.mondoo.io/mondoo/motor/transports/vsphere"
 )
@@ -83,6 +84,12 @@ func (d *Detector) Platform() (*Platform, error) {
 			Name:    "microsoft365",
 			Kind:    transports.Kind_KIND_API,
 			Runtime: transports.RUNTIME_MICROSOFT_GRAPH,
+		}, nil
+	case *ipmi.Transport:
+		return &Platform{
+			Name:    "ipmi",
+			Kind:    d.transport.Kind(),
+			Runtime: d.transport.Runtime(),
 		}, nil
 	default:
 		var resolved bool

@@ -37,6 +37,7 @@ func init() {
 	resolver["vsphere"] = &vsphereResolver{}
 	resolver["aristaeos"] = &instanceResolver{}
 	resolver["ms365"] = &ms365Resolver{}
+	resolver["ipmi"] = &ipmiResolver{}
 }
 
 func Assets(opts *options.VulnOpts) ([]*asset.Asset, error) {

@@ -20,6 +20,7 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/docker/image"
 	"go.mondoo.io/mondoo/motor/transports/docker/snapshot"
 	"go.mondoo.io/mondoo/motor/transports/gcp"
+	"go.mondoo.io/mondoo/motor/transports/ipmi"
 	"go.mondoo.io/mondoo/motor/transports/local"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 	"go.mondoo.io/mondoo/motor/transports/ms365"
@@ -368,6 +369,25 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 	case transports.TransportBackend_CONNECTION_MS365:
 		log.Debug().Msg("connection> load microsoft 365 transport")
 		trans, err := ms365.New(endpoint)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(trans)
+		if err != nil {
+			return nil, err
+		}
+
+		if endpoint.Record {
+			m.ActivateRecorder()
+		}
+
+		id, err := trans.Identifier()
+		if err == nil && len(id) > 0 {
+			identifier = append(identifier, id)
+		}
+	case transports.TransportBackend_CONNECTION_IPMI:
+		log.Debug().Msg("connection> load ipmi transport")
+		trans, err := ipmi.New(endpoint)
 		if err != nil {
 			return nil, err
 		}

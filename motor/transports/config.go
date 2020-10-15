@@ -71,6 +71,8 @@ func backend(scheme string) (TransportBackend, error) {
 		return TransportBackend_CONNECTION_VSPHERE, nil
 	case "aristaeos":
 		return TransportBackend_CONNECTION_ARISTAEOS, nil
+	case "ipmi":
+		return TransportBackend_CONNECTION_IPMI, nil
 	}
 
 	return TransportBackend_CONNECTION_LOCAL_OS, errors.New("unknown connection scheme: " + scheme)
@@ -133,6 +135,8 @@ func (conn *TransportConfig) ToUrl() string {
 		return "azure://"
 	case TransportBackend_CONNECTION_MS365:
 		return "ms365://"
+	case TransportBackend_CONNECTION_IPMI:
+		return "ipmi://"
 	default:
 		log.Warn().Str("backend", conn.Backend.String()).Msg("cannot render backend config")
 		return ""
