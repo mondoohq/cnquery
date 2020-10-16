@@ -1,12 +1,7 @@
 package ipmi
 
-// import (
-// 	"testing"
-
-// 	"github.com/stretchr/testify/assert"
-// 	"github.com/stretchr/testify/require"
-// )
-
+// This test runs against the an IPMI service. For example, an simulator can be used like the openipmi simulator
+// a complete docker container is available at https://github.com/vapor-ware/ipmi-simulator
 // func TestIpmiDockerSimulator(t *testing.T) {
 // 	c := &Connection{Hostname: "127.0.0.1", Port: 623, Username: "ADMIN", Password: "ADMIN", Interface: "lan"}
 // 	client, err := NewIpmiClient(c)
@@ -78,4 +73,8 @@ package ipmi
 // 		},
 // 	}
 // 	assert.Equal(t, expectedBootOptions, bootOptions)
+
+// 	guid, err := client.DeviceGUID()
+// 	require.NoError(t, err)
+// 	assert.Equal(t, "A123456789AB", guid.GUID)
 // }

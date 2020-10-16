@@ -21,6 +21,19 @@ func (a *lumiIpmi) id() (string, error) {
 	return "ipmi", nil
 }
 
+func (a *lumiIpmi) GetGuid() (string, error) {
+	client, err := getIpmiInstance(a.Runtime.Motor.Transport)
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := client.DeviceGUID()
+	if err != nil {
+		return "", err
+	}
+	return resp.GUID, nil
+}
+
 func (a *lumiIpmi) GetDeviceID() (map[string]interface{}, error) {
 
 	client, err := getIpmiInstance(a.Runtime.Motor.Transport)

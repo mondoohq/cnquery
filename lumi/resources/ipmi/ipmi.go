@@ -58,7 +58,7 @@ func NewIpmiClient(c *Connection) (*IpmiClient, error) {
 
 type deviceIDReq struct{}
 
-// 20.1Get Device IDCommand
+// 20.1 - Get Device IDCommand
 type deviceIDResp struct {
 	ipmiTransport.CompletionCode
 	DeviceID                      uint8
@@ -334,5 +334,60 @@ func (c *IpmiClient) ChassisSystemBootOptions() (*ChassisSystemBootOptions, erro
 			BIOSMuxControlOverride: biosMuxControlOverride,
 			BIOSSharedModeOverride: res.Data[3]&0x8 != 0,
 		},
+	}, nil
+}
+
+const CommandGetUUID = ipmiTransport.Command(0x37)
+
+type DeviceGuidRequest struct{}
+
+type DeviceGuidResponse struct {
+	ipmiTransport.CompletionCode
+	Guid1        uint8
+	Guid2        uint8
+	Guid3        uint8
+	Guid4        uint8
+	Guid5        uint8
+	Guid6        uint8
+	ClockSeqLow  uint8
+	ClockSeqHigh uint8
+	TimeHigh     uint8
+	TimeMid      uint8
+	TimeLow      uint16
+}
+
+type DeviceGUID struct {
+	GUID string
+}
+
+// Device GUID - 20.8 Get Device GUID Command
+func (c *IpmiClient) DeviceGUID() (*DeviceGUID, error) {
+	req := &ipmiTransport.Request{
+		// NOTE we use the FunctionApp here
+		ipmiTransport.NetworkFunctionApp,
+		CommandGetUUID,
+		&DeviceGuidRequest{},
+	}
+
+	res := &DeviceGuidResponse{}
+	err := c.Client.Send(req, res)
+	if err != nil {
+		return nil, err
+	}
+
+	// guid dump mode
+	// TODO: handle RFC4122 GUID, SMBIOS UUID
+	// TODO: try to extract timestamp too
+	guid := ""
+	guid += fmt.Sprintf("%02X", res.Guid1)
+	guid += fmt.Sprintf("%02X", res.Guid2)
+	guid += fmt.Sprintf("%02X", res.Guid3)
+	guid += fmt.Sprintf("%02X", res.Guid4)
+	guid += fmt.Sprintf("%02X", res.Guid5)
+	guid += fmt.Sprintf("%02X", res.Guid6)
+
+	// use dump mode
+	return &DeviceGUID{
+		GUID: guid,
 	}, nil
 }

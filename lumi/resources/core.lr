@@ -1984,11 +1984,20 @@ yum.repo {
   enabled() bool
 }
 
+// Intelligent Platform Management Interface (IPMI) resource
+//
+// Provides access to BIOS and UEFI configuration
 ipmi {
+  // retrieve the hardware & firmware revision and sensor and event interface
   deviceID() dict
+  // GUID (Globally Unique ID) for management controller
+  guid() string
 }
 
+// IPMI system chassis resource
 ipmi.chassis {
+  // high-level status of the system chassis and main power subsystem
   status() dict
+  // retrieve the system boot options
   systemBootOptions() dict
 }

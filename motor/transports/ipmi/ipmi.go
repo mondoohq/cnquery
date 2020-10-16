@@ -3,6 +3,7 @@ package ipmi
 import (
 	"errors"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/lumi/resources/ipmi"
 	"go.mondoo.io/mondoo/motor/transports"
@@ -14,10 +15,14 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 		return nil, errors.New("backend is not supported for ipmi transport")
 	}
 
-	// TODO: use default port 623
 	port, err := tc.IntPort()
 	if err != nil {
 		return nil, errors.New("port is not a valid number " + tc.Port)
+	}
+
+	// fallback to default port 623
+	if port == 0 {
+		port = 623
 	}
 
 	client, err := ipmi.NewIpmiClient(&ipmi.Connection{
@@ -43,6 +48,7 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 
 type Transport struct {
 	client *ipmi.IpmiClient
+	guid   string
 }
 
 func (t *Transport) RunCommand(command string) (*transports.Command, error) {
@@ -80,9 +86,20 @@ func (t *Transport) Client() *ipmi.IpmiClient {
 }
 
 func (t *Transport) Identifier() (string, error) {
-	return "//platformid.api.mondoo.app/runtime/ipmi/deviceid/", nil
+	guid := t.Guid()
+	return "//platformid.api.mondoo.app/runtime/ipmi/deviceid/" + guid, nil
 }
 
-func (t *Transport) Device() string {
-	return "deviceid"
+func (t *Transport) Guid() string {
+	if t.guid != "" {
+		return t.guid
+	}
+
+	resp, err := t.client.DeviceGUID()
+	if err != nil {
+		log.Error().Err(err).Msg("could not retrieve Ipmi GUID")
+	}
+
+	t.guid = resp.GUID
+	return t.guid
 }
