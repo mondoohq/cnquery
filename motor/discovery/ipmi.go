@@ -50,10 +50,11 @@ func (k *ipmiResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts
 
 	resolved = append(resolved, &asset.Asset{
 		ReferenceIDs: []string{identifier},
-		Name:         "IPMI device " + trans.Device(),
-		Platform:     pf,
-		Connections:  []*transports.TransportConfig{t}, // pass-in the current config
-		Labels:       map[string]string{},
+		// TODO: consider using the ipmi vendor id and product id
+		Name:        "IPMI device " + trans.Guid(),
+		Platform:    pf,
+		Connections: []*transports.TransportConfig{t}, // pass-in the current config
+		Labels:      map[string]string{},
 	})
 
 	return resolved, nil
