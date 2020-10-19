@@ -32,6 +32,7 @@ func init() {
 		"||":     compileComparable,
 		"&&":     compileComparable,
 		"if":     compileIf,
+		"else":   compileElse,
 		"expect": compileExpect,
 	}
 }
@@ -276,12 +277,11 @@ func compileIf(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (
 		return types.Nil, errors.New("need conditional arguments for if-clause")
 	}
 	if call == nil || len(call.Function) < 1 {
-		return types.Nil, errors.New("missing parameters for '" + id + "', it requires 1")
+		return types.Nil, errors.New("missing parameters for if-clause, it requires 1")
 	}
-
 	arg := call.Function[0]
 	if arg.Name != "" {
-		return types.Nil, errors.New("called '" + id + "' with a named argument, which is not supported")
+		return types.Nil, errors.New("called if-clause with a named argument, which is not supported")
 	}
 
 	argValue, err := c.compileExpression(arg.Value)
@@ -298,6 +298,23 @@ func compileIf(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (
 		},
 	})
 	res.Code.Entrypoints = append(res.Code.Entrypoints, res.Code.ChunkIndex())
+
+	return types.Nil, nil
+}
+
+func compileElse(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
+	if call != nil {
+		return types.Nil, errors.New("cannot have conditional arguments for else-clause, use another if-statement")
+	}
+
+	if len(res.Code.Code) == 0 {
+		return types.Nil, errors.New("can only use else-statement after a preceding if-statement")
+	}
+
+	prev := res.Code.Code[len(res.Code.Code)-1]
+	if prev.Id != "if" {
+		return types.Nil, errors.New("can only use else-statement after a preceding if-statement")
+	}
 
 	return types.Nil, nil
 }

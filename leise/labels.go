@@ -81,29 +81,41 @@ func createLabel(code *llx.Code, ref int32, labels *llx.Labels, schema *lumi.Sch
 
 	case "if":
 		res = "if"
-		if len(chunk.Function.Args) > 2 {
-			panic("don't know how to extract label data from more than one arg!")
+		argLen := len(chunk.Function.Args)
+
+		if argLen > 3 {
+			panic("don't know how to extract label data for if-call with too many args")
 		}
 
 		// if there are no labels yet
-		if len(chunk.Function.Args) != 2 {
+		if argLen < 2 {
 			return "if", nil
 		}
 
 		fref := chunk.Function.Args[1]
-		if !types.Type(fref.Type).IsFunction() {
-			panic("don't know how to extract label data when argument is not a function: " + types.Type(fref.Type).Label())
-		}
-
 		ref, ok := fref.Ref()
 		if !ok {
-			panic("cannot find function reference for data extraction")
+			return "", errors.New("cannot get function reference from first block of if-statement")
 		}
 
 		function := code.Functions[ref-1]
 		err = UpdateLabels(function, labels, schema)
 		if err != nil {
 			return "", err
+		}
+
+		if argLen == 3 {
+			fref := chunk.Function.Args[2]
+			ref, ok := fref.Ref()
+			if !ok {
+				return "", errors.New("cannot get function reference from first block of if-statement")
+			}
+
+			function := code.Functions[ref-1]
+			err = UpdateLabels(function, labels, schema)
+			if err != nil {
+				return "", err
+			}
 		}
 
 	default:

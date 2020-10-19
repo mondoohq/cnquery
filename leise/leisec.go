@@ -158,7 +158,7 @@ func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type
 }
 
 func (c *compiler) compileUnboundBlock(expressions []*parser.Expression, chunk *llx.Chunk) (types.Type, error) {
-	if chunk.Id != "if" {
+	if !(chunk.Id == "if") {
 		return types.Nil, errors.New("don't know how to compile unbound block on call `" + chunk.Id + "`")
 	}
 
