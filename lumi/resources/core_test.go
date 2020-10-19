@@ -320,6 +320,18 @@ func TestCore_If(t *testing.T) {
 				"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
 			},
 		},
+		{
+			"if (false) { 123 } else if (true) { 456 } else { 789 }",
+			0, map[string]interface{}{
+				"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
+			},
+		},
+		{
+			"if (false) { 123 } else if (false) { 456 } else { 789 }",
+			0, map[string]interface{}{
+				"Oy5SF8NbUtxaBwvZPpsnd0K21CY+fvC44FSd2QpgvIL689658Na52udy7qF2+hHjczk35TAstDtFZq7JIHNCmg==": llx.IntData(789),
+			},
+		},
 	})
 }
 

@@ -33,22 +33,28 @@ func init() {
 }
 
 func ifCall(c *LeiseExecutor, f *Function, ref int32) (*RawData, int32, error) {
-	if len(f.Args) < 2 || len(f.Args) > 3 {
-		return nil, 0, errors.New("Called if with " + strconv.Itoa(len(f.Args)) + " arguments, expected 2-3")
+	if len(f.Args) < 2 {
+		return nil, 0, errors.New("Called if with " + strconv.Itoa(len(f.Args)) + " arguments, expected at least 2")
 	}
 
-	res, dref, err := c.resolveValue(f.Args[0], ref)
-	if err != nil || dref != 0 || res == nil {
-		return res, dref, err
+	var idx int
+	max := len(f.Args)
+	for idx+1 < max {
+		res, dref, err := c.resolveValue(f.Args[idx], ref)
+		if err != nil || dref != 0 || res == nil {
+			return res, dref, err
+		}
+
+		if truthy, _ := res.IsTruthy(); truthy {
+			res, dref, err = c.runBlock(nil, f.Args[idx+1], ref)
+			return res, dref, err
+		}
+
+		idx += 2
 	}
 
-	if truthy, _ := res.IsTruthy(); truthy {
-		res, dref, err = c.runBlock(nil, f.Args[1], ref)
-		return res, dref, err
-	}
-
-	if len(f.Args) == 3 {
-		res, dref, err = c.runBlock(nil, f.Args[2], ref)
+	if idx < max {
+		res, dref, err := c.runBlock(nil, f.Args[idx], ref)
 		return res, dref, err
 	}
 
