@@ -308,6 +308,18 @@ func TestCore_If(t *testing.T) {
 			"if ( mondoo.version == null ) { 123 }",
 			1, nil,
 		},
+		{
+			"if ( mondoo.version != null ) { 123 } else { 456 }",
+			1, map[string]interface{}{
+				"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
+			},
+		},
+		{
+			"if ( mondoo.version == null ) { 123 } else { 456 }",
+			1, map[string]interface{}{
+				"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
+			},
+		},
 	})
 }
 
