@@ -38,6 +38,9 @@ type compiler struct {
 	//   file(xyz).content          is standalone
 	//   file(xyz).content == _     is not
 	standalone bool
+
+	// helps chaining of builtin calls like `if (..) else if (..) else ..`
+	prevID string
 }
 
 func addResourceSuggestions(resources map[string]*lumi.ResourceInfo, name string, res *llx.CodeBundle) {
@@ -160,6 +163,12 @@ func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type
 func (c *compiler) compileUnboundBlock(expressions []*parser.Expression, chunk *llx.Chunk) (types.Type, error) {
 	if !(chunk.Id == "if") {
 		return types.Nil, errors.New("don't know how to compile unbound block on call `" + chunk.Id + "`")
+	}
+
+	// if `else { .. }` is called, we reset the prevID to indicate there is no
+	// more chaining happening
+	if c.prevID == "else" {
+		c.prevID = ""
 	}
 
 	blockCompiler := &compiler{
