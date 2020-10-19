@@ -284,6 +284,29 @@ func compileIf(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (
 		return types.Nil, errors.New("called if-clause with a named argument, which is not supported")
 	}
 
+	// if we are in a chained if-else call (needs previous if-call)
+	if c.prevID == "else" && len(res.Code.Code) != 0 {
+		maxRef := len(res.Code.Code) - 1
+		prev := res.Code.Code[maxRef]
+		if prev.Id == "if" {
+			// we need to pop off the last "if" chunk as the new condition needs to
+			// be added in front of it
+			res.Code.Code = res.Code.Code[0:maxRef]
+
+			argValue, err := c.compileExpression(arg.Value)
+			if err != nil {
+				return types.Nil, err
+			}
+
+			// now add back the last chunk and append the newly compiled condition
+			res.Code.AddChunk(prev)
+			prev.Function.Args = append(prev.Function.Args, argValue)
+
+			c.prevID = "if"
+			return types.Nil, nil
+		}
+	}
+
 	argValue, err := c.compileExpression(arg.Value)
 	if err != nil {
 		return types.Nil, err
@@ -298,6 +321,7 @@ func compileIf(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (
 		},
 	})
 	res.Code.Entrypoints = append(res.Code.Entrypoints, res.Code.ChunkIndex())
+	c.prevID = "if"
 
 	return types.Nil, nil
 }
@@ -315,6 +339,12 @@ func compileElse(c *compiler, id string, call *parser.Call, res *llx.CodeBundle)
 	if prev.Id != "if" {
 		return types.Nil, errors.New("can only use else-statement after a preceding if-statement")
 	}
+
+	if c.prevID != "if" {
+		return types.Nil, errors.New("can only use else-statement after a preceding if-statement (internal reference is wrong)")
+	}
+
+	c.prevID = "else"
 
 	return types.Nil, nil
 }

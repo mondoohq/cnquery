@@ -81,34 +81,30 @@ func createLabel(code *llx.Code, ref int32, labels *llx.Labels, schema *lumi.Sch
 
 	case "if":
 		res = "if"
-		argLen := len(chunk.Function.Args)
 
-		if argLen > 3 {
-			panic("don't know how to extract label data for if-call with too many args")
-		}
-
-		// if there are no labels yet
-		if argLen < 2 {
-			return "if", nil
-		}
-
-		fref := chunk.Function.Args[1]
-		ref, ok := fref.Ref()
-		if !ok {
-			return "", errors.New("cannot get function reference from first block of if-statement")
-		}
-
-		function := code.Functions[ref-1]
-		err = UpdateLabels(function, labels, schema)
-		if err != nil {
-			return "", err
-		}
-
-		if argLen == 3 {
-			fref := chunk.Function.Args[2]
+		var i int
+		max := len(chunk.Function.Args)
+		for i+1 < max {
+			fref := chunk.Function.Args[i+1]
 			ref, ok := fref.Ref()
 			if !ok {
-				return "", errors.New("cannot get function reference from first block of if-statement")
+				return "", errors.New("cannot get function reference for block in if-statement")
+			}
+
+			function := code.Functions[ref-1]
+			err = UpdateLabels(function, labels, schema)
+			if err != nil {
+				return "", err
+			}
+
+			i += 2
+		}
+
+		if i < max {
+			fref := chunk.Function.Args[i]
+			ref, ok := fref.Ref()
+			if !ok {
+				return "", errors.New("cannot get function reference for block in if-statement")
 			}
 
 			function := code.Functions[ref-1]

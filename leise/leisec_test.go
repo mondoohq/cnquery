@@ -410,6 +410,33 @@ func TestCompiler_If(t *testing.T) {
 		assertPrimitive(t, llx.IntPrimitive(456), res.Code.Functions[1].Code[0])
 		assert.Equal(t, []int32{1}, res.Code.Functions[1].Entrypoints)
 	})
+
+	compile(t, "if ( mondoo ) { 123 } else if ( true ) { 456 } else { 789 }", func(res *llx.CodeBundle) {
+		assertFunction(t, "mondoo", nil, res.Code.Code[0])
+
+		assertFunction(t, "if", &llx.Function{
+			Type:    types.Nil,
+			Binding: 0,
+			Args: []*llx.Primitive{
+				llx.RefPrimitive(1),
+				llx.FunctionPrimitive(1),
+				llx.BoolPrimitive(true),
+				llx.FunctionPrimitive(2),
+				llx.FunctionPrimitive(3),
+			},
+		}, res.Code.Code[1])
+		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
+		assert.Equal(t, []int32{}, res.Code.Datapoints)
+
+		assertPrimitive(t, llx.IntPrimitive(123), res.Code.Functions[0].Code[0])
+		assert.Equal(t, []int32{1}, res.Code.Functions[0].Entrypoints)
+
+		assertPrimitive(t, llx.IntPrimitive(456), res.Code.Functions[1].Code[0])
+		assert.Equal(t, []int32{1}, res.Code.Functions[1].Entrypoints)
+
+		assertPrimitive(t, llx.IntPrimitive(789), res.Code.Functions[2].Code[0])
+		assert.Equal(t, []int32{1}, res.Code.Functions[2].Entrypoints)
+	})
 }
 
 //    =======================
