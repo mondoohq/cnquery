@@ -24,7 +24,7 @@ func (k *instanceResolver) Resolve(in *options.VulnOptsAsset, opts *options.Vuln
 	}
 
 	assetInfo := &asset.Asset{
-		// SpaceMrn:     opts.SpaceMrn,
+		Name:         in.Name,
 		ReferenceIDs: refIds,
 		Labels:       in.Labels,
 		State:        asset.State_STATE_ONLINE,
@@ -44,8 +44,10 @@ func (k *instanceResolver) Resolve(in *options.VulnOptsAsset, opts *options.Vuln
 		t.Password = in.Password
 	}
 
-	// use hostname as name for now
-	assetInfo.Name = t.Host
+	// use hostname as name if asset name was not explicitly provided
+	if assetInfo.Name == "" {
+		assetInfo.Name = t.Host
+	}
 
 	t.Sudo = &transports.Sudo{
 		Active: opts.Sudo.Active,

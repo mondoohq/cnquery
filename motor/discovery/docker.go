@@ -90,6 +90,7 @@ func (k *dockerResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOp
 		// Tar container can be an image or a snapshot
 		t.Backend = transports.TransportBackend_CONNECTION_CONTAINER_TAR
 		resolvedAsset = &asset.Asset{
+			Name:        t.Host,
 			Connections: []*transports.TransportConfig{t},
 			Platform: &platform.Platform{
 				// TODO: this is temporary, decide if we want to move the detection logic for image/container here
@@ -104,10 +105,11 @@ func (k *dockerResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOp
 	// could be an image id/name, container id/name or a short reference to an image in docker engine
 	ded, err := docker_discovery.NewDockerEngineDiscovery()
 	if err == nil {
-		_, err := ded.ContainerInfo(t.Host)
+		ci, err := ded.ContainerInfo(t.Host)
 		if err == nil {
 			t.Backend = transports.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER
 			resolvedAsset = &asset.Asset{
+				Name:        docker_discovery.MondooContainerID(ci.ID),
 				Connections: []*transports.TransportConfig{t},
 				Platform: &platform.Platform{
 					Kind:    transports.Kind_KIND_CONTAINER,
@@ -117,10 +119,11 @@ func (k *dockerResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOp
 			return []*asset.Asset{resolvedAsset}, nil
 		}
 
-		_, err = ded.ImageInfo(t.Host)
+		ii, err := ded.ImageInfo(t.Host)
 		if err == nil {
 			t.Backend = transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE
 			resolvedAsset = &asset.Asset{
+				Name:        ii.Name,
 				Connections: []*transports.TransportConfig{t},
 				Platform: &platform.Platform{
 					Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
