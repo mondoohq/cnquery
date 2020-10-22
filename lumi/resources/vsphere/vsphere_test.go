@@ -118,6 +118,10 @@ package vsphere
 // 		require.NoError(t, err)
 // 		assert.Equal(t, 1, len(pauseParams))
 
+// 		nicDetails, err := e.ListNicDetails("vmnic0")
+// 		require.NoError(t, err)
+// 		assert.Equal(t, 1, len(nicDetails))
+
 // 		// 	// list packages
 // 		// 	vibs, err := e.Vibs()
 // 		// 	require.NoError(t, err)
