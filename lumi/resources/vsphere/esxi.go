@@ -182,6 +182,30 @@ func (esxi *Esxi) Adapters() ([]map[string]interface{}, error) {
 	return esxiValuesSliceToDict(res.Values), nil
 }
 
+// List adapter details for nic
+// Usage esxcli network nic pauseParams list
+func (esxi *Esxi) ListNicDetails(interfacename string) (map[string]interface{}, error) {
+	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := e.Run([]string{"network", "nic", "get", "--nic-name", interfacename})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(resp.Values) == 0 {
+		return nil, nil
+	}
+
+	if len(resp.Values) > 1 {
+		return nil, errors.New("network.ip.interface.tag returns more than one value, this is unexpected")
+	}
+
+	return esxiValuesToDict(resp.Values[0]), nil
+}
+
 // List pause parameters of all NICs
 // Usage esxcli network nic pauseParams list
 func (esxi *Esxi) ListNicPauseParams() ([]map[string]interface{}, error) {

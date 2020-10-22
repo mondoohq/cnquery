@@ -47,7 +47,12 @@ export GOVC_URL='https://root:password1!@192.168.56.102/sdk'
 Install [PowerCLI for macOS](https://blogs.vmware.com/PowerCLI/2018/03/installing-powercli-10-0-0-macos.html)
 
 ```bash
+# install powershell
 brew cask install powershell
+# start powershell
+pwsh
+# install powercli modules
+Install-Module -Name VMware.PowerCLI -Scope CurrentUser
 ```
 
 Connect ot the simulator:

@@ -728,6 +728,8 @@ vsphere.vmnic {
   name string
   // NIC properties
   properties dict
+  // generic configuration of a network device
+  details() dict
   // NIC pause parameters
   pauseParams dict
 }

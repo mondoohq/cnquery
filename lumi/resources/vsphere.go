@@ -49,10 +49,6 @@ func (v *lumiVsphereHost) id() (string, error) {
 	return v.Moid()
 }
 
-func (v *lumiVsphereVmnic) id() (string, error) {
-	return v.Name()
-}
-
 func (v *lumiVsphereVmknic) id() (string, error) {
 	return v.Name()
 }
@@ -363,7 +359,7 @@ func (v *lumiVsphereHost) GetAdapters() ([]interface{}, error) {
 		nicName := a["Name"].(string)
 		pParams := pauseParams[nicName]
 
-		lumiVswitch, err := v.Runtime.CreateResource("vsphere.vmnic",
+		lumiAdapter, err := v.Runtime.CreateResource("vsphere.vmnic",
 			"name", nicName,
 			"properties", a,
 			"pauseParams", pParams,
@@ -371,10 +367,40 @@ func (v *lumiVsphereHost) GetAdapters() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		lumiAdapters[i] = lumiVswitch
+
+		// store host inventory path, so that sub resources can use that to quickly query more
+		lumiAdapter.LumiResource().Cache.Store("_host_inventory_path", &lumi.CacheEntry{Data: esxiClient.InventoryPath})
+		lumiAdapters[i] = lumiAdapter
 	}
 
 	return lumiAdapters, nil
+}
+
+func (v *lumiVsphereVmnic) id() (string, error) {
+	return v.Name()
+}
+
+func (v *lumiVsphereVmnic) esxiClient() (*vsphere.Esxi, error) {
+	c, ok := v.LumiResource().Cache.Load("_host_inventory_path")
+	if !ok {
+		return nil, errors.New("cannot get esxi host inventory path")
+	}
+	inventoryPath := c.Data.(string)
+	return esxiClient(v.Runtime.Motor.Transport, inventoryPath)
+}
+
+func (v *lumiVsphereVmnic) GetDetails() (map[string]interface{}, error) {
+	name, err := v.Name()
+	if err != nil {
+		return nil, err
+	}
+
+	esxiClient, err := v.esxiClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return esxiClient.ListNicDetails(name)
 }
 
 func (v *lumiVsphereHost) GetVmknics() ([]interface{}, error) {
