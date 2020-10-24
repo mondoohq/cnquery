@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"regexp"
-	"strconv"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -212,21 +210,8 @@ type PowershellWinHotFix struct {
 	InstalledBy string `json:"InstalledBy"`
 }
 
-var powershellTimestamp = regexp.MustCompile(`Date\((\d+)\)`)
-
 func (hf PowershellWinHotFix) InstalledOnTime() *time.Time {
-	// extract unix seconds
-	m := powershellTimestamp.FindStringSubmatch(hf.InstalledOn.Value)
-	if len(m) > 0 {
-		i, err := strconv.ParseInt(m[1], 10, 64)
-		if err != nil {
-			return nil
-		}
-
-		tm := time.Unix(0, i*int64(time.Millisecond))
-		return &tm
-	}
-	return nil
+	return powershell.PSJsonTimestamp(hf.InstalledOn.Value)
 }
 
 func ParseWindowsHotfixes(input io.Reader) ([]PowershellWinHotFix, error) {
