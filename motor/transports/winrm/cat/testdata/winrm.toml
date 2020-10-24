@@ -1,0 +1,200 @@
+[commands."wmic os get * /format:csv"]
+stdout = """Node,BootDevice,BuildNumber,BuildType,Caption,CodeSet,CountryCode,CreationClassName,CSCreationClassName,CSDVersion,CSName,CurrentTimeZone,DataExecutionPrevention_32BitApplications,DataExecutionPrevention_Available,DataExecutionPrevention_Drivers,DataExecutionPrevention_SupportPolicy,Debug,Description,Distributed,EncryptionLevel,ForegroundApplicationBoost,FreePhysicalMemory,FreeSpaceInPagingFiles,FreeVirtualMemory,InstallDate,LargeSystemCache,LastBootUpTime,LocalDateTime,Locale,Manufacturer,MaxNumberOfProcesses,MaxProcessMemorySize,MUILanguages,Name,NumberOfLicensedUsers,NumberOfProcesses,NumberOfUsers,OperatingSystemSKU,Organization,OSArchitecture,OSLanguage,OSProductSuite,OSType,OtherTypeDescription,PAEEnabled,PlusProductID,PlusVersionNumber,PortableOperatingSystem,Primary,ProductType,RegisteredUser,SerialNumber,ServicePackMajorVersion,ServicePackMinorVersion,SizeStoredInPagingFiles,Status,SuiteMask,SystemDevice,SystemDirectory,SystemDrive,TotalSwapSpaceSize,TotalVirtualMemorySize,TotalVisibleMemorySize,Version,WindowsDirectory
+EC2AMAZ-N68EMTI,\\Device\\HarddiskVolume1,17763,Multiprocessor Free,Microsoft Windows Server 2019 Datacenter,1252,1,Win32_OperatingSystem,Win32_ComputerSystem,,EC2AMAZ-N68EMTI,0,TRUE,TRUE,TRUE,3,FALSE,,FALSE,256,2,252024,583528,950224,20201024075949.000000+000,,20201024083542.500000+000,20201025092404.635000+000,0409,Microsoft Corporation,4294967295,137438953344,{en-US},Microsoft Windows Server 2019 Datacenter|C:\\Windows|\\Device\\Harddisk0\\Partition1,0,66,2,8,Amazon.com,64-bit,1033,400,18,,,,,FALSE,TRUE,3,EC2,00430-00000-00000-AA875,0,0,1048576,OK,400,\\Device\\HarddiskVolume1,C:\\Windows\\system32,C:,,2096752,1048176,10.0.17763,C:\\Windows
+"""
+
+[commands."powershell -c \"Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion' -Name CurrentBuild, UBR, EditionID | ConvertTo-Json\""]
+stdout="""
+{
+    "CurrentBuild":  "17763",
+    "EditionID":  "ServerDatacenter",
+    "UBR":  1518
+}
+"""
+
+[commands."powershell -c \"Get-WmiObject Win32_ComputerSystemProduct  | Select-Object -ExpandProperty UUID\""]
+stdout="EC2670D2-3D6E-2F4A-5C32-42C5931E1E1E"
+
+[commands."type C:\\test.txt"]
+stdout="""
+hi
+"""
+
+[commands."powershell -c \"Get-Item C:\\test.txt | ConvertTo-JSON\""]
+stdout="""
+{
+  "Name": "test.txt",
+  "Length": 2,
+  "DirectoryName": "C:\\\\",
+  "Directory": {
+    "Name": "C:\\\\",
+    "FullName": "C:\\\\",
+    "Parent": null,
+    "Exists": true,
+    "Root": {
+      "Name": "C:\\\\",
+      "FullName": "C:\\\\",
+      "Parent": null,
+      "Exists": true,
+      "Root": "C:\\\\",
+      "Extension": "",
+      "CreationTime": "\\/Date(1536991766317)\\/",
+      "CreationTimeUtc": "\\/Date(1536991766317)\\/",
+      "LastAccessTime": "\\/Date(1603529613315)\\/",
+      "LastAccessTimeUtc": "\\/Date(1603529613315)\\/",
+      "LastWriteTime": "\\/Date(1603529613315)\\/",
+      "LastWriteTimeUtc": "\\/Date(1603529613315)\\/",
+      "Attributes": 22
+    },
+    "Extension": "",
+    "CreationTime": "\\/Date(1536991766317)\\/",
+    "CreationTimeUtc": "\\/Date(1536991766317)\\/",
+    "LastAccessTime": "\\/Date(1603529613315)\\/",
+    "LastAccessTimeUtc": "\\/Date(1603529613315)\\/",
+    "LastWriteTime": "\\/Date(1603529613315)\\/",
+    "LastWriteTimeUtc": "\\/Date(1603529613315)\\/",
+    "Attributes": 22
+  },
+  "IsReadOnly": false,
+  "Exists": true,
+  "FullName": "C:\\\\test.txt",
+  "Extension": ".txt",
+  "CreationTime": "\\/Date(1603529613252)\\/",
+  "CreationTimeUtc": "\\/Date(1603529613252)\\/",
+  "LastAccessTime": "\\/Date(1603529613315)\\/",
+  "LastAccessTimeUtc": "\\/Date(1603529613315)\\/",
+  "LastWriteTime": "\\/Date(1603529613315)\\/",
+  "LastWriteTimeUtc": "\\/Date(1603529613315)\\/",
+  "Attributes": 32,
+  "Mode": "-a----",
+  "VersionInfo": {
+    "Comments": null,
+    "CompanyName": null,
+    "FileBuildPart": 0,
+    "FileDescription": null,
+    "FileMajorPart": 0,
+    "FileMinorPart": 0,
+    "FileName": "C:\\\\test.txt",
+    "FilePrivatePart": 0,
+    "FileVersion": null,
+    "InternalName": null,
+    "IsDebug": false,
+    "IsPatched": false,
+    "IsPrivateBuild": false,
+    "IsPreRelease": false,
+    "IsSpecialBuild": false,
+    "Language": null,
+    "LegalCopyright": null,
+    "LegalTrademarks": null,
+    "OriginalFilename": null,
+    "PrivateBuild": null,
+    "ProductBuildPart": 0,
+    "ProductMajorPart": 0,
+    "ProductMinorPart": 0,
+    "ProductName": null,
+    "ProductPrivatePart": 0,
+    "ProductVersion": null,
+    "SpecialBuild": null,
+    "FileVersionRaw": {
+      "Major": 0,
+      "Minor": 0,
+      "Build": 0,
+      "Revision": 0,
+      "MajorRevision": 0,
+      "MinorRevision": 0
+    },
+    "ProductVersionRaw": {
+      "Major": 0,
+      "Minor": 0,
+      "Build": 0,
+      "Revision": 0,
+      "MajorRevision": 0,
+      "MinorRevision": 0
+    }
+  },
+  "BaseName": "test",
+  "Target": [],
+  "LinkType": null
+}
+"""
+
+[commands."powershell -c \"Get-Item C:\\Windows | ConvertTo-JSON\""]
+stdout="""
+{
+  "Name": "Windows",
+  "FullName": "C:\\\\Windows",
+  "Parent": {
+    "Name": "C:\\\\",
+    "FullName": "C:\\\\",
+    "Parent": null,
+    "Exists": true,
+    "Root": {
+      "Name": "C:\\\\",
+      "FullName": "C:\\\\",
+      "Parent": null,
+      "Exists": true,
+      "Root": "C:\\\\",
+      "Extension": "",
+      "CreationTime": "\\/Date(1536991766317)\\/",
+      "CreationTimeUtc": "\\/Date(1536991766317)\\/",
+      "LastAccessTime": "\\/Date(1603529613315)\\/",
+      "LastAccessTimeUtc": "\\/Date(1603529613315)\\/",
+      "LastWriteTime": "\\/Date(1603529613315)\\/",
+      "LastWriteTimeUtc": "\\/Date(1603529613315)\\/",
+      "Attributes": 22
+    },
+    "Extension": "",
+    "CreationTime": "\\/Date(1536991766317)\\/",
+    "CreationTimeUtc": "\\/Date(1536991766317)\\/",
+    "LastAccessTime": "\\/Date(1603529613315)\\/",
+    "LastAccessTimeUtc": "\\/Date(1603529613315)\\/",
+    "LastWriteTime": "\\/Date(1603529613315)\\/",
+    "LastWriteTimeUtc": "\\/Date(1603529613315)\\/",
+    "Attributes": 22
+  },
+  "Exists": true,
+  "Root": {
+    "Name": "C:\\\\",
+    "FullName": "C:\\\\",
+    "Parent": null,
+    "Exists": true,
+    "Root": {
+      "Name": "C:\\\\",
+      "FullName": "C:\\\\",
+      "Parent": null,
+      "Exists": true,
+      "Root": "C:\\\\",
+      "Extension": "",
+      "CreationTime": "\\/Date(1536991766317)\\/",
+      "CreationTimeUtc": "\\/Date(1536991766317)\\/",
+      "LastAccessTime": "\\/Date(1603529613315)\\/",
+      "LastAccessTimeUtc": "\\/Date(1603529613315)\\/",
+      "LastWriteTime": "\\/Date(1603529613315)\\/",
+      "LastWriteTimeUtc": "\\/Date(1603529613315)\\/",
+      "Attributes": 22
+    },
+    "Extension": "",
+    "CreationTime": "\\/Date(1536991766317)\\/",
+    "CreationTimeUtc": "\\/Date(1536991766317)\\/",
+    "LastAccessTime": "\\/Date(1603529613315)\\/",
+    "LastAccessTimeUtc": "\\/Date(1603529613315)\\/",
+    "LastWriteTime": "\\/Date(1603529613315)\\/",
+    "LastWriteTimeUtc": "\\/Date(1603529613315)\\/",
+    "Attributes": 22
+  },
+  "Extension": "",
+  "CreationTime": "\\/Date(1536991766473)\\/",
+  "CreationTimeUtc": "\\/Date(1536991766473)\\/",
+  "LastAccessTime": "\\/Date(1603526263397)\\/",
+  "LastAccessTimeUtc": "\\/Date(1603526263397)\\/",
+  "LastWriteTime": "\\/Date(1603526263319)\\/",
+  "LastWriteTimeUtc": "\\/Date(1603526263319)\\/",
+  "Attributes": 16,
+  "Mode": "d-----",
+  "BaseName": "Windows",
+  "Target": [
+
+  ],
+  "LinkType": null
+}
+"""

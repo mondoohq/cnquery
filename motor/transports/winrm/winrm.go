@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/winrm/cat"
 )
 
 func VerifyConfig(endpoint *transports.TransportConfig) (*winrm.Endpoint, error) {
@@ -98,10 +99,11 @@ type WinrmTransport struct {
 	Client   *winrm.Client
 	kind     transports.Kind
 	runtime  string
+	fs       afero.Fs
 }
 
 func (t *WinrmTransport) RunCommand(command string) (*transports.Command, error) {
-	log.Debug().Str("command", command).Str("transport", "ssh").Msg("winrm> run command")
+	log.Debug().Str("command", command).Str("transport", "winrm").Msg("winrm> run command")
 
 	stdoutBuffer := &bytes.Buffer{}
 	stderrBuffer := &bytes.Buffer{}
@@ -112,7 +114,9 @@ func (t *WinrmTransport) RunCommand(command string) (*transports.Command, error)
 		return nil, err
 	}
 
-	// log.Debug().Str("stdout", stdoutBuffer.String()).Str("stderr", stderrBuffer.String()).Int("exitcode", exitCode).Msg("winrm command executed")
+	// log.Debug().Int("exitcode", exitCode).Msg("winrm command executed")
+	// fmt.Println(stdoutBuffer.String())
+	// fmt.Println(stderrBuffer.String())
 
 	mcmd := &transports.Command{
 		Command:    command,
@@ -125,11 +129,30 @@ func (t *WinrmTransport) RunCommand(command string) (*transports.Command, error)
 }
 
 func (t *WinrmTransport) FileInfo(path string) (transports.FileInfoDetails, error) {
-	return transports.FileInfoDetails{}, errors.New("not implemented")
+	fs := t.FS()
+	afs := &afero.Afero{Fs: fs}
+	stat, err := afs.Stat(path)
+	if err != nil {
+		return transports.FileInfoDetails{}, err
+	}
+
+	uid := int64(-1)
+	gid := int64(-1)
+	mode := stat.Mode()
+
+	return transports.FileInfoDetails{
+		Mode: transports.FileModeDetails{mode},
+		Size: stat.Size(),
+		Uid:  uid,
+		Gid:  gid,
+	}, nil
 }
 
 func (t *WinrmTransport) FS() afero.Fs {
-	return NewWinrmFS()
+	if t.fs == nil {
+		t.fs = cat.New(t)
+	}
+	return t.fs
 }
 
 func (t *WinrmTransport) Close() {
