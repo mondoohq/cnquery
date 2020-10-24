@@ -72,10 +72,8 @@ func (p *lumiOs) GetEnv() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	for i := range pf.Family {
-		if pf.Family[i] == "windows" {
-			return p.getWindowsEnv()
-		}
+	if pf.IsFamily("windows") {
+		return p.getWindowsEnv()
 	}
 
 	return p.getUnixEnv()
