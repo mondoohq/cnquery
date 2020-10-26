@@ -77,6 +77,15 @@ func (v *lumiVsphere) id() (string, error) {
 	return "vsphere", nil
 }
 
+func (v *lumiVsphere) GetAbout() (map[string]interface{}, error) {
+	client, err := getClientInstance(v.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.AboutInfo()
+}
+
 func (v *lumiVsphere) GetDatacenters() ([]interface{}, error) {
 	client, err := getClientInstance(v.Runtime.Motor.Transport)
 	if err != nil {
