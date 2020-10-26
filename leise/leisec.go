@@ -41,6 +41,9 @@ type compiler struct {
 
 	// helps chaining of builtin calls like `if (..) else if (..) else ..`
 	prevID string
+
+	// tracks if the return statement was called in this block
+	returnCalled bool
 }
 
 func addResourceSuggestions(resources map[string]*lumi.ResourceInfo, name string, res *llx.CodeBundle) {
@@ -201,6 +204,11 @@ func (c *compiler) compileUnboundBlock(expressions []*parser.Expression, chunk *
 
 	chunk.Function.Args = append(chunk.Function.Args, llx.FunctionPrimitive(c.Result.Code.FunctionsIndex()))
 	c.Result.Code.RefreshChunkChecksum(chunk)
+
+	// we set this to true, so that we can decide how to handle all following expressions
+	if blockCompiler.returnCalled {
+		c.returnCalled = true
+	}
 
 	return types.Nil, nil
 }
@@ -896,9 +904,65 @@ func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 		}
 	}
 
+	var ident string
+	var prev string
 	for idx := range expressions {
-		ref, err := c.compileAndAddExpression(expressions[idx])
+		expression := expressions[idx]
+		prev = ident
+		ident = ""
+		if expression.Operand != nil && expression.Operand.Value != nil && expression.Operand.Value.Ident != nil {
+			ident = *expression.Operand.Value.Ident
+		}
+
+		if ident == "return" {
+			// A return statement can only be followed by max 1 more expression
+			max := len(expressions)
+			if idx+2 < max {
+				return errors.New("return statement is followed by too many expressions")
+			}
+
+			if idx+1 == max {
+				// nothing else coming after this, return nil
+			}
+
+			c.returnCalled = true
+			continue
+		}
+
+		// for all other expressions, just compile
+		ref, err := c.compileAndAddExpression(expression)
 		if err != nil {
+			return err
+		}
+
+		if prev == "return" {
+			prevChunk := c.Result.Code.Code[ref-1]
+
+			c.Result.Code.AddChunk(&llx.Chunk{
+				Call: llx.Chunk_FUNCTION,
+				Id:   "return",
+				Function: &llx.Function{
+					Type:    prevChunk.Type(c.Result.Code),
+					Binding: 0,
+					Args: []*llx.Primitive{
+						llx.RefPrimitive(ref),
+					},
+				},
+			})
+			c.Result.Code.Entrypoints = append(c.Result.Code.Entrypoints, c.Result.Code.ChunkIndex())
+
+			return nil
+		}
+
+		if ident == "if" && c.returnCalled {
+			// reset for everything else (TODO: not sure if this is even needed?)
+			c.returnCalled = false
+
+			// all following expressions need to be compiled in a block which is
+			// conditional to this if-statement
+			c.prevID = "else"
+			rest := expressions[idx+1:]
+			_, err := c.compileUnboundBlock(rest, c.Result.Code.LastChunk())
 			return err
 		}
 

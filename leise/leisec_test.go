@@ -362,6 +362,85 @@ func TestCompiler_Props(t *testing.T) {
 }
 
 func TestCompiler_If(t *testing.T) {
+	compile(t, "if ( mondoo ) { return 123 } if ( true ) { return 456 } 789", func(res *llx.CodeBundle) {
+		assertFunction(t, "mondoo", nil, res.Code.Code[0])
+
+		assertFunction(t, "if", &llx.Function{
+			Type:    types.Nil,
+			Binding: 0,
+			Args: []*llx.Primitive{
+				llx.RefPrimitive(1),
+				llx.FunctionPrimitive(1),
+				llx.FunctionPrimitive(2),
+			},
+		}, res.Code.Code[1])
+		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
+		assert.Equal(t, []int32{}, res.Code.Datapoints)
+
+		assertPrimitive(t, llx.IntPrimitive(123), res.Code.Functions[0].Code[0])
+		assertFunction(t, "return", &llx.Function{
+			Type:    types.Int,
+			Binding: 0,
+			Args: []*llx.Primitive{
+				llx.RefPrimitive(1),
+			},
+		}, res.Code.Functions[0].Code[1])
+		assert.Equal(t, []int32{2}, res.Code.Functions[0].Entrypoints)
+
+		assertFunction(t, "if", &llx.Function{
+			Type:    types.Nil,
+			Binding: 0,
+			Args: []*llx.Primitive{
+				llx.BoolPrimitive(true),
+				llx.FunctionPrimitive(1),
+				llx.FunctionPrimitive(2),
+			},
+		}, res.Code.Functions[1].Code[0])
+		assert.Equal(t, []int32{1}, res.Code.Functions[1].Entrypoints)
+
+		assertPrimitive(t, llx.IntPrimitive(456), res.Code.Functions[1].Functions[0].Code[0])
+		assertFunction(t, "return", &llx.Function{
+			Type:    types.Int,
+			Binding: 0,
+			Args: []*llx.Primitive{
+				llx.RefPrimitive(1),
+			},
+		}, res.Code.Functions[1].Functions[0].Code[1])
+		assert.Equal(t, []int32{2}, res.Code.Functions[1].Functions[0].Entrypoints)
+
+		assertPrimitive(t, llx.IntPrimitive(789), res.Code.Functions[1].Functions[1].Code[0])
+		assert.Equal(t, []int32{1}, res.Code.Functions[1].Functions[1].Entrypoints)
+	})
+
+	compile(t, "if ( mondoo ) { return 123 } 456", func(res *llx.CodeBundle) {
+		assertFunction(t, "mondoo", nil, res.Code.Code[0])
+
+		assertFunction(t, "if", &llx.Function{
+			Type:    types.Nil,
+			Binding: 0,
+			Args: []*llx.Primitive{
+				llx.RefPrimitive(1),
+				llx.FunctionPrimitive(1),
+				llx.FunctionPrimitive(2),
+			},
+		}, res.Code.Code[1])
+		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
+		assert.Equal(t, []int32{}, res.Code.Datapoints)
+
+		assertPrimitive(t, llx.IntPrimitive(123), res.Code.Functions[0].Code[0])
+		assertFunction(t, "return", &llx.Function{
+			Type:    types.Int,
+			Binding: 0,
+			Args: []*llx.Primitive{
+				llx.RefPrimitive(1),
+			},
+		}, res.Code.Functions[0].Code[1])
+		assert.Equal(t, []int32{2}, res.Code.Functions[0].Entrypoints)
+
+		assertPrimitive(t, llx.IntPrimitive(456), res.Code.Functions[1].Code[0])
+		assert.Equal(t, []int32{1}, res.Code.Functions[1].Entrypoints)
+	})
+
 	compile(t, "if ( mondoo.version != null ) { 123 }", func(res *llx.CodeBundle) {
 		assertFunction(t, "mondoo", nil, res.Code.Code[0])
 		assertFunction(t, "version", &llx.Function{
