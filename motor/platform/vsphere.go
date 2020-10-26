@@ -46,7 +46,7 @@ func VspherePlatform(t *vsphere.Transport, identifier string) (*Platform, error)
 				Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
 			}, nil
 		default:
-			return nil, errors.New("unsupported platform identier " + identifier)
+			return nil, errors.New("unsupported platform identifier " + identifier)
 		}
 	}
 

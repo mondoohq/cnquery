@@ -1,6 +1,8 @@
 package discovery
 
 import (
+	"fmt"
+
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/apps/mondoo/cmd/options"
@@ -55,9 +57,15 @@ func (v *vsphereResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnO
 
 	// add asset for the api itself
 	info := trans.Info()
+
+	name := info.Name
+	if info.InstanceUuid != "" {
+		name = fmt.Sprintf("%s (%s)", info.Name, info.InstanceUuid)
+	}
+
 	resolved = append(resolved, &asset.Asset{
 		ReferenceIDs: []string{identifier},
-		Name:         info.Name,
+		Name:         name,
 		Platform:     pf,
 		Connections:  []*transports.TransportConfig{t}, // pass-in the current config
 	})
