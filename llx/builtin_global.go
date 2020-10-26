@@ -29,6 +29,7 @@ func init() {
 		"expect": expect,
 		"if":     ifCall,
 		"{}":     block,
+		"return": returnCall,
 	}
 }
 
@@ -82,4 +83,9 @@ func block(c *LeiseExecutor, f *Function, ref int32) (*RawData, int32, error) {
 	// 	return nil, 0, errors.New("Called expect body with wrong type, it should be a boolean (type mismatch)")
 	// }
 	// return res, dref, err
+}
+
+func returnCall(c *LeiseExecutor, f *Function, ref int32) (*RawData, int32, error) {
+	arg := f.Args[0]
+	return c.resolveValue(arg, ref)
 }
