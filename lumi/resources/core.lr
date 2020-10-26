@@ -592,6 +592,8 @@ privatekey {
 
 // VMware vSphere resource
 vsphere {
+  // system information including the name, type, version, and build number
+  about() dict
   // configured licenses
   licenses() []vsphere.license
   // list of available datacenter

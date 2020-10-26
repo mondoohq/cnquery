@@ -24,6 +24,10 @@ type Client struct {
 	Client *govmomi.Client
 }
 
+func (c *Client) AboutInfo() (map[string]interface{}, error) {
+	return PropertiesToDict(c.Client.ServiceContent.About)
+}
+
 func (c *Client) ListLicenses() ([]types.LicenseManagerLicenseInfo, error) {
 	manager := license.NewManager(c.Client.Client)
 	infoList, err := manager.List(context.Background())
