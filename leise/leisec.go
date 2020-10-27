@@ -41,9 +41,6 @@ type compiler struct {
 
 	// helps chaining of builtin calls like `if (..) else if (..) else ..`
 	prevID string
-
-	// tracks if the return statement was called in this block
-	returnCalled bool
 }
 
 func addResourceSuggestions(resources map[string]*lumi.ResourceInfo, name string, res *llx.CodeBundle) {
@@ -206,8 +203,8 @@ func (c *compiler) compileUnboundBlock(expressions []*parser.Expression, chunk *
 	c.Result.Code.RefreshChunkChecksum(chunk)
 
 	// we set this to true, so that we can decide how to handle all following expressions
-	if blockCompiler.returnCalled {
-		c.returnCalled = true
+	if blockCompiler.Result.Code.SingleValue {
+		c.Result.Code.SingleValue = true
 	}
 
 	return types.Nil, nil
@@ -925,7 +922,7 @@ func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 				// nothing else coming after this, return nil
 			}
 
-			c.returnCalled = true
+			c.Result.Code.SingleValue = true
 			continue
 		}
 
@@ -950,14 +947,12 @@ func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 				},
 			})
 			c.Result.Code.Entrypoints = append(c.Result.Code.Entrypoints, c.Result.Code.ChunkIndex())
+			c.Result.Code.SingleValue = true
 
 			return nil
 		}
 
-		if ident == "if" && c.returnCalled {
-			// reset for everything else (TODO: not sure if this is even needed?)
-			c.returnCalled = false
-
+		if ident == "if" && c.Result.Code.SingleValue {
 			// all following expressions need to be compiled in a block which is
 			// conditional to this if-statement
 			c.prevID = "else"

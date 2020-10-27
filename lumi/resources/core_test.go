@@ -298,56 +298,56 @@ func TestCore_Props(t *testing.T) {
 
 func TestCore_If(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
-		// {
-		// 	"if ( mondoo.version != null ) { 123 }",
-		// 	1, map[string]interface{}{
-		// 		"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
-		// 	},
-		// },
-		// {
-		// 	"if ( mondoo.version == null ) { 123 }",
-		// 	1, nil,
-		// },
-		// {
-		// 	"if ( mondoo.version != null ) { 123 } else { 456 }",
-		// 	1, map[string]interface{}{
-		// 		"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
-		// 	},
-		// },
-		// {
-		// 	"if ( mondoo.version == null ) { 123 } else { 456 }",
-		// 	1, map[string]interface{}{
-		// 		"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
-		// 	},
-		// },
-		// {
-		// 	"if (false) { 123 } else if (true) { 456 } else { 789 }",
-		// 	0, map[string]interface{}{
-		// 		"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
-		// 	},
-		// },
-		// {
-		// 	"if (false) { 123 } else if (false) { 456 } else { 789 }",
-		// 	0, map[string]interface{}{
-		// 		"Oy5SF8NbUtxaBwvZPpsnd0K21CY+fvC44FSd2QpgvIL689658Na52udy7qF2+hHjczk35TAstDtFZq7JIHNCmg==": llx.IntData(789),
-		// 	},
-		// },
-		// {
-		// 	"if (true) { return 123 } return 456",
-		// 	0, int64(123),
-		// },
-		// {
-		// 	"if (false) { return 123 } return 456",
-		// 	0, int64(456),
-		// },
+		{
+			"if ( mondoo.version != null ) { 123 }",
+			1, map[string]interface{}{
+				"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
+			},
+		},
+		{
+			"if ( mondoo.version == null ) { 123 }",
+			1, nil,
+		},
+		{
+			"if ( mondoo.version != null ) { 123 } else { 456 }",
+			1, map[string]interface{}{
+				"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
+			},
+		},
+		{
+			"if ( mondoo.version == null ) { 123 } else { 456 }",
+			1, map[string]interface{}{
+				"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
+			},
+		},
+		{
+			"if (false) { 123 } else if (true) { 456 } else { 789 }",
+			0, map[string]interface{}{
+				"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
+			},
+		},
+		{
+			"if (false) { 123 } else if (false) { 456 } else { 789 }",
+			0, map[string]interface{}{
+				"Oy5SF8NbUtxaBwvZPpsnd0K21CY+fvC44FSd2QpgvIL689658Na52udy7qF2+hHjczk35TAstDtFZq7JIHNCmg==": llx.IntData(789),
+			},
+		},
+		{
+			"if (true) { return 123 } return 456",
+			0, int64(123),
+		},
+		{
+			"if (false) { return 123 } return 456",
+			0, int64(456),
+		},
 		{
 			"if (false) { return 123 } if (true) { return 456 } return 789",
 			0, int64(456),
 		},
-		// {
-		// 	"if (false) { return 123 } if (false) { return 456 } return 789",
-		// 	0, int64(789),
-		// },
+		{
+			"if (false) { return 123 } if (false) { return 456 } return 789",
+			0, int64(789),
+		},
 	})
 }
 

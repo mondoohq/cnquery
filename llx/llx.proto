@@ -46,6 +46,7 @@ message Code {
   repeated int32 datapoints = 5;
   map<int32,string> checksums = 6;
   repeated Code functions = 7;
+  bool singleValue = 8;
 }
 
 message Labels {

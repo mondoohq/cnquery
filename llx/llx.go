@@ -234,17 +234,9 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, ref int3
 		return nil, 0, errors.New("block function is nil")
 	}
 
-	returnStatements := map[string]struct{}{}
-	for i := range fun.Code {
-		chunk := fun.Code[i]
-		if chunk.Id == "return" && chunk.Function != nil && chunk.Function.Binding == 0 {
-			returnStatements[fun.Checksums[int32(i)+1]] = struct{}{}
-		}
-	}
-
 	blockResult := map[string]interface{}{}
 	err := c.runFunctionBlock(bind, fun, func(res *RawResult) {
-		if _, ok := returnStatements[res.CodeID]; ok {
+		if fun.SingleValue {
 			c.cache.Store(ref, &stepCache{
 				Result: res.Data,
 			})
