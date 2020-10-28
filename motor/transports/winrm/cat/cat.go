@@ -33,7 +33,8 @@ func (cat *CatFs) Name() string {
 }
 
 func (cat *CatFs) Open(name string) (afero.File, error) {
-	cmd, err := cat.commandRunner.RunCommand(fmt.Sprintf("type %s", name))
+	// NOTE: do not use type here since it does not work well with file names like 'C:\Program Files\New Text Document.txt'
+	cmd, err := cat.commandRunner.RunCommand(fmt.Sprintf("powershell -c \"Get-Content '%s'\"", name))
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +52,7 @@ func (cat *CatFs) Open(name string) (afero.File, error) {
 }
 
 func (cat *CatFs) Stat(name string) (os.FileInfo, error) {
-	cmd, err := cat.commandRunner.RunCommand(fmt.Sprintf("powershell -c \"Get-Item %s | ConvertTo-JSON\"", name))
+	cmd, err := cat.commandRunner.RunCommand(fmt.Sprintf("powershell -c \"Get-Item -LiteralPath '%s' | ConvertTo-JSON\"", name))
 	if err != nil {
 		return nil, err
 	}

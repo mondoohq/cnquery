@@ -15,12 +15,12 @@ stdout="""
 [commands."powershell -c \"Get-WmiObject Win32_ComputerSystemProduct  | Select-Object -ExpandProperty UUID\""]
 stdout="EC2670D2-3D6E-2F4A-5C32-42C5931E1E1E"
 
-[commands."type C:\\test.txt"]
+[commands."powershell -c \"Get-Content 'C:\\test.txt'\""]
 stdout="""
 hi
 """
 
-[commands."powershell -c \"Get-Item C:\\test.txt | ConvertTo-JSON\""]
+[commands."powershell -c \"Get-Item -LiteralPath 'C:\\test.txt' | ConvertTo-JSON\""]
 stdout="""
 {
   "Name": "test.txt",
@@ -118,7 +118,7 @@ stdout="""
 }
 """
 
-[commands."powershell -c \"Get-Item C:\\Windows | ConvertTo-JSON\""]
+[commands."powershell -c \"Get-Item -LiteralPath 'C:\\Windows' | ConvertTo-JSON\""]
 stdout="""
 {
   "Name": "Windows",
