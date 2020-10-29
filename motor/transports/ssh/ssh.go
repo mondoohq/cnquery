@@ -102,31 +102,44 @@ func (t *SSHTransport) RunCommand(command string) (*transports.Command, error) {
 }
 
 func (t *SSHTransport) FS() afero.Fs {
-	if t.fs == nil {
-		// if any priviledge elevation is used, we have no other chance as to use command-based file transfer
-		if t.Sudo != nil {
-			t.fs = cat.New(t)
+	// if we cached an instance already, return it
+	if t.fs != nil {
+		return t.fs
+	}
+
+	// log the used ssh filesystem backend
+	defer func() {
+		log.Debug().Str("file-transfer", t.fs.Name()).Msg("initialized ssh filesystem")
+	}()
+
+	// if any priviledge elevation is used, we have no other chance as to use command-based file transfer
+	if t.Sudo != nil {
+		t.fs = cat.New(t)
+
+		return t.fs
+	}
+
+	// we always try to use sftp first (if scp is not user-enforced)
+	// and we also fallback to scp if sftp does not work
+	if !t.UseScpFilesystem {
+		fs, err := sftp.New(t.SSHClient)
+		if err != nil {
+			log.Error().Err(err).Msg("error during sftp initialization, enable fallback to scp")
+			// enable fallback
+			t.UseScpFilesystem = true
+		} else {
+			t.fs = fs
 			return t.fs
 		}
-
-		// we always try to use sftp first (if scp is not user-enforced)
-		// and we also fallback to scp if sftp does not work
-		if !t.UseScpFilesystem {
-			fs, err := sftp.New(t.SSHClient)
-			if err != nil {
-				log.Error().Err(err).Msg("error during sftp initialization, enable fallback to scp")
-				// enable fallback
-				t.UseScpFilesystem = true
-			} else {
-				t.fs = fs
-			}
-		}
-
-		if t.UseScpFilesystem {
-			log.Info().Str("transport", "ssh").Msg("ssh uses scp (beta) instead of sftp for file transfer")
-			t.fs = scp.NewFs(t, t.SSHClient)
-		}
 	}
+
+	if t.UseScpFilesystem {
+		t.fs = scp.NewFs(t, t.SSHClient)
+		return t.fs
+	}
+
+	// always fallback to catfs, slow but it works
+	t.fs = cat.New(t)
 	return t.fs
 }
 
