@@ -139,6 +139,7 @@ func (k *dockerResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOp
 	if err == nil {
 		t.Backend = transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY
 		resolvedAsset = &asset.Asset{
+			Name:        t.Host,
 			Connections: []*transports.TransportConfig{t},
 			Platform: &platform.Platform{
 				Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
