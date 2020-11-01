@@ -20,6 +20,27 @@ func (a *Asset) HumanName() string {
 	return a.Name
 }
 
+func (a *Asset) EnsureReferenceID(ids ...string) {
+	if a.ReferenceIDs == nil {
+		a.ReferenceIDs = ids
+		return
+	}
+
+	// check if the id is already included
+	keys := map[string]bool{}
+	for _, k := range a.ReferenceIDs {
+		keys[k] = true
+	}
+
+	// append entry
+	for _, id := range ids {
+		_, ok := keys[id]
+		if !ok {
+			a.ReferenceIDs = append(a.ReferenceIDs, id)
+		}
+	}
+}
+
 func (a *Asset) UpdatePlatform(pf *platform.Platform) {
 	if pf == nil {
 		return

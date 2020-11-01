@@ -22,25 +22,34 @@ func Connect(tc *transports.TransportConfig, idDetector string, insecure bool, r
 	return New(tc, idDetector)
 }
 
-func ConnectAsset(assetObj *asset.Asset, record bool) (*motor.Motor, error) {
+func ConnectAsset(assetInfo *asset.Asset, record bool) (*motor.Motor, error) {
+	if assetInfo == nil {
+		return nil, errors.New("asset is not defined")
+	}
+
 	// connect to the platform
-	if len(assetObj.Connections) == 0 {
-		return nil, errors.New("no connection provided for asset " + assetObj.Name)
+	if len(assetInfo.Connections) == 0 {
+		return nil, errors.New("no connection provided for asset " + assetInfo.Name)
 	}
 
 	// TODO: we may want to allow multiple connection trials later
-	tc := assetObj.Connections[0]
+	tc := assetInfo.Connections[0]
+
+	// use connection host as default
+	if assetInfo.Name == "" {
+		assetInfo.Name = tc.Host
+	}
 
 	// some transports have their own kind/runtime information already
 	// NOTE: going forward we may want to enforce that assets have at least kind and runtime information
-	if assetObj.Platform != nil {
-		tc.Kind = assetObj.Platform.Kind
-		tc.Runtime = assetObj.Platform.Runtime
+	if assetInfo.Platform != nil {
+		tc.Kind = assetInfo.Platform.Kind
+		tc.Runtime = assetInfo.Platform.Runtime
 	}
 
 	// parse reference id and restore options
-	if len(assetObj.ReferenceIDs) > 0 {
-		tc.Platformid = assetObj.ReferenceIDs[0]
+	if len(assetInfo.ReferenceIDs) > 0 {
+		tc.Platformid = assetInfo.ReferenceIDs[0]
 	}
 
 	return Connect(tc, "", tc.Insecure, record)
