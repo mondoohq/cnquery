@@ -101,12 +101,6 @@ func resourceLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 	itemsRef := chunk.Function.Args[0]
 	items, rref, err := c.resolveValue(itemsRef, ref)
 	if err != nil || rref > 0 {
-		if err != nil {
-			c.cache.Store(ref, &stepCache{Result: &RawData{
-				Error: err,
-			}})
-		}
-
 		return nil, rref, err
 	}
 

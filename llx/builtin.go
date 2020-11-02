@@ -647,6 +647,11 @@ func (c *LeiseExecutor) runBoundFunction(bind *RawData, chunk *Chunk, ref int32)
 		if res != nil {
 			c.cache.Store(ref, &stepCache{Result: res})
 		}
+		if err != nil {
+			c.cache.Store(ref, &stepCache{Result: &RawData{
+				Error: err,
+			}})
+		}
 		return res, dref, err
 	}
 
