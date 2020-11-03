@@ -4,7 +4,6 @@ import (
 	"errors"
 	fmt "fmt"
 	"sync"
-	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor"
@@ -271,15 +270,6 @@ func (ctx *Runtime) WatchAndUpdate(r ResourceType, field string, watcherUID stri
 			return nil
 		}
 
-		// typical errors
-		if err != nil {
-			resource.Cache.Store(field, &CacheEntry{
-				Timestamp: time.Now().Unix(),
-				Valid:     true,
-				Error:     err,
-			})
-		}
-
 		// final case: it is computed and ready to go
 		log.Debug().Msg("w+u> initial process result")
 		processResult()
@@ -313,12 +303,6 @@ func (ctx *Runtime) WatchAndCompute(src ResourceType, sfield string, dst Resourc
 		// if the field isnt ready, finish this execution
 		if _, ok := ierr.(NotReadyError); ok {
 			return
-		}
-
-		// for all regular field failures, make sure we report and commit the error
-		if ierr != nil {
-			log.Error().Str("resource+field uid", fid).Msg("w+c> Failed to compute resource field: " + ierr.Error())
-			dst.LumiResource().Cache.Store(dfield, &CacheEntry{Error: ierr})
 		}
 
 		// then we let all the dependent fields know that we just updated this resource field

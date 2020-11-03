@@ -451,9 +451,13 @@ func (b *goBuilder) goFieldComputer(r *Resource, f *Field) {
 		args[i] = "varg" + arg.goType()
 		argGetters += fmt.Sprintf(`	varg%s, err := s.%s()
 	if err != nil {
-		return err
+		if _, ok := err.(lumi.NotReadyError); ok {
+			return err
+		}
+		s.Cache.Store("%s", &lumi.CacheEntry{Valid: true, Error: err, Timestamp: time.Now().Unix()})
+		return nil
 	}
-`, arg.goType(), arg.goType())
+`, arg.goType(), arg.goType(), f.ID)
 	}
 
 	// for fields that only compute a default value, only do this once
