@@ -314,9 +314,11 @@ func (ctx *Runtime) WatchAndCompute(src ResourceType, sfield string, dst Resourc
 		if _, ok := ierr.(NotReadyError); ok {
 			return
 		}
+
+		// for all regular field failures, make sure we report and commit the error
 		if ierr != nil {
 			log.Error().Str("resource+field uid", fid).Msg("w+c> Failed to compute resource field: " + ierr.Error())
-			return
+			dst.LumiResource().Cache.Store(dfield, &CacheEntry{Error: ierr})
 		}
 
 		// then we let all the dependent fields know that we just updated this resource field
@@ -380,8 +382,9 @@ func (ctx *Runtime) Trigger(r ResourceType, field string) error {
 	// we set the cache to an invalid value to make sure no one else triggers it
 	// then we ensure all dependencies send us their results
 	if ok {
+		entry := res.(*CacheEntry)
 		// if it's valid call whatever is listening to this field
-		if res.(*CacheEntry).Valid {
+		if entry.Valid || entry.Error != nil {
 			return ctx.Observers.Trigger(resource.FieldUID(field))
 		}
 		// if it's not we won't call listening fields yet, because things aren't ready
