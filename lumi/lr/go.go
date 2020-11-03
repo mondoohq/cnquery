@@ -468,10 +468,10 @@ func (b *goBuilder) goFieldComputer(r *Resource, f *Field) {
 func (s *%s) Compute%s() error {
 	var err error
 %s	vres, err := s.Get%s(%s)
-	if err != nil {
+	if _, ok := err.(lumi.NotReadyError); ok {
 		return err
 	}
-	s.Cache.Store("%s", &lumi.CacheEntry{Data: vres, Valid: true, Timestamp: time.Now().Unix()})
+	s.Cache.Store("%s", &lumi.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
 	return nil
 }
 
