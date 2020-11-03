@@ -429,7 +429,7 @@ func (s *%s) %s() (%s, error) {
 	if !ok {
 		return %s, fmt.Errorf("\"%s\" failed to cast field \"%s\" to the right type (%s): %%#v", res)
 	}
-	return tres, nil
+	return tres, res.Error
 }
 
 `, f.goName(),
