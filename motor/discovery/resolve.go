@@ -35,6 +35,7 @@ func init() {
 	resolver["vagrant"] = &vagrantResolver{}
 	resolver["mock"] = &mockResolver{}
 	resolver["vsphere"] = &vsphereResolver{}
+	resolver["vsphere+vm"] = &vmwareGuestResolver{}
 	resolver["aristaeos"] = &instanceResolver{}
 	resolver["ms365"] = &ms365Resolver{}
 	resolver["ipmi"] = &ipmiResolver{}

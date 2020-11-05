@@ -69,6 +69,8 @@ func backend(scheme string) (TransportBackend, error) {
 		return TransportBackend_CONNECTION_MOCK, nil
 	case "vsphere":
 		return TransportBackend_CONNECTION_VSPHERE, nil
+	case "vsphere+vm":
+		return TransportBackend_CONNECTION_VSPHERE_VM, nil
 	case "aristaeos":
 		return TransportBackend_CONNECTION_ARISTAEOS, nil
 	case "ipmi":
@@ -127,6 +129,8 @@ func (conn *TransportConfig) ToUrl() string {
 		return "mock://" + conn.Path
 	case TransportBackend_CONNECTION_VSPHERE:
 		return "vsphere://" + conn.Host
+	case TransportBackend_CONNECTION_VSPHERE_VM:
+		return "vsphere+vm://" + conn.Host
 	case TransportBackend_CONNECTION_ARISTAEOS:
 		return "aristaeos://" + conn.Host
 	case TransportBackend_CONNECTION_AWS:

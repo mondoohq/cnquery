@@ -21,6 +21,7 @@ enum TransportBackend {
   CONNECTION_AZURE = 14;
   CONNECTION_MS365 = 15;
   CONNECTION_IPMI = 16;
+  CONNECTION_VSPHERE_VM = 17;
 }
 
 enum Kind {
