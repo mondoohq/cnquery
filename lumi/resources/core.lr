@@ -75,6 +75,16 @@ platform {
   runtimeEnv string
 }
 
+// information about the platfrom end-of-life
+platform.eol {
+  // Documentation URL
+  docsUrl string
+  // Product URL
+  productUrl string
+  // eol date
+  date time
+}
+
 // Results of running a command on the system
 command {
   init(command string)
