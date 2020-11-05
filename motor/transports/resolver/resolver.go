@@ -26,6 +26,7 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/ms365"
 	"go.mondoo.io/mondoo/motor/transports/ssh"
 	"go.mondoo.io/mondoo/motor/transports/tar"
+	"go.mondoo.io/mondoo/motor/transports/vmwareguestapi"
 	"go.mondoo.io/mondoo/motor/transports/vsphere"
 	"go.mondoo.io/mondoo/motor/transports/winrm"
 )
@@ -403,6 +404,19 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 		id, err := trans.Identifier()
 		if err == nil && len(id) > 0 {
 			identifier = append(identifier, id)
+		}
+	case transports.TransportBackend_CONNECTION_VSPHERE_VM:
+		trans, err := vmwareguestapi.New(endpoint)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(trans)
+		if err != nil {
+			return nil, err
+		}
+
+		if endpoint.Record {
+			m.ActivateRecorder()
 		}
 	default:
 		return nil, fmt.Errorf("connection> unsupported backend '%s', only docker://, local://, tar://, ssh:// are allowed", endpoint.Backend)

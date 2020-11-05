@@ -11,7 +11,7 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
 )
 
-func vSphereURL(hostname string, port string, user string, password string) (*url.URL, error) {
+func VSphereConnectionURL(hostname string, port string, user string, password string) (*url.URL, error) {
 	host := hostname
 	if len(port) > 0 {
 		host = hostname + ":" + port
@@ -31,7 +31,7 @@ func New(endpoint *transports.TransportConfig) (*Transport, error) {
 	}
 
 	// derive vsphere connection url from Transport Config
-	vsphereUrl, err := vSphereURL(endpoint.Host, endpoint.Port, endpoint.User, endpoint.Password)
+	vsphereUrl, err := VSphereConnectionURL(endpoint.Host, endpoint.Port, endpoint.User, endpoint.Password)
 	if err != nil {
 		return nil, err
 	}
