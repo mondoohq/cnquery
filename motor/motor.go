@@ -2,6 +2,7 @@ package motor
 
 import (
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/falcon"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/events"
@@ -23,6 +24,9 @@ type Motor struct {
 	watcher   transports.Watcher
 	Meta      MetaInfo
 	recording bool
+
+	// optional upstream configuration for resources that need to talk upstream
+	mondooCloudConfig *MondooCloudConfig
 }
 
 type MetaInfo struct {
@@ -97,4 +101,24 @@ func (m *Motor) IsLocalTransport() bool {
 		return false
 	}
 	return true
+}
+
+// temporary mondoo cloud config so that resource can talk upstream
+// TODO: discuss if the transport is the correct entity to hold that information
+// I like the idea of having addition value, but the motor package should really not
+// know anything out mondoo cloud, maybe we just set a context.Context or map[sting]interface{}
+type MondooCloudConfig struct {
+	SpaceMrn    string
+	Collector   string
+	ApiEndpoint string
+	Plugins     []falcon.ClientPlugin
+	Incognito   bool
+}
+
+func (m *Motor) SetCloudConfig(mcc *MondooCloudConfig) {
+	m.mondooCloudConfig = mcc
+}
+
+func (m *Motor) CloudConfig() *MondooCloudConfig {
+	return m.mondooCloudConfig
 }
