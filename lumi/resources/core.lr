@@ -85,6 +85,39 @@ platform.eol {
   date time
 }
 
+cvss {
+  score   float
+  vector  string
+  source  string
+}
+
+// Returns all Platform/Package advisories
+platform.advisories {
+  []risk.advisory
+  // Worst CVSS score for all advisories
+  cvss() cvss
+  // returns statistical information: total, critical, high, medium, low, none, unknown
+  stats() dict
+}
+
+// Platform/Package advisory
+risk.advisory {
+  // Advisory ID
+  id          string
+  // Mondoo Advisory Identifier
+  mrn         string
+  // Advisory Title
+  title       string
+  // Advisory Description
+  description string
+  // Advisory publication date
+  published   time
+  // Last modification date
+  modified    time
+  // Worst CVSS Score of all assigned CVEs
+  worstScore    cvss
+}
+
 // Results of running a command on the system
 command {
   init(command string)
