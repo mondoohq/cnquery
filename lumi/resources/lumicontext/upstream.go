@@ -9,7 +9,6 @@ import (
 
 // mondoo cloud config so that resource scan talk upstream
 type CloudConfig struct {
-	AssetMrn    string // optional, not set in shell yet
 	SpaceMrn    string
 	Collector   string
 	ApiEndpoint string
@@ -35,4 +34,24 @@ func CloudConfigFromContext(ctx context.Context) (*CloudConfig, error) {
 		return nil, errors.New("no cloud config in context")
 	}
 	return v.(*CloudConfig), nil
+}
+
+type contextAssetMrnType struct{}
+
+var contextAssetMrnKey = &contextAssetMrnType{}
+
+// WithAssetMrn puts the assetMrn the current context.
+func WithAssetMrn(ctx context.Context, assetMrn string) context.Context {
+	return context.WithValue(ctx, contextAssetMrnKey, assetMrn)
+}
+
+// AssetMrnFromContext returns the asset mrn from the context.
+// An empty string is returned if there is no asset mrn in the
+// current context.
+func AssetMrnFromContext(ctx context.Context) string {
+	v := ctx.Value(contextAssetMrnKey)
+	if v == nil {
+		return ""
+	}
+	return v.(string)
 }

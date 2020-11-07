@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/lumicontext"
 	"go.mondoo.io/mondoo/motor"
@@ -56,7 +57,8 @@ func getAdvisoryReport(r *lumi.Runtime) (*scanner.VulnReport, error) {
 	}
 
 	asset := &assets.Asset{
-		Mrn:      mcc.AssetMrn, // NOTE: asset mrn may not be available in incognito mode
+		// NOTE: asset mrn may not be available in incognito mode and will be an empty string then
+		Mrn:      lumicontext.AssetMrnFromContext(r.Motor.Context()),
 		SpaceMrn: mcc.SpaceMrn,
 		Platform: &assets.Platform{
 			Name:    name,
@@ -94,6 +96,7 @@ func getAdvisoryReport(r *lumi.Runtime) (*scanner.VulnReport, error) {
 		})
 	}
 
+	log.Debug().Str("asset", asset.Mrn).Bool("incognito", mcc.Incognito).Msg("run advisory scan")
 	reportBinder, err := scannerClient.AnalysePlatform(context.Background(), &scanner.AssetVulnMetadataList{
 		Metadata: []*scanner.AssetVulnMetadata{
 			&scanner.AssetVulnMetadata{
