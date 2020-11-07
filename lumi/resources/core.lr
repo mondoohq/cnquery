@@ -85,9 +85,13 @@ platform.eol {
   date time
 }
 
+// Common Vulnerability Scoring System (CVSS) Score
 cvss {
+  // CVSS Score ranging from 0.0 to 10.0
   score   float
+  // CVSS score is also represented as a vector string
   vector  string
+  // Source that provided the score
   source  string
 }
 
@@ -95,6 +99,24 @@ cvss {
 platform.advisories {
   []risk.advisory
   // Worst CVSS score for all advisories
+  cvss() cvss
+  // returns statistical information: total, critical, high, medium, low, none, unknown
+  stats() dict
+}
+
+// Returns all Platform/Package cves
+platform.cves {
+  []risk.cve
+  // Worst CVSS score for all cves
+  cvss() cvss
+  // returns statistical information: total, critical, high, medium, low, none, unknown
+  stats() dict
+}
+
+// Returns all Platform/Package exploits
+platform.exploits {
+  []risk.exploit
+  // Worst CVSS score for all exploits
   cvss() cvss
   // returns statistical information: total, critical, high, medium, low, none, unknown
   stats() dict
@@ -115,6 +137,38 @@ risk.advisory {
   // Last modification date
   modified    time
   // Worst CVSS Score of all assigned CVEs
+  worstScore    cvss
+}
+
+// Common Vulnerabilities and Exposures (CVE)
+risk.cve {
+  // CVE ID
+  id        string
+  // Mondoo CVE Identifier
+  mrn       string
+  // CVE state
+  state     string
+  // Summary Description
+  summary   string
+  // Indicates if the CVE has a CVSS score
+  unscored  bool
+  // publication date
+  published   time
+  // Last modification date
+  modified    time
+  // Worst CVSS Score of all assigned CVEs
+  worstScore    cvss
+}
+
+// Exploit Information
+risk.exploit {
+  // CVE ID
+  id        string
+  // Mondoo CVE Identifier
+  mrn       string
+  // Last modification date
+  modified    time
+  // Worst CVSS Score of all assigned CVEs for this exploit
   worstScore    cvss
 }
 
