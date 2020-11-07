@@ -14,20 +14,6 @@ import (
 	"go.mondoo.io/mondoo/vadvisor/api"
 )
 
-func (c *lumiCvss) id() (string, error) {
-	// TODO: use c.Vector() once we have the data available
-	score, _ := c.Score()
-	return "cvss/" + strconv.FormatFloat(score, 'f', 2, 64), nil
-}
-
-func (c *lumiRiskAdvisory) id() (string, error) {
-	return c.Mrn()
-}
-
-func (a *lumiPlatformAdvisories) id() (string, error) {
-	return "platform.advisories", nil
-}
-
 func getScannerClient(m *motor.Motor) (string, scannerclient.Client, error) {
 	mcc := m.CloudConfig()
 
@@ -41,22 +27,9 @@ func getScannerClient(m *motor.Motor) (string, scannerclient.Client, error) {
 }
 
 // fetches the vulnerability report and caches it
-func (a *lumiPlatformAdvisories) getAdvisoryReport() (*scanner.VulnReport, error) {
-	// check if the data is cached
-	r, ok := a.LumiResource().Cache.Load("_report")
-	if ok {
-		report := r.Data.(*scanner.VulnReport)
-		return report, nil
-	}
-
-	// get new advisory report
-	spaceMrn, scannerClient, err := getScannerClient(a.Runtime.Motor)
-	if err != nil {
-		return nil, err
-	}
-
+func getAdvisoryReport(r *lumi.Runtime) (*scanner.VulnReport, error) {
 	// get platform information
-	obj, err := a.Runtime.CreateResource("platform")
+	obj, err := r.CreateResource("platform")
 	if err != nil {
 		return nil, err
 	}
@@ -66,6 +39,21 @@ func (a *lumiPlatformAdvisories) getAdvisoryReport() (*scanner.VulnReport, error
 	name, _ := platform.Name()
 	release, _ := platform.Release()
 	arch, _ := platform.Arch()
+
+	// check if the data is cached
+	// NOTE: we cache it in the platform resource, so that platform.advisories, platform.cves and
+	// platform.exploits can all share the results
+	cachedReport, ok := platform.LumiResource().Cache.Load("_report")
+	if ok {
+		report := cachedReport.Data.(*scanner.VulnReport)
+		return report, nil
+	}
+
+	// get new advisory report
+	spaceMrn, scannerClient, err := getScannerClient(r.Motor)
+	if err != nil {
+		return nil, err
+	}
 
 	// TODO: get the asset and basis platfrom via a new asset resource so that we can also send the mrn
 	asset := &assets.Asset{
@@ -80,7 +68,7 @@ func (a *lumiPlatformAdvisories) getAdvisoryReport() (*scanner.VulnReport, error
 
 	apiPackages := []*api.Package{}
 
-	obj, err = a.Runtime.CreateResource("packages")
+	obj, err = r.CreateResource("packages")
 	if err != nil {
 		return nil, err
 	}
@@ -132,13 +120,27 @@ func (a *lumiPlatformAdvisories) getAdvisoryReport() (*scanner.VulnReport, error
 		report = reports[i]
 	}
 
-	a.Cache.Store("_report", &lumi.CacheEntry{Data: report})
+	platform.LumiResource().Cache.Store("_report", &lumi.CacheEntry{Data: report})
 
 	return report, nil
 }
 
+func (c *lumiCvss) id() (string, error) {
+	// TODO: use c.Vector() once we have the data available
+	score, _ := c.Score()
+	return "cvss/" + strconv.FormatFloat(score, 'f', 2, 64), nil
+}
+
+func (c *lumiRiskAdvisory) id() (string, error) {
+	return c.Mrn()
+}
+
+func (a *lumiPlatformAdvisories) id() (string, error) {
+	return "platform.advisories", nil
+}
+
 func (a *lumiPlatformAdvisories) GetCvss() (interface{}, error) {
-	report, err := a.getAdvisoryReport()
+	report, err := getAdvisoryReport(a.Runtime)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +158,7 @@ func (a *lumiPlatformAdvisories) GetCvss() (interface{}, error) {
 }
 
 func (a *lumiPlatformAdvisories) GetList() ([]interface{}, error) {
-	report, err := a.getAdvisoryReport()
+	report, err := getAdvisoryReport(a.Runtime)
 	if err != nil {
 		return nil, err
 	}
@@ -206,12 +208,188 @@ func (a *lumiPlatformAdvisories) GetList() ([]interface{}, error) {
 }
 
 func (a *lumiPlatformAdvisories) GetStats() (interface{}, error) {
-	report, err := a.getAdvisoryReport()
+	report, err := getAdvisoryReport(a.Runtime)
 	if err != nil {
 		return nil, err
 	}
 
 	dict, err := jsonToDict(report.Stats.Advisories)
+	if err != nil {
+		return nil, err
+	}
+
+	return dict, nil
+}
+
+func (c *lumiRiskCve) id() (string, error) {
+	return c.Mrn()
+}
+
+func (a *lumiPlatformCves) id() (string, error) {
+	return "platform.cves", nil
+}
+
+func (a *lumiPlatformCves) GetList() ([]interface{}, error) {
+	report, err := getAdvisoryReport(a.Runtime)
+	if err != nil {
+		return nil, err
+	}
+
+	cveList := report.Cves()
+
+	lumiCves := make([]interface{}, len(cveList))
+	for i := range cveList {
+		cve := cveList[i]
+
+		cvssScore, err := a.Runtime.CreateResource("cvss",
+			"score", float64(cve.Score)/10,
+			"vector", "", // TODO: we need to extend the report to include the vector in the report
+			"source", "", // TODO: we need to extend the report to include the source in the report
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		var published *time.Time
+		parsedTime, err := time.Parse(time.RFC3339, cve.Published)
+		if err == nil {
+			published = &parsedTime
+		}
+
+		var modified *time.Time
+		parsedTime, err = time.Parse(time.RFC3339, cve.Modified)
+		if err == nil {
+			modified = &parsedTime
+		}
+
+		lumiCve, err := a.Runtime.CreateResource("risk.cve",
+			"id", cve.ID,
+			"mrn", cve.Mrn,
+			"state", cve.State.String(),
+			"summary", cve.Summary,
+			"unscored", cve.Unscored,
+			"published", published,
+			"modified", modified,
+			"worstScore", cvssScore,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		lumiCves[i] = lumiCve
+	}
+
+	return lumiCves, nil
+}
+
+func (a *lumiPlatformCves) GetCvss() (interface{}, error) {
+	report, err := getAdvisoryReport(a.Runtime)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: we need to distingush between advisory, cve and exploit cvss
+	obj, err := a.Runtime.CreateResource("cvss",
+		"score", float64(report.Stats.Score)/10,
+		"vector", "", // TODO: we need to extend the report to include the vector in the report
+		"source", "", // TODO: we need to extend the report to include the source in the report
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return obj, nil
+}
+
+func (a *lumiPlatformCves) GetStats() (interface{}, error) {
+	report, err := getAdvisoryReport(a.Runtime)
+	if err != nil {
+		return nil, err
+	}
+
+	dict, err := jsonToDict(report.Stats.Cves)
+	if err != nil {
+		return nil, err
+	}
+
+	return dict, nil
+}
+
+func (c *lumiRiskExploit) id() (string, error) {
+	return c.Mrn()
+}
+
+func (a *lumiPlatformExploits) id() (string, error) {
+	return "platform.exploits", nil
+}
+
+func (a *lumiPlatformExploits) GetList() ([]interface{}, error) {
+	report, err := getAdvisoryReport(a.Runtime)
+	if err != nil {
+		return nil, err
+	}
+
+	lumiExploits := make([]interface{}, len(report.Exploits))
+	for i := range report.Exploits {
+		exploit := report.Exploits[i]
+
+		cvssScore, err := a.Runtime.CreateResource("cvss",
+			"score", float64(exploit.Score)/10,
+			"vector", "", // TODO: we need to extend the report to include the vector in the report
+			"source", "", // TODO: we need to extend the report to include the source in the report
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		var modified *time.Time
+		parsedTime, err := time.Parse(time.RFC3339, exploit.Modified)
+		if err == nil {
+			modified = &parsedTime
+		}
+
+		lumiExploit, err := a.Runtime.CreateResource("risk.exploit",
+			"id", exploit.ID,
+			"mrn", exploit.Mrn,
+			"modified", modified,
+			"worstScore", cvssScore,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		lumiExploits[i] = lumiExploit
+	}
+
+	return lumiExploits, nil
+}
+
+func (a *lumiPlatformExploits) GetCvss() (interface{}, error) {
+	report, err := getAdvisoryReport(a.Runtime)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: this needs to be the exploit worst score
+	obj, err := a.Runtime.CreateResource("cvss",
+		"score", float64(report.Stats.Score)/10,
+		"vector", "", // TODO: we need to extend the report to include the vector in the report
+		"source", "", // TODO: we need to extend the report to include the source in the report
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return obj, nil
+}
+
+func (a *lumiPlatformExploits) GetStats() (interface{}, error) {
+	report, err := getAdvisoryReport(a.Runtime)
+	if err != nil {
+		return nil, err
+	}
+
+	dict, err := jsonToDict(report.Stats.Exploits)
 	if err != nil {
 		return nil, err
 	}
