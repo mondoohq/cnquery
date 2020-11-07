@@ -1,8 +1,9 @@
 package motor
 
 import (
+	"context"
+
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/falcon"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/events"
@@ -12,6 +13,7 @@ import (
 
 func New(trans transports.Transport) (*Motor, error) {
 	c := &Motor{
+		ctx:       context.Background(),
 		Transport: trans,
 		detector:  platform.NewDetector(trans),
 	}
@@ -19,14 +21,12 @@ func New(trans transports.Transport) (*Motor, error) {
 }
 
 type Motor struct {
+	ctx       context.Context
 	Transport transports.Transport
 	detector  *platform.Detector
 	watcher   transports.Watcher
 	Meta      MetaInfo
 	recording bool
-
-	// optional upstream configuration for resources that need to talk upstream
-	mondooCloudConfig *MondooCloudConfig
 }
 
 type MetaInfo struct {
@@ -103,23 +103,12 @@ func (m *Motor) IsLocalTransport() bool {
 	return true
 }
 
-// temporary mondoo cloud config so that resource can talk upstream
-// TODO: discuss if the transport is the correct entity to hold that information
-// I like the idea of having addition value, but the motor package should really not
-// know anything out mondoo cloud, maybe we just set a context.Context or map[sting]interface{}
-type MondooCloudConfig struct {
-	AssetMrn    string // optional, not set in shell yet
-	SpaceMrn    string
-	Collector   string
-	ApiEndpoint string
-	Plugins     []falcon.ClientPlugin
-	Incognito   bool
+func (m *Motor) Context() context.Context {
+	return m.ctx
 }
 
-func (m *Motor) SetCloudConfig(mcc *MondooCloudConfig) {
-	m.mondooCloudConfig = mcc
-}
-
-func (m *Motor) CloudConfig() *MondooCloudConfig {
-	return m.mondooCloudConfig
+func (m *Motor) WithContext(ctx context.Context) *Motor {
+	// TODO: should we clone motor object? I think this should be okay for now
+	m.ctx = ctx
+	return m
 }
