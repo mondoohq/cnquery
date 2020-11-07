@@ -14,16 +14,16 @@ import (
 	"go.mondoo.io/mondoo/vadvisor/api"
 )
 
-func getScannerClient(m *motor.Motor) (string, scannerclient.Client, error) {
+func getScannerClient(m *motor.Motor) (*motor.MondooCloudConfig, scannerclient.Client, error) {
 	mcc := m.CloudConfig()
 
 	if mcc == nil {
-		return "", nil, errors.New("mondoo upstream configuration is missing")
+		return nil, nil, errors.New("mondoo upstream configuration is missing")
 	}
 
 	// start scanner client
 	cl, err := scannerclient.New(mcc.Collector, mcc.ApiEndpoint, mcc.Plugins, false, mcc.Incognito)
-	return mcc.SpaceMrn, cl, err
+	return mcc, cl, err
 }
 
 // fetches the vulnerability report and caches it
@@ -50,15 +50,14 @@ func getAdvisoryReport(r *lumi.Runtime) (*scanner.VulnReport, error) {
 	}
 
 	// get new advisory report
-	spaceMrn, scannerClient, err := getScannerClient(r.Motor)
+	mcc, scannerClient, err := getScannerClient(r.Motor)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: get the asset and basis platfrom via a new asset resource so that we can also send the mrn
 	asset := &assets.Asset{
-		Mrn:      "", // TODO: get the asset mrn from motor
-		SpaceMrn: spaceMrn,
+		Mrn:      mcc.AssetMrn, // NOTE: asset mrn may not be available in incognito mode
+		SpaceMrn: mcc.SpaceMrn,
 		Platform: &assets.Platform{
 			Name:    name,
 			Release: release,
@@ -98,10 +97,9 @@ func getAdvisoryReport(r *lumi.Runtime) (*scanner.VulnReport, error) {
 	reportBinder, err := scannerClient.AnalysePlatform(context.Background(), &scanner.AssetVulnMetadataList{
 		Metadata: []*scanner.AssetVulnMetadata{
 			&scanner.AssetVulnMetadata{
-				Asset:    asset,
-				Packages: apiPackages,
-				// TODO: remove the incognito here to ensure the data is stored per asset mrn upstream
-				Incognito: true,
+				Asset:     asset,
+				Packages:  apiPackages,
+				Incognito: mcc.Incognito, // respect the user incognito setting
 			},
 		},
 	})

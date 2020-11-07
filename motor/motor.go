@@ -108,6 +108,7 @@ func (m *Motor) IsLocalTransport() bool {
 // I like the idea of having addition value, but the motor package should really not
 // know anything out mondoo cloud, maybe we just set a context.Context or map[sting]interface{}
 type MondooCloudConfig struct {
+	AssetMrn    string // optional, not set in shell yet
 	SpaceMrn    string
 	Collector   string
 	ApiEndpoint string
