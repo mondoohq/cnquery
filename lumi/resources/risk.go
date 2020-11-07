@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/lumi/resources/lumicontext"
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/nexus/assets"
 	"go.mondoo.io/mondoo/nexus/scanner"
@@ -14,10 +15,9 @@ import (
 	"go.mondoo.io/mondoo/vadvisor/api"
 )
 
-func getScannerClient(m *motor.Motor) (*motor.MondooCloudConfig, scannerclient.Client, error) {
-	mcc := m.CloudConfig()
-
-	if mcc == nil {
+func getScannerClient(m *motor.Motor) (*lumicontext.CloudConfig, scannerclient.Client, error) {
+	mcc, err := lumicontext.CloudConfigFromContext(m.Context())
+	if mcc == nil || err != nil {
 		return nil, nil, errors.New("mondoo upstream configuration is missing")
 	}
 
