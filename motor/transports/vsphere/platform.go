@@ -118,6 +118,10 @@ func EsxiVersion(host *object.HostSystem) (*EsxiSystemVersion, error) {
 
 			switch k {
 			case "Build":
+				// ahhhh really? "Releasebuild-8169922"
+				if strings.HasPrefix(value, "Releasebuild-") {
+					value = strings.Replace(value, "Releasebuild-", "", 1)
+				}
 				version.Build = value
 			case "Patch":
 				version.Patch = value

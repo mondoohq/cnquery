@@ -24,10 +24,12 @@ func VspherePlatform(t *vsphere.Transport, identifier string) (*Platform, error)
 
 			// TODO: Determine full platform information eg. esxi
 			esxi_version := ""
+			esxi_build := ""
 			// we do not abort in case of error because the simulator does not support esxi interface for the host
 			ver, err := vsphere_transport.EsxiVersion(host)
 			if err == nil {
 				esxi_version = ver.Version
+				esxi_build = ver.Build
 			}
 
 			// host
@@ -35,6 +37,7 @@ func VspherePlatform(t *vsphere.Transport, identifier string) (*Platform, error)
 				Name:    "vmware-esxi",
 				Title:   "VMware ESXi",
 				Release: esxi_version,
+				Build:   esxi_build,
 				Runtime: transports.RUNTIME_VSPHERE_HOSTS,
 				Kind:    transports.Kind_KIND_BARE_METAL,
 			}, nil
@@ -55,6 +58,7 @@ func VspherePlatform(t *vsphere.Transport, identifier string) (*Platform, error)
 		Name:    "vmware-vsphere",
 		Title:   info.FullName,
 		Release: info.Version,
+		Build:   info.Build,
 		Kind:    transports.Kind_KIND_API,
 		Runtime: transports.RUNTIME_VSPHERE,
 	}, nil
