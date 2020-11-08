@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/falcon"
 	"go.mondoo.io/mondoo/motor"
 )
 
@@ -52,12 +53,27 @@ func (c *Cache) Load(key string) (*CacheEntry, bool) {
 // Delete a Cache Entry
 func (c *Cache) Delete(key string) { c.Map.Delete(key) }
 
+// mondoo cloud config so that resource scan talk upstream
+// TODO: this configuration struct does not belong into the lumi package
+// nevertheless the lumi runtime needs to have something that allows users
+// to store additional credentials so that resource can use those for
+// their resources.
+type UpstreamConfig struct {
+	AssetMrn    string
+	SpaceMrn    string
+	Collector   string
+	ApiEndpoint string
+	Plugins     []falcon.ClientPlugin
+	Incognito   bool
+}
+
 // Runtime of all initialized resources
 type Runtime struct {
-	Registry  *Registry
-	cache     *Cache
-	Observers *Observers
-	Motor     *motor.Motor
+	Registry       *Registry
+	cache          *Cache
+	Observers      *Observers
+	Motor          *motor.Motor
+	UpstreamConfig *UpstreamConfig
 }
 
 // NewRuntime creates a new runtime from a registry and motor backend

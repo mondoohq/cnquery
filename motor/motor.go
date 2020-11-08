@@ -1,8 +1,6 @@
 package motor
 
 import (
-	"context"
-
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
@@ -13,7 +11,6 @@ import (
 
 func New(trans transports.Transport) (*Motor, error) {
 	c := &Motor{
-		ctx:       context.Background(),
 		Transport: trans,
 		detector:  platform.NewDetector(trans),
 	}
@@ -21,7 +18,6 @@ func New(trans transports.Transport) (*Motor, error) {
 }
 
 type Motor struct {
-	ctx       context.Context
 	Transport transports.Transport
 	detector  *platform.Detector
 	watcher   transports.Watcher
@@ -101,14 +97,4 @@ func (m *Motor) IsLocalTransport() bool {
 		return false
 	}
 	return true
-}
-
-func (m *Motor) Context() context.Context {
-	return m.ctx
-}
-
-func (m *Motor) WithContext(ctx context.Context) *Motor {
-	// TODO: should we clone motor object? I think this should be okay for now
-	m.ctx = ctx
-	return m
 }
