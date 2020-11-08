@@ -11,6 +11,7 @@ message Platform {
   string arch = 3;
   string title = 4;
   repeated string family = 5;
+  string build = 6;
 
   mondoo.motor.transports.v1.Kind kind = 20;
   string runtime = 21;
