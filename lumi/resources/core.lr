@@ -85,21 +85,11 @@ platform.eol {
   date time
 }
 
-// Common Vulnerability Scoring System (CVSS) Score
-cvss {
-  // CVSS Score ranging from 0.0 to 10.0
-  score   float
-  // CVSS score is also represented as a vector string
-  vector  string
-  // Source that provided the score
-  source  string
-}
-
 // Returns all Platform/Package advisories
 platform.advisories {
   []risk.advisory
   // Worst CVSS score for all advisories
-  cvss() cvss
+  cvss() audit.cvss
   // returns statistical information: total, critical, high, medium, low, none, unknown
   stats() dict
 }
@@ -108,7 +98,7 @@ platform.advisories {
 platform.cves {
   []risk.cve
   // Worst CVSS score for all cves
-  cvss() cvss
+  cvss() audit.cvss
   // returns statistical information: total, critical, high, medium, low, none, unknown
   stats() dict
 }
@@ -117,13 +107,21 @@ platform.cves {
 platform.exploits {
   []risk.exploit
   // Worst CVSS score for all exploits
-  cvss() cvss
+  cvss() audit.cvss
   // returns statistical information: total, critical, high, medium, low, none, unknown
   stats() dict
 }
 
+// Common Vulnerability Scoring System (CVSS) Score
+audit.cvss {
+  // CVSS Score ranging from 0.0 to 10.0
+  score   float
+  // CVSS score is also represented as a vector string
+  vector  string
+}
+
 // Platform/Package advisory
-risk.advisory {
+audit.advisory {
   // Advisory ID
   id          string
   // Mondoo Advisory Identifier
@@ -137,11 +135,11 @@ risk.advisory {
   // Last modification date
   modified    time
   // Worst CVSS Score of all assigned CVEs
-  worstScore    cvss
+  worstScore    audit.cvss
 }
 
 // Common Vulnerabilities and Exposures (CVE)
-risk.cve {
+audit.cve {
   // CVE ID
   id        string
   // Mondoo CVE Identifier
@@ -157,11 +155,11 @@ risk.cve {
   // Last modification date
   modified    time
   // Worst CVSS Score of all assigned CVEs
-  worstScore    cvss
+  worstScore    audit.cvss
 }
 
 // Exploit Information
-risk.exploit {
+audit.exploit {
   // CVE ID
   id        string
   // Mondoo CVE Identifier
@@ -169,7 +167,7 @@ risk.exploit {
   // Last modification date
   modified    time
   // Worst CVSS Score of all assigned CVEs for this exploit
-  worstScore    cvss
+  worstScore    audit.cvss
 }
 
 // Results of running a command on the system
