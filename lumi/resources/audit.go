@@ -126,13 +126,13 @@ func getAdvisoryReport(r *lumi.Runtime) (*scanner.VulnReport, error) {
 	return report, nil
 }
 
-func (c *lumiCvss) id() (string, error) {
+func (c *lumiAuditCvss) id() (string, error) {
 	// TODO: use c.Vector() once we have the data available
 	score, _ := c.Score()
 	return "cvss/" + strconv.FormatFloat(score, 'f', 2, 64), nil
 }
 
-func (c *lumiRiskAdvisory) id() (string, error) {
+func (c *lumiAuditAdvisory) id() (string, error) {
 	return c.Mrn()
 }
 
@@ -146,10 +146,9 @@ func (a *lumiPlatformAdvisories) GetCvss() (interface{}, error) {
 		return nil, err
 	}
 
-	obj, err := a.Runtime.CreateResource("cvss",
+	obj, err := a.Runtime.CreateResource("audit.cvss",
 		"score", float64(report.Stats.Score)/10,
 		"vector", "", // TODO: we need to extend the report to include the vector in the report
-		"source", "", // TODO: we need to extend the report to include the source in the report
 	)
 	if err != nil {
 		return nil, err
@@ -168,10 +167,9 @@ func (a *lumiPlatformAdvisories) GetList() ([]interface{}, error) {
 	for i := range report.Advisories {
 		advisory := report.Advisories[i]
 
-		cvssScore, err := a.Runtime.CreateResource("cvss",
+		cvssScore, err := a.Runtime.CreateResource("audit.cvss",
 			"score", float64(advisory.Score)/10,
 			"vector", "", // TODO: we need to extend the report to include the vector in the report
-			"source", "", // TODO: we need to extend the report to include the source in the report
 		)
 		if err != nil {
 			return nil, err
@@ -189,7 +187,7 @@ func (a *lumiPlatformAdvisories) GetList() ([]interface{}, error) {
 			modified = &parsedTime
 		}
 
-		lumiAdvisory, err := a.Runtime.CreateResource("risk.advisory",
+		lumiAdvisory, err := a.Runtime.CreateResource("audit.advisory",
 			"id", advisory.ID,
 			"mrn", advisory.Mrn,
 			"title", advisory.Title,
@@ -222,7 +220,7 @@ func (a *lumiPlatformAdvisories) GetStats() (interface{}, error) {
 	return dict, nil
 }
 
-func (c *lumiRiskCve) id() (string, error) {
+func (c *lumiAuditCve) id() (string, error) {
 	return c.Mrn()
 }
 
@@ -242,10 +240,9 @@ func (a *lumiPlatformCves) GetList() ([]interface{}, error) {
 	for i := range cveList {
 		cve := cveList[i]
 
-		cvssScore, err := a.Runtime.CreateResource("cvss",
+		cvssScore, err := a.Runtime.CreateResource("audit.cvss",
 			"score", float64(cve.Score)/10,
 			"vector", "", // TODO: we need to extend the report to include the vector in the report
-			"source", "", // TODO: we need to extend the report to include the source in the report
 		)
 		if err != nil {
 			return nil, err
@@ -263,7 +260,7 @@ func (a *lumiPlatformCves) GetList() ([]interface{}, error) {
 			modified = &parsedTime
 		}
 
-		lumiCve, err := a.Runtime.CreateResource("risk.cve",
+		lumiCve, err := a.Runtime.CreateResource("audit.cve",
 			"id", cve.ID,
 			"mrn", cve.Mrn,
 			"state", cve.State.String(),
@@ -290,10 +287,9 @@ func (a *lumiPlatformCves) GetCvss() (interface{}, error) {
 	}
 
 	// TODO: we need to distingush between advisory, cve and exploit cvss
-	obj, err := a.Runtime.CreateResource("cvss",
+	obj, err := a.Runtime.CreateResource("audit.cvss",
 		"score", float64(report.Stats.Score)/10,
 		"vector", "", // TODO: we need to extend the report to include the vector in the report
-		"source", "", // TODO: we need to extend the report to include the source in the report
 	)
 	if err != nil {
 		return nil, err
@@ -316,7 +312,7 @@ func (a *lumiPlatformCves) GetStats() (interface{}, error) {
 	return dict, nil
 }
 
-func (c *lumiRiskExploit) id() (string, error) {
+func (c *lumiAuditExploit) id() (string, error) {
 	return c.Mrn()
 }
 
@@ -334,10 +330,9 @@ func (a *lumiPlatformExploits) GetList() ([]interface{}, error) {
 	for i := range report.Exploits {
 		exploit := report.Exploits[i]
 
-		cvssScore, err := a.Runtime.CreateResource("cvss",
+		cvssScore, err := a.Runtime.CreateResource("audit.cvss",
 			"score", float64(exploit.Score)/10,
 			"vector", "", // TODO: we need to extend the report to include the vector in the report
-			"source", "", // TODO: we need to extend the report to include the source in the report
 		)
 		if err != nil {
 			return nil, err
@@ -349,7 +344,7 @@ func (a *lumiPlatformExploits) GetList() ([]interface{}, error) {
 			modified = &parsedTime
 		}
 
-		lumiExploit, err := a.Runtime.CreateResource("risk.exploit",
+		lumiExploit, err := a.Runtime.CreateResource("audit.exploit",
 			"id", exploit.ID,
 			"mrn", exploit.Mrn,
 			"modified", modified,
@@ -372,10 +367,9 @@ func (a *lumiPlatformExploits) GetCvss() (interface{}, error) {
 	}
 
 	// TODO: this needs to be the exploit worst score
-	obj, err := a.Runtime.CreateResource("cvss",
+	obj, err := a.Runtime.CreateResource("audit.cvss",
 		"score", float64(report.Stats.Score)/10,
 		"vector", "", // TODO: we need to extend the report to include the vector in the report
-		"source", "", // TODO: we need to extend the report to include the source in the report
 	)
 	if err != nil {
 		return nil, err
