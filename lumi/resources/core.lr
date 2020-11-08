@@ -87,7 +87,7 @@ platform.eol {
 
 // Returns all Platform/Package advisories
 platform.advisories {
-  []risk.advisory
+  []audit.advisory
   // Worst CVSS score for all advisories
   cvss() audit.cvss
   // returns statistical information: total, critical, high, medium, low, none, unknown
@@ -96,7 +96,7 @@ platform.advisories {
 
 // Returns all Platform/Package cves
 platform.cves {
-  []risk.cve
+  []audit.cve
   // Worst CVSS score for all cves
   cvss() audit.cvss
   // returns statistical information: total, critical, high, medium, low, none, unknown
@@ -105,7 +105,7 @@ platform.cves {
 
 // Returns all Platform/Package exploits
 platform.exploits {
-  []risk.exploit
+  []audit.exploit
   // Worst CVSS score for all exploits
   cvss() audit.cvss
   // returns statistical information: total, critical, high, medium, low, none, unknown
