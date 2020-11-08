@@ -8,27 +8,19 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/lumi/resources/lumicontext"
-	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/nexus/assets"
 	"go.mondoo.io/mondoo/nexus/scanner"
 	"go.mondoo.io/mondoo/nexus/scanner/scannerclient"
 	"go.mondoo.io/mondoo/vadvisor/api"
 )
 
-func getScannerClient(m *motor.Motor) (*lumicontext.CloudConfig, scannerclient.Client, error) {
-	mcc, err := lumicontext.CloudConfigFromContext(m.Context())
-	if mcc == nil || err != nil {
-		return nil, nil, errors.New("mondoo upstream configuration is missing")
-	}
-
-	// start scanner client
-	cl, err := scannerclient.New(mcc.Collector, mcc.ApiEndpoint, mcc.Plugins, false, mcc.Incognito)
-	return mcc, cl, err
-}
-
 // fetches the vulnerability report and caches it
 func getAdvisoryReport(r *lumi.Runtime) (*scanner.VulnReport, error) {
+	mcc := r.UpstreamConfig
+	if mcc == nil {
+		return nil, errors.New("mondoo upstream configuration is missing")
+	}
+
 	// get platform information
 	obj, err := r.CreateResource("platform")
 	if err != nil {
@@ -51,15 +43,16 @@ func getAdvisoryReport(r *lumi.Runtime) (*scanner.VulnReport, error) {
 	}
 
 	// get new advisory report
-	mcc, scannerClient, err := getScannerClient(r.Motor)
+	// start scanner client
+	scannerClient, err := scannerclient.New(mcc.Collector, mcc.ApiEndpoint, mcc.Plugins, false, mcc.Incognito)
 	if err != nil {
 		return nil, err
 	}
 
 	asset := &assets.Asset{
 		// NOTE: asset mrn may not be available in incognito mode and will be an empty string then
-		Mrn:      lumicontext.AssetMrnFromContext(r.Motor.Context()),
-		SpaceMrn: mcc.SpaceMrn,
+		Mrn:      r.UpstreamConfig.AssetMrn,
+		SpaceMrn: r.UpstreamConfig.SpaceMrn,
 		Platform: &assets.Platform{
 			Name:    name,
 			Release: release,
