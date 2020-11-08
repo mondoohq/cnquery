@@ -17,6 +17,7 @@ func (s *lumiPlatform) init(args *lumi.Args) (*lumi.Args, Platform, error) {
 		(*args)["title"] = platform.Title
 		(*args)["arch"] = platform.Arch
 		(*args)["release"] = platform.Release
+		(*args)["build"] = platform.Build
 		(*args)["kind"] = platform.Kind.Name()
 		(*args)["runtimeEnv"] = platform.Runtime
 
