@@ -64,32 +64,36 @@ func getAdvisoryReport(r *lumi.Runtime) (*scanner.VulnReport, error) {
 	}
 
 	apiPackages := []*api.Package{}
+	// collect pacakges if required
+	if name == "vmware-esxi" || name == "vmware-vsphere" {
+		// nothing to do
+	} else {
+		obj, err = r.CreateResource("packages")
+		if err != nil {
+			return nil, err
+		}
+		packages := obj.(Packages)
 
-	obj, err = r.CreateResource("packages")
-	if err != nil {
-		return nil, err
-	}
-	packages := obj.(Packages)
+		lumiPkgs, err := packages.List()
+		if err != nil {
+			return nil, err
+		}
 
-	lumiPkgs, err := packages.List()
-	if err != nil {
-		return nil, err
-	}
+		for i := range lumiPkgs {
+			lumiPkg := lumiPkgs[i]
+			pkg := lumiPkg.(Package)
+			name, _ := pkg.Name()
+			version, _ := pkg.Version()
+			arch, _ := pkg.Arch()
+			format, _ := pkg.Format()
 
-	for i := range lumiPkgs {
-		lumiPkg := lumiPkgs[i]
-		pkg := lumiPkg.(Package)
-		name, _ := pkg.Name()
-		version, _ := pkg.Version()
-		arch, _ := pkg.Arch()
-		format, _ := pkg.Format()
-
-		apiPackages = append(apiPackages, &api.Package{
-			Name:    name,
-			Version: version,
-			Arch:    arch,
-			Format:  format,
-		})
+			apiPackages = append(apiPackages, &api.Package{
+				Name:    name,
+				Version: version,
+				Arch:    arch,
+				Format:  format,
+			})
+		}
 	}
 
 	log.Debug().Str("asset", asset.Mrn).Bool("incognito", mcc.Incognito).Msg("run advisory scan")
