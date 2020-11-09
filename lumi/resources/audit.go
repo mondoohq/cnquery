@@ -8,6 +8,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/nexus/assets"
 	"go.mondoo.io/mondoo/nexus/scanner"
 	"go.mondoo.io/mondoo/nexus/scanner/scannerclient"
@@ -27,16 +28,17 @@ func getAdvisoryReport(r *lumi.Runtime) (*scanner.VulnReport, error) {
 		return nil, err
 	}
 
-	platform := obj.(Platform)
+	lumiPlatform := obj.(Platform)
 
-	name, _ := platform.Name()
-	release, _ := platform.Release()
-	arch, _ := platform.Arch()
+	name, _ := lumiPlatform.Name()
+	release, _ := lumiPlatform.Release()
+	arch, _ := lumiPlatform.Arch()
+	build, _ := lumiPlatform.Build()
 
 	// check if the data is cached
 	// NOTE: we cache it in the platform resource, so that platform.advisories, platform.cves and
 	// platform.exploits can all share the results
-	cachedReport, ok := platform.LumiResource().Cache.Load("_report")
+	cachedReport, ok := lumiPlatform.LumiResource().Cache.Load("_report")
 	if ok {
 		report := cachedReport.Data.(*scanner.VulnReport)
 		return report, nil
@@ -53,10 +55,11 @@ func getAdvisoryReport(r *lumi.Runtime) (*scanner.VulnReport, error) {
 		// NOTE: asset mrn may not be available in incognito mode and will be an empty string then
 		Mrn:      r.UpstreamConfig.AssetMrn,
 		SpaceMrn: r.UpstreamConfig.SpaceMrn,
-		Platform: &assets.Platform{
+		Platform: &platform.Platform{
 			Name:    name,
 			Release: release,
 			Arch:    arch,
+			Build:   build,
 		},
 	}
 
@@ -114,7 +117,7 @@ func getAdvisoryReport(r *lumi.Runtime) (*scanner.VulnReport, error) {
 		report = reports[i]
 	}
 
-	platform.LumiResource().Cache.Store("_report", &lumi.CacheEntry{Data: report})
+	lumiPlatform.LumiResource().Cache.Store("_report", &lumi.CacheEntry{Data: report})
 
 	return report, nil
 }
