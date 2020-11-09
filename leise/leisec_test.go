@@ -143,6 +143,11 @@ func TestCompiler_Buggy(t *testing.T) {
 }
 
 func TestCompiler_Simple(t *testing.T) {
+	score, err := llx.CvssScorePrimitive("CVSS:3.1/AV:P/AC:H/PR:L/UI:N/S:U/C:H/I:L/A:H")
+	if err != nil {
+		assert.NoError(t, err, "parsing CVSS score")
+	}
+
 	data := []struct {
 		code string
 		res  *llx.Primitive
@@ -155,6 +160,8 @@ func TestCompiler_Simple(t *testing.T) {
 		{"12.3", llx.FloatPrimitive(12.3)},
 		{"\"hi\"", llx.StringPrimitive("hi")},
 		{"/hi/", llx.RegexPrimitive("hi")},
+		{"score(100)", llx.ScorePrimitive(100)},
+		{"score(\"CVSS:3.1/AV:P/AC:H/PR:L/UI:N/S:U/C:H/I:L/A:H\")", score},
 		{"[true, false]", &llx.Primitive{
 			Type: types.Array(types.Bool),
 			Array: []*llx.Primitive{

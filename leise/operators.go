@@ -34,6 +34,7 @@ func init() {
 		"if":     compileIf,
 		"else":   compileElse,
 		"expect": compileExpect,
+		"score":  compileScore,
 	}
 }
 
@@ -383,4 +384,40 @@ func compileExpect(c *compiler, id string, call *parser.Call, res *llx.CodeBundl
 	res.Code.Entrypoints = append(res.Code.Entrypoints, res.Code.ChunkIndex())
 
 	return typ, nil
+}
+
+func compileScore(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
+	if call == nil || len(call.Function) < 1 {
+		return types.Nil, errors.New("missing parameter for '" + id + "', it requires 1")
+	}
+
+	arg := call.Function[0]
+	if arg == nil || arg.Value == nil || arg.Value.Operand == nil || arg.Value.Operand.Value == nil {
+		return types.Nil, errors.New("failed to get parameter for '" + id + "'")
+	}
+
+	val := arg.Value.Operand.Value
+
+	switch {
+	case val.Int != nil:
+		res.Code.AddChunk(&llx.Chunk{
+			Call:      llx.Chunk_PRIMITIVE,
+			Primitive: llx.ScorePrimitive(int32(*val.Int)),
+		})
+
+	case val.String != nil:
+		p, err := llx.CvssScorePrimitive(*val.String)
+		if err != nil {
+			return types.Nil, err
+		}
+
+		res.Code.AddChunk(&llx.Chunk{
+			Call:      llx.Chunk_PRIMITIVE,
+			Primitive: p,
+		})
+	default:
+		return types.Nil, errors.New("failed to initialize score")
+	}
+
+	return types.Score, nil
 }
