@@ -87,6 +87,8 @@ func rawDataString(typ types.Type, value interface{}) string {
 		return value.(*time.Time).String()
 	case types.Dict:
 		return dictRawDataString(value)
+	case types.Score:
+		return ScoreString(value.([]byte))
 	case types.ArrayLike:
 		var res strings.Builder
 		arr := value.([]interface{})
@@ -296,6 +298,14 @@ func TimeData(t time.Time) *RawData {
 func DictData(r interface{}) *RawData {
 	return &RawData{
 		Type:  types.Dict,
+		Value: r,
+	}
+}
+
+// ScoreData creates a rawdata struct from raw score data
+func ScoreData(r interface{}) *RawData {
+	return &RawData{
+		Type:  types.Score,
 		Value: r,
 	}
 }

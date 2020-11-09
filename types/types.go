@@ -12,18 +12,18 @@ type Type string
 // Otherwise we are not able to store the compile code as json blob in pg since
 // llx and type use \x00 or \u0000. This is not allowed in Postgres json blobs
 // see https://www.postgresql.org/docs/9.4/release-9-4-1.html
-func (t Type) MarshalJSON() ([]byte, error) {
-	newVal := strings.ReplaceAll(string(t), "\u0000", "\\u0000")
+func (typ Type) MarshalJSON() ([]byte, error) {
+	newVal := strings.ReplaceAll(string(typ), "\u0000", "\\u0000")
 	return json.Marshal(newVal)
 }
 
-func (t *Type) UnmarshalJSON(data []byte) error {
+func (typ *Type) UnmarshalJSON(data []byte) error {
 	var d string
 	if err := json.Unmarshal(data, &d); err != nil {
 		return err
 	}
 	reverted := strings.ReplaceAll(d, "\\u0000", "\u0000")
-	*t = Type(reverted)
+	*typ = Type(reverted)
 	return nil
 }
 
@@ -41,7 +41,8 @@ const (
 	byteRegex
 	byteTime
 	byteDict
-	byteArray = 1<<4 + iota - 2 // set to 24 to avoid breaking changes
+	byteScore
+	byteArray = 1<<4 + iota - 3 // set to 24 to avoid breaking changes
 	byteMap
 	byteResource
 	byteFunction
@@ -68,6 +69,8 @@ const (
 	Time = Type(rune(byteTime))
 	// Dict for storing hierarchical simple key-value assignemnts
 	Dict = Type(rune(byteDict))
+	// Score for evaluations
+	Score = Type(rune(byteScore))
 	// ArrayLike is the underlying type of all arrays
 	ArrayLike = Type(rune(byteArray))
 	// MapLike is the underlying type of all arrays
@@ -176,6 +179,7 @@ var labels = map[byte]string{
 	byteRegex:  "regex",
 	byteTime:   "time",
 	byteDict:   "dict",
+	byteScore:  "score",
 }
 
 var labelfun map[byte]func(Type) string

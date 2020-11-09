@@ -27,6 +27,7 @@ func init() {
 		types.Regex:        regex2result,
 		types.Time:         time2result,
 		types.Dict:         dict2result,
+		types.Score:        score2result,
 		types.ArrayLike:    array2result,
 		types.MapLike:      map2result,
 		types.ResourceLike: resource2result,
@@ -43,6 +44,7 @@ func init() {
 		types.Regex:        pregex2raw,
 		types.Time:         ptime2raw,
 		types.Dict:         pdict2raw,
+		types.Score:        pscore2raw,
 		types.ArrayLike:    parray2raw,
 		types.MapLike:      pmap2raw,
 		types.ResourceLike: presource2raw,
@@ -122,6 +124,13 @@ func dict2result(value interface{}, typ types.Type) (*Primitive, error) {
 			Type: types.Dict,
 		}, errors.New("failed to convert dict to primitive, unsupported child type")
 	}
+}
+
+func score2result(value interface{}, typ types.Type) (*Primitive, error) {
+	return &Primitive{
+		Type:  types.Score,
+		Value: value.([]byte),
+	}, nil
 }
 
 func array2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -296,6 +305,10 @@ func pdict2raw(p *Primitive) *RawData {
 		Error: errors.New("failed to convert dict to raw, unsupported child type"),
 		Type:  types.Dict,
 	}
+}
+
+func pscore2raw(p *Primitive) *RawData {
+	return &RawData{Value: p.Value, Error: nil, Type: types.Score}
 }
 
 func parray2raw(p *Primitive) *RawData {

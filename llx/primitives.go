@@ -2,6 +2,8 @@ package llx
 
 import (
 	"encoding/binary"
+	"errors"
+	"strings"
 	"time"
 
 	"go.mondoo.io/mondoo/types"
@@ -72,6 +74,31 @@ func TimePrimitive(t *time.Time) *Primitive {
 		Type:  types.Time,
 		Value: v,
 	}
+}
+
+func ScorePrimitive(num int32) *Primitive {
+	return &Primitive{
+		Type:  types.Score,
+		Value: []byte{scoreTypeMondoo, byte(num & 0xff)},
+	}
+}
+
+// CvssScorePrimitive creates a primitive for a CVSS score
+func CvssScorePrimitive(vector string) (*Primitive, error) {
+	var b []byte
+	switch {
+	case strings.HasPrefix(vector, "CVSS:3.0/"):
+		b = cvssv3vector(vector[8:])
+	case strings.HasPrefix(vector, "CVSS:3.1/"):
+		b = cvssv3vector(vector[8:])
+	default:
+		return nil, errors.New("Cannot parse this CVSS vector into a Mondoo score")
+	}
+
+	return &Primitive{
+		Type:  types.Score,
+		Value: b,
+	}, nil
 }
 
 // RefPrimitive creates a primitive from an int value
