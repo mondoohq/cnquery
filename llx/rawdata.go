@@ -144,6 +144,23 @@ func (r *RawData) IsTruthy() (bool, bool) {
 	return isTruthy(r.Value, r.Type)
 }
 
+// Score returns the score value if the value is of score type
+func (r *RawData) Score() (int, bool) {
+	if r.Error != nil {
+		return 0, false
+	}
+
+	if r.Type != types.Score {
+		return 0, false
+	}
+
+	v, err := scoreValue(r.Value.([]byte))
+	if err != nil {
+		return v, false
+	}
+	return v, true
+}
+
 func isTruthy(data interface{}, typ types.Type) (bool, bool) {
 	if data == nil &&
 		(typ.IsEmpty() || !typ.Underlying().IsResource()) {
