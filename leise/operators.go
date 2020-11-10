@@ -400,9 +400,25 @@ func compileScore(c *compiler, id string, call *parser.Call, res *llx.CodeBundle
 
 	switch {
 	case val.Int != nil:
+		p, err := llx.ScorePrimitive(int32(*val.Int))
+		if err != nil {
+			return types.Nil, err
+		}
+
 		res.Code.AddChunk(&llx.Chunk{
 			Call:      llx.Chunk_PRIMITIVE,
-			Primitive: llx.ScorePrimitive(int32(*val.Int)),
+			Primitive: p,
+		})
+
+	case val.Float != nil:
+		p, err := llx.ScorePrimitive(int32(*val.Float))
+		if err != nil {
+			return types.Nil, err
+		}
+
+		res.Code.AddChunk(&llx.Chunk{
+			Call:      llx.Chunk_PRIMITIVE,
+			Primitive: p,
 		})
 
 	case val.String != nil:
