@@ -96,6 +96,31 @@ func scoreString(vector string) ([]byte, error) {
 	}
 }
 
+func ScorePrimitive(num int32) (*Primitive, error) {
+	v, err := scoreVector(num)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Primitive{
+		Type:  types.Score,
+		Value: v,
+	}, nil
+}
+
+// CvssScorePrimitive creates a primitive for a CVSS score
+func CvssScorePrimitive(vector string) (*Primitive, error) {
+	var b []byte
+	switch {
+	case strings.HasPrefix(vector, "CVSS:3.0/"):
+		b = cvssv3vector(vector[8:])
+	case strings.HasPrefix(vector, "CVSS:3.1/"):
+		b = cvssv3vector(vector[8:])
+	default:
+		return nil, errors.New("Cannot parse this CVSS vector into a Mondoo score")
+	}
+}
+
 // ScorePrimitive creates a primitive with a numeric score
 func ScorePrimitive(num int32) *Primitive {
 	v, err := scoreVector(num)
