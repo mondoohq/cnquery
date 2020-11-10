@@ -3,6 +3,7 @@ package llx
 import (
 	"encoding/binary"
 	"errors"
+	"strconv"
 	"strings"
 	"time"
 
@@ -76,11 +77,15 @@ func TimePrimitive(t *time.Time) *Primitive {
 	}
 }
 
-func ScorePrimitive(num int32) *Primitive {
+func ScorePrimitive(num int32) (*Primitive, error) {
+	if num > 100 || num < 0 {
+		return nil, errors.New("Not a valid score (" + strconv.FormatInt(int64(num), 10) + ")")
+	}
+
 	return &Primitive{
 		Type:  types.Score,
 		Value: []byte{scoreTypeMondoo, byte(num & 0xff)},
-	}
+	}, nil
 }
 
 // CvssScorePrimitive creates a primitive for a CVSS score
