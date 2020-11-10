@@ -546,6 +546,19 @@ func duration(i int64) *time.Time {
 	return &res
 }
 
+func TestScore_Methods(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"score(100)",
+			0, []byte{0x00, byte(100)},
+		},
+		{
+			"score(\"CVSS:3.1/AV:P/AC:H/PR:L/UI:N/S:U/C:H/I:L/A:H\")",
+			0, []byte{0x01, 0x03, 0x01, 0x04, 0x00, 0x00, 0x00, 0x01, 0x00},
+		},
+	})
+}
+
 func TestTime_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
