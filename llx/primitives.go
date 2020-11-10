@@ -77,33 +77,49 @@ func TimePrimitive(t *time.Time) *Primitive {
 	}
 }
 
-func ScorePrimitive(num int32) (*Primitive, error) {
+func scoreVector(num int32) ([]byte, error) {
 	if num > 100 || num < 0 {
 		return nil, errors.New("Not a valid score (" + strconv.FormatInt(int64(num), 10) + ")")
 	}
 
+	return []byte{scoreTypeMondoo, byte(num & 0xff)}, nil
+}
+
+func scoreString(vector string) ([]byte, error) {
+	switch {
+	case strings.HasPrefix(vector, "CVSS:3.0/"):
+		return cvssv3vector(vector[8:]), nil
+	case strings.HasPrefix(vector, "CVSS:3.1/"):
+		return cvssv3vector(vector[8:]), nil
+	default:
+		return nil, errors.New("Cannot parse this CVSS vector into a Mondoo score")
+	}
+}
+
+// ScorePrimitive creates a primitive with a numeric score
+func ScorePrimitive(num int32) *Primitive {
+	v, err := scoreVector(num)
+	if err != nil {
+		panic(err.Error())
+	}
+
 	return &Primitive{
 		Type:  types.Score,
-		Value: []byte{scoreTypeMondoo, byte(num & 0xff)},
-	}, nil
+		Value: v,
+	}
 }
 
 // CvssScorePrimitive creates a primitive for a CVSS score
-func CvssScorePrimitive(vector string) (*Primitive, error) {
-	var b []byte
-	switch {
-	case strings.HasPrefix(vector, "CVSS:3.0/"):
-		b = cvssv3vector(vector[8:])
-	case strings.HasPrefix(vector, "CVSS:3.1/"):
-		b = cvssv3vector(vector[8:])
-	default:
-		return nil, errors.New("Cannot parse this CVSS vector into a Mondoo score")
+func CvssScorePrimitive(vector string) *Primitive {
+	b, err := scoreString(vector)
+	if err != nil {
+		panic(err.Error())
 	}
 
 	return &Primitive{
 		Type:  types.Score,
 		Value: b,
-	}, nil
+	}
 }
 
 // RefPrimitive creates a primitive from an int value

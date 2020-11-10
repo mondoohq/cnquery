@@ -28,6 +28,7 @@ func init() {
 	globalFunctions = map[string]handleFunction{
 		"expect": expect,
 		"if":     ifCall,
+		"score":  scoreCall,
 		"{}":     block,
 		"return": returnCall,
 	}
@@ -60,6 +61,35 @@ func ifCall(c *LeiseExecutor, f *Function, ref int32) (*RawData, int32, error) {
 	}
 
 	return NilData, 0, nil
+}
+
+func scoreCall(c *LeiseExecutor, f *Function, ref int32) (*RawData, int32, error) {
+	if len(f.Args) != 1 {
+		return nil, 0, errors.New("Called if with " + strconv.Itoa(len(f.Args)) + " arguments, expected one")
+	}
+
+	res, dref, err := c.resolveValue(f.Args[0], ref)
+	if err != nil || dref != 0 || res == nil {
+		return res, dref, err
+	}
+
+	var b []byte
+	switch res.Type {
+	case types.Int:
+		b, err = scoreVector(int32(res.Value.(int64)))
+
+	case types.Float:
+		b, err = scoreVector(int32(res.Value.(float64)))
+
+	case types.String:
+		b, err = scoreString(res.Value.(string))
+	}
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return ScoreData(b), 0, nil
 }
 
 func expect(c *LeiseExecutor, f *Function, ref int32) (*RawData, int32, error) {

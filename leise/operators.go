@@ -396,44 +396,19 @@ func compileScore(c *compiler, id string, call *parser.Call, res *llx.CodeBundle
 		return types.Nil, errors.New("failed to get parameter for '" + id + "'")
 	}
 
-	val := arg.Value.Operand.Value
-
-	switch {
-	case val.Int != nil:
-		p, err := llx.ScorePrimitive(int32(*val.Int))
-		if err != nil {
-			return types.Nil, err
-		}
-
-		res.Code.AddChunk(&llx.Chunk{
-			Call:      llx.Chunk_PRIMITIVE,
-			Primitive: p,
-		})
-
-	case val.Float != nil:
-		p, err := llx.ScorePrimitive(int32(*val.Float))
-		if err != nil {
-			return types.Nil, err
-		}
-
-		res.Code.AddChunk(&llx.Chunk{
-			Call:      llx.Chunk_PRIMITIVE,
-			Primitive: p,
-		})
-
-	case val.String != nil:
-		p, err := llx.CvssScorePrimitive(*val.String)
-		if err != nil {
-			return types.Nil, err
-		}
-
-		res.Code.AddChunk(&llx.Chunk{
-			Call:      llx.Chunk_PRIMITIVE,
-			Primitive: p,
-		})
-	default:
-		return types.Nil, errors.New("failed to initialize score")
+	argValue, err := c.compileExpression(arg.Value)
+	if err != nil {
+		return types.Nil, err
 	}
+
+	res.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "score",
+		Function: &llx.Function{
+			Type: types.Score,
+			Args: []*llx.Primitive{argValue},
+		},
+	})
 
 	return types.Score, nil
 }
