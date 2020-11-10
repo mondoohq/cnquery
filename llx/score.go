@@ -1,9 +1,35 @@
 package llx
 
 import (
+	"errors"
 	"math"
 	"strconv"
+	"strings"
 )
+
+const (
+	scoreTypeMondoo = iota
+	scoreTypeCVSSv3
+)
+
+func scoreVector(num int32) ([]byte, error) {
+	if num > 100 || num < 0 {
+		return nil, errors.New("Not a valid score (" + strconv.FormatInt(int64(num), 10) + ")")
+	}
+
+	return []byte{scoreTypeMondoo, byte(num & 0xff)}, nil
+}
+
+func scoreString(vector string) ([]byte, error) {
+	switch {
+	case strings.HasPrefix(vector, "CVSS:3.0/"):
+		return cvssv3vector(vector[8:]), nil
+	case strings.HasPrefix(vector, "CVSS:3.1/"):
+		return cvssv3vector(vector[8:]), nil
+	default:
+		return nil, errors.New("Cannot parse this CVSS vector into a Mondoo score")
+	}
+}
 
 // ScoreString turns a given score data into a printeable string
 func ScoreString(b []byte) string {
@@ -20,10 +46,17 @@ func ScoreString(b []byte) string {
 	}
 }
 
-const (
-	scoreTypeMondoo = iota
-	scoreTypeCVSSv3
-)
+func scoreValue(vector []byte) (int, error) {
+	switch vector[0] {
+	case scoreTypeMondoo:
+		return int(vector[1]), nil
+	case scoreTypeCVSSv3:
+		num := cvssv3score(vector)
+		return int(100 - (num * 10)), nil
+	default:
+		return 0, errors.New("unknown score value")
+	}
+}
 
 var (
 	// all metrics are in order from highest to lowest; for example:
