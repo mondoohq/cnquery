@@ -459,6 +459,35 @@ func TestOperations_Equality(t *testing.T) {
 	runSimpleTests(t, simpleTests)
 }
 
+func TestNumber_Methods(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"1 + 2", 0, int64(3),
+		},
+		{
+			"1 - 2", 0, int64(-1),
+		},
+		{
+			"1 * 2", 0, int64(2),
+		},
+		{
+			"4 / 2", 0, int64(2),
+		},
+		{
+			"1.0 + 2.0", 0, float64(3),
+		},
+		{
+			"1 - 2.0", 0, float64(-1),
+		},
+		{
+			"1.0 * 2", 0, float64(2),
+		},
+		{
+			"4.0 / 2.0", 0, float64(2),
+		},
+	})
+}
+
 func TestString_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
