@@ -418,6 +418,13 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 		if endpoint.Record {
 			m.ActivateRecorder()
 		}
+
+		pi, err := m.Platform()
+		if err == nil && pi.IsFamily(platform.FAMILY_WINDOWS) {
+			idDetectors = append(idDetectors, "machineid")
+		} else {
+			idDetectors = append(idDetectors, "hostname")
+		}
 	default:
 		return nil, fmt.Errorf("connection> unsupported backend '%s', only docker://, local://, tar://, ssh:// are allowed", endpoint.Backend)
 	}
