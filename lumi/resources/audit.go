@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/nexus/assets"
 	"go.mondoo.io/mondoo/nexus/scanner"
 	"go.mondoo.io/mondoo/nexus/scanner/scannerclient"
@@ -64,10 +65,9 @@ func getAdvisoryReport(r *lumi.Runtime) (*scanner.VulnReport, error) {
 	}
 
 	apiPackages := []*api.Package{}
-	// collect pacakges if required
-	if name == "vmware-esxi" || name == "vmware-vsphere" {
-		// nothing to do
-	} else {
+
+	// collect pacakges if the platform supports gathering files
+	if r.Motor.HasCapability(transports.Cabability_File) {
 		obj, err = r.CreateResource("packages")
 		if err != nil {
 			return nil, err
