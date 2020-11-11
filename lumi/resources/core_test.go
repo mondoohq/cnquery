@@ -337,6 +337,10 @@ func TestCore_If(t *testing.T) {
 			0, int64(123),
 		},
 		{
+			"if (true) { return [1] } return [2,3]",
+			0, []interface{}{int64(1)},
+		},
+		{
 			"if (false) { return 123 } return 456",
 			0, int64(456),
 		},
