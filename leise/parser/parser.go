@@ -301,6 +301,11 @@ func (p *parser) parseOperand() (*Operand, error) {
 		return nil, nil
 	}
 
+	if value.Ident != nil && *value.Ident == "return" {
+		p.nextToken()
+		return &Operand{Value: value}, nil
+	}
+
 	res := Operand{
 		Value: value,
 	}
