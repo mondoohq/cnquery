@@ -425,16 +425,20 @@ func (s *%s) %s() (%s, error) {
 	if !ok || !res.Valid {
 		%s
 	}
+	if res.Error != nil {
+		return %s, res.Error
+	}
 	tres, ok := res.Data.(%s)
 	if !ok {
 		return %s, fmt.Errorf("\"%s\" failed to cast field \"%s\" to the right type (%s): %%#v", res)
 	}
-	return tres, res.Error
+	return tres, nil
 }
 
 `, f.goName(),
 		r.structName(), f.goName(), f.Type.goType(),
 		f.ID, notFound,
+		f.Type.goZeroValue(),
 		f.Type.goType(),
 		f.Type.goZeroValue(), r.ID, f.ID, f.Type.goType())
 }
