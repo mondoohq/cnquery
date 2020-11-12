@@ -333,6 +333,7 @@ func TestCompiler_Props(t *testing.T) {
 		assert.Equal(t, map[string]string{"name": string(types.String)}, res.Props)
 	})
 
+	// prop <op> value
 	compileProps(t, "props.name == 'bob'", map[string]*llx.Primitive{
 		"name": {Type: types.String},
 	}, func(res *llx.CodeBundle) {
@@ -344,6 +345,17 @@ func TestCompiler_Props(t *testing.T) {
 		}, res.Code.Code[1])
 		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
 		assert.Equal(t, map[string]string{"name": string(types.String)}, res.Props)
+	})
+
+	// different compile stages yielding the same checksums
+	compileProps(t, "props.name == 'bob'", map[string]*llx.Primitive{
+		"name": {Type: types.String},
+	}, func(res1 *llx.CodeBundle) {
+		compileProps(t, "props.name == 'bob'", map[string]*llx.Primitive{
+			"name": {Type: types.String, Value: []byte("yoman")},
+		}, func(res2 *llx.CodeBundle) {
+			assert.Equal(t, res2.Code.Id, res1.Code.Id)
+		})
 	})
 
 	compileProps(t, "props.name == props.name", map[string]*llx.Primitive{
@@ -366,7 +378,7 @@ func TestCompiler_If(t *testing.T) {
 		assertFunction(t, "mondoo", nil, res.Code.Code[0])
 
 		assertFunction(t, "if", &llx.Function{
-			Type:    types.Nil,
+			Type:    types.Int,
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(1),
@@ -388,7 +400,7 @@ func TestCompiler_If(t *testing.T) {
 		assert.Equal(t, []int32{2}, res.Code.Functions[0].Entrypoints)
 
 		assertFunction(t, "if", &llx.Function{
-			Type:    types.Nil,
+			Type:    types.Int,
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.BoolPrimitive(true),
@@ -416,7 +428,7 @@ func TestCompiler_If(t *testing.T) {
 		assertFunction(t, "mondoo", nil, res.Code.Code[0])
 
 		assertFunction(t, "if", &llx.Function{
-			Type:    types.Nil,
+			Type:    types.Int,
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(1),
@@ -454,7 +466,7 @@ func TestCompiler_If(t *testing.T) {
 		}, res.Code.Code[2])
 
 		assertFunction(t, "if", &llx.Function{
-			Type:    types.Nil,
+			Type:    types.Int,
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(3),
@@ -472,7 +484,7 @@ func TestCompiler_If(t *testing.T) {
 		assertFunction(t, "mondoo", nil, res.Code.Code[0])
 
 		assertFunction(t, "if", &llx.Function{
-			Type:    types.Nil,
+			Type:    types.Int,
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(1),
@@ -494,7 +506,7 @@ func TestCompiler_If(t *testing.T) {
 		assertFunction(t, "mondoo", nil, res.Code.Code[0])
 
 		assertFunction(t, "if", &llx.Function{
-			Type:    types.Nil,
+			Type:    types.Int,
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(1),

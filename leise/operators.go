@@ -317,7 +317,7 @@ func compileIf(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
-			Type: types.Nil,
+			Type: types.Unset,
 			Args: []*llx.Primitive{argValue},
 		},
 	})

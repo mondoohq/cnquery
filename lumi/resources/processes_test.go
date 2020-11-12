@@ -25,8 +25,8 @@ func TestResource_Processes(t *testing.T) {
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, map[string]interface{}{
-			"1KDb20yLX9QLH98+C+vtkIBAK/8ABRHY9VVMxQ9p8Kk/c0/fJtFNgyxeQV2Na6A2C3QN4zu3ZcNN563zUwINKw==": llx.StringData("/sbin/init"),
-			"8dN2acsl4BqSCpQ0kwkn+ynk/JQLd8M7XTrexlWX08tUsuTjpglEizl5RGipKJSOZDb1F+L1Otpct3c/5k7taw==": llx.IntData(1),
+			"inW9aIPV3zVln3ROYYeru57EdXnE2cK452ZDPxvPs9HFaftOPsef3usY0JSS/J+EWStj+thfd7AH5XdflLF81Q==": llx.StringData("/sbin/init"),
+			"vGNOj/UnoXRncBiEGYvtT8Xml8xKuzl85lo7SkIdwF7X3tQLa/Tnv0M0UEA8pZdsQmfGkhHh3FFH3PiDFBEMwA==": llx.IntData(1),
 		}, res[0].Data.Value)
 	})
 }
