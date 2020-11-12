@@ -596,7 +596,8 @@ func TestWindows2019Detector(t *testing.T) {
 
 	assert.Equal(t, "windows", di.Name, "os name should be identified")
 	assert.Equal(t, "Microsoft Windows Server 2019 Datacenter Evaluation", di.Title, "os title should be identified")
-	assert.Equal(t, "17763.720", di.Release, "os version should be identified")
+	assert.Equal(t, "17763", di.Release, "os version should be identified")
+	assert.Equal(t, "720", di.Build, "os build version should be identified")
 	assert.Equal(t, "64-bit", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"windows", "os"}, di.Family)
 }
