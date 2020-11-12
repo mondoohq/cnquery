@@ -1,9 +1,9 @@
 package platform
 
 import (
-	"fmt"
 	"io/ioutil"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/gosimple/slug"
@@ -601,7 +601,8 @@ var windows = &PlatformResolver{
 		if err == nil {
 			current, err := ParseWinRegistryCurrentVersion(cmd.Stdout)
 			if err == nil && current.UBR > 0 {
-				di.Release = fmt.Sprintf("%s.%d", di.Release, current.UBR)
+				di.Release = di.Release
+				di.Build = strconv.Itoa(current.UBR)
 			} else {
 				log.Debug().Err(err).Msg("could not parse windows current version")
 			}
