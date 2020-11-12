@@ -642,9 +642,9 @@ func TestArray_Block(t *testing.T) {
 		{
 			"[1,2,3] { _ == 2 }",
 			0, []interface{}{
-				map[string]interface{}{"H1/Sy2Mih0/ZbyAPVrYJgUuJH09rTBHw1CnafKZFa3wIrZzZsHEwKqr+bgBy6ymTjc1JW94vshmwLLW8kb4CtQ==": llx.BoolFalse},
-				map[string]interface{}{"H1/Sy2Mih0/ZbyAPVrYJgUuJH09rTBHw1CnafKZFa3wIrZzZsHEwKqr+bgBy6ymTjc1JW94vshmwLLW8kb4CtQ==": llx.BoolTrue},
-				map[string]interface{}{"H1/Sy2Mih0/ZbyAPVrYJgUuJH09rTBHw1CnafKZFa3wIrZzZsHEwKqr+bgBy6ymTjc1JW94vshmwLLW8kb4CtQ==": llx.BoolFalse},
+				map[string]interface{}{"OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolFalse},
+				map[string]interface{}{"OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolTrue},
+				map[string]interface{}{"OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolFalse},
 			},
 		},
 		{
@@ -699,7 +699,7 @@ func TestMap(t *testing.T) {
 		{
 			"sshd.config.params { _['Protocol'] != 1 }",
 			0, map[string]interface{}{
-				"wY2itjYLEbmP9L3U2Z24a7jlTpJxpHoit+s8zoaBkbHW4itI+GhHF1lazZSPjH42eqY106gEXgr/IHV2Q5vB8g==": llx.BoolTrue,
+				"TZsaWUkFbzR9WTfufqRaHuWJa/W4MQsYsrTli6w8DGQnSLYumOg7kduA17NEX/4y5xBfYQMvPIVBRThyB3LsJg==": llx.BoolTrue,
 			},
 		},
 		{
@@ -726,8 +726,8 @@ func TestResource_Where(t *testing.T) {
 			}`,
 			0, []interface{}{
 				map[string]interface{}{
-					"IBJ7+s+IAJiwObGQnaqzH/11QzFL1t1OvBVk84sjZ658GMB1SM1n/TLJF8Y2hws3/qh0kj/JKM04PPQeam0HRA==": llx.BoolTrue,
-					"hvIlu70nu2ZxrcctGtHb9WOI1uVTlQKM8YiQX9AC026dO8shkWue9yaruWPqhin9M2cZibXkTqSaVQavfB2yAQ==": llx.BoolTrue,
+					"BamDDGp87sNG0hVjpmEAPEjF6fZmdA6j3nDinlgr/y5xK3KaLgulyscoeEEaEASm2RkRXifnWj3ZbF0OZBF6XA==": llx.BoolTrue,
+					"ytOUfV4UyOjY0C6HKzQ8GcA/hshrh2ahRySNG41RbFt3TNNf+6gBuHvs2hGTNDPUZR/oN8WH0QFIYYm/Vj3pGQ==": llx.BoolTrue,
 				},
 			},
 		},

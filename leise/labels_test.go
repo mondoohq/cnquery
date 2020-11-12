@@ -55,11 +55,11 @@ func TestLabels(t *testing.T) {
 			}}},
 		{"sshd.config.params",
 			&llx.Labels{Labels: map[string]string{
-				"actnqYQLWDh5cxtVy8rfK3l1fuNL/GKx7+AhXMz5p94+Owz53454WHYsJ/QHb0yNDae5vTjgKnpRFRVKXrOiBw==": "sshd.config.params",
+				"mhgTAYWyl4RGL8my4EskNtiC8WdZdCnvto9+Vp+vdGvTXrsmNCZF2I1dGbbT/2LS8npk1ULPyVFyX4MEE7zwkw==": "sshd.config.params",
 			}}},
 		{"sshd.config(\"/my/path\").params",
 			&llx.Labels{Labels: map[string]string{
-				"MM6K7Xt2myq6kCdTrfBpbWjR1+ehr4QjM+Kx6Y0cUWFmznjodWF7ALNZOa//9sZbjwrNK6cqlhYqCKyBDpF2XQ==": "sshd.config.params",
+				"WuRyBukFpZbzB1eSaci2IBPTPd+JnEVlEeEfBBTPR7xZjvFvPS/Hhn9WY5z/D7bVhwtddpaxrAPFWfk6djgr1Q==": "sshd.config.params",
 			}}},
 		{"platform.name platform.release",
 			&llx.Labels{Labels: map[string]string{
@@ -77,39 +77,39 @@ func TestLabels(t *testing.T) {
 		{"users.list { uid }",
 			&llx.Labels{
 				Labels: map[string]string{
-					"fJouDBclTWnQzulQN8sfpcczyAta7uD5rxbcu25eKsgH1Adks60jEMs/x0XU6XuHHNSMqf9NXWxs+z7yBcW74Q==": "users.list",
-					"PwdDaV8xrCNIvOSwTLwmNR301BKQRqkZa2q7ZLLPoblw5AuQfqqIfjpWt5nNh+FBnr+vu62u0aphsamJKX63cg==": "uid",
+					"mSGW03diY13ig6wZcPouTUrH6fq06Ie9lz23s1a/CwdVGiEBEyhqi+9T8RrkrdoRrn/QKSrC/kcvYE4yd1qo7g==": "users.list",
+					"kijfKPV0fU/MBdcby4ng65mWcsH/kOn5PcVmYvbDBfUlSSSqGKiyhy1Qte+BO/GqMfL62iaaIRP8LgfRZ0/3pg==": "uid",
 				},
 			}},
 
 		{"users.list[0]",
 			&llx.Labels{
 				Labels: map[string]string{
-					"JRBY9Hgf44wZCNyBMqI/3qnRI6Vn9okb5sBH1rm93GzmhMsxfgS5GOZ17hmuUK+ZAtTRlW+WL6KNs9+L9CEXfw==": "users.list[0]",
+					"TxBWFcRsfJWnLkUQy4pJkosddFcGzQ9MGz7LyR6IhzC9CrFjA6CZhTx73gj/pcyGG9HZwW3wMwUvnokVnkZqYA==": "users.list[0]",
 				},
 			}},
 
 		{"users.list[0] { uid }",
 			&llx.Labels{
 				Labels: map[string]string{
-					"MGLaoT4GBZEfOUqDmz79sM7TWoPUZ2aFPus6DlE/3Z7i0V2Bv7dmcF4NLaU3yM/93dbDiLJdenmxZZZmXKrkzw==": "users.list[0]",
-					"vXUmtyv5Thql2cXelEul3Xaa8v7oNbP8ve/kufi3J8reZNVvp2dnoKPW+av/wIL6x6ma2cCxB/UoHuovKwuypw==": "uid",
+					"JhFnMMVbSxPycbnGcRinWgHu6v4SetPNceTQlWMcv1q0MhVhab9av8DcspcLuPpfuI3IScUfD09rH0ZrB2ea+g==": "users.list[0]",
+					"MCqGdk4puEdBb/fxS3qDqAV/8gv3DIxFT+InTY7+JcySIzGMDzq8L1t2C8W6qh4z8GI3MvR6ZQ64bVQl0f2Xww==": "uid",
 				},
 			}},
 
 		{"sshd.config.params[\"UsePAM\"]",
 			&llx.Labels{
 				Labels: map[string]string{
-					"ANn7ciWfTVSHM5K6f4zOlY6BhSEURGhlL0W+2T1aWWLDz4Lz4QCVntNNBUXr0xHTyMoYRuomj13o/LpNEf+VVQ==": "sshd.config.params[UsePAM]",
+					"PSwPW4/H4l4oMTVi+uJnCzKqWAbakhxMi8HjdZMixpF3/CpjPFePhE5Vpe5sgf3DGVIZENZtfB+i0SjMK/c7rw==": "sshd.config.params[UsePAM]",
 				},
 			}},
 
 		{"sshd.config { file { path } }",
 			&llx.Labels{
 				Labels: map[string]string{
-					"b6YNJMaiWRNeu7poW0c6CT3q8+GyK0iv+/GT/le7t/vuw5k43MEEv/Xyd6peWdwCUXUqOX7I3kJFyOPva+Rgfg==": "sshd.config",
-					"SwRDm5QOMGSzFzNKULH44ySUffldHeJpDBZtFuw20Z35lWcnkAbnTYtgPzAVAglbxPihV2Ixh9bxwHgh+RU1NQ==": "file",
-					"7UaqV74XSP+zpDe2jWCIK7knE3Oq+OWA79/8o/iQcBisCqUcafc878wFLOzGqDVOZZAiqGOKcSwZXVivDpnmjQ==": "path",
+					"nq3SFDuqajaULpvYBxsfJbvHQzMFY3RDDhLEjg0HXSFPvzthdNZHl8oRuNTx+Z0Zq+bg9MZ+t2CK4WNRj4ru0A==": "sshd.config",
+					"g/rqzDTGUq+d5jE7JD/FBhx5WZqA8kd2m0RNNB1lEBv+E8sIx1TgKoxJbmOfInDTrulh4mwpYDHwvlZoGAWXjg==": "file",
+					"k6rlXoYpV48Qd19gKeNl+/IiPnkI5VNQBiqZBca3gDKsIRiLcpXQUlDv52x9sscIWiqOMpC7+x/aBpY0IUq0ww==": "path",
 				},
 			}},
 	}

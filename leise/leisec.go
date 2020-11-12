@@ -199,7 +199,18 @@ func (c *compiler) compileUnboundBlock(expressions []*parser.Expression, chunk *
 	code.UpdateID()
 	c.Result.Code.Functions = append(c.Result.Code.Functions, code)
 
+	// the last chunk in this case is the `if` function call
 	chunk.Function.Args = append(chunk.Function.Args, llx.FunctionPrimitive(c.Result.Code.FunctionsIndex()))
+
+	if len(c.Result.Code.Code) != 0 {
+		last := blockCompiler.Result.Code.Code[blockCompiler.Result.Code.ChunkIndex()-1]
+		var ok bool
+		chunk.Function.Type, ok = types.Enforce(chunk.Function.Type, last.Type(code))
+		if !ok {
+			return types.Nil, errors.New("mismatched return type for child block of if-function; make sure all return types are the same")
+		}
+	}
+
 	c.Result.Code.RefreshChunkChecksum(chunk)
 
 	// we set this to true, so that we can decide how to handle all following expressions

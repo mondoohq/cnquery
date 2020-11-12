@@ -31,7 +31,8 @@ func (typ *Type) UnmarshalJSON(data []byte) error {
 const Unspecified Type = ""
 
 const (
-	byteAny byte = 1 + iota
+	byteUnset byte = iota
+	byteAny
 	byteNil
 	byteRef
 	byteBool
@@ -49,6 +50,8 @@ const (
 )
 
 const (
+	// Unset type indicates that the type has not yet been set
+	Unset = Type(rune(byteUnset))
 	// Any type indicating an untyped value that can have any type
 	Any = Type(rune(byteAny))
 	// Nil for the empty type
@@ -136,6 +139,19 @@ func (typ Type) IsFunction() bool {
 // Underlying returns the basic type, e.g. types.MapLike instead of types.Map(..)
 func (typ Type) Underlying() Type {
 	return Type(typ[0])
+}
+
+// Enforce makes sure that both types are the same, and returns the common
+// type and true if they are, false otherwise. If one of the types is not
+// yet set, use the other type instead. If neither are set return the unset type.
+func Enforce(left, right Type) (Type, bool) {
+	if left[0] == byteUnset {
+		return right, true
+	}
+	if left != right {
+		return right, false
+	}
+	return right, true
 }
 
 // Child returns the child type of arrays and maps
