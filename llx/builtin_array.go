@@ -227,7 +227,7 @@ func compileArrayOpArray(op string) func(types.Type, types.Type) (string, error)
 			return name, nil
 		}
 
-		return "<T>" + op + "<T>", nil
+		return op, nil
 	}
 }
 

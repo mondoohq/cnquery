@@ -446,13 +446,10 @@ func init() {
 			"{}":     {f: arrayBlockList},
 			"length": {f: arrayLength},
 			"where":  {f: arrayWhere},
-			"==":     {Compiler: compileArrayOpArray("==")},
-			"!=":     {Compiler: compileArrayOpArray("!=")},
+			"==":     {Compiler: compileArrayOpArray("=="), f: tarrayCmpTarray, Label: "=="},
+			"!=":     {Compiler: compileArrayOpArray("!="), f: tarrayNotTarray, Label: "!="},
 			"&&":     {Compiler: compileLogicalArrayOp(types.ArrayLike, "&&")},
 			"||":     {Compiler: compileLogicalArrayOp(types.ArrayLike, "||")},
-			// special case: []<T> -- []<T>
-			"<T>==<T>": {f: tarrayCmpTarray, Label: "=="},
-			"<T>!=<T>": {f: tarrayNotTarray, Label: "!="},
 			// logical operations []<T> -- K
 			string(types.Any + "&&" + types.Bool):      {f: arrayAndBool, Label: "&&"},
 			string(types.Any + "&&" + types.Int):       {f: arrayAndInt, Label: "&&"},
