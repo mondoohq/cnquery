@@ -37,8 +37,16 @@ func PrettyJSON(obj interface{}) string {
 // DebugDumpJSON will write a JSON dump if the Debug mode is active and
 // the DumpLocal prefix is defined.
 func DebugDumpJSON(name string, obj interface{}) {
-	if !log.Debug().Enabled() || mondoo.DumpLocal == "" {
+	if !log.Debug().Enabled() {
 		return
+	}
+
+	if mondoo.DumpLocal == "" {
+		if val, ok := os.LookupEnv("DEBUG"); ok && val == "1" {
+			mondoo.DumpLocal = "./mondoo-debug-"
+		} else {
+			return
+		}
 	}
 
 	raw, err := json.MarshalIndent(obj, "", "  ")
