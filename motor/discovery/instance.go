@@ -4,9 +4,12 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/apps/mondoo/cmd/options"
+	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/motorid/hostname"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/local"
 )
 
 type instanceResolver struct{}
@@ -16,7 +19,6 @@ func (k *instanceResolver) Name() string {
 }
 
 func (k *instanceResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts) ([]*asset.Asset, error) {
-	resolved := []*asset.Asset{}
 
 	refIds := []string{}
 	if len(in.ReferenceID) > 0 {
@@ -62,11 +64,33 @@ func (k *instanceResolver) Resolve(in *options.VulnOptsAsset, opts *options.Vuln
 	assetInfo.Platform = &platform.Platform{
 		Kind: transports.Kind_KIND_BARE_METAL,
 	}
-
 	if in != nil && len(in.AssetMrn) > 0 {
 		assetInfo.Mrn = in.AssetMrn
 	}
-	resolved = append(resolved, assetInfo)
 
-	return resolved, nil
+	// this collection here is only to show the user a right indication about the asset name since -t local://
+	// will lead to an empty asset name. Since the discovery process runs BEFORE the real asset collector starts,
+	// we keep it intentionally lighweight, therefore we only do this for local connections
+	if t.Backend == transports.TransportBackend_CONNECTION_LOCAL_OS {
+		transport, err := local.New()
+		if err != nil {
+			panic(err.Error())
+		}
+
+		m, err := motor.New(transport)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		p, err := m.Platform()
+		if err == nil {
+			// retrieve hostname
+			hostname, err := hostname.Hostname(m.Transport, p)
+			if err == nil && len(hostname) > 0 {
+				assetInfo.Name = hostname
+			}
+		}
+	}
+
+	return []*asset.Asset{assetInfo}, nil
 }
