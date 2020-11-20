@@ -563,6 +563,27 @@ func TestScore_Methods(t *testing.T) {
 	})
 }
 
+func TestTypeof_Methods(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"typeof(null)",
+			0, "null",
+		},
+		{
+			"typeof(123)",
+			0, "int",
+		},
+		{
+			"typeof([1,2,3])",
+			0, "[]int",
+		},
+		{
+			"a = 123; typeof(a)",
+			0, "int",
+		},
+	})
+}
+
 func TestTime_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{

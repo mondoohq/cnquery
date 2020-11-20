@@ -35,6 +35,7 @@ func init() {
 		"else":   compileElse,
 		"expect": compileExpect,
 		"score":  compileScore,
+		"typeof": compileTypeof,
 	}
 }
 
@@ -411,4 +412,31 @@ func compileScore(c *compiler, id string, call *parser.Call, res *llx.CodeBundle
 	})
 
 	return types.Score, nil
+}
+
+func compileTypeof(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
+	if call == nil || len(call.Function) < 1 {
+		return types.Nil, errors.New("missing parameter for '" + id + "', it requires 1")
+	}
+
+	arg := call.Function[0]
+	if arg == nil || arg.Value == nil || arg.Value.Operand == nil || arg.Value.Operand.Value == nil {
+		return types.Nil, errors.New("failed to get parameter for '" + id + "'")
+	}
+
+	argValue, err := c.compileExpression(arg.Value)
+	if err != nil {
+		return types.Nil, err
+	}
+
+	res.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "typeof",
+		Function: &llx.Function{
+			Type: types.String,
+			Args: []*llx.Primitive{argValue},
+		},
+	})
+
+	return types.String, nil
 }
