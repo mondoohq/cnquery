@@ -29,6 +29,7 @@ func init() {
 		"expect": expect,
 		"if":     ifCall,
 		"score":  scoreCall,
+		"typeof": typeofCall,
 		"{}":     block,
 		"return": returnCall,
 	}
@@ -65,7 +66,7 @@ func ifCall(c *LeiseExecutor, f *Function, ref int32) (*RawData, int32, error) {
 
 func scoreCall(c *LeiseExecutor, f *Function, ref int32) (*RawData, int32, error) {
 	if len(f.Args) != 1 {
-		return nil, 0, errors.New("Called if with " + strconv.Itoa(len(f.Args)) + " arguments, expected one")
+		return nil, 0, errors.New("Called `score` with " + strconv.Itoa(len(f.Args)) + " arguments, expected one")
 	}
 
 	res, dref, err := c.resolveValue(f.Args[0], ref)
@@ -90,6 +91,19 @@ func scoreCall(c *LeiseExecutor, f *Function, ref int32) (*RawData, int32, error
 	}
 
 	return ScoreData(b), 0, nil
+}
+
+func typeofCall(c *LeiseExecutor, f *Function, ref int32) (*RawData, int32, error) {
+	if len(f.Args) != 1 {
+		return nil, 0, errors.New("Called `typeof` with " + strconv.Itoa(len(f.Args)) + " arguments, expected one")
+	}
+
+	res, dref, err := c.resolveValue(f.Args[0], ref)
+	if err != nil || dref != 0 || res == nil {
+		return res, dref, err
+	}
+
+	return StringData(res.Type.Label()), 0, nil
 }
 
 func expect(c *LeiseExecutor, f *Function, ref int32) (*RawData, int32, error) {
