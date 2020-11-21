@@ -17,6 +17,7 @@ func (typ Type) MarshalJSON() ([]byte, error) {
 	return json.Marshal(newVal)
 }
 
+// UnmarshalJSON reverts MarshalJSON data arrays to its base type.
 func (typ *Type) UnmarshalJSON(data []byte) error {
 	var d string
 	if err := json.Unmarshal(data, &d); err != nil {
@@ -26,9 +27,6 @@ func (typ *Type) UnmarshalJSON(data []byte) error {
 	*typ = Type(reverted)
 	return nil
 }
-
-// Unspecified indicates that this type has not been specified
-const Unspecified Type = ""
 
 const (
 	byteUnset byte = iota
@@ -48,6 +46,9 @@ const (
 	byteResource
 	byteFunction
 )
+
+// Empty type is one whose type information is not available at all
+const Empty Type = ""
 
 const (
 	// Unset type indicates that the type has not yet been set

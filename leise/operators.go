@@ -224,7 +224,7 @@ func compileTransformation(c *compiler, id string, call *parser.Call, res *llx.C
 	}
 
 	returnType := h.Typ
-	if returnType == types.Unspecified {
+	if returnType == types.Empty {
 		returnType = lt
 	}
 

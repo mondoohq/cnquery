@@ -202,7 +202,7 @@ func (c *compiler) compileUnboundBlock(expressions []*parser.Expression, chunk *
 	// the last chunk in this case is the `if` function call
 	chunk.Function.Args = append(chunk.Function.Args, llx.FunctionPrimitive(c.Result.Code.FunctionsIndex()))
 
-	if len(c.Result.Code.Code) != 0 {
+	if len(blockCompiler.Result.Code.Code) != 0 {
 		last := blockCompiler.Result.Code.Code[blockCompiler.Result.Code.ChunkIndex()-1]
 		var ok bool
 		chunk.Function.Type, ok = types.Enforce(chunk.Function.Type, last.Type(code))
