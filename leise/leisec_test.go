@@ -127,6 +127,15 @@ func TestCompiler_Buggy(t *testing.T) {
 		}, nil},
 		{`users.list[]`, nil, errors.New("missing operand in child block")},
 		{`file(not-there)`, nil, errors.New("addResourceCall error: cannot find resource for identifier 'not'")},
+		{`if(true) {`, []*llx.Chunk{
+			{Call: llx.Chunk_FUNCTION, Id: "if", Function: &llx.Function{
+				Type: types.Unset,
+				Args: []*llx.Primitive{
+					llx.BoolPrimitive(true),
+					llx.FunctionPrimitive(1),
+				},
+			}},
+		}, errors.New("expected '}', got token \"\" at <source>:1:11 in function parseOperand-block")},
 	}
 
 	for _, v := range data {
