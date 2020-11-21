@@ -9,6 +9,20 @@ import (
 	"go.mondoo.io/mondoo/types"
 )
 
+func createArgLabel(arg *llx.Primitive, code *llx.Code, labels *llx.Labels, schema *lumi.Schema) error {
+	if !types.Type(arg.Type).IsFunction() {
+		return nil
+	}
+
+	ref, ok := arg.Ref()
+	if !ok {
+		return errors.New("cannot get function reference")
+	}
+
+	function := code.Functions[ref-1]
+	return UpdateLabels(function, labels, schema)
+}
+
 func createLabel(code *llx.Code, ref int32, labels *llx.Labels, schema *lumi.Schema) (string, error) {
 	chunk := code.Code[ref-1]
 
@@ -85,31 +99,16 @@ func createLabel(code *llx.Code, ref int32, labels *llx.Labels, schema *lumi.Sch
 		var i int
 		max := len(chunk.Function.Args)
 		for i+1 < max {
-			fref := chunk.Function.Args[i+1]
-			ref, ok := fref.Ref()
-			if !ok {
-				return "", errors.New("cannot get function reference for block in if-statement")
-			}
-
-			function := code.Functions[ref-1]
-			err = UpdateLabels(function, labels, schema)
-			if err != nil {
+			arg := chunk.Function.Args[i+1]
+			if err := createArgLabel(arg, code, labels, schema); err != nil {
 				return "", err
 			}
-
 			i += 2
 		}
 
 		if i < max {
-			fref := chunk.Function.Args[i]
-			ref, ok := fref.Ref()
-			if !ok {
-				return "", errors.New("cannot get function reference for block in if-statement")
-			}
-
-			function := code.Functions[ref-1]
-			err = UpdateLabels(function, labels, schema)
-			if err != nil {
+			arg := chunk.Function.Args[i]
+			if err := createArgLabel(arg, code, labels, schema); err != nil {
 				return "", err
 			}
 		}

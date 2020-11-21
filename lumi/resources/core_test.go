@@ -352,6 +352,10 @@ func TestCore_If(t *testing.T) {
 			"if (false) { return 123 } if (false) { return 456 } return 789",
 			0, int64(789),
 		},
+		{
+			"if(platform.family.contains('arch'))",
+			0, nil,
+		},
 	})
 }
 
