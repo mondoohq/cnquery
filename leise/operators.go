@@ -278,7 +278,7 @@ func compileIf(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (
 	if call == nil {
 		return types.Nil, errors.New("need conditional arguments for if-clause")
 	}
-	if call == nil || len(call.Function) < 1 {
+	if len(call.Function) < 1 {
 		return types.Nil, errors.New("missing parameters for if-clause, it requires 1")
 	}
 	arg := call.Function[0]
