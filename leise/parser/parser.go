@@ -374,6 +374,57 @@ func (p *parser) parseOperand() (*Operand, error) {
 			p.nextToken()
 
 		case "{":
+			if *res.Value.Ident == "switch" {
+				p.nextToken()
+
+				for {
+					ident := p.token.Value
+					if ident == "}" {
+						break
+					}
+
+					if ident != "case" && ident != "default" {
+						return nil, errors.New("expected `case` or `default` statements in `switch` call")
+					}
+					p.nextToken()
+
+					if ident == "case" {
+						exp, err := p.parseExpression()
+						if err != nil {
+							return nil, err
+						}
+						if exp == nil || (exp.Operand == nil && exp.Operations == nil) {
+							return nil, errors.New("expected expression in `case` statement")
+						}
+						res.Block = append(res.Block, exp)
+					} else {
+						// we still need to add the empty condition block
+						res.Block = append(res.Block, nil)
+					}
+
+					if p.token.Value != ":" {
+						return nil, errors.New("expected `:` in `" + ident + "` statement")
+					}
+					p.nextToken()
+
+					exp, err := p.parseExpression()
+					if err != nil {
+						return nil, err
+					}
+					if exp == nil || (exp.Operand == nil && exp.Operations == nil) {
+						return nil, errors.New("expected block following `" + ident + "` statement")
+					}
+					res.Block = append(res.Block, exp)
+
+					for p.token.Value == ";" {
+						p.nextToken()
+					}
+				}
+
+				p.nextToken()
+				continue
+			}
+
 			p.nextToken()
 			block := []*Expression{}
 
@@ -410,6 +461,8 @@ func (p *parser) parseOperation() (*Operation, error) {
 	res := Operation{}
 	switch p.token.Value {
 	case ";":
+		return nil, nil
+	case ":":
 		return nil, nil
 	case "&":
 		p.nextToken()

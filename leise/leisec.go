@@ -43,6 +43,22 @@ type compiler struct {
 	prevID string
 }
 
+func (c *compiler) newBlockCompiler(code *llx.Code, binding *binding) compiler {
+	return compiler{
+		Schema: c.Schema,
+		Result: &llx.CodeBundle{
+			Code:   code,
+			Labels: c.Result.Labels,
+			Props:  c.Result.Props,
+		},
+		Binding:    binding,
+		vars:       map[string]variable{},
+		parent:     c,
+		props:      c.props,
+		standalone: true,
+	}
+}
+
 func addResourceSuggestions(resources map[string]*lumi.ResourceInfo, name string, res *llx.CodeBundle) {
 	names := make([]string, len(resources))
 	i := 0
@@ -160,34 +176,19 @@ func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type
 	return resultType, nil
 }
 
-func (c *compiler) compileUnboundBlock(expressions []*parser.Expression, chunk *llx.Chunk) (types.Type, error) {
-	if !(chunk.Id == "if") {
-		return types.Nil, errors.New("don't know how to compile unbound block on call `" + chunk.Id + "`")
-	}
-
+func (c *compiler) compileIfBlock(expressions []*parser.Expression, chunk *llx.Chunk) (types.Type, error) {
 	// if `else { .. }` is called, we reset the prevID to indicate there is no
 	// more chaining happening
 	if c.prevID == "else" {
 		c.prevID = ""
 	}
 
-	blockCompiler := &compiler{
-		Schema: c.Schema,
-		Result: &llx.CodeBundle{
-			Code: &llx.Code{
-				Id:         chunk.Id,
-				Parameters: 0,
-				Checksums:  map[int32]string{},
-				Code:       []*llx.Chunk{},
-			},
-			Labels: c.Result.Labels,
-			Props:  c.Result.Props,
-		},
-		vars:       map[string]variable{},
-		parent:     c,
-		props:      c.props,
-		standalone: true,
-	}
+	blockCompiler := c.newBlockCompiler(&llx.Code{
+		Id:         chunk.Id,
+		Parameters: 0,
+		Checksums:  map[int32]string{},
+		Code:       []*llx.Chunk{},
+	}, nil)
 
 	err := blockCompiler.compileExpressions(expressions)
 	c.Result.Suggestions = append(c.Result.Suggestions, blockCompiler.Result.Suggestions...)
@@ -221,34 +222,126 @@ func (c *compiler) compileUnboundBlock(expressions []*parser.Expression, chunk *
 	return types.Nil, nil
 }
 
+func (c *compiler) compileSwitchCase(expression []*parser.Expression, bind *binding, chunk *llx.Chunk) error {
+	// for the default case, we get a nil expression
+	if expression[0] == nil {
+		chunk.Function.Args = append(chunk.Function.Args, llx.BoolPrimitive(true))
+		return nil
+	}
+
+	// compiler prep
+	code := &llx.Code{
+		Id:         chunk.Id,
+		Parameters: 0,
+		Checksums:  map[int32]string{},
+		Code:       []*llx.Chunk{},
+	}
+	if bind != nil {
+		code.Parameters = 1
+		code.Code = []*llx.Chunk{{
+			Call:      llx.Chunk_PRIMITIVE,
+			Primitive: &llx.Primitive{Type: bind.Type},
+		}}
+		code.Checksums = map[int32]string{
+			// we must provide the first chunk, which is a reference to the caller
+			// and which will always be number 1
+			1: c.Result.Code.Checksums[c.Result.Code.ChunkIndex()],
+		}
+	}
+
+	// we always walk through expressions in pairs of:
+	// (1) case statement
+	// (2) block if case is true
+	blockCompiler := c.newBlockCompiler(code, bind)
+	err := blockCompiler.compileExpressions(expression)
+	c.Result.Suggestions = append(c.Result.Suggestions, blockCompiler.Result.Suggestions...)
+	if err != nil {
+		return err
+	}
+
+	code = blockCompiler.Result.Code
+	code.UpdateID()
+	c.Result.Code.Functions = append(c.Result.Code.Functions, code)
+	chunk.Function.Args = append(chunk.Function.Args, llx.FunctionPrimitive(c.Result.Code.FunctionsIndex()))
+
+	return nil
+}
+
+func (c *compiler) compileSwitchBlock(expressions []*parser.Expression, chunk *llx.Chunk) (types.Type, error) {
+	// determine if there is a binding
+	// i.e. something inside of those `switch( ?? )` calls
+	var bind *binding
+	if chunk.Function != nil && len(chunk.Function.Args) != 0 {
+		arg := chunk.Function.Args[0]
+		bind = &binding{
+			Type: arg.Type,
+			Ref:  1,
+		}
+	}
+
+	for i := 0; i < len(expressions); i++ {
+		err := c.compileSwitchCase(expressions[i:i+1], bind, chunk)
+		if err != nil {
+			return types.Nil, err
+		}
+
+		// compile the block of this case/default
+		i++
+		if i >= len(expressions) {
+			return types.Nil, errors.New("missing block expression in calling `case`/`default` statement")
+		}
+
+		expression := expressions[i : i+1]
+		blockCompiler := c.newBlockCompiler(&llx.Code{
+			Id:         chunk.Id,
+			Parameters: 0,
+			Checksums:  map[int32]string{},
+			Code:       []*llx.Chunk{},
+		}, bind)
+		err = blockCompiler.compileExpressions(expression)
+		c.Result.Suggestions = append(c.Result.Suggestions, blockCompiler.Result.Suggestions...)
+		if err != nil {
+			return types.Nil, err
+		}
+
+		code := blockCompiler.Result.Code
+		code.UpdateID()
+		c.Result.Code.Functions = append(c.Result.Code.Functions, code)
+		chunk.Function.Args = append(chunk.Function.Args, llx.FunctionPrimitive(c.Result.Code.FunctionsIndex()))
+	}
+
+	c.Result.Code.RefreshChunkChecksum(chunk)
+
+	return types.Nil, nil
+}
+
+func (c *compiler) compileUnboundBlock(expressions []*parser.Expression, chunk *llx.Chunk) (types.Type, error) {
+	switch chunk.Id {
+	case "if":
+		return c.compileIfBlock(expressions, chunk)
+	case "switch":
+		return c.compileSwitchBlock(expressions, chunk)
+	default:
+		return types.Nil, errors.New("don't know how to compile unbound block on call `" + chunk.Id + "`")
+	}
+}
+
 // evaluates the given expressions on a non-array resource
 // and creates a function, whose reference is returned
 func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.Type) (int32, bool, error) {
-	blockCompiler := &compiler{
-		Schema: c.Schema,
-		Result: &llx.CodeBundle{
-			Code: &llx.Code{
-				Id:         "binding",
-				Parameters: 1,
-				Checksums: map[int32]string{
-					// we must provide the first chunk, which is a reference to the caller
-					// and which will always be number 1
-					1: c.Result.Code.Checksums[c.Result.Code.ChunkIndex()],
-				},
-				Code: []*llx.Chunk{{
-					Call:      llx.Chunk_PRIMITIVE,
-					Primitive: &llx.Primitive{Type: typ},
-				}},
-			},
-			Labels: c.Result.Labels,
-			Props:  c.Result.Props,
+	blockCompiler := c.newBlockCompiler(&llx.Code{
+		Id:         "binding",
+		Parameters: 1,
+		Checksums: map[int32]string{
+			// we must provide the first chunk, which is a reference to the caller
+			// and which will always be number 1
+			1: c.Result.Code.Checksums[c.Result.Code.ChunkIndex()],
 		},
-		Binding:    &binding{Type: typ, Ref: 1},
-		vars:       map[string]variable{},
-		parent:     c,
-		props:      c.props,
-		standalone: true,
-	}
+		Code: []*llx.Chunk{{
+			Call:      llx.Chunk_PRIMITIVE,
+			Primitive: &llx.Primitive{Type: typ},
+		}},
+	}, &binding{Type: typ, Ref: 1})
 
 	err := blockCompiler.compileExpressions(expressions)
 	c.Result.Suggestions = append(c.Result.Suggestions, blockCompiler.Result.Suggestions...)
