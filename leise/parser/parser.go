@@ -117,6 +117,10 @@ func (p *parser) error(msg string, in string) error {
 	return errors.New(msg + " at " + p.token.Pos.String() + " in function " + in)
 }
 
+func (p *parser) errorMsg(msg string) error {
+	return errors.New(msg + " at " + p.token.Pos.String())
+}
+
 // nextToken loads the next token into p.token
 func (p *parser) nextToken() error {
 	if p.nextTokens == nil {
@@ -318,7 +322,7 @@ func (p *parser) parseOperand() (*Operand, error) {
 			if p.token.Type != Ident {
 				v := "."
 				res.Calls = append(res.Calls, &Call{Ident: &v})
-				return &res, p.expected("identifier", "parseOperand-call")
+				return &res, p.errorMsg("missing field accessor")
 			}
 			v := p.token.Value
 			res.Calls = append(res.Calls, &Call{Ident: &v})
@@ -344,7 +348,7 @@ func (p *parser) parseOperand() (*Operand, error) {
 			}
 
 			if p.token.Value != ")" {
-				return nil, p.expected("')'", "parseOperand-function")
+				return nil, p.errorMsg("missing closing `)` while parsing function")
 			}
 
 			res.Calls = append(res.Calls, &Call{Function: args})
@@ -358,11 +362,11 @@ func (p *parser) parseOperand() (*Operand, error) {
 				return nil, err
 			}
 			if exp == nil {
-				return nil, p.error("missing value in accessor", "parseOperand-accessor")
+				return nil, p.errorMsg("missing value inside of `[]`")
 			}
 
 			if p.token.Value != "]" {
-				return nil, p.expected("']'", "parseOperand-accessor")
+				return nil, p.errorMsg("missing closing `]`")
 			}
 			res.Calls = append(res.Calls, &Call{
 				Accessor: exp,
@@ -387,7 +391,7 @@ func (p *parser) parseOperand() (*Operand, error) {
 			res.Block = block
 
 			if p.token.Value != "}" {
-				return &res, p.expected("'}'", "parseOperand-block")
+				return &res, p.errorMsg("missing closing `}`")
 			}
 
 			p.nextToken()

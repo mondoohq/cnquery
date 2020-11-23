@@ -1102,11 +1102,8 @@ func Compile(input string, schema *lumi.Schema, props map[string]*llx.Primitive)
 	// we want to get any compiler suggestions for auto-complete / fixing it.
 	// That said, we must return an error either way.
 	if err != nil {
-		res, err2 := CompileAST(ast, schema, props)
-		if err2 == nil {
-			return res, err
-		}
-		return res, err2
+		res, _ := CompileAST(ast, schema, props)
+		return res, err
 	}
 
 	res, err := CompileAST(ast, schema, props)

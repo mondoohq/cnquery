@@ -125,7 +125,7 @@ func TestCompiler_Buggy(t *testing.T) {
 				Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
 			}},
 		}, nil},
-		{`users.list[]`, nil, errors.New("missing operand in child block")},
+		{`users.list[]`, nil, errors.New("missing value inside of `[]` at <source>:1:12")},
 		{`file(not-there)`, nil, errors.New("addResourceCall error: cannot find resource for identifier 'not'")},
 		{`if(true) {`, []*llx.Chunk{
 			{Call: llx.Chunk_FUNCTION, Id: "if", Function: &llx.Function{
@@ -135,7 +135,7 @@ func TestCompiler_Buggy(t *testing.T) {
 					llx.FunctionPrimitive(1),
 				},
 			}},
-		}, errors.New("expected '}', got token \"\" at <source>:1:11 in function parseOperand-block")},
+		}, errors.New("missing closing `}` at <source>:1:11")},
 	}
 
 	for _, v := range data {
@@ -1193,12 +1193,12 @@ func TestSuggestions(t *testing.T) {
 		{
 			// resource with empty field call
 			"sshd.", []string{"config"},
-			errors.New("missing field name in accessing sshd"),
+			errors.New("missing field accessor at <source>:1:6"),
 		},
 		{
 			// list resource with empty field call
 			"users.", []string{"all", "any", "contains", "length", "list", "one", "where"},
-			errors.New("missing field name in accessing users"),
+			errors.New("missing field accessor at <source>:1:7"),
 		},
 		{
 			// resource with partial field call
