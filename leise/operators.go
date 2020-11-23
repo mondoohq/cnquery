@@ -36,6 +36,7 @@ func init() {
 		"expect": compileExpect,
 		"score":  compileScore,
 		"typeof": compileTypeof,
+		"switch": compileSwitch,
 	}
 }
 
@@ -439,4 +440,35 @@ func compileTypeof(c *compiler, id string, call *parser.Call, res *llx.CodeBundl
 	})
 
 	return types.String, nil
+}
+
+func compileSwitch(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
+	var ref *llx.Primitive
+
+	if call != nil && len(call.Function) != 0 {
+		arg := call.Function[0]
+		if arg.Name != "" {
+			return types.Nil, errors.New("called `" + id + "` with a named argument, which is not supported")
+		}
+
+		argValue, err := c.compileExpression(arg.Value)
+		if err != nil {
+			return types.Nil, err
+		}
+
+		ref = argValue
+	}
+
+	res.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   id,
+		Function: &llx.Function{
+			Type: types.Unset,
+			Args: []*llx.Primitive{ref},
+		},
+	})
+	res.Code.Entrypoints = append(res.Code.Entrypoints, res.Code.ChunkIndex())
+	c.prevID = "switch"
+
+	return types.Nil, nil
 }

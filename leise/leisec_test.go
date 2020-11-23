@@ -539,6 +539,24 @@ func TestCompiler_If(t *testing.T) {
 	})
 }
 
+func TestCompiler_Switch(t *testing.T) {
+	compile(t, "switch ( 1 ) { case _ > 0: true; default: false }", func(res *llx.CodeBundle) {
+		assertFunction(t, "switch", &llx.Function{
+			Type:    types.Unset,
+			Binding: 0,
+			Args: []*llx.Primitive{
+				llx.IntPrimitive(1),
+				llx.FunctionPrimitive(1),
+				llx.FunctionPrimitive(2),
+				llx.BoolPrimitive(true),
+				llx.FunctionPrimitive(3),
+			},
+		}, res.Code.Code[0])
+		assert.Equal(t, []int32{1}, res.Code.Entrypoints)
+		assert.Equal(t, []int32{}, res.Code.Datapoints)
+	})
+}
+
 //    =======================
 //   👋   ARRAYS and MAPS   🍹
 //    =======================
