@@ -231,10 +231,11 @@ func (c *compiler) compileSwitchCase(expression []*parser.Expression, bind *bind
 
 	// compiler prep
 	code := &llx.Code{
-		Id:         chunk.Id,
-		Parameters: 0,
-		Checksums:  map[int32]string{},
-		Code:       []*llx.Chunk{},
+		Id:          chunk.Id,
+		Parameters:  0,
+		Checksums:   map[int32]string{},
+		Code:        []*llx.Chunk{},
+		SingleValue: true,
 	}
 	if bind != nil {
 		code.Parameters = 1
@@ -271,8 +272,9 @@ func (c *compiler) compileSwitchBlock(expressions []*parser.Expression, chunk *l
 	// determine if there is a binding
 	// i.e. something inside of those `switch( ?? )` calls
 	var bind *binding
-	if chunk.Function != nil && len(chunk.Function.Args) != 0 {
-		arg := chunk.Function.Args[0]
+	arg := chunk.Function.Args[0]
+
+	if arg.Type != types.Unset {
 		bind = &binding{
 			Type: arg.Type,
 			Ref:  1,
@@ -293,10 +295,11 @@ func (c *compiler) compileSwitchBlock(expressions []*parser.Expression, chunk *l
 
 		expression := expressions[i : i+1]
 		blockCompiler := c.newBlockCompiler(&llx.Code{
-			Id:         chunk.Id,
-			Parameters: 0,
-			Checksums:  map[int32]string{},
-			Code:       []*llx.Chunk{},
+			Id:          chunk.Id,
+			Parameters:  0,
+			Checksums:   map[int32]string{},
+			Code:        []*llx.Chunk{},
+			SingleValue: true,
 		}, bind)
 		err = blockCompiler.compileExpressions(expression)
 		c.Result.Suggestions = append(c.Result.Suggestions, blockCompiler.Result.Suggestions...)

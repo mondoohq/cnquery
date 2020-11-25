@@ -457,6 +457,8 @@ func compileSwitch(c *compiler, id string, call *parser.Call, res *llx.CodeBundl
 		}
 
 		ref = argValue
+	} else {
+		ref = &llx.Primitive{Type: types.Unset}
 	}
 
 	res.Code.AddChunk(&llx.Chunk{
