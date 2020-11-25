@@ -379,6 +379,19 @@ func TestCore_If(t *testing.T) {
 	})
 }
 
+func TestCore_Switch(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"switch ( 3 ) { case _ > 2: true; default: false }",
+			1, true,
+		},
+		{
+			"switch ( 1 ) { case _ > 2: true; default: false }",
+			1, false,
+		},
+	})
+}
+
 func TestCore_Vars(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{

@@ -186,6 +186,7 @@ func (typ Type) Name() string {
 }
 
 var labels = map[byte]string{
+	byteUnset:  "unset",
 	byteAny:    "any",
 	byteNil:    "null",
 	byteRef:    "ref",
