@@ -254,6 +254,9 @@ func isTruthy(data interface{}, typ types.Type) (bool, bool) {
 	}
 }
 
+// UnsetData for the unset value
+var UnsetData = &RawData{Type: types.Unset}
+
 // NilData for the nil value
 var NilData = &RawData{Type: types.Nil}
 

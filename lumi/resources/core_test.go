@@ -389,6 +389,14 @@ func TestCore_Switch(t *testing.T) {
 			"switch ( 1 ) { case _ > 2: true; default: false }",
 			1, false,
 		},
+		{
+			"switch { case 3 > 2: true; default: false }",
+			1, true,
+		},
+		{
+			"switch { case 1 > 2: true; default: false }",
+			1, false,
+		},
 	})
 }
 

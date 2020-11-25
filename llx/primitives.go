@@ -7,6 +7,9 @@ import (
 	"go.mondoo.io/mondoo/types"
 )
 
+// UnsetPrimitive is the unset primitive
+var UnsetPrimitive = &Primitive{Type: types.Unset}
+
 // NilPrimitive is the empty primitive
 var NilPrimitive = &Primitive{Type: types.Nil}
 
