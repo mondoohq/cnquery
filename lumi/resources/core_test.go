@@ -11,6 +11,7 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources"
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/local"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 	"go.mondoo.io/mondoo/policy/executor"
 )
@@ -55,13 +56,28 @@ func testQueryWithExecutor(t *testing.T, executor *executor.Executor, query stri
 	return results
 }
 
-func mockExecutor(path string) *executor.Executor {
-	motor, err := mockTransport(path)
+func localExecutor() *executor.Executor {
+	transport, err := local.New()
 	if err != nil {
 		panic(err.Error())
 	}
 
-	executor := initExecutor(motor)
+	m, err := motor.New(transport)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	executor := initExecutor(m)
+	return executor
+}
+
+func mockExecutor(path string) *executor.Executor {
+	m, err := mockTransport(path)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	executor := initExecutor(m)
 	return executor
 }
 
@@ -76,6 +92,10 @@ func testQuery(t *testing.T, query string) []*llx.RawResult {
 
 func testWindowsQuery(t *testing.T, query string) []*llx.RawResult {
 	return testQueryWithExecutor(t, mockExecutor("./testdata/windows.toml"), query, nil)
+}
+
+func testQueryLocal(t *testing.T, query string) []*llx.RawResult {
+	return testQueryWithExecutor(t, localExecutor(), query, nil)
 }
 
 func testResultsErrors(t *testing.T, r []*llx.RawResult) bool {
