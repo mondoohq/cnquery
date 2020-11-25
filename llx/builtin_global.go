@@ -74,9 +74,14 @@ func switchCall(c *LeiseExecutor, f *Function, ref int32) (*RawData, int32, erro
 		return nil, 0, errors.New("Called switch with no arguments, expected at least one case statement")
 	}
 
-	bind, dref, err := c.resolveValue(f.Args[0], ref)
-	if err != nil || dref != 0 || bind == nil {
-		return bind, dref, err
+	var bind *RawData
+	if f.Args[0].Type != types.Unset {
+		var dref int32
+		var err error
+		bind, dref, err = c.resolveValue(f.Args[0], ref)
+		if err != nil || dref != 0 || bind == nil {
+			return bind, dref, err
+		}
 	}
 
 	// ignore the first argument, it's just the reference value

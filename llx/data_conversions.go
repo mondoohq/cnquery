@@ -18,6 +18,7 @@ var primitiveConverters map[types.Type]primitiveConverter
 
 func init() {
 	dataConverters = map[types.Type]dataConverter{
+		types.Unset:        unset2result,
 		types.Nil:          nil2result,
 		types.Bool:         bool2result,
 		types.Ref:          ref2result,
@@ -35,6 +36,7 @@ func init() {
 	}
 
 	primitiveConverters = map[types.Type]primitiveConverter{
+		types.Unset:        punset2raw,
 		types.Nil:          pnil2raw,
 		types.Bool:         pbool2raw,
 		types.Ref:          pref2raw,
@@ -50,6 +52,10 @@ func init() {
 		types.ResourceLike: presource2raw,
 		types.FunctionLike: pfunction2raw,
 	}
+}
+
+func unset2result(value interface{}, typ types.Type) (*Primitive, error) {
+	return UnsetPrimitive, nil
 }
 
 func nil2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -245,6 +251,10 @@ func (r *RawResult) Result() *Result {
 	res := r.Data.Result()
 	res.CodeId = r.CodeID
 	return res
+}
+
+func punset2raw(p *Primitive) *RawData {
+	return UnsetData
 }
 
 func pnil2raw(p *Primitive) *RawData {
