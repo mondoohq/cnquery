@@ -580,7 +580,7 @@ shadow {
 shadow.entry {
   user string
   password string
-  lastchanges string
+  lastchanged time
   mindays string
   maxdays string
   warndays string

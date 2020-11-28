@@ -30,7 +30,7 @@ func (s *lumiShadow) GetList() ([]interface{}, error) {
 		shadowEntry, err := s.Runtime.CreateResource("shadow.entry",
 			"user", entry.User,
 			"password", entry.Password,
-			"lastchanges", entry.LastChanges,
+			"lastchanged", entry.LastChanged,
 			"mindays", entry.MinDays,
 			"maxdays", entry.MaxDays,
 			"warndays", entry.WarnDays,
