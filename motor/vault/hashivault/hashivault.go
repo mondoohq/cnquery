@@ -4,26 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/hashicorp/vault/api"
-	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
 var notImplemented = errors.New("not implemented")
 
-func New() *Vault {
-	serverURL := os.Getenv("VAULT_SERVER_URL")
-	if serverURL == "" {
-		log.Warn().Msg("VAULT_SERVER_URL environment variable is not set, fallback to http://127.0.0.1:8200")
-		serverURL = "http://127.0.0.1:8200"
-	}
-	token := os.Getenv("VAULT_SERVER_TOKEN") // token is not required
-	if token == "" {
-		token = "root"
-	}
+func New(serverURL string, token string) *Vault {
 	return &Vault{
 		Token: token,
 		APIConfig: api.Config{
