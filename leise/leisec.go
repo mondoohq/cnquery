@@ -880,7 +880,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 
 		ref = c.Result.Code.ChunkIndex()
 		if id == "_" && len(orgcalls) == 0 {
-			ref = 1
+			ref = c.Binding.Ref
 		}
 
 		res = llx.RefPrimitive(ref)
