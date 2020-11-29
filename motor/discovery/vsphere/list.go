@@ -24,7 +24,16 @@ type VSphere struct {
 	Client *govmomi.Client
 }
 
+func (v *VSphere) InstanceUuid() (string, error) {
+	return vsphere_transport.InstanceUUID(v.Client)
+}
+
 func (v *VSphere) ListEsxiHosts() ([]*asset.Asset, error) {
+	instanceUuid, err := v.InstanceUuid()
+	if err != nil {
+		return nil, err
+	}
+
 	dcs, err := v.listDatacenters()
 	if err != nil {
 		return nil, err
@@ -37,7 +46,7 @@ func (v *VSphere) ListEsxiHosts() ([]*asset.Asset, error) {
 		if err != nil {
 			return nil, err
 		}
-		hostsAsAssets, err := hostsToAssetList(hostList)
+		hostsAsAssets, err := hostsToAssetList(instanceUuid, hostList)
 		if err != nil {
 			return nil, err
 		}
@@ -46,7 +55,7 @@ func (v *VSphere) ListEsxiHosts() ([]*asset.Asset, error) {
 	return res, nil
 }
 
-func hostsToAssetList(hosts []*object.HostSystem) ([]*asset.Asset, error) {
+func hostsToAssetList(instanceUuid string, hosts []*object.HostSystem) ([]*asset.Asset, error) {
 	res := []*asset.Asset{}
 	for i := range hosts {
 		host := hosts[i]
@@ -60,10 +69,11 @@ func hostsToAssetList(hosts []*object.HostSystem) ([]*asset.Asset, error) {
 			// NOTE: platform information is filled by the resolver
 			State: mapHostPowerstateToState(props.Runtime.PowerState),
 			Labels: map[string]string{
-				"vsphere.vmware.com/reference-type": host.Reference().Type,
-				"vsphere.vmware.com/inventorypath":  host.InventoryPath,
+				"vsphere.vmware.com/type":          host.Reference().Type,
+				"vsphere.vmware.com/moid":          host.Reference().Value,
+				"vsphere.vmware.com/inventorypath": host.InventoryPath,
 			},
-			ReferenceIDs: []string{vsphere_transport.VsphereResourceID(host.Reference().Type, host.InventoryPath)},
+			ReferenceIDs: []string{vsphere_transport.VsphereResourceID(instanceUuid, host.Reference())},
 		}
 		res = append(res, ha)
 	}
@@ -95,6 +105,11 @@ func mapHostPowerstateToState(hostPowerState types.HostSystemPowerState) asset.S
 }
 
 func (v *VSphere) ListVirtualMachines() ([]*asset.Asset, error) {
+	instanceUuid, err := v.InstanceUuid()
+	if err != nil {
+		return nil, err
+	}
+
 	dcs, err := v.listDatacenters()
 	if err != nil {
 		return nil, err
@@ -107,7 +122,7 @@ func (v *VSphere) ListVirtualMachines() ([]*asset.Asset, error) {
 		if err != nil {
 			return nil, err
 		}
-		vmsAsAssets, err := vmsToAssetList(vmList)
+		vmsAsAssets, err := vmsToAssetList(instanceUuid, vmList)
 		if err != nil {
 			return nil, err
 		}
@@ -117,7 +132,7 @@ func (v *VSphere) ListVirtualMachines() ([]*asset.Asset, error) {
 	return res, nil
 }
 
-func vmsToAssetList(vms []*object.VirtualMachine) ([]*asset.Asset, error) {
+func vmsToAssetList(instanceUuid string, vms []*object.VirtualMachine) ([]*asset.Asset, error) {
 	res := []*asset.Asset{}
 	for i := range vms {
 		vm := vms[i]
@@ -131,10 +146,11 @@ func vmsToAssetList(vms []*object.VirtualMachine) ([]*asset.Asset, error) {
 			// NOTE: platform information is filled by the resolver
 			State: mapVmGuestState(props.Guest.GuestState),
 			Labels: map[string]string{
-				"vsphere.vmware.com/reference-type": vm.Reference().Type,
-				"vsphere.vmware.com/inventorypath":  vm.InventoryPath,
+				"vsphere.vmware.com/type":          vm.Reference().Type,
+				"vsphere.vmware.com/moid":          vm.Reference().Value,
+				"vsphere.vmware.com/inventorypath": vm.InventoryPath,
 			},
-			ReferenceIDs: []string{vsphere_transport.VsphereResourceID(vm.Reference().Type, vm.InventoryPath)},
+			ReferenceIDs: []string{vsphere_transport.VsphereResourceID(instanceUuid, vm.Reference())},
 		}
 		res = append(res, ha)
 	}
@@ -235,13 +251,3 @@ func IsNotFound(err error) bool {
 	var e *find.NotFoundError
 	return errors.As(err, &e)
 }
-
-// func (c *VSphere) Host(path string) (*object.HostSystem, error) {
-// 	finder := find.NewFinder(c.Client.Client, true)
-// 	return finder.HostSystem(context.Background(), path)
-// }
-
-// func (c *VSphere) VirtualMachine(path string) (*object.VirtualMachine, error) {
-// 	finder := find.NewFinder(c.Client.Client, true)
-// 	return finder.VirtualMachine(context.Background(), path)
-// }

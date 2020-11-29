@@ -28,7 +28,7 @@ func esxiClient(t transports.Transport, path string) (*vsphere.Esxi, error) {
 		return nil, err
 	}
 
-	host, err := client.Host(path)
+	host, err := client.HostByInventoryPath(path)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func (v *lumiVsphere) GetDatacenters() ([]interface{}, error) {
 	datacenters := make([]interface{}, len(dcs))
 	for i, dc := range dcs {
 		lumiDc, err := v.Runtime.CreateResource("vsphere.datacenter",
-			"moid", dc.Reference().Value,
+			"moid", dc.Reference().Encode(),
 			"name", dc.Name(),
 			"inventoryPath", dc.InventoryPath,
 		)
@@ -150,14 +150,19 @@ func vsphereHosts(client *vsphere.Client, runtime *lumi.Runtime, vhosts []*objec
 	lumiHosts := make([]interface{}, len(vhosts))
 	for i, h := range vhosts {
 
-		props, err := client.HostProperties(h)
+		hostInfo, err := vsphere.HostInfo(h)
+		if err != nil {
+			return nil, err
+		}
+
+		props, err := vsphere.HostProperties(hostInfo)
 		if err != nil {
 			return nil, err
 		}
 
 		lumiHost, err := runtime.CreateResource("vsphere.host",
-			"moid", h.Reference().Value,
-			"name", h.Name(),
+			"moid", h.Reference().Encode(),
+			"name", hostInfo.Name,
 			"properties", props,
 			"inventoryPath", h.InventoryPath,
 		)
@@ -228,7 +233,7 @@ func (v *lumiVsphereDatacenter) GetClusters() ([]interface{}, error) {
 		}
 
 		lumiCluster, err := v.Runtime.CreateResource("vsphere.cluster",
-			"moid", c.Reference().Value,
+			"moid", c.Reference().Encode(),
 			"name", c.Name(),
 			"properties", props,
 			"inventoryPath", c.InventoryPath,
@@ -540,7 +545,7 @@ func (v *lumiVsphereHost) GetAdvancedSettings() (map[string]interface{}, error) 
 		return nil, err
 	}
 
-	host, err := client.Host(path)
+	host, err := client.HostByInventoryPath(path)
 	if err != nil {
 		return nil, err
 	}
@@ -559,7 +564,7 @@ func (v *lumiVsphereHost) GetServices() ([]interface{}, error) {
 		return nil, err
 	}
 
-	host, err := client.Host(path)
+	host, err := client.HostByInventoryPath(path)
 	if err != nil {
 		return nil, err
 	}
@@ -606,7 +611,7 @@ func (v *lumiVsphereHost) GetTimezone() (interface{}, error) {
 		return nil, err
 	}
 
-	host, err := client.Host(path)
+	host, err := client.HostByInventoryPath(path)
 	if err != nil {
 		return nil, err
 	}
@@ -640,7 +645,7 @@ func (v *lumiVsphereHost) GetNtp() (interface{}, error) {
 		return nil, err
 	}
 
-	host, err := client.Host(path)
+	host, err := client.HostByInventoryPath(path)
 	if err != nil {
 		return nil, err
 	}
@@ -693,15 +698,19 @@ func (v *lumiVsphereDatacenter) GetVms() ([]interface{}, error) {
 
 	lumiVms := make([]interface{}, len(vms))
 	for i, vm := range vms {
+		vmInfo, err := vsphere.VmInfo(vm)
+		if err != nil {
+			return nil, err
+		}
 
-		props, err := vsphere.VmProperties(vm)
+		props, err := vsphere.VmProperties(vmInfo)
 		if err != nil {
 			return nil, err
 		}
 
 		lumiVm, err := v.Runtime.CreateResource("vsphere.vm",
-			"moid", vm.Reference().Value,
-			"name", vm.Name(),
+			"moid", vm.Reference().Encode(),
+			"name", vmInfo.Config.Name,
 			"properties", props,
 			"inventoryPath", vm.InventoryPath,
 		)
@@ -726,7 +735,7 @@ func (v *lumiVsphereVm) GetAdvancedSettings() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	vm, err := client.VirtualMachine(path)
+	vm, err := client.VirtualMachineByInventoryPath(path)
 	if err != nil {
 		return nil, err
 	}
@@ -780,27 +789,32 @@ func (v *lumiEsxi) GetHost() (interface{}, error) {
 		}
 
 		// extract type and inventory
-		typ, inventoryPath, err := vsphere_transport.ParseVsphereResourceID(identifier)
+		moid, err := vsphere_transport.ParseVsphereResourceID(identifier)
 
-		if typ != "HostSystem" {
-			return nil, errors.New("esxi resource is not supported for vsphere type " + typ)
+		if moid.Type != "HostSystem" {
+			return nil, errors.New("esxi resource is not supported for vsphere type " + moid.Type)
 		}
 
-		h, err = cl.Host(inventoryPath)
+		h, err = cl.HostByMoid(moid)
 		if err != nil {
 			return nil, errors.New("could not find the esxi host via platform id: " + identifier)
 		}
 	}
 
 	// todo sync with GetHosts
-	props, err := cl.HostProperties(h)
+	hostInfo, err := vsphere.HostInfo(h)
+	if err != nil {
+		return nil, err
+	}
+
+	props, err := vsphere.HostProperties(hostInfo)
 	if err != nil {
 		return nil, err
 	}
 
 	lumiHost, err := v.Runtime.CreateResource("vsphere.host",
-		"moid", h.Reference().Value,
-		"name", h.Name(),
+		"moid", h.Reference().Encode(),
+		"name", hostInfo.Name,
 		"properties", props,
 		"inventoryPath", h.InventoryPath,
 	)
@@ -827,25 +841,30 @@ func (v *lumiEsxi) GetVm() (interface{}, error) {
 	}
 
 	// extract type and inventory
-	typ, inventoryPath, err := vsphere_transport.ParseVsphereResourceID(identifier)
+	moid, err := vsphere_transport.ParseVsphereResourceID(identifier)
 
-	if typ != "VirtualMachine" {
-		return nil, errors.New("esxi resource is not supported for vsphere type " + typ)
+	if moid.Type != "VirtualMachine" {
+		return nil, errors.New("esxi resource is not supported for vsphere type " + moid.Type)
 	}
 
-	vm, err := cl.VirtualMachine(inventoryPath)
+	vm, err := cl.VirtualMachineByMoid(moid)
 	if err != nil {
 		return nil, errors.New("could not find the esxi vm via platform id: " + identifier)
 	}
 
-	props, err := vsphere.VmProperties(vm)
+	vmInfo, err := vsphere.VmInfo(vm)
+	if err != nil {
+		return nil, err
+	}
+
+	props, err := vsphere.VmProperties(vmInfo)
 	if err != nil {
 		return nil, err
 	}
 
 	lumiVm, err := v.Runtime.CreateResource("vsphere.vm",
-		"moid", vm.Reference().Value,
-		"name", vm.Name(),
+		"moid", vm.Reference().Encode(),
+		"name", vmInfo.Config.Name,
 		"properties", props,
 		"inventoryPath", vm.InventoryPath,
 	)
