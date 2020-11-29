@@ -10,14 +10,15 @@ import (
 
 func VspherePlatform(t *vsphere.Transport, identifier string) (*Platform, error) {
 	if vsphere_transport.IsVsphereResourceID(identifier) {
-		typ, inventoryPath, err := vsphere_transport.ParseVsphereResourceID(identifier)
+		moid, err := vsphere_transport.ParseVsphereResourceID(identifier)
 		if err != nil {
 			return nil, err
 		}
 
-		switch typ {
+		switch moid.Type {
 		case "HostSystem":
-			host, err := t.Host(inventoryPath)
+			// TODO: check that we can gather a host by its moid
+			host, err := t.Host(moid)
 			if err != nil {
 				return nil, err
 			}
@@ -43,6 +44,7 @@ func VspherePlatform(t *vsphere.Transport, identifier string) (*Platform, error)
 			}, nil
 
 		case "VirtualMachine":
+			// TODO: we should detect more details here
 			// vm
 			return &Platform{
 				Runtime: transports.RUNTIME_VSPHERE_VM,

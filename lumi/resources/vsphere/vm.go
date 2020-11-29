@@ -8,9 +8,10 @@ import (
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
+	"github.com/vmware/govmomi/vim25/types"
 )
 
-func vmProperties(vm *object.VirtualMachine) (*mo.VirtualMachine, error) {
+func VmInfo(vm *object.VirtualMachine) (*mo.VirtualMachine, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultAPITimeout)
 	defer cancel()
 	var props mo.VirtualMachine
@@ -20,23 +21,19 @@ func vmProperties(vm *object.VirtualMachine) (*mo.VirtualMachine, error) {
 	return &props, nil
 }
 
-func VmProperties(vm *object.VirtualMachine) (map[string]interface{}, error) {
-	props, err := vmProperties(vm)
-	if err != nil {
-		return nil, err
-	}
-	return PropertiesToDict(props)
+func VmProperties(vm *mo.VirtualMachine) (map[string]interface{}, error) {
+	return PropertiesToDict(vm)
 }
 
 func AdvancedSettings(vm *object.VirtualMachine) (map[string]interface{}, error) {
-	props, err := vmProperties(vm)
+	vmInfo, err := VmInfo(vm)
 	if err != nil {
 		return nil, err
 	}
 
 	advancedProps := map[string]interface{}{}
-	for i := range props.Config.ExtraConfig {
-		prop := props.Config.ExtraConfig[i]
+	for i := range vmInfo.Config.ExtraConfig {
+		prop := vmInfo.Config.ExtraConfig[i]
 		key := prop.GetOptionValue().Key
 		value := fmt.Sprintf("%v", prop.GetOptionValue().Value)
 		advancedProps[key] = value
@@ -56,9 +53,23 @@ func (c *Client) ListVirtualMachines(dc *object.Datacenter) ([]*object.VirtualMa
 	return res, nil
 }
 
-func (c *Client) VirtualMachine(path string) (*object.VirtualMachine, error) {
+func (c *Client) VirtualMachineByInventoryPath(path string) (*object.VirtualMachine, error) {
 	finder := find.NewFinder(c.Client.Client, true)
 	return finder.VirtualMachine(context.Background(), path)
+}
+
+func (c *Client) VirtualMachineByMoid(moid types.ManagedObjectReference) (*object.VirtualMachine, error) {
+	finder := find.NewFinder(c.Client.Client, true)
+	ref, err := finder.ObjectReference(context.Background(), moid)
+	if err != nil {
+		return nil, err
+	}
+
+	switch ref.(type) {
+	case *object.VirtualMachine:
+		return ref.(*object.VirtualMachine), nil
+	}
+	return nil, errors.New("reference is not a valid virtual machine")
 }
 
 // IsNotFound returns a boolean indicating whether the error is a not found error.

@@ -2,6 +2,7 @@ package vsphere
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -13,7 +14,7 @@ import (
 	"github.com/vmware/govmomi/vim25/types"
 )
 
-func hostProperties(host *object.HostSystem) (*mo.HostSystem, error) {
+func HostInfo(host *object.HostSystem) (*mo.HostSystem, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultAPITimeout)
 	defer cancel()
 	var props mo.HostSystem
@@ -23,13 +24,8 @@ func hostProperties(host *object.HostSystem) (*mo.HostSystem, error) {
 	return &props, nil
 }
 
-func (c *Client) HostProperties(host *object.HostSystem) (map[string]interface{}, error) {
-	props, err := hostProperties(host)
-	if err != nil {
-		return nil, err
-	}
-
-	return PropertiesToDict(props)
+func HostProperties(host *mo.HostSystem) (map[string]interface{}, error) {
+	return PropertiesToDict(host)
 }
 
 func HostOptions(host *object.HostSystem) (map[string]interface{}, error) {
@@ -99,9 +95,23 @@ func (c *Client) ListHosts(dc *object.Datacenter, cluster *object.ClusterCompute
 	return res, nil
 }
 
-func (c *Client) Host(path string) (*object.HostSystem, error) {
+func (c *Client) HostByInventoryPath(path string) (*object.HostSystem, error) {
 	finder := find.NewFinder(c.Client.Client, true)
 	return finder.HostSystem(context.Background(), path)
+}
+
+func (c *Client) HostByMoid(moid types.ManagedObjectReference) (*object.HostSystem, error) {
+	finder := find.NewFinder(c.Client.Client, true)
+	ref, err := finder.ObjectReference(context.Background(), moid)
+	if err != nil {
+		return nil, err
+	}
+
+	switch ref.(type) {
+	case *object.HostSystem:
+		return ref.(*object.HostSystem), nil
+	}
+	return nil, errors.New("reference is not a valid host")
 }
 
 func HostLicenses(client *vim25.Client, hostID string) ([]types.LicenseManagerLicenseInfo, error) {

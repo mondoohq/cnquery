@@ -2,7 +2,6 @@ package vsphere
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"strings"
@@ -141,8 +140,8 @@ func EsxiVersion(host *object.HostSystem) (*EsxiSystemVersion, error) {
 	return &version, nil
 }
 
-func (t *Transport) GetHost() (*object.HostSystem, error) {
-	dcs, err := listDatacenters(t.client)
+func GetHost(client *govmomi.Client) (*object.HostSystem, error) {
+	dcs, err := listDatacenters(client)
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +151,7 @@ func (t *Transport) GetHost() (*object.HostSystem, error) {
 	}
 	dc := dcs[0]
 
-	hosts, err := listHosts(t.client, dc)
+	hosts, err := listHosts(client, dc)
 	if err != nil {
 		return nil, err
 	}
@@ -162,6 +161,22 @@ func (t *Transport) GetHost() (*object.HostSystem, error) {
 	}
 	host := hosts[0]
 	return host, nil
+}
+
+func InstanceUUID(client *govmomi.Client) (string, error) {
+	// determine identifier since ESXI connections do not return an InstanceUuid
+	if !client.IsVC() {
+		host, err := GetHost(client)
+		if err != nil {
+			return "", err
+		}
+
+		// NOTE: we do not use the ESXi host identifier here to distingush between the API and the host itself
+		return host.Reference().Value, nil
+	}
+
+	v := client.ServiceContent.About
+	return v.InstanceUuid, nil
 }
 
 // Identifier will only identify the connection
@@ -176,19 +191,12 @@ func (t *Transport) Identifier() (string, error) {
 		return t.selectedPlatformID, nil
 	}
 
-	// determine identifier since ESXI connections do not return an InstanceUuid
-	if !t.Client().IsVC() {
-		host, err := t.GetHost()
-		if err != nil {
-			return "", err
-		}
-
-		// NOTE: we do not use the ESXi host identifier here to distingush between the API and the host itself
-		return VsphereID(host.Reference().Value), nil
+	id, err := InstanceUUID(t.Client())
+	if err != nil {
+		return "", err
 	}
 
-	v := t.Client().ServiceContent.About
-	return VsphereID(v.InstanceUuid), nil
+	return VsphereID(id), nil
 }
 
 // Info returns the connection information
@@ -196,53 +204,64 @@ func (t *Transport) Info() types.AboutInfo {
 	return t.Client().ServiceContent.About
 }
 
-func VsphereResourceID(typ string, inventorypath string) string {
-	return "//platformid.api.mondoo.app/runtime/vsphere/type/" + typ + "/inventorypath/" + base64.StdEncoding.EncodeToString([]byte(inventorypath))
+func VsphereResourceID(instance string, reference types.ManagedObjectReference) string {
+	return "//platformid.api.mondoo.app/runtime/vsphere/instance/" + instance + "/moid/" + reference.Encode()
 }
 
-func ParseVsphereResourceID(id string) (string, string, error) {
-	var decodedPath []byte
+func decodeMoid(moid string) (types.ManagedObjectReference, error) {
+	r := types.ManagedObjectReference{}
+
+	s := strings.SplitN(moid, "-", 2)
+
+	if len(s) < 2 {
+		return r, errors.New("moid not parsable: " + moid)
+	}
+
+	r.Type = s[0]
+	r.Value = s[1]
+
+	return r, nil
+}
+
+func ParseVsphereResourceID(id string) (types.ManagedObjectReference, error) {
+	var reference types.ManagedObjectReference
 	parsed, err := mrn.NewMRN(id)
 	if err != nil {
-		return "", "", err
+		return reference, err
 	}
-	typ, err := parsed.ResourceID("type")
+	moid, err := parsed.ResourceID("moid")
 	if err != nil {
-		return "", "", errors.New("vsphere platform id has invalid type")
-	}
-	inventoryPath, err := parsed.ResourceID("inventorypath")
-	if err != nil {
-		return "", "", errors.New("vsphere platform id has invalid inventorypath")
+		return reference, errors.New("vsphere platform id has invalid type")
 	}
 
-	decodedPath, err = base64.StdEncoding.DecodeString(inventoryPath)
+	reference, err = decodeMoid(moid)
 	if err != nil {
-		return "", "", errors.New("vsphere platform id has invalid inventorypath")
+		return reference, err
 	}
 
-	return typ, string(decodedPath), nil
+	return reference, nil
 
 }
 
 func IsVsphereResourceID(mrn string) bool {
-	return strings.HasPrefix(mrn, "//platformid.api.mondoo.app/runtime/vsphere/type/") && strings.Contains(mrn, "/inventorypath/")
+	return strings.HasPrefix(mrn, "//platformid.api.mondoo.app/runtime/vsphere/instance/") && strings.Contains(mrn, "/moid/")
 }
 
 // use in combination with Client.ServiceContent.About.InstanceUuid
 func VsphereID(id string) string {
-	return "//platformid.api.mondoo.app/runtime/vsphere/uuid/" + id
+	return "//platformid.api.mondoo.app/runtime/vsphere/instance/" + id
 }
 
 func IsVsphereID(mrn string) bool {
-	return strings.HasPrefix(mrn, "//platformid.api.mondoo.app/runtime/vsphere/uuid/")
+	return strings.HasPrefix(mrn, "//platformid.api.mondoo.app/runtime/vsphere/instance/")
 }
 
-func (c *Transport) Host(path string) (*object.HostSystem, error) {
-	finder := find.NewFinder(c.Client().Client, true)
-	return finder.HostSystem(context.Background(), path)
+func (c *Transport) Host(moid types.ManagedObjectReference) (*object.HostSystem, error) {
+	// TODO: how should we handle the case when the moid does not exist
+	return object.NewHostSystem(c.Client().Client, moid), nil
 }
 
-func (c *Transport) VirtualMachine(path string) (*object.VirtualMachine, error) {
-	finder := find.NewFinder(c.Client().Client, true)
-	return finder.VirtualMachine(context.Background(), path)
+func (c *Transport) VirtualMachine(moid types.ManagedObjectReference) (*object.VirtualMachine, error) {
+	// TODO: how should we handle the case when the moid does not exist
+	return object.NewVirtualMachine(c.Client().Client, moid), nil
 }
