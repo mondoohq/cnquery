@@ -374,7 +374,7 @@ func (p *parser) parseOperand() (*Operand, error) {
 			p.nextToken()
 
 		case "{":
-			if *res.Value.Ident == "switch" {
+			if res.Value.Ident != nil && *res.Value.Ident == "switch" {
 				p.nextToken()
 
 				for {
