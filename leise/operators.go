@@ -31,6 +31,7 @@ func init() {
 		"=":      compileAssignment,
 		"||":     compileComparable,
 		"&&":     compileComparable,
+		"{}":     compileBlock,
 		"if":     compileIf,
 		"else":   compileElse,
 		"expect": compileExpect,
@@ -273,6 +274,18 @@ func generateEntrypoints(arg *llx.Primitive, res *llx.CodeBundle) error {
 		}
 	}
 	return nil
+}
+
+func compileBlock(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
+	res.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   id,
+		Function: &llx.Function{
+			Type: types.Unset,
+			Args: []*llx.Primitive{},
+		},
+	})
+	return types.Unset, nil
 }
 
 func compileIf(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {

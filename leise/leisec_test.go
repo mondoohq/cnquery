@@ -546,13 +546,13 @@ func TestCompiler_Switch(t *testing.T) {
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.IntPrimitive(1),
+				llx.RefPrimitive(3),
 				llx.FunctionPrimitive(1),
-				llx.FunctionPrimitive(2),
 				llx.BoolPrimitive(true),
-				llx.FunctionPrimitive(3),
+				llx.FunctionPrimitive(2),
 			},
 		}, res.Code.Code[0])
-		assert.Equal(t, []int32{1}, res.Code.Entrypoints)
+		assert.Equal(t, []int32{1, 3}, res.Code.Entrypoints)
 		assert.Equal(t, []int32{}, res.Code.Datapoints)
 	})
 }
