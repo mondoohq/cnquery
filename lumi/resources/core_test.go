@@ -383,27 +383,27 @@ func TestCore_Switch(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"switch { case 3 > 2: 123; default: 321 }",
-			1, int64(123),
+			0, int64(123),
 		},
 		{
 			"switch { case 1 > 2: 123; default: 321 }",
-			1, int64(321),
+			0, int64(321),
 		},
 		{
 			"switch { case 3 > 2: return 123; default: return 321 }",
-			1, int64(123),
+			0, int64(123),
 		},
 		{
 			"switch { case 1 > 2: return 123; default: return 321 }",
-			1, int64(321),
+			0, int64(321),
 		},
 		{
-			"switch ( 3 ) { case _ > 2: 123; default: 321 }",
-			1, int64(123),
+			"switch ( 3 ) { case _ > 2: return 123; default: return 321 }",
+			0, int64(123),
 		},
 		{
 			"switch ( 1 ) { case _ > 2: true; default: false }",
-			1, false,
+			0, false,
 		},
 	})
 }
