@@ -95,7 +95,7 @@ func switchCall(c *LeiseExecutor, f *Function, ref int32) (*RawData, int32, erro
 			continue
 		}
 
-		res, dref, err := c.runBlock(bind, f.Args[idx], ref)
+		res, dref, err := c.resolveValue(f.Args[idx], ref)
 		if err != nil || dref != 0 || res == nil {
 			return res, dref, err
 		}

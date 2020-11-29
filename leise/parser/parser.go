@@ -43,6 +43,10 @@ var tokenNames = map[rune]string{
 	Op:      "operator",
 }
 
+var (
+	blockCall string = "{}"
+)
+
 // Expression at the root of leise
 type Expression struct {
 	Operand    *Operand     `json:",omitempty"`
@@ -384,13 +388,16 @@ func (p *parser) parseOperand() (*Operand, error) {
 					}
 
 					if ident != "case" && ident != "default" {
-						return nil, errors.New("expected `case` or `default` statements in `switch` call")
+						return nil, errors.New("expected `case` or `default` statements in `switch` call, got `" + ident + "`")
 					}
 					p.nextToken()
 
 					if ident == "case" {
 						exp, err := p.parseExpression()
 						if err != nil {
+							return nil, err
+						}
+						if err = exp.processOperators(); err != nil {
 							return nil, err
 						}
 						if exp == nil || (exp.Operand == nil && exp.Operations == nil) {
@@ -407,14 +414,28 @@ func (p *parser) parseOperand() (*Operand, error) {
 					}
 					p.nextToken()
 
-					exp, err := p.parseExpression()
-					if err != nil {
-						return nil, err
+					block := Expression{
+						Operand: &Operand{
+							Value: &Value{
+								Ident: &blockCall,
+							},
+						},
 					}
-					if exp == nil || (exp.Operand == nil && exp.Operations == nil) {
+					for {
+						exp, err := p.parseExpression()
+						if err != nil {
+							return nil, err
+						}
+						if exp == nil || (exp.Operand == nil && exp.Operations == nil) {
+							break
+						}
+						block.Operand.Block = append(block.Operand.Block, exp)
+					}
+
+					if len(block.Operand.Block) == 0 {
 						return nil, errors.New("expected block following `" + ident + "` statement")
 					}
-					res.Block = append(res.Block, exp)
+					res.Block = append(res.Block, &block)
 
 					for p.token.Value == ";" {
 						p.nextToken()
