@@ -1,35 +1,35 @@
-package discovery
+package ipmi
 
 import (
-	"github.com/cockroachdb/errors"
-	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/apps/mondoo/cmd/options"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	ipmi_transport "go.mondoo.io/mondoo/motor/transports/ipmi"
 )
 
-type ipmiResolver struct{}
+type Resolver struct{}
 
-func (k *ipmiResolver) Name() string {
+func (r *Resolver) Name() string {
 	return "IPMI Resolver"
 }
 
-func (k *ipmiResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts) ([]*asset.Asset, error) {
+func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
+	return transports.NewTransportFromUrl(url, opts...)
+	// if err != nil {
+	// 	err := errors.Wrapf(err, "cannot connect to %s", url)
+	// 	return nil, err
+	// }
+
+	// // copy password from opts asset if it was not encoded in url
+	// if len(t.Password) == 0 && len(in.Password) > 0 {
+	// 	t.Password = in.Password
+	// }
+
+	// return t, nil
+}
+
+func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
-
-	t := &transports.TransportConfig{}
-	err := t.ParseFromURI(in.Connection)
-	if err != nil {
-		err := errors.Wrapf(err, "cannot connect to %s", in.Connection)
-		log.Error().Err(err).Msg("invalid asset connection")
-	}
-
-	// copy password from opts asset if it was not encoded in url
-	if len(t.Password) == 0 && len(in.Password) > 0 {
-		t.Password = in.Password
-	}
 
 	trans, err := ipmi_transport.New(t)
 	if err != nil {

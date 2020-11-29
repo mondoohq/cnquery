@@ -1,14 +1,11 @@
-package discovery
+package aws
 
 import (
 	"strings"
 
-	"go.mondoo.io/mondoo/apps/mondoo/cmd/options"
-
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/discovery/aws"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
@@ -49,17 +46,15 @@ func ParseAwsContext(awsUrl string) Ec2Config {
 	return config
 }
 
-type awsResolver struct{}
+type Resolver struct{}
 
-func (k *awsResolver) Name() string {
+func (r *Resolver) Name() string {
 	return "AWS EC2 Resolver"
 }
 
-func (k *awsResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts) ([]*asset.Asset, error) {
-	resolved := []*asset.Asset{}
-
+func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
 	// parse context from url
-	config := ParseAwsContext(in.Connection)
+	config := ParseAwsContext(url)
 
 	t := &transports.TransportConfig{
 		Backend: transports.TransportBackend_CONNECTION_AWS,
@@ -68,6 +63,12 @@ func (k *awsResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts)
 			"region":  config.Region,
 		},
 	}
+
+	return t, nil
+}
+
+func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
+	resolved := []*asset.Asset{}
 
 	// add aws api as asset
 	trans, err := aws_transport.New(t)
@@ -101,16 +102,17 @@ func (k *awsResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts)
 	})
 
 	// discover ec2 instances
-	if opts.DiscoverInstances {
+	DiscoverInstances := true
+	if DiscoverInstances {
 		// TODO: rewrite ec2 discovert to use the aws transport
-		r, err := aws.NewEc2Discovery(trans.Config())
+		r, err := NewEc2Discovery(trans.Config())
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize aws ec2 discovery")
 		}
 
 		// we may want to pass a specific user, otherwise it will fallback to ssh config
-		if len(config.User) > 0 {
-			r.InstanceSSHUsername = config.User
+		if len(t.User) > 0 {
+			r.InstanceSSHUsername = t.User
 		}
 
 		assetList, err := r.List()

@@ -1,4 +1,4 @@
-package discovery
+package azure
 
 import (
 	"context"
@@ -6,9 +6,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/apps/mondoo/cmd/options"
 	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/discovery/azure"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	azure_transport "go.mondoo.io/mondoo/motor/transports/azure"
@@ -26,7 +24,7 @@ func (az AzureConfig) Validate() error {
 	return nil
 }
 
-func ParseAzureInstanceContext(azureUrl string) *AzureConfig {
+func parseAzureInstanceContext(azureUrl string) *AzureConfig {
 	var config AzureConfig
 
 	azureUrl = strings.TrimPrefix(azureUrl, "az://")
@@ -52,16 +50,34 @@ func ParseAzureInstanceContext(azureUrl string) *AzureConfig {
 	return &config
 }
 
-type azureResolver struct{}
+type Resolver struct{}
 
-func (k *azureResolver) Name() string {
+func (r *Resolver) Name() string {
 	return "Azure Compute Resolver"
 }
 
-func (k *azureResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts) ([]*asset.Asset, error) {
+func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
+	config := parseAzureInstanceContext(url)
+
+	err := config.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	// add azure api as asset
+	return &transports.TransportConfig{
+		Backend: transports.TransportBackend_CONNECTION_AZURE,
+		Options: map[string]string{
+			"subscriptionID": config.SubscriptionID,
+			"user":           config.User,
+		},
+	}, nil
+}
+
+func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
-	config := ParseAzureInstanceContext(in.Connection)
+	subscriptionID := t.Options["subscriptionID"]
 
 	// TODO: for now we only support the azure cli authentication
 	err := azure_transport.IsAzInstalled()
@@ -70,36 +86,25 @@ func (k *azureResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpt
 	}
 
 	// if we have no subscription, try to ask azure cli
-	if len(config.SubscriptionID) == 0 {
+	if len(subscriptionID) == 0 {
 		log.Debug().Msg("no subscription id provided, fallback to azure cli")
 		// read from `az account show --output json`
 		account, err := azure_transport.GetAccount()
 		if err == nil {
-			config.SubscriptionID = account.ID
+			subscriptionID = account.ID
 			// NOTE: we ignore the tenant id here since we validate it below
 		}
 		// if an error happens, the following config validation will catch the missing subscription id
 	}
 
-	err = config.Validate()
-	if err != nil {
-		return nil, err
-	}
-
 	// Verify the subscription and get the details to ensure we have access
-	subscription, err := azure_transport.VerifySubscription(config.SubscriptionID)
+	subscription, err := azure_transport.VerifySubscription(subscriptionID)
 	if err != nil || subscription.TenantID == nil {
-		return nil, errors.Wrap(err, "could not fetch azure subscription details for: "+config.SubscriptionID)
+		return nil, errors.Wrap(err, "could not fetch azure subscription details for: "+subscriptionID)
 	}
 
-	// add azure api as asset
-	t := &transports.TransportConfig{
-		Backend: transports.TransportBackend_CONNECTION_AZURE,
-		Options: map[string]string{
-			"subscriptionID": config.SubscriptionID,
-			"tenantID":       *subscription.TenantID,
-		},
-	}
+	// attach tenant to config
+	t.Options["tenantID"] = *subscription.TenantID
 
 	trans, err := azure_transport.New(t)
 	if err != nil {
@@ -118,7 +123,7 @@ func (k *azureResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpt
 		return nil, err
 	}
 
-	name := config.SubscriptionID
+	name := subscriptionID
 	if subscription.DisplayName != nil {
 		name = *subscription.DisplayName
 	}
@@ -129,14 +134,15 @@ func (k *azureResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpt
 		Platform:     pf,
 		Connections:  []*transports.TransportConfig{t}, // pass-in the current config
 		Labels: map[string]string{
-			"azure.com/subscription": config.SubscriptionID,
+			"azure.com/subscription": subscriptionID,
 			"azure.com/tenant":       *subscription.TenantID,
 		},
 	})
 
 	// get all compute instances
-	if opts.DiscoverInstances {
-		r, err := azure.NewCompute(config.SubscriptionID)
+	DiscoverInstances := true
+	if DiscoverInstances {
+		r, err := NewCompute(subscriptionID)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize azure compute discovery")
 		}

@@ -1,38 +1,40 @@
-package discovery
+package vsphere
 
 import (
 	"fmt"
 
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/apps/mondoo/cmd/options"
 	"go.mondoo.io/mondoo/motor/asset"
-	vsphere_discovery "go.mondoo.io/mondoo/motor/discovery/vsphere"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/vsphere"
 )
 
-type vsphereResolver struct{}
+type Resolver struct{}
 
-func (k *vsphereResolver) Name() string {
+func (r *Resolver) Name() string {
 	return "VMware vSphere Resolver"
 }
 
-func (v *vsphereResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts) ([]*asset.Asset, error) {
+func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
+	return transports.NewTransportFromUrl(url, opts...)
+	// t := &transports.TransportConfig{}
+	// err := t.ParseFromURI(url)
+	// if err != nil {
+	// 	err := errors.Wrapf(err, "cannot connect to %s", url)
+	// 	return nil, err
+	// }
+
+	// // copy password from opts asset if it was not encoded in url
+	// if len(t.Password) == 0 && len(in.Password) > 0 {
+	// 	t.Password = in.Password
+	// }
+
+	// return t, nil
+}
+
+func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
-
-	t := &transports.TransportConfig{}
-	err := t.ParseFromURI(in.Connection)
-	if err != nil {
-		err := errors.Wrapf(err, "cannot connect to %s", in.Connection)
-		log.Error().Err(err).Msg("invalid asset connection")
-	}
-
-	// copy password from opts asset if it was not encoded in url
-	if len(t.Password) == 0 && len(in.Password) > 0 {
-		t.Password = in.Password
-	}
 
 	// we leverage the vpshere transport to establish a connection
 	trans, err := vsphere.New(t)
@@ -41,7 +43,7 @@ func (v *vsphereResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnO
 	}
 
 	client := trans.Client()
-	discoveryClient := vsphere_discovery.New(client)
+	discoveryClient := New(client)
 
 	identifier, err := trans.Identifier()
 	if err != nil {
@@ -70,7 +72,8 @@ func (v *vsphereResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnO
 		Connections:  []*transports.TransportConfig{t}, // pass-in the current config
 	})
 
-	if opts.DiscoverHostMachines {
+	DiscoverHostMachines := true
+	if DiscoverHostMachines {
 		// resolve esxi hosts
 		hosts, err := discoveryClient.ListEsxiHosts()
 		if err != nil {
@@ -96,7 +99,8 @@ func (v *vsphereResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnO
 		}
 	}
 
-	if opts.DiscoverInstances {
+	DiscoverInstances := true
+	if DiscoverInstances {
 		// resolve vms
 		vms, err := discoveryClient.ListVirtualMachines()
 		if err != nil {

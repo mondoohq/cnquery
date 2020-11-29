@@ -31,73 +31,21 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/winrm"
 )
 
-type EndpointOption func(endpoint *transports.TransportConfig)
-
-func WithIdentityFile(identityFile string) EndpointOption {
-	return func(endpoint *transports.TransportConfig) {
-		endpoint.IdentityFiles = append(endpoint.IdentityFiles, identityFile)
-	}
+func New(t *transports.TransportConfig, idDetectors ...string) (*motor.Motor, error) {
+	return ResolveTransport(t, idDetectors)
 }
 
-func WithPassword(password string) EndpointOption {
-	return func(endpoint *transports.TransportConfig) {
-		endpoint.Password = password
-	}
-}
-
-func WithSudo() EndpointOption {
-	return func(endpoint *transports.TransportConfig) {
-		endpoint.Sudo = &transports.Sudo{
-			Active: true,
-		}
-	}
-}
-
-func WithInsecure() EndpointOption {
-	return func(endpoint *transports.TransportConfig) {
-		endpoint.Insecure = true
-	}
-}
-
-func New(endpoint *transports.TransportConfig, idDetectors ...string) (*motor.Motor, error) {
-	return ResolveTransport(endpoint, idDetectors)
-}
-
-func NewFromUrl(uri string, opts ...EndpointOption) (*motor.Motor, error) {
-	t := &transports.TransportConfig{}
-	err := t.ParseFromURI(uri)
-	if err != nil {
-		return nil, err
-	}
-
-	for i := range opts {
-		opts[i](t)
-	}
-	return New(t)
-}
-
-func NewWithUrlAndKey(uri string, key string) (*motor.Motor, error) {
-	t := &transports.TransportConfig{
-		IdentityFiles: []string{key},
-	}
-	err := t.ParseFromURI(uri)
-	if err != nil {
-		return nil, err
-	}
-	return New(t)
-}
-
-func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string) (*motor.Motor, error) {
+func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*motor.Motor, error) {
 	var m *motor.Motor
 	var name string
 	var identifier []string
 	var labels map[string]string
 	var err error
 
-	switch endpoint.Backend {
+	switch tc.Backend {
 	case transports.TransportBackend_CONNECTION_MOCK:
 		log.Debug().Msg("connection> load mock transport")
-		trans, err := mock.NewFromToml(endpoint)
+		trans, err := mock.NewFromToml(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -106,7 +54,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 		if err != nil {
 			return nil, err
 		}
-		if endpoint.Record {
+		if tc.Record {
 			m.ActivateRecorder()
 		}
 	case transports.TransportBackend_CONNECTION_LOCAL_OS:
@@ -121,7 +69,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			return nil, err
 		}
 
-		if endpoint.Record {
+		if tc.Record {
 			m.ActivateRecorder()
 		}
 
@@ -134,7 +82,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 	case transports.TransportBackend_CONNECTION_TAR:
 		log.Debug().Msg("connection> load tar transport")
 		// TODO: we need to generate an artifact id
-		trans, err := tar.New(endpoint)
+		trans, err := tar.New(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -144,11 +92,11 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			return nil, err
 		}
 
-		if endpoint.Record {
+		if tc.Record {
 			m.ActivateRecorder()
 		}
 	case transports.TransportBackend_CONNECTION_CONTAINER_TAR:
-		trans, info, err := containertar(endpoint)
+		trans, info, err := containertar(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -157,7 +105,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			return nil, err
 		}
 
-		if endpoint.Record {
+		if tc.Record {
 			m.ActivateRecorder()
 		}
 
@@ -169,7 +117,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			identifier = append(identifier, info.Identifier)
 		}
 	case transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY:
-		trans, info, err := containerregistry(endpoint)
+		trans, info, err := containerregistry(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -178,7 +126,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			return nil, err
 		}
 
-		if endpoint.Record {
+		if tc.Record {
 			m.ActivateRecorder()
 		}
 
@@ -190,7 +138,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			identifier = append(identifier, info.Identifier)
 		}
 	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER:
-		trans, info, err := dockerenginecontainer(endpoint)
+		trans, info, err := dockerenginecontainer(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -199,7 +147,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			return nil, err
 		}
 
-		if endpoint.Record {
+		if tc.Record {
 			m.ActivateRecorder()
 		}
 
@@ -211,7 +159,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			identifier = append(identifier, info.Identifier)
 		}
 	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE:
-		trans, info, err := dockerengineimage(endpoint)
+		trans, info, err := dockerengineimage(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -220,7 +168,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			return nil, err
 		}
 
-		if endpoint.Record {
+		if tc.Record {
 			m.ActivateRecorder()
 		}
 
@@ -233,7 +181,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 		}
 	case transports.TransportBackend_CONNECTION_SSH:
 		log.Debug().Msg("connection> load ssh transport")
-		trans, err := ssh.New(endpoint)
+		trans, err := ssh.New(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -243,7 +191,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			return nil, err
 		}
 
-		if endpoint.Record {
+		if tc.Record {
 			m.ActivateRecorder()
 		}
 
@@ -256,7 +204,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 		idDetectors = append(idDetectors, "ssh-hostkey")
 	case transports.TransportBackend_CONNECTION_WINRM:
 		log.Debug().Msg("connection> load winrm transport")
-		trans, err := winrm.New(endpoint)
+		trans, err := winrm.New(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -266,14 +214,14 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			return nil, err
 		}
 
-		if endpoint.Record {
+		if tc.Record {
 			m.ActivateRecorder()
 		}
 
 		idDetectors = append(idDetectors, "machineid")
 	case transports.TransportBackend_CONNECTION_VSPHERE:
 		log.Debug().Msg("connection> load vsphere transport")
-		trans, err := vsphere.New(endpoint)
+		trans, err := vsphere.New(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -283,7 +231,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			return nil, err
 		}
 
-		if endpoint.Record {
+		if tc.Record {
 			m.ActivateRecorder()
 		}
 
@@ -293,7 +241,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 		}
 	case transports.TransportBackend_CONNECTION_ARISTAEOS:
 		log.Debug().Msg("connection> load aristaeos transport")
-		trans, err := arista.New(endpoint)
+		trans, err := arista.New(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -302,7 +250,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			return nil, err
 		}
 
-		if endpoint.Record {
+		if tc.Record {
 			m.ActivateRecorder()
 		}
 
@@ -312,7 +260,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 		}
 	case transports.TransportBackend_CONNECTION_AWS:
 		log.Debug().Msg("connection> load aws transport")
-		trans, err := aws.New(endpoint)
+		trans, err := aws.New(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -321,7 +269,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			return nil, err
 		}
 
-		if endpoint.Record {
+		if tc.Record {
 			m.ActivateRecorder()
 		}
 
@@ -331,7 +279,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 		}
 	case transports.TransportBackend_CONNECTION_GCP:
 		log.Debug().Msg("connection> load gcp transport")
-		trans, err := gcp.New(endpoint)
+		trans, err := gcp.New(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -340,7 +288,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			return nil, err
 		}
 
-		if endpoint.Record {
+		if tc.Record {
 			m.ActivateRecorder()
 		}
 
@@ -350,7 +298,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 		}
 	case transports.TransportBackend_CONNECTION_AZURE:
 		log.Debug().Msg("connection> load azure transport")
-		trans, err := azure.New(endpoint)
+		trans, err := azure.New(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -359,7 +307,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			return nil, err
 		}
 
-		if endpoint.Record {
+		if tc.Record {
 			m.ActivateRecorder()
 		}
 
@@ -369,7 +317,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 		}
 	case transports.TransportBackend_CONNECTION_MS365:
 		log.Debug().Msg("connection> load microsoft 365 transport")
-		trans, err := ms365.New(endpoint)
+		trans, err := ms365.New(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -378,7 +326,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			return nil, err
 		}
 
-		if endpoint.Record {
+		if tc.Record {
 			m.ActivateRecorder()
 		}
 
@@ -388,7 +336,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 		}
 	case transports.TransportBackend_CONNECTION_IPMI:
 		log.Debug().Msg("connection> load ipmi transport")
-		trans, err := ipmi.New(endpoint)
+		trans, err := ipmi.New(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -397,7 +345,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			return nil, err
 		}
 
-		if endpoint.Record {
+		if tc.Record {
 			m.ActivateRecorder()
 		}
 
@@ -406,7 +354,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			identifier = append(identifier, id)
 		}
 	case transports.TransportBackend_CONNECTION_VSPHERE_VM:
-		trans, err := vmwareguestapi.New(endpoint)
+		trans, err := vmwareguestapi.New(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -415,7 +363,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			return nil, err
 		}
 
-		if endpoint.Record {
+		if tc.Record {
 			m.ActivateRecorder()
 		}
 
@@ -426,7 +374,7 @@ func ResolveTransport(endpoint *transports.TransportConfig, idDetectors []string
 			idDetectors = append(idDetectors, "hostname")
 		}
 	default:
-		return nil, fmt.Errorf("connection> unsupported backend '%s', only docker://, local://, tar://, ssh:// are allowed", endpoint.Backend)
+		return nil, fmt.Errorf("connection> unsupported backend '%s', only docker://, local://, tar://, ssh:// are allowed", tc.Backend)
 	}
 
 	p, err := m.Platform()
@@ -457,16 +405,16 @@ type DockerInfo struct {
 	Labels     map[string]string
 }
 
-func containerregistry(endpoint *transports.TransportConfig) (transports.Transport, DockerInfo, error) {
+func containerregistry(tc *transports.TransportConfig) (transports.Transport, DockerInfo, error) {
 	// load container image from remote directoryload tar file into backend
-	ref, err := name.ParseReference(endpoint.Host, name.WeakValidation)
+	ref, err := name.ParseReference(tc.Host, name.WeakValidation)
 	if err == nil {
 		log.Debug().Str("ref", ref.Name()).Msg("found valid container registry reference")
 
-		registryOpts := []image.Option{image.WithInsecure(endpoint.Insecure)}
-		if len(endpoint.BearerToken) > 0 {
+		registryOpts := []image.Option{image.WithInsecure(tc.Insecure)}
+		if len(tc.BearerToken) > 0 {
 			log.Debug().Msg("enable bearer authentication for image")
-			registryOpts = append(registryOpts, image.WithAuthenticator(&authn.Bearer{Token: endpoint.BearerToken}))
+			registryOpts = append(registryOpts, image.WithAuthenticator(&authn.Bearer{Token: tc.BearerToken}))
 		}
 
 		// image.WithAuthenticator()
@@ -487,18 +435,18 @@ func containerregistry(endpoint *transports.TransportConfig) (transports.Transpo
 			Identifier: identifier,
 		}, err
 	}
-	log.Debug().Str("image", endpoint.Host).Msg("Could not detect a valid repository url")
+	log.Debug().Str("image", tc.Host).Msg("Could not detect a valid repository url")
 	return nil, DockerInfo{}, err
 }
 
-func dockerenginecontainer(endpoint *transports.TransportConfig) (transports.Transport, DockerInfo, error) {
+func dockerenginecontainer(tc *transports.TransportConfig) (transports.Transport, DockerInfo, error) {
 	// could be an image id/name, container id/name or a short reference to an image in docker engine
 	ded, err := docker_discovery.NewDockerEngineDiscovery()
 	if err != nil {
 		return nil, DockerInfo{}, err
 	}
 
-	ci, err := ded.ContainerInfo(endpoint.Host)
+	ci, err := ded.ContainerInfo(tc.Host)
 	if err != nil {
 		return nil, DockerInfo{}, err
 	}

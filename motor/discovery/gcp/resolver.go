@@ -1,13 +1,11 @@
-package discovery
+package gcp
 
 import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/apps/mondoo/cmd/options"
 	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/discovery/gcp"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	gcp_transport "go.mondoo.io/mondoo/motor/transports/gcp"
@@ -41,19 +39,27 @@ func ParseGcpInstanceContext(gcpUrl string) GcpConfig {
 	return config
 }
 
-type gcrResolver struct{}
+type GcrResolver struct{}
 
-func (k *gcrResolver) Name() string {
+func (r *GcrResolver) Name() string {
 	return "GCP Container Registry Resolver"
 }
 
-func (k *gcrResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts) ([]*asset.Asset, error) {
-	resolved := []*asset.Asset{}
+func (r *GcrResolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
+	repository := strings.TrimPrefix(url, "gcr://")
+	return &transports.TransportConfig{
+		Backend: transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY,
+		Host:    repository,
+	}, nil
+}
 
-	repository := strings.TrimPrefix(in.Connection, "gcr://")
+func (r *GcrResolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
+	resolved := []*asset.Asset{}
+	repository := t.Host
+
 	log.Debug().Str("registry", repository).Msg("fetch meta information from gcr registry")
-	r := gcp.NewGCRImages()
-	assetList, err := r.ListRepository(repository, true)
+	gcrImages := NewGCRImages()
+	assetList, err := gcrImages.ListRepository(repository, true)
 	if err != nil {
 		log.Error().Err(err).Msg("could not fetch k8s images")
 		return nil, err
@@ -67,19 +73,15 @@ func (k *gcrResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts)
 	return resolved, nil
 }
 
-type gcpResolver struct{}
+type GcpResolver struct{}
 
-func (k *gcpResolver) Name() string {
+func (k *GcpResolver) Name() string {
 	return "GCP Compute Resolver"
 }
 
-func (k *gcpResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts) ([]*asset.Asset, error) {
-	resolved := []*asset.Asset{}
-
-	r := gcp.NewCompute()
-
+func (r *GcpResolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
 	// parse context from url
-	config := ParseGcpInstanceContext(in.Connection)
+	config := ParseGcpInstanceContext(url)
 
 	// check if we got a project or try to determine it
 	if len(config.Project) == 0 {
@@ -95,11 +97,18 @@ func (k *gcpResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts)
 	// add gcp api as asset
 	t := &transports.TransportConfig{
 		Backend: transports.TransportBackend_CONNECTION_GCP,
+		User:    config.User,
 		Options: map[string]string{
 			// TODO: support organization scanning as well
 			"project": config.Project,
 		},
 	}
+
+	return t, nil
+}
+
+func (r *GcpResolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
+	resolved := []*asset.Asset{}
 
 	trans, err := gcp_transport.New(t)
 	if err != nil {
@@ -118,21 +127,26 @@ func (k *gcpResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts)
 		return nil, err
 	}
 
+	project := t.Options["project"]
+
 	resolved = append(resolved, &asset.Asset{
 		ReferenceIDs: []string{identifier},
-		Name:         "GCP project " + config.Project,
+		Name:         "GCP project " + project,
 		Platform:     pf,
 		Connections:  []*transports.TransportConfig{t}, // pass-in the current config
 	})
 
 	// discover compute instances
-	if opts.DiscoverInstances {
+	DiscoverInstances := true
+	if DiscoverInstances {
+		compute := NewCompute()
+
 		// we may want to pass a specific user, otherwise it will fallback to ssh config
-		if len(config.User) > 0 {
-			r.InstanceSSHUsername = config.User
+		if len(t.User) > 0 {
+			compute.InstanceSSHUsername = t.User
 		}
 
-		assetList, err := r.ListInstancesInProject(config.Project)
+		assetList, err := compute.ListInstancesInProject(project)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not fetch gcp compute instances")
 		}

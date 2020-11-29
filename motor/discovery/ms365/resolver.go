@@ -1,28 +1,33 @@
-package discovery
+package ms365
 
 import (
-	"go.mondoo.io/mondoo/apps/mondoo/cmd/options"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	ms365_transport "go.mondoo.io/mondoo/motor/transports/ms365"
 )
 
-type ms365Resolver struct{}
+type Resolver struct{}
 
-func (k *ms365Resolver) Name() string {
+func (r *Resolver) Name() string {
 	return "Microsoft 365 Resolver"
 }
 
-func (k *ms365Resolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts) ([]*asset.Asset, error) {
-	resolved := []*asset.Asset{}
+// TODO: we need the identity file
+func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
+	return transports.NewTransportFromUrl(url, opts...)
+	// // add azure api as asset
+	// t := &transports.TransportConfig{
+	// 	Backend:       transports.TransportBackend_CONNECTION_MS365,
+	// 	Options:       map[string]string{},
+	// 	IdentityFiles: []string{in.IdentityFile},
+	// }
 
-	// add azure api as asset
-	t := &transports.TransportConfig{
-		Backend:       transports.TransportBackend_CONNECTION_MS365,
-		Options:       map[string]string{},
-		IdentityFiles: []string{in.IdentityFile},
-	}
+	// return t, nil
+}
+
+func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
+	resolved := []*asset.Asset{}
 
 	trans, err := ms365_transport.New(t)
 	if err != nil {
