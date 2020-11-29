@@ -249,6 +249,22 @@ func (c *compiler) compileSwitchBlock(expressions []*parser.Expression, chunk *l
 	var bind *binding
 	arg := chunk.Function.Args[0]
 
+	// we have to pop the switch chunk from the compiler stack, because it needs
+	// to be the last item on the stack. otherwise the last reference (top of stack)
+	// will not be pointing to it and an additional entrypoint will be generated
+
+	last := len(c.Result.Code.Code) - 1
+	if c.Result.Code.Code[last] != chunk {
+		return types.Nil, errors.New("failed to compile switch statement, it wasn't on the top of the compile stack")
+	}
+	c.Result.Code.Code = c.Result.Code.Code[:last]
+	checksum := c.Result.Code.Checksums[int32(last+1)]
+	c.Result.Code.Checksums[int32(last+1)] = ""
+	defer func() {
+		c.Result.Code.Code = append(c.Result.Code.Code, chunk)
+		c.Result.Code.Checksums[c.Result.Code.ChunkIndex()] = checksum
+	}()
+
 	if arg.Type != types.Unset {
 		if arg.Type == types.Ref {
 			val, ok := arg.Ref()

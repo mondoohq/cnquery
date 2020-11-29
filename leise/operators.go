@@ -482,7 +482,6 @@ func compileSwitch(c *compiler, id string, call *parser.Call, res *llx.CodeBundl
 			Args: []*llx.Primitive{ref},
 		},
 	})
-	res.Code.Entrypoints = append(res.Code.Entrypoints, res.Code.ChunkIndex())
 	c.prevID = "switch"
 
 	return types.Nil, nil
