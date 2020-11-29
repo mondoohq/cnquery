@@ -1,9 +1,6 @@
-package discovery
+package instance
 
 import (
-	"github.com/cockroachdb/errors"
-	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/apps/mondoo/cmd/options"
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/motorid/hostname"
@@ -12,38 +9,49 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/local"
 )
 
-type instanceResolver struct{}
+type Resolver struct{}
 
-func (k *instanceResolver) Name() string {
+func (r *Resolver) Name() string {
 	return "Instance Resolver"
 }
 
-func (k *instanceResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts) ([]*asset.Asset, error) {
-
-	refIds := []string{}
-	if len(in.ReferenceID) > 0 {
-		refIds = []string{in.ReferenceID}
-	}
-
-	assetInfo := &asset.Asset{
-		Name:         in.Name,
-		ReferenceIDs: refIds,
-		Labels:       in.Labels,
-		State:        asset.State_STATE_ONLINE,
-	}
-
+func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
+	return transports.NewTransportFromUrl(url, opts...)
 	// parse connection from URI
 	// TODO: can we avoid the convertion between asset and motor? should assets use motor connections?
-	t := &transports.TransportConfig{}
-	err := t.ParseFromURI(in.Connection)
-	if err != nil {
-		err := errors.Wrapf(err, "cannot connect to %s", in.Connection)
-		log.Error().Err(err).Msg("invalid asset connection")
-	}
+	// t, err := transports.NewTransportFromUrl(url, opts...)
+	// if err != nil {
+	// 	err := errors.Wrapf(err, "cannot connect to %s", url)
+	// 	return nil, er
+	// }
 
-	// copy password from opts asset if it was not encoded in url
-	if len(t.Password) == 0 && len(in.Password) > 0 {
-		t.Password = in.Password
+	// // copy password from opts asset if it was not encoded in url
+	// if len(t.Password) == 0 && len(in.Password) > 0 {
+	// 	t.Password = in.Password
+	// }
+
+	// t.Sudo = &transports.Sudo{
+	// 	Active: opts.Sudo.Active,
+	// }
+
+	// t.IdentityFiles = []string{in.IdentityFile}
+	// t.Insecure = opts.Insecure
+	// t.BearerToken = in.BearerToken
+
+	// return t, nil
+}
+
+func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
+	// refIds := []string{}
+	// if len(in.ReferenceID) > 0 {
+	// 	refIds = []string{in.ReferenceID}
+	// }
+
+	assetInfo := &asset.Asset{
+		// Name: in.Name,
+		// ReferenceIDs: refIds,
+		// Labels: in.Labels,
+		State: asset.State_STATE_ONLINE,
 	}
 
 	// use hostname as name if asset name was not explicitly provided
@@ -51,22 +59,14 @@ func (k *instanceResolver) Resolve(in *options.VulnOptsAsset, opts *options.Vuln
 		assetInfo.Name = t.Host
 	}
 
-	t.Sudo = &transports.Sudo{
-		Active: opts.Sudo.Active,
-	}
-
-	t.IdentityFiles = []string{in.IdentityFile}
-	t.Insecure = opts.Insecure
-	t.BearerToken = in.BearerToken
-
 	assetInfo.Connections = []*transports.TransportConfig{t}
 
 	assetInfo.Platform = &platform.Platform{
 		Kind: transports.Kind_KIND_BARE_METAL,
 	}
-	if in != nil && len(in.AssetMrn) > 0 {
-		assetInfo.Mrn = in.AssetMrn
-	}
+	// if in != nil && len(in.AssetMrn) > 0 {
+	// 	assetInfo.Mrn = in.AssetMrn
+	// }
 
 	// this collection here is only to show the user a right indication about the asset name since -t local://
 	// will lead to an empty asset name. Since the discovery process runs BEFORE the real asset collector starts,

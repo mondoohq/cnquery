@@ -1,4 +1,4 @@
-package discovery
+package vsphere
 
 // import (
 // 	"testing"

@@ -1,4 +1,4 @@
-package discovery
+package docker_engine
 
 import (
 	"strings"
@@ -9,11 +9,9 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/apps/mondoo/cmd/options"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/platform"
 
-	docker_discovery "go.mondoo.io/mondoo/motor/discovery/docker_engine"
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
@@ -23,9 +21,9 @@ type DockerInfo struct {
 	Labels     map[string]string
 }
 
-type dockerResolver struct{}
+type Resolver struct{}
 
-func (k *dockerResolver) Name() string {
+func (r *Resolver) Name() string {
 	return "Docker Resolver"
 }
 
@@ -53,10 +51,20 @@ func (k *dockerResolver) Name() string {
 // -t docker:///path/link_to_image_archive.tar -> Docker Image
 // -t docker:///path/link_to_image_archive2.tar -> OCI
 // -t docker:///path/link_to_container.tar
-//
-// Therefore, this package will only implement the auto-discovery and
-// redirect to specific implementations once the disovery is completed
-func (k *dockerResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOpts) ([]*asset.Asset, error) {
+func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
+	if !strings.HasPrefix(url, "docker://") {
+		return nil, errors.New("could not find the container reference")
+	}
+
+	t := &transports.TransportConfig{
+		Backend: transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE,
+		Host:    strings.Replace(url, "docker://", "", 1),
+	}
+
+	return t, nil
+}
+
+func (k *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
 	// 0. check if we have a tar as input
 	//    detect if the tar is a container image format -> container image
 	//    or a container snapshot format -> container snapshot
@@ -65,16 +73,6 @@ func (k *dockerResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOp
 	//    check if the container is stopped -> container snapshot
 	// 3. check if we have an image id -> container image
 	// 4. check if we have a descriptor for a registry -> container image
-
-	uri := in.Connection
-
-	if !strings.HasPrefix(uri, "docker://") {
-		return nil, errors.New("could not find the container reference")
-	}
-
-	t := &transports.TransportConfig{}
-	t.Host = strings.Replace(uri, "docker://", "", 1)
-
 	if t == nil || len(t.Host) == 0 {
 		return nil, errors.New("no endpoint provided")
 	}
@@ -103,13 +101,13 @@ func (k *dockerResolver) Resolve(in *options.VulnOptsAsset, opts *options.VulnOp
 
 	log.Debug().Msg("try to connect to docker engine")
 	// could be an image id/name, container id/name or a short reference to an image in docker engine
-	ded, err := docker_discovery.NewDockerEngineDiscovery()
+	ded, err := NewDockerEngineDiscovery()
 	if err == nil {
 		ci, err := ded.ContainerInfo(t.Host)
 		if err == nil {
 			t.Backend = transports.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER
 			resolvedAsset = &asset.Asset{
-				Name:        docker_discovery.MondooContainerID(ci.ID),
+				Name:        MondooContainerID(ci.ID),
 				Connections: []*transports.TransportConfig{t},
 				Platform: &platform.Platform{
 					Kind:    transports.Kind_KIND_CONTAINER,

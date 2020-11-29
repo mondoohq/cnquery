@@ -1,4 +1,4 @@
-package discovery
+package k8s
 
 import (
 	"testing"
