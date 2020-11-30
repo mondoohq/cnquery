@@ -486,6 +486,8 @@ service {
   enabled() bool
   // Type information
   type() string
+  // Is it masked?
+  masked() bool
 }
 
 // Services configured on this system

@@ -31,7 +31,7 @@ stdout = """
   nfs-idmapd.service                                    loaded    inactive dead    NFSv4 ID-name mapping service
   nfs-mountd.service                                    loaded    inactive dead    NFS Mount Daemon
 ● nfs-secure-server.service                             not-found inactive dead    nfs-secure-server.service
-  nfs-server.service                                    loaded    inactive dead    NFS server and services
+  nfs-server.service                                    masked    inactive dead    NFS server and services
   nfs-utils.service                                     loaded    inactive dead    NFS server and client services
 ● ntpd.service                                          not-found inactive dead    ntpd.service
 ● ntpdate.service                                       not-found inactive dead    ntpdate.service

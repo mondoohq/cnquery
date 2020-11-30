@@ -16,6 +16,7 @@ type Service struct {
 	Installed   bool
 	Running     bool
 	Enabled     bool
+	Masked      bool
 }
 
 type State string

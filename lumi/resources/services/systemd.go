@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	SYSTEMD_LIST_UNITS_REGEX = regexp.MustCompile(`(?m)^(?:[^\S\n]{2}|●[^\S\n]|)(\S+)(?:[^\S\n])+(loaded|not-found)(?:[^\S\n])+(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(.+)$`)
+	SYSTEMD_LIST_UNITS_REGEX = regexp.MustCompile(`(?m)^(?:[^\S\n]{2}|●[^\S\n]|)(\S+)(?:[^\S\n])+(loaded|not-found|masked)(?:[^\S\n])+(\S+)(?:[^\S\n])+(\S+)(?:[^\S\n])+(.+)$`)
 )
 
 // a line may be prefixed with nothing, whitespace or a dot
@@ -32,6 +32,7 @@ func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 			Running:   m[i][3] == "active",
 			// TODO: we may need to revist the enabled state
 			Enabled:     m[i][2] == "loaded",
+			Masked:      m[i][2] == "masked",
 			Description: m[i][5],
 			Type:        "systemd",
 		}
