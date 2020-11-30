@@ -15,6 +15,7 @@ const (
 	SERVICE_CACHE_TYPE        = "type"
 	SERVICE_CACHE_RUNNING     = "running"
 	SERVICE_CACHE_ENABLED     = "enabled"
+	SERVICE_CACHE_MASKED      = "masked"
 )
 
 func (p *lumiService) init(args *lumi.Args) (*lumi.Args, Service, error) {
@@ -61,6 +62,7 @@ func (p *lumiService) init(args *lumi.Args) (*lumi.Args, Service, error) {
 	(*args)["installed"] = false
 	(*args)["running"] = false
 	(*args)["enabled"] = false
+	(*args)["masked"] = false
 	(*args)["type"] = ""
 
 	return args, nil, nil
@@ -107,6 +109,16 @@ func (p *lumiService) GetEnabled() (bool, error) {
 	}
 
 	p.gatherServiceInfo(p.createCallback(SERVICE_CACHE_ENABLED))
+	return false, lumi.NotReadyError{}
+}
+
+func (p *lumiService) GetMasked() (bool, error) {
+	_, ok := p.Cache.Load(SERVICE_CACHE_MASKED)
+	if ok {
+		return false, lumi.NotReadyError{}
+	}
+
+	p.gatherServiceInfo(p.createCallback(SERVICE_CACHE_MASKED))
 	return false, lumi.NotReadyError{}
 }
 
@@ -158,6 +170,7 @@ func (p *lumiService) gatherServiceInfo(fn ServiceCallbackTrigger) error {
 	p.Cache.Store("description", &lumi.CacheEntry{Data: srv.Description, Valid: true, Timestamp: time.Now().Unix()})
 	p.Cache.Store("installed", &lumi.CacheEntry{Data: srv.Installed, Valid: true, Timestamp: time.Now().Unix()})
 	p.Cache.Store("enabled", &lumi.CacheEntry{Data: srv.Enabled, Valid: true, Timestamp: time.Now().Unix()})
+	p.Cache.Store("masked", &lumi.CacheEntry{Data: srv.Masked, Valid: true, Timestamp: time.Now().Unix()})
 	p.Cache.Store("running", &lumi.CacheEntry{Data: srv.Running, Valid: true, Timestamp: time.Now().Unix()})
 	p.Cache.Store("type", &lumi.CacheEntry{Data: srv.Type, Valid: true, Timestamp: time.Now().Unix()})
 
@@ -200,6 +213,7 @@ func (p *lumiServices) GetList() ([]interface{}, error) {
 			"description", srv.Description,
 			"installed", srv.Installed,
 			"enabled", srv.Enabled,
+			"masked", srv.Masked,
 			"running", srv.Running,
 			"type", srv.Type,
 		)

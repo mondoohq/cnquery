@@ -35,4 +35,8 @@ func TestParseServiceSystemDUnitFiles(t *testing.T) {
 	assert.Equal(t, false, m[101].Running, "service is running")
 	assert.Equal(t, false, m[101].Installed, "service is installed")
 	assert.Equal(t, "systemd", m[101].Type, "service type is added")
+
+	// check for masked element
+	assert.Equal(t, "nfs-server", m[30].Name, "service name detected")
+	assert.Equal(t, true, m[30].Masked, "service is masked")
 }
