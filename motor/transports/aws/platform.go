@@ -3,7 +3,8 @@ package aws
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/service/organizations"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	"github.com/rs/zerolog/log"
 )
 
 func (t *Transport) Identifier() (string, error) {
@@ -16,24 +17,27 @@ func (t *Transport) Info() Info {
 }
 
 type Account struct {
-	ID     string
-	Name   string
-	Arn    string
-	Status string
+	ID   string
+	Name string
 }
 
 func (t *Transport) Account() (Account, error) {
 	accountid := t.info.Account
-	// get account id
 	ctx := context.Background()
-	res, err := t.Organizations().DescribeAccountRequest(&organizations.DescribeAccountInput{AccountId: &accountid}).Send(ctx)
+	res, err := t.Iam().ListAccountAliasesRequest(&iam.ListAccountAliasesInput{}).Send(ctx)
 	if err != nil {
 		return Account{}, err
 	}
+	var accountName string
+	if len(res.AccountAliases) == 0 {
+		// if account has no alias, log a warning and use account id
+		log.Warn().Msgf("no alias found for account %s", accountid)
+		accountName = accountid
+	} else {
+		accountName = res.AccountAliases[0]
+	}
 	return Account{
-		ID:     toString(res.Account.Id),
-		Name:   toString(res.Account.Name),
-		Arn:    toString(res.Account.Arn),
-		Status: string(res.Account.Status),
+		ID:   accountid,
+		Name: accountName,
 	}, nil
 }
