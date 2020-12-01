@@ -634,140 +634,128 @@ func nilNotTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 // string </>/<=/>= string
 
 func stringLTString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
-		return left.(string) < right.(string)
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+		return BoolData(left.(string) < right.(string))
 	})
 }
 
 func stringLTEString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
-		return left.(string) <= right.(string)
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+		return BoolData(left.(string) <= right.(string))
 	})
 }
 
 func stringGTString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
-		return left.(string) > right.(string)
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+		return BoolData(left.(string) > right.(string))
 	})
 }
 
 func stringGTEString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
-		return left.(string) >= right.(string)
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+		return BoolData(left.(string) >= right.(string))
 	})
 }
 
 // int </>/<=/>= int
 
 func intLTInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
-		return left.(int64) < right.(int64)
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+		return BoolData(left.(int64) < right.(int64))
 	})
 }
 
 func intLTEInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
-		return left.(int64) <= right.(int64)
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+		return BoolData(left.(int64) <= right.(int64))
 	})
 }
 
 func intGTInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
-		return left.(int64) > right.(int64)
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+		return BoolData(left.(int64) > right.(int64))
 	})
 }
 
 func intGTEInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
-		return left.(int64) >= right.(int64)
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+		return BoolData(left.(int64) >= right.(int64))
 	})
 }
 
 // float </>/<=/>= float
 
 func floatLTFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
-		return left.(float64) < right.(float64)
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+		return BoolData(left.(float64) < right.(float64))
 	})
 }
 
 func floatLTEFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
-		return left.(float64) <= right.(float64)
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+		return BoolData(left.(float64) <= right.(float64))
 	})
 }
 
 func floatGTFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
-		return left.(float64) > right.(float64)
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+		return BoolData(left.(float64) > right.(float64))
 	})
 }
 
 func floatGTEFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
-		return left.(float64) >= right.(float64)
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+		return BoolData(left.(float64) >= right.(float64))
 	})
 }
 
 // time </>/<=/>= time
 
 func timeLTTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		l := left.(*time.Time)
 		r := right.(*time.Time)
-		if l == nil {
-			return r == nil
-		}
-		if r == nil {
-			return false
+		if l == nil || r == nil {
+			return &RawData{Type: types.Bool}
 		}
 
-		return (*l).Before(*r)
+		return BoolData((*l).Before(*r))
 	})
 }
 
 func timeLTETime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		l := left.(*time.Time)
 		r := right.(*time.Time)
-		if l == nil {
-			return r == nil
-		}
-		if r == nil {
-			return false
+		if l == nil || r == nil {
+			return &RawData{Type: types.Bool}
 		}
 
-		return (*l).Before(*r) || (*l).Equal(*r)
+		return BoolData((*l).Before(*r) || (*l).Equal(*r))
 	})
 }
 
 func timeGTTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		l := left.(*time.Time)
 		r := right.(*time.Time)
-		if l == nil {
-			return r == nil
-		}
-		if r == nil {
-			return false
+		if l == nil || r == nil {
+			return &RawData{Type: types.Bool}
 		}
 
-		return (*l).After(*r)
+		return BoolData((*l).After(*r))
 	})
 }
 
 func timeGTETime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		l := left.(*time.Time)
 		r := right.(*time.Time)
-		if l == nil {
-			return r == nil
-		}
-		if r == nil {
-			return false
+		if l == nil || r == nil {
+			return &RawData{Type: types.Bool}
 		}
 
-		return (*l).After(*r) || (*l).Equal(*r)
+		return BoolData((*l).After(*r) || (*l).Equal(*r))
 	})
 }
 
@@ -816,172 +804,220 @@ func intTimesTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 // int </>/<=/>= float
 
 func intLTFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
-		return float64(left.(int64)) < right.(float64)
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+		return BoolData(float64(left.(int64)) < right.(float64))
 	})
 }
 
 func intLTEFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
-		return float64(left.(int64)) <= right.(float64)
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+		return BoolData(float64(left.(int64)) <= right.(float64))
 	})
 }
 
 func intGTFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
-		return float64(left.(int64)) > right.(float64)
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+		return BoolData(float64(left.(int64)) > right.(float64))
 	})
 }
 
 func intGTEFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
-		return float64(left.(int64)) >= right.(float64)
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+		return BoolData(float64(left.(int64)) >= right.(float64))
 	})
 }
 
 // float </>/<=/>= int
 
 func floatLTInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
-		return left.(float64) < float64(right.(int64))
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+		return BoolData(left.(float64) < float64(right.(int64)))
 	})
 }
 
 func floatLTEInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
-		return left.(float64) <= float64(right.(int64))
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+		return BoolData(left.(float64) <= float64(right.(int64)))
 	})
 }
 
 func floatGTInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
-		return left.(float64) > float64(right.(int64))
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+		return BoolData(left.(float64) > float64(right.(int64)))
 	})
 }
 
 func floatGTEInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
-		return left.(float64) >= float64(right.(int64))
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+		return BoolData(left.(float64) >= float64(right.(int64)))
 	})
 }
 
 // float </>/<=/>= string
 
 func floatLTString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseFloat(right.(string), 64)
-		return err == nil && left.(float64) < f
+		if err != nil {
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+		}
+		return BoolData(left.(float64) < f)
 	})
 }
 
 func floatLTEString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseFloat(right.(string), 64)
-		return err == nil && left.(float64) <= f
+		if err != nil {
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+		}
+		return BoolData(left.(float64) <= f)
 	})
 }
 
 func floatGTString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseFloat(right.(string), 64)
-		return err == nil && left.(float64) > f
+		if err != nil {
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+		}
+		return BoolData(left.(float64) > f)
 	})
 }
 
 func floatGTEString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseFloat(right.(string), 64)
-		return err == nil && left.(float64) >= f
+		if err != nil {
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+		}
+		return BoolData(left.(float64) >= f)
 	})
 }
 
 // string </>/<=/>= float
 
 func stringLTFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseFloat(left.(string), 64)
-		return err == nil && f < right.(float64)
+		if err != nil {
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+		}
+		return BoolData(f < right.(float64))
 	})
 }
 
 func stringLTEFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseFloat(left.(string), 64)
-		return err == nil && f <= right.(float64)
+		if err != nil {
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+		}
+		return BoolData(f <= right.(float64))
 	})
 }
 
 func stringGTFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseFloat(left.(string), 64)
-		return err == nil && f > right.(float64)
+		if err != nil {
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+		}
+		return BoolData(f > right.(float64))
 	})
 }
 
 func stringGTEFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseFloat(left.(string), 64)
-		return err == nil && f >= right.(float64)
+		if err != nil {
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+		}
+		return BoolData(f >= right.(float64))
 	})
 }
 
 // int </>/<=/>= string
 
 func intLTString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(right.(string), 10, 64)
-		return err == nil && left.(int64) < f
+		if err != nil {
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+		}
+		return BoolData(left.(int64) < f)
 	})
 }
 
 func intLTEString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(right.(string), 10, 64)
-		return err == nil && left.(int64) <= f
+		if err != nil {
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+		}
+		return BoolData(left.(int64) <= f)
 	})
 }
 
 func intGTString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(right.(string), 10, 64)
-		return err == nil && left.(int64) > f
+		if err != nil {
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+		}
+		return BoolData(left.(int64) > f)
 	})
 }
 
 func intGTEString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(right.(string), 10, 64)
-		return err == nil && left.(int64) >= f
+		if err != nil {
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+		}
+		return BoolData(left.(int64) >= f)
 	})
 }
 
 // string </>/<=/>= int
 
 func stringLTInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(left.(string), 10, 64)
-		return err == nil && f < right.(int64)
+		if err != nil {
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+		}
+		return BoolData(f < right.(int64))
 	})
 }
 
 func stringLTEInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(left.(string), 10, 64)
-		return err == nil && f <= right.(int64)
+		if err != nil {
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+		}
+		return BoolData(f <= right.(int64))
 	})
 }
 
 func stringGTInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(left.(string), 10, 64)
-		return err == nil && f > right.(int64)
+		if err != nil {
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+		}
+		return BoolData(f > right.(int64))
 	})
 }
 
 func stringGTEInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return dataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(left.(string), 10, 64)
-		return err == nil && f >= right.(int64)
+		if err != nil {
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+		}
+		return BoolData(f >= right.(int64))
 	})
 }
 
