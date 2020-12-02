@@ -199,24 +199,28 @@ func (c *lumiAwsIam) GetUsers() ([]interface{}, error) {
 	svc := at.Iam()
 	ctx := context.Background()
 
-	usersResp, err := svc.ListUsersRequest(&iam.ListUsersInput{}).Send(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not gather aws iam users")
-	}
-
-	// TODO: handle pagination
+	var marker *string
 	res := []interface{}{}
-	for i := range usersResp.Users {
-		usr := usersResp.Users[i]
-
-		lumiAwsIamUser, err := c.createIamUser(&usr)
+	for {
+		usersResp, err := svc.ListUsersRequest(&iam.ListUsersInput{Marker: marker}).Send(ctx)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "could not gather aws iam users")
 		}
+		for i := range usersResp.Users {
+			usr := usersResp.Users[i]
 
-		res = append(res, lumiAwsIamUser)
+			lumiAwsIamUser, err := c.createIamUser(&usr)
+			if err != nil {
+				return nil, err
+			}
+
+			res = append(res, lumiAwsIamUser)
+		}
+		if usersResp.IsTruncated == nil || *usersResp.IsTruncated == false {
+			break
+		}
+		marker = usersResp.Marker
 	}
-
 	return res, nil
 }
 
@@ -263,7 +267,7 @@ func (c *lumiAwsIam) GetVirtualMfaDevices() ([]interface{}, error) {
 		return nil, errors.Wrap(err, "could not gather aws iam virtual-mfa-devices")
 	}
 
-	// TODO: handle pagination
+	// note: adding pagination to this call results in Throttling: Rate exceeded error
 	res := []interface{}{}
 	for i := range devicesResp.VirtualMFADevices {
 		device := devicesResp.VirtualMFADevices[i]
@@ -293,7 +297,6 @@ func (c *lumiAwsIam) GetVirtualMfaDevices() ([]interface{}, error) {
 }
 
 func (c *lumiAwsIam) lumiPolicies(policies []iam.Policy) ([]interface{}, error) {
-	// TODO: handle pagination
 	res := []interface{}{}
 	for i := range policies {
 		policy := policies[i]
@@ -329,7 +332,6 @@ func (c *lumiAwsIam) GetPolicies() ([]interface{}, error) {
 	res := []interface{}{}
 	var marker *string
 	for {
-		// TODO: implement pagination
 		policiesResp, err := svc.ListPoliciesRequest(&iam.ListPoliciesInput{
 			Scope:  iam.PolicyScopeTypeAll,
 			Marker: marker,
@@ -363,7 +365,6 @@ func (c *lumiAwsIam) GetRoles() ([]interface{}, error) {
 	ctx := context.Background()
 
 	res := []interface{}{}
-
 	var marker *string
 	for {
 		rolesResp, err := svc.ListRolesRequest(&iam.ListRolesInput{
@@ -410,7 +411,6 @@ func (c *lumiAwsIam) GetGroups() ([]interface{}, error) {
 	ctx := context.Background()
 
 	res := []interface{}{}
-
 	var marker *string
 	for {
 		groupsResp, err := svc.ListGroupsRequest(&iam.ListGroupsInput{
@@ -733,16 +733,24 @@ func (u *lumiAwsIamUser) GetPolicies() ([]interface{}, error) {
 		return nil, err
 	}
 
-	userPolicies, err := svc.ListUserPoliciesRequest(&iam.ListUserPoliciesInput{
-		UserName: &username,
-	}).Send(ctx)
-	if err != nil {
-		return nil, err
-	}
+	var marker *string
+	res := make([]interface{}, 0)
+	for {
+		userPolicies, err := svc.ListUserPoliciesRequest(&iam.ListUserPoliciesInput{
+			UserName: &username,
+			Marker:   marker,
+		}).Send(ctx)
+		if err != nil {
+			return nil, err
+		}
 
-	res := make([]interface{}, len(userPolicies.PolicyNames))
-	for i := range userPolicies.PolicyNames {
-		res[i] = userPolicies.PolicyNames[i]
+		for i := range userPolicies.PolicyNames {
+			res[i] = userPolicies.PolicyNames[i]
+		}
+		if userPolicies.IsTruncated == nil || *userPolicies.IsTruncated == false {
+			break
+		}
+		marker = userPolicies.Marker
 	}
 
 	return res, nil
@@ -762,25 +770,33 @@ func (u *lumiAwsIamUser) GetAttachedPolicies() ([]interface{}, error) {
 		return nil, err
 	}
 
-	userAttachedPolicies, err := svc.ListAttachedUserPoliciesRequest(&iam.ListAttachedUserPoliciesInput{
-		UserName: &username,
-	}).Send(ctx)
-	if err != nil {
-		return nil, err
-	}
-
+	var marker *string
 	res := []interface{}{}
-	for i := range userAttachedPolicies.AttachedPolicies {
-		attachedPolicy := userAttachedPolicies.AttachedPolicies[i]
-
-		lumiAwsIamPolicy, err := u.Runtime.CreateResource("aws.iam.policy",
-			"arn", toString(attachedPolicy.PolicyArn),
-		)
+	for {
+		userAttachedPolicies, err := svc.ListAttachedUserPoliciesRequest(&iam.ListAttachedUserPoliciesInput{
+			Marker:   marker,
+			UserName: &username,
+		}).Send(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		res = append(res, lumiAwsIamPolicy)
+		for i := range userAttachedPolicies.AttachedPolicies {
+			attachedPolicy := userAttachedPolicies.AttachedPolicies[i]
+
+			lumiAwsIamPolicy, err := u.Runtime.CreateResource("aws.iam.policy",
+				"arn", toString(attachedPolicy.PolicyArn),
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			res = append(res, lumiAwsIamPolicy)
+			if userAttachedPolicies.IsTruncated == nil || *userAttachedPolicies.IsTruncated == false {
+				break
+			}
+			marker = userAttachedPolicies.Marker
+		}
 	}
 
 	return res, nil

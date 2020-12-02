@@ -4,6 +4,7 @@ import (
 	"context"
 	"strconv"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 )
 
@@ -33,29 +34,36 @@ func (s *lumiAwsEc2) GetVpcs() ([]interface{}, error) {
 
 	svc := at.Ec2()
 	ctx := context.Background()
-
-	// todo: add pagination
-	vpcs, err := svc.DescribeVpcsRequest(&ec2.DescribeVpcsInput{}).Send(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	res := []interface{}{}
-	for i := range vpcs.Vpcs {
-		v := vpcs.Vpcs[i]
-		stringState, err := ec2.VpcState.MarshalValue(v.State)
+
+	nextToken := aws.String("no_token_to_start_with")
+	params := &ec2.DescribeVpcsInput{}
+	for nextToken != nil {
+		vpcs, err := svc.DescribeVpcsRequest(params).Send(ctx)
 		if err != nil {
 			return nil, err
 		}
-		lumiVpc, err := s.Runtime.CreateResource("aws.ec2.vpc",
-			"id", toString(v.VpcId),
-			"state", stringState,
-			"isDefault", toBool(v.IsDefault),
-		)
-		if err != nil {
-			return nil, err
+		nextToken = vpcs.NextToken
+		if vpcs.NextToken != nil {
+			params.NextToken = nextToken
 		}
-		res = append(res, lumiVpc)
+
+		for i := range vpcs.Vpcs {
+			v := vpcs.Vpcs[i]
+			stringState, err := ec2.VpcState.MarshalValue(v.State)
+			if err != nil {
+				return nil, err
+			}
+			lumiVpc, err := s.Runtime.CreateResource("aws.ec2.vpc",
+				"id", toString(v.VpcId),
+				"state", stringState,
+				"isDefault", toBool(v.IsDefault),
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, lumiVpc)
+		}
 	}
 	return res, nil
 }
@@ -69,69 +77,77 @@ func (s *lumiAwsEc2) GetSecurityGroups() ([]interface{}, error) {
 	svc := at.Ec2()
 	ctx := context.Background()
 
-	// TODO: iterate over each region? pagination is needed.
-	securityGroups, err := svc.DescribeSecurityGroupsRequest(&ec2.DescribeSecurityGroupsInput{}).Send(ctx)
-	if err != nil {
-		return nil, err
-	}
-
+	// TODO: iterate over each region?
 	res := []interface{}{}
-	for i := range securityGroups.SecurityGroups {
-		group := securityGroups.SecurityGroups[i]
 
-		lumiIpPermissions := []interface{}{}
-		for p := range group.IpPermissions {
-			permission := group.IpPermissions[p]
+	nextToken := aws.String("no_token_to_start_with")
+	params := &ec2.DescribeSecurityGroupsInput{}
+	for nextToken != nil {
+		securityGroups, err := svc.DescribeSecurityGroupsRequest(params).Send(ctx)
+		if err != nil {
+			return nil, err
+		}
+		nextToken = securityGroups.NextToken
+		if securityGroups.NextToken != nil {
+			params.NextToken = nextToken
+		}
 
-			ipRanges := []interface{}{}
-			for r := range permission.IpRanges {
-				iprange := permission.IpRanges[r]
-				if iprange.CidrIp != nil {
-					ipRanges = append(ipRanges, *iprange.CidrIp)
+		for i := range securityGroups.SecurityGroups {
+			group := securityGroups.SecurityGroups[i]
+
+			lumiIpPermissions := []interface{}{}
+			for p := range group.IpPermissions {
+				permission := group.IpPermissions[p]
+
+				ipRanges := []interface{}{}
+				for r := range permission.IpRanges {
+					iprange := permission.IpRanges[r]
+					if iprange.CidrIp != nil {
+						ipRanges = append(ipRanges, *iprange.CidrIp)
+					}
 				}
+
+				ipv6Ranges := []interface{}{}
+				for r := range permission.Ipv6Ranges {
+					iprange := permission.Ipv6Ranges[r]
+					if iprange.CidrIpv6 != nil {
+						ipRanges = append(ipRanges, *iprange.CidrIpv6)
+					}
+				}
+
+				lumiSecurityGroupIpPermission, err := s.Runtime.CreateResource("aws.ec2.securitygroup.ippermission",
+					"id", toString(group.GroupId)+"-"+strconv.Itoa(p),
+					"fromPort", toInt64(permission.FromPort),
+					"toPort", toInt64(permission.ToPort),
+					"ipProtocol", toString(permission.IpProtocol),
+					"ipRanges", ipRanges,
+					"ipv6Ranges", ipv6Ranges,
+					// prefixListIds
+					// userIdGroupPairs
+				)
+				if err != nil {
+					return nil, err
+				}
+
+				lumiIpPermissions = append(lumiIpPermissions, lumiSecurityGroupIpPermission)
 			}
 
-			ipv6Ranges := []interface{}{}
-			for r := range permission.Ipv6Ranges {
-				iprange := permission.Ipv6Ranges[r]
-				if iprange.CidrIpv6 != nil {
-					ipRanges = append(ipRanges, *iprange.CidrIpv6)
-				}
-			}
-
-			lumiSecurityGroupIpPermission, err := s.Runtime.CreateResource("aws.ec2.securitygroup.ippermission",
-				"id", toString(group.GroupId)+"-"+strconv.Itoa(p),
-				"fromPort", toInt64(permission.FromPort),
-				"toPort", toInt64(permission.ToPort),
-				"ipProtocol", toString(permission.IpProtocol),
-				"ipRanges", ipRanges,
-				"ipv6Ranges", ipv6Ranges,
-				// prefixListIds
-				// userIdGroupPairs
+			lumiS3SecurityGroup, err := s.Runtime.CreateResource("aws.ec2.securitygroup",
+				"id", toString(group.GroupId),
+				"name", toString(group.GroupName),
+				"description", toString(group.Description),
+				"tag", ec2TagsToMap(group.Tags),
+				// TODO: reference to vpc
+				"vpcid", toString(group.VpcId),
+				"ipPermissions", lumiIpPermissions,
+				"ipPermissionsEgress", []interface{}{},
 			)
 			if err != nil {
 				return nil, err
 			}
-
-			lumiIpPermissions = append(lumiIpPermissions, lumiSecurityGroupIpPermission)
+			res = append(res, lumiS3SecurityGroup)
 		}
-
-		lumiS3SecurityGroup, err := s.Runtime.CreateResource("aws.ec2.securitygroup",
-			"id", toString(group.GroupId),
-			"name", toString(group.GroupName),
-			"description", toString(group.Description),
-			"tag", ec2TagsToMap(group.Tags),
-			// TODO: reference to vpc
-			"vpcid", toString(group.VpcId),
-			"ipPermissions", lumiIpPermissions,
-			"ipPermissionsEgress", []interface{}{},
-		)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, lumiS3SecurityGroup)
 	}
-
 	return res, nil
 }
 
