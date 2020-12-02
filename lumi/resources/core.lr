@@ -8,6 +8,8 @@ mondoo {
   resources() []string
   // Returns the agent execution environment
   jobEnvironment() dict
+  // Transport capabilities
+  capabilities() []string
 }
 
 // Parse provides common parsers (json, ini, certs, etc)

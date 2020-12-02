@@ -70,7 +70,9 @@ func (t *Transport) Close() {
 }
 
 func (t *Transport) Capabilities() transports.Capabilities {
-	return transports.Capabilities{}
+	return transports.Capabilities{
+		transports.Capability_Ipmi,
+	}
 }
 
 func (t *Transport) Kind() transports.Kind {

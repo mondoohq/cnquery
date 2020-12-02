@@ -1,12 +1,42 @@
 package transports
 
+import "strconv"
+
 type Capability int
 
 const (
-	Cabability_RunCommand Capability = iota
-	Cabability_File
-	Cabability_FileSearch
+	Capability_RunCommand Capability = iota
+	Capability_File
+	Capability_FileSearch
+	Capability_AWS
+	Capability_vSphere
+	Capability_Azure
+	Capability_Gcp
+	Capability_Arista
+	Capability_Microsoft365
+	Capability_Ipmi
 )
+
+var CapabilityNames = map[Capability]string{
+	Capability_RunCommand:   "run-command",
+	Capability_File:         "file",
+	Capability_FileSearch:   "file-search",
+	Capability_AWS:          "api-aws",
+	Capability_vSphere:      "api-vsphere",
+	Capability_Azure:        "api-azure",
+	Capability_Gcp:          "api-gcp",
+	Capability_Arista:       "api-arista",
+	Capability_Microsoft365: "api-ms365",
+	Capability_Ipmi:         "api-ipmi",
+}
+
+func (c Capability) String() string {
+	v, ok := CapabilityNames[c]
+	if ok {
+		return v
+	}
+	return strconv.Itoa(int(c))
+}
 
 type Capabilities []Capability
 
