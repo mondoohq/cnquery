@@ -144,7 +144,9 @@ func (t *Transport) FS() afero.Fs {
 func (t *Transport) Close() {}
 
 func (t *Transport) Capabilities() transports.Capabilities {
-	return transports.Capabilities{}
+	return transports.Capabilities{
+		transports.Capability_Microsoft365,
+	}
 }
 
 func (t *Transport) Options() map[string]string {

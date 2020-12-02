@@ -7,20 +7,20 @@ import (
 	"go.mondoo.io/mondoo/cli/execruntime"
 )
 
-func (s *lumiMondoo) id() (string, error) {
+func (m *lumiMondoo) id() (string, error) {
 	return "", nil
 }
 
-func (s *lumiMondoo) GetVersion() (string, error) {
+func (m *lumiMondoo) GetVersion() (string, error) {
 	return mondoo.GetVersion(), nil
 }
 
-func (s *lumiMondoo) GetBuild() (string, error) {
+func (m *lumiMondoo) GetBuild() (string, error) {
 	return mondoo.GetBuild(), nil
 }
 
-func (s *lumiMondoo) GetResources() ([]interface{}, error) {
-	n := s.Runtime.Registry.Names()
+func (m *lumiMondoo) GetResources() ([]interface{}, error) {
+	n := m.Runtime.Registry.Names()
 	sort.Strings(n)
 	res := make([]interface{}, len(n))
 	for i, s := range n {
@@ -34,7 +34,7 @@ type runtimeEnv struct {
 	Name string `json:"name"`
 }
 
-func (s *lumiMondoo) GetJobEnvironment() (map[string]interface{}, error) {
+func (m *lumiMondoo) GetJobEnvironment() (map[string]interface{}, error) {
 	// get the local agent runtime information
 	ciEnv := execruntime.Detect()
 
@@ -44,4 +44,13 @@ func (s *lumiMondoo) GetJobEnvironment() (map[string]interface{}, error) {
 	}
 
 	return jsonToDict(re)
+}
+
+func (m *lumiMondoo) GetCapabilities() ([]interface{}, error) {
+	capabilities := []interface{}{}
+	caps := m.Runtime.Motor.Transport.Capabilities()
+	for i := range caps {
+		capabilities = append(capabilities, caps[i].String())
+	}
+	return capabilities, nil
 }

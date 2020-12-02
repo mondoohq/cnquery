@@ -161,8 +161,8 @@ func (t *WinrmTransport) Close() {
 
 func (t *WinrmTransport) Capabilities() transports.Capabilities {
 	return transports.Capabilities{
-		transports.Cabability_RunCommand,
-		transports.Cabability_File,
+		transports.Capability_RunCommand,
+		transports.Capability_File,
 	}
 }
 

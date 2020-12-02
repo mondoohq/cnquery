@@ -96,8 +96,8 @@ func (m *Transport) Close() {
 
 func (t *Transport) Capabilities() transports.Capabilities {
 	return transports.Capabilities{
-		transports.Cabability_RunCommand,
-		transports.Cabability_File,
+		transports.Capability_RunCommand,
+		transports.Capability_File,
 	}
 }
 

@@ -159,7 +159,7 @@ func (l *lumiFilesFind) GetList() ([]interface{}, error) {
 
 	var foundFiles []string
 	caps := l.Runtime.Motor.Transport.Capabilities()
-	if caps.HasCapability(transports.Cabability_FileSearch) {
+	if caps.HasCapability(transports.Capability_FileSearch) {
 		fs := l.Runtime.Motor.Transport.FS()
 
 		fsSearch, ok := fs.(transports.FileSearch)
@@ -171,7 +171,7 @@ func (l *lumiFilesFind) GetList() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-	} else if caps.HasCapability(transports.Cabability_RunCommand) {
+	} else if caps.HasCapability(transports.Capability_RunCommand) {
 		var call strings.Builder
 		call.WriteString("find ")
 		call.WriteString(strconv.Quote(path))

@@ -67,7 +67,7 @@ func getAdvisoryReport(r *lumi.Runtime) (*scanner.VulnReport, error) {
 	apiPackages := []*api.Package{}
 
 	// collect pacakges if the platform supports gathering files
-	if r.Motor.HasCapability(transports.Cabability_File) {
+	if r.Motor.HasCapability(transports.Capability_File) {
 		obj, err = r.CreateResource("packages")
 		if err != nil {
 			return nil, err

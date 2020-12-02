@@ -21,7 +21,7 @@ func (s *RpmNewestKernel) Name() string {
 
 func (s *RpmNewestKernel) RebootPending() (bool, error) {
 	// if it is a static asset, no reboot is pending
-	if !s.Motor.HasCapability(transports.Cabability_RunCommand) {
+	if !s.Motor.HasCapability(transports.Capability_RunCommand) {
 		return false, nil
 	}
 

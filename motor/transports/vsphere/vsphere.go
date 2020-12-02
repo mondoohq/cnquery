@@ -74,7 +74,9 @@ func (t *Transport) FS() afero.Fs {
 func (t *Transport) Close() {}
 
 func (t *Transport) Capabilities() transports.Capabilities {
-	return transports.Capabilities{}
+	return transports.Capabilities{
+		transports.Capability_vSphere,
+	}
 }
 
 func (t *Transport) Client() *govmomi.Client {
