@@ -1310,6 +1310,13 @@ aws.s3.bucket.policystatement {
 
 aws.ec2 {
   securityGroups() []aws.ec2.securitygroup
+  vpcs() []aws.ec2.vpc
+}
+
+aws.ec2.vpc {
+  id string
+  state string
+  isDefault bool
 }
 
 aws.ec2.securitygroup {

@@ -25,6 +25,41 @@ func ec2TagsToMap(tags []ec2.Tag) map[string]interface{} {
 	return tagsMap
 }
 
+func (s *lumiAwsEc2) GetVpcs() ([]interface{}, error) {
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.Ec2()
+	ctx := context.Background()
+
+	// todo: add pagination
+	vpcs, err := svc.DescribeVpcsRequest(&ec2.DescribeVpcsInput{}).Send(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res := []interface{}{}
+	for i := range vpcs.Vpcs {
+		v := vpcs.Vpcs[i]
+		stringState, err := ec2.VpcState.MarshalValue(v.State)
+		if err != nil {
+			return nil, err
+		}
+		lumiVpc, err := s.Runtime.CreateResource("aws.ec2.vpc",
+			"id", toString(v.VpcId),
+			"state", stringState,
+			"isDefault", toBool(v.IsDefault),
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, lumiVpc)
+	}
+	return res, nil
+}
+
 func (s *lumiAwsEc2) GetSecurityGroups() ([]interface{}, error) {
 	at, err := awstransport(s.Runtime.Motor.Transport)
 	if err != nil {
@@ -34,7 +69,7 @@ func (s *lumiAwsEc2) GetSecurityGroups() ([]interface{}, error) {
 	svc := at.Ec2()
 	ctx := context.Background()
 
-	// TODO: iterate over each region?
+	// TODO: iterate over each region? pagination is needed.
 	securityGroups, err := svc.DescribeSecurityGroupsRequest(&ec2.DescribeSecurityGroupsInput{}).Send(ctx)
 	if err != nil {
 		return nil, err
@@ -105,5 +140,9 @@ func (s *lumiAwsEc2Securitygroup) id() (string, error) {
 }
 
 func (s *lumiAwsEc2SecuritygroupIppermission) id() (string, error) {
+	return s.Id()
+}
+
+func (s *lumiAwsEc2Vpc) id() (string, error) {
 	return s.Id()
 }
