@@ -17,7 +17,7 @@ func (t *lumiAwsCloudtrail) GetTrails() ([]interface{}, error) {
 		return nil, err
 	}
 
-	svc := at.Cloudtrail()
+	svc := at.Cloudtrail("")
 	ctx := context.Background()
 
 	trailsResp, err := svc.DescribeTrailsRequest(&cloudtrail.DescribeTrailsInput{}).Send(ctx)
@@ -76,7 +76,7 @@ func (t *lumiAwsCloudtrailTrail) GetStatus() (interface{}, error) {
 		return nil, err
 	}
 
-	svc := at.Cloudtrail()
+	svc := at.Cloudtrail("")
 	ctx := context.Background()
 
 	arnValue, err := t.Arn()

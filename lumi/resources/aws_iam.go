@@ -34,7 +34,7 @@ func (c *lumiAwsIam) GetCredentialReport() ([]interface{}, error) {
 		return nil, err
 	}
 
-	svc := at.Iam()
+	svc := at.Iam("")
 	ctx := context.Background()
 
 	var data []byte
@@ -115,7 +115,7 @@ func (c *lumiAwsIam) GetAccountPasswordPolicy() (map[string]interface{}, error) 
 		return nil, err
 	}
 
-	svc := at.Iam()
+	svc := at.Iam("")
 	ctx := context.Background()
 
 	resp, err := svc.GetAccountPasswordPolicyRequest(&iam.GetAccountPasswordPolicyInput{}).Send(ctx)
@@ -173,7 +173,7 @@ func (c *lumiAwsIam) GetAccountSummary() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	svc := at.Iam()
+	svc := at.Iam("")
 	ctx := context.Background()
 
 	resp, err := svc.GetAccountSummaryRequest(&iam.GetAccountSummaryInput{}).Send(ctx)
@@ -196,7 +196,7 @@ func (c *lumiAwsIam) GetUsers() ([]interface{}, error) {
 		return nil, err
 	}
 
-	svc := at.Iam()
+	svc := at.Iam("")
 	ctx := context.Background()
 
 	var marker *string
@@ -259,7 +259,7 @@ func (c *lumiAwsIam) GetVirtualMfaDevices() ([]interface{}, error) {
 		return nil, err
 	}
 
-	svc := at.Iam()
+	svc := at.Iam("")
 	ctx := context.Background()
 
 	devicesResp, err := svc.ListVirtualMFADevicesRequest(&iam.ListVirtualMFADevicesInput{}).Send(ctx)
@@ -326,7 +326,7 @@ func (c *lumiAwsIam) GetPolicies() ([]interface{}, error) {
 		return nil, err
 	}
 
-	svc := at.Iam()
+	svc := at.Iam("")
 	ctx := context.Background()
 
 	res := []interface{}{}
@@ -361,7 +361,7 @@ func (c *lumiAwsIam) GetRoles() ([]interface{}, error) {
 		return nil, err
 	}
 
-	svc := at.Iam()
+	svc := at.Iam("")
 	ctx := context.Background()
 
 	res := []interface{}{}
@@ -407,7 +407,7 @@ func (c *lumiAwsIam) GetGroups() ([]interface{}, error) {
 		return nil, err
 	}
 
-	svc := at.Iam()
+	svc := at.Iam("")
 	ctx := context.Background()
 
 	res := []interface{}{}
@@ -678,7 +678,7 @@ func (p *lumiAwsIamUser) init(args *lumi.Args) (*lumi.Args, AwsIamUser, error) {
 		return nil, nil, err
 	}
 
-	svc := at.Iam()
+	svc := at.Iam("")
 	ctx := context.Background()
 
 	// TODO: handle arn and extract the name
@@ -725,7 +725,7 @@ func (u *lumiAwsIamUser) GetPolicies() ([]interface{}, error) {
 		return nil, err
 	}
 
-	svc := at.Iam()
+	svc := at.Iam("")
 	ctx := context.Background()
 
 	username, err := u.Name()
@@ -762,7 +762,7 @@ func (u *lumiAwsIamUser) GetAttachedPolicies() ([]interface{}, error) {
 		return nil, err
 	}
 
-	svc := at.Iam()
+	svc := at.Iam("")
 	ctx := context.Background()
 
 	username, err := u.Name()
@@ -819,7 +819,7 @@ func (u *lumiAwsIamPolicy) loadPolicy(arn string) (*iam.Policy, error) {
 		return nil, err
 	}
 
-	svc := at.Iam()
+	svc := at.Iam("")
 	ctx := context.Background()
 
 	policy, err := svc.GetPolicyRequest(&iam.GetPolicyInput{PolicyArn: &arn}).Send(ctx)
@@ -961,7 +961,7 @@ func (u *lumiAwsIamPolicy) listAttachedEntities(arn string) (attachedEntities, e
 		return res, err
 	}
 
-	svc := at.Iam()
+	svc := at.Iam("")
 	ctx := context.Background()
 
 	var marker *string
@@ -1082,7 +1082,7 @@ func (u *lumiAwsIamPolicy) GetVersions() ([]interface{}, error) {
 		return nil, err
 	}
 
-	svc := at.Iam()
+	svc := at.Iam("")
 	ctx := context.Background()
 
 	arn, err := u.Arn()
@@ -1135,7 +1135,7 @@ func (u *lumiAwsIamPolicyversion) GetDocument() (string, error) {
 		return "", err
 	}
 
-	svc := at.Iam()
+	svc := at.Iam("")
 	ctx := context.Background()
 
 	arn, err := u.Arn()
@@ -1183,7 +1183,7 @@ func (p *lumiAwsIamRole) init(args *lumi.Args) (*lumi.Args, AwsIamRole, error) {
 		return nil, nil, err
 	}
 
-	svc := at.Iam()
+	svc := at.Iam("")
 	ctx := context.Background()
 
 	// TODO: handle arn and extract the name
@@ -1239,7 +1239,7 @@ func (p *lumiAwsIamGroup) init(args *lumi.Args) (*lumi.Args, AwsIamGroup, error)
 		return nil, nil, err
 	}
 
-	svc := at.Iam()
+	svc := at.Iam("")
 	ctx := context.Background()
 
 	// TODO: handle arn and extract the name
