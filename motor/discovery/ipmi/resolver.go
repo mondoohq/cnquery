@@ -49,7 +49,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error
 	}
 
 	resolved = append(resolved, &asset.Asset{
-		ReferenceIDs: []string{identifier},
+		PlatformIDs: []string{identifier},
 		// TODO: consider using the ipmi vendor id and product id
 		Name:        "IPMI device " + trans.Guid(),
 		Platform:    pf,

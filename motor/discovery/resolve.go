@@ -105,8 +105,8 @@ func enrichAssetInformation(v vault.Vault, a *asset.Asset) *asset.Asset {
 	}
 
 	// iterate over each platform id
-	for pid := range a.ReferenceIDs {
-		platformId := a.ReferenceIDs[pid]
+	for pid := range a.PlatformIDs {
+		platformId := a.PlatformIDs[pid]
 		secret, err := getSecret(v, platformId)
 		if err == nil {
 			// TODO: we should only overwrite the data that is available

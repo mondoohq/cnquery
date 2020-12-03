@@ -515,7 +515,7 @@ func containertar(endpoint *transports.TransportConfig) (transports.Transport, D
 		if err == nil {
 			identifier = docker_discovery.MondooContainerImageID(hash.String())
 		} else {
-			log.Warn().Err(err).Msg("could not determine referenceid")
+			log.Warn().Err(err).Msg("could not determine platform id")
 		}
 
 		rc := mutate.Extract(img)

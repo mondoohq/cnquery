@@ -66,10 +66,10 @@ func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error
 	}
 
 	resolved = append(resolved, &asset.Asset{
-		ReferenceIDs: []string{identifier},
-		Name:         name,
-		Platform:     pf,
-		Connections:  []*transports.TransportConfig{t}, // pass-in the current config
+		PlatformIDs: []string{identifier},
+		Name:        name,
+		Platform:    pf,
+		Connections: []*transports.TransportConfig{t}, // pass-in the current config
 	})
 
 	DiscoverHostMachines := true
@@ -88,7 +88,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error
 			ht.Options = host.Annotations
 			host.Connections = append(host.Connections, ht)
 
-			pf, err := platform.VspherePlatform(trans, host.ReferenceIDs[0])
+			pf, err := platform.VspherePlatform(trans, host.PlatformIDs[0])
 			if err == nil {
 				host.Platform = pf
 			} else {
@@ -115,7 +115,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error
 			vt.Options = vm.Annotations
 			vm.Connections = append(vm.Connections, vt)
 
-			pf, err := platform.VspherePlatform(trans, vm.ReferenceIDs[0])
+			pf, err := platform.VspherePlatform(trans, vm.PlatformIDs[0])
 			if err == nil {
 				vm.Platform = pf
 			} else {

@@ -158,7 +158,7 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*asset.Asset, error) {
 		// TODO: derive platform information from azure instance
 
 		asset := &asset.Asset{
-			ReferenceIDs: []string{MondooAzureInstanceID(*instance.ID)},
+			PlatformIDs: []string{MondooAzureInstanceID(*instance.ID)},
 			Name:         *instance.Name,
 			Platform: &platform.Platform{
 				Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,

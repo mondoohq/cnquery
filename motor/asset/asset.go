@@ -18,15 +18,15 @@ func (a *Asset) HumanName() string {
 	return a.Name
 }
 
-func (a *Asset) EnsureReferenceID(ids ...string) {
-	if a.ReferenceIDs == nil {
-		a.ReferenceIDs = ids
+func (a *Asset) EnsurePlatformID(ids ...string) {
+	if a.PlatformIDs == nil {
+		a.PlatformIDs = ids
 		return
 	}
 
 	// check if the id is already included
 	keys := map[string]bool{}
-	for _, k := range a.ReferenceIDs {
+	for _, k := range a.PlatformIDs {
 		keys[k] = true
 	}
 
@@ -34,17 +34,17 @@ func (a *Asset) EnsureReferenceID(ids ...string) {
 	for _, id := range ids {
 		_, ok := keys[id]
 		if !ok {
-			a.ReferenceIDs = append(a.ReferenceIDs, id)
+			a.PlatformIDs = append(a.PlatformIDs, id)
 		}
 	}
 }
 
-func (a *Asset) AddReferenceID(ids ...string) {
-	if a.ReferenceIDs == nil {
-		a.ReferenceIDs = []string{}
+func (a *Asset) AddPlatformID(ids ...string) {
+	if a.PlatformIDs == nil {
+		a.PlatformIDs = []string{}
 	}
 
-	a.ReferenceIDs = append(a.ReferenceIDs, ids...)
+	a.PlatformIDs = append(a.PlatformIDs, ids...)
 }
 
 // AddLabels adds the provided labels

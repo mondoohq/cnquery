@@ -43,13 +43,13 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 
 func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
 	// refIds := []string{}
-	// if len(in.ReferenceID) > 0 {
-	// 	refIds = []string{in.ReferenceID}
+	// if len(in.PlatformID) > 0 {
+	// 	refIds = []string{in.PlatformID}
 	// }
 
 	assetInfo := &asset.Asset{
 		// Name: in.Name,
-		// ReferenceIDs: refIds,
+		// PlatformIDs: refIds,
 		// Labels: in.Labels,
 		State: asset.State_STATE_ONLINE,
 	}
