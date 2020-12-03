@@ -32,8 +32,8 @@ message Asset {
   string mrn = 1;
   string name = 2;
 
-  // 3rd-party asset id eg. amazon arn org gcp resource name
-  repeated string ReferenceIDs = 3;
+  // 3rd-party platform id eg. amazon arn, gcp resource name or ssh host key
+  repeated string PlatformIDs = 3;
 
   // asset state
   State state = 4;
@@ -49,6 +49,6 @@ message Asset {
   // additional information that is not touched by the system
   map<string, string> annotations = 19;
 
-  // relationships
-  string ParentReferenceID = 30;
+  // relationships to parent
+  string ParentPlatformID = 30;
 }

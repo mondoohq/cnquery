@@ -202,8 +202,8 @@ func (a *DockerRegistryImages) ListImages(repoName string) ([]*asset.Asset, erro
 func (a *DockerRegistryImages) toAsset(repoName string, imgDigest string, tags []string) *asset.Asset {
 	imageUrl := repoName + "@" + imgDigest
 	asset := &asset.Asset{
-		ReferenceIDs: []string{docker_engine.MondooContainerImageID(imgDigest)},
-		Name:         docker_engine.ShortContainerImageID(imgDigest),
+		PlatformIDs: []string{docker_engine.MondooContainerImageID(imgDigest)},
+		Name:        docker_engine.ShortContainerImageID(imgDigest),
 		Platform: &platform.Platform{
 			Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
 			Runtime: transports.RUNTIME_DOCKER_REGISTRY,

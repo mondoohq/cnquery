@@ -73,7 +73,7 @@ func hostsToAssetList(instanceUuid string, hosts []*object.HostSystem) ([]*asset
 				"vsphere.vmware.com/moid":          host.Reference().Value,
 				"vsphere.vmware.com/inventorypath": host.InventoryPath,
 			},
-			ReferenceIDs: []string{vsphere_transport.VsphereResourceID(instanceUuid, host.Reference())},
+			PlatformIDs: []string{vsphere_transport.VsphereResourceID(instanceUuid, host.Reference())},
 		}
 		res = append(res, ha)
 	}
@@ -150,7 +150,7 @@ func vmsToAssetList(instanceUuid string, vms []*object.VirtualMachine) ([]*asset
 				"vsphere.vmware.com/moid":          vm.Reference().Value,
 				"vsphere.vmware.com/inventorypath": vm.InventoryPath,
 			},
-			ReferenceIDs: []string{vsphere_transport.VsphereResourceID(instanceUuid, vm.Reference())},
+			PlatformIDs: []string{vsphere_transport.VsphereResourceID(instanceUuid, vm.Reference())},
 		}
 		res = append(res, ha)
 	}

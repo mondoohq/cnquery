@@ -62,7 +62,7 @@ func (ssmi *SSMManagedInstances) List() ([]*asset.Asset, error) {
 		instance := isssmresp.InstanceInformationList[i]
 
 		asset := &asset.Asset{
-			ReferenceIDs: []string{awsec2.MondooInstanceID(account, ssmi.config.Region, *instance.InstanceId)},
+			PlatformIDs: []string{awsec2.MondooInstanceID(account, ssmi.config.Region, *instance.InstanceId)},
 			Name:         *instance.InstanceId,
 			Platform: &platform.Platform{
 				Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,

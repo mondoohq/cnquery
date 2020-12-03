@@ -95,10 +95,10 @@ func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error
 	}
 
 	resolved = append(resolved, &asset.Asset{
-		ReferenceIDs: []string{identifier},
-		Name:         "AWS Account " + info.Name + "(" + info.ID + ")",
-		Platform:     pf,
-		Connections:  []*transports.TransportConfig{t}, // pass-in the current config
+		PlatformIDs: []string{identifier},
+		Name:        "AWS Account " + info.Name + "(" + info.ID + ")",
+		Platform:    pf,
+		Connections: []*transports.TransportConfig{t}, // pass-in the current config
 	})
 
 	// discover ec2 instances

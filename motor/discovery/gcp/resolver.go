@@ -130,10 +130,10 @@ func (r *GcpResolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, er
 	project := t.Options["project"]
 
 	resolved = append(resolved, &asset.Asset{
-		ReferenceIDs: []string{identifier},
-		Name:         "GCP project " + project,
-		Platform:     pf,
-		Connections:  []*transports.TransportConfig{t}, // pass-in the current config
+		PlatformIDs: []string{identifier},
+		Name:        "GCP project " + project,
+		Platform:    pf,
+		Connections: []*transports.TransportConfig{t}, // pass-in the current config
 	})
 
 	// discover compute instances

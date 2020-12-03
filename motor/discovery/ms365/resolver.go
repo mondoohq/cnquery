@@ -47,10 +47,10 @@ func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error
 	}
 
 	resolved = append(resolved, &asset.Asset{
-		ReferenceIDs: []string{identifier},
-		Name:         "Microsoft 365 tenant " + trans.TenantID(),
-		Platform:     pf,
-		Connections:  []*transports.TransportConfig{t}, // pass-in the current config
+		PlatformIDs: []string{identifier},
+		Name:        "Microsoft 365 tenant " + trans.TenantID(),
+		Platform:    pf,
+		Connections: []*transports.TransportConfig{t}, // pass-in the current config
 		Labels: map[string]string{
 			"azure.com/tenant": trans.TenantID(),
 		},

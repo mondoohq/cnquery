@@ -52,7 +52,7 @@ func (a *EcrImages) List() ([]*asset.Asset, error) {
 			digest := *imageResp.ImageDetails[i].ImageDigest
 
 			asset := &asset.Asset{
-				ReferenceIDs: []string{MondooContainerImageID(digest)},
+				PlatformIDs: []string{MondooContainerImageID(digest)},
 				// Name:         strings.Join(dImg.RepoTags, ","),
 				Platform: &platform.Platform{
 					Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
