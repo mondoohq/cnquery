@@ -1329,6 +1329,7 @@ aws.ec2.securitygroup {
   vpcid string
   ipPermissions []aws.ec2.securitygroup.ippermission
   ipPermissionsEgress []aws.ec2.securitygroup.ippermission
+  region string
 }
 
 aws.ec2.securitygroup.ippermission {
