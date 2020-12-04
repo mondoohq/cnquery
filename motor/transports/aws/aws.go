@@ -107,12 +107,12 @@ func (t *Transport) Runtime() string {
 	return transports.RUNTIME_AWS
 }
 
-func (t *Transport) GetRegions() []string {
+func (t *Transport) GetRegions() ([]string, error) {
 	// check cache for regions list, return if exists
 	c, ok := t.cache.Load("_regions")
 	if ok {
 		log.Info().Msg("use regions from cache")
-		return c.Data.([]string)
+		return c.Data.([]string), nil
 	}
 	log.Info().Msg("no region cache found. fetching regions")
 
@@ -123,15 +123,14 @@ func (t *Transport) GetRegions() []string {
 
 	res, err := svc.DescribeRegionsRequest(&ec2.DescribeRegionsInput{}).Send(ctx)
 	if err != nil {
-		log.Err(err)
+		return regions, nil
 	}
-
 	for _, region := range res.Regions {
 		regions = append(regions, *region.RegionName)
 	}
 	// cache the regions as part of the transport object
 	t.cache.Store("_regions", &CacheEntry{Data: regions})
-	return regions
+	return regions, nil
 }
 
 // CacheEntry contains cached clients
