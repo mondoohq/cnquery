@@ -31,21 +31,15 @@ in the function that actually calls aws, the return object must be a slice of jo
 
 func (s *lumiAwsEc2) getThingsFromAWS() []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	regions, err := s.getRegions()
+	at, err := awstransport(s.Runtime.Motor.Transport)
 	if err != nil {
 		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
 	}
+	regions := at.GetRegions()
+
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			at, err := awstransport(s.Runtime.Motor.Transport)
-			if err != nil {
-				return nil, err
-			}
-			atWithRegion, err := at.SetRegion(regionVal)
-			if err != nil {
-				return nil, err
-			}
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
 			svc := atWithRegion.Ec2()

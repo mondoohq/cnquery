@@ -1319,6 +1319,7 @@ aws.ec2.vpc {
   id string
   state string
   isDefault bool
+  region string
 }
 
 aws.ec2.securitygroup {
