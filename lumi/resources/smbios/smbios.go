@@ -1,12 +1,16 @@
 package smbios
 
 import (
+	"bytes"
 	"errors"
+	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor"
+	plist "howett.net/plist"
 )
 
 type SmBIOSInfo struct {
@@ -69,7 +73,7 @@ func ResolveManager(motor *motor.Motor) (SmBIOSManager, error) {
 
 	// check darwin before unix since darwin is also a unix
 	if platform.IsFamily("darwin") {
-		biosM = &OSXKernelManager{motor: motor}
+		biosM = &OSXSmbiosManager{motor: motor}
 	} else if platform.IsFamily("linux") {
 		biosM = &LinuxSmbiosManager{motor: motor}
 	}
@@ -160,14 +164,140 @@ func (s *LinuxSmbiosManager) Info() (*SmBIOSInfo, error) {
 	return &smInfo, nil
 }
 
-type OSXKernelManager struct {
+// We use the ioreg implementation to get native access. Its preferred
+// over system_profiler since its much faster
+//
+// hardware info
+// ioreg -rw0 -d2 -c IOPlatformExpertDevice -a
+//
+// acpi info:
+// ioreg -rw0 -d1 -c AppleACPIPlatformExpert
+//
+// get the rom version:
+// ioreg -r -p IODeviceTree -n rom@0
+//
+// helpful mac commands:
+// https://github.com/erikberglund/Scripts/blob/master/snippets/macos_hardware.md
+//
+// results can be compared with dmidecode
+// http://cavaliercoder.com/blog/dmidecode-for-apple-osx.html
+type OSXSmbiosManager struct {
 	motor *motor.Motor
 }
 
-func (s *OSXKernelManager) Name() string {
+func (s *OSXSmbiosManager) Name() string {
 	return "macOS Smbios Manager"
 }
 
-func (s *OSXKernelManager) Info() (*SmBIOSInfo, error) {
-	return nil, errors.New("not implemented")
+func (s *OSXSmbiosManager) Info() (*SmBIOSInfo, error) {
+	smInfo := SmBIOSInfo{}
+
+	cmd, err := s.motor.Transport.RunCommand("ioreg -rw0 -d2 -c IOPlatformExpertDevice -a")
+	if err != nil {
+		return nil, err
+	}
+
+	hw, err := ParseMacosIOPlatformExpertDevice(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	smInfo.SysInfo.Vendor = plistData(hw.Manufacturer)
+	smInfo.SysInfo.Model = plistData(hw.Model)
+	smInfo.SysInfo.Version = plistData(hw.Version)
+	smInfo.SysInfo.SerialNumber = hw.IOPlatformSerialNumber
+	smInfo.SysInfo.UUID = hw.IOPlatformUUID
+
+	smInfo.BaseBoardInfo.Vendor = plistData(hw.Manufacturer)
+	smInfo.BaseBoardInfo.Model = plistData(hw.BoardID)
+	smInfo.BaseBoardInfo.Version = ""
+	smInfo.BaseBoardInfo.SerialNumber = hw.IOPlatformSerialNumber
+
+	smInfo.ChassisInfo.Vendor = plistData(hw.Manufacturer)
+	smInfo.ChassisInfo.Version = plistData(hw.BoardID)
+	smInfo.ChassisInfo.SerialNumber = hw.IOPlatformSerialNumber
+	smInfo.ChassisInfo.Type = "Laptop"
+
+	cmd, err = s.motor.Transport.RunCommand("ioreg -r -p IODeviceTree -n rom@0 -a")
+	if err != nil {
+		return nil, err
+	}
+
+	bios, err := ParseMacosBios(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+	smInfo.BIOS.ReleaseDate = plistData(bios.ReleaseDate)
+	smInfo.BIOS.Vendor = plistData(bios.Vendor)
+	smInfo.BIOS.Version = plistData(bios.Version)
+
+	return &smInfo, nil
+}
+
+func plistData(data []byte) string {
+	return string(bytes.Trim(data, "\x00"))
+}
+
+type IOPlatformExpertDevice struct {
+	IORegistryEntryName    string `plist:"IORegistryEntryName"`
+	BoardID                []byte `plist:"board-id"`
+	Manufacturer           []byte `plist:"manufacturer"`
+	Model                  []byte `plist:"model"`
+	SerialNumber           []byte `plist:"serial-number"`
+	IOPlatformUUID         string `plist:"IOPlatformUUID"`
+	IOPlatformSerialNumber string `plist:"IOPlatformSerialNumber"`
+	ProductName            []byte `plist:"product-name"`
+	Version                []byte `plist:"version"`
+}
+
+func ParseMacosIOPlatformExpertDevice(input io.Reader) (*IOPlatformExpertDevice, error) {
+	var r io.ReadSeeker
+	r, ok := input.(io.ReadSeeker)
+
+	// if the read seaker is not implemented lets cache stdout in-memory
+	if !ok {
+		packageList, err := ioutil.ReadAll(input)
+		if err != nil {
+			return nil, err
+		}
+		r = strings.NewReader(string(packageList))
+	}
+
+	var data []IOPlatformExpertDevice
+	decoder := plist.NewDecoder(r)
+	err := decoder.Decode(&data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data[0], nil
+}
+
+type IODeviceTree struct {
+	Vendor      []byte `plist:"vendor"`
+	ReleaseDate []byte `plist:"release-date"`
+	Version     []byte `plist:"version"`
+}
+
+func ParseMacosBios(input io.Reader) (*IODeviceTree, error) {
+	var r io.ReadSeeker
+	r, ok := input.(io.ReadSeeker)
+
+	// if the read seaker is not implemented lets cache stdout in-memory
+	if !ok {
+		packageList, err := ioutil.ReadAll(input)
+		if err != nil {
+			return nil, err
+		}
+		r = strings.NewReader(string(packageList))
+	}
+
+	var data []IODeviceTree
+	decoder := plist.NewDecoder(r)
+	err := decoder.Decode(&data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data[0], nil
 }

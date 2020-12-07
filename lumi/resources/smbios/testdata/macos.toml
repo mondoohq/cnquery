@@ -1,0 +1,147 @@
+[commands."uname -s"]
+stdout = "Darwin"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "19.6.0"
+
+[commands."/usr/bin/sw_vers"]
+stdout = """
+ProductName:	Mac OS X
+ProductVersion:	10.15.7
+BuildVersion:	19H15
+"""
+
+[commands."ioreg -rw0 -d2 -c IOPlatformExpertDevice -a"]
+stdout = """
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+<array>
+	<dict>
+		<key>IOBusyInterest</key>
+		<string>IOCommand is not serializable</string>
+		<key>IOObjectClass</key>
+		<string>IOPlatformExpertDevice</string>
+		<key>IOObjectRetainCount</key>
+		<integer>140</integer>
+		<key>IOPlatformSerialNumber</key>
+		<string>DAAAA111AA11</string>
+		<key>IOPlatformUUID</key>
+		<string>e126775d-2368-4f51-9863-76d5df0c8108</string>
+		<key>IOPolledInterface</key>
+		<string>SMCPolledInterface is not serializable</string>
+		<key>IORegistryEntryName</key>
+		<string>iMac17,1</string>
+		<key>IOServiceBusyState</key>
+		<integer>0</integer>
+		<key>IOServiceBusyTime</key>
+		<integer>83327400683</integer>
+		<key>IOServiceState</key>
+		<integer>30</integer>
+		<key>board-id</key>
+		<data>
+		TWFjLUExMTFBMTExN0FBMUFBMUE=
+		</data>
+		<key>clock-frequency</key>
+		<data>
+		AOH1BQ==
+		</data>
+		<key>compatible</key>
+		<data>
+		aU1hYzE3LDEA
+		</data>
+		<key>manufacturer</key>
+		<data>
+		QXBwbGUgSW5jLgA=
+		</data>
+		<key>model</key>
+		<data>
+		aU1hYzE3LDEA
+		</data>
+		<key>name</key>
+		<data>
+		LwA=
+		</data>
+		<key>platform-feature</key>
+		<data>
+		AAAAAAAAAAA=
+		</data>
+		<key>product-name</key>
+		<data>
+		aU1hYzE3LDEA
+		</data>
+		<key>serial-number</key>
+		<data>
+		QUExMe+/uUFBQUExMTFBQTEx
+		</data>
+		<key>system-type</key>
+		<data>
+		AQ==
+		</data>
+		<key>target-type</key>
+		<data>
+		TWFjAA==
+		</data>
+		<key>version</key>
+		<data>
+		MS4wAA==
+		</data>
+	</dict>
+</array>
+</plist>
+"""
+
+[commands."ioreg -r -p IODeviceTree -n rom@0 -a"]
+stdout = """
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+<array>
+	<dict>
+		<key>IOObjectClass</key>
+		<string>IOService</string>
+		<key>IOObjectRetainCount</key>
+		<integer>4</integer>
+		<key>IORegistryEntryID</key>
+		<integer>4294967621</integer>
+		<key>IORegistryEntryLocation</key>
+		<string>0</string>
+		<key>IORegistryEntryName</key>
+		<string>rom</string>
+		<key>IOServiceBusyState</key>
+		<integer>0</integer>
+		<key>IOServiceBusyTime</key>
+		<integer>0</integer>
+		<key>IOServiceState</key>
+		<integer>0</integer>
+		<key>apple-rom-info</key>
+		<data></data>
+		<key>characteristics</key>
+		<integer>104576</integer>
+		<key>firmware-features</key>
+		<integer>4245681526</integer>
+		<key>fv-main-address</key>
+		<integer>-6909952</integer>
+		<key>fv-main-size</key>
+		<integer>1404928</integer>
+		<key>release-date</key>
+		<data>
+		MDYvMTcvMjAxOQA=
+		</data>
+		<key>rom-size</key>
+		<integer>8388608</integer>
+		<key>vendor</key>
+		<data>
+		QXBwbGUgSW5jLgA=
+		</data>
+		<key>version</key>
+		<data>
+		MTcwLjAuMC4wLjAA
+		</data>
+	</dict>
+</array>
+</plist>
+"""

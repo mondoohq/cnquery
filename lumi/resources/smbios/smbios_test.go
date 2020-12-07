@@ -48,3 +48,43 @@ func TestManagerCentos(t *testing.T) {
 			Type:         "1"},
 	}, biosInfo)
 }
+
+func TestManagerMacos(t *testing.T) {
+	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/macos.toml"})
+	require.NoError(t, err)
+	m, err := motor.New(mock)
+	require.NoError(t, err)
+
+	mm, err := ResolveManager(m)
+	require.NoError(t, err)
+	biosInfo, err := mm.Info()
+	require.NoError(t, err)
+	assert.Equal(t, &SmBIOSInfo{
+		BIOS: BiosInfo{
+			Vendor:      "Apple Inc.",
+			Version:     "170.0.0.0.0",
+			ReleaseDate: "06/17/2019"},
+		SysInfo: SysInfo{
+			Vendor:       "Apple Inc.",
+			Model:        "iMac17,1",
+			Version:      "1.0",
+			SerialNumber: "DAAAA111AA11",
+			UUID:         "e126775d-2368-4f51-9863-76d5df0c8108",
+			Familiy:      "",
+			SKU:          ""},
+		BaseBoardInfo: BaseBoardInfo{
+			Vendor:       "Apple Inc.",
+			Model:        "Mac-A111A1117AA1AA1A",
+			Version:      "",
+			SerialNumber: "DAAAA111AA11",
+			AssetTag:     ""},
+		ChassisInfo: ChassisInfo{
+			Vendor:       "Apple Inc.",
+			Model:        "",
+			Version:      "Mac-A111A1117AA1AA1A",
+			SerialNumber: "DAAAA111AA11",
+			AssetTag:     "",
+			Type:         "Laptop"},
+	}, biosInfo)
+}
+}
