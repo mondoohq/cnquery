@@ -792,11 +792,11 @@ func (u *lumiAwsIamUser) GetAttachedPolicies() ([]interface{}, error) {
 			}
 
 			res = append(res, lumiAwsIamPolicy)
-			if userAttachedPolicies.IsTruncated == nil || *userAttachedPolicies.IsTruncated == false {
-				break
-			}
-			marker = userAttachedPolicies.Marker
 		}
+		if userAttachedPolicies.IsTruncated == nil || *userAttachedPolicies.IsTruncated == false {
+			break
+		}
+		marker = userAttachedPolicies.Marker
 	}
 
 	return res, nil
