@@ -386,6 +386,62 @@ rsyslog.conf {
   settings(content) []string
 }
 
+machine {}
+
+// SMBIOS BIOS Information
+machine.bios {
+  // BIOS vendor
+  vendor string
+  // BIOS version
+  version string
+  // BIOS release date
+  releaseDate string
+}
+
+// SMBIOS System Information
+machine.system {
+  // Manufacturer
+  manufacturer string
+  // Product Name
+  product string
+  // Version
+  version string
+  // Serial Number
+  serial string
+  // UUID
+  uuid string
+  // SKU Number
+  sku string
+  // Family
+  family string
+}
+
+// SMBIOS Baseboard (or Module) Information 
+machine.baseboard {
+  // Manufacturer
+  manufacturer string
+  // Product
+  product string
+  // Version
+  version string
+  // Serial Number
+  serial string
+  // Asset Tag
+  assetTag string
+}
+
+// SMBIOS System Enclosure or Chassis
+machine.chassis {
+  // Manufacturer
+  manufacturer string
+  // Version
+  version string
+  // Serial Number
+  serial string
+  // Asset Tag Number
+  assetTag string
+}
+
 // Operating System information
 os {
   // ENV variable contents
