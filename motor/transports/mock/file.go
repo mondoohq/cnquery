@@ -3,6 +3,7 @@ package mock
 import (
 	"errors"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -27,6 +28,7 @@ type MockFileData struct {
 type MockFile struct {
 	data       *MockFileData
 	dataReader *strings.Reader
+	fs         *mockFS
 }
 
 func (mf *MockFile) Name() string {
@@ -37,7 +39,9 @@ func (mf *MockFile) Stat() (os.FileInfo, error) {
 	if mf.data.Enoent {
 		return nil, os.ErrNotExist
 	}
+
 	return &transports.FileInfo{
+		FName:    filepath.Base(mf.data.Path),
 		FSize:    int64(len(mf.data.Content)),
 		FModTime: mf.data.StatData.ModTime,
 		FMode:    mf.data.StatData.Mode,
@@ -99,7 +103,28 @@ func (f *MockFile) Readdir(n int) ([]os.FileInfo, error) {
 }
 
 func (f *MockFile) Readdirnames(n int) ([]string, error) {
-	return nil, errors.New("not implemented yet")
+	children := []string{}
+	path := f.data.Path
+	// searches for direct childs of this file
+	for k := range f.fs.Files {
+		if strings.HasPrefix(k, path) {
+			// check if it is only one layer down
+			filename := strings.TrimPrefix(k, path)
+
+			// path-seperator is still included, remove it
+			filename = strings.TrimPrefix(filename, "/")
+			filename = strings.TrimPrefix(filename, "\\")
+
+			if filename == "" || strings.Contains(filename, "/") || strings.Contains(filename, "\\") {
+				continue
+			}
+			children = append(children, filename)
+		}
+		if n > 0 && len(children) > n {
+			return children, nil
+		}
+	}
+	return children, nil
 }
 
 func (f *MockFile) Close() error {

@@ -147,3 +147,13 @@ Subsystem	sftp	/usr/libexec/sftp-server
 #	PermitTTY no
 #	ForceCommand cvs server
 """
+
+[files."/sys/class/dmi/id"]
+  [files."/sys/class/dmi/id".stat]
+  isdir = true
+
+[files."/sys/class/dmi/id/bios_date"]
+content = "12/01/2006"
+
+[files."/sys/class/dmi/id/bios_vendor"]
+content = "innotek GmbH"
