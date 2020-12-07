@@ -7,8 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi/resources/packages"
 	"go.mondoo.io/mondoo/lumi/resources/platformid"
 	"go.mondoo.io/mondoo/lumi/resources/uptime"
@@ -100,17 +102,23 @@ func (p *lumiOs) GetPath() ([]interface{}, error) {
 	return res, nil
 }
 
-func (p *lumiOs) GetUptime() (int64, error) {
+// returns uptime in nanoseconds
+func (p *lumiOs) GetUptime() (*time.Time, error) {
+
 	uptime, err := uptime.New(p.Runtime.Motor)
 	if err != nil {
-		return 0, err
+		return LumiTime(llx.DurationToTime(0)), err
 	}
 
 	t, err := uptime.Duration()
 	if err != nil {
-		return 0, err
+		return LumiTime(llx.DurationToTime(0)), err
 	}
-	return int64(t), nil
+
+	// we get nano seconds but duration to time only takes seconds
+	bootTime := time.Now().Add(-t)
+	up := time.Now().Unix() - bootTime.Unix()
+	return LumiTime(llx.DurationToTime(up)), nil
 }
 
 // func (p *lumiOs) GetRebootpending() ([]interface{}, error) {

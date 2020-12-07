@@ -393,7 +393,7 @@ os {
   // PATH variable contents
   path() []string
   // Current uptime
-  uptime() string
+  uptime() time
   // List of available OS updates
   updates() []os.update
   // Indicates if a reboot is pending
