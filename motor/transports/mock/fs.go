@@ -43,6 +43,7 @@ func (fs mockFS) Open(name string) (afero.File, error) {
 
 	return &MockFile{
 		data: data,
+		fs:   &fs,
 	}, nil
 }
 
@@ -81,6 +82,7 @@ func (fs mockFS) Stat(name string) (os.FileInfo, error) {
 
 	f := &MockFile{
 		data: data,
+		fs:   &fs,
 	}
 
 	return f.Stat()

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
@@ -34,4 +35,23 @@ func TestLoadFile(t *testing.T) {
 	assert.Nil(t, err)
 
 	assert.Equal(t, 382, len(data))
+}
+
+func TestReadDirnames(t *testing.T) {
+	filepath, _ := filepath.Abs("./testdata/mock.toml")
+	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: filepath})
+	require.NoError(t, err)
+
+	dir, err := trans.FS().Open("/sys/class/dmi/id")
+	require.NoError(t, err)
+	stat, err := dir.Stat()
+	require.NoError(t, err)
+	assert.True(t, stat.IsDir())
+
+	names, err := dir.Readdirnames(100)
+	require.NoError(t, err)
+
+	assert.Equal(t, 2, len(names))
+	assert.Contains(t, names, "bios_vendor")
+	assert.Contains(t, names, "bios_date")
 }
