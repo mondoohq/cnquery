@@ -20,7 +20,7 @@ func TestManagerCentos(t *testing.T) {
 	require.NoError(t, err)
 	biosInfo, err := mm.Info()
 	require.NoError(t, err)
-	assert.Equal(t, &SmBIOSInfo{
+	assert.Equal(t, &SmBiosInfo{
 		BIOS: BiosInfo{
 			Vendor:      "innotek GmbH",
 			Version:     "VirtualBox",
@@ -59,7 +59,7 @@ func TestManagerMacos(t *testing.T) {
 	require.NoError(t, err)
 	biosInfo, err := mm.Info()
 	require.NoError(t, err)
-	assert.Equal(t, &SmBIOSInfo{
+	assert.Equal(t, &SmBiosInfo{
 		BIOS: BiosInfo{
 			Vendor:      "Apple Inc.",
 			Version:     "170.0.0.0.0",
