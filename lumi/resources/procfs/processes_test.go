@@ -1,10 +1,9 @@
-package procfs_test
+package procfs
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/lumi/resources/procfs"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
@@ -19,7 +18,7 @@ func TestParseProcessStatus(t *testing.T) {
 	}
 	defer f.Close()
 
-	processStatus, err := procfs.ParseProcessStatus(f)
+	processStatus, err := ParseProcessStatus(f)
 	if err != nil {
 		t.Fatalf("cannot request file %v", err)
 	}
@@ -38,7 +37,7 @@ func TestParseProcessCmdline(t *testing.T) {
 	}
 	defer f.Close()
 
-	cmd, err := procfs.ParseProcessCmdline(f)
+	cmd, err := ParseProcessCmdline(f)
 	if err != nil {
 		t.Fatalf("cannot request file %v", err)
 	}
