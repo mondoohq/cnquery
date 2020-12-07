@@ -1,0 +1,95 @@
+[commands."uname -r"]
+stdout = "4.18.0-80.el8.x86_64"
+
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[files."/etc/os-release"]
+content = """
+NAME="CentOS Linux"
+VERSION="8 (Core)"
+ID="centos"
+ID_LIKE="rhel fedora"
+VERSION_ID="8"
+PLATFORM_ID="platform:el8"
+PRETTY_NAME="CentOS Linux 8 (Core)"
+ANSI_COLOR="0;31"
+CPE_NAME="cpe:/o:centos:centos:8"
+HOME_URL="https://www.centos.org/"
+BUG_REPORT_URL="https://bugs.centos.org/"
+
+CENTOS_MANTISBT_PROJECT="CentOS-8"
+CENTOS_MANTISBT_PROJECT_VERSION="8"
+REDHAT_SUPPORT_PRODUCT="centos"
+REDHAT_SUPPORT_PRODUCT_VERSION="8"
+"""
+
+[files."/sys/class/dmi/id"]
+  [files."/sys/class/dmi/id".stat]
+  isdir = true
+
+[files."/sys/class/dmi/id/bios_date"]
+content = "12/01/2006"
+
+[files."/sys/class/dmi/id/bios_vendor"]
+content = "innotek GmbH"
+
+[files."/sys/class/dmi/id/bios_version"]
+content = "VirtualBox"
+
+[files."/sys/class/dmi/id/board_asset_tag"]
+content = ""
+
+[files."/sys/class/dmi/id/board_name"]
+content = "VirtualBox"
+
+[files."/sys/class/dmi/id/board_serial"]
+content = "0"
+
+[files."/sys/class/dmi/id/board_vendor"]
+content = "Oracle Corporation"
+
+[files."/sys/class/dmi/id/board_version"]
+content = "1.2"
+
+[files."/sys/class/dmi/id/chassis_asset_tag"]
+content = ""
+
+[files."/sys/class/dmi/id/chassis_serial"]
+content = ""
+
+[files."/sys/class/dmi/id/chassis_type"]
+content = "1"
+
+[files."/sys/class/dmi/id/chassis_vendor"]
+content = "Oracle Corporation"
+
+[files."/sys/class/dmi/id/chassis_version"]
+content = ""
+
+[files."/sys/class/dmi/id/modalias "]
+content = "dmi:bvninnotekGmbH:bvrVirtualBox:bd12/01/2006:svninnotekGmbH:pnVirtualBox:pvr1.2:rvnOracleCorporation:rnVirtualBox:rvr1.2:cvnOracleCorporation:ct1:cvr:"
+
+[files."/sys/class/dmi/id/product_family"]
+content = "Virtual Machine"
+
+[files."/sys/class/dmi/id/product_name"]
+content = "VirtualBox"
+
+[files."/sys/class/dmi/id/product_serial"]
+content = "0"
+
+[files."/sys/class/dmi/id/product_sku"]
+content = ""
+
+[files."/sys/class/dmi/id/product_uuid"]
+content = "64f118d3-0060-4a4c-bf1f-a11d655c4d6f"
+
+[files."/sys/class/dmi/id/product_version"]
+content = "1.2"
+
+[files."/sys/class/dmi/id/sys_vendor"]
+content = "innotek GmbH"
