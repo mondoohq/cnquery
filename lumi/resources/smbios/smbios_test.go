@@ -87,4 +87,42 @@ func TestManagerMacos(t *testing.T) {
 			Type:         "Laptop"},
 	}, biosInfo)
 }
+
+func TestManagerWindows(t *testing.T) {
+	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/windows.toml"})
+	require.NoError(t, err)
+	m, err := motor.New(mock)
+	require.NoError(t, err)
+
+	mm, err := ResolveManager(m)
+	require.NoError(t, err)
+	biosInfo, err := mm.Info()
+	require.NoError(t, err)
+	assert.Equal(t, &SmBiosInfo{
+		BIOS: BiosInfo{
+			Vendor:      "VMware, Inc.",
+			Version:     "VMW71.00V.16722896.B64.2008100651",
+			ReleaseDate: "20200810000000.000000+000"},
+		SysInfo: SysInfo{
+			Vendor:       "VMware, Inc.",
+			Model:        "VMware7,1",
+			Version:      "None",
+			SerialNumber: "",
+			UUID:         "16BD4D56-6B98-23F9-493C-F6B14E7CFC0B",
+			Familiy:      "",
+			SKU:          ""},
+		BaseBoardInfo: BaseBoardInfo{
+			Vendor:       "Intel Corporation",
+			Model:        "440BX Desktop Reference Platform",
+			Version:      "None",
+			SerialNumber: "None",
+			AssetTag:     ""},
+		ChassisInfo: ChassisInfo{
+			Vendor:       "No Enclosure",
+			Model:        "",
+			Version:      "N/A",
+			SerialNumber: "None",
+			AssetTag:     "",
+			Type:         ""},
+	}, biosInfo)
 }
