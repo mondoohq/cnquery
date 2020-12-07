@@ -708,9 +708,9 @@ func (p *lumiAwsIamUser) init(args *lumi.Args) (*lumi.Args, AwsIamUser, error) {
 	(*args)["arn"] = ""
 	(*args)["id"] = ""
 	(*args)["name"] = ""
-	(*args)["createDate"] = nil
-	(*args)["passwordLastUsed"] = nil
-	(*args)["tags"] = nil
+	(*args)["createDate"] = &time.Time{}
+	(*args)["passwordLastUsed"] = &time.Time{}
+	(*args)["tags"] = make(map[string]interface{})
 
 	return args, nil, nil
 }
@@ -1214,8 +1214,8 @@ func (p *lumiAwsIamRole) init(args *lumi.Args) (*lumi.Args, AwsIamRole, error) {
 	(*args)["id"] = ""
 	(*args)["name"] = ""
 	(*args)["description"] = ""
-	(*args)["tags"] = nil
-	(*args)["createDate"] = nil
+	(*args)["tags"] = make(map[string]interface{})
+	(*args)["createDate"] = &time.Time{}
 
 	return args, nil, nil
 }
@@ -1267,7 +1267,7 @@ func (p *lumiAwsIamGroup) init(args *lumi.Args) (*lumi.Args, AwsIamGroup, error)
 	(*args)["arn"] = ""
 	(*args)["id"] = ""
 	(*args)["name"] = ""
-	(*args)["createDate"] = nil
+	(*args)["createDate"] = &time.Time{}
 
 	return args, nil, nil
 }
