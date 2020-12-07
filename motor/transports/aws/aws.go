@@ -111,10 +111,10 @@ func (t *Transport) GetRegions() ([]string, error) {
 	// check cache for regions list, return if exists
 	c, ok := t.cache.Load("_regions")
 	if ok {
-		log.Info().Msg("use regions from cache")
+		log.Debug().Msg("use regions from cache")
 		return c.Data.([]string), nil
 	}
-	log.Info().Msg("no region cache found. fetching regions")
+	log.Debug().Msg("no region cache found. fetching regions")
 
 	// if no cache, get regions using ec2 client (using the ssm list global regions does not give the same list)
 	regions := []string{}
