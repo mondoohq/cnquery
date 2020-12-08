@@ -1311,6 +1311,22 @@ aws.cloudtrail.trailstatus {
   stopLoggingTime time
 }
 
+aws.kms {
+  // a list of all customer master keys (CMKs) in the caller's AWS account (across all regions)
+  keys() []aws.kms.key
+}
+
+aws.kms.key {
+  // unique identifier for the key
+  id string
+  // arn of the key
+  arn string
+  // region the key lives in
+  region string
+  // bool that specifies whether key rotation is enabled
+  keyRotationEnabled bool
+}
+
 aws.s3 {
   buckets() []aws.s3.bucket
 }
