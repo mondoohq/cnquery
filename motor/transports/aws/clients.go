@@ -1,8 +1,6 @@
 package aws
 
 import (
-	"fmt"
-
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -16,7 +14,7 @@ func (t *Transport) Ec2(region string) *ec2.Client {
 	if len(region) == 0 {
 		region = t.config.Region
 	}
-	cacheVal := fmt.Sprintf("_ec2_%s", region)
+	cacheVal := "_ec2_" + region
 
 	// check for cached client and return it if it exists
 	c, ok := t.cache.Load(cacheVal)
@@ -40,7 +38,7 @@ func (t *Transport) Iam(region string) *iam.Client {
 	if len(region) == 0 {
 		region = t.config.Region
 	}
-	cacheVal := fmt.Sprintf("_iam_%s", region)
+	cacheVal := "_iam_" + region
 
 	// check for cached client and return it if it exists
 	c, ok := t.cache.Load(cacheVal)
@@ -64,7 +62,7 @@ func (t *Transport) S3(region string) *s3.Client {
 	if len(region) == 0 {
 		region = t.config.Region
 	}
-	cacheVal := fmt.Sprintf("_s3_%s", region)
+	cacheVal := "_s3_" + region
 
 	// check for cached client and return it if it exists
 	c, ok := t.cache.Load(cacheVal)
@@ -88,7 +86,7 @@ func (t *Transport) Cloudtrail(region string) *cloudtrail.Client {
 	if len(region) == 0 {
 		region = t.config.Region
 	}
-	cacheVal := fmt.Sprintf("_cloudtrail_%s", region)
+	cacheVal := "_cloudtrail_" + region
 
 	// check for cached client and return it if it exists
 	c, ok := t.cache.Load(cacheVal)
@@ -112,7 +110,7 @@ func (t *Transport) ConfigService(region string) *configservice.Client {
 	if len(region) == 0 {
 		region = t.config.Region
 	}
-	cacheVal := fmt.Sprintf("_config_%s", region)
+	cacheVal := "_config_" + region
 
 	// check for cached client and return it if it exists
 	c, ok := t.cache.Load(cacheVal)
