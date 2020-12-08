@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/rs/zerolog/log"
 )
@@ -19,7 +20,7 @@ func (t *Transport) Ec2(region string) *ec2.Client {
 	// check for cached client and return it if it exists
 	c, ok := t.cache.Load(cacheVal)
 	if ok {
-		log.Debug().Msg("use cached client")
+		log.Debug().Msg("use cached ec2 client")
 		return c.Data.(*ec2.Client)
 	}
 
@@ -43,7 +44,7 @@ func (t *Transport) Iam(region string) *iam.Client {
 	// check for cached client and return it if it exists
 	c, ok := t.cache.Load(cacheVal)
 	if ok {
-		log.Debug().Msg("use cached client")
+		log.Debug().Msg("use cached iam client")
 		return c.Data.(*iam.Client)
 	}
 
@@ -67,7 +68,7 @@ func (t *Transport) S3(region string) *s3.Client {
 	// check for cached client and return it if it exists
 	c, ok := t.cache.Load(cacheVal)
 	if ok {
-		log.Debug().Msg("use cached client")
+		log.Debug().Msg("use cached s3 client")
 		return c.Data.(*s3.Client)
 	}
 
@@ -91,7 +92,7 @@ func (t *Transport) Cloudtrail(region string) *cloudtrail.Client {
 	// check for cached client and return it if it exists
 	c, ok := t.cache.Load(cacheVal)
 	if ok {
-		log.Debug().Msg("use cached client")
+		log.Debug().Msg("use cached cloudtrail client")
 		return c.Data.(*cloudtrail.Client)
 	}
 
@@ -115,7 +116,7 @@ func (t *Transport) ConfigService(region string) *configservice.Client {
 	// check for cached client and return it if it exists
 	c, ok := t.cache.Load(cacheVal)
 	if ok {
-		log.Debug().Msg("use cached client")
+		log.Debug().Msg("use cached config client")
 		return c.Data.(*configservice.Client)
 	}
 
@@ -123,6 +124,30 @@ func (t *Transport) ConfigService(region string) *configservice.Client {
 	cfg := t.config.Copy()
 	cfg.Region = region
 	client := configservice.New(cfg)
+
+	// cache it
+	t.cache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *Transport) Kms(region string) *kms.Client {
+	// if no region value is sent in, use the configured region
+	if len(region) == 0 {
+		region = t.config.Region
+	}
+	cacheVal := "_kms_" + region
+
+	// check for cached client and return it if it exists
+	c, ok := t.cache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached kms client")
+		return c.Data.(*kms.Client)
+	}
+
+	// create the client
+	cfg := t.config.Copy()
+	cfg.Region = region
+	client := kms.New(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
