@@ -1398,6 +1398,20 @@ aws.ec2.securitygroup.ippermission {
   ipv6Ranges []string
 }
 
+aws.config {
+  recorders() []aws.config.recorder
+}
+
+aws.config.recorder {
+  name string
+  roleArn string
+  allSupported bool
+  includeGlobalResourceTypes bool
+  recording bool
+  lastStatus string
+  region string
+}
+
 gcloud.organization {
   id() string
   name() string
