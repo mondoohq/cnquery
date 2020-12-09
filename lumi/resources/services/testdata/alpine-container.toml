@@ -1,0 +1,83 @@
+[commands."uname -r"]
+stdout = "5.4.39-linuxkit"
+
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[files."/etc/os-release"]
+content = """
+NAME="Alpine Linux"
+ID=alpine
+VERSION_ID=3.13.0_alpha20200917
+PRETTY_NAME="Alpine Linux edge"
+HOME_URL="https://alpinelinux.org/"
+BUG_REPORT_URL="https://bugs.alpinelinux.org/"
+"""
+
+[commands."rc-status -s"]
+stdout = """
+local                                                       [  stopped  ]
+savecache                                                   [  stopped  ]
+hwdrivers                                                   [  stopped  ]
+osclock                                                     [  stopped  ]
+agetty                                                      [  started  ]
+bootmisc                                                    [  stopped  ]
+modules                                                     [  stopped  ]
+loopback                                                    [  stopped  ]
+runsvdir                                                    [  stopped  ]
+firstboot                                                   [  stopped  ]
+sysfsconf                                                   [  stopped  ]
+sysctl                                                      [  stopped  ]
+killprocs                                                   [  stopped  ]
+s6-svscan                                                   [  stopped  ]
+mtab                                                        [  stopped  ]
+modloop                                                     [  stopped  ]
+machine-id                                                  [  stopped  ]
+staticroute                                                 [  stopped  ]
+"""
+
+[files."/etc/init.d"]
+  [files."/etc/init.d".stat]
+  isdir = true
+
+[files."/etc/init.d/agetty"]
+content = """
+content does not matter for testing
+"""
+
+[files."/etc/init.d/urandom"]
+content = """
+content does not matter for testing
+"""
+
+[files."/etc/runlevels/"]
+  [files."/etc/runlevels/".stat]
+  isdir = true
+
+[files."/etc/runlevels/boot"]
+  [files."/etc/runlevels/boot".stat]
+  isdir = true
+
+[files."/etc/runlevels/default"]
+  [files."/etc/runlevels/default".stat]
+  isdir = true
+
+[files."/etc/runlevels/nonetwork"]
+  [files."/etc/runlevels/nonetwork".stat]
+  isdir = true
+
+[files."/etc/runlevels/shutdown"]
+  [files."/etc/runlevels/shutdown".stat]
+  isdir = true
+
+[files."/etc/runlevels/sysinit"]
+  [files."/etc/runlevels/sysinit".stat]
+  isdir = true
+
+[files."/etc/runlevels/sysinit/agetty"]
+content = """
+this is actually a symlink to /etc/init.d/agetty
+"""
