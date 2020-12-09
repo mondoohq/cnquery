@@ -1205,7 +1205,7 @@ func TestSuggestions(t *testing.T) {
 		},
 		{
 			// resource suggestions
-			"platfo", []string{"platform", "platform.advisories", "platform.cves", "platform.eol", "platform.exploits"},
+			"platfo", []string{"platform", "platform.advisories", "platform.cves", "platform.eol", "platform.exploits", "platform.virtualization"},
 			errors.New("cannot find resource for identifier 'platfo'"),
 		},
 		{

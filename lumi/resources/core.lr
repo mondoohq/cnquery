@@ -79,6 +79,12 @@ platform {
   runtimeEnv string
 }
 
+// hardware virtualization information
+platform.virtualization {
+  // indicates if the target is a container or container image
+  isContainer() bool
+}
+
 // information about the platfrom end-of-life
 platform.eol {
   // Documentation URL
