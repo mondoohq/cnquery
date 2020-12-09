@@ -180,6 +180,9 @@ func (p *lumiAwsS3Bucket) gatherAcl() (*s3.GetBucketAclOutput, error) {
 	acl, err := svc.GetBucketAclRequest(&s3.GetBucketAclInput{
 		Bucket: &bucketname,
 	}).Send(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	// TODO: store in cache
 	return acl.GetBucketAclOutput, nil
