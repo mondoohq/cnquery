@@ -1289,6 +1289,16 @@ aws.iam.virtualmfadevice {
   user aws.iam.user
 }
 
+aws.cloudwatch {
+  alarms() []aws.cloudwatch.alarm
+}
+
+aws.cloudwatch.alarm {
+  arn string
+  name string
+  alarmActions []string
+}
+
 aws.cloudtrail {
   trails() []aws.cloudtrail.trail
 }
@@ -1306,6 +1316,45 @@ aws.cloudtrail.trail {
   status() aws.cloudtrail.trailstatus
   cloudWatchLogsLogGroupArn string
   cloudWatchLogsRoleArn string
+  mgmtEvents() aws.cloudtrail.trailmgmtevents
+  metricFilters() aws.cloudtrail.trailmetricfilters
+}
+
+aws.cloudtrail.trailmetricfilters {
+  id string
+  metrics []aws.cloudtrail.trailmetricfilters.metricfilters
+}
+
+aws.cloudtrail.trailmetricfilters.metricfilters {
+  id string
+  filterName string
+  filterPattern string
+  metricName string
+  metricValue string
+  alarmsForMetric() []aws.cloudtrail.trailmetricfilters.metricfilters.alarms
+}
+
+aws.cloudtrail.trailmetricfilters.metricfilters.alarms {
+  arn string
+  name string
+  alarmActions []aws.cloudtrail.alarmactions
+}
+
+aws.cloudtrail.alarmactions {
+  snsTopicArn string
+  subscriptionArn string
+  validSubscription bool
+}
+
+aws.cloudtrail.trailmgmtevents {
+  arn string
+  eventSelectors []aws.cloudtrail.trailmgmtevents.eventselectors
+}
+
+aws.cloudtrail.trailmgmtevents.eventselectors {
+  id string
+  includeManagementEvents bool
+  readWriteType string
 }
 
 aws.cloudtrail.trailstatus {

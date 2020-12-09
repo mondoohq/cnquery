@@ -2,11 +2,14 @@ package aws
 
 import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/rs/zerolog/log"
 )
 
@@ -148,6 +151,78 @@ func (t *Transport) Kms(region string) *kms.Client {
 	cfg := t.config.Copy()
 	cfg.Region = region
 	client := kms.New(cfg)
+
+	// cache it
+	t.cache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *Transport) CloudwatchLogs(region string) *cloudwatchlogs.Client {
+	// if no region value is sent in, use the configured region
+	if len(region) == 0 {
+		region = t.config.Region
+	}
+	cacheVal := "_cloudwatchlogs_" + region
+
+	// check for cached client and return it if it exists
+	c, ok := t.cache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached cloudwatchlogs client")
+		return c.Data.(*cloudwatchlogs.Client)
+	}
+
+	// create the client
+	cfg := t.config.Copy()
+	cfg.Region = region
+	client := cloudwatchlogs.New(cfg)
+
+	// cache it
+	t.cache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *Transport) Cloudwatch(region string) *cloudwatch.Client {
+	// if no region value is sent in, use the configured region
+	if len(region) == 0 {
+		region = t.config.Region
+	}
+	cacheVal := "_cloudwatch_" + region
+
+	// check for cached client and return it if it exists
+	c, ok := t.cache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached cloudwatch client")
+		return c.Data.(*cloudwatch.Client)
+	}
+
+	// create the client
+	cfg := t.config.Copy()
+	cfg.Region = region
+	client := cloudwatch.New(cfg)
+
+	// cache it
+	t.cache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *Transport) Sns(region string) *sns.Client {
+	// if no region value is sent in, use the configured region
+	if len(region) == 0 {
+		region = t.config.Region
+	}
+	cacheVal := "_sns_" + region
+
+	// check for cached client and return it if it exists
+	c, ok := t.cache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached sns client")
+		return c.Data.(*sns.Client)
+	}
+
+	// create the client
+	cfg := t.config.Copy()
+	cfg.Region = region
+	client := sns.New(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
