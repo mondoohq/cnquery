@@ -107,8 +107,9 @@ func (k *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error
 		if err == nil {
 			t.Backend = transports.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER
 			resolvedAsset = &asset.Asset{
-				Name:        MondooContainerID(ci.ID),
+				Name:        ci.Name,
 				Connections: []*transports.TransportConfig{t},
+				PlatformIDs: []string{ci.PlatformID},
 				Platform: &platform.Platform{
 					Kind:    transports.Kind_KIND_CONTAINER,
 					Runtime: transports.RUNTIME_DOCKER_CONTAINER,
@@ -123,6 +124,7 @@ func (k *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error
 			resolvedAsset = &asset.Asset{
 				Name:        ii.Name,
 				Connections: []*transports.TransportConfig{t},
+				PlatformIDs: []string{ii.PlatformID},
 				Platform: &platform.Platform{
 					Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
 					Runtime: transports.RUNTIME_DOCKER_IMAGE,
@@ -137,7 +139,8 @@ func (k *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error
 	if err == nil {
 		t.Backend = transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY
 		resolvedAsset = &asset.Asset{
-			Name:        t.Host,
+			Name: t.Host,
+			// PlatformIDs: []string{}, // we cannot determine the id here
 			Connections: []*transports.TransportConfig{t},
 			Platform: &platform.Platform{
 				Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
