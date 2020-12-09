@@ -35,10 +35,12 @@ func (e *dockerEngineDiscovery) ListContainerShas() ([]string, error) {
 }
 
 type ContainerInfo struct {
-	ID      string
-	Running bool
-	Labels  map[string]string
-	Arch    string
+	ID         string
+	Name       string
+	PlatformID string
+	Running    bool
+	Labels     map[string]string
+	Arch       string
 }
 
 // will resolve name and id to a container id
@@ -54,15 +56,24 @@ func (e *dockerEngineDiscovery) ContainerInfo(name string) (ContainerInfo, error
 		return ci, err
 	}
 
+	cName := cdata.Name
+	cName = strings.TrimPrefix(cName, "/")
+	if len(cName) == 0 {
+		cName = ShortContainerID(cdata.ID)
+	}
+
 	ci.ID = cdata.ID
+	ci.Name = cName
+	ci.PlatformID = MondooContainerID(ci.ID)
 	ci.Running = cdata.State.Running
 
 	// fetch docker specific metadata
 	labels := map[string]string{}
 	labels["mondoo.app/instance"] = cdata.ID
-	// labels["mondoo.app/image-id"] = cdata.ImageID
+	labels["docker.io/container-id"] = cdata.ID
 	labels["docker.io/image-name"] = cdata.Image
-	labels["docker.io/names"] = name
+	// labels["mondoo.app/image-id"] = cdata.ImageID
+	labels["docker.io/names"] = cName
 
 	ci.Labels = labels
 
@@ -70,10 +81,11 @@ func (e *dockerEngineDiscovery) ContainerInfo(name string) (ContainerInfo, error
 }
 
 type ImageInfo struct {
-	ID     string
-	Name   string
-	Labels map[string]string
-	Arch   string
+	ID         string
+	Name       string
+	PlatformID string
+	Labels     map[string]string
+	Arch       string
 }
 
 func (e *dockerEngineDiscovery) ImageInfo(name string) (ImageInfo, error) {
@@ -101,6 +113,7 @@ func (e *dockerEngineDiscovery) ImageInfo(name string) (ImageInfo, error) {
 	ii.Name = ShortContainerImageID(res.ID)
 	ii.ID = res.ID
 	ii.Labels = labels
+	ii.PlatformID = MondooContainerImageID(res.ID)
 	return ii, nil
 }
 
@@ -113,11 +126,9 @@ func (e *dockerEngineDiscovery) ListContainer() ([]*asset.Asset, error) {
 	container := make([]*asset.Asset, len(dContainers))
 	for i, dContainer := range dContainers {
 		name := strings.Join(DockerDisplayNames(dContainer.Names), ",")
-
 		asset := &asset.Asset{
-			PlatformIDs: []string{MondooContainerID(dContainer.ID)},
 			Name:        name,
-			// ParentPlatformID: dContainer.ImageID,
+			PlatformIDs: []string{MondooContainerID(dContainer.ID)},
 			Platform: &platform.Platform{
 				Kind:    transports.Kind_KIND_CONTAINER,
 				Runtime: transports.RUNTIME_DOCKER_CONTAINER,
@@ -147,6 +158,13 @@ func (e *dockerEngineDiscovery) ListContainer() ([]*asset.Asset, error) {
 		container[i] = asset
 	}
 	return container, nil
+}
+
+func ShortContainerID(id string) string {
+	if len(id) > 12 {
+		return id[0:12]
+	}
+	return id
 }
 
 func ShortContainerImageID(id string) string {
