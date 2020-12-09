@@ -99,7 +99,35 @@ func (f *MockFile) Delete() error {
 }
 
 func (f *MockFile) Readdir(n int) ([]os.FileInfo, error) {
-	return nil, errors.New("not implemented yet")
+	children := []os.FileInfo{}
+	path := f.data.Path
+	// searches for direct childs of this file
+	for k := range f.fs.Files {
+		if strings.HasPrefix(k, path) {
+			// check if it is only one layer down
+			filename := strings.TrimPrefix(k, path)
+
+			// path-seperator is still included, remove it
+			filename = strings.TrimPrefix(filename, "/")
+			filename = strings.TrimPrefix(filename, "\\")
+
+			if filename == "" || strings.Contains(filename, "/") || strings.Contains(filename, "\\") {
+				continue
+			}
+
+			// fetch file stats
+			fsInfo, err := f.fs.Stat(k)
+			if err != nil {
+				return nil, errors.New("cannot find file in mock index: " + k)
+			}
+
+			children = append(children, fsInfo)
+		}
+		if n > 0 && len(children) > n {
+			return children, nil
+		}
+	}
+	return children, nil
 }
 
 func (f *MockFile) Readdirnames(n int) ([]string, error) {
