@@ -125,6 +125,8 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		osm = &OpenBsdRcctlServiceManager{motor: motor}
 	case "windows":
 		osm = &WindowsServiceManager{motor: motor}
+	case "alpine":
+		osm = &AlpineOpenrcServiceManager{motor: motor}
 	}
 
 	if osm == nil {

@@ -64,10 +64,10 @@ func TestManagerUbuntu1404(t *testing.T) {
 
 	mm, err := services.ResolveManager(m)
 	require.NoError(t, err)
-	mounts, err := mm.List()
+	serviceList, err := mm.List()
 	require.NoError(t, err)
 
-	assert.Equal(t, 9, len(mounts))
+	assert.Equal(t, 9, len(serviceList))
 }
 
 func TestManagerOpensuse13(t *testing.T) {
@@ -79,10 +79,10 @@ func TestManagerOpensuse13(t *testing.T) {
 
 	mm, err := services.ResolveManager(m)
 	require.NoError(t, err)
-	mounts, err := mm.List()
+	serviceList, err := mm.List()
 	require.NoError(t, err)
 
-	assert.Equal(t, 31, len(mounts))
+	assert.Equal(t, 31, len(serviceList))
 }
 
 func TestManagerMacos(t *testing.T) {
@@ -93,10 +93,10 @@ func TestManagerMacos(t *testing.T) {
 
 	mm, err := services.ResolveManager(m)
 	require.NoError(t, err)
-	mounts, err := mm.List()
+	serviceList, err := mm.List()
 	require.NoError(t, err)
 
-	assert.Equal(t, 15, len(mounts))
+	assert.Equal(t, 15, len(serviceList))
 }
 
 func TestManagerFreebsd(t *testing.T) {
@@ -107,10 +107,10 @@ func TestManagerFreebsd(t *testing.T) {
 
 	mm, err := services.ResolveManager(m)
 	require.NoError(t, err)
-	mounts, err := mm.List()
+	serviceList, err := mm.List()
 	require.NoError(t, err)
 
-	assert.Equal(t, 25, len(mounts))
+	assert.Equal(t, 25, len(serviceList))
 }
 
 func TestManagerDragonflybsd5(t *testing.T) {
@@ -121,10 +121,10 @@ func TestManagerDragonflybsd5(t *testing.T) {
 
 	mm, err := services.ResolveManager(m)
 	require.NoError(t, err)
-	mounts, err := mm.List()
+	serviceList, err := mm.List()
 	require.NoError(t, err)
 
-	assert.Equal(t, 11, len(mounts))
+	assert.Equal(t, 11, len(serviceList))
 }
 
 func TestManagerOpenBsd6(t *testing.T) {
@@ -135,10 +135,10 @@ func TestManagerOpenBsd6(t *testing.T) {
 
 	mm, err := services.ResolveManager(m)
 	require.NoError(t, err)
-	mounts, err := mm.List()
+	serviceList, err := mm.List()
 	require.NoError(t, err)
 
-	assert.Equal(t, 70, len(mounts))
+	assert.Equal(t, 70, len(serviceList))
 }
 
 func TestManagerWindows(t *testing.T) {
@@ -149,8 +149,8 @@ func TestManagerWindows(t *testing.T) {
 
 	mm, err := services.ResolveManager(m)
 	require.NoError(t, err)
-	mounts, err := mm.List()
+	serviceList, err := mm.List()
 	require.NoError(t, err)
 
-	assert.Equal(t, 1, len(mounts))
+	assert.Equal(t, 1, len(serviceList))
 }
