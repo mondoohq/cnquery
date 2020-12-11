@@ -1289,89 +1289,101 @@ aws.iam.virtualmfadevice {
   user aws.iam.user
 }
 
-aws.cloudwatch {
-  alarms() []aws.cloudwatch.alarm
-}
-
-aws.cloudwatch.alarm {
+aws.sns.topic {
+  // SNS topic ARN
   arn string
-  name string
-  alarmActions []string
+  // region where the sns topic exists
+  region string
+  // list of subscriptions associated with the topic ARN
+  subscriptions() []aws.sns.subscription 
 }
 
+aws.sns.subscription {
+  // ARN of the subscription
+  arn string
+  // protocol value for the subscription
+  protocol string
+}
+
+// aws service that provides observability of AWS resources and applications
+aws.cloudwatch {
+  // list of cloudwatch log groups
+  logGroups() []aws.cloudwatch.loggroup
+}
+
+aws.cloudwatch.metricsalarm {
+  // unique id for metric alarm
+  id string
+  // metric name associated with the alarm
+  metricName string
+  // metric namespace associated with the alarm
+  metricNamespace string
+  // region where the alarm exists
+  region string
+  // list of sns topic ARNs associated with the alarm
+  snsTopics() []aws.sns.topic
+}
+
+aws.cloudwatch.loggroup {
+  // ARN of the log group
+  arn string
+  // name of the log group
+  name string
+  // list of metric filters associated with the log group
+  metricsFilters() []aws.cloudwatch.loggroup.metricsfilter
+}
+
+aws.cloudwatch.loggroup.metricsfilter {
+  // unique id for the metric
+  id string
+  // filter name associated with metric
+  filterName string
+  // filter pattern associated with the metric
+  filterPattern string
+  // list of metric alarms
+  metricAlarms []aws.cloudwatch.metricsalarm 
+}
+
+// aws service that enables risk auditing of your AWS account
 aws.cloudtrail {
+  // a list of cloudtrail trails associated with the account
   trails() []aws.cloudtrail.trail
 }
 
 aws.cloudtrail.trail {
+  // ARN of the trail
   arn string
+  // name of the trail
   name string
+  // ARN of the KMS key id that encrypts the logs
   kmsKeyId string
+  // specifies if trail exists only in one region or multiple
   isMultiRegionTrail bool
+  // whether trail is organization trail (logs events for mgmt and member accts of org)
   isOrganizationTrail bool
+  // whether log file validation is enabled
   logFileValidationEnabled bool
+  // true if api calls from global services are included
   includeGlobalServiceEvents bool
+  // s3 bucket where trail files are delivered
   s3bucket aws.s3.bucket
+  // ARN of the SNS topic that the trail uses to send notifications
   snsTopicARN string
-  status() aws.cloudtrail.trailstatus
+  // JSON list of information about the trail
+  status() dict
+  // ARN of log group to which trail files will be delivered
   cloudWatchLogsLogGroupArn string
+  // role for logs endpoint to assume when writing to log group
   cloudWatchLogsRoleArn string
-  mgmtEvents() aws.cloudtrail.trailmgmtevents
-  metricFilters() aws.cloudtrail.trailmetricfilters
+  // settings for the trail's configured event selectors
+  eventSelectors() []dict
+  // a list of log groups associated with the group name from cloudWatchLogsLogGroupArn
+  logGroup() aws.cloudwatch.loggroup
+  // region in which the trail was created (home region)
+  region string
 }
 
-aws.cloudtrail.trailmetricfilters {
-  id string
-  metrics []aws.cloudtrail.trailmetricfilters.metricfilters
-}
-
-aws.cloudtrail.trailmetricfilters.metricfilters {
-  id string
-  filterName string
-  filterPattern string
-  metricName string
-  metricValue string
-  alarmsForMetric() []aws.cloudtrail.trailmetricfilters.metricfilters.alarms
-}
-
-aws.cloudtrail.trailmetricfilters.metricfilters.alarms {
-  arn string
-  name string
-  alarmActions []aws.cloudtrail.alarmactions
-}
-
-aws.cloudtrail.alarmactions {
-  snsTopicArn string
-  subscriptionArn string
-  validSubscription bool
-}
-
-aws.cloudtrail.trailmgmtevents {
-  arn string
-  eventSelectors []aws.cloudtrail.trailmgmtevents.eventselectors
-}
-
-aws.cloudtrail.trailmgmtevents.eventselectors {
-  id string
-  includeManagementEvents bool
-  readWriteType string
-}
-
-aws.cloudtrail.trailstatus {
-  arn string
-  isLogging bool
-  latestCloudWatchLogsDeliveryError string
-  latestCloudWatchLogsDeliveryTime time
-  latestDeliveryError string
-  latestDeliveryTime time
-  latestDigestDeliveryError string
-  latestDigestDeliveryTime time
-  latestNotificationError string
-  latestNotificationTime time
-  startLoggingTime time
-  stopLoggingTime time
-}
-
+// aws service for key management
 aws.kms {
   // a list of all customer master keys (CMKs) in the caller's AWS account (across all regions)
   keys() []aws.kms.key
