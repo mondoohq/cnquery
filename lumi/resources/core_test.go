@@ -542,6 +542,12 @@ func TestNumber_Methods(t *testing.T) {
 		{
 			"4.0 / 2.0", 0, float64(2),
 		},
+		{
+			"1 < Infinity", 0, true,
+		},
+		{
+			"1 == NaN", 0, false,
+		},
 	})
 }
 
@@ -693,6 +699,10 @@ func TestTime_Methods(t *testing.T) {
 		},
 		{
 			"1 * time.day > 3 * time.hour",
+			2, true,
+		},
+		{
+			"time.now != Never",
 			2, true,
 		},
 	})

@@ -77,6 +77,18 @@ func TimePrimitive(t *time.Time) *Primitive {
 	}
 }
 
+// NeverFutureTime is an indicator for what we consider infinity when looking at time
+var NeverFutureTime = time.Unix(1<<63-1, 0)
+
+// NeverPastTime is an indicator for what we consider negative infinity when looking at time
+var NeverPastTime = time.Unix(-(1<<63 - 1), 0)
+
+// NeverFuturePrimitive is the special time primitive for the infinite future time
+var NeverFuturePrimitive = TimePrimitive(&NeverFutureTime)
+
+// NeverPastPrimitive is the special time primitive for the infinite future time
+var NeverPastPrimitive = TimePrimitive(&NeverPastTime)
+
 // ScorePrimitive creates a primitive with a numeric score
 func ScorePrimitive(num int32) *Primitive {
 	v, err := scoreVector(num)

@@ -2,6 +2,7 @@ package parser
 
 import (
 	"errors"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -100,6 +101,12 @@ var falseBool = false
 var trueValue = Value{Bool: &trueBool}
 var falseValue = Value{Bool: &falseBool}
 var nilValue = Value{}
+var nanRef = math.NaN()
+var nanValue = Value{Float: &nanRef}
+var infinityRef = math.Inf(1)
+var infinityValue = Value{Float: &infinityRef}
+var neverRef = "Never"
+var neverValue = Value{Ident: &neverRef}
 
 type parser struct {
 	token      lexer.Token
@@ -179,6 +186,12 @@ func (p *parser) parseValue() *Value {
 			return &falseValue
 		case "null":
 			return &nilValue
+		case "NaN":
+			return &nanValue
+		case "Infinity":
+			return &infinityValue
+		case "Never":
+			return &neverValue
 		default:
 			v := p.token.Value
 			return &Value{Ident: &v}

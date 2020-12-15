@@ -38,6 +38,7 @@ func init() {
 		"score":  compileScore,
 		"typeof": compileTypeof,
 		"switch": compileSwitch,
+		"Never":  compileNever,
 	}
 }
 
@@ -485,4 +486,13 @@ func compileSwitch(c *compiler, id string, call *parser.Call, res *llx.CodeBundl
 	c.prevID = "switch"
 
 	return types.Nil, nil
+}
+
+func compileNever(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
+	res.Code.AddChunk(&llx.Chunk{
+		Call:      llx.Chunk_PRIMITIVE,
+		Primitive: llx.NeverFuturePrimitive,
+	})
+
+	return types.Time, nil
 }
