@@ -165,6 +165,10 @@ func opTimeCmpTime(left interface{}, right interface{}) bool {
 		return false
 	}
 
+	if (*l == NeverPastTime || *l == NeverFutureTime) && (*r == NeverPastTime || *r == NeverFutureTime) {
+		return true
+	}
+
 	return (*l).Equal(*r)
 }
 

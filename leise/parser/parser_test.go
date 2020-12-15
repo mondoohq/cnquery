@@ -64,6 +64,9 @@ func TestParser_ParseValues(t *testing.T) {
 		res  *Expression
 	}{
 		{"null", &Expression{Operand: &Operand{Value: &nilValue}}},
+		{"NaN", &Expression{Operand: &Operand{Value: &nanValue}}},
+		{"Infinity", &Expression{Operand: &Operand{Value: &infinityValue}}},
+		{"Never", &Expression{Operand: &Operand{Value: &neverValue}}},
 		{"true", &Expression{Operand: &Operand{Value: vBool(true)}}},
 		{"false", &Expression{Operand: &Operand{Value: vBool(false)}}},
 		{"name", &Expression{Operand: &Operand{Value: vIdent("name")}}},
