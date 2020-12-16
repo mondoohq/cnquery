@@ -17,6 +17,10 @@ func (s *lumiAwsVpcFlowlog) id() (string, error) {
 	return s.Id()
 }
 
+func (s *lumiAwsVpcRoutetable) id() (string, error) {
+	return s.Id()
+}
+
 func (s *lumiAws) GetVpcs() ([]interface{}, error) {
 	res := []interface{}{}
 	poolOfJobs := jobpool.CreatePool(s.getVpcs(), 5)
@@ -135,4 +139,48 @@ func (s *lumiAwsVpc) GetFlowLogs() ([]interface{}, error) {
 		}
 	}
 	return flowLogs, nil
+}
+
+func (s *lumiAwsVpc) GetRouteTables() ([]interface{}, error) {
+	vpcVal, err := s.Id()
+	if err != nil {
+		return nil, err
+	}
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	svc := at.Ec2("")
+	ctx := context.Background()
+	res := []interface{}{}
+
+	nextToken := aws.String("no_token_to_start_with")
+	filterName := "vpc-id"
+	params := &ec2.DescribeRouteTablesInput{Filters: []ec2.Filter{{Name: &filterName, Values: []string{vpcVal}}}}
+	for nextToken != nil {
+		routeTables, err := svc.DescribeRouteTablesRequest(params).Send(ctx)
+		if err != nil {
+			return nil, err
+		}
+		nextToken = routeTables.NextToken
+		if routeTables.NextToken != nil {
+			params.NextToken = nextToken
+		}
+
+		for _, routeTable := range routeTables.RouteTables {
+			dictRoutes, err := jsonToDictSlice(routeTable.Routes)
+			if err != nil {
+				return nil, err
+			}
+			lumiRouteTable, err := s.Runtime.CreateResource("aws.vpc.routetable",
+				"id", toString(routeTable.RouteTableId),
+				"routes", dictRoutes,
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, lumiRouteTable)
+		}
+	}
+	return res, nil
 }
