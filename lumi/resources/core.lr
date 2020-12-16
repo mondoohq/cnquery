@@ -1470,6 +1470,8 @@ aws.vpc {
   region string
   // a list of flowlogs for the vpc
   flowLogs() []aws.vpc.flowlog
+  // list of route tables for the vpc
+  routeTables() []aws.vpc.routetable
 }
 
 aws.vpc.flowlog {
@@ -1481,6 +1483,13 @@ aws.vpc.flowlog {
   region string
   // status of the flowlog
   status string
+}
+
+aws.vpc.routetable {
+  // unique id of the route table
+  id string
+  // a list of route descriptions
+  routes []dict
 }
 
 aws.ec2.securitygroup {
