@@ -7,6 +7,26 @@ import (
 	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
+func (e *lumiAws) id() (string, error) {
+	return "aws", nil
+}
+
+func (s *lumiAws) GetRegions() ([]interface{}, error) {
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	regions, err := at.GetRegions()
+	if err != nil {
+		return nil, err
+	}
+	res := make([]interface{}, len(regions))
+	for i := range regions {
+		res[i] = regions[i]
+	}
+	return res, nil
+}
+
 func awstransport(t transports.Transport) (*aws_transport.Transport, error) {
 	at, ok := t.(*aws_transport.Transport)
 	if !ok {

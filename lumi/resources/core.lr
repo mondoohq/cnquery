@@ -1179,6 +1179,12 @@ arista.eos.spt.mstInterface {
   // Interface features: BPDU filter, specifies the BPDU reception rate & link type of the interface
   features() dict
 }
+aws {
+  // list of vpcs in the account (across all regions)
+  vpcs() []aws.vpc
+  // list of regions for the account
+  regions() []string
+}
 
 aws.iam {
   users() []aws.iam.user
@@ -1390,14 +1396,30 @@ aws.s3.bucket.policystatement {
 
 aws.ec2 {
   securityGroups() []aws.ec2.securitygroup
-  vpcs() []aws.ec2.vpc
 }
 
-aws.ec2.vpc {
+aws.vpc {
+  // id of the vpc
   id string
+  // state of the vpc (pending|available)
   state string
+  // whether the vpc is the default one
   isDefault bool
+  // region the vpc exists in
   region string
+  // a list of flowlogs for the vpc
+  flowLogs() []aws.vpc.flowlog
+}
+
+aws.vpc.flowlog {
+  // unique id of the flowlog
+  id string
+  // vpc the flowlog exists in
+  vpc string
+  // region the flowlog exists in
+  region string
+  // status of the flowlog
+  status string
 }
 
 aws.ec2.securitygroup {
