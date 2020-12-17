@@ -4,10 +4,13 @@ import (
 	"context"
 	"strconv"
 
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 )
 
@@ -27,6 +30,34 @@ func ec2TagsToMap(tags []ec2.Tag) map[string]interface{} {
 	}
 
 	return tagsMap
+}
+
+func (s *lumiAwsEc2Securitygroup) GetIsAttachedToNetworkInterface() (bool, error) {
+	sgId, err := s.Id()
+	if err != nil {
+		return false, errors.Wrap(err, "unable to parse instance id")
+	}
+	region, err := s.Region()
+	if err != nil {
+		return false, errors.Wrap(err, "unable to parse instance id")
+	}
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return false, nil
+	}
+	svc := at.Ec2(region)
+	ctx := context.Background()
+	groupIdFilter := "group-id"
+	networkinterfaces, err := svc.DescribeNetworkInterfacesRequest(&ec2.DescribeNetworkInterfacesInput{Filters: []ec2.Filter{
+		{Name: &groupIdFilter, Values: []string{sgId}},
+	}}).Send(ctx)
+	if err != nil {
+		return false, err
+	}
+	if len(networkinterfaces.NetworkInterfaces) > 0 {
+		return true, nil
+	}
+	return false, nil
 }
 
 func (s *lumiAwsEc2) getSecurityGroups() []*jobpool.Job {
@@ -141,10 +172,351 @@ func (s *lumiAwsEc2) GetSecurityGroups() ([]interface{}, error) {
 	return res, nil
 }
 
+type ebsEncryption struct {
+	region                 string `json:"region"`
+	ebsEncryptionByDefault bool   `json:"ebsEncryptionByDefault"`
+}
+
+func (s *lumiAwsEc2) GetEbsEncryptionByDefault() (map[string]interface{}, error) {
+	res := make(map[string]interface{})
+	poolOfJobs := jobpool.CreatePool(s.getEbsEncryptionPerRegion(), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		jobResult := poolOfJobs.Jobs[i].Result.(ebsEncryption)
+		res[jobResult.region] = jobResult.ebsEncryptionByDefault
+	}
+	return res, nil
+}
+
+func (s *lumiAwsEc2) getEbsEncryptionPerRegion() []*jobpool.Job {
+	var tasks = make([]*jobpool.Job, 0)
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
+	}
+	regions, err := at.GetRegions()
+	if err != nil {
+		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("calling aws with region %s", regionVal)
+
+			svc := at.Ec2(regionVal)
+			ctx := context.Background()
+
+			ebsEncryptionRes, err := svc.GetEbsEncryptionByDefaultRequest(&ec2.GetEbsEncryptionByDefaultInput{}).Send(ctx)
+			if err != nil {
+				return nil, err
+			}
+			structVal := ebsEncryption{
+				region:                 regionVal,
+				ebsEncryptionByDefault: toBool(ebsEncryptionRes.EbsEncryptionByDefault),
+			}
+			return jobpool.JobResult(structVal), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (s *lumiAwsEc2) GetInstances() ([]interface{}, error) {
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(s.getInstances(), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+
+	return res, nil
+}
+
+func (s *lumiAwsEc2) getImdsv2Instances(ctx context.Context, svc *ec2.Client, filterName string) ([]ec2.Reservation, error) {
+	res := []ec2.Reservation{}
+	nextToken := aws.String("no_token_to_start_with")
+	params := &ec2.DescribeInstancesInput{
+		Filters: []ec2.Filter{
+			{Name: &filterName, Values: []string{"required"}},
+		},
+	}
+	for nextToken != nil {
+		instances, err := svc.DescribeInstancesRequest(params).Send(ctx)
+		if err != nil {
+			return nil, err
+		}
+		nextToken = instances.NextToken
+		if instances.NextToken != nil {
+			params.NextToken = nextToken
+		}
+		res = append(res, instances.Reservations...)
+	}
+	return res, nil
+}
+
+func (s *lumiAwsEc2) getImdsv1Instances(ctx context.Context, svc *ec2.Client, filterName string) ([]ec2.Reservation, error) {
+	res := []ec2.Reservation{}
+	nextToken := aws.String("no_token_to_start_with")
+	params := &ec2.DescribeInstancesInput{
+		Filters: []ec2.Filter{
+			{Name: &filterName, Values: []string{"optional"}},
+		},
+	}
+	for nextToken != nil {
+		instances, err := svc.DescribeInstancesRequest(params).Send(ctx)
+		if err != nil {
+			return nil, err
+		}
+		nextToken = instances.NextToken
+		if instances.NextToken != nil {
+			params.NextToken = nextToken
+		}
+		res = append(res, instances.Reservations...)
+	}
+	return res, nil
+}
+
+func (s *lumiAwsEc2) getInstances() []*jobpool.Job {
+	var tasks = make([]*jobpool.Job, 0)
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
+	}
+	regions, err := at.GetRegions()
+	if err != nil {
+		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("calling aws with region %s", regionVal)
+
+			svc := at.Ec2(regionVal)
+			ctx := context.Background()
+			res := []interface{}{}
+
+			// the value for http tokens is not available on api output i've been able to find, so here
+			// we make two calls to get the instances, one with the imdsv1 filter and another with the imdsv2 filter
+			filterName := "metadata-options.http-tokens"
+			imdsv2Instances, err := s.getImdsv2Instances(ctx, svc, filterName)
+			if err != nil {
+				return nil, err
+			}
+			res, err = s.gatherInstanceInfo(imdsv2Instances, 2, regionVal)
+			if err != nil {
+				return nil, err
+			}
+
+			imdsv1Instances, err := s.getImdsv1Instances(ctx, svc, filterName)
+			if err != nil {
+				return nil, err
+			}
+			imdsv1Res, err := s.gatherInstanceInfo(imdsv1Instances, 1, regionVal)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, imdsv1Res...)
+
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (p *lumiAwsEc2Securitygroup) init(args *lumi.Args) (*lumi.Args, AwsEc2Securitygroup, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if (*args)["id"] == nil {
+		return nil, nil, errors.New("id required to fetch security group")
+	}
+
+	idVal := (*args)["id"]
+	if idVal == nil {
+		return args, nil, nil
+	}
+
+	obj, err := p.Runtime.CreateResource("aws.ec2")
+	if err != nil {
+		return nil, nil, err
+	}
+	awsEc2 := obj.(AwsEc2)
+
+	_, err = awsEc2.SecurityGroups()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["id"] = idVal
+	(*args)["name"] = ""
+	(*args)["description"] = ""
+	(*args)["tag"] = make(map[string]interface{})
+	(*args)["vpcid"] = ""
+	(*args)["ipPermissions"] = []interface{}{}
+	(*args)["ipPermissionsEgress"] = []interface{}{}
+	(*args)["region"] = ""
+
+	return args, nil, nil
+}
+
+func (s *lumiAwsEc2) gatherInstanceInfo(instances []ec2.Reservation, imdsvVersion int, regionVal string) ([]interface{}, error) {
+	res := []interface{}{}
+	httpTokens := "required"
+	if imdsvVersion == 1 {
+		httpTokens = "optional"
+	}
+	for _, reservation := range instances {
+		for _, instance := range reservation.Instances {
+			lumiDevices := []interface{}{}
+			for i := range instance.BlockDeviceMappings {
+				device := instance.BlockDeviceMappings[i]
+				deviceStatus, err := device.Ebs.Status.MarshalValue()
+				if err != nil {
+					return nil, err
+				}
+				lumiInstanceDevice, err := s.Runtime.CreateResource("aws.ec2.instance.device",
+					"deleteOnTermination", toBool(device.Ebs.DeleteOnTermination),
+					"status", deviceStatus,
+					"volumeId", toString(device.Ebs.VolumeId),
+					"deviceName", toString(device.DeviceName),
+				)
+				if err != nil {
+					return nil, err
+				}
+				lumiDevices = append(lumiDevices, lumiInstanceDevice)
+			}
+			stateName, err := instance.State.Name.MarshalValue()
+			if err != nil {
+				return nil, err
+			}
+			detailedMonitoring, err := instance.Monitoring.State.MarshalValue()
+			if err != nil {
+				return nil, err
+			}
+			sgs := []interface{}{}
+			for i := range instance.SecurityGroups {
+				lumiSg, err := s.Runtime.CreateResource("aws.ec2.securitygroup",
+					"id", toString(instance.SecurityGroups[i].GroupId),
+				)
+				if err != nil {
+					return nil, err
+				}
+				sgs = append(sgs, lumiSg)
+			}
+			lumiEc2Instance, err := s.Runtime.CreateResource("aws.ec2.instance",
+				"id", toString(instance.InstanceId)+"/"+regionVal,
+				"instanceId", toString(instance.InstanceId),
+				"region", regionVal,
+				"publicIp", toString(instance.PublicIpAddress),
+				"detailedMonitoring", detailedMonitoring,
+				"vpcId", toString(instance.VpcId),
+				"httpTokens", httpTokens,
+				"state", stateName,
+				"deviceMappings", lumiDevices,
+				"securityGroups", sgs,
+				"publicDnsName", toString(instance.PublicDnsName),
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, lumiEc2Instance)
+		}
+	}
+	return res, nil
+}
+
 func (s *lumiAwsEc2Securitygroup) id() (string, error) {
 	return s.Id()
 }
 
 func (s *lumiAwsEc2SecuritygroupIppermission) id() (string, error) {
 	return s.Id()
+}
+
+func (s *lumiAwsEc2Instance) id() (string, error) {
+	return s.Id()
+}
+
+func (s *lumiAwsEc2InstanceDevice) id() (string, error) {
+	return s.VolumeId()
+}
+
+func (s *lumiAwsEc2Instance) GetSsm() (interface{}, error) {
+	instanceId, err := s.InstanceId()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse instance id")
+	}
+	region, err := s.Region()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse instance region")
+	}
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	svc := at.Ssm(region)
+	ctx := context.Background()
+	resourceTypeFilter := "ResourceType"
+	instanceIdFilter := "InstanceIds"
+	params := &ssm.DescribeInstanceInformationInput{
+		Filters: []ssm.InstanceInformationStringFilter{
+			{Key: &resourceTypeFilter, Values: []string{"ManagedInstance"}},
+			{Key: &instanceIdFilter, Values: []string{instanceId}},
+		},
+	}
+	ssmInstanceInfo, err := svc.DescribeInstanceInformationRequest(params).Send(ctx)
+	if err != nil {
+		return nil, err
+	}
+	res, err := jsonToDict(ssmInstanceInfo)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (s *lumiAwsEc2Instance) GetPatchState() (interface{}, error) {
+	var res interface{}
+	instanceId, err := s.InstanceId()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse instance id")
+	}
+	region, err := s.Region()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse instance region")
+	}
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	svc := at.Ssm(region)
+	ctx := context.Background()
+
+	ssmPatchInfo, err := svc.DescribeInstancePatchStatesRequest(&ssm.DescribeInstancePatchStatesInput{InstanceIds: []string{instanceId}}).Send(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if len(ssmPatchInfo.InstancePatchStates) > 0 {
+		if instanceId == toString(ssmPatchInfo.InstancePatchStates[0].InstanceId) {
+			res, err = jsonToDict(ssmPatchInfo.InstancePatchStates[0])
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	return res, nil
 }

@@ -1530,7 +1530,52 @@ aws.s3.bucket.policystatement {
 }
 
 aws.ec2 {
-  securityGroups() []aws.ec2.securitygroup
+  // a list of security groups available to the account
+  securityGroups() []aws.ec2.securitygroup 
+  // a list of instances across the aws account (all regions)
+  instances() []aws.ec2.instance
+  // map[region]boolean used to denote if ebs encryption is on by default per region
+  ebsEncryptionByDefault() map[string]bool
+}
+
+aws.ec2.instance {
+  // unique id for the instance
+  id string
+  // instance id for the instance
+  instanceId string
+  // indicates whether detailed monitoring is enabled
+  detailedMonitoring string
+  // region where the instance exists
+  region string
+  // public ip for instance
+  publicIp string
+  // Amazon Systems Manager information for the instance
+  ssm() dict
+  // id of the vpc associated with the intance
+  vpcId string
+  // a value of optional for http tokens denotes imdsv1 server compatibility; required is imdsv2
+  httpTokens string
+  // patch state information about the instance
+  patchState() dict
+  // state of the instance
+  state string
+  // a list of devices attached to the instance (e.g. ebs volume)
+  deviceMappings []aws.ec2.instance.device
+  // a list of security groups (ids) associated with the instance
+  securityGroups []aws.ec2.securitygroup
+  // public dns name for the instance
+  publicDnsName string
+}
+
+aws.ec2.instance.device {
+  // boolean to denote whether volume should be deleted on instance termination
+  deleteOnTermination bool
+  // status of the device
+  status string
+  // volume id for the device
+  volumeId string
+  // name for the device
+  deviceName string
 }
 
 aws.vpc {
@@ -1567,22 +1612,39 @@ aws.vpc.routetable {
 }
 
 aws.ec2.securitygroup {
+  init(id string)
+  // unique id for the security group
   id string
+  // name of the security group
   name string
+  // description of the secuirty group
   description string
+  // a map of tags associated with the security group
   tag map[string]string
+  // id of the vpc associated with the security group
   vpcid string
+  // ip permissions (ingress) for the security group
   ipPermissions []aws.ec2.securitygroup.ippermission
+  // ip permissions (egress) for the security group
   ipPermissionsEgress []aws.ec2.securitygroup.ippermission
+  // region associated with the security group
   region string
+  // bool to denote if security group is attached to Amazon Elastic Compute Cloud
+  isAttachedToNetworkInterface() bool
 }
 
 aws.ec2.securitygroup.ippermission {
+  // unique id for the ip permission
   id string
+  // start of port range for tcp/udp protocols
   fromPort int
+  // end of port range for tcp/udp protocols
   toPort int
+  // ip protocol name
   ipProtocol string
+  // ipv4 ranges
   ipRanges []string
+  // ipv6 ranges
   ipv6Ranges []string
 }
 
