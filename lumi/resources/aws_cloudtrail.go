@@ -8,6 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/cockroachdb/errors"
+	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/lumi/library/jobpool"
 )
 
 func (t *lumiAwsCloudtrail) id() (string, error) {
@@ -15,60 +17,92 @@ func (t *lumiAwsCloudtrail) id() (string, error) {
 }
 
 func (t *lumiAwsCloudtrail) GetTrails() ([]interface{}, error) {
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(t.getTrails(), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+	return res, nil
+}
+
+func (t *lumiAwsCloudtrail) getTrails() []*jobpool.Job {
+	var tasks = make([]*jobpool.Job, 0)
 	at, err := awstransport(t.Runtime.Motor.Transport)
 	if err != nil {
-		return nil, err
+		return []*jobpool.Job{&jobpool.Job{Err: err}}
 	}
-
-	// no need to call for each region, this api gets all trails across all regions (afaict)
-	svc := at.Cloudtrail("")
-	ctx := context.Background()
-
-	// no pagination required
-	trailsResp, err := svc.DescribeTrailsRequest(&cloudtrail.DescribeTrailsInput{}).Send(ctx)
+	regions, err := at.GetRegions()
 	if err != nil {
-		return nil, errors.Wrap(err, "could not gather aws cloudtrail trails")
+		return []*jobpool.Job{&jobpool.Job{Err: err}}
 	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("calling aws with region %s", regionVal)
 
-	res := []interface{}{}
-	for i := range trailsResp.TrailList {
-		trail := trailsResp.TrailList[i]
+			svc := at.Cloudtrail(regionVal)
+			ctx := context.Background()
 
-		// trail.S3BucketName
-		var s3Bucket interface{}
-		if trail.S3BucketName != nil {
-			lumiAwsS3Bucket, err := t.Runtime.CreateResource("aws.s3.bucket",
-				"name", toString(trail.S3BucketName),
-			)
+			// no pagination required
+			trailsResp, err := svc.DescribeTrailsRequest(&cloudtrail.DescribeTrailsInput{}).Send(ctx)
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "could not gather aws cloudtrail trails")
 			}
-			s3Bucket = lumiAwsS3Bucket
-		}
-		lumiAwsCloudtrailTrail, err := t.Runtime.CreateResource("aws.cloudtrail.trail",
-			"arn", toString(trail.TrailARN),
-			"name", toString(trail.Name),
-			"kmsKeyId", toString(trail.KmsKeyId),
-			"isMultiRegionTrail", toBool(trail.IsMultiRegionTrail),
-			"isOrganizationTrail", toBool(trail.IsOrganizationTrail),
-			"logFileValidationEnabled", toBool(trail.LogFileValidationEnabled),
-			"includeGlobalServiceEvents", toBool(trail.IncludeGlobalServiceEvents),
-			"s3bucket", s3Bucket,
-			"snsTopicARN", toString(trail.SnsTopicARN),
-			// TODO: link to log group
-			"cloudWatchLogsLogGroupArn", toString(trail.CloudWatchLogsLogGroupArn),
-			// TODO: link to watch logs grou
-			"cloudWatchLogsRoleArn", toString(trail.CloudWatchLogsRoleArn),
-			"region", toString(trail.HomeRegion),
-		)
-		if err != nil {
-			return nil, err
-		}
 
-		res = append(res, lumiAwsCloudtrailTrail)
+			res := []interface{}{}
+			for i := range trailsResp.TrailList {
+				trail := trailsResp.TrailList[i]
+
+				// trail.S3BucketName
+				var s3Bucket interface{}
+				if trail.S3BucketName != nil {
+					lumiAwsS3Bucket, err := t.Runtime.CreateResource("aws.s3.bucket",
+						"name", toString(trail.S3BucketName),
+					)
+					if err != nil {
+						return nil, err
+					}
+					s3Bucket = lumiAwsS3Bucket
+				}
+				// only include trail if this region is the home region for the trail
+				// we do this to avoid getting duped results from multiregion trails
+				if regionVal != toString(trail.HomeRegion) {
+					continue
+				}
+				lumiAwsCloudtrailTrail, err := t.Runtime.CreateResource("aws.cloudtrail.trail",
+					"arn", toString(trail.TrailARN),
+					"name", toString(trail.Name),
+					"kmsKeyId", toString(trail.KmsKeyId),
+					"isMultiRegionTrail", toBool(trail.IsMultiRegionTrail),
+					"isOrganizationTrail", toBool(trail.IsOrganizationTrail),
+					"logFileValidationEnabled", toBool(trail.LogFileValidationEnabled),
+					"includeGlobalServiceEvents", toBool(trail.IncludeGlobalServiceEvents),
+					"s3bucket", s3Bucket,
+					"snsTopicARN", toString(trail.SnsTopicARN),
+					// TODO: link to log group
+					"cloudWatchLogsLogGroupArn", toString(trail.CloudWatchLogsLogGroupArn),
+					// TODO: link to watch logs grou
+					"cloudWatchLogsRoleArn", toString(trail.CloudWatchLogsRoleArn),
+					"region", toString(trail.HomeRegion),
+				)
+				if err != nil {
+					return nil, err
+				}
+
+				res = append(res, lumiAwsCloudtrailTrail)
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
 	}
-
-	return res, nil
+	return tasks
 }
 
 func (t *lumiAwsCloudtrailTrail) id() (string, error) {
