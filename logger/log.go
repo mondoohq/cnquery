@@ -13,13 +13,17 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// we use colorable to support color output on windows
+// we buffer it by default, so that tui components can interrupt cli logger
+var LogOutputWriter = NewBufferedWriter(colorable.NewColorable(os.Stderr))
+
 // Debug is set to true if the application is running in a debug mode
 var Debug bool
 
 func init() {
 	Set("debug")
 	// uses cli logger by default
-	CliNoColorLogger()
+	CliNoColorLogger(LogOutputWriter)
 }
 
 // SetWriter configures a log writer for the global logger
@@ -28,28 +32,22 @@ func SetWriter(w io.Writer) {
 }
 
 // UseJSONLogging for global logger
-func UseJSONLogging() {
-	log.Logger = zerolog.New(os.Stderr).With().Timestamp().Logger()
+func UseJSONLogging(out io.Writer) {
+	log.Logger = zerolog.New(out).With().Timestamp().Logger()
 }
 
 // CliLogger sets the global logger to the console logger with color
 func CliLogger() {
-	// we use colerable to support color output on windows
-	stderr := colorable.NewColorableStderr()
-	log.Logger = NewConsoleWriter(stderr, false, false)
+	log.Logger = NewConsoleWriter(LogOutputWriter, false, false)
 }
 
-func CliCompactLogger() {
-	// we use colerable to support color output on windows
-	stderr := colorable.NewColorableStderr()
-	log.Logger = NewConsoleWriter(stderr, false, true)
+func CliCompactLogger(out io.Writer) {
+	log.Logger = NewConsoleWriter(out, false, true)
 }
 
 // CliNoColorLogger sets the global logger to the console logger without color
-func CliNoColorLogger() {
-	// we use colerable to support color output on windows
-	stderr := colorable.NewColorableStderr()
-	log.Logger = NewConsoleWriter(stderr, true, false)
+func CliNoColorLogger(out io.Writer) {
+	log.Logger = NewConsoleWriter(out, true, false)
 }
 
 // Set will set up the logger
