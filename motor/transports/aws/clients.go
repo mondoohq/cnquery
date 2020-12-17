@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/rs/zerolog/log"
 )
 
@@ -223,6 +224,30 @@ func (t *Transport) Sns(region string) *sns.Client {
 	cfg := t.config.Copy()
 	cfg.Region = region
 	client := sns.New(cfg)
+
+	// cache it
+	t.cache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *Transport) Ssm(region string) *ssm.Client {
+	// if no region value is sent in, use the configured region
+	if len(region) == 0 {
+		region = t.config.Region
+	}
+	cacheVal := "_ssm_" + region
+
+	// check for cached client and return it if it exists
+	c, ok := t.cache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached ssm client")
+		return c.Data.(*ssm.Client)
+	}
+
+	// create the client
+	cfg := t.config.Copy()
+	cfg.Region = region
+	client := ssm.New(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
