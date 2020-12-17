@@ -3,6 +3,7 @@ package resources
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -320,6 +321,43 @@ func (c *lumiAwsIam) lumiPolicies(policies []iam.Policy) ([]interface{}, error) 
 	return res, nil
 }
 
+func (c *lumiAwsIam) GetAttachedPolicies() ([]interface{}, error) {
+	at, err := awstransport(c.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.Iam("")
+	ctx := context.Background()
+
+	res := []interface{}{}
+	var marker *string
+	onlyAttachedPolicies := true
+	for {
+		policiesResp, err := svc.ListPoliciesRequest(&iam.ListPoliciesInput{
+			// setting only attached ensures we only fetch policies attached to a user, group, or role
+			OnlyAttached: &onlyAttachedPolicies,
+			Marker:       marker,
+		}).Send(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not gather aws iam policies")
+		}
+
+		policies, err := c.lumiPolicies(policiesResp.Policies)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, policies...)
+
+		if policiesResp.IsTruncated == nil || *policiesResp.IsTruncated == false {
+			break
+		}
+		marker = policiesResp.Marker
+	}
+
+	return res, nil
+}
+
 func (c *lumiAwsIam) GetPolicies() ([]interface{}, error) {
 	at, err := awstransport(c.Runtime.Motor.Transport)
 	if err != nil {
@@ -333,7 +371,6 @@ func (c *lumiAwsIam) GetPolicies() ([]interface{}, error) {
 	var marker *string
 	for {
 		policiesResp, err := svc.ListPoliciesRequest(&iam.ListPoliciesInput{
-			Scope:  iam.PolicyScopeTypeAll,
 			Marker: marker,
 		}).Send(ctx)
 		if err != nil {
@@ -1076,6 +1113,43 @@ func (u *lumiAwsIamPolicy) GetAttachedGroups() ([]interface{}, error) {
 	return res, nil
 }
 
+func (u *lumiAwsIamPolicy) GetDefaultVersion() (interface{}, error) {
+	at, err := awstransport(u.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.Iam("")
+	ctx := context.Background()
+
+	arn, err := u.Arn()
+	if err != nil {
+		return nil, err
+	}
+
+	policyVersions, err := svc.ListPolicyVersionsRequest(&iam.ListPolicyVersionsInput{PolicyArn: &arn}).Send(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range policyVersions.Versions {
+		policyversion := policyVersions.Versions[i]
+		if toBool(policyversion.IsDefaultVersion) == true {
+			lumiAwsIamPolicyVersion, err := u.Runtime.CreateResource("aws.iam.policyversion",
+				"arn", arn,
+				"versionId", toString(policyversion.VersionId),
+				"isDefaultVersion", toBool(policyversion.IsDefaultVersion),
+				"createDate", policyversion.CreateDate,
+			)
+			if err != nil {
+				return nil, err
+			}
+			return lumiAwsIamPolicyVersion, nil
+		}
+	}
+	return nil, errors.New("unable to find default policy version")
+}
+
 func (u *lumiAwsIamPolicy) GetVersions() ([]interface{}, error) {
 	at, err := awstransport(u.Runtime.Motor.Transport)
 	if err != nil {
@@ -1129,7 +1203,19 @@ func (u *lumiAwsIamPolicyversion) id() (string, error) {
 	return arn + "/" + versionid, nil
 }
 
-func (u *lumiAwsIamPolicyversion) GetDocument() (string, error) {
+type policyDocument struct {
+	Version   string            `json:"Version,omitempty"`
+	Statement []policyStatement `json:"Statement,omitempty"`
+}
+
+type policyStatement struct {
+	Sid      string   `json:"Sid,omitempty"`
+	Effect   string   `json:"Effect,omitempty"`
+	Action   []string `json:"Action,omitempty"`
+	Resource []string `json:"Resource,omitempty"`
+}
+
+func (u *lumiAwsIamPolicyversion) GetDocument() (interface{}, error) {
 	at, err := awstransport(u.Runtime.Motor.Transport)
 	if err != nil {
 		return "", err
@@ -1159,13 +1245,20 @@ func (u *lumiAwsIamPolicyversion) GetDocument() (string, error) {
 	if policyVersion.PolicyVersion.Document == nil {
 		return "", errors.New("could not retrieve the policy document")
 	}
-
 	decodedValue, err := url.QueryUnescape(*policyVersion.PolicyVersion.Document)
 	if err != nil {
 		return "", err
 	}
-
-	return decodedValue, nil
+	policyDoc := policyDocument{}
+	err = json.Unmarshal([]byte(decodedValue), &policyDoc)
+	if err != nil {
+		return "", err
+	}
+	dict, err := jsonToDict(policyDoc)
+	if err != nil {
+		return "", err
+	}
+	return dict, nil
 }
 
 func (p *lumiAwsIamRole) init(args *lumi.Args) (*lumi.Args, AwsIamRole, error) {

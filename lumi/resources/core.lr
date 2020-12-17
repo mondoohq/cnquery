@@ -1186,106 +1186,180 @@ aws {
   regions() []string
 }
 
+// AWS service to create and manage permissions for users and groups
 aws.iam {
+  // list of iam users in the account
   users() []aws.iam.user
+  // list of iam roles in the account
   roles() []aws.iam.role
+  // list of iam groups in the account
   groups() []aws.iam.group
+  // list of iam policies in the account
   policies() []aws.iam.policy
+  // list of iam policies attached to a user, role, or group
+  attachedPolicies() []aws.iam.policy
+  // iam credential report
   credentialReport() []aws.iam.usercredentialreportentry
+  // iam account password policy for the account
   accountPasswordPolicy() map[string]string
+  // iam account summary
   accountSummary() map[string]int
+  // list of virtual mfs devices associated with the account
   virtualMfaDevices() []aws.iam.virtualmfadevice
 }
 
 aws.iam.usercredentialreportentry {
   init(properties map[string]string)
+  // properties on the iam user credential report
   properties map[string]string
 
+  // arn for the credential report
   arn() string
 
+  // denotes if the access key is active
   accessKey1Active() bool
+  // time when key was last rotated
   accessKey1LastRotated() time
+  // time when key was last used
   accessKey1LastUsedDate() time
+  // region in which the key was last used
   accessKey1LastUsedRegion() string
+  // service that last used the key
   accessKey1LastUsedService() string
 
+  // denotes if the access key is active
   accessKey2Active() bool
+  // time when key was last rotated
   accessKey2LastRotated() time
+  // time when key was last used
   accessKey2LastUsedDate() time
+  // region in which the key was last used
   accessKey2LastUsedRegion() string
+  // service that last used the key
   accessKey2LastUsedService() string
 
+  // denotes if the cert is active
   cert1Active() bool
+  // time when the cert was last rotated
   cert1LastRotated() time
 
+  // denotes if the cert is active
   cert2Active() bool
+  // time when the cert was last rotated
   cert2LastRotated() time
 
+  // denotes if mfa is active in the account
   mfaActive() bool
+  // denotes if passwords are enabled 
   passwordEnabled() bool
+  // time when the password was last changed
   passwordLastChanged() time
+  // time when the password was last used
   passwordLastUsed() time
+  // next time when the password should rotate
   passwordNextRotation() time
 
+  // iam user
   user() aws.iam.user
+  // time when user was created
   userCreationTime() time
 }
 
 aws.iam.user {
+  // arn of the iam user 
   arn string
+  // id of the iam user
   id string
+  // name of the user
   name string
+  // time when user was created
   createDate time
+  // time when password was last used
   passwordLastUsed time
+  // tags for the iam user
   tags map[string]string
+  // list of inline policies attached to the user
   policies() []string
+  // list of managed policies attached to the user
   attachedPolicies() []aws.iam.policy
 }
 
 aws.iam.policy {
+  // ARN of the policy
   arn string
+  // id of the policy
   id() string
+  // name of the policy
   name() string
+  // description of the policy
   description() string
+  // denotes if the policy can be attached
   isAttachable() bool
   attachmentCount() int
+  // time when the policy was created
   createDate() time
+  // time when the policy was updated
   updateDate() time
+  // scope of the policy
   scope() string
+  // list of versions for the policy
   versions() []aws.iam.policyversion
+  // default version of the policy
+  defaultVersion() aws.iam.policyversion
 
+  // list of users attached to the policy
   attachedUsers() []aws.iam.user
+  // list of roles attached to the policy
   attachedRoles() []aws.iam.role
+  // list of groups attached to the policy
   attachedGroups() []aws.iam.group
 }
 
 aws.iam.policyversion {
+  // ARN of the policy version
   arn string
+  // version id
   versionId string
+  // denotes if this version is the policy default version
   isDefaultVersion bool
-  document() string
+  // json statements for this policy version
+  document() dict
+  // time when this policy version was created
   createDate time
 }
 
 aws.iam.role {
+  // ARN of the role
   arn string
+  // id of the role
   id string
+  // name of the role
   name string
+  // description of the role
   description string
+  // tags associated with the role
   tags map[string]string
+  // time when the role was created
   createDate time
 }
 
 aws.iam.group {
+  // ARN of the group
   arn string
+  // id of the group
   id string
+  // name of the group
   name string
+  // time when the group was created
   createDate time
 }
 
 aws.iam.virtualmfadevice {
+  // serial number for the mfa device
   serialNumber string
+  // time when the mfa device was enabled
   enableDate time
+  // user associated with the mfa device
   user aws.iam.user
 }
 
