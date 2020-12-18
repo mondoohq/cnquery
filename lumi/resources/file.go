@@ -7,6 +7,7 @@ package resources
 import (
 	"errors"
 	"io/ioutil"
+	"os"
 	"path"
 	"strconv"
 	"time"
@@ -248,6 +249,7 @@ func (s *lumiFile) stat() (FilePermissions, int64, error) {
 		"sticky", fi.Mode.Sticky(),
 		"isDirectory", fi.Mode.IsDir(),
 		"isFile", fi.Mode.IsRegular(),
+		"isSymlink", fi.Mode.FileMode&os.ModeSymlink == 0,
 	)
 	if err != nil {
 		return nil, 0, err

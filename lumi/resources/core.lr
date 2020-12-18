@@ -261,6 +261,8 @@ file.permissions {
   isDirectory bool
   // whether the file describes a regular file
   isFile bool
+  // whether the file is a symlink
+  isSymlink bool
 }
 
 // Find files on the system efficiently
