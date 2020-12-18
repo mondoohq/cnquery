@@ -53,6 +53,15 @@ func (fs *FS) Open(path string) (afero.File, error) {
 		return nil, os.ErrNotExist
 	}
 
+	if h.Typeflag == tar.TypeSymlink {
+		resolvedPath := fs.resolveSymlink(h)
+		log.Debug().Str("path", path).Str("resolved", Abs(resolvedPath)).Msg("file is a symlink, resolved it")
+		h, ok = fs.FileMap[Abs(resolvedPath)]
+		if !ok {
+			return nil, os.ErrNotExist
+		}
+	}
+
 	reader, err := fs.open(h)
 	if err != nil {
 		return nil, err
