@@ -1,6 +1,7 @@
 package k8s
 
 import (
+	"context"
 	"strings"
 
 	"github.com/cockroachdb/errors"
@@ -25,12 +26,13 @@ type PodContainerImage struct {
 	Container     *string
 }
 
-func ListPodImages(context string, namespaceFilter []string, podFilter []string) ([]*asset.Asset, error) {
+func ListPodImages(k8scontext string, namespaceFilter []string, podFilter []string) ([]*asset.Asset, error) {
+	ctx := context.Background()
 	var configFlags *genericclioptions.ConfigFlags
 	configFlags = genericclioptions.NewConfigFlags(false)
 
-	if len(context) > 0 {
-		configFlags.Context = &context
+	if len(k8scontext) > 0 {
+		configFlags.Context = &k8scontext
 	}
 
 	config, err := configFlags.ToRESTConfig()
@@ -43,7 +45,7 @@ func ListPodImages(context string, namespaceFilter []string, podFilter []string)
 		return nil, errors.Wrap(err, "could not create kubernetes clientset")
 	}
 
-	namespaces, err := clientset.CoreV1().Namespaces().List(metav1.ListOptions{})
+	namespaces, err := clientset.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
 	}
@@ -55,7 +57,7 @@ func ListPodImages(context string, namespaceFilter []string, podFilter []string)
 			continue
 		}
 
-		pods, err := clientset.CoreV1().Pods(namespace.Name).List(metav1.ListOptions{})
+		pods, err := clientset.CoreV1().Pods(namespace.Name).List(ctx, metav1.ListOptions{})
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to list pods")
 		}
