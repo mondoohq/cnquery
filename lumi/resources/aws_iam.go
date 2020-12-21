@@ -771,7 +771,7 @@ func (u *lumiAwsIamUser) GetPolicies() ([]interface{}, error) {
 	}
 
 	var marker *string
-	res := make([]interface{}, 0)
+	res := []interface{}{}
 	for {
 		userPolicies, err := svc.ListUserPoliciesRequest(&iam.ListUserPoliciesInput{
 			UserName: &username,
@@ -782,7 +782,7 @@ func (u *lumiAwsIamUser) GetPolicies() ([]interface{}, error) {
 		}
 
 		for i := range userPolicies.PolicyNames {
-			res[i] = userPolicies.PolicyNames[i]
+			res = append(res, userPolicies.PolicyNames[i])
 		}
 		if userPolicies.IsTruncated == nil || *userPolicies.IsTruncated == false {
 			break
