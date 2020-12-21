@@ -107,7 +107,7 @@ func (p *Pool) GetErrors() error {
 	var err error
 	for _, job := range p.Jobs {
 		if job.Err != nil {
-			err = errors.Wrap(err, "pool job error")
+			err = errors.Wrap(job.Err, " ")
 		}
 	}
 	return err
