@@ -1612,8 +1612,9 @@ aws.vpc.routetable {
 }
 
 aws.ec2.securitygroup {
-  init(id string)
-  // unique id for the security group
+  // security group arn
+  arn string
+  // security group id
   id string
   // name of the security group
   name string

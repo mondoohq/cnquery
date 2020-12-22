@@ -30,8 +30,8 @@ func (t *Transport) Account() (Account, error) {
 	}
 	var accountName string
 	if len(res.AccountAliases) == 0 {
-		// if account has no alias, log a warning and use account id
-		log.Warn().Msgf("no alias found for account %s", accountid)
+		// if account has no alias, use account id
+		log.Debug().Msgf("no alias found for account %s", accountid)
 		accountName = accountid
 	} else {
 		accountName = res.AccountAliases[0]
