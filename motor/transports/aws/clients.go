@@ -6,9 +6,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/efs"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/rs/zerolog/log"
@@ -80,6 +82,30 @@ func (t *Transport) S3(region string) *s3.Client {
 	cfg := t.config.Copy()
 	cfg.Region = region
 	client := s3.New(cfg)
+
+	// cache it
+	t.cache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *Transport) S3Control(region string) *s3control.Client {
+	// if no region value is sent in, use the configured region
+	if len(region) == 0 {
+		region = t.config.Region
+	}
+	cacheVal := "_s3control_" + region
+
+	// check for cached client and return it if it exists
+	c, ok := t.cache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached s3control client")
+		return c.Data.(*s3control.Client)
+	}
+
+	// create the client
+	cfg := t.config.Copy()
+	cfg.Region = region
+	client := s3control.New(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -248,6 +274,30 @@ func (t *Transport) Ssm(region string) *ssm.Client {
 	cfg := t.config.Copy()
 	cfg.Region = region
 	client := ssm.New(cfg)
+
+	// cache it
+	t.cache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *Transport) Efs(region string) *efs.Client {
+	// if no region value is sent in, use the configured region
+	if len(region) == 0 {
+		region = t.config.Region
+	}
+	cacheVal := "_efs_" + region
+
+	// check for cached client and return it if it exists
+	c, ok := t.cache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached ssm client")
+		return c.Data.(*efs.Client)
+	}
+
+	// create the client
+	cfg := t.config.Copy()
+	cfg.Region = region
+	client := efs.New(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
