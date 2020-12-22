@@ -1539,8 +1539,8 @@ aws.ec2 {
 }
 
 aws.ec2.instance {
-  // unique id for the instance
-  id string
+  // arn for the instance
+  arn string
   // instance id for the instance
   instanceId string
   // indicates whether detailed monitoring is enabled

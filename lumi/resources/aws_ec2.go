@@ -15,6 +15,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	ec2InstanceArnPattern   = "arn:aws:ec2:%s:%s:instance/%s"
+	securityGroupArnPattern = "arn:aws:ec2:%s:%s:security-group/%s"
+)
+
 func (e *lumiAwsEc2) id() (string, error) {
 	return "aws.ec2", nil
 }
@@ -345,6 +350,15 @@ func (s *lumiAwsEc2) getInstances() []*jobpool.Job {
 }
 
 func (s *lumiAwsEc2) gatherInstanceInfo(instances []ec2.Reservation, imdsvVersion int, regionVal string) ([]interface{}, error) {
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	account, err := at.Account()
+	if err != nil {
+		return nil, err
+	}
+
 	res := []interface{}{}
 	httpTokens := "required"
 	if imdsvVersion == 1 {
@@ -390,7 +404,7 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []ec2.Reservation, imdsvVersio
 				sgs = append(sgs, lumiSg)
 			}
 			lumiEc2Instance, err := s.Runtime.CreateResource("aws.ec2.instance",
-				"id", toString(instance.InstanceId)+"/"+regionVal,
+				"arn", fmt.Sprintf(ec2InstanceArnPattern, regionVal, account.ID, toString(instance.InstanceId)),
 				"instanceId", toString(instance.InstanceId),
 				"region", regionVal,
 				"publicIp", toString(instance.PublicIpAddress),
@@ -410,8 +424,6 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []ec2.Reservation, imdsvVersio
 	}
 	return res, nil
 }
-
-const securityGroupArnPattern = "arn:aws:ec2:%s:%s:security-group/%s"
 
 func (s *lumiAwsEc2Securitygroup) id() (string, error) {
 	return s.Arn()
@@ -482,12 +494,12 @@ func (s *lumiAwsEc2SecuritygroupIppermission) id() (string, error) {
 	return s.Id()
 }
 
-func (s *lumiAwsEc2Instance) id() (string, error) {
-	return s.Id()
-}
-
 func (s *lumiAwsEc2InstanceDevice) id() (string, error) {
 	return s.VolumeId()
+}
+
+func (s *lumiAwsEc2Instance) id() (string, error) {
+	return s.Arn()
 }
 
 func (s *lumiAwsEc2Instance) GetSsm() (interface{}, error) {
