@@ -1,6 +1,8 @@
 package awsec2
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/ec2metadata"
 )
@@ -18,7 +20,8 @@ type LocalEc2InstanceMetadata struct {
 
 func (m *LocalEc2InstanceMetadata) InstanceID() (string, error) {
 	metadata := ec2metadata.New(m.config)
-	doc, err := metadata.GetInstanceIdentityDocument()
+	ctx := context.Background()
+	doc, err := metadata.GetInstanceIdentityDocument(ctx)
 	if err != nil {
 		return "", err
 	}
