@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
@@ -47,9 +48,9 @@ func (s *lumiAwsEc2Securitygroup) GetIsAttachedToNetworkInterface() (bool, error
 	}
 	svc := at.Ec2(region)
 	ctx := context.Background()
-	groupIdFilter := "group-id"
+
 	networkinterfaces, err := svc.DescribeNetworkInterfacesRequest(&ec2.DescribeNetworkInterfacesInput{Filters: []ec2.Filter{
-		{Name: &groupIdFilter, Values: []string{sgId}},
+		{Name: aws.String("group-id"), Values: []string{sgId}},
 	}}).Send(ctx)
 	if err != nil {
 		return false, err
@@ -66,6 +67,12 @@ func (s *lumiAwsEc2) getSecurityGroups() []*jobpool.Job {
 	if err != nil {
 		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
 	}
+
+	account, err := at.Account()
+	if err != nil {
+		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
+	}
+
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
@@ -132,6 +139,7 @@ func (s *lumiAwsEc2) getSecurityGroups() []*jobpool.Job {
 					}
 
 					lumiS3SecurityGroup, err := s.Runtime.CreateResource("aws.ec2.securitygroup",
+						"arn", fmt.Sprintf(securityGroupArnPattern, regionVal, account.ID, toString(group.GroupId)),
 						"id", toString(group.GroupId),
 						"name", toString(group.GroupName),
 						"description", toString(group.Description),
@@ -336,43 +344,6 @@ func (s *lumiAwsEc2) getInstances() []*jobpool.Job {
 	return tasks
 }
 
-func (p *lumiAwsEc2Securitygroup) init(args *lumi.Args) (*lumi.Args, AwsEc2Securitygroup, error) {
-	if len(*args) > 2 {
-		return args, nil, nil
-	}
-
-	if (*args)["id"] == nil {
-		return nil, nil, errors.New("id required to fetch security group")
-	}
-
-	idVal := (*args)["id"]
-	if idVal == nil {
-		return args, nil, nil
-	}
-
-	obj, err := p.Runtime.CreateResource("aws.ec2")
-	if err != nil {
-		return nil, nil, err
-	}
-	awsEc2 := obj.(AwsEc2)
-
-	_, err = awsEc2.SecurityGroups()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	(*args)["id"] = idVal
-	(*args)["name"] = ""
-	(*args)["description"] = ""
-	(*args)["tag"] = make(map[string]interface{})
-	(*args)["vpcid"] = ""
-	(*args)["ipPermissions"] = []interface{}{}
-	(*args)["ipPermissionsEgress"] = []interface{}{}
-	(*args)["region"] = ""
-
-	return args, nil, nil
-}
-
 func (s *lumiAwsEc2) gatherInstanceInfo(instances []ec2.Reservation, imdsvVersion int, regionVal string) ([]interface{}, error) {
 	res := []interface{}{}
 	httpTokens := "required"
@@ -409,6 +380,7 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []ec2.Reservation, imdsvVersio
 			}
 			sgs := []interface{}{}
 			for i := range instance.SecurityGroups {
+				// NOTE: this will create the resource and determine the data in its init method
 				lumiSg, err := s.Runtime.CreateResource("aws.ec2.securitygroup",
 					"id", toString(instance.SecurityGroups[i].GroupId),
 				)
@@ -439,8 +411,71 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []ec2.Reservation, imdsvVersio
 	return res, nil
 }
 
+const securityGroupArnPattern = "arn:aws:ec2:%s:%s:security-group/%s"
+
 func (s *lumiAwsEc2Securitygroup) id() (string, error) {
-	return s.Id()
+	return s.Arn()
+}
+
+func (p *lumiAwsEc2Securitygroup) init(args *lumi.Args) (*lumi.Args, AwsEc2Securitygroup, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if (*args)["arn"] == nil && (*args)["id"] == nil {
+		return nil, nil, errors.New("arn or id required to fetch aws security group")
+	}
+
+	// construct arn of security group if misssing
+	var arn string
+	if (*args)["arn"] != nil {
+		arn = (*args)["arn"].(string)
+	} else {
+		at, err := awstransport(p.Runtime.Motor.Transport)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		idVal := (*args)["id"].(string)
+		account, err := at.Account()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		region := at.DefaultRegion()
+		arn = fmt.Sprintf(securityGroupArnPattern, region, account.ID, idVal)
+	}
+	log.Debug().Str("arn", arn).Msg("init security group with arn")
+
+	// load all security groups
+	obj, err := p.Runtime.CreateResource("aws.ec2")
+	if err != nil {
+		return nil, nil, err
+	}
+	awsEc2 := obj.(AwsEc2)
+
+	rawResources, err := awsEc2.SecurityGroups()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// iterate over security groups and find the one with the arn
+	for i := range rawResources {
+		securityGroup := rawResources[i].(AwsEc2Securitygroup)
+		lumiSecArn, err := securityGroup.Arn()
+		if err != nil {
+			return nil, nil, err
+		}
+		if lumiSecArn == arn {
+			return args, securityGroup, nil
+		}
+	}
+
+	return nil, nil, errors.New("security group does not exist")
 }
 
 func (s *lumiAwsEc2SecuritygroupIppermission) id() (string, error) {

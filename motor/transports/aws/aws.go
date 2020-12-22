@@ -107,6 +107,10 @@ func (t *Transport) Runtime() string {
 	return transports.RUNTIME_AWS
 }
 
+func (t *Transport) DefaultRegion() string {
+	return t.config.Region
+}
+
 func (t *Transport) GetRegions() ([]string, error) {
 	// check cache for regions list, return if exists
 	c, ok := t.cache.Load("_regions")
