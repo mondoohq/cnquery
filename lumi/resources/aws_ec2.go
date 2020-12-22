@@ -403,6 +403,12 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []ec2.Reservation, imdsvVersio
 				}
 				sgs = append(sgs, lumiSg)
 			}
+
+			stateReason, err := jsonToDict(instance.StateReason)
+			if err != nil {
+				return nil, err
+			}
+
 			lumiEc2Instance, err := s.Runtime.CreateResource("aws.ec2.instance",
 				"arn", fmt.Sprintf(ec2InstanceArnPattern, regionVal, account.ID, toString(instance.InstanceId)),
 				"instanceId", toString(instance.InstanceId),
@@ -415,6 +421,8 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []ec2.Reservation, imdsvVersio
 				"deviceMappings", lumiDevices,
 				"securityGroups", sgs,
 				"publicDnsName", toString(instance.PublicDnsName),
+				"stateReason", stateReason,
+				"stateTransitionReason", toString(instance.StateTransitionReason),
 			)
 			if err != nil {
 				return nil, err
@@ -565,5 +573,43 @@ func (s *lumiAwsEc2Instance) GetPatchState() (interface{}, error) {
 			}
 		}
 	}
+	return res, nil
+}
+
+func (s *lumiAwsEc2Instance) GetInstanceStatus() (interface{}, error) {
+	var res interface{}
+	instanceId, err := s.InstanceId()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse instance id")
+	}
+	region, err := s.Region()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse instance region")
+	}
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.Ec2(region)
+	ctx := context.Background()
+
+	instanceStatus, err := svc.DescribeInstanceStatusRequest(&ec2.DescribeInstanceStatusInput{
+		InstanceIds:         []string{instanceId},
+		IncludeAllInstances: aws.Bool(true),
+	}).Send(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(instanceStatus.InstanceStatuses) > 0 {
+		if instanceId == toString(instanceStatus.InstanceStatuses[0].InstanceId) {
+			res, err = jsonToDict(instanceStatus.InstanceStatuses[0])
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	return res, nil
 }
