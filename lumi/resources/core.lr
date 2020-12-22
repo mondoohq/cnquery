@@ -1567,6 +1567,12 @@ aws.ec2.instance {
   securityGroups []aws.ec2.securitygroup
   // public dns name for the instance
   publicDnsName string
+  // the status of the specified instance
+  instanceStatus() dict
+  // reason for the most recent state transition
+  stateReason dict
+  // reason for the most recent state transition
+  stateTransitionReason string
 }
 
 aws.ec2.instance.device {
