@@ -1476,58 +1476,97 @@ aws.kms.key {
   keyRotationEnabled bool
 }
 
+
+// aws service for object storage
 aws.s3 {
+  // list of s3 buckets across the account
   buckets() []aws.s3.bucket
 }
 
 aws.s3.bucket {
+  // name of the bucket
   name string
+  // policy associated with the bucket
   policy() aws.s3.bucket.policy
+  // tags for the bucket
   tags() map[string]string
+  // list of grants associated with the bucket
   acl() []aws.s3.bucket.grant
+  // owner for the bucket
   owner() map[string]string
+  // denotes if bucket is public
   public() bool
+  // list of cors information for the bucket
   cors() []aws.s3.bucket.corsrule
+  // location of the bucket
   location() string
+  // versioning state and mfa delete status of bucket
   versioning() map[string]string
+  // logging status and user perms for bucket logging status
   logging() map[string]string
+  // website configuration for a bucket
   staticWebsiteHosting() map[string]string
 }
 
 aws.s3.bucket.grant {
+  // id of the bucket grant
   id string
+  // name for the bucket grant
   name string
+  // permission associated with the grant
   permission string
+  // grantee associated with the grant
   grantee map[string]string
 }
 
 aws.s3.bucket.corsrule {
+  // name of the rule
   name string
+  // list of allowed headers
   allowedHeaders []string
+  // list of allowed methods (GET, POST, PUT, etc.)
   allowedMethods []string
+  // list of origins from which the bucket can be accessed
   allowedOrigins []string
+  // list of exposed response headers  
   exposeHeaders []string
+  // time in seconds that browser caches preflight response
   maxAgeSeconds int
 }
 
 aws.s3.bucket.policy {
+  // name for the policy
   name string
+  // document for the policy
   document string
+  // version of the policy
   version() string
+  // unique id for the policy
   id() string
+  // list of statements for the policy
   statements() []aws.s3.bucket.policystatement
 }
 
 aws.s3.bucket.policystatement {
+  // unique id for the policy statement
   id string
+  // statement id
   sid string
+  // effect for the policy (allow|deny) 
   effect string
+  // allowed or denied principal for the policy statement
   principal map[string][]string
+  // excluded principal
   notPrincipal map[string][]string
+  // list of allowed or denied actions
   action []string
+  // list of excluded actions
   notAction []string
+  // list of objects the statement covers
   grantResource []string
+  // list of excluded resources
   denyResource []string
+  // conditions that determine when the policy is in effect
   condition string
 }
 
