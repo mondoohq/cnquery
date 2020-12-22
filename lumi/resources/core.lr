@@ -1188,6 +1188,29 @@ aws {
   regions() []string
 }
 
+// AWS cloud service for encypted file storage
+aws.efs {
+  // a list of filesystems managed by the service
+  filesystems() []aws.efs.filesystem
+}
+
+aws.efs.filesystem {
+  // name of the filesystem
+  name string
+  // id of the filesystem
+  id string
+  // arn of the filesystem
+  arn string
+  // denotes whether or not the filesystem id encrypted
+  encrypted bool
+  // KMS key id used for encryption of the filesystem
+  kmsKeyId string
+  // backup policy for the filesystem
+  backupPolicy() dict
+  // region in which the filesystem exists
+  region string
+}
+
 // AWS service to create and manage permissions for users and groups
 aws.iam {
   // list of iam users in the account
@@ -1483,6 +1506,11 @@ aws.s3 {
   buckets() []aws.s3.bucket
 }
 
+aws.s3control {
+  // account level public access configuration for s3
+  accountPublicAccessBlock() dict
+}
+
 aws.s3.bucket {
   // name of the bucket
   name string
@@ -1490,7 +1518,7 @@ aws.s3.bucket {
   policy() aws.s3.bucket.policy
   // tags for the bucket
   tags() map[string]string
-  // list of grants associated with the bucket
+  // list of access control grants associated with the bucket
   acl() []aws.s3.bucket.grant
   // owner for the bucket
   owner() map[string]string
@@ -1506,6 +1534,14 @@ aws.s3.bucket {
   logging() map[string]string
   // website configuration for a bucket
   staticWebsiteHosting() map[string]string
+  // denotes whether bucket is locked by default
+  defaultLock() string
+  // bucket cross-region replication configuration
+  replication() dict
+  // bucket encryption configuration
+  encryption() dict
+  // public access block configuration for the bucket
+  publicAccessBlock() dict
 }
 
 aws.s3.bucket.grant {

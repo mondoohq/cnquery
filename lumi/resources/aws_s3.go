@@ -104,13 +104,17 @@ func (p *lumiAwsS3Bucket) GetTags() (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	location, err := p.Location()
+	if err != nil {
+		return nil, err
+	}
 
 	at, err := awstransport(p.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.S3("")
+	svc := at.S3(location)
 	ctx := context.Background()
 
 	tags, err := svc.GetBucketTaggingRequest(&s3.GetBucketTaggingInput{
@@ -168,13 +172,17 @@ func (p *lumiAwsS3Bucket) gatherAcl() (*s3.GetBucketAclOutput, error) {
 	if err != nil {
 		return nil, err
 	}
+	location, err := p.Location()
+	if err != nil {
+		return nil, err
+	}
 
 	at, err := awstransport(p.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.S3("")
+	svc := at.S3(location)
 	ctx := context.Background()
 
 	acl, err := svc.GetBucketAclRequest(&s3.GetBucketAclInput{
@@ -237,6 +245,36 @@ func (p *lumiAwsS3Bucket) GetAcl() ([]interface{}, error) {
 	return res, nil
 }
 
+func (p *lumiAwsS3Bucket) GetPublicAccessBlock() (interface{}, error) {
+	bucketname, err := p.Name()
+	if err != nil {
+		return nil, err
+	}
+	location, err := p.Location()
+	if err != nil {
+		return nil, err
+	}
+	at, err := awstransport(p.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.S3(location)
+	ctx := context.Background()
+
+	publicAccessBlock, err := svc.GetPublicAccessBlockRequest(&s3.GetPublicAccessBlockInput{
+		Bucket: &bucketname,
+	}).Send(ctx)
+	isAwsErr, code := IsAwsCode(err)
+	if err != nil && isAwsErr && code == "NoSuchPublicAccessBlockConfiguration" {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	return jsonToDict(publicAccessBlock.PublicAccessBlockConfiguration)
+}
+
 func (p *lumiAwsS3Bucket) GetOwner() (map[string]interface{}, error) {
 	acl, err := p.gatherAcl()
 	if err != nil {
@@ -278,13 +316,17 @@ func (p *lumiAwsS3Bucket) GetCors() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	location, err := p.Location()
+	if err != nil {
+		return nil, err
+	}
 
 	at, err := awstransport(p.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.S3("")
+	svc := at.S3(location)
 	ctx := context.Background()
 
 	cors, err := svc.GetBucketCorsRequest(&s3.GetBucketCorsInput{
@@ -324,13 +366,17 @@ func (p *lumiAwsS3Bucket) GetLogging() (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	bucketlocation, err := p.Location()
+	if err != nil {
+		return nil, err
+	}
 
 	at, err := awstransport(p.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.S3("")
+	svc := at.S3(bucketlocation)
 	ctx := context.Background()
 
 	logging, err := svc.GetBucketLoggingRequest(&s3.GetBucketLoggingInput{
@@ -365,13 +411,17 @@ func (p *lumiAwsS3Bucket) GetVersioning() (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	location, err := p.Location()
+	if err != nil {
+		return nil, err
+	}
 
 	at, err := awstransport(p.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.S3("")
+	svc := at.S3(location)
 	ctx := context.Background()
 
 	versioning, err := svc.GetBucketVersioningRequest(&s3.GetBucketVersioningInput{
@@ -391,8 +441,12 @@ func (p *lumiAwsS3Bucket) GetVersioning() (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (p *lumiAwsS3Bucket) GetStaticWebsiteHosting() (map[string]interface{}, error) {
+func (p *lumiAwsS3Bucket) GetReplication() (interface{}, error) {
 	bucketname, err := p.Name()
+	if err != nil {
+		return nil, err
+	}
+	region, err := p.Location()
 	if err != nil {
 		return nil, err
 	}
@@ -402,7 +456,103 @@ func (p *lumiAwsS3Bucket) GetStaticWebsiteHosting() (map[string]interface{}, err
 		return nil, err
 	}
 
-	svc := at.S3("")
+	svc := at.S3(region)
+	ctx := context.Background()
+
+	bucketReplication, err := svc.GetBucketReplicationRequest(&s3.GetBucketReplicationInput{
+		Bucket: &bucketname,
+	}).Send(ctx)
+	isAwsErr, code := IsAwsCode(err)
+	if err != nil && isAwsErr && code == "ReplicationConfigurationNotFoundError" {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+	return jsonToDict(bucketReplication.ReplicationConfiguration)
+}
+
+func (p *lumiAwsS3Bucket) GetEncryption() (interface{}, error) {
+	bucketname, err := p.Name()
+	if err != nil {
+		return nil, err
+	}
+	region, err := p.Location()
+	if err != nil {
+		return nil, err
+	}
+
+	at, err := awstransport(p.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.S3(region)
+	ctx := context.Background()
+
+	encryption, err := svc.GetBucketEncryptionRequest(&s3.GetBucketEncryptionInput{
+		Bucket: &bucketname,
+	}).Send(ctx)
+	isAwsErr, code := IsAwsCode(err)
+	if err != nil && isAwsErr && code == "ServerSideEncryptionConfigurationNotFoundError" {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	return jsonToDict(encryption.ServerSideEncryptionConfiguration)
+}
+
+func (p *lumiAwsS3Bucket) GetDefaultLock() (string, error) {
+	bucketname, err := p.Name()
+	if err != nil {
+		return "", err
+	}
+	region, err := p.Location()
+	if err != nil {
+		return "", err
+	}
+
+	at, err := awstransport(p.Runtime.Motor.Transport)
+	if err != nil {
+		return "", err
+	}
+
+	svc := at.S3(region)
+	ctx := context.Background()
+
+	objectLockConfiguration, err := svc.GetObjectLockConfigurationRequest(&s3.GetObjectLockConfigurationInput{
+		Bucket: &bucketname,
+	}).Send(ctx)
+	isAwsErr, code := IsAwsCode(err)
+	if err != nil && isAwsErr && code == "ObjectLockConfigurationNotFoundError" {
+		return "", nil
+	} else if err != nil {
+		return "", err
+	}
+
+	lockEnabled, err := objectLockConfiguration.ObjectLockConfiguration.ObjectLockEnabled.MarshalValue()
+	if err != nil {
+		return "", err
+	}
+	return lockEnabled, nil
+}
+
+func (p *lumiAwsS3Bucket) GetStaticWebsiteHosting() (map[string]interface{}, error) {
+	bucketname, err := p.Name()
+	if err != nil {
+		return nil, err
+	}
+	location, err := p.Location()
+	if err != nil {
+		return nil, err
+	}
+
+	at, err := awstransport(p.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.S3(location)
 	ctx := context.Background()
 
 	website, err := svc.GetBucketWebsiteRequest(&s3.GetBucketWebsiteInput{
