@@ -1580,30 +1580,7 @@ aws.s3.bucket.policy {
   // unique id for the policy
   id() string
   // list of statements for the policy
-  statements() []aws.s3.bucket.policystatement
-}
-
-aws.s3.bucket.policystatement {
-  // unique id for the policy statement
-  id string
-  // statement id
-  sid string
-  // effect for the policy (allow|deny) 
-  effect string
-  // allowed or denied principal for the policy statement
-  principal map[string][]string
-  // excluded principal
-  notPrincipal map[string][]string
-  // list of allowed or denied actions
-  action []string
-  // list of excluded actions
-  notAction []string
-  // list of objects the statement covers
-  grantResource []string
-  // list of excluded resources
-  denyResource []string
-  // conditions that determine when the policy is in effect
-  condition string
+  statements() []dict
 }
 
 aws.ec2 {

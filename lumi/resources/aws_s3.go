@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/resources/awspolicy"
@@ -625,52 +624,9 @@ func (p *lumiAwsS3BucketPolicy) GetId() (string, error) {
 }
 
 func (p *lumiAwsS3BucketPolicy) GetStatements() ([]interface{}, error) {
-	bucketname, err := p.Name()
-	if err != nil {
-		return nil, err
-	}
-
 	policy, err := p.parsePolicyDocument()
 	if err != nil {
 		return nil, err
 	}
-
-	res := []interface{}{}
-
-	for i := range policy.Statements {
-		statement := policy.Statements[i]
-
-		principal := map[string]interface{}{}
-		for k := range statement.Principal {
-			val := statement.Principal[k]
-			principal[k] = strSliceToInterface(val.Value())
-		}
-		notPrincipal := map[string]interface{}{}
-		for k := range statement.NotPrincipal {
-			val := statement.NotPrincipal[k]
-			notPrincipal[k] = strSliceToInterface(val.Value())
-		}
-
-		lumiStatement, err := p.Runtime.CreateResource("aws.s3.bucket.policystatement",
-			"id", bucketname+"-"+strconv.Itoa(i),
-			"sid", statement.Sid,
-			"effect", statement.Effect,
-			"principal", principal,
-			"notPrincipal", notPrincipal,
-			"action", strSliceToInterface(statement.Action),
-			"notAction", strSliceToInterface(statement.NotAction),
-			"grantResource", strSliceToInterface(statement.Resource),
-			"denyResource", strSliceToInterface(statement.NotResource),
-			"condition", string(statement.Condition),
-		)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, lumiStatement)
-	}
-	return res, nil
-}
-
-func (p *lumiAwsS3BucketPolicystatement) id() (string, error) {
-	return p.Id()
+	return jsonToDictSlice(policy.Statements)
 }

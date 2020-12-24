@@ -24,15 +24,15 @@ type S3BucketPolicy struct {
 // the policy statement includes many different aspects including the Not* elements, they are used to exlclude
 // things from the previous inlcude, see https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_examples_s3_deny-except-bucket.html
 type S3BucketPolicyStatement struct {
-	Sid          string                                  `json:"Sid,omitempty"`          // statement ID, optional
-	Effect       string                                  `json:"Effect"`                 // `Allow` or `Deny`
-	Principal    map[string]S3BucketPolicyStatementValue `json:"Principal,omitempty"`    // principal that is allowed or denied
-	NotPrincipal map[string]S3BucketPolicyStatementValue `json:"NotPrincipal,omitempty"` // excluded principal
-	Action       S3BucketPolicyStatementValue            `json:"Action"`                 // allowed or denied action
-	NotAction    S3BucketPolicyStatementValue            `json:"NotAction,omitempty"`    // excluded action
-	Resource     S3BucketPolicyStatementValue            `json:"Resource,omitempty"`     // object or objects that the statement covers
-	NotResource  S3BucketPolicyStatementValue            `json:"NotResource,omitempty"`  // excluded resources
-	Condition    json.RawMessage                         `json:"Condition,omitempty"`    // conditions for when a policy is in effect
+	Sid          string                       `json:"Sid,omitempty"`          // statement ID, optional
+	Effect       string                       `json:"Effect"`                 // `Allow` or `Deny`
+	Principal    interface{}                  `json:"Principal,omitempty"`    // principal that is allowed or denied
+	NotPrincipal interface{}                  `json:"NotPrincipal,omitempty"` // excluded principal
+	Action       S3BucketPolicyStatementValue `json:"Action"`                 // allowed or denied action
+	NotAction    S3BucketPolicyStatementValue `json:"NotAction,omitempty"`    // excluded action
+	Resource     S3BucketPolicyStatementValue `json:"Resource,omitempty"`     // object or objects that the statement covers
+	NotResource  S3BucketPolicyStatementValue `json:"NotResource,omitempty"`  // excluded resources
+	Condition    json.RawMessage              `json:"Condition,omitempty"`    // conditions for when a policy is in effect
 }
 
 // AWS allows string or []string as value, we convert everything to []string to avoid casting
