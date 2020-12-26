@@ -1586,6 +1586,108 @@ aws.s3.bucket.policy {
   statements() []dict
 }
 
+// AWS NoSQL database service for scale
+aws.dynamodb {
+  // list of backups for dynamodb
+  backups() []dict
+  // list of global tables for dynamodb
+  globalTables() []aws.dynamodb.globaltable
+  // list of tables for dynamodb
+  tables() []aws.dynamodb.table
+  // list of dynamodb settings across all regions
+  limits() []aws.dynamodb.limit
+}
+
+aws.dynamodb.limit {
+  // region where the limits apply
+  region string
+  // account max read limit
+  accountMaxRead int
+  // account max write limit
+  accountMaxWrite int
+  // table max read limit
+  tableMaxRead int
+  // table max write limit
+  tableMaxWrite int
+}
+
+aws.dynamodb.globaltable {
+  // table name
+  name string
+  // list of replica settings for the table
+  replicaSettings() []dict
+}
+
+aws.dynamodb.table {
+  // ARN for the table
+  arn string
+  // table name
+  name string
+  // region where the table exists
+  region string
+  // backups for the table
+  backups() []dict
+}
+
+// AWS service for creating, maintaining, and securing APIs at scale
+aws.apigateway {
+  // list of rest APIs across all regions in the account
+  restApis() []aws.apigateway.restapi
+}
+
+aws.apigateway.restapi {
+  // unique id for the rest api
+  id string
+  // name for the rest api
+  name string
+  // time when the rest api was created
+  createdDate time
+  // description for the rest api
+  description string
+  // stages for the rest api
+  stages() []aws.apigateway.stage
+  // region where the rest api exists
+  region string
+}
+
+aws.apigateway.stage {
+  // unique id for the stage
+  id string
+  // name for the stage
+  name string
+  // bool that denotes if tracing is enabled for the stage
+  tracingEnabled bool
+  // description for the stage
+  description string
+  // id of the deployment the stage is attached to
+  deploymentId string
+  // method settings for the stage
+  methodSettings dict
+}
+
+// AWS serverless compute service for running code
+aws.lambda {
+  // list of lambda functions across all regions in the account
+  functions() []aws.lambda.function
+}
+
+aws.lambda.function {
+  // arn of the function
+  arn string
+  // name of the function
+  name string
+  // concurrency limit for the function
+  concurrency() int
+  // target ARN of the DeadLetterQueue config
+  dlqTargetArn string
+  // policy for the function
+  policy() dict
+  // vpc configuration for the lambda function
+  vpcConfig dict
+  // region where the function exists
+  region string
+}
+
 aws.ec2 {
   // a list of security groups available to the account
   securityGroups() []aws.ec2.securitygroup 
