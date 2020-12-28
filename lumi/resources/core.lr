@@ -1511,7 +1511,10 @@ aws.s3control {
   accountPublicAccessBlock() dict
 }
 
+// AWS S3 Bucket
 aws.s3.bucket {
+  // arn of the bucket
+  arn string
   // name of the bucket
   name string
   // policy associated with the bucket
