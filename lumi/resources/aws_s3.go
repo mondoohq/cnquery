@@ -7,9 +7,14 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/awspolicy"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+)
+
+const (
+	s3ArnPattern = "arn:aws:s3:::%s"
 )
 
 func (p *lumiAwsS3) id() (string, error) {
@@ -36,6 +41,7 @@ func (p *lumiAwsS3) GetBuckets() ([]interface{}, error) {
 
 		lumiS3Bucket, err := p.Runtime.CreateResource("aws.s3.bucket",
 			"name", toString(bucket.Name),
+			"arn", fmt.Sprintf(s3ArnPattern, toString(bucket.Name)),
 		)
 		if err != nil {
 			return nil, err
@@ -46,9 +52,56 @@ func (p *lumiAwsS3) GetBuckets() ([]interface{}, error) {
 	return res, nil
 }
 
+func (p *lumiAwsS3Bucket) init(args *lumi.Args) (*lumi.Args, AwsS3Bucket, error) {
+	// NOTE: bucket only initializes with arn and name
+	if len(*args) >= 2 {
+		return args, nil, nil
+	}
+
+	if (*args)["arn"] == nil && (*args)["name"] == nil {
+		return nil, nil, errors.New("arn or name required to fetch aws s3 bucket")
+	}
+
+	// construct arn of bucket name if misssing
+	var arn string
+	if (*args)["arn"] != nil {
+		arn = (*args)["arn"].(string)
+	} else {
+		nameVal := (*args)["name"].(string)
+		arn = fmt.Sprintf(s3ArnPattern, nameVal)
+	}
+	log.Debug().Str("arn", arn).Msg("init s3 bucket with arn")
+
+	// load all s3 buckets
+	obj, err := p.Runtime.CreateResource("aws.s3")
+	if err != nil {
+		return nil, nil, err
+	}
+	awsS3 := obj.(AwsS3)
+
+	rawResources, err := awsS3.Buckets()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// iterate over security groups and find the one with the arn
+	for i := range rawResources {
+		bucket := rawResources[i].(AwsS3Bucket)
+		lumiBucketArn, err := bucket.Arn()
+		if err != nil {
+			return nil, nil, err
+		}
+		if lumiBucketArn == arn {
+			return args, bucket, nil
+		}
+	}
+
+	return nil, nil, errors.New("aws s3 bucket does not exist")
+}
+
 func (p *lumiAwsS3Bucket) id() (string, error) {
 	// assumes bucket names are globally unique, which they are right now
-	return p.Name()
+	return p.Arn()
 }
 
 func (p *lumiAwsS3Bucket) GetPolicy() (interface{}, error) {

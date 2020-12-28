@@ -442,10 +442,6 @@ func (p *lumiAwsEc2Securitygroup) init(args *lumi.Args) (*lumi.Args, AwsEc2Secur
 		return args, nil, nil
 	}
 
-	if len(*args) > 2 {
-		return args, nil, nil
-	}
-
 	if (*args)["arn"] == nil && (*args)["id"] == nil {
 		return nil, nil, errors.New("arn or id required to fetch aws security group")
 	}
