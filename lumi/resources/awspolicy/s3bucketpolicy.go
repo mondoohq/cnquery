@@ -2,7 +2,6 @@ package awspolicy
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 )
 
@@ -26,8 +25,8 @@ type S3BucketPolicy struct {
 type S3BucketPolicyStatement struct {
 	Sid          string                       `json:"Sid,omitempty"`          // statement ID, optional
 	Effect       string                       `json:"Effect"`                 // `Allow` or `Deny`
-	Principal    interface{}                  `json:"Principal,omitempty"`    // principal that is allowed or denied
-	NotPrincipal interface{}                  `json:"NotPrincipal,omitempty"` // excluded principal
+	Principal    S3BucketPrincipal            `json:"Principal,omitempty"`    // principal that is allowed or denied
+	NotPrincipal S3BucketPrincipal            `json:"NotPrincipal,omitempty"` // excluded principal
 	Action       S3BucketPolicyStatementValue `json:"Action"`                 // allowed or denied action
 	NotAction    S3BucketPolicyStatementValue `json:"NotAction,omitempty"`    // excluded action
 	Resource     S3BucketPolicyStatementValue `json:"Resource,omitempty"`     // object or objects that the statement covers
@@ -61,7 +60,52 @@ func (v *S3BucketPolicyStatementValue) UnmarshalJSON(b []byte) error {
 		}
 		p = items
 	default:
-		return errors.New("invalid %s value element, s3 bucket policy only supports string or []string")
+		return fmt.Errorf("invalid %T value element, s3 bucket policy only supports string or []string", v)
+	}
+	*v = p
+	return nil
+}
+
+// see https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html
+type S3BucketPrincipal map[string][]string
+
+func (v S3BucketPrincipal) Data() map[string][]string {
+	return map[string][]string(v)
+}
+
+// value can be string, map[string]string or map[string][]string
+// we convert everything to map[string][]string
+func (v *S3BucketPrincipal) UnmarshalJSON(b []byte) error {
+	var raw interface{}
+	err := json.Unmarshal(b, &raw)
+	if err != nil {
+		return err
+	}
+
+	var p map[string][]string
+	switch v := raw.(type) {
+	case string:
+		p = map[string][]string{
+			"AWS": []string{v},
+		}
+	case map[string]interface{}:
+		p = map[string][]string{}
+		for key, value := range v {
+			switch subv := value.(type) {
+			case string:
+				p[key] = []string{fmt.Sprintf("%v", subv)}
+			case []interface{}:
+				var items []string
+				for _, item := range v {
+					items = append(items, fmt.Sprintf("%v", item))
+				}
+				p[key] = items
+			default:
+				return fmt.Errorf("invalid policy principal entry %T: %s", subv, subv)
+			}
+		}
+	default:
+		return fmt.Errorf("invalid %T value element, policy principal only supports string or map[string]string or map[string][string]", v)
 	}
 	*v = p
 	return nil
