@@ -3,11 +3,12 @@ package resources
 import (
 	"context"
 	"errors"
+	"github.com/mitchellh/mapstructure"
+	"go.mondoo.io/mondoo/lumi"
 	"strconv"
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/nexus/assets"
@@ -16,8 +17,9 @@ import (
 	"go.mondoo.io/mondoo/vadvisor/api"
 )
 
-// fetches the vulnerability report and caches it
-func getAdvisoryReport(r *lumi.Runtime) (*scanner.VulnReport, error) {
+// fetches the vulnerability report and returns the full report
+func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
+	r := p.Runtime
 	mcc := r.UpstreamConfig
 	if mcc == nil {
 		return nil, errors.New("mondoo upstream configuration is missing")
@@ -121,9 +123,34 @@ func getAdvisoryReport(r *lumi.Runtime) (*scanner.VulnReport, error) {
 		report = reports[i]
 	}
 
-	lumiPlatform.LumiResource().Cache.Store("_report", &lumi.CacheEntry{Data: report})
+	return jsonToDict(report)
+}
 
-	return report, nil
+func getAdvisoryReport(r *lumi.Runtime) (*scanner.VulnReport, error) {
+	obj, err := r.CreateResource("platform")
+	if err != nil {
+		return nil, err
+	}
+	platform := obj.(Platform)
+
+	rawReport, err := platform.VulnerabilityReport()
+	if err != nil {
+		return nil, err
+	}
+
+	var vulnReport scanner.VulnReport
+	cfg := &mapstructure.DecoderConfig{
+		Metadata: nil,
+		Result:   &vulnReport,
+		TagName:  "json",
+	}
+	decoder, _ := mapstructure.NewDecoder(cfg)
+	err = decoder.Decode(rawReport)
+	if err != nil {
+		return nil, err
+	}
+
+	return &vulnReport, nil
 }
 
 func (c *lumiAuditCvss) id() (string, error) {
