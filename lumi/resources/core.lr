@@ -77,6 +77,9 @@ platform {
   // Contextual information about the runtime (bare-metal, cloud, container, etc)
   // TODO: rename to runtime (it conflicts with built-in runtime) 
   runtimeEnv string
+
+  // full advisory & vulnerability report
+  vulnerabilityReport() dict
 }
 
 // hardware virtualization information
