@@ -253,6 +253,24 @@ func (r *RawResult) Result() *Result {
 	return res
 }
 
+func (r *Result) RawResult() *RawResult {
+	if r == nil {
+		return nil
+	}
+
+	data := &RawData{}
+	if r.Data != nil {
+		data = r.Data.RawData()
+	}
+	if len(r.Error) > 0 {
+		data.Error = errors.New(r.Error)
+	}
+	return &RawResult{
+		Data:   data,
+		CodeID: r.CodeId,
+	}
+}
+
 func punset2raw(p *Primitive) *RawData {
 	return UnsetData
 }
