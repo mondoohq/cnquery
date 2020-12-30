@@ -15,8 +15,8 @@ func (a *lumiAwsApigateway) id() (string, error) {
 }
 
 const (
-	apiArnPattern      = "arn:%s:apigateway:%s::/apis/%s"
-	apiStageArnPattern = "arn:%s:apigateway:%s::/apis/%s/stages/%s"
+	apiArnPattern      = "arn:aws:apigateway:%s:%s::/apis/%s"
+	apiStageArnPattern = "arn:aws:apigateway:%s:%s::/apis/%s/stages/%s"
 )
 
 func (a *lumiAwsApigateway) GetRestApis() ([]interface{}, error) {
@@ -69,7 +69,7 @@ func (a *lumiAwsApigateway) getRestApis() []*jobpool.Job {
 
 				for _, restApi := range restApisResp.Items {
 					lumiRestApi, err := a.Runtime.CreateResource("aws.apigateway.restapi",
-						"arn", fmt.Sprintf(apiArnPattern, account.ID, regionVal, toString(restApi.Id)),
+						"arn", fmt.Sprintf(apiArnPattern, regionVal, account.ID, toString(restApi.Id)),
 						"id", toString(restApi.Id),
 						"name", toString(restApi.Name),
 						"description", toString(restApi.Description),
@@ -125,7 +125,7 @@ func (a *lumiAwsApigatewayRestapi) GetStages() ([]interface{}, error) {
 			return nil, err
 		}
 		lumiStage, err := a.Runtime.CreateResource("aws.apigateway.stage",
-			"arn", fmt.Sprintf(apiStageArnPattern, account.ID, region, restApiId, toString(stage.StageName)),
+			"arn", fmt.Sprintf(apiStageArnPattern, region, account.ID, restApiId, toString(stage.StageName)),
 			"name", toString(stage.StageName),
 			"description", toString(stage.Description),
 			"tracingEnabled", toBool(stage.TracingEnabled),
