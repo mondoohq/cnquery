@@ -1716,8 +1716,8 @@ aws.ec2.instance {
   publicIp string
   // Amazon Systems Manager information for the instance
   ssm() dict
-  // id of the vpc associated with the intance
-  vpcId string
+  // vpc associated with the intance
+  vpc aws.vpc
   // a value of optional for http tokens denotes imdsv1 server compatibility; required is imdsv2
   httpTokens string
   // patch state information about the instance
@@ -1750,6 +1750,8 @@ aws.ec2.instance.device {
 }
 
 aws.vpc {
+  // arn of the vpc
+  arn string
   // id of the vpc
   id string
   // state of the vpc (pending|available)
@@ -1793,8 +1795,8 @@ aws.ec2.securitygroup {
   description string
   // a map of tags associated with the security group
   tag map[string]string
-  // id of the vpc associated with the security group
-  vpcid string
+  // vpc associated with the security group
+  vpc aws.vpc
   // ip permissions (ingress) for the security group
   ipPermissions []aws.ec2.securitygroup.ippermission
   // ip permissions (egress) for the security group

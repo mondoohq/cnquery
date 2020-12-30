@@ -2,15 +2,22 @@ package resources
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 )
 
+const (
+	vpcArnPattern = "arn:aws:vpc:%s:%s:id/%s"
+)
+
 func (s *lumiAwsVpc) id() (string, error) {
-	return s.Id()
+	return s.Arn()
 }
 
 func (s *lumiAwsVpcFlowlog) id() (string, error) {
@@ -47,6 +54,10 @@ func (s *lumiAws) getVpcs() []*jobpool.Job {
 	if err != nil {
 		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
 	}
+	account, err := at.Account()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
@@ -77,6 +88,7 @@ func (s *lumiAws) getVpcs() []*jobpool.Job {
 					}
 
 					lumiVpc, err := s.Runtime.CreateResource("aws.vpc",
+						"arn", fmt.Sprintf(vpcArnPattern, regionVal, account.ID, toString(v.VpcId)),
 						"id", toString(v.VpcId),
 						"state", stringState,
 						"isDefault", toBool(v.IsDefault),
@@ -139,6 +151,61 @@ func (s *lumiAwsVpc) GetFlowLogs() ([]interface{}, error) {
 		}
 	}
 	return flowLogs, nil
+}
+func (p *lumiAwsVpc) init(args *lumi.Args) (*lumi.Args, AwsVpc, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if (*args)["arn"] == nil && (*args)["id"] == nil {
+		return nil, nil, errors.New("arn or id required to fetch aws vpc")
+	}
+
+	// load all vpcs
+	obj, err := p.Runtime.CreateResource("aws")
+	if err != nil {
+		return nil, nil, err
+	}
+	aws := obj.(Aws)
+
+	rawResources, err := aws.Vpcs()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var match func(secGroup AwsVpc) bool
+
+	if (*args)["arn"] != nil {
+		arnVal := (*args)["arn"].(string)
+		match = func(vpc AwsVpc) bool {
+			lumiVpcArn, err := vpc.Arn()
+			if err != nil {
+				log.Error().Err(err).Msg("vpc is not properly initialized")
+				return false
+			}
+			return lumiVpcArn == arnVal
+		}
+	}
+
+	if (*args)["id"] != nil {
+		idVal := (*args)["id"].(string)
+		match = func(vpc AwsVpc) bool {
+			lumiVpcId, err := vpc.Id()
+			if err != nil {
+				log.Error().Err(err).Msg("vpc is not properly initialized")
+				return false
+			}
+			return lumiVpcId == idVal
+		}
+	}
+
+	for i := range rawResources {
+		vpc := rawResources[i].(AwsVpc)
+		if match(vpc) {
+			return args, vpc, nil
+		}
+	}
+	return nil, nil, errors.New("vpc does not exist")
 }
 
 func (s *lumiAwsVpc) GetRouteTables() ([]interface{}, error) {
