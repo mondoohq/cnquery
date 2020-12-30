@@ -238,10 +238,25 @@ func (d *lumiAwsDynamodb) getTables() []*jobpool.Job {
 			}
 			res := []interface{}{}
 			for _, tableName := range listTablesResp.TableNames {
+				// call describe table to get real info/details about the table
+				table, err := svc.DescribeTableRequest(&dynamodb.DescribeTableInput{TableName: &tableName}).Send(ctx)
+				if err != nil {
+					return nil, errors.Wrap(err, "could not get aws dynamodb table")
+				}
+				sseDict, err := jsonToDict(table.Table.SSEDescription)
+				if err != nil {
+					return nil, err
+				}
+				throughputDict, err := jsonToDict(table.Table.ProvisionedThroughput)
+				if err != nil {
+					return nil, err
+				}
 				lumiTable, err := d.Runtime.CreateResource("aws.dynamodb.table",
 					"arn", fmt.Sprintf(dynamoTableArnPattern, regionVal, account.ID, tableName),
 					"name", tableName,
 					"region", regionVal,
+					"sseDescription", sseDict,
+					"provisionedThroughput", throughputDict,
 				)
 				if err != nil {
 					return nil, err
@@ -273,6 +288,30 @@ func (d *lumiAwsDynamodbGlobaltable) GetReplicaSettings() ([]interface{}, error)
 		return nil, errors.Wrap(err, "could not gather aws dynamodb table settings")
 	}
 	return jsonToDictSlice(tableSettingsResp.ReplicaSettings)
+}
+
+func (d *lumiAwsDynamodbTable) GetContinuousBackups() (interface{}, error) {
+	tableName, err := d.Name()
+	if err != nil {
+		return nil, err
+	}
+	region, err := d.Region()
+	if err != nil {
+		return nil, err
+	}
+	at, err := awstransport(d.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	svc := at.Dynamodb(region)
+	ctx := context.Background()
+
+	// no pagination required
+	continuousBackupsResp, err := svc.DescribeContinuousBackupsRequest(&dynamodb.DescribeContinuousBackupsInput{TableName: &tableName}).Send(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not gather aws dynamodb continuous backups")
+	}
+	return jsonToDict(continuousBackupsResp.ContinuousBackupsDescription)
 }
 
 func (d *lumiAwsDynamodbGlobaltable) id() (string, error) {

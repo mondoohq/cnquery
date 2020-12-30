@@ -25,8 +25,8 @@ type S3BucketPolicy struct {
 type S3BucketPolicyStatement struct {
 	Sid          string                       `json:"Sid,omitempty"`          // statement ID, optional
 	Effect       string                       `json:"Effect"`                 // `Allow` or `Deny`
-	Principal    S3BucketPrincipal            `json:"Principal,omitempty"`    // principal that is allowed or denied
-	NotPrincipal S3BucketPrincipal            `json:"NotPrincipal,omitempty"` // excluded principal
+	Principal    Principal                    `json:"Principal,omitempty"`    // principal that is allowed or denied
+	NotPrincipal Principal                    `json:"NotPrincipal,omitempty"` // excluded principal
 	Action       S3BucketPolicyStatementValue `json:"Action"`                 // allowed or denied action
 	NotAction    S3BucketPolicyStatementValue `json:"NotAction,omitempty"`    // excluded action
 	Resource     S3BucketPolicyStatementValue `json:"Resource,omitempty"`     // object or objects that the statement covers
@@ -67,15 +67,15 @@ func (v *S3BucketPolicyStatementValue) UnmarshalJSON(b []byte) error {
 }
 
 // see https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html
-type S3BucketPrincipal map[string][]string
+type Principal map[string][]string
 
-func (v S3BucketPrincipal) Data() map[string][]string {
+func (v Principal) Data() map[string][]string {
 	return map[string][]string(v)
 }
 
 // value can be string, map[string]string or map[string][]string
 // we convert everything to map[string][]string
-func (v *S3BucketPrincipal) UnmarshalJSON(b []byte) error {
+func (v *Principal) UnmarshalJSON(b []byte) error {
 	var raw interface{}
 	err := json.Unmarshal(b, &raw)
 	if err != nil {

@@ -1631,6 +1631,12 @@ aws.dynamodb.table {
   region string
   // backups for the table
   backups() []dict
+  // description of server side encryption for the table
+  sseDescription dict
+  // provisioned throughput settings for the table
+  provisionedThroughput dict
+  // continuous backups and point in time recovery settings for the table
+  continuousBackups() dict
 }
 
 // AWS service for creating, maintaining, and securing APIs at scale
