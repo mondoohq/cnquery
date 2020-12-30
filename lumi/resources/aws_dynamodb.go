@@ -15,7 +15,9 @@ func (d *lumiAwsDynamodb) id() (string, error) {
 }
 
 const (
-	dynamoTableArnPattern = "arn:aws:dynamodb:%s:%s:table/%s"
+	dynamoTableArnPattern       = "arn:aws:dynamodb:%s:%s:table/%s"
+	limitsArn                   = "arn:aws:dynamodb:%s:%s"
+	dynamoGlobalTableArnPattern = "arn:aws:dynamodb:-:%s:globaltable/%s"
 )
 
 func (d *lumiAwsDynamodb) GetBackups() ([]interface{}, error) {
@@ -121,6 +123,10 @@ func (d *lumiAwsDynamodb) getLimits() []*jobpool.Job {
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
+	account, err := at.Account()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
 
 	for _, region := range regions {
 		regionVal := region
@@ -137,6 +143,7 @@ func (d *lumiAwsDynamodb) getLimits() []*jobpool.Job {
 			}
 
 			lumiLimits, err := d.Runtime.CreateResource("aws.dynamodb.limit",
+				"arn", fmt.Sprintf(limitsArn, regionVal, account.ID),
 				"region", regionVal,
 				"accountMaxRead", *limitsResp.AccountMaxReadCapacityUnits,
 				"accountMaxWrite", *limitsResp.AccountMaxWriteCapacityUnits,
@@ -158,6 +165,10 @@ func (d *lumiAwsDynamodb) GetGlobalTables() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	account, err := at.Account()
+	if err != nil {
+		return nil, err
+	}
 	svc := at.Dynamodb("")
 	ctx := context.Background()
 
@@ -169,6 +180,7 @@ func (d *lumiAwsDynamodb) GetGlobalTables() ([]interface{}, error) {
 	res := []interface{}{}
 	for _, table := range listGlobalTablesResp.GlobalTables {
 		lumiTable, err := d.Runtime.CreateResource("aws.dynamodb.globaltable",
+			"arn", fmt.Sprintf(dynamoGlobalTableArnPattern, account.ID, toString(table.GlobalTableName)),
 			"name", toString(table.GlobalTableName),
 		)
 		if err != nil {
@@ -264,7 +276,7 @@ func (d *lumiAwsDynamodbGlobaltable) GetReplicaSettings() ([]interface{}, error)
 }
 
 func (d *lumiAwsDynamodbGlobaltable) id() (string, error) {
-	return d.Name()
+	return d.Arn()
 }
 
 func (d *lumiAwsDynamodbTable) id() (string, error) {
@@ -272,5 +284,5 @@ func (d *lumiAwsDynamodbTable) id() (string, error) {
 }
 
 func (d *lumiAwsDynamodbLimit) id() (string, error) {
-	return d.Region()
+	return d.Arn()
 }
