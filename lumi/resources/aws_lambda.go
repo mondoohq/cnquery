@@ -2,11 +2,13 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/lumi/resources/awspolicy"
 )
 
 func (l *lumiAwsLambda) id() (string, error) {
@@ -141,10 +143,31 @@ func (l *lumiAwsLambdaFunction) GetPolicy() (interface{}, error) {
 	} else if err != nil {
 		return nil, err
 	}
+	if functionPolicy != nil {
+		var policy lambdaPolicyDocument
+		err = json.Unmarshal([]byte(*functionPolicy.Policy), &policy)
+		if err != nil {
+			return nil, err
+		}
+		return jsonToDict(policy)
+	}
 
-	return jsonToDict(functionPolicy)
+	return nil, nil
 }
 
 func (l *lumiAwsLambdaFunction) id() (string, error) {
 	return l.Arn()
+}
+
+type lambdaPolicyDocument struct {
+	Version   string                  `json:"Version,omitempty"`
+	Statement []lambdaPolicyStatement `json:"Statement,omitempty"`
+}
+
+type lambdaPolicyStatement struct {
+	Sid       string              `json:"Sid,omitempty"`
+	Effect    string              `json:"Effect,omitempty"`
+	Action    string              `json:"Action,omitempty"`
+	Resource  string              `json:"Resource,omitempty"`
+	Principal awspolicy.Principal `json:"Principal,omitempty"`
 }
