@@ -77,11 +77,11 @@ const (
 	Score = Type(rune(byteScore))
 	// ArrayLike is the underlying type of all arrays
 	ArrayLike = Type(rune(byteArray))
-	// MapLike is the underlying type of all arrays
+	// MapLike is the underlying type of all maps
 	MapLike = Type(rune(byteMap))
-	// ResourceLike is the underlying type of all arrays
+	// ResourceLike is the underlying type of all resources
 	ResourceLike = Type(rune(byteResource))
-	// FunctionLike is the underlying type of all arrays
+	// FunctionLike is the underlying type of all functions
 	FunctionLike = Type(rune(byteFunction))
 )
 
