@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/cockroachdb/errors"
@@ -12,6 +13,11 @@ import (
 func (a *lumiAwsApigateway) id() (string, error) {
 	return "aws.apigateway", nil
 }
+
+const (
+	apiArnPattern      = "arn:%s:apigateway:%s::/apis/%s"
+	apiStageArnPattern = "arn:%s:apigateway:%s::/apis/%s/stages/%s"
+)
 
 func (a *lumiAwsApigateway) GetRestApis() ([]interface{}, error) {
 	res := []interface{}{}
@@ -40,6 +46,10 @@ func (a *lumiAwsApigateway) getRestApis() []*jobpool.Job {
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
+	account, err := at.Account()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
 
 	for _, region := range regions {
 		regionVal := region
@@ -59,6 +69,7 @@ func (a *lumiAwsApigateway) getRestApis() []*jobpool.Job {
 
 				for _, restApi := range restApisResp.Items {
 					lumiRestApi, err := a.Runtime.CreateResource("aws.apigateway.restapi",
+						"arn", fmt.Sprintf(apiArnPattern, account.ID, regionVal, toString(restApi.Id)),
 						"id", toString(restApi.Id),
 						"name", toString(restApi.Name),
 						"description", toString(restApi.Description),
@@ -95,6 +106,10 @@ func (a *lumiAwsApigatewayRestapi) GetStages() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	account, err := at.Account()
+	if err != nil {
+		return nil, err
+	}
 	svc := at.Apigateway(region)
 	ctx := context.Background()
 
@@ -110,7 +125,7 @@ func (a *lumiAwsApigatewayRestapi) GetStages() ([]interface{}, error) {
 			return nil, err
 		}
 		lumiStage, err := a.Runtime.CreateResource("aws.apigateway.stage",
-			"id", restApiId+"/"+toString(stage.StageName),
+			"arn", fmt.Sprintf(apiStageArnPattern, account.ID, region, restApiId, toString(stage.StageName)),
 			"name", toString(stage.StageName),
 			"description", toString(stage.Description),
 			"tracingEnabled", toBool(stage.TracingEnabled),
@@ -126,9 +141,9 @@ func (a *lumiAwsApigatewayRestapi) GetStages() ([]interface{}, error) {
 }
 
 func (l *lumiAwsApigatewayRestapi) id() (string, error) {
-	return l.Id()
+	return l.Arn()
 }
 
 func (l *lumiAwsApigatewayStage) id() (string, error) {
-	return l.Id()
+	return l.Arn()
 }

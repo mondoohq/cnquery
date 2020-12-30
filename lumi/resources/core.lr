@@ -1599,6 +1599,8 @@ aws.dynamodb {
 }
 
 aws.dynamodb.limit {
+  // ARN representing the account + region where the limit applies 
+  arn string
   // region where the limits apply
   region string
   // account max read limit
@@ -1612,6 +1614,8 @@ aws.dynamodb.limit {
 }
 
 aws.dynamodb.globaltable {
+  // ARN for the global table
+  arn string
   // table name
   name string
   // list of replica settings for the table
@@ -1636,6 +1640,8 @@ aws.apigateway {
 }
 
 aws.apigateway.restapi {
+  // ARN for the rest api
+  arn string
   // unique id for the rest api
   id string
   // name for the rest api
@@ -1651,8 +1657,8 @@ aws.apigateway.restapi {
 }
 
 aws.apigateway.stage {
-  // unique id for the stage
-  id string
+  // ARN for the rest api stage
+  arn string
   // name for the stage
   name string
   // bool that denotes if tracing is enabled for the stage
