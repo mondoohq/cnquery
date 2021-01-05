@@ -1717,7 +1717,7 @@ aws.ec2.instance {
   // Amazon Systems Manager information for the instance
   ssm() dict
   // vpc associated with the intance
-  vpc aws.vpc
+  vpc() aws.vpc
   // a value of optional for http tokens denotes imdsv1 server compatibility; required is imdsv2
   httpTokens string
   // patch state information about the instance
