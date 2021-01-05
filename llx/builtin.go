@@ -520,6 +520,10 @@ func init() {
 			"values": {f: mapValues, Label: "values"},
 		},
 		types.ResourceLike: {
+			// == / !=
+			string("==" + types.Nil): {f: chunkEqFalse, Label: "=="},
+			string("!=" + types.Nil): {f: chunkNeqTrue, Label: "!="},
+			// fields
 			"where":  {f: resourceWhere},
 			"length": {f: resourceLength},
 			"{}": {f: func(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
