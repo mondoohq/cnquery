@@ -229,23 +229,30 @@ func raw2primitive(value interface{}, typ types.Type) (*Primitive, error) {
 // can be sent over the wire. It converts the interface{} value of RawData
 // into a []byte structure that is easily serializable
 func (r *RawData) Result() *Result {
+	errorMsg := ""
+
 	if r.Error != nil {
-		return &Result{
-			Error: r.Error.Error(),
-		}
+		errorMsg = r.Error.Error()
 	}
 
 	if r.Value == nil {
-		return &Result{Data: &Primitive{
-			Type: r.Type,
-		}}
+		return &Result{
+			Data:  &Primitive{Type: r.Type},
+			Error: errorMsg,
+		}
 	}
 
 	data, err := raw2primitive(r.Value, r.Type)
 	if err != nil {
-		return &Result{Error: err.Error()}
+		return &Result{
+			Data:  &Primitive{Type: r.Type},
+			Error: err.Error(),
+		}
 	}
-	return &Result{Data: data}
+	return &Result{
+		Data:  data,
+		Error: errorMsg,
+	}
 }
 
 // Result converts the raw result into a proto-compliant data structure that
@@ -370,7 +377,7 @@ func pfunction2raw(p *Primitive) *RawData {
 	return &RawData{Value: int32(bytes2int(p.Value)), Type: types.Type(p.Type)}
 }
 
-// RawData converts the primtiive into the internal go-representation of the
+// RawData converts the primitive into the internal go-representation of the
 // data that can be used for computations
 func (p *Primitive) RawData() *RawData {
 	// FIXME: This is a stopgap. It points to an underlying problem that exists and needs fixing.
