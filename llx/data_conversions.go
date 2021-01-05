@@ -2,6 +2,7 @@ package llx
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -96,6 +97,8 @@ func dict2result(value interface{}, typ types.Type) (*Primitive, error) {
 	}
 
 	switch x := value.(type) {
+	case bool:
+		return BoolPrimitive(x), nil
 	case int64:
 		return IntPrimitive(x), nil
 	case float64:
@@ -128,7 +131,7 @@ func dict2result(value interface{}, typ types.Type) (*Primitive, error) {
 	default:
 		return &Primitive{
 			Type: types.Dict,
-		}, errors.New("failed to convert dict to primitive, unsupported child type")
+		}, fmt.Errorf("failed to convert dict to primitive, unsupported child type %T", x)
 	}
 }
 
