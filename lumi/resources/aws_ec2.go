@@ -415,29 +415,46 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []ec2.Reservation, imdsvVersio
 				return nil, err
 			}
 
-			// NOTE: this will create the resource and determine the data in its init method
-			lumiVpc, err := s.Runtime.CreateResource("aws.vpc",
-				"arn", fmt.Sprintf(vpcArnPattern, regionVal, account.ID, toString(instance.VpcId)),
-			)
-			if err != nil {
-				return nil, err
+			var lumiEc2Instance lumi.ResourceType
+			if instance.VpcId == nil {
+				lumiEc2Instance, err = s.Runtime.CreateResource("aws.ec2.instance",
+					"arn", fmt.Sprintf(ec2InstanceArnPattern, regionVal, account.ID, toString(instance.InstanceId)),
+					"instanceId", toString(instance.InstanceId),
+					"region", regionVal,
+					"publicIp", toString(instance.PublicIpAddress),
+					"detailedMonitoring", detailedMonitoring,
+					"httpTokens", httpTokens,
+					"state", stateName,
+					"deviceMappings", lumiDevices,
+					"securityGroups", sgs,
+					"publicDnsName", toString(instance.PublicDnsName),
+					"stateReason", stateReason,
+					"stateTransitionReason", toString(instance.StateTransitionReason),
+				)
+			} else {
+				// NOTE: this will create the resource and determine the data in its init method
+				lumiVpc, err := s.Runtime.CreateResource("aws.vpc",
+					"arn", fmt.Sprintf(vpcArnPattern, regionVal, account.ID, toString(instance.VpcId)),
+				)
+				if err != nil {
+					return nil, err
+				}
+				lumiEc2Instance, err = s.Runtime.CreateResource("aws.ec2.instance",
+					"arn", fmt.Sprintf(ec2InstanceArnPattern, regionVal, account.ID, toString(instance.InstanceId)),
+					"instanceId", toString(instance.InstanceId),
+					"region", regionVal,
+					"publicIp", toString(instance.PublicIpAddress),
+					"detailedMonitoring", detailedMonitoring,
+					"vpc", lumiVpc,
+					"httpTokens", httpTokens,
+					"state", stateName,
+					"deviceMappings", lumiDevices,
+					"securityGroups", sgs,
+					"publicDnsName", toString(instance.PublicDnsName),
+					"stateReason", stateReason,
+					"stateTransitionReason", toString(instance.StateTransitionReason),
+				)
 			}
-
-			lumiEc2Instance, err := s.Runtime.CreateResource("aws.ec2.instance",
-				"arn", fmt.Sprintf(ec2InstanceArnPattern, regionVal, account.ID, toString(instance.InstanceId)),
-				"instanceId", toString(instance.InstanceId),
-				"region", regionVal,
-				"publicIp", toString(instance.PublicIpAddress),
-				"detailedMonitoring", detailedMonitoring,
-				"vpc", lumiVpc,
-				"httpTokens", httpTokens,
-				"state", stateName,
-				"deviceMappings", lumiDevices,
-				"securityGroups", sgs,
-				"publicDnsName", toString(instance.PublicDnsName),
-				"stateReason", stateReason,
-				"stateTransitionReason", toString(instance.StateTransitionReason),
-			)
 			if err != nil {
 				return nil, err
 			}
@@ -518,6 +535,10 @@ func (s *lumiAwsEc2InstanceDevice) id() (string, error) {
 
 func (s *lumiAwsEc2Instance) id() (string, error) {
 	return s.Arn()
+}
+
+func (s *lumiAwsEc2Instance) GetVpc() (interface{}, error) {
+	return nil, fmt.Errorf("no vpc found")
 }
 
 func (s *lumiAwsEc2Instance) GetSsm() (interface{}, error) {
