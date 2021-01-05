@@ -180,6 +180,7 @@ func (typ Type) Key() Type {
 }
 
 // Name return the name of a resource
+// TODO: we should consider to rename this to ResourceName, it can be confused with Label() quickly
 func (typ Type) Name() string {
 	switch typ[0] {
 	case byteResource:
