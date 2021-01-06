@@ -1639,6 +1639,115 @@ aws.dynamodb.table {
   continuousBackups() dict
 }
 
+ // AWS service for operating and scaling relational dbs
+aws.rds {
+  // list of db instances
+  dbInstances() []aws.rds.dbinstance
+  // list of rds db clusters
+  dbClusters() []aws.rds.dbcluster
+}
+
+aws.rds.dbcluster {
+  // ARN for the db cluster
+  arn string
+  // region where the db cluster exists
+  region string
+  // identifier for the db cluster
+  id string
+  // list of db instances that belong to the cluster
+  members []aws.rds.dbinstance
+  // list of snapshots for the cluster
+  snapshots() []aws.rds.snapshot
+}
+
+aws.rds.snapshot {
+  // ARN of the snapshot
+  arn string
+  // id of the snapshot
+  id string
+  // attribute values that describe permissions to restore the snapshot
+  attributes() []dict
+  // type of snapshot (manual, automated)
+  type string
+  // denotes whether or not snapshot is encrypted
+  encrypted bool
+  // region where the snapshot exists
+  region string
+  // true if snapshot if for cluster
+  isClusterSnapshot bool
+}
+
+aws.rds.dbinstance {
+  // ARN for the db instance
+  arn string
+  // name of the db instance
+  name string
+  // number of days for which automated snapshots are retained
+  backupRetentionPeriod int
+  // list of snapshots for the db instance
+  snapshots() []aws.rds.snapshot
+  // denotes whether the instance is encrypted
+  storageEncrypted bool
+  // region where the instance exists
+  region string
+  // denotes whether or not the instance is publicly accessible
+  publiclyAccessible bool
+  // list of log types the instance is configured to export to cloudwatch logs
+  enabledCloudwatchLogsExports []string
+  // indicates if deletion protection is enabled
+  deletionProtection bool
+  // specifies whether the instance is a multi az deployment
+  multiAZ bool
+  // identifier for the db instance
+  id string
+  // arn of the CloudWatch log stream that receives the enhanced monitoring metrics data
+  enhancedMonitoringResourceArn string
+}
+
+// AWS service for running Amazon Elasticsearch
+aws.elasticache {
+  // list of clusters
+  clusters() []dict
+}
+
+// AWS service for analyzing large amounts of data
+aws.redshift {
+  // list of clusters
+  clusters() []aws.redshift.cluster
+}
+
+aws.redshift.cluster {
+  // ARN for the cluster
+  arn string
+  // denotes whether or not the cluster is encrypted
+  encrypted bool
+  // the node type for the nodes in the cluster
+  nodeType string
+  // denotes whether major upgrades will be applied automatically
+  allowVersionUpgrade bool
+  // weekly time range for system maintenance (in UTC)
+  preferredMaintenanceWindow string
+  // number of days automatic cluster snapshots are retained
+  automatedSnapshotRetentionPeriod int
+  // denotes whether or not cluster is publicly accessible
+  publiclyAccessible bool
+  // detailed list of parameters for each parameter group name
+  parameters() []dict
+  // logging configuration for the cluster
+  logging() dict
+  // name of the initial db created when cluster was created
+  name string
+  // region where the cluster exists
+  region string
+  // list of cluster parameter group names
+  clusterParameterGroupNames []string
+}
+
+// AWS service for migrating databases to AWS
+aws.dms {
+  replicationInstances() []dict
+}
+
 // AWS service for creating, maintaining, and securing APIs at scale
 aws.apigateway {
   // list of rest APIs across all regions in the account
