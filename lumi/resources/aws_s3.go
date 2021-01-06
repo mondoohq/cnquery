@@ -129,7 +129,7 @@ func (p *lumiAwsS3Bucket) GetPolicy() (interface{}, error) {
 	isAwsErr, code := IsAwsCode(err)
 	// aws code NoSuchBucketPolicy in case no policy exists
 	if err != nil && isAwsErr && code == "NoSuchBucketPolicy" {
-		return nil, errors.New("the specified bucket does not have a bucket policy")
+		return nil, nil
 	} else if err != nil {
 		log.Error().Err(err).Msg("could not retrieve bucket policy")
 		return nil, err
@@ -147,8 +147,8 @@ func (p *lumiAwsS3Bucket) GetPolicy() (interface{}, error) {
 		return lumiS3BucketPolicy, nil
 	}
 
-	// no bucket policy found
-	return nil, errors.New("the specified bucket does not have a bucket policy")
+	// no bucket policy found, return nil for the policy
+	return nil, nil
 }
 
 func (p *lumiAwsS3Bucket) GetTags() (map[string]interface{}, error) {
