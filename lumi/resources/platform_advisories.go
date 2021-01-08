@@ -99,28 +99,13 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 	}
 
 	log.Debug().Str("asset", asset.Mrn).Bool("incognito", mcc.Incognito).Msg("run advisory scan")
-	reportBinder, err := scannerClient.AnalysePlatform(context.Background(), &scanner.AssetVulnMetadataList{
-		Metadata: []*scanner.AssetVulnMetadata{
-			&scanner.AssetVulnMetadata{
-				Asset:     asset,
-				Packages:  apiPackages,
-				Incognito: mcc.Incognito, // respect the user incognito setting
-			},
-		},
+	report, err := scannerClient.AnalysePlatform(context.Background(), &scanner.AssetVulnMetadata{
+		Asset:     asset,
+		Packages:  apiPackages,
+		Incognito: mcc.Incognito, // respect the user incognito setting
 	})
 	if err != nil {
 		return nil, err
-	}
-
-	reports := reportBinder.GetReports()
-
-	if len(reports) > 1 {
-		return nil, errors.New("vulnerability report contains too many reports")
-	}
-
-	var report *scanner.VulnReport
-	for i := range reports {
-		report = reports[i]
 	}
 
 	return jsonToDict(report)
