@@ -120,6 +120,9 @@ func Resource(name string) Type {
 
 // IsResource checks if this type is a map
 func (typ Type) IsResource() bool {
+	if typ.IsEmpty() {
+		return false
+	}
 	return typ[0] == byteResource
 }
 
