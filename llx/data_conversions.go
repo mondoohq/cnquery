@@ -2,7 +2,7 @@ package llx
 
 import (
 	"errors"
-	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -131,7 +131,7 @@ func dict2result(value interface{}, typ types.Type) (*Primitive, error) {
 	default:
 		return &Primitive{
 			Type: types.Dict,
-		}, fmt.Errorf("failed to convert dict to primitive, unsupported child type %T", x)
+		}, errors.New("failed to convert dict to primitive, unsupported child type: " + reflect.TypeOf(x).String())
 	}
 }
 
@@ -231,6 +231,8 @@ func raw2primitive(value interface{}, typ types.Type) (*Primitive, error) {
 func (r *RawData) Result() *Result {
 	errorMsg := ""
 
+	// In case we encounter an error we need to still construct the result object
+	// with the type information so it can be processed by the server
 	if r.Error != nil {
 		errorMsg = r.Error.Error()
 	}

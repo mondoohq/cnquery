@@ -139,7 +139,7 @@ func fieldsInfo(resourceInfo *lumi.ResourceInfo) map[string]llx.Documentation {
 func availableFields(c *compiler, typ types.Type) map[string]llx.Documentation {
 	// resources maintain their own fields and may be list resources
 	if typ.IsResource() {
-		resourceInfo := c.Schema.Resources[typ.Name()]
+		resourceInfo := c.Schema.Resources[typ.ResourceName()]
 		res := fieldsInfo(resourceInfo)
 
 		_, err := listResource(c, typ)

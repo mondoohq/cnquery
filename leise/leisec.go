@@ -578,7 +578,7 @@ func (c *compiler) compileBuiltinFunction(h *compileHandler, id string, binding 
 func (c *compiler) compileBoundIdentifier(id string, binding *binding, call *parser.Call) (bool, types.Type, error) {
 	typ := binding.Type
 	if typ.IsResource() {
-		resource, ok := c.Schema.Resources[typ.Name()]
+		resource, ok := c.Schema.Resources[typ.ResourceName()]
 		if !ok {
 			return true, types.Nil, errors.New("cannot find resource that is called by '" + id + "' of type " + typ.Label())
 		}

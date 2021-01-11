@@ -2,10 +2,11 @@ package llx
 
 import (
 	"errors"
-	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/types"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"go.mondoo.io/mondoo/types"
 )
 
 func TestResultConversion(t *testing.T) {
@@ -22,7 +23,7 @@ func TestResultConversion(t *testing.T) {
 		ArrayPrimitive([]*Primitive{StringPrimitive("hello")}, types.String),
 		ArrayPrimitive([]*Primitive{IntPrimitive(42)}, types.Int),
 
-		// NOTE: any is not supported for arrays in serialization
+		// TODO: any is not supported for arrays in serialization
 		//ArrayPrimitive([]*Primitive{StringPrimitive("hello"), IntPrimitive(42)}, types.Any),
 	}
 
