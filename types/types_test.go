@@ -1,80 +1,48 @@
 package types
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTypes(t *testing.T) {
-	type test struct {
+	list := []struct {
 		T             Type
 		ExpectedLabel string
-	}
-
-	list := []test{
+	}{
 		{
-			T: Unset,
-
-			ExpectedLabel: "unset",
+			T: Unset, ExpectedLabel: "unset",
 		}, {
-			T: Any,
-
-			ExpectedLabel: "any",
+			T: Any, ExpectedLabel: "any",
 		}, {
-			T: Nil,
-
-			ExpectedLabel: "null",
+			T: Nil, ExpectedLabel: "null",
 		}, {
-			T: Ref,
-
-			ExpectedLabel: "ref",
+			T: Ref, ExpectedLabel: "ref",
 		}, {
-			T: Bool,
-
-			ExpectedLabel: "bool",
+			T: Bool, ExpectedLabel: "bool",
 		}, {
-			T: Int,
-
-			ExpectedLabel: "int",
+			T: Int, ExpectedLabel: "int",
 		}, {
-			T: Float,
-
-			ExpectedLabel: "float",
+			T: Float, ExpectedLabel: "float",
 		}, {
-			T: String,
-
-			ExpectedLabel: "string",
+			T: String, ExpectedLabel: "string",
 		}, {
-			T: Regex,
-
-			ExpectedLabel: "regex",
+			T: Regex, ExpectedLabel: "regex",
 		}, {
-			T: Time,
-
-			ExpectedLabel: "time",
+			T: Time, ExpectedLabel: "time",
 		}, {
-			T: Dict,
-
-			ExpectedLabel: "dict",
+			T: Dict, ExpectedLabel: "dict",
 		}, {
-			T: Score,
-
-			ExpectedLabel: "score",
+			T: Score, ExpectedLabel: "score",
 		}, {
-			T: Array(String),
-
-			ExpectedLabel: "[]string",
+			T: Array(String), ExpectedLabel: "[]string",
 		}, {
-			T: Map(String, String),
-
-			ExpectedLabel: "map[string]string",
+			T: Map(String, String), ExpectedLabel: "map[string]string",
 		}, {
-			T: Resource("mockresource"),
-
-			ExpectedLabel: "mockresource",
+			T: Resource("mockresource"), ExpectedLabel: "mockresource",
 		}, {
-			T:             Function('f', []Type{String, Int}),
-			ExpectedLabel: "function(..??..)",
+			T: Function('f', []Type{String, Int}), ExpectedLabel: "function(..??..)",
 		},
 	}
 

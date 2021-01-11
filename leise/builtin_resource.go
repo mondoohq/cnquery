@@ -11,7 +11,7 @@ import (
 )
 
 func compileResourceDefault(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
-	name := typ.Name()
+	name := typ.ResourceName()
 	resource := c.Schema.Resources[name]
 	if resource == nil {
 		return types.Nil, errors.New("cannot find resource '" + name + "' when compiling field '" + id + "'")
@@ -97,7 +97,7 @@ func (f *FunctionSignature) Validate(args []*llx.Primitive) error {
 }
 
 func listResource(c *compiler, typ types.Type) (*lumi.ResourceInfo, error) {
-	name := typ.Name()
+	name := typ.ResourceName()
 	resource := c.Schema.Resources[name]
 	if resource == nil {
 		return nil, errors.New("cannot find resource '" + name + "'")
@@ -202,7 +202,7 @@ func compileResourceContains(c *compiler, typ types.Type, ref int32, id string, 
 	})
 
 	checksum := c.Result.Code.Checksums[c.Result.Code.ChunkIndex()]
-	c.Result.Labels.Labels[checksum] = typ.Name() + ".contains()"
+	c.Result.Labels.Labels[checksum] = typ.ResourceName() + ".contains()"
 
 	return types.Bool, nil
 }
@@ -222,7 +222,7 @@ func compileResourceOne(c *compiler, typ types.Type, ref int32, id string, call 
 	lastOp.Function.Args[0] = llx.IntPrimitive(1)
 
 	checksum := c.Result.Code.Checksums[c.Result.Code.ChunkIndex()]
-	c.Result.Labels.Labels[checksum] = typ.Name() + ".one()"
+	c.Result.Labels.Labels[checksum] = typ.ResourceName() + ".one()"
 
 	return res, err
 }
@@ -277,7 +277,7 @@ func compileResourceAll(c *compiler, typ types.Type, ref int32, id string, call 
 	})
 
 	checksum := c.Result.Code.Checksums[c.Result.Code.ChunkIndex()]
-	c.Result.Labels.Labels[checksum] = typ.Name() + ".all()"
+	c.Result.Labels.Labels[checksum] = typ.ResourceName() + ".all()"
 
 	return types.Bool, nil
 }
@@ -321,7 +321,7 @@ func compileResourceAny(c *compiler, typ types.Type, ref int32, id string, call 
 	})
 
 	checksum := c.Result.Code.Checksums[c.Result.Code.ChunkIndex()]
-	c.Result.Labels.Labels[checksum] = typ.Name() + ".all()"
+	c.Result.Labels.Labels[checksum] = typ.ResourceName() + ".all()"
 
 	return types.Bool, nil
 }

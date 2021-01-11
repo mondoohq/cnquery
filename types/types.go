@@ -179,9 +179,8 @@ func (typ Type) Key() Type {
 	return Type(typ[1])
 }
 
-// Name return the name of a resource
-// TODO: we should consider to rename this to ResourceName, it can be confused with Label() quickly
-func (typ Type) Name() string {
+// ResourceName return the name of a resource
+func (typ Type) ResourceName() string {
 	switch typ[0] {
 	case byteResource:
 		return string(typ[1:])
