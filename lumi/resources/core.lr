@@ -1391,6 +1391,41 @@ aws.iam.virtualmfadevice {
   user aws.iam.user
 }
 
+// AWS service for machine learning
+aws.sagemaker {
+  // list of sagemaker endpoints
+  endpoints() []aws.sagemaker.endpoint
+  // list of sagemaker notebook instances
+  notebookInstances() []aws.sagemaker.notebookinstance
+}
+
+aws.sagemaker.notebookinstance {
+  // ARN for the notebook instance
+  arn string
+  // name of the notebook instance
+  name string
+  // KMS key id used to encrypt data
+  kmsKeyId() string
+  // region where the notebook instance exists
+  region string
+}
+
+aws.sagemaker.endpoint {
+  // ARN for the endpoint
+  arn string
+  // name of the endpoint
+  name string
+  // configuration information for the endpoint
+  config() dict
+  // region where the endpoint exists
+  region string
+}
+
+aws.sns {
+  // list of sns topics
+  topics() []aws.sns.topic
+}
+
 aws.sns.topic {
   // SNS topic ARN
   arn string
@@ -1398,6 +1433,8 @@ aws.sns.topic {
   region string
   // list of subscriptions associated with the topic ARN
   subscriptions() []aws.sns.subscription 
+  // attributes for the sns topic, including kms id if any
+  attributes() dict
 }
 
 aws.sns.subscription {
@@ -1405,6 +1442,68 @@ aws.sns.subscription {
   arn string
   // protocol value for the subscription
   protocol string
+}
+
+// AWS service for a managed ElasticSearch service
+aws.es {
+  // list of ElasticSearch domains
+  domains() []aws.es.domain
+}
+
+aws.es.domain {
+  // ARN for the elasticsearch domain
+  arn string
+  // denotes whether encryption at rest is enabled
+  encryptionAtRestEnabled bool
+  // denoted whether node to ndoe encryption is enabled
+  nodeToNodeEncryptionEnabled bool
+  // name of the es domain
+  name string
+  // endpoint used to submit index and search reqs
+  endpoint string
+}
+
+// AWS service for managing public and private SSL/TLS certificates
+aws.acm {
+  certificates() []aws.acm.certificate
+}
+
+aws.acm.certificate {
+  // ARN for the certificate
+  arn string
+  // time before which the certificate is not valid
+  notBefore time
+  // time after which the certificate is not valid
+  notAfter time
+  // time at which the cert was requested
+  createdAt time
+  // fqdn for the certificate
+  domainName string
+  // status of the certificate (issued, expired, revoked, etc.)
+  status string
+  // name of entity associated with pubkey in cert
+  subject string
+}
+
+// AWS service for load balancing
+aws.elb {
+  // list of classic load balancers
+  classicLoadBalancers() []aws.elb.loadbalancer
+  // list of application, gateway, and network load balancers (elbv2)
+  loadBalancers() []aws.elb.loadbalancer
+}
+
+aws.elb.loadbalancer {
+  // ARN for the load balancer
+  arn string
+  // dns name for the load balancer
+  dnsName string
+  // list of listener configurations for the load balancer
+  listenerDescriptions []dict
+  // user specified name for the load balancer
+  name string
+  // scheme for the lb (internet-facing vs. internal)
+  scheme string
 }
 
 // aws service that provides observability of AWS resources and applications
@@ -1433,6 +1532,8 @@ aws.cloudwatch.loggroup {
   name string
   // list of metric filters associated with the log group
   metricsFilters() []aws.cloudwatch.loggroup.metricsfilter
+  // ARN of the CMK for log encryption
+  kmsKeyId string
 }
 
 aws.cloudwatch.loggroup.metricsfilter {
@@ -1499,7 +1600,9 @@ aws.kms.key {
   // region the key lives in
   region string
   // bool that specifies whether key rotation is enabled
-  keyRotationEnabled bool
+  keyRotationEnabled() bool
+  // metadata for the key
+  metadata() dict
 }
 
 
@@ -1548,6 +1651,8 @@ aws.s3.bucket {
   encryption() dict
   // public access block configuration for the bucket
   publicAccessBlock() dict
+  // denotes whether the bucket still exists
+  exists bool
 }
 
 aws.s3.bucket.grant {
@@ -1819,6 +1924,21 @@ aws.ec2 {
   instances() []aws.ec2.instance
   // map[region]boolean used to denote if ebs encryption is on by default per region
   ebsEncryptionByDefault() map[string]bool
+  // list of volumes across the aws account
+  volumes() []aws.ec2.volume
+}
+
+aws.ec2.volume {
+  // ARN for the ec2 volume
+  arn string
+  // id of the ec2 volume
+  id string
+  // information about the volume attachments
+  attachments []dict
+  // denotes whether volume is encrypted
+  encrypted bool
+  // state of the volume (creating, available, in-use, etc.) 
+  state string
 }
 
 aws.ec2.instance {

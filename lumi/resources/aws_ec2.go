@@ -18,6 +18,7 @@ import (
 const (
 	ec2InstanceArnPattern   = "arn:aws:ec2:%s:%s:instance/%s"
 	securityGroupArnPattern = "arn:aws:ec2:%s:%s:security-group/%s"
+	volumeArnPattern        = "arn:aws:ec2:%s:%s:volume/%s"
 )
 
 func (e *lumiAwsEc2) id() (string, error) {
@@ -635,4 +636,86 @@ func (s *lumiAwsEc2Instance) GetInstanceStatus() (interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func (s *lumiAwsEc2) GetVolumes() ([]interface{}, error) {
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(s.getVolumes(), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+
+	return res, nil
+}
+
+func (s *lumiAwsEc2) getVolumes() []*jobpool.Job {
+	var tasks = make([]*jobpool.Job, 0)
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	regions, err := at.GetRegions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	account, err := at.Account()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+
+			svc := at.Ec2(regionVal)
+			ctx := context.Background()
+			res := []interface{}{}
+
+			nextToken := aws.String("no_token_to_start_with")
+			params := &ec2.DescribeVolumesInput{}
+			for nextToken != nil {
+				volumes, err := svc.DescribeVolumesRequest(params).Send(ctx)
+				if err != nil {
+					return nil, err
+				}
+				for _, vol := range volumes.Volumes {
+					stringState, err := vol.State.MarshalValue()
+					if err != nil {
+						return nil, err
+					}
+					jsonAttachments, err := jsonToDictSlice(vol.Attachments)
+					if err != nil {
+						return nil, err
+					}
+					lumiVol, err := s.Runtime.CreateResource("aws.ec2.volume",
+						"arn", fmt.Sprintf(volumeArnPattern, region, account.ID, toString(vol.VolumeId)),
+						"id", toString(vol.VolumeId),
+						"attachments", jsonAttachments,
+						"encrypted", toBool(vol.Encrypted),
+						"state", stringState,
+					)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, lumiVol)
+				}
+				nextToken = volumes.NextToken
+				if volumes.NextToken != nil {
+					params.NextToken = nextToken
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+func (s *lumiAwsEc2Volume) id() (string, error) {
+	return s.Arn()
 }

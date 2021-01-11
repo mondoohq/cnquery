@@ -33,14 +33,16 @@ func (s *lumiAwsEc2) getThingsFromAWS() []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
 	at, err := awstransport(s.Runtime.Motor.Transport)
 	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
+		return []*jobpool.Job{{Err: err}}
 	}
-	regions := at.GetRegions()
+	regions, err := at.GetRegions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
 
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
 
 			svc := atWithRegion.Ec2()
 

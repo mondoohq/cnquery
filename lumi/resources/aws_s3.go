@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
@@ -42,6 +43,7 @@ func (p *lumiAwsS3) GetBuckets() ([]interface{}, error) {
 		lumiS3Bucket, err := p.Runtime.CreateResource("aws.s3.bucket",
 			"name", toString(bucket.Name),
 			"arn", fmt.Sprintf(s3ArnPattern, toString(bucket.Name)),
+			"exists", true,
 		)
 		if err != nil {
 			return nil, err
@@ -95,8 +97,17 @@ func (p *lumiAwsS3Bucket) init(args *lumi.Args) (*lumi.Args, AwsS3Bucket, error)
 			return args, bucket, nil
 		}
 	}
-
-	return nil, nil, errors.New("aws s3 bucket does not exist")
+	// it is possible for a resource to reference a non-existent/deleted bucket, so here we
+	// create the object, noting that it no longer exists but is still recorded as part of some resources
+	splitArn := strings.Split(arn, ":::")
+	name := splitArn[1]
+	log.Debug().Msgf("no bucket found for %s", arn)
+	lumiAwsS3Bucket, err := p.Runtime.CreateResource("aws.s3.bucket",
+		"arn", arn,
+		"name", name,
+		"exists", false,
+	)
+	return nil, lumiAwsS3Bucket.(AwsS3Bucket), nil
 }
 
 func (p *lumiAwsS3Bucket) id() (string, error) {
