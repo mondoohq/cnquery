@@ -55,16 +55,10 @@ func (k *lumiAwsKms) getKeys() []*jobpool.Job {
 				}
 
 				for _, key := range keyList.Keys {
-					// need to call key rotation status api with key id to get status of key
-					status, err := k.getKeyStatus(ctx, svc, key.KeyId)
-					if err != nil {
-						return nil, err
-					}
 					lumiRecorder, err := k.Runtime.CreateResource("aws.kms.key",
 						"id", toString(key.KeyId),
 						"arn", toString(key.KeyArn),
 						"region", regionVal,
-						"keyRotationEnabled", toBool(status),
 					)
 					if err != nil {
 						return nil, err
@@ -83,13 +77,50 @@ func (k *lumiAwsKms) getKeys() []*jobpool.Job {
 	return tasks
 }
 
-func (k *lumiAwsKms) getKeyStatus(ctx context.Context, svc *kms.Client, keyID *string) (*bool, error) {
-	params := &kms.GetKeyRotationStatusInput{KeyId: keyID}
-	key, err := svc.GetKeyRotationStatusRequest(params).Send(ctx)
+func (k *lumiAwsKmsKey) GetMetadata() (interface{}, error) {
+	key, err := k.Arn()
 	if err != nil {
 		return nil, err
 	}
-	return key.KeyRotationEnabled, nil
+	region, err := k.Region()
+	if err != nil {
+		return nil, err
+	}
+	at, err := awstransport(k.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	svc := at.Kms(region)
+	ctx := context.Background()
+
+	keyMetadata, err := svc.DescribeKeyRequest(&kms.DescribeKeyInput{KeyId: &key}).Send(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return jsonToDict(keyMetadata.DescribeKeyOutput.KeyMetadata)
+}
+
+func (k *lumiAwsKmsKey) GetKeyRotationEnabled() (bool, error) {
+	keyId, err := k.Id()
+	if err != nil {
+		return false, err
+	}
+	region, err := k.Region()
+	if err != nil {
+		return false, err
+	}
+	at, err := awstransport(k.Runtime.Motor.Transport)
+	if err != nil {
+		return false, err
+	}
+	svc := at.Kms(region)
+	ctx := context.Background()
+
+	key, err := svc.GetKeyRotationStatusRequest(&kms.GetKeyRotationStatusInput{KeyId: &keyId}).Send(ctx)
+	if err != nil {
+		return false, err
+	}
+	return toBool(key.KeyRotationEnabled), nil
 }
 
 func (k *lumiAwsKmsKey) id() (string, error) {

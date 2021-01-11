@@ -153,8 +153,9 @@ func (t *lumiAwsCloudwatch) getLogGroups() []*jobpool.Job {
 				}
 				for _, loggroup := range logGroups.LogGroups {
 					lumiLogGroup, err := t.Runtime.CreateResource("aws.cloudwatch.loggroup",
-						"arn", loggroup.Arn,
-						"name", loggroup.LogGroupName,
+						"arn", toString(loggroup.Arn),
+						"name", toString(loggroup.LogGroupName),
+						"kmsKeyId", toString(loggroup.KmsKeyId),
 					)
 					if err != nil {
 						return nil, err
