@@ -12,7 +12,6 @@ import (
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/nexus/assets"
-	"go.mondoo.io/mondoo/nexus/scanner"
 	"go.mondoo.io/mondoo/vadvisor/api"
 	"go.mondoo.io/mondoo/vadvisor/client"
 )
@@ -99,10 +98,14 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 	}
 
 	log.Debug().Str("asset", asset.Mrn).Bool("incognito", mcc.Incognito).Msg("run advisory scan")
-	report, err := scannerClient.AnalysePlatform(context.Background(), &scanner.AssetVulnMetadata{
-		Asset:     asset,
-		Packages:  apiPackages,
-		Incognito: mcc.Incognito, // respect the user incognito setting
+	report, err := scannerClient.AnalysePlatform(context.Background(), &api.AnalyseAssetRequest{
+		Platform: &api.Platform{
+			Name:    name,
+			Release: release,
+			Arch:    arch,
+			Build:   build,
+		},
+		Packages: apiPackages,
 	})
 	if err != nil {
 		return nil, err
