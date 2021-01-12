@@ -43,7 +43,7 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 	// platform.exploits can all share the results
 	cachedReport, ok := lumiPlatform.LumiResource().Cache.Load("_report")
 	if ok {
-		report := cachedReport.Data.(*scanner.VulnReport)
+		report := cachedReport.Data.(*api.VulnReport)
 		return report, nil
 	}
 
@@ -111,7 +111,7 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 	return jsonToDict(report)
 }
 
-func getAdvisoryReport(r *lumi.Runtime) (*scanner.VulnReport, error) {
+func getAdvisoryReport(r *lumi.Runtime) (*api.VulnReport, error) {
 	obj, err := r.CreateResource("platform")
 	if err != nil {
 		return nil, err
@@ -123,7 +123,7 @@ func getAdvisoryReport(r *lumi.Runtime) (*scanner.VulnReport, error) {
 		return nil, err
 	}
 
-	var vulnReport scanner.VulnReport
+	var vulnReport api.VulnReport
 	cfg := &mapstructure.DecoderConfig{
 		Metadata: nil,
 		Result:   &vulnReport,
