@@ -13,8 +13,8 @@ import (
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/nexus/assets"
 	"go.mondoo.io/mondoo/nexus/scanner"
-	"go.mondoo.io/mondoo/nexus/scanner/scannerclient"
 	"go.mondoo.io/mondoo/vadvisor/api"
+	"go.mondoo.io/mondoo/vadvisor/client"
 )
 
 // fetches the vulnerability report and returns the full report
@@ -49,7 +49,7 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 
 	// get new advisory report
 	// start scanner client
-	scannerClient, err := scannerclient.New(mcc.Collector, mcc.ApiEndpoint, mcc.Plugins, false, mcc.Incognito)
+	scannerClient, err := client.New(mcc.Collector, mcc.ApiEndpoint, mcc.Plugins, false, mcc.Incognito)
 	if err != nil {
 		return nil, err
 	}
