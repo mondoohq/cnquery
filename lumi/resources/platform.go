@@ -2,11 +2,11 @@ package resources
 
 import (
 	"errors"
+	"go.mondoo.io/mondoo/vadvisor"
 	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/vadvisor/api"
 	"go.mondoo.io/mondoo/vadvisor/sources/eol"
 )
 
@@ -53,7 +53,7 @@ func (p *lumiPlatformEol) init(args *lumi.Args) (*lumi.Args, PlatformEol, error)
 	release, _ := platform.Release()
 	arch, _ := platform.Arch()
 
-	platformEolInfo := eol.IsEol(&api.Platform{
+	platformEolInfo := eol.IsEol(&vadvisor.Platform{
 		Name:    name,
 		Release: release,
 		Arch:    arch,

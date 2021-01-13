@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/mitchellh/mapstructure"
 	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/vadvisor"
 	"strconv"
 	"time"
 
@@ -12,7 +13,6 @@ import (
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/nexus/assets"
-	"go.mondoo.io/mondoo/vadvisor/api"
 	"go.mondoo.io/mondoo/vadvisor/client"
 )
 
@@ -42,7 +42,7 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 	// platform.exploits can all share the results
 	cachedReport, ok := lumiPlatform.LumiResource().Cache.Load("_report")
 	if ok {
-		report := cachedReport.Data.(*api.VulnReport)
+		report := cachedReport.Data.(*vadvisor.VulnReport)
 		return report, nil
 	}
 
@@ -65,7 +65,7 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 		},
 	}
 
-	apiPackages := []*api.Package{}
+	apiPackages := []*vadvisor.Package{}
 
 	// collect pacakges if the platform supports gathering files
 	if r.Motor.HasCapability(transports.Capability_File) {
@@ -88,7 +88,7 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 			arch, _ := pkg.Arch()
 			format, _ := pkg.Format()
 
-			apiPackages = append(apiPackages, &api.Package{
+			apiPackages = append(apiPackages, &vadvisor.Package{
 				Name:    name,
 				Version: version,
 				Arch:    arch,
@@ -98,8 +98,8 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 	}
 
 	log.Debug().Str("asset", asset.Mrn).Bool("incognito", mcc.Incognito).Msg("run advisory scan")
-	report, err := scannerClient.AnalysePlatform(context.Background(), &api.AnalyseAssetRequest{
-		Platform: &api.Platform{
+	report, err := scannerClient.AnalysePlatform(context.Background(), &vadvisor.AnalyseAssetRequest{
+		Platform: &vadvisor.Platform{
 			Name:    name,
 			Release: release,
 			Arch:    arch,
@@ -114,7 +114,7 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 	return jsonToDict(report)
 }
 
-func getAdvisoryReport(r *lumi.Runtime) (*api.VulnReport, error) {
+func getAdvisoryReport(r *lumi.Runtime) (*vadvisor.VulnReport, error) {
 	obj, err := r.CreateResource("platform")
 	if err != nil {
 		return nil, err
@@ -126,7 +126,7 @@ func getAdvisoryReport(r *lumi.Runtime) (*api.VulnReport, error) {
 		return nil, err
 	}
 
-	var vulnReport api.VulnReport
+	var vulnReport vadvisor.VulnReport
 	cfg := &mapstructure.DecoderConfig{
 		Metadata: nil,
 		Result:   &vulnReport,

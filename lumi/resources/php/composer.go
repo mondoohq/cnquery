@@ -2,10 +2,9 @@ package php
 
 import (
 	"encoding/json"
+	"go.mondoo.io/mondoo/vadvisor"
 	"io"
 	"io/ioutil"
-
-	"go.mondoo.io/mondoo/vadvisor/api"
 )
 
 type ComposerPackage struct {
@@ -20,7 +19,7 @@ type ComposerLock struct {
 	DevPackages []ComposerPackage `json:"packages-dev"`
 }
 
-func ParseComposerLock(r io.Reader) ([]*api.Package, error) {
+func ParseComposerLock(r io.Reader) ([]*vadvisor.Package, error) {
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -32,12 +31,12 @@ func ParseComposerLock(r io.Reader) ([]*api.Package, error) {
 		return nil, err
 	}
 
-	entries := []*api.Package{}
+	entries := []*vadvisor.Package{}
 
 	// add dependencies
 	for i := range composerLock.Packages {
 		pkg := composerLock.Packages[i]
-		entries = append(entries, &api.Package{
+		entries = append(entries, &vadvisor.Package{
 			Name:      pkg.Name,
 			Version:   pkg.Version,
 			Format:    "php",

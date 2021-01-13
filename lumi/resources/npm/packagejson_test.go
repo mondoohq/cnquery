@@ -1,12 +1,12 @@
 package npm_test
 
 import (
+	"go.mondoo.io/mondoo/vadvisor"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/lumi/resources/npm"
-	"go.mondoo.io/mondoo/vadvisor/api"
 )
 
 func TestPackageJsonParser(t *testing.T) {
@@ -19,7 +19,7 @@ func TestPackageJsonParser(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 31, len(pkgs))
 
-	assert.Contains(t, pkgs, &api.Package{
+	assert.Contains(t, pkgs, &vadvisor.Package{
 		Name:      "path-to-regexp",
 		Version:   "0.1.7",
 		Format:    "npm",
@@ -28,7 +28,7 @@ func TestPackageJsonParser(t *testing.T) {
 
 	// "range-parser": "~1.2.0",
 	// TODO: we need to be better at version ranges
-	assert.Contains(t, pkgs, &api.Package{
+	assert.Contains(t, pkgs, &vadvisor.Package{
 		Name:      "range-parser",
 		Version:   "~1.2.0",
 		Format:    "npm",
@@ -46,14 +46,14 @@ func TestPackageJsonLockParser(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 1300, len(pkgs))
 
-	assert.Contains(t, pkgs, &api.Package{
+	assert.Contains(t, pkgs, &vadvisor.Package{
 		Name:      "@babel/generator",
 		Version:   "7.0.0",
 		Format:    "npm",
 		Namespace: "nodejs",
 	})
 
-	assert.Contains(t, pkgs, &api.Package{
+	assert.Contains(t, pkgs, &vadvisor.Package{
 		Name:      "@lerna/changed",
 		Version:   "3.3.2",
 		Format:    "npm",

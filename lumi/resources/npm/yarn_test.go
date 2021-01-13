@@ -1,12 +1,12 @@
 package npm_test
 
 import (
+	"go.mondoo.io/mondoo/vadvisor"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/lumi/resources/npm"
-	"go.mondoo.io/mondoo/vadvisor/api"
 )
 
 func TestYarnParser(t *testing.T) {
@@ -19,14 +19,14 @@ func TestYarnParser(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 99, len(pkgs))
 
-	assert.Contains(t, pkgs, &api.Package{
+	assert.Contains(t, pkgs, &vadvisor.Package{
 		Name:      "has",
 		Version:   "1.0.3",
 		Format:    "npm",
 		Namespace: "nodejs",
 	})
 
-	assert.Contains(t, pkgs, &api.Package{
+	assert.Contains(t, pkgs, &vadvisor.Package{
 		Name:      "iconv-lite",
 		Version:   "0.4.24",
 		Format:    "npm",
