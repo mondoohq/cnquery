@@ -2,10 +2,10 @@ package packages
 
 import (
 	"fmt"
+	"go.mondoo.io/mondoo/vadvisor"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/vadvisor/api"
 )
 
 func Detect(motor *motor.Motor) ([]Package, map[string]PackageUpdate, error) {
@@ -35,8 +35,8 @@ func Detect(motor *motor.Motor) ([]Package, map[string]PackageUpdate, error) {
 	return packages, availableList, nil
 }
 
-func ConvertParserPackages(pkgs []Package, updates map[string]PackageUpdate) []*api.Package {
-	apiPkgs := []*api.Package{}
+func ConvertParserPackages(pkgs []Package, updates map[string]PackageUpdate) []*vadvisor.Package {
+	apiPkgs := []*vadvisor.Package{}
 
 	for _, d := range pkgs {
 
@@ -46,7 +46,7 @@ func ConvertParserPackages(pkgs []Package, updates map[string]PackageUpdate) []*
 			available = update.Available
 		}
 
-		apiPkgs = append(apiPkgs, &api.Package{
+		apiPkgs = append(apiPkgs, &vadvisor.Package{
 			Name:      d.Name,
 			Version:   d.Version,
 			Available: available,

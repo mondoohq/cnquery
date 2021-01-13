@@ -2,10 +2,9 @@ package npm
 
 import (
 	"encoding/json"
+	"go.mondoo.io/mondoo/vadvisor"
 	"io"
 	"io/ioutil"
-
-	"go.mondoo.io/mondoo/vadvisor/api"
 )
 
 // PackageJson allows parsing the package json file
@@ -30,7 +29,7 @@ type PackageJsonLock struct {
 	Dependencies map[string]PackageJsonLockEntry `jsonn:"dependencies"`
 }
 
-func ParsePackageJson(r io.Reader) ([]*api.Package, error) {
+func ParsePackageJson(r io.Reader) ([]*vadvisor.Package, error) {
 
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -43,10 +42,10 @@ func ParsePackageJson(r io.Reader) ([]*api.Package, error) {
 		return nil, err
 	}
 
-	entries := []*api.Package{}
+	entries := []*vadvisor.Package{}
 
 	// add own package
-	entries = append(entries, &api.Package{
+	entries = append(entries, &vadvisor.Package{
 		Name:      packageJson.Name,
 		Version:   packageJson.Version,
 		Format:    "npm",
@@ -56,7 +55,7 @@ func ParsePackageJson(r io.Reader) ([]*api.Package, error) {
 	// add all dependencies
 
 	for k, v := range packageJson.Dependencies {
-		entries = append(entries, &api.Package{
+		entries = append(entries, &vadvisor.Package{
 			Name:      k,
 			Version:   v,
 			Format:    "npm",
@@ -67,7 +66,7 @@ func ParsePackageJson(r io.Reader) ([]*api.Package, error) {
 	return entries, nil
 }
 
-func ParsePackageJsonLock(r io.Reader) ([]*api.Package, error) {
+func ParsePackageJsonLock(r io.Reader) ([]*vadvisor.Package, error) {
 
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -80,10 +79,10 @@ func ParsePackageJsonLock(r io.Reader) ([]*api.Package, error) {
 		return nil, err
 	}
 
-	entries := []*api.Package{}
+	entries := []*vadvisor.Package{}
 
 	// add own package
-	entries = append(entries, &api.Package{
+	entries = append(entries, &vadvisor.Package{
 		Name:      packageJsonLock.Name,
 		Version:   packageJsonLock.Version,
 		Format:    "npm",
@@ -92,7 +91,7 @@ func ParsePackageJsonLock(r io.Reader) ([]*api.Package, error) {
 
 	// add all dependencies
 	for k, v := range packageJsonLock.Dependencies {
-		entries = append(entries, &api.Package{
+		entries = append(entries, &vadvisor.Package{
 			Name:      k,
 			Version:   v.Version,
 			Format:    "npm",

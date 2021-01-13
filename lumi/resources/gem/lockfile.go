@@ -3,13 +3,12 @@ package gem
 import (
 	"bufio"
 	"errors"
+	"go.mondoo.io/mondoo/vadvisor"
 	"io"
 	"regexp"
 	"strings"
 
 	"github.com/rs/zerolog/log"
-
-	"go.mondoo.io/mondoo/vadvisor/api"
 )
 
 var (
@@ -20,8 +19,8 @@ var (
 	DEPENDENCIES = "DEPENDENCIES"
 )
 
-func ParseGemfileLock(r io.Reader) ([]*api.Package, error) {
-	pkgs := []*api.Package{}
+func ParseGemfileLock(r io.Reader) ([]*vadvisor.Package, error) {
+	pkgs := []*vadvisor.Package{}
 	state := "INIT"
 
 	scanner := bufio.NewScanner(r)
@@ -43,7 +42,7 @@ func ParseGemfileLock(r io.Reader) ([]*api.Package, error) {
 		}
 
 		var err error
-		var pkg *api.Package
+		var pkg *vadvisor.Package
 		switch state {
 		case GIT:
 			fallthrough
@@ -67,7 +66,7 @@ func ParseGemfileLock(r io.Reader) ([]*api.Package, error) {
 	return pkgs, nil
 }
 
-func parseSpecLine(line string) (*api.Package, error) {
+func parseSpecLine(line string) (*vadvisor.Package, error) {
 	// ignore everthing with 2 leading spaces, we do not need that info
 	whitespace := LeadingSpaces(line)
 	// We do not need to scan whitespace = 6 since those are just dependencies
@@ -78,7 +77,7 @@ func parseSpecLine(line string) (*api.Package, error) {
 			return nil, err
 		}
 
-		return &api.Package{
+		return &vadvisor.Package{
 			Name:      name,
 			Version:   version,
 			Format:    "gem",
