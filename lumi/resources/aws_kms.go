@@ -2,9 +2,11 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 )
 
@@ -125,4 +127,39 @@ func (k *lumiAwsKmsKey) GetKeyRotationEnabled() (bool, error) {
 
 func (k *lumiAwsKmsKey) id() (string, error) {
 	return k.Arn()
+}
+
+func (p *lumiAwsKmsKey) init(args *lumi.Args) (*lumi.Args, AwsKmsKey, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if (*args)["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch aws kms key")
+	}
+
+	// load all keys
+	obj, err := p.Runtime.CreateResource("aws.kms")
+	if err != nil {
+		return nil, nil, err
+	}
+	aws := obj.(AwsKms)
+
+	rawResources, err := aws.Keys()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	arnVal := (*args)["arn"].(string)
+	for i := range rawResources {
+		key := rawResources[i].(AwsKmsKey)
+		lumiKeyArn, err := key.Arn()
+		if err != nil {
+			return nil, nil, errors.New("kms key does not exist")
+		}
+		if lumiKeyArn == arnVal {
+			return args, key, nil
+		}
+	}
+	return nil, nil, errors.New("kms key does not exist")
 }

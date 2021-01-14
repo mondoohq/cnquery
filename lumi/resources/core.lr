@@ -1206,8 +1206,8 @@ aws.efs.filesystem {
   arn string
   // denotes whether or not the filesystem id encrypted
   encrypted bool
-  // KMS key id used for encryption of the filesystem
-  kmsKeyId string
+  // KMS key used for encryption of the filesystem
+  kmsKey() aws.kms.key
   // backup policy for the filesystem
   backupPolicy() dict
   // region in which the filesystem exists
@@ -1404,8 +1404,8 @@ aws.sagemaker.notebookinstance {
   arn string
   // name of the notebook instance
   name string
-  // KMS key id used to encrypt data
-  kmsKeyId() string
+  // KMS key used to encrypt data
+  kmsKey() aws.kms.key
   // region where the notebook instance exists
   region string
 }
@@ -1532,8 +1532,8 @@ aws.cloudwatch.loggroup {
   name string
   // list of metric filters associated with the log group
   metricsFilters() []aws.cloudwatch.loggroup.metricsfilter
-  // ARN of the CMK for log encryption
-  kmsKeyId string
+  // KMS key used for log encryption
+  kmsKey() aws.kms.key
 }
 
 aws.cloudwatch.loggroup.metricsfilter {
@@ -1558,8 +1558,8 @@ aws.cloudtrail.trail {
   arn string
   // name of the trail
   name string
-  // ARN of the KMS key id that encrypts the logs
-  kmsKeyId string
+  // KMS key used to encrypt the logs
+  kmsKey() aws.kms.key
   // specifies if trail exists only in one region or multiple
   isMultiRegionTrail bool
   // whether trail is organization trail (logs events for mgmt and member accts of org)
@@ -1651,7 +1651,7 @@ aws.s3.bucket {
   encryption() dict
   // public access block configuration for the bucket
   publicAccessBlock() dict
-  // denotes whether the bucket still exists
+  // false if the bucket no longer exists (stale reference)
   exists bool
 }
 
