@@ -104,7 +104,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error
 	// discover ec2 instances
 	DiscoverInstances := true
 	if DiscoverInstances {
-		// TODO: rewrite ec2 discovert to use the aws transport
+		// TODO: rewrite ec2 discovery to use the aws transport
 		r, err := NewEc2Discovery(trans.Config())
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize aws ec2 discovery")
