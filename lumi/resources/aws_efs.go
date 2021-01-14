@@ -62,14 +62,25 @@ func (e *lumiAwsEfs) getFilesystems() []*jobpool.Job {
 
 				for i := range describeFileSystemsRes.FileSystems {
 					fs := describeFileSystemsRes.FileSystems[i]
-					lumiFilesystem, err := e.Runtime.CreateResource("aws.efs.filesystem",
+					args := []interface{}{
 						"id", toString(fs.FileSystemId),
 						"arn", toString(fs.FileSystemArn),
 						"name", toString(fs.Name),
 						"encrypted", toBool(fs.Encrypted),
-						"kmsKeyId", toString(fs.KmsKeyId),
 						"region", regionVal,
-					)
+					}
+					// add kms key if there is one
+					if fs.KmsKeyId != nil {
+						lumiKeyResource, err := e.Runtime.CreateResource("aws.kms.key",
+							"arn", toString(fs.KmsKeyId),
+						)
+						if err != nil {
+							return nil, err
+						}
+						lumiKey := lumiKeyResource.(AwsKmsKey)
+						args = append(args, "kmsKey", lumiKey)
+					}
+					lumiFilesystem, err := e.Runtime.CreateResource("aws.efs.filesystem", args...)
 					if err != nil {
 						return nil, err
 					}
@@ -85,6 +96,11 @@ func (e *lumiAwsEfs) getFilesystems() []*jobpool.Job {
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func (e *lumiAwsEfsFilesystem) GetKmsKey() (interface{}, error) {
+	// no key id on the log group object
+	return nil, nil
 }
 
 func (e *lumiAwsEfsFilesystem) GetBackupPolicy() (interface{}, error) {

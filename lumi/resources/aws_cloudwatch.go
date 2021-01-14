@@ -152,11 +152,23 @@ func (t *lumiAwsCloudwatch) getLogGroups() []*jobpool.Job {
 					params.NextToken = nextToken
 				}
 				for _, loggroup := range logGroups.LogGroups {
-					lumiLogGroup, err := t.Runtime.CreateResource("aws.cloudwatch.loggroup",
+					args := []interface{}{
 						"arn", toString(loggroup.Arn),
 						"name", toString(loggroup.LogGroupName),
-						"kmsKeyId", toString(loggroup.KmsKeyId),
-					)
+					}
+					// add kms key if there is one
+					if loggroup.KmsKeyId != nil {
+						lumiKeyResource, err := t.Runtime.CreateResource("aws.kms.key",
+							"arn", toString(loggroup.KmsKeyId),
+						)
+						if err != nil {
+							return nil, err
+						}
+						lumiKey := lumiKeyResource.(AwsKmsKey)
+						args = append(args, "kmsKey", lumiKey)
+					}
+
+					lumiLogGroup, err := t.Runtime.CreateResource("aws.cloudwatch.loggroup", args...)
 					if err != nil {
 						return nil, err
 					}
@@ -168,6 +180,11 @@ func (t *lumiAwsCloudwatch) getLogGroups() []*jobpool.Job {
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func (s *lumiAwsCloudwatchLoggroup) GetKmsKey() (interface{}, error) {
+	// no key id on the log group object
+	return nil, nil
 }
 
 func (t *lumiAwsCloudwatchLoggroup) id() (string, error) {

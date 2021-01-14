@@ -76,10 +76,10 @@ func (t *lumiAwsCloudtrail) getTrails() []*jobpool.Job {
 				if regionVal != toString(trail.HomeRegion) {
 					continue
 				}
-				lumiAwsCloudtrailTrail, err := t.Runtime.CreateResource("aws.cloudtrail.trail",
+
+				args := []interface{}{
 					"arn", toString(trail.TrailARN),
 					"name", toString(trail.Name),
-					"kmsKeyId", toString(trail.KmsKeyId),
 					"isMultiRegionTrail", toBool(trail.IsMultiRegionTrail),
 					"isOrganizationTrail", toBool(trail.IsOrganizationTrail),
 					"logFileValidationEnabled", toBool(trail.LogFileValidationEnabled),
@@ -91,7 +91,21 @@ func (t *lumiAwsCloudtrail) getTrails() []*jobpool.Job {
 					// TODO: link to watch logs grou
 					"cloudWatchLogsRoleArn", toString(trail.CloudWatchLogsRoleArn),
 					"region", toString(trail.HomeRegion),
-				)
+				}
+
+				// add kms key if there is one
+				if trail.KmsKeyId != nil {
+					lumiKeyResource, err := t.Runtime.CreateResource("aws.kms.key",
+						"arn", toString(trail.KmsKeyId),
+					)
+					if err != nil {
+						return nil, err
+					}
+					lumiKey := lumiKeyResource.(AwsKmsKey)
+					args = append(args, "kmsKey", lumiKey)
+				}
+
+				lumiAwsCloudtrailTrail, err := t.Runtime.CreateResource("aws.cloudtrail.trail", args...)
 				if err != nil {
 					return nil, err
 				}
@@ -103,6 +117,11 @@ func (t *lumiAwsCloudtrail) getTrails() []*jobpool.Job {
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func (s *lumiAwsCloudtrailTrail) GetKmsKey() (interface{}, error) {
+	// no key id on the trail object
+	return nil, nil
 }
 
 func (t *lumiAwsCloudtrailTrail) id() (string, error) {

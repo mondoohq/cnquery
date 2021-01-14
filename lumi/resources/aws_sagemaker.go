@@ -164,26 +164,35 @@ func (s *lumiAwsSagemaker) getNotebookInstances() []*jobpool.Job {
 	return tasks
 }
 
-func (s *lumiAwsSagemakerNotebookinstance) GetKmsKeyId() (string, error) {
+func (s *lumiAwsSagemakerNotebookinstance) GetKmsKey() (interface{}, error) {
 	name, err := s.Name()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	region, err := s.Region()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	at, err := awstransport(s.Runtime.Motor.Transport)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	svc := at.Sagemaker(region)
 	ctx := context.Background()
 	instanceDetails, err := svc.DescribeNotebookInstanceRequest(&sagemaker.DescribeNotebookInstanceInput{NotebookInstanceName: &name}).Send(ctx)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return toString(instanceDetails.KmsKeyId), nil
+	if instanceDetails.KmsKeyId == nil {
+		return nil, nil
+	}
+	lumiKeyResource, err := s.Runtime.CreateResource("aws.kms.key",
+		"arn", toString(instanceDetails.KmsKeyId),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return lumiKeyResource, nil
 }
 
 func (s *lumiAwsSagemakerEndpoint) id() (string, error) {
