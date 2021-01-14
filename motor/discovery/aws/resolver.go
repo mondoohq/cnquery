@@ -96,7 +96,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error
 
 	resolved = append(resolved, &asset.Asset{
 		PlatformIDs: []string{identifier},
-		Name:        "AWS Account " + info.Name + "(" + info.ID + ")",
+		Name:        "AWS Account " + info.ID,
 		Platform:    pf,
 		Connections: []*transports.TransportConfig{t}, // pass-in the current config
 	})
