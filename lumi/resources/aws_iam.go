@@ -16,6 +16,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/awsiam"
+	"go.mondoo.io/mondoo/lumi/resources/awspolicy"
 )
 
 func (p *lumiAwsIam) id() (string, error) {
@@ -1203,73 +1204,6 @@ func (u *lumiAwsIamPolicyversion) id() (string, error) {
 	return arn + "/" + versionid, nil
 }
 
-type policyDocument struct {
-	Version   string           `json:"Version,omitempty"`
-	Statement policyStatements `json:"Statement,omitempty"`
-}
-
-type policyStatement struct {
-	Sid      string           `json:"Sid,omitempty"`
-	Effect   string           `json:"Effect,omitempty"`
-	Action   statementSection `json:"Action,omitempty"`
-	Resource statementSection `json:"Resource,omitempty"`
-}
-
-type policyStatements []policyStatement
-
-type statementSection []string
-
-// can be string or []string
-func (v *statementSection) UnmarshalJSON(b []byte) error {
-	var raw interface{}
-	err := json.Unmarshal(b, &raw)
-	if err != nil {
-		return err
-	}
-
-	var section []string
-	switch v := raw.(type) {
-	case string:
-		section = []string{v}
-	case []interface{}:
-		for _, item := range v {
-			section = append(section, item.(string))
-		}
-	default:
-		return fmt.Errorf("invalid %T value element, policy action and resource only support string or []string", v)
-	}
-	*v = section
-	return nil
-}
-
-// can be single object or array
-func (v *policyStatements) UnmarshalJSON(b []byte) error {
-	var raw interface{}
-	err := json.Unmarshal(b, &raw)
-	if err != nil {
-		return err
-	}
-
-	statements := []policyStatement{}
-
-	switch raw.(type) {
-	case []interface{}:
-		err = json.Unmarshal(b, &statements)
-		if err != nil {
-			return err
-		}
-	case interface{}:
-		statement := policyStatement{}
-		err = json.Unmarshal(b, &statement)
-		if err != nil {
-			return err
-		}
-		statements = append(statements, statement)
-	}
-	*v = statements
-	return nil
-}
-
 func (u *lumiAwsIamPolicyversion) GetDocument() (interface{}, error) {
 	at, err := awstransport(u.Runtime.Motor.Transport)
 	if err != nil {
@@ -1304,7 +1238,7 @@ func (u *lumiAwsIamPolicyversion) GetDocument() (interface{}, error) {
 	if err != nil {
 		return "", err
 	}
-	policyDoc := policyDocument{}
+	policyDoc := awspolicy.IamPolicyDocument{}
 	err = json.Unmarshal([]byte(decodedValue), &policyDoc)
 	if err != nil {
 		return "", err
