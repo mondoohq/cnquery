@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/service/iam"
-	"github.com/rs/zerolog/log"
 )
 
 func (t *Transport) Identifier() (string, error) {
@@ -17,8 +16,8 @@ func (t *Transport) Info() Info {
 }
 
 type Account struct {
-	ID   string
-	Name string
+	ID      string
+	Aliases []string
 }
 
 func (t *Transport) Account() (Account, error) {
@@ -26,18 +25,12 @@ func (t *Transport) Account() (Account, error) {
 	ctx := context.Background()
 	res, err := t.Iam("").ListAccountAliasesRequest(&iam.ListAccountAliasesInput{}).Send(ctx)
 	if err != nil {
-		return Account{}, err
-	}
-	var accountName string
-	if len(res.AccountAliases) == 0 {
-		// if account has no alias, use account id
-		log.Debug().Msgf("no alias found for account %s", accountid)
-		accountName = accountid
-	} else {
-		accountName = res.AccountAliases[0]
+		return Account{
+			ID: accountid,
+		}, err
 	}
 	return Account{
-		ID:   accountid,
-		Name: accountName,
+		ID:      accountid,
+		Aliases: res.AccountAliases,
 	}, nil
 }

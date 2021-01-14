@@ -1184,11 +1184,20 @@ arista.eos.spt.mstInterface {
   // Interface features: BPDU filter, specifies the BPDU reception rate & link type of the interface
   features() dict
 }
+
 aws {
   // list of vpcs in the account (across all regions)
   vpcs() []aws.vpc
   // list of regions for the account
   regions() []string
+}
+
+// AWS account information
+aws.account {
+  // Account Id
+  id() string
+  // Account Aliases
+  aliases() []string
 }
 
 // AWS cloud service for encypted file storage
