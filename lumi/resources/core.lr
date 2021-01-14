@@ -1494,6 +1494,22 @@ aws.acm.certificate {
   subject string
 }
 
+aws.autoscaling {
+  // list of autoscaling groups across the account
+  groups() []aws.autoscaling.group
+}
+
+aws.autoscaling.group {
+  // arn for the autoscaling group
+  arn string
+  // name of the group
+  name string
+  // list of load balancer names associated with the group
+  loadBalancerNames []string
+  // health check type used by the group (ELB|EC2)
+  healthCheckType string
+}
+
 // AWS service for load balancing
 aws.elb {
   // list of classic load balancers
@@ -1935,6 +1951,19 @@ aws.ec2 {
   ebsEncryptionByDefault() map[string]bool
   // list of volumes across the aws account
   volumes() []aws.ec2.volume
+  // list of snapshots across the account
+  snapshots() []aws.ec2.snapshot
+}
+
+aws.ec2.snapshot {
+  // arn for the snapshot
+  arn string
+  // id for the snapshot
+  id string
+  // region where the snapshot exists
+  region string
+  // users/groups that have the permsfor creating volumes from the snapshot
+  createVolumePermission() []dict
 }
 
 aws.ec2.volume {
@@ -1983,6 +2012,10 @@ aws.ec2.instance {
   stateReason dict
   // reason for the most recent state transition
   stateTransitionReason string
+  // denotes whether or not instance has ebs optimization turned on
+  ebsOptimized bool
+  // instance type, e.g. t1.micro
+  instanceType string
 }
 
 aws.ec2.instance.device {
@@ -2072,6 +2105,17 @@ aws.ec2.securitygroup.ippermission {
 aws.config {
   // list of configuration recorders for each region in the account
   recorders() []aws.config.recorder
+  // list of aws config rules
+  rules() []aws.config.rule
+}
+
+aws.config.rule {
+  // ARN for the config rule
+  arn string
+  // state of the rule
+  state string
+  // rule identifier that causes function to eval resources
+  source dict
 }
 
 aws.config.recorder {

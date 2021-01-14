@@ -126,3 +126,74 @@ func (c *lumiAwsConfigRecorder) id() (string, error) {
 	}
 	return getName(name, region), nil
 }
+
+func (c *lumiAwsConfig) GetRules() ([]interface{}, error) {
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(c.getRules(), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+	return res, nil
+}
+
+func (c *lumiAwsConfig) getRules() []*jobpool.Job {
+	var tasks = make([]*jobpool.Job, 0)
+	at, err := awstransport(c.Runtime.Motor.Transport)
+	if err != nil {
+		return []*jobpool.Job{&jobpool.Job{Err: err}}
+	}
+	regions, err := at.GetRegions()
+	if err != nil {
+		return []*jobpool.Job{&jobpool.Job{Err: err}}
+	}
+
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("calling aws with region %s", regionVal)
+
+			svc := at.ConfigService(regionVal)
+			ctx := context.Background()
+			res := []interface{}{}
+
+			params := &configservice.DescribeConfigRulesInput{}
+			rules, err := svc.DescribeConfigRulesRequest(params).Send(ctx)
+			if err != nil {
+				return nil, err
+			}
+			for _, r := range rules.ConfigRules {
+				stringState, err := r.ConfigRuleState.MarshalValue()
+				if err != nil {
+					return nil, err
+				}
+				jsonSource, err := jsonToDict(r.Source)
+				if err != nil {
+					return nil, err
+				}
+				lumiRule, err := c.Runtime.CreateResource("aws.config.rule",
+					"arn", toString(r.ConfigRuleArn),
+					"state", stringState,
+					"source", jsonSource,
+				)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, lumiRule)
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (c *lumiAwsConfigRule) id() (string, error) {
+	return c.Arn()
+}
