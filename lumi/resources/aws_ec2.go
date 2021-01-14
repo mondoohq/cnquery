@@ -19,6 +19,7 @@ const (
 	ec2InstanceArnPattern   = "arn:aws:ec2:%s:%s:instance/%s"
 	securityGroupArnPattern = "arn:aws:ec2:%s:%s:security-group/%s"
 	volumeArnPattern        = "arn:aws:ec2:%s:%s:volume/%s"
+	snapshotArnPattern      = "arn:aws:ec2:%s:%s:snapshot/%s"
 )
 
 func (e *lumiAwsEc2) id() (string, error) {
@@ -71,17 +72,17 @@ func (s *lumiAwsEc2) getSecurityGroups() []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
 	at, err := awstransport(s.Runtime.Motor.Transport)
 	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
+		return []*jobpool.Job{{Err: err}} // return the error
 	}
 
 	account, err := at.Account()
 	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
+		return []*jobpool.Job{{Err: err}} // return the error
 	}
 
 	regions, err := at.GetRegions()
 	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
+		return []*jobpool.Job{{Err: err}} // return the error
 	}
 	for _, region := range regions {
 		regionVal := region
@@ -218,11 +219,11 @@ func (s *lumiAwsEc2) getEbsEncryptionPerRegion() []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
 	at, err := awstransport(s.Runtime.Motor.Transport)
 	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
+		return []*jobpool.Job{{Err: err}} // return the error
 	}
 	regions, err := at.GetRegions()
 	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
+		return []*jobpool.Job{{Err: err}} // return the error
 	}
 	for _, region := range regions {
 		regionVal := region
@@ -312,11 +313,11 @@ func (s *lumiAwsEc2) getInstances() []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
 	at, err := awstransport(s.Runtime.Motor.Transport)
 	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
+		return []*jobpool.Job{{Err: err}} // return the error
 	}
 	regions, err := at.GetRegions()
 	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
+		return []*jobpool.Job{{Err: err}} // return the error
 	}
 	for _, region := range regions {
 		regionVal := region
@@ -415,7 +416,10 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []ec2.Reservation, imdsvVersio
 			if err != nil {
 				return nil, err
 			}
-
+			instanceTypeString, err := instance.InstanceType.MarshalValue()
+			if err != nil {
+				return nil, err
+			}
 			args := []interface{}{
 				"arn", fmt.Sprintf(ec2InstanceArnPattern, regionVal, account.ID, toString(instance.InstanceId)),
 				"instanceId", toString(instance.InstanceId),
@@ -429,6 +433,8 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []ec2.Reservation, imdsvVersio
 				"publicDnsName", toString(instance.PublicDnsName),
 				"stateReason", stateReason,
 				"stateTransitionReason", toString(instance.StateTransitionReason),
+				"ebsOptimized", toBool(instance.EbsOptimized),
+				"instanceType", instanceTypeString,
 			}
 
 			// add vpc if there is one
@@ -718,4 +724,102 @@ func (s *lumiAwsEc2) getVolumes() []*jobpool.Job {
 }
 func (s *lumiAwsEc2Volume) id() (string, error) {
 	return s.Arn()
+}
+
+func (s *lumiAwsEc2Snapshot) id() (string, error) {
+	return s.Arn()
+}
+
+func (s *lumiAwsEc2) GetSnapshots() ([]interface{}, error) {
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(s.getSnapshots(), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+
+	return res, nil
+}
+
+func (s *lumiAwsEc2) getSnapshots() []*jobpool.Job {
+	var tasks = make([]*jobpool.Job, 0)
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	regions, err := at.GetRegions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	account, err := at.Account()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+
+			svc := at.Ec2(regionVal)
+			ctx := context.Background()
+			res := []interface{}{}
+
+			nextToken := aws.String("no_token_to_start_with")
+			params := &ec2.DescribeSnapshotsInput{Filters: []ec2.Filter{{Name: aws.String("owner-id"), Values: []string{account.ID}}}}
+			for nextToken != nil {
+				snapshots, err := svc.DescribeSnapshotsRequest(params).Send(ctx)
+				if err != nil {
+					return nil, err
+				}
+				for _, snapshot := range snapshots.Snapshots {
+					lumiSnap, err := s.Runtime.CreateResource("aws.ec2.snapshot",
+						"arn", fmt.Sprintf(snapshotArnPattern, regionVal, account.ID, toString(snapshot.SnapshotId)),
+						"id", toString(snapshot.SnapshotId),
+						"region", regionVal,
+					)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, lumiSnap)
+				}
+				nextToken = snapshots.NextToken
+				if snapshots.NextToken != nil {
+					params.NextToken = nextToken
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (s *lumiAwsEc2Snapshot) GetCreateVolumePermission() ([]interface{}, error) {
+	id, err := s.Id()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse instance id")
+	}
+	region, err := s.Region()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse instance region")
+	}
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.Ec2(region)
+	ctx := context.Background()
+
+	attribute, err := svc.DescribeSnapshotAttributeRequest(&ec2.DescribeSnapshotAttributeInput{SnapshotId: &id, Attribute: ec2.SnapshotAttributeNameCreateVolumePermission}).Send(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonToDictSlice(attribute.CreateVolumePermissions)
 }
