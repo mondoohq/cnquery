@@ -2,6 +2,7 @@ package aws
 
 import (
 	"context"
+	"go.mondoo.io/mondoo/lumi/library/jobpool"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -17,6 +18,13 @@ import (
 )
 
 func NewEc2Discovery(cfg aws.Config) (*Ec2Instances, error) {
+	clone := cfg.Copy()
+
+	// fallback to default region, we run things cross-region anyhow
+	if clone.Region == "" {
+		clone.Region = "us-east-1"
+	}
+
 	return &Ec2Instances{config: cfg}, nil
 }
 
@@ -29,91 +37,149 @@ func (ec2i *Ec2Instances) Name() string {
 	return "AWS EC2 Discover"
 }
 
-func (ec2i *Ec2Instances) List() ([]*asset.Asset, error) {
-	ctx := context.Background()
-	ec2svc := ec2.New(ec2i.config)
+func (ec2i *Ec2Instances) getRegions() ([]string, error) {
+	// if no cache, get regions using ec2 client (using the ssm list global regions does not give the same list)
+	regions := []string{}
 
-	identity, err := aws_transport.CheckIam(ec2i.config)
+	ec2svc := ec2.New(ec2i.config)
+	ctx := context.Background()
+
+	res, err := ec2svc.DescribeRegionsRequest(&ec2.DescribeRegionsInput{}).Send(ctx)
+	if err != nil {
+		return regions, nil
+	}
+	for _, region := range res.Regions {
+		regions = append(regions, *region.RegionName)
+	}
+	return regions, nil
+}
+
+func (ec2i *Ec2Instances) getInstances(account string) []*jobpool.Job {
+	var tasks = make([]*jobpool.Job, 0)
+
+	regions, err := ec2i.getRegions()
+	if err != nil {
+		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
+	}
+
+	for ri := range regions {
+		region := regions[ri]
+		f := func() (jobpool.JobResult, error) {
+			// get client for region
+			clonedConfig := ec2i.config.Copy()
+			clonedConfig.Region = region
+
+			// fetch instances
+			ec2svc := ec2.New(clonedConfig)
+			ctx := context.Background()
+			res := []*asset.Asset{}
+
+			log.Debug().Str("account", account).Str("region", clonedConfig.Region).Msg("fetch ec2 instances")
+			req := ec2svc.DescribeInstancesRequest(&ec2.DescribeInstancesInput{})
+			resp, err := req.Send(ctx)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to describe instances, %s", clonedConfig.Region)
+			}
+
+			// resolve all instances
+			for i := range resp.Reservations {
+				reservation := resp.Reservations[i]
+				log.Debug().Int("instances", len(reservation.Instances)).Str("region", region).Msg("found instances")
+				for j := range reservation.Instances {
+					instance := reservation.Instances[j]
+					res = append(res, instanceToAsset(account, region, instance, ec2i.InstanceSSHUsername))
+				}
+			}
+
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (ec2i *Ec2Instances) List() ([]*asset.Asset, error) {
+	identityResp, err := aws_transport.CheckIam(ec2i.config)
 	if err != nil {
 		return nil, err
 	}
 
-	account := *identity.Account
-
-	log.Debug().Str("region", ec2i.config.Region).Msg("search ec2 instances")
-	req := ec2svc.DescribeInstancesRequest(&ec2.DescribeInstancesInput{})
-	resp, err := req.Send(ctx)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to describe instances, %s", ec2i.config.Region)
-	}
+	account := *identityResp.Account
 
 	instances := []*asset.Asset{}
-	for i := range resp.Reservations {
-		reservation := resp.Reservations[i]
-		for j := range reservation.Instances {
-			instance := reservation.Instances[j]
+	poolOfJobs := jobpool.CreatePool(ec2i.getInstances(account), 5)
+	poolOfJobs.Run()
 
-			connections := []*transports.TransportConfig{}
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		instances = append(instances, poolOfJobs.Jobs[i].Result.([]*asset.Asset)...)
+	}
 
-			// add ssh and ssm run command if the transports.Connectionsm
-			// connections = append(connections, &transports.TransportConfig{
-			// 	Backend: transports.TransportConfigBackend_CONNECTION_AWS_SSM_RUN_COMMAND,
-			// 	Host:    *instance.InstanceId,
-			// })
+	return instances, nil
+}
 
-			if instance.PublicIpAddress != nil {
-				connections = append(connections, &transports.TransportConfig{
-					Backend: transports.TransportBackend_CONNECTION_SSH,
-					User:    ec2i.InstanceSSHUsername,
-					Host:    *instance.PublicIpAddress,
-				})
-			}
+func instanceToAsset(account string, region string, instance ec2.Instance, sshUsername string) *asset.Asset {
 
-			asset := &asset.Asset{
-				PlatformIDs: []string{awsec2.MondooInstanceID(account, ec2i.config.Region, *instance.InstanceId)},
-				Name:        *instance.InstanceId,
-				Platform: &platform.Platform{
-					Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
-					Runtime: transports.RUNTIME_AWS_EC2,
-				},
-				Connections: connections,
-				State:       mapEc2InstanceStateCode(instance.State),
-				Labels:      make(map[string]string),
-			}
+	connections := []*transports.TransportConfig{}
 
-			for k := range instance.Tags {
-				tag := instance.Tags[k]
-				if tag.Key != nil {
-					key := *tag.Key
-					value := ""
-					if tag.Value != nil {
-						value = *tag.Value
-					}
-					asset.Labels[key] = value
-				}
-			}
+	// add ssh and ssm run command if the transports.Connectionsm
+	// connections = append(connections, &transports.TransportConfig{
+	// 	Backend: transports.TransportConfigBackend_CONNECTION_AWS_SSM_RUN_COMMAND,
+	// 	Host:    *instance.InstanceId,
+	// })
 
-			// fetch aws specific metadata
-			asset.Labels["mondoo.app/region"] = ec2i.config.Region
-			if instance.InstanceId != nil {
-				asset.Labels["mondoo.app/instance"] = *instance.InstanceId
-			}
-			if instance.PublicDnsName != nil {
-				asset.Labels["mondoo.app/public-dns-name"] = *instance.PublicDnsName
-			}
-			if instance.PublicIpAddress != nil {
-				asset.Labels["mondoo.app/public-ip"] = *instance.PublicIpAddress
-			}
-			if instance.ImageId != nil {
-				asset.Labels["mondoo.app/ami-id"] = *instance.ImageId
-			}
+	if instance.PublicIpAddress != nil {
+		connections = append(connections, &transports.TransportConfig{
+			Backend: transports.TransportBackend_CONNECTION_SSH,
+			User:    sshUsername,
+			Host:    *instance.PublicIpAddress,
+		})
+	}
 
-			instances = append(instances, asset)
+	asset := &asset.Asset{
+		PlatformIDs: []string{awsec2.MondooInstanceID(account, region, *instance.InstanceId)},
+		Name:        *instance.InstanceId,
+		Platform: &platform.Platform{
+			Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
+			Runtime: transports.RUNTIME_AWS_EC2,
+		},
+		Connections: connections,
+		State:       mapEc2InstanceStateCode(instance.State),
+		Labels:      make(map[string]string),
+	}
+
+	for k := range instance.Tags {
+		tag := instance.Tags[k]
+		if tag.Key != nil {
+			key := *tag.Key
+			value := ""
+			if tag.Value != nil {
+				value = *tag.Value
+			}
+			asset.Labels[key] = value
 		}
 	}
 
-	log.Debug().Int("instances", len(instances)).Msg("found ec2 instances")
-	return instances, nil
+	// fetch aws specific metadata
+	asset.Labels["mondoo.app/region"] = region
+	if instance.InstanceId != nil {
+		asset.Labels["mondoo.app/instance"] = *instance.InstanceId
+	}
+	if instance.PublicDnsName != nil {
+		asset.Labels["mondoo.app/public-dns-name"] = *instance.PublicDnsName
+	}
+	if instance.PublicIpAddress != nil {
+		asset.Labels["mondoo.app/public-ip"] = *instance.PublicIpAddress
+	}
+	if instance.ImageId != nil {
+		asset.Labels["mondoo.app/ami-id"] = *instance.ImageId
+	}
+
+	return asset
 }
 
 type awsec2id struct {
