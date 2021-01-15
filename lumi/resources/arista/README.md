@@ -21,6 +21,34 @@ https://www.youtube.com/watch?v=QEmHqHpeoZM
 ssh -p 2221 admin@localhost
 ```
 
+Cancel zerotouch
+
+```
+localhost login:admin
+localhost>zerotouch cancel
+```
+
+Configure IP for management
+
+```
+config
+interface ma1
+ip address dhcp
+dhcp client accept default-route
+end
+
+show run int ma1
+show int ma1
+```
+
+Configure user with password
+
+```
+en
+config
+username admin secret x245
+```
+
 Enable the eosAPI
 
 ```
@@ -42,6 +70,26 @@ Switch# configure terminal
   HTTP server:        running, set to use port 80
   Local HTTP server:  shutdown, no authentication, set to use port 8080
   Unix Socket server: shutdown, no authentication
+```
+
+Enable password:
+
+```
+en
+config
+enable password xyrt1
+// deletes the enable password
+no enable password 
+```
+
+see https://www.arista.com/en/um-eos/eos-user-security
+
+
+Enter bash mode
+
+```
+switch#conf t
+switch(config)#bash sudo su -
 ```
 
 understanding eapi
