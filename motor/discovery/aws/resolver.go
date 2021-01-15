@@ -56,15 +56,25 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 	// parse context from url
 	config := ParseAwsContext(url)
 
-	t := &transports.TransportConfig{
-		Backend: transports.TransportBackend_CONNECTION_AWS,
-		Options: map[string]string{
-			"profile": config.Profile,
-			"region":  config.Region,
-		},
+	options := map[string]string{
+		"profile": config.Profile,
+		"region":  config.Region,
 	}
 
-	return t, nil
+	if config.User != "" {
+		options["ec2user"] = config.User
+	}
+
+	tc := &transports.TransportConfig{
+		Backend: transports.TransportBackend_CONNECTION_AWS,
+		Options: options,
+	}
+
+	for i := range opts {
+		opts[i](tc)
+	}
+
+	return tc, nil
 }
 
 func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
@@ -104,22 +114,23 @@ func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error
 	// discover ec2 instances
 	DiscoverInstances := true
 	if DiscoverInstances {
-		// TODO: rewrite ec2 discovery to use the aws transport
 		r, err := NewEc2Discovery(trans.Config())
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize aws ec2 discovery")
 		}
 
 		// we may want to pass a specific user, otherwise it will fallback to ssh config
-		if len(t.User) > 0 {
-			r.InstanceSSHUsername = t.User
+		ec2User, ok := t.Options["ec2user"]
+		if ok {
+			r.InstanceSSHUsername = ec2User
 		}
+		r.Insecure = t.Insecure
 
 		assetList, err := r.List()
 		if err != nil {
 			return nil, errors.Wrap(err, "could not fetch ec2 instances")
 		}
-		log.Debug().Int("instances", len(assetList)).Msg("completed instance search")
+		log.Debug().Int("instances", len(assetList)).Bool("insecure", r.Insecure).Msg("completed instance search")
 		for i := range assetList {
 			log.Debug().Str("name", assetList[i].Name).Msg("resolved ec2 instance")
 			if assetList[i].State != asset.State_STATE_RUNNING {

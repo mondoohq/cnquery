@@ -55,14 +55,20 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 	// parse context from url
 	config := ParseK8SContext(url)
 
-	return &transports.TransportConfig{
+	tc := &transports.TransportConfig{
 		// TODO: we need to set the backend here
 		Options: map[string]string{
 			"context":   config.Context,
 			"namespace": config.Namespace,
 			"pod":       config.Pod,
 		},
-	}, nil
+	}
+
+	for i := range opts {
+		opts[i](tc)
+	}
+
+	return tc, nil
 }
 
 func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {

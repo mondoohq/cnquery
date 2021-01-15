@@ -17,14 +17,14 @@ func (r *Resolver) Name() string {
 func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
 	repository := strings.TrimPrefix(url, "cr://")
 
-	t := &transports.TransportConfig{
+	tc := &transports.TransportConfig{
 		Host: repository,
 	}
 
 	for i := range opts {
-		opts[i](t)
+		opts[i](tc)
 	}
-	return t, nil
+	return tc, nil
 }
 
 func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {

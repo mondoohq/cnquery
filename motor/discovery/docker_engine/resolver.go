@@ -56,12 +56,16 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 		return nil, errors.New("could not find the container reference")
 	}
 
-	t := &transports.TransportConfig{
+	tc := &transports.TransportConfig{
 		Backend: transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE,
 		Host:    strings.Replace(url, "docker://", "", 1),
 	}
 
-	return t, nil
+	for i := range opts {
+		opts[i](tc)
+	}
+
+	return tc, nil
 }
 
 func (k *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {

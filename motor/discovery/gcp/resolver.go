@@ -47,10 +47,16 @@ func (r *GcrResolver) Name() string {
 
 func (r *GcrResolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
 	repository := strings.TrimPrefix(url, "gcr://")
-	return &transports.TransportConfig{
+	tc := &transports.TransportConfig{
 		Backend: transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY,
 		Host:    repository,
-	}, nil
+	}
+
+	for i := range opts {
+		opts[i](tc)
+	}
+
+	return tc, nil
 }
 
 func (r *GcrResolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
