@@ -57,6 +57,8 @@ func (d *Detector) Platform() (*Platform, error) {
 
 		return &Platform{
 			Name:    "arista-eos",
+			Title:   "Arista EOS",
+			Arch:    v.Architecture,
 			Release: v.Version,
 			Kind:    d.transport.Kind(),
 			Runtime: d.transport.Runtime(),
@@ -64,30 +66,35 @@ func (d *Detector) Platform() (*Platform, error) {
 	case *aws.Transport:
 		return &Platform{
 			Name:    "aws",
+			Title:   "Amazon Web Services",
 			Kind:    transports.Kind_KIND_API,
 			Runtime: transports.RUNTIME_AWS,
 		}, nil
 	case *gcp.Transport:
 		return &Platform{
 			Name:    "gcp",
+			Title:   "Google Cloud Platform",
 			Kind:    transports.Kind_KIND_API,
 			Runtime: transports.RUNTIME_AWS,
 		}, nil
 	case *azure.Transport:
 		return &Platform{
 			Name:    "azure",
+			Title:   "Microsoft Azure",
 			Kind:    transports.Kind_KIND_API,
 			Runtime: transports.RUNTIME_AZ,
 		}, nil
 	case *ms365.Transport:
 		return &Platform{
 			Name:    "microsoft365",
+			Title:   "Microsoft 365",
 			Kind:    transports.Kind_KIND_API,
 			Runtime: transports.RUNTIME_MICROSOFT_GRAPH,
 		}, nil
 	case *ipmi.Transport:
 		return &Platform{
 			Name:    "ipmi",
+			Title:   "Ipmi",
 			Kind:    d.transport.Kind(),
 			Runtime: d.transport.Runtime(),
 		}, nil
