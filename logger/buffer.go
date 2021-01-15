@@ -22,6 +22,9 @@ func (bw *BufferedWriter) Pause() {
 }
 
 func (bw *BufferedWriter) Resume() {
+	if bw.paused == false {
+		return
+	}
 	bw.paused = false
 	bw.out.Write(bw.buf.Bytes())
 	bw.buf = bytes.Buffer{}
