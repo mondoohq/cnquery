@@ -46,3 +46,28 @@ func TestResultConversion(t *testing.T) {
 	assert.Equal(t, rawResult.CodeID, convertedRawResult.CodeID)
 
 }
+
+func TestErrorConversion(t *testing.T) {
+	// test error conversion
+	rawData := StringPrimitive("hello").RawData()
+	rawData.Error = errors.New("cannot do x")
+	rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
+
+	convertedRawResult := rawResult.Result().RawResult()
+	assert.Equal(t, rawResult.Data.Type, convertedRawResult.Data.Type)
+	assert.Equal(t, rawResult.Data.Value, convertedRawResult.Data.Value)
+	assert.Equal(t, rawResult.Data.Error, convertedRawResult.Data.Error)
+	assert.Equal(t, rawResult.CodeID, convertedRawResult.CodeID)
+}
+
+func TestDictConversion(t *testing.T) {
+	rawData := &RawData{
+		Type:  types.Dict,
+		Value: "hello",
+	}
+	rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
+
+	convertedRawResult := rawResult.Result().RawResult()
+	assert.Equal(t, rawResult.Data.Type, convertedRawResult.Data.Type)
+	assert.Equal(t, rawResult.Data.Value, convertedRawResult.Data.Value)
+}

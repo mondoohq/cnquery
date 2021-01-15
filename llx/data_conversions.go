@@ -1,12 +1,14 @@
 package llx
 
 import (
+	"encoding/hex"
 	"errors"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/proto"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/types"
 )
@@ -55,6 +57,72 @@ func init() {
 	}
 }
 
+func dict2primitive(value interface{}) (*Primitive, error) {
+	if value == nil {
+		return nil, nil
+	}
+
+	switch x := value.(type) {
+	case bool:
+		return BoolPrimitive(x), nil
+	case int64:
+		return IntPrimitive(x), nil
+	case float64:
+		return FloatPrimitive(x), nil
+	case string:
+		return StringPrimitive(x), nil
+	case []interface{}:
+		res := make([]*Primitive, len(x))
+		var err error
+		for i := range x {
+			res[i], err = dict2primitive(x[i])
+			if err != nil {
+				return nil, err
+			}
+		}
+		return &Primitive{Type: types.Array(types.Dict), Array: res}, nil
+
+	case map[string]interface{}:
+		res := make(map[string]*Primitive, len(x))
+		var err error
+		for k, v := range x {
+			res[k], err = dict2primitive(v)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return &Primitive{Type: types.Map(types.String, types.Dict), Map: res}, nil
+
+	default:
+		return nil, errors.New("failed to convert dict to primitive, unsupported child type: " + reflect.TypeOf(x).String())
+	}
+}
+
+func primitive2dict(p *Primitive) (interface{}, error) {
+	switch p.Type.Underlying() {
+	case types.Nil:
+		return nil, nil
+	case types.Bool:
+		return bytes2bool(p.Value), nil
+	case types.Int:
+		return bytes2int(p.Value), nil
+	case types.Float:
+		return bytes2float(p.Value), nil
+	case types.String:
+		return string(p.Value), nil
+	case types.ArrayLike:
+		d, _, err := args2resourceargs(nil, 0, p.Array)
+		return d, err
+	case types.MapLike:
+		m, err := primitive2map(p.Map)
+		return m, err
+	default:
+		hexType := make([]byte, hex.EncodedLen(len(p.Type)))
+		hex.Encode(hexType, []byte(p.Type))
+		return nil, errors.New("unknown type to convert dict primitive back to raw data (" + string(hexType) + ")")
+	}
+}
+
 func unset2result(value interface{}, typ types.Type) (*Primitive, error) {
 	return UnsetPrimitive, nil
 }
@@ -92,47 +160,21 @@ func time2result(value interface{}, typ types.Type) (*Primitive, error) {
 }
 
 func dict2result(value interface{}, typ types.Type) (*Primitive, error) {
-	if value == nil {
-		return NilPrimitive, nil
+	prim, err := dict2primitive(value)
+	if err != nil {
+		return nil, err
 	}
 
-	switch x := value.(type) {
-	case bool:
-		return BoolPrimitive(x), nil
-	case int64:
-		return IntPrimitive(x), nil
-	case float64:
-		return FloatPrimitive(x), nil
-	case string:
-		return StringPrimitive(x), nil
-	case []interface{}:
-		res := make([]*Primitive, len(x))
-		var err error
-		for i := range x {
-			res[i], err = dict2result(x[i], typ)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		return &Primitive{Type: types.Array(types.Dict), Array: res}, nil
-	case map[string]interface{}:
-		res := make(map[string]*Primitive, len(x))
-		var err error
-		for k, v := range x {
-			res[k], err = dict2result(v, typ)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		return &Primitive{Type: types.Map(types.String, types.Dict), Map: res}, nil
-
-	default:
-		return &Primitive{
-			Type: types.Dict,
-		}, errors.New("failed to convert dict to primitive, unsupported child type: " + reflect.TypeOf(x).String())
+	if prim == nil {
+		return &Primitive{Type: types.Dict}, nil
 	}
+
+	raw, err := proto.Marshal(prim)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Primitive{Type: types.Dict, Value: raw}, nil
 }
 
 func score2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -320,31 +362,18 @@ func ptime2raw(p *Primitive) *RawData {
 }
 
 func pdict2raw(p *Primitive) *RawData {
-	if p.Value == nil && p.Map == nil && p.Array == nil {
-		return NilData
+	if p.Value == nil {
+		return &RawData{Type: types.Dict}
 	}
 
-	if p.Map != nil {
-		res := make(map[string]interface{}, len(p.Map))
-		for k, v := range p.Map {
-			res[k] = pdict2raw(v).Value
-		}
-		return &RawData{Value: res, Error: nil, Type: types.Map(types.String, types.Dict)}
+	res := Primitive{}
+	err := proto.Unmarshal(p.Value, &res)
+	if err != nil {
+		return &RawData{Error: err, Type: types.Dict}
 	}
 
-	if p.Array != nil {
-		res := make([]interface{}, len(p.Array))
-		for i := range p.Array {
-			res[i] = pdict2raw(p.Array[i]).Value
-		}
-		return &RawData{Value: res, Error: nil, Type: types.Array(types.Dict)}
-	}
-
-	// FIXME: we can't figure out what the real data is that is embedded if the primitive is dict
-	return &RawData{
-		Error: errors.New("failed to convert dict to raw, unsupported child type"),
-		Type:  types.Dict,
-	}
+	raw, err := primitive2dict(&res)
+	return &RawData{Error: err, Type: types.Dict, Value: raw}
 }
 
 func pscore2raw(p *Primitive) *RawData {
