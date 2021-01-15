@@ -34,17 +34,6 @@ func TestResultConversion(t *testing.T) {
 		reResult := rawResult.Result()
 		assert.Equal(t, result, reResult)
 	}
-
-	// test error conversion
-	rawData := StringPrimitive("hello").RawData()
-	rawData.Error = errors.New("cannot do x")
-	rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
-
-	convertedRawResult := rawResult.Result().RawResult()
-	assert.Equal(t, rawResult.Data.Value, convertedRawResult.Data.Value)
-	assert.Equal(t, rawResult.Data.Error, convertedRawResult.Data.Error)
-	assert.Equal(t, rawResult.CodeID, convertedRawResult.CodeID)
-
 }
 
 func TestErrorConversion(t *testing.T) {
