@@ -65,13 +65,19 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 	}
 
 	// add azure api as asset
-	return &transports.TransportConfig{
+	tc := &transports.TransportConfig{
 		Backend: transports.TransportBackend_CONNECTION_AZURE,
 		Options: map[string]string{
 			"subscriptionID": config.SubscriptionID,
 			"user":           config.User,
 		},
-	}, nil
+	}
+
+	for i := range opts {
+		opts[i](tc)
+	}
+
+	return tc, nil
 }
 
 func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {

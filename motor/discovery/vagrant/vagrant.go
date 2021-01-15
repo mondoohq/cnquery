@@ -25,9 +25,15 @@ type vagrantContext struct {
 
 func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
 	host := strings.TrimPrefix(url, "vagrant://")
-	return &transports.TransportConfig{
+	tc := &transports.TransportConfig{
 		Host: host,
-	}, nil
+	}
+
+	for i := range opts {
+		opts[i](tc)
+	}
+
+	return tc, nil
 }
 
 func (v *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {

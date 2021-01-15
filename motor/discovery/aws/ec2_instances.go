@@ -31,6 +31,7 @@ func NewEc2Discovery(cfg aws.Config) (*Ec2Instances, error) {
 type Ec2Instances struct {
 	config              aws.Config
 	InstanceSSHUsername string
+	Insecure            bool
 }
 
 func (ec2i *Ec2Instances) Name() string {
@@ -87,7 +88,7 @@ func (ec2i *Ec2Instances) getInstances(account string) []*jobpool.Job {
 				log.Debug().Int("instances", len(reservation.Instances)).Str("region", region).Msg("found instances")
 				for j := range reservation.Instances {
 					instance := reservation.Instances[j]
-					res = append(res, instanceToAsset(account, region, instance, ec2i.InstanceSSHUsername))
+					res = append(res, instanceToAsset(account, region, instance, ec2i.InstanceSSHUsername, ec2i.Insecure))
 				}
 			}
 
@@ -122,7 +123,7 @@ func (ec2i *Ec2Instances) List() ([]*asset.Asset, error) {
 	return instances, nil
 }
 
-func instanceToAsset(account string, region string, instance ec2.Instance, sshUsername string) *asset.Asset {
+func instanceToAsset(account string, region string, instance ec2.Instance, sshUsername string, insecure bool) *asset.Asset {
 
 	connections := []*transports.TransportConfig{}
 
@@ -134,9 +135,10 @@ func instanceToAsset(account string, region string, instance ec2.Instance, sshUs
 
 	if instance.PublicIpAddress != nil {
 		connections = append(connections, &transports.TransportConfig{
-			Backend: transports.TransportBackend_CONNECTION_SSH,
-			User:    sshUsername,
-			Host:    *instance.PublicIpAddress,
+			Backend:  transports.TransportBackend_CONNECTION_SSH,
+			User:     sshUsername,
+			Host:     *instance.PublicIpAddress,
+			Insecure: insecure,
 		})
 	}
 
