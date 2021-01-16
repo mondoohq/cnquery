@@ -23,7 +23,7 @@ var Debug bool
 func init() {
 	Set("debug")
 	// uses cli logger by default
-	CliNoColorLogger(LogOutputWriter)
+	CliCompactLogger(LogOutputWriter)
 }
 
 // SetWriter configures a log writer for the global logger
@@ -38,16 +38,11 @@ func UseJSONLogging(out io.Writer) {
 
 // CliLogger sets the global logger to the console logger with color
 func CliLogger() {
-	log.Logger = NewConsoleWriter(LogOutputWriter, false, false)
+	log.Logger = NewConsoleWriter(LogOutputWriter, false)
 }
 
 func CliCompactLogger(out io.Writer) {
-	log.Logger = NewConsoleWriter(out, false, true)
-}
-
-// CliNoColorLogger sets the global logger to the console logger without color
-func CliNoColorLogger(out io.Writer) {
-	log.Logger = NewConsoleWriter(out, true, false)
+	log.Logger = NewConsoleWriter(out, true)
 }
 
 // Set will set up the logger

@@ -2,71 +2,66 @@ package logger
 
 import (
 	"fmt"
+	"github.com/muesli/termenv"
+	"go.mondoo.io/mondoo/cli/theme/colors"
 	"io"
-	"runtime"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
-func NewConsoleWriter(out io.Writer, nocolor bool, compact bool) zerolog.Logger {
-	w := zerolog.ConsoleWriter{Out: out, NoColor: nocolor}
+func NewConsoleWriter(out io.Writer, compact bool) zerolog.Logger {
+	w := zerolog.ConsoleWriter{Out: out}
 
 	if compact {
-		w.FormatLevel = consoleFormatLevel(w.NoColor)
+		w.FormatLevel = consoleFormatLevel()
 		w.FormatTimestamp = func(i interface{}) string { return "" }
 	}
 
 	return log.Output(w)
 }
 
-func consoleFormatLevel(noColor bool) zerolog.Formatter {
-
-	errorIcon := "✗"
-	// support ansi cmd on windows
-	// TODO: detect if we have a utf console
-	if runtime.GOOS == "windows" {
-		errorIcon = "x"
-	}
+func consoleFormatLevel() zerolog.Formatter {
 
 	return func(i interface{}) string {
 		var l string
+		var color termenv.Color
+
 		if ll, ok := i.(string); ok {
 			switch ll {
 			case "trace":
-				l = colorize("TRC", color.FgMagenta, noColor)
+				l = "TRC"
+				color = colors.DefaultColorTheme.Secondary
 			case "debug":
-				l = colorize("DBG", color.FgHiYellow, noColor)
+				l = "DBG"
+				color = colors.DefaultColorTheme.Primary
 			case "info":
-				l = colorize("→", color.FgCyan, noColor)
+				l = "→"
+				color = colors.DefaultColorTheme.Good
 			case "warn":
-				l = colorize(errorIcon, color.FgHiYellow, noColor)
+				l = "!"
+				color = colors.DefaultColorTheme.Medium
 			case "error":
-				l = colorize(colorize(errorIcon, color.FgRed, noColor), color.Bold, noColor)
+				l = "x"
+				color = colors.DefaultColorTheme.Error
 			case "fatal":
-				l = colorize(colorize("FTL", color.FgRed, noColor), color.Bold, noColor)
+				l = "FTL"
+				color = colors.DefaultColorTheme.Error
 			case "panic":
-				l = colorize(colorize("PNC", color.FgRed, noColor), color.Bold, noColor)
+				l = "PNC"
+				color = colors.DefaultColorTheme.Error
 			default:
-				l = colorize("???", color.Bold, noColor)
+				l = "???"
 			}
 		} else {
 			if i == nil {
-				l = colorize("???", color.Bold, noColor)
+				l = "???"
 			} else {
 				l = strings.ToUpper(fmt.Sprintf("%s", i))[0:3]
 			}
 		}
-		return l
-	}
-}
 
-// colorize returns the string s wrapped in ANSI code c, unless disabled is true.
-func colorize(s interface{}, c color.Attribute, disabled bool) string {
-	if disabled {
-		return fmt.Sprintf("%s", s)
+		return termenv.String(l).Foreground(color).String()
 	}
-	return color.New(c).Sprintf("%v", s)
 }
