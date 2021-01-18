@@ -1470,6 +1470,8 @@ aws.es.domain {
   name string
   // endpoint used to submit index and search reqs
   endpoint string
+  // region where the domain exists
+  region string
 }
 
 // AWS service for managing public and private SSL/TLS certificates
@@ -1492,6 +1494,8 @@ aws.acm.certificate {
   status string
   // name of entity associated with pubkey in cert
   subject string
+  // retrieves an Amazon-issued certificate and its certificate chain
+  certificate() certificate
 }
 
 aws.autoscaling {
@@ -1524,7 +1528,7 @@ aws.elb.loadbalancer {
   // dns name for the load balancer
   dnsName string
   // list of listener configurations for the load balancer
-  listenerDescriptions []dict
+  listenerDescriptions() []dict
   // user specified name for the load balancer
   name string
   // scheme for the lb (internet-facing vs. internal)
@@ -1599,14 +1603,12 @@ aws.cloudtrail.trail {
   snsTopicARN string
   // JSON list of information about the trail
   status() dict
-  // ARN of log group to which trail files will be delivered
-  cloudWatchLogsLogGroupArn string
+  // log group to which trail files will be delivered
+  logGroup aws.cloudwatch.loggroup
   // role for logs endpoint to assume when writing to log group
   cloudWatchLogsRoleArn string
   // settings for the trail's configured event selectors
   eventSelectors() []dict
-  // a list of log groups associated with the group name from cloudWatchLogsLogGroupArn
-  logGroup() aws.cloudwatch.loggroup
   // region in which the trail was created (home region)
   region string
 }

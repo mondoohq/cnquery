@@ -137,18 +137,12 @@ func (e *lumiAwsElb) getLoadBalancers() []*jobpool.Job {
 					return nil, err
 				}
 				for _, lb := range lbs.LoadBalancers {
-					listeners, err := svc.DescribeListenersRequest(&elasticloadbalancingv2.DescribeListenersInput{LoadBalancerArn: lb.LoadBalancerArn}).Send(ctx)
-					jsonListeners, err := jsonToDictSlice(listeners.Listeners)
-					if err != nil {
-						return nil, err
-					}
 					stringScheme, err := lb.Scheme.MarshalValue()
 					if err != nil {
 						return nil, err
 					}
 					lumiLb, err := e.Runtime.CreateResource("aws.elb.loadbalancer",
 						"arn", toString(lb.LoadBalancerArn),
-						"listenerDescriptions", jsonListeners,
 						"dnsName", toString(lb.DNSName),
 						"name", toString(lb.LoadBalancerName),
 						"scheme", stringScheme,
@@ -168,4 +162,27 @@ func (e *lumiAwsElb) getLoadBalancers() []*jobpool.Job {
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func (e *lumiAwsElbLoadbalancer) GetListenerDescriptions() ([]interface{}, error) {
+	at, err := awstransport(e.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	arn, err := e.Arn()
+	if err != nil {
+		return nil, err
+	}
+	region, err := getRegionFromArn(arn)
+	if err != nil {
+		return nil, err
+	}
+	svc := at.Elbv2(region)
+	ctx := context.Background()
+	listeners, err := svc.DescribeListenersRequest(&elasticloadbalancingv2.DescribeListenersInput{LoadBalancerArn: &arn}).Send(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return jsonToDictSlice(listeners.Listeners)
+
 }
