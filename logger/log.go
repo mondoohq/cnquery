@@ -8,23 +8,16 @@ import (
 	"io"
 	"os"
 
-	"github.com/mattn/go-colorable"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
 // we use colorable to support color output on windows
 // we buffer it by default, so that tui components can interrupt cli logger
-var LogOutputWriter = NewBufferedWriter(colorable.NewColorable(os.Stderr))
+var LogOutputWriter = NewBufferedWriter(os.Stderr)
 
 // Debug is set to true if the application is running in a debug mode
 var Debug bool
-
-func init() {
-	Set("debug")
-	// uses cli logger by default
-	CliCompactLogger(LogOutputWriter)
-}
 
 // SetWriter configures a log writer for the global logger
 func SetWriter(w io.Writer) {
