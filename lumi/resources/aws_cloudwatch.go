@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 )
 
@@ -125,11 +126,11 @@ func (t *lumiAwsCloudwatch) getLogGroups() []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
 	at, err := awstransport(t.Runtime.Motor.Transport)
 	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}}
+		return []*jobpool.Job{{Err: err}}
 	}
 	regions, err := at.GetRegions()
 	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}}
+		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
 		regionVal := region
@@ -180,6 +181,40 @@ func (t *lumiAwsCloudwatch) getLogGroups() []*jobpool.Job {
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func (c *lumiAwsCloudwatchLoggroup) init(args *lumi.Args) (*lumi.Args, AwsCloudwatchLoggroup, error) {
+	if len(*args) > 1 {
+		return args, nil, nil
+	}
+
+	if (*args)["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch cloudwatch log group")
+	}
+
+	obj, err := c.Runtime.CreateResource("aws.cloudwatch")
+	if err != nil {
+		return nil, nil, err
+	}
+	cloudwatch := obj.(AwsCloudwatch)
+
+	rawResources, err := cloudwatch.LogGroups()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	arnVal := (*args)["arn"].(string)
+	for i := range rawResources {
+		loggroup := rawResources[i].(AwsCloudwatchLoggroup)
+		lumiLgArn, err := loggroup.Arn()
+		if err != nil {
+			return nil, nil, errors.New("cloudwatch log group does not exist")
+		}
+		if lumiLgArn == arnVal {
+			return args, loggroup, nil
+		}
+	}
+	return nil, nil, errors.New("cloudwatch log group does not exist")
 }
 
 func (s *lumiAwsCloudwatchLoggroup) GetKmsKey() (interface{}, error) {

@@ -2,8 +2,10 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
+	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 )
 
@@ -52,16 +54,11 @@ func (e *lumiAwsEs) getDomains() []*jobpool.Job {
 			}
 
 			for _, domain := range domains.DomainNames {
-				domainDetails, err := svc.DescribeElasticsearchDomainRequest(&elasticsearchservice.DescribeElasticsearchDomainInput{DomainName: domain.DomainName}).Send(ctx)
-				if err != nil {
-					return nil, err
-				}
+				// note: the api returns name and region here, so we just use that.
+				// the arn is not returned until we get to the describe call
 				lumiDomain, err := e.Runtime.CreateResource("aws.es.domain",
-					"arn", toString(domainDetails.DomainStatus.ARN),
-					"encryptionAtRestEnabled", toBool(domainDetails.DomainStatus.EncryptionAtRestOptions.Enabled),
-					"nodeToNodeEncryptionEnabled", toBool(domainDetails.DomainStatus.NodeToNodeEncryptionOptions.Enabled),
-					"endpoint", toString(domainDetails.DomainStatus.Endpoint),
-					"name", toString(domainDetails.DomainStatus.DomainName),
+					"name", toString(domain.DomainName),
+					"region", regionVal,
 				)
 				if err != nil {
 					return nil, err
@@ -73,6 +70,35 @@ func (e *lumiAwsEs) getDomains() []*jobpool.Job {
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func (a *lumiAwsEsDomain) init(args *lumi.Args) (*lumi.Args, AwsEsDomain, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if (*args)["name"] == nil || (*args)["region"] == nil {
+		return nil, nil, errors.New("name and region required to fetch es domain")
+	}
+
+	name := (*args)["name"].(string)
+	region := (*args)["region"].(string)
+	at, err := awstransport(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, nil, err
+	}
+	svc := at.Es(region)
+	ctx := context.Background()
+	domainDetails, err := svc.DescribeElasticsearchDomainRequest(&elasticsearchservice.DescribeElasticsearchDomainInput{DomainName: &name}).Send(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["encryptionAtRestEnabled"] = toBool(domainDetails.DomainStatus.EncryptionAtRestOptions.Enabled)
+	(*args)["nodeToNodeEncryptionEnabled"] = toBool(domainDetails.DomainStatus.NodeToNodeEncryptionOptions.Enabled)
+	(*args)["endpoint"] = toString(domainDetails.DomainStatus.Endpoint)
+	(*args)["arn"] = toString(domainDetails.DomainStatus.ARN)
+	return args, nil, nil
 }
 
 func (e *lumiAwsEsDomain) id() (string, error) {

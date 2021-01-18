@@ -3,6 +3,7 @@ package resources
 import (
 	"errors"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"go.mondoo.io/mondoo/motor/transports"
 	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
@@ -61,4 +62,12 @@ func toInt(i *int) int64 {
 		return int64(0)
 	}
 	return int64(*i)
+}
+
+func getRegionFromArn(arnVal string) (string, error) {
+	parsedArn, err := arn.Parse(arnVal)
+	if err != nil {
+		return "", err
+	}
+	return parsedArn.Region, nil
 }

@@ -32,11 +32,11 @@ func (c *lumiAwsConfig) getRecorders() []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
 	at, err := awstransport(c.Runtime.Motor.Transport)
 	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}}
+		return []*jobpool.Job{{Err: err}}
 	}
 	regions, err := at.GetRegions()
 	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}}
+		return []*jobpool.Job{{Err: err}}
 	}
 
 	for _, region := range regions {

@@ -2,11 +2,8 @@ package resources
 
 import (
 	"context"
-	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
-	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
@@ -36,11 +33,11 @@ func (t *lumiAwsCloudtrail) getTrails() []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
 	at, err := awstransport(t.Runtime.Motor.Transport)
 	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}}
+		return []*jobpool.Job{{Err: err}}
 	}
 	regions, err := at.GetRegions()
 	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}}
+		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
 		regionVal := region
@@ -86,9 +83,6 @@ func (t *lumiAwsCloudtrail) getTrails() []*jobpool.Job {
 					"includeGlobalServiceEvents", toBool(trail.IncludeGlobalServiceEvents),
 					"s3bucket", s3Bucket,
 					"snsTopicARN", toString(trail.SnsTopicARN),
-					// TODO: link to log group
-					"cloudWatchLogsLogGroupArn", toString(trail.CloudWatchLogsLogGroupArn),
-					// TODO: link to watch logs grou
 					"cloudWatchLogsRoleArn", toString(trail.CloudWatchLogsRoleArn),
 					"region", toString(trail.HomeRegion),
 				}
@@ -103,6 +97,15 @@ func (t *lumiAwsCloudtrail) getTrails() []*jobpool.Job {
 					}
 					lumiKey := lumiKeyResource.(AwsKmsKey)
 					args = append(args, "kmsKey", lumiKey)
+				}
+				if trail.CloudWatchLogsLogGroupArn != nil {
+					lumiLoggroup, err := t.Runtime.CreateResource("aws.cloudwatch.loggroup",
+						"arn", toString(trail.CloudWatchLogsLogGroupArn),
+					)
+					if err != nil {
+						return nil, err
+					}
+					args = append(args, "logGroup", lumiLoggroup)
 				}
 
 				lumiAwsCloudtrailTrail, err := t.Runtime.CreateResource("aws.cloudtrail.trail", args...)
@@ -155,56 +158,6 @@ func (t *lumiAwsCloudtrailTrail) GetStatus() (interface{}, error) {
 	}
 
 	return jsonToDict(trailstatus)
-}
-
-func (t *lumiAwsCloudtrailTrail) GetLogGroup() (interface{}, error) {
-	arnValue, err := t.CloudWatchLogsLogGroupArn()
-	if err != nil {
-		return nil, err
-	}
-
-	if err != nil || len(arnValue) < 6 {
-		return nil, errors.Wrap(err, "unable to parse cloud watch log group arn")
-	}
-	// arn:aws:logs:<region>:<aws_account_number>:log-group:GROUPVAL:*
-	logGroupArn := strings.Split(arnValue, ":")
-	groupName := logGroupArn[6]
-	region := logGroupArn[3]
-
-	at, err := awstransport(t.Runtime.Motor.Transport)
-	if err != nil {
-		return nil, err
-	}
-	svc := at.CloudwatchLogs(region)
-	ctx := context.Background()
-
-	nextToken := aws.String("no_token_to_start_with")
-	params := &cloudwatchlogs.DescribeLogGroupsInput{
-		LogGroupNamePrefix: &groupName,
-	}
-	for nextToken != nil {
-		logGroups, err := svc.DescribeLogGroupsRequest(params).Send(ctx)
-		if err != nil {
-			return nil, errors.Wrap(err, "could not gather aws cloudwatch log groups")
-		}
-		nextToken = logGroups.NextToken
-		if logGroups.NextToken != nil {
-			params.NextToken = nextToken
-		}
-		for _, loggroup := range logGroups.LogGroups {
-			if toString(loggroup.Arn) == arnValue {
-				lumiLogGroup, err := t.Runtime.CreateResource("aws.cloudwatch.loggroup",
-					"arn", toString(loggroup.Arn),
-					"name", toString(loggroup.LogGroupName),
-				)
-				if err != nil {
-					return nil, err
-				}
-				return lumiLogGroup, nil
-			}
-		}
-	}
-	return nil, errors.New("unable to find matching log group")
 }
 
 func (t *lumiAwsCloudtrailTrail) GetEventSelectors() (interface{}, error) {

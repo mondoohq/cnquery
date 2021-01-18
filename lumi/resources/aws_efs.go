@@ -38,11 +38,11 @@ func (e *lumiAwsEfs) getFilesystems() []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
 	at, err := awstransport(e.Runtime.Motor.Transport)
 	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
+		return []*jobpool.Job{{Err: err}} // return the error
 	}
 	regions, err := at.GetRegions()
 	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
+		return []*jobpool.Job{{Err: err}} // return the error
 	}
 	for _, region := range regions {
 		regionVal := region

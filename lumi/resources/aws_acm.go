@@ -2,10 +2,14 @@ package resources
 
 import (
 	"context"
+	"errors"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
+	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/lumi/resources/certificates"
 )
 
 func (a *lumiAwsAcm) id() (string, error) {
@@ -56,22 +60,8 @@ func (a *lumiAwsAcm) getCertificates() []*jobpool.Job {
 					return nil, err
 				}
 				for _, cert := range certs.CertificateSummaryList {
-					certDetails, err := svc.DescribeCertificateRequest(&acm.DescribeCertificateInput{CertificateArn: cert.CertificateArn}).Send(ctx)
-					if err != nil {
-						return nil, err
-					}
-					stringStatus, err := certDetails.Certificate.Status.MarshalValue()
-					if err != nil {
-						return nil, err
-					}
 					lumiCert, err := a.Runtime.CreateResource("aws.acm.certificate",
-						"arn", toString(certDetails.Certificate.CertificateArn),
-						"notBefore", certDetails.Certificate.NotBefore,
-						"notAfter", certDetails.Certificate.NotAfter,
-						"createdAt", certDetails.Certificate.CreatedAt,
-						"domainName", toString(certDetails.Certificate.DomainName),
-						"status", stringStatus,
-						"subject", toString(certDetails.Certificate.Subject),
+						"arn", toString(cert.CertificateArn),
 					)
 					if err != nil {
 						return nil, err
@@ -90,6 +80,80 @@ func (a *lumiAwsAcm) getCertificates() []*jobpool.Job {
 	return tasks
 }
 
-func (e *lumiAwsAcmCertificate) id() (string, error) {
-	return e.Arn()
+func (a *lumiAwsAcmCertificate) id() (string, error) {
+	return a.Arn()
+}
+
+func (a *lumiAwsAcmCertificate) init(args *lumi.Args) (*lumi.Args, AwsAcmCertificate, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if (*args)["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch aws acm certificate")
+	}
+
+	arnVal := (*args)["arn"].(string)
+	region, err := getRegionFromArn(arnVal)
+	if err != nil {
+		return args, nil, nil
+	}
+	at, err := awstransport(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, nil, err
+	}
+	svc := at.Acm(region)
+	ctx := context.Background()
+	certDetails, err := svc.DescribeCertificateRequest(&acm.DescribeCertificateInput{CertificateArn: &arnVal}).Send(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	stringStatus, err := certDetails.Certificate.Status.MarshalValue()
+	if err != nil {
+		return nil, nil, err
+	}
+	(*args)["arn"] = arnVal
+	(*args)["notBefore"] = certDetails.Certificate.NotBefore
+	(*args)["notAfter"] = certDetails.Certificate.NotAfter
+	(*args)["createdAt"] = certDetails.Certificate.CreatedAt
+	(*args)["domainName"] = toString(certDetails.Certificate.DomainName)
+	(*args)["status"] = stringStatus
+	(*args)["subject"] = toString(certDetails.Certificate.Subject)
+	return args, nil, nil
+}
+
+func (a *lumiAwsAcmCertificate) GetCertificate() (interface{}, error) {
+	certArn, err := a.Arn()
+	if err != nil {
+		return false, err
+	}
+	region, err := getRegionFromArn(certArn)
+	if err != nil {
+		return false, err
+	}
+	at, err := awstransport(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	svc := at.Acm(region)
+	ctx := context.Background()
+	cert, err := svc.GetCertificateRequest(&acm.GetCertificateInput{CertificateArn: &certArn}).Send(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if cert.Certificate == nil {
+		return nil, nil
+	}
+	parsedCert, err := certificates.ParseCertFromPEM(strings.NewReader(toString(cert.Certificate)))
+	if err != nil {
+		return nil, err
+	}
+	lumiCerts, err := certificatesToLumiCertificates(a.Runtime, parsedCert)
+	if err != nil {
+		return nil, err
+	}
+	if len(lumiCerts) == 1 {
+		return lumiCerts[0], nil
+	}
+	return nil, nil
 }
