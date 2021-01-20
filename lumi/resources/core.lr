@@ -1319,6 +1319,8 @@ aws.iam.user {
   policies() []string
   // list of managed policies attached to the user
   attachedPolicies() []aws.iam.policy
+  // list of group ARNs that the user belongs to
+  groups() []string
 }
 
 aws.iam.policy {
@@ -1389,6 +1391,8 @@ aws.iam.group {
   name string
   // time when the group was created
   createDate time
+  // list of usernames that belong to the group
+  usernames []string
 }
 
 aws.iam.virtualmfadevice {
