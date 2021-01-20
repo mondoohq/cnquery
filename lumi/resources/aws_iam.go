@@ -463,9 +463,7 @@ func (c *lumiAwsIam) GetGroups() ([]interface{}, error) {
 
 			lumiAwsIamGroup, err := c.Runtime.CreateResource("aws.iam.group",
 				"arn", toString(grp.Arn),
-				"id", toString(grp.GroupId),
 				"name", toString(grp.GroupName),
-				"createDate", grp.CreateDate,
 			)
 			if err != nil {
 				return nil, err
@@ -1335,12 +1333,17 @@ func (p *lumiAwsIamGroup) init(args *lumi.Args) (*lumi.Args, AwsIamGroup, error)
 		if err != nil {
 			return nil, nil, err
 		}
+		usernames := []interface{}{}
+		for _, user := range resp.Users {
+			usernames = append(usernames, toString(user.UserName))
+		}
 
 		grp := resp.Group
 		(*args)["arn"] = toString(grp.Arn)
 		(*args)["id"] = toString(grp.GroupId)
 		(*args)["name"] = toString(grp.GroupName)
 		(*args)["createDate"] = grp.CreateDate
+		(*args)["usernames"] = usernames
 
 		return args, nil, nil
 	}
@@ -1350,10 +1353,48 @@ func (p *lumiAwsIamGroup) init(args *lumi.Args) (*lumi.Args, AwsIamGroup, error)
 	(*args)["id"] = ""
 	(*args)["name"] = ""
 	(*args)["createDate"] = &time.Time{}
+	(*args)["usernames"] = []interface{}{}
 
 	return args, nil, nil
 }
 
 func (u *lumiAwsIamGroup) id() (string, error) {
 	return u.Arn()
+}
+
+func (u *lumiAwsIamUser) GetGroups() ([]interface{}, error) {
+	at, err := awstransport(u.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.Iam("")
+	ctx := context.Background()
+
+	username, err := u.Name()
+	if err != nil {
+		return nil, err
+	}
+
+	var marker *string
+	res := []interface{}{}
+	for {
+		userGroups, err := svc.ListGroupsForUserRequest(&iam.ListGroupsForUserInput{
+			UserName: &username,
+			Marker:   marker,
+		}).Send(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for i := range userGroups.Groups {
+			res = append(res, toString(userGroups.Groups[i].GroupName))
+		}
+		if userGroups.IsTruncated == nil || *userGroups.IsTruncated == false {
+			break
+		}
+		marker = userGroups.Marker
+	}
+
+	return res, nil
 }
