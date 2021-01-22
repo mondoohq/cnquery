@@ -44,7 +44,7 @@ type compiler struct {
 }
 
 func (c *compiler) newBlockCompiler(code *llx.Code, binding *binding) compiler {
-	return compiler{
+	res := compiler{
 		Schema: c.Schema,
 		Result: &llx.CodeBundle{
 			Code:   code,
@@ -57,6 +57,17 @@ func (c *compiler) newBlockCompiler(code *llx.Code, binding *binding) compiler {
 		props:      c.props,
 		standalone: true,
 	}
+
+	for k, v := range c.vars {
+		chunk := c.Result.Code.Code[int(v.ref)-1]
+		res.Result.Code.AddChunk(chunk)
+		res.vars[k] = variable{
+			ref: res.Result.Code.ChunkIndex(),
+			typ: v.typ,
+		}
+	}
+
+	return res
 }
 
 func addResourceSuggestions(resources map[string]*lumi.ResourceInfo, name string, res *llx.CodeBundle) {

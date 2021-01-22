@@ -331,6 +331,9 @@ func TestCompiler_Assignment(t *testing.T) {
 		assertPrimitive(t, llx.RefPrimitive(1), res.Code.Code[1])
 		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
 	})
+	compile(t, "v = 'one'; users.one(name == v)", func(res *llx.CodeBundle) {
+		assertPrimitive(t, llx.StringPrimitive("one"), res.Code.Code[0])
+	})
 }
 
 func TestCompiler_Props(t *testing.T) {
