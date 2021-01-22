@@ -1261,6 +1261,10 @@ func TestCompiler_Error(t *testing.T) {
 		// assert.Nil(t, res)
 		assert.EqualError(t, err, "failed to compile: cannot find resource for identifier 'enabled'")
 	})
+	t.Run("missing operator + block call type errors", func(t *testing.T) {
+		_, err := Compile("sshd.config.params { _ == 123 }", schema, nil)
+		assert.EqualError(t, err, "cannot find operator handler: map[string]string == int")
+	})
 }
 
 func TestCompiler_Multiline(t *testing.T) {
