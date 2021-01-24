@@ -1945,6 +1945,13 @@ func timeSeconds(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 		return &RawData{Type: types.Array(types.Time)}, 0, nil
 	}
 
+	if *t == NeverPastTime {
+		return MinIntPrimitive.RawData(), 0, nil
+	}
+	if *t == NeverFutureTime {
+		return MaxIntPrimitive.RawData(), 0, nil
+	}
+
 	raw := TimeToDuration(t)
 	return IntData(int64(raw)), 0, nil
 }
@@ -1953,6 +1960,13 @@ func timeMinutes(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	t := bind.Value.(*time.Time)
 	if t == nil {
 		return &RawData{Type: types.Array(types.Time)}, 0, nil
+	}
+
+	if *t == NeverPastTime {
+		return MinIntPrimitive.RawData(), 0, nil
+	}
+	if *t == NeverFutureTime {
+		return MaxIntPrimitive.RawData(), 0, nil
 	}
 
 	raw := TimeToDuration(t) / 60
@@ -1965,6 +1979,13 @@ func timeHours(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDa
 		return &RawData{Type: types.Array(types.Time)}, 0, nil
 	}
 
+	if *t == NeverPastTime {
+		return MinIntPrimitive.RawData(), 0, nil
+	}
+	if *t == NeverFutureTime {
+		return MaxIntPrimitive.RawData(), 0, nil
+	}
+
 	raw := TimeToDuration(t) / (60 * 60)
 	return IntData(int64(raw)), 0, nil
 }
@@ -1973,6 +1994,13 @@ func timeDays(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDat
 	t := bind.Value.(*time.Time)
 	if t == nil {
 		return &RawData{Type: types.Array(types.Time)}, 0, nil
+	}
+
+	if *t == NeverPastTime {
+		return MinIntPrimitive.RawData(), 0, nil
+	}
+	if *t == NeverFutureTime {
+		return MaxIntPrimitive.RawData(), 0, nil
 	}
 
 	raw := TimeToDuration(t) / (60 * 60 * 24)
