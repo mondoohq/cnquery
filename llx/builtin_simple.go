@@ -260,56 +260,56 @@ func timeNotTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 // int arithmetic
 
 func intPlusInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOp(c, bind, chunk, ref, types.Int, func(left interface{}, right interface{}) *RawData {
 		res := left.(int64) + right.(int64)
 		return IntData(res)
 	})
 }
 
 func intMinusInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOp(c, bind, chunk, ref, types.Int, func(left interface{}, right interface{}) *RawData {
 		res := left.(int64) - right.(int64)
 		return IntData(res)
 	})
 }
 
 func intTimesInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOp(c, bind, chunk, ref, types.Int, func(left interface{}, right interface{}) *RawData {
 		res := left.(int64) * right.(int64)
 		return IntData(res)
 	})
 }
 
 func intDividedInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOp(c, bind, chunk, ref, types.Int, func(left interface{}, right interface{}) *RawData {
 		res := left.(int64) / right.(int64)
 		return IntData(res)
 	})
 }
 
 func intPlusFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := float64(left.(int64)) + right.(float64)
 		return FloatData(res)
 	})
 }
 
 func intMinusFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := float64(left.(int64)) - right.(float64)
 		return FloatData(res)
 	})
 }
 
 func intTimesFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := float64(left.(int64)) * right.(float64)
 		return FloatData(res)
 	})
 }
 
 func intDividedFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := float64(left.(int64)) / right.(float64)
 		return FloatData(res)
 	})
@@ -318,56 +318,56 @@ func intDividedFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (
 // float arithmetic
 
 func floatPlusInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := left.(float64) + float64(right.(int64))
 		return FloatData(res)
 	})
 }
 
 func floatMinusInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := left.(float64) - float64(right.(int64))
 		return FloatData(res)
 	})
 }
 
 func floatTimesInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := left.(float64) * float64(right.(int64))
 		return FloatData(res)
 	})
 }
 
 func floatDividedInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := left.(float64) / float64(right.(int64))
 		return FloatData(res)
 	})
 }
 
 func floatPlusFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := left.(float64) + right.(float64)
 		return FloatData(res)
 	})
 }
 
 func floatMinusFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := left.(float64) - right.(float64)
 		return FloatData(res)
 	})
 }
 
 func floatTimesFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := left.(float64) * right.(float64)
 		return FloatData(res)
 	})
 }
 
 func floatDividedFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := left.(float64) / right.(float64)
 		return FloatData(res)
 	})
