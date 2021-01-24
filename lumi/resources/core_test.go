@@ -604,11 +604,6 @@ func TestString_Methods(t *testing.T) {
 	})
 }
 
-func duration(i int64) *time.Time {
-	res := llx.DurationToTime(i)
-	return &res
-}
-
 func TestScore_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
@@ -641,6 +636,11 @@ func TestTypeof_Methods(t *testing.T) {
 			0, "int",
 		},
 	})
+}
+
+func duration(i int64) *time.Time {
+	res := llx.DurationToTime(i)
+	return &res
 }
 
 func TestTime_Methods(t *testing.T) {
@@ -704,6 +704,22 @@ func TestTime_Methods(t *testing.T) {
 		{
 			"time.now != Never",
 			2, true,
+		},
+		{
+			"time.now - Never",
+			0, &llx.NeverPastTime,
+		},
+		{
+			"Never - time.now",
+			0, &llx.NeverFutureTime,
+		},
+		{
+			"Never - Never",
+			0, &llx.NeverPastTime,
+		},
+		{
+			"Never * 3",
+			0, &llx.NeverFutureTime,
 		},
 	})
 }
