@@ -2,6 +2,7 @@ package llx
 
 import (
 	"encoding/binary"
+	"math"
 	"time"
 
 	"go.mondoo.io/mondoo/types"
@@ -19,6 +20,18 @@ func BoolPrimitive(v bool) *Primitive {
 		Type:  types.Bool,
 		Value: bool2bytes(v),
 	}
+}
+
+// MaxIntPrimitive is the largest integer possible
+var MaxIntPrimitive = &Primitive{
+	Type:  types.Int,
+	Value: int2bytes(math.MaxInt64),
+}
+
+// MinIntPrimitive is the smallest integer possible
+var MinIntPrimitive = &Primitive{
+	Type:  types.Int,
+	Value: int2bytes(math.MinInt64),
 }
 
 // IntPrimitive creates a primitive from an int value

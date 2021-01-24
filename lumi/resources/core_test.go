@@ -1,6 +1,7 @@
 package resources_test
 
 import (
+	"math"
 	"strconv"
 	"testing"
 	"time"
@@ -720,6 +721,10 @@ func TestTime_Methods(t *testing.T) {
 		{
 			"Never * 3",
 			0, &llx.NeverFutureTime,
+		},
+		{
+			"a = Never - time.now; a.days",
+			0, int64(math.MaxInt64),
 		},
 	})
 }
