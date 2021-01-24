@@ -65,6 +65,20 @@ var alpine = &PlatformResolver{
 	Name:    "alpine",
 	Familiy: false,
 	Detect: func(p *PlatformResolver, di *Platform, t transports.Transport) (bool, error) {
+		// check if we are on edge
+		osrd := NewOSReleaseDetector(t)
+		osr, err := osrd.osrelease()
+		if err != nil {
+			return false, nil
+		}
+
+		if osr["PRETTY_NAME"] == "Alpine Linux edge" {
+			di.Name = "alpine"
+			di.Release = "edge"
+			di.Build = osr["VERSION_ID"]
+		}
+
+		// if we are on alpine, the release was detected properly from parent check
 		if di.Name == "alpine" {
 			return true, nil
 		}
