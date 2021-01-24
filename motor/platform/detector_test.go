@@ -562,6 +562,20 @@ func TestAlpineLinuxDetector(t *testing.T) {
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
 
+func TestAlpineEdgeLinuxDetector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-alpine-edge.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	di, err := detector.Platform()
+	require.NoError(t, err)
+
+	assert.Equal(t, "alpine", di.Name, "os name should be identified")
+	assert.Equal(t, "Alpine Linux", di.Title, "os title should be identified")
+	assert.Equal(t, "edge", di.Release, "os version should be identified")
+	assert.Equal(t, "3.13.0_alpha20201218", di.Build, "os build should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
 func TestBusyboxLinuxDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-busybox.toml")
 	assert.Nil(t, err, "was able to create the transport")
