@@ -2,6 +2,7 @@ package resources
 
 import (
 	"errors"
+	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/vadvisor"
 	"time"
 
@@ -47,6 +48,7 @@ func (p *lumiPlatformEol) init(args *lumi.Args) (*lumi.Args, PlatformEol, error)
 		return nil, nil, err
 	}
 
+	// gather system infomation
 	platform := obj.(Platform)
 
 	name, _ := platform.Name()
@@ -63,15 +65,22 @@ func (p *lumiPlatformEol) init(args *lumi.Args) (*lumi.Args, PlatformEol, error)
 		return nil, nil, errors.New("no platform eol information available")
 	}
 
-	eolDate, err := time.Parse(time.RFC3339, platformEolInfo.EolDate)
-	if err != nil {
-		return nil, nil, err
+	var eolDate *time.Time
+
+	if platformEolInfo.EolDate != "" {
+		parsedEolDate, err := time.Parse(time.RFC3339, platformEolInfo.EolDate)
+		if err != nil {
+			return nil, nil, errors.New("could not parse eol date: " + platformEolInfo.EolDate)
+		}
+		eolDate = &parsedEolDate
+	} else {
+		eolDate = &llx.NeverFutureTime
 	}
 
 	// if the package cannot be found, we init it as an empty package
 	(*args)["docsUrl"] = platformEolInfo.DocsUrl
 	(*args)["productUrl"] = platformEolInfo.ProductUrl
-	(*args)["date"] = &eolDate
+	(*args)["date"] = eolDate
 
 	return args, nil, nil
 }
