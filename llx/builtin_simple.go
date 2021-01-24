@@ -805,6 +805,19 @@ func timeMinusTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 			return &RawData{Type: types.Time}
 		}
 
+		if *r == NeverPastTime {
+			return NeverFuturePrimitive.RawData()
+		}
+		if *r == NeverFutureTime {
+			return NeverPastPrimitive.RawData()
+		}
+		if *l == NeverPastTime {
+			return NeverPastPrimitive.RawData()
+		}
+		if *l == NeverFutureTime {
+			return NeverFuturePrimitive.RawData()
+		}
+
 		diff := l.Unix() - r.Unix()
 		res := DurationToTime(diff)
 		return TimeData(res)
@@ -818,6 +831,13 @@ func timeTimesInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 			return &RawData{Type: types.Time}
 		}
 
+		if *l == NeverPastTime {
+			return NeverPastPrimitive.RawData()
+		}
+		if *l == NeverFutureTime {
+			return NeverFuturePrimitive.RawData()
+		}
+
 		diff := TimeToDuration(l) * right.(int64)
 		res := DurationToTime(diff)
 		return TimeData(res)
@@ -829,6 +849,13 @@ func intTimesTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 		r := right.(*time.Time)
 		if r == nil {
 			return &RawData{Type: types.Time}
+		}
+
+		if *r == NeverPastTime {
+			return NeverPastPrimitive.RawData()
+		}
+		if *r == NeverFutureTime {
+			return NeverFuturePrimitive.RawData()
 		}
 
 		diff := left.(int64) * TimeToDuration(r)
