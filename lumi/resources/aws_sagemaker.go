@@ -164,7 +164,7 @@ func (s *lumiAwsSagemaker) getNotebookInstances() []*jobpool.Job {
 	return tasks
 }
 
-func (s *lumiAwsSagemakerNotebookinstance) GetKmsKey() (interface{}, error) {
+func (s *lumiAwsSagemakerNotebookinstance) GetDetails() (interface{}, error) {
 	name, err := s.Name()
 	if err != nil {
 		return nil, err
@@ -183,16 +183,26 @@ func (s *lumiAwsSagemakerNotebookinstance) GetKmsKey() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	if instanceDetails.KmsKeyId == nil {
-		return nil, nil
-	}
 	lumiKeyResource, err := s.Runtime.CreateResource("aws.kms.key",
 		"arn", toString(instanceDetails.KmsKeyId),
 	)
 	if err != nil {
 		return nil, err
 	}
-	return lumiKeyResource, nil
+	directAccessString, err := instanceDetails.DirectInternetAccess.MarshalValue()
+	if err != nil {
+		return nil, err
+	}
+	lumiInstanceDetails, err := s.Runtime.CreateResource("aws.sagemaker.notebookinstance.details",
+		"arn", toString(instanceDetails.NotebookInstanceArn),
+		"kmsKey", lumiKeyResource,
+		"directInternetAccess", directAccessString,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+	return lumiInstanceDetails, nil
 }
 
 func (s *lumiAwsSagemakerEndpoint) id() (string, error) {
@@ -200,5 +210,9 @@ func (s *lumiAwsSagemakerEndpoint) id() (string, error) {
 }
 
 func (s *lumiAwsSagemakerNotebookinstance) id() (string, error) {
+	return s.Arn()
+}
+
+func (s *lumiAwsSagemakerNotebookinstanceDetails) id() (string, error) {
 	return s.Arn()
 }

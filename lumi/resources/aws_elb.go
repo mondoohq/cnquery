@@ -186,3 +186,25 @@ func (e *lumiAwsElbLoadbalancer) GetListenerDescriptions() ([]interface{}, error
 	return jsonToDictSlice(listeners.Listeners)
 
 }
+
+func (e *lumiAwsElbLoadbalancer) GetAttributes() ([]interface{}, error) {
+	at, err := awstransport(e.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	arn, err := e.Arn()
+	if err != nil {
+		return nil, err
+	}
+	region, err := getRegionFromArn(arn)
+	if err != nil {
+		return nil, err
+	}
+	svc := at.Elbv2(region)
+	ctx := context.Background()
+	attributes, err := svc.DescribeLoadBalancerAttributesRequest(&elasticloadbalancingv2.DescribeLoadBalancerAttributesInput{LoadBalancerArn: &arn}).Send(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return jsonToDictSlice(attributes.Attributes)
+}
