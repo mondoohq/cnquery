@@ -1417,10 +1417,19 @@ aws.sagemaker.notebookinstance {
   arn string
   // name of the notebook instance
   name string
-  // KMS key used to encrypt data
-  kmsKey() aws.kms.key
+  // details about the notebook 
+  details() aws.sagemaker.notebookinstance.details
   // region where the notebook instance exists
   region string
+}
+
+aws.sagemaker.notebookinstance.details {
+  // ARN for the notebook instance
+  arn string
+  // KMS key used to encrypt data
+  kmsKey aws.kms.key
+  // denotes whether SageMaker provides internet access to the instance
+  directInternetAccess string
 }
 
 aws.sagemaker.endpoint {
@@ -1537,25 +1546,112 @@ aws.elb.loadbalancer {
   name string
   // scheme for the lb (internet-facing vs. internal)
   scheme string
+  // a list of attributes for the load balancer
+  attributes() []dict
 }
+
+// AWS managed CI service for building and testing code 
+aws.codebuild {
+  // list of build projects
+  projects() []aws.codebuild.project
+}
+
+// AWS service for threat detection 
+aws.guardduty {
+  // list of guardduty detectors
+  detectors() []aws.guardduty.detector
+}
+
+aws.guardduty.detector {
+  // unique id for the detector
+  id string
+  // region for the detector
+  region string
+  // status of the detector (ENABLED|DISABLED)
+  status string
+  // publishing frequency for the detector
+  findingPublishingFrequency string
+  // list of unarchivedFindings found by the detector
+  unarchivedFindings() []dict
+}
+
+// AWS service for large data processing 
+aws.emr {
+  // list of emr clusters
+  clusters() []aws.emr.cluster
+}
+
+aws.emr.cluster {
+  // ARN for the cluster
+  arn string
+  // name of the cluster
+  name string
+  // an approximation of the cost of the cluster, represented in m1.small/hours
+  normalizedInstanceHours int
+  // ARN of outpost where cluster is launched
+  outpostArn string
+  // details about the current status of the cluster
+  status dict
+}
+
+aws.codebuild.project {
+  // ARN for the project
+  arn string
+  // description of the project
+  description string
+  // name of the project
+  name string
+  // build environment information about the project
+  environment dict
+  // region where the project exists
+  region string
+  // source used for the build project
+  source dict
+}
+
 
 // aws service that provides observability of AWS resources and applications
 aws.cloudwatch {
   // list of cloudwatch log groups
   logGroups() []aws.cloudwatch.loggroup
+  // list of cloudwatch alarms
+  alarms() []aws.cloudwatch.metricsalarm
+  // list of cloudwatch metrics
+  metrics() []aws.cloudwatch.metric
 }
 
 aws.cloudwatch.metricsalarm {
-  // unique id for metric alarm
-  id string
+  // arn for the metric alarm
+  arn string
   // metric name associated with the alarm
   metricName string
   // metric namespace associated with the alarm
   metricNamespace string
   // region where the alarm exists
   region string
-  // list of sns topic ARNs associated with the alarm
-  snsTopics() []aws.sns.topic
+  // list of alarm actions (sns topic ARNs) associated with the alarm
+  actions []aws.sns.topic
+  // state of the alarm
+  state string
+  // description of the reason for the state
+  stateReason string
+  // list of snsTopic ARNs to be triggered for insufficientDataActions
+  insufficientDataActions []aws.sns.topic
+  // list of snsTopic ARNs to be triggered for okActions
+  okActions []aws.sns.topic
+  // name of the alarm
+  name string
+}
+
+aws.cloudwatch.metric {
+  // name of the metric
+  name string
+  // namespace for the metric
+  namespace string
+  // region where the metric exists
+  region string
+  // list of cloudwatch metric alarms for the metric
+  alarms() []aws.cloudwatch.metricsalarm
 }
 
 aws.cloudwatch.loggroup {
@@ -1576,8 +1672,8 @@ aws.cloudwatch.loggroup.metricsfilter {
   filterName string
   // filter pattern associated with the metric
   filterPattern string
-  // list of metric alarms
-  metricAlarms []aws.cloudwatch.metricsalarm 
+  // list of cloudwatch metrics
+  metrics []aws.cloudwatch.metric
 }
 
 // aws service that enables risk auditing of your AWS account
@@ -1959,6 +2055,17 @@ aws.ec2 {
   volumes() []aws.ec2.volume
   // list of snapshots across the account
   snapshots() []aws.ec2.snapshot
+  // list of internet gateways
+  internetGateways() []aws.ec2.internetgateway
+}
+
+aws.ec2.internetgateway {
+  // ARN for the gateway
+  arn string
+  // id for the gateway
+  id string
+  // 
+  attachments []dict
 }
 
 aws.ec2.snapshot {

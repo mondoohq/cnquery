@@ -14,16 +14,82 @@ import (
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 )
 
+const (
+	cloudwatchAlarmArnPattern = "arn:aws:cloudwatch:%s:%s:metricalarm/%s/%s"
+)
+
 func (t *lumiAwsCloudwatch) id() (string, error) {
 	return "aws.cloudwatch", nil
 }
+func (t *lumiAwsCloudwatch) GetMetrics() ([]interface{}, error) {
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(t.getMetrics(), 5)
+	poolOfJobs.Run()
 
-func (t *lumiAwsCloudwatchMetricsalarm) GetSnsTopics() ([]interface{}, error) {
-	metricName, err := t.MetricName()
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+	return res, nil
+}
+func (t *lumiAwsCloudwatch) getMetrics() []*jobpool.Job {
+	var tasks = make([]*jobpool.Job, 0)
+	at, err := awstransport(t.Runtime.Motor.Transport)
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	regions, err := at.GetRegions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+
+			svc := at.Cloudwatch(regionVal)
+			ctx := context.Background()
+
+			res := []interface{}{}
+			nextToken := aws.String("no_token_to_start_with")
+			params := &cloudwatch.ListMetricsInput{}
+			for nextToken != nil {
+				metrics, err := svc.ListMetricsRequest(params).Send(ctx)
+				if err != nil {
+					return nil, err
+				}
+				for _, metric := range metrics.Metrics {
+					lumiMetric, err := t.Runtime.CreateResource("aws.cloudwatch.metric",
+						"name", toString(metric.MetricName),
+						"namespace", toString(metric.Namespace),
+						"region", regionVal,
+					)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, lumiMetric)
+				}
+				nextToken = metrics.NextToken
+				if metrics.NextToken != nil {
+					params.NextToken = nextToken
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+func (t *lumiAwsCloudwatchMetric) GetAlarms() ([]interface{}, error) {
+	metricName, err := t.Name()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to parse metric name")
 	}
-	namespace, err := t.MetricNamespace()
+	namespace, err := t.Namespace()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to parse metric namespace")
 	}
@@ -48,20 +114,129 @@ func (t *lumiAwsCloudwatchMetricsalarm) GetSnsTopics() ([]interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "could not gather aws cloudwatch alarms")
 	}
-	lumiActions := []interface{}{}
+	res := []interface{}{}
 	for _, alarm := range alarmsResp.MetricAlarms {
-		for _, action := range alarm.AlarmActions {
-			lumiAlarmAction, err := t.Runtime.CreateResource("aws.sns.topic",
-				"arn", action,
-				"region", regionVal,
-			)
-			if err != nil {
-				return nil, err
-			}
-			lumiActions = append(lumiActions, lumiAlarmAction)
+		lumiAlarm, err := t.Runtime.CreateResource("aws.cloudwatch.metricsalarm",
+			"arn", toString(alarm.AlarmArn),
+		)
+		if err != nil {
+			return nil, err
 		}
+		res = append(res, lumiAlarm)
 	}
-	return lumiActions, nil
+	return res, nil
+}
+
+func (t *lumiAwsCloudwatch) GetAlarms() ([]interface{}, error) {
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(t.getAlarms(), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+	return res, nil
+}
+func (t *lumiAwsCloudwatch) getAlarms() []*jobpool.Job {
+	var tasks = make([]*jobpool.Job, 0)
+	at, err := awstransport(t.Runtime.Motor.Transport)
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	regions, err := at.GetRegions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+
+			svc := at.Cloudwatch(regionVal)
+			ctx := context.Background()
+
+			res := []interface{}{}
+			nextToken := aws.String("no_token_to_start_with")
+			params := &cloudwatch.DescribeAlarmsInput{}
+			for nextToken != nil {
+
+				alarms, err := svc.DescribeAlarmsRequest(params).Send(ctx)
+				if err != nil {
+					return nil, err
+				}
+
+				for _, alarm := range alarms.MetricAlarms {
+					stringState, err := alarm.StateValue.MarshalValue()
+					if err != nil {
+						return nil, err
+					}
+					actions := []interface{}{}
+					for _, action := range alarm.AlarmActions {
+						lumiAlarmAction, err := t.Runtime.CreateResource("aws.sns.topic",
+							"arn", action,
+							"region", regionVal,
+						)
+						if err != nil {
+							return nil, err
+						}
+						actions = append(actions, lumiAlarmAction)
+					}
+					insuffActions := []interface{}{}
+					for _, action := range alarm.InsufficientDataActions {
+						lumiInsuffAction, err := t.Runtime.CreateResource("aws.sns.topic",
+							"arn", action,
+							"region", regionVal,
+						)
+						if err != nil {
+							return nil, err
+						}
+						insuffActions = append(insuffActions, lumiInsuffAction)
+					}
+
+					okActions := []interface{}{}
+					for _, action := range alarm.OKActions {
+						lumiokAction, err := t.Runtime.CreateResource("aws.sns.topic",
+							"arn", action,
+							"region", regionVal,
+						)
+						if err != nil {
+							return nil, err
+						}
+						okActions = append(okActions, lumiokAction)
+					}
+
+					lumiAlarm, err := t.Runtime.CreateResource("aws.cloudwatch.metricsalarm",
+						"arn", toString(alarm.AlarmArn),
+						"metricName", toString(alarm.MetricName),
+						"metricNamespace", toString(alarm.Namespace),
+						"region", regionVal,
+						"state", stringState,
+						"stateReason", toString(alarm.StateReason),
+						"insufficientDataActions", insuffActions,
+						"okActions", okActions,
+						"name", toString(alarm.AlarmName),
+						"actions", actions,
+					)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, lumiAlarm)
+				}
+				nextToken = alarms.NextToken
+				if alarms.NextToken != nil {
+					params.NextToken = nextToken
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
 }
 
 func (t *lumiAwsSnsTopic) GetSubscriptions() ([]interface{}, error) {
@@ -256,24 +431,23 @@ func (t *lumiAwsCloudwatchLoggroup) GetMetricsFilters() ([]interface{}, error) {
 			params.NextToken = nextToken
 		}
 		for _, m := range metricsResp.MetricFilters {
-			lumiCloudwatchAlarms := []interface{}{}
+			lumiCloudwatchMetrics := []interface{}{}
 			for _, mt := range m.MetricTransformations {
-				lumiAwsAlarm, err := t.Runtime.CreateResource("aws.cloudwatch.metricsalarm",
-					"id", groupName+"/"+region+"/"+toString(mt.MetricNamespace)+"/"+toString(mt.MetricName),
-					"metricName", toString(mt.MetricName),
-					"metricNamespace", toString(mt.MetricNamespace),
+				lumiAwsMetric, err := t.Runtime.CreateResource("aws.cloudwatch.metric",
+					"name", toString(mt.MetricName),
+					"namespace", toString(mt.MetricNamespace),
 					"region", region,
 				)
 				if err != nil {
 					return nil, err
 				}
-				lumiCloudwatchAlarms = append(lumiCloudwatchAlarms, lumiAwsAlarm)
+				lumiCloudwatchMetrics = append(lumiCloudwatchMetrics, lumiAwsMetric)
 			}
 			lumiAwsLogGroupMetricFilters, err := t.Runtime.CreateResource("aws.cloudwatch.loggroup.metricsfilter",
 				"id", groupName+"/"+region+"/"+toString(m.FilterName),
 				"filterName", toString(m.FilterName),
 				"filterPattern", toString(m.FilterPattern),
-				"metricAlarms", lumiCloudwatchAlarms,
+				"metrics", lumiCloudwatchMetrics,
 			)
 			if err != nil {
 				return nil, err
@@ -293,5 +467,57 @@ func (t *lumiAwsCloudwatchLoggroupMetricsfilter) id() (string, error) {
 }
 
 func (t *lumiAwsCloudwatchMetricsalarm) id() (string, error) {
-	return t.Id()
+	return t.Arn()
+}
+
+func (t *lumiAwsCloudwatchMetric) id() (string, error) {
+	region, err := t.Region()
+	if err != nil {
+		return "", err
+	}
+	name, err := t.Name()
+	if err != nil {
+		return "", err
+	}
+	namespace, err := t.Namespace()
+	if err != nil {
+		return "", err
+	}
+
+	return region + "/" + namespace + "/" + name, nil
+}
+
+func (t *lumiAwsCloudwatchMetricsalarm) init(args *lumi.Args) (*lumi.Args, AwsCloudwatchMetricsalarm, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if (*args)["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch aws cloudwatch metrics alarm")
+	}
+
+	// load all cloudwatch metrics alarm
+	obj, err := t.Runtime.CreateResource("aws.cloudwatch")
+	if err != nil {
+		return nil, nil, err
+	}
+	aws := obj.(AwsCloudwatch)
+
+	rawResources, err := aws.Alarms()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	arnVal := (*args)["arn"].(string)
+	for i := range rawResources {
+		alarm := rawResources[i].(AwsCloudwatchMetricsalarm)
+		lumiAlarmArn, err := alarm.Arn()
+		if err != nil {
+			return nil, nil, errors.New("cloudwatch alarm does not exist")
+		}
+		if lumiAlarmArn == arnVal {
+			return args, alarm, nil
+		}
+	}
+	return nil, nil, errors.New("cloudwatch alarm does not exist")
 }

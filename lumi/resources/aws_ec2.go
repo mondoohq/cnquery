@@ -20,6 +20,7 @@ const (
 	securityGroupArnPattern = "arn:aws:ec2:%s:%s:security-group/%s"
 	volumeArnPattern        = "arn:aws:ec2:%s:%s:volume/%s"
 	snapshotArnPattern      = "arn:aws:ec2:%s:%s:snapshot/%s"
+	internetGwArnPattern    = "arn:aws:ec2:%s:%s:gateway/%s"
 )
 
 func (e *lumiAwsEc2) id() (string, error) {
@@ -822,4 +823,72 @@ func (s *lumiAwsEc2Snapshot) GetCreateVolumePermission() ([]interface{}, error) 
 	}
 
 	return jsonToDictSlice(attribute.CreateVolumePermissions)
+}
+
+func (s *lumiAwsEc2) GetInternetGateways() ([]interface{}, error) {
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(s.getInternetGateways(), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+	return res, nil
+}
+func (s *lumiAwsEc2) getInternetGateways() []*jobpool.Job {
+	var tasks = make([]*jobpool.Job, 0)
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	regions, err := at.GetRegions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+
+			svc := at.Ec2(regionVal)
+			ctx := context.Background()
+			params := &ec2.DescribeInternetGatewaysInput{}
+			res := []interface{}{}
+			nextToken := aws.String("no_token_to_start_with")
+			for nextToken != nil {
+				internetGws, err := svc.DescribeInternetGatewaysRequest(params).Send(ctx)
+				if err != nil {
+					return nil, err
+				}
+				for _, gateway := range internetGws.InternetGateways {
+					jsonAttachments, err := jsonToDictSlice(gateway.Attachments)
+					if err != nil {
+						return nil, err
+					}
+					lumiInternetGw, err := s.Runtime.CreateResource("aws.ec2.internetgateway",
+						"arn", fmt.Sprintf(internetGwArnPattern, regionVal, toString(gateway.OwnerId), toString(gateway.InternetGatewayId)),
+						"id", toString(gateway.InternetGatewayId),
+						"attachments", jsonAttachments,
+					)
+					res = append(res, lumiInternetGw)
+				}
+
+				nextToken = internetGws.NextToken
+				if internetGws.NextToken != nil {
+					params.NextToken = nextToken
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (s *lumiAwsEc2Internetgateway) id() (string, error) {
+	return s.Arn()
 }
