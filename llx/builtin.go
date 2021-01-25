@@ -642,9 +642,6 @@ func runResourceFunction(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int3
 }
 
 // BuiltinFunction provides the handler for this type's function
-// Note: Do NOT call this function with underlying types only!!
-// It uses underlying types to do the lookup. If you throw an underlying type
-// in it will cause a panic downstream.
 func BuiltinFunction(typ types.Type, name string) (*chunkHandler, error) {
 	h, ok := BuiltinFunctions[typ.Underlying()]
 	if !ok {
