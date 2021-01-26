@@ -2,6 +2,8 @@ package leise
 
 import (
 	"errors"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 	"strconv"
 
 	"go.mondoo.io/mondoo/llx"
@@ -121,7 +123,20 @@ func createLabel(code *llx.Code, ref int32, labels *llx.Labels, schema *lumi.Sch
 		}
 	}
 
-	return res, nil
+	// TODO: figure out why this string includes control characters in the first place
+	return stripCtlAndExtFromUnicode(res), nil
+}
+
+// Unicode normalization and filtering, see http://blog.golang.org/normalization and
+// http://godoc.org/golang.org/x/text/unicode/norm for more details.
+func stripCtlAndExtFromUnicode(str string) string {
+	isOk := func(r rune) bool {
+		return r < 32 || r >= 127
+	}
+	// The isOk filter is such that there is no need to chain to norm.NFC
+	t := transform.Chain(norm.NFKD, transform.RemoveFunc(isOk))
+	str, _, _ = transform.String(t, str)
+	return str
 }
 
 // UpdateLabels for the given code under the schema
