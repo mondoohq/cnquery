@@ -67,6 +67,8 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		} else {
 			osm = &SystemDServiceManager{motor: motor}
 		}
+	case "photon":
+		osm = &SystemDServiceManager{motor: motor}
 	case "fedora":
 		rv := platform.ParseOsVersion(pi.Release)
 		v, err := rv.MajorAtoi()
