@@ -351,6 +351,8 @@ packages {
 
 // Kernel information for this OS
 kernel {
+  // Active kernel information
+  info() dict
   // Kernel parameters map
   parameters() map[string]string
   // List of kernel modules
