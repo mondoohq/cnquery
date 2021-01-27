@@ -1,0 +1,86 @@
+
+[commands."uname -r"]
+stdout = "3.10.0-1127.19.1.el7.x86_64"
+
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[files."/etc/os-release"]
+content = """
+NAME="CentOS Linux"
+VERSION="7 (Core)"
+ID="centos"
+ID_LIKE="rhel fedora"
+VERSION_ID="7"
+PRETTY_NAME="CentOS Linux 7 (Core)"
+ANSI_COLOR="0;31"
+CPE_NAME="cpe:/o:centos:centos:7"
+HOME_URL="https://www.centos.org/"
+BUG_REPORT_URL="https://bugs.centos.org/"
+
+CENTOS_MANTISBT_PROJECT="CentOS-7"
+CENTOS_MANTISBT_PROJECT_VERSION="7"
+REDHAT_SUPPORT_PRODUCT="centos"
+REDHAT_SUPPORT_PRODUCT_VERSION="7"
+"""
+
+[files."/proc/version"]
+content = "Linux version 3.10.0-1127.19.1.el7.x86_64 (mockbuild@kbuilder.bsys.centos.org) (gcc version 4.8.5 20150623 (Red Hat 4.8.5-39) (GCC) ) #1 SMP Tue Aug 25 17:23:54 UTC 2020"
+
+[files."/proc/cmdline"]
+content = "BOOT_IMAGE=/boot/vmlinuz-3.10.0-1127.19.1.el7.x86_64 root=UUID=ff6cbb65-ccab-489c-91a5-61b9b09e4d49 ro crashkernel=auto console=ttyS0,38400n8 elevator=noop\n"
+
+[commands."/sbin/sysctl -a"]
+stdout = """abi.vsyscall32 = 1
+crypto.fips_enabled = 0
+debug.exception-trace = 1
+debug.kprobes-optimization = 1
+debug.panic_on_rcu_stall = 0
+dev.hpet.max-user-freq = 64
+dev.mac_hid.mouse_button2_keycode = 97
+dev.mac_hid.mouse_button3_keycode = 100
+dev.mac_hid.mouse_button_emulation = 0
+dev.parport.default.spintime = 500
+dev.parport.default.timeslice = 200
+dev.raid.speed_limit_max = 200000
+dev.raid.speed_limit_min = 1000
+dev.scsi.logging_level = 0
+fs.aio-max-nr = 65536
+fs.aio-nr = 0
+fs.binfmt_misc.status = enabled
+fs.dentry-state = 26351	13485	45	0	98	0
+fs.dir-notify-enable = 1
+fs.epoll.max_user_watches = 204308
+fs.file-max = 94907
+fs.file-nr = 1184	0	94907
+fs.inode-nr = 35115	9090
+fs.inode-state = 35115	9090	0	0	0	0	0
+fs.inotify.max_queued_events = 16384
+fs.inotify.max_user_instances = 128
+fs.inotify.max_user_watches = 8192
+fs.lease-break-time = 45
+fs.leases-enable = 1
+"""
+
+[commands."/sbin/lsmod"]
+stdout = """Module                  Size  Used by
+binfmt_misc            17468  1
+ip6t_rpfilter          12595  1
+ip6t_REJECT            12625  2
+nf_reject_ipv6         13717  1 ip6t_REJECT
+ipt_REJECT             12541  2
+nf_reject_ipv4         13373  1 ipt_REJECT
+xt_conntrack           12760  8
+ebtable_nat            12807  1
+ebtable_broute         12731  1
+bridge                151336  1 ebtable_broute
+stp                    12976  1 bridge
+llc                    14552  2 stp,bridge
+ip6table_nat           12864  1
+nf_conntrack_ipv6      18935  5
+nf_defrag_ipv6         35104  1 nf_conntrack_ipv6
+nf_nat_ipv6            14131  1 ip6table_nat
+"""

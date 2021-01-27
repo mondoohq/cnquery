@@ -32,6 +32,22 @@ func (k *lumiKernel) id() (string, error) {
 	return "kernel", nil
 }
 
+func (k *lumiKernel) GetInfo() (map[string]interface{}, error) {
+	// find suitable kernel module manager
+	mm, err := kernel.ResolveManager(k.Runtime.Motor)
+	if mm == nil || err != nil {
+		return nil, errors.Wrap(err, "could not detect suiteable kernel module manager for platform")
+	}
+
+	// retrieve all kernel modules
+	kernelInfo, err := mm.Info()
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonToDict(kernelInfo)
+}
+
 func (k *lumiKernel) GetParameters() (map[string]interface{}, error) {
 	// find suitable kernel module manager
 	mm, err := kernel.ResolveManager(k.Runtime.Motor)
