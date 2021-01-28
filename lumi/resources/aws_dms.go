@@ -13,7 +13,7 @@ func (d *lumiAwsDms) id() (string, error) {
 }
 
 func (d *lumiAwsDms) GetReplicationInstances() ([]interface{}, error) {
-	res := []interface{}{}
+	res := []databasemigrationservice.ReplicationInstance{}
 	poolOfJobs := jobpool.CreatePool(d.getReplicationInstances(), 5)
 	poolOfJobs.Run()
 
@@ -23,10 +23,9 @@ func (d *lumiAwsDms) GetReplicationInstances() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]databasemigrationservice.ReplicationInstance)...)
 	}
-
-	return res, nil
+	return jsonToDictSlice(res)
 }
 
 func (d *lumiAwsDms) getReplicationInstances() []*jobpool.Job {
@@ -62,11 +61,7 @@ func (d *lumiAwsDms) getReplicationInstances() []*jobpool.Job {
 				}
 				marker = replicationInstances.Marker
 			}
-			res, err := jsonToDictSlice(replicationInstancesAggregated)
-			if err != nil {
-				return nil, err
-			}
-			return jobpool.JobResult(res), nil
+			return jobpool.JobResult(replicationInstancesAggregated), nil
 		}
 		tasks = append(tasks, jobpool.NewJob(f))
 	}

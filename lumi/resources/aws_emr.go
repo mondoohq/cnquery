@@ -68,6 +68,7 @@ func (e *lumiAwsEmr) getClusters() []*jobpool.Job {
 						"normalizedInstanceHours", toInt64(cluster.NormalizedInstanceHours),
 						"outpostArn", toString(cluster.OutpostArn),
 						"status", jsonStatus,
+						"id", toString(cluster.Id),
 					)
 					if err != nil {
 						return nil, err
@@ -84,4 +85,43 @@ func (e *lumiAwsEmr) getClusters() []*jobpool.Job {
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func (e *lumiAwsEmrCluster) GetMasterInstances() ([]interface{}, error) {
+	arn, err := e.Arn()
+	if err != nil {
+		return nil, err
+	}
+	id, err := e.Id()
+	if err != nil {
+		return nil, err
+	}
+	region, err := getRegionFromArn(arn)
+	if err != nil {
+		return nil, err
+	}
+	res := []emr.Instance{}
+	at, err := awstransport(e.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	svc := at.Emr(region)
+	ctx := context.Background()
+	var marker *string
+	for {
+		instances, err := svc.ListInstancesRequest(&emr.ListInstancesInput{
+			Marker:             marker,
+			ClusterId:          &id,
+			InstanceGroupTypes: []emr.InstanceGroupType{"MASTER"},
+		}).Send(ctx)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, instances.Instances...)
+		if instances.Marker == nil {
+			break
+		}
+		marker = instances.Marker
+	}
+	return jsonToDictSlice(res)
 }

@@ -1575,6 +1575,34 @@ aws.guardduty.detector {
   unarchivedFindings() []dict
 }
 
+// AWS service for viewing and managing security alerts
+aws.securityhub {
+  // list of hubs across the account
+  hubs() []aws.securityhub.hub
+}
+
+aws.securityhub.hub {
+  // ARN for the security hub
+  arn string
+  // date and time when the hub was enabled
+  subscribedAt string
+}
+
+// AWS service for rotating, managing, and retrieving secrets
+aws.secretsmanager {
+  // list of secrets
+  secrets() []aws.secretsmanager.secret
+}
+
+aws.secretsmanager.secret {
+  // ARN for the secret
+  arn string
+  // denotes whether rotation is enabled for the secret
+  rotationEnabled bool
+  // name of the secret
+  name string
+}
+
 // AWS service for large data processing 
 aws.emr {
   // list of emr clusters
@@ -1592,6 +1620,10 @@ aws.emr.cluster {
   outpostArn string
   // details about the current status of the cluster
   status dict
+  // list of master instances for the cluster
+  masterInstances() []dict
+  // emr cluster id
+  id string
 }
 
 aws.codebuild.project {
@@ -2057,6 +2089,13 @@ aws.ec2 {
   snapshots() []aws.ec2.snapshot
   // list of internet gateways
   internetGateways() []aws.ec2.internetgateway
+  // list of vpn connections 
+  vpnConnections() []aws.ec2.vpnconnection
+}
+
+aws.ec2.vpnconnection {
+  // ARN for the vpn connection
+  arn string
 }
 
 aws.ec2.internetgateway {
