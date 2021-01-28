@@ -21,6 +21,7 @@ const (
 	volumeArnPattern        = "arn:aws:ec2:%s:%s:volume/%s"
 	snapshotArnPattern      = "arn:aws:ec2:%s:%s:snapshot/%s"
 	internetGwArnPattern    = "arn:aws:ec2:%s:%s:gateway/%s"
+	vpnConnArnPattern       = "arn:aws:ec2:%s:%s:vpn-connection/%s"
 )
 
 func (e *lumiAwsEc2) id() (string, error) {
@@ -731,6 +732,65 @@ func (s *lumiAwsEc2Snapshot) id() (string, error) {
 	return s.Arn()
 }
 
+func (s *lumiAwsEc2) GetVpnConnections() ([]interface{}, error) {
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(s.getVpnConnections(), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+
+	return res, nil
+}
+
+func (s *lumiAwsEc2) getVpnConnections() []*jobpool.Job {
+	var tasks = make([]*jobpool.Job, 0)
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	regions, err := at.GetRegions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	account, err := at.Account()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+
+			svc := at.Ec2(regionVal)
+			ctx := context.Background()
+			res := []interface{}{}
+
+			vpnConnections, err := svc.DescribeVpnConnectionsRequest(&ec2.DescribeVpnConnectionsInput{}).Send(ctx)
+			if err != nil {
+				return nil, err
+			}
+			for _, vpnConn := range vpnConnections.VpnConnections {
+				lumiVpnConn, err := s.Runtime.CreateResource("aws.ec2.vpnconnection",
+					"arn", fmt.Sprintf(vpnConnArnPattern, regionVal, account.ID, toString(vpnConn.ConnectionId)),
+				)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, lumiVpnConn)
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
 func (s *lumiAwsEc2) GetSnapshots() ([]interface{}, error) {
 	res := []interface{}{}
 	poolOfJobs := jobpool.CreatePool(s.getSnapshots(), 5)
@@ -890,5 +950,9 @@ func (s *lumiAwsEc2) getInternetGateways() []*jobpool.Job {
 }
 
 func (s *lumiAwsEc2Internetgateway) id() (string, error) {
+	return s.Arn()
+}
+
+func (s *lumiAwsEc2Vpnconnection) id() (string, error) {
 	return s.Arn()
 }
