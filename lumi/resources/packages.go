@@ -79,7 +79,7 @@ func (p *lumiPackage) id() (string, error) {
 }
 
 func (p *lumiPackage) GetStatus() (string, error) {
-	return "nil", nil
+	return "", nil
 }
 
 func (p *lumiPackage) GetOutdated() (bool, error) {
@@ -88,6 +88,10 @@ func (p *lumiPackage) GetOutdated() (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+func (p *lumiPackage) GetOrigin() (string, error) {
+	return "", nil
 }
 
 func (p *lumiPackages) id() (string, error) {
@@ -147,6 +151,7 @@ func (p *lumiPackages) GetList() ([]interface{}, error) {
 			"description", osPkg.Description,
 			"format", pm.Format(),
 			"installed", true,
+			"origin", osPkg.Origin,
 		)
 		if err != nil {
 			return nil, err
