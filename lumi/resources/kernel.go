@@ -2,11 +2,12 @@ package resources
 
 import (
 	"github.com/cockroachdb/errors"
-
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/kernel"
+	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
+	"strings"
 )
 
 func (k *lumiKernel) init(args *lumi.Args) (*lumi.Args, Kernel, error) {
@@ -30,6 +31,121 @@ func (k *lumiKernel) init(args *lumi.Args) (*lumi.Args, Kernel, error) {
 
 func (k *lumiKernel) id() (string, error) {
 	return "kernel", nil
+}
+
+type KernelVersion struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
+	Running bool   `json:"running"`
+}
+
+func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
+	res := []KernelVersion{}
+
+	pf, err := k.Runtime.Motor.Platform()
+	if err != nil {
+		return nil, err
+	}
+
+	if pf.IsFamily(platform.FAMILY_LINUX) {
+
+		// 1. gather running kernel information
+		kernelInfo, err := k.Info()
+		if err != nil {
+			return nil, errors.New("could not determine kernel version")
+		}
+
+		runningKernelVersion := kernelInfo["version"].(string)
+
+		// 2. get all packages
+		obj, err := k.Runtime.CreateResource("packages")
+		if err != nil {
+			return nil, err
+		}
+		packages := obj.(Packages)
+
+		lumiPkgs, err := packages.List()
+		if err != nil {
+			return nil, err
+		}
+
+		if pf.IsFamily("debian") {
+			// debian based systems
+			// kernel version is  "4.19.0-13-cloud-amd64"
+			// filter by packages named "linux-image-*"
+			//[{
+			//	name: "linux-image-4.19.0-12-cloud-amd64"
+			//	version: "4.19.152-1"
+			//}, {
+			//	name: "linux-image-4.19.0-13-cloud-amd64"
+			//	version: "4.19.160-2"
+			//}, {
+			//	name: "linux-image-cloud-amd64"
+			//	version: "4.19+105+deb10u8"
+			//}]
+			for i := range lumiPkgs {
+				lumiPkg := lumiPkgs[i]
+				pkg := lumiPkg.(Package)
+				name, _ := pkg.Name()
+
+				if strings.HasPrefix(name, "linux-image") {
+					version, _ := pkg.Version()
+
+					kernelName := strings.TrimPrefix(name, "linux-image-")
+					running := false
+					if kernelName == runningKernelVersion {
+						running = true
+					}
+
+					res = append(res, KernelVersion{
+						Name:    kernelName,
+						Version: version,
+						Running: running,
+					})
+				}
+			}
+		} else if pf.IsFamily("redhat") {
+			// rpm based systems
+			// kernel version is  "3.10.0-1160.11.1.el7.x86_64"
+			// filter by packages named "kernel"
+			//[{
+			//	name: "kernel"
+			//	version: "3.10.0-1127.el7"
+			//}, {
+			//	name: "kernel"
+			//	version: "3.10.0-1160.11.1.el7"
+			//}, {
+			//	name: "kernel"
+			//	version: "3.10.0-1127.19.1.el7"
+			//}]
+			for i := range lumiPkgs {
+				lumiPkg := lumiPkgs[i]
+				pkg := lumiPkg.(Package)
+				name, _ := pkg.Name()
+
+				if name == "kernel" {
+					version, _ := pkg.Version()
+					arch, _ := pkg.Arch()
+
+					kernelName := version + "." + arch
+					running := false
+					if kernelName == runningKernelVersion {
+						running = true
+					}
+
+					res = append(res, KernelVersion{
+						Name:    name,
+						Version: version,
+						Running: running,
+					})
+				}
+			}
+		}
+
+	}
+
+	// empty when there is no kernel information found
+	return jsonToDictSlice(res)
 }
 
 func (k *lumiKernel) GetInfo() (map[string]interface{}, error) {

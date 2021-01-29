@@ -360,6 +360,8 @@ kernel {
   parameters() map[string]string
   // List of kernel modules
   modules() []kernel.module
+  // Installed Versions
+  installed() []dict
 }
 
 // Kernel module information
