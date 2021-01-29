@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/mitchellh/mapstructure"
+	"go.mondoo.io/mondoo/logger"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/vadvisor"
 	"strconv"
@@ -112,8 +113,7 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 		}
 	}
 
-	log.Debug().Str("asset", asset.Mrn).Bool("incognito", mcc.Incognito).Msg("run advisory scan")
-	report, err := scannerClient.AnalysePlatform(context.Background(), &vadvisor.AnalyseAssetRequest{
+	scanjob := &vadvisor.AnalyseAssetRequest{
 		Platform: &vadvisor.Platform{
 			Name:    name,
 			Release: release,
@@ -122,7 +122,12 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 		},
 		Packages:      apiPackages,
 		KernelVersion: kernelVersion,
-	})
+	}
+
+	logger.DebugDumpJSON("vuln-scan-job", scanjob)
+
+	log.Debug().Str("asset", asset.Mrn).Bool("incognito", mcc.Incognito).Msg("run advisory scan")
+	report, err := scannerClient.AnalysePlatform(context.Background(), scanjob)
 	if err != nil {
 		return nil, err
 	}
