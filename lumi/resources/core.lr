@@ -336,6 +336,9 @@ package {
   // Package description
   description string
 
+  // Package Origin (optional)
+  origin() string
+
   // Available version
   available string
   // Indicates if this package is installed
