@@ -17,7 +17,7 @@ func TestResource_Command(t *testing.T) {
 	t.Run("run a command", func(t *testing.T) {
 		res := testQuery(t, "command(\"lsssssssss\").stdout")
 		assert.NotEmpty(t, res)
-		assert.Empty(t, res[0].Result().Error)
+		assert.NotEmpty(t, res[0].Result().Error)
 		assert.Equal(t, "", res[0].Data.Value)
 	})
 }

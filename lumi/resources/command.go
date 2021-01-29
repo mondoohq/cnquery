@@ -23,17 +23,17 @@ func (c *lumiCommand) execute() (*transports.Command, error) {
 	if ok {
 		executedCmd, ok := data.Data.(*transports.Command)
 		if ok {
-			return executedCmd, nil
+			return executedCmd, data.Error
 		}
 	}
 
 	// note: we ignore the error here, because we want to give all results
 	// (stdout/stderr/exitcode) to the user for handling. otherwise the command
 	// resource would be nil and you couldnt do `command('notme').exitcode`
-	executedCmd, _ = c.Runtime.Motor.Transport.RunCommand(cmd)
+	executedCmd, err = c.Runtime.Motor.Transport.RunCommand(cmd)
 
-	c.Cache.Store(cmd, &lumi.CacheEntry{Data: executedCmd})
-	return executedCmd, nil
+	c.Cache.Store(cmd, &lumi.CacheEntry{Data: executedCmd, Error: err})
+	return executedCmd, err
 }
 
 func (c *lumiCommand) GetStdout() (string, error) {
