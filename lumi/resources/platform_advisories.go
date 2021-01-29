@@ -66,6 +66,7 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 	}
 
 	apiPackages := []*vadvisor.Package{}
+	kernelVersion := ""
 
 	// collect pacakges if the platform supports gathering files
 	if r.Motor.HasCapability(transports.Capability_File) {
@@ -95,6 +96,20 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 				Format:  format,
 			})
 		}
+
+		// determine the kernel version if possible (just needed for linux at this point)
+		// therefore we ignore the error because its not important, worst case the user sees to many advisories
+		objKernel, err := r.CreateResource("kernel")
+		if err == nil {
+			kernel := objKernel.(Kernel)
+			kernelInfo, err := kernel.Info()
+			if err == nil {
+				val, ok := kernelInfo["version"]
+				if ok {
+					kernelVersion = val.(string)
+				}
+			}
+		}
 	}
 
 	log.Debug().Str("asset", asset.Mrn).Bool("incognito", mcc.Incognito).Msg("run advisory scan")
@@ -105,7 +120,8 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 			Arch:    arch,
 			Build:   build,
 		},
-		Packages: apiPackages,
+		Packages:      apiPackages,
+		KernelVersion: kernelVersion,
 	})
 	if err != nil {
 		return nil, err
