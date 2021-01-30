@@ -55,7 +55,7 @@ func (p *lumiPlatformEol) init(args *lumi.Args) (*lumi.Args, PlatformEol, error)
 	release, _ := platform.Release()
 	arch, _ := platform.Arch()
 
-	platformEolInfo := eol.IsEol(&vadvisor.Platform{
+	platformEolInfo := eol.EolInfo(&vadvisor.Platform{
 		Name:    name,
 		Release: release,
 		Arch:    arch,
