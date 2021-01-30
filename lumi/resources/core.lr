@@ -12,6 +12,17 @@ mondoo {
   capabilities() []string
 }
 
+// Returns EOL information from the mondoo EOL service
+mondoo.eol {
+  // Product Name
+  product string
+  // Product Version
+  version string
+
+  // End-of-Life date for the product
+  date() time
+}
+
 // Parse provides common parsers (json, ini, certs, etc)
 parse {
   // Builtin functions:
@@ -88,13 +99,13 @@ platform.virtualization {
   isContainer() bool
 }
 
-// information about the platfrom end-of-life
+// information about the platform end-of-life
 platform.eol {
   // Documentation URL
   docsUrl string
   // Product URL
   productUrl string
-  // eol date
+  // End-of-Life date
   date time
 }
 
