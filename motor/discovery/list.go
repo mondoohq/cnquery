@@ -1,7 +1,9 @@
 package discovery
 
 import (
-	"github.com/aws/aws-sdk-go-v2/aws/external"
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/aws"
@@ -17,11 +19,12 @@ type Plugin interface {
 
 func ListAssets(runtimes ...string) ([]*asset.Asset, error) {
 	askRuntimes := []Plugin{}
+	ctx := context.Background()
 
 	if stringx.Contains(runtimes, transports.RUNTIME_AWS_EC2) ||
 		stringx.Contains(runtimes, transports.RUNTIME_AWS_SSM_MANAGED) ||
 		stringx.Contains(runtimes, transports.RUNTIME_AWS_ECR) {
-		cfg, err := external.LoadDefaultAWSConfig()
+		cfg, err := config.LoadDefaultConfig(ctx)
 		if err != nil {
 			log.Warn().Err(err).Msg("skip aws assets")
 		} else {

@@ -51,7 +51,7 @@ func (k *lumiAwsKms) getKeys() []*jobpool.Job {
 			res := []interface{}{}
 			var marker *string
 			for {
-				keyList, err := svc.ListKeysRequest(&kms.ListKeysInput{Marker: marker}).Send(ctx)
+				keyList, err := svc.ListKeys(ctx, &kms.ListKeysInput{Marker: marker})
 				if err != nil {
 					return nil, err
 				}
@@ -67,7 +67,7 @@ func (k *lumiAwsKms) getKeys() []*jobpool.Job {
 					}
 					res = append(res, lumiRecorder)
 				}
-				if keyList.Truncated == nil || *keyList.Truncated == false {
+				if keyList.Truncated == false {
 					break
 				}
 				marker = keyList.NextMarker
@@ -95,11 +95,11 @@ func (k *lumiAwsKmsKey) GetMetadata() (interface{}, error) {
 	svc := at.Kms(region)
 	ctx := context.Background()
 
-	keyMetadata, err := svc.DescribeKeyRequest(&kms.DescribeKeyInput{KeyId: &key}).Send(ctx)
+	keyMetadata, err := svc.DescribeKey(ctx, &kms.DescribeKeyInput{KeyId: &key})
 	if err != nil {
 		return nil, err
 	}
-	return jsonToDict(keyMetadata.DescribeKeyOutput.KeyMetadata)
+	return jsonToDict(keyMetadata.KeyMetadata)
 }
 
 func (k *lumiAwsKmsKey) GetKeyRotationEnabled() (bool, error) {
@@ -118,11 +118,11 @@ func (k *lumiAwsKmsKey) GetKeyRotationEnabled() (bool, error) {
 	svc := at.Kms(region)
 	ctx := context.Background()
 
-	key, err := svc.GetKeyRotationStatusRequest(&kms.GetKeyRotationStatusInput{KeyId: &keyId}).Send(ctx)
+	key, err := svc.GetKeyRotationStatus(ctx, &kms.GetKeyRotationStatusInput{KeyId: &keyId})
 	if err != nil {
 		return false, err
 	}
-	return toBool(key.KeyRotationEnabled), nil
+	return key.KeyRotationEnabled, nil
 }
 
 func (k *lumiAwsKmsKey) id() (string, error) {

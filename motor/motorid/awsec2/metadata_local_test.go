@@ -7,22 +7,27 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/defaults"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 )
 
 func fakeConfig() aws.Config {
-	config := defaults.Config()
-	config.Region = "mock-region"
-	config.EndpointResolver = aws.ResolveWithEndpointURL("https://endpoint")
-	config.Credentials = aws.StaticCredentialsProvider{
+	conf := aws.Config{}
+	conf.Region = "mock-region"
+	localResolverFn := func(service, region string) (aws.Endpoint, error) {
+		return aws.Endpoint{
+			URL: "https://endpoint",
+		}, nil
+	}
+	conf.EndpointResolver = aws.EndpointResolverFunc(localResolverFn)
+	conf.Credentials = credentials.StaticCredentialsProvider{
 		Value: aws.Credentials{
 			AccessKeyID: "AKID", SecretAccessKey: "SECRET", SessionToken: "SESSION",
 			Source: "unit test credentials",
 		},
 	}
-	return config
+	return conf
 }
 
 func initTestServer(path string, resp string) *httptest.Server {
@@ -49,7 +54,12 @@ func TestEC2RoleProviderInstanceIdentityLocal(t *testing.T) {
 	defer server.Close()
 
 	cfg := fakeConfig()
-	cfg.EndpointResolver = aws.ResolveWithEndpointURL(server.URL + "/latest")
+	localResolverFn := func(service, region string) (aws.Endpoint, error) {
+		return aws.Endpoint{
+			URL: server.URL + "/latest",
+		}, nil
+	}
+	cfg.EndpointResolver = aws.EndpointResolverFunc(localResolverFn)
 
 	metadata := awsec2.NewLocal(cfg)
 	mrn, err := metadata.InstanceID()

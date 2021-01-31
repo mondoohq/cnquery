@@ -52,7 +52,7 @@ func (t *lumiAwsCodebuild) getProjects() []*jobpool.Job {
 			params := &codebuild.ListProjectsInput{}
 			nextToken := aws.String("no_token_to_start_with")
 			for nextToken != nil {
-				projects, err := svc.ListProjectsRequest(params).Send(ctx)
+				projects, err := svc.ListProjects(ctx, params)
 				if err != nil {
 					return nil, err
 				}
@@ -99,7 +99,7 @@ func (c *lumiAwsCodebuildProject) init(args *lumi.Args) (*lumi.Args, AwsCodebuil
 	}
 	svc := at.Codebuild(region)
 	ctx := context.Background()
-	projectDetails, err := svc.BatchGetProjectsRequest(&codebuild.BatchGetProjectsInput{Names: []string{name}}).Send(ctx)
+	projectDetails, err := svc.BatchGetProjects(ctx, &codebuild.BatchGetProjectsInput{Names: []string{name}})
 	if err != nil {
 		return nil, nil, err
 	}

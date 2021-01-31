@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
+
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 
@@ -28,7 +31,7 @@ func (e *lumiAwsEc2) id() (string, error) {
 	return "aws.ec2", nil
 }
 
-func ec2TagsToMap(tags []ec2.Tag) map[string]interface{} {
+func ec2TagsToMap(tags []types.Tag) map[string]interface{} {
 	var tagsMap map[string]interface{}
 
 	if len(tags) > 0 {
@@ -58,9 +61,9 @@ func (s *lumiAwsEc2Securitygroup) GetIsAttachedToNetworkInterface() (bool, error
 	svc := at.Ec2(region)
 	ctx := context.Background()
 
-	networkinterfaces, err := svc.DescribeNetworkInterfacesRequest(&ec2.DescribeNetworkInterfacesInput{Filters: []ec2.Filter{
+	networkinterfaces, err := svc.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{Filters: []types.Filter{
 		{Name: aws.String("group-id"), Values: []string{sgId}},
-	}}).Send(ctx)
+	}})
 	if err != nil {
 		return false, err
 	}
@@ -98,7 +101,7 @@ func (s *lumiAwsEc2) getSecurityGroups() []*jobpool.Job {
 			nextToken := aws.String("no_token_to_start_with")
 			params := &ec2.DescribeSecurityGroupsInput{}
 			for nextToken != nil {
-				securityGroups, err := svc.DescribeSecurityGroupsRequest(params).Send(ctx)
+				securityGroups, err := svc.DescribeSecurityGroups(ctx, params)
 				if err != nil {
 					return nil, err
 				}
@@ -132,8 +135,8 @@ func (s *lumiAwsEc2) getSecurityGroups() []*jobpool.Job {
 
 						lumiSecurityGroupIpPermission, err := s.Runtime.CreateResource("aws.ec2.securitygroup.ippermission",
 							"id", toString(group.GroupId)+"-"+strconv.Itoa(p),
-							"fromPort", toInt64(permission.FromPort),
-							"toPort", toInt64(permission.ToPort),
+							"fromPort", int64(permission.FromPort),
+							"toPort", int64(permission.ToPort),
 							"ipProtocol", toString(permission.IpProtocol),
 							"ipRanges", ipRanges,
 							"ipv6Ranges", ipv6Ranges,
@@ -235,13 +238,13 @@ func (s *lumiAwsEc2) getEbsEncryptionPerRegion() []*jobpool.Job {
 			svc := at.Ec2(regionVal)
 			ctx := context.Background()
 
-			ebsEncryptionRes, err := svc.GetEbsEncryptionByDefaultRequest(&ec2.GetEbsEncryptionByDefaultInput{}).Send(ctx)
+			ebsEncryptionRes, err := svc.GetEbsEncryptionByDefault(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
 			if err != nil {
 				return nil, err
 			}
 			structVal := ebsEncryption{
 				region:                 regionVal,
-				ebsEncryptionByDefault: toBool(ebsEncryptionRes.EbsEncryptionByDefault),
+				ebsEncryptionByDefault: ebsEncryptionRes.EbsEncryptionByDefault,
 			}
 			return jobpool.JobResult(structVal), nil
 		}
@@ -267,16 +270,16 @@ func (s *lumiAwsEc2) GetInstances() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getImdsv2Instances(ctx context.Context, svc *ec2.Client, filterName string) ([]ec2.Reservation, error) {
-	res := []ec2.Reservation{}
+func (s *lumiAwsEc2) getImdsv2Instances(ctx context.Context, svc *ec2.Client, filterName string) ([]types.Reservation, error) {
+	res := []types.Reservation{}
 	nextToken := aws.String("no_token_to_start_with")
 	params := &ec2.DescribeInstancesInput{
-		Filters: []ec2.Filter{
+		Filters: []types.Filter{
 			{Name: &filterName, Values: []string{"required"}},
 		},
 	}
 	for nextToken != nil {
-		instances, err := svc.DescribeInstancesRequest(params).Send(ctx)
+		instances, err := svc.DescribeInstances(ctx, params)
 		if err != nil {
 			return nil, err
 		}
@@ -289,16 +292,16 @@ func (s *lumiAwsEc2) getImdsv2Instances(ctx context.Context, svc *ec2.Client, fi
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getImdsv1Instances(ctx context.Context, svc *ec2.Client, filterName string) ([]ec2.Reservation, error) {
-	res := []ec2.Reservation{}
+func (s *lumiAwsEc2) getImdsv1Instances(ctx context.Context, svc *ec2.Client, filterName string) ([]types.Reservation, error) {
+	res := []types.Reservation{}
 	nextToken := aws.String("no_token_to_start_with")
 	params := &ec2.DescribeInstancesInput{
-		Filters: []ec2.Filter{
+		Filters: []types.Filter{
 			{Name: &filterName, Values: []string{"optional"}},
 		},
 	}
 	for nextToken != nil {
-		instances, err := svc.DescribeInstancesRequest(params).Send(ctx)
+		instances, err := svc.DescribeInstances(ctx, params)
 		if err != nil {
 			return nil, err
 		}
@@ -359,7 +362,7 @@ func (s *lumiAwsEc2) getInstances() []*jobpool.Job {
 	return tasks
 }
 
-func (s *lumiAwsEc2) gatherInstanceInfo(instances []ec2.Reservation, imdsvVersion int, regionVal string) ([]interface{}, error) {
+func (s *lumiAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVersion int, regionVal string) ([]interface{}, error) {
 	at, err := awstransport(s.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
@@ -379,13 +382,10 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []ec2.Reservation, imdsvVersio
 			lumiDevices := []interface{}{}
 			for i := range instance.BlockDeviceMappings {
 				device := instance.BlockDeviceMappings[i]
-				deviceStatus, err := device.Ebs.Status.MarshalValue()
-				if err != nil {
-					return nil, err
-				}
+
 				lumiInstanceDevice, err := s.Runtime.CreateResource("aws.ec2.instance.device",
-					"deleteOnTermination", toBool(device.Ebs.DeleteOnTermination),
-					"status", deviceStatus,
+					"deleteOnTermination", device.Ebs.DeleteOnTermination,
+					"status", string(device.Ebs.Status),
 					"volumeId", toString(device.Ebs.VolumeId),
 					"deviceName", toString(device.DeviceName),
 				)
@@ -393,14 +393,6 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []ec2.Reservation, imdsvVersio
 					return nil, err
 				}
 				lumiDevices = append(lumiDevices, lumiInstanceDevice)
-			}
-			stateName, err := instance.State.Name.MarshalValue()
-			if err != nil {
-				return nil, err
-			}
-			detailedMonitoring, err := instance.Monitoring.State.MarshalValue()
-			if err != nil {
-				return nil, err
 			}
 			sgs := []interface{}{}
 			for i := range instance.SecurityGroups {
@@ -418,25 +410,21 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []ec2.Reservation, imdsvVersio
 			if err != nil {
 				return nil, err
 			}
-			instanceTypeString, err := instance.InstanceType.MarshalValue()
-			if err != nil {
-				return nil, err
-			}
 			args := []interface{}{
 				"arn", fmt.Sprintf(ec2InstanceArnPattern, regionVal, account.ID, toString(instance.InstanceId)),
 				"instanceId", toString(instance.InstanceId),
 				"region", regionVal,
 				"publicIp", toString(instance.PublicIpAddress),
-				"detailedMonitoring", detailedMonitoring,
+				"detailedMonitoring", string(instance.Monitoring.State),
 				"httpTokens", httpTokens,
-				"state", stateName,
+				"state", string(instance.State.Name),
 				"deviceMappings", lumiDevices,
 				"securityGroups", sgs,
 				"publicDnsName", toString(instance.PublicDnsName),
 				"stateReason", stateReason,
 				"stateTransitionReason", toString(instance.StateTransitionReason),
-				"ebsOptimized", toBool(instance.EbsOptimized),
-				"instanceType", instanceTypeString,
+				"ebsOptimized", instance.EbsOptimized,
+				"instanceType", string(instance.InstanceType),
 			}
 
 			// add vpc if there is one
@@ -560,12 +548,12 @@ func (s *lumiAwsEc2Instance) GetSsm() (interface{}, error) {
 	resourceTypeFilter := "ResourceType"
 	instanceIdFilter := "InstanceIds"
 	params := &ssm.DescribeInstanceInformationInput{
-		Filters: []ssm.InstanceInformationStringFilter{
+		Filters: []ssmtypes.InstanceInformationStringFilter{
 			{Key: &resourceTypeFilter, Values: []string{"ManagedInstance"}},
 			{Key: &instanceIdFilter, Values: []string{instanceId}},
 		},
 	}
-	ssmInstanceInfo, err := svc.DescribeInstanceInformationRequest(params).Send(ctx)
+	ssmInstanceInfo, err := svc.DescribeInstanceInformation(ctx, params)
 	if err != nil {
 		return nil, err
 	}
@@ -593,7 +581,7 @@ func (s *lumiAwsEc2Instance) GetPatchState() (interface{}, error) {
 	svc := at.Ssm(region)
 	ctx := context.Background()
 
-	ssmPatchInfo, err := svc.DescribeInstancePatchStatesRequest(&ssm.DescribeInstancePatchStatesInput{InstanceIds: []string{instanceId}}).Send(ctx)
+	ssmPatchInfo, err := svc.DescribeInstancePatchStates(ctx, &ssm.DescribeInstancePatchStatesInput{InstanceIds: []string{instanceId}})
 	if err != nil {
 		return nil, err
 	}
@@ -626,10 +614,10 @@ func (s *lumiAwsEc2Instance) GetInstanceStatus() (interface{}, error) {
 	svc := at.Ec2(region)
 	ctx := context.Background()
 
-	instanceStatus, err := svc.DescribeInstanceStatusRequest(&ec2.DescribeInstanceStatusInput{
+	instanceStatus, err := svc.DescribeInstanceStatus(ctx, &ec2.DescribeInstanceStatusInput{
 		InstanceIds:         []string{instanceId},
-		IncludeAllInstances: aws.Bool(true),
-	}).Send(ctx)
+		IncludeAllInstances: true,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -688,15 +676,11 @@ func (s *lumiAwsEc2) getVolumes() []*jobpool.Job {
 			nextToken := aws.String("no_token_to_start_with")
 			params := &ec2.DescribeVolumesInput{}
 			for nextToken != nil {
-				volumes, err := svc.DescribeVolumesRequest(params).Send(ctx)
+				volumes, err := svc.DescribeVolumes(ctx, params)
 				if err != nil {
 					return nil, err
 				}
 				for _, vol := range volumes.Volumes {
-					stringState, err := vol.State.MarshalValue()
-					if err != nil {
-						return nil, err
-					}
 					jsonAttachments, err := jsonToDictSlice(vol.Attachments)
 					if err != nil {
 						return nil, err
@@ -705,8 +689,8 @@ func (s *lumiAwsEc2) getVolumes() []*jobpool.Job {
 						"arn", fmt.Sprintf(volumeArnPattern, region, account.ID, toString(vol.VolumeId)),
 						"id", toString(vol.VolumeId),
 						"attachments", jsonAttachments,
-						"encrypted", toBool(vol.Encrypted),
-						"state", stringState,
+						"encrypted", vol.Encrypted,
+						"state", string(vol.State),
 					)
 					if err != nil {
 						return nil, err
@@ -771,13 +755,13 @@ func (s *lumiAwsEc2) getVpnConnections() []*jobpool.Job {
 			ctx := context.Background()
 			res := []interface{}{}
 
-			vpnConnections, err := svc.DescribeVpnConnectionsRequest(&ec2.DescribeVpnConnectionsInput{}).Send(ctx)
+			vpnConnections, err := svc.DescribeVpnConnections(ctx, &ec2.DescribeVpnConnectionsInput{})
 			if err != nil {
 				return nil, err
 			}
 			for _, vpnConn := range vpnConnections.VpnConnections {
 				lumiVpnConn, err := s.Runtime.CreateResource("aws.ec2.vpnconnection",
-					"arn", fmt.Sprintf(vpnConnArnPattern, regionVal, account.ID, toString(vpnConn.ConnectionId)),
+					"arn", fmt.Sprintf(vpnConnArnPattern, regionVal, account.ID, toString(vpnConn.VpnConnectionId)),
 				)
 				if err != nil {
 					return nil, err
@@ -831,9 +815,9 @@ func (s *lumiAwsEc2) getSnapshots() []*jobpool.Job {
 			res := []interface{}{}
 
 			nextToken := aws.String("no_token_to_start_with")
-			params := &ec2.DescribeSnapshotsInput{Filters: []ec2.Filter{{Name: aws.String("owner-id"), Values: []string{account.ID}}}}
+			params := &ec2.DescribeSnapshotsInput{Filters: []types.Filter{{Name: aws.String("owner-id"), Values: []string{account.ID}}}}
 			for nextToken != nil {
-				snapshots, err := svc.DescribeSnapshotsRequest(params).Send(ctx)
+				snapshots, err := svc.DescribeSnapshots(ctx, params)
 				if err != nil {
 					return nil, err
 				}
@@ -877,7 +861,7 @@ func (s *lumiAwsEc2Snapshot) GetCreateVolumePermission() ([]interface{}, error) 
 	svc := at.Ec2(region)
 	ctx := context.Background()
 
-	attribute, err := svc.DescribeSnapshotAttributeRequest(&ec2.DescribeSnapshotAttributeInput{SnapshotId: &id, Attribute: ec2.SnapshotAttributeNameCreateVolumePermission}).Send(ctx)
+	attribute, err := svc.DescribeSnapshotAttribute(ctx, &ec2.DescribeSnapshotAttributeInput{SnapshotId: &id, Attribute: types.SnapshotAttributeNameCreateVolumePermission})
 	if err != nil {
 		return nil, err
 	}
@@ -920,7 +904,7 @@ func (s *lumiAwsEc2) getInternetGateways() []*jobpool.Job {
 			res := []interface{}{}
 			nextToken := aws.String("no_token_to_start_with")
 			for nextToken != nil {
-				internetGws, err := svc.DescribeInternetGatewaysRequest(params).Send(ctx)
+				internetGws, err := svc.DescribeInternetGateways(ctx, params)
 				if err != nil {
 					return nil, err
 				}

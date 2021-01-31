@@ -55,7 +55,7 @@ func (e *lumiAwsSecretsmanager) getSecrets() []*jobpool.Job {
 			nextToken := aws.String("no_token_to_start_with")
 			params := &secretsmanager.ListSecretsInput{}
 			for nextToken != nil {
-				secrets, err := svc.ListSecretsRequest(params).Send(ctx)
+				secrets, err := svc.ListSecrets(ctx, params)
 				if err != nil {
 					return nil, err
 				}
@@ -63,7 +63,7 @@ func (e *lumiAwsSecretsmanager) getSecrets() []*jobpool.Job {
 					lumiSecret, err := e.Runtime.CreateResource("aws.secretsmanager.secret",
 						"arn", toString(secret.ARN),
 						"name", toString(secret.Name),
-						"rotationEnabled", toBool(secret.RotationEnabled),
+						"rotationEnabled", secret.RotationEnabled,
 					)
 					if err != nil {
 						return nil, err

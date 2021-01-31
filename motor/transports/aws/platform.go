@@ -23,7 +23,7 @@ type Account struct {
 func (t *Transport) Account() (Account, error) {
 	accountid := t.info.Account
 	ctx := context.Background()
-	res, err := t.Iam("").ListAccountAliasesRequest(&iam.ListAccountAliasesInput{}).Send(ctx)
+	res, err := t.Iam("").ListAccountAliases(ctx, &iam.ListAccountAliasesInput{})
 	if err != nil {
 		return Account{
 			ID: accountid,

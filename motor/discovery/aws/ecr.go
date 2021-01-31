@@ -28,20 +28,18 @@ func (k *EcrImages) Name() string {
 
 func (a *EcrImages) List() ([]*asset.Asset, error) {
 	ctx := context.Background()
-	svc := ecr.New(a.config)
+	svc := ecr.NewFromConfig(a.config)
 
-	reqRepo := svc.DescribeRepositoriesRequest(&ecr.DescribeRepositoriesInput{})
-	repoResp, err := reqRepo.Send(ctx)
+	repoResp, err := svc.DescribeRepositories(ctx, &ecr.DescribeRepositoriesInput{})
 	if err != nil {
 		return nil, err
 	}
 	imgs := []*asset.Asset{}
 	for i := range repoResp.Repositories {
 		repoName := repoResp.Repositories[i].RepositoryName
-		reqImages := svc.DescribeImagesRequest(&ecr.DescribeImagesInput{
+		imageResp, err := svc.DescribeImages(ctx, &ecr.DescribeImagesInput{
 			RepositoryName: repoName,
 		})
-		imageResp, err := reqImages.Send(ctx)
 		if err != nil {
 			return nil, err
 		}

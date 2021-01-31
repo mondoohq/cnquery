@@ -49,7 +49,7 @@ func (s *lumiAwsSagemaker) getEndpoints() []*jobpool.Job {
 			nextToken := aws.String("no_token_to_start_with")
 			params := &sagemaker.ListEndpointsInput{}
 			for nextToken != nil {
-				endpoints, err := svc.ListEndpointsRequest(params).Send(ctx)
+				endpoints, err := svc.ListEndpoints(ctx, params)
 				if err != nil {
 					return nil, err
 				}
@@ -92,7 +92,7 @@ func (s *lumiAwsSagemakerEndpoint) GetConfig() (map[string]interface{}, error) {
 	}
 	svc := at.Sagemaker(region)
 	ctx := context.Background()
-	config, err := svc.DescribeEndpointConfigRequest(&sagemaker.DescribeEndpointConfigInput{EndpointConfigName: &name}).Send(ctx)
+	config, err := svc.DescribeEndpointConfig(ctx, &sagemaker.DescribeEndpointConfigInput{EndpointConfigName: &name})
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (s *lumiAwsSagemaker) getNotebookInstances() []*jobpool.Job {
 			nextToken := aws.String("no_token_to_start_with")
 			params := &sagemaker.ListNotebookInstancesInput{}
 			for nextToken != nil {
-				notebookInstances, err := svc.ListNotebookInstancesRequest(&sagemaker.ListNotebookInstancesInput{}).Send(ctx)
+				notebookInstances, err := svc.ListNotebookInstances(ctx, &sagemaker.ListNotebookInstancesInput{})
 				if err != nil {
 					return nil, err
 				}
@@ -179,7 +179,7 @@ func (s *lumiAwsSagemakerNotebookinstance) GetDetails() (interface{}, error) {
 	}
 	svc := at.Sagemaker(region)
 	ctx := context.Background()
-	instanceDetails, err := svc.DescribeNotebookInstanceRequest(&sagemaker.DescribeNotebookInstanceInput{NotebookInstanceName: &name}).Send(ctx)
+	instanceDetails, err := svc.DescribeNotebookInstance(ctx, &sagemaker.DescribeNotebookInstanceInput{NotebookInstanceName: &name})
 	if err != nil {
 		return nil, err
 	}
@@ -189,14 +189,10 @@ func (s *lumiAwsSagemakerNotebookinstance) GetDetails() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	directAccessString, err := instanceDetails.DirectInternetAccess.MarshalValue()
-	if err != nil {
-		return nil, err
-	}
 	lumiInstanceDetails, err := s.Runtime.CreateResource("aws.sagemaker.notebookinstance.details",
 		"arn", toString(instanceDetails.NotebookInstanceArn),
 		"kmsKey", lumiKeyResource,
-		"directInternetAccess", directAccessString,
+		"directInternetAccess", string(instanceDetails.DirectInternetAccess),
 	)
 
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
+	"github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 )
@@ -60,7 +61,7 @@ func (r *lumiAwsRedshift) getClusters() []*jobpool.Job {
 
 			var marker *string
 			for {
-				clusters, err := svc.DescribeClustersRequest(&redshift.DescribeClustersInput{Marker: marker}).Send(ctx)
+				clusters, err := svc.DescribeClusters(ctx, &redshift.DescribeClustersInput{Marker: marker})
 				if err != nil {
 					return nil, err
 				}
@@ -73,12 +74,12 @@ func (r *lumiAwsRedshift) getClusters() []*jobpool.Job {
 						"arn", fmt.Sprintf(redshiftClusterArnPattern, regionVal, account.ID, toString(cluster.ClusterIdentifier)),
 						"name", toString(cluster.ClusterIdentifier),
 						"region", regionVal,
-						"encrypted", toBool(cluster.Encrypted),
+						"encrypted", cluster.Encrypted,
 						"nodeType", toString(cluster.NodeType),
-						"allowVersionUpgrade", toBool(cluster.AllowVersionUpgrade),
+						"allowVersionUpgrade", cluster.AllowVersionUpgrade,
 						"preferredMaintenanceWindow", toString(cluster.PreferredMaintenanceWindow),
-						"automatedSnapshotRetentionPeriod", toInt64(cluster.AutomatedSnapshotRetentionPeriod),
-						"publiclyAccessible", toBool(cluster.PubliclyAccessible),
+						"automatedSnapshotRetentionPeriod", int64(cluster.AutomatedSnapshotRetentionPeriod),
+						"publiclyAccessible", cluster.PubliclyAccessible,
 						"clusterParameterGroupNames", names,
 					)
 					if err != nil {
@@ -118,10 +119,10 @@ func (r *lumiAwsRedshiftCluster) GetParameters() ([]interface{}, error) {
 
 	svc := at.Redshift(region)
 	ctx := context.Background()
-	res := []redshift.Parameter{}
+	res := []types.Parameter{}
 	for _, name := range clusterGroupNames {
 		stringName := name.(string)
-		params, err := svc.DescribeClusterParametersRequest(&redshift.DescribeClusterParametersInput{ParameterGroupName: &stringName}).Send(ctx)
+		params, err := svc.DescribeClusterParameters(ctx, &redshift.DescribeClusterParametersInput{ParameterGroupName: &stringName})
 		if err != nil {
 			return nil, err
 		}
@@ -147,7 +148,7 @@ func (r *lumiAwsRedshiftCluster) GetLogging() (interface{}, error) {
 	svc := at.Redshift(region)
 	ctx := context.Background()
 
-	params, err := svc.DescribeLoggingStatusRequest(&redshift.DescribeLoggingStatusInput{ClusterIdentifier: &name}).Send(ctx)
+	params, err := svc.DescribeLoggingStatus(ctx, &redshift.DescribeLoggingStatusInput{ClusterIdentifier: &name})
 	if err != nil {
 		return nil, err
 	}

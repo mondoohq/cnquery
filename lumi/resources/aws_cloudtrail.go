@@ -48,7 +48,7 @@ func (t *lumiAwsCloudtrail) getTrails() []*jobpool.Job {
 			ctx := context.Background()
 
 			// no pagination required
-			trailsResp, err := svc.DescribeTrailsRequest(&cloudtrail.DescribeTrailsInput{}).Send(ctx)
+			trailsResp, err := svc.DescribeTrails(ctx, &cloudtrail.DescribeTrailsInput{})
 			if err != nil {
 				return nil, errors.Wrap(err, "could not gather aws cloudtrail trails")
 			}
@@ -150,9 +150,9 @@ func (t *lumiAwsCloudtrailTrail) GetStatus() (interface{}, error) {
 	}
 
 	// no pagination required
-	trailstatus, err := svc.GetTrailStatusRequest(&cloudtrail.GetTrailStatusInput{
+	trailstatus, err := svc.GetTrailStatus(ctx, &cloudtrail.GetTrailStatusInput{
 		Name: &arnValue,
-	}).Send(ctx)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -179,9 +179,9 @@ func (t *lumiAwsCloudtrailTrail) GetEventSelectors() (interface{}, error) {
 	}
 
 	// no pagination required
-	trailmgmtevents, err := svc.GetEventSelectorsRequest(&cloudtrail.GetEventSelectorsInput{
+	trailmgmtevents, err := svc.GetEventSelectors(ctx, &cloudtrail.GetEventSelectorsInput{
 		TrailName: &arnValue,
-	}).Send(ctx)
+	})
 	if err != nil {
 		return nil, err
 	}

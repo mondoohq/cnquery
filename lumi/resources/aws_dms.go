@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
+	"github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 )
@@ -13,7 +14,7 @@ func (d *lumiAwsDms) id() (string, error) {
 }
 
 func (d *lumiAwsDms) GetReplicationInstances() ([]interface{}, error) {
-	res := []databasemigrationservice.ReplicationInstance{}
+	res := []types.ReplicationInstance{}
 	poolOfJobs := jobpool.CreatePool(d.getReplicationInstances(), 5)
 	poolOfJobs.Run()
 
@@ -23,7 +24,7 @@ func (d *lumiAwsDms) GetReplicationInstances() ([]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]databasemigrationservice.ReplicationInstance)...)
+		res = append(res, poolOfJobs.Jobs[i].Result.([]types.ReplicationInstance)...)
 	}
 	return jsonToDictSlice(res)
 }
@@ -46,11 +47,11 @@ func (d *lumiAwsDms) getReplicationInstances() []*jobpool.Job {
 
 			svc := at.Dms(regionVal)
 			ctx := context.Background()
-			replicationInstancesAggregated := []databasemigrationservice.ReplicationInstance{}
+			replicationInstancesAggregated := []types.ReplicationInstance{}
 
 			var marker *string
 			for {
-				replicationInstances, err := svc.DescribeReplicationInstancesRequest(&databasemigrationservice.DescribeReplicationInstancesInput{Marker: marker}).Send(ctx)
+				replicationInstances, err := svc.DescribeReplicationInstances(ctx, &databasemigrationservice.DescribeReplicationInstancesInput{Marker: marker})
 				if err != nil {
 					return nil, err
 				}

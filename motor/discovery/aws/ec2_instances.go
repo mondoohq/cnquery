@@ -2,11 +2,13 @@ package aws
 
 import (
 	"context"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
 	"regexp"
+
+	"go.mondoo.io/mondoo/lumi/library/jobpool"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
@@ -42,10 +44,10 @@ func (ec2i *Ec2Instances) getRegions() ([]string, error) {
 	// if no cache, get regions using ec2 client (using the ssm list global regions does not give the same list)
 	regions := []string{}
 
-	ec2svc := ec2.New(ec2i.config)
+	ec2svc := ec2.NewFromConfig(ec2i.config)
 	ctx := context.Background()
 
-	res, err := ec2svc.DescribeRegionsRequest(&ec2.DescribeRegionsInput{}).Send(ctx)
+	res, err := ec2svc.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
 	if err != nil {
 		return regions, nil
 	}
@@ -71,13 +73,12 @@ func (ec2i *Ec2Instances) getInstances(account string) []*jobpool.Job {
 			clonedConfig.Region = region
 
 			// fetch instances
-			ec2svc := ec2.New(clonedConfig)
+			ec2svc := ec2.NewFromConfig(clonedConfig)
 			ctx := context.Background()
 			res := []*asset.Asset{}
 
 			log.Debug().Str("account", account).Str("region", clonedConfig.Region).Msg("fetch ec2 instances")
-			req := ec2svc.DescribeInstancesRequest(&ec2.DescribeInstancesInput{})
-			resp, err := req.Send(ctx)
+			resp, err := ec2svc.DescribeInstances(ctx, &ec2.DescribeInstancesInput{})
 			if err != nil {
 				return nil, errors.Wrapf(err, "failed to describe instances, %s", clonedConfig.Region)
 			}
@@ -123,7 +124,7 @@ func (ec2i *Ec2Instances) List() ([]*asset.Asset, error) {
 	return instances, nil
 }
 
-func instanceToAsset(account string, region string, instance ec2.Instance, sshUsername string, insecure bool) *asset.Asset {
+func instanceToAsset(account string, region string, instance types.Instance, sshUsername string, insecure bool) *asset.Asset {
 
 	connections := []*transports.TransportConfig{}
 
@@ -205,11 +206,11 @@ func ParseEc2PlatformID(uri string) *awsec2id {
 	}
 }
 
-func mapEc2InstanceStateCode(state *ec2.InstanceState) asset.State {
+func mapEc2InstanceStateCode(state *types.InstanceState) asset.State {
 	if state == nil {
 		return asset.State_STATE_UNKNOWN
 	}
-	switch *state.Code {
+	switch state.Code {
 	case 16:
 		return asset.State_STATE_RUNNING
 	case 0:
@@ -223,7 +224,7 @@ func mapEc2InstanceStateCode(state *ec2.InstanceState) asset.State {
 	case 48:
 		return asset.State_STATE_TERMINATED
 	default:
-		log.Warn().Str("state", state.String()).Msg("unknown ec2 state")
+		log.Warn().Str("state", string(state.Name)).Msg("unknown ec2 state")
 		return asset.State_STATE_UNKNOWN
 	}
 }

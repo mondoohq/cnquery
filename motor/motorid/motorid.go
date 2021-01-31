@@ -1,10 +1,11 @@
 package motorid
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws/external"
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/motor/motorid/hostname"
@@ -71,7 +72,7 @@ func GatherID(t transports.Transport, p *platform.Platform, idDetector string) (
 	case "awsec2":
 		_, ok := transport.(*local.LocalTransport)
 		if ok {
-			cfg, err := external.LoadDefaultAWSConfig()
+			cfg, err := config.LoadDefaultConfig(context.Background())
 			if err != nil {
 				return "", errors.Wrap(err, "cannot not determine aws environment")
 			}

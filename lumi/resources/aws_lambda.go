@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -54,7 +55,7 @@ func (l *lumiAwsLambda) getFunctions() []*jobpool.Job {
 
 			var marker *string
 			for {
-				functionsResp, err := svc.ListFunctionsRequest(&lambda.ListFunctionsInput{Marker: marker}).Send(ctx)
+				functionsResp, err := svc.ListFunctions(ctx, &lambda.ListFunctionsInput{Marker: marker})
 				if err != nil {
 					return nil, errors.Wrap(err, "could not gather aws lambda functions")
 				}
@@ -108,12 +109,12 @@ func (l *lumiAwsLambdaFunction) GetConcurrency() (int64, error) {
 	ctx := context.Background()
 
 	// no pagination required
-	functionConcurrency, err := svc.GetFunctionConcurrencyRequest(&lambda.GetFunctionConcurrencyInput{FunctionName: &funcName}).Send(ctx)
+	functionConcurrency, err := svc.GetFunctionConcurrency(ctx, &lambda.GetFunctionConcurrencyInput{FunctionName: &funcName})
 	if err != nil {
 		return 0, errors.Wrap(err, "could not gather aws lambda function concurrency")
 	}
 	if functionConcurrency.ReservedConcurrentExecutions != nil {
-		return *functionConcurrency.ReservedConcurrentExecutions, nil
+		return toInt64From32(functionConcurrency.ReservedConcurrentExecutions), nil
 	}
 
 	return 0, nil
@@ -136,9 +137,9 @@ func (l *lumiAwsLambdaFunction) GetPolicy() (interface{}, error) {
 	ctx := context.Background()
 
 	// no pagination required
-	functionPolicy, err := svc.GetPolicyRequest(&lambda.GetPolicyInput{FunctionName: &funcArn}).Send(ctx)
-	isAwsErr, code := IsAwsCode(err)
-	if err != nil && isAwsErr && code == "ResourceNotFoundException" {
+	functionPolicy, err := svc.GetPolicy(ctx, &lambda.GetPolicyInput{FunctionName: &funcArn})
+	var notFoundErr *types.ResourceNotFoundException
+	if err != nil && errors.As(err, &notFoundErr) {
 		return nil, nil
 	} else if err != nil {
 		return nil, err
