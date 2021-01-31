@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
+	"github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 )
@@ -57,7 +58,7 @@ func (g *lumiAwsGuardduty) getDetectors() []*jobpool.Job {
 
 			nextToken := aws.String("no_token_to_start_with")
 			for nextToken != nil {
-				detectors, err := svc.ListDetectorsRequest(params).Send(ctx)
+				detectors, err := svc.ListDetectors(ctx, params)
 				if err != nil {
 					return nil, err
 				}
@@ -100,20 +101,20 @@ func (g *lumiAwsGuarddutyDetector) GetUnarchivedFindings() ([]interface{}, error
 	svc := at.Guardduty(region)
 	ctx := context.Background()
 
-	findings, err := svc.ListFindingsRequest(&guardduty.ListFindingsInput{
+	findings, err := svc.ListFindings(ctx, &guardduty.ListFindingsInput{
 		DetectorId: &id,
-		FindingCriteria: &guardduty.FindingCriteria{
-			Criterion: map[string]guardduty.Condition{
+		FindingCriteria: &types.FindingCriteria{
+			Criterion: map[string]types.Condition{
 				"service.archived": {
 					Equals: []string{"false"},
 				},
 			},
 		},
-	}).Send(ctx)
+	})
 	if err != nil {
 		return nil, err
 	}
-	findingDetails, err := svc.GetFindingsRequest(&guardduty.GetFindingsInput{FindingIds: findings.FindingIds, DetectorId: &id}).Send(ctx)
+	findingDetails, err := svc.GetFindings(ctx, &guardduty.GetFindingsInput{FindingIds: findings.FindingIds, DetectorId: &id})
 	if err != nil {
 		return nil, err
 	}
@@ -137,20 +138,12 @@ func (g *lumiAwsGuarddutyDetector) init(args *lumi.Args) (*lumi.Args, AwsGuarddu
 	}
 	svc := at.Guardduty(region)
 	ctx := context.Background()
-	detector, err := svc.GetDetectorRequest(&guardduty.GetDetectorInput{DetectorId: &id}).Send(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
-	stringState, err := detector.Status.MarshalValue()
-	if err != nil {
-		return nil, nil, err
-	}
-	stringFreq, err := detector.FindingPublishingFrequency.MarshalValue()
+	detector, err := svc.GetDetector(ctx, &guardduty.GetDetectorInput{DetectorId: &id})
 	if err != nil {
 		return nil, nil, err
 	}
 
-	(*args)["status"] = stringState
-	(*args)["findingPublishingFrequency"] = stringFreq
+	(*args)["status"] = string(detector.Status)
+	(*args)["findingPublishingFrequency"] = string(detector.FindingPublishingFrequency)
 	return args, nil, nil
 }

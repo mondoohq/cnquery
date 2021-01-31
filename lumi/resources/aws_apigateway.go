@@ -62,7 +62,7 @@ func (a *lumiAwsApigateway) getRestApis() []*jobpool.Job {
 			res := []interface{}{}
 			var position *string
 			for {
-				restApisResp, err := svc.GetRestApisRequest(&apigateway.GetRestApisInput{Position: position}).Send(ctx)
+				restApisResp, err := svc.GetRestApis(ctx, &apigateway.GetRestApisInput{Position: position})
 				if err != nil {
 					return nil, errors.Wrap(err, "could not gather aws apigateway rest apis")
 				}
@@ -114,7 +114,7 @@ func (a *lumiAwsApigatewayRestapi) GetStages() ([]interface{}, error) {
 	ctx := context.Background()
 
 	// no pagination required
-	stagesResp, err := svc.GetStagesRequest(&apigateway.GetStagesInput{RestApiId: &restApiId}).Send(ctx)
+	stagesResp, err := svc.GetStages(ctx, &apigateway.GetStagesInput{RestApiId: &restApiId})
 	if err != nil {
 		return nil, errors.Wrap(err, "could not gather aws api gateway stages")
 	}
@@ -128,7 +128,7 @@ func (a *lumiAwsApigatewayRestapi) GetStages() ([]interface{}, error) {
 			"arn", fmt.Sprintf(apiStageArnPattern, region, account.ID, restApiId, toString(stage.StageName)),
 			"name", toString(stage.StageName),
 			"description", toString(stage.Description),
-			"tracingEnabled", toBool(stage.TracingEnabled),
+			"tracingEnabled", stage.TracingEnabled,
 			"deploymentId", toString(stage.DeploymentId),
 			"methodSettings", dictMethodSettings,
 		)

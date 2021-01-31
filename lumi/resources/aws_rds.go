@@ -58,7 +58,7 @@ func (d *lumiAwsRds) getDbInstances() []*jobpool.Job {
 
 			var marker *string
 			for {
-				dbInstances, err := svc.DescribeDBInstancesRequest(&rds.DescribeDBInstancesInput{Marker: marker}).Send(ctx)
+				dbInstances, err := svc.DescribeDBInstances(ctx, &rds.DescribeDBInstancesInput{Marker: marker})
 				if err != nil {
 					return nil, err
 				}
@@ -70,15 +70,15 @@ func (d *lumiAwsRds) getDbInstances() []*jobpool.Job {
 					lumiDBInstance, err := d.Runtime.CreateResource("aws.rds.dbinstance",
 						"arn", toString(dbInstance.DBInstanceArn),
 						"name", toString(dbInstance.DBName),
-						"backupRetentionPeriod", toInt64(dbInstance.BackupRetentionPeriod),
-						"storageEncrypted", toBool(dbInstance.StorageEncrypted),
+						"backupRetentionPeriod", int64(dbInstance.BackupRetentionPeriod),
+						"storageEncrypted", dbInstance.StorageEncrypted,
 						"region", regionVal,
-						"publiclyAccessible", toBool(dbInstance.PubliclyAccessible),
+						"publiclyAccessible", dbInstance.PubliclyAccessible,
 						"enabledCloudwatchLogsExports", stringSliceInterface,
 						"enhancedMonitoringResourceArn", toString(dbInstance.EnhancedMonitoringResourceArn),
-						"multiAZ", toBool(dbInstance.MultiAZ),
+						"multiAZ", dbInstance.MultiAZ,
 						"id", toString(dbInstance.DBInstanceIdentifier),
-						"deletionProtection", toBool(dbInstance.DeletionProtection),
+						"deletionProtection", dbInstance.DeletionProtection,
 					)
 					if err != nil {
 						return nil, err
@@ -174,7 +174,7 @@ func (d *lumiAwsRds) getDbClusters() []*jobpool.Job {
 
 			var marker *string
 			for {
-				dbClusters, err := svc.DescribeDBClustersRequest(&rds.DescribeDBClustersInput{Marker: marker}).Send(ctx)
+				dbClusters, err := svc.DescribeDBClusters(ctx, &rds.DescribeDBClustersInput{Marker: marker})
 				if err != nil {
 					return nil, err
 				}
@@ -233,7 +233,7 @@ func (d *lumiAwsRdsDbcluster) GetSnapshots() ([]interface{}, error) {
 
 	var marker *string
 	for {
-		snapshots, err := svc.DescribeDBClusterSnapshotsRequest(&rds.DescribeDBClusterSnapshotsInput{DBClusterIdentifier: &dbClusterId, Marker: marker}).Send(ctx)
+		snapshots, err := svc.DescribeDBClusterSnapshots(ctx, &rds.DescribeDBClusterSnapshotsInput{DBClusterIdentifier: &dbClusterId, Marker: marker})
 		if err != nil {
 			return nil, err
 		}
@@ -243,7 +243,7 @@ func (d *lumiAwsRdsDbcluster) GetSnapshots() ([]interface{}, error) {
 				"id", toString(snapshot.DBClusterSnapshotIdentifier),
 				"type", toString(snapshot.SnapshotType),
 				"region", region,
-				"encrypted", toBool(snapshot.StorageEncrypted),
+				"encrypted", snapshot.StorageEncrypted,
 				"isClusterSnapshot", true,
 			)
 			if err != nil {
@@ -279,7 +279,7 @@ func (d *lumiAwsRdsDbinstance) GetSnapshots() ([]interface{}, error) {
 
 	var marker *string
 	for {
-		snapshots, err := svc.DescribeDBSnapshotsRequest(&rds.DescribeDBSnapshotsInput{DBInstanceIdentifier: &instanceId, Marker: marker}).Send(ctx)
+		snapshots, err := svc.DescribeDBSnapshots(ctx, &rds.DescribeDBSnapshotsInput{DBInstanceIdentifier: &instanceId, Marker: marker})
 		if err != nil {
 			return nil, err
 		}
@@ -289,7 +289,7 @@ func (d *lumiAwsRdsDbinstance) GetSnapshots() ([]interface{}, error) {
 				"id", toString(snapshot.DBSnapshotIdentifier),
 				"type", toString(snapshot.SnapshotType),
 				"region", region,
-				"encrypted", toBool(snapshot.Encrypted),
+				"encrypted", snapshot.Encrypted,
 				"isClusterSnapshot", false,
 			)
 			if err != nil {
@@ -338,13 +338,13 @@ func (d *lumiAwsRdsSnapshot) GetAttributes() ([]interface{}, error) {
 	svc := at.Rds(region)
 	ctx := context.Background()
 	if isCluster == true {
-		snapshotAttributes, err := svc.DescribeDBClusterSnapshotAttributesRequest(&rds.DescribeDBClusterSnapshotAttributesInput{DBClusterSnapshotIdentifier: &snapshotId}).Send(ctx)
+		snapshotAttributes, err := svc.DescribeDBClusterSnapshotAttributes(ctx, &rds.DescribeDBClusterSnapshotAttributesInput{DBClusterSnapshotIdentifier: &snapshotId})
 		if err != nil {
 			return nil, err
 		}
 		return jsonToDictSlice(snapshotAttributes.DBClusterSnapshotAttributesResult.DBClusterSnapshotAttributes)
 	}
-	snapshotAttributes, err := svc.DescribeDBSnapshotAttributesRequest(&rds.DescribeDBSnapshotAttributesInput{DBSnapshotIdentifier: &snapshotId}).Send(ctx)
+	snapshotAttributes, err := svc.DescribeDBSnapshotAttributes(ctx, &rds.DescribeDBSnapshotAttributesInput{DBSnapshotIdentifier: &snapshotId})
 	if err != nil {
 		return nil, err
 	}

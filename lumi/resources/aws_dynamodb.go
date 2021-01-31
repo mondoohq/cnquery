@@ -57,7 +57,7 @@ func (d *lumiAwsDynamodb) getBackups() []*jobpool.Job {
 			ctx := context.Background()
 
 			// no pagination required
-			listBackupsResp, err := svc.ListBackupsRequest(&dynamodb.ListBackupsInput{}).Send(ctx)
+			listBackupsResp, err := svc.ListBackups(ctx, &dynamodb.ListBackupsInput{})
 			if err != nil {
 				return nil, errors.Wrap(err, "could not gather aws dynamodb backups")
 			}
@@ -89,7 +89,7 @@ func (d *lumiAwsDynamodbTable) GetBackups() ([]interface{}, error) {
 	ctx := context.Background()
 
 	// no pagination required
-	listBackupsResp, err := svc.ListBackupsRequest(&dynamodb.ListBackupsInput{TableName: &tableName}).Send(ctx)
+	listBackupsResp, err := svc.ListBackups(ctx, &dynamodb.ListBackupsInput{TableName: &tableName})
 	if err != nil {
 		return nil, errors.Wrap(err, "could not gather aws dynamodb backups")
 	}
@@ -137,7 +137,7 @@ func (d *lumiAwsDynamodb) getLimits() []*jobpool.Job {
 			ctx := context.Background()
 
 			// no pagination required
-			limitsResp, err := svc.DescribeLimitsRequest(&dynamodb.DescribeLimitsInput{}).Send(ctx)
+			limitsResp, err := svc.DescribeLimits(ctx, &dynamodb.DescribeLimitsInput{})
 			if err != nil {
 				return nil, errors.Wrap(err, "could not gather aws dynamodb backups")
 			}
@@ -173,7 +173,7 @@ func (d *lumiAwsDynamodb) GetGlobalTables() ([]interface{}, error) {
 	ctx := context.Background()
 
 	// no pagination required
-	listGlobalTablesResp, err := svc.ListGlobalTablesRequest(&dynamodb.ListGlobalTablesInput{}).Send(ctx)
+	listGlobalTablesResp, err := svc.ListGlobalTables(ctx, &dynamodb.ListGlobalTablesInput{})
 	if err != nil {
 		return nil, errors.Wrap(err, "could not gather aws dynamodb global tables")
 	}
@@ -232,14 +232,14 @@ func (d *lumiAwsDynamodb) getTables() []*jobpool.Job {
 			ctx := context.Background()
 
 			// no pagination required
-			listTablesResp, err := svc.ListTablesRequest(&dynamodb.ListTablesInput{}).Send(ctx)
+			listTablesResp, err := svc.ListTables(ctx, &dynamodb.ListTablesInput{})
 			if err != nil {
 				return nil, errors.Wrap(err, "could not gather aws dynamodb tables")
 			}
 			res := []interface{}{}
 			for _, tableName := range listTablesResp.TableNames {
 				// call describe table to get real info/details about the table
-				table, err := svc.DescribeTableRequest(&dynamodb.DescribeTableInput{TableName: &tableName}).Send(ctx)
+				table, err := svc.DescribeTable(ctx, &dynamodb.DescribeTableInput{TableName: &tableName})
 				if err != nil {
 					return nil, errors.Wrap(err, "could not get aws dynamodb table")
 				}
@@ -283,7 +283,7 @@ func (d *lumiAwsDynamodbGlobaltable) GetReplicaSettings() ([]interface{}, error)
 	ctx := context.Background()
 
 	// no pagination required
-	tableSettingsResp, err := svc.DescribeGlobalTableSettingsRequest(&dynamodb.DescribeGlobalTableSettingsInput{GlobalTableName: &tableName}).Send(ctx)
+	tableSettingsResp, err := svc.DescribeGlobalTableSettings(ctx, &dynamodb.DescribeGlobalTableSettingsInput{GlobalTableName: &tableName})
 	if err != nil {
 		return nil, errors.Wrap(err, "could not gather aws dynamodb table settings")
 	}
@@ -307,7 +307,7 @@ func (d *lumiAwsDynamodbTable) GetContinuousBackups() (interface{}, error) {
 	ctx := context.Background()
 
 	// no pagination required
-	continuousBackupsResp, err := svc.DescribeContinuousBackupsRequest(&dynamodb.DescribeContinuousBackupsInput{TableName: &tableName}).Send(ctx)
+	continuousBackupsResp, err := svc.DescribeContinuousBackups(ctx, &dynamodb.DescribeContinuousBackupsInput{TableName: &tableName})
 	if err != nil {
 		return nil, errors.Wrap(err, "could not gather aws dynamodb continuous backups")
 	}

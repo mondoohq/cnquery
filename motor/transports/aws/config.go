@@ -23,11 +23,10 @@ func CheckRegion(cfg aws_sdk.Config) error {
 	return nil
 }
 
-func CheckIam(cfg aws_sdk.Config) (*sts.GetCallerIdentityResponse, error) {
+func CheckIam(cfg aws_sdk.Config) (*sts.GetCallerIdentityOutput, error) {
 	ctx := context.Background()
-	stsSvr := sts.New(cfg)
-	req := stsSvr.GetCallerIdentityRequest(&sts.GetCallerIdentityInput{})
-	resp, err := req.Send(ctx)
+	stsSvr := sts.NewFromConfig(cfg)
+	resp, err := stsSvr.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
 	if err != nil {
 		return nil, err
 	} else if resp.Account == nil || resp.UserId == nil {

@@ -58,7 +58,7 @@ func (e *lumiAwsElb) getClassicLoadBalancers() []*jobpool.Job {
 
 			var marker *string
 			for {
-				lbs, err := svc.DescribeLoadBalancersRequest(&elasticloadbalancing.DescribeLoadBalancersInput{Marker: marker}).Send(ctx)
+				lbs, err := svc.DescribeLoadBalancers(ctx, &elasticloadbalancing.DescribeLoadBalancersInput{Marker: marker})
 				if err != nil {
 					return nil, err
 				}
@@ -132,20 +132,16 @@ func (e *lumiAwsElb) getLoadBalancers() []*jobpool.Job {
 
 			var marker *string
 			for {
-				lbs, err := svc.DescribeLoadBalancersRequest(&elasticloadbalancingv2.DescribeLoadBalancersInput{Marker: marker}).Send(ctx)
+				lbs, err := svc.DescribeLoadBalancers(ctx, &elasticloadbalancingv2.DescribeLoadBalancersInput{Marker: marker})
 				if err != nil {
 					return nil, err
 				}
 				for _, lb := range lbs.LoadBalancers {
-					stringScheme, err := lb.Scheme.MarshalValue()
-					if err != nil {
-						return nil, err
-					}
 					lumiLb, err := e.Runtime.CreateResource("aws.elb.loadbalancer",
 						"arn", toString(lb.LoadBalancerArn),
 						"dnsName", toString(lb.DNSName),
 						"name", toString(lb.LoadBalancerName),
-						"scheme", stringScheme,
+						"scheme", string(lb.Scheme),
 					)
 					if err != nil {
 						return nil, err
@@ -179,7 +175,7 @@ func (e *lumiAwsElbLoadbalancer) GetListenerDescriptions() ([]interface{}, error
 	}
 	svc := at.Elbv2(region)
 	ctx := context.Background()
-	listeners, err := svc.DescribeListenersRequest(&elasticloadbalancingv2.DescribeListenersInput{LoadBalancerArn: &arn}).Send(ctx)
+	listeners, err := svc.DescribeListeners(ctx, &elasticloadbalancingv2.DescribeListenersInput{LoadBalancerArn: &arn})
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +198,7 @@ func (e *lumiAwsElbLoadbalancer) GetAttributes() ([]interface{}, error) {
 	}
 	svc := at.Elbv2(region)
 	ctx := context.Background()
-	attributes, err := svc.DescribeLoadBalancerAttributesRequest(&elasticloadbalancingv2.DescribeLoadBalancerAttributesInput{LoadBalancerArn: &arn}).Send(ctx)
+	attributes, err := svc.DescribeLoadBalancerAttributes(ctx, &elasticloadbalancingv2.DescribeLoadBalancerAttributesInput{LoadBalancerArn: &arn})
 	if err != nil {
 		return nil, err
 	}

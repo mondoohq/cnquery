@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"github.com/aws/aws-sdk-go-v2/aws/awserr"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
+	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
@@ -21,13 +21,6 @@ import (
 
 func (p *lumiAwsIam) id() (string, error) {
 	return "aws.iam", nil
-}
-
-func IsAwsCode(err error) (bool, string) {
-	if awsErr, ok := err.(awserr.Error); ok {
-		return true, awsErr.Code()
-	}
-	return false, ""
 }
 
 func (c *lumiAwsIam) GetCredentialReport() ([]interface{}, error) {
@@ -46,41 +39,44 @@ func (c *lumiAwsIam) GetCredentialReport() ([]interface{}, error) {
 	// 404 - ReportInProgress
 	// 410 - ReportNotPresent
 	// 500 - ServiceFailure
-	rresp, err := svc.GetCredentialReportRequest(&iam.GetCredentialReportInput{}).Send(ctx)
-	isAwsCode, code := IsAwsCode(err)
-	if err != nil && (!isAwsCode || code == iam.ErrCodeServiceFailureException) {
-		return nil, errors.Wrap(err, "could not gather aws iam credential report")
-	}
+	rresp, err := svc.GetCredentialReport(ctx, &iam.GetCredentialReportInput{})
+	var notFoundErr *types.NoSuchEntityException
 
-	// if we have an error and it is not 500 we generate a code
-	if err != nil && isAwsCode && code != iam.ErrCodeNoSuchEntityException {
-		// generate a new report
-		gresp, err := svc.GenerateCredentialReportRequest(&iam.GenerateCredentialReportInput{}).Send(ctx)
-		if err != nil {
-			return nil, err
+	if err != nil {
+		var awsFailErr *types.ServiceFailureException
+		if errors.As(err, &awsFailErr) {
+			return nil, errors.Wrap(err, "could not gather aws iam credential report")
 		}
 
-		if gresp.State == iam.ReportStateTypeStarted || gresp.State == iam.ReportStateTypeInprogress {
-			// we need to wait
-		} else if gresp.State == iam.ReportStateTypeComplete {
-			// we do not neet do do anything
-		} else {
-			// unsupported report state
-			return nil, fmt.Errorf("aws iam credential report state is not supported: %s", gresp.State)
+		// if we have an error and it is not 500 we generate a code
+		if errors.As(err, &notFoundErr) {
+			// generate a new report
+			gresp, err := svc.GenerateCredentialReport(ctx, &iam.GenerateCredentialReportInput{})
+			if err != nil {
+				return nil, err
+			}
+
+			if gresp.State == types.ReportStateTypeStarted || gresp.State == types.ReportStateTypeInprogress {
+				// we need to wait
+			} else if gresp.State == types.ReportStateTypeComplete {
+				// we do not neet do do anything
+			} else {
+				// unsupported report state
+				return nil, fmt.Errorf("aws iam credential report state is not supported: %s", gresp.State)
+			}
 		}
 	}
 
 	// loop as long as the response is 404 since this means the report is still in progress
-	for code == iam.ErrCodeNoSuchEntityException {
-		rresp, err = svc.GetCredentialReportRequest(&iam.GetCredentialReportInput{}).Send(ctx)
+	for errors.As(err, &notFoundErr) {
+		rresp, err = svc.GetCredentialReport(ctx, &iam.GetCredentialReportInput{})
 		if err == nil {
 			break
 		}
 
 		log.Error().Err(err).Msgf("resp %v, err: %v", rresp, err)
 
-		isAwsCode, code = IsAwsCode(err)
-		if !isAwsCode || isAwsCode && code != iam.ErrCodeNoSuchEntityException {
+		if !errors.As(err, &notFoundErr) {
 			return nil, errors.Wrap(err, "could not gather aws iam credential report")
 		}
 		time.Sleep(100 * time.Millisecond)
@@ -120,50 +116,28 @@ func (c *lumiAwsIam) GetAccountPasswordPolicy() (map[string]interface{}, error) 
 	svc := at.Iam("")
 	ctx := context.Background()
 
-	resp, err := svc.GetAccountPasswordPolicyRequest(&iam.GetAccountPasswordPolicyInput{}).Send(ctx)
-	isAwsCode, code := IsAwsCode(err)
-	if err != nil && (!isAwsCode) {
+	resp, err := svc.GetAccountPasswordPolicy(ctx, &iam.GetAccountPasswordPolicyInput{})
+	var notFoundErr *types.NoSuchEntityException
+	if err != nil {
+		if errors.As(err, &notFoundErr) {
+			return nil, nil
+		}
 		return nil, errors.Wrap(err, "could not gather aws iam account-password-policy")
-	}
-
-	log.Info().Msg(code)
-	if code == iam.ErrCodeNoSuchEntityException {
-		return nil, nil
 	}
 
 	res := map[string]interface{}{}
 
 	if resp.PasswordPolicy != nil {
-		if resp.PasswordPolicy.AllowUsersToChangePassword != nil {
-			res["AllowUsersToChangePassword"] = fmt.Sprintf("%t", *resp.PasswordPolicy.AllowUsersToChangePassword)
-		}
-		if resp.PasswordPolicy.RequireUppercaseCharacters != nil {
-			res["RequireUppercaseCharacters"] = fmt.Sprintf("%t", *resp.PasswordPolicy.RequireUppercaseCharacters)
-		}
-		if resp.PasswordPolicy.RequireSymbols != nil {
-			res["RequireSymbols"] = fmt.Sprintf("%t", *resp.PasswordPolicy.RequireSymbols)
-		}
-		if resp.PasswordPolicy.ExpirePasswords != nil {
-			res["ExpirePasswords"] = fmt.Sprintf("%t", *resp.PasswordPolicy.ExpirePasswords)
-		}
-		if resp.PasswordPolicy.PasswordReusePrevention != nil {
-			res["PasswordReusePrevention"] = strconv.FormatInt(*resp.PasswordPolicy.PasswordReusePrevention, 10)
-		}
-		if resp.PasswordPolicy.RequireLowercaseCharacters != nil {
-			res["RequireLowercaseCharacters"] = fmt.Sprintf("%t", *resp.PasswordPolicy.RequireLowercaseCharacters)
-		}
-		if resp.PasswordPolicy.MaxPasswordAge != nil {
-			res["MaxPasswordAge"] = strconv.FormatInt(*resp.PasswordPolicy.MaxPasswordAge, 10)
-		}
-		if resp.PasswordPolicy.HardExpiry != nil {
-			res["HardExpiry"] = fmt.Sprintf("%t", *resp.PasswordPolicy.HardExpiry)
-		}
-		if resp.PasswordPolicy.RequireNumbers != nil {
-			res["RequireNumbers"] = fmt.Sprintf("%t", *resp.PasswordPolicy.RequireNumbers)
-		}
-		if resp.PasswordPolicy.MinimumPasswordLength != nil {
-			res["MinimumPasswordLength"] = strconv.FormatInt(*resp.PasswordPolicy.MinimumPasswordLength, 10)
-		}
+		res["AllowUsersToChangePassword"] = resp.PasswordPolicy.AllowUsersToChangePassword
+		res["RequireUppercaseCharacters"] = resp.PasswordPolicy.RequireUppercaseCharacters
+		res["RequireSymbols"] = resp.PasswordPolicy.RequireSymbols
+		res["ExpirePasswords"] = resp.PasswordPolicy.ExpirePasswords
+		res["PasswordReusePrevention"] = strconv.FormatInt(int64(*resp.PasswordPolicy.PasswordReusePrevention), 10)
+		res["RequireLowercaseCharacters"] = resp.PasswordPolicy.RequireLowercaseCharacters
+		res["MaxPasswordAge"] = strconv.FormatInt(int64(*resp.PasswordPolicy.MaxPasswordAge), 10)
+		res["HardExpiry"] = toBool(resp.PasswordPolicy.HardExpiry)
+		res["RequireNumbers"] = resp.PasswordPolicy.RequireNumbers
+		res["MinimumPasswordLength"] = strconv.FormatInt(int64(*resp.PasswordPolicy.MinimumPasswordLength), 10)
 	}
 
 	return res, nil
@@ -178,7 +152,7 @@ func (c *lumiAwsIam) GetAccountSummary() (map[string]interface{}, error) {
 	svc := at.Iam("")
 	ctx := context.Background()
 
-	resp, err := svc.GetAccountSummaryRequest(&iam.GetAccountSummaryInput{}).Send(ctx)
+	resp, err := svc.GetAccountSummary(ctx, &iam.GetAccountSummaryInput{})
 	if err != nil {
 		return nil, errors.Wrap(err, "could not gather aws iam account-summary")
 	}
@@ -204,7 +178,7 @@ func (c *lumiAwsIam) GetUsers() ([]interface{}, error) {
 	var marker *string
 	res := []interface{}{}
 	for {
-		usersResp, err := svc.ListUsersRequest(&iam.ListUsersInput{Marker: marker}).Send(ctx)
+		usersResp, err := svc.ListUsers(ctx, &iam.ListUsersInput{Marker: marker})
 		if err != nil {
 			return nil, errors.Wrap(err, "could not gather aws iam users")
 		}
@@ -218,7 +192,7 @@ func (c *lumiAwsIam) GetUsers() ([]interface{}, error) {
 
 			res = append(res, lumiAwsIamUser)
 		}
-		if usersResp.IsTruncated == nil || *usersResp.IsTruncated == false {
+		if usersResp.IsTruncated == false {
 			break
 		}
 		marker = usersResp.Marker
@@ -226,7 +200,7 @@ func (c *lumiAwsIam) GetUsers() ([]interface{}, error) {
 	return res, nil
 }
 
-func iamTagsToMap(tags []iam.Tag) map[string]interface{} {
+func iamTagsToMap(tags []types.Tag) map[string]interface{} {
 	var tagsMap map[string]interface{}
 
 	if len(tags) > 0 {
@@ -240,7 +214,7 @@ func iamTagsToMap(tags []iam.Tag) map[string]interface{} {
 	return tagsMap
 }
 
-func (c *lumiAwsIam) createIamUser(usr *iam.User) (lumi.ResourceType, error) {
+func (c *lumiAwsIam) createIamUser(usr *types.User) (lumi.ResourceType, error) {
 	if usr == nil {
 		return nil, errors.New("no iam user provided")
 	}
@@ -264,7 +238,7 @@ func (c *lumiAwsIam) GetVirtualMfaDevices() ([]interface{}, error) {
 	svc := at.Iam("")
 	ctx := context.Background()
 
-	devicesResp, err := svc.ListVirtualMFADevicesRequest(&iam.ListVirtualMFADevicesInput{}).Send(ctx)
+	devicesResp, err := svc.ListVirtualMFADevices(ctx, &iam.ListVirtualMFADevicesInput{})
 	if err != nil {
 		return nil, errors.Wrap(err, "could not gather aws iam virtual-mfa-devices")
 	}
@@ -298,7 +272,7 @@ func (c *lumiAwsIam) GetVirtualMfaDevices() ([]interface{}, error) {
 	return res, nil
 }
 
-func (c *lumiAwsIam) lumiPolicies(policies []iam.Policy) ([]interface{}, error) {
+func (c *lumiAwsIam) lumiPolicies(policies []types.Policy) ([]interface{}, error) {
 	res := []interface{}{}
 	for i := range policies {
 		policy := policies[i]
@@ -309,8 +283,8 @@ func (c *lumiAwsIam) lumiPolicies(policies []iam.Policy) ([]interface{}, error) 
 			"id", toString(policy.PolicyId),
 			"name", toString(policy.PolicyName),
 			"description", toString(policy.Description),
-			"isAttachable", toBool(policy.IsAttachable),
-			"attachmentCount", toInt64(policy.AttachmentCount),
+			"isAttachable", policy.IsAttachable,
+			"attachmentCount", toInt64From32(policy.AttachmentCount),
 			"createDate", policy.CreateDate,
 			"updateDate", policy.UpdateDate,
 		)
@@ -333,13 +307,12 @@ func (c *lumiAwsIam) GetAttachedPolicies() ([]interface{}, error) {
 
 	res := []interface{}{}
 	var marker *string
-	onlyAttachedPolicies := true
 	for {
-		policiesResp, err := svc.ListPoliciesRequest(&iam.ListPoliciesInput{
+		policiesResp, err := svc.ListPolicies(ctx, &iam.ListPoliciesInput{
 			// setting only attached ensures we only fetch policies attached to a user, group, or role
-			OnlyAttached: &onlyAttachedPolicies,
+			OnlyAttached: true,
 			Marker:       marker,
-		}).Send(ctx)
+		})
 		if err != nil {
 			return nil, errors.Wrap(err, "could not gather aws iam policies")
 		}
@@ -350,7 +323,7 @@ func (c *lumiAwsIam) GetAttachedPolicies() ([]interface{}, error) {
 		}
 		res = append(res, policies...)
 
-		if policiesResp.IsTruncated == nil || *policiesResp.IsTruncated == false {
+		if policiesResp.IsTruncated == false {
 			break
 		}
 		marker = policiesResp.Marker
@@ -371,9 +344,9 @@ func (c *lumiAwsIam) GetPolicies() ([]interface{}, error) {
 	res := []interface{}{}
 	var marker *string
 	for {
-		policiesResp, err := svc.ListPoliciesRequest(&iam.ListPoliciesInput{
+		policiesResp, err := svc.ListPolicies(ctx, &iam.ListPoliciesInput{
 			Marker: marker,
-		}).Send(ctx)
+		})
 		if err != nil {
 			return nil, errors.Wrap(err, "could not gather aws iam policies")
 		}
@@ -384,7 +357,7 @@ func (c *lumiAwsIam) GetPolicies() ([]interface{}, error) {
 		}
 		res = append(res, policies...)
 
-		if policiesResp.IsTruncated == nil || *policiesResp.IsTruncated == false {
+		if policiesResp.IsTruncated == false {
 			break
 		}
 		marker = policiesResp.Marker
@@ -405,9 +378,9 @@ func (c *lumiAwsIam) GetRoles() ([]interface{}, error) {
 	res := []interface{}{}
 	var marker *string
 	for {
-		rolesResp, err := svc.ListRolesRequest(&iam.ListRolesInput{
+		rolesResp, err := svc.ListRoles(ctx, &iam.ListRolesInput{
 			Marker: marker,
-		}).Send(ctx)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -430,7 +403,7 @@ func (c *lumiAwsIam) GetRoles() ([]interface{}, error) {
 			res = append(res, lumiAwsIamRole)
 		}
 
-		if rolesResp.IsTruncated == nil || *rolesResp.IsTruncated == false {
+		if rolesResp.IsTruncated == false {
 			break
 		}
 		marker = rolesResp.Marker
@@ -451,9 +424,9 @@ func (c *lumiAwsIam) GetGroups() ([]interface{}, error) {
 	res := []interface{}{}
 	var marker *string
 	for {
-		groupsResp, err := svc.ListGroupsRequest(&iam.ListGroupsInput{
+		groupsResp, err := svc.ListGroups(ctx, &iam.ListGroupsInput{
 			Marker: marker,
-		}).Send(ctx)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -472,7 +445,7 @@ func (c *lumiAwsIam) GetGroups() ([]interface{}, error) {
 			res = append(res, lumiAwsIamGroup)
 		}
 
-		if groupsResp.IsTruncated == nil || *groupsResp.IsTruncated == false {
+		if groupsResp.IsTruncated == false {
 			break
 		}
 		marker = groupsResp.Marker
@@ -722,9 +695,9 @@ func (p *lumiAwsIamUser) init(args *lumi.Args) (*lumi.Args, AwsIamUser, error) {
 
 	if (*args)["name"] != nil {
 		username := (*args)["name"].(string)
-		resp, err := svc.GetUserRequest(&iam.GetUserInput{
+		resp, err := svc.GetUser(ctx, &iam.GetUserInput{
 			UserName: &username,
-		}).Send(ctx)
+		})
 		if err != nil {
 			return nil, nil, err
 		}
@@ -772,10 +745,10 @@ func (u *lumiAwsIamUser) GetPolicies() ([]interface{}, error) {
 	var marker *string
 	res := []interface{}{}
 	for {
-		userPolicies, err := svc.ListUserPoliciesRequest(&iam.ListUserPoliciesInput{
+		userPolicies, err := svc.ListUserPolicies(ctx, &iam.ListUserPoliciesInput{
 			UserName: &username,
 			Marker:   marker,
-		}).Send(ctx)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -783,7 +756,7 @@ func (u *lumiAwsIamUser) GetPolicies() ([]interface{}, error) {
 		for i := range userPolicies.PolicyNames {
 			res = append(res, userPolicies.PolicyNames[i])
 		}
-		if userPolicies.IsTruncated == nil || *userPolicies.IsTruncated == false {
+		if userPolicies.IsTruncated == false {
 			break
 		}
 		marker = userPolicies.Marker
@@ -809,10 +782,10 @@ func (u *lumiAwsIamUser) GetAttachedPolicies() ([]interface{}, error) {
 	var marker *string
 	res := []interface{}{}
 	for {
-		userAttachedPolicies, err := svc.ListAttachedUserPoliciesRequest(&iam.ListAttachedUserPoliciesInput{
+		userAttachedPolicies, err := svc.ListAttachedUserPolicies(ctx, &iam.ListAttachedUserPoliciesInput{
 			Marker:   marker,
 			UserName: &username,
-		}).Send(ctx)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -829,7 +802,7 @@ func (u *lumiAwsIamUser) GetAttachedPolicies() ([]interface{}, error) {
 
 			res = append(res, lumiAwsIamPolicy)
 		}
-		if userAttachedPolicies.IsTruncated == nil || *userAttachedPolicies.IsTruncated == false {
+		if userAttachedPolicies.IsTruncated == false {
 			break
 		}
 		marker = userAttachedPolicies.Marker
@@ -842,11 +815,11 @@ func (u *lumiAwsIamPolicy) id() (string, error) {
 	return u.Arn()
 }
 
-func (u *lumiAwsIamPolicy) loadPolicy(arn string) (*iam.Policy, error) {
+func (u *lumiAwsIamPolicy) loadPolicy(arn string) (*types.Policy, error) {
 	c, ok := u.Cache.Load("_policy")
 	if ok {
 		log.Info().Msg("use policy from cache")
-		return c.Data.(*iam.Policy), nil
+		return c.Data.(*types.Policy), nil
 	}
 
 	// if its not in the cache, fetch it
@@ -858,7 +831,7 @@ func (u *lumiAwsIamPolicy) loadPolicy(arn string) (*iam.Policy, error) {
 	svc := at.Iam("")
 	ctx := context.Background()
 
-	policy, err := svc.GetPolicyRequest(&iam.GetPolicyInput{PolicyArn: &arn}).Send(ctx)
+	policy, err := svc.GetPolicy(ctx, &iam.GetPolicyInput{PolicyArn: &arn})
 	if err != nil {
 		return nil, err
 	}
@@ -917,7 +890,7 @@ func (u *lumiAwsIamPolicy) GetIsAttachable() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return toBool(policy.IsAttachable), nil
+	return policy.IsAttachable, nil
 }
 
 func (u *lumiAwsIamPolicy) GetAttachmentCount() (int64, error) {
@@ -930,7 +903,7 @@ func (u *lumiAwsIamPolicy) GetAttachmentCount() (int64, error) {
 	if err != nil {
 		return int64(0), err
 	}
-	return toInt64(policy.AttachmentCount), nil
+	return toInt64From32(policy.AttachmentCount), nil
 }
 
 func (u *lumiAwsIamPolicy) GetCreateDate() (*time.Time, error) {
@@ -978,9 +951,9 @@ func (u *lumiAwsIamPolicy) GetScope() (string, error) {
 }
 
 type attachedEntities struct {
-	PolicyGroups []iam.PolicyGroup
-	PolicyRoles  []iam.PolicyRole
-	PolicyUsers  []iam.PolicyUser
+	PolicyGroups []types.PolicyGroup
+	PolicyRoles  []types.PolicyRole
+	PolicyUsers  []types.PolicyUser
 }
 
 func (u *lumiAwsIamPolicy) listAttachedEntities(arn string) (attachedEntities, error) {
@@ -1002,10 +975,10 @@ func (u *lumiAwsIamPolicy) listAttachedEntities(arn string) (attachedEntities, e
 
 	var marker *string
 	for {
-		entities, err := svc.ListEntitiesForPolicyRequest(&iam.ListEntitiesForPolicyInput{
+		entities, err := svc.ListEntitiesForPolicy(ctx, &iam.ListEntitiesForPolicyInput{
 			Marker:    marker,
 			PolicyArn: &arn,
-		}).Send(ctx)
+		})
 		if err != nil {
 			return res, err
 		}
@@ -1022,7 +995,7 @@ func (u *lumiAwsIamPolicy) listAttachedEntities(arn string) (attachedEntities, e
 			res.PolicyUsers = append(res.PolicyUsers, entities.PolicyUsers...)
 		}
 
-		if entities.IsTruncated == nil || *entities.IsTruncated == false {
+		if entities.IsTruncated == false {
 			break
 		}
 		marker = entities.Marker
@@ -1126,18 +1099,18 @@ func (u *lumiAwsIamPolicy) GetDefaultVersion() (interface{}, error) {
 		return nil, err
 	}
 
-	policyVersions, err := svc.ListPolicyVersionsRequest(&iam.ListPolicyVersionsInput{PolicyArn: &arn}).Send(ctx)
+	policyVersions, err := svc.ListPolicyVersions(ctx, &iam.ListPolicyVersionsInput{PolicyArn: &arn})
 	if err != nil {
 		return nil, err
 	}
 
 	for i := range policyVersions.Versions {
 		policyversion := policyVersions.Versions[i]
-		if toBool(policyversion.IsDefaultVersion) == true {
+		if policyversion.IsDefaultVersion == true {
 			lumiAwsIamPolicyVersion, err := u.Runtime.CreateResource("aws.iam.policyversion",
 				"arn", arn,
 				"versionId", toString(policyversion.VersionId),
-				"isDefaultVersion", toBool(policyversion.IsDefaultVersion),
+				"isDefaultVersion", policyversion.IsDefaultVersion,
 				"createDate", policyversion.CreateDate,
 			)
 			if err != nil {
@@ -1163,7 +1136,7 @@ func (u *lumiAwsIamPolicy) GetVersions() ([]interface{}, error) {
 		return nil, err
 	}
 
-	policyVersions, err := svc.ListPolicyVersionsRequest(&iam.ListPolicyVersionsInput{PolicyArn: &arn}).Send(ctx)
+	policyVersions, err := svc.ListPolicyVersions(ctx, &iam.ListPolicyVersionsInput{PolicyArn: &arn})
 	if err != nil {
 		return nil, err
 	}
@@ -1175,7 +1148,7 @@ func (u *lumiAwsIamPolicy) GetVersions() ([]interface{}, error) {
 		lumiAwsIamPolicyVersion, err := u.Runtime.CreateResource("aws.iam.policyversion",
 			"arn", arn,
 			"versionId", toString(policyversion.VersionId),
-			"isDefaultVersion", toBool(policyversion.IsDefaultVersion),
+			"isDefaultVersion", policyversion.IsDefaultVersion,
 			"createDate", policyversion.CreateDate,
 		)
 		if err != nil {
@@ -1221,10 +1194,10 @@ func (u *lumiAwsIamPolicyversion) GetDocument() (interface{}, error) {
 		return "", err
 	}
 
-	policyVersion, err := svc.GetPolicyVersionRequest(&iam.GetPolicyVersionInput{
+	policyVersion, err := svc.GetPolicyVersion(ctx, &iam.GetPolicyVersionInput{
 		PolicyArn: &arn,
 		VersionId: &versionid,
-	}).Send(ctx)
+	})
 	if err != nil {
 		return "", err
 	}
@@ -1271,9 +1244,9 @@ func (p *lumiAwsIamRole) init(args *lumi.Args) (*lumi.Args, AwsIamRole, error) {
 
 	if (*args)["name"] != nil {
 		rolename := (*args)["name"].(string)
-		resp, err := svc.GetRoleRequest(&iam.GetRoleInput{
+		resp, err := svc.GetRole(ctx, &iam.GetRoleInput{
 			RoleName: &rolename,
-		}).Send(ctx)
+		})
 		if err != nil {
 			return nil, nil, err
 		}
@@ -1327,9 +1300,9 @@ func (p *lumiAwsIamGroup) init(args *lumi.Args) (*lumi.Args, AwsIamGroup, error)
 
 	if (*args)["name"] != nil {
 		groupname := (*args)["name"].(string)
-		resp, err := svc.GetGroupRequest(&iam.GetGroupInput{
+		resp, err := svc.GetGroup(ctx, &iam.GetGroupInput{
 			GroupName: &groupname,
-		}).Send(ctx)
+		})
 		if err != nil {
 			return nil, nil, err
 		}
@@ -1379,10 +1352,10 @@ func (u *lumiAwsIamUser) GetGroups() ([]interface{}, error) {
 	var marker *string
 	res := []interface{}{}
 	for {
-		userGroups, err := svc.ListGroupsForUserRequest(&iam.ListGroupsForUserInput{
+		userGroups, err := svc.ListGroupsForUser(ctx, &iam.ListGroupsForUserInput{
 			UserName: &username,
 			Marker:   marker,
-		}).Send(ctx)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -1390,7 +1363,7 @@ func (u *lumiAwsIamUser) GetGroups() ([]interface{}, error) {
 		for i := range userGroups.Groups {
 			res = append(res, toString(userGroups.Groups[i].GroupName))
 		}
-		if userGroups.IsTruncated == nil || *userGroups.IsTruncated == false {
+		if userGroups.IsTruncated == false {
 			break
 		}
 		marker = userGroups.Marker

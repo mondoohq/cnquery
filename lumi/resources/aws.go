@@ -57,6 +57,13 @@ func toInt64(i *int64) int64 {
 	return *i
 }
 
+func toInt64From32(i *int32) int64 {
+	if i == nil {
+		return int64(0)
+	}
+	return int64(*i)
+}
+
 func toInt(i *int) int64 {
 	if i == nil {
 		return int64(0)

@@ -5,9 +5,9 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/cockroachdb/errors"
 
-	"github.com/aws/aws-sdk-go-v2/aws/ec2metadata"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 )
@@ -45,7 +45,7 @@ func (m *UnixInstanceMetadata) InstanceID() (string, error) {
 	}
 
 	// parse into struct
-	doc := ec2metadata.EC2InstanceIdentityDocument{}
+	doc := imds.InstanceIdentityDocument{}
 	if err := json.NewDecoder(strings.NewReader(instanceDocument)).Decode(&doc); err != nil {
 		return "", errors.Wrap(err, "failed to decode EC2 instance identity document")
 	}

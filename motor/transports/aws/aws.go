@@ -8,7 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	aws_sdk "github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/external"
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
@@ -20,12 +20,14 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 		return nil, errors.New("backend is not supported for aws transport")
 	}
 
-	configs := []external.Config{}
+	configs := []config.Config{}
 	if tc.Options != nil && len(tc.Options["profile"]) > 0 {
-		configs = append(configs, external.WithSharedConfigProfile(tc.Options["profile"]))
+		configs = append(configs, config.WithSharedConfigProfile(tc.Options["profile"]))
 	}
 
-	cfg, err := external.LoadDefaultAWSConfig(configs...)
+	ctx := context.Background()
+	// TODO include configs
+	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not load aws configuration")
 	}
@@ -125,7 +127,7 @@ func (t *Transport) GetRegions() ([]string, error) {
 	svc := t.Ec2("us-east-1")
 	ctx := context.Background()
 
-	res, err := svc.DescribeRegionsRequest(&ec2.DescribeRegionsInput{}).Send(ctx)
+	res, err := svc.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
 	if err != nil {
 		return regions, nil
 	}

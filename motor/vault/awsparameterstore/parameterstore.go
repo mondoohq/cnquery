@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/motor/vault"
 )
@@ -46,7 +47,7 @@ func (v *Vault) Set(ctx context.Context, cred *vault.Credential) (*vault.Credent
 	}
 
 	// create the client
-	c := ssm.New(v.cfg)
+	c := ssm.NewFromConfig(v.cfg)
 
 	// we json-encode the value, while proto would be more efficient, json allows humans to read the data more easily
 	payload, err := json.Marshal(cred.Fields)
@@ -55,15 +56,14 @@ func (v *Vault) Set(ctx context.Context, cred *vault.Credential) (*vault.Credent
 	}
 
 	// store new secret version
-	putReq := c.PutParameterRequest(&ssm.PutParameterInput{
+	_, err = c.PutParameter(ctx, &ssm.PutParameterInput{
 		Name:      aws.String(awsParamKeyID(cred.Key)),
 		Value:     aws.String(string(payload)),
-		Type:      ssm.ParameterTypeString,
-		Overwrite: aws.Bool(true),
+		Type:      types.ParameterTypeString,
+		Overwrite: true,
 		// NOTE: once we use  tags, override will not work
 		// Tags:  []ssm.Tag{ssm.Tag{Key: aws.String("key"), Value: aws.String("value")}},
 	})
-	_, err = putReq.Send(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to add secret version")
 	}
@@ -78,14 +78,13 @@ func (v *Vault) Get(ctx context.Context, id *vault.CredentialID) (*vault.Credent
 	}
 
 	// create the client
-	c := ssm.New(v.cfg)
+	c := ssm.NewFromConfig(v.cfg)
 
 	// retrieve secret
-	getReq := c.GetParameterRequest(&ssm.GetParameterInput{
+	out, err := c.GetParameter(ctx, &ssm.GetParameterInput{
 		Name:           aws.String(awsParamKeyID(id.Key)),
-		WithDecryption: aws.Bool(true),
+		WithDecryption: true,
 	})
-	out, err := getReq.Send(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get secret")
 	}

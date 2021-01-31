@@ -52,7 +52,7 @@ func (t *Transport) Ec2(region string) *ec2.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := ec2.New(cfg)
+	client := ec2.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -76,7 +76,7 @@ func (t *Transport) Iam(region string) *iam.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := iam.New(cfg)
+	client := iam.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -100,7 +100,7 @@ func (t *Transport) S3(region string) *s3.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := s3.New(cfg)
+	client := s3.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -124,7 +124,7 @@ func (t *Transport) S3Control(region string) *s3control.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := s3control.New(cfg)
+	client := s3control.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -148,7 +148,7 @@ func (t *Transport) Cloudtrail(region string) *cloudtrail.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := cloudtrail.New(cfg)
+	client := cloudtrail.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -172,7 +172,7 @@ func (t *Transport) ConfigService(region string) *configservice.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := configservice.New(cfg)
+	client := configservice.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -196,7 +196,7 @@ func (t *Transport) Kms(region string) *kms.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := kms.New(cfg)
+	client := kms.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -220,7 +220,7 @@ func (t *Transport) CloudwatchLogs(region string) *cloudwatchlogs.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := cloudwatchlogs.New(cfg)
+	client := cloudwatchlogs.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -244,7 +244,7 @@ func (t *Transport) Cloudwatch(region string) *cloudwatch.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := cloudwatch.New(cfg)
+	client := cloudwatch.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -268,7 +268,7 @@ func (t *Transport) Sns(region string) *sns.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := sns.New(cfg)
+	client := sns.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -292,7 +292,7 @@ func (t *Transport) Ssm(region string) *ssm.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := ssm.New(cfg)
+	client := ssm.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -316,7 +316,7 @@ func (t *Transport) Efs(region string) *efs.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := efs.New(cfg)
+	client := efs.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -340,7 +340,7 @@ func (t *Transport) Apigateway(region string) *apigateway.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := apigateway.New(cfg)
+	client := apigateway.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -364,7 +364,7 @@ func (t *Transport) Lambda(region string) *lambda.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := lambda.New(cfg)
+	client := lambda.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -388,7 +388,7 @@ func (t *Transport) Dynamodb(region string) *dynamodb.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := dynamodb.New(cfg)
+	client := dynamodb.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -412,7 +412,7 @@ func (t *Transport) Dms(region string) *databasemigrationservice.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := databasemigrationservice.New(cfg)
+	client := databasemigrationservice.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -436,7 +436,7 @@ func (t *Transport) Rds(region string) *rds.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := rds.New(cfg)
+	client := rds.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -460,7 +460,7 @@ func (t *Transport) Elasticache(region string) *elasticache.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := elasticache.New(cfg)
+	client := elasticache.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -484,7 +484,7 @@ func (t *Transport) Redshift(region string) *redshift.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := redshift.New(cfg)
+	client := redshift.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -508,7 +508,7 @@ func (t *Transport) Acm(region string) *acm.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := acm.New(cfg)
+	client := acm.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -532,7 +532,7 @@ func (t *Transport) Elb(region string) *elasticloadbalancing.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := elasticloadbalancing.New(cfg)
+	client := elasticloadbalancing.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -556,7 +556,7 @@ func (t *Transport) Elbv2(region string) *elasticloadbalancingv2.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := elasticloadbalancingv2.New(cfg)
+	client := elasticloadbalancingv2.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -580,7 +580,7 @@ func (t *Transport) Es(region string) *elasticsearchservice.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := elasticsearchservice.New(cfg)
+	client := elasticsearchservice.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -604,7 +604,7 @@ func (t *Transport) Sagemaker(region string) *sagemaker.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := sagemaker.New(cfg)
+	client := sagemaker.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -628,7 +628,7 @@ func (t *Transport) Autoscaling(region string) *autoscaling.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := autoscaling.New(cfg)
+	client := autoscaling.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -652,7 +652,7 @@ func (t *Transport) Codebuild(region string) *codebuild.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := codebuild.New(cfg)
+	client := codebuild.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -676,7 +676,7 @@ func (t *Transport) Emr(region string) *emr.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := emr.New(cfg)
+	client := emr.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -700,7 +700,7 @@ func (t *Transport) Guardduty(region string) *guardduty.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := guardduty.New(cfg)
+	client := guardduty.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -724,7 +724,7 @@ func (t *Transport) Secretsmanager(region string) *secretsmanager.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := secretsmanager.New(cfg)
+	client := secretsmanager.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
@@ -748,7 +748,7 @@ func (t *Transport) Securityhub(region string) *securityhub.Client {
 	// create the client
 	cfg := t.config.Copy()
 	cfg.Region = region
-	client := securityhub.New(cfg)
+	client := securityhub.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})

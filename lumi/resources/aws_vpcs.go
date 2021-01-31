@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
@@ -70,7 +71,7 @@ func (s *lumiAws) getVpcs() []*jobpool.Job {
 			nextToken := aws.String("no_token_to_start_with")
 			params := &ec2.DescribeVpcsInput{}
 			for nextToken != nil {
-				vpcs, err := svc.DescribeVpcsRequest(params).Send(ctx)
+				vpcs, err := svc.DescribeVpcs(ctx, params)
 				if err != nil {
 					return nil, err
 				}
@@ -82,16 +83,11 @@ func (s *lumiAws) getVpcs() []*jobpool.Job {
 				for i := range vpcs.Vpcs {
 					v := vpcs.Vpcs[i]
 
-					stringState, err := ec2.VpcState.MarshalValue(v.State)
-					if err != nil {
-						return nil, err
-					}
-
 					lumiVpc, err := s.Runtime.CreateResource("aws.vpc",
 						"arn", fmt.Sprintf(vpcArnPattern, regionVal, account.ID, toString(v.VpcId)),
 						"id", toString(v.VpcId),
-						"state", stringState,
-						"isDefault", toBool(v.IsDefault),
+						"state", string(v.State),
+						"isDefault", v.IsDefault,
 						"region", regionVal,
 					)
 					if err != nil {
@@ -126,9 +122,9 @@ func (s *lumiAwsVpc) GetFlowLogs() ([]interface{}, error) {
 	flowLogs := []interface{}{}
 	filterKeyVal := "resource-id"
 	nextToken := aws.String("no_token_to_start_with")
-	params := &ec2.DescribeFlowLogsInput{Filter: []ec2.Filter{{Name: &filterKeyVal, Values: []string{vpc}}}}
+	params := &ec2.DescribeFlowLogsInput{Filter: []types.Filter{{Name: &filterKeyVal, Values: []string{vpc}}}}
 	for nextToken != nil {
-		flowLogsRes, err := svc.DescribeFlowLogsRequest(params).Send(ctx)
+		flowLogsRes, err := svc.DescribeFlowLogs(ctx, params)
 		if err != nil {
 			return nil, err
 		}
@@ -223,9 +219,9 @@ func (s *lumiAwsVpc) GetRouteTables() ([]interface{}, error) {
 
 	nextToken := aws.String("no_token_to_start_with")
 	filterName := "vpc-id"
-	params := &ec2.DescribeRouteTablesInput{Filters: []ec2.Filter{{Name: &filterName, Values: []string{vpcVal}}}}
+	params := &ec2.DescribeRouteTablesInput{Filters: []types.Filter{{Name: &filterName, Values: []string{vpcVal}}}}
 	for nextToken != nil {
-		routeTables, err := svc.DescribeRouteTablesRequest(params).Send(ctx)
+		routeTables, err := svc.DescribeRouteTables(ctx, params)
 		if err != nil {
 			return nil, err
 		}

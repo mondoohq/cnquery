@@ -55,7 +55,7 @@ func (a *lumiAwsAcm) getCertificates() []*jobpool.Job {
 			nextToken := aws.String("no_token_to_start_with")
 			params := &acm.ListCertificatesInput{}
 			for nextToken != nil {
-				certs, err := svc.ListCertificatesRequest(params).Send(ctx)
+				certs, err := svc.ListCertificates(ctx, params)
 				if err != nil {
 					return nil, err
 				}
@@ -104,20 +104,17 @@ func (a *lumiAwsAcmCertificate) init(args *lumi.Args) (*lumi.Args, AwsAcmCertifi
 	}
 	svc := at.Acm(region)
 	ctx := context.Background()
-	certDetails, err := svc.DescribeCertificateRequest(&acm.DescribeCertificateInput{CertificateArn: &arnVal}).Send(ctx)
+	certDetails, err := svc.DescribeCertificate(ctx, &acm.DescribeCertificateInput{CertificateArn: &arnVal})
 	if err != nil {
 		return nil, nil, err
 	}
-	stringStatus, err := certDetails.Certificate.Status.MarshalValue()
-	if err != nil {
-		return nil, nil, err
-	}
+
 	(*args)["arn"] = arnVal
 	(*args)["notBefore"] = certDetails.Certificate.NotBefore
 	(*args)["notAfter"] = certDetails.Certificate.NotAfter
 	(*args)["createdAt"] = certDetails.Certificate.CreatedAt
 	(*args)["domainName"] = toString(certDetails.Certificate.DomainName)
-	(*args)["status"] = stringStatus
+	(*args)["status"] = string(certDetails.Certificate.Status)
 	(*args)["subject"] = toString(certDetails.Certificate.Subject)
 	return args, nil, nil
 }
@@ -137,7 +134,7 @@ func (a *lumiAwsAcmCertificate) GetCertificate() (interface{}, error) {
 	}
 	svc := at.Acm(region)
 	ctx := context.Background()
-	cert, err := svc.GetCertificateRequest(&acm.GetCertificateInput{CertificateArn: &certArn}).Send(ctx)
+	cert, err := svc.GetCertificate(ctx, &acm.GetCertificateInput{CertificateArn: &certArn})
 	if err != nil {
 		return nil, err
 	}

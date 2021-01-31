@@ -58,7 +58,7 @@ func (t *lumiAwsCloudwatch) getMetrics() []*jobpool.Job {
 			nextToken := aws.String("no_token_to_start_with")
 			params := &cloudwatch.ListMetricsInput{}
 			for nextToken != nil {
-				metrics, err := svc.ListMetricsRequest(params).Send(ctx)
+				metrics, err := svc.ListMetrics(ctx, params)
 				if err != nil {
 					return nil, err
 				}
@@ -110,7 +110,7 @@ func (t *lumiAwsCloudwatchMetric) GetAlarms() ([]interface{}, error) {
 		Namespace:  &namespace,
 	}
 	// no pagination required
-	alarmsResp, err := svc.DescribeAlarmsForMetricRequest(params).Send(ctx)
+	alarmsResp, err := svc.DescribeAlarmsForMetric(ctx, params)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not gather aws cloudwatch alarms")
 	}
@@ -165,16 +165,12 @@ func (t *lumiAwsCloudwatch) getAlarms() []*jobpool.Job {
 			params := &cloudwatch.DescribeAlarmsInput{}
 			for nextToken != nil {
 
-				alarms, err := svc.DescribeAlarmsRequest(params).Send(ctx)
+				alarms, err := svc.DescribeAlarms(ctx, params)
 				if err != nil {
 					return nil, err
 				}
 
 				for _, alarm := range alarms.MetricAlarms {
-					stringState, err := alarm.StateValue.MarshalValue()
-					if err != nil {
-						return nil, err
-					}
 					actions := []interface{}{}
 					for _, action := range alarm.AlarmActions {
 						lumiAlarmAction, err := t.Runtime.CreateResource("aws.sns.topic",
@@ -215,7 +211,7 @@ func (t *lumiAwsCloudwatch) getAlarms() []*jobpool.Job {
 						"metricName", toString(alarm.MetricName),
 						"metricNamespace", toString(alarm.Namespace),
 						"region", regionVal,
-						"state", stringState,
+						"state", string(alarm.StateValue),
 						"stateReason", toString(alarm.StateReason),
 						"insufficientDataActions", insuffActions,
 						"okActions", okActions,
@@ -259,7 +255,7 @@ func (t *lumiAwsSnsTopic) GetSubscriptions() ([]interface{}, error) {
 	params := &sns.ListSubscriptionsByTopicInput{TopicArn: &arnValue}
 	nextToken := aws.String("no_token_to_start_with")
 	for nextToken != nil {
-		subsByTopic, err := svc.ListSubscriptionsByTopicRequest(params).Send(ctx)
+		subsByTopic, err := svc.ListSubscriptionsByTopic(ctx, params)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not gather sns subscriptions info")
 		}
@@ -319,7 +315,7 @@ func (t *lumiAwsCloudwatch) getLogGroups() []*jobpool.Job {
 			params := &cloudwatchlogs.DescribeLogGroupsInput{}
 			res := []interface{}{}
 			for nextToken != nil {
-				logGroups, err := svc.DescribeLogGroupsRequest(params).Send(ctx)
+				logGroups, err := svc.DescribeLogGroups(ctx, params)
 				if err != nil {
 					return nil, errors.Wrap(err, "could not gather aws cloudwatch log groups")
 				}
@@ -422,7 +418,7 @@ func (t *lumiAwsCloudwatchLoggroup) GetMetricsFilters() ([]interface{}, error) {
 	params := &cloudwatchlogs.DescribeMetricFiltersInput{LogGroupName: &groupName}
 	metricFilters := []interface{}{}
 	for nextToken != nil {
-		metricsResp, err := svc.DescribeMetricFiltersRequest(params).Send(ctx)
+		metricsResp, err := svc.DescribeMetricFilters(ctx, params)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not gather log metric filters")
 		}

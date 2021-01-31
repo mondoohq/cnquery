@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/service/emr"
+	"github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 )
 
@@ -53,7 +54,7 @@ func (e *lumiAwsEmr) getClusters() []*jobpool.Job {
 
 			var marker *string
 			for {
-				clusters, err := svc.ListClustersRequest(&emr.ListClustersInput{Marker: marker}).Send(ctx)
+				clusters, err := svc.ListClusters(ctx, &emr.ListClustersInput{Marker: marker})
 				if err != nil {
 					return nil, err
 				}
@@ -65,7 +66,7 @@ func (e *lumiAwsEmr) getClusters() []*jobpool.Job {
 					lumiCluster, err := e.Runtime.CreateResource("aws.emr.cluster",
 						"arn", toString(cluster.ClusterArn),
 						"name", toString(cluster.Name),
-						"normalizedInstanceHours", toInt64(cluster.NormalizedInstanceHours),
+						"normalizedInstanceHours", toInt64From32(cluster.NormalizedInstanceHours),
 						"outpostArn", toString(cluster.OutpostArn),
 						"status", jsonStatus,
 						"id", toString(cluster.Id),
@@ -100,7 +101,7 @@ func (e *lumiAwsEmrCluster) GetMasterInstances() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := []emr.Instance{}
+	res := []types.Instance{}
 	at, err := awstransport(e.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
@@ -109,11 +110,11 @@ func (e *lumiAwsEmrCluster) GetMasterInstances() ([]interface{}, error) {
 	ctx := context.Background()
 	var marker *string
 	for {
-		instances, err := svc.ListInstancesRequest(&emr.ListInstancesInput{
+		instances, err := svc.ListInstances(ctx, &emr.ListInstancesInput{
 			Marker:             marker,
 			ClusterId:          &id,
-			InstanceGroupTypes: []emr.InstanceGroupType{"MASTER"},
-		}).Send(ctx)
+			InstanceGroupTypes: []types.InstanceGroupType{"MASTER"},
+		})
 		if err != nil {
 			return nil, err
 		}

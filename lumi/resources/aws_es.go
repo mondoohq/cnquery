@@ -48,7 +48,7 @@ func (e *lumiAwsEs) getDomains() []*jobpool.Job {
 			ctx := context.Background()
 			res := []interface{}{}
 
-			domains, err := svc.ListDomainNamesRequest(&elasticsearchservice.ListDomainNamesInput{}).Send(ctx)
+			domains, err := svc.ListDomainNames(ctx, &elasticsearchservice.ListDomainNamesInput{})
 			if err != nil {
 				return nil, err
 			}
@@ -89,7 +89,7 @@ func (a *lumiAwsEsDomain) init(args *lumi.Args) (*lumi.Args, AwsEsDomain, error)
 	}
 	svc := at.Es(region)
 	ctx := context.Background()
-	domainDetails, err := svc.DescribeElasticsearchDomainRequest(&elasticsearchservice.DescribeElasticsearchDomainInput{DomainName: &name}).Send(ctx)
+	domainDetails, err := svc.DescribeElasticsearchDomain(ctx, &elasticsearchservice.DescribeElasticsearchDomainInput{DomainName: &name})
 	if err != nil {
 		return nil, nil, err
 	}

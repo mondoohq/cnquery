@@ -2,8 +2,10 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 )
 
@@ -47,11 +49,11 @@ func (s *lumiAwsSecurityhub) getHubs() []*jobpool.Job {
 			svc := at.Securityhub(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
-			secHub, err := svc.DescribeHubRequest(&securityhub.DescribeHubInput{}).Send(ctx)
-			isAwsErr, code := IsAwsCode(err)
+			secHub, err := svc.DescribeHub(ctx, &securityhub.DescribeHubInput{})
 			if err != nil {
-				if isAwsErr && code == "InvalidAccessException" {
-					return jobpool.JobResult(nil), nil
+				var notFoundErr *types.InvalidAccessException
+				if errors.As(err, &notFoundErr) {
+					return nil, nil
 				}
 				return nil, err
 			}

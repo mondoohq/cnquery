@@ -55,7 +55,7 @@ func (e *lumiAwsEfs) getFilesystems() []*jobpool.Job {
 
 			var marker *string
 			for {
-				describeFileSystemsRes, err := svc.DescribeFileSystemsRequest(&efs.DescribeFileSystemsInput{Marker: marker}).Send(ctx)
+				describeFileSystemsRes, err := svc.DescribeFileSystems(ctx, &efs.DescribeFileSystemsInput{Marker: marker})
 				if err != nil {
 					return nil, err
 				}
@@ -119,9 +119,9 @@ func (e *lumiAwsEfsFilesystem) GetBackupPolicy() (interface{}, error) {
 	svc := at.Efs(region)
 	ctx := context.Background()
 
-	backupPolicy, err := svc.DescribeBackupPolicyRequest(&efs.DescribeBackupPolicyInput{
+	backupPolicy, err := svc.DescribeBackupPolicy(ctx, &efs.DescribeBackupPolicyInput{
 		FileSystemId: &id,
-	}).Send(ctx)
+	})
 	if err != nil {
 		return nil, err
 	}

@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/motor/platform"
@@ -29,7 +30,7 @@ func (ssmi *SSMManagedInstances) Name() string {
 
 func (ssmi *SSMManagedInstances) List() ([]*asset.Asset, error) {
 	ctx := context.Background()
-	ssmsvc := ssm.New(ssmi.config)
+	ssmsvc := ssm.NewFromConfig(ssmi.config)
 
 	identity, err := aws_transport.CheckIam(ssmi.config)
 	if err != nil {
@@ -41,16 +42,15 @@ func (ssmi *SSMManagedInstances) List() ([]*asset.Asset, error) {
 	// check that all instances have ssm agent installed and are reachable
 	// it will return only those instances that are active in ssm
 	// e.g stopped instances are not reachable
-	platformFilter := string(ssm.InstanceInformationFilterKeyPlatformTypes)
-	resourceFilter := string(ssm.InstanceInformationFilterKeyResourceType)
-	isssmreq := ssmsvc.DescribeInstanceInformationRequest(&ssm.DescribeInstanceInformationInput{
-		Filters: []ssm.InstanceInformationStringFilter{
-			ssm.InstanceInformationStringFilter{Key: &platformFilter, Values: []string{string(ssm.PlatformTypeLinux), string(ssm.PlatformTypeWindows)}},
+	platformFilter := string(types.InstanceInformationFilterKeyPlatformTypes)
+	resourceFilter := string(types.InstanceInformationFilterKeyResourceType)
+	isssmresp, err := ssmsvc.DescribeInstanceInformation(ctx, &ssm.DescribeInstanceInformationInput{
+		Filters: []types.InstanceInformationStringFilter{
+			types.InstanceInformationStringFilter{Key: &platformFilter, Values: []string{string(types.PlatformTypeLinux), string(types.PlatformTypeWindows)}},
 			// we only look for managed instanced
-			ssm.InstanceInformationStringFilter{Key: &resourceFilter, Values: []string{string(ssm.ResourceTypeManagedInstance)}},
+			types.InstanceInformationStringFilter{Key: &resourceFilter, Values: []string{string(types.ResourceTypeManagedInstance)}},
 		},
 	})
-	isssmresp, err := isssmreq.Send(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not gather ssm information")
 	}
@@ -63,7 +63,7 @@ func (ssmi *SSMManagedInstances) List() ([]*asset.Asset, error) {
 
 		asset := &asset.Asset{
 			PlatformIDs: []string{awsec2.MondooInstanceID(account, ssmi.config.Region, *instance.InstanceId)},
-			Name:         *instance.InstanceId,
+			Name:        *instance.InstanceId,
 			Platform: &platform.Platform{
 				Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
 				Runtime: transports.RUNTIME_AWS_SSM_MANAGED,
@@ -74,12 +74,11 @@ func (ssmi *SSMManagedInstances) List() ([]*asset.Asset, error) {
 			Labels: make(map[string]string),
 		}
 
-		tagreq := ssmsvc.ListTagsForResourceRequest(&ssm.ListTagsForResourceInput{
+		tagresp, err := ssmsvc.ListTagsForResource(ctx, &ssm.ListTagsForResourceInput{
 			ResourceId:   instance.InstanceId,
-			ResourceType: ssm.ResourceTypeForTaggingManagedInstance,
+			ResourceType: types.ResourceTypeForTaggingManagedInstance,
 		})
 
-		tagresp, err := tagreq.Send(ctx)
 		if err != nil {
 			log.Warn().Err(err).Msg("could not gather ssm information")
 		} else if tagresp != nil {
@@ -113,13 +112,13 @@ func (ssmi *SSMManagedInstances) List() ([]*asset.Asset, error) {
 	return instances, nil
 }
 
-func mapSmmManagedPingStateCode(pingStatus ssm.PingStatus) asset.State {
+func mapSmmManagedPingStateCode(pingStatus types.PingStatus) asset.State {
 	switch pingStatus {
-	case ssm.PingStatusOnline:
+	case types.PingStatusOnline:
 		return asset.State_STATE_RUNNING
-	case ssm.PingStatusConnectionLost:
+	case types.PingStatusConnectionLost:
 		return asset.State_STATE_PENDING
-	case ssm.PingStatusInactive:
+	case types.PingStatusInactive:
 		return asset.State_STATE_STOPPED
 	default:
 		return asset.State_STATE_UNKNOWN

@@ -58,7 +58,7 @@ func (s *lumiAwsSns) getTopics() []*jobpool.Job {
 			nextToken := aws.String("no_token_to_start_with")
 			params := &sns.ListTopicsInput{}
 			for nextToken != nil {
-				topics, err := svc.ListTopicsRequest(params).Send(ctx)
+				topics, err := svc.ListTopics(ctx, params)
 				if err != nil {
 					return nil, err
 				}
@@ -101,7 +101,7 @@ func (s *lumiAwsSnsTopic) GetAttributes() (interface{}, error) {
 	svc := at.Sns(region)
 	ctx := context.Background()
 
-	topicAttributes, err := svc.GetTopicAttributesRequest(&sns.GetTopicAttributesInput{TopicArn: &arn}).Send(ctx)
+	topicAttributes, err := svc.GetTopicAttributes(ctx, &sns.GetTopicAttributesInput{TopicArn: &arn})
 	if err != nil {
 		return nil, err
 	}

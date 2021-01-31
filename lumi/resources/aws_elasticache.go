@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
+	"github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 )
@@ -49,11 +50,11 @@ func (e *lumiAwsElasticache) getClusters() []*jobpool.Job {
 
 			svc := at.Elasticache(regionVal)
 			ctx := context.Background()
-			res := []elasticache.CacheCluster{}
+			res := []types.CacheCluster{}
 
 			var marker *string
 			for {
-				clusters, err := svc.DescribeCacheClustersRequest(&elasticache.DescribeCacheClustersInput{Marker: marker}).Send(ctx)
+				clusters, err := svc.DescribeCacheClusters(ctx, &elasticache.DescribeCacheClustersInput{Marker: marker})
 				if err != nil {
 					return nil, err
 				}

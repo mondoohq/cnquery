@@ -65,38 +65,38 @@ import (
 // 	svc := iam.New(cfg)
 // 	require.NoError(t, err)
 // 	ctx := context.Background()
-// 	// _, err = svc.GetAccountPasswordPolicyRequest(&iam.GetAccountPasswordPolicyInput{}).Send(ctx)
+// 	// _, err = svc.GetAccountPasswordPolicy(ctx, &iam.GetAccountPasswordPolicyInput{})
 // 	// require.NoError(t, err)
 
-// 	// summaryResp, err := svc.GetAccountSummaryRequest(&iam.GetAccountSummaryInput{}).Send(ctx)
+// 	// summaryResp, err := svc.GetAccountSummary(ctx, &iam.GetAccountSummaryInput{})
 // 	// require.NoError(t, err)
 // 	// fmt.Printf("%v", summaryResp)
 
-// 	// usersResp, err := svc.ListUsersRequest(&iam.ListUsersInput{}).Send(ctx)
+// 	// usersResp, err := svc.ListUsers(ctx, &iam.ListUsersInput{})
 // 	// require.NoError(t, err)
 // 	// fmt.Printf("%v", usersResp)
 
-// 	// userAttachedPolicies, err := svc.ListAttachedUserPoliciesRequest(&iam.ListAttachedUserPoliciesInput{}).Send(ctx)
+// 	// userAttachedPolicies, err := svc.ListAttachedUserPolicies(ctx, &iam.ListAttachedUserPoliciesInput{})
 // 	// require.NoError(t, err)
 // 	// fmt.Printf("%v", userAttachedPolicies)
 
-// 	// userPolicies, err := svc.ListUserPoliciesRequest(&iam.ListUserPoliciesInput{}).Send(ctx)
+// 	// userPolicies, err := svc.ListUserPolicies(ctx, &iam.ListUserPoliciesInput{})
 // 	// require.NoError(t, err)
 // 	// fmt.Printf("%v", userPolicies)
 
-// 	// userPolicies, err := svc.ListUserPoliciesRequest(&iam.ListUserPoliciesInput{}).Send(ctx)
+// 	// userPolicies, err := svc.ListUserPolicies(ctx, &iam.ListUserPoliciesInput{})
 // 	// require.NoError(t, err)
 // 	// fmt.Printf("%v", userPolicies)
 
-// 	// devicesResp, err := svc.ListVirtualMFADevicesRequest(&iam.ListVirtualMFADevicesInput{}).Send(ctx)
+// 	// devicesResp, err := svc.ListVirtualMFADevices(ctx, &iam.ListVirtualMFADevicesInput{})
 // 	// require.NoError(t, err)
 // 	// fmt.Printf("%v", devicesResp)
 // 	policyArn := "arn:aws:iam::aws:policy/AWSDirectConnectReadOnlyAccess"
 // 	policyVersion := "v4"
-// 	policydocResp, err := svc.GetPolicyVersionRequest(&iam.GetPolicyVersionInput{
+// 	policydocResp, err := svc.GetPolicyVersion(ctx, &iam.GetPolicyVersionInput{
 // 		PolicyArn: &policyArn,
 // 		VersionId: &policyVersion,
-// 	}).Send(ctx)
+// 	})
 // 	require.NoError(t, err)
 // 	fmt.Printf("%v", policydocResp)
 

@@ -55,7 +55,7 @@ func (a *lumiAwsAutoscaling) getGroups() []*jobpool.Job {
 			nextToken := aws.String("no_token_to_start_with")
 			params := &autoscaling.DescribeAutoScalingGroupsInput{}
 			for nextToken != nil {
-				groups, err := svc.DescribeAutoScalingGroupsRequest(params).Send(ctx)
+				groups, err := svc.DescribeAutoScalingGroups(ctx, params)
 				if err != nil {
 					return nil, err
 				}
