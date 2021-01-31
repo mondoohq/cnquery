@@ -1,10 +1,9 @@
 package ssh
 
 import (
+	"github.com/cockroachdb/errors"
 	"net"
 	"os"
-
-	"github.com/cockroachdb/errors"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -31,10 +30,47 @@ func New(endpoint *transports.TransportConfig) (*SSHTransport, error) {
 	// set default config if required
 	endpoint = DefaultConfig(endpoint)
 
+	activateScp := false
+	if os.Getenv("MONDOO_SSH_SCP") == "on" {
+		activateScp = true
+	}
+
+	var s cmd.Wrapper
+	if endpoint.Sudo != nil && endpoint.Sudo.Active {
+		log.Debug().Msg("activated sudo for ssh connection")
+		s = cmd.NewSudo()
+	}
+
+	t := &SSHTransport{
+		Endpoint:         endpoint,
+		UseScpFilesystem: activateScp,
+		Sudo:             s,
+		kind:             endpoint.Kind,
+		runtime:          endpoint.Runtime,
+	}
+	err = t.Connect()
+	return t, err
+}
+
+type SSHTransport struct {
+	Endpoint         *transports.TransportConfig
+	SSHClient        *ssh.Client
+	fs               afero.Fs
+	UseScpFilesystem bool
+	HostKey          ssh.PublicKey
+	Sudo             cmd.Wrapper
+	kind             transports.Kind
+	runtime          string
+	serverVersion    string
+}
+
+func (t *SSHTransport) Connect() error {
+	endpoint := t.Endpoint
+
 	// load known hosts and track the fingerprint of the ssh server for later identification
 	knownHostsCallback, err := KnownHostsCallback()
 	if err != nil {
-		return nil, errors.Wrap(err, "could not read hostkey file")
+		return errors.Wrap(err, "could not read hostkey file")
 	}
 
 	var hostkey ssh.PublicKey
@@ -54,41 +90,21 @@ func New(endpoint *transports.TransportConfig) (*SSHTransport, error) {
 	conn, err := sshClientConnection(endpoint, hostkeyCallback)
 	if err != nil {
 		log.Debug().Err(err).Str("transport", "ssh").Str("host", endpoint.Host).Str("port", endpoint.Port).Str("user", endpoint.User).Msg("could not establish ssh session")
-		return nil, err
+		return err
 	}
-
-	log.Debug().Str("transport", "ssh").Str("host", endpoint.Host).Str("port", endpoint.Port).Str("user", endpoint.User).Msg("ssh session established")
-	activateScp := false
-	if os.Getenv("MONDOO_SSH_SCP") == "on" {
-		activateScp = true
-	}
-
-	var s cmd.Wrapper
-	if endpoint.Sudo != nil && endpoint.Sudo.Active {
-		log.Debug().Msg("activated sudo for ssh connection")
-		s = cmd.NewSudo()
-	}
-
-	return &SSHTransport{
-		Endpoint:         endpoint,
-		SSHClient:        conn,
-		UseScpFilesystem: activateScp,
-		HostKey:          hostkey,
-		Sudo:             s,
-		kind:             endpoint.Kind,
-		runtime:          endpoint.Runtime,
-	}, nil
+	t.SSHClient = conn
+	t.HostKey = hostkey
+	t.serverVersion = string(conn.ServerVersion())
+	log.Debug().Str("transport", "ssh").Str("host", endpoint.Host).Str("port", endpoint.Port).Str("user", endpoint.User).Str("server", t.serverVersion).Msg("ssh session established")
+	return nil
 }
 
-type SSHTransport struct {
-	Endpoint         *transports.TransportConfig
-	SSHClient        *ssh.Client
-	fs               afero.Fs
-	UseScpFilesystem bool
-	HostKey          ssh.PublicKey
-	Sudo             cmd.Wrapper
-	kind             transports.Kind
-	runtime          string
+func (t *SSHTransport) Reconnect() error {
+	// ensure the connections is going to be closed
+	if t.SSHClient != nil {
+		t.SSHClient.Close()
+	}
+	return t.Connect()
 }
 
 func (t *SSHTransport) RunCommand(command string) (*transports.Command, error) {
@@ -97,7 +113,7 @@ func (t *SSHTransport) RunCommand(command string) (*transports.Command, error) {
 	}
 
 	log.Debug().Str("command", command).Str("transport", "ssh").Msg("run command")
-	c := &Command{SSHClient: t.SSHClient}
+	c := &Command{SSHTransport: t}
 	return c.Exec(command)
 }
 
@@ -112,10 +128,17 @@ func (t *SSHTransport) FS() afero.Fs {
 		log.Debug().Str("file-transfer", t.fs.Name()).Msg("initialized ssh filesystem")
 	}()
 
+	//// detect cisco network gear, they returns something like SSH-2.0-Cisco-1.25
+	//// NOTE: we need to understand why this happens
+	//if strings.Contains(strings.ToLower(t.serverVersion), "cisco") {
+	//	log.Debug().Msg("detected cisco device, deactivate file system support")
+	//	t.fs = &fsutil.NoFs{}
+	//	return t.fs
+	//}
+
 	// if any priviledge elevation is used, we have no other chance as to use command-based file transfer
 	if t.Sudo != nil {
 		t.fs = cat.New(t)
-
 		return t.fs
 	}
 
