@@ -100,6 +100,11 @@ func ParseWinWmicOS(csvData io.Reader) (*WmicOS, error) {
 			for j, item := range line {
 				header[item] = j
 			}
+
+			if len(header) < 10 {
+				return nil, errors.New("unexpected wmic result")
+			}
+
 			continue
 		}
 
