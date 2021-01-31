@@ -3,6 +3,7 @@ package ssh
 import (
 	"bytes"
 	"errors"
+	"github.com/rs/zerolog/log"
 	"time"
 
 	"go.mondoo.io/mondoo/motor/transports"
@@ -11,7 +12,7 @@ import (
 
 type Command struct {
 	transports.Command
-	SSHClient *ssh.Client
+	SSHTransport *SSHTransport
 }
 
 func (c *Command) Exec(command string) (*transports.Command, error) {
@@ -24,13 +25,22 @@ func (c *Command) Exec(command string) (*transports.Command, error) {
 	c.Command.Stdout = stdoutBuffer
 	c.Command.Stderr = stderrBuffer
 
-	if c.SSHClient == nil {
+	if c.SSHTransport.SSHClient == nil {
 		return nil, errors.New("ssh session not established")
 	}
 
-	session, err := c.SSHClient.NewSession()
+	session, err := c.SSHTransport.SSHClient.NewSession()
 	if err != nil {
-		return nil, err
+		log.Debug().Msg("could not open new session, try to re-establish connection")
+		err = c.SSHTransport.Reconnect()
+		if err != nil {
+			return nil, err
+		}
+
+		session, err = c.SSHTransport.SSHClient.NewSession()
+		if err != nil {
+			return nil, err
+		}
 	}
 	defer session.Close()
 
