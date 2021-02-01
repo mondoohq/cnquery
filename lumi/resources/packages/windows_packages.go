@@ -283,19 +283,6 @@ func (win *WinPkgManager) List() ([]Package, error) {
 		pkgs = append(pkgs, appxPkgs...)
 	}
 
-	// try to read wsus updates
-	wsusCmd, err := win.motor.Transport.RunCommand(powershell.Encode(WINDOWS_QUERY_WSUS_AVAILABLE))
-	if err == nil {
-		wsusUpdates, err := ParseWindowsUpdates(wsusCmd.Stdout)
-		if err == nil {
-			pkgs = append(pkgs, wsusUpdates...)
-		} else {
-			log.Warn().Err(err).Msg("could not parse wsus results")
-		}
-	} else {
-		log.Warn().Err(err).Msg("could not fetch windows update services")
-	}
-
 	cmd, err := win.motor.Transport.RunCommand(powershell.Wrap(WINDOWS_QUERY_HOTFIXES))
 	if err != nil {
 		return nil, errors.Wrap(err, "could not fetch hotfixes")
