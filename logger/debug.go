@@ -42,7 +42,7 @@ func DebugDumpJSON(name string, obj interface{}) {
 	}
 
 	if mondoo.DumpLocal == "" {
-		if val, ok := os.LookupEnv("DEBUG"); ok && val == "1" {
+		if val, ok := os.LookupEnv("DEBUG"); ok && (val == "1" || val == "true") {
 			mondoo.DumpLocal = "./mondoo-debug-"
 		} else {
 			return
