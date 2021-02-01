@@ -9,10 +9,10 @@ import (
 type detect func(p *PlatformResolver, di *Platform, t transports.Transport) (bool, error)
 
 type PlatformResolver struct {
-	Name     string
-	Familiy  bool
-	Children []*PlatformResolver
-	Detect   detect
+	Name      string
+	IsFamiliy bool
+	Children  []*PlatformResolver
+	Detect    detect
 }
 
 func (p *PlatformResolver) Resolve(t transports.Transport) (*Platform, bool) {
@@ -44,7 +44,7 @@ func (p *PlatformResolver) resolvePlatform(di *Platform, t transports.Transport)
 	}
 
 	// if detection is true but we have a family
-	if detected == true && p.Familiy == true {
+	if detected == true && p.IsFamiliy == true {
 		// we are a familiy and we may have childs to try
 		for _, c := range p.Children {
 			detected, resolved := c.resolvePlatform(di, t)
@@ -62,7 +62,7 @@ func (p *PlatformResolver) resolvePlatform(di *Platform, t transports.Transport)
 	}
 
 	// return if the detect is true and we have a leaf
-	if detected && p.Familiy == false {
+	if detected && p.IsFamiliy == false {
 		return di, true
 	}
 
