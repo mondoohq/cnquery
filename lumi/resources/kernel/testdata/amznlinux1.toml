@@ -1,0 +1,54 @@
+
+[commands."uname -r"]
+stdout = "4.14.193-113.317.amzn1.x86_64"
+
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[files."/etc/os-release"]
+content = """
+NAME="Amazon Linux AMI"
+VERSION="2018.03"
+ID="amzn"
+ID_LIKE="rhel fedora"
+VERSION_ID="2018.03"
+PRETTY_NAME="Amazon Linux AMI 2018.03"
+ANSI_COLOR="0;33"
+CPE_NAME="cpe:/o:amazon:linux:2018.03:ga"
+HOME_URL="http://aws.amazon.com/amazon-linux-ami/"
+"""
+
+[files."/proc/version"]
+content = "Linux version 4.14.193-113.317.amzn1.x86_64 (mockbuild@koji-pdx-corp-builder-60005) (gcc version 7.2.1 20170915 (Red Hat 7.2.1-2) (GCC)) #1 SMP Thu Sep 3 19:08:08 UTC 2020"
+
+[files."/proc/cmdline"]
+content = "root=LABEL=/ console=tty1 console=ttyS0 selinux=0 nvme_core.io_timeout=4294967295"
+
+
+[commands."/sbin/lsmod"]
+stdout = """Module                  Size  Used by
+ipv6                  516096  54
+crc_ccitt              16384  1 ipv6
+binfmt_misc            20480  1
+mousedev               24576  0
+evdev                  20480  3
+psmouse                32768  0
+button                 16384  0
+ext4                  724992  1
+crc16                  16384  1 ext4
+mbcache                16384  1 ext4
+jbd2                  126976  1 ext4
+fscrypto               32768  1 ext4
+xen_blkfront           49152  2
+ata_piix               36864  0
+libata                266240  1 ata_piix
+scsi_mod              245760  1 libata
+dm_mirror              28672  0
+dm_region_hash         20480  1 dm_mirror
+dm_log                 20480  2 dm_region_hash,dm_mirror
+dm_mod                139264  2 dm_log,dm_mirror
+dax                    69632  1 dm_mod
+"""
