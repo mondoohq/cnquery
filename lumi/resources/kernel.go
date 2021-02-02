@@ -104,7 +104,7 @@ func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
 					})
 				}
 			}
-		} else if pf.IsFamily("redhat") {
+		} else if pf.IsFamily("redhat") || pf.Name == "amazonlinux" {
 			// rpm based systems
 			// kernel version is  "3.10.0-1160.11.1.el7.x86_64"
 			// filter by packages named "kernel"
