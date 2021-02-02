@@ -89,12 +89,14 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 			version, _ := pkg.Version()
 			arch, _ := pkg.Arch()
 			format, _ := pkg.Format()
+			origin, _ := pkg.Origin()
 
 			apiPackages = append(apiPackages, &vadvisor.Package{
 				Name:    name,
 				Version: version,
 				Arch:    arch,
 				Format:  format,
+				Origin:  origin,
 			})
 		}
 
