@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"go.mondoo.io/mondoo/lumi/resources/reboot"
@@ -24,6 +25,41 @@ func (p *lumiOs) id() (string, error) {
 }
 
 func (p *lumiOs) GetRebootpending() (interface{}, error) {
+	pf, err := p.Runtime.Motor.Platform()
+	if err != nil {
+		return nil, err
+	}
+	if pf.Name == "photon" {
+		// get installed kernel and check if the found one is running
+		lumiKernel, err := p.Runtime.CreateResource("kernel")
+		if err != nil {
+			return nil, err
+		}
+		kernel := lumiKernel.(Kernel)
+		kernelInstalled, err := kernel.Installed()
+		if err != nil {
+			return nil, err
+		}
+
+		kernels := []KernelVersion{}
+		data, err := json.Marshal(kernelInstalled)
+		if err != nil {
+			return nil, err
+		}
+		err = json.Unmarshal([]byte(data), &kernels)
+		if err != nil {
+			return nil, err
+		}
+
+		// we should only have one kernel here
+		if len(kernels) != 1 {
+			return nil, errors.New("unexpected kernel list result for photon os")
+		}
+
+		return !kernels[0].Running, nil
+	}
+
+	// TODO: move more logic into lumi to leverage its cache
 	// try to collect if a reboot is required, fails for static images
 	rb, err := reboot.New(p.Runtime.Motor)
 	if err != nil {
@@ -126,10 +162,6 @@ func (p *lumiOs) GetUptime() (*time.Time, error) {
 	up := time.Now().Unix() - bootTime.Unix()
 	return LumiTime(llx.DurationToTime(up)), nil
 }
-
-// func (p *lumiOs) GetRebootpending() ([]interface{}, error) {
-// 	return nil, errors.New("not implemented")
-// }
 
 func (p *lumiOsUpdate) id() (string, error) {
 	name, _ := p.Name()
