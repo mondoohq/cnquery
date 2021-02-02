@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"go.mondoo.io/mondoo/lumi/resources/reboot"
 	"strings"
 	"time"
 
@@ -22,8 +23,13 @@ func (p *lumiOs) id() (string, error) {
 	return "os", nil
 }
 
-func (p *lumiOs) GetRebootpending() ([]interface{}, error) {
-	return nil, errors.New("not implemented")
+func (p *lumiOs) GetRebootpending() (interface{}, error) {
+	// try to collect if a reboot is required, fails for static images
+	rb, err := reboot.New(p.Runtime.Motor)
+	if err != nil {
+		return nil, err
+	}
+	return rb.RebootPending()
 }
 
 func (p *lumiOs) getUnixEnv() (map[string]interface{}, error) {
