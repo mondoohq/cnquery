@@ -69,6 +69,8 @@ func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
 			return nil, err
 		}
 
+		isKernel := func(pkg Package) {}
+
 		if pf.IsFamily("debian") {
 			// debian based systems
 			// kernel version is  "4.19.0-13-cloud-amd64"
@@ -83,9 +85,7 @@ func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
 			//	name: "linux-image-cloud-amd64"
 			//	version: "4.19+105+deb10u8"
 			//}]
-			for i := range lumiPkgs {
-				lumiPkg := lumiPkgs[i]
-				pkg := lumiPkg.(Package)
+			isKernel = func(pkg Package) {
 				name, _ := pkg.Name()
 
 				if strings.HasPrefix(name, "linux-image") {
@@ -104,6 +104,7 @@ func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
 					})
 				}
 			}
+
 		} else if pf.IsFamily("redhat") || pf.Name == "amazonlinux" {
 			// rpm based systems
 			// kernel version is  "3.10.0-1160.11.1.el7.x86_64"
@@ -118,9 +119,7 @@ func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
 			//	name: "kernel"
 			//	version: "3.10.0-1127.19.1.el7"
 			//}]
-			for i := range lumiPkgs {
-				lumiPkg := lumiPkgs[i]
-				pkg := lumiPkg.(Package)
+			isKernel = func(pkg Package) {
 				name, _ := pkg.Name()
 
 				if name == "kernel" {
@@ -140,8 +139,33 @@ func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
 					})
 				}
 			}
+		} else if pf.Name == "photon" {
+			isKernel = func(pkg Package) {
+				name, _ := pkg.Name()
+
+				if strings.HasPrefix(name, "linux") {
+					version, _ := pkg.Version()
+
+					kernelName := version + strings.TrimPrefix(name, "linux")
+					running := false
+					if kernelName == runningKernelVersion {
+						running = true
+					}
+
+					res = append(res, KernelVersion{
+						Name:    name,
+						Version: version + strings.TrimPrefix(name, "linux"),
+						Running: running,
+					})
+				}
+			}
 		}
 
+		for i := range lumiPkgs {
+			lumiPkg := lumiPkgs[i]
+			pkg := lumiPkg.(Package)
+			isKernel(pkg)
+		}
 	}
 
 	// empty when there is no kernel information found
