@@ -46,6 +46,28 @@ func TestManagerCentos(t *testing.T) {
 	assert.Equal(t, 16, len(mods))
 }
 
+func TestManagerAmazonLinux1(t *testing.T) {
+	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/amznlinux1.toml"})
+	require.NoError(t, err)
+	m, err := motor.New(mock)
+	require.NoError(t, err)
+
+	mm, err := ResolveManager(m)
+	require.NoError(t, err)
+
+	info, err := mm.Info()
+	require.NoError(t, err)
+	assert.Equal(t, "4.14.193-113.317.amzn1.x86_64", info.Version)
+	assert.Equal(t, map[string]string{"console": "ttyS0", "nvme_core.io_timeout": "4294967295", "selinux": "0"}, info.Arguments)
+	assert.Equal(t, "", info.Path)
+	assert.Equal(t, "LABEL=/", info.Device)
+
+	mods, err := mm.Modules()
+	require.NoError(t, err)
+
+	assert.Equal(t, 21, len(mods))
+}
+
 func TestManagerMacos(t *testing.T) {
 	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/osx.toml"})
 	require.NoError(t, err)
