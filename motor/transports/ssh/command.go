@@ -49,13 +49,20 @@ func (c *Command) Exec(command string) (*transports.Command, error) {
 	session.Stderr = stderrBuffer
 	err = session.Run(c.Command.Command)
 	c.Command.Stats.Duration = time.Since(c.Command.Stats.Start)
-	if err != nil {
-		var e *ssh.ExitError
-		match := errors.As(err, &e)
-		if match {
-			c.Command.ExitStatus = e.ExitStatus()
-		}
+
+	// command completed successfully, great :-)
+	if err == nil {
+		return &c.Command, nil
+	}
+
+	// if the program failed, we do not return err but its exit code
+	var e *ssh.ExitError
+	match := errors.As(err, &e)
+	if match {
+		c.Command.ExitStatus = e.ExitStatus()
 		return &c.Command, err
 	}
-	return &c.Command, nil
+
+	// all other errors are real errors and not expected
+	return &c.Command, err
 }

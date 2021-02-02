@@ -108,23 +108,20 @@ func (t *WinrmTransport) RunCommand(command string) (*transports.Command, error)
 	stdoutBuffer := &bytes.Buffer{}
 	stderrBuffer := &bytes.Buffer{}
 
+	mcmd := &transports.Command{
+		Command: command,
+		Stdout:  stdoutBuffer,
+		Stderr:  stderrBuffer,
+	}
+
+	// Note: winrm does not return err of the command was executed with a non-zero exit code
 	exitCode, err := t.Client.Run(command, stdoutBuffer, stderrBuffer)
 	if err != nil {
 		log.Error().Err(err).Str("command", command).Msg("could not execute winrm command")
-		return nil, err
+		return mcmd, err
 	}
 
-	// log.Debug().Int("exitcode", exitCode).Msg("winrm command executed")
-	// fmt.Println(stdoutBuffer.String())
-	// fmt.Println(stderrBuffer.String())
-
-	mcmd := &transports.Command{
-		Command:    command,
-		Stdout:     stdoutBuffer,
-		Stderr:     stderrBuffer,
-		ExitStatus: exitCode,
-	}
-
+	mcmd.ExitStatus = exitCode
 	return mcmd, nil
 }
 

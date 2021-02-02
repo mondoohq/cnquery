@@ -48,16 +48,21 @@ func (c *Command) Exec(usercmd string, args []string) (*transports.Command, erro
 	c.cmdExecutor.Stderr = c.Command.Stderr
 
 	err := c.cmdExecutor.Run()
-	if err != nil {
-		// try to extract the status code
-		if exiterr, ok := err.(*exec.ExitError); ok {
-			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
-				c.Command.ExitStatus = status.ExitStatus()
-			}
-		}
-		return &c.Command, err
+	c.Command.Stats.Duration = time.Since(c.Command.Stats.Start)
+
+	// command completed successfully, great :-)
+	if err == nil {
+		return &c.Command, nil
 	}
 
-	c.Command.Stats.Duration = time.Since(c.Command.Stats.Start)
-	return &c.Command, nil
+	// if the program failed, we do not return err but its exit code
+	if exiterr, ok := err.(*exec.ExitError); ok {
+		if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+			c.Command.ExitStatus = status.ExitStatus()
+		}
+		return &c.Command, nil
+	}
+
+	// all other errors are real errors and not expected
+	return &c.Command, err
 }
