@@ -52,7 +52,6 @@ func (f *File) Readdir(n int) ([]os.FileInfo, error) {
 	// search all child items
 	for k := range f.Fs.FileMap {
 		entry := f.Fs.FileMap[k].Name
-		// log.Debug().Str("entry", Abs(entry)).Str("path", f.path).Msg("iteratte path")
 		if strings.HasPrefix(Abs(entry), f.path) {
 			fi = append(fi)
 		}

@@ -55,3 +55,6 @@ this is actually a symlink to /etc/init.d/agetty
 # mock has the capability to run commands
 [commands."rc-status -s"]
 stdout = ""
+
+[commands."which rc-status"]
+stdout = ""

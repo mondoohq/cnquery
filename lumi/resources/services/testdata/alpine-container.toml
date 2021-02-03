@@ -81,3 +81,6 @@ content does not matter for testing
 content = """
 this is actually a symlink to /etc/init.d/agetty
 """
+
+[commands."which rc-status"]
+stdout = "/bin/rc-status"
