@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-var LINUX_KERNEL_ARGUMENTS_REGEX = regexp.MustCompile(`(?:^BOOT_IMAGE=([^\s]*)\s)?root=([^\s]*)\s(.*)`)
+var LINUX_KERNEL_ARGUMENTS_REGEX = regexp.MustCompile(`(?:^BOOT_IMAGE=([^\s]*)\s)?(?:root=([^\s]*)\s)?(.*)`)
 
 type LinuxKernelArguments struct {
 	Path      string
