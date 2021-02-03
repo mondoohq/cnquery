@@ -1,9 +1,6 @@
 package resources
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -240,14 +237,5 @@ func (s *lumiOs) GetMachineid() (string, error) {
 		return "", errors.New("cannot determine platform uuid on known system " + platform.Name)
 	}
 
-	// TODO: we may want to inject that during compile time
-	return HashedMachineID("3zXPqBRdu2zyspzplk7gxi1LEveYBrY0hdgCYv4M", id), nil
-}
-
-// We use a mechanism established by https://github.com/denisbrodbeck/machineid to
-// derive the platform id in a reliable manner but we are not exposing the machine secret
-func HashedMachineID(secret, id string) string {
-	mac := hmac.New(sha256.New, []byte(id))
-	mac.Write([]byte(secret))
-	return hex.EncodeToString(mac.Sum(nil))
+	return id, nil
 }
