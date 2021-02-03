@@ -485,6 +485,8 @@ os {
   rebootpending() bool
   // Hostname for this OS
   hostname() string
+  // Pretty Hostname
+  prettyHostname() string
   // Machine ID for this OS
   machineid() string
 }

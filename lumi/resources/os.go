@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"go.mondoo.io/mondoo/lumi/resources/reboot"
+	"go.mondoo.io/mondoo/lumi/resources/systemd"
 	"strings"
 	"time"
 
@@ -208,6 +209,41 @@ func (s *lumiOs) GetHostname() (string, error) {
 	}
 
 	return hostname.Hostname(s.Runtime.Motor.Transport, platform)
+}
+
+func (s *lumiOs) GetPrettyHostname() (string, error) {
+	lf, err := s.Runtime.CreateResource("file", "path", "/etc/machine-info")
+	if err != nil {
+		return "", err
+	}
+	file := lf.(File)
+
+	exists, err := file.Exists()
+	if err != nil {
+		return "", err
+	}
+	// if the file does not exist, the pretty hostname is just empty
+	if !exists {
+		return "", nil
+	}
+
+	err = s.Runtime.WatchAndCompute(file, "content", s, "prettyHostname")
+	if err != nil {
+		return "", err
+	}
+
+	// gather content
+	data, err := file.Content()
+	if err != nil {
+		return "", err
+	}
+
+	mi, err := systemd.ParseMachineInfo(strings.NewReader(data))
+	if err != nil {
+		return "", err
+	}
+
+	return mi.PrettyHostname, nil
 }
 
 // returns the OS native machine UUID/GUID
