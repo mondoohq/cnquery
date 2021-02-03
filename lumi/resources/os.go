@@ -7,6 +7,9 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/reboot"
 	"go.mondoo.io/mondoo/lumi/resources/systemd"
 	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/transports/docker/image"
+	"go.mondoo.io/mondoo/motor/transports/docker/snapshot"
+	"go.mondoo.io/mondoo/motor/transports/tar"
 	"strings"
 	"time"
 
@@ -24,6 +27,17 @@ func (p *lumiOs) id() (string, error) {
 }
 
 func (p *lumiOs) GetRebootpending() (interface{}, error) {
+	// it is a container image, a reboot is never required
+	switch p.Runtime.Motor.Transport.(type) {
+	case *image.DockerImageTransport:
+		return false, nil
+	case *snapshot.DockerSnapshotTransport:
+		return false, nil
+	case *tar.Transport:
+		return false, nil
+	}
+
+	// check photon
 	pf, err := p.Runtime.Motor.Platform()
 	if err != nil {
 		return nil, err
