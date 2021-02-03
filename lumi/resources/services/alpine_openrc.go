@@ -2,13 +2,13 @@ package services
 
 import (
 	"bufio"
-	"io"
-	"path/filepath"
-	"regexp"
-
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/transports"
+	"io"
+	"io/ioutil"
+	"path/filepath"
+	"regexp"
 )
 
 type AlpineOpenrcServiceManager struct {
@@ -36,21 +36,27 @@ func (s *AlpineOpenrcServiceManager) List() ([]*Service, error) {
 	}
 
 	// retrieve service status from running systems
-	var serviceStatusMap map[string]bool
+	serviceStatusMap := map[string]bool{}
 	if s.motor.Transport.Capabilities().HasCapability(transports.Capability_RunCommand) {
-
-		cmd, err := s.motor.Transport.RunCommand("rc-status -s")
+		// check if the rc-status command exits, if not no service is running
+		cmd, err := s.motor.Transport.RunCommand("which rc-status")
 		if err != nil {
 			return nil, err
 		}
 
-		serviceStatusMap, err = ParseOpenRCServiceStatus(cmd.Stdout)
-		if err != nil {
-			return nil, err
-		}
+		// if the rc-status command is installed
+		cmdOut, _ := ioutil.ReadAll(cmd.Stdout)
+		if string(cmdOut) != "" {
+			cmd, err := s.motor.Transport.RunCommand("rc-status -s")
+			if err != nil {
+				return nil, err
+			}
 
-	} else {
-		serviceStatusMap = map[string]bool{}
+			serviceStatusMap, err = ParseOpenRCServiceStatus(cmd.Stdout)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	// check for services in runlevel
