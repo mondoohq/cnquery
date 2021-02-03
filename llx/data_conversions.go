@@ -444,10 +444,12 @@ func args2resourceargs(c *LeiseExecutor, ref int32, args []*Primitive) ([]interf
 			cur = args[i].RawData()
 		}
 
-		if cur.Error != nil {
-			return nil, 0, cur.Error
+		if cur != nil {
+			if cur.Error != nil {
+				return nil, 0, cur.Error
+			}
+			res[i] = cur.Value
 		}
-		res[i] = cur.Value
 	}
 	return res, 0, nil
 }
