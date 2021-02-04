@@ -1,0 +1,35 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "4.18.0-240.el8.x86_64"
+
+[files."/etc/redhat-release"]
+content = "AlmaLinux release 8.3 Beta (Purple Manul)"
+
+[files."/etc/centos-release"]
+content = "AlmaLinux release 8.3 Beta (Purple Manul)"
+
+[files."/etc/almalinux-release"]
+content = "AlmaLinux release 8.3 Beta (Purple Manul)"
+
+[files."/etc/os-release"]
+content = """
+NAME="AlmaLinux"
+VERSION="8.3 (Purple Manul)"
+ID="almalinux"
+ID_LIKE="rhel centos fedora"
+VERSION_ID="8.3"
+PLATFORM_ID="platform:el8"
+PRETTY_NAME="AlmaLinux 8.3 Beta (Purple Manul)"
+ANSI_COLOR="0;34"
+CPE_NAME="cpe:/o:almalinux:almalinux:8.3:beta"
+HOME_URL="https://almalinux.org/"
+BUG_REPORT_URL="https://bugs.almalinux.org/"
+
+ALMALINUX_MANTISBT_PROJECT="AlmaLinux-8"
+ALMALINUX_MANTISBT_PROJECT_VERSION="8"
+"""
