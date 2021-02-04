@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"go.mondoo.io/mondoo/lumi/resources/reboot"
 	"go.mondoo.io/mondoo/lumi/resources/systemd"
+	"go.mondoo.io/mondoo/motor/platform"
 	"strings"
 	"time"
 
@@ -211,39 +212,74 @@ func (s *lumiOs) GetHostname() (string, error) {
 	return hostname.Hostname(s.Runtime.Motor.Transport, platform)
 }
 
-func (s *lumiOs) GetPrettyHostname() (string, error) {
-	lf, err := s.Runtime.CreateResource("file", "path", "/etc/machine-info")
-	if err != nil {
-		return "", err
-	}
-	file := lf.(File)
-
-	exists, err := file.Exists()
-	if err != nil {
-		return "", err
-	}
-	// if the file does not exist, the pretty hostname is just empty
-	if !exists {
-		return "", nil
-	}
-
-	err = s.Runtime.WatchAndCompute(file, "content", s, "prettyHostname")
+func (p *lumiOs) GetName() (string, error) {
+	pf, err := p.Runtime.Motor.Platform()
 	if err != nil {
 		return "", err
 	}
 
-	// gather content
-	data, err := file.Content()
-	if err != nil {
-		return "", err
+	if !pf.IsFamily(platform.FAMILY_UNIX) && !pf.IsFamily(platform.FAMILY_WINDOWS) {
+		return "", errors.New("your platform is not supported by operating system resource")
 	}
 
-	mi, err := systemd.ParseMachineInfo(strings.NewReader(data))
-	if err != nil {
-		return "", err
+	if pf.IsFamily(platform.FAMILY_LINUX) {
+		lf, err := p.Runtime.CreateResource("file", "path", "/etc/machine-info")
+		if err != nil {
+			return "", err
+		}
+		file := lf.(File)
+
+		exists, err := file.Exists()
+		if err != nil {
+			return "", err
+		}
+		// if the file does not exist, the pretty hostname is just empty
+		if !exists {
+			return "", nil
+		}
+
+		err = p.Runtime.WatchAndCompute(file, "content", p, "name")
+		if err != nil {
+			return "", err
+		}
+
+		// gather content
+		data, err := file.Content()
+		if err != nil {
+			return "", err
+		}
+
+		mi, err := systemd.ParseMachineInfo(strings.NewReader(data))
+		if err != nil {
+			return "", err
+		}
+
+		if mi.PrettyHostname != "" {
+			return mi.PrettyHostname, nil
+		}
 	}
 
-	return mi.PrettyHostname, nil
+	// return plain hostname, this also happens for linux if no pretty name was found
+	if pf.IsFamily(platform.FAMILY_UNIX) {
+		return hostname.Hostname(p.Runtime.Motor.Transport, pf)
+	}
+
+	if pf.IsFamily(platform.FAMILY_WINDOWS) {
+
+		// try to get the computer name from env
+		env, err := p.getWindowsEnv()
+		if err == nil {
+			val, ok := env["COMPUTERNAME"]
+			if ok {
+				return val.(string), nil
+			}
+		}
+
+		// fallback to hostname
+		return hostname.Hostname(p.Runtime.Motor.Transport, pf)
+	}
+
+	return "", errors.New("your platform is not supported by operating system resource")
 }
 
 // returns the OS native machine UUID/GUID

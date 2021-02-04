@@ -473,6 +473,8 @@ machine.chassis {
 
 // Operating System information
 os {
+  // Pretty Hostname on Linux / Device name on Windows
+  name() string
   // ENV variable contents
   env() map[string]string
   // PATH variable contents
@@ -485,8 +487,6 @@ os {
   rebootpending() bool
   // Hostname for this OS
   hostname() string
-  // Pretty Hostname
-  prettyHostname() string
   // Machine ID for this OS
   machineid() string
 }
