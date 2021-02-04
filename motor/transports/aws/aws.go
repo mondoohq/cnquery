@@ -93,6 +93,11 @@ func (t *Transport) Capabilities() transports.Capabilities {
 	}
 }
 
+func (t *Transport) SetConfig(cfg aws_sdk.Config) aws_sdk.Config {
+	t.config = cfg
+	return t.config
+}
+
 func (t *Transport) Config() aws_sdk.Config {
 	return t.config
 }
