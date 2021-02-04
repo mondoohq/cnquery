@@ -42,38 +42,28 @@ var amazonlinux1version = regexp.MustCompile(`^20\d\d`)
 func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 	var osm OSServiceManager
 
-	pi, err := motor.Platform()
+	pf, err := motor.Platform()
 	if err != nil {
 		return nil, err
 	}
 
-	switch pi.Name {
-	case "manjaro", "arch": // arch family
+	switch {
+	case pf.IsFamily("arch"): // arch family
 		osm = &SystemDServiceManager{motor: motor}
-	case "amazonlinux":
-		if amazonlinux1version.MatchString(pi.Release) {
+	case pf.Name == "amazonlinux":
+		if amazonlinux1version.MatchString(pf.Release) {
 			osm = &UpstartServiceManager{SysVServiceManager{motor: motor}}
 		} else {
 			osm = &SystemDServiceManager{motor: motor}
 		}
-	case "centos", "redhat", "scientific", "oraclelinux":
-		rv := platform.ParseOsVersion(pi.Release)
-		v, err := rv.MajorAtoi()
-		if err != nil {
-			return nil, errors.New("unknown redhat version: " + pi.Release)
-		}
-		if v < 7 {
-			osm = &UpstartServiceManager{SysVServiceManager{motor: motor}}
-		} else {
-			osm = &SystemDServiceManager{motor: motor}
-		}
-	case "photon":
+	case pf.Name == "photon":
 		osm = &SystemDServiceManager{motor: motor}
-	case "fedora":
-		rv := platform.ParseOsVersion(pi.Release)
+	// NOTE: we need to check fedora before rhel family, since its also rhel family
+	case pf.Name == "fedora":
+		rv := platform.ParseOsVersion(pf.Release)
 		v, err := rv.MajorAtoi()
 		if err != nil {
-			return nil, errors.New("unknown fedora version: " + pi.Release)
+			return nil, errors.New("unknown fedora version: " + pf.Release)
 		}
 
 		if v < 15 {
@@ -82,11 +72,22 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		} else {
 			osm = &SystemDServiceManager{motor: motor}
 		}
-	case "ubuntu", "linuxmint":
-		rv := platform.ParseOsVersion(pi.Release)
+	case pf.IsFamily("redhat"):
+		rv := platform.ParseOsVersion(pf.Release)
 		v, err := rv.MajorAtoi()
 		if err != nil {
-			return nil, errors.New("unknown ubuntu version: " + pi.Release)
+			return nil, errors.New("unknown redhat version: " + pf.Release)
+		}
+		if v < 7 {
+			osm = &UpstartServiceManager{SysVServiceManager{motor: motor}}
+		} else {
+			osm = &SystemDServiceManager{motor: motor}
+		}
+	case pf.Name == "ubuntu" || pf.Name == "linuxmint":
+		rv := platform.ParseOsVersion(pf.Release)
+		v, err := rv.MajorAtoi()
+		if err != nil {
+			return nil, errors.New("unknown ubuntu version: " + pf.Release)
 		}
 
 		if v < 15 {
@@ -94,11 +95,11 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		} else {
 			osm = &SystemDServiceManager{motor: motor}
 		}
-	case "debian":
-		rv := platform.ParseOsVersion(pi.Release)
+	case pf.Name == "debian":
+		rv := platform.ParseOsVersion(pf.Release)
 		v, err := rv.MajorAtoi()
 		if err != nil {
-			return nil, errors.New("unknown debian version: " + pi.Release)
+			return nil, errors.New("unknown debian version: " + pf.Release)
 		}
 
 		if v < 7 {
@@ -106,11 +107,11 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		} else {
 			osm = &SystemDServiceManager{motor: motor}
 		}
-	case "sles", "opensuse", "opensuse-tumbleweed":
-		rv := platform.ParseOsVersion(pi.Release)
+	case pf.Name == "sles" || pf.Name == "opensuse" || pf.Name == "opensuse-tumbleweed":
+		rv := platform.ParseOsVersion(pf.Release)
 		v, err := rv.MajorAtoi()
 		if err != nil {
-			return nil, errors.New("unknown suse version: " + pi.Release)
+			return nil, errors.New("unknown suse version: " + pf.Release)
 		}
 
 		// NOTE: opensuse-tumbleweed uses version numbers like 20200622
@@ -119,20 +120,20 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		} else {
 			osm = &SystemDServiceManager{motor: motor}
 		}
-	case "macos", "darwin":
+	case pf.IsFamily("darwin"): // "macos", "darwin"
 		osm = &LaunchDServiceManager{motor: motor}
-	case "freebsd", "dragonflybsd", "netbsd":
+	case pf.Name == "freebsd" || pf.Name == "dragonflybsd" || pf.Name == "netbsd":
 		osm = &BsdInitServiceManager{motor: motor}
-	case "openbsd":
+	case pf.Name == "openbsd":
 		osm = &OpenBsdRcctlServiceManager{motor: motor}
-	case "windows":
+	case pf.Name == "windows":
 		osm = &WindowsServiceManager{motor: motor}
-	case "alpine":
+	case pf.Name == "alpine":
 		osm = &AlpineOpenrcServiceManager{motor: motor}
 	}
 
 	if osm == nil {
-		return nil, errors.New("could not detect suitable service manager for platform: " + pi.Name)
+		return nil, errors.New("could not detect suitable service manager for platform: " + pf.Name)
 	}
 
 	return osm, nil

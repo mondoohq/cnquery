@@ -12,7 +12,7 @@ import (
 )
 
 func TestManagerDebian(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/linux_systemd.toml"})
+	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/debian.toml"})
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)

@@ -2,7 +2,6 @@ package packages
 
 import (
 	"github.com/cockroachdb/errors"
-
 	"go.mondoo.io/mondoo/motor"
 )
 
@@ -23,35 +22,36 @@ type OperatingSystemUpdateManager interface {
 func ResolveSystemPkgManager(motor *motor.Motor) (OperatingSystemPkgManager, error) {
 	var pm OperatingSystemPkgManager
 
-	platform, err := motor.Platform()
+	pf, err := motor.Platform()
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: use OS family and select package manager
-	switch platform.Name {
-	case "manjaro", "arch": // arch family
+	switch {
+	case pf.IsFamily("arch"): // arch family
 		pm = &PacmanPkgManager{motor: motor}
-	case "ubuntu", "debian", "raspbian", "kali", "linuxmint": // debian family
+	case pf.IsFamily("debian"): // debian family
 		pm = &DebPkgManager{motor: motor}
-	case "redhat", "centos", "fedora", "amazonlinux", "oraclelinux", "scientific", "photon", "wrlinux": // rhel family
-		pm = &RpmPkgManager{motor: motor, platform: platform}
-	case "opensuse", "sles", "opensuse-leap", "opensuse-tumbleweed": // suse handling
-		pm = &SusePkgManager{RpmPkgManager{motor: motor, platform: platform}}
-	case "alpine": // alpine family
+	case pf.Name == "amazonlinux" || pf.Name == "photon" || pf.Name == "wrlinux":
+		fallthrough
+	case pf.IsFamily("redhat"): // rhel family
+		pm = &RpmPkgManager{motor: motor, platform: pf}
+	case pf.IsFamily("suse"): // suse handling
+		pm = &SusePkgManager{RpmPkgManager{motor: motor, platform: pf}}
+	case pf.Name == "alpine": // alpine
 		pm = &AlpinePkgManager{motor: motor}
-	case "macos": // mac os family
+	case pf.Name == "macos": // mac os family
 		pm = &MacOSPkgManager{motor: motor}
-	case "windows":
+	case pf.Name == "windows":
 		pm = &WinPkgManager{motor: motor}
-	case "scratch", "coreos":
+	case pf.Name == "scratch" || pf.Name == "coreos":
 		pm = &ScratchPkgManager{motor: motor}
-	case "openwrt":
+	case pf.Name == "openwrt":
 		pm = &OpkgPkgManager{motor: motor}
-	case "solaris":
+	case pf.Name == "solaris":
 		pm = &SolarisPkgManager{motor: motor}
 	default:
-		return nil, errors.New("could not detect suitable package manager for platform: " + platform.Name)
+		return nil, errors.New("could not detect suitable package manager for platform: " + pf.Name)
 	}
 
 	return pm, nil
