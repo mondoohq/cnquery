@@ -2,6 +2,7 @@ package hashivault
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -55,40 +56,6 @@ func validKey(key string) error {
 	return nil
 }
 
-func (v *Vault) Set(ctx context.Context, cred *vault.Credential) (*vault.CredentialID, error) {
-	c, err := v.client()
-	if err != nil {
-		return nil, err
-	}
-
-	err = validKey(cred.Key)
-	if err != nil {
-		return nil, err
-	}
-
-	// convert creds fields to vault struct
-	// TODO: we could store labels as part of the content fields, may not look as nice
-	// see https://github.com/hashicorp/vault/issues/7905
-	data := map[string]interface{}{}
-	for k, v := range cred.Fields {
-		data[k] = v
-	}
-
-	// encapsulate data into v2 secrets api
-	secretData := map[string]interface{}{
-		"data": data,
-	}
-
-	// store secret
-	_, err = c.Logical().Write(vaultSecretId(cred.Key), secretData)
-	if err != nil {
-		return nil, err
-	}
-
-	return &vault.CredentialID{Key: cred.Key}, nil
-
-}
-
 // https://learn.hashicorp.com/tutorials/vault/versioned-kv?in=vault/secrets-management#step-2-write-secrets
 func (v *Vault) Get(ctx context.Context, id *vault.CredentialID) (*vault.Credential, error) {
 	c, err := v.client()
@@ -106,23 +73,19 @@ func (v *Vault) Get(ctx context.Context, id *vault.CredentialID) (*vault.Credent
 		return nil, err
 	}
 
-	fields, err := SecretData(secret)
+	secretBytes, err := SecretData(secret)
 	if err != nil {
 		return nil, err
 	}
 
 	return &vault.Credential{
 		Key:    id.Key,
-		Fields: fields,
+		Secret: string(secretBytes),
 	}, nil
 }
 
-func (v *Vault) Delete(ctx context.Context, id *vault.CredentialID) (*vault.CredentialDeletedResp, error) {
-	return nil, notImplemented
-}
-
 // SecretData returns the map of metadata associated with the secret
-func SecretData(s *api.Secret) (map[string]string, error) {
+func SecretData(s *api.Secret) ([]byte, error) {
 	if s == nil {
 		return nil, nil
 	}
@@ -136,6 +99,7 @@ func SecretData(s *api.Secret) (map[string]string, error) {
 		return nil, fmt.Errorf("unable to convert data field to expected format")
 	}
 
+	// when we resolve the secret in motor/discovery/resolve.go, we unmarshal to map[string]string, so things should match!
 	secretData := make(map[string]string, len(data))
 	for k, v := range data {
 		typed, ok := v.(string)
@@ -145,5 +109,9 @@ func SecretData(s *api.Secret) (map[string]string, error) {
 		secretData[k] = typed
 	}
 
-	return secretData, nil
+	return json.Marshal(secretData)
+}
+
+func (v *Vault) Set(ctx context.Context, cred *vault.Credential) (*vault.CredentialID, error) {
+	return nil, errors.New("not implemented")
 }

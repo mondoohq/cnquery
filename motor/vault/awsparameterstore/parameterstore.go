@@ -2,12 +2,10 @@ package awsparameterstore
 
 import (
 	"context"
-	"encoding/json"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
-	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/motor/vault"
 )
@@ -40,37 +38,6 @@ func awsParamKeyID(key string) string {
 	return gcpKey
 }
 
-func (v *Vault) Set(ctx context.Context, cred *vault.Credential) (*vault.CredentialID, error) {
-	err := validKey(cred.Key)
-	if err != nil {
-		return nil, err
-	}
-
-	// create the client
-	c := ssm.NewFromConfig(v.cfg)
-
-	// we json-encode the value, while proto would be more efficient, json allows humans to read the data more easily
-	payload, err := json.Marshal(cred.Fields)
-	if err != nil {
-		return nil, err
-	}
-
-	// store new secret version
-	_, err = c.PutParameter(ctx, &ssm.PutParameterInput{
-		Name:      aws.String(awsParamKeyID(cred.Key)),
-		Value:     aws.String(string(payload)),
-		Type:      types.ParameterTypeString,
-		Overwrite: true,
-		// NOTE: once we use  tags, override will not work
-		// Tags:  []ssm.Tag{ssm.Tag{Key: aws.String("key"), Value: aws.String("value")}},
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to add secret version")
-	}
-
-	return &vault.CredentialID{Key: cred.Key}, nil
-}
-
 func (v *Vault) Get(ctx context.Context, id *vault.CredentialID) (*vault.Credential, error) {
 	err := validKey(id.Key)
 	if err != nil {
@@ -89,25 +56,17 @@ func (v *Vault) Get(ctx context.Context, id *vault.CredentialID) (*vault.Credent
 		return nil, errors.Wrap(err, "failed to get secret")
 	}
 
-	var data []byte
-	if out != nil {
-		data = []byte(*out.Parameter.Value)
-	}
-
-	var fields map[string]string
-	err = json.Unmarshal(data, &fields)
-	if err != nil {
-		return nil, err
+	var data string
+	if out != nil && out.Parameter != nil {
+		data = *out.Parameter.Value
 	}
 
 	return &vault.Credential{
-		Key: id.Key,
-		// TODO: add label support
-		// Label:  i.Label,
-		Fields: fields,
+		Key:    id.Key,
+		Secret: data,
 	}, nil
 }
 
-func (v *Vault) Delete(ctx context.Context, id *vault.CredentialID) (*vault.CredentialDeletedResp, error) {
-	return nil, notImplemented
+func (v *Vault) Set(ctx context.Context, cred *vault.Credential) (*vault.CredentialID, error) {
+	return nil, errors.New("not implemented")
 }

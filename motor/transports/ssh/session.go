@@ -45,7 +45,10 @@ func authPrivateKey(privateKeyPath string, password string) (ssh.Signer, error) 
 	if err != nil {
 		return nil, err
 	}
+	return authPrivateKeyString(pemBytes, password)
+}
 
+func authPrivateKeyString(pemBytes []byte, password string) (ssh.Signer, error) {
 	// check if the key is encrypted
 	block, _ := pem.Decode(pemBytes)
 	if block == nil {
@@ -53,6 +56,7 @@ func authPrivateKey(privateKeyPath string, password string) (ssh.Signer, error) 
 	}
 
 	var signer ssh.Signer
+	var err error
 	if strings.Contains(block.Headers["Proc-Type"], "ENCRYPTED") {
 		// we may want to support to parse password protected encrypted key
 		signer, err = ssh.ParsePrivateKeyWithPassphrase(pemBytes, []byte(password))
@@ -113,6 +117,14 @@ func authMethods(endpoint *transports.TransportConfig) ([]ssh.AuthMethod, error)
 		priv, err := authPrivateKey(identityKey, endpoint.Password)
 		if err != nil {
 			log.Debug().Err(err).Str("key", identityKey).Msg("could not load private key, ignore the file")
+		} else {
+			signers = append(signers, priv)
+		}
+	}
+	if len(endpoint.PrivateKeyBytes) > 0 {
+		priv, err := authPrivateKeyString(endpoint.PrivateKeyBytes, endpoint.Password)
+		if err != nil {
+			log.Debug().Err(err).Msg("could not read private key")
 		} else {
 			signers = append(signers, priv)
 		}

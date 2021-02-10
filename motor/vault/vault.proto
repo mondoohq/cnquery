@@ -11,17 +11,10 @@ message CredentialID {
 message Credential {
   string key = 1;
   string label = 2;
-  map<string, string> fields = 3;
+  string secret = 3;
 }
-
-message CredentialList {
-  repeated Credential credentials = 1;
-}
-
-message CredentialDeletedResp {}
 
 service Vault {
   rpc Get(CredentialID) returns (Credential);
-  rpc Set(Credential)  returns (CredentialID);
-  rpc Delete(CredentialID) returns (CredentialDeletedResp);
+  rpc Set(Credential) returns (CredentialID);
 }
