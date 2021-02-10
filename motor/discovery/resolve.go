@@ -2,7 +2,9 @@ package discovery
 
 import (
 	"context"
+	"encoding/json"
 	"regexp"
+	"sort"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -19,6 +21,7 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/ms365"
 	"go.mondoo.io/mondoo/motor/discovery/vagrant"
 	"go.mondoo.io/mondoo/motor/discovery/vsphere"
+	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/vault"
 )
@@ -59,30 +62,16 @@ func init() {
 	resolver["ipmi"] = &ipmi.Resolver{}
 }
 
-type secret struct {
-	backend  string
-	host     string
-	user     string
-	password string
-}
-
-func getSecret(v vault.Vault, platformID string) (secret, error) {
-	log.Info().Str("platform-id", platformID).Msg("get secret")
-	ctx := context.Background()
-	creds, err := v.Get(ctx, &vault.CredentialID{
-		Key: vault.Mrn2secretKey(platformID),
+func getSecret(v vault.Vault, keyID string) (string, error) {
+	log.Info().Str("key-id", keyID).Msg("get secret")
+	cred, err := v.Get(context.Background(), &vault.CredentialID{
+		Key: keyID,
 	})
-	if err != nil {
+	if err != nil || cred == nil {
 		log.Info().Msg("could not find the id")
-		return secret{}, err
+		return "", err
 	}
-	log.Info().Msgf("%v", creds)
-	return secret{
-		backend:  creds.Fields["backend"],
-		host:     creds.Fields["host"],
-		user:     creds.Fields["user"],
-		password: creds.Fields["password"],
-	}, nil
+	return cred.Secret, nil
 }
 
 func ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
@@ -99,44 +88,65 @@ func ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*
 	return r.ParseConnectionURL(url, opts...)
 }
 
-func enrichAssetInformation(v vault.Vault, a *asset.Asset) *asset.Asset {
-	if v == nil {
-		return a
+func enrichAssetWithVaultData(v vault.Vault, a *asset.Asset, secretInfo *secretInfo) {
+	if v == nil || secretInfo == nil {
+		return
 	}
-
-	// iterate over each platform id
-	for pid := range a.PlatformIDs {
-		platformId := a.PlatformIDs[pid]
-		secret, err := getSecret(v, platformId)
-		if err == nil {
-			// TODO: we should only overwrite the data that is available
-			// ensure there are no duplicates
-			b, err := transports.MapSchemeBackend(secret.backend)
-			if err != nil {
-				log.Warn().Err(err).Msg("backend missing for " + platformId)
-				continue
+	secret, err := getSecret(v, secretInfo.secretID)
+	if len(secret) > 0 {
+		for i := range a.Connections {
+			connection := a.Connections[i]
+			if secretInfo.connectionType == "winrm" {
+				connection.Backend = transports.TransportBackend_CONNECTION_WINRM
 			}
-			a.Connections = append(a.Connections, &transports.TransportConfig{
-				Platformid: platformId,
-				Backend:    b,
-				Host:       secret.host, // that should come from the
-				User:       secret.user,
-				Password:   secret.password,
-				Port:       "",
-				Insecure:   true,
-			})
+			if secretInfo.user != "" {
+				connection.User = secretInfo.user
+			}
+			switch secretInfo.secretFormat {
+			case "private_key":
+				connection.PrivateKeyBytes = []byte(secret)
+			case "password":
+				connection.Password = secret
+			case "json":
+				err = parseJsonByFields([]byte(secret), secretInfo, connection)
+				if err != nil {
+					log.Error().Msgf("unable to parse json secret for %v", secretInfo)
+				}
+			default:
+				log.Error().Msgf("unsupported secret format %s requested", secretInfo.secretFormat)
+			}
+
 		}
 	}
 
-	return a
+	return
+}
 
+func parseJsonByFields(secret []byte, secretInfo *secretInfo, connection *transports.TransportConfig) error {
+	if secretInfo.secretFormat != "json" || len(secretInfo.jsonFields) == 0 {
+		return errors.New("invalid configuration")
+	}
+	jsonSecret := make(map[string]string)
+	err := json.Unmarshal(secret, &jsonSecret)
+	if err != nil {
+		return err
+	}
+	for i := range secretInfo.jsonFields {
+		jsonField := secretInfo.jsonFields[i]
+		switch jsonField {
+		case "user":
+			connection.User = jsonSecret["user"]
+		case "password":
+			connection.Password = jsonSecret["password"]
+		case "private_key":
+			connection.PrivateKeyBytes = []byte(jsonSecret["private_key"])
+		}
+	}
+	return nil
 }
 
 func ResolveAsset(root *asset.Asset, v vault.Vault) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
-
-	// enrich asset with information from vault
-	root = enrichAssetInformation(v, root)
 
 	for i := range root.Connections {
 		t := root.Connections[i]
@@ -154,8 +164,13 @@ func ResolveAsset(root *asset.Asset, v vault.Vault) ([]*asset.Asset, error) {
 
 		for ai := range resp {
 			asset := resp[ai]
-			// enrich asset with information from vault
-			asset = enrichAssetInformation(v, asset)
+
+			// this is where we get the vault configuration query and evaluate it against the asset data
+			secretInfo := resolveAssetToVaultConfiguration(&assetMatchInfo{labels: asset.GetLabels(), platform: asset.Platform})
+			if secretInfo != nil {
+				// if it does match a configuration, enrich asset with information from vault
+				enrichAssetWithVaultData(v, asset, secretInfo)
+			}
 
 			resolved = append(resolved, asset)
 		}
@@ -178,4 +193,120 @@ func ResolveAssets(rootAssets []*asset.Asset, v vault.Vault) ([]*asset.Asset, er
 	}
 
 	return resolved, nil
+}
+
+type assetMatchInfo struct {
+	labels   map[string]string
+	platform *platform.Platform
+}
+
+type secretInfo struct {
+	user           string   // user associated with the secret
+	secretID       string   // id to use to fetch the secret from the source vault
+	secretFormat   string   // private_key, password, or json
+	jsonFields     []string // only for json, the fields we should desconstruct the json object into. all fields and values assumed to be of string type.
+	connectionType string   // default to ssh, user specified
+}
+
+// just for now, this goes away when we are using the query with lumi
+type queryConfiguration struct {
+	MatchKey      string
+	MatchValue    string
+	SecretId      string
+	User          string
+	SecretFormat  string
+	JsonFields    []string
+	MatchPlatform string
+	Hierarchy     int
+}
+
+func resolveAssetToVaultConfiguration(asset *assetMatchInfo) *secretInfo {
+	// here is where we will call the lumi runtime function
+	// give it the asset match information (labels and platform and connection type (e.g. ssh)) + the user-defined vault config query
+	// it returns the secretinfo as defined in the vault config query
+
+	// this is the go code that will be replaced by the lumi stuff
+	configurations := []queryConfiguration{}
+	config1 := queryConfiguration{
+		User:         "ec2-user",
+		MatchKey:     "secretsmanager",
+		MatchValue:   "secret_id",
+		SecretFormat: "private_key",
+		Hierarchy:    1,
+	}
+	configurations = append(configurations, config1)
+	config2 := queryConfiguration{
+		User:          "ubuntu",
+		MatchPlatform: "ubuntu",
+		SecretId:      "arn:aws:secretsmanager:us-east-2:921877552404:secret:test2-lTHSUJ",
+		SecretFormat:  "private_key",
+		Hierarchy:     2,
+	}
+	configurations = append(configurations, config2)
+
+	config3 := queryConfiguration{
+		User:         "ec2-user",
+		MatchKey:     "env",
+		MatchValue:   "test",
+		SecretId:     "arn:aws:secretsmanager:us-east-2:921877552404:secret:test3-pK8sjF",
+		SecretFormat: "private_key",
+		Hierarchy:    3,
+	}
+	configurations = append(configurations, config3)
+
+	sort.SliceStable(configurations, func(i, j int) bool {
+		return configurations[i].Hierarchy < configurations[j].Hierarchy
+	})
+	for i := range configurations {
+		configuration := configurations[i]
+		if configuration.MatchPlatform != "" {
+			// for now, assuming platform == platform name - should be extended
+			if asset.platform.Name == configuration.MatchPlatform {
+				return &secretInfo{
+					user:           configuration.User,
+					secretID:       configuration.SecretId,
+					secretFormat:   configuration.SecretFormat,
+					jsonFields:     configuration.JsonFields,
+					connectionType: "winrm",
+				}
+			}
+		}
+		if configuration.MatchKey != "" {
+			val := asset.labels[configuration.MatchKey]
+			if len(val) > 0 {
+				if configuration.MatchValue == "secret_id" {
+					// user has specified "secret_id" keyword, telling us to look at the value of the tag for the secret id
+					return &secretInfo{
+						user:           configuration.User,
+						secretID:       val,
+						secretFormat:   configuration.SecretFormat,
+						jsonFields:     configuration.JsonFields,
+						connectionType: "ssh",
+					}
+				}
+				// user has specified a match value
+				if configuration.MatchValue != "" {
+					if val == configuration.MatchValue {
+						return &secretInfo{
+							user:           configuration.User,
+							secretID:       configuration.SecretId,
+							secretFormat:   configuration.SecretFormat,
+							jsonFields:     configuration.JsonFields,
+							connectionType: "ssh",
+						}
+					}
+				}
+				// user specificied match key but no value, match
+				return &secretInfo{
+					user:           configuration.User,
+					secretID:       configuration.SecretId,
+					secretFormat:   configuration.SecretFormat,
+					jsonFields:     configuration.JsonFields,
+					connectionType: "ssh",
+				}
+			}
+		}
+	}
+	// end code block
+	return nil
 }

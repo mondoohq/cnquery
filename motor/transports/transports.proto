@@ -55,6 +55,8 @@ message TransportConfig {
   string Password = 7;
   bool Insecure = 8;  // disable ssl/tls checks
   string BearerToken = 9;
+  bytes PrivateKeyBytes = 10;
+
   
   Sudo Sudo = 21;
   bool Record = 22;

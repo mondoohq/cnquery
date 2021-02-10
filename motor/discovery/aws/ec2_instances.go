@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
@@ -128,19 +129,20 @@ func instanceToAsset(account string, region string, instance types.Instance, ssh
 
 	connections := []*transports.TransportConfig{}
 
-	// add ssh and ssm run command if the transports.Connectionsm
+	// figure out some option the user can set to run ssm scans if they want to?
 	// connections = append(connections, &transports.TransportConfig{
 	// 	Backend: transports.TransportConfigBackend_CONNECTION_AWS_SSM_RUN_COMMAND,
 	// 	Host:    *instance.InstanceId,
 	// })
-
+	var connection *transports.TransportConfig
 	if instance.PublicIpAddress != nil {
-		connections = append(connections, &transports.TransportConfig{
+		connection = &transports.TransportConfig{
 			Backend:  transports.TransportBackend_CONNECTION_SSH,
 			User:     sshUsername,
 			Host:     *instance.PublicIpAddress,
 			Insecure: insecure,
-		})
+		}
+		connections = append(connections, connection)
 	}
 
 	asset := &asset.Asset{

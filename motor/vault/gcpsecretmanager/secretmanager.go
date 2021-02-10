@@ -54,61 +54,6 @@ func gcpKeyID(key string) string {
 	return gcpKey
 }
 
-func (v *Vault) Set(ctx context.Context, cred *vault.Credential) (*vault.CredentialID, error) {
-	err := validKey(cred.Key)
-	if err != nil {
-		return nil, err
-	}
-
-	// create the client
-	c, err := v.client(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// check if the secret already exists
-	secret, err := c.GetSecret(ctx, &secretmanagerpb.GetSecretRequest{
-		Name: fmt.Sprintf("projects/%s/secrets/%s", v.projectID, gcpKeyID(cred.Key)),
-	})
-	if err != nil {
-		// create a new secret
-		secret, err = c.CreateSecret(ctx, &secretmanagerpb.CreateSecretRequest{
-			Parent:   fmt.Sprintf("projects/%s", v.projectID),
-			SecretId: gcpKeyID(cred.Key),
-			Secret: &secretmanagerpb.Secret{
-				Replication: &secretmanagerpb.Replication{
-					Replication: &secretmanagerpb.Replication_Automatic_{
-						Automatic: &secretmanagerpb.Replication_Automatic{},
-					},
-				},
-			},
-		})
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to create secret")
-		}
-	}
-
-	// we json-encode the value, while proto would be more efficient, json allows humans to read the data more easily
-	payload, err := json.Marshal(cred.Fields)
-	if err != nil {
-		return nil, err
-	}
-
-	// store new secret version
-	_, err = c.AddSecretVersion(ctx, &secretmanagerpb.AddSecretVersionRequest{
-		Parent: secret.Name,
-		Payload: &secretmanagerpb.SecretPayload{
-			Data: payload,
-		},
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to add secret version")
-	}
-
-	return &vault.CredentialID{Key: cred.Key}, nil
-
-}
-
 func (v *Vault) Get(ctx context.Context, id *vault.CredentialID) (*vault.Credential, error) {
 	err := validKey(id.Key)
 	if err != nil {
@@ -133,15 +78,17 @@ func (v *Vault) Get(ctx context.Context, id *vault.CredentialID) (*vault.Credent
 	if err != nil {
 		return nil, err
 	}
+	var data string
+	if result != nil && result.Payload != nil {
+		data = string(result.Payload.Data)
+	}
 
 	return &vault.Credential{
-		Key: id.Key,
-		// TODO: add label support
-		// Label:  i.Label,
-		Fields: fields,
+		Key:    id.Key,
+		Secret: data,
 	}, nil
 }
 
-func (v *Vault) Delete(ctx context.Context, id *vault.CredentialID) (*vault.CredentialDeletedResp, error) {
-	return nil, notImplemented
+func (v *Vault) Set(ctx context.Context, cred *vault.Credential) (*vault.CredentialID, error) {
+	return nil, errors.New("not implemented")
 }

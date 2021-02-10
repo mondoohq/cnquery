@@ -2,11 +2,13 @@ package keyring
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 
 	"github.com/99designs/keyring"
 	"go.mondoo.io/mondoo/motor/vault"
 )
+
+var notImplemented = errors.New("not implemented")
 
 func New(serviceName string) *Vault {
 	return &Vault{
@@ -37,18 +39,13 @@ func (v *Vault) Set(ctx context.Context, cred *vault.Credential) (*vault.Credent
 		return nil, err
 	}
 
-	// we json-encode the value, while proto would be more efficient, json allows humans to read the data more easily
-	data, err := json.Marshal(cred.Fields)
-	if err != nil {
-		return nil, err
-	}
-
 	// TODO: store data as json encoding
 	err = ring.Set(keyring.Item{
 		Key:   cred.Key,
 		Label: cred.Label,
-		Data:  data,
+		Data:  []byte(cred.Secret),
 	})
+
 	return &vault.CredentialID{
 		Key: cred.Key,
 	}, err
@@ -65,25 +62,9 @@ func (v *Vault) Get(ctx context.Context, id *vault.CredentialID) (*vault.Credent
 		return nil, err
 	}
 
-	var fields map[string]string
-	err = json.Unmarshal(i.Data, &fields)
-	if err != nil {
-		return nil, err
-	}
-
 	return &vault.Credential{
 		Key:    i.Key,
 		Label:  i.Label,
-		Fields: fields,
+		Secret: string(i.Data),
 	}, nil
-}
-
-func (v *Vault) Delete(ctx context.Context, id *vault.CredentialID) (*vault.CredentialDeletedResp, error) {
-	ring, err := v.open()
-	if err != nil {
-		return nil, err
-	}
-
-	err = ring.Remove(id.Key)
-	return &vault.CredentialDeletedResp{}, err
 }
