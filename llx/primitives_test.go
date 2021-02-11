@@ -53,6 +53,16 @@ func TestPrimitiveRef(t *testing.T) {
 	assert.Equal(t, a, RefPrimitive(123))
 }
 
+func TestPrimitiveArray(t *testing.T) {
+	a := &Primitive{Type: types.Array(types.Int), Array: []*Primitive{IntPrimitive(123)}}
+	assert.Equal(t, a, ArrayPrimitive([]*Primitive{IntPrimitive(123)}, types.Int))
+}
+
+func TestPrimitiveMap(t *testing.T) {
+	a := &Primitive{Type: types.Map(types.String, types.Int), Map: map[string]*Primitive{"a": IntPrimitive(123)}}
+	assert.Equal(t, a, MapPrimitive(map[string]*Primitive{"a": IntPrimitive(123)}, types.Int))
+}
+
 func TestPrimitiveFunction(t *testing.T) {
 	a := &Primitive{
 		Type:  types.Function(0, nil),

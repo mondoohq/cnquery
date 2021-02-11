@@ -136,11 +136,19 @@ func RefPrimitive(v int32) *Primitive {
 	}
 }
 
-// ArrayPrimitive creates a primitive from an int value
+// ArrayPrimitive creates a primitive from a list of primitives
 func ArrayPrimitive(v []*Primitive, childType types.Type) *Primitive {
 	return &Primitive{
 		Type:  types.Array(childType),
 		Array: v,
+	}
+}
+
+// MapPrimitive creates a primitive from a map of primitives
+func MapPrimitive(v map[string]*Primitive, childType types.Type) *Primitive {
+	return &Primitive{
+		Type: types.Map(types.String, childType),
+		Map:  v,
 	}
 }
 
