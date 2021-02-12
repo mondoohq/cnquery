@@ -2116,6 +2116,14 @@ aws.ec2 {
 aws.ec2.vpnconnection {
   // ARN for the vpn connection
   arn string
+  // list of telemetry data for the vpn
+  vgwTelemetry []aws.ec2.vgwtelemetry
+}
+
+aws.ec2.vgwtelemetry {
+  outsideIpAddress string
+  status string
+  statusMessage string
 }
 
 aws.ec2.internetgateway {
