@@ -760,8 +760,21 @@ func (s *lumiAwsEc2) getVpnConnections() []*jobpool.Job {
 				return nil, err
 			}
 			for _, vpnConn := range vpnConnections.VpnConnections {
+				lumiVgwT := []interface{}{}
+				for _, vgwT := range vpnConn.VgwTelemetry {
+					lumiVgwTelemetry, err := s.Runtime.CreateResource("aws.ec2.vgwtelemetry",
+						"outsideIpAddress", toString(vgwT.OutsideIpAddress),
+						"status", string(vgwT.Status),
+						"statusMessage", toString(vgwT.StatusMessage),
+					)
+					if err != nil {
+						return nil, err
+					}
+					lumiVgwT = append(lumiVgwT, lumiVgwTelemetry)
+				}
 				lumiVpnConn, err := s.Runtime.CreateResource("aws.ec2.vpnconnection",
 					"arn", fmt.Sprintf(vpnConnArnPattern, regionVal, account.ID, toString(vpnConn.VpnConnectionId)),
+					"vgwTelemetry", lumiVgwT,
 				)
 				if err != nil {
 					return nil, err
@@ -939,4 +952,8 @@ func (s *lumiAwsEc2Internetgateway) id() (string, error) {
 
 func (s *lumiAwsEc2Vpnconnection) id() (string, error) {
 	return s.Arn()
+}
+
+func (s *lumiAwsEc2Vgwtelemetry) id() (string, error) {
+	return s.OutsideIpAddress()
 }
