@@ -72,8 +72,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 		Connections: []*transports.TransportConfig{t}, // pass-in the current config
 	})
 
-	DiscoverHostMachines := true
-	if DiscoverHostMachines {
+	if _, ok := opts["host-machines"]; ok {
 		// resolve esxi hosts
 		hosts, err := discoveryClient.ListEsxiHosts()
 		if err != nil {
@@ -99,8 +98,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 		}
 	}
 
-	DiscoverInstances := true
-	if DiscoverInstances {
+	if _, ok := opts["instances"]; ok {
 		// resolve vms
 		vms, err := discoveryClient.ListVirtualMachines()
 		if err != nil {
