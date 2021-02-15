@@ -113,7 +113,7 @@ func (r *GcpResolver) ParseConnectionURL(url string, opts ...transports.Transpor
 	return t, nil
 }
 
-func (r *GcpResolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
+func (r *GcpResolver) Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	trans, err := gcp_transport.New(t)
@@ -143,8 +143,7 @@ func (r *GcpResolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, er
 	})
 
 	// discover compute instances
-	DiscoverInstances := true
-	if DiscoverInstances {
+	if _, ok := opts["instances"]; ok {
 		compute := NewCompute()
 
 		// we may want to pass a specific user, otherwise it will fallback to ssh config

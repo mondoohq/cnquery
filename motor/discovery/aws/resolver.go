@@ -112,8 +112,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 	})
 
 	// discover ec2 instances
-	DiscoverInstances := true
-	if DiscoverInstances {
+	if _, ok := opts["instances"]; ok {
 		r, err := NewEc2Discovery(trans.Config())
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize aws ec2 discovery")
