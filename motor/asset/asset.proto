@@ -49,6 +49,9 @@ message Asset {
   // additional information that is not touched by the system
   map<string, string> annotations = 19;
 
+  // additional options for that asset
+  map<string, string> options = 20;
+
   // relationships to parent
   string ParentPlatformID = 30;
 }
