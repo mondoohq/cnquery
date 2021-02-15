@@ -59,7 +59,7 @@ func (r *GcrResolver) ParseConnectionURL(url string, opts ...transports.Transpor
 	return tc, nil
 }
 
-func (r *GcrResolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
+func (r *GcrResolver) Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 	repository := t.Host
 

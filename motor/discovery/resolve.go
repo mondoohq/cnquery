@@ -28,7 +28,7 @@ var scheme = regexp.MustCompile(`^(.*?):\/\/(.*)$`)
 type Resolver interface {
 	Name() string
 	ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error)
-	Resolve(t *transports.TransportConfig) ([]*asset.Asset, error)
+	Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error)
 }
 
 var resolver map[string]Resolver
@@ -147,7 +147,7 @@ func ResolveAsset(root *asset.Asset, v vault.Vault) ([]*asset.Asset, error) {
 			return nil, errors.New("unsupported backend: " + resolverId)
 		}
 
-		resp, err := r.Resolve(t)
+		resp, err := r.Resolve(t, root.Options)
 		if err != nil {
 			return nil, err
 		}

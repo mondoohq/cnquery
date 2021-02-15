@@ -28,7 +28,7 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 	// return t, nil
 }
 
-func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	trans, err := ipmi_transport.New(t)

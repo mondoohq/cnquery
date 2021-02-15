@@ -36,7 +36,7 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 	return tc, nil
 }
 
-func (v *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
+func (v *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	localTransport, err := local.New()

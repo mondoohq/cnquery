@@ -15,7 +15,7 @@ func (r *VMGuestResolver) ParseConnectionURL(url string, opts ...transports.Tran
 	return transports.NewTransportFromUrl(url, opts...)
 }
 
-func (k *VMGuestResolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
+func (k *VMGuestResolver) Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// refIds := []string{}
