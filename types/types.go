@@ -41,7 +41,7 @@ const (
 	byteTime
 	byteDict
 	byteScore
-	byteArray = 1<<4 + iota - 3 // set to 24 to avoid breaking changes
+	byteArray = 1<<4 + iota - 3 // set to 25 to avoid breaking changes
 	byteMap
 	byteResource
 	byteFunction
