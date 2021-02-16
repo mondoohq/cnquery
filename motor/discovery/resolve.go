@@ -166,7 +166,7 @@ func ResolveAsset(root *asset.Asset, v vault.Vault) ([]*asset.Asset, error) {
 			asset := resp[ai]
 
 			// this is where we get the vault configuration query and evaluate it against the asset data
-			secretInfo := resolveAssetToVaultConfiguration(&assetMatchInfo{labels: asset.GetLabels(), platform: asset.Platform})
+			secretInfo := getAssetSecretInfo(&assetMatchInfo{labels: asset.GetLabels(), platform: asset.Platform})
 			if secretInfo != nil {
 				// if it does match a configuration, enrich asset with information from vault
 				enrichAssetWithVaultData(v, asset, secretInfo)
@@ -220,7 +220,7 @@ type queryConfiguration struct {
 	Hierarchy     int
 }
 
-func resolveAssetToVaultConfiguration(asset *assetMatchInfo) *secretInfo {
+func getAssetSecretInfo(asset *assetMatchInfo) *secretInfo {
 	// here is where we will call the lumi runtime function
 	// give it the asset match information (labels and platform and connection type (e.g. ssh)) + the user-defined vault config query
 	// it returns the secretinfo as defined in the vault config query
