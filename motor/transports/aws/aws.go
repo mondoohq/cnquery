@@ -2,54 +2,97 @@ package aws
 
 import (
 	"context"
+	"github.com/aws/aws-sdk-go-v2/config"
 	"sync"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 
 	aws_sdk "github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
 )
 
-func New(tc *transports.TransportConfig) (*Transport, error) {
+type TransportOption func(chart *Transport)
+
+func WithEndpoint(apiEndpoint string) TransportOption {
+	return func(t *Transport) {
+		localResolverFn := func(service, region string) (aws_sdk.Endpoint, error) {
+			return aws_sdk.Endpoint{
+				URL:               apiEndpoint,
+				SigningRegion:     region,
+				HostnameImmutable: true,
+			}, nil
+		}
+		t.awsConfigOptions = append(t.awsConfigOptions, config.WithEndpointResolver(aws_sdk.EndpointResolverFunc(localResolverFn)))
+	}
+}
+
+func WithRegion(region string) TransportOption {
+	return func(t *Transport) {
+		t.awsConfigOptions = append(t.awsConfigOptions, config.WithRegion(region))
+	}
+}
+
+func WithProfile(profile string) TransportOption {
+	return func(t *Transport) {
+		t.awsConfigOptions = append(t.awsConfigOptions, config.WithSharedConfigProfile(profile))
+	}
+}
+
+func TransportOptions(opts map[string]string) []TransportOption {
+	// extract config options
+	transportOpts := []TransportOption{}
+	if apiEndpoint, ok := opts["endpoint-url"]; ok {
+		transportOpts = append(transportOpts, WithEndpoint(apiEndpoint))
+	}
+
+	if awsRegion, ok := opts["region"]; ok {
+		transportOpts = append(transportOpts, WithRegion(awsRegion))
+	}
+
+	if awsProfile, ok := opts["profile"]; ok {
+		transportOpts = append(transportOpts, WithProfile(awsProfile))
+	}
+	return transportOpts
+}
+
+func New(tc *transports.TransportConfig, opts ...TransportOption) (*Transport, error) {
 	if tc.Backend != transports.TransportBackend_CONNECTION_AWS {
 		return nil, errors.New("backend is not supported for aws transport")
 	}
 
-	configs := []config.Config{}
-	if tc.Options != nil && len(tc.Options["profile"]) > 0 {
-		configs = append(configs, config.WithSharedConfigProfile(tc.Options["profile"]))
+	t := &Transport{
+		awsConfigOptions: []func(*config.LoadOptions) error{},
 	}
 
-	ctx := context.Background()
-	// TODO include configs
-	cfg, err := config.LoadDefaultConfig(ctx)
+	for _, opt := range opts {
+		opt(t)
+	}
+
+	cfg, err := config.LoadDefaultConfig(context.Background(), t.awsConfigOptions...)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not load aws configuration")
 	}
 
-	if tc.Options != nil && len(tc.Options["region"]) > 0 {
-		cfg.Region = tc.Options["region"]
-	}
+	t.config = cfg
 
-	identity, err := CheckIam(cfg)
+	// gather information about the aws account
+	identity, err := CheckIam(t.config)
 	if err != nil {
-		return nil, err
-	}
-
-	return &Transport{
-		config: cfg,
-		opts:   tc.Options,
-		info: Info{
+		log.Warn().Err(err).Msg("could not gather details of AWS account")
+		// do not error since this break with localstack
+	} else {
+		t.info = Info{
 			Account: toString(identity.Account),
 			Arn:     toString(identity.Arn),
 			UserId:  toString(identity.UserId),
-		},
-	}, nil
+		}
+	}
+
+	return t, nil
 }
 
 func toString(i *string) string {
@@ -67,7 +110,7 @@ type Info struct {
 
 type Transport struct {
 	config             aws_sdk.Config
-	opts               map[string]string
+	awsConfigOptions   []func(*config.LoadOptions) error
 	selectedPlatformID string
 	info               Info
 	cache              Cache
@@ -93,17 +136,8 @@ func (t *Transport) Capabilities() transports.Capabilities {
 	}
 }
 
-func (t *Transport) SetConfig(cfg aws_sdk.Config) aws_sdk.Config {
-	t.config = cfg
-	return t.config
-}
-
 func (t *Transport) Config() aws_sdk.Config {
 	return t.config
-}
-
-func (t *Transport) Options() map[string]string {
-	return t.opts
 }
 
 func (t *Transport) Kind() transports.Kind {

@@ -14,7 +14,7 @@ import (
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/arista"
-	"go.mondoo.io/mondoo/motor/transports/aws"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 	"go.mondoo.io/mondoo/motor/transports/azure"
 	"go.mondoo.io/mondoo/motor/transports/docker/docker_engine"
 	"go.mondoo.io/mondoo/motor/transports/docker/image"
@@ -260,7 +260,7 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 		}
 	case transports.TransportBackend_CONNECTION_AWS:
 		log.Debug().Msg("connection> load aws transport")
-		trans, err := aws.New(tc)
+		trans, err := aws_transport.New(tc, aws_transport.TransportOptions(tc.Options)...)
 		if err != nil {
 			return nil, err
 		}

@@ -1,8 +1,6 @@
 package aws
 
 import (
-	"strings"
-
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
@@ -17,35 +15,6 @@ type Ec2Config struct {
 	Profile string
 }
 
-func ParseAwsContext(awsUrl string) Ec2Config {
-	var config Ec2Config
-
-	awsUrl = strings.TrimPrefix(awsUrl, "aws://")
-	awsUrl = strings.TrimPrefix(awsUrl, "ec2://")
-
-	keyValues := strings.Split(awsUrl, "/")
-	for i := 0; i < len(keyValues); {
-		if keyValues[i] == "user" {
-			if i+1 < len(keyValues) {
-				config.User = keyValues[i+1]
-			}
-		}
-		if keyValues[i] == "region" {
-			if i+1 < len(keyValues) {
-				config.Region = keyValues[i+1]
-			}
-		}
-		if keyValues[i] == "profile" {
-			if i+1 < len(keyValues) {
-				config.Profile = keyValues[i+1]
-			}
-		}
-		i = i + 2
-	}
-
-	return config
-}
-
 type Resolver struct{}
 
 func (r *Resolver) Name() string {
@@ -53,21 +22,8 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
-	// parse context from url
-	config := ParseAwsContext(url)
-
-	options := map[string]string{
-		"profile": config.Profile,
-		"region":  config.Region,
-	}
-
-	if config.User != "" {
-		options["ec2user"] = config.User
-	}
-
 	tc := &transports.TransportConfig{
 		Backend: transports.TransportBackend_CONNECTION_AWS,
-		Options: options,
 	}
 
 	for i := range opts {
@@ -80,8 +36,14 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
+	// copy opts into transport config options, to ensure motor transport resolver will get the information as well
+	for k, v := range opts {
+		t.Options[k] = v
+	}
+
 	// add aws api as asset
-	trans, err := aws_transport.New(t)
+	trans, err := aws_transport.New(t, aws_transport.TransportOptions(opts)...)
+	// trans, err := aws_transport.New(t, transportOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -139,6 +101,5 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 			resolved = append(resolved, assetList[i])
 		}
 	}
-
 	return resolved, nil
 }
