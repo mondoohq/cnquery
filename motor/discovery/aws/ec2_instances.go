@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 
+	"github.com/aws/smithy-go"
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
@@ -35,6 +36,7 @@ type Ec2Instances struct {
 	config              aws.Config
 	InstanceSSHUsername string
 	Insecure            bool
+	filterOptions       ec2InstancesFilters
 }
 
 func (ec2i *Ec2Instances) Name() string {
@@ -58,14 +60,19 @@ func (ec2i *Ec2Instances) getRegions() ([]string, error) {
 	return regions, nil
 }
 
-func (ec2i *Ec2Instances) getInstances(account string) []*jobpool.Job {
+func (ec2i *Ec2Instances) getInstances(account string, ec2InstancesFilters ec2InstancesFilters) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
+	var err error
 
-	regions, err := ec2i.getRegions()
-	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
+	regions := ec2InstancesFilters.regions
+	if len(regions) == 0 {
+		// user did not include a region filter, fetch em all
+		regions, err = ec2i.getRegions()
+		if err != nil {
+			return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
+		}
 	}
-
+	log.Debug().Msgf("regions being called for ec2 instance list are: %v", regions)
 	for ri := range regions {
 		region := regions[ri]
 		f := func() (jobpool.JobResult, error) {
@@ -78,16 +85,33 @@ func (ec2i *Ec2Instances) getInstances(account string) []*jobpool.Job {
 			ctx := context.Background()
 			res := []*asset.Asset{}
 
-			log.Debug().Str("account", account).Str("region", clonedConfig.Region).Msg("fetch ec2 instances")
-			resp, err := ec2svc.DescribeInstances(ctx, &ec2.DescribeInstancesInput{})
+			input := &ec2.DescribeInstancesInput{}
+			if len(ec2i.filterOptions.instanceIds) > 0 {
+				input.InstanceIds = ec2i.filterOptions.instanceIds
+				log.Debug().Msgf("filtering by instance ids %v", input.InstanceIds)
+			}
+			if len(ec2i.filterOptions.tags) > 0 {
+				for k, v := range ec2i.filterOptions.tags {
+					input.Filters = append(input.Filters, types.Filter{Name: &k, Values: []string{v}})
+					log.Debug().Msgf("filtering by tag %s:%s", k, v)
+				}
+			}
+			resp, err := ec2svc.DescribeInstances(ctx, input)
 			if err != nil {
+				var ae smithy.APIError
+				if errors.As(err, &ae) {
+					// when filtering for instance ids, we'll get this error in the regions where the instance ids are not found
+					if ae.ErrorCode() == "InvalidInstanceID.NotFound" {
+						return res, nil
+					}
+				}
 				return nil, errors.Wrapf(err, "failed to describe instances, %s", clonedConfig.Region)
 			}
+			log.Debug().Str("account", account).Str("region", clonedConfig.Region).Int("instance count", len(resp.Reservations)).Msg("found ec2 instances")
 
 			// resolve all instances
 			for i := range resp.Reservations {
 				reservation := resp.Reservations[i]
-				log.Debug().Int("instances", len(reservation.Instances)).Str("region", region).Msg("found instances")
 				for j := range reservation.Instances {
 					instance := reservation.Instances[j]
 					res = append(res, instanceToAsset(account, region, instance, ec2i.InstanceSSHUsername, ec2i.Insecure))
@@ -110,7 +134,7 @@ func (ec2i *Ec2Instances) List() ([]*asset.Asset, error) {
 	account := *identityResp.Account
 
 	instances := []*asset.Asset{}
-	poolOfJobs := jobpool.CreatePool(ec2i.getInstances(account), 5)
+	poolOfJobs := jobpool.CreatePool(ec2i.getInstances(account, ec2i.filterOptions), 5)
 	poolOfJobs.Run()
 
 	// check for errors
