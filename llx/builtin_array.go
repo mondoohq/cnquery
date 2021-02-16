@@ -81,20 +81,13 @@ func arrayBlockList(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 		allResults[idx] = blockResult
 	}
 
-	var childType types.Type
-	if bind.Type == types.Dict {
-		childType = types.Dict
-	} else {
-		childType = bind.Type.Child()
-	}
-
 	finishedBlocks := 0
 
 	for idx := range arr {
 		blockResult := allResults[idx].(map[string]interface{})
 
 		bind := &RawData{
-			Type:  childType,
+			Type:  bind.Type.Child(),
 			Value: arr[idx],
 		}
 
