@@ -69,8 +69,9 @@ func hostsToAssetList(instanceUuid string, hosts []*object.HostSystem) ([]*asset
 			// NOTE: platform information is filled by the resolver
 			State: mapHostPowerstateToState(props.Runtime.PowerState),
 			Labels: map[string]string{
+				"vsphere.vmware.com/name":          host.Name(),
 				"vsphere.vmware.com/type":          host.Reference().Type,
-				"vsphere.vmware.com/moid":          host.Reference().Value,
+				"vsphere.vmware.com/moid":          host.Reference().Encode(),
 				"vsphere.vmware.com/inventorypath": host.InventoryPath,
 			},
 			PlatformIDs: []string{vsphere_transport.VsphereResourceID(instanceUuid, host.Reference())},
@@ -146,8 +147,9 @@ func vmsToAssetList(instanceUuid string, vms []*object.VirtualMachine) ([]*asset
 			// NOTE: platform information is filled by the resolver
 			State: mapVmGuestState(props.Guest.GuestState),
 			Labels: map[string]string{
+				"vsphere.vmware.com/name":          vm.Name(),
 				"vsphere.vmware.com/type":          vm.Reference().Type,
-				"vsphere.vmware.com/moid":          vm.Reference().Value,
+				"vsphere.vmware.com/moid":          vm.Reference().Encode(),
 				"vsphere.vmware.com/inventorypath": vm.InventoryPath,
 			},
 			PlatformIDs: []string{vsphere_transport.VsphereResourceID(instanceUuid, vm.Reference())},
