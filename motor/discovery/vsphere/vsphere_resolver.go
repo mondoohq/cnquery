@@ -2,6 +2,7 @@ package vsphere
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
@@ -18,19 +19,6 @@ func (r *Resolver) Name() string {
 
 func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
 	return transports.NewTransportFromUrl(url, opts...)
-	// t := &transports.TransportConfig{}
-	// err := t.ParseFromURI(url)
-	// if err != nil {
-	// 	err := errors.Wrapf(err, "cannot connect to %s", url)
-	// 	return nil, err
-	// }
-
-	// // copy password from opts asset if it was not encoded in url
-	// if len(t.Password) == 0 && len(in.Password) > 0 {
-	// 	t.Password = in.Password
-	// }
-
-	// return t, nil
 }
 
 func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
@@ -108,6 +96,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 		// add transport config for each vm
 		for i := range vms {
 			vm := vms[i]
+
 			vt := t.Clone()
 			// pass-through "vsphere.vmware.com/reference-type" and "vsphere.vmware.com/inventorypath"
 			vt.Options = vm.Annotations
@@ -124,5 +113,49 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 		}
 	}
 
+	// filter assets
+
+	if namesFilter, ok := opts["names"]; ok {
+		names := strings.Split(namesFilter, ",")
+		resolved = filter(resolved, func(a *asset.Asset) bool {
+			return contains(names, a.Name)
+		})
+	}
+
+	if moidsFilter, ok := opts["moids"]; ok {
+		moids := strings.Split(moidsFilter, ",")
+		resolved = filter(resolved, func(a *asset.Asset) bool {
+			label, ok := a.Labels["vsphere.vmware.com/moid"]
+			log.Debug().Strs("moids", moids).Str("search", label).Msg("check if moid is included")
+			if !ok {
+				return false
+			}
+			return contains(moids, label)
+		})
+	}
+
 	return resolved, nil
+}
+
+func filter(a []*asset.Asset, keep func(asset *asset.Asset) bool) []*asset.Asset {
+	n := 0
+	for _, x := range a {
+		if keep(x) {
+			a[n] = x
+			n++
+		}
+	}
+	a = a[:n]
+	return a
+}
+
+func contains(slice []string, entry string) bool {
+	sanitizedEntry := strings.ToLower(strings.TrimSpace(entry))
+
+	for i := range slice {
+		if strings.ToLower(strings.TrimSpace(slice[i])) == sanitizedEntry {
+			return true
+		}
+	}
+	return false
 }
