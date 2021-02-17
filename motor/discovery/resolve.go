@@ -3,6 +3,7 @@ package discovery
 import (
 	"context"
 	"encoding/json"
+	"go.mondoo.io/mondoo/motor/discovery/local"
 	"regexp"
 	"sort"
 
@@ -38,7 +39,7 @@ var resolver map[string]Resolver
 
 func init() {
 	resolver = make(map[string]Resolver)
-	resolver["local"] = &instance.Resolver{}
+	resolver["local"] = &local.Resolver{}
 	resolver["winrm"] = &instance.Resolver{}
 	resolver["ssh"] = &instance.Resolver{}
 	resolver["docker"] = &docker_engine.Resolver{}
@@ -157,6 +158,7 @@ func ResolveAsset(root *asset.Asset, v vault.Vault) ([]*asset.Asset, error) {
 			return nil, errors.New("unsupported backend: " + resolverId)
 		}
 
+		log.Debug().Str("resolver", r.Name()).Msg("run resolver")
 		resp, err := r.Resolve(t, root.Options)
 		if err != nil {
 			return nil, err
