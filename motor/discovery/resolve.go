@@ -122,7 +122,6 @@ func enrichAssetWithVaultData(v vault.Vault, a *asset.Asset, secretInfo *secretI
 			default:
 				log.Error().Msgf("unsupported secret format %s requested", secretInfo.secretFormat)
 			}
-
 		}
 	}
 
