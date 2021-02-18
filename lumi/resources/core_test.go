@@ -781,16 +781,20 @@ func TestArray_Block(t *testing.T) {
 			1, true,
 		},
 		{
-			"[1,2,3].one(_ == 2)",
-			1, true,
-		},
-		{
 			"[1,2,3].all(_ < 9)",
 			2, true,
 		},
 		{
 			"[1,2,3].any(_ > 1)",
 			2, true,
+		},
+		{
+			"[1,2,3].one(_ == 2)",
+			1, true,
+		},
+		{
+			"[1,2,3].none(_ == 4)",
+			1, true,
 		},
 		{
 			"[0].where(_ > 0).where(_ > 0)",
@@ -822,7 +826,7 @@ func TestMap(t *testing.T) {
 	})
 }
 
-func TestResource_Where(t *testing.T) {
+func TestResource_Filters(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			`users.where(name == 'root').list {
@@ -885,6 +889,19 @@ func TestResource_All(t *testing.T) {
 	})
 }
 
+func TestResource_Any(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"users.any(uid < 100)",
+			2, true,
+		},
+		{
+			"users.where(uid < 100).any(uid < 50)",
+			1, true,
+		},
+	})
+}
+
 func TestResource_One(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
@@ -898,14 +915,14 @@ func TestResource_One(t *testing.T) {
 	})
 }
 
-func TestResource_Any(t *testing.T) {
+func TestResource_None(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
-			"users.any(uid < 100)",
-			2, true,
+			"users.none(uid == 99999)",
+			1, true,
 		},
 		{
-			"users.where(uid < 100).any(uid < 50)",
+			"users.where(uid < 100).none(uid == 1000)",
 			1, true,
 		},
 	})
