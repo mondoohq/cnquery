@@ -1,13 +1,14 @@
 package aws
 
 import (
+	"strings"
+
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
-	"strings"
 )
 
 const (
@@ -86,6 +87,23 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 
 	// discover ec2 instances
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {
+		// discover ssm instances
+		if val := opts["ssm"]; val == "true" {
+			s, err := NewSSMManagedInstancesDiscovery(trans.Config())
+			if err != nil {
+				return nil, errors.Wrap(err, "could not initialize aws ec2 ssm discovery")
+			}
+			s.filterOptions = assembleEc2InstancesFilters(opts)
+			assetList, err := s.List()
+			if err != nil {
+				return nil, errors.Wrap(err, "could not fetch ec2 ssm instances")
+			}
+			log.Debug().Int("instances", len(assetList)).Msg("completed ssm instance search")
+			for i := range assetList {
+				log.Debug().Str("name", assetList[i].Name).Msg("resolved ssm instance")
+				resolved = append(resolved, assetList[i])
+			}
+		}
 		r, err := NewEc2Discovery(trans.Config())
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize aws ec2 discovery")
@@ -98,31 +116,8 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 		}
 		r.Insecure = tc.Insecure
 
-		var ec2InstancesFilters ec2InstancesFilters
-		if _, ok := discoverFilter["instance-ids"]; ok {
-			instanceIds := strings.Split(discoverFilter["instance-ids"], ",")
-			ec2InstancesFilters.instanceIds = instanceIds
-		}
-		if _, ok := discoverFilter["tags"]; ok {
-			tags := strings.Split(discoverFilter["tags"], ",")
-			ec2InstancesFilters.tags = make(map[string]string, len(tags))
-			for _, tagkv := range tags {
-				tag := strings.Split(tagkv, "=")
-				if len(tag) == 2 {
-					// to use tag filters with aws, we have to specify tag:KEY for the key, and then put the value as the values
-					key := "tag:" + tag[0]
-					ec2InstancesFilters.tags[key] = tag[1]
-				} else if len(tag) == 1 {
-					// this means no value was included, so we search for just the tag key
-					ec2InstancesFilters.tags["tag-key"] = tag[0]
-				}
-			}
-		}
-		if _, ok := discoverFilter["regions"]; ok {
-			regions := strings.Split(discoverFilter["regions"], ",")
-			ec2InstancesFilters.regions = regions
-		}
-		r.filterOptions = ec2InstancesFilters
+		r.filterOptions = assembleEc2InstancesFilters(opts)
+
 		assetList, err := r.List()
 		if err != nil {
 			return nil, errors.Wrap(err, "could not fetch ec2 instances")
@@ -138,6 +133,34 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 		}
 	}
 	return resolved, nil
+}
+
+func assembleEc2InstancesFilters(opts map[string]string) ec2InstancesFilters {
+	var ec2InstancesFilters ec2InstancesFilters
+	if _, ok := opts["instance-ids"]; ok {
+		instanceIds := strings.Split(opts["instance-ids"], ",")
+		ec2InstancesFilters.instanceIds = instanceIds
+	}
+	if _, ok := opts["tags"]; ok {
+		tags := strings.Split(opts["tags"], ",")
+		ec2InstancesFilters.tags = make(map[string]string, len(tags))
+		for _, tagkv := range tags {
+			tag := strings.Split(tagkv, "=")
+			if len(tag) == 2 {
+				// to use tag filters with aws, we have to specify tag:KEY for the key, and then put the value as the values
+				key := "tag:" + tag[0]
+				ec2InstancesFilters.tags[key] = tag[1]
+			} else if len(tag) == 1 {
+				// this means no value was included, so we search for just the tag key
+				ec2InstancesFilters.tags["tag-key"] = tag[0]
+			}
+		}
+	}
+	if _, ok := opts["regions"]; ok {
+		regions := strings.Split(opts["regions"], ",")
+		ec2InstancesFilters.regions = regions
+	}
+	return ec2InstancesFilters
 }
 
 type ec2InstancesFilters struct {
