@@ -117,41 +117,6 @@ func compileArrayContains(c *compiler, typ types.Type, ref int32, id string, cal
 	return types.Bool, nil
 }
 
-func compileArrayOne(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
-	_, err := compileWhere(c, typ, ref, "where", call)
-	if err != nil {
-		return types.Nil, err
-	}
-
-	// .length
-	c.Result.Code.AddChunk(&llx.Chunk{
-		Call: llx.Chunk_FUNCTION,
-		Id:   "length",
-		Function: &llx.Function{
-			Type:    types.Int,
-			Binding: c.Result.GetCode().ChunkIndex(),
-		},
-	})
-
-	// == 1
-	c.Result.Code.AddChunk(&llx.Chunk{
-		Call: llx.Chunk_FUNCTION,
-		Id:   string("==" + types.Int),
-		Function: &llx.Function{
-			Type:    types.Bool,
-			Binding: c.Result.Code.ChunkIndex(),
-			Args: []*llx.Primitive{
-				llx.IntPrimitive(1),
-			},
-		},
-	})
-
-	checksum := c.Result.Code.Checksums[c.Result.Code.ChunkIndex()]
-	c.Result.Labels.Labels[checksum] = "[].one()"
-
-	return types.Bool, nil
-}
-
 func compileArrayAll(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
 	_, err := compileWhere(c, typ, ref, "where", call)
 	if err != nil {
@@ -231,6 +196,76 @@ func compileArrayAny(c *compiler, typ types.Type, ref int32, id string, call *pa
 
 	checksum := c.Result.Code.Checksums[c.Result.Code.ChunkIndex()]
 	c.Result.Labels.Labels[checksum] = "[].any()"
+
+	return types.Bool, nil
+}
+
+func compileArrayOne(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
+	_, err := compileWhere(c, typ, ref, "where", call)
+	if err != nil {
+		return types.Nil, err
+	}
+
+	// .length
+	c.Result.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "length",
+		Function: &llx.Function{
+			Type:    types.Int,
+			Binding: c.Result.GetCode().ChunkIndex(),
+		},
+	})
+
+	// == 1
+	c.Result.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   string("==" + types.Int),
+		Function: &llx.Function{
+			Type:    types.Bool,
+			Binding: c.Result.Code.ChunkIndex(),
+			Args: []*llx.Primitive{
+				llx.IntPrimitive(1),
+			},
+		},
+	})
+
+	checksum := c.Result.Code.Checksums[c.Result.Code.ChunkIndex()]
+	c.Result.Labels.Labels[checksum] = "[].one()"
+
+	return types.Bool, nil
+}
+
+func compileArrayNone(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
+	_, err := compileWhere(c, typ, ref, "where", call)
+	if err != nil {
+		return types.Nil, err
+	}
+
+	// .length
+	c.Result.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "length",
+		Function: &llx.Function{
+			Type:    types.Int,
+			Binding: c.Result.GetCode().ChunkIndex(),
+		},
+	})
+
+	// == 0
+	c.Result.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   string("==" + types.Int),
+		Function: &llx.Function{
+			Type:    types.Bool,
+			Binding: c.Result.Code.ChunkIndex(),
+			Args: []*llx.Primitive{
+				llx.IntPrimitive(0),
+			},
+		},
+	})
+
+	checksum := c.Result.Code.Checksums[c.Result.Code.ChunkIndex()]
+	c.Result.Labels.Labels[checksum] = "[].none()"
 
 	return types.Bool, nil
 }
