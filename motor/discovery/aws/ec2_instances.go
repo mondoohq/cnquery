@@ -153,11 +153,6 @@ func instanceToAsset(account string, region string, instance types.Instance, ssh
 
 	connections := []*transports.TransportConfig{}
 
-	// figure out some option the user can set to run ssm scans if they want to?
-	// connections = append(connections, &transports.TransportConfig{
-	// 	Backend: transports.TransportConfigBackend_CONNECTION_AWS_SSM_RUN_COMMAND,
-	// 	Host:    *instance.InstanceId,
-	// })
 	var connection *transports.TransportConfig
 	if instance.PublicIpAddress != nil {
 		connection = &transports.TransportConfig{
