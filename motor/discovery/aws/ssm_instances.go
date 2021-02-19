@@ -92,7 +92,7 @@ func (ssmi *SSMManagedInstances) getInstances(account string, ec2InstancesFilter
 			// get client for region
 			clonedConfig := ssmi.config.Copy()
 			clonedConfig.Region = region
-			instances := []*asset.Asset{}
+			res := []*asset.Asset{}
 			ssmsvc := ssm.NewFromConfig(clonedConfig)
 			ctx := context.Background()
 
@@ -121,62 +121,9 @@ func (ssmi *SSMManagedInstances) getInstances(account string, ec2InstancesFilter
 
 			for i := range isssmresp.InstanceInformationList {
 				instance := isssmresp.InstanceInformationList[i]
-
-				connections := []*transports.TransportConfig{}
-
-				connections = append(connections, &transports.TransportConfig{
-					Backend: transports.TransportBackend_CONNECTION_AWS_SSM_RUN_COMMAND,
-					Host:    *instance.InstanceId,
-				})
-				asset := &asset.Asset{
-					PlatformIDs: []string{awsec2.MondooInstanceID(account, ssmi.config.Region, *instance.InstanceId)},
-					Name:        *instance.InstanceId,
-					Platform: &platform.Platform{
-						Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
-						Runtime: transports.RUNTIME_AWS_SSM_MANAGED,
-					},
-
-					Connections: connections,
-					State:       mapSmmManagedPingStateCode(instance.PingStatus),
-					Labels:      make(map[string]string),
-				}
-
-				ec2svc := ec2.NewFromConfig(clonedConfig)
-				tagresp, err := ec2svc.DescribeTags(ctx, &ec2.DescribeTagsInput{
-					Filters: []ec2types.Filter{
-						{Name: aws.String("resource-id"),
-							Values: []string{*instance.InstanceId}},
-					},
-				})
-
-				if err != nil {
-					log.Warn().Err(err).Msg("could not gather ssm instance tag information")
-				} else if tagresp != nil {
-					for j := range tagresp.Tags {
-						tag := tagresp.Tags[j]
-						if tag.Key != nil {
-							key := *tag.Key
-							value := ""
-							if tag.Value != nil {
-								value = *tag.Value
-							}
-							asset.Labels[key] = value
-						}
-					}
-				}
-
-				// fetch aws specific metadata
-				asset.Labels["mondoo.app/region"] = ssmi.config.Region
-				if instance.InstanceId != nil {
-					asset.Labels["mondoo.app/instance"] = *instance.InstanceId
-				}
-				if instance.IPAddress != nil {
-					asset.Labels["mondoo.app/public-ip"] = *instance.IPAddress
-				}
-
-				instances = append(instances, asset)
+				res = append(res, ssmInstanceToAsset(account, region, instance, clonedConfig))
 			}
-			return jobpool.JobResult(instances), nil
+			return jobpool.JobResult(res), nil
 		}
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
@@ -194,4 +141,61 @@ func mapSmmManagedPingStateCode(pingStatus types.PingStatus) asset.State {
 	default:
 		return asset.State_STATE_UNKNOWN
 	}
+}
+
+func ssmInstanceToAsset(account string, region string, instance types.InstanceInformation, clonedConfig aws.Config) *asset.Asset {
+
+	connections := []*transports.TransportConfig{}
+
+	connections = append(connections, &transports.TransportConfig{
+		Backend: transports.TransportBackend_CONNECTION_AWS_SSM_RUN_COMMAND,
+		Host:    *instance.InstanceId,
+	})
+	asset := &asset.Asset{
+		PlatformIDs: []string{awsec2.MondooInstanceID(account, region, *instance.InstanceId)},
+		Name:        *instance.InstanceId,
+		Platform: &platform.Platform{
+			Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
+			Runtime: transports.RUNTIME_AWS_SSM_MANAGED,
+		},
+
+		Connections: connections,
+		State:       mapSmmManagedPingStateCode(instance.PingStatus),
+		Labels:      make(map[string]string),
+	}
+
+	ec2svc := ec2.NewFromConfig(clonedConfig)
+	tagresp, err := ec2svc.DescribeTags(context.Background(), &ec2.DescribeTagsInput{
+		Filters: []ec2types.Filter{
+			{Name: aws.String("resource-id"),
+				Values: []string{*instance.InstanceId}},
+		},
+	})
+
+	if err != nil {
+		log.Warn().Err(err).Msg("could not gather ssm instance tag information")
+	} else if tagresp != nil {
+		for j := range tagresp.Tags {
+			tag := tagresp.Tags[j]
+			if tag.Key != nil {
+				key := *tag.Key
+				value := ""
+				if tag.Value != nil {
+					value = *tag.Value
+				}
+				asset.Labels[key] = value
+			}
+		}
+	}
+
+	// fetch aws specific metadata
+	asset.Labels["mondoo.app/region"] = region
+	if instance.InstanceId != nil {
+		asset.Labels["mondoo.app/instance"] = *instance.InstanceId
+	}
+	if instance.IPAddress != nil {
+		asset.Labels["mondoo.app/public-ip"] = *instance.IPAddress
+	}
+
+	return asset
 }

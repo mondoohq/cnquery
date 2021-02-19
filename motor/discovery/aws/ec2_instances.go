@@ -33,10 +33,11 @@ func NewEc2Discovery(cfg aws.Config) (*Ec2Instances, error) {
 }
 
 type Ec2Instances struct {
-	config              aws.Config
-	InstanceSSHUsername string
-	Insecure            bool
-	filterOptions       ec2InstancesFilters
+	config                     aws.Config
+	InstanceSSHUsername        string
+	Insecure                   bool
+	filterOptions              ec2InstancesFilters
+	SSMInstancesPlatformIdsMap map[string]*asset.Asset
 }
 
 func (ec2i *Ec2Instances) Name() string {
@@ -114,7 +115,7 @@ func (ec2i *Ec2Instances) getInstances(account string, ec2InstancesFilters ec2In
 				reservation := resp.Reservations[i]
 				for j := range reservation.Instances {
 					instance := reservation.Instances[j]
-					res = append(res, instanceToAsset(account, region, instance, ec2i.InstanceSSHUsername, ec2i.Insecure))
+					res = append(res, instanceToAsset(account, region, instance, ec2i.InstanceSSHUsername, ec2i.Insecure, ec2i.SSMInstancesPlatformIdsMap))
 				}
 			}
 
@@ -149,7 +150,7 @@ func (ec2i *Ec2Instances) List() ([]*asset.Asset, error) {
 	return instances, nil
 }
 
-func instanceToAsset(account string, region string, instance types.Instance, sshUsername string, insecure bool) *asset.Asset {
+func instanceToAsset(account string, region string, instance types.Instance, sshUsername string, insecure bool, ssmInstancesPlatformIdsMap map[string]*asset.Asset) *asset.Asset {
 
 	connections := []*transports.TransportConfig{}
 
@@ -164,46 +165,53 @@ func instanceToAsset(account string, region string, instance types.Instance, ssh
 		connections = append(connections, connection)
 	}
 
-	asset := &asset.Asset{
-		PlatformIDs: []string{awsec2.MondooInstanceID(account, region, *instance.InstanceId)},
-		Name:        *instance.InstanceId,
-		Platform: &platform.Platform{
+	asset := &asset.Asset{}
+	if ssmAsset, ok := ssmInstancesPlatformIdsMap[awsec2.MondooInstanceID(account, region, *instance.InstanceId)]; ok {
+		// instance already discovered via ssm search. only add connections
+		ssmAsset.Connections = append(ssmAsset.Connections, connections...)
+		ssmAsset.Labels = addAssetLabels(ssmAsset.Labels, instance, region)
+	} else {
+		asset.PlatformIDs = []string{awsec2.MondooInstanceID(account, region, *instance.InstanceId)}
+		asset.Name = *instance.InstanceId
+		asset.Platform = &platform.Platform{
 			Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
 			Runtime: transports.RUNTIME_AWS_EC2,
-		},
-		Connections: connections,
-		State:       mapEc2InstanceStateCode(instance.State),
-		Labels:      make(map[string]string),
-	}
-
-	for k := range instance.Tags {
-		tag := instance.Tags[k]
-		if tag.Key != nil {
-			key := *tag.Key
-			value := ""
-			if tag.Value != nil {
-				value = *tag.Value
+		}
+		asset.Connections = connections
+		asset.State = mapEc2InstanceStateCode(instance.State)
+		asset.Labels = addAssetLabels(map[string]string{}, instance, region)
+		for k := range instance.Tags {
+			tag := instance.Tags[k]
+			if tag.Key != nil {
+				key := *tag.Key
+				value := ""
+				if tag.Value != nil {
+					value = *tag.Value
+				}
+				asset.Labels[key] = value
 			}
-			asset.Labels[key] = value
 		}
 	}
 
+	return asset
+}
+
+func addAssetLabels(labels map[string]string, instance types.Instance, region string) map[string]string {
 	// fetch aws specific metadata
-	asset.Labels["mondoo.app/region"] = region
+	labels["mondoo.app/region"] = region
 	if instance.InstanceId != nil {
-		asset.Labels["mondoo.app/instance"] = *instance.InstanceId
+		labels["mondoo.app/instance"] = *instance.InstanceId
 	}
 	if instance.PublicDnsName != nil {
-		asset.Labels["mondoo.app/public-dns-name"] = *instance.PublicDnsName
+		labels["mondoo.app/public-dns-name"] = *instance.PublicDnsName
 	}
 	if instance.PublicIpAddress != nil {
-		asset.Labels["mondoo.app/public-ip"] = *instance.PublicIpAddress
+		labels["mondoo.app/public-ip"] = *instance.PublicIpAddress
 	}
 	if instance.ImageId != nil {
-		asset.Labels["mondoo.app/ami-id"] = *instance.ImageId
+		labels["mondoo.app/ami-id"] = *instance.ImageId
 	}
-
-	return asset
+	return labels
 }
 
 type awsec2id struct {
