@@ -60,7 +60,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 		Connections: []*transports.TransportConfig{t}, // pass-in the current config
 	})
 
-	if _, ok := opts["host-machines"]; ok {
+	if val := opts["host-machines"]; val == "true" {
 		// resolve esxi hosts
 		hosts, err := discoveryClient.ListEsxiHosts()
 		if err != nil {
@@ -86,7 +86,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 		}
 	}
 
-	if _, ok := opts["instances"]; ok {
+	if val := opts["instances"]; val == "true" {
 		// resolve vms
 		vms, err := discoveryClient.ListVirtualMachines()
 		if err != nil {
@@ -114,7 +114,6 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 	}
 
 	// filter assets
-
 	if namesFilter, ok := opts["names"]; ok {
 		names := strings.Split(namesFilter, ",")
 		resolved = filter(resolved, func(a *asset.Asset) bool {
