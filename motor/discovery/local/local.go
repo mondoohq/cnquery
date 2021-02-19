@@ -65,7 +65,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 	// the system is using docker or podman locally
 
 	// discover running container: container:true
-	if _, ok := opts["container"]; ok {
+	if val := opts["container"]; val == "true" {
 		ded, err := docker_engine.NewDockerEngineDiscovery()
 		if err != nil {
 			return nil, err
@@ -80,7 +80,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 	}
 
 	// discover container images: container-images:true
-	if _, ok := opts["container-images"]; ok {
+	if val := opts["container-images"]; val == "true" {
 		ded, err := docker_engine.NewDockerEngineDiscovery()
 		if err != nil {
 			return nil, err

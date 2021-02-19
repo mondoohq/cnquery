@@ -146,7 +146,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 	})
 
 	// get all compute instances
-	if _, ok := opts["instances"]; ok {
+	if val := opts["instances"]; val == "true" {
 		r, err := NewCompute(subscriptionID)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize azure compute discovery")
