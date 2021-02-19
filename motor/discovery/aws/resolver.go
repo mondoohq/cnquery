@@ -48,8 +48,12 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 	resolved := []*asset.Asset{}
 
 	// add aws api as asset
+<<<<<<< HEAD
 	trans, err := aws_transport.New(tc, aws_transport.TransportOptions(tc.Options)...)
 	// trans, err := aws_transport.New(t, transportOpts...)
+=======
+	trans, err := aws_transport.New(t, aws_transport.TransportOptions(opts)...)
+>>>>>>> avoid duplicated assets between ssm and ec2 discovery
 	if err != nil {
 		return nil, err
 	}
@@ -84,6 +88,26 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 	if tc.Discover != nil {
 		discoverFilter = tc.Discover.Filter
 	}
+	// discover ssm instances
+	ssmInstancesPlatformIdsMap := map[string]*asset.Asset{}
+	if val := opts["ssm"]; val == "true" {
+		// create a map to track the platform ids of the ssm instances, to avoid duplication of assets
+		s, err := NewSSMManagedInstancesDiscovery(trans.Config())
+		if err != nil {
+			return nil, errors.Wrap(err, "could not initialize aws ec2 ssm discovery")
+		}
+		s.filterOptions = assembleEc2InstancesFilters(opts)
+		assetList, err := s.List()
+		if err != nil {
+			return nil, errors.Wrap(err, "could not fetch ec2 ssm instances")
+		}
+		log.Debug().Int("instances", len(assetList)).Msg("completed ssm instance search")
+		for i := range assetList {
+			log.Debug().Str("name", assetList[i].Name).Msg("resolved ssm instance")
+			resolved = append(resolved, assetList[i])
+			ssmInstancesPlatformIdsMap[assetList[i].PlatformIDs[0]] = assetList[i]
+		}
+	}
 
 	// discover ec2 instances
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {
@@ -117,6 +141,8 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 		r.Insecure = tc.Insecure
 
 		r.filterOptions = assembleEc2InstancesFilters(opts)
+
+		r.SSMInstancesPlatformIdsMap = ssmInstancesPlatformIdsMap
 
 		assetList, err := r.List()
 		if err != nil {
