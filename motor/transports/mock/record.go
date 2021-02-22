@@ -1,6 +1,8 @@
 package mock
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"io/ioutil"
 	"os"
 	"time"
@@ -8,6 +10,12 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
 )
+
+func hashCmd(message string) string {
+	hash := sha256.New()
+	hash.Write([]byte(message))
+	return hex.EncodeToString(hash.Sum(nil))
+}
 
 func NewRecordTransport(trans transports.Transport) (*RecordTransport, error) {
 	mock, err := New()
@@ -61,7 +69,7 @@ func (t *RecordTransport) RunCommand(command string) (*transports.Command, error
 		}
 
 		// store command
-		t.mock.Commands[command] = &Command{
+		t.mock.Commands[hashCmd(command)] = &Command{
 			Command:    command,
 			Stdout:     stdout,
 			Stderr:     stderr,

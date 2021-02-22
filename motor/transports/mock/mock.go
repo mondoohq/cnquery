@@ -3,7 +3,6 @@ package mock
 import (
 	"bytes"
 	"errors"
-
 	"github.com/spf13/afero"
 
 	"go.mondoo.io/mondoo/motor/transports"
@@ -42,7 +41,15 @@ type Transport struct {
 func (m *Transport) RunCommand(command string) (*transports.Command, error) {
 	res := transports.Command{Command: command, Stdout: &bytes.Buffer{}, Stderr: &bytes.Buffer{}}
 
+	// we check both the command and the sha sum
+
 	c, ok := m.Commands[command]
+	if !ok {
+		// try to fetch command by hash (more reliable for whitespace)
+		c, ok = m.Commands[hashCmd(command)]
+	}
+
+	// handle case where the command was not found
 	if !ok {
 		res.Stdout.Write([]byte(""))
 		res.Stderr.Write([]byte("command not found"))
