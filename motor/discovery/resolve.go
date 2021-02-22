@@ -3,10 +3,6 @@ package discovery
 import (
 	"context"
 	"encoding/json"
-	"go.mondoo.io/mondoo/motor/discovery/local"
-	"regexp"
-	"sort"
-
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
@@ -18,6 +14,7 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/instance"
 	"go.mondoo.io/mondoo/motor/discovery/ipmi"
 	"go.mondoo.io/mondoo/motor/discovery/k8s"
+	"go.mondoo.io/mondoo/motor/discovery/local"
 	"go.mondoo.io/mondoo/motor/discovery/mock"
 	"go.mondoo.io/mondoo/motor/discovery/ms365"
 	"go.mondoo.io/mondoo/motor/discovery/vagrant"
@@ -25,6 +22,7 @@ import (
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/vault"
+	"regexp"
 )
 
 var scheme = regexp.MustCompile(`^(.*?):\/\/(.*)$`)
@@ -167,11 +165,14 @@ func ResolveAsset(root *asset.Asset, v vault.Vault) ([]*asset.Asset, error) {
 		for ai := range resp {
 			asset := resp[ai]
 
-			// this is where we get the vault configuration query and evaluate it against the asset data
-			secretInfo := getAssetSecretInfo(&assetMatchInfo{labels: asset.GetLabels(), platform: asset.Platform})
-			if secretInfo != nil {
-				// if it does match a configuration, enrich asset with information from vault
-				enrichAssetWithVaultData(v, asset, secretInfo)
+			// if vault and secret function is set, run the additional handling
+			if v != nil {
+				// this is where we get the vault configuration query and evaluate it against the asset data
+				secretInfo := getAssetSecretInfo(&assetMatchInfo{labels: asset.GetLabels(), platform: asset.Platform})
+				if secretInfo != nil {
+					// if it does match a configuration, enrich asset with information from vault
+					enrichAssetWithVaultData(v, asset, secretInfo)
+				}
 			}
 
 			resolved = append(resolved, asset)
@@ -226,89 +227,5 @@ func getAssetSecretInfo(asset *assetMatchInfo) *secretInfo {
 	// here is where we will call the lumi runtime function
 	// give it the asset match information (labels and platform and connection type (e.g. ssh)) + the user-defined vault config query
 	// it returns the secretinfo as defined in the vault config query
-
-	// this is the go code that will be replaced by the lumi stuff
-	configurations := []queryConfiguration{}
-	config1 := queryConfiguration{
-		User:         "ec2-user",
-		MatchKey:     "secretsmanager",
-		MatchValue:   "secret_id",
-		SecretFormat: "private_key",
-		Hierarchy:    1,
-	}
-	configurations = append(configurations, config1)
-	config2 := queryConfiguration{
-		User:          "ubuntu",
-		MatchPlatform: "ubuntu",
-		SecretId:      "arn:aws:secretsmanager:us-east-2:921877552404:secret:test2-lTHSUJ",
-		SecretFormat:  "private_key",
-		Hierarchy:     2,
-	}
-	configurations = append(configurations, config2)
-
-	config3 := queryConfiguration{
-		User:         "ec2-user",
-		MatchKey:     "env",
-		MatchValue:   "test",
-		SecretId:     "arn:aws:secretsmanager:us-east-2:921877552404:secret:test3-pK8sjF",
-		SecretFormat: "private_key",
-		Hierarchy:    3,
-	}
-	configurations = append(configurations, config3)
-
-	sort.SliceStable(configurations, func(i, j int) bool {
-		return configurations[i].Hierarchy < configurations[j].Hierarchy
-	})
-	for i := range configurations {
-		configuration := configurations[i]
-		if configuration.MatchPlatform != "" {
-			// for now, assuming platform == platform name - should be extended
-			if asset.platform.Name == configuration.MatchPlatform {
-				return &secretInfo{
-					user:           configuration.User,
-					secretID:       configuration.SecretId,
-					secretFormat:   configuration.SecretFormat,
-					jsonFields:     configuration.JsonFields,
-					connectionType: "winrm",
-				}
-			}
-		}
-		if configuration.MatchKey != "" {
-			val := asset.labels[configuration.MatchKey]
-			if len(val) > 0 {
-				if configuration.MatchValue == "secret_id" {
-					// user has specified "secret_id" keyword, telling us to look at the value of the tag for the secret id
-					return &secretInfo{
-						user:           configuration.User,
-						secretID:       val,
-						secretFormat:   configuration.SecretFormat,
-						jsonFields:     configuration.JsonFields,
-						connectionType: "ssh",
-					}
-				}
-				// user has specified a match value
-				if configuration.MatchValue != "" {
-					if val == configuration.MatchValue {
-						return &secretInfo{
-							user:           configuration.User,
-							secretID:       configuration.SecretId,
-							secretFormat:   configuration.SecretFormat,
-							jsonFields:     configuration.JsonFields,
-							connectionType: "ssh",
-						}
-					}
-				}
-				// user specificied match key but no value, match
-				return &secretInfo{
-					user:           configuration.User,
-					secretID:       configuration.SecretId,
-					secretFormat:   configuration.SecretFormat,
-					jsonFields:     configuration.JsonFields,
-					connectionType: "ssh",
-				}
-			}
-		}
-	}
-	// end code block
 	return nil
 }
