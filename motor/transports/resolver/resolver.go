@@ -54,8 +54,12 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 		if err != nil {
 			return nil, err
 		}
-		if tc.Record {
-			m.ActivateRecorder()
+
+		pi, err := m.Platform()
+		if err == nil && pi.IsFamily(platform.FAMILY_WINDOWS) {
+			idDetectors = append(idDetectors, "machineid")
+		} else {
+			idDetectors = append(idDetectors, "hostname")
 		}
 	case transports.TransportBackend_CONNECTION_LOCAL_OS:
 		log.Debug().Msg("connection> load local transport")
@@ -64,13 +68,9 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 			return nil, err
 		}
 
-		m, err = motor.New(trans)
+		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
 		if err != nil {
 			return nil, err
-		}
-
-		if tc.Record {
-			m.ActivateRecorder()
 		}
 
 		pi, err := m.Platform()
@@ -87,26 +87,18 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 			return nil, err
 		}
 
-		m, err = motor.New(trans)
+		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
 		if err != nil {
 			return nil, err
-		}
-
-		if tc.Record {
-			m.ActivateRecorder()
 		}
 	case transports.TransportBackend_CONNECTION_CONTAINER_TAR:
 		trans, info, err := containertar(tc)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans)
+		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
 		if err != nil {
 			return nil, err
-		}
-
-		if tc.Record {
-			m.ActivateRecorder()
 		}
 
 		name = info.Name
@@ -121,13 +113,9 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans)
+		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
 		if err != nil {
 			return nil, err
-		}
-
-		if tc.Record {
-			m.ActivateRecorder()
 		}
 
 		name = info.Name
@@ -142,13 +130,9 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans)
+		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
 		if err != nil {
 			return nil, err
-		}
-
-		if tc.Record {
-			m.ActivateRecorder()
 		}
 
 		name = info.Name
@@ -163,13 +147,9 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans)
+		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
 		if err != nil {
 			return nil, err
-		}
-
-		if tc.Record {
-			m.ActivateRecorder()
 		}
 
 		name = info.Name
@@ -186,13 +166,9 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 			return nil, err
 		}
 
-		m, err = motor.New(trans)
+		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
 		if err != nil {
 			return nil, err
-		}
-
-		if tc.Record {
-			m.ActivateRecorder()
 		}
 
 		// for windows, we also collect the machine id
@@ -209,13 +185,9 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 			return nil, err
 		}
 
-		m, err = motor.New(trans)
+		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
 		if err != nil {
 			return nil, err
-		}
-
-		if tc.Record {
-			m.ActivateRecorder()
 		}
 
 		idDetectors = append(idDetectors, "machineid")
@@ -231,16 +203,12 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 			return nil, err
 		}
 
-		if tc.Record {
-			m.ActivateRecorder()
-		}
-
 		id, err := trans.Identifier()
 		if err == nil && len(id) > 0 {
 			identifier = append(identifier, id)
 		}
 	case transports.TransportBackend_CONNECTION_ARISTAEOS:
-		log.Debug().Msg("connection> load aristaeos transport")
+		log.Debug().Msg("connection> load arista eos transport")
 		trans, err := arista.New(tc)
 		if err != nil {
 			return nil, err
@@ -248,10 +216,6 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 		m, err = motor.New(trans)
 		if err != nil {
 			return nil, err
-		}
-
-		if tc.Record {
-			m.ActivateRecorder()
 		}
 
 		id, err := trans.Identifier()
@@ -269,10 +233,6 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 			return nil, err
 		}
 
-		if tc.Record {
-			m.ActivateRecorder()
-		}
-
 		id, err := trans.Identifier()
 		if err == nil && len(id) > 0 {
 			identifier = append(identifier, id)
@@ -286,10 +246,6 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 		m, err = motor.New(trans)
 		if err != nil {
 			return nil, err
-		}
-
-		if tc.Record {
-			m.ActivateRecorder()
 		}
 
 		id, err := trans.Identifier()
@@ -307,10 +263,6 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 			return nil, err
 		}
 
-		if tc.Record {
-			m.ActivateRecorder()
-		}
-
 		id, err := trans.Identifier()
 		if err == nil && len(id) > 0 {
 			identifier = append(identifier, id)
@@ -324,10 +276,6 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 		m, err = motor.New(trans)
 		if err != nil {
 			return nil, err
-		}
-
-		if tc.Record {
-			m.ActivateRecorder()
 		}
 
 		id, err := trans.Identifier()
@@ -345,10 +293,6 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 			return nil, err
 		}
 
-		if tc.Record {
-			m.ActivateRecorder()
-		}
-
 		id, err := trans.Identifier()
 		if err == nil && len(id) > 0 {
 			identifier = append(identifier, id)
@@ -358,13 +302,9 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans)
+		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
 		if err != nil {
 			return nil, err
-		}
-
-		if tc.Record {
-			m.ActivateRecorder()
 		}
 
 		pi, err := m.Platform()
