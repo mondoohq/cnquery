@@ -29,6 +29,15 @@ func Parse(data string) (*TomlData, error) {
 
 	log.Debug().Int("commands", len(tomlContent.Commands)).Int("files", len(tomlContent.Files)).Msg("mock> loaded data successfully")
 
+	// trace information
+	for k := range tomlContent.Commands {
+		log.Trace().Str("cmd", k).Msg("load command")
+	}
+
+	for k := range tomlContent.Files {
+		log.Trace().Str("file", k).Msg("load file")
+	}
+
 	return tomlContent, nil
 }
 
