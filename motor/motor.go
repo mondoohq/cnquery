@@ -9,20 +9,37 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
-func New(trans transports.Transport) (*Motor, error) {
-	c := &Motor{
-		Transport: trans,
-		detector:  platform.NewDetector(trans),
+type MotorOption func(m *Motor)
+
+func WithRecoding(record bool) MotorOption {
+	return func(m *Motor) {
+		if record {
+			m.ActivateRecorder()
+		}
 	}
-	return c, nil
+}
+
+func New(trans transports.Transport, motorOpts ...MotorOption) (*Motor, error) {
+	m := &Motor{
+		Transport: trans,
+	}
+
+	for i := range motorOpts {
+		motorOpts[i](m)
+	}
+
+	// set the detector after the opts have been applied to ensure its going via the recorder
+	// if activated
+	m.detector = platform.NewDetector(m.Transport)
+	return m, nil
 }
 
 type Motor struct {
-	Transport transports.Transport
-	detector  *platform.Detector
-	watcher   transports.Watcher
-	Meta      MetaInfo
-	recording bool
+	Transport   transports.Transport
+	detector    *platform.Detector
+	watcher     transports.Watcher
+	Meta        MetaInfo
+	isRecording bool
 }
 
 type MetaInfo struct {
@@ -44,23 +61,22 @@ func (m *Motor) Watcher() transports.Watcher {
 }
 
 func (m *Motor) ActivateRecorder() {
-	if m.recording {
+	if m.isRecording {
 		return
 	}
 
 	mockT, _ := mock.NewRecordTransport(m.Transport)
 	m.Transport = mockT
-	m.recording = true
+	m.isRecording = true
 }
 
 func (m *Motor) IsRecording() bool {
-	return m.recording
+	return m.isRecording
 }
 
 // returns marshaled toml stucture
 func (m *Motor) Recording() []byte {
-
-	if m.recording {
+	if m.isRecording {
 		rt := m.Transport.(*mock.RecordTransport)
 		data, err := rt.ExportData()
 		if err != nil {
