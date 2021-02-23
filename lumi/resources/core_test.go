@@ -48,7 +48,7 @@ func testQueryWithExecutor(t *testing.T, executor *executor.Executor, query stri
 	if err != nil {
 		t.Fatal("failed to add code to executor: " + err.Error())
 	}
-	defer executor.RemoveCode(bundle.Code.Id)
+	defer executor.RemoveCode(bundle.Code.Id, query)
 
 	if executor.WaitForResults(2*time.Second) == false {
 		t.Fatal("ran into timeout on testing query " + query)
@@ -139,7 +139,7 @@ func stableResults(t *testing.T, query string) map[string]*llx.RawResult {
 		}
 
 		executor.RemoveWatcher(watcherID)
-		executor.RemoveCode(bundle.Code.Id)
+		executor.RemoveCode(bundle.Code.Id, query)
 	}
 
 	first := results[0]
@@ -226,12 +226,12 @@ func testTimeout(t *testing.T, codes ...string) {
 	for i := range codes {
 		code := codes[i]
 		t.Run(code, func(t *testing.T) {
-			code, err := executor.AddCode(code, nil)
+			res, err := executor.AddCode(code, nil)
 			if err != nil {
 				t.Error("failed to compile: " + err.Error())
 				return
 			}
-			defer executor.RemoveCode(code.Code.Id)
+			defer executor.RemoveCode(res.Code.Id, code)
 
 			var timeoutTime = 5
 			if !executor.WaitForResults(time.Duration(timeoutTime) * time.Second) {
