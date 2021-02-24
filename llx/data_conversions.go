@@ -5,7 +5,6 @@ import (
 	"errors"
 	"reflect"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -191,15 +190,6 @@ func block2result(value interface{}, typ types.Type) (*Primitive, error) {
 	res := make(map[string]*Primitive)
 
 	for k, v := range m {
-		if k == "_" {
-			info := v.(lumi.ResourceID)
-			res[k] = &Primitive{
-				Type:  types.Resource(info.Name),
-				Value: []byte(info.Id),
-			}
-			continue
-		}
-
 		raw := v.(*RawData)
 		res[k] = raw.Result().Data
 	}
@@ -262,8 +252,7 @@ func map2result(value interface{}, typ types.Type) (*Primitive, error) {
 func resource2result(value interface{}, typ types.Type) (*Primitive, error) {
 	m := value.(lumi.ResourceType)
 	r := m.LumiResource()
-	v := r.Name + "\x00" + r.Id
-	return &Primitive{Type: typ, Value: []byte(v)}, nil
+	return &Primitive{Type: typ, Value: []byte(r.Id)}, nil
 }
 
 func function2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -403,7 +392,7 @@ func pscore2raw(p *Primitive) *RawData {
 }
 
 func pblock2raw(p *Primitive) *RawData {
-	d, err := primitive2map(p.Map)
+	d, err := primitive2rawdataMap(p.Map)
 	return &RawData{Value: d, Error: err, Type: types.Type(p.Type)}
 }
 
@@ -419,14 +408,11 @@ func pmap2raw(p *Primitive) *RawData {
 }
 
 func presource2raw(p *Primitive) *RawData {
-	res := strings.SplitN(string(p.Value), "\x00", 2)
-	id := ""
-	if len(res) > 1 {
-		id = res[1]
-	}
+	id := string(p.Value)
+
 	return &RawData{Value: lumi.MockResource{
 		StaticResource: &lumi.Resource{
-			ResourceID: lumi.ResourceID{Name: res[0], Id: id},
+			ResourceID: lumi.ResourceID{Name: p.Type.ResourceName(), Id: id},
 		},
 	}, Type: types.Type(p.Type)}
 }
@@ -497,6 +483,26 @@ func primitive2map(m map[string]*Primitive) (map[string]interface{}, error) {
 			return nil, cur.Error
 		}
 		res[k] = cur.Value
+	}
+	return res, nil
+}
+
+func primitive2rawdataMap(m map[string]*Primitive) (map[string]interface{}, error) {
+	if m == nil {
+		return map[string]interface{}{}, nil
+	}
+
+	res := make(map[string]interface{})
+	for k, v := range m {
+		if v == nil {
+			res[k] = nil
+			continue
+		}
+		cur := v.RawData()
+		if cur.Error != nil {
+			return nil, cur.Error
+		}
+		res[k] = cur
 	}
 	return res, nil
 }
