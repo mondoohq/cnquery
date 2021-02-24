@@ -60,3 +60,29 @@ func TestDictConversion(t *testing.T) {
 	assert.Equal(t, rawResult.Data.Type, convertedRawResult.Data.Type)
 	assert.Equal(t, rawResult.Data.Value, convertedRawResult.Data.Value)
 }
+
+func TestResourceConversion(t *testing.T) {
+	// this checks that the result of a resource is properly converted. in this case  platform { name title release }
+	rawData := &RawData{
+		Type: types.Block,
+		Value: map[string]interface{}{
+			"yUHOZ/pJzgQ3FLcnKAPphE4TgWqFptqPWA8GYl4e5Dqg0/YzQWcDml2cbrTEj3nj1rm0azm9povOYMRjTgSvZg==": &RawData{
+				Type:  types.String,
+				Value: "8.2.2004",
+			},
+			"eXSx690ws3fjmTRXKjSBqpgounx3VRr3RKSaBo1mmPnW7+D2NSjYD9W5uNGiageTGQh37XHomdUvF4iSMON9yQ==": &RawData{
+				Type:  types.String,
+				Value: "CentOS Linux",
+			},
+			"EpnHIF31KeNgY/3Z4KyBuKHQ0kk/i+MyYbTX+ZWiQIAvK6lv4P2Nlf9CKAIrn2KOfCWICteI96BN1e8GA6sNZA==": &RawData{
+				Type:  types.String,
+				Value: "centos",
+			},
+		},
+	}
+	rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
+
+	convertedRawResult := rawResult.Result().RawResult()
+	assert.Equal(t, rawResult.Data.Type, convertedRawResult.Data.Type)
+	assert.Equal(t, rawResult.Data.Value, convertedRawResult.Data.Value)
+}
