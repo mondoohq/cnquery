@@ -120,7 +120,7 @@ func TestCompiler_Buggy(t *testing.T) {
 		{`mondoo { version }`, []*llx.Chunk{
 			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
 			{Id: "{}", Call: llx.Chunk_FUNCTION, Function: &llx.Function{
-				Type:    types.Any,
+				Type:    types.Block,
 				Binding: 1,
 				Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
 			}},
@@ -900,7 +900,7 @@ func TestCompiler_Block(t *testing.T) {
 	compile(t, "mondoo { version build }", func(res *llx.CodeBundle) {
 		assertFunction(t, "mondoo", nil, res.Code.Code[0])
 		assertFunction(t, "{}", &llx.Function{
-			Type:    types.Any,
+			Type:    types.Block,
 			Binding: 1,
 			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
 		}, res.Code.Code[1])
@@ -925,7 +925,7 @@ func TestCompiler_BlockWithSelf(t *testing.T) {
 	compile(t, "mondoo { _.version }", func(res *llx.CodeBundle) {
 		assertFunction(t, "mondoo", nil, res.Code.Code[0])
 		assertFunction(t, "{}", &llx.Function{
-			Type:    types.Any,
+			Type:    types.Block,
 			Binding: 1,
 			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
 		}, res.Code.Code[1])
@@ -948,7 +948,7 @@ func TestCompiler_BlockWithSelf(t *testing.T) {
 			Binding: 1,
 		}, res.Code.Code[1])
 		assertFunction(t, "{}", &llx.Function{
-			Type:    types.Any,
+			Type:    types.Block,
 			Binding: 2,
 			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
 		}, res.Code.Code[2])
@@ -982,7 +982,7 @@ func TestCompiler_BlockWithSelf(t *testing.T) {
 			Binding: 1,
 		}, res.Code.Code[1])
 		assertFunction(t, "{}", &llx.Function{
-			Type:    types.Array(types.Any),
+			Type:    types.Array(types.Block),
 			Binding: 2,
 			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
 		}, res.Code.Code[2])
@@ -1037,7 +1037,7 @@ func TestCompiler_CallWithResource(t *testing.T) {
 			Binding: 1,
 		}, res.Code.Code[1])
 		assertFunction(t, "{}", &llx.Function{
-			Type:    types.Array(types.Any),
+			Type:    types.Array(types.Block),
 			Binding: 2,
 			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
 		}, res.Code.Code[2])
@@ -1069,7 +1069,7 @@ func TestCompiler_List(t *testing.T) {
 			Binding: 1,
 		}, res.Code.Code[1])
 		assertFunction(t, "{}", &llx.Function{
-			Type:    types.Array(types.Any),
+			Type:    types.Array(types.Block),
 			Binding: 2,
 			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
 		}, res.Code.Code[2])

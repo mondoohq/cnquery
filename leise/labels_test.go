@@ -77,7 +77,7 @@ func TestLabels(t *testing.T) {
 		{"platform { name release }",
 			&llx.Labels{
 				Labels: map[string]string{
-					"tjadxMHtfOxMg9sUP0rM7pXETzjJYmJFKhUcS6GWSiqwPrttgTjKUsOvHo2dutc0Ao2x+rS0REELtEv4Vcuf7Q==": "platform",
+					"58Saw3DjwlEPe8iFhCNbV6q79mHGW+2PVowCr/Zs2AD4Uis3PPPeEHAy5xw8sBGtsOLs8tJ5upaJDfuByaEbFw==": "platform",
 					"EpnHIF31KeNgY/3Z4KyBuKHQ0kk/i+MyYbTX+ZWiQIAvK6lv4P2Nlf9CKAIrn2KOfCWICteI96BN1e8GA6sNZA==": "name",
 					"yUHOZ/pJzgQ3FLcnKAPphE4TgWqFptqPWA8GYl4e5Dqg0/YzQWcDml2cbrTEj3nj1rm0azm9povOYMRjTgSvZg==": "release",
 				},
@@ -85,7 +85,7 @@ func TestLabels(t *testing.T) {
 		{"users.list { uid }",
 			&llx.Labels{
 				Labels: map[string]string{
-					"mSGW03diY13ig6wZcPouTUrH6fq06Ie9lz23s1a/CwdVGiEBEyhqi+9T8RrkrdoRrn/QKSrC/kcvYE4yd1qo7g==": "users.list",
+					"IB4yJOaaWXlkuGCEIjatVrL5rQZWQucCaOM55RqFxHYXGFvano6W1uqe55OJVo3joocfdpiSZjNqRjse8SMfiA==": "users.list",
 					"kijfKPV0fU/MBdcby4ng65mWcsH/kOn5PcVmYvbDBfUlSSSqGKiyhy1Qte+BO/GqMfL62iaaIRP8LgfRZ0/3pg==": "uid",
 				},
 			}},
@@ -100,7 +100,7 @@ func TestLabels(t *testing.T) {
 		{"users.list[0] { uid }",
 			&llx.Labels{
 				Labels: map[string]string{
-					"JhFnMMVbSxPycbnGcRinWgHu6v4SetPNceTQlWMcv1q0MhVhab9av8DcspcLuPpfuI3IScUfD09rH0ZrB2ea+g==": "users.list[0]",
+					"ITQmg8B2q1g7hUGGDcnFYQjiQ/w1TPr9xyd4dlWAPjwGyRdH2CrtCv55kn7v4SUVqGaJ8k021tUTZznlRzeXNg==": "users.list[0]",
 					"MCqGdk4puEdBb/fxS3qDqAV/8gv3DIxFT+InTY7+JcySIzGMDzq8L1t2C8W6qh4z8GI3MvR6ZQ64bVQl0f2Xww==": "uid",
 				},
 			}},
@@ -115,8 +115,8 @@ func TestLabels(t *testing.T) {
 		{"sshd.config { file { path } }",
 			&llx.Labels{
 				Labels: map[string]string{
-					"nq3SFDuqajaULpvYBxsfJbvHQzMFY3RDDhLEjg0HXSFPvzthdNZHl8oRuNTx+Z0Zq+bg9MZ+t2CK4WNRj4ru0A==": "sshd.config",
-					"g/rqzDTGUq+d5jE7JD/FBhx5WZqA8kd2m0RNNB1lEBv+E8sIx1TgKoxJbmOfInDTrulh4mwpYDHwvlZoGAWXjg==": "file",
+					"4dkTkPWdGYANJNsnlIoZxztiguA32f0UoKeYLeVb5Iry/nSYR0RmK6cveUCA6t4fqQJ5RkTwrDlEDHjoE0vURg==": "sshd.config",
+					"OuTdAjszQCmHLzp7Y5W3QICyVbGVX3UcnUllLGIXPjQToitI3LKzJ78iVUzMWOmNJZxmbpP7iySzzuFXgflQ+g==": "file",
 					"k6rlXoYpV48Qd19gKeNl+/IiPnkI5VNQBiqZBca3gDKsIRiLcpXQUlDv52x9sscIWiqOMpC7+x/aBpY0IUq0ww==": "path",
 				},
 			}},

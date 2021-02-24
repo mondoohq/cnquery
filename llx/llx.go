@@ -234,6 +234,7 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, ref int3
 	}
 
 	blockResult := map[string]interface{}{}
+
 	err := c.runFunctionBlock(bind, fun, func(res *RawResult) {
 		if fun.SingleValue {
 			c.cache.Store(ref, &stepCache{
@@ -245,6 +246,15 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, ref int3
 
 		blockResult[res.CodeID] = res.Data
 		if len(blockResult) == len(fun.Entrypoints) {
+			if bind != nil && bind.Type.IsResource() {
+				rr, ok := bind.Value.(lumi.ResourceType)
+				if !ok {
+					log.Warn().Msg("cannot cast resource to resource type")
+				} else {
+					blockResult["_"] = rr.LumiResource().ResourceID
+				}
+			}
+
 			c.cache.Store(ref, &stepCache{
 				Result: &RawData{
 					Type:  types.Block,
