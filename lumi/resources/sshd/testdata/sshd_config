@@ -1,5 +1,3 @@
-[files."/etc/ssh/sshd_config"]
-content = """
 #	$OpenBSD: sshd_config,v 1.100 2016/08/15 12:32:04 naddy Exp $
 
 # This is the sshd server system-wide configuration file.  See
@@ -139,4 +137,3 @@ Subsystem	sftp	/usr/libexec/openssh/sftp-server
 #	AllowTcpForwarding no
 #	PermitTTY no
 #	ForceCommand cvs server
-"""

@@ -6,7 +6,7 @@ package resources
 
 import (
 	"errors"
-	"regexp"
+	"go.mondoo.io/mondoo/lumi/resources/sshd"
 	"strings"
 
 	"go.mondoo.io/mondoo/lumi"
@@ -64,11 +64,15 @@ func (s *lumiSshdConfig) GetContent(file File) (string, error) {
 }
 
 func (s *lumiSshdConfig) GetParams(content string) (map[string]interface{}, error) {
-	re := regexp.MustCompile("(?m:^([[:alpha:]]+)\\s+(.*))")
-	m := re.FindAllStringSubmatch(content, -1)
-	res := make(map[string]interface{})
-	for _, mm := range m {
-		res[mm[1]] = mm[2]
+	params, err := sshd.Params(content)
+	if err != nil {
+		return nil, err
+	}
+
+	// convert  map
+	res := map[string]interface{}{}
+	for k, v := range params {
+		res[k] = v
 	}
 
 	return res, nil
