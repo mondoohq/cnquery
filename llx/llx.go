@@ -251,7 +251,10 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, ref int3
 				if !ok {
 					log.Warn().Msg("cannot cast resource to resource type")
 				} else {
-					blockResult["_"] = rr.LumiResource().ResourceID
+					blockResult["_"] = &RawData{
+						Type:  bind.Type,
+						Value: rr,
+					}
 				}
 			}
 
