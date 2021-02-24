@@ -16,7 +16,6 @@ import (
 type ResultCallback func(*RawResult)
 
 var emptyFunction = Function{}
-var blockType = types.Map(types.String, types.Any)
 
 // RawResult wraps RawData to code and refs
 type RawResult struct {
@@ -248,7 +247,7 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, ref int3
 		if len(blockResult) == len(fun.Entrypoints) {
 			c.cache.Store(ref, &stepCache{
 				Result: &RawData{
-					Type:  blockType,
+					Type:  types.Block,
 					Value: blockResult,
 				},
 				IsStatic: true,

@@ -16,13 +16,13 @@ type compileHandler struct {
 }
 
 var childType = func(t types.Type) types.Type { return t.Child() }
-var arrayBlockType = func(t types.Type) types.Type { return types.Array(types.Map(types.Int, types.Any)) }
-var mapBlockType = func(t types.Type) types.Type { return types.Map(types.String, types.Any) }
+var arrayBlockType = func(t types.Type) types.Type { return types.Array(types.Map(types.Int, types.Block)) }
 var boolType = func(t types.Type) types.Type { return types.Bool }
 var intType = func(t types.Type) types.Type { return types.Int }
 var stringType = func(t types.Type) types.Type { return types.String }
 var stringArrayType = func(t types.Type) types.Type { return types.Array(types.String) }
 var dictType = func(t types.Type) types.Type { return types.Dict }
+var blockType = func(t types.Type) types.Type { return types.Block }
 var dictArrayType = func(t types.Type) types.Type { return types.Array(types.Dict) }
 
 var builtinFunctions map[types.Type]map[string]compileHandler
@@ -47,7 +47,7 @@ func init() {
 		},
 		types.Dict: {
 			"[]": {typ: dictType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Any}}},
-			"{}": {typ: dictType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"{}": {typ: blockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			// string-ish
 			"contains": {compile: compileStringContains, typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
 			"find":     {typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Regex}}},
@@ -79,7 +79,7 @@ func init() {
 		},
 		types.MapLike: {
 			"[]":     {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
-			"{}":     {typ: mapBlockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"{}":     {typ: blockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"length": {typ: intType, signature: FunctionSignature{}},
 			"keys":   {typ: stringArrayType, signature: FunctionSignature{}},
 			"values": {typ: dictArrayType, signature: FunctionSignature{}},

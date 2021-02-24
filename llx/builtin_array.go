@@ -7,7 +7,7 @@ import (
 	"go.mondoo.io/mondoo/types"
 )
 
-var arrayBlockType = types.Array(types.Map(types.String, types.Any))
+var arrayBlockType = types.Array(types.Block)
 
 // arrayFunctions are all the handlers for builtin array methods
 var arrayFunctions map[string]chunkHandler
