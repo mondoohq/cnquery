@@ -15,7 +15,13 @@ func Params(content string) (map[string]string, error) {
 		if sshKey, ok := SSH_Keywords[strings.ToLower(k)]; ok {
 			k = sshKey
 		}
-		res[k] = mm[2]
+
+		// check if we have an entry already
+		if val, ok := res[k]; ok {
+			res[k] = val + "," + mm[2]
+		} else {
+			res[k] = mm[2]
+		}
 	}
 	return res, nil
 }
