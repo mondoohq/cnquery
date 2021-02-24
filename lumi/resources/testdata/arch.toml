@@ -12,6 +12,17 @@ stdout = """/etc/arch-release
 /etc/ssh/sshd_config
 """
 
+[commands."find \"/etc/pam.d\" -xdev -type f"]
+stdout = """/etc/pam.d/sshd
+"""
+
+[files."/etc/pam.d/sshd"]
+content = """#%PAM-1.0
+#auth     required  pam_securetty.so     #disable remote root
+auth      include   system-remote-login
+account   include   system-remote-login
+"""
+
 [files."/etc/arch-release"]
 content = ""
 

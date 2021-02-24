@@ -92,7 +92,11 @@ func (s *lumiPamConf) GetContent(files []interface{}) (string, error) {
 
 		content, err := file.Content()
 		if err != nil {
-			notReadyError = lumi.NotReadyError{}
+			if _, ok := err.(lumi.NotReadyError); ok {
+				notReadyError = lumi.NotReadyError{}
+			} else {
+				return "", err
+			}
 		}
 
 		res.WriteString(content)
