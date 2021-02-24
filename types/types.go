@@ -41,7 +41,8 @@ const (
 	byteTime
 	byteDict
 	byteScore
-	byteArray = 1<<4 + iota - 3 // set to 25 to avoid breaking changes
+	byteBlock
+	byteArray = 1<<4 + iota - 4 // set to 25 to avoid breaking changes
 	byteMap
 	byteResource
 	byteFunction
@@ -75,6 +76,8 @@ const (
 	Dict = Type(rune(byteDict))
 	// Score for evaluations
 	Score = Type(rune(byteScore))
+	// Block evaluation results
+	Block = Type(rune(byteBlock))
 	// ArrayLike is the underlying type of all arrays
 	ArrayLike = Type(rune(byteArray))
 	// MapLike is the underlying type of all maps
@@ -201,6 +204,7 @@ var labels = map[byte]string{
 	byteTime:   "time",
 	byteDict:   "dict",
 	byteScore:  "score",
+	byteBlock:  "block",
 }
 
 var labelfun map[byte]func(Type) string

@@ -157,9 +157,11 @@ func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type
 		return typ, nil
 	}
 
-	resultType := types.Any
+	var resultType types.Type
 	if typ.IsArray() {
-		resultType = types.Array(types.Any)
+		resultType = types.Array(types.Block)
+	} else {
+		resultType = types.Block
 	}
 
 	chunk := llx.Chunk{
