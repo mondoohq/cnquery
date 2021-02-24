@@ -88,8 +88,8 @@ func (fs mockFS) Stat(name string) (os.FileInfo, error) {
 	return f.Stat()
 }
 
-func (fs mockFS) Lstat(p string) (os.FileInfo, error) {
-	return nil, errors.New("not implemented")
+func (fs mockFS) Lstat(name string) (os.FileInfo, error) {
+	return fs.Stat(name)
 }
 
 func (fs mockFS) Chmod(name string, mode os.FileMode) error {

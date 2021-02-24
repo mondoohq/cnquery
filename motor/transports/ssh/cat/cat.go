@@ -43,7 +43,7 @@ func (cat *CatFs) Open(name string) (afero.File, error) {
 		return nil, err
 	}
 
-	return NewFile(name, bytes.NewBuffer(data)), nil
+	return NewFile(cat, name, bytes.NewBuffer(data)), nil
 }
 
 func (cat *CatFs) Stat(name string) (os.FileInfo, error) {

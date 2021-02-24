@@ -3,6 +3,7 @@ package mock
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"github.com/rs/zerolog/log"
 	"io/ioutil"
 	"os"
 	"time"
@@ -86,8 +87,31 @@ func (t *RecordTransport) FS() afero.Fs {
 	return NewRecordFS(fs, t.mock.Fs)
 }
 
-func (t *RecordTransport) FileInfo(path string) (transports.FileInfoDetails, error) {
-	return t.observe.FileInfo(path)
+func (t *RecordTransport) FileInfo(name string) (transports.FileInfoDetails, error) {
+	enonet := false
+	stat, err := t.observe.FileInfo(name)
+	if err == os.ErrNotExist {
+		enonet = true
+	}
+
+	fMock, ok := t.mock.Fs.Files[name]
+	if !ok {
+		fMock = &MockFileData{}
+	}
+
+	fMock.Path = name
+	fMock.Enoent = enonet
+	fMock.StatData = FileInfo{
+		Mode: stat.Mode.FileMode,
+		// TODO: add size if required
+		//ModTime: stat.ModTime,
+		//IsDir:   stat.IsDir,
+		Uid: stat.Uid,
+		Gid: stat.Gid,
+	}
+	t.mock.Fs.Files[name] = fMock
+
+	return stat, err
 }
 
 func (t *RecordTransport) Capabilities() transports.Capabilities {
@@ -137,6 +161,7 @@ func (fs recordFS) MkdirAll(path string, perm os.FileMode) error {
 func (fs recordFS) Open(name string) (afero.File, error) {
 	enonet := false
 	content := ""
+	var fi FileInfo
 
 	f, err := fs.observe.Open(name)
 	if err == os.ErrNotExist {
@@ -150,6 +175,14 @@ func (fs recordFS) Open(name string) (afero.File, error) {
 			return nil, err
 		}
 		content = string(data)
+
+		// if recording is active, we also collect stats
+		stat, err := f.Stat()
+		if err == nil {
+			fi = NewMockFileInfo(stat)
+		} else {
+			log.Warn().Err(err).Str("file", name).Msg("could not stat file for recording")
+		}
 	}
 
 	fMock, ok := fs.mock.Files[name]
@@ -160,6 +193,7 @@ func (fs recordFS) Open(name string) (afero.File, error) {
 	fMock.Content = content
 	fMock.Path = name
 	fMock.Enoent = enonet
+	fMock.StatData = fi
 
 	fs.mock.Files[name] = fMock
 
@@ -183,8 +217,38 @@ func (fs recordFS) Rename(oldname, newname string) error {
 	return fs.observe.Rename(oldname, newname)
 }
 
+func NewMockFileInfo(stat os.FileInfo) FileInfo {
+	if stat == nil {
+		return FileInfo{}
+	}
+	fi := FileInfo{
+		Mode:    stat.Mode(),
+		ModTime: stat.ModTime(),
+		IsDir:   stat.IsDir(),
+		//Uid:     0,
+		//Gid:     0,
+	}
+	return fi
+}
+
 func (fs recordFS) Stat(name string) (os.FileInfo, error) {
-	return fs.observe.Stat(name)
+	enonet := false
+	stat, err := fs.observe.Stat(name)
+	if err == os.ErrNotExist {
+		enonet = true
+	}
+
+	fMock, ok := fs.mock.Files[name]
+	if !ok {
+		fMock = &MockFileData{}
+	}
+
+	fMock.Path = name
+	fMock.Enoent = enonet
+	fMock.StatData = NewMockFileInfo(stat)
+	fs.mock.Files[name] = fMock
+
+	return stat, err
 }
 
 // func (fs recordFS) Lstat(p string) (os.FileInfo, error) {
