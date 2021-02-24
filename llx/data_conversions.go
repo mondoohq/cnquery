@@ -32,6 +32,7 @@ func init() {
 		types.Time:         time2result,
 		types.Dict:         dict2result,
 		types.Score:        score2result,
+		types.Block:        block2result,
 		types.ArrayLike:    array2result,
 		types.MapLike:      map2result,
 		types.ResourceLike: resource2result,
@@ -50,6 +51,7 @@ func init() {
 		types.Time:         ptime2raw,
 		types.Dict:         pdict2raw,
 		types.Score:        pscore2raw,
+		types.Block:        pblock2raw,
 		types.ArrayLike:    parray2raw,
 		types.MapLike:      pmap2raw,
 		types.ResourceLike: presource2raw,
@@ -182,6 +184,26 @@ func score2result(value interface{}, typ types.Type) (*Primitive, error) {
 		Type:  types.Score,
 		Value: value.([]byte),
 	}, nil
+}
+
+func block2result(value interface{}, typ types.Type) (*Primitive, error) {
+	m := value.(map[string]interface{})
+	res := make(map[string]*Primitive)
+
+	for k, v := range m {
+		if k == "_" {
+			info := v.(lumi.ResourceID)
+			res[k] = &Primitive{
+				Type:  types.Resource(info.Name),
+				Value: []byte(info.Id),
+			}
+			continue
+		}
+
+		raw := v.(*RawData)
+		res[k] = raw.Result().Data
+	}
+	return &Primitive{Type: typ, Map: res}, nil
 }
 
 func array2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -378,6 +400,11 @@ func pdict2raw(p *Primitive) *RawData {
 
 func pscore2raw(p *Primitive) *RawData {
 	return &RawData{Value: p.Value, Error: nil, Type: types.Score}
+}
+
+func pblock2raw(p *Primitive) *RawData {
+	d, err := primitive2map(p.Map)
+	return &RawData{Value: d, Error: err, Type: types.Type(p.Type)}
 }
 
 func parray2raw(p *Primitive) *RawData {

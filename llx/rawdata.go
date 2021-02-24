@@ -163,7 +163,7 @@ func (r *RawData) Score() (int, bool) {
 
 func isTruthy(data interface{}, typ types.Type) (bool, bool) {
 	if data == nil &&
-		(typ.IsEmpty() || !typ.Underlying().IsResource()) {
+		(typ.IsEmpty() || !typ.IsResource()) {
 		return false, true
 	}
 
@@ -204,6 +204,19 @@ func isTruthy(data interface{}, typ types.Type) (bool, bool) {
 		}
 
 		return !dt.IsZero(), true
+
+	case types.Block:
+		res := true
+
+		m := data.(map[string]interface{})
+		for _, v := range m {
+			t1, f1 := isTruthy(v, types.Any)
+			if f1 {
+				res = res && t1
+			}
+		}
+
+		return res, true
 
 	case types.ArrayLike:
 		arr := data.([]interface{})
