@@ -6,13 +6,14 @@ import (
 	"os"
 )
 
-func NewFile(name string, buf *bytes.Buffer) *File {
-	return &File{path: name, buf: buf}
+func NewFile(catfs *CatFs, name string, buf *bytes.Buffer) *File {
+	return &File{catfs: catfs, path: name, buf: buf}
 }
 
 type File struct {
-	buf  *bytes.Buffer
-	path string
+	catfs *CatFs
+	buf   *bytes.Buffer
+	path  string
 }
 
 func (f *File) Close() error {
@@ -24,7 +25,7 @@ func (f *File) Name() string {
 }
 
 func (f *File) Stat() (os.FileInfo, error) {
-	return nil, errors.New("not implemented")
+	return f.catfs.Stat(f.path)
 }
 
 func (f *File) Sync() error {
