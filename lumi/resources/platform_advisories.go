@@ -126,7 +126,7 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 		KernelVersion: kernelVersion,
 	}
 
-	logger.DebugDumpJSON("vuln-scan-job", scanjob)
+	logger.DebugDumpYAML("vuln-scan-job", scanjob)
 
 	log.Debug().Str("asset", asset.Mrn).Bool("incognito", mcc.Incognito).Msg("run advisory scan")
 	report, err := scannerClient.AnalysePlatform(context.Background(), scanjob)
