@@ -179,22 +179,51 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 	// defer os.RemoveAll(rpmTmpDir)
 
 	fs := rpm.motor.Transport.FS()
+	afs := &afero.Afero{Fs: fs}
 
-	// fetch rpm database file and store it in local tmp file
-	f, err := fs.Open("/var/lib/rpm/Packages")
+	// on fedora 33+ sqlite is used already, implement new mechanism here
+	// if it is stable, we can use it for all rhel
+	if rpm.platform != nil && rpm.platform.Name == "fedora" {
+		// /var/lib/rpm/rpmdb.sqlite, rpmdb.sqlite-shm and rpmdb.sqlite-wal need to be copied for Fedora 33+
+		// We copy the whole /var/lib/rpm directory
+		rpmPath := "/var/lib/rpm"
+		ok, err := afs.Exists(rpmPath)
+		if err != nil {
+			return nil, errors.Wrap(err, "rpm directory could not be found")
+		}
+		if !ok {
+			return nil, errors.New("rpm directory could not be found")
+		}
 
-	// on opensuse, the directory usr/lib/sysimage/rpm/Packages is used in tar
-	if err != nil && rpm.platform != nil && rpm.platform.IsFamily("suse") {
-		log.Debug().Msg("fallback to opensuse rpm package location")
-
+		// list directory and copy the content
+		err = afs.Walk(rpmPath, func(path string, info os.FileInfo, err error) error {
+			log.Debug().Str("path", path).Str("name", info.Name()).Msg("copy file")
+			f, err := fs.Open(path)
+			if err != nil {
+				return errors.Wrap(err, "could not fetch rpm package list")
+			}
+			fWriter, err := os.Create(filepath.Join(rpmTmpDir, info.Name()))
+			if err != nil {
+				log.Error().Err(err).Msg("lumi[packages]> could not create tmp file for rpm database")
+				return errors.Wrap(err, "could not create local temp file")
+			}
+			_, err = io.Copy(fWriter, f)
+			if err != nil {
+				log.Error().Err(err).Msg("lumi[packages]> could not copy rpm to tmp file")
+				return fmt.Errorf("could not cache rpm package list")
+			}
+			return nil
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "could not fetch rpm package list")
+		}
+	} else {
+		// fetch rpm database file and store it in local tmp file
 		// iterate over file paths to check if one exists
-		// NOTE: I've seen discussions where those paths are also used for other rpm bases systems
-		// NOTE: It seems like tumbleweed uses a new directory layout. Therefore we would need to copy more?
 		files := []string{
 			"/var/lib/rpm/Packages",
-			"/usr/lib/sysimage/rpm/Packages",
+			"/usr/lib/sysimage/rpm/Packages", // used on opensuse container
 		}
-		afs := &afero.Afero{Fs: fs}
 		detectedPath := ""
 		for i := range files {
 			ok, err := afs.Exists(files[i])
@@ -205,26 +234,23 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 		}
 
 		if len(detectedPath) == 0 {
-			return nil, errors.Wrap(err, "could not find rpm packages on suse system")
+			return nil, errors.Wrap(err, "could not find rpm packages location on : "+rpm.platform.Name)
 		}
 
-		f, err = fs.Open(detectedPath)
-	}
-
-	// throw error if we stil couldn't find the packages file
-	if err != nil {
-		return nil, errors.Wrap(err, "could not fetch rpm package list")
-	}
-
-	fWriter, err := os.Create(filepath.Join(rpmTmpDir, "Packages"))
-	if err != nil {
-		log.Error().Err(err).Msg("lumi[packages]> could not create tmp file for rpm database")
-		return nil, errors.Wrap(err, "could not create local temp file")
-	}
-	_, err = io.Copy(fWriter, f)
-	if err != nil {
-		log.Error().Err(err).Msg("lumi[packages]> could not copy rpm to tmp file")
-		return nil, fmt.Errorf("could not cache rpm package list")
+		f, err := fs.Open(detectedPath)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not fetch rpm package list")
+		}
+		fWriter, err := os.Create(filepath.Join(rpmTmpDir, "Packages"))
+		if err != nil {
+			log.Error().Err(err).Msg("lumi[packages]> could not create tmp file for rpm database")
+			return nil, errors.Wrap(err, "could not create local temp file")
+		}
+		_, err = io.Copy(fWriter, f)
+		if err != nil {
+			log.Error().Err(err).Msg("lumi[packages]> could not copy rpm to tmp file")
+			return nil, fmt.Errorf("could not cache rpm package list")
+		}
 	}
 
 	log.Debug().Str("rpmdb", rpmTmpDir).Msg("cached rpm database locally")
