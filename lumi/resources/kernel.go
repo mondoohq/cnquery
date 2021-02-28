@@ -69,7 +69,7 @@ func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
 			return nil, err
 		}
 
-		isKernel := func(pkg Package) {}
+		filterKernel := func(pkg Package) {}
 
 		if pf.IsFamily("debian") {
 			// debian based systems
@@ -85,7 +85,7 @@ func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
 			//	name: "linux-image-cloud-amd64"
 			//	version: "4.19+105+deb10u8"
 			//}]
-			isKernel = func(pkg Package) {
+			filterKernel = func(pkg Package) {
 				name, _ := pkg.Name()
 
 				if strings.HasPrefix(name, "linux-image") {
@@ -119,7 +119,7 @@ func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
 			//	name: "kernel"
 			//	version: "3.10.0-1127.19.1.el7"
 			//}]
-			isKernel = func(pkg Package) {
+			filterKernel = func(pkg Package) {
 				name, _ := pkg.Name()
 
 				if name == "kernel" {
@@ -140,7 +140,7 @@ func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
 				}
 			}
 		} else if pf.Name == "photon" {
-			isKernel = func(pkg Package) {
+			filterKernel = func(pkg Package) {
 				name, _ := pkg.Name()
 
 				if strings.HasPrefix(name, "linux") {
@@ -159,12 +159,40 @@ func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
 					})
 				}
 			}
+		} else if pf.IsFamily("suse") {
+			// kernel.info[version] == "4.12.14-122.23-default"
+			//rpm -qa | grep -i kernel
+			//kernel-default-4.12.14-122.23.1.x86_64
+			//kernel-firmware-20190618-5.14.1.noarch
+			//kernel-default-4.12.14-122.60.1.x86_64
+			// cat /proc/version
+			// Linux version 4.12.14-122.23-default (geeko@buildhost)
+			filterKernel = func(pkg Package) {
+				name, _ := pkg.Name()
+				if strings.HasPrefix(name, "kernel-") {
+					version, _ := pkg.Version()
+
+					kernelType := strings.TrimPrefix(name, "kernel")
+					running := false
+
+					// NOTE: pkg version is 4.12.14-122.23.1 while the kernel version is 4.12.14-122.23
+					if strings.HasSuffix(runningKernelVersion, kernelType) && strings.HasPrefix(version, strings.TrimSuffix(runningKernelVersion, kernelType)) {
+						running = true
+					}
+
+					res = append(res, KernelVersion{
+						Name:    name,
+						Version: version + strings.TrimPrefix(name, "kernel"),
+						Running: running,
+					})
+				}
+			}
 		}
 
 		for i := range lumiPkgs {
 			lumiPkg := lumiPkgs[i]
 			pkg := lumiPkg.(Package)
-			isKernel(pkg)
+			filterKernel(pkg)
 		}
 	}
 
