@@ -60,7 +60,7 @@ func (c *Command) Exec(command string) (*transports.Command, error) {
 	match := errors.As(err, &e)
 	if match {
 		c.Command.ExitStatus = e.ExitStatus()
-		return &c.Command, err
+		return &c.Command, nil
 	}
 
 	// all other errors are real errors and not expected
