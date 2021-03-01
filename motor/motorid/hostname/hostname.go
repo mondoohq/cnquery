@@ -31,7 +31,7 @@ func Hostname(t transports.Transport, p *platform.Platform) (string, error) {
 			return strings.TrimSpace(string(data)), nil
 		}
 	} else {
-		log.Warn().Err(err).Msg("could not run hostname command")
+		log.Debug().Err(err).Msg("could not run hostname command")
 	}
 
 	// try to use /etc/hostname since it's also working on static analysis
@@ -44,7 +44,7 @@ func Hostname(t transports.Transport, p *platform.Platform) (string, error) {
 				return strings.TrimSpace(string(content)), nil
 			}
 		} else {
-			log.Warn().Err(err).Msg("could not read /etc/hostname file")
+			log.Debug().Err(err).Msg("could not read /etc/hostname file")
 		}
 	}
 
