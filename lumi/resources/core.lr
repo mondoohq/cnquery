@@ -321,7 +321,22 @@ pam.conf {
   // The raw PAM configuration (across all files)
   content(files) string
   // A list of services that are configured via PAM
-  services(files) map[string][]string
+  services(files) map[string][]pam.conf.serviceEntry
+}
+
+pam.conf.serviceEntry {
+  //Service file that entry is from
+  service string
+  //Line number in service file - used for ID
+  lineNumber int 
+  // Type for pam entry, ie auth, password etc
+  pamType string
+  // Level of control, ie required, requisite, sufficient
+  control string
+  // PAM module used
+  module string
+  // configuration options for pam service entry
+  options []string
 }
 
 // SSH server resource
