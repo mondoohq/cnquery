@@ -77,6 +77,8 @@ func (conn *TransportConfig) ToUrl() string {
 		return "ms365://"
 	case TransportBackend_CONNECTION_IPMI:
 		return "ipmi://"
+	case TransportBackend_CONNECTION_FS:
+		return "fs://"
 	default:
 		log.Warn().Str("backend", conn.Backend.String()).Msg("cannot render backend config")
 		return ""

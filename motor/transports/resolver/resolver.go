@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"fmt"
+	"go.mondoo.io/mondoo/motor/transports/fs"
 
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -307,6 +308,21 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 			return nil, err
 		}
 
+		pi, err := m.Platform()
+		if err == nil && pi.IsFamily(platform.FAMILY_WINDOWS) {
+			idDetectors = append(idDetectors, "machineid")
+		} else {
+			idDetectors = append(idDetectors, "hostname")
+		}
+	case transports.TransportBackend_CONNECTION_FS:
+		trans, err := fs.New(tc)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
+		if err != nil {
+			return nil, err
+		}
 		pi, err := m.Platform()
 		if err == nil && pi.IsFamily(platform.FAMILY_WINDOWS) {
 			idDetectors = append(idDetectors, "machineid")

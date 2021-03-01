@@ -26,6 +26,7 @@ var TransportBackend_scheme = map[TransportBackend]string{
 	TransportBackend_CONNECTION_MS365:                   "ms365",
 	TransportBackend_CONNECTION_IPMI:                    "ipmi",
 	TransportBackend_CONNECTION_VSPHERE_VM:              "vsphere+vm",
+	TransportBackend_CONNECTION_FS:                      "fs",
 }
 
 var TransportBackend_schemevalue = map[string]TransportBackend{
@@ -47,6 +48,7 @@ var TransportBackend_schemevalue = map[string]TransportBackend{
 	"ms365":              TransportBackend_CONNECTION_MS365,
 	"ipmi":               TransportBackend_CONNECTION_IPMI,
 	"vsphere+vm":         TransportBackend_CONNECTION_VSPHERE_VM,
+	"fs":                 TransportBackend_CONNECTION_FS,
 }
 
 func (x TransportBackend) Scheme() string {

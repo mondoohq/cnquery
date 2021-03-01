@@ -45,6 +45,7 @@ type Transport struct {
 }
 
 func (m *Transport) RunCommand(command string) (*transports.Command, error) {
+	// TODO: switch to error state
 	res := transports.Command{Command: command, Stdout: &bytes.Buffer{}, Stderr: &bytes.Buffer{}, ExitStatus: -1}
 	return &res, nil
 }
