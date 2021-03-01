@@ -52,6 +52,10 @@ func arrayGetIndex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 }
 
 func arrayBlockList(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type[1:]}, 0, nil
+	}
+
 	arr, ok := bind.Value.([]interface{})
 	if !ok {
 		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into array")
@@ -232,6 +236,9 @@ func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 // list of only duplicates. The latter list only has every entry appear only
 // once.
 func detectDupes(array interface{}, typ types.Type) ([]interface{}, []interface{}, error) {
+	if array == nil {
+		return nil, nil, nil
+	}
 	arr, ok := array.([]interface{})
 	if !ok {
 		return nil, nil, errors.New("failed to typecast " + typ.Label() + " into array")

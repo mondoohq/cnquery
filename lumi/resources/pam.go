@@ -2,10 +2,18 @@ package resources
 
 import (
 	"errors"
+	"io/ioutil"
+	"strconv"
 	"strings"
 
 	"go.mondoo.io/mondoo/checksums"
 	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/lumi/resources/pam"
+)
+
+const (
+	defaultPamConf = "/etc/pam.conf"
+	defaultPamDir  = "/etc/pam.d"
 )
 
 func (s *lumiPamConf) init(args *lumi.Args) (*lumi.Args, PamConf, error) {
@@ -27,8 +35,6 @@ func (s *lumiPamConf) init(args *lumi.Args) (*lumi.Args, PamConf, error) {
 	return args, nil, nil
 }
 
-const defaultPamConf = "/etc/pam.conf"
-
 func (s *lumiPamConf) id() (string, error) {
 	files, err := s.Files()
 	if err != nil {
@@ -47,17 +53,61 @@ func (s *lumiPamConf) id() (string, error) {
 	return checksum.String(), nil
 }
 
-func (s *lumiPamConf) getFiles(confPath string) ([]interface{}, error) {
-	if !strings.HasSuffix(confPath, ".conf") {
-		return nil, errors.New("failed to initialize, path must end in `.conf` so we can find files in `.d` directory")
+func (se *lumiPamConfServiceEntry) id() (string, error) {
+	ptype, err := se.PamType()
+	if err != nil {
+		return "", err
+	}
+	mod, err := se.Module()
+	if err != nil {
+		return "", err
 	}
 
-	f, err := s.Runtime.CreateResource("file", "path", confPath)
+	s, err := se.Service()
+	if err != nil {
+		return "", err
+	}
+	ln, err := se.LineNumber()
+	if err != nil {
+		return "", err
+	}
+	lnstr := strconv.FormatInt(ln, 10)
+	id := s + ptype + mod + lnstr
+	return id, nil
+}
+
+func (s *lumiPamConf) getFiles(confPath string) ([]interface{}, error) {
+	// check if the pam.d directory or pam config file exists
+	lumiFile, err := s.Runtime.CreateResource("file", "path", confPath)
+	if err != nil {
+		return nil, err
+	}
+	f := lumiFile.(File)
+	exists, err := f.Exists()
 	if err != nil {
 		return nil, err
 	}
 
-	confD := confPath[0:len(confPath)-5] + ".d"
+	if !exists {
+		return nil, errors.New(" could not load pam configuration: " + confPath)
+	}
+
+	fp, err := f.Permissions()
+	if err != nil {
+		return nil, err
+	}
+	isDir, err := fp.IsDirectory()
+	if err != nil {
+		return nil, err
+	}
+	if isDir {
+		return s.getConfDFiles(confPath)
+	} else {
+		return []interface{}{f.(File)}, nil
+	}
+}
+
+func (s *lumiPamConf) getConfDFiles(confD string) ([]interface{}, error) {
 	files, err := s.Runtime.CreateResource("files.find", "from", confD, "type", "file")
 	if err != nil {
 		return nil, err
@@ -67,39 +117,55 @@ func (s *lumiPamConf) getFiles(confPath string) ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	list = append([]interface{}{f.(File)}, list...)
 	return list, nil
 }
 
+// GetFiles is called when the user has not provided a custom path. Otherwise files are set in the init
+// method and this function is never called then since the data is already cached.
 func (s *lumiPamConf) GetFiles() ([]interface{}, error) {
-	return s.getFiles(defaultPamConf)
+	// check if the pam.d directory exists and is a directory
+	// according to the pam spec, pam prefers the directory if it  exists over the single file config
+	// see http://www.linux-pam.org/Linux-PAM-html/sag-configuration.html
+	lumiFile, err := s.Runtime.CreateResource("file", "path", defaultPamDir)
+	if err != nil {
+		return nil, err
+	}
+	f := lumiFile.(File)
+	exists, err := f.Exists()
+	if err != nil {
+		return nil, err
+	}
+
+	if exists {
+		return s.getFiles(defaultPamDir)
+	} else {
+		return s.getFiles(defaultPamConf)
+	}
 }
 
 func (s *lumiPamConf) GetContent(files []interface{}) (string, error) {
 	var res strings.Builder
 	var notReadyError error = nil
 
-	// TODO: this can be heavily improved once we do it right, since this is constantly
-	// re-registered as the file changes
 	for i := range files {
 		file := files[i].(File)
 
-		err := s.Runtime.WatchAndCompute(file, "content", s, "content")
+		path, err := file.Path()
+		if err != nil {
+			return "", err
+		}
+		f, err := s.Runtime.Motor.Transport.FS().Open(path)
 		if err != nil {
 			return "", err
 		}
 
-		content, err := file.Content()
+		raw, err := ioutil.ReadAll(f)
+		f.Close()
 		if err != nil {
-			if _, ok := err.(lumi.NotReadyError); ok {
-				notReadyError = lumi.NotReadyError{}
-			} else {
-				return "", err
-			}
+			return "", err
 		}
 
-		res.WriteString(content)
+		res.WriteString(string(raw))
 		res.WriteString("\n")
 	}
 
@@ -117,26 +183,22 @@ func (s *lumiPamConf) GetServices(files []interface{}) (map[string]interface{}, 
 	for i := range files {
 		file := files[i].(File)
 
-		err := s.Runtime.WatchAndCompute(file, "content", s, "services")
+		path, err := file.Path()
 		if err != nil {
 			return nil, err
 		}
-		err = s.Runtime.WatchAndCompute(file, "basename", s, "services")
+		f, err := s.Runtime.Motor.Transport.FS().Open(path)
 		if err != nil {
 			return nil, err
 		}
 
-		content, err := file.Content()
+		raw, err := ioutil.ReadAll(f)
+		f.Close()
 		if err != nil {
-			notReadyError = lumi.NotReadyError{}
+			return nil, err
 		}
 
-		basename, err := file.Basename()
-		if err != nil {
-			notReadyError = lumi.NotReadyError{}
-		}
-
-		contents[basename] = content
+		contents[path] = string(raw)
 	}
 
 	if notReadyError != nil {
@@ -150,13 +212,29 @@ func (s *lumiPamConf) GetServices(files []interface{}) (map[string]interface{}, 
 		var line string
 		for i := range lines {
 			line = lines[i]
+
 			if idx := strings.Index(line, "#"); idx >= 0 {
 				line = line[0:idx]
 			}
 			line = strings.Trim(line, " \t\r")
 
 			if line != "" {
-				settings = append(settings, line)
+				entry, err := pam.ParseLine(line)
+				if err != nil {
+					return nil, err
+				}
+				pamEntry, err := s.Runtime.CreateResource("pam.conf.serviceEntry",
+					"service", basename,
+					"lineNumber", int64(i), //Used for ID
+					"pamType", entry.PamType,
+					"control", entry.Control,
+					"module", entry.Module,
+					"options", entry.Options,
+				)
+				if err != nil {
+					return nil, err
+				}
+				settings = append(settings, pamEntry.(PamConfServiceEntry))
 			}
 		}
 
