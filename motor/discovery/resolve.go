@@ -3,6 +3,8 @@ package discovery
 import (
 	"context"
 	"encoding/json"
+	"regexp"
+
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
@@ -22,7 +24,6 @@ import (
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/vault"
-	"regexp"
 )
 
 var scheme = regexp.MustCompile(`^(.*?):\/\/(.*)$`)
@@ -36,30 +37,30 @@ type Resolver interface {
 var resolver map[string]Resolver
 
 func init() {
-	resolver = make(map[string]Resolver)
-	resolver["local"] = &local.Resolver{}
-	resolver["winrm"] = &instance.Resolver{}
-	resolver["ssh"] = &instance.Resolver{}
-	resolver["docker"] = &docker_engine.Resolver{}
-	resolver["docker+image"] = &docker_engine.Resolver{}
-	resolver["mock"] = &instance.Resolver{}
-	resolver["tar"] = &instance.Resolver{}
-	resolver["k8s"] = &k8s.Resolver{}
-	resolver["gcr"] = &gcp.GcrResolver{}
-	resolver["gcp"] = &gcp.GcpResolver{}
-	resolver["cr"] = &container_registry.Resolver{}
-	resolver["az"] = &azure.Resolver{}
-	resolver["azure"] = &azure.Resolver{}
-	resolver["aws"] = &aws.Resolver{}
-	resolver["ec2"] = &aws.Resolver{}
-	resolver["vagrant"] = &vagrant.Resolver{}
-	resolver["mock"] = &mock.Resolver{}
-	resolver["vsphere"] = &vsphere.Resolver{}
-	resolver["vsphere+vm"] = &vsphere.VMGuestResolver{}
-	resolver["aristaeos"] = &instance.Resolver{}
-	resolver["ms365"] = &ms365.Resolver{}
-	resolver["ipmi"] = &ipmi.Resolver{}
-	resolver["fs"] = &instance.Resolver{}
+	resolver = map[string]Resolver{
+		"local":        &local.Resolver{},
+		"winrm":        &instance.Resolver{},
+		"ssh":          &instance.Resolver{},
+		"docker":       &docker_engine.Resolver{},
+		"docker+image": &docker_engine.Resolver{},
+		"tar":          &instance.Resolver{},
+		"k8s":          &k8s.Resolver{},
+		"gcr":          &gcp.GcrResolver{},
+		"gcp":          &gcp.GcpResolver{},
+		"cr":           &container_registry.Resolver{},
+		"az":           &azure.Resolver{},
+		"azure":        &azure.Resolver{},
+		"aws":          &aws.Resolver{},
+		"ec2":          &aws.Resolver{},
+		"vagrant":      &vagrant.Resolver{},
+		"mock":         &mock.Resolver{},
+		"vsphere":      &vsphere.Resolver{},
+		"vsphere+vm":   &vsphere.VMGuestResolver{},
+		"aristaeos":    &instance.Resolver{},
+		"ms365":        &ms365.Resolver{},
+		"ipmi":         &ipmi.Resolver{},
+		"fs":           &instance.Resolver{},
+	}
 }
 
 func getSecret(v vault.Vault, keyID string) (string, error) {
