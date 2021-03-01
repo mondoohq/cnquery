@@ -59,6 +59,7 @@ func init() {
 	resolver["aristaeos"] = &instance.Resolver{}
 	resolver["ms365"] = &ms365.Resolver{}
 	resolver["ipmi"] = &ipmi.Resolver{}
+	resolver["fs"] = &instance.Resolver{}
 }
 
 func getSecret(v vault.Vault, keyID string) (string, error) {
