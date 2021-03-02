@@ -25,7 +25,7 @@ func Hostname(t transports.Transport, p *platform.Platform) (string, error) {
 	// hostname command works more reliable than t.RunCommand("powershell -c \"$env:computername\"")
 	// since it will return a non-zero exit code.
 	cmd, err := t.RunCommand("hostname")
-	if err == nil {
+	if err == nil && cmd.ExitStatus == 0 {
 		data, err := ioutil.ReadAll(cmd.Stdout)
 		if err == nil {
 			return strings.TrimSpace(string(data)), nil
