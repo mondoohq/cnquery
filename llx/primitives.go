@@ -2,7 +2,9 @@ package llx
 
 import (
 	"encoding/binary"
+	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"go.mondoo.io/mondoo/types"
@@ -168,4 +170,88 @@ func (p *Primitive) Ref() (int32, bool) {
 		return 0, false
 	}
 	return int32(bytes2int(p.Value)), true
+}
+
+// Label returns a printable label for this primitive
+func (p *Primitive) Label(code *Code) string {
+	switch p.Type.Underlying() {
+	case types.Any:
+		return string(p.Value)
+	case types.Ref:
+		return "<ref>"
+	case types.Nil:
+		return "null"
+	case types.Bool:
+		if len(p.Value) == 0 {
+			return "null"
+		}
+		if bytes2bool(p.Value) {
+			return "true"
+		}
+		return "false"
+	case types.Int:
+		if len(p.Value) == 0 {
+			return "null"
+		}
+		data := bytes2int(p.Value)
+		if data == math.MaxInt64 {
+			return "Infinity"
+		}
+		if data == math.MinInt64 {
+			return "-Infinity"
+		}
+		return fmt.Sprintf("%d", data)
+	case types.Float:
+		if len(p.Value) == 0 {
+			return "null"
+		}
+		data := bytes2float(p.Value)
+		if math.IsInf(data, 1) {
+			return "Infinity"
+		}
+		if math.IsInf(data, -1) {
+			return "-Infinity"
+		}
+		return fmt.Sprintf("%f", data)
+	case types.String:
+		if len(p.Value) == 0 {
+			return "null"
+		}
+		return PrettyPrintString(string(p.Value))
+	case types.Regex:
+		if len(p.Value) == 0 {
+			return "null"
+		}
+		return fmt.Sprintf("/%s/", string(p.Value))
+	case types.Time:
+		return "<...>"
+	case types.Dict:
+		return "<...>"
+	case types.Score:
+		return ScoreString(p.Value)
+	case types.ArrayLike:
+		if len(p.Array) == 0 {
+			return "[]"
+		}
+		return "[..]"
+
+	case types.MapLike:
+		if len(p.Map) == 0 {
+			return "{}"
+		}
+		return "{..}"
+
+	case types.ResourceLike:
+		return ""
+
+	default:
+		return ""
+	}
+}
+
+func PrettyPrintString(s string) string {
+	res := fmt.Sprintf("%#v", s)
+	res = strings.ReplaceAll(res, "\\n", "\n")
+	res = strings.ReplaceAll(res, "\\t", "\t")
+	return res
 }
