@@ -29,6 +29,14 @@ func TestLabels(t *testing.T) {
 		src    string
 		labels *llx.Labels
 	}{
+		{"mondoo.version == 'yo'",
+			&llx.Labels{
+				Labels: map[string]string{
+					"J084T/tsf/V2gVKuPUCMiaSli6jjgbrZfBlLtC06P3JdvDMMg2jLWvO8q8CXcZ4rtZf08GRZ5Qsgcoz/4Ph6Vw==": "mondoo.version == \"yo\"",
+					"J4anmJ+mXJX380Qslh563U7Bs5d6fiD2ghVxV9knAU0iy/P+IVNZsDhBbCmbpJch3Tm0NliAMiaY47lmw887Jw==": "mondoo.version",
+				},
+			}},
+
 		{"true",
 			&llx.Labels{Labels: map[string]string{
 				"13VXYfnMnc74H8XVgiMbH6ZSHxTGQxkhJfUkIiYOBCfUDxHAIJWopMcsea7hXkBTFpbM9lCDnbDBev1z+uagBw==": "",

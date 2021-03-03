@@ -2,9 +2,10 @@ package leise
 
 import (
 	"errors"
+	"strconv"
+
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
-	"strconv"
 
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi"
@@ -116,7 +117,10 @@ func createLabel(code *llx.Code, ref int32, labels *llx.Labels, schema *lumi.Sch
 		}
 
 	default:
-		if parentLabel == "" {
+		if label, ok := llx.ComparableLabel(id); ok {
+			arg := chunk.Function.Args[0].Label(code)
+			res = parentLabel + " " + label + " " + arg
+		} else if parentLabel == "" {
 			res = id
 		} else {
 			res = parentLabel + "." + id
