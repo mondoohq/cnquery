@@ -90,6 +90,26 @@ func (c *Chunk) isStatic() bool {
 	return true
 }
 
+// ComparableLabel takes any arbitrary label and returns the
+// operation as a printable string and true if it fits, otherwise "" and false.
+func ComparableLabel(label string) (string, bool) {
+	if label == "" {
+		return "", false
+	}
+
+	x := label[0:1]
+	if _, ok := comparableOperations[x]; ok {
+		return x, true
+	}
+
+	x = label[0:2]
+	if _, ok := comparableOperations[x]; ok {
+		return x, true
+	}
+
+	return "", false
+}
+
 // RefDatapoints returns the additional datapoints that inform a ref.
 // Typically used when writing tests and providing additional data when the test fails.
 func (l *Code) RefDatapoints(ref int32) []int32 {
@@ -113,13 +133,8 @@ func (l *Code) RefDatapoints(ref int32) []int32 {
 		return nil
 	}
 
-	if _, ok := comparableOperations[chunk.Id[0:1]]; !ok {
-		if len(chunk.Id) == 1 {
-			return nil
-		}
-		if _, ok := comparableOperations[chunk.Id[0:2]]; !ok {
-			return nil
-		}
+	if _, ok := ComparableLabel(chunk.Id); !ok {
+		return nil
 	}
 
 	var res []int32
@@ -199,19 +214,11 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, lookup func(s string) (
 		return &res
 	}
 
-	if _, ok := comparableOperations[chunk.Id[0:1]]; ok {
-		res.Operation = chunk.Id[0:1]
+	if label, found := ComparableLabel(chunk.Id); found {
+		res.Operation = label
 	} else {
-		if len(chunk.Id) == 1 {
-			res.Actual = checksumRes.Result().Data
-			return &res
-		}
-		if _, ok := comparableOperations[chunk.Id[0:2]]; ok {
-			res.Operation = chunk.Id[0:2]
-		} else {
-			res.Actual = checksumRes.Result().Data
-			return &res
-		}
+		res.Actual = checksumRes.Result().Data
+		return &res
 	}
 
 	res.Comparable = true
