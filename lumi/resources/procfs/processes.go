@@ -83,7 +83,7 @@ func ParseProcessStatus(input io.Reader) (*LinuxProcessStatus, error) {
 			"Mems_allowed", "Mems_allowed_list", "voluntary_ctxt_switches", "nonvoluntary_ctxt_switches":
 			// known, nothing to do yet
 		default:
-			log.Warn().Str("key", key).Msg("process status key is not handled")
+			log.Debug().Str("key", key).Msg("process status key is not handled")
 		}
 	}
 
