@@ -2,6 +2,7 @@ package processes
 
 import (
 	"errors"
+	"os"
 
 	"go.mondoo.io/mondoo/motor"
 )
@@ -29,17 +30,14 @@ func ResolveManager(motor *motor.Motor) (OSProcessManager, error) {
 		return nil, err
 	}
 
-	// TODO: switch to proc based process manager
-	// if platform.IsFamily("linux") {
-	// case "linux":
-	// pm = &LinuxProcManager{motor: motor}
-	if platform.IsFamily("unix") {
+	switch {
+	case platform.IsFamily("linux") && os.Getenv("MONDOO_PROCFS") == "on":
+		pm = &LinuxProcManager{motor: motor}
+	case platform.IsFamily("unix"):
 		pm = &UnixProcessManager{motor: motor, platform: platform}
-	} else if platform.IsFamily("windows") {
+	case platform.IsFamily("windows"):
 		pm = &WindowsProcessManager{motor: motor}
-	}
-
-	if pm == nil {
+	default:
 		return nil, errors.New("could not detect suitable process manager for platform: " + platform.Name)
 	}
 
