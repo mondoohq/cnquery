@@ -56,7 +56,7 @@ func init() {
 		"mock":         &mock.Resolver{},
 		"vsphere":      &vsphere.Resolver{},
 		"vsphere+vm":   &vsphere.VMGuestResolver{},
-		"aristaeos":    &instance.Resolver{},
+		"arista":       &instance.Resolver{},
 		"ms365":        &ms365.Resolver{},
 		"ipmi":         &ipmi.Resolver{},
 		"fs":           &instance.Resolver{},
