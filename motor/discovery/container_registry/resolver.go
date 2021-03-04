@@ -1,6 +1,7 @@
 package container_registry
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -18,6 +19,7 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 	repository := strings.TrimPrefix(url, "cr://")
 
 	tc := &transports.TransportConfig{
+		Backend: transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY,
 		Host: repository,
 	}
 
@@ -30,7 +32,7 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 	repository := t.Host
-	log.Debug().Str("registry", repository).Msg("fetch meta information from docker registry")
+	log.Info().Str("registry", repository).Msg("fetch meta information from docker registry")
 	imageFetcher := NewDockerRegistryImages()
 	// to support self-signed certs
 	imageFetcher.Insecure = t.Insecure
@@ -42,8 +44,12 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 	}
 
 	for i := range assetList {
-		log.Debug().Str("name", assetList[i].Name).Str("image", assetList[i].Connections[0].Host+assetList[i].Connections[0].Path).Msg("resolved image")
+		log.Info().Str("name", assetList[i].Name).Str("image", assetList[i].Connections[0].Host+assetList[i].Connections[0].Path).Msg("resolved image")
 		resolved = append(resolved, assetList[i])
+	}
+
+	if len(resolved) == 0 {
+		return nil, errors.New("could not find repository:"  + repository)
 	}
 
 	return resolved, nil
