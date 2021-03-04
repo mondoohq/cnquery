@@ -1,11 +1,11 @@
 package processes
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/kballard/go-shellquote"
-	"github.com/rs/zerolog/log"
 )
 
 // Flagset is derived from Go's internal flagset, licensed MIT
@@ -17,6 +17,9 @@ type FlagSet struct {
 }
 
 func (f *FlagSet) ParseCommand(cmd string) error {
+	if cmd == "" {
+		return errors.New("no command provided")
+	}
 	args, err := shellquote.Split(cmd)
 	if err != nil {
 		return err
@@ -51,9 +54,7 @@ func (f *FlagSet) parseOneArg() (bool, error) {
 	}
 	s := f.args[0]
 
-	// TODO: we need to handle shorthand flags
 	if len(s) < 2 || s[0] != '-' {
-		log.Debug().Msg("nope")
 		return false, nil
 	}
 	numMinuses := 1
@@ -61,13 +62,11 @@ func (f *FlagSet) parseOneArg() (bool, error) {
 		numMinuses++
 		if len(s) == 2 { // "--" terminates the flags
 			f.args = f.args[1:]
-			log.Debug().Msg("nope2")
 			return false, nil
 		}
 	}
 	name := s[numMinuses:]
 	if len(name) == 0 || name[0] == '-' || name[0] == '=' {
-		log.Debug().Msg("err")
 		return false, fmt.Errorf("bad flag syntax: %s", s)
 	}
 
