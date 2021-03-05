@@ -56,6 +56,7 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 	config := ParseK8SContext(url)
 
 	tc := &transports.TransportConfig{
+		Backend: transports.TransportBackend_CONNECTION_K8S,
 		// TODO: we need to set the backend here
 		Options: map[string]string{
 			"context":   config.Context,
@@ -72,6 +73,7 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 }
 
 func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
+
 	resolved := []*asset.Asset{}
 	namespacesFilter := []string{}
 	podFilter := []string{}
@@ -110,6 +112,8 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 	if len(pod) > 0 {
 		podFilter = append(podFilter, pod)
 	}
+
+	log.Debug().Strs("podFilter", podFilter).Strs("namespaceFilter", namespacesFilter).Msg("resolve k8s assets")
 
 	// fetch pod informaton
 	log.Debug().Str("context", k8sContext).Strs("namespace", namespacesFilter).Strs("namespace", podFilter).Msg("search for pods")
