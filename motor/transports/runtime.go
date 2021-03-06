@@ -13,8 +13,9 @@ const (
 	RUNTIME_KUBERNETES       = "k8s"
 	RUNTIME_AZ               = "az" // api
 	RUNTIME_AZ_COMPUTE       = "az compute"
-	RUNTIME_VSPHERE          = "vsphere"      // api
-	RUNTIME_VSPHERE_HOSTS    = "vsphere host" // esxi instances
-	RUNTIME_VSPHERE_VM       = "vsphere vm"   // vms running on esxi
-	RUNTIME_MICROSOFT_GRAPH  = "ms graph"     // api
+	RUNTIME_VSPHERE          = "vsphere"       // api
+	RUNTIME_VSPHERE_HOSTS    = "vsphere host"  // esxi instances
+	RUNTIME_VSPHERE_VM       = "vsphere vm"    // vms running on esxi
+	RUNTIME_MICROSOFT_GRAPH  = "ms graph"      // api
+	RUNTIME_EQUINIX_METAL    = "equinix metal" // api
 )

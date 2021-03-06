@@ -3088,3 +3088,81 @@ ipmi.chassis {
   // retrieve the system boot options
   systemBootOptions() dict
 }
+
+// Equinix Metal Project
+equinix.metal.project {
+  id string
+  name string
+  organization() equinix.metal.organization
+  createdAt time
+  updatedAt time
+  url string
+  paymentMethod dict
+  users() []equinix.metal.user
+  sshKeys() []equinix.metal.sshkey
+  devices() []equinix.metal.device
+}
+
+// Equinix Metal Organization
+equinix.metal.organization {
+  id string
+  name string
+  description string
+  website string
+  twitter string
+  createdAt time
+  updatedAt time
+  address dict
+  taxId string
+  mainPhone string
+  billingPhone string
+  creditAmount float
+  url string
+}
+
+// Equinix Metal User
+equinix.metal.user {
+  id string
+  firstName string
+  lastName string
+  fullName string
+  email string
+  twoFactorAuth string
+  avatarUrl string
+  twitter string
+  facebook string
+  linkedin string
+  createdAt time
+  updatedAt time
+  timezone string
+  phoneNumber string
+  url string
+  vpn bool
+}
+
+// Equinix Metal SSH Key
+equinix.metal.sshkey {
+  id string
+  label string
+  key string
+  fingerPrint string
+  createdAt time
+  updatedAt time
+  url string
+}
+
+// Equinix Metal Device
+equinix.metal.device {
+  id string
+  shortID string
+  url string
+  hostname string
+  description string
+  state string
+  createdAt time
+  updatedAt time
+  locked bool
+  billingCycle string
+  spotInstance bool
+  os dict
+}

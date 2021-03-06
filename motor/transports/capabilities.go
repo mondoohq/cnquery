@@ -15,6 +15,7 @@ const (
 	Capability_Arista
 	Capability_Microsoft365
 	Capability_Ipmi
+	Capability_Equinix
 )
 
 var CapabilityNames = map[Capability]string{
@@ -28,6 +29,7 @@ var CapabilityNames = map[Capability]string{
 	Capability_Arista:       "api-arista",
 	Capability_Microsoft365: "api-ms365",
 	Capability_Ipmi:         "api-ipmi",
+	Capability_Equinix:      "api-equinix",
 }
 
 func (c Capability) String() string {

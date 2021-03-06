@@ -28,6 +28,7 @@ var TransportBackend_scheme = map[TransportBackend]string{
 	TransportBackend_CONNECTION_VSPHERE_VM:              "vsphere+vm",
 	TransportBackend_CONNECTION_FS:                      "fs",
 	TransportBackend_CONNECTION_K8S:                     "k8s",
+	TransportBackend_CONNECTION_EQUINIX_METAL:           "equinix",
 }
 
 var TransportBackend_schemevalue = map[string]TransportBackend{
@@ -51,6 +52,7 @@ var TransportBackend_schemevalue = map[string]TransportBackend{
 	"vsphere+vm":       TransportBackend_CONNECTION_VSPHERE_VM,
 	"fs":               TransportBackend_CONNECTION_FS,
 	"k8s":              TransportBackend_CONNECTION_K8S,
+	"equinix":          TransportBackend_CONNECTION_EQUINIX_METAL,
 }
 
 func (x TransportBackend) Scheme() string {
