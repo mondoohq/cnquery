@@ -3,6 +3,7 @@ package discovery
 import (
 	"context"
 	"encoding/json"
+
 	"regexp"
 
 	"github.com/cockroachdb/errors"
@@ -12,6 +13,7 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/azure"
 	"go.mondoo.io/mondoo/motor/discovery/container_registry"
 	"go.mondoo.io/mondoo/motor/discovery/docker_engine"
+	"go.mondoo.io/mondoo/motor/discovery/equinix"
 	"go.mondoo.io/mondoo/motor/discovery/gcp"
 	"go.mondoo.io/mondoo/motor/discovery/instance"
 	"go.mondoo.io/mondoo/motor/discovery/ipmi"
@@ -60,6 +62,7 @@ func init() {
 		"ms365":        &ms365.Resolver{},
 		"ipmi":         &ipmi.Resolver{},
 		"fs":           &instance.Resolver{},
+		"equinix":      &equinix.Resolver{},
 	}
 }
 

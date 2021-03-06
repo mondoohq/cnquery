@@ -79,6 +79,8 @@ func (conn *TransportConfig) ToUrl() string {
 		return "ipmi://"
 	case TransportBackend_CONNECTION_FS:
 		return "fs://"
+	case TransportBackend_CONNECTION_EQUINIX_METAL:
+		return "equinix://"
 	default:
 		log.Warn().Str("backend", conn.Backend.String()).Msg("cannot render backend config")
 		return ""

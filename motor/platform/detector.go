@@ -2,6 +2,7 @@ package platform
 
 import (
 	"errors"
+	"go.mondoo.io/mondoo/motor/transports/equinix"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/transports"
@@ -97,6 +98,13 @@ func (d *Detector) Platform() (*Platform, error) {
 			Title:   "Ipmi",
 			Kind:    d.transport.Kind(),
 			Runtime: d.transport.Runtime(),
+		}, nil
+	case *equinix.Transport:
+		return &Platform{
+			Name:    "equinix",
+			Title:   "Equinix Metal",
+			Kind:    transports.Kind_KIND_API,
+			Runtime: transports.RUNTIME_EQUINIX_METAL,
 		}, nil
 	default:
 		var resolved bool

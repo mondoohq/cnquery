@@ -24,6 +24,7 @@ enum TransportBackend {
   CONNECTION_VSPHERE_VM = 17;
   CONNECTION_FS = 18;
   CONNECTION_K8S = 19;
+  CONNECTION_EQUINIX_METAL = 20;
 }
 
 enum Kind {

@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"fmt"
+	"go.mondoo.io/mondoo/motor/transports/equinix"
 	"go.mondoo.io/mondoo/motor/transports/fs"
 
 	"github.com/google/go-containerregistry/pkg/authn"
@@ -328,6 +329,19 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 			idDetectors = append(idDetectors, "machineid")
 		} else {
 			idDetectors = append(idDetectors, "hostname")
+		}
+	case transports.TransportBackend_CONNECTION_EQUINIX_METAL:
+		trans, err := equinix.New(tc)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(trans)
+		if err != nil {
+			return nil, err
+		}
+		id, err := trans.Identifier()
+		if err == nil && len(id) > 0 {
+			identifier = append(identifier, id)
 		}
 	default:
 		return nil, fmt.Errorf("connection> unsupported backend '%s', only docker://, local://, tar://, ssh:// are allowed", tc.Backend)

@@ -120,14 +120,6 @@ func pkixextensionToLumi(runtime *lumi.Runtime, ext pkix.Extension, id string) (
 	return lumiPkixExt.(PkixExtension), nil
 }
 
-func strSliceToInterface(value []string) []interface{} {
-	res := make([]interface{}, len(value))
-	for i := range value {
-		res[i] = value[i]
-	}
-	return res
-}
-
 func (p *lumiParseCertificates) GetList(content string, path string) ([]interface{}, error) {
 	certs, err := certificates.ParseCertFromPEM(strings.NewReader(content))
 	if err != nil {
