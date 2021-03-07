@@ -15,6 +15,12 @@ import (
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
+const (
+	DiscoveryAll              = "all"
+	DiscoveryContainerRunning = "container"
+	DiscoveryContainerImages  = "container-images"
+)
+
 type Resolver struct{}
 
 func (r *Resolver) Name() string {
@@ -22,7 +28,7 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{}
+	return []string{DiscoveryAll, DiscoveryContainerRunning, DiscoveryContainerImages}
 }
 
 // When we talk about Docker, users think at leasst of 3 different things:
@@ -144,6 +150,11 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 		return []*asset.Asset{resolvedAsset}, nil
 	}
 
+	// check if we should do a discovery
+	if tc.Host == "" {
+		return DiscoverDockerEngineAssets(tc)
+	}
+
 	// if we are here, the user has not specified the direct target, we need to search for it
 	// could be an image id/name, container id/name or a short reference to an image in docker engine
 	// 1. check if we have a container id
@@ -151,9 +162,6 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 	//    check if the container is stopped -> container snapshot
 	// 3. check if we have an image id -> container image
 	// 4. check if we have a descriptor for a registry -> container image
-	if tc == nil || len(tc.Host) == 0 {
-		return nil, errors.New("no endpoint provided")
-	}
 	log.Debug().Str("docker", tc.Host).Msg("try to resolve the container or image source")
 
 	if dockerEngErr == nil {
@@ -224,4 +232,41 @@ func (k *Resolver) image(tc *transports.TransportConfig, ded *dockerEngineDiscov
 			Runtime: transports.RUNTIME_DOCKER_REGISTRY,
 		},
 	}, nil
+}
+
+func DiscoverDockerEngineAssets(tc *transports.TransportConfig) ([]*asset.Asset, error) {
+	// we use generic `container` and `container-images` options to avoid the requirement for the user to know if
+	// the system is using docker or podman locally
+	assetList := []*asset.Asset{}
+
+	// discover running container: container:true
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryContainerRunning) {
+		ded, err := NewDockerEngineDiscovery()
+		if err != nil {
+			return nil, err
+		}
+
+		containerAssets, err := ded.ListContainer()
+		if err != nil {
+			return nil, err
+		}
+		log.Info().Int("images", len(containerAssets)).Msg("running container search completed")
+		assetList = append(assetList, containerAssets...)
+	}
+
+	// discover container images: container-images:true
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryContainerImages) {
+		ded, err := NewDockerEngineDiscovery()
+		if err != nil {
+			return nil, err
+		}
+
+		containerImageAssets, err := ded.ListImages()
+		if err != nil {
+			return nil, err
+		}
+		log.Info().Int("images", len(containerImageAssets)).Msg("running container image search completed")
+		assetList = append(assetList, containerImageAssets...)
+	}
+	return assetList, nil
 }
