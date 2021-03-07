@@ -11,27 +11,37 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/local"
 )
 
+const (
+	DiscoveryAll              = "all"
+	DiscoveryContainerRunning = "container"
+	DiscoveryContainerImages  = "container-images"
+)
+
 type Resolver struct{}
 
 func (r *Resolver) Name() string {
 	return "Local Resolver"
 }
 
+func (r *Resolver) AvailableDiscoveryModes() []string {
+	return []string{DiscoveryAll, DiscoveryContainerRunning, DiscoveryContainerImages}
+}
+
 func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
 	return transports.NewTransportFromUrl(url, opts...)
 }
 
-func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
 	assetInfo := &asset.Asset{
 		State: asset.State_STATE_ONLINE,
 	}
 
 	// use hostname as name if asset name was not explicitly provided
 	if assetInfo.Name == "" {
-		assetInfo.Name = t.Host
+		assetInfo.Name = tc.Host
 	}
 
-	assetInfo.Connections = []*transports.TransportConfig{t}
+	assetInfo.Connections = []*transports.TransportConfig{tc}
 
 	assetInfo.Platform = &platform.Platform{
 		Kind: transports.Kind_KIND_BARE_METAL,
@@ -65,7 +75,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 	// the system is using docker or podman locally
 
 	// discover running container: container:true
-	if val := opts["container"]; val == "true" {
+	if tc.IncludesDiscovery(DiscoveryAll) || tc.IncludesDiscovery(DiscoveryContainerRunning) {
 		ded, err := docker_engine.NewDockerEngineDiscovery()
 		if err != nil {
 			return nil, err
@@ -80,7 +90,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 	}
 
 	// discover container images: container-images:true
-	if val := opts["container-images"]; val == "true" {
+	if tc.IncludesDiscovery(DiscoveryAll) || tc.IncludesDiscovery(DiscoveryContainerImages) {
 		ded, err := docker_engine.NewDockerEngineDiscovery()
 		if err != nil {
 			return nil, err

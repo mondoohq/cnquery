@@ -13,6 +13,10 @@ func (r *Resolver) Name() string {
 	return "Microsoft 365 Resolver"
 }
 
+func (r *Resolver) AvailableDiscoveryModes() []string {
+	return []string{}
+}
+
 // TODO: we need the identity file
 func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
 	return transports.NewTransportFromUrl(url, opts...)

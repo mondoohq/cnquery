@@ -27,6 +27,10 @@ func (r *Resolver) Name() string {
 	return "Docker Resolver"
 }
 
+func (r *Resolver) AvailableDiscoveryModes() []string {
+	return []string{}
+}
+
 // When we talk about Docker, users think at leasst of 3 different things:
 // - container runtime (e.g. docker engine)
 // - container image (eg. from docker engine or registry)

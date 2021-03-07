@@ -11,6 +11,11 @@ import (
 	gcp_transport "go.mondoo.io/mondoo/motor/transports/gcp"
 )
 
+const (
+	DiscoveryAll       = "all"
+	DiscoveryInstances = "instances"
+)
+
 type GcpConfig struct {
 	User    string
 	Project string
@@ -43,6 +48,10 @@ type GcrResolver struct{}
 
 func (r *GcrResolver) Name() string {
 	return "GCP Container Registry Resolver"
+}
+
+func (r *GcrResolver) AvailableDiscoveryModes() []string {
+	return []string{}
 }
 
 func (r *GcrResolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
@@ -85,6 +94,10 @@ func (k *GcpResolver) Name() string {
 	return "GCP Compute Resolver"
 }
 
+func (r *GcpResolver) AvailableDiscoveryModes() []string {
+	return []string{DiscoveryAll, DiscoveryInstances}
+}
+
 func (r *GcpResolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
 	// parse context from url
 	config := ParseGcpInstanceContext(url)
@@ -113,10 +126,10 @@ func (r *GcpResolver) ParseConnectionURL(url string, opts ...transports.Transpor
 	return t, nil
 }
 
-func (r *GcpResolver) Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
+func (r *GcpResolver) Resolve(tc *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
-	trans, err := gcp_transport.New(t)
+	trans, err := gcp_transport.New(tc)
 	if err != nil {
 		return nil, err
 	}
@@ -133,22 +146,22 @@ func (r *GcpResolver) Resolve(t *transports.TransportConfig, opts map[string]str
 		return nil, err
 	}
 
-	project := t.Options["project"]
+	project := tc.Options["project"]
 
 	resolved = append(resolved, &asset.Asset{
 		PlatformIDs: []string{identifier},
 		Name:        "GCP project " + project,
 		Platform:    pf,
-		Connections: []*transports.TransportConfig{t}, // pass-in the current config
+		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
 	})
 
 	// discover compute instances
-	if _, ok := opts["instances"]; ok {
+	if tc.IncludesDiscovery(DiscoveryAll) || tc.IncludesDiscovery(DiscoveryInstances) {
 		compute := NewCompute()
 
 		// we may want to pass a specific user, otherwise it will fallback to ssh config
-		if len(t.User) > 0 {
-			compute.InstanceSSHUsername = t.User
+		if len(tc.User) > 0 {
+			compute.InstanceSSHUsername = tc.User
 		}
 
 		assetList, err := compute.ListInstancesInProject(project)

@@ -11,6 +11,10 @@ func (k *VMGuestResolver) Name() string {
 	return "VmWare vSphere VM Guest Resolver"
 }
 
+func (r *VMGuestResolver) AvailableDiscoveryModes() []string {
+	return []string{}
+}
+
 func (r *VMGuestResolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
 	return transports.NewTransportFromUrl(url, opts...)
 }

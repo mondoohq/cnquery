@@ -15,12 +15,16 @@ func (r *Resolver) Name() string {
 	return "Container Registry Discover"
 }
 
+func (r *Resolver) AvailableDiscoveryModes() []string {
+	return []string{}
+}
+
 func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
 	repository := strings.TrimPrefix(url, "cr://")
 
 	tc := &transports.TransportConfig{
 		Backend: transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY,
-		Host: repository,
+		Host:    repository,
 	}
 
 	for i := range opts {
@@ -49,7 +53,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 	}
 
 	if len(resolved) == 0 {
-		return nil, errors.New("could not find repository:"  + repository)
+		return nil, errors.New("could not find repository:" + repository)
 	}
 
 	return resolved, nil

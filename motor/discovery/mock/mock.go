@@ -25,6 +25,10 @@ func (r *Resolver) Name() string {
 	return "Mock Resolver"
 }
 
+func (r *Resolver) AvailableDiscoveryModes() []string {
+	return []string{}
+}
+
 func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
 	// parse context from url
 	mockCtx := parseContext(url)

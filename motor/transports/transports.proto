@@ -60,11 +60,13 @@ message TransportConfig {
   string BearerToken = 9;
   bytes PrivateKeyBytes = 10;
 
-  
   Sudo Sudo = 21;
   bool Record = 22;
 
   map<string,string> options = 23;
+
+  // flags for additional discovery option
+  repeated string discover = 27;
 
   // additional platform information, passed-through
   Kind kind = 24;
