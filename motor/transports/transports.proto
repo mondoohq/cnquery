@@ -15,7 +15,7 @@ enum TransportBackend {
   CONNECTION_MOCK = 8;
   CONNECTION_VSPHERE = 9;
   CONNECTION_ARISTAEOS = 10;
-  CONNECTION_CONTAINER_TAR = 11;
+  CONNECTION_DOCKER_ENGINE_TAR = 11;
   CONNECTION_AWS = 12;
   CONNECTION_GCP = 13;
   CONNECTION_AZURE = 14;
@@ -25,6 +25,7 @@ enum TransportBackend {
   CONNECTION_FS = 18;
   CONNECTION_K8S = 19;
   CONNECTION_EQUINIX_METAL = 20;
+  CONNECTION_DOCKER = 21; // unspecified if this is a container or image
 }
 
 enum Kind {

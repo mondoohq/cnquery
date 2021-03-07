@@ -19,7 +19,7 @@ var TransportBackend_scheme = map[TransportBackend]string{
 	TransportBackend_CONNECTION_MOCK:                    "mock",
 	TransportBackend_CONNECTION_VSPHERE:                 "vsphere",
 	TransportBackend_CONNECTION_ARISTAEOS:               "arista",
-	TransportBackend_CONNECTION_CONTAINER_TAR:           "container+tar",
+	TransportBackend_CONNECTION_DOCKER_ENGINE_TAR:       "docker+tar",
 	TransportBackend_CONNECTION_AWS:                     "aws",
 	TransportBackend_CONNECTION_GCP:                     "gcp",
 	TransportBackend_CONNECTION_AZURE:                   "azure",
@@ -29,6 +29,7 @@ var TransportBackend_scheme = map[TransportBackend]string{
 	TransportBackend_CONNECTION_FS:                      "fs",
 	TransportBackend_CONNECTION_K8S:                     "k8s",
 	TransportBackend_CONNECTION_EQUINIX_METAL:           "equinix",
+	TransportBackend_CONNECTION_DOCKER:                  "docker",
 }
 
 var TransportBackend_schemevalue = map[string]TransportBackend{
@@ -43,7 +44,7 @@ var TransportBackend_schemevalue = map[string]TransportBackend{
 	"mock":             TransportBackend_CONNECTION_MOCK,
 	"vsphere":          TransportBackend_CONNECTION_VSPHERE,
 	"arista":           TransportBackend_CONNECTION_ARISTAEOS,
-	"container+tar":    TransportBackend_CONNECTION_CONTAINER_TAR,
+	"docker+tar":       TransportBackend_CONNECTION_DOCKER_ENGINE_TAR,
 	"aws":              TransportBackend_CONNECTION_AWS,
 	"gcp":              TransportBackend_CONNECTION_GCP,
 	"azure":            TransportBackend_CONNECTION_AZURE,
@@ -53,6 +54,7 @@ var TransportBackend_schemevalue = map[string]TransportBackend{
 	"fs":               TransportBackend_CONNECTION_FS,
 	"k8s":              TransportBackend_CONNECTION_K8S,
 	"equinix":          TransportBackend_CONNECTION_EQUINIX_METAL,
+	"docker":           TransportBackend_CONNECTION_DOCKER,
 }
 
 func (x TransportBackend) Scheme() string {

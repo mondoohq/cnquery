@@ -11,6 +11,11 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/local"
 )
 
+const (
+	DiscoveryAll             = "all"
+	DiscoveryContainerImages = "container-images"
+)
+
 type K8sConfig struct {
 	Context   string
 	Namespace string

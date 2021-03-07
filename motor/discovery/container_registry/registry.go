@@ -209,7 +209,7 @@ func (a *DockerRegistryImages) toAsset(repoName string, imgDigest string, tags [
 			Runtime: transports.RUNTIME_DOCKER_REGISTRY,
 		},
 		Connections: []*transports.TransportConfig{
-			&transports.TransportConfig{
+			{
 				Backend: transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY,
 				Host:    imageUrl,
 			},

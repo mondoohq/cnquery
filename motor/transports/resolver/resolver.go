@@ -93,7 +93,7 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 		if err != nil {
 			return nil, err
 		}
-	case transports.TransportBackend_CONNECTION_CONTAINER_TAR:
+	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_TAR:
 		trans, info, err := containertar(tc)
 		if err != nil {
 			return nil, err
