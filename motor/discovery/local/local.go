@@ -1,7 +1,6 @@
 package local
 
 import (
-	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/docker_engine"
@@ -11,12 +10,6 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/local"
 )
 
-const (
-	DiscoveryAll              = "all"
-	DiscoveryContainerRunning = "container"
-	DiscoveryContainerImages  = "container-images"
-)
-
 type Resolver struct{}
 
 func (r *Resolver) Name() string {
@@ -24,7 +17,7 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{DiscoveryAll, DiscoveryContainerRunning, DiscoveryContainerImages}
+	return []string{docker_engine.DiscoveryAll, docker_engine.DiscoveryContainerRunning, docker_engine.DiscoveryContainerImages}
 }
 
 func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
@@ -71,38 +64,12 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 
 	assetList := []*asset.Asset{assetInfo}
 
-	// we use generic `container` and `container-images` options to avoid the requirement for the user to know if
-	// the system is using docker or podman locally
-
-	// discover running container: container:true
-	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryContainerRunning) {
-		ded, err := docker_engine.NewDockerEngineDiscovery()
-		if err != nil {
-			return nil, err
-		}
-
-		containerAssets, err := ded.ListContainer()
-		if err != nil {
-			return nil, err
-		}
-		log.Info().Int("images", len(containerAssets)).Msg("running container search completed")
-		assetList = append(assetList, containerAssets...)
+	// search for container assets
+	engineAssets, err := docker_engine.DiscoverDockerEngineAssets(tc)
+	if err != nil {
+		return nil, err
 	}
-
-	// discover container images: container-images:true
-	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryContainerImages) {
-		ded, err := docker_engine.NewDockerEngineDiscovery()
-		if err != nil {
-			return nil, err
-		}
-
-		containerImageAssets, err := ded.ListImages()
-		if err != nil {
-			return nil, err
-		}
-		log.Info().Int("images", len(containerImageAssets)).Msg("running container image search completed")
-		assetList = append(assetList, containerImageAssets...)
-	}
+	assetList = append(assetList, engineAssets...)
 
 	return assetList, nil
 }
