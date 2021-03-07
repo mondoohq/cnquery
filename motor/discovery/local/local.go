@@ -23,7 +23,7 @@ func (r *Resolver) Name() string {
 	return "Local Resolver"
 }
 
-func (r *Resolver) AvailableDiscoveryModes() []string {
+func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryContainerRunning, DiscoveryContainerImages}
 }
 
@@ -31,7 +31,7 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 	return transports.NewTransportFromUrl(url, opts...)
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {
 	assetInfo := &asset.Asset{
 		State: asset.State_STATE_ONLINE,
 	}
@@ -75,7 +75,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, opts map[string]strin
 	// the system is using docker or podman locally
 
 	// discover running container: container:true
-	if tc.IncludesDiscovery(DiscoveryAll) || tc.IncludesDiscovery(DiscoveryContainerRunning) {
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryContainerRunning) {
 		ded, err := docker_engine.NewDockerEngineDiscovery()
 		if err != nil {
 			return nil, err
@@ -90,7 +90,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, opts map[string]strin
 	}
 
 	// discover container images: container-images:true
-	if tc.IncludesDiscovery(DiscoveryAll) || tc.IncludesDiscovery(DiscoveryContainerImages) {
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryContainerImages) {
 		ded, err := docker_engine.NewDockerEngineDiscovery()
 		if err != nil {
 			return nil, err

@@ -27,7 +27,7 @@ func (r *Resolver) Name() string {
 	return "AWS EC2 Resolver"
 }
 
-func (r *Resolver) AvailableDiscoveryModes() []string {
+func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryInstances}
 }
 
@@ -43,16 +43,11 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 	return tc, nil
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
-	// copy opts into transport config options, to ensure motor transport resolver will get the information as well
-	for k, v := range opts {
-		tc.Options[k] = v
-	}
-
 	// add aws api as asset
-	trans, err := aws_transport.New(tc, aws_transport.TransportOptions(opts)...)
+	trans, err := aws_transport.New(tc, aws_transport.TransportOptions(tc.Options)...)
 	// trans, err := aws_transport.New(t, transportOpts...)
 	if err != nil {
 		return nil, err
@@ -83,8 +78,14 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, opts map[string]strin
 		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
 	})
 
+	// filter assets
+	discoverFilter := map[string]string{}
+	if tc.Discover != nil {
+		discoverFilter = tc.Discover.Filter
+	}
+
 	// discover ec2 instances
-	if tc.IncludesDiscovery(DiscoveryAll) || tc.IncludesDiscovery(DiscoveryInstances) {
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {
 		r, err := NewEc2Discovery(trans.Config())
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize aws ec2 discovery")
@@ -98,12 +99,12 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, opts map[string]strin
 		r.Insecure = tc.Insecure
 
 		var ec2InstancesFilters ec2InstancesFilters
-		if _, ok := opts["instance-ids"]; ok {
-			instanceIds := strings.Split(opts["instance-ids"], ",")
+		if _, ok := discoverFilter["instance-ids"]; ok {
+			instanceIds := strings.Split(discoverFilter["instance-ids"], ",")
 			ec2InstancesFilters.instanceIds = instanceIds
 		}
-		if _, ok := opts["tags"]; ok {
-			tags := strings.Split(opts["tags"], ",")
+		if _, ok := discoverFilter["tags"]; ok {
+			tags := strings.Split(discoverFilter["tags"], ",")
 			ec2InstancesFilters.tags = make(map[string]string, len(tags))
 			for _, tagkv := range tags {
 				tag := strings.Split(tagkv, "=")
@@ -117,8 +118,8 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, opts map[string]strin
 				}
 			}
 		}
-		if _, ok := opts["regions"]; ok {
-			regions := strings.Split(opts["regions"], ",")
+		if _, ok := discoverFilter["regions"]; ok {
+			regions := strings.Split(discoverFilter["regions"], ",")
 			ec2InstancesFilters.regions = regions
 		}
 		r.filterOptions = ec2InstancesFilters

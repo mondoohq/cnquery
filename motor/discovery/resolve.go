@@ -35,8 +35,8 @@ var scheme = regexp.MustCompile(`^(.*?):\/\/(.*)$`)
 type Resolver interface {
 	Name() string
 	ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error)
-	Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error)
-	AvailableDiscoveryModes() []string
+	Resolve(t *transports.TransportConfig) ([]*asset.Asset, error)
+	AvailableDiscoveryTargets() []string
 }
 
 var resolver map[string]Resolver
@@ -167,22 +167,22 @@ func ResolveAsset(root *asset.Asset, v vault.Vault) ([]*asset.Asset, error) {
 		log.Debug().Str("resolver", r.Name()).Msg("run resolver")
 
 		// check that all discovery options are supported and show a user warning
-		availableModes := r.AvailableDiscoveryModes()
-		for i := range tc.Discover {
-			mode := tc.Discover[i]
-			if !stringx.Contains(availableModes, mode) {
-				log.Warn().Str("resolver", r.Name()).Msgf("resolver does not support discovery option '%s', the following are supported: %s", mode, strings.Join(availableModes, ","))
+		availableTargets := r.AvailableDiscoveryTargets()
+		for i := range tc.Discover.Targets {
+			target := tc.Discover.Targets[i]
+			if !stringx.Contains(availableTargets, target) {
+				log.Warn().Str("resolver", r.Name()).Msgf("resolver does not support discovery target '%s', the following are supported: %s", target, strings.Join(availableTargets, ","))
 			}
 		}
 
 		// resolve assets
-		resp, err := r.Resolve(tc, root.Options)
+		resolvedAssets, err := r.Resolve(tc)
 		if err != nil {
 			return nil, err
 		}
 
-		for ai := range resp {
-			asset := resp[ai]
+		for ai := range resolvedAssets {
+			asset := resolvedAssets[ai]
 
 			// if vault and secret function is set, run the additional handling
 			if v != nil {

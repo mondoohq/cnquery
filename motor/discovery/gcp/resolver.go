@@ -50,7 +50,7 @@ func (r *GcrResolver) Name() string {
 	return "GCP Container Registry Resolver"
 }
 
-func (r *GcrResolver) AvailableDiscoveryModes() []string {
+func (r *GcrResolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
@@ -68,7 +68,7 @@ func (r *GcrResolver) ParseConnectionURL(url string, opts ...transports.Transpor
 	return tc, nil
 }
 
-func (r *GcrResolver) Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
+func (r *GcrResolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 	repository := t.Host
 
@@ -94,7 +94,7 @@ func (k *GcpResolver) Name() string {
 	return "GCP Compute Resolver"
 }
 
-func (r *GcpResolver) AvailableDiscoveryModes() []string {
+func (r *GcpResolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryInstances}
 }
 
@@ -126,7 +126,7 @@ func (r *GcpResolver) ParseConnectionURL(url string, opts ...transports.Transpor
 	return t, nil
 }
 
-func (r *GcpResolver) Resolve(tc *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
+func (r *GcpResolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	trans, err := gcp_transport.New(tc)
@@ -156,7 +156,7 @@ func (r *GcpResolver) Resolve(tc *transports.TransportConfig, opts map[string]st
 	})
 
 	// discover compute instances
-	if tc.IncludesDiscovery(DiscoveryAll) || tc.IncludesDiscovery(DiscoveryInstances) {
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {
 		compute := NewCompute()
 
 		// we may want to pass a specific user, otherwise it will fallback to ssh config
