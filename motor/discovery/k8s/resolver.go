@@ -51,7 +51,7 @@ func (r *Resolver) Name() string {
 	return "Kubernetes Resolver"
 }
 
-func (r *Resolver) AvailableDiscoveryModes() []string {
+func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
@@ -76,7 +76,7 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 	return tc, nil
 }
 
-func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 	namespacesFilter := []string{}
 	podFilter := []string{}

@@ -11,7 +11,7 @@ func (k *VMGuestResolver) Name() string {
 	return "VmWare vSphere VM Guest Resolver"
 }
 
-func (r *VMGuestResolver) AvailableDiscoveryModes() []string {
+func (r *VMGuestResolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
@@ -19,7 +19,7 @@ func (r *VMGuestResolver) ParseConnectionURL(url string, opts ...transports.Tran
 	return transports.NewTransportFromUrl(url, opts...)
 }
 
-func (k *VMGuestResolver) Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
+func (k *VMGuestResolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// refIds := []string{}

@@ -61,7 +61,7 @@ func (r *Resolver) Name() string {
 	return "Azure Compute Resolver"
 }
 
-func (r *Resolver) AvailableDiscoveryModes() []string {
+func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryInstances}
 }
 
@@ -89,7 +89,7 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 	return tc, nil
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	subscriptionID := tc.Options["subscriptionID"]
@@ -155,7 +155,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, opts map[string]strin
 	})
 
 	// get all compute instances
-	if tc.IncludesDiscovery(DiscoveryAll) || tc.IncludesDiscovery(DiscoveryInstances) {
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {
 		r, err := NewCompute(subscriptionID)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize azure compute discovery")

@@ -88,6 +88,10 @@ func (conn *TransportConfig) ToUrl() string {
 	}
 }
 
-func (conn *TransportConfig) IncludesDiscovery(mode string) bool {
-	return stringx.Contains(conn.Discover, mode)
+func (conn *TransportConfig) IncludesDiscoveryTarget(target string) bool {
+	if conn.Discover == nil {
+		return false
+	}
+
+	return stringx.Contains(conn.Discover.Targets, target)
 }

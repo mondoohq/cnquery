@@ -27,7 +27,7 @@ func (r *Resolver) Name() string {
 	return "Docker Resolver"
 }
 
-func (r *Resolver) AvailableDiscoveryModes() []string {
+func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
@@ -72,7 +72,7 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 	return tc, nil
 }
 
-func (k *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
+func (k *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
 	// 0. check if we have a tar as input
 	//    detect if the tar is a container image format -> container image
 	//    or a container snapshot format -> container snapshot

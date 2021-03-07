@@ -25,7 +25,7 @@ func (r *Resolver) Name() string {
 	return "Mock Resolver"
 }
 
-func (r *Resolver) AvailableDiscoveryModes() []string {
+func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
@@ -39,7 +39,7 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 	}, nil
 }
 
-func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
 	return []*asset.Asset{&asset.Asset{
 		Connections: []*transports.TransportConfig{t},
 	}}, nil

@@ -23,7 +23,7 @@ func (r *Resolver) Name() string {
 	return "VMware vSphere Resolver"
 }
 
-func (r *Resolver) AvailableDiscoveryModes() []string {
+func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryInstances, DiscoveryHostMachines}
 }
 
@@ -31,7 +31,7 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 	return transports.NewTransportFromUrl(url, opts...)
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// we leverage the vpshere transport to establish a connection
@@ -70,7 +70,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, opts map[string]strin
 		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
 	})
 
-	if tc.IncludesDiscovery(DiscoveryAll) || tc.IncludesDiscovery(DiscoveryHostMachines) {
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryHostMachines) {
 		// resolve esxi hosts
 		hosts, err := discoveryClient.ListEsxiHosts()
 		if err != nil {
@@ -96,7 +96,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, opts map[string]strin
 		}
 	}
 
-	if tc.IncludesDiscovery(DiscoveryAll) || tc.IncludesDiscovery(DiscoveryInstances) {
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {
 		// resolve vms
 		vms, err := discoveryClient.ListVirtualMachines()
 		if err != nil {
@@ -124,14 +124,19 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, opts map[string]strin
 	}
 
 	// filter assets
-	if namesFilter, ok := opts["names"]; ok {
+	discoverFilter := map[string]string{}
+	if tc.Discover != nil {
+		discoverFilter = tc.Discover.Filter
+	}
+
+	if namesFilter, ok := discoverFilter["names"]; ok {
 		names := strings.Split(namesFilter, ",")
 		resolved = filter(resolved, func(a *asset.Asset) bool {
 			return contains(names, a.Name)
 		})
 	}
 
-	if moidsFilter, ok := opts["moids"]; ok {
+	if moidsFilter, ok := discoverFilter["moids"]; ok {
 		moids := strings.Split(moidsFilter, ",")
 		resolved = filter(resolved, func(a *asset.Asset) bool {
 			label, ok := a.Labels["vsphere.vmware.com/moid"]

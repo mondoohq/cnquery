@@ -36,6 +36,10 @@ func (r *Resolver) Name() string {
 	return "Equinix Metal Resolver"
 }
 
+func (r *Resolver) AvailableDiscoveryTargets() []string {
+	return []string{}
+}
+
 func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
 	// parse context from url
 	config := ParseEquinixContext(url)
@@ -54,7 +58,7 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 	return tc, nil
 }
 
-func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// add aws api as asset

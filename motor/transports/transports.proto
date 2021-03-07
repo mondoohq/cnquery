@@ -65,8 +65,8 @@ message TransportConfig {
 
   map<string,string> options = 23;
 
-  // flags for additional discovery option
-  repeated string discover = 27;
+  // flags for additional asset discovery
+  Discovery discover = 27;
 
   // additional platform information, passed-through
   Kind kind = 24;
@@ -80,4 +80,9 @@ message Sudo {
   bool active = 1;
   string user = 2;
   string shell = 3;
+}
+
+message Discovery {
+    repeated string targets = 1;
+    map<string,string> filter = 2;
 }
