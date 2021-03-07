@@ -15,12 +15,6 @@ import (
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
-type DockerInfo struct {
-	Name       string
-	Identifier string
-	Labels     map[string]string
-}
-
 type Resolver struct{}
 
 func (r *Resolver) Name() string {
@@ -34,7 +28,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 // When we talk about Docker, users think at leasst of 3 different things:
 // - container runtime (e.g. docker engine)
 // - container image (eg. from docker engine or registry)
-// - container snapshot
+// - container tar snapshot
 //
 // Docker made a very good job in abstracting the problem away from the user
 // so that he normally does not think about the distinction. But we need to
@@ -43,7 +37,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 //
 // The user wants and needs an easy way to point to those endpoints:
 //
-// # registries
+// # registry images
 // -t docker://gcr.io/project/image@sha256:label
 // -t docker://index.docker.io/project/image:label
 //
@@ -52,54 +46,73 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 // -t docker://id -> container
 //
 // # local directory
-// -t docker:///path/link_to_image_archive.tar -> Docker Image
-// -t docker:///path/link_to_image_archive2.tar -> OCI
-// -t docker:///path/link_to_container.tar
+// -t docker+tar:///path/link_to_image_archive.tar -> Docker Image
+// -t docker+tar:///path/link_to_image_archive2.tar -> OCI
+// -t docker+tar:///path/link_to_container.tar
 func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
-	if !strings.HasPrefix(url, "docker://") {
-		return nil, errors.New("could not find the container reference")
-	}
+	if strings.HasPrefix(url, "docker://") {
+		tc := &transports.TransportConfig{
+			Backend: transports.TransportBackend_CONNECTION_DOCKER,
+			Host:    strings.Replace(url, "docker://", "", 1),
+		}
 
-	tc := &transports.TransportConfig{
-		Backend: transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE,
-		Host:    strings.Replace(url, "docker://", "", 1),
-	}
+		for i := range opts {
+			opts[i](tc)
+		}
+		return tc, nil
+	} else if strings.HasPrefix(url, "docker+image://") {
+		tc := &transports.TransportConfig{
+			Backend: transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE,
+			Host:    strings.Replace(url, "docker+image://", "", 1),
+		}
+		for i := range opts {
+			opts[i](tc)
+		}
+		return tc, nil
+	} else if strings.HasPrefix(url, "docker+container://") {
+		tc := &transports.TransportConfig{
+			Backend: transports.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER,
+			Host:    strings.Replace(url, "docker+container://", "", 1),
+		}
+		for i := range opts {
+			opts[i](tc)
+		}
+		return tc, nil
+	} else if strings.HasPrefix(url, "docker+tar://") {
+		tc := &transports.TransportConfig{
+			Backend: transports.TransportBackend_CONNECTION_DOCKER_ENGINE_TAR,
+			Host:    strings.Replace(url, "docker+tar://", "", 1),
+		}
 
-	for i := range opts {
-		opts[i](tc)
+		for i := range opts {
+			opts[i](tc)
+		}
+		return tc, nil
 	}
-
-	return tc, nil
+	return nil, errors.New("could not find the container reference")
 }
 
-func (k *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
-	// 0. check if we have a tar as input
-	//    detect if the tar is a container image format -> container image
-	//    or a container snapshot format -> container snapshot
-	// 1. check if we have a container id
-	//    check if the container is running -> docker engine
-	//    check if the container is stopped -> container snapshot
-	// 3. check if we have an image id -> container image
-	// 4. check if we have a descriptor for a registry -> container image
-	if t == nil || len(t.Host) == 0 {
-		return nil, errors.New("no endpoint provided")
+func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {
+	if tc == nil {
+		return nil, errors.New("no transport configuration found")
 	}
-	log.Debug().Str("docker", t.Host).Msg("try to resolve the container or image source")
 
-	var resolvedAsset *asset.Asset
-	var err error
-
-	// check if we are pointing to a local tar file
-	_, err = os.Stat(t.Host)
-	if err == nil {
+	// check if we have a tar as input
+	// detect if the tar is a container image format -> container image
+	// or a container snapshot format -> container snapshot
+	if tc.Backend == transports.TransportBackend_CONNECTION_DOCKER_ENGINE_TAR {
+		// check if we are pointing to a local tar file
+		_, err := os.Stat(tc.Host)
+		if err != nil {
+			return nil, errors.New("could not find the tar file: " + tc.Host)
+		}
 		log.Debug().Msg("detected local container tar file")
+
 		// Tar container can be an image or a snapshot
-		t.Backend = transports.TransportBackend_CONNECTION_CONTAINER_TAR
-		resolvedAsset = &asset.Asset{
-			Name:        t.Host,
-			Connections: []*transports.TransportConfig{t},
+		resolvedAsset := &asset.Asset{
+			Name:        tc.Host,
+			Connections: []*transports.TransportConfig{tc},
 			Platform: &platform.Platform{
-				// TODO: this is temporary, decide if we want to move the detection logic for image/container here
 				Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
 				Runtime: transports.RUNTIME_DOCKER_IMAGE,
 			},
@@ -107,57 +120,108 @@ func (k *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error
 		return []*asset.Asset{resolvedAsset}, nil
 	}
 
-	log.Debug().Msg("try to connect to docker engine")
-	// could be an image id/name, container id/name or a short reference to an image in docker engine
-	ded, err := NewDockerEngineDiscovery()
-	if err == nil {
-		ci, err := ded.ContainerInfo(t.Host)
-		if err == nil {
-			t.Backend = transports.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER
-			resolvedAsset = &asset.Asset{
-				Name:        ci.Name,
-				Connections: []*transports.TransportConfig{t},
-				PlatformIDs: []string{ci.PlatformID},
-				Platform: &platform.Platform{
-					Kind:    transports.Kind_KIND_CONTAINER,
-					Runtime: transports.RUNTIME_DOCKER_CONTAINER,
-				},
-			}
-			return []*asset.Asset{resolvedAsset}, nil
+	ded, dockerEngErr := NewDockerEngineDiscovery()
+	// we do not fail here, since we pull the image from upstream if its is an image without the need for docker
+
+	if tc.Backend == transports.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER {
+		if dockerEngErr != nil {
+			return nil, errors.Wrap(dockerEngErr, "cannot connect to docker engine to fetch the container")
+		}
+		resolvedAsset, err := r.container(tc, ded)
+		if err != nil {
+			return nil, err
 		}
 
-		ii, err := ded.ImageInfo(t.Host)
+		return []*asset.Asset{resolvedAsset}, nil
+	}
+
+	if tc.Backend == transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE {
+		// NOTE, we ignore dockerEngErr here since we fallback to pulling the image directly
+		resolvedAsset, err := r.image(tc, ded)
+		if err != nil {
+			return nil, err
+		}
+		return []*asset.Asset{resolvedAsset}, nil
+	}
+
+	// if we are here, the user has not specified the direct target, we need to search for it
+	// could be an image id/name, container id/name or a short reference to an image in docker engine
+	// 1. check if we have a container id
+	//    check if the container is running -> docker engine
+	//    check if the container is stopped -> container snapshot
+	// 3. check if we have an image id -> container image
+	// 4. check if we have a descriptor for a registry -> container image
+	if tc == nil || len(tc.Host) == 0 {
+		return nil, errors.New("no endpoint provided")
+	}
+	log.Debug().Str("docker", tc.Host).Msg("try to resolve the container or image source")
+
+	if dockerEngErr == nil {
+		containerAsset, err := r.container(tc, ded)
 		if err == nil {
-			t.Backend = transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE
-			resolvedAsset = &asset.Asset{
+			return []*asset.Asset{containerAsset}, nil
+		}
+	}
+
+	containerImageAsset, err := r.image(tc, ded)
+	if err == nil {
+		return []*asset.Asset{containerImageAsset}, nil
+	}
+
+	// if we reached here, we assume we have a name of an image or container from a registry
+	return nil, errors.New("could not find the container reference")
+}
+
+func (k *Resolver) container(tc *transports.TransportConfig, ded *dockerEngineDiscovery) (*asset.Asset, error) {
+	ci, err := ded.ContainerInfo(tc.Host)
+	if err != nil {
+		return nil, err
+	}
+
+	tc.Backend = transports.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER
+	return &asset.Asset{
+		Name:        ci.Name,
+		Connections: []*transports.TransportConfig{tc},
+		PlatformIDs: []string{ci.PlatformID},
+		Platform: &platform.Platform{
+			Kind:    transports.Kind_KIND_CONTAINER,
+			Runtime: transports.RUNTIME_DOCKER_CONTAINER,
+		},
+	}, nil
+}
+
+func (k *Resolver) image(tc *transports.TransportConfig, ded *dockerEngineDiscovery) (*asset.Asset, error) {
+	// if we have a docker engine available, try to fetch it from there
+	if ded != nil {
+		ii, err := ded.ImageInfo(tc.Host)
+		if err == nil {
+			tc.Backend = transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE
+			return &asset.Asset{
 				Name:        ii.Name,
-				Connections: []*transports.TransportConfig{t},
+				Connections: []*transports.TransportConfig{tc},
 				PlatformIDs: []string{ii.PlatformID},
 				Platform: &platform.Platform{
 					Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
 					Runtime: transports.RUNTIME_DOCKER_IMAGE,
 				},
-			}
-			return []*asset.Asset{resolvedAsset}, nil
+			}, nil
 		}
 	}
 
 	log.Debug().Msg("try to download the image from docker registry")
-	_, err = name.ParseReference(t.Host, name.WeakValidation)
-	if err == nil {
-		t.Backend = transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY
-		resolvedAsset = &asset.Asset{
-			Name: t.Host,
-			// PlatformIDs: []string{}, // we cannot determine the id here
-			Connections: []*transports.TransportConfig{t},
-			Platform: &platform.Platform{
-				Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
-				Runtime: transports.RUNTIME_DOCKER_REGISTRY,
-			},
-		}
-		return []*asset.Asset{resolvedAsset}, nil
+	_, err := name.ParseReference(tc.Host, name.WeakValidation)
+	if err != nil {
+		return nil, err
 	}
 
-	// if we reached here, we assume we have a name of an image or container from a registry
-	return nil, errors.New("could not find the container reference")
+	tc.Backend = transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY
+	return &asset.Asset{
+		Name: tc.Host,
+		// PlatformIDs: []string{}, // we cannot determine the id here
+		Connections: []*transports.TransportConfig{tc},
+		Platform: &platform.Platform{
+			Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
+			Runtime: transports.RUNTIME_DOCKER_REGISTRY,
+		},
+	}, nil
 }
