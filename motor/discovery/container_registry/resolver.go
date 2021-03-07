@@ -2,6 +2,8 @@ package container_registry
 
 import (
 	"errors"
+	"github.com/google/go-containerregistry/pkg/name"
+	"go.mondoo.io/mondoo/motor/platform"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -33,13 +35,33 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 	return tc, nil
 }
 
-func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
-	repository := t.Host
+
+	// check if the reference is an image
+	_, err := name.ParseReference(tc.Host, name.WeakValidation)
+	if err == nil {
+		log.Debug().Str("image", tc.Host).Msg("detected container image in registry")
+		// TODO: sync implementation with docker resolver image
+		tc.Backend = transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY
+		resolved = append(resolved, &asset.Asset{
+			Name: tc.Host,
+			// PlatformIDs: []string{}, // we cannot determine the id here
+			Connections: []*transports.TransportConfig{tc},
+			Platform: &platform.Platform{
+				Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
+				Runtime: transports.RUNTIME_DOCKER_REGISTRY,
+			},
+		})
+		return resolved, nil
+	}
+
+	// okay, no image, lets check the repository
+	repository := tc.Host
 	log.Info().Str("registry", repository).Msg("fetch meta information from docker registry")
 	imageFetcher := NewDockerRegistryImages()
 	// to support self-signed certs
-	imageFetcher.Insecure = t.Insecure
+	imageFetcher.Insecure = tc.Insecure
 
 	assetList, err := imageFetcher.ListImages(repository)
 	if err != nil {
