@@ -15,8 +15,12 @@ import (
 
 type Resolver struct{}
 
-func (k *Resolver) Name() string {
+func (r *Resolver) Name() string {
 	return "Vagrant Resolver"
+}
+
+func (r *Resolver) AvailableDiscoveryModes() []string {
+	return []string{}
 }
 
 type vagrantContext struct {
@@ -36,7 +40,7 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 	return tc, nil
 }
 
-func (v *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
+func (v *Resolver) Resolve(tc *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	localTransport, err := local.New()
@@ -61,8 +65,8 @@ func (v *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 	}
 
 	// filter vms if a context was provided
-	if len(t.Host) > 0 {
-		k := t.Host
+	if len(tc.Host) > 0 {
+		k := tc.Host
 		vm, ok := vmStatus[k]
 		if !ok {
 			return nil, errors.New("could not find vagrant host: " + k)
@@ -82,7 +86,7 @@ func (v *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 			return nil, err
 		}
 
-		resolved = append(resolved, vagrantToAsset(vmSshConfig[k], t))
+		resolved = append(resolved, vagrantToAsset(vmSshConfig[k], tc))
 
 	} else {
 		vagrantVms := map[string]*VagrantVmSSHConfig{}
@@ -109,7 +113,7 @@ func (v *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 		}
 
 		for i := range vagrantVms {
-			resolved = append(resolved, vagrantToAsset(vagrantVms[i], t))
+			resolved = append(resolved, vagrantToAsset(vagrantVms[i], tc))
 		}
 	}
 

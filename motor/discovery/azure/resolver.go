@@ -12,6 +12,11 @@ import (
 	azure_transport "go.mondoo.io/mondoo/motor/transports/azure"
 )
 
+const (
+	DiscoveryAll       = "all"
+	DiscoveryInstances = "instances"
+)
+
 type AzureConfig struct {
 	SubscriptionID string
 	User           string
@@ -56,6 +61,10 @@ func (r *Resolver) Name() string {
 	return "Azure Compute Resolver"
 }
 
+func (r *Resolver) AvailableDiscoveryModes() []string {
+	return []string{DiscoveryAll, DiscoveryInstances}
+}
+
 func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
 	config := parseAzureInstanceContext(url)
 
@@ -80,10 +89,10 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 	return tc, nil
 }
 
-func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
-	subscriptionID := t.Options["subscriptionID"]
+	subscriptionID := tc.Options["subscriptionID"]
 
 	// TODO: for now we only support the azure cli authentication
 	err := azure_transport.IsAzInstalled()
@@ -110,9 +119,9 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 	}
 
 	// attach tenant to config
-	t.Options["tenantID"] = *subscription.TenantID
+	tc.Options["tenantID"] = *subscription.TenantID
 
-	trans, err := azure_transport.New(t)
+	trans, err := azure_transport.New(tc)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +147,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 		PlatformIDs: []string{identifier},
 		Name:        "Azure subscription " + name,
 		Platform:    pf,
-		Connections: []*transports.TransportConfig{t}, // pass-in the current config
+		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
 		Labels: map[string]string{
 			"azure.com/subscription": subscriptionID,
 			"azure.com/tenant":       *subscription.TenantID,
@@ -146,7 +155,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 	})
 
 	// get all compute instances
-	if val := opts["instances"]; val == "true" {
+	if tc.IncludesDiscovery(DiscoveryAll) || tc.IncludesDiscovery(DiscoveryInstances) {
 		r, err := NewCompute(subscriptionID)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize azure compute discovery")

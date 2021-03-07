@@ -10,6 +10,11 @@ import (
 	"strings"
 )
 
+const (
+	DiscoveryAll       = "all"
+	DiscoveryInstances = "instances"
+)
+
 type Ec2Config struct {
 	User    string
 	Region  string
@@ -20,6 +25,10 @@ type Resolver struct{}
 
 func (r *Resolver) Name() string {
 	return "AWS EC2 Resolver"
+}
+
+func (r *Resolver) AvailableDiscoveryModes() []string {
+	return []string{DiscoveryAll, DiscoveryInstances}
 }
 
 func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
@@ -34,16 +43,16 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 	return tc, nil
 }
 
-func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// copy opts into transport config options, to ensure motor transport resolver will get the information as well
 	for k, v := range opts {
-		t.Options[k] = v
+		tc.Options[k] = v
 	}
 
 	// add aws api as asset
-	trans, err := aws_transport.New(t, aws_transport.TransportOptions(opts)...)
+	trans, err := aws_transport.New(tc, aws_transport.TransportOptions(opts)...)
 	// trans, err := aws_transport.New(t, transportOpts...)
 	if err != nil {
 		return nil, err
@@ -71,22 +80,22 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 		PlatformIDs: []string{identifier},
 		Name:        "AWS Account " + info.ID,
 		Platform:    pf,
-		Connections: []*transports.TransportConfig{t}, // pass-in the current config
+		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
 	})
 
 	// discover ec2 instances
-	if _, ok := opts["instances"]; ok {
+	if tc.IncludesDiscovery(DiscoveryAll) || tc.IncludesDiscovery(DiscoveryInstances) {
 		r, err := NewEc2Discovery(trans.Config())
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize aws ec2 discovery")
 		}
 
 		// we may want to pass a specific user, otherwise it will fallback to ssh config
-		ec2User, ok := t.Options["ec2user"]
+		ec2User, ok := tc.Options["ec2user"]
 		if ok {
 			r.InstanceSSHUsername = ec2User
 		}
-		r.Insecure = t.Insecure
+		r.Insecure = tc.Insecure
 
 		var ec2InstancesFilters ec2InstancesFilters
 		if _, ok := opts["instance-ids"]; ok {

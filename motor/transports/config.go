@@ -2,6 +2,7 @@ package transports
 
 import (
 	"errors"
+	"go.mondoo.io/mondoo/stringx"
 	"strconv"
 	"strings"
 
@@ -85,4 +86,8 @@ func (conn *TransportConfig) ToUrl() string {
 		log.Warn().Str("backend", conn.Backend.String()).Msg("cannot render backend config")
 		return ""
 	}
+}
+
+func (conn *TransportConfig) IncludesDiscovery(mode string) bool {
+	return stringx.Contains(conn.Discover, mode)
 }

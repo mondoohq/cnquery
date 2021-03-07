@@ -13,6 +13,10 @@ func (r *Resolver) Name() string {
 	return "IPMI Resolver"
 }
 
+func (r *Resolver) AvailableDiscoveryModes() []string {
+	return []string{}
+}
+
 func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
 	return transports.NewTransportFromUrl(url, opts...)
 	// if err != nil {

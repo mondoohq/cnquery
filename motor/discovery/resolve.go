@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 
+	"go.mondoo.io/mondoo/stringx"
 	"regexp"
+	"strings"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -34,6 +36,7 @@ type Resolver interface {
 	Name() string
 	ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error)
 	Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error)
+	AvailableDiscoveryModes() []string
 }
 
 var resolver map[string]Resolver
@@ -153,16 +156,27 @@ func ResolveAsset(root *asset.Asset, v vault.Vault) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	for i := range root.Connections {
-		t := root.Connections[i]
+		tc := root.Connections[i]
 
-		resolverId := t.Backend.Scheme()
+		resolverId := tc.Backend.Scheme()
 		r, ok := resolver[resolverId]
 		if !ok {
 			return nil, errors.New("unsupported backend: " + resolverId)
 		}
 
 		log.Debug().Str("resolver", r.Name()).Msg("run resolver")
-		resp, err := r.Resolve(t, root.Options)
+
+		// check that all discovery options are supported and show a user warning
+		availableModes := r.AvailableDiscoveryModes()
+		for i := range tc.Discover {
+			mode := tc.Discover[i]
+			if !stringx.Contains(availableModes, mode) {
+				log.Warn().Str("resolver", r.Name()).Msgf("resolver does not support discovery option '%s', the following are supported: %s", mode, strings.Join(availableModes, ","))
+			}
+		}
+
+		// resolve assets
+		resp, err := r.Resolve(tc, root.Options)
 		if err != nil {
 			return nil, err
 		}

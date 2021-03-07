@@ -11,21 +11,31 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/vsphere"
 )
 
+const (
+	DiscoveryAll          = "all"
+	DiscoveryInstances    = "instances"
+	DiscoveryHostMachines = "host-machines"
+)
+
 type Resolver struct{}
 
 func (r *Resolver) Name() string {
 	return "VMware vSphere Resolver"
 }
 
+func (r *Resolver) AvailableDiscoveryModes() []string {
+	return []string{DiscoveryAll, DiscoveryInstances, DiscoveryHostMachines}
+}
+
 func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
 	return transports.NewTransportFromUrl(url, opts...)
 }
 
-func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *transports.TransportConfig, opts map[string]string) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// we leverage the vpshere transport to establish a connection
-	trans, err := vsphere.New(t)
+	trans, err := vsphere.New(tc)
 	if err != nil {
 		return nil, err
 	}
@@ -57,10 +67,10 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 		PlatformIDs: []string{identifier},
 		Name:        name,
 		Platform:    pf,
-		Connections: []*transports.TransportConfig{t}, // pass-in the current config
+		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
 	})
 
-	if val := opts["host-machines"]; val == "true" {
+	if tc.IncludesDiscovery(DiscoveryAll) || tc.IncludesDiscovery(DiscoveryHostMachines) {
 		// resolve esxi hosts
 		hosts, err := discoveryClient.ListEsxiHosts()
 		if err != nil {
@@ -70,7 +80,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 		// add transport config for each host
 		for i := range hosts {
 			host := hosts[i]
-			ht := t.Clone()
+			ht := tc.Clone()
 			// pass-through "vsphere.vmware.com/reference-type" and "vsphere.vmware.com/inventorypath"
 			ht.Options = host.Annotations
 			host.Connections = append(host.Connections, ht)
@@ -86,7 +96,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 		}
 	}
 
-	if val := opts["instances"]; val == "true" {
+	if tc.IncludesDiscovery(DiscoveryAll) || tc.IncludesDiscovery(DiscoveryInstances) {
 		// resolve vms
 		vms, err := discoveryClient.ListVirtualMachines()
 		if err != nil {
@@ -97,7 +107,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, opts map[string]string
 		for i := range vms {
 			vm := vms[i]
 
-			vt := t.Clone()
+			vt := tc.Clone()
 			// pass-through "vsphere.vmware.com/reference-type" and "vsphere.vmware.com/inventorypath"
 			vt.Options = vm.Annotations
 			vm.Connections = append(vm.Connections, vt)
