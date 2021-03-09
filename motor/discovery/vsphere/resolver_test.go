@@ -1,21 +1,24 @@
 package vsphere
 
-// import (
-// 	"testing"
-
-// 	"github.com/stretchr/testify/assert"
-// 	"github.com/stretchr/testify/require"
-// 	"go.mondoo.io/mondoo/apps/mondoo/cmd/options"
-// )
-
-// func TestVsphereResolver(t *testing.T) {
-// 	r := vsphereResolver{}
-// 	assets, err := r.Resolve(&options.VulnOptsAsset{
-// 		// Connection: "vsphere://user@127.0.0.1:8990",
-// 		// Password:   "pass",
-// 		Connection: "vsphere://root@192.168.56.102",
-// 		Password:   "password1!",
-// 	}, &options.VulnOpts{})
-// 	require.NoError(t, err)
-// 	assert.Equal(t, 9, len(assets)) // api + esx + vm
-// }
+//import (
+//	"go.mondoo.io/mondoo/motor/transports"
+//	"testing"
+//
+//	"github.com/stretchr/testify/assert"
+//	"github.com/stretchr/testify/require"
+//)
+//
+//func TestVsphereResolver(t *testing.T) {
+//	r := Resolver{}
+//	assets, err := r.Resolve(&transports.TransportConfig{
+//		Backend:  transports.TransportBackend_CONNECTION_VSPHERE,
+//		User:     "root",
+//		Host:     "192.168.87.7",
+//		Password: "password1!",
+//		Discover: &transports.Discovery{
+//			Targets: []string{"all"},
+//		},
+//	})
+//	require.NoError(t, err)
+//	assert.Equal(t, 9, len(assets)) // api + esx + vm
+//}
