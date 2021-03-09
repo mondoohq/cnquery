@@ -79,17 +79,7 @@ func ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*
 	return r.ParseConnectionURL(url, opts...)
 }
 
-func ResolveAsset(root *asset.Asset, v vault.Vault) ([]*asset.Asset, error) {
-	// TODO: gather this secret query from config
-	var secretMgr SecretManager
-	if v != nil {
-		var err error
-		secretMgr, err = NewVaultSecretManager(v, "")
-		if err != nil {
-			return nil, err
-		}
-	}
-
+func ResolveAsset(root *asset.Asset, secretMgr vault.SecretManager) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	for i := range root.Connections {
@@ -139,13 +129,13 @@ func ResolveAsset(root *asset.Asset, v vault.Vault) ([]*asset.Asset, error) {
 	return resolved, nil
 }
 
-func ResolveAssets(rootAssets []*asset.Asset, v vault.Vault) ([]*asset.Asset, error) {
+func ResolveAssets(rootAssets []*asset.Asset, secretMgr vault.SecretManager) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	for i := range rootAssets {
 		asset := rootAssets[i]
 
-		resolverAssets, err := ResolveAsset(asset, v)
+		resolverAssets, err := ResolveAsset(asset, secretMgr)
 		if err != nil {
 			return nil, err
 		}

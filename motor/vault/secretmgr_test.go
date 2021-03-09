@@ -1,4 +1,4 @@
-package discovery
+package vault
 
 import (
 	"github.com/mitchellh/mapstructure"
