@@ -19,7 +19,7 @@ type Vault struct{}
 const (
 	MockPassword = "password"
 	MockPKey     = "BEGIN_PRIVATE_KEY...."
-	MockJson     = `{"private_key":"blabla","user":"that-user"}`
+	MockJson     = `{"backend": "ssh","private_key":"blabla","user":"that-user","password": "supersecure"}`
 )
 
 func (v *Vault) Get(ctx context.Context, id *vault.CredentialID) (*vault.Credential, error) {

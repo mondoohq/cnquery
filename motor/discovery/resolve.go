@@ -1,9 +1,6 @@
 package discovery
 
 import (
-	"context"
-	"encoding/json"
-
 	"go.mondoo.io/mondoo/stringx"
 	"regexp"
 	"strings"
@@ -25,7 +22,6 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/ms365"
 	"go.mondoo.io/mondoo/motor/discovery/vagrant"
 	"go.mondoo.io/mondoo/motor/discovery/vsphere"
-	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/vault"
 )
@@ -69,18 +65,6 @@ func init() {
 	}
 }
 
-func getSecret(v vault.Vault, keyID string) (string, error) {
-	log.Info().Str("key-id", keyID).Msg("get secret")
-	cred, err := v.Get(context.Background(), &vault.CredentialID{
-		Key: keyID,
-	})
-	if err != nil || cred == nil {
-		log.Info().Msg("could not find the id")
-		return "", err
-	}
-	return cred.Secret, nil
-}
-
 func ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
 	m := scheme.FindStringSubmatch(url)
 	if len(m) < 3 {
@@ -95,63 +79,17 @@ func ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*
 	return r.ParseConnectionURL(url, opts...)
 }
 
-func enrichAssetWithVaultData(v vault.Vault, a *asset.Asset, secretInfo *secretInfo) {
-	if v == nil || secretInfo == nil {
-		return
-	}
-	secret, err := getSecret(v, secretInfo.secretID)
-	if len(secret) > 0 {
-		for i := range a.Connections {
-			connection := a.Connections[i]
-			if secretInfo.connectionType == "winrm" {
-				connection.Backend = transports.TransportBackend_CONNECTION_WINRM
-			}
-			if secretInfo.user != "" {
-				connection.User = secretInfo.user
-			}
-			switch secretInfo.secretFormat {
-			case "private_key":
-				connection.PrivateKeyBytes = []byte(secret)
-			case "password":
-				connection.Password = secret
-			case "json":
-				err = parseJsonByFields([]byte(secret), secretInfo, connection)
-				if err != nil {
-					log.Error().Msgf("unable to parse json secret for %v", secretInfo)
-				}
-			default:
-				log.Error().Msgf("unsupported secret format %s requested", secretInfo.secretFormat)
-			}
-		}
-	}
-
-	return
-}
-
-func parseJsonByFields(secret []byte, secretInfo *secretInfo, connection *transports.TransportConfig) error {
-	if secretInfo.secretFormat != "json" || len(secretInfo.jsonFields) == 0 {
-		return errors.New("invalid configuration")
-	}
-	jsonSecret := make(map[string]string)
-	err := json.Unmarshal(secret, &jsonSecret)
-	if err != nil {
-		return err
-	}
-	for i := range secretInfo.jsonFields {
-		jsonField := secretInfo.jsonFields[i]
-		switch jsonField {
-		case "user":
-			connection.User = jsonSecret["user"]
-		case "password":
-			connection.Password = jsonSecret["password"]
-		case "private_key":
-			connection.PrivateKeyBytes = []byte(jsonSecret["private_key"])
-		}
-	}
-	return nil
-}
-
 func ResolveAsset(root *asset.Asset, v vault.Vault) ([]*asset.Asset, error) {
+	// TODO: gather this secret query from config
+	var secretMgr SecretManager
+	if v != nil {
+		var err error
+		secretMgr, err = NewVaultSecretManager(v, "")
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	resolved := []*asset.Asset{}
 
 	for i := range root.Connections {
@@ -164,7 +102,6 @@ func ResolveAsset(root *asset.Asset, v vault.Vault) ([]*asset.Asset, error) {
 		}
 
 		log.Debug().Str("resolver", r.Name()).Msg("run resolver")
-
 		// check that all discovery options are supported and show a user warning
 		availableTargets := r.AvailableDiscoveryTargets()
 		for i := range tc.Discover.Targets {
@@ -181,19 +118,22 @@ func ResolveAsset(root *asset.Asset, v vault.Vault) ([]*asset.Asset, error) {
 		}
 
 		for ai := range resolvedAssets {
-			asset := resolvedAssets[ai]
+			assetObj := resolvedAssets[ai]
 
-			// if vault and secret function is set, run the additional handling
-			if v != nil {
-				// this is where we get the vault configuration query and evaluate it against the asset data
-				secretInfo := getAssetSecretInfo(&assetMatchInfo{labels: asset.GetLabels(), platform: asset.Platform})
-				if secretInfo != nil {
-					// if it does match a configuration, enrich asset with information from vault
-					enrichAssetWithVaultData(v, asset, secretInfo)
+			// fetch the secret info for the asset
+			if secretMgr != nil {
+				log.Debug().Str("asset", root.Name).Msg("fetch secret from secrets manager")
+				secM, err := secretMgr.GetSecretMetadata(assetObj)
+				if err != nil {
+					log.Warn().Err(err).Msg("could not fetch secret for asset " + root.Name)
+					return nil, err
+				} else {
+					// enrich connection with secret information
+					secretMgr.EnrichConnection(assetObj, secM)
 				}
 			}
 
-			resolved = append(resolved, asset)
+			resolved = append(resolved, assetObj)
 		}
 	}
 	return resolved, nil
@@ -214,36 +154,4 @@ func ResolveAssets(rootAssets []*asset.Asset, v vault.Vault) ([]*asset.Asset, er
 	}
 
 	return resolved, nil
-}
-
-type assetMatchInfo struct {
-	labels   map[string]string
-	platform *platform.Platform
-}
-
-type secretInfo struct {
-	user           string   // user associated with the secret
-	secretID       string   // id to use to fetch the secret from the source vault
-	secretFormat   string   // private_key, password, or json
-	jsonFields     []string // only for json, the fields we should desconstruct the json object into. all fields and values assumed to be of string type.
-	connectionType string   // default to ssh, user specified
-}
-
-// just for now, this goes away when we are using the query with lumi
-type queryConfiguration struct {
-	MatchKey      string
-	MatchValue    string
-	SecretId      string
-	User          string
-	SecretFormat  string
-	JsonFields    []string
-	MatchPlatform string
-	Hierarchy     int
-}
-
-func getAssetSecretInfo(asset *assetMatchInfo) *secretInfo {
-	// here is where we will call the lumi runtime function
-	// give it the asset match information (labels and platform and connection type (e.g. ssh)) + the user-defined vault config query
-	// it returns the secretinfo as defined in the vault config query
-	return nil
 }
