@@ -742,8 +742,16 @@ func TestArray_Access(t *testing.T) {
 	})
 }
 
-func TestArray_Block(t *testing.T) {
+func TestArray(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
+		{
+			"[1,2,3]",
+			0, []interface{}{int64(1), int64(2), int64(3)},
+		},
+		{
+			"return [1,2,3]",
+			0, []interface{}{int64(1), int64(2), int64(3)},
+		},
 		{
 			"[1,2,3] { _ == 2 }",
 			0, []interface{}{
@@ -805,6 +813,14 @@ func TestArray_Block(t *testing.T) {
 
 func TestMap(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
+		{
+			"{a: 123}",
+			0, map[string]interface{}{"a": int64(123)},
+		},
+		{
+			"return {a: 123}",
+			0, map[string]interface{}{"a": int64(123)},
+		},
 		{
 			"sshd.config.params { _['Protocol'] != 1 }",
 			0, map[string]interface{}{

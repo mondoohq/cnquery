@@ -358,7 +358,8 @@ func (p *parser) parseMap() (*Value, error) {
 	return &res, nil
 }
 
-func (p *parser) parseOperand() (*Operand, error) {
+// parseOperand and return the operand, and true if the operand is standalone
+func (p *parser) parseOperand() (*Operand, bool, error) {
 	// operand:      value [ call | accessor | '.' ident ]+ [ block ]
 	value := p.parseValue()
 	var err error
@@ -368,25 +369,25 @@ func (p *parser) parseOperand() (*Operand, error) {
 		if p.token.Value == "[" {
 			value, err = p.parseArray()
 			if err != nil {
-				return nil, err
+				return nil, false, err
 			}
 		}
 		// maps
 		if p.token.Value == "{" {
 			value, err = p.parseMap()
 			if err != nil {
-				return nil, err
+				return nil, false, err
 			}
 		}
 	}
 
 	if value == nil {
-		return nil, nil
+		return nil, false, nil
 	}
 
 	if value.Ident != nil && *value.Ident == "return" {
 		p.nextToken()
-		return &Operand{Value: value}, nil
+		return &Operand{Value: value}, true, nil
 	}
 
 	res := Operand{
@@ -401,7 +402,7 @@ func (p *parser) parseOperand() (*Operand, error) {
 			if p.token.Type != Ident {
 				v := "."
 				res.Calls = append(res.Calls, &Call{Ident: &v})
-				return &res, p.errorMsg("missing field accessor")
+				return &res, false, p.errorMsg("missing field accessor")
 			}
 			v := p.token.Value
 			res.Calls = append(res.Calls, &Call{Ident: &v})
@@ -414,7 +415,7 @@ func (p *parser) parseOperand() (*Operand, error) {
 			for {
 				arg, err := p.parseArg()
 				if err != nil {
-					return nil, err
+					return nil, false, err
 				}
 				if arg == nil {
 					break
@@ -427,7 +428,7 @@ func (p *parser) parseOperand() (*Operand, error) {
 			}
 
 			if p.token.Value != ")" {
-				return nil, p.errorMsg("missing closing `)` while parsing function")
+				return nil, false, p.errorMsg("missing closing `)` while parsing function")
 			}
 
 			res.Calls = append(res.Calls, &Call{Function: args})
@@ -438,14 +439,14 @@ func (p *parser) parseOperand() (*Operand, error) {
 
 			exp, err := p.parseExpression()
 			if err != nil {
-				return nil, err
+				return nil, false, err
 			}
 			if exp == nil {
-				return nil, p.errorMsg("missing value inside of `[]`")
+				return nil, false, p.errorMsg("missing value inside of `[]`")
 			}
 
 			if p.token.Value != "]" {
-				return nil, p.errorMsg("missing closing `]`")
+				return nil, false, p.errorMsg("missing closing `]`")
 			}
 			res.Calls = append(res.Calls, &Call{
 				Accessor: exp,
@@ -463,20 +464,20 @@ func (p *parser) parseOperand() (*Operand, error) {
 					}
 
 					if ident != "case" && ident != "default" {
-						return nil, errors.New("expected `case` or `default` statements in `switch` call, got `" + ident + "`")
+						return nil, false, errors.New("expected `case` or `default` statements in `switch` call, got `" + ident + "`")
 					}
 					p.nextToken()
 
 					if ident == "case" {
 						exp, err := p.parseExpression()
 						if err != nil {
-							return nil, err
+							return nil, false, err
 						}
 						if err = exp.processOperators(); err != nil {
-							return nil, err
+							return nil, false, err
 						}
 						if exp == nil || (exp.Operand == nil && exp.Operations == nil) {
-							return nil, errors.New("expected expression in `case` statement")
+							return nil, false, errors.New("expected expression in `case` statement")
 						}
 						res.Block = append(res.Block, exp)
 					} else {
@@ -485,7 +486,7 @@ func (p *parser) parseOperand() (*Operand, error) {
 					}
 
 					if p.token.Value != ":" {
-						return nil, errors.New("expected `:` in `" + ident + "` statement")
+						return nil, false, errors.New("expected `:` in `" + ident + "` statement")
 					}
 					p.nextToken()
 
@@ -499,7 +500,7 @@ func (p *parser) parseOperand() (*Operand, error) {
 					for {
 						exp, err := p.parseExpression()
 						if err != nil {
-							return nil, err
+							return nil, false, err
 						}
 						if exp == nil || (exp.Operand == nil && exp.Operations == nil) {
 							break
@@ -508,7 +509,7 @@ func (p *parser) parseOperand() (*Operand, error) {
 					}
 
 					if len(block.Operand.Block) == 0 {
-						return nil, errors.New("expected block following `" + ident + "` statement")
+						return nil, false, errors.New("expected block following `" + ident + "` statement")
 					}
 					res.Block = append(res.Block, &block)
 
@@ -527,7 +528,7 @@ func (p *parser) parseOperand() (*Operand, error) {
 			for {
 				exp, err := p.parseExpression()
 				if err != nil {
-					return nil, err
+					return nil, false, err
 				}
 				if exp == nil || (exp.Operand == nil && exp.Operations == nil) {
 					break
@@ -538,13 +539,13 @@ func (p *parser) parseOperand() (*Operand, error) {
 			res.Block = block
 
 			if p.token.Value != "}" {
-				return &res, p.errorMsg("missing closing `}`")
+				return &res, false, p.errorMsg("missing closing `}`")
 			}
 
 			p.nextToken()
 
 		default:
-			return &res, nil
+			return &res, false, nil
 		}
 	}
 }
@@ -633,7 +634,7 @@ func (p *parser) parseOperation() (*Operation, error) {
 		return nil, errors.New("found unexpected operation '" + p.token.Value + "'")
 	}
 
-	op, err := p.parseOperand()
+	op, _, err := p.parseOperand()
 	if err != nil {
 		return nil, err
 	}
@@ -652,10 +653,14 @@ func (p *parser) parseExpression() (*Expression, error) {
 
 	res := Expression{}
 	var err error
+	var standalone bool
 
 	// expression:   operand [ op operand ]+
-	res.Operand, err = p.parseOperand()
+	res.Operand, standalone, err = p.parseOperand()
 	if err != nil {
+		return &res, err
+	}
+	if standalone {
 		return &res, err
 	}
 
@@ -725,7 +730,7 @@ func Parse(input string) (*AST, error) {
 			}
 		}
 
-		if thisParser.token.Value != "" && thisParser.token.Type == CallType && thisParser.token.Value != "[" {
+		if thisParser.token.Value != "" && thisParser.token.Type == CallType && thisParser.token.Value != "[" && thisParser.token.Value != "{" {
 			return &res, errors.New("mismatched symbol '" + thisParser.token.Value + "' at the end of expression")
 		}
 	}
