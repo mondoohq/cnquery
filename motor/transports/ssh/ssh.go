@@ -89,7 +89,7 @@ func (t *SSHTransport) Connect() error {
 	// establish connection
 	conn, err := sshClientConnection(endpoint, hostkeyCallback)
 	if err != nil {
-		log.Debug().Err(err).Str("transport", "ssh").Str("host", endpoint.Host).Str("port", endpoint.Port).Str("user", endpoint.User).Msg("could not establish ssh session")
+		log.Debug().Err(err).Str("transport", "ssh").Str("host", endpoint.Host).Str("port", endpoint.Port).Str("user", endpoint.User).Bool("insecure", endpoint.Insecure).Msg("could not establish ssh session")
 		return err
 	}
 	t.SSHClient = conn

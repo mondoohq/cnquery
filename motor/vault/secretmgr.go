@@ -1,12 +1,7 @@
-package discovery
-
-// TODO: load secrets query from configuration
-// TODO: test in more complex scenarios
-// TODO: implement windows/linux vm setup
+package vault
 
 import (
 	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/motor/vault"
 	"go.mondoo.io/mondoo/policy/executor"
 
 	"context"
@@ -22,6 +17,7 @@ import (
 type SecretMetadata struct {
 	Backend      string `json:"backend,omitempty"`      // default to ssh, user specified
 	User         string `json:"user,omitempty"`         // user associated with the secret
+	Host         string `json:"host,omitempty"`         // overwrite of the host
 	SecretID     string `json:"secretID,omitempty"`     // id to use to fetch the secret from the source vault
 	SecretFormat string `json:"secretFormat,omitempty"` // private_key, password, or json
 }
@@ -31,13 +27,20 @@ type SecretManager interface {
 	EnrichConnection(a *asset.Asset, secMeta *SecretMetadata) error
 }
 
-func NewVaultSecretManager(v vault.Vault, secretMetadataQuery string) (SecretManager, error) {
+func NewVaultSecretManager(v Vault, secretMetadataQuery string) (SecretManager, error) {
 	e, err := executor.NewEmbeddedExecutor()
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = e.Compile(secretMetadataQuery, map[string]*llx.Primitive{})
+	// just empty props to ensure we can compile
+	props := map[string]*llx.Primitive{
+		"mrn":      llx.StringPrimitive(""),
+		"name":     llx.StringPrimitive(""),
+		"labels":   llx.MapData(map[string]interface{}{}, types.String).Result().Data,
+		"platform": llx.MapData(map[string]interface{}{}, types.String).Result().Data,
+	}
+	_, err = e.Compile(secretMetadataQuery, props)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not compile the secret metadata function")
 	}
@@ -56,7 +59,7 @@ func NewVaultSecretManager(v vault.Vault, secretMetadataQuery string) (SecretMan
 // 2. we use the secret metadata to retrieve the secret from vault
 type VaultSecretManager struct {
 	e                   *executor.EmbeddedExecutor
-	vault               vault.Vault
+	vault               Vault
 	secretMetadataQuery string
 }
 
@@ -112,7 +115,7 @@ func (vsm *VaultSecretManager) GetSecretMetadata(a *asset.Asset) (*SecretMetadat
 
 func (vsm *VaultSecretManager) GetSecret(keyID string) (string, error) {
 	log.Info().Str("key-id", keyID).Msg("get secret")
-	cred, err := vsm.vault.Get(context.Background(), &vault.CredentialID{
+	cred, err := vsm.vault.Get(context.Background(), &CredentialID{
 		Key: keyID,
 	})
 	if err != nil {
@@ -174,6 +177,10 @@ func mergeConnectionValues(tc1 *transports.TransportConfig, tc2 *transports.Tran
 		return
 	}
 
+	if tc2.Host != "" {
+		tc1.Host = tc2.Host
+	}
+
 	if tc2.User != "" {
 		tc1.User = tc2.User
 	}
@@ -215,6 +222,10 @@ func parseSecret(secretMetadata *SecretMetadata, secret string) (*transports.Tra
 
 		if usr, ok := jsonSecret["user"]; ok {
 			connection.User = usr
+		}
+
+		if host, ok := jsonSecret["host"]; ok {
+			connection.Host = host
 		}
 
 		if pwd, ok := jsonSecret["password"]; ok {
