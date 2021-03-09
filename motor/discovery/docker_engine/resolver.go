@@ -56,38 +56,38 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 // -t docker+tar:///path/link_to_image_archive2.tar -> OCI
 // -t docker+tar:///path/link_to_container.tar
 func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
-	if strings.HasPrefix(url, "docker://") {
+	if strings.HasPrefix(url, transports.SCHEME_DOCKER+"://") {
 		tc := &transports.TransportConfig{
 			Backend: transports.TransportBackend_CONNECTION_DOCKER,
-			Host:    strings.Replace(url, "docker://", "", 1),
+			Host:    strings.Replace(url, transports.SCHEME_DOCKER+"://", "", 1),
 		}
 
 		for i := range opts {
 			opts[i](tc)
 		}
 		return tc, nil
-	} else if strings.HasPrefix(url, "docker+image://") {
+	} else if strings.HasPrefix(url, transports.SCHEME_DOCKER_IMAGE+"://") {
 		tc := &transports.TransportConfig{
 			Backend: transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE,
-			Host:    strings.Replace(url, "docker+image://", "", 1),
+			Host:    strings.Replace(url, transports.SCHEME_DOCKER_IMAGE+"://", "", 1),
 		}
 		for i := range opts {
 			opts[i](tc)
 		}
 		return tc, nil
-	} else if strings.HasPrefix(url, "docker+container://") {
+	} else if strings.HasPrefix(url, transports.SCHEME_DOCKER_CONTAINER+"://") {
 		tc := &transports.TransportConfig{
 			Backend: transports.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER,
-			Host:    strings.Replace(url, "docker+container://", "", 1),
+			Host:    strings.Replace(url, transports.SCHEME_DOCKER_CONTAINER+"://", "", 1),
 		}
 		for i := range opts {
 			opts[i](tc)
 		}
 		return tc, nil
-	} else if strings.HasPrefix(url, "docker+tar://") {
+	} else if strings.HasPrefix(url, transports.SCHEME_DOCKER_TAR+"://") {
 		tc := &transports.TransportConfig{
 			Backend: transports.TransportBackend_CONNECTION_DOCKER_ENGINE_TAR,
-			Host:    strings.Replace(url, "docker+tar://", "", 1),
+			Host:    strings.Replace(url, transports.SCHEME_DOCKER_TAR+"://", "", 1),
 		}
 
 		for i := range opts {

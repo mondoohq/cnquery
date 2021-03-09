@@ -1,9 +1,14 @@
 package resolver
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/motor/transports/equinix"
 	"go.mondoo.io/mondoo/motor/transports/fs"
+	"io"
+	"os"
 
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -93,23 +98,6 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 		if err != nil {
 			return nil, err
 		}
-	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_TAR:
-		trans, info, err := containertar(tc)
-		if err != nil {
-			return nil, err
-		}
-		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
-		if err != nil {
-			return nil, err
-		}
-
-		name = info.Name
-		labels = info.Labels
-
-		// TODO: can we make the id optional here, we may want to use an approach that is similar to ssh
-		if len(info.Identifier) > 0 {
-			identifier = append(identifier, info.Identifier)
-		}
 	case transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY:
 		trans, info, err := containerregistry(tc)
 		if err != nil {
@@ -146,6 +134,23 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 		}
 	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE:
 		trans, info, err := dockerengineimage(tc)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
+		if err != nil {
+			return nil, err
+		}
+
+		name = info.Name
+		labels = info.Labels
+
+		// TODO: can we make the id optional here, we may want to use an approach that is similar to ssh
+		if len(info.Identifier) > 0 {
+			identifier = append(identifier, info.Identifier)
+		}
+	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_TAR:
+		trans, info, err := containertar(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -472,6 +477,7 @@ func dockerengineimage(endpoint *transports.TransportConfig) (transports.Transpo
 	}, err
 }
 
+// check if the tar is an image or container
 func containertar(endpoint *transports.TransportConfig) (transports.Transport, DockerInfo, error) {
 	log.Debug().Msg("found local docker/image file")
 
@@ -496,6 +502,23 @@ func containertar(endpoint *transports.TransportConfig) (transports.Transport, D
 	}
 
 	log.Debug().Msg("detected docker container snapshot")
+
+	// generate sha sum of tar file
+	f, err := os.Open(endpoint.Host)
+	if err != nil {
+		return nil, DockerInfo{}, errors.Wrap(err, "cannot read container tar to generate hash")
+	}
+	defer f.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return nil, DockerInfo{}, errors.Wrap(err, "cannot read container tar to generate hash")
+	}
+
+	hash := hex.EncodeToString(h.Sum(nil))
+
 	transport, err := snapshot.NewFromFile(endpoint.Host)
-	return transport, DockerInfo{}, err
+	return transport, DockerInfo{
+		Identifier: "//platformid.api.mondoo.app/runtime/docker/snapshot/" + hash,
+	}, err
 }
