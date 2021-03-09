@@ -36,52 +36,54 @@ func (c *TransportConfig) IntPort() (int, error) {
 func (conn *TransportConfig) ToUrl() string {
 	switch conn.Backend {
 	case TransportBackend_CONNECTION_SSH:
-		return "ssh://" + conn.Host
+		return SCHEME_SSH + "://" + conn.Host
 	case TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER:
 		if len(conn.Host) > 12 {
 			return "docker://" + conn.Host[:12]
 		}
-		return "docker://" + conn.Host
+		return SCHEME_DOCKER_CONTAINER + "://" + conn.Host
 	case TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE:
 		if strings.HasPrefix(conn.Host, "sha256:") {
 			host := strings.Replace(conn.Host, "sha256:", "", -1)
 			if len(host) > 12 {
 				return "docker://" + host[:12]
 			}
-			return "docker://" + host
+			return SCHEME_DOCKER_IMAGE + "://" + host
 		}
 		// eg. docker://centos:8
-		return "docker://" + conn.Host
+		return SCHEME_DOCKER_IMAGE + "://" + conn.Host
+	case TransportBackend_CONNECTION_DOCKER_ENGINE_TAR:
+		return SCHEME_DOCKER_TAR + "://" + conn.Host + conn.Path
+	case TransportBackend_CONNECTION_CONTAINER_REGISTRY:
+		return SCHEME_CONTAINER_REGISTRY + "://" + conn.Host + conn.Path
 	case TransportBackend_CONNECTION_LOCAL_OS:
-		return "local://"
+		return SCHEME_LOCAL + "://"
 	case TransportBackend_CONNECTION_WINRM:
-		return "winrm://" + conn.Host
+		return SCHEME_WINRM + "://" + conn.Host
 	case TransportBackend_CONNECTION_AWS_SSM_RUN_COMMAND:
 		return "aws-ssm://" + conn.Host
-	case TransportBackend_CONNECTION_CONTAINER_REGISTRY:
-		return "docker://" + conn.Host + conn.Path
 	case TransportBackend_CONNECTION_TAR:
-		return "tar://" + conn.Path
+		return SCHEME_TAR + "://" + conn.Path
 	case TransportBackend_CONNECTION_MOCK:
-		return "mock://" + conn.Path
+		return SCHEME_MOCK + "://" + conn.Path
 	case TransportBackend_CONNECTION_VSPHERE:
-		return "vsphere://" + conn.Host
+		return SCHEME_VSPHERE + "://" + conn.Host
 	case TransportBackend_CONNECTION_VSPHERE_VM:
-		return "vsphere+vm://" + conn.Host
+		return SCHEME_VSPHERE_VM + "://" + conn.Host
 	case TransportBackend_CONNECTION_ARISTAEOS:
-		return "aristaeos://" + conn.Host
+		return SCHEME_ARISTA + "://" + conn.Host
 	case TransportBackend_CONNECTION_AWS:
-		return "aws://"
+		return SCHEME_AWS + "://"
 	case TransportBackend_CONNECTION_AZURE:
-		return "azure://"
+		return SCHEME_AZURE + "://"
 	case TransportBackend_CONNECTION_MS365:
-		return "ms365://"
+		return SCHEME_MS365 + "://"
 	case TransportBackend_CONNECTION_IPMI:
-		return "ipmi://"
+		return SCHEME_IPMI + "://"
 	case TransportBackend_CONNECTION_FS:
-		return "fs://"
+		return SCHEME_FS + "://"
 	case TransportBackend_CONNECTION_EQUINIX_METAL:
-		return "equinix://"
+		return SCHEME_EQUINIX + "://"
 	default:
 		log.Warn().Str("backend", conn.Backend.String()).Msg("cannot render backend config")
 		return ""
