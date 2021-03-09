@@ -276,6 +276,7 @@ func TestCompiler_LogicalOps(t *testing.T) {
 		"\"str\"": llx.StringPrimitive("str"),
 		"/str/":   llx.RegexPrimitive("str"),
 		"[]":      llx.ArrayPrimitive([]*llx.Primitive{}, types.Any),
+		"{}":      llx.MapPrimitive(map[string]*llx.Primitive{}, types.Any),
 	}
 	for _, op := range ops {
 		for val1, valres1 := range vals {
