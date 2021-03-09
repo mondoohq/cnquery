@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/transports"
 	vsphere_transport "go.mondoo.io/mondoo/motor/transports/vsphere"
 )
 
@@ -109,7 +109,7 @@ func mapHostPowerstateToState(hostPowerState types.HostSystemPowerState) asset.S
 	}
 }
 
-func (v *VSphere) ListVirtualMachines() ([]*asset.Asset, error) {
+func (v *VSphere) ListVirtualMachines(parentTC *transports.TransportConfig) ([]*asset.Asset, error) {
 	instanceUuid, err := v.InstanceUuid()
 	if err != nil {
 		return nil, err
@@ -127,7 +127,7 @@ func (v *VSphere) ListVirtualMachines() ([]*asset.Asset, error) {
 		if err != nil {
 			return nil, err
 		}
-		vmsAsAssets, err := vmsToAssetList(instanceUuid, vmList)
+		vmsAsAssets, err := vmsToAssetList(instanceUuid, vmList, parentTC)
 		if err != nil {
 			return nil, err
 		}
@@ -137,7 +137,7 @@ func (v *VSphere) ListVirtualMachines() ([]*asset.Asset, error) {
 	return res, nil
 }
 
-func vmsToAssetList(instanceUuid string, vms []*object.VirtualMachine) ([]*asset.Asset, error) {
+func vmsToAssetList(instanceUuid string, vms []*object.VirtualMachine, parentTC *transports.TransportConfig) ([]*asset.Asset, error) {
 	res := []*asset.Asset{}
 	for i := range vms {
 		vm := vms[i]
@@ -154,6 +154,7 @@ func vmsToAssetList(instanceUuid string, vms []*object.VirtualMachine) ([]*asset
 				"vsphere.vmware.com/name":           vm.Name(),
 				"vsphere.vmware.com/type":           vm.Reference().Type,
 				"vsphere.vmware.com/moid":           vm.Reference().Encode(),
+				"vsphere.vmware.com/ip-address":     props.Guest.IpAddress,
 				"vsphere.vmware.com/inventorypath":  vm.InventoryPath,
 				"vsphere.vmware.com/guest-family":   props.Guest.GuestFamily,
 				"vsphere.vmware.com/guest-id":       props.Guest.GuestId,
@@ -161,6 +162,22 @@ func vmsToAssetList(instanceUuid string, vms []*object.VirtualMachine) ([]*asset
 			},
 			PlatformIDs: []string{vsphere_transport.VsphereResourceID(instanceUuid, vm.Reference())},
 		}
+
+		// add parent information to validate the vm configuration from vsphere api perspective
+		vt := parentTC.Clone()
+		ha.Connections = append(ha.Connections, vt)
+
+		if props.Guest.GuestFamily == "linuxGuest" {
+			ha.Connections = []*transports.TransportConfig{
+				{
+					Backend:  transports.TransportBackend_CONNECTION_SSH,
+					Host:     props.Guest.IpAddress,
+					Insecure: parentTC.Insecure,
+				},
+			}
+		}
+		// TODO: handle windows guest
+
 		res = append(res, ha)
 	}
 	return res, nil

@@ -98,7 +98,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {
 		// resolve vms
-		vms, err := discoveryClient.ListVirtualMachines()
+		vms, err := discoveryClient.ListVirtualMachines(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -106,11 +106,6 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 		// add transport config for each vm
 		for i := range vms {
 			vm := vms[i]
-
-			vt := tc.Clone()
-			// pass-through "vsphere.vmware.com/reference-type" and "vsphere.vmware.com/inventorypath"
-			vt.Options = vm.Annotations
-			vm.Connections = append(vm.Connections, vt)
 
 			pf, err := platform.VspherePlatform(trans, vm.PlatformIDs[0])
 			if err == nil {
