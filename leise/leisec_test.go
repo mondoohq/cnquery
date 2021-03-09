@@ -206,6 +206,12 @@ func TestCompiler_Simple(t *testing.T) {
 				llx.IntPrimitive(1),
 			},
 		}},
+		{"{a: 123}", &llx.Primitive{
+			Type: types.Map(types.String, types.Int),
+			Map: map[string]*llx.Primitive{
+				"a": llx.IntPrimitive(123),
+			},
+		}},
 	}
 	for _, v := range data {
 		t.Run(v.code, func(t *testing.T) {

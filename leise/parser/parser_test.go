@@ -55,14 +55,41 @@ func vRegex(v string) *Value {
 	return &Value{Regex: &v}
 }
 
+func vMap(v map[string]*Expression) *Value {
+	return &Value{Map: v}
+}
+
 func callIdent(ident string) *Call {
 	return &Call{Ident: &ident}
 }
+
+type parserTest struct {
+	code string
+	res  *Expression
+}
+
+func runParserTests(t *testing.T, tests []parserTest) {
+	for i := range tests {
+		test := tests[i]
+
+		t.Run(test.code, func(t *testing.T) {
+			res, err := Parse(test.code)
+			if err != nil {
+				assert.Nil(t, err)
+				return
+			}
+			if res == nil || res.Expressions == nil {
+				assert.Equal(t, 1, len(res.Expressions), "parsing must generate one expression")
+				return
+			}
+
+			assert.Equal(t, test.res, res.Expressions[0])
+		})
+	}
+}
+
 func TestParser_ParseValues(t *testing.T) {
-	tests := []struct {
-		code string
-		res  *Expression
-	}{
+	runParserTests(t, []parserTest{
 		{"null", &Expression{Operand: &Operand{Value: &nilValue}}},
 		{"NaN", &Expression{Operand: &Operand{Value: &nanValue}}},
 		{"Infinity", &Expression{Operand: &Operand{Value: &infinityValue}}},
@@ -87,6 +114,16 @@ func TestParser_ParseValues(t *testing.T) {
 			{Operand: &Operand{Value: vInt(1)}},
 			{Operand: &Operand{Value: vFloat(2.3)}},
 		}}}}},
+		{"{}", &Expression{Operand: &Operand{Value: vMap(map[string]*Expression{})}}},
+		{"{'a': 'word'}", &Expression{Operand: &Operand{Value: vMap(map[string]*Expression{
+			"a": {Operand: &Operand{Value: vString("word")}},
+		})}}},
+		{"{\"b\": \"there\"}", &Expression{Operand: &Operand{Value: vMap(map[string]*Expression{
+			"b": {Operand: &Operand{Value: vString("there")}},
+		})}}},
+		{"{c: 123}", &Expression{Operand: &Operand{Value: vMap(map[string]*Expression{
+			"c": {Operand: &Operand{Value: vInt(123)}},
+		})}}},
 		{"name.last", &Expression{Operand: &Operand{
 			Value: vIdent("name"),
 			Calls: []*Call{callIdent("last")},
@@ -209,24 +246,7 @@ func TestParser_ParseValues(t *testing.T) {
 				}},
 			},
 		}},
-	}
-	for i := range tests {
-		test := tests[i]
-
-		t.Run(test.code, func(t *testing.T) {
-			res, err := Parse(test.code)
-			if err != nil {
-				assert.Nil(t, err)
-				return
-			}
-			if res == nil || res.Expressions == nil {
-				assert.Equal(t, 1, len(res.Expressions), "parsing must generate one expression")
-				return
-			}
-
-			assert.Equal(t, test.res, res.Expressions[0])
-		})
-	}
+	})
 }
 
 func TestParser_Multiline(t *testing.T) {

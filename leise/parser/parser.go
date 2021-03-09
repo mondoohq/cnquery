@@ -69,13 +69,14 @@ type Operand struct {
 
 // Value representation
 type Value struct {
-	Bool   *bool         `json:",omitempty"`
-	String *string       `json:",omitempty"`
-	Int    *int64        `json:",omitempty"`
-	Float  *float64      `json:",omitempty"`
-	Regex  *string       `json:",omitempty"`
-	Array  []*Expression `json:",omitempty"`
-	Ident  *string       `json:",omitempty"`
+	Bool   *bool                  `json:",omitempty"`
+	String *string                `json:",omitempty"`
+	Int    *int64                 `json:",omitempty"`
+	Float  *float64               `json:",omitempty"`
+	Regex  *string                `json:",omitempty"`
+	Array  []*Expression          `json:",omitempty"`
+	Map    map[string]*Expression `json:",omitempty"`
+	Ident  *string                `json:",omitempty"`
 }
 
 // Call to a value
@@ -176,6 +177,23 @@ var unescapeMap = map[string]string{
 	"\\0": "\x00",
 }
 
+func (p *parser) token2string() string {
+	v := p.token.Value
+	vv := v[1 : len(v)-1]
+
+	if v[0] == '\'' {
+		return vv
+	}
+
+	vv = reUnescape.ReplaceAllStringFunc(vv, func(match string) string {
+		if found := unescapeMap[match]; found != "" {
+			return found
+		}
+		return string(match[1])
+	})
+	return vv
+}
+
 func (p *parser) parseValue() *Value {
 	switch p.token.Type {
 	case Ident:
@@ -219,19 +237,7 @@ func (p *parser) parseValue() *Value {
 		return &Value{Int: &v}
 
 	case String:
-		v := p.token.Value
-
-		vv := v[1 : len(v)-1]
-
-		if v[0] == '"' {
-			vv = reUnescape.ReplaceAllStringFunc(vv, func(match string) string {
-				if found := unescapeMap[match]; found != "" {
-					return found
-				}
-				return string(match[1])
-			})
-		}
-
+		vv := p.token2string()
 		return &Value{String: &vv}
 
 	case Regex:
@@ -303,6 +309,55 @@ func (p *parser) parseArray() (*Value, error) {
 	return &res, nil
 }
 
+func (p *parser) parseMap() (*Value, error) {
+	res := Value{
+		Map: map[string]*Expression{},
+	}
+
+	p.nextToken()
+	if p.token.Value == "}" {
+		return &res, nil
+	}
+
+	for {
+		var key string
+
+		switch p.token.Type {
+		case String:
+			key = p.token2string()
+		case Ident:
+			key = p.token.Value
+		default:
+			return nil, p.expected("string", "map key")
+		}
+
+		p.nextToken()
+		if p.token.Value != ":" || p.token.Type != Op {
+			return nil, p.expected(":", "after map key")
+		}
+
+		p.nextToken()
+		exp, err := p.parseExpression()
+		if exp == nil {
+			return nil, p.expected("expression", "parseOperand-map")
+		}
+		if err != nil {
+			return nil, err
+		}
+		res.Map[key] = exp
+
+		if p.token.Value == "}" {
+			break
+		}
+		if p.token.Value != "," {
+			return nil, p.expected(", or }", "parseOperand")
+		}
+		p.nextToken()
+	}
+
+	return &res, nil
+}
+
 func (p *parser) parseOperand() (*Operand, error) {
 	// operand:      value [ call | accessor | '.' ident ]+ [ block ]
 	value := p.parseValue()
@@ -312,6 +367,13 @@ func (p *parser) parseOperand() (*Operand, error) {
 		// arrays
 		if p.token.Value == "[" {
 			value, err = p.parseArray()
+			if err != nil {
+				return nil, err
+			}
+		}
+		// maps
+		if p.token.Value == "{" {
+			value, err = p.parseMap()
 			if err != nil {
 				return nil, err
 			}
