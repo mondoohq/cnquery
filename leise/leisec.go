@@ -856,6 +856,31 @@ func (c *compiler) compileValue(val *parser.Value) (*llx.Primitive, error) {
 		}, nil
 	}
 
+	if val.Map != nil {
+		mapRes := make(map[string]*llx.Primitive, len(val.Map))
+		var resType types.Type
+
+		for k, v := range val.Map {
+			vv, err := c.compileExpression(v)
+			if err != nil {
+				return nil, err
+			}
+			if vv.Type != resType {
+				if resType == "" {
+					resType = vv.Type
+				} else if resType != types.Any {
+					resType = types.Any
+				}
+			}
+			mapRes[k] = vv
+		}
+
+		return &llx.Primitive{
+			Type: types.Map(types.String, resType),
+			Map:  mapRes,
+		}, nil
+	}
+
 	return llx.NilPrimitive, nil
 }
 
