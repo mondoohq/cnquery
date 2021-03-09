@@ -1438,6 +1438,38 @@ func arrayOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 	return boolOp(c, bind, chunk, ref, opArrayOrInt)
 }
 
+func opIntAndMap(left interface{}, right interface{}) bool {
+	return (left.(int64) != 0) && (len(right.(map[string]interface{})) != 0)
+}
+
+func opMapAndInt(left interface{}, right interface{}) bool {
+	return (right.(int64) != 0) && (len(left.(map[string]interface{})) != 0)
+}
+
+func opIntOrMap(left interface{}, right interface{}) bool {
+	return (left.(int64) != 0) || (len(right.(map[string]interface{})) != 0)
+}
+
+func opMapOrInt(left interface{}, right interface{}) bool {
+	return (right.(int64) != 0) || (len(left.(map[string]interface{})) != 0)
+}
+
+func intAndMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opIntAndMap)
+}
+
+func intOrMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opIntOrMap)
+}
+
+func mapAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opMapAndInt)
+}
+
+func mapOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opMapOrInt)
+}
+
 // float &&/|| T
 
 func opFloatAndString(left interface{}, right interface{}) bool {
@@ -1520,6 +1552,38 @@ func arrayOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 	return boolOp(c, bind, chunk, ref, opArrayOrFloat)
 }
 
+func opFloatAndMap(left interface{}, right interface{}) bool {
+	return (left.(float64) != 0) && (len(right.(map[string]interface{})) != 0)
+}
+
+func opMapAndFloat(left interface{}, right interface{}) bool {
+	return (right.(float64) != 0) && (len(left.(map[string]interface{})) != 0)
+}
+
+func opFloatOrMap(left interface{}, right interface{}) bool {
+	return (left.(float64) != 0) || (len(right.(map[string]interface{})) != 0)
+}
+
+func opMapOrFloat(left interface{}, right interface{}) bool {
+	return (right.(float64) != 0) || (len(left.(map[string]interface{})) != 0)
+}
+
+func floatAndMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opFloatAndMap)
+}
+
+func floatOrMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opFloatOrMap)
+}
+
+func mapAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opMapAndFloat)
+}
+
+func mapOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opMapOrFloat)
+}
+
 // string &&/|| T
 
 func stringAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -1570,6 +1634,38 @@ func arrayOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	return boolOp(c, bind, chunk, ref, opArrayOrString)
 }
 
+func opStringAndMap(left interface{}, right interface{}) bool {
+	return (left.(float64) != 0) && (len(right.(map[string]interface{})) != 0)
+}
+
+func opMapAndString(left interface{}, right interface{}) bool {
+	return (right.(float64) != 0) && (len(left.(map[string]interface{})) != 0)
+}
+
+func opStringOrMap(left interface{}, right interface{}) bool {
+	return (left.(float64) != 0) || (len(right.(map[string]interface{})) != 0)
+}
+
+func opMapOrString(left interface{}, right interface{}) bool {
+	return (right.(float64) != 0) || (len(left.(map[string]interface{})) != 0)
+}
+
+func stringAndMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opStringAndMap)
+}
+
+func stringOrMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opStringOrMap)
+}
+
+func mapAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opMapAndString)
+}
+
+func mapOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opMapOrString)
+}
+
 // string + T
 
 func stringPlusString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -1581,7 +1677,7 @@ func stringPlusString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) 
 	})
 }
 
-// regex &&/|| T
+// regex &&/|| array
 
 func regexAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOp(c, bind, chunk, ref, opStringAndArray)
@@ -1597,6 +1693,24 @@ func arrayAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 
 func arrayOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOp(c, bind, chunk, ref, opArrayOrString)
+}
+
+// regex &&/|| map
+
+func regexAndMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opStringAndMap)
+}
+
+func regexOrMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opStringOrMap)
+}
+
+func mapAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opMapAndString)
+}
+
+func mapOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opMapOrString)
 }
 
 // time &&/|| T
@@ -1751,6 +1865,30 @@ func arrayAndTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 }
 
 func arrayOrTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return BoolTrue, 0, nil
+}
+
+func opTimeAndMap(left interface{}, right interface{}) bool {
+	return len(right.(map[string]interface{})) != 0
+}
+
+func opMapAndTime(left interface{}, right interface{}) bool {
+	return len(left.(map[string]interface{})) != 0
+}
+
+func timeAndMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opTimeAndMap)
+}
+
+func timeOrMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return BoolTrue, 0, nil
+}
+
+func mapAndTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opMapAndTime)
+}
+
+func mapOrTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return BoolTrue, 0, nil
 }
 

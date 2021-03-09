@@ -378,6 +378,56 @@ func dictFind(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDat
 	}
 }
 
+// map &&/||
+
+func opArrayAndMap(left interface{}, right interface{}) bool {
+	return (len(left.([]interface{})) != 0) && (len(right.(map[string]interface{})) != 0)
+}
+
+func opArrayOrMap(left interface{}, right interface{}) bool {
+	return (len(left.([]interface{})) != 0) || (len(right.(map[string]interface{})) != 0)
+}
+
+func opMapAndArray(left interface{}, right interface{}) bool {
+	return (len(right.(map[string]interface{})) != 0) && (len(left.([]interface{})) != 0)
+}
+
+func opMapOrArray(left interface{}, right interface{}) bool {
+	return (len(right.(map[string]interface{})) != 0) || (len(left.([]interface{})) != 0)
+}
+
+func arrayAndMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opArrayAndMap)
+}
+
+func arrayOrMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opArrayOrMap)
+}
+
+func mapAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opMapAndArray)
+}
+
+func mapOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opMapOrArray)
+}
+
+func opMapAndMap(left interface{}, right interface{}) bool {
+	return (len(left.(map[string]interface{})) != 0) && (len(right.(map[string]interface{})) != 0)
+}
+
+func opMapOrMap(left interface{}, right interface{}) bool {
+	return (len(left.(map[string]interface{})) != 0) || (len(right.(map[string]interface{})) != 0)
+}
+
+func mapAndMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opMapAndMap)
+}
+
+func mapOrMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opMapOrMap)
+}
+
 // dict ==/!= nil
 
 func opDictCmpNil(left interface{}, right interface{}) bool {
@@ -1348,6 +1398,40 @@ func arrayAndDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 
 func arrayOrDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOp(c, bind, chunk, ref, opArrayOrDict)
+}
+
+// ... map
+
+func opDictAndMap(left interface{}, right interface{}) bool {
+	return truthyDict(left) && (len(right.(map[string]interface{})) != 0)
+}
+
+func opMapAndDict(left interface{}, right interface{}) bool {
+	return truthyDict(right) && (len(left.(map[string]interface{})) != 0)
+}
+
+func opDictOrMap(left interface{}, right interface{}) bool {
+	return truthyDict(left) || (len(right.(map[string]interface{})) != 0)
+}
+
+func opMapOrDict(left interface{}, right interface{}) bool {
+	return truthyDict(right) || (len(left.(map[string]interface{})) != 0)
+}
+
+func dictAndMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opDictAndMap)
+}
+
+func dictOrMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opDictOrMap)
+}
+
+func mapAndDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opMapAndDict)
+}
+
+func mapOrDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opMapOrDict)
 }
 
 // dict +

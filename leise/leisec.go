@@ -875,6 +875,10 @@ func (c *compiler) compileValue(val *parser.Value) (*llx.Primitive, error) {
 			mapRes[k] = vv
 		}
 
+		if resType == "" {
+			resType = types.Any
+		}
+
 		return &llx.Primitive{
 			Type: types.Map(types.String, resType),
 			Map:  mapRes,
