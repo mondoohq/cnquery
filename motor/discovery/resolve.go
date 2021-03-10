@@ -94,10 +94,12 @@ func ResolveAsset(root *asset.Asset, secretMgr vault.SecretManager) ([]*asset.As
 		log.Debug().Str("resolver", r.Name()).Msg("run resolver")
 		// check that all discovery options are supported and show a user warning
 		availableTargets := r.AvailableDiscoveryTargets()
-		for i := range tc.Discover.Targets {
-			target := tc.Discover.Targets[i]
-			if !stringx.Contains(availableTargets, target) {
-				log.Warn().Str("resolver", r.Name()).Msgf("resolver does not support discovery target '%s', the following are supported: %s", target, strings.Join(availableTargets, ","))
+		if tc.Discover != nil {
+			for i := range tc.Discover.Targets {
+				target := tc.Discover.Targets[i]
+				if !stringx.Contains(availableTargets, target) {
+					log.Warn().Str("resolver", r.Name()).Msgf("resolver does not support discovery target '%s', the following are supported: %s", target, strings.Join(availableTargets, ","))
+				}
 			}
 		}
 
