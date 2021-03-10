@@ -7,7 +7,9 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/kubectl"
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
+	k8s_transport "go.mondoo.io/mondoo/motor/transports/k8s"
 	"go.mondoo.io/mondoo/motor/transports/local"
 )
 
@@ -81,7 +83,7 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 	return tc, nil
 }
 
-func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 	namespacesFilter := []string{}
 	podFilter := []string{}
@@ -98,7 +100,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error
 		}
 	}
 
-	k8sContext := t.Options["context"]
+	k8sContext := tc.Options["context"]
 	if len(k8sContext) == 0 {
 		// try to parse context from kubectl
 		if k8sctlConfig != nil && len(k8sctlConfig.CurrentContext) > 0 {
@@ -106,7 +108,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error
 		}
 	}
 
-	namespace := t.Options["namespace"]
+	namespace := tc.Options["namespace"]
 	if len(namespace) > 0 {
 		namespacesFilter = append(namespacesFilter, namespace)
 	} else {
@@ -116,25 +118,54 @@ func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error
 		}
 	}
 
-	pod := t.Options["pod"]
+	pod := tc.Options["pod"]
 	if len(pod) > 0 {
 		podFilter = append(podFilter, pod)
 	}
 
 	log.Debug().Strs("podFilter", podFilter).Strs("namespaceFilter", namespacesFilter).Msg("resolve k8s assets")
 
-	// fetch pod informaton
-	log.Debug().Str("context", k8sContext).Strs("namespace", namespacesFilter).Strs("namespace", podFilter).Msg("search for pods")
-	assetList, err := ListPodImages(k8sContext, namespacesFilter, podFilter)
+	// add k8s api
+	// add aws api as asset
+	trans, err := k8s_transport.New(tc)
+	// trans, err := aws_transport.New(t, transportOpts...)
 	if err != nil {
-		log.Error().Err(err).Msg("could not fetch k8s images")
 		return nil, err
 	}
 
-	for i := range assetList {
-		log.Debug().Str("name", assetList[i].Name).Str("image", assetList[i].Connections[0].Host).Msg("resolved pod")
-		resolved = append(resolved, assetList[i])
+	identifier, err := trans.Identifier()
+	if err != nil {
+		return nil, err
 	}
 
+	// detect platform info for the asset
+	detector := platform.NewDetector(trans)
+	pf, err := detector.Platform()
+	if err != nil {
+		return nil, err
+	}
+
+	resolved = append(resolved, &asset.Asset{
+		PlatformIDs: []string{identifier},
+		Name:        "K8S Cluster", // TODO: add more details
+		Platform:    pf,
+		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
+	})
+
+	// discover ec2 instances
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryContainerImages) {
+		// fetch pod informaton
+		log.Debug().Str("context", k8sContext).Strs("namespace", namespacesFilter).Strs("namespace", podFilter).Msg("search for pods")
+		assetList, err := ListPodImages(k8sContext, namespacesFilter, podFilter)
+		if err != nil {
+			log.Error().Err(err).Msg("could not fetch k8s images")
+			return nil, err
+		}
+
+		for i := range assetList {
+			log.Debug().Str("name", assetList[i].Name).Str("image", assetList[i].Connections[0].Host).Msg("resolved pod")
+			resolved = append(resolved, assetList[i])
+		}
+	}
 	return resolved, nil
 }
