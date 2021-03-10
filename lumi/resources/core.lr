@@ -3167,16 +3167,26 @@ equinix.metal.device {
   os dict
 }
 
-// Kubernetes
+// Kubernetes Cluster
 k8s {
+  // Available Resource Types
   apiResources() []k8s.apiresource
+  // Cluster Nodes
   nodes() []k8s.node
+  // Cluster Namespaces
   namespaces() []k8s.namespace
+  // Cluster Pods
   pods() []k8s.pod
+  // Cluster Deployments
   deployments() []k8s.deployment
+  // Cluster DaemonSets
   daemonsets() []k8s.daemonset
+  // Cluster Jobs
   jobs() []k8s.job
+  // Cluster CronJobs
   cronjobs() []k8s.cronjob
+  // Cluster Version
+  serverVersion() dict
 }
 
 // Kubernetes API Resources
