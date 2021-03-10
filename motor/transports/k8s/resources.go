@@ -38,7 +38,7 @@ func (t *Transport) Resources(kind string, name string) (*ResourceResult, error)
 	if len(ns) == 0 {
 		allNs = true
 	}
-	manifestFile := ""
+	manifestFile := t.opts["manifest"]
 	var err error
 	var resourceObjects []runtime.Object
 
