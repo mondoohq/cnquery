@@ -33,8 +33,11 @@ type ResourceResult struct {
 
 func (t *Transport) Resources(kind string, name string) (*ResourceResult, error) {
 	ctx := context.Background()
-	ns := ""
-	allNs := true
+	ns := t.opts["namespace"]
+	allNs := false
+	if len(ns) == 0 {
+		allNs = true
+	}
 	manifestFile := ""
 	var err error
 	var resourceObjects []runtime.Object
