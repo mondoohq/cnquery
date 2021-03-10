@@ -273,14 +273,6 @@ func (g *lumiGcloudCompute) id() (string, error) {
 	return "gcloud.compute", nil
 }
 
-func strMapToInterface(data map[string]string) map[string]interface{} {
-	labels := make(map[string]interface{})
-	for key := range data {
-		labels[key] = data[key]
-	}
-	return labels
-}
-
 func (g *lumiGcloudCompute) GetInstances() ([]interface{}, error) {
 	gt, err := gcptransport(g.Runtime.Motor.Transport)
 	if err != nil {
