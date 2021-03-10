@@ -4,11 +4,12 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io"
+	"os"
+
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/motor/transports/equinix"
 	"go.mondoo.io/mondoo/motor/transports/fs"
-	"io"
-	"os"
 
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -28,6 +29,7 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/docker/snapshot"
 	"go.mondoo.io/mondoo/motor/transports/gcp"
 	"go.mondoo.io/mondoo/motor/transports/ipmi"
+	k8s_transport "go.mondoo.io/mondoo/motor/transports/k8s"
 	"go.mondoo.io/mondoo/motor/transports/local"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 	"go.mondoo.io/mondoo/motor/transports/ms365"
@@ -337,6 +339,19 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 		}
 	case transports.TransportBackend_CONNECTION_EQUINIX_METAL:
 		trans, err := equinix.New(tc)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(trans)
+		if err != nil {
+			return nil, err
+		}
+		id, err := trans.Identifier()
+		if err == nil && len(id) > 0 {
+			identifier = append(identifier, id)
+		}
+	case transports.TransportBackend_CONNECTION_K8S:
+		trans, err := k8s_transport.New(tc)
 		if err != nil {
 			return nil, err
 		}

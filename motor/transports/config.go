@@ -2,9 +2,10 @@ package transports
 
 import (
 	"errors"
-	"go.mondoo.io/mondoo/stringx"
 	"strconv"
 	"strings"
+
+	"go.mondoo.io/mondoo/stringx"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/rs/zerolog/log"
@@ -84,6 +85,8 @@ func (conn *TransportConfig) ToUrl() string {
 		return SCHEME_FS + "://"
 	case TransportBackend_CONNECTION_EQUINIX_METAL:
 		return SCHEME_EQUINIX + "://"
+	case TransportBackend_CONNECTION_K8S:
+		return SCHEME_K8S + "://"
 	default:
 		log.Warn().Str("backend", conn.Backend.String()).Msg("cannot render backend config")
 		return ""

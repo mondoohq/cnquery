@@ -3166,3 +3166,176 @@ equinix.metal.device {
   spotInstance bool
   os dict
 }
+
+// Kubernetes
+k8s {
+  apiResources() []k8s.apiresource
+  nodes() []k8s.node
+  namespaces() []k8s.namespace
+  pods() []k8s.pod
+  deployments() []k8s.deployment
+  daemonsets() []k8s.daemonset
+  jobs() []k8s.job
+  cronjobs() []k8s.cronjob
+}
+
+// Kubernetes API Resources
+k8s.apiresource {
+  // plural name of the resource
+  name string
+  // singular name of the resource
+  singularName string
+  // indicates if a resource is namespaced or not
+  namespaced bool
+  // preferred group of the resource
+  group string
+  // preferred version of the resource
+  version string
+  // kind for the resource
+  kind string
+  // list of suggested short names of the resource
+  shortNames []string
+  // list of the grouped resources
+  categories []string
+}
+
+// Kubernetes Node
+k8s.node {
+  uid string
+  name string
+  kind string
+}
+
+// Kubernetes Namespace
+k8s.namespace {
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+}
+
+// Kubernetes Pod
+k8s.pod {
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Labels
+  labels map[string]string
+  // Kubernetes Object Annotations
+  annotations map[string]string
+  // Kubernetes Object Version
+  apiVersion string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // PodSpec is a description of a pod
+  podSpec dict
+  // Contained Containers
+  containers() []k8s.container
+  node() k8s.node
+}
+
+// single application container
+k8s.container {
+  uid string
+  // Name of the container
+  name string
+  // Docker image name
+  image string
+  // Entrypoint array
+  command []string
+  // Arguments to the entrypoint
+  args []string
+  // Compute Resources required by this container
+  resources dict
+  // Pod volumes to mount into the container's filesystem
+  volumeMounts []dict
+  // volumeDevices is the list of block devices to be used by the container
+  volumeDevices []dict
+  // Periodic probe of container liveness
+  livenessProbe dict
+  // Periodic probe of container service readiness
+  readinessProbe dict
+  // Image pull policy, One of Always, Never, IfNotPresent
+  imagePullPolicy string
+  // Security options the pod should run with
+  securityContext dict
+  // Container's working directory
+  workingDir string
+  // Whether this container should allocate a TTY for itself
+  tty bool
+}
+
+// Kubernetes Deployment
+k8s.deployment {
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+}
+
+// Kubernetes DaemonSet
+k8s.daemonset {
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+}
+
+// Kubernetes Job
+k8s.job {
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+}
+
+// Kubernetes Cron Job
+k8s.cronjob {
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+}
