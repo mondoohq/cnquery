@@ -25,6 +25,15 @@ func (k *lumiK8s) id() (string, error) {
 	return "k8s", nil
 }
 
+func (k *lumiK8s) GetServerVersion() (interface{}, error) {
+	kt, err := k8stransport(k.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonToDict(kt.ServerVersion())
+}
+
 func (k *lumiK8s) GetApiResources() ([]interface{}, error) {
 	kt, err := k8stransport(k.Runtime.Motor.Transport)
 	if err != nil {
@@ -69,7 +78,7 @@ func k8sResourceToLumi(r *lumi.Runtime, kind string, fn resourceConvertFn) ([]in
 		return nil, err
 	}
 
-	result, err := kt.Resources(kind)
+	result, err := kt.Resources(kind, "")
 	if err != nil {
 		return nil, err
 	}
@@ -265,7 +274,7 @@ func (k *lumiK8sPod) GetContainers() ([]interface{}, error) {
 		return nil, err
 	}
 
-	result, err := kt.Resources("pods")
+	result, err := kt.Resources("pods", "")
 	if err != nil {
 		return nil, err
 	}

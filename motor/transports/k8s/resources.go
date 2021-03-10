@@ -8,7 +8,12 @@ import (
 	"github.com/rs/zerolog/log"
 	api "go.mondoo.io/mondoo/cosmo/resources"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/version"
 )
+
+func (t *Transport) ServerVersion() *version.Info {
+	return t.d.ServerVersion
+}
 
 // discover api and resources that have a list method
 func (t *Transport) SupportedResources() (*api.ApiResourceIndex, error) {
@@ -26,9 +31,8 @@ type ResourceResult struct {
 	AllNs         bool
 }
 
-func (t *Transport) Resources(kind string) (*ResourceResult, error) {
+func (t *Transport) Resources(kind string, name string) (*ResourceResult, error) {
 	ctx := context.Background()
-	name := ""
 	ns := ""
 	allNs := true
 	manifestFile := ""

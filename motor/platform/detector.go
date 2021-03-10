@@ -2,6 +2,7 @@ package platform
 
 import (
 	"errors"
+
 	"go.mondoo.io/mondoo/motor/transports/equinix"
 
 	"github.com/rs/zerolog/log"
@@ -11,6 +12,7 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/azure"
 	"go.mondoo.io/mondoo/motor/transports/gcp"
 	ipmi "go.mondoo.io/mondoo/motor/transports/ipmi"
+	k8s_transport "go.mondoo.io/mondoo/motor/transports/k8s"
 	"go.mondoo.io/mondoo/motor/transports/ms365"
 	"go.mondoo.io/mondoo/motor/transports/vsphere"
 )
@@ -105,6 +107,26 @@ func (d *Detector) Platform() (*Platform, error) {
 			Title:   "Equinix Metal",
 			Kind:    transports.Kind_KIND_API,
 			Runtime: transports.RUNTIME_EQUINIX_METAL,
+		}, nil
+	case *k8s_transport.Transport:
+		release := ""
+		build := ""
+		arch := ""
+		sv := pt.ServerVersion()
+		if sv != nil {
+			release = sv.GitVersion
+			build = sv.BuildDate
+			arch = sv.Platform
+		}
+
+		return &Platform{
+			Name:    "kubernetes",
+			Title:   "Kubernetes Cluster",
+			Release: release,
+			Build:   build,
+			Arch:    arch,
+			Kind:    transports.Kind_KIND_API,
+			Runtime: transports.RUNTIME_KUBERNETES,
 		}, nil
 	default:
 		var resolved bool
