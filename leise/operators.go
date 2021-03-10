@@ -160,7 +160,7 @@ func compileComparable(c *compiler, id string, call *parser.Call, res *llx.CodeB
 	}
 
 	// find specialized or generalized builtin function
-	lt := left.Type(res.Code).Underlying()
+	lt := left.Type(res.Code)
 	rt := resolveType(&llx.Chunk{Primitive: right}, res.Code)
 
 	name := id + string(rt)

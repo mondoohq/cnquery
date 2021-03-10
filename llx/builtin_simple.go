@@ -1324,6 +1324,38 @@ func arrayOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return boolOp(c, bind, chunk, ref, opArrayOrBool)
 }
 
+func opBoolAndMap(left interface{}, right interface{}) bool {
+	return left.(bool) && (len(right.([]interface{})) != 0)
+}
+
+func opMapAndBool(left interface{}, right interface{}) bool {
+	return right.(bool) && (len(left.([]interface{})) != 0)
+}
+
+func opBoolOrMap(left interface{}, right interface{}) bool {
+	return left.(bool) || (len(right.([]interface{})) != 0)
+}
+
+func opMapOrBool(left interface{}, right interface{}) bool {
+	return right.(bool) || (len(left.([]interface{})) != 0)
+}
+
+func boolAndMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opBoolAndMap)
+}
+
+func boolOrMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opBoolOrMap)
+}
+
+func mapAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opMapAndBool)
+}
+
+func mapOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return boolOp(c, bind, chunk, ref, opMapOrBool)
+}
+
 // int &&/|| T
 
 func opIntAndFloat(left interface{}, right interface{}) bool {

@@ -96,6 +96,8 @@ func init() {
 			string("||" + types.Dict):      {f: boolOrDict, Label: "||"},
 			string("&&" + types.ArrayLike): {f: boolAndArray, Label: "&&"},
 			string("||" + types.ArrayLike): {f: boolOrArray, Label: "||"},
+			string("&&" + types.MapLike):   {f: boolAndMap, Label: "&&"},
+			string("||" + types.MapLike):   {f: boolOrMap, Label: "||"},
 		},
 		types.Int: {
 			// == / !=
