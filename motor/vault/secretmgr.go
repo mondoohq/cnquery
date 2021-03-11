@@ -115,7 +115,6 @@ func (vsm *VaultSecretManager) GetSecretMetadata(a *asset.Asset) (*SecretMetadat
 }
 
 func (vsm *VaultSecretManager) GetSecret(keyID string) (string, error) {
-	log.Info().Str("key-id", keyID).Msg("get secret")
 	cred, err := vsm.vault.Get(context.Background(), &CredentialID{
 		Key: keyID,
 	})
@@ -132,7 +131,7 @@ func (vsm *VaultSecretManager) EnrichConnection(a *asset.Asset, secretMetadata *
 	if vsm.vault == nil || a == nil || secretMetadata == nil {
 		return nil
 	}
-
+	log.Debug().Str("key-id", secretMetadata.SecretID).Str("format", secretMetadata.SecretFormat).Str("ssh", secretMetadata.Backend).Str("host", secretMetadata.Host).Str("user", secretMetadata.User).Msg("use secret for asset")
 	secret, err := vsm.GetSecret(secretMetadata.SecretID)
 	if err != nil {
 		return err
@@ -148,6 +147,7 @@ func (vsm *VaultSecretManager) EnrichConnection(a *asset.Asset, secretMetadata *
 		return err
 	}
 
+	log.Info().Str("secret", secretMetadata.SecretID).Msg("use secret from vault for asset")
 	// merge the data but relatively smart, if the backend connection was found, enrich the existing since it
 	// most-likely does not make sense to have 1+ ssh connections
 	found := false
