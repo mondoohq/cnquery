@@ -26,7 +26,7 @@ func NewSSMManagedInstancesDiscovery(cfg aws.Config) (*SSMManagedInstances, erro
 
 type SSMManagedInstances struct {
 	config        aws.Config
-	filterOptions ec2InstancesFilters
+	FilterOptions ec2InstancesFilters
 }
 
 func (ssmi *SSMManagedInstances) Name() string {
@@ -42,7 +42,7 @@ func (ssmi *SSMManagedInstances) List() ([]*asset.Asset, error) {
 	account := *identityResp.Account
 
 	instances := []*asset.Asset{}
-	poolOfJobs := jobpool.CreatePool(ssmi.getInstances(account, ssmi.filterOptions), 5)
+	poolOfJobs := jobpool.CreatePool(ssmi.getInstances(account, ssmi.FilterOptions), 5)
 	poolOfJobs.Run()
 
 	// check for errors

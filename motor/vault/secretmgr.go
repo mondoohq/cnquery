@@ -119,11 +119,13 @@ func (vsm *VaultSecretManager) GetSecret(keyID string) (string, error) {
 		Key: keyID,
 	})
 	if err != nil {
+		log.Error().Msgf("unable to retrieve secret id: %s", keyID)
 		return "", err
 	}
 	if cred == nil {
 		return "", errors.New("could not find the id: " + keyID)
 	}
+	log.Debug().Str("key-id", keyID).Msg("retrieved secret")
 	return cred.Secret, nil
 }
 
