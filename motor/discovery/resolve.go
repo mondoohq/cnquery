@@ -121,7 +121,10 @@ func ResolveAsset(root *asset.Asset, secretMgr vault.SecretManager) ([]*asset.As
 					return nil, err
 				} else {
 					// enrich connection with secret information
-					secretMgr.EnrichConnection(assetObj, secM)
+					err := secretMgr.EnrichConnection(assetObj, secM)
+					if err != nil {
+						log.Warn().Err(err).Msg("could not fetch secret information")
+					}
 				}
 			}
 
