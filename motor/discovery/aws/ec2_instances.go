@@ -36,7 +36,7 @@ type Ec2Instances struct {
 	config                     aws.Config
 	InstanceSSHUsername        string
 	Insecure                   bool
-	filterOptions              ec2InstancesFilters
+	FilterOptions              ec2InstancesFilters
 	SSMInstancesPlatformIdsMap map[string]*asset.Asset
 }
 
@@ -87,12 +87,12 @@ func (ec2i *Ec2Instances) getInstances(account string, ec2InstancesFilters ec2In
 			res := []*asset.Asset{}
 
 			input := &ec2.DescribeInstancesInput{}
-			if len(ec2i.filterOptions.instanceIds) > 0 {
-				input.InstanceIds = ec2i.filterOptions.instanceIds
+			if len(ec2i.FilterOptions.instanceIds) > 0 {
+				input.InstanceIds = ec2i.FilterOptions.instanceIds
 				log.Debug().Msgf("filtering by instance ids %v", input.InstanceIds)
 			}
-			if len(ec2i.filterOptions.tags) > 0 {
-				for k, v := range ec2i.filterOptions.tags {
+			if len(ec2i.FilterOptions.tags) > 0 {
+				for k, v := range ec2i.FilterOptions.tags {
 					input.Filters = append(input.Filters, types.Filter{Name: &k, Values: []string{v}})
 					log.Debug().Msgf("filtering by tag %s:%s", k, v)
 				}
@@ -135,7 +135,7 @@ func (ec2i *Ec2Instances) List() ([]*asset.Asset, error) {
 	account := *identityResp.Account
 
 	instances := []*asset.Asset{}
-	poolOfJobs := jobpool.CreatePool(ec2i.getInstances(account, ec2i.filterOptions), 5)
+	poolOfJobs := jobpool.CreatePool(ec2i.getInstances(account, ec2i.FilterOptions), 5)
 	poolOfJobs.Run()
 
 	// check for errors

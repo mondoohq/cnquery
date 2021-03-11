@@ -94,7 +94,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 			if err != nil {
 				return nil, errors.Wrap(err, "could not initialize aws ec2 ssm discovery")
 			}
-			s.filterOptions = assembleEc2InstancesFilters(discoverFilter)
+			s.FilterOptions = AssembleEc2InstancesFilters(discoverFilter)
 			assetList, err := s.List()
 			if err != nil {
 				return nil, errors.Wrap(err, "could not fetch ec2 ssm instances")
@@ -109,23 +109,6 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 	}
 	// discover ec2 instances
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {
-		// discover ssm instances
-		if val := discoverFilter["ssm"]; val == "true" {
-			s, err := NewSSMManagedInstancesDiscovery(trans.Config())
-			if err != nil {
-				return nil, errors.Wrap(err, "could not initialize aws ec2 ssm discovery")
-			}
-			s.filterOptions = assembleEc2InstancesFilters(discoverFilter)
-			assetList, err := s.List()
-			if err != nil {
-				return nil, errors.Wrap(err, "could not fetch ec2 ssm instances")
-			}
-			log.Debug().Int("instances", len(assetList)).Msg("completed ssm instance search")
-			for i := range assetList {
-				log.Debug().Str("name", assetList[i].Name).Msg("resolved ssm instance")
-				resolved = append(resolved, assetList[i])
-			}
-		}
 		r, err := NewEc2Discovery(trans.Config())
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize aws ec2 discovery")
@@ -138,7 +121,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 		}
 		r.Insecure = tc.Insecure
 
-		r.filterOptions = assembleEc2InstancesFilters(discoverFilter)
+		r.FilterOptions = AssembleEc2InstancesFilters(discoverFilter)
 
 		r.SSMInstancesPlatformIdsMap = ssmInstancesPlatformIdsMap
 
@@ -159,7 +142,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 	return resolved, nil
 }
 
-func assembleEc2InstancesFilters(opts map[string]string) ec2InstancesFilters {
+func AssembleEc2InstancesFilters(opts map[string]string) ec2InstancesFilters {
 	var ec2InstancesFilters ec2InstancesFilters
 	if _, ok := opts["instance-ids"]; ok {
 		instanceIds := strings.Split(opts["instance-ids"], ",")

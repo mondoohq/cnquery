@@ -1,9 +1,10 @@
 package discovery
 
 import (
-	"go.mondoo.io/mondoo/stringx"
 	"regexp"
 	"strings"
+
+	"go.mondoo.io/mondoo/stringx"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
