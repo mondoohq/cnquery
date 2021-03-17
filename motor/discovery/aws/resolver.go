@@ -30,7 +30,7 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{DiscoveryAll, DiscoveryInstances}
+	return []string{DiscoveryAll, DiscoveryInstances, DiscoverySSM}
 }
 
 func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
