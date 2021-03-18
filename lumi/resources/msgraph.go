@@ -114,7 +114,6 @@ func (m *lumiMsgraphBeta) GetUsers() ([]interface{}, error) {
 		user := users[i]
 
 		settings, _ := jsonToDict(user.Settings)
-
 		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.user",
 			"id", toString(user.ID),
 			"accountEnabled", toBool(user.AccountEnabled),
@@ -196,16 +195,64 @@ func (m *lumiMsgraphBeta) GetDomains() ([]interface{}, error) {
 	return res, nil
 }
 
+func (m *lumiMsgraphBeta) GetApplications() ([]interface{}, error) {
+	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	missingPermissions := mt.MissingRoles("Application.Read.All")
+	if len(missingPermissions) > 0 {
+		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
+	}
+
+	graphBetaClient, err := mt.GraphBetaClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	apps, err := graphBetaClient.Applications().Request().Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res := []interface{}{}
+	for i := range apps {
+		app := apps[i]
+
+		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.application",
+			"id", toString(app.ID),
+			"appId", toString(app.AppID),
+			"createdDateTime", app.CreatedDateTime,
+			"identifierUris", strSliceToInterface(app.IdentifierUris),
+			"displayName", toString(app.DisplayName),
+			"publisherDomain", toString(app.PublisherDomain),
+			"signInAudience", toString(app.SignInAudience),
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, lumiResource)
+	}
+
+	return res, nil
+}
+
 func (m *lumiMsgraphBetaOrganization) id() (string, error) {
-	return "msgraph.beta.organization", nil
+	return m.Id()
 }
 
 func (m *lumiMsgraphBetaUser) id() (string, error) {
-	return "msgraph.beta.user", nil
+	return m.Id()
 }
 
 func (m *lumiMsgraphBetaDomain) id() (string, error) {
-	return "msgraph.beta.domain", nil
+	return m.Id()
+}
+
+func (m *lumiMsgraphBetaApplication) id() (string, error) {
+	return m.Id()
 }
 
 func (m *lumiMsgraphBetaUser) GetSettings() (interface{}, error) {
