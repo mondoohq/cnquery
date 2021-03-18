@@ -163,6 +163,7 @@ func ssmInstanceToAsset(account string, region string, instance types.InstanceIn
 		State:       mapSmmManagedPingStateCode(instance.PingStatus),
 		Labels:      make(map[string]string),
 	}
+	asset.SsmPlatform = string(instance.PlatformType)
 
 	ec2svc := ec2.NewFromConfig(clonedConfig)
 	tagresp, err := ec2svc.DescribeTags(context.Background(), &ec2.DescribeTagsInput{
