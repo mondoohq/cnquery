@@ -2895,6 +2895,7 @@ msgraph.beta {
   organizations() []msgraph.beta.organization
   users() []msgraph.beta.user
   domains() []msgraph.beta.domain
+  applications() []msgraph.beta.application
   settings() []dict
 }
 
@@ -2943,6 +2944,16 @@ msgraph.beta.domain {
   passwordNotificationWindowInDays int
   passwordValidityPeriodInDays int
   supportedServices []string
+}
+
+msgraph.beta.application {
+  id string
+  appId string
+  createdDateTime time
+  identifierUris []string
+  displayName string
+  publisherDomain string
+  signInAudience string
 }
 
 msgraph.beta.security {
