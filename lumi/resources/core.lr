@@ -18,7 +18,6 @@ mondoo.eol {
   product string
   // Product Version
   version string
-
   // End-of-Life date for the product
   date() time
 }
@@ -2892,6 +2891,60 @@ azurerm.monitor.diagnosticsetting {
   storageAccount azurerm.storage.account
 }
 
+msgraph.beta {
+  organizations() []msgraph.beta.organization
+  users() []msgraph.beta.user
+  domains() []msgraph.beta.domain
+  settings() []dict
+}
+
+msgraph.beta.organization {
+  id string
+  assignedPlans []dict
+  createdDateTime time
+  displayName string
+  verifiedDomains []dict
+}
+
+msgraph.beta.user {
+  id string
+  accountEnabled bool
+  city string
+  companyName string
+  country string
+  createdDateTime time
+  department string
+  displayName string
+  employeeId string
+  givenName string
+  jobTitle string
+  mail string
+  mobilePhone string
+  otherMails []string
+  officeLocation string
+  postalCode string
+  state string
+  streetAddress string
+  surname string
+  userPrincipalName string
+  userType string
+  settings() dict
+}
+
+msgraph.beta.domain {
+  id string
+  authenticationType string
+  availabilityStatus string
+  isAdminManaged bool
+  isDefault bool
+  isInitial bool
+  isRoot bool
+  isVerified bool
+  passwordNotificationWindowInDays int
+  passwordValidityPeriodInDays int
+  supportedServices []string
+}
+
 msgraph.beta.security {
   secureScores() []msgraph.beta.security.securityscore
   latestSecureScores() msgraph.beta.security.securityscore
@@ -2911,6 +2964,10 @@ msgraph.beta.security.securityscore {
   vendorInformation dict
 }
 
+msgraph.beta.profiles {
+  authorizationPolicy() dict
+  identitySecurityDefaultsEnforcementPolicy() dict
+}
 
 // Windows-specific resource to get operating system details
 windows {
