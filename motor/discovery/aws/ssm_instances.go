@@ -163,7 +163,6 @@ func ssmInstanceToAsset(account string, region string, instance types.InstanceIn
 		State:       mapSmmManagedPingStateCode(instance.PingStatus),
 		Labels:      make(map[string]string),
 	}
-	asset.SsmPlatform = string(instance.PlatformType)
 
 	ec2svc := ec2.NewFromConfig(clonedConfig)
 	tagresp, err := ec2svc.DescribeTags(context.Background(), &ec2.DescribeTagsInput{
@@ -172,6 +171,8 @@ func ssmInstanceToAsset(account string, region string, instance types.InstanceIn
 				Values: []string{*instance.InstanceId}},
 		},
 	})
+
+	asset.Labels["ssm_platform"] = string(instance.PlatformType)
 
 	if err != nil {
 		log.Warn().Err(err).Msg("could not gather ssm instance tag information")

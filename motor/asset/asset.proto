@@ -54,6 +54,4 @@ message Asset {
 
   // relationships to parent
   string ParentPlatformID = 30;
-
-  string ssmPlatform = 31;
 }
