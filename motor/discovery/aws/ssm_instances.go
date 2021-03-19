@@ -172,7 +172,7 @@ func ssmInstanceToAsset(account string, region string, instance types.InstanceIn
 		},
 	})
 
-	asset.Labels["ssm_platform"] = string(instance.PlatformType)
+	asset.Labels["ssm.aws.mondoo.app/platform"] = string(instance.PlatformType)
 
 	if err != nil {
 		log.Warn().Err(err).Msg("could not gather ssm instance tag information")
