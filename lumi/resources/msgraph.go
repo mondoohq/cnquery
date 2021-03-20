@@ -42,6 +42,10 @@ func (m *lumiMsgraphBeta) GetSettings() ([]interface{}, error) {
 	return jsonToDictSlice(settings)
 }
 
+func (m *lumiMsgraphBetaOrganization) id() (string, error) {
+	return m.Id()
+}
+
 func (m *lumiMsgraphBeta) GetOrganizations() ([]interface{}, error) {
 	mt, err := ms365transport(m.Runtime.Motor.Transport)
 	if err != nil {
@@ -85,6 +89,10 @@ func (m *lumiMsgraphBeta) GetOrganizations() ([]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func (m *lumiMsgraphBetaUser) id() (string, error) {
+	return m.Id()
 }
 
 func (m *lumiMsgraphBeta) GetUsers() ([]interface{}, error) {
@@ -147,6 +155,10 @@ func (m *lumiMsgraphBeta) GetUsers() ([]interface{}, error) {
 	return res, nil
 }
 
+func (m *lumiMsgraphBetaDomain) id() (string, error) {
+	return m.Id()
+}
+
 func (m *lumiMsgraphBeta) GetDomains() ([]interface{}, error) {
 	mt, err := ms365transport(m.Runtime.Motor.Transport)
 	if err != nil {
@@ -195,6 +207,65 @@ func (m *lumiMsgraphBeta) GetDomains() ([]interface{}, error) {
 	return res, nil
 }
 
+func (m *lumiMsgraphBetaDomaindnsrecord) id() (string, error) {
+	return m.Id()
+}
+
+func (m *lumiMsgraphBetaDomain) GetServiceConfigurationRecords() ([]interface{}, error) {
+	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	missingPermissions := mt.MissingRoles("Domain.Read.All")
+	if len(missingPermissions) > 0 {
+		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
+	}
+
+	id, err := m.Id()
+	if err != nil {
+		return nil, err
+	}
+
+	graphBetaClient, err := mt.GraphBetaClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	records, err := graphBetaClient.Domains().ID(id).ServiceConfigurationRecords().Request().Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res := []interface{}{}
+	for i := range records {
+		record := records[i]
+
+		properties, _ := jsonToDict(record.AdditionalData)
+
+		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.domaindnsrecord",
+			"id", toString(record.ID),
+			"isOptional", toBool(record.IsOptional),
+			"label", toString(record.Label),
+			"recordType", toString(record.RecordType),
+			"supportedService", toString(record.SupportedService),
+			"ttl", toInt(record.TTL),
+			"properties", properties,
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, lumiResource)
+	}
+
+	return res, nil
+}
+
+func (m *lumiMsgraphBetaApplication) id() (string, error) {
+	return m.Id()
+}
+
 func (m *lumiMsgraphBeta) GetApplications() ([]interface{}, error) {
 	mt, err := ms365transport(m.Runtime.Motor.Transport)
 	if err != nil {
@@ -237,22 +308,6 @@ func (m *lumiMsgraphBeta) GetApplications() ([]interface{}, error) {
 	}
 
 	return res, nil
-}
-
-func (m *lumiMsgraphBetaOrganization) id() (string, error) {
-	return m.Id()
-}
-
-func (m *lumiMsgraphBetaUser) id() (string, error) {
-	return m.Id()
-}
-
-func (m *lumiMsgraphBetaDomain) id() (string, error) {
-	return m.Id()
-}
-
-func (m *lumiMsgraphBetaApplication) id() (string, error) {
-	return m.Id()
 }
 
 func (m *lumiMsgraphBetaUser) GetSettings() (interface{}, error) {

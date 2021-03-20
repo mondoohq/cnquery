@@ -2944,6 +2944,17 @@ msgraph.beta.domain {
   passwordNotificationWindowInDays int
   passwordValidityPeriodInDays int
   supportedServices []string
+  serviceConfigurationRecords() []msgraph.beta.domaindnsrecord
+}
+
+msgraph.beta.domaindnsrecord {
+  id string
+  isOptional bool
+  label string
+  recordType string
+  supportedService string
+  ttl int
+  properties dict
 }
 
 msgraph.beta.application {
