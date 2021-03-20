@@ -3032,6 +3032,23 @@ msgraph.beta.devicemanagement.devicecompliancepolicy {
   assignments []dict
 }
 
+msexchange.online {
+  malwareFilterPolicy []dict
+  hostedOutboundSpamFilterPolicy []dict
+  transportRule []dict
+  remoteDomain []dict
+  safeLinksPolicy []dict
+  safeAttachmentPolicy []dict
+  organizationConfig dict
+  authenticationPolicy []dict
+  antiPhishPolicy []dict
+  dkimSigningConfig []dict
+  owaMailboxPolicy []dict
+  adminAuditLogConfig dict
+  phishFilterPolicy []dict
+  mailbox []dict
+}
+
 // Windows-specific resource to get operating system details
 windows {
   // Gets a consolidated object of system and operating system properties
