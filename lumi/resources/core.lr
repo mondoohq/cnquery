@@ -2986,9 +2986,11 @@ msgraph.beta.security.securityscore {
   vendorInformation dict
 }
 
-msgraph.beta.profiles {
+msgraph.beta.policies {
   authorizationPolicy() dict
   identitySecurityDefaultsEnforcementPolicy() dict
+  adminConsentRequestPolicy() dict
+  permissionGrantPolicies() []dict
 }
 
 msgraph.beta.rolemanagement {
