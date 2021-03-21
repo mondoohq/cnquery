@@ -16,6 +16,8 @@ type ExchangeOnlineReport struct {
 	PhishFilterPolicy              []interface{} `json:"PhishFilterPolicy"`
 	Mailbox                        []interface{} `json:"Mailbox"`
 	AtpPolicyForO365               []interface{} `json:"AtpPolicyForO365"`
+	SharingPolicy                  []interface{} `json:"SharingPolicy"`
+	RoleAssignmentPolicy           []interface{} `json:"RoleAssignmentPolicy"`
 }
 
 type SharepointOnlineReport struct {

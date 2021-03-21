@@ -47,6 +47,8 @@ func (p *lumiMs365Exchangeonline) init(args *lumi.Args) (*lumi.Args, Ms365Exchan
 	phishFilterPolicy, _ := jsonToDictSlice(report.ExchangeOnline.PhishFilterPolicy)
 	mailbox, _ := jsonToDictSlice(report.ExchangeOnline.Mailbox)
 	atpPolicyForO365, _ := jsonToDictSlice(report.ExchangeOnline.AtpPolicyForO365)
+	sharingPolicy, _ := jsonToDictSlice(report.ExchangeOnline.SharingPolicy)
+	roleAssignmentPolicy, _ := jsonToDictSlice(report.ExchangeOnline.RoleAssignmentPolicy)
 
 	(*args)["malwareFilterPolicy"] = malwareFilterPolicy
 	(*args)["hostedOutboundSpamFilterPolicy"] = hostedOutboundSpamFilterPolicy
@@ -63,6 +65,8 @@ func (p *lumiMs365Exchangeonline) init(args *lumi.Args) (*lumi.Args, Ms365Exchan
 	(*args)["phishFilterPolicy"] = phishFilterPolicy
 	(*args)["mailbox"] = mailbox
 	(*args)["atpPolicyForO365"] = atpPolicyForO365
+	(*args)["sharingPolicy"] = sharingPolicy
+	(*args)["roleAssignmentPolicy"] = roleAssignmentPolicy
 
 	return args, nil, nil
 }
