@@ -3,7 +3,9 @@ package ms365
 import (
 	"context"
 	"encoding/json"
+	ms356_resources "go.mondoo.io/mondoo/lumi/resources/ms365"
 	"os"
+	"sync"
 
 	"github.com/cockroachdb/errors"
 	"github.com/dgrijalva/jwt-go"
@@ -58,10 +60,11 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 	}
 
 	t := &Transport{
-		tenantID:     msauth.TenantId,
-		opts:         tc.Options,
-		clientID:     msauth.ClientId,
-		clientSecret: msauth.ClientSecret,
+		tenantID:                 msauth.TenantId,
+		opts:                     tc.Options,
+		clientID:                 msauth.ClientId,
+		clientSecret:             msauth.ClientSecret,
+		powershellDataReportFile: tc.Options["mondoo-ms365-datareport"],
 	}
 
 	claims, err := t.TokenClaims()
@@ -89,11 +92,14 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 }
 
 type Transport struct {
-	tenantID     string
-	clientID     string
-	clientSecret string
-	opts         map[string]string
-	rolesMap     map[string]struct{}
+	tenantID                    string
+	clientID                    string
+	clientSecret                string
+	opts                        map[string]string
+	rolesMap                    map[string]struct{}
+	powershellDataReportFile    string
+	ms365PowershellReport       *ms356_resources.Microsoft365Report
+	ms365PowershellReportLoader sync.Mutex
 }
 
 func (t *Transport) TokenClaims() (*MicrosoftIdTokenClaims, error) {
