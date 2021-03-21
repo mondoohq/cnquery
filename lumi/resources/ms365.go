@@ -1,33 +1,20 @@
 package resources
 
 import (
-	"encoding/json"
-	"io/ioutil"
-
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/lumi/resources/ms365"
 )
-
-func getMs365DataReport() (*ms365.Microsoft365Report, error) {
-	// TODO: get path from transport option
-	data, err := ioutil.ReadFile("/Users/chris-rock/go/src/go.mondoo.io/mondoo/lumi/resources/ms365/testdata/exchangeonlinereport.json")
-	if err != nil {
-		return nil, err
-	}
-	report := ms365.Microsoft365Report{}
-	err = json.Unmarshal(data, &report)
-	if err != nil {
-		return nil, err
-	}
-	return &report, nil
-}
 
 func (m *lumiMs365Exchangeonline) id() (string, error) {
 	return "ms365.exchangeonline", nil
 }
 
-func (p *lumiMs365Exchangeonline) init(args *lumi.Args) (*lumi.Args, Ms365Exchangeonline, error) {
-	report, err := getMs365DataReport()
+func (m *lumiMs365Exchangeonline) init(args *lumi.Args) (*lumi.Args, Ms365Exchangeonline, error) {
+	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	report, err := mt.GetMs365DataReport()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -75,8 +62,13 @@ func (m *lumiMs365Sharepointonline) id() (string, error) {
 	return "ms365.sharepointonline", nil
 }
 
-func (p *lumiMs365Sharepointonline) init(args *lumi.Args) (*lumi.Args, Ms365Sharepointonline, error) {
-	report, err := getMs365DataReport()
+func (m *lumiMs365Sharepointonline) init(args *lumi.Args) (*lumi.Args, Ms365Sharepointonline, error) {
+	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	report, err := mt.GetMs365DataReport()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -94,8 +86,13 @@ func (m *lumiMs365Teams) id() (string, error) {
 	return "ms365.teams", nil
 }
 
-func (p *lumiMs365Teams) init(args *lumi.Args) (*lumi.Args, Ms365Teams, error) {
-	report, err := getMs365DataReport()
+func (m *lumiMs365Teams) init(args *lumi.Args) (*lumi.Args, Ms365Teams, error) {
+	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	report, err := mt.GetMs365DataReport()
 	if err != nil {
 		return nil, nil, err
 	}
