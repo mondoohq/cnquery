@@ -463,11 +463,11 @@ func (s *lumiMsgraphBetaSecuritySecurityscore) id() (string, error) {
 	return s.Id()
 }
 
-func (s *lumiMsgraphBetaProfiles) id() (string, error) {
-	return "msgraph.beta.profiles", nil
+func (s *lumiMsgraphBetaPolicies) id() (string, error) {
+	return "msgraph.beta.policies", nil
 }
 
-func (m *lumiMsgraphBetaProfiles) GetAuthorizationPolicy() (interface{}, error) {
+func (m *lumiMsgraphBetaPolicies) GetAuthorizationPolicy() (interface{}, error) {
 	mt, err := ms365transport(m.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
@@ -499,7 +499,7 @@ func (m *lumiMsgraphBetaProfiles) GetAuthorizationPolicy() (interface{}, error) 
 	return nil, nil
 }
 
-func (m *lumiMsgraphBetaProfiles) GetIdentitySecurityDefaultsEnforcementPolicy() (interface{}, error) {
+func (m *lumiMsgraphBetaPolicies) GetIdentitySecurityDefaultsEnforcementPolicy() (interface{}, error) {
 	mt, err := ms365transport(m.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
@@ -521,6 +521,57 @@ func (m *lumiMsgraphBetaProfiles) GetIdentitySecurityDefaultsEnforcementPolicy()
 		return nil, err
 	}
 	return jsonToDict(policy.AdditionalData)
+}
+
+// https://docs.microsoft.com/en-us/graph/api/adminconsentrequestpolicy-get?view=graph-rest-beta
+func (m *lumiMsgraphBetaPolicies) GetAdminConsentRequestPolicy() (interface{}, error) {
+	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	missingPermissions := mt.MissingRoles("Policy.Read.All")
+	if len(missingPermissions) > 0 {
+		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
+	}
+
+	graphBetaClient, err := mt.GraphBetaClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	policy, err := graphBetaClient.Policies().ID("adminConsentRequestPolicy").Request().Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return jsonToDict(policy.AdditionalData)
+}
+
+// https://docs.microsoft.com/en-us/azure/active-directory/manage-apps/configure-user-consent?tabs=azure-powershell
+// https://docs.microsoft.com/en-us/graph/api/permissiongrantpolicy-list?view=graph-rest-1.0&tabs=http
+func (m *lumiMsgraphBetaPolicies) GetPermissionGrantPolicies() (interface{}, error) {
+	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	missingPermissions := mt.MissingRoles("Policy.Read.All")
+	if len(missingPermissions) > 0 {
+		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
+	}
+
+	graphBetaClient, err := mt.GraphBetaClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	policy, err := graphBetaClient.Policies().ID("permissionGrantPolicies").Request().Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return jsonToDictSlice(policy.AdditionalData["value"])
 }
 
 func (m *lumiMsgraphBetaRolemanagement) id() (string, error) {
