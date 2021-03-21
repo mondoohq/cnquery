@@ -3043,7 +3043,7 @@ msgraph.beta.devicemanagement.devicecompliancepolicy {
   assignments []dict
 }
 
-msexchange.online {
+ms365.exchangeonline {
   malwareFilterPolicy []dict
   hostedOutboundSpamFilterPolicy []dict
   transportRule []dict
@@ -3058,6 +3058,17 @@ msexchange.online {
   adminAuditLogConfig dict
   phishFilterPolicy []dict
   mailbox []dict
+  atpPolicyForO365 []dict
+}
+
+ms365.sharepointonline {
+  spoTenant dict
+  spoTenantSyncClientRestriction dict
+}
+
+ms365.teams {
+  csTeamsClientConfiguration dict
+  csOAuthConfiguration []dict
 }
 
 // Windows-specific resource to get operating system details
