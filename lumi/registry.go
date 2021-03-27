@@ -30,6 +30,16 @@ func NewRegistry() *Registry {
 	}
 }
 
+// Clone creates a shallow copy of this registry, which means you can add/remove
+// resources, but don't mess with their underlying configuration
+func (ctx *Registry) Clone() *Registry {
+	res := make(map[string]*ResourceCls, len(ctx.Resources))
+	for k, v := range ctx.Resources {
+		res[k] = v
+	}
+	return &Registry{res}
+}
+
 // for a given resource name, make sure all parent resources exist
 // e.g. sshd.config ==> make sure sshd exists
 func (ctx *Registry) ensureResourceChain(name string) {
