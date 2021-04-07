@@ -137,7 +137,7 @@ func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 	}
 
 	arg1 := chunk.Function.Args[1]
-	if arg1.Type.Underlying() != types.FunctionLike {
+	if types.Type(arg1.Type).Underlying() != types.FunctionLike {
 		right := arg1.RawData().Value
 		var res []interface{}
 		for i := range list {
