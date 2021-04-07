@@ -14,34 +14,34 @@ func init() {
 }
 
 func TestPrimitiveBool(t *testing.T) {
-	a := &Primitive{Type: types.Bool, Value: bool2bytes(true)}
-	b := &Primitive{Type: types.Bool, Value: bool2bytes(false)}
+	a := &Primitive{Type: string(types.Bool), Value: bool2bytes(true)}
+	b := &Primitive{Type: string(types.Bool), Value: bool2bytes(false)}
 	assert.Equal(t, a, BoolPrimitive(true))
 	assert.Equal(t, b, BoolPrimitive(false))
 }
 
 func TestPrimitiveFloat(t *testing.T) {
-	a := &Primitive{Type: types.Float, Value: []byte{0x9a, 0x99, 0x99, 0x99, 0x99, 0x99, 0x28, 0x40}}
+	a := &Primitive{Type: string(types.Float), Value: []byte{0x9a, 0x99, 0x99, 0x99, 0x99, 0x99, 0x28, 0x40}}
 	assert.Equal(t, a, FloatPrimitive(12.3))
 }
 
 func TestPrimitiveInt(t *testing.T) {
-	a := &Primitive{Type: types.Int, Value: []byte{0xf6, 0x01}}
+	a := &Primitive{Type: string(types.Int), Value: []byte{0xf6, 0x01}}
 	assert.Equal(t, a, IntPrimitive(123))
 }
 
 func TestPrimitiveString(t *testing.T) {
-	a := &Primitive{Type: types.String, Value: []byte("hi")}
+	a := &Primitive{Type: string(types.String), Value: []byte("hi")}
 	assert.Equal(t, a, StringPrimitive("hi"))
 }
 
 func TestPrimitiveRegex(t *testing.T) {
-	a := &Primitive{Type: types.Regex, Value: []byte(".*")}
+	a := &Primitive{Type: string(types.Regex), Value: []byte(".*")}
 	assert.Equal(t, a, RegexPrimitive(".*"))
 }
 
 func TestPrimitiveTime(t *testing.T) {
-	a := &Primitive{Type: types.Time, Value: []byte{0x15, 0xcd, 0x5b, 0x07, 0x00, 0x00, 0x00, 0x00, 0x15, 0xcd, 0x5b, 0x07}}
+	a := &Primitive{Type: string(types.Time), Value: []byte{0x15, 0xcd, 0x5b, 0x07, 0x00, 0x00, 0x00, 0x00, 0x15, 0xcd, 0x5b, 0x07}}
 	ut := time.Unix(123456789, 123456789)
 	assert.Equal(t, a, TimePrimitive(&ut))
 
@@ -49,23 +49,23 @@ func TestPrimitiveTime(t *testing.T) {
 }
 
 func TestPrimitiveRef(t *testing.T) {
-	a := &Primitive{Type: types.Ref, Value: []byte{0xf6, 0x01}}
+	a := &Primitive{Type: string(types.Ref), Value: []byte{0xf6, 0x01}}
 	assert.Equal(t, a, RefPrimitive(123))
 }
 
 func TestPrimitiveArray(t *testing.T) {
-	a := &Primitive{Type: types.Array(types.Int), Array: []*Primitive{IntPrimitive(123)}}
+	a := &Primitive{Type: string(types.Array(types.Int)), Array: []*Primitive{IntPrimitive(123)}}
 	assert.Equal(t, a, ArrayPrimitive([]*Primitive{IntPrimitive(123)}, types.Int))
 }
 
 func TestPrimitiveMap(t *testing.T) {
-	a := &Primitive{Type: types.Map(types.String, types.Int), Map: map[string]*Primitive{"a": IntPrimitive(123)}}
+	a := &Primitive{Type: string(types.Map(types.String, types.Int)), Map: map[string]*Primitive{"a": IntPrimitive(123)}}
 	assert.Equal(t, a, MapPrimitive(map[string]*Primitive{"a": IntPrimitive(123)}, types.Int))
 }
 
 func TestPrimitiveFunction(t *testing.T) {
 	a := &Primitive{
-		Type:  types.Function(0, nil),
+		Type:  string(types.Function(0, nil)),
 		Value: []byte{0xf6, 0x01},
 	}
 	assert.Equal(t, a, FunctionPrimitive(123))

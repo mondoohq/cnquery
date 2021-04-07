@@ -230,7 +230,7 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, lookup func(s string) (
 		leftChunk := l.Code[left-1]
 		if leftChunk == nil {
 			res.Actual = &Primitive{
-				Type:  types.Any,
+				Type:  string(types.Any),
 				Value: []byte("< unknown expected value >"),
 			}
 		}
@@ -255,7 +255,7 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, lookup func(s string) (
 	rightPrim := chunk.Function.Args[0]
 	if rightPrim == nil {
 		res.Expected = &Primitive{
-			Type:  types.Any,
+			Type:  string(types.Any),
 			Value: []byte("< unknown actual value >"),
 		}
 	}
@@ -266,7 +266,7 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, lookup func(s string) (
 		right, ok := rightPrim.Ref()
 		if !ok {
 			res.Expected = &Primitive{
-				Type:  types.Any,
+				Type:  string(types.Any),
 				Value: []byte("< unknown actual value >"),
 			}
 		} else {

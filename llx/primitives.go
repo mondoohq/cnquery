@@ -11,35 +11,35 @@ import (
 )
 
 // UnsetPrimitive is the unset primitive
-var UnsetPrimitive = &Primitive{Type: types.Unset}
+var UnsetPrimitive = &Primitive{Type: string(types.Unset)}
 
 // NilPrimitive is the empty primitive
-var NilPrimitive = &Primitive{Type: types.Nil}
+var NilPrimitive = &Primitive{Type: string(types.Nil)}
 
 // BoolPrimitive creates a primitive from a boolean value
 func BoolPrimitive(v bool) *Primitive {
 	return &Primitive{
-		Type:  types.Bool,
+		Type:  string(types.Bool),
 		Value: bool2bytes(v),
 	}
 }
 
 // MaxIntPrimitive is the largest integer possible
 var MaxIntPrimitive = &Primitive{
-	Type:  types.Int,
+	Type:  string(types.Int),
 	Value: int2bytes(math.MaxInt64),
 }
 
 // MinIntPrimitive is the smallest integer possible
 var MinIntPrimitive = &Primitive{
-	Type:  types.Int,
+	Type:  string(types.Int),
 	Value: int2bytes(math.MinInt64),
 }
 
 // IntPrimitive creates a primitive from an int value
 func IntPrimitive(v int64) *Primitive {
 	return &Primitive{
-		Type:  types.Int,
+		Type:  string(types.Int),
 		Value: int2bytes(v),
 	}
 }
@@ -47,7 +47,7 @@ func IntPrimitive(v int64) *Primitive {
 // FloatPrimitive creates a primitive from a float value
 func FloatPrimitive(v float64) *Primitive {
 	return &Primitive{
-		Type:  types.Float,
+		Type:  string(types.Float),
 		Value: float2bytes(v),
 	}
 }
@@ -55,7 +55,7 @@ func FloatPrimitive(v float64) *Primitive {
 // StringPrimitive creates a primitive from a string value
 func StringPrimitive(s string) *Primitive {
 	return &Primitive{
-		Type:  types.String,
+		Type:  string(types.String),
 		Value: []byte(s),
 	}
 }
@@ -63,7 +63,7 @@ func StringPrimitive(s string) *Primitive {
 // RegexPrimitive creates a primitive from a regex in string shape
 func RegexPrimitive(r string) *Primitive {
 	return &Primitive{
-		Type:  types.Regex,
+		Type:  string(types.Regex),
 		Value: []byte(r),
 	}
 }
@@ -87,7 +87,7 @@ func TimePrimitive(t *time.Time) *Primitive {
 	binary.LittleEndian.PutUint32(v[8:], uint32(nanos))
 
 	return &Primitive{
-		Type:  types.Time,
+		Type:  string(types.Time),
 		Value: v,
 	}
 }
@@ -112,7 +112,7 @@ func ScorePrimitive(num int32) *Primitive {
 	}
 
 	return &Primitive{
-		Type:  types.Score,
+		Type:  string(types.Score),
 		Value: v,
 	}
 }
@@ -125,7 +125,7 @@ func CvssScorePrimitive(vector string) *Primitive {
 	}
 
 	return &Primitive{
-		Type:  types.Score,
+		Type:  string(types.Score),
 		Value: b,
 	}
 }
@@ -133,7 +133,7 @@ func CvssScorePrimitive(vector string) *Primitive {
 // RefPrimitive creates a primitive from an int value
 func RefPrimitive(v int32) *Primitive {
 	return &Primitive{
-		Type:  types.Ref,
+		Type:  string(types.Ref),
 		Value: int2bytes(int64(v)),
 	}
 }
@@ -141,7 +141,7 @@ func RefPrimitive(v int32) *Primitive {
 // ArrayPrimitive creates a primitive from a list of primitives
 func ArrayPrimitive(v []*Primitive, childType types.Type) *Primitive {
 	return &Primitive{
-		Type:  types.Array(childType),
+		Type:  string(types.Array(childType)),
 		Array: v,
 	}
 }
@@ -149,7 +149,7 @@ func ArrayPrimitive(v []*Primitive, childType types.Type) *Primitive {
 // MapPrimitive creates a primitive from a map of primitives
 func MapPrimitive(v map[string]*Primitive, childType types.Type) *Primitive {
 	return &Primitive{
-		Type: types.Map(types.String, childType),
+		Type: string(types.Map(types.String, childType)),
 		Map:  v,
 	}
 }
@@ -158,7 +158,7 @@ func MapPrimitive(v map[string]*Primitive, childType types.Type) *Primitive {
 func FunctionPrimitive(v int32) *Primitive {
 	return &Primitive{
 		// TODO: function signature
-		Type:  types.Function(0, nil),
+		Type:  string(types.Function(0, nil)),
 		Value: int2bytes(int64(v)),
 	}
 }
@@ -174,7 +174,7 @@ func (p *Primitive) Ref() (int32, bool) {
 
 // Label returns a printable label for this primitive
 func (p *Primitive) Label(code *Code) string {
-	switch p.Type.Underlying() {
+	switch types.Type(p.Type).Underlying() {
 	case types.Any:
 		return string(p.Value)
 	case types.Ref:
