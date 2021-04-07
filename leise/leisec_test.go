@@ -70,7 +70,7 @@ func assertFunction(t *testing.T, id string, f *llx.Function, chunk *llx.Chunk) 
 func assertProperty(t *testing.T, name string, typ types.Type, chunk *llx.Chunk) {
 	assert.Equal(t, llx.Chunk_PROPERTY, chunk.Call)
 	assert.Equal(t, name, chunk.Id, "property name is set")
-	assert.Equal(t, &llx.Primitive{Type: typ}, chunk.Primitive, "property type is set")
+	assert.Equal(t, &llx.Primitive{Type: string(typ)}, chunk.Primitive, "property type is set")
 }
 
 //    ===========================
@@ -120,7 +120,7 @@ func TestCompiler_Buggy(t *testing.T) {
 		{`mondoo { version }`, []*llx.Chunk{
 			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
 			{Id: "{}", Call: llx.Chunk_FUNCTION, Function: &llx.Function{
-				Type:    types.Block,
+				Type:    string(types.Block),
 				Binding: 1,
 				Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
 			}},
@@ -129,7 +129,7 @@ func TestCompiler_Buggy(t *testing.T) {
 		{`file(not-there)`, nil, errors.New("addResourceCall error: cannot find resource for identifier 'not'")},
 		{`if(true) {`, []*llx.Chunk{
 			{Call: llx.Chunk_FUNCTION, Id: "if", Function: &llx.Function{
-				Type: types.Unset,
+				Type: string(types.Unset),
 				Args: []*llx.Primitive{
 					llx.BoolPrimitive(true),
 					llx.FunctionPrimitive(1),
@@ -165,49 +165,49 @@ func TestCompiler_Simple(t *testing.T) {
 		{"\"hi\"", llx.StringPrimitive("hi")},
 		{"/hi/", llx.RegexPrimitive("hi")},
 		{"[true, false]", &llx.Primitive{
-			Type: types.Array(types.Bool),
+			Type: string(types.Array(types.Bool)),
 			Array: []*llx.Primitive{
 				llx.BoolPrimitive(true),
 				llx.BoolPrimitive(false),
 			},
 		}},
 		{"[1, 2]", &llx.Primitive{
-			Type: types.Array(types.Int),
+			Type: string(types.Array(types.Int)),
 			Array: []*llx.Primitive{
 				llx.IntPrimitive(1),
 				llx.IntPrimitive(2),
 			},
 		}},
 		{"[1.2,3.4]", &llx.Primitive{
-			Type: types.Array(types.Float),
+			Type: string(types.Array(types.Float)),
 			Array: []*llx.Primitive{
 				llx.FloatPrimitive(1.2),
 				llx.FloatPrimitive(3.4),
 			},
 		}},
 		{"[\"a\",\"b\"]", &llx.Primitive{
-			Type: types.Array(types.String),
+			Type: string(types.Array(types.String)),
 			Array: []*llx.Primitive{
 				llx.StringPrimitive("a"),
 				llx.StringPrimitive("b"),
 			},
 		}},
 		{"[1.2,1]", &llx.Primitive{
-			Type: types.Array(types.Any),
+			Type: string(types.Array(types.Any)),
 			Array: []*llx.Primitive{
 				llx.FloatPrimitive(1.2),
 				llx.IntPrimitive(1),
 			},
 		}},
 		{"[\n  1.2,\n  1\n]", &llx.Primitive{
-			Type: types.Array(types.Any),
+			Type: string(types.Array(types.Any)),
 			Array: []*llx.Primitive{
 				llx.FloatPrimitive(1.2),
 				llx.IntPrimitive(1),
 			},
 		}},
 		{"{a: 123}", &llx.Primitive{
-			Type: types.Map(types.String, types.Int),
+			Type: string(types.Map(types.String, types.Int)),
 			Map: map[string]*llx.Primitive{
 				"a": llx.IntPrimitive(123),
 			},
@@ -259,7 +259,7 @@ func TestCompiler_Comparisons(t *testing.T) {
 					assert.Equal(t, llx.Chunk_FUNCTION, o.Call)
 					assert.Equal(t, op+string(valres.Type), o.Id)
 					assert.Equal(t, int32(1), o.Function.Binding)
-					assert.Equal(t, types.Bool, o.Function.Type)
+					assert.Equal(t, types.Bool, types.Type(o.Function.Type))
 					assert.Equal(t, valres, o.Function.Args[0])
 				})
 			})
@@ -290,7 +290,7 @@ func TestCompiler_LogicalOps(t *testing.T) {
 						r := res.Code.Code[1]
 						assert.Equal(t, llx.Chunk_FUNCTION, r.Call)
 						assert.Equal(t, int32(1), r.Function.Binding)
-						assert.Equal(t, types.Bool, r.Function.Type)
+						assert.Equal(t, types.Bool, types.Type(r.Function.Type))
 						assert.Equal(t, valres2, r.Function.Args[0])
 
 						f, err := llx.BuiltinFunction(l.Type(res.Code), r.Id)
@@ -342,7 +342,7 @@ func TestCompiler_Assignment(t *testing.T) {
 
 func TestCompiler_Props(t *testing.T) {
 	compileProps(t, "props.name", map[string]*llx.Primitive{
-		"name": {Type: types.String},
+		"name": {Type: string(types.String)},
 	}, func(res *llx.CodeBundle) {
 		assertProperty(t, "name", types.String, res.Code.Code[0])
 		assert.Equal(t, []int32{1}, res.Code.Entrypoints)
@@ -351,11 +351,11 @@ func TestCompiler_Props(t *testing.T) {
 
 	// prop <op> value
 	compileProps(t, "props.name == 'bob'", map[string]*llx.Primitive{
-		"name": {Type: types.String},
+		"name": {Type: string(types.String)},
 	}, func(res *llx.CodeBundle) {
 		assertProperty(t, "name", types.String, res.Code.Code[0])
 		assertFunction(t, "=="+string(types.String), &llx.Function{
-			Type:    types.Bool,
+			Type:    string(types.Bool),
 			Binding: 1,
 			Args:    []*llx.Primitive{llx.StringPrimitive("bob")},
 		}, res.Code.Code[1])
@@ -365,22 +365,22 @@ func TestCompiler_Props(t *testing.T) {
 
 	// different compile stages yielding the same checksums
 	compileProps(t, "props.name == 'bob'", map[string]*llx.Primitive{
-		"name": {Type: types.String},
+		"name": {Type: string(types.String)},
 	}, func(res1 *llx.CodeBundle) {
 		compileProps(t, "props.name == 'bob'", map[string]*llx.Primitive{
-			"name": {Type: types.String, Value: []byte("yoman")},
+			"name": {Type: string(types.String), Value: []byte("yoman")},
 		}, func(res2 *llx.CodeBundle) {
 			assert.Equal(t, res2.Code.Id, res1.Code.Id)
 		})
 	})
 
 	compileProps(t, "props.name == props.name", map[string]*llx.Primitive{
-		"name": {Type: types.String},
+		"name": {Type: string(types.String)},
 	}, func(res *llx.CodeBundle) {
 		assertProperty(t, "name", types.String, res.Code.Code[0])
 		assertProperty(t, "name", types.String, res.Code.Code[1])
 		assertFunction(t, "=="+string(types.String), &llx.Function{
-			Type:    types.Bool,
+			Type:    string(types.Bool),
 			Binding: 1,
 			Args:    []*llx.Primitive{llx.RefPrimitive(2)},
 		}, res.Code.Code[2])
@@ -394,7 +394,7 @@ func TestCompiler_If(t *testing.T) {
 		assertFunction(t, "mondoo", nil, res.Code.Code[0])
 
 		assertFunction(t, "if", &llx.Function{
-			Type:    types.Int,
+			Type:    string(types.Int),
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(1),
@@ -407,7 +407,7 @@ func TestCompiler_If(t *testing.T) {
 
 		assertPrimitive(t, llx.IntPrimitive(123), res.Code.Functions[0].Code[0])
 		assertFunction(t, "return", &llx.Function{
-			Type:    types.Int,
+			Type:    string(types.Int),
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(1),
@@ -416,7 +416,7 @@ func TestCompiler_If(t *testing.T) {
 		assert.Equal(t, []int32{2}, res.Code.Functions[0].Entrypoints)
 
 		assertFunction(t, "if", &llx.Function{
-			Type:    types.Int,
+			Type:    string(types.Int),
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.BoolPrimitive(true),
@@ -428,7 +428,7 @@ func TestCompiler_If(t *testing.T) {
 
 		assertPrimitive(t, llx.IntPrimitive(456), res.Code.Functions[1].Functions[0].Code[0])
 		assertFunction(t, "return", &llx.Function{
-			Type:    types.Int,
+			Type:    string(types.Int),
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(1),
@@ -444,7 +444,7 @@ func TestCompiler_If(t *testing.T) {
 		assertFunction(t, "mondoo", nil, res.Code.Code[0])
 
 		assertFunction(t, "if", &llx.Function{
-			Type:    types.Int,
+			Type:    string(types.Int),
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(1),
@@ -457,7 +457,7 @@ func TestCompiler_If(t *testing.T) {
 
 		assertPrimitive(t, llx.IntPrimitive(123), res.Code.Functions[0].Code[0])
 		assertFunction(t, "return", &llx.Function{
-			Type:    types.Int,
+			Type:    string(types.Int),
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(1),
@@ -472,17 +472,17 @@ func TestCompiler_If(t *testing.T) {
 	compile(t, "if ( mondoo.version != null ) { 123 }", func(res *llx.CodeBundle) {
 		assertFunction(t, "mondoo", nil, res.Code.Code[0])
 		assertFunction(t, "version", &llx.Function{
-			Type:    types.String,
+			Type:    string(types.String),
 			Binding: 1,
 		}, res.Code.Code[1])
 		assertFunction(t, "!=\x02", &llx.Function{
-			Type:    types.Bool,
+			Type:    string(types.Bool),
 			Binding: 2,
 			Args:    []*llx.Primitive{llx.NilPrimitive},
 		}, res.Code.Code[2])
 
 		assertFunction(t, "if", &llx.Function{
-			Type:    types.Int,
+			Type:    string(types.Int),
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(3),
@@ -500,7 +500,7 @@ func TestCompiler_If(t *testing.T) {
 		assertFunction(t, "mondoo", nil, res.Code.Code[0])
 
 		assertFunction(t, "if", &llx.Function{
-			Type:    types.Int,
+			Type:    string(types.Int),
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(1),
@@ -522,7 +522,7 @@ func TestCompiler_If(t *testing.T) {
 		assertFunction(t, "mondoo", nil, res.Code.Code[0])
 
 		assertFunction(t, "if", &llx.Function{
-			Type:    types.Int,
+			Type:    string(types.Int),
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(1),
@@ -549,7 +549,7 @@ func TestCompiler_If(t *testing.T) {
 func TestCompiler_Switch(t *testing.T) {
 	compile(t, "switch ( 1 ) { case _ > 0: true; default: false }", func(res *llx.CodeBundle) {
 		assertFunction(t, "switch", &llx.Function{
-			Type:    types.Unset,
+			Type:    string(types.Unset),
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.IntPrimitive(1),
@@ -571,7 +571,7 @@ func TestCompiler_Switch(t *testing.T) {
 func TestCompiler_ArrayEmptyWhere(t *testing.T) {
 	compile(t, "[1,2,3].where()", func(res *llx.CodeBundle) {
 		assertPrimitive(t, &llx.Primitive{
-			Type: types.Array(types.Int),
+			Type: string(types.Array(types.Int)),
 			Array: []*llx.Primitive{
 				llx.IntPrimitive(1),
 				llx.IntPrimitive(2),
@@ -585,7 +585,7 @@ func TestCompiler_ArrayEmptyWhere(t *testing.T) {
 func TestCompiler_ArrayWhereStatic(t *testing.T) {
 	compileErroneous(t, "[1,2,3].where(1.0)", errors.New("called 'where' with wrong type; either provide a type int value or write it as an expression (e.g. \"_ == 123\")"), func(res *llx.CodeBundle) {
 		assertPrimitive(t, &llx.Primitive{
-			Type: types.Array(types.Int),
+			Type: string(types.Array(types.Int)),
 			Array: []*llx.Primitive{
 				llx.IntPrimitive(1),
 				llx.IntPrimitive(2),
@@ -596,7 +596,7 @@ func TestCompiler_ArrayWhereStatic(t *testing.T) {
 
 	compile(t, "[1,2,3].where(2)", func(res *llx.CodeBundle) {
 		assertPrimitive(t, &llx.Primitive{
-			Type: types.Array(types.Int),
+			Type: string(types.Array(types.Int)),
 			Array: []*llx.Primitive{
 				llx.IntPrimitive(1),
 				llx.IntPrimitive(2),
@@ -605,7 +605,7 @@ func TestCompiler_ArrayWhereStatic(t *testing.T) {
 		}, res.Code.Code[0])
 
 		assertFunction(t, "where", &llx.Function{
-			Type:    types.Array(types.Int),
+			Type:    string(types.Array(types.Int)),
 			Binding: 1,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(1),
@@ -620,7 +620,7 @@ func TestCompiler_ArrayWhereStatic(t *testing.T) {
 func TestCompiler_ArrayContains(t *testing.T) {
 	compile(t, "[1,2,3].contains(_ == 2)", func(res *llx.CodeBundle) {
 		assertPrimitive(t, &llx.Primitive{
-			Type: types.Array(types.Int),
+			Type: string(types.Array(types.Int)),
 			Array: []*llx.Primitive{
 				llx.IntPrimitive(1),
 				llx.IntPrimitive(2),
@@ -629,7 +629,7 @@ func TestCompiler_ArrayContains(t *testing.T) {
 		}, res.Code.Code[0])
 
 		assertFunction(t, "where", &llx.Function{
-			Type:    types.Array(types.Int),
+			Type:    string(types.Array(types.Int)),
 			Binding: 1,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(1),
@@ -638,11 +638,11 @@ func TestCompiler_ArrayContains(t *testing.T) {
 		}, res.Code.Code[1])
 
 		assertFunction(t, "length", &llx.Function{
-			Type:    types.Int,
+			Type:    string(types.Int),
 			Binding: 2,
 		}, res.Code.Code[2])
 		assertFunction(t, string(">"+types.Int), &llx.Function{
-			Type:    types.Bool,
+			Type:    string(types.Bool),
 			Binding: 3,
 			Args:    []*llx.Primitive{llx.IntPrimitive(0)},
 		}, res.Code.Code[3])
@@ -654,7 +654,7 @@ func TestCompiler_ArrayContains(t *testing.T) {
 func TestCompiler_ArrayOne(t *testing.T) {
 	compile(t, "[1,2,3].one(_ == 2)", func(res *llx.CodeBundle) {
 		assertPrimitive(t, &llx.Primitive{
-			Type: types.Array(types.Int),
+			Type: string(types.Array(types.Int)),
 			Array: []*llx.Primitive{
 				llx.IntPrimitive(1),
 				llx.IntPrimitive(2),
@@ -663,7 +663,7 @@ func TestCompiler_ArrayOne(t *testing.T) {
 		}, res.Code.Code[0])
 
 		assertFunction(t, "where", &llx.Function{
-			Type:    types.Array(types.Int),
+			Type:    string(types.Array(types.Int)),
 			Binding: 1,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(1),
@@ -672,11 +672,11 @@ func TestCompiler_ArrayOne(t *testing.T) {
 		}, res.Code.Code[1])
 
 		assertFunction(t, "length", &llx.Function{
-			Type:    types.Int,
+			Type:    string(types.Int),
 			Binding: 2,
 		}, res.Code.Code[2])
 		assertFunction(t, string("=="+types.Int), &llx.Function{
-			Type:    types.Bool,
+			Type:    string(types.Bool),
 			Binding: 3,
 			Args:    []*llx.Primitive{llx.IntPrimitive(1)},
 		}, res.Code.Code[3])
@@ -688,7 +688,7 @@ func TestCompiler_ArrayOne(t *testing.T) {
 func TestCompiler_ArrayAll(t *testing.T) {
 	compile(t, "[1,2,3].all(_ < 9)", func(res *llx.CodeBundle) {
 		assertPrimitive(t, &llx.Primitive{
-			Type: types.Array(types.Int),
+			Type: string(types.Array(types.Int)),
 			Array: []*llx.Primitive{
 				llx.IntPrimitive(1),
 				llx.IntPrimitive(2),
@@ -697,7 +697,7 @@ func TestCompiler_ArrayAll(t *testing.T) {
 		}, res.Code.Code[0])
 
 		assertFunction(t, "where", &llx.Function{
-			Type:    types.Array(types.Int),
+			Type:    string(types.Array(types.Int)),
 			Binding: 1,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(1),
@@ -706,16 +706,16 @@ func TestCompiler_ArrayAll(t *testing.T) {
 		}, res.Code.Code[1])
 
 		assertFunction(t, "length", &llx.Function{
-			Type:    types.Int,
+			Type:    string(types.Int),
 			Binding: 1,
 		}, res.Code.Code[2])
 
 		assertFunction(t, "length", &llx.Function{
-			Type:    types.Int,
+			Type:    string(types.Int),
 			Binding: 2,
 		}, res.Code.Code[3])
 		assertFunction(t, string("=="+types.Int), &llx.Function{
-			Type:    types.Bool,
+			Type:    string(types.Bool),
 			Binding: 4,
 			Args:    []*llx.Primitive{llx.RefPrimitive(3)},
 		}, res.Code.Code[4])
@@ -750,7 +750,7 @@ func TestCompiler_ResourceMap(t *testing.T) {
 	compile(t, "sshd.config.params", func(res *llx.CodeBundle) {
 		assertFunction(t, "sshd.config", nil, res.Code.Code[0])
 		assertFunction(t, "params", &llx.Function{
-			Type:    types.Map(types.String, types.String),
+			Type:    string(types.Map(types.String, types.String)),
 			Binding: 1,
 		}, res.Code.Code[1])
 	})
@@ -759,7 +759,7 @@ func TestCompiler_ResourceMap(t *testing.T) {
 func TestCompiler_ResourceMapLength(t *testing.T) {
 	compile(t, "sshd.config.params.length", func(res *llx.CodeBundle) {
 		assertFunction(t, "length", &llx.Function{
-			Type:    types.Int,
+			Type:    string(types.Int),
 			Binding: 2,
 		}, res.Code.Code[2])
 	})
@@ -770,7 +770,7 @@ func TestCompiler_ResourceArrayAccessor(t *testing.T) {
 		assertFunction(t, "[]", &llx.Function{
 			Binding: 2,
 			Args:    []*llx.Primitive{llx.IntPrimitive(123)},
-			Type:    types.Resource("package"),
+			Type:    string(types.Resource("package")),
 		}, res.Code.Code[2])
 	})
 }
@@ -779,7 +779,7 @@ func TestCompiler_ResourceArrayLength(t *testing.T) {
 	compile(t, "packages.list.length", func(res *llx.CodeBundle) {
 		assertFunction(t, "length", &llx.Function{
 			Binding: 2,
-			Type:    types.Int,
+			Type:    string(types.Int),
 		}, res.Code.Code[2])
 	})
 }
@@ -788,12 +788,12 @@ func TestCompiler_ResourceArrayImplicitLength(t *testing.T) {
 	compile(t, "packages.length", func(res *llx.CodeBundle) {
 		assertFunction(t, "list", &llx.Function{
 			Binding: 1,
-			Type:    types.Array(types.Resource("package")),
+			Type:    string(types.Array(types.Resource("package"))),
 		}, res.Code.Code[1])
 		assertFunction(t, "length", &llx.Function{
 			Binding: 1,
 			Args:    []*llx.Primitive{llx.RefPrimitive(2)},
-			Type:    types.Int,
+			Type:    string(types.Int),
 		}, res.Code.Code[2])
 	})
 }
@@ -801,7 +801,7 @@ func TestCompiler_ResourceArrayImplicitLength(t *testing.T) {
 func TestCompiler_ResourceFieldArrayAccessor(t *testing.T) {
 	compile(t, "sshd.config.params[\"Protocol\"]", func(res *llx.CodeBundle) {
 		assertFunction(t, "[]", &llx.Function{
-			Type:    types.String,
+			Type:    string(types.String),
 			Binding: 2,
 			Args: []*llx.Primitive{
 				llx.StringPrimitive("Protocol"),
@@ -813,7 +813,7 @@ func TestCompiler_ResourceFieldArrayAccessor(t *testing.T) {
 func TestCompiler_ResourceWithUnnamedArgs(t *testing.T) {
 	compile(t, "file(\"/path\")", func(res *llx.CodeBundle) {
 		assertFunction(t, "file", &llx.Function{
-			Type:    types.Resource("file"),
+			Type:    string(types.Resource("file")),
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.StringPrimitive("path"),
@@ -826,7 +826,7 @@ func TestCompiler_ResourceWithUnnamedArgs(t *testing.T) {
 func TestCompiler_ResourceWithNamedArgs(t *testing.T) {
 	compile(t, "file(path: \"/path\")", func(res *llx.CodeBundle) {
 		assertFunction(t, "file", &llx.Function{
-			Type:    types.Resource("file"),
+			Type:    string(types.Resource("file")),
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.StringPrimitive("path"),
@@ -839,7 +839,7 @@ func TestCompiler_ResourceWithNamedArgs(t *testing.T) {
 func TestCompiler_LongResourceWithUnnamedArgs(t *testing.T) {
 	compile(t, "sshd.config(\"/path\")", func(res *llx.CodeBundle) {
 		assertFunction(t, "sshd.config", &llx.Function{
-			Type:    types.Resource("sshd.config"),
+			Type:    string(types.Resource("sshd.config")),
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.StringPrimitive("path"),
@@ -856,7 +856,7 @@ func TestCompiler_ExpectSimplest(t *testing.T) {
 		assert.Equal(t, "expect", f.Id)
 		assert.Equal(t, []int32{1}, res.Code.Entrypoints)
 		assert.Equal(t, &llx.Function{
-			Type:    types.Bool,
+			Type:    string(types.Bool),
 			Binding: 0,
 			Args:    []*llx.Primitive{llx.BoolPrimitive(true)},
 		}, f.Function)
@@ -870,7 +870,7 @@ func TestCompiler_ExpectEq(t *testing.T) {
 		assert.Equal(t, []int32{3}, res.Code.Entrypoints)
 		assert.Equal(t, string("=="+types.String), cmp.Id)
 		assert.Equal(t, &llx.Function{
-			Type:    types.Bool,
+			Type:    string(types.Bool),
 			Binding: 1,
 			Args: []*llx.Primitive{
 				llx.StringPrimitive("1"),
@@ -881,7 +881,7 @@ func TestCompiler_ExpectEq(t *testing.T) {
 		assert.Equal(t, llx.Chunk_FUNCTION, f.Call)
 		assert.Equal(t, "expect", f.Id)
 		assert.Equal(t, &llx.Function{
-			Type:    types.Bool,
+			Type:    string(types.Bool),
 			Binding: 0,
 			Args:    []*llx.Primitive{llx.RefPrimitive(2)},
 		}, f.Function)
@@ -900,21 +900,21 @@ func TestCompiler_Block(t *testing.T) {
 	compile(t, "mondoo { version build }", func(res *llx.CodeBundle) {
 		assertFunction(t, "mondoo", nil, res.Code.Code[0])
 		assertFunction(t, "{}", &llx.Function{
-			Type:    types.Block,
+			Type:    string(types.Block),
 			Binding: 1,
 			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
 		}, res.Code.Code[1])
 		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
 
 		assertPrimitive(t, &llx.Primitive{
-			Type: types.Resource("mondoo"),
+			Type: string(types.Resource("mondoo")),
 		}, res.Code.Functions[0].Code[0])
 		assertFunction(t, "version", &llx.Function{
-			Type:    types.String,
+			Type:    string(types.String),
 			Binding: 1,
 		}, res.Code.Functions[0].Code[1])
 		assertFunction(t, "build", &llx.Function{
-			Type:    types.String,
+			Type:    string(types.String),
 			Binding: 1,
 		}, res.Code.Functions[0].Code[2])
 		assert.Equal(t, []int32{2, 3}, res.Code.Functions[0].Entrypoints)
@@ -925,17 +925,17 @@ func TestCompiler_BlockWithSelf(t *testing.T) {
 	compile(t, "mondoo { _.version }", func(res *llx.CodeBundle) {
 		assertFunction(t, "mondoo", nil, res.Code.Code[0])
 		assertFunction(t, "{}", &llx.Function{
-			Type:    types.Block,
+			Type:    string(types.Block),
 			Binding: 1,
 			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
 		}, res.Code.Code[1])
 		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
 
 		assertPrimitive(t, &llx.Primitive{
-			Type: types.Resource("mondoo"),
+			Type: string(types.Resource("mondoo")),
 		}, res.Code.Functions[0].Code[0])
 		assertFunction(t, "version", &llx.Function{
-			Type:    types.String,
+			Type:    string(types.String),
 			Binding: 1,
 		}, res.Code.Functions[0].Code[1])
 		assert.Equal(t, []int32{2}, res.Code.Functions[0].Entrypoints)
@@ -944,31 +944,31 @@ func TestCompiler_BlockWithSelf(t *testing.T) {
 	compile(t, "sshd.config.params { _['A'] != _['B'] }", func(res *llx.CodeBundle) {
 		assertFunction(t, "sshd.config", nil, res.Code.Code[0])
 		assertFunction(t, "params", &llx.Function{
-			Type:    types.Map(types.String, types.String),
+			Type:    string(types.Map(types.String, types.String)),
 			Binding: 1,
 		}, res.Code.Code[1])
 		assertFunction(t, "{}", &llx.Function{
-			Type:    types.Block,
+			Type:    string(types.Block),
 			Binding: 2,
 			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
 		}, res.Code.Code[2])
 		assert.Equal(t, []int32{3}, res.Code.Entrypoints)
 
 		assertPrimitive(t, &llx.Primitive{
-			Type: types.Map(types.String, types.String),
+			Type: string(types.Map(types.String, types.String)),
 		}, res.Code.Functions[0].Code[0])
 		assertFunction(t, "[]", &llx.Function{
-			Type:    types.String,
+			Type:    string(types.String),
 			Binding: 1,
 			Args:    []*llx.Primitive{llx.StringPrimitive("A")},
 		}, res.Code.Functions[0].Code[1])
 		assertFunction(t, "[]", &llx.Function{
-			Type:    types.String,
+			Type:    string(types.String),
 			Binding: 1,
 			Args:    []*llx.Primitive{llx.StringPrimitive("B")},
 		}, res.Code.Functions[0].Code[2])
 		assertFunction(t, string("!="+types.String), &llx.Function{
-			Type:    types.Bool,
+			Type:    string(types.Bool),
 			Binding: 2,
 			Args:    []*llx.Primitive{llx.RefPrimitive(3)},
 		}, res.Code.Functions[0].Code[3])
@@ -978,31 +978,31 @@ func TestCompiler_BlockWithSelf(t *testing.T) {
 	compile(t, "\"alice\\nbob\".lines { _ != \"alice\" && _ != \"bob\" }", func(res *llx.CodeBundle) {
 		assertPrimitive(t, llx.StringPrimitive("alice\nbob"), res.Code.Code[0])
 		assertFunction(t, "lines", &llx.Function{
-			Type:    types.Array(types.String),
+			Type:    string(types.Array(types.String)),
 			Binding: 1,
 		}, res.Code.Code[1])
 		assertFunction(t, "{}", &llx.Function{
-			Type:    types.Array(types.Block),
+			Type:    string(types.Array(types.Block)),
 			Binding: 2,
 			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
 		}, res.Code.Code[2])
 		assert.Equal(t, []int32{3}, res.Code.Entrypoints)
 
 		assertPrimitive(t, &llx.Primitive{
-			Type: types.String,
+			Type: string(types.String),
 		}, res.Code.Functions[0].Code[0])
 		assertFunction(t, string("!="+types.String), &llx.Function{
-			Type:    types.Bool,
+			Type:    string(types.Bool),
 			Binding: 1,
 			Args:    []*llx.Primitive{llx.StringPrimitive("alice")},
 		}, res.Code.Functions[0].Code[1])
 		assertFunction(t, string("!="+types.String), &llx.Function{
-			Type:    types.Bool,
+			Type:    string(types.Bool),
 			Binding: 1,
 			Args:    []*llx.Primitive{llx.StringPrimitive("bob")},
 		}, res.Code.Functions[0].Code[2])
 		assertFunction(t, string("&&"+types.Bool), &llx.Function{
-			Type:    types.Bool,
+			Type:    string(types.Bool),
 			Binding: 2,
 			Args:    []*llx.Primitive{llx.RefPrimitive(3)},
 		}, res.Code.Functions[0].Code[3])
@@ -1016,11 +1016,11 @@ func TestCompiler_ContainsWithResource(t *testing.T) {
 		assertPrimitive(t, llx.StringPrimitive("hello"), res.Code.Code[0])
 		assertFunction(t, "platform", nil, res.Code.Code[1])
 		assertFunction(t, "family", &llx.Function{
-			Type:    types.Array(types.String),
+			Type:    string(types.Array(types.String)),
 			Binding: 2,
 		}, res.Code.Code[2])
 		assertFunction(t, "contains"+string(types.Array(types.String)), &llx.Function{
-			Type:    types.Bool,
+			Type:    string(types.Bool),
 			Binding: 1,
 			Args:    []*llx.Primitive{llx.RefPrimitive(3)},
 		}, res.Code.Code[3])
@@ -1033,25 +1033,25 @@ func TestCompiler_CallWithResource(t *testing.T) {
 	compile(t, "users.list { file(home) }", func(res *llx.CodeBundle) {
 		assertFunction(t, "users", nil, res.Code.Code[0])
 		assertFunction(t, "list", &llx.Function{
-			Type:    types.Array(types.Resource("user")),
+			Type:    string(types.Array(types.Resource("user"))),
 			Binding: 1,
 		}, res.Code.Code[1])
 		assertFunction(t, "{}", &llx.Function{
-			Type:    types.Array(types.Block),
+			Type:    string(types.Array(types.Block)),
 			Binding: 2,
 			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
 		}, res.Code.Code[2])
 		assert.Equal(t, 3, len(res.Code.Code))
 
 		assertPrimitive(t, &llx.Primitive{
-			Type: types.Resource("user"),
+			Type: string(types.Resource("user")),
 		}, res.Code.Functions[0].Code[0])
 		assertFunction(t, "home", &llx.Function{
-			Type:    types.String,
+			Type:    string(types.String),
 			Binding: 1,
 		}, res.Code.Functions[0].Code[1])
 		assertFunction(t, "file", &llx.Function{
-			Type:    types.Resource("file"),
+			Type:    string(types.Resource("file")),
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.StringPrimitive("path"),
@@ -1065,21 +1065,21 @@ func TestCompiler_List(t *testing.T) {
 	compile(t, "packages.list { name }", func(res *llx.CodeBundle) {
 		assertFunction(t, "packages", nil, res.Code.Code[0])
 		assertFunction(t, "list", &llx.Function{
-			Type:    types.Array(types.Resource("package")),
+			Type:    string(types.Array(types.Resource("package"))),
 			Binding: 1,
 		}, res.Code.Code[1])
 		assertFunction(t, "{}", &llx.Function{
-			Type:    types.Array(types.Block),
+			Type:    string(types.Array(types.Block)),
 			Binding: 2,
 			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
 		}, res.Code.Code[2])
 		assert.Equal(t, 3, len(res.Code.Code))
 
 		assertPrimitive(t, &llx.Primitive{
-			Type: types.Resource("package"),
+			Type: string(types.Resource("package")),
 		}, res.Code.Functions[0].Code[0])
 		assertFunction(t, "name", &llx.Function{
-			Type:    types.String,
+			Type:    string(types.String),
 			Binding: 1,
 		}, res.Code.Functions[0].Code[1])
 		assert.Equal(t, []int32{2}, res.Code.Functions[0].Entrypoints)
@@ -1097,11 +1097,11 @@ func TestCompiler_ResourceWhere(t *testing.T) {
 	compile(t, "packages.where(outdated)", func(res *llx.CodeBundle) {
 		assertFunction(t, "packages", nil, res.Code.Code[0])
 		assertFunction(t, "list", &llx.Function{
-			Type:    types.Array(types.Resource("package")),
+			Type:    string(types.Array(types.Resource("package"))),
 			Binding: 1,
 		}, res.Code.Code[1])
 		assertFunction(t, "where", &llx.Function{
-			Type:    types.Resource("packages"),
+			Type:    string(types.Resource("packages")),
 			Binding: 1,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(2),
@@ -1110,10 +1110,10 @@ func TestCompiler_ResourceWhere(t *testing.T) {
 		}, res.Code.Code[2])
 
 		assertPrimitive(t, &llx.Primitive{
-			Type: types.Resource("package"),
+			Type: string(types.Resource("package")),
 		}, res.Code.Functions[0].Code[0])
 		assertFunction(t, "outdated", &llx.Function{
-			Type:    types.Bool,
+			Type:    string(types.Bool),
 			Binding: 1,
 		}, res.Code.Functions[0].Code[1])
 		assert.Equal(t, []int32{2}, res.Code.Functions[0].Entrypoints)
@@ -1124,11 +1124,11 @@ func TestCompiler_ResourceContains(t *testing.T) {
 	compile(t, "packages.contains(outdated)", func(res *llx.CodeBundle) {
 		assertFunction(t, "packages", nil, res.Code.Code[0])
 		assertFunction(t, "list", &llx.Function{
-			Type:    types.Array(types.Resource("package")),
+			Type:    string(types.Array(types.Resource("package"))),
 			Binding: 1,
 		}, res.Code.Code[1])
 		assertFunction(t, "where", &llx.Function{
-			Type:    types.Resource("packages"),
+			Type:    string(types.Resource("packages")),
 			Binding: 1,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(2),
@@ -1136,24 +1136,24 @@ func TestCompiler_ResourceContains(t *testing.T) {
 			},
 		}, res.Code.Code[2])
 		assertFunction(t, "list", &llx.Function{
-			Type:    types.Array(types.Resource("package")),
+			Type:    string(types.Array(types.Resource("package"))),
 			Binding: 3,
 		}, res.Code.Code[3])
 		assertFunction(t, "length", &llx.Function{
-			Type:    types.Int,
+			Type:    string(types.Int),
 			Binding: 4,
 		}, res.Code.Code[4])
 		assertFunction(t, string(">"+types.Int), &llx.Function{
-			Type:    types.Bool,
+			Type:    string(types.Bool),
 			Binding: 5,
 			Args:    []*llx.Primitive{llx.IntPrimitive(0)},
 		}, res.Code.Code[5])
 
 		assertPrimitive(t, &llx.Primitive{
-			Type: types.Resource("package"),
+			Type: string(types.Resource("package")),
 		}, res.Code.Functions[0].Code[0])
 		assertFunction(t, "outdated", &llx.Function{
-			Type:    types.Bool,
+			Type:    string(types.Bool),
 			Binding: 1,
 		}, res.Code.Functions[0].Code[1])
 		assert.Equal(t, []int32{2}, res.Code.Functions[0].Entrypoints)
