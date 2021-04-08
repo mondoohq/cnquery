@@ -64,7 +64,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 	}
 
 	resolved = append(resolved, &asset.Asset{
-		PlatformIDs: []string{identifier},
+		PlatformIds: []string{identifier},
 		Name:        name,
 		Platform:    pf,
 		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
@@ -85,7 +85,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 			ht.Options = host.Annotations
 			host.Connections = append(host.Connections, ht)
 
-			pf, err := platform.VspherePlatform(trans, host.PlatformIDs[0])
+			pf, err := platform.VspherePlatform(trans, host.PlatformIds[0])
 			if err == nil {
 				host.Platform = pf
 			} else {
@@ -107,7 +107,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 		for i := range vms {
 			vm := vms[i]
 
-			pf, err := platform.VspherePlatform(trans, vm.PlatformIDs[0])
+			pf, err := platform.VspherePlatform(trans, vm.PlatformIds[0])
 			if err == nil {
 				vm.Platform = pf
 			} else {

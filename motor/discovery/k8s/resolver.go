@@ -146,7 +146,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 	}
 
 	resolved = append(resolved, &asset.Asset{
-		PlatformIDs: []string{identifier},
+		PlatformIds: []string{identifier},
 		Name:        "K8S Cluster", // TODO: add more details
 		Platform:    pf,
 		Connections: []*transports.TransportConfig{tc}, // pass-in the current config

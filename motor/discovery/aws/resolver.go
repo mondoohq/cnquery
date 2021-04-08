@@ -73,7 +73,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 	}
 
 	resolved = append(resolved, &asset.Asset{
-		PlatformIDs: []string{identifier},
+		PlatformIds: []string{identifier},
 		Name:        "AWS Account " + info.ID,
 		Platform:    pf,
 		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
@@ -103,7 +103,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 			for i := range assetList {
 				log.Debug().Str("name", assetList[i].Name).Msg("resolved ssm instance")
 				resolved = append(resolved, assetList[i])
-				ssmInstancesPlatformIdsMap[assetList[i].PlatformIDs[0]] = assetList[i]
+				ssmInstancesPlatformIdsMap[assetList[i].PlatformIds[0]] = assetList[i]
 			}
 		}
 	}

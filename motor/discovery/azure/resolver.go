@@ -144,7 +144,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 	}
 
 	resolved = append(resolved, &asset.Asset{
-		PlatformIDs: []string{identifier},
+		PlatformIds: []string{identifier},
 		Name:        "Azure subscription " + name,
 		Platform:    pf,
 		Connections: []*transports.TransportConfig{tc}, // pass-in the current config

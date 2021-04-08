@@ -171,7 +171,7 @@ func instanceToAsset(account string, region string, instance types.Instance, ssh
 		ssmAsset.Connections = append(ssmAsset.Connections, connections...)
 		ssmAsset.Labels = addAssetLabels(ssmAsset.Labels, instance, region)
 	} else {
-		asset.PlatformIDs = []string{awsec2.MondooInstanceID(account, region, *instance.InstanceId)}
+		asset.PlatformIds = []string{awsec2.MondooInstanceID(account, region, *instance.InstanceId)}
 		asset.Name = *instance.InstanceId
 		asset.Platform = &platform.Platform{
 			Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,

@@ -33,7 +33,7 @@ message Asset {
   string name = 2;
 
   // 3rd-party platform id eg. amazon arn, gcp resource name or ssh host key
-  repeated string PlatformIDs = 3;
+  repeated string platform_ids = 3;
 
   // asset state
   State state = 4;
@@ -53,5 +53,8 @@ message Asset {
   map<string, string> options = 20;
 
   // relationships to parent
-  string ParentPlatformID = 30;
+  string parent_platform_id = 30;
+
+  // platform id detection mechanisms
+  repeated string id_detector = 31;
 }

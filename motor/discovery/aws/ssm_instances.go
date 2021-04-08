@@ -152,7 +152,7 @@ func ssmInstanceToAsset(account string, region string, instance types.InstanceIn
 		Host:    *instance.InstanceId,
 	})
 	asset := &asset.Asset{
-		PlatformIDs: []string{awsec2.MondooInstanceID(account, region, *instance.InstanceId)},
+		PlatformIds: []string{awsec2.MondooInstanceID(account, region, *instance.InstanceId)},
 		Name:        *instance.InstanceId,
 		Platform: &platform.Platform{
 			Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
