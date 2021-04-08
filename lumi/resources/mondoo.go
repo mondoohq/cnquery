@@ -8,7 +8,7 @@ import (
 )
 
 func (m *lumiMondoo) id() (string, error) {
-	return "", nil
+	return "mondoo", nil
 }
 
 func (m *lumiMondoo) GetVersion() (string, error) {
@@ -53,4 +53,12 @@ func (m *lumiMondoo) GetCapabilities() ([]interface{}, error) {
 		capabilities = append(capabilities, caps[i].String())
 	}
 	return capabilities, nil
+}
+
+func (m *lumiMondooAsset) id() (string, error) {
+	return "mondoo.asset", nil
+}
+
+func (m *lumiMondooAsset) GetPlatformIDs() ([]interface{}, error) {
+	return strSliceToInterface(m.Runtime.Motor.Meta.Identifier), nil
 }
