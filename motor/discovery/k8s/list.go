@@ -133,7 +133,7 @@ func toAsset(pod v1.Pod, status v1.ContainerStatus) *asset.Asset {
 	asset := &asset.Asset{
 		Name: pod.Name,
 
-		PlatformIDs: []string{MondooKubernetesPodID(string(pod.UID))},
+		PlatformIds: []string{MondooKubernetesPodID(string(pod.UID))},
 		// ParentPlatformID: parentRef,
 
 		Platform: &platform.Platform{

@@ -78,7 +78,7 @@ func hostsToAssetList(instanceUuid string, hosts []*object.HostSystem) ([]*asset
 				"vsphere.vmware.com/os-type":         props.Config.Product.OsType,
 				"vsphere.vmware.com/produce-lineid":  props.Config.Product.ProductLineId,
 			},
-			PlatformIDs: []string{vsphere_transport.VsphereResourceID(instanceUuid, host.Reference())},
+			PlatformIds: []string{vsphere_transport.VsphereResourceID(instanceUuid, host.Reference())},
 		}
 		res = append(res, ha)
 	}
@@ -160,7 +160,7 @@ func vmsToAssetList(instanceUuid string, vms []*object.VirtualMachine, parentTC 
 				"vsphere.vmware.com/guest-id":       props.Guest.GuestId,
 				"vsphere.vmware.com/guest-fullname": props.Guest.GuestFullName,
 			},
-			PlatformIDs: []string{vsphere_transport.VsphereResourceID(instanceUuid, vm.Reference())},
+			PlatformIds: []string{vsphere_transport.VsphereResourceID(instanceUuid, vm.Reference())},
 		}
 
 		// add parent information to validate the vm configuration from vsphere api perspective

@@ -149,7 +149,7 @@ func (r *GcpResolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, e
 	project := tc.Options["project"]
 
 	resolved = append(resolved, &asset.Asset{
-		PlatformIDs: []string{identifier},
+		PlatformIds: []string{identifier},
 		Name:        "GCP project " + project,
 		Platform:    pf,
 		Connections: []*transports.TransportConfig{tc}, // pass-in the current config

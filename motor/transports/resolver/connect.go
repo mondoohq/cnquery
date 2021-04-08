@@ -83,8 +83,8 @@ func ConnectAsset2(assetInfo *asset.Asset, record bool) ([]*motor.Motor, error) 
 		}
 
 		// parse reference id and restore options
-		if len(assetInfo.PlatformIDs) > 0 {
-			tc.Platformid = assetInfo.PlatformIDs[0]
+		if len(assetInfo.PlatformIds) > 0 {
+			tc.Platformid = assetInfo.PlatformIds[0]
 		}
 
 		m, err := Connect(tc, "", tc.Insecure, record)

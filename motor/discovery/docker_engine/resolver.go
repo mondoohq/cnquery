@@ -190,7 +190,7 @@ func (k *Resolver) container(tc *transports.TransportConfig, ded *dockerEngineDi
 	return &asset.Asset{
 		Name:        ci.Name,
 		Connections: []*transports.TransportConfig{tc},
-		PlatformIDs: []string{ci.PlatformID},
+		PlatformIds: []string{ci.PlatformID},
 		Platform: &platform.Platform{
 			Kind:    transports.Kind_KIND_CONTAINER,
 			Runtime: transports.RUNTIME_DOCKER_CONTAINER,
@@ -207,7 +207,7 @@ func (k *Resolver) image(tc *transports.TransportConfig, ded *dockerEngineDiscov
 			return &asset.Asset{
 				Name:        ii.Name,
 				Connections: []*transports.TransportConfig{tc},
-				PlatformIDs: []string{ii.PlatformID},
+				PlatformIds: []string{ii.PlatformID},
 				Platform: &platform.Platform{
 					Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
 					Runtime: transports.RUNTIME_DOCKER_IMAGE,

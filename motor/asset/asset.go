@@ -19,14 +19,14 @@ func (a *Asset) HumanName() string {
 }
 
 func (a *Asset) EnsurePlatformID(ids ...string) {
-	if a.PlatformIDs == nil {
-		a.PlatformIDs = ids
+	if a.PlatformIds == nil {
+		a.PlatformIds = ids
 		return
 	}
 
 	// check if the id is already included
 	keys := map[string]bool{}
-	for _, k := range a.PlatformIDs {
+	for _, k := range a.PlatformIds {
 		keys[k] = true
 	}
 
@@ -34,17 +34,17 @@ func (a *Asset) EnsurePlatformID(ids ...string) {
 	for _, id := range ids {
 		_, ok := keys[id]
 		if !ok {
-			a.PlatformIDs = append(a.PlatformIDs, id)
+			a.PlatformIds = append(a.PlatformIds, id)
 		}
 	}
 }
 
 func (a *Asset) AddPlatformID(ids ...string) {
-	if a.PlatformIDs == nil {
-		a.PlatformIDs = []string{}
+	if a.PlatformIds == nil {
+		a.PlatformIds = []string{}
 	}
 
-	a.PlatformIDs = append(a.PlatformIDs, ids...)
+	a.PlatformIds = append(a.PlatformIds, ids...)
 }
 
 // AddLabels adds the provided labels

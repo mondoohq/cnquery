@@ -52,7 +52,7 @@ func (e *dockerEngineDiscovery) ListImages() ([]*asset.Asset, error) {
 
 		asset := &asset.Asset{
 			Name:        strings.Join(dImg.RepoTags, ","),
-			PlatformIDs: []string{MondooContainerImageID(digest)},
+			PlatformIds: []string{MondooContainerImageID(digest)},
 			Platform: &platform.Platform{
 				Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
 				Runtime: transports.RUNTIME_DOCKER_IMAGE,

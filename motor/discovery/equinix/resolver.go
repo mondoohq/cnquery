@@ -81,7 +81,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error
 	}
 
 	resolved = append(resolved, &asset.Asset{
-		PlatformIDs: []string{identifier},
+		PlatformIds: []string{identifier},
 		Name:        "Equinix Account", // TODO: we need to relate this to something
 		Platform:    pf,
 		Connections: []*transports.TransportConfig{t}, // pass-in the current config

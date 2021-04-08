@@ -128,7 +128,7 @@ func (e *dockerEngineDiscovery) ListContainer() ([]*asset.Asset, error) {
 		name := strings.Join(DockerDisplayNames(dContainer.Names), ",")
 		asset := &asset.Asset{
 			Name:        name,
-			PlatformIDs: []string{MondooContainerID(dContainer.ID)},
+			PlatformIds: []string{MondooContainerID(dContainer.ID)},
 			Platform: &platform.Platform{
 				Kind:    transports.Kind_KIND_CONTAINER,
 				Runtime: transports.RUNTIME_DOCKER_CONTAINER,
