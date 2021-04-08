@@ -8,7 +8,7 @@ import (
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
-func Connect(tc *transports.TransportConfig, idDetector string, insecure bool, record bool) (*motor.Motor, error) {
+func Connect(tc *transports.TransportConfig, idDetectors []string, insecure bool, record bool) (*motor.Motor, error) {
 	log.Debug().Str("connection", tc.ToUrl()).Bool("insecure", insecure).Msg("establish connection to asset")
 	// overwrite connection specific insecure with global insecure
 	if insecure {
@@ -19,7 +19,7 @@ func Connect(tc *transports.TransportConfig, idDetector string, insecure bool, r
 		tc.Record = true
 	}
 
-	return New(tc, idDetector)
+	return New(tc, idDetectors...)
 }
 
 func ConnectAsset(assetInfo *asset.Asset, record bool) (*motor.Motor, error) {
@@ -48,11 +48,11 @@ func ConnectAsset(assetInfo *asset.Asset, record bool) (*motor.Motor, error) {
 	}
 
 	// parse reference id and restore options
-	if len(assetInfo.PlatformIDs) > 0 {
-		tc.Platformid = assetInfo.PlatformIDs[0]
+	if len(assetInfo.PlatformIds) > 0 {
+		tc.Platformid = assetInfo.PlatformIds[0]
 	}
 
-	return Connect(tc, "", tc.Insecure, record)
+	return Connect(tc, nil, tc.Insecure, record)
 }
 
 func ConnectAsset2(assetInfo *asset.Asset, record bool) ([]*motor.Motor, error) {
@@ -87,7 +87,7 @@ func ConnectAsset2(assetInfo *asset.Asset, record bool) ([]*motor.Motor, error) 
 			tc.Platformid = assetInfo.PlatformIds[0]
 		}
 
-		m, err := Connect(tc, "", tc.Insecure, record)
+		m, err := Connect(tc, assetInfo.IdDetector, tc.Insecure, record)
 		if err != nil {
 			return nil, err
 		}

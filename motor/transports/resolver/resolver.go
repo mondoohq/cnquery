@@ -19,7 +19,6 @@ import (
 	"go.mondoo.io/mondoo/motor"
 	docker_discovery "go.mondoo.io/mondoo/motor/discovery/docker_engine"
 	"go.mondoo.io/mondoo/motor/motorid"
-	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/arista"
 	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
@@ -40,16 +39,20 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/winrm"
 )
 
-func New(t *transports.TransportConfig, idDetectors ...string) (*motor.Motor, error) {
-	return ResolveTransport(t, idDetectors)
+func New(t *transports.TransportConfig, idDetector ...string) (*motor.Motor, error) {
+	return ResolveTransport(t, idDetector...)
 }
 
-func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*motor.Motor, error) {
+// ResolveTransport establishes a motor connection by using the provided transport configuration
+// By default it uses the id detector mechanisms provided by the transport. User can overwride that
+// behaviour by optionally passing id detector identifier
+func ResolveTransport(tc *transports.TransportConfig, userIdDetectors ...string) (*motor.Motor, error) {
 	var m *motor.Motor
 	var name string
 	var identifier []string
 	var labels map[string]string
 	var err error
+	idDetectors := []string{}
 
 	switch tc.Backend {
 	case transports.TransportBackend_CONNECTION_MOCK:
@@ -64,12 +67,8 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 			return nil, err
 		}
 
-		pi, err := m.Platform()
-		if err == nil && pi.IsFamily(platform.FAMILY_WINDOWS) {
-			idDetectors = append(idDetectors, "machineid")
-		} else {
-			idDetectors = append(idDetectors, "hostname")
-		}
+		idDetectors = append(idDetectors, "machineid")
+		idDetectors = append(idDetectors, "hostname")
 	case transports.TransportBackend_CONNECTION_LOCAL_OS:
 		log.Debug().Msg("connection> load local transport")
 		trans, err := local.New()
@@ -82,12 +81,8 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 			return nil, err
 		}
 
-		pi, err := m.Platform()
-		if err == nil && pi.IsFamily(platform.FAMILY_WINDOWS) {
-			idDetectors = append(idDetectors, "machineid")
-		} else {
-			idDetectors = append(idDetectors, "hostname")
-		}
+		idDetectors = append(idDetectors, "machineid")
+		idDetectors = append(idDetectors, "hostname")
 	case transports.TransportBackend_CONNECTION_TAR:
 		log.Debug().Msg("connection> load tar transport")
 		// TODO: we need to generate an artifact id
@@ -180,12 +175,8 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 			return nil, err
 		}
 
-		// for windows, we also collect the machine id
-		pi, err := m.Platform()
-		if err == nil && pi.IsFamily(platform.FAMILY_WINDOWS) {
-			idDetectors = append(idDetectors, "machineid")
-		}
-
+		idDetectors = append(idDetectors, "machineid")
+		idDetectors = append(idDetectors, "hostname")
 		idDetectors = append(idDetectors, "ssh-hostkey")
 	case transports.TransportBackend_CONNECTION_WINRM:
 		log.Debug().Msg("connection> load winrm transport")
@@ -316,12 +307,8 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 			return nil, err
 		}
 
-		pi, err := m.Platform()
-		if err == nil && pi.IsFamily(platform.FAMILY_WINDOWS) {
-			idDetectors = append(idDetectors, "machineid")
-		} else {
-			idDetectors = append(idDetectors, "hostname")
-		}
+		idDetectors = append(idDetectors, "machineid")
+		idDetectors = append(idDetectors, "hostname")
 	case transports.TransportBackend_CONNECTION_FS:
 		trans, err := fs.New(tc)
 		if err != nil {
@@ -331,12 +318,9 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 		if err != nil {
 			return nil, err
 		}
-		pi, err := m.Platform()
-		if err == nil && pi.IsFamily(platform.FAMILY_WINDOWS) {
-			idDetectors = append(idDetectors, "machineid")
-		} else {
-			idDetectors = append(idDetectors, "hostname")
-		}
+
+		idDetectors = append(idDetectors, "machineid")
+		idDetectors = append(idDetectors, "hostname")
 	case transports.TransportBackend_CONNECTION_EQUINIX_METAL:
 		trans, err := equinix.New(tc)
 		if err != nil {
@@ -365,6 +349,11 @@ func ResolveTransport(tc *transports.TransportConfig, idDetectors []string) (*mo
 		}
 	default:
 		return nil, fmt.Errorf("connection> unsupported backend '%s', only docker://, local://, tar://, ssh:// are allowed", tc.Backend)
+	}
+
+	if len(userIdDetectors) > 0 {
+		log.Info().Strs("id-detector", userIdDetectors).Msg("user provided platform detector ids")
+		idDetectors = userIdDetectors
 	}
 
 	p, err := m.Platform()

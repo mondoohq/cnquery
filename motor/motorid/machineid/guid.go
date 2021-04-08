@@ -24,7 +24,7 @@ func MachineId(t transports.Transport, p *platform.Platform) (string, error) {
 		}
 		guid = string(data)
 	default:
-		return guid, errors.New("your platform is not supported by hostname resource")
+		return guid, errors.New("your platform does not supported by machine-id detection")
 	}
 
 	return strings.TrimSpace(guid), nil
