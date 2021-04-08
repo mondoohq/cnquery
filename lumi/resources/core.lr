@@ -22,6 +22,12 @@ mondoo.eol {
   date() time
 }
 
+// information about the asset
+mondoo.asset {
+  // Platform Identifier
+  platformIDs() []string
+}
+
 // Parse provides common parsers (json, ini, certs, etc)
 parse {
   // Builtin functions:
