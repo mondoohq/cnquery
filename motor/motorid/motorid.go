@@ -3,6 +3,8 @@ package motorid
 import (
 	"context"
 	"fmt"
+	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/stringx"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -19,14 +21,17 @@ import (
 )
 
 func GatherIDs(t transports.Transport, p *platform.Platform, idDetectors []string) ([]string, error) {
+	// sanitize ids
+	idDetectors = stringx.RemoveEmpty(idDetectors)
+
 	var ids []string
 	for i := range idDetectors {
-		if len(idDetectors[i]) == 0 {
-			continue
-		}
-		id, err := GatherID(t, p, idDetectors[i])
+		idDetector := idDetectors[i]
+		id, err := GatherID(t, p, idDetector)
 		if err != nil {
-			return nil, err
+			// we only err if we found zero platform ids, if we try multiple, a fail of an individual one is okay
+			log.Debug().Err(err).Str("detector", idDetector).Msg("could not determine platform id")
+			continue
 		}
 
 		if len(id) > 0 {
@@ -34,11 +39,17 @@ func GatherIDs(t transports.Transport, p *platform.Platform, idDetectors []strin
 		}
 	}
 
+	// if we found zero platform ids something went wrong
+	if len(ids) == 0 {
+		return nil, errors.New("could not determine a platform identifier")
+	}
+
+	log.Debug().Strs("id-detector", idDetectors).Strs("platform-ids", ids).Msg("detected platform ids")
+
 	return ids, nil
 }
 
 func GatherID(t transports.Transport, p *platform.Platform, idDetector string) (string, error) {
-
 	transport := t
 	// helper for recoding transport to extract the original transport
 	recT, ok := t.(*mock.RecordTransport)
@@ -54,11 +65,13 @@ func GatherID(t transports.Transport, p *platform.Platform, idDetector string) (
 		if hostErr == nil && len(hostname) > 0 {
 			identifier = "//platformid.api.mondoo.app/hostname/" + hostname
 		}
+		return identifier, hostErr
 	case "machineid":
 		guid, hostErr := machineid.MachineId(t, p)
 		if hostErr == nil && len(guid) > 0 {
 			identifier = "//platformid.api.mondoo.app/machineid/" + guid
 		}
+		return identifier, hostErr
 	case "ssh-hostkey":
 		sshTrans, ok := transport.(*ssh.SSHTransport)
 		if !ok {
@@ -69,6 +82,7 @@ func GatherID(t transports.Transport, p *platform.Platform, idDetector string) (
 			fingerprint = strings.Replace(fingerprint, ":", "-", 1)
 			identifier = "//platformid.api.mondoo.app/runtime/ssh/hostkey/" + fingerprint
 		}
+		return identifier, nil
 	case "awsec2":
 		_, ok := transport.(*local.LocalTransport)
 		if ok {
@@ -94,8 +108,8 @@ func GatherID(t transports.Transport, p *platform.Platform, idDetector string) (
 				return "", errors.New(fmt.Sprintf("awsec2 id detector is not supported for your asset: %s %s", p.Name, p.Release))
 			}
 		}
+		return identifier, nil
 	default:
 		return "", errors.New(fmt.Sprintf("the provided id-detector is not supported: %s", idDetector))
 	}
-	return identifier, nil
 }

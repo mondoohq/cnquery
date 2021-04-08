@@ -113,12 +113,15 @@ func ResolveAsset(root *asset.Asset, secretMgr vault.SecretManager) ([]*asset.As
 		for ai := range resolvedAssets {
 			assetObj := resolvedAssets[ai]
 
+			// copy over id detector overwrite
+			assetObj.IdDetector = root.IdDetector
+
 			// fetch the secret info for the asset
 			if secretMgr != nil {
-				log.Debug().Str("asset", root.Name).Msg("fetch secret from secrets manager")
+				log.Debug().Str("asset", assetObj.Name).Msg("fetch secret from secrets manager")
 				secM, err := secretMgr.GetSecretMetadata(assetObj)
 				if err != nil {
-					log.Warn().Err(err).Msg("could not fetch secret for asset " + root.Name)
+					log.Warn().Err(err).Msg("could not fetch secret for asset " + assetObj.Name)
 					return nil, err
 				} else {
 					// enrich connection with secret information
