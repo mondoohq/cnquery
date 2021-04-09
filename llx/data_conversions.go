@@ -81,7 +81,7 @@ func dict2primitive(value interface{}) (*Primitive, error) {
 				return nil, err
 			}
 		}
-		return &Primitive{Type: string(types.Array(types.Dict)), Array: res}, nil
+		return &Primitive{Type: types.Array(types.Dict), Array: res}, nil
 
 	case map[string]interface{}:
 		res := make(map[string]*Primitive, len(x))
@@ -92,7 +92,7 @@ func dict2primitive(value interface{}) (*Primitive, error) {
 				return nil, err
 			}
 		}
-		return &Primitive{Type: string(types.Map(types.String, types.Dict)), Map: res}, nil
+		return &Primitive{Type: types.Map(types.String, types.Dict), Map: res}, nil
 
 	default:
 		return nil, errors.New("failed to convert dict to primitive, unsupported child type: " + reflect.TypeOf(x).String())
@@ -100,7 +100,7 @@ func dict2primitive(value interface{}) (*Primitive, error) {
 }
 
 func primitive2dict(p *Primitive) (interface{}, error) {
-	switch types.Type(p.Type).Underlying() {
+	switch p.Type.Underlying() {
 	case types.Nil:
 		return nil, nil
 	case types.Bool:
@@ -167,7 +167,7 @@ func dict2result(value interface{}, typ types.Type) (*Primitive, error) {
 	}
 
 	if prim == nil {
-		return &Primitive{Type: string(types.Dict)}, nil
+		return &Primitive{Type: types.Dict}, nil
 	}
 
 	raw, err := proto.Marshal(prim)
@@ -175,12 +175,12 @@ func dict2result(value interface{}, typ types.Type) (*Primitive, error) {
 		return nil, err
 	}
 
-	return &Primitive{Type: string(types.Dict), Value: raw}, nil
+	return &Primitive{Type: types.Dict, Value: raw}, nil
 }
 
 func score2result(value interface{}, typ types.Type) (*Primitive, error) {
 	return &Primitive{
-		Type:  string(types.Score),
+		Type:  types.Score,
 		Value: value.([]byte),
 	}, nil
 }
@@ -193,7 +193,7 @@ func block2result(value interface{}, typ types.Type) (*Primitive, error) {
 		raw := v.(*RawData)
 		res[k] = raw.Result().Data
 	}
-	return &Primitive{Type: string(typ), Map: res}, nil
+	return &Primitive{Type: typ, Map: res}, nil
 }
 
 func array2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -207,7 +207,7 @@ func array2result(value interface{}, typ types.Type) (*Primitive, error) {
 			return nil, err
 		}
 	}
-	return &Primitive{Type: string(typ), Array: res}, nil
+	return &Primitive{Type: typ, Array: res}, nil
 }
 
 func stringmap2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -221,7 +221,7 @@ func stringmap2result(value interface{}, typ types.Type) (*Primitive, error) {
 			return nil, err
 		}
 	}
-	return &Primitive{Type: string(typ), Map: res}, nil
+	return &Primitive{Type: typ, Map: res}, nil
 }
 
 func intmap2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -235,7 +235,7 @@ func intmap2result(value interface{}, typ types.Type) (*Primitive, error) {
 			return nil, err
 		}
 	}
-	return &Primitive{Type: string(typ), Map: res}, nil
+	return &Primitive{Type: typ, Map: res}, nil
 }
 
 func map2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -252,7 +252,7 @@ func map2result(value interface{}, typ types.Type) (*Primitive, error) {
 func resource2result(value interface{}, typ types.Type) (*Primitive, error) {
 	m := value.(lumi.ResourceType)
 	r := m.LumiResource()
-	return &Primitive{Type: string(typ), Value: []byte(r.Id)}, nil
+	return &Primitive{Type: typ, Value: []byte(r.Id)}, nil
 }
 
 func function2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -262,7 +262,7 @@ func function2result(value interface{}, typ types.Type) (*Primitive, error) {
 func raw2primitive(value interface{}, typ types.Type) (*Primitive, error) {
 	if value == nil {
 		return &Primitive{
-			Type: string(typ),
+			Type: typ,
 		}, nil
 	}
 
@@ -292,7 +292,7 @@ func (r *RawData) Result() *Result {
 
 	if r.Value == nil {
 		return &Result{
-			Data:  &Primitive{Type: string(r.Type)},
+			Data:  &Primitive{Type: r.Type},
 			Error: errorMsg,
 		}
 	}
@@ -300,7 +300,7 @@ func (r *RawData) Result() *Result {
 	data, err := raw2primitive(r.Value, r.Type)
 	if err != nil {
 		return &Result{
-			Data:  &Primitive{Type: string(r.Type)},
+			Data:  &Primitive{Type: r.Type},
 			Error: err.Error(),
 		}
 	}
@@ -412,7 +412,7 @@ func presource2raw(p *Primitive) *RawData {
 
 	return &RawData{Value: lumi.MockResource{
 		StaticResource: &lumi.Resource{
-			ResourceID: lumi.ResourceID{Name: types.Type(p.Type).ResourceName(), Id: id},
+			ResourceID: lumi.ResourceID{Name: p.Type.ResourceName(), Id: id},
 		},
 	}, Type: types.Type(p.Type)}
 }
