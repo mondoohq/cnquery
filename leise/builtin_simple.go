@@ -34,7 +34,7 @@ func compileStringContains(c *compiler, typ types.Type, ref int32, id string, ca
 			Call: llx.Chunk_FUNCTION,
 			Id:   "contains" + string(types.String),
 			Function: &llx.Function{
-				Type:    string(types.Bool),
+				Type:    types.Bool,
 				Binding: ref,
 				Args:    []*llx.Primitive{val},
 			},
@@ -46,7 +46,7 @@ func compileStringContains(c *compiler, typ types.Type, ref int32, id string, ca
 			Call: llx.Chunk_FUNCTION,
 			Id:   "contains" + string(types.Array(types.String)),
 			Function: &llx.Function{
-				Type:    string(types.Bool),
+				Type:    types.Bool,
 				Binding: ref,
 				Args:    []*llx.Primitive{val},
 			},

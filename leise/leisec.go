@@ -168,7 +168,7 @@ func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type
 		Call: llx.Chunk_FUNCTION,
 		Id:   "{}",
 		Function: &llx.Function{
-			Type:    string(resultType),
+			Type:    resultType,
 			Binding: c.Result.Code.ChunkIndex(),
 			Args:    []*llx.Primitive{llx.FunctionPrimitive(fref)},
 		},
@@ -207,11 +207,11 @@ func (c *compiler) compileIfBlock(expressions []*parser.Expression, chunk *llx.C
 
 	if len(blockCompiler.Result.Code.Code) != 0 {
 		last := blockCompiler.Result.Code.Code[blockCompiler.Result.Code.ChunkIndex()-1]
-		t, ok := types.Enforce(types.Type(chunk.Function.Type), last.Type(code))
+		var ok bool
+		chunk.Function.Type, ok = types.Enforce(chunk.Function.Type, last.Type(code))
 		if !ok {
 			return types.Nil, errors.New("mismatched return type for child block of if-function; make sure all return types are the same")
 		}
-		chunk.Function.Type = string(t)
 	}
 
 	c.Result.Code.RefreshChunkChecksum(chunk)
@@ -267,14 +267,14 @@ func (c *compiler) compileSwitchBlock(expressions []*parser.Expression, chunk *l
 		c.Result.Code.Checksums[c.Result.Code.ChunkIndex()] = checksum
 	}()
 
-	if types.Type(arg.Type) != types.Unset {
-		if types.Type(arg.Type) == types.Ref {
+	if arg.Type != types.Unset {
+		if arg.Type == types.Ref {
 			val, ok := arg.Ref()
 			if !ok {
 				return types.Nil, errors.New("could not resolve references of switch argument")
 			}
 			bind = &binding{
-				Type: types.Type(arg.Type),
+				Type: arg.Type,
 				Ref:  val,
 			}
 		} else {
@@ -284,7 +284,7 @@ func (c *compiler) compileSwitchBlock(expressions []*parser.Expression, chunk *l
 			})
 			ref := c.Result.Code.ChunkIndex()
 			bind = &binding{
-				Type: types.Type(arg.Type),
+				Type: arg.Type,
 				Ref:  ref,
 			}
 		}
@@ -320,7 +320,7 @@ func (c *compiler) compileSwitchBlock(expressions []*parser.Expression, chunk *l
 				},
 				Code: []*llx.Chunk{{
 					Call:      llx.Chunk_PRIMITIVE,
-					Primitive: &llx.Primitive{Type: string(bind.Type)},
+					Primitive: &llx.Primitive{Type: bind.Type},
 				}},
 				SingleValue: true,
 			}, bind)
@@ -375,7 +375,7 @@ func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.T
 		},
 		Code: []*llx.Chunk{{
 			Call:      llx.Chunk_PRIMITIVE,
-			Primitive: &llx.Primitive{Type: string(typ)},
+			Primitive: &llx.Primitive{Type: typ},
 		}},
 	}, &binding{Type: typ, Ref: 1})
 
@@ -566,7 +566,7 @@ func (c *compiler) compileBuiltinFunction(h *compileHandler, id string, binding 
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
-			Type:    string(resType),
+			Type:    resType,
 			Binding: binding.Ref,
 			Args:    args,
 		},
@@ -645,7 +645,7 @@ func (c *compiler) addResource(id string, resource *lumi.ResourceInfo, call *par
 	typ := types.Resource(id)
 
 	if call != nil && len(call.Function) > 0 {
-		function = &llx.Function{Type: string(typ)}
+		function = &llx.Function{Type: typ}
 		function.Args, err = c.resourceArgs(resource, call.Function)
 		if err != nil {
 			return types.Nil, err
@@ -853,7 +853,7 @@ func (c *compiler) compileValue(val *parser.Value) (*llx.Primitive, error) {
 		}
 
 		return &llx.Primitive{
-			Type:  string(llx.ArrayType(arr, c.Result.Code)),
+			Type:  llx.ArrayType(arr, c.Result.Code),
 			Array: arr,
 		}, nil
 	}
@@ -867,9 +867,9 @@ func (c *compiler) compileValue(val *parser.Value) (*llx.Primitive, error) {
 			if err != nil {
 				return nil, err
 			}
-			if types.Type(vv.Type) != resType {
+			if vv.Type != resType {
 				if resType == "" {
-					resType = types.Type(vv.Type)
+					resType = vv.Type
 				} else if resType != types.Any {
 					resType = types.Any
 				}
@@ -882,7 +882,7 @@ func (c *compiler) compileValue(val *parser.Value) (*llx.Primitive, error) {
 		}
 
 		return &llx.Primitive{
-			Type: string(types.Map(types.String, resType)),
+			Type: types.Map(types.String, resType),
 			Map:  mapRes,
 		}, nil
 	}
@@ -1108,7 +1108,7 @@ func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 				Call: llx.Chunk_FUNCTION,
 				Id:   "return",
 				Function: &llx.Function{
-					Type:    string(prevChunk.Type(c.Result.Code)),
+					Type:    prevChunk.Type(c.Result.Code),
 					Binding: 0,
 					Args: []*llx.Primitive{
 						llx.RefPrimitive(ref),
