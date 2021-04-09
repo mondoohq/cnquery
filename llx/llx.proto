@@ -6,7 +6,7 @@ package mondoo.llx;
 option go_package = "llx";
 
 message Primitive {
-  string type = 1;
+  string type = 1 [(gogoproto.casttype) = "go.mondoo.io/mondoo/types.Type"];
 
   // The value of the primitive in case of bool|int|float|string|ref|json
   // For array/map it holds the exact datatype as a string,
@@ -21,7 +21,7 @@ message Primitive {
 }
 
 message Function {
-  string type = 1;
+  string type = 1 [(gogoproto.casttype) = "go.mondoo.io/mondoo/types.Type"];
   int32 binding = 2;
   repeated Primitive args = 3;
 }

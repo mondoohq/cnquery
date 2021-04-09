@@ -75,7 +75,7 @@ func switchCall(c *LeiseExecutor, f *Function, ref int32) (*RawData, int32, erro
 	}
 
 	var bind *RawData
-	if types.Type(f.Args[0].Type) != types.Unset {
+	if f.Args[0].Type != types.Unset {
 		var dref int32
 		var err error
 		bind, dref, err = c.resolveValue(f.Args[0], ref)
@@ -89,7 +89,7 @@ func switchCall(c *LeiseExecutor, f *Function, ref int32) (*RawData, int32, erro
 	max := len(f.Args)
 	defaultCaseIdx := -1
 	for idx+1 < max {
-		if types.Type(f.Args[idx].Type) == types.Bool {
+		if f.Args[idx].Type == types.Bool {
 			defaultCaseIdx = idx
 			idx += 2
 			continue
