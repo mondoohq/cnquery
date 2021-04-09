@@ -51,7 +51,6 @@ func ResolveTransport(tc *transports.TransportConfig, userIdDetectors ...string)
 	var name string
 	var identifier []string
 	var labels map[string]string
-	var err error
 	idDetectors := []string{}
 
 	switch tc.Backend {
@@ -356,16 +355,21 @@ func ResolveTransport(tc *transports.TransportConfig, userIdDetectors ...string)
 		idDetectors = userIdDetectors
 	}
 
-	p, err := m.Platform()
-	if err != nil {
-		return nil, err
+	// some platforms are requiring ids only and have no id detector
+	if len(idDetectors) > 0 {
+		p, err := m.Platform()
+		if err != nil {
+			return nil, err
+		}
+
+		ids, err := motorid.GatherIDs(m.Transport, p, idDetectors)
+		if err == nil {
+			identifier = append(identifier, ids...)
+		}
 	}
 
-	ids, err := motorid.GatherIDs(m.Transport, p, idDetectors)
-	if err == nil {
-		identifier = append(identifier, ids...)
-	} else {
-		log.Error().Err(err).Msg("could not gather the requested platform identifier")
+	if len(identifier) == 0 {
+		return nil, errors.New("could not find a valid platform identifier")
 	}
 
 	m.Meta = motor.MetaInfo{
@@ -374,7 +378,7 @@ func ResolveTransport(tc *transports.TransportConfig, userIdDetectors ...string)
 		Labels:     labels,
 	}
 
-	return m, err
+	return m, nil
 }
 
 // TODO: move individual docker handling to specific transport
