@@ -187,7 +187,7 @@ func compileComparable(c *compiler, id string, call *parser.Call, res *llx.CodeB
 		Call: llx.Chunk_FUNCTION,
 		Id:   name,
 		Function: &llx.Function{
-			Type:    types.Bool,
+			Type:    string(types.Bool),
 			Binding: leftRef,
 			Args:    []*llx.Primitive{right},
 		},
@@ -235,7 +235,7 @@ func compileTransformation(c *compiler, id string, call *parser.Call, res *llx.C
 		Call: llx.Chunk_FUNCTION,
 		Id:   name,
 		Function: &llx.Function{
-			Type:    returnType,
+			Type:    string(returnType),
 			Binding: leftRef,
 			Args:    []*llx.Primitive{right},
 		},
@@ -282,7 +282,7 @@ func compileBlock(c *compiler, id string, call *parser.Call, res *llx.CodeBundle
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
-			Type: types.Unset,
+			Type: string(types.Unset),
 			Args: []*llx.Primitive{},
 		},
 	})
@@ -333,7 +333,7 @@ func compileIf(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
-			Type: types.Unset,
+			Type: string(types.Unset),
 			Args: []*llx.Primitive{argValue},
 		},
 	})
@@ -393,7 +393,7 @@ func compileExpect(c *compiler, id string, call *parser.Call, res *llx.CodeBundl
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
-			Type: typ,
+			Type: string(typ),
 			Args: []*llx.Primitive{argValue},
 		},
 	})
@@ -421,7 +421,7 @@ func compileScore(c *compiler, id string, call *parser.Call, res *llx.CodeBundle
 		Call: llx.Chunk_FUNCTION,
 		Id:   "score",
 		Function: &llx.Function{
-			Type: types.Score,
+			Type: string(types.Score),
 			Args: []*llx.Primitive{argValue},
 		},
 	})
@@ -448,7 +448,7 @@ func compileTypeof(c *compiler, id string, call *parser.Call, res *llx.CodeBundl
 		Call: llx.Chunk_FUNCTION,
 		Id:   "typeof",
 		Function: &llx.Function{
-			Type: types.String,
+			Type: string(types.String),
 			Args: []*llx.Primitive{argValue},
 		},
 	})
@@ -472,14 +472,14 @@ func compileSwitch(c *compiler, id string, call *parser.Call, res *llx.CodeBundl
 
 		ref = argValue
 	} else {
-		ref = &llx.Primitive{Type: types.Unset}
+		ref = &llx.Primitive{Type: string(types.Unset)}
 	}
 
 	res.Code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
-			Type: types.Unset,
+			Type: string(types.Unset),
 			Args: []*llx.Primitive{ref},
 		},
 	})

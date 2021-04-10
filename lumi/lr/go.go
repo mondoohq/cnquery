@@ -226,7 +226,7 @@ func (b *goBuilder) goInitInfo(r *Resource) error {
 		title, desc := extractComments(f.Comments)
 
 		fields += fmt.Sprintf(
-			`	fields["%s"] = &lumi.Field{Name: "%s", Type: %s, Mandatory: %t, Refs: %s, Title: %s, Desc: %s}
+			`	fields["%s"] = &lumi.Field{Name: "%s", Type: string(%s), Mandatory: %t, Refs: %s, Title: %s, Desc: %s}
 `, f.ID, f.ID, f.Type.mondooType(), f.isStatic(), refs, title, desc)
 	}
 
@@ -252,7 +252,7 @@ func (b *goBuilder) goInitInfo(r *Resource) error {
 				}
 			}
 
-			args = append(args, `				&lumi.TypedArg{Name: "`+arg.ID+`", Type: `+typ+`},
+			args = append(args, `				&lumi.TypedArg{Name: "`+arg.ID+`", Type: string(`+typ+`)},
 `)
 		}
 		init = `&lumi.Init{Args: []*lumi.TypedArg{
