@@ -18,7 +18,7 @@ message ResourceID {
 
 message TypedArg {
   string name = 1;
-  string type = 2 [(gogoproto.casttype) = "go.mondoo.io/mondoo/types.Type"];
+  string type = 2;
 }
 
 message Init {
@@ -37,7 +37,7 @@ message ResourceInfo {
 
 message Field {
   string name = 1;
-  string type = 2 [(gogoproto.casttype) = "go.mondoo.io/mondoo/types.Type"];
+  string type = 2;
   bool mandatory = 3;
   repeated string refs = 4;
   string title = 20;
