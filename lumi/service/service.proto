@@ -1,10 +1,9 @@
 syntax = "proto3";
 
-import "gogo.proto";
-import "go.mondoo.io/mondoo/lumi/lumi.proto";
+import "lumi.proto";
 
 package mondoo.lumi.service;
-option go_package = "service";
+option go_package = "go.mondoo.io/mondoo/lumi/service";
 
 // Lumi service
 service Lumi {

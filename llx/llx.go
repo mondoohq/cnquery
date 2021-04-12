@@ -1,5 +1,7 @@
 package llx
 
+//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --falcon_out=. llx.proto
+
 import (
 	"errors"
 	"sort"

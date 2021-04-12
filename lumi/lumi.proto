@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package mondoo.lumi;
-option go_package = "lumi";
+option go_package = "go.mondoo.io/mondoo/lumi";
 
 // BASIC DATATYPES
 

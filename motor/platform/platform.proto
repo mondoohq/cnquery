@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-import "go.mondoo.io/mondoo/motor/transports/transports.proto";
+import "motor/transports/transports.proto";
 
 package mondoo.motor.platform.v1;
 option go_package = "go.mondoo.io/mondoo/motor/platform";
