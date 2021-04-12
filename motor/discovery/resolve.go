@@ -116,6 +116,9 @@ func ResolveAsset(root *asset.Asset, secretMgr vault.SecretManager) ([]*asset.As
 			// copy over id detector overwrite
 			assetObj.IdDetector = root.IdDetector
 
+			// copy over labels for secret metadata fetching
+			assetObj.Labels = root.Labels
+
 			// fetch the secret info for the asset
 			if secretMgr != nil {
 				log.Debug().Str("asset", assetObj.Name).Msg("fetch secret from secrets manager")
