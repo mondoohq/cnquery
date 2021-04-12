@@ -143,6 +143,8 @@ func mapSmmManagedPingStateCode(pingStatus types.PingStatus) asset.State {
 	}
 }
 
+const SsmPlatformLabel = "ssm.aws.mondoo.app/platform"
+
 func ssmInstanceToAsset(account string, region string, instance types.InstanceInformation, clonedConfig aws.Config) *asset.Asset {
 
 	connections := []*transports.TransportConfig{}
@@ -172,7 +174,7 @@ func ssmInstanceToAsset(account string, region string, instance types.InstanceIn
 		},
 	})
 
-	asset.Labels["ssm.aws.mondoo.app/platform"] = string(instance.PlatformType)
+	asset.Labels[SsmPlatformLabel] = string(instance.PlatformType)
 
 	if err != nil {
 		log.Warn().Err(err).Msg("could not gather ssm instance tag information")
