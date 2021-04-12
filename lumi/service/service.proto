@@ -53,5 +53,5 @@ message FieldArguments {
 }
 
 message FieldReturn {
-  bytes data = 3 [(gogoproto.casttype) = "encoding/json.RawMessage"];
+  bytes data = 3;
 }
