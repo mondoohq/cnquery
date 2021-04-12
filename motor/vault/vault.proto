@@ -1,8 +1,7 @@
 syntax = "proto3";
 
-package mondoo.vault;
-
-option go_package = "vault";
+package mondoo.motor.vault.v1;
+option go_package = "go.mondoo.io/mondoo/motor/vault";
 
 message CredentialID {
   string key = 1;

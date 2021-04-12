@@ -1,6 +1,6 @@
 package transports
 
-//go:generate protoc --proto_path=$GOPATH/src:. --falcon_out=. --iam-actions_out=. --gofast_out=$GOPATH/src transports.proto
+//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --falcon_out=. --iam-actions_out=. transports.proto
 
 import (
 	"regexp"
