@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/golang/protobuf/proto"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/types"
+	"google.golang.org/protobuf/proto"
 )
 
 type dataConverter func(interface{}, types.Type) (*Primitive, error)
@@ -170,7 +170,7 @@ func dict2result(value interface{}, typ types.Type) (*Primitive, error) {
 		return &Primitive{Type: string(types.Dict)}, nil
 	}
 
-	raw, err := proto.Marshal(prim)
+	raw, err := proto.MarshalOptions{Deterministic: true}.Marshal(prim)
 	if err != nil {
 		return nil, err
 	}
