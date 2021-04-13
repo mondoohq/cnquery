@@ -74,7 +74,7 @@ func New(endpoint *transports.TransportConfig) (*WinrmTransport, error) {
 	}
 
 	// test connection
-	log.Debug().Msg("winrm> connecting to remote shell via WinRM")
+	log.Debug().Str("user", endpoint.User).Str("host", endpoint.Host).Msg("winrm> connecting to remote shell via WinRM")
 	shell, err := client.CreateShell()
 	if err != nil {
 		return nil, err
