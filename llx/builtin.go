@@ -691,7 +691,7 @@ func BuiltinFunction(typ types.Type, name string) (*chunkHandler, error) {
 
 // this is called for objects that call a function
 func (c *LeiseExecutor) runBoundFunction(bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	log.Debug().Int32("ref", ref).Str("id", chunk.Id).Msg("exec> run bound function")
+	log.Trace().Int32("ref", ref).Str("id", chunk.Id).Msg("exec> run bound function")
 
 	fh, err := BuiltinFunction(bind.Type, chunk.Id)
 	if err == nil {

@@ -165,7 +165,7 @@ func (ctx *Runtime) CreateResourceWithID(name string, id string, args ...interfa
 		resResource.LumiResource().Id = id
 	}
 
-	log.Debug().Str("name", name).Str("id", id).Msg("created resource")
+	log.Trace().Str("name", name).Str("id", id).Msg("created resource")
 
 	if ex, err := ctx.GetResource(name, id); err == nil {
 		resResource = ex
@@ -238,7 +238,7 @@ func (ctx *Runtime) WatchAndUpdate(r ResourceType, field string, watcherUID stri
 	fieldUID := resource.FieldUID(field)
 
 	processResult := func() {
-		log.Debug().
+		log.Trace().
 			Str("src", resource.Name+"\x00"+resource.Id+"\x00"+field).
 			Str("watcher", watcherUID).
 			Msg("w+u> process field result")
@@ -287,7 +287,7 @@ func (ctx *Runtime) WatchAndUpdate(r ResourceType, field string, watcherUID stri
 		}
 
 		// final case: it is computed and ready to go
-		log.Debug().Msg("w+u> initial process result")
+		log.Trace().Msg("w+u> initial process result")
 		processResult()
 		return nil
 	}
@@ -354,7 +354,7 @@ func (ctx *Runtime) WatchAndCompute(src ResourceType, sfield string, dst Resourc
 		err = src.Compute(sfield)
 		if err != nil {
 			if _, ok := err.(NotReadyError); !ok {
-				log.Debug().Err(err).Msg("w+c> initial compute failed")
+				log.Trace().Err(err).Msg("w+c> initial compute failed")
 				return err
 			}
 		}
@@ -371,7 +371,7 @@ func (ctx *Runtime) Trigger(r ResourceType, field string) error {
 		return errors.New("cannot trigger a resource without specifying a field")
 	}
 
-	log.Debug().
+	log.Trace().
 		Str("resource", resource.Name+":"+resource.Id).
 		Str("field", field).
 		Msg("trigger> trigger resource")
