@@ -163,7 +163,7 @@ func (c *LeiseExecutor) Run() {
 			continue
 		}
 
-		log.Debug().Int32("entrypoint", ref).Str("exec-ID", c.id).Msg("exec.Run>")
+		log.Trace().Int32("entrypoint", ref).Str("exec-ID", c.id).Msg("exec.Run>")
 		c.runChain(ref)
 	}
 }
@@ -318,7 +318,7 @@ func (c *LeiseExecutor) runGlobalFunction(chunk *Chunk, f *Function, ref int32) 
 		}
 
 		res, dref, err := h(c, f, ref)
-		log.Debug().Msgf("exec> global: %s %+v = %#v", chunk.Id, f.Args, res)
+		log.Trace().Msgf("exec> global: %s %+v = %#v", chunk.Id, f.Args, res)
 		if res != nil {
 			c.cache.Store(ref, &stepCache{Result: res})
 		}
@@ -423,7 +423,7 @@ func (c *LeiseExecutor) runChain(start int32) {
 	for nextRef != 0 {
 		curRef = nextRef
 		c.stepTracker.Store(curRef, nil)
-		// log.Debug().Int32("ref", curRef).Msg("exec> run chain")
+		// log.Trace().Int32("ref", curRef).Msg("exec> run chain")
 
 		// Try to load the result from cache if it already exists. This was added
 		// so that blocks that are called on top of a binding, where the results
@@ -489,7 +489,7 @@ func (c *LeiseExecutor) triggerChain(ref int32) {
 		return
 	}
 
-	log.Debug().Int32("ref", ref).Msgf("exec> trigger callback")
+	log.Trace().Int32("ref", ref).Msgf("exec> trigger callback")
 	c.callback(&RawResult{Data: res.Result, CodeID: codeID})
 }
 
