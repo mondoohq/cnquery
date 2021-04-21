@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/aws/smithy-go"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
@@ -40,7 +41,6 @@ func (c *lumiAwsIam) GetCredentialReport() ([]interface{}, error) {
 	// 410 - ReportNotPresent
 	// 500 - ServiceFailure
 	rresp, err := svc.GetCredentialReport(ctx, &iam.GetCredentialReportInput{})
-	var notFoundErr *types.NoSuchEntityException
 
 	if err != nil {
 		var awsFailErr *types.ServiceFailureException
@@ -48,38 +48,47 @@ func (c *lumiAwsIam) GetCredentialReport() ([]interface{}, error) {
 			return nil, errors.Wrap(err, "could not gather aws iam credential report")
 		}
 
-		// if we have an error and it is not 500 we generate a code
-		if errors.As(err, &notFoundErr) {
-			// generate a new report
-			gresp, err := svc.GenerateCredentialReport(ctx, &iam.GenerateCredentialReportInput{})
-			if err != nil {
-				return nil, err
-			}
+		// if we have an error and it is not 500 we generate a report
+		var ae smithy.APIError
+		if errors.As(err, &ae) {
+			if ae.ErrorCode() == "ReportNotPresent" {
+				// generate a new report
+				gresp, err := svc.GenerateCredentialReport(ctx, &iam.GenerateCredentialReportInput{})
+				if err != nil {
+					return nil, err
+				}
 
-			if gresp.State == types.ReportStateTypeStarted || gresp.State == types.ReportStateTypeInprogress {
-				// we need to wait
-			} else if gresp.State == types.ReportStateTypeComplete {
-				// we do not neet do do anything
-			} else {
-				// unsupported report state
-				return nil, fmt.Errorf("aws iam credential report state is not supported: %s", gresp.State)
+				if gresp.State == types.ReportStateTypeStarted || gresp.State == types.ReportStateTypeInprogress {
+					// we need to wait
+				} else if gresp.State == types.ReportStateTypeComplete {
+					// we do not neet do do anything
+				} else {
+					// unsupported report state
+					return nil, fmt.Errorf("aws iam credential report state is not supported: %s", gresp.State)
+				}
 			}
 		}
 	}
 
 	// loop as long as the response is 404 since this means the report is still in progress
-	for errors.As(err, &notFoundErr) {
-		rresp, err = svc.GetCredentialReport(ctx, &iam.GetCredentialReportInput{})
-		if err == nil {
-			break
-		}
+	rresp, err = svc.GetCredentialReport(ctx, &iam.GetCredentialReportInput{})
+	var ae smithy.APIError
+	if errors.As(err, &ae) {
+		for ae.ErrorCode() == "NoSuchEntity" || ae.ErrorCode() == "ReportInProgress" {
+			rresp, err = svc.GetCredentialReport(ctx, &iam.GetCredentialReportInput{})
+			if err == nil {
+				break
+			}
 
-		log.Error().Err(err).Msgf("resp %v, err: %v", rresp, err)
+			log.Error().Err(err).Msgf("resp %v, err: %v", rresp, err)
 
-		if !errors.As(err, &notFoundErr) {
-			return nil, errors.Wrap(err, "could not gather aws iam credential report")
+			if errors.As(err, &ae) {
+				if ae.ErrorCode() != "NoSuchEntity" && ae.ErrorCode() != "ReportInProgress" {
+					return nil, errors.Wrap(err, "could not gather aws iam credential report")
+				}
+			}
+			time.Sleep(100 * time.Millisecond)
 		}
-		time.Sleep(100 * time.Millisecond)
 	}
 
 	if rresp == nil {
@@ -160,7 +169,7 @@ func (c *lumiAwsIam) GetAccountSummary() (map[string]interface{}, error) {
 	// convert result to lumi
 	res := map[string]interface{}{}
 	for k := range resp.SummaryMap {
-		res[k] = resp.SummaryMap[k]
+		res[k] = int64(resp.SummaryMap[k])
 	}
 
 	return res, nil
@@ -544,7 +553,7 @@ func (p *lumiAwsIamUsercredentialreportentry) getTimeValue(key string) (*time.Ti
 
 	// handle "N/A" and "not_supported" value
 	// some accounts do not support specific values eg. root_account does not support password_last_changed or password_next_rotation
-	if val == "N/A" || val == "not_supported" {
+	if val == "N/A" || val == "not_supported" || val == "no_information" {
 		return nil, nil
 	}
 
