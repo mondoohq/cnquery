@@ -176,7 +176,8 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "could not create local temp directory")
 	}
-	// defer os.RemoveAll(rpmTmpDir)
+	log.Debug().Str("path", rpmTmpDir).Msg("cache rpm library locally")
+	defer os.RemoveAll(rpmTmpDir)
 
 	fs := rpm.motor.Transport.FS()
 	afs := &afero.Afero{Fs: fs}
