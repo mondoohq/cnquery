@@ -26,3 +26,8 @@ func (x Kind) Name() string {
 		return "unknown"
 	}
 }
+
+func GetKind(kind string) Kind {
+	val := Kind_value[kind]
+	return Kind(val)
+}
