@@ -2,6 +2,7 @@ package asset
 
 import (
 	fmt "fmt"
+	"github.com/rs/zerolog/log"
 )
 
 //go:generate protoc --proto_path=$PWD:. --go_out=. --go_opt=paths=source_relative --falcon_out=. --iam-actions_out=. asset.proto
@@ -57,5 +58,37 @@ func (a *Asset) AddLabels(labels map[string]string) {
 	// copy labels
 	for k := range labels {
 		a.Labels[k] = labels[k]
+	}
+}
+
+func NewState(state string) State {
+	switch state {
+	case "STATE_UNKNOWN":
+		return State_STATE_UNKNOWN
+	case "STATE_ERROR":
+		return State_STATE_ERROR
+	case "STATE_PENDING":
+		return State_STATE_PENDING
+	case "STATE_RUNNING":
+		return State_STATE_RUNNING
+	case "STATE_STOPPING":
+		return State_STATE_STOPPING
+	case "STATE_STOPPED":
+		return State_STATE_STOPPED
+	case "STATE_SHUTDOWN":
+		return State_STATE_SHUTDOWN
+	case "STATE_TERMINATED":
+		return State_STATE_TERMINATED
+	case "STATE_REBOOT":
+		return State_STATE_REBOOT
+	case "STATE_ONLINE":
+		return State_STATE_ONLINE
+	case "STATE_OFFLINE":
+		return State_STATE_OFFLINE
+	case "STATE_DELETED":
+		return State_STATE_DELETED
+	default:
+		log.Debug().Str("state", state).Msg("unknown asset state")
+		return State_STATE_UNKNOWN
 	}
 }
