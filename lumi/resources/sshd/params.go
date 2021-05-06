@@ -6,7 +6,7 @@ import (
 )
 
 func Params(content string) (map[string]string, error) {
-	re := regexp.MustCompile("(?m:^([[:alpha:]]+)\\s+(.*))")
+	re := regexp.MustCompile("(?m:^((?:[[:alpha:]]|\\d)+)\\s+(.*))")
 	m := re.FindAllStringSubmatch(content, -1)
 	res := make(map[string]string)
 	for _, mm := range m {
