@@ -1,0 +1,457 @@
+resources:
+  arista.eos:
+    snippets:
+      - title: Arista EOS Version
+        query: arista.eos.version
+      - title: Verify that Arista EOS Version is 18.x
+        query: arista.eos.version['version'] == /18\./
+      - title: Display EOS interfaces
+        query: arista.eos.interfaces { name mtu bandwidth status }
+      - title: Display all connected EOS interfaces
+        query: arista.eos.interfaces.where ( status['linkStatus'] == "connected") {  name mtu bandwidth stauts}
+      - title: EOS Hostname
+        query: arista.eos.hostname
+  arista.eos.interface:
+  arista.eos.ipInterface:
+  arista.eos.ntpSetting:
+  arista.eos.role:
+  arista.eos.runningConfig:
+  arista.eos.runningConfig.section:
+  arista.eos.snmpSetting:
+  arista.eos.spt.mstInterface:
+    snippets:
+      - title: Verify the Spanning-Tree Version
+        query: |
+          arista.eos.stp.mstInstances {
+           protocol == "mstp"
+          }
+  arista.eos.stp:
+  arista.eos.stp.mst:
+  arista.eos.user:
+  audit.advisory:
+  audit.cve:
+  audit.cvss:
+  audit.exploit:
+  auditpol:
+    snippets:
+      - title: List all audit policies
+        query: auditpol.list { inclusionsetting exclusionsetting  subcategory }
+      - title: Check a specific auditpol configuration
+        query: |
+          auditpol.where(subcategory == 'Sensitive Privilege Use').list {
+            inclusionsetting == 'Success and Failure'
+          }
+  auditpol.entry:
+  authorizedkeys:
+  authorizedkeys.entry:
+  aws:
+  aws.account:
+  aws.acm:
+  aws.acm.certificate:
+  aws.apigateway:
+  aws.apigateway.restapi:
+  aws.apigateway.stage:
+  aws.autoscaling:
+  aws.autoscaling.group:
+  aws.cloudtrail:
+  aws.cloudtrail.trail:
+  aws.cloudwatch:
+  aws.cloudwatch.loggroup:
+  aws.cloudwatch.loggroup.metricsfilter:
+  aws.cloudwatch.metric:
+  aws.cloudwatch.metricsalarm:
+  aws.codebuild:
+  aws.codebuild.project:
+  aws.config:
+  aws.config.recorder:
+  aws.config.rule: null
+  aws.dms: null
+  aws.dynamodb: null
+  aws.dynamodb.globaltable: null
+  aws.dynamodb.limit: null
+  aws.dynamodb.table: null
+  aws.ec2: null
+  aws.ec2.instance: null
+  aws.ec2.instance.device: null
+  aws.ec2.internetgateway: null
+  aws.ec2.securitygroup: null
+  aws.ec2.securitygroup.ippermission: null
+  aws.ec2.snapshot: null
+  aws.ec2.vgwtelemetry: null
+  aws.ec2.volume: null
+  aws.ec2.vpnconnection: null
+  aws.efs: null
+  aws.efs.filesystem: null
+  aws.elasticache: null
+  aws.elb: null
+  aws.elb.loadbalancer: null
+  aws.emr: null
+  aws.emr.cluster: null
+  aws.es: null
+  aws.es.domain: null
+  aws.guardduty: null
+  aws.guardduty.detector: null
+  aws.iam: null
+  aws.iam.group: null
+  aws.iam.policy: null
+  aws.iam.policyversion: null
+  aws.iam.role: null
+  aws.iam.user: null
+  aws.iam.usercredentialreportentry: null
+  aws.iam.virtualmfadevice: null
+  aws.kms: null
+  aws.kms.key: null
+  aws.lambda: null
+  aws.lambda.function: null
+  aws.rds: null
+  aws.rds.dbcluster: null
+  aws.rds.dbinstance: null
+  aws.rds.snapshot: null
+  aws.redshift: null
+  aws.redshift.cluster: null
+  aws.s3: null
+  aws.s3.bucket: null
+  aws.s3.bucket.corsrule: null
+  aws.s3.bucket.grant: null
+  aws.s3.bucket.policy: null
+  aws.s3control: null
+  aws.sagemaker: null
+  aws.sagemaker.endpoint: null
+  aws.sagemaker.notebookinstance: null
+  aws.sagemaker.notebookinstance.details: null
+  aws.secretsmanager: null
+  aws.secretsmanager.secret: null
+  aws.securityhub: null
+  aws.securityhub.hub: null
+  aws.sns: null
+  aws.sns.subscription: null
+  aws.sns.topic: null
+  aws.vpc: null
+  aws.vpc.flowlog: null
+  aws.vpc.routetable: null
+  azuread: null
+  azuread.application: null
+  azuread.domain: null
+  azuread.group: null
+  azuread.serviceprincipal: null
+  azuread.user: null
+  azurerm: null
+  azurerm.compute: null
+  azurerm.compute.disk: null
+  azurerm.compute.vm: null
+  azurerm.keyvault: null
+  azurerm.keyvault.certificate: null
+  azurerm.keyvault.key: null
+  azurerm.keyvault.secret: null
+  azurerm.keyvault.vault: null
+  azurerm.mariadb: null
+  azurerm.mariadb.database: null
+  azurerm.mariadb.server: null
+  azurerm.monitor: null
+  azurerm.monitor.diagnosticsetting: null
+  azurerm.monitor.logprofile: null
+  azurerm.mysql: null
+  azurerm.mysql.database: null
+  azurerm.mysql.server: null
+  azurerm.network: null
+  azurerm.network.interface: null
+  azurerm.network.securitygroup: null
+  azurerm.network.securityrule: null
+  azurerm.network.watcher: null
+  azurerm.postgresql: null
+  azurerm.postgresql.database: null
+  azurerm.postgresql.server: null
+  azurerm.resource: null
+  azurerm.sql: null
+  azurerm.sql.configuration: null
+  azurerm.sql.database: null
+  azurerm.sql.databaseusage: null
+  azurerm.sql.firewallrule: null
+  azurerm.sql.server: null
+  azurerm.sql.server.administrator: null
+  azurerm.storage: null
+  azurerm.storage.account: null
+  azurerm.storage.container: null
+  azurerm.web: null
+  azurerm.web.appsite: null
+  azurerm.web.appsiteauthsettings: null
+  azurerm.web.appsiteconfig: null
+  certificate: null
+  command: null
+  docker: null
+  docker.container: null
+  docker.image: null
+  equinix.metal.device: null
+  equinix.metal.organization: null
+  equinix.metal.project: null
+  equinix.metal.sshkey: null
+  equinix.metal.user: null
+  esxi:
+    snippets:
+      - title: Check that all kernel modules are signed
+        query: |
+          esxi.host {
+            kernelModules {
+              signedStatus == "Signed"
+            }
+          }
+  esxi.kernelmodule: null
+  esxi.ntpconfig: null
+  esxi.service: null
+  esxi.timezone: null
+  esxi.vib: null
+  file:
+    snippets:
+      - title: Test if a directory exists
+        query: |
+          file('/etc') {
+            exists
+            permissions.isDirectory
+          }
+  file.permissions: null
+  files.find: null
+  gcloud.compute: null
+  gcloud.compute.instance: null
+  gcloud.compute.serviceaccount: null
+  gcloud.organization: null
+  gcloud.project: null
+  gcloud.resourcemanager.binding: null
+  gcloud.sql: null
+  gcloud.sql.instance: null
+  gcloud.storage: null
+  gcloud.storage.bucket: null
+  group: null
+  groups:
+    snippets:
+      - title: Ensure the user is not part of group
+        query:  groups.where(name == 'wheel').list { members.all( name != 'username') }
+  ipmi: null
+  ipmi.chassis: null
+  k8s: null
+  k8s.apiresource: null
+  k8s.container: null
+  k8s.cronjob: null
+  k8s.daemonset: null
+  k8s.deployment: null
+  k8s.job: null
+  k8s.namespace: null
+  k8s.node: null
+  k8s.pod: null
+  kernel:
+    snippets:
+      - title: List all kernel modules
+        query: kernel.modules { name loaded size }
+      - title: List all loaded kernel modules
+        query: kernel.modules.where( loaded == true ) { name }
+  kernel.module: null
+  logindefs: null
+  machine: null
+  machine.baseboard: null
+  machine.bios: null
+  machine.chassis: null
+  machine.system: null
+  mondoo: null
+  mondoo.asset: null
+  mondoo.eol: null
+  mount:
+    snippets:
+      - title: List all mount points
+        query: mount.list { path device fstype options }
+      - title: Ensure the mountpoint exists
+        query: mount.one( path == "/" )
+      - title: Check mountpoint configuration
+        query: |
+          mount.where( path == "/" ).list {
+            device == '/dev/mapper/vg00-lv_root'
+            fstype == 'xfs'
+            options['rw'] != null
+            options['relatime'] != null
+            options['seclabel'] != null
+            options['attr2'] != null
+            options['inode64'] != null
+            options['noquota'] != null
+          }
+  mount.point: null
+  ms365.exchangeonline: null
+  ms365.sharepointonline: null
+  ms365.teams: null
+  msgraph.beta: null
+  msgraph.beta.application: null
+  msgraph.beta.devicemanagement: null
+  msgraph.beta.devicemanagement.devicecompliancepolicy: null
+  msgraph.beta.devicemanagement.deviceconfiguration: null
+  msgraph.beta.domain: null
+  msgraph.beta.domaindnsrecord: null
+  msgraph.beta.organization: null
+  msgraph.beta.policies: null
+  msgraph.beta.rolemanagement: null
+  msgraph.beta.rolemanagement.roleassignment: null
+  msgraph.beta.rolemanagement.roledefinition: null
+  msgraph.beta.security: null
+  msgraph.beta.security.securityscore: null
+  msgraph.beta.user: null
+  ntp.conf: null
+  os:
+    snippets:
+      - title: Show all environment variables
+        query: os.env
+      - title: Retrieve a single environment variable
+        query: os.env['windir']
+
+  os.rootcertificates: null
+  os.update: null
+  package:
+    snippets:
+      - title: Check if a package is installed
+        query: package('git').installed
+  packages: null
+  pam.conf: null
+  parse: null
+  parse.certificates: null
+  parse.ini: null
+  parse.json: null
+  pkix.extension: null
+  pkix.name: null
+  platform:
+    snippets:
+      - title: Platform Name and Release
+        query: platform { name release }
+  platform.advisories: null
+  platform.cves: null
+  platform.eol: null
+  platform.exploits: null
+  platform.virtualization: null
+  powershell:
+    snippets:
+      - title: Run custom powershell command
+        query: |
+          powershell('Get-WmiObject -Class Win32_volume -Filter "DriveType=3"| Select Label') {
+            stdout == /PAGEFILE/
+            stderr == ''
+          }
+      - title: Check the timezone
+        query: |
+          powershell('tzutil /g') {
+            stdout.trim == 'GMT Standard Time'
+            stderr == ''
+          }
+  privatekey: null
+  process: null
+  processes: null
+  registrykey: null
+  registrykey.property:
+    snippets:
+      - title: Verify a registry key property
+        query: |
+          registrykey.property(path: 'HKEY_LOCAL_MACHINE\Software\Policies\Microsoft\Windows\EventLog\System', name: 'MaxSize') {
+            value >= 32768
+          }
+  rsyslog.conf: null
+  secpol:
+    snippets:
+      - title: Check that a specific SID is included in the privilege rights
+        query: secpol.privilegerights['SeRemoteShutdownPrivilege'].contains( _ == 'S-1-5-32-544')
+  service: null
+  services: null
+  shadow: null
+  shadow.entry: null
+  sshd: null
+  sshd.config:
+    snippets:
+      - title: Check the ssh banner setting
+        query: sshd.config.params['Banner'] == '/etc/ssh/sshd-banner'
+  time: null
+  user: null
+  users:
+    snippets:
+      - title: Display all users and their uid
+        query: users.list { uid name }
+      - title: Ensure user exists
+        query: users.one( name == 'root')
+      - title: Ensure user does not exist
+        query: users.none(name == "vagrant")
+      - title: Search for a specific SID and check for its values
+        query: |
+          users.where( sid == /S-1-5-21-\d+-\d+-\d+-501/ ).list {
+            name != "Guest"
+          }
+  vsphere:
+    snippets:
+      - title: Display Information about the vSphere environment
+        query: vsphere.about
+      - title: Display ESXi host moid and properties
+        query: vsphere.datacenters { hosts { moid properties } }
+      - title: Display NTP server for all ESXi hosts
+        query: vsphere.datacenters { hosts { ntp.server } }
+      - title: Ensure a specific NTP Server is set
+        query: vsphere.datacenters { hosts { ntp.server.any(_ == "10.31.21.2") } }
+      - title: Ensure specific VmkNics properties for all management VmkNics
+        query: |
+          vsphere.datacenters {
+            hosts {
+              vmknics.where(tags == "Management") {
+                properties['Enabled'] == true
+                properties['MTU'] == 1500
+                properties['VDSName'] != /(?i)storage/
+              }
+            }
+          }
+  vsphere.cluster: null
+  vsphere.datacenter: null
+  vsphere.host:
+    snippets:
+      - title: Verify the Software AcceptanceLevel for ESXi host
+        query: |
+          // targeting a single ESXi host
+          esxi.host {
+            acceptanceLevel == 'VMwareCertified' || acceptanceLevel == 'VMwareAccepted' || acceptanceLevel == 'PartnerSupported'
+          }
+
+          // targeting the vSphere API
+          vsphere.datacenters {
+            hosts {
+              acceptanceLevel == 'VMwareCertified' || acceptanceLevel == 'VMwareAccepted' || acceptanceLevel == 'PartnerSupported'
+            }
+          }
+      - title: Verify that each vib is "VMwareCertified" or "VMwareAccepted"
+        query: |
+          esxi.host {
+            packages {
+              acceptanceLevel == 'VMwareCertified' || acceptanceLevel == 'VMwareAccepted' || acceptanceLevel == 'PartnerSupported'
+            }
+          }
+  vsphere.license: null
+  vsphere.vm: null
+  vsphere.vmknic: null
+  vsphere.vmnic: null
+  vsphere.vswitch.dvs: null
+  vsphere.vswitch.standard: null
+  windows:
+    snippets:
+      - title: Check the OS Edition
+        query: windows.computerInfo['WindowsInstallationType'] == 'Server Core'
+  windows.feature:
+    snippets:
+      - title: Check that a Windows features is installed
+        query: windows.feature('SNMP-Service').installed
+      - title: Check that a specific feature is not installed
+        query: windows.feature('Windows-Defender').installed == false
+  windows.firewall:
+    snippets:
+      - title: Check a specific Windows Firewall rule
+        query: |
+          windows.firewall.rules.where ( displayName == "File and Printer Sharing (Echo Request - ICMPv4-In)") {
+            enabled == 1
+          }
+  windows.firewall.profile: null
+  windows.firewall.rule: null
+  windows.hotfix: null
+  yaml.path: null
+  yum: null
+  yum.repo:
+    snippets:
+      - title: Check if a yum repo is enabled
+        query: |
+          yum.repo('salt-latest') {
+            enabled
+          }
