@@ -30,6 +30,10 @@ func (y *lumiYum) GetRepos() ([]interface{}, error) {
 		return nil, errors.Wrap(err, "could not retrieve yum repo list")
 	}
 
+	if cmd.ExitStatus != 0 {
+		return nil, errors.New("could not retrieve yum repo list")
+	}
+
 	repos, err := yum.ParseRepos(cmd.Stdout)
 	if err != nil {
 		return nil, err
