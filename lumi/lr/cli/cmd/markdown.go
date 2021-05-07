@@ -59,13 +59,25 @@ var markdownCmd = &cobra.Command{
 			return res.Resources[i].ID < res.Resources[j].ID
 		})
 
-		// generate resource map for hyperlink generation
+		// generate resource map for hyperlink generation and table of content
 		resourceHrefMap := map[string]bool{}
 
+		builder.WriteString("# Table of Content \n\n")
+		rows := [][]string{}
 		for i := range res.Resources {
 			resource := res.Resources[i]
 			resourceHrefMap[resource.ID] = true
+			rows = append(rows, []string{"[" + resource.ID + "](#" + anchor(resource.ID) + ")", strings.Join(sanitizeComments(resource.Comments), ",")})
 		}
+
+		table := tablewriter.NewWriter(builder)
+		table.SetHeader([]string{"ID", "Description"})
+		table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
+		table.SetCenterSeparator("|")
+		table.SetAutoWrapText(false)
+		table.AppendBulk(rows)
+		table.Render()
+		builder.WriteString("\n")
 
 		// render all resources incl. fields and examples
 		for i := range res.Resources {
