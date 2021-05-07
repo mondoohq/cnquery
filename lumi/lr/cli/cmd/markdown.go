@@ -59,6 +59,15 @@ var markdownCmd = &cobra.Command{
 			return res.Resources[i].ID < res.Resources[j].ID
 		})
 
+		// generate resource map for hyperlink generation
+		resourceHrefMap := map[string]bool{}
+
+		for i := range res.Resources {
+			resource := res.Resources[i]
+			resourceHrefMap[resource.ID] = true
+		}
+
+		// render all resources incl. fields and examples
 		for i := range res.Resources {
 			resource := res.Resources[i]
 			builder.WriteString("## ")
@@ -79,7 +88,7 @@ var markdownCmd = &cobra.Command{
 
 					for a := range init.Args {
 						arg := init.Args[a]
-						builder.WriteString(resource.ID + "(" + arg.ID + " " + renderLrType(arg.Type) + ")")
+						builder.WriteString(resource.ID + "(" + arg.ID + " " + renderLrType(arg.Type, resourceHrefMap) + ")")
 						builder.WriteString("\n")
 					}
 				}
@@ -100,7 +109,7 @@ var markdownCmd = &cobra.Command{
 
 				for k := range resource.Body.Fields {
 					field := resource.Body.Fields[k]
-					rows = append(rows, []string{field.ID, renderLrType(field.Type), strings.Join(sanitizeComments(field.Comments), ", ")})
+					rows = append(rows, []string{field.ID, renderLrType(field.Type, resourceHrefMap), strings.Join(sanitizeComments(field.Comments), ", ")})
 				}
 
 				table := tablewriter.NewWriter(builder)
@@ -134,14 +143,23 @@ var markdownCmd = &cobra.Command{
 	},
 }
 
-func renderLrType(t lr.Type) string {
+func anchor(name string) string {
+	name = strings.Replace(name, ".", "", -1)
+	return name
+}
+
+func renderLrType(t lr.Type, resourceHrefMap map[string]bool) string {
 	switch {
 	case t.SimpleType != nil:
+		_, ok := resourceHrefMap[t.SimpleType.Type]
+		if ok {
+			return "[" + t.SimpleType.Type + "](#" + anchor(t.SimpleType.Type) + ")"
+		}
 		return t.SimpleType.Type
 	case t.ListType != nil:
-		return "[]" + renderLrType(t.ListType.Type)
+		return "[]" + renderLrType(t.ListType.Type, resourceHrefMap)
 	case t.MapType != nil:
-		return "map[" + t.MapType.Key.Type + "]" + renderLrType(t.MapType.Value)
+		return "map[" + t.MapType.Key.Type + "]" + renderLrType(t.MapType.Value, resourceHrefMap)
 	default:
 		return "?"
 	}
