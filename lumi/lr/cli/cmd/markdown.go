@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/olekukonko/tablewriter"
 	"io/ioutil"
+	"os"
+	"sigs.k8s.io/yaml"
 	"sort"
 	"strings"
 
@@ -13,6 +15,7 @@ import (
 )
 
 func init() {
+	markdownCmd.Flags().String("docs-file", "", "optional docs yaml to enrich the resource information")
 	rootCmd.AddCommand(markdownCmd)
 }
 
@@ -32,6 +35,20 @@ var markdownCmd = &cobra.Command{
 		if err != nil {
 			log.Error().Msg(err.Error())
 			return
+		}
+
+		var lrDocsData LrDocs
+		filepath, _ := cmd.Flags().GetString("docs-file")
+		_, err = os.Stat(filepath)
+		if err == nil {
+			content, err := ioutil.ReadFile(filepath)
+			if err != nil {
+				log.Fatal().Err(err).Msg("could not read file " + filepath)
+			}
+			err = yaml.Unmarshal(content, &lrDocsData)
+			if err != nil {
+				log.Fatal().Err(err).Msg("could not load yaml data")
+			}
 		}
 
 		builder := &strings.Builder{}
@@ -94,6 +111,22 @@ var markdownCmd = &cobra.Command{
 				table.AppendBulk(rows)
 				table.Render()
 				builder.WriteString("\n")
+			}
+
+			if lrDocsData.Resources != nil {
+				docs := lrDocsData.Resources[resource.ID]
+				if docs != nil && len(docs.Snippets) > 0 {
+					builder.WriteString("**Examples**\n\n")
+					for si := range docs.Snippets {
+						snippet := docs.Snippets[si]
+						builder.WriteString(snippet.Title)
+						builder.WriteString("\n\n")
+						builder.WriteString("```javascript\n")
+						builder.WriteString(strings.TrimSpace(snippet.Query))
+						builder.WriteString("\n```\n\n")
+					}
+					builder.WriteString("\n")
+				}
 			}
 		}
 
