@@ -829,15 +829,15 @@ func TestMap(t *testing.T) {
 		},
 		{
 			"sshd.config.params.length",
-			0, int64(44),
+			0, int64(46),
 		},
 		{
 			"sshd.config.params.keys.length",
-			0, int64(44),
+			0, int64(46),
 		},
 		{
 			"sshd.config.params.values.length",
-			0, int64(44),
+			0, int64(46),
 		},
 	})
 }
