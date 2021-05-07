@@ -3220,23 +3220,37 @@ windows.firewall.rule {
   policyStoreSourceType int
 }
 
+// Yum package manager resource
 yum {
+  // variables defined built-in in Yum configuration files (/etc/yum.conf and all .repo files in the /etc/yum.repos.d/)
   vars() map[string]string
+  // list of all configured yum repositories
   repos() []yum.repo
 }
 
+// Yum repository resource
 yum.repo {
   init(id string)
   id string
+  // human-readable repository name
   name string
+  // repository status
   status string
+  // URL where the repodata directory of a repository is located
   baseurl []string
+  // indicator when the repository will expire
   expire string
+  // location of the repo configuration file
   filename string
+  // revision for this repository
   revision string
+  // packages in repository
   pkgs string
+  // file size of this repository
   size string
+  // mirrors for this repository
   mirrors string
+  // indicates if this repository is used as package source
   enabled() bool
 }
 
