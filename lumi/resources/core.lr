@@ -607,84 +607,137 @@ groups {
   []group
 }
 
+// Docker Host resource
 docker {
+  // List all Docker images
   images() []docker.image
-  container() []docker.container
+  // List all Docker containers
+  containers() []docker.container
 }
 
+// Docker image
 docker.image {
+  // Image ID
   id string
+  // Image Size
   size int
+  // Virtual Image Size
   virtualsize int
+  // Tags
   tags []string
+  // Labels
   labels map[string]string
 }
 
+// Docker container
 docker.container {
+  // Container ID
   id string
+  // Container Command
   command string
+  // Container Image
   image string
+  // Image ID
   imageid string
+  // Container Names
   names []string
+  // Container State
   state string
+  // Status Message
   status string
+  // Labels
   labels map[string]string
 }
 
+// Windows audit policies
 auditpol {
   []auditpol.entry
 }
 
+// Windows audit policy
 auditpol.entry {
-  machinename      string
-	policytarget     string
-	subcategory      string
-	subcategoryguid  string
-	inclusionsetting string
-	exclusionsetting string
+  // Machine name
+  machinename string
+  // Policy Target
+  policytarget string
+  // Subcategory
+  subcategory string
+  // Subcategory GUID
+  subcategoryguid string
+  // Inclusive setting
+  inclusionsetting string
+  // Exclusive settings
+  exclusionsetting string
 }
 
+// Windows Local Security Policy
 secpol {
+  // System Access
   systemaccess() map[string]string
+  // Event Audit
   eventaudit() map[string]string
+  // Registry Values
   registryvalues() map[string]string
+  // Privilege Rights
   privilegerights() map[string][]string
 }
 
+// Shadow password suite configuration
 logindefs {
   init(path string)
+  // Current configuration file for resource
   file() file
+  // Content of the configuration file
   content(file) string
+  // Parsed logindef parameter
   params(content) map[string]string
 }
 
+// Unix Mounted Filesystem
 mount {
   []mount.point
 }
 
+// Unix Mountpoint
 mount.point {
+  // Device
   device string
+  // Path
   path string
+  // Filesystem Type
   fstype string
+  // Mount Options
   options map[string]string
 }
 
+// Shadowed Password File
 shadow {
   []shadow.entry
 }
 
+// Shadowed Password File Entry
 shadow.entry {
+  // User
   user string
+  // Password
   password string
+  // Date of last password change
   lastchanged time
+  // Minimum password age
   mindays string
+  // Maximum password age
   maxdays string
+  // Password warning period
   warndays string
+  // Password inactivity period
   inactivedays string
+  // Account expiration date
   expirydates string
+  // Reserved field
   reserved string
 }
 
+// Windows Registry Key
 registrykey {
   init(path string)
   path string
@@ -693,6 +746,7 @@ registrykey {
   children() []string
 }
 
+// Windows Registry Key Property
 registrykey.property {
   init(path string, name string)
   path string
@@ -707,6 +761,7 @@ yaml.path {
   result() string
 }
 
+// List of Authorized Keys
 authorizedkeys {
   []authorizedkeys.entry(file, content)
   init(path string)
@@ -715,6 +770,7 @@ authorizedkeys {
   content(file) string
 }
 
+// Authorized Keys Entry
 authorizedkeys.entry {
   line int
   type string
@@ -724,6 +780,7 @@ authorizedkeys.entry {
   file file
 }
 
+// Parse Certificates from files
 parse.certificates {
   []certificate(content, path)
   init(path string)
@@ -732,6 +789,7 @@ parse.certificates {
   content(file) string
 }
 
+// x509 Certificate PKIX Name
 pkix.name {
   id string
   dn string
@@ -740,20 +798,22 @@ pkix.name {
   country []string
   organization []string
   organizationalunit []string
-	locality []string
+  locality []string
   province []string
-	streetaddress []string
+  streetaddress []string
   postalcode []string
-	names      map[string]string
-	extranames map[string]string
+  names      map[string]string
+  extranames map[string]string
 }
 
+// x509 Certificate PKIX Extension
 pkix.extension {
   identifier string
   critical bool
   value string
 }
 
+// x509 Certificate Resource
 certificate {
   pem string
   hashs() map[string]string
@@ -777,6 +837,7 @@ certificate {
   issuingcertificateurl() []string
 }
 
+// Private Key Resource
 privatekey {
   pem string
   path() string
@@ -959,7 +1020,7 @@ esxi.vib {
   // Bundle vendor
   vendor string
   // Bundle version
-	version string
+  version string
 }
 
 // vSphere ESXi kernel module resource
@@ -1270,6 +1331,7 @@ aws.iam {
   virtualMfaDevices() []aws.iam.virtualmfadevice
 }
 
+// Entry in AWS IAM credential report
 aws.iam.usercredentialreportentry {
   init(properties map[string]string)
   // properties on the iam user credential report
@@ -1327,6 +1389,7 @@ aws.iam.usercredentialreportentry {
   userCreationTime() time
 }
 
+// AWS IAM User
 aws.iam.user {
   // arn of the iam user 
   arn string
@@ -1348,6 +1411,7 @@ aws.iam.user {
   groups() []string
 }
 
+// AWS IAM Policy
 aws.iam.policy {
   // ARN of the policy
   arn string
@@ -1379,6 +1443,7 @@ aws.iam.policy {
   attachedGroups() []aws.iam.group
 }
 
+// AWS IAM Policy Version
 aws.iam.policyversion {
   // ARN of the policy version
   arn string
@@ -1392,6 +1457,7 @@ aws.iam.policyversion {
   createDate time
 }
 
+// AWS IAM Role
 aws.iam.role {
   // ARN of the role
   arn string
@@ -1407,6 +1473,7 @@ aws.iam.role {
   createDate time
 }
 
+// AWS IAM Group
 aws.iam.group {
   // ARN of the group
   arn string
@@ -1420,6 +1487,7 @@ aws.iam.group {
   usernames []string
 }
 
+// AWS IAM Virtual MFA Device
 aws.iam.virtualmfadevice {
   // serial number for the mfa device
   serialNumber string
@@ -1468,11 +1536,13 @@ aws.sagemaker.endpoint {
   region string
 }
 
+// AWS SNS
 aws.sns {
   // list of sns topics
   topics() []aws.sns.topic
 }
 
+// AWS SNS Topic
 aws.sns.topic {
   // SNS topic ARN
   arn string
@@ -1484,6 +1554,7 @@ aws.sns.topic {
   attributes() dict
 }
 
+// AWS SNS Subscription
 aws.sns.subscription {
   // ARN of the subscription
   arn string
@@ -1497,6 +1568,7 @@ aws.es {
   domains() []aws.es.domain
 }
 
+// Amazon Elasticsearch Service
 aws.es.domain {
   // ARN for the elasticsearch domain
   arn string
@@ -1512,11 +1584,12 @@ aws.es.domain {
   region string
 }
 
-// AWS service for managing public and private SSL/TLS certificates
+// AWS Certificate Manager for managing public and private SSL/TLS certificates
 aws.acm {
   certificates() []aws.acm.certificate
 }
 
+// AWS Certificate Manager Certificate
 aws.acm.certificate {
   // ARN for the certificate
   arn string
@@ -1536,11 +1609,13 @@ aws.acm.certificate {
   certificate() certificate
 }
 
+// AWS Auto Scaling
 aws.autoscaling {
   // list of autoscaling groups across the account
   groups() []aws.autoscaling.group
 }
 
+// AWS Auto Scaling Group
 aws.autoscaling.group {
   // arn for the autoscaling group
   arn string
@@ -1552,7 +1627,7 @@ aws.autoscaling.group {
   healthCheckType string
 }
 
-// AWS service for load balancing
+// AWS Elastic Load Balancing
 aws.elb {
   // list of classic load balancers
   classicLoadBalancers() []aws.elb.loadbalancer
@@ -1560,6 +1635,7 @@ aws.elb {
   loadBalancers() []aws.elb.loadbalancer
 }
 
+// AWS Elastic Load Balancing Load Balancer
 aws.elb.loadbalancer {
   // ARN for the load balancer
   arn string
@@ -1575,18 +1651,35 @@ aws.elb.loadbalancer {
   attributes() []dict
 }
 
-// AWS managed CI service for building and testing code 
+// AWS CodeBuild for building and testing code
 aws.codebuild {
   // list of build projects
   projects() []aws.codebuild.project
 }
 
-// AWS service for threat detection 
+// AWS Codebuild Project
+aws.codebuild.project {
+  // ARN for the project
+  arn string
+  // description of the project
+  description string
+  // name of the project
+  name string
+  // build environment information about the project
+  environment dict
+  // region where the project exists
+  region string
+  // source used for the build project
+  source dict
+}
+
+// Amazon GuardDuty for threat detection
 aws.guardduty {
   // list of guardduty detectors
   detectors() []aws.guardduty.detector
 }
 
+// Amazon GuardDuty Detector
 aws.guardduty.detector {
   // unique id for the detector
   id string
@@ -1600,12 +1693,13 @@ aws.guardduty.detector {
   unarchivedFindings() []dict
 }
 
-// AWS service for viewing and managing security alerts
+// AWS Security Hub service for viewing and managing security alerts
 aws.securityhub {
   // list of hubs across the account
   hubs() []aws.securityhub.hub
 }
 
+// AWS Security Hub
 aws.securityhub.hub {
   // ARN for the security hub
   arn string
@@ -1613,12 +1707,13 @@ aws.securityhub.hub {
   subscribedAt string
 }
 
-// AWS service for rotating, managing, and retrieving secrets
+// AWS Secrets Manager for rotating, managing, and retrieving secrets
 aws.secretsmanager {
   // list of secrets
   secrets() []aws.secretsmanager.secret
 }
 
+// Secret in AWS Secrets Manager
 aws.secretsmanager.secret {
   // ARN for the secret
   arn string
@@ -1628,12 +1723,13 @@ aws.secretsmanager.secret {
   name string
 }
 
-// AWS service for large data processing 
+// AWS EMR for large data processing
 aws.emr {
   // list of emr clusters
   clusters() []aws.emr.cluster
 }
 
+// Amazon EMR Cluster
 aws.emr.cluster {
   // ARN for the cluster
   arn string
@@ -1651,23 +1747,7 @@ aws.emr.cluster {
   id string
 }
 
-aws.codebuild.project {
-  // ARN for the project
-  arn string
-  // description of the project
-  description string
-  // name of the project
-  name string
-  // build environment information about the project
-  environment dict
-  // region where the project exists
-  region string
-  // source used for the build project
-  source dict
-}
-
-
-// aws service that provides observability of AWS resources and applications
+// AWS CloudWatch provides observability of AWS resources and applications
 aws.cloudwatch {
   // list of cloudwatch log groups
   logGroups() []aws.cloudwatch.loggroup
@@ -1677,6 +1757,7 @@ aws.cloudwatch {
   metrics() []aws.cloudwatch.metric
 }
 
+// AWS CloudWatch Alarms
 aws.cloudwatch.metricsalarm {
   // arn for the metric alarm
   arn string
@@ -1700,6 +1781,7 @@ aws.cloudwatch.metricsalarm {
   name string
 }
 
+// AWS CloudWatch Metric
 aws.cloudwatch.metric {
   // name of the metric
   name string
@@ -1711,6 +1793,7 @@ aws.cloudwatch.metric {
   alarms() []aws.cloudwatch.metricsalarm
 }
 
+// AWS CloudWatch Log Groups
 aws.cloudwatch.loggroup {
   // ARN of the log group
   arn string
@@ -1722,6 +1805,7 @@ aws.cloudwatch.loggroup {
   kmsKey() aws.kms.key
 }
 
+// AWS CloudWatch Log Group Metrics Filter
 aws.cloudwatch.loggroup.metricsfilter {
   // unique id for the metric
   id string
@@ -1733,12 +1817,13 @@ aws.cloudwatch.loggroup.metricsfilter {
   metrics []aws.cloudwatch.metric
 }
 
-// aws service that enables risk auditing of your AWS account
+// AWS Cloudtrail enables risk auditing of your AWS account
 aws.cloudtrail {
   // a list of cloudtrail trails associated with the account
   trails() []aws.cloudtrail.trail
 }
 
+// AWS Cloudtrail Trail
 aws.cloudtrail.trail {
   // ARN of the trail
   arn string
@@ -1770,12 +1855,13 @@ aws.cloudtrail.trail {
   region string
 }
 
-// aws service for key management
+// AWS KMS for key management
 aws.kms {
   // a list of all customer master keys (CMKs) in the caller's AWS account (across all regions)
   keys() []aws.kms.key
 }
 
+// AWS KMS Key
 aws.kms.key {
   // unique identifier for the key
   id string
@@ -1790,12 +1876,13 @@ aws.kms.key {
 }
 
 
-// aws service for object storage
+// AWS S3 Cloud Object Storage
 aws.s3 {
   // list of s3 buckets across the account
   buckets() []aws.s3.bucket
 }
 
+// AWS S3 Bucket Control
 aws.s3control {
   // account level public access configuration for s3
   accountPublicAccessBlock() dict
@@ -1839,6 +1926,7 @@ aws.s3.bucket {
   exists bool
 }
 
+// AWS S3 Bucket Grant
 aws.s3.bucket.grant {
   // id of the bucket grant
   id string
@@ -1850,6 +1938,7 @@ aws.s3.bucket.grant {
   grantee map[string]string
 }
 
+// AWS S3 Bucket CORS Rule
 aws.s3.bucket.corsrule {
   // name of the rule
   name string
@@ -1865,6 +1954,7 @@ aws.s3.bucket.corsrule {
   maxAgeSeconds int
 }
 
+// AWS S3 Bucket Policy
 aws.s3.bucket.policy {
   // name for the policy
   name string
@@ -1890,6 +1980,7 @@ aws.dynamodb {
   limits() []aws.dynamodb.limit
 }
 
+// AWS DynamoDB Limits
 aws.dynamodb.limit {
   // ARN representing the account + region where the limit applies 
   arn string
@@ -1905,6 +1996,7 @@ aws.dynamodb.limit {
   tableMaxWrite int
 }
 
+// AWS DynamoDB Global Table
 aws.dynamodb.globaltable {
   // ARN for the global table
   arn string
@@ -1914,6 +2006,7 @@ aws.dynamodb.globaltable {
   replicaSettings() []dict
 }
 
+// AWS DynamoDB Table
 aws.dynamodb.table {
   // ARN for the table
   arn string
@@ -1931,7 +2024,7 @@ aws.dynamodb.table {
   continuousBackups() dict
 }
 
- // AWS service for operating and scaling relational dbs
+// AWS RDS for operating and scaling relational dbs
 aws.rds {
   // list of db instances
   dbInstances() []aws.rds.dbinstance
@@ -1939,6 +2032,7 @@ aws.rds {
   dbClusters() []aws.rds.dbcluster
 }
 
+// AWS RDS Cluster
 aws.rds.dbcluster {
   // ARN for the db cluster
   arn string
@@ -1952,6 +2046,7 @@ aws.rds.dbcluster {
   snapshots() []aws.rds.snapshot
 }
 
+// AWS RDS Snapshot
 aws.rds.snapshot {
   // ARN of the snapshot
   arn string
@@ -1969,6 +2064,7 @@ aws.rds.snapshot {
   isClusterSnapshot bool
 }
 
+// AWS RDS Database Instance
 aws.rds.dbinstance {
   // ARN for the db instance
   arn string
@@ -1996,18 +2092,19 @@ aws.rds.dbinstance {
   enhancedMonitoringResourceArn string
 }
 
-// AWS service for running Amazon Elasticsearch
+// Amazon ElastiCache in-memory data store
 aws.elasticache {
   // list of clusters
   clusters() []dict
 }
 
-// AWS service for analyzing large amounts of data
+// AWS Redshift for analyzing large amounts of data
 aws.redshift {
   // list of clusters
   clusters() []aws.redshift.cluster
 }
 
+// AWS Redshift Cluster
 aws.redshift.cluster {
   // ARN for the cluster
   arn string
@@ -2035,17 +2132,18 @@ aws.redshift.cluster {
   clusterParameterGroupNames []string
 }
 
-// AWS service for migrating databases to AWS
+// AWS Database Migration Service
 aws.dms {
   replicationInstances() []dict
 }
 
-// AWS service for creating, maintaining, and securing APIs at scale
+// Amazon API Gateway for creating, maintaining, and securing APIs at scale
 aws.apigateway {
   // list of rest APIs across all regions in the account
   restApis() []aws.apigateway.restapi
 }
 
+// Amazon API Gateway REST API
 aws.apigateway.restapi {
   // ARN for the rest api
   arn string
@@ -2063,6 +2161,7 @@ aws.apigateway.restapi {
   region string
 }
 
+// Amazon API Gateway REST API unique identifier for a version of a deployed RestApi that is callable by users
 aws.apigateway.stage {
   // ARN for the rest api stage
   arn string
@@ -2078,12 +2177,13 @@ aws.apigateway.stage {
   methodSettings dict
 }
 
-// AWS serverless compute service for running code
+// AWS Lambda serverless compute service for running code
 aws.lambda {
   // list of lambda functions across all regions in the account
   functions() []aws.lambda.function
 }
 
+// AWS Lambda Function
 aws.lambda.function {
   // arn of the function
   arn string
@@ -2101,6 +2201,7 @@ aws.lambda.function {
   region string
 }
 
+// Amazon EC2
 aws.ec2 {
   // a list of security groups available to the account
   securityGroups() []aws.ec2.securitygroup 
@@ -2118,6 +2219,7 @@ aws.ec2 {
   vpnConnections() []aws.ec2.vpnconnection
 }
 
+// Amazon EC2 VPN Connection
 aws.ec2.vpnconnection {
   // ARN for the vpn connection
   arn string
@@ -2125,12 +2227,14 @@ aws.ec2.vpnconnection {
   vgwTelemetry []aws.ec2.vgwtelemetry
 }
 
+// Amazon EC2 VPN Telemetry for a VPN tunnel.
 aws.ec2.vgwtelemetry {
   outsideIpAddress string
   status string
   statusMessage string
 }
 
+// Amazon EC2 internet gateway for use with a VPC
 aws.ec2.internetgateway {
   // ARN for the gateway
   arn string
@@ -2140,6 +2244,7 @@ aws.ec2.internetgateway {
   attachments []dict
 }
 
+// AWS EC2 Snapshot
 aws.ec2.snapshot {
   // arn for the snapshot
   arn string
@@ -2151,6 +2256,7 @@ aws.ec2.snapshot {
   createVolumePermission() []dict
 }
 
+// AWS EC2 Volume
 aws.ec2.volume {
   // ARN for the ec2 volume
   arn string
@@ -2164,6 +2270,7 @@ aws.ec2.volume {
   state string
 }
 
+// AWS EC2 Instance
 aws.ec2.instance {
   // arn for the instance
   arn string
@@ -2203,6 +2310,7 @@ aws.ec2.instance {
   instanceType string
 }
 
+// AWS EC2 Instance Device
 aws.ec2.instance.device {
   // boolean to denote whether volume should be deleted on instance termination
   deleteOnTermination bool
@@ -2214,6 +2322,7 @@ aws.ec2.instance.device {
   deviceName string
 }
 
+// Amazon Virtual Private Cloud
 aws.vpc {
   // arn of the vpc
   arn string
@@ -2231,6 +2340,7 @@ aws.vpc {
   routeTables() []aws.vpc.routetable
 }
 
+// Amazon Virtual Private Cloud Flow Log
 aws.vpc.flowlog {
   // unique id of the flowlog
   id string
@@ -2242,6 +2352,7 @@ aws.vpc.flowlog {
   status string
 }
 
+// Amazon Virtual Private Cloud Route Table
 aws.vpc.routetable {
   // unique id of the route table
   id string
@@ -2249,6 +2360,7 @@ aws.vpc.routetable {
   routes []dict
 }
 
+// AWS EC2 Security Group
 aws.ec2.securitygroup {
   // security group arn
   arn string
@@ -2272,6 +2384,7 @@ aws.ec2.securitygroup {
   isAttachedToNetworkInterface() bool
 }
 
+// AWS EC2 Security Group IP Permission
 aws.ec2.securitygroup.ippermission {
   // unique id for the ip permission
   id string
@@ -2287,6 +2400,7 @@ aws.ec2.securitygroup.ippermission {
   ipv6Ranges []string
 }
 
+// AWS Config
 aws.config {
   // list of configuration recorders for each region in the account
   recorders() []aws.config.recorder
@@ -2294,6 +2408,7 @@ aws.config {
   rules() []aws.config.rule
 }
 
+// AWS Config Rule
 aws.config.rule {
   // ARN for the config rule
   arn string
@@ -2303,6 +2418,7 @@ aws.config.rule {
   source dict
 }
 
+// AWS Config Recorder
 aws.config.recorder {
   // name of the recorder
   name string
@@ -2320,6 +2436,7 @@ aws.config.recorder {
   region string
 }
 
+// GCP Cloud organization
 gcloud.organization {
   id() string
   name() string
@@ -2327,6 +2444,7 @@ gcloud.organization {
   iamPolicy() []gcloud.resourcemanager.binding
 }
 
+// GCP Cloud Project
 gcloud.project {
   id() string
   name() string
@@ -2337,16 +2455,20 @@ gcloud.project {
   iamPolicy() []gcloud.resourcemanager.binding
 }
 
+// GCP Resource Manager Binding
 gcloud.resourcemanager.binding {
   id string
   members []string
   role string
 }
 
+// GCP Compute
 gcloud.compute {
+  // displays all Google Compute Engine instances in a project
   instances() []gcloud.compute.instance
 }
 
+// GCP Compute Instances
 gcloud.compute.instance {
   id string
   name string
@@ -2362,15 +2484,19 @@ gcloud.compute.instance {
   serviceAccounts []gcloud.compute.serviceaccount
 }
 
+// GCP Compute Service Account
 gcloud.compute.serviceaccount {
   email string
   scopes []string
 }
 
+// GCP Cloud Storage
 gcloud.storage {
+  // List all buckets
   buckets() []gcloud.storage.bucket
 }
 
+// GCP Cloud Storage Bucket
 gcloud.storage.bucket {
   id string
   name string
@@ -2386,10 +2512,12 @@ gcloud.storage.bucket {
   iamConfiguration dict
 }
 
+// GCP Cloud SQL
 gcloud.sql {
   instances() []gcloud.sql.instance
 }
 
+// GCP Cloud SQL Instance
 gcloud.sql.instance {
   name string
   backendType string
@@ -2407,6 +2535,7 @@ gcloud.sql.instance {
   settings dict
 }
 
+// Azure AD
 azuread {
   users() []azuread.user
   groups() []azuread.group
@@ -2415,6 +2544,7 @@ azuread {
   servicePrincipals() []azuread.serviceprincipal
 }
 
+// Azure AD User
 azuread.user {
   id string
   displayName string
@@ -2429,6 +2559,7 @@ azuread.user {
   properties dict
 }
 
+// Azure AD Group
 azuread.group {
   id string
   displayName string
@@ -2441,6 +2572,7 @@ azuread.group {
   members() []azuread.user
 }
 
+// Azure AD Domain
 azuread.domain {
   name string
   isVerified bool
@@ -2449,18 +2581,23 @@ azuread.domain {
   properties dict
 }
 
+// Azure AD Application
 azuread.application {
   id string
 }
 
+// Azure AD Service Principal
 azuread.serviceprincipal {
   id string
 }
 
+// Azure Resource Manager
 azurerm {
+  // Get all the resources in a subscription
   resources() []azurerm.resource
 }
 
+// AzureRM Resource
 azurerm.resource {
   id string
   name string
@@ -2479,12 +2616,14 @@ azurerm.resource {
   changedTime time
 }
 
+// AzureRM Compute
 azurerm.compute {
   vms() []azurerm.compute.vm
   // lists all the disks under a subscription
   disks() []azurerm.compute.disk
 }
 
+// AzureRM Compute VM
 azurerm.compute.vm {
   id string
   name string
@@ -2497,7 +2636,7 @@ azurerm.compute.vm {
   dataDisks() []azurerm.compute.disk
 }
 
-// Azure disk resource
+// AzureRM Disk Resource
 azurerm.compute.disk {
   // Disk resource id
   id string
@@ -2521,12 +2660,14 @@ azurerm.compute.disk {
   properties dict
 }
 
+// AzureRM Network
 azurerm.network {
   interfaces() []azurerm.network.interface
   securityGroups() []azurerm.network.securitygroup
   watchers() []azurerm.network.watcher
 }
 
+// AzureRM Network Interface
 azurerm.network.interface {
   id string
   name string
@@ -2538,6 +2679,7 @@ azurerm.network.interface {
   vm() azurerm.compute.vm
 }
 
+// AzureRM Network Security Group
 azurerm.network.securitygroup {
   id string
   name string
@@ -2547,10 +2689,11 @@ azurerm.network.securitygroup {
   etag string
   properties dict
   interfaces []azure.network.interface
-	securityRules []azurerm.network.securityrule
+  securityRules []azurerm.network.securityrule
   defaultSecurityRules []azurerm.network.securityrule
 }
 
+// AzureRM Network Security Rule
 azurerm.network.securityrule {
   id string
   name string
@@ -2559,6 +2702,7 @@ azurerm.network.securityrule {
   destinationPortRange []dict
 }
 
+// AzureRM Network Watcher
 azurerm.network.watcher {
   id string
   name string
@@ -2569,10 +2713,12 @@ azurerm.network.watcher {
   properties dict
 }
 
+// AzureRM Storage
 azurerm.storage {
   accounts() []azurerm.storage.account
 }
 
+// AzureRM Storage Account
 azurerm.storage.account {
   id string
   name string
@@ -2586,6 +2732,7 @@ azurerm.storage.account {
   containers() []azurerm.storage.container
 }
 
+// AzureRM Storage Container
 azurerm.storage.container {
   id string
   name string
@@ -2594,11 +2741,13 @@ azurerm.storage.container {
   properties dict
 }
 
+// AzureRM Web
 azurerm.web {
   apps() []azurerm.web.appsite
   availableRuntimes() []dict
 }
 
+// AzureRM Web App Site
 azurerm.web.appsite {
   id string
   name string
@@ -2617,6 +2766,7 @@ azurerm.web.appsite {
   stack() dict
 }
 
+// AzureRM AppSite Authentication Settings
 azurerm.web.appsiteauthsettings {
   id string
   name string
@@ -2625,6 +2775,7 @@ azurerm.web.appsiteauthsettings {
   properties dict
 }
 
+// AzureRM AppSite Config
 azurerm.web.appsiteconfig {
   id string
   name string
@@ -2633,10 +2784,12 @@ azurerm.web.appsiteconfig {
   properties dict
 }
 
+// AzureRM SQL
 azurerm.sql {
   servers() []azurerm.sql.server
 }
 
+// AzureRM Sql Server
 azurerm.sql.server {
   id string
   name string
@@ -2653,6 +2806,7 @@ azurerm.sql.server {
   encryptionProtector() dict
 }
 
+// AzureRM Sql Server Administrator
 azurerm.sql.server.administrator {
   id string
   name string
@@ -2663,6 +2817,7 @@ azurerm.sql.server.administrator {
   tenantId string
 }
 
+// AzureRM Sql Server Database
 azurerm.sql.database {
   id string
   name string
@@ -2701,6 +2856,7 @@ azurerm.sql.database {
   usage() []azurerm.sql.databaseusage
 }
 
+// AzureRM MS Database Usage
 azurerm.sql.databaseusage {
   id string
   name string
@@ -2712,10 +2868,12 @@ azurerm.sql.databaseusage {
   nextResetTime time
 }
 
+// AzureRM PostgreSQL
 azurerm.postgresql {
    servers() []azurerm.postgresql.server
 }
 
+// AzureRM PostgreSQL Server
 azurerm.postgresql.server {
   id string
   name string
@@ -2728,6 +2886,7 @@ azurerm.postgresql.server {
   firewallRules() []azurerm.sql.firewallrule
 }
 
+// AzureRM PostgreSQL Database
 azurerm.postgresql.database {
   id string
   name string
@@ -2736,10 +2895,12 @@ azurerm.postgresql.database {
   collation string
 }
 
+// AzureRM MySQL
 azurerm.mysql {
   servers() []azurerm.mysql.server
 }
 
+// AzureRM MySQL Server
 azurerm.mysql.server {
   id string
   name string
@@ -2752,6 +2913,7 @@ azurerm.mysql.server {
   firewallRules() []azurerm.sql.firewallrule
 }
 
+// AzureRM MySQL Database
 azurerm.mysql.database {
   id string
   name string
@@ -2760,10 +2922,12 @@ azurerm.mysql.database {
   collation string
 }
 
+// AzureRM MariaDB
 azurerm.mariadb {
   servers() []azurerm.mariadb.server
 }
 
+// AzureRM MariaDB Server
 azurerm.mariadb.server {
   id string
   name string
@@ -2776,6 +2940,7 @@ azurerm.mariadb.server {
   firewallRules() []azurerm.sql.firewallrule
 }
 
+// AzureRM MariaDB Database
 azurerm.mariadb.database {
   id string
   name string
@@ -2784,6 +2949,7 @@ azurerm.mariadb.database {
   collation string
 }
 
+// AzureRM SQL Configuration
 azurerm.sql.configuration {
   id string
   name string
@@ -2796,6 +2962,7 @@ azurerm.sql.configuration {
   source string
 }
 
+// AzureRM SQL Firewall Rule
 azurerm.sql.firewallrule {
   id string
   name string
@@ -2804,10 +2971,12 @@ azurerm.sql.firewallrule {
   endIpAddress string
 }
 
+// AzureRM Key Vault
 azurerm.keyvault {
   vaults() []azurerm.keyvault.vault
 }
 
+// AzureRM Key Vault Vault
 azurerm.keyvault.vault {
   id string
   vaultName string
@@ -2824,6 +2993,7 @@ azurerm.keyvault.vault {
   diagnosticSettings() []azurerm.monitor.diagnosticsetting
 }
 
+// AzureRM Key Vault Key
 azurerm.keyvault.key {
   kid string
   tags map[string]string
@@ -2841,6 +3011,7 @@ azurerm.keyvault.key {
   versions() []azurerm.keyvault.key
 }
 
+// AzureRM Key Vault Certificate
 azurerm.keyvault.certificate {
   id string
   tags map[string]string
@@ -2858,6 +3029,7 @@ azurerm.keyvault.certificate {
   versions() []azurerm.keyvault.certificate
 }
 
+// AzureRM Key Vault Secret
 azurerm.keyvault.secret {
   id string
   tags map[string]string
@@ -2875,10 +3047,12 @@ azurerm.keyvault.secret {
   versions() []azurerm.keyvault.secret
 }
 
+// AzureRM Monitor
 azurerm.monitor {
   logProfiles() []azurerm.monitor.logprofile
 }
 
+// AzureRM Monitor Log Profile
 azurerm.monitor.logprofile {
   id string
   name string
@@ -2889,6 +3063,7 @@ azurerm.monitor.logprofile {
   storageAccount azurerm.storage.account
 }
 
+// AzureRM Monitor Diagnostic Setting
 azurerm.monitor.diagnosticsetting {
   id string
   name string
@@ -2897,6 +3072,7 @@ azurerm.monitor.diagnosticsetting {
   storageAccount azurerm.storage.account
 }
 
+// Microsoft Graph Beta
 msgraph.beta {
   organizations() []msgraph.beta.organization
   users() []msgraph.beta.user
@@ -2905,6 +3081,7 @@ msgraph.beta {
   settings() []dict
 }
 
+// Microsoft Graph Beta Organization
 msgraph.beta.organization {
   id string
   assignedPlans []dict
@@ -2913,6 +3090,7 @@ msgraph.beta.organization {
   verifiedDomains []dict
 }
 
+// Microsoft Graph Beta User
 msgraph.beta.user {
   id string
   accountEnabled bool
@@ -2938,6 +3116,7 @@ msgraph.beta.user {
   settings() dict
 }
 
+// Microsoft Graph Beta Domain
 msgraph.beta.domain {
   id string
   authenticationType string
@@ -2953,6 +3132,7 @@ msgraph.beta.domain {
   serviceConfigurationRecords() []msgraph.beta.domaindnsrecord
 }
 
+// Microsoft Graph Beta Domain DNS Record
 msgraph.beta.domaindnsrecord {
   id string
   isOptional bool
@@ -2963,6 +3143,7 @@ msgraph.beta.domaindnsrecord {
   properties dict
 }
 
+// Microsoft Graph Beta Application
 msgraph.beta.application {
   id string
   appId string
@@ -2973,11 +3154,13 @@ msgraph.beta.application {
   signInAudience string
 }
 
+// Microsoft Graph Beta Security
 msgraph.beta.security {
   secureScores() []msgraph.beta.security.securityscore
   latestSecureScores() msgraph.beta.security.securityscore
 }
 
+// Microsoft Graph Beta Security Score
 msgraph.beta.security.securityscore {
   id string
   activeUserCount int
@@ -2992,6 +3175,7 @@ msgraph.beta.security.securityscore {
   vendorInformation dict
 }
 
+// Microsoft Graph Beta Policies
 msgraph.beta.policies {
   authorizationPolicy() dict
   identitySecurityDefaultsEnforcementPolicy() dict
@@ -2999,10 +3183,12 @@ msgraph.beta.policies {
   permissionGrantPolicies() []dict
 }
 
+// Microsoft Graph Beta Role Management
 msgraph.beta.rolemanagement {
   roleDefinitions() []msgraph.beta.rolemanagement.roledefinition
 }
 
+// Microsoft Graph Beta Role Definition
 msgraph.beta.rolemanagement.roledefinition {
   id string
   description string
@@ -3015,6 +3201,7 @@ msgraph.beta.rolemanagement.roledefinition {
   assignments() []msgraph.beta.rolemanagement.roleassignment
 }
 
+// Microsoft Graph Beta Role Assignment
 msgraph.beta.rolemanagement.roleassignment {
   id string
   roleDefinitionId string
@@ -3022,11 +3209,13 @@ msgraph.beta.rolemanagement.roleassignment {
   principal dict
 }
 
+// Microsoft Graph Beta Device Management
 msgraph.beta.devicemanagement {
   deviceConfigurations() []msgraph.beta.devicemanagement.deviceconfiguration
   deviceCompliancePolicies() []msgraph.beta.devicemanagement.devicecompliancepolicy
 }
 
+// Microsoft Graph Beta Device Configuration
 msgraph.beta.devicemanagement.deviceconfiguration {
   id string
   lastModifiedDateTime time
@@ -3039,6 +3228,7 @@ msgraph.beta.devicemanagement.deviceconfiguration {
   properties dict
 }
 
+// Microsoft Graph Beta Device Compliance Policy
 msgraph.beta.devicemanagement.devicecompliancepolicy {
   id string
   createdDateTime time
@@ -3051,6 +3241,7 @@ msgraph.beta.devicemanagement.devicecompliancepolicy {
   assignments []dict
 }
 
+// Microsoft 365 ExchangeOnline
 ms365.exchangeonline {
   malwareFilterPolicy []dict
   hostedOutboundSpamFilterPolicy []dict
@@ -3071,11 +3262,13 @@ ms365.exchangeonline {
   roleAssignmentPolicy []dict
 }
 
+// Microsoft 365 SharepointOnline
 ms365.sharepointonline {
   spoTenant dict
   spoTenantSyncClientRestriction dict
 }
 
+// Microsoft 365 Teams
 ms365.teams {
   csTeamsClientConfiguration dict
   csOAuthConfiguration []dict
