@@ -2,10 +2,10 @@ package platform
 
 import (
 	"errors"
-
 	"go.mondoo.io/mondoo/motor/transports/equinix"
+	"go.mondoo.io/mondoo/motor/transports/local"
+	"runtime"
 
-	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/arista"
 	"go.mondoo.io/mondoo/motor/transports/aws"
@@ -29,8 +29,13 @@ type Detector struct {
 }
 
 func (d *Detector) resolveOS() (*Platform, bool) {
-	log.Debug().Msg("detector> start resolving the platfrom")
-	return operatingSystems.Resolve(d.transport)
+	// NOTE: on windows, powershell calls are expensive therefore we want to shortcut the detection mechanism
+	_, ok := d.transport.(*local.LocalTransport)
+	if ok && runtime.GOOS == "windows" {
+		return windowsFamily.Resolve(d.transport)
+	} else {
+		return operatingSystems.Resolve(d.transport)
+	}
 }
 
 func (d *Detector) Platform() (*Platform, error) {
