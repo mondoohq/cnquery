@@ -59,7 +59,7 @@ func (p *lumiDocker) GetImages() ([]interface{}, error) {
 	return imgs, nil
 }
 
-func (p *lumiDocker) GetContainer() ([]interface{}, error) {
+func (p *lumiDocker) GetContainers() ([]interface{}, error) {
 	_, ok := p.Runtime.Motor.Transport.(*local.LocalTransport)
 	if !ok {
 		return nil, errors.New("docker is not support for this transport")
