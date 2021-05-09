@@ -7,6 +7,7 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/events"
 	"go.mondoo.io/mondoo/motor/transports/local"
 	"go.mondoo.io/mondoo/motor/transports/mock"
+	"sync"
 )
 
 type MotorOption func(m *Motor)
@@ -19,6 +20,11 @@ func WithRecoding(record bool) MotorOption {
 	}
 }
 
+// implement special case for local platform to speed things up, this is especially important on windows where
+// powershell calls are pretty expensive and slow
+var localTransportLock = &sync.Mutex{}
+var localTransportDetector *platform.Detector
+
 func New(trans transports.Transport, motorOpts ...MotorOption) (*Motor, error) {
 	m := &Motor{
 		Transport: trans,
@@ -30,7 +36,18 @@ func New(trans transports.Transport, motorOpts ...MotorOption) (*Motor, error) {
 
 	// set the detector after the opts have been applied to ensure its going via the recorder
 	// if activated
-	m.detector = platform.NewDetector(m.Transport)
+	_, ok := m.Transport.(*local.LocalTransport)
+	if ok && !m.isRecording {
+		localTransportLock.Lock()
+		if localTransportDetector == nil {
+			localTransportDetector = platform.NewDetector(m.Transport)
+		}
+		m.detector = localTransportDetector
+		localTransportLock.Unlock()
+	} else {
+		m.detector = platform.NewDetector(m.Transport)
+	}
+
 	return m, nil
 }
 
