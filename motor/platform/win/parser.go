@@ -1,4 +1,4 @@
-package winbuild
+package win
 
 import (
 	"fmt"
