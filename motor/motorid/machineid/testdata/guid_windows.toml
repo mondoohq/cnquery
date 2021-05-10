@@ -1,4 +1,4 @@
-[commands."powershell -c \"Get-WmiObject Win32_ComputerSystemProduct  | Select-Object -ExpandProperty UUID\""]
+[commands."powershell -c \"Get-WmiObject -Query 'SELECT UUID FROM Win32_ComputerSystemProduct' | Select-Object -ExpandProperty UUID\""]
 stdout="6BAB78BE-4623-4705-924C-2B22433A4489"
 
 [commands."wmic os get * /format:csv"]

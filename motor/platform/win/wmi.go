@@ -2,18 +2,16 @@ package win
 
 import (
 	"encoding/csv"
-	"encoding/json"
 	"errors"
+	"go.mondoo.io/mondoo/motor/transports"
 	"io"
-	"io/ioutil"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
 )
 
-type WmicOS struct {
-	Node                                      string
+type WmicOSInformation struct {
 	BootDevice                                string
 	BuildNumber                               string
 	BuildType                                 string
@@ -80,9 +78,9 @@ type WmicOS struct {
 	WindowsDirectory                          string
 }
 
-func ParseWinWmicOS(csvData io.Reader) (*WmicOS, error) {
+func ParseWinWmicOS(csvData io.Reader) (*WmicOSInformation, error) {
 	reader := csv.NewReader(fsutil.NewLineFeedReader(csvData))
-	os := []*WmicOS{}
+	os := []*WmicOSInformation{}
 	header := map[string]int{}
 
 	i := -1 // to ensure counting starts at 0
@@ -108,8 +106,7 @@ func ParseWinWmicOS(csvData io.Reader) (*WmicOS, error) {
 			continue
 		}
 
-		os = append(os, &WmicOS{
-			Node:           line[header["Node"]],
+		os = append(os, &WmicOSInformation{
 			Name:           line[header["Name"]],
 			Caption:        line[header["Caption"]],
 			Manufacturer:   line[header["Manufacturer"]],
@@ -134,25 +131,13 @@ func ParseWinWmicOS(csvData io.Reader) (*WmicOS, error) {
 	}
 }
 
-type WindowsCurrentVersion struct {
-	CurrentBuild string `json:"CurrentBuild"`
-	EditionID    string `json:"EditionID"`
-	ReleaseId    string `json:"ReleaseId"`
-	// Update Build Revision
-	UBR int `json:"UBR"`
-}
-
-func ParseWinRegistryCurrentVersion(r io.Reader) (*WindowsCurrentVersion, error) {
-	data, err := ioutil.ReadAll(r)
+func powershellGetWmiInformation(t transports.Transport) (*WmicOSInformation, error) {
+	// wmic is available since Windows Server 2008/Vista
+	command := "wmic os get * /format:csv"
+	cmd, err := t.RunCommand(command)
 	if err != nil {
 		return nil, err
 	}
 
-	var winCurrentVersion WindowsCurrentVersion
-	err = json.Unmarshal(data, &winCurrentVersion)
-	if err != nil {
-		return nil, err
-	}
-
-	return &winCurrentVersion, nil
+	return ParseWinWmicOS(cmd.Stdout)
 }
