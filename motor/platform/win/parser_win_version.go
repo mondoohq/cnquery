@@ -1,4 +1,4 @@
-package platform
+package win
 
 import (
 	"encoding/csv"

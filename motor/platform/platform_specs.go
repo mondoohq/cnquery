@@ -1,6 +1,7 @@
 package platform
 
 import (
+	"go.mondoo.io/mondoo/motor/platform/win"
 	"io/ioutil"
 	"regexp"
 	"strconv"
@@ -8,7 +9,6 @@ import (
 
 	"github.com/gosimple/slug"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi/resources/powershell"
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
@@ -594,7 +594,7 @@ var windows = &PlatformResolver{
 			return false, nil
 		}
 
-		data, err := ParseWinWmicOS(cmd.Stdout)
+		data, err := win.ParseWinWmicOS(cmd.Stdout)
 		if err != nil {
 			return false, nil
 		}
@@ -610,16 +610,13 @@ var windows = &PlatformResolver{
 		di.Arch = data.OSArchitecture
 
 		// optional: try to get the ubr number (win 10 + 2019)
-		pscommand := "Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion' -Name CurrentBuild, UBR, EditionID | ConvertTo-Json"
-		cmd, err = t.RunCommand(powershell.Wrap(pscommand))
-		if err == nil {
-			current, err := ParseWinRegistryCurrentVersion(cmd.Stdout)
-			if err == nil && current.UBR > 0 {
-				di.Release = di.Release
-				di.Build = strconv.Itoa(current.UBR)
-			} else {
-				log.Debug().Err(err).Msg("could not parse windows current version")
-			}
+
+		current, err := win.GetWindowsOSBuild(t)
+		if err == nil && current.UBR > 0 {
+			di.Release = di.Release
+			di.Build = strconv.Itoa(current.UBR)
+		} else {
+			log.Debug().Err(err).Msg("could not parse windows current version")
 		}
 
 		return true, nil

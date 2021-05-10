@@ -1,4 +1,4 @@
-package platform_test
+package win_test
 
 import (
 	"strings"
