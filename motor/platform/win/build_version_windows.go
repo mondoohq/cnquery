@@ -2,6 +2,13 @@
 
 package win
 
+import (
+	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/local"
+	"golang.org/x/sys/windows/registry"
+	"runtime"
+)
+
 func GetWindowsOSBuild(t transports.Transport) (*WindowsCurrentVersion, error) {
 	// if we are running locally on windows, we want to avoid using powershell to be faster
 	_, ok := t.(*local.LocalTransport)

@@ -587,15 +587,9 @@ var windows = &PlatformResolver{
 	Name:      "windows",
 	IsFamiliy: false,
 	Detect: func(p *PlatformResolver, di *Platform, t transports.Transport) (bool, error) {
-		// wmic is available since Windows Server 2008/Vista
-		command := "wmic os get * /format:csv"
-		cmd, err := t.RunCommand(command)
+		data, err := win.GetWmiInformation(t)
 		if err != nil {
-			return false, nil
-		}
-
-		data, err := win.ParseWinWmicOS(cmd.Stdout)
-		if err != nil {
+			log.Debug().Err(err).Msg("could not gather wmi information")
 			return false, nil
 		}
 

@@ -11,21 +11,27 @@ import (
 
 func MachineId(t transports.Transport, p *platform.Platform) (string, error) {
 	var guid string
-
+	var err error
 	switch {
 	case p.IsFamily(platform.FAMILY_WINDOWS):
-		cmd, err := t.RunCommand("powershell -c \"Get-WmiObject Win32_ComputerSystemProduct  | Select-Object -ExpandProperty UUID\"")
-		if err != nil {
-			return guid, err
-		}
-		data, err := ioutil.ReadAll(cmd.Stdout)
-		if err != nil {
-			return guid, err
-		}
-		guid = string(data)
+		guid, err = windowsMachineId(t)
 	default:
-		return guid, errors.New("your platform does not supported by machine-id detection")
+		err = errors.New("your platform does not supported by machine-id detection")
 	}
+	return strings.TrimSpace(guid), err
+}
 
-	return strings.TrimSpace(guid), nil
+const wmiMachineIDQuery = "SELECT UUID FROM Win32_ComputerSystemProduct"
+
+func powershellWindowsMachineId(t transports.Transport) (string, error) {
+	cmd, err := t.RunCommand("powershell -c \"Get-WmiObject -Query '" + wmiMachineIDQuery + "' | Select-Object -ExpandProperty UUID\"")
+	if err != nil {
+		return "", err
+	}
+	data, err := ioutil.ReadAll(cmd.Stdout)
+	if err != nil {
+		return "", err
+	}
+	guid := string(data)
+	return guid, nil
 }
