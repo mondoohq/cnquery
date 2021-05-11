@@ -1,4 +1,4 @@
-package win
+package windows
 
 import (
 	"github.com/stretchr/testify/assert"

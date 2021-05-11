@@ -1,6 +1,6 @@
 // +build windows
 
-package win
+package windows
 
 import (
 	"go.mondoo.io/mondoo/motor/transports"
