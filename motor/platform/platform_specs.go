@@ -1,7 +1,7 @@
 package platform
 
 import (
-	"go.mondoo.io/mondoo/motor/platform/win"
+	win "go.mondoo.io/mondoo/motor/platform/windows"
 	"io/ioutil"
 	"regexp"
 	"strconv"

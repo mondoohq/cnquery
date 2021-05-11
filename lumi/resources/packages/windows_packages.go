@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/platform/win"
+	"go.mondoo.io/mondoo/motor/platform/windows"
 )
 
 // ProcessorArchitecture Enum
@@ -266,7 +266,7 @@ func (w *WinPkgManager) List() ([]Package, error) {
 		return nil, err
 	}
 
-	b, err := win.Version(pf.Release)
+	b, err := windows.Version(pf.Release)
 
 	pkgs := []Package{}
 
