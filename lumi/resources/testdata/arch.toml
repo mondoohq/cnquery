@@ -482,17 +482,17 @@ rqXRfboQnoZsG4q5WTP468SQvvG5
 content="""
 {
   "_": null,
-  "a": true,
-  "b": 1,
-  "c": 1.0,
-  "d": [1,2,3],
-  "e": {
+  "true": true,
+  "1": 1,
+  "1.0": 1.0,
+  "int-array": [1,2,3],
+  "dict": {
     "ee": 3,
     "ej": 4,
     "ek": 5
   },
   "f": [{"ff": 3}],
-  "g": ["a", "b", "c"],
-  "h": "hello"
+  "string-array": ["a", "b", "c"],
+  "hello": "hello"
 }
 """

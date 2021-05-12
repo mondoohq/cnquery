@@ -945,53 +945,58 @@ func TestResource_None(t *testing.T) {
 }
 
 func TestDict_Methods(t *testing.T) {
+	p := "parse.json('/dummy.json')."
 	runSimpleTests(t, []simpleTest{
 		{
-			"parse.json('/dummy.json').params['g'].where(_ == 'a')",
+			p + "params['string-array'].where(_ == 'a')",
 			0, []interface{}{"a"},
 		},
 		{
-			"parse.json('/dummy.json').params['g'].one(_ == 'a')",
+			p + "params['string-array'].one(_ == 'a')",
 			1, true,
 		},
 		{
-			"parse.json('/dummy.json').params['g'].all(_ != 'z')",
+			p + "params['string-array'].all(_ != 'z')",
 			2, true,
 		},
 		{
-			"parse.json('/dummy.json').params['g'].any(_ != 'a')",
+			p + "params['string-array'].any(_ != 'a')",
 			1, true,
 		},
 		{
-			"parse.json('/dummy.json').params { _['b'] == _['c'] }",
+			p + "params { _['1'] == _['1.0'] }",
 			1, true,
 		},
 		{
-			"parse.json('/dummy.json').params['d'] { _ }",
+			p + "params { _['1'] - 2 }",
 			1, true,
 		},
 		{
-			"parse.json('/dummy.json').params['h'] + ' world'",
+			p + "params['int-array'] { _ }",
+			1, true,
+		},
+		{
+			p + "params['hello'] + ' world'",
 			0, "hello world",
 		},
 		{
-			"parse.json('/dummy.json').params['h'].trim('ho')",
+			p + "params['hello'].trim('ho')",
 			0, "ell",
 		},
 		{
-			"parse.json('/dummy.json').params['h'] { _.contains('llo') }",
+			p + "params['hello'] { _.contains('llo') }",
 			1, true,
 		},
 		{
-			"parse.json('/dummy.json').params['e'].length",
+			p + "params['dict'].length",
 			0, int64(3),
 		},
 		{
-			"parse.json('/dummy.json').params['e'].keys.length",
+			p + "params['dict'].keys.length",
 			0, int64(3),
 		},
 		{
-			"parse.json('/dummy.json').params['e'].values.length",
+			p + "params['dict'].values.length",
 			0, int64(3),
 		},
 	})
