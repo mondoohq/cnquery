@@ -842,6 +842,24 @@ func opTimeTimesInt(left interface{}, right interface{}) *RawData {
 	return TimeData(res)
 }
 
+func opTimeTimesFloat(left interface{}, right interface{}) *RawData {
+	l := left.(*time.Time)
+	if l == nil {
+		return &RawData{Type: types.Time}
+	}
+
+	if *l == NeverPastTime {
+		return NeverPastPrimitive.RawData()
+	}
+	if *l == NeverFutureTime {
+		return NeverFuturePrimitive.RawData()
+	}
+
+	diff := float64(TimeToDuration(l)) * right.(float64)
+	res := DurationToTime(int64(diff))
+	return TimeData(res)
+}
+
 func timeTimesInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, types.Time, opTimeTimesInt)
 }
@@ -849,6 +867,16 @@ func timeTimesInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 func intTimesTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		return opTimeTimesInt(right, left)
+	})
+}
+
+func timeTimesFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, opTimeTimesFloat)
+}
+
+func floatTimesTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		return opTimeTimesFloat(right, left)
 	})
 }
 

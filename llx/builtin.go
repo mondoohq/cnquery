@@ -133,6 +133,7 @@ func init() {
 			string("-" + types.Dict):                 {f: intMinusDict, Label: "-", Typ: types.Float},
 			string("*" + types.Dict):                 {f: intTimesDict, Label: "*", Typ: types.Float},
 			string("/" + types.Dict):                 {f: intDividedDict, Label: "/", Typ: types.Float},
+			string("*" + types.Time):                 {f: intTimesTime, Label: "*", Typ: types.Time},
 			string("<" + types.Int):                  {f: intLTInt, Label: "<"},
 			string("<=" + types.Int):                 {f: intLTEInt, Label: "<="},
 			string(">" + types.Int):                  {f: intGTInt, Label: ">"},
@@ -167,7 +168,6 @@ func init() {
 			string("||" + types.ArrayLike):           {f: intOrArray, Label: "||"},
 			string("&&" + types.MapLike):             {f: intAndMap, Label: "&&"},
 			string("||" + types.MapLike):             {f: intOrMap, Label: "||"},
-			string("*" + types.Time):                 {f: intTimesTime, Label: "*", Typ: types.Time},
 		},
 		types.Float: {
 			// == / !=
@@ -201,6 +201,7 @@ func init() {
 			string("-" + types.Dict):                 {f: floatMinusDict, Label: "-", Typ: types.Float},
 			string("*" + types.Dict):                 {f: floatTimesDict, Label: "*", Typ: types.Float},
 			string("/" + types.Dict):                 {f: floatDividedDict, Label: "/", Typ: types.Float},
+			string("*" + types.Time):                 {f: floatTimesTime, Label: "*", Typ: types.Time},
 			string("<" + types.Int):                  {f: floatLTInt, Label: "<"},
 			string("<=" + types.Int):                 {f: floatLTEInt, Label: "<="},
 			string(">" + types.Int):                  {f: floatGTInt, Label: ">"},
@@ -361,7 +362,6 @@ func init() {
 			string("<=" + types.Time):      {f: timeLTETime, Label: "<="},
 			string(">" + types.Time):       {f: timeGTTime, Label: ">"},
 			string(">=" + types.Time):      {f: timeGTETime, Label: ">="},
-			string("-" + types.Time):       {f: timeMinusTime, Label: "-"},
 			string("&&" + types.Bool):      {f: timeAndBool, Label: "&&"},
 			string("||" + types.Bool):      {f: timeOrBool, Label: "||"},
 			string("&&" + types.Int):       {f: timeAndInt, Label: "&&"},
@@ -380,7 +380,9 @@ func init() {
 			string("||" + types.ArrayLike): {f: timeOrArray, Label: "||"},
 			string("&&" + types.MapLike):   {f: timeAndMap, Label: "&&"},
 			string("||" + types.MapLike):   {f: timeOrMap, Label: "||"},
+			string("-" + types.Time):       {f: timeMinusTime, Label: "-"},
 			string("*" + types.Int):        {f: timeTimesInt, Label: "*", Typ: types.Time},
+			string("*" + types.Float):      {f: timeTimesFloat, Label: "*", Typ: types.Time},
 			string("*" + types.Dict):       {f: timeTimesDict, Label: "*", Typ: types.Time},
 			// fields
 			string("seconds"): {f: timeSeconds, Label: "seconds"},
