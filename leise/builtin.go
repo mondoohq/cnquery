@@ -140,10 +140,12 @@ func fieldsInfo(resourceInfo *lumi.ResourceInfo) map[string]llx.Documentation {
 }
 
 func availableFields(c *compiler, typ types.Type) map[string]llx.Documentation {
+	var res map[string]llx.Documentation
+
 	// resources maintain their own fields and may be list resources
 	if typ.IsResource() {
 		resourceInfo := c.Schema.Resources[typ.ResourceName()]
-		res := fieldsInfo(resourceInfo)
+		res = fieldsInfo(resourceInfo)
 
 		_, err := listResource(c, typ)
 		if err == nil {
@@ -155,22 +157,31 @@ func availableFields(c *compiler, typ types.Type) map[string]llx.Documentation {
 			}
 		}
 
-		return res
 	}
 
-	// everything else
-	m, ok := builtinFunctions[typ.Underlying()]
-	if !ok {
-		return nil
+	// We first try to auto-complete the full type. This is important for
+	// more complex types, like resource types (eg `parse`).
+	builtins := builtinFunctions[typ]
+	if builtins == nil && res == nil {
+		// Only if we fail to find the full resource AND if we couldn't look
+		// up the resource definition either, will we look for additional
+		// methods. Otherwise we stick to the directly defined methods, not any
+		// potentially "shared" methods (which aren't actually shared).
+		builtins = builtinFunctions[typ.Underlying()]
+		if builtins == nil {
+			return res
+		}
 	}
 
-	res := make(map[string]llx.Documentation, len(m))
-	idx := 0
-	for k := range m {
+	// the non-resource use-case:
+	if res == nil {
+		res = make(map[string]llx.Documentation, len(builtins))
+	}
+
+	for k := range builtins {
 		res[k] = llx.Documentation{
 			Field: k,
 		}
-		idx++
 	}
 
 	return res
