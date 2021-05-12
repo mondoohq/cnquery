@@ -539,8 +539,7 @@ func (c *compiler) compileBuiltinFunction(h *compileHandler, id string, binding 
 	typ := binding.Type
 
 	if h.compile != nil {
-		resType, err := h.compile(c, typ, binding.Ref, id, call)
-		return resType, err
+		return h.compile(c, typ, binding.Ref, id, call)
 	}
 
 	var args []*llx.Primitive
