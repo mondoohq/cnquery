@@ -1247,6 +1247,11 @@ func TestSuggestions(t *testing.T) {
 			"sshd.config.params.leng", []string{"length"},
 			errors.New("cannot find field 'leng' in map[string]string"),
 		},
+		{
+			// builtin calls
+			"parse.d", []string{"date"},
+			errors.New("cannot find field 'd' in parse"),
+		},
 	}
 
 	for i := range tests {
