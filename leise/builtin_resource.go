@@ -379,6 +379,10 @@ func compileResourceLength(c *compiler, typ types.Type, ref int32, id string, ca
 }
 
 func compileResourceParseDate(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
+	if call == nil {
+		return types.Nil, errors.New("missing arguments to parse date")
+	}
+
 	functionID := string(typ) + "." + id
 
 	init := &lumi.Init{
@@ -395,6 +399,10 @@ func compileResourceParseDate(c *compiler, typ types.Type, ref int32, id string,
 	rawArgs := make([]*llx.Primitive, len(call.Function))
 	for i := range call.Function {
 		rawArgs[i] = args[i*2+1]
+	}
+
+	if len(rawArgs) == 0 {
+		return types.Nil, errors.New("missing arguments to parse date")
 	}
 
 	c.Result.Code.AddChunk(&llx.Chunk{

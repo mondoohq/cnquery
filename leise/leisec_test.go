@@ -136,6 +136,12 @@ func TestCompiler_Buggy(t *testing.T) {
 				},
 			}},
 		}, errors.New("missing closing `}` at <source>:1:11")},
+		{`parse.date`, []*llx.Chunk{
+			{Id: "parse", Call: llx.Chunk_FUNCTION},
+		}, errors.New("missing arguments to parse date")},
+		{`parse.date()`, []*llx.Chunk{
+			{Id: "parse", Call: llx.Chunk_FUNCTION},
+		}, errors.New("missing arguments to parse date")},
 	}
 
 	for _, v := range data {
