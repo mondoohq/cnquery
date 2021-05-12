@@ -1781,6 +1781,8 @@ func dictTimesTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 		switch l := left.(type) {
 		case int64:
 			return opTimeTimesInt(right, l)
+		case float64:
+			return opTimeTimesFloat(right, l)
 		default:
 			return &RawData{
 				Type:  types.Nil,
@@ -1796,6 +1798,8 @@ func timeTimesDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 		switch r := right.(type) {
 		case int64:
 			return opTimeTimesInt(left, r)
+		case float64:
+			return opTimeTimesFloat(left, r)
 		default:
 			return &RawData{
 				Type:  types.Nil,
