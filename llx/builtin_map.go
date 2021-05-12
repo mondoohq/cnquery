@@ -1434,7 +1434,7 @@ func mapOrDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDa
 	return boolOp(c, bind, chunk, ref, opMapOrDict)
 }
 
-// dict +
+// dict + - * /
 
 func dictPlusString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
@@ -1469,5 +1469,339 @@ func stringPlusDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 			}
 		}
 
+	})
+}
+
+func intPlusDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		l := left.(int64)
+
+		switch r := right.(type) {
+		case int64:
+			return IntData(l + r)
+		case float64:
+			return FloatData(float64(l) + r)
+		default:
+			return &RawData{
+				Type:  types.Nil,
+				Value: nil,
+				Error: errors.New("right side of `+` operation is not number"),
+			}
+		}
+	})
+}
+
+func dictPlusInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		r := right.(int64)
+
+		switch l := left.(type) {
+		case int64:
+			return IntData(l + r)
+		case float64:
+			return FloatData(l + float64(r))
+		default:
+			return &RawData{
+				Type:  types.Nil,
+				Value: nil,
+				Error: errors.New("left side of `+` operation is not number"),
+			}
+		}
+	})
+}
+
+func floatPlusDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		l := left.(float64)
+
+		switch r := right.(type) {
+		case int64:
+			return FloatData(l + float64(r))
+		case float64:
+			return FloatData(l + r)
+		default:
+			return &RawData{
+				Type:  types.Nil,
+				Value: nil,
+				Error: errors.New("right side of `+` operation is not number"),
+			}
+		}
+	})
+}
+
+func dictPlusFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		r := right.(float64)
+
+		switch l := left.(type) {
+		case int64:
+			return FloatData(float64(l) + r)
+		case float64:
+			return FloatData(l + r)
+		default:
+			return &RawData{
+				Type:  types.Nil,
+				Value: nil,
+				Error: errors.New("left side of `+` operation is not number"),
+			}
+		}
+	})
+}
+
+func intMinusDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		l := left.(int64)
+
+		switch r := right.(type) {
+		case int64:
+			return IntData(l - r)
+		case float64:
+			return FloatData(float64(l) - r)
+		default:
+			return &RawData{
+				Type:  types.Nil,
+				Value: nil,
+				Error: errors.New("right side of `-` operation is not number"),
+			}
+		}
+	})
+}
+
+func dictMinusInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		r := right.(int64)
+
+		switch l := left.(type) {
+		case int64:
+			return IntData(l - r)
+		case float64:
+			return FloatData(l - float64(r))
+		default:
+			return &RawData{
+				Type:  types.Nil,
+				Value: nil,
+				Error: errors.New("left side of `-` operation is not number"),
+			}
+		}
+	})
+}
+
+func floatMinusDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		l := left.(float64)
+
+		switch r := right.(type) {
+		case int64:
+			return FloatData(l - float64(r))
+		case float64:
+			return FloatData(l - r)
+		default:
+			return &RawData{
+				Type:  types.Nil,
+				Value: nil,
+				Error: errors.New("right side of `-` operation is not number"),
+			}
+		}
+	})
+}
+
+func dictMinusFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		r := right.(float64)
+
+		switch l := left.(type) {
+		case int64:
+			return FloatData(float64(l) - r)
+		case float64:
+			return FloatData(l - r)
+		default:
+			return &RawData{
+				Type:  types.Nil,
+				Value: nil,
+				Error: errors.New("left side of `-` operation is not number"),
+			}
+		}
+	})
+}
+
+func intTimesDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		l := left.(int64)
+
+		switch r := right.(type) {
+		case int64:
+			return IntData(l * r)
+		case float64:
+			return FloatData(float64(l) * r)
+		default:
+			return &RawData{
+				Type:  types.Nil,
+				Value: nil,
+				Error: errors.New("right side of `*` operation is not number"),
+			}
+		}
+	})
+}
+
+func dictTimesInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		r := right.(int64)
+
+		switch l := left.(type) {
+		case int64:
+			return IntData(l * r)
+		case float64:
+			return FloatData(l * float64(r))
+		default:
+			return &RawData{
+				Type:  types.Nil,
+				Value: nil,
+				Error: errors.New("left side of `*` operation is not number"),
+			}
+		}
+	})
+}
+
+func floatTimesDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		l := left.(float64)
+
+		switch r := right.(type) {
+		case int64:
+			return FloatData(l * float64(r))
+		case float64:
+			return FloatData(l * r)
+		default:
+			return &RawData{
+				Type:  types.Nil,
+				Value: nil,
+				Error: errors.New("right side of `*` operation is not number"),
+			}
+		}
+	})
+}
+
+func dictTimesFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		r := right.(float64)
+
+		switch l := left.(type) {
+		case int64:
+			return FloatData(float64(l) * r)
+		case float64:
+			return FloatData(l * r)
+		default:
+			return &RawData{
+				Type:  types.Nil,
+				Value: nil,
+				Error: errors.New("left side of `*` operation is not number"),
+			}
+		}
+	})
+}
+
+func intDividedDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		l := left.(int64)
+
+		switch r := right.(type) {
+		case int64:
+			return IntData(l / r)
+		case float64:
+			return FloatData(float64(l) / r)
+		default:
+			return &RawData{
+				Type:  types.Nil,
+				Value: nil,
+				Error: errors.New("right side of `/` operation is not number"),
+			}
+		}
+	})
+}
+
+func dictDividedInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		r := right.(int64)
+
+		switch l := left.(type) {
+		case int64:
+			return IntData(l / r)
+		case float64:
+			return FloatData(l / float64(r))
+		default:
+			return &RawData{
+				Type:  types.Nil,
+				Value: nil,
+				Error: errors.New("left side of `/` operation is not number"),
+			}
+		}
+	})
+}
+
+func floatDividedDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		l := left.(float64)
+
+		switch r := right.(type) {
+		case int64:
+			return FloatData(l / float64(r))
+		case float64:
+			return FloatData(l / r)
+		default:
+			return &RawData{
+				Type:  types.Nil,
+				Value: nil,
+				Error: errors.New("right side of `/` operation is not number"),
+			}
+		}
+	})
+}
+
+func dictDividedFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		r := right.(float64)
+
+		switch l := left.(type) {
+		case int64:
+			return FloatData(float64(l) / r)
+		case float64:
+			return FloatData(l / r)
+		default:
+			return &RawData{
+				Type:  types.Nil,
+				Value: nil,
+				Error: errors.New("left side of `/` operation is not number"),
+			}
+		}
+	})
+}
+
+func dictTimesTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		switch l := left.(type) {
+		case int64:
+			return opTimeTimesInt(right, l)
+		default:
+			return &RawData{
+				Type:  types.Nil,
+				Value: nil,
+				Error: errors.New("left side of `*` operation is not compatible with `time`"),
+			}
+		}
+	})
+}
+
+func timeTimesDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		switch r := right.(type) {
+		case int64:
+			return opTimeTimesInt(left, r)
+		default:
+			return &RawData{
+				Type:  types.Nil,
+				Value: nil,
+				Error: errors.New("left side of `*` operation is not compatible with `time`"),
+			}
+		}
 	})
 }

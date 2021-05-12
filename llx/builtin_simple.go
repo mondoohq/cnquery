@@ -824,43 +824,31 @@ func timeMinusTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	})
 }
 
+func opTimeTimesInt(left interface{}, right interface{}) *RawData {
+	l := left.(*time.Time)
+	if l == nil {
+		return &RawData{Type: types.Time}
+	}
+
+	if *l == NeverPastTime {
+		return NeverPastPrimitive.RawData()
+	}
+	if *l == NeverFutureTime {
+		return NeverFuturePrimitive.RawData()
+	}
+
+	diff := TimeToDuration(l) * right.(int64)
+	res := DurationToTime(diff)
+	return TimeData(res)
+}
+
 func timeTimesInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
-		l := left.(*time.Time)
-		if l == nil {
-			return &RawData{Type: types.Time}
-		}
-
-		if *l == NeverPastTime {
-			return NeverPastPrimitive.RawData()
-		}
-		if *l == NeverFutureTime {
-			return NeverFuturePrimitive.RawData()
-		}
-
-		diff := TimeToDuration(l) * right.(int64)
-		res := DurationToTime(diff)
-		return TimeData(res)
-	})
+	return dataOp(c, bind, chunk, ref, types.Time, opTimeTimesInt)
 }
 
 func intTimesTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
-		r := right.(*time.Time)
-		if r == nil {
-			return &RawData{Type: types.Time}
-		}
-
-		if *r == NeverPastTime {
-			return NeverPastPrimitive.RawData()
-		}
-		if *r == NeverFutureTime {
-			return NeverFuturePrimitive.RawData()
-		}
-
-		diff := left.(int64) * TimeToDuration(r)
-		res := DurationToTime(diff)
-		return TimeData(res)
+		return opTimeTimesInt(right, left)
 	})
 }
 
