@@ -62,7 +62,10 @@ func mapBlockCall(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 
 func mapKeys(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
-		return nil, 0, nil
+		return &RawData{
+			Type:  types.Array(types.Dict),
+			Error: errors.New("Failed to get keys of `null`"),
+		}, 0, nil
 	}
 
 	m, ok := bind.Value.(map[string]interface{})
@@ -82,7 +85,10 @@ func mapKeys(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData
 
 func mapValues(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
-		return nil, 0, nil
+		return &RawData{
+			Type:  types.Array(types.Dict),
+			Error: errors.New("Failed to get values of `null`"),
+		}, 0, nil
 	}
 
 	m, ok := bind.Value.(map[string]interface{})
@@ -218,7 +224,10 @@ func dictTrim(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDat
 
 func dictKeys(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
-		return nil, 0, nil
+		return &RawData{
+			Type:  types.Array(types.Dict),
+			Error: errors.New("Failed to get keys of `null`"),
+		}, 0, nil
 	}
 
 	m, ok := bind.Value.(map[string]interface{})
@@ -238,7 +247,10 @@ func dictKeys(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDat
 
 func dictValues(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
-		return nil, 0, nil
+		return &RawData{
+			Type:  types.Array(types.Dict),
+			Error: errors.New("Failed to get values of `null`"),
+		}, 0, nil
 	}
 
 	m, ok := bind.Value.(map[string]interface{})
