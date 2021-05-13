@@ -946,6 +946,12 @@ func TestResource_None(t *testing.T) {
 
 func TestDict_Methods(t *testing.T) {
 	p := "parse.json('/dummy.json')."
+
+	expectedTime, err := time.Parse(time.RFC3339, "2016-01-28T23:02:24Z")
+	if err != nil {
+		panic(err.Error())
+	}
+
 	runSimpleTests(t, []simpleTest{
 		{
 			p + "params['string-array'].where(_ == 'a')",
@@ -998,6 +1004,10 @@ func TestDict_Methods(t *testing.T) {
 		{
 			p + "params['dict'].values.length",
 			0, int64(3),
+		},
+		{
+			"parse.date(" + p + "params['date'])",
+			0, &expectedTime,
 		},
 	})
 }
