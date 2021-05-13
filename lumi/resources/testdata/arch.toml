@@ -493,6 +493,7 @@ content="""
   },
   "f": [{"ff": 3}],
   "string-array": ["a", "b", "c"],
-  "hello": "hello"
+  "hello": "hello",
+  "date": "2016-01-28T23:02:24Z"
 }
 """
