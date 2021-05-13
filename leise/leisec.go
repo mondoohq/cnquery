@@ -476,9 +476,17 @@ func (c *compiler) unnamedArgs(callerLabel string, init *lumi.Init, args []*pars
 		expected := init.Args[idx]
 		expectedType := types.Type(expected.Type)
 		if vType != expectedType {
-			return nil, errors.New("Incorrect type on argument " + strconv.Itoa(idx) +
-				" in " + callerLabel + ": expected " + expectedType.Label() +
-				", got: " + vType.Label())
+			// TODO: We are looking for dict types to see if we can type-cast them
+			// This needs massive improvements to dynamically cast them in LLX.
+			// For a full description see: https://gitlab.com/mondoolabs/mondoo/-/issues/241
+			// This is ONLY a temporary workaround which works in a few cases:
+			if vType == types.Dict && expectedType == types.String {
+				// we are good, LLX will handle it
+			} else {
+				return nil, errors.New("Incorrect type on argument " + strconv.Itoa(idx) +
+					" in " + callerLabel + ": expected " + expectedType.Label() +
+					", got: " + vType.Label())
+			}
 		}
 
 		res[idx*2] = llx.StringPrimitive(expected.Name)
