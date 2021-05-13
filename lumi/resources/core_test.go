@@ -1010,4 +1010,11 @@ func TestDict_Methods(t *testing.T) {
 			0, &expectedTime,
 		},
 	})
+
+	runSimpleErrorTests(t, []simpleTest{
+		{
+			p + "params['does not exist'].values",
+			0, "Failed to get values of `null`",
+		},
+	})
 }
