@@ -114,6 +114,10 @@ func TestParser_ParseValues(t *testing.T) {
 			{Operand: &Operand{Value: vInt(1)}},
 			{Operand: &Operand{Value: vFloat(2.3)}},
 		}}}}},
+		{"[1,2,]", &Expression{Operand: &Operand{Value: &Value{Array: []*Expression{
+			{Operand: &Operand{Value: vInt(1)}},
+			{Operand: &Operand{Value: vInt(2)}},
+		}}}}},
 		{"{}", &Expression{Operand: &Operand{Value: vMap(map[string]*Expression{})}}},
 		{"{'a': 'word'}", &Expression{Operand: &Operand{Value: vMap(map[string]*Expression{
 			"a": {Operand: &Operand{Value: vString("word")}},
@@ -123,6 +127,10 @@ func TestParser_ParseValues(t *testing.T) {
 		})}}},
 		{"{c: 123}", &Expression{Operand: &Operand{Value: vMap(map[string]*Expression{
 			"c": {Operand: &Operand{Value: vInt(123)}},
+		})}}},
+		{"{a: 1, b: 2,}", &Expression{Operand: &Operand{Value: vMap(map[string]*Expression{
+			"a": {Operand: &Operand{Value: vInt(1)}},
+			"b": {Operand: &Operand{Value: vInt(2)}},
 		})}}},
 		{"name.last", &Expression{Operand: &Operand{
 			Value: vIdent("name"),
