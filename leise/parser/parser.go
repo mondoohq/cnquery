@@ -303,7 +303,13 @@ func (p *parser) parseArray() (*Value, error) {
 		if p.token.Value != "," {
 			return nil, p.expected(", or ]", "parseOperand")
 		}
+
 		p.nextToken()
+
+		// catch trailing commas, ie: [a, b, c, ]
+		if p.token.Value == "]" {
+			break
+		}
 	}
 
 	return &res, nil
@@ -352,7 +358,13 @@ func (p *parser) parseMap() (*Value, error) {
 		if p.token.Value != "," {
 			return nil, p.expected(", or }", "parseOperand")
 		}
+
 		p.nextToken()
+
+		// catch trailing commas, ie: {a: 1,}
+		if p.token.Value == "}" {
+			break
+		}
 	}
 
 	return &res, nil
