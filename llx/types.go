@@ -154,7 +154,7 @@ func (p *Primitive) dereferenceType(typ types.Type, stack *Code) types.Type {
 // ArrayType for the given list of primitives
 func ArrayType(arr []*Primitive, stack *Code) types.Type {
 	if arr == nil || len(arr) == 0 {
-		return types.Array(types.Any)
+		return types.Array(types.Unset)
 	}
 
 	sharedType := arr[0].dereferenceType(types.Type(arr[0].Type), stack)

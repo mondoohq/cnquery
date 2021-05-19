@@ -149,16 +149,26 @@ func (typ Type) Underlying() Type {
 }
 
 // Enforce makes sure that both types are the same, and returns the common
-// type and true if they are, false otherwise. If one of the types is not
-// yet set, use the other type instead. If neither are set return the unset type.
+// type and true if they are, false otherwise (and the right type).
+// - if one of the types is not yet set, use the other type instead.
+// - if neither are set return the unset type.
+// - goes into child types to see if either is unset
 func Enforce(left, right Type) (Type, bool) {
-	if left[0] == byteUnset {
-		return right, true
+	var i int
+	for ; i < len(left) && i < len(right); i++ {
+		if left[i] == right[i] {
+			continue
+		}
+
+		if left[i] == byteUnset {
+			return right, true
+		}
+		if right[i] == byteUnset {
+			return left, true
+		}
 	}
-	if left != right {
-		return right, false
-	}
-	return right, true
+
+	return right, len(left) == len(right)
 }
 
 // Child returns the child type of arrays and maps
