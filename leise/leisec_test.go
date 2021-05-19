@@ -281,8 +281,8 @@ func TestCompiler_LogicalOps(t *testing.T) {
 		"true":    llx.BoolPrimitive(true),
 		"\"str\"": llx.StringPrimitive("str"),
 		"/str/":   llx.RegexPrimitive("str"),
-		"[]":      llx.ArrayPrimitive([]*llx.Primitive{}, types.Any),
-		"{}":      llx.MapPrimitive(map[string]*llx.Primitive{}, types.Any),
+		"[]":      llx.ArrayPrimitive([]*llx.Primitive{}, types.Unset),
+		"{}":      llx.MapPrimitive(map[string]*llx.Primitive{}, types.Unset),
 	}
 	for _, op := range ops {
 		for val1, valres1 := range vals {
@@ -473,6 +473,33 @@ func TestCompiler_If(t *testing.T) {
 
 		assertPrimitive(t, llx.IntPrimitive(456), res.Code.Functions[1].Code[0])
 		assert.Equal(t, []int32{1}, res.Code.Functions[1].Entrypoints)
+	})
+
+	// Test empty array with filled array and type-consolidation in the compiler
+	compile(t, "if ( mondoo ) { return [] } return [1,2,3]", func(res *llx.CodeBundle) {
+		assertFunction(t, "mondoo", nil, res.Code.Code[0])
+
+		assertFunction(t, "if", &llx.Function{
+			Type:    string(types.Array(types.Int)),
+			Binding: 0,
+			Args: []*llx.Primitive{
+				llx.RefPrimitive(1),
+				llx.FunctionPrimitive(1),
+				llx.FunctionPrimitive(2),
+			},
+		}, res.Code.Code[1])
+		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
+		assert.Equal(t, []int32{}, res.Code.Datapoints)
+
+		assertPrimitive(t, llx.ArrayPrimitive([]*llx.Primitive{}, types.Unset), res.Code.Functions[0].Code[0])
+		assertFunction(t, "return", &llx.Function{
+			Type:    string(types.Array(types.Unset)),
+			Binding: 0,
+			Args: []*llx.Primitive{
+				llx.RefPrimitive(1),
+			},
+		}, res.Code.Functions[0].Code[1])
+		assert.Equal(t, []int32{2}, res.Code.Functions[0].Entrypoints)
 	})
 
 	compile(t, "if ( mondoo.version != null ) { 123 }", func(res *llx.CodeBundle) {

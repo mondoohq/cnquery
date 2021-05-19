@@ -885,7 +885,7 @@ func (c *compiler) compileValue(val *parser.Value) (*llx.Primitive, error) {
 		}
 
 		if resType == "" {
-			resType = types.Any
+			resType = types.Unset
 		}
 
 		return &llx.Primitive{
