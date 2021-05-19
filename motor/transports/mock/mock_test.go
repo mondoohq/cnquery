@@ -23,7 +23,29 @@ func TestMockCommand(t *testing.T) {
 		assert.Equal(t, nil, err, "should execute without error")
 		stdoutContent, _ := ioutil.ReadAll(cmd.Stdout)
 		assert.Equal(t, "bin  boot  dev  etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var", string(stdoutContent), "output should be correct")
-		stderrContent, _ := ioutil.ReadAll(cmd.Stdout)
+		stderrContent, _ := ioutil.ReadAll(cmd.Stderr)
+		assert.Equal(t, "", string(stderrContent), "output should be correct")
+	}
+}
+
+func TestMockCommandWithHostname(t *testing.T) {
+	filepath, _ := filepath.Abs("./testdata/mock.toml")
+	trans, err := mock.NewFromToml(&transports.TransportConfig{
+		Backend: transports.TransportBackend_CONNECTION_MOCK,
+		Path:    filepath,
+		Options: map[string]string{
+			"hostname": "foobear",
+		},
+	})
+	assert.Equal(t, nil, err, "should create mock without error")
+
+	cmd, err := trans.RunCommand("hostname")
+
+	if assert.NotNil(t, cmd) {
+		assert.Equal(t, nil, err, "should execute without error")
+		stdoutContent, _ := ioutil.ReadAll(cmd.Stdout)
+		assert.Equal(t, "foobear", string(stdoutContent), "output should be correct")
+		stderrContent, _ := ioutil.ReadAll(cmd.Stderr)
 		assert.Equal(t, "", string(stderrContent), "output should be correct")
 	}
 }
