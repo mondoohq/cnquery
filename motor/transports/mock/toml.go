@@ -97,6 +97,11 @@ func NewFromToml(endpoint *transports.TransportConfig) (*Transport, error) {
 			log.Error().Err(err).Str("toml", endpoint.Path).Msg("mock> could not load toml data")
 			return nil, err
 		}
+		if endpoint.Options != nil && endpoint.Options["hostname"] != "" {
+			transport.Commands[hashCmd("hostname")] = &Command{
+				Stdout: endpoint.Options["hostname"],
+			}
+		}
 	}
 
 	return transport, nil
