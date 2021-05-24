@@ -85,6 +85,7 @@ func TestJobDeletion(t *testing.T) {
 	// verify that the job is not there anymore
 	job, err = jm.GetJob(jobid)
 	assert.NotNil(t, err, "job could not be retrieved")
+	assert.Nil(t, job)
 
 	assert.Equal(t, 0, jm.Metrics().Jobs, "no job is scheduled")
 	TeardownTest(jm)

@@ -46,6 +46,9 @@ func (c *Command) Exec(command string) (*transports.Command, error) {
 
 	// TODO: transformHijack breaks for long stdout, but not if we read stdout/stderr in upfront
 	content, err := ioutil.ReadAll(resp.Reader)
+	if err != nil {
+		return nil, err
+	}
 
 	var stdoutBuffer bytes.Buffer
 	var stderrBuffer bytes.Buffer

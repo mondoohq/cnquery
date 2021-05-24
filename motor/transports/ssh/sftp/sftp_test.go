@@ -215,10 +215,10 @@ func MakeSSHKeyPair(bits int, pubKeyPath, privateKeyPath string) error {
 
 	// generate and write private key as PEM
 	privateKeyFile, err := os.Create(privateKeyPath)
-	defer privateKeyFile.Close()
 	if err != nil {
 		return err
 	}
+	defer privateKeyFile.Close()
 
 	privateKeyPEM := &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privateKey)}
 	if err := pem.Encode(privateKeyFile, privateKeyPEM); err != nil {

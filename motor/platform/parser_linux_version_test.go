@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/platform"
 )
 
@@ -52,6 +53,7 @@ ORACLE_SUPPORT_PRODUCT="Oracle Linux"
 ORACLE_SUPPORT_PRODUCT_VERSION=6.9`
 
 	m, err = platform.ParseOsRelease(osRelease)
+	require.NoError(t, err)
 	assert.Equal(t, "Oracle Linux Server", m["NAME"], "NAME should be parsed properly")
 	assert.Equal(t, "ol", m["ID"], "ID should be parsed properly")
 	assert.Equal(t, "6.9", m["VERSION"], "VERSION should be parsed properly")
@@ -65,7 +67,7 @@ DISTRIB_CODENAME=xenial
 DISTRIB_DESCRIPTION="Ubuntu 16.04.3 LTS"`
 
 	m, err := platform.ParseLsbRelease(lsbRelease)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, "Ubuntu", m["DISTRIB_ID"], "DISTRIB_ID should be parsed properly")
 	assert.Equal(t, "16.04", m["DISTRIB_RELEASE"], "DISTRIB_RELEASE should be parsed properly")
@@ -76,13 +78,13 @@ DISTRIB_DESCRIPTION="Ubuntu 16.04.3 LTS"`
 func TestRedhatRelease(t *testing.T) {
 	rhRelease := "CentOS Linux release 7.4.1708 (Core)"
 	name, release, err := platform.ParseRhelVersion(rhRelease)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "CentOS Linux", name, "parse os name")
 	assert.Equal(t, "7.4.1708", release, "parse release version")
 
 	rhRelease = "CentOS release 6.9 (Final)"
 	name, release, err = platform.ParseRhelVersion(rhRelease)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "CentOS", name, "parse os name")
 	assert.Equal(t, "6.9", release, "parse release version")
 
@@ -94,8 +96,7 @@ func TestRedhatRelease(t *testing.T) {
 
 	rhRelease = "Oracle Linux Server release 7.4 (Maipo)"
 	name, release, err = platform.ParseRhelVersion(rhRelease)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "Oracle Linux Server", name, "parse os name")
 	assert.Equal(t, "7.4", release, "parse release version")
-
 }

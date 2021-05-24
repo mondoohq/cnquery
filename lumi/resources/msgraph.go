@@ -655,6 +655,9 @@ func (m *lumiMsgraphBetaRolemanagementRoledefinition) GetAssignments() ([]interf
 	r.Filter("roleDefinitionId eq '" + roleDefinitionID + "'")
 	r.Expand("principal")
 	roleAssignments, err := r.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []interface{}{}
 	for i := range roleAssignments {
@@ -703,6 +706,9 @@ func (m *lumiMsgraphBetaDevicemanagement) GetDeviceConfigurations() ([]interface
 
 	ctx := context.Background()
 	configurations, err := graphBetaClient.DeviceManagement().DeviceConfigurations().Request().Get(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []interface{}{}
 	for i := range configurations {
@@ -750,6 +756,9 @@ func (m *lumiMsgraphBetaDevicemanagement) GetDeviceCompliancePolicies() ([]inter
 	r := graphBetaClient.DeviceManagement().DeviceCompliancePolicies().Request()
 	r.Expand("assignments")
 	compliancePolicies, err := r.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []interface{}{}
 	for i := range compliancePolicies {

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/platform"
 )
 
@@ -14,7 +15,7 @@ BuildVersion:	17C88
 	`
 
 	m, err := platform.ParseDarwinRelease(swVers)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, "Mac OS X", m["ProductName"], "ProductName should be parsed properly")
 	assert.Equal(t, "10.13.2", m["ProductVersion"], "ProductVersion should be parsed properly")

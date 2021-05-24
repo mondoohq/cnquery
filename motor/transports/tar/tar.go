@@ -3,6 +3,7 @@ package tar
 import (
 	"archive/tar"
 	"bytes"
+	"errors"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -17,6 +18,10 @@ func New(endpoint *transports.TransportConfig) (*Transport, error) {
 }
 
 func NewWithClose(endpoint *transports.TransportConfig, close func()) (*Transport, error) {
+	if endpoint == nil {
+		return nil, errors.New("endpoint cannot be empty")
+	}
+
 	t := &Transport{
 		Fs:              NewFs(endpoint.Path),
 		CloseFN:         close,
@@ -25,7 +30,7 @@ func NewWithClose(endpoint *transports.TransportConfig, close func()) (*Transpor
 	}
 
 	var err error
-	if endpoint != nil && len(endpoint.Path) > 0 {
+	if len(endpoint.Path) > 0 {
 		err := t.LoadFile(endpoint.Path)
 		if err != nil {
 			log.Error().Err(err).Str("tar", endpoint.Path).Msg("tar> could not load tar file")
@@ -114,10 +119,10 @@ func (t *Transport) LoadFile(path string) error {
 	log.Debug().Str("path", path).Msg("tar> load tar file into backend")
 
 	f, err := os.Open(path)
-	defer f.Close()
 	if err != nil {
 		return err
 	}
+	defer f.Close()
 
 	return t.Load(f)
 }

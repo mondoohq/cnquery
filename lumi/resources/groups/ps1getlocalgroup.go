@@ -62,6 +62,9 @@ func (s *WindowsGroupManager) List() ([]*Group, error) {
 		return nil, err
 	}
 	winUsers, err := ParseWindowsLocalGroups(c.Stdout)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []*Group{}
 	for i := range winUsers {

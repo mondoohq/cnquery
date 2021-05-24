@@ -29,6 +29,10 @@ type DockerImageTransport struct {
 }
 
 func newWithClose(endpoint *transports.TransportConfig, close func()) (*DockerImageTransport, error) {
+	if endpoint == nil {
+		return nil, errors.New("endpoint cannot be empty")
+	}
+
 	t := &DockerImageTransport{
 		Transport: tar.Transport{
 			Fs:              tar.NewFs(endpoint.Path),
@@ -38,15 +42,14 @@ func newWithClose(endpoint *transports.TransportConfig, close func()) (*DockerIm
 		},
 	}
 
-	var err error
-	if endpoint != nil && len(endpoint.Path) > 0 {
+	if len(endpoint.Path) > 0 {
 		err := t.LoadFile(endpoint.Path)
 		if err != nil {
 			log.Error().Err(err).Str("tar", endpoint.Path).Msg("tar> could not load tar file")
 			return nil, err
 		}
 	}
-	return t, err
+	return t, nil
 }
 
 //  provide a container image stream

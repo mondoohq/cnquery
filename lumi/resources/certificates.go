@@ -390,13 +390,12 @@ func (s *lumiOsRootcertificates) id() (string, error) {
 }
 
 func (s *lumiOsRootcertificates) init(args *lumi.Args) (*lumi.Args, OsRootcertificates, error) {
-
 	pi, err := s.Runtime.Motor.Platform()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	files := []string{}
+	var files []string
 	if pi.IsFamily(platform.FAMILY_LINUX) {
 		files = certificates.LinuxCertFiles
 	} else if pi.IsFamily(platform.FAMILY_BSD) {

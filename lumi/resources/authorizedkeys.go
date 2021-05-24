@@ -14,6 +14,9 @@ import (
 func (u *lumiUser) GetAuthorizedkeys() (Authorizedkeys, error) {
 	// fmt.Println("determine user authorized key file")
 	home, err := u.Home()
+	if err != nil {
+		return nil, err
+	}
 
 	// TODO: we may need to handle ".ssh/authorized_keys2" too
 	authorizedKeysPath := path.Join(home, ".ssh", "authorized_keys")

@@ -32,6 +32,7 @@ func TestSecretKeySimple(t *testing.T) {
 		TagName:  "json",
 	})
 	err = decoder.Decode(value)
+	require.NoError(t, err)
 	assert.Equal(t, "ssh", sMeta.Backend)
 }
 
@@ -63,6 +64,7 @@ func TestSecretKeyIfReturn(t *testing.T) {
 		TagName:  "json",
 	})
 	err = decoder.Decode(value)
+	require.NoError(t, err)
 
 	// NOTE: this is not working yet
 	assert.Equal(t, "ssh", sMeta.Backend)

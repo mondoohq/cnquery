@@ -40,8 +40,7 @@ func (c *lumiAwsIam) GetCredentialReport() ([]interface{}, error) {
 	// 404 - ReportInProgress
 	// 410 - ReportNotPresent
 	// 500 - ServiceFailure
-	rresp, err := svc.GetCredentialReport(ctx, &iam.GetCredentialReportInput{})
-
+	_, err = svc.GetCredentialReport(ctx, &iam.GetCredentialReportInput{})
 	if err != nil {
 		var awsFailErr *types.ServiceFailureException
 		if errors.As(err, &awsFailErr) {
@@ -71,7 +70,7 @@ func (c *lumiAwsIam) GetCredentialReport() ([]interface{}, error) {
 	}
 
 	// loop as long as the response is 404 since this means the report is still in progress
-	rresp, err = svc.GetCredentialReport(ctx, &iam.GetCredentialReportInput{})
+	rresp, err := svc.GetCredentialReport(ctx, &iam.GetCredentialReportInput{})
 	var ae smithy.APIError
 	if errors.As(err, &ae) {
 		for ae.ErrorCode() == "NoSuchEntity" || ae.ErrorCode() == "ReportInProgress" {

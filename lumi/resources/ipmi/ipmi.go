@@ -126,7 +126,7 @@ func (c *IpmiClient) DeviceID() (*DeviceID, error) {
 	}
 
 	// 20 bits of are used for the vendor id
-	manufactor := OemVendorID(uint32(res.ManufacturerID1) + uint32(res.ManufacturerID2&0x3<<8))
+	manufactor := OemVendorID(uint32(res.ManufacturerID1) + uint32(res.ManufacturerID2)&0x3<<8)
 	product := OemProductID(res.ProductID)
 
 	return &DeviceID{
