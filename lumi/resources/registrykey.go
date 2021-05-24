@@ -181,7 +181,7 @@ func (p *lumiRegistrykeyProperty) init(args *lumi.Args) (*lumi.Args, Registrykey
 
 		// search for property
 		for k := range properties {
-			if strings.ToLower(k) == strings.ToLower(name) {
+			if strings.EqualFold(k, name) {
 				(*args)["exists"] = true
 				(*args)["value"] = properties[k].(string)
 				break

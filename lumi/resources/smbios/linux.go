@@ -22,7 +22,7 @@ func (s *LinuxSmbiosManager) Info() (*SmBiosInfo, error) {
 	fs := s.motor.Transport.FS()
 	afs := &afero.Afero{Fs: fs}
 	root := "/sys/class/dmi/id"
-	afs.Walk(root, func(path string, info os.FileInfo, err error) error {
+	wErr := afs.Walk(root, func(path string, info os.FileInfo, fErr error) error {
 		if info.IsDir() {
 			return nil
 		}
@@ -84,5 +84,5 @@ func (s *LinuxSmbiosManager) Info() (*SmBiosInfo, error) {
 		return nil
 	})
 
-	return &smInfo, nil
+	return &smInfo, wErr
 }

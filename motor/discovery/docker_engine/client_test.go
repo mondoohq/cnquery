@@ -45,7 +45,7 @@ func TestDockerEnvParsing(t *testing.T) {
 	assert.Equal(t, "tcp://192.186.1.1:2375", cli.DaemonHost())
 
 	os.Setenv("DOCKER_HOST", "http://192.186.1.1")
-	cli, err = client.NewClientWithOpts(docker_engine.FromDockerEnv)
+	_, err = client.NewClientWithOpts(docker_engine.FromDockerEnv)
 	assert.NotNil(t, err)
 
 	os.Setenv("DOCKER_HOST", "tcp://192.186.1.1")

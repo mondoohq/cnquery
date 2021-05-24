@@ -286,6 +286,9 @@ func (g *lumiGcloudCompute) GetInstances() ([]interface{}, error) {
 
 	ctx := context.Background()
 	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
 
 	projectName := gt.ProjectID()
 
@@ -369,6 +372,9 @@ func (g *lumiGcloudStorage) GetBuckets() ([]interface{}, error) {
 
 	ctx := context.Background()
 	storageSvc, err := storage.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
 
 	projectID := gt.ProjectID()
 	buckets, err := storageSvc.Buckets.List(projectID).Do()

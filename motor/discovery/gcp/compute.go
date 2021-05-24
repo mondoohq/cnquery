@@ -1,6 +1,7 @@
 package gcp
 
 import (
+	"context"
 	"strconv"
 	"sync"
 
@@ -8,7 +9,6 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
-	gcp_transport "go.mondoo.io/mondoo/motor/transports/gcp"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
 )
@@ -29,13 +29,7 @@ func (a *Compute) Name() string {
 
 // TODO: try to auto-detect the current project, otherwise return an error
 func (a *Compute) ListInstancesInProject(project string) ([]*asset.Asset, error) {
-
-	client, err := gcp_transport.Client(compute.ComputeScope, compute.CloudPlatformScope)
-	if err != nil {
-		return nil, err
-	}
-
-	svc, err := compute.New(client)
+	svc, err := compute.NewService(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -70,13 +64,13 @@ func (a *Compute) ListInstancesInProject(project string) ([]*asset.Asset, error)
 }
 
 func (a *Compute) ListInstances() ([]*asset.Asset, error) {
-	client, err := gcp_transport.Client(compute.ComputeScope, compute.CloudPlatformScope)
-	svc, err := compute.New(client)
+	ctx := context.Background()
+	svc, err := compute.NewService(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	resSrv, err := cloudresourcemanager.New(client)
+	resSrv, err := cloudresourcemanager.NewService(ctx)
 	if err != nil {
 		return nil, err
 	}

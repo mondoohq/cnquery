@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
 	"go.mondoo.io/mondoo/motor/transports/mock"
@@ -18,6 +19,7 @@ func TestMockCommand(t *testing.T) {
 	assert.Equal(t, nil, err, "should create mock without error")
 
 	cmd, err := trans.RunCommand("ls /")
+	require.NoError(t, err)
 
 	if assert.NotNil(t, cmd) {
 		assert.Equal(t, nil, err, "should execute without error")

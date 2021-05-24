@@ -790,6 +790,9 @@ func (v *lumiEsxi) GetHost() (interface{}, error) {
 
 		// extract type and inventory
 		moid, err := vsphere_transport.ParseVsphereResourceID(identifier)
+		if err != nil {
+			return nil, err
+		}
 
 		if moid.Type != "HostSystem" {
 			return nil, errors.New("esxi resource is not supported for vsphere type " + moid.Type)
@@ -842,6 +845,9 @@ func (v *lumiEsxi) GetVm() (interface{}, error) {
 
 	// extract type and inventory
 	moid, err := vsphere_transport.ParseVsphereResourceID(identifier)
+	if err != nil {
+		return nil, err
+	}
 
 	if moid.Type != "VirtualMachine" {
 		return nil, errors.New("esxi resource is not supported for vsphere type " + moid.Type)

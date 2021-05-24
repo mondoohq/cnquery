@@ -130,6 +130,10 @@ func (p *lumiEquinixMetalProject) GetUsers() ([]interface{}, error) {
 	// NOTE: circumvent the API, since project user only includes url of the user
 	userMap := map[string]packngo.User{}
 	users, _, err := c.Users.List(nil)
+	if err != nil {
+		return nil, err
+	}
+
 	for i := range users {
 		user := users[i]
 		userMap[user.URL] = user

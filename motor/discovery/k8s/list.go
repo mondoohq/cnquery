@@ -90,7 +90,7 @@ func isIncluded(value string, included []string) bool {
 	}
 
 	for _, ex := range included {
-		if strings.ToLower(ex) == strings.ToLower(value) {
+		if strings.EqualFold(ex, value) {
 			return true
 		}
 	}

@@ -58,7 +58,7 @@ func Tar(fs afero.Fs, f afero.File) (io.ReadCloser, error) {
 
 				_, err := io.Copy(tw, fReader)
 				if err != nil {
-
+					log.Error().Str("file", path).Err(err).Msg("local> could not write tar data")
 				}
 			} else {
 				log.Error().Str("file", path).Err(err).Msg("local> could not stream file")

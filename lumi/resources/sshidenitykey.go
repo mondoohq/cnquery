@@ -15,6 +15,10 @@ func (u *lumiUser) GetSshkeys() ([]interface{}, error) {
 	res := []interface{}{}
 
 	home, err := u.Home()
+	if err != nil {
+		return nil, err
+	}
+
 	userSshPath := path.Join(home, ".ssh")
 
 	fs := u.Runtime.Motor.Transport.FS()

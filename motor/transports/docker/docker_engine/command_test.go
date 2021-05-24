@@ -25,7 +25,7 @@ func (suite *DockerCommandTestSuite) SetupSuite() {
 	// Start new docker container
 	ctx := context.Background()
 	var err error
-	suite.dockerClient, err = client.NewEnvClient()
+	suite.dockerClient, err = client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		suite.T().Error(err)
 	}

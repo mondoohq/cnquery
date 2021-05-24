@@ -2,6 +2,7 @@ package snapshot
 
 import (
 	"context"
+	"errors"
 	"os"
 
 	"github.com/rs/zerolog/log"
@@ -20,6 +21,10 @@ func new(endpoint *transports.TransportConfig) (*DockerSnapshotTransport, error)
 }
 
 func newWithClose(endpoint *transports.TransportConfig, close func()) (*DockerSnapshotTransport, error) {
+	if endpoint == nil {
+		return nil, errors.New("endpoint cannot be empty")
+	}
+
 	t := &DockerSnapshotTransport{
 		Transport: tar.Transport{
 			Fs:              tar.NewFs(endpoint.Path),
@@ -30,7 +35,7 @@ func newWithClose(endpoint *transports.TransportConfig, close func()) (*DockerSn
 	}
 
 	var err error
-	if endpoint != nil && len(endpoint.Path) > 0 {
+	if len(endpoint.Path) > 0 {
 		err := t.LoadFile(endpoint.Path)
 		if err != nil {
 			log.Error().Err(err).Str("tar", endpoint.Path).Msg("tar> could not load tar file")

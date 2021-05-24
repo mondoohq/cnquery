@@ -75,6 +75,9 @@ func (s *WindowsUserManager) List() ([]*User, error) {
 		return nil, err
 	}
 	winUsers, err := ParseWindowsLocalUsers(c.Stdout)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []*User{}
 	for i := range winUsers {

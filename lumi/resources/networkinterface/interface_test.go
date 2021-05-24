@@ -131,6 +131,7 @@ func TestLinuxRemoteInterface(t *testing.T) {
 	assert.True(t, len(list) == 2)
 
 	inet, err := ifaces.InterfaceByName("lo")
+	require.NoError(t, err)
 	assert.Equal(t, "lo", inet.Name)
 	assert.Equal(t, 1, inet.Index)
 	assert.Equal(t, 0, inet.MTU)

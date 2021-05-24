@@ -197,7 +197,7 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 		}
 
 		// list directory and copy the content
-		err = afs.Walk(rpmPath, func(path string, info os.FileInfo, err error) error {
+		wErr := afs.Walk(rpmPath, func(path string, info os.FileInfo, fErr error) error {
 			log.Debug().Str("path", path).Str("name", info.Name()).Msg("copy file")
 			f, err := fs.Open(path)
 			if err != nil {
@@ -215,8 +215,8 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 			}
 			return nil
 		})
-		if err != nil {
-			return nil, errors.Wrap(err, "could not fetch rpm package list")
+		if wErr != nil {
+			return nil, errors.Wrap(wErr, "could not fetch rpm package list")
 		}
 	} else {
 		// fetch rpm database file and store it in local tmp file

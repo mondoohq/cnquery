@@ -18,6 +18,7 @@ func TestGlobCommand(t *testing.T) {
 
 	filesystem := trans.Fs
 	matches, err := filesystem.Glob("*ssh/*_config")
+	require.NoError(t, err)
 
 	assert.True(t, len(matches) == 1)
 	assert.Contains(t, matches, "/etc/ssh/sshd_config")
@@ -29,10 +30,10 @@ func TestLoadFile(t *testing.T) {
 	assert.Equal(t, nil, err, "should create mock without error")
 
 	f, err := trans.FS().Open("/etc/os-release")
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	data, err := ioutil.ReadAll(f)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, 382, len(data))
 }

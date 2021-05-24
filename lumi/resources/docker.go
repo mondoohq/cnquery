@@ -121,5 +121,5 @@ func dockerClient() (*client.Client, error) {
 	// set docker api version for macos
 	os.Setenv("DOCKER_API_VERSION", "1.26")
 	// Start new docker container
-	return client.NewEnvClient()
+	return client.NewClientWithOpts(client.FromEnv)
 }

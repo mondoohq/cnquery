@@ -12,11 +12,10 @@ import (
 func TestParseProcCpuX64(t *testing.T) {
 	path := "./testdata/cpu-info-x64.toml"
 	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: path})
+	require.NoError(t, err)
 
 	f, err := trans.FS().Open("/proc/cpuinfo")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	defer f.Close()
 
 	cpuInfo, err := ParseCpuInfo(f)
@@ -72,11 +71,10 @@ func TestParseProcCpuX64(t *testing.T) {
 func TestParseProcCpuArm(t *testing.T) {
 	path := "./testdata/cpu-info-aarch64.toml"
 	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: path})
+	require.NoError(t, err)
 
 	f, err := trans.FS().Open("/proc/cpuinfo")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	defer f.Close()
 
 	cpuInfo, err := ParseCpuInfo(f)

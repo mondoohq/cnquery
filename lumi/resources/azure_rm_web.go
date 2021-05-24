@@ -503,6 +503,9 @@ func (a *lumiAzurermWebAppsite) GetStack() (map[string]interface{}, error) {
 
 	// get metadata
 	metadata, err := a.Metadata()
+	if err != nil {
+		return nil, err
+	}
 
 	runtime := AzureWebAppStackRuntime{
 		Os: "windows",

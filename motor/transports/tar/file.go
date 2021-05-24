@@ -53,7 +53,7 @@ func (f *File) Readdir(n int) ([]os.FileInfo, error) {
 	for k := range f.Fs.FileMap {
 		entry := f.Fs.FileMap[k].Name
 		if strings.HasPrefix(Abs(entry), f.path) {
-			fi = append(fi)
+			fi = append(fi, f.Fs.FileMap[k].FileInfo())
 		}
 	}
 	return fi, nil

@@ -331,7 +331,7 @@ func (s *lumiAwsEc2) getInstances() []*jobpool.Job {
 
 			svc := at.Ec2(regionVal)
 			ctx := context.Background()
-			res := []interface{}{}
+			var res []interface{}
 
 			// the value for http tokens is not available on api output i've been able to find, so here
 			// we make two calls to get the instances, one with the imdsv1 filter and another with the imdsv2 filter
@@ -931,6 +931,9 @@ func (s *lumiAwsEc2) getInternetGateways() []*jobpool.Job {
 						"id", toString(gateway.InternetGatewayId),
 						"attachments", jsonAttachments,
 					)
+					if err != nil {
+						return nil, err
+					}
 					res = append(res, lumiInternetGw)
 				}
 

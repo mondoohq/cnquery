@@ -267,6 +267,9 @@ func (w *WinPkgManager) List() ([]Package, error) {
 	}
 
 	b, err := windows.Version(pf.Release)
+	if err != nil {
+		return nil, err
+	}
 
 	pkgs := []Package{}
 

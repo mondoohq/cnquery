@@ -7,8 +7,8 @@ import (
 
 	"go.mondoo.io/mondoo/stringx"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/protobuf/proto"
 )
 
 func (conn *TransportConfig) Clone() *TransportConfig {

@@ -27,6 +27,9 @@ func (lpm *LinuxProcManager) List() ([]*OSProcess, error) {
 	}
 
 	dirs, err := f.Readdirnames(-1)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []*OSProcess{}
 	for i := range dirs {

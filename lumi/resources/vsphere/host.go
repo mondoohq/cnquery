@@ -37,6 +37,9 @@ func HostOptions(host *object.HostSystem) (map[string]interface{}, error) {
 
 	var om mo.OptionManager
 	err = m.Properties(ctx, m.Reference(), []string{"setting"}, &om)
+	if err != nil {
+		return nil, err
+	}
 
 	advancedProps := map[string]interface{}{}
 	for i := range om.Setting {

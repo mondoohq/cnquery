@@ -151,7 +151,7 @@ func (dpm *DebPkgManager) List() ([]Package, error) {
 	// e.g. google distroless images stores their pkg data in /var/lib/dpkg/status.d/
 	if dErr == nil && dStat.IsDir() == true {
 		afutil := afero.Afero{Fs: fs}
-		err := afutil.Walk(dpkgStatusDir, func(path string, f os.FileInfo, err error) error {
+		wErr := afutil.Walk(dpkgStatusDir, func(path string, f os.FileInfo, fErr error) error {
 			if f == nil || f.IsDir() {
 				return nil
 			}
@@ -174,8 +174,8 @@ func (dpm *DebPkgManager) List() ([]Package, error) {
 			pkgList = append(pkgList, list...)
 			return nil
 		})
-		if err != nil {
-			return nil, err
+		if wErr != nil {
+			return nil, wErr
 		}
 	}
 

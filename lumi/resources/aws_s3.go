@@ -108,7 +108,7 @@ func (p *lumiAwsS3Bucket) init(args *lumi.Args) (*lumi.Args, AwsS3Bucket, error)
 		"name", name,
 		"exists", false,
 	)
-	return nil, lumiAwsS3Bucket.(AwsS3Bucket), nil
+	return nil, lumiAwsS3Bucket.(AwsS3Bucket), err
 }
 
 func (p *lumiAwsS3Bucket) id() (string, error) {
