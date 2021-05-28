@@ -11,6 +11,7 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/mock"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type WatcherTester struct {
@@ -19,7 +20,7 @@ type WatcherTester struct {
 }
 
 func SetupWatcherTest() *WatcherTester {
-	filepath, _ := filepath.Abs("./watcher_test.toml")
+	filepath, _ := filepath.Abs("testdata/watcher_test.toml")
 	trans, _ := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: filepath})
 	return &WatcherTester{watcher: NewWatcher(trans), mock: trans}
 }
@@ -59,7 +60,7 @@ func TestFileSubscribe(t *testing.T) {
 	var res *FileObservable
 
 	wg.Add(1)
-	w.Subscribe("file", "/tmp/test", func(fo transports.Observable) {
+	err := w.Subscribe("file", "/tmp/test", func(fo transports.Observable) {
 		switch x := fo.(type) {
 		case *FileObservable:
 			defer wg.Done()
@@ -67,7 +68,7 @@ func TestFileSubscribe(t *testing.T) {
 		default:
 		}
 	})
-
+	require.NoError(t, err)
 	wg.Wait()
 	content, err := ioutil.ReadAll(res.File)
 	assert.Nil(t, err, "file content was returned without any error")
@@ -77,35 +78,50 @@ func TestFileSubscribe(t *testing.T) {
 }
 
 func TestFileChangeEvents(t *testing.T) {
-	var wg sync.WaitGroup
+	var waitInitialRead sync.WaitGroup
+	var waitFileUpdate sync.WaitGroup
+	var waitSecondRead sync.WaitGroup
+
 	wt := SetupWatcherTest()
 	w := wt.watcher
 	// wait 500ms
 	w.SleepDuration = time.Duration(2 * time.Millisecond)
 
 	res := []string{}
+	readCount := 0
+	waitInitialRead.Add(1)
+	waitFileUpdate.Add(1)
+	waitSecondRead.Add(1)
 
-	wg.Add(2)
-	w.Subscribe("file", "/tmp/test", func(fo transports.Observable) {
+	err := w.Subscribe("file", "/tmp/test", func(fo transports.Observable) {
 		switch x := fo.(type) {
 		case *FileObservable:
-			defer wg.Done()
+			if readCount == 0 {
+				defer waitInitialRead.Done()
+			} else if readCount == 1 {
+				waitFileUpdate.Wait()
+				defer waitSecondRead.Done()
+			} else {
+				return
+			}
 			content, err := ioutil.ReadAll(x.File)
 			if err == nil {
 				res = append(res, string(content))
 			}
+			readCount++
 		default:
 		}
 	})
+	require.NoError(t, err)
 
-	// wait a second to ensure the callback was called already
-	time.AfterFunc(time.Duration(1*time.Millisecond), func() {
-		// change file content
-		mt := wt.mock.(*mock.Transport)
-		mt.Fs.Files["/tmp/test"].Content = "newtest"
-	})
+	waitInitialRead.Wait()
 
-	wg.Wait()
+	// change file content
+	mt := wt.mock.(*mock.Transport)
+	mt.Fs.Files["/tmp/test"].Content = "newtest"
+	waitFileUpdate.Done()
+
+	waitSecondRead.Wait()
 
 	assert.Equal(t, []string{"test", "newtest"}, res, "detect file change")
 
