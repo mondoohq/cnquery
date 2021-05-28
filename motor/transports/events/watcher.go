@@ -135,10 +135,7 @@ func (w *Watcher) Unsubscribe(typ string, id string) error {
 
 func (w *Watcher) unsubscribe(sid string) error {
 	// stop jobs in flight
-	err := w.jm.Delete(sid)
-	if err != nil {
-		return err
-	}
+	w.jm.Delete(sid)
 
 	// remove the subscription and un-register the jobs
 	w.subscriptions.Delete(sid)
@@ -149,7 +146,9 @@ func (w *Watcher) TearDown() error {
 	log.Debug().Msg("motor.watcher> teardown")
 	// remove all subscriptions
 	w.subscriptions.Range(func(k string, v *WatcherSubscription) bool {
-		w.unsubscribe(k)
+		if err := w.unsubscribe(k); err != nil {
+			log.Warn().Str("sub", k).Err(err).Msg("motor.watch> teardown unscribe failed")
+		}
 		return true
 	})
 

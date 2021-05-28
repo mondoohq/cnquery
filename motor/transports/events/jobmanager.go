@@ -156,10 +156,9 @@ func (jm *JobManager) GetJob(jobid string) (*Job, error) {
 	return job, nil
 }
 
-func (jm *JobManager) Delete(jobid string) error {
+func (jm *JobManager) Delete(jobid string) {
 	log.Debug().Str("jobid", jobid).Msg("motor.job> delete job")
 	jm.jobs.Delete(jobid)
-	return nil
 }
 
 func (jm *JobManager) Metrics() *JobManagerMetrics {
@@ -198,7 +197,7 @@ func (jm *JobManager) Serve() {
 	}()
 }
 
-func (jm *JobManager) Run(job *Job) error {
+func (jm *JobManager) Run(job *Job) {
 	log.Debug().Str("jobid", job.ID).Msg("motor.job> run job")
 	job.Metrics.RunAt = time.Now()
 
@@ -240,7 +239,6 @@ func (jm *JobManager) Run(job *Job) error {
 		subscriber(observable)
 	}
 
-	return nil
 }
 
 // nextJob looks for the oldest job and does that one first
