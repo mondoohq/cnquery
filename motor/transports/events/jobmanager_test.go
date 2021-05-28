@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
@@ -79,7 +80,7 @@ func TestJobDeletion(t *testing.T) {
 	assert.NotNil(t, job, "job could be retrieved")
 
 	// cancel the job
-	err = jm.Delete(jobid)
+	jm.Delete(jobid)
 	assert.Nil(t, err, "job could be deleted without any error")
 
 	// verify that the job is not there anymore
@@ -111,7 +112,7 @@ func TestCommandJob(t *testing.T) {
 
 	var res *CommandObservable
 	wg.Add(1)
-	jm.Schedule(&Job{
+	_, err := jm.Schedule(&Job{
 		ID:           "command-abc",
 		ScheduledFor: time.Now(),
 		Interval:     time.Duration(10 * time.Second),
@@ -130,6 +131,7 @@ func TestCommandJob(t *testing.T) {
 			},
 		},
 	})
+	require.NoError(t, err)
 
 	wg.Wait()
 
@@ -145,7 +147,7 @@ func TestFileJob(t *testing.T) {
 	path := "/tmp/test"
 	var res *FileObservable
 	wg.Add(1)
-	jm.Schedule(&Job{
+	_, err := jm.Schedule(&Job{
 		ID:           "file-abc",
 		ScheduledFor: time.Now(),
 		Interval:     time.Duration(10 * time.Second),
@@ -163,6 +165,7 @@ func TestFileJob(t *testing.T) {
 			},
 		},
 	})
+	require.NoError(t, err)
 	wg.Wait()
 	assert.Equal(t, path, res.File.Name(), "get the expected file")
 	assert.Equal(t, Modify, res.FileOp, "get the expected file event")
