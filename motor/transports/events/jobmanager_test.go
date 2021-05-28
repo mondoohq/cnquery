@@ -14,7 +14,7 @@ import (
 )
 
 func SetupTest() *JobManager {
-	filepath, _ := filepath.Abs("./watcher_test.toml")
+	filepath, _ := filepath.Abs("testdata/watcher_test.toml")
 	trans, _ := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: filepath})
 	return NewJobManager(trans)
 }
