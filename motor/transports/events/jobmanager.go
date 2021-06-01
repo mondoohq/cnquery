@@ -79,6 +79,7 @@ func (j *Job) isPending() bool {
 func NewJobManager(transport transports.Transport) *JobManager {
 	jm := &JobManager{transport: transport, jobs: &Jobs{}}
 	jm.jobSelectionMutex = &sync.Mutex{}
+	jm.quit = make(chan chan struct{})
 	jm.Serve()
 	return jm
 }
@@ -125,7 +126,7 @@ func (c *Jobs) Delete(k string) {
 
 type JobManager struct {
 	transport         transports.Transport
-	quit              chan bool
+	quit              chan chan struct{}
 	jobSelectionMutex *sync.Mutex
 	jobs              *Jobs
 	jobMetrics        JobManagerMetrics
@@ -169,11 +170,11 @@ func (jm *JobManager) Metrics() *JobManagerMetrics {
 // Serve creates a goroutine and runs jobs in the background
 func (jm *JobManager) Serve() {
 	// create a new channel and starte a new go routine
-	jm.quit = make(chan bool)
 	go func() {
 		for {
 			select {
-			case <-jm.quit:
+			case doneChan := <-jm.quit:
+				close(doneChan)
 				return
 			default:
 				// fetch job
@@ -277,5 +278,7 @@ func (jm *JobManager) nextJob() (*Job, error) {
 func (jm *JobManager) TearDown() {
 	log.Debug().Msg("motor.job> tear down")
 	// ensures the go routines are canceled
-	jm.quit <- true
+	done := make(chan struct{})
+	jm.quit <- done
+	<-done
 }

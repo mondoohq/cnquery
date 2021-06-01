@@ -26,7 +26,7 @@ func SetupWatcherTest() *WatcherTester {
 }
 
 func TeardownWatcherTest(wt *WatcherTester) {
-
+	wt.watcher.TearDown()
 }
 
 func TestCommandSubscribe(t *testing.T) {
