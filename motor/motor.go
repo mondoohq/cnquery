@@ -1,13 +1,14 @@
 package motor
 
 import (
+	"sync"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/events"
 	"go.mondoo.io/mondoo/motor/transports/local"
 	"go.mondoo.io/mondoo/motor/transports/mock"
-	"sync"
 )
 
 type MotorOption func(m *Motor)
@@ -111,6 +112,11 @@ func (m *Motor) Close() {
 	}
 	if m.Transport != nil {
 		m.Transport.Close()
+	}
+	if m.watcher != nil {
+		if err := m.watcher.TearDown(); err != nil {
+			log.Warn().Err(err).Msg("failed to tear down watcher")
+		}
 	}
 }
 
