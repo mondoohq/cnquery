@@ -1,16 +1,24 @@
 package sshd
 
 import (
-	"regexp"
 	"strings"
 )
 
 func Params(content string) (map[string]string, error) {
-	re := regexp.MustCompile("(?m:^([[:alnum:]]+)\\s+(.*))")
-	m := re.FindAllStringSubmatch(content, -1)
+	lines := strings.Split(content, "\n")
+
 	res := make(map[string]string)
-	for _, mm := range m {
-		k := mm[1]
+	for _, textLine := range lines {
+		l, err := ParseLine([]rune(textLine))
+		if err != nil {
+			return nil, err
+		}
+
+		k := l.key
+		if k == "" {
+			continue
+		}
+
 		// handle lower case entries and use proper ssh camel case
 		if sshKey, ok := SSH_Keywords[strings.ToLower(k)]; ok {
 			k = sshKey
@@ -18,11 +26,12 @@ func Params(content string) (map[string]string, error) {
 
 		// check if we have an entry already
 		if val, ok := res[k]; ok {
-			res[k] = val + "," + mm[2]
+			res[k] = val + "," + l.args
 		} else {
-			res[k] = mm[2]
+			res[k] = l.args
 		}
 	}
+
 	return res, nil
 }
 
