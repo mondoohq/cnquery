@@ -74,7 +74,7 @@ func (ssmi *SSMManagedInstances) getRegions() ([]string, error) {
 }
 
 func (ssmi *SSMManagedInstances) getInstances(account string, ec2InstancesFilters ec2InstancesFilters) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	var err error
 
 	regions := ec2InstancesFilters.regions
@@ -82,7 +82,7 @@ func (ssmi *SSMManagedInstances) getInstances(account string, ec2InstancesFilter
 		// user did not include a region filter, fetch em all
 		regions, err = ssmi.getRegions()
 		if err != nil {
-			return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
+			return []*jobpool.Job{{Err: err}} // return the error
 		}
 	}
 	log.Debug().Msgf("regions being called for ec2 instance list are: %v", regions)
@@ -146,7 +146,6 @@ func mapSmmManagedPingStateCode(pingStatus types.PingStatus) asset.State {
 const SsmPlatformLabel = "ssm.aws.mondoo.app/platform"
 
 func ssmInstanceToAsset(account string, region string, instance types.InstanceInformation, clonedConfig aws.Config) *asset.Asset {
-
 	connections := []*transports.TransportConfig{}
 
 	connections = append(connections, &transports.TransportConfig{
@@ -169,8 +168,10 @@ func ssmInstanceToAsset(account string, region string, instance types.InstanceIn
 	ec2svc := ec2.NewFromConfig(clonedConfig)
 	tagresp, err := ec2svc.DescribeTags(context.Background(), &ec2.DescribeTagsInput{
 		Filters: []ec2types.Filter{
-			{Name: aws.String("resource-id"),
-				Values: []string{*instance.InstanceId}},
+			{
+				Name:   aws.String("resource-id"),
+				Values: []string{*instance.InstanceId},
+			},
 		},
 	})
 
