@@ -161,6 +161,7 @@ func instanceToAsset(account string, region string, instance types.Instance, ssh
 			User:     sshUsername,
 			Host:     *instance.PublicIpAddress,
 			Insecure: insecure,
+			Runtime:  transports.RUNTIME_AWS_EC2,
 		}
 		connections = append(connections, connection)
 	}
@@ -196,9 +197,14 @@ func instanceToAsset(account string, region string, instance types.Instance, ssh
 	return asset
 }
 
+const (
+	ImageIdLabel string = "mondoo.app/ami-id"
+	RegionLabel  string = "mondoo.app/region"
+)
+
 func addAssetLabels(labels map[string]string, instance types.Instance, region string) map[string]string {
 	// fetch aws specific metadata
-	labels["mondoo.app/region"] = region
+	labels[RegionLabel] = region
 	if instance.InstanceId != nil {
 		labels["mondoo.app/instance"] = *instance.InstanceId
 	}
@@ -209,7 +215,7 @@ func addAssetLabels(labels map[string]string, instance types.Instance, region st
 		labels["mondoo.app/public-ip"] = *instance.PublicIpAddress
 	}
 	if instance.ImageId != nil {
-		labels["mondoo.app/ami-id"] = *instance.ImageId
+		labels[ImageIdLabel] = *instance.ImageId
 	}
 	return labels
 }
