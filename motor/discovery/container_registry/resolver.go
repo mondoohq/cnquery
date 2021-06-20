@@ -2,9 +2,10 @@ package container_registry
 
 import (
 	"errors"
+	"strings"
+
 	"github.com/google/go-containerregistry/pkg/name"
 	"go.mondoo.io/mondoo/motor/platform"
-	"strings"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
@@ -39,7 +40,9 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 	resolved := []*asset.Asset{}
 
 	// check if the reference is an image
-	_, err := name.ParseReference(tc.Host, name.WeakValidation)
+	// NOTE: we use strict validation here otherwise urls like cr://index.docker.io/mondoolabs/mondoo are converted
+	// to index.docker.io/mondoolabs/mondoo:latest
+	_, err := name.ParseReference(tc.Host, name.StrictValidation)
 	if err == nil {
 		log.Debug().Str("image", tc.Host).Msg("detected container image in registry")
 		// TODO: sync implementation with docker resolver image
