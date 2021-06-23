@@ -1278,6 +1278,21 @@ aws {
   regions() []string
 }
 
+// AWS Access Analyzer helps identify resources that are shared with an external entity
+aws.accessAnalyzer {
+  // list of AWS IAM access analyzers
+  analyzers() []aws.accessanalyzer.analyzer
+}
+
+aws.accessanalyzer.analyzer {
+  // ARN for the analyzer
+  arn string
+  // name for the analyzer
+  name string
+  // status of the analyzer
+  status string
+}
+
 // AWS account information
 aws.account {
   // Account Id
@@ -1329,6 +1344,8 @@ aws.iam {
   accountSummary() map[string]int
   // list of virtual mfs devices associated with the account
   virtualMfaDevices() []aws.iam.virtualmfadevice
+  // list of server certificates stored in IAM
+  serverCertificates() []dict
 }
 
 // Entry in AWS IAM credential report
@@ -1409,6 +1426,8 @@ aws.iam.user {
   attachedPolicies() []aws.iam.policy
   // list of group ARNs that the user belongs to
   groups() []string
+  // list of access keys metadata associated with the user
+  accessKeys() []dict
 }
 
 // AWS IAM Policy
