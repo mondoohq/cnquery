@@ -1,6 +1,7 @@
 package aws
 
 import (
+	accessanalyzer "github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
@@ -485,6 +486,30 @@ func (t *Transport) Redshift(region string) *redshift.Client {
 	cfg := t.config.Copy()
 	cfg.Region = region
 	client := redshift.NewFromConfig(cfg)
+
+	// cache it
+	t.cache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *Transport) AccessAnalyzer(region string) *accessanalyzer.Client {
+	// if no region value is sent in, use the configured region
+	if len(region) == 0 {
+		region = t.config.Region
+	}
+	cacheVal := "_accessanalyzer_" + region
+	log.Info().Msgf("calling access analyzer with region %s ", region)
+	// check for cached client and return it if it exists
+	c, ok := t.cache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached access analyzer client")
+		return c.Data.(*accessanalyzer.Client)
+	}
+
+	// create the client
+	cfg := t.config.Copy()
+	cfg.Region = region
+	client := accessanalyzer.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})

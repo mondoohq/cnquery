@@ -24,6 +24,37 @@ func (p *lumiAwsIam) id() (string, error) {
 	return "aws.iam", nil
 }
 
+func (c *lumiAwsIam) GetServerCertificates() ([]interface{}, error) {
+	at, err := awstransport(c.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.Iam("")
+	ctx := context.Background()
+	var marker *string
+	res := []interface{}{}
+
+	for {
+		certsResp, err := svc.ListServerCertificates(ctx, &iam.ListServerCertificatesInput{Marker: marker})
+		if err != nil {
+			return nil, err
+		}
+		if len(certsResp.ServerCertificateMetadataList) > 0 {
+			certs, err := jsonToDictSlice(certsResp.ServerCertificateMetadataList)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, certs)
+		}
+		if !certsResp.IsTruncated {
+			break
+		}
+		marker = certsResp.Marker
+	}
+	return res, nil
+}
+
 func (c *lumiAwsIam) GetCredentialReport() ([]interface{}, error) {
 	at, err := awstransport(c.Runtime.Motor.Transport)
 	if err != nil {
@@ -734,6 +765,44 @@ func (p *lumiAwsIamUser) init(args *lumi.Args) (*lumi.Args, AwsIamUser, error) {
 
 func (u *lumiAwsIamUser) id() (string, error) {
 	return u.Arn()
+}
+
+func (u *lumiAwsIamUser) GetAccessKeys() ([]interface{}, error) {
+	at, err := awstransport(u.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.Iam("")
+	ctx := context.Background()
+
+	username, err := u.Name()
+	if err != nil {
+		return nil, err
+	}
+
+	var marker *string
+	res := []interface{}{}
+	for {
+		keysResp, err := svc.ListAccessKeys(ctx, &iam.ListAccessKeysInput{
+			UserName: &username,
+			Marker:   marker,
+		})
+		if err != nil {
+			return nil, err
+		}
+		metadata, err := jsonToDictSlice(keysResp.AccessKeyMetadata)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, metadata)
+		if !keysResp.IsTruncated {
+			break
+		}
+		marker = keysResp.Marker
+	}
+
+	return res, nil
 }
 
 func (u *lumiAwsIamUser) GetPolicies() ([]interface{}, error) {
