@@ -62,7 +62,7 @@ func (ec2i *Ec2Instances) getRegions() ([]string, error) {
 }
 
 func (ec2i *Ec2Instances) getInstances(account string, ec2InstancesFilters ec2InstancesFilters) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	var err error
 
 	regions := ec2InstancesFilters.regions
@@ -70,7 +70,7 @@ func (ec2i *Ec2Instances) getInstances(account string, ec2InstancesFilters ec2In
 		// user did not include a region filter, fetch em all
 		regions, err = ec2i.getRegions()
 		if err != nil {
-			return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
+			return []*jobpool.Job{{Err: err}} // return the error
 		}
 	}
 	log.Debug().Msgf("regions being called for ec2 instance list are: %v", regions)
@@ -151,7 +151,6 @@ func (ec2i *Ec2Instances) List() ([]*asset.Asset, error) {
 }
 
 func instanceToAsset(account string, region string, instance types.Instance, sshUsername string, insecure bool, ssmInstancesPlatformIdsMap map[string]*asset.Asset) *asset.Asset {
-
 	connections := []*transports.TransportConfig{}
 
 	var connection *transports.TransportConfig
