@@ -115,9 +115,9 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 		}
 
 		// we may want to pass a specific user, otherwise it will fallback to ssh config
-		ec2User, ok := tc.Options["ec2user"]
+		sshUser, ok := tc.Options["ssh-user"]
 		if ok {
-			r.InstanceSSHUsername = ec2User
+			r.InstanceSSHUsername = sshUser
 		}
 		r.Insecure = tc.Insecure
 
