@@ -9,6 +9,7 @@ import (
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	gcp_transport "go.mondoo.io/mondoo/motor/transports/gcp"
+	"google.golang.org/api/compute/v1"
 )
 
 const (
@@ -91,7 +92,7 @@ func (r *GcrResolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, er
 type GcpResolver struct{}
 
 func (k *GcpResolver) Name() string {
-	return "GCP Compute Resolver"
+	return "GCP Resolver"
 }
 
 func (r *GcpResolver) AvailableDiscoveryTargets() []string {
@@ -112,6 +113,8 @@ func (r *GcpResolver) ParseConnectionURL(url string, opts ...transports.Transpor
 		}
 		config.Project = projectid
 	}
+
+	log.Debug().Str("project", config.Project).Msg("selected gcp project")
 
 	// add gcp api as asset
 	t := &transports.TransportConfig{
@@ -157,7 +160,12 @@ func (r *GcpResolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, e
 
 	// discover compute instances
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {
-		compute := NewCompute()
+		client, err := trans.Client(compute.ComputeReadonlyScope)
+		if err != nil {
+			return nil, errors.Wrap(err, "use `gcloud auth application-default login` to authenticate locally")
+		}
+
+		compute := NewCompute(client)
 
 		// we may want to pass a specific user, otherwise it will fallback to ssh config
 		if len(tc.User) > 0 {

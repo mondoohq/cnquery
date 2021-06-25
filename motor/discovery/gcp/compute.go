@@ -2,8 +2,11 @@ package gcp
 
 import (
 	"context"
+	"net/http"
 	"strconv"
 	"sync"
+
+	"google.golang.org/api/option"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
@@ -13,11 +16,14 @@ import (
 	"google.golang.org/api/compute/v1"
 )
 
-func NewCompute() *Compute {
-	return &Compute{}
+func NewCompute(client *http.Client) *Compute {
+	return &Compute{
+		client: client,
+	}
 }
 
 type Compute struct {
+	client *http.Client
 	// NOTE: is empty by default since we read the username from ssh config
 	// this would force a specific user
 	InstanceSSHUsername string
@@ -29,7 +35,7 @@ func (a *Compute) Name() string {
 
 // TODO: try to auto-detect the current project, otherwise return an error
 func (a *Compute) ListInstancesInProject(project string) ([]*asset.Asset, error) {
-	svc, err := compute.NewService(context.Background())
+	svc, err := compute.NewService(context.Background(), option.WithHTTPClient(a.client))
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +71,7 @@ func (a *Compute) ListInstancesInProject(project string) ([]*asset.Asset, error)
 
 func (a *Compute) ListInstances() ([]*asset.Asset, error) {
 	ctx := context.Background()
-	svc, err := compute.NewService(ctx)
+	svc, err := compute.NewService(ctx, option.WithHTTPClient(a.client))
 	if err != nil {
 		return nil, err
 	}
