@@ -5,8 +5,6 @@ import (
 	"strings"
 
 	"github.com/google/go-containerregistry/pkg/name"
-	"go.mondoo.io/mondoo/motor/platform"
-
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/transports"
@@ -39,32 +37,27 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
+	imageFetcher := NewContainerRegistry()
+	// to support self-signed certs
+	imageFetcher.Insecure = tc.Insecure
+
 	// check if the reference is an image
 	// NOTE: we use strict validation here otherwise urls like cr://index.docker.io/mondoolabs/mondoo are converted
 	// to index.docker.io/mondoolabs/mondoo:latest
-	_, err := name.ParseReference(tc.Host, name.StrictValidation)
+	ref, err := name.ParseReference(tc.Host, name.StrictValidation)
 	if err == nil {
-		log.Debug().Str("image", tc.Host).Msg("detected container image in registry")
-		// TODO: sync implementation with docker resolver image
-		tc.Backend = transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY
-		resolved = append(resolved, &asset.Asset{
-			Name: tc.Host,
-			// PlatformIDs: []string{}, // we cannot determine the id here
-			Connections: []*transports.TransportConfig{tc},
-			Platform: &platform.Platform{
-				Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
-				Runtime: transports.RUNTIME_DOCKER_REGISTRY,
-			},
-		})
-		return resolved, nil
+		log.Debug().Str("image", tc.Host).Msg("detected container image in container registry")
+
+		a, err := imageFetcher.GetImage(ref)
+		if err != nil {
+			return nil, err
+		}
+		return []*asset.Asset{a}, nil
 	}
 
 	// okay, no image, lets check the repository
 	repository := tc.Host
-	log.Info().Str("registry", repository).Msg("fetch meta information from docker registry")
-	imageFetcher := NewDockerRegistryImages()
-	// to support self-signed certs
-	imageFetcher.Insecure = tc.Insecure
+	log.Info().Str("registry", repository).Msg("fetch meta information from container registry")
 
 	assetList, err := imageFetcher.ListImages(repository)
 	if err != nil {

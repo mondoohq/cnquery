@@ -21,48 +21,12 @@ import (
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
-func NewDockerRegistryImages() *DockerRegistryImages {
+func NewContainerRegistry() *DockerRegistryImages {
 	return &DockerRegistryImages{}
 }
 
 type DockerRegistryImages struct {
 	Insecure bool
-}
-
-func (a *DockerRegistryImages) Repositories(reg name.Registry) ([]string, error) {
-	n := 100
-	last := ""
-	var res []string
-	for {
-		page, err := remote.CatalogPage(reg, last, n, a.remoteOptions()...)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(page) > 0 {
-			last = page[len(page)-1]
-			res = append(res, page...)
-		}
-
-		if len(page) < n {
-			break
-		}
-	}
-
-	return res, nil
-}
-
-func (a *DockerRegistryImages) Digest(r string) (string, error) {
-	ref, err := name.ParseReference(r)
-	if err != nil {
-		return "", fmt.Errorf("parsing reference %q: %v", r, err)
-	}
-
-	desc, err := remote.Get(ref, a.remoteOptions()...)
-	if err != nil {
-		return "", err
-	}
-	return desc.Digest.String(), nil
 }
 
 func (a *DockerRegistryImages) remoteOptions() []remote.Option {
@@ -93,34 +57,27 @@ func (a *DockerRegistryImages) remoteOptions() []remote.Option {
 	return options
 }
 
-func (a *DockerRegistryImages) Tags(repo name.Repository) ([]string, error) {
-	return remote.List(repo, a.remoteOptions()...)
-}
-
-// Repository reads information about a specific repo and returns its entry digests with related tags
-func (a *DockerRegistryImages) Repository(repo name.Repository) (map[string][]string, error) {
-	tags, err := a.Tags(repo)
-	if err != nil {
-		return nil, err
-	}
-
-	digestsImgs := map[string][]string{}
-
-	for i := range tags {
-		repoWithTag := repo.Name() + ":" + tags[i]
-		digest, err := a.Digest(repoWithTag)
-		log.Debug().Str("repo", repo.Name()).Str("tag", tags[i]).Msg("discovered image with tag")
+func (a *DockerRegistryImages) Repositories(reg name.Registry) ([]string, error) {
+	n := 100
+	last := ""
+	var res []string
+	for {
+		page, err := remote.CatalogPage(reg, last, n, a.remoteOptions()...)
 		if err != nil {
 			return nil, err
 		}
-		_, ok := digestsImgs[digest]
-		if !ok {
-			digestsImgs[digest] = []string{repoWithTag}
-		} else {
-			digestsImgs[digest] = append(digestsImgs[digest], repoWithTag)
+
+		if len(page) > 0 {
+			last = page[len(page)-1]
+			res = append(res, page...)
+		}
+
+		if len(page) < n {
+			break
 		}
 	}
-	return digestsImgs, nil
+
+	return res, nil
 }
 
 // ListRegistry tries to iterate over all repositores in one registry
@@ -141,19 +98,12 @@ func (a *DockerRegistryImages) ListRegistry(registry string) ([]*asset.Asset, er
 		repoName := reg.RegistryStr() + "/" + repos[i]
 		log.Debug().Str("repository", repoName).Msg("discovered repository")
 
-		repo, err := name.NewRepository(repoName)
+		// iterate over all repository digests
+		repoImages, err := a.ListRepository(repoName)
 		if err != nil {
 			return nil, err
 		}
-
-		digests, err := a.Repository(repo)
-		if err != nil {
-			return nil, err
-		}
-		for imgDigest := range digests {
-			tags := digests[imgDigest]
-			assets = append(assets, a.toAsset(repoName, imgDigest, tags))
-		}
+		assets = append(assets, repoImages...)
 	}
 
 	return assets, nil
@@ -172,13 +122,22 @@ func (a *DockerRegistryImages) ListRepository(repoName string) ([]*asset.Asset, 
 		return nil, err
 	}
 
-	digests, err := a.Repository(repo)
-	if err != nil {
-		return nil, err
-	}
-	for imgDigest := range digests {
-		tags := digests[imgDigest]
-		assets = append(assets, a.toAsset(repoName, imgDigest, tags))
+	// fetch tags
+	tags, err := remote.List(repo, a.remoteOptions()...)
+
+	for i := range tags {
+		repoWithTag := repo.Name() + ":" + tags[i]
+
+		ref, err := name.ParseReference(repoWithTag)
+		if err != nil {
+			return nil, fmt.Errorf("parsing reference %q: %v", repoWithTag, err)
+		}
+
+		a, err := a.toAsset(ref)
+		if err != nil {
+			return nil, err
+		}
+		assets = append(assets, a)
 	}
 	return assets, nil
 }
@@ -199,7 +158,17 @@ func (a *DockerRegistryImages) ListImages(repoName string) ([]*asset.Asset, erro
 	}
 }
 
-func (a *DockerRegistryImages) toAsset(repoName string, imgDigest string, tags []string) *asset.Asset {
+func (a *DockerRegistryImages) GetImage(ref name.Reference) (*asset.Asset, error) {
+	return a.toAsset(ref)
+}
+
+func (a *DockerRegistryImages) toAsset(ref name.Reference) (*asset.Asset, error) {
+	desc, err := remote.Get(ref, a.remoteOptions()...)
+	if err != nil {
+		return nil, err
+	}
+	imgDigest := desc.Digest.String()
+	repoName := ref.Name()
 	imageUrl := repoName + "@" + imgDigest
 	asset := &asset.Asset{
 		PlatformIds: []string{docker_engine.MondooContainerImageID(imgDigest)},
@@ -222,13 +191,15 @@ func (a *DockerRegistryImages) toAsset(repoName string, imgDigest string, tags [
 	asset.Labels["docker.io/digest"] = imgDigest
 
 	// store repo tags
-	asset.Labels["docker.io/tags"] = strings.Join(tags, ",")
+	// asset.Labels["docker.io/tags"] = strings.Join(tags, ",")
+
+	log.Debug().Strs("platform-ids", asset.PlatformIds).Msg("asset platform ids")
 
 	// store repo digest
 	// NOTE: based on the current api, this case cannot happen
 	// repoDigests := []string{repoURL + "@" + digest}
 	// asset.Labels["docker.io/repo-digests"] = strings.Join(repoDigests, ",")
-	return asset
+	return asset, nil
 }
 
 func ShortContainerImageID(id string) string {
