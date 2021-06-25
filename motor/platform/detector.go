@@ -2,9 +2,10 @@ package platform
 
 import (
 	"errors"
+	"runtime"
+
 	"go.mondoo.io/mondoo/motor/transports/equinix"
 	"go.mondoo.io/mondoo/motor/transports/local"
-	"runtime"
 
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/arista"
@@ -57,7 +58,6 @@ func (d *Detector) Platform() (*Platform, error) {
 		}
 		return VspherePlatform(pt, identifier)
 	case *arista.Transport:
-
 		v, err := pt.GetVersion()
 		if err != nil {
 			return nil, errors.New("cannot determine arista version")
@@ -83,7 +83,7 @@ func (d *Detector) Platform() (*Platform, error) {
 			Name:    "gcp",
 			Title:   "Google Cloud Platform",
 			Kind:    transports.Kind_KIND_API,
-			Runtime: transports.RUNTIME_AWS,
+			Runtime: transports.RUNTIME_GCP,
 		}, nil
 	case *azure.Transport:
 		return &Platform{
