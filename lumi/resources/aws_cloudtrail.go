@@ -57,17 +57,6 @@ func (t *lumiAwsCloudtrail) getTrails() []*jobpool.Job {
 			for i := range trailsResp.TrailList {
 				trail := trailsResp.TrailList[i]
 
-				// trail.S3BucketName
-				var s3Bucket interface{}
-				if trail.S3BucketName != nil {
-					lumiAwsS3Bucket, err := t.Runtime.CreateResource("aws.s3.bucket",
-						"name", toString(trail.S3BucketName),
-					)
-					if err != nil {
-						return nil, err
-					}
-					s3Bucket = lumiAwsS3Bucket
-				}
 				// only include trail if this region is the home region for the trail
 				// we do this to avoid getting duped results from multiregion trails
 				if regionVal != toString(trail.HomeRegion) {
@@ -81,10 +70,22 @@ func (t *lumiAwsCloudtrail) getTrails() []*jobpool.Job {
 					"isOrganizationTrail", toBool(trail.IsOrganizationTrail),
 					"logFileValidationEnabled", toBool(trail.LogFileValidationEnabled),
 					"includeGlobalServiceEvents", toBool(trail.IncludeGlobalServiceEvents),
-					"s3bucket", s3Bucket,
 					"snsTopicARN", toString(trail.SnsTopicARN),
 					"cloudWatchLogsRoleArn", toString(trail.CloudWatchLogsRoleArn),
 					"region", toString(trail.HomeRegion),
+				}
+
+				// trail.S3BucketName
+				if trail.S3BucketName != nil {
+					lumiAwsS3Bucket, err := t.Runtime.CreateResource("aws.s3.bucket",
+						"name", toString(trail.S3BucketName),
+					)
+					if err != nil {
+						return nil, err
+					}
+					s3Bucket := lumiAwsS3Bucket.(AwsS3Bucket)
+					args = append(args, "s3bucket", s3Bucket)
+
 				}
 
 				// add kms key if there is one
@@ -105,7 +106,8 @@ func (t *lumiAwsCloudtrail) getTrails() []*jobpool.Job {
 					if err != nil {
 						return nil, err
 					}
-					args = append(args, "logGroup", lumiLoggroup)
+					lumiLog := lumiLoggroup.(AwsCloudwatchLoggroup)
+					args = append(args, "logGroup", lumiLog)
 				}
 
 				lumiAwsCloudtrailTrail, err := t.Runtime.CreateResource("aws.cloudtrail.trail", args...)
@@ -120,6 +122,15 @@ func (t *lumiAwsCloudtrail) getTrails() []*jobpool.Job {
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+func (s *lumiAwsCloudtrailTrail) GetS3bucket() (interface{}, error) {
+	// no s3 bucket on the trail object
+	return nil, nil
+}
+
+func (s *lumiAwsCloudtrailTrail) GetLogGroup() (interface{}, error) {
+	// no log group on the trail object
+	return nil, nil
 }
 
 func (s *lumiAwsCloudtrailTrail) GetKmsKey() (interface{}, error) {

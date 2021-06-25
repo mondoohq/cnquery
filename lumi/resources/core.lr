@@ -1859,13 +1859,13 @@ aws.cloudtrail.trail {
   // true if api calls from global services are included
   includeGlobalServiceEvents bool
   // s3 bucket where trail files are delivered
-  s3bucket aws.s3.bucket
+  s3bucket() aws.s3.bucket
   // ARN of the SNS topic that the trail uses to send notifications
   snsTopicARN string
   // JSON list of information about the trail
   status() dict
   // log group to which trail files will be delivered
-  logGroup aws.cloudwatch.loggroup
+  logGroup() aws.cloudwatch.loggroup
   // role for logs endpoint to assume when writing to log group
   cloudWatchLogsRoleArn string
   // settings for the trail's configured event selectors
