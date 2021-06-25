@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/aws/smithy-go"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/awspolicy"
@@ -138,6 +139,16 @@ func (p *lumiAwsS3Bucket) GetPolicy() (interface{}, error) {
 	policy, err := svc.GetBucketPolicy(ctx, &s3.GetBucketPolicyInput{
 		Bucket: &bucketname,
 	})
+	var res interface{}
+	if err != nil {
+		var ae smithy.APIError
+		if errors.As(err, &ae) {
+			if ae.ErrorCode() == "NoSuchBucketPolicy" {
+				return res, nil
+			}
+		}
+		return nil, err
+	}
 	if err != nil {
 		var notFoundErr *types.NotFound
 		if errors.As(err, &notFoundErr) {
@@ -558,10 +569,13 @@ func (p *lumiAwsS3Bucket) GetEncryption() (interface{}, error) {
 	encryption, err := svc.GetBucketEncryption(ctx, &s3.GetBucketEncryptionInput{
 		Bucket: &bucketname,
 	})
+	var res interface{}
 	if err != nil {
-		var notFoundErr *types.NotFound
-		if errors.As(err, &notFoundErr) {
-			return nil, nil
+		var ae smithy.APIError
+		if errors.As(err, &ae) {
+			if ae.ErrorCode() == "ServerSideEncryptionConfigurationNotFoundError" {
+				return res, nil
+			}
 		}
 		return nil, err
 	}
