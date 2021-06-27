@@ -27,6 +27,8 @@ type Compute struct {
 	// NOTE: is empty by default since we read the username from ssh config
 	// this would force a specific user
 	InstanceSSHUsername string
+
+	Insecure bool
 }
 
 func (a *Compute) Name() string {
@@ -151,9 +153,10 @@ func (a *Compute) instancesPerZone(svc *compute.Service, project string, zone st
 				if len(iface.AccessConfigs[ac].NatIP) > 0 {
 					log.Debug().Str("instance", instance.Name).Str("ip", iface.AccessConfigs[ac].NatIP).Msg("found public ip")
 					connections = append(connections, &transports.TransportConfig{
-						Backend: transports.TransportBackend_CONNECTION_SSH,
-						User:    a.InstanceSSHUsername,
-						Host:    iface.AccessConfigs[ac].NatIP,
+						Backend:  transports.TransportBackend_CONNECTION_SSH,
+						User:     a.InstanceSSHUsername,
+						Host:     iface.AccessConfigs[ac].NatIP,
+						Insecure: a.Insecure,
 					})
 				}
 			}

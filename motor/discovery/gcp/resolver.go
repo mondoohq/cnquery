@@ -117,16 +117,20 @@ func (r *GcpResolver) ParseConnectionURL(url string, opts ...transports.Transpor
 	log.Debug().Str("project", config.Project).Msg("selected gcp project")
 
 	// add gcp api as asset
-	t := &transports.TransportConfig{
+	tc := &transports.TransportConfig{
 		Backend: transports.TransportBackend_CONNECTION_GCP,
-		User:    config.User,
 		Options: map[string]string{
 			// TODO: support organization scanning as well
-			"project": config.Project,
+			"ssh-user": config.User,
+			"project":  config.Project,
 		},
 	}
 
-	return t, nil
+	for i := range opts {
+		opts[i](tc)
+	}
+
+	return tc, nil
 }
 
 func (r *GcpResolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {
@@ -168,9 +172,11 @@ func (r *GcpResolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, e
 		compute := NewCompute(client)
 
 		// we may want to pass a specific user, otherwise it will fallback to ssh config
-		if len(tc.User) > 0 {
-			compute.InstanceSSHUsername = tc.User
+		sshUser, ok := tc.Options["ssh-user"]
+		if ok {
+			compute.InstanceSSHUsername = sshUser
 		}
+		compute.Insecure = tc.Insecure
 
 		assetList, err := compute.ListInstancesInProject(project)
 		if err != nil {
