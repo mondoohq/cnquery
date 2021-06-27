@@ -1,9 +1,10 @@
 package ssh
 
 import (
-	"github.com/cockroachdb/errors"
 	"net"
 	"os"
+
+	"github.com/cockroachdb/errors"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -39,6 +40,10 @@ func New(endpoint *transports.TransportConfig) (*SSHTransport, error) {
 	if endpoint.Sudo != nil && endpoint.Sudo.Active {
 		log.Debug().Msg("activated sudo for ssh connection")
 		s = cmd.NewSudo()
+	}
+
+	if endpoint.Insecure {
+		log.Debug().Msg("user allowed insecure ssh connection")
 	}
 
 	t := &SSHTransport{
