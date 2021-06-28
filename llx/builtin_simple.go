@@ -33,11 +33,61 @@ func boolOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(int
 	if bind.Value == nil {
 		return BoolData(v.Value == nil), 0, nil
 	}
-	if v == nil || v.Value == nil {
+	if v.Value == nil {
 		return BoolData(false), 0, nil
 	}
 
 	return BoolData(f(bind.Value, v.Value)), 0, nil
+}
+
+// boolOrOp behaves like boolOp, but checks if the left argument is true first
+// (and stop if it is). Only then proceeds to check the right argument.
+func boolOrOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, fLeft func(interface{}) bool, fRight func(interface{}) bool) (*RawData, int32, error) {
+	if bind.Value != nil && fLeft(bind.Value) {
+		return BoolData(true), 0, nil
+	}
+
+	v, dref, err := c.resolveValue(chunk.Function.Args[0], ref)
+	if err != nil {
+		return nil, 0, err
+	}
+	if dref != 0 {
+		return nil, dref, nil
+	}
+
+	if bind.Value == nil {
+		return BoolData(v.Value == nil), 0, nil
+	}
+	if v.Value == nil {
+		return BoolData(false), 0, nil
+	}
+
+	return BoolData(fRight(v.Value)), 0, nil
+}
+
+// boolAndOp behaves like boolOp, but checks if the left argument is false first
+// (and stop if it is). Only then proceeds to check the right argument.
+func boolAndOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, fLeft func(interface{}) bool, fRight func(interface{}) bool) (*RawData, int32, error) {
+	if bind.Value != nil && !fLeft(bind.Value) {
+		return BoolData(false), 0, nil
+	}
+
+	v, dref, err := c.resolveValue(chunk.Function.Args[0], ref)
+	if err != nil {
+		return nil, 0, err
+	}
+	if dref != 0 {
+		return nil, dref, nil
+	}
+
+	if bind.Value == nil {
+		return BoolData(v.Value == nil), 0, nil
+	}
+	if v.Value == nil {
+		return BoolData(false), 0, nil
+	}
+
+	return BoolData(fRight(v.Value)), 0, nil
 }
 
 func rawboolNotOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(*RawData, *RawData) bool) (*RawData, int32, error) {
@@ -1106,238 +1156,158 @@ func stringGTEInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 
 // T &&/|| T
 
-func opBoolAndBool(left interface{}, right interface{}) bool {
-	return left.(bool) && right.(bool)
+func truthyBool(val interface{}) bool {
+	return val.(bool)
+}
+
+func truthyInt(val interface{}) bool {
+	return val.(int64) != 0
+}
+
+func truthyFloat(val interface{}) bool {
+	return val.(float64) != 0
+}
+
+func truthyString(val interface{}) bool {
+	return val.(string) != ""
+}
+
+func truthyArray(val interface{}) bool {
+	return true
+}
+
+func truthyMap(val interface{}) bool {
+	return true
 }
 
 func boolAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opBoolAndBool)
-}
-
-func opBoolOrBool(left interface{}, right interface{}) bool {
-	return left.(bool) || right.(bool)
+	return boolAndOp(c, bind, chunk, ref, truthyBool, truthyBool)
 }
 
 func boolOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opBoolOrBool)
-}
-
-func opIntAndInt(left interface{}, right interface{}) bool {
-	return (left.(int64) != 0) && (right.(int64) != 0)
+	return boolOrOp(c, bind, chunk, ref, truthyBool, truthyBool)
 }
 
 func intAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opIntAndInt)
-}
-
-func opIntOrInt(left interface{}, right interface{}) bool {
-	return (left.(int64) != 0) || (right.(int64) != 0)
+	return boolAndOp(c, bind, chunk, ref, truthyInt, truthyInt)
 }
 
 func intOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opIntOrInt)
-}
-
-func opFloatAndFloat(left interface{}, right interface{}) bool {
-	return (left.(float64) != 0) && (right.(float64) != 0)
+	return boolOrOp(c, bind, chunk, ref, truthyInt, truthyInt)
 }
 
 func floatAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opFloatAndFloat)
-}
-
-func opFloatOrFloat(left interface{}, right interface{}) bool {
-	return (left.(float64) != 0) || (right.(float64) != 0)
+	return boolAndOp(c, bind, chunk, ref, truthyFloat, truthyFloat)
 }
 
 func floatOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opFloatOrFloat)
-}
-
-func opStringAndString(left interface{}, right interface{}) bool {
-	return (left.(string) != "") && (right.(string) != "")
+	return boolOrOp(c, bind, chunk, ref, truthyFloat, truthyFloat)
 }
 
 func stringAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringAndString)
-}
-
-func opStringOrString(left interface{}, right interface{}) bool {
-	return (left.(string) != "") || (right.(string) != "")
+	return boolAndOp(c, bind, chunk, ref, truthyString, truthyString)
 }
 
 func stringOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringOrString)
+	return boolOrOp(c, bind, chunk, ref, truthyString, truthyString)
 }
 
 func regexAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringAndString)
+	return boolAndOp(c, bind, chunk, ref, truthyString, truthyString)
 }
 
 func regexOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringOrString)
-}
-
-func opArrayAndArray(left interface{}, right interface{}) bool {
-	return (len(left.([]interface{})) != 0) && (len(right.([]interface{})) != 0)
+	return boolOrOp(c, bind, chunk, ref, truthyString, truthyString)
 }
 
 func arrayAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opArrayAndArray)
-}
-
-func opArrayOrArray(left interface{}, right interface{}) bool {
-	return (len(left.([]interface{})) != 0) || (len(right.([]interface{})) != 0)
+	return boolAndOp(c, bind, chunk, ref, truthyArray, truthyArray)
 }
 
 func arrayOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opArrayOrArray)
+	return boolOrOp(c, bind, chunk, ref, truthyArray, truthyArray)
 }
 
 // bool &&/|| T
 
-func opBoolAndInt(left interface{}, right interface{}) bool {
-	return left.(bool) && (right.(int64) != 0)
-}
-
-func opIntAndBool(left interface{}, right interface{}) bool {
-	return right.(bool) && (left.(int64) != 0)
-}
-
-func opBoolOrInt(left interface{}, right interface{}) bool {
-	return left.(bool) || (right.(int64) != 0)
-}
-
-func opIntOrBool(left interface{}, right interface{}) bool {
-	return right.(bool) || (left.(int64) != 0)
-}
-
 func boolAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opBoolAndInt)
+	return boolAndOp(c, bind, chunk, ref, truthyBool, truthyInt)
 }
 
 func boolOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opBoolOrInt)
+	return boolOrOp(c, bind, chunk, ref, truthyBool, truthyInt)
 }
 
 func intAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opIntAndBool)
+	return boolAndOp(c, bind, chunk, ref, truthyInt, truthyBool)
 }
 
 func intOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opIntOrBool)
-}
-
-func opBoolAndFloat(left interface{}, right interface{}) bool {
-	return left.(bool) && (right.(float64) != 0)
-}
-
-func opFloatAndBool(left interface{}, right interface{}) bool {
-	return right.(bool) && (left.(float64) != 0)
-}
-
-func opBoolOrFloat(left interface{}, right interface{}) bool {
-	return left.(bool) || (right.(float64) != 0)
-}
-
-func opFloatOrBool(left interface{}, right interface{}) bool {
-	return right.(bool) || (left.(float64) != 0)
+	return boolOrOp(c, bind, chunk, ref, truthyInt, truthyBool)
 }
 
 func boolAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opBoolAndFloat)
+	return boolAndOp(c, bind, chunk, ref, truthyBool, truthyFloat)
 }
 
 func boolOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opBoolOrFloat)
+	return boolOrOp(c, bind, chunk, ref, truthyBool, truthyFloat)
 }
 
 func floatAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opFloatAndBool)
+	return boolAndOp(c, bind, chunk, ref, truthyFloat, truthyBool)
 }
 
 func floatOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opFloatOrBool)
-}
-
-func opBoolAndString(left interface{}, right interface{}) bool {
-	return left.(bool) && (right.(string) != "")
-}
-
-func opStringAndBool(left interface{}, right interface{}) bool {
-	return right.(bool) && (left.(string) != "")
-}
-
-func opBoolOrString(left interface{}, right interface{}) bool {
-	return left.(bool) || (right.(string) != "")
-}
-
-func opStringOrBool(left interface{}, right interface{}) bool {
-	return right.(bool) || (left.(string) != "")
+	return boolOrOp(c, bind, chunk, ref, truthyFloat, truthyBool)
 }
 
 func boolAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opBoolAndString)
+	return boolAndOp(c, bind, chunk, ref, truthyBool, truthyString)
 }
 
 func boolOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opBoolOrString)
+	return boolOrOp(c, bind, chunk, ref, truthyBool, truthyString)
 }
 
 func stringAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringAndBool)
+	return boolAndOp(c, bind, chunk, ref, truthyString, truthyBool)
 }
 
 func stringOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringOrBool)
+	return boolOrOp(c, bind, chunk, ref, truthyString, truthyBool)
 }
 
 func boolAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opBoolAndString)
+	return boolAndOp(c, bind, chunk, ref, truthyBool, truthyString)
 }
 
 func boolOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opBoolOrString)
+	return boolOrOp(c, bind, chunk, ref, truthyBool, truthyString)
 }
 
 func regexAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringAndBool)
+	return boolAndOp(c, bind, chunk, ref, truthyString, truthyBool)
 }
 
 func regexOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringOrBool)
-}
-
-func opBoolAndArray(left interface{}, right interface{}) bool {
-	return left.(bool) && (len(right.([]interface{})) != 0)
-}
-
-func opArrayAndBool(left interface{}, right interface{}) bool {
-	return right.(bool) && (len(left.([]interface{})) != 0)
-}
-
-func opBoolOrArray(left interface{}, right interface{}) bool {
-	return left.(bool) || (len(right.([]interface{})) != 0)
-}
-
-func opArrayOrBool(left interface{}, right interface{}) bool {
-	return right.(bool) || (len(left.([]interface{})) != 0)
+	return boolOrOp(c, bind, chunk, ref, truthyString, truthyBool)
 }
 
 func boolAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opBoolAndArray)
+	return boolAndOp(c, bind, chunk, ref, truthyBool, truthyArray)
 }
 
 func boolOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opBoolOrArray)
+	return boolOrOp(c, bind, chunk, ref, truthyBool, truthyArray)
 }
 
 func arrayAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opArrayAndBool)
+	return boolAndOp(c, bind, chunk, ref, truthyArray, truthyBool)
 }
 
 func arrayOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opArrayOrBool)
+	return boolOrOp(c, bind, chunk, ref, truthyArray, truthyBool)
 }
 
 func opBoolAndMap(left interface{}, right interface{}) bool {
@@ -1635,19 +1605,19 @@ func mapOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 // string &&/|| T
 
 func stringAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringAndString)
+	return boolAndOp(c, bind, chunk, ref, truthyString, truthyString)
 }
 
 func stringOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringOrString)
+	return boolOrOp(c, bind, chunk, ref, truthyString, truthyString)
 }
 
 func regexAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringAndString)
+	return boolAndOp(c, bind, chunk, ref, truthyString, truthyString)
 }
 
 func regexOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringOrString)
+	return boolOrOp(c, bind, chunk, ref, truthyString, truthyString)
 }
 
 func opStringAndArray(left interface{}, right interface{}) bool {
