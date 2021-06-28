@@ -189,16 +189,7 @@ func (a *DockerRegistryImages) toAsset(ref name.Reference) (*asset.Asset, error)
 
 	// store digest
 	asset.Labels["docker.io/digest"] = imgDigest
-
-	// store repo tags
-	// asset.Labels["docker.io/tags"] = strings.Join(tags, ",")
-
 	log.Debug().Strs("platform-ids", asset.PlatformIds).Msg("asset platform ids")
-
-	// store repo digest
-	// NOTE: based on the current api, this case cannot happen
-	// repoDigests := []string{repoURL + "@" + digest}
-	// asset.Labels["docker.io/repo-digests"] = strings.Join(repoDigests, ",")
 	return asset, nil
 }
 
