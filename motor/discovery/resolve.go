@@ -141,19 +141,27 @@ func ResolveAsset(root *asset.Asset, secretMgr vault.SecretManager) ([]*asset.As
 	return resolved, nil
 }
 
-func ResolveAssets(rootAssets []*asset.Asset, secretMgr vault.SecretManager) ([]*asset.Asset, error) {
-	resolved := []*asset.Asset{}
+type ResolvedAssets struct {
+	Assets []*asset.Asset
+	Errors map[*asset.Asset]error
+}
 
+func ResolveAssets(rootAssets []*asset.Asset, secretMgr vault.SecretManager) ResolvedAssets {
+	resolved := []*asset.Asset{}
+	errors := map[*asset.Asset]error{}
 	for i := range rootAssets {
 		asset := rootAssets[i]
 
 		resolverAssets, err := ResolveAsset(asset, secretMgr)
 		if err != nil {
-			return nil, err
+			errors[asset] = err
 		}
 
 		resolved = append(resolved, resolverAssets...)
 	}
 
-	return resolved, nil
+	return ResolvedAssets{
+		Assets: resolved,
+		Errors: errors,
+	}
 }
