@@ -681,28 +681,28 @@ func nilNotFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 
 // time ==/!= nil
 
-func opTimeCmpNil(left interface{}, right interface{}) bool {
-	return left == nil
+func opTimeCmpNil(left *RawData, right *RawData) bool {
+	return left.Value == nil || left.Value.(*time.Time) == nil
 }
 
-func opNilCmpTime(left interface{}, right interface{}) bool {
-	return right == nil
+func opNilCmpTime(left *RawData, right *RawData) bool {
+	return right.Value == nil || right.Value.(*time.Time) == nil
 }
 
 func timeCmpNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opTimeCmpNil)
+	return rawboolOp(c, bind, chunk, ref, opTimeCmpNil)
 }
 
 func timeNotNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opTimeCmpNil)
+	return rawboolNotOp(c, bind, chunk, ref, opTimeCmpNil)
 }
 
 func nilCmpTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opNilCmpTime)
+	return rawboolOp(c, bind, chunk, ref, opNilCmpTime)
 }
 
 func nilNotTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opNilCmpTime)
+	return rawboolNotOp(c, bind, chunk, ref, opNilCmpTime)
 }
 
 // string </>/<=/>= string
