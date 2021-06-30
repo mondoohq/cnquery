@@ -2236,7 +2236,40 @@ aws.ec2 {
   internetGateways() []aws.ec2.internetgateway
   // list of vpn connections 
   vpnConnections() []aws.ec2.vpnconnection
+  // list of network ACLs 
+  networkAcls() []aws.ec2.networkacl
 }
+
+aws.ec2.networkacl {
+  // ARN for the network ACL
+  arn string
+  // ID for the network ACL 
+  id string
+  // region for the network ACL 
+  region string
+  // entries for the network ACL
+  entries() []aws.ec2.networkacl.entry
+}
+
+aws.ec2.networkacl.entry {
+  // denotes whether this is an entry for egress rules
+  egress bool
+  // allow or deny
+  ruleAction string
+  // port range for the acl entry
+  portRange() aws.ec2.networkacl.entry.portrange
+  // id for the entry rule
+  id string
+}
+
+ aws.ec2.networkacl.entry.portrange {
+   // starting port for port range
+   from int
+   // ending port for port range
+   to int
+   // id for the entry port range
+   id string
+ }
 
 // Amazon EC2 VPN Connection
 aws.ec2.vpnconnection {
