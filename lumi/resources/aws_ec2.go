@@ -25,6 +25,7 @@ const (
 	snapshotArnPattern      = "arn:aws:ec2:%s:%s:snapshot/%s"
 	internetGwArnPattern    = "arn:aws:ec2:%s:%s:gateway/%s"
 	vpnConnArnPattern       = "arn:aws:ec2:%s:%s:vpn-connection/%s"
+	networkAclArnPattern    = "arn:aws:ec2:%s:%s:network-acl/%s"
 )
 
 func (e *lumiAwsEc2) id() (string, error) {
@@ -43,6 +44,149 @@ func ec2TagsToMap(tags []types.Tag) map[string]interface{} {
 	}
 
 	return tagsMap
+}
+
+func (s *lumiAwsEc2Networkacl) id() (string, error) {
+	return s.Arn()
+}
+
+func (s *lumiAwsEc2) GetNetworkAcls() ([]interface{}, error) {
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(s.getNetworkACLs(), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+
+	return res, nil
+}
+
+func (s *lumiAwsEc2) getNetworkACLs() []*jobpool.Job {
+	var tasks = make([]*jobpool.Job, 0)
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return []*jobpool.Job{{Err: err}} // return the error
+	}
+
+	account, err := at.Account()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}} // return the error
+	}
+
+	regions, err := at.GetRegions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}} // return the error
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("calling aws with region %s", regionVal)
+
+			svc := at.Ec2(regionVal)
+			ctx := context.Background()
+			res := []interface{}{}
+
+			nextToken := aws.String("no_token_to_start_with")
+			params := &ec2.DescribeNetworkAclsInput{}
+			for nextToken != nil {
+				networkAcls, err := svc.DescribeNetworkAcls(ctx, params)
+				if err != nil {
+					return nil, err
+				}
+				nextToken = networkAcls.NextToken
+				if networkAcls.NextToken != nil {
+					params.NextToken = nextToken
+				}
+
+				for i := range networkAcls.NetworkAcls {
+					acl := networkAcls.NetworkAcls[i]
+					lumiNetworkAcl, err := s.Runtime.CreateResource("aws.ec2.networkacl",
+						"arn", fmt.Sprintf(networkAclArnPattern, regionVal, account.ID, toString(acl.NetworkAclId)),
+						"id", toString(acl.NetworkAclId),
+						"region", regionVal,
+					)
+					if err != nil {
+						return nil, err
+					}
+
+					res = append(res, lumiNetworkAcl)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (s *lumiAwsEc2NetworkaclEntry) id() (string, error) {
+	return s.Id()
+}
+func (s *lumiAwsEc2NetworkaclEntryPortrange) id() (string, error) {
+	return s.Id()
+}
+
+func (s *lumiAwsEc2Networkacl) GetEntries() ([]interface{}, error) {
+	id, err := s.Id()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse id")
+	}
+	region, err := s.Region()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to region")
+	}
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	svc := at.Ec2(region)
+	ctx := context.Background()
+	networkacls, err := svc.DescribeNetworkAcls(ctx, &ec2.DescribeNetworkAclsInput{NetworkAclIds: []string{id}})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(networkacls.NetworkAcls) == 0 {
+		return nil, errors.New("aws network acl not found")
+	}
+
+	res := []interface{}{}
+	for _, entry := range networkacls.NetworkAcls[0].Entries {
+		args := []interface{}{
+			"egress", entry.Egress,
+			"ruleAction", string(entry.RuleAction),
+			"id", id + "-" + strconv.Itoa(int(entry.RuleNumber)),
+		}
+		if entry.PortRange != nil {
+			lumiPortEntry, err := s.Runtime.CreateResource("aws.ec2.networkacl.entry.portrange",
+				"from", entry.PortRange.From,
+				"to", entry.PortRange.To,
+				"id", id+"-"+strconv.Itoa(int(entry.RuleNumber))+"-"+strconv.Itoa(int(entry.PortRange.From)),
+			)
+			if err != nil {
+				return nil, err
+			}
+			args = append(args, lumiPortEntry)
+		}
+
+		lumiAclEntry, err := s.Runtime.CreateResource("aws.ec2.networkacl.entry", args...)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, lumiAclEntry)
+	}
+
+	return res, nil
+}
+
+func (s *lumiAwsEc2NetworkaclEntry) GetPortRange() (interface{}, error) {
+	return nil, nil
 }
 
 func (s *lumiAwsEc2Securitygroup) GetIsAttachedToNetworkInterface() (bool, error) {
