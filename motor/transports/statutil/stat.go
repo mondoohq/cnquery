@@ -59,6 +59,7 @@ func (s *statHelper) Stat(name string) (os.FileInfo, error) {
 		cmd, err := s.commandRunner.RunCommand("uname -s")
 		if err != nil {
 			log.Debug().Err(err).Str("file", name).Msg("could not detect plaform for file stat")
+			return nil, err
 		}
 
 		data, err := ioutil.ReadAll(cmd.Stdout)
