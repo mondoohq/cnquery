@@ -243,7 +243,7 @@ func cmpArrays(left *RawData, right *RawData, f func(interface{}, interface{}) b
 		}
 		return false
 	}
-	if right.Value == nil {
+	if right == nil || right.Value == nil {
 		return false
 	}
 
