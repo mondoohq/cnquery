@@ -10,6 +10,8 @@ import (
 	"go.mondoo.io/mondoo/types"
 )
 
+// run an operation that returns true/false on a bind data vs a chunk call.
+// Unlike boolOp we don't check if either side is nil
 func rawboolOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(*RawData, *RawData) bool) (*RawData, int32, error) {
 	v, dref, err := c.resolveValue(chunk.Function.Args[0], ref)
 	if err != nil {
@@ -21,6 +23,24 @@ func rawboolOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(
 	return BoolData(f(bind, v)), 0, nil
 }
 
+// run an operation that returns true/false on a bind data vs a chunk call.
+// Unlike boolOp we don't check if either side is nil. It inverts the
+// returned boolean from the child function.
+func rawboolNotOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(*RawData, *RawData) bool) (*RawData, int32, error) {
+	v, dref, err := c.resolveValue(chunk.Function.Args[0], ref)
+	if err != nil {
+		return nil, 0, err
+	}
+	if dref != 0 {
+		return nil, dref, nil
+	}
+	return BoolData(!f(bind, v)), 0, nil
+}
+
+// run an operation that returns true/false on a bind data vs a chunk call.
+// this includes handling for the case where either side is nil, i.e.
+// - if both sides are nil we return true
+// - if either side is nil but not the other we return false
 func boolOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(interface{}, interface{}) bool) (*RawData, int32, error) {
 	v, dref, err := c.resolveValue(chunk.Function.Args[0], ref)
 	if err != nil {
@@ -33,7 +53,7 @@ func boolOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(int
 	if bind.Value == nil {
 		return BoolData(v.Value == nil), 0, nil
 	}
-	if v.Value == nil {
+	if v == nil || v.Value == nil {
 		return BoolData(false), 0, nil
 	}
 
@@ -58,7 +78,7 @@ func boolOrOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, fLeft fu
 	if bind.Value == nil {
 		return BoolData(v.Value == nil), 0, nil
 	}
-	if v.Value == nil {
+	if v == nil || v.Value == nil {
 		return BoolData(false), 0, nil
 	}
 
@@ -83,22 +103,10 @@ func boolAndOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, fLeft f
 	if bind.Value == nil {
 		return BoolData(v.Value == nil), 0, nil
 	}
-	if v.Value == nil {
+	if v == nil || v.Value == nil {
 		return BoolData(false), 0, nil
 	}
-
 	return BoolData(fRight(v.Value)), 0, nil
-}
-
-func rawboolNotOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(*RawData, *RawData) bool) (*RawData, int32, error) {
-	v, dref, err := c.resolveValue(chunk.Function.Args[0], ref)
-	if err != nil {
-		return nil, 0, err
-	}
-	if dref != 0 {
-		return nil, dref, nil
-	}
-	return BoolData(!f(bind, v)), 0, nil
 }
 
 func boolNotOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(interface{}, interface{}) bool) (*RawData, int32, error) {
@@ -113,7 +121,7 @@ func boolNotOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(
 	if bind.Value == nil {
 		return BoolData(v.Value != nil), 0, nil
 	}
-	if v.Value == nil {
+	if v == nil || v.Value == nil {
 		return BoolData(true), 0, nil
 	}
 
