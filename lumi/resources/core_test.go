@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/llx"
+	"go.mondoo.io/mondoo/logger"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources"
 	"go.mondoo.io/mondoo/motor"
@@ -16,6 +17,10 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/mock"
 	"go.mondoo.io/mondoo/policy/executor"
 )
+
+func init() {
+	logger.InitTestEnv()
+}
 
 func mockTransport(path string) (*motor.Motor, error) {
 	transport, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: path})
