@@ -177,7 +177,7 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*asset.Asset, error) {
 			return nil, err
 		}
 
-		details, err := vmClient.Get(ctx, res.ResourceGroup, *instance.Name, compute.InstanceView)
+		details, err := vmClient.Get(ctx, res.ResourceGroup, *instance.Name, compute.InstanceViewTypesInstanceView)
 		if err != nil {
 			return nil, err
 		}
