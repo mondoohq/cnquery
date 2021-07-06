@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/Azure/go-autorest/autorest/date"
-	uuid "github.com/satori/go.uuid"
+	"github.com/gofrs/uuid"
 )
 
 func (a *lumiAzurerm) id() (string, error) {
