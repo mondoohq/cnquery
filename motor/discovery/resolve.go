@@ -82,6 +82,21 @@ func ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*
 
 func ResolveAsset(root *asset.Asset, secretMgr vault.SecretManager) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
+	// fetch the secret info for the asset
+	if secretMgr != nil {
+		log.Debug().Str("asset", root.Name).Msg("fetch secret from secrets manager")
+		secM, err := secretMgr.GetSecretMetadata(root)
+		if err != nil {
+			log.Warn().Err(err).Msg("could not fetch secret for asset " + root.Name)
+			return nil, err
+		} else {
+			// enrich connection with secret information
+			err := secretMgr.EnrichConnection(root, secM)
+			if err != nil {
+				log.Warn().Err(err).Msg("could not fetch secret information")
+			}
+		}
+	}
 
 	for i := range root.Connections {
 		tc := root.Connections[i]
@@ -119,21 +134,8 @@ func ResolveAsset(root *asset.Asset, secretMgr vault.SecretManager) ([]*asset.As
 			// copy over labels for secret metadata fetching
 			assetObj.Labels = root.Labels
 
-			// fetch the secret info for the asset
-			if secretMgr != nil {
-				log.Debug().Str("asset", assetObj.Name).Msg("fetch secret from secrets manager")
-				secM, err := secretMgr.GetSecretMetadata(assetObj)
-				if err != nil {
-					log.Warn().Err(err).Msg("could not fetch secret for asset " + assetObj.Name)
-					return nil, err
-				} else {
-					// enrich connection with secret information
-					err := secretMgr.EnrichConnection(assetObj, secM)
-					if err != nil {
-						log.Warn().Err(err).Msg("could not fetch secret information")
-					}
-				}
-			}
+			// merge platform ids with root object platform ids
+			assetObj.PlatformIds = append(assetObj.PlatformIds, root.PlatformIds...)
 
 			resolved = append(resolved, assetObj)
 		}
