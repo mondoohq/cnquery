@@ -1339,7 +1339,7 @@ aws.iam {
   // iam credential report
   credentialReport() []aws.iam.usercredentialreportentry
   // iam account password policy for the account
-  accountPasswordPolicy() map[string]string
+  accountPasswordPolicy() dict
   // iam account summary
   accountSummary() map[string]int
   // list of virtual mfs devices associated with the account
