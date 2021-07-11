@@ -46,22 +46,46 @@ enum Kind {
   KIND_BARE_METAL = 9;
 }
 
+enum CredentialType {
+  undefined = 0;
+  password = 1;
+  private_key = 2;
+  public_key = 3;
+  ssh_agent = 4;
+  bearer = 5;
+  credentials_query = 6;
+  json = 7;
+}
+
+// Credential holds authentication information
+message Credential {
+  string secret_id = 1;
+  CredentialType type = 2;
+  string user = 3;
+  bytes secret = 4;
+
+  // the following are optional and sugar for defining a secret
+  // those values are only allowed for reading in yaml values but not via API calls
+  optional string password = 21;
+  optional string identity_file = 22;
+  optional string identity_pass = 23;
+  optional string private_key = 24;
+}
+
 message TransportConfig {
-  reserved 20;
+  reserved 6, 7, 9, 10, 20;
 
   TransportBackend Backend = 1;
   string Host = 2;
   // Ports are not int by default, eg. docker://centos:latest parses a string as port
-	// Therefore it is up to the transport to convert the port to what they need
+  // Therefore it is up to the transport to convert the port to what they need
   string Port = 3;
   string Path = 4;
-  string User = 5;
-  repeated string IdentityFiles = 6;
-  string Password = 7;
-  bool Insecure = 8;  // disable ssl/tls checks
-  string BearerToken = 9;
-  bytes PrivateKeyBytes = 10;
 
+  // secrets for the transport
+  repeated Credential credentials = 11;
+
+  bool Insecure = 8;  // disable ssl/tls checks
   Sudo Sudo = 21;
   bool Record = 22;
 

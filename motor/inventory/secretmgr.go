@@ -118,34 +118,25 @@ func mergeConnectionValues(tc1 *transports.TransportConfig, tc2 *transports.Tran
 		tc1.Host = tc2.Host
 	}
 
-	if tc2.User != "" {
-		tc1.User = tc2.User
-	}
-
-	if tc2.Password != "" {
-		tc1.Password = tc2.Password
-	}
-
-	if len(tc2.PrivateKeyBytes) > 0 {
-		tc1.PrivateKeyBytes = tc2.PrivateKeyBytes
+	// add all secrets from second config
+	if len(tc2.Credentials) > 0 {
+		tc1.Credentials = append(tc1.Credentials, tc2.Credentials...)
 	}
 }
 
 // parses the secret and its meta-information into a transport.Config object
 func parseSecret(secretMetadata *CredentialQueryResponse, secret string) (*transports.TransportConfig, error) {
-	connection := &transports.TransportConfig{}
+	tc := &transports.TransportConfig{}
 
 	backendValue := ""
 
-	if secretMetadata.User != "" {
-		connection.User = secretMetadata.User
-	}
-
 	switch secretMetadata.SecretFormat {
 	case "", "password": // if no format was provided, we assume its password
-		connection.Password = secret
+		credential := transports.NewPasswordCredential(secretMetadata.User, secret)
+		tc.AddCredential(credential)
 	case "private_key":
-		connection.PrivateKeyBytes = []byte(secret)
+		credential := transports.NewPrivateKeyCredential(secretMetadata.User, []byte(secret))
+		tc.AddCredential(credential)
 	case "json":
 		jsonSecret := make(map[string]string)
 		err := json.Unmarshal([]byte(secret), &jsonSecret)
@@ -157,20 +148,23 @@ func parseSecret(secretMetadata *CredentialQueryResponse, secret string) (*trans
 			backendValue = bkd
 		}
 
-		if usr, ok := jsonSecret["user"]; ok {
-			connection.User = usr
+		if host, ok := jsonSecret["host"]; ok {
+			tc.Host = host
 		}
 
-		if host, ok := jsonSecret["host"]; ok {
-			connection.Host = host
+		user := ""
+		if usr, ok := jsonSecret["user"]; ok {
+			user = usr
 		}
 
 		if pwd, ok := jsonSecret["password"]; ok {
-			connection.Password = pwd
+			credential := transports.NewPasswordCredential(user, pwd)
+			tc.AddCredential(credential)
 		}
 
 		if privK, ok := jsonSecret["private_key"]; ok {
-			connection.PrivateKeyBytes = []byte(privK)
+			credential := transports.NewPrivateKeyCredential(user, []byte(privK))
+			tc.AddCredential(credential)
 		}
 	default:
 		return nil, errors.New("unsupported secret format " + secretMetadata.SecretFormat + " requested")
@@ -185,7 +179,7 @@ func parseSecret(secretMetadata *CredentialQueryResponse, secret string) (*trans
 	if err != nil {
 		return nil, err
 	}
-	connection.Backend = backend
+	tc.Backend = backend
 
-	return connection, nil
+	return tc, nil
 }

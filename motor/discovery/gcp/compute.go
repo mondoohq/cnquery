@@ -154,9 +154,9 @@ func (a *Compute) instancesPerZone(svc *compute.Service, project string, zone st
 					log.Debug().Str("instance", instance.Name).Str("ip", iface.AccessConfigs[ac].NatIP).Msg("found public ip")
 					connections = append(connections, &transports.TransportConfig{
 						Backend:  transports.TransportBackend_CONNECTION_SSH,
-						User:     a.InstanceSSHUsername,
 						Host:     iface.AccessConfigs[ac].NatIP,
 						Insecure: a.Insecure,
+						// User:     a.InstanceSSHUsername,
 					})
 				}
 			}

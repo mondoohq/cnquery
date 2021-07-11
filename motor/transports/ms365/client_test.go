@@ -1,7 +1,6 @@
 package ms365
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -22,7 +21,7 @@ func TestParseJson(t *testing.T) {
     "managementEndpointUrl": "https://management.core.windows.net/"
 	}`
 
-	auth, err := ParseMicrosoftAuth(strings.NewReader(data))
+	auth, err := ParseMicrosoftAuth([]byte(data))
 	require.NoError(t, err)
 	assert.Equal(t, "<tenant_id>", auth.TenantId)
 	assert.Equal(t, "<azure_subscription_id>", auth.SubscriptionId)

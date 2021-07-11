@@ -3,9 +3,9 @@ package ms365
 import (
 	"context"
 	"encoding/json"
-	ms356_resources "go.mondoo.io/mondoo/lumi/resources/ms365"
-	"os"
 	"sync"
+
+	ms356_resources "go.mondoo.io/mondoo/lumi/resources/ms365"
 
 	"github.com/cockroachdb/errors"
 	"github.com/dgrijalva/jwt-go"
@@ -31,24 +31,22 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 		return nil, errors.New("backend is not supported for ms365 transport")
 	}
 
-	if len(tc.IdentityFiles) != 1 {
+	if len(tc.Credentials) != 1 {
 		return nil, errors.New("ms365 backend requires a credentials file, pass json via -i option")
 	}
 
 	var msauth *MicrosoftAuth
-	if len(tc.IdentityFiles) == 1 {
 
-		filename := tc.IdentityFiles[0]
+	secret := tc.Credentials[0]
 
-		f, err := os.Open(filename)
-		if err != nil {
-			return nil, errors.Wrap(err, "could not open credentials file")
-		}
+	// TODO: we probably do not want to mix that and detect the valid ms 365 secret earlier
+	if secret.Type != transports.CredentialType_json {
+		return nil, errors.New("invalid secret configuration for ms365 transport")
+	}
 
-		msauth, err = ParseMicrosoftAuth(f)
-		if err != nil {
-			return nil, errors.Wrap(err, "could not parse credentials file")
-		}
+	msauth, err := ParseMicrosoftAuth(secret.Secret)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not parse credentials file")
 	}
 
 	if msauth == nil {

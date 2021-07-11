@@ -4,7 +4,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"strings"
@@ -15,8 +14,8 @@ import (
 	"golang.org/x/crypto/ssh/agent"
 )
 
-func sshClientConnection(hostconfig *transports.TransportConfig, hostKeyCallback ssh.HostKeyCallback) (*ssh.Client, error) {
-	authMethods, err := authMethods(hostconfig)
+func sshClientConnection(cc *transports.TransportConfig, hostKeyCallback ssh.HostKeyCallback) (*ssh.Client, error) {
+	authMethods, err := authMethods(cc)
 	if err != nil {
 		return nil, err
 	}
@@ -26,29 +25,26 @@ func sshClientConnection(hostconfig *transports.TransportConfig, hostKeyCallback
 		return nil, errors.New("no authentication method defined")
 	}
 
+	// TODO: hack: we want to establish a proper connection per configured connection so that we could use multiple users
+	user := ""
+	for i := range cc.Credentials {
+		if cc.Credentials[i].User != "" {
+			user = cc.Credentials[i].User
+		}
+	}
+
 	sshConfig := &ssh.ClientConfig{
-		User:            hostconfig.User,
+		User:            user,
 		Auth:            authMethods,
 		HostKeyCallback: hostKeyCallback,
 	}
 
-	return ssh.Dial("tcp", fmt.Sprintf("%s:%s", hostconfig.Host, hostconfig.Port), sshConfig)
+	return ssh.Dial("tcp", fmt.Sprintf("%s:%s", cc.Host, cc.Port), sshConfig)
 }
 
-func authPrivateKey(privateKeyPath string, password string) (ssh.Signer, error) {
-	log.Debug().Str("key", privateKeyPath).Msg("enabled ssh private key authentication")
-	if _, err := os.Stat(privateKeyPath); os.IsNotExist(err) {
-		return nil, errors.New("private key does not exist " + privateKeyPath)
-	}
+func authPrivateKeyWithPassphrase(pemBytes []byte, password string) (ssh.Signer, error) {
+	log.Debug().Msg("enabled ssh private key authentication")
 
-	pemBytes, err := ioutil.ReadFile(privateKeyPath)
-	if err != nil {
-		return nil, err
-	}
-	return authPrivateKeyString(pemBytes, password)
-}
-
-func authPrivateKeyString(pemBytes []byte, password string) (ssh.Signer, error) {
 	// check if the key is encrypted
 	block, _ := pem.Decode(pemBytes)
 	if block == nil {
@@ -95,49 +91,57 @@ func authMethods(endpoint *transports.TransportConfig) ([]ssh.AuthMethod, error)
 	signers := []ssh.Signer{}
 
 	// enable ssh agent auth
-	if sshAgentConn, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK")); err == nil {
-		log.Debug().Str("socket", os.Getenv("SSH_AUTH_SOCK")).Msg("enabled ssh agent authentication")
-		sshAgentClient := agent.NewClient(sshAgentConn)
-		sshAgentSigners, err := sshAgentClient.Signers()
-		if err == nil {
-			signers = append(signers, sshAgentSigners...)
+	useAgentAuth := func() {
+		if sshAgentConn, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK")); err == nil {
+			log.Debug().Str("socket", os.Getenv("SSH_AUTH_SOCK")).Msg("enabled ssh agent authentication")
+			sshAgentClient := agent.NewClient(sshAgentConn)
+			sshAgentSigners, err := sshAgentClient.Signers()
+			if err == nil {
+				signers = append(signers, sshAgentSigners...)
+			} else {
+				log.Error().Err(err).Msg("could not get public keys from ssh agent")
+			}
 		} else {
-			log.Error().Err(err).Msg("could not get public keys from ssh agent")
+			log.Debug().Msg("could not find valud ssh agent authentication")
 		}
-	} else {
-		log.Debug().Msg("could not find valud ssh agent authentication")
 	}
 
 	// use key auth, only load if the key was not found in ssh agent
-	for i := range endpoint.IdentityFiles {
-		identityKey := endpoint.IdentityFiles[i]
-		if len(identityKey) == 0 {
-			continue
-		}
-		priv, err := authPrivateKey(identityKey, endpoint.Password)
-		if err != nil {
-			log.Debug().Err(err).Str("key", identityKey).Msg("could not load private key, ignore the file")
-		} else {
-			signers = append(signers, priv)
+	for i := range endpoint.Credentials {
+		credential := endpoint.Credentials[i]
+
+		switch credential.Type {
+		case transports.CredentialType_public_key:
+			// TODO: passphrase is not supported yet, we need to move that logic into the load mechanis
+			// it is too late to handle this here
+			identityPass := ""
+			if credential.IdentityPass != nil {
+				identityPass = *credential.IdentityPass
+			}
+			priv, err := authPrivateKeyWithPassphrase(credential.Secret, identityPass)
+			if err != nil {
+				log.Debug().Err(err).Msg("could not read private key")
+			} else {
+				signers = append(signers, priv)
+			}
+		case transports.CredentialType_password:
+			// use password auth
+			log.Debug().Msg("enabled ssh password authentication")
+			auths = append(auths, ssh.Password(string(credential.Secret)))
+		case transports.CredentialType_ssh_agent:
+			useAgentAuth()
+		default:
+			return nil, errors.New("unsupported authentication mechanism for ssh: " + credential.Type.String())
 		}
 	}
-	if len(endpoint.PrivateKeyBytes) > 0 {
-		priv, err := authPrivateKeyString(endpoint.PrivateKeyBytes, endpoint.Password)
-		if err != nil {
-			log.Debug().Err(err).Msg("could not read private key")
-		} else {
-			signers = append(signers, priv)
-		}
+
+	// if no credential was provided, fallback to ssh-agent and ssh-config
+	if len(endpoint.Credentials) == 0 {
+		useAgentAuth()
 	}
 
 	if len(signers) > 0 {
 		auths = append(auths, ssh.PublicKeys(signers...))
-	}
-
-	// use password auth
-	if endpoint.Password != "" {
-		log.Debug().Msg("enabled ssh password authentication")
-		auths = append(auths, ssh.Password(endpoint.Password))
 	}
 	return auths, nil
 }

@@ -24,8 +24,7 @@ func TestSSHAuthError(t *testing.T) {
 }
 
 func TestSSHPort(t *testing.T) {
-
-	endpoint := &transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_SSH, Host: "example.local", Password: "example"}
+	endpoint := &transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_SSH, Host: "example.local"}
 	err := ssh.VerifyConfig(endpoint)
 	assert.Nil(t, err)
 

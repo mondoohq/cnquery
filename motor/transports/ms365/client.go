@@ -3,8 +3,6 @@ package ms365
 import (
 	"context"
 	"encoding/json"
-	"io"
-	"io/ioutil"
 	"net/http"
 
 	msgraph "github.com/yaegashi/msgraph.go/beta"
@@ -49,15 +47,10 @@ func (t *Transport) httpClient() (*http.Client, error) {
 	return httpClient, nil
 }
 
-func ParseMicrosoftAuth(r io.Reader) (*MicrosoftAuth, error) {
+func ParseMicrosoftAuth(data []byte) (*MicrosoftAuth, error) {
 	var adAccount MicrosoftAuth
 
-	data, err := ioutil.ReadAll(r)
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.Unmarshal(data, &adAccount)
+	err := json.Unmarshal(data, &adAccount)
 	if err != nil {
 		return nil, err
 	}

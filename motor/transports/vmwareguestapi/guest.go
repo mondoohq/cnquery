@@ -35,20 +35,26 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/ssh/cat"
 )
 
-func New(endpoint *transports.TransportConfig) (*Transport, error) {
-	if endpoint.Backend != transports.TransportBackend_CONNECTION_VSPHERE_VM {
-		return nil, errors.New("backend is not supported for vSphere transport")
+func New(tc *transports.TransportConfig) (*Transport, error) {
+	if tc.Backend != transports.TransportBackend_CONNECTION_VSPHERE_VM {
+		return nil, errors.New("backend is not supported for VMware tools transport")
+	}
+
+	// search for password secret
+	c, err := transports.GetPassword(tc.Credentials)
+	if err != nil {
+		return nil, errors.New("missing password for VMware tools transport")
 	}
 
 	// derive vsphere connection url from Transport Config
-	vsphereUrl, err := vsphere.VSphereConnectionURL(endpoint.Host, endpoint.Port, endpoint.User, endpoint.Password)
+	vsphereUrl, err := vsphere.VSphereConnectionURL(tc.Host, tc.Port, c.User, string(c.Secret))
 	if err != nil {
 		return nil, err
 	}
 
-	inventoryPath := endpoint.Options["inventoryPath"]
-	guestuser := endpoint.Options["guestUser"]
-	guestpassword := endpoint.Options["guestPassword"]
+	inventoryPath := tc.Options["inventoryPath"]
+	guestuser := tc.Options["guestUser"]
+	guestpassword := tc.Options["guestPassword"]
 
 	// establish vsphere connection
 	ctx := context.Background()

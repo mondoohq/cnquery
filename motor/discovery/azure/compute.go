@@ -38,7 +38,6 @@ func (c *AzureClient) PublicIPAddressesClient() network.PublicIPAddressesClient 
 }
 
 func NewCompute(subscriptionID string) (*Compute, error) {
-
 	a, err := azure_transport.GetAuthorizer()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not detect az authentication")
@@ -63,7 +62,6 @@ type Compute struct {
 // getPublicIp reads the public ip by using its resource identifier
 // "/subscriptions/20192456-09dd-4782-8046-8cdfede4026a/resourceGroups/Demo/providers/Microsoft.Network/networkInterfaces/test35"
 func (c *Compute) getPublicIp(ctx context.Context, resourceID string) ([]network.PublicIPAddress, error) {
-
 	resource, err := azure_transport.ParseResourceID(resourceID)
 	if err != nil {
 		return nil, errors.Wrap(err, "invalid network resource")
@@ -148,8 +146,9 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*asset.Asset, error) {
 					ip := *ipResp.IPAddress
 					connections = append(connections, &transports.TransportConfig{
 						Backend: transports.TransportBackend_CONNECTION_SSH,
-						User:    *instance.OsProfile.AdminUsername,
 						Host:    ip,
+						// we do not add credentials here since those may not match the expected state
+						// *instance.OsProfile.AdminUsername
 					})
 				}
 			}
