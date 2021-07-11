@@ -18,20 +18,8 @@ func New(serviceName string) *Vault {
 			// TODO: this only applies to cases where we have no real keychain available
 			return "", errors.New("file-fallback is not supported")
 		},
-	}
-}
-
-type Vault struct {
-	ServiceName      string
-	fileDir          string
-	filePasswordFunc func(s string) (string, error)
-}
-
-func (v *Vault) open() (keyring.Keyring, error) {
-	return keyring.Open(keyring.Config{
-		ServiceName: v.ServiceName,
 		// by default we do not allow a fallback to encrypted keys
-		AllowedBackends: []keyring.BackendType{
+		allowedBackends: []keyring.BackendType{
 			// Windows
 			keyring.WinCredBackend,
 			// MacOS
@@ -42,6 +30,33 @@ func (v *Vault) open() (keyring.Keyring, error) {
 			// General
 			keyring.PassBackend,
 		},
+	}
+}
+
+func NewEncryptedFile(path string, serviceName string, password string) *Vault {
+	return &Vault{
+		ServiceName: serviceName,
+		fileDir:     path,
+		filePasswordFunc: func(s string) (string, error) {
+			return password, nil
+		},
+		allowedBackends: []keyring.BackendType{
+			keyring.FileBackend,
+		},
+	}
+}
+
+type Vault struct {
+	ServiceName      string
+	allowedBackends  []keyring.BackendType
+	fileDir          string
+	filePasswordFunc func(s string) (string, error)
+}
+
+func (v *Vault) open() (keyring.Keyring, error) {
+	return keyring.Open(keyring.Config{
+		ServiceName:      v.ServiceName,
+		AllowedBackends:  v.allowedBackends,
 		FileDir:          v.fileDir,
 		FilePasswordFunc: v.filePasswordFunc,
 	})

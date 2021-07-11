@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/cockroachdb/errors"
@@ -14,12 +13,7 @@ import (
 
 var notImplemented = errors.New("not implemented")
 
-func New() *Vault {
-	cfg, _ := config.LoadDefaultConfig(context.Background())
-	// if err != nil {
-	// 	log.Error().Msg(err.Error())
-	// 	return nil
-	// }
+func New(cfg aws.Config) *Vault {
 	return &Vault{
 		cfg: cfg.Copy(),
 	}
