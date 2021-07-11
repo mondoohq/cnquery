@@ -13,23 +13,37 @@ var notImplemented = errors.New("not implemented")
 func New(serviceName string) *Vault {
 	return &Vault{
 		ServiceName: serviceName,
+		fileDir:     "~/.mondoo/",
+		filePasswordFunc: func(s string) (string, error) {
+			// TODO: this only applies to cases where we have no real keychain available
+			return "", errors.New("file-fallback is not supported")
+		},
 	}
 }
 
 type Vault struct {
-	ServiceName string
+	ServiceName      string
+	fileDir          string
+	filePasswordFunc func(s string) (string, error)
 }
 
 func (v *Vault) open() (keyring.Keyring, error) {
 	return keyring.Open(keyring.Config{
 		ServiceName: v.ServiceName,
-		FileDir:     "~/.mondoo/",
-		FilePasswordFunc: func(s string) (string, error) {
-			// TODO: this only applies to cases where we have no real keychain available
-			// we need to find a better way to manage this, maybe this is going to land in
-			// the mondoo configuration
-			return "random", nil
+		// by default we do not allow a fallback to encrypted keys
+		AllowedBackends: []keyring.BackendType{
+			// Windows
+			keyring.WinCredBackend,
+			// MacOS
+			keyring.KeychainBackend,
+			// Linux
+			keyring.SecretServiceBackend,
+			keyring.KWalletBackend,
+			// General
+			keyring.PassBackend,
 		},
+		FileDir:          v.fileDir,
+		FilePasswordFunc: v.filePasswordFunc,
 	})
 }
 
