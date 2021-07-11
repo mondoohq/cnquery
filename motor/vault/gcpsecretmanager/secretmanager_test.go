@@ -17,8 +17,9 @@ func TestGcpSecretmanager(t *testing.T) {
 	v := New(projectID)
 	ctx := context.Background()
 
+	key := "mondoo-test-secret-key"
 	cred := &vault.Secret{
-		Key:    vault.Mrn2secretKey("//platformid.api.mondoo.app/runtime/aws/ec2/v1/accounts/675173580680/regions/eu-west-1/instances/i-0e11b0762369fbefa"),
+		Key:    key,
 		Secret: []byte("super-secret"),
 	}
 
