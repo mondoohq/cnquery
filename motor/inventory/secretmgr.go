@@ -1,11 +1,12 @@
-package vault
+package inventory
 
 import (
-	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/policy/executor"
-
 	"context"
 	"encoding/json"
+
+	"go.mondoo.io/mondoo/llx"
+	"go.mondoo.io/mondoo/motor/vault"
+	"go.mondoo.io/mondoo/policy/executor"
 
 	"github.com/cockroachdb/errors"
 	"github.com/mitchellh/mapstructure"
@@ -28,7 +29,7 @@ type SecretManager interface {
 	EnrichConnection(a *asset.Asset, secMeta *SecretMetadata) error
 }
 
-func NewVaultSecretManager(v Vault, secretMetadataQuery string) (SecretManager, error) {
+func NewVaultSecretManager(v vault.Vault, secretMetadataQuery string) (SecretManager, error) {
 	e, err := executor.NewEmbeddedExecutor()
 	if err != nil {
 		return nil, err
@@ -60,7 +61,7 @@ func NewVaultSecretManager(v Vault, secretMetadataQuery string) (SecretManager, 
 // 2. we use the secret metadata to retrieve the secret from vault
 type VaultSecretManager struct {
 	e                   *executor.EmbeddedExecutor
-	vault               Vault
+	vault               vault.Vault
 	secretMetadataQuery string
 }
 
@@ -115,7 +116,7 @@ func (vsm *VaultSecretManager) GetSecretMetadata(a *asset.Asset) (*SecretMetadat
 }
 
 func (vsm *VaultSecretManager) GetSecret(keyID string) (string, error) {
-	cred, err := vsm.vault.Get(context.Background(), &CredentialID{
+	cred, err := vsm.vault.Get(context.Background(), &vault.CredentialID{
 		Key: keyID,
 	})
 	if err != nil {
