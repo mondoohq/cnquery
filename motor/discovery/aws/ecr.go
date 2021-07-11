@@ -70,7 +70,7 @@ func (a *EcrImages) getRepositories() []*jobpool.Job {
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
-	log.Debug().Msgf("regions being called for ec2 instance list are: %v", regions)
+	log.Debug().Msgf("regions being called for ecr images are: %v", regions)
 	for ri := range regions {
 		region := regions[ri]
 		f := func() (jobpool.JobResult, error) {
