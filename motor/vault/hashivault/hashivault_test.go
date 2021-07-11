@@ -13,15 +13,13 @@ import (
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
-func TestKeyring(t *testing.T) {
+func TestHashiVault(t *testing.T) {
 	endpoint := "http://127.0.0.1:8200"
-	token := "s.UyXEFDKcKRxWYVyX3gL4Vx8l"
+	token := "secretgoeshere"
 
 	// store secret
 	c, err := client(endpoint, token)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 	ctx := context.Background()
 
 	key := "test-key"
@@ -57,7 +55,7 @@ func client(endpoint string, token string) (*api.Client, error) {
 	return c, nil
 }
 
-func set(c *api.Client, key string, fields map[string]string) (*vault.CredentialID, error) {
+func set(c *api.Client, key string, fields map[string]string) (*vault.SecretID, error) {
 	err := validKey(key)
 	if err != nil {
 		return nil, err
@@ -82,5 +80,5 @@ func set(c *api.Client, key string, fields map[string]string) (*vault.Credential
 		return nil, err
 	}
 
-	return &vault.CredentialID{Key: key}, nil
+	return &vault.SecretID{Key: key}, nil
 }

@@ -73,7 +73,7 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 		return nil, err
 	}
 
-	secretBytes, err := SecretData(secret)
+	secretBytes, err := secretData(secret)
 	if err != nil {
 		return nil, err
 	}
@@ -84,8 +84,8 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 	}, nil
 }
 
-// SecretData returns the map of metadata associated with the secret
-func SecretData(s *api.Secret) ([]byte, error) {
+// secretData returns the map of metadata associated with the secret
+func secretData(s *api.Secret) ([]byte, error) {
 	if s == nil {
 		return nil, nil
 	}
