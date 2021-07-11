@@ -4,6 +4,8 @@ import (
 	"regexp"
 	"strings"
 
+	"go.mondoo.io/mondoo/motor/inventory"
+
 	"go.mondoo.io/mondoo/stringx"
 
 	"github.com/cockroachdb/errors"
@@ -25,7 +27,6 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/vagrant"
 	"go.mondoo.io/mondoo/motor/discovery/vsphere"
 	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/vault"
 )
 
 var scheme = regexp.MustCompile(`^(.*?):\/\/(.*)$`)
@@ -81,7 +82,7 @@ func ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*
 	return r.ParseConnectionURL(url, opts...)
 }
 
-func ResolveAsset(root *asset.Asset, secretMgr vault.SecretManager) ([]*asset.Asset, error) {
+func ResolveAsset(root *asset.Asset, secretMgr inventory.SecretManager) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 	// fetch the secret info for the asset
 	if secretMgr != nil {
@@ -149,7 +150,7 @@ type ResolvedAssets struct {
 	Errors map[*asset.Asset]error
 }
 
-func ResolveAssets(rootAssets []*asset.Asset, secretMgr vault.SecretManager) ResolvedAssets {
+func ResolveAssets(rootAssets []*asset.Asset, secretMgr inventory.SecretManager) ResolvedAssets {
 	resolved := []*asset.Asset{}
 	errors := map[*asset.Asset]error{}
 	for i := range rootAssets {
