@@ -36,7 +36,7 @@ type Ec2Instances struct {
 	config                     aws.Config
 	InstanceSSHUsername        string
 	Insecure                   bool
-	FilterOptions              ec2InstancesFilters
+	FilterOptions              Ec2InstancesFilters
 	SSMInstancesPlatformIdsMap map[string]*asset.Asset
 }
 
@@ -61,11 +61,11 @@ func (ec2i *Ec2Instances) getRegions() ([]string, error) {
 	return regions, nil
 }
 
-func (ec2i *Ec2Instances) getInstances(account string, ec2InstancesFilters ec2InstancesFilters) []*jobpool.Job {
+func (ec2i *Ec2Instances) getInstances(account string, ec2InstancesFilters Ec2InstancesFilters) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	var err error
 
-	regions := ec2InstancesFilters.regions
+	regions := ec2InstancesFilters.Regions
 	if len(regions) == 0 {
 		// user did not include a region filter, fetch em all
 		regions, err = ec2i.getRegions()
@@ -87,12 +87,12 @@ func (ec2i *Ec2Instances) getInstances(account string, ec2InstancesFilters ec2In
 			res := []*asset.Asset{}
 
 			input := &ec2.DescribeInstancesInput{}
-			if len(ec2i.FilterOptions.instanceIds) > 0 {
-				input.InstanceIds = ec2i.FilterOptions.instanceIds
+			if len(ec2i.FilterOptions.InstanceIds) > 0 {
+				input.InstanceIds = ec2i.FilterOptions.InstanceIds
 				log.Debug().Msgf("filtering by instance ids %v", input.InstanceIds)
 			}
-			if len(ec2i.FilterOptions.tags) > 0 {
-				for k, v := range ec2i.FilterOptions.tags {
+			if len(ec2i.FilterOptions.Tags) > 0 {
+				for k, v := range ec2i.FilterOptions.Tags {
 					input.Filters = append(input.Filters, types.Filter{Name: &k, Values: []string{v}})
 					log.Debug().Msgf("filtering by tag %s:%s", k, v)
 				}

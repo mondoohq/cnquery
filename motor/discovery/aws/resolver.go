@@ -142,36 +142,36 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 	return resolved, nil
 }
 
-func AssembleEc2InstancesFilters(opts map[string]string) ec2InstancesFilters {
-	var ec2InstancesFilters ec2InstancesFilters
+func AssembleEc2InstancesFilters(opts map[string]string) Ec2InstancesFilters {
+	var ec2InstancesFilters Ec2InstancesFilters
 	if _, ok := opts["instance-ids"]; ok {
 		instanceIds := strings.Split(opts["instance-ids"], ",")
-		ec2InstancesFilters.instanceIds = instanceIds
+		ec2InstancesFilters.InstanceIds = instanceIds
 	}
 	if _, ok := opts["tags"]; ok {
 		tags := strings.Split(opts["tags"], ",")
-		ec2InstancesFilters.tags = make(map[string]string, len(tags))
+		ec2InstancesFilters.Tags = make(map[string]string, len(tags))
 		for _, tagkv := range tags {
 			tag := strings.Split(tagkv, "=")
 			if len(tag) == 2 {
 				// to use tag filters with aws, we have to specify tag:KEY for the key, and then put the value as the values
 				key := "tag:" + tag[0]
-				ec2InstancesFilters.tags[key] = tag[1]
+				ec2InstancesFilters.Tags[key] = tag[1]
 			} else if len(tag) == 1 {
 				// this means no value was included, so we search for just the tag key
-				ec2InstancesFilters.tags["tag-key"] = tag[0]
+				ec2InstancesFilters.Tags["tag-key"] = tag[0]
 			}
 		}
 	}
 	if _, ok := opts["regions"]; ok {
 		regions := strings.Split(opts["regions"], ",")
-		ec2InstancesFilters.regions = regions
+		ec2InstancesFilters.Regions = regions
 	}
 	return ec2InstancesFilters
 }
 
-type ec2InstancesFilters struct {
-	instanceIds []string
-	tags        map[string]string
-	regions     []string
+type Ec2InstancesFilters struct {
+	InstanceIds []string
+	Tags        map[string]string
+	Regions     []string
 }

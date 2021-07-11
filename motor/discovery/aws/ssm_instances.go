@@ -26,7 +26,7 @@ func NewSSMManagedInstancesDiscovery(cfg aws.Config) (*SSMManagedInstances, erro
 
 type SSMManagedInstances struct {
 	config        aws.Config
-	FilterOptions ec2InstancesFilters
+	FilterOptions Ec2InstancesFilters
 }
 
 func (ssmi *SSMManagedInstances) Name() string {
@@ -73,11 +73,11 @@ func (ssmi *SSMManagedInstances) getRegions() ([]string, error) {
 	return regions, nil
 }
 
-func (ssmi *SSMManagedInstances) getInstances(account string, ec2InstancesFilters ec2InstancesFilters) []*jobpool.Job {
+func (ssmi *SSMManagedInstances) getInstances(account string, ec2InstancesFilters Ec2InstancesFilters) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	var err error
 
-	regions := ec2InstancesFilters.regions
+	regions := ec2InstancesFilters.Regions
 	if len(regions) == 0 {
 		// user did not include a region filter, fetch em all
 		regions, err = ssmi.getRegions()
@@ -85,7 +85,7 @@ func (ssmi *SSMManagedInstances) getInstances(account string, ec2InstancesFilter
 			return []*jobpool.Job{{Err: err}} // return the error
 		}
 	}
-	log.Debug().Msgf("regions being called for ec2 instance list are: %v", regions)
+	log.Debug().Msgf("regions being called for ec2 ssm instance list are: %v", regions)
 	for ri := range regions {
 		region := regions[ri]
 		f := func() (jobpool.JobResult, error) {
@@ -102,12 +102,12 @@ func (ssmi *SSMManagedInstances) getInstances(account string, ec2InstancesFilter
 			input := &ssm.DescribeInstanceInformationInput{
 				Filters: []types.InstanceInformationStringFilter{},
 			}
-			if len(ec2InstancesFilters.instanceIds) > 0 {
-				input.Filters = append(input.Filters, types.InstanceInformationStringFilter{Key: aws.String("InstanceIds"), Values: ec2InstancesFilters.instanceIds})
-				log.Debug().Msgf("filtering by instance ids %v", ec2InstancesFilters.instanceIds)
+			if len(ec2InstancesFilters.InstanceIds) > 0 {
+				input.Filters = append(input.Filters, types.InstanceInformationStringFilter{Key: aws.String("InstanceIds"), Values: ec2InstancesFilters.InstanceIds})
+				log.Debug().Msgf("filtering by instance ids %v", ec2InstancesFilters.InstanceIds)
 			}
-			if len(ec2InstancesFilters.tags) > 0 {
-				for k, v := range ec2InstancesFilters.tags {
+			if len(ec2InstancesFilters.Tags) > 0 {
+				for k, v := range ec2InstancesFilters.Tags {
 					input.Filters = append(input.Filters, types.InstanceInformationStringFilter{Key: &k, Values: []string{v}})
 					log.Debug().Msgf("filtering by tag %s:%s", k, v)
 				}
