@@ -25,11 +25,17 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 		port = 623
 	}
 
+	// search for password secret
+	c, err := transports.GetPassword(tc.Credentials)
+	if err != nil {
+		return nil, errors.New("missing password for ipmi transport")
+	}
+
 	client, err := ipmi.NewIpmiClient(&ipmi.Connection{
 		Hostname:  tc.Host,
 		Port:      port,
-		Username:  tc.User,
-		Password:  tc.Password,
+		Username:  c.User,
+		Password:  string(c.Secret),
 		Interface: "lan",
 	})
 	if err != nil {

@@ -25,13 +25,19 @@ func VSphereConnectionURL(hostname string, port string, user string, password st
 	return u, nil
 }
 
-func New(endpoint *transports.TransportConfig) (*Transport, error) {
-	if endpoint.Backend != transports.TransportBackend_CONNECTION_VSPHERE {
+func New(tc *transports.TransportConfig) (*Transport, error) {
+	if tc.Backend != transports.TransportBackend_CONNECTION_VSPHERE {
 		return nil, errors.New("backend is not supported for vSphere transport")
 	}
 
+	// search for password secret
+	c, err := transports.GetPassword(tc.Credentials)
+	if err != nil {
+		return nil, errors.New("missing password for vSphere transport")
+	}
+
 	// derive vsphere connection url from Transport Config
-	vsphereUrl, err := VSphereConnectionURL(endpoint.Host, endpoint.Port, endpoint.User, endpoint.Password)
+	vsphereUrl, err := VSphereConnectionURL(tc.Host, tc.Port, c.User, string(c.Secret))
 	if err != nil {
 		return nil, err
 	}
@@ -44,10 +50,10 @@ func New(endpoint *transports.TransportConfig) (*Transport, error) {
 
 	return &Transport{
 		client:             client,
-		kind:               endpoint.Kind,
-		runtime:            endpoint.Runtime,
-		opts:               endpoint.Options,
-		selectedPlatformID: endpoint.Platformid,
+		kind:               tc.Kind,
+		runtime:            tc.Runtime,
+		opts:               tc.Options,
+		selectedPlatformID: tc.Platformid,
 	}, nil
 }
 

@@ -86,7 +86,11 @@ func (v *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 			return nil, err
 		}
 
-		resolved = append(resolved, vagrantToAsset(vmSshConfig[k], tc))
+		a, err := newVagrantAsset(vmSshConfig[k], tc)
+		if err != nil {
+			return nil, err
+		}
+		resolved = append(resolved, a)
 
 	} else {
 		vagrantVms := map[string]*VagrantVmSSHConfig{}
@@ -113,32 +117,44 @@ func (v *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 		}
 
 		for i := range vagrantVms {
-			resolved = append(resolved, vagrantToAsset(vagrantVms[i], tc))
+			a, err := newVagrantAsset(vagrantVms[i], tc)
+			if err != nil {
+				return nil, err
+			}
+			resolved = append(resolved, a)
 		}
 	}
 
 	return resolved, nil
 }
 
-func vagrantToAsset(sshConfig *VagrantVmSSHConfig, rootTransportConfig *transports.TransportConfig) *asset.Asset {
+func newVagrantAsset(sshConfig *VagrantVmSSHConfig, rootTransportConfig *transports.TransportConfig) (*asset.Asset, error) {
 	if sshConfig == nil {
-		return nil
+		return nil, errors.New("missing vagrant ssh config")
 	}
 
+	cc := &transports.TransportConfig{
+		// TODO: do we need to support winrm?
+		Backend:  transports.TransportBackend_CONNECTION_SSH,
+		Host:     sshConfig.HostName,
+		Insecure: strings.ToLower(sshConfig.StrictHostKeyChecking) == "no",
+
+		Port: strconv.Itoa(sshConfig.Port),
+		Sudo: rootTransportConfig.Sudo,
+	}
+
+	// load secret
+	credential, err := transports.NewPrivateKeyCredentialFromPath(sshConfig.User, sshConfig.IdentityFile)
+	if err != nil {
+		return nil, err
+	}
+	cc.AddCredential(credential)
+
 	return &asset.Asset{
-		Name: sshConfig.Host,
-		Connections: []*transports.TransportConfig{{
-			// TODO: do we need to support winrm?
-			Backend:       transports.TransportBackend_CONNECTION_SSH,
-			Host:          sshConfig.HostName,
-			IdentityFiles: []string{sshConfig.IdentityFile},
-			Insecure:      strings.ToLower(sshConfig.StrictHostKeyChecking) == "no",
-			User:          sshConfig.User,
-			Port:          strconv.Itoa(sshConfig.Port),
-			Sudo:          rootTransportConfig.Sudo,
-		}},
+		Name:        sshConfig.Host,
+		Connections: []*transports.TransportConfig{cc},
 		Platform: &platform.Platform{
 			Kind: transports.Kind_KIND_VIRTUAL_MACHINE,
 		},
-	}
+	}, nil
 }

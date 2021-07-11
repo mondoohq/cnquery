@@ -54,7 +54,7 @@ func TestManagerFreebsd(t *testing.T) {
 }
 
 // func TestManagerWindows(t *testing.T) {
-// 	mock, err := mock.NewFromToml(&types.Endpoint{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/windows.toml"})
+// 	mock, err := mock.NewFromToml(&types.ConnectionConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/windows.toml"})
 // 	require.NoError(t, err)
 // 	m, err := motor.New(mock)
 // 	require.NoError(t, err)

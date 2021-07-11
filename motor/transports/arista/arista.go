@@ -11,30 +11,39 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
 )
 
-func New(endpoint *transports.TransportConfig) (*Transport, error) {
-
+func New(tc *transports.TransportConfig) (*Transport, error) {
 	port := goeapi.UseDefaultPortNum
-	if len(endpoint.Port) > 0 {
-		p, err := strconv.Atoi(endpoint.Port)
+	if len(tc.Port) > 0 {
+		p, err := strconv.Atoi(tc.Port)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not parse port")
 		}
 		port = p
 	}
 
+	if len(tc.Credentials) == 0 {
+		return nil, errors.New("missing password for arista transport")
+	}
+
+	// search for password secret
+	c, err := transports.GetPassword(tc.Credentials)
+	if err != nil {
+		return nil, errors.New("missing password for arista transport")
+	}
+
 	// NOTE: we explicitly do not support http, since there is no real reason to support http
-	// NOTE: the goeapi is always running in insecure mode since it does not verify the server
+	// the goeapi is always running in insecure mode since it does not verify the server
 	// setup which allows potential man-in-the-middle attacks, consider opening a PR
 	// https://github.com/aristanetworks/goeapi/blob/7944bcedaf212bb60e5f9baaf471469f49113f47/eapilib.go#L527
-	node, err := goeapi.Connect("https", endpoint.Host, endpoint.User, endpoint.Password, port)
+	node, err := goeapi.Connect("https", tc.Host, c.User, string(c.Secret), port)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Transport{
 		node:    node,
-		kind:    endpoint.Kind,
-		runtime: endpoint.Runtime,
+		kind:    tc.Kind,
+		runtime: tc.Runtime,
 	}, nil
 }
 

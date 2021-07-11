@@ -93,8 +93,8 @@ func TestSecretManagerPassword(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, transports.TransportBackend_CONNECTION_SSH, assetObj.Connections[0].Backend)
-	assert.Equal(t, "test-user", assetObj.Connections[0].User)
-	assert.Equal(t, "password", assetObj.Connections[0].Password)
+	assert.Equal(t, "test-user", assetObj.Connections[0].Credentials[0].User)
+	assert.Equal(t, "password", string(assetObj.Connections[0].Credentials[0].Secret))
 }
 
 func TestSecretManagerPrivateKey(t *testing.T) {
@@ -118,9 +118,9 @@ func TestSecretManagerPrivateKey(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, transports.TransportBackend_CONNECTION_SSH, assetObj.Connections[0].Backend)
-	assert.Equal(t, "some-user", assetObj.Connections[0].User)
-	assert.Equal(t, "", assetObj.Connections[0].Password)
-	assert.Equal(t, []byte(mockvault.MockPKey), assetObj.Connections[0].PrivateKeyBytes)
+	assert.Equal(t, "some-user", assetObj.Connections[0].Credentials[0].User)
+	assert.Equal(t, transports.CredentialType_private_key, assetObj.Connections[0].Credentials[0].Type)
+	assert.Equal(t, []byte(mockvault.MockPKey), assetObj.Connections[0].Credentials[0].Secret)
 }
 
 func TestSecretManagerJSON(t *testing.T) {
@@ -138,9 +138,22 @@ func TestSecretManagerJSON(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, transports.TransportBackend_CONNECTION_SSH, assetObj.Connections[0].Backend)
-	assert.Equal(t, "that-user", assetObj.Connections[0].User)
-	assert.Equal(t, []byte("blabla"), assetObj.Connections[0].PrivateKeyBytes)
-	assert.Equal(t, "supersecure", assetObj.Connections[0].Password)
+	assert.Equal(t, "that-user", assetObj.Connections[0].Credentials[0].User)
+
+	var pwdAuth *transports.Credential
+	var identityAuth *transports.Credential
+	secrets := assetObj.Connections[0].Credentials
+	for i := range secrets {
+		s := secrets[i]
+		if s.Type == transports.CredentialType_password {
+			pwdAuth = s
+		} else if s.Type == transports.CredentialType_private_key {
+			identityAuth = s
+		}
+	}
+
+	assert.Equal(t, []byte("blabla"), identityAuth.Secret)
+	assert.Equal(t, "supersecure", string(pwdAuth.Secret))
 }
 
 func TestSecretManagerJSONBackendOverride(t *testing.T) {
@@ -158,9 +171,22 @@ func TestSecretManagerJSONBackendOverride(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, transports.TransportBackend_CONNECTION_WINRM, assetObj.Connections[0].Backend)
-	assert.Equal(t, "that-user", assetObj.Connections[0].User)
-	assert.Equal(t, []byte("blabla"), assetObj.Connections[0].PrivateKeyBytes)
-	assert.Equal(t, "supersecure", assetObj.Connections[0].Password)
+	assert.Equal(t, "that-user", assetObj.Connections[0].Credentials[0].User)
+
+	var pwdAuth *transports.Credential
+	var identityAuth *transports.Credential
+	secrets := assetObj.Connections[0].Credentials
+	for i := range secrets {
+		s := secrets[i]
+		if s.Type == transports.CredentialType_password {
+			pwdAuth = s
+		} else if s.Type == transports.CredentialType_private_key {
+			identityAuth = s
+		}
+	}
+
+	assert.Equal(t, []byte("blabla"), identityAuth.Secret)
+	assert.Equal(t, "supersecure", string(pwdAuth.Secret))
 }
 
 func TestSecretManagerBadKey(t *testing.T) {

@@ -54,10 +54,9 @@ func DefaultConfig(endpoint *winrm.Endpoint) *winrm.Endpoint {
 }
 
 // New creates a winrm client and establishes a connection to verify the connection
-func New(endpoint *transports.TransportConfig) (*WinrmTransport, error) {
-
+func New(tc *transports.TransportConfig) (*WinrmTransport, error) {
 	// ensure all required configs are set
-	winrmEndpoint, err := VerifyConfig(endpoint)
+	winrmEndpoint, err := VerifyConfig(tc)
 	if err != nil {
 		return nil, err
 	}
@@ -68,13 +67,19 @@ func New(endpoint *transports.TransportConfig) (*WinrmTransport, error) {
 	params := winrm.DefaultParameters
 	params.TransportDecorator = func() winrm.Transporter { return &winrm.ClientNTLM{} }
 
-	client, err := winrm.NewClientWithParameters(winrmEndpoint, endpoint.User, endpoint.Password, params)
+	// search for password secret
+	c, err := transports.GetPassword(tc.Credentials)
+	if err != nil {
+		return nil, errors.New("missing password for winrm transport")
+	}
+
+	client, err := winrm.NewClientWithParameters(winrmEndpoint, c.User, string(c.Secret), params)
 	if err != nil {
 		return nil, err
 	}
 
 	// test connection
-	log.Debug().Str("user", endpoint.User).Str("host", endpoint.Host).Msg("winrm> connecting to remote shell via WinRM")
+	log.Debug().Str("user", c.User).Str("host", tc.Host).Msg("winrm> connecting to remote shell via WinRM")
 	shell, err := client.CreateShell()
 	if err != nil {
 		return nil, err
@@ -89,8 +94,8 @@ func New(endpoint *transports.TransportConfig) (*WinrmTransport, error) {
 	return &WinrmTransport{
 		Endpoint: winrmEndpoint,
 		Client:   client,
-		kind:     endpoint.Kind,
-		runtime:  endpoint.Runtime,
+		kind:     tc.Kind,
+		runtime:  tc.Runtime,
 	}, nil
 }
 

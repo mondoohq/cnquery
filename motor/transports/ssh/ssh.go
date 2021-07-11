@@ -3,6 +3,9 @@ package ssh
 import (
 	"net"
 	"os"
+	"path/filepath"
+
+	"github.com/mitchellh/go-homedir"
 
 	"github.com/cockroachdb/errors"
 
@@ -47,7 +50,7 @@ func New(endpoint *transports.TransportConfig) (*SSHTransport, error) {
 	}
 
 	t := &SSHTransport{
-		Endpoint:         endpoint,
+		ConnectionConfig: endpoint,
 		UseScpFilesystem: activateScp,
 		Sudo:             s,
 		kind:             endpoint.Kind,
@@ -57,8 +60,42 @@ func New(endpoint *transports.TransportConfig) (*SSHTransport, error) {
 	return t, err
 }
 
+// TODO: only run when ssh-agent credential is there
+func DefaultConfig(cc *transports.TransportConfig) *transports.TransportConfig {
+	p, err := cc.IntPort()
+	// use default port if port is 0
+	if err == nil && p <= 0 {
+		cc.Port = "22"
+	}
+
+	// ssh config overwrite like: IdentityFile ~/.foo/identity is done in ReadSSHConfig()
+	// fallback to default paths 	~/.ssh/id_rsa and ~/.ssh/id_dsa if they exist
+	home, err := homedir.Dir()
+	if err == nil {
+		files := []string{
+			filepath.Join(home, ".ssh", "id_rsa"),
+			filepath.Join(home, ".ssh", "id_dsa"),
+			// specific handling for google compute engine, see https://cloud.google.com/compute/docs/instances/connecting-to-instance
+			// filepath.Join(home, ".ssh", "google_compute_engine"),
+		}
+
+		// filter keys by existence
+		for i := range files {
+			f := files[i]
+			_, err := os.Stat(f)
+			if err == nil {
+				// apply the option manually
+				credential, _ := transports.NewPrivateKeyCredentialFromPath("changem", f)
+				cc.AddCredential(credential)
+			}
+		}
+	}
+
+	return cc
+}
+
 type SSHTransport struct {
-	Endpoint         *transports.TransportConfig
+	ConnectionConfig *transports.TransportConfig
 	SSHClient        *ssh.Client
 	fs               afero.Fs
 	UseScpFilesystem bool
@@ -70,7 +107,7 @@ type SSHTransport struct {
 }
 
 func (t *SSHTransport) Connect() error {
-	endpoint := t.Endpoint
+	cc := t.ConnectionConfig
 
 	// load known hosts and track the fingerprint of the ssh server for later identification
 	knownHostsCallback, err := KnownHostsCallback()
@@ -84,7 +121,7 @@ func (t *SSHTransport) Connect() error {
 		hostkey = key
 
 		// ignore hostkey check if the user provided an insecure flag
-		if endpoint.Insecure {
+		if cc.Insecure {
 			return nil
 		}
 
@@ -92,15 +129,15 @@ func (t *SSHTransport) Connect() error {
 	}
 
 	// establish connection
-	conn, err := sshClientConnection(endpoint, hostkeyCallback)
+	conn, err := sshClientConnection(cc, hostkeyCallback)
 	if err != nil {
-		log.Debug().Err(err).Str("transport", "ssh").Str("host", endpoint.Host).Str("port", endpoint.Port).Str("user", endpoint.User).Bool("insecure", endpoint.Insecure).Msg("could not establish ssh session")
+		log.Debug().Err(err).Str("transport", "ssh").Str("host", cc.Host).Str("port", cc.Port).Bool("insecure", cc.Insecure).Msg("could not establish ssh session")
 		return err
 	}
 	t.SSHClient = conn
 	t.HostKey = hostkey
 	t.serverVersion = string(conn.ServerVersion())
-	log.Debug().Str("transport", "ssh").Str("host", endpoint.Host).Str("port", endpoint.Port).Str("user", endpoint.User).Str("server", t.serverVersion).Msg("ssh session established")
+	log.Debug().Str("transport", "ssh").Str("host", cc.Host).Str("port", cc.Port).Str("server", t.serverVersion).Msg("ssh session established")
 	return nil
 }
 

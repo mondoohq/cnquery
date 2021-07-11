@@ -158,7 +158,6 @@ func instanceToAsset(account string, region string, instance types.Instance, ssh
 	if instance.PublicIpAddress != nil {
 		connection = &transports.TransportConfig{
 			Backend:  transports.TransportBackend_CONNECTION_SSH,
-			User:     sshUsername,
 			Host:     *instance.PublicIpAddress,
 			Insecure: insecure,
 			Runtime:  transports.RUNTIME_AWS_EC2,
