@@ -21,8 +21,9 @@ func TestAwsParameterStore(t *testing.T) {
 	v := New(cfg)
 	ctx := context.Background()
 
+	key := "mondoo-test-secret-key"
 	cred := &vault.Credential{
-		Key: vault.Mrn2secretKey("//platformid.api.mondoo.app/runtime/aws/ec2/v1/accounts/675173580680/regions/eu-west-1/instances/i-0e11b0762369fbefa"),
+		Key: key,
 		Fields: map[string]string{
 			"key":  "value1",
 			"key2": "value2",

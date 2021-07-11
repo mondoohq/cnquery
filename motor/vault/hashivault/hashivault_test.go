@@ -24,7 +24,7 @@ func TestKeyring(t *testing.T) {
 	}
 	ctx := context.Background()
 
-	key := vault.Mrn2secretKey("//platformid.api.mondoo.app/runtime/aws/ec2/v1/accounts/675173580680/regions/eu-west-1/instances/i-0e11b0762369fbefa")
+	key := "test-key"
 	fields := map[string]string{
 		"key":  "value",
 		"key2": "value2",
