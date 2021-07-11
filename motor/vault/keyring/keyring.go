@@ -33,7 +33,7 @@ func (v *Vault) open() (keyring.Keyring, error) {
 	})
 }
 
-func (v *Vault) Set(ctx context.Context, cred *vault.Credential) (*vault.CredentialID, error) {
+func (v *Vault) Set(ctx context.Context, cred *vault.Secret) (*vault.SecretID, error) {
 	ring, err := v.open()
 	if err != nil {
 		return nil, err
@@ -46,12 +46,12 @@ func (v *Vault) Set(ctx context.Context, cred *vault.Credential) (*vault.Credent
 		Data:  []byte(cred.Secret),
 	})
 
-	return &vault.CredentialID{
+	return &vault.SecretID{
 		Key: cred.Key,
 	}, err
 }
 
-func (v *Vault) Get(ctx context.Context, id *vault.CredentialID) (*vault.Credential, error) {
+func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, error) {
 	ring, err := v.open()
 	if err != nil {
 		return nil, err
@@ -62,9 +62,9 @@ func (v *Vault) Get(ctx context.Context, id *vault.CredentialID) (*vault.Credent
 		return nil, err
 	}
 
-	return &vault.Credential{
+	return &vault.Secret{
 		Key:    i.Key,
 		Label:  i.Label,
-		Secret: string(i.Data),
+		Secret: i.Data,
 	}, nil
 }
