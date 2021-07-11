@@ -22,10 +22,10 @@ func TestKeyring(t *testing.T) {
 	require.NoError(t, err)
 
 	key := vault.Mrn2secretKey("//platformid.api.mondoo.app/runtime/aws/ec2/v1/accounts/675173580680/regions/eu-west-1/instances/i-0e11b0762369fbefa")
-	cred := &vault.Credential{
+	cred := &vault.Secret{
 		Key:    key,
 		Label:  "mondoo: " + key,
-		Secret: string(credBytes),
+		Secret: credBytes,
 	}
 
 	id, err := v.Set(ctx, cred)

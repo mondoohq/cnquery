@@ -38,7 +38,7 @@ func awsParamKeyID(key string) string {
 	return gcpKey
 }
 
-func (v *Vault) Get(ctx context.Context, id *vault.CredentialID) (*vault.Credential, error) {
+func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, error) {
 	err := validKey(id.Key)
 	if err != nil {
 		return nil, err
@@ -56,17 +56,18 @@ func (v *Vault) Get(ctx context.Context, id *vault.CredentialID) (*vault.Credent
 		return nil, errors.Wrap(err, "failed to get secret")
 	}
 
-	var data string
+	var data []byte
 	if out != nil && out.Parameter != nil {
-		data = *out.Parameter.Value
+		v := *out.Parameter.Value
+		data = []byte(v)
 	}
 
-	return &vault.Credential{
+	return &vault.Secret{
 		Key:    id.Key,
 		Secret: data,
 	}, nil
 }
 
-func (v *Vault) Set(ctx context.Context, cred *vault.Credential) (*vault.CredentialID, error) {
+func (v *Vault) Set(ctx context.Context, cred *vault.Secret) (*vault.SecretID, error) {
 	return nil, errors.New("not implemented")
 }

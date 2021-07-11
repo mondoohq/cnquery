@@ -116,7 +116,7 @@ func (vsm *VaultSecretManager) GetSecretMetadata(a *asset.Asset) (*SecretMetadat
 }
 
 func (vsm *VaultSecretManager) GetSecret(keyID string) (string, error) {
-	cred, err := vsm.vault.Get(context.Background(), &vault.CredentialID{
+	cred, err := vsm.vault.Get(context.Background(), &vault.SecretID{
 		Key: keyID,
 	})
 	if err != nil {
@@ -127,7 +127,7 @@ func (vsm *VaultSecretManager) GetSecret(keyID string) (string, error) {
 		return "", errors.New("could not find the id: " + keyID)
 	}
 	log.Debug().Str("key-id", keyID).Msg("retrieved secret")
-	return cred.Secret, nil
+	return string(cred.Secret), nil
 }
 
 func (vsm *VaultSecretManager) EnrichConnection(a *asset.Asset, secretMetadata *SecretMetadata) error {

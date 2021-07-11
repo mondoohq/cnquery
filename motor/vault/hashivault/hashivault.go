@@ -57,7 +57,7 @@ func validKey(key string) error {
 }
 
 // https://learn.hashicorp.com/tutorials/vault/versioned-kv?in=vault/secrets-management#step-2-write-secrets
-func (v *Vault) Get(ctx context.Context, id *vault.CredentialID) (*vault.Credential, error) {
+func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, error) {
 	c, err := v.client()
 	if err != nil {
 		return nil, err
@@ -78,9 +78,9 @@ func (v *Vault) Get(ctx context.Context, id *vault.CredentialID) (*vault.Credent
 		return nil, err
 	}
 
-	return &vault.Credential{
+	return &vault.Secret{
 		Key:    id.Key,
-		Secret: string(secretBytes),
+		Secret: secretBytes,
 	}, nil
 }
 
@@ -112,6 +112,6 @@ func SecretData(s *api.Secret) ([]byte, error) {
 	return json.Marshal(secretData)
 }
 
-func (v *Vault) Set(ctx context.Context, cred *vault.Credential) (*vault.CredentialID, error) {
+func (v *Vault) Set(ctx context.Context, cred *vault.Secret) (*vault.SecretID, error) {
 	return nil, errors.New("not implemented")
 }

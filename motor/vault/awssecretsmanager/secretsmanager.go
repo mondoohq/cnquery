@@ -29,7 +29,7 @@ type Vault struct {
 	cfg aws.Config
 }
 
-func (v *Vault) Get(ctx context.Context, id *vault.CredentialID) (*vault.Credential, error) {
+func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, error) {
 	log.Debug().Msgf("getting cred from aws secrets manager %s", id.Key)
 	// create the client
 	parsedArn, err := arn.Parse(id.Key)
@@ -46,12 +46,12 @@ func (v *Vault) Get(ctx context.Context, id *vault.CredentialID) (*vault.Credent
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get secret")
 	}
-	return &vault.Credential{
+	return &vault.Secret{
 		Key:    id.Key,
-		Secret: *out.SecretString,
+		Secret: out.SecretBinary,
 	}, nil
 }
 
-func (v *Vault) Set(ctx context.Context, cred *vault.Credential) (*vault.CredentialID, error) {
+func (v *Vault) Set(ctx context.Context, cred *vault.Secret) (*vault.SecretID, error) {
 	return nil, errors.New("not implemented")
 }

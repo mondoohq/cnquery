@@ -3,17 +3,17 @@ syntax = "proto3";
 package mondoo.motor.vault.v1;
 option go_package = "go.mondoo.io/mondoo/motor/vault";
 
-message CredentialID {
+message SecretID {
   string key = 1;
 }
 
-message Credential {
+message Secret {
   string key = 1;
   string label = 2;
-  string secret = 3;
+  bytes secret = 3;
 }
 
 service Vault {
-  rpc Get(CredentialID) returns (Credential);
-  rpc Set(Credential) returns (CredentialID);
+  rpc Get(SecretID) returns (Secret);
+  rpc Set(Secret) returns (SecretID);
 }

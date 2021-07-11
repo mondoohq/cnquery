@@ -2,7 +2,6 @@ package gcpsecretmanager
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -54,7 +53,7 @@ func gcpKeyID(key string) string {
 	return gcpKey
 }
 
-func (v *Vault) Get(ctx context.Context, id *vault.CredentialID) (*vault.Credential, error) {
+func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, error) {
 	err := validKey(id.Key)
 	if err != nil {
 		return nil, err
@@ -73,22 +72,12 @@ func (v *Vault) Get(ctx context.Context, id *vault.CredentialID) (*vault.Credent
 		return nil, errors.Wrap(err, "failed to access secret version")
 	}
 
-	var fields map[string]string
-	err = json.Unmarshal(result.Payload.Data, &fields)
-	if err != nil {
-		return nil, err
-	}
-	var data string
-	if result != nil && result.Payload != nil {
-		data = string(result.Payload.Data)
-	}
-
-	return &vault.Credential{
+	return &vault.Secret{
 		Key:    id.Key,
-		Secret: data,
+		Secret: result.Payload.Data,
 	}, nil
 }
 
-func (v *Vault) Set(ctx context.Context, cred *vault.Credential) (*vault.CredentialID, error) {
+func (v *Vault) Set(ctx context.Context, cred *vault.Secret) (*vault.SecretID, error) {
 	return nil, errors.New("not implemented")
 }
