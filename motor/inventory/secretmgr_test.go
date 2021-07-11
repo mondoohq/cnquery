@@ -26,7 +26,7 @@ func TestSecretKeySimple(t *testing.T) {
 	value, err := e.Run(query, map[string]*llx.Primitive{})
 	require.NoError(t, err)
 
-	sMeta := &inventory.SecretMetadata{}
+	sMeta := &inventory.CredentialQueryResponse{}
 	decoder, _ := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		Metadata: nil,
 		Result:   sMeta,
@@ -58,7 +58,7 @@ func TestSecretKeyIfReturn(t *testing.T) {
 	value, err := e.Run(query, props)
 	require.NoError(t, err)
 
-	sMeta := &inventory.SecretMetadata{}
+	sMeta := &inventory.CredentialQueryResponse{}
 	decoder, _ := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		Metadata: nil,
 		Result:   sMeta,

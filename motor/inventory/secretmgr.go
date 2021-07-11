@@ -4,53 +4,27 @@ import (
 	"context"
 	"encoding/json"
 
-	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/motor/vault"
-	"go.mondoo.io/mondoo/policy/executor"
-
 	"github.com/cockroachdb/errors"
-	"github.com/mitchellh/mapstructure"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/types"
+	"go.mondoo.io/mondoo/motor/vault"
 )
 
-type SecretMetadata struct {
-	Backend      string `json:"backend,omitempty"`      // default to ssh, user specified
-	User         string `json:"user,omitempty"`         // user associated with the secret
-	Host         string `json:"host,omitempty"`         // overwrite of the host
-	SecretID     string `json:"secretID,omitempty"`     // id to use to fetch the secret from the source vault
-	SecretFormat string `json:"secretFormat,omitempty"` // private_key, password, or json
-}
-
 type SecretManager interface {
-	GetSecretMetadata(a *asset.Asset) (*SecretMetadata, error)
-	EnrichConnection(a *asset.Asset, secMeta *SecretMetadata) error
+	GetSecretMetadata(a *asset.Asset) (*CredentialQueryResponse, error)
+	EnrichConnection(a *asset.Asset, secMeta *CredentialQueryResponse) error
 }
 
 func NewVaultSecretManager(v vault.Vault, secretMetadataQuery string) (SecretManager, error) {
-	e, err := executor.NewEmbeddedExecutor()
+	sq, err := NewCredentialQueryRunner(secretMetadataQuery)
 	if err != nil {
 		return nil, err
 	}
 
-	// just empty props to ensure we can compile
-	props := map[string]*llx.Primitive{
-		"mrn":      llx.StringPrimitive(""),
-		"name":     llx.StringPrimitive(""),
-		"labels":   llx.MapData(map[string]interface{}{}, types.String).Result().Data,
-		"platform": llx.MapData(map[string]interface{}{}, types.String).Result().Data,
-	}
-	_, err = e.Compile(secretMetadataQuery, props)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not compile the secret metadata function")
-	}
-
 	return &VaultSecretManager{
-		e:                   e,
-		vault:               v,
-		secretMetadataQuery: secretMetadataQuery,
+		vault: v,
+		sq:    sq,
 	}, nil
 }
 
@@ -60,59 +34,18 @@ func NewVaultSecretManager(v vault.Vault, secretMetadataQuery string) (SecretMan
 //    asset metadata  (labels and platform and connection type (e.g. ssh) is passed in as a property
 // 2. we use the secret metadata to retrieve the secret from vault
 type VaultSecretManager struct {
-	e                   *executor.EmbeddedExecutor
-	vault               vault.Vault
-	secretMetadataQuery string
+	vault vault.Vault
+	sq    *CredentialQueryRunner
 }
 
-func (vsm *VaultSecretManager) GetSecretMetadata(a *asset.Asset) (*SecretMetadata, error) {
+func (vsm *VaultSecretManager) GetSecretMetadata(a *asset.Asset) (*CredentialQueryResponse, error) {
 	if vsm.vault == nil {
 		return nil, nil
 	}
 
 	// this is where we get the vault configuration query and evaluate it against the asset data
 	// if vault and secret function is set, run the additional handling
-
-	// map labels to props
-	labelProps := map[string]interface{}{}
-	labels := a.GetLabels()
-	for k, v := range labels {
-		labelProps[k] = v
-	}
-
-	// map platform to props
-	var platformProps map[string]interface{}
-	if a.Platform != nil {
-		platformProps = map[string]interface{}{
-			"name":    a.Platform.Name,
-			"release": a.Platform.Release,
-			"arch":    a.Platform.Arch,
-		}
-	} else {
-		platformProps = map[string]interface{}{}
-	}
-
-	props := map[string]*llx.Primitive{
-		"mrn":      llx.StringPrimitive(a.Mrn),
-		"name":     llx.StringPrimitive(a.Name),
-		"labels":   llx.MapData(labelProps, types.String).Result().Data,
-		"platform": llx.MapData(platformProps, types.String).Result().Data,
-	}
-
-	value, err := vsm.e.Run(vsm.secretMetadataQuery, props)
-	if err != nil {
-		return nil, err
-	}
-
-	sMeta := &SecretMetadata{}
-	decoder, _ := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-		Metadata: nil,
-		Result:   sMeta,
-		TagName:  "json",
-	})
-	err = decoder.Decode(value)
-
-	return sMeta, err
+	return vsm.sq.SecretId(a)
 }
 
 func (vsm *VaultSecretManager) GetSecret(keyID string) (string, error) {
@@ -130,7 +63,7 @@ func (vsm *VaultSecretManager) GetSecret(keyID string) (string, error) {
 	return string(cred.Secret), nil
 }
 
-func (vsm *VaultSecretManager) EnrichConnection(a *asset.Asset, secretMetadata *SecretMetadata) error {
+func (vsm *VaultSecretManager) EnrichConnection(a *asset.Asset, secretMetadata *CredentialQueryResponse) error {
 	if vsm.vault == nil || a == nil || secretMetadata == nil {
 		return nil
 	}
@@ -199,7 +132,7 @@ func mergeConnectionValues(tc1 *transports.TransportConfig, tc2 *transports.Tran
 }
 
 // parses the secret and its meta-information into a transport.Config object
-func parseSecret(secretMetadata *SecretMetadata, secret string) (*transports.TransportConfig, error) {
+func parseSecret(secretMetadata *CredentialQueryResponse, secret string) (*transports.TransportConfig, error) {
 	connection := &transports.TransportConfig{}
 
 	backendValue := ""
