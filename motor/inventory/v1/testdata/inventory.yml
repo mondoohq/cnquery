@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: Inventory
+metadata:
+  name: mondoo-inventory
+  labels:
+    environment: production
+spec:
+  # credential query is always used if no credential is directly assigned
+  credential_query: "{ id: secret-1 }"
+  assets:
+    # windows with password authentication
+    - id: windows
+      connections:
+        - host: 192.168.1.1
+          credentials:
+            - # should generate implicit type: password
+              user: username
+              password: pass
+            - # should generate implicit type: private_key
+              user: username
+              private_key_path: ./private_key_01
+              password: password
+            - type: credentials_query
+
+    # linux with ssh agent reference
+    - id: linux-ssh-key
+      connections:
+        - host: example.com
+          credentials:
+            - type: ssh_agent # todo, make this a implicit?
+              user: username
+              # method: ssh-agent -> also read the ssh config
+              # if nothing is provided we may activate this as default
+    # linux with custom identity keys
+    - id: linux-identity-key
+      connections:
+        - host: x
+          credentials:
+            - user: chris # implicit type private key
+              private_key_path: ./private_key_02
+    - id: linux-embedded-pem
+      connections:
+        - host: x
+          credentials:
+            - secret_id: secret-1
+
+    - id: vsphere # asset with dynamic discovery
+      connections:
+        - host: 192.168.1.100
+          credentials:
+            - user: root # implicit type password
+              password: pwd
+            - type: credentials_query
+      options:
+        discover: all
+        # platform vsphere instance id
+        # if any discovered machine does not match the asset list then the credentials-query kicks in
+
+      # no platform -> ssh connected read ssh hostkey (no hostname)
+    - connections:
+        - host: 192.134.100.1
+          credentials:
+            - secret_id: secret-2
+
+    - name: asset x
+      platform-ids:
+        - //platform.mondoo.app/vsphere-id
+        - //platform.mondoo.app/ssh-hostkey
+        - //platform.mondoo.app/hostname
+        - //platform.mondoo.app/machine-uuid
+      connections:
+        - credentials:
+            - secret_id: secret-1
+
+  # external vault, needs to be pre-configured
+  # If a vault is defined along with embedded credentials, we first query against embedded credentials
+  # and fall-backs to the configured vault
+  vault: vault-1
+
+  # essentially an embedded in-memory vault
+  # we will make no difference if the content that is embedded and a referenced vault
+  # during processing, all embedded credentials will be extracted via a vault
+  # all embedded credentials in asset definitions are automatically migrated to this list
+  credentials:
+    secret-1:
+      type: password
+      user: username
+      password: password
+    secret-2:
+      private_key_path: ./private_key_03
+    secret-3:
+      private_key: |
+        PEM encoded
