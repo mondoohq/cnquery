@@ -1,10 +1,43 @@
 package transports
 
 import (
+	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"os"
 )
+
+// UnmarshalJSON parses either an int or a the string representation of
+// CredentialType into the struct
+func (s *CredentialType) UnmarshalJSON(data []byte) error {
+	// check if we have a number
+	var code int32
+	err := json.Unmarshal(data, &code)
+	if err == nil {
+		*s = CredentialType(code)
+	}
+	if err != nil {
+		var name string
+		err = json.Unmarshal(data, &name)
+		code, ok := CredentialType_value[name]
+		if !ok {
+			return errors.New("unknown type value: " + string(data))
+		}
+		*s = CredentialType(code)
+	}
+	return nil
+}
+
+// MarshalJSON returns the JSON respresentation of CredentialType
+// NOTE: we do not use pointers here to ensure its converted properly
+// even if the struct is used directly
+func (s CredentialType) MarshalJSON() ([]byte, error) {
+	v, ok := CredentialType_name[int32(s)]
+	if !ok {
+		return nil, errors.New("could not marshal CredentialType")
+	}
+	return json.Marshal(v)
+}
 
 func NewPrivateKeyCredential(user string, pemBytes []byte, password string) *Credential {
 	return &Credential{

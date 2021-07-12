@@ -66,7 +66,14 @@ message Credential {
   // the following are optional and sugar for defining a secret
   // those values are only allowed for reading in yaml values but not via API calls
   string password = 21; // optional, could also be the password for the private key
-  string private_key = 22; // optional
+
+  // for user convenience we define private_key, this allows yaml/json writers
+  // to just embed the string representation, otherwise it would need to be base64 encoded
+  string private_key = 22;
+
+  // for user convenience we define private_key_path which loads a local file into the
+  // secret
+  string private_key_path = 23;
 }
 
 message TransportConfig {
