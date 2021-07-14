@@ -1,8 +1,6 @@
 package k8s
 
 import (
-	"strings"
-
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/resources/kubectl"
 	"go.mondoo.io/mondoo/motor"
@@ -18,40 +16,6 @@ const (
 	DiscoveryContainerImages = "container-images"
 )
 
-type K8sConfig struct {
-	Context   string
-	Namespace string
-	Pod       string
-}
-
-func ParseK8SContext(k8sUrl string) K8sConfig {
-	var config K8sConfig
-
-	k8sUrl = strings.TrimPrefix(k8sUrl, "k8s://")
-
-	keyValues := strings.Split(k8sUrl, "/")
-	for i := 0; i < len(keyValues); {
-		if keyValues[i] == "namespace" {
-			if i+1 < len(keyValues) {
-				config.Namespace = keyValues[i+1]
-			}
-		}
-		if keyValues[i] == "context" {
-			if i+1 < len(keyValues) {
-				config.Context = keyValues[i+1]
-			}
-		}
-		if keyValues[i] == "pod" {
-			if i+1 < len(keyValues) {
-				config.Pod = keyValues[i+1]
-			}
-		}
-		i = i + 2
-	}
-
-	return config
-}
-
 type Resolver struct{}
 
 func (r *Resolver) Name() string {
@@ -60,27 +24,6 @@ func (r *Resolver) Name() string {
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
-}
-
-func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
-	// parse context from url
-	config := ParseK8SContext(url)
-
-	tc := &transports.TransportConfig{
-		Backend: transports.TransportBackend_CONNECTION_K8S,
-		// TODO: we need to set the backend here
-		Options: map[string]string{
-			"context":   config.Context,
-			"namespace": config.Namespace,
-			"pod":       config.Pod,
-		},
-	}
-
-	for i := range opts {
-		opts[i](tc)
-	}
-
-	return tc, nil
 }
 
 func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {

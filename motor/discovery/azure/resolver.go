@@ -2,7 +2,6 @@ package azure
 
 import (
 	"context"
-	"strings"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -17,44 +16,6 @@ const (
 	DiscoveryInstances = "instances"
 )
 
-type AzureConfig struct {
-	SubscriptionID string
-	User           string
-}
-
-func (az AzureConfig) Validate() error {
-	if len(az.SubscriptionID) == 0 {
-		return errors.New("no subscription provided, use az://subscriptions/id")
-	}
-	return nil
-}
-
-func parseAzureInstanceContext(azureUrl string) *AzureConfig {
-	var config AzureConfig
-
-	azureUrl = strings.TrimPrefix(azureUrl, "az://")
-	azureUrl = strings.TrimPrefix(azureUrl, "azure://")
-
-	keyValues := strings.Split(azureUrl, "/")
-	for i := 0; i < len(keyValues); {
-		if keyValues[i] == "user" {
-			if i+1 < len(keyValues) {
-				config.User = keyValues[i+1]
-			}
-		}
-
-		if keyValues[i] == "subscriptions" {
-			if i+1 < len(keyValues) {
-				config.SubscriptionID = keyValues[i+1]
-			}
-		}
-
-		i = i + 2
-	}
-
-	return &config
-}
-
 type Resolver struct{}
 
 func (r *Resolver) Name() string {
@@ -63,30 +24,6 @@ func (r *Resolver) Name() string {
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryInstances}
-}
-
-func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
-	config := parseAzureInstanceContext(url)
-
-	err := config.Validate()
-	if err != nil {
-		return nil, err
-	}
-
-	// add azure api as asset
-	tc := &transports.TransportConfig{
-		Backend: transports.TransportBackend_CONNECTION_AZURE,
-		Options: map[string]string{
-			"subscriptionID": config.SubscriptionID,
-			"user":           config.User,
-		},
-	}
-
-	for i := range opts {
-		opts[i](tc)
-	}
-
-	return tc, nil
 }
 
 func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {

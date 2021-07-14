@@ -2,7 +2,6 @@ package container_registry
 
 import (
 	"errors"
-	"strings"
 
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/rs/zerolog/log"
@@ -23,20 +22,6 @@ func (r *Resolver) Name() string {
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
-}
-
-func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
-	repository := strings.TrimPrefix(url, "cr://")
-
-	tc := &transports.TransportConfig{
-		Backend: transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY,
-		Host:    repository,
-	}
-
-	for i := range opts {
-		opts[i](tc)
-	}
-	return tc, nil
 }
 
 func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {

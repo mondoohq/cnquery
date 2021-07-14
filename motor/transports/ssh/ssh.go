@@ -85,7 +85,8 @@ func DefaultConfig(cc *transports.TransportConfig) *transports.TransportConfig {
 			_, err := os.Stat(f)
 			if err == nil {
 				// apply the option manually
-				credential, _ := transports.NewPrivateKeyCredentialFromPath("changem", f)
+				// TODO: change username
+				credential, _ := transports.NewPrivateKeyCredentialFromPath("changem", f, nil)
 				cc.AddCredential(credential)
 			}
 		}

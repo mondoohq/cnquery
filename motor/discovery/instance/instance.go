@@ -18,10 +18,6 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
-	return transports.NewTransportFromUrl(url, opts...)
-}
-
 func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {
 	assetInfo := &asset.Asset{
 		Connections: []*transports.TransportConfig{tc},

@@ -46,19 +46,19 @@ func NewTransportConfig(b TransportBackend, opts ...TransportConfigOption) (*Tra
 	return t, nil
 }
 
-func NewTransportFromUrl(uri string, opts ...TransportConfigOption) (*TransportConfig, error) {
+func NewTransportFromUrl(uri string, opts ...TransportConfigOption) (*TransportConfig, string, error) {
 	if uri == "" {
-		return nil, errors.New("uri cannot be empty")
+		return nil, "", errors.New("uri cannot be empty")
 	}
 
 	u, err := url.Parse(uri)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	b, err := MapSchemeBackend(u.Scheme)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	t := &TransportConfig{
@@ -73,10 +73,10 @@ func NewTransportFromUrl(uri string, opts ...TransportConfigOption) (*TransportC
 	for i := range opts {
 		err = opts[i](t)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 	}
-	return t, nil
+	return t, u.User.Username(), nil
 }
 
 func (cc *TransportConfig) AddCredential(c *Credential) {
