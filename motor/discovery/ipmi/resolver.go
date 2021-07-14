@@ -17,21 +17,6 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
-	return transports.NewTransportFromUrl(url, opts...)
-	// if err != nil {
-	// 	err := errors.Wrapf(err, "cannot connect to %s", url)
-	// 	return nil, err
-	// }
-
-	// // copy password from opts asset if it was not encoded in url
-	// if len(t.Password) == 0 && len(in.Password) > 0 {
-	// 	t.Password = in.Password
-	// }
-
-	// return t, nil
-}
-
 func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 

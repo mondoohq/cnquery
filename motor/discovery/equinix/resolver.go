@@ -5,30 +5,7 @@ import (
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	equinix_transport "go.mondoo.io/mondoo/motor/transports/equinix"
-	"strings"
 )
-
-type EquinixConfig struct {
-	ProjectID string
-}
-
-func ParseEquinixContext(gcpUrl string) EquinixConfig {
-	var config EquinixConfig
-
-	gcpUrl = strings.TrimPrefix(gcpUrl, "equinix://")
-
-	keyValues := strings.Split(gcpUrl, "/")
-	for i := 0; i < len(keyValues); {
-		if keyValues[i] == "projects" {
-			if i+1 < len(keyValues) {
-				config.ProjectID = keyValues[i+1]
-			}
-		}
-		i = i + 2
-	}
-
-	return config
-}
 
 type Resolver struct{}
 
@@ -38,24 +15,6 @@ func (r *Resolver) Name() string {
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
-}
-
-func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
-	// parse context from url
-	config := ParseEquinixContext(url)
-
-	tc := &transports.TransportConfig{
-		Backend: transports.TransportBackend_CONNECTION_EQUINIX_METAL,
-		Options: map[string]string{
-			"projectID": config.ProjectID,
-		},
-	}
-
-	for i := range opts {
-		opts[i](tc)
-	}
-
-	return tc, nil
 }
 
 func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {

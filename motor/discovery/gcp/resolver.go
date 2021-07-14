@@ -1,8 +1,6 @@
 package gcp
 
 import (
-	"strings"
-
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
@@ -17,34 +15,6 @@ const (
 	DiscoveryInstances = "instances"
 )
 
-type GcpConfig struct {
-	User    string
-	Project string
-}
-
-func ParseGcpInstanceContext(gcpUrl string) GcpConfig {
-	var config GcpConfig
-
-	gcpUrl = strings.TrimPrefix(gcpUrl, "gcp://")
-
-	keyValues := strings.Split(gcpUrl, "/")
-	for i := 0; i < len(keyValues); {
-		if keyValues[i] == "user" {
-			if i+1 < len(keyValues) {
-				config.User = keyValues[i+1]
-			}
-		}
-		if keyValues[i] == "project" {
-			if i+1 < len(keyValues) {
-				config.Project = keyValues[i+1]
-			}
-		}
-		i = i + 2
-	}
-
-	return config
-}
-
 type GcrResolver struct{}
 
 func (r *GcrResolver) Name() string {
@@ -53,20 +23,6 @@ func (r *GcrResolver) Name() string {
 
 func (r *GcrResolver) AvailableDiscoveryTargets() []string {
 	return []string{}
-}
-
-func (r *GcrResolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
-	repository := strings.TrimPrefix(url, "gcr://")
-	tc := &transports.TransportConfig{
-		Backend: transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY,
-		Host:    repository,
-	}
-
-	for i := range opts {
-		opts[i](tc)
-	}
-
-	return tc, nil
 }
 
 func (r *GcrResolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
@@ -97,40 +53,6 @@ func (k *GcpResolver) Name() string {
 
 func (r *GcpResolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryInstances}
-}
-
-func (r *GcpResolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
-	// parse context from url
-	config := ParseGcpInstanceContext(url)
-
-	// check if we got a project or try to determine it
-	if len(config.Project) == 0 {
-		// try to determine current project
-		projectid, err := gcp_transport.GetCurrentProject()
-
-		if err != nil || len(projectid) == 0 {
-			return nil, errors.New("gcp: no project id provided")
-		}
-		config.Project = projectid
-	}
-
-	log.Debug().Str("project", config.Project).Msg("selected gcp project")
-
-	// add gcp api as asset
-	tc := &transports.TransportConfig{
-		Backend: transports.TransportBackend_CONNECTION_GCP,
-		Options: map[string]string{
-			// TODO: support organization scanning as well
-			"ssh-user": config.User,
-			"project":  config.Project,
-		},
-	}
-
-	for i := range opts {
-		opts[i](tc)
-	}
-
-	return tc, nil
 }
 
 func (r *GcpResolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {

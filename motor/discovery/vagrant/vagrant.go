@@ -23,23 +23,6 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-type vagrantContext struct {
-	Host string
-}
-
-func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
-	host := strings.TrimPrefix(url, "vagrant://")
-	tc := &transports.TransportConfig{
-		Host: host,
-	}
-
-	for i := range opts {
-		opts[i](tc)
-	}
-
-	return tc, nil
-}
-
 func (v *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
@@ -144,7 +127,7 @@ func newVagrantAsset(sshConfig *VagrantVmSSHConfig, rootTransportConfig *transpo
 	}
 
 	// load secret
-	credential, err := transports.NewPrivateKeyCredentialFromPath(sshConfig.User, sshConfig.IdentityFile)
+	credential, err := transports.NewPrivateKeyCredentialFromPath(sshConfig.User, sshConfig.IdentityFile, nil)
 	if err != nil {
 		return nil, err
 	}

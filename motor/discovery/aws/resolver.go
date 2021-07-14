@@ -17,12 +17,6 @@ const (
 	DiscoverySSM       = "ssm"
 )
 
-type Ec2Config struct {
-	User    string
-	Region  string
-	Profile string
-}
-
 type Resolver struct{}
 
 func (r *Resolver) Name() string {
@@ -31,18 +25,6 @@ func (r *Resolver) Name() string {
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryInstances, DiscoverySSM}
-}
-
-func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
-	tc := &transports.TransportConfig{
-		Backend: transports.TransportBackend_CONNECTION_AWS,
-	}
-
-	for i := range opts {
-		opts[i](tc)
-	}
-
-	return tc, nil
 }
 
 func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {

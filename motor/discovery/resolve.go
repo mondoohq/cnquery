@@ -1,12 +1,7 @@
 package discovery
 
 import (
-	"regexp"
 	"strings"
-
-	"go.mondoo.io/mondoo/motor/inventory"
-
-	"go.mondoo.io/mondoo/stringx"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -26,14 +21,13 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/tar"
 	"go.mondoo.io/mondoo/motor/discovery/vagrant"
 	"go.mondoo.io/mondoo/motor/discovery/vsphere"
+	"go.mondoo.io/mondoo/motor/inventory"
 	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/stringx"
 )
-
-var scheme = regexp.MustCompile(`^(.*?):\/\/(.*)$`)
 
 type Resolver interface {
 	Name() string
-	ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error)
 	Resolve(t *transports.TransportConfig) ([]*asset.Asset, error)
 	AvailableDiscoveryTargets() []string
 }
@@ -66,20 +60,6 @@ func init() {
 		transports.SCHEME_EQUINIX:            &equinix.Resolver{},
 		transports.SCHEME_GITHUB:             &instance.Resolver{},
 	}
-}
-
-func ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
-	m := scheme.FindStringSubmatch(url)
-	if len(m) < 3 {
-		return nil, errors.New("unsupported connection string: " + url)
-	}
-	resolverId := m[1]
-	r, ok := resolver[resolverId]
-	if !ok {
-		return nil, errors.New("unsupported backend: " + resolverId)
-	}
-	log.Debug().Str("resolver", r.Name()).Msg("parse url")
-	return r.ParseConnectionURL(url, opts...)
 }
 
 func ResolveAsset(root *asset.Asset, secretMgr inventory.SecretManager) ([]*asset.Asset, error) {

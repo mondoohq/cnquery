@@ -17,19 +17,6 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-// TODO: we need the identity file
-func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
-	return transports.NewTransportFromUrl(url, opts...)
-	// // add azure api as asset
-	// t := &transports.TransportConfig{
-	// 	Backend:       transports.TransportBackend_CONNECTION_MS365,
-	// 	Options:       map[string]string{},
-	// 	IdentityFiles: []string{in.IdentityFile},
-	// }
-
-	// return t, nil
-}
-
 func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
