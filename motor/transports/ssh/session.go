@@ -111,8 +111,7 @@ func authMethods(endpoint *transports.TransportConfig) ([]ssh.AuthMethod, error)
 		credential := endpoint.Credentials[i]
 
 		switch credential.Type {
-		case transports.CredentialType_public_key:
-			// TODO: passphrase is not supported yet, we need to move that logic into the load mechanis
+		case transports.CredentialType_private_key:
 			// it is too late to handle this here
 			identityPass := ""
 			if credential.IdentityPass != nil {
