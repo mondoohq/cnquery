@@ -50,11 +50,10 @@ enum CredentialType {
   undefined = 0;
   password = 1;
   private_key = 2;
-  public_key = 3;
-  ssh_agent = 4;
-  bearer = 5;
-  credentials_query = 6;
-  json = 7;
+  ssh_agent = 3;
+  bearer = 4;
+  credentials_query = 5;
+  json = 6;
 }
 
 // Credential holds authentication information

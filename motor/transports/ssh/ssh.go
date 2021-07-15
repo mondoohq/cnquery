@@ -3,9 +3,6 @@ package ssh
 import (
 	"net"
 	"os"
-	"path/filepath"
-
-	"github.com/mitchellh/go-homedir"
 
 	"github.com/cockroachdb/errors"
 
@@ -31,9 +28,6 @@ func New(endpoint *transports.TransportConfig) (*SSHTransport, error) {
 		return nil, err
 	}
 
-	// set default config if required
-	endpoint = DefaultConfig(endpoint)
-
 	activateScp := false
 	if os.Getenv("MONDOO_SSH_SCP") == "on" {
 		activateScp = true
@@ -58,41 +52,6 @@ func New(endpoint *transports.TransportConfig) (*SSHTransport, error) {
 	}
 	err = t.Connect()
 	return t, err
-}
-
-// TODO: only run when ssh-agent credential is there
-func DefaultConfig(cc *transports.TransportConfig) *transports.TransportConfig {
-	p, err := cc.IntPort()
-	// use default port if port is 0
-	if err == nil && p <= 0 {
-		cc.Port = "22"
-	}
-
-	// ssh config overwrite like: IdentityFile ~/.foo/identity is done in ReadSSHConfig()
-	// fallback to default paths 	~/.ssh/id_rsa and ~/.ssh/id_dsa if they exist
-	home, err := homedir.Dir()
-	if err == nil {
-		files := []string{
-			filepath.Join(home, ".ssh", "id_rsa"),
-			filepath.Join(home, ".ssh", "id_dsa"),
-			// specific handling for google compute engine, see https://cloud.google.com/compute/docs/instances/connecting-to-instance
-			// filepath.Join(home, ".ssh", "google_compute_engine"),
-		}
-
-		// filter keys by existence
-		for i := range files {
-			f := files[i]
-			_, err := os.Stat(f)
-			if err == nil {
-				// apply the option manually
-				// TODO: change username
-				credential, _ := transports.NewPrivateKeyCredentialFromPath("changem", f, nil)
-				cc.AddCredential(credential)
-			}
-		}
-	}
-
-	return cc
 }
 
 type SSHTransport struct {
