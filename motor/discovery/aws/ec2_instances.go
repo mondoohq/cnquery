@@ -53,7 +53,7 @@ func (ec2i *Ec2Instances) getRegions() ([]string, error) {
 
 	res, err := ec2svc.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
 	if err != nil {
-		return regions, nil
+		return regions, err
 	}
 	for _, region := range res.Regions {
 		regions = append(regions, *region.RegionName)
