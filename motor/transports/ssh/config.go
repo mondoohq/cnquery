@@ -59,7 +59,7 @@ func ReadSSHConfig(cc *transports.TransportConfig) *transports.TransportConfig {
 			if err == nil {
 				log.Debug().Str("key", expandedPath).Str("host", host).Msg("read ssh identity key from ssh config")
 				// NOTE: we ignore the error here for now but this should probably been catched earlier anyway
-				credential, _ := transports.NewPrivateKeyCredentialFromPath(user, expandedPath, nil)
+				credential, _ := transports.NewPrivateKeyCredentialFromPath(user, expandedPath, "")
 				// apply the option manually
 				cc.AddCredential(credential)
 			}

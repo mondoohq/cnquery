@@ -33,7 +33,7 @@ func (s *CredentialType) MarshalJSON() ([]byte, error) {
 	return []byte(s.String()), nil
 }
 
-func NewPrivateKeyCredential(user string, pemBytes []byte, password *string) *Credential {
+func NewPrivateKeyCredential(user string, pemBytes []byte, password string) *Credential {
 	return &Credential{
 		Type:     CredentialType_private_key,
 		User:     user,
@@ -42,7 +42,7 @@ func NewPrivateKeyCredential(user string, pemBytes []byte, password *string) *Cr
 	}
 }
 
-func NewPrivateKeyCredentialFromPath(user string, path string, password *string) (*Credential, error) {
+func NewPrivateKeyCredentialFromPath(user string, path string, password string) (*Credential, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return nil, errors.New("private key does not exist " + path)
 	}
