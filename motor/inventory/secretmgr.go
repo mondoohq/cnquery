@@ -135,7 +135,7 @@ func parseSecret(secretMetadata *CredentialQueryResponse, secret string) (*trans
 		credential := transports.NewPasswordCredential(secretMetadata.User, secret)
 		tc.AddCredential(credential)
 	case "private_key":
-		credential := transports.NewPrivateKeyCredential(secretMetadata.User, []byte(secret), nil)
+		credential := transports.NewPrivateKeyCredential(secretMetadata.User, []byte(secret), "")
 		tc.AddCredential(credential)
 	case "json":
 		jsonSecret := make(map[string]string)
@@ -163,7 +163,7 @@ func parseSecret(secretMetadata *CredentialQueryResponse, secret string) (*trans
 		}
 
 		if privK, ok := jsonSecret["private_key"]; ok {
-			credential := transports.NewPrivateKeyCredential(user, []byte(privK), nil)
+			credential := transports.NewPrivateKeyCredential(user, []byte(privK), "")
 			tc.AddCredential(credential)
 		}
 	default:

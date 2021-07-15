@@ -65,10 +65,8 @@ message Credential {
 
   // the following are optional and sugar for defining a secret
   // those values are only allowed for reading in yaml values but not via API calls
-  optional string password = 21;
-  optional string identity_file = 22;
-  optional string identity_pass = 23;
-  optional string private_key = 24;
+  string password = 21; // optional, could also be the password for the private key
+  string private_key = 22; // optional
 }
 
 message TransportConfig {
@@ -81,7 +79,7 @@ message TransportConfig {
   string Port = 3;
   string Path = 4;
 
-  // secrets for the transport
+  // credentials available for this transport configuration
   repeated Credential credentials = 11;
 
   bool Insecure = 8;  // disable ssl/tls checks

@@ -23,12 +23,17 @@ func ApplyDefaults(cc *transports.TransportConfig, username string, identityFile
 	// if identity file is provided with password -> encrypted private key
 	// if no identity file is provided but a password -> password
 	if identityFile != "" && password == "" {
-		credential, err := transports.NewPrivateKeyCredentialFromPath(username, identityFile, &password)
+		credential, err := transports.NewPrivateKeyCredentialFromPath(username, identityFile, password)
 		if err != nil {
 			return err
 		}
 		cc.AddCredential(credential)
 	} else if identityFile != "" && password != "" {
+		credential, err := transports.NewPrivateKeyCredentialFromPath(username, identityFile, password)
+		if err != nil {
+			return err
+		}
+		cc.AddCredential(credential)
 	} else if password != "" {
 		credential := transports.NewPasswordCredential(username, password)
 		cc.AddCredential(credential)
@@ -70,12 +75,8 @@ func ApplyDefaultIdentities(cc *transports.TransportConfig, username string, pas
 			f := files[i]
 			_, err := os.Stat(f)
 			if err == nil {
-				var pwd *string
-				if password != "" {
-					pwd = &password
-				}
 				log.Debug().Str("key", f).Msg("load ssh identity")
-				credential, err := transports.NewPrivateKeyCredentialFromPath(username, f, pwd)
+				credential, err := transports.NewPrivateKeyCredentialFromPath(username, f, password)
 				if err != nil {
 					log.Warn().Err(err).Str("key", f).Msg("could not load ssh identity")
 				} else {

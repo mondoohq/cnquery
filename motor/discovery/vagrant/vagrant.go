@@ -127,7 +127,7 @@ func newVagrantAsset(sshConfig *VagrantVmSSHConfig, rootTransportConfig *transpo
 	}
 
 	// load secret
-	credential, err := transports.NewPrivateKeyCredentialFromPath(sshConfig.User, sshConfig.IdentityFile, nil)
+	credential, err := transports.NewPrivateKeyCredentialFromPath(sshConfig.User, sshConfig.IdentityFile, "")
 	if err != nil {
 		return nil, err
 	}

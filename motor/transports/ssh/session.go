@@ -112,12 +112,7 @@ func authMethods(endpoint *transports.TransportConfig) ([]ssh.AuthMethod, error)
 
 		switch credential.Type {
 		case transports.CredentialType_private_key:
-			// it is too late to handle this here
-			identityPass := ""
-			if credential.IdentityPass != nil {
-				identityPass = *credential.IdentityPass
-			}
-			priv, err := authPrivateKeyWithPassphrase(credential.Secret, identityPass)
+			priv, err := authPrivateKeyWithPassphrase(credential.Secret, credential.Password)
 			if err != nil {
 				log.Debug().Err(err).Msg("could not read private key")
 			} else {
