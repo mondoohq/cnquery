@@ -96,15 +96,8 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 			return nil, errors.Wrap(err, "could not initialize aws ec2 discovery")
 		}
 
-		// we may want to pass a specific user, otherwise it will fallback to ssh config
-		sshUser, ok := tc.Options["ssh-user"]
-		if ok {
-			r.InstanceSSHUsername = sshUser
-		}
 		r.Insecure = tc.Insecure
-
 		r.FilterOptions = AssembleEc2InstancesFilters(discoverFilter)
-
 		r.SSMInstancesPlatformIdsMap = ssmInstancesPlatformIdsMap
 
 		assetList, err := r.List()
