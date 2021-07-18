@@ -22,13 +22,7 @@ func ApplyDefaults(cc *transports.TransportConfig, username string, identityFile
 	// if identity file is provided but no password -> private key
 	// if identity file is provided with password -> encrypted private key
 	// if no identity file is provided but a password -> password
-	if identityFile != "" && password == "" {
-		credential, err := transports.NewPrivateKeyCredentialFromPath(username, identityFile, password)
-		if err != nil {
-			return err
-		}
-		cc.AddCredential(credential)
-	} else if identityFile != "" && password != "" {
+	if identityFile != "" {
 		credential, err := transports.NewPrivateKeyCredentialFromPath(username, identityFile, password)
 		if err != nil {
 			return err
