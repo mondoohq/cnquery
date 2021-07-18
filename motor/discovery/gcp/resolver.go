@@ -92,12 +92,6 @@ func (r *GcpResolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, e
 		}
 
 		compute := NewCompute(client)
-
-		// we may want to pass a specific user, otherwise it will fallback to ssh config
-		sshUser, ok := tc.Options["ssh-user"]
-		if ok {
-			compute.InstanceSSHUsername = sshUser
-		}
 		compute.Insecure = tc.Insecure
 
 		assetList, err := compute.ListInstancesInProject(project)

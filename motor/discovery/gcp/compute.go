@@ -23,11 +23,7 @@ func NewCompute(client *http.Client) *Compute {
 }
 
 type Compute struct {
-	client *http.Client
-	// NOTE: is empty by default since we read the username from ssh config
-	// this would force a specific user
-	InstanceSSHUsername string
-
+	client   *http.Client
 	Insecure bool
 }
 
@@ -156,7 +152,6 @@ func (a *Compute) instancesPerZone(svc *compute.Service, project string, zone st
 						Backend:  transports.TransportBackend_CONNECTION_SSH,
 						Host:     iface.AccessConfigs[ac].NatIP,
 						Insecure: a.Insecure,
-						// User:     a.InstanceSSHUsername,
 					})
 				}
 			}

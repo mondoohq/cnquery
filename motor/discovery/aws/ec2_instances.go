@@ -34,7 +34,6 @@ func NewEc2Discovery(cfg aws.Config) (*Ec2Instances, error) {
 
 type Ec2Instances struct {
 	config                     aws.Config
-	InstanceSSHUsername        string
 	Insecure                   bool
 	FilterOptions              Ec2InstancesFilters
 	SSMInstancesPlatformIdsMap map[string]*asset.Asset
@@ -116,7 +115,7 @@ func (ec2i *Ec2Instances) getInstances(account string, ec2InstancesFilters Ec2In
 				reservation := resp.Reservations[i]
 				for j := range reservation.Instances {
 					instance := reservation.Instances[j]
-					res = append(res, instanceToAsset(account, region, instance, ec2i.InstanceSSHUsername, ec2i.Insecure, ec2i.SSMInstancesPlatformIdsMap, ec2i.Labels))
+					res = append(res, instanceToAsset(account, region, instance, ec2i.Insecure, ec2i.SSMInstancesPlatformIdsMap, ec2i.Labels))
 				}
 			}
 
@@ -151,7 +150,7 @@ func (ec2i *Ec2Instances) List() ([]*asset.Asset, error) {
 	return instances, nil
 }
 
-func instanceToAsset(account string, region string, instance types.Instance, sshUsername string, insecure bool, ssmInstancesPlatformIdsMap map[string]*asset.Asset, passInLabels map[string]string) *asset.Asset {
+func instanceToAsset(account string, region string, instance types.Instance, insecure bool, ssmInstancesPlatformIdsMap map[string]*asset.Asset, passInLabels map[string]string) *asset.Asset {
 	connections := []*transports.TransportConfig{}
 
 	var connection *transports.TransportConfig
