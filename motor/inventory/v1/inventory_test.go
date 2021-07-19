@@ -14,7 +14,7 @@ func TestInventoryParser(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, inventory)
 
-	assert.Equal(t, "mondoo-inventory", *inventory.Metadata.Name)
+	assert.Equal(t, "mondoo-inventory", inventory.Metadata.Name)
 	assert.Equal(t, "production", inventory.Metadata.Labels["environment"])
 	assert.Equal(t, "{ id: secret-1 }", inventory.Spec.CredentialQuery)
 }
