@@ -1,8 +1,10 @@
 package transports
 
 import (
+	"encoding/json"
 	"errors"
 	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 )
@@ -21,6 +23,7 @@ const (
 	SCHEME_CONTAINER_REGISTRY = "cr"
 	SCHEME_AZURE              = "az"
 	SCHEME_AWS                = "aws"
+	SCHEME_AWS_SSM            = "aws+ssm"
 	SCHEME_VAGRANT            = "vagrant" // maps to ssh, so no transport required
 	SCHEME_MOCK               = "mock"
 	SCHEME_VSPHERE            = "vsphere"
@@ -40,7 +43,7 @@ var TransportBackend_scheme = map[TransportBackend]string{
 	TransportBackend_CONNECTION_DOCKER:                  SCHEME_DOCKER,
 	TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE:     SCHEME_DOCKER_IMAGE,
 	TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER: SCHEME_DOCKER_CONTAINER,
-	TransportBackend_CONNECTION_AWS_SSM_RUN_COMMAND:     "aws+ssm",
+	TransportBackend_CONNECTION_AWS_SSM_RUN_COMMAND:     SCHEME_AWS_SSM,
 	TransportBackend_CONNECTION_CONTAINER_REGISTRY:      SCHEME_CONTAINER_REGISTRY,
 	TransportBackend_CONNECTION_TAR:                     SCHEME_TAR,
 	TransportBackend_CONNECTION_MOCK:                    SCHEME_MOCK,
@@ -65,7 +68,7 @@ var TransportBackend_schemevalue = map[string]TransportBackend{
 	SCHEME_DOCKER:             TransportBackend_CONNECTION_DOCKER,
 	SCHEME_DOCKER_IMAGE:       TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE,
 	SCHEME_DOCKER_CONTAINER:   TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER,
-	"aws+ssm":                 TransportBackend_CONNECTION_AWS_SSM_RUN_COMMAND,
+	SCHEME_AWS_SSM:            TransportBackend_CONNECTION_AWS_SSM_RUN_COMMAND,
 	SCHEME_CONTAINER_REGISTRY: TransportBackend_CONNECTION_CONTAINER_REGISTRY,
 	SCHEME_TAR:                TransportBackend_CONNECTION_TAR,
 	SCHEME_MOCK:               TransportBackend_CONNECTION_MOCK,
@@ -90,6 +93,27 @@ func (x TransportBackend) Scheme() string {
 	}
 	log.Warn().Str("backend", x.String()).Msg("cannot return scheme for backend")
 	return strconv.Itoa(int(x))
+}
+
+// UnmarshalJSON parses either an int or a string representation of
+// CredentialType into the struct
+func (s *TransportBackend) UnmarshalJSON(data []byte) error {
+	// check if we have a number
+	var code int32
+	err := json.Unmarshal(data, &code)
+	if err == nil {
+		*s = TransportBackend(code)
+	}
+	if err != nil {
+		var name string
+		err = json.Unmarshal(data, &name)
+		code, ok := TransportBackend_schemevalue[strings.TrimSpace(name)]
+		if !ok {
+			return errors.New("unknown backend value: " + string(data))
+		}
+		*s = code
+	}
+	return nil
 }
 
 func MapSchemeBackend(scheme string) (TransportBackend, error) {

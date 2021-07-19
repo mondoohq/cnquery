@@ -5,9 +5,10 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
-// UnmarshalJSON parses either an int or a the string representation of
+// UnmarshalJSON parses either an int or a string representation of
 // CredentialType into the struct
 func (s *CredentialType) UnmarshalJSON(data []byte) error {
 	// check if we have a number
@@ -19,7 +20,7 @@ func (s *CredentialType) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		var name string
 		err = json.Unmarshal(data, &name)
-		code, ok := CredentialType_value[name]
+		code, ok := CredentialType_value[strings.TrimSpace(name)]
 		if !ok {
 			return errors.New("unknown type value: " + string(data))
 		}
@@ -28,7 +29,7 @@ func (s *CredentialType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// MarshalJSON returns the JSON respresentation of CredentialType
+// MarshalJSON returns the JSON representation of CredentialType
 // NOTE: we do not use pointers here to ensure its converted properly
 // even if the struct is used directly
 func (s CredentialType) MarshalJSON() ([]byte, error) {

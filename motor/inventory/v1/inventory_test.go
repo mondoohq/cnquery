@@ -38,3 +38,16 @@ func TestPreprocess(t *testing.T) {
 	err = ioutil.WriteFile("./testdata/inventory.parsed.yml", data, 0o700)
 	require.NoError(t, err)
 }
+
+func TestParseGCPInventory(t *testing.T) {
+	inventory, err := InventoryFromFile("./testdata/gcp_inventory.yml")
+	require.NoError(t, err)
+
+	// extract credentials into credential section
+	err = inventory.PreProcess()
+	require.NoError(t, err)
+
+	// ensure that all assets have a valid secret reference
+	err = inventory.Validate()
+	require.NoError(t, err)
+}
