@@ -7,10 +7,24 @@ import (
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
-func New() *inmemoryVault {
-	return &inmemoryVault{
+type Option func(*inmemoryVault)
+
+func WithSecretMap(secrets map[string]*vault.Secret) Option {
+	return func(iv *inmemoryVault) {
+		iv.secrets = secrets
+	}
+}
+
+func New(opts ...Option) *inmemoryVault {
+	iv := &inmemoryVault{
 		secrets: map[string]*vault.Secret{},
 	}
+
+	for _, option := range opts {
+		option(iv)
+	}
+
+	return iv
 }
 
 type inmemoryVault struct {
@@ -32,7 +46,7 @@ func (v *inmemoryVault) Get(ctx context.Context, id *vault.SecretID) (*vault.Sec
 
 	s, ok := v.secrets[id.Key]
 	if !ok {
-		return nil, errors.New("secret not found")
+		return nil, errors.New("secret not found: " + id.Key)
 	}
 	return s, nil
 }
