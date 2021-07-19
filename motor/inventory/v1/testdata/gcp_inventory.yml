@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Inventory
+metadata:
+  name: mondoo-inventory
+  labels:
+    environment: production
+spec:
+  credential_query: "{ user: chris, type: ssh_agent }"
+  assets:
+    - id: gcp
+      connections:
+        - backend: gcp
+      options:
+        discover: all
