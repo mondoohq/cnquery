@@ -29,16 +29,17 @@ enum State {
 }
 
 message Asset {
-  string mrn = 1;
-  string name = 2;
+  string id = 1;
+  string mrn = 2;
+  string name = 3;
 
   // 3rd-party platform id eg. amazon arn, gcp resource name or ssh host key
-  repeated string platform_ids = 3;
+  repeated string platform_ids = 4;
 
   // asset state
-  State state = 4;
+  State state = 5;
 
-  mondoo.motor.platform.v1.Platform platform = 5;
+  mondoo.motor.platform.v1.Platform platform = 6;
 
   // key is a lower case string of connection type
   repeated mondoo.motor.transports.v1.TransportConfig connections = 17;
