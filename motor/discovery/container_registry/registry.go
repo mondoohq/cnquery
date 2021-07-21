@@ -6,7 +6,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -15,7 +14,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/discovery/docker_engine"
 	"go.mondoo.io/mondoo/motor/platform"
 
 	"go.mondoo.io/mondoo/motor/transports"
@@ -171,8 +169,8 @@ func (a *DockerRegistryImages) toAsset(ref name.Reference) (*asset.Asset, error)
 	repoName := ref.Name()
 	imageUrl := repoName + "@" + imgDigest
 	asset := &asset.Asset{
-		PlatformIds: []string{docker_engine.MondooContainerImageID(imgDigest)},
-		Name:        docker_engine.ShortContainerImageID(imgDigest),
+		PlatformIds: []string{MondooContainerImageID(imgDigest)},
+		Name:        ShortContainerImageID(imgDigest),
 		Platform: &platform.Platform{
 			Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
 			Runtime: transports.RUNTIME_DOCKER_REGISTRY,
@@ -191,12 +189,4 @@ func (a *DockerRegistryImages) toAsset(ref name.Reference) (*asset.Asset, error)
 	asset.Labels["docker.io/digest"] = imgDigest
 	log.Debug().Strs("platform-ids", asset.PlatformIds).Msg("asset platform ids")
 	return asset, nil
-}
-
-func ShortContainerImageID(id string) string {
-	id = strings.Replace(id, "sha256:", "", -1)
-	if len(id) > 12 {
-		return id[0:12]
-	}
-	return id
 }

@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 
+	"go.mondoo.io/mondoo/motor/discovery/container_registry"
+
 	"github.com/docker/docker/api/types"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/platform"
@@ -52,13 +54,13 @@ func (e *dockerEngineDiscovery) ListImages() ([]*asset.Asset, error) {
 
 		asset := &asset.Asset{
 			Name:        strings.Join(dImg.RepoTags, ","),
-			PlatformIds: []string{MondooContainerImageID(digest)},
+			PlatformIds: []string{container_registry.MondooContainerImageID(digest)},
 			Platform: &platform.Platform{
 				Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
 				Runtime: transports.RUNTIME_DOCKER_IMAGE,
 			},
 			Connections: []*transports.TransportConfig{
-				&transports.TransportConfig{
+				{
 					Backend: transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE,
 					Host:    dImg.ID,
 				},
@@ -94,9 +96,4 @@ func digest(repoDigest []string) string {
 	}
 
 	return ""
-}
-
-func MondooContainerImageID(id string) string {
-	id = strings.Replace(id, "sha256:", "", -1)
-	return "//platformid.api.mondoo.app/runtime/docker/images/" + id
 }

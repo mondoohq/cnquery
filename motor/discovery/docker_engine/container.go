@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 
+	"go.mondoo.io/mondoo/motor/discovery/container_registry"
+
 	"github.com/docker/docker/api/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
@@ -59,12 +61,12 @@ func (e *dockerEngineDiscovery) ContainerInfo(name string) (ContainerInfo, error
 	cName := cdata.Name
 	cName = strings.TrimPrefix(cName, "/")
 	if len(cName) == 0 {
-		cName = ShortContainerID(cdata.ID)
+		cName = container_registry.ShortContainerID(cdata.ID)
 	}
 
 	ci.ID = cdata.ID
 	ci.Name = cName
-	ci.PlatformID = MondooContainerID(ci.ID)
+	ci.PlatformID = container_registry.MondooContainerID(ci.ID)
 	ci.Running = cdata.State.Running
 
 	// fetch docker specific metadata
@@ -110,10 +112,10 @@ func (e *dockerEngineDiscovery) ImageInfo(name string) (ImageInfo, error) {
 	labels["docker.io/tags"] = strings.Join(res.RepoTags, ",")
 	labels["docker.io/digests"] = strings.Join(res.RepoDigests, ",")
 
-	ii.Name = ShortContainerImageID(res.ID)
+	ii.Name = container_registry.ShortContainerImageID(res.ID)
 	ii.ID = res.ID
 	ii.Labels = labels
-	ii.PlatformID = MondooContainerImageID(res.ID)
+	ii.PlatformID = container_registry.MondooContainerImageID(res.ID)
 	return ii, nil
 }
 
@@ -128,13 +130,13 @@ func (e *dockerEngineDiscovery) ListContainer() ([]*asset.Asset, error) {
 		name := strings.Join(DockerDisplayNames(dContainer.Names), ",")
 		asset := &asset.Asset{
 			Name:        name,
-			PlatformIds: []string{MondooContainerID(dContainer.ID)},
+			PlatformIds: []string{container_registry.MondooContainerID(dContainer.ID)},
 			Platform: &platform.Platform{
 				Kind:    transports.Kind_KIND_CONTAINER,
 				Runtime: transports.RUNTIME_DOCKER_CONTAINER,
 			},
 			Connections: []*transports.TransportConfig{
-				&transports.TransportConfig{
+				{
 					Backend: transports.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER,
 					Host:    dContainer.ID,
 				},
@@ -158,25 +160,6 @@ func (e *dockerEngineDiscovery) ListContainer() ([]*asset.Asset, error) {
 		container[i] = asset
 	}
 	return container, nil
-}
-
-func ShortContainerID(id string) string {
-	if len(id) > 12 {
-		return id[0:12]
-	}
-	return id
-}
-
-func ShortContainerImageID(id string) string {
-	id = strings.Replace(id, "sha256:", "", -1)
-	if len(id) > 12 {
-		return id[0:12]
-	}
-	return id
-}
-
-func MondooContainerID(id string) string {
-	return "//platformid.api.mondoo.app/runtime/docker/containers/" + id
 }
 
 func mapContainerState(state string) asset.State {
