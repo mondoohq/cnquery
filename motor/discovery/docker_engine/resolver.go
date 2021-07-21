@@ -1,9 +1,10 @@
 package docker_engine
 
 import (
+	"os"
 	"strings"
 
-	"os"
+	"go.mondoo.io/mondoo/motor/discovery/container_registry"
 
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -142,12 +143,12 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 	}
 
 	if tc.Backend == transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE {
-		// NOTE, we ignore dockerEngErr here since we fallback to pulling the image directly
-		resolvedAsset, err := r.image(tc, ded)
+		// NOTE, we ignore dockerEngErr here since we fallback to pulling the images directly
+		resolvedAssets, err := r.images(tc, ded)
 		if err != nil {
 			return nil, err
 		}
-		return []*asset.Asset{resolvedAsset}, nil
+		return resolvedAssets, nil
 	}
 
 	// check if we should do a discovery
@@ -171,9 +172,9 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 		}
 	}
 
-	containerImageAsset, err := r.image(tc, ded)
+	containerImageAssets, err := r.images(tc, ded)
 	if err == nil {
-		return []*asset.Asset{containerImageAsset}, nil
+		return containerImageAssets, nil
 	}
 
 	// if we reached here, we assume we have a name of an image or container from a registry
@@ -198,13 +199,13 @@ func (k *Resolver) container(tc *transports.TransportConfig, ded *dockerEngineDi
 	}, nil
 }
 
-func (k *Resolver) image(tc *transports.TransportConfig, ded *dockerEngineDiscovery) (*asset.Asset, error) {
+func (k *Resolver) images(tc *transports.TransportConfig, ded *dockerEngineDiscovery) ([]*asset.Asset, error) {
 	// if we have a docker engine available, try to fetch it from there
 	if ded != nil {
 		ii, err := ded.ImageInfo(tc.Host)
 		if err == nil {
 			tc.Backend = transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE
-			return &asset.Asset{
+			return []*asset.Asset{{
 				Name:        ii.Name,
 				Connections: []*transports.TransportConfig{tc},
 				PlatformIds: []string{ii.PlatformID},
@@ -212,26 +213,22 @@ func (k *Resolver) image(tc *transports.TransportConfig, ded *dockerEngineDiscov
 					Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
 					Runtime: transports.RUNTIME_DOCKER_IMAGE,
 				},
-			}, nil
+			}}, nil
 		}
 	}
 
+	// otherwise try to fetch the image from upstream
 	log.Debug().Msg("try to download the image from docker registry")
 	_, err := name.ParseReference(tc.Host, name.WeakValidation)
 	if err != nil {
 		return nil, err
 	}
 
-	tc.Backend = transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY
-	return &asset.Asset{
-		Name: tc.Host,
-		// PlatformIDs: []string{}, // we cannot determine the id here
-		Connections: []*transports.TransportConfig{tc},
-		Platform: &platform.Platform{
-			Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
-			Runtime: transports.RUNTIME_DOCKER_REGISTRY,
-		},
-	}, nil
+	// switch to container registry resolver since docker is not installed
+	rr := container_registry.Resolver{
+		NoStrictValidation: true,
+	}
+	return rr.Resolve(tc)
 }
 
 func DiscoverDockerEngineAssets(tc *transports.TransportConfig) ([]*asset.Asset, error) {
@@ -265,7 +262,7 @@ func DiscoverDockerEngineAssets(tc *transports.TransportConfig) ([]*asset.Asset,
 		if err != nil {
 			return nil, err
 		}
-		log.Info().Int("images", len(containerImageAssets)).Msg("running container image search completed")
+		log.Info().Int("images", len(containerImageAssets)).Msg("running container images search completed")
 		assetList = append(assetList, containerImageAssets...)
 	}
 	return assetList, nil

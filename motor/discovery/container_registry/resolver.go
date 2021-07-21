@@ -10,7 +10,12 @@ import (
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
-type Resolver struct{}
+type Resolver struct {
+	// NoStrictValidation deactivates the strict validation for container registry resolutions
+	// cr://index.docker.io/mondoolabs/mondoo would be converted index.docker.io/mondoolabs/mondoo:latest
+	// It is not the default behavior but is used by the docker resolver to resolve images
+	NoStrictValidation bool
+}
 
 func (r *Resolver) Name() string {
 	return "Container Registry Discover"
@@ -44,7 +49,12 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 	// check if the reference is an image
 	// NOTE: we use strict validation here otherwise urls like cr://index.docker.io/mondoolabs/mondoo are converted
 	// to index.docker.io/mondoolabs/mondoo:latest
-	ref, err := name.ParseReference(tc.Host, name.StrictValidation)
+	opts := name.StrictValidation
+	if r.NoStrictValidation {
+		opts = name.WeakValidation
+	}
+
+	ref, err := name.ParseReference(tc.Host, opts)
 	if err == nil {
 		log.Debug().Str("image", tc.Host).Msg("detected container image in container registry")
 
