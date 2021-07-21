@@ -42,9 +42,20 @@ func InventoryFromFile(path string) (*Inventory, error) {
 		return nil, err
 	}
 
+	inventory.ensureRequireMetadataStructs()
 	inventory.Metadata.Labels[InventoryFilePath] = absPath
 
 	return inventory, nil
+}
+
+func (p *Inventory) ensureRequireMetadataStructs() {
+	if p.Metadata == nil {
+		p.Metadata = &ObjectMeta{}
+	}
+
+	if p.Metadata.Labels == nil {
+		p.Metadata.Labels = map[string]string{}
+	}
 }
 
 // ToYAML returns the inventory as yaml
@@ -60,6 +71,9 @@ func (p *Inventory) PreProcess() error {
 	if p.Spec.Credentials == nil {
 		p.Spec.Credentials = map[string]*transports.Credential{}
 	}
+
+	// we are going to use the labels in metadata, ensure the structs are in place
+	p.ensureRequireMetadataStructs()
 
 	// extract embedded credentials from assets into dedicated section
 	for i := range p.Spec.Assets {
