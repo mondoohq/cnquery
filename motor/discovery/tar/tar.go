@@ -1,9 +1,10 @@
-package instance
+package tar
 
 import (
+	"strings"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/motorid/hostname"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/resolver"
 )
@@ -11,7 +12,7 @@ import (
 type Resolver struct{}
 
 func (r *Resolver) Name() string {
-	return "Instance Resolver"
+	return "Tar Resolver"
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
@@ -19,7 +20,19 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 }
 
 func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
-	return transports.NewTransportFromUrl(url, opts...)
+	filename := strings.TrimPrefix(url, "tar://")
+	tc := &transports.TransportConfig{
+		Backend: transports.TransportBackend_CONNECTION_TAR,
+		Options: map[string]string{
+			"file": filename,
+		},
+	}
+
+	for i := range opts {
+		opts[i](tc)
+	}
+
+	return tc, nil
 }
 
 func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {
@@ -45,18 +58,9 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 		assetInfo.Platform = p
 	}
 
-	// use hostname as asset name
-	if p != nil && assetInfo.Name == "" {
-		// retrieve hostname
-		hostname, err := hostname.Hostname(m.Transport, p)
-		if err == nil && len(hostname) > 0 {
-			assetInfo.Name = hostname
-		}
-	}
-
 	// use hostname as name if asset name was not explicitly provided
-	if assetInfo.Name == "" {
-		assetInfo.Name = tc.Host
+	if assetInfo.Name == "" && tc.Options["path"] != "" {
+		assetInfo.Name = tc.Options["path"]
 	}
 
 	return []*asset.Asset{assetInfo}, nil

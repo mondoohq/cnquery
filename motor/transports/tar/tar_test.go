@@ -36,7 +36,9 @@ func TestTarCommand(t *testing.T) {
 
 	tarTransport, err := tar.New(&transports.TransportConfig{
 		Backend: transports.TransportBackend_CONNECTION_TAR,
-		Path:    alpineContainerPath,
+		Options: map[string]string{
+			"file": alpineContainerPath,
+		},
 	})
 	assert.Equal(t, nil, err, "should create tar without error")
 
@@ -58,7 +60,9 @@ func TestPlatformIdentifier(t *testing.T) {
 
 	m, err := resolver.New(&transports.TransportConfig{
 		Backend: transports.TransportBackend_CONNECTION_TAR,
-		Path:    alpineContainerPath,
+		Options: map[string]string{
+			"file": alpineContainerPath,
+		},
 	})
 	require.NoError(t, err)
 	assert.True(t, len(m.Meta.Identifier) > 0)
@@ -70,7 +74,9 @@ func TestTarSymlinkFile(t *testing.T) {
 
 	tarTransport, err := tar.New(&transports.TransportConfig{
 		Backend: transports.TransportBackend_CONNECTION_TAR,
-		Path:    alpineContainerPath,
+		Options: map[string]string{
+			"file": alpineContainerPath,
+		},
 	})
 	assert.Equal(t, nil, err, "should create tar without error")
 
@@ -100,7 +106,9 @@ func TestTarRelativeSymlinkFileCentos(t *testing.T) {
 
 	tarTransport, err := tar.New(&transports.TransportConfig{
 		Backend: transports.TransportBackend_CONNECTION_TAR,
-		Path:    centosContainerPath,
+		Options: map[string]string{
+			"file": centosContainerPath,
+		},
 	})
 	assert.Equal(t, nil, err, "should create tar without error")
 
@@ -129,7 +137,9 @@ func TestTarFile(t *testing.T) {
 
 	tarTransport, err := tar.New(&transports.TransportConfig{
 		Backend: transports.TransportBackend_CONNECTION_TAR,
-		Path:    alpineContainerPath,
+		Options: map[string]string{
+			"file": alpineContainerPath,
+		},
 	})
 	assert.Equal(t, nil, err, "should create tar without error")
 
@@ -157,7 +167,9 @@ func TestFilePermissions(t *testing.T) {
 
 	trans, err := tar.New(&transports.TransportConfig{
 		Backend: transports.TransportBackend_CONNECTION_TAR,
-		Path:    alpineContainerPath,
+		Options: map[string]string{
+			"file": alpineContainerPath,
+		},
 	})
 	require.NoError(t, err)
 
@@ -212,7 +224,9 @@ func TestTarFileFind(t *testing.T) {
 
 	trans, err := tar.New(&transports.TransportConfig{
 		Backend: transports.TransportBackend_CONNECTION_TAR,
-		Path:    alpineContainerPath,
+		Options: map[string]string{
+			"file": alpineContainerPath,
+		},
 	})
 	assert.Equal(t, nil, err, "should create tar without error")
 
