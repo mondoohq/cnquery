@@ -41,8 +41,8 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/winrm"
 )
 
-func New(t *transports.TransportConfig, idDetector ...string) (*motor.Motor, error) {
-	return ResolveTransport(t, idDetector...)
+func New(t *transports.TransportConfig, userIdDetectors ...string) (*motor.Motor, error) {
+	return ResolveTransport(t, userIdDetectors...)
 }
 
 // ResolveTransport establishes a motor connection by using the provided transport configuration
