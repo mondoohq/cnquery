@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"go.mondoo.io/mondoo/motor/discovery/container_registry"
+	"go.mondoo.io/mondoo/motor/motorid/containerid"
 
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/google"
@@ -51,7 +51,7 @@ func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*asset.
 
 			asset := &asset.Asset{
 				PlatformIds: []string{MondooContainerImageID(digest)},
-				Name:        container_registry.ShortContainerImageID(digest),
+				Name:        containerid.ShortContainerImageID(digest),
 				Platform: &platform.Platform{
 					Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
 					Runtime: transports.RUNTIME_GCP_GCR,

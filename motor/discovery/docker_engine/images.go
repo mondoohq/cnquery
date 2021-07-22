@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/discovery/container_registry"
+	"go.mondoo.io/mondoo/motor/motorid/containerid"
 
 	"github.com/docker/docker/api/types"
 	"go.mondoo.io/mondoo/motor/asset"
@@ -54,7 +54,7 @@ func (e *dockerEngineDiscovery) ListImages() ([]*asset.Asset, error) {
 
 		asset := &asset.Asset{
 			Name:        strings.Join(dImg.RepoTags, ","),
-			PlatformIds: []string{container_registry.MondooContainerImageID(digest)},
+			PlatformIds: []string{containerid.MondooContainerImageID(digest)},
 			Platform: &platform.Platform{
 				Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
 				Runtime: transports.RUNTIME_DOCKER_IMAGE,

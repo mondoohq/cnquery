@@ -14,8 +14,8 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/motorid/containerid"
 	"go.mondoo.io/mondoo/motor/platform"
-
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
@@ -169,8 +169,8 @@ func (a *DockerRegistryImages) toAsset(ref name.Reference) (*asset.Asset, error)
 	repoName := ref.Name()
 	imageUrl := repoName + "@" + imgDigest
 	asset := &asset.Asset{
-		PlatformIds: []string{MondooContainerImageID(imgDigest)},
-		Name:        ShortContainerImageID(imgDigest),
+		PlatformIds: []string{containerid.MondooContainerImageID(imgDigest)},
+		Name:        containerid.ShortContainerImageID(imgDigest),
 		Platform: &platform.Platform{
 			Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
 			Runtime: transports.RUNTIME_DOCKER_REGISTRY,
