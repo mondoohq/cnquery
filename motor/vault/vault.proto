@@ -10,7 +10,7 @@ message SecretID {
 message Secret {
   string key = 1;
   string label = 2;
-  bytes secret = 3;
+  bytes data = 3;
 }
 
 service Vault {

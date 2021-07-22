@@ -60,7 +60,7 @@ func (vsm *VaultSecretManager) GetSecret(keyID string) (string, error) {
 		return "", errors.New("could not find the id: " + keyID)
 	}
 	log.Debug().Str("key-id", keyID).Msg("retrieved secret")
-	return string(cred.Secret), nil
+	return string(cred.Data), nil
 }
 
 func (vsm *VaultSecretManager) EnrichConnection(a *asset.Asset, secretMetadata *CredentialQueryResponse) error {

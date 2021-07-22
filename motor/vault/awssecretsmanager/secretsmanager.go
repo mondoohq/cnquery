@@ -41,8 +41,8 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 		return nil, errors.Wrap(err, "failed to get secret")
 	}
 	return &vault.Secret{
-		Key:    id.Key,
-		Secret: out.SecretBinary,
+		Key:  id.Key,
+		Data: out.SecretBinary,
 	}, nil
 }
 

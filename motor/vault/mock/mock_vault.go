@@ -27,18 +27,18 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 	switch id.Key {
 	case "mockPassword":
 		return &vault.Secret{
-			Key:    id.Key,
-			Secret: []byte(MockPassword),
+			Key:  id.Key,
+			Data: []byte(MockPassword),
 		}, nil
 	case "mockPKey":
 		return &vault.Secret{
-			Key:    id.Key,
-			Secret: []byte(MockPKey),
+			Key:  id.Key,
+			Data: []byte(MockPKey),
 		}, nil
 	case "mockJson":
 		return &vault.Secret{
-			Key:    id.Key,
-			Secret: []byte(MockJson),
+			Key:  id.Key,
+			Data: []byte(MockJson),
 		}, nil
 	}
 	return nil, nil

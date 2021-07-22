@@ -12,16 +12,16 @@ import (
 
 func TestMultiVault(t *testing.T) {
 	secret1 := &vault.Secret{
-		Key:    "secret1",
-		Secret: []byte("password"),
+		Key:  "secret1",
+		Data: []byte("password"),
 	}
 	secret2 := &vault.Secret{
-		Key:    "secret2",
-		Secret: []byte("password2"),
+		Key:  "secret2",
+		Data: []byte("password2"),
 	}
 	secret3 := &vault.Secret{
-		Key:    "secret3",
-		Secret: []byte("password3"),
+		Key:  "secret3",
+		Data: []byte("password3"),
 	}
 
 	ctx := context.Background()
