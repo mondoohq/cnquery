@@ -86,7 +86,6 @@ func ResolveTransport(tc *transports.TransportConfig, userIdDetectors ...string)
 		idDetectors = append(idDetectors, "hostname")
 	case transports.TransportBackend_CONNECTION_TAR:
 		log.Debug().Msg("connection> load tar transport")
-		// TODO: we need to generate an artifact id
 		trans, err := tar.New(tc)
 		if err != nil {
 			return nil, err
@@ -96,7 +95,12 @@ func ResolveTransport(tc *transports.TransportConfig, userIdDetectors ...string)
 		if err != nil {
 			return nil, err
 		}
+
+		if len(trans.Identifier()) > 0 {
+			identifier = append(identifier, trans.Identifier())
+		}
 	case transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY:
+		log.Debug().Msg("connection> load container registry transport")
 		trans, info, err := containerregistry(tc)
 		if err != nil {
 			return nil, err
@@ -114,6 +118,7 @@ func ResolveTransport(tc *transports.TransportConfig, userIdDetectors ...string)
 			identifier = append(identifier, info.Identifier)
 		}
 	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER:
+		log.Debug().Msg("connection> load docker engine container transport")
 		trans, info, err := dockerenginecontainer(tc)
 		if err != nil {
 			return nil, err
@@ -131,6 +136,7 @@ func ResolveTransport(tc *transports.TransportConfig, userIdDetectors ...string)
 			identifier = append(identifier, info.Identifier)
 		}
 	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE:
+		log.Debug().Msg("connection> load docker engine image transport")
 		trans, info, err := dockerengineimage(tc)
 		if err != nil {
 			return nil, err
@@ -148,6 +154,7 @@ func ResolveTransport(tc *transports.TransportConfig, userIdDetectors ...string)
 			identifier = append(identifier, info.Identifier)
 		}
 	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_TAR:
+		log.Debug().Msg("connection> load docker tar transport")
 		trans, info, err := containertar(tc)
 		if err != nil {
 			return nil, err

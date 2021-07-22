@@ -4,13 +4,16 @@ import (
 	"archive/tar"
 	"bytes"
 	"errors"
+	"io"
+	"os"
+
+	"github.com/google/go-containerregistry/pkg/v1/tarball"
+	"go.mondoo.io/mondoo/motor/motorid/containerid"
+	"go.mondoo.io/mondoo/motor/transports/fsutil"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
-
-	"io"
-	"os"
 )
 
 func New(endpoint *transports.TransportConfig) (*Transport, error) {
@@ -18,26 +21,63 @@ func New(endpoint *transports.TransportConfig) (*Transport, error) {
 }
 
 func NewWithClose(endpoint *transports.TransportConfig, close func()) (*Transport, error) {
-	if endpoint == nil {
+	var identifier string
+	if endpoint == nil || len(endpoint.Options["file"]) == 0 {
 		return nil, errors.New("endpoint cannot be empty")
 	}
 
+	filename := endpoint.Options["file"]
+
 	t := &Transport{
-		Fs:              NewFs(endpoint.Path),
+		Fs:              NewFs(filename),
 		CloseFN:         close,
 		PlatformKind:    endpoint.Kind,
 		PlatformRuntime: endpoint.Runtime,
 	}
 
-	var err error
-	if len(endpoint.Path) > 0 {
-		err := t.LoadFile(endpoint.Path)
-		if err != nil {
-			log.Error().Err(err).Str("tar", endpoint.Path).Msg("tar> could not load tar file")
-			return nil, err
-		}
+	err := t.LoadFile(filename)
+	if err != nil {
+		log.Error().Err(err).Str("tar", filename).Msg("tar> could not load tar file")
+		return nil, err
 	}
-	return t, err
+
+	identifier, err = PlatformID(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	t.PlatformIdentifier = identifier
+	return t, nil
+}
+
+// PlatformID determines the platform identifier for a tar file
+func PlatformID(filename string) (string, error) {
+	var identifier string
+
+	// try to determine the image digest
+	// NOTE: a tar file does not need to be a container image
+	img, iErr := tarball.ImageFromPath(filename, nil)
+	if iErr == nil {
+		hash, err := img.Digest()
+		if err == nil {
+			identifier = containerid.MondooContainerImageID(hash.String())
+		}
+	} else {
+		osFs := afero.NewOsFs()
+		f, err := osFs.Open(filename)
+		if err != nil {
+			return identifier, err
+		}
+
+		defer f.Close()
+		hash, err := fsutil.Sha256(f)
+		if err != nil {
+			return identifier, err
+		}
+		identifier = "//platformid.api.mondoo.app/runtime/tar/hash/" + hash
+	}
+
+	return identifier, nil
 }
 
 // Transport loads tar files and make them available
@@ -45,8 +85,13 @@ type Transport struct {
 	Fs      *FS
 	CloseFN func()
 	// fields are exposed since the tar backend is re-used for the docker backend
-	PlatformKind    transports.Kind
-	PlatformRuntime string
+	PlatformKind       transports.Kind
+	PlatformRuntime    string
+	PlatformIdentifier string
+}
+
+func (t *Transport) Identifier() string {
+	return t.PlatformIdentifier
 }
 
 func (m *Transport) RunCommand(command string) (*transports.Command, error) {
@@ -123,7 +168,6 @@ func (t *Transport) LoadFile(path string) error {
 		return err
 	}
 	defer f.Close()
-
 	return t.Load(f)
 }
 

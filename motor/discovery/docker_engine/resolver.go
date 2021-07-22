@@ -4,6 +4,8 @@ import (
 	"os"
 	"strings"
 
+	"go.mondoo.io/mondoo/motor/transports/tar"
+
 	"go.mondoo.io/mondoo/motor/discovery/container_registry"
 
 	"github.com/cockroachdb/errors"
@@ -88,7 +90,9 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 	} else if strings.HasPrefix(url, transports.SCHEME_DOCKER_TAR+"://") {
 		tc := &transports.TransportConfig{
 			Backend: transports.TransportBackend_CONNECTION_DOCKER_ENGINE_TAR,
-			Host:    strings.Replace(url, transports.SCHEME_DOCKER_TAR+"://", "", 1),
+			Options: map[string]string{
+				"file": strings.Replace(url, transports.SCHEME_DOCKER_TAR+"://", "", 1),
+			},
 		}
 
 		for i := range opts {
@@ -108,22 +112,37 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 	// detect if the tar is a container image format -> container image
 	// or a container snapshot format -> container snapshot
 	if tc.Backend == transports.TransportBackend_CONNECTION_DOCKER_ENGINE_TAR {
-		// check if we are pointing to a local tar file
-		_, err := os.Stat(tc.Host)
-		if err != nil {
-			return nil, errors.New("could not find the tar file: " + tc.Host)
+
+		if tc.Options == nil || tc.Options["file"] == "" {
+			return nil, errors.New("could not find the tar file")
 		}
-		log.Debug().Msg("detected local container tar file")
+
+		filename := tc.Options["file"]
+
+		// check if we are pointing to a local tar file
+		_, err := os.Stat(filename)
+		if err != nil {
+			return nil, errors.New("could not find the tar file: " + filename)
+		}
 
 		// Tar container can be an image or a snapshot
 		resolvedAsset := &asset.Asset{
-			Name:        tc.Host,
+			Name:        filename,
 			Connections: []*transports.TransportConfig{tc},
 			Platform: &platform.Platform{
 				Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
 				Runtime: transports.RUNTIME_DOCKER_IMAGE,
 			},
 		}
+
+		// determine platform identifier
+		identifier, err := tar.PlatformID(filename)
+		if err != nil {
+			return nil, err
+		}
+
+		resolvedAsset.PlatformIds = []string{identifier}
+
 		return []*asset.Asset{resolvedAsset}, nil
 	}
 

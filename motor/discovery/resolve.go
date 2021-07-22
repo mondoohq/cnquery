@@ -21,6 +21,7 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/local"
 	"go.mondoo.io/mondoo/motor/discovery/mock"
 	"go.mondoo.io/mondoo/motor/discovery/ms365"
+	"go.mondoo.io/mondoo/motor/discovery/tar"
 	"go.mondoo.io/mondoo/motor/discovery/vagrant"
 	"go.mondoo.io/mondoo/motor/discovery/vsphere"
 	"go.mondoo.io/mondoo/motor/transports"
@@ -47,7 +48,7 @@ func init() {
 		transports.SCHEME_DOCKER_IMAGE:       &docker_engine.Resolver{},
 		transports.SCHEME_DOCKER_CONTAINER:   &docker_engine.Resolver{},
 		transports.SCHEME_DOCKER_TAR:         &docker_engine.Resolver{},
-		transports.SCHEME_TAR:                &instance.Resolver{},
+		transports.SCHEME_TAR:                &tar.Resolver{},
 		transports.SCHEME_K8S:                &k8s.Resolver{},
 		transports.SCHEME_GCR:                &gcp.GcrResolver{},
 		transports.SCHEME_GCP:                &gcp.GcpResolver{},
