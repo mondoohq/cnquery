@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/discovery/container_registry"
+	"go.mondoo.io/mondoo/motor/motorid/containerid"
 
 	"github.com/docker/docker/api/types"
 	"github.com/rs/zerolog/log"
@@ -61,12 +61,12 @@ func (e *dockerEngineDiscovery) ContainerInfo(name string) (ContainerInfo, error
 	cName := cdata.Name
 	cName = strings.TrimPrefix(cName, "/")
 	if len(cName) == 0 {
-		cName = container_registry.ShortContainerID(cdata.ID)
+		cName = containerid.ShortContainerID(cdata.ID)
 	}
 
 	ci.ID = cdata.ID
 	ci.Name = cName
-	ci.PlatformID = container_registry.MondooContainerID(ci.ID)
+	ci.PlatformID = containerid.MondooContainerID(ci.ID)
 	ci.Running = cdata.State.Running
 
 	// fetch docker specific metadata
@@ -112,10 +112,10 @@ func (e *dockerEngineDiscovery) ImageInfo(name string) (ImageInfo, error) {
 	labels["docker.io/tags"] = strings.Join(res.RepoTags, ",")
 	labels["docker.io/digests"] = strings.Join(res.RepoDigests, ",")
 
-	ii.Name = container_registry.ShortContainerImageID(res.ID)
+	ii.Name = containerid.ShortContainerImageID(res.ID)
 	ii.ID = res.ID
 	ii.Labels = labels
-	ii.PlatformID = container_registry.MondooContainerImageID(res.ID)
+	ii.PlatformID = containerid.MondooContainerImageID(res.ID)
 	return ii, nil
 }
 
@@ -130,7 +130,7 @@ func (e *dockerEngineDiscovery) ListContainer() ([]*asset.Asset, error) {
 		name := strings.Join(DockerDisplayNames(dContainer.Names), ",")
 		asset := &asset.Asset{
 			Name:        name,
-			PlatformIds: []string{container_registry.MondooContainerID(dContainer.ID)},
+			PlatformIds: []string{containerid.MondooContainerID(dContainer.ID)},
 			Platform: &platform.Platform{
 				Kind:    transports.Kind_KIND_CONTAINER,
 				Runtime: transports.RUNTIME_DOCKER_CONTAINER,

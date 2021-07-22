@@ -1,4 +1,4 @@
-package container_registry
+package containerid
 
 import "strings"
 

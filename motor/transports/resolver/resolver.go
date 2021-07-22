@@ -7,7 +7,7 @@ import (
 	"io"
 	"os"
 
-	"go.mondoo.io/mondoo/motor/discovery/container_registry"
+	"go.mondoo.io/mondoo/motor/motorid/containerid"
 
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/motor/transports/equinix"
@@ -411,12 +411,12 @@ func containerregistry(tc *transports.TransportConfig) (transports.Transport, Do
 		var identifier string
 		hash, err := img.Digest()
 		if err == nil {
-			identifier = container_registry.MondooContainerImageID(hash.String())
+			identifier = containerid.MondooContainerImageID(hash.String())
 		}
 
 		transport, err := image.New(rc)
 		return transport, DockerInfo{
-			Name:       container_registry.ShortContainerImageID(hash.String()),
+			Name:       containerid.ShortContainerImageID(hash.String()),
 			Identifier: identifier,
 		}, err
 	}
@@ -440,16 +440,16 @@ func dockerenginecontainer(tc *transports.TransportConfig) (transports.Transport
 		log.Debug().Msg("found running container " + ci.ID)
 		transport, err := docker_engine.New(ci.ID)
 		return transport, DockerInfo{
-			Name:       container_registry.ShortContainerImageID(ci.ID),
-			Identifier: container_registry.MondooContainerID(ci.ID),
+			Name:       containerid.ShortContainerImageID(ci.ID),
+			Identifier: containerid.MondooContainerID(ci.ID),
 			Labels:     ci.Labels,
 		}, err
 	} else {
 		log.Debug().Msg("found stopped container " + ci.ID)
 		transport, err := snapshot.NewFromDockerEngine(ci.ID)
 		return transport, DockerInfo{
-			Name:       container_registry.ShortContainerImageID(ci.ID),
-			Identifier: container_registry.MondooContainerID(ci.ID),
+			Name:       containerid.ShortContainerImageID(ci.ID),
+			Identifier: containerid.MondooContainerID(ci.ID),
 			Labels:     ci.Labels,
 		}, err
 	}
@@ -476,7 +476,7 @@ func dockerengineimage(endpoint *transports.TransportConfig) (transports.Transpo
 	var identifier string
 	hash, err := img.Digest()
 	if err == nil {
-		identifier = container_registry.MondooContainerImageID(hash.String())
+		identifier = containerid.MondooContainerImageID(hash.String())
 	}
 
 	transport, err := image.New(rc)
@@ -499,7 +499,7 @@ func containertar(endpoint *transports.TransportConfig) (transports.Transport, D
 
 		hash, err := img.Digest()
 		if err == nil {
-			identifier = container_registry.MondooContainerImageID(hash.String())
+			identifier = containerid.MondooContainerImageID(hash.String())
 		} else {
 			log.Warn().Err(err).Msg("could not determine platform id")
 		}
