@@ -8,6 +8,8 @@ import (
 	"regexp"
 	"testing"
 
+	"go.mondoo.io/mondoo/motor/transports/resolver"
+
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 
 	"github.com/stretchr/testify/assert"
@@ -48,6 +50,18 @@ func TestTarCommand(t *testing.T) {
 		stderrContent, _ := ioutil.ReadAll(cmd.Stdout)
 		assert.Equal(t, "", string(stderrContent), "output should be correct")
 	}
+}
+
+func TestPlatformIdentifier(t *testing.T) {
+	err := cacheAlpine()
+	require.NoError(t, err, "should create tar without error")
+
+	m, err := resolver.New(&transports.TransportConfig{
+		Backend: transports.TransportBackend_CONNECTION_TAR,
+		Path:    alpineContainerPath,
+	})
+	require.NoError(t, err)
+	assert.True(t, len(m.Meta.Identifier) > 0)
 }
 
 func TestTarSymlinkFile(t *testing.T) {
