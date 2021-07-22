@@ -23,8 +23,10 @@ func WithRecoding(record bool) MotorOption {
 
 // implement special case for local platform to speed things up, this is especially important on windows where
 // powershell calls are pretty expensive and slow
-var localTransportLock = &sync.Mutex{}
-var localTransportDetector *platform.Detector
+var (
+	localTransportLock     = &sync.Mutex{}
+	localTransportDetector *platform.Detector
+)
 
 func New(trans transports.Transport, motorOpts ...MotorOption) (*Motor, error) {
 	m := &Motor{
@@ -56,11 +58,12 @@ type Motor struct {
 	Transport   transports.Transport
 	detector    *platform.Detector
 	watcher     transports.Watcher
-	Meta        MetaInfo
+	Meta        ResolverMetadata
 	isRecording bool
 }
 
-type MetaInfo struct {
+// ResolverMetadata contains additional information for the transport that was discovered by the transport resolver
+type ResolverMetadata struct {
 	Name       string
 	Identifier []string
 	Labels     map[string]string
