@@ -65,18 +65,20 @@ func InitTestEnv() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 }
 
-// InitLogger sets the log level to the requested level unless
-// env vars DEBUG or TRACE are set
-func InitLogger(level string) {
+// GetEnvLogLevel determines the loglevel from env vars DEBUG or TRACE are set
+func GetEnvLogLevel() (string, bool) {
+	level := ""
+	ok := false
+
 	if os.Getenv("DEBUG") == "true" || os.Getenv("DEBUG") == "1" {
-		Set("debug")
-		return
+		level = "debug"
+		ok = true
 	}
 
 	if os.Getenv("TRACE") == "true" || os.Getenv("TRACE") == "1" {
-		Set("trace")
-		return
+		level = "trace"
+		ok = true
 	}
 
-	Set(level)
+	return level, ok
 }
