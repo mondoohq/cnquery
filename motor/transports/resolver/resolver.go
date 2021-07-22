@@ -374,7 +374,7 @@ func ResolveTransport(tc *transports.TransportConfig, userIdDetectors ...string)
 		return nil, errors.New("could not find a valid platform identifier")
 	}
 
-	m.Meta = motor.MetaInfo{
+	m.Meta = motor.ResolverMetadata{
 		Name:       name,
 		Identifier: identifier,
 		Labels:     labels,
