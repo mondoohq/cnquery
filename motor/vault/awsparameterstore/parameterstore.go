@@ -63,8 +63,8 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 	}
 
 	return &vault.Secret{
-		Key:    id.Key,
-		Secret: data,
+		Key:  id.Key,
+		Data: data,
 	}, nil
 }
 

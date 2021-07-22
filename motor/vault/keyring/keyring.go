@@ -72,7 +72,7 @@ func (v *Vault) Set(ctx context.Context, cred *vault.Secret) (*vault.SecretID, e
 	err = ring.Set(keyring.Item{
 		Key:   cred.Key,
 		Label: cred.Label,
-		Data:  []byte(cred.Secret),
+		Data:  cred.Data,
 	})
 
 	return &vault.SecretID{
@@ -92,8 +92,8 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 	}
 
 	return &vault.Secret{
-		Key:    i.Key,
-		Label:  i.Label,
-		Secret: i.Data,
+		Key:   i.Key,
+		Label: i.Label,
+		Data:  i.Data,
 	}, nil
 }

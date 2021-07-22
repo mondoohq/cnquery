@@ -23,9 +23,9 @@ func TestVault(t *testing.T) {
 
 	key := "mondoo-test-secret-key"
 	cred := &vault.Secret{
-		Key:    key,
-		Label:  "mondoo: " + key,
-		Secret: credBytes,
+		Key:   key,
+		Label: "mondoo: " + key,
+		Data:  credBytes,
 	}
 
 	id, err := v.Set(ctx, cred)
@@ -35,5 +35,5 @@ func TestVault(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, key, newCred.Key)
 	assert.Equal(t, cred.Label, newCred.Label)
-	assert.DeepEqual(t, cred.Secret, newCred.Secret)
+	assert.DeepEqual(t, cred.Data, newCred.Data)
 }
