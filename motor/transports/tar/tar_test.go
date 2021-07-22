@@ -20,16 +20,22 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 )
 
-const alpineContainerPath = "./alpine-container.tar"
+const (
+	alpineImage         = "alpine:3.9"
+	alpineContainerPath = "./alpine-container.tar"
+
+	centosImage         = "centos:7"
+	centosContainerPath = "./centos-container.tar"
+)
 
 func TestTarCommand(t *testing.T) {
-	err := cacheImageToTar()
-	assert.Equal(t, nil, err, "should create tar without error")
-	if err != nil {
-		return
-	}
+	err := cacheAlpine()
+	require.NoError(t, err, "should create tar without error")
 
-	tarTransport, err := tar.New(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_TAR, Path: alpineContainerPath})
+	tarTransport, err := tar.New(&transports.TransportConfig{
+		Backend: transports.TransportBackend_CONNECTION_TAR,
+		Path:    alpineContainerPath,
+	})
 	assert.Equal(t, nil, err, "should create tar without error")
 
 	cmd, err := tarTransport.RunCommand("ls /")
@@ -43,14 +49,15 @@ func TestTarCommand(t *testing.T) {
 		assert.Equal(t, "", string(stderrContent), "output should be correct")
 	}
 }
-func TestTarSymlinkFile(t *testing.T) {
-	err := cacheImageToTar()
-	assert.Equal(t, nil, err, "should create tar without error")
-	if err != nil {
-		return
-	}
 
-	tarTransport, err := tar.New(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_TAR, Path: alpineContainerPath})
+func TestTarSymlinkFile(t *testing.T) {
+	err := cacheAlpine()
+	require.NoError(t, err, "should create tar without error")
+
+	tarTransport, err := tar.New(&transports.TransportConfig{
+		Backend: transports.TransportBackend_CONNECTION_TAR,
+		Path:    alpineContainerPath,
+	})
 	assert.Equal(t, nil, err, "should create tar without error")
 
 	f, err := tarTransport.FS().Open("/bin/cat")
@@ -72,49 +79,44 @@ func TestTarSymlinkFile(t *testing.T) {
 }
 
 // deactivate test for now for speedier testing
-// in contrast to alpine, the symlink on centos is pointinng to a relative target
-// and not an absolute one
-//
-// func TestTarSymlinkFileCentos(t *testing.T) {
-// 	err := cacheImageToTar()
-// 	assert.Equal(t, nil, err, "should create tar without error")
-// 	if err != nil {
-// 		return
-// 	}
+// in contrast to alpine, the symlink on centos is pointinng to a relative target and not an absolute one
+func TestTarRelativeSymlinkFileCentos(t *testing.T) {
+	err := cacheCentos()
+	require.NoError(t, err, "should create tar without error")
 
-// 	filepath, _ := filepath.Abs("./centos-container.tar")
-// 	tarTransport, err := tar.New(&transports.TransportConfig{Backend: "tar", Path: filepath})
-// 	assert.Equal(t, nil, err, "should create tar without error")
+	tarTransport, err := tar.New(&transports.TransportConfig{
+		Backend: transports.TransportBackend_CONNECTION_TAR,
+		Path:    centosContainerPath,
+	})
+	assert.Equal(t, nil, err, "should create tar without error")
 
-// 	f, err := tarTransport.File("/etc/redhat-release")
-
-// 	if assert.NotNil(t, f) {
-// 		assert.Equal(t, nil, err, "should execute without error")
-
-// 		p := f.Name()
-// 		assert.Equal(t, "/etc/redhat-release", p, "path should be correct")
-
-// 		stat, err := f.Stat()
-// 		assert.Equal(t, nil, err, "should stat without error")
-// 		assert.Equal(t, int64(38), stat.Size(), "should read file size")
-
-// 		reader, err := f.Open()
-// 		assert.Equal(t, nil, err, "should open without error")
-// 		content, err := ioutil.ReadAll(reader)
-// 		assert.Equal(t, nil, err, "should execute without error")
-// 		assert.Equal(t, 38, len(content), "should read the full content")
-
-// 		// ensure the same works with tar()
-// 		content, err = motorutil.ReadFile(f)
-// 		assert.Equal(t, nil, err, "should read without error")
-// 		assert.Equal(t, 38, len(content), "should read the full content")
-// 	}
-// }
-func TestTarFile(t *testing.T) {
-	err := cacheImageToTar()
+	f, err := tarTransport.FS().Open("/etc/redhat-release")
 	require.NoError(t, err)
 
-	tarTransport, err := tar.New(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_TAR, Path: alpineContainerPath})
+	if assert.NotNil(t, f) {
+		assert.Equal(t, nil, err, "should execute without error")
+
+		p := f.Name()
+		assert.Equal(t, "/etc/redhat-release", p, "path should be correct")
+
+		stat, err := f.Stat()
+		assert.Equal(t, nil, err, "should stat without error")
+		assert.Equal(t, int64(37), stat.Size(), "should read file size")
+
+		content, err := ioutil.ReadAll(f)
+		assert.Equal(t, nil, err, "should execute without error")
+		assert.Equal(t, 37, len(content), "should read the full content")
+	}
+}
+
+func TestTarFile(t *testing.T) {
+	err := cacheAlpine()
+	require.NoError(t, err, "should create tar without error")
+
+	tarTransport, err := tar.New(&transports.TransportConfig{
+		Backend: transports.TransportBackend_CONNECTION_TAR,
+		Path:    alpineContainerPath,
+	})
 	assert.Equal(t, nil, err, "should create tar without error")
 
 	f, err := tarTransport.FS().Open("/etc/alpine-release")
@@ -136,10 +138,13 @@ func TestTarFile(t *testing.T) {
 }
 
 func TestFilePermissions(t *testing.T) {
-	err := cacheImageToTar()
-	require.NoError(t, err)
+	err := cacheAlpine()
+	require.NoError(t, err, "should create tar without error")
 
-	trans, err := tar.New(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_TAR, Path: alpineContainerPath})
+	trans, err := tar.New(&transports.TransportConfig{
+		Backend: transports.TransportBackend_CONNECTION_TAR,
+		Path:    alpineContainerPath,
+	})
 	require.NoError(t, err)
 
 	path := "/etc/alpine-release"
@@ -187,11 +192,35 @@ func TestFilePermissions(t *testing.T) {
 	assert.False(t, details.Mode.Sticky())
 }
 
-func cacheImageToTar() error {
+func TestTarFileFind(t *testing.T) {
+	err := cacheAlpine()
+	require.NoError(t, err, "should create tar without error")
 
-	source := "alpine:3.9"
-	filename := alpineContainerPath
+	trans, err := tar.New(&transports.TransportConfig{
+		Backend: transports.TransportBackend_CONNECTION_TAR,
+		Path:    alpineContainerPath,
+	})
+	assert.Equal(t, nil, err, "should create tar without error")
 
+	fs := trans.FS()
+
+	fSearch := fs.(*tar.FS)
+
+	infos, err := fSearch.Find("/", regexp.MustCompile(`alpine-release`), "file")
+	require.NoError(t, err)
+
+	assert.Equal(t, 1, len(infos))
+}
+
+func cacheAlpine() error {
+	return cacheImageToTar(alpineImage, alpineContainerPath)
+}
+
+func cacheCentos() error {
+	return cacheImageToTar(centosImage, centosContainerPath)
+}
+
+func cacheImageToTar(source string, filename string) error {
 	// check if the cache is already there
 	_, err := os.Stat(filename)
 	if err == nil {
@@ -226,21 +255,4 @@ func cacheImageToTar() error {
 	_, err = io.Copy(out, rc)
 
 	return err
-}
-
-func TestTarFileFind(t *testing.T) {
-	err := cacheImageToTar()
-	require.NoError(t, err)
-
-	trans, err := tar.New(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_TAR, Path: alpineContainerPath})
-	assert.Equal(t, nil, err, "should create tar without error")
-
-	fs := trans.FS()
-
-	fSearch := fs.(*tar.FS)
-
-	infos, err := fSearch.Find("/", regexp.MustCompile(`alpine-release`), "file")
-	require.NoError(t, err)
-
-	assert.Equal(t, 1, len(infos))
 }
