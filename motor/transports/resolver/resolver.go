@@ -99,6 +99,24 @@ func ResolveTransport(tc *transports.TransportConfig, userIdDetectors ...string)
 		if len(trans.Identifier()) > 0 {
 			identifier = append(identifier, trans.Identifier())
 		}
+	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_TAR:
+		log.Debug().Msg("connection> load docker tar transport")
+		trans, info, err := containertar(tc)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
+		if err != nil {
+			return nil, err
+		}
+
+		name = info.Name
+		labels = info.Labels
+
+		// TODO: can we make the id optional here, we may want to use an approach that is similar to ssh
+		if len(info.Identifier) > 0 {
+			identifier = append(identifier, info.Identifier)
+		}
 	case transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY:
 		log.Debug().Msg("connection> load container registry transport")
 		trans, info, err := containerregistry(tc)
@@ -138,24 +156,6 @@ func ResolveTransport(tc *transports.TransportConfig, userIdDetectors ...string)
 	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE:
 		log.Debug().Msg("connection> load docker engine image transport")
 		trans, info, err := dockerengineimage(tc)
-		if err != nil {
-			return nil, err
-		}
-		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
-		if err != nil {
-			return nil, err
-		}
-
-		name = info.Name
-		labels = info.Labels
-
-		// TODO: can we make the id optional here, we may want to use an approach that is similar to ssh
-		if len(info.Identifier) > 0 {
-			identifier = append(identifier, info.Identifier)
-		}
-	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_TAR:
-		log.Debug().Msg("connection> load docker tar transport")
-		trans, info, err := containertar(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -421,6 +421,7 @@ func containerregistry(tc *transports.TransportConfig) (transports.Transport, Do
 			identifier = containerid.MondooContainerImageID(hash.String())
 		}
 
+		// TODO: remove docker info since we do not need this anymore
 		transport, err := image.New(rc)
 		return transport, DockerInfo{
 			Name:       containerid.ShortContainerImageID(hash.String()),
