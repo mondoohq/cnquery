@@ -28,27 +28,36 @@ type DockerImageTransport struct {
 	tar.Transport
 }
 
+// TODO: harmonize most of the code with the tar transport
+// TODO: add specific testing
 func newWithClose(endpoint *transports.TransportConfig, close func()) (*DockerImageTransport, error) {
-	if endpoint == nil {
+	if endpoint == nil || len(endpoint.Options["file"]) == 0 {
 		return nil, errors.New("endpoint cannot be empty")
 	}
 
+	filename := endpoint.Options["file"]
+
 	t := &DockerImageTransport{
 		Transport: tar.Transport{
-			Fs:              tar.NewFs(endpoint.Path),
+			Fs:              tar.NewFs(filename),
 			CloseFN:         close,
 			PlatformKind:    endpoint.Kind,
 			PlatformRuntime: endpoint.Runtime,
 		},
 	}
 
-	if len(endpoint.Path) > 0 {
-		err := t.LoadFile(endpoint.Path)
-		if err != nil {
-			log.Error().Err(err).Str("tar", endpoint.Path).Msg("tar> could not load tar file")
-			return nil, err
-		}
+	err := t.LoadFile(filename)
+	if err != nil {
+		log.Error().Err(err).Str("tar", filename).Msg("tar> could not load tar file")
+		return nil, err
 	}
+
+	identifier, err := tar.PlatformID(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	t.PlatformIdentifier = identifier
 	return t, nil
 }
 
@@ -69,9 +78,11 @@ func New(rc io.ReadCloser) (*DockerImageTransport, error) {
 	filename := f.Name()
 
 	return newWithClose(&transports.TransportConfig{
-		Path:    filename,
 		Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
 		Runtime: transports.RUNTIME_DOCKER_IMAGE,
+		Options: map[string]string{
+			"file": filename,
+		},
 	}, func() {
 		// remove temporary file on stream close
 		os.Remove(filename)

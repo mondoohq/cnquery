@@ -8,12 +8,11 @@ import (
 	"os"
 
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
-	"go.mondoo.io/mondoo/motor/motorid/containerid"
-	"go.mondoo.io/mondoo/motor/transports/fsutil"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"go.mondoo.io/mondoo/motor/motorid/containerid"
 	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/fsutil"
 )
 
 func New(endpoint *transports.TransportConfig) (*Transport, error) {
@@ -21,7 +20,6 @@ func New(endpoint *transports.TransportConfig) (*Transport, error) {
 }
 
 func NewWithClose(endpoint *transports.TransportConfig, close func()) (*Transport, error) {
-	var identifier string
 	if endpoint == nil || len(endpoint.Options["file"]) == 0 {
 		return nil, errors.New("endpoint cannot be empty")
 	}
@@ -41,7 +39,7 @@ func NewWithClose(endpoint *transports.TransportConfig, close func()) (*Transpor
 		return nil, err
 	}
 
-	identifier, err = PlatformID(filename)
+	identifier, err := PlatformID(filename)
 	if err != nil {
 		return nil, err
 	}

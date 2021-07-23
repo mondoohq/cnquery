@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"bufio"
 	"errors"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -11,11 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"io"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
 )
 
