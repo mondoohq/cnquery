@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	motor_asset "go.mondoo.io/mondoo/motor/asset"
+
 	"github.com/cockroachdb/errors"
 
 	"github.com/segmentio/ksuid"
@@ -188,6 +190,12 @@ func (p *Inventory) Validate() error {
 	}
 
 	return nil
+}
+
+func (p *Inventory) AddAssets(assetList ...*motor_asset.Asset) {
+	for i := range assetList {
+		p.Spec.Assets = append(p.Spec.Assets, assetList[i])
+	}
 }
 
 // isValidCredentialRef ensures an asset credential is defined properly

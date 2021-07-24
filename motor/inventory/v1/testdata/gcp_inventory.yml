@@ -7,8 +7,11 @@ metadata:
 spec:
   credential_query: "{ user: chris, type: ssh_agent }"
   assets:
-    - id: gcp
+    - name: gcp
       connections:
         - backend: gcp
-      options:
-        discover: all
+          discover:
+            targets:
+            - all
+          options:
+            project: mondoo-dev-262313
