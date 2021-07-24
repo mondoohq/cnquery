@@ -15,16 +15,36 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
 )
 
+const OPTION_FILE = "file"
+
 func New(endpoint *transports.TransportConfig) (*Transport, error) {
 	return NewWithClose(endpoint, nil)
 }
 
 func NewWithClose(endpoint *transports.TransportConfig, close func()) (*Transport, error) {
-	if endpoint == nil || len(endpoint.Options["file"]) == 0 {
+	if endpoint == nil || len(endpoint.Options[OPTION_FILE]) == 0 {
 		return nil, errors.New("endpoint cannot be empty")
 	}
 
-	filename := endpoint.Options["file"]
+	filename := endpoint.Options[OPTION_FILE]
+	var identifier string
+
+	// try to determine if the tar is a container image
+	img, iErr := tarball.ImageFromPath(filename, nil)
+	if iErr == nil {
+		hash, err := img.Digest()
+		if err != nil {
+			return nil, err
+		}
+		identifier = containerid.MondooContainerImageID(hash.String())
+		// TODO: if it is a container image, we need to transform the tar first, so that all layers are flattened
+	} else {
+		hash, err := fsutil.LocalFileSha256(filename)
+		if err != nil {
+			return nil, err
+		}
+		identifier = "//platformid.api.mondoo.app/runtime/tar/hash/" + hash
+	}
 
 	t := &Transport{
 		Fs:              NewFs(filename),
@@ -39,42 +59,27 @@ func NewWithClose(endpoint *transports.TransportConfig, close func()) (*Transpor
 		return nil, err
 	}
 
-	identifier, err := PlatformID(filename)
-	if err != nil {
-		return nil, err
-	}
-
 	t.PlatformIdentifier = identifier
 	return t, nil
 }
 
-// PlatformID determines the platform identifier for a tar file
 func PlatformID(filename string) (string, error) {
 	var identifier string
-
-	// try to determine the image digest
-	// NOTE: a tar file does not need to be a container image
+	// try to determine if the tar is a container image
 	img, iErr := tarball.ImageFromPath(filename, nil)
 	if iErr == nil {
 		hash, err := img.Digest()
-		if err == nil {
-			identifier = containerid.MondooContainerImageID(hash.String())
+		if err != nil {
+			return "", err
 		}
+		identifier = containerid.MondooContainerImageID(hash.String())
 	} else {
-		osFs := afero.NewOsFs()
-		f, err := osFs.Open(filename)
+		hash, err := fsutil.LocalFileSha256(filename)
 		if err != nil {
-			return identifier, err
-		}
-
-		defer f.Close()
-		hash, err := fsutil.Sha256(f)
-		if err != nil {
-			return identifier, err
+			return "", err
 		}
 		identifier = "//platformid.api.mondoo.app/runtime/tar/hash/" + hash
 	}
-
 	return identifier, nil
 }
 
@@ -86,10 +91,23 @@ type Transport struct {
 	PlatformKind       transports.Kind
 	PlatformRuntime    string
 	PlatformIdentifier string
+	// optional metadata to store additional information
+	Metadata struct {
+		Name   string
+		Labels map[string]string
+	}
 }
 
 func (t *Transport) Identifier() string {
 	return t.PlatformIdentifier
+}
+
+func (t *Transport) Labels() map[string]string {
+	return t.Metadata.Labels
+}
+
+func (t *Transport) PlatformName() string {
+	return t.Metadata.Name
 }
 
 func (m *Transport) RunCommand(command string) (*transports.Command, error) {
