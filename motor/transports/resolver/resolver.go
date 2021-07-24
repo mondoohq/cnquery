@@ -1,33 +1,19 @@
 package resolver
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
-	"io"
-	"os"
-
-	"go.mondoo.io/mondoo/motor/motorid/containerid"
 
 	"github.com/cockroachdb/errors"
-	"go.mondoo.io/mondoo/motor/transports/equinix"
-	"go.mondoo.io/mondoo/motor/transports/fs"
-
-	"github.com/google/go-containerregistry/pkg/authn"
-	"github.com/google/go-containerregistry/pkg/name"
-	"github.com/google/go-containerregistry/pkg/v1/mutate"
-	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor"
-	docker_discovery "go.mondoo.io/mondoo/motor/discovery/docker_engine"
 	"go.mondoo.io/mondoo/motor/motorid"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/arista"
 	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 	"go.mondoo.io/mondoo/motor/transports/azure"
-	"go.mondoo.io/mondoo/motor/transports/docker/docker_engine"
-	"go.mondoo.io/mondoo/motor/transports/docker/image"
-	"go.mondoo.io/mondoo/motor/transports/docker/snapshot"
+	"go.mondoo.io/mondoo/motor/transports/container"
+	"go.mondoo.io/mondoo/motor/transports/equinix"
+	"go.mondoo.io/mondoo/motor/transports/fs"
 	"go.mondoo.io/mondoo/motor/transports/gcp"
 	"go.mondoo.io/mondoo/motor/transports/ipmi"
 	k8s_transport "go.mondoo.io/mondoo/motor/transports/k8s"
@@ -101,7 +87,7 @@ func ResolveTransport(tc *transports.TransportConfig, userIdDetectors ...string)
 		}
 	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_TAR:
 		log.Debug().Msg("connection> load docker tar transport")
-		trans, info, err := containertar(tc)
+		trans, err := container.NewContainerTar(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -110,16 +96,14 @@ func ResolveTransport(tc *transports.TransportConfig, userIdDetectors ...string)
 			return nil, err
 		}
 
-		name = info.Name
-		labels = info.Labels
-
-		// TODO: can we make the id optional here, we may want to use an approach that is similar to ssh
-		if len(info.Identifier) > 0 {
-			identifier = append(identifier, info.Identifier)
+		name = trans.PlatformName()
+		labels = trans.Labels()
+		if len(trans.Identifier()) > 0 {
+			identifier = append(identifier, trans.Identifier())
 		}
 	case transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY:
 		log.Debug().Msg("connection> load container registry transport")
-		trans, info, err := containerregistry(tc)
+		trans, err := container.NewContainerRegistryImage(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -128,16 +112,14 @@ func ResolveTransport(tc *transports.TransportConfig, userIdDetectors ...string)
 			return nil, err
 		}
 
-		name = info.Name
-		labels = info.Labels
-
-		// TODO: can we make the id optional here, we may want to use an approach that is similar to ssh
-		if len(info.Identifier) > 0 {
-			identifier = append(identifier, info.Identifier)
+		name = trans.PlatformName()
+		labels = trans.Labels()
+		if len(trans.Identifier()) > 0 {
+			identifier = append(identifier, trans.Identifier())
 		}
 	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER:
 		log.Debug().Msg("connection> load docker engine container transport")
-		trans, info, err := dockerenginecontainer(tc)
+		trans, err := container.NewDockerEngineContainer(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -146,16 +128,14 @@ func ResolveTransport(tc *transports.TransportConfig, userIdDetectors ...string)
 			return nil, err
 		}
 
-		name = info.Name
-		labels = info.Labels
-
-		// TODO: can we make the id optional here, we may want to use an approach that is similar to ssh
-		if len(info.Identifier) > 0 {
-			identifier = append(identifier, info.Identifier)
+		name = trans.PlatformName()
+		labels = trans.Labels()
+		if len(trans.Identifier()) > 0 {
+			identifier = append(identifier, trans.Identifier())
 		}
 	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE:
 		log.Debug().Msg("connection> load docker engine image transport")
-		trans, info, err := dockerengineimage(tc)
+		trans, err := container.NewDockerEngineImage(tc)
 		if err != nil {
 			return nil, err
 		}
@@ -164,12 +144,10 @@ func ResolveTransport(tc *transports.TransportConfig, userIdDetectors ...string)
 			return nil, err
 		}
 
-		name = info.Name
-		labels = info.Labels
-
-		// TODO: can we make the id optional here, we may want to use an approach that is similar to ssh
-		if len(info.Identifier) > 0 {
-			identifier = append(identifier, info.Identifier)
+		name = trans.PlatformName()
+		labels = trans.Labels()
+		if len(trans.Identifier()) > 0 {
+			identifier = append(identifier, trans.Identifier())
 		}
 	case transports.TransportBackend_CONNECTION_SSH:
 		log.Debug().Msg("connection> load ssh transport")
@@ -388,155 +366,4 @@ func ResolveTransport(tc *transports.TransportConfig, userIdDetectors ...string)
 	}
 
 	return m, nil
-}
-
-// TODO: move individual docker handling to specific transport
-type DockerInfo struct {
-	Name       string
-	Identifier string
-	Labels     map[string]string
-}
-
-func containerregistry(tc *transports.TransportConfig) (transports.Transport, DockerInfo, error) {
-	// load container image from remote directoryload tar file into backend
-	ref, err := name.ParseReference(tc.Host, name.WeakValidation)
-	if err == nil {
-		log.Debug().Str("ref", ref.Name()).Msg("found valid container registry reference")
-
-		registryOpts := []image.Option{image.WithInsecure(tc.Insecure)}
-		if len(tc.BearerToken) > 0 {
-			log.Debug().Msg("enable bearer authentication for image")
-			registryOpts = append(registryOpts, image.WithAuthenticator(&authn.Bearer{Token: tc.BearerToken}))
-		}
-
-		// image.WithAuthenticator()
-		img, rc, err := image.LoadFromRegistry(ref, registryOpts...)
-		if err != nil {
-			return nil, DockerInfo{}, err
-		}
-
-		var identifier string
-		hash, err := img.Digest()
-		if err == nil {
-			identifier = containerid.MondooContainerImageID(hash.String())
-		}
-
-		// TODO: remove docker info since we do not need this anymore
-		transport, err := image.New(rc)
-		return transport, DockerInfo{
-			Name:       containerid.ShortContainerImageID(hash.String()),
-			Identifier: identifier,
-		}, err
-	}
-	log.Debug().Str("image", tc.Host).Msg("Could not detect a valid repository url")
-	return nil, DockerInfo{}, err
-}
-
-func dockerenginecontainer(tc *transports.TransportConfig) (transports.Transport, DockerInfo, error) {
-	// could be an image id/name, container id/name or a short reference to an image in docker engine
-	ded, err := docker_discovery.NewDockerEngineDiscovery()
-	if err != nil {
-		return nil, DockerInfo{}, err
-	}
-
-	ci, err := ded.ContainerInfo(tc.Host)
-	if err != nil {
-		return nil, DockerInfo{}, err
-	}
-
-	if ci.Running {
-		log.Debug().Msg("found running container " + ci.ID)
-		transport, err := docker_engine.New(ci.ID)
-		return transport, DockerInfo{
-			Name:       containerid.ShortContainerImageID(ci.ID),
-			Identifier: containerid.MondooContainerID(ci.ID),
-			Labels:     ci.Labels,
-		}, err
-	} else {
-		log.Debug().Msg("found stopped container " + ci.ID)
-		transport, err := snapshot.NewFromDockerEngine(ci.ID)
-		return transport, DockerInfo{
-			Name:       containerid.ShortContainerImageID(ci.ID),
-			Identifier: containerid.MondooContainerID(ci.ID),
-			Labels:     ci.Labels,
-		}, err
-	}
-}
-
-func dockerengineimage(endpoint *transports.TransportConfig) (transports.Transport, DockerInfo, error) {
-	// could be an image id/name, container id/name or a short reference to an image in docker engine
-	ded, err := docker_discovery.NewDockerEngineDiscovery()
-	if err != nil {
-		return nil, DockerInfo{}, err
-	}
-
-	ii, err := ded.ImageInfo(endpoint.Host)
-	if err != nil {
-		return nil, DockerInfo{}, err
-	}
-
-	log.Debug().Msg("found docker engine image " + ii.ID)
-	img, rc, err := image.LoadFromDockerEngine(ii.ID)
-	if err != nil {
-		return nil, DockerInfo{}, err
-	}
-
-	var identifier string
-	hash, err := img.Digest()
-	if err == nil {
-		identifier = containerid.MondooContainerImageID(hash.String())
-	}
-
-	transport, err := image.New(rc)
-	return transport, DockerInfo{
-		Name:       ii.Name,
-		Identifier: identifier,
-		Labels:     ii.Labels,
-	}, err
-}
-
-// check if the tar is an image or container
-func containertar(endpoint *transports.TransportConfig) (transports.Transport, DockerInfo, error) {
-	log.Debug().Msg("found local docker/image file")
-
-	// try to load docker image tarball
-	img, err := tarball.ImageFromPath(endpoint.Host, nil)
-	if err == nil {
-		log.Debug().Msg("detected docker image")
-		var identifier string
-
-		hash, err := img.Digest()
-		if err == nil {
-			identifier = containerid.MondooContainerImageID(hash.String())
-		} else {
-			log.Warn().Err(err).Msg("could not determine platform id")
-		}
-
-		rc := mutate.Extract(img)
-		transport, err := image.New(rc)
-		return transport, DockerInfo{
-			Identifier: identifier,
-		}, err
-	}
-
-	log.Debug().Msg("detected docker container snapshot")
-
-	// generate sha sum of tar file
-	f, err := os.Open(endpoint.Host)
-	if err != nil {
-		return nil, DockerInfo{}, errors.Wrap(err, "cannot read container tar to generate hash")
-	}
-	defer f.Close()
-
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		return nil, DockerInfo{}, errors.Wrap(err, "cannot read container tar to generate hash")
-	}
-
-	hash := hex.EncodeToString(h.Sum(nil))
-
-	transport, err := snapshot.NewFromFile(endpoint.Host)
-	return transport, DockerInfo{
-		Identifier: "//platformid.api.mondoo.app/runtime/docker/snapshot/" + hash,
-	}, err
 }

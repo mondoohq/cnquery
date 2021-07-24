@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	"go.mondoo.io/mondoo/lumi/resources/reboot"
 	"go.mondoo.io/mondoo/lumi/resources/systemd"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports/docker/image"
-	"go.mondoo.io/mondoo/motor/transports/docker/snapshot"
+	"go.mondoo.io/mondoo/motor/transports/container/docker_snapshot"
+	"go.mondoo.io/mondoo/motor/transports/container/image"
 	"go.mondoo.io/mondoo/motor/transports/tar"
-	"strings"
-	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/llx"
@@ -29,9 +30,9 @@ func (p *lumiOs) id() (string, error) {
 func (p *lumiOs) GetRebootpending() (interface{}, error) {
 	// it is a container image, a reboot is never required
 	switch p.Runtime.Motor.Transport.(type) {
-	case *image.DockerImageTransport:
+	case *image.ContainerImageTransport:
 		return false, nil
-	case *snapshot.DockerSnapshotTransport:
+	case *docker_snapshot.DockerSnapshotTransport:
 		return false, nil
 	case *tar.Transport:
 		return false, nil
@@ -159,7 +160,6 @@ func (p *lumiOs) GetPath() ([]interface{}, error) {
 
 // returns uptime in nanoseconds
 func (p *lumiOs) GetUptime() (*time.Time, error) {
-
 	uptime, err := uptime.New(p.Runtime.Motor)
 	if err != nil {
 		return LumiTime(llx.DurationToTime(0)), err
