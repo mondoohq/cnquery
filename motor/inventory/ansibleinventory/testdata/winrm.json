@@ -1,0 +1,31 @@
+{
+    "_meta": {
+        "hostvars": {
+            "172.16.2.5": {
+                "ansible_connection": "winrm", 
+                "ansible_password": "password", 
+                "ansible_user": "vagrant", 
+                "ansible_winrm_server_cert_validation": "ignore"
+            }, 
+            "172.16.2.6": {
+                "ansible_connection": "winrm", 
+                "ansible_password": "password", 
+                "ansible_user": "vagrant", 
+                "ansible_winrm_server_cert_validation": "ignore"
+            }
+        }
+    }, 
+    "all": {
+        "children": [
+            "ungrouped", 
+            "win"
+        ]
+    }, 
+    "ungrouped": {}, 
+    "win": {
+        "hosts": [
+            "172.16.2.5", 
+            "172.16.2.6"
+        ]
+    }
+}

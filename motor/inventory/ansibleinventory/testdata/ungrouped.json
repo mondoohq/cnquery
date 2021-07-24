@@ -1,0 +1,34 @@
+{
+  "_meta": {
+      "hostvars": {
+          "34.244.38.44": {
+              "ansible_port": 2222
+          }, 
+          "34.244.38.46": {
+              "ansible_port": 22, 
+              "ansible_user": "ec2-user"
+          }, 
+          "34.255.178.16": {
+              "ansible_ssh_private_key_file": "/Users/chartmann/.ssh/id_rsa", 
+              "ansible_user": "ec2-user"
+          }
+      }
+  }, 
+  "all": {
+      "children": [
+          "ungrouped", 
+          "workers"
+      ]
+  }, 
+  "ungrouped": {
+      "hosts": [
+          "34.244.38.44"
+      ]
+  }, 
+  "workers": {
+      "hosts": [
+          "34.244.38.46", 
+          "34.255.178.16"
+      ]
+  }
+}

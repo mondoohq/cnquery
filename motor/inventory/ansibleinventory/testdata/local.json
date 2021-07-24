@@ -1,0 +1,21 @@
+{
+    "_meta": {
+        "hostvars": {
+            "127.0.0.1": {
+                "ansible_connection": "local"
+            }
+        }
+    }, 
+    "all": {
+        "children": [
+            "local", 
+            "ungrouped"
+        ]
+    }, 
+    "local": {
+        "hosts": [
+            "127.0.0.1"
+        ]
+    }, 
+    "ungrouped": {}
+}
