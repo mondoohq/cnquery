@@ -53,8 +53,6 @@ func (conn *TransportConfig) ToUrl() string {
 		}
 		// eg. docker://centos:8
 		return SCHEME_DOCKER_IMAGE + "://" + conn.Host
-	case TransportBackend_CONNECTION_DOCKER_ENGINE_TAR:
-		return SCHEME_DOCKER_TAR + "://" + conn.Host + conn.Path
 	case TransportBackend_CONNECTION_CONTAINER_REGISTRY:
 		return SCHEME_CONTAINER_REGISTRY + "://" + conn.Host + conn.Path
 	case TransportBackend_CONNECTION_LOCAL_OS:

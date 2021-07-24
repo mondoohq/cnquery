@@ -14,7 +14,6 @@ const (
 	SCHEME_DOCKER             = "docker"
 	SCHEME_DOCKER_IMAGE       = "docker+image"
 	SCHEME_DOCKER_CONTAINER   = "docker+container"
-	SCHEME_DOCKER_TAR         = "docker+tar"
 	SCHEME_TAR                = "tar"
 	SCHEME_K8S                = "k8s"
 	SCHEME_GCR                = "gcr" // TODO: this is not part of the transports, merge with cr
@@ -46,7 +45,6 @@ var TransportBackend_scheme = map[TransportBackend]string{
 	TransportBackend_CONNECTION_MOCK:                    SCHEME_MOCK,
 	TransportBackend_CONNECTION_VSPHERE:                 SCHEME_VSPHERE,
 	TransportBackend_CONNECTION_ARISTAEOS:               SCHEME_ARISTA,
-	TransportBackend_CONNECTION_DOCKER_ENGINE_TAR:       SCHEME_DOCKER_TAR,
 	TransportBackend_CONNECTION_AWS:                     SCHEME_AWS,
 	TransportBackend_CONNECTION_GCP:                     SCHEME_GCP,
 	TransportBackend_CONNECTION_AZURE:                   SCHEME_AZURE,
@@ -71,7 +69,6 @@ var TransportBackend_schemevalue = map[string]TransportBackend{
 	SCHEME_MOCK:               TransportBackend_CONNECTION_MOCK,
 	SCHEME_VSPHERE:            TransportBackend_CONNECTION_VSPHERE,
 	SCHEME_ARISTA:             TransportBackend_CONNECTION_ARISTAEOS,
-	SCHEME_DOCKER_TAR:         TransportBackend_CONNECTION_DOCKER_ENGINE_TAR,
 	SCHEME_AWS:                TransportBackend_CONNECTION_AWS,
 	SCHEME_GCP:                TransportBackend_CONNECTION_GCP,
 	SCHEME_AZURE:              TransportBackend_CONNECTION_AZURE,

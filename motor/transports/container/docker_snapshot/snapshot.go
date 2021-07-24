@@ -43,23 +43,6 @@ func NewFromDockerEngine(containerid string) (*DockerSnapshotTransport, error) {
 	return &DockerSnapshotTransport{Transport: *tarTransport}, nil
 }
 
-// NewFromFile opens a Docker Engine snapshot from file
-func NewFromFile(filename string) (*DockerSnapshotTransport, error) {
-	tarTransport, err := tar.NewWithClose(&transports.TransportConfig{
-		Backend: transports.TransportBackend_CONNECTION_TAR,
-		Options: map[string]string{
-			tar.OPTION_FILE: filename,
-		},
-		Kind:    transports.Kind_KIND_CONTAINER,
-		Runtime: transports.RUNTIME_DOCKER_CONTAINER,
-	}, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return &DockerSnapshotTransport{Transport: *tarTransport}, nil
-}
-
 // ExportSnapshot exports a given container from docker engine to a tar file
 func ExportSnapshot(containerid string, f *os.File) error {
 	dc, err := docker_engine.GetDockerClient()

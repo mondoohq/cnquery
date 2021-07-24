@@ -85,22 +85,6 @@ func ResolveTransport(tc *transports.TransportConfig, userIdDetectors ...string)
 		if len(trans.Identifier()) > 0 {
 			identifier = append(identifier, trans.Identifier())
 		}
-	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_TAR:
-		log.Debug().Msg("connection> load docker tar transport")
-		trans, err := container.NewContainerTar(tc)
-		if err != nil {
-			return nil, err
-		}
-		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
-		if err != nil {
-			return nil, err
-		}
-
-		name = trans.PlatformName()
-		labels = trans.Labels()
-		if len(trans.Identifier()) > 0 {
-			identifier = append(identifier, trans.Identifier())
-		}
 	case transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY:
 		log.Debug().Msg("connection> load container registry transport")
 		trans, err := container.NewContainerRegistryImage(tc)

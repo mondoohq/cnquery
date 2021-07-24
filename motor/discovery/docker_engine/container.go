@@ -4,11 +4,10 @@ import (
 	"context"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/motorid/containerid"
-
 	"github.com/docker/docker/api/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/motorid/containerid"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 )

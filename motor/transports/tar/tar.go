@@ -7,6 +7,10 @@ import (
 	"io"
 	"os"
 
+	"github.com/google/go-containerregistry/pkg/v1/mutate"
+
+	"go.mondoo.io/mondoo/motor/transports/container/cache"
+
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -21,7 +25,36 @@ func New(endpoint *transports.TransportConfig) (*Transport, error) {
 	return NewWithClose(endpoint, nil)
 }
 
-func NewWithClose(endpoint *transports.TransportConfig, close func()) (*Transport, error) {
+// NewWithReader provides a transport from a container image stream
+func NewWithReader(rc io.ReadCloser, close func()) (*Transport, error) {
+	// we cache the flattened image locally
+	f, err := cache.RandomFile()
+	if err != nil {
+		return nil, err
+	}
+
+	// we return a pure tar image
+	filename := f.Name()
+
+	err = cache.StreamToTmpFile(rc, f)
+	if err != nil {
+		os.Remove(filename)
+		return nil, err
+	}
+
+	return NewWithClose(&transports.TransportConfig{
+		Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
+		Runtime: transports.RUNTIME_DOCKER_IMAGE,
+		Options: map[string]string{
+			OPTION_FILE: filename,
+		},
+	}, func() {
+		// remove temporary file on stream close
+		os.Remove(filename)
+	})
+}
+
+func NewWithClose(endpoint *transports.TransportConfig, closeFn func()) (*Transport, error) {
 	if endpoint == nil || len(endpoint.Options[OPTION_FILE]) == 0 {
 		return nil, errors.New("endpoint cannot be empty")
 	}
@@ -37,30 +70,36 @@ func NewWithClose(endpoint *transports.TransportConfig, close func()) (*Transpor
 			return nil, err
 		}
 		identifier = containerid.MondooContainerImageID(hash.String())
-		// TODO: if it is a container image, we need to transform the tar first, so that all layers are flattened
+		// if it is a container image, we need to transform the tar first, so that all layers are flattened
+		trans, err := NewWithReader(mutate.Extract(img), closeFn)
+		if err != nil {
+			return nil, err
+		}
+		trans.PlatformIdentifier = identifier
+		return trans, nil
 	} else {
 		hash, err := fsutil.LocalFileSha256(filename)
 		if err != nil {
 			return nil, err
 		}
 		identifier = "//platformid.api.mondoo.app/runtime/tar/hash/" + hash
-	}
 
-	t := &Transport{
-		Fs:              NewFs(filename),
-		CloseFN:         close,
-		PlatformKind:    endpoint.Kind,
-		PlatformRuntime: endpoint.Runtime,
-	}
+		t := &Transport{
+			Fs:              NewFs(filename),
+			CloseFN:         closeFn,
+			PlatformKind:    endpoint.Kind,
+			PlatformRuntime: endpoint.Runtime,
+		}
 
-	err := t.LoadFile(filename)
-	if err != nil {
-		log.Error().Err(err).Str("tar", filename).Msg("tar> could not load tar file")
-		return nil, err
-	}
+		err = t.LoadFile(filename)
+		if err != nil {
+			log.Error().Err(err).Str("tar", filename).Msg("tar> could not load tar file")
+			return nil, err
+		}
 
-	t.PlatformIdentifier = identifier
-	return t, nil
+		t.PlatformIdentifier = identifier
+		return t, nil
+	}
 }
 
 func PlatformID(filename string) (string, error) {
