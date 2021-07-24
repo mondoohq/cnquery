@@ -3,16 +3,12 @@ package inventory
 import (
 	"testing"
 
-	"go.mondoo.io/mondoo/motor/asset"
-
-	"google.golang.org/protobuf/testing/protocmp"
-
 	"github.com/google/go-cmp/cmp"
-
-	"go.mondoo.io/mondoo/motor/transports"
-
 	"github.com/stretchr/testify/require"
-	v1 "go.mondoo.io/mondoo/motor/inventory/v1"
+	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/inventory/v1"
+	"go.mondoo.io/mondoo/motor/transports"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 func TestInventoryLoader(t *testing.T) {

@@ -18,6 +18,13 @@ const (
 	InventoryFilePath = "mondoo.app/source-file"
 )
 
+func New() *Inventory {
+	return &Inventory{
+		Metadata: &ObjectMeta{},
+		Spec:     &InventorySpec{},
+	}
+}
+
 // InventoryFromYAML create an inventory from yaml contents
 func InventoryFromYAML(data []byte) (*Inventory, error) {
 	var res Inventory
