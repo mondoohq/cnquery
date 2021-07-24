@@ -14,7 +14,7 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 	}
 
 	if tc.Options == nil || len(tc.Options["project"]) == 0 {
-		return nil, errors.New("gcp backend requires a project id")
+		return nil, errors.New("gcp backend requires a project id. please set option `project`")
 	}
 
 	return &Transport{

@@ -203,11 +203,29 @@ func (i *Inventory) ToV1Inventory() *v1.Inventory {
 	return out
 }
 
+var validConnectionTypes = []string{"ssh", "winrm", "local", "docker"}
+
+func isValidConnectionType(conn string) bool {
+	for i := range validConnectionTypes {
+		if conn == validConnectionTypes[i] {
+			return true
+		}
+	}
+	return false
+}
+
+// ansibleBackend maps an ansible connection to mondoo backend
+// https://docs.ansible.com/ansible/latest/plugins/connection.html
+// quickly get a list of available plugins via `ansible-doc -t connection -l`
 func ansibleBackend(connection string) transports.TransportBackend {
 	var res transports.TransportBackend
 	switch strings.TrimSpace(connection) {
+	case "local":
+		res = transports.TransportBackend_CONNECTION_LOCAL_OS
 	case "ssh":
 		res = transports.TransportBackend_CONNECTION_SSH
+	case "winrm":
+		res = transports.TransportBackend_CONNECTION_WINRM
 	case "docker":
 		res = transports.TransportBackend_CONNECTION_DOCKER
 	default:
