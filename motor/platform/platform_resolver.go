@@ -3,7 +3,7 @@ package platform
 import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/container/image"
+	"go.mondoo.io/mondoo/motor/transports/tar"
 )
 
 type detect func(p *PlatformResolver, di *Platform, t transports.Transport) (bool, error)
@@ -24,7 +24,7 @@ func (p *PlatformResolver) Resolve(t transports.Transport) (*Platform, bool) {
 	pi, resolved := p.resolvePlatform(di, t)
 
 	// if we have a docker image, we should fallback to the scratch operating system
-	_, ok := t.(*image.ContainerImageTransport)
+	_, ok := t.(*tar.Transport)
 	if resolved && len(pi.Name) == 0 && ok {
 		di.Name = "scratch"
 		return di, true

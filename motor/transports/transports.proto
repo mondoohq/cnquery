@@ -4,6 +4,7 @@ package mondoo.motor.transports.v1;
 option go_package = "go.mondoo.io/mondoo/motor/transports";
 
 enum TransportBackend {
+  reserved 11;
   CONNECTION_LOCAL_OS = 0;
   CONNECTION_DOCKER_ENGINE_IMAGE = 1;
   CONNECTION_DOCKER_ENGINE_CONTAINER = 2;
@@ -15,7 +16,6 @@ enum TransportBackend {
   CONNECTION_MOCK = 8;
   CONNECTION_VSPHERE = 9;
   CONNECTION_ARISTAEOS = 10;
-  CONNECTION_DOCKER_ENGINE_TAR = 11;
   CONNECTION_AWS = 12;
   CONNECTION_GCP = 13;
   CONNECTION_AZURE = 14;

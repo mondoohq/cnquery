@@ -47,7 +47,6 @@ func init() {
 		transports.SCHEME_DOCKER:             &docker_engine.Resolver{},
 		transports.SCHEME_DOCKER_IMAGE:       &docker_engine.Resolver{},
 		transports.SCHEME_DOCKER_CONTAINER:   &docker_engine.Resolver{},
-		transports.SCHEME_DOCKER_TAR:         &docker_engine.Resolver{},
 		transports.SCHEME_TAR:                &tar.Resolver{},
 		transports.SCHEME_K8S:                &k8s.Resolver{},
 		transports.SCHEME_GCR:                &gcp.GcrResolver{},

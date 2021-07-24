@@ -4,18 +4,14 @@ import (
 	"os"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/transports/tar"
-
-	"go.mondoo.io/mondoo/motor/discovery/container_registry"
-
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-containerregistry/pkg/name"
-
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/discovery/container_registry"
 	"go.mondoo.io/mondoo/motor/platform"
-
 	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/tar"
 )
 
 const (
@@ -87,18 +83,6 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 			opts[i](tc)
 		}
 		return tc, nil
-	} else if strings.HasPrefix(url, transports.SCHEME_DOCKER_TAR+"://") {
-		tc := &transports.TransportConfig{
-			Backend: transports.TransportBackend_CONNECTION_DOCKER_ENGINE_TAR,
-			Options: map[string]string{
-				"file": strings.Replace(url, transports.SCHEME_DOCKER_TAR+"://", "", 1),
-			},
-		}
-
-		for i := range opts {
-			opts[i](tc)
-		}
-		return tc, nil
 	}
 	return nil, errors.New("could not find the container reference")
 }
@@ -111,7 +95,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 	// check if we have a tar as input
 	// detect if the tar is a container image format -> container image
 	// or a container snapshot format -> container snapshot
-	if tc.Backend == transports.TransportBackend_CONNECTION_DOCKER_ENGINE_TAR {
+	if tc.Backend == transports.TransportBackend_CONNECTION_TAR {
 
 		if tc.Options == nil || tc.Options["file"] == "" {
 			return nil, errors.New("could not find the tar file")

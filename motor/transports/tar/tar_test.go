@@ -1,16 +1,16 @@
 package tar_test
 
 import (
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"regexp"
 	"testing"
 
+	"github.com/google/go-containerregistry/pkg/v1/tarball"
+
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
-	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -267,17 +267,5 @@ func cacheImageToTar(source string, filename string) error {
 		return err
 	}
 
-	// convert multi-layer image into a flatten container tar
-	rc := mutate.Extract(img)
-	defer rc.Close()
-
-	// write content to file
-	out, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-	_, err = io.Copy(out, rc)
-
-	return err
+	return tarball.WriteToFile(filename, tag, img)
 }

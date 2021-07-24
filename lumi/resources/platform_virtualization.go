@@ -3,7 +3,7 @@ package resources
 import (
 	"go.mondoo.io/mondoo/motor/transports/container/docker_engine"
 	"go.mondoo.io/mondoo/motor/transports/container/docker_snapshot"
-	"go.mondoo.io/mondoo/motor/transports/container/image"
+	"go.mondoo.io/mondoo/motor/transports/tar"
 )
 
 func (v *lumiPlatformVirtualization) id() (string, error) {
@@ -12,7 +12,7 @@ func (v *lumiPlatformVirtualization) id() (string, error) {
 
 func (v *lumiPlatformVirtualization) GetIsContainer() (bool, error) {
 	switch v.Runtime.Motor.Transport.(type) {
-	case *image.ContainerImageTransport:
+	case *tar.Transport:
 		return true, nil
 	case *docker_snapshot.DockerSnapshotTransport:
 		return true, nil

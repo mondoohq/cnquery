@@ -11,7 +11,6 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/systemd"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports/container/docker_snapshot"
-	"go.mondoo.io/mondoo/motor/transports/container/image"
 	"go.mondoo.io/mondoo/motor/transports/tar"
 
 	"github.com/rs/zerolog/log"
@@ -30,8 +29,6 @@ func (p *lumiOs) id() (string, error) {
 func (p *lumiOs) GetRebootpending() (interface{}, error) {
 	// it is a container image, a reboot is never required
 	switch p.Runtime.Motor.Transport.(type) {
-	case *image.ContainerImageTransport:
-		return false, nil
 	case *docker_snapshot.DockerSnapshotTransport:
 		return false, nil
 	case *tar.Transport:
