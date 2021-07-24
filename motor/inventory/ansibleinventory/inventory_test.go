@@ -205,3 +205,17 @@ func TestHostConnectionWinrm(t *testing.T) {
 		Connection: "winrm",
 	}}, hosts)
 }
+
+func TestInventoryConversion(t *testing.T) {
+	input, err := ioutil.ReadFile("./testdata/inventory.json")
+	assert.Nil(t, err)
+	assert.True(t, ansibleinventory.IsInventory(input))
+
+	ansibleInventory := ansibleinventory.Inventory{}
+	err = ansibleInventory.Decode(input)
+	assert.Nil(t, err)
+
+	v1Intentory := ansibleInventory.ToV1Inventory()
+
+	assert.Equal(t, 8, len(v1Intentory.Spec.Assets))
+}

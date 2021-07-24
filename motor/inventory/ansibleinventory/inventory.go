@@ -3,6 +3,14 @@ package ansibleinventory
 import (
 	"errors"
 	"strconv"
+	"strings"
+
+	"github.com/rs/zerolog/log"
+
+	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/transports"
+
+	"go.mondoo.io/mondoo/motor/inventory/v1"
 
 	"github.com/mitchellh/mapstructure"
 	"sigs.k8s.io/yaml"
@@ -168,4 +176,75 @@ func Filter(vs []string, f func(string) bool) []string {
 		}
 	}
 	return vsf
+}
+
+func (i *Inventory) ToV1Inventory() *v1.Inventory {
+	out := v1.New()
+
+	// convert assets
+	hosts := i.List()
+	for i := range hosts {
+		host := hosts[i]
+
+		name := host.Host
+		if host.Alias != "" {
+			name = host.Alias
+		}
+
+		out.Spec.Assets = append(out.Spec.Assets, &asset.Asset{
+			Name:        name,
+			Connections: ansibleConnections(host),
+		})
+	}
+
+	// move credentials out into credentials section
+	out.PreProcess()
+
+	return out
+}
+
+func ansibleBackend(connection string) transports.TransportBackend {
+	var res transports.TransportBackend
+	switch strings.TrimSpace(connection) {
+	case "ssh":
+		res = transports.TransportBackend_CONNECTION_SSH
+	case "docker":
+		res = transports.TransportBackend_CONNECTION_DOCKER
+	default:
+		log.Warn().Str("ansible-connection", connection).Msg("unknown connection, fallback to ssh")
+		res = transports.TransportBackend_CONNECTION_SSH
+	}
+	return res
+}
+
+func ansibleConnections(host *Host) []*transports.TransportConfig {
+	backend := ansibleBackend(host.Connection)
+
+	res := &transports.TransportConfig{
+		Backend: backend,
+		Host:    host.Host,
+		Port:    host.Port,
+		Sudo: &transports.Sudo{
+			Active: host.Become,
+		},
+	}
+
+	credentials := []*transports.Credential{}
+
+	if host.Password != "" {
+		credentials = append(credentials, &transports.Credential{
+			Type:     transports.CredentialType_password,
+			User:     host.User,
+			Password: host.Password,
+		})
+	}
+
+	if backend == transports.TransportBackend_CONNECTION_SSH {
+		credentials = append(credentials, &transports.Credential{
+			Type: transports.CredentialType_ssh_agent,
+		})
+	}
+
+	res.Credentials = credentials
+	return []*transports.TransportConfig{res}
 }

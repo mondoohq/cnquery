@@ -6,7 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery"
-	v1 "go.mondoo.io/mondoo/motor/inventory/v1"
+	"go.mondoo.io/mondoo/motor/inventory/v1"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/vault"
 	"go.mondoo.io/mondoo/motor/vault/inmemory"
