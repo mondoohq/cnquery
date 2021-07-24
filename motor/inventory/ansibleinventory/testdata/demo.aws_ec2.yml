@@ -1,0 +1,7 @@
+plugin: aws_ec2
+regions: # populate inventory with instances in these regions
+  - eu-west-1
+  - us-east-1
+  - us-east-2
+hostnames:
+  - dns-name
