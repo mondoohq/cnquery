@@ -37,13 +37,13 @@ func warnIncompleteFeature(backend transports.TransportBackend) {
 }
 
 func New(t *transports.TransportConfig, userIdDetectors ...string) (*motor.Motor, error) {
-	return ResolveTransport(t, userIdDetectors...)
+	return NewMotorConnection(t, userIdDetectors...)
 }
 
-// ResolveTransport establishes a motor connection by using the provided transport configuration
-// By default it uses the id detector mechanisms provided by the transport. User can overwride that
+// NewMotorConnection establishes a motor connection by using the provided transport configuration
+// By default it uses the id detector mechanisms provided by the transport. User can overwrite that
 // behaviour by optionally passing id detector identifier
-func ResolveTransport(tc *transports.TransportConfig, userIdDetectors ...string) (*motor.Motor, error) {
+func NewMotorConnection(tc *transports.TransportConfig, userIdDetectors ...string) (*motor.Motor, error) {
 	var m *motor.Motor
 	var name string
 	var identifier []string

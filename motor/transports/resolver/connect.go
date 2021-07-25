@@ -20,7 +20,7 @@ func EstablishConnection(tc *transports.TransportConfig, v vault.Vault, idDetect
 		tc.Record = true
 	}
 
-	return New(tc, idDetectors...)
+	return NewMotorConnection(tc, idDetectors...)
 }
 
 func OpenAssetConnection(assetInfo *asset.Asset, v vault.Vault, record bool) (*motor.Motor, error) {

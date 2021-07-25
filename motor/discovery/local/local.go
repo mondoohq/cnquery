@@ -35,7 +35,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 		Kind: transports.Kind_KIND_BARE_METAL,
 	}
 
-	m, err := resolver.New(tc)
+	m, err := resolver.NewMotorConnection(tc)
 	if err != nil {
 		return nil, err
 	}
