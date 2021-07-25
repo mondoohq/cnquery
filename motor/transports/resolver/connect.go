@@ -6,9 +6,10 @@ import (
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/vault"
 )
 
-func Connect(tc *transports.TransportConfig, idDetectors []string, insecure bool, record bool) (*motor.Motor, error) {
+func EstablishConnection(tc *transports.TransportConfig, v vault.Vault, idDetectors []string, insecure bool, record bool) (*motor.Motor, error) {
 	log.Debug().Str("connection", tc.ToUrl()).Bool("insecure", insecure).Msg("establish connection to asset")
 	// overwrite connection specific insecure with global insecure
 	if insecure {
@@ -22,7 +23,7 @@ func Connect(tc *transports.TransportConfig, idDetectors []string, insecure bool
 	return New(tc, idDetectors...)
 }
 
-func ConnectAsset(assetInfo *asset.Asset, record bool) (*motor.Motor, error) {
+func OpenAssetConnection(assetInfo *asset.Asset, v vault.Vault, record bool) (*motor.Motor, error) {
 	if assetInfo == nil {
 		return nil, errors.New("asset is not defined")
 	}
@@ -52,10 +53,10 @@ func ConnectAsset(assetInfo *asset.Asset, record bool) (*motor.Motor, error) {
 		tc.Platformid = assetInfo.PlatformIds[0]
 	}
 
-	return Connect(tc, nil, tc.Insecure, record)
+	return EstablishConnection(tc, v, nil, tc.Insecure, record)
 }
 
-func ConnectAsset2(assetInfo *asset.Asset, record bool) ([]*motor.Motor, error) {
+func OpenAssetConnections(assetInfo *asset.Asset, v vault.Vault, record bool) ([]*motor.Motor, error) {
 	if assetInfo == nil {
 		return nil, errors.New("asset is not defined")
 	}
@@ -87,7 +88,7 @@ func ConnectAsset2(assetInfo *asset.Asset, record bool) ([]*motor.Motor, error) 
 			tc.Platformid = assetInfo.PlatformIds[0]
 		}
 
-		m, err := Connect(tc, assetInfo.IdDetector, tc.Insecure, record)
+		m, err := EstablishConnection(tc, v, assetInfo.IdDetector, tc.Insecure, record)
 		if err != nil {
 			return nil, err
 		}

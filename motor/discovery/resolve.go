@@ -21,7 +21,6 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/tar"
 	"go.mondoo.io/mondoo/motor/discovery/vagrant"
 	"go.mondoo.io/mondoo/motor/discovery/vsphere"
-	"go.mondoo.io/mondoo/motor/inventory/credentialquery"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/stringx"
 )
@@ -62,23 +61,8 @@ func init() {
 	}
 }
 
-func ResolveAsset(root *asset.Asset, secretMgr credentialquery.SecretManager) ([]*asset.Asset, error) {
+func ResolveAsset(root *asset.Asset) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
-	// fetch the secret info for the asset
-	if secretMgr != nil {
-		log.Debug().Str("asset", root.Name).Msg("fetch secret from secrets manager")
-		secM, err := secretMgr.GetSecretMetadata(root)
-		if err != nil {
-			log.Warn().Err(err).Msg("could not fetch secret for asset " + root.Name)
-			return nil, err
-		} else {
-			// enrich connection with secret information
-			err := secretMgr.EnrichConnection(root, secM)
-			if err != nil {
-				log.Warn().Err(err).Msg("could not fetch secret information")
-			}
-		}
-	}
 
 	for i := range root.Connections {
 		tc := root.Connections[i]
@@ -130,13 +114,13 @@ type ResolvedAssets struct {
 	Errors map[*asset.Asset]error
 }
 
-func ResolveAssets(rootAssets []*asset.Asset, secretMgr credentialquery.SecretManager) ResolvedAssets {
+func ResolveAssets(rootAssets []*asset.Asset) ResolvedAssets {
 	resolved := []*asset.Asset{}
 	errors := map[*asset.Asset]error{}
 	for i := range rootAssets {
 		asset := rootAssets[i]
 
-		resolverAssets, err := ResolveAsset(asset, secretMgr)
+		resolverAssets, err := ResolveAsset(asset)
 		if err != nil {
 			errors[asset] = err
 		}
