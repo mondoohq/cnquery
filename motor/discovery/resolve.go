@@ -21,7 +21,7 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/tar"
 	"go.mondoo.io/mondoo/motor/discovery/vagrant"
 	"go.mondoo.io/mondoo/motor/discovery/vsphere"
-	"go.mondoo.io/mondoo/motor/inventory"
+	"go.mondoo.io/mondoo/motor/inventory/credentialquery"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/stringx"
 )
@@ -62,7 +62,7 @@ func init() {
 	}
 }
 
-func ResolveAsset(root *asset.Asset, secretMgr inventory.SecretManager) ([]*asset.Asset, error) {
+func ResolveAsset(root *asset.Asset, secretMgr credentialquery.SecretManager) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 	// fetch the secret info for the asset
 	if secretMgr != nil {
@@ -130,7 +130,7 @@ type ResolvedAssets struct {
 	Errors map[*asset.Asset]error
 }
 
-func ResolveAssets(rootAssets []*asset.Asset, secretMgr inventory.SecretManager) ResolvedAssets {
+func ResolveAssets(rootAssets []*asset.Asset, secretMgr credentialquery.SecretManager) ResolvedAssets {
 	resolved := []*asset.Asset{}
 	errors := map[*asset.Asset]error{}
 	for i := range rootAssets {
