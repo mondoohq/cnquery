@@ -1,4 +1,4 @@
-package inventory
+package credentialquery
 
 import (
 	"context"

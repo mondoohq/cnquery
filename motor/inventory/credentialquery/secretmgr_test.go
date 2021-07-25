@@ -1,9 +1,9 @@
-package inventory_test
+package credentialquery_test
 
 import (
 	"testing"
 
-	"go.mondoo.io/mondoo/motor/inventory"
+	"go.mondoo.io/mondoo/motor/inventory/credentialquery"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +26,7 @@ func TestSecretKeySimple(t *testing.T) {
 	value, err := e.Run(query, map[string]*llx.Primitive{})
 	require.NoError(t, err)
 
-	sMeta := &inventory.CredentialQueryResponse{}
+	sMeta := &credentialquery.CredentialQueryResponse{}
 	decoder, _ := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		Metadata: nil,
 		Result:   sMeta,
@@ -58,7 +58,7 @@ func TestSecretKeyIfReturn(t *testing.T) {
 	value, err := e.Run(query, props)
 	require.NoError(t, err)
 
-	sMeta := &inventory.CredentialQueryResponse{}
+	sMeta := &credentialquery.CredentialQueryResponse{}
 	decoder, _ := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		Metadata: nil,
 		Result:   sMeta,
@@ -75,7 +75,7 @@ func TestSecretKeyIfReturn(t *testing.T) {
 func TestSecretManagerPassword(t *testing.T) {
 	v := mockvault.New()
 	secretMetdataQuery := "{backend: 'ssh', secretFormat: 'password', secretID: 'mockPassword', user: 'test-user'}"
-	vsm, err := inventory.NewVaultSecretManager(v, secretMetdataQuery)
+	vsm, err := credentialquery.NewVaultSecretManager(v, secretMetdataQuery)
 	require.NoError(t, err)
 
 	assetObj := &asset.Asset{
@@ -100,7 +100,7 @@ func TestSecretManagerPassword(t *testing.T) {
 func TestSecretManagerPrivateKey(t *testing.T) {
 	v := mockvault.New()
 	secretMetdataQuery := "{backend: 'ssh', secretFormat: 'private_key',  secretID: 'mockPKey', user: 'some-user'}"
-	vsm, err := inventory.NewVaultSecretManager(v, secretMetdataQuery)
+	vsm, err := credentialquery.NewVaultSecretManager(v, secretMetdataQuery)
 	require.NoError(t, err)
 
 	assetObj := &asset.Asset{
@@ -126,7 +126,7 @@ func TestSecretManagerPrivateKey(t *testing.T) {
 func TestSecretManagerJSON(t *testing.T) {
 	v := mockvault.New()
 	secretMetdataQuery := "{secretFormat: 'json', secretID: 'mockJson'}"
-	vsm, err := inventory.NewVaultSecretManager(v, secretMetdataQuery)
+	vsm, err := credentialquery.NewVaultSecretManager(v, secretMetdataQuery)
 	require.NoError(t, err)
 
 	assetObj := &asset.Asset{}
@@ -159,7 +159,7 @@ func TestSecretManagerJSON(t *testing.T) {
 func TestSecretManagerJSONBackendOverride(t *testing.T) {
 	v := mockvault.New()
 	secretMetdataQuery := "{backend: 'winrm', secretFormat: 'json', secretID: 'mockJson'}"
-	vsm, err := inventory.NewVaultSecretManager(v, secretMetdataQuery)
+	vsm, err := credentialquery.NewVaultSecretManager(v, secretMetdataQuery)
 	require.NoError(t, err)
 
 	assetObj := &asset.Asset{}
@@ -192,7 +192,7 @@ func TestSecretManagerJSONBackendOverride(t *testing.T) {
 func TestSecretManagerBadKey(t *testing.T) {
 	v := mockvault.New()
 	secretMetdataQuery := "{backend: 'ssh', secretFormat: 'json', secretID: 'bad-id'}"
-	vsm, err := inventory.NewVaultSecretManager(v, secretMetdataQuery)
+	vsm, err := credentialquery.NewVaultSecretManager(v, secretMetdataQuery)
 	require.NoError(t, err)
 
 	assetObj := &asset.Asset{}
