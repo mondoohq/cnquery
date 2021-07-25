@@ -24,7 +24,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 		State:       asset.State_STATE_ONLINE,
 	}
 
-	m, err := resolver.New(tc)
+	m, err := resolver.NewMotorConnection(tc)
 	if err != nil {
 		return nil, err
 	}

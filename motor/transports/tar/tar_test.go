@@ -55,12 +55,12 @@ func TestPlatformIdentifier(t *testing.T) {
 	err := cacheAlpine()
 	require.NoError(t, err, "should create tar without error")
 
-	m, err := resolver.New(&transports.TransportConfig{
+	m, err := resolver.NewMotorConnection(&transports.TransportConfig{
 		Backend: transports.TransportBackend_CONNECTION_TAR,
 		Options: map[string]string{
 			"file": alpineContainerPath,
 		},
-	})
+	}, nil)
 	require.NoError(t, err)
 	assert.True(t, len(m.Meta.Identifier) > 0)
 }
