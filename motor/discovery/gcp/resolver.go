@@ -4,6 +4,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	gcp_transport "go.mondoo.io/mondoo/motor/transports/gcp"
@@ -25,7 +26,7 @@ func (r *GcrResolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *GcrResolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
+func (r *GcrResolver) Resolve(t *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 	repository := t.Host
 
@@ -55,7 +56,7 @@ func (r *GcpResolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryInstances}
 }
 
-func (r *GcpResolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {
+func (r *GcpResolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	trans, err := gcp_transport.New(tc)
@@ -101,8 +102,24 @@ func (r *GcpResolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, e
 		log.Debug().Int("instances", len(assetList)).Msg("completed instance search")
 
 		for i := range assetList {
-			log.Debug().Str("name", assetList[i].Name).Msg("resolved gcp compute instance")
-			resolved = append(resolved, assetList[i])
+			a := assetList[i]
+			log.Debug().Str("name", a.Name).Msg("resolved gcp compute instance")
+
+			// TODO: make this a resolver helper
+			for j := range a.Connections {
+				conn := a.Connections[j]
+
+				if len(conn.Credentials) == 0 {
+					creds, err := sfn(a)
+					if err == nil {
+						conn.Credentials = []*transports.Credential{creds}
+					} else {
+						log.Warn().Str("name", a.Name).Msg("could not determine credentials for asset")
+					}
+				}
+			}
+
+			resolved = append(resolved, a)
 		}
 	}
 

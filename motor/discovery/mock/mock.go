@@ -2,6 +2,7 @@ package mock
 
 import (
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
@@ -15,7 +16,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(t *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	return []*asset.Asset{{
 		Connections: []*transports.TransportConfig{t},
 	}}, nil

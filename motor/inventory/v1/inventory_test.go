@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,7 +15,7 @@ func TestInventoryParser(t *testing.T) {
 
 	assert.Equal(t, "mondoo-inventory", inventory.Metadata.Name)
 	assert.Equal(t, "production", inventory.Metadata.Labels["environment"])
-	assert.Equal(t, "{ id: secret-1 }", inventory.Spec.CredentialQuery)
+	assert.Equal(t, "{ id: 'secret-1' }", inventory.Spec.CredentialQuery)
 }
 
 func TestPreprocess(t *testing.T) {
@@ -31,12 +30,13 @@ func TestPreprocess(t *testing.T) {
 	err = inventory.Validate()
 	require.NoError(t, err)
 
-	// write output for debugging, so that we can easily compare the result
-	data, err := inventory.ToYAML()
-	require.NoError(t, err)
-
-	err = ioutil.WriteFile("./testdata/inventory.parsed.yml", data, 0o700)
-	require.NoError(t, err)
+	// activate to debug the pre-process output
+	//// write output for debugging, so that we can easily compare the result
+	//data, err := inventory.ToYAML()
+	//require.NoError(t, err)
+	//
+	//err = ioutil.WriteFile("./testdata/inventory.parsed.yml", data, 0o700)
+	//require.NoError(t, err)
 }
 
 func TestParseGCPInventory(t *testing.T) {

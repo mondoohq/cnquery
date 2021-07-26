@@ -87,6 +87,8 @@ func (conn *TransportConfig) ToUrl() string {
 		return SCHEME_K8S + "://"
 	case TransportBackend_CONNECTION_GITHUB:
 		return SCHEME_GITHUB
+	case TransportBackend_CONNECTION_GCP:
+		return SCHEME_GCP + "://"
 	default:
 		log.Warn().Str("backend", conn.Backend.String()).Msg("cannot render backend config")
 		return ""

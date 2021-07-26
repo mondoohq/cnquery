@@ -2,6 +2,7 @@ package vsphere
 
 import (
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
@@ -15,7 +16,7 @@ func (r *VMGuestResolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (k *VMGuestResolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
+func (k *VMGuestResolver) Resolve(t *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// refIds := []string{}

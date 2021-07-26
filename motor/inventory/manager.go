@@ -2,26 +2,31 @@ package inventory
 
 import (
 	"context"
+	"errors"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/logger"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery"
+	"go.mondoo.io/mondoo/motor/inventory/credentialquery"
 	"go.mondoo.io/mondoo/motor/inventory/v1"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/vault"
 	"go.mondoo.io/mondoo/motor/vault/inmemory"
-	"google.golang.org/protobuf/proto"
 )
 
-// TODO: we may want to use a proto service for this implementation
-type CredentialManager interface {
-	GetCredential(secretId string) (*transports.Credential, error)
-}
-
 type InventoryManager interface {
+	// GetAssets returns all assets under management
 	GetAssets() []*asset.Asset
+	// Resolve will iterate over all assets and try to discover all nested assets. After this operation
+	// GetAssets will return the fully resolved list of assets
+	Resolve() map[*asset.Asset]error
+	// GetCredential returns a full credential including the secret from vault
 	GetCredential(secretId string) (*transports.Credential, error)
+	// QuerySecretId runs the credential query to determine the secret id for an asset, the resulting credential
+	// only returns a secret id
+	QuerySecretId(a *asset.Asset) (*transports.Credential, error)
+	// GetVault returns the configured Vault
 	GetVault() vault.Vault
 }
 
@@ -47,6 +52,13 @@ func WithAssets(assetList []*asset.Asset) Option {
 	}
 }
 
+func WithVault(v vault.Vault) Option {
+	return func(im *inventoryManager) error {
+		im.vault = v
+		return nil
+	}
+}
+
 func New(opts ...Option) (*inventoryManager, error) {
 	im := &inventoryManager{
 		assetList: []*asset.Asset{},
@@ -62,8 +74,9 @@ func New(opts ...Option) (*inventoryManager, error) {
 }
 
 type inventoryManager struct {
-	assetList []*asset.Asset
-	vault     vault.Vault
+	assetList             []*asset.Asset
+	vault                 vault.Vault
+	credentialQueryRunner *credentialquery.CredentialQueryRunner
 }
 
 // TODO: define what happens when we call load multiple times?
@@ -81,7 +94,7 @@ func (im *inventoryManager) loadInventory(inventory *v1.Inventory) error {
 	for i := range inventory.Spec.Credentials {
 		cred := inventory.Spec.Credentials[i]
 
-		secret, err := NewSecret(cred)
+		secret, err := vault.NewSecret(cred)
 		if err != nil {
 			return err
 		}
@@ -89,9 +102,15 @@ func (im *inventoryManager) loadInventory(inventory *v1.Inventory) error {
 		secrets[secret.Key] = secret
 	}
 
+	// TODO: use multi-vault to warp the provided vault and all inline-configured credentials
 	im.vault = inmemory.New(inmemory.WithSecretMap(secrets))
 
-	// TODO: use multi-vault to warp the provided vault and all inline-configured credentials
+	qr, err := credentialquery.NewCredentialQueryRunner(inventory.Spec.CredentialQuery)
+	if err != nil {
+		return err
+	}
+	im.credentialQueryRunner = qr
+
 	return nil
 }
 
@@ -100,6 +119,7 @@ func (im *inventoryManager) GetAssets() []*asset.Asset {
 	return im.assetList
 }
 
+// GetCredential retrieves teh credential from vault via the secret id
 func (im *inventoryManager) GetCredential(secretId string) (*transports.Credential, error) {
 	secret, err := im.vault.Get(context.Background(), &vault.SecretID{
 		Key: secretId,
@@ -108,11 +128,23 @@ func (im *inventoryManager) GetCredential(secretId string) (*transports.Credenti
 		return nil, err
 	}
 
-	return NewCredential(secret)
+	return vault.NewCredential(secret)
+}
+
+// QuerySecretId provides an input and determines the credential information for an asset
+// The credential will only include the reference to the secret and not include the actual secret
+func (im *inventoryManager) QuerySecretId(a *asset.Asset) (*transports.Credential, error) {
+	if im.credentialQueryRunner == nil {
+		return nil, errors.New("no credential query configured")
+	}
+
+	// this is where we get the vault configuration query and evaluate it against the asset data
+	// if vault and secret function is set, run the additional handling
+	return im.credentialQueryRunner.Run(a)
 }
 
 func (im *inventoryManager) Resolve() map[*asset.Asset]error {
-	resolvedAssets := discovery.ResolveAssets(im.assetList)
+	resolvedAssets := discovery.ResolveAssets(im.assetList, im.GetCredential, im.QuerySecretId)
 
 	// TODO: iterate over all resolved assets and match them with the original list and try to find credentials for each asset
 	im.assetList = resolvedAssets.Assets
@@ -124,27 +156,4 @@ func (im *inventoryManager) Resolve() map[*asset.Asset]error {
 
 func (im *inventoryManager) GetVault() vault.Vault {
 	return im.vault
-}
-
-func NewSecret(cred *transports.Credential) (*vault.Secret, error) {
-	// TODO: we also encode the ID, this may not be a good approach
-	secretData, err := proto.Marshal(cred)
-	if err != nil {
-		return nil, err
-	}
-
-	return &vault.Secret{
-		Key:  cred.SecretId,
-		Data: secretData, // TODO: rename secret.secret into Data
-	}, nil
-}
-
-func NewCredential(sec *vault.Secret) (*transports.Credential, error) {
-	var cred transports.Credential
-	err := proto.Unmarshal(sec.Data, &cred)
-	if err != nil {
-		return nil, err
-	}
-	cred.SecretId = sec.Key
-	return &cred, nil
 }

@@ -26,6 +26,7 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/vmwareguestapi"
 	"go.mondoo.io/mondoo/motor/transports/vsphere"
 	"go.mondoo.io/mondoo/motor/transports/winrm"
+	"google.golang.org/protobuf/proto"
 )
 
 var transportDevelopmentStatus = map[transports.TransportBackend]string{transports.TransportBackend_CONNECTION_GITHUB: "experimental"}
@@ -41,9 +42,9 @@ func New(t *transports.TransportConfig, userIdDetectors ...string) (*motor.Motor
 }
 
 // NewMotorConnection establishes a motor connection by using the provided transport configuration
-// By default it uses the id detector mechanisms provided by the transport. User can overwrite that
+// By default, it uses the id detector mechanisms provided by the transport. User can overwrite that
 // behaviour by optionally passing id detector identifier
-func NewMotorConnection(tc *transports.TransportConfig, userIdDetectors ...string) (*motor.Motor, error) {
+func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(secretId string) (*transports.Credential, error), userIdDetectors ...string) (*motor.Motor, error) {
 	var m *motor.Motor
 	var name string
 	var identifier []string
@@ -52,10 +53,28 @@ func NewMotorConnection(tc *transports.TransportConfig, userIdDetectors ...strin
 
 	warnIncompleteFeature(tc.Backend)
 
-	switch tc.Backend {
+	// we clone the config here, and replace all credential references with the real references
+	// the clone is important so that credentials are not leaked outside of the function
+	clonedConfig := proto.Clone(tc).(*transports.TransportConfig)
+	resolvedCredentials := []*transports.Credential{}
+	var err error
+	for i := range clonedConfig.Credentials {
+		credential := clonedConfig.Credentials[i]
+		if credential.SecretId != "" && credentialFn != nil {
+			credential, err = credentialFn(credential.SecretId)
+			if err != nil {
+				return nil, err
+			}
+		}
+		resolvedCredentials = append(resolvedCredentials, credential)
+	}
+	clonedConfig.Credentials = resolvedCredentials
+
+	// establish connection
+	switch clonedConfig.Backend {
 	case transports.TransportBackend_CONNECTION_MOCK:
 		log.Debug().Msg("connection> load mock transport")
-		trans, err := mock.NewFromToml(tc)
+		trans, err := mock.NewFromToml(clonedConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -74,7 +93,7 @@ func NewMotorConnection(tc *transports.TransportConfig, userIdDetectors ...strin
 			return nil, err
 		}
 
-		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
+		m, err = motor.New(trans, motor.WithRecoding(clonedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
@@ -83,12 +102,12 @@ func NewMotorConnection(tc *transports.TransportConfig, userIdDetectors ...strin
 		idDetectors = append(idDetectors, "hostname")
 	case transports.TransportBackend_CONNECTION_TAR:
 		log.Debug().Msg("connection> load tar transport")
-		trans, err := tar.New(tc)
+		trans, err := tar.New(clonedConfig)
 		if err != nil {
 			return nil, err
 		}
 
-		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
+		m, err = motor.New(trans, motor.WithRecoding(clonedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
@@ -98,11 +117,11 @@ func NewMotorConnection(tc *transports.TransportConfig, userIdDetectors ...strin
 		}
 	case transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY:
 		log.Debug().Msg("connection> load container registry transport")
-		trans, err := container.NewContainerRegistryImage(tc)
+		trans, err := container.NewContainerRegistryImage(clonedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
+		m, err = motor.New(trans, motor.WithRecoding(clonedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
@@ -114,11 +133,11 @@ func NewMotorConnection(tc *transports.TransportConfig, userIdDetectors ...strin
 		}
 	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER:
 		log.Debug().Msg("connection> load docker engine container transport")
-		trans, err := container.NewDockerEngineContainer(tc)
+		trans, err := container.NewDockerEngineContainer(clonedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
+		m, err = motor.New(trans, motor.WithRecoding(clonedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
@@ -130,11 +149,11 @@ func NewMotorConnection(tc *transports.TransportConfig, userIdDetectors ...strin
 		}
 	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE:
 		log.Debug().Msg("connection> load docker engine image transport")
-		trans, err := container.NewDockerEngineImage(tc)
+		trans, err := container.NewDockerEngineImage(clonedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
+		m, err = motor.New(trans, motor.WithRecoding(clonedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
@@ -146,12 +165,12 @@ func NewMotorConnection(tc *transports.TransportConfig, userIdDetectors ...strin
 		}
 	case transports.TransportBackend_CONNECTION_SSH:
 		log.Debug().Msg("connection> load ssh transport")
-		trans, err := ssh.New(tc)
+		trans, err := ssh.New(clonedConfig)
 		if err != nil {
 			return nil, err
 		}
 
-		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
+		m, err = motor.New(trans, motor.WithRecoding(clonedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
@@ -161,12 +180,12 @@ func NewMotorConnection(tc *transports.TransportConfig, userIdDetectors ...strin
 		idDetectors = append(idDetectors, "ssh-hostkey")
 	case transports.TransportBackend_CONNECTION_WINRM:
 		log.Debug().Msg("connection> load winrm transport")
-		trans, err := winrm.New(tc)
+		trans, err := winrm.New(clonedConfig)
 		if err != nil {
 			return nil, err
 		}
 
-		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
+		m, err = motor.New(trans, motor.WithRecoding(clonedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
@@ -174,7 +193,7 @@ func NewMotorConnection(tc *transports.TransportConfig, userIdDetectors ...strin
 		idDetectors = append(idDetectors, "machineid")
 	case transports.TransportBackend_CONNECTION_VSPHERE:
 		log.Debug().Msg("connection> load vsphere transport")
-		trans, err := vsphere.New(tc)
+		trans, err := vsphere.New(clonedConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -190,7 +209,7 @@ func NewMotorConnection(tc *transports.TransportConfig, userIdDetectors ...strin
 		}
 	case transports.TransportBackend_CONNECTION_ARISTAEOS:
 		log.Debug().Msg("connection> load arista eos transport")
-		trans, err := arista.New(tc)
+		trans, err := arista.New(clonedConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -205,7 +224,7 @@ func NewMotorConnection(tc *transports.TransportConfig, userIdDetectors ...strin
 		}
 	case transports.TransportBackend_CONNECTION_AWS:
 		log.Debug().Msg("connection> load aws transport")
-		trans, err := aws_transport.New(tc, aws_transport.TransportOptions(tc.Options)...)
+		trans, err := aws_transport.New(clonedConfig, aws_transport.TransportOptions(clonedConfig.Options)...)
 		if err != nil {
 			return nil, err
 		}
@@ -220,7 +239,7 @@ func NewMotorConnection(tc *transports.TransportConfig, userIdDetectors ...strin
 		}
 	case transports.TransportBackend_CONNECTION_GCP:
 		log.Debug().Msg("connection> load gcp transport")
-		trans, err := gcp.New(tc)
+		trans, err := gcp.New(clonedConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -235,7 +254,7 @@ func NewMotorConnection(tc *transports.TransportConfig, userIdDetectors ...strin
 		}
 	case transports.TransportBackend_CONNECTION_AZURE:
 		log.Debug().Msg("connection> load azure transport")
-		trans, err := azure.New(tc)
+		trans, err := azure.New(clonedConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -250,7 +269,7 @@ func NewMotorConnection(tc *transports.TransportConfig, userIdDetectors ...strin
 		}
 	case transports.TransportBackend_CONNECTION_MS365:
 		log.Debug().Msg("connection> load microsoft 365 transport")
-		trans, err := ms365.New(tc)
+		trans, err := ms365.New(clonedConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -265,7 +284,7 @@ func NewMotorConnection(tc *transports.TransportConfig, userIdDetectors ...strin
 		}
 	case transports.TransportBackend_CONNECTION_IPMI:
 		log.Debug().Msg("connection> load ipmi transport")
-		trans, err := ipmi.New(tc)
+		trans, err := ipmi.New(clonedConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -279,11 +298,11 @@ func NewMotorConnection(tc *transports.TransportConfig, userIdDetectors ...strin
 			identifier = append(identifier, id)
 		}
 	case transports.TransportBackend_CONNECTION_VSPHERE_VM:
-		trans, err := vmwareguestapi.New(tc)
+		trans, err := vmwareguestapi.New(clonedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
+		m, err = motor.New(trans, motor.WithRecoding(clonedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
@@ -291,11 +310,11 @@ func NewMotorConnection(tc *transports.TransportConfig, userIdDetectors ...strin
 		idDetectors = append(idDetectors, "machineid")
 		idDetectors = append(idDetectors, "hostname")
 	case transports.TransportBackend_CONNECTION_FS:
-		trans, err := fs.New(tc)
+		trans, err := fs.New(clonedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans, motor.WithRecoding(tc.Record))
+		m, err = motor.New(trans, motor.WithRecoding(clonedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
@@ -303,7 +322,7 @@ func NewMotorConnection(tc *transports.TransportConfig, userIdDetectors ...strin
 		idDetectors = append(idDetectors, "machineid")
 		idDetectors = append(idDetectors, "hostname")
 	case transports.TransportBackend_CONNECTION_EQUINIX_METAL:
-		trans, err := equinix.New(tc)
+		trans, err := equinix.New(clonedConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -316,7 +335,7 @@ func NewMotorConnection(tc *transports.TransportConfig, userIdDetectors ...strin
 			identifier = append(identifier, id)
 		}
 	case transports.TransportBackend_CONNECTION_K8S:
-		trans, err := k8s_transport.New(tc)
+		trans, err := k8s_transport.New(clonedConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -342,7 +361,7 @@ func NewMotorConnection(tc *transports.TransportConfig, userIdDetectors ...strin
 			identifier = append(identifier, id)
 		}
 	default:
-		return nil, fmt.Errorf("connection> unsupported backend '%s', only docker://, local://, tar://, ssh:// are allowed", tc.Backend)
+		return nil, fmt.Errorf("connection> unsupported backend '%s', only docker://, local://, tar://, ssh:// are allowed", clonedConfig.Backend)
 	}
 
 	if len(userIdDetectors) > 0 {

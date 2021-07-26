@@ -4,6 +4,8 @@ import (
 	"strconv"
 	"strings"
 
+	"go.mondoo.io/mondoo/motor/discovery/common"
+
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor"
@@ -23,7 +25,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (v *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {
+func (v *Resolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	localTransport, err := local.New()

@@ -6,7 +6,7 @@ metadata:
     environment: production
 spec:
   # credential query is always used if no credential is directly assigned
-  credential_query: "{ id: secret-1 }"
+  credential_query: "{ id: 'secret-1' }"
   assets:
     # windows with password authentication
     - id: windows
