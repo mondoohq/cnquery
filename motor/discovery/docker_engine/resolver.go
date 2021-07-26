@@ -2,7 +2,8 @@ package docker_engine
 
 import (
 	"os"
-	"strings"
+
+	"go.mondoo.io/mondoo/motor/discovery/common"
 
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -30,64 +31,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryContainerRunning, DiscoveryContainerImages}
 }
 
-// When we talk about Docker, users think at leasst of 3 different things:
-// - container runtime (e.g. docker engine)
-// - container image (eg. from docker engine or registry)
-// - container tar snapshot
-//
-// Docker made a very good job in abstracting the problem away from the user
-// so that he normally does not think about the distinction. But we need to
-// think about those aspects since all those need a different implementation and
-// handling.
-//
-// The user wants and needs an easy way to point to those endpoints:
-//
-// # registry images
-// -t docker://gcr.io/project/image@sha256:label
-// -t docker://index.docker.io/project/image:label
-//
-// # docker daemon
-// -t docker://id -> image
-// -t docker://id -> container
-//
-// # local directory
-// -t docker+tar:///path/link_to_image_archive.tar -> Docker Image
-// -t docker+tar:///path/link_to_image_archive2.tar -> OCI
-// -t docker+tar:///path/link_to_container.tar
-func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportConfigOption) (*transports.TransportConfig, error) {
-	if strings.HasPrefix(url, transports.SCHEME_DOCKER+"://") {
-		tc := &transports.TransportConfig{
-			Backend: transports.TransportBackend_CONNECTION_DOCKER,
-			Host:    strings.Replace(url, transports.SCHEME_DOCKER+"://", "", 1),
-		}
-
-		for i := range opts {
-			opts[i](tc)
-		}
-		return tc, nil
-	} else if strings.HasPrefix(url, transports.SCHEME_DOCKER_IMAGE+"://") {
-		tc := &transports.TransportConfig{
-			Backend: transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE,
-			Host:    strings.Replace(url, transports.SCHEME_DOCKER_IMAGE+"://", "", 1),
-		}
-		for i := range opts {
-			opts[i](tc)
-		}
-		return tc, nil
-	} else if strings.HasPrefix(url, transports.SCHEME_DOCKER_CONTAINER+"://") {
-		tc := &transports.TransportConfig{
-			Backend: transports.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER,
-			Host:    strings.Replace(url, transports.SCHEME_DOCKER_CONTAINER+"://", "", 1),
-		}
-		for i := range opts {
-			opts[i](tc)
-		}
-		return tc, nil
-	}
-	return nil, errors.New("could not find the container reference")
-}
-
-func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	if tc == nil {
 		return nil, errors.New("no transport configuration found")
 	}
@@ -147,7 +91,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 
 	if tc.Backend == transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE {
 		// NOTE, we ignore dockerEngErr here since we fallback to pulling the images directly
-		resolvedAssets, err := r.images(tc, ded)
+		resolvedAssets, err := r.images(tc, ded, cfn, sfn)
 		if err != nil {
 			return nil, err
 		}
@@ -175,7 +119,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 		}
 	}
 
-	containerImageAssets, err := r.images(tc, ded)
+	containerImageAssets, err := r.images(tc, ded, cfn, sfn)
 	if err == nil {
 		return containerImageAssets, nil
 	}
@@ -202,7 +146,7 @@ func (k *Resolver) container(tc *transports.TransportConfig, ded *dockerEngineDi
 	}, nil
 }
 
-func (k *Resolver) images(tc *transports.TransportConfig, ded *dockerEngineDiscovery) ([]*asset.Asset, error) {
+func (k *Resolver) images(tc *transports.TransportConfig, ded *dockerEngineDiscovery, cfn common.CredentialFn, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	// if we have a docker engine available, try to fetch it from there
 	if ded != nil {
 		ii, err := ded.ImageInfo(tc.Host)
@@ -231,7 +175,7 @@ func (k *Resolver) images(tc *transports.TransportConfig, ded *dockerEngineDisco
 	rr := container_registry.Resolver{
 		NoStrictValidation: true,
 	}
-	return rr.Resolve(tc)
+	return rr.Resolve(tc, cfn, sfn)
 }
 
 func DiscoverDockerEngineAssets(tc *transports.TransportConfig) ([]*asset.Asset, error) {

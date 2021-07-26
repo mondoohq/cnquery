@@ -2,6 +2,7 @@ package equinix
 
 import (
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	equinix_transport "go.mondoo.io/mondoo/motor/transports/equinix"
@@ -17,7 +18,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *Resolver) Resolve(t *transports.TransportConfig) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(t *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// add aws api as asset

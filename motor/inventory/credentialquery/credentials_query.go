@@ -1,20 +1,24 @@
 package credentialquery
 
 import (
+	"strings"
+
+	"github.com/rs/zerolog/log"
+
 	"github.com/cockroachdb/errors"
 	"github.com/mitchellh/mapstructure"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/policy/executor"
 	"go.mondoo.io/mondoo/types"
 )
 
 type CredentialQueryResponse struct {
-	Backend      string `json:"backend,omitempty"`      // default to ssh, user specified
-	User         string `json:"user,omitempty"`         // user associated with the secret
-	Host         string `json:"host,omitempty"`         // overwrite of the host
-	SecretID     string `json:"secretID,omitempty"`     // id to use to fetch the secret from the source vault
-	SecretFormat string `json:"secretFormat,omitempty"` // private_key, password, or json
+	// maps to credentials
+	Type     string `json:"type,omitempty"`
+	User     string `json:"user,omitempty"`      // user associated with the secret
+	SecretId string `json:"secret_id,omitempty"` // id to use to fetch the secret from the source vault
 }
 
 func NewCredentialQueryRunner(credentialQuery string) (*CredentialQueryRunner, error) {
@@ -45,7 +49,7 @@ type CredentialQueryRunner struct {
 	secretMetadataQuery string
 }
 
-func (sq *CredentialQueryRunner) SecretId(a *asset.Asset) (*CredentialQueryResponse, error) {
+func (sq *CredentialQueryRunner) Run(a *asset.Asset) (*transports.Credential, error) {
 	// map labels to props
 	labelProps := map[string]interface{}{}
 	labels := a.GetLabels()
@@ -85,5 +89,16 @@ func (sq *CredentialQueryRunner) SecretId(a *asset.Asset) (*CredentialQueryRespo
 	})
 	err = decoder.Decode(value)
 
-	return sMeta, err
+	code, ok := transports.CredentialType_value[strings.TrimSpace(sMeta.Type)]
+	if !ok {
+		log.Warn().Str("credential_type", sMeta.Type).Msg("unknown credential type used in credential query")
+	}
+
+	creds := &transports.Credential{
+		Type:     transports.CredentialType(code),
+		User:     sMeta.User,
+		SecretId: sMeta.SecretId,
+	}
+
+	return creds, err
 }

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"go.mondoo.io/mondoo/motor/discovery/common"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/platform"
@@ -27,7 +29,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryInstances, DiscoveryHostMachines}
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// we leverage the vpshere transport to establish a connection

@@ -1,5 +1,15 @@
 package discovery
 
+// The discovery package is responsible to determine all assets reachable. E.g. If you provide an AWS
+// connection, multiple assets like EC2, ECR images as well as EKS clusters can be determined automatically
+//
+// This package implements all the resolution steps and returns a fully resolved list of assets that mondoo
+// can connect to.
+//
+// As part of the discovery process, secrets need to be determined. This package is designed to have know
+// no knowledge about inventory or vault packages. It defines two `common.CredentialFn` and `common.QuerySecretFn`
+// to retrieve the required information. The inventory manager injects the correct functions upon initialization
+
 import (
 	"strings"
 
@@ -8,6 +18,7 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/aws"
 	"go.mondoo.io/mondoo/motor/discovery/azure"
+	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/discovery/container_registry"
 	"go.mondoo.io/mondoo/motor/discovery/docker_engine"
 	"go.mondoo.io/mondoo/motor/discovery/equinix"
@@ -27,7 +38,7 @@ import (
 
 type Resolver interface {
 	Name() string
-	Resolve(t *transports.TransportConfig) ([]*asset.Asset, error)
+	Resolve(t *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn) ([]*asset.Asset, error)
 	AvailableDiscoveryTargets() []string
 }
 
@@ -61,7 +72,7 @@ func init() {
 	}
 }
 
-func ResolveAsset(root *asset.Asset) ([]*asset.Asset, error) {
+func ResolveAsset(root *asset.Asset, cfn common.CredentialFn, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	for i := range root.Connections {
@@ -86,7 +97,7 @@ func ResolveAsset(root *asset.Asset) ([]*asset.Asset, error) {
 		}
 
 		// resolve assets
-		resolvedAssets, err := r.Resolve(tc)
+		resolvedAssets, err := r.Resolve(tc, cfn, sfn)
 		if err != nil {
 			return nil, err
 		}
@@ -114,13 +125,13 @@ type ResolvedAssets struct {
 	Errors map[*asset.Asset]error
 }
 
-func ResolveAssets(rootAssets []*asset.Asset) ResolvedAssets {
+func ResolveAssets(rootAssets []*asset.Asset, cfn common.CredentialFn, sfn common.QuerySecretFn) ResolvedAssets {
 	resolved := []*asset.Asset{}
 	errors := map[*asset.Asset]error{}
 	for i := range rootAssets {
 		asset := rootAssets[i]
 
-		resolverAssets, err := ResolveAsset(asset)
+		resolverAssets, err := ResolveAsset(asset, cfn, sfn)
 		if err != nil {
 			errors[asset] = err
 		}

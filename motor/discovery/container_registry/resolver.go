@@ -3,6 +3,8 @@ package container_registry
 import (
 	"errors"
 
+	"go.mondoo.io/mondoo/motor/discovery/common"
+
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
@@ -24,7 +26,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	imageFetcher := NewContainerRegistry()

@@ -5,7 +5,7 @@ metadata:
   labels:
     environment: production
 spec:
-  credential_query: "{ user: chris, type: ssh_agent }"
+  credential_query: "{ user: 'chris', type: 'ssh_agent' }"
   assets:
     - name: gcp
       connections:

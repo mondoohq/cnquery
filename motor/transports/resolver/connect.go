@@ -6,10 +6,9 @@ import (
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/vault"
 )
 
-func EstablishConnection(tc *transports.TransportConfig, v vault.Vault, idDetectors []string, insecure bool, record bool) (*motor.Motor, error) {
+func EstablishConnection(tc *transports.TransportConfig, credentialFn func(secretId string) (*transports.Credential, error), idDetectors []string, insecure bool, record bool) (*motor.Motor, error) {
 	log.Debug().Str("connection", tc.ToUrl()).Bool("insecure", insecure).Msg("establish connection to asset")
 	// overwrite connection specific insecure with global insecure
 	if insecure {
@@ -20,10 +19,10 @@ func EstablishConnection(tc *transports.TransportConfig, v vault.Vault, idDetect
 		tc.Record = true
 	}
 
-	return NewMotorConnection(tc, idDetectors...)
+	return NewMotorConnection(tc, credentialFn, idDetectors...)
 }
 
-func OpenAssetConnection(assetInfo *asset.Asset, v vault.Vault, record bool) (*motor.Motor, error) {
+func OpenAssetConnection(assetInfo *asset.Asset, credentialFn func(secretId string) (*transports.Credential, error), record bool) (*motor.Motor, error) {
 	if assetInfo == nil {
 		return nil, errors.New("asset is not defined")
 	}
@@ -53,10 +52,10 @@ func OpenAssetConnection(assetInfo *asset.Asset, v vault.Vault, record bool) (*m
 		tc.Platformid = assetInfo.PlatformIds[0]
 	}
 
-	return EstablishConnection(tc, v, nil, tc.Insecure, record)
+	return EstablishConnection(tc, credentialFn, nil, tc.Insecure, record)
 }
 
-func OpenAssetConnections(assetInfo *asset.Asset, v vault.Vault, record bool) ([]*motor.Motor, error) {
+func OpenAssetConnections(assetInfo *asset.Asset, credentialFn func(secretId string) (*transports.Credential, error), record bool) ([]*motor.Motor, error) {
 	if assetInfo == nil {
 		return nil, errors.New("asset is not defined")
 	}
@@ -88,7 +87,7 @@ func OpenAssetConnections(assetInfo *asset.Asset, v vault.Vault, record bool) ([
 			tc.Platformid = assetInfo.PlatformIds[0]
 		}
 
-		m, err := EstablishConnection(tc, v, assetInfo.IdDetector, tc.Insecure, record)
+		m, err := EstablishConnection(tc, credentialFn, assetInfo.IdDetector, tc.Insecure, record)
 		if err != nil {
 			return nil, err
 		}
