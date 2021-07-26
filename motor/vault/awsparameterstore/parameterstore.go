@@ -53,7 +53,7 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 		WithDecryption: true,
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get secret")
+		return nil, vault.NotFoundError
 	}
 
 	var data []byte

@@ -69,7 +69,7 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 		Name: fmt.Sprintf("projects/%s/secrets/%s/versions/latest", v.projectID, gcpKeyID(id.Key)),
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to access secret version")
+		return nil, vault.NotFoundError
 	}
 
 	return &vault.Secret{

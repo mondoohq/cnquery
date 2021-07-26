@@ -46,7 +46,7 @@ func (v *inmemoryVault) Get(ctx context.Context, id *vault.SecretID) (*vault.Sec
 
 	s, ok := v.secrets[id.Key]
 	if !ok {
-		return nil, errors.New("secret not found: " + id.Key)
+		return nil, vault.NotFoundError
 	}
 	return s, nil
 }

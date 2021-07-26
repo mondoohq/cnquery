@@ -70,7 +70,7 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 
 	secret, err := c.Logical().Read(vaultSecretId(id.Key))
 	if err != nil {
-		return nil, err
+		return nil, vault.NotFoundError
 	}
 
 	secretBytes, err := secretData(secret)

@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/99designs/keyring"
 	"go.mondoo.io/mondoo/motor/vault"
 )
@@ -88,7 +90,8 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 
 	i, err := ring.Get(id.Key)
 	if err != nil {
-		return nil, err
+		log.Debug().Err(err).Msg("could not retrieve secret from keyring")
+		return nil, vault.NotFoundError
 	}
 
 	return &vault.Secret{
