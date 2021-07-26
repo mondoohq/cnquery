@@ -4,6 +4,10 @@ import (
 	"context"
 	"errors"
 
+	"go.mondoo.io/mondoo/falcon/codes"
+
+	"go.mondoo.io/mondoo/falcon/status"
+
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
@@ -35,10 +39,15 @@ func (m *multiVault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret
 	for i := range m.vaults {
 		v := m.vaults[i]
 		secret, err := v.Get(ctx, id)
-		if err == nil {
-			return secret, nil
+		se, _ := status.FromError(err)
+		// move to next vault if we could not find the secret
+		if se != nil && se.Code() == codes.NotFound {
+			continue
+		} else if se != nil {
+			return nil, err
 		}
+		return secret, nil
 	}
 
-	return nil, errors.New("secret not found")
+	return nil, vault.NotFoundError
 }

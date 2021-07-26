@@ -38,7 +38,7 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 		SecretId: &id.Key,
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get secret")
+		return nil, vault.NotFoundError
 	}
 	return &vault.Secret{
 		Key:  id.Key,

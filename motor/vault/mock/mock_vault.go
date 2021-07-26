@@ -41,7 +41,7 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 			Data: []byte(MockJson),
 		}, nil
 	}
-	return nil, nil
+	return nil, vault.NotFoundError
 }
 
 func (v *Vault) Set(ctx context.Context, cred *vault.Secret) (*vault.SecretID, error) {
