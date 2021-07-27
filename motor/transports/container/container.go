@@ -27,9 +27,9 @@ func NewContainerRegistryImage(tc *transports.TransportConfig) (ContainerTranspo
 		log.Debug().Str("ref", ref.Name()).Msg("found valid container registry reference")
 
 		registryOpts := []image.Option{image.WithInsecure(tc.Insecure)}
-		if len(tc.BearerToken) > 0 {
+		if len(tc.Options["bearer"]) > 0 {
 			log.Debug().Msg("enable bearer authentication for image")
-			registryOpts = append(registryOpts, image.WithAuthenticator(&authn.Bearer{Token: tc.BearerToken}))
+			registryOpts = append(registryOpts, image.WithAuthenticator(&authn.Bearer{Token: tc.Options["bearer"]}))
 		}
 
 		img, rc, err := image.LoadImageFromRegistry(ref, registryOpts...)
