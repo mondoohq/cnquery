@@ -4,6 +4,8 @@ import (
 	"errors"
 	"runtime"
 
+	"go.mondoo.io/mondoo/motor/transports/github"
+
 	"go.mondoo.io/mondoo/motor/transports/equinix"
 	"go.mondoo.io/mondoo/motor/transports/local"
 
@@ -132,6 +134,13 @@ func (d *Detector) Platform() (*Platform, error) {
 			Arch:    arch,
 			Kind:    transports.Kind_KIND_API,
 			Runtime: transports.RUNTIME_KUBERNETES,
+		}, nil
+	case *github.Transport:
+		return &Platform{
+			Name:    "github",
+			Title:   "Github",
+			Kind:    transports.Kind_KIND_API,
+			Runtime: transports.RUNTIME_GITHUB,
 		}, nil
 	default:
 		var resolved bool

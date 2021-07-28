@@ -19,4 +19,5 @@ const (
 	RUNTIME_VSPHERE_VM       = "vsphere vm"    // vms running on esxi
 	RUNTIME_MICROSOFT_GRAPH  = "ms graph"      // api
 	RUNTIME_EQUINIX_METAL    = "equinix metal" // api
+	RUNTIME_GITHUB           = "github"        // api
 )

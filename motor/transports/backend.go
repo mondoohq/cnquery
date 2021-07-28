@@ -30,6 +30,7 @@ const (
 	SCHEME_IPMI               = "ipmi"
 	SCHEME_FS                 = "fs"
 	SCHEME_EQUINIX            = "equinix"
+	SCHEME_GITHUB             = "github"
 )
 
 var TransportBackend_scheme = map[TransportBackend]string{
@@ -54,6 +55,7 @@ var TransportBackend_scheme = map[TransportBackend]string{
 	TransportBackend_CONNECTION_FS:                      SCHEME_FS,
 	TransportBackend_CONNECTION_K8S:                     SCHEME_K8S,
 	TransportBackend_CONNECTION_EQUINIX_METAL:           SCHEME_EQUINIX,
+	TransportBackend_CONNECTION_GITHUB:                  SCHEME_GITHUB,
 }
 
 var TransportBackend_schemevalue = map[string]TransportBackend{
@@ -78,6 +80,7 @@ var TransportBackend_schemevalue = map[string]TransportBackend{
 	SCHEME_FS:                 TransportBackend_CONNECTION_FS,
 	SCHEME_K8S:                TransportBackend_CONNECTION_K8S,
 	SCHEME_EQUINIX:            TransportBackend_CONNECTION_EQUINIX_METAL,
+	SCHEME_GITHUB:             TransportBackend_CONNECTION_GITHUB,
 }
 
 func (x TransportBackend) Scheme() string {
