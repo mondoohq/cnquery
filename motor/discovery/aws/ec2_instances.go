@@ -38,7 +38,7 @@ type Ec2Instances struct {
 	Insecure                   bool
 	FilterOptions              Ec2InstancesFilters
 	SSMInstancesPlatformIdsMap map[string]*asset.Asset
-	IntegrationMrn             string
+	Labels                     map[string]string
 }
 
 func (ec2i *Ec2Instances) Name() string {
@@ -116,7 +116,7 @@ func (ec2i *Ec2Instances) getInstances(account string, ec2InstancesFilters Ec2In
 				reservation := resp.Reservations[i]
 				for j := range reservation.Instances {
 					instance := reservation.Instances[j]
-					res = append(res, instanceToAsset(account, region, instance, ec2i.InstanceSSHUsername, ec2i.Insecure, ec2i.SSMInstancesPlatformIdsMap, ec2i.IntegrationMrn))
+					res = append(res, instanceToAsset(account, region, instance, ec2i.InstanceSSHUsername, ec2i.Insecure, ec2i.SSMInstancesPlatformIdsMap, ec2i.Labels))
 				}
 			}
 
@@ -151,7 +151,7 @@ func (ec2i *Ec2Instances) List() ([]*asset.Asset, error) {
 	return instances, nil
 }
 
-func instanceToAsset(account string, region string, instance types.Instance, sshUsername string, insecure bool, ssmInstancesPlatformIdsMap map[string]*asset.Asset, integrationMrn string) *asset.Asset {
+func instanceToAsset(account string, region string, instance types.Instance, sshUsername string, insecure bool, ssmInstancesPlatformIdsMap map[string]*asset.Asset, passInLabels map[string]string) *asset.Asset {
 	connections := []*transports.TransportConfig{}
 
 	var connection *transports.TransportConfig
@@ -170,7 +170,8 @@ func instanceToAsset(account string, region string, instance types.Instance, ssh
 	if ssmAsset, ok := ssmInstancesPlatformIdsMap[awsec2.MondooInstanceID(account, region, *instance.InstanceId)]; ok {
 		// instance already discovered via ssm search. only add connections
 		ssmAsset.Connections = append(ssmAsset.Connections, connections...)
-		ssmAsset.Labels = addAssetLabels(ssmAsset.Labels, instance, region, integrationMrn)
+		ssmAsset.Labels = addAssetLabels(ssmAsset.Labels, instance, region, passInLabels)
+
 	} else {
 		asset.PlatformIds = []string{awsec2.MondooInstanceID(account, region, *instance.InstanceId)}
 		asset.Name = *instance.InstanceId
@@ -180,7 +181,7 @@ func instanceToAsset(account string, region string, instance types.Instance, ssh
 		}
 		asset.Connections = connections
 		asset.State = mapEc2InstanceStateCode(instance.State)
-		asset.Labels = addAssetLabels(map[string]string{}, instance, region, integrationMrn)
+		asset.Labels = addAssetLabels(map[string]string{}, instance, region, passInLabels)
 		for k := range instance.Tags {
 			tag := instance.Tags[k]
 			if tag.Key != nil {
@@ -203,7 +204,7 @@ const (
 	IntegrationMrnLabel string = "mondoo.app/integration-mrn"
 )
 
-func addAssetLabels(labels map[string]string, instance types.Instance, region string, integrationMrn string) map[string]string {
+func addAssetLabels(labels map[string]string, instance types.Instance, region string, additionalLabels ...map[string]string) map[string]string {
 	// fetch aws specific metadata
 	labels[RegionLabel] = region
 	if instance.InstanceId != nil {
@@ -218,8 +219,10 @@ func addAssetLabels(labels map[string]string, instance types.Instance, region st
 	if instance.ImageId != nil {
 		labels[ImageIdLabel] = *instance.ImageId
 	}
-	if integrationMrn != "" {
-		labels[IntegrationMrnLabel] = integrationMrn
+	for i := range additionalLabels {
+		for k, v := range additionalLabels[i] {
+			labels[k] = v
+		}
 	}
 	return labels
 }
