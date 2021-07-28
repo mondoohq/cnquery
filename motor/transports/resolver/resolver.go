@@ -15,6 +15,7 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/equinix"
 	"go.mondoo.io/mondoo/motor/transports/fs"
 	"go.mondoo.io/mondoo/motor/transports/gcp"
+	"go.mondoo.io/mondoo/motor/transports/github"
 	"go.mondoo.io/mondoo/motor/transports/ipmi"
 	k8s_transport "go.mondoo.io/mondoo/motor/transports/k8s"
 	"go.mondoo.io/mondoo/motor/transports/local"
@@ -306,6 +307,19 @@ func ResolveTransport(tc *transports.TransportConfig, userIdDetectors ...string)
 		}
 	case transports.TransportBackend_CONNECTION_K8S:
 		trans, err := k8s_transport.New(tc)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(trans)
+		if err != nil {
+			return nil, err
+		}
+		id, err := trans.Identifier()
+		if err == nil && len(id) > 0 {
+			identifier = append(identifier, id)
+		}
+	case transports.TransportBackend_CONNECTION_GITHUB:
+		trans, err := github.New(tc)
 		if err != nil {
 			return nil, err
 		}

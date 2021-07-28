@@ -3777,3 +3777,37 @@ k8s.cronjob {
   // Full resource manifest
   manifest dict
 }
+
+// Organization represents a GitHub organization account
+github.organization {
+  login string
+  id int
+  node_id string
+  name string
+  company string
+  blog string
+  location string
+  email string
+  twitter_username string
+  description string
+  created_at time
+  updated_at time
+  total_private_repos int
+  owned_private_repos int
+  private_gists int
+  disk_usage int
+  collaborators int
+  billing_email string
+  plan dict
+  two_factor_requirement_enabled bool
+  is_verified bool
+
+  default_repository_permission string
+  members_can_create_repositories bool
+  members_can_create_public_repositories bool
+  members_can_create_private_repositories bool
+  members_can_create_internal_repositories bool
+  members_can_create_pages bool
+  members_can_create_public_pages bool
+  members_can_create_private_pages bool
+}

@@ -63,6 +63,7 @@ func init() {
 		transports.SCHEME_IPMI:               &ipmi.Resolver{},
 		transports.SCHEME_FS:                 &instance.Resolver{},
 		transports.SCHEME_EQUINIX:            &equinix.Resolver{},
+		transports.SCHEME_GITHUB:             &instance.Resolver{},
 	}
 }
 
