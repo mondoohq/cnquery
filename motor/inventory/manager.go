@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/logger"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery"
 	"go.mondoo.io/mondoo/motor/inventory/v1"
@@ -29,6 +30,7 @@ type Option func(*inventoryManager) error
 // passes a pre-parsed asset inventory into the Inventory Manager
 func WithInventory(inventory *v1.Inventory) Option {
 	return func(im *inventoryManager) error {
+		logger.DebugDumpJSON("mondoo-inventory", inventory)
 		return im.loadInventory(inventory)
 	}
 }
