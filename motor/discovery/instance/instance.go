@@ -23,7 +23,6 @@ func (r *Resolver) ParseConnectionURL(url string, opts ...transports.TransportCo
 }
 
 func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, error) {
-	log.Info().Msg("resolve")
 	assetInfo := &asset.Asset{
 		Connections: []*transports.TransportConfig{tc},
 		State:       asset.State_STATE_ONLINE,
@@ -37,7 +36,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig) ([]*asset.Asset, erro
 
 	// store detected platform identifier with asset
 	assetInfo.PlatformIds = m.Meta.Identifier
-	log.Info().Strs("identifier", assetInfo.PlatformIds).Msg("motor connection")
+	log.Debug().Strs("identifier", assetInfo.PlatformIds).Msg("motor connection")
 
 	// determine platform information
 	p, err := m.Platform()
