@@ -19,11 +19,11 @@ import (
 	rawsftp "github.com/pkg/sftp"
 )
 
-func New(endpoint *transports.TransportConfig) (*SSHTransport, error) {
-	endpoint = ReadSSHConfig(endpoint)
+func New(tc *transports.TransportConfig) (*SSHTransport, error) {
+	tc = ReadSSHConfig(tc)
 
 	// ensure all required configs are set
-	err := VerifyConfig(endpoint)
+	err := VerifyConfig(tc)
 	if err != nil {
 		return nil, err
 	}
@@ -34,21 +34,21 @@ func New(endpoint *transports.TransportConfig) (*SSHTransport, error) {
 	}
 
 	var s cmd.Wrapper
-	if endpoint.Sudo != nil && endpoint.Sudo.Active {
+	if tc.Sudo != nil && tc.Sudo.Active {
 		log.Debug().Msg("activated sudo for ssh connection")
 		s = cmd.NewSudo()
 	}
 
-	if endpoint.Insecure {
+	if tc.Insecure {
 		log.Debug().Msg("user allowed insecure ssh connection")
 	}
 
 	t := &SSHTransport{
-		ConnectionConfig: endpoint,
+		ConnectionConfig: tc,
 		UseScpFilesystem: activateScp,
 		Sudo:             s,
-		kind:             endpoint.Kind,
-		runtime:          endpoint.Runtime,
+		kind:             tc.Kind,
+		runtime:          tc.Runtime,
 	}
 	err = t.Connect()
 	return t, err
@@ -68,6 +68,9 @@ type SSHTransport struct {
 
 func (t *SSHTransport) Connect() error {
 	cc := t.ConnectionConfig
+
+	// we always want to ensure we use the default port if nothing was specified
+	ApplyDefaultPort(cc)
 
 	// load known hosts and track the fingerprint of the ssh server for later identification
 	knownHostsCallback, err := KnownHostsCallback()

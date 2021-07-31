@@ -84,7 +84,7 @@ func hasAgentLoadedKey(list []*agent.Key, filename string) bool {
 	return false
 }
 
-func authMethods(endpoint *transports.TransportConfig) ([]ssh.AuthMethod, error) {
+func authMethods(tc *transports.TransportConfig) ([]ssh.AuthMethod, error) {
 	auths := []ssh.AuthMethod{}
 
 	// only one public auth method is allowed, therefore multiple keys need to be encapsulated into one auth method
@@ -107,11 +107,12 @@ func authMethods(endpoint *transports.TransportConfig) ([]ssh.AuthMethod, error)
 	}
 
 	// use key auth, only load if the key was not found in ssh agent
-	for i := range endpoint.Credentials {
-		credential := endpoint.Credentials[i]
+	for i := range tc.Credentials {
+		credential := tc.Credentials[i]
 
 		switch credential.Type {
 		case transports.CredentialType_private_key:
+			log.Debug().Msg("enabled ssh private key authentication")
 			priv, err := authPrivateKeyWithPassphrase(credential.Secret, credential.Password)
 			if err != nil {
 				log.Debug().Err(err).Msg("could not read private key")
@@ -123,6 +124,7 @@ func authMethods(endpoint *transports.TransportConfig) ([]ssh.AuthMethod, error)
 			log.Debug().Msg("enabled ssh password authentication")
 			auths = append(auths, ssh.Password(string(credential.Secret)))
 		case transports.CredentialType_ssh_agent:
+			log.Debug().Msg("enabled ssh agent authentication")
 			useAgentAuth()
 		default:
 			return nil, errors.New("unsupported authentication mechanism for ssh: " + credential.Type.String())
@@ -130,7 +132,7 @@ func authMethods(endpoint *transports.TransportConfig) ([]ssh.AuthMethod, error)
 	}
 
 	// if no credential was provided, fallback to ssh-agent and ssh-config
-	if len(endpoint.Credentials) == 0 {
+	if len(tc.Credentials) == 0 {
 		useAgentAuth()
 	}
 
