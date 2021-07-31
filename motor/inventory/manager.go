@@ -30,7 +30,7 @@ type Option func(*inventoryManager) error
 // passes a pre-parsed asset inventory into the Inventory Manager
 func WithInventory(inventory *v1.Inventory) Option {
 	return func(im *inventoryManager) error {
-		logger.DebugDumpJSON("mondoo-inventory", inventory)
+		logger.DebugDumpJSON("inventory-unresolved", inventory)
 		return im.loadInventory(inventory)
 	}
 }
@@ -118,6 +118,7 @@ func (im *inventoryManager) Resolve() map[*asset.Asset]error {
 	im.assetList = resolvedAssets.Assets
 
 	log.Info().Int("resolved-assets", len(im.assetList)).Msg("resolved assets")
+	logger.DebugDumpJSON("inventory-resolved-assets", im.assetList)
 	return resolvedAssets.Errors
 }
 
