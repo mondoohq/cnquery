@@ -16,7 +16,7 @@ import (
 // - configures ssh agent authentication
 func ApplyDefaults(cc *transports.TransportConfig, username string, identityFile string, password string) error {
 	// set default port for ssh
-	ApplyDefaultConfig(cc)
+	ApplyDefaultPort(cc)
 
 	// handle credentials cases:
 	// if identity file is provided but no password -> private key
@@ -41,7 +41,7 @@ func ApplyDefaults(cc *transports.TransportConfig, username string, identityFile
 
 // ApplyDefaultConfig set defaults like the ssh port 22 to the transport configuration
 // to cover cases where users have not set those values explicitly
-func ApplyDefaultConfig(cc *transports.TransportConfig) *transports.TransportConfig {
+func ApplyDefaultPort(cc *transports.TransportConfig) *transports.TransportConfig {
 	p, err := cc.IntPort()
 	// use default port if port is 0
 	if err == nil && p <= 0 {
