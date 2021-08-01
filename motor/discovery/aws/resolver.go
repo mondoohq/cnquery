@@ -86,6 +86,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 			log.Debug().Int("instances", len(assetList)).Msg("completed ssm instance search")
 			for i := range assetList {
 				log.Debug().Str("name", assetList[i].Name).Msg("resolved ssm instance")
+
 				resolved = append(resolved, assetList[i])
 				ssmInstancesPlatformIdsMap[assetList[i].PlatformIds[0]] = assetList[i]
 			}
@@ -108,12 +109,13 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 		}
 		log.Debug().Int("instances", len(assetList)).Bool("insecure", r.Insecure).Msg("completed instance search")
 		for i := range assetList {
-			log.Debug().Str("name", assetList[i].Name).Msg("resolved ec2 instance")
-			if assetList[i].State != asset.State_STATE_RUNNING {
-				log.Warn().Str("name", assetList[i].Name).Msg("skip instance that is not running")
-				continue
-			}
-			resolved = append(resolved, assetList[i])
+			a := assetList[i]
+			log.Debug().Str("name", a.Name).Msg("resolved ec2 instance")
+
+			// find the secret reference for the asset
+			common.EnrichAssetWithSecrets(a, sfn)
+
+			resolved = append(resolved, a)
 		}
 	}
 	return resolved, nil
