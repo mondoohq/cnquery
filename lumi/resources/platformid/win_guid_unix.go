@@ -1,9 +1,11 @@
 // +build linux darwin netbsd openbsd freebsd
 
-package machineid
+package platformid
 
-import "go.mondoo.io/mondoo/motor/transports"
+import (
+	"go.mondoo.io/mondoo/motor/transports"
+)
 
 func windowsMachineId(t transports.Transport) (string, error) {
-	return powershellWindowsMachineId(t)
+	return PowershellWindowsMachineId(t)
 }

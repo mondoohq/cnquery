@@ -2,24 +2,23 @@ package resources
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
 
-	"go.mondoo.io/mondoo/lumi/resources/reboot"
-	"go.mondoo.io/mondoo/lumi/resources/systemd"
-	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports/container/docker_snapshot"
-	"go.mondoo.io/mondoo/motor/transports/tar"
-
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi/resources/packages"
 	"go.mondoo.io/mondoo/lumi/resources/platformid"
+	"go.mondoo.io/mondoo/lumi/resources/reboot"
+	"go.mondoo.io/mondoo/lumi/resources/systemd"
 	"go.mondoo.io/mondoo/lumi/resources/uptime"
 	"go.mondoo.io/mondoo/lumi/resources/windows"
 	"go.mondoo.io/mondoo/motor/motorid/hostname"
+	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/transports/container/docker_snapshot"
+	"go.mondoo.io/mondoo/motor/transports/tar"
 )
 
 func (p *lumiOs) id() (string, error) {
@@ -300,24 +299,18 @@ func (s *lumiOs) GetMachineid() (string, error) {
 		return "", errors.New("cannot determine platform uuid")
 	}
 
-	var uuidProvider platformid.UniquePlatformIDProvider
-	for i := range platform.Family {
-		if platform.Family[i] == "linux" {
-			uuidProvider = &platformid.LinuxIdProvider{Motor: s.Runtime.Motor}
-		}
-	}
-
-	if uuidProvider == nil && platform.Name == "macos" {
-		uuidProvider = &platformid.MacOSIdProvider{Motor: s.Runtime.Motor}
+	uuidProvider, err := platformid.MachineIDProvider(s.Runtime.Motor.Transport, platform)
+	if err != nil {
+		return "", errors.Wrap(err, "cannot determine platform uuid")
 	}
 
 	if uuidProvider == nil {
-		return "", errors.New("cannot determine platform uuid for " + platform.Name)
+		return "", errors.New("cannot determine platform uuid")
 	}
 
 	id, err := uuidProvider.ID()
 	if err != nil {
-		return "", errors.New("cannot determine platform uuid on known system " + platform.Name)
+		return "", errors.Wrap(err, "cannot determine platform uuid")
 	}
 
 	return id, nil

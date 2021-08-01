@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/motor"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
@@ -13,20 +13,11 @@ import (
 func TestMacOSMachineId(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/osx_test.toml")
 	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: filepath})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	m, err := motor.New(trans)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	lid := MacOSIdProvider{Motor: m}
+	lid := MacOSIdProvider{Transport: trans}
 	id, err := lid.ID()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	assert.Equal(t, "5c09e2c7-07f2-5bee-be82-7cb70688e55c", id, "machine id is properly detected")
 }
