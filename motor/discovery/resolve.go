@@ -108,8 +108,14 @@ func ResolveAsset(root *asset.Asset, cfn common.CredentialFn, sfn common.QuerySe
 			// copy over id detector overwrite
 			assetObj.IdDetector = root.IdDetector
 
-			// copy over labels for secret metadata fetching
-			assetObj.Labels = root.Labels
+			// copy over labels from root
+			if assetObj.Labels == nil {
+				assetObj.Labels = map[string]string{}
+			}
+
+			for k, v := range root.Labels {
+				assetObj.Labels[k] = v
+			}
 
 			// merge platform ids with root object platform ids
 			assetObj.PlatformIds = append(assetObj.PlatformIds, root.PlatformIds...)
