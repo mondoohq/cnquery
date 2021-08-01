@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	"github.com/rs/zerolog/log"
 	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/object"
@@ -146,37 +148,44 @@ func vmsToAssetList(instanceUuid string, vms []*object.VirtualMachine, parentTC 
 		if err != nil {
 			return nil, err
 		}
+
+		platformId := vsphere_transport.VsphereResourceID(instanceUuid, vm.Reference())
+		log.Debug().Str("platform-id", platformId).Msg("found vsphere vm")
 		ha := &asset.Asset{
 			Name: vm.Name(),
-			// NOTE: platform information is filled by the resolver
+			// TODO: derive platform information guest id e.g. debian10_64Guest, be aware that this does not need to be
+			// the correct platform name
 			State: mapVmGuestState(props.Guest.GuestState),
 			Labels: map[string]string{
 				"vsphere.vmware.com/name":           vm.Name(),
 				"vsphere.vmware.com/type":           vm.Reference().Type,
 				"vsphere.vmware.com/moid":           vm.Reference().Encode(),
 				"vsphere.vmware.com/ip-address":     props.Guest.IpAddress,
-				"vsphere.vmware.com/inventorypath":  vm.InventoryPath,
+				"vsphere.vmware.com/inventory-path": vm.InventoryPath,
 				"vsphere.vmware.com/guest-family":   props.Guest.GuestFamily,
 				"vsphere.vmware.com/guest-id":       props.Guest.GuestId,
 				"vsphere.vmware.com/guest-fullname": props.Guest.GuestFullName,
 			},
-			PlatformIds: []string{vsphere_transport.VsphereResourceID(instanceUuid, vm.Reference())},
+			PlatformIds: []string{platformId},
 		}
 
+		// TODO: reactivate once we have multi-perspective scan active
 		// add parent information to validate the vm configuration from vsphere api perspective
-		vt := parentTC.Clone()
-		ha.Connections = append(ha.Connections, vt)
+		// vt := parentTC.Clone()
+		// ha.Connections = append(ha.Connections, vt)
 
-		if props.Guest.GuestFamily == "linuxGuest" {
-			ha.Connections = []*transports.TransportConfig{
-				{
-					Backend:  transports.TransportBackend_CONNECTION_SSH,
-					Host:     props.Guest.IpAddress,
-					Insecure: parentTC.Insecure,
+		// TODO: steer the connection type by option
+		ha.Connections = []*transports.TransportConfig{
+			{
+				Backend:     transports.TransportBackend_CONNECTION_VSPHERE_VM,
+				Host:        parentTC.Host,
+				Insecure:    parentTC.Insecure,
+				Credentials: parentTC.Credentials,
+				Options: map[string]string{
+					"inventoryPath": vm.InventoryPath,
 				},
-			}
+			},
 		}
-		// TODO: handle windows guest
 
 		res = append(res, ha)
 	}
