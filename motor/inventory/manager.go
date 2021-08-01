@@ -2,7 +2,6 @@ package inventory
 
 import (
 	"context"
-	"errors"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/logger"
@@ -105,11 +104,13 @@ func (im *inventoryManager) loadInventory(inventory *v1.Inventory) error {
 	// TODO: use multi-vault to warp the provided vault and all inline-configured credentials
 	im.vault = inmemory.New(inmemory.WithSecretMap(secrets))
 
-	qr, err := credentialquery.NewCredentialQueryRunner(inventory.Spec.CredentialQuery)
-	if err != nil {
-		return err
+	if inventory.Spec.CredentialQuery != "" {
+		qr, err := credentialquery.NewCredentialQueryRunner(inventory.Spec.CredentialQuery)
+		if err != nil {
+			return err
+		}
+		im.credentialQueryRunner = qr
 	}
-	im.credentialQueryRunner = qr
 
 	return nil
 }
@@ -135,7 +136,7 @@ func (im *inventoryManager) GetCredential(secretId string) (*transports.Credenti
 // The credential will only include the reference to the secret and not include the actual secret
 func (im *inventoryManager) QuerySecretId(a *asset.Asset) (*transports.Credential, error) {
 	if im.credentialQueryRunner == nil {
-		return nil, errors.New("no credential query configured")
+		return nil, nil
 	}
 
 	// this is where we get the vault configuration query and evaluate it against the asset data
