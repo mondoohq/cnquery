@@ -112,6 +112,9 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 				log.Error().Err(err).Msg("could not determine platform information for esxi vm")
 			}
 
+			// find the secret reference for the asset
+			common.EnrichAssetWithSecrets(vm, sfn)
+
 			resolved = append(resolved, vm)
 		}
 	}

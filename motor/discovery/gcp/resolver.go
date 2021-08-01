@@ -105,19 +105,8 @@ func (r *GcpResolver) Resolve(tc *transports.TransportConfig, cfn common.Credent
 			a := assetList[i]
 			log.Debug().Str("name", a.Name).Msg("resolved gcp compute instance")
 
-			// TODO: make this a resolver helper
-			for j := range a.Connections {
-				conn := a.Connections[j]
-
-				if len(conn.Credentials) == 0 {
-					creds, err := sfn(a)
-					if err == nil {
-						conn.Credentials = []*transports.Credential{creds}
-					} else {
-						log.Warn().Str("name", a.Name).Msg("could not determine credentials for asset")
-					}
-				}
-			}
+			// find the secret reference for the asset
+			common.EnrichAssetWithSecrets(a, sfn)
 
 			resolved = append(resolved, a)
 		}
