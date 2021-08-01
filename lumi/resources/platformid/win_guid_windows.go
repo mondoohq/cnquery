@@ -1,13 +1,13 @@
 // +build windows
 
-package machineid
+package platformid
 
 import (
 	"errors"
-	"github.com/StackExchange/wmi"
+	"runtime"
+
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/local"
-	"runtime"
 )
 
 func windowsMachineId(t transports.Transport) (string, error) {
@@ -32,5 +32,5 @@ func windowsMachineId(t transports.Transport) (string, error) {
 
 		return *entries[0].UUID, nil
 	}
-	return powershellWindowsMachineId(t)
+	return platformid.PowershellWindowsMachineId(t)(t)
 }
