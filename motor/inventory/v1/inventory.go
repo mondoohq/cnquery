@@ -121,6 +121,14 @@ func (p *Inventory) PreProcess() error {
 		// load private key pem into secret
 		if cred.PrivateKey != "" {
 			cred.Secret = []byte(cred.PrivateKey)
+			cred.PrivateKey = ""
+		}
+
+		// NOTE: it is possible that private keys hold an additional password, therefore we only
+		// copy the password into the secret when the credential type is password
+		if cred.Type == transports.CredentialType_password && cred.Password != "" {
+			cred.Secret = []byte(cred.Password)
+			cred.Password = ""
 		}
 
 		// TODO: we may want to load it but we probably need

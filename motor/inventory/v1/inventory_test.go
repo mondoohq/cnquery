@@ -51,3 +51,27 @@ func TestParseGCPInventory(t *testing.T) {
 	err = inventory.Validate()
 	require.NoError(t, err)
 }
+
+func TestParseVsphereInventory(t *testing.T) {
+	inventory, err := InventoryFromFile("./testdata/vsphere_inventory.yml")
+	require.NoError(t, err)
+
+	// extract credentials into credential section
+	err = inventory.PreProcess()
+	require.NoError(t, err)
+
+	// ensure that all assets have a valid secret reference
+	err = inventory.Validate()
+	require.NoError(t, err)
+
+	// check that the password was pre-processed
+	cred := inventory.Spec.Assets[0].Connections[0].Credentials[0]
+	assert.Equal(t, "", cred.User)
+	assert.Equal(t, "", cred.Password)
+	assert.Equal(t, []byte{}, cred.Secret)
+
+	secret := inventory.Spec.Credentials[cred.SecretId]
+	assert.Equal(t, "root", secret.User)
+	assert.Equal(t, "", secret.Password)
+	assert.Equal(t, []byte("password1!"), secret.Secret)
+}

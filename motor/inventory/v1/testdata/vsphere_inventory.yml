@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Inventory
+metadata:
+  name: mondoo-inventory
+  labels:
+    environment: production
+spec:
+  credential_query: "{ user: 'chris', type: 'ssh_agent' }"
+  assets:
+    - name: vsphere
+      connections:
+        - backend: vsphere
+          host: 192.168.178.147
+          credentials:
+            - type: password
+              user: root
+              password: password1!
+          discover:
+            targets:
+            - all
