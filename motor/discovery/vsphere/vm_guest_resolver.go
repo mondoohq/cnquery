@@ -1,9 +1,16 @@
 package vsphere
 
 import (
+	"errors"
+
+	"github.com/rs/zerolog/log"
+
+	"go.mondoo.io/mondoo/motor/transports/vmwareguestapi"
+
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/resolver"
 )
 
 type VMGuestResolver struct{}
@@ -16,62 +23,86 @@ func (r *VMGuestResolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (k *VMGuestResolver) Resolve(t *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
+func (k *VMGuestResolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
-	// refIds := []string{}
-	// if len(in.PlatformID) > 0 {
-	// 	refIds = []string{in.PlatformID}
-	// }
+	// we leverage the vpshere transport to establish a connection
+	m, err := resolver.NewMotorConnection(tc, cfn)
+	if err != nil {
+		return nil, err
+	}
+	defer m.Close()
 
-	assetInfo := &asset.Asset{
-		// Name: in.Name,
-		// PlatformIDs: refIds,
-		// Labels: in.Labels,
-		// TODO: we need to ask the vmware api
-		State: asset.State_STATE_ONLINE,
+	trans, ok := m.Transport.(*vmwareguestapi.Transport)
+	if !ok {
+		return nil, errors.New("could not initialize vsphere guest transport")
 	}
 
-	// // parse connection from URI
-	// t := &transports.TransportConfig{}
-	// err := t.ParseFromURI(in.Connection)
-	// if err != nil {
-	// 	err := errors.Wrapf(err, "cannot connect to %s", in.Connection)
-	// 	log.Error().Err(err).Msg("invalid asset connection")
-	// }
+	client := trans.Client()
+	discoveryClient := New(client)
 
-	// // copy password from opts asset if it was not encoded in url
-	// if len(t.Password) == 0 && len(in.Password) > 0 {
-	// 	t.Password = in.Password
-	// }
-
-	// use hostname as name if asset name was not explicitly provided
-	if assetInfo.Name == "" {
-		assetInfo.Name = t.Host
+	// resolve vms
+	vms, err := discoveryClient.ListVirtualMachines(tc)
+	if err != nil {
+		return nil, err
 	}
 
-	// t.Sudo = &transports.Sudo{
-	// 	Active: opts.Sudo.Active,
-	// }
+	// add transport config for each vm
+	for i := range vms {
+		vm := vms[i]
+		resolved = append(resolved, vm)
+	}
 
-	// t.IdentityFiles = []string{in.IdentityFile}
-	// t.Insecure = opts.Insecure
+	// filter the vms by inventoryPath
+	inventoryPaths := []string{}
+	inventoryPathFilter, ok := tc.Options["inventoryPath"]
+	if ok {
+		inventoryPaths = []string{inventoryPathFilter}
+	}
 
-	// // add guest credentials
-	// t.Options = in.Options
-	// // this transport needs the following valuse
-	// // t.Options = map[string]string{
-	// // 	"inventoryPath": "/ha-datacenter/vm/example-centos",
-	// // 	"guestUser":     "root",
-	// // 	"guestPassword": "password",
-	// // }
+	resolved = filter(resolved, func(a *asset.Asset) bool {
+		inventoryPathLabel := a.Labels["vsphere.vmware.com/inventory-path"]
 
-	assetInfo.Connections = []*transports.TransportConfig{t}
+		return contains(inventoryPaths, inventoryPathLabel)
+	})
 
-	// if in != nil && len(in.AssetMrn) > 0 {
-	// 	assetInfo.Mrn = in.AssetMrn
-	// }
-	resolved = append(resolved, assetInfo)
+	if len(resolved) == 1 {
+		a := resolved[0]
+		a.Connections = []*transports.TransportConfig{tc}
 
-	return resolved, nil
+		// find the secret reference for the asset
+		EnrichVsphereToolsConnWithSecrets(a, cfn, sfn)
+
+		return []*asset.Asset{a}, nil
+	} else {
+		return nil, errors.New("could not resolve vSphere vm")
+	}
+}
+
+func EnrichVsphereToolsConnWithSecrets(a *asset.Asset, cfn common.CredentialFn, sfn common.QuerySecretFn) {
+	// search secret for vm
+	// NOTE: we do not use `common.EnrichAssetWithSecrets(a, sfn)` here since vmware requires two secrets at the same time
+	for j := range a.Connections {
+		conn := a.Connections[j]
+
+		// special handling for vsphere vm config
+		if conn.Backend == transports.TransportBackend_CONNECTION_VSPHERE_VM {
+			var creds *transports.Credential
+
+			secretRefCred, err := sfn(a)
+			if err == nil && secretRefCred != nil {
+				creds, err = cfn(secretRefCred.SecretId)
+			}
+
+			if err == nil && creds != nil {
+				if conn.Options == nil {
+					conn.Options = map[string]string{}
+				}
+				conn.Options["guestUser"] = creds.User
+				conn.Options["guestPassword"] = string(creds.Secret)
+			}
+		} else {
+			log.Warn().Str("name", a.Name).Msg("could not determine credentials for asset")
+		}
+	}
 }

@@ -5,7 +5,7 @@ metadata:
   labels:
     environment: production
 spec:
-  credential_query: "{ user: 'chris', type: 'ssh_agent' }"
+  credential_query: "{ secret_id: 'vmsecret' }"
   assets:
     - name: vsphere
       connections:
@@ -18,3 +18,8 @@ spec:
           discover:
             targets:
             - all
+  credentials:
+    vmsecret:
+      type: password
+      user: mondoo
+      password: password1!

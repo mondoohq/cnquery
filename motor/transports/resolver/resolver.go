@@ -357,7 +357,7 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(secret
 			identifier = append(identifier, id)
 		}
 	default:
-		return nil, fmt.Errorf("connection> unsupported backend '%s', only docker://, local://, tar://, ssh:// are allowed", clonedConfig.Backend)
+		return nil, fmt.Errorf("connection> unsupported backend '%s'", clonedConfig.Backend)
 	}
 
 	if len(userIdDetectors) > 0 {

@@ -126,6 +126,10 @@ type Transport struct {
 	fs     afero.Fs
 }
 
+func (t *Transport) Client() *govmomi.Client {
+	return t.client
+}
+
 func (t *Transport) RunCommand(command string) (*transports.Command, error) {
 	log.Debug().Str("command", command).Str("transport", "vmwareguest").Msg("run command")
 	c := &Command{tb: t.tb}

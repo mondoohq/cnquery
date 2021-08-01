@@ -1,8 +1,11 @@
 package vsphere
 
 import (
+	"errors"
 	"fmt"
 	"strings"
+
+	"go.mondoo.io/mondoo/motor/transports/resolver"
 
 	"go.mondoo.io/mondoo/motor/discovery/common"
 
@@ -33,22 +36,19 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 	resolved := []*asset.Asset{}
 
 	// we leverage the vpshere transport to establish a connection
-	trans, err := vsphere.New(tc)
+	m, err := resolver.NewMotorConnection(tc, cfn)
 	if err != nil {
 		return nil, err
 	}
+	defer m.Close()
 
-	client := trans.Client()
-	discoveryClient := New(client)
-
-	identifier, err := trans.Identifier()
-	if err != nil {
-		return nil, err
+	trans, ok := m.Transport.(*vsphere.Transport)
+	if !ok {
+		return nil, errors.New("could not initialize vsphere transport")
 	}
 
 	// detect platform info for the asset
-	detector := platform.NewDetector(trans)
-	pf, err := detector.Platform()
+	pf, err := m.Platform()
 	if err != nil {
 		return nil, err
 	}
@@ -62,11 +62,14 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 	}
 
 	resolved = append(resolved, &asset.Asset{
-		PlatformIds: []string{identifier},
+		PlatformIds: m.Meta.Identifier,
 		Name:        name,
 		Platform:    pf,
 		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
 	})
+
+	client := trans.Client()
+	discoveryClient := New(client)
 
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryHostMachines) {
 		// resolve esxi hosts
@@ -113,7 +116,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 			}
 
 			// find the secret reference for the asset
-			common.EnrichAssetWithSecrets(vm, sfn)
+			EnrichVsphereToolsConnWithSecrets(vm, cfn, sfn)
 
 			resolved = append(resolved, vm)
 		}
