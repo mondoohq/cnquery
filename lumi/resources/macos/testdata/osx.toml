@@ -1,0 +1,147 @@
+[commands."defaults -currentHost domains"]
+stdout = """
+com.apple.Bluetooth, com.apple.MIDI"""
+
+[commands."defaults -currentHost export com.apple.Bluetooth -"]
+stdout = """
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>BluetoothVersionNumber</key>
+	<integer>3</integer>
+	<key>IDSPairedDevices</key>
+	<array>
+		<string>e1-e4-ab-19-4b-30</string>
+		<string>1c-01-80-e0-12-6f</string>
+	</array>
+	<key>RecentDevices</key>
+	<dict>
+		<key>00-01-a7-01-78-ae</key>
+		<date>2021-07-28T08:59:02Z</date>
+	</dict>
+	<key>RemoteWakeEnabled</key>
+	<false/>
+</dict>
+</plist>"""
+
+[commands."defaults -currentHost export com.apple.MIDI -"]
+stdout = """
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>MIDISetup</key>
+	<dict>
+		<key>devices</key>
+		<array>
+			<dict>
+				<key>driver</key>
+				<string>com.apple.AppleMIDIIACDriver</string>
+				<key>entities</key>
+				<array>
+					<dict>
+						<key>destinations</key>
+						<array>
+							<dict>
+								<key>uniqueID</key>
+								<integer>203251924</integer>
+							</dict>
+						</array>
+						<key>embedded</key>
+						<integer>1</integer>
+						<key>maxSysExSpeed</key>
+						<integer>3125</integer>
+						<key>name</key>
+						<string>Bus 1</string>
+						<key>sources</key>
+						<array>
+							<dict>
+								<key>uniqueID</key>
+								<integer>536348020</integer>
+							</dict>
+						</array>
+						<key>uniqueID</key>
+						<integer>-986255373</integer>
+					</dict>
+				</array>
+				<key>image</key>
+				<string>/System/Library/Extensions/AppleMIDIIACDriver.plugin/Contents/Resources/IACDriverIcon.tiff</string>
+				<key>manufacturer</key>
+				<string>Apple Inc.</string>
+				<key>model</key>
+				<string>IAC Driver</string>
+				<key>name</key>
+				<string>IAC Driver</string>
+				<key>offline</key>
+				<integer>1</integer>
+				<key>uniqueID</key>
+				<integer>567392281</integer>
+			</dict>
+			<dict>
+				<key>apple.midirtp.errors</key>
+				<data>
+				</data>
+				<key>driver</key>
+				<string>com.apple.AppleMIDIRTPDriver</string>
+				<key>entities</key>
+				<array/>
+				<key>image</key>
+				<string>/System/Library/Extensions/AppleMIDIRTPDriver.plugin/Contents/Resources/RTPDriverIcon.tiff</string>
+				<key>manufacturer</key>
+				<string></string>
+				<key>model</key>
+				<string></string>
+				<key>name</key>
+				<string>Network</string>
+				<key>offline</key>
+				<integer>0</integer>
+				<key>scheduleAheadMuSec</key>
+				<integer>50000</integer>
+				<key>uniqueID</key>
+				<integer>1341499295</integer>
+			</dict>
+		</array>
+	</dict>
+</dict>
+</plist>
+"""
+
+[commands."defaults domains"]
+stdout = """
+com.apple.iCal.helper, com.apple.iChat"""
+
+[commands."defaults export com.apple.iCal.helper -"]
+stdout = """
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CalSuccessfulLaunchTimestampPreferenceKey</key>
+	<real>365187040</real>
+</dict>
+</plist>"""
+
+[commands."defaults export com.apple.iChat -"]
+stdout = """
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AccountSortOrder</key>
+	<array>
+		<string>EFB16E7A-30AB-4418-A06A-1D9A7474A6FE</string>
+		<string>1590F35B-ACA2-4395-A66F-A1E7D0BB3A68</string>
+	</array>
+	<key>AccountsToLogInAtLaunch</key>
+	<array/>
+	<key>ApplicationRestorableStateStorageVersion</key>
+	<integer>3</integer>
+	<key>BuddyPictureSetToGenericByUser</key>
+	<false/>
+	<key>CachedVCCaps</key>
+	<integer>22093540229120</integer>
+	<key>CaptionDWA_CaptionBehavior</key>
+	<integer>0</integer>
+</dict>
+</plist>"""
