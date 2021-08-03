@@ -28,6 +28,14 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/winrm"
 )
 
+var transportDevelopmentStatus = map[transports.TransportBackend]string{transports.TransportBackend_CONNECTION_GITHUB: "experimental"}
+
+func warnIncompleteFeature(backend transports.TransportBackend) {
+	if transportDevelopmentStatus[backend] != "" {
+		log.Warn().Str("feature", backend.String()).Str("status", transportDevelopmentStatus[backend]).Msg("WARNING: you are using an early access feature")
+	}
+}
+
 func New(t *transports.TransportConfig, userIdDetectors ...string) (*motor.Motor, error) {
 	return ResolveTransport(t, userIdDetectors...)
 }
@@ -41,6 +49,8 @@ func ResolveTransport(tc *transports.TransportConfig, userIdDetectors ...string)
 	var identifier []string
 	var labels map[string]string
 	idDetectors := []string{}
+
+	warnIncompleteFeature(tc.Backend)
 
 	switch tc.Backend {
 	case transports.TransportBackend_CONNECTION_MOCK:
