@@ -7,6 +7,7 @@ package logger
 import (
 	"io"
 	"os"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -26,6 +27,16 @@ func SetWriter(w io.Writer) {
 
 // UseJSONLogging for global logger
 func UseJSONLogging(out io.Writer) {
+	log.Logger = zerolog.New(out).With().Timestamp().Logger()
+}
+
+// UseGCPJSONLogging for global logger. This is a JSON logger
+// with field names GCP will recognize
+func UseGCPJSONLogging(out io.Writer) {
+	zerolog.LevelFieldName = "severity"
+	zerolog.TimestampFieldName = "timestamp"
+	zerolog.TimeFieldFormat = time.RFC3339Nano
+
 	log.Logger = zerolog.New(out).With().Timestamp().Logger()
 }
 
