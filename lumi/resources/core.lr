@@ -74,6 +74,17 @@ parse.json {
   params(content) dict
 }
 
+// Parse Plist files
+parse.plist {
+  init(path string)
+  // File that is being parsed
+  file() file
+  // Raw content of the file that is parsed
+  content(file) string
+  // The parsed parameters that are defined in this file
+  params(content) dict
+}
+
 // Common platform information (OS, API, Service)
 platform {
   // Name of the platform
