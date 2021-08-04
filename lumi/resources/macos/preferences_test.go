@@ -12,7 +12,7 @@ import (
 func TestPreferences(t *testing.T) {
 	mock, err := mock.NewFromToml(&transports.TransportConfig{
 		Backend: transports.TransportBackend_CONNECTION_MOCK,
-		Path:    "./testdata/osx.toml",
+		Path:    "./testdata/user_preferences.toml",
 	})
 	require.NoError(t, err)
 

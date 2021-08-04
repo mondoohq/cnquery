@@ -3869,3 +3869,48 @@ macos.alf {
   // Applications with exceptions for network blocking
   applications []dict
 }
+
+// macOS machine settings
+// The resource requires at least "admin" privileges to run
+macos.systemsetup {
+  // Current date
+  date() string
+  // Current time in 24-hour format
+  time() string
+  // Current time zone
+  timeZone() string
+  // Whether network time is on or off
+  usingNetworkTime() string
+  // Configured network time server
+  networkTimeServer() string
+  // Amount of idle time until machine sleeps
+  sleep() []string
+  // Amount of idle time until display sleeps
+  displaySleep() string
+  // Amount of idle time until hard disk sleeps
+  harddiskSleep() string
+  // Whether wake on modem is on or off
+  wakeOnModem() string
+  // Whether wake on network access is on or off
+  wakeOnNetworkAccess() string
+  // Whether restart on power failure is on or off
+  restartPowerFailure() string
+  // Whether restart on freeze is on or off
+  restartFreeze() string
+  // Whether the power button can sleep the computer
+  allowPowerButtonToSleepComputer() string
+  // Whether remote login (SSH) is on or off
+  remoteLogin() string
+  // Whether remote apple events are on or off
+  remoteAppleEvents() string
+  // Computer name
+  computerName() string
+  // Local subnet name
+  localSubnetName() string
+  // Current startup disk
+  startupDisk() string
+  // Number of seconds after which the computer will start up after a power failure
+  waitForStartupAfterPowerFailure() string
+  // Whether or not the keyboard should be disabled when the X Serve enclosure lock is engaged
+  disableKeyboardWhenEnclosureLockIsEngaged() string
+}
