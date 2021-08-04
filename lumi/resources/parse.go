@@ -5,9 +5,9 @@
 package resources
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"strings"
 
 	"go.mondoo.io/mondoo/lumi"
@@ -212,17 +212,26 @@ func (s *lumiParsePlist) GetFile() (File, error) {
 }
 
 func (s *lumiParsePlist) GetContent(file File) (string, error) {
-	// we cannot load the file directly since we do not know the plist format
-	cmd, err := s.Runtime.Motor.Transport.RunCommand("plutil -convert xml1 /Library/Preferences/com.apple.SoftwareUpdate.plist -o -")
-	if err != nil {
-		return "", err
-	}
-	content, err := ioutil.ReadAll(cmd.Stdout)
+	path, _ := file.Path()
+
+	// NOTE: normalize the file format to text, so that the content is always readable
+	f, err := s.Runtime.Motor.Transport.FS().Open(path)
 	if err != nil {
 		return "", err
 	}
 
-	return string(content), nil
+	// convert file format to xml
+	var val interface{}
+	dec := plist.NewDecoder(f)
+	err = dec.Decode(&val)
+	if err != nil {
+		return "", err
+	}
+
+	out := &bytes.Buffer{}
+	enc := plist.NewEncoderForFormat(out, plist.XMLFormat)
+	err = enc.Encode(val)
+	return out.String(), err
 }
 
 func (s *lumiParsePlist) GetParams(content string) (map[string]interface{}, error) {
