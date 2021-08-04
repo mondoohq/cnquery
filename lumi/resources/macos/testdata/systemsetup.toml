@@ -1,0 +1,67 @@
+[commands."systemsetup -getdate"]
+stdout = "8/4/2021"
+
+[commands."systemsetup -gettime"]
+stdout = "Time: 20:22:54"
+
+[commands."systemsetup -gettimezone"]
+stdout = "Time Zone: Europe/Berlin"
+
+[commands."systemsetup -getusingnetworktime"]
+stdout = "Network Time: On"
+
+[commands."systemsetup -getnetworktimeserver"]
+stdout = "Network Time Server: time.euro.apple.com"
+
+[commands."systemsetup -getsleep"]
+stdout = """
+Sleep: Computer sleeps after 1 minutes
+Sleep: Display sleeps after 10 minutes
+Sleep: Disk sleeps after 10 minutes"""
+
+[commands."systemsetup -getdisplaysleep"]
+stdout = "Display Sleep: after 10 minutes"
+
+[commands."systemsetup -getharddisksleep"]
+stdout = "Hard Disk Sleep: after 10 minutes"
+
+[commands."systemsetup -getwakeonmodem"]
+stdout = "Wake On Modem: Not supported on this machine."
+
+[commands."systemsetup -getwakeonnetworkaccess"]
+stdout = "Wake On Network Access: On"
+
+[commands."systemsetup -getrestartpowerfailure"]
+stdout = "Restart After Power Failure: Not supported on this machine."
+
+[commands."systemsetup -getrestartfreeze"]
+stdout = "Restart After Freeze: On"
+
+[commands."systemsetup -getallowpowerbuttontosleepcomputer"]
+stdout = "getAllowPowerButtonToSleepComputer: On"
+
+[commands."systemsetup -getremotelogin"]
+stdout = "Remote Login: Off"
+
+[commands."systemsetup -getremoteappleevents"]
+stdout = "Remote Apple Events: Off"
+
+[commands."systemsetup -getcomputername"]
+stdout = "Computer Name: spacerocket"
+
+[commands."systemsetup -getlocalsubnetname"]
+stdout = "Local Subnet Name: spacerocket"
+
+[commands."systemsetup -getstartupdisk"]
+stdout = "(null)"
+
+[commands."systemsetup -getwaitforstartupafterpowerfailure"]
+stdout = "getwaitforstartupafterpowerfailure: 0 seconds"
+
+[commands."systemsetup -getdisablekeyboardwhenenclosurelockisengaged"]
+stdout = "getdisablekeyboardwhenenclosurelockisengaged: No"
+
+
+
+
+
