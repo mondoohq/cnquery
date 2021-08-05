@@ -255,3 +255,43 @@ func PrettyPrintString(s string) string {
 	res = strings.ReplaceAll(res, "\\t", "\t")
 	return res
 }
+
+// Estimation based on https://golang.org/src/runtime/slice.go
+const arrayOverhead = 2 * 4
+
+// Estimation based on https://golang.org/src/runtime/slice.go
+const mapOverhead = 4 + 1 + 1 + 2 + 4
+
+// Size returns the approximate size of the primitive in bytes
+func (p *Primitive) Size() int {
+	typ := types.Type(p.Type)
+
+	if typ.IsEmpty() {
+		return 0
+	}
+
+	if typ.IsArray() {
+		var res int
+		for i := range p.Array {
+			res += p.Array[i].Size()
+		}
+
+		return res + arrayOverhead
+	}
+
+	if typ.IsMap() {
+		// We are under-estimating the real size of maps in memory, because buckets
+		// actually use more room than the calculation below suggests. However,
+		// for the sake of appoximation, it serves well enough.
+
+		var res int
+		for k, v := range p.Map {
+			res += len(k)
+			res += v.Size()
+		}
+
+		return res + mapOverhead
+	}
+
+	return len(p.Value)
+}
