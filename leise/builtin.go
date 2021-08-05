@@ -15,15 +15,17 @@ type compileHandler struct {
 	compile   func(*compiler, types.Type, int32, string, *parser.Call) (types.Type, error)
 }
 
-var childType = func(t types.Type) types.Type { return t.Child() }
-var arrayBlockType = func(t types.Type) types.Type { return types.Array(types.Map(types.Int, types.Block)) }
-var boolType = func(t types.Type) types.Type { return types.Bool }
-var intType = func(t types.Type) types.Type { return types.Int }
-var stringType = func(t types.Type) types.Type { return types.String }
-var stringArrayType = func(t types.Type) types.Type { return types.Array(types.String) }
-var dictType = func(t types.Type) types.Type { return types.Dict }
-var blockType = func(t types.Type) types.Type { return types.Block }
-var dictArrayType = func(t types.Type) types.Type { return types.Array(types.Dict) }
+var (
+	childType       = func(t types.Type) types.Type { return t.Child() }
+	arrayBlockType  = func(t types.Type) types.Type { return types.Array(types.Map(types.Int, types.Block)) }
+	boolType        = func(t types.Type) types.Type { return types.Bool }
+	intType         = func(t types.Type) types.Type { return types.Int }
+	stringType      = func(t types.Type) types.Type { return types.String }
+	stringArrayType = func(t types.Type) types.Type { return types.Array(types.String) }
+	dictType        = func(t types.Type) types.Type { return types.Dict }
+	blockType       = func(t types.Type) types.Type { return types.Block }
+	dictArrayType   = func(t types.Type) types.Type { return types.Array(types.Dict) }
+)
 
 var builtinFunctions map[types.Type]map[string]compileHandler
 
@@ -34,6 +36,7 @@ func init() {
 			"find":     {typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Regex}}},
 			"length":   {typ: intType, signature: FunctionSignature{}},
 			"downcase": {typ: stringType, signature: FunctionSignature{}},
+			"upcase":   {typ: stringType, signature: FunctionSignature{}},
 			"lines":    {typ: stringArrayType, signature: FunctionSignature{}},
 			"split":    {typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
 			"trim":     {typ: stringType, signature: FunctionSignature{Required: 0, Args: []types.Type{types.String}}},
@@ -53,6 +56,7 @@ func init() {
 			"find":     {typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Regex}}},
 			"length":   {typ: intType, signature: FunctionSignature{}},
 			"downcase": {typ: stringType, signature: FunctionSignature{}},
+			"upcase":   {typ: stringType, signature: FunctionSignature{}},
 			"lines":    {typ: stringArrayType, signature: FunctionSignature{}},
 			"split":    {typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
 			"trim":     {typ: stringType, signature: FunctionSignature{Required: 0, Args: []types.Type{types.String}}},
