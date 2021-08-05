@@ -26,3 +26,13 @@ func TestParse_Date(t *testing.T) {
 		},
 	})
 }
+
+func TestParsePlist(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"parse.plist('/dummy.plist').params['allowdownloadsignedenabled']",
+			// validates that the output is not uint64
+			0, float64(1),
+		},
+	})
+}

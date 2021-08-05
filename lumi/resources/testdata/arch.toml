@@ -497,3 +497,61 @@ content="""
   "date": "2016-01-28T23:02:24Z"
 }
 """
+
+[files."/dummy.plist"]
+content="""
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>allowdownloadsignedenabled</key>
+	<integer>1</integer>
+	<key>allowsignedenabled</key>
+	<integer>1</integer>
+	<key>applications</key>
+	<array/>
+	<key>exceptions</key>
+	<array>
+		<dict>
+			<key>path</key>
+			<string>/usr/libexec/configd</string>
+			<key>state</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>bundleid</key>
+			<string>com.apple.EmbeddedOSInstallService</string>
+			<key>path</key>
+			<string>/System/Library/PrivateFrameworks/EmbeddedOSInstall.framework/Versions/A/XPCServices/EmbeddedOSInstallService.xpc/</string>
+			<key>state</key>
+			<integer>3</integer>
+		</dict>
+	</array>
+	<key>explicitauths</key>
+	<array>
+		<dict>
+			<key>id</key>
+			<string>org.python.python.app</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<string>com.apple.ksh</string>
+		</dict>
+	</array>
+	<key>firewall</key>
+	<dict>
+		<key>Apple Remote Desktop</key>
+		<dict>
+			<key>proc</key>
+			<string>AppleVNCServer</string>
+			<key>state</key>
+			<integer>0</integer>
+		</dict>
+	</dict>
+	<key>loggingenabled</key>
+	<integer>1</integer>
+	<key>version</key>
+	<string>1.6</string>
+</dict>
+</plist>
+"""
