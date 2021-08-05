@@ -28,5 +28,5 @@ func TestMacOSMachineId(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, "5c09e2c707f25beebe827cb70688e55c", id, "machine id is properly detected")
+	assert.Equal(t, "5c09e2c7-07f2-5bee-be82-7cb70688e55c", id, "machine id is properly detected")
 }
