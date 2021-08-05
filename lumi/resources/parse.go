@@ -219,6 +219,7 @@ func (s *lumiParsePlist) GetContent(file File) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer f.Close()
 
 	// convert file format to xml
 	var val interface{}
@@ -241,5 +242,21 @@ func (s *lumiParsePlist) GetParams(content string) (map[string]interface{}, erro
 	if err != nil {
 		return nil, err
 	}
-	return data, nil
+
+	// NOTE: we need to do the extra conversion here to make sure we use supported
+	// values by our dict structure: string, float64, int64
+	// plist also uses uint64 heavily which we do not support
+	// TODO: we really do not want to use the poor-man's json conversion version
+	jsondata, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+
+	var dataJson map[string]interface{}
+	err = json.Unmarshal(jsondata, &dataJson)
+	if err != nil {
+		return nil, err
+	}
+
+	return dataJson, nil
 }
