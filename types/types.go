@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"strings"
+	"time"
 )
 
 // Type information
@@ -248,3 +249,37 @@ func (typ Type) Label() string {
 	}
 	return h(typ[1:])
 }
+
+var (
+	// Equal provides a set of function for a range of types to test if 2 values
+	// of that type are equal
+	Equal = map[Type]func(interface{}, interface{}) bool{
+		Bool: func(left, right interface{}) bool {
+			return left.(bool) == right.(bool)
+		},
+		Int: func(left, right interface{}) bool {
+			return left.(int64) == right.(int64)
+		},
+		Float: func(left, right interface{}) bool {
+			return left.(float64) == right.(float64)
+		},
+		String: func(left, right interface{}) bool {
+			return left.(string) == right.(string)
+		},
+		Regex: func(left, right interface{}) bool {
+			return left.(string) == right.(string)
+		},
+		Time: func(left, right interface{}) bool {
+			l := left.(*time.Time)
+			r := right.(*time.Time)
+			if l == nil || r == nil {
+				return false
+			}
+			return l.Equal(*r)
+		},
+		// types.Dict: func(left, right interface{}) bool {},
+		Score: func(left, right interface{}) bool {
+			return left.(int32) == right.(int32)
+		},
+	}
+)

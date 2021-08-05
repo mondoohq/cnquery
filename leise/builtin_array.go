@@ -82,6 +82,50 @@ func compileWhere(c *compiler, typ types.Type, ref int32, id string, call *parse
 	return typ, nil
 }
 
+func compileArrayDuplicates(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
+	if call != nil && len(call.Function) > 0 {
+		return types.Nil, errors.New("too many arguments when calling '" + id + "'")
+	}
+
+	ct := typ.Child()
+	_, ok := types.Equal[ct]
+	if !ok {
+		return typ, errors.New("cannot extract duplicates from array, don't know how to compare entries")
+	}
+
+	c.Result.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   id,
+		Function: &llx.Function{
+			Type:    string(typ),
+			Binding: ref,
+		},
+	})
+	return typ, nil
+}
+
+func compileArrayUnique(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
+	if call != nil && len(call.Function) > 0 {
+		return types.Nil, errors.New("too many arguments when calling '" + id + "'")
+	}
+
+	ct := typ.Child()
+	_, ok := types.Equal[ct]
+	if !ok {
+		return typ, errors.New("cannot extract uniques from array, don't know how to compare entries")
+	}
+
+	c.Result.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   id,
+		Function: &llx.Function{
+			Type:    string(typ),
+			Binding: ref,
+		},
+	})
+	return typ, nil
+}
+
 func compileArrayContains(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
 	_, err := compileWhere(c, typ, ref, "where", call)
 	if err != nil {
