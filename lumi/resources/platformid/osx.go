@@ -39,7 +39,5 @@ func (p *MacOSIdProvider) ID() (string, error) {
 		return "", errors.New("could not detect the machine id")
 	}
 
-	id := strings.Replace(m[1], "-", "", -1)
-
-	return strings.TrimSpace(strings.ToLower(id)), nil
+	return strings.TrimSpace(strings.ToLower(m[1])), nil
 }
