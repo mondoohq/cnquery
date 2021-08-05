@@ -2006,6 +2006,15 @@ func stringDowncase(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 	return StringData(res), 0, nil
 }
 
+func stringUpcase(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type}, 0, nil
+	}
+
+	res := strings.ToUpper(bind.Value.(string))
+	return StringData(res), 0, nil
+}
+
 func stringLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
 		return &RawData{Type: types.Int}, 0, nil

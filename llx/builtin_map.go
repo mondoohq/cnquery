@@ -195,6 +195,15 @@ func dictDowncase(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 	return stringDowncase(c, bind, chunk, ref)
 }
 
+func dictUpcase(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	_, ok := bind.Value.(string)
+	if !ok {
+		return nil, 0, errors.New("dict value does not support field `upcase`")
+	}
+
+	return stringUpcase(c, bind, chunk, ref)
+}
+
 func dictLines(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	_, ok := bind.Value.(string)
 	if !ok {
@@ -1462,7 +1471,6 @@ func dictPlusString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 				Error: errors.New("dict value does not support `+` operation with string"),
 			}
 		}
-
 	})
 }
 
@@ -1480,7 +1488,6 @@ func stringPlusDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 				Error: errors.New("dict value does not support `+` operation with string"),
 			}
 		}
-
 	})
 }
 

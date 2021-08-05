@@ -303,6 +303,7 @@ func init() {
 			string("contains" + types.Array(types.String)): {f: stringContainsArrayString, Label: "contains"},
 			string("find"):     {f: stringFind, Label: "find"},
 			string("downcase"): {f: stringDowncase, Label: "downcase"},
+			string("upcase"):   {f: stringUpcase, Label: "upcase"},
 			string("length"):   {f: stringLength, Label: "length"},
 			string("lines"):    {f: stringLines, Label: "lines"},
 			string("split"):    {f: stringSplit, Label: "split"},
@@ -465,6 +466,7 @@ func init() {
 			"length":                          {f: dictLength},
 			"{}":                              {f: dictBlockCall},
 			"downcase":                        {f: dictDowncase, Label: "downcase"},
+			"upcase":                          {f: dictUpcase, Label: "upcase"},
 			"lines":                           {f: dictLines, Label: "lines"},
 			"split":                           {f: dictSplit, Label: "split"},
 			"trim":                            {f: dictTrim, Label: "trim"},
@@ -672,7 +674,6 @@ func runResourceFunction(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int3
 
 		c.triggerChain(ref)
 	})
-
 	if err != nil {
 		if _, ok := err.(lumi.NotReadyError); !ok {
 			// TODO: Deduplicate storage between cache and resource storage
