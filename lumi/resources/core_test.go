@@ -817,6 +817,14 @@ func TestArray(t *testing.T) {
 			"[0].where(_ > 0).where(_ > 0)",
 			0, []interface{}{},
 		},
+		{
+			"[1,2,2,2,3].unique()",
+			0, []interface{}{int64(1), int64(2), int64(3)},
+		},
+		{
+			"[1,1,2,2,2,3].duplicates()",
+			0, []interface{}{int64(1), int64(2)},
+		},
 	})
 }
 

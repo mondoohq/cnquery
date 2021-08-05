@@ -119,6 +119,18 @@ func arrayBlockList(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 	return nil, 0, nil
 }
 
+func arrayLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Int, Error: bind.Error}, 0, nil
+	}
+
+	arr, ok := bind.Value.([]interface{})
+	if !ok {
+		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into array")
+	}
+	return IntData(int64(len(arr))), 0, nil
+}
+
 func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	// where(array, function)
 	itemsRef := chunk.Function.Args[0]
@@ -200,16 +212,81 @@ func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 	return nil, 0, nil
 }
 
-func arrayLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	if bind.Value == nil {
-		return &RawData{Type: types.Int}, 0, nil
+// Take an array and separate it into a list of unique entries and another
+// list of only duplicates. The latter list only has every entry appear only
+// once.
+func detectDupes(array interface{}, typ types.Type) ([]interface{}, []interface{}, error) {
+	arr, ok := array.([]interface{})
+	if !ok {
+		return nil, nil, errors.New("failed to typecast " + typ.Label() + " into array")
 	}
 
-	arr, ok := bind.Value.([]interface{})
+	ct := typ.Child()
+	equalFunc, ok := types.Equal[ct]
 	if !ok {
-		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into array")
+		return nil, nil, errors.New("cannot extract duplicates from array, don't know how to compare entries")
 	}
-	return IntData(int64(len(arr))), 0, nil
+
+	existing := []interface{}{}
+	duplicates := []interface{}{}
+	var found bool
+	for i := 0; i < len(arr); i++ {
+		left := arr[i]
+
+		for j := range existing {
+			if equalFunc(left, existing[j]) {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			existing = append(existing, left)
+			continue
+		}
+
+		found = false
+		for j := range duplicates {
+			if equalFunc(left, duplicates[j]) {
+				found = true
+				break
+			}
+		}
+
+		if found {
+			found = false
+		} else {
+			duplicates = append(duplicates, left)
+		}
+	}
+
+	return existing, duplicates, nil
+}
+
+func arrayDuplicates(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type, Error: bind.Error}, 0, nil
+	}
+
+	_, dupes, err := detectDupes(bind.Value, bind.Type)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return &RawData{Type: bind.Type, Value: dupes}, 0, nil
+}
+
+func arrayUnique(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type, Error: bind.Error}, 0, nil
+	}
+
+	unique, _, err := detectDupes(bind.Value, bind.Type)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return &RawData{Type: bind.Type, Value: unique}, 0, nil
 }
 
 func compileArrayOpArray(op string) func(types.Type, types.Type) (string, error) {
