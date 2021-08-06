@@ -110,7 +110,7 @@ func refMapJSON(typ types.Type, data map[string]interface{}, codeID string, bund
 	return nil
 }
 
-func rawDictJSON(typ types.Type, raw interface{}, codeID string, bundle *CodeBundle, buf *bytes.Buffer) error {
+func rawDictJSON(typ types.Type, raw interface{}, buf *bytes.Buffer) error {
 	switch data := raw.(type) {
 	case bool:
 		if data {
@@ -142,7 +142,7 @@ func rawDictJSON(typ types.Type, raw interface{}, codeID string, bundle *CodeBun
 
 		last := len(data) - 1
 		for i := range data {
-			err := rawDictJSON(typ, data[i], "", bundle, buf)
+			err := rawDictJSON(typ, data[i], buf)
 			if err != nil {
 				return err
 			}
@@ -168,7 +168,7 @@ func rawDictJSON(typ types.Type, raw interface{}, codeID string, bundle *CodeBun
 			if v == nil {
 				buf.WriteString("null")
 			} else {
-				err := rawDictJSON(typ, v, "", bundle, buf)
+				err := rawDictJSON(typ, v, buf)
 				if err != nil {
 					return err
 				}
@@ -350,7 +350,7 @@ func rawDataJSON(typ types.Type, data interface{}, codeID string, bundle *CodeBu
 		return err
 
 	case types.Dict:
-		return rawDictJSON(typ, data, codeID, bundle, buf)
+		return rawDictJSON(typ, data, buf)
 
 	case types.Score:
 		buf.WriteString(ScoreString(data.([]byte)))

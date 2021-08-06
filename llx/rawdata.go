@@ -270,6 +270,14 @@ func isTruthy(data interface{}, typ types.Type) (bool, bool) {
 // UnsetData for the unset value
 var UnsetData = &RawData{Type: types.Unset}
 
+// AnyData returns any value embedded in a RawData
+func AnyData(v interface{}) *RawData {
+	return &RawData{
+		Type:  types.Any,
+		Value: v,
+	}
+}
+
 // NilData for the nil value
 var NilData = &RawData{Type: types.Nil}
 
