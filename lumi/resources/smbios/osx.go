@@ -69,13 +69,17 @@ func (s *OSXSmbiosManager) Info() (*SmBiosInfo, error) {
 		return nil, err
 	}
 
-	bios, err := ParseMacosBios(cmd.Stdout)
-	if err != nil {
-		return nil, err
+	// TODO: this does not work on m1 macs yet, we need to find a way to gather that information
+	pf, err := s.motor.Platform()
+	if err == nil && pf.Arch == "x86_64" {
+		bios, err := ParseMacosBios(cmd.Stdout)
+		if err != nil {
+			return nil, err
+		}
+		smInfo.BIOS.ReleaseDate = plistData(bios.ReleaseDate)
+		smInfo.BIOS.Vendor = plistData(bios.Vendor)
+		smInfo.BIOS.Version = plistData(bios.Version)
 	}
-	smInfo.BIOS.ReleaseDate = plistData(bios.ReleaseDate)
-	smInfo.BIOS.Vendor = plistData(bios.Vendor)
-	smInfo.BIOS.Version = plistData(bios.Version)
 
 	return &smInfo, nil
 }
@@ -100,13 +104,13 @@ func ParseMacosIOPlatformExpertDevice(input io.Reader) (*IOPlatformExpertDevice,
 	var r io.ReadSeeker
 	r, ok := input.(io.ReadSeeker)
 
-	// if the read seaker is not implemented lets cache stdout in-memory
+	// if the read seeker is not implemented lets cache stdout in-memory
 	if !ok {
-		packageList, err := ioutil.ReadAll(input)
+		entries, err := ioutil.ReadAll(input)
 		if err != nil {
 			return nil, err
 		}
-		r = strings.NewReader(string(packageList))
+		r = strings.NewReader(string(entries))
 	}
 
 	var data []IOPlatformExpertDevice
@@ -129,13 +133,13 @@ func ParseMacosBios(input io.Reader) (*IODeviceTree, error) {
 	var r io.ReadSeeker
 	r, ok := input.(io.ReadSeeker)
 
-	// if the read seaker is not implemented lets cache stdout in-memory
+	// if the read seeker is not implemented lets cache stdout in-memory
 	if !ok {
-		packageList, err := ioutil.ReadAll(input)
+		entries, err := ioutil.ReadAll(input)
 		if err != nil {
 			return nil, err
 		}
-		r = strings.NewReader(string(packageList))
+		r = strings.NewReader(string(entries))
 	}
 
 	var data []IODeviceTree
