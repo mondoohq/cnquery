@@ -5,14 +5,13 @@
 package resources
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"strings"
 
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/parsers"
-	"howett.net/plist"
+	"go.mondoo.io/mondoo/lumi/resources/plist"
 )
 
 func (s *lumiParse) id() (string, error) {
@@ -221,42 +220,10 @@ func (s *lumiParsePlist) GetContent(file File) (string, error) {
 	}
 	defer f.Close()
 
-	// convert file format to xml
-	var val interface{}
-	dec := plist.NewDecoder(f)
-	err = dec.Decode(&val)
-	if err != nil {
-		return "", err
-	}
-
-	out := &bytes.Buffer{}
-	enc := plist.NewEncoderForFormat(out, plist.XMLFormat)
-	err = enc.Encode(val)
-	return out.String(), err
+	data, err := plist.ToXml(f)
+	return string(data), err
 }
 
 func (s *lumiParsePlist) GetParams(content string) (map[string]interface{}, error) {
-	var data map[string]interface{}
-	decoder := plist.NewDecoder(strings.NewReader(content))
-	err := decoder.Decode(&data)
-	if err != nil {
-		return nil, err
-	}
-
-	// NOTE: we need to do the extra conversion here to make sure we use supported
-	// values by our dict structure: string, float64, int64
-	// plist also uses uint64 heavily which we do not support
-	// TODO: we really do not want to use the poor-man's json conversion version
-	jsondata, err := json.Marshal(data)
-	if err != nil {
-		return nil, err
-	}
-
-	var dataJson map[string]interface{}
-	err = json.Unmarshal(jsondata, &dataJson)
-	if err != nil {
-		return nil, err
-	}
-
-	return dataJson, nil
+	return plist.Decode(strings.NewReader(content))
 }
