@@ -58,7 +58,7 @@ func dictRawDataString(value interface{}) string {
 		res.WriteString("}")
 		return res.String()
 	default:
-		return "?value?"
+		return "?value? (type:dict)"
 	}
 }
 
@@ -122,7 +122,7 @@ func rawDataString(typ types.Type, value interface{}) string {
 			return "map[?]?"
 		}
 	default:
-		return "?value?"
+		return "?value? (typ:" + typ.Label() + ")"
 	}
 }
 
