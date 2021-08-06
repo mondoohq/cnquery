@@ -82,12 +82,14 @@ func refMapJSON(typ types.Type, data map[string]interface{}, codeID string, bund
 	keys := stringKeys(data)
 	sort.Strings(keys)
 
+	for i := range keys {
+		if keys[i] == "_" {
+			keys = append(keys[0:i], keys[i+1:]...)
+		}
+	}
+
 	last := len(keys) - 1
 	for i, k := range keys {
-		if k == "_" {
-			continue
-		}
-
 		v := data[k]
 		label := label(k, bundle, true)
 		buf.WriteString("\"" + label + "\":")
