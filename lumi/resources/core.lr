@@ -3843,3 +3843,29 @@ macos {
 	// macOS user defaults for current host
 	userHostPreferences() map[string]dict
 }
+
+// macOS application layer firewall (ALF) service
+macos.alf {
+  // Allow downloaded software to receive incoming connections
+  allowDownloadSignedEnabled int
+  // Allow built-in software to receive incoming connections for signed software
+  allowSignedEnabled int
+  // Flag if firewall is unloaded
+  firewallUnload int
+  // Indicates if the firewall is enabled
+  globalState int
+  // Specifies if alf.log is used
+  loggingEnabled int
+  // Specifies logging flags
+  loggingOption int
+  // Stealth mode
+  stealthEnabled int
+  // ALF version
+  version string
+  // Service exceptions
+  expections []dict
+  // Services explicitly allowed to perform networking
+  explicitAuths []string
+  // Applications with exceptions for network blocking
+  applications []dict
+}
