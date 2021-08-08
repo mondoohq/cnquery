@@ -12,6 +12,7 @@ import (
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/vault"
 	"go.mondoo.io/mondoo/motor/vault/inmemory"
+	"go.mondoo.io/mondoo/motor/vault/multivault"
 )
 
 type InventoryManager interface {
@@ -68,13 +69,20 @@ func New(opts ...Option) (*inventoryManager, error) {
 			return nil, err
 		}
 	}
+	im.resetVault()
 
 	return im, nil
 }
 
 type inventoryManager struct {
-	assetList             []*asset.Asset
-	vault                 vault.Vault
+	assetList []*asset.Asset
+	// optional vault set by user
+	vault vault.Vault
+	// internal vault used to store embedded credentials
+	inmemoryVault vault.Vault
+	// wrapper vault to access the credentials
+	accessVault vault.Vault
+
 	credentialQueryRunner *credentialquery.CredentialQueryRunner
 }
 
@@ -101,8 +109,8 @@ func (im *inventoryManager) loadInventory(inventory *v1.Inventory) error {
 		secrets[secret.Key] = secret
 	}
 
-	// TODO: use multi-vault to warp the provided vault and all inline-configured credentials
-	im.vault = inmemory.New(inmemory.WithSecretMap(secrets))
+	im.inmemoryVault = inmemory.New(inmemory.WithSecretMap(secrets))
+	im.resetVault()
 
 	if inventory.Spec.CredentialQuery != "" {
 		qr, err := credentialquery.NewCredentialQueryRunner(inventory.Spec.CredentialQuery)
@@ -122,7 +130,12 @@ func (im *inventoryManager) GetAssets() []*asset.Asset {
 
 // GetCredential retrieves the credential from vault via the secret id
 func (im *inventoryManager) GetCredential(secretId string) (*transports.Credential, error) {
-	secret, err := im.vault.Get(context.Background(), &vault.SecretID{
+	v := im.GetVault()
+	if v == nil {
+		return nil, vault.NotFoundError
+	}
+
+	secret, err := v.Get(context.Background(), &vault.SecretID{
 		Key: secretId,
 	})
 	if err != nil {
@@ -155,6 +168,18 @@ func (im *inventoryManager) Resolve() map[*asset.Asset]error {
 	return resolvedAssets.Errors
 }
 
+func (im *inventoryManager) resetVault() {
+	if im.vault != nil && im.inmemoryVault != nil {
+		im.accessVault = multivault.New(im.vault, im.inmemoryVault)
+	} else if im.vault != nil {
+		im.accessVault = im.vault
+	} else if im.inmemoryVault != nil {
+		im.accessVault = im.inmemoryVault
+	} else {
+		im.accessVault = nil
+	}
+}
+
 func (im *inventoryManager) GetVault() vault.Vault {
-	return im.vault
+	return im.accessVault
 }

@@ -3,6 +3,7 @@ package inventory
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/inventory/v1"
@@ -26,7 +27,7 @@ func TestInventoryLoader(t *testing.T) {
 			for k := range conn.Credentials {
 				cred := conn.Credentials[k]
 				_, err := im.GetCredential(cred.SecretId)
-				require.NoError(t, err)
+				assert.NoError(t, err, cred.SecretId)
 			}
 		}
 	}
