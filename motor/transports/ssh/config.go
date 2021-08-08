@@ -3,6 +3,7 @@ package ssh
 import (
 	"errors"
 	"os"
+	"os/user"
 	"path/filepath"
 	"strings"
 
@@ -99,6 +100,14 @@ func DefaultConfig(endpoint *transports.TransportConfig) *transports.TransportCo
 	// use default port if port is 0
 	if err == nil && p <= 0 {
 		endpoint.Port = "22"
+	}
+
+	if endpoint.User == "" {
+		usr, err := user.Current()
+		if err != nil {
+			log.Warn().Err(err).Msg("could not fallback do current user")
+		}
+		endpoint.User = usr.Username
 	}
 
 	// ssh config overwrite like: IdentityFile ~/.foo/identity is done in ReadSSHConfig()
