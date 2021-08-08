@@ -2,6 +2,7 @@ package ssh
 
 import (
 	"os"
+	"os/user"
 	"path/filepath"
 
 	"github.com/rs/zerolog/log"
@@ -17,6 +18,15 @@ import (
 func ApplyDefaults(cc *transports.TransportConfig, username string, identityFile string, password string) error {
 	// set default port for ssh
 	ApplyDefaultPort(cc)
+
+	// fallback to current user if no username was provided
+	if username == "" {
+		usr, err := user.Current()
+		if err != nil {
+			log.Warn().Err(err).Msg("could not fallback do current user")
+		}
+		username = usr.Username
+	}
 
 	// handle credentials cases:
 	// if identity file is provided but no password -> private key
