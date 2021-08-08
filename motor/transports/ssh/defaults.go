@@ -39,7 +39,7 @@ func ApplyDefaults(cc *transports.TransportConfig, username string, identityFile
 	return nil
 }
 
-// ApplyDefaultConfig set defaults like the ssh port 22 to the transport configuration
+// ApplyDefaultPort set defaults like the ssh port 22 to the transport configuration
 // to cover cases where users have not set those values explicitly
 func ApplyDefaultPort(cc *transports.TransportConfig) *transports.TransportConfig {
 	p, err := cc.IntPort()
