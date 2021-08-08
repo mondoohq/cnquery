@@ -103,8 +103,7 @@ func (s *TransportBackend) UnmarshalJSON(data []byte) error {
 	err := json.Unmarshal(data, &code)
 	if err == nil {
 		*s = TransportBackend(code)
-	}
-	if err != nil {
+	} else {
 		var name string
 		err = json.Unmarshal(data, &name)
 		code, ok := TransportBackend_schemevalue[strings.TrimSpace(name)]

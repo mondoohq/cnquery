@@ -119,7 +119,7 @@ func (im *inventoryManager) GetAssets() []*asset.Asset {
 	return im.assetList
 }
 
-// GetCredential retrieves teh credential from vault via the secret id
+// GetCredential retrieves the credential from vault via the secret id
 func (im *inventoryManager) GetCredential(secretId string) (*transports.Credential, error) {
 	secret, err := im.vault.Get(context.Background(), &vault.SecretID{
 		Key: secretId,
