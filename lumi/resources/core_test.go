@@ -212,8 +212,8 @@ func runSimpleErrorTests(t *testing.T, tests []simpleTest) {
 		t.Run(cur.code, func(t *testing.T) {
 			res := testQuery(t, cur.code)
 			assert.NotEmpty(t, res)
-			assert.Equal(t, cur.expectation, res[0].Result().Error)
-			assert.Nil(t, res[0].Data.Value)
+			assert.Equal(t, cur.expectation, res[cur.resultIndex].Result().Error)
+			assert.Nil(t, res[cur.resultIndex].Data.Value)
 		})
 	}
 }
@@ -1032,6 +1032,10 @@ func TestDict_Methods(t *testing.T) {
 		{
 			p + "params['does not exist'].values",
 			0, "Failed to get values of `null`",
+		},
+		{
+			p + "params['yo'] > 3",
+			2, "left side of operation is null",
 		},
 	})
 }
