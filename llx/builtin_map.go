@@ -809,282 +809,550 @@ func dictNotDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 
 // dict </>/<=/>= int
 
-func opDictLTInt(left interface{}, right interface{}) bool {
+func opDictLTInt(left interface{}, right interface{}) *RawData {
 	switch x := left.(type) {
 	case int64:
-		return x < right.(int64)
+		return BoolData(x < right.(int64))
 	case float64:
-		return x < float64(right.(int64))
+		return BoolData(x < float64(right.(int64)))
 	case string:
 		f, err := strconv.ParseInt(x, 10, 64)
-		return err == nil && f < right.(int64)
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + x + " as number"), Type: types.Bool}
+		}
+		return BoolData(f < right.(int64))
 	default:
-		return false
+		return &RawData{Error: errors.New("type conflict for '<'"), Type: types.Bool}
 	}
 }
 
-func opDictLTEInt(left interface{}, right interface{}) bool {
+func opDictLTEInt(left interface{}, right interface{}) *RawData {
 	switch x := left.(type) {
 	case int64:
-		return x <= right.(int64)
+		return BoolData(x <= right.(int64))
 	case float64:
-		return x <= float64(right.(int64))
+		return BoolData(x <= float64(right.(int64)))
 	case string:
 		f, err := strconv.ParseInt(x, 10, 64)
-		return err == nil && f <= right.(int64)
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + x + " as number"), Type: types.Bool}
+		}
+		return BoolData(f <= right.(int64))
 	default:
-		return false
+		return &RawData{Error: errors.New("type conflict for '<='"), Type: types.Bool}
+	}
+}
+
+func opDictGTInt(left interface{}, right interface{}) *RawData {
+	switch x := left.(type) {
+	case int64:
+		return BoolData(x > right.(int64))
+	case float64:
+		return BoolData(x > float64(right.(int64)))
+	case string:
+		f, err := strconv.ParseInt(x, 10, 64)
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + x + " as number"), Type: types.Bool}
+		}
+		return BoolData(f > right.(int64))
+	default:
+		return &RawData{Error: errors.New("type conflict for '>'"), Type: types.Bool}
+	}
+}
+
+func opDictGTEInt(left interface{}, right interface{}) *RawData {
+	switch x := left.(type) {
+	case int64:
+		return BoolData(x >= right.(int64))
+	case float64:
+		return BoolData(x >= float64(right.(int64)))
+	case string:
+		f, err := strconv.ParseInt(x, 10, 64)
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + x + " as number"), Type: types.Bool}
+		}
+		return BoolData(f >= right.(int64))
+	default:
+		return &RawData{Error: errors.New("type conflict for '>='"), Type: types.Bool}
 	}
 }
 
 func dictLTInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opDictLTInt)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opDictLTInt)
 }
 
 func dictLTEInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opDictLTEInt)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opDictLTEInt)
 }
 
 func dictGTInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opDictLTEInt)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opDictGTInt)
 }
 
 func dictGTEInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opDictLTInt)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opDictGTEInt)
 }
 
-func opIntLTDict(left interface{}, right interface{}) bool {
+func opIntLTDict(left interface{}, right interface{}) *RawData {
 	switch x := right.(type) {
 	case int64:
-		return left.(int64) < x
+		return BoolData(left.(int64) < x)
 	case float64:
-		return float64(left.(int64)) < x
+		return BoolData(float64(left.(int64)) < x)
 	case string:
 		f, err := strconv.ParseInt(x, 10, 64)
-		return err == nil && left.(int64) < f
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + x + " as number"), Type: types.Bool}
+		}
+		return BoolData(left.(int64) < f)
 	default:
-		return false
+		return &RawData{Error: errors.New("type conflict for '<'"), Type: types.Bool}
 	}
 }
 
-func opIntLTEDict(left interface{}, right interface{}) bool {
+func opIntLTEDict(left interface{}, right interface{}) *RawData {
 	switch x := right.(type) {
 	case int64:
-		return left.(int64) <= x
+		return BoolData(left.(int64) <= x)
 	case float64:
-		return float64(left.(int64)) <= x
+		return BoolData(float64(left.(int64)) <= x)
 	case string:
 		f, err := strconv.ParseInt(x, 10, 64)
-		return err == nil && left.(int64) <= f
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + x + " as number"), Type: types.Bool}
+		}
+		return BoolData(left.(int64) <= f)
 	default:
-		return false
+		return &RawData{Error: errors.New("type conflict for '<='"), Type: types.Bool}
+	}
+}
+
+func opIntGTDict(left interface{}, right interface{}) *RawData {
+	switch x := right.(type) {
+	case int64:
+		return BoolData(left.(int64) > x)
+	case float64:
+		return BoolData(float64(left.(int64)) > x)
+	case string:
+		f, err := strconv.ParseInt(x, 10, 64)
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + x + " as number"), Type: types.Bool}
+		}
+		return BoolData(left.(int64) > f)
+	default:
+		return &RawData{Error: errors.New("type conflict for '>'"), Type: types.Bool}
+	}
+}
+
+func opIntGTEDict(left interface{}, right interface{}) *RawData {
+	switch x := right.(type) {
+	case int64:
+		return BoolData(left.(int64) >= x)
+	case float64:
+		return BoolData(float64(left.(int64)) >= x)
+	case string:
+		f, err := strconv.ParseInt(x, 10, 64)
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + x + " as number"), Type: types.Bool}
+		}
+		return BoolData(left.(int64) >= f)
+	default:
+		return &RawData{Error: errors.New("type conflict for '>='"), Type: types.Bool}
 	}
 }
 
 func intLTDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opIntLTDict)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opIntLTDict)
 }
 
 func intLTEDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opIntLTEDict)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opIntLTEDict)
 }
 
 func intGTDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opIntLTEDict)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opIntLTEDict)
 }
 
 func intGTEDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opIntLTDict)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opIntLTDict)
 }
 
 // dict </>/<=/>= float
 
-func opDictLTFloat(left interface{}, right interface{}) bool {
+func opDictLTFloat(left interface{}, right interface{}) *RawData {
 	switch x := left.(type) {
 	case int64:
-		return float64(x) < right.(float64)
+		return BoolData(float64(x) < right.(float64))
 	case float64:
-		return x < right.(float64)
+		return BoolData(x < right.(float64))
 	case string:
 		f, err := strconv.ParseFloat(x, 64)
-		return err == nil && f < right.(float64)
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + x + " as number"), Type: types.Bool}
+		}
+		return BoolData(f < right.(float64))
 	default:
-		return false
+		return &RawData{Error: errors.New("type conflict for '<'"), Type: types.Bool}
 	}
 }
 
-func opDictLTEFloat(left interface{}, right interface{}) bool {
+func opDictLTEFloat(left interface{}, right interface{}) *RawData {
 	switch x := left.(type) {
 	case int64:
-		return float64(x) <= right.(float64)
+		return BoolData(float64(x) <= right.(float64))
 	case float64:
-		return x <= right.(float64)
+		return BoolData(x <= right.(float64))
 	case string:
 		f, err := strconv.ParseFloat(x, 64)
-		return err == nil && f <= right.(float64)
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + x + " as number"), Type: types.Bool}
+		}
+		return BoolData(f <= right.(float64))
 	default:
-		return false
+		return &RawData{Error: errors.New("type conflict for '<='"), Type: types.Bool}
+	}
+}
+
+func opDictGTFloat(left interface{}, right interface{}) *RawData {
+	switch x := left.(type) {
+	case int64:
+		return BoolData(float64(x) > right.(float64))
+	case float64:
+		return BoolData(x > right.(float64))
+	case string:
+		f, err := strconv.ParseFloat(x, 64)
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + x + " as number"), Type: types.Bool}
+		}
+		return BoolData(f > right.(float64))
+	default:
+		return &RawData{Error: errors.New("type conflict for '>'"), Type: types.Bool}
+	}
+}
+
+func opDictGTEFloat(left interface{}, right interface{}) *RawData {
+	switch x := left.(type) {
+	case int64:
+		return BoolData(float64(x) >= right.(float64))
+	case float64:
+		return BoolData(x >= right.(float64))
+	case string:
+		f, err := strconv.ParseFloat(x, 64)
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + x + " as number"), Type: types.Bool}
+		}
+		return BoolData(f >= right.(float64))
+	default:
+		return &RawData{Error: errors.New("type conflict for '>='"), Type: types.Bool}
 	}
 }
 
 func dictLTFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opDictLTFloat)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opDictLTFloat)
 }
 
 func dictLTEFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opDictLTEFloat)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opDictLTEFloat)
 }
 
 func dictGTFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opDictLTEFloat)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opDictGTFloat)
 }
 
 func dictGTEFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opDictLTFloat)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opDictGTEFloat)
 }
 
-func opFloatLTDict(left interface{}, right interface{}) bool {
+func opFloatLTDict(left interface{}, right interface{}) *RawData {
 	switch x := right.(type) {
 	case int64:
-		return left.(float64) < float64(x)
+		return BoolData(left.(float64) < float64(x))
 	case float64:
-		return left.(float64) < x
+		return BoolData(left.(float64) < x)
 	case string:
 		f, err := strconv.ParseFloat(x, 64)
-		return err == nil && left.(float64) < f
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + x + " as number"), Type: types.Bool}
+		}
+		return BoolData(left.(float64) < f)
 	default:
-		return false
+		return &RawData{Error: errors.New("type conflict for '<'"), Type: types.Bool}
 	}
 }
 
-func opFloatLTEDict(left interface{}, right interface{}) bool {
+func opFloatLTEDict(left interface{}, right interface{}) *RawData {
 	switch x := right.(type) {
 	case int64:
-		return left.(float64) <= float64(x)
+		return BoolData(left.(float64) <= float64(x))
 	case float64:
-		return left.(float64) <= x
+		return BoolData(left.(float64) <= x)
 	case string:
 		f, err := strconv.ParseFloat(x, 64)
-		return err == nil && left.(float64) <= f
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + x + " as number"), Type: types.Bool}
+		}
+		return BoolData(left.(float64) <= f)
 	default:
-		return false
+		return &RawData{Error: errors.New("type conflict for '<='"), Type: types.Bool}
+	}
+}
+
+func opFloatGTDict(left interface{}, right interface{}) *RawData {
+	switch x := right.(type) {
+	case int64:
+		return BoolData(left.(float64) > float64(x))
+	case float64:
+		return BoolData(left.(float64) > x)
+	case string:
+		f, err := strconv.ParseFloat(x, 64)
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + x + " as number"), Type: types.Bool}
+		}
+		return BoolData(left.(float64) > f)
+	default:
+		return &RawData{Error: errors.New("type conflict for '>'"), Type: types.Bool}
+	}
+}
+
+func opFloatGTEDict(left interface{}, right interface{}) *RawData {
+	switch x := right.(type) {
+	case int64:
+		return BoolData(left.(float64) >= float64(x))
+	case float64:
+		return BoolData(left.(float64) >= x)
+	case string:
+		f, err := strconv.ParseFloat(x, 64)
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + x + " as number"), Type: types.Bool}
+		}
+		return BoolData(left.(float64) >= f)
+	default:
+		return &RawData{Error: errors.New("type conflict for '>='"), Type: types.Bool}
 	}
 }
 
 func floatLTDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opFloatLTDict)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opFloatLTDict)
 }
 
 func floatLTEDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opFloatLTEDict)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opFloatLTEDict)
 }
 
 func floatGTDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opFloatLTEDict)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opFloatGTDict)
 }
 
 func floatGTEDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opFloatLTDict)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opFloatGTEDict)
 }
 
 // dict </>/<=/>= string
 
-func opDictLTString(left interface{}, right interface{}) bool {
+func opDictLTString(left interface{}, right interface{}) *RawData {
 	switch x := left.(type) {
 	case int64:
 		f, err := strconv.ParseInt(right.(string), 10, 64)
-		return err == nil && x < f
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + right.(string) + " as number"), Type: types.Bool}
+		}
+		return BoolData(x < f)
 	case float64:
 		f, err := strconv.ParseFloat(right.(string), 64)
-		return err == nil && x < f
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + right.(string) + " as number"), Type: types.Bool}
+		}
+		return BoolData(x < f)
 	case string:
-		return x < right.(string)
+		return BoolData(x < right.(string))
 	default:
-		return false
+		return &RawData{Error: errors.New("type conflict for '<'"), Type: types.Bool}
 	}
 }
 
-func opDictLTEString(left interface{}, right interface{}) bool {
+func opDictLTEString(left interface{}, right interface{}) *RawData {
 	switch x := left.(type) {
 	case int64:
 		f, err := strconv.ParseInt(right.(string), 10, 64)
-		return err == nil && x <= f
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + right.(string) + " as number"), Type: types.Bool}
+		}
+		return BoolData(x <= f)
 	case float64:
 		f, err := strconv.ParseFloat(right.(string), 64)
-		return err == nil && x <= f
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + right.(string) + " as number"), Type: types.Bool}
+		}
+		return BoolData(x <= f)
 	case string:
-		return x <= right.(string)
+		return BoolData(x <= right.(string))
 	default:
-		return false
+		return &RawData{Error: errors.New("type conflict for '<='"), Type: types.Bool}
+	}
+}
+
+func opDictGTString(left interface{}, right interface{}) *RawData {
+	switch x := left.(type) {
+	case int64:
+		f, err := strconv.ParseInt(right.(string), 10, 64)
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + right.(string) + " as number"), Type: types.Bool}
+		}
+		return BoolData(x > f)
+	case float64:
+		f, err := strconv.ParseFloat(right.(string), 64)
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + right.(string) + " as number"), Type: types.Bool}
+		}
+		return BoolData(x > f)
+	case string:
+		return BoolData(x > right.(string))
+	default:
+		return &RawData{Error: errors.New("type conflict for '>'"), Type: types.Bool}
+	}
+}
+
+func opDictGTEString(left interface{}, right interface{}) *RawData {
+	switch x := left.(type) {
+	case int64:
+		f, err := strconv.ParseInt(right.(string), 10, 64)
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + right.(string) + " as number"), Type: types.Bool}
+		}
+		return BoolData(x >= f)
+	case float64:
+		f, err := strconv.ParseFloat(right.(string), 64)
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + right.(string) + " as number"), Type: types.Bool}
+		}
+		return BoolData(x >= f)
+	case string:
+		return BoolData(x >= right.(string))
+	default:
+		return &RawData{Error: errors.New("type conflict for '>='"), Type: types.Bool}
 	}
 }
 
 func dictLTString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opDictLTString)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opDictLTString)
 }
 
 func dictLTEString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opDictLTEString)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opDictLTEString)
 }
 
 func dictGTString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opDictLTEString)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opDictGTString)
 }
 
 func dictGTEString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opDictLTString)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opDictGTEString)
 }
 
-func opStringLTDict(left interface{}, right interface{}) bool {
+func opStringLTDict(left interface{}, right interface{}) *RawData {
 	switch x := right.(type) {
 	case int64:
 		f, err := strconv.ParseInt(left.(string), 10, 64)
-		return err == nil && f < x
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + left.(string) + " as number"), Type: types.Bool}
+		}
+		return BoolData(f < x)
 	case float64:
 		f, err := strconv.ParseFloat(left.(string), 64)
-		return err == nil && f < x
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + left.(string) + " as number"), Type: types.Bool}
+		}
+		return BoolData(f < x)
 	case string:
-		return left.(string) < x
+		return BoolData(left.(string) < x)
 	default:
-		return false
+		return &RawData{Error: errors.New("type conflict for '<'"), Type: types.Bool}
 	}
 }
 
-func opStringLTEDict(left interface{}, right interface{}) bool {
+func opStringLTEDict(left interface{}, right interface{}) *RawData {
 	switch x := right.(type) {
 	case int64:
 		f, err := strconv.ParseInt(left.(string), 10, 64)
-		return err == nil && f <= x
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + left.(string) + " as number"), Type: types.Bool}
+		}
+		return BoolData(f <= x)
 	case float64:
 		f, err := strconv.ParseFloat(left.(string), 64)
-		return err == nil && f <= x
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + left.(string) + " as number"), Type: types.Bool}
+		}
+		return BoolData(f <= x)
 	case string:
-		return left.(string) <= x
+		return BoolData(left.(string) <= x)
 	default:
-		return false
+		return &RawData{Error: errors.New("type conflict for '<='"), Type: types.Bool}
+	}
+}
+
+func opStringGTDict(left interface{}, right interface{}) *RawData {
+	switch x := right.(type) {
+	case int64:
+		f, err := strconv.ParseInt(left.(string), 10, 64)
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + left.(string) + " as number"), Type: types.Bool}
+		}
+		return BoolData(f > x)
+	case float64:
+		f, err := strconv.ParseFloat(left.(string), 64)
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + left.(string) + " as number"), Type: types.Bool}
+		}
+		return BoolData(f > x)
+	case string:
+		return BoolData(left.(string) > x)
+	default:
+		return &RawData{Error: errors.New("type conflict for '>'"), Type: types.Bool}
+	}
+}
+
+func opStringGTEDict(left interface{}, right interface{}) *RawData {
+	switch x := right.(type) {
+	case int64:
+		f, err := strconv.ParseInt(left.(string), 10, 64)
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + left.(string) + " as number"), Type: types.Bool}
+		}
+		return BoolData(f >= x)
+	case float64:
+		f, err := strconv.ParseFloat(left.(string), 64)
+		if err != nil {
+			return &RawData{Error: errors.New("cannot parse " + left.(string) + " as number"), Type: types.Bool}
+		}
+		return BoolData(f >= x)
+	case string:
+		return BoolData(left.(string) >= x)
+	default:
+		return &RawData{Error: errors.New("type conflict for '>='"), Type: types.Bool}
 	}
 }
 
 func stringLTDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringLTDict)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opStringLTDict)
 }
 
 func stringLTEDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringLTEDict)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opStringLTEDict)
 }
 
 func stringGTDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opStringLTEDict)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opStringGTDict)
 }
 
 func stringGTEDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opStringLTDict)
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, opStringGTEDict)
 }
 
 // dict </>/<=/>= dict
 
 func dictLTDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		switch x := right.(type) {
 		case int64:
 			return opDictLTInt(left, x)
@@ -1093,13 +1361,13 @@ func dictLTDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 		case string:
 			return opDictLTString(left, x)
 		default:
-			return false
+			return &RawData{Error: errors.New("type conflict for '<'"), Type: types.Bool}
 		}
 	})
 }
 
 func dictLTEDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		switch x := right.(type) {
 		case int64:
 			return opDictLTEInt(left, x)
@@ -1108,13 +1376,13 @@ func dictLTEDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 		case string:
 			return opDictLTEString(left, x)
 		default:
-			return false
+			return &RawData{Error: errors.New("type conflict for '<='"), Type: types.Bool}
 		}
 	})
 }
 
 func dictGTDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		switch x := right.(type) {
 		case int64:
 			return opDictLTEInt(left, x)
@@ -1123,13 +1391,13 @@ func dictGTDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 		case string:
 			return opDictLTString(left, x)
 		default:
-			return false
+			return &RawData{Error: errors.New("type conflict for '>'"), Type: types.Bool}
 		}
 	})
 }
 
 func dictGTEDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, func(left interface{}, right interface{}) bool {
+	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		switch x := right.(type) {
 		case int64:
 			return opDictLTInt(left, x)
@@ -1138,7 +1406,7 @@ func dictGTEDict(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 		case string:
 			return opDictLTString(left, x)
 		default:
-			return false
+			return &RawData{Error: errors.New("type conflict for '>='"), Type: types.Bool}
 		}
 	})
 }
