@@ -3916,3 +3916,9 @@ macos.systemsetup {
   // Whether or not the keyboard should be disabled when the X Serve enclosure lock is engaged
   disableKeyboardWhenEnclosureLockIsEngaged() string
 }
+
+// macOS time machine
+macos.timemachine {
+  // macOS Time Machine preferences
+  preferences() dict
+}
