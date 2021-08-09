@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"io/ioutil"
@@ -72,12 +73,22 @@ func (m *lumiMacosTimemachine) GetPreferences() (map[string]interface{}, error) 
 		return nil, err
 	}
 
-	data, err := ioutil.ReadAll(cmd.Stdout)
-	if err != nil {
+	var buf bytes.Buffer
+	scanner := bufio.NewScanner(cmd.Stdout)
+	for scanner.Scan() {
+		line := scanner.Text()
+		// skip the BackupAlias since they are not parsable when returned by the `defaults` command
+		if strings.HasPrefix(strings.TrimSpace(line), "BackupAlias") {
+			continue
+		}
+		buf.WriteString(line)
+	}
+
+	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
 
-	return plist.Decode(bytes.NewReader(data))
+	return plist.Decode(bytes.NewReader(buf.Bytes()))
 }
 
 func (m *lumiMacosSystemsetup) id() (string, error) {
