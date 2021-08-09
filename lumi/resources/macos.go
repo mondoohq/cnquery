@@ -1,11 +1,13 @@
 package resources
 
 import (
+	"bytes"
 	"errors"
 	"io/ioutil"
 	"strings"
 
 	"go.mondoo.io/mondoo/lumi/resources/macos"
+	"go.mondoo.io/mondoo/lumi/resources/plist"
 )
 
 func (m *lumiMacos) id() (string, error) {
@@ -36,6 +38,20 @@ func (m *lumiMacos) GetUserHostPreferences() (map[string]interface{}, error) {
 		res[k] = preferences[k]
 	}
 	return res, nil
+}
+
+func (m *lumiMacos) GetGlobalAccountPolicies() (map[string]interface{}, error) {
+	cmd, err := m.Runtime.Motor.Transport.RunCommand("pwpolicy -getaccountpolicies")
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := ioutil.ReadAll(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	return plist.Decode(bytes.NewReader(data))
 }
 
 func (m *lumiMacosSystemsetup) id() (string, error) {

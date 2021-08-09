@@ -3838,10 +3838,12 @@ uuid {
 
 // macOS specific resources
 macos {
-    // macOS user defaults
-	userPreferences() map[string]dict
-	// macOS user defaults for current host
-	userHostPreferences() map[string]dict
+  // macOS user defaults
+  userPreferences() map[string]dict
+  // macOS user defaults for current host
+  userHostPreferences() map[string]dict
+  // macOS global account policies
+  globalAccountPolicies() dict
 }
 
 // macOS application layer firewall (ALF) service
