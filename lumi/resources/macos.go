@@ -54,6 +54,32 @@ func (m *lumiMacos) GetGlobalAccountPolicies() (map[string]interface{}, error) {
 	return plist.Decode(bytes.NewReader(data))
 }
 
+func (m *lumiMacosTimemachine) id() (string, error) {
+	return "macos.timemachine", nil
+}
+
+// GetPreferences returns the time machine preferences
+//
+// NOTE: this cannot be implemented via:
+// parse.plist('/Library/Preferences/com.apple.TimeMachine.plist').params['AutoBackup'] == 1
+// since the binary is missing the Full Disk Access (FDA), therefore even applications with
+// sudo permissions cannot access the file. Instead we need to call
+// defaults read /Library/Preferences/com.apple.TimeMachine.plist which has FDA
+// see https://developer.apple.com/forums/thread/108348
+func (m *lumiMacosTimemachine) GetPreferences() (map[string]interface{}, error) {
+	cmd, err := m.Runtime.Motor.Transport.RunCommand("defaults read /Library/Preferences/com.apple.TimeMachine.plist")
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := ioutil.ReadAll(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	return plist.Decode(bytes.NewReader(data))
+}
+
 func (m *lumiMacosSystemsetup) id() (string, error) {
 	return "macos.systemsetup", nil
 }
