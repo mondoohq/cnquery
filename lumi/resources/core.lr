@@ -3922,3 +3922,9 @@ macos.timemachine {
   // macOS Time Machine preferences
   preferences() dict
 }
+
+// macOS keychains and Security framework
+macos.security {
+  // Authorization policy database
+  authorizationDB() dict
+}
