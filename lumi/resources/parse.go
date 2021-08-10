@@ -9,6 +9,7 @@ import (
 	"errors"
 	"strings"
 
+	"go.mondoo.io/mondoo/checksums"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/parsers"
 	"go.mondoo.io/mondoo/lumi/resources/plist"
@@ -99,11 +100,10 @@ func (s *lumiParseIni) GetParams(sections map[string]interface{}) (map[string]in
 }
 
 func (s *lumiParseJson) init(args *lumi.Args) (*lumi.Args, ParseJson, error) {
-	if x, ok := (*args)["path"]; ok {
-		path, ok := x.(string)
-		if !ok {
-			return nil, nil, errors.New("wrong type for 'path' in parse.json initialization, it must be a string")
-		}
+	rawPath := (*args)["path"]
+
+	if rawPath != nil {
+		path := rawPath.(string)
 
 		f, err := s.Runtime.CreateResource("file", "path", path)
 		if err != nil {
@@ -111,8 +111,18 @@ func (s *lumiParseJson) init(args *lumi.Args) (*lumi.Args, ParseJson, error) {
 		}
 		(*args)["file"] = f
 		delete(*args, "path")
+
+	} else if x, ok := (*args)["content"]; ok {
+		content := x.(string)
+		virtualPath := "in-memory://" + checksums.New.Add(content).String()
+		f, err := s.Runtime.CreateResource("file", "path", virtualPath, "content", content, "exists", true)
+		if err != nil {
+			return nil, nil, err
+		}
+		(*args)["file"] = f
+
 	} else {
-		return nil, nil, errors.New("missing 'path' argument for parse.json initialization")
+		return nil, nil, errors.New("missing 'path' or 'content' for parse.json initialization")
 	}
 
 	return args, nil, nil
