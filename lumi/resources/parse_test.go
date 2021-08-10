@@ -36,3 +36,12 @@ func TestParsePlist(t *testing.T) {
 		},
 	})
 }
+
+func TestParseJson(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"parse.json(content: '{\"a\": 1}').params",
+			0, map[string]interface{}{"a": float64(1)},
+		},
+	})
+}
