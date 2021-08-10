@@ -140,7 +140,7 @@ func (jm *JobManager) Schedule(job *Job) (string, error) {
 		return "", err
 	}
 
-	log.Debug().Str("jobid", job.ID).Msg("motor.job> schedule new job")
+	log.Trace().Str("jobid", job.ID).Msg("motor.job> schedule new job")
 
 	// store job, with a mutex
 	jm.jobs.Store(job.ID, job)
@@ -158,7 +158,7 @@ func (jm *JobManager) GetJob(jobid string) (*Job, error) {
 }
 
 func (jm *JobManager) Delete(jobid string) {
-	log.Debug().Str("jobid", jobid).Msg("motor.job> delete job")
+	log.Trace().Str("jobid", jobid).Msg("motor.job> delete job")
 	jm.jobs.Delete(jobid)
 }
 
@@ -199,7 +199,7 @@ func (jm *JobManager) Serve() {
 }
 
 func (jm *JobManager) Run(job *Job) {
-	log.Debug().Str("jobid", job.ID).Msg("motor.job> run job")
+	log.Trace().Str("jobid", job.ID).Msg("motor.job> run job")
 	job.Metrics.RunAt = time.Now()
 
 	// execute job
@@ -216,10 +216,10 @@ func (jm *JobManager) Run(job *Job) {
 	// determine the next run or delete the job
 	if job.Repeat != 0 {
 		job.ScheduledFor = time.Now().Add(job.Interval)
-		log.Debug().Str("jobid", job.ID).Time("time", job.ScheduledFor).Msg("motor.job> scheduled job for the future")
+		log.Trace().Str("jobid", job.ID).Time("time", job.ScheduledFor).Msg("motor.job> scheduled job for the future")
 		job.State = Job_PENDING
 	} else {
-		log.Debug().Str("jobid", job.ID).Msg("motor.job> last run for this job, yeah")
+		log.Trace().Str("jobid", job.ID).Msg("motor.job> last run for this job, yeah")
 		job.State = Job_TERMINATED
 	}
 
@@ -230,12 +230,12 @@ func (jm *JobManager) Run(job *Job) {
 
 	// calc duration
 	job.Metrics.Duration = time.Now().Sub(job.Metrics.RunAt)
-	log.Debug().Str("jobid", job.ID).Msg("motor.job> completed")
+	log.Trace().Str("jobid", job.ID).Msg("motor.job> completed")
 
 	// send observable to all subscribers
 	// since this call is synchronous in the same go routine, we need to do this as the last step, to ensure
 	// all job planning is completed before a potential canceling comes in.
-	log.Debug().Str("jobid", job.ID).Msg("motor.job> call subscriber")
+	log.Trace().Str("jobid", job.ID).Msg("motor.job> call subscriber")
 	for _, subscriber := range job.Callback {
 		subscriber(observable)
 	}
@@ -276,7 +276,7 @@ func (jm *JobManager) nextJob() (*Job, error) {
 
 // TeadDown deletes all
 func (jm *JobManager) TearDown() {
-	log.Debug().Msg("motor.job> tear down")
+	log.Trace().Msg("motor.job> tear down")
 	// ensures the go routines are canceled
 	done := make(chan struct{})
 	jm.quit <- done
