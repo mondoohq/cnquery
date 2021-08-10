@@ -6,6 +6,8 @@ import (
 	"errors"
 	"runtime"
 
+	"github.com/StackExchange/wmi"
+
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/local"
 )
@@ -32,5 +34,5 @@ func windowsMachineId(t transports.Transport) (string, error) {
 
 		return *entries[0].UUID, nil
 	}
-	return platformid.PowershellWindowsMachineId(t)(t)
+	return PowershellWindowsMachineId(t)(t)
 }
