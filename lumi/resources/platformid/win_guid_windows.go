@@ -34,5 +34,5 @@ func windowsMachineId(t transports.Transport) (string, error) {
 
 		return *entries[0].UUID, nil
 	}
-	return PowershellWindowsMachineId(t)(t)
+	return PowershellWindowsMachineId(t)
 }
