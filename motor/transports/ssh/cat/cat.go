@@ -2,13 +2,14 @@ package cat
 
 import (
 	"bytes"
-	"fmt"
+	"encoding/base64"
 	"io/ioutil"
 	"os"
 	"time"
 
 	"github.com/cockroachdb/errors"
-
+	"github.com/kballard/go-shellquote"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/statutil"
@@ -26,14 +27,41 @@ func New(cmdRunner CommandRunner) *CatFs {
 
 type CatFs struct {
 	commandRunner CommandRunner
+	base64        *bool
 }
 
 func (cat *CatFs) Name() string {
 	return "Cat FS"
 }
 
+func (cat *CatFs) useBase64encoding() bool {
+	if cat.base64 != nil {
+		return *cat.base64
+	}
+
+	b := cat.base64available()
+	cat.base64 = &b
+	return b
+}
+
+func (cat *CatFs) base64available() bool {
+	cmd, err := cat.commandRunner.RunCommand("command -v base64")
+	if err != nil {
+		log.Warn().Msg("base64 command not found on target system")
+		return false
+	}
+	log.Debug().Msg("use base64 encoding for data transfer")
+	return cmd.ExitStatus == 0
+}
+
 func (cat *CatFs) Open(name string) (afero.File, error) {
-	cmd, err := cat.commandRunner.RunCommand(fmt.Sprintf("cat %s", name))
+	// we need shellquote to escape filenames with spaces
+	catCmd := shellquote.Join("cat", name)
+	if cat.useBase64encoding() {
+		catCmd = catCmd + " | base64"
+	}
+
+	cmd, err := cat.commandRunner.RunCommand(catCmd)
 	if err != nil {
 		return nil, err
 	}
@@ -41,6 +69,15 @@ func (cat *CatFs) Open(name string) (afero.File, error) {
 	data, err := ioutil.ReadAll(cmd.Stdout)
 	if err != nil {
 		return nil, err
+	}
+
+	if cat.useBase64encoding() {
+		log.Debug().Msg(string(data))
+
+		data, err = base64.StdEncoding.DecodeString(string(data))
+		if err != nil {
+			return nil, errors.Wrap(err, "could not decode base64 data stream")
+		}
 	}
 
 	return NewFile(cat, name, bytes.NewBuffer(data)), nil
@@ -53,9 +90,11 @@ func (cat *CatFs) Stat(name string) (os.FileInfo, error) {
 func (cat *CatFs) Create(name string) (afero.File, error) {
 	return nil, errors.New("not implemented")
 }
+
 func (cat *CatFs) Mkdir(name string, perm os.FileMode) error {
 	return errors.New("not implemented")
 }
+
 func (cat *CatFs) MkdirAll(path string, perm os.FileMode) error {
 	return errors.New("not implemented")
 }
