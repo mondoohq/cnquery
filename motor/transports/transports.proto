@@ -27,6 +27,7 @@ enum TransportBackend {
   CONNECTION_EQUINIX_METAL = 20;
   CONNECTION_DOCKER = 21; // unspecified if this is a container or image
   CONNECTION_GITHUB = 22;
+  CONNECTION_VAGRANT = 23;
 }
 
 enum Kind {

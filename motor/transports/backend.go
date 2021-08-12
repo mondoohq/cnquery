@@ -24,7 +24,7 @@ const (
 	SCHEME_AZURE              = "az"
 	SCHEME_AWS                = "aws"
 	SCHEME_AWS_SSM            = "aws+ssm"
-	SCHEME_VAGRANT            = "vagrant" // maps to ssh, so no transport required
+	SCHEME_VAGRANT            = "vagrant"
 	SCHEME_MOCK               = "mock"
 	SCHEME_VSPHERE            = "vsphere"
 	SCHEME_VSPHERE_VM         = "vsphere+vm"
@@ -59,6 +59,7 @@ var TransportBackend_scheme = map[TransportBackend]string{
 	TransportBackend_CONNECTION_K8S:                     SCHEME_K8S,
 	TransportBackend_CONNECTION_EQUINIX_METAL:           SCHEME_EQUINIX,
 	TransportBackend_CONNECTION_GITHUB:                  SCHEME_GITHUB,
+	TransportBackend_CONNECTION_VAGRANT:                 SCHEME_VAGRANT,
 }
 
 var TransportBackend_schemevalue = map[string]TransportBackend{
@@ -84,6 +85,7 @@ var TransportBackend_schemevalue = map[string]TransportBackend{
 	SCHEME_K8S:                TransportBackend_CONNECTION_K8S,
 	SCHEME_EQUINIX:            TransportBackend_CONNECTION_EQUINIX_METAL,
 	SCHEME_GITHUB:             TransportBackend_CONNECTION_GITHUB,
+	SCHEME_VAGRANT:            TransportBackend_CONNECTION_VAGRANT,
 }
 
 func (x TransportBackend) Scheme() string {
