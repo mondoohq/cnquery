@@ -5,8 +5,10 @@
 package resources
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"strings"
 
 	"go.mondoo.io/mondoo/checksums"
@@ -230,7 +232,13 @@ func (s *lumiParsePlist) GetContent(file File) (string, error) {
 	}
 	defer f.Close()
 
-	data, err := plist.ToXml(f)
+	// NOTE: we need to read all data here, otherwise the plist parser does not work as expected
+	rawData, err := ioutil.ReadAll(f)
+	if err != nil {
+		return "", err
+	}
+
+	data, err := plist.ToXml(bytes.NewReader(rawData))
 	return string(data), err
 }
 
