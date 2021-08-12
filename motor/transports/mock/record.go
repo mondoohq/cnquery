@@ -3,11 +3,11 @@ package mock
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"github.com/rs/zerolog/log"
 	"io/ioutil"
 	"os"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
 )
@@ -104,11 +104,12 @@ func (t *RecordTransport) FileInfo(name string) (transports.FileInfoDetails, err
 	fMock.StatData = FileInfo{
 		Mode: stat.Mode.FileMode,
 		// TODO: add size if required
-		//ModTime: stat.ModTime,
-		//IsDir:   stat.IsDir,
+		// ModTime: stat.ModTime,
+		// IsDir:   stat.IsDir,
 		Uid: stat.Uid,
 		Gid: stat.Gid,
 	}
+
 	t.mock.Fs.Files[name] = fMock
 
 	return stat, err
@@ -160,7 +161,7 @@ func (fs recordFS) MkdirAll(path string, perm os.FileMode) error {
 
 func (fs recordFS) Open(name string) (afero.File, error) {
 	enonet := false
-	content := ""
+	content := []byte{}
 	var fi FileInfo
 
 	f, err := fs.observe.Open(name)
@@ -174,7 +175,7 @@ func (fs recordFS) Open(name string) (afero.File, error) {
 		if err != nil {
 			return nil, err
 		}
-		content = string(data)
+		content = data
 
 		// if recording is active, we also collect stats
 		stat, err := f.Stat()
@@ -190,7 +191,7 @@ func (fs recordFS) Open(name string) (afero.File, error) {
 		fMock = &MockFileData{}
 	}
 
-	fMock.Content = content
+	fMock.Data = content
 	fMock.Path = name
 	fMock.Enoent = enonet
 	fMock.StatData = fi
@@ -225,8 +226,8 @@ func NewMockFileInfo(stat os.FileInfo) FileInfo {
 		Mode:    stat.Mode(),
 		ModTime: stat.ModTime(),
 		IsDir:   stat.IsDir(),
-		//Uid:     0,
-		//Gid:     0,
+		// Uid:     0,
+		// Gid:     0,
 	}
 	return fi
 }

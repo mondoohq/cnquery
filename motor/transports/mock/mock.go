@@ -3,8 +3,8 @@ package mock
 import (
 	"bytes"
 	"errors"
-	"github.com/spf13/afero"
 
+	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
