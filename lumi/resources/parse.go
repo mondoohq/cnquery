@@ -5,10 +5,8 @@
 package resources
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"strings"
 
 	"go.mondoo.io/mondoo/checksums"
@@ -192,6 +190,14 @@ func (s *lumiParsePlist) init(args *lumi.Args) (*lumi.Args, ParseJson, error) {
 		}
 		(*args)["file"] = f
 		delete(*args, "path")
+	} else if z, ok := (*args)["content"]; ok {
+		content := z.(string)
+		virtualPath := "in-memory://" + checksums.New.Add(content).String()
+		f, err := s.Runtime.CreateResource("file", "path", virtualPath, "content", content, "exists", true)
+		if err != nil {
+			return nil, nil, err
+		}
+		(*args)["file"] = f
 	} else {
 		return nil, nil, errors.New("missing 'path' argument for parse.json initialization")
 	}
@@ -223,23 +229,14 @@ func (s *lumiParsePlist) GetFile() (File, error) {
 }
 
 func (s *lumiParsePlist) GetContent(file File) (string, error) {
-	path, _ := file.Path()
-
-	// NOTE: normalize the file format to text, so that the content is always readable
-	f, err := s.Runtime.Motor.Transport.FS().Open(path)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-
-	// NOTE: we need to read all data here, otherwise the plist parser does not work as expected
-	rawData, err := ioutil.ReadAll(f)
+	// TODO: this can be heavily improved once we do it right, since this is constantly
+	// re-registered as the file changes
+	err := s.Runtime.WatchAndCompute(file, "content", s, "content")
 	if err != nil {
 		return "", err
 	}
 
-	data, err := plist.ToXml(bytes.NewReader(rawData))
-	return string(data), err
+	return file.Content()
 }
 
 func (s *lumiParsePlist) GetParams(content string) (map[string]interface{}, error) {
