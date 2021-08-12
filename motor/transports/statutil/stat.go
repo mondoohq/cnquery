@@ -51,6 +51,7 @@ var bsdunix = map[string]bool{
 	"dragonfly": true,
 	"freebsd":   true,
 	"netbsd":    true,
+	"darwin":    true, // use bsd stat for macOS
 }
 
 func (s *statHelper) Stat(name string) (os.FileInfo, error) {
@@ -58,7 +59,7 @@ func (s *statHelper) Stat(name string) (os.FileInfo, error) {
 	if !s.detected {
 		cmd, err := s.commandRunner.RunCommand("uname -s")
 		if err != nil {
-			log.Debug().Err(err).Str("file", name).Msg("could not detect plaform for file stat")
+			log.Debug().Err(err).Str("file", name).Msg("could not detect platform for file stat")
 			return nil, err
 		}
 
@@ -157,10 +158,10 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 	}
 
 	// extract file modes
-	mapMode := os.FileMode(uint32(mask) & 07777)
+	mapMode := os.FileMode(uint32(mask) & 0o7777)
 
 	// eg mask is 40755 and octal 40000 indicates a directory
-	if mask&040000 == 040000 {
+	if mask&0o40000 == 0o40000 {
 		mapMode = mapMode | os.ModeDir
 	}
 
@@ -227,7 +228,7 @@ func (s *statHelper) unix(name string) (os.FileInfo, error) {
 	}
 
 	// TODO: we may need to support a similar behavior as in linux to map the directory flag
-	mode := os.FileMode(uint32(mask) & 07777)
+	mode := os.FileMode(uint32(mask) & 0o7777)
 
 	mtime, err := strconv.ParseInt(statsData[4], 10, 64)
 	if err != nil {
