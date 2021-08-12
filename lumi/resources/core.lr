@@ -3925,6 +3925,6 @@ macos.timemachine {
 
 // macOS keychains and Security framework
 macos.security {
-  // Authorization policy database
+  // Deprecated: Authorization policy database
   authorizationDB() dict
 }

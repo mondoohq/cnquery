@@ -220,10 +220,5 @@ func (m *lumiMacosSecurity) id() (string, error) {
 }
 
 func (m *lumiMacosSecurity) GetAuthorizationDB() (map[string]interface{}, error) {
-	f, err := m.Runtime.Motor.Transport.FS().Open("/System/Library/Security/authorization.plist")
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	return plist.Decode(f)
+	return nil, errors.New("the implementation is deprecated")
 }
