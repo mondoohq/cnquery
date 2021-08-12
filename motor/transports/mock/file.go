@@ -1,7 +1,9 @@
 package mock
 
 import (
+	"bytes"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,18 +18,29 @@ type FileInfo struct {
 	IsDir   bool        `toml:"isdir"`
 	Uid     int64       `toml:"uid"`
 	Gid     int64       `toml:"gid"`
+	Size    int64       `toml:"size"`
 }
 
 type MockFileData struct {
-	Path     string   `toml:"path"`
-	Content  string   `toml:"content"`
+	Path string `toml:"path"`
+
 	StatData FileInfo `toml:"stat"`
 	Enoent   bool     `toml:"enoent"`
+	// Holds the file content
+	Data []byte `toml:"data"`
+	// Plain String response (simpler user usage, will not be used for automated recording)
+	Content string `toml:"content"`
+}
+
+type ReadAtSeeker interface {
+	io.Reader
+	io.Seeker
+	io.ReaderAt
 }
 
 type MockFile struct {
 	data       *MockFileData
-	dataReader *strings.Reader
+	dataReader ReadAtSeeker
 	fs         *mockFS
 }
 
@@ -40,9 +53,19 @@ func (mf *MockFile) Stat() (os.FileInfo, error) {
 		return nil, os.ErrNotExist
 	}
 
+	// fallback in case the size information is missing, eg. older mock files
+	var size int64
+	if mf.data.StatData.Size > 0 {
+		size = mf.data.StatData.Size
+	} else if mf.data.StatData.Size == 0 && len(mf.data.Data) > 0 {
+		size = int64(len(mf.data.Data))
+	} else if mf.data.StatData.Size == 0 && len(mf.data.Content) > 0 {
+		size = int64(len(mf.data.Content))
+	}
+
 	return &transports.FileInfo{
 		FName:    filepath.Base(mf.data.Path),
-		FSize:    int64(len(mf.data.Content)),
+		FSize:    size,
 		FModTime: mf.data.StatData.ModTime,
 		FMode:    mf.data.StatData.Mode,
 		FIsDir:   mf.data.StatData.IsDir,
@@ -51,9 +74,12 @@ func (mf *MockFile) Stat() (os.FileInfo, error) {
 	}, nil
 }
 
-func (mf *MockFile) reader() *strings.Reader {
-	if mf.dataReader == nil {
-		mf.dataReader = strings.NewReader(string(mf.data.Content))
+func (mf *MockFile) reader() ReadAtSeeker {
+	// if binary data was provided, we ignore the string data
+	if mf.dataReader == nil && len(mf.data.Data) > 0 {
+		mf.dataReader = bytes.NewReader(mf.data.Data)
+	} else if mf.dataReader == nil {
+		mf.dataReader = strings.NewReader(mf.data.Content)
 	}
 	return mf.dataReader
 }
