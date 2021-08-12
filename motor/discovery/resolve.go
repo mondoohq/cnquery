@@ -84,7 +84,7 @@ func ResolveAsset(root *asset.Asset, cfn common.CredentialFn, sfn common.QuerySe
 			return nil, errors.New("unsupported backend: " + resolverId)
 		}
 
-		log.Debug().Str("resolver", r.Name()).Msg("run resolver")
+		log.Debug().Str("resolver-id", resolverId).Str("resolver", r.Name()).Msg("run resolver")
 		// check that all discovery options are supported and show a user warning
 		availableTargets := r.AvailableDiscoveryTargets()
 		if tc.Discover != nil {
