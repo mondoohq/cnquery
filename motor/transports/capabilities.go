@@ -17,6 +17,7 @@ const (
 	Capability_Ipmi
 	Capability_Equinix
 	Capability_Github
+	Capability_Aws_Ebs
 )
 
 var CapabilityNames = map[Capability]string{
@@ -32,6 +33,7 @@ var CapabilityNames = map[Capability]string{
 	Capability_Ipmi:         "api-ipmi",
 	Capability_Equinix:      "api-equinix",
 	Capability_Github:       "api-github",
+	Capability_Aws_Ebs:      "aws-ebs",
 }
 
 func (c Capability) String() string {

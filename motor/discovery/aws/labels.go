@@ -13,6 +13,7 @@ const (
 	InstanceLabel       string = "mondoo.app/instance"
 	IPLabel             string = "mondoo.app/ip"
 	DNSLabel            string = "mondoo.app/public-dns-name"
+	EBSScanLabel        string = "mondoo.app/ebs-volume-scan"
 )
 
 func addAWSMetadataLabels(assetLabels map[string]string, instance basicInstanceInfo) map[string]string {

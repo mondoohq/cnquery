@@ -17,6 +17,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/aws"
+	"go.mondoo.io/mondoo/motor/discovery/aws/ebs"
 	"go.mondoo.io/mondoo/motor/discovery/azure"
 	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/discovery/container_registry"
@@ -70,6 +71,7 @@ func init() {
 		transports.SCHEME_FS:                 &standard.Resolver{},
 		transports.SCHEME_EQUINIX:            &equinix.Resolver{},
 		transports.SCHEME_GITHUB:             &standard.Resolver{},
+		transports.SCHEME_AWS_EC2_EBS:        &ebs.Resolver{},
 	}
 }
 

@@ -30,6 +30,7 @@ enum TransportBackend {
   CONNECTION_DOCKER = 21; // unspecified if this is a container or image
   CONNECTION_GITHUB = 22;
   CONNECTION_VAGRANT = 23;
+  CONNECTION_AWS_EC2_EBS = 24;
 }
 
 enum Kind {

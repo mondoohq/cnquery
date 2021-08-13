@@ -20,4 +20,5 @@ const (
 	RUNTIME_MICROSOFT_GRAPH  = "ms graph"      // api
 	RUNTIME_EQUINIX_METAL    = "equinix metal" // api
 	RUNTIME_GITHUB           = "github"        // api
+	RUNTIME_AWS_EC2_EBS      = "aws ec2 ebs"
 )

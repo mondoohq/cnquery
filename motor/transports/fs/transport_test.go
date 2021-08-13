@@ -1,17 +1,19 @@
-package fs
+package fs_test
 
 import (
+	"testing"
+
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/transports/fs"
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
-	"testing"
 )
 
 func TestOsDetection(t *testing.T) {
-	trans := &FsTransport{
-		mountedDir: "./testdata/centos8",
+	trans := &fs.FsTransport{
+		MountedDir: "./testdata/centos8",
 	}
 
 	m, err := motor.New(trans)
@@ -25,8 +27,8 @@ func TestOsDetection(t *testing.T) {
 }
 
 func TestMountedDirectoryFile(t *testing.T) {
-	trans := &FsTransport{
-		mountedDir: "./testdata/centos8",
+	trans := &fs.FsTransport{
+		MountedDir: "./testdata/centos8",
 	}
 
 	f, err := trans.FS().Open("/etc/os-release")

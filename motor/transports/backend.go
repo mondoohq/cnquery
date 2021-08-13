@@ -34,6 +34,7 @@ const (
 	SCHEME_FS                 = "fs"
 	SCHEME_EQUINIX            = "equinix"
 	SCHEME_GITHUB             = "github"
+	SCHEME_AWS_EC2_EBS        = "aws-ec2-ebs"
 )
 
 var TransportBackend_scheme = map[TransportBackend]string{
@@ -60,6 +61,7 @@ var TransportBackend_scheme = map[TransportBackend]string{
 	TransportBackend_CONNECTION_EQUINIX_METAL:           SCHEME_EQUINIX,
 	TransportBackend_CONNECTION_GITHUB:                  SCHEME_GITHUB,
 	TransportBackend_CONNECTION_VAGRANT:                 SCHEME_VAGRANT,
+	TransportBackend_CONNECTION_AWS_EC2_EBS:             SCHEME_AWS_EC2_EBS,
 }
 
 var TransportBackend_schemevalue = map[string]TransportBackend{
@@ -86,6 +88,7 @@ var TransportBackend_schemevalue = map[string]TransportBackend{
 	SCHEME_EQUINIX:            TransportBackend_CONNECTION_EQUINIX_METAL,
 	SCHEME_GITHUB:             TransportBackend_CONNECTION_GITHUB,
 	SCHEME_VAGRANT:            TransportBackend_CONNECTION_VAGRANT,
+	SCHEME_AWS_EC2_EBS:        TransportBackend_CONNECTION_AWS_EC2_EBS,
 }
 
 func (x TransportBackend) Scheme() string {

@@ -12,6 +12,7 @@ import (
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/arista"
 	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
+	"go.mondoo.io/mondoo/motor/transports/awsec2ebs"
 	"go.mondoo.io/mondoo/motor/transports/azure"
 	"go.mondoo.io/mondoo/motor/transports/container"
 	"go.mondoo.io/mondoo/motor/transports/equinix"
@@ -31,7 +32,10 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var transportDevelopmentStatus = map[transports.TransportBackend]string{transports.TransportBackend_CONNECTION_GITHUB: "experimental"}
+var transportDevelopmentStatus = map[transports.TransportBackend]string{
+	transports.TransportBackend_CONNECTION_GITHUB:      "experimental",
+	transports.TransportBackend_CONNECTION_AWS_EC2_EBS: "experimental",
+}
 
 func warnIncompleteFeature(backend transports.TransportBackend) {
 	if transportDevelopmentStatus[backend] != "" {
@@ -353,6 +357,19 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 			return nil, err
 		}
 		m, err = motor.New(trans)
+		if err != nil {
+			return nil, err
+		}
+		id, err := trans.Identifier()
+		if err == nil && len(id) > 0 {
+			identifier = append(identifier, id)
+		}
+	case transports.TransportBackend_CONNECTION_AWS_EC2_EBS:
+		trans, err := awsec2ebs.New(tc)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(trans.FsTransport)
 		if err != nil {
 			return nil, err
 		}
