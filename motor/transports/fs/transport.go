@@ -2,24 +2,35 @@ package fs
 
 import (
 	"bytes"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
+func NewWithClose(endpoint *transports.TransportConfig, closeFN func()) (*FsTransport, error) {
+	log.Info().Str("mountdir", endpoint.Host+endpoint.Path).Msg("load fs")
+
+	return &FsTransport{
+		MountedDir: endpoint.Host + endpoint.Path,
+		closeFN:    closeFN,
+	}, nil
+}
+
 func New(endpoint *transports.TransportConfig) (*FsTransport, error) {
 	log.Info().Str("mountdir", endpoint.Host+endpoint.Path).Msg("load fs")
 
 	return &FsTransport{
-		mountedDir: endpoint.Host + endpoint.Path,
+		MountedDir: endpoint.Host + endpoint.Path,
 	}, nil
 }
 
 type FsTransport struct {
-	mountedDir string
+	MountedDir string
 	fs         afero.Fs
 	kind       transports.Kind
 	runtime    string
+	closeFN    func()
 }
 
 func (t *FsTransport) RunCommand(command string) (*transports.Command, error) {
@@ -30,7 +41,7 @@ func (t *FsTransport) RunCommand(command string) (*transports.Command, error) {
 
 func (t *FsTransport) FS() afero.Fs {
 	if t.fs == nil {
-		t.fs = NewMountedFs(t.mountedDir)
+		t.fs = NewMountedFs(t.MountedDir)
 	}
 	return t.fs
 }
@@ -54,7 +65,11 @@ func (t *FsTransport) FileInfo(path string) (transports.FileInfoDetails, error) 
 	}, nil
 }
 
-func (t *FsTransport) Close() {}
+func (t *FsTransport) Close() {
+	if t.closeFN != nil {
+		t.closeFN()
+	}
+}
 
 func (t *FsTransport) Capabilities() transports.Capabilities {
 	return transports.Capabilities{

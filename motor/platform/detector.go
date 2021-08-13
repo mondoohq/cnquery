@@ -4,6 +4,7 @@ import (
 	"errors"
 	"runtime"
 
+	"go.mondoo.io/mondoo/motor/transports/awsec2ebs"
 	"go.mondoo.io/mondoo/motor/transports/github"
 
 	"go.mondoo.io/mondoo/motor/transports/equinix"
@@ -141,6 +142,13 @@ func (d *Detector) Platform() (*Platform, error) {
 			Title:   "Github",
 			Kind:    transports.Kind_KIND_API,
 			Runtime: transports.RUNTIME_GITHUB,
+		}, nil
+	case *awsec2ebs.Ec2EbsTransport:
+		return &Platform{
+			Name:    "aws-ec2-ebs",
+			Title:   "Aws Ec2 Ebs",
+			Kind:    transports.Kind_KIND_API,
+			Runtime: transports.RUNTIME_AWS_EC2_EBS,
 		}, nil
 	default:
 		var resolved bool
