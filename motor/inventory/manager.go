@@ -8,7 +8,7 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery"
 	"go.mondoo.io/mondoo/motor/inventory/credentialquery"
-	"go.mondoo.io/mondoo/motor/inventory/v1"
+	v1 "go.mondoo.io/mondoo/motor/inventory/v1"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/vault"
 	"go.mondoo.io/mondoo/motor/vault/inmemory"
@@ -41,11 +41,12 @@ func WithInventory(inventory *v1.Inventory) Option {
 }
 
 // passes a list of asset into the Inventory Manager
-func WithAssets(assetList []*asset.Asset) Option {
+func WithAssets(assetList []*asset.Asset, credentialQuery string) Option {
 	return func(im *inventoryManager) error {
 		inventory := &v1.Inventory{
 			Spec: &v1.InventorySpec{
-				Assets: assetList,
+				Assets:          assetList,
+				CredentialQuery: credentialQuery,
 			},
 		}
 		return im.loadInventory(inventory)
