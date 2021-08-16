@@ -135,6 +135,7 @@ func (im *inventoryManager) GetCredential(secretId string) (*transports.Credenti
 		return nil, vault.NotFoundError
 	}
 
+	log.Debug().Str("secret-id", secretId).Msg("fetch secret from vault")
 	secret, err := v.Get(context.Background(), &vault.SecretID{
 		Key: secretId,
 	})

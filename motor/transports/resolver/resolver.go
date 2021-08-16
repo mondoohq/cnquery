@@ -41,6 +41,7 @@ func warnIncompleteFeature(backend transports.TransportBackend) {
 // By default, it uses the id detector mechanisms provided by the transport. User can overwrite that
 // behaviour by optionally passing id detector identifier
 func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(secretId string) (*transports.Credential, error), userIdDetectors ...string) (*motor.Motor, error) {
+	log.Debug().Msg("establish motor connection")
 	var m *motor.Motor
 	var name string
 	var identifier []string
@@ -53,14 +54,15 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(secret
 	// the clone is important so that credentials are not leaked outside of the function
 	clonedConfig := proto.Clone(tc).(*transports.TransportConfig)
 	resolvedCredentials := []*transports.Credential{}
-	var err error
 	for i := range clonedConfig.Credentials {
 		credential := clonedConfig.Credentials[i]
 		if credential.SecretId != "" && credentialFn != nil {
-			credential, err = credentialFn(credential.SecretId)
+			resolvedCredential, err := credentialFn(credential.SecretId)
 			if err != nil {
+				log.Debug().Str("secret-id", credential.SecretId).Err(err).Msg("could not fetch secret for motor connection")
 				return nil, err
 			}
+			credential = resolvedCredential
 		}
 		resolvedCredentials = append(resolvedCredentials, credential)
 	}
