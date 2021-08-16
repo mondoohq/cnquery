@@ -49,7 +49,7 @@ func OpenAssetConnection(assetInfo *asset.Asset, credentialFn func(secretId stri
 
 	// parse reference id and restore options
 	if len(assetInfo.PlatformIds) > 0 {
-		tc.Platformid = assetInfo.PlatformIds[0]
+		tc.PlatformId = assetInfo.PlatformIds[0]
 	}
 
 	return EstablishConnection(tc, credentialFn, nil, tc.Insecure, record)
@@ -84,7 +84,7 @@ func OpenAssetConnections(assetInfo *asset.Asset, credentialFn func(secretId str
 
 		// parse reference id and restore options
 		if len(assetInfo.PlatformIds) > 0 {
-			tc.Platformid = assetInfo.PlatformIds[0]
+			tc.PlatformId = assetInfo.PlatformIds[0]
 		}
 
 		m, err := EstablishConnection(tc, credentialFn, assetInfo.IdDetector, tc.Insecure, record)

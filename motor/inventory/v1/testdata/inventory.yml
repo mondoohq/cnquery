@@ -63,7 +63,7 @@ spec:
             - secret_id: secret-2
 
     - name: asset x
-      platform-ids:
+      platform_ids:
         - //platform.mondoo.app/vsphere-id
         - //platform.mondoo.app/ssh-hostkey
         - //platform.mondoo.app/hostname

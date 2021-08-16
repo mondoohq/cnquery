@@ -53,7 +53,7 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 		kind:               tc.Kind,
 		runtime:            tc.Runtime,
 		opts:               tc.Options,
-		selectedPlatformID: tc.Platformid,
+		selectedPlatformID: tc.PlatformId,
 	}, nil
 }
 
