@@ -484,6 +484,7 @@ func init() {
 			"where":      {f: arrayWhere},
 			"duplicates": {f: arrayDuplicates},
 			"unique":     {f: arrayUnique},
+			"difference": {f: arrayDifference},
 			"==":         {Compiler: compileArrayOpArray("=="), f: tarrayCmpTarray, Label: "=="},
 			"!=":         {Compiler: compileArrayOpArray("!="), f: tarrayNotTarray, Label: "!="},
 			"&&":         {Compiler: compileLogicalArrayOp(types.ArrayLike, "&&")},
