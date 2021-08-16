@@ -28,17 +28,17 @@ func init() {
 	MockPassword, _ = vault.NewSecret(&transports.Credential{
 		Type:   transports.CredentialType_password,
 		Secret: []byte("password"),
-	})
+	}, vault.SecretEncoding_PROTO)
 	MockPKey, _ = vault.NewSecret(&transports.Credential{
 		Type:   transports.CredentialType_private_key,
 		Secret: []byte("BEGIN_PRIVATE_KEY...."),
-	})
+	}, vault.SecretEncoding_PROTO)
 	MockPrivateKeyPassword, _ = vault.NewSecret(&transports.Credential{
 		Type:     transports.CredentialType_private_key,
 		User:     "that-user",
 		Secret:   []byte("blabla"),
 		Password: "supersecure",
-	})
+	}, vault.SecretEncoding_PROTO)
 }
 
 func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, error) {

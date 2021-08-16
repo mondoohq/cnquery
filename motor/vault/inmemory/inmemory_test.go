@@ -23,9 +23,10 @@ func TestVault(t *testing.T) {
 
 	key := "mondoo-test-secret-key"
 	cred := &vault.Secret{
-		Key:   key,
-		Label: "mondoo: " + key,
-		Data:  credBytes,
+		Key:      key,
+		Label:    "mondoo: " + key,
+		Data:     credBytes,
+		Encoding: vault.SecretEncoding_PROTO,
 	}
 
 	id, err := v.Set(ctx, cred)

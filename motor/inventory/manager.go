@@ -109,7 +109,7 @@ func (im *inventoryManager) loadInventory(inventory *v1.Inventory) error {
 	for i := range inventory.Spec.Credentials {
 		cred := inventory.Spec.Credentials[i]
 
-		secret, err := vault.NewSecret(cred)
+		secret, err := vault.NewSecret(cred, vault.SecretEncoding_PROTO)
 		if err != nil {
 			return err
 		}
@@ -168,7 +168,7 @@ func (im *inventoryManager) GetCredential(secretId string) (*transports.Credenti
 		return nil, err
 	}
 
-	return vault.NewCredential(secret)
+	return secret.Credential()
 }
 
 // QuerySecretId provides an input and determines the credential information for an asset
