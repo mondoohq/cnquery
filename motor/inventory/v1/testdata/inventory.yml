@@ -75,7 +75,8 @@ spec:
   # external vault, needs to be pre-configured
   # If a vault is defined along with embedded credentials, we first query against embedded credentials
   # and fall-backs to the configured vault
-  vault: vault-1
+  #  vault:
+  #    name: vault-1
 
   # essentially an embedded in-memory vault
   # we will make no difference if the content that is embedded and a referenced vault
