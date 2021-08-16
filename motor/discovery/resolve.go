@@ -23,12 +23,12 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/docker_engine"
 	"go.mondoo.io/mondoo/motor/discovery/equinix"
 	"go.mondoo.io/mondoo/motor/discovery/gcp"
-	"go.mondoo.io/mondoo/motor/discovery/instance"
 	"go.mondoo.io/mondoo/motor/discovery/ipmi"
 	"go.mondoo.io/mondoo/motor/discovery/k8s"
 	"go.mondoo.io/mondoo/motor/discovery/local"
 	"go.mondoo.io/mondoo/motor/discovery/mock"
 	"go.mondoo.io/mondoo/motor/discovery/ms365"
+	"go.mondoo.io/mondoo/motor/discovery/standard"
 	"go.mondoo.io/mondoo/motor/discovery/tar"
 	"go.mondoo.io/mondoo/motor/discovery/vagrant"
 	"go.mondoo.io/mondoo/motor/discovery/vsphere"
@@ -47,8 +47,8 @@ var resolver map[string]Resolver
 func init() {
 	resolver = map[string]Resolver{
 		transports.SCHEME_LOCAL:              &local.Resolver{},
-		transports.SCHEME_WINRM:              &instance.Resolver{},
-		transports.SCHEME_SSH:                &instance.Resolver{},
+		transports.SCHEME_WINRM:              &standard.Resolver{},
+		transports.SCHEME_SSH:                &standard.Resolver{},
 		transports.SCHEME_DOCKER:             &docker_engine.Resolver{},
 		transports.SCHEME_DOCKER_IMAGE:       &docker_engine.Resolver{},
 		transports.SCHEME_DOCKER_CONTAINER:   &docker_engine.Resolver{},
@@ -63,12 +63,12 @@ func init() {
 		transports.SCHEME_MOCK:               &mock.Resolver{},
 		transports.SCHEME_VSPHERE:            &vsphere.Resolver{},
 		transports.SCHEME_VSPHERE_VM:         &vsphere.VMGuestResolver{},
-		transports.SCHEME_ARISTA:             &instance.Resolver{},
+		transports.SCHEME_ARISTA:             &standard.Resolver{},
 		transports.SCHEME_MS365:              &ms365.Resolver{},
 		transports.SCHEME_IPMI:               &ipmi.Resolver{},
-		transports.SCHEME_FS:                 &instance.Resolver{},
+		transports.SCHEME_FS:                 &standard.Resolver{},
 		transports.SCHEME_EQUINIX:            &equinix.Resolver{},
-		transports.SCHEME_GITHUB:             &instance.Resolver{},
+		transports.SCHEME_GITHUB:             &standard.Resolver{},
 	}
 }
 
