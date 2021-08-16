@@ -825,6 +825,18 @@ func TestArray(t *testing.T) {
 			"[1,1,2,2,2,3].duplicates()",
 			0, []interface{}{int64(1), int64(2)},
 		},
+		{
+			"[2,1,2,2].containsOnly([2])",
+			0, []interface{}{int64(1)},
+		},
+		{
+			"[2,1,2,1].containsOnly([1,2])",
+			0, []interface{}(nil),
+		},
+		{
+			"a = [1]; [2,1,2,1].containsOnly(a)",
+			0, []interface{}{int64(2), int64(2)},
+		},
 	})
 }
 

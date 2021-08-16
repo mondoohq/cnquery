@@ -289,6 +289,60 @@ func arrayUnique(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return &RawData{Type: bind.Type, Value: unique}, 0, nil
 }
 
+func arrayDifference(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type, Error: bind.Error}, 0, nil
+	}
+
+	args := chunk.Function.Args
+	// TODO: all this needs to go into the compile phase
+	if len(args) < 1 {
+		return nil, 0, errors.New("Called `difference` with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
+	}
+	if len(args) > 1 {
+		return nil, 0, errors.New("called `difference` with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
+	}
+	// ^^ TODO
+
+	argRef := args[0]
+	arg, rref, err := c.resolveValue(argRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	t := types.Type(arg.Type)
+	if t != bind.Type {
+		return nil, 0, errors.New("called `difference` with wrong type (got: " + t.Label() + ", expected:" + bind.Type.Label() + ")")
+	}
+
+	ct := bind.Type.Child()
+	equalFunc, ok := types.Equal[ct]
+	if !ok {
+		return nil, 0, errors.New("cannot compare array entries")
+	}
+
+	org := bind.Value.([]interface{})
+	filters := arg.Value.([]interface{})
+
+	var res []interface{}
+	var skip bool
+	for i := range org {
+		skip = false
+		for j := range filters {
+			if equalFunc(org[i], filters[j]) {
+				skip = true
+				break
+			}
+		}
+
+		if !skip {
+			res = append(res, org[i])
+		}
+	}
+
+	return &RawData{Type: bind.Type, Value: res}, 0, nil
+}
+
 func compileArrayOpArray(op string) func(types.Type, types.Type) (string, error) {
 	return func(left types.Type, right types.Type) (string, error) {
 		name := string(left.Child()) + op + string(right)
