@@ -1,4 +1,4 @@
-package instance
+package standard
 
 import (
 	"github.com/rs/zerolog/log"
@@ -12,7 +12,7 @@ import (
 type Resolver struct{}
 
 func (r *Resolver) Name() string {
-	return "Instance Resolver"
+	return "Standard Resolver"
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
