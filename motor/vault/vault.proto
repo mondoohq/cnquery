@@ -7,10 +7,18 @@ message SecretID {
   string key = 1;
 }
 
+enum SecretEncoding {
+  UNKNOWN = 0;
+  JSON = 1;
+  PROTO = 2;
+  BINARY = 3;
+}
+
 message Secret {
   string key = 1;
   string label = 2;
   bytes data = 3;
+  SecretEncoding encoding = 4;
 }
 
 service Vault {

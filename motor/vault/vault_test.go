@@ -16,10 +16,10 @@ func TestSecretCredentialConversion(t *testing.T) {
 		Password: "pass1",
 	}
 
-	secret, err := NewSecret(cred)
+	secret, err := NewSecret(cred, SecretEncoding_PROTO)
 	require.NoError(t, err)
 
-	cred2, err := NewCredential(secret)
+	cred2, err := secret.Credential()
 	require.NoError(t, err)
 
 	if d := cmp.Diff(cred, cred2, protocmp.Transform()); d != "" {

@@ -7,6 +7,8 @@ import (
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
+const inmemoryEncoding = vault.SecretEncoding_PROTO
+
 type Option func(*inmemoryVault)
 
 func WithSecretMap(secrets map[string]*vault.Secret) Option {
@@ -48,5 +50,6 @@ func (v *inmemoryVault) Get(ctx context.Context, id *vault.SecretID) (*vault.Sec
 	if !ok {
 		return nil, vault.NotFoundError
 	}
+	s.Encoding = inmemoryEncoding
 	return s, nil
 }
