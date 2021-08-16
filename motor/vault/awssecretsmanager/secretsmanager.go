@@ -24,7 +24,6 @@ type Vault struct {
 }
 
 func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, error) {
-	log.Debug().Msgf("getting cred from aws secrets manager %s", id.Key)
 	// create the client
 	parsedArn, err := arn.Parse(id.Key)
 	if err != nil {
@@ -33,16 +32,28 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 	cfg := v.cfg.Copy()
 	cfg.Region = parsedArn.Region
 	c := secretsmanager.NewFromConfig(cfg)
+
 	// retrieve secret
+	log.Debug().Str("secret-id", id.Key).Msg("getting cred from aws secrets manager")
 	out, err := c.GetSecretValue(ctx, &secretsmanager.GetSecretValueInput{
 		SecretId: &id.Key,
 	})
 	if err != nil {
+		log.Debug().Err(err).Str("secret-id", id.Key).Msg("could not retrieve secret from aws secret manager")
 		return nil, vault.NotFoundError
 	}
+
+	// NOTE: we cannot use out.SecretBinary since it is not guaranteed to be set
+	var data []byte
+	if out.SecretString != nil {
+		data = []byte(*out.SecretString)
+	} else {
+		data = out.SecretBinary
+	}
+
 	return &vault.Secret{
 		Key:  id.Key,
-		Data: out.SecretBinary,
+		Data: data,
 	}, nil
 }
 
