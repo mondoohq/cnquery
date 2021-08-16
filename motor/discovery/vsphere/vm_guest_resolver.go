@@ -91,7 +91,7 @@ func EnrichVsphereToolsConnWithSecrets(a *asset.Asset, cfn common.CredentialFn, 
 
 			secretRefCred, err := sfn(a)
 			if err == nil && secretRefCred != nil {
-				creds, err = cfn(secretRefCred.SecretId)
+				creds, err = cfn(secretRefCred)
 			}
 
 			if err == nil && creds != nil {

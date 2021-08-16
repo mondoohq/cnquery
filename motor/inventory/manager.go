@@ -2,6 +2,7 @@ package inventory
 
 import (
 	"context"
+	"errors"
 
 	"go.mondoo.io/mondoo/motor/vault/config"
 
@@ -24,7 +25,7 @@ type InventoryManager interface {
 	// GetAssets will return the fully resolved list of assets
 	Resolve() map[*asset.Asset]error
 	// GetCredential returns a full credential including the secret from vault
-	GetCredential(secretId string) (*transports.Credential, error)
+	GetCredential(*transports.Credential) (*transports.Credential, error)
 	// QuerySecretId runs the credential query to determine the secret id for an asset, the resulting credential
 	// only returns a secret id
 	QuerySecretId(a *asset.Asset) (*transports.Credential, error)
@@ -154,21 +155,40 @@ func (im *inventoryManager) GetAssets() []*asset.Asset {
 }
 
 // GetCredential retrieves the credential from vault via the secret id
-func (im *inventoryManager) GetCredential(secretId string) (*transports.Credential, error) {
+func (im *inventoryManager) GetCredential(cred *transports.Credential) (*transports.Credential, error) {
+	if cred == nil {
+		return nil, errors.New("cannot find credential with empty input")
+	}
+
 	v := im.GetVault()
 	if v == nil {
 		return nil, vault.NotFoundError
 	}
 
-	log.Debug().Str("secret-id", secretId).Msg("fetch secret from vault")
+	log.Debug().Str("secret-id", cred.SecretId).Msg("fetch secret from vault")
+	// TODO: do we need to provide the encoding from outside or inside?
 	secret, err := v.Get(context.Background(), &vault.SecretID{
-		Key: secretId,
+		Key: cred.SecretId,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return secret.Credential()
+	retrievedCred, err := secret.Credential()
+	if err != nil {
+		return nil, err
+	}
+
+	// merge creds since user can provide additional credential_type, user
+	if cred.User != "" {
+		retrievedCred.User = cred.User
+	}
+
+	if cred.Type != transports.CredentialType_undefined {
+		retrievedCred.Type = cred.Type
+	}
+
+	return retrievedCred, nil
 }
 
 // QuerySecretId provides an input and determines the credential information for an asset
