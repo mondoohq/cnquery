@@ -134,8 +134,14 @@ message Inventory {
 message InventorySpec {
    repeated mondoo.motor.asset.v1.Asset assets = 1;
    map<string,mondoo.motor.transports.v1.Credential> credentials = 2;
-   string vault = 3;
+  VaultConfiguration vault = 3;
    string credential_query = 4;
 }
 
 message InventoryStatus {}
+
+message VaultConfiguration {
+  string name = 1;
+  string type = 2;
+  map<string,string> options = 3;
+}

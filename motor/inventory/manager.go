@@ -3,6 +3,8 @@ package inventory
 import (
 	"context"
 
+	"go.mondoo.io/mondoo/motor/vault/config"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/logger"
 	"go.mondoo.io/mondoo/motor/asset"
@@ -120,6 +122,18 @@ func (im *inventoryManager) loadInventory(inventory *v1.Inventory) error {
 
 	if inventory.Spec.CredentialQuery != "" {
 		im.SetCredentialQuery(inventory.Spec.CredentialQuery)
+	}
+
+	if inventory.Spec.Vault != nil {
+		v, err := config.New(config.VaultConfiguration{
+			Name:      inventory.Spec.Vault.Name,
+			VaultType: inventory.Spec.Vault.Type,
+			Options:   inventory.Spec.Vault.Options,
+		})
+		if err != nil {
+			return err
+		}
+		im.vault = v
 	}
 
 	return nil
