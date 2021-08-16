@@ -26,7 +26,7 @@ func TestInventoryLoader(t *testing.T) {
 			conn := a.Connections[j]
 			for k := range conn.Credentials {
 				cred := conn.Credentials[k]
-				_, err := im.GetCredential(cred.SecretId)
+				_, err := im.GetCredential(cred)
 				assert.NoError(t, err, cred.SecretId)
 			}
 		}

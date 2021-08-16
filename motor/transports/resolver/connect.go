@@ -8,7 +8,7 @@ import (
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
-func EstablishConnection(tc *transports.TransportConfig, credentialFn func(secretId string) (*transports.Credential, error), idDetectors []string, insecure bool, record bool) (*motor.Motor, error) {
+func EstablishConnection(tc *transports.TransportConfig, credentialFn func(cred *transports.Credential) (*transports.Credential, error), idDetectors []string, insecure bool, record bool) (*motor.Motor, error) {
 	log.Debug().Str("connection", tc.ToUrl()).Bool("insecure", insecure).Msg("establish connection to asset")
 	// overwrite connection specific insecure with global insecure
 	if insecure {
@@ -22,7 +22,7 @@ func EstablishConnection(tc *transports.TransportConfig, credentialFn func(secre
 	return NewMotorConnection(tc, credentialFn, idDetectors...)
 }
 
-func OpenAssetConnection(assetInfo *asset.Asset, credentialFn func(secretId string) (*transports.Credential, error), record bool) (*motor.Motor, error) {
+func OpenAssetConnection(assetInfo *asset.Asset, credentialFn func(cred *transports.Credential) (*transports.Credential, error), record bool) (*motor.Motor, error) {
 	if assetInfo == nil {
 		return nil, errors.New("asset is not defined")
 	}
@@ -55,7 +55,7 @@ func OpenAssetConnection(assetInfo *asset.Asset, credentialFn func(secretId stri
 	return EstablishConnection(tc, credentialFn, nil, tc.Insecure, record)
 }
 
-func OpenAssetConnections(assetInfo *asset.Asset, credentialFn func(secretId string) (*transports.Credential, error), record bool) ([]*motor.Motor, error) {
+func OpenAssetConnections(assetInfo *asset.Asset, credentialFn func(cred *transports.Credential) (*transports.Credential, error), record bool) ([]*motor.Motor, error) {
 	if assetInfo == nil {
 		return nil, errors.New("asset is not defined")
 	}

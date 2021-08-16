@@ -40,7 +40,7 @@ func warnIncompleteFeature(backend transports.TransportBackend) {
 // NewMotorConnection establishes a motor connection by using the provided transport configuration
 // By default, it uses the id detector mechanisms provided by the transport. User can overwrite that
 // behaviour by optionally passing id detector identifier
-func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(secretId string) (*transports.Credential, error), userIdDetectors ...string) (*motor.Motor, error) {
+func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *transports.Credential) (*transports.Credential, error), userIdDetectors ...string) (*motor.Motor, error) {
 	log.Debug().Msg("establish motor connection")
 	var m *motor.Motor
 	var name string
@@ -57,7 +57,7 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(secret
 	for i := range clonedConfig.Credentials {
 		credential := clonedConfig.Credentials[i]
 		if credential.SecretId != "" && credentialFn != nil {
-			resolvedCredential, err := credentialFn(credential.SecretId)
+			resolvedCredential, err := credentialFn(credential)
 			if err != nil {
 				log.Debug().Str("secret-id", credential.SecretId).Err(err).Msg("could not fetch secret for motor connection")
 				return nil, err

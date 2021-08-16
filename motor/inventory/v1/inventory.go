@@ -95,7 +95,7 @@ func (p *Inventory) PreProcess() error {
 				if cred.SecretId != "" {
 					// clean credentials
 					// if a secret id with content is provided, we discard the content and always prefer the secret id
-					cleanCred(cred)
+					cleanSecrets(cred)
 				} else {
 					// create secret id and add id to the credential
 					secretId := ksuid.New().String()
@@ -165,8 +165,12 @@ func (p *Inventory) PreProcess() error {
 
 func cleanCred(c *transports.Credential) {
 	c.User = ""
-	c.Secret = []byte{}
 	c.Type = transports.CredentialType_undefined
+	cleanSecrets(c)
+}
+
+func cleanSecrets(c *transports.Credential) {
+	c.Secret = []byte{}
 	c.PrivateKey = ""
 	c.PrivateKeyPath = ""
 	c.Password = ""
