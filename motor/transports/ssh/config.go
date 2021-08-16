@@ -17,20 +17,20 @@ func ReadSSHConfig(cc *transports.TransportConfig) *transports.TransportConfig {
 
 	home, err := homedir.Dir()
 	if err != nil {
-		log.Debug().Err(err).Msg("Failed to determine user home directory")
+		log.Debug().Err(err).Msg("ssh> failed to determine user home directory")
 		return cc
 	}
 
 	sshUserConfigPath := filepath.Join(home, ".ssh", "config")
 	f, err := os.Open(sshUserConfigPath)
 	if err != nil {
-		log.Debug().Err(err).Str("file", sshUserConfigPath).Msg("Could not read ssh config")
+		log.Debug().Err(err).Str("file", sshUserConfigPath).Msg("ssh> could not read ssh config")
 		return cc
 	}
 
 	cfg, err := ssh_config.Decode(f)
 	if err != nil {
-		log.Debug().Err(err).Str("file", sshUserConfigPath).Msg("Could not parse ssh config")
+		log.Debug().Err(err).Str("file", sshUserConfigPath).Msg("could not parse ssh config")
 		return cc
 	}
 
@@ -57,7 +57,7 @@ func ReadSSHConfig(cc *transports.TransportConfig) *transports.TransportConfig {
 			// commonly ssh config included paths like ~
 			expandedPath, err := homedir.Expand(entry)
 			if err == nil {
-				log.Debug().Str("key", expandedPath).Str("host", host).Msg("read ssh identity key from ssh config")
+				log.Debug().Str("key", expandedPath).Str("host", host).Msg("ssh> read ssh identity key from ssh config")
 				// NOTE: we ignore the error here for now but this should probably been catched earlier anyway
 				credential, _ := transports.NewPrivateKeyCredentialFromPath(user, expandedPath, "")
 				// apply the option manually
