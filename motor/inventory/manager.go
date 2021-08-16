@@ -8,7 +8,7 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery"
 	"go.mondoo.io/mondoo/motor/inventory/credentialquery"
-	v1 "go.mondoo.io/mondoo/motor/inventory/v1"
+	"go.mondoo.io/mondoo/motor/inventory/v1"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/vault"
 	"go.mondoo.io/mondoo/motor/vault/inmemory"
@@ -41,15 +41,20 @@ func WithInventory(inventory *v1.Inventory) Option {
 }
 
 // passes a list of asset into the Inventory Manager
-func WithAssets(assetList []*asset.Asset, credentialQuery string) Option {
+func WithAssets(assetList []*asset.Asset) Option {
 	return func(im *inventoryManager) error {
 		inventory := &v1.Inventory{
 			Spec: &v1.InventorySpec{
-				Assets:          assetList,
-				CredentialQuery: credentialQuery,
+				Assets: assetList,
 			},
 		}
 		return im.loadInventory(inventory)
+	}
+}
+
+func WithCredentialQuery(query string) Option {
+	return func(im *inventoryManager) error {
+		return im.SetCredentialQuery(query)
 	}
 }
 
@@ -114,13 +119,18 @@ func (im *inventoryManager) loadInventory(inventory *v1.Inventory) error {
 	im.resetVault()
 
 	if inventory.Spec.CredentialQuery != "" {
-		qr, err := credentialquery.NewCredentialQueryRunner(inventory.Spec.CredentialQuery)
-		if err != nil {
-			return err
-		}
-		im.credentialQueryRunner = qr
+		im.SetCredentialQuery(inventory.Spec.CredentialQuery)
 	}
 
+	return nil
+}
+
+func (im *inventoryManager) SetCredentialQuery(query string) error {
+	qr, err := credentialquery.NewCredentialQueryRunner(query)
+	if err != nil {
+		return err
+	}
+	im.credentialQueryRunner = qr
 	return nil
 }
 
