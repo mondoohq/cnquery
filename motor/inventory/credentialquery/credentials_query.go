@@ -3,15 +3,13 @@ package credentialquery
 import (
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/vault"
-
-	"github.com/rs/zerolog/log"
-
 	"github.com/cockroachdb/errors"
 	"github.com/mitchellh/mapstructure"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/policy/executor"
+	"go.mondoo.io/mondoo/motor/vault"
+	"go.mondoo.io/mondoo/mql"
 	"go.mondoo.io/mondoo/types"
 )
 
@@ -23,10 +21,12 @@ type CredentialQueryResponse struct {
 }
 
 func NewCredentialQueryRunner(credentialQuery string) (*CredentialQueryRunner, error) {
-	e, err := executor.NewEmbeddedExecutor()
+	rt, err := mql.MockRuntime()
 	if err != nil {
 		return nil, err
 	}
+
+	mqlExecutor := mql.New(rt)
 
 	// just empty props to ensure we can compile
 	props := map[string]*llx.Primitive{
@@ -35,18 +35,20 @@ func NewCredentialQueryRunner(credentialQuery string) (*CredentialQueryRunner, e
 		"labels":   llx.MapData(map[string]interface{}{}, types.String).Result().Data,
 		"platform": llx.MapData(map[string]interface{}{}, types.String).Result().Data,
 	}
-	_, err = e.Compile(credentialQuery, props)
+
+	// test query to see if it compiles well
+	_, err = mql.Exec(credentialQuery, rt, props)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not compile the secret metadata function")
 	}
 	return &CredentialQueryRunner{
-		e:                   e,
+		mqlExecutor:         mqlExecutor,
 		secretMetadataQuery: credentialQuery,
 	}, nil
 }
 
 type CredentialQueryRunner struct {
-	e                   *executor.EmbeddedExecutor
+	mqlExecutor         *mql.Executor
 	secretMetadataQuery string
 }
 
@@ -77,7 +79,7 @@ func (sq *CredentialQueryRunner) Run(a *asset.Asset) (*vault.Credential, error) 
 		"platform": llx.MapData(platformProps, types.String).Result().Data,
 	}
 
-	value, err := sq.e.Run(sq.secretMetadataQuery, props)
+	value, err := sq.mqlExecutor.Exec(sq.secretMetadataQuery, props)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +90,7 @@ func (sq *CredentialQueryRunner) Run(a *asset.Asset) (*vault.Credential, error) 
 		Result:   sMeta,
 		TagName:  "json",
 	})
-	err = decoder.Decode(value)
+	err = decoder.Decode(value.Value)
 
 	code, ok := vault.CredentialType_value[strings.TrimSpace(sMeta.Type)]
 	if !ok {
