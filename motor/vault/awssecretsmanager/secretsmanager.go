@@ -54,6 +54,8 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 	return &vault.Secret{
 		Key:  id.Key,
 		Data: data,
+		// we do not know the encoding here, but the default is binary
+		Encoding: vault.SecretEncoding_encoding_binary,
 	}, nil
 }
 
