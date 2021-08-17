@@ -69,7 +69,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 		discoverFilter = tc.Discover.Filter
 	}
 
-	ssmInstancesPlatformIdsMap := map[string]*asset.Asset{}
+	instancesPlatformIdsMap := map[string]*asset.Asset{}
 	// discover ssm instances
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoverySSM) {
 		if val := discoverFilter["ssm"]; val == "true" {
@@ -86,9 +86,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 			log.Debug().Int("instances", len(assetList)).Msg("completed ssm instance search")
 			for i := range assetList {
 				log.Debug().Str("name", assetList[i].Name).Msg("resolved ssm instance")
-
-				resolved = append(resolved, assetList[i])
-				ssmInstancesPlatformIdsMap[assetList[i].PlatformIds[0]] = assetList[i]
+				instancesPlatformIdsMap[assetList[i].PlatformIds[0]] = assetList[i]
 			}
 		}
 	}
@@ -101,7 +99,6 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 
 		r.Insecure = tc.Insecure
 		r.FilterOptions = AssembleEc2InstancesFilters(discoverFilter)
-		r.SSMInstancesPlatformIdsMap = ssmInstancesPlatformIdsMap
 
 		assetList, err := r.List()
 		if err != nil {
@@ -111,13 +108,29 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 		for i := range assetList {
 			a := assetList[i]
 			log.Debug().Str("name", a.Name).Msg("resolved ec2 instance")
-
-			// find the secret reference for the asset
-			common.EnrichAssetWithSecrets(a, sfn)
-
-			resolved = append(resolved, a)
+			id := a.PlatformIds[0]
+			existing, ok := instancesPlatformIdsMap[id]
+			if ok {
+				// NOTE: we do not merge connections here, since ssm is available
+				// merge labels
+				for k, v := range a.Labels {
+					existing.Labels[k] = v
+				}
+			} else {
+				instancesPlatformIdsMap[id] = a
+			}
 		}
 	}
+
+	// add all the detected ssm instanced and ec2 instances to the list
+	for k := range instancesPlatformIdsMap {
+		a := instancesPlatformIdsMap[k]
+
+		// find the secret reference for the asset
+		common.EnrichAssetWithSecrets(a, sfn)
+		resolved = append(resolved, a)
+	}
+
 	return resolved, nil
 }
 

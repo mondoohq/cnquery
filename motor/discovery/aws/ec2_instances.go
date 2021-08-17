@@ -33,11 +33,10 @@ func NewEc2Discovery(cfg aws.Config) (*Ec2Instances, error) {
 }
 
 type Ec2Instances struct {
-	config                     aws.Config
-	Insecure                   bool
-	FilterOptions              Ec2InstancesFilters
-	SSMInstancesPlatformIdsMap map[string]*asset.Asset
-	Labels                     map[string]string
+	config        aws.Config
+	Insecure      bool
+	FilterOptions Ec2InstancesFilters
+	Labels        map[string]string
 }
 
 func (ec2i *Ec2Instances) Name() string {
@@ -110,12 +109,12 @@ func (ec2i *Ec2Instances) getInstances(account string, ec2InstancesFilters Ec2In
 			}
 			log.Debug().Str("account", account).Str("region", clonedConfig.Region).Int("instance count", len(resp.Reservations)).Msg("found ec2 instances")
 
-			// resolve all instances
+			// resolve all ec2 instances
 			for i := range resp.Reservations {
 				reservation := resp.Reservations[i]
 				for j := range reservation.Instances {
 					instance := reservation.Instances[j]
-					res = append(res, instanceToAsset(account, region, instance, ec2i.Insecure, ec2i.SSMInstancesPlatformIdsMap, ec2i.Labels))
+					res = append(res, instanceToAsset(account, region, instance, ec2i.Insecure, ec2i.Labels))
 				}
 			}
 
@@ -150,46 +149,40 @@ func (ec2i *Ec2Instances) List() ([]*asset.Asset, error) {
 	return instances, nil
 }
 
-func instanceToAsset(account string, region string, instance types.Instance, insecure bool, ssmInstancesPlatformIdsMap map[string]*asset.Asset, passInLabels map[string]string) *asset.Asset {
-	connections := []*transports.TransportConfig{}
+func instanceToAsset(account string, region string, instance types.Instance, insecure bool, passInLabels map[string]string) *asset.Asset {
+	asset := &asset.Asset{
+		Connections: []*transports.TransportConfig{},
+	}
 
-	var connection *transports.TransportConfig
+	// if there is a public ip, we assume ssh is an option
 	if instance.PublicIpAddress != nil {
-		connection = &transports.TransportConfig{
+		asset.Connections = append(asset.Connections, &transports.TransportConfig{
 			Backend:  transports.TransportBackend_CONNECTION_SSH,
 			Host:     *instance.PublicIpAddress,
 			Insecure: insecure,
 			Runtime:  transports.RUNTIME_AWS_EC2,
-		}
-		connections = append(connections, connection)
+		})
 	}
 
-	asset := &asset.Asset{}
-	if ssmAsset, ok := ssmInstancesPlatformIdsMap[awsec2.MondooInstanceID(account, region, *instance.InstanceId)]; ok {
-		// instance already discovered via ssm search. only add connections
-		ssmAsset.Connections = append(ssmAsset.Connections, connections...)
-		ssmAsset.Labels = addAssetLabels(ssmAsset.Labels, instance, region, passInLabels)
+	asset.PlatformIds = []string{awsec2.MondooInstanceID(account, region, *instance.InstanceId)}
+	asset.Name = *instance.InstanceId
+	asset.Platform = &platform.Platform{
+		Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
+		Runtime: transports.RUNTIME_AWS_EC2,
+	}
 
-	} else {
-		asset.PlatformIds = []string{awsec2.MondooInstanceID(account, region, *instance.InstanceId)}
-		asset.Name = *instance.InstanceId
-		asset.Platform = &platform.Platform{
-			Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
-			Runtime: transports.RUNTIME_AWS_EC2,
-		}
-		asset.Connections = connections
-		asset.State = mapEc2InstanceStateCode(instance.State)
-		asset.Labels = addAssetLabels(map[string]string{}, instance, region, passInLabels)
-		for k := range instance.Tags {
-			tag := instance.Tags[k]
-			if tag.Key != nil {
-				key := *tag.Key
-				value := ""
-				if tag.Value != nil {
-					value = *tag.Value
-				}
-				asset.Labels[key] = value
+	asset.State = mapEc2InstanceStateCode(instance.State)
+
+	asset.Labels = addAssetLabels(map[string]string{}, instance, region, passInLabels)
+	for k := range instance.Tags {
+		tag := instance.Tags[k]
+		if tag.Key != nil {
+			key := *tag.Key
+			value := ""
+			if tag.Value != nil {
+				value = *tag.Value
 			}
+			asset.Labels[key] = value
 		}
 	}
 
