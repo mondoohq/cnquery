@@ -117,9 +117,6 @@ func ResolveAsset(root *asset.Asset, cfn common.CredentialFn, sfn common.QuerySe
 				assetObj.Labels[k] = v
 			}
 
-			// merge platform ids with root object platform ids
-			assetObj.PlatformIds = append(assetObj.PlatformIds, root.PlatformIds...)
-
 			resolved = append(resolved, assetObj)
 		}
 	}

@@ -151,11 +151,13 @@ func vmsToAssetList(instanceUuid string, vms []*object.VirtualMachine, parentTC 
 
 		platformId := vsphere_transport.VsphereResourceID(instanceUuid, vm.Reference())
 		log.Debug().Str("platform-id", platformId).Msg("found vsphere vm")
+		guestState := mapVmGuestState(props.Guest.GuestState)
+
 		ha := &asset.Asset{
 			Name: vm.Name(),
 			// TODO: derive platform information guest id e.g. debian10_64Guest, be aware that this does not need to be
 			// the correct platform name
-			State: mapVmGuestState(props.Guest.GuestState),
+			State: guestState,
 			Labels: map[string]string{
 				"vsphere.vmware.com/name":           vm.Name(),
 				"vsphere.vmware.com/type":           vm.Reference().Type,
@@ -169,22 +171,18 @@ func vmsToAssetList(instanceUuid string, vms []*object.VirtualMachine, parentTC 
 			PlatformIds: []string{platformId},
 		}
 
-		// TODO: reactivate once we have multi-perspective scan active
-		// add parent information to validate the vm configuration from vsphere api perspective
-		// vt := parentTC.Clone()
-		// ha.Connections = append(ha.Connections, vt)
-
-		// TODO: steer the connection type by option
-		ha.Connections = []*transports.TransportConfig{
-			{
-				Backend:     transports.TransportBackend_CONNECTION_VSPHERE_VM,
-				Host:        parentTC.Host,
-				Insecure:    parentTC.Insecure,
-				Credentials: parentTC.Credentials,
-				Options: map[string]string{
-					"inventoryPath": vm.InventoryPath,
+		if guestState == asset.State_STATE_RUNNING {
+			ha.Connections = []*transports.TransportConfig{
+				{
+					Backend:     transports.TransportBackend_CONNECTION_VSPHERE_VM,
+					Host:        parentTC.Host,
+					Insecure:    parentTC.Insecure,
+					Credentials: parentTC.Credentials,
+					Options: map[string]string{
+						"inventoryPath": vm.InventoryPath,
+					},
 				},
-			},
+			}
 		}
 
 		res = append(res, ha)
