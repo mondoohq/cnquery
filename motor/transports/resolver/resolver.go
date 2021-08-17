@@ -3,6 +3,8 @@ package resolver
 import (
 	"fmt"
 
+	"go.mondoo.io/mondoo/motor/vault"
+
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor"
@@ -40,7 +42,7 @@ func warnIncompleteFeature(backend transports.TransportBackend) {
 // NewMotorConnection establishes a motor connection by using the provided transport configuration
 // By default, it uses the id detector mechanisms provided by the transport. User can overwrite that
 // behaviour by optionally passing id detector identifier
-func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *transports.Credential) (*transports.Credential, error), userIdDetectors ...string) (*motor.Motor, error) {
+func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *vault.Credential) (*vault.Credential, error), userIdDetectors ...string) (*motor.Motor, error) {
 	log.Debug().Msg("establish motor connection")
 	var m *motor.Motor
 	var name string
@@ -53,7 +55,7 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 	// we clone the config here, and replace all credential references with the real references
 	// the clone is important so that credentials are not leaked outside of the function
 	clonedConfig := proto.Clone(tc).(*transports.TransportConfig)
-	resolvedCredentials := []*transports.Credential{}
+	resolvedCredentials := []*vault.Credential{}
 	for i := range clonedConfig.Credentials {
 		credential := clonedConfig.Credentials[i]
 		if credential.SecretId != "" && credentialFn != nil {

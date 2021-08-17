@@ -4,15 +4,15 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/discovery/common"
-
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/local"
+	"go.mondoo.io/mondoo/motor/vault"
 )
 
 type Resolver struct{}
@@ -129,7 +129,7 @@ func newVagrantAsset(sshConfig *VagrantVmSSHConfig, rootTransportConfig *transpo
 	}
 
 	// load secret
-	credential, err := transports.NewPrivateKeyCredentialFromPath(sshConfig.User, sshConfig.IdentityFile, "")
+	credential, err := vault.NewPrivateKeyCredentialFromPath(sshConfig.User, sshConfig.IdentityFile, "")
 	if err != nil {
 		return nil, err
 	}

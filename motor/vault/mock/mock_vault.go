@@ -3,8 +3,6 @@ package mockvault
 import (
 	"context"
 
-	"go.mondoo.io/mondoo/motor/transports"
-
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/vault"
@@ -25,20 +23,20 @@ var (
 )
 
 func init() {
-	MockPassword, _ = vault.NewSecret(&transports.Credential{
-		Type:   transports.CredentialType_password,
+	MockPassword, _ = vault.NewSecret(&vault.Credential{
+		Type:   vault.CredentialType_password,
 		Secret: []byte("password"),
-	}, vault.SecretEncoding_PROTO)
-	MockPKey, _ = vault.NewSecret(&transports.Credential{
-		Type:   transports.CredentialType_private_key,
+	}, vault.SecretEncoding_encoding_proto)
+	MockPKey, _ = vault.NewSecret(&vault.Credential{
+		Type:   vault.CredentialType_private_key,
 		Secret: []byte("BEGIN_PRIVATE_KEY...."),
-	}, vault.SecretEncoding_PROTO)
-	MockPrivateKeyPassword, _ = vault.NewSecret(&transports.Credential{
-		Type:     transports.CredentialType_private_key,
+	}, vault.SecretEncoding_encoding_proto)
+	MockPrivateKeyPassword, _ = vault.NewSecret(&vault.Credential{
+		Type:     vault.CredentialType_private_key,
 		User:     "that-user",
 		Secret:   []byte("blabla"),
 		Password: "supersecure",
-	}, vault.SecretEncoding_PROTO)
+	}, vault.SecretEncoding_encoding_proto)
 }
 
 func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, error) {

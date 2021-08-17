@@ -5,10 +5,10 @@ import (
 	"os/user"
 	"path/filepath"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/mitchellh/go-homedir"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/vault"
 )
 
 // ApplyDefaults applies all ssh defaults to the transport. It specifically set
@@ -33,13 +33,13 @@ func ApplyDefaults(cc *transports.TransportConfig, username string, identityFile
 	// if identity file is provided with password -> encrypted private key
 	// if no identity file is provided but a password -> password
 	if identityFile != "" {
-		credential, err := transports.NewPrivateKeyCredentialFromPath(username, identityFile, password)
+		credential, err := vault.NewPrivateKeyCredentialFromPath(username, identityFile, password)
 		if err != nil {
 			return err
 		}
 		cc.AddCredential(credential)
 	} else if password != "" {
-		credential := transports.NewPasswordCredential(username, password)
+		credential := vault.NewPasswordCredential(username, password)
 		cc.AddCredential(credential)
 	}
 
@@ -80,7 +80,7 @@ func ApplyDefaultIdentities(cc *transports.TransportConfig, username string, pas
 			_, err := os.Stat(f)
 			if err == nil {
 				log.Debug().Str("key", f).Msg("load ssh identity")
-				credential, err := transports.NewPrivateKeyCredentialFromPath(username, f, password)
+				credential, err := vault.NewPrivateKeyCredentialFromPath(username, f, password)
 				if err != nil {
 					log.Warn().Err(err).Str("key", f).Msg("could not load ssh identity")
 				} else {
@@ -91,7 +91,7 @@ func ApplyDefaultIdentities(cc *transports.TransportConfig, username string, pas
 	}
 
 	// enable ssh-agent authentication as default
-	cc.AddCredential(&transports.Credential{Type: transports.CredentialType_ssh_agent, User: username})
+	cc.AddCredential(&vault.Credential{Type: vault.CredentialType_ssh_agent, User: username})
 
 	return cc
 }

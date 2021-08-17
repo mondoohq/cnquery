@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 
+	"go.mondoo.io/mondoo/motor/vault"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/transports"
 	"golang.org/x/crypto/ssh"
@@ -111,7 +113,7 @@ func authMethods(tc *transports.TransportConfig) ([]ssh.AuthMethod, error) {
 		credential := tc.Credentials[i]
 
 		switch credential.Type {
-		case transports.CredentialType_private_key:
+		case vault.CredentialType_private_key:
 			log.Debug().Msg("enabled ssh private key authentication")
 			priv, err := authPrivateKeyWithPassphrase(credential.Secret, credential.Password)
 			if err != nil {
@@ -119,11 +121,11 @@ func authMethods(tc *transports.TransportConfig) ([]ssh.AuthMethod, error) {
 			} else {
 				signers = append(signers, priv)
 			}
-		case transports.CredentialType_password:
+		case vault.CredentialType_password:
 			// use password auth
 			log.Debug().Msg("enabled ssh password authentication")
 			auths = append(auths, ssh.Password(string(credential.Secret)))
-		case transports.CredentialType_ssh_agent:
+		case vault.CredentialType_ssh_agent:
 			log.Debug().Msg("enabled ssh agent authentication")
 			useAgentAuth()
 		default:

@@ -3,14 +3,14 @@ package common
 import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/vault"
 )
 
 type (
 	// CredentialFn retrieves the credentials to connect to the platform
-	CredentialFn func(cred *transports.Credential) (*transports.Credential, error)
+	CredentialFn func(cred *vault.Credential) (*vault.Credential, error)
 	// QuerySecretFn is used during discovery phase to identify a secret for an asset
-	QuerySecretFn func(a *asset.Asset) (*transports.Credential, error)
+	QuerySecretFn func(a *asset.Asset) (*vault.Credential, error)
 )
 
 func EnrichAssetWithSecrets(a *asset.Asset, sfn QuerySecretFn) {
@@ -20,7 +20,7 @@ func EnrichAssetWithSecrets(a *asset.Asset, sfn QuerySecretFn) {
 		if len(conn.Credentials) == 0 {
 			creds, err := sfn(a)
 			if err == nil {
-				conn.Credentials = []*transports.Credential{creds}
+				conn.Credentials = []*vault.Credential{creds}
 			} else {
 				log.Warn().Str("name", a.Name).Msg("could not determine credentials for asset")
 			}

@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 import "motor/asset/asset.proto";
-import "motor/transports/transports.proto";
+import "motor/vault/vault.proto";
 
 package mondoo.motor.inventory.v1;
 option go_package = "go.mondoo.io/mondoo/motor/inventory/v1";
@@ -133,7 +133,7 @@ message Inventory {
 
 message InventorySpec {
    repeated mondoo.motor.asset.v1.Asset assets = 1;
-   map<string,mondoo.motor.transports.v1.Credential> credentials = 2;
+   map<string,mondoo.motor.vault.v1.Credential> credentials = 2;
   VaultConfiguration vault = 3;
    string credential_query = 4;
 }

@@ -4,12 +4,13 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"go.mondoo.io/mondoo/motor/vault"
+
 	motor_asset "go.mondoo.io/mondoo/motor/asset"
 
 	"github.com/cockroachdb/errors"
 
 	"github.com/segmentio/ksuid"
-	"go.mondoo.io/mondoo/motor/transports"
 	"google.golang.org/protobuf/proto"
 	"sigs.k8s.io/yaml"
 )
@@ -78,7 +79,7 @@ func (p *Inventory) ToYAML() ([]byte, error) {
 // the yaml file is not.
 func (p *Inventory) PreProcess() error {
 	if p.Spec.Credentials == nil {
-		p.Spec.Credentials = map[string]*transports.Credential{}
+		p.Spec.Credentials = map[string]*vault.Credential{}
 	}
 
 	// we are going to use the labels in metadata, ensure the structs are in place
@@ -126,7 +127,7 @@ func (p *Inventory) PreProcess() error {
 
 		// NOTE: it is possible that private keys hold an additional password, therefore we only
 		// copy the password into the secret when the credential type is password
-		if cred.Type == transports.CredentialType_password && cred.Password != "" {
+		if cred.Type == vault.CredentialType_password && cred.Password != "" {
 			cred.Secret = []byte(cred.Password)
 			cred.Password = ""
 		}
@@ -163,22 +164,22 @@ func (p *Inventory) PreProcess() error {
 	return nil
 }
 
-func cleanCred(c *transports.Credential) {
+func cleanCred(c *vault.Credential) {
 	c.User = ""
-	c.Type = transports.CredentialType_undefined
+	c.Type = vault.CredentialType_undefined
 	cleanSecrets(c)
 }
 
-func cleanSecrets(c *transports.Credential) {
+func cleanSecrets(c *vault.Credential) {
 	c.Secret = []byte{}
 	c.PrivateKey = ""
 	c.PrivateKeyPath = ""
 	c.Password = ""
 }
 
-func cloneCred(c *transports.Credential) *transports.Credential {
+func cloneCred(c *vault.Credential) *vault.Credential {
 	m := proto.Clone(c)
-	return m.(*transports.Credential)
+	return m.(*vault.Credential)
 }
 
 // Validate ensures consistency within the inventory.
@@ -213,13 +214,13 @@ func (p *Inventory) AddAssets(assetList ...*motor_asset.Asset) {
 // isValidCredentialRef ensures an asset credential is defined properly
 // The implementation assumes the credentials have been offloaded to the
 // credential map before via PreProcess
-func isValidCredentialRef(cred *transports.Credential) error {
+func isValidCredentialRef(cred *vault.Credential) error {
 	if cred.SecretId == "" {
 		return errors.New("credential is missing the secret_id")
 	}
 
 	// credential references have no type defined
-	if cred.Type != transports.CredentialType_undefined {
+	if cred.Type != vault.CredentialType_undefined {
 		return errors.New("credential reference has a wrong type defined")
 	}
 

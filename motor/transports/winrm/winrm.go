@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/winrm/cat"
+	"go.mondoo.io/mondoo/motor/vault"
 )
 
 func VerifyConfig(endpoint *transports.TransportConfig) (*winrm.Endpoint, error) {
@@ -68,7 +69,7 @@ func New(tc *transports.TransportConfig) (*WinrmTransport, error) {
 	params.TransportDecorator = func() winrm.Transporter { return &winrm.ClientNTLM{} }
 
 	// search for password secret
-	c, err := transports.GetPassword(tc.Credentials)
+	c, err := vault.GetPassword(tc.Credentials)
 	if err != nil {
 		return nil, errors.New("missing password for winrm transport")
 	}

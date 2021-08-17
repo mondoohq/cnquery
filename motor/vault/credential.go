@@ -1,4 +1,4 @@
-package transports
+package vault
 
 import (
 	"encoding/json"
@@ -79,4 +79,36 @@ func GetPassword(list []*Credential) (*Credential, error) {
 		}
 	}
 	return nil, errors.New("no password found")
+}
+
+// UnmarshalJSON parses either an int or a string representation of
+// SecretEncoding into the struct
+func (s *SecretEncoding) UnmarshalJSON(data []byte) error {
+	// check if we have a number
+	var code int32
+	err := json.Unmarshal(data, &code)
+	if err == nil {
+		*s = SecretEncoding(code)
+	}
+	if err != nil {
+		var name string
+		err = json.Unmarshal(data, &name)
+		code, ok := SecretEncoding_value["encoding_"+strings.ToLower(strings.TrimSpace(name))]
+		if !ok {
+			return errors.New("unknown type value: " + string(data))
+		}
+		*s = SecretEncoding(code)
+	}
+	return nil
+}
+
+// MarshalJSON returns the JSON representation of SecretEncoding
+// NOTE: we do not use pointers here to ensure its converted properly
+// even if the struct is used directly
+func (s SecretEncoding) MarshalJSON() ([]byte, error) {
+	v, ok := SecretEncoding_name[int32(s)]
+	if !ok {
+		return nil, errors.New("could not marshal CredentialType")
+	}
+	return json.Marshal(v)
 }

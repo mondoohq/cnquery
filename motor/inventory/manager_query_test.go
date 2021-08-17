@@ -3,6 +3,8 @@ package inventory
 import (
 	"testing"
 
+	"go.mondoo.io/mondoo/motor/vault"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/asset"
@@ -34,7 +36,7 @@ func TestSecretManagerPassword(t *testing.T) {
 	credential, err := im.QuerySecretId(assetObj)
 	require.NoError(t, err)
 
-	assert.Equal(t, transports.CredentialType_password, credential.Type)
+	assert.Equal(t, vault.CredentialType_password, credential.Type)
 	assert.Equal(t, "test-user", credential.User)
 	assert.Equal(t, "mockPassword", credential.SecretId)
 
@@ -65,7 +67,7 @@ func TestSecretManagerPrivateKey(t *testing.T) {
 	credential, err := im.QuerySecretId(assetObj)
 	require.NoError(t, err)
 
-	assert.Equal(t, transports.CredentialType_private_key, credential.Type)
+	assert.Equal(t, vault.CredentialType_private_key, credential.Type)
 	assert.Equal(t, "some-user", credential.User)
 	assert.Equal(t, "mockPKey", credential.SecretId)
 
@@ -96,7 +98,7 @@ func TestSecretManagerBadKey(t *testing.T) {
 	// NOTE: we get the secret id but the load from the vault will fail
 	credential, err := im.QuerySecretId(assetObj)
 	assert.NoError(t, err)
-	assert.Equal(t, transports.CredentialType_password, credential.Type)
+	assert.Equal(t, vault.CredentialType_password, credential.Type)
 	assert.Equal(t, "some-user", credential.User)
 	assert.Equal(t, "bad-id", credential.SecretId)
 

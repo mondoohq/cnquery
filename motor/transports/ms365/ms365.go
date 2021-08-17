@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"sync"
 
+	"go.mondoo.io/mondoo/motor/vault"
+
 	ms356_resources "go.mondoo.io/mondoo/lumi/resources/ms365"
 
 	"github.com/cockroachdb/errors"
@@ -40,7 +42,7 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 	secret := tc.Credentials[0]
 
 	// TODO: we probably do not want to mix that and detect the valid ms 365 secret earlier
-	if secret.Type != transports.CredentialType_json {
+	if secret.Type != vault.CredentialType_json {
 		return nil, errors.New("invalid secret configuration for ms365 transport")
 	}
 

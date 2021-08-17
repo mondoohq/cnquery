@@ -29,6 +29,7 @@ import (
 	"github.com/vmware/govmomi/vim25/types"
 	"go.mondoo.io/mondoo/motor/transports/vmwareguestapi/toolbox"
 	"go.mondoo.io/mondoo/motor/transports/vsphere"
+	"go.mondoo.io/mondoo/motor/vault"
 
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
@@ -41,7 +42,7 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 	}
 
 	// search for password secret
-	c, err := transports.GetPassword(tc.Credentials)
+	c, err := vault.GetPassword(tc.Credentials)
 	if err != nil {
 		return nil, errors.New("missing password for VMware tools transport")
 	}

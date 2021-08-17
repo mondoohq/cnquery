@@ -8,6 +8,7 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/ipmi"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
+	"go.mondoo.io/mondoo/motor/vault"
 )
 
 func New(tc *transports.TransportConfig) (*Transport, error) {
@@ -26,7 +27,7 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 	}
 
 	// search for password secret
-	c, err := transports.GetPassword(tc.Credentials)
+	c, err := vault.GetPassword(tc.Credentials)
 	if err != nil {
 		return nil, errors.New("missing password for ipmi transport")
 	}

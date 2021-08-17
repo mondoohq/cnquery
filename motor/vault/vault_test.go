@@ -5,18 +5,17 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/transports"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
 func TestSecretCredentialConversion(t *testing.T) {
-	cred := &transports.Credential{
-		Type:     transports.CredentialType_password,
+	cred := &Credential{
+		Type:     CredentialType_password,
 		User:     "username",
 		Password: "pass1",
 	}
 
-	secret, err := NewSecret(cred, SecretEncoding_PROTO)
+	secret, err := NewSecret(cred, SecretEncoding_encoding_proto)
 	require.NoError(t, err)
 
 	cred2, err := secret.Credential()

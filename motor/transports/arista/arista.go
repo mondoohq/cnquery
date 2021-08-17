@@ -3,12 +3,12 @@ package arista
 import (
 	"strconv"
 
-	"github.com/cockroachdb/errors"
-
 	"github.com/aristanetworks/goeapi"
+	"github.com/cockroachdb/errors"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
+	"go.mondoo.io/mondoo/motor/vault"
 )
 
 func New(tc *transports.TransportConfig) (*Transport, error) {
@@ -26,7 +26,7 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 	}
 
 	// search for password secret
-	c, err := transports.GetPassword(tc.Credentials)
+	c, err := vault.GetPassword(tc.Credentials)
 	if err != nil {
 		return nil, errors.New("missing password for arista transport")
 	}
