@@ -70,6 +70,10 @@ func (v *Vault) Set(ctx context.Context, cred *vault.Secret) (*vault.SecretID, e
 		return nil, err
 	}
 
+	if cred.Encoding != vault.SecretEncoding_encoding_binary && cred.Encoding != vault.SecretEncoding_encoding_undefined {
+		return nil, errors.New("only binary encoding is supported")
+	}
+
 	// TODO: store data as json encoding
 	err = ring.Set(keyring.Item{
 		Key:   cred.Key,
@@ -95,8 +99,9 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 	}
 
 	return &vault.Secret{
-		Key:   i.Key,
-		Label: i.Label,
-		Data:  i.Data,
+		Key:      i.Key,
+		Label:    i.Label,
+		Data:     i.Data,
+		Encoding: vault.SecretEncoding_encoding_binary,
 	}, nil
 }
