@@ -382,7 +382,7 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		}
 	}
 
-	if len(identifier) == 0 {
+	if len(identifier) == 0 && tc.PlatformId == "" {
 		return nil, errors.New("could not find a valid platform identifier")
 	}
 

@@ -47,7 +47,7 @@ func (cat *CatFs) useBase64encoding() bool {
 func (cat *CatFs) base64available() bool {
 	cmd, err := cat.commandRunner.RunCommand("command -v base64")
 	if err != nil {
-		log.Warn().Msg("base64 command not found on target system")
+		log.Debug().Msg("base64 command not found on target system")
 		return false
 	}
 	log.Debug().Msg("use base64 encoding for data transfer")
