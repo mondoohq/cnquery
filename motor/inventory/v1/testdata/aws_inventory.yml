@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Inventory
+metadata:
+  name: mondoo-inventory
+  labels:
+    environment: production
+spec:
+  credential_query: "{ user: 'ec2-user', type: 'private_key', secret_id: 'arn:aws:secretsmanager:us-east-1:921877552404:secret:ec2-secret-v2-3G3DVF', secret_encoding: 'binary' }"
+  assets:
+    # option 1 use aws scan in combination with a secret
+    - name: aws
+      connections:
+        - backend: aws
+          discover:
+            targets:
+            - all
+    # option 2: use an instance directly with a secret
+#    - name: i-01a46ade2364692a0
+#      connections:
+#      - backend: ssh
+#        host: 54.145.57.6
+#        credentials:
+#          - secret_id: 'arn:aws:secretsmanager:us-east-1:921877552404:secret:ec2-secret-v2-3G3DVF'
+#            type: private_key
+#            user: ec2-user
+#            # secret_encoding: binary (not required since binary is the default)
+
+    # option 3: instance with credential query
+#    - name: i-01a46ade2364692a0
+#      connections:
+#        - backend: ssh
+#          host: 54.145.57.6
+
+  vault:
+    name: aws-921877552404
+    type: aws-secrets-manager

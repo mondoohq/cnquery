@@ -121,7 +121,10 @@ func (im *inventoryManager) loadInventory(inventory *v1.Inventory) error {
 	im.resetVault()
 
 	if inventory.Spec.CredentialQuery != "" {
-		im.SetCredentialQuery(inventory.Spec.CredentialQuery)
+		err = im.SetCredentialQuery(inventory.Spec.CredentialQuery)
+		if err != nil {
+			return err
+		}
 	}
 
 	if inventory.Spec.Vault != nil {
