@@ -162,7 +162,7 @@ func (l *Code) RefDatapoints(ref int32) []int32 {
 	return res
 }
 
-func (l *Code) entrypoint2assessment(bundle *CodeBundle, lookup func(s string) (*RawResult, bool), ref int32) *AssessmentItem {
+func (l *Code) entrypoint2assessment(bundle *CodeBundle, ref int32, lookup func(s string) (*RawResult, bool)) *AssessmentItem {
 	checksum := bundle.Code.Checksums[ref]
 
 	checksumRes, ok := lookup(checksum)
@@ -283,16 +283,67 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, lookup func(s string) (
 	return &res
 }
 
+func (l *Code) refValues(bundle *CodeBundle, ref int32, lookup func(s string) (*RawResult, bool)) []*RawResult {
+	checksum := l.Checksums[ref]
+	checksumRes, ok := lookup(checksum)
+	if ok {
+		return []*RawResult{checksumRes}
+	}
+
+	chunk := l.Code[ref-1]
+
+	if chunk.Id == "if" && chunk.Function != nil && len(chunk.Function.Args) != 0 {
+		// FIXME: we should be checking for the result of the if-condition and then proceed
+		// with whatever result is applicable; not poke at possible results
+
+		// function arguments are functions refs to:
+		// [1] = the first conditino, [2] = the second condition
+		fref, ok := chunk.Function.Args[1].Ref()
+		if ok {
+			fun := l.Functions[fref-1]
+			part := fun.returnValues(bundle, lookup)
+			if len(part) != 0 {
+				return part
+			}
+		}
+
+		fref, ok = chunk.Function.Args[2].Ref()
+		if ok {
+			fun := l.Functions[fref-1]
+			part := fun.returnValues(bundle, lookup)
+			if len(part) != 0 {
+				return part
+			}
+		}
+	}
+
+	return nil
+}
+
+func (l *Code) returnValues(bundle *CodeBundle, lookup func(s string) (*RawResult, bool)) []*RawResult {
+	var res []*RawResult
+
+	for i := range l.Entrypoints {
+		ep := l.Entrypoints[i]
+		cur := l.refValues(bundle, ep, lookup)
+		if cur != nil {
+			res = append(res, cur...)
+		}
+	}
+
+	return res
+}
+
 // Results2Assessment converts a list of raw results into an assessment for the query
 func Results2Assessment(bundle *CodeBundle, results map[string]*RawResult) *Assessment {
-	return Results2AssessmentAsync(bundle, func(s string) (*RawResult, bool) {
+	return Results2AssessmentLookup(bundle, func(s string) (*RawResult, bool) {
 		r, ok := results[s]
 		return r, ok
 	})
 }
 
-// Results2AssessmentAsync creates an assessment for a bundle using a lookup hook to get all results
-func Results2AssessmentAsync(bundle *CodeBundle, f func(s string) (*RawResult, bool)) *Assessment {
+// Results2AssessmentLookup creates an assessment for a bundle using a lookup hook to get all results
+func Results2AssessmentLookup(bundle *CodeBundle, f func(s string) (*RawResult, bool)) *Assessment {
 	res := Assessment{
 		Success:  true,
 		Checksum: bundle.Code.Id,
@@ -301,7 +352,7 @@ func Results2AssessmentAsync(bundle *CodeBundle, f func(s string) (*RawResult, b
 
 	for i := range bundle.Code.Entrypoints {
 		ep := bundle.Code.Entrypoints[i]
-		cur := bundle.Code.entrypoint2assessment(bundle, f, ep)
+		cur := bundle.Code.entrypoint2assessment(bundle, ep, f)
 		if cur == nil {
 			continue
 		}
@@ -316,4 +367,8 @@ func Results2AssessmentAsync(bundle *CodeBundle, f func(s string) (*RawResult, b
 	}
 
 	return &res
+}
+
+func ReturnValues(bundle *CodeBundle, f func(s string) (*RawResult, bool)) []*RawResult {
+	return bundle.Code.returnValues(bundle, f)
 }

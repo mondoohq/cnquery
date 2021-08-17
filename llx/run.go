@@ -22,6 +22,8 @@ func RunOnce(code *Code, runtime *lumi.Runtime, props map[string]*Primitive, cal
 	var executor *LeiseExecutor
 	var err error
 
+	maxCnt := len(code.Entrypoints) + len(code.Datapoints)
+
 	// Note: We cannot copy the code from the Run method above as it may
 	// lead to a race condition where the callback is run BEFORE the
 	// executor is created. The way we do it here guarantees everything
@@ -29,7 +31,7 @@ func RunOnce(code *Code, runtime *lumi.Runtime, props map[string]*Primitive, cal
 	// runs.
 	executor, err = NewExecutor(code, runtime, props, func(one *RawResult) {
 		cnt++
-		if cnt >= len(code.Entrypoints) {
+		if cnt >= maxCnt {
 			executor.Unregister()
 		}
 		callback(one)
@@ -46,8 +48,9 @@ func RunOnce(code *Code, runtime *lumi.Runtime, props map[string]*Primitive, cal
 func RunOnceSync(code *Code, runtime *lumi.Runtime, props map[string]*Primitive) ([]*RawResult, error) {
 	res := []*RawResult{}
 	var done sync.WaitGroup
-	// FIXME: shouldnt this be:
-	done.Add(len(code.Entrypoints))
+
+	maxCnt := len(code.Entrypoints) + len(code.Datapoints)
+	done.Add(maxCnt)
 
 	err := RunOnce(code, runtime, props, func(one *RawResult) {
 		res = append(res, one)
