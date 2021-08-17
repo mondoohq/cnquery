@@ -7,11 +7,10 @@ import (
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/falcon/codes"
 	"go.mondoo.io/mondoo/falcon/status"
-	"go.mondoo.io/mondoo/motor/transports"
 	"google.golang.org/protobuf/proto"
 )
 
-//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --falcon_out=. vault.proto
+//go:generate protoc --proto_path=$PWD:. --go_out=. --go_opt=paths=source_relative --falcon_out=. vault.proto
 
 func EscapeSecretID(key string) string {
 	return strings.TrimPrefix(key, "//")
@@ -20,17 +19,17 @@ func EscapeSecretID(key string) string {
 var NotFoundError = status.Error(codes.NotFound, "secret not found")
 
 // Credential parses the secret data and creates a credential
-func (x *Secret) Credential() (*transports.Credential, error) {
-	var cred transports.Credential
+func (x *Secret) Credential() (*Credential, error) {
+	var cred Credential
 	var err error
 
 	switch x.Encoding {
-	case SecretEncoding_PROTO:
+	case SecretEncoding_encoding_proto:
 		err = proto.Unmarshal(x.Data, &cred)
-	case SecretEncoding_JSON:
+	case SecretEncoding_encoding_json:
 		err = json.Unmarshal(x.Data, &cred)
-	case SecretEncoding_BINARY:
-		cred = transports.Credential{
+	case SecretEncoding_encoding_binary:
+		cred = Credential{
 			// if binary is used, it needs to be overwriten from outside
 			Secret: x.Data,
 		}
@@ -46,15 +45,15 @@ func (x *Secret) Credential() (*transports.Credential, error) {
 	return &cred, nil
 }
 
-func NewSecret(cred *transports.Credential, encoding SecretEncoding) (*Secret, error) {
+func NewSecret(cred *Credential, encoding SecretEncoding) (*Secret, error) {
 	// TODO: we also encode the ID, this may not be a good approach
 	var secretData []byte
 	var err error
 
 	switch encoding {
-	case SecretEncoding_JSON:
+	case SecretEncoding_encoding_json:
 		secretData, err = json.Marshal(cred)
-	case SecretEncoding_PROTO:
+	case SecretEncoding_encoding_proto:
 		secretData, err = proto.Marshal(cred)
 	default:
 		return nil, errors.New("unknown secret encoding")

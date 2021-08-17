@@ -3,6 +3,8 @@ package vsphere
 import (
 	"errors"
 
+	"go.mondoo.io/mondoo/motor/vault"
+
 	"github.com/rs/zerolog/log"
 
 	"go.mondoo.io/mondoo/motor/transports/vmwareguestapi"
@@ -87,7 +89,7 @@ func EnrichVsphereToolsConnWithSecrets(a *asset.Asset, cfn common.CredentialFn, 
 
 		// special handling for vsphere vm config
 		if conn.Backend == transports.TransportBackend_CONNECTION_VSPHERE_VM {
-			var creds *transports.Credential
+			var creds *vault.Credential
 
 			secretRefCred, err := sfn(a)
 			if err == nil && secretRefCred != nil {

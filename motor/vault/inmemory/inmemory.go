@@ -7,7 +7,7 @@ import (
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
-const inmemoryEncoding = vault.SecretEncoding_PROTO
+const inmemoryEncoding = vault.SecretEncoding_encoding_proto
 
 type Option func(*inmemoryVault)
 

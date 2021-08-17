@@ -12,7 +12,6 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery"
 	"go.mondoo.io/mondoo/motor/inventory/credentialquery"
 	"go.mondoo.io/mondoo/motor/inventory/v1"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/vault"
 	"go.mondoo.io/mondoo/motor/vault/inmemory"
 	"go.mondoo.io/mondoo/motor/vault/multivault"
@@ -25,10 +24,10 @@ type InventoryManager interface {
 	// GetAssets will return the fully resolved list of assets
 	Resolve() map[*asset.Asset]error
 	// GetCredential returns a full credential including the secret from vault
-	GetCredential(*transports.Credential) (*transports.Credential, error)
+	GetCredential(*vault.Credential) (*vault.Credential, error)
 	// QuerySecretId runs the credential query to determine the secret id for an asset, the resulting credential
 	// only returns a secret id
-	QuerySecretId(a *asset.Asset) (*transports.Credential, error)
+	QuerySecretId(a *asset.Asset) (*vault.Credential, error)
 	// GetVault returns the configured Vault
 	GetVault() vault.Vault
 }
@@ -110,7 +109,7 @@ func (im *inventoryManager) loadInventory(inventory *v1.Inventory) error {
 	for i := range inventory.Spec.Credentials {
 		cred := inventory.Spec.Credentials[i]
 
-		secret, err := vault.NewSecret(cred, vault.SecretEncoding_PROTO)
+		secret, err := vault.NewSecret(cred, vault.SecretEncoding_encoding_proto)
 		if err != nil {
 			return err
 		}
@@ -155,7 +154,7 @@ func (im *inventoryManager) GetAssets() []*asset.Asset {
 }
 
 // GetCredential retrieves the credential from vault via the secret id
-func (im *inventoryManager) GetCredential(cred *transports.Credential) (*transports.Credential, error) {
+func (im *inventoryManager) GetCredential(cred *vault.Credential) (*vault.Credential, error) {
 	if cred == nil {
 		return nil, errors.New("cannot find credential with empty input")
 	}
@@ -184,7 +183,7 @@ func (im *inventoryManager) GetCredential(cred *transports.Credential) (*transpo
 		retrievedCred.User = cred.User
 	}
 
-	if cred.Type != transports.CredentialType_undefined {
+	if cred.Type != vault.CredentialType_undefined {
 		retrievedCred.Type = cred.Type
 	}
 
@@ -193,7 +192,7 @@ func (im *inventoryManager) GetCredential(cred *transports.Credential) (*transpo
 
 // QuerySecretId provides an input and determines the credential information for an asset
 // The credential will only include the reference to the secret and not include the actual secret
-func (im *inventoryManager) QuerySecretId(a *asset.Asset) (*transports.Credential, error) {
+func (im *inventoryManager) QuerySecretId(a *asset.Asset) (*vault.Credential, error) {
 	if im.credentialQueryRunner == nil {
 		return nil, nil
 	}

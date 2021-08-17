@@ -7,13 +7,6 @@ message SecretID {
   string key = 1;
 }
 
-enum SecretEncoding {
-  UNKNOWN = 0;
-  JSON = 1;
-  PROTO = 2;
-  BINARY = 3;
-}
-
 message Secret {
   string key = 1;
   string label = 2;
@@ -24,4 +17,42 @@ message Secret {
 service Vault {
   rpc Get(SecretID) returns (Secret);
   rpc Set(Secret) returns (SecretID);
+}
+
+enum CredentialType {
+  undefined = 0;
+  password = 1;
+  private_key = 2;
+  ssh_agent = 3;
+  bearer = 4;
+  credentials_query = 5;
+  json = 6;
+}
+
+enum SecretEncoding {
+  encoding_undefined = 0;
+  encoding_json = 1;
+  encoding_proto = 2;
+  encoding_binary = 3;
+}
+
+// Credential holds authentication information
+message Credential {
+  string secret_id = 1;
+  CredentialType type = 2;
+  string user = 3;
+  bytes secret = 4;
+  SecretEncoding secret_encoding = 5;
+
+  // the following are optional and sugar for defining a secret
+  // those values are only allowed for reading in yaml values but not via API calls
+  string password = 21; // optional, could also be the password for the private key
+
+  // for user convenience we define private_key, this allows yaml/json writers
+  // to just embed the string representation, otherwise it would need to be base64 encoded
+  string private_key = 22;
+
+  // for user convenience we define private_key_path which loads a local file into the
+  // secret
+  string private_key_path = 23;
 }

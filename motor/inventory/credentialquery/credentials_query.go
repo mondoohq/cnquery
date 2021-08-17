@@ -3,13 +3,14 @@ package credentialquery
 import (
 	"strings"
 
+	"go.mondoo.io/mondoo/motor/vault"
+
 	"github.com/rs/zerolog/log"
 
 	"github.com/cockroachdb/errors"
 	"github.com/mitchellh/mapstructure"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/policy/executor"
 	"go.mondoo.io/mondoo/types"
 )
@@ -49,7 +50,7 @@ type CredentialQueryRunner struct {
 	secretMetadataQuery string
 }
 
-func (sq *CredentialQueryRunner) Run(a *asset.Asset) (*transports.Credential, error) {
+func (sq *CredentialQueryRunner) Run(a *asset.Asset) (*vault.Credential, error) {
 	// map labels to props
 	labelProps := map[string]interface{}{}
 	labels := a.GetLabels()
@@ -89,13 +90,13 @@ func (sq *CredentialQueryRunner) Run(a *asset.Asset) (*transports.Credential, er
 	})
 	err = decoder.Decode(value)
 
-	code, ok := transports.CredentialType_value[strings.TrimSpace(sMeta.Type)]
+	code, ok := vault.CredentialType_value[strings.TrimSpace(sMeta.Type)]
 	if !ok {
 		log.Warn().Str("credential_type", sMeta.Type).Msg("unknown credential type used in credential query")
 	}
 
-	creds := &transports.Credential{
-		Type:     transports.CredentialType(code),
+	creds := &vault.Credential{
+		Type:     vault.CredentialType(code),
 		User:     sMeta.User,
 		SecretId: sMeta.SecretId,
 	}

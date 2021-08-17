@@ -9,6 +9,7 @@ import (
 	"github.com/vmware/govmomi"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
+	"go.mondoo.io/mondoo/motor/vault"
 )
 
 func VSphereConnectionURL(hostname string, port string, user string, password string) (*url.URL, error) {
@@ -31,7 +32,7 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 	}
 
 	// search for password secret
-	c, err := transports.GetPassword(tc.Credentials)
+	c, err := vault.GetPassword(tc.Credentials)
 	if err != nil {
 		return nil, errors.New("missing password for vSphere transport")
 	}

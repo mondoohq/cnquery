@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 
+	"go.mondoo.io/mondoo/motor/vault"
+
 	"github.com/rs/zerolog/log"
 
 	"go.mondoo.io/mondoo/motor/asset"
@@ -247,19 +249,19 @@ func ansibleConnections(host *Host) []*transports.TransportConfig {
 		},
 	}
 
-	credentials := []*transports.Credential{}
+	credentials := []*vault.Credential{}
 
 	if host.Password != "" {
-		credentials = append(credentials, &transports.Credential{
-			Type:     transports.CredentialType_password,
+		credentials = append(credentials, &vault.Credential{
+			Type:     vault.CredentialType_password,
 			User:     host.User,
 			Password: host.Password,
 		})
 	}
 
 	if backend == transports.TransportBackend_CONNECTION_SSH {
-		credentials = append(credentials, &transports.Credential{
-			Type: transports.CredentialType_ssh_agent,
+		credentials = append(credentials, &vault.Credential{
+			Type: vault.CredentialType_ssh_agent,
 		})
 	}
 

@@ -3,11 +3,13 @@ package transports
 import (
 	"errors"
 	"net/url"
+
+	"go.mondoo.io/mondoo/motor/vault"
 )
 
 type TransportConfigOption func(t *TransportConfig) error
 
-func WithCredential(credential *Credential) TransportConfigOption {
+func WithCredential(credential *vault.Credential) TransportConfigOption {
 	return func(cc *TransportConfig) error {
 		cc.AddCredential(credential)
 		return nil
@@ -67,7 +69,7 @@ func NewTransportFromUrl(uri string, opts ...TransportConfigOption) (*TransportC
 		Port:        u.Port(),
 		Path:        u.Path,
 		Options:     map[string]string{},
-		Credentials: []*Credential{},
+		Credentials: []*vault.Credential{},
 	}
 
 	for i := range opts {
@@ -79,6 +81,6 @@ func NewTransportFromUrl(uri string, opts ...TransportConfigOption) (*TransportC
 	return t, u.User.Username(), nil
 }
 
-func (cc *TransportConfig) AddCredential(c *Credential) {
+func (cc *TransportConfig) AddCredential(c *vault.Credential) {
 	cc.Credentials = append(cc.Credentials, c)
 }

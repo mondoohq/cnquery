@@ -26,7 +26,7 @@ func TestVault(t *testing.T) {
 		Key:      key,
 		Label:    "mondoo: " + key,
 		Data:     credBytes,
-		Encoding: vault.SecretEncoding_PROTO,
+		Encoding: vault.SecretEncoding_encoding_proto,
 	}
 
 	id, err := v.Set(ctx, cred)

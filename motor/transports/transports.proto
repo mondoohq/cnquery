@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "motor/vault/vault.proto";
+
 package mondoo.motor.transports.v1;
 option go_package = "go.mondoo.io/mondoo/motor/transports";
 
@@ -47,36 +49,6 @@ enum Kind {
   KIND_BARE_METAL = 9;
 }
 
-enum CredentialType {
-  undefined = 0;
-  password = 1;
-  private_key = 2;
-  ssh_agent = 3;
-  bearer = 4;
-  credentials_query = 5;
-  json = 6;
-}
-
-// Credential holds authentication information
-message Credential {
-  string secret_id = 1;
-  CredentialType type = 2;
-  string user = 3;
-  bytes secret = 4;
-
-  // the following are optional and sugar for defining a secret
-  // those values are only allowed for reading in yaml values but not via API calls
-  string password = 21; // optional, could also be the password for the private key
-
-  // for user convenience we define private_key, this allows yaml/json writers
-  // to just embed the string representation, otherwise it would need to be base64 encoded
-  string private_key = 22;
-
-  // for user convenience we define private_key_path which loads a local file into the
-  // secret
-  string private_key_path = 23;
-}
-
 message TransportConfig {
   reserved 6, 7, 9, 10, 20;
 
@@ -88,7 +60,7 @@ message TransportConfig {
   string path = 4;
 
   // credentials available for this transport configuration
-  repeated Credential credentials = 11;
+  repeated mondoo.motor.vault.v1.Credential credentials = 11;
 
   bool Insecure = 8;  // disable ssl/tls checks
   Sudo Sudo = 21;
