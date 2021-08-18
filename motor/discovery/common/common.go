@@ -3,6 +3,7 @@ package common
 import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
@@ -17,9 +18,10 @@ func EnrichAssetWithSecrets(a *asset.Asset, sfn QuerySecretFn) {
 	for j := range a.Connections {
 		conn := a.Connections[j]
 
-		if len(conn.Credentials) == 0 {
+		// NOTE: for now we only add credentials for ssh, we may revisit that in the future
+		if len(conn.Credentials) == 0 && conn.Backend == transports.TransportBackend_CONNECTION_SSH {
 			creds, err := sfn(a)
-			if err == nil {
+			if err == nil && creds != nil {
 				conn.Credentials = []*vault.Credential{creds}
 			} else {
 				log.Warn().Str("name", a.Name).Msg("could not determine credentials for asset")
