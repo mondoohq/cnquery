@@ -133,6 +133,7 @@ func TestCompiler_Buggy(t *testing.T) {
 				Args: []*llx.Primitive{
 					llx.BoolPrimitive(true),
 					llx.FunctionPrimitive(1),
+					llx.FunctionPrimitive(2),
 				},
 			}},
 		}, errors.New("missing closing `}` at <source>:1:11")},
