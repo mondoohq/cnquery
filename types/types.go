@@ -161,10 +161,10 @@ func Enforce(left, right Type) (Type, bool) {
 			continue
 		}
 
-		if left[i] == byteUnset {
+		if left[i] == byteUnset || left[i] == byteNil {
 			return right, true
 		}
-		if right[i] == byteUnset {
+		if right[i] == byteUnset || right[i] == byteNil {
 			return left, true
 		}
 	}

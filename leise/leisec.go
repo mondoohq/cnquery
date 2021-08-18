@@ -199,6 +199,25 @@ func (c *compiler) compileIfBlock(expressions []*parser.Expression, chunk *llx.C
 	}
 
 	code := blockCompiler.Result.Code
+
+	// insert a body if we are in standalone mode to return a value
+	if len(code.Code) == 0 && c.standalone {
+		code.AddChunk(&llx.Chunk{
+			Call:      llx.Chunk_PRIMITIVE,
+			Primitive: llx.NilPrimitive,
+		})
+		code.AddChunk(&llx.Chunk{
+			Call: llx.Chunk_FUNCTION,
+			Id:   "return",
+			Function: &llx.Function{
+				Type: string(types.Nil),
+				Args: []*llx.Primitive{llx.RefPrimitive(1)},
+			},
+		})
+		code.SingleValue = true
+		code.Entrypoints = []int32{2}
+	}
+
 	code.UpdateID()
 	c.Result.Code.Functions = append(c.Result.Code.Functions, code)
 
@@ -1161,12 +1180,12 @@ func (c *compiler) CompileParsed(ast *parser.AST) error {
 	}
 
 	c.Result.Code.UpdateID()
-	c.UpdateEntrypoints()
+	c.updateEntrypoints()
 
 	return nil
 }
 
-func (c *compiler) UpdateEntrypoints() {
+func (c *compiler) updateEntrypoints() {
 	// 0. prep: everything that's an entrypoint is a scoringpoint later on
 	datapoints := map[int32]struct{}{}
 
