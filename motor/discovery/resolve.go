@@ -75,6 +75,9 @@ func init() {
 func ResolveAsset(root *asset.Asset, cfn common.CredentialFn, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
+	// if the asset is missing a secret, we try to add this for the asset
+	common.EnrichAssetWithSecrets(root, sfn)
+
 	for i := range root.Connections {
 		tc := root.Connections[i]
 

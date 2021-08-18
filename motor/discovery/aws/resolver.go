@@ -124,11 +124,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 
 	// add all the detected ssm instanced and ec2 instances to the list
 	for k := range instancesPlatformIdsMap {
-		a := instancesPlatformIdsMap[k]
-
-		// find the secret reference for the asset
-		common.EnrichAssetWithSecrets(a, sfn)
-		resolved = append(resolved, a)
+		resolved = append(resolved, instancesPlatformIdsMap[k])
 	}
 
 	return resolved, nil
