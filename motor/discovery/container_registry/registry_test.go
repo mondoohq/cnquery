@@ -2,7 +2,14 @@ package container_registry
 
 import (
 	"net/url"
+	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"go.mondoo.io/mondoo/motor/transports"
+
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDockerRegistry(t *testing.T) {
@@ -22,4 +29,27 @@ func TestDockerRegistry(t *testing.T) {
 	// assets, err := r.List(name)
 	// require.NoError(t, err)
 	// assert.True(t, len(assets) > 0)
+}
+
+func TestHarbor(t *testing.T) {
+	urls := []string{
+		"index.docker.io/library/centos:latest",
+		"index.docker.io/library/centos@sha256:5528e8b1b1719d34604c87e11dcd1c0a20bedf46e83b5632cdeac91b8c04efc1",
+	}
+
+	for i := range urls {
+		url := urls[i]
+		ref, err := name.ParseReference(url, name.WeakValidation)
+		require.NoError(t, err, url)
+		assert.NotNil(t, ref, url)
+
+		dri := DockerRegistryImages{}
+		a, err := dri.toAsset(ref)
+		require.NoError(t, err, url)
+
+		// check that we resolved it correctly and we got a specific shasum
+		assert.Equal(t, transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY, a.Connections[0].Backend)
+		assert.True(t, strings.HasPrefix(a.Connections[0].Host, "index.docker.io/library/centos"), url)
+		assert.True(t, len(strings.Split(a.Connections[0].Host, "@")) == 2, url)
+	}
 }

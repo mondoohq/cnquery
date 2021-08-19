@@ -166,7 +166,7 @@ func (a *DockerRegistryImages) toAsset(ref name.Reference) (*asset.Asset, error)
 		return nil, err
 	}
 	imgDigest := desc.Digest.String()
-	repoName := ref.Name()
+	repoName := ref.Context().Name()
 	imageUrl := repoName + "@" + imgDigest
 	asset := &asset.Asset{
 		PlatformIds: []string{containerid.MondooContainerImageID(imgDigest)},
