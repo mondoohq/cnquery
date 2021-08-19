@@ -49,6 +49,14 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 		if err != nil {
 			return nil, err
 		}
+
+		if tc.Insecure {
+			for i := range a.Connections {
+				c := a.Connections[i]
+				c.Insecure = tc.Insecure
+			}
+		}
+
 		return []*asset.Asset{a}, nil
 	}
 
@@ -63,8 +71,16 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 	}
 
 	for i := range assetList {
-		log.Info().Str("name", assetList[i].Name).Str("image", assetList[i].Connections[0].Host+assetList[i].Connections[0].Path).Msg("resolved image")
-		resolved = append(resolved, assetList[i])
+		a := assetList[i]
+		log.Info().Str("name", a.Name).Str("image", a.Connections[0].Host+assetList[i].Connections[0].Path).Msg("resolved image")
+
+		if tc.Insecure {
+			for i := range a.Connections {
+				c := a.Connections[i]
+				c.Insecure = tc.Insecure
+			}
+		}
+		resolved = append(resolved, a)
 	}
 
 	if len(resolved) == 0 {
