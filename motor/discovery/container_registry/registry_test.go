@@ -5,11 +5,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/motor/transports"
-
 	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.io/mondoo/motor/transports"
 )
 
 func TestDockerRegistry(t *testing.T) {
@@ -44,7 +43,7 @@ func TestHarbor(t *testing.T) {
 		assert.NotNil(t, ref, url)
 
 		dri := DockerRegistryImages{}
-		a, err := dri.toAsset(ref)
+		a, err := dri.toAsset(ref, nil)
 		require.NoError(t, err, url)
 
 		// check that we resolved it correctly and we got a specific shasum

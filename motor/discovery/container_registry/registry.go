@@ -8,8 +8,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/cockroachdb/errors"
 	"github.com/google/go-containerregistry/pkg/authn"
+
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rs/zerolog/log"
@@ -17,6 +18,7 @@ import (
 	"go.mondoo.io/mondoo/motor/motorid/containerid"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/vault"
 )
 
 func NewContainerRegistry() *DockerRegistryImages {
@@ -30,7 +32,6 @@ type DockerRegistryImages struct {
 func (a *DockerRegistryImages) remoteOptions() []remote.Option {
 	options := []remote.Option{}
 	options = append(options, remote.WithAuthFromKeychain(authn.DefaultKeychain))
-
 	if a.Insecure {
 		// NOTE: config to get remote running with an insecure registry, we need to override the TLSClientConfig
 		tr := &http.Transport{
@@ -131,7 +132,7 @@ func (a *DockerRegistryImages) ListRepository(repoName string) ([]*asset.Asset, 
 			return nil, fmt.Errorf("parsing reference %q: %v", repoWithTag, err)
 		}
 
-		a, err := a.toAsset(ref)
+		a, err := a.toAsset(ref, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -156,12 +157,14 @@ func (a *DockerRegistryImages) ListImages(repoName string) ([]*asset.Asset, erro
 	}
 }
 
-func (a *DockerRegistryImages) GetImage(ref name.Reference) (*asset.Asset, error) {
-	return a.toAsset(ref)
+func (a *DockerRegistryImages) GetImage(ref name.Reference, creds []*vault.Credential, opts ...remote.Option) (*asset.Asset, error) {
+	return a.toAsset(ref, creds, opts...)
 }
 
-func (a *DockerRegistryImages) toAsset(ref name.Reference) (*asset.Asset, error) {
-	desc, err := remote.Get(ref, a.remoteOptions()...)
+func (a *DockerRegistryImages) toAsset(ref name.Reference, creds []*vault.Credential, opts ...remote.Option) (*asset.Asset, error) {
+	remoteOpts := a.remoteOptions()
+	remoteOpts = append(remoteOpts, opts...)
+	desc, err := remote.Get(ref, remoteOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -177,8 +180,9 @@ func (a *DockerRegistryImages) toAsset(ref name.Reference) (*asset.Asset, error)
 		},
 		Connections: []*transports.TransportConfig{
 			{
-				Backend: transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY,
-				Host:    imageUrl,
+				Backend:     transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY,
+				Host:        imageUrl,
+				Credentials: creds,
 			},
 		},
 		State:  asset.State_STATE_ONLINE,

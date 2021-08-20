@@ -3,12 +3,15 @@ package container_registry
 import (
 	"errors"
 
-	"go.mondoo.io/mondoo/motor/discovery/common"
-
+	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/logger"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/vault"
 )
 
 type Resolver struct {
@@ -45,7 +48,8 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 	if err == nil {
 		log.Debug().Str("image", tc.Host).Msg("detected container image in container registry")
 
-		a, err := imageFetcher.GetImage(ref)
+		remoteOpts := AuthOption(tc.Credentials, cfn)
+		a, err := imageFetcher.GetImage(ref, tc.Credentials, remoteOpts...)
 		if err != nil {
 			return nil, err
 		}
@@ -54,6 +58,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 			for i := range a.Connections {
 				c := a.Connections[i]
 				c.Insecure = tc.Insecure
+				c.Credentials = tc.Credentials
 			}
 		}
 
@@ -88,4 +93,38 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 	}
 
 	return resolved, nil
+}
+
+func AuthOption(credentials []*vault.Credential, cfn common.CredentialFn) []remote.Option {
+	remoteOpts := []remote.Option{}
+	for i := range credentials {
+		cred := credentials[i]
+
+		// NOTE: normally the motor connection is resolving the credentials but here we need the credential earlier
+		// we probably want to write some mql resources to support the query of registries itself
+		resolvedCredential, err := cfn(cred)
+		if err != nil {
+			log.Warn().Err(err).Msg("could not resolve credential")
+		}
+		switch resolvedCredential.Type {
+		case vault.CredentialType_password:
+			log.Debug().Msg("add password authentication")
+			cfg := authn.AuthConfig{
+				Username: resolvedCredential.User,
+				Password: string(resolvedCredential.Secret),
+			}
+			remoteOpts = append(remoteOpts, remote.WithAuth(authn.FromConfig(cfg)))
+		case vault.CredentialType_bearer:
+			log.Debug().Str("token", string(resolvedCredential.Secret)).Msg("add bearer authentication")
+			cfg := authn.AuthConfig{
+				Username:      resolvedCredential.User,
+				RegistryToken: string(resolvedCredential.Secret),
+			}
+			remoteOpts = append(remoteOpts, remote.WithAuth(authn.FromConfig(cfg)))
+		default:
+			log.Warn().Msg("unknown credentials for container image")
+			logger.DebugJSON(credentials)
+		}
+	}
+	return remoteOpts
 }
