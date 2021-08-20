@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws/external"
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/vault"
@@ -16,7 +16,7 @@ import (
 func TestAwsParameterStore(t *testing.T) {
 	os.Setenv("AWS_PROFILE", "mondoo-dev")
 	os.Setenv("AWS_REGION", "us-east-1")
-	cfg, err := external.LoadDefaultAWSConfig()
+	cfg, err := config.LoadDefaultAWSConfig()
 	require.NoError(t, err)
 	v := New(cfg)
 	ctx := context.Background()
