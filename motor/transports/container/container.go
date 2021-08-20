@@ -1,7 +1,6 @@
 package container
 
 import (
-	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/rs/zerolog/log"
 	docker_discovery "go.mondoo.io/mondoo/motor/discovery/docker_engine"
@@ -27,9 +26,9 @@ func NewContainerRegistryImage(tc *transports.TransportConfig) (ContainerTranspo
 		log.Debug().Str("ref", ref.Name()).Msg("found valid container registry reference")
 
 		registryOpts := []image.Option{image.WithInsecure(tc.Insecure)}
-		if len(tc.Options["bearer"]) > 0 {
-			log.Debug().Msg("enable bearer authentication for image")
-			registryOpts = append(registryOpts, image.WithAuthenticator(&authn.Bearer{Token: tc.Options["bearer"]}))
+		remoteOpts := AuthOption(tc.Credentials)
+		for i := range remoteOpts {
+			registryOpts = append(registryOpts, remoteOpts[i])
 		}
 
 		img, rc, err := image.LoadImageFromRegistry(ref, registryOpts...)
