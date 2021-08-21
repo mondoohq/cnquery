@@ -49,6 +49,11 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 		log.Debug().Str("image", tc.Host).Msg("detected container image in container registry")
 
 		remoteOpts := AuthOption(tc.Credentials, cfn)
+		// we need to disable default keychain auth if an auth method was found
+		if len(remoteOpts) > 0 {
+			imageFetcher.DisableKeychainAuth = true
+		}
+
 		a, err := imageFetcher.GetImage(ref, tc.Credentials, remoteOpts...)
 		if err != nil {
 			return nil, err
