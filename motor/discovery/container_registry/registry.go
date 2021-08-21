@@ -26,12 +26,19 @@ func NewContainerRegistry() *DockerRegistryImages {
 }
 
 type DockerRegistryImages struct {
-	Insecure bool
+	Insecure            bool
+	DisableKeychainAuth bool
 }
 
 func (a *DockerRegistryImages) remoteOptions() []remote.Option {
 	options := []remote.Option{}
-	options = append(options, remote.WithAuthFromKeychain(authn.DefaultKeychain))
+
+	// does not work with bearer auth, therefore it need to be disabled when other remote auth options are used
+	// TODO: we should implement this a bit differentlys
+	if a.DisableKeychainAuth == false {
+		options = append(options, remote.WithAuthFromKeychain(authn.DefaultKeychain))
+	}
+
 	if a.Insecure {
 		// NOTE: config to get remote running with an insecure registry, we need to override the TLSClientConfig
 		tr := &http.Transport{
