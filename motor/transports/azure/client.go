@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/resources/mgmt/subscriptions"
-	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/motor/transports/local"
 )
@@ -67,11 +66,11 @@ type AzureAccount struct {
 }
 
 func VerifySubscription(subscriptionId string) (subscriptions.Subscription, error) {
-	// TODO: todo, support service accounts
-	authorizer, err := auth.NewAuthorizerFromCLI()
+	authorizer, err := GetAuthorizer()
 	if err != nil {
 		return subscriptions.Subscription{}, err
 	}
+
 	subscriptionsC := subscriptions.NewClient()
 	subscriptionsC.Authorizer = authorizer
 
