@@ -19,11 +19,22 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
 )
 
+const (
+	OptionTenantID     = "tenantId"
+	OptionClientID     = "clientId"
+	OptionClientSecret = "clientSecret"
+	OptionDataReport   = "mondoo-ms365-datareport"
+)
+
 // New create a new Microsoft 365 transport
 //
 // At this point, this transports only supports application permissions
 // because we are not able to get the user consent on cli yet. Seems like
-// Microsoft is workin on some Powershell features that may make it happen.
+// Microsoft is working on some Powershell features that may make it happen.
+//
+// For authentication we need a tenant id, client id (appid), and a certificate and an optional password
+// mondoo scan -t ms365:// -i certificate --password password --option clientId --option tenantId
+// mondoo scan -t ms365:// --password clientSecret --option clientId --option tenantId
 //
 // [How to recognize differences between delegated and application permissions](https://docs.microsoft.com/en-us/azure/active-directory/develop/delegated-and-app-perms)
 // [Authentication and authorization basics for Microsoft Graph](https://docs.microsoft.com/en-us/graph/auth/auth-concepts)
@@ -37,34 +48,31 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 		return nil, errors.New("ms365 backend requires a credentials file, pass json via -i option")
 	}
 
-	var msauth *MicrosoftAuth
+	cred := tc.Credentials[0]
 
-	secret := tc.Credentials[0]
-
-	// TODO: we probably do not want to mix that and detect the valid ms 365 secret earlier
-	if secret.Type != vault.CredentialType_json {
-		return nil, errors.New("invalid secret configuration for ms365 transport")
-	}
-
-	msauth, err := ParseMicrosoftAuth(secret.Secret)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not parse credentials file")
-	}
-
-	if msauth == nil {
-		return nil, errors.New("could not parse credentials file")
-	}
-
-	if len(msauth.TenantId) == 0 {
-		return nil, errors.New("ms365 backend requires a tenantID")
+	// we only support private key authentication for ms 365
+	clientSecret := ""
+	switch cred.Type {
+	case vault.CredentialType_private_key:
+		return nil, errors.New("certificate authentication is not implemented yet")
+	case vault.CredentialType_password:
+		clientSecret = string(cred.Secret)
+	default:
+		return nil, errors.New("invalid secret configuration for ms365 transport: " + cred.Type.String())
 	}
 
 	t := &Transport{
-		tenantID:                 msauth.TenantId,
+		tenantID: tc.Options[OptionTenantID],
+		clientID: tc.Options[OptionClientID],
+		// TODO: we want to support secret and certificate authentication
+		clientSecret: clientSecret,
+		// TODO: we want to remove the data report with a proper implementation
+		powershellDataReportFile: tc.Options[OptionDataReport],
 		opts:                     tc.Options,
-		clientID:                 msauth.ClientId,
-		clientSecret:             msauth.ClientSecret,
-		powershellDataReportFile: tc.Options["mondoo-ms365-datareport"],
+	}
+
+	if len(t.tenantID) == 0 {
+		return nil, errors.New("ms365 backend requires a tenantID")
 	}
 
 	claims, err := t.TokenClaims()
