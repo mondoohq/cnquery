@@ -1,11 +1,13 @@
 package ms365
 
 import (
+	"errors"
+
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/common"
-	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	ms365_transport "go.mondoo.io/mondoo/motor/transports/ms365"
+	"go.mondoo.io/mondoo/motor/transports/resolver"
 )
 
 type Resolver struct{}
@@ -18,12 +20,19 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *Resolver) Resolve(t *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(cc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
-	trans, err := ms365_transport.New(t)
+	// Note: we use the resolver instead of the direct ms365_transport.New to resolve credentials properly
+	m, err := resolver.NewMotorConnection(cc, cfn)
 	if err != nil {
 		return nil, err
+	}
+	defer m.Close()
+
+	trans, ok := m.Transport.(*ms365_transport.Transport)
+	if !ok {
+		return nil, errors.New("could not create ms 365 transport")
 	}
 
 	identifier, err := trans.Identifier()
@@ -32,8 +41,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, cfn common.CredentialF
 	}
 
 	// detect platform info for the asset
-	detector := platform.NewDetector(trans)
-	pf, err := detector.Platform()
+	pf, err := m.Platform()
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +50,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, cfn common.CredentialF
 		PlatformIds: []string{identifier},
 		Name:        "Microsoft 365 tenant " + trans.TenantID(),
 		Platform:    pf,
-		Connections: []*transports.TransportConfig{t}, // pass-in the current config
+		Connections: []*transports.TransportConfig{cc}, // pass-in the current config
 		Labels: map[string]string{
 			"azure.com/tenant": trans.TenantID(),
 		},

@@ -2,14 +2,12 @@ package ms365
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 
 	msgraph "github.com/yaegashi/msgraph.go/beta"
+	msgraphbeta "github.com/yaegashi/msgraph.go/beta"
 	"github.com/yaegashi/msgraph.go/msauth"
 	"golang.org/x/oauth2"
-
-	msgraphbeta "github.com/yaegashi/msgraph.go/beta"
 )
 
 var DefaultMSGraphScopes = []string{msauth.DefaultMSGraphScope}
@@ -45,21 +43,4 @@ func (t *Transport) httpClient() (*http.Client, error) {
 
 	httpClient := oauth2.NewClient(ctx, ts)
 	return httpClient, nil
-}
-
-func ParseMicrosoftAuth(data []byte) (*MicrosoftAuth, error) {
-	var adAccount MicrosoftAuth
-
-	err := json.Unmarshal(data, &adAccount)
-	if err != nil {
-		return nil, err
-	}
-	return &adAccount, nil
-}
-
-type MicrosoftAuth struct {
-	TenantId       string `json:"tenantId"`
-	SubscriptionId string `json:"subscriptionId"`
-	ClientId       string `json:"clientId"`
-	ClientSecret   string `json:"clientSecret"`
 }
