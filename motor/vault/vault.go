@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-//go:generate protoc --proto_path=$PWD:. --go_out=. --go_opt=paths=source_relative --falcon_out=. vault.proto
+//go:generate protoc --proto_path=../../:. --go_out=. --go_opt=paths=source_relative --falcon_out=. vault.proto
 
 func EscapeSecretID(key string) string {
 	return strings.TrimPrefix(key, "//")
