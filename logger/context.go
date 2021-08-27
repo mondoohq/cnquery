@@ -10,6 +10,8 @@ import (
 
 const RequestIDFieldKey = "req-id"
 
+var GlobalLogger = log.With().Str(RequestIDFieldKey, "global").Logger()
+
 // RequestScopedContext returns a context that contains a logger which logs the request ID
 // Given a context, a logger can be retrieved as follows
 //  ctx := RequestScopedContext(context.Background(), "req-id")
@@ -29,5 +31,11 @@ func RequestScopedContext(ctx context.Context, reqID string) context.Context {
 // FromContext returns the logger in the context if present, otherwise the it
 // returns the default logger
 func FromContext(ctx context.Context) *zerolog.Logger {
-	return log.Ctx(ctx)
+	l := log.Ctx(ctx)
+	if l.GetLevel() == zerolog.Disabled {
+		// If a context logger was not set, we'll return our global
+		// logger instead of the default noop logger
+		return &GlobalLogger
+	}
+	return l
 }
