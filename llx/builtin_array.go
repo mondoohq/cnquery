@@ -131,6 +131,22 @@ func arrayLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return IntData(int64(len(arr))), 0, nil
 }
 
+func arrayNotEmpty(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
+	arr, ok := bind.Value.([]interface{})
+	if !ok {
+		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into array")
+	}
+
+	if len(arr) == 0 {
+		return BoolFalse, 0, nil
+	}
+	return BoolTrue, 0, nil
+}
+
 func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	// where(array, function)
 	itemsRef := chunk.Function.Args[0]

@@ -10,6 +10,7 @@ mondoo {
   jobEnvironment() dict
   // Transport capabilities
   capabilities() []string
+  nulllist() []string
 }
 
 // Returns EOL information from the mondoo EOL service
