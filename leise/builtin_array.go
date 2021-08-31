@@ -271,26 +271,13 @@ func compileArrayAny(c *compiler, typ types.Type, ref int32, id string, call *pa
 	}
 	listRef := c.Result.GetCode().ChunkIndex()
 
-	// .length ==> after where clause
+	// .notEmpty ==> after where clause
 	c.Result.Code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
-		Id:   "length",
-		Function: &llx.Function{
-			Type:    string(types.Int),
-			Binding: listRef,
-		},
-	})
-
-	// == allLen
-	c.Result.Code.AddChunk(&llx.Chunk{
-		Call: llx.Chunk_FUNCTION,
-		Id:   string("!=" + types.Int),
+		Id:   "notEmpty",
 		Function: &llx.Function{
 			Type:    string(types.Bool),
-			Binding: c.Result.Code.ChunkIndex(),
-			Args: []*llx.Primitive{
-				llx.IntPrimitive(0),
-			},
+			Binding: listRef,
 		},
 	})
 

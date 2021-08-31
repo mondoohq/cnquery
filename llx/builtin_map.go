@@ -32,12 +32,19 @@ func mapGetIndex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	// ^^ TODO
 
 	key := string(args[0].Value)
+	childType := bind.Type.Child()
+
+	if bind.Value == nil {
+		return &RawData{
+			Type:  childType,
+			Value: nil,
+		}, 0, nil
+	}
 
 	m, ok := bind.Value.(map[string]interface{})
 	if !ok {
 		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into map")
 	}
-	childType := bind.Type.Child()
 	return &RawData{
 		Type:  childType,
 		Value: m[key],
@@ -174,6 +181,23 @@ func dictLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 		return IntData(int64(len(x))), 0, nil
 	default:
 		return nil, 0, errors.New("dict value does not support field `length`")
+	}
+}
+
+func dictNotEmpty(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
+	switch x := bind.Value.(type) {
+	case string:
+		return BoolData(len(x) != 0), 0, nil
+	case []interface{}:
+		return BoolData(len(x) != 0), 0, nil
+	case map[string]interface{}:
+		return BoolData(len(x) != 0), 0, nil
+	default:
+		return nil, 0, errors.New("dict value does not support field `notEmpty`")
 	}
 }
 

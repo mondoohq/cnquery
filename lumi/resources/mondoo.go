@@ -19,6 +19,10 @@ func (m *lumiMondoo) GetBuild() (string, error) {
 	return mondoo.GetBuild(), nil
 }
 
+func (m *lumiMondoo) GetNulllist() ([]interface{}, error) {
+	return nil, nil
+}
+
 func (m *lumiMondoo) GetResources() ([]interface{}, error) {
 	n := m.Runtime.Registry.Names()
 	sort.Strings(n)

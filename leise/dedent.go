@@ -20,7 +20,7 @@ func Dedent(content string) string {
 			continue
 		}
 		whitespace := leadingWhitespace.FindString(line)
-		if initial == true || len(indent) > len(whitespace) {
+		if initial || len(indent) > len(whitespace) {
 			indent = whitespace
 		}
 	}

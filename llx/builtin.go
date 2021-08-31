@@ -476,6 +476,9 @@ func init() {
 			string("contains" + types.String): {f: dictContainsString, Label: "contains"},
 			string("contains" + types.Array(types.String)): {f: dictContainsArrayString, Label: "contains"},
 			string("find"): {f: dictFind, Label: "find"},
+			// NOTE: the following functions are internal ONLY!
+			// We have not yet decided if and how these may be exposed to users
+			"notEmpty": {f: dictNotEmpty},
 		},
 		types.ArrayLike: {
 			"[]":         {f: arrayGetIndex},
@@ -552,6 +555,9 @@ func init() {
 			string(types.Float + "!=" + types.Regex):  {f: floatarrayNotRegex, Label: "!="},
 			string(types.String + "==" + types.Regex): {f: stringarrayCmpRegex, Label: "=="},
 			string(types.String + "!=" + types.Regex): {f: stringarrayNotRegex, Label: "!="},
+			// NOTE: the following functions are internal ONLY!
+			// We have not yet decided if and how these may be exposed to users
+			"notEmpty": {f: arrayNotEmpty},
 		},
 		types.MapLike: {
 			"[]":     {f: mapGetIndex},
