@@ -35,7 +35,7 @@ type Windows struct {
 }
 
 func (s *Windows) Name() string {
-	return "Windoows Uptime"
+	return "Windows Uptime"
 }
 
 func (s *Windows) Duration() (time.Duration, error) {
