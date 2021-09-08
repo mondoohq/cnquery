@@ -20,7 +20,7 @@ func ParseLine(line string) (*PamLine, error) {
 	pamType := fields[0]
 	control := fields[1]
 	//Control can either be one word or several contained in [] backets
-	if control[:1] == "[" {
+	if control[0] == '[' && control[len(control)-1] != ']' {
 		return complicatedParse(fields)
 	}
 	module := fields[2]
