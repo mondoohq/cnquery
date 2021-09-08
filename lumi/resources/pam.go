@@ -219,6 +219,58 @@ func (s *lumiPamConf) GetServices(files []interface{}) (map[string]interface{}, 
 			line = strings.Trim(line, " \t\r")
 
 			if line != "" {
+				settings = append(settings, line)
+			}
+		}
+		services[basename] = settings
+	}
+
+	return services, nil
+}
+
+func (s *lumiPamConf) GetEntries(files []interface{}) (map[string]interface{}, error) {
+	contents := map[string]string{}
+	var notReadyError error = nil
+
+	for i := range files {
+		file := files[i].(File)
+
+		path, err := file.Path()
+		if err != nil {
+			return nil, err
+		}
+		f, err := s.Runtime.Motor.Transport.FS().Open(path)
+		if err != nil {
+			return nil, err
+		}
+
+		raw, err := ioutil.ReadAll(f)
+		f.Close()
+		if err != nil {
+			return nil, err
+		}
+
+		contents[path] = string(raw)
+	}
+
+	if notReadyError != nil {
+		return nil, notReadyError
+	}
+
+	services := map[string]interface{}{}
+	for basename, content := range contents {
+		lines := strings.Split(content, "\n")
+		settings := []interface{}{}
+		var line string
+		for i := range lines {
+			line = lines[i]
+
+			if idx := strings.Index(line, "#"); idx >= 0 {
+				line = line[0:idx]
+			}
+			line = strings.Trim(line, " \t\r")
+
+			if line != "" {
 				entry, err := pam.ParseLine(line)
 				if err != nil {
 					return nil, err
