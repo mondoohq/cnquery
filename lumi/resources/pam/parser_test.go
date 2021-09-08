@@ -58,4 +58,17 @@ func TestParseLine(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, expected, result)
 	})
+
+	t.Run("parsing conf lines with complicated control and options", func(t *testing.T) {
+		line := "account    [default=bad]       pam_opendirectory.so no_warn group=admin,wheel"
+		expected := &PamLine{
+			PamType: "account",
+			Control: "[default=bad]",
+			Module:  "pam_opendirectory.so",
+			Options: []interface{}{"no_warn", "group=admin,wheel"},
+		}
+		result, err := ParseLine(line)
+		require.NoError(t, err)
+		require.Equal(t, expected, result)
+	})
 }
