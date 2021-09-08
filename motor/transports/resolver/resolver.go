@@ -84,7 +84,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 			return nil, err
 		}
 
-		idDetectors = append(idDetectors, "machineid")
 		idDetectors = append(idDetectors, "hostname")
 	case transports.TransportBackend_CONNECTION_LOCAL_OS:
 		log.Debug().Msg("connection> load local transport")
@@ -98,7 +97,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 			return nil, err
 		}
 
-		idDetectors = append(idDetectors, "machineid")
 		idDetectors = append(idDetectors, "hostname")
 	case transports.TransportBackend_CONNECTION_TAR:
 		log.Debug().Msg("connection> load tar transport")
@@ -175,7 +173,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 			return nil, err
 		}
 
-		idDetectors = append(idDetectors, "machineid")
 		idDetectors = append(idDetectors, "hostname")
 		idDetectors = append(idDetectors, "ssh-hostkey")
 	case transports.TransportBackend_CONNECTION_WINRM:
@@ -190,7 +187,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 			return nil, err
 		}
 
-		idDetectors = append(idDetectors, "machineid")
 		idDetectors = append(idDetectors, "hostname")
 	case transports.TransportBackend_CONNECTION_VSPHERE:
 		log.Debug().Msg("connection> load vsphere transport")
@@ -308,7 +304,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 			return nil, err
 		}
 
-		idDetectors = append(idDetectors, "machineid")
 		idDetectors = append(idDetectors, "hostname")
 	case transports.TransportBackend_CONNECTION_FS:
 		trans, err := fs.New(clonedConfig)
@@ -320,7 +315,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 			return nil, err
 		}
 
-		idDetectors = append(idDetectors, "machineid")
 		idDetectors = append(idDetectors, "hostname")
 	case transports.TransportBackend_CONNECTION_EQUINIX_METAL:
 		trans, err := equinix.New(clonedConfig)
