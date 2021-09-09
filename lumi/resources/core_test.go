@@ -837,6 +837,18 @@ func TestArray(t *testing.T) {
 			"a = [1]; [2,1,2,1].containsOnly(a)",
 			0, []interface{}{int64(2), int64(2)},
 		},
+		{
+			"[2,1,2,2].containsNone([1])",
+			0, []interface{}{int64(1)},
+		},
+		{
+			"[2,1,2,1].containsNone([3,4])",
+			0, []interface{}(nil),
+		},
+		{
+			"a = [1]; [2,1,2,1].containsNone(a)",
+			0, []interface{}{int64(1), int64(1)},
+		},
 	})
 }
 
