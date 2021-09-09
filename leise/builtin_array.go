@@ -217,6 +217,62 @@ func compileArrayContainsOnly(c *compiler, typ types.Type, ref int32, id string,
 	return types.Bool, nil
 }
 
+func compileArrayContainsNone(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
+	if call == nil || len(call.Function) != 1 {
+		return types.Nil, errors.New("function " + id + " needs one argument (array)")
+	}
+
+	f := call.Function[0]
+	if f.Value == nil || f.Value.Operand == nil {
+		return types.Nil, errors.New("function " + id + " needs one argument")
+	}
+
+	val, err := c.compileOperand(f.Value.Operand)
+	if err != nil {
+		return types.Nil, err
+	}
+
+	valType, err := c.dereferenceType(val)
+	if err != nil {
+		return types.Nil, err
+	}
+
+	if valType != typ {
+		return types.Nil, errors.New("types don't match for calling contains (got: " + valType.Label() + ", expected: " + typ.Label() + ")")
+	}
+
+	// .containsNone
+	c.Result.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "containsNone",
+		Function: &llx.Function{
+			Type:    string(typ),
+			Binding: ref,
+			Args: []*llx.Primitive{
+				val,
+			},
+		},
+	})
+
+	// == []
+	c.Result.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   string("=="),
+		Function: &llx.Function{
+			Type:    string(types.Bool),
+			Binding: c.Result.Code.ChunkIndex(),
+			Args: []*llx.Primitive{
+				llx.ArrayPrimitive([]*llx.Primitive{}, typ.Child()),
+			},
+		},
+	})
+
+	checksum := c.Result.Code.Checksums[c.Result.Code.ChunkIndex()]
+	c.Result.Labels.Labels[checksum] = "[].containsNone()"
+
+	return types.Bool, nil
+}
+
 func compileArrayAll(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
 	_, err := compileWhere(c, typ, ref, "where", call)
 	if err != nil {

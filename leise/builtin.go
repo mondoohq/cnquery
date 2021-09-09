@@ -79,6 +79,7 @@ func init() {
 			"unique":       {compile: compileArrayUnique, signature: FunctionSignature{Required: 0}},
 			"contains":     {compile: compileArrayContains, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"containsOnly": {compile: compileArrayContainsOnly, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"containsNone": {compile: compileArrayContainsNone, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"all":          {compile: compileArrayAll, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"any":          {compile: compileArrayAny, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"one":          {compile: compileArrayOne, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
