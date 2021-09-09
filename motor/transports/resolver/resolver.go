@@ -191,6 +191,7 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		}
 
 		idDetectors = append(idDetectors, "machineid")
+		idDetectors = append(idDetectors, "hostname")
 	case transports.TransportBackend_CONNECTION_VSPHERE:
 		log.Debug().Msg("connection> load vsphere transport")
 		trans, err := vsphere.New(clonedConfig)
