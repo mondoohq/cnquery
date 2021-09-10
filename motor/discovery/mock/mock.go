@@ -19,7 +19,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...string) ([]*asset.Asset, error) {
 	assetInfo := &asset.Asset{
 		State:       asset.State_STATE_ONLINE,
 		Connections: []*transports.TransportConfig{tc},
@@ -36,7 +36,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 		Kind: transports.Kind_KIND_BARE_METAL,
 	}
 
-	m, err := resolver.NewMotorConnection(tc, cfn)
+	m, err := resolver.NewMotorConnection(tc, cfn, userIdDetectors...)
 	if err != nil {
 		return nil, err
 	}
