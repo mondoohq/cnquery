@@ -19,32 +19,41 @@ type VaultConfiguration struct {
 	Options   map[string]string `json:"options,omitempty" `
 }
 
+const (
+	Vault_Hashicorp         string = "hashicorp-vault"
+	Vault_EncryptedFile     string = "encrypted-file"
+	Vault_Keyring           string = "keyring"
+	Vault_GCPSecretsManager string = "gcp-secret-manager"
+	Vault_AWSSecretsManager string = "aws-secrets-manager"
+	Vault_AWSParameterStore string = "aws-parameter-store"
+)
+
 func New(vCfg VaultConfiguration) (vault.Vault, error) {
 	var vault vault.Vault
 	switch vCfg.VaultType {
-	case "hashicorp-vault":
+	case Vault_Hashicorp:
 		serverUrl := vCfg.Options["url"]
 		token := vCfg.Options["token"]
 		vault = hashivault.New(serverUrl, token)
-	case "encrypted-file":
+	case Vault_EncryptedFile:
 		path := vCfg.Options["path"]
 		keyRingName := vCfg.Options["name"]
 		password := vCfg.Options["password"]
 		vault = keyring.NewEncryptedFile(path, keyRingName, password)
-	case "keyring":
+	case Vault_Keyring:
 		keyRingName := vCfg.Options["name"]
 		vault = keyring.New(keyRingName)
-	case "gcp-secret-manager":
+	case Vault_GCPSecretsManager:
 		projectID := vCfg.Options["project-id"]
 		vault = gcpsecretmanager.New(projectID)
-	case "aws-secrets-manager":
+	case Vault_AWSSecretsManager:
 		// TODO: do we really want to load it from the env?
 		cfg, err := config.LoadDefaultConfig(context.Background())
 		if err != nil {
 			return nil, errors.Wrap(err, "cannot not determine aws environment")
 		}
 		vault = awssecretsmanager.New(cfg)
-	case "aws-parameter-store":
+	case Vault_AWSParameterStore:
 		cfg, err := config.LoadDefaultConfig(context.Background())
 		if err != nil {
 			return nil, errors.Wrap(err, "cannot not determine aws environment")
