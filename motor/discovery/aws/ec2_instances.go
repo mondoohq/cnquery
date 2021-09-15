@@ -165,6 +165,7 @@ func instanceToAsset(account string, region string, instance types.Instance, ins
 	}
 
 	asset.PlatformIds = []string{awsec2.MondooInstanceID(account, region, *instance.InstanceId)}
+	asset.IdDetector = []string{"awsec2"}
 	asset.Name = *instance.InstanceId
 	asset.Platform = &platform.Platform{
 		Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
