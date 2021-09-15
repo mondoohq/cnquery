@@ -247,7 +247,7 @@ func detectDupes(array interface{}, typ types.Type) ([]interface{}, []interface{
 	ct := typ.Child()
 	equalFunc, ok := types.Equal[ct]
 	if !ok {
-		return nil, nil, errors.New("cannot extract duplicates from array, don't know how to compare entries type ")
+		return nil, nil, errors.New("cannot extract duplicates from array, must be a basic type. Try using a field argument.")
 	}
 
 	existing := []interface{}{}
@@ -284,6 +284,127 @@ func detectDupes(array interface{}, typ types.Type) ([]interface{}, []interface{
 	}
 
 	return existing, duplicates, nil
+}
+
+// Takes an array of resources and a field, identify duplicates of that field value
+// Result list is every resource that has duplicates
+// (there will be at least resources 2 if there is a duplicate field value)
+func arrayFieldDuplicates(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	// where(array, function)
+	itemsRef := chunk.Function.Args[0]
+	items, rref, err := c.resolveValue(itemsRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	if items.Value == nil {
+		return &RawData{Type: items.Type}, 0, nil
+	}
+
+	list := items.Value.([]interface{})
+	if len(list) == 0 {
+		return items, 0, nil
+	}
+
+	arg1 := chunk.Function.Args[1]
+	if types.Type(arg1.Type).Underlying() != types.FunctionLike {
+		return nil, 0, errors.New("Expected resource field, unable to get field value from " + types.Type(arg1.Type).Label())
+	}
+
+	fref, ok := arg1.Ref()
+	if !ok {
+		return nil, 0, errors.New("Failed to retrieve function reference of 'field duplicates' call")
+	}
+
+	f := c.code.Functions[fref-1]
+	ct := items.Type.Child()
+	filteredList := map[int]*RawData{}
+	finishedResults := 0
+	for i := range list {
+		//Function block resolves field value of resource
+		c.runFunctionBlock(&RawData{Type: ct, Value: list[i]}, f, func(res *RawResult) {
+			_, ok := filteredList[i]
+			if !ok {
+				finishedResults++
+			}
+
+			filteredList[i] = res.Data
+
+			//Once we have fun the function block (extracting field value) and collected all of the results
+			//we can check them for duplicates
+			if finishedResults == len(list) {
+				resList := []interface{}{}
+
+				equalFunc, ok := types.Equal[filteredList[0].Type]
+				if !ok {
+					c.cache.Store(ref, &stepCache{
+						Result: &RawData{
+							Type:  items.Type,
+							Error: errors.New("cannot extract duplicates from array, field must be a basic type"),
+						},
+						IsStatic: false,
+					})
+					c.triggerChain(ref)
+					return
+				}
+
+				arr := make([]*RawData, len(list))
+				for k, v := range filteredList {
+					arr[k] = v
+				}
+
+				//to track values of fields
+				existing := make(map[int]interface{})
+				//to track index of duplicate resources
+				duplicateIndices := []int{}
+				var found bool
+				var added bool
+				for i := 0; i < len(arr); i++ {
+					left := arr[i].Value
+
+					for j, v := range existing {
+						if equalFunc(left, v) {
+							found = true
+							//Track the index so that we can get the whole resource
+							duplicateIndices = append(duplicateIndices, i)
+							//check if j was already added to our list of indices
+							for di := range duplicateIndices {
+								if j == duplicateIndices[di] {
+									added = true
+								}
+							}
+							if added == false {
+								duplicateIndices = append(duplicateIndices, j)
+							}
+							break
+						}
+					}
+
+					//value not found so we add it to list of things to check for dupes
+					if !found {
+						existing[i] = left
+					}
+				}
+
+				//Once we collect duplicate indices, make a list of resources
+				for i := range duplicateIndices {
+					idx := duplicateIndices[i]
+					resList = append(resList, list[idx])
+				}
+
+				c.cache.Store(ref, &stepCache{
+					Result: &RawData{
+						Type:  bind.Type,
+						Value: resList,
+					},
+					IsStatic: false,
+				})
+				c.triggerChain(ref)
+			}
+		})
+	}
+
+	return nil, 0, nil
 }
 
 func arrayDuplicates(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {

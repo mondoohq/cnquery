@@ -9,6 +9,8 @@ import (
 
 const passwdContent = `root:x:0:0::/root:/bin/bash
 chris:x:1000:1001::/home/chris:/bin/bash
+christopher:x:1000:1001::/home/christopher:/bin/bash
+chris:x:1002:1003::/home/chris:/bin/bash
 bin:x:1:1::/:/usr/bin/nologin
 `
 
@@ -28,7 +30,7 @@ func TestResource_File(t *testing.T) {
 		},
 		{
 			"file(\"/etc/passwd\").size",
-			0, int64(99),
+			0, int64(193),
 		},
 		{
 			"file(\"/etc/passwd\").permissions.mode",
