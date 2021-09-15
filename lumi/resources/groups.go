@@ -67,12 +67,17 @@ func (g *lumiGroup) id() (string, error) {
 		return "", err
 	}
 
+	name, err := g.Name()
+	if err != nil {
+		return "", err
+	}
+
 	id := strconv.FormatInt(gid, 10)
 	if len(sid) > 0 {
 		id = sid
 	}
 
-	return "group/" + id, nil
+	return "group/" + id + "/" + name, nil
 }
 
 func (g *lumiGroup) GetMembers() ([]interface{}, error) {

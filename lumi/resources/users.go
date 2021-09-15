@@ -119,12 +119,17 @@ func (u *lumiUser) id() (string, error) {
 		return "", err
 	}
 
+	name, err := u.Name()
+	if err != nil {
+		return "", err
+	}
+
 	id := strconv.FormatInt(uid, 10)
 	if len(sid) > 0 {
 		id = sid
 	}
 
-	return "user/" + id, nil
+	return "user/" + id + "/" + name, nil
 }
 
 func (u *lumiUsers) id() (string, error) {

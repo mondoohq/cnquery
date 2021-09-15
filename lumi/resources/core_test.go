@@ -985,6 +985,26 @@ func TestResource_None(t *testing.T) {
 	})
 }
 
+func TestResource_duplicateFields(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"users.list.duplicates(uid) { uid }",
+			2, []interface{}{
+				map[string]interface{}{"sYZO9ps0Y4tx2p0TkrAn73WTQx83QIQu70uPtNukYNnVAzaer3Pf6xe7vAplB+cAgPbteXzizlUioUMnNJr5sg==": &llx.RawData{
+					Type:  "\x05",
+					Value: int64(1000),
+					Error: nil,
+				}},
+				map[string]interface{}{"sYZO9ps0Y4tx2p0TkrAn73WTQx83QIQu70uPtNukYNnVAzaer3Pf6xe7vAplB+cAgPbteXzizlUioUMnNJr5sg==": &llx.RawData{
+					Type:  "\x05",
+					Value: int64(1000),
+					Error: nil,
+				}},
+			},
+		},
+	})
+}
+
 func TestDict_Methods(t *testing.T) {
 	p := "parse.json('/dummy.json')."
 

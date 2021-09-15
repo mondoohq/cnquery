@@ -83,14 +83,45 @@ func compileWhere(c *compiler, typ types.Type, ref int32, id string, call *parse
 }
 
 func compileArrayDuplicates(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
-	if call != nil && len(call.Function) > 0 {
+	if call != nil && len(call.Function) > 1 {
 		return types.Nil, errors.New("too many arguments when calling '" + id + "'")
+	} else if call != nil && len(call.Function) == 1 {
+		arg := call.Function[0]
+
+		functionRef, standalone, err := c.blockExpressions([]*parser.Expression{arg.Value}, typ)
+		if err != nil {
+			return types.Nil, err
+		}
+		if functionRef == 0 {
+			return types.Nil, errors.New("called '" + id + "' without a function block")
+		}
+		argExpectation := llx.FunctionPrimitive(functionRef)
+
+		if standalone {
+			return typ, errors.New("called duplicates with a field name on an invalid type")
+		}
+
+		c.Result.Code.AddChunk(&llx.Chunk{
+			Call: llx.Chunk_FUNCTION,
+			Id:   "fieldDuplicates",
+			Function: &llx.Function{
+				Type:    string(typ),
+				Binding: ref,
+				Args: []*llx.Primitive{
+					llx.RefPrimitive(ref),
+					argExpectation,
+				},
+			},
+		})
+		return typ, nil
 	}
 
+	// Duplicates is being called with 0 arguments, which means it should be on an
+	// array of basic types
 	ct := typ.Child()
 	_, ok := types.Equal[ct]
 	if !ok {
-		return typ, errors.New("cannot extract duplicates from array, don't know how to compare entries")
+		return typ, errors.New("cannot extract duplicates from array, must be a basic type. Try using a field argument.")
 	}
 
 	c.Result.Code.AddChunk(&llx.Chunk{
