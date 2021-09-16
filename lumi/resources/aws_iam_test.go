@@ -1,9 +1,11 @@
-package resources_test
+package resources
 
 import (
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -117,4 +119,12 @@ func TestParseAwsIso8601Parser(t *testing.T) {
 		_, err := time.Parse(format, timestamps[i])
 		require.NoError(t, err)
 	}
+}
+
+func TestParsePasswordPolicy(t *testing.T) {
+	pPolicy := &types.PasswordPolicy{}
+	assert.Equal(t, map[string]interface{}{"AllowUsersToChangePassword": false, "ExpirePasswords": false, "HardExpiry": false, "MaxPasswordAge": "0", "MinimumPasswordLength": "0", "PasswordReusePrevention": "0", "RequireLowercaseCharacters": false, "RequireNumbers": false, "RequireSymbols": false, "RequireUppercaseCharacters": false}, parsePasswordPolicy(pPolicy))
+	pPolicy.AllowUsersToChangePassword = true
+	pPolicy.RequireNumbers = true
+	assert.Equal(t, map[string]interface{}{"AllowUsersToChangePassword": true, "ExpirePasswords": false, "HardExpiry": false, "MaxPasswordAge": "0", "MinimumPasswordLength": "0", "PasswordReusePrevention": "0", "RequireLowercaseCharacters": false, "RequireNumbers": true, "RequireSymbols": false, "RequireUppercaseCharacters": false}, parsePasswordPolicy(pPolicy))
 }

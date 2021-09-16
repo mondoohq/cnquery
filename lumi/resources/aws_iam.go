@@ -164,22 +164,40 @@ func (c *lumiAwsIam) GetAccountPasswordPolicy() (map[string]interface{}, error) 
 		return nil, errors.Wrap(err, "could not gather aws iam account-password-policy")
 	}
 
-	res := map[string]interface{}{}
-
-	if resp.PasswordPolicy != nil {
-		res["AllowUsersToChangePassword"] = resp.PasswordPolicy.AllowUsersToChangePassword
-		res["RequireUppercaseCharacters"] = resp.PasswordPolicy.RequireUppercaseCharacters
-		res["RequireSymbols"] = resp.PasswordPolicy.RequireSymbols
-		res["ExpirePasswords"] = resp.PasswordPolicy.ExpirePasswords
-		res["PasswordReusePrevention"] = strconv.FormatInt(int64(*resp.PasswordPolicy.PasswordReusePrevention), 10)
-		res["RequireLowercaseCharacters"] = resp.PasswordPolicy.RequireLowercaseCharacters
-		res["MaxPasswordAge"] = strconv.FormatInt(int64(*resp.PasswordPolicy.MaxPasswordAge), 10)
-		res["HardExpiry"] = toBool(resp.PasswordPolicy.HardExpiry)
-		res["RequireNumbers"] = resp.PasswordPolicy.RequireNumbers
-		res["MinimumPasswordLength"] = strconv.FormatInt(int64(*resp.PasswordPolicy.MinimumPasswordLength), 10)
-	}
+	res := parsePasswordPolicy(resp.PasswordPolicy)
 
 	return res, nil
+}
+
+func parsePasswordPolicy(passwordPolicy *types.PasswordPolicy) map[string]interface{} {
+	res := map[string]interface{}{}
+
+	if passwordPolicy != nil {
+		prp := int64(0)
+		if passwordPolicy.PasswordReusePrevention != nil {
+			prp = int64(*passwordPolicy.PasswordReusePrevention)
+		}
+		mpa := int64(0)
+		if passwordPolicy.MaxPasswordAge != nil {
+			mpa = int64(*passwordPolicy.MaxPasswordAge)
+		}
+		mpl := int64(0)
+		if passwordPolicy.MinimumPasswordLength != nil {
+			mpl = int64(*passwordPolicy.MinimumPasswordLength)
+		}
+
+		res["AllowUsersToChangePassword"] = passwordPolicy.AllowUsersToChangePassword
+		res["RequireUppercaseCharacters"] = passwordPolicy.RequireUppercaseCharacters
+		res["RequireSymbols"] = passwordPolicy.RequireSymbols
+		res["ExpirePasswords"] = passwordPolicy.ExpirePasswords
+		res["PasswordReusePrevention"] = strconv.FormatInt(prp, 10)
+		res["RequireLowercaseCharacters"] = passwordPolicy.RequireLowercaseCharacters
+		res["MaxPasswordAge"] = strconv.FormatInt(mpa, 10)
+		res["HardExpiry"] = toBool(passwordPolicy.HardExpiry)
+		res["RequireNumbers"] = passwordPolicy.RequireNumbers
+		res["MinimumPasswordLength"] = strconv.FormatInt(mpl, 10)
+	}
+	return res
 }
 
 func (c *lumiAwsIam) GetAccountSummary() (map[string]interface{}, error) {
