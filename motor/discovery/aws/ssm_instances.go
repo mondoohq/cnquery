@@ -146,12 +146,7 @@ func mapSmmManagedPingStateCode(pingStatus types.PingStatus) asset.State {
 const SsmPlatformLabel = "ssm.aws.mondoo.app/platform"
 
 func ssmInstanceToAsset(account string, region string, instance types.InstanceInformation, clonedConfig aws.Config) *asset.Asset {
-	connections := []*transports.TransportConfig{}
 
-	connections = append(connections, &transports.TransportConfig{
-		Backend: transports.TransportBackend_CONNECTION_AWS_SSM_RUN_COMMAND,
-		Host:    *instance.InstanceId,
-	})
 	asset := &asset.Asset{
 		PlatformIds: []string{awsec2.MondooInstanceID(account, region, *instance.InstanceId)},
 		Name:        *instance.InstanceId,
@@ -160,11 +155,15 @@ func ssmInstanceToAsset(account string, region string, instance types.InstanceIn
 			Runtime: transports.RUNTIME_AWS_SSM_MANAGED,
 		},
 
-		Connections: connections,
-		State:       mapSmmManagedPingStateCode(instance.PingStatus),
-		Labels:      make(map[string]string),
+		Connections: []*transports.TransportConfig{{
+			Backend: transports.TransportBackend_CONNECTION_AWS_SSM_RUN_COMMAND,
+			Host:    *instance.InstanceId,
+		}},
+		State:  mapSmmManagedPingStateCode(instance.PingStatus),
+		Labels: make(map[string]string),
 	}
 
+	// fetch and add labels from the instance
 	ec2svc := ec2.NewFromConfig(clonedConfig)
 	tagresp, err := ec2svc.DescribeTags(context.Background(), &ec2.DescribeTagsInput{
 		Filters: []ec2types.Filter{
@@ -174,9 +173,6 @@ func ssmInstanceToAsset(account string, region string, instance types.InstanceIn
 			},
 		},
 	})
-
-	asset.Labels[SsmPlatformLabel] = string(instance.PlatformType)
-
 	if err != nil {
 		log.Warn().Err(err).Msg("could not gather ssm instance tag information")
 	} else if tagresp != nil {
@@ -192,15 +188,7 @@ func ssmInstanceToAsset(account string, region string, instance types.InstanceIn
 			}
 		}
 	}
-
-	// fetch aws specific metadata
-	asset.Labels["mondoo.app/region"] = region
-	if instance.InstanceId != nil {
-		asset.Labels["mondoo.app/instance"] = *instance.InstanceId
-	}
-	if instance.IPAddress != nil {
-		asset.Labels["mondoo.app/public-ip"] = *instance.IPAddress
-	}
-
+	// add AWS metadata labels
+	asset.Labels = addAWSMetadataLabels(asset.Labels, ssmInstanceToBasicInstanceInfo(instance, region))
 	return asset
 }
