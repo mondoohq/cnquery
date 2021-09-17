@@ -151,7 +151,16 @@ func (ec2i *Ec2Instances) List() ([]*asset.Asset, error) {
 
 func instanceToAsset(account string, region string, instance types.Instance, insecure bool, passInLabels map[string]string) *asset.Asset {
 	asset := &asset.Asset{
+		PlatformIds: []string{awsec2.MondooInstanceID(account, region, *instance.InstanceId)},
 		Connections: []*transports.TransportConfig{},
+		Labels:      make(map[string]string),
+		IdDetector:  []string{"awsec2"},
+		Name:        *instance.InstanceId,
+		Platform: &platform.Platform{
+			Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
+			Runtime: transports.RUNTIME_AWS_EC2,
+		},
+		State: mapEc2InstanceStateCode(instance.State),
 	}
 
 	// if there is a public ip, we assume ssh is an option
@@ -164,17 +173,7 @@ func instanceToAsset(account string, region string, instance types.Instance, ins
 		})
 	}
 
-	asset.PlatformIds = []string{awsec2.MondooInstanceID(account, region, *instance.InstanceId)}
-	asset.IdDetector = []string{"awsec2"}
-	asset.Name = *instance.InstanceId
-	asset.Platform = &platform.Platform{
-		Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
-		Runtime: transports.RUNTIME_AWS_EC2,
-	}
-
-	asset.State = mapEc2InstanceStateCode(instance.State)
-
-	asset.Labels = addAssetLabels(map[string]string{}, instance, region, passInLabels)
+	// add labels from the instance
 	for k := range instance.Tags {
 		tag := instance.Tags[k]
 		if tag.Key != nil {
@@ -186,37 +185,14 @@ func instanceToAsset(account string, region string, instance types.Instance, ins
 			asset.Labels[key] = value
 		}
 	}
+	// add passed in labels
+	for k, v := range passInLabels {
+		asset.Labels[k] = v
+	}
+	// add AWS metadata labels
+	asset.Labels = addAWSMetadataLabels(asset.Labels, ec2InstanceToBasicInstanceInfo(instance, region))
 
 	return asset
-}
-
-const (
-	ImageIdLabel        string = "mondoo.app/ami-id"
-	RegionLabel         string = "mondoo.app/region"
-	IntegrationMrnLabel string = "mondoo.app/integration-mrn"
-)
-
-func addAssetLabels(labels map[string]string, instance types.Instance, region string, additionalLabels ...map[string]string) map[string]string {
-	// fetch aws specific metadata
-	labels[RegionLabel] = region
-	if instance.InstanceId != nil {
-		labels["mondoo.app/instance"] = *instance.InstanceId
-	}
-	if instance.PublicDnsName != nil {
-		labels["mondoo.app/public-dns-name"] = *instance.PublicDnsName
-	}
-	if instance.PublicIpAddress != nil {
-		labels["mondoo.app/public-ip"] = *instance.PublicIpAddress
-	}
-	if instance.ImageId != nil {
-		labels[ImageIdLabel] = *instance.ImageId
-	}
-	for i := range additionalLabels {
-		for k, v := range additionalLabels[i] {
-			labels[k] = v
-		}
-	}
-	return labels
 }
 
 type awsec2id struct {
