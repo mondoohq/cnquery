@@ -66,22 +66,28 @@ func hostsToAssetList(instanceUuid string, hosts []*object.HostSystem) ([]*asset
 			return nil, err
 		}
 
+		// NOTE: if a host is not running properly (returning not responding), the properties are nil
 		ha := &asset.Asset{
-			Name: host.Name(),
-			// NOTE: platform information is filled by the resolver
-			State: mapHostPowerstateToState(props.Runtime.PowerState),
+			Name:  host.Name(),
+			State: asset.State_STATE_UNKNOWN,
 			Labels: map[string]string{
-				"vsphere.vmware.com/name":            host.Name(),
-				"vsphere.vmware.com/type":            host.Reference().Type,
-				"vsphere.vmware.com/moid":            host.Reference().Encode(),
-				"vsphere.vmware.com/inventorypath":   host.InventoryPath,
-				"vsphere.vmware.com/product-name":    props.Config.Product.Name,
-				"vsphere.vmware.com/product-version": props.Config.Product.Version,
-				"vsphere.vmware.com/os-type":         props.Config.Product.OsType,
-				"vsphere.vmware.com/produce-lineid":  props.Config.Product.ProductLineId,
+				"vsphere.vmware.com/name":          host.Name(),
+				"vsphere.vmware.com/type":          host.Reference().Type,
+				"vsphere.vmware.com/moid":          host.Reference().Encode(),
+				"vsphere.vmware.com/inventorypath": host.InventoryPath,
 			},
 			PlatformIds: []string{vsphere_transport.VsphereResourceID(instanceUuid, host.Reference())},
 		}
+
+		// add more information if available
+		if props != nil {
+			ha.State = mapHostPowerstateToState(props.Runtime.PowerState)
+			ha.Labels["vsphere.vmware.com/product-name"] = props.Config.Product.Name
+			ha.Labels["vsphere.vmware.com/product-version"] = props.Config.Product.Version
+			ha.Labels["vsphere.vmware.com/os-type"] = props.Config.Product.OsType
+			ha.Labels["vsphere.vmware.com/produce-lineid"] = props.Config.Product.ProductLineId
+		}
+
 		res = append(res, ha)
 	}
 	return res, nil
