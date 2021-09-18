@@ -47,14 +47,8 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 		return nil, errors.New("missing password for VMware tools transport")
 	}
 
-	scheme := "https"
-	// allow fallback to http protocol
-	if tc.Options["protocol"] == "http" {
-		scheme = "http"
-	}
-
 	// derive vsphere connection url from Transport Config
-	vsphereUrl, err := vsphere.VSphereConnectionURL(scheme, tc.Host, tc.Port, c.User, string(c.Secret))
+	vsphereUrl, err := vsphere.VSphereConnectionURL(tc.Host, tc.Port, c.User, string(c.Secret))
 	if err != nil {
 		return nil, err
 	}

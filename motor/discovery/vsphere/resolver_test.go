@@ -1,6 +1,7 @@
 package vsphere
 
 import (
+	"net/http/httptest"
 	"net/url"
 	"testing"
 
@@ -26,25 +27,28 @@ func TestVsphereResolver(t *testing.T) {
 	model.Service.Listen = &url.URL{
 		User: url.UserPassword(username, password),
 	}
+
+	// use the httptest tls generation instead of writing our own
+	tlsSrv := httptest.NewTLSServer(nil)
+	tls := tlsSrv.TLS
+	tlsSrv.Close()
+	model.Service.TLS = tls
 	s := model.Service.NewServer()
 	defer s.Close()
 
 	// start vsphere discover
 	r := Resolver{}
 	assets, err := r.Resolve(&transports.TransportConfig{
-		Backend: transports.TransportBackend_CONNECTION_VSPHERE,
-		Host:    s.URL.Hostname(),
-		Port:    s.URL.Port(),
-
+		Backend:  transports.TransportBackend_CONNECTION_VSPHERE,
+		Host:     s.URL.Hostname(),
+		Port:     s.URL.Port(),
+		Insecure: true, // allows self-signed certificates
 		Credentials: []*vault.Credential{
 			{
 				Type:   vault.CredentialType_password,
 				User:   username,
 				Secret: []byte(password),
 			},
-		},
-		Options: map[string]string{
-			"protocol": "http", // only required for testing
 		},
 		Discover: &transports.Discovery{
 			Targets: []string{"all"},
