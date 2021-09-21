@@ -3,12 +3,13 @@ package resources
 import (
 	"context"
 	"errors"
+	"strconv"
+	"time"
+
 	"github.com/mitchellh/mapstructure"
 	"go.mondoo.io/mondoo/logger"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/vadvisor"
-	"strconv"
-	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/platform"
