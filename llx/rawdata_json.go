@@ -76,17 +76,24 @@ func label(ref string, bundle *CodeBundle, isResource bool) string {
 	return label
 }
 
+func removeUnderscoreKeys(keys []string) []string {
+	results := make([]string, 0, len(keys))
+	for i := 0; i < len(keys); i++ {
+		if keys[i] != "_" {
+			results = append(results, keys[i])
+		}
+	}
+	return results
+}
+
 func refMapJSON(typ types.Type, data map[string]interface{}, codeID string, bundle *CodeBundle, buf *bytes.Buffer) error {
 	buf.WriteByte('{')
 
 	keys := stringKeys(data)
 	sort.Strings(keys)
 
-	for i := range keys {
-		if keys[i] == "_" {
-			keys = append(keys[0:i], keys[i+1:]...)
-		}
-	}
+	// What is the best explanation for why we do this?
+	keys = removeUnderscoreKeys(keys)
 
 	last := len(keys) - 1
 	for i, k := range keys {
