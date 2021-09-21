@@ -1,10 +1,10 @@
 package resources_test
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.mondoo.io/mondoo/lumi"
 )
 
 const passwdContent = `root:x:0:0::/root:/bin/bash
@@ -43,5 +43,5 @@ func TestResource_File(t *testing.T) {
 
 func TestResource_File_NotExist(t *testing.T) {
 	res := testQuery(t, "file('Nope').content")
-	assert.Equal(t, errors.New("file 'Nope' does not exist"), res[0].Data.Error)
+	assert.ErrorIs(t, res[0].Data.Error, lumi.NotFound)
 }

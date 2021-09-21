@@ -27,6 +27,8 @@ func (n NotReadyError) Error() string {
 	return "NotReadyError"
 }
 
+var NotFound = errors.New("not found")
+
 // CacheEntry contains cached data for resources
 type CacheEntry struct {
 	Timestamp int64

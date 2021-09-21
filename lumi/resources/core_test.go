@@ -746,7 +746,7 @@ func TestArray_Access(t *testing.T) {
 		},
 		{
 			"sshd.config('1').params['2'] == '3'",
-			0, "file '1' does not exist",
+			0, "file not found: '1' does not exist",
 		},
 	})
 }

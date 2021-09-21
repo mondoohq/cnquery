@@ -6,6 +6,7 @@ package resources
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -29,7 +30,7 @@ func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
 
 		// store the result in cache as we don't expect the file to improve
 		// unless it starts existing
-		resErr := errors.New("file '" + path + "' does not exist")
+		resErr := fmt.Errorf("file %w: '%s' does not exist", lumi.NotFound, path)
 		s.Cache.Store("content", &lumi.CacheEntry{
 			Data:      "",
 			Valid:     true,
