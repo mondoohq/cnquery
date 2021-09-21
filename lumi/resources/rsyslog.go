@@ -92,6 +92,9 @@ func (s *lumiRsyslogConf) GetContent(files []interface{}) (string, error) {
 
 		content, err := file.Content()
 		if err != nil {
+			if errors.Is(err, lumi.NotFound) {
+				continue
+			}
 			notReadyError = lumi.NotReadyError{}
 		}
 
