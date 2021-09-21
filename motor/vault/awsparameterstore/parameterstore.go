@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/motor/vault"
 )
@@ -24,32 +25,21 @@ type Vault struct {
 	cfg aws.Config
 }
 
-// we need to remove the leading // from mrns, this should not be done here, therefore we just throw an error
-func validKey(key string) error {
-	if strings.HasPrefix(key, "/") {
-		return errors.New("leading / are not allowed")
-	}
-	return nil
-}
-
-func awsParamKeyID(key string) string {
-	gcpKey := strings.ReplaceAll(key, "/", "-")
-	gcpKey = strings.ReplaceAll(gcpKey, ".", "-")
-	return gcpKey
-}
-
+// arn:aws:ssm:us-east-2:123456789012:parameter/prod-*
 func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, error) {
-	err := validKey(id.Key)
+	// create the client
+	parsedArn, err := arn.Parse(id.Key)
 	if err != nil {
 		return nil, err
 	}
+	cfg := v.cfg.Copy()
+	cfg.Region = parsedArn.Region
+	c := ssm.NewFromConfig(cfg)
 
-	// create the client
-	c := ssm.NewFromConfig(v.cfg)
-
+	name := strings.TrimPrefix(parsedArn.Resource, "parameter/")
 	// retrieve secret
 	out, err := c.GetParameter(ctx, &ssm.GetParameterInput{
-		Name:           aws.String(awsParamKeyID(id.Key)),
+		Name:           aws.String(name),
 		WithDecryption: true,
 	})
 	if err != nil {
@@ -65,6 +55,8 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 	return &vault.Secret{
 		Key:  id.Key,
 		Data: data,
+		// we do not know the encoding here, but the default is binary
+		Encoding: vault.SecretEncoding_encoding_binary,
 	}, nil
 }
 
