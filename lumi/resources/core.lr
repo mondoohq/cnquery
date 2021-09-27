@@ -2349,6 +2349,12 @@ aws.ec2.volume {
   encrypted bool
   // state of the volume (creating, available, in-use, etc.) 
   state string
+  // a map of tags associated with the ebs volume
+  tags map[string]string
+  //  availability Zone in which the volume was created
+  availabilityZone string
+  // EBS volume type (gp2 | gp3 | io1 | io2 | st1 | sc1| standard)
+  volumeType string
 }
 
 // AWS EC2 Instance
@@ -2452,7 +2458,7 @@ aws.ec2.securitygroup {
   // description of the secuirty group
   description string
   // a map of tags associated with the security group
-  tag map[string]string
+  tags map[string]string
   // vpc associated with the security group
   vpc aws.vpc
   // ip permissions (ingress) for the security group
