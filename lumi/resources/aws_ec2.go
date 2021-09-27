@@ -306,7 +306,7 @@ func (s *lumiAwsEc2) getSecurityGroups() []*jobpool.Job {
 						"id", toString(group.GroupId),
 						"name", toString(group.GroupName),
 						"description", toString(group.Description),
-						"tag", ec2TagsToMap(group.Tags),
+						"tags", ec2TagsToMap(group.Tags),
 						"vpc", lumiVpc,
 						"ipPermissions", lumiIpPermissions,
 						"ipPermissionsEgress", []interface{}{},
@@ -835,6 +835,9 @@ func (s *lumiAwsEc2) getVolumes() []*jobpool.Job {
 						"attachments", jsonAttachments,
 						"encrypted", vol.Encrypted,
 						"state", string(vol.State),
+						"tags", ec2TagsToMap(vol.Tags),
+						"availabilityZone", toString(vol.AvailabilityZone),
+						"volumeType", string(vol.VolumeType),
 					)
 					if err != nil {
 						return nil, err
