@@ -33,10 +33,9 @@ func (e *lumiAwsEc2) id() (string, error) {
 }
 
 func ec2TagsToMap(tags []types.Tag) map[string]interface{} {
-	var tagsMap map[string]interface{}
+	tagsMap := make(map[string]interface{})
 
 	if len(tags) > 0 {
-		tagsMap := map[string]interface{}{}
 		for i := range tags {
 			tag := tags[i]
 			tagsMap[toString(tag.Key)] = toString(tag.Value)
@@ -569,6 +568,7 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVers
 				"stateTransitionReason", toString(instance.StateTransitionReason),
 				"ebsOptimized", instance.EbsOptimized,
 				"instanceType", string(instance.InstanceType),
+				"tags", ec2TagsToMap(instance.Tags),
 			}
 
 			// add vpc if there is one
