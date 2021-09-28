@@ -2395,6 +2395,7 @@ aws.ec2.instance {
   ebsOptimized bool
   // instance type, e.g. t1.micro
   instanceType string
+  tags map[string]string
 }
 
 // AWS EC2 Instance Device
