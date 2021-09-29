@@ -11,6 +11,7 @@ import (
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
+	"go.mondoo.io/mondoo/lumi/resources/vsphere"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/transports"
 	vsphere_transport "go.mondoo.io/mondoo/motor/transports/vsphere"
@@ -150,14 +151,15 @@ func vmsToAssetList(instanceUuid string, vms []*object.VirtualMachine, parentTC 
 	for i := range vms {
 		vm := vms[i]
 
-		props, err := vmProperties(vm)
+		platformId := vsphere_transport.VsphereResourceID(instanceUuid, vm.Reference())
+		log.Debug().Str("platform-id", platformId).Msg("found vsphere vm")
+
+		vmInfo, err := vsphere.VmInfo(vm)
 		if err != nil {
 			return nil, err
 		}
 
-		platformId := vsphere_transport.VsphereResourceID(instanceUuid, vm.Reference())
-		log.Debug().Str("platform-id", platformId).Msg("found vsphere vm")
-		guestState := mapVmGuestState(props.Guest.GuestState)
+		guestState := mapVmGuestState(vmInfo.Guest.GuestState)
 
 		ha := &asset.Asset{
 			Name: vm.Name(),
@@ -168,11 +170,12 @@ func vmsToAssetList(instanceUuid string, vms []*object.VirtualMachine, parentTC 
 				"vsphere.vmware.com/name":           vm.Name(),
 				"vsphere.vmware.com/type":           vm.Reference().Type,
 				"vsphere.vmware.com/moid":           vm.Reference().Encode(),
-				"vsphere.vmware.com/ip-address":     props.Guest.IpAddress,
+				"vsphere.vmware.com/ip-address":     vmInfo.Guest.IpAddress,
 				"vsphere.vmware.com/inventory-path": vm.InventoryPath,
-				"vsphere.vmware.com/guest-family":   props.Guest.GuestFamily,
-				"vsphere.vmware.com/guest-id":       props.Guest.GuestId,
-				"vsphere.vmware.com/guest-fullname": props.Guest.GuestFullName,
+				"vsphere.vmware.com/guest-hostname": vmInfo.Guest.HostName,
+				"vsphere.vmware.com/guest-family":   vmInfo.Guest.GuestFamily,
+				"vsphere.vmware.com/guest-id":       vmInfo.Guest.GuestId,
+				"vsphere.vmware.com/guest-fullname": vmInfo.Guest.GuestFullName,
 			},
 			PlatformIds: []string{platformId},
 		}
@@ -213,15 +216,6 @@ func mapVmGuestState(vsphereGuestState string) asset.State {
 	default:
 		return asset.State_STATE_UNKNOWN
 	}
-}
-
-func vmProperties(vm *object.VirtualMachine) (*mo.VirtualMachine, error) {
-	ctx := context.Background()
-	var props mo.VirtualMachine
-	if err := vm.Properties(ctx, vm.Reference(), nil, &props); err != nil {
-		return nil, err
-	}
-	return &props, nil
 }
 
 func (v *VSphere) listDatacenters() ([]*object.Datacenter, error) {
