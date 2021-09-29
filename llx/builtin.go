@@ -698,9 +698,14 @@ func runResourceFunction(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int3
 				Error:     err,
 			})
 
+			fieldType := types.Unset
+			if field := resource.Fields[chunk.Id]; field != nil {
+				fieldType = types.Type(field.Type)
+			}
+
 			c.cache.Store(ref, &stepCache{
 				Result: &RawData{
-					Type:  types.Type(resource.Fields[chunk.Id].Type),
+					Type:  fieldType,
 					Value: nil,
 					Error: err,
 				},
