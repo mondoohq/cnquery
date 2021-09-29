@@ -8,8 +8,8 @@ type Operator int
 const (
 	// strictly following the javascript operator precedence
 	OpAssignment Operator = iota + 30
-	OpAnd        Operator = iota + 60
-	OpOr         Operator = iota + 70
+	OpOr         Operator = iota + 60
+	OpAnd        Operator = iota + 70
 	OpEqual      Operator = iota + 100
 	OpCmp
 	OpNotEqual

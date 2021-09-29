@@ -317,8 +317,8 @@ func TestCompiler_OperatorPrecedence(t *testing.T) {
 		first  string
 		second string
 	}{
-		{"1 || 2 && 3", 1, string("||" + types.Int), string("&&" + types.Int)},
-		{"1 && 2 || 3", 2, string("||" + types.Int), string("&&" + types.Bool)},
+		{"1 || 2 && 3", 2, string("&&" + types.Int), string("||" + types.Bool)},
+		{"1 && 2 || 3", 1, string("&&" + types.Int), string("||" + types.Int)},
 	}
 
 	for _, d := range data {
