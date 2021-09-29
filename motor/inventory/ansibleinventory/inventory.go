@@ -262,6 +262,7 @@ func ansibleConnections(host *Host) []*transports.TransportConfig {
 	if backend == transports.TransportBackend_CONNECTION_SSH {
 		credentials = append(credentials, &vault.Credential{
 			Type: vault.CredentialType_ssh_agent,
+			User: host.User,
 		})
 	}
 

@@ -5,7 +5,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/inventory/ansibleinventory"
+	"go.mondoo.io/mondoo/motor/vault"
 )
 
 func TestValidInventory(t *testing.T) {
@@ -218,4 +220,42 @@ func TestInventoryConversion(t *testing.T) {
 	v1Intentory := ansibleInventory.ToV1Inventory()
 
 	assert.Equal(t, 8, len(v1Intentory.Spec.Assets))
+}
+
+func TestInventoryWithUsernameConversion(t *testing.T) {
+	input, err := ioutil.ReadFile("./testdata/hosts.json")
+	assert.Nil(t, err)
+	assert.True(t, ansibleinventory.IsInventory(input))
+
+	ansibleInventory := ansibleinventory.Inventory{}
+	err = ansibleInventory.Decode(input)
+	assert.Nil(t, err)
+
+	v1Intentory := ansibleInventory.ToV1Inventory()
+	assert.Equal(t, 2, len(v1Intentory.Spec.Assets))
+
+	a := findAsset(v1Intentory.Spec.Assets, "instance1")
+	assert.NotNil(t, a)
+	assert.Equal(t, "104.154.55.51", a.Connections[0].Host)
+	secretId := a.Connections[0].Credentials[0].SecretId
+	cred := v1Intentory.Spec.Credentials[secretId]
+	assert.Equal(t, "chris", cred.User)
+	assert.Equal(t, vault.CredentialType_ssh_agent, cred.Type)
+
+	a = findAsset(v1Intentory.Spec.Assets, "34.133.130.53")
+	assert.NotNil(t, a)
+	assert.Equal(t, "34.133.130.53", a.Connections[0].Host)
+	secretId = a.Connections[0].Credentials[0].SecretId
+	cred = v1Intentory.Spec.Credentials[secretId]
+	assert.Equal(t, "chris", cred.User)
+	assert.Equal(t, vault.CredentialType_ssh_agent, cred.Type)
+}
+
+func findAsset(assetList []*asset.Asset, name string) *asset.Asset {
+	for i := range assetList {
+		if assetList[i].Name == name {
+			return assetList[i]
+		}
+	}
+	return nil
 }
