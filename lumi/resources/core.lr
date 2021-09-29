@@ -47,6 +47,10 @@ time {
   hour() time
   // One day, used for durations
   day() time
+  // The current day starting at midnight
+  today() time
+  // The next day starting at midnight
+  tomorrow() time
 }
 
 // Parse INI files

@@ -38,3 +38,17 @@ func (p *lumiTime) GetHour() (*time.Time, error) {
 func (p *lumiTime) GetDay() (*time.Time, error) {
 	return &day, nil
 }
+
+func (p *lumiTime) GetToday() (*time.Time, error) {
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	return &today, nil
+}
+
+func (p *lumiTime) GetTomorrow() (*time.Time, error) {
+	cur, _ := p.GetToday()
+	res := cur.Add(24 * time.Hour)
+
+	return &res, nil
+}
