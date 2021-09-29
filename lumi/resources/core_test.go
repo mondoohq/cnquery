@@ -654,6 +654,10 @@ func duration(i int64) *time.Time {
 }
 
 func TestTime_Methods(t *testing.T) {
+	now := time.Now()
+	today, _ := time.ParseInLocation("2006-01-02", now.Format("2006-01-02"), now.Location())
+	tomorrow := today.Add(24 * time.Hour)
+
 	runSimpleTests(t, []simpleTest{
 		{
 			"time.now",
@@ -662,6 +666,14 @@ func TestTime_Methods(t *testing.T) {
 		{
 			"time.now.unix",
 			0, time.Now().Unix(),
+		},
+		{
+			"time.today",
+			0, &today,
+		},
+		{
+			"time.tomorrow",
+			0, &tomorrow,
 		},
 		{
 			"parse.date('0000-01-01T02:03:04Z').seconds",
