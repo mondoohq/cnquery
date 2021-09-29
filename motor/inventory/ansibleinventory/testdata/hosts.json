@@ -1,0 +1,25 @@
+{
+  "_meta": {
+    "hostvars": {
+      "34.133.130.53": {
+        "ansible_user": "chris"
+      },
+      "instance1": {
+        "ansible_host": "104.154.55.51",
+        "ansible_user": "chris"
+      }
+    }
+  },
+  "all": {
+    "children": [
+      "ungrouped",
+      "workers"
+    ]
+  },
+  "workers": {
+    "hosts": [
+      "34.133.130.53",
+      "instance1"
+    ]
+  }
+}
