@@ -215,8 +215,13 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 			return nil, err
 		}
 
+		// We need this identifier, therefore we error if we could not retrieve it
 		id, err := trans.Identifier()
-		if err == nil && len(id) > 0 {
+		if err != nil {
+			return nil, errors.Wrap(err, "we could not retrieve platform information from arista device")
+		}
+
+		if len(id) > 0 {
 			identifier = append(identifier, id)
 		}
 	case transports.TransportBackend_CONNECTION_AWS:
