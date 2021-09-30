@@ -2,16 +2,16 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/olekukonko/tablewriter"
 	"io/ioutil"
 	"os"
-	"sigs.k8s.io/yaml"
 	"sort"
 	"strings"
 
+	"github.com/olekukonko/tablewriter"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"go.mondoo.io/mondoo/lumi/lr"
+	"sigs.k8s.io/yaml"
 )
 
 func init() {
@@ -72,6 +72,8 @@ var markdownCmd = &cobra.Command{
 
 		table := tablewriter.NewWriter(builder)
 		table.SetHeader([]string{"ID", "Description"})
+		table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+		table.SetAlignment(tablewriter.ALIGN_LEFT)
 		table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
 		table.SetCenterSeparator("|")
 		table.SetAutoWrapText(false)
@@ -126,6 +128,8 @@ var markdownCmd = &cobra.Command{
 
 				table := tablewriter.NewWriter(builder)
 				table.SetHeader([]string{"ID", "Type", "Description"})
+				table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+				table.SetAlignment(tablewriter.ALIGN_LEFT)
 				table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
 				table.SetCenterSeparator("|")
 				table.SetAutoWrapText(false)
@@ -169,7 +173,9 @@ func renderLrType(t lr.Type, resourceHrefMap map[string]bool) string {
 		}
 		return t.SimpleType.Type
 	case t.ListType != nil:
-		return "[]" + renderLrType(t.ListType.Type, resourceHrefMap)
+		// we need a space between [] and the link, otherwise some markdown link parsers do not render the links properly
+		// related to https://github.com/facebook/docusaurus/issues/4801
+		return "&#91;&#93;" + renderLrType(t.ListType.Type, resourceHrefMap)
 	case t.MapType != nil:
 		return "map[" + t.MapType.Key.Type + "]" + renderLrType(t.MapType.Value, resourceHrefMap)
 	default:
