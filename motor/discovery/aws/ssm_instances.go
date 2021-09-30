@@ -104,14 +104,9 @@ func (ssmi *SSMManagedInstances) getInstances(account string, ec2InstancesFilter
 			}
 			if len(ec2InstancesFilters.InstanceIds) > 0 {
 				input.Filters = append(input.Filters, types.InstanceInformationStringFilter{Key: aws.String("InstanceIds"), Values: ec2InstancesFilters.InstanceIds})
-				log.Debug().Msgf("filtering by instance ids %v", ec2InstancesFilters.InstanceIds)
+				log.Debug().Interface("instance ids", ec2InstancesFilters.InstanceIds).Msgf("filtering")
 			}
-			if len(ec2InstancesFilters.Tags) > 0 {
-				for k, v := range ec2InstancesFilters.Tags {
-					input.Filters = append(input.Filters, types.InstanceInformationStringFilter{Key: &k, Values: []string{v}})
-					log.Debug().Msgf("filtering by tag %s:%s", k, v)
-				}
-			}
+			// NOTE: AWS does not support filtering by tags for this api call
 			isssmresp, err := ssmsvc.DescribeInstanceInformation(ctx, input)
 			if err != nil {
 				return nil, errors.Wrap(err, "could not gather ssm information")
@@ -121,6 +116,13 @@ func (ssmi *SSMManagedInstances) getInstances(account string, ec2InstancesFilter
 
 			for i := range isssmresp.InstanceInformationList {
 				instance := isssmresp.InstanceInformationList[i]
+				// apply the tag filters here; we fetch the labels for the instance during ssmInstanceToAsset
+				a := ssmInstanceToAsset(account, region, instance, clonedConfig)
+				if len(ec2InstancesFilters.Tags) > 0 {
+					if !assetHasLabels(a, ec2InstancesFilters.Tags) {
+						continue
+					}
+				}
 				res = append(res, ssmInstanceToAsset(account, region, instance, clonedConfig))
 			}
 			return jobpool.JobResult(res), nil
@@ -128,6 +130,18 @@ func (ssmi *SSMManagedInstances) getInstances(account string, ec2InstancesFilter
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func assetHasLabels(a *asset.Asset, labels map[string]string) bool {
+	if len(labels) == 0 {
+		return true
+	}
+	for k, v := range labels {
+		if a.Labels[k] == v {
+			return true
+		}
+	}
+	return false
 }
 
 func mapSmmManagedPingStateCode(pingStatus types.PingStatus) asset.State {

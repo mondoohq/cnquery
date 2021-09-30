@@ -92,7 +92,7 @@ func (ec2i *Ec2Instances) getInstances(account string, ec2InstancesFilters Ec2In
 			}
 			if len(ec2i.FilterOptions.Tags) > 0 {
 				for k, v := range ec2i.FilterOptions.Tags {
-					input.Filters = append(input.Filters, types.Filter{Name: &k, Values: []string{v}})
+					input.Filters = append(input.Filters, types.Filter{Name: aws.String("tag:" + k), Values: []string{v}})
 					log.Debug().Msgf("filtering by tag %s:%s", k, v)
 				}
 			}
