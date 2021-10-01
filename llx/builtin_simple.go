@@ -2,10 +2,12 @@ package llx
 
 import (
 	"errors"
+	"io"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"go.mondoo.io/mondoo/types"
 )
@@ -2003,6 +2005,33 @@ func stringDowncase(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 	}
 
 	res := strings.ToLower(bind.Value.(string))
+	return StringData(res), 0, nil
+}
+
+var camelCaseRe = regexp.MustCompile(`([[:punct:]]|\s)+[\p{L}]`)
+
+func stringCamelcase(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type}, 0, nil
+	}
+
+	res := camelCaseRe.ReplaceAllStringFunc(bind.Value.(string), func(in string) string {
+		reader := strings.NewReader(in)
+		var last rune
+		for {
+			r, _, err := reader.ReadRune()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return in
+			}
+			last = r
+		}
+
+		return string(unicode.ToTitle(last))
+	})
+
 	return StringData(res), 0, nil
 }
 

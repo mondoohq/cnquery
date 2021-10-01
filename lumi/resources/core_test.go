@@ -584,6 +584,10 @@ func TestString_Methods(t *testing.T) {
 			0, []interface{}{"hello bob"},
 		},
 		{
+			"'oh-hello-world!'.camelcase",
+			0, "ohHelloWorld!",
+		},
+		{
 			"'HeLlO'.downcase",
 			0, "hello",
 		},
@@ -759,6 +763,25 @@ func TestArray_Access(t *testing.T) {
 		{
 			"sshd.config('1').params['2'] == '3'",
 			0, "file not found: '1' does not exist",
+		},
+	})
+
+	runSimpleTests(t, []simpleTest{
+		{
+			"[1,2,3][-1]",
+			0, int64(3),
+		},
+		{
+			"[1,2,3][-3]",
+			0, int64(1),
+		},
+		{
+			"[1,2,3].first",
+			0, int64(1),
+		},
+		{
+			"[1,2,3].last",
+			0, int64(3),
 		},
 	})
 }

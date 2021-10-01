@@ -301,13 +301,14 @@ func init() {
 			// fields
 			string("contains" + types.String):              {f: stringContainsString, Label: "contains"},
 			string("contains" + types.Array(types.String)): {f: stringContainsArrayString, Label: "contains"},
-			string("find"):     {f: stringFind, Label: "find"},
-			string("downcase"): {f: stringDowncase, Label: "downcase"},
-			string("upcase"):   {f: stringUpcase, Label: "upcase"},
-			string("length"):   {f: stringLength, Label: "length"},
-			string("lines"):    {f: stringLines, Label: "lines"},
-			string("split"):    {f: stringSplit, Label: "split"},
-			string("trim"):     {f: stringTrim, Label: "trim"},
+			string("find"):      {f: stringFind, Label: "find"},
+			string("camelcase"): {f: stringCamelcase, Label: "camelcase"},
+			string("downcase"):  {f: stringDowncase, Label: "downcase"},
+			string("upcase"):    {f: stringUpcase, Label: "upcase"},
+			string("length"):    {f: stringLength, Label: "length"},
+			string("lines"):     {f: stringLines, Label: "lines"},
+			string("split"):     {f: stringSplit, Label: "split"},
+			string("trim"):      {f: stringTrim, Label: "trim"},
 		},
 		types.Regex: {
 			// == / !=
@@ -465,6 +466,7 @@ func init() {
 			"[]":                              {f: dictGetIndex},
 			"length":                          {f: dictLength},
 			"{}":                              {f: dictBlockCall},
+			"camelcase":                       {f: dictCamelcase, Label: "camelcase"},
 			"downcase":                        {f: dictDowncase, Label: "downcase"},
 			"upcase":                          {f: dictUpcase, Label: "upcase"},
 			"lines":                           {f: dictLines, Label: "lines"},
@@ -482,6 +484,8 @@ func init() {
 		},
 		types.ArrayLike: {
 			"[]":              {f: arrayGetIndex},
+			"first":           {f: arrayGetFirstIndex},
+			"last":            {f: arrayGetLastIndex},
 			"{}":              {f: arrayBlockList},
 			"length":          {f: arrayLength},
 			"where":           {f: arrayWhere},
