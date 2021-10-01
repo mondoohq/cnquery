@@ -12,6 +12,46 @@ var arrayBlockType = types.Array(types.Block)
 // arrayFunctions are all the handlers for builtin array methods
 var arrayFunctions map[string]chunkHandler
 
+func arrayGetFirstIndex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type[1:]}, 0, nil
+	}
+
+	arr, ok := bind.Value.([]interface{})
+	if !ok {
+		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into array")
+	}
+
+	if len(arr) == 0 {
+		return nil, 0, errors.New("array index out of bound (trying to access first element on an empty array)")
+	}
+
+	return &RawData{
+		Type:  bind.Type[1:],
+		Value: arr[0],
+	}, 0, nil
+}
+
+func arrayGetLastIndex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type[1:]}, 0, nil
+	}
+
+	arr, ok := bind.Value.([]interface{})
+	if !ok {
+		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into array")
+	}
+
+	if len(arr) == 0 {
+		return nil, 0, errors.New("array index out of bound (trying to access last element on an empty array)")
+	}
+
+	return &RawData{
+		Type:  bind.Type[1:],
+		Value: arr[len(arr)-1],
+	}, 0, nil
+}
+
 func arrayGetIndex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type[1:]}, 0, nil
@@ -39,7 +79,10 @@ func arrayGetIndex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	}
 
 	if key < 0 {
-		return nil, 0, errors.New("array index out of bound (trying to access element " + strconv.Itoa(key) + ")")
+		if -key > len(arr) {
+			return nil, 0, errors.New("array index out of bound (trying to access element " + strconv.Itoa(key) + ", max: " + strconv.Itoa(len(arr)-1) + ")")
+		}
+		key = len(arr) + key
 	}
 	if key >= len(arr) {
 		return nil, 0, errors.New("array index out of bound (trying to access element " + strconv.Itoa(key) + ", max: " + strconv.Itoa(len(arr)-1) + ")")

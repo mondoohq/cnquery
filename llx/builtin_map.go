@@ -210,6 +210,15 @@ func dictBlockCall(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	}
 }
 
+func dictCamelcase(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	_, ok := bind.Value.(string)
+	if !ok {
+		return nil, 0, errors.New("dict value does not support field `downcase`")
+	}
+
+	return stringCamelcase(c, bind, chunk, ref)
+}
+
 func dictDowncase(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	_, ok := bind.Value.(string)
 	if !ok {
