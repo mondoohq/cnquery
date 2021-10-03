@@ -1149,7 +1149,7 @@ arista.eos.runningConfig {
   content() string
 }
 
-// Arista EOS system’s operating configuration for a sepecific section
+// Arista EOS system’s operating configuration for a specific section
 arista.eos.runningConfig.section {
   // section name
   name string
