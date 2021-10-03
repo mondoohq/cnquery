@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Inventory
+metadata:
+  name: mondoo-inventory
+  labels:
+    environment: production
+spec:
+  credential_query: "return { user: 'azureuser', type: 'ssh_agent' }"
+  assets:
+    - name: azure
+      connections:
+        - backend: az
+          insecure: true # to allow missing host-keys
+          discover:
+            targets:
+            - all
+          options:
+            subscriptionID: d13c8331-50af-4496-b9d2-3ff8e72d22b9
