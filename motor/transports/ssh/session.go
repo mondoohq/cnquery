@@ -98,7 +98,9 @@ func authMethods(tc *transports.TransportConfig) ([]ssh.AuthMethod, error) {
 			log.Debug().Str("socket", os.Getenv("SSH_AUTH_SOCK")).Msg("enabled ssh agent authentication")
 			sshAgentClient := agent.NewClient(sshAgentConn)
 			sshAgentSigners, err := sshAgentClient.Signers()
-			if err == nil {
+			if err == nil && len(sshAgentSigners) == 0 {
+				log.Warn().Msg("could not find keys in ssh agent")
+			} else if err == nil {
 				signers = append(signers, sshAgentSigners...)
 			} else {
 				log.Error().Err(err).Msg("could not get public keys from ssh agent")
