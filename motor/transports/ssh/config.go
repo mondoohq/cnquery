@@ -62,7 +62,9 @@ func ReadSSHConfig(cc *transports.TransportConfig) *transports.TransportConfig {
 				// NOTE: we ignore the error here for now but this should probably been catched earlier anyway
 				credential, _ := vault.NewPrivateKeyCredentialFromPath(user, expandedPath, "")
 				// apply the option manually
-				cc.AddCredential(credential)
+				if credential != nil {
+					cc.AddCredential(credential)
+				}
 			}
 		}
 	}
