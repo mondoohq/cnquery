@@ -5,11 +5,12 @@ metadata:
   labels:
     environment: production
 spec:
-  credential_query: "{ user: 'chris', type: 'ssh_agent' }"
+  credential_query: "return { user: 'chris', type: 'ssh_agent' }"
   assets:
     - name: gcp
       connections:
         - backend: gcp
+          insecure: true # to allow missing host-keys
           discover:
             targets:
             - all
