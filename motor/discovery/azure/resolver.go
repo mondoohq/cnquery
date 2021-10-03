@@ -109,9 +109,14 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 
 		for i := range assetList {
 			a := assetList[i]
+
 			log.Debug().Str("name", a.Name).Msg("resolved azure compute instance")
 			// find the secret reference for the asset
 			common.EnrichAssetWithSecrets(a, sfn)
+
+			for i := range a.Connections {
+				a.Connections[i].Insecure = tc.Insecure
+			}
 
 			resolved = append(resolved, a)
 		}
