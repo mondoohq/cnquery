@@ -110,7 +110,7 @@ func k8sResourceToLumi(r *lumi.Runtime, kind string, fn resourceConvertFn) ([]in
 }
 
 func (k *lumiK8s) GetNodes() ([]interface{}, error) {
-	return k8sResourceToLumi(k.Runtime, "nodes", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToLumi(k.Runtime, "nodes.v1.", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		return k.Runtime.CreateResource("k8s.node",
 			"uid", string(obj.GetUID()),
 			"name", obj.GetName(),
@@ -139,7 +139,7 @@ func (k *lumiK8s) GetNamespaces() ([]interface{}, error) {
 }
 
 func (k *lumiK8s) GetPods() ([]interface{}, error) {
-	return k8sResourceToLumi(k.Runtime, "pods", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToLumi(k.Runtime, "pods.v1.", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := jsonToDict(resource)
