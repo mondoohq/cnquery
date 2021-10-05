@@ -237,7 +237,8 @@ func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 	ct := items.Type.Child()
 	filteredList := map[int]interface{}{}
 	finishedResults := 0
-	for i := range list {
+	for it := range list {
+		i := it
 		c.runFunctionBlock(&RawData{Type: ct, Value: list[i]}, f, func(res *RawResult) {
 			_, ok := filteredList[i]
 			if !ok {
