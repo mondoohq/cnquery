@@ -3,6 +3,7 @@ package llx
 import (
 	"errors"
 	"strconv"
+	"sync"
 
 	"go.mondoo.io/mondoo/types"
 )
@@ -237,9 +238,11 @@ func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 	ct := items.Type.Child()
 	filteredList := map[int]interface{}{}
 	finishedResults := 0
+	l := sync.Mutex{}
 	for it := range list {
 		i := it
 		c.runFunctionBlock(&RawData{Type: ct, Value: list[i]}, f, func(res *RawResult) {
+			l.Lock()
 			_, ok := filteredList[i]
 			if !ok {
 				finishedResults++
@@ -268,7 +271,11 @@ func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 					},
 					IsStatic: false,
 				})
+				l.Unlock()
+
 				c.triggerChain(ref)
+			} else {
+				l.Unlock()
 			}
 		})
 	}
