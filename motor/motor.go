@@ -55,6 +55,8 @@ func New(trans transports.Transport, motorOpts ...MotorOption) (*Motor, error) {
 }
 
 type Motor struct {
+	l sync.Mutex
+
 	Transport   transports.Transport
 	detector    *platform.Detector
 	watcher     transports.Watcher
@@ -70,10 +72,15 @@ type ResolverMetadata struct {
 }
 
 func (m *Motor) Platform() (*platform.Platform, error) {
+	m.l.Lock()
+	defer m.l.Unlock()
 	return m.detector.Platform()
 }
 
 func (m *Motor) Watcher() transports.Watcher {
+	m.l.Lock()
+	defer m.l.Unlock()
+
 	// create watcher once
 	if m.watcher == nil {
 		m.watcher = events.NewWatcher(m.Transport)
@@ -82,6 +89,9 @@ func (m *Motor) Watcher() transports.Watcher {
 }
 
 func (m *Motor) ActivateRecorder() {
+	m.l.Lock()
+	defer m.l.Unlock()
+
 	if m.isRecording {
 		return
 	}
@@ -92,11 +102,17 @@ func (m *Motor) ActivateRecorder() {
 }
 
 func (m *Motor) IsRecording() bool {
+	m.l.Lock()
+	defer m.l.Unlock()
+
 	return m.isRecording
 }
 
 // returns marshaled toml stucture
 func (m *Motor) Recording() []byte {
+	m.l.Lock()
+	defer m.l.Unlock()
+
 	if m.isRecording {
 		rt := m.Transport.(*mock.RecordTransport)
 		data, err := rt.ExportData()
@@ -113,6 +129,9 @@ func (m *Motor) Close() {
 	if m == nil {
 		return
 	}
+	m.l.Lock()
+	defer m.l.Unlock()
+
 	if m.Transport != nil {
 		m.Transport.Close()
 	}
@@ -124,6 +143,9 @@ func (m *Motor) Close() {
 }
 
 func (m *Motor) HasCapability(capability transports.Capability) bool {
+	m.l.Lock()
+	defer m.l.Unlock()
+
 	list := m.Transport.Capabilities()
 	for i := range list {
 		if list[i] == capability {
@@ -134,6 +156,9 @@ func (m *Motor) HasCapability(capability transports.Capability) bool {
 }
 
 func (m *Motor) IsLocalTransport() bool {
+	m.l.Lock()
+	defer m.l.Unlock()
+
 	_, ok := m.Transport.(*local.LocalTransport)
 	if !ok {
 		return false
