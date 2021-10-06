@@ -50,8 +50,6 @@ func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
 	log.Debug().Msg("[file]> listen to file " + path)
 
 	watcher := s.Runtime.Motor.Watcher()
-	// TODO: overwrite sleepduration for now
-	watcher.(*events.Watcher).SleepDuration = 1 * time.Second
 
 	err := watcher.Subscribe("file", path, func(o transports.Observable) {
 		log.Debug().Str("file", path).Msg("[file]> got observable")
