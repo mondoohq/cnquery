@@ -3,6 +3,7 @@ package llx
 import (
 	"errors"
 	"strings"
+	"sync"
 	"time"
 
 	"go.mondoo.io/mondoo/lumi"
@@ -35,31 +36,40 @@ func resourceWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	ct := items.Type.Child()
 	filteredList := map[int]interface{}{}
 	finishedResults := 0
-	for i := range list {
+	l := sync.Mutex{}
+	for it := range list {
+		i := it
 		c.runFunctionBlock(&RawData{Type: ct, Value: list[i]}, f, func(res *RawResult) {
-			_, ok := filteredList[i]
-			if !ok {
-				finishedResults++
-			}
+			resList := func() []interface{} {
+				l.Lock()
+				defer l.Unlock()
 
-			isTruthy, _ := res.Data.IsTruthy()
-			if isTruthy {
-				filteredList[i] = list[i]
-			} else {
-				filteredList[i] = nil
-			}
-
-			// log.Debug().Int("cur", finishedResults).Int("max", len(list)).Msg("finished one where-result")
-
-			if finishedResults == len(list) {
-				resList := []interface{}{}
-				for j := 0; j < len(filteredList); j++ {
-					k := filteredList[j]
-					if k != nil {
-						resList = append(resList, k)
-					}
+				_, ok := filteredList[i]
+				if !ok {
+					finishedResults++
 				}
 
+				isTruthy, _ := res.Data.IsTruthy()
+				if isTruthy {
+					filteredList[i] = list[i]
+				} else {
+					filteredList[i] = nil
+				}
+
+				if finishedResults == len(list) {
+					resList := []interface{}{}
+					for j := 0; j < len(filteredList); j++ {
+						k := filteredList[j]
+						if k != nil {
+							resList = append(resList, k)
+						}
+					}
+					return resList
+				}
+				return nil
+			}()
+
+			if resList != nil {
 				// get all mandatory args
 				lumiResource := resource.LumiResource()
 				resourceInfo := lumiResource.Runtime.Registry.Resources[lumiResource.Name]
