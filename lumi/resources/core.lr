@@ -3957,3 +3957,53 @@ macos.security {
   // Deprecated: Authorization policy database
   authorizationDB() dict
 }
+
+//ipv4 tables
+iptables {
+  //ipv4 input chain stats
+  input() []iptables.entry
+  //ipv4 output chain stats
+  output() []iptables.entry
+}
+
+//ipv6 tables
+ip6tables {
+  //ipv6 input chain stats
+  input() []iptables.entry
+  //ipv6 output chain stats
+  output() []iptables.entry
+}
+
+iptables.entry {
+  //Line number of statistic - used to create id
+  lineNumber int
+  //packets from iptable
+  packets int
+  //This field tells us how large the packet is in octets, including headers and everything.
+  bytes int
+  //If a packet matches the rule, the target specifies what should be done with it.
+  target string
+  //protocol of the next level layer. For example, this may be TCP, UDP or ICMP among others.
+  protocol string
+  //indicates IP options
+  opt string
+  //input
+  in string
+  //output
+  out string
+  //source address field that lets the receiver know where the packet came from.
+  source string
+  //The destination IP address or subnet of the traffic, or anywhere
+  destination string
+  //The options field contains different optional settings within the header,
+  //such as Internet timestamps, SACK or record route options. 
+  options string
+  //input or output - used to create id
+  chain string
+}
+
+//socket stats from ss command
+socketstats {
+  //Listening non-localhost open ports
+  openPorts() []string
+}
