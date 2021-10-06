@@ -242,28 +242,37 @@ func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 	for it := range list {
 		i := it
 		c.runFunctionBlock(&RawData{Type: ct, Value: list[i]}, f, func(res *RawResult) {
-			l.Lock()
-			_, ok := filteredList[i]
-			if !ok {
-				finishedResults++
-			}
+			resList := func() []interface{} {
+				l.Lock()
+				defer l.Unlock()
 
-			isTruthy, _ := res.Data.IsTruthy()
-			if isTruthy {
-				filteredList[i] = list[i]
-			} else {
-				filteredList[i] = nil
-			}
-
-			if finishedResults == len(list) {
-				resList := []interface{}{}
-				for j := 0; j < len(filteredList); j++ {
-					k := filteredList[j]
-					if k != nil {
-						resList = append(resList, k)
-					}
+				_, ok := filteredList[i]
+				if !ok {
+					finishedResults++
 				}
 
+				isTruthy, _ := res.Data.IsTruthy()
+				if isTruthy {
+					filteredList[i] = list[i]
+				} else {
+					filteredList[i] = nil
+				}
+
+				if finishedResults == len(list) {
+					resList := []interface{}{}
+					for j := 0; j < len(filteredList); j++ {
+						k := filteredList[j]
+						if k != nil {
+							resList = append(resList, k)
+						}
+					}
+					return resList
+				}
+
+				return nil
+			}()
+
+			if resList != nil {
 				c.cache.Store(ref, &stepCache{
 					Result: &RawData{
 						Type:  bind.Type,
@@ -271,12 +280,10 @@ func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 					},
 					IsStatic: false,
 				})
-				l.Unlock()
 
 				c.triggerChain(ref)
-			} else {
-				l.Unlock()
 			}
+
 		})
 	}
 
