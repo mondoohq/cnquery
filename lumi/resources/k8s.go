@@ -274,7 +274,7 @@ func (k *lumiK8sPod) GetContainers() ([]interface{}, error) {
 		return nil, err
 	}
 
-	result, err := kt.Resources("pods", "")
+	result, err := kt.Resources("pods.v1.", "")
 	if err != nil {
 		return nil, err
 	}
