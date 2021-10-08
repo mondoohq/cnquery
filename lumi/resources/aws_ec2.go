@@ -986,6 +986,8 @@ func (s *lumiAwsEc2) getSnapshots() []*jobpool.Job {
 						"arn", fmt.Sprintf(snapshotArnPattern, regionVal, account.ID, toString(snapshot.SnapshotId)),
 						"id", toString(snapshot.SnapshotId),
 						"region", regionVal,
+						"volumeId", toString(snapshot.VolumeId),
+						"startTime", snapshot.StartTime,
 					)
 					if err != nil {
 						return nil, err

@@ -2350,6 +2350,10 @@ aws.ec2.snapshot {
   region string
   // users/groups that have the permsfor creating volumes from the snapshot
   createVolumePermission() []dict
+  // id of the volume used to create the snapshot
+  volumeId string
+  // time when the snapshot was initiated
+  startTime time
 }
 
 // AWS EC2 Volume
