@@ -96,11 +96,11 @@ platform {
   name string
   // Human-readable name of the platform
   title string
-  // List of platform families that this platfrom belongs to
+  // List of platform families that this platform belongs to
   family []string
   // Release version of the platform
   release string
-  // Build version of the platfrom (optional)
+  // Build version of the platform (optional)
   build string
   // Architecture this OS is running on
   arch string
