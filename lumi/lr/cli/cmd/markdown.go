@@ -161,7 +161,7 @@ var markdownCmd = &cobra.Command{
 
 func anchor(name string) string {
 	name = strings.Replace(name, ".", "", -1)
-	return name
+	return strings.ToLower(name)
 }
 
 func renderLrType(t lr.Type, resourceHrefMap map[string]bool) string {
