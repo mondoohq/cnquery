@@ -13,6 +13,7 @@ import (
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/parsers"
 	"go.mondoo.io/mondoo/lumi/resources/plist"
+	"sigs.k8s.io/yaml"
 )
 
 func (s *lumiParse) id() (string, error) {
@@ -170,6 +171,80 @@ func (s *lumiParseJson) GetParams(content string) (map[string]interface{}, error
 	}
 
 	err := json.Unmarshal([]byte(content), &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (s *lumiParseYaml) init(args *lumi.Args) (*lumi.Args, ParseJson, error) {
+	rawPath := (*args)["path"]
+
+	if rawPath != nil {
+		path := rawPath.(string)
+
+		f, err := s.Runtime.CreateResource("file", "path", path)
+		if err != nil {
+			return nil, nil, err
+		}
+		(*args)["file"] = f
+		delete(*args, "path")
+
+	} else if x, ok := (*args)["content"]; ok {
+		content := x.(string)
+		virtualPath := "in-memory://" + checksums.New.Add(content).String()
+		f, err := s.Runtime.CreateResource("file", "path", virtualPath, "content", content, "exists", true)
+		if err != nil {
+			return nil, nil, err
+		}
+		(*args)["file"] = f
+
+	} else {
+		return nil, nil, errors.New("missing 'path' or 'content' for parse.json initialization")
+	}
+
+	return args, nil, nil
+}
+
+func (s *lumiParseYaml) id() (string, error) {
+	r, err := s.File()
+	if err != nil {
+		return "", err
+	}
+
+	path, err := r.Path()
+	if err != nil {
+		return "", err
+	}
+
+	return path, nil
+}
+
+func (s *lumiParseYaml) GetFile() (File, error) {
+	// NOTE: this code should never be reached since the file field is initialized via init
+	return nil, errors.New("no file available")
+}
+
+func (s *lumiParseYaml) GetContent(file File) (string, error) {
+	// TODO: this can be heavily improved once we do it right, since this is constantly
+	// re-registered as the file changes
+	err := s.Runtime.WatchAndCompute(file, "content", s, "content")
+	if err != nil {
+		return "", err
+	}
+
+	return file.Content()
+}
+
+func (s *lumiParseYaml) GetParams(content string) (map[string]interface{}, error) {
+	res := make(map[string](interface{}))
+
+	if content == "" {
+		return nil, nil
+	}
+
+	err := yaml.Unmarshal([]byte(content), &res)
 	if err != nil {
 		return nil, err
 	}
