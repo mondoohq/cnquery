@@ -56,6 +56,7 @@ func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
 		},
 		ec2svc: svc,
 		shell:  shell,
+		fsType: Ext4,
 	}
 
 	// 3. setup
@@ -94,6 +95,7 @@ type Ec2EbsTransport struct {
 	targetInstance           *InstanceId
 	shell                    []string // run commands, used for mount til i get lib working
 	scanVolumeId             *VolumeId
+	fsType                   FsType
 }
 
 func (t *Ec2EbsTransport) RunCommand(command string) (*transports.Command, error) {

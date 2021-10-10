@@ -21,6 +21,7 @@ func (t *Ec2EbsTransport) Mount() error {
 	fsType := t.GetFsType()
 	err = t.MountVolumeToScanDir(fsType)
 	if err != nil {
+		t.Close()
 		return err
 	}
 	return err
@@ -42,13 +43,16 @@ func (t *Ec2EbsTransport) EnsureScanDir() error {
 func (t *Ec2EbsTransport) GetFsType() FsType {
 	log.Info().Msg("get fs type")
 	// use mql for this
-	return Ext4
+	return t.fsType // workaround til we read with mql
 }
 
 func (t *Ec2EbsTransport) MountVolumeToScanDir(fsType FsType) error {
 	log.Info().Str("fs type", fsType.String()).Str("mount dir", mountDirLoc).Str("scan dir", ScanDir).Msg("mount volume to scan dir")
-	var flags uintptr = syscall.MS_MGC_VAL
-	if err := unix.Mount(mountDirLoc, ScanDir, fsType.String(), flags, ""); err != nil && err != unix.EBUSY { // does not compile on mac bc mount is not implemented for darwin
+	opts := ""
+	if fsType == Xfs {
+		opts = "nouuid"
+	}
+	if err := unix.Mount(mountDirLoc, ScanDir, fsType.String(), syscall.MS_MGC_VAL, opts); err != nil && err != unix.EBUSY { // does not compile on mac bc mount is not implemented for darwin
 		log.Error().Err(err).Msg("failed to mount dir")
 		return err
 	}

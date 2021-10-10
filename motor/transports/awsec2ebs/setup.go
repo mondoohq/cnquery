@@ -118,6 +118,8 @@ func (t *Ec2EbsTransport) CopySnapshotToRegion(ctx context.Context, snapshot Sna
 		}
 		snapState = snaps.Snapshots[0].State
 	}
+	// workaround til we read type with mql query
+	t.fsType = Xfs
 	return SnapshotId{Id: *res.SnapshotId, Region: t.config.Region, Account: t.scannerInstance.Account}, nil
 }
 
