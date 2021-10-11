@@ -54,9 +54,9 @@ func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
 			Account: i.AccountID,
 			Zone:    i.AvailabilityZone,
 		},
-		ec2svc: svc,
-		shell:  shell,
-		fsType: Ext4,
+		scannerRegionEc2svc: svc,
+		shell:               shell,
+		fsType:              Ext4,
 	}
 
 	// 3. setup
@@ -87,7 +87,7 @@ func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
 
 type Ec2EbsTransport struct {
 	FsTransport              *fs.FsTransport
-	ec2svc                   *ec2.Client
+	scannerRegionEc2svc      *ec2.Client
 	config                   aws.Config
 	opts                     map[string]string
 	scannerInstance          *InstanceId
@@ -115,13 +115,18 @@ func (t *Ec2EbsTransport) FS() afero.Fs {
 }
 
 func (t *Ec2EbsTransport) Close() {
+	ctx := context.Background()
 	err := t.UnmountVolumeFromInstance()
 	if err != nil {
 		log.Error().Err(err).Msg("unable to unmount volume")
 	}
-	err = t.DetachVolumeFromInstance(context.Background(), t.scanVolumeId)
+	err = t.DetachVolumeFromInstance(ctx, t.scanVolumeId)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to detach volume")
+	}
+	err = t.DeleteCreatedVolume(ctx, t.scanVolumeId)
+	if err != nil {
+		log.Error().Err(err).Msg("unable to delete volume")
 	}
 }
 

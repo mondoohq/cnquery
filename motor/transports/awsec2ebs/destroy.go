@@ -21,7 +21,7 @@ func (t *Ec2EbsTransport) UnmountVolumeFromInstance() error {
 
 func (t *Ec2EbsTransport) DetachVolumeFromInstance(ctx context.Context, volume *VolumeId) error {
 	log.Info().Msg("detach volume")
-	_, err := t.ec2svc.DetachVolume(ctx, &ec2.DetachVolumeInput{
+	_, err := t.scannerRegionEc2svc.DetachVolume(ctx, &ec2.DetachVolumeInput{
 		Device: aws.String(mountDir), VolumeId: &volume.Id,
 		InstanceId: &t.scannerInstance.Id,
 	})
@@ -31,4 +31,8 @@ func (t *Ec2EbsTransport) DetachVolumeFromInstance(ctx context.Context, volume *
 	return nil
 }
 
-// todo: remove created volume
+func (t *Ec2EbsTransport) DeleteCreatedVolume(ctx context.Context, volume *VolumeId) error {
+	log.Info().Msg("delete created volume")
+	_, err := t.scannerRegionEc2svc.DeleteVolume(ctx, &ec2.DeleteVolumeInput{VolumeId: &volume.Id})
+	return err
+}
