@@ -4,6 +4,7 @@ import (
 	"os"
 	"syscall"
 
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sys/unix"
 )
@@ -29,6 +30,7 @@ func (t *Ec2EbsTransport) Mount() error {
 
 const mountDir string = "/dev/xvdk"
 const mountDirLoc string = mountDir + "1"
+const mountDirLoc2 string = mountDir + "2"
 const ScanDir string = "/mondooscandata"
 
 func (t *Ec2EbsTransport) EnsureScanDir() error {
@@ -48,13 +50,45 @@ func (t *Ec2EbsTransport) GetFsType() FsType {
 
 func (t *Ec2EbsTransport) MountVolumeToScanDir(fsType FsType) error {
 	log.Info().Str("fs type", fsType.String()).Str("mount dir", mountDirLoc).Str("scan dir", ScanDir).Msg("mount volume to scan dir")
-	opts := ""
 	if fsType == Xfs {
-		opts = "nouuid"
+		err := mountXfsVolume()
+		if err != nil {
+			// try ext4
+			err2 := mountExt4Volume()
+			if err2 != nil {
+				return errors.Wrap(err, err2.Error())
+			}
+		}
+	} else {
+		err := mountExt4Volume()
+		if err != nil {
+			// try xfs
+			err2 := mountXfsVolume()
+			if err2 != nil {
+				return errors.Wrap(err, err2.Error())
+			}
+		}
 	}
-	if err := unix.Mount(mountDirLoc, ScanDir, fsType.String(), syscall.MS_MGC_VAL, opts); err != nil && err != unix.EBUSY { // does not compile on mac bc mount is not implemented for darwin
+
+	return nil
+}
+
+func mountXfsVolume() error {
+	if err := unix.Mount(mountDirLoc, ScanDir, Xfs.String(), syscall.MS_MGC_VAL, "nouuid"); err != nil && err != unix.EBUSY { // does not compile on mac bc mount is not implemented for darwin
 		log.Error().Err(err).Msg("failed to mount dir")
-		return err
+		if err := unix.Mount(mountDirLoc2, ScanDir, Xfs.String(), syscall.MS_MGC_VAL, "nouuid"); err != nil && err != unix.EBUSY {
+			return err
+		}
+	}
+	return nil
+}
+
+func mountExt4Volume() error {
+	if err := unix.Mount(mountDirLoc, ScanDir, Ext4.String(), syscall.MS_MGC_VAL, ""); err != nil && err != unix.EBUSY { // does not compile on mac bc mount is not implemented for darwin
+		log.Error().Err(err).Msg("failed to mount dir")
+		if err := unix.Mount(mountDirLoc2, ScanDir, Ext4.String(), syscall.MS_MGC_VAL, ""); err != nil && err != unix.EBUSY {
+			return err
+		}
 	}
 	return nil
 }

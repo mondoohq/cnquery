@@ -19,7 +19,7 @@ func (t *Ec2EbsTransport) Setup() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	found, snapId := t.FindRecentSnapshotForVolume(v)
+	found, snapId := t.FindRecentSnapshotForVolume(ctx, v)
 	if !found {
 		snapId, err = t.CreateSnapshotFromVolume(ctx, v)
 		if err != nil {
@@ -39,6 +39,7 @@ func (t *Ec2EbsTransport) Setup() (bool, error) {
 }
 
 func (t *Ec2EbsTransport) GetVolumeIdForInstance(ctx context.Context, i *InstanceId) (VolumeId, error) {
+	log.Info().Interface("instance", i).Msg("find volume id")
 	// use region from instance for aws config
 	cfgCopy := t.config.Copy()
 	cfgCopy.Region = i.Region
@@ -57,10 +58,33 @@ func (t *Ec2EbsTransport) GetVolumeIdForInstance(ctx context.Context, i *Instanc
 	return VolumeId{}, errors.New("no volume id found for instance")
 }
 
-func (t *Ec2EbsTransport) FindRecentSnapshotForVolume(v VolumeId) (bool, SnapshotId) {
-	// use mql query for this
+func (t *Ec2EbsTransport) FindRecentSnapshotForVolume(ctx context.Context, v VolumeId) (bool, SnapshotId) {
+	log.Info().Msg("find recent snapshot")
+	// todo: use mql query for this
 	// aws.ec2.snapshots.where(volumeId == v.Id) { id startTime < time.now - 8*time.hour}
 	// return true, SnapshotId{Id: "snap-06bdec45af7e648c5", Region: "us-east-1", Account: "185972265011"} // i-09aafd4819fc62703
+	// checking in scanner region
+	cfgCopy := t.config.Copy()
+	cfgCopy.Region = v.Region
+	ec2svc := ec2.NewFromConfig(cfgCopy)
+	res, err := ec2svc.DescribeSnapshots(ctx,
+		&ec2.DescribeSnapshotsInput{Filters: []types.Filter{
+			{Name: aws.String("volume-id"), Values: []string{v.Id}},
+		}})
+	if err != nil {
+		return false, SnapshotId{}
+	}
+
+	eighthrsago := time.Now().Add(-8 * time.Hour)
+	for i := range res.Snapshots {
+		// check the start time on all the snapshots
+		snapshot := res.Snapshots[i]
+		if snapshot.StartTime.After(eighthrsago) {
+			s := SnapshotId{Account: v.Account, Region: v.Region, Id: *snapshot.SnapshotId}
+			log.Info().Interface("snapshot", s).Msg("found snapshot")
+			return true, s
+		}
+	}
 	return false, SnapshotId{}
 }
 
@@ -91,6 +115,7 @@ func (t *Ec2EbsTransport) CreateSnapshotFromVolume(ctx context.Context, v Volume
 }
 
 func (t *Ec2EbsTransport) CopySnapshotToRegion(ctx context.Context, snapshot SnapshotId) (SnapshotId, error) {
+	log.Info().Str("snapshot", snapshot.Region).Str("scanner instance", t.scannerInstance.Region).Msg("checking snapshot region")
 	if snapshot.Region == t.scannerInstance.Region {
 		// we only need to copy the snapshot to the scanner region if it is not already in the same region
 		return snapshot, nil
@@ -98,13 +123,13 @@ func (t *Ec2EbsTransport) CopySnapshotToRegion(ctx context.Context, snapshot Sna
 	var newSnapshot SnapshotId
 	log.Info().Msg("copy snapshot")
 	// snapshot the volume
-	res, err := t.ec2svc.CopySnapshot(ctx, &ec2.CopySnapshotInput{SourceRegion: &snapshot.Region, SourceSnapshotId: &snapshot.Id})
+	res, err := t.scannerRegionEc2svc.CopySnapshot(ctx, &ec2.CopySnapshotInput{SourceRegion: &snapshot.Region, SourceSnapshotId: &snapshot.Id})
 	if err != nil {
 		return newSnapshot, err
 	}
 
 	// wait for snapshot to be ready
-	snaps, err := t.ec2svc.DescribeSnapshots(ctx, &ec2.DescribeSnapshotsInput{SnapshotIds: []string{*res.SnapshotId}})
+	snaps, err := t.scannerRegionEc2svc.DescribeSnapshots(ctx, &ec2.DescribeSnapshotsInput{SnapshotIds: []string{*res.SnapshotId}})
 	if err != nil {
 		return newSnapshot, err
 	}
@@ -112,7 +137,7 @@ func (t *Ec2EbsTransport) CopySnapshotToRegion(ctx context.Context, snapshot Sna
 	for snapState != types.SnapshotStateCompleted {
 		log.Info().Interface("state", snapState).Msg("waiting for snapshot copy completion; sleeping 10 seconds")
 		time.Sleep(10 * time.Second)
-		snaps, err := t.ec2svc.DescribeSnapshots(ctx, &ec2.DescribeSnapshotsInput{SnapshotIds: []string{*res.SnapshotId}})
+		snaps, err := t.scannerRegionEc2svc.DescribeSnapshots(ctx, &ec2.DescribeSnapshotsInput{SnapshotIds: []string{*res.SnapshotId}})
 		if err != nil {
 			return newSnapshot, err
 		}
@@ -127,7 +152,7 @@ func (t *Ec2EbsTransport) CreateVolumeFromSnapshot(ctx context.Context, snapshot
 	log.Info().Msg("create volume")
 	var vol VolumeId
 
-	out, err := t.ec2svc.CreateVolume(ctx, &ec2.CreateVolumeInput{
+	out, err := t.scannerRegionEc2svc.CreateVolume(ctx, &ec2.CreateVolumeInput{
 		SnapshotId:       &snapshot.Id,
 		AvailabilityZone: &t.scannerInstance.Zone,
 	})
@@ -138,7 +163,7 @@ func (t *Ec2EbsTransport) CreateVolumeFromSnapshot(ctx context.Context, snapshot
 	for state != types.VolumeStateAvailable {
 		log.Info().Interface("state", state).Msg("waiting for volume creation completion; sleeping 10 seconds")
 		time.Sleep(10 * time.Second)
-		vols, err := t.ec2svc.DescribeVolumes(ctx, &ec2.DescribeVolumesInput{VolumeIds: []string{*out.VolumeId}})
+		vols, err := t.scannerRegionEc2svc.DescribeVolumes(ctx, &ec2.DescribeVolumesInput{VolumeIds: []string{*out.VolumeId}})
 		if err != nil {
 			return vol, err
 		}
@@ -150,7 +175,7 @@ func (t *Ec2EbsTransport) CreateVolumeFromSnapshot(ctx context.Context, snapshot
 func (t *Ec2EbsTransport) AttachVolumeToInstance(ctx context.Context, volume VolumeId) (bool, error) {
 	log.Info().Msg("attach volume")
 	ready := false
-	res, err := t.ec2svc.AttachVolume(ctx, &ec2.AttachVolumeInput{
+	res, err := t.scannerRegionEc2svc.AttachVolume(ctx, &ec2.AttachVolumeInput{
 		Device: aws.String(mountDir), VolumeId: &volume.Id,
 		InstanceId: &t.scannerInstance.Id,
 	})
@@ -162,7 +187,7 @@ func (t *Ec2EbsTransport) AttachVolumeToInstance(ctx context.Context, volume Vol
 		var volState types.VolumeState
 		for volState != types.VolumeStateInUse {
 			time.Sleep(10 * time.Second)
-			resp, err := t.ec2svc.DescribeVolumes(ctx, &ec2.DescribeVolumesInput{VolumeIds: []string{volume.Id}})
+			resp, err := t.scannerRegionEc2svc.DescribeVolumes(ctx, &ec2.DescribeVolumesInput{VolumeIds: []string{volume.Id}})
 			if err != nil {
 				return ready, err
 			}
