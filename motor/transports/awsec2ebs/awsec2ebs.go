@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/fs"
-	"go.mondoo.io/mondoo/motor/transports/fsutil"
+	"go.mondoo.io/mondoo/motor/transports/shared"
 )
 
 func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
@@ -61,8 +61,11 @@ func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
 
 	// 3. setup
 	ok, err := t.Setup()
-	if err != nil || !ok {
+	if err != nil {
 		return t, err
+	}
+	if !ok {
+		return t, errors.New("something went wrong; unable to complete setup for ebs volume scan")
 	}
 
 	// 4. mount
@@ -99,7 +102,7 @@ type Ec2EbsTransport struct {
 }
 
 func (t *Ec2EbsTransport) RunCommand(command string) (*transports.Command, error) {
-	c := Command{shell: t.shell}
+	c := shared.Command{Shell: t.shell}
 	args := []string{}
 
 	res, err := c.Exec(command, args)
@@ -111,7 +114,7 @@ func (t *Ec2EbsTransport) FileInfo(path string) (transports.FileInfoDetails, err
 }
 
 func (t *Ec2EbsTransport) FS() afero.Fs {
-	return &fsutil.NoFs{}
+	return t.FsTransport.FS()
 }
 
 func (t *Ec2EbsTransport) Close() {

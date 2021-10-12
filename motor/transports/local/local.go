@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/shared"
 )
 
 func New() (*LocalTransport, error) {
@@ -35,7 +36,7 @@ type LocalTransport struct {
 
 func (t *LocalTransport) RunCommand(command string) (*transports.Command, error) {
 	log.Debug().Msgf("local> run command %s", command)
-	c := &Command{shell: t.shell}
+	c := &shared.Command{Shell: t.shell}
 	args := []string{}
 
 	res, err := c.Exec(command, args)
