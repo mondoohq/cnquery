@@ -6,16 +6,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/rs/zerolog/log"
-	"golang.org/x/sys/unix"
+	"go.mondoo.io/mondoo/motor/transports/awsec2ebs/custommount"
 )
 
 func (t *Ec2EbsTransport) UnmountVolumeFromInstance() error {
 	log.Info().Msg("unmount volume")
-	if err := unix.Unmount(ScanDir, unix.MNT_DETACH); err != nil && err != unix.EBUSY { // does not compile on mac bc mount is not implemented for darwin
+	if err := custommount.Unmount(ScanDir); err != nil {
 		log.Error().Err(err).Msg("failed to unmount dir")
 		return err
 	}
-
 	return nil
 }
 
