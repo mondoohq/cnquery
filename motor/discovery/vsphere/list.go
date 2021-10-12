@@ -81,12 +81,12 @@ func hostsToAssetList(instanceUuid string, hosts []*object.HostSystem) ([]*asset
 		}
 
 		// add more information if available
-		if props != nil {
-			ha.State = mapHostPowerstateToState(props.Runtime.PowerState)
+		if props != nil && props.Config != nil {
 			ha.Labels["vsphere.vmware.com/product-name"] = props.Config.Product.Name
 			ha.Labels["vsphere.vmware.com/product-version"] = props.Config.Product.Version
 			ha.Labels["vsphere.vmware.com/os-type"] = props.Config.Product.OsType
 			ha.Labels["vsphere.vmware.com/produce-lineid"] = props.Config.Product.ProductLineId
+			ha.State = mapHostPowerstateToState(props.Runtime.PowerState)
 		}
 
 		res = append(res, ha)
