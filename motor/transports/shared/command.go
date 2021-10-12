@@ -1,4 +1,4 @@
-package local
+package shared
 
 import (
 	"bytes"
@@ -13,7 +13,7 @@ import (
 type Command struct {
 	transports.Command
 	cmdExecutor *exec.Cmd
-	shell       []string
+	Shell       []string
 }
 
 func (c *Command) Exec(usercmd string, args []string) (*transports.Command, error) {
@@ -23,8 +23,8 @@ func (c *Command) Exec(usercmd string, args []string) (*transports.Command, erro
 	var cmd string
 	cmdArgs := []string{}
 
-	if len(c.shell) > 0 {
-		shellCommand, shellArgs := c.shell[0], c.shell[1:]
+	if len(c.Shell) > 0 {
+		shellCommand, shellArgs := c.Shell[0], c.Shell[1:]
 		cmd = shellCommand
 		cmdArgs = append(cmdArgs, shellArgs...)
 		cmdArgs = append(cmdArgs, usercmd)

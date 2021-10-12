@@ -19,7 +19,11 @@ func (t *Ec2EbsTransport) Setup() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	found, snapId := t.FindRecentSnapshotForVolume(ctx, v)
+	found, snapId, err := t.FindRecentSnapshotForVolume(ctx, v)
+	if err != nil {
+		// only log the error here, this is not a blocker
+		log.Error().Err(err).Msg("unable to find recent snapshot for volume")
+	}
 	if !found {
 		snapId, err = t.CreateSnapshotFromVolume(ctx, v)
 		if err != nil {
@@ -58,7 +62,7 @@ func (t *Ec2EbsTransport) GetVolumeIdForInstance(ctx context.Context, i *Instanc
 	return VolumeId{}, errors.New("no volume id found for instance")
 }
 
-func (t *Ec2EbsTransport) FindRecentSnapshotForVolume(ctx context.Context, v VolumeId) (bool, SnapshotId) {
+func (t *Ec2EbsTransport) FindRecentSnapshotForVolume(ctx context.Context, v VolumeId) (bool, SnapshotId, error) {
 	log.Info().Msg("find recent snapshot")
 	// todo: use mql query for this
 	// aws.ec2.snapshots.where(volumeId == v.Id) { id startTime < time.now - 8*time.hour}
@@ -72,7 +76,7 @@ func (t *Ec2EbsTransport) FindRecentSnapshotForVolume(ctx context.Context, v Vol
 			{Name: aws.String("volume-id"), Values: []string{v.Id}},
 		}})
 	if err != nil {
-		return false, SnapshotId{}
+		return false, SnapshotId{}, err
 	}
 
 	eighthrsago := time.Now().Add(-8 * time.Hour)
@@ -82,10 +86,10 @@ func (t *Ec2EbsTransport) FindRecentSnapshotForVolume(ctx context.Context, v Vol
 		if snapshot.StartTime.After(eighthrsago) {
 			s := SnapshotId{Account: v.Account, Region: v.Region, Id: *snapshot.SnapshotId}
 			log.Info().Interface("snapshot", s).Msg("found snapshot")
-			return true, s
+			return true, s, nil
 		}
 	}
-	return false, SnapshotId{}
+	return false, SnapshotId{}, nil
 }
 
 func (t *Ec2EbsTransport) CreateSnapshotFromVolume(ctx context.Context, v VolumeId) (SnapshotId, error) {
