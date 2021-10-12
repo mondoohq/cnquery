@@ -104,6 +104,13 @@ func (t *Ec2EbsTransport) CreateSnapshotFromVolume(ctx context.Context, v Volume
 		return SnapshotId{}, err
 	}
 
+	/*
+		NOTE re: encrypted snapshots
+		Snapshots that are taken from encrypted volumes are
+		automatically encrypted/decrypted. Volumes that are created from encrypted snapshots are
+		also automatically encrypted/decrypted.
+	*/
+
 	// wait for snapshot to be ready
 	snapProgress := *res.Progress
 	for !strings.Contains(snapProgress, "100") {
@@ -163,6 +170,14 @@ func (t *Ec2EbsTransport) CreateVolumeFromSnapshot(ctx context.Context, snapshot
 	if err != nil {
 		return vol, err
 	}
+
+	/*
+		NOTE re: encrypted snapshots
+		Snapshots that are taken from encrypted volumes are
+		automatically encrypted/decrypted. Volumes that are created from encrypted snapshots are
+		also automatically encrypted/decrypted.
+	*/
+
 	state := out.State
 	for state != types.VolumeStateAvailable {
 		log.Info().Interface("state", state).Msg("waiting for volume creation completion; sleeping 10 seconds")
@@ -186,6 +201,13 @@ func (t *Ec2EbsTransport) AttachVolumeToInstance(ctx context.Context, volume Vol
 	if err != nil {
 		return ready, err
 	}
+
+	/*
+		NOTE: re: encrypted volumes
+		Encrypted EBS volumes must be attached
+		to instances that support Amazon EBS encryption: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html
+	*/
+
 	// here we have the attachment state
 	if res.State != types.VolumeAttachmentStateAttached {
 		var volState types.VolumeState
