@@ -2,11 +2,10 @@ package awsec2ebs
 
 import (
 	"os"
-	"syscall"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"golang.org/x/sys/unix"
+	"go.mondoo.io/mondoo/motor/transports/awsec2ebs/custommount"
 )
 
 /* testing command
@@ -74,19 +73,18 @@ func (t *Ec2EbsTransport) MountVolumeToScanDir(fsType FsType) error {
 }
 
 func mountXfsVolume() error {
-	if err := unix.Mount(mountDirLoc, ScanDir, Xfs.String(), syscall.MS_MGC_VAL, "nouuid"); err != nil && err != unix.EBUSY { // does not compile on mac bc mount is not implemented for darwin
-		log.Error().Err(err).Msg("failed to mount dir")
-		if err := unix.Mount(mountDirLoc2, ScanDir, Xfs.String(), syscall.MS_MGC_VAL, "nouuid"); err != nil && err != unix.EBUSY {
+	if err := custommount.Mount(mountDirLoc, ScanDir, Xfs.String(), "nouuid"); err != nil {
+		if err := custommount.Mount(mountDirLoc2, ScanDir, Xfs.String(), "nouuid"); err != nil {
 			return err
 		}
+		return err
 	}
 	return nil
 }
 
 func mountExt4Volume() error {
-	if err := unix.Mount(mountDirLoc, ScanDir, Ext4.String(), syscall.MS_MGC_VAL, ""); err != nil && err != unix.EBUSY { // does not compile on mac bc mount is not implemented for darwin
-		log.Error().Err(err).Msg("failed to mount dir")
-		if err := unix.Mount(mountDirLoc2, ScanDir, Ext4.String(), syscall.MS_MGC_VAL, ""); err != nil && err != unix.EBUSY {
+	if err := custommount.Mount(mountDirLoc, ScanDir, Ext4.String(), ""); err != nil {
+		if err := custommount.Mount(mountDirLoc2, ScanDir, Ext4.String(), ""); err != nil {
 			return err
 		}
 	}
