@@ -3,8 +3,10 @@ package awsec2ebs
 import (
 	"context"
 	"os"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/transports/awsec2ebs/custommount"
@@ -27,6 +29,20 @@ func (t *Ec2EbsTransport) DetachVolumeFromInstance(ctx context.Context, volume *
 	})
 	if err != nil {
 		return err
+	}
+	if res.State != types.VolumeAttachmentStateDetached { // check if it's detached already
+		var volState types.VolumeState
+		for volState != types.VolumeStateAvailable {
+			time.Sleep(10 * time.Second)
+			resp, err := t.scannerRegionEc2svc.DescribeVolumes(ctx, &ec2.DescribeVolumesInput{VolumeIds: []string{volume.Id}})
+			if err != nil {
+				return err
+			}
+			if len(resp.Volumes) == 1 {
+				volState = resp.Volumes[0].State
+			}
+			log.Info().Interface("state", volState).Msg("waiting for volume detachment completion")
+		}
 	}
 	return nil
 }
