@@ -76,7 +76,7 @@ func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
 
 	// 5. create and initialize fs transport (nested transport)
 	fsTransport, err := fs.NewWithClose(&transports.TransportConfig{
-		Path:       ScanDir,
+		Path:       t.scanDir,
 		Backend:    transports.TransportBackend_CONNECTION_FS,
 		PlatformId: tc.PlatformId,
 		Options:    tc.Options,
@@ -99,6 +99,7 @@ type Ec2EbsTransport struct {
 	shell                    []string // run commands, used for mount til i get lib working
 	scanVolumeId             *VolumeId
 	fsType                   FsType
+	scanDir                  string
 }
 
 func (t *Ec2EbsTransport) RunCommand(command string) (*transports.Command, error) {
@@ -130,6 +131,10 @@ func (t *Ec2EbsTransport) Close() {
 	err = t.DeleteCreatedVolume(ctx, t.scanVolumeId)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to delete volume")
+	}
+	err = t.RemoveCreatedDir()
+	if err != nil {
+		log.Error().Err(err).Msg("unable to remove dir")
 	}
 }
 
