@@ -179,6 +179,8 @@ func new` + r.interfaceName() + `(runtime *lumi.Runtime, args *lumi.Args) (inter
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		res.Resource.Id = id
 	}
 
 	return &res, nil
