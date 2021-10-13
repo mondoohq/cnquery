@@ -257,36 +257,63 @@ func (s *lumiFile) stat() (FilePermissions, int64, error) {
 }
 
 func (l *lumiFilePermissions) id() (string, error) {
-	res := []byte("---------")
+	res := []byte("----------")
+
+	if d, _ := l.IsDirectory(); d {
+		res[0] = 'd'
+	} else if l, _ := l.IsSymlink(); l {
+		res[0] = 'l'
+	}
 
 	if i, _ := l.User_readable(); i {
-		res[0] = 'r'
+		res[1] = 'r'
 	}
 	if i, _ := l.User_writeable(); i {
-		res[1] = 'w'
+		res[2] = 'w'
 	}
 	if i, _ := l.User_executable(); i {
-		res[2] = 'x'
+		res[3] = 'x'
+		if suid, _ := l.Suid(); suid {
+			res[3] = 's'
+		}
+	} else {
+		if suid, _ := l.Suid(); suid {
+			res[3] = 'S'
+		}
 	}
 
 	if i, _ := l.Group_readable(); i {
-		res[3] = 'r'
+		res[4] = 'r'
 	}
 	if i, _ := l.Group_writeable(); i {
-		res[4] = 'w'
+		res[5] = 'w'
 	}
 	if i, _ := l.Group_executable(); i {
-		res[5] = 'x'
+		res[6] = 'x'
+		if sgid, _ := l.Sgid(); sgid {
+			res[6] = 's'
+		}
+	} else {
+		if sgid, _ := l.Sgid(); sgid {
+			res[6] = 'S'
+		}
 	}
 
 	if i, _ := l.Other_readable(); i {
-		res[6] = 'r'
+		res[7] = 'r'
 	}
 	if i, _ := l.Other_writeable(); i {
-		res[7] = 'w'
+		res[8] = 'w'
 	}
 	if i, _ := l.Other_executable(); i {
-		res[8] = 'x'
+		res[9] = 'x'
+		if sticky, _ := l.Sticky(); sticky {
+			res[9] = 't'
+		}
+	} else {
+		if sticky, _ := l.Sticky(); sticky {
+			res[9] = 'T'
+		}
 	}
 
 	return string(res), nil
