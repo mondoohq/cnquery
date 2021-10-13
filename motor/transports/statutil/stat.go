@@ -1,11 +1,13 @@
 package statutil
 
 import (
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -158,12 +160,7 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 	}
 
 	// extract file modes
-	mapMode := os.FileMode(uint32(mask) & 0o7777)
-
-	// eg mask is 40755 and octal 40000 indicates a directory
-	if mask&0o40000 == 0o40000 {
-		mapMode = mapMode | os.ModeDir
-	}
+	mapMode := toFileMode(mask)
 
 	return &transports.FileInfo{
 		FSize:    int64(size),
@@ -227,8 +224,7 @@ func (s *statHelper) unix(name string) (os.FileInfo, error) {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
-	// TODO: we may need to support a similar behavior as in linux to map the directory flag
-	mode := os.FileMode(uint32(mask) & 0o7777)
+	mode := toFileMode(mask)
 
 	mtime, err := strconv.ParseInt(statsData[4], 10, 64)
 	if err != nil {
@@ -243,4 +239,47 @@ func (s *statHelper) unix(name string) (os.FileInfo, error) {
 		Uid:      uid,
 		Gid:      gid,
 	}, nil
+}
+
+const (
+	S_IFMT  = 0170000
+	S_IFBLK = 060000
+	S_IFCHR = 020000
+	S_IFDIR = 040000
+	S_IFIFO = 10000
+	S_ISUID = 04000
+	S_ISGID = 02000
+	S_ISVTX = 01000
+)
+
+func toFileMode(mask uint64) os.FileMode {
+	mode := os.FileMode(uint32(mask) & 0o0777)
+
+	// taken from https://github.com/golang/go/blob/2ebe77a2fda1ee9ff6fd9a3e08933ad1ebaea039/src/os/stat_linux.go
+	switch mask & S_IFMT {
+	case S_IFBLK:
+		mode |= fs.ModeDevice
+	case S_IFCHR:
+		mode |= fs.ModeDevice | fs.ModeCharDevice
+	case S_IFDIR:
+		mode |= fs.ModeDir
+	case S_IFIFO:
+		mode |= fs.ModeNamedPipe
+	case syscall.S_IFLNK:
+		mode |= fs.ModeSymlink
+	case syscall.S_IFREG:
+		// nothing to do
+	case syscall.S_IFSOCK:
+		mode |= fs.ModeSocket
+	}
+	if mask&syscall.S_ISGID != 0 {
+		mode |= fs.ModeSetgid
+	}
+	if mask&syscall.S_ISUID != 0 {
+		mode |= fs.ModeSetuid
+	}
+	if mask&syscall.S_ISVTX != 0 {
+		mode |= fs.ModeSticky
+	}
+	return mode
 }

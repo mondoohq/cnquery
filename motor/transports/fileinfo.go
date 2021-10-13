@@ -1,6 +1,7 @@
 package transports
 
 import (
+	"io/fs"
 	"os"
 	"time"
 )
@@ -70,14 +71,37 @@ func (mode FileModeDetails) OtherWriteable() bool {
 func (mode FileModeDetails) OtherExecutable() bool {
 	return uint32(mode.FileMode)&00001 != 0
 }
+
 func (mode FileModeDetails) Suid() bool {
-	return uint32(mode.FileMode)&04000 != 0
+	return mode.FileMode&fs.ModeSetuid != 0
 }
 func (mode FileModeDetails) Sgid() bool {
-	return uint32(mode.FileMode)&02000 != 0
+	return mode.FileMode&fs.ModeSetgid != 0
 }
 func (mode FileModeDetails) Sticky() bool {
-	return uint32(mode.FileMode)&01000 != 0
+	return mode.FileMode&fs.ModeSticky != 0
+}
+
+func (mode FileModeDetails) UnixMode() uint32 {
+	m := mode.FileMode & 0777
+
+	if mode.IsDir() {
+
+	}
+
+	if (mode.FileMode & fs.ModeSetuid) != 0 {
+		m |= 04000
+	}
+
+	if (mode.FileMode & fs.ModeSetgid) != 0 {
+		m |= 02000
+	}
+
+	if (mode.FileMode & fs.ModeSticky) != 0 {
+		m |= 01000
+	}
+
+	return uint32(m)
 }
 
 type FileInfoDetails struct {
