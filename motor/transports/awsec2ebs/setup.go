@@ -100,7 +100,7 @@ func (t *Ec2EbsTransport) CreateSnapshotFromVolume(ctx context.Context, v Volume
 	cfgCopy := t.config.Copy()
 	cfgCopy.Region = v.Region
 	ec2svc := ec2.NewFromConfig(cfgCopy)
-	res, err := ec2svc.CreateSnapshot(ctx, &ec2.CreateSnapshotInput{VolumeId: &v.Id})
+	res, err := ec2svc.CreateSnapshot(ctx, &ec2.CreateSnapshotInput{VolumeId: &v.Id, TagSpecifications: resourceTags(types.ResourceTypeSnapshot, t.targetInstance.Id)})
 	if err != nil {
 		return SnapshotId{}, err
 	}
@@ -135,7 +135,7 @@ func (t *Ec2EbsTransport) CopySnapshotToRegion(ctx context.Context, snapshot Sna
 	var newSnapshot SnapshotId
 	log.Info().Msg("copy snapshot")
 	// snapshot the volume
-	res, err := t.scannerRegionEc2svc.CopySnapshot(ctx, &ec2.CopySnapshotInput{SourceRegion: &snapshot.Region, SourceSnapshotId: &snapshot.Id})
+	res, err := t.scannerRegionEc2svc.CopySnapshot(ctx, &ec2.CopySnapshotInput{SourceRegion: &snapshot.Region, SourceSnapshotId: &snapshot.Id, TagSpecifications: resourceTags(types.ResourceTypeSnapshot, t.targetInstance.Id)})
 	if err != nil {
 		return newSnapshot, err
 	}
@@ -165,8 +165,9 @@ func (t *Ec2EbsTransport) CreateVolumeFromSnapshot(ctx context.Context, snapshot
 	var vol VolumeId
 
 	out, err := t.scannerRegionEc2svc.CreateVolume(ctx, &ec2.CreateVolumeInput{
-		SnapshotId:       &snapshot.Id,
-		AvailabilityZone: &t.scannerInstance.Zone,
+		SnapshotId:        &snapshot.Id,
+		AvailabilityZone:  &t.scannerInstance.Zone,
+		TagSpecifications: resourceTags(types.ResourceTypeVolume, t.targetInstance.Id),
 	})
 	if err != nil {
 		return vol, err

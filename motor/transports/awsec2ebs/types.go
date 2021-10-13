@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/cockroachdb/errors"
 )
 
@@ -71,4 +73,15 @@ func (v FsType) String() string {
 		return "ext4"
 	}
 	return "xfs"
+}
+
+func resourceTags(resourceType types.ResourceType, instanceId string) []types.TagSpecification {
+	return []types.TagSpecification{
+		{ResourceType: resourceType,
+			Tags: []types.Tag{
+				{Key: aws.String("Created By"), Value: aws.String("Mondoo")},
+				{Key: aws.String("Created From Instance"), Value: aws.String(instanceId)},
+			},
+		},
+	}
 }
