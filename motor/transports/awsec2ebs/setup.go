@@ -88,6 +88,7 @@ func (t *Ec2EbsTransport) FindRecentSnapshotForVolume(ctx context.Context, v Vol
 			log.Info().Interface("snapshot", s).Msg("found snapshot")
 			return true, s, nil
 		}
+		// todo: check status of snapshot and wait for it if it's not yet ready
 	}
 	return false, SnapshotId{}, nil
 }
@@ -195,7 +196,7 @@ func (t *Ec2EbsTransport) AttachVolumeToInstance(ctx context.Context, volume Vol
 	log.Info().Msg("attach volume")
 	ready := false
 	res, err := t.scannerRegionEc2svc.AttachVolume(ctx, &ec2.AttachVolumeInput{
-		Device: aws.String(mountDir), VolumeId: &volume.Id,
+		Device: aws.String(attachedFS), VolumeId: &volume.Id,
 		InstanceId: &t.scannerInstance.Id,
 	})
 	if err != nil {

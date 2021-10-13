@@ -6,8 +6,8 @@ import (
 	"syscall"
 )
 
-func Mount(mountDir string, scanDir string, fsType string, opts string) error {
-	if err := unix.Mount(mountDir, scanDir, fsType, syscall.MS_MGC_VAL, opts); err != nil && err != unix.EBUSY {
+func Mount(attachedFS string, scanDir string, fsType string, opts string) error {
+	if err := unix.Mount(attachedFS, scanDir, fsType, syscall.MS_MGC_VAL, opts); err != nil && err != unix.EBUSY {
 		log.Error().Err(err).Msg("failed to mount dir")
 		return err
 	}
