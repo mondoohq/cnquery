@@ -13,6 +13,18 @@ stdout = """4317
 1590418792
 """
 
+[commands."stat -L /usr/bin/su --printf '%s\n%f\n%u\n%g\n%X\n%Y\n%C'"]
+stdout = """71728
+89ed
+0
+0
+1634057181
+1629123001
+"""
+
 
 [commands."test -e /etc/ssh/sshd_config"]
+stdout = ""
+
+[commands."test -e /usr/bin/su"]
 stdout = ""
