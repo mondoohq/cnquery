@@ -114,6 +114,10 @@ func (ec2i *Ec2Instances) getInstances(account string, ec2InstancesFilters Ec2In
 				reservation := resp.Reservations[i]
 				for j := range reservation.Instances {
 					instance := reservation.Instances[j]
+					if instance.State.Code != 16 && instance.State.Code != 80 {
+						// 16 is running, 80 is stopped. we ignore terminated/pending
+						continue
+					}
 					res = append(res, instanceToAsset(account, region, instance, ec2i.Insecure, ec2i.Labels))
 				}
 			}
