@@ -4022,3 +4022,22 @@ socketstats {
   //Listening non-localhost open ports
   openPorts() []string
 }
+
+gitlab.group {
+  id int
+  name string
+  path string
+  description string
+  visibility string
+  requireTwoFactorAuthentication bool
+  projects() []gitlab.project
+}
+
+gitlab.project {
+  id int
+  name string
+  path string
+  description string
+  visibility string
+}
+

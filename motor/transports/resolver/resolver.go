@@ -19,6 +19,7 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/fs"
 	"go.mondoo.io/mondoo/motor/transports/gcp"
 	"go.mondoo.io/mondoo/motor/transports/github"
+	"go.mondoo.io/mondoo/motor/transports/gitlab"
 	"go.mondoo.io/mondoo/motor/transports/ipmi"
 	k8s_transport "go.mondoo.io/mondoo/motor/transports/k8s"
 	"go.mondoo.io/mondoo/motor/transports/local"
@@ -360,6 +361,20 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		if err != nil {
 			return nil, err
 		}
+		id, err := trans.Identifier()
+		if err == nil && len(id) > 0 {
+			identifier = append(identifier, id)
+		}
+	case transports.TransportBackend_CONNECTION_GITLAB:
+		trans, err := gitlab.New(tc)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(trans)
+		if err != nil {
+			return nil, err
+		}
+
 		id, err := trans.Identifier()
 		if err == nil && len(id) > 0 {
 			identifier = append(identifier, id)
