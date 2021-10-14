@@ -4,19 +4,18 @@ import (
 	"errors"
 	"runtime"
 
-	"go.mondoo.io/mondoo/motor/transports/awsec2ebs"
-	"go.mondoo.io/mondoo/motor/transports/github"
-
-	"go.mondoo.io/mondoo/motor/transports/equinix"
-	"go.mondoo.io/mondoo/motor/transports/local"
-
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/arista"
 	"go.mondoo.io/mondoo/motor/transports/aws"
+	"go.mondoo.io/mondoo/motor/transports/awsec2ebs"
 	"go.mondoo.io/mondoo/motor/transports/azure"
+	"go.mondoo.io/mondoo/motor/transports/equinix"
 	"go.mondoo.io/mondoo/motor/transports/gcp"
+	"go.mondoo.io/mondoo/motor/transports/github"
+	"go.mondoo.io/mondoo/motor/transports/gitlab"
 	ipmi "go.mondoo.io/mondoo/motor/transports/ipmi"
 	k8s_transport "go.mondoo.io/mondoo/motor/transports/k8s"
+	"go.mondoo.io/mondoo/motor/transports/local"
 	"go.mondoo.io/mondoo/motor/transports/ms365"
 	"go.mondoo.io/mondoo/motor/transports/vsphere"
 )
@@ -142,6 +141,13 @@ func (d *Detector) Platform() (*Platform, error) {
 			Title:   "Github",
 			Kind:    transports.Kind_KIND_API,
 			Runtime: transports.RUNTIME_GITHUB,
+		}, nil
+	case *gitlab.Transport:
+		return &Platform{
+			Name:    "gitlab",
+			Title:   "Gitlab",
+			Kind:    transports.Kind_KIND_API,
+			Runtime: transports.RUNTIME_GITLAB,
 		}, nil
 	case *awsec2ebs.Ec2EbsTransport:
 		return &Platform{

@@ -31,6 +31,7 @@ enum TransportBackend {
   CONNECTION_GITHUB = 22;
   CONNECTION_VAGRANT = 23;
   CONNECTION_AWS_EC2_EBS = 24;
+  CONNECTION_GITLAB = 25;
 }
 
 enum Kind {
