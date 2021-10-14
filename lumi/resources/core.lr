@@ -759,6 +759,25 @@ logindefs {
   params(content) map[string]string
 }
 
+// Unix List Block devices
+lsblk {
+  []lsblk.entry
+}
+
+// Unix BlockDevice
+lsblk.entry {
+  // Device name
+  name string
+  // Filesystem Type
+  fstype string
+  // label for the fs
+  label string
+  // uuid for the fs 
+  uuid string
+  // mountpoints for the device
+  mountpoints []string
+}
+
 // Unix Mounted Filesystem
 mount {
   []mount.point
