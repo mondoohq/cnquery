@@ -3,6 +3,7 @@ package mock_test
 import (
 	"io/ioutil"
 	"path/filepath"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -55,4 +56,33 @@ func TestReadDirnames(t *testing.T) {
 	assert.Equal(t, 2, len(names))
 	assert.Contains(t, names, "bios_vendor")
 	assert.Contains(t, names, "bios_date")
+}
+
+func TestConcurrent(t *testing.T) {
+	wg := sync.WaitGroup{}
+	filepath, _ := filepath.Abs("./testdata/mock.toml")
+	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: filepath})
+	require.NoError(t, err)
+
+	for i := 0; i < 100; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for _, f := range []string{
+				"/etc/os-release",
+				"/etc/ssh/sshd_config",
+				"/sys/class/dmi/id/bios_date",
+				"/sys/class/dmi/id/bios_vendor",
+			} {
+
+				_, err := trans.FS().Open(f)
+				require.NoError(t, err)
+
+				err = trans.FS().Rename(f, f+".new")
+				require.NoError(t, err)
+			}
+		}()
+	}
+	wg.Wait()
+
 }
