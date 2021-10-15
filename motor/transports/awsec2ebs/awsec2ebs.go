@@ -44,10 +44,9 @@ func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
 
 	// 2. create transport
 	t := &Ec2EbsTransport{
-		config:                   cfg,
-		opts:                     tc.Options,
-		targetInstancePlatformId: tc.PlatformId,
-		targetInstance:           ti,
+		config: cfg,
+		opts:   tc.Options,
+		target: targetInfo{instance: ti, platformId: tc.PlatformId},
 		scannerInstance: &InstanceId{
 			Id:      i.InstanceID,
 			Region:  i.Region,
@@ -56,7 +55,6 @@ func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
 		},
 		scannerRegionEc2svc: svc,
 		shell:               shell,
-		fsType:              Ext4,
 	}
 
 	// 3. setup
@@ -71,12 +69,13 @@ func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
 	// 4. mount
 	err = t.Mount()
 	if err != nil {
+		t.Close()
 		return t, err
 	}
 
 	// 5. create and initialize fs transport (nested transport)
 	fsTransport, err := fs.NewWithClose(&transports.TransportConfig{
-		Path:       t.scanDir,
+		Path:       t.tmpInfo.scanDir,
 		Backend:    transports.TransportBackend_CONNECTION_FS,
 		PlatformId: tc.PlatformId,
 		Options:    tc.Options,
@@ -89,17 +88,25 @@ func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
 }
 
 type Ec2EbsTransport struct {
-	FsTransport              *fs.FsTransport
-	scannerRegionEc2svc      *ec2.Client
-	config                   aws.Config
-	opts                     map[string]string
-	scannerInstance          *InstanceId
-	targetInstancePlatformId string
-	targetInstance           *InstanceId
-	shell                    []string // run commands, used for mount til i get lib working
-	scanVolumeId             *VolumeId
-	fsType                   FsType
-	scanDir                  string
+	FsTransport         *fs.FsTransport
+	scannerRegionEc2svc *ec2.Client
+	config              aws.Config
+	opts                map[string]string
+	shell               []string
+	scannerInstance     *InstanceId // the instance the transport is running on
+	tmpInfo             tmpInfo
+	target              targetInfo // info about the target instance
+}
+
+type targetInfo struct {
+	platformId string
+	instance   *InstanceId
+}
+
+type tmpInfo struct {
+	// these fields are referenced during setup/mount and close
+	scanVolumeId *VolumeId // the volume id of the volume we attached to the instance
+	scanDir      string    // the tmp dir we create; serves as the directory we mount the volume to
 }
 
 func (t *Ec2EbsTransport) RunCommand(command string) (*transports.Command, error) {
@@ -124,11 +131,11 @@ func (t *Ec2EbsTransport) Close() {
 	if err != nil {
 		log.Error().Err(err).Msg("unable to unmount volume")
 	}
-	err = t.DetachVolumeFromInstance(ctx, t.scanVolumeId)
+	err = t.DetachVolumeFromInstance(ctx, t.tmpInfo.scanVolumeId)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to detach volume")
 	}
-	err = t.DeleteCreatedVolume(ctx, t.scanVolumeId)
+	err = t.DeleteCreatedVolume(ctx, t.tmpInfo.scanVolumeId)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to delete volume")
 	}
@@ -163,5 +170,5 @@ func RawInstanceInfo(cfg aws.Config) (*imds.InstanceIdentityDocument, error) {
 }
 
 func (t *Ec2EbsTransport) Identifier() (string, error) {
-	return t.targetInstancePlatformId, nil
+	return t.target.platformId, nil
 }
