@@ -10,12 +10,14 @@ import (
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
-func TestVSphereTransport(t *testing.T) {
+func TestVsphereResolver(t *testing.T) {
 	vs, err := vsimulator.New()
 	require.NoError(t, err)
 	defer vs.Close()
 
-	trans, err := New(&transports.TransportConfig{
+	// start vsphere discover
+	r := Resolver{}
+	assets, err := r.Resolve(&transports.TransportConfig{
 		Backend:  transports.TransportBackend_CONNECTION_VSPHERE,
 		Host:     vs.Server.URL.Hostname(),
 		Port:     vs.Server.URL.Port(),
@@ -27,9 +29,10 @@ func TestVSphereTransport(t *testing.T) {
 				Secret: []byte(vsimulator.Password),
 			},
 		},
-	})
+		Discover: &transports.Discovery{
+			Targets: []string{"all"},
+		},
+	}, nil, nil)
 	require.NoError(t, err)
-
-	ver := trans.Client().ServiceContent.About
-	assert.Equal(t, "6.5", ver.ApiVersion)
+	assert.Equal(t, 9, len(assets)) // api + esx + vm
 }
