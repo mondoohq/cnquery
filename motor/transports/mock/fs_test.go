@@ -76,10 +76,16 @@ func TestConcurrent(t *testing.T) {
 			} {
 
 				_, err := trans.FS().Open(f)
-				require.NoError(t, err)
+				if err != nil {
+					t.Errorf("unexpected error in Open: %v", err)
+					return
+				}
 
 				err = trans.FS().Rename(f, f+".new")
-				require.NoError(t, err)
+				if err != nil {
+					t.Errorf("unexpected error in Rename: %v", err)
+					return
+				}
 			}
 		}()
 	}
