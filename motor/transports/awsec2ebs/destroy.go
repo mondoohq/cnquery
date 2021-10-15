@@ -14,7 +14,7 @@ import (
 
 func (t *Ec2EbsTransport) UnmountVolumeFromInstance() error {
 	log.Info().Msg("unmount volume")
-	if err := custommount.Unmount(t.scanDir); err != nil {
+	if err := custommount.Unmount(t.tmpInfo.scanDir); err != nil {
 		log.Error().Err(err).Msg("failed to unmount dir")
 		return err
 	}
@@ -24,7 +24,7 @@ func (t *Ec2EbsTransport) UnmountVolumeFromInstance() error {
 func (t *Ec2EbsTransport) DetachVolumeFromInstance(ctx context.Context, volume *VolumeId) error {
 	log.Info().Msg("detach volume")
 	res, err := t.scannerRegionEc2svc.DetachVolume(ctx, &ec2.DetachVolumeInput{
-		Device: aws.String(attachedFS), VolumeId: &volume.Id,
+		Device: aws.String(volumeAttachmenLoc), VolumeId: &volume.Id,
 		InstanceId: &t.scannerInstance.Id,
 	})
 	if err != nil {
@@ -55,5 +55,5 @@ func (t *Ec2EbsTransport) DeleteCreatedVolume(ctx context.Context, volume *Volum
 
 func (t *Ec2EbsTransport) RemoveCreatedDir() error {
 	log.Info().Msg("remove created dir")
-	return os.RemoveAll(t.scanDir)
+	return os.RemoveAll(t.tmpInfo.scanDir)
 }

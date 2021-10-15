@@ -15,7 +15,7 @@ import (
 func (t *Ec2EbsTransport) Setup() (bool, error) {
 	var err error
 	ctx := context.Background()
-	v, err := t.GetVolumeIdForInstance(ctx, t.targetInstance)
+	v, err := t.GetVolumeIdForInstance(ctx, t.target.instance)
 	if err != nil {
 		return false, err
 	}
@@ -38,7 +38,7 @@ func (t *Ec2EbsTransport) Setup() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	t.scanVolumeId = &volId
+	t.tmpInfo.scanVolumeId = &volId
 	return t.AttachVolumeToInstance(ctx, volId)
 }
 
@@ -100,7 +100,7 @@ func (t *Ec2EbsTransport) CreateSnapshotFromVolume(ctx context.Context, v Volume
 	cfgCopy := t.config.Copy()
 	cfgCopy.Region = v.Region
 	ec2svc := ec2.NewFromConfig(cfgCopy)
-	res, err := ec2svc.CreateSnapshot(ctx, &ec2.CreateSnapshotInput{VolumeId: &v.Id, TagSpecifications: resourceTags(types.ResourceTypeSnapshot, t.targetInstance.Id)})
+	res, err := ec2svc.CreateSnapshot(ctx, &ec2.CreateSnapshotInput{VolumeId: &v.Id, TagSpecifications: resourceTags(types.ResourceTypeSnapshot, t.target.instance.Id)})
 	if err != nil {
 		return SnapshotId{}, err
 	}
@@ -135,7 +135,7 @@ func (t *Ec2EbsTransport) CopySnapshotToRegion(ctx context.Context, snapshot Sna
 	var newSnapshot SnapshotId
 	log.Info().Msg("copy snapshot")
 	// snapshot the volume
-	res, err := t.scannerRegionEc2svc.CopySnapshot(ctx, &ec2.CopySnapshotInput{SourceRegion: &snapshot.Region, SourceSnapshotId: &snapshot.Id, TagSpecifications: resourceTags(types.ResourceTypeSnapshot, t.targetInstance.Id)})
+	res, err := t.scannerRegionEc2svc.CopySnapshot(ctx, &ec2.CopySnapshotInput{SourceRegion: &snapshot.Region, SourceSnapshotId: &snapshot.Id, TagSpecifications: resourceTags(types.ResourceTypeSnapshot, t.target.instance.Id)})
 	if err != nil {
 		return newSnapshot, err
 	}
@@ -155,8 +155,6 @@ func (t *Ec2EbsTransport) CopySnapshotToRegion(ctx context.Context, snapshot Sna
 		}
 		snapState = snaps.Snapshots[0].State
 	}
-	// workaround til we read type with mql query
-	t.fsType = Xfs
 	return SnapshotId{Id: *res.SnapshotId, Region: t.config.Region, Account: t.scannerInstance.Account}, nil
 }
 
@@ -167,7 +165,7 @@ func (t *Ec2EbsTransport) CreateVolumeFromSnapshot(ctx context.Context, snapshot
 	out, err := t.scannerRegionEc2svc.CreateVolume(ctx, &ec2.CreateVolumeInput{
 		SnapshotId:        &snapshot.Id,
 		AvailabilityZone:  &t.scannerInstance.Zone,
-		TagSpecifications: resourceTags(types.ResourceTypeVolume, t.targetInstance.Id),
+		TagSpecifications: resourceTags(types.ResourceTypeVolume, t.target.instance.Id),
 	})
 	if err != nil {
 		return vol, err
@@ -197,7 +195,7 @@ func (t *Ec2EbsTransport) AttachVolumeToInstance(ctx context.Context, volume Vol
 	log.Info().Msg("attach volume")
 	ready := false
 	res, err := t.scannerRegionEc2svc.AttachVolume(ctx, &ec2.AttachVolumeInput{
-		Device: aws.String(attachedFS), VolumeId: &volume.Id,
+		Device: aws.String(volumeAttachmenLoc), VolumeId: &volume.Id,
 		InstanceId: &t.scannerInstance.Id,
 	})
 	if err != nil {

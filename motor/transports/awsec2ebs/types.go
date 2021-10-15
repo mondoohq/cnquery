@@ -58,23 +58,6 @@ type VolumeId struct {
 	Account string
 }
 
-type FsType int64
-
-const (
-	Xfs FsType = iota
-	Ext4
-)
-
-func (v FsType) String() string {
-	switch v {
-	case Xfs:
-		return "xfs"
-	case Ext4:
-		return "ext4"
-	}
-	return "xfs"
-}
-
 func resourceTags(resourceType types.ResourceType, instanceId string) []types.TagSpecification {
 	return []types.TagSpecification{
 		{ResourceType: resourceType,
@@ -85,3 +68,5 @@ func resourceTags(resourceType types.ResourceType, instanceId string) []types.Ta
 		},
 	}
 }
+
+const volumeAttachmenLoc = "/dev/sdf"
