@@ -18,9 +18,12 @@ func gitlabtransport(t transports.Transport) (*gitlab.Transport, error) {
 }
 
 func (g *lumiGitlabGroup) id() (string, error) {
-	return "gitlab.group", nil
+	id, _ := g.Id()
+	return "gitlab.group/" + strconv.FormatInt(id, 10), nil
 }
 
+// init initializes the gitlab group with the arguments
+// see https://docs.gitlab.com/ee/api/groups.html#new-group
 func (g *lumiGitlabGroup) init(args *lumi.Args) (*lumi.Args, GitlabGroup, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
@@ -46,6 +49,8 @@ func (g *lumiGitlabGroup) init(args *lumi.Args) (*lumi.Args, GitlabGroup, error)
 	return args, nil, nil
 }
 
+// GetProjects list all projects that belong to a group
+// see https://docs.gitlab.com/ee/api/projects.html
 func (g *lumiGitlabGroup) GetProjects() ([]interface{}, error) {
 	gt, err := gitlabtransport(g.Runtime.Motor.Transport)
 	if err != nil {
@@ -84,5 +89,5 @@ func (g *lumiGitlabGroup) GetProjects() ([]interface{}, error) {
 
 func (g *lumiGitlabProject) id() (string, error) {
 	id, _ := g.Id()
-	return "gitlab.project" + strconv.FormatInt(id, 10), nil
+	return "gitlab.project/" + strconv.FormatInt(id, 10), nil
 }

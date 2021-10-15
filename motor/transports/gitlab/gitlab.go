@@ -43,11 +43,11 @@ type Transport struct {
 }
 
 func (t *Transport) RunCommand(command string) (*transports.Command, error) {
-	return nil, errors.New("github does not implement RunCommand")
+	return nil, errors.New("gitlab does not implement RunCommand")
 }
 
 func (t *Transport) FileInfo(path string) (transports.FileInfoDetails, error) {
-	return transports.FileInfoDetails{}, errors.New("github does not implement FileInfo")
+	return transports.FileInfoDetails{}, errors.New("gitlab does not implement FileInfo")
 }
 
 func (t *Transport) FS() afero.Fs {
@@ -58,7 +58,7 @@ func (t *Transport) Close() {}
 
 func (t *Transport) Capabilities() transports.Capabilities {
 	return transports.Capabilities{
-		transports.Capability_Github,
+		transports.Capability_Gitlab,
 	}
 }
 
