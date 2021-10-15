@@ -12,7 +12,7 @@ import (
 
 type mockFS struct {
 	Files map[string]*MockFileData
-	Mutex sync.Mutex
+	mutex sync.Mutex
 }
 
 func NewMockFS() *mockFS {
@@ -38,8 +38,8 @@ func (fs *mockFS) MkdirAll(path string, perm os.FileMode) error {
 }
 
 func (fs *mockFS) Open(name string) (afero.File, error) {
-	fs.Mutex.Lock()
-	defer fs.Mutex.Unlock()
+	fs.mutex.Lock()
+	defer fs.mutex.Unlock()
 
 	data, ok := fs.Files[name]
 	if !ok || data.Enoent {
@@ -57,8 +57,8 @@ func (fs *mockFS) OpenFile(name string, flag int, perm os.FileMode) (afero.File,
 }
 
 func (fs *mockFS) Remove(name string) error {
-	fs.Mutex.Lock()
-	defer fs.Mutex.Unlock()
+	fs.mutex.Lock()
+	defer fs.mutex.Unlock()
 	delete(fs.Files, name)
 	return nil
 }
@@ -68,8 +68,8 @@ func (fs *mockFS) RemoveAll(path string) error {
 }
 
 func (fs *mockFS) Rename(oldname, newname string) error {
-	fs.Mutex.Lock()
-	defer fs.Mutex.Unlock()
+	fs.mutex.Lock()
+	defer fs.mutex.Unlock()
 	if oldname == newname {
 		return nil
 	}
@@ -84,8 +84,8 @@ func (fs *mockFS) Rename(oldname, newname string) error {
 }
 
 func (fs *mockFS) Stat(name string) (os.FileInfo, error) {
-	fs.Mutex.Lock()
-	defer fs.Mutex.Unlock()
+	fs.mutex.Lock()
+	defer fs.mutex.Unlock()
 	data, ok := fs.Files[name]
 	if !ok {
 		return nil, os.ErrNotExist
