@@ -376,12 +376,15 @@ func (c *LeiseExecutor) runChunk(chunk *Chunk, ref int32) (*RawData, int32, erro
 	switch chunk.Call {
 	case Chunk_PRIMITIVE:
 		res, dref, err := c.runPrimitive(chunk.Primitive, ref)
-		if dref != 0 || err != nil {
-			return res, dref, err
+		if res != nil {
+			c.cache.Store(ref, &stepCache{Result: res})
+		} else if err != nil {
+			c.cache.Store(ref, &stepCache{Result: &RawData{
+				Error: err,
+			}})
 		}
-		c.cache.Store(ref, &stepCache{Result: res})
-		return res, dref, err
 
+		return res, dref, err
 	case Chunk_FUNCTION:
 		return c.runFunction(chunk, ref)
 
