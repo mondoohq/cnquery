@@ -3,6 +3,7 @@ package mock
 import (
 	"errors"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/gobwas/glob"
@@ -11,6 +12,7 @@ import (
 
 type mockFS struct {
 	Files map[string]*MockFileData
+	Mutex sync.Mutex
 }
 
 func NewMockFS() *mockFS {
@@ -19,23 +21,26 @@ func NewMockFS() *mockFS {
 	}
 }
 
-func (f mockFS) Name() string {
+func (f *mockFS) Name() string {
 	return "mockfs"
 }
 
-func (fs mockFS) Create(name string) (afero.File, error) {
+func (fs *mockFS) Create(name string) (afero.File, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (fs mockFS) Mkdir(name string, perm os.FileMode) error {
+func (fs *mockFS) Mkdir(name string, perm os.FileMode) error {
 	return errors.New("not implemented")
 }
 
-func (fs mockFS) MkdirAll(path string, perm os.FileMode) error {
+func (fs *mockFS) MkdirAll(path string, perm os.FileMode) error {
 	return errors.New("not implemented")
 }
 
-func (fs mockFS) Open(name string) (afero.File, error) {
+func (fs *mockFS) Open(name string) (afero.File, error) {
+	fs.Mutex.Lock()
+	defer fs.Mutex.Unlock()
+
 	data, ok := fs.Files[name]
 	if !ok || data.Enoent {
 		return nil, os.ErrNotExist
@@ -43,24 +48,28 @@ func (fs mockFS) Open(name string) (afero.File, error) {
 
 	return &MockFile{
 		data: data,
-		fs:   &fs,
+		fs:   fs,
 	}, nil
 }
 
-func (fs mockFS) OpenFile(name string, flag int, perm os.FileMode) (afero.File, error) {
+func (fs *mockFS) OpenFile(name string, flag int, perm os.FileMode) (afero.File, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (fs mockFS) Remove(name string) error {
+func (fs *mockFS) Remove(name string) error {
+	fs.Mutex.Lock()
+	defer fs.Mutex.Unlock()
 	delete(fs.Files, name)
 	return nil
 }
 
-func (fs mockFS) RemoveAll(path string) error {
+func (fs *mockFS) RemoveAll(path string) error {
 	return errors.New("not implemented")
 }
 
-func (fs mockFS) Rename(oldname, newname string) error {
+func (fs *mockFS) Rename(oldname, newname string) error {
+	fs.Mutex.Lock()
+	defer fs.Mutex.Unlock()
 	if oldname == newname {
 		return nil
 	}
@@ -74,7 +83,9 @@ func (fs mockFS) Rename(oldname, newname string) error {
 	return nil
 }
 
-func (fs mockFS) Stat(name string) (os.FileInfo, error) {
+func (fs *mockFS) Stat(name string) (os.FileInfo, error) {
+	fs.Mutex.Lock()
+	defer fs.Mutex.Unlock()
 	data, ok := fs.Files[name]
 	if !ok {
 		return nil, os.ErrNotExist
@@ -82,25 +93,25 @@ func (fs mockFS) Stat(name string) (os.FileInfo, error) {
 
 	f := &MockFile{
 		data: data,
-		fs:   &fs,
+		fs:   fs,
 	}
 
 	return f.Stat()
 }
 
-func (fs mockFS) Lstat(name string) (os.FileInfo, error) {
+func (fs *mockFS) Lstat(name string) (os.FileInfo, error) {
 	return fs.Stat(name)
 }
 
-func (fs mockFS) Chmod(name string, mode os.FileMode) error {
+func (fs *mockFS) Chmod(name string, mode os.FileMode) error {
 	return errors.New("not implemented")
 }
 
-func (fs mockFS) Chtimes(name string, atime time.Time, mtime time.Time) error {
+func (fs *mockFS) Chtimes(name string, atime time.Time, mtime time.Time) error {
 	return errors.New("not implemented")
 }
 
-func (fs mockFS) Glob(pattern string) ([]string, error) {
+func (fs *mockFS) Glob(pattern string) ([]string, error) {
 	matches := []string{}
 
 	g, err := glob.Compile(pattern)
