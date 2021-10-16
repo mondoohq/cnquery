@@ -14,6 +14,7 @@ import (
 )
 
 func (t *Ec2EbsTransport) Setup() (bool, error) {
+	rand.Seed(time.Now().UnixNano())
 	var err error
 	ctx := context.Background()
 	v, err := t.GetVolumeIdForInstance(ctx, t.target.instance)
