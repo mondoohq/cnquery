@@ -73,6 +73,7 @@ func init() {
 		transports.SCHEME_GITHUB:             &standard.Resolver{},
 		transports.SCHEME_AWS_EC2_EBS:        &ebs.Resolver{},
 		transports.SCHEME_GITLAB:             &standard.Resolver{},
+		transports.SCHEME_TERRAFORM:          &standard.Resolver{},
 	}
 }
 
