@@ -36,6 +36,7 @@ const (
 	SCHEME_GITHUB             = "github"
 	SCHEME_AWS_EC2_EBS        = "aws-ec2-ebs"
 	SCHEME_GITLAB             = "gitlab"
+	SCHEME_TERRAFORM          = "terraform"
 )
 
 var TransportBackend_scheme = map[TransportBackend]string{
@@ -64,6 +65,7 @@ var TransportBackend_scheme = map[TransportBackend]string{
 	TransportBackend_CONNECTION_VAGRANT:                 SCHEME_VAGRANT,
 	TransportBackend_CONNECTION_AWS_EC2_EBS:             SCHEME_AWS_EC2_EBS,
 	TransportBackend_CONNECTION_GITLAB:                  SCHEME_GITLAB,
+	TransportBackend_CONNECTION_TERRAFORM:               SCHEME_TERRAFORM,
 }
 
 var TransportBackend_schemevalue = map[string]TransportBackend{
@@ -92,6 +94,7 @@ var TransportBackend_schemevalue = map[string]TransportBackend{
 	SCHEME_VAGRANT:            TransportBackend_CONNECTION_VAGRANT,
 	SCHEME_AWS_EC2_EBS:        TransportBackend_CONNECTION_AWS_EC2_EBS,
 	SCHEME_GITLAB:             TransportBackend_CONNECTION_GITLAB,
+	SCHEME_TERRAFORM:          TransportBackend_CONNECTION_TERRAFORM,
 }
 
 func (x TransportBackend) Scheme() string {

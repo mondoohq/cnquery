@@ -4,6 +4,8 @@ import (
 	"errors"
 	"runtime"
 
+	"go.mondoo.io/mondoo/motor/transports/terraform"
+
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/arista"
 	"go.mondoo.io/mondoo/motor/transports/aws"
@@ -155,6 +157,13 @@ func (d *Detector) Platform() (*Platform, error) {
 			Title:   "Aws Ec2 Ebs",
 			Kind:    transports.Kind_KIND_API,
 			Runtime: transports.RUNTIME_AWS_EC2_EBS,
+		}, nil
+	case *terraform.Transport:
+		return &Platform{
+			Name:    "terraform",
+			Title:   "Terraform",
+			Kind:    transports.Kind_KIND_API,
+			Runtime: "",
 		}, nil
 	default:
 		var resolved bool

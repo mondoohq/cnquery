@@ -3,6 +3,8 @@ package resolver
 import (
 	"fmt"
 
+	"go.mondoo.io/mondoo/motor/transports/terraform"
+
 	"go.mondoo.io/mondoo/motor/vault"
 
 	"github.com/cockroachdb/errors"
@@ -390,6 +392,20 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		if err != nil {
 			return nil, err
 		}
+		id, err := trans.Identifier()
+		if err == nil && len(id) > 0 {
+			identifier = append(identifier, id)
+		}
+	case transports.TransportBackend_CONNECTION_TERRAFORM:
+		trans, err := terraform.New(tc)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(trans)
+		if err != nil {
+			return nil, err
+		}
+
 		id, err := trans.Identifier()
 		if err == nil && len(id) > 0 {
 			identifier = append(identifier, id)

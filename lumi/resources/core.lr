@@ -4252,3 +4252,42 @@ gitlab.project {
   // The project's visibility level. Can be private, internal, or public.
   visibility string
 }
+
+terraform {
+  // access to individual files
+  files() []terraform.file
+  // tf vars
+  // vars()
+  // custom loading of modules
+  // modules()
+  blocks() []terraform.block
+}
+
+// a tf file
+terraform.file {
+  // tf or tf.json file
+  path string
+  // all blocks within the file
+  blocks() []terraform.block
+}
+
+// Position of the hcl block in file
+terraform.fileposition {
+  path string
+  line int
+  column int
+  byte int
+}
+
+// hcl block
+terraform.block {
+  type string
+  nameLabel() string
+  labels []string
+
+  start terraform.fileposition
+  end terraform.fileposition
+
+  arguments() dict
+  blocks() []terraform.block
+}
