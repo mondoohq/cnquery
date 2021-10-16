@@ -2,6 +2,8 @@ package awsec2ebs
 
 import (
 	"context"
+	"math/rand"
+	"time"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -17,6 +19,7 @@ import (
 )
 
 func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
+	rand.Seed(time.Now().UnixNano())
 	// get aws config
 	// expect to be running on an ec2 instance with ssm iam role
 	// && perms for copy snapshot, create snapshot, create volume, attach volume, detach volume
@@ -105,8 +108,9 @@ type targetInfo struct {
 
 type tmpInfo struct {
 	// these fields are referenced during setup/mount and close
-	scanVolumeId *VolumeId // the volume id of the volume we attached to the instance
-	scanDir      string    // the tmp dir we create; serves as the directory we mount the volume to
+	scanVolumeId        *VolumeId // the volume id of the volume we attached to the instance
+	scanDir             string    // the tmp dir we create; serves as the directory we mount the volume to
+	volumeAttachmentLoc string    // where we tell AWS to attach the volume; it doesn't necessarily get attached there, but we have to reference this same location when detaching
 }
 
 func (t *Ec2EbsTransport) RunCommand(command string) (*transports.Command, error) {
