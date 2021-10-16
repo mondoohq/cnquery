@@ -24,7 +24,7 @@ func (t *Ec2EbsTransport) UnmountVolumeFromInstance() error {
 func (t *Ec2EbsTransport) DetachVolumeFromInstance(ctx context.Context, volume *VolumeId) error {
 	log.Info().Msg("detach volume")
 	res, err := t.scannerRegionEc2svc.DetachVolume(ctx, &ec2.DetachVolumeInput{
-		Device: aws.String(volumeAttachmenLoc), VolumeId: &volume.Id,
+		Device: aws.String(t.tmpInfo.volumeAttachmentLoc), VolumeId: &volume.Id,
 		InstanceId: &t.scannerInstance.Id,
 	})
 	if err != nil {

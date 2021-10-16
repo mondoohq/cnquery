@@ -68,5 +68,3 @@ func resourceTags(resourceType types.ResourceType, instanceId string) []types.Ta
 		},
 	}
 }
-
-const volumeAttachmenLoc = "/dev/sdf"

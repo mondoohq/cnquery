@@ -2,6 +2,7 @@ package awsec2ebs
 
 import (
 	"context"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -191,11 +192,19 @@ func (t *Ec2EbsTransport) CreateVolumeFromSnapshot(ctx context.Context, snapshot
 	return VolumeId{Id: *out.VolumeId, Region: t.config.Region, Account: t.scannerInstance.Account}, nil
 }
 
+func newVolumeAttachmentLoc() string {
+	chars := []rune("bcdefghijklmnopqrstuvwxyz") // a is reserved for the root volume
+	randomIndex := rand.Intn(len(chars))
+	c := chars[randomIndex]
+	return "/dev/xvd" + string(c)
+}
+
 func (t *Ec2EbsTransport) AttachVolumeToInstance(ctx context.Context, volume VolumeId) (bool, error) {
 	log.Info().Msg("attach volume")
+	t.tmpInfo.volumeAttachmentLoc = newVolumeAttachmentLoc()
 	ready := false
 	res, err := t.scannerRegionEc2svc.AttachVolume(ctx, &ec2.AttachVolumeInput{
-		Device: aws.String(volumeAttachmenLoc), VolumeId: &volume.Id,
+		Device: aws.String(t.tmpInfo.volumeAttachmentLoc), VolumeId: &volume.Id,
 		InstanceId: &t.scannerInstance.Id,
 	})
 	if err != nil {
