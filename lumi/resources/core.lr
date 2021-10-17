@@ -4256,14 +4256,27 @@ gitlab.project {
 terraform {
   // access to individual files
   files() []terraform.file
-  // tf vars
-  // vars()
-  // custom loading of modules
-  // modules()
+
+  // raw hcl blocks
   blocks() []terraform.block
+
+  // provider blocks
+  providers() []terraform.block
+
+  // data sources blocks
+  datasources() []terraform.block
+
+  // all blocks with type resource
+  resources() []terraform.block
+
+  // variable blocks
+  variables() []terraform.block
+
+  // output blocks
+  outputs() []terraform.block
 }
 
-// a tf file
+// represents a .tf or .tf.json file
 terraform.file {
   // tf or tf.json file
   path string

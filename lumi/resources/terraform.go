@@ -14,19 +14,127 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/terraform"
 )
 
-func (p *lumiTerraformFileposition) id() (string, error) {
-	path, _ := p.Path()
-	line, _ := p.Line()
-	column, _ := p.Column()
-	return "file.position/" + path + "/" + strconv.FormatInt(line, 10) + "/" + strconv.FormatInt(column, 10), nil
-}
-
 func terraformtransport(t transports.Transport) (*terraform.Transport, error) {
 	gt, ok := t.(*terraform.Transport)
 	if !ok {
 		return nil, errors.New("terraform resource is not supported on this transport")
 	}
 	return gt, nil
+}
+
+func (g *lumiTerraform) id() (string, error) {
+	return "terraform", nil
+}
+
+func (g *lumiTerraform) GetFiles() ([]interface{}, error) {
+	t, err := terraformtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	var lumiTerraformFiles []interface{}
+	files := t.Parser().Files()
+	for path := range files {
+		lumiTerraformFile, err := g.Runtime.CreateResource("terraform.file",
+			"path", path,
+		)
+		if err != nil {
+			return nil, err
+		}
+		lumiTerraformFiles = append(lumiTerraformFiles, lumiTerraformFile)
+	}
+
+	return lumiTerraformFiles, nil
+}
+
+func (g *lumiTerraform) GetBlocks() ([]interface{}, error) {
+	t, err := terraformtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	files := t.Parser().Files()
+
+	var lumiHclBlocks []interface{}
+	for k := range files {
+		f := files[k]
+		blocks, err := listHclBlocks(g.Runtime, f.Body)
+		if err != nil {
+			return nil, err
+		}
+		lumiHclBlocks = append(lumiHclBlocks, blocks...)
+	}
+	return lumiHclBlocks, nil
+}
+
+func (g *lumiTerraform) filterBlockByType(filterType string) ([]interface{}, error) {
+	t, err := terraformtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	files := t.Parser().Files()
+
+	var lumiHclBlocks []interface{}
+	for k := range files {
+		f := files[k]
+		blocks, err := listHclBlocks(g.Runtime, f.Body)
+		if err != nil {
+			return nil, err
+		}
+
+		for i := range blocks {
+			b := blocks[i].(TerraformBlock)
+			blockType, err := b.Type()
+			if err != nil {
+				return nil, err
+			}
+			if blockType == filterType {
+				lumiHclBlocks = append(lumiHclBlocks, b)
+			}
+		}
+	}
+	return lumiHclBlocks, nil
+}
+
+func (g *lumiTerraform) GetProviders() ([]interface{}, error) {
+	return g.filterBlockByType("provider")
+}
+
+func (g *lumiTerraform) GetDatasources() ([]interface{}, error) {
+	return g.filterBlockByType("data")
+}
+
+func (g *lumiTerraform) GetResources() ([]interface{}, error) {
+	return g.filterBlockByType("resource")
+}
+
+func (g *lumiTerraform) GetVariables() ([]interface{}, error) {
+	return g.filterBlockByType("variable")
+}
+
+func (g *lumiTerraform) GetOutputs() ([]interface{}, error) {
+	return g.filterBlockByType("output")
+}
+
+func newLumiHclBlock(runtime *lumi.Runtime, block *hcl.Block) (lumi.ResourceType, error) {
+	start, end, err := newFilePosRange(runtime, block.TypeRange)
+	if err != nil {
+		return nil, err
+	}
+
+	r, err := runtime.CreateResource("terraform.block",
+		"type", block.Type,
+		"labels", sliceInterface(block.Labels),
+		"start", start,
+		"end", end,
+	)
+
+	if err == nil {
+		r.LumiResource().Cache.Store("_hclblock", &lumi.CacheEntry{Data: block})
+	}
+
+	return r, err
 }
 
 func (g *lumiTerraformBlock) id() (string, error) {
@@ -184,75 +292,6 @@ func listHclBlocks(runtime *lumi.Runtime, rawBody interface{}) ([]interface{}, e
 	return lumiHclBlocks, nil
 }
 
-func (g *lumiTerraform) id() (string, error) {
-	return "terraform", nil
-}
-
-func (g *lumiTerraform) GetFiles() ([]interface{}, error) {
-	t, err := terraformtransport(g.Runtime.Motor.Transport)
-	if err != nil {
-		return nil, err
-	}
-
-	var lumiTerraformFiles []interface{}
-	files := t.Parser().Files()
-	for path := range files {
-		lumiTerraformFile, err := g.Runtime.CreateResource("terraform.file",
-			"path", path,
-		)
-		if err != nil {
-			return nil, err
-		}
-		lumiTerraformFiles = append(lumiTerraformFiles, lumiTerraformFile)
-	}
-
-	return lumiTerraformFiles, nil
-}
-
-func (g *lumiTerraform) GetBlocks() ([]interface{}, error) {
-	t, err := terraformtransport(g.Runtime.Motor.Transport)
-	if err != nil {
-		return nil, err
-	}
-
-	files := t.Parser().Files()
-
-	var lumiHclBlocks []interface{}
-	for k := range files {
-		f := files[k]
-		blocks, err := listHclBlocks(g.Runtime, f.Body)
-		if err != nil {
-			return nil, err
-		}
-		lumiHclBlocks = append(lumiHclBlocks, blocks...)
-	}
-	return lumiHclBlocks, nil
-}
-
-func (g *lumiTerraformFile) id() (string, error) {
-	p, err := g.Path()
-	if err != nil {
-		return "", err
-	}
-	return "terraform.file/" + p, nil
-}
-
-func (g *lumiTerraformFile) GetBlocks() ([]interface{}, error) {
-	t, err := terraformtransport(g.Runtime.Motor.Transport)
-	if err != nil {
-		return nil, err
-	}
-
-	p, err := g.Path()
-	if err != nil {
-		return nil, err
-	}
-
-	files := t.Parser().Files()
-	file := files[p]
-	return listHclBlocks(g.Runtime, file.Body)
-}
-
 func newFilePosRange(runtime *lumi.Runtime, r hcl.Range) (lumi.ResourceType, lumi.ResourceType, error) {
 	start, err := runtime.CreateResource("terraform.fileposition",
 		"path", r.Filename,
@@ -277,22 +316,33 @@ func newFilePosRange(runtime *lumi.Runtime, r hcl.Range) (lumi.ResourceType, lum
 	return start, end, nil
 }
 
-func newLumiHclBlock(runtime *lumi.Runtime, block *hcl.Block) (lumi.ResourceType, error) {
-	start, end, err := newFilePosRange(runtime, block.TypeRange)
+func (p *lumiTerraformFileposition) id() (string, error) {
+	path, _ := p.Path()
+	line, _ := p.Line()
+	column, _ := p.Column()
+	return "file.position/" + path + "/" + strconv.FormatInt(line, 10) + "/" + strconv.FormatInt(column, 10), nil
+}
+
+func (g *lumiTerraformFile) id() (string, error) {
+	p, err := g.Path()
+	if err != nil {
+		return "", err
+	}
+	return "terraform.file/" + p, nil
+}
+
+func (g *lumiTerraformFile) GetBlocks() ([]interface{}, error) {
+	t, err := terraformtransport(g.Runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
 
-	r, err := runtime.CreateResource("terraform.block",
-		"type", block.Type,
-		"labels", sliceInterface(block.Labels),
-		"start", start,
-		"end", end,
-	)
-
-	if err == nil {
-		r.LumiResource().Cache.Store("_hclblock", &lumi.CacheEntry{Data: block})
+	p, err := g.Path()
+	if err != nil {
+		return nil, err
 	}
 
-	return r, err
+	files := t.Parser().Files()
+	file := files[p]
+	return listHclBlocks(g.Runtime, file.Body)
 }
