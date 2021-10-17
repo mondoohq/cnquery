@@ -32,9 +32,12 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 		return nil, errors.Wrap(err, "could not parse tfvars files")
 	}
 
+	modulesManifest, err := ParseTerraformModuleManifest(path)
+
 	return &Transport{
-		parsed: parsed,
-		tfVars: tfVars,
+		parsed:          parsed,
+		tfVars:          tfVars,
+		modulesManifest: modulesManifest,
 	}, nil
 }
 
@@ -42,9 +45,10 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 // - https://www.terraform.io/docs/language/syntax/configuration.html
 // - https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md
 type Transport struct {
-	parsed *hclparse.Parser
-	tfVars map[string]*hcl.Attribute
-	opts   map[string]string
+	parsed          *hclparse.Parser
+	tfVars          map[string]*hcl.Attribute
+	modulesManifest *ModuleManifest
+	opts            map[string]string
 }
 
 func (t *Transport) RunCommand(command string) (*transports.Command, error) {
@@ -79,6 +83,10 @@ func (t *Transport) Parser() *hclparse.Parser {
 
 func (t *Transport) TfVars() map[string]*hcl.Attribute {
 	return t.tfVars
+}
+
+func (t *Transport) ModulesManifest() *ModuleManifest {
+	return t.modulesManifest
 }
 
 // TODO: we need to fix that

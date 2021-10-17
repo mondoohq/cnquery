@@ -57,6 +57,36 @@ func (g *lumiTerraform) GetTfvars() (interface{}, error) {
 	return hclAttributesToDict(t.TfVars())
 }
 
+func (g *lumiTerraform) GetModules() ([]interface{}, error) {
+	t, err := terraformtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	manifest := t.ModulesManifest()
+	if manifest == nil {
+		return nil, nil
+	}
+
+	var lumiModules []interface{}
+	for i := range manifest.Records {
+		record := manifest.Records[i]
+
+		r, err := g.Runtime.CreateResource("terraform.module",
+			"key", record.Key,
+			"source", record.SourceAddr,
+			"version", record.Version,
+			"dir", record.Dir,
+		)
+		if err != nil {
+			return nil, err
+		}
+		lumiModules = append(lumiModules, r)
+	}
+
+	return lumiModules, nil
+}
+
 func (g *lumiTerraform) GetBlocks() ([]interface{}, error) {
 	t, err := terraformtransport(g.Runtime.Motor.Transport)
 	if err != nil {
@@ -362,4 +392,10 @@ func (g *lumiTerraformFile) GetBlocks() ([]interface{}, error) {
 	files := t.Parser().Files()
 	file := files[p]
 	return listHclBlocks(g.Runtime, file.Body)
+}
+
+func (g *lumiTerraformModule) id() (string, error) {
+	k, _ := g.Key()
+	v, _ := g.Version()
+	return "terraform.module/key/" + k + "/version/" + v, nil
 }
