@@ -4260,6 +4260,9 @@ terraform {
   // returns the attributes defined in .tfvars and .tfvars.json
   tfvars() dict
 
+  // list all referenced terraform modules
+  modules() []terraform.module
+
   // raw hcl blocks
   blocks() []terraform.block
 
@@ -4306,4 +4309,11 @@ terraform.block {
 
   arguments() dict
   blocks() []terraform.block
+}
+
+terraform.module {
+  key string
+  source string
+  version string
+  dir string
 }
