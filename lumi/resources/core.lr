@@ -4257,6 +4257,9 @@ terraform {
   // access to individual files
   files() []terraform.file
 
+  // returns the attributes defined in .tfvars and .tfvars.json
+  tfvars() dict
+
   // raw hcl blocks
   blocks() []terraform.block
 

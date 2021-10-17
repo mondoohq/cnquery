@@ -2,8 +2,11 @@ package terraform
 
 import (
 	"io/fs"
+	"io/ioutil"
 	"path/filepath"
 	"strings"
+
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclparse"
@@ -37,4 +40,40 @@ func ParseHclDirectory(path string, fileList []fs.FileInfo) (*hclparse.Parser, e
 	}
 
 	return hclParser, nil
+}
+
+func ParseTfVars(path string, fileList []fs.FileInfo) (map[string]*hcl.Attribute, error) {
+	terraformVars := make(map[string]*hcl.Attribute)
+
+	for i := range fileList {
+		fi := fileList[i]
+
+		if fi.IsDir() {
+			continue
+		}
+
+		switch {
+		case strings.HasSuffix(fi.Name(), ".tfvars"):
+			fallthrough
+		case strings.HasSuffix(fi.Name(), ".tfvars.json"):
+			filename := filepath.Join(path, fi.Name())
+			src, err := ioutil.ReadFile(filename)
+			if err != nil {
+				return nil, err
+			}
+
+			// we ignore the diagnositics information here
+			variableFile, _ := hclsyntax.ParseConfig(src, filename, hcl.Pos{Line: 1, Column: 1})
+
+			// NOTE: we ignore the diagnositics info
+			attrs, _ := variableFile.Body.JustAttributes()
+			for k := range attrs {
+				v := attrs[k]
+				terraformVars[k] = v
+			}
+		default:
+			continue
+		}
+	}
+	return terraformVars, nil
 }

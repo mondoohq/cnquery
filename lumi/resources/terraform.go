@@ -4,6 +4,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hashicorp/hcl/v2/ext/typeexpr"
+
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
@@ -45,6 +47,14 @@ func (g *lumiTerraform) GetFiles() ([]interface{}, error) {
 	}
 
 	return lumiTerraformFiles, nil
+}
+
+func (g *lumiTerraform) GetTfvars() (interface{}, error) {
+	t, err := terraformtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	return hclAttributesToDict(t.TfVars())
 }
 
 func (g *lumiTerraform) GetBlocks() ([]interface{}, error) {
@@ -174,10 +184,17 @@ func (g *lumiTerraformBlock) GetArguments() (map[string]interface{}, error) {
 
 	// do not handle diag information here, it also throws errors for blocks nearby
 	attributes, _ := hclBlock.Body.JustAttributes()
+	return hclAttributesToDict(attributes)
+}
 
+func hclAttributesToDict(attributes map[string]*hcl.Attribute) (map[string]interface{}, error) {
 	dict := map[string]interface{}{}
 	for k := range attributes {
-		dict[k] = getCtyValue(attributes[k].Expr, nil)
+		val, _ := attributes[k].Expr.Value(nil)
+		dict[k] = map[string]interface{}{
+			"value": getCtyValue(attributes[k].Expr, nil),
+			"type":  typeexpr.TypeString(val.Type()),
+		}
 	}
 
 	return dict, nil
