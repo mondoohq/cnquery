@@ -8,6 +8,11 @@ variable "image_id" {
   }
 }
 
+variable "availability_zone_names" {
+  type    = list(string)
+  default = ["us-west-1a"]
+}
+
 output "instance_ip_addr" {
   value       = aws_instance.example.private_ip
   description = "The private IP address of the main server instance."

@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 
 	"github.com/cockroachdb/errors"
+	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclparse"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
@@ -26,8 +27,14 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 		return nil, errors.Wrap(err, "could not parse hcl files")
 	}
 
+	tfVars, err := ParseTfVars(path, fileList)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not parse tfvars files")
+	}
+
 	return &Transport{
 		parsed: parsed,
+		tfVars: tfVars,
 	}, nil
 }
 
@@ -36,6 +43,7 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 // - https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md
 type Transport struct {
 	parsed *hclparse.Parser
+	tfVars map[string]*hcl.Attribute
 	opts   map[string]string
 }
 
@@ -69,6 +77,11 @@ func (t *Transport) Parser() *hclparse.Parser {
 	return t.parsed
 }
 
+func (t *Transport) TfVars() map[string]*hcl.Attribute {
+	return t.tfVars
+}
+
+// TODO: we need to fix that
 func (t *Transport) Identifier() (string, error) {
 	return "terraform", nil
 }

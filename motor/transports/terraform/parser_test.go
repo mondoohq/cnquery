@@ -11,8 +11,19 @@ import (
 func TestLoadHclBlocks(t *testing.T) {
 	path := "./testdata"
 	fileList, err := ioutil.ReadDir(path)
+	require.NoError(t, err)
 
 	parsed, err := ParseHclDirectory(path, fileList)
 	require.NoError(t, err)
-	assert.Equal(t, 1, len(parsed.Files()))
+	assert.Equal(t, 2, len(parsed.Files()))
+}
+
+func TestLoadTfvars(t *testing.T) {
+	path := "./testdata"
+	fileList, err := ioutil.ReadDir(path)
+	require.NoError(t, err)
+
+	variables, err := ParseTfVars(path, fileList)
+	require.NoError(t, err)
+	assert.Equal(t, 2, len(variables))
 }
