@@ -88,9 +88,18 @@ func (t *Ec2EbsTransport) FindRecentSnapshotForVolume(ctx context.Context, v Vol
 		if snapshot.StartTime.After(eighthrsago) {
 			s := SnapshotId{Account: v.Account, Region: v.Region, Id: *snapshot.SnapshotId}
 			log.Info().Interface("snapshot", s).Msg("found snapshot")
+			snapState := snapshot.State
+			for snapState != types.SnapshotStateCompleted {
+				log.Info().Interface("state", snapState).Msg("waiting for snapshot copy completion; sleeping 10 seconds")
+				time.Sleep(10 * time.Second)
+				snaps, err := t.scannerRegionEc2svc.DescribeSnapshots(ctx, &ec2.DescribeSnapshotsInput{SnapshotIds: []string{s.Id}})
+				if err != nil {
+					return false, SnapshotId{}, err
+				}
+				snapState = snaps.Snapshots[0].State
+			}
 			return true, s, nil
 		}
-		// todo: check status of snapshot and wait for it if it's not yet ready
 	}
 	return false, SnapshotId{}, nil
 }
