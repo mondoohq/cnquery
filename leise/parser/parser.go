@@ -17,7 +17,7 @@ var (
 		`|(?P<Int>[-+]?\d+([eE][-+]?\d+)?)` +
 		`|(?P<String>'[^']*'|"[^"]*")` +
 		`|(?P<Comment>//[^\n]*(\n|\z))` +
-		`|(?P<Regex>/([^\\/]+|\\.)+/)` +
+		`|(?P<Regex>/([^\\/]+|\\.)+/[msi]*)` +
 		`|(?P<Op>[-+*/%,:.=<>!|&~#;])` +
 		`|(?P<Call>[(){}\[\]])`,
 	))
@@ -242,8 +242,22 @@ func (p *parser) parseValue() *Value {
 
 	case Regex:
 		v := p.token.Value
+
+		reEnd := len(v) - 1
+		for ; reEnd > 1; reEnd-- {
+			if v[reEnd] == '/' {
+				break
+			}
+		}
+
 		// TODO: handling of escape sequences
-		vv := v[1 : len(v)-1]
+		vv := v[1:reEnd]
+		mods := v[reEnd+1:]
+
+		if mods != "" {
+			vv = "(?" + mods + ")" + vv
+		}
+
 		return &Value{Regex: &vv}
 
 	}
