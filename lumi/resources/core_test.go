@@ -561,6 +561,27 @@ func TestNumber_Methods(t *testing.T) {
 	})
 }
 
+func TestRegex_Methods(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"'hello bob'.find(/he\\w*\\s?[bo]+/)",
+			0, []interface{}{"hello bob"},
+		},
+		{
+			"'HellO'.find(/hello/i)",
+			0, []interface{}{"HellO"},
+		},
+		{
+			"'hello\nworld'.find(/hello.world/s)",
+			0, []interface{}{"hello\nworld"},
+		},
+		{
+			"'yo! hello\nto the world'.find(/\\w+$/m)",
+			0, []interface{}{"hello", "world"},
+		},
+	})
+}
+
 func TestString_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
@@ -578,10 +599,6 @@ func TestString_Methods(t *testing.T) {
 		{
 			"'hello'.contains(['lu', 'la'])",
 			0, false,
-		},
-		{
-			"'hello bob'.find(/he\\w*\\s?[bo]+/)",
-			0, []interface{}{"hello bob"},
 		},
 		{
 			"'oh-hello-world!'.camelcase",
