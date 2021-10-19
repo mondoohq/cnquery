@@ -3,6 +3,7 @@ package transports
 import (
 	"errors"
 	"net/url"
+	"strings"
 
 	"go.mondoo.io/mondoo/motor/vault"
 )
@@ -53,21 +54,30 @@ func NewTransportFromUrl(uri string, opts ...TransportConfigOption) (*TransportC
 		return nil, "", errors.New("uri cannot be empty")
 	}
 
-	u, err := url.Parse(uri)
-	if err != nil {
-		return nil, "", err
+	scheme := uri
+	var hostname, username, port, path string
+	if strings.Contains(uri, "://") {
+		u, err := url.Parse(uri)
+		if err != nil {
+			return nil, "", err
+		}
+		scheme = u.Scheme
+		hostname = u.Hostname()
+		port = u.Port()
+		path = u.Path
+		username = u.User.Username()
 	}
 
-	b, err := MapSchemeBackend(u.Scheme)
+	b, err := MapSchemeBackend(scheme)
 	if err != nil {
 		return nil, "", err
 	}
 
 	t := &TransportConfig{
 		Backend:     b,
-		Host:        u.Hostname(),
-		Port:        u.Port(),
-		Path:        u.Path,
+		Host:        hostname,
+		Port:        port,
+		Path:        path,
 		Options:     map[string]string{},
 		Credentials: []*vault.Credential{},
 	}
@@ -78,7 +88,7 @@ func NewTransportFromUrl(uri string, opts ...TransportConfigOption) (*TransportC
 			return nil, "", err
 		}
 	}
-	return t, u.User.Username(), nil
+	return t, username, nil
 }
 
 func (cc *TransportConfig) AddCredential(c *vault.Credential) {
