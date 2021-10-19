@@ -1,9 +1,9 @@
 package leise
 
 import (
-	"errors"
 	"strconv"
 
+	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/leise/parser"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi"
@@ -64,7 +64,7 @@ func (f *FunctionSignature) expected2string() string {
 
 // Validate the field call against the signature. Returns nil if valid and
 // an error message otherwise
-func (f *FunctionSignature) Validate(args []*llx.Primitive) error {
+func (f *FunctionSignature) Validate(args []*llx.Primitive, c *compiler) error {
 	max := len(f.Args)
 	given := len(args)
 
@@ -85,6 +85,14 @@ func (f *FunctionSignature) Validate(args []*llx.Primitive) error {
 	for i := range args {
 		req := f.Args[i]
 		argT := types.Type(args[i].Type)
+
+		var err error
+		if argT == types.Ref {
+			argT, err = c.dereferenceType(args[i])
+			if err != nil {
+				return errors.Wrap(err, "failed to dereference argument in validating function signature")
+			}
+		}
 
 		// TODO: find out the real type from these REF types
 		if argT == req || req == types.Any {

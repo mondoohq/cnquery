@@ -561,6 +561,8 @@ func TestNumber_Methods(t *testing.T) {
 	})
 }
 
+var emojiTestString = []rune("☀⛺➿🌀🎂👍🔒😀🙈🚵🛼🤌🤣🥳🧡🧿🩰🫖")
+
 func TestRegex_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
@@ -578,6 +580,38 @@ func TestRegex_Methods(t *testing.T) {
 		{
 			"'yo! hello\nto the world'.find(/\\w+$/m)",
 			0, []interface{}{"hello", "world"},
+		},
+		{
+			"'IPv4: 0.0.0.0, 255.255.255.255, 1.50.120.230, 256.0.0.0 '.find(regex.ipv4)",
+			0, []interface{}{"0.0.0.0", "255.255.255.255", "1.50.120.230"},
+		},
+		{
+			"'IPv6: 2001:0db8:85a3:0000:0000:8a2e:0370:7334'.find(regex.ipv6)",
+			0, []interface{}{"2001:0db8:85a3:0000:0000:8a2e:0370:7334"},
+		},
+		{
+			"'Sarah Summers <sarah@summe.rs>'.find( regex.email )",
+			0, []interface{}{"sarah@summe.rs"},
+		},
+		{
+			"'Urls: http://mondoo.io/welcome'.find( regex.url )",
+			0, []interface{}{"http://mondoo.io/welcome"},
+		},
+		{
+			"'mac 01:23:45:67:89:ab attack'.find(regex.mac)",
+			0, []interface{}{"01:23:45:67:89:ab"},
+		},
+		{
+			"'uuid: b7f99555-5bca-48f4-b86f-a953a4883383.'.find(regex.uuid)",
+			0, []interface{}{"b7f99555-5bca-48f4-b86f-a953a4883383"},
+		},
+		{
+			"'some ⮆" + string(emojiTestString) + " ⮄ emojis'.find(regex.emoji).length",
+			0, int64(len(emojiTestString)),
+		},
+		{
+			"'semvers: 1, 1.2, 1.2.3, 1.2.3-4'.find(regex.semver)",
+			0, []interface{}{"1.2.3", "1.2.3-4"},
 		},
 	})
 }
