@@ -48,7 +48,13 @@ func compileEmpty(t *testing.T, s string, f func(res *llx.CodeBundle)) {
 
 func compileErroneous(t *testing.T, s string, expectedError error, f func(res *llx.CodeBundle)) {
 	res, err := Compile(s, schema, nil)
-	assert.Equal(t, expectedError, err)
+
+	if err != nil && expectedError != nil {
+		assert.Equal(t, expectedError.Error(), err.Error())
+	} else {
+		assert.Equal(t, expectedError, err)
+	}
+
 	if f != nil {
 		f(res)
 	}
