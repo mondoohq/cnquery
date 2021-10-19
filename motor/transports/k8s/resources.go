@@ -38,7 +38,7 @@ func (t *Transport) Resources(kind string, name string) (*ResourceResult, error)
 	if len(ns) == 0 {
 		allNs = true
 	}
-	manifestFile := t.opts["manifest"]
+
 	var err error
 	var resourceObjects []runtime.Object
 
@@ -49,15 +49,15 @@ func (t *Transport) Resources(kind string, name string) (*ResourceResult, error)
 	}
 	log.Debug().Msg("completed querying resource types")
 
-	if len(manifestFile) > 0 {
+	if len(t.manifestFile) > 0 {
 		var f *os.File
 
 		// if content is piped
-		if manifestFile == "-" {
+		if t.manifestFile == "-" {
 			f = os.Stdin
 		} else {
 			// return all resources from manifest
-			f, err = os.Open(manifestFile)
+			f, err = os.Open(t.manifestFile)
 			if err != nil {
 				return nil, err
 			}

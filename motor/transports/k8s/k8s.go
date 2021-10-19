@@ -28,15 +28,23 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 	}
 	log.Debug().Msg("loaded kubeconfig successfully")
 
+	manifestFile, ok := tc.Options["path"]
+	if !ok {
+		// deprecated, we use path option now, just for fallback
+		manifestFile, ok = tc.Options["manifest"]
+	}
+
 	return &Transport{
-		d:    d,
-		opts: tc.Options,
+		d:            d,
+		opts:         tc.Options,
+		manifestFile: manifestFile,
 	}, nil
 }
 
 type Transport struct {
-	d    *resources.Discovery
-	opts map[string]string
+	d            *resources.Discovery
+	opts         map[string]string
+	manifestFile string
 }
 
 func (t *Transport) RunCommand(command string) (*transports.Command, error) {

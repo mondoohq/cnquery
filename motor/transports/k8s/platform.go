@@ -10,8 +10,9 @@ import (
 
 func (t *Transport) Identifier() (string, error) {
 	uid := ""
-	if filename, ok := t.opts["manifest"]; ok {
-		f, err := os.Open(filename)
+
+	if t.manifestFile != "" {
+		f, err := os.Open(t.manifestFile)
 		if err != nil {
 			return "", err
 		}
