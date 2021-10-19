@@ -2,6 +2,8 @@ package awsec2ebs
 
 import (
 	"context"
+	"math/rand"
+	"time"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -17,6 +19,8 @@ import (
 )
 
 func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
+	rand.Seed(time.Now().UnixNano())
+
 	// get aws config
 	// expect to be running on an ec2 instance with ssm iam role
 	// && perms for copy snapshot, create snapshot, create volume, attach volume, detach volume
