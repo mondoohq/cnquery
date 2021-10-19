@@ -583,7 +583,7 @@ func (c *compiler) compileBuiltinFunction(h *compileHandler, id string, binding 
 		}
 	}
 
-	if err := h.signature.Validate(args); err != nil {
+	if err := h.signature.Validate(args, c); err != nil {
 		return types.Nil, err
 	}
 

@@ -53,6 +53,28 @@ time {
   tomorrow() time
 }
 
+// Builtin regular expression functions
+regex {
+  // Matches IPv4 addresses
+  ipv4() regex
+  // Matches IPv6 addresses
+  ipv6() regex
+  // Matches email addresses
+  email() regex
+  // Matches URL addressess (HTTP/HTTPS)
+  url() regex
+  // Matches MAC addresses
+  mac() regex
+  // Matches hyphen-deliminated UUIDs
+  uuid() regex
+  // Matches emojis
+  emoji() regex
+  // Matches semantic version numbers
+  semver() regex
+  // Matches credit card numbers
+  creditCard() regex
+}
+
 // Parse INI files
 parse.ini {
   init(path string, delimiter string)
