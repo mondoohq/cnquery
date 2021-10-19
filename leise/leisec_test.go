@@ -623,7 +623,7 @@ func TestCompiler_ArrayEmptyWhere(t *testing.T) {
 }
 
 func TestCompiler_ArrayWhereStatic(t *testing.T) {
-	compileErroneous(t, "[1,2,3].where(1.0)", errors.New("called 'where' with wrong type; either provide a type int value or write it as an expression (e.g. \"_ == 123\")"), func(res *llx.CodeBundle) {
+	compileErroneous(t, "[1,2,3].where(sshd)", errors.New("called 'where' with wrong type; either provide a type int value or write it as an expression (e.g. \"_ == 123\")"), func(res *llx.CodeBundle) {
 		assertPrimitive(t, &llx.Primitive{
 			Type: string(types.Array(types.Int)),
 			Array: []*llx.Primitive{

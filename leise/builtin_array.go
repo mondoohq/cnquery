@@ -45,8 +45,13 @@ func compileWhere(c *compiler, typ types.Type, ref int32, id string, call *parse
 		}
 
 		childType := typ.Child()
+		chunkId := "==" + string(childType)
 		if t != childType {
-			return types.Nil, errors.New("called '" + id + "' with wrong type; either provide a type " + childType.Label() + " value or write it as an expression (e.g. \"_ == 123\")")
+			chunkId = "==" + string(t)
+			_, err := llx.BuiltinFunction(t, chunkId)
+			if err != nil {
+				return types.Nil, errors.New("called '" + id + "' with wrong type; either provide a type " + childType.Label() + " value or write it as an expression (e.g. \"_ == 123\")")
+			}
 		}
 
 		functionCode := c.Result.Code.Functions[functionRef-1]
@@ -54,7 +59,7 @@ func compileWhere(c *compiler, typ types.Type, ref int32, id string, call *parse
 
 		functionCode.AddChunk(&llx.Chunk{
 			Call: llx.Chunk_FUNCTION,
-			Id:   "==" + string(childType),
+			Id:   chunkId,
 			Function: &llx.Function{
 				Type:    string(types.Bool),
 				Binding: 1,

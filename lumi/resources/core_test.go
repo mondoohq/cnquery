@@ -880,6 +880,10 @@ func TestArray(t *testing.T) {
 			0, []interface{}{int64(2), int64(3)},
 		},
 		{
+			"['yo','ho','ho'].where( /y.$/ )",
+			0, []interface{}{"yo"},
+		},
+		{
 			"[1,2,3].contains(_ >= 2)",
 			1, true,
 		},
