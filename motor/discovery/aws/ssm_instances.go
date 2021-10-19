@@ -157,8 +157,6 @@ func mapSmmManagedPingStateCode(pingStatus types.PingStatus) asset.State {
 	}
 }
 
-const SsmPlatformLabel = "ssm.aws.mondoo.app/platform"
-
 func ssmInstanceToAsset(account string, region string, instance types.InstanceInformation, clonedConfig aws.Config) *asset.Asset {
 
 	asset := &asset.Asset{
