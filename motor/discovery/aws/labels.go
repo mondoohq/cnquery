@@ -14,6 +14,7 @@ const (
 	IPLabel             string = "mondoo.app/ip"
 	DNSLabel            string = "mondoo.app/public-dns-name"
 	EBSScanLabel        string = "mondoo.app/ebs-volume-scan"
+	PlatformLabel       string = "mondoo.app/platform"
 )
 
 func addAWSMetadataLabels(assetLabels map[string]string, instance basicInstanceInfo) map[string]string {
@@ -30,8 +31,8 @@ func addAWSMetadataLabels(assetLabels map[string]string, instance basicInstanceI
 	if instance.ImageId != nil {
 		assetLabels[ImageIdLabel] = *instance.ImageId
 	}
-	if instance.SSMPlatformType != "" {
-		assetLabels[SsmPlatformLabel] = instance.SSMPlatformType
+	if instance.PlatformType != "" {
+		assetLabels[PlatformLabel] = instance.PlatformType
 	}
 	if instance.SSMPingStatus != "" {
 		assetLabels[SSMPingLabel] = instance.SSMPingStatus
@@ -40,22 +41,22 @@ func addAWSMetadataLabels(assetLabels map[string]string, instance basicInstanceI
 }
 
 type basicInstanceInfo struct {
-	InstanceId      *string
-	IPAddress       *string
-	Region          string
-	PublicDnsName   *string
-	ImageId         *string
-	SSMPingStatus   string
-	SSMPlatformType string
+	InstanceId    *string
+	IPAddress     *string
+	Region        string
+	PublicDnsName *string
+	ImageId       *string
+	SSMPingStatus string
+	PlatformType  string
 }
 
 func ssmInstanceToBasicInstanceInfo(instance types.InstanceInformation, region string) basicInstanceInfo {
 	return basicInstanceInfo{
-		InstanceId:      instance.InstanceId,
-		IPAddress:       instance.IPAddress,
-		Region:          region,
-		SSMPingStatus:   string(instance.PingStatus),
-		SSMPlatformType: string(instance.PlatformType),
+		InstanceId:    instance.InstanceId,
+		IPAddress:     instance.IPAddress,
+		Region:        region,
+		SSMPingStatus: string(instance.PingStatus),
+		PlatformType:  string(instance.PlatformType),
 	}
 }
 
@@ -66,5 +67,6 @@ func ec2InstanceToBasicInstanceInfo(instance ec2types.Instance, region string) b
 		Region:        region,
 		PublicDnsName: instance.PublicDnsName,
 		ImageId:       instance.ImageId,
+		PlatformType:  string(instance.Platform),
 	}
 }
