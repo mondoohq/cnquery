@@ -2455,7 +2455,24 @@ aws.ec2.instance {
   ebsOptimized bool
   // instance type, e.g. t1.micro
   instanceType string
+  // tags on the instance
   tags map[string]string
+  // image that was used for the instance
+  image aws.ec2.image
+}
+
+// AWS EC2 Image
+aws.ec2.image {
+  // ARN for the AMI
+  arn string
+  // id of the image
+  id string
+  // name for the image
+  name string
+  // architecture associated with the image
+  architecture string
+  // AWS account id of the image owner
+  ownerId string
 }
 
 // AWS EC2 Instance Device
