@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
@@ -26,6 +28,7 @@ const (
 	internetGwArnPattern    = "arn:aws:ec2:%s:%s:gateway/%s"
 	vpnConnArnPattern       = "arn:aws:ec2:%s:%s:vpn-connection/%s"
 	networkAclArnPattern    = "arn:aws:ec2:%s:%s:network-acl/%s"
+	imageArnPattern         = "arn:aws:ec2:%s:%s:image/%s"
 )
 
 func (e *lumiAwsEc2) id() (string, error) {
@@ -553,6 +556,13 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVers
 			if err != nil {
 				return nil, err
 			}
+
+			lumiImage, err := s.Runtime.CreateResource("aws.ec2.image",
+				"arn", fmt.Sprintf(imageArnPattern, regionVal, account.ID, toString(instance.ImageId)),
+			)
+			if err != nil {
+				return nil, err
+			}
 			args := []interface{}{
 				"arn", fmt.Sprintf(ec2InstanceArnPattern, regionVal, account.ID, toString(instance.InstanceId)),
 				"instanceId", toString(instance.InstanceId),
@@ -569,6 +579,7 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVers
 				"ebsOptimized", instance.EbsOptimized,
 				"instanceType", string(instance.InstanceType),
 				"tags", ec2TagsToMap(instance.Tags),
+				"image", lumiImage,
 			}
 
 			// add vpc if there is one
@@ -592,6 +603,54 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVers
 		}
 	}
 	return res, nil
+}
+
+func (i *lumiAwsEc2Image) id() (string, error) {
+	return i.Arn()
+}
+
+func (i *lumiAwsEc2Image) init(args *lumi.Args) (*lumi.Args, AwsEc2Image, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if (*args)["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch aws ec2 image")
+	}
+
+	arnVal := (*args)["arn"].(string)
+	arn, err := arn.Parse(arnVal)
+	if err != nil {
+		return nil, nil, nil
+	}
+	resource := strings.Split(arn.Resource, "/")
+	at, err := awstransport(i.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, nil, err
+	}
+	svc := at.Ec2(arn.Region)
+	ctx := context.Background()
+	images, err := svc.DescribeImages(ctx, &ec2.DescribeImagesInput{ImageIds: []string{resource[1]}})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if len(images.Images) > 0 {
+		image := images.Images[0]
+		(*args)["arn"] = arnVal
+		(*args)["id"] = resource[1]
+		(*args)["name"] = toString(image.Name)
+		(*args)["architecture"] = string(image.Architecture)
+		(*args)["ownerId"] = toString(image.OwnerId)
+		return args, nil, nil
+	}
+
+	(*args)["arn"] = arnVal
+	(*args)["id"] = resource[1]
+	(*args)["name"] = ""
+	(*args)["architecture"] = ""
+	(*args)["ownerId"] = ""
+	return args, nil, nil
 }
 
 func (s *lumiAwsEc2Securitygroup) id() (string, error) {
