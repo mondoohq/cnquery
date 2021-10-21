@@ -475,6 +475,29 @@ ntp.conf {
   fudge(settings) []string
 }
 
+// TCP/IP ports on the system
+port {
+  // Protocol of this port
+  protocol string
+  // Port number
+  port int
+  // Local address of this port
+  address string
+  // User configured for this port
+  user user
+  // process process
+  // State of this open port
+  state string
+  // Remote address connected to this port
+  remoteAddress string
+  // Remote port connected to this port
+  remotePort int
+}
+
+ports {
+  []port
+}
+
 // Rsyslog service configuration
 rsyslog.conf {
   init(path string)
@@ -4112,4 +4135,3 @@ gitlab.project {
   // The project's visibility level. Can be private, internal, or public.
   visibility string
 }
-
