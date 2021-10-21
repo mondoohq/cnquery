@@ -173,7 +173,8 @@ func (p *lumiProcesses) GetList() ([]interface{}, error) {
 	}
 	log.Debug().Int("processes", len(processes)).Msg("lumi[processes]> running processes")
 
-	procs := []interface{}{}
+	procs := make([]interface{}, len(processes))
+	processesMap := make(map[int64]Process, len(processes))
 	for i := range processes {
 		proc := processes[i]
 
@@ -187,8 +188,11 @@ func (p *lumiProcesses) GetList() ([]interface{}, error) {
 			return nil, err
 		}
 
-		procs = append(procs, lumiProcess.(Process))
+		procs[proc.Pid] = lumiProcess.(Process)
+		processesMap[proc.Pid] = lumiProcess.(Process)
 	}
+
+	p.Cache.Store("_map", &lumi.CacheEntry{Data: processesMap})
 
 	// return the processes as new entries
 	return procs, nil

@@ -192,7 +192,7 @@ func runSimpleTests(t *testing.T, tests []simpleTest) {
 	for i := range tests {
 		cur := tests[i]
 		t.Run(cur.code, func(t *testing.T) {
-			res := testQuery(t, cur.code)
+			res := testQueryLocal(t, cur.code)
 			assert.NotEmpty(t, res)
 
 			if len(res) <= cur.resultIndex {
