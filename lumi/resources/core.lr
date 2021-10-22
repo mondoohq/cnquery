@@ -500,6 +500,28 @@ ports {
   listening() []port
 }
 
+// Socket
+socket {
+  // Protocol for this socket
+  protocol string
+  // Port number
+  port int
+  // Target address
+  address string
+}
+
+ssl {
+  init(target string)
+  // Socket of this connection
+  socket socket
+  // Params is a list of all parameters for this SSL/TLS connection
+  params(socket) dict
+  // Version of SSL/TLS that is being used
+  versions(params) []string
+  // Ciphers supported by a given SSL/TLS connection
+  ciphers(params) []string
+}
+
 // Rsyslog service configuration
 rsyslog.conf {
   init(path string)
