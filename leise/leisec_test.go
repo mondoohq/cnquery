@@ -107,6 +107,7 @@ func TestCompiler_Buggy(t *testing.T) {
 		res  []*llx.Chunk
 		err  error
 	}{
+
 		{`mondoo mondoo`, []*llx.Chunk{
 			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
 			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
@@ -149,6 +150,7 @@ func TestCompiler_Buggy(t *testing.T) {
 		{`parse.date()`, []*llx.Chunk{
 			{Id: "parse", Call: llx.Chunk_FUNCTION},
 		}, errors.New("missing arguments to parse date")},
+		{"# mondoo\n mondoo", nil, errors.New("found unexpected operation '#'")},
 	}
 
 	for _, v := range data {

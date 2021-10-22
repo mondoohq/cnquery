@@ -704,7 +704,7 @@ func (p *parser) parseExpression() (*Expression, error) {
 	}
 
 	if res.Operand == nil && res.Operations == nil {
-		return nil, nil
+		return nil, err
 	}
 
 	return &res, err
