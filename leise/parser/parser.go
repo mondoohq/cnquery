@@ -10,38 +10,53 @@ import (
 	"github.com/alecthomas/participle/lexer"
 )
 
+var leiseLexer lexer.Definition
+
 var (
+	Ident    rune
+	Float    rune
+	Int      rune
+	String   rune
+	Comment  rune
+	Regex    rune
+	Op       rune
+	CallType rune
+)
+
+var tokenNames map[rune]string
+
+func init() {
 	leiseLexer = lexer.Must(lexer.Regexp(`(\s+)` +
 		`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)` +
 		`|(?P<Float>[-+]?\d*\.\d+([eE][-+]?\d+)?)` +
 		`|(?P<Int>[-+]?\d+([eE][-+]?\d+)?)` +
 		`|(?P<String>'[^']*'|"[^"]*")` +
-		`|(?P<Comment>//[^\n]*(\n|\z))` +
+		`|(?P<Comment>(//|#)[^\n]*(\n|\z))` +
 		`|(?P<Regex>/([^\\/]+|\\.)+/[msi]*)` +
-		`|(?P<Op>[-+*/%,:.=<>!|&~#;])` +
+		`|(?P<Op>[-+*/%,:.=<>!|&~;])` +
 		`|(?P<Call>[(){}\[\]])`,
 	))
-)
 
-const (
-	Ident    rune = -3
-	Float    rune = -4
-	Int      rune = -6
-	String   rune = -8
-	Comment  rune = -9
-	Regex    rune = -11
-	Op       rune = -13
-	CallType rune = -14
-)
+	syms := leiseLexer.Symbols()
 
-var tokenNames = map[rune]string{
-	Ident:   "identifier",
-	Float:   "float",
-	Int:     "number",
-	String:  "string",
-	Comment: "comment",
-	Regex:   "regex",
-	Op:      "operator",
+	Ident = syms["Ident"]
+	Float = syms["Float"]
+	Int = syms["Int"]
+	String = syms["String"]
+	Comment = syms["Comment"]
+	Regex = syms["Regex"]
+	Op = syms["Op"]
+	CallType = syms["Call"]
+
+	tokenNames = map[rune]string{
+		Ident:   "identifier",
+		Float:   "float",
+		Int:     "number",
+		String:  "string",
+		Comment: "comment",
+		Regex:   "regex",
+		Op:      "operator",
+	}
 }
 
 var (

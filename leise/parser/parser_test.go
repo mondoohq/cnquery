@@ -254,6 +254,8 @@ func TestParser_ParseValues(t *testing.T) {
 				}},
 			},
 		}},
+		{"// this // is a comment\n'hi'", &Expression{Operand: &Operand{Value: vString("hi")}}},
+		{"# this # is a comment\n'hi'", &Expression{Operand: &Operand{Value: vString("hi")}}},
 	})
 }
 
