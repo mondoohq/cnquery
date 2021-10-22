@@ -225,7 +225,7 @@ func (p *lumiPorts) parseProcNet(path string, protocol string, users map[int64]U
 			"port", int64(port),
 			"address", address,
 			"user", user,
-			// "process", process,
+			//"process", process,
 			"state", state,
 			"remoteAddress", remoteAddress,
 			"remotePort", int64(remotePort),
