@@ -114,7 +114,7 @@ func TestCompiler_Buggy(t *testing.T) {
 		}, nil},
 		{`mondoo # mondoo`, []*llx.Chunk{
 			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
-		}, errors.New("found unexpected operation '#'")},
+		}, nil},
 		{`mondoo }`, []*llx.Chunk{
 			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
 		}, errors.New("mismatched symbol '}' at the end of expression")},
@@ -150,7 +150,6 @@ func TestCompiler_Buggy(t *testing.T) {
 		{`parse.date()`, []*llx.Chunk{
 			{Id: "parse", Call: llx.Chunk_FUNCTION},
 		}, errors.New("missing arguments to parse date")},
-		{"# mondoo\n mondoo", nil, errors.New("found unexpected operation '#'")},
 	}
 
 	for _, v := range data {
