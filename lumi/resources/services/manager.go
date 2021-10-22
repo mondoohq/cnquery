@@ -107,7 +107,7 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		} else {
 			osm = &SystemDServiceManager{motor: motor}
 		}
-	case pf.Name == "sles" || pf.Name == "opensuse" || pf.Name == "opensuse-tumbleweed":
+	case pf.IsFamily("suse"):
 		rv := platform.ParseOsVersion(pf.Release)
 		v, err := rv.MajorAtoi()
 		if err != nil {
