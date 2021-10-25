@@ -25,4 +25,11 @@ func TestResource_Users(t *testing.T) {
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, true, res[1].Data.Value)
 	})
+
+	t.Run("test contains", func(t *testing.T) {
+		res := testQuery(t, "users.contains(group != null)")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, true, res[1].Data.Value)
+	})
 }

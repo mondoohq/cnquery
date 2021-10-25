@@ -178,3 +178,16 @@ func (u *lumiUsers) GetList() ([]interface{}, error) {
 	u.Cache.Store("_map", &lumi.CacheEntry{Data: namedMap})
 	return lumiUsers, nil
 }
+
+func (u *lumiUser) GetGroup() (interface{}, error) {
+	gid, err := u.Gid()
+	group, err := u.Runtime.CreateResource("group",
+		"id", strconv.FormatInt(gid, 10),
+		"gid", gid)
+	// Don't return the error just null
+	// This is so we can check if a user's group exists
+	if err != nil {
+		return nil, nil
+	}
+	return group, nil
+}

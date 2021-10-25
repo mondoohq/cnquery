@@ -624,6 +624,8 @@ user {
   authorizedkeys() authorizedkeys
   // List of SSH keys
   sshkeys() []privatekey
+  // Group that user is a member of
+  group() group
 }
 
 // Users configured on this system
