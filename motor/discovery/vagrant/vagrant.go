@@ -12,6 +12,7 @@ import (
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/local"
+	"go.mondoo.io/mondoo/motor/transports/resolver"
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
@@ -135,11 +136,24 @@ func newVagrantAsset(sshConfig *VagrantVmSSHConfig, rootTransportConfig *transpo
 	}
 	cc.AddCredential(credential)
 
-	return &asset.Asset{
+	assetInfo := &asset.Asset{
 		Name:        sshConfig.Host,
+		PlatformIds: []string{},
 		Connections: []*transports.TransportConfig{cc},
 		Platform: &platform.Platform{
 			Kind: transports.Kind_KIND_VIRTUAL_MACHINE,
 		},
-	}, nil
+	}
+
+	m, err := resolver.NewMotorConnection(cc, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer m.Close()
+
+	// store detected platform identifier with asset
+	assetInfo.PlatformIds = m.Meta.Identifier
+	log.Debug().Strs("identifier", assetInfo.PlatformIds).Msg("motor connection")
+
+	return assetInfo, nil
 }
