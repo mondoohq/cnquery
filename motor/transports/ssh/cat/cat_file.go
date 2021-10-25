@@ -89,7 +89,39 @@ func (f *File) Readdir(count int) (res []os.FileInfo, err error) {
 }
 
 func (f *File) Readdirnames(n int) (names []string, err error) {
-	return nil, errors.New("not implemented")
+	// TODO: input n is ignored
+
+	cmd, err := f.catfs.commandRunner.RunCommand("ls -1 '" + f.path + "'")
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := ioutil.ReadAll(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	list := strings.Split(strings.TrimSpace(string(data)), "\n")
+
+	if list != nil {
+		// filter . and ..
+		keep := func(x string) bool {
+			if x == "." || x == ".." {
+				return false
+			}
+			return true
+		}
+		m := 0
+		for _, x := range list {
+			if keep(x) {
+				list[m] = x
+				m++
+			}
+		}
+		list = list[:m]
+	}
+
+	return list, nil
 }
 
 func (f *File) Seek(offset int64, whence int) (int64, error) {

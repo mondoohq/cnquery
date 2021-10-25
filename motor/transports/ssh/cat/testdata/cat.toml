@@ -47,3 +47,27 @@ stdout = """4317
 1590420240
 1590418792
 """
+
+[commands."sudo test -e /etc/ssh"]
+stdout = ""
+
+[commands."sudo stat -L /etc/ssh --printf '%s\n%f\n%u\n%g\n%X\n%Y\n%C'"]
+stdout = """271
+41ed
+0
+0
+1635245760
+1635147499
+"""
+
+[commands."sudo ls -1 '/etc/ssh'"]
+stdout = """ssh_config
+ssh_config.d
+ssh_host_ecdsa_key
+ssh_host_ecdsa_key.pub
+ssh_host_ed25519_key
+ssh_host_ed25519_key.pub
+ssh_host_rsa_key
+ssh_host_rsa_key.pub
+sshd_config
+sshd_config.rpmnew"""

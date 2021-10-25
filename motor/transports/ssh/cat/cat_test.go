@@ -39,6 +39,7 @@ func TestCatFs(t *testing.T) {
 	// fetch file content
 	f, err := catfs.Open("/etc/ssh/sshd_config")
 	require.NoError(t, err)
+	defer f.Close()
 
 	data, err := ioutil.ReadAll(f)
 	require.NoError(t, err)
@@ -50,6 +51,17 @@ MaxAuthTries 4
 UsePAM yes
 `
 	assert.Equal(t, expected, string(data))
+
+	dir, err := catfs.Open("/etc/ssh")
+	require.NoError(t, err)
+	defer dir.Close()
+
+	stat, err := dir.Stat()
+	require.NoError(t, err)
+	assert.Equal(t, true, stat.IsDir())
+	files, err := dir.Readdirnames(-1)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"ssh_config", "ssh_config.d", "ssh_host_ecdsa_key", "ssh_host_ecdsa_key.pub", "ssh_host_ed25519_key", "ssh_host_ed25519_key.pub", "ssh_host_rsa_key", "ssh_host_rsa_key.pub", "sshd_config", "sshd_config.rpmnew"}, files)
 }
 
 type CommandWrapper struct {
