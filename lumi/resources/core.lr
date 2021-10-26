@@ -2441,26 +2441,28 @@ aws.ec2.instance {
   patchState() dict
   // state of the instance
   state string
-  // a list of devices attached to the instance (e.g. ebs volume)
+  // List of devices attached to the instance (e.g. ebs volume)
   deviceMappings []aws.ec2.instance.device
-  // a list of security groups (ids) associated with the instance
+  // List of security groups (ids) associated with the instance
   securityGroups []aws.ec2.securitygroup
-  // public dns name for the instance
+  // Public dns name for the instance
   publicDnsName string
-  // the status of the specified instance
+  // The status of the specified instance
   instanceStatus() dict
-  // reason for the most recent state transition
+  // Reason for the most recent state transition
   stateReason dict
-  // reason for the most recent state transition
+  // Reason for the most recent state transition
   stateTransitionReason string
-  // denotes whether or not instance has ebs optimization turned on
+  // Denotes whether or not instance has ebs optimization turned on
   ebsOptimized bool
-  // instance type, e.g. t1.micro
+  // Instance type, e.g. t1.micro
   instanceType string
-  // tags on the instance
+  // Tags on the instance
   tags map[string]string
-  // image that was used for the instance
+  // Image that was used for the instance
   image aws.ec2.image
+  // Launch time of the instance
+  launchTime time
 }
 
 // AWS EC2 Image
