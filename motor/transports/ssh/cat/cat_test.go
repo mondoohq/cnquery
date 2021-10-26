@@ -1,6 +1,7 @@
 package cat_test
 
 import (
+	"errors"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -62,6 +63,9 @@ UsePAM yes
 	files, err := dir.Readdirnames(-1)
 	require.NoError(t, err)
 	assert.Equal(t, []string{"ssh_config", "ssh_config.d", "ssh_host_ecdsa_key", "ssh_host_ecdsa_key.pub", "ssh_host_ed25519_key", "ssh_host_ed25519_key.pub", "ssh_host_rsa_key", "ssh_host_rsa_key.pub", "sshd_config", "sshd_config.rpmnew"}, files)
+
+	_, err = catfs.Open("/etc/not-there")
+	assert.True(t, errors.Is(err, os.ErrNotExist))
 }
 
 type CommandWrapper struct {

@@ -51,6 +51,11 @@ func (cat *CatFs) base64available() bool {
 }
 
 func (cat *CatFs) Open(name string) (afero.File, error) {
+	_, err := statutil.New(cat.commandRunner).Stat(name)
+	if err != nil {
+		return nil, err
+	}
+
 	return NewFile(cat, name, cat.useBase64encoding()), nil
 }
 
