@@ -2,18 +2,51 @@ package cat
 
 import (
 	"bytes"
-	"errors"
+	"encoding/base64"
+	"io/ioutil"
 	"os"
+	"strings"
+
+	"github.com/cockroachdb/errors"
+	"github.com/kballard/go-shellquote"
 )
 
-func NewFile(catfs *CatFs, name string, buf *bytes.Buffer) *File {
-	return &File{catfs: catfs, path: name, buf: buf}
+func NewFile(catfs *CatFs, path string, useBase64encoding bool) *File {
+	return &File{catfs: catfs, path: path, useBase64encoding: useBase64encoding}
 }
 
 type File struct {
-	catfs *CatFs
-	buf   *bytes.Buffer
-	path  string
+	catfs             *CatFs
+	buf               *bytes.Buffer
+	path              string
+	useBase64encoding bool
+}
+
+func (f *File) readContent() (*bytes.Buffer, error) {
+	// we need shellquote to escape filenames with spaces
+	catCmd := shellquote.Join("cat", f.path)
+	if f.useBase64encoding {
+		catCmd = catCmd + " | base64"
+	}
+
+	cmd, err := f.catfs.commandRunner.RunCommand(catCmd)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := ioutil.ReadAll(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	if f.useBase64encoding {
+		data, err = base64.StdEncoding.DecodeString(string(data))
+		if err != nil {
+			return nil, errors.Wrap(err, "could not decode base64 data stream")
+		}
+	}
+
+	return bytes.NewBuffer(data), nil
 }
 
 func (f *File) Close() error {
@@ -37,6 +70,13 @@ func (f *File) Truncate(size int64) error {
 }
 
 func (f *File) Read(b []byte) (n int, err error) {
+	if f.buf == nil {
+		bufData, err := f.readContent()
+		if err != nil {
+			return 0, err
+		}
+		f.buf = bufData
+	}
 	return f.buf.Read(b)
 }
 

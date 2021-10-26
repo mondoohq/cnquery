@@ -49,7 +49,6 @@ PasswordAuthentication yes
 MaxAuthTries 4
 UsePAM yes
 `
-
 	assert.Equal(t, expected, string(data))
 }
 

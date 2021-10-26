@@ -1,14 +1,10 @@
 package cat
 
 import (
-	"bytes"
-	"encoding/base64"
-	"io/ioutil"
 	"os"
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/kballard/go-shellquote"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
@@ -55,32 +51,7 @@ func (cat *CatFs) base64available() bool {
 }
 
 func (cat *CatFs) Open(name string) (afero.File, error) {
-	// we need shellquote to escape filenames with spaces
-	catCmd := shellquote.Join("cat", name)
-	if cat.useBase64encoding() {
-		catCmd = catCmd + " | base64"
-	}
-
-	cmd, err := cat.commandRunner.RunCommand(catCmd)
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := ioutil.ReadAll(cmd.Stdout)
-	if err != nil {
-		return nil, err
-	}
-
-	if cat.useBase64encoding() {
-		log.Debug().Msg(string(data))
-
-		data, err = base64.StdEncoding.DecodeString(string(data))
-		if err != nil {
-			return nil, errors.Wrap(err, "could not decode base64 data stream")
-		}
-	}
-
-	return NewFile(cat, name, bytes.NewBuffer(data)), nil
+	return NewFile(cat, name, cat.useBase64encoding()), nil
 }
 
 func (cat *CatFs) Stat(name string) (os.FileInfo, error) {
