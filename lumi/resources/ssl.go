@@ -82,19 +82,27 @@ func (s *lumiSsl) GetParams(socket Socket) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	fields := map[string][]string{
-		"versions":    capabilities.versions,
-		"ciphers":     capabilities.ciphers,
-		"errors":      capabilities.errors,
-		"unsupported": capabilities.unsupported,
+	res := map[string]interface{}{}
+
+	lists := map[string][]string{
+		"errors": capabilities.errors,
 	}
-
-	res := make(map[string]interface{}, len(fields))
-
-	for field, data := range fields {
+	for field, data := range lists {
 		v := make([]interface{}, len(data))
 		for i := range data {
 			v[i] = data[i]
+		}
+		res[field] = v
+	}
+
+	maps := map[string]map[string]bool{
+		"versions": capabilities.versions,
+		"ciphers":  capabilities.ciphers,
+	}
+	for field, data := range maps {
+		v := make(map[string]interface{}, len(data))
+		for k, vv := range data {
+			v[k] = vv
 		}
 		res[field] = v
 	}
@@ -108,7 +116,15 @@ func (s *lumiSsl) GetVersions(params map[string]interface{}) ([]interface{}, err
 		return []interface{}{}, nil
 	}
 
-	return raw.([]interface{}), nil
+	data := raw.(map[string]interface{})
+	res := []interface{}{}
+	for k, v := range data {
+		if v.(bool) {
+			res = append(res, k)
+		}
+	}
+
+	return res, nil
 }
 
 func (s *lumiSsl) GetCiphers(params map[string]interface{}) ([]interface{}, error) {
@@ -117,20 +133,30 @@ func (s *lumiSsl) GetCiphers(params map[string]interface{}) ([]interface{}, erro
 		return []interface{}{}, nil
 	}
 
-	return raw.([]interface{}), nil
+	data := raw.(map[string]interface{})
+	res := []interface{}{}
+	for k, v := range data {
+		if v.(bool) {
+			res = append(res, k)
+		}
+	}
+
+	return res, nil
 }
 
 // shake that SSL
 
 type sslCapabilities struct {
-	versions    []string
-	ciphers     []string
-	errors      []string
-	unsupported []string
+	versions map[string]bool
+	ciphers  map[string]bool
+	errors   []string
 }
 
 func probeSSL(proto string, host string, port int, versions []string) (*sslCapabilities, error) {
-	res := sslCapabilities{}
+	res := sslCapabilities{
+		versions: map[string]bool{},
+		ciphers:  map[string]bool{},
+	}
 	target := host + ":" + strconv.Itoa(port)
 
 	if len(versions) == 0 {
@@ -214,19 +240,12 @@ func parseHello(conn net.Conn, res *sslCapabilities) error {
 			// version is unsupported or just its ciphers. So we check if we found
 			// it previously and if so, don't add it to the list of unsupported
 			// versions.
-			var found bool
-			for k := range res.versions {
-				if res.versions[k] == "ssl3" {
-					found = true
-					break
-				}
-			}
-			if !found {
-				res.unsupported = append(res.unsupported, version)
+			if _, ok := res.versions["ssl3"]; !ok {
+				res.versions["ssl3"] = false
 			}
 		} else if version != "ssl3" && description == "PROTOCOL_VERSION" {
 			// here we know the TLS version is not supported
-			res.unsupported = append(res.unsupported, version)
+			res.versions[version] = false
 		} else {
 			res.errors = append(res.errors, "failed to connect via "+version+": "+severity+" - "+description)
 		}
@@ -263,9 +282,9 @@ func parseHello(conn net.Conn, res *sslCapabilities) error {
 	idx += 2
 	cipher, ok := ALL_CIPHERS[cipherID]
 	if !ok {
-		res.ciphers = append(res.ciphers, "unknown")
+		res.ciphers["unknown"] = true
 	} else {
-		res.ciphers = append(res.ciphers, cipher)
+		res.ciphers[cipher] = true
 	}
 
 	// TLS 1.3 pretends to be TLS 1.2 in the preceeding headers for
@@ -292,7 +311,7 @@ func parseHello(conn net.Conn, res *sslCapabilities) error {
 		}
 	}
 
-	res.versions = append(res.versions, version)
+	res.versions[version] = true
 
 	return nil
 }
