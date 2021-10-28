@@ -101,7 +101,7 @@ func testWindowsQuery(t *testing.T, query string) []*llx.RawResult {
 }
 
 func testQueryLocal(t *testing.T, query string) []*llx.RawResult {
-	return testQueryWithExecutor(t, localExecutor(), query, nil)
+	return testQueryWithExecutor(t, linuxMockExecutor(), query, nil)
 }
 
 func testResultsErrors(t *testing.T, r []*llx.RawResult) bool {
