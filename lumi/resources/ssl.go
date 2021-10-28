@@ -77,25 +77,29 @@ func (s *lumiSsl) GetParams(socket Socket) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	res, err := probeSSL(proto, host, int(port), []string{})
+	capabilities, err := probeSSL(proto, host, int(port), []string{})
 	if err != nil {
 		return nil, err
 	}
 
-	versions := make([]interface{}, len(res.versions))
-	for i := range res.versions {
-		versions[i] = res.versions[i]
+	fields := map[string][]string{
+		"versions":    capabilities.versions,
+		"ciphers":     capabilities.ciphers,
+		"errors":      capabilities.errors,
+		"unsupported": capabilities.unsupported,
 	}
 
-	ciphers := make([]interface{}, len(res.ciphers))
-	for i := range res.ciphers {
-		ciphers[i] = res.ciphers[i]
+	res := make(map[string]interface{}, len(fields))
+
+	for field, data := range fields {
+		v := make([]interface{}, len(data))
+		for i := range data {
+			v[i] = data[i]
+		}
+		res[field] = v
 	}
 
-	return map[string]interface{}{
-		"versions": versions,
-		"ciphers":  ciphers,
-	}, nil
+	return res, nil
 }
 
 func (s *lumiSsl) GetVersions(params map[string]interface{}) ([]interface{}, error) {
@@ -119,8 +123,10 @@ func (s *lumiSsl) GetCiphers(params map[string]interface{}) ([]interface{}, erro
 // shake that SSL
 
 type sslCapabilities struct {
-	versions []string
-	ciphers  []string
+	versions    []string
+	ciphers     []string
+	errors      []string
+	unsupported []string
 }
 
 func probeSSL(proto string, host string, port int, versions []string) (*sslCapabilities, error) {
@@ -128,7 +134,7 @@ func probeSSL(proto string, host string, port int, versions []string) (*sslCapab
 	target := host + ":" + strconv.Itoa(port)
 
 	if len(versions) == 0 {
-		versions = []string{"tls1.3"}
+		versions = []string{"ssl3", "tls1.0", "tls1.1", "tls1.2", "tls1.3"}
 	}
 
 	for i := range versions {
@@ -172,7 +178,7 @@ func parseHello(conn net.Conn, res *sslCapabilities) error {
 	}
 
 	if b[0] == CONTENT_TYPE_Alert {
-		// version := b[1:3]
+		version := VERSIONS_LOOKUP[string(b[1:3])]
 		msgLen := bytes2int(b[3:5])
 
 		if msgLen == 0 {
@@ -203,7 +209,29 @@ func parseHello(conn net.Conn, res *sslCapabilities) error {
 			description = "cannot find description"
 		}
 
-		return errors.New("SSL alert: " + severity + " - " + description)
+		if version == "ssl3" && description == "HANDSHAKE_FAILURE" {
+			// Note: it's a little fuzzy here, since we don't know if the protocol
+			// version is unsupported or just its ciphers. So we check if we found
+			// it previously and if so, don't add it to the list of unsupported
+			// versions.
+			var found bool
+			for k := range res.versions {
+				if res.versions[k] == "ssl3" {
+					found = true
+					break
+				}
+			}
+			if !found {
+				res.unsupported = append(res.unsupported, version)
+			}
+		} else if version != "ssl3" && description == "PROTOCOL_VERSION" {
+			// here we know the TLS version is not supported
+			res.unsupported = append(res.unsupported, version)
+		} else {
+			res.errors = append(res.errors, "failed to connect via "+version+": "+severity+" - "+description)
+		}
+
+		return nil
 	}
 
 	if b[0] != CONTENT_TYPE_Handshake {
@@ -284,6 +312,26 @@ func helloSSLMsg(version string, ciphersFilter func(cipher string) bool) ([]byte
 	var extensions []byte
 
 	switch version {
+	case "ssl3":
+		regular := filterCiphers(SSL3_CIPHERS, ciphersFilter)
+		fips := filterCiphers(SSL_FIPS_CIPHERS, ciphersFilter)
+		ciphers = append(regular, fips...)
+
+	case "tls1.0", "tls1.1", "tls1.2":
+		ciphers = filterCiphers(TLS_CIPHERS, ciphersFilter)
+
+		var ext bytes.Buffer
+		// add heartbeat
+		ext.WriteString("\x00\x0f\x00\x01\x01")
+		// add signature_algorithms
+		ext.WriteString("\x00\x0d\x00\x14\x00\x12\x04\x03\x08\x04\x04\x01\x05\x03\x08\x05\x05\x01\x08\x06\x06\x01\x02\x01")
+		// add ec_points_format
+		ext.WriteString("\x00\x0b\x00\x02\x01\x00")
+		// add elliptic_curve
+		ext.WriteString("\x00\x0a\x00\x0a\x00\x08\xfa\xfa\x00\x1d\x00\x17\x00\x18")
+
+		extensions = ext.Bytes()
+
 	case "tls1.3":
 		ciphers = filterCiphers(TLS13_CIPHERS, ciphersFilter)
 
@@ -500,8 +548,6 @@ var ALERT_DESCRIPTIONS = map[byte]string{
 	'\x78': "NO_APPLICATION_PROTOCOL",
 }
 
-// https://tools.ietf.org/html/rfc6101#appendix-A.6
-
 var SSL2_CIPHERS = map[string]string{
 	"\x01\x00\x80": "SSL_CK_RC4_128_WITH_MD5",
 	"\x02\x00\x80": "SSL_CK_RC4_128_EXPORT40_WITH_MD5",
@@ -519,6 +565,41 @@ var SSL_FIPS_CIPHERS = map[string]string{
 	"\xFF\xE0": "SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA",
 	"\xFF\xE1": "SSL_RSA_FIPS_WITH_DES_CBC_SHA",
 }
+
+// https://datatracker.ietf.org/doc/html/rfc6101#appendix-A.6
+var SSL3_CIPHERS = map[string]string{
+	"\x00\x00": "SSL_NULL_WITH_NULL_NULL",
+	"\x00\x01": "SSL_RSA_WITH_NULL_MD5",
+	"\x00\x02": "SSL_RSA_WITH_NULL_SHA",
+	"\x00\x03": "SSL_RSA_EXPORT_WITH_RC4_40_MD5",
+	"\x00\x04": "SSL_RSA_WITH_RC4_128_MD5",
+	"\x00\x05": "SSL_RSA_WITH_RC4_128_SHA",
+	"\x00\x06": "SSL_RSA_EXPORT_WITH_RC2_CBC_40_MD5",
+	"\x00\x07": "SSL_RSA_WITH_IDEA_CBC_SHA",
+	"\x00\x08": "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA",
+	"\x00\x09": "SSL_RSA_WITH_DES_CBC_SHA",
+	"\x00\x0A": "SSL_RSA_WITH_3DES_EDE_CBC_SHA",
+	"\x00\x0B": "SSL_DH_DSS_EXPORT_WITH_DES40_CBC_SHA",
+	"\x00\x0C": "SSL_DH_DSS_WITH_DES_CBC_SHA",
+	"\x00\x0D": "SSL_DH_DSS_WITH_3DES_EDE_CBC_SHA",
+	"\x00\x0E": "SSL_DH_RSA_EXPORT_WITH_DES40_CBC_SHA",
+	"\x00\x0F": "SSL_DH_RSA_WITH_DES_CBC_SHA",
+	"\x00\x10": "SSL_DH_RSA_WITH_3DES_EDE_CBC_SHA",
+	"\x00\x11": "SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA",
+	"\x00\x12": "SSL_DHE_DSS_WITH_DES_CBC_SHA",
+	"\x00\x13": "SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA",
+	"\x00\x14": "SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA",
+	"\x00\x15": "SSL_DHE_RSA_WITH_DES_CBC_SHA",
+	"\x00\x16": "SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA",
+	"\x00\x17": "SSL_DH_anon_EXPORT_WITH_RC4_40_MD5",
+	"\x00\x18": "SSL_DH_anon_WITH_RC4_128_MD5",
+	"\x00\x19": "SSL_DH_anon_EXPORT_WITH_DES40_CBC_SHA",
+	"\x00\x1A": "SSL_DH_anon_WITH_DES_CBC_SHA",
+	"\x00\x1B": "SSL_DH_anon_WITH_3DES_EDE_CBC_SHA",
+	// TODO: we may want to add back the FORTEZZA ciphers?
+}
+
+// TLS 1.2 https://datatracker.ietf.org/doc/html/rfc5246
 
 var TLS10_CIPHERS = map[string]string{
 	"\x00\x00": "TLS_NULL_WITH_NULL_NULL",
@@ -549,7 +630,6 @@ var TLS10_CIPHERS = map[string]string{
 	"\x00\x19": "TLS_DH_anon_EXPORT_WITH_DES40_CBC_SHA",
 	"\x00\x1A": "TLS_DH_anon_WITH_DES_CBC_SHA",
 	"\x00\x1B": "TLS_DH_anon_WITH_3DES_EDE_CBC_SHA",
-	// TODO: we may want to add back the FORTEZZA ciphers?
 	"\x00\x1E": "TLS_KRB5_WITH_DES_CBC_SHA",
 	"\x00\x1F": "TLS_KRB5_WITH_3DES_EDE_CBC_SHA",
 	"\x00\x20": "TLS_KRB5_WITH_RC4_128_SHA",
