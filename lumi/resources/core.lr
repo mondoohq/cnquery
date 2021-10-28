@@ -59,10 +59,10 @@ regex {
   ipv4() regex
   // Matches IPv6 addresses
   ipv6() regex
-  // Matches email addresses
-  email() regex
   // Matches URL addressess (HTTP/HTTPS)
   url() regex
+  // Matches email addresses
+  email() regex
   // Matches MAC addresses
   mac() regex
   // Matches hyphen-deliminated UUIDs
@@ -4079,9 +4079,9 @@ iptables.entry {
   chain string
 }
 
-//socket stats from ss command
+// socket stats from ss command
 socketstats {
-  //Listening non-localhost open ports
+  // Listening non-localhost open ports
   openPorts() []string
 }
 

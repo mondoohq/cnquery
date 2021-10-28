@@ -594,6 +594,10 @@ func TestRegex_Methods(t *testing.T) {
 			0, []interface{}{"sarah@summe.rs"},
 		},
 		{
+			"'one+1@sum.me.rs:'.find( regex.email )",
+			0, []interface{}{"one+1@sum.me.rs"},
+		},
+		{
 			"'Urls: http://mondoo.io/welcome'.find( regex.url )",
 			0, []interface{}{"http://mondoo.io/welcome"},
 		},

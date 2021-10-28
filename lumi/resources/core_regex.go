@@ -16,21 +16,43 @@ func (p *lumiRegex) GetIpv6() (string, error) {
 	return "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))", nil
 }
 
-// TODO: this needs serious work! re-use aspects from the domain recognition
-func (p *lumiRegex) GetEmail() (string, error) {
-	return "[^@ \\t\\r\\n<>]+@[^@ \\t\\r\\n<>]+\\.[^@ \\t\\r\\n<>]+", nil
-}
-
 // TODO: needs to be much more precise
 func (p *lumiRegex) GetUrl() (string, error) {
 	return "https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()!@:%_\\+.~#?&\\/\\/=]*)", nil
 }
 
 // TODO: can't figure this one out yet, needs work before getting exposed
+// Adopted from:
+//   https://stackoverflow.com/a/20046959/1195583
+const reDomain = "(([a-zA-Z]{1})|([a-zA-Z]{1}[a-zA-Z]{1})|([a-zA-Z]{1}[0-9]{1})|([0-9]{1}[a-zA-Z]{1})|([a-zA-Z0-9][a-zA-Z0-9-_]{1,61}[a-zA-Z0-9]))\\.([a-zA-Z]{2,}|[a-zA-Z0-9-]{2,30}\\.[a-zA-Z]{2,3})"
+
 func (p *lumiRegex) GetDomain() (string, error) {
-	// Adopted from:
-	// https://stackoverflow.com/a/20046959/1195583
-	return "(([a-zA-Z]{1})|([a-zA-Z]{1}[a-zA-Z]{1})|([a-zA-Z]{1}[0-9]{1})|([0-9]{1}[a-zA-Z]{1})|([a-zA-Z0-9][a-zA-Z0-9-_]{1,61}[a-zA-Z0-9]))\\.([a-zA-Z]{2,}|[a-zA-Z0-9-]{2,30}\\.[a-zA-Z]{2,3})", nil
+	return reDomain, nil
+}
+
+const reAtextAscii = "[a-z0-9!#$%&'*+-/=?^_`{|}~]"
+const reNonAscii = "[\\xC0-\\xDF][\\x80-\\xBF]|[\\xE0-\\xEF][\\x80-\\xBF]{2}|[\\xF0-\\xF7][\\x80-\\xBF]{3}"
+const reAtext = "(" + reAtextAscii + "|" + reNonAscii + ")+"
+const reEmailLocal = reAtext + "(\\." + reAtext + ")*"
+
+// vv TODO: needs work, amongst others: UTF8 support?, IPv4 + IPv6, comments
+// also: how is this different from domain in general?
+const reEmailDomain = "[A-Za-z0-9]{1,63}(\\.[A-Za-z0-9]{1,63})+"
+const reEmail = reEmailLocal + "@" + reEmailDomain
+
+// TODO: this needs serious work! re-use aspects from the domain recognition
+func (p *lumiRegex) GetEmail() (string, error) {
+	// overall:     https://en.wikipedia.org/wiki/Email_address
+	// utf8 email:  https://datatracker.ietf.org/doc/html/rfc6531
+	// utf8 coding: https://en.wikipedia.org/wiki/UTF-8
+	// atext:       https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3
+	//
+	// local-part@domain
+	// - unquoted:
+	//     [a-z0-9!#$%&'*+-/=?^_`{|}~] and '.' (not first, not last, not in sequence)
+	//     any unicode above ascii, encoded as UTF8
+	// - max: 64 chars
+	return reEmail, nil
 }
 
 func (p *lumiRegex) GetMac() (string, error) {
