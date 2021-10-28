@@ -78,22 +78,22 @@ var TCP_STATES = map[int64]string{
 }
 
 func hex2ipv4(s string) (string, error) {
-	a, err := strconv.ParseUint(s[0:1], 16, 0)
+	a, err := strconv.ParseUint(s[0:2], 16, 0)
 	if err != nil {
 		return "", err
 	}
 
-	b, err := strconv.ParseUint(s[2:3], 16, 0)
+	b, err := strconv.ParseUint(s[2:4], 16, 0)
 	if err != nil {
 		return "", err
 	}
 
-	c, err := strconv.ParseUint(s[4:5], 16, 0)
+	c, err := strconv.ParseUint(s[4:6], 16, 0)
 	if err != nil {
 		return "", err
 	}
 
-	d, err := strconv.ParseUint(s[6:7], 16, 0)
+	d, err := strconv.ParseUint(s[6:8], 16, 0)
 	if err != nil {
 		return "", err
 	}

@@ -188,7 +188,7 @@ func (p *lumiProcesses) GetList() ([]interface{}, error) {
 			return nil, err
 		}
 
-		procs[proc.Pid] = lumiProcess.(Process)
+		procs[i] = lumiProcess.(Process)
 		processesMap[proc.Pid] = lumiProcess.(Process)
 	}
 
