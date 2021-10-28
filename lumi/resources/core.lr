@@ -496,6 +496,8 @@ port {
 
 ports {
   []port
+  // All listening ports
+  listening() []port
 }
 
 // Rsyslog service configuration
