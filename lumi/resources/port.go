@@ -26,6 +26,28 @@ func (p *lumiPorts) GetList() ([]interface{}, error) {
 	}
 }
 
+func (p *lumiPorts) GetListening() ([]interface{}, error) {
+	all, err := p.GetList()
+	if err != nil {
+		return all, err
+	}
+
+	res := []interface{}{}
+	for i := range all {
+		cur := all[i]
+		port := cur.(Port)
+		state, err := port.State()
+		if err != nil {
+			return nil, err
+		}
+		if state == "listen" {
+			res = append(res, cur)
+		}
+	}
+
+	return res, nil
+}
+
 var reLinuxProcNet = regexp.MustCompile(
 	"^\\s*\\d+: " +
 		"([0-9A-F]+):([0-9A-F]+) " + // local_address
