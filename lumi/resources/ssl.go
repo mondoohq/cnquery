@@ -165,59 +165,79 @@ func probeSSL(proto string, host string, port int, versions []string) (*sslCapab
 
 	for i := range versions {
 		version := versions[i]
-		if err := helloSSL(proto, target, version, &res); err != nil {
-			return nil, err
+
+		for {
+			remaining, err := helloSSL(proto, target, version, &res)
+			if err != nil {
+				return nil, err
+			}
+			if remaining <= 0 {
+				break
+			}
+			// fmt.Printf("remaining ciphers on %s: %d\n", version, remaining)
 		}
+
 	}
 
 	return &res, nil
 }
 
-func helloSSL(proto string, target string, version string, res *sslCapabilities) error {
+// Attempts to connect to an endpoint with a given version and records
+// results in the sslCapabilities.
+// Returns the number of remaining ciphers to test (if so desired)
+// and any potential error
+func helloSSL(proto string, target string, version string, res *sslCapabilities) (int, error) {
 	conn, err := net.Dial(proto, target)
 	if err != nil {
-		return errors.Wrap(err, "failed to connect to target")
+		return 0, errors.Wrap(err, "failed to connect to target")
 	}
 	defer conn.Close()
 
-	msg, err := helloSSLMsg(version, func(cipher string) bool {
+	ciphersFilter := func(cipher string) bool {
+		if v, ok := res.ciphers[cipher]; ok && v {
+			return false
+		}
 		return true
-	})
+	}
+
+	msg, cipherCount, err := helloSSLMsg(version, ciphersFilter)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	_, err = conn.Write(msg)
 	if err != nil {
-		return errors.Wrap(err, "failed to send SSL hello")
+		return 0, errors.Wrap(err, "failed to send SSL hello")
 	}
 
-	return parseHello(conn, res)
+	return parseHello(conn, version, cipherCount, ciphersFilter, res)
 }
 
-func parseHello(conn net.Conn, res *sslCapabilities) error {
+func parseHello(conn net.Conn, version string, cipherCount int, ciphersFilter func(cipher string) bool, res *sslCapabilities) (int, error) {
 	reader := bufio.NewReader(conn)
 	b := make([]byte, 5)
 	_, err := io.ReadFull(reader, b)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	if b[0] == CONTENT_TYPE_Alert {
-		version := VERSIONS_LOOKUP[string(b[1:3])]
+		// Do not grab the version here, instead use the pre-provided
+		// There is a nice edge-case in TLS1.3 which is handled further down,
+		// but not required here since we are dealing with an error
 		msgLen := bytes2int(b[3:5])
 
 		if msgLen == 0 {
-			return errors.New("SSL alert (without message body)")
+			return 0, errors.New("SSL alert (without message body)")
 		}
 		if msgLen > 1<<20 {
-			return errors.New("SSL alert (with too large message body)")
+			return 0, errors.New("SSL alert (with too large message body)")
 		}
 
 		b = make([]byte, msgLen)
 		_, err = io.ReadFull(reader, b)
 		if err != nil {
-			return errors.Wrap(err, "failed to read SSL alert body")
+			return 0, errors.Wrap(err, "failed to read SSL alert body")
 		}
 
 		var severity string
@@ -235,35 +255,48 @@ func parseHello(conn net.Conn, res *sslCapabilities) error {
 			description = "cannot find description"
 		}
 
-		if version == "ssl3" && description == "HANDSHAKE_FAILURE" {
-			// Note: it's a little fuzzy here, since we don't know if the protocol
-			// version is unsupported or just its ciphers. So we check if we found
-			// it previously and if so, don't add it to the list of unsupported
-			// versions.
-			if _, ok := res.versions["ssl3"]; !ok {
-				res.versions["ssl3"] = false
-			}
-		} else if version != "ssl3" && description == "PROTOCOL_VERSION" {
+		switch description {
+		case "PROTOCOL_VERSION":
 			// here we know the TLS version is not supported
 			res.versions[version] = false
-		} else {
+
+		case "HANDSHAKE_FAILURE":
+			if version == "ssl3" {
+				// Note: it's a little fuzzy here, since we don't know if the protocol
+				// version is unsupported or just its ciphers. So we check if we found
+				// it previously and if so, don't add it to the list of unsupported
+				// versions.
+				if _, ok := res.versions["ssl3"]; !ok {
+					res.versions["ssl3"] = false
+				}
+			}
+
+			names := cipherNames(version, ciphersFilter)
+			for i := range names {
+				name := names[i]
+				if _, ok := res.ciphers[name]; !ok {
+					res.ciphers[name] = false
+				}
+			}
+
+		default:
 			res.errors = append(res.errors, "failed to connect via "+version+": "+severity+" - "+description)
 		}
 
-		return nil
+		return 0, nil
 	}
 
 	if b[0] != CONTENT_TYPE_Handshake {
-		return errors.New("unhandled SSL response (was expecting a handshake, got '0x" + hex.EncodeToString(b[0:1]) + "' )")
+		return 0, errors.New("unhandled SSL response (was expecting a handshake, got '0x" + hex.EncodeToString(b[0:1]) + "' )")
 	}
 
-	version := VERSIONS_LOOKUP[string(b[1:3])]
+	version = VERSIONS_LOOKUP[string(b[1:3])]
 	msgLen := bytes2int(b[3:5])
 
 	b = make([]byte, msgLen)
 	_, err = io.ReadFull(reader, b)
 	if err != nil {
-		return errors.Wrap(err, "failed to read SSL handshake body")
+		return 0, errors.Wrap(err, "failed to read SSL handshake body")
 	}
 
 	idx := 0
@@ -313,31 +346,63 @@ func parseHello(conn net.Conn, res *sslCapabilities) error {
 
 	res.versions[version] = true
 
-	return nil
+	return cipherCount - 1, nil
 }
 
-func filterCiphers(org map[string]string, f func(cipher string) bool) []byte {
+func filterCipherMsg(org map[string]string, f func(cipher string) bool) ([]byte, int) {
 	var res bytes.Buffer
+	var n int
 	for k, v := range org {
 		if f(v) {
 			res.WriteString(k)
+			n++
 		}
 	}
-	return res.Bytes()
+	return res.Bytes(), n
 }
 
-func helloSSLMsg(version string, ciphersFilter func(cipher string) bool) ([]byte, error) {
+func filterCipherNames(org map[string]string, f func(cipher string) bool) []string {
+	var res []string
+	for _, v := range org {
+		if f(v) {
+			res = append(res, v)
+		}
+	}
+	return res
+}
+
+func cipherNames(version string, filter func(cipher string) bool) []string {
+	switch version {
+	case "ssl3":
+		regular := filterCipherNames(SSL3_CIPHERS, filter)
+		fips := filterCipherNames(SSL_FIPS_CIPHERS, filter)
+		return append(regular, fips...)
+	case "tls1.0", "tls1.1", "tls1.2":
+		return filterCipherNames(TLS_CIPHERS, filter)
+	case "tls1.3":
+		return filterCipherNames(TLS13_CIPHERS, filter)
+	default:
+		return []string{}
+	}
+}
+
+func helloSSLMsg(version string, ciphersFilter func(cipher string) bool) ([]byte, int, error) {
 	var ciphers []byte
+	var cipherCount int
 	var extensions []byte
 
 	switch version {
 	case "ssl3":
-		regular := filterCiphers(SSL3_CIPHERS, ciphersFilter)
-		fips := filterCiphers(SSL_FIPS_CIPHERS, ciphersFilter)
+		regular, n1 := filterCipherMsg(SSL3_CIPHERS, ciphersFilter)
+		fips, n2 := filterCipherMsg(SSL_FIPS_CIPHERS, ciphersFilter)
 		ciphers = append(regular, fips...)
+		cipherCount = n1 + n2
 
 	case "tls1.0", "tls1.1", "tls1.2":
-		ciphers = filterCiphers(TLS_CIPHERS, ciphersFilter)
+		org, n1 := filterCipherMsg(TLS10_CIPHERS, ciphersFilter)
+		tls, n2 := filterCipherMsg(TLS_CIPHERS, ciphersFilter)
+		ciphers = append(org, tls...)
+		cipherCount = n1 + n2
 
 		var ext bytes.Buffer
 		// add heartbeat
@@ -352,7 +417,12 @@ func helloSSLMsg(version string, ciphersFilter func(cipher string) bool) ([]byte
 		extensions = ext.Bytes()
 
 	case "tls1.3":
-		ciphers = filterCiphers(TLS13_CIPHERS, ciphersFilter)
+		org, n1 := filterCipherMsg(TLS10_CIPHERS, ciphersFilter)
+		tls, n2 := filterCipherMsg(TLS_CIPHERS, ciphersFilter)
+		tls13, n3 := filterCipherMsg(TLS13_CIPHERS, ciphersFilter)
+		ciphers = append(org, tls...)
+		ciphers = append(ciphers, tls13...)
+		cipherCount = n1 + n2 + n3
 
 		var ext bytes.Buffer
 		// TLSv1.3 Supported Versions extension
@@ -382,10 +452,10 @@ func helloSSLMsg(version string, ciphersFilter func(cipher string) bool) ([]byte
 		extensions = ext.Bytes()
 
 	default:
-		return nil, errors.New("unsupported SSL version: " + version)
+		return nil, 0, errors.New("unsupported SSL version: " + version)
 	}
 
-	return constructSSLHello(version, ciphers, extensions), nil
+	return constructSSLHello(version, ciphers, extensions), cipherCount, nil
 }
 
 func int1byte(i int) []byte {
@@ -492,7 +562,11 @@ func init() {
 			len(TLS13_CIPHERS)+
 			len(TLS_CIPHERS))
 
+	// Note: overlapping names will be overwritten
 	for k, v := range SSL2_CIPHERS {
+		ALL_CIPHERS[k] = v
+	}
+	for k, v := range SSL3_CIPHERS {
 		ALL_CIPHERS[k] = v
 	}
 	for k, v := range SSL_FIPS_CIPHERS {
