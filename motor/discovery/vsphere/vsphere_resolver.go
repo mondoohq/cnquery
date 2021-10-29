@@ -56,16 +56,15 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 	// add asset for the api itself
 	info := trans.Info()
 
-	name := info.Name
-	if info.InstanceUuid != "" {
-		name = fmt.Sprintf("%s (%s)", info.Name, info.InstanceUuid)
-	}
-
 	resolved = append(resolved, &asset.Asset{
 		PlatformIds: m.Meta.Identifier,
-		Name:        name,
+		Name:        fmt.Sprintf("%s (%s)", tc.Host, info.Name),
 		Platform:    pf,
 		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
+		Labels: map[string]string{
+			"vsphere.vmware.com/name": info.Name,
+			"vsphere.vmware.com/uuid": info.InstanceUuid,
+		},
 	})
 
 	client := trans.Client()
