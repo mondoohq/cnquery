@@ -55,7 +55,7 @@ func (c *Cache) Load(key string) (*CacheEntry, bool) {
 // Delete a Cache Entry
 func (c *Cache) Delete(key string) { c.Map.Delete(key) }
 
-// mondoo cloud config so that resource scan talk upstream
+// mondoo platform config so that resource scan talk upstream
 // TODO: this configuration struct does not belong into the lumi package
 // nevertheless the lumi runtime needs to have something that allows users
 // to store additional credentials so that resource can use those for
