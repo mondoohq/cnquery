@@ -1,7 +1,6 @@
 package platform
 
 import (
-	win "go.mondoo.io/mondoo/motor/platform/windows"
 	"io/ioutil"
 	"regexp"
 	"strconv"
@@ -9,6 +8,7 @@ import (
 
 	"github.com/gosimple/slug"
 	"github.com/rs/zerolog/log"
+	win "go.mondoo.io/mondoo/motor/platform/windows"
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
@@ -356,6 +356,7 @@ var amazonlinux = &PlatformResolver{
 		return false, nil
 	},
 }
+
 var windriver = &PlatformResolver{
 	Name:      "wrlinux",
 	IsFamiliy: false,
@@ -384,6 +385,17 @@ var sles = &PlatformResolver{
 	IsFamiliy: false,
 	Detect: func(p *PlatformResolver, di *Platform, t transports.Transport) (bool, error) {
 		if di.Name == "sles" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
+var suseMicroOs = &PlatformResolver{
+	Name:      "suse-microos",
+	IsFamiliy: false,
+	Detect: func(p *PlatformResolver, di *Platform, t transports.Transport) (bool, error) {
+		if di.Name == "suse-microos" {
 			return true, nil
 		}
 		return false, nil
@@ -426,7 +438,6 @@ var busybox = &PlatformResolver{
 	Name:      "busybox",
 	IsFamiliy: false,
 	Detect: func(p *PlatformResolver, di *Platform, t transports.Transport) (bool, error) {
-
 		command := "ls --help 2>&1 | head -1"
 		cmd, err := t.RunCommand(command)
 		if err != nil {
@@ -733,7 +744,7 @@ var debianFamily = &PlatformResolver{
 var suseFamily = &PlatformResolver{
 	Name:      "suse",
 	IsFamiliy: true,
-	Children:  []*PlatformResolver{opensuse, sles},
+	Children:  []*PlatformResolver{opensuse, sles, suseMicroOs},
 	Detect: func(p *PlatformResolver, di *Platform, t transports.Transport) (bool, error) {
 		return true, nil
 	},
