@@ -107,6 +107,8 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		} else {
 			osm = &SystemDServiceManager{motor: motor}
 		}
+	case pf.Name == "suse-microos": // it is suse family but uses a different version scheme
+		osm = &SystemDServiceManager{motor: motor}
 	case pf.IsFamily("suse"):
 		rv := platform.ParseOsVersion(pf.Release)
 		v, err := rv.MajorAtoi()
