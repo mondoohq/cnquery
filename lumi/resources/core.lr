@@ -520,6 +520,8 @@ ssl {
   versions(params) []string
   // Ciphers supported by a given SSL/TLS connection
   ciphers(params) []string
+  // Certificates provided in this SSL/TLS connection
+  certificates(params) []certificate
 }
 
 // Rsyslog service configuration
