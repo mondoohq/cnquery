@@ -39,7 +39,7 @@ func (p *lumiProcess) init(args *lumi.Args) (*lumi.Args, Process, error) {
 
 		// check that the PID exists
 		exists, err := opm.Exists(pid)
-		if err != nil || exists != true {
+		if err != nil || !exists {
 			return nil, nil, errors.New("process " + strconv.FormatInt(pid, 10) + " does not exist")
 		}
 	}
@@ -141,9 +141,16 @@ func (p *lumiProcess) gatherProcessInfo(fn ProcessCallbackTrigger) error {
 		return errors.New("cannot gather process details")
 	}
 
-	p.Cache.Store("state", &lumi.CacheEntry{Data: process.State, Valid: true, Timestamp: time.Now().Unix()})
-	p.Cache.Store("executable", &lumi.CacheEntry{Data: process.Executable, Valid: true, Timestamp: time.Now().Unix()})
-	p.Cache.Store("command", &lumi.CacheEntry{Data: process.Command, Valid: true, Timestamp: time.Now().Unix()})
+	sockets := make([]interface{}, len(process.SocketInodes))
+	for i := range process.SocketInodes {
+		sockets[i] = process.SocketInodes[i]
+	}
+
+	now := time.Now().Unix()
+	p.Cache.Store("state", &lumi.CacheEntry{Data: process.State, Valid: true, Timestamp: now})
+	p.Cache.Store("executable", &lumi.CacheEntry{Data: process.Executable, Valid: true, Timestamp: now})
+	p.Cache.Store("command", &lumi.CacheEntry{Data: process.Command, Valid: true, Timestamp: now})
+	p.Cache.Store("sockets", &lumi.CacheEntry{Data: sockets, Valid: true, Timestamp: now})
 
 	// call callback trigger
 	if fn != nil {
@@ -161,7 +168,7 @@ func (p *lumiProcesses) GetList() ([]interface{}, error) {
 	// find suitable package manager
 	opm, err := processes.ResolveManager(p.Runtime.Motor)
 	if opm == nil || err != nil {
-		log.Warn().Err(err).Msg("lumi[processes]> could not retrieve process list")
+		log.Warn().Err(err).Msg("lumi[processes]> could not retrieve process resolver")
 		return nil, errors.New("cannot find process manager")
 	}
 
@@ -175,6 +182,8 @@ func (p *lumiProcesses) GetList() ([]interface{}, error) {
 
 	procs := make([]interface{}, len(processes))
 	processesMap := make(map[int64]Process, len(processes))
+	socketsMap := map[int64]Process{}
+
 	for i := range processes {
 		proc := processes[i]
 
@@ -188,11 +197,17 @@ func (p *lumiProcesses) GetList() ([]interface{}, error) {
 			return nil, err
 		}
 
-		procs[i] = lumiProcess.(Process)
-		processesMap[proc.Pid] = lumiProcess.(Process)
+		process := lumiProcess.(Process)
+		procs[i] = process
+		processesMap[proc.Pid] = process
+
+		for i := range proc.SocketInodes {
+			socketsMap[proc.SocketInodes[i]] = process
+		}
 	}
 
 	p.Cache.Store("_map", &lumi.CacheEntry{Data: processesMap})
+	p.Cache.Store("_socketsMap", &lumi.CacheEntry{Data: socketsMap})
 
 	// return the processes as new entries
 	return procs, nil

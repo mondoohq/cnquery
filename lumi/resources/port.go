@@ -133,29 +133,28 @@ func (p *lumiPorts) users() (map[int64]User, error) {
 	return userUidMap, nil
 }
 
-func (p *lumiPorts) processes() (map[int64]User, error) {
-	// // Prerequisites: processes
-	// obj, err = p.Runtime.CreateResource("processes")
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// processes := obj.(Processes)
+func (p *lumiPorts) processes() (map[int64]Process, error) {
+	// Prerequisites: processes
+	obj, err := p.Runtime.CreateResource("processes")
+	if err != nil {
+		return nil, err
+	}
+	processes := obj.(Processes)
 
-	// _, err = processes.List()
-	// if err != nil {
-	// 	return nil, err
-	// }
+	_, err = processes.List()
+	if err != nil {
+		return nil, err
+	}
 
-	// c, ok = processes.LumiResource().Cache.Load("_map")
-	// if !ok {
-	// 	return nil, errors.New("cannot get map of processes")
-	// }
-	// processesUidMap := c.Data.(map[int64]Process)
-	// TODO: need the Inode in the process to complete this code
-	panic("ports processes not yet implemented")
+	c, ok := processes.LumiResource().Cache.Load("_socketsMap")
+	if !ok {
+		return nil, errors.New("cannot get map of processes (and their sockets)")
+	}
+
+	return c.Data.(map[int64]Process), nil
 }
 
-func (p *lumiPorts) parseProcNet(path string, protocol string, users map[int64]User) ([]interface{}, error) {
+func (p *lumiPorts) parseProcNet(path string, protocol string, users map[int64]User, processes map[int64]Process) ([]interface{}, error) {
 	motor := p.Runtime.Motor
 	fs := motor.Transport.FS()
 	stat, err := fs.Stat(path)
@@ -167,6 +166,9 @@ func (p *lumiPorts) parseProcNet(path string, protocol string, users map[int64]U
 	}
 
 	fi, err := fs.Open(path)
+	if err != nil {
+		return nil, err
+	}
 	defer fi.Close()
 
 	var res []interface{}
@@ -214,18 +216,20 @@ func (p *lumiPorts) parseProcNet(path string, protocol string, users map[int64]U
 		}
 		user := users[int64(uid)]
 
-		// inode, err := strconv.ParseUint(m[7], 10, 64)
-		// if err != nil {
-		// 	return nil, errors.New("failed to parse port Inode: " + m[7])
-		// }
-		// process := processesInodeMap[inode]
+		inode, err := strconv.ParseUint(m[7], 10, 64)
+		if err != nil {
+			return nil, errors.New("failed to parse port Inode: " + m[7])
+		}
+
+		// the process may be nil, eg if the inode is 0
+		process := processes[int64(inode)]
 
 		obj, err := p.Runtime.CreateResource("port",
 			"protocol", protocol,
 			"port", int64(port),
 			"address", address,
 			"user", user,
-			//"process", process,
+			"process", process,
 			"state", state,
 			"remoteAddress", remoteAddress,
 			"remotePort", int64(remotePort),
@@ -247,14 +251,17 @@ func (p *lumiPorts) listLinux() ([]interface{}, error) {
 		return nil, err
 	}
 
-	// processesUidMap, err := p.processes()
-
-	tcpPorts, err := p.parseProcNet("/proc/net/tcp", "tcp", users)
+	processes, err := p.processes()
 	if err != nil {
 		return nil, err
 	}
 
-	udpPorts, err := p.parseProcNet("/proc/net/udp", "udp", users)
+	tcpPorts, err := p.parseProcNet("/proc/net/tcp", "tcp", users, processes)
+	if err != nil {
+		return nil, err
+	}
+
+	udpPorts, err := p.parseProcNet("/proc/net/udp", "udp", users, processes)
 	if err != nil {
 		return nil, err
 	}
