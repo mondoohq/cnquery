@@ -2,17 +2,17 @@ package processes
 
 import (
 	"errors"
-	"os"
 
 	"go.mondoo.io/mondoo/motor"
 )
 
 type OSProcess struct {
-	Pid        int64
-	Command    string
-	Executable string
-	State      string
-	Uid        int64
+	Pid          int64
+	Command      string
+	Executable   string
+	State        string
+	Uid          int64
+	SocketInodes []int64
 }
 
 type OSProcessManager interface {
@@ -31,7 +31,7 @@ func ResolveManager(motor *motor.Motor) (OSProcessManager, error) {
 	}
 
 	switch {
-	case platform.IsFamily("linux") && os.Getenv("MONDOO_PROCFS") == "on":
+	case platform.IsFamily("linux"):
 		pm = &LinuxProcManager{motor: motor}
 	case platform.IsFamily("unix"):
 		pm = &UnixProcessManager{motor: motor, platform: platform}
