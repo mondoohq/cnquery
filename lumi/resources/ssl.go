@@ -3,6 +3,7 @@ package resources
 import (
 	"bufio"
 	"bytes"
+	"crypto/x509"
 	"encoding/binary"
 	"encoding/hex"
 	"io"
@@ -107,6 +108,27 @@ func (s *lumiSsl) GetParams(socket Socket) (map[string]interface{}, error) {
 		res[field] = v
 	}
 
+	certs := []interface{}{}
+	for i := range capabilities.certificates {
+		cert := capabilities.certificates[i]
+
+		raw, err := s.Runtime.CreateResource("certificate",
+			"pem", "",
+			// NOTE: if we do not set the hash here, it will generate the cache content before we can store it
+			// we are using the hashs for the id, therefore it is required during creation
+			"hashs", certHashs(cert),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// store parsed object with resource
+		lumiCert := raw.(Certificate)
+		lumiCert.LumiResource().Cache.Store("_cert", &lumi.CacheEntry{Data: cert})
+		certs = append(certs, lumiCert)
+	}
+	res["certificates"] = certs
+
 	return res, nil
 }
 
@@ -144,12 +166,22 @@ func (s *lumiSsl) GetCiphers(params map[string]interface{}) ([]interface{}, erro
 	return res, nil
 }
 
+func (s *lumiSsl) GetCertificates(params map[string]interface{}) ([]interface{}, error) {
+	raw, ok := params["certificates"]
+	if !ok {
+		return []interface{}{}, nil
+	}
+
+	return raw.([]interface{}), nil
+}
+
 // shake that SSL
 
 type sslCapabilities struct {
-	versions map[string]bool
-	ciphers  map[string]bool
-	errors   []string
+	versions     map[string]bool
+	ciphers      map[string]bool
+	errors       []string
+	certificates []*x509.Certificate
 }
 
 func probeSSL(proto string, host string, port int, versions []string) (*sslCapabilities, error) {
@@ -210,110 +242,75 @@ func helloSSL(proto string, target string, version string, res *sslCapabilities)
 		return 0, errors.Wrap(err, "failed to send SSL hello")
 	}
 
-	return parseHello(conn, version, cipherCount, ciphersFilter, res)
-}
-
-func parseHello(conn net.Conn, version string, cipherCount int, ciphersFilter func(cipher string) bool, res *sslCapabilities) (int, error) {
-	reader := bufio.NewReader(conn)
-	b := make([]byte, 5)
-	_, err := io.ReadFull(reader, b)
-	if err != nil {
+	success, err := parseHello(conn, version, ciphersFilter, res)
+	if err != nil || !success {
 		return 0, err
 	}
 
-	if b[0] == CONTENT_TYPE_Alert {
-		// Do not grab the version here, instead use the pre-provided
-		// There is a nice edge-case in TLS1.3 which is handled further down,
-		// but not required here since we are dealing with an error
-		msgLen := bytes2int(b[3:5])
+	return cipherCount - 1, nil
+}
 
-		if msgLen == 0 {
-			return 0, errors.New("SSL alert (without message body)")
-		}
-		if msgLen > 1<<20 {
-			return 0, errors.New("SSL alert (with too large message body)")
-		}
+func parseAlert(data []byte, version string, ciphersFilter func(cipher string) bool, res *sslCapabilities) error {
+	var severity string
+	switch data[0] {
+	case '\x01':
+		severity = "Warning"
+	case '\x02':
+		severity = "Fatal"
+	default:
+		severity = "Unknown"
+	}
 
-		b = make([]byte, msgLen)
-		_, err = io.ReadFull(reader, b)
-		if err != nil {
-			return 0, errors.Wrap(err, "failed to read SSL alert body")
-		}
+	description, ok := ALERT_DESCRIPTIONS[data[1]]
+	if !ok {
+		description = "cannot find description"
+	}
 
-		var severity string
-		switch b[0] {
-		case '\x01':
-			severity = "Warning"
-		case '\x02':
-			severity = "Fatal"
-		default:
-			severity = "Unknown"
-		}
+	switch description {
+	case "PROTOCOL_VERSION":
+		// here we know the TLS version is not supported
+		res.versions[version] = false
 
-		description, ok := ALERT_DESCRIPTIONS[b[1]]
-		if !ok {
-			description = "cannot find description"
-		}
-
-		switch description {
-		case "PROTOCOL_VERSION":
-			// here we know the TLS version is not supported
-			res.versions[version] = false
-
-		case "HANDSHAKE_FAILURE":
-			if version == "ssl3" {
-				// Note: it's a little fuzzy here, since we don't know if the protocol
-				// version is unsupported or just its ciphers. So we check if we found
-				// it previously and if so, don't add it to the list of unsupported
-				// versions.
-				if _, ok := res.versions["ssl3"]; !ok {
-					res.versions["ssl3"] = false
-				}
+	case "HANDSHAKE_FAILURE":
+		if version == "ssl3" {
+			// Note: it's a little fuzzy here, since we don't know if the protocol
+			// version is unsupported or just its ciphers. So we check if we found
+			// it previously and if so, don't add it to the list of unsupported
+			// versions.
+			if _, ok := res.versions["ssl3"]; !ok {
+				res.versions["ssl3"] = false
 			}
-
-			names := cipherNames(version, ciphersFilter)
-			for i := range names {
-				name := names[i]
-				if _, ok := res.ciphers[name]; !ok {
-					res.ciphers[name] = false
-				}
-			}
-
-		default:
-			res.errors = append(res.errors, "failed to connect via "+version+": "+severity+" - "+description)
 		}
 
-		return 0, nil
+		names := cipherNames(version, ciphersFilter)
+		for i := range names {
+			name := names[i]
+			if _, ok := res.ciphers[name]; !ok {
+				res.ciphers[name] = false
+			}
+		}
+
+	default:
+		res.errors = append(res.errors, "failed to connect via "+version+": "+severity+" - "+description)
 	}
 
-	if b[0] != CONTENT_TYPE_Handshake {
-		return 0, errors.New("unhandled SSL response (was expecting a handshake, got '0x" + hex.EncodeToString(b[0:1]) + "' )")
-	}
+	return nil
+}
 
-	version = VERSIONS_LOOKUP[string(b[1:3])]
-	msgLen := bytes2int(b[3:5])
-
-	b = make([]byte, msgLen)
-	_, err = io.ReadFull(reader, b)
-	if err != nil {
-		return 0, errors.Wrap(err, "failed to read SSL handshake body")
-	}
-
+func parseServerHello(data []byte, version string, ciphersFilter func(cipher string) bool, res *sslCapabilities) error {
 	idx := 0
 
-	idx += 1 + 3 + 2 + 32
-	// handshake type (1)
-	// len (3)
-	// handshake tls version (2)
-	// random (32)
+	idx += 2 + 32
+	// handshake tls version (2), which we don't need yet (we will look at it in the extension if necessary)
+	// random (32), which we don't need
 
-	sessionIDlen := byte1int(b[idx])
+	// we don't need the session ID
+	sessionIDlen := byte1int(data[idx])
 	idx += 1
 	idx += sessionIDlen
 
-	cipherID := string(b[idx : idx+2])
+	cipher, ok := ALL_CIPHERS[string(data[idx:idx+2])]
 	idx += 2
-	cipher, ok := ALL_CIPHERS[cipherID]
 	if !ok {
 		res.ciphers["unknown"] = true
 	} else {
@@ -327,13 +324,13 @@ func parseHello(conn net.Conn, version string, cipherCount int, ciphersFilter fu
 	// compression method (which should be set to null)
 	idx += 1
 
-	allExtLen := bytes2int(b[idx : idx+2])
+	allExtLen := bytes2int(data[idx : idx+2])
 	idx += 2
 
-	for allExtLen > 0 && idx < len(b) {
-		extType := string(b[idx : idx+2])
-		extLen := bytes2int(b[idx+2 : idx+4])
-		extData := string(b[idx+4 : idx+4+extLen])
+	for allExtLen > 0 && idx < len(data) {
+		extType := string(data[idx : idx+2])
+		extLen := bytes2int(data[idx+2 : idx+4])
+		extData := string(data[idx+4 : idx+4+extLen])
 
 		allExtLen -= 4 + extLen
 		idx += 4 + extLen
@@ -346,7 +343,131 @@ func parseHello(conn net.Conn, version string, cipherCount int, ciphersFilter fu
 
 	res.versions[version] = true
 
-	return cipherCount - 1, nil
+	return nil
+}
+
+func parseCertificate(data []byte, res *sslCapabilities) error {
+	certsLen := bytes3int(data[0:3])
+	if len(data) < certsLen+3 {
+		return errors.New("malformed certificate response, too little data read from stream to parse certificate")
+	}
+
+	i := 3
+	for i < 3+certsLen {
+		certLen := bytes3int(data[i : i+3])
+		i += 3
+
+		rawCert := data[i : i+certLen]
+		i += certLen
+
+		cert, err := x509.ParseCertificate(rawCert)
+		if err != nil {
+			msg := errors.Wrap(err, "failed to parse certificate (x509 parser error)").Error()
+			res.errors = append(res.errors, msg)
+		}
+
+		res.certificates = append(res.certificates, cert)
+	}
+
+	return nil
+}
+
+// returns true if we are done, false otherwise
+// It will try to wait for the certificate info, if it doesn't have it yet.
+// Otherwise we may stop at the sever hello.
+func parseHandshake(data []byte, version string, ciphersFilter func(cipher string) bool, res *sslCapabilities) (bool, error) {
+	handshakeType := data[0]
+	handshakeLen := bytes3int(data[1:4])
+
+	switch handshakeType {
+	case HANDSHAKE_TYPE_ServerHello:
+		err := parseServerHello(data[4:4+handshakeLen], version, ciphersFilter, res)
+		done := len(res.certificates) != 0
+		return done, err
+	case HANDSHAKE_TYPE_Certificate:
+		return true, parseCertificate(data[4:4+handshakeLen], res)
+	case HANDSHAKE_TYPE_ServerKeyExchange:
+		return false, nil
+	case HANDSHAKE_TYPE_ServerHelloDone:
+		return true, nil
+	case HANDSHAKE_TYPE_Finished:
+		return true, nil
+	default:
+		typ := "0x" + hex.EncodeToString([]byte{handshakeType})
+		res.errors = append(res.errors, "Unhandled SSL/TLS handshake: '"+typ+"'")
+		return false, nil
+	}
+}
+
+// returns:
+//   true if the handshake was successful, false otherwise
+func parseHello(conn net.Conn, version string, ciphersFilter func(cipher string) bool, res *sslCapabilities) (bool, error) {
+	reader := bufio.NewReader(conn)
+	header := make([]byte, 5)
+	var success bool
+	var done bool
+
+	for !done {
+		_, err := io.ReadFull(reader, header)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return false, err
+		}
+
+		typ := "0x" + hex.EncodeToString(header[0:1])
+		headerVersion := VERSIONS_LOOKUP[string(header[1:3])]
+
+		msgLen := bytes2int(header[3:5])
+		if msgLen == 0 {
+			return false, errors.New("No body in SSL/TLS response (type: '" + typ + "')")
+		}
+		if msgLen > 1<<20 {
+			return false, errors.New("SSL/TLS response body is too larget (type: '" + typ + "')")
+		}
+
+		msg := make([]byte, msgLen)
+		_, err = io.ReadFull(reader, msg)
+		if err != nil {
+			return false, errors.Wrap(err, "Failed to read full SSL/TLS response body (type: '"+typ+"')")
+		}
+
+		switch header[0] {
+		case CONTENT_TYPE_Alert:
+			// Do not grab the version here, instead use the pre-provided
+			// There is a nice edge-case in TLS1.3 which is handled further down,
+			// but not required here since we are dealing with an error
+			if err := parseAlert(msg, version, ciphersFilter, res); err != nil {
+				return false, err
+			}
+
+		case CONTENT_TYPE_Handshake:
+			handshakeDone, err := parseHandshake(msg, headerVersion, ciphersFilter, res)
+			if err != nil {
+				return false, err
+			}
+			success = true
+			done = handshakeDone
+
+		case CONTENT_TYPE_ChangeCipherSpec:
+			// We don't care about other cipher strategies. We get what we need from
+			// the handshake for now.
+			//
+			// This also means we are done with this stream, since it signals that we
+			// are no longer looking at a handshake.
+			done = true
+
+		case CONTENT_TYPE_Application:
+			// Definitely don't care about anything past the handshake.
+			done = true
+
+		default:
+			res.errors = append(res.errors, "Unhandled SSL/TLS response (received '"+typ+"')")
+		}
+	}
+
+	return success, nil
 }
 
 func filterCipherMsg(org map[string]string, f func(cipher string) bool) ([]byte, int) {
@@ -484,6 +605,10 @@ func bytes2int(b []byte) int {
 	return int(binary.BigEndian.Uint16(b))
 }
 
+func bytes3int(b []byte) int {
+	return int(binary.BigEndian.Uint32(append([]byte{0x00}, b...)))
+}
+
 func constructSSLHello(version string, ciphers []byte, extensions []byte) []byte {
 	sessionID := ""
 	compressions := "\x00"
@@ -594,13 +719,13 @@ const (
 	HANDSHAKE_TYPE_ClientHello        byte = '\x01'
 	HANDSHAKE_TYPE_ServerHello        byte = '\x02'
 	HANDSHAKE_TYPE_NewSessionTicket   byte = '\x04'
-	HANDSHAKE_TYPE_Certificate        byte = '\x11'
-	HANDSHAKE_TYPE_ServerKeyExchange  byte = '\x12'
-	HANDSHAKE_TYPE_CertificateRequest byte = '\x13'
-	HANDSHAKE_TYPE_ServerHelloDone    byte = '\x14'
-	HANDSHAKE_TYPE_CertificateVerify  byte = '\x15'
-	HANDSHAKE_TYPE_ClientKeyExchange  byte = '\x16'
-	HANDSHAKE_TYPE_Finished           byte = '\x20'
+	HANDSHAKE_TYPE_Certificate        byte = '\x0b'
+	HANDSHAKE_TYPE_ServerKeyExchange  byte = '\x0c'
+	HANDSHAKE_TYPE_CertificateRequest byte = '\x0d'
+	HANDSHAKE_TYPE_ServerHelloDone    byte = '\x0e'
+	HANDSHAKE_TYPE_CertificateVerify  byte = '\x0f'
+	HANDSHAKE_TYPE_ClientKeyExchange  byte = '\x10'
+	HANDSHAKE_TYPE_Finished           byte = '\x14'
 )
 
 // https://tools.ietf.org/html/rfc5246#appendix-A.3
