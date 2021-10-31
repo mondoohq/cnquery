@@ -222,6 +222,11 @@ func (c *LeiseExecutor) runFunctionBlock(bind *RawData, code *Code, cb ResultCal
 }
 
 func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, ref int32) (*RawData, int32, error) {
+
+	if bind != nil && bind.Value == nil && bind.Type != types.Nil {
+		return &RawData{Type: bind.Type, Value: nil}, 0, nil
+	}
+
 	typ := types.Type(functionRef.Type)
 	if !typ.IsFunction() {
 		return nil, 0, errors.New("called block with wrong function type")
