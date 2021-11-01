@@ -24,34 +24,82 @@ func (p *lumiRegex) GetUrl() (string, error) {
 // TODO: can't figure this one out yet, needs work before getting exposed
 // Adopted from:
 //   https://stackoverflow.com/a/20046959/1195583
-const reDomain = "(([a-zA-Z]{1})|([a-zA-Z]{1}[a-zA-Z]{1})|([a-zA-Z]{1}[0-9]{1})|([0-9]{1}[a-zA-Z]{1})|([a-zA-Z0-9][a-zA-Z0-9-_]{1,61}[a-zA-Z0-9]))\\.([a-zA-Z]{2,}|[a-zA-Z0-9-]{2,30}\\.[a-zA-Z]{2,3})"
+// Note:
+// - there is a difference between Domain names and Host names, see:
+//   https://stackoverflow.com/questions/2180465/can-domain-name-subdomains-have-an-underscore-in-it
+//   - For example, in the case of emails and URLs we use internet domain names
+//     ie host names
+// - the reNoTldHostname allows for domain names with no TLD, even though this
+//   is discouraged (and it kind of matches all kinds of things). Useful
+//   for e.g. email regex
+const reLDHLabel = "([0-9][a-zA-Z]|[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]|[a-zA-Z][0-9]|[a-zA-Z]{1,2})"
+const reUrlDomain = reLDHLabel + "(\\." + reLDHLabel + ")+"
+const reNoTldHostname = reLDHLabel + "(\\." + reLDHLabel + ")*"
+
+// const reDomainLabel = "... needs work"
 
 func (p *lumiRegex) GetDomain() (string, error) {
-	return reDomain, nil
+	return reUrlDomain, nil
 }
 
+// Email Regex
+// ===========
+// overall:     https://en.wikipedia.org/wiki/Email_address
+//   addr-spec       =   local-part "@" domain
+//   local-part      =   dot-atom / quoted-string / obs-local-part
+//
+// utf8 email:  https://datatracker.ietf.org/doc/html/rfc6531
+// utf8 coding: https://en.wikipedia.org/wiki/UTF-8
+//
+// Unquoted:
+//   Atext:       https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3
+//   [a-z0-9!#$%&'*+-/=?^_`{|}~] and '.' (not first, not last, not in sequence)
+//   any unicode above ascii, encoded as UTF8
+//
+// Quoted:
+//   https://datatracker.ietf.org/doc/html/rfc5321#section-4.1.2
+//   https://datatracker.ietf.org/doc/html/rfc6531#section-3.3
+//   Qtext = %d32-33 / %d35-91 / %d93-126 / UTF8-nonascii
+//
+// Domain:
+//   https://datatracker.ietf.org/doc/html/rfc5322#section-3.4.1
+//   Dtext = %d33-90 / %d94-126 / obs-dtext
+//   Weird: dtext may be empty, which is very weird. Implementing it with
+//   this constraint in place, but it may need review.
+//
+//   Additionally: it's not in these RFCs, but the domain is further resricted
+//   by https://datatracker.ietf.org/doc/html/rfc3696. It is also not a domain
+//   name in the context of DNS, see these clarifications:
+//   - https://www.rfc-editor.org/rfc/rfc2181#section-11
+//   - https://stackoverflow.com/questions/2180465/can-domain-name-subdomains-have-an-underscore-in-it
+//
+// Limitation: I suspect we may also need to support rfc5322, which includes
+// more characters in its qtext definition. However this document and the wiki
+// are at odds with each other and I can't make heads or tails out of it
+// (eg the wiki says qtext support HT, but rfc5322 clearly says it doesn't).
+// This needs follow-up work, but it's also an extreme edge-case afaics.
+//
+// Limitation: We do not check the length of the individual parts ie:
+// - local part can be up to 64 octets
+// - domain can be up to 255 octets
+// - also domain labels may only be up to 63 octets
+//
+// TODO: IPv4 + IPv6 domains, comments
 const reAtextAscii = "[a-z0-9!#$%&'*+-/=?^_`{|}~]"
-const reNonAscii = "[\\xC0-\\xDF][\\x80-\\xBF]|[\\xE0-\\xEF][\\x80-\\xBF]{2}|[\\xF0-\\xF7][\\x80-\\xBF]{3}"
-const reAtext = "(" + reAtextAscii + "|" + reNonAscii + ")+"
-const reEmailLocal = reAtext + "(\\." + reAtext + ")*"
+const reUtf8NonAscii = "[\\xC0-\\xDF][\\x80-\\xBF]|[\\xE0-\\xEF][\\x80-\\xBF]{2}|[\\xF0-\\xF7][\\x80-\\xBF]{3}"
+const reQtextAscii = "[ !#-\\[\\]-~]"
+const reQtext = "\"(" + reQtextAscii + "|" + reUtf8NonAscii + "){1,63}\""
+const reAtext = "(" + reAtextAscii + "|" + reUtf8NonAscii + "){1,63}"
+const reDotAtom = reAtext + "(\\." + reAtext + ")*"
+const reEmailLocal = "(" + reQtext + "|" + reDotAtom + ")"
+const dText = "[!-Z^-~]"
+const reDomainLiteral = "\\[" + dText + "{0,255}\\]"
+const reEmailDomain = "(" + reNoTldHostname + "|" + reDomainLiteral + ")"
 
-// vv TODO: needs work, amongst others: UTF8 support?, IPv4 + IPv6, comments
-// also: how is this different from domain in general?
-const reEmailDomain = "[A-Za-z0-9]{1,63}(\\.[A-Za-z0-9]{1,63})+"
 const reEmail = reEmailLocal + "@" + reEmailDomain
 
 // TODO: this needs serious work! re-use aspects from the domain recognition
 func (p *lumiRegex) GetEmail() (string, error) {
-	// overall:     https://en.wikipedia.org/wiki/Email_address
-	// utf8 email:  https://datatracker.ietf.org/doc/html/rfc6531
-	// utf8 coding: https://en.wikipedia.org/wiki/UTF-8
-	// atext:       https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3
-	//
-	// local-part@domain
-	// - unquoted:
-	//     [a-z0-9!#$%&'*+-/=?^_`{|}~] and '.' (not first, not last, not in sequence)
-	//     any unicode above ascii, encoded as UTF8
-	// - max: 64 chars
 	return reEmail, nil
 }
 
