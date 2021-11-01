@@ -6,12 +6,12 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/lumi/resources/sslshake"
+	"go.mondoo.io/mondoo/lumi/resources/tlsshake"
 )
 
 var reTarget = regexp.MustCompile("([^/:]+?)(:\\d+)?$")
 
-func (s *lumiSsl) init(args *lumi.Args) (*lumi.Args, Ssl, error) {
+func (s *lumiTls) init(args *lumi.Args) (*lumi.Args, Tls, error) {
 	if _target, ok := (*args)["target"]; ok {
 		target := _target.(string)
 		m := reTarget.FindStringSubmatch(target)
@@ -46,16 +46,16 @@ func (s *lumiSsl) init(args *lumi.Args) (*lumi.Args, Ssl, error) {
 	return args, nil, nil
 }
 
-func (s *lumiSsl) id() (string, error) {
+func (s *lumiTls) id() (string, error) {
 	socket, err := s.Socket()
 	if err != nil {
 		return "", err
 	}
 
-	return "ssl+" + socket.LumiResource().Id, nil
+	return "tls+" + socket.LumiResource().Id, nil
 }
 
-func (s *lumiSsl) GetParams(socket Socket) (map[string]interface{}, error) {
+func (s *lumiTls) GetParams(socket Socket) (map[string]interface{}, error) {
 	host, err := socket.Address()
 	if err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ func (s *lumiSsl) GetParams(socket Socket) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	tester := sslshake.New(proto, host, int(port))
+	tester := tlsshake.New(proto, host, int(port))
 	if err := tester.Test(); err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func (s *lumiSsl) GetParams(socket Socket) (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiSsl) GetVersions(params map[string]interface{}) ([]interface{}, error) {
+func (s *lumiTls) GetVersions(params map[string]interface{}) ([]interface{}, error) {
 	raw, ok := params["versions"]
 	if !ok {
 		return []interface{}{}, nil
@@ -143,7 +143,7 @@ func (s *lumiSsl) GetVersions(params map[string]interface{}) ([]interface{}, err
 	return res, nil
 }
 
-func (s *lumiSsl) GetCiphers(params map[string]interface{}) ([]interface{}, error) {
+func (s *lumiTls) GetCiphers(params map[string]interface{}) ([]interface{}, error) {
 	raw, ok := params["ciphers"]
 	if !ok {
 		return []interface{}{}, nil
@@ -160,7 +160,7 @@ func (s *lumiSsl) GetCiphers(params map[string]interface{}) ([]interface{}, erro
 	return res, nil
 }
 
-func (s *lumiSsl) GetCertificates(params map[string]interface{}) ([]interface{}, error) {
+func (s *lumiTls) GetCertificates(params map[string]interface{}) ([]interface{}, error) {
 	raw, ok := params["certificates"]
 	if !ok {
 		return []interface{}{}, nil

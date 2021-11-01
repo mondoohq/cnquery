@@ -510,17 +510,17 @@ socket {
   address string
 }
 
-ssl {
+tls {
   init(target string)
   // Socket of this connection
   socket socket
-  // Params is a list of all parameters for this SSL/TLS connection
+  // Params is a list of all parameters for this TLS/SSL connection
   params(socket) dict
-  // Version of SSL/TLS that is being used
+  // Version of TLS/SSL that is being used
   versions(params) []string
-  // Ciphers supported by a given SSL/TLS connection
+  // Ciphers supported by a given TLS/SSL connection
   ciphers(params) []string
-  // Certificates provided in this SSL/TLS connection
+  // Certificates provided in this TLS/SSL connection
   certificates(params) []certificate
 }
 
