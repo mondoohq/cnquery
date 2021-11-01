@@ -1,6 +1,6 @@
 // shake that SSL
 
-package sslshake
+package tlsshake
 
 import (
 	"bufio"
@@ -18,7 +18,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var SSL_VERSIONS = []string{"ssl3", "tls1.0", "tls1.1", "tls1.2", "tls1.3"}
+var TLS_VERSIONS = []string{"ssl3", "tls1.0", "tls1.1", "tls1.2", "tls1.3"}
 
 // Tester is the test runner and results object for any findings done in a
 // session of tests. We re-use it to avoid duplicate requests and optimize
@@ -54,12 +54,12 @@ func New(proto string, host string, port int) *Tester {
 	}
 }
 
-// Test runs the SSL/TLS probes for all given versions
-// - versions may contain any supported pre-defined SSL/TLS versions
-//   with a complete list found in SSL_VERSIONS. Leave empty to test all.
+// Test runs the TLS/SSL probes for all given versions
+// - versions may contain any supported pre-defined TLS/SSL versions
+//   with a complete list found in TLS_VERSIONS. Leave empty to test all.
 func (s *Tester) Test(versions ...string) error {
 	if len(versions) == 0 {
-		versions = SSL_VERSIONS
+		versions = TLS_VERSIONS
 	}
 
 	workers := sync.WaitGroup{}
@@ -73,7 +73,7 @@ func (s *Tester) Test(versions ...string) error {
 			defer workers.Done()
 
 			for {
-				remaining, err := s.testSSL(s.proto, s.target, version)
+				remaining, err := s.testTLS(s.proto, s.target, version)
 				if err != nil {
 					s.sync.Lock()
 					errs = multierror.Append(errs, err)
@@ -97,7 +97,7 @@ func (s *Tester) Test(versions ...string) error {
 // results in the Tester.
 // Returns the number of remaining ciphers to test (if so desired)
 // and any potential error
-func (s *Tester) testSSL(proto string, target string, version string) (int, error) {
+func (s *Tester) testTLS(proto string, target string, version string) (int, error) {
 	conn, err := net.Dial(proto, target)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to connect to target")
@@ -111,14 +111,14 @@ func (s *Tester) testSSL(proto string, target string, version string) (int, erro
 		return true
 	}
 
-	msg, cipherCount, err := helloSSLMsg(version, ciphersFilter)
+	msg, cipherCount, err := helloTLSMsg(version, ciphersFilter)
 	if err != nil {
 		return 0, err
 	}
 
 	_, err = conn.Write(msg)
 	if err != nil {
-		return 0, errors.Wrap(err, "failed to send SSL hello")
+		return 0, errors.Wrap(err, "failed to send TLS hello")
 	}
 
 	success, err := s.parseHello(conn, version, ciphersFilter)
@@ -303,7 +303,7 @@ func (s *Tester) parseHandshake(data []byte, version string, ciphersFilter func(
 		return true, nil
 	default:
 		typ := "0x" + hex.EncodeToString([]byte{handshakeType})
-		s.addError("Unhandled SSL/TLS handshake: '" + typ + "'")
+		s.addError("Unhandled TLS/SSL handshake: '" + typ + "'")
 		return false, nil
 	}
 }
@@ -330,16 +330,16 @@ func (s *Tester) parseHello(conn net.Conn, version string, ciphersFilter func(ci
 
 		msgLen := bytes2int(header[3:5])
 		if msgLen == 0 {
-			return false, errors.New("No body in SSL/TLS response (type: '" + typ + "')")
+			return false, errors.New("No body in TLS/SSL response (type: '" + typ + "')")
 		}
 		if msgLen > 1<<20 {
-			return false, errors.New("SSL/TLS response body is too larget (type: '" + typ + "')")
+			return false, errors.New("TLS/SSL response body is too larget (type: '" + typ + "')")
 		}
 
 		msg := make([]byte, msgLen)
 		_, err = io.ReadFull(reader, msg)
 		if err != nil {
-			return false, errors.Wrap(err, "Failed to read full SSL/TLS response body (type: '"+typ+"')")
+			return false, errors.Wrap(err, "Failed to read full TLS/SSL response body (type: '"+typ+"')")
 		}
 
 		switch header[0] {
@@ -372,7 +372,7 @@ func (s *Tester) parseHello(conn net.Conn, version string, ciphersFilter func(ci
 			done = true
 
 		default:
-			s.addError("Unhandled SSL/TLS response (received '" + typ + "')")
+			s.addError("Unhandled TLS/SSL response (received '" + typ + "')")
 		}
 	}
 
@@ -416,7 +416,7 @@ func cipherNames(version string, filter func(cipher string) bool) []string {
 	}
 }
 
-func helloSSLMsg(version string, ciphersFilter func(cipher string) bool) ([]byte, int, error) {
+func helloTLSMsg(version string, ciphersFilter func(cipher string) bool) ([]byte, int, error) {
 	var ciphers []byte
 	var cipherCount int
 	var extensions []byte
@@ -482,10 +482,10 @@ func helloSSLMsg(version string, ciphersFilter func(cipher string) bool) ([]byte
 		extensions = ext.Bytes()
 
 	default:
-		return nil, 0, errors.New("unsupported SSL version: " + version)
+		return nil, 0, errors.New("unsupported TLS/SSL version: " + version)
 	}
 
-	return constructSSLHello(version, ciphers, extensions), cipherCount, nil
+	return constructTLSHello(version, ciphers, extensions), cipherCount, nil
 }
 
 func int1byte(i int) []byte {
@@ -518,7 +518,7 @@ func bytes3int(b []byte) int {
 	return int(binary.BigEndian.Uint32(append([]byte{0x00}, b...)))
 }
 
-func constructSSLHello(version string, ciphers []byte, extensions []byte) []byte {
+func constructTLSHello(version string, ciphers []byte, extensions []byte) []byte {
 	sessionID := ""
 	compressions := "\x00"
 
@@ -553,10 +553,10 @@ func constructSSLHello(version string, ciphers []byte, extensions []byte) []byte
 	core = append(core, int3bytes(len(c))...)
 	core = append(core, c...)
 
-	return constructSSLMsg(CONTENT_TYPE_Handshake, core, []byte(VERSIONS[version]))
+	return constructTLSMsg(CONTENT_TYPE_Handshake, core, []byte(VERSIONS[version]))
 }
 
-func constructSSLMsg(contentType byte, content []byte, version []byte) []byte {
+func constructTLSMsg(contentType byte, content []byte, version []byte) []byte {
 	var res bytes.Buffer
 	res.WriteByte(contentType)
 	res.Write(version)
