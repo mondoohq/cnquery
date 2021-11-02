@@ -98,10 +98,10 @@ func hex2ipv4(s string) (string, error) {
 		return "", err
 	}
 
-	return (strconv.FormatUint(a, 10) + "." +
-		strconv.FormatUint(b, 10) + "." +
+	return (strconv.FormatUint(d, 10) + "." +
 		strconv.FormatUint(c, 10) + "." +
-		strconv.FormatUint(d, 10)), nil
+		strconv.FormatUint(b, 10) + "." +
+		strconv.FormatUint(a, 10)), nil
 }
 
 func (p *lumiPorts) users() (map[int64]User, error) {
@@ -154,6 +154,8 @@ func (p *lumiPorts) processes() (map[int64]Process, error) {
 	return c.Data.(map[int64]Process), nil
 }
 
+// See:
+// - socket/address parsing: https://wiki.christophchamp.com/index.php?title=Unix_sockets
 func (p *lumiPorts) parseProcNet(path string, protocol string, users map[int64]User, processes map[int64]Process) ([]interface{}, error) {
 	motor := p.Runtime.Motor
 	fs := motor.Transport.FS()
