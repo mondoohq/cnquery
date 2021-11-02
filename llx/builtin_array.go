@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/hashicorp/go-multierror"
 	"go.mondoo.io/mondoo/types"
 )
 
@@ -131,6 +132,7 @@ func arrayBlockList(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 
 	finishedBlocks := 0
 
+	var anyError error
 	for idx := range arr {
 		blockResult := allResults[idx].(map[string]interface{})
 
@@ -140,19 +142,30 @@ func arrayBlockList(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 		}
 
 		finished := false
+		//Execution errors aren't returned by runFunctionBlock, some are in the results
+		// Collect any errors from results and add them to the rawData
+		// Effect: The query will show error instead
 		err := c.runFunctionBlock(bind, fun, func(res *RawResult) {
 			blockResult[res.CodeID] = res.Data
 
 			if len(blockResult) == len(fun.Entrypoints) && !finished {
+				if res.Data.Error != nil {
+					anyError = multierror.Append(anyError, res.Data.Error)
+				}
+
 				finishedBlocks++
 				finished = true
 			}
 
 			if finishedBlocks >= len(arr) {
+				// We can wait until we get done to collect all results
+				// TODO: what if one result is an error but the rest are ok?
+				// The current state will put the overall query into error state if one block is in error
 				c.cache.Store(ref, &stepCache{
 					Result: &RawData{
 						Type:  arrayBlockType,
 						Value: allResults,
+						Error: anyError,
 					},
 					IsStatic: true,
 				})

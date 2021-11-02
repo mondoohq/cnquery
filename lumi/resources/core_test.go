@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/logger"
 	"go.mondoo.io/mondoo/lumi"
@@ -1228,4 +1229,18 @@ func TestDict_Methods(t *testing.T) {
 			2, "left side of operation is null",
 		},
 	})
+}
+
+func TestArrayBlockError(t *testing.T) {
+	res := testQuery(t, "users.list { file(_.name + 'doesnotexist').content }")
+	assert.NotEmpty(t, res)
+	var queryResult *llx.RawResult
+	for _, r := range res {
+		if r.CodeID == "A9pn4sYRrgg=" {
+			queryResult = r
+			break
+		}
+	}
+	require.NotNil(t, queryResult)
+	require.Error(t, queryResult.Data.Error)
 }
