@@ -254,7 +254,7 @@ func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 	l := sync.Mutex{}
 	for it := range list {
 		i := it
-		c.runFunctionBlock(&RawData{Type: ct, Value: list[i]}, f, func(res *RawResult) {
+		err := c.runFunctionBlock(&RawData{Type: ct, Value: list[i]}, f, func(res *RawResult) {
 			resList := func() []interface{} {
 				l.Lock()
 				defer l.Unlock()
@@ -296,8 +296,10 @@ func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 
 				c.triggerChain(ref)
 			}
-
 		})
+		if err != nil {
+			return nil, 0, err
+		}
 	}
 
 	return nil, 0, nil
@@ -393,7 +395,7 @@ func arrayFieldDuplicates(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int
 	finishedResults := 0
 	for i := range list {
 		//Function block resolves field value of resource
-		c.runFunctionBlock(&RawData{Type: ct, Value: list[i]}, f, func(res *RawResult) {
+		err := c.runFunctionBlock(&RawData{Type: ct, Value: list[i]}, f, func(res *RawResult) {
 			_, ok := filteredList[i]
 			if !ok {
 				finishedResults++
@@ -473,6 +475,9 @@ func arrayFieldDuplicates(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int
 				c.triggerChain(ref)
 			}
 		})
+		if err != nil {
+			return nil, 0, err
+		}
 	}
 
 	return nil, 0, nil

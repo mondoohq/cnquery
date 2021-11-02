@@ -345,7 +345,7 @@ func dictWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDa
 	l := sync.Mutex{}
 	for it := range list {
 		i := it
-		c.runFunctionBlock(&RawData{Type: ct, Value: list[i]}, f, func(res *RawResult) {
+		err := c.runFunctionBlock(&RawData{Type: ct, Value: list[i]}, f, func(res *RawResult) {
 			resList := func() []interface{} {
 				l.Lock()
 				defer l.Unlock()
@@ -386,6 +386,9 @@ func dictWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDa
 				c.triggerChain(ref)
 			}
 		})
+		if err != nil {
+			return nil, 0, err
+		}
 	}
 
 	return nil, 0, nil
