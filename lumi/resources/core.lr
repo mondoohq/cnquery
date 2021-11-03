@@ -525,6 +525,24 @@ tls {
   certificates(params) []certificate
 }
 
+dns {
+  init(fqdn string)
+  fqdn string
+  records() []dns.record
+}
+
+dns.record {
+  // DNS name
+  name string
+  // Time-To-Live (TTL) in seconds
+  ttl int
+  // DNS class
+  class string
+  // DNS type
+  type string
+  rdata []string
+}
+
 // Rsyslog service configuration
 rsyslog.conf {
   init(path string)
