@@ -127,3 +127,7 @@ func (fs *mockFS) Glob(pattern string) ([]string, error) {
 
 	return matches, nil
 }
+
+func (fs *mockFS) Chown(name string, uid, gid int) error {
+	return errors.New("not implemented")
+}

@@ -2,10 +2,11 @@ package fs
 
 import (
 	"errors"
-	"github.com/spf13/afero"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/spf13/afero"
 )
 
 var notSupported = errors.New("not supported")
@@ -97,4 +98,8 @@ func (t *MountedFs) LstatIfPossible(name string) (os.FileInfo, bool, error) {
 	mountedPath := t.getPath(name)
 	fi, err := os.Lstat(mountedPath)
 	return fi, true, err
+}
+
+func (t *MountedFs) Chown(name string, uid, gid int) error {
+	return notSupported
 }

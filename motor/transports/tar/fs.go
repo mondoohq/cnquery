@@ -105,6 +105,10 @@ func (fs *FS) Chtimes(name string, atime time.Time, mtime time.Time) error {
 	return errors.New("chtimes not implemented")
 }
 
+func (fs *FS) Chown(name string, uid, gid int) error {
+	return errors.New("chown not implemented")
+}
+
 func (fs *FS) stat(header *tar.Header) (os.FileInfo, error) {
 	statHeader := header
 	if header.Typeflag == tar.TypeSymlink {

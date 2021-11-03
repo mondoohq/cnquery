@@ -109,3 +109,7 @@ func (cat *CatFs) Chmod(name string, mode os.FileMode) error {
 func (cat *CatFs) Chtimes(name string, atime time.Time, mtime time.Time) error {
 	return errors.New("not implemented")
 }
+
+func (cat *CatFs) Chown(name string, uid, gid int) error {
+	return errors.New("not implemented")
+}
