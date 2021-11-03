@@ -73,6 +73,7 @@ func (t *FsTransport) Close() {
 
 func (t *FsTransport) Capabilities() transports.Capabilities {
 	return transports.Capabilities{
+		transports.Capability_FileSearch,
 		transports.Capability_File,
 	}
 }

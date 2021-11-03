@@ -4,9 +4,11 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"regexp"
 	"time"
 
 	"github.com/spf13/afero"
+	"go.mondoo.io/mondoo/motor/transports/shared"
 )
 
 var notSupported = errors.New("not supported")
@@ -102,4 +104,9 @@ func (t *MountedFs) LstatIfPossible(name string) (os.FileInfo, bool, error) {
 
 func (t *MountedFs) Chown(name string, uid, gid int) error {
 	return notSupported
+}
+
+func (t *MountedFs) Find(from string, r *regexp.Regexp, typ string) ([]string, error) {
+	iofs := afero.NewIOFS(t)
+	return shared.FindFiles(iofs, from, r, typ)
 }
