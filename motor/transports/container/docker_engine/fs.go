@@ -66,3 +66,7 @@ func (fs *FS) Chmod(name string, mode os.FileMode) error {
 func (fs *FS) Chtimes(name string, atime time.Time, mtime time.Time) error {
 	return errors.New("chtimes not implemented")
 }
+
+func (fs *FS) Chown(name string, uid, gid int) error {
+	return errors.New("chown not implemented")
+}

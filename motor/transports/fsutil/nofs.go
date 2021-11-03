@@ -59,3 +59,7 @@ func (NoFs) Chmod(name string, mode os.FileMode) error {
 func (NoFs) Chtimes(name string, atime time.Time, mtime time.Time) error {
 	return notImplementedError
 }
+
+func (NoFs) Chown(name string, uid, gid int) error {
+	return notImplementedError
+}

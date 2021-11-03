@@ -267,3 +267,7 @@ func (fs recordFS) Chtimes(name string, atime time.Time, mtime time.Time) error 
 // func (fs recordFS) Glob(pattern string) ([]string, error) {
 // 	return fs.observe.Glob(pattern)
 // }
+
+func (fs recordFS) Chown(name string, uid, gid int) error {
+	return fs.observe.Chown(name, uid, gid)
+}
