@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	uuid "github.com/gofrs/uuid"
+	"github.com/hashicorp/go-multierror"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/types"
@@ -242,6 +243,7 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, ref int3
 
 	blockResult := map[string]interface{}{}
 
+	var anyError error
 	err := c.runFunctionBlock(bind, fun, func(res *RawResult) {
 		if fun.SingleValue {
 			c.cache.Store(ref, &stepCache{
@@ -251,6 +253,9 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, ref int3
 			return
 		}
 
+		if _, exists := blockResult[res.CodeID]; !exists && res.Data.Error != nil {
+			anyError = multierror.Append(anyError, res.Data.Error)
+		}
 		blockResult[res.CodeID] = res.Data
 		if len(blockResult) == len(fun.Entrypoints) {
 			if bind != nil && bind.Type.IsResource() {
@@ -269,6 +274,7 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, ref int3
 				Result: &RawData{
 					Type:  types.Block,
 					Value: blockResult,
+					Error: anyError,
 				},
 				IsStatic: true,
 			})
