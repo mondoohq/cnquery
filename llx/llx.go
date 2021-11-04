@@ -242,7 +242,6 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, ref int3
 
 	blockResult := map[string]interface{}{}
 
-	var anyError error
 	err := c.runFunctionBlock(bind, fun, func(res *RawResult) {
 		if fun.SingleValue {
 			c.cache.Store(ref, &stepCache{
@@ -253,7 +252,6 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, ref int3
 		}
 
 		blockResult[res.CodeID] = res.Data
-		anyError = res.Data.Error
 		if len(blockResult) == len(fun.Entrypoints) {
 			if bind != nil && bind.Type.IsResource() {
 				rr, ok := bind.Value.(lumi.ResourceType)
@@ -263,7 +261,6 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, ref int3
 					blockResult["_"] = &RawData{
 						Type:  bind.Type,
 						Value: rr,
-						Error: anyError,
 					}
 				}
 			}
@@ -272,7 +269,6 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, ref int3
 				Result: &RawData{
 					Type:  types.Block,
 					Value: blockResult,
-					Error: anyError,
 				},
 				IsStatic: true,
 			})
