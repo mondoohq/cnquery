@@ -149,7 +149,7 @@ func certificatesToLumiCertificates(runtime *lumi.Runtime, certs []*x509.Certifi
 			"pem", string(certdata),
 			// NOTE: if we do not set the hash here, it will generate the cache content before we can store it
 			// we are using the hashs for the id, therefore it is required during creation
-			"hashs", certHashs(cert),
+			"fingerprints", certFingerprints(cert),
 		)
 		if err != nil {
 			return nil, err
@@ -165,7 +165,7 @@ func certificatesToLumiCertificates(runtime *lumi.Runtime, certs []*x509.Certifi
 }
 
 func (r *lumiCertificate) id() (string, error) {
-	fingerprints, err := r.Hashs()
+	fingerprints, err := r.Fingerprints()
 	if err != nil {
 		return "", err
 	}
@@ -199,7 +199,7 @@ func (s *lumiCertificate) getGoCert() *x509.Certificate {
 	return cert[0]
 }
 
-func certHashs(cert *x509.Certificate) map[string]interface{} {
+func certFingerprints(cert *x509.Certificate) map[string]interface{} {
 	return map[string]interface{}{
 		"sha1":   hex.EncodeToString(certificates.Sha1Hash(cert)),
 		"sha256": hex.EncodeToString(certificates.Sha256Hash(cert)),
@@ -207,9 +207,9 @@ func certHashs(cert *x509.Certificate) map[string]interface{} {
 	}
 }
 
-func (s *lumiCertificate) GetHashs() (map[string]interface{}, error) {
+func (s *lumiCertificate) GetFingerprints() (map[string]interface{}, error) {
 	cert := s.getGoCert()
-	return certHashs(cert), nil
+	return certFingerprints(cert), nil
 }
 
 func (s *lumiCertificate) GetSerial() (string, error) {
