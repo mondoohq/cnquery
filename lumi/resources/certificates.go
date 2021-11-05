@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
@@ -74,7 +75,6 @@ func (a *lumiParseCertificates) GetContent(file File) (string, error) {
 }
 
 func pkixnameToLumi(runtime *lumi.Runtime, name pkix.Name, id string) (PkixName, error) {
-
 	names := map[string]interface{}{}
 	for i := range name.Names {
 		key := name.Names[i].Type.String()
@@ -259,16 +259,14 @@ func (s *lumiCertificate) GetIsca() (bool, error) {
 	return cert.IsCA, nil
 }
 
-func (s *lumiCertificate) GetNotbefore() (int64, error) {
+func (s *lumiCertificate) GetNotbefore() (*time.Time, error) {
 	cert := s.getGoCert()
-	// TODO: we may want to return a real timestamp
-	return cert.NotBefore.Unix(), nil
+	return &cert.NotBefore, nil
 }
 
-func (s *lumiCertificate) GetNotafter() (int64, error) {
+func (s *lumiCertificate) GetNotafter() (*time.Time, error) {
 	cert := s.getGoCert()
-	// TODO: we may want to return a real timestamp
-	return cert.NotAfter.Unix(), nil
+	return &cert.NotAfter, nil
 }
 
 var keyusageNames = map[x509.KeyUsage]string{

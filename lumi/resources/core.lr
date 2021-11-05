@@ -960,8 +960,8 @@ certificate {
   subject() pkix.name
   issuer() pkix.name
   version() int
-  notbefore() int
-  notafter() int
+  notbefore() time
+  notafter() time
   signature() string
   signingalgorithm() string
   isca() bool
