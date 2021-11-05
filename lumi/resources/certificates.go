@@ -217,13 +217,13 @@ func (s *lumiCertificate) GetSerial() (string, error) {
 	return certificates.HexEncodeToHumanString(cert.SerialNumber.Bytes()), nil
 }
 
-func (s *lumiCertificate) GetSubjectkeyid() (string, error) {
+func (s *lumiCertificate) GetSubjectKeyID() (string, error) {
 	cert := s.getGoCert()
 	// TODO: we may want return bytes and leave the printing to runtime
 	return certificates.HexEncodeToHumanString(cert.SubjectKeyId), nil
 }
 
-func (s *lumiCertificate) GetAuthoritykeyid() (string, error) {
+func (s *lumiCertificate) GetAuthorityKeyID() (string, error) {
 	cert := s.getGoCert()
 	// TODO: we may want return bytes and leave the printing to runtime
 	return certificates.HexEncodeToHumanString(cert.AuthorityKeyId), nil
@@ -254,17 +254,17 @@ func (s *lumiCertificate) GetVersion() (int64, error) {
 	return int64(cert.Version), nil
 }
 
-func (s *lumiCertificate) GetIsca() (bool, error) {
+func (s *lumiCertificate) GetIsCA() (bool, error) {
 	cert := s.getGoCert()
 	return cert.IsCA, nil
 }
 
-func (s *lumiCertificate) GetNotbefore() (*time.Time, error) {
+func (s *lumiCertificate) GetNotBefore() (*time.Time, error) {
 	cert := s.getGoCert()
 	return &cert.NotBefore, nil
 }
 
-func (s *lumiCertificate) GetNotafter() (*time.Time, error) {
+func (s *lumiCertificate) GetNotAfter() (*time.Time, error) {
 	cert := s.getGoCert()
 	return &cert.NotAfter, nil
 }
@@ -281,7 +281,7 @@ var keyusageNames = map[x509.KeyUsage]string{
 	x509.KeyUsageDecipherOnly:      "DecipherOnly",
 }
 
-func (s *lumiCertificate) GetKeyusage() ([]interface{}, error) {
+func (s *lumiCertificate) GetKeyUsage() ([]interface{}, error) {
 	res := []interface{}{}
 	cert := s.getGoCert()
 
@@ -311,7 +311,7 @@ var extendendkeyusageNames = map[x509.ExtKeyUsage]string{
 	x509.ExtKeyUsageMicrosoftKernelCodeSigning:     "MicrosoftKernelCodeSigning",
 }
 
-func (s *lumiCertificate) GetExtendedkeyusage() ([]interface{}, error) {
+func (s *lumiCertificate) GetExtendedKeyUsage() ([]interface{}, error) {
 	res := []interface{}{}
 	cert := s.getGoCert()
 	for i := range cert.ExtKeyUsage {
@@ -340,7 +340,7 @@ func (s *lumiCertificate) GetExtensions() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiCertificate) GetPolicyidentifier() ([]interface{}, error) {
+func (s *lumiCertificate) GetPolicyIdentifier() ([]interface{}, error) {
 	res := []interface{}{}
 	cert := s.getGoCert()
 	for i := range cert.PolicyIdentifiers {
@@ -349,7 +349,7 @@ func (s *lumiCertificate) GetPolicyidentifier() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiCertificate) GetSigningalgorithm() (string, error) {
+func (s *lumiCertificate) GetSigningAlgorithm() (string, error) {
 	cert := s.getGoCert()
 	return cert.SignatureAlgorithm.String(), nil
 }
@@ -360,17 +360,17 @@ func (s *lumiCertificate) GetSignature() (string, error) {
 	return hex.EncodeToString(cert.Signature), nil
 }
 
-func (s *lumiCertificate) GetCrldistributionpoints() ([]interface{}, error) {
+func (s *lumiCertificate) GetCrlDistributionPoints() ([]interface{}, error) {
 	cert := s.getGoCert()
 	return strSliceToInterface(cert.CRLDistributionPoints), nil
 }
 
-func (s *lumiCertificate) GetOcspserver() ([]interface{}, error) {
+func (s *lumiCertificate) GetOcspServer() ([]interface{}, error) {
 	cert := s.getGoCert()
 	return strSliceToInterface(cert.OCSPServer), nil
 }
 
-func (s *lumiCertificate) GetIssuingcertificateurl() ([]interface{}, error) {
+func (s *lumiCertificate) GetIssuingCertificateUrl() ([]interface{}, error) {
 	cert := s.getGoCert()
 	return strSliceToInterface(cert.IssuingCertificateURL), nil
 }

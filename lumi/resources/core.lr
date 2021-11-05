@@ -952,26 +952,46 @@ pkix.extension {
 
 // x509 Certificate Resource
 certificate {
+  // PEM content
   pem string
+  // Certificate Fingerprints
   hashs() map[string]string
+  // Serial Number
   serial() string
-  subjectkeyid() string
-  authoritykeyid() string
+  // Subject Unique Identifier
+  subjectKeyID() string
+  // Authority Key Identifier
+  authorityKeyID() string
+  // Subject
   subject() pkix.name
+  // Issuer
   issuer() pkix.name
+  // Version Number
   version() int
-  notbefore() time
-  notafter() time
+  // Validity period Validity period
+  notBefore() time
+  // Validity period Not After
+  notAfter() time
+  // Signature
   signature() string
-  signingalgorithm() string
-  isca() bool
-  keyusage() []string
-  extendedkeyusage() []string
+  // Signature Algorithm ID
+  signingAlgorithm() string
+  // Flag if Certificate Authority
+  isCA() bool
+  // Key Usage
+  keyUsage() []string
+  // Extended Key Usage
+  extendedKeyUsage() []string
+  // Extensions
   extensions() []pkix.extension
-  policyidentifier() []string
-  crldistributionpoints() []string
-  ocspserver() []string
-  issuingcertificateurl() []string
+  // Policy Identifier
+  policyIdentifier() []string
+  // CRL Distribution Points
+  crlDistributionPoints() []string
+  // OCSP
+  ocspServer() []string
+  // Issuing Certificate Url
+  issuingCertificateUrl() []string
 }
 
 // Private Key Resource
