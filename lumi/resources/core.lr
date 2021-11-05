@@ -627,7 +627,7 @@ os.update {
 }
 
 // Operating System root certificates
-os.rootcertificates {
+os.rootCertificates {
   []certificate(content)
   // List of files that define these certificates
   files() []file
@@ -929,24 +929,36 @@ parse.certificates {
 // x509 Certificate PKIX Name
 pkix.name {
   id string
+  // Distinguished Name Qualifier
   dn string
-  serialnumber string
-  commonname string
+  // Serial Number
+  serialNumber string
+  // Common Name
+  commonName string
+  // Country
   country []string
+  // Organization
   organization []string
-  organizationalunit []string
+  // Organizational Unit
+  organizationalUnit []string
   locality []string
+  // State or Province
   province []string
-  streetaddress []string
-  postalcode []string
+  // Street Address
+  streetAddress []string
+  // Postal Code
+  postalCode []string
   names      map[string]string
-  extranames map[string]string
+  extraNames map[string]string
 }
 
 // x509 Certificate PKIX Extension
 pkix.extension {
+  // Extension Identifier
   identifier string
+  // Flag for Critical Extension
   critical bool
+  // Extension Value
   value string
 }
 

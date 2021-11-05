@@ -91,17 +91,17 @@ func pkixnameToLumi(runtime *lumi.Runtime, name pkix.Name, id string) (PkixName,
 	lumiPkixName, err := runtime.CreateResource("pkix.name",
 		"id", id,
 		"dn", name.String(),
-		"serialnumber", name.SerialNumber,
-		"commonname", name.CommonName,
+		"serialNumber", name.SerialNumber,
+		"commonName", name.CommonName,
 		"country", strSliceToInterface(name.Country),
 		"organization", strSliceToInterface(name.Organization),
-		"organizationalunit", strSliceToInterface(name.OrganizationalUnit),
+		"organizationalUnit", strSliceToInterface(name.OrganizationalUnit),
 		"locality", strSliceToInterface(name.Locality),
 		"province", strSliceToInterface(name.Province),
-		"streetaddress", strSliceToInterface(name.StreetAddress),
-		"postalcode", strSliceToInterface(name.PostalCode),
+		"streetAddress", strSliceToInterface(name.StreetAddress),
+		"postalCode", strSliceToInterface(name.PostalCode),
 		"names", names,
-		"extranames", extraNames,
+		"extraNames", extraNames,
 	)
 	if err != nil {
 		return nil, err
@@ -391,11 +391,11 @@ func (r *lumiPkixExtension) id() (string, error) {
 	return r.Identifier()
 }
 
-func (s *lumiOsRootcertificates) id() (string, error) {
+func (s *lumiOsRootCertificates) id() (string, error) {
 	return "osrootcertificates", nil
 }
 
-func (s *lumiOsRootcertificates) init(args *lumi.Args) (*lumi.Args, OsRootcertificates, error) {
+func (s *lumiOsRootCertificates) init(args *lumi.Args) (*lumi.Args, OsRootCertificates, error) {
 	pi, err := s.Runtime.Motor.Platform()
 	if err != nil {
 		return nil, nil, err
@@ -434,11 +434,11 @@ func (s *lumiOsRootcertificates) init(args *lumi.Args) (*lumi.Args, OsRootcertif
 	return args, nil, nil
 }
 
-func (s *lumiOsRootcertificates) GetFiles() ([]interface{}, error) {
+func (s *lumiOsRootCertificates) GetFiles() ([]interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (s *lumiOsRootcertificates) GetContent(files []interface{}) ([]interface{}, error) {
+func (s *lumiOsRootCertificates) GetContent(files []interface{}) ([]interface{}, error) {
 	contents := []interface{}{}
 
 	for i := range files {
@@ -461,7 +461,7 @@ func (s *lumiOsRootcertificates) GetContent(files []interface{}) ([]interface{},
 	return contents, nil
 }
 
-func (s *lumiOsRootcertificates) GetList(content []interface{}) ([]interface{}, error) {
+func (s *lumiOsRootCertificates) GetList(content []interface{}) ([]interface{}, error) {
 	certificateList := []*x509.Certificate{}
 	for i := range content {
 		certs, err := certificates.ParseCertFromPEM(strings.NewReader(content[i].(string)))

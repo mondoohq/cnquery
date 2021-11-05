@@ -10,17 +10,17 @@ import (
 // parse.certificates('/etc/ssl/cert.pem').list {
 // 		fingerprints
 // 		serial
-// 		subjectkeyid
-// 		authoritykeyid
-// 		isca
+// 		subjectKeyID
+// 		authorityKeyID
+// 		isCA
 // 		version
-// 		keyusage
-// 		extendedkeyusage
-// 		crldistributionpoints
-// 		ocspserver
-// 		issuingcertificateurl
-// 		issuer { serialnumber commonname }
-// 		subject {serialnumber commonname}
+// 		keyUsage
+// 		extendedKeyUsage
+// 		crlDistributionPoints
+// 		ocspServer
+// 		issuingCertificateUrl
+// 		issuer { serialNumber commonName }
+// 		subject {serialNumber commonName}
 // 		policyidentifier
 // 		extensions { identifier }
 // }
@@ -40,7 +40,7 @@ func TestResource_ParseCertificates(t *testing.T) {
 	})
 
 	t.Run("test certificate issuer commonname", func(t *testing.T) {
-		res := testQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].issuer.commonname")
+		res := testQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].issuer.commonName")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, "Amazon Root CA 1", res[0].Data.Value)
@@ -54,14 +54,14 @@ func TestResource_ParseCertificates(t *testing.T) {
 	})
 
 	t.Run("test certificate subjectkeyid", func(t *testing.T) {
-		res := testQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].subjectkeyid")
+		res := testQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].subjectKeyID")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, "84:18:cc:85:34:ec:bc:0c:94:94:2e:08:59:9c:c7:b2:10:4e:0a:08", res[0].Data.Value)
 	})
 
 	t.Run("test certificate authoritykeyid", func(t *testing.T) {
-		res := testQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].authoritykeyid")
+		res := testQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].authorityKeyID")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, "", res[0].Data.Value)
@@ -75,14 +75,14 @@ func TestResource_ParseCertificates(t *testing.T) {
 	})
 
 	t.Run("test certificate isca", func(t *testing.T) {
-		res := testQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].isca")
+		res := testQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].isCA")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, true, res[0].Data.Value)
 	})
 
 	t.Run("test certificate keyusage", func(t *testing.T) {
-		res := testQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].keyusage")
+		res := testQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].keyUsage")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		list := res[0].Data.Value.([]interface{})
@@ -92,28 +92,28 @@ func TestResource_ParseCertificates(t *testing.T) {
 	})
 
 	t.Run("test certificate extendedkeyusage", func(t *testing.T) {
-		res := testQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].extendedkeyusage")
+		res := testQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].extendedKeyUsage")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, []interface{}{}, res[0].Data.Value)
 	})
 
 	t.Run("test certificate crldistributionpoints", func(t *testing.T) {
-		res := testQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].crldistributionpoints")
+		res := testQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].crlDistributionPoints")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, []interface{}{}, res[0].Data.Value)
 	})
 
 	t.Run("test certificate ocspserver", func(t *testing.T) {
-		res := testQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].ocspserver")
+		res := testQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].ocspServer")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, []interface{}{}, res[0].Data.Value)
 	})
 
 	t.Run("test certificate issuingcertificateurl", func(t *testing.T) {
-		res := testQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].issuingcertificateurl")
+		res := testQuery(t, "parse.certificates('/etc/ssl/cert.pem').list[0].issuingCertificateUrl")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, []interface{}{}, res[0].Data.Value)
@@ -122,7 +122,7 @@ func TestResource_ParseCertificates(t *testing.T) {
 
 func TestResource_OSRootCertificates(t *testing.T) {
 	t.Run("list root certificates", func(t *testing.T) {
-		res := testQuery(t, "os.rootcertificates().length")
+		res := testQuery(t, "os.rootCertificates().length")
 		assert.NotEmpty(t, res)
 		assert.Equal(t, int64(1), res[0].Data.Value.(int64))
 	})
