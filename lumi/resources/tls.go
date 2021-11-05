@@ -110,7 +110,7 @@ func (s *lumiTls) GetParams(socket Socket) (map[string]interface{}, error) {
 			"pem", "",
 			// NOTE: if we do not set the hash here, it will generate the cache content before we can store it
 			// we are using the hashs for the id, therefore it is required during creation
-			"hashs", certHashs(cert),
+			"fingerprints", certFingerprints(cert),
 		)
 		if err != nil {
 			return nil, err

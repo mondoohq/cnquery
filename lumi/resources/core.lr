@@ -955,7 +955,7 @@ certificate {
   // PEM content
   pem string
   // Certificate Fingerprints
-  hashs() map[string]string
+  fingerprints() map[string]string
   // Serial Number
   serial() string
   // Subject Unique Identifier
