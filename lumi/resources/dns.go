@@ -1,6 +1,8 @@
 package resources
 
 import (
+	"strconv"
+
 	"github.com/miekg/dns"
 	"go.mondoo.io/mondoo/lumi/resources/dnsshake"
 )
@@ -63,4 +65,70 @@ func (d *lumiDnsRecord) id() (string, error) {
 	t, _ := d.Type()
 	c, _ := d.Class()
 	return "dns.record/" + name + "/" + c + "/" + t, nil
+}
+
+func (d *lumiDns) GetMx(params map[string]interface{}) ([]interface{}, error) {
+	mxEntries := []interface{}{}
+	record, ok := params["MX"]
+	if !ok {
+		return mxEntries, nil
+	}
+
+	r := record.(map[string]interface{})
+
+	var name, c, t string
+	var ttl int64
+	var rdata []interface{}
+
+	if r["name"] != nil {
+		name = r["name"].(string)
+	}
+
+	if r["class"] != nil {
+		c = r["class"].(string)
+	}
+
+	if r["type"] != nil {
+		t = r["type"].(string)
+	}
+
+	if r["TTL"] != nil {
+		ttl = r["TTL"].(int64)
+	}
+
+	if r["rData"] != nil {
+		rdata = r["rData"].([]interface{})
+	}
+
+	for j := range rdata {
+		entry := rdata[j].(string)
+
+		// use dns package to parse mx entry
+		s := name + "\t" + strconv.FormatInt(ttl, 10) + "\t" + c + "\t" + t + "\t" + entry
+		got, err := dns.NewRR(s)
+		if err != nil {
+			return nil, err
+		}
+
+		switch v := got.(type) {
+		case *dns.MX:
+			mxEntry, err := d.Runtime.CreateResource("dns.mxRecord",
+				"name", name,
+				"preference", int64(v.Preference),
+				"domainName", v.Mx,
+			)
+			if err != nil {
+				return nil, err
+			}
+			mxEntries = append(mxEntries, mxEntry)
+		}
+	}
+
+	return mxEntries, nil
+}
+
+func (d *lumiDnsMxRecord) id() (string, error) {
+	name, err := d.Name()
+	domainName, _ := d.DomainName()
+	return "dns.mx/" + name + "+" + domainName, err
 }

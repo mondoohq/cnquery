@@ -532,6 +532,8 @@ dns {
   params() dict
   // Successful DNS records
   records(params) []dns.record
+  // Successful DNS MX records
+  mx(params) []dns.mxRecord
 }
 
 dns.record {
@@ -545,6 +547,12 @@ dns.record {
   type string
   // Resource Data
   rdata []string
+}
+
+dns.mxRecord {
+  name string
+  preference int
+  domainName string
 }
 
 // Rsyslog service configuration
