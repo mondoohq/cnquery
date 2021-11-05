@@ -972,6 +972,8 @@ certificate {
   notBefore() time
   // Validity period Not After
   notAfter() time
+  // Expiration Duration
+  expiresIn() time
   // Signature
   signature() string
   // Signature Algorithm ID

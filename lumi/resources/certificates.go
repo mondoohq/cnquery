@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/certificates"
 	"go.mondoo.io/mondoo/motor/platform"
@@ -267,6 +268,13 @@ func (s *lumiCertificate) GetNotBefore() (*time.Time, error) {
 func (s *lumiCertificate) GetNotAfter() (*time.Time, error) {
 	cert := s.getGoCert()
 	return &cert.NotAfter, nil
+}
+
+func (s *lumiCertificate) GetExpiresIn() (*time.Time, error) {
+	cert := s.getGoCert()
+	diff := cert.NotAfter.Unix() - time.Now().Unix()
+	ts := llx.DurationToTime(diff)
+	return &ts, nil
 }
 
 var keyusageNames = map[x509.KeyUsage]string{
