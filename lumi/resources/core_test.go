@@ -238,7 +238,7 @@ func testTimeout(t *testing.T, codes ...string) {
 			}
 			defer executor.RemoveCode(res.Code.Id, code)
 
-			var timeoutTime = 5
+			timeoutTime := 5
 			if !executor.WaitForResults(time.Duration(timeoutTime) * time.Second) {
 				t.Error("ran into timeout after ", timeoutTime, " seconds")
 				return
@@ -326,7 +326,8 @@ func TestCore_If(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"if ( mondoo.version != null ) { 123 }",
-			1, map[string]interface{}{
+			1,
+			map[string]interface{}{
 				"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
 			},
 		},
@@ -336,25 +337,29 @@ func TestCore_If(t *testing.T) {
 		},
 		{
 			"if ( mondoo.version != null ) { 123 } else { 456 }",
-			1, map[string]interface{}{
+			1,
+			map[string]interface{}{
 				"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
 			},
 		},
 		{
 			"if ( mondoo.version == null ) { 123 } else { 456 }",
-			1, map[string]interface{}{
+			1,
+			map[string]interface{}{
 				"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
 			},
 		},
 		{
 			"if (false) { 123 } else if (true) { 456 } else { 789 }",
-			0, map[string]interface{}{
+			0,
+			map[string]interface{}{
 				"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
 			},
 		},
 		{
 			"if (false) { 123 } else if (false) { 456 } else { 789 }",
-			0, map[string]interface{}{
+			0,
+			map[string]interface{}{
 				"Oy5SF8NbUtxaBwvZPpsnd0K21CY+fvC44FSd2QpgvIL689658Na52udy7qF2+hHjczk35TAstDtFZq7JIHNCmg==": llx.IntData(789),
 			},
 		},
@@ -364,7 +369,8 @@ func TestCore_If(t *testing.T) {
 		},
 		{
 			"if (true) { return [1] } return [2,3]",
-			0, []interface{}{int64(1)},
+			0,
+			[]interface{}{int64(1)},
 		},
 		{
 			"if (false) { return 123 } return 456",
@@ -422,7 +428,8 @@ func TestCore_Vars(t *testing.T) {
 		},
 		{
 			"a = [1,2,3]; return a",
-			0, []interface{}{int64(1), int64(2), int64(3)},
+			0,
+			[]interface{}{int64(1), int64(2), int64(3)},
 		},
 	})
 }
@@ -567,47 +574,58 @@ func TestRegex_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"'hello bob'.find(/he\\w*\\s?[bo]+/)",
-			0, []interface{}{"hello bob"},
+			0,
+			[]interface{}{"hello bob"},
 		},
 		{
 			"'HellO'.find(/hello/i)",
-			0, []interface{}{"HellO"},
+			0,
+			[]interface{}{"HellO"},
 		},
 		{
 			"'hello\nworld'.find(/hello.world/s)",
-			0, []interface{}{"hello\nworld"},
+			0,
+			[]interface{}{"hello\nworld"},
 		},
 		{
 			"'yo! hello\nto the world'.find(/\\w+$/m)",
-			0, []interface{}{"hello", "world"},
+			0,
+			[]interface{}{"hello", "world"},
 		},
 		{
 			"'IPv4: 0.0.0.0, 255.255.255.255, 1.50.120.230, 256.0.0.0 '.find(regex.ipv4)",
-			0, []interface{}{"0.0.0.0", "255.255.255.255", "1.50.120.230"},
+			0,
+			[]interface{}{"0.0.0.0", "255.255.255.255", "1.50.120.230"},
 		},
 		{
 			"'IPv6: 2001:0db8:85a3:0000:0000:8a2e:0370:7334'.find(regex.ipv6)",
-			0, []interface{}{"2001:0db8:85a3:0000:0000:8a2e:0370:7334"},
+			0,
+			[]interface{}{"2001:0db8:85a3:0000:0000:8a2e:0370:7334"},
 		},
 		{
 			"'Sarah Summers <sarah@summe.rs>'.find( regex.email )",
-			0, []interface{}{"sarah@summe.rs"},
+			0,
+			[]interface{}{"sarah@summe.rs"},
 		},
 		{
 			"'one+1@sum.me.rs:'.find( regex.email )",
-			0, []interface{}{"one+1@sum.me.rs"},
+			0,
+			[]interface{}{"one+1@sum.me.rs"},
 		},
 		{
 			"'Urls: http://mondoo.io/welcome'.find( regex.url )",
-			0, []interface{}{"http://mondoo.io/welcome"},
+			0,
+			[]interface{}{"http://mondoo.io/welcome"},
 		},
 		{
 			"'mac 01:23:45:67:89:ab attack'.find(regex.mac)",
-			0, []interface{}{"01:23:45:67:89:ab"},
+			0,
+			[]interface{}{"01:23:45:67:89:ab"},
 		},
 		{
 			"'uuid: b7f99555-5bca-48f4-b86f-a953a4883383.'.find(regex.uuid)",
-			0, []interface{}{"b7f99555-5bca-48f4-b86f-a953a4883383"},
+			0,
+			[]interface{}{"b7f99555-5bca-48f4-b86f-a953a4883383"},
 		},
 		{
 			"'some ⮆" + string(emojiTestString) + " ⮄ emojis'.find(regex.emoji).length",
@@ -615,7 +633,8 @@ func TestRegex_Methods(t *testing.T) {
 		},
 		{
 			"'semvers: 1, 1.2, 1.2.3, 1.2.3-4'.find(regex.semver)",
-			0, []interface{}{"1.2.3", "1.2.3-4"},
+			0,
+			[]interface{}{"1.2.3", "1.2.3-4"},
 		},
 	})
 }
@@ -652,11 +671,13 @@ func TestString_Methods(t *testing.T) {
 		},
 		{
 			"'hello world'.split(' ')",
-			0, []interface{}{"hello", "world"},
+			0,
+			[]interface{}{"hello", "world"},
 		},
 		{
 			"'he\nll\no'.lines",
-			0, []interface{}{"he", "ll", "o"},
+			0,
+			[]interface{}{"he", "ll", "o"},
 		},
 		{
 			"' \n\t yo \t \n   '.trim",
@@ -677,11 +698,13 @@ func TestScore_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"score(100)",
-			0, []byte{0x00, byte(100)},
+			0,
+			[]byte{0x00, byte(100)},
 		},
 		{
 			"score(\"CVSS:3.1/AV:P/AC:H/PR:L/UI:N/S:U/C:H/I:L/A:H\")",
-			0, []byte{0x01, 0x03, 0x01, 0x04, 0x00, 0x00, 0x00, 0x01, 0x00},
+			0,
+			[]byte{0x01, 0x03, 0x01, 0x04, 0x00, 0x00, 0x00, 0x01, 0x00},
 		},
 	})
 }
@@ -752,7 +775,7 @@ func TestTime_Methods(t *testing.T) {
 		},
 		{
 			"parse.date('1970-01-01T01:02:03Z').unix",
-			0, int64(1*60*60 + 02*60 + 03),
+			0, int64(1*60*60 + 0o2*60 + 0o3),
 		},
 		{
 			"parse.date('1970-01-01T01:02:04Z') - parse.date('1970-01-01T01:02:03Z')",
@@ -845,15 +868,18 @@ func TestArray(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"[1,2,3]",
-			0, []interface{}{int64(1), int64(2), int64(3)},
+			0,
+			[]interface{}{int64(1), int64(2), int64(3)},
 		},
 		{
 			"return [1,2,3]",
-			0, []interface{}{int64(1), int64(2), int64(3)},
+			0,
+			[]interface{}{int64(1), int64(2), int64(3)},
 		},
 		{
 			"[1,2,3] { _ == 2 }",
-			0, []interface{}{
+			0,
+			[]interface{}{
 				map[string]interface{}{"OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolFalse},
 				map[string]interface{}{"OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolTrue},
 				map[string]interface{}{"OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolFalse},
@@ -861,31 +887,38 @@ func TestArray(t *testing.T) {
 		},
 		{
 			"[1,2,3].where()",
-			0, []interface{}{int64(1), int64(2), int64(3)},
+			0,
+			[]interface{}{int64(1), int64(2), int64(3)},
 		},
 		{
 			"[true, true, false].where(true)",
-			0, []interface{}{true, true},
+			0,
+			[]interface{}{true, true},
 		},
 		{
 			"[false, true, false].where(false)",
-			0, []interface{}{false, false},
+			0,
+			[]interface{}{false, false},
 		},
 		{
 			"[1,2,3].where(2)",
-			0, []interface{}{int64(2)},
+			0,
+			[]interface{}{int64(2)},
 		},
 		{
 			"[1,2,3].where(_ > 2)",
-			0, []interface{}{int64(3)},
+			0,
+			[]interface{}{int64(3)},
 		},
 		{
 			"[1,2,3].where(_ >= 2)",
-			0, []interface{}{int64(2), int64(3)},
+			0,
+			[]interface{}{int64(2), int64(3)},
 		},
 		{
 			"['yo','ho','ho'].where( /y.$/ )",
-			0, []interface{}{"yo"},
+			0,
+			[]interface{}{"yo"},
 		},
 		{
 			"[1,2,3].contains(_ >= 2)",
@@ -909,19 +942,23 @@ func TestArray(t *testing.T) {
 		},
 		{
 			"[0].where(_ > 0).where(_ > 0)",
-			0, []interface{}{},
+			0,
+			[]interface{}{},
 		},
 		{
 			"[1,2,2,2,3].unique()",
-			0, []interface{}{int64(1), int64(2), int64(3)},
+			0,
+			[]interface{}{int64(1), int64(2), int64(3)},
 		},
 		{
 			"[1,1,2,2,2,3].duplicates()",
-			0, []interface{}{int64(1), int64(2)},
+			0,
+			[]interface{}{int64(1), int64(2)},
 		},
 		{
 			"[2,1,2,2].containsOnly([2])",
-			0, []interface{}{int64(1)},
+			0,
+			[]interface{}{int64(1)},
 		},
 		{
 			"[2,1,2,1].containsOnly([1,2])",
@@ -929,11 +966,13 @@ func TestArray(t *testing.T) {
 		},
 		{
 			"a = [1]; [2,1,2,1].containsOnly(a)",
-			0, []interface{}{int64(2), int64(2)},
+			0,
+			[]interface{}{int64(2), int64(2)},
 		},
 		{
 			"[2,1,2,2].containsNone([1])",
-			0, []interface{}{int64(1)},
+			0,
+			[]interface{}{int64(1)},
 		},
 		{
 			"[2,1,2,1].containsNone([3,4])",
@@ -941,7 +980,8 @@ func TestArray(t *testing.T) {
 		},
 		{
 			"a = [1]; [2,1,2,1].containsNone(a)",
-			0, []interface{}{int64(1), int64(1)},
+			0,
+			[]interface{}{int64(1), int64(1)},
 		},
 	})
 }
@@ -950,15 +990,18 @@ func TestMap(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"{a: 123}",
-			0, map[string]interface{}{"a": int64(123)},
+			0,
+			map[string]interface{}{"a": int64(123)},
 		},
 		{
 			"return {a: 123}",
-			0, map[string]interface{}{"a": int64(123)},
+			0,
+			map[string]interface{}{"a": int64(123)},
 		},
 		{
 			"sshd.config.params { _['Protocol'] != 1 }",
-			0, map[string]interface{}{
+			0,
+			map[string]interface{}{
 				"TZsaWUkFbzR9WTfufqRaHuWJa/W4MQsYsrTli6w8DGQnSLYumOg7kduA17NEX/4y5xBfYQMvPIVBRThyB3LsJg==": llx.BoolTrue,
 			},
 		},
@@ -984,7 +1027,8 @@ func TestResource_Filters(t *testing.T) {
 				uid == 0
 				gid == 0
 			}`,
-			0, []interface{}{
+			0,
+			[]interface{}{
 				map[string]interface{}{
 					"BamDDGp87sNG0hVjpmEAPEjF6fZmdA6j3nDinlgr/y5xK3KaLgulyscoeEEaEASm2RkRXifnWj3ZbF0OZBF6XA==": llx.BoolTrue,
 					"ytOUfV4UyOjY0C6HKzQ8GcA/hshrh2ahRySNG41RbFt3TNNf+6gBuHvs2hGTNDPUZR/oN8WH0QFIYYm/Vj3pGQ==": llx.BoolTrue,
@@ -1001,14 +1045,16 @@ func TestResource_Filters(t *testing.T) {
 		},
 		{
 			"users.where(name == 'rooot').list { uid }",
-			0, []interface{}{},
+			0,
+			[]interface{}{},
 		},
 		{
 			"users.where(uid > 0).where(uid < 0).list",
-			0, []interface{}{},
+			0,
+			[]interface{}{},
 		},
 		{
-			"os.rootcertificates.where(  subject.commonname == '' ).length",
+			"os.rootCertificates.where(  subject.commonName == '' ).length",
 			0, int64(0),
 		},
 	})
@@ -1083,7 +1129,8 @@ func TestResource_duplicateFields(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"users.list.duplicates(uid) { uid }",
-			2, []interface{}{
+			2,
+			[]interface{}{
 				map[string]interface{}{"sYZO9ps0Y4tx2p0TkrAn73WTQx83QIQu70uPtNukYNnVAzaer3Pf6xe7vAplB+cAgPbteXzizlUioUMnNJr5sg==": &llx.RawData{
 					Type:  "\x05",
 					Value: int64(1000),
@@ -1110,7 +1157,8 @@ func TestDict_Methods(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			p + "params['string-array'].where(_ == 'a')",
-			0, []interface{}{"a"},
+			0,
+			[]interface{}{"a"},
 		},
 		{
 			p + "params['string-array'].one(_ == 'a')",
