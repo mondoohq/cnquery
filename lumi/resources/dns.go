@@ -1,7 +1,13 @@
 package resources
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
 	"strconv"
+	"strings"
+
+	"go.mondoo.io/mondoo/lumi"
 
 	"github.com/miekg/dns"
 	"go.mondoo.io/mondoo/lumi/resources/dnsshake"
@@ -131,4 +137,89 @@ func (d *lumiDnsMxRecord) id() (string, error) {
 	name, err := d.Name()
 	domainName, _ := d.DomainName()
 	return "dns.mx/" + name + "+" + domainName, err
+}
+
+func (d *lumiDns) GetDkim(params map[string]interface{}) ([]interface{}, error) {
+	dkimEntries := []interface{}{}
+
+	record, ok := params["TXT"]
+	if !ok {
+		return dkimEntries, nil
+	}
+
+	r := record.(map[string]interface{})
+
+	var name string
+	var rdata []interface{}
+
+	if r["name"] != nil {
+		name = r["name"].(string)
+	}
+
+	if r["rData"] != nil {
+		rdata = r["rData"].([]interface{})
+	}
+
+	for j := range rdata {
+		entry := rdata[j].(string)
+		entry = strings.TrimSpace(entry)
+
+		if !strings.HasPrefix(entry, "v=DKIM1;") {
+			continue
+		}
+
+		dkimRepr, err := dnsshake.NewDkimPublicKeyRepresentation(entry)
+		if err != nil {
+			return nil, err
+		}
+
+		dkimRecord, err := d.Runtime.CreateResource("dns.dkimRecord",
+			"domain", name,
+			"dnsTxt", entry,
+			"version", dkimRepr.Version,
+			"hashAlgorithms", strSliceToInterface(dkimRepr.HashAlgorithms),
+			"keyType", dkimRepr.KeyType,
+			"notes", dkimRepr.Notes,
+			"publicKeyData", dkimRepr.PublicKeyData,
+			"serviceTypes", strSliceToInterface(dkimRepr.ServiceType),
+			"flags", strSliceToInterface(dkimRepr.Flags),
+		)
+		if err != nil {
+			return nil, err
+		}
+		dkimRecord.LumiResource().Cache.Store("_dkim", &lumi.CacheEntry{Data: dkimRepr})
+		dkimEntries = append(dkimEntries, dkimRecord)
+	}
+
+	return dkimEntries, nil
+}
+
+func (d *lumiDnsDkimRecord) id() (string, error) {
+	name, err := d.Domain()
+	if err != nil {
+		return "", err
+	}
+	dnsTxt, err := d.DnsTxt()
+	if err != nil {
+		return "", err
+	}
+	hasher := sha256.New()
+	hasher.Write([]byte(dnsTxt))
+	sha256 := hex.EncodeToString(hasher.Sum(nil))
+	return "dns.dkim/" + name + "/" + sha256, err
+}
+
+func (d *lumiDnsDkimRecord) GetValid() (bool, error) {
+	entry, ok := d.LumiResource().Cache.Load("_dkim")
+	if !ok {
+		return false, errors.New("could not load dkim data")
+	}
+
+	rep, ok := entry.Data.(*dnsshake.DkimPublicKeyRepresentation)
+	if !ok {
+		return false, errors.New("could not load dkim data")
+	}
+
+	ok, _, _ = rep.Valid()
+	return ok, nil
 }
