@@ -27,9 +27,18 @@ type DnsRecord struct {
 }
 
 func New(fqdn string) (*Tester, error) {
+	// try to load unix dns server
+	// TODO: this does not work on windows https://github.com/go-acme/lego/issues/1015
 	config, err := dns.ClientConfigFromFile("/etc/resolv.conf")
 	if err != nil {
-		return nil, err
+		// fallback to google dns for now
+		config = &dns.ClientConfig{}
+		config.Servers = []string{"4.4.4.4"}
+		config.Search = []string{}
+		config.Port = "53"
+		config.Ndots = 1
+		config.Timeout = 5
+		config.Attempts = 2
 	}
 
 	return &Tester{
