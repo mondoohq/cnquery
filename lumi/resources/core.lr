@@ -534,6 +534,8 @@ dns {
   records(params) []dns.record
   // Successful DNS MX records
   mx(params) []dns.mxRecord
+  // DKIM TXT records
+  dkim(params) []dns.dkimRecord
 }
 
 dns.record {
@@ -553,6 +555,30 @@ dns.mxRecord {
   name string
   preference int
   domainName string
+}
+
+// DKIM Public Key Representation as defined in RFC 6376
+dns.dkimRecord {
+  // DNS Text Representation
+  dnsTxt string
+  // DKIM Selector Domain
+  domain string
+  // Version
+  version string
+  // Acceptable Hash Algorithms
+  hashAlgorithms []string
+  // Key Type
+  keyType string
+  // Notes
+  notes string
+  // Public Key Data base64-Encoded
+  publicKeyData string
+  // Service Types
+  serviceTypes []string
+  // Flags
+  flags []string
+  // Verifies if the DKIM entry and public key is valid
+  valid() bool
 }
 
 // Rsyslog service configuration
