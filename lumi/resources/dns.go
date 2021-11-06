@@ -20,7 +20,7 @@ func (d *lumiDns) GetRecords() ([]interface{}, error) {
 		return nil, err
 	}
 
-	records, err := dnsShaker.Test()
+	records, err := dnsShaker.Query()
 	if err != nil {
 		return nil, err
 	}

@@ -11,22 +11,26 @@ import (
 	"github.com/miekg/dns"
 )
 
-type Tester struct {
+type DnsClient struct {
 	config *dns.ClientConfig
 	fqdn   string
 	sync   sync.Mutex
 }
 
 type DnsRecord struct {
-	ID    string
-	Name  string // DNS name
-	TTL   int64  // Time-To-Live (TTL) in seconds
-	Class string // DNS class
-	Type  string // DNS type
+	ID string
+	// DNS name
+	Name string
+	// Time-To-Live (TTL) in seconds
+	TTL int64
+	// DNS class
+	Class string
+	// DNS type
+	Type  string
 	RData []string
 }
 
-func New(fqdn string) (*Tester, error) {
+func New(fqdn string) (*DnsClient, error) {
 	// try to load unix dns server
 	// TODO: this does not work on windows https://github.com/go-acme/lego/issues/1015
 	config, err := dns.ClientConfigFromFile("/etc/resolv.conf")
@@ -41,7 +45,7 @@ func New(fqdn string) (*Tester, error) {
 		config.Attempts = 2
 	}
 
-	return &Tester{
+	return &DnsClient{
 		fqdn:   fqdn,
 		config: config,
 	}, nil
@@ -135,7 +139,7 @@ var stringToType = map[string]uint16{
 	"NSAP-PTR":   dns.TypeNSAPPTR,
 }
 
-func (d *Tester) Test(dnsTypes ...string) (map[string]DnsRecord, error) {
+func (d *DnsClient) Query(dnsTypes ...string) (map[string]DnsRecord, error) {
 	if len(dnsTypes) == 0 {
 		for k := range stringToType {
 			dnsTypes = append(dnsTypes, k)
@@ -153,7 +157,7 @@ func (d *Tester) Test(dnsTypes ...string) (map[string]DnsRecord, error) {
 		go func() {
 			defer workers.Done()
 
-			records, err := d.testDnsType(d.fqdn, dnsType)
+			records, err := d.queryDnsType(d.fqdn, dnsType)
 			if err != nil {
 				d.sync.Lock()
 				errs = multierror.Append(errs, err)
@@ -173,7 +177,7 @@ func (d *Tester) Test(dnsTypes ...string) (map[string]DnsRecord, error) {
 	return res, errs
 }
 
-func (d *Tester) testDnsType(fqdn string, t string) (map[string]DnsRecord, error) {
+func (d *DnsClient) queryDnsType(fqdn string, t string) (map[string]DnsRecord, error) {
 	dnsType, ok := stringToType[t]
 	if !ok {
 		return nil, errors.New("unknown dns type")
