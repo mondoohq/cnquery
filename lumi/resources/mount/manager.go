@@ -3,6 +3,7 @@ package mount
 import (
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/transports"
 )
 
 type MountPoint struct {
@@ -59,13 +60,17 @@ func (s *LinuxMountManager) List() ([]MountPoint, error) {
 	// 	return ParseLinuxProcMount(f), nil
 	// }
 
-	// fallback to mount cmd
-	cmd, err := s.motor.Transport.RunCommand("mount")
-	if err != nil {
-		return nil, errors.Wrap(err, "could not read mounts")
+	if s.motor.HasCapability(transports.Capability_RunCommand) {
+		cmd, err := s.motor.Transport.RunCommand("mount")
+		if err != nil {
+			return nil, errors.Wrap(err, "could not read mounts")
+		}
+		return ParseLinuxMountCmd(cmd.Stdout), nil
+	} else if s.motor.HasCapability(transports.Capability_File) {
+		return mountsFromFSLinux(s.motor.Transport.FS())
 	}
 
-	return ParseLinuxMountCmd(cmd.Stdout), nil
+	return nil, errors.New("mount not supported for provided transport")
 }
 
 type UnixMountManager struct {

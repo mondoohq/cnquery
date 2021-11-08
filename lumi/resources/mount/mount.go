@@ -5,6 +5,9 @@ import (
 	"io"
 	"regexp"
 	"strings"
+
+	"github.com/cockroachdb/errors"
+	"github.com/spf13/afero"
 )
 
 func ParseLinuxMountCmd(r io.Reader) []MountPoint {
@@ -94,4 +97,58 @@ func parseOptions(opts string) map[string]string {
 		}
 	}
 	return res
+}
+
+func ParseFstab(r io.Reader) ([]MountPoint, error) {
+	res := []MountPoint{}
+
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if line == "" || line[0] == '#' {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) < 4 {
+			// ignoring bad lines
+			continue
+		}
+		res = append(res, MountPoint{
+			Device:     fields[0],
+			MountPoint: fields[1],
+			FSType:     fields[2],
+			Options:    parseOptions(fields[3]),
+		})
+	}
+	return res, scanner.Err()
+}
+
+func mountsFromFSLinux(fs afero.Fs) ([]MountPoint, error) {
+	// Check if we have /proc/mounts
+	procMountExists, err := afero.Exists(fs, "/proc/mounts")
+	if err != nil {
+		return nil, err
+	}
+	if procMountExists {
+		f, err := fs.Open("/proc/mounts")
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+		return ParseLinuxProcMount(f), nil
+	}
+
+	fstabExists, err := afero.Exists(fs, "/etc/fstab")
+	if err != nil {
+		return nil, err
+	}
+	if fstabExists {
+		f, err := fs.Open("/etc/fstab")
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+		return ParseFstab(f)
+	}
+	return nil, errors.New("could not find mounts")
 }

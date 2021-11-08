@@ -1,6 +1,7 @@
 package mount_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -119,4 +120,62 @@ func findMountpoint(mounts []mount.MountPoint, name string) *mount.MountPoint {
 		}
 	}
 	return nil
+}
+
+var fstabExample = `
+# 
+# /etc/fstab: static file system information
+#
+# <file system>	<dir>	<type>	<options>	<dump>	<pass>
+# /dev/sdc2
+UUID=6c44ec5a-4727-47d4-b485-81cff72b207e	/         	ext4      	rw,relatime,data=ordered	0 1
+
+# /dev/sdc1
+UUID=0EC7-F4C1      	/boot     	vfat      	rw,relatime,fmask=0022,dmask=0022,iocharset=iso8859-1	0 2
+
+UUID=6060df9a-7e53-439c-9189-ba9657161fd4       /data           btrfs           rw,nofail              0 2
+`
+
+func TestFstab(t *testing.T) {
+	r := strings.NewReader(fstabExample)
+
+	entries, err := mount.ParseFstab(r)
+	require.NoError(t, err)
+
+	// /dev/sda1 on / type ext4 (rw,relatime,data=ordered)
+	expected := []mount.MountPoint{
+		{
+			Device:     "UUID=6c44ec5a-4727-47d4-b485-81cff72b207e",
+			MountPoint: "/",
+			FSType:     "ext4",
+			Options: map[string]string{
+				"rw":       "",
+				"relatime": "",
+				"data":     "ordered",
+			},
+		},
+		{
+			Device:     "UUID=0EC7-F4C1",
+			MountPoint: "/boot",
+			FSType:     "vfat",
+			Options: map[string]string{
+				"rw":        "",
+				"relatime":  "",
+				"fmask":     "0022",
+				"dmask":     "0022",
+				"iocharset": "iso8859-1",
+			},
+		},
+		{
+			Device:     "UUID=6060df9a-7e53-439c-9189-ba9657161fd4",
+			MountPoint: "/data",
+			FSType:     "btrfs",
+			Options: map[string]string{
+				"rw":     "",
+				"nofail": "",
+			},
+		},
+	}
+
+	assert.Equal(t, expected, entries)
 }
