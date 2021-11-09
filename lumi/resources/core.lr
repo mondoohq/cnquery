@@ -528,7 +528,10 @@ tls {
 dns {
   init(fqdn string)
   fqdn string
-  records() []dns.record
+  // Params is a list of all parameters for DNS fqdn
+  params() dict
+  // Successful DNS records
+  records(params) []dns.record
 }
 
 dns.record {
@@ -540,6 +543,7 @@ dns.record {
   class string
   // DNS type
   type string
+  // Resource Data
   rdata []string
 }
 

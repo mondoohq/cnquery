@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"github.com/miekg/dns"
 	"go.mondoo.io/mondoo/lumi/resources/dnsshake"
 )
 
@@ -9,7 +10,7 @@ func (d *lumiDns) id() (string, error) {
 	return "dns/" + id, nil
 }
 
-func (d *lumiDns) GetRecords() ([]interface{}, error) {
+func (d *lumiDns) GetParams() (interface{}, error) {
 	fqdn, err := d.Fqdn()
 	if err != nil {
 		return nil, err
@@ -25,25 +26,33 @@ func (d *lumiDns) GetRecords() ([]interface{}, error) {
 		return nil, err
 	}
 
+	return jsonToDict(records)
+}
+
+// GetRecords returns successful dns records
+func (d *lumiDns) GetRecords(params map[string]interface{}) ([]interface{}, error) {
 	// convert responses to dns types
-	dnsEntries := make([]interface{}, len(records))
-	i := 0
-	for k := range records {
-		r := records[k]
+	dnsEntries := []interface{}{}
+	for k := range params {
+		r := params[k].(map[string]interface{})
+
+		// filter by successful dns records
+		if r["rCode"] != dns.RcodeToString[dns.RcodeSuccess] {
+			continue
+		}
 
 		lumiDnsRecord, err := d.Runtime.CreateResource("dns.record",
-			"name", r.Name,
-			"ttl", r.TTL,
-			"class", r.Class,
-			"type", r.Type,
-			"rdata", strSliceToInterface(r.RData),
+			"name", r["name"],
+			"ttl", r["TTL"],
+			"class", r["class"],
+			"type", r["type"],
+			"rdata", r["rData"],
 		)
 		if err != nil {
 			return nil, err
 		}
 
-		dnsEntries[i] = lumiDnsRecord.(DnsRecord)
-		i++
+		dnsEntries = append(dnsEntries, lumiDnsRecord.(DnsRecord))
 	}
 
 	return dnsEntries, nil
