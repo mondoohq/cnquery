@@ -389,6 +389,19 @@ func TestCore_If(t *testing.T) {
 			"if(platform.family.contains('arch'))",
 			0, nil,
 		},
+		{
+			// This test comes out from an issue we had where return was not
+			// generating a single entrypoint, causing the first reported
+			// value to be used as the return value.
+			`
+				if (true) { 
+					// file has content so should return true
+					a = file('/etc/ssh/sshd_config').content != ''
+					b = false
+					return a || b
+				}
+			`, 0, true,
+		},
 	})
 }
 

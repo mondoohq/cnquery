@@ -1173,7 +1173,7 @@ func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 					},
 				},
 			})
-			c.Result.Code.Entrypoints = append(c.Result.Code.Entrypoints, c.Result.Code.ChunkIndex())
+			c.Result.Code.Entrypoints = []int32{c.Result.Code.ChunkIndex()}
 			c.Result.Code.SingleValue = true
 
 			return nil
