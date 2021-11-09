@@ -19,20 +19,24 @@ type DnsClient struct {
 }
 
 type DnsRecord struct {
-	ID string
 	// DNS name
-	Name string
+	Name string `json:"name"`
 	// Time-To-Live (TTL) in seconds
-	TTL int64
+	TTL int64 `json:"ttl"`
 	// DNS class
-	Class string
+	Class string `json:"class"`
 	// DNS type
-	Type  string
-	RData []string
+	Type string `json:"type"`
+	// Resource Data
+	RData []string `json:"rData"`
+	// DNS Response Code
+	RCode string `json:"rCode"`
+	// Error during dns request
+	Error error `json:"error"`
 }
 
 func New(fqdn string) (*DnsClient, error) {
-	// use google dns for now
+	// use Google DNS for now
 	config := &dns.ClientConfig{}
 	config.Servers = []string{"8.8.8.8", "8.8.4.4"}
 	config.Search = []string{}
@@ -189,6 +193,9 @@ func (d *DnsClient) queryDnsType(fqdn string, t string) (map[string]DnsRecord, e
 	if !ok {
 		return nil, errors.New("unknown dns type")
 	}
+	dnsTypText := dns.Type(dnsType).String()
+
+	res := map[string]DnsRecord{}
 
 	c := &dns.Client{}
 	m := &dns.Msg{}
@@ -197,19 +204,22 @@ func (d *DnsClient) queryDnsType(fqdn string, t string) (map[string]DnsRecord, e
 
 	r, _, err := c.Exchange(m, net.JoinHostPort(d.config.Servers[0], d.config.Port))
 	if err != nil {
-		return nil, err
-	}
-
-	// those errors happen with normal requests for all entries
-	if r.Rcode == dns.RcodeNotImplemented || r.Rcode == dns.RcodeFormatError {
-		return nil, nil
+		res[dnsTypText] = DnsRecord{
+			Type:  dnsTypText,
+			Error: err,
+		}
+		return res, nil
 	}
 
 	if r.Rcode != dns.RcodeSuccess {
-		return nil, errors.New("could not get request: " + strconv.Itoa(r.Rcode))
+		res[dnsTypText] = DnsRecord{
+			Type:  dnsTypText,
+			RCode: dns.RcodeToString[r.Rcode],
+		}
+		return res, nil
 	}
 
-	res := map[string]DnsRecord{}
+	// extract more information if dns request was successful
 	for i := range r.Answer {
 		a := r.Answer[i]
 
@@ -220,12 +230,12 @@ func (d *DnsClient) queryDnsType(fqdn string, t string) (map[string]DnsRecord, e
 		rec, ok := res[typ]
 		if !ok {
 			rec = DnsRecord{
-				ID:    a.String(),
 				Name:  a.Header().Name,
 				Type:  typ,
 				Class: dns.Class(a.Header().Class).String(),
 				TTL:   int64(a.Header().Ttl),
 				RData: []string{},
+				RCode: dns.RcodeToString[r.Rcode],
 			}
 		}
 
