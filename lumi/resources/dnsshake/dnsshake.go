@@ -2,6 +2,7 @@ package dnsshake
 
 import (
 	"net"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -31,18 +32,24 @@ type DnsRecord struct {
 }
 
 func New(fqdn string) (*DnsClient, error) {
+	// use google dns for now
+	config := &dns.ClientConfig{}
+	config.Servers = []string{"8.8.8.8", "8.8.4.4"}
+	config.Search = []string{}
+	config.Port = "53"
+	config.Ndots = 1
+	config.Timeout = 5
+	config.Attempts = 2
+
 	// try to load unix dns server
 	// TODO: this does not work on windows https://github.com/go-acme/lego/issues/1015
-	config, err := dns.ClientConfigFromFile("/etc/resolv.conf")
-	if err != nil {
-		// fallback to google dns for now
-		config = &dns.ClientConfig{}
-		config.Servers = []string{"4.4.4.4"}
-		config.Search = []string{}
-		config.Port = "53"
-		config.Ndots = 1
-		config.Timeout = 5
-		config.Attempts = 2
+	resolveFile := "/etc/resolv.conf"
+	_, err := os.Stat(resolveFile)
+	if err == nil {
+		rConfig, err := dns.ClientConfigFromFile(resolveFile)
+		if err == nil {
+			config = rConfig
+		}
 	}
 
 	return &DnsClient{
