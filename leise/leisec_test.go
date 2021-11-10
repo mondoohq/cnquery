@@ -23,6 +23,7 @@ func compileProps(t *testing.T, s string, props map[string]*llx.Primitive, f fun
 	res, err := Compile(s, schema, props)
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
+	assert.NoError(t, Invariants.Check(res))
 	if res != nil && res.Code != nil {
 		assert.Nil(t, res.Suggestions)
 		assert.NotEmpty(t, res.Code.Code)
@@ -40,6 +41,7 @@ func compileEmpty(t *testing.T, s string, f func(res *llx.CodeBundle)) {
 	res, err := Compile(s, schema, nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
+
 	if res != nil && res.Code != nil {
 		assert.Nil(t, res.Suggestions)
 		f(res)

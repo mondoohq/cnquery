@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.io/mondoo/leise"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/logger"
 	"go.mondoo.io/mondoo/lumi"
@@ -50,7 +51,14 @@ func testQueryWithExecutor(t *testing.T, executor *executor.Executor, query stri
 	})
 	defer executor.RemoveWatcher("test")
 
-	bundle, err := executor.AddCode(query, props)
+	bundle, err := leise.Compile(query, executor.Schema(), props)
+	if err != nil {
+		t.Fatal("failed to compile code: " + err.Error())
+	}
+	err = leise.Invariants.Check(bundle)
+	require.NoError(t, err)
+
+	err = executor.AddCodeBundle(bundle, props)
 	if err != nil {
 		t.Fatal("failed to add code to executor: " + err.Error())
 	}
