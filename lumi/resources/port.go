@@ -3,6 +3,7 @@ package resources
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"regexp"
 	"strconv"
 )
@@ -282,5 +283,25 @@ func (s *lumiPort) id() (string, error) {
 		return "", err
 	}
 
-	return "port: " + proto + "/" + strconv.Itoa(int(port)), nil
+	addr, err := s.Address()
+	if err != nil {
+		return "", err
+	}
+
+	remoteAddress, err := s.RemoteAddress()
+	if err != nil {
+		return "", err
+	}
+
+	remotePort, err := s.RemotePort()
+	if err != nil {
+		return "", err
+	}
+
+	state, err := s.State()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("port: %s/%s:%d/%s:%d/%s", proto, addr, port, remoteAddress, remotePort, state), nil
 }
