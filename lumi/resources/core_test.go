@@ -736,6 +736,25 @@ func duration(i int64) *time.Time {
 	return &res
 }
 
+func TestFuzzyTime(t *testing.T) {
+	code := "time.now.unix"
+	t.Run(code, func(t *testing.T) {
+		res := testQueryLocal(t, code)
+		now := time.Now().Unix()
+		assert.NotEmpty(t, res)
+
+		assert.NotNil(t, res[0].Result().Error)
+		val := res[0].Data.Value
+		valInt, ok := val.(int64)
+		assert.Equal(t, true, ok)
+		min := now - 1
+		max := now + 1
+		between := min <= valInt && valInt <= max
+		assert.Equal(t, true, between)
+	})
+
+}
+
 func TestTime_Methods(t *testing.T) {
 	now := time.Now()
 	today, _ := time.ParseInLocation("2006-01-02", now.Format("2006-01-02"), now.Location())
@@ -745,10 +764,6 @@ func TestTime_Methods(t *testing.T) {
 		{
 			"time.now",
 			1, true,
-		},
-		{
-			"time.now.unix",
-			0, time.Now().Unix(),
 		},
 		{
 			"time.today",
