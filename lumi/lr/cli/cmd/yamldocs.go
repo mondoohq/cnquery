@@ -2,13 +2,15 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"sort"
+	"strings"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"go.mondoo.io/mondoo/lumi/lr"
-	"io/ioutil"
-	"os"
 	"sigs.k8s.io/yaml"
-	"sort"
 )
 
 func init() {
@@ -21,14 +23,34 @@ type LrDocs struct {
 }
 
 type LrDocsEntry struct {
-	// TODO: this is just an indicator, we may want to replace this with native lumi resource platform information
-	Platforms []string        `json:"platforms,omitempty"`
-	Snippets  []LrDocsSnippet `json:"snippets,omitempty"`
+	// Maturity of the resource: experimental, preview, public, deprecated
+	// default maturity is public if nothing is provided
+	Maturity string `json:"maturity,omitempty"`
+	// this is just an indicator, we may want to replace this with native lumi resource platform information
+	Platform  *LrDocsPlatform      `json:"platform,omitempty"`
+	Docs      *LrDocsDocumentation `json:"docs,omitempty"`
+	Resources []LrDocsRefs         `json:"resources ,omitempty"`
+	Refs      []LrDocsRefs         `json:"refs,omitempty"`
+	Snippets  []LrDocsSnippet      `json:"snippets,omitempty"`
+}
+
+type LrDocsPlatform struct {
+	Name    []string `json:"name,omitempty"`
+	Familiy []string `json:"family,omitempty"`
+}
+
+type LrDocsDocumentation struct {
+	Description string `json:"desc,omitempty"`
+}
+
+type LrDocsRefs struct {
+	Title string `json:"title,omitempty"`
+	Url   string `json:"url,omitempty"`
 }
 
 type LrDocsSnippet struct {
-	Query string `json:"query,omitempty"`
 	Title string `json:"title,omitempty"`
+	Query string `json:"query,omitempty"`
 }
 
 var yamlDocsCmd = &cobra.Command{
@@ -101,15 +123,50 @@ var yamlDocsCmd = &cobra.Command{
 			}
 		}
 
+		// ensure default values are set
+		for k := range docs.Resources {
+			docs.Resources[k] = ensureDefaults(k, docs.Resources[k])
+		}
+
 		data, err := yaml.Marshal(docs)
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not marshal docs")
 		}
 
 		log.Info().Str("file", filepath).Msg("write file")
-		err = ioutil.WriteFile(filepath, data, 0700)
+		err = ioutil.WriteFile(filepath, data, 0o700)
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not write docs file")
 		}
 	},
+}
+
+var platformMapping = map[string][]string{
+	"aws":     {"aws"},
+	"gcp":     {"gcloud"},
+	"k8s":     {"kubernetes"},
+	"azure":   {"azure"},
+	"azurerm": {"azure"},
+	"arista":  {"arista-eos"},
+	"equinix": {"equinix"},
+	"ms365":   {"microsoft365"},
+	"msgraph": {"microsoft365"},
+	"vsphere": {"vmware-esxi", "vmware-vsphere"},
+	"esxi":    {"vmware-esxi", "vmware-vsphere"},
+}
+
+func ensureDefaults(id string, entry *LrDocsEntry) *LrDocsEntry {
+	for k := range platformMapping {
+		if strings.HasPrefix(id, k) {
+			if entry == nil {
+				entry = &LrDocsEntry{}
+			}
+
+			entry.Platform = &LrDocsPlatform{
+				Name: platformMapping[k],
+			}
+		}
+	}
+
+	return entry
 }

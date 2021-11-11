@@ -1,213 +1,720 @@
 resources:
   arista.eos:
+    platform:
+      name:
+      - arista-eos
     snippets:
-      - title: Arista EOS Version
-        query: arista.eos.version
-      - title: Verify that Arista EOS Version is 18.x
-        query: arista.eos.version['version'] == /18\./
-      - title: Display EOS interfaces
-        query: arista.eos.interfaces { name mtu bandwidth status }
-      - title: Display all connected EOS interfaces
-        query: arista.eos.interfaces.where ( status['linkStatus'] == "connected") {  name mtu bandwidth stauts}
-      - title: EOS Hostname
-        query: arista.eos.hostname
+    - query: arista.eos.version
+      title: Arista EOS Version
+    - query: arista.eos.version['version'] == /18\./
+      title: Verify that Arista EOS Version is 18.x
+    - query: arista.eos.interfaces { name mtu bandwidth status }
+      title: Display EOS interfaces
+    - query: arista.eos.interfaces.where ( status['linkStatus'] == "connected") {  name
+        mtu bandwidth stauts}
+      title: Display all connected EOS interfaces
+    - query: arista.eos.hostname
+      title: EOS Hostname
   arista.eos.interface:
+    platform:
+      name:
+      - arista-eos
   arista.eos.ipInterface:
+    platform:
+      name:
+      - arista-eos
   arista.eos.ntpSetting:
+    platform:
+      name:
+      - arista-eos
   arista.eos.role:
+    platform:
+      name:
+      - arista-eos
   arista.eos.runningConfig:
+    platform:
+      name:
+      - arista-eos
   arista.eos.runningConfig.section:
+    platform:
+      name:
+      - arista-eos
   arista.eos.snmpSetting:
+    platform:
+      name:
+      - arista-eos
   arista.eos.spt.mstInterface:
+    platform:
+      name:
+      - arista-eos
     snippets:
-      - title: Verify the Spanning-Tree Version
-        query: |
-          arista.eos.stp.mstInstances {
-           protocol == "mstp"
-          }
+    - query: |
+        arista.eos.stp.mstInstances {
+         protocol == "mstp"
+        }
+      title: Verify the Spanning-Tree Version
   arista.eos.stp:
+    platform:
+      name:
+      - arista-eos
   arista.eos.stp.mst:
+    platform:
+      name:
+      - arista-eos
   arista.eos.user:
-  audit.advisory:
-  audit.cve:
-  audit.cvss:
-  audit.exploit:
+    platform:
+      name:
+      - arista-eos
+  audit.advisory: null
+  audit.cve: null
+  audit.cvss: null
+  audit.exploit: null
   auditpol:
     snippets:
-      - title: List all audit policies
-        query: auditpol.list { inclusionsetting exclusionsetting  subcategory }
-      - title: Check a specific auditpol configuration
-        query: |
-          auditpol.where(subcategory == 'Sensitive Privilege Use').list {
-            inclusionsetting == 'Success and Failure'
-          }
-  auditpol.entry:
-  authorizedkeys:
-  authorizedkeys.entry:
+    - query: auditpol.list { inclusionsetting exclusionsetting  subcategory }
+      title: List all audit policies
+    - query: |
+        auditpol.where(subcategory == 'Sensitive Privilege Use').list {
+          inclusionsetting == 'Success and Failure'
+        }
+      title: Check a specific auditpol configuration
+  auditpol.entry: null
+  authorizedkeys: null
+  authorizedkeys.entry: null
   aws:
+    platform:
+      name:
+      - aws
+  aws.accessAnalyzer:
+    platform:
+      name:
+      - aws
+  aws.accessanalyzer.analyzer:
+    platform:
+      name:
+      - aws
   aws.account:
+    platform:
+      name:
+      - aws
   aws.acm:
+    platform:
+      name:
+      - aws
   aws.acm.certificate:
+    platform:
+      name:
+      - aws
   aws.apigateway:
+    platform:
+      name:
+      - aws
   aws.apigateway.restapi:
+    platform:
+      name:
+      - aws
   aws.apigateway.stage:
+    platform:
+      name:
+      - aws
   aws.autoscaling:
+    platform:
+      name:
+      - aws
   aws.autoscaling.group:
+    platform:
+      name:
+      - aws
   aws.cloudtrail:
+    platform:
+      name:
+      - aws
   aws.cloudtrail.trail:
+    platform:
+      name:
+      - aws
   aws.cloudwatch:
+    platform:
+      name:
+      - aws
   aws.cloudwatch.loggroup:
+    platform:
+      name:
+      - aws
   aws.cloudwatch.loggroup.metricsfilter:
+    platform:
+      name:
+      - aws
   aws.cloudwatch.metric:
+    platform:
+      name:
+      - aws
   aws.cloudwatch.metricsalarm:
+    platform:
+      name:
+      - aws
   aws.codebuild:
+    platform:
+      name:
+      - aws
   aws.codebuild.project:
+    platform:
+      name:
+      - aws
   aws.config:
+    platform:
+      name:
+      - aws
   aws.config.recorder:
-  aws.config.rule: null
-  aws.dms: null
-  aws.dynamodb: null
-  aws.dynamodb.globaltable: null
-  aws.dynamodb.limit: null
-  aws.dynamodb.table: null
-  aws.ec2: null
-  aws.ec2.instance: null
-  aws.ec2.instance.device: null
-  aws.ec2.internetgateway: null
-  aws.ec2.securitygroup: null
-  aws.ec2.securitygroup.ippermission: null
-  aws.ec2.snapshot: null
-  aws.ec2.vgwtelemetry: null
-  aws.ec2.volume: null
-  aws.ec2.vpnconnection: null
-  aws.efs: null
-  aws.efs.filesystem: null
-  aws.elasticache: null
-  aws.elb: null
-  aws.elb.loadbalancer: null
-  aws.emr: null
-  aws.emr.cluster: null
-  aws.es: null
-  aws.es.domain: null
-  aws.guardduty: null
-  aws.guardduty.detector: null
-  aws.iam: null
-  aws.iam.group: null
-  aws.iam.policy: null
-  aws.iam.policyversion: null
-  aws.iam.role: null
-  aws.iam.user: null
-  aws.iam.usercredentialreportentry: null
-  aws.iam.virtualmfadevice: null
-  aws.kms: null
-  aws.kms.key: null
-  aws.lambda: null
-  aws.lambda.function: null
-  aws.rds: null
-  aws.rds.dbcluster: null
-  aws.rds.dbinstance: null
-  aws.rds.snapshot: null
-  aws.redshift: null
-  aws.redshift.cluster: null
-  aws.s3: null
-  aws.s3.bucket: null
-  aws.s3.bucket.corsrule: null
-  aws.s3.bucket.grant: null
-  aws.s3.bucket.policy: null
-  aws.s3control: null
-  aws.sagemaker: null
-  aws.sagemaker.endpoint: null
-  aws.sagemaker.notebookinstance: null
-  aws.sagemaker.notebookinstance.details: null
-  aws.secretsmanager: null
-  aws.secretsmanager.secret: null
-  aws.securityhub: null
-  aws.securityhub.hub: null
-  aws.sns: null
-  aws.sns.subscription: null
-  aws.sns.topic: null
-  aws.vpc: null
-  aws.vpc.flowlog: null
-  aws.vpc.routetable: null
-  azuread: null
-  azuread.application: null
-  azuread.domain: null
-  azuread.group: null
-  azuread.serviceprincipal: null
-  azuread.user: null
-  azurerm: null
-  azurerm.compute: null
-  azurerm.compute.disk: null
-  azurerm.compute.vm: null
-  azurerm.keyvault: null
-  azurerm.keyvault.certificate: null
-  azurerm.keyvault.key: null
-  azurerm.keyvault.secret: null
-  azurerm.keyvault.vault: null
-  azurerm.mariadb: null
-  azurerm.mariadb.database: null
-  azurerm.mariadb.server: null
-  azurerm.monitor: null
-  azurerm.monitor.diagnosticsetting: null
-  azurerm.monitor.logprofile: null
-  azurerm.mysql: null
-  azurerm.mysql.database: null
-  azurerm.mysql.server: null
-  azurerm.network: null
-  azurerm.network.interface: null
-  azurerm.network.securitygroup: null
-  azurerm.network.securityrule: null
-  azurerm.network.watcher: null
-  azurerm.postgresql: null
-  azurerm.postgresql.database: null
-  azurerm.postgresql.server: null
-  azurerm.resource: null
-  azurerm.sql: null
-  azurerm.sql.configuration: null
-  azurerm.sql.database: null
-  azurerm.sql.databaseusage: null
-  azurerm.sql.firewallrule: null
-  azurerm.sql.server: null
-  azurerm.sql.server.administrator: null
-  azurerm.storage: null
-  azurerm.storage.account: null
-  azurerm.storage.container: null
-  azurerm.web: null
-  azurerm.web.appsite: null
-  azurerm.web.appsiteauthsettings: null
-  azurerm.web.appsiteconfig: null
+    platform:
+      name:
+      - aws
+  aws.config.rule:
+    platform:
+      name:
+      - aws
+  aws.dms:
+    platform:
+      name:
+      - aws
+  aws.dynamodb:
+    platform:
+      name:
+      - aws
+  aws.dynamodb.globaltable:
+    platform:
+      name:
+      - aws
+  aws.dynamodb.limit:
+    platform:
+      name:
+      - aws
+  aws.dynamodb.table:
+    platform:
+      name:
+      - aws
+  aws.ec2:
+    platform:
+      name:
+      - aws
+  aws.ec2.image:
+    platform:
+      name:
+      - aws
+  aws.ec2.instance:
+    platform:
+      name:
+      - aws
+  aws.ec2.instance.device:
+    platform:
+      name:
+      - aws
+  aws.ec2.internetgateway:
+    platform:
+      name:
+      - aws
+  aws.ec2.networkacl:
+    platform:
+      name:
+      - aws
+  aws.ec2.networkacl.entry:
+    platform:
+      name:
+      - aws
+  aws.ec2.networkacl.entry.portrange:
+    platform:
+      name:
+      - aws
+  aws.ec2.securitygroup:
+    platform:
+      name:
+      - aws
+  aws.ec2.securitygroup.ippermission:
+    platform:
+      name:
+      - aws
+  aws.ec2.snapshot:
+    platform:
+      name:
+      - aws
+  aws.ec2.vgwtelemetry:
+    platform:
+      name:
+      - aws
+  aws.ec2.volume:
+    platform:
+      name:
+      - aws
+  aws.ec2.vpnconnection:
+    platform:
+      name:
+      - aws
+  aws.efs:
+    platform:
+      name:
+      - aws
+  aws.efs.filesystem:
+    platform:
+      name:
+      - aws
+  aws.elasticache:
+    platform:
+      name:
+      - aws
+  aws.elb:
+    platform:
+      name:
+      - aws
+  aws.elb.loadbalancer:
+    platform:
+      name:
+      - aws
+  aws.emr:
+    platform:
+      name:
+      - aws
+  aws.emr.cluster:
+    platform:
+      name:
+      - aws
+  aws.es:
+    platform:
+      name:
+      - aws
+  aws.es.domain:
+    platform:
+      name:
+      - aws
+  aws.guardduty:
+    platform:
+      name:
+      - aws
+  aws.guardduty.detector:
+    platform:
+      name:
+      - aws
+  aws.iam:
+    platform:
+      name:
+      - aws
+  aws.iam.group:
+    platform:
+      name:
+      - aws
+  aws.iam.policy:
+    platform:
+      name:
+      - aws
+  aws.iam.policyversion:
+    platform:
+      name:
+      - aws
+  aws.iam.role:
+    platform:
+      name:
+      - aws
+  aws.iam.user:
+    platform:
+      name:
+      - aws
+  aws.iam.usercredentialreportentry:
+    platform:
+      name:
+      - aws
+  aws.iam.virtualmfadevice:
+    platform:
+      name:
+      - aws
+  aws.kms:
+    platform:
+      name:
+      - aws
+  aws.kms.key:
+    platform:
+      name:
+      - aws
+  aws.lambda:
+    platform:
+      name:
+      - aws
+  aws.lambda.function:
+    platform:
+      name:
+      - aws
+  aws.rds:
+    platform:
+      name:
+      - aws
+  aws.rds.dbcluster:
+    platform:
+      name:
+      - aws
+  aws.rds.dbinstance:
+    platform:
+      name:
+      - aws
+  aws.rds.snapshot:
+    platform:
+      name:
+      - aws
+  aws.redshift:
+    platform:
+      name:
+      - aws
+  aws.redshift.cluster:
+    platform:
+      name:
+      - aws
+  aws.s3:
+    platform:
+      name:
+      - aws
+  aws.s3.bucket:
+    platform:
+      name:
+      - aws
+  aws.s3.bucket.corsrule:
+    platform:
+      name:
+      - aws
+  aws.s3.bucket.grant:
+    platform:
+      name:
+      - aws
+  aws.s3.bucket.policy:
+    platform:
+      name:
+      - aws
+  aws.s3control:
+    platform:
+      name:
+      - aws
+  aws.sagemaker:
+    platform:
+      name:
+      - aws
+  aws.sagemaker.endpoint:
+    platform:
+      name:
+      - aws
+  aws.sagemaker.notebookinstance:
+    platform:
+      name:
+      - aws
+  aws.sagemaker.notebookinstance.details:
+    platform:
+      name:
+      - aws
+  aws.secretsmanager:
+    platform:
+      name:
+      - aws
+  aws.secretsmanager.secret:
+    platform:
+      name:
+      - aws
+  aws.securityhub:
+    platform:
+      name:
+      - aws
+  aws.securityhub.hub:
+    platform:
+      name:
+      - aws
+  aws.sns:
+    platform:
+      name:
+      - aws
+  aws.sns.subscription:
+    platform:
+      name:
+      - aws
+  aws.sns.topic:
+    platform:
+      name:
+      - aws
+  aws.vpc:
+    platform:
+      name:
+      - aws
+  aws.vpc.flowlog:
+    platform:
+      name:
+      - aws
+  aws.vpc.routetable:
+    platform:
+      name:
+      - aws
+  azuread:
+    platform:
+      name:
+      - azure
+  azuread.application:
+    platform:
+      name:
+      - azure
+  azuread.domain:
+    platform:
+      name:
+      - azure
+  azuread.group:
+    platform:
+      name:
+      - azure
+  azuread.serviceprincipal:
+    platform:
+      name:
+      - azure
+  azuread.user:
+    platform:
+      name:
+      - azure
+  azurerm:
+    platform:
+      name:
+      - azure
+  azurerm.compute:
+    platform:
+      name:
+      - azure
+  azurerm.compute.disk:
+    platform:
+      name:
+      - azure
+  azurerm.compute.vm:
+    platform:
+      name:
+      - azure
+  azurerm.keyvault:
+    platform:
+      name:
+      - azure
+  azurerm.keyvault.certificate:
+    platform:
+      name:
+      - azure
+  azurerm.keyvault.key:
+    platform:
+      name:
+      - azure
+  azurerm.keyvault.secret:
+    platform:
+      name:
+      - azure
+  azurerm.keyvault.vault:
+    platform:
+      name:
+      - azure
+  azurerm.mariadb:
+    platform:
+      name:
+      - azure
+  azurerm.mariadb.database:
+    platform:
+      name:
+      - azure
+  azurerm.mariadb.server:
+    platform:
+      name:
+      - azure
+  azurerm.monitor:
+    platform:
+      name:
+      - azure
+  azurerm.monitor.diagnosticsetting:
+    platform:
+      name:
+      - azure
+  azurerm.monitor.logprofile:
+    platform:
+      name:
+      - azure
+  azurerm.mysql:
+    platform:
+      name:
+      - azure
+  azurerm.mysql.database:
+    platform:
+      name:
+      - azure
+  azurerm.mysql.server:
+    platform:
+      name:
+      - azure
+  azurerm.network:
+    platform:
+      name:
+      - azure
+  azurerm.network.interface:
+    platform:
+      name:
+      - azure
+  azurerm.network.securitygroup:
+    platform:
+      name:
+      - azure
+  azurerm.network.securityrule:
+    platform:
+      name:
+      - azure
+  azurerm.network.watcher:
+    platform:
+      name:
+      - azure
+  azurerm.postgresql:
+    platform:
+      name:
+      - azure
+  azurerm.postgresql.database:
+    platform:
+      name:
+      - azure
+  azurerm.postgresql.server:
+    platform:
+      name:
+      - azure
+  azurerm.resource:
+    platform:
+      name:
+      - azure
+  azurerm.sql:
+    platform:
+      name:
+      - azure
+  azurerm.sql.configuration:
+    platform:
+      name:
+      - azure
+  azurerm.sql.database:
+    platform:
+      name:
+      - azure
+  azurerm.sql.databaseusage:
+    platform:
+      name:
+      - azure
+  azurerm.sql.firewallrule:
+    platform:
+      name:
+      - azure
+  azurerm.sql.server:
+    platform:
+      name:
+      - azure
+  azurerm.sql.server.administrator:
+    platform:
+      name:
+      - azure
+  azurerm.storage:
+    platform:
+      name:
+      - azure
+  azurerm.storage.account:
+    platform:
+      name:
+      - azure
+  azurerm.storage.container:
+    platform:
+      name:
+      - azure
+  azurerm.web:
+    platform:
+      name:
+      - azure
+  azurerm.web.appsite:
+    platform:
+      name:
+      - azure
+  azurerm.web.appsiteauthsettings:
+    platform:
+      name:
+      - azure
+  azurerm.web.appsiteconfig:
+    platform:
+      name:
+      - azure
   certificate: null
   command: null
+  dns:
+    maturity: experimental
+  dns.mxRecord:
+    maturity: experimental
+  dns.record:
+    maturity: experimental
   docker: null
   docker.container: null
   docker.image: null
-  equinix.metal.device: null
-  equinix.metal.organization: null
-  equinix.metal.project: null
-  equinix.metal.sshkey: null
-  equinix.metal.user: null
+  equinix.metal.device:
+    maturity: experimental
+    platform:
+      name:
+      - equinix
+  equinix.metal.organization:
+    maturity: experimental
+    platform:
+      name:
+      - equinix
+  equinix.metal.project:
+    maturity: experimental
+    platform:
+      name:
+      - equinix
+  equinix.metal.sshkey:
+    maturity: experimental
+    platform:
+      name:
+      - equinix
+  equinix.metal.user:
+    maturity: experimental
+    platform:
+      name:
+      - equinix
   esxi:
+    platform:
+      name:
+      - vmware-esxi
+      - vmware-vsphere
     snippets:
-      - title: Check that all kernel modules are signed
-        query: |
-          esxi.host {
-            kernelModules {
-              signedStatus == "Signed"
-            }
+    - query: |
+        esxi.host {
+          kernelModules {
+            signedStatus == "Signed"
           }
-  esxi.kernelmodule: null
-  esxi.ntpconfig: null
-  esxi.service: null
-  esxi.timezone: null
-  esxi.vib: null
+        }
+      title: Check that all kernel modules are signed
+  esxi.kernelmodule:
+    platform:
+      name:
+      - vmware-esxi
+      - vmware-vsphere
+  esxi.ntpconfig:
+    platform:
+      name:
+      - vmware-esxi
+      - vmware-vsphere
+  esxi.service:
+    platform:
+      name:
+      - vmware-esxi
+      - vmware-vsphere
+  esxi.timezone:
+    platform:
+      name:
+      - vmware-esxi
+      - vmware-vsphere
+  esxi.vib:
+    platform:
+      name:
+      - vmware-esxi
+      - vmware-vsphere
   file:
     snippets:
-      - title: Test if a directory exists
-        query: |
-          file('/etc') {
-            exists
-            permissions.isDirectory
-          }
+    - query: |
+        file('/etc') {
+          exists
+          permissions.isDirectory
+        }
+      title: Test if a directory exists
   file.permissions: null
   files.find: null
   gcloud.compute: null
@@ -220,229 +727,382 @@ resources:
   gcloud.sql.instance: null
   gcloud.storage: null
   gcloud.storage.bucket: null
+  github.organization:
+    maturity: experimental
+  gitlab.group:
+    maturity: experimental
+  gitlab.project:
+    maturity: experimental
   group: null
   groups:
     snippets:
-      - title: Ensure the user is not part of group
-        query:  groups.where(name == 'wheel').list { members.all( name != 'username') }
-  ipmi: null
-  ipmi.chassis: null
-  k8s: null
-  k8s.apiresource: null
-  k8s.container: null
-  k8s.cronjob: null
-  k8s.daemonset: null
-  k8s.deployment: null
-  k8s.job: null
-  k8s.namespace: null
-  k8s.node: null
-  k8s.pod: null
+    - query: groups.where(name == 'wheel').list { members.all( name != 'username')
+        }
+      title: Ensure the user is not part of group
+  ip6tables: null
+  ipmi:
+    maturity: experimental
+  ipmi.chassis:
+    maturity: experimental
+  iptables: null
+  iptables.entry: null
+  k8s:
+    platform:
+      name:
+      - kubernetes
+  k8s.apiresource:
+    platform:
+      name:
+      - kubernetes
+  k8s.container:
+    platform:
+      name:
+      - kubernetes
+  k8s.cronjob:
+    platform:
+      name:
+      - kubernetes
+  k8s.daemonset:
+    platform:
+      name:
+      - kubernetes
+  k8s.deployment:
+    platform:
+      name:
+      - kubernetes
+  k8s.job:
+    platform:
+      name:
+      - kubernetes
+  k8s.namespace:
+    platform:
+      name:
+      - kubernetes
+  k8s.node:
+    platform:
+      name:
+      - kubernetes
+  k8s.pod:
+    platform:
+      name:
+      - kubernetes
   kernel:
     snippets:
-      - title: List all kernel modules
-        query: kernel.modules { name loaded size }
-      - title: List all loaded kernel modules
-        query: kernel.modules.where( loaded == true ) { name }
+    - query: kernel.modules { name loaded size }
+      title: List all kernel modules
+    - query: kernel.modules.where( loaded == true ) { name }
+      title: List all loaded kernel modules
   kernel.module: null
   logindefs: null
+  lsblk: null
+  lsblk.entry: null
   machine: null
   machine.baseboard: null
   machine.bios: null
   machine.chassis: null
   machine.system: null
+  macos: null
+  macos.alf: null
+  macos.security: null
+  macos.systemsetup: null
+  macos.timemachine: null
   mondoo: null
   mondoo.asset: null
   mondoo.eol: null
   mount:
     snippets:
-      - title: List all mount points
-        query: mount.list { path device fstype options }
-      - title: Ensure the mountpoint exists
-        query: mount.one( path == "/" )
-      - title: Check mountpoint configuration
-        query: |
-          mount.where( path == "/" ).list {
-            device == '/dev/mapper/vg00-lv_root'
-            fstype == 'xfs'
-            options['rw'] != null
-            options['relatime'] != null
-            options['seclabel'] != null
-            options['attr2'] != null
-            options['inode64'] != null
-            options['noquota'] != null
-          }
+    - query: mount.list { path device fstype options }
+      title: List all mount points
+    - query: mount.one( path == "/" )
+      title: Ensure the mountpoint exists
+    - query: |
+        mount.where( path == "/" ).list {
+          device == '/dev/mapper/vg00-lv_root'
+          fstype == 'xfs'
+          options['rw'] != null
+          options['relatime'] != null
+          options['seclabel'] != null
+          options['attr2'] != null
+          options['inode64'] != null
+          options['noquota'] != null
+        }
+      title: Check mountpoint configuration
   mount.point: null
-  ms365.exchangeonline: null
-  ms365.sharepointonline: null
-  ms365.teams: null
-  msgraph.beta: null
-  msgraph.beta.application: null
-  msgraph.beta.devicemanagement: null
-  msgraph.beta.devicemanagement.devicecompliancepolicy: null
-  msgraph.beta.devicemanagement.deviceconfiguration: null
-  msgraph.beta.domain: null
-  msgraph.beta.domaindnsrecord: null
-  msgraph.beta.organization: null
-  msgraph.beta.policies: null
-  msgraph.beta.rolemanagement: null
-  msgraph.beta.rolemanagement.roleassignment: null
-  msgraph.beta.rolemanagement.roledefinition: null
-  msgraph.beta.security: null
-  msgraph.beta.security.securityscore: null
-  msgraph.beta.user: null
+  ms365.exchangeonline:
+    platform:
+      name:
+      - microsoft365
+  ms365.sharepointonline:
+    platform:
+      name:
+      - microsoft365
+  ms365.teams:
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta:
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.application:
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.devicemanagement:
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.devicemanagement.devicecompliancepolicy:
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.devicemanagement.deviceconfiguration:
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.domain:
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.domaindnsrecord:
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.organization:
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.policies:
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.rolemanagement:
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.rolemanagement.roleassignment:
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.rolemanagement.roledefinition:
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.security:
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.security.securityscore:
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.user:
+    platform:
+      name:
+      - microsoft365
   ntp.conf: null
   os:
     snippets:
-      - title: Show all environment variables
-        query: os.env
-      - title: Retrieve a single environment variable
-        query: os.env['windir']
-
+    - query: os.env
+      title: Show all environment variables
+    - query: os.env['windir']
+      title: Retrieve a single environment variable
+  os.rootCertificates: null
   os.rootcertificates: null
   os.update: null
   package:
     snippets:
-      - title: Check if a package is installed
-        query: package('git').installed
+    - query: package('git').installed
+      title: Check if a package is installed
   packages: null
   pam.conf: null
+  pam.conf.serviceEntry: null
   parse: null
   parse.certificates: null
   parse.ini: null
   parse.json: null
+  parse.plist: null
+  parse.yaml: null
   pkix.extension: null
   pkix.name: null
   platform:
     snippets:
-      - title: Platform Name and Release
-        query: platform { name release }
+    - query: platform { name release }
+      title: Platform Name and Release
   platform.advisories: null
   platform.cves: null
   platform.eol: null
   platform.exploits: null
   platform.virtualization: null
+  port: null
+  ports: null
   powershell:
     snippets:
-      - title: Run custom powershell command
-        query: |
-          powershell('Get-WmiObject -Class Win32_volume -Filter "DriveType=3"| Select Label') {
-            stdout == /PAGEFILE/
-            stderr == ''
-          }
-      - title: Check the timezone
-        query: |
-          powershell('tzutil /g') {
-            stdout.trim == 'GMT Standard Time'
-            stderr == ''
-          }
+    - query: |
+        powershell('Get-WmiObject -Class Win32_volume -Filter "DriveType=3"| Select Label') {
+          stdout == /PAGEFILE/
+          stderr == ''
+        }
+      title: Run custom powershell command
+    - query: |
+        powershell('tzutil /g') {
+          stdout.trim == 'GMT Standard Time'
+          stderr == ''
+        }
+      title: Check the timezone
   privatekey: null
   process: null
   processes: null
+  regex: null
   registrykey: null
   registrykey.property:
     snippets:
-      - title: Verify a registry key property
-        query: |
-          registrykey.property(path: 'HKEY_LOCAL_MACHINE\Software\Policies\Microsoft\Windows\EventLog\System', name: 'MaxSize') {
-            value >= 32768
-          }
+    - query: |
+        registrykey.property(path: 'HKEY_LOCAL_MACHINE\Software\Policies\Microsoft\Windows\EventLog\System', name: 'MaxSize') {
+          value >= 32768
+        }
+      title: Verify a registry key property
   rsyslog.conf: null
   secpol:
     snippets:
-      - title: Check that a specific SID is included in the privilege rights
-        query: secpol.privilegerights['SeRemoteShutdownPrivilege'].contains( _ == 'S-1-5-32-544')
+    - query: secpol.privilegerights['SeRemoteShutdownPrivilege'].contains( _ == 'S-1-5-32-544')
+      title: Check that a specific SID is included in the privilege rights
   service: null
   services: null
   shadow: null
   shadow.entry: null
+  socket: null
+  socketstats: null
   sshd: null
   sshd.config:
     snippets:
-      - title: Check the ssh banner setting
-        query: sshd.config.params['Banner'] == '/etc/ssh/sshd-banner'
+    - query: sshd.config.params['Banner'] == '/etc/ssh/sshd-banner'
+      title: Check the ssh banner setting
   time: null
+  tls: null
   user: null
   users:
     snippets:
-      - title: Display all users and their uid
-        query: users.list { uid name }
-      - title: Ensure user exists
-        query: users.one( name == 'root')
-      - title: Ensure user does not exist
-        query: users.none(name == "vagrant")
-      - title: Search for a specific SID and check for its values
-        query: |
-          users.where( sid == /S-1-5-21-\d+-\d+-\d+-501/ ).list {
-            name != "Guest"
-          }
+    - query: users.list { uid name }
+      title: Display all users and their uid
+    - query: users.one( name == 'root')
+      title: Ensure user exists
+    - query: users.none(name == "vagrant")
+      title: Ensure user does not exist
+    - query: |
+        users.where( sid == /S-1-5-21-\d+-\d+-\d+-501/ ).list {
+          name != "Guest"
+        }
+      title: Search for a specific SID and check for its values
+  uuid: null
   vsphere:
+    platform:
+      name:
+      - vmware-esxi
+      - vmware-vsphere
     snippets:
-      - title: Display Information about the vSphere environment
-        query: vsphere.about
-      - title: Display ESXi host moid and properties
-        query: vsphere.datacenters { hosts { moid properties } }
-      - title: Display NTP server for all ESXi hosts
-        query: vsphere.datacenters { hosts { ntp.server } }
-      - title: Ensure a specific NTP Server is set
-        query: vsphere.datacenters { hosts { ntp.server.any(_ == "10.31.21.2") } }
-      - title: Ensure specific VmkNics properties for all management VmkNics
-        query: |
-          vsphere.datacenters {
-            hosts {
-              vmknics.where(tags == "Management") {
-                properties['Enabled'] == true
-                properties['MTU'] == 1500
-                properties['VDSName'] != /(?i)storage/
-              }
+    - query: vsphere.about
+      title: Display Information about the vSphere environment
+    - query: vsphere.datacenters { hosts { moid properties } }
+      title: Display ESXi host moid and properties
+    - query: vsphere.datacenters { hosts { ntp.server } }
+      title: Display NTP server for all ESXi hosts
+    - query: vsphere.datacenters { hosts { ntp.server.any(_ == "10.31.21.2") } }
+      title: Ensure a specific NTP Server is set
+    - query: |
+        vsphere.datacenters {
+          hosts {
+            vmknics.where(tags == "Management") {
+              properties['Enabled'] == true
+              properties['MTU'] == 1500
+              properties['VDSName'] != /(?i)storage/
             }
           }
-  vsphere.cluster: null
-  vsphere.datacenter: null
+        }
+      title: Ensure specific VmkNics properties for all management VmkNics
+  vsphere.cluster:
+    platform:
+      name:
+      - vmware-esxi
+      - vmware-vsphere
+  vsphere.datacenter:
+    platform:
+      name:
+      - vmware-esxi
+      - vmware-vsphere
   vsphere.host:
+    platform:
+      name:
+      - vmware-esxi
+      - vmware-vsphere
     snippets:
-      - title: Verify the Software AcceptanceLevel for ESXi host
-        query: |
-          // targeting a single ESXi host
-          esxi.host {
+    - query: |
+        // targeting a single ESXi host
+        esxi.host {
+          acceptanceLevel == 'VMwareCertified' || acceptanceLevel == 'VMwareAccepted' || acceptanceLevel == 'PartnerSupported'
+        }
+
+        // targeting the vSphere API
+        vsphere.datacenters {
+          hosts {
             acceptanceLevel == 'VMwareCertified' || acceptanceLevel == 'VMwareAccepted' || acceptanceLevel == 'PartnerSupported'
           }
-
-          // targeting the vSphere API
-          vsphere.datacenters {
-            hosts {
-              acceptanceLevel == 'VMwareCertified' || acceptanceLevel == 'VMwareAccepted' || acceptanceLevel == 'PartnerSupported'
-            }
+        }
+      title: Verify the Software AcceptanceLevel for ESXi host
+    - query: |
+        esxi.host {
+          packages {
+            acceptanceLevel == 'VMwareCertified' || acceptanceLevel == 'VMwareAccepted' || acceptanceLevel == 'PartnerSupported'
           }
-      - title: Verify that each vib is "VMwareCertified" or "VMwareAccepted"
-        query: |
-          esxi.host {
-            packages {
-              acceptanceLevel == 'VMwareCertified' || acceptanceLevel == 'VMwareAccepted' || acceptanceLevel == 'PartnerSupported'
-            }
-          }
-  vsphere.license: null
-  vsphere.vm: null
-  vsphere.vmknic: null
-  vsphere.vmnic: null
-  vsphere.vswitch.dvs: null
-  vsphere.vswitch.standard: null
+        }
+      title: Verify that each vib is "VMwareCertified" or "VMwareAccepted"
+  vsphere.license:
+    platform:
+      name:
+      - vmware-esxi
+      - vmware-vsphere
+  vsphere.vm:
+    platform:
+      name:
+      - vmware-esxi
+      - vmware-vsphere
+  vsphere.vmknic:
+    platform:
+      name:
+      - vmware-esxi
+      - vmware-vsphere
+  vsphere.vmnic:
+    platform:
+      name:
+      - vmware-esxi
+      - vmware-vsphere
+  vsphere.vswitch.dvs:
+    platform:
+      name:
+      - vmware-esxi
+      - vmware-vsphere
+  vsphere.vswitch.standard:
+    platform:
+      name:
+      - vmware-esxi
+      - vmware-vsphere
   windows:
     snippets:
-      - title: Check the OS Edition
-        query: windows.computerInfo['WindowsInstallationType'] == 'Server Core'
+    - query: windows.computerInfo['WindowsInstallationType'] == 'Server Core'
+      title: Check the OS Edition
   windows.feature:
     snippets:
-      - title: Check that a Windows features is installed
-        query: windows.feature('SNMP-Service').installed
-      - title: Check that a specific feature is not installed
-        query: windows.feature('Windows-Defender').installed == false
+    - query: windows.feature('SNMP-Service').installed
+      title: Check that a Windows features is installed
+    - query: windows.feature('Windows-Defender').installed == false
+      title: Check that a specific feature is not installed
   windows.firewall:
     snippets:
-      - title: Check a specific Windows Firewall rule
-        query: |
-          windows.firewall.rules.where ( displayName == "File and Printer Sharing (Echo Request - ICMPv4-In)") {
-            enabled == 1
-          }
+    - query: |
+        windows.firewall.rules.where ( displayName == "File and Printer Sharing (Echo Request - ICMPv4-In)") {
+          enabled == 1
+        }
+      title: Check a specific Windows Firewall rule
   windows.firewall.profile: null
   windows.firewall.rule: null
   windows.hotfix: null
@@ -450,8 +1110,8 @@ resources:
   yum: null
   yum.repo:
     snippets:
-      - title: Check if a yum repo is enabled
-        query: |
-          yum.repo('salt-latest') {
-            enabled
-          }
+    - query: |
+        yum.repo('salt-latest') {
+          enabled
+        }
+      title: Check if a yum repo is enabled
