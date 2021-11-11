@@ -70,6 +70,7 @@ func ApplyDefaultIdentities(cc *transports.TransportConfig, username string, pas
 			filepath.Join(home, ".ssh", "id_rsa"),
 			filepath.Join(home, ".ssh", "id_dsa"),
 			filepath.Join(home, ".ssh", "id_ed25519"),
+			filepath.Join(home, ".ssh", "id_ecdsa"),
 			// specific handling for google compute engine, see https://cloud.google.com/compute/docs/instances/connecting-to-instance
 			filepath.Join(home, ".ssh", "google_compute_engine"),
 		}
