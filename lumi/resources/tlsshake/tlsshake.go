@@ -105,6 +105,8 @@ func (s *Tester) testTLS(proto string, target string, version string) (int, erro
 	defer conn.Close()
 
 	ciphersFilter := func(cipher string) bool {
+		s.sync.Lock()
+		defer s.sync.Unlock()
 		if v, ok := s.Findings.Ciphers[cipher]; ok && v {
 			return false
 		}
