@@ -4253,67 +4253,73 @@ gitlab.project {
   visibility string
 }
 
+// Terraform Configuration Files
 terraform {
-  // access to individual files
+  // Access to individual files including .tf and .tf.json files
   files() []terraform.file
-
-  // returns the attributes defined in .tfvars and .tfvars.json
+  // Returns the attributes defined in .tfvars and .tfvars.json
   tfvars() dict
-
-  // list all referenced terraform modules
+  // List all referenced terraform modules
   modules() []terraform.module
-
-  // raw hcl blocks
+  // Raw HCL blocks
   blocks() []terraform.block
-
-  // provider blocks
+  // Provider blocks
   providers() []terraform.block
-
-  // data sources blocks
+  // Data sources blocks
   datasources() []terraform.block
-
-  // all blocks with type resource
+  // All blocks with type resource
   resources() []terraform.block
-
-  // variable blocks
+  // Variable blocks
   variables() []terraform.block
-
-  // output blocks
+  // Output blocks
   outputs() []terraform.block
 }
 
-// represents a .tf or .tf.json file
+// Terraform Configuration File represents a .tf or .tf.json file
 terraform.file {
   // tf or tf.json file
   path string
-  // all blocks within the file
+  // All blocks within the file
   blocks() []terraform.block
 }
 
-// Position of the hcl block in file
+// Position of the terraform configuration block in file
 terraform.fileposition {
+  // File path to Terraform configuration file
   path string
+  // Line of the block
   line int
+  // Column of the Block
   column int
   byte int
 }
 
-// hcl block
+// Terraform Resource Block
 terraform.block {
+  // Resource type
   type string
+  // Resource Name Label
   nameLabel() string
+  // Resource Labels
   labels []string
-
+  // Block Start Position
   start terraform.fileposition
+  // Block End Position
   end terraform.fileposition
-
+  // Block Arguments
   arguments() dict
+  // Child Blocks
   blocks() []terraform.block
 }
 
+// Terraform Module Block
 terraform.module {
+  // Unique identifier for this particular module
   key string
+  // Source indicates where the modules was loaded from
   source string
+  // Module Version
   version string
+  //  Path to the directory where the module is stored
   dir string
 }
