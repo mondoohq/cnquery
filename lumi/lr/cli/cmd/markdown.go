@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"go.mondoo.io/mondoo/lumi/lr"
+	"go.mondoo.io/mondoo/lumi/lr/docs"
 	"sigs.k8s.io/yaml"
 )
 
@@ -37,7 +38,7 @@ var markdownCmd = &cobra.Command{
 			return
 		}
 
-		var lrDocsData LrDocs
+		var lrDocsData docs.LrDocs
 		filepath, _ := cmd.Flags().GetString("docs-file")
 		_, err = os.Stat(filepath)
 		if err == nil {
