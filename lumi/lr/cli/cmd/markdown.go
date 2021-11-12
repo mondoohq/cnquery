@@ -104,13 +104,37 @@ var markdownCmd = &cobra.Command{
 		// render all resources incl. fields and examples
 		for i := range res.Resources {
 			resource := res.Resources[i]
+
+			var docs *docs.LrDocsEntry
+			if lrDocsData.Resources != nil {
+				docs = lrDocsData.Resources[resource.ID]
+			}
+
 			builder.WriteString("## ")
 			builder.WriteString(resource.ID)
 			builder.WriteString("\n\n")
 
+			if docs != nil && docs.Platform != nil && (len(docs.Platform.Name) > 0 || len(docs.Platform.Family) > 0) {
+				builder.WriteString("**Supported Platform**\n\n")
+				for r := range docs.Platform.Name {
+					builder.WriteString(fmt.Sprintf("- %s", docs.Platform.Name[r]))
+					builder.WriteString("\n")
+				}
+				for r := range docs.Platform.Family {
+					builder.WriteString(fmt.Sprintf("- %s", docs.Platform.Name[r]))
+					builder.WriteString("\n")
+				}
+				builder.WriteString("\n")
+			}
+
 			if len(resource.Comments) > 0 {
 				builder.WriteString("**Description**\n\n")
 				builder.WriteString(strings.Join(sanitizeComments(resource.Comments), "\n"))
+				builder.WriteString("\n\n")
+			}
+
+			if docs != nil && docs.Docs != nil && docs.Docs.Description != "" {
+				builder.WriteString(docs.Docs.Description)
 				builder.WriteString("\n\n")
 			}
 
@@ -158,20 +182,35 @@ var markdownCmd = &cobra.Command{
 				builder.WriteString("\n")
 			}
 
-			if lrDocsData.Resources != nil {
-				docs := lrDocsData.Resources[resource.ID]
-				if docs != nil && len(docs.Snippets) > 0 {
-					builder.WriteString("**Examples**\n\n")
-					for si := range docs.Snippets {
-						snippet := docs.Snippets[si]
-						builder.WriteString(snippet.Title)
-						builder.WriteString("\n\n")
-						builder.WriteString("```javascript\n")
-						builder.WriteString(strings.TrimSpace(snippet.Query))
-						builder.WriteString("\n```\n\n")
-					}
+			if docs != nil && len(docs.Snippets) > 0 {
+				builder.WriteString("**Examples**\n\n")
+				for si := range docs.Snippets {
+					snippet := docs.Snippets[si]
+					builder.WriteString(snippet.Title)
+					builder.WriteString("\n\n")
+					builder.WriteString("```javascript\n")
+					builder.WriteString(strings.TrimSpace(snippet.Query))
+					builder.WriteString("\n```\n\n")
+				}
+				builder.WriteString("\n")
+			}
+
+			if docs != nil && len(docs.Resources) > 0 {
+				builder.WriteString("**Resources**\n\n")
+				for r := range docs.Resources {
+					builder.WriteString(fmt.Sprintf("- [%s](%s)", docs.Resources[r].Title, docs.Resources[r].Url))
 					builder.WriteString("\n")
 				}
+				builder.WriteString("\n")
+			}
+
+			if docs != nil && len(docs.Refs) > 0 {
+				builder.WriteString("**References**\n\n")
+				for r := range docs.Refs {
+					builder.WriteString(fmt.Sprintf("- [%s](%s)", docs.Refs[r].Title, docs.Refs[r].Url))
+					builder.WriteString("\n")
+				}
+				builder.WriteString("\n")
 			}
 		}
 
