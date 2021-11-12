@@ -149,6 +149,34 @@ func addFieldSuggestions(fields map[string]llx.Documentation, fieldName string, 
 
 // compileBlock on a context
 func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type) (types.Type, error) {
+
+	// For resource, users may indicate to query all fields.
+	// This is a special case which is handled here:
+	if len(expressions) == 1 && typ.IsResource() {
+		x := expressions[0]
+		if x.Operand != nil && x.Operand.Value != nil && x.Operand.Value.Ident != nil && *(x.Operand.Value.Ident) == "*" {
+			fields := availableGlobFields(c, typ)
+
+			fieldNames := make([]string, len(fields))
+			var i int
+			for k := range fields {
+				fieldNames[i] = k
+				i++
+			}
+			sort.Strings(fieldNames)
+
+			expressions = []*parser.Expression{}
+			for _, v := range fieldNames {
+				name := v
+				expressions = append(expressions, &parser.Expression{
+					Operand: &parser.Operand{
+						Value: &parser.Value{Ident: &name},
+					},
+				})
+			}
+		}
+	}
+
 	fref, _, err := c.blockExpressions(expressions, typ)
 	if err != nil {
 		return types.Nil, err
@@ -993,10 +1021,10 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 			var resType types.Type
 			id := *call.Ident
 
-			// We get this from the parser if the user called the dot-accessor
-			// but didn't provide any values at all. It equates a not found and
-			// we can now just suggest all fields
 			if id == "." {
+				// We get this from the parser if the user called the dot-accessor
+				// but didn't provide any values at all. It equates a not found and
+				// we can now just suggest all fields
 				addFieldSuggestions(availableFields(c, typ), "", c.Result)
 				return nil, errors.New("missing field name in accessing " + typ.Label())
 			}

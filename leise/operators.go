@@ -106,11 +106,11 @@ func compileABOperation(c *compiler, id string, call *parser.Call) (int32, *llx.
 
 func compileAssignment(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
 	if call == nil {
-		return types.Nil, errors.New("operation needs a function call")
+		return types.Nil, errors.New("assignment needs a function call")
 	}
 
 	if call.Function == nil {
-		return types.Nil, errors.New("operation needs a function call")
+		return types.Nil, errors.New("assignment needs a function call")
 	}
 	if len(call.Function) != 2 {
 		if len(call.Function) < 2 {

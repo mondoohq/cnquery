@@ -112,17 +112,20 @@ type AST struct {
 	Expressions []*Expression
 }
 
-var trueBool = true
-var falseBool = false
-var trueValue = Value{Bool: &trueBool}
-var falseValue = Value{Bool: &falseBool}
-var nilValue = Value{}
-var nanRef = math.NaN()
-var nanValue = Value{Float: &nanRef}
-var infinityRef = math.Inf(1)
-var infinityValue = Value{Float: &infinityRef}
-var neverRef = "Never"
-var neverValue = Value{Ident: &neverRef}
+var (
+	trueBool  bool = true
+	falseBool bool = false
+	neverRef       = "Never"
+
+	trueValue     = Value{Bool: &trueBool}
+	falseValue    = Value{Bool: &falseBool}
+	nilValue      = Value{}
+	nanRef        = math.NaN()
+	nanValue      = Value{Float: &nanRef}
+	infinityRef   = math.Inf(1)
+	infinityValue = Value{Float: &infinityRef}
+	neverValue    = Value{Ident: &neverRef}
+)
 
 type parser struct {
 	token      lexer.Token
@@ -413,12 +416,25 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 				return nil, false, err
 			}
 		}
+
 		// maps
 		if p.token.Value == "{" {
 			value, err = p.parseMap()
 			if err != nil {
 				return nil, false, err
 			}
+		}
+
+		// glob all fields of a resource
+		// ie: resource { * }
+		if p.token.Value == "*" {
+			p.nextToken()
+			star := "*"
+			return &Operand{
+				Value: &Value{
+					Ident: &star,
+				},
+			}, true, nil
 		}
 	}
 
@@ -440,11 +456,14 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 		switch p.token.Value {
 		case ".":
 			p.nextToken()
+
+			// everything else must be an identifier
 			if p.token.Type != Ident {
 				v := "."
 				res.Calls = append(res.Calls, &Call{Ident: &v})
 				return &res, false, p.errorMsg("missing field accessor")
 			}
+
 			v := p.token.Value
 			res.Calls = append(res.Calls, &Call{Ident: &v})
 			p.nextToken()
