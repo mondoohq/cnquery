@@ -17,6 +17,7 @@ import (
 
 func init() {
 	markdownCmd.Flags().String("docs-file", "", "optional docs yaml to enrich the resource information")
+	markdownCmd.Flags().String("front-matter-file", "", "optional file path for yaml front matter")
 	rootCmd.AddCommand(markdownCmd)
 }
 
@@ -53,6 +54,24 @@ var markdownCmd = &cobra.Command{
 		}
 
 		builder := &strings.Builder{}
+
+		// write optional front-matter
+		frontMatterPath, _ := cmd.Flags().GetString("front-matter-file")
+		if frontMatterPath != "" {
+			_, err = os.Stat(frontMatterPath)
+			if err != nil {
+				log.Fatal().Err(err).Msg("could not find front matter file " + filepath)
+			}
+
+			log.Info().Msg("load front matter data")
+			content, err := ioutil.ReadFile(frontMatterPath)
+			if err != nil {
+				log.Fatal().Err(err).Msg("could not read file " + filepath)
+			}
+			builder.Write(content)
+			builder.WriteString("\n")
+		}
+
 		builder.WriteString("# Mondoo Resource Reference\n\n")
 
 		// to ensure we generate the same markdown, we sort the resources first
