@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	docsYamlCmd.Flags().String("file", "", "optional file path to write content to a file")
+	docsYamlCmd.Flags().String("docs-file", "", "optional file path to write content to a file")
 	docsCmd.AddCommand(docsYamlCmd)
 	docsCmd.AddCommand(docsGoCmd)
 	rootCmd.AddCommand(docsCmd)
@@ -48,7 +48,7 @@ var docsYamlCmd = &cobra.Command{
 			return res.Resources[i].ID < res.Resources[j].ID
 		})
 
-		filepath, err := cmd.Flags().GetString("file")
+		filepath, err := cmd.Flags().GetString("docs-file")
 		if err != nil {
 			log.Fatal().Err(err).Msg("invalid argument for `file`")
 		}
