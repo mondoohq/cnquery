@@ -127,6 +127,12 @@ var markdownCmd = &cobra.Command{
 				builder.WriteString("\n")
 			}
 
+			if docs != nil && len(docs.Maturity) > 0 {
+				builder.WriteString("**Maturity**\n\n")
+				builder.WriteString(docs.Maturity)
+				builder.WriteString("\n\n")
+			}
+
 			if len(resource.Comments) > 0 {
 				builder.WriteString("**Description**\n\n")
 				builder.WriteString(strings.Join(sanitizeComments(resource.Comments), "\n"))
