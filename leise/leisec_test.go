@@ -839,6 +839,44 @@ func TestCompiler_ResourceArrayImplicitLength(t *testing.T) {
 	})
 }
 
+func TestCompiler_ResourceFieldGlob(t *testing.T) {
+	compile(t, "pam.conf { * }", func(res *llx.CodeBundle) {
+		assertFunction(t, "pam.conf", nil, res.Code.Code[0])
+		assertFunction(t, "{}", &llx.Function{
+			Type:    string(types.Block),
+			Binding: 1,
+			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
+		}, res.Code.Code[1])
+		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
+
+		assertPrimitive(t, &llx.Primitive{
+			Type: string(types.Resource("pam.conf")),
+		}, res.Code.Functions[0].Code[0])
+		assertFunction(t, "content", &llx.Function{
+			Type:    string(types.String),
+			Binding: 1,
+		}, res.Code.Functions[0].Code[1])
+		assertFunction(t, "entries", &llx.Function{
+			Type:    string(types.Map(types.String, types.Array(types.Resource("pam.conf.serviceEntry")))),
+			Binding: 1,
+		}, res.Code.Functions[0].Code[2])
+		assertFunction(t, "files", &llx.Function{
+			Type:    string(types.Array(types.Resource("file"))),
+			Binding: 1,
+		}, res.Code.Functions[0].Code[3])
+		assertFunction(t, "services", &llx.Function{
+			Type:    string(types.Map(types.String, types.Array(types.String))),
+			Binding: 1,
+		}, res.Code.Functions[0].Code[5])
+		// TODO: We need to ensure that the serviceEntry sub-resource is not exposed!!
+		assertFunction(t, "serviceEntry", &llx.Function{
+			Type:    string(types.Resource("pam.conf.serviceEntry")),
+			Binding: 1,
+		}, res.Code.Functions[0].Code[4])
+		assert.Equal(t, []int32{2, 3, 4, 5, 6}, res.Code.Functions[0].Entrypoints)
+	})
+}
+
 func TestCompiler_ResourceFieldArrayAccessor(t *testing.T) {
 	compile(t, "sshd.config.params[\"Protocol\"]", func(res *llx.CodeBundle) {
 		assertFunction(t, "[]", &llx.Function{

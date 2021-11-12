@@ -151,6 +151,17 @@ func fieldsInfo(resourceInfo *lumi.ResourceInfo) map[string]llx.Documentation {
 	return res
 }
 
+func availableGlobFields(c *compiler, typ types.Type) map[string]llx.Documentation {
+	var res map[string]llx.Documentation
+
+	if !typ.IsResource() {
+		return res
+	}
+
+	resourceInfo := c.Schema.Resources[typ.ResourceName()]
+	return fieldsInfo(resourceInfo)
+}
+
 func availableFields(c *compiler, typ types.Type) map[string]llx.Documentation {
 	var res map[string]llx.Documentation
 
