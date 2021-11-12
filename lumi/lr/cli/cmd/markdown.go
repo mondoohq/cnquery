@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -34,6 +35,11 @@ var markdownCmd = &cobra.Command{
 			return
 		}
 
+		outputDir, err := cmd.Flags().GetString("output")
+		if err != nil {
+			log.Fatal().Err(err).Msg("no output directory provided")
+		}
+
 		res, err := lr.Parse(string(raw))
 		if err != nil {
 			log.Error().Msg(err.Error())
@@ -41,12 +47,12 @@ var markdownCmd = &cobra.Command{
 		}
 
 		var lrDocsData docs.LrDocs
-		filepath, _ := cmd.Flags().GetString("docs-file")
-		_, err = os.Stat(filepath)
+		docsFilepath, _ := cmd.Flags().GetString("docs-file")
+		_, err = os.Stat(docsFilepath)
 		if err == nil {
-			content, err := ioutil.ReadFile(filepath)
+			content, err := ioutil.ReadFile(docsFilepath)
 			if err != nil {
-				log.Fatal().Err(err).Msg("could not read file " + filepath)
+				log.Fatal().Err(err).Msg("could not read file " + docsFilepath)
 			}
 			err = yaml.Unmarshal(content, &lrDocsData)
 			if err != nil {
@@ -54,21 +60,19 @@ var markdownCmd = &cobra.Command{
 			}
 		}
 
-		builder := &strings.Builder{}
-
 		// write optional front-matter
 		frontMatterPath, _ := cmd.Flags().GetString("front-matter-file")
 		var frontMatter string
 		if frontMatterPath != "" {
 			_, err = os.Stat(frontMatterPath)
 			if err != nil {
-				log.Fatal().Err(err).Msg("could not find front matter file " + filepath)
+				log.Fatal().Err(err).Msg("could not find front matter file " + frontMatterPath)
 			}
 
 			log.Info().Msg("load front matter data")
 			content, err := ioutil.ReadFile(frontMatterPath)
 			if err != nil {
-				log.Fatal().Err(err).Msg("could not read file " + filepath)
+				log.Fatal().Err(err).Msg("could not read file " + frontMatterPath)
 			}
 			frontMatter = string(content)
 		}
@@ -90,7 +94,11 @@ var markdownCmd = &cobra.Command{
 			resourceHrefMap: resourceHrefMap,
 		}
 
-		builder.WriteString(r.renderToc(res.Resources, frontMatter))
+		// render readme
+		err = os.WriteFile(filepath.Join(outputDir, "resources.md"), []byte(r.renderToc(res.Resources, frontMatter)), 0o600)
+		if err != nil {
+			log.Fatal().Err(err).Msg("could not write file")
+		}
 
 		for i := range res.Resources {
 			resource := res.Resources[i]
@@ -99,10 +107,11 @@ var markdownCmd = &cobra.Command{
 				docs = lrDocsData.Resources[resource.ID]
 			}
 
-			builder.WriteString(r.renderResourcePage(resource, docs))
+			err = os.WriteFile(filepath.Join(outputDir, strings.ToLower(resource.ID+".md")), []byte(r.renderResourcePage(resource, docs)), 0o600)
+			if err != nil {
+				log.Fatal().Err(err).Msg("could not write file")
+			}
 		}
-
-		fmt.Println(builder.String())
 	},
 }
 
@@ -124,7 +133,7 @@ func (l *lrSchemaRenderer) renderToc(resources []*lr.Resource, frontMatter strin
 
 	for i := range resources {
 		resource := resources[i]
-		rows = append(rows, []string{"[" + resource.ID + "](#" + anchor(resource.ID) + ")", strings.Join(sanitizeComments(resource.Comments), ",")})
+		rows = append(rows, []string{"[" + resource.ID + "](" + mdRef(resource.ID) + ")", strings.Join(sanitizeComments(resource.Comments), ",")})
 	}
 
 	table := tablewriter.NewWriter(builder)
@@ -144,7 +153,18 @@ func (l *lrSchemaRenderer) renderToc(resources []*lr.Resource, frontMatter strin
 func (l *lrSchemaRenderer) renderResourcePage(resource *lr.Resource, docs *docs.LrDocsEntry) string {
 	builder := &strings.Builder{}
 
-	builder.WriteString("## ")
+	builder.WriteString("---\n")
+	builder.WriteString("title: " + resource.ID + "\n")
+	builder.WriteString("sidebar_label: " + resource.ID + "\n")
+
+	headerDesc := strings.Join(sanitizeComments(resource.Comments), " ")
+	if headerDesc != "" {
+		builder.WriteString("description: " + headerDesc + "\n")
+	}
+	builder.WriteString("---\n")
+	builder.WriteString("\n")
+
+	builder.WriteString("# ")
 	builder.WriteString(resource.ID)
 	builder.WriteString("\n\n")
 
@@ -256,8 +276,12 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lr.Resource, docs *docs.
 	return builder.String()
 }
 
-func anchor(name string) string {
+func anchore(name string) string {
 	name = strings.Replace(name, ".", "", -1)
+	return strings.ToLower(name)
+}
+
+func mdRef(name string) string {
 	return strings.ToLower(name)
 }
 
@@ -266,7 +290,7 @@ func renderLrType(t lr.Type, resourceHrefMap map[string]bool) string {
 	case t.SimpleType != nil:
 		_, ok := resourceHrefMap[t.SimpleType.Type]
 		if ok {
-			return "[" + t.SimpleType.Type + "](#" + anchor(t.SimpleType.Type) + ")"
+			return "[" + t.SimpleType.Type + "](" + mdRef(t.SimpleType.Type) + ")"
 		}
 		return t.SimpleType.Type
 	case t.ListType != nil:
