@@ -366,13 +366,29 @@ resources:
       name:
       - aws
   aws.s3:
+    docs:
+      desc: |
+        Amazon Simple Storage Service (Amazon S3) is an object storage service
     platform:
       name:
       - aws
+    refs:
+    - title: Amazon S3 Product Page
+      url: https://aws.amazon.com/s3/
+    - title: 'AWS Documentation: What is Amazon S3?'
+      url: https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html
   aws.s3.bucket:
+    docs:
+      desc: |
+        Buckets and objects are AWS resources, and Amazon S3 provides APIs for you to manage them
     platform:
       name:
       - aws
+    refs:
+    - title: Amazon S3 Product Page
+      url: https://aws.amazon.com/s3/
+    - title: 'AWS Documentation: Buckets overview'
+      url: https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingBucket.html
   aws.s3.bucket.corsrule:
     platform:
       name:
@@ -382,9 +398,15 @@ resources:
       name:
       - aws
   aws.s3.bucket.policy:
+    docs:
+      desc: |
+        Bucket policies grant permission to your Amazon S3 resources
     platform:
       name:
       - aws
+    refs:
+    - title: 'AWS Documentation: Using bucket policies'
+      url: https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucket-policies.html
   aws.s3control:
     platform:
       name:
