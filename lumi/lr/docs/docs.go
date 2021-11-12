@@ -46,6 +46,10 @@ type LrDocsEntry struct {
 func (d LrDocsEntry) MarshalGo() string {
 	var sb strings.Builder
 
+	if d.Maturity != "" {
+		sb.WriteString("Maturity: " + strconv.Quote(d.Maturity) + ",\n")
+	}
+
 	if d.Platform != nil {
 		sb.WriteString(fmt.Sprintf(`Platform: &docs.LrDocsPlatform{
 			%s
