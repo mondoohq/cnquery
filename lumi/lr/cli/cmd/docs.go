@@ -115,17 +115,18 @@ var docsYamlCmd = &cobra.Command{
 }
 
 var platformMapping = map[string][]string{
-	"aws":     {"aws"},
-	"gcp":     {"gcloud"},
-	"k8s":     {"kubernetes"},
-	"azure":   {"azure"},
-	"azurerm": {"azure"},
-	"arista":  {"arista-eos"},
-	"equinix": {"equinix"},
-	"ms365":   {"microsoft365"},
-	"msgraph": {"microsoft365"},
-	"vsphere": {"vmware-esxi", "vmware-vsphere"},
-	"esxi":    {"vmware-esxi", "vmware-vsphere"},
+	"aws":       {"aws"},
+	"gcp":       {"gcloud"},
+	"k8s":       {"kubernetes"},
+	"azure":     {"azure"},
+	"azurerm":   {"azure"},
+	"arista":    {"arista-eos"},
+	"equinix":   {"equinix"},
+	"ms365":     {"microsoft365"},
+	"msgraph":   {"microsoft365"},
+	"vsphere":   {"vmware-esxi", "vmware-vsphere"},
+	"esxi":      {"vmware-esxi", "vmware-vsphere"},
+	"terraform": {"terraform"},
 }
 
 func ensureDefaults(id string, entry *docs.LrDocsEntry) *docs.LrDocsEntry {

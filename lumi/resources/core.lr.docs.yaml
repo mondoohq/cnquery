@@ -659,6 +659,7 @@ resources:
   command: null
   dns:
     maturity: experimental
+  dns.dkimRecord: null
   dns.mxRecord:
     maturity: experimental
   dns.record:
@@ -1000,6 +1001,47 @@ resources:
     snippets:
     - query: sshd.config.params['Banner'] == '/etc/ssh/sshd-banner'
       title: Check the ssh banner setting
+  terraform:
+    maturity: experimental
+    platform:
+      name:
+      - terraform
+    snippets:
+    - query: terraform.blocks { nameLabel arguments }
+      title: Display all Terraform blocks and their arguments
+    - query: terraform.datasources { nameLabel arguments }
+      title: Display all data blocks
+    - query: terraform.resources { nameLabel arguments }
+      title: Display all resource blocks
+  terraform.block:
+    maturity: experimental
+    platform:
+      name:
+      - terraform
+    snippets:
+    - query: terraform.blocks { nameLabel arguments }
+      title: Display all Terraform blocks and their arguments
+  terraform.file:
+    maturity: experimental
+    platform:
+      name:
+      - terraform
+    snippets:
+    - query: terraform.files { path blocks { nameLabel } }
+      title: Display all files and their blocks
+  terraform.fileposition:
+    maturity: experimental
+    platform:
+      name:
+      - terraform
+  terraform.module:
+    maturity: experimental
+    platform:
+      name:
+      - terraform
+    snippets:
+    - query: terraform.modules { key version source}
+      title: Display all loaded Terraform modules
   time: null
   tls: null
   user: null
