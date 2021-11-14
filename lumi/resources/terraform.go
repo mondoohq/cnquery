@@ -1,16 +1,18 @@
 package resources
 
 import (
+	"encoding/json"
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/hcl/v2/ext/typeexpr"
-
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/ext/typeexpr"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/rs/zerolog/log"
 	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/function"
+	"github.com/zclconf/go-cty/cty/function/stdlib"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/terraform"
@@ -222,12 +224,21 @@ func hclAttributesToDict(attributes map[string]*hcl.Attribute) (map[string]inter
 	for k := range attributes {
 		val, _ := attributes[k].Expr.Value(nil)
 		dict[k] = map[string]interface{}{
-			"value": getCtyValue(attributes[k].Expr, nil),
-			"type":  typeexpr.TypeString(val.Type()),
+			"value": getCtyValue(attributes[k].Expr, &hcl.EvalContext{
+				Functions: hclFunctions(),
+			}),
+			"type": typeexpr.TypeString(val.Type()),
 		}
 	}
 
 	return dict, nil
+}
+
+func hclFunctions() map[string]function.Function {
+	return map[string]function.Function{
+		"jsondecode": stdlib.JSONDecodeFunc,
+		"jsonencode": stdlib.JSONEncodeFunc,
+	}
 }
 
 func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) interface{} {
@@ -260,7 +271,22 @@ func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) interface{} {
 		}
 		// TODO: are we sure we want to do this?
 		return strings.Join(res, ".")
-	case *hclsyntax.FunctionCallExpr, *hclsyntax.ConditionalExpr:
+	case *hclsyntax.FunctionCallExpr:
+		results := []interface{}{}
+		subVal, err := t.Value(ctx)
+		if err == nil && subVal.Type() == cty.String {
+			if t.Name == "jsonencode" {
+				res := map[string]interface{}{}
+				err := json.Unmarshal([]byte(subVal.AsString()), &res)
+				if err == nil {
+					results = append(results, res)
+				}
+			} else {
+				results = append(results, subVal.AsString())
+			}
+		}
+		return results
+	case *hclsyntax.ConditionalExpr:
 		results := []interface{}{}
 		subVal, err := t.Value(ctx)
 		if err == nil && subVal.Type() == cty.String {

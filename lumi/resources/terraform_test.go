@@ -41,4 +41,11 @@ func TestResource_Terraform(t *testing.T) {
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, string("resource"), res[0].Data.Value)
 	})
+
+	t.Run("terraform jsonencode blocks", func(t *testing.T) {
+		res := terraformTestQuery(t, "terraform.resources.where( nameLabel == 'aws_iam_policy' && labels[1] == 'policy' )[0].arguments['policy']['value'][0]['Version']")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, string("2012-10-17"), res[0].Data.Value)
+	})
 }
