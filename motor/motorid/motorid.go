@@ -3,13 +3,15 @@ package motorid
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/stringx"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
+	"go.mondoo.io/mondoo/motor/motorid/clouddetect"
 	"go.mondoo.io/mondoo/motor/motorid/hostname"
 	"go.mondoo.io/mondoo/motor/motorid/machineid"
 	"go.mondoo.io/mondoo/motor/platform"
@@ -108,6 +110,9 @@ func GatherID(t transports.Transport, p *platform.Platform, idDetector string) (
 				return "", errors.New(fmt.Sprintf("awsec2 id detector is not supported for your asset: %s %s", p.Name, p.Release))
 			}
 		}
+		return identifier, nil
+	case "clouddetect":
+		identifier := clouddetect.Detect(t, p)
 		return identifier, nil
 	default:
 		return "", errors.New(fmt.Sprintf("the provided id-detector is not supported: %s", idDetector))
