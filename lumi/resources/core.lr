@@ -1498,19 +1498,21 @@ arista.eos.spt.mstInterface {
   features() dict
 }
 
+// AWS Resource
 aws {
-  // list of vpcs in the account (across all regions)
+  // list of `aws.vpc` objects representing all VPCs in the account across all enabled regions
   vpcs() []aws.vpc
-  // list of regions for the account
+  // list of all enabled regions in the account
   regions() []string
 }
 
-// AWS Access Analyzer helps identify resources that are shared with an external entity
+// AWS Access Analyzer resource for assessing the configuration of AWS IAM Access Analyzer
 aws.accessAnalyzer {
-  // list of AWS IAM access analyzers
+  // list of `aws.accessanalyzer.analyzer` objects for all AWS Access Analyzers configured within the account 
   analyzers() []aws.accessanalyzer.analyzer
 }
 
+// AWS Access Analyzer resource provides an object representing an individual AWS IAM Access Analyzer configuration
 aws.accessanalyzer.analyzer {
   // ARN for the analyzer
   arn string
@@ -1520,7 +1522,7 @@ aws.accessanalyzer.analyzer {
   status string
 }
 
-// AWS account information
+// AWS account resource
 aws.account {
   // Account Id
   id() string
@@ -1830,12 +1832,13 @@ aws.es.domain {
   region string
 }
 
-// AWS Certificate Manager for managing public and private SSL/TLS certificates
+// AWS Certificate Manager resource for assessing the configuration of AWS Certificate Manager
 aws.acm {
+  // list of `aws.acm.certificate` objects representing ACM certificates configured within the account
   certificates() []aws.acm.certificate
 }
 
-// AWS Certificate Manager Certificate
+// AWS Certificate Manager Certificate resource provides an object representing an individual ACM certificate
 aws.acm.certificate {
   // ARN for the certificate
   arn string
@@ -2383,13 +2386,13 @@ aws.dms {
   replicationInstances() []dict
 }
 
-// Amazon API Gateway for creating, maintaining, and securing APIs at scale
+// Amazon API Gateway resource for assessing the configuration of the AWS API Gateway service
 aws.apigateway {
-  // list of rest APIs across all regions in the account
+  // list of `aws.apigateway.restapi` objects representing all rest APIs across all enabled regions in the account
   restApis() []aws.apigateway.restapi
 }
 
-// Amazon API Gateway REST API
+// Amazon API Gateway REST API resource provides an object representing an individual configured API Gateway REST API
 aws.apigateway.restapi {
   // ARN for the rest api
   arn string
@@ -2407,7 +2410,7 @@ aws.apigateway.restapi {
   region string
 }
 
-// Amazon API Gateway REST API unique identifier for a version of a deployed RestApi that is callable by users
+// Amazon API Gateway REST API resource provides an object representing an individual stage configured on an API Gateway 
 aws.apigateway.stage {
   // ARN for the rest api stage
   arn string
@@ -2631,7 +2634,7 @@ aws.ec2.instance.device {
   deviceName string
 }
 
-// Amazon Virtual Private Cloud
+// AWS VPC resource
 aws.vpc {
   // arn of the vpc
   arn string
