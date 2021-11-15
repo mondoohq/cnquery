@@ -82,41 +82,166 @@ resources:
   authorizedkeys: null
   authorizedkeys.entry: null
   aws:
+    docs:
+      desc: |
+        The AWS Resource is used to query AWS accounts and the services and resources within them. The `aws` resource returns a list of enabled regions within the AWS account, as well as a list of `aws.vpc` objects representing all VPCs configured across all enabled regions.
     platform:
       name:
       - aws
+    snippets:
+      - query: aws.regions
+        title: List all enabled regions within the AWS account
+      - query: aws.vpcs
+        title: List of `aws.vpc` objects for all VPCs across all enabled regions
+      - query: |
+          aws.vpcs {
+            arn 
+            id 
+            state 
+            isDefault 
+            region 
+            flowLogs
+            routeTables
+          }
+        title: List of `aws.vpc` objects for all VPCs across all enabled regions and the values for specified fields
+      - query: |
+          aws.vpcs
+            .all(
+              flowLogs.any(status == "ACTIVE")
+            )
+        title: Ensure VPC flow logging is enabled in all VPCs
+    refs:
+    - title: 'AWS Documentation: Managing AWS Regions'
+      url: https://docs.aws.amazon.com/general/latest/gr/rande-manage.html
+    - title: 'AWS Documentation: Security in Amazon Virtual Private Cloud'
+      url: https://docs.aws.amazon.com/vpc/latest/userguide/security.html
   aws.accessAnalyzer:
+    docs:
+      desc: |
+        The `aws.accessAnalyzer` resource returns a list of `aws.accessAnalyzer.analyzer` objects representing all of the AWS IAM Access Analyzers configured across the AWS account.
     platform:
       name:
       - aws
+    snippets:
+      - query: aws.accessAnalyzer.analyzers 
+        title: "Return a list of `aws.accessAnalyzer.analyzer` objects representing all of the AWS IAM Access Analyzers configured across the AWS account"
+    refs:
+    - title: "Using AWS IAM Access Analyzer"
+      url: https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html
   aws.accessanalyzer.analyzer:
     platform:
+      docs:
+        desc: |
+          AWS Access Analyzer resource provides an object representing an individual AWS IAM Access Analyzer configuration. See `aws.accessAnalyzer` resource documentation for more information and usage. 
       name:
       - aws
   aws.account:
+    docs:
+      desc: |
+        The `aws.account` resource provides configuration for AWS accounts including the account number, and configured aliases.
     platform:
       name:
       - aws
+    snippets:
+      - query: aws.account { id aliases }
+        title: "Return the account id (number) and any configured account aliases"
   aws.acm:
+    docs:
+      desc:
+        The `aws.acm` resource can be used to assess the configuration of the AWS Certificates Manager service within the account. This resource returns a list of `aws.acm.certificate` objects for all ACM certificates found within the account.
     platform:
       name:
       - aws
+    snippets:
+      - query: aws.acm.certificates
+        title: Return a list of `aws.acm.certificates` within the AWS account
+      - query: |
+          aws.acm.certificates {
+          arn
+          notBefore
+          notAfter 
+          createdAt
+          domainName
+          status
+          subject
+          certificate() 
+          }
+        title: Return a list of `aws.acm.certificates` within the AWS account along with values for specified fields
+      - query: |
+          aws.acm.certificates.
+            where( status != /PENDING_VALIDATION/ ).
+            all (notAfter - notBefore <= 90 * time.day)
+        title: "Checks whether ACM Certificates in your account are marked for expiration within 90 days"
+    refs:
+      - title: What Is AWS Certificate Manager?
+        url: https://docs.aws.amazon.com/acm/latest/userguide/acm-overview.html
+      - title: Security in AWS Certificate Manager
+        url: https://docs.aws.amazon.com/acm/latest/userguide/security.html
   aws.acm.certificate:
+    docs:
+      desc: |
+        The `aws.acm.certificate` resource provides an object representing an individual AWS ACM certificate. For usage see the `aws.acm` documentation.
     platform:
       name:
       - aws
   aws.apigateway:
+    docs:
+      desc:
+        The `aws.apigateway` resource can be used to assess the configuration of the AWS API Gateway service.
     platform:
       name:
       - aws
+    snippets:
+      - query: aws.apigateway.restApis
+        title: Return a list of `aws.apigateway.restapi` objects for all REST APIs configured with the account across all enabled regions
+      - query: |
+          aws.apigateway.restApis {
+            createdDate
+            description
+            stages
+            region
+            arn
+            id
+            name
+          }
+        title: Return a list of `aws.apigateway.restapi` objects for all REST APIs configured with the account across all enabled regions and the value for specified fields
+      - query: |
+          aws.apigateway.restApis.all(stages.all(
+            methodSettings['CachingEnabled'] == true && 
+              methodSettings['CacheDataEncrypted'] == true
+          ))
+        title: Checks that all methods in Amazon API Gateway have caching enabled and encrypted
+      - query: |
+          aws.apigateway.restApis.all(stages.all(
+          methodSettings['LoggingLevel'] == "ERROR" || methodSettings['LoggingLevel'] == "INFO"
+          ))
+        title: Checks that all methods in Amazon API Gateway have logging enabled
+    refs:
+      - title: What is Amazon API Gateway?
+        url: https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html
+      - title: Security in Amazon API Gateway
+        url: https://docs.aws.amazon.com/apigateway/latest/developerguide/security.html
   aws.apigateway.restapi:
+    docs:
+      desc: |
+        The `aws.apigateway.restapi` resource provides an object representing an individual REST API configured within the AWS account. For usage see the `aws.apigateway` resource documentation.
     platform:
       name:
       - aws
   aws.apigateway.stage:
+    docs:
+      desc: |
+        The `aws.apigateway.stage` resource provides an object representing an individual stage configured on a REST API. For usage see the `aws.apigateway` resource documentation.
     platform:
       name:
       - aws
+    snippets:
+      - query: |
+          aws.apigateway.restApis { 
+            arn 
+            stages 
+          }
+        title: Return a list of AWS API Gateway REST APIs configured across all enabled regions in the AWS account and the values for the arn and stages
   aws.autoscaling:
     platform:
       name:
