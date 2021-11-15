@@ -27,8 +27,8 @@ REDHAT_SUPPORT_PRODUCT="centos"
 REDHAT_SUPPORT_PRODUCT_VERSION="8"
 """
 
-[files."/sys/class/dmi/id"]
-  [files."/sys/class/dmi/id".stat]
+[files."/sys/class/dmi/id/"]
+  [files."/sys/class/dmi/id/".stat]
   isdir = true
 
 [files."/sys/class/dmi/id/bios_date"]
