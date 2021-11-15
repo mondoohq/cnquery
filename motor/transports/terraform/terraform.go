@@ -48,7 +48,6 @@ type Transport struct {
 	parsed          *hclparse.Parser
 	tfVars          map[string]*hcl.Attribute
 	modulesManifest *ModuleManifest
-	opts            map[string]string
 }
 
 func (t *Transport) RunCommand(command string) (*transports.Command, error) {
