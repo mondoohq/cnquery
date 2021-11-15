@@ -103,6 +103,7 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		}
 
 		idDetectors = append(idDetectors, "hostname")
+		idDetectors = append(idDetectors, "clouddetect")
 	case transports.TransportBackend_CONNECTION_TAR:
 		log.Debug().Msg("connection> load tar transport")
 		trans, err := tar.New(clonedConfig)
@@ -180,6 +181,7 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 
 		idDetectors = append(idDetectors, "hostname")
 		idDetectors = append(idDetectors, "ssh-hostkey")
+		idDetectors = append(idDetectors, "clouddetect")
 	case transports.TransportBackend_CONNECTION_WINRM:
 		log.Debug().Msg("connection> load winrm transport")
 		trans, err := winrm.New(clonedConfig)
