@@ -273,8 +273,11 @@ func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) interface{} {
 			return t.Val.AsString()
 		case cty.Bool:
 			return t.Val.True()
+		case cty.Number:
+			f, _ := t.Val.AsBigFloat().Float64()
+			return f
 		default:
-			log.Warn().Msgf("unknown type %T", t)
+			log.Warn().Msgf("unknown literal type %s", t.Val.Type().GoString())
 			return nil
 		}
 	case *hclsyntax.TemplateExpr:
