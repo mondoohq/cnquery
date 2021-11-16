@@ -3,6 +3,7 @@ package smbios
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/afero"
@@ -24,8 +25,8 @@ func (s *LinuxSmbiosManager) Info() (*SmBiosInfo, error) {
 	afs := &afero.Afero{Fs: fs}
 	root := "/sys/class/dmi/id/"
 	wErr := afs.Walk(root, func(path string, info os.FileInfo, fErr error) error {
-		if info.IsDir() {
-			return nil
+		if info.IsDir() && path != root {
+			return filepath.SkipDir
 		}
 
 		var dst *string

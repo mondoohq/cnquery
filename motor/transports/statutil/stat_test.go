@@ -31,6 +31,7 @@ func TestLinuxStatCmd(t *testing.T) {
 	require.NoError(t, err)
 	mode := fi.Mode()
 	assert.Zero(t, mode&fs.ModeSetuid)
+	assert.Equal(t, "sshd_config", fi.Name())
 
 	fi, err = statHelper.Stat("/usr/bin/su")
 	require.NoError(t, err)
@@ -57,6 +58,7 @@ func TestOpenbsdStatCmd(t *testing.T) {
 	assert.Equal(t, time.Unix(1592996018, 0), fi.ModTime())
 	assert.Equal(t, int64(0), fi.Sys().(*transports.FileInfo).Uid)
 	assert.Equal(t, int64(0), fi.Sys().(*transports.FileInfo).Gid)
+	assert.Equal(t, "sshd_config", fi.Name())
 }
 
 func TestToFileMode(t *testing.T) {
