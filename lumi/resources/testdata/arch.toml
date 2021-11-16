@@ -7,12 +7,12 @@ stdout = "x86_64"
 [commands."uname -r"]
 stdout = "4.19.76-linuxkit"
 
-[commands."find \"/etc\" -xdev"]
+[commands."find -L \"/etc\" -xdev"]
 stdout = """/etc/arch-release
 /etc/ssh/sshd_config
 """
 
-[commands."find \"/etc/pam.d\" -xdev -type f"]
+[commands."find -L \"/etc/pam.d\" -xdev -type f"]
 stdout = """/etc/pam.d/sshd
 """
 

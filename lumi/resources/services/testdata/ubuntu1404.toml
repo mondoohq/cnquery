@@ -5,7 +5,7 @@ rc
 ssh
 """
 
-[commands."find /etc/rc*.d -name 'S*'"]
+[commands."find -L /etc/rc*.d -name 'S*'"]
 stdout = """
 """
 
