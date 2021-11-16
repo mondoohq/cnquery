@@ -52,20 +52,20 @@ func (a *lumiAwsAccessAnalyzer) getAnalyzers() []*jobpool.Job {
 			svc := at.AccessAnalyzer(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
-			log.Info().Msgf("analyzer service client %s %v", regionVal, svc)
 			nextToken := aws.String("no_token_to_start_with")
 			params := &accessanalyzer.ListAnalyzersInput{Type: types.TypeAccount}
 			for nextToken != nil {
 				analyzers, err := svc.ListAnalyzers(ctx, params)
 				if err != nil {
-					log.Error().Err(err).Msgf("analyzer region call %s", regionVal)
+					log.Error().Err(err).Str("region", regionVal).Msg("error listing analyzers")
 					return nil, err
 				}
 				for _, analyzer := range analyzers.Analyzers {
-					lumiAnalyzer, err := a.Runtime.CreateResource("aws.accessanalyzer",
+					lumiAnalyzer, err := a.Runtime.CreateResource("aws.accessanalyzer.analyzer",
 						"arn", toString(analyzer.Arn),
 						"name", toString(analyzer.Name),
 						"status", string(analyzer.Status),
+						"type", string(analyzer.Type),
 					)
 					if err != nil {
 						return nil, err

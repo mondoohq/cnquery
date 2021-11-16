@@ -498,7 +498,7 @@ func (t *Transport) AccessAnalyzer(region string) *accessanalyzer.Client {
 		region = t.config.Region
 	}
 	cacheVal := "_accessanalyzer_" + region
-	log.Info().Msgf("calling access analyzer with region %s ", region)
+
 	// check for cached client and return it if it exists
 	c, ok := t.cache.Load(cacheVal)
 	if ok {
