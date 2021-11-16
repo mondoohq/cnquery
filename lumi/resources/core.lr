@@ -1520,6 +1520,8 @@ aws.accessanalyzer.analyzer {
   name string
   // status of the analyzer
   status string
+  // type of analyzer (ACCOUNT or ORGANIZATION)
+  type string
 }
 
 // AWS account resource
