@@ -4,6 +4,7 @@ import (
 	"io/fs"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -163,6 +164,7 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 	mapMode := toFileMode(mask)
 
 	return &transports.FileInfo{
+		FName:    filepath.Base(path),
 		FSize:    int64(size),
 		FMode:    mapMode,
 		FIsDir:   mapMode.IsDir(),
@@ -232,6 +234,7 @@ func (s *statHelper) unix(name string) (os.FileInfo, error) {
 	}
 
 	return &transports.FileInfo{
+		FName:    filepath.Base(path),
 		FSize:    int64(size),
 		FMode:    mode,
 		FIsDir:   mode.IsDir(),
