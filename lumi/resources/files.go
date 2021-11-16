@@ -173,7 +173,7 @@ func (l *lumiFilesFind) GetList() ([]interface{}, error) {
 		}
 	} else if caps.HasCapability(transports.Capability_RunCommand) {
 		var call strings.Builder
-		call.WriteString("find ")
+		call.WriteString("find -L ")
 		call.WriteString(strconv.Quote(path))
 
 		if !xdev {
