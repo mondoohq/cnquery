@@ -274,6 +274,10 @@ func (b *goBuilder) goInitInfo(r *Resource) error {
 	}
 
 	title, desc := extractComments(r.Comments)
+	isPrivate := "false"
+	if r.IsPrivate {
+		isPrivate = "true"
+	}
 
 	b.data += `// initInfo contains all information needed for the resource registration
 func (s *` + r.structName() + `) initInfo() *lumi.ResourceCls {
@@ -286,6 +290,7 @@ func (s *` + r.structName() + `) initInfo() *lumi.ResourceCls {
 		ListType: ` + listType + `,
 		Title: ` + title + `,
 		Desc: ` + desc + `,
+		Private: ` + isPrivate + `,
 	}
 	return &lumi.ResourceCls{
 		Factory:      new` + r.interfaceName() + `,

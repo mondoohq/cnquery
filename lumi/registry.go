@@ -42,7 +42,7 @@ func (ctx *Registry) Clone() *Registry {
 
 // for a given resource name, make sure all parent resources exist
 // e.g. sshd.config ==> make sure sshd exists
-func (ctx *Registry) ensureResourceChain(name string) {
+func (ctx *Registry) ensureResourceChain(name string, isPrivate bool) {
 	parts := strings.Split(name, ".")
 	if len(parts) == 1 {
 		return
@@ -53,14 +53,30 @@ func (ctx *Registry) ensureResourceChain(name string) {
 		if !ok {
 			o = newResourceCls(cur)
 			ctx.Resources[cur] = o
+			// parent resources get the visibility of their children by default
+			// any public child overwrites the rest for the parent (see below)
+			o.Private = isPrivate
+		}
+		// we may need to overwrite parent resource declaration if we realize the child is public
+		if !isPrivate {
+			o.Private = false
 		}
 		next := cur + "." + parts[i+1]
 
-		o.Fields[parts[i+1]] = &Field{
-			Name:      parts[i+1],
-			Type:      string(types.Resource(next)),
-			Mandatory: false,
-			Refs:      []string{},
+		f, ok := o.Fields[parts[i+1]]
+		if !ok {
+			f = &Field{
+				Name:      parts[i+1],
+				Type:      string(types.Resource(next)),
+				Mandatory: false,
+				Refs:      []string{},
+				Private:   isPrivate,
+			}
+			o.Fields[parts[i+1]] = f
+		}
+		// same as above: if any child is public, the field in the chain must become public
+		if !isPrivate {
+			f.Private = isPrivate
 		}
 
 		cur = next
@@ -79,7 +95,7 @@ func (ctx *Registry) Add(resource *ResourceCls) error {
 	}
 
 	ctx.Resources[name] = resource
-	ctx.ensureResourceChain(name)
+	ctx.ensureResourceChain(name, resource.ResourceInfo.Private)
 	return nil
 }
 

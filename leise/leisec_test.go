@@ -867,13 +867,8 @@ func TestCompiler_ResourceFieldGlob(t *testing.T) {
 		assertFunction(t, "services", &llx.Function{
 			Type:    string(types.Map(types.String, types.Array(types.String))),
 			Binding: 1,
-		}, res.Code.Functions[0].Code[5])
-		// TODO: We need to ensure that the serviceEntry sub-resource is not exposed!!
-		assertFunction(t, "serviceEntry", &llx.Function{
-			Type:    string(types.Resource("pam.conf.serviceEntry")),
-			Binding: 1,
 		}, res.Code.Functions[0].Code[4])
-		assert.Equal(t, []int32{2, 3, 4, 5, 6}, res.Code.Functions[0].Entrypoints)
+		assert.Equal(t, []int32{2, 3, 4, 5}, res.Code.Functions[0].Entrypoints)
 	})
 }
 

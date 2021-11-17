@@ -35,10 +35,11 @@ type LR struct {
 
 // Resource in LR
 type Resource struct {
-	Comments []string       `{ @Comment }`
-	ID       string         `@Ident { @'.' @Ident }`
-	ListType *SimplListType `[ '{' [ @@ ]`
-	Body     *ResourceDef   `@@ '}' ]`
+	Comments  []string       `{ @Comment }`
+	IsPrivate bool           `@"private"?`
+	ID        string         `@Ident { @'.' @Ident }`
+	ListType  *SimplListType `[ '{' [ @@ ]`
+	Body      *ResourceDef   `@@ '}' ]`
 }
 
 type Type struct {

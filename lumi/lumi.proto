@@ -31,6 +31,7 @@ message ResourceInfo {
   string list_type = 21;
   string title = 22;
   string desc = 23;
+  bool private = 24;
 }
 
 message Field {
@@ -40,4 +41,5 @@ message Field {
   repeated string refs = 4;
   string title = 20;
   string desc = 21;
+  bool private = 22;
 }

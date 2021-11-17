@@ -156,7 +156,7 @@ func TestParse(t *testing.T) {
 
 	t.Run("complex resource", func(t *testing.T) {
 		parse(t, `
-	name.no {
+	private name.no {
 		init(i1 string, i2 map[int]int)
 		field map[string]int
 		call(resource.field) []int
@@ -176,6 +176,7 @@ func TestParse(t *testing.T) {
 					}},
 			}
 			assert.Equal(t, "name.no", res.Resources[0].ID)
+			assert.Equal(t, true, res.Resources[0].IsPrivate)
 			assert.Equal(t, i, res.Resources[0].Body.Inits)
 			assert.Equal(t, f, res.Resources[0].Body.Fields)
 		})
