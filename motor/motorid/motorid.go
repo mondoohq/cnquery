@@ -1,14 +1,12 @@
 package motorid
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/stringx"
 
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/motor/motorid/clouddetect"
@@ -16,7 +14,6 @@ import (
 	"go.mondoo.io/mondoo/motor/motorid/machineid"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/local"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 	"go.mondoo.io/mondoo/motor/transports/ssh"
 	gossh "golang.org/x/crypto/ssh"
@@ -86,31 +83,11 @@ func GatherID(t transports.Transport, p *platform.Platform, idDetector string) (
 		}
 		return identifier, nil
 	case "awsec2":
-		_, ok := transport.(*local.LocalTransport)
-		if ok {
-			cfg, err := config.LoadDefaultConfig(context.Background())
-			if err != nil {
-				return "", errors.Wrap(err, "cannot not determine aws environment")
-			}
-			metadata := awsec2.NewLocal(cfg)
-			mrn, err := metadata.InstanceID()
-			if err != nil {
-				return "", errors.Wrap(err, "cannot not determine aws ec2 instance id")
-			}
-			identifier = mrn
-		} else {
-			if p.IsFamily(platform.FAMILY_LINUX) {
-				metadata := awsec2.NewUnix(t, p)
-				mrn, err := metadata.InstanceID()
-				if err != nil {
-					return "", errors.Wrap(err, "cannot not determine aws ec2 instance id")
-				}
-				identifier = mrn
-			} else {
-				return "", errors.New(fmt.Sprintf("awsec2 id detector is not supported for your asset: %s %s", p.Name, p.Release))
-			}
+		metadata, err := awsec2.Resolve(transport, p)
+		if err != nil {
+			return "", err
 		}
-		return identifier, nil
+		return metadata.InstanceID()
 	case "clouddetect":
 		identifier := clouddetect.Detect(t, p)
 		return identifier, nil

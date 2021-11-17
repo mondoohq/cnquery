@@ -7,11 +7,11 @@ import (
 	"strings"
 
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/transports"
 )
 
 type LinuxSmbiosManager struct {
-	motor *motor.Motor
+	t transports.Transport
 }
 
 func (s *LinuxSmbiosManager) Name() string {
@@ -21,9 +21,10 @@ func (s *LinuxSmbiosManager) Name() string {
 func (s *LinuxSmbiosManager) Info() (*SmBiosInfo, error) {
 	smInfo := SmBiosInfo{}
 
-	fs := s.motor.Transport.FS()
+	fs := s.t.FS()
 	afs := &afero.Afero{Fs: fs}
 	root := "/sys/class/dmi/id/"
+
 	wErr := afs.Walk(root, func(path string, info os.FileInfo, fErr error) error {
 		if info.IsDir() && path != root {
 			return filepath.SkipDir
