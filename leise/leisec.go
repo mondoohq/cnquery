@@ -149,13 +149,17 @@ func addFieldSuggestions(fields map[string]llx.Documentation, fieldName string, 
 
 // compileBlock on a context
 func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type) (types.Type, error) {
-
-	// For resource, users may indicate to query all fields.
+	// For resource, users may indicate to query all fields. It also works for list of resources.
 	// This is a special case which is handled here:
-	if len(expressions) == 1 && typ.IsResource() {
+	if len(expressions) == 1 && (typ.IsResource() || (typ.IsArray() && typ.Child().IsResource())) {
 		x := expressions[0]
 		if x.Operand != nil && x.Operand.Value != nil && x.Operand.Value.Ident != nil && *(x.Operand.Value.Ident) == "*" {
-			fields := availableGlobFields(c, typ)
+			var fields map[string]llx.Documentation
+			if typ.IsArray() {
+				fields = availableGlobFields(c, typ.Child())
+			} else {
+				fields = availableGlobFields(c, typ)
+			}
 
 			fieldNames := make([]string, len(fields))
 			var i int
