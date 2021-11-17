@@ -138,9 +138,13 @@ func builtinFunction(typ types.Type, id string) (*compileHandler, error) {
 	return nil, errors.New("cannot find function '" + id + "' for type '" + typ.Label() + "' during compile")
 }
 
-func fieldsInfo(resourceInfo *lumi.ResourceInfo) map[string]llx.Documentation {
+func publicFieldsInfo(resourceInfo *lumi.ResourceInfo) map[string]llx.Documentation {
 	res := map[string]llx.Documentation{}
 	for k, v := range resourceInfo.Fields {
+		if v.Private {
+			continue
+		}
+
 		res[k] = llx.Documentation{
 			Field: k,
 			Title: v.Title,
@@ -159,7 +163,7 @@ func availableGlobFields(c *compiler, typ types.Type) map[string]llx.Documentati
 	}
 
 	resourceInfo := c.Schema.Resources[typ.ResourceName()]
-	return fieldsInfo(resourceInfo)
+	return publicFieldsInfo(resourceInfo)
 }
 
 func availableFields(c *compiler, typ types.Type) map[string]llx.Documentation {
@@ -168,7 +172,7 @@ func availableFields(c *compiler, typ types.Type) map[string]llx.Documentation {
 	// resources maintain their own fields and may be list resources
 	if typ.IsResource() {
 		resourceInfo := c.Schema.Resources[typ.ResourceName()]
-		res = fieldsInfo(resourceInfo)
+		res = publicFieldsInfo(resourceInfo)
 
 		_, err := listResource(c, typ)
 		if err == nil {

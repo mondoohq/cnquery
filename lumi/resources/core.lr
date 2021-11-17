@@ -191,7 +191,7 @@ platform.exploits {
 }
 
 // Common Vulnerability Scoring System (CVSS) Score
-audit.cvss {
+private audit.cvss {
   // CVSS Score ranging from 0.0 to 10.0
   score   float
   // CVSS score is also represented as a vector string
@@ -199,7 +199,7 @@ audit.cvss {
 }
 
 // Platform/Package advisory
-audit.advisory {
+private audit.advisory {
   // Advisory ID
   id          string
   // Mondoo Advisory Identifier
@@ -217,7 +217,7 @@ audit.advisory {
 }
 
 // Common Vulnerabilities and Exposures (CVE)
-audit.cve {
+private audit.cve {
   // CVE ID
   id        string
   // Mondoo CVE Identifier
@@ -237,7 +237,7 @@ audit.cve {
 }
 
 // Exploit Information
-audit.exploit {
+private audit.exploit {
   // CVE ID
   id        string
   // Mondoo CVE Identifier
@@ -298,7 +298,7 @@ file {
 }
 
 // Access permissions for a given file
-file.permissions {
+private file.permissions {
   // Raw POSIX mode for the permissions
   mode int
   // Indicator if this file is readable by its owner
@@ -363,7 +363,7 @@ pam.conf {
   entries(files) map[string][]pam.conf.serviceEntry
 }
 
-pam.conf.serviceEntry {
+private pam.conf.serviceEntry {
   //Service file that entry is from
   service string
   //Line number in service file - used for ID
