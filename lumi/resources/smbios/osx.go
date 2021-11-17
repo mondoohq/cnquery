@@ -6,7 +6,8 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/transports"
 	plist "howett.net/plist"
 )
 
@@ -28,7 +29,8 @@ import (
 // results can be compared with dmidecode
 // http://cavaliercoder.com/blog/dmidecode-for-apple-osx.html
 type OSXSmbiosManager struct {
-	motor *motor.Motor
+	t transports.Transport
+	p *platform.Platform
 }
 
 func (s *OSXSmbiosManager) Name() string {
@@ -38,7 +40,7 @@ func (s *OSXSmbiosManager) Name() string {
 func (s *OSXSmbiosManager) Info() (*SmBiosInfo, error) {
 	smInfo := SmBiosInfo{}
 
-	cmd, err := s.motor.Transport.RunCommand("ioreg -rw0 -d2 -c IOPlatformExpertDevice -a")
+	cmd, err := s.t.RunCommand("ioreg -rw0 -d2 -c IOPlatformExpertDevice -a")
 	if err != nil {
 		return nil, err
 	}
@@ -64,14 +66,13 @@ func (s *OSXSmbiosManager) Info() (*SmBiosInfo, error) {
 	smInfo.ChassisInfo.SerialNumber = hw.IOPlatformSerialNumber
 	smInfo.ChassisInfo.Type = "Laptop"
 
-	cmd, err = s.motor.Transport.RunCommand("ioreg -r -p IODeviceTree -n rom@0 -a")
+	cmd, err = s.t.RunCommand("ioreg -r -p IODeviceTree -n rom@0 -a")
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO: this does not work on m1 macs yet, we need to find a way to gather that information
-	pf, err := s.motor.Platform()
-	if err == nil && pf.Arch == "x86_64" {
+	if s.p.Arch == "x86_64" {
 		bios, err := ParseMacosBios(cmd.Stdout)
 		if err != nil {
 			return nil, err

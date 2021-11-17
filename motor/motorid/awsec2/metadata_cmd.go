@@ -8,29 +8,45 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/cockroachdb/errors"
 
+	"go.mondoo.io/mondoo/lumi/resources/powershell"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
-func NewUnix(t transports.Transport, p *platform.Platform) *UnixInstanceMetadata {
-	return &UnixInstanceMetadata{
+const (
+	identityUrl                   = "http://169.254.169.254/latest/dynamic/instance-identity/document"
+	metadataIdentityScriptWindows = "Invoke-RestMethod -URI http://169.254.169.254/latest/dynamic/instance-identity/document -UseBasicParsing | ConvertTo-Json"
+)
+
+func NewCommandInstanceMetadata(t transports.Transport, p *platform.Platform) *CommandInstanceMetadata {
+	return &CommandInstanceMetadata{
 		transport: t,
 		platform:  p,
 	}
 }
 
-type UnixInstanceMetadata struct {
+type CommandInstanceMetadata struct {
 	transport transports.Transport
 	platform  *platform.Platform
 }
 
-func (m *UnixInstanceMetadata) InstanceID() (string, error) {
-	identityUrl := "http://169.254.169.254/latest/dynamic/instance-identity/document"
+func (m *CommandInstanceMetadata) InstanceID() (string, error) {
 
 	var instanceDocument string
 	switch {
 	case m.platform.IsFamily(platform.FAMILY_UNIX):
 		cmd, err := m.transport.RunCommand("curl " + identityUrl)
+		if err != nil {
+			return "", err
+		}
+		data, err := ioutil.ReadAll(cmd.Stdout)
+		if err != nil {
+			return "", err
+		}
+
+		instanceDocument = strings.TrimSpace(string(data))
+	case m.platform.IsFamily(platform.FAMILY_WINDOWS):
+		cmd, err := m.transport.RunCommand(powershell.Encode(metadataIdentityScriptWindows))
 		if err != nil {
 			return "", err
 		}

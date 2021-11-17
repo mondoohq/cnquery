@@ -27,7 +27,12 @@ func getbiosinfo(runtime *lumi.Runtime) (*smbios.SmBiosInfo, error) {
 		biosInfo = c.Data.(*smbios.SmBiosInfo)
 	} else {
 		// find suitable package manager
-		pm, err := smbios.ResolveManager(runtime.Motor)
+		t := runtime.Motor.Transport
+		p, err := runtime.Motor.Platform()
+		if err != nil {
+			return nil, errors.Wrap(err, "could not detect suiteable smbios manager for platform")
+		}
+		pm, err := smbios.ResolveManager(t, p)
 		if pm == nil || err != nil {
 			return nil, fmt.Errorf("could not detect suiteable smbios manager for platform")
 		}
