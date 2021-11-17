@@ -9,7 +9,6 @@ import (
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/arista"
 	"go.mondoo.io/mondoo/motor/transports/aws"
-	"go.mondoo.io/mondoo/motor/transports/awsec2ebs"
 	"go.mondoo.io/mondoo/motor/transports/azure"
 	"go.mondoo.io/mondoo/motor/transports/equinix"
 	"go.mondoo.io/mondoo/motor/transports/gcp"
@@ -150,13 +149,6 @@ func (d *Detector) Platform() (*Platform, error) {
 			Title:   "Gitlab",
 			Kind:    transports.Kind_KIND_API,
 			Runtime: transports.RUNTIME_GITLAB,
-		}, nil
-	case *awsec2ebs.Ec2EbsTransport:
-		return &Platform{
-			Name:    "aws-ec2-ebs",
-			Title:   "Aws Ec2 Ebs",
-			Kind:    transports.Kind_KIND_API,
-			Runtime: transports.RUNTIME_AWS_EC2_EBS,
 		}, nil
 	case *terraform.Transport:
 		return &Platform{
