@@ -877,6 +877,43 @@ func TestCompiler_ResourceFieldGlob(t *testing.T) {
 	})
 }
 
+func TestCompiler_ArrayResourceFieldGlob(t *testing.T) {
+	compile(t, "groups.list { * }", func(res *llx.CodeBundle) {
+		assertFunction(t, "groups", nil, res.Code.Code[0])
+		assertFunction(t, "list", &llx.Function{
+			Type:    string(types.Array(types.Resource("group"))),
+			Binding: 1,
+		}, res.Code.Code[1])
+		assertFunction(t, "{}", &llx.Function{
+			Type:    string(types.Array(types.Block)),
+			Binding: 2,
+			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
+		}, res.Code.Code[2])
+		assert.Equal(t, []int32{3}, res.Code.Entrypoints)
+
+		assertPrimitive(t, &llx.Primitive{
+			Type: string(types.Resource("group")),
+		}, res.Code.Functions[0].Code[0])
+		assertFunction(t, "gid", &llx.Function{
+			Type:    string(types.Int),
+			Binding: 1,
+		}, res.Code.Functions[0].Code[1])
+		assertFunction(t, "members", &llx.Function{
+			Type:    string(types.Array(types.Resource("user"))),
+			Binding: 1,
+		}, res.Code.Functions[0].Code[2])
+		assertFunction(t, "name", &llx.Function{
+			Type:    string(types.String),
+			Binding: 1,
+		}, res.Code.Functions[0].Code[3])
+		assertFunction(t, "sid", &llx.Function{
+			Type:    string(types.String),
+			Binding: 1,
+		}, res.Code.Functions[0].Code[4])
+		assert.Equal(t, []int32{2, 3, 4, 5}, res.Code.Functions[0].Entrypoints)
+	})
+}
+
 func TestCompiler_ResourceFieldArrayAccessor(t *testing.T) {
 	compile(t, "sshd.config.params[\"Protocol\"]", func(res *llx.CodeBundle) {
 		assertFunction(t, "[]", &llx.Function{
