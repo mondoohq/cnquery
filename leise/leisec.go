@@ -604,13 +604,14 @@ func (c *compiler) compileBuiltinFunction(h *compileHandler, id string, binding 
 	var args []*llx.Primitive
 
 	if call != nil {
-		args = make([]*llx.Primitive, len(call.Function))
-		var err error
 		for idx := range call.Function {
 			arg := call.Function[idx]
-			args[idx], err = c.compileExpression(arg.Value)
+			x, err := c.compileExpression(arg.Value)
 			if err != nil {
 				return types.Nil, err
+			}
+			if x != nil {
+				args = append(args, x)
 			}
 		}
 	}
@@ -630,6 +631,45 @@ func (c *compiler) compileBuiltinFunction(h *compileHandler, id string, binding 
 		},
 	})
 	return resType, nil
+}
+
+func filterTrailingNullArgs(call *parser.Call) *parser.Call {
+	if call == nil {
+		return call
+	}
+
+	res := parser.Call{
+		Comments: call.Comments,
+		Ident:    call.Ident,
+		Function: call.Function,
+		Accessor: call.Accessor,
+	}
+
+	args := call.Function
+	if len(args) == 0 {
+		return &res
+	}
+
+	lastIdx := len(args) - 1
+	x := args[lastIdx]
+	if x.Value.IsEmpty() {
+		res.Function = args[0:lastIdx]
+	}
+
+	return &res
+}
+
+func filterEmptyExpressions(expressions []*parser.Expression) []*parser.Expression {
+	res := []*parser.Expression{}
+	for i := range expressions {
+		exp := expressions[i]
+		if exp.IsEmpty() {
+			continue
+		}
+		res = append(res, exp)
+	}
+
+	return res
 }
 
 // compile a bound identifier to its binding
@@ -662,6 +702,7 @@ func (c *compiler) compileBoundIdentifier(id string, binding *binding, call *par
 
 	h, _ := builtinFunction(typ, id)
 	if h != nil {
+		call = filterTrailingNullArgs(call)
 		typ, err := c.compileBuiltinFunction(h, id, binding, call)
 		return true, typ, err
 	}
@@ -1122,6 +1163,10 @@ func (c *compiler) compileAndAddExpression(expression *parser.Expression) (int32
 
 func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 	var err error
+
+	// we may have comment-only expressions
+	expressions = filterEmptyExpressions(expressions)
+
 	for idx := range expressions {
 		if err = expressions[idx].ProcessOperators(); err != nil {
 			return err

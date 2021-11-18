@@ -132,6 +132,14 @@ func TestCompiler_Buggy(t *testing.T) {
 				Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
 			}},
 		}, nil},
+		{"# ..\nmondoo { \n# ..\nversion\n# ..\n}\n# ..", []*llx.Chunk{
+			{Call: llx.Chunk_FUNCTION, Id: "mondoo"},
+			{Call: llx.Chunk_FUNCTION, Id: "{}", Function: &llx.Function{
+				Type:    string(types.Block),
+				Binding: 1,
+				Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
+			}},
+		}, nil},
 		{`users.list[]`, nil, errors.New("missing value inside of `[]` at <source>:1:12")},
 		{`file(not-there)`, nil, errors.New("addResourceCall error: cannot find resource for identifier 'not'")},
 		{`if(true) {`, []*llx.Chunk{
