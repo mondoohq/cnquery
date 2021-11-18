@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"bytes"
 	"errors"
 	"math"
 	"regexp"
@@ -69,6 +70,11 @@ type Expression struct {
 	Operations []*Operation `json:",omitempty"`
 }
 
+// IsEmpty expression returns true if we don't contain any action (e.g. comment-only expressions)
+func (x *Expression) IsEmpty() bool {
+	return len(x.Operations) == 0 && (x.Operand == nil || (x.Operand.Value == nil && len(x.Operand.Calls) == 0 && len(x.Operand.Block) == 0))
+}
+
 // Operation has an operator and an operand
 type Operation struct {
 	Operator Operator
@@ -133,7 +139,7 @@ type parser struct {
 	token      lexer.Token
 	nextTokens []lexer.Token
 	lex        lexer.Lexer
-	comments   string
+	comments   bytes.Buffer
 }
 
 // expected generates an error string based on the expected type/field
@@ -187,15 +193,19 @@ func (p *parser) nextToken() error {
 func (p *parser) parseComment() {
 	// we only need the comment's body
 	if p.token.Value[0] == '#' {
-		p.comments += strings.Trim(p.token.Value[1:], " ")
+		p.comments.WriteString(strings.Trim(p.token.Value[1:], " "))
 	} else {
-		p.comments += strings.Trim(p.token.Value[2:], " ")
+		p.comments.WriteString(strings.Trim(p.token.Value[2:], " "))
 	}
 }
 
 func (p *parser) flushComments() string {
-	res := p.comments
-	p.comments = ""
+	if p.comments.Len() == 0 {
+		return ""
+	}
+
+	res := p.comments.String()
+	p.comments.Reset()
 	return res
 }
 
@@ -731,7 +741,7 @@ func (p *parser) parseOperation() (*Operation, error) {
 }
 
 func (p *parser) flushExpression() *Expression {
-	if p.comments == "" {
+	if p.comments.Len() == 0 {
 		return nil
 	}
 
