@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
+	"github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 	"go.mondoo.io/mondoo/lumi/resources/certificates"
@@ -109,6 +110,10 @@ func (a *lumiAwsAcmCertificate) init(args *lumi.Args) (*lumi.Args, AwsAcmCertifi
 	if err != nil {
 		return nil, nil, err
 	}
+	certTags, err := svc.ListTagsForCertificate(ctx, &acm.ListTagsForCertificateInput{CertificateArn: &arnVal})
+	if err != nil {
+		return nil, nil, err
+	}
 
 	(*args)["arn"] = arnVal
 	(*args)["notBefore"] = certDetails.Certificate.NotBefore
@@ -117,7 +122,18 @@ func (a *lumiAwsAcmCertificate) init(args *lumi.Args) (*lumi.Args, AwsAcmCertifi
 	(*args)["domainName"] = toString(certDetails.Certificate.DomainName)
 	(*args)["status"] = string(certDetails.Certificate.Status)
 	(*args)["subject"] = toString(certDetails.Certificate.Subject)
+	(*args)["tags"] = certTagsToMapTags(certTags.Tags)
 	return args, nil, nil
+}
+
+func certTagsToMapTags(tags []types.Tag) map[string]string {
+	mapTags := make(map[string]string)
+	for i := range tags {
+		if tags[i].Key != nil && tags[i].Value != nil {
+			mapTags[*tags[i].Key] = *tags[i].Value
+		}
+	}
+	return mapTags
 }
 
 func (a *lumiAwsAcmCertificate) GetCertificate() (interface{}, error) {
