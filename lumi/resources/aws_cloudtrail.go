@@ -7,6 +7,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func (t *lumiAwsCloudtrail) id() (string, error) {
@@ -14,8 +15,12 @@ func (t *lumiAwsCloudtrail) id() (string, error) {
 }
 
 func (t *lumiAwsCloudtrail) GetTrails() ([]interface{}, error) {
+	at, err := awstransport(t.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(t.getTrails(), 5)
+	poolOfJobs := jobpool.CreatePool(t.getTrails(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -29,12 +34,8 @@ func (t *lumiAwsCloudtrail) GetTrails() ([]interface{}, error) {
 	return res, nil
 }
 
-func (t *lumiAwsCloudtrail) getTrails() []*jobpool.Job {
+func (t *lumiAwsCloudtrail) getTrails(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(t.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}

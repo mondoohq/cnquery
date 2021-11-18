@@ -8,6 +8,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func (d *lumiAwsDynamodb) id() (string, error) {
@@ -21,8 +22,12 @@ const (
 )
 
 func (d *lumiAwsDynamodb) GetBackups() ([]interface{}, error) {
+	at, err := awstransport(d.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(d.getBackups(), 5)
+	poolOfJobs := jobpool.CreatePool(d.getBackups(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -37,12 +42,8 @@ func (d *lumiAwsDynamodb) GetBackups() ([]interface{}, error) {
 	return res, nil
 }
 
-func (d *lumiAwsDynamodb) getBackups() []*jobpool.Job {
+func (d *lumiAwsDynamodb) getBackups(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(d.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -97,8 +98,12 @@ func (d *lumiAwsDynamodbTable) GetBackups() ([]interface{}, error) {
 }
 
 func (d *lumiAwsDynamodb) GetLimits() ([]interface{}, error) {
+	at, err := awstransport(d.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(d.getLimits(), 5)
+	poolOfJobs := jobpool.CreatePool(d.getLimits(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -112,12 +117,8 @@ func (d *lumiAwsDynamodb) GetLimits() ([]interface{}, error) {
 	return res, nil
 }
 
-func (d *lumiAwsDynamodb) getLimits() []*jobpool.Job {
+func (d *lumiAwsDynamodb) getLimits(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(d.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -192,8 +193,12 @@ func (d *lumiAwsDynamodb) GetGlobalTables() ([]interface{}, error) {
 }
 
 func (d *lumiAwsDynamodb) GetTables() ([]interface{}, error) {
+	at, err := awstransport(d.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(d.getTables(), 5)
+	poolOfJobs := jobpool.CreatePool(d.getTables(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -208,12 +213,8 @@ func (d *lumiAwsDynamodb) GetTables() ([]interface{}, error) {
 	return res, nil
 }
 
-func (d *lumiAwsDynamodb) getTables() []*jobpool.Job {
+func (d *lumiAwsDynamodb) getTables(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(d.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}

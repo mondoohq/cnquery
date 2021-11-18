@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 	"go.mondoo.io/mondoo/lumi/resources/awspolicy"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func (l *lumiAwsLambda) id() (string, error) {
@@ -17,8 +18,12 @@ func (l *lumiAwsLambda) id() (string, error) {
 }
 
 func (l *lumiAwsLambda) GetFunctions() ([]interface{}, error) {
+	at, err := awstransport(l.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(l.getFunctions(), 5)
+	poolOfJobs := jobpool.CreatePool(l.getFunctions(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -33,12 +38,8 @@ func (l *lumiAwsLambda) GetFunctions() ([]interface{}, error) {
 	return res, nil
 }
 
-func (l *lumiAwsLambda) getFunctions() []*jobpool.Job {
+func (l *lumiAwsLambda) getFunctions(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(l.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}

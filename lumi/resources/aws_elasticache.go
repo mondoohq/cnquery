@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func (e *lumiAwsElasticache) id() (string, error) {
@@ -14,8 +15,12 @@ func (e *lumiAwsElasticache) id() (string, error) {
 }
 
 func (e *lumiAwsElasticache) GetClusters() ([]interface{}, error) {
+	at, err := awstransport(e.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(e.getClusters(), 5)
+	poolOfJobs := jobpool.CreatePool(e.getClusters(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -32,12 +37,8 @@ func (e *lumiAwsElasticache) GetClusters() ([]interface{}, error) {
 	return res, nil
 }
 
-func (e *lumiAwsElasticache) getClusters() []*jobpool.Job {
+func (e *lumiAwsElasticache) getClusters(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(e.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}

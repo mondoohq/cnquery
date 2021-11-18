@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 const (
@@ -53,8 +54,12 @@ func (s *lumiAwsEc2Networkacl) id() (string, error) {
 }
 
 func (s *lumiAwsEc2) GetNetworkAcls() ([]interface{}, error) {
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getNetworkACLs(), 5)
+	poolOfJobs := jobpool.CreatePool(s.getNetworkACLs(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -69,12 +74,8 @@ func (s *lumiAwsEc2) GetNetworkAcls() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getNetworkACLs() []*jobpool.Job {
+func (s *lumiAwsEc2) getNetworkACLs(at *aws_transport.Transport) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	at, err := awstransport(s.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}} // return the error
-	}
 
 	account, err := at.Account()
 	if err != nil {
@@ -220,12 +221,8 @@ func (s *lumiAwsEc2Securitygroup) GetIsAttachedToNetworkInterface() (bool, error
 	return false, nil
 }
 
-func (s *lumiAwsEc2) getSecurityGroups() []*jobpool.Job {
+func (s *lumiAwsEc2) getSecurityGroups(at *aws_transport.Transport) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	at, err := awstransport(s.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}} // return the error
-	}
 
 	account, err := at.Account()
 	if err != nil {
@@ -329,8 +326,12 @@ func (s *lumiAwsEc2) getSecurityGroups() []*jobpool.Job {
 }
 
 func (s *lumiAwsEc2) GetSecurityGroups() ([]interface{}, error) {
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getSecurityGroups(), 5)
+	poolOfJobs := jobpool.CreatePool(s.getSecurityGroups(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -351,8 +352,12 @@ type ebsEncryption struct {
 }
 
 func (s *lumiAwsEc2) GetEbsEncryptionByDefault() (map[string]interface{}, error) {
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := make(map[string]interface{})
-	poolOfJobs := jobpool.CreatePool(s.getEbsEncryptionPerRegion(), 5)
+	poolOfJobs := jobpool.CreatePool(s.getEbsEncryptionPerRegion(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -367,12 +372,9 @@ func (s *lumiAwsEc2) GetEbsEncryptionByDefault() (map[string]interface{}, error)
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getEbsEncryptionPerRegion() []*jobpool.Job {
+func (s *lumiAwsEc2) getEbsEncryptionPerRegion(at *aws_transport.Transport) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	at, err := awstransport(s.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}} // return the error
-	}
+
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}} // return the error
@@ -401,8 +403,12 @@ func (s *lumiAwsEc2) getEbsEncryptionPerRegion() []*jobpool.Job {
 }
 
 func (s *lumiAwsEc2) GetInstances() ([]interface{}, error) {
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getInstances(), 5)
+	poolOfJobs := jobpool.CreatePool(s.getInstances(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -461,12 +467,8 @@ func (s *lumiAwsEc2) getImdsv1Instances(ctx context.Context, svc *ec2.Client, fi
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getInstances() []*jobpool.Job {
+func (s *lumiAwsEc2) getInstances(at *aws_transport.Transport) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	at, err := awstransport(s.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}} // return the error
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}} // return the error
@@ -840,8 +842,12 @@ func (s *lumiAwsEc2Instance) GetInstanceStatus() (interface{}, error) {
 }
 
 func (s *lumiAwsEc2) GetVolumes() ([]interface{}, error) {
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getVolumes(), 5)
+	poolOfJobs := jobpool.CreatePool(s.getVolumes(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -856,12 +862,9 @@ func (s *lumiAwsEc2) GetVolumes() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getVolumes() []*jobpool.Job {
+func (s *lumiAwsEc2) getVolumes(at *aws_transport.Transport) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	at, err := awstransport(s.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
+
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -925,8 +928,12 @@ func (s *lumiAwsEc2Snapshot) id() (string, error) {
 }
 
 func (s *lumiAwsEc2) GetVpnConnections() ([]interface{}, error) {
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getVpnConnections(), 5)
+	poolOfJobs := jobpool.CreatePool(s.getVpnConnections(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -941,12 +948,8 @@ func (s *lumiAwsEc2) GetVpnConnections() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getVpnConnections() []*jobpool.Job {
+func (s *lumiAwsEc2) getVpnConnections(at *aws_transport.Transport) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	at, err := awstransport(s.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -996,8 +999,12 @@ func (s *lumiAwsEc2) getVpnConnections() []*jobpool.Job {
 }
 
 func (s *lumiAwsEc2) GetSnapshots() ([]interface{}, error) {
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getSnapshots(), 5)
+	poolOfJobs := jobpool.CreatePool(s.getSnapshots(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -1012,12 +1019,8 @@ func (s *lumiAwsEc2) GetSnapshots() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getSnapshots() []*jobpool.Job {
+func (s *lumiAwsEc2) getSnapshots(at *aws_transport.Transport) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	at, err := awstransport(s.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -1091,8 +1094,12 @@ func (s *lumiAwsEc2Snapshot) GetCreateVolumePermission() ([]interface{}, error) 
 }
 
 func (s *lumiAwsEc2) GetInternetGateways() ([]interface{}, error) {
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getInternetGateways(), 5)
+	poolOfJobs := jobpool.CreatePool(s.getInternetGateways(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -1106,7 +1113,7 @@ func (s *lumiAwsEc2) GetInternetGateways() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getInternetGateways() []*jobpool.Job {
+func (s *lumiAwsEc2) getInternetGateways(at *aws_transport.Transport) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	at, err := awstransport(s.Runtime.Motor.Transport)
 	if err != nil {

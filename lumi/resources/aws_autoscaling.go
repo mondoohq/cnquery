@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func (a *lumiAwsAutoscaling) id() (string, error) {
@@ -17,8 +18,12 @@ func (a *lumiAwsAutoscalingGroup) id() (string, error) {
 }
 
 func (a *lumiAwsAutoscaling) GetGroups() ([]interface{}, error) {
+	at, err := awstransport(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(a.getGroups(), 5)
+	poolOfJobs := jobpool.CreatePool(a.getGroups(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -33,12 +38,8 @@ func (a *lumiAwsAutoscaling) GetGroups() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *lumiAwsAutoscaling) getGroups() []*jobpool.Job {
+func (a *lumiAwsAutoscaling) getGroups(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(a.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}

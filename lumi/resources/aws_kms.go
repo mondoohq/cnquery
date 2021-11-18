@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func (k *lumiAwsKms) id() (string, error) {
@@ -15,8 +16,12 @@ func (k *lumiAwsKms) id() (string, error) {
 }
 
 func (k *lumiAwsKms) GetKeys() ([]interface{}, error) {
+	at, err := awstransport(k.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(k.getKeys(), 5)
+	poolOfJobs := jobpool.CreatePool(k.getKeys(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -30,12 +35,8 @@ func (k *lumiAwsKms) GetKeys() ([]interface{}, error) {
 	return res, nil
 }
 
-func (k *lumiAwsKms) getKeys() []*jobpool.Job {
+func (k *lumiAwsKms) getKeys(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(k.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{&jobpool.Job{Err: err}}

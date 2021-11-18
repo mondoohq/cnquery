@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func (e *lumiAwsSecretsmanager) id() (string, error) {
@@ -13,8 +14,12 @@ func (e *lumiAwsSecretsmanager) id() (string, error) {
 }
 
 func (e *lumiAwsSecretsmanager) GetSecrets() ([]interface{}, error) {
+	at, err := awstransport(e.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(e.getSecrets(), 5)
+	poolOfJobs := jobpool.CreatePool(e.getSecrets(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -32,12 +37,8 @@ func (e *lumiAwsSecretsmanagerSecret) id() (string, error) {
 	return e.Arn()
 }
 
-func (e *lumiAwsSecretsmanager) getSecrets() []*jobpool.Job {
+func (e *lumiAwsSecretsmanager) getSecrets(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(e.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}

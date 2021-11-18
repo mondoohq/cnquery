@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func (d *lumiAwsRds) id() (string, error) {
@@ -20,8 +21,12 @@ const (
 )
 
 func (d *lumiAwsRds) GetDbInstances() ([]interface{}, error) {
+	at, err := awstransport(d.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(d.getDbInstances(), 5)
+	poolOfJobs := jobpool.CreatePool(d.getDbInstances(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -36,12 +41,8 @@ func (d *lumiAwsRds) GetDbInstances() ([]interface{}, error) {
 	return res, nil
 }
 
-func (d *lumiAwsRds) getDbInstances() []*jobpool.Job {
+func (d *lumiAwsRds) getDbInstances(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(d.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -98,8 +99,12 @@ func (d *lumiAwsRds) getDbInstances() []*jobpool.Job {
 }
 
 func (d *lumiAwsRds) GetDbClusters() ([]interface{}, error) {
+	at, err := awstransport(d.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(d.getDbClusters(), 5)
+	poolOfJobs := jobpool.CreatePool(d.getDbClusters(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -149,12 +154,8 @@ func (p *lumiAwsRdsDbinstance) init(args *lumi.Args) (*lumi.Args, AwsRdsDbinstan
 	return nil, nil, errors.New("rds db instance does not exist")
 }
 
-func (d *lumiAwsRds) getDbClusters() []*jobpool.Job {
+func (d *lumiAwsRds) getDbClusters(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(d.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}

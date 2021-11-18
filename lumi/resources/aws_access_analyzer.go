@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func (a *lumiAwsAccessAnalyzer) id() (string, error) {
@@ -18,8 +19,12 @@ func (e *lumiAwsAccessanalyzerAnalyzer) id() (string, error) {
 }
 
 func (a *lumiAwsAccessAnalyzer) GetAnalyzers() ([]interface{}, error) {
+	at, err := awstransport(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(a.getAnalyzers(), 5)
+	poolOfJobs := jobpool.CreatePool(a.getAnalyzers(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -34,12 +39,8 @@ func (a *lumiAwsAccessAnalyzer) GetAnalyzers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *lumiAwsAccessAnalyzer) getAnalyzers() []*jobpool.Job {
+func (a *lumiAwsAccessAnalyzer) getAnalyzers(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(a.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}

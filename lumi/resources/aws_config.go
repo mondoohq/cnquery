@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func (c *lumiAwsConfig) id() (string, error) {
@@ -13,8 +14,12 @@ func (c *lumiAwsConfig) id() (string, error) {
 }
 
 func (c *lumiAwsConfig) GetRecorders() ([]interface{}, error) {
+	at, err := awstransport(c.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(c.getRecorders(), 5)
+	poolOfJobs := jobpool.CreatePool(c.getRecorders(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -28,12 +33,8 @@ func (c *lumiAwsConfig) GetRecorders() ([]interface{}, error) {
 	return res, nil
 }
 
-func (c *lumiAwsConfig) getRecorders() []*jobpool.Job {
+func (c *lumiAwsConfig) getRecorders(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(c.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -124,8 +125,12 @@ func (c *lumiAwsConfigRecorder) id() (string, error) {
 }
 
 func (c *lumiAwsConfig) GetRules() ([]interface{}, error) {
+	at, err := awstransport(c.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(c.getRules(), 5)
+	poolOfJobs := jobpool.CreatePool(c.getRules(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -139,12 +144,8 @@ func (c *lumiAwsConfig) GetRules() ([]interface{}, error) {
 	return res, nil
 }
 
-func (c *lumiAwsConfig) getRules() []*jobpool.Job {
+func (c *lumiAwsConfig) getRules(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(c.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{&jobpool.Job{Err: err}}

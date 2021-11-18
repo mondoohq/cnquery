@@ -10,6 +10,7 @@ import (
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 	"go.mondoo.io/mondoo/lumi/resources/certificates"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func (a *lumiAwsAcm) id() (string, error) {
@@ -17,8 +18,12 @@ func (a *lumiAwsAcm) id() (string, error) {
 }
 
 func (a *lumiAwsAcm) GetCertificates() ([]interface{}, error) {
+	at, err := awstransport(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(a.getCertificates(), 5)
+	poolOfJobs := jobpool.CreatePool(a.getCertificates(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -33,12 +38,8 @@ func (a *lumiAwsAcm) GetCertificates() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *lumiAwsAcm) getCertificates() []*jobpool.Job {
+func (a *lumiAwsAcm) getCertificates(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(a.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
