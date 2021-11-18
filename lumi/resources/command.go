@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"errors"
 	"io/ioutil"
 
 	"go.mondoo.io/mondoo/lumi"
@@ -12,6 +13,9 @@ func (c *lumiCommand) id() (string, error) {
 }
 
 func (c *lumiCommand) execute() (*transports.Command, error) {
+	if !c.Runtime.Motor.Transport.Capabilities().HasCapability(transports.Capability_RunCommand) {
+		return nil, errors.New("run command not supported on this transport")
+	}
 	var executedCmd *transports.Command
 
 	cmd, err := c.Command()
