@@ -31,7 +31,7 @@ func (s *lumiAws) GetRegions() ([]interface{}, error) {
 func awstransport(t transports.Transport) (*aws_transport.Transport, error) {
 	at, ok := t.(*aws_transport.Transport)
 	if !ok {
-		return nil, errors.New("aws resource is not supported on this transport")
+		return nil, errors.New("aws resource is not supported on this transport; please run with -t aws")
 	}
 	return at, nil
 }
