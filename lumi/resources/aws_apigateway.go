@@ -8,6 +8,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func (a *lumiAwsApigateway) id() (string, error) {
@@ -20,8 +21,12 @@ const (
 )
 
 func (a *lumiAwsApigateway) GetRestApis() ([]interface{}, error) {
+	at, err := awstransport(a.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(a.getRestApis(), 5)
+	poolOfJobs := jobpool.CreatePool(a.getRestApis(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -36,12 +41,8 @@ func (a *lumiAwsApigateway) GetRestApis() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *lumiAwsApigateway) getRestApis() []*jobpool.Job {
+func (a *lumiAwsApigateway) getRestApis(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(a.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}

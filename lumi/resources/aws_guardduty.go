@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func (g *lumiAwsGuardduty) id() (string, error) {
@@ -16,8 +17,12 @@ func (g *lumiAwsGuardduty) id() (string, error) {
 }
 
 func (g *lumiAwsGuardduty) GetDetectors() ([]interface{}, error) {
+	at, err := awstransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(g.getDetectors(), 5)
+	poolOfJobs := jobpool.CreatePool(g.getDetectors(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -35,12 +40,8 @@ func (g *lumiAwsGuarddutyDetector) id() (string, error) {
 	return g.Id()
 }
 
-func (g *lumiAwsGuardduty) getDetectors() []*jobpool.Job {
+func (g *lumiAwsGuardduty) getDetectors(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(g.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}

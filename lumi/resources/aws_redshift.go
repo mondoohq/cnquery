@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func (r *lumiAwsRedshift) id() (string, error) {
@@ -19,8 +20,12 @@ const (
 )
 
 func (r *lumiAwsRedshift) GetClusters() ([]interface{}, error) {
+	at, err := awstransport(r.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(r.getClusters(), 5)
+	poolOfJobs := jobpool.CreatePool(r.getClusters(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -35,12 +40,9 @@ func (r *lumiAwsRedshift) GetClusters() ([]interface{}, error) {
 	return res, nil
 }
 
-func (r *lumiAwsRedshift) getClusters() []*jobpool.Job {
+func (r *lumiAwsRedshift) getClusters(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(r.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
+
 	account, err := at.Account()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}

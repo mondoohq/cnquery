@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func (s *lumiAwsSns) id() (string, error) {
@@ -21,8 +22,12 @@ func (s *lumiAwsSnsSubscription) id() (string, error) {
 }
 
 func (s *lumiAwsSns) GetTopics() ([]interface{}, error) {
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getTopics(), 5)
+	poolOfJobs := jobpool.CreatePool(s.getTopics(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -36,12 +41,8 @@ func (s *lumiAwsSns) GetTopics() ([]interface{}, error) {
 
 	return res, nil
 }
-func (s *lumiAwsSns) getTopics() []*jobpool.Job {
+func (s *lumiAwsSns) getTopics(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(s.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}

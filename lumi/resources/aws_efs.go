@@ -7,6 +7,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func (e *lumiAwsEfs) id() (string, error) {
@@ -18,8 +19,12 @@ func (e *lumiAwsEfsFilesystem) id() (string, error) {
 }
 
 func (e *lumiAwsEfs) GetFilesystems() ([]interface{}, error) {
+	at, err := awstransport(e.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(e.getFilesystems(), 5)
+	poolOfJobs := jobpool.CreatePool(e.getFilesystems(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -34,12 +39,8 @@ func (e *lumiAwsEfs) GetFilesystems() ([]interface{}, error) {
 	return res, nil
 }
 
-func (e *lumiAwsEfs) getFilesystems() []*jobpool.Job {
+func (e *lumiAwsEfs) getFilesystems(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(e.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}} // return the error
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}} // return the error

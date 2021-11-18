@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func (c *lumiAwsCodebuild) id() (string, error) {
@@ -15,8 +16,12 @@ func (c *lumiAwsCodebuild) id() (string, error) {
 }
 
 func (c *lumiAwsCodebuild) GetProjects() ([]interface{}, error) {
+	at, err := awstransport(c.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(c.getProjects(), 5)
+	poolOfJobs := jobpool.CreatePool(c.getProjects(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -30,12 +35,8 @@ func (c *lumiAwsCodebuild) GetProjects() ([]interface{}, error) {
 	return res, nil
 }
 
-func (t *lumiAwsCodebuild) getProjects() []*jobpool.Job {
+func (t *lumiAwsCodebuild) getProjects(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(t.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}

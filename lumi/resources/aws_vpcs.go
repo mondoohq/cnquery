@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 const (
@@ -30,8 +31,12 @@ func (s *lumiAwsVpcRoutetable) id() (string, error) {
 }
 
 func (s *lumiAws) GetVpcs() ([]interface{}, error) {
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getVpcs(), 5)
+	poolOfJobs := jobpool.CreatePool(s.getVpcs(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -45,12 +50,8 @@ func (s *lumiAws) GetVpcs() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAws) getVpcs() []*jobpool.Job {
+func (s *lumiAws) getVpcs(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(s.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error

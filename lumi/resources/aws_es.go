@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func (e *lumiAwsEs) id() (string, error) {
@@ -14,8 +15,12 @@ func (e *lumiAwsEs) id() (string, error) {
 }
 
 func (e *lumiAwsEs) GetDomains() ([]interface{}, error) {
+	at, err := awstransport(e.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(e.getDomains(), 5)
+	poolOfJobs := jobpool.CreatePool(e.getDomains(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -30,12 +35,8 @@ func (e *lumiAwsEs) GetDomains() ([]interface{}, error) {
 	return res, nil
 }
 
-func (e *lumiAwsEs) getDomains() []*jobpool.Job {
+func (e *lumiAwsEs) getDomains(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(e.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}

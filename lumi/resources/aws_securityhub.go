@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func (s *lumiAwsSecurityhub) id() (string, error) {
@@ -14,8 +15,12 @@ func (s *lumiAwsSecurityhub) id() (string, error) {
 }
 
 func (s *lumiAwsSecurityhub) GetHubs() ([]interface{}, error) {
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getHubs(), 5)
+	poolOfJobs := jobpool.CreatePool(s.getHubs(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -31,12 +36,8 @@ func (s *lumiAwsSecurityhub) GetHubs() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsSecurityhub) getHubs() []*jobpool.Job {
+func (s *lumiAwsSecurityhub) getHubs(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(s.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}

@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emr"
 	"github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func (e *lumiAwsEmr) id() (string, error) {
@@ -13,8 +14,12 @@ func (e *lumiAwsEmr) id() (string, error) {
 }
 
 func (e *lumiAwsEmr) GetClusters() ([]interface{}, error) {
+	at, err := awstransport(e.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(e.getClusters(), 5)
+	poolOfJobs := jobpool.CreatePool(e.getClusters(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -32,12 +37,8 @@ func (e *lumiAwsEmrCluster) id() (string, error) {
 	return e.Arn()
 }
 
-func (e *lumiAwsEmr) getClusters() []*jobpool.Job {
+func (e *lumiAwsEmr) getClusters(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(e.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}

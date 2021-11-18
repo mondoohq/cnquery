@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func (d *lumiAwsDms) id() (string, error) {
@@ -14,8 +15,12 @@ func (d *lumiAwsDms) id() (string, error) {
 }
 
 func (d *lumiAwsDms) GetReplicationInstances() ([]interface{}, error) {
+	at, err := awstransport(d.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []types.ReplicationInstance{}
-	poolOfJobs := jobpool.CreatePool(d.getReplicationInstances(), 5)
+	poolOfJobs := jobpool.CreatePool(d.getReplicationInstances(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -29,12 +34,8 @@ func (d *lumiAwsDms) GetReplicationInstances() ([]interface{}, error) {
 	return jsonToDictSlice(res)
 }
 
-func (d *lumiAwsDms) getReplicationInstances() []*jobpool.Job {
+func (d *lumiAwsDms) getReplicationInstances(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(d.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}

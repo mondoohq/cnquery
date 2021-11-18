@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 func (s *lumiAwsSagemaker) id() (string, error) {
@@ -13,8 +14,12 @@ func (s *lumiAwsSagemaker) id() (string, error) {
 }
 
 func (s *lumiAwsSagemaker) GetEndpoints() ([]interface{}, error) {
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getEndpoints(), 5)
+	poolOfJobs := jobpool.CreatePool(s.getEndpoints(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -28,12 +33,8 @@ func (s *lumiAwsSagemaker) GetEndpoints() ([]interface{}, error) {
 
 	return res, nil
 }
-func (s *lumiAwsSagemaker) getEndpoints() []*jobpool.Job {
+func (s *lumiAwsSagemaker) getEndpoints(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(s.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -100,8 +101,12 @@ func (s *lumiAwsSagemakerEndpoint) GetConfig() (map[string]interface{}, error) {
 }
 
 func (s *lumiAwsSagemaker) GetNotebookInstances() ([]interface{}, error) {
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getNotebookInstances(), 5)
+	poolOfJobs := jobpool.CreatePool(s.getNotebookInstances(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -116,7 +121,7 @@ func (s *lumiAwsSagemaker) GetNotebookInstances() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsSagemaker) getNotebookInstances() []*jobpool.Job {
+func (s *lumiAwsSagemaker) getNotebookInstances(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
 	at, err := awstransport(s.Runtime.Motor.Transport)
 	if err != nil {

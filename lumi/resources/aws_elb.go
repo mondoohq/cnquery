@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
 
 const (
@@ -18,8 +19,12 @@ func (e *lumiAwsElb) id() (string, error) {
 }
 
 func (e *lumiAwsElb) GetClassicLoadBalancers() ([]interface{}, error) {
+	at, err := awstransport(e.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(e.getClassicLoadBalancers(), 5)
+	poolOfJobs := jobpool.CreatePool(e.getClassicLoadBalancers(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -34,12 +39,8 @@ func (e *lumiAwsElb) GetClassicLoadBalancers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (e *lumiAwsElb) getClassicLoadBalancers() []*jobpool.Job {
+func (e *lumiAwsElb) getClassicLoadBalancers(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(e.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -96,8 +97,12 @@ func (e *lumiAwsElbLoadbalancer) id() (string, error) {
 }
 
 func (e *lumiAwsElb) GetLoadBalancers() ([]interface{}, error) {
+	at, err := awstransport(e.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(e.getLoadBalancers(), 5)
+	poolOfJobs := jobpool.CreatePool(e.getLoadBalancers(at), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -112,12 +117,8 @@ func (e *lumiAwsElb) GetLoadBalancers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (e *lumiAwsElb) getLoadBalancers() []*jobpool.Job {
+func (e *lumiAwsElb) getLoadBalancers(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(e.Runtime.Motor.Transport)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
