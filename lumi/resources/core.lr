@@ -1858,6 +1858,8 @@ aws.acm.certificate {
   subject string
   // retrieves an Amazon-issued certificate and its certificate chain
   certificate() certificate
+  // tags associated with the certificate
+  tags map[string]string
 }
 
 // AWS Auto Scaling
