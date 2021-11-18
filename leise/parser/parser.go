@@ -77,9 +77,10 @@ type Operation struct {
 
 // Operand is anything that produces a value
 type Operand struct {
-	Value *Value        `json:",omitempty"`
-	Calls []*Call       `json:",omitempty"`
-	Block []*Expression `json:",omitempty"`
+	Comments string        `json:",omitempty"`
+	Value    *Value        `json:",omitempty"`
+	Calls    []*Call       `json:",omitempty"`
+	Block    []*Expression `json:",omitempty"`
 }
 
 // Value representation
@@ -96,6 +97,7 @@ type Value struct {
 
 // Call to a value
 type Call struct {
+	Comments string      `json:",omitempty"`
 	Ident    *string     `json:",omitempty"`
 	Function []*Arg      `json:",omitempty"`
 	Accessor *Expression `json:",omitempty"`
@@ -131,6 +133,7 @@ type parser struct {
 	token      lexer.Token
 	nextTokens []lexer.Token
 	lex        lexer.Lexer
+	comments   string
 }
 
 // expected generates an error string based on the expected type/field
@@ -164,6 +167,8 @@ func (p *parser) nextToken() error {
 			if p.token.Type != Comment {
 				break
 			}
+
+			p.parseComment()
 		}
 
 		return nil
@@ -177,6 +182,21 @@ func (p *parser) nextToken() error {
 	}
 
 	return nil
+}
+
+func (p *parser) parseComment() {
+	// we only need the comment's body
+	if p.token.Value[0] == '#' {
+		p.comments += strings.Trim(p.token.Value[1:], " ")
+	} else {
+		p.comments += strings.Trim(p.token.Value[2:], " ")
+	}
+}
+
+func (p *parser) flushComments() string {
+	res := p.comments
+	p.comments = ""
+	return res
 }
 
 // rewind pushes the current token back on the stack and replaces it iwth the given token
@@ -448,7 +468,8 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 	}
 
 	res := Operand{
-		Value: value,
+		Comments: p.flushComments(),
+		Value:    value,
 	}
 	p.nextToken()
 
@@ -465,7 +486,10 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 			}
 
 			v := p.token.Value
-			res.Calls = append(res.Calls, &Call{Ident: &v})
+			res.Calls = append(res.Calls, &Call{
+				Ident:    &v,
+				Comments: p.flushComments(),
+			})
 			p.nextToken()
 
 		case "(":
@@ -706,9 +730,21 @@ func (p *parser) parseOperation() (*Operation, error) {
 	return &res, nil
 }
 
+func (p *parser) flushExpression() *Expression {
+	if p.comments == "" {
+		return nil
+	}
+
+	return &Expression{
+		Operand: &Operand{
+			Comments: p.flushComments(),
+		},
+	}
+}
+
 func (p *parser) parseExpression() (*Expression, error) {
 	if p.token.EOF() {
-		return nil, nil
+		return p.flushExpression(), nil
 	}
 
 	res := Expression{}
@@ -738,7 +774,7 @@ func (p *parser) parseExpression() (*Expression, error) {
 	}
 
 	if res.Operand == nil && res.Operations == nil {
-		return nil, err
+		return p.flushExpression(), err
 	}
 
 	return &res, err
@@ -752,23 +788,16 @@ func Parse(input string) (*AST, error) {
 	}
 	res := AST{}
 
-	var token lexer.Token
-	for {
-		token, err = lex.Next()
-		if err != nil {
-			return nil, err
-		}
-		if token.EOF() {
-			return &res, nil
-		}
-		if token.Type != Comment {
-			break
-		}
+	thisParser := parser{
+		lex: lex,
 	}
 
-	thisParser := parser{
-		lex:   lex,
-		token: token,
+	err = thisParser.nextToken()
+	if err != nil {
+		return nil, err
+	}
+	if thisParser.token.EOF() {
+		return &res, nil
 	}
 
 	var exp *Expression
@@ -794,6 +823,7 @@ func Parse(input string) (*AST, error) {
 			return &res, errors.New("mismatched symbol '" + thisParser.token.Value + "' at the end of expression")
 		}
 	}
+
 	return &res, err
 }
 

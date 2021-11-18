@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/logger"
 )
 
@@ -29,6 +30,10 @@ func TestParser_Lex(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, tests[i].typ, res[0].Type)
 	}
+}
+
+func sPtr(s string) *string {
+	return &s
 }
 
 func vBool(b bool) *Value {
@@ -74,16 +79,29 @@ func runParserTests(t *testing.T, tests []parserTest) {
 
 		t.Run(test.code, func(t *testing.T) {
 			res, err := Parse(test.code)
-			if err != nil {
-				assert.Nil(t, err)
-				return
-			}
-			if res == nil || res.Expressions == nil {
-				assert.Equal(t, 1, len(res.Expressions), "parsing must generate one expression")
-				return
-			}
+			require.NoError(t, err, "parsing should not generate an error")
+			require.NotNil(t, res, "parsing must generate a result value")
+			require.NotEmpty(t, res.Expressions, "parsing must generate one expression")
 
 			assert.Equal(t, test.res, res.Expressions[0])
+		})
+	}
+}
+
+type multiTest struct {
+	code string
+	res  []*Expression
+}
+
+func runMultiTest(t *testing.T, tests []multiTest) {
+	for i := range tests {
+		test := tests[i]
+
+		t.Run(test.code, func(t *testing.T) {
+			res, err := Parse(test.code)
+			require.NoError(t, err, "parsing should not generate an error")
+			require.NotNil(t, res, "parsing must generate a result value")
+			assert.Equal(t, test.res, res.Expressions, "resulting expressions must match")
 		})
 	}
 }
@@ -254,23 +272,67 @@ func TestParser_ParseValues(t *testing.T) {
 				}},
 			},
 		}},
-		{"// this // is a comment\n'hi'", &Expression{Operand: &Operand{Value: vString("hi")}}},
-		{"# this # is a comment\n'hi'", &Expression{Operand: &Operand{Value: vString("hi")}}},
+		{"// this // is a comment\n'hi'", &Expression{Operand: &Operand{
+			Value:    vString("hi"),
+			Comments: "this // is a comment\n",
+		}}},
+		{"# this # is a comment\n'hi'", &Expression{Operand: &Operand{
+			Value:    vString("hi"),
+			Comments: "this # is a comment\n",
+		}}},
+	})
+}
+
+func TestParser_Comments(t *testing.T) {
+	runMultiTest(t, []multiTest{
+		// call chain with many newlines
+		{"// 1\nsshd\n// 2\n\t.\n// 3\nconfig // 4", []*Expression{
+			{Operand: &Operand{
+				Comments: "1\n",
+				Value:    vIdent("sshd"),
+				Calls: []*Call{
+					{
+						Comments: "2\n3\n",
+						Ident:    sPtr("config"),
+					},
+				},
+			}},
+			{Operand: &Operand{Comments: "4"}},
+		}},
+		// blocks and newlines
+		{"file\n// 1\n{\n// 2\npath\n// 3\n==\n// 4\n'abc'\n// 5\n}\n// 6", []*Expression{
+			{Operand: &Operand{
+				Value: vIdent("file"),
+				Block: []*Expression{
+					{
+						Operand: &Operand{
+							Comments: "1\n2\n",
+							Value:    vIdent("path"),
+						},
+						Operations: []*Operation{{
+							Operator: 103,
+							Operand: &Operand{
+								Comments: "3\n4\n",
+								Value:    vString("abc"),
+							},
+						}},
+					},
+					{
+						Operand: &Operand{Comments: "5\n"},
+					},
+				},
+			}},
+			{Operand: &Operand{Comments: "6"}},
+		}},
 	})
 }
 
 func TestParser_Multiline(t *testing.T) {
-	res, err := Parse("true\n1\n2\n")
-	if !assert.Nil(t, err) {
-		return
-	}
-	if !assert.NotNil(t, res) {
-		return
-	}
-
-	assert.Equal(t, []*Expression{
-		{Operand: &Operand{Value: vBool(true)}},
-		{Operand: &Operand{Value: vInt(1)}},
-		{Operand: &Operand{Value: vInt(2)}},
-	}, res.Expressions)
+	runMultiTest(t, []multiTest{
+		{"true\n1\n2\n", []*Expression{
+			{Operand: &Operand{Value: vBool(true)}},
+			{Operand: &Operand{Value: vInt(1)}},
+			{Operand: &Operand{Value: vInt(2)}},
+		}},
+	})
 }
