@@ -62,3 +62,13 @@ func TestMountedDirectoryFile(t *testing.T) {
 	assert.Equal(t, "f5a898d54907811ccc54cd35dcb991d1", md5, "md5 output should be correct")
 	assert.Nil(t, err, "should execute without error")
 }
+
+func TestRunCommandReturnsErr(t *testing.T) {
+	trans := &fs.FsTransport{
+		MountedDir: "./testdata/centos8",
+	}
+
+	_, err := trans.RunCommand("aa-status")
+	require.Error(t, err)
+	assert.Equal(t, err.Error(), "filesearch transport does not implement RunCommand")
+}

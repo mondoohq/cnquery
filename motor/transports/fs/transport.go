@@ -1,7 +1,6 @@
 package fs
 
 import (
-	"bytes"
 	"errors"
 
 	"github.com/rs/zerolog/log"
@@ -40,9 +39,7 @@ type FsTransport struct {
 }
 
 func (t *FsTransport) RunCommand(command string) (*transports.Command, error) {
-	// TODO: switch to error state
-	res := transports.Command{Command: command, Stdout: &bytes.Buffer{}, Stderr: &bytes.Buffer{}, ExitStatus: -1}
-	return &res, nil
+	return nil, errors.New("filesearch transport does not implement RunCommand")
 }
 
 func (t *FsTransport) FS() afero.Fs {
