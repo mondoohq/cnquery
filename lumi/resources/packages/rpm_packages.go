@@ -99,11 +99,12 @@ func (rpm *RpmPkgManager) isStaticAnalysis() bool {
 	// we cannot always rely on that, a running photon container return non-zero exit code but it will be -1 on the system
 	// we probably cannot fix this easily, see dockers approach:
 	// https://docs.docker.com/engine/reference/commandline/attach/#get-the-exit-code-of-the-containers-command
-	rpmCmdPath, err := ioutil.ReadAll(c.Stdout)
-	if err != nil || len(rpmCmdPath) == 0 {
-		rpm.static = true
+	if c != nil {
+		rpmCmdPath, err := ioutil.ReadAll(c.Stdout)
+		if err != nil || len(rpmCmdPath) == 0 {
+			rpm.static = true
+		}
 	}
-
 	rpm.staticChecked = true
 	return rpm.static
 }
