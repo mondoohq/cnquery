@@ -36,6 +36,12 @@ message Chunk {
   Function function = 4;
 }
 
+message AssertionMessage {
+  string template = 1;
+  repeated string checksums = 3;
+  repeated int32 datapoint = 20;
+}
+
 message Code {
   string id = 1;
   repeated Chunk code = 2;
@@ -45,6 +51,7 @@ message Code {
   map<int32,string> checksums = 6;
   repeated Code functions = 7;
   bool singleValue = 8;
+  map<int32,AssertionMessage> assertions = 20;
 }
 
 message Labels {
@@ -64,6 +71,7 @@ message CodeBundle {
   Labels labels = 4;
   map<string,string> props = 5; // name + type
   string version = 20;
+  map<string,AssertionMessage> assertions = 21;
 }
 
 message Result {

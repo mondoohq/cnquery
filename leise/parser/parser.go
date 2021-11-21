@@ -28,7 +28,7 @@ var tokenNames map[rune]string
 
 func init() {
 	leiseLexer = lexer.Must(lexer.Regexp(`(\s+)` +
-		`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)` +
+		`|(?P<Ident>[a-zA-Z$_][a-zA-Z0-9_]*)` +
 		`|(?P<Float>[-+]?\d*\.\d+([eE][-+]?\d+)?)` +
 		`|(?P<Int>[-+]?\d+([eE][-+]?\d+)?)` +
 		`|(?P<String>'[^']*'|"[^"]*")` +
@@ -193,9 +193,17 @@ func (p *parser) nextToken() error {
 func (p *parser) parseComment() {
 	// we only need the comment's body
 	if p.token.Value[0] == '#' {
-		p.comments.WriteString(strings.Trim(p.token.Value[1:], " "))
+		if p.token.Value[1] == ' ' {
+			p.comments.WriteString(strings.Trim(p.token.Value[2:], " "))
+		} else {
+			p.comments.WriteString(strings.Trim(p.token.Value[1:], " "))
+		}
 	} else {
-		p.comments.WriteString(strings.Trim(p.token.Value[2:], " "))
+		if p.token.Value[2] == ' ' {
+			p.comments.WriteString(strings.Trim(p.token.Value[3:], " "))
+		} else {
+			p.comments.WriteString(strings.Trim(p.token.Value[2:], " "))
+		}
 	}
 }
 
