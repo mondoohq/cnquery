@@ -1380,8 +1380,50 @@ func Compile(input string, schema *lumi.Schema, props map[string]*llx.Primitive)
 		res.Labels.Labels = nil
 	}
 
+	err = UpdateAssertions(res)
+	if err != nil {
+		return res, err
+	}
+
 	res.Source = input
 	return res, nil
+}
+
+// UpdateAssertions in a bundle and remove all intermediate assertion objects
+func UpdateAssertions(bundle *llx.CodeBundle) error {
+	bundle.Assertions = map[string]*llx.AssertionMessage{}
+	return updateCodeAssertions(bundle, bundle.Code)
+}
+
+func updateCodeAssertions(bundle *llx.CodeBundle, code *llx.Code) error {
+	for ref, assert := range code.Assertions {
+		sum, ok := code.Checksums[ref]
+		if !ok {
+			return errors.New("cannot find reference for assertion")
+		}
+
+		assert.Checksums = make([]string, len(assert.Datapoint))
+		for i := range assert.Datapoint {
+			datapoint := assert.Datapoint[i]
+			assert.Checksums[i], ok = code.Checksums[datapoint]
+			if !ok {
+				return errors.New("cannot find reference to datapoint in assertion")
+			}
+		}
+		assert.Datapoint = nil
+
+		bundle.Assertions[sum] = assert
+	}
+	code.Assertions = nil
+
+	for i := range code.Functions {
+		child := code.Functions[i]
+		if err := updateCodeAssertions(bundle, child); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // MustCompile a code piece that should not fail (otherwise panic)

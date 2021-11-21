@@ -149,7 +149,29 @@ func UpdateLabels(code *llx.Code, labels *llx.Labels, schema *lumi.Schema) error
 		return errors.New("cannot create labels without code")
 	}
 
-	labelrefs := append(code.Entrypoints, code.Datapoints...)
+	datapoints := code.Datapoints
+
+	// We don't want assertions to become labels. Their data should not be printed
+	// regularly but instead be processed through the assertion itself
+	if code.Assertions != nil {
+		assertionPoints := map[int32]struct{}{}
+		for _, assertion := range code.Assertions {
+			for j := range assertion.Datapoint {
+				assertionPoints[assertion.Datapoint[j]] = struct{}{}
+			}
+		}
+
+		filtered := []int32{}
+		for i := range code.Datapoints {
+			ref := code.Datapoints[i]
+			if _, ok := assertionPoints[ref]; !ok {
+				filtered = append(filtered, ref)
+			}
+		}
+		datapoints = filtered
+	}
+
+	labelrefs := append(code.Entrypoints, datapoints...)
 
 	var err error
 	for _, entrypoint := range labelrefs {

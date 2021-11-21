@@ -2,6 +2,8 @@ package leise
 
 import (
 	"errors"
+	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/leise/parser"
@@ -63,45 +65,219 @@ func resolveType(chunk *llx.Chunk, code *llx.Code) types.Type {
 	return resolveType(code.Code[ref-1], code)
 }
 
+func extractComments(c *parser.Expression) string {
+	// TODO: we need to clarify how many of the comments we really want to extract.
+	// For now we only grab the operand and ignore the rest
+	if c == nil || c.Operand == nil {
+		return ""
+	}
+	return c.Operand.Comments
+}
+
+func extractMsgTag(comment string) string {
+	lines := strings.Split(comment, "\n")
+	var msgLines strings.Builder
+
+	var i int
+	for i < len(lines) {
+		if strings.HasPrefix(lines[i], "@msg ") {
+			break
+		}
+		i++
+	}
+	if i == len(lines) {
+		return ""
+	}
+
+	msgLines.WriteString(lines[i][5:])
+	msgLines.WriteByte('\n')
+	i++
+
+	for i < len(lines) {
+		line := lines[i]
+		if line != "" && line[0] == '@' {
+			break
+		}
+		msgLines.WriteString(line)
+		msgLines.WriteByte('\n')
+		i++
+	}
+
+	return msgLines.String()
+}
+
+func extractMql(s string) (string, error) {
+	var openBrackets []byte
+	for i := 0; i < len(s); i++ {
+		switch s[i] {
+		case '"', '\'':
+			// TODO: for all of these string things we need to support proper string interpolation...
+			d := s[i]
+			for ; i < len(s) && s[i] != d; i++ {
+			}
+		case '{', '(', '[':
+			openBrackets = append(openBrackets, s[i])
+		case '}':
+			if len(openBrackets) == 0 {
+				return s[0:i], nil
+			}
+			last := openBrackets[len(openBrackets)-1]
+			if last != '}' {
+				return "", errors.New("unexpected closing bracket '" + string(s[i]) + "'")
+			}
+			openBrackets = openBrackets[0 : len(openBrackets)-1]
+		case ')', ']':
+			if len(openBrackets) == 0 {
+				return "", errors.New("unexpected closing bracket '" + string(s[i]) + "'")
+			}
+			last := openBrackets[len(openBrackets)-1]
+			if (s[i] == '(' && last != ')') || (s[i] == '[' && last != ']') {
+				return "", errors.New("unexpected closing bracket '" + string(s[i]) + "'")
+			}
+			openBrackets = openBrackets[0 : len(openBrackets)-1]
+		}
+	}
+
+	return s, nil
+}
+
+func compileAssertionMsg(msg string, c *compiler) (*llx.AssertionMessage, error) {
+	template := strings.Builder{}
+	var codes []string
+	var i int
+	var max = len(msg)
+	textStart := i
+	for ; i < max; i++ {
+		if msg[i] != '$' {
+			continue
+		}
+		if i+1 == max || msg[i+1] != '{' {
+			continue
+		}
+
+		template.WriteString(msg[textStart:i])
+		template.WriteByte('$')
+		template.WriteString(strconv.Itoa(len(codes)))
+
+		// extract the code
+		code, err := extractMql(msg[i+2:])
+		if err != nil {
+			return nil, err
+		}
+
+		i += 2 + len(code)
+		if i >= max {
+			return nil, errors.New("cannot extract code in @msg (message ended before '}')")
+		}
+		if msg[i] != '}' {
+			return nil, errors.New("cannot extract code in @msg (expected '}' but got '" + string(msg[i]) + "')")
+		}
+		i++
+		textStart = i
+
+		codes = append(codes, code)
+	}
+
+	template.WriteString(msg[textStart:])
+
+	res := llx.AssertionMessage{
+		Template: template.String(),
+	}
+
+	for i := range codes {
+		code := codes[i]
+		ast, err := parser.Parse(code)
+		if err != nil {
+			return nil, errors.New("cannot parse code block in comment: " + code)
+		}
+
+		if len(ast.Expressions) == 0 {
+			return nil, errors.New("can't have empty calls to `${}` in comments")
+		}
+		if len(ast.Expressions) > 1 {
+			return nil, errors.New("can't have more than one value in `${}`")
+		}
+		expression := ast.Expressions[0]
+
+		ref, err := c.compileAndAddExpression(expression)
+		if err != nil {
+			return nil, errors.New("failed to compile comment: " + err.Error())
+		}
+
+		res.Datapoint = append(res.Datapoint, ref)
+		c.Result.Code.Datapoints = append(c.Result.Code.Datapoints, ref)
+	}
+
+	return &res, nil
+}
+
 // compile the operation between two operands A and B
 // examples: A && B, A - B, ...
-func compileABOperation(c *compiler, id string, call *parser.Call) (int32, *llx.Chunk, *llx.Primitive, error) {
+func compileABOperation(c *compiler, id string, call *parser.Call) (int32, *llx.Chunk, *llx.Primitive, *llx.AssertionMessage, error) {
 	if call == nil {
-		return 0, nil, nil, errors.New("operation needs a function call")
+		return 0, nil, nil, nil, errors.New("operation needs a function call")
 	}
 
 	if call.Function == nil {
-		return 0, nil, nil, errors.New("operation needs a function call")
+		return 0, nil, nil, nil, errors.New("operation needs a function call")
 	}
 	if len(call.Function) != 2 {
 		if len(call.Function) < 2 {
-			return 0, nil, nil, errors.New("missing arguments")
+			return 0, nil, nil, nil, errors.New("missing arguments")
 		}
-		return 0, nil, nil, errors.New("too many arguments")
+		return 0, nil, nil, nil, errors.New("too many arguments")
 	}
 
 	a := call.Function[0]
 	b := call.Function[1]
 	if a.Name != "" || b.Name != "" {
-		return 0, nil, nil, errors.New("calling operations with named arguments is not supported")
+		return 0, nil, nil, nil, errors.New("calling operations with named arguments is not supported")
 	}
 
 	leftRef, err := c.compileAndAddExpression(a.Value)
 	if err != nil {
-		return 0, nil, nil, err
+		return 0, nil, nil, nil, err
 	}
 	left := c.Result.Code.Code[leftRef-1]
 
 	right, err := c.compileExpression(b.Value)
 	if err != nil {
-		return 0, nil, nil, err
+		return 0, nil, nil, nil, err
 	}
 
 	if left == nil {
 		log.Fatal().Msgf("left is nil: %d %#v", leftRef, c.Result.Code.Code[leftRef-1])
 	}
 
-	return leftRef, left, right, nil
+	comments := extractComments(a.Value) + "\n" + extractComments(b.Value)
+	msg := extractMsgTag(comments)
+	if msg == "" {
+		return leftRef, left, right, nil, nil
+	}
+
+	// if the right-hand argument is directly provided as a primitive, we don't have a way to
+	// ref to it in the chunk stack. Since the message tag **may** end up using it,
+	// we have to provide it ref'able. So... bit the bullet (for now... seriously if
+	// we could do this simpler that'd be great)
+	rightRef, ok := right.Ref()
+	if !ok {
+		c.Result.Code.AddChunk(&llx.Chunk{
+			Call:      llx.Chunk_PRIMITIVE,
+			Primitive: right,
+		})
+		rightRef = c.Result.Code.ChunkIndex()
+	}
+
+	// these variables are accessible only to comments
+	c.vars["$expected"] = variable{ref: rightRef, typ: types.Type(right.Type)}
+	c.vars["$actual"] = variable{ref: leftRef, typ: left.Type(c.Result.Code)}
+	c.vars["$binding"] = variable{ref: c.Binding.Ref, typ: c.Binding.Type}
+
+	assertionMsg, err := compileAssertionMsg(msg, c)
+	if err != nil {
+		return 0, nil, nil, nil, err
+	}
+	return leftRef, left, right, assertionMsg, nil
 }
 
 func compileAssignment(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
@@ -129,7 +305,14 @@ func compileAssignment(c *compiler, id string, call *parser.Call, res *llx.CodeB
 		varIdent.Value.Operand.Value.Ident == nil {
 		return types.Nil, errors.New("variable name is not defined")
 	}
+
 	name := *varIdent.Value.Operand.Value.Ident
+	if name == "" {
+		return types.Nil, errors.New("cannot assign to empty variable name")
+	}
+	if name[0] == '$' {
+		return types.Nil, errors.New("illegal character in variable assignment '$'")
+	}
 
 	ref, err := c.compileAndAddExpression(varValue.Value)
 	if err != nil {
@@ -145,7 +328,7 @@ func compileAssignment(c *compiler, id string, call *parser.Call, res *llx.CodeB
 }
 
 func compileComparable(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
-	leftRef, left, right, err := compileABOperation(c, id, call)
+	leftRef, left, right, assertionMsg, err := compileABOperation(c, id, call)
 	if err != nil {
 		return types.Nil, errors.New("failed to compile: " + err.Error())
 	}
@@ -193,11 +376,18 @@ func compileComparable(c *compiler, id string, call *parser.Call, res *llx.CodeB
 		},
 	})
 
+	if assertionMsg != nil {
+		if c.Result.Code.Assertions == nil {
+			c.Result.Code.Assertions = map[int32]*llx.AssertionMessage{}
+		}
+		c.Result.Code.Assertions[c.Result.Code.ChunkIndex()] = assertionMsg
+	}
+
 	return types.Bool, nil
 }
 
 func compileTransformation(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
-	leftRef, left, right, err := compileABOperation(c, id, call)
+	leftRef, left, right, _, err := compileABOperation(c, id, call)
 	if err != nil {
 		return types.Nil, err
 	}
