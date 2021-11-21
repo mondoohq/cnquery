@@ -4320,6 +4320,8 @@ terraform.block {
   end terraform.fileposition
   // Block Arguments
   arguments() dict
+  // Raw Block Attributes
+  attributes() dict
   // Child Blocks
   blocks() []terraform.block
 }

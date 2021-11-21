@@ -206,7 +206,7 @@ func (g *lumiTerraformBlock) GetNameLabel() (interface{}, error) {
 	return labels[0].(string), nil
 }
 
-func (g *lumiTerraformBlock) GetArguments() (map[string]interface{}, error) {
+func (g *lumiTerraformBlock) GetAttributes() (map[string]interface{}, error) {
 	ce, ok := g.LumiResource().Cache.Load("_hclblock")
 	if !ok {
 		return nil, nil
@@ -217,6 +217,29 @@ func (g *lumiTerraformBlock) GetArguments() (map[string]interface{}, error) {
 	// do not handle diag information here, it also throws errors for blocks nearby
 	attributes, _ := hclBlock.Body.JustAttributes()
 	return hclAttributesToDict(attributes)
+}
+
+func (g *lumiTerraformBlock) GetArguments() (map[string]interface{}, error) {
+	ce, ok := g.LumiResource().Cache.Load("_hclblock")
+	if !ok {
+		return nil, nil
+	}
+
+	hclBlock := ce.Data.(*hcl.Block)
+
+	// do not handle diag information here, it also throws errors for blocks nearby
+	attributes, _ := hclBlock.Body.JustAttributes()
+	return hclResolvedAttributesToDict(attributes)
+}
+
+func hclResolvedAttributesToDict(attributes map[string]*hcl.Attribute) (map[string]interface{}, error) {
+	dict := map[string]interface{}{}
+	for k := range attributes {
+		dict[k] = getCtyValue(attributes[k].Expr, &hcl.EvalContext{
+			Functions: hclFunctions(),
+		})
+	}
+	return dict, nil
 }
 
 func hclAttributesToDict(attributes map[string]*hcl.Attribute) (map[string]interface{}, error) {
