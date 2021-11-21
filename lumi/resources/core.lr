@@ -4324,6 +4324,8 @@ terraform.block {
   attributes() dict
   // Child Blocks
   blocks() []terraform.block
+  // Block Snippet
+  snippet string
 }
 
 // Terraform Module Block
