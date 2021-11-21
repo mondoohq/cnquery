@@ -2,6 +2,7 @@ package resources
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -100,7 +101,7 @@ func (g *lumiTerraform) GetBlocks() ([]interface{}, error) {
 	var lumiHclBlocks []interface{}
 	for k := range files {
 		f := files[k]
-		blocks, err := listHclBlocks(g.Runtime, f.Body)
+		blocks, err := listHclBlocks(g.Runtime, f.Body, f)
 		if err != nil {
 			return nil, err
 		}
@@ -120,7 +121,7 @@ func (g *lumiTerraform) filterBlockByType(filterType string) ([]interface{}, err
 	var lumiHclBlocks []interface{}
 	for k := range files {
 		f := files[k]
-		blocks, err := listHclBlocks(g.Runtime, f.Body)
+		blocks, err := listHclBlocks(g.Runtime, f.Body, f)
 		if err != nil {
 			return nil, err
 		}
@@ -159,21 +160,57 @@ func (g *lumiTerraform) GetOutputs() ([]interface{}, error) {
 	return g.filterBlockByType("output")
 }
 
-func newLumiHclBlock(runtime *lumi.Runtime, block *hcl.Block) (lumi.ResourceType, error) {
+func extractHclCodeSnippet(file *hcl.File, fileRange hcl.Range) string {
+	if file == nil {
+		return ""
+	}
+
+	lines := append([]string{""}, strings.Split(string(file.Bytes), "\n")...)
+
+	// determine few surrounding lines
+	start := fileRange.Start.Line - 3
+	if start <= 0 {
+		start = 1
+	}
+	end := fileRange.End.Line + 3
+	if end >= len(lines) {
+		end = len(lines) - 1
+	}
+
+	// build the snippet
+	sb := strings.Builder{}
+	for lineNo := start; lineNo <= end; lineNo++ {
+		sb.WriteString(fmt.Sprintf("% 6d | ", lineNo))
+		sb.WriteString(fmt.Sprintf("%s", lines[lineNo]))
+		sb.WriteString("\n")
+	}
+
+	return sb.String()
+}
+
+func newLumiHclBlock(runtime *lumi.Runtime, block *hcl.Block, file *hcl.File) (lumi.ResourceType, error) {
 	start, end, err := newFilePosRange(runtime, block.TypeRange)
 	if err != nil {
 		return nil, err
 	}
+
+	snippet := extractHclCodeSnippet(file, block.TypeRange)
 
 	r, err := runtime.CreateResource("terraform.block",
 		"type", block.Type,
 		"labels", sliceInterface(block.Labels),
 		"start", start,
 		"end", end,
+		"snippet", snippet,
 	)
 
 	if err == nil {
-		r.LumiResource().Cache.Store("_hclblock", &lumi.CacheEntry{Data: block})
+		r.LumiResource().Cache.Store("_hclblock", &lumi.CacheEntry{
+			Data: block,
+		})
+		r.LumiResource().Cache.Store("_hclfile", &lumi.CacheEntry{
+			Data: file,
+		})
 	}
 
 	return r, err
@@ -359,17 +396,24 @@ func (g *lumiTerraformBlock) GetBlocks() ([]interface{}, error) {
 	if !ok {
 		return nil, nil
 	}
-
 	hclBlock := ce.Data.(*hcl.Block)
-	return listHclBlocks(g.Runtime, hclBlock.Body)
+
+	hFile, ok := g.LumiResource().Cache.Load("_hclfile")
+	if !ok {
+		return nil, nil
+	}
+	hclFile := hFile.Data.(*hcl.File)
+
+	return listHclBlocks(g.Runtime, hclBlock.Body, hclFile)
 }
 
-func listHclBlocks(runtime *lumi.Runtime, rawBody interface{}) ([]interface{}, error) {
+func listHclBlocks(runtime *lumi.Runtime, rawBody interface{}, file *hcl.File) ([]interface{}, error) {
 	var lumiHclBlocks []interface{}
+
 	switch body := rawBody.(type) {
 	case *hclsyntax.Body:
 		for i := range body.Blocks {
-			lumiBlock, err := newLumiHclBlock(runtime, body.Blocks[i].AsHCLBlock())
+			lumiBlock, err := newLumiHclBlock(runtime, body.Blocks[i].AsHCLBlock(), file)
 			if err != nil {
 				return nil, err
 			}
@@ -378,7 +422,7 @@ func listHclBlocks(runtime *lumi.Runtime, rawBody interface{}) ([]interface{}, e
 	case hcl.Body:
 		content, _, _ := body.PartialContent(terraform.TerraformSchema_0_12)
 		for i := range content.Blocks {
-			lumiBlock, err := newLumiHclBlock(runtime, content.Blocks[i])
+			lumiBlock, err := newLumiHclBlock(runtime, content.Blocks[i], file)
 			if err != nil {
 				return nil, err
 			}
@@ -443,7 +487,7 @@ func (g *lumiTerraformFile) GetBlocks() ([]interface{}, error) {
 
 	files := t.Parser().Files()
 	file := files[p]
-	return listHclBlocks(g.Runtime, file.Body)
+	return listHclBlocks(g.Runtime, file.Body, file)
 }
 
 func (g *lumiTerraformModule) id() (string, error) {
