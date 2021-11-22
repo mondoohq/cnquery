@@ -113,6 +113,10 @@ func ComparableLabel(label string) (string, bool) {
 // RefDatapoints returns the additional datapoints that inform a ref.
 // Typically used when writing tests and providing additional data when the test fails.
 func (l *Code) RefDatapoints(ref int32) []int32 {
+	if assertion, ok := l.Assertions[ref]; ok {
+		return assertion.Datapoint
+	}
+
 	chunk := l.Code[ref-1]
 
 	if chunk.Id == "if" && chunk.Function != nil && len(chunk.Function.Args) != 0 {
@@ -180,6 +184,25 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, ref int32, lookup func(
 
 	if checksumRes.Data.Error != nil {
 		res.Error = checksumRes.Data.Error.Error()
+	}
+
+	if assertion, ok := bundle.Assertions[checksum]; ok {
+		data := make([]*Primitive, len(assertion.Checksums))
+		for j := range assertion.Checksums {
+			sum := assertion.Checksums[j]
+
+			raw, ok := lookup(sum)
+			if !ok {
+				res.Error = "cannot find required data"
+				return &res
+			}
+
+			data[j] = raw.Result().Data
+		}
+
+		res.Data = data
+		res.Template = assertion.Template
+		return &res
 	}
 
 	chunk := l.Code[ref-1]
