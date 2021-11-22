@@ -32,18 +32,40 @@ type stepCache struct {
 }
 
 // Calls is a map connecting call-refs with each other
-type Calls struct{ sync.Map }
+type Calls struct {
+	locker sync.Mutex
+	calls  map[int32][]int32
+}
 
-// Store a new call connection
-func (c *Calls) Store(k int32, v int32) { c.Map.Store(k, v) }
+// Store a new call connection.
+// Returns true if this connection already exists.
+// Returns false if this is a new connection.
+func (c *Calls) Store(k int32, v int32) bool {
+	c.locker.Lock()
+	defer c.locker.Unlock()
+
+	calls, ok := c.calls[k]
+	if !ok {
+		calls = []int32{}
+	} else {
+		for k := range calls {
+			if calls[k] == v {
+				return true
+			}
+		}
+	}
+
+	calls = append(calls, v)
+	c.calls[k] = calls
+	return false
+}
 
 // Load a call connection
-func (c *Calls) Load(k int32) (int32, bool) {
-	res, ok := c.Map.Load(k)
-	if !ok {
-		return 0, ok
-	}
-	return res.(int32), ok
+func (c *Calls) Load(k int32) ([]int32, bool) {
+	c.locker.Lock()
+	v, ok := c.calls[k]
+	c.locker.Unlock()
+	return v, ok
 }
 
 // Cache is a map containing stepCache values
@@ -116,9 +138,12 @@ func NewExecutor(code *Code, runtime *lumi.Runtime, props map[string]*Primitive,
 		callback:       callback,
 		cache:          &Cache{},
 		stepTracker:    &Cache{},
-		calls:          &Calls{},
-		watcherIds:     &types.StringSet{},
-		props:          props,
+		calls: &Calls{
+			locker: sync.Mutex{},
+			calls:  map[int32][]int32{},
+		},
+		watcherIds: &types.StringSet{},
+		props:      props,
 	}
 
 	for _, ref := range code.Entrypoints {
@@ -341,11 +366,12 @@ func (c *LeiseExecutor) runGlobalFunction(chunk *Chunk, f *Function, ref int32) 
 
 // connect references, calling `dst` if `src` is updated
 func (c *LeiseExecutor) connectRef(src int32, dst int32) (*RawData, int32, error) {
-	// check if the ref is connected and connect it if not
-	_, ok := c.calls.LoadOrStore(src, dst)
-	if ok {
+	// connect the ref. If it is already connected, someone else already made this
+	// call, so we don't have to follow up anymore
+	if exists := c.calls.Store(src, dst); exists {
 		return nil, 0, nil
 	}
+
 	// if the ref was not yet connected, we must run the src ref after we connected it
 	return nil, src, nil
 }
@@ -433,6 +459,7 @@ func (c *LeiseExecutor) runChain(start int32) {
 	var err error
 	nextRef := start
 	var curRef int32
+	var remaining []int32
 
 	for nextRef != 0 {
 		curRef = nextRef
@@ -477,7 +504,20 @@ func (c *LeiseExecutor) runChain(start int32) {
 		if nextRef == 0 {
 			// note: if the call cannot be retrieved it will use the
 			// zero value, which is 0 in this case; i.e. if !ok => ref = 0
-			nextRef, _ = c.calls.Load(curRef)
+			nextRefs, _ := c.calls.Load(curRef)
+			cnt := len(nextRefs)
+			if cnt != 0 {
+				nextRef = nextRefs[0]
+				remaining = append(remaining, nextRefs[1:]...)
+				continue
+			}
+
+			cnt = len(remaining)
+			if cnt == 0 {
+				break
+			}
+			nextRef = remaining[0]
+			remaining = remaining[1:]
 		}
 	}
 }
@@ -489,10 +529,12 @@ func (c *LeiseExecutor) runChain(start int32) {
 func (c *LeiseExecutor) triggerChain(ref int32) {
 	nxt, ok := c.calls.Load(ref)
 	if ok {
-		if nxt < 1 {
+		if len(nxt) == 0 {
 			panic("internal state error: cannot trigger next call on chain because it points to a zero ref")
 		}
-		c.runChain(nxt)
+		for i := range nxt {
+			c.runChain(nxt[i])
+		}
 		return
 	}
 
@@ -509,6 +551,7 @@ func (c *LeiseExecutor) triggerChain(ref int32) {
 
 func (c *LeiseExecutor) triggerChainError(ref int32, err error) {
 	cur := ref
+	var remaining []int32
 	for cur > 0 {
 		if codeID, ok := c.callbackPoints[cur]; ok {
 			c.callback(&RawResult{
@@ -521,11 +564,16 @@ func (c *LeiseExecutor) triggerChainError(ref int32, err error) {
 
 		nxt, ok := c.calls.Load(cur)
 		if !ok {
-			break
+			if len(remaining) == 0 {
+				break
+			}
+			cur = remaining[0]
+			remaining = remaining[1:]
 		}
-		if nxt < 1 {
+		if len(nxt) == 0 {
 			panic("internal state error: cannot trigger next call on chain because it points to a zero ref")
 		}
-		cur = nxt
+		cur = nxt[0]
+		remaining = append(remaining, nxt[1:]...)
 	}
 }
