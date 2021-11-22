@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"go.mondoo.io/mondoo/motor/motorid/clouddetect/providers/aws"
+	"go.mondoo.io/mondoo/motor/motorid/clouddetect/providers/azure"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 )
@@ -14,6 +15,7 @@ type detectorFunc func(t transports.Transport, p *platform.Platform) string
 
 var detectors = []detectorFunc{
 	aws.Detect,
+	azure.Detect,
 }
 
 func Detect(t transports.Transport, p *platform.Platform) string {
