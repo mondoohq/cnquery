@@ -181,7 +181,7 @@ func compileAssertionMsg(msg string, c *compiler) (*llx.AssertionMessage, error)
 	template.WriteString(msg[textStart:])
 
 	res := llx.AssertionMessage{
-		Template: template.String(),
+		Template: strings.Trim(template.String(), "\n\t "),
 	}
 
 	for i := range codes {
@@ -271,7 +271,9 @@ func compileABOperation(c *compiler, id string, call *parser.Call) (int32, *llx.
 	// these variables are accessible only to comments
 	c.vars["$expected"] = variable{ref: rightRef, typ: types.Type(right.Type)}
 	c.vars["$actual"] = variable{ref: leftRef, typ: left.Type(c.Result.Code)}
-	c.vars["$binding"] = variable{ref: c.Binding.Ref, typ: c.Binding.Type}
+	if c.Binding != nil {
+		c.vars["$binding"] = variable{ref: c.Binding.Ref, typ: c.Binding.Type}
+	}
 
 	assertionMsg, err := compileAssertionMsg(msg, c)
 	if err != nil {

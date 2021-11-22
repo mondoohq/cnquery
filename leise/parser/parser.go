@@ -194,15 +194,15 @@ func (p *parser) parseComment() {
 	// we only need the comment's body
 	if p.token.Value[0] == '#' {
 		if p.token.Value[1] == ' ' {
-			p.comments.WriteString(strings.Trim(p.token.Value[2:], " "))
+			p.comments.WriteString(strings.TrimRight(p.token.Value[2:], " \t"))
 		} else {
-			p.comments.WriteString(strings.Trim(p.token.Value[1:], " "))
+			p.comments.WriteString(strings.TrimRight(p.token.Value[1:], " \t"))
 		}
 	} else {
 		if p.token.Value[2] == ' ' {
-			p.comments.WriteString(strings.Trim(p.token.Value[3:], " "))
+			p.comments.WriteString(strings.TrimRight(p.token.Value[3:], " \t"))
 		} else {
-			p.comments.WriteString(strings.Trim(p.token.Value[2:], " "))
+			p.comments.WriteString(strings.TrimRight(p.token.Value[2:], " \t"))
 		}
 	}
 }

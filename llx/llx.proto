@@ -98,6 +98,8 @@ message AssessmentItem {
   string operation = 6;
   string error = 7;
   bool comparable = 8;
+  string template = 20;
+  repeated Primitive data = 21;
 }
 
 message Assessment {
