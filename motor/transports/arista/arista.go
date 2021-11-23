@@ -11,6 +11,9 @@ import (
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
+var _ transports.Transport = (*Transport)(nil)
+var _ transports.TransportIdentifier = (*Transport)(nil)
+
 func New(tc *transports.TransportConfig) (*Transport, error) {
 	port := goeapi.UseDefaultPortNum
 	if len(tc.Port) > 0 {
@@ -87,4 +90,10 @@ func (t *Transport) Runtime() string {
 
 func (t *Transport) GetVersion() (ShowVersion, error) {
 	return GetVersion(t.node)
+}
+
+func (t *Transport) PlatformIdDetectors() []transports.PlatformIdDetector {
+	return []transports.PlatformIdDetector{
+		transports.TransportIdentifierDetector,
+	}
 }

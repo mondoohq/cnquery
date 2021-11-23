@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"errors"
 	"sort"
 
 	"go.mondoo.io/mondoo"
@@ -64,5 +65,8 @@ func (m *lumiMondooAsset) id() (string, error) {
 }
 
 func (m *lumiMondooAsset) GetPlatformIDs() ([]interface{}, error) {
-	return strSliceToInterface(m.Runtime.Motor.Meta.Identifier), nil
+	// The mondoo asset resource is created and populated when the lumi
+	// runtime is initialized. The correct values are thus already injected
+	// into the runtime and we cannot calculate the value
+	return nil, errors.New("unimplemented")
 }

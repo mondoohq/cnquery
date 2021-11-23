@@ -14,6 +14,8 @@ import (
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
+var _ transports.Transport = (*WinrmTransport)(nil)
+
 func VerifyConfig(endpoint *transports.TransportConfig) (*winrm.Endpoint, error) {
 	if endpoint.Backend != transports.TransportBackend_CONNECTION_WINRM {
 		return nil, errors.New("only winrm backend for winrm transport supported")
@@ -175,4 +177,11 @@ func (t *WinrmTransport) Kind() transports.Kind {
 
 func (t *WinrmTransport) Runtime() string {
 	return t.runtime
+}
+
+func (t *WinrmTransport) PlatformIdDetectors() []transports.PlatformIdDetector {
+	return []transports.PlatformIdDetector{
+		transports.HostnameDetector,
+		transports.CloudDetector,
+	}
 }

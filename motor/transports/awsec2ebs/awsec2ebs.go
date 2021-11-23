@@ -18,6 +18,9 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/shared"
 )
 
+var _ transports.Transport = (*Ec2EbsTransport)(nil)
+var _ transports.TransportIdentifier = (*Ec2EbsTransport)(nil)
+
 func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
 	rand.Seed(time.Now().UnixNano())
 
@@ -162,6 +165,12 @@ func (t *Ec2EbsTransport) Kind() transports.Kind {
 
 func (t *Ec2EbsTransport) Runtime() string {
 	return transports.RUNTIME_AWS_EC2_EBS
+}
+
+func (t *Ec2EbsTransport) PlatformIdDetectors() []transports.PlatformIdDetector {
+	return []transports.PlatformIdDetector{
+		transports.TransportIdentifierDetector,
+	}
 }
 
 func RawInstanceInfo(cfg aws.Config) (*imds.InstanceIdentityDocument, error) {

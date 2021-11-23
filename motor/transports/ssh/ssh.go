@@ -19,6 +19,8 @@ import (
 	rawsftp "github.com/pkg/sftp"
 )
 
+var _ transports.Transport = (*SSHTransport)(nil)
+
 func New(tc *transports.TransportConfig) (*SSHTransport, error) {
 	tc = ReadSSHConfig(tc)
 
@@ -222,4 +224,12 @@ func (t *SSHTransport) Kind() transports.Kind {
 
 func (t *SSHTransport) Runtime() string {
 	return t.runtime
+}
+
+func (t *SSHTransport) PlatformIdDetectors() []transports.PlatformIdDetector {
+	return []transports.PlatformIdDetector{
+		transports.HostnameDetector,
+		transports.SSHHostKeyDetector,
+		transports.CloudDetector,
+	}
 }

@@ -2,8 +2,9 @@ package aws
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go-v2/config"
 	"sync"
+
+	"github.com/aws/aws-sdk-go-v2/config"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -14,6 +15,9 @@ import (
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
 )
+
+var _ transports.Transport = (*Transport)(nil)
+var _ transports.TransportIdentifier = (*Transport)(nil)
 
 type TransportOption func(chart *Transport)
 
@@ -146,6 +150,12 @@ func (t *Transport) Kind() transports.Kind {
 
 func (t *Transport) Runtime() string {
 	return transports.RUNTIME_AWS
+}
+
+func (t *Transport) PlatformIdDetectors() []transports.PlatformIdDetector {
+	return []transports.PlatformIdDetector{
+		transports.TransportIdentifierDetector,
+	}
 }
 
 func (t *Transport) DefaultRegion() string {

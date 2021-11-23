@@ -4,6 +4,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/common"
+	"go.mondoo.io/mondoo/motor/motorid"
 	"go.mondoo.io/mondoo/motor/motorid/hostname"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/resolver"
@@ -34,21 +35,23 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 		assetInfo.Connections[0].Credentials = append(assetInfo.Connections[0].Credentials, cred)
 	}
 
-	m, err := resolver.NewMotorConnection(tc, cfn, userIdDetectors...)
+	m, err := resolver.NewMotorConnection(tc, cfn)
 	if err != nil {
 		return nil, err
 	}
 	defer m.Close()
-
-	// store detected platform identifier with asset
-	assetInfo.PlatformIds = m.Meta.Identifier
-	log.Debug().Strs("identifier", assetInfo.PlatformIds).Msg("motor connection")
 
 	// determine platform information
 	p, err := m.Platform()
 	if err == nil {
 		assetInfo.Platform = p
 	}
+
+	platformIds, err := motorid.GatherIDs(m.Transport, p, transports.ToPlatformIdDetectors(userIdDetectors))
+	if err != nil {
+		return nil, err
+	}
+	assetInfo.PlatformIds = platformIds
 
 	// use hostname as asset name
 	if p != nil && assetInfo.Name == "" {

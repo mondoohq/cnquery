@@ -11,6 +11,9 @@ import (
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
+var _ transports.Transport = (*Transport)(nil)
+var _ transports.TransportIdentifier = (*Transport)(nil)
+
 func New(tc *transports.TransportConfig) (*Transport, error) {
 	if tc == nil || tc.Backend != transports.TransportBackend_CONNECTION_IPMI {
 		return nil, errors.New("backend is not supported for ipmi transport")
@@ -88,6 +91,12 @@ func (t *Transport) Kind() transports.Kind {
 
 func (t *Transport) Runtime() string {
 	return ""
+}
+
+func (t *Transport) PlatformIdDetectors() []transports.PlatformIdDetector {
+	return []transports.PlatformIdDetector{
+		transports.TransportIdentifierDetector,
+	}
 }
 
 func (t *Transport) Client() *ipmi.IpmiClient {

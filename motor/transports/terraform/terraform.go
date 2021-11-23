@@ -11,6 +11,9 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
 )
 
+var _ transports.Transport = (*Transport)(nil)
+var _ transports.TransportIdentifier = (*Transport)(nil)
+
 func New(tc *transports.TransportConfig) (*Transport, error) {
 	if tc.Options == nil || tc.Options["path"] == "" {
 		return nil, errors.New("path is required")
@@ -70,6 +73,12 @@ func (t *Transport) Capabilities() transports.Capabilities {
 
 func (t *Transport) Kind() transports.Kind {
 	return transports.Kind_KIND_CODE
+}
+
+func (t *Transport) PlatformIdDetectors() []transports.PlatformIdDetector {
+	return []transports.PlatformIdDetector{
+		transports.TransportIdentifierDetector,
+	}
 }
 
 func (t *Transport) Runtime() string {

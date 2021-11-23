@@ -10,6 +10,9 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
 )
 
+var _ transports.Transport = (*Transport)(nil)
+var _ transports.TransportIdentifier = (*Transport)(nil)
+
 func New(tc *transports.TransportConfig) (*Transport, error) {
 	if tc.Backend != transports.TransportBackend_CONNECTION_AZURE {
 		return nil, errors.New("backend is not supported for azure transport")
@@ -66,6 +69,12 @@ func (t *Transport) Kind() transports.Kind {
 
 func (t *Transport) Runtime() string {
 	return transports.RUNTIME_AZ
+}
+
+func (t *Transport) PlatformIdDetectors() []transports.PlatformIdDetector {
+	return []transports.PlatformIdDetector{
+		transports.TransportIdentifierDetector,
+	}
 }
 
 func GetAuthorizer() (autorest.Authorizer, error) {

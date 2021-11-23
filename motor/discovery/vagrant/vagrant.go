@@ -9,6 +9,7 @@ import (
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/common"
+	"go.mondoo.io/mondoo/motor/motorid"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/local"
@@ -151,8 +152,16 @@ func newVagrantAsset(sshConfig *VagrantVmSSHConfig, rootTransportConfig *transpo
 	}
 	defer m.Close()
 
-	// store detected platform identifier with asset
-	assetInfo.PlatformIds = m.Meta.Identifier
+	p, err := m.Platform()
+	if err != nil {
+		return nil, err
+	}
+
+	platformIds, err := motorid.GatherIDs(m.Transport, p, nil)
+	if err != nil {
+		return nil, err
+	}
+	assetInfo.PlatformIds = platformIds
 	log.Debug().Strs("identifier", assetInfo.PlatformIds).Msg("motor connection")
 
 	return assetInfo, nil

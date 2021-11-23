@@ -12,6 +12,9 @@ import (
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
+var _ transports.Transport = (*Transport)(nil)
+var _ transports.TransportIdentifier = (*Transport)(nil)
+
 func VSphereConnectionURL(hostname string, port string, user string, password string) (*url.URL, error) {
 	host := hostname
 	if len(port) > 0 {
@@ -100,4 +103,10 @@ func (t *Transport) Kind() transports.Kind {
 
 func (t *Transport) Runtime() string {
 	return t.runtime
+}
+
+func (t *Transport) PlatformIdDetectors() []transports.PlatformIdDetector {
+	return []transports.PlatformIdDetector{
+		transports.TransportIdentifierDetector,
+	}
 }

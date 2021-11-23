@@ -60,15 +60,7 @@ type Motor struct {
 	Transport   transports.Transport
 	detector    *platform.Detector
 	watcher     transports.Watcher
-	Meta        ResolverMetadata
 	isRecording bool
-}
-
-// ResolverMetadata contains additional information for the transport that was discovered by the transport resolver
-type ResolverMetadata struct {
-	Name       string
-	Identifier []string
-	Labels     map[string]string
 }
 
 func (m *Motor) Platform() (*platform.Platform, error) {

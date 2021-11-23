@@ -131,6 +131,10 @@ func (t *RecordTransport) Runtime() string {
 	return t.observe.Runtime()
 }
 
+func (t *RecordTransport) PlatformIdDetectors() []transports.PlatformIdDetector {
+	return t.observe.PlatformIdDetectors()
+}
+
 func NewRecordFS(observe afero.Fs, mockfs *mockFS) *recordFS {
 	return &recordFS{
 		observe: observe,

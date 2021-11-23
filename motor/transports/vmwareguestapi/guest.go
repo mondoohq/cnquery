@@ -36,6 +36,8 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/ssh/cat"
 )
 
+var _ transports.Transport = (*Transport)(nil)
+
 func New(tc *transports.TransportConfig) (*Transport, error) {
 	if tc.Backend != transports.TransportBackend_CONNECTION_VSPHERE_VM {
 		return nil, errors.New("backend is not supported for VMware tools transport")
@@ -204,4 +206,10 @@ func (t *Transport) Kind() transports.Kind {
 
 func (t *Transport) Runtime() string {
 	return transports.RUNTIME_VSPHERE_VM
+}
+
+func (t *Transport) PlatformIdDetectors() []transports.PlatformIdDetector {
+	return []transports.PlatformIdDetector{
+		transports.HostnameDetector,
+	}
 }

@@ -15,6 +15,8 @@ type Command struct {
 	ExitStatus int    `toml:"exit_status"`
 }
 
+var _ transports.Transport = (*Transport)(nil)
+
 // New creates a new Transport.
 func New() (*Transport, error) {
 	mt := &Transport{
@@ -138,4 +140,10 @@ func (t *Transport) Kind() transports.Kind {
 
 func (t *Transport) Runtime() string {
 	return t.runtime
+}
+
+func (t *Transport) PlatformIdDetectors() []transports.PlatformIdDetector {
+	return []transports.PlatformIdDetector{
+		transports.HostnameDetector,
+	}
 }

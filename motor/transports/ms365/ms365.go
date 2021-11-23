@@ -26,6 +26,9 @@ const (
 	OptionDataReport   = "mondoo-ms365-datareport"
 )
 
+var _ transports.Transport = (*Transport)(nil)
+var _ transports.TransportIdentifier = (*Transport)(nil)
+
 // New create a new Microsoft 365 transport
 //
 // At this point, this transports only supports application permissions
@@ -173,4 +176,10 @@ func (t *Transport) Kind() transports.Kind {
 
 func (t *Transport) Runtime() string {
 	return transports.RUNTIME_AZ
+}
+
+func (t *Transport) PlatformIdDetectors() []transports.PlatformIdDetector {
+	return []transports.PlatformIdDetector{
+		transports.TransportIdentifierDetector,
+	}
 }

@@ -193,7 +193,9 @@ func (t *Transport) Identifier() (string, error) {
 
 	id, err := InstanceUUID(t.Client())
 	if err != nil {
-		return "", err
+		log.Warn().Err(err).Msg("failed to get vsphere instance uuid")
+		// This error is being ignored
+		return "", nil
 	}
 
 	return VsphereID(id), nil
