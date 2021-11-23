@@ -7,10 +7,8 @@ import (
 
 	"go.mondoo.io/mondoo/motor/vault"
 
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/motorid"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/arista"
 	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
@@ -49,13 +47,9 @@ func warnIncompleteFeature(backend transports.TransportBackend) {
 // NewMotorConnection establishes a motor connection by using the provided transport configuration
 // By default, it uses the id detector mechanisms provided by the transport. User can overwrite that
 // behaviour by optionally passing id detector identifier
-func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *vault.Credential) (*vault.Credential, error), userIdDetectors ...string) (*motor.Motor, error) {
+func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *vault.Credential) (*vault.Credential, error)) (*motor.Motor, error) {
 	log.Debug().Msg("establish motor connection")
 	var m *motor.Motor
-	var name string
-	var identifier []string
-	var labels map[string]string
-	idDetectors := []string{}
 
 	warnIncompleteFeature(tc.Backend)
 
@@ -90,8 +84,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		if err != nil {
 			return nil, err
 		}
-
-		idDetectors = append(idDetectors, "hostname")
 	case transports.TransportBackend_CONNECTION_LOCAL_OS:
 		log.Debug().Msg("connection> load local transport")
 		trans, err := local.New()
@@ -103,9 +95,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		if err != nil {
 			return nil, err
 		}
-
-		idDetectors = append(idDetectors, "hostname")
-		idDetectors = append(idDetectors, "clouddetect")
 	case transports.TransportBackend_CONNECTION_TAR:
 		log.Debug().Msg("connection> load tar transport")
 		trans, err := tar.New(clonedConfig)
@@ -117,10 +106,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		if err != nil {
 			return nil, err
 		}
-
-		if len(trans.Identifier()) > 0 {
-			identifier = append(identifier, trans.Identifier())
-		}
 	case transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY:
 		log.Debug().Msg("connection> load container registry transport")
 		trans, err := container.NewContainerRegistryImage(clonedConfig)
@@ -130,12 +115,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		m, err = motor.New(trans, motor.WithRecoding(clonedConfig.Record))
 		if err != nil {
 			return nil, err
-		}
-
-		name = trans.PlatformName()
-		labels = trans.Labels()
-		if len(trans.Identifier()) > 0 {
-			identifier = append(identifier, trans.Identifier())
 		}
 	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER:
 		log.Debug().Msg("connection> load docker engine container transport")
@@ -147,12 +126,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		if err != nil {
 			return nil, err
 		}
-
-		name = trans.PlatformName()
-		labels = trans.Labels()
-		if len(trans.Identifier()) > 0 {
-			identifier = append(identifier, trans.Identifier())
-		}
 	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE:
 		log.Debug().Msg("connection> load docker engine image transport")
 		trans, err := container.NewDockerEngineImage(clonedConfig)
@@ -162,12 +135,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		m, err = motor.New(trans, motor.WithRecoding(clonedConfig.Record))
 		if err != nil {
 			return nil, err
-		}
-
-		name = trans.PlatformName()
-		labels = trans.Labels()
-		if len(trans.Identifier()) > 0 {
-			identifier = append(identifier, trans.Identifier())
 		}
 	case transports.TransportBackend_CONNECTION_SSH:
 		log.Debug().Msg("connection> load ssh transport")
@@ -180,10 +147,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		if err != nil {
 			return nil, err
 		}
-
-		idDetectors = append(idDetectors, "hostname")
-		idDetectors = append(idDetectors, "ssh-hostkey")
-		idDetectors = append(idDetectors, "clouddetect")
 	case transports.TransportBackend_CONNECTION_WINRM:
 		log.Debug().Msg("connection> load winrm transport")
 		trans, err := winrm.New(clonedConfig)
@@ -195,9 +158,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		if err != nil {
 			return nil, err
 		}
-
-		idDetectors = append(idDetectors, "hostname")
-		idDetectors = append(idDetectors, "clouddetect")
 	case transports.TransportBackend_CONNECTION_VSPHERE:
 		log.Debug().Msg("connection> load vsphere transport")
 		trans, err := vsphere.New(clonedConfig)
@@ -209,11 +169,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		if err != nil {
 			return nil, err
 		}
-
-		id, err := trans.Identifier()
-		if err == nil && len(id) > 0 {
-			identifier = append(identifier, id)
-		}
 	case transports.TransportBackend_CONNECTION_ARISTAEOS:
 		log.Debug().Msg("connection> load arista eos transport")
 		trans, err := arista.New(clonedConfig)
@@ -223,16 +178,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		m, err = motor.New(trans)
 		if err != nil {
 			return nil, err
-		}
-
-		// We need this identifier, therefore we error if we could not retrieve it
-		id, err := trans.Identifier()
-		if err != nil {
-			return nil, errors.Wrap(err, "we could not retrieve platform information from arista device")
-		}
-
-		if len(id) > 0 {
-			identifier = append(identifier, id)
 		}
 	case transports.TransportBackend_CONNECTION_AWS:
 		log.Debug().Msg("connection> load aws transport")
@@ -244,11 +189,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		if err != nil {
 			return nil, err
 		}
-
-		id, err := trans.Identifier()
-		if err == nil && len(id) > 0 {
-			identifier = append(identifier, id)
-		}
 	case transports.TransportBackend_CONNECTION_GCP:
 		log.Debug().Msg("connection> load gcp transport")
 		trans, err := gcp.New(clonedConfig)
@@ -258,11 +198,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		m, err = motor.New(trans)
 		if err != nil {
 			return nil, err
-		}
-
-		id, err := trans.Identifier()
-		if err == nil && len(id) > 0 {
-			identifier = append(identifier, id)
 		}
 	case transports.TransportBackend_CONNECTION_AZURE:
 		log.Debug().Msg("connection> load azure transport")
@@ -274,11 +209,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		if err != nil {
 			return nil, err
 		}
-
-		id, err := trans.Identifier()
-		if err == nil && len(id) > 0 {
-			identifier = append(identifier, id)
-		}
 	case transports.TransportBackend_CONNECTION_MS365:
 		log.Debug().Msg("connection> load microsoft 365 transport")
 		trans, err := ms365.New(clonedConfig)
@@ -288,11 +218,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		m, err = motor.New(trans)
 		if err != nil {
 			return nil, err
-		}
-
-		id, err := trans.Identifier()
-		if err == nil && len(id) > 0 {
-			identifier = append(identifier, id)
 		}
 	case transports.TransportBackend_CONNECTION_IPMI:
 		log.Debug().Msg("connection> load ipmi transport")
@@ -304,11 +229,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		if err != nil {
 			return nil, err
 		}
-
-		id, err := trans.Identifier()
-		if err == nil && len(id) > 0 {
-			identifier = append(identifier, id)
-		}
 	case transports.TransportBackend_CONNECTION_VSPHERE_VM:
 		trans, err := vmwareguestapi.New(clonedConfig)
 		if err != nil {
@@ -318,8 +238,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		if err != nil {
 			return nil, err
 		}
-
-		idDetectors = append(idDetectors, "hostname")
 	case transports.TransportBackend_CONNECTION_FS:
 		trans, err := fs.New(clonedConfig)
 		if err != nil {
@@ -329,8 +247,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		if err != nil {
 			return nil, err
 		}
-
-		idDetectors = append(idDetectors, "hostname")
 	case transports.TransportBackend_CONNECTION_EQUINIX_METAL:
 		trans, err := equinix.New(clonedConfig)
 		if err != nil {
@@ -339,10 +255,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		m, err = motor.New(trans)
 		if err != nil {
 			return nil, err
-		}
-		id, err := trans.Identifier()
-		if err == nil && len(id) > 0 {
-			identifier = append(identifier, id)
 		}
 	case transports.TransportBackend_CONNECTION_K8S:
 		trans, err := k8s_transport.New(clonedConfig)
@@ -353,10 +265,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		if err != nil {
 			return nil, err
 		}
-		id, err := trans.Identifier()
-		if err == nil && len(id) > 0 {
-			identifier = append(identifier, id)
-		}
 	case transports.TransportBackend_CONNECTION_GITHUB:
 		trans, err := github.New(tc)
 		if err != nil {
@@ -365,10 +273,6 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		m, err = motor.New(trans)
 		if err != nil {
 			return nil, err
-		}
-		id, err := trans.Identifier()
-		if err == nil && len(id) > 0 {
-			identifier = append(identifier, id)
 		}
 	case transports.TransportBackend_CONNECTION_GITLAB:
 		trans, err := gitlab.New(tc)
@@ -379,23 +283,16 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		if err != nil {
 			return nil, err
 		}
-
-		id, err := trans.Identifier()
-		if err == nil && len(id) > 0 {
-			identifier = append(identifier, id)
-		}
 	case transports.TransportBackend_CONNECTION_AWS_EC2_EBS:
 		trans, err := awsec2ebs.New(tc)
 		if err != nil {
 			return nil, err
 		}
+		// TODO (jaym) before merge: The ebs transport is being lost. This
+		// is problematic. It will break the platform id detection being added
 		m, err = motor.New(trans.FsTransport)
 		if err != nil {
 			return nil, err
-		}
-		id, err := trans.Identifier()
-		if err == nil && len(id) > 0 {
-			identifier = append(identifier, id)
 		}
 	case transports.TransportBackend_CONNECTION_TERRAFORM:
 		trans, err := terraform.New(tc)
@@ -406,41 +303,8 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		if err != nil {
 			return nil, err
 		}
-
-		id, err := trans.Identifier()
-		if err == nil && len(id) > 0 {
-			identifier = append(identifier, id)
-		}
 	default:
 		return nil, fmt.Errorf("connection> unsupported backend '%s'", clonedConfig.Backend)
-	}
-
-	if len(userIdDetectors) > 0 {
-		log.Info().Strs("id-detector", userIdDetectors).Msg("user provided platform detector ids")
-		idDetectors = userIdDetectors
-	}
-
-	// some platforms are requiring ids only and have no id detector
-	if len(idDetectors) > 0 {
-		p, err := m.Platform()
-		if err != nil {
-			return nil, err
-		}
-
-		ids, err := motorid.GatherIDs(m.Transport, p, idDetectors)
-		if err == nil {
-			identifier = append(identifier, ids...)
-		}
-	}
-
-	if len(identifier) == 0 && tc.PlatformId == "" {
-		return nil, errors.New("could not find a valid platform identifier")
-	}
-
-	m.Meta = motor.ResolverMetadata{
-		Name:       name,
-		Identifier: identifier,
-		Labels:     labels,
 	}
 
 	return m, nil

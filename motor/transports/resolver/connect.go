@@ -9,7 +9,7 @@ import (
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
-func EstablishConnection(tc *transports.TransportConfig, credentialFn func(cred *vault.Credential) (*vault.Credential, error), idDetectors []string, insecure bool, record bool) (*motor.Motor, error) {
+func EstablishConnection(tc *transports.TransportConfig, credentialFn func(cred *vault.Credential) (*vault.Credential, error), insecure bool, record bool) (*motor.Motor, error) {
 	log.Debug().Str("connection", tc.ToUrl()).Bool("insecure", insecure).Msg("establish connection to asset")
 	// overwrite connection specific insecure with global insecure
 	if insecure {
@@ -20,7 +20,7 @@ func EstablishConnection(tc *transports.TransportConfig, credentialFn func(cred 
 		tc.Record = true
 	}
 
-	return NewMotorConnection(tc, credentialFn, idDetectors...)
+	return NewMotorConnection(tc, credentialFn)
 }
 
 func OpenAssetConnection(assetInfo *asset.Asset, credentialFn func(cred *vault.Credential) (*vault.Credential, error), record bool) (*motor.Motor, error) {
@@ -53,7 +53,7 @@ func OpenAssetConnection(assetInfo *asset.Asset, credentialFn func(cred *vault.C
 		tc.PlatformId = assetInfo.PlatformIds[0]
 	}
 
-	return EstablishConnection(tc, credentialFn, nil, tc.Insecure, record)
+	return EstablishConnection(tc, credentialFn, tc.Insecure, record)
 }
 
 func OpenAssetConnections(assetInfo *asset.Asset, credentialFn func(cred *vault.Credential) (*vault.Credential, error), record bool) ([]*motor.Motor, error) {
@@ -88,7 +88,7 @@ func OpenAssetConnections(assetInfo *asset.Asset, credentialFn func(cred *vault.
 			tc.PlatformId = assetInfo.PlatformIds[0]
 		}
 
-		m, err := EstablishConnection(tc, credentialFn, assetInfo.IdDetector, tc.Insecure, record)
+		m, err := EstablishConnection(tc, credentialFn, tc.Insecure, record)
 		if err != nil {
 			return nil, err
 		}

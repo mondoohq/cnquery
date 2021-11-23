@@ -2,8 +2,10 @@ package tar
 
 import (
 	"github.com/rs/zerolog/log"
+
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/common"
+	"go.mondoo.io/mondoo/motor/motorid"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/resolver"
 )
@@ -24,21 +26,24 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 		State:       asset.State_STATE_ONLINE,
 	}
 
-	m, err := resolver.NewMotorConnection(tc, cfn, userIdDetectors...)
+	m, err := resolver.NewMotorConnection(tc, cfn)
 	if err != nil {
 		return nil, err
 	}
 	defer m.Close()
-
-	// store detected platform identifier with asset
-	assetInfo.PlatformIds = m.Meta.Identifier
-	log.Debug().Strs("identifier", assetInfo.PlatformIds).Msg("motor connection")
 
 	// determine platform information
 	p, err := m.Platform()
 	if err == nil {
 		assetInfo.Platform = p
 	}
+
+	platformIds, err := motorid.GatherIDs(m.Transport, p, transports.ToPlatformIdDetectors(userIdDetectors))
+	if err != nil {
+		return nil, err
+	}
+	assetInfo.PlatformIds = platformIds
+	log.Debug().Strs("identifier", assetInfo.PlatformIds).Msg("motor connection")
 
 	// use hostname as name if asset name was not explicitly provided
 	if assetInfo.Name == "" && tc.Options["path"] != "" {

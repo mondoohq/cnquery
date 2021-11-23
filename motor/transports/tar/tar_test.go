@@ -62,7 +62,9 @@ func TestPlatformIdentifier(t *testing.T) {
 		},
 	}, nil)
 	require.NoError(t, err)
-	assert.True(t, len(m.Meta.Identifier) > 0)
+	platformId, err := m.Transport.(transports.TransportIdentifier).Identifier()
+	require.NoError(t, err)
+	assert.True(t, len(platformId) > 0)
 }
 
 func TestTarSymlinkFile(t *testing.T) {

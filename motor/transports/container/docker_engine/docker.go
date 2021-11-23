@@ -10,6 +10,9 @@ import (
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
+var _ transports.Transport = (*Transport)(nil)
+var _ transports.TransportIdentifier = (*Transport)(nil)
+
 func New(container string) (*Transport, error) {
 	// TODO: harmonize docker client establishment with docker engine discovery
 	dockerClient, err := GetDockerClient()
@@ -51,8 +54,8 @@ type Transport struct {
 	runtime string
 }
 
-func (t *Transport) Identifier() string {
-	return t.PlatformIdentifier
+func (t *Transport) Identifier() (string, error) {
+	return t.PlatformIdentifier, nil
 }
 
 func (t *Transport) Labels() map[string]string {
@@ -127,4 +130,10 @@ func (t *Transport) Kind() transports.Kind {
 
 func (t *Transport) Runtime() string {
 	return t.runtime
+}
+
+func (t *Transport) PlatformIdDetectors() []transports.PlatformIdDetector {
+	return []transports.PlatformIdDetector{
+		transports.TransportIdentifierDetector,
+	}
 }

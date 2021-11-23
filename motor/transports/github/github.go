@@ -13,6 +13,9 @@ import (
 	"golang.org/x/oauth2"
 )
 
+var _ transports.Transport = (*Transport)(nil)
+var _ transports.TransportIdentifier = (*Transport)(nil)
+
 func New(tc *transports.TransportConfig) (*Transport, error) {
 	token := tc.Options["token"]
 	if token == "" {
@@ -67,6 +70,12 @@ func (t *Transport) Kind() transports.Kind {
 
 func (t *Transport) Runtime() string {
 	return ""
+}
+
+func (t *Transport) PlatformIdDetectors() []transports.PlatformIdDetector {
+	return []transports.PlatformIdDetector{
+		transports.TransportIdentifierDetector,
+	}
 }
 
 func (t *Transport) Client() *github.Client {

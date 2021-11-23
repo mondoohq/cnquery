@@ -21,6 +21,9 @@ import (
 
 const OPTION_FILE = "file"
 
+var _ transports.Transport = (*Transport)(nil)
+var _ transports.TransportIdentifier = (*Transport)(nil)
+
 func New(endpoint *transports.TransportConfig) (*Transport, error) {
 	return NewWithClose(endpoint, nil)
 }
@@ -137,8 +140,8 @@ type Transport struct {
 	}
 }
 
-func (t *Transport) Identifier() string {
-	return t.PlatformIdentifier
+func (t *Transport) Identifier() (string, error) {
+	return t.PlatformIdentifier, nil
 }
 
 func (t *Transport) Labels() map[string]string {
@@ -232,4 +235,10 @@ func (t *Transport) Kind() transports.Kind {
 
 func (t *Transport) Runtime() string {
 	return t.PlatformRuntime
+}
+
+func (t *Transport) PlatformIdDetectors() []transports.PlatformIdDetector {
+	return []transports.PlatformIdDetector{
+		transports.TransportIdentifierDetector,
+	}
 }

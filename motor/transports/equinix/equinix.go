@@ -8,6 +8,9 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
 )
 
+var _ transports.Transport = (*Transport)(nil)
+var _ transports.TransportIdentifier = (*Transport)(nil)
+
 func New(tc *transports.TransportConfig) (*Transport, error) {
 	if tc.Backend != transports.TransportBackend_CONNECTION_EQUINIX_METAL {
 		return nil, errors.New("backend is not supported for equinix transport")
@@ -85,6 +88,12 @@ func (t *Transport) Kind() transports.Kind {
 
 func (t *Transport) Runtime() string {
 	return transports.RUNTIME_EQUINIX_METAL
+}
+
+func (t *Transport) PlatformIdDetectors() []transports.PlatformIdDetector {
+	return []transports.PlatformIdDetector{
+		transports.TransportIdentifierDetector,
+	}
 }
 
 func (t *Transport) Client() *packngo.Client {

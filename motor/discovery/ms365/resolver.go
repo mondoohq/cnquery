@@ -24,7 +24,7 @@ func (r *Resolver) Resolve(cc *transports.TransportConfig, cfn common.Credential
 	resolved := []*asset.Asset{}
 
 	// Note: we use the resolver instead of the direct ms365_transport.New to resolve credentials properly
-	m, err := resolver.NewMotorConnection(cc, cfn, userIdDetectors...)
+	m, err := resolver.NewMotorConnection(cc, cfn)
 	if err != nil {
 		return nil, err
 	}

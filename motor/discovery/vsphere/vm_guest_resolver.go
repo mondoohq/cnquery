@@ -29,7 +29,7 @@ func (k *VMGuestResolver) Resolve(tc *transports.TransportConfig, cfn common.Cre
 	resolved := []*asset.Asset{}
 
 	// we leverage the vpshere transport to establish a connection
-	m, err := resolver.NewMotorConnection(tc, cfn, userIdDetectors...)
+	m, err := resolver.NewMotorConnection(tc, cfn)
 	if err != nil {
 		return nil, err
 	}

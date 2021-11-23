@@ -8,6 +8,28 @@ import (
 	"github.com/spf13/afero"
 )
 
+type PlatformIdDetector string
+
+const (
+	HostnameDetector   PlatformIdDetector = "hostname"
+	MachineIdDetector  PlatformIdDetector = "machineid"
+	SSHHostKeyDetector PlatformIdDetector = "ssh-hostkey"
+	CloudDetector      PlatformIdDetector = "clouddetect"
+	AWSEc2Detector     PlatformIdDetector = "awsec2"
+	// TransportIdentifierDetector is a detector that gets the plaform id
+	// from the transports Indentifier() method. This requires the
+	// TransportIdentifier inteface be implemented for the transport
+	TransportIdentifierDetector PlatformIdDetector = "transportid"
+)
+
+func ToPlatformIdDetectors(idDetectors []string) []PlatformIdDetector {
+	idDetectorsCopy := make([]PlatformIdDetector, len(idDetectors))
+	for i, v := range idDetectors {
+		idDetectorsCopy[i] = PlatformIdDetector(v)
+	}
+	return idDetectorsCopy
+}
+
 type Transport interface {
 	// RunCommand executes a command on the target system
 	RunCommand(command string) (*Command, error)
@@ -22,6 +44,12 @@ type Transport interface {
 
 	Kind() Kind
 	Runtime() string
+
+	PlatformIdDetectors() []PlatformIdDetector
+}
+
+type TransportIdentifier interface {
+	Identifier() (string, error)
 }
 
 type FileSearch interface {

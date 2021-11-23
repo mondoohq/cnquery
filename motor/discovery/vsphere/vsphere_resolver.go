@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"go.mondoo.io/mondoo/motor/motorid"
 	"go.mondoo.io/mondoo/motor/transports/resolver"
 
 	"go.mondoo.io/mondoo/motor/discovery/common"
@@ -36,7 +37,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 	resolved := []*asset.Asset{}
 
 	// we leverage the vpshere transport to establish a connection
-	m, err := resolver.NewMotorConnection(tc, cfn, userIdDetectors...)
+	m, err := resolver.NewMotorConnection(tc, cfn)
 	if err != nil {
 		return nil, err
 	}
@@ -55,9 +56,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 
 	// add asset for the api itself
 	info := trans.Info()
-
-	resolved = append(resolved, &asset.Asset{
-		PlatformIds: m.Meta.Identifier,
+	assetInfo := &asset.Asset{
 		Name:        fmt.Sprintf("%s (%s)", tc.Host, info.Name),
 		Platform:    pf,
 		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
@@ -65,7 +64,15 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 			"vsphere.vmware.com/name": info.Name,
 			"vsphere.vmware.com/uuid": info.InstanceUuid,
 		},
-	})
+	}
+	platformIds, err := motorid.GatherIDs(m.Transport, pf, nil)
+	if err != nil {
+		return nil, err
+	}
+	assetInfo.PlatformIds = platformIds
+	log.Debug().Strs("identifier", assetInfo.PlatformIds).Msg("motor connection")
+
+	resolved = append(resolved, assetInfo)
 
 	client := trans.Client()
 	discoveryClient := New(client)

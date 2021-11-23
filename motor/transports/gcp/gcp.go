@@ -8,6 +8,9 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
 )
 
+var _ transports.Transport = (*Transport)(nil)
+var _ transports.TransportIdentifier = (*Transport)(nil)
+
 func New(tc *transports.TransportConfig) (*Transport, error) {
 	if tc.Backend != transports.TransportBackend_CONNECTION_GCP {
 		return nil, errors.New("backend is not supported for gcp transport")
@@ -59,4 +62,10 @@ func (t *Transport) Kind() transports.Kind {
 
 func (t *Transport) Runtime() string {
 	return transports.RUNTIME_AWS
+}
+
+func (t *Transport) PlatformIdDetectors() []transports.PlatformIdDetector {
+	return []transports.PlatformIdDetector{
+		transports.TransportIdentifierDetector,
+	}
 }

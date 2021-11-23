@@ -9,6 +9,8 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/shared"
 )
 
+var _ transports.Transport = (*LocalTransport)(nil)
+
 func New() (*LocalTransport, error) {
 
 	// expect unix shell by default
@@ -86,4 +88,11 @@ func (t *LocalTransport) Kind() transports.Kind {
 
 func (t *LocalTransport) Runtime() string {
 	return t.runtime
+}
+
+func (t *LocalTransport) PlatformIdDetectors() []transports.PlatformIdDetector {
+	return []transports.PlatformIdDetector{
+		transports.HostnameDetector,
+		transports.CloudDetector,
+	}
 }

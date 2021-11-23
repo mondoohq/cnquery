@@ -2,18 +2,22 @@ package fs
 
 import (
 	"bytes"
+	"errors"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
+var _ transports.Transport = (*FsTransport)(nil)
+
 func NewWithClose(endpoint *transports.TransportConfig, closeFN func()) (*FsTransport, error) {
 	log.Info().Str("mountdir", endpoint.Host+endpoint.Path).Msg("load fs")
 
 	return &FsTransport{
-		MountedDir: endpoint.Host + endpoint.Path,
-		closeFN:    closeFN,
+		MountedDir:   endpoint.Host + endpoint.Path,
+		closeFN:      closeFN,
+		tcPlatformId: endpoint.PlatformId,
 	}, nil
 }
 
@@ -21,16 +25,18 @@ func New(endpoint *transports.TransportConfig) (*FsTransport, error) {
 	log.Info().Str("mountdir", endpoint.Host+endpoint.Path).Msg("load fs")
 
 	return &FsTransport{
-		MountedDir: endpoint.Host + endpoint.Path,
+		MountedDir:   endpoint.Host + endpoint.Path,
+		tcPlatformId: endpoint.PlatformId,
 	}, nil
 }
 
 type FsTransport struct {
-	MountedDir string
-	fs         afero.Fs
-	kind       transports.Kind
-	runtime    string
-	closeFN    func()
+	MountedDir   string
+	fs           afero.Fs
+	kind         transports.Kind
+	runtime      string
+	tcPlatformId string
+	closeFN      func()
 }
 
 func (t *FsTransport) RunCommand(command string) (*transports.Command, error) {
@@ -84,4 +90,22 @@ func (t *FsTransport) Kind() transports.Kind {
 
 func (t *FsTransport) Runtime() string {
 	return t.runtime
+}
+
+func (t *FsTransport) PlatformIdDetectors() []transports.PlatformIdDetector {
+	if t.tcPlatformId != "" {
+		return []transports.PlatformIdDetector{
+			transports.TransportIdentifierDetector,
+		}
+	}
+	return []transports.PlatformIdDetector{
+		transports.HostnameDetector,
+	}
+}
+
+func (t *FsTransport) Identifier() (string, error) {
+	if t.tcPlatformId == "" {
+		return "", errors.New("not platform id provided")
+	}
+	return t.tcPlatformId, nil
 }
