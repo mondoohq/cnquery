@@ -1,0 +1,26 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "4.9.125-linuxkit"
+
+[commands.1cc64a592409d946f50ac1636853572ef0725d0c820d304fb98a4c3bf84aaf00]
+  command = "curl --noproxy '*' -H Metadata-Flavor:Google http://metadata.google.internal/computeMetadata/v1/instance/zone?alt=json"
+  stdout = "\"projects/458067389847/zones/us-central1-a\""
+  exit_status = 0
+[commands.4746171c37abe5d0554d931f28a4b28f59e1bbea20c4c3e82f344643c6cb0d86]
+  command = "curl --noproxy '*' -H Metadata-Flavor:Google http://metadata.google.internal/computeMetadata/v1/project/project-id?alt=json"
+  stdout = "\"mondoo-dev-262313\""
+  exit_status = 0
+[commands.e094fbb82063cbccce75191cef7520b952380f5ad51ad7cd3ea158b3d67304e3]
+  command = "curl --noproxy '*' -H Metadata-Flavor:Google http://metadata.google.internal/computeMetadata/v1/instance/id?alt=json"
+  stdout = "6001244637815193808"
+  exit_status = 0
+
+[files."/sys/class/dmi/id/product_name"]
+  path = "/sys/class/dmi/id/product_name"
+  enoent = false
+  content = "Google Compute Engine"
