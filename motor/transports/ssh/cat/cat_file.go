@@ -11,12 +11,12 @@ import (
 	"github.com/kballard/go-shellquote"
 )
 
-func NewFile(catfs *CatFs, path string, useBase64encoding bool) *File {
+func NewFile(catfs *Fs, path string, useBase64encoding bool) *File {
 	return &File{catfs: catfs, path: path, useBase64encoding: useBase64encoding}
 }
 
 type File struct {
-	catfs             *CatFs
+	catfs             *Fs
 	buf               *bytes.Buffer
 	path              string
 	useBase64encoding bool

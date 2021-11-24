@@ -5,18 +5,15 @@ import (
 	"os"
 
 	"github.com/cockroachdb/errors"
-
+	rawsftp "github.com/pkg/sftp"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/cmd"
 	"go.mondoo.io/mondoo/motor/transports/ssh/cat"
 	"go.mondoo.io/mondoo/motor/transports/ssh/scp"
 	"go.mondoo.io/mondoo/motor/transports/ssh/sftp"
 	"golang.org/x/crypto/ssh"
-
-	rawsftp "github.com/pkg/sftp"
 )
 
 var _ transports.Transport = (*SSHTransport)(nil)
@@ -152,7 +149,7 @@ func (t *SSHTransport) FS() afero.Fs {
 	// we always try to use sftp first (if scp is not user-enforced)
 	// and we also fallback to scp if sftp does not work
 	if !t.UseScpFilesystem {
-		fs, err := sftp.New(t.SSHClient)
+		fs, err := sftp.New(t, t.SSHClient)
 		if err != nil {
 			log.Info().Msg("use scp instead of sftp")
 			// enable fallback

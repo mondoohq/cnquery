@@ -3,6 +3,7 @@ package scp
 import (
 	"errors"
 	"os"
+	"strings"
 	"time"
 
 	scp_client "github.com/hnakamur/go-scp"
@@ -17,6 +18,7 @@ func NewFs(commandRunner cat.CommandRunner, client *ssh.Client) *Fs {
 		sshClient:     client,
 		scpClient:     scp_client.NewSCP(client),
 		commandRunner: commandRunner,
+		catFs:         cat.New(commandRunner),
 	}
 }
 
@@ -24,6 +26,7 @@ type Fs struct {
 	sshClient     *ssh.Client
 	scpClient     *scp_client.SCP
 	commandRunner cat.CommandRunner
+	catFs         *cat.Fs
 }
 
 func (s Fs) Name() string { return "scpfs" }
@@ -41,6 +44,11 @@ func (s Fs) MkdirAll(path string, perm os.FileMode) error {
 }
 
 func (s Fs) Open(path string) (afero.File, error) {
+	// NOTE: procfs cannot be read via scp, so we fall-back to catfs all paths there
+	if strings.HasPrefix(path, "/proc") {
+		return s.catFs.Open(path)
+	}
+
 	return FileOpen(s.scpClient, path)
 }
 
