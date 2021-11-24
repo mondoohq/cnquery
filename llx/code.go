@@ -187,6 +187,36 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, ref int32, lookup func(
 	}
 
 	if assertion, ok := bundle.Assertions[checksum]; ok {
+		if assertion.DecodeBlock {
+			sum := assertion.Checksums[0]
+			raw, ok := lookup(sum)
+			if !ok {
+				res.Error = "cannot find required data block for assessment"
+				return &res
+			}
+
+			x := raw.Result().Data
+			if x == nil {
+				res.Error = "required data block for assessment is nil"
+				return &res
+			}
+
+			dataMap := map[string]*Primitive(x.Map)
+
+			cnt := len(assertion.Checksums) - 1
+			res.Data = make([]*Primitive, cnt)
+			for i := 0; i < cnt; i++ {
+				sum = assertion.Checksums[i+1]
+				res.Data[i], ok = dataMap[sum]
+				if !ok {
+					res.Error = "required data field is not in block for assessment"
+				}
+			}
+
+			res.Template = assertion.Template
+			return &res
+		}
+
 		data := make([]*Primitive, len(assertion.Checksums))
 		for j := range assertion.Checksums {
 			sum := assertion.Checksums[j]

@@ -12,7 +12,7 @@ import (
 // resourceFunctions are all the shared handlers for resource calls
 var resourceFunctions map[string]chunkHandler
 
-func resourceWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func _resourceWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, invert bool) (*RawData, int32, error) {
 	// where(resource.list, function)
 	itemsRef := chunk.Function.Args[0]
 	items, rref, err := c.resolveValue(itemsRef, ref)
@@ -50,7 +50,7 @@ func resourceWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 				}
 
 				isTruthy, _ := res.Data.IsTruthy()
-				if isTruthy {
+				if isTruthy == !invert {
 					filteredList[i] = list[i]
 				} else {
 					filteredList[i] = nil
@@ -107,6 +107,14 @@ func resourceWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	}
 
 	return nil, 0, nil
+}
+
+func resourceWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return _resourceWhere(c, bind, chunk, ref, false)
+}
+
+func resourceWhereNot(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return _resourceWhere(c, bind, chunk, ref, true)
 }
 
 func resourceLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {

@@ -310,43 +310,18 @@ func compileArrayContainsNone(c *compiler, typ types.Type, ref int32, id string,
 }
 
 func compileArrayAll(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
-	_, err := compileWhere(c, typ, ref, "where", call)
+	_, err := compileWhere(c, typ, ref, "$whereNot", call)
 	if err != nil {
 		return types.Nil, err
 	}
 	listRef := c.Result.GetCode().ChunkIndex()
 
-	// .length ==> allLen
 	c.Result.Code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
-		Id:   "length",
-		Function: &llx.Function{
-			Type:    string(types.Int),
-			Binding: ref,
-		},
-	})
-	allLengthRef := c.Result.Code.ChunkIndex()
-
-	// .length ==> after where clause
-	c.Result.Code.AddChunk(&llx.Chunk{
-		Call: llx.Chunk_FUNCTION,
-		Id:   "length",
-		Function: &llx.Function{
-			Type:    string(types.Int),
-			Binding: listRef,
-		},
-	})
-
-	// == allLen
-	c.Result.Code.AddChunk(&llx.Chunk{
-		Call: llx.Chunk_FUNCTION,
-		Id:   string("==" + types.Int),
+		Id:   "$all",
 		Function: &llx.Function{
 			Type:    string(types.Bool),
-			Binding: c.Result.Code.ChunkIndex(),
-			Args: []*llx.Primitive{
-				llx.RefPrimitive(allLengthRef),
-			},
+			Binding: listRef,
 		},
 	})
 
@@ -363,10 +338,9 @@ func compileArrayAny(c *compiler, typ types.Type, ref int32, id string, call *pa
 	}
 	listRef := c.Result.GetCode().ChunkIndex()
 
-	// .notEmpty ==> after where clause
 	c.Result.Code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
-		Id:   "notEmpty",
+		Id:   "$any",
 		Function: &llx.Function{
 			Type:    string(types.Bool),
 			Binding: listRef,
@@ -384,27 +358,14 @@ func compileArrayOne(c *compiler, typ types.Type, ref int32, id string, call *pa
 	if err != nil {
 		return types.Nil, err
 	}
+	listRef := c.Result.GetCode().ChunkIndex()
 
-	// .length
 	c.Result.Code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
-		Id:   "length",
-		Function: &llx.Function{
-			Type:    string(types.Int),
-			Binding: c.Result.GetCode().ChunkIndex(),
-		},
-	})
-
-	// == 1
-	c.Result.Code.AddChunk(&llx.Chunk{
-		Call: llx.Chunk_FUNCTION,
-		Id:   string("==" + types.Int),
+		Id:   "$one",
 		Function: &llx.Function{
 			Type:    string(types.Bool),
-			Binding: c.Result.Code.ChunkIndex(),
-			Args: []*llx.Primitive{
-				llx.IntPrimitive(1),
-			},
+			Binding: listRef,
 		},
 	})
 
@@ -419,27 +380,14 @@ func compileArrayNone(c *compiler, typ types.Type, ref int32, id string, call *p
 	if err != nil {
 		return types.Nil, err
 	}
+	listRef := c.Result.GetCode().ChunkIndex()
 
-	// .length
 	c.Result.Code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
-		Id:   "length",
-		Function: &llx.Function{
-			Type:    string(types.Int),
-			Binding: c.Result.GetCode().ChunkIndex(),
-		},
-	})
-
-	// == 0
-	c.Result.Code.AddChunk(&llx.Chunk{
-		Call: llx.Chunk_FUNCTION,
-		Id:   string("==" + types.Int),
+		Id:   "$none",
 		Function: &llx.Function{
 			Type:    string(types.Bool),
-			Binding: c.Result.Code.ChunkIndex(),
-			Args: []*llx.Primitive{
-				llx.IntPrimitive(0),
-			},
+			Binding: listRef,
 		},
 	})
 

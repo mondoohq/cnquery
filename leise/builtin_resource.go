@@ -215,52 +215,103 @@ func compileResourceContains(c *compiler, typ types.Type, ref int32, id string, 
 	return types.Bool, nil
 }
 
+func compileListAssertionMsg(c *compiler, typ types.Type, failedRef int32, assertionRef int32) error {
+	// assertions
+	msg := extractMsgTag(c.comment)
+	if msg == "" {
+		return nil
+	}
+
+	blockCompiler := c.newBlockCompiler(&llx.Code{
+		Id:         "binding",
+		Parameters: 1,
+		Checksums: map[int32]string{
+			// we must provide the first chunk, which is a reference to the caller
+			// and which will always be number 1
+			1: c.Result.Code.Checksums[c.Result.Code.ChunkIndex()-1],
+		},
+		Code: []*llx.Chunk{
+			{
+				Call:      llx.Chunk_PRIMITIVE,
+				Primitive: &llx.Primitive{Type: string(typ)},
+			},
+		},
+	}, &binding{Type: types.Type(typ), Ref: 1})
+
+	assertionMsg, err := compileAssertionMsg(msg, &blockCompiler)
+	if err != nil {
+		return err
+	}
+	if assertionMsg != nil {
+		if c.Result.Code.Assertions == nil {
+			c.Result.Code.Assertions = map[int32]*llx.AssertionMessage{}
+		}
+		c.Result.Code.Assertions[assertionRef+2] = assertionMsg
+
+		code := blockCompiler.Result.Code
+		code.UpdateID()
+		c.Result.Code.Functions = append(c.Result.Code.Functions, code)
+		//return c.Result.Code.FunctionsIndex(), blockCompiler.standalone, nil
+
+		fref := c.Result.Code.FunctionsIndex()
+		c.Result.Code.AddChunk(&llx.Chunk{
+			Call: llx.Chunk_FUNCTION,
+			Id:   "${}",
+			Function: &llx.Function{
+				Type:    string(types.Block),
+				Binding: failedRef,
+				Args:    []*llx.Primitive{llx.FunctionPrimitive(fref)},
+			},
+		})
+
+		// since it operators on top of a block, we have to add its
+		// checksum as the first entry in the list. Once the block is received,
+		// all of its child entries are processed for the final result
+		blockRef := c.Result.Code.ChunkIndex()
+		checksum := c.Result.Code.Checksums[blockRef]
+		assertionMsg.Checksums = make([]string, len(assertionMsg.Datapoint)+1)
+		assertionMsg.Checksums[0] = checksum
+		c.Result.Code.Datapoints = append(c.Result.Code.Datapoints, blockRef)
+
+		blocksums := blockCompiler.Result.Code.Checksums
+		for i := range assertionMsg.Datapoint {
+			sum, ok := blocksums[assertionMsg.Datapoint[i]]
+			if !ok {
+				return errors.New("cannot find checksum for datapoint in @msg tag")
+			}
+
+			assertionMsg.Checksums[i+1] = sum
+		}
+		assertionMsg.Datapoint = nil
+		assertionMsg.DecodeBlock = true
+	}
+
+	return nil
+}
+
 func compileResourceAll(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
-	// resource.where
-	_, err := compileResourceWhere(c, typ, ref, "where", call)
+	// resource.$whereNot
+	_, err := compileResourceWhere(c, typ, ref, "$whereNot", call)
 	if err != nil {
 		return types.Nil, err
 	}
-	resourceRef := c.Result.Code.ChunkIndex()
 
-	// .length ==> allLen
-	c.Result.Code.AddChunk(&llx.Chunk{
-		Call: llx.Chunk_FUNCTION,
-		Id:   "length",
-		Function: &llx.Function{
-			Type:    string(types.Int),
-			Binding: resourceRef - 1, // since the resource calls list right before processing the block
-		},
-	})
-	allLengthRef := c.Result.Code.ChunkIndex()
-
-	// .list
-	t, err := compileResourceDefault(c, typ, resourceRef, "list", nil)
+	listType, err := compileResourceDefault(c, typ, c.Result.Code.ChunkIndex(), "list", nil)
 	if err != nil {
-		return t, err
+		return listType, err
 	}
 	listRef := c.Result.Code.ChunkIndex()
 
-	// .length
-	c.Result.Code.AddChunk(&llx.Chunk{
-		Call: llx.Chunk_FUNCTION,
-		Id:   "length",
-		Function: &llx.Function{
-			Type:    string(types.Int),
-			Binding: listRef,
-		},
-	})
+	if err := compileListAssertionMsg(c, listType, listRef, listRef); err != nil {
+		return types.Nil, err
+	}
 
-	// == allLen
 	c.Result.Code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
-		Id:   string("==" + types.Int),
+		Id:   "$all",
 		Function: &llx.Function{
 			Type:    string(types.Bool),
-			Binding: c.Result.Code.ChunkIndex(),
-			Args: []*llx.Primitive{
-				llx.RefPrimitive(allLengthRef),
-			},
+			Binding: listRef,
 		},
 	})
 
@@ -276,82 +327,95 @@ func compileResourceAny(c *compiler, typ types.Type, ref int32, id string, call 
 	if err != nil {
 		return types.Nil, err
 	}
-	resourceRef := c.Result.Code.ChunkIndex()
+	whereRef := c.Result.Code.ChunkIndex()
 
-	// .list
-	t, err := compileResourceDefault(c, typ, resourceRef, "list", nil)
+	listType, err := compileResourceDefault(c, typ, whereRef, "list", nil)
 	if err != nil {
-		return t, err
+		return listType, err
 	}
 	listRef := c.Result.Code.ChunkIndex()
 
-	// .length
+	if err := compileListAssertionMsg(c, listType, whereRef-1, listRef); err != nil {
+		return types.Nil, err
+	}
+
 	c.Result.Code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
-		Id:   "length",
+		Id:   "$any",
 		Function: &llx.Function{
-			Type:    string(types.Int),
+			Type:    string(types.Bool),
 			Binding: listRef,
 		},
 	})
 
-	// == allLen
-	c.Result.Code.AddChunk(&llx.Chunk{
-		Call: llx.Chunk_FUNCTION,
-		Id:   string("!=" + types.Int),
-		Function: &llx.Function{
-			Type:    string(types.Bool),
-			Binding: c.Result.Code.ChunkIndex(),
-			Args: []*llx.Primitive{
-				llx.IntPrimitive(0),
-			},
-		},
-	})
-
 	checksum := c.Result.Code.Checksums[c.Result.Code.ChunkIndex()]
-	c.Result.Labels.Labels[checksum] = typ.ResourceName() + ".all()"
+	c.Result.Labels.Labels[checksum] = typ.ResourceName() + ".any()"
 
 	return types.Bool, nil
 }
 
 func compileResourceOne(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
-	res, err := compileResourceContains(c, typ, ref, id, call)
+	// resource.where
+	_, err := compileResourceWhere(c, typ, ref, "where", call)
 	if err != nil {
-		return res, err
+		return types.Nil, err
 	}
 
-	// all we need to do is change the last operation on contains, as it tests for
-	// where( .. ).list.length > 0
-	// and we want
-	// where( .. ).list.length == 1
-	lastOp := c.Result.Code.LastChunk()
-	lastOp.Id = string("==" + types.Int)
-	lastOp.Function.Args[0] = llx.IntPrimitive(1)
+	listType, err := compileResourceDefault(c, typ, c.Result.Code.ChunkIndex(), "list", nil)
+	if err != nil {
+		return listType, err
+	}
+	listRef := c.Result.Code.ChunkIndex()
+
+	if err := compileListAssertionMsg(c, listType, listRef, listRef); err != nil {
+		return types.Nil, err
+	}
+
+	c.Result.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "$one",
+		Function: &llx.Function{
+			Type:    string(types.Bool),
+			Binding: listRef,
+		},
+	})
 
 	checksum := c.Result.Code.Checksums[c.Result.Code.ChunkIndex()]
 	c.Result.Labels.Labels[checksum] = typ.ResourceName() + ".one()"
 
-	return res, err
+	return types.Bool, nil
 }
 
 func compileResourceNone(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
-	res, err := compileResourceContains(c, typ, ref, id, call)
+	// resource.where
+	_, err := compileResourceWhere(c, typ, ref, "where", call)
 	if err != nil {
-		return res, err
+		return types.Nil, err
 	}
 
-	// all we need to do is change the last operation on contains, as it tests for
-	// where( .. ).list.length > 0
-	// and we want
-	// where( .. ).list.length == 0
-	lastOp := c.Result.Code.LastChunk()
-	lastOp.Id = string("==" + types.Int)
-	lastOp.Function.Args[0] = llx.IntPrimitive(0)
+	listType, err := compileResourceDefault(c, typ, c.Result.Code.ChunkIndex(), "list", nil)
+	if err != nil {
+		return listType, err
+	}
+	listRef := c.Result.Code.ChunkIndex()
+
+	if err := compileListAssertionMsg(c, listType, listRef, listRef); err != nil {
+		return types.Nil, err
+	}
+
+	c.Result.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "$none",
+		Function: &llx.Function{
+			Type:    string(types.Bool),
+			Binding: listRef,
+		},
+	})
 
 	checksum := c.Result.Code.Checksums[c.Result.Code.ChunkIndex()]
 	c.Result.Labels.Labels[checksum] = typ.ResourceName() + ".none()"
 
-	return res, err
+	return types.Bool, nil
 }
 
 func compileResourceLength(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {

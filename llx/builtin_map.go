@@ -311,7 +311,7 @@ func dictValues(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 	return ArrayData(res, types.Dict), 0, nil
 }
 
-func dictWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func _dictWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, inverted bool) (*RawData, int32, error) {
 	// where(array, function)
 	itemsRef := chunk.Function.Args[0]
 	items, rref, err := c.resolveValue(itemsRef, ref)
@@ -356,7 +356,7 @@ func dictWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDa
 				}
 
 				isTruthy, _ := res.Data.IsTruthy()
-				if isTruthy {
+				if isTruthy == !inverted {
 					filteredList[i] = list[i]
 				} else {
 					filteredList[i] = nil
@@ -392,6 +392,78 @@ func dictWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDa
 	}
 
 	return nil, 0, nil
+}
+
+func dictWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return _dictWhere(c, bind, chunk, ref, false)
+}
+
+func dictWhereNot(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return _dictWhere(c, bind, chunk, ref, true)
+}
+
+func dictAll(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Bool}, 0, nil
+	}
+
+	filteredList, ok := bind.Value.([]interface{})
+	if !ok {
+		return nil, 0, errors.New("failed to call dict assertion on a non-list value")
+	}
+
+	if len(filteredList) != 0 {
+		return BoolFalse, 0, nil
+	}
+	return BoolTrue, 0, nil
+}
+
+func dictNone(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Bool}, 0, nil
+	}
+
+	filteredList, ok := bind.Value.([]interface{})
+	if !ok {
+		return nil, 0, errors.New("failed to call dict assertion on a non-list value")
+	}
+
+	if len(filteredList) != 0 {
+		return BoolFalse, 0, nil
+	}
+	return BoolTrue, 0, nil
+}
+
+func dictAny(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Bool}, 0, nil
+	}
+
+	filteredList, ok := bind.Value.([]interface{})
+	if !ok {
+		return nil, 0, errors.New("failed to call dict assertion on a non-list value")
+	}
+
+	if len(filteredList) == 0 {
+		return BoolFalse, 0, nil
+	}
+	return BoolTrue, 0, nil
+}
+
+func dictOne(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Bool}, 0, nil
+	}
+
+	filteredList, ok := bind.Value.([]interface{})
+	if !ok {
+		return nil, 0, errors.New("failed to call dict assertion on a non-list value")
+	}
+
+	if len(filteredList) != 1 {
+		return BoolFalse, 0, nil
+	}
+	return BoolTrue, 0, nil
 }
 
 func anyContainsString(an interface{}, s string) bool {
