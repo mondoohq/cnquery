@@ -77,7 +77,7 @@ type AzureWebAppStackRuntime struct {
 	MinorVersion string `json:"minorVersion,omitempty"`
 	IsDeprecated bool   `json:"isDeprecated,omitempty"`
 	IsHidden     bool   `json:"isHidden,omitempty"`
-	IsDefault    bool   `json:"isHidden,omitempty"`
+	IsDefault    bool   `json:"isDefault,omitempty"`
 }
 
 var majorVersionRegex = regexp.MustCompile(`^(\d+)`)

@@ -29,12 +29,14 @@ var spfLexer = lexer.MustSimple([]lexer.Rule{
 	{`Number`, `\d+`, nil},
 })
 
+//nolint: govet
 type SpfRecord struct {
 	Version    string      `"v=" @Version`
 	Directives []Directive `@@*`
 	Modifiers  []Modifier  `@@*`
 }
 
+//nolint: govet
 type Directive struct {
 	Qualifier string `(@Qualifier)?`
 	Mechanism string `@Mechanism`
@@ -42,6 +44,7 @@ type Directive struct {
 	CIDR      string `("/" @String)?`
 }
 
+//nolint: govet
 type Modifier struct {
 	Modifier string `@Modifier "="`
 	Value    string `@String`

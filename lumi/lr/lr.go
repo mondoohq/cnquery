@@ -29,11 +29,13 @@ func (b *Bool) Capture(values []string) error {
 }
 
 // LR are lumi resources parsed into an AST
+// nolint: govet
 type LR struct {
 	Resources []*Resource `{ @@ }`
 }
 
 // Resource in LR
+// nolint: govet
 type Resource struct {
 	Comments  []string       `{ @Comment }`
 	IsPrivate bool           `@"private"?`
@@ -42,48 +44,57 @@ type Resource struct {
 	Body      *ResourceDef   `@@ '}' ]`
 }
 
+// nolint: govet
 type Type struct {
 	MapType    *MapType    `( @@ |`
 	ListType   *ListType   ` @@ |`
 	SimpleType *SimpleType ` @@ )`
 }
 
+// nolint: govet
 type SimplListType struct {
 	Type SimpleType `'[' ']' @@`
 	Args *FieldArgs `[ '(' @@ ')' ]`
 }
 
+// nolint: govet
 type ListType struct {
 	Type Type `'[' ']' @@`
 }
 
+// nolint: govet
 type MapType struct {
 	Key   SimpleType `'map' '[' @@ `
 	Value Type       `']' @@`
 }
 
+// nolint: govet
 type SimpleType struct {
 	Type string `@Ident { @'.' @Ident }`
 }
 
 // ResourceDef carrying the definition of the resource
+// nolint: govet
 type ResourceDef struct {
 	Inits  []*Init  `{ ( @@ `
 	Fields []*Field `| @@ ) }`
 }
 
 // Init calls
+// nolint: govet
 type Init struct {
 	Args []TypedArg `'init' '(' @@ { ',' @@ } ')'`
 }
 
 // TypedArg is an argument with a type
+// nolint: govet
 type TypedArg struct {
 	ID   string `@Ident`
 	Type Type   ` @@`
 }
 
 // Field definition of a resource
+// nolint: govet
 type Field struct {
 	Comments []string   `{ @Comment }`
 	ID       string     `@Ident?`
@@ -92,6 +103,7 @@ type Field struct {
 }
 
 // Args list of arguments
+// nolint: govet
 type FieldArgs struct {
 	List []SimpleType `[ @@ { ',' @@ } ]`
 }
