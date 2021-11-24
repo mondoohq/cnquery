@@ -40,7 +40,7 @@ import (
 type Resolver interface {
 	Name() string
 	Resolve(t *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn,
-		userIdDetectors ...string) ([]*asset.Asset, error)
+		userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error)
 	AvailableDiscoveryTargets() []string
 }
 
@@ -104,8 +104,10 @@ func ResolveAsset(root *asset.Asset, cfn common.CredentialFn, sfn common.QuerySe
 			}
 		}
 
+		userIdDetectors := transports.ToPlatformIdDetectors(root.IdDetector)
+
 		// resolve assets
-		resolvedAssets, err := r.Resolve(tc, cfn, sfn, root.IdDetector...)
+		resolvedAssets, err := r.Resolve(tc, cfn, sfn, userIdDetectors...)
 		if err != nil {
 			return nil, err
 		}
