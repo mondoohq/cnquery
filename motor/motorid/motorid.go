@@ -91,8 +91,8 @@ func GatherID(t transports.Transport, p *platform.Platform, idDetector transport
 	case transports.CloudDetector:
 		identifier := clouddetect.Detect(t, p)
 		return identifier, nil
-	case transports.TransportIdentifierDetector:
-		identifiable, ok := transport.(transports.TransportIdentifier)
+	case transports.TransportPlatformIdentifierDetector:
+		identifiable, ok := transport.(transports.TransportPlatformIdentifier)
 		if !ok {
 			return "", errors.New("the transportid detector is not supported for transport")
 		}

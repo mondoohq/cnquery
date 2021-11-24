@@ -95,7 +95,7 @@ func (t *FsTransport) Runtime() string {
 func (t *FsTransport) PlatformIdDetectors() []transports.PlatformIdDetector {
 	if t.tcPlatformId != "" {
 		return []transports.PlatformIdDetector{
-			transports.TransportIdentifierDetector,
+			transports.TransportPlatformIdentifierDetector,
 		}
 	}
 	return []transports.PlatformIdDetector{

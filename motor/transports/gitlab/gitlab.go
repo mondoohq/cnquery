@@ -11,7 +11,7 @@ import (
 )
 
 var _ transports.Transport = (*Transport)(nil)
-var _ transports.TransportIdentifier = (*Transport)(nil)
+var _ transports.TransportPlatformIdentifier = (*Transport)(nil)
 
 func New(tc *transports.TransportConfig) (*Transport, error) {
 	token := tc.Options["token"]
@@ -75,7 +75,7 @@ func (t *Transport) Runtime() string {
 
 func (t *Transport) PlatformIdDetectors() []transports.PlatformIdDetector {
 	return []transports.PlatformIdDetector{
-		transports.TransportIdentifierDetector,
+		transports.TransportPlatformIdentifierDetector,
 	}
 }
 

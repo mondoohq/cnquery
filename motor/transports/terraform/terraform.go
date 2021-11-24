@@ -12,7 +12,7 @@ import (
 )
 
 var _ transports.Transport = (*Transport)(nil)
-var _ transports.TransportIdentifier = (*Transport)(nil)
+var _ transports.TransportPlatformIdentifier = (*Transport)(nil)
 
 func New(tc *transports.TransportConfig) (*Transport, error) {
 	if tc.Options == nil || tc.Options["path"] == "" {
@@ -77,7 +77,7 @@ func (t *Transport) Kind() transports.Kind {
 
 func (t *Transport) PlatformIdDetectors() []transports.PlatformIdDetector {
 	return []transports.PlatformIdDetector{
-		transports.TransportIdentifierDetector,
+		transports.TransportPlatformIdentifierDetector,
 	}
 }
 
