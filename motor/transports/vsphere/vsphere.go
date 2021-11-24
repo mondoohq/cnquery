@@ -13,7 +13,7 @@ import (
 )
 
 var _ transports.Transport = (*Transport)(nil)
-var _ transports.TransportIdentifier = (*Transport)(nil)
+var _ transports.TransportPlatformIdentifier = (*Transport)(nil)
 
 func VSphereConnectionURL(hostname string, port string, user string, password string) (*url.URL, error) {
 	host := hostname
@@ -107,6 +107,6 @@ func (t *Transport) Runtime() string {
 
 func (t *Transport) PlatformIdDetectors() []transports.PlatformIdDetector {
 	return []transports.PlatformIdDetector{
-		transports.TransportIdentifierDetector,
+		transports.TransportPlatformIdentifierDetector,
 	}
 }

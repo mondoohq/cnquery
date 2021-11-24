@@ -22,7 +22,7 @@ import (
 const OPTION_FILE = "file"
 
 var _ transports.Transport = (*Transport)(nil)
-var _ transports.TransportIdentifier = (*Transport)(nil)
+var _ transports.TransportPlatformIdentifier = (*Transport)(nil)
 
 func New(endpoint *transports.TransportConfig) (*Transport, error) {
 	return NewWithClose(endpoint, nil)
@@ -239,6 +239,6 @@ func (t *Transport) Runtime() string {
 
 func (t *Transport) PlatformIdDetectors() []transports.PlatformIdDetector {
 	return []transports.PlatformIdDetector{
-		transports.TransportIdentifierDetector,
+		transports.TransportPlatformIdentifierDetector,
 	}
 }

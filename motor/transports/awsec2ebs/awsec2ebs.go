@@ -19,7 +19,7 @@ import (
 )
 
 var _ transports.Transport = (*Ec2EbsTransport)(nil)
-var _ transports.TransportIdentifier = (*Ec2EbsTransport)(nil)
+var _ transports.TransportPlatformIdentifier = (*Ec2EbsTransport)(nil)
 
 func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
 	rand.Seed(time.Now().UnixNano())
@@ -169,7 +169,7 @@ func (t *Ec2EbsTransport) Runtime() string {
 
 func (t *Ec2EbsTransport) PlatformIdDetectors() []transports.PlatformIdDetector {
 	return []transports.PlatformIdDetector{
-		transports.TransportIdentifierDetector,
+		transports.TransportPlatformIdentifierDetector,
 	}
 }
 

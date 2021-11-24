@@ -14,12 +14,12 @@ const (
 	HostnameDetector   PlatformIdDetector = "hostname"
 	MachineIdDetector  PlatformIdDetector = "machineid"
 	SSHHostKeyDetector PlatformIdDetector = "ssh-hostkey"
-	CloudDetector      PlatformIdDetector = "clouddetect"
+	CloudDetector      PlatformIdDetector = "cloud-detect"
 	AWSEc2Detector     PlatformIdDetector = "awsec2"
-	// TransportIdentifierDetector is a detector that gets the plaform id
+	// TransportPlatformIdentifierDetector is a detector that gets the plaform id
 	// from the transports Indentifier() method. This requires the
 	// TransportIdentifier inteface be implemented for the transport
-	TransportIdentifierDetector PlatformIdDetector = "transportid"
+	TransportPlatformIdentifierDetector PlatformIdDetector = "transport-platform-id"
 )
 
 func ToPlatformIdDetectors(idDetectors []string) []PlatformIdDetector {
@@ -48,7 +48,7 @@ type Transport interface {
 	PlatformIdDetectors() []PlatformIdDetector
 }
 
-type TransportIdentifier interface {
+type TransportPlatformIdentifier interface {
 	Identifier() (string, error)
 }
 
