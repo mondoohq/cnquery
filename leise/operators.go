@@ -122,7 +122,7 @@ func extractMql(s string) (string, error) {
 				return s[0:i], nil
 			}
 			last := openBrackets[len(openBrackets)-1]
-			if last != '}' {
+			if last != '{' {
 				return "", errors.New("unexpected closing bracket '" + string(s[i]) + "'")
 			}
 			openBrackets = openBrackets[0 : len(openBrackets)-1]
@@ -131,7 +131,7 @@ func extractMql(s string) (string, error) {
 				return "", errors.New("unexpected closing bracket '" + string(s[i]) + "'")
 			}
 			last := openBrackets[len(openBrackets)-1]
-			if (s[i] == '(' && last != ')') || (s[i] == '[' && last != ']') {
+			if (s[i] == ')' && last != '(') || (s[i] == ']' && last != '[') {
 				return "", errors.New("unexpected closing bracket '" + string(s[i]) + "'")
 			}
 			openBrackets = openBrackets[0 : len(openBrackets)-1]
@@ -172,8 +172,7 @@ func compileAssertionMsg(msg string, c *compiler) (*llx.AssertionMessage, error)
 		if msg[i] != '}' {
 			return nil, errors.New("cannot extract code in @msg (expected '}' but got '" + string(msg[i]) + "')")
 		}
-		i++
-		textStart = i
+		textStart = i + 1 // one past the closing '}'
 
 		codes = append(codes, code)
 	}
@@ -186,6 +185,33 @@ func compileAssertionMsg(msg string, c *compiler) (*llx.AssertionMessage, error)
 
 	for i := range codes {
 		code := codes[i]
+
+		// Small helper for assertion messages:
+		// At the moment, the parser can't deliniate if a given `{}` call
+		// is meant to be a map creation or a block call.
+		//
+		// When it is at the beginning of an operand it is always treated
+		// as a map creation, e.g.:
+		//     {a: 123, ...}             vs
+		//     something { block... }
+		//
+		// However, in the assertion message case we know it's generally
+		// not about map-creation. So we are using a workaround to more
+		// easily extract values via blocks.
+		//
+		// This approach is extremely limited. It works with the most
+		// straightforward use-case and prohibits map any type of map
+		// creation in assertion messages.
+		//
+		// TODO: Find a more appropriate solution for this problem.
+		// Identify use-cases we don't cover well with this approach
+		// before changing it.
+
+		code = strings.Trim(code, " \t\n")
+		if code[0] == '{' {
+			code = "_" + code
+		}
+
 		ast, err := parser.Parse(code)
 		if err != nil {
 			return nil, errors.New("cannot parse code block in comment: " + code)

@@ -32,6 +32,7 @@ type compiler struct {
 	vars    map[string]variable
 	parent  *compiler
 	props   map[string]*llx.Primitive
+	comment string
 
 	// a standalone code is one that doesn't call any of its bindings
 	// examples:
@@ -148,7 +149,7 @@ func addFieldSuggestions(fields map[string]llx.Documentation, fieldName string, 
 // }
 
 // compileBlock on a context
-func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type) (types.Type, error) {
+func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type, bindingRef int32) (types.Type, error) {
 	// For resource, users may indicate to query all fields. It also works for list of resources.
 	// This is a special case which is handled here:
 	if len(expressions) == 1 && (typ.IsResource() || (typ.IsArray() && typ.Child().IsResource())) {
@@ -201,7 +202,7 @@ func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type
 		Id:   "{}",
 		Function: &llx.Function{
 			Type:    string(resultType),
-			Binding: c.Result.Code.ChunkIndex(),
+			Binding: bindingRef,
 			Args:    []*llx.Primitive{llx.FunctionPrimitive(fref)},
 		},
 	}
@@ -996,6 +997,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 	var ref int32
 
 	calls := operand.Calls
+	c.comment = operand.Comments
 
 	// value:        bool | string | regex | number | array | map | ident
 	// so all simple values are compiled into primitives and identifiers
@@ -1038,6 +1040,10 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 		call := calls[0]
 		if call.Function != nil {
 			return nil, errors.New("don't know how to compile chained functions just yet")
+		}
+
+		if call.Comments != "" {
+			c.comment = call.Comments
 		}
 
 		if call.Accessor != nil {
@@ -1105,8 +1111,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 	if operand.Block != nil {
 		// for starters, we need the primitive to exist on the stack,
 		// so add it if it's missing
-		ref := c.Result.Code.ChunkIndex()
-		if ref == 0 {
+		if x := c.Result.Code.ChunkIndex(); x == 0 {
 			val, err := c.compileValue(operand.Value)
 			if err != nil {
 				return nil, err
@@ -1116,12 +1121,13 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 				// no ID for standalone
 				Primitive: val,
 			})
+			ref = c.Result.Code.ChunkIndex()
 		}
 
 		if typ == types.Nil {
 			_, err = c.compileUnboundBlock(operand.Block, c.Result.Code.LastChunk())
 		} else {
-			_, err = c.compileBlock(operand.Block, typ)
+			_, err = c.compileBlock(operand.Block, typ, ref)
 		}
 		if err != nil {
 			return nil, err
@@ -1315,7 +1321,7 @@ func (c *compiler) updateEntrypoints() {
 	sort.Slice(res, func(i, j int) bool {
 		return res[i] < res[j]
 	})
-	c.Result.Code.Datapoints = res
+	c.Result.Code.Datapoints = append(c.Result.Code.Datapoints, res...)
 }
 
 // CompileAST with a schema into a chunky code
@@ -1402,15 +1408,17 @@ func updateCodeAssertions(bundle *llx.CodeBundle, code *llx.Code) error {
 			return errors.New("cannot find reference for assertion")
 		}
 
-		assert.Checksums = make([]string, len(assert.Datapoint))
-		for i := range assert.Datapoint {
-			datapoint := assert.Datapoint[i]
-			assert.Checksums[i], ok = code.Checksums[datapoint]
-			if !ok {
-				return errors.New("cannot find reference to datapoint in assertion")
+		if !assert.DecodeBlock {
+			assert.Checksums = make([]string, len(assert.Datapoint))
+			for i := range assert.Datapoint {
+				datapoint := assert.Datapoint[i]
+				assert.Checksums[i], ok = code.Checksums[datapoint]
+				if !ok {
+					return errors.New("cannot find reference to datapoint in assertion")
+				}
 			}
+			assert.Datapoint = nil
 		}
-		assert.Datapoint = nil
 
 		bundle.Assertions[sum] = assert
 	}

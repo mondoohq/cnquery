@@ -425,7 +425,7 @@ func TestCompiler_If(t *testing.T) {
 			},
 		}, res.Code.Code[1])
 		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
-		assert.Equal(t, []int32{}, res.Code.Datapoints)
+		assert.Equal(t, []int32(nil), res.Code.Datapoints)
 
 		assertPrimitive(t, llx.IntPrimitive(123), res.Code.Functions[0].Code[0])
 		assertFunction(t, "return", &llx.Function{
@@ -475,7 +475,7 @@ func TestCompiler_If(t *testing.T) {
 			},
 		}, res.Code.Code[1])
 		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
-		assert.Equal(t, []int32{}, res.Code.Datapoints)
+		assert.Equal(t, []int32(nil), res.Code.Datapoints)
 
 		assertPrimitive(t, llx.IntPrimitive(123), res.Code.Functions[0].Code[0])
 		assertFunction(t, "return", &llx.Function{
@@ -505,7 +505,7 @@ func TestCompiler_If(t *testing.T) {
 			},
 		}, res.Code.Code[1])
 		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
-		assert.Equal(t, []int32{}, res.Code.Datapoints)
+		assert.Equal(t, []int32(nil), res.Code.Datapoints)
 
 		assertPrimitive(t, llx.ArrayPrimitive([]*llx.Primitive{}, types.Unset), res.Code.Functions[0].Code[0])
 		assertFunction(t, "return", &llx.Function{
@@ -558,7 +558,7 @@ func TestCompiler_If(t *testing.T) {
 			},
 		}, res.Code.Code[1])
 		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
-		assert.Equal(t, []int32{}, res.Code.Datapoints)
+		assert.Equal(t, []int32(nil), res.Code.Datapoints)
 
 		assertPrimitive(t, llx.IntPrimitive(123), res.Code.Functions[0].Code[0])
 		assert.Equal(t, []int32{1}, res.Code.Functions[0].Entrypoints)
@@ -582,7 +582,7 @@ func TestCompiler_If(t *testing.T) {
 			},
 		}, res.Code.Code[1])
 		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
-		assert.Equal(t, []int32{}, res.Code.Datapoints)
+		assert.Equal(t, []int32(nil), res.Code.Datapoints)
 
 		assertPrimitive(t, llx.IntPrimitive(123), res.Code.Functions[0].Code[0])
 		assert.Equal(t, []int32{1}, res.Code.Functions[0].Entrypoints)
@@ -609,7 +609,7 @@ func TestCompiler_Switch(t *testing.T) {
 			},
 		}, res.Code.Code[2])
 		assert.Equal(t, []int32{3}, res.Code.Entrypoints)
-		assert.Equal(t, []int32{}, res.Code.Datapoints)
+		assert.Equal(t, []int32(nil), res.Code.Datapoints)
 	})
 }
 
@@ -720,17 +720,11 @@ func TestCompiler_ArrayOne(t *testing.T) {
 			},
 		}, res.Code.Code[1])
 
-		assertFunction(t, "length", &llx.Function{
-			Type:    string(types.Int),
+		assertFunction(t, "$one", &llx.Function{
+			Type:    string(types.Bool),
 			Binding: 2,
 		}, res.Code.Code[2])
-		assertFunction(t, string("=="+types.Int), &llx.Function{
-			Type:    string(types.Bool),
-			Binding: 3,
-			Args:    []*llx.Primitive{llx.IntPrimitive(1)},
-		}, res.Code.Code[3])
-
-		assert.Equal(t, 4, len(res.Code.Code))
+		assert.Equal(t, 3, len(res.Code.Code))
 	})
 }
 
@@ -745,7 +739,7 @@ func TestCompiler_ArrayAll(t *testing.T) {
 			},
 		}, res.Code.Code[0])
 
-		assertFunction(t, "where", &llx.Function{
+		assertFunction(t, "$whereNot", &llx.Function{
 			Type:    string(types.Array(types.Int)),
 			Binding: 1,
 			Args: []*llx.Primitive{
@@ -754,22 +748,12 @@ func TestCompiler_ArrayAll(t *testing.T) {
 			},
 		}, res.Code.Code[1])
 
-		assertFunction(t, "length", &llx.Function{
-			Type:    string(types.Int),
-			Binding: 1,
+		assertFunction(t, "$all", &llx.Function{
+			Type:    string(types.Bool),
+			Binding: 2,
 		}, res.Code.Code[2])
 
-		assertFunction(t, "length", &llx.Function{
-			Type:    string(types.Int),
-			Binding: 2,
-		}, res.Code.Code[3])
-		assertFunction(t, string("=="+types.Int), &llx.Function{
-			Type:    string(types.Bool),
-			Binding: 4,
-			Args:    []*llx.Primitive{llx.RefPrimitive(3)},
-		}, res.Code.Code[4])
-
-		assert.Equal(t, 5, len(res.Code.Code))
+		assert.Equal(t, 3, len(res.Code.Code))
 	})
 }
 
@@ -1406,7 +1390,7 @@ func TestCompiler_Entrypoints(t *testing.T) {
 	}{
 		{
 			"1",
-			[]int32{}, []int32{1},
+			[]int32(nil), []int32{1},
 		},
 		{
 			"mondoo.version == 1",

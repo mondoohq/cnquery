@@ -74,7 +74,7 @@ func createLabel(code *llx.Code, ref int32, labels *llx.Labels, schema *lumi.Sch
 		if parentLabel != "" {
 			res = parentLabel + res
 		}
-	case "{}":
+	case "{}", "${}":
 		res = parentLabel
 		if len(chunk.Function.Args) != 1 {
 			panic("don't know how to extract label data from more than one arg!")
@@ -162,11 +162,12 @@ func UpdateLabels(code *llx.Code, labels *llx.Labels, schema *lumi.Schema) error
 		}
 
 		filtered := []int32{}
-		for i := range code.Datapoints {
-			ref := code.Datapoints[i]
-			if _, ok := assertionPoints[ref]; !ok {
-				filtered = append(filtered, ref)
+		for i := range datapoints {
+			ref := datapoints[i]
+			if _, ok := assertionPoints[ref]; ok {
+				continue
 			}
+			filtered = append(filtered, ref)
 		}
 		datapoints = filtered
 	}
@@ -187,6 +188,20 @@ func UpdateLabels(code *llx.Code, labels *llx.Labels, schema *lumi.Schema) error
 		labels.Labels[checksum], err = createLabel(code, entrypoint, labels, schema)
 		if err != nil {
 			return err
+		}
+	}
+
+	// any more checksums that might have been set need to be removed, since we don't need them
+	// TODO: there must be a way to do this without having to create the label first
+	if code.Assertions != nil {
+		for _, assertion := range code.Assertions {
+			if !assertion.DecodeBlock {
+				continue
+			}
+
+			for i := 0; i < len(assertion.Checksums); i++ {
+				delete(labels.Labels, assertion.Checksums[i])
+			}
 		}
 	}
 

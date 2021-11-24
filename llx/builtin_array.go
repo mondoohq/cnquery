@@ -180,6 +180,14 @@ func arrayBlockList(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 	return nil, 0, nil
 }
 
+func arrayBlock(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	prim := chunk.Function.Args[0]
+	if !types.Type(prim.Type).IsFunction() {
+		return nil, 0, errors.New("called block with wrong function type")
+	}
+	return c.runBlock(bind, prim, ref)
+}
+
 func arrayLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
 		return &RawData{Type: types.Int, Error: bind.Error}, 0, nil
@@ -208,7 +216,7 @@ func arrayNotEmpty(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	return BoolTrue, 0, nil
 }
 
-func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func _arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, invert bool) (*RawData, int32, error) {
 	// where(array, function)
 	itemsRef := chunk.Function.Args[0]
 	items, rref, err := c.resolveValue(itemsRef, ref)
@@ -265,7 +273,7 @@ func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 				}
 
 				isTruthy, _ := res.Data.IsTruthy()
-				if isTruthy {
+				if isTruthy == !invert {
 					filteredList[i] = list[i]
 				} else {
 					filteredList[i] = nil
@@ -303,6 +311,50 @@ func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 	}
 
 	return nil, 0, nil
+}
+
+func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return _arrayWhere(c, bind, chunk, ref, false)
+}
+
+func arrayWhereNot(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return _arrayWhere(c, bind, chunk, ref, true)
+}
+
+func arrayAll(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	filteredList := bind.Value.([]interface{})
+
+	if len(filteredList) != 0 {
+		return BoolFalse, 0, nil
+	}
+	return BoolTrue, 0, nil
+}
+
+func arrayNone(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	filteredList := bind.Value.([]interface{})
+
+	if len(filteredList) != 0 {
+		return BoolFalse, 0, nil
+	}
+	return BoolTrue, 0, nil
+}
+
+func arrayAny(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	filteredList := bind.Value.([]interface{})
+
+	if len(filteredList) == 0 {
+		return BoolFalse, 0, nil
+	}
+	return BoolTrue, 0, nil
+}
+
+func arrayOne(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	filteredList := bind.Value.([]interface{})
+
+	if len(filteredList) != 1 {
+		return BoolFalse, 0, nil
+	}
+	return BoolTrue, 0, nil
 }
 
 // Take an array and separate it into a list of unique entries and another

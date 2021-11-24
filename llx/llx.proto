@@ -40,6 +40,7 @@ message AssertionMessage {
   string template = 1;
   repeated string checksums = 3;
   repeated int32 datapoint = 20;
+  bool decode_block = 21;
 }
 
 message Code {

@@ -955,7 +955,7 @@ func TestArray(t *testing.T) {
 		},
 		{
 			"[1,2,3].all(_ < 9)",
-			2, true,
+			1, true,
 		},
 		{
 			"[1,2,3].any(_ > 1)",
@@ -1195,7 +1195,7 @@ func TestDict_Methods(t *testing.T) {
 		},
 		{
 			p + "params['string-array'].all(_ != 'z')",
-			2, true,
+			1, true,
 		},
 		{
 			p + "params['string-array'].any(_ != 'a')",
@@ -1203,7 +1203,7 @@ func TestDict_Methods(t *testing.T) {
 		},
 		{
 			p + "params['does_not_exist'].any(_ != 'a')",
-			1, false,
+			1, nil,
 		},
 		{
 			p + "params { _['1'] == _['1.0'] }",

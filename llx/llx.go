@@ -282,7 +282,8 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, ref int3
 			anyError = multierror.Append(anyError, res.Data.Error)
 		}
 		blockResult[res.CodeID] = res.Data
-		if len(blockResult) == len(fun.Entrypoints) {
+		expectedCnt := len(fun.Entrypoints) + len(fun.Datapoints)
+		if len(blockResult) == expectedCnt {
 			if bind != nil && bind.Type.IsResource() {
 				rr, ok := bind.Value.(lumi.ResourceType)
 				if !ok {
