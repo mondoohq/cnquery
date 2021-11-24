@@ -152,7 +152,7 @@ func (t *SSHTransport) FS() afero.Fs {
 	if !t.UseScpFilesystem {
 		fs, err := sftp.New(t.SSHClient)
 		if err != nil {
-			log.Error().Err(err).Msg("error during sftp initialization, enable fallback to scp")
+			log.Info().Msg("use scp instead of sftp")
 			// enable fallback
 			t.UseScpFilesystem = true
 		} else {
