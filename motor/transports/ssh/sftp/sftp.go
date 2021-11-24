@@ -15,12 +15,13 @@ package sftp
 
 import (
 	"os"
+	"strings"
 	"time"
 
 	"github.com/cockroachdb/errors"
-
 	"github.com/pkg/sftp"
 	"github.com/spf13/afero"
+	"go.mondoo.io/mondoo/motor/transports/ssh/cat"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -30,15 +31,19 @@ import (
 // (github.com/pkg/sftp).
 type Fs struct {
 	client *sftp.Client
+	catFs  *cat.Fs
 }
 
-func New(client *ssh.Client) (afero.Fs, error) {
+func New(commandRunner cat.CommandRunner, client *ssh.Client) (afero.Fs, error) {
 	ftpClient, err := sftpClient(client)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not initialize sftp backend")
 	}
 
-	return &Fs{client: ftpClient}, nil
+	return &Fs{
+		client: ftpClient,
+		catFs:  cat.New(commandRunner),
+	}, nil
 }
 
 func sftpClient(sshClient *ssh.Client) (*sftp.Client, error) {
@@ -106,8 +111,13 @@ func (s Fs) MkdirAll(path string, perm os.FileMode) error {
 	return nil
 }
 
-func (s Fs) Open(name string) (afero.File, error) {
-	return FileOpen(s.client, name)
+func (s Fs) Open(path string) (afero.File, error) {
+	// NOTE: procfs cannot be read via scp, so we fall-back to catfs all paths there
+	if strings.HasPrefix(path, "/proc") {
+		return s.catFs.Open(path)
+	}
+
+	return FileOpen(s.client, path)
 }
 
 func (s Fs) OpenFile(name string, flag int, perm os.FileMode) (afero.File, error) {
