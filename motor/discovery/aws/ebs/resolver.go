@@ -17,7 +17,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...string) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
 	tc.Backend = transports.TransportBackend_CONNECTION_AWS_EC2_EBS
 	assetInfo := &asset.Asset{
 		Connections: []*transports.TransportConfig{tc},

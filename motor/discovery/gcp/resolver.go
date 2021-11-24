@@ -26,7 +26,7 @@ func (r *GcrResolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *GcrResolver) Resolve(t *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...string) ([]*asset.Asset, error) {
+func (r *GcrResolver) Resolve(t *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 	repository := t.Host
 
@@ -56,7 +56,7 @@ func (r *GcpResolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryInstances}
 }
 
-func (r *GcpResolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...string) ([]*asset.Asset, error) {
+func (r *GcpResolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	trans, err := gcp_transport.New(tc)

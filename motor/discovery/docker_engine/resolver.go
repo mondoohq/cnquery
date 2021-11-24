@@ -31,7 +31,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryContainerRunning, DiscoveryContainerImages}
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...string) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
 	if tc == nil {
 		return nil, errors.New("no transport configuration found")
 	}

@@ -20,7 +20,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...string) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
 	assetInfo := &asset.Asset{
 		State:       asset.State_STATE_ONLINE,
 		Connections: []*transports.TransportConfig{tc},
@@ -49,7 +49,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 		assetInfo.Platform = p
 	}
 
-	platformIds, err := motorid.GatherIDs(m.Transport, p, transports.ToPlatformIdDetectors(userIdDetectors))
+	platformIds, err := motorid.GatherIDs(m.Transport, p, userIdDetectors)
 	if err != nil {
 		return nil, err
 	}

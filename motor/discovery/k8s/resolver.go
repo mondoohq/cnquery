@@ -27,7 +27,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryContainerImages}
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...string) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 	namespacesFilter := []string{}
 	podFilter := []string{}

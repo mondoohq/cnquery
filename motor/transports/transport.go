@@ -15,17 +15,25 @@ const (
 	MachineIdDetector  PlatformIdDetector = "machineid"
 	SSHHostKeyDetector PlatformIdDetector = "ssh-hostkey"
 	CloudDetector      PlatformIdDetector = "cloud-detect"
-	AWSEc2Detector     PlatformIdDetector = "awsec2"
+	AWSEc2Detector     PlatformIdDetector = "aws-ec2"
 	// TransportPlatformIdentifierDetector is a detector that gets the plaform id
 	// from the transports Indentifier() method. This requires the
 	// TransportIdentifier inteface be implemented for the transport
 	TransportPlatformIdentifierDetector PlatformIdDetector = "transport-platform-id"
 )
 
+var platformIdAliases = map[string]PlatformIdDetector{
+	"awsec2": AWSEc2Detector,
+}
+
 func ToPlatformIdDetectors(idDetectors []string) []PlatformIdDetector {
 	idDetectorsCopy := make([]PlatformIdDetector, len(idDetectors))
 	for i, v := range idDetectors {
-		idDetectorsCopy[i] = PlatformIdDetector(v)
+		if detector, ok := platformIdAliases[v]; ok {
+			idDetectorsCopy[i] = detector
+		} else {
+			idDetectorsCopy[i] = PlatformIdDetector(v)
+		}
 	}
 	return idDetectorsCopy
 }
