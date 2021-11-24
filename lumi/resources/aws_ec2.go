@@ -347,8 +347,8 @@ func (s *lumiAwsEc2) GetSecurityGroups() ([]interface{}, error) {
 }
 
 type ebsEncryption struct {
-	region                 string `json:"region"`
-	ebsEncryptionByDefault bool   `json:"ebsEncryptionByDefault"`
+	region                 string
+	ebsEncryptionByDefault bool
 }
 
 func (s *lumiAwsEc2) GetEbsEncryptionByDefault() (map[string]interface{}, error) {
