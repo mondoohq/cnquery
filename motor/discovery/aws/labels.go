@@ -15,6 +15,7 @@ const (
 	DNSLabel            string = "mondoo.app/public-dns-name"
 	EBSScanLabel        string = "mondoo.app/ebs-volume-scan"
 	PlatformLabel       string = "mondoo.app/platform"
+	StateLabel          string = "mondoo.app/instance-state"
 )
 
 func addAWSMetadataLabels(assetLabels map[string]string, instance basicInstanceInfo) map[string]string {
@@ -37,6 +38,9 @@ func addAWSMetadataLabels(assetLabels map[string]string, instance basicInstanceI
 	if instance.SSMPingStatus != "" {
 		assetLabels[SSMPingLabel] = instance.SSMPingStatus
 	}
+	if instance.State != "" {
+		assetLabels[StateLabel] = instance.State
+	}
 	return assetLabels
 }
 
@@ -48,6 +52,7 @@ type basicInstanceInfo struct {
 	ImageId       *string
 	SSMPingStatus string
 	PlatformType  string
+	State         string
 }
 
 func ssmInstanceToBasicInstanceInfo(instance types.InstanceInformation, region string) basicInstanceInfo {
@@ -68,5 +73,6 @@ func ec2InstanceToBasicInstanceInfo(instance ec2types.Instance, region string) b
 		PublicDnsName: instance.PublicDnsName,
 		ImageId:       instance.ImageId,
 		PlatformType:  string(instance.Platform),
+		State:         string(instance.State.Name),
 	}
 }
