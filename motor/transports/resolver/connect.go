@@ -53,7 +53,14 @@ func OpenAssetConnection(assetInfo *asset.Asset, credentialFn func(cred *vault.C
 		tc.PlatformId = assetInfo.PlatformIds[0]
 	}
 
-	return EstablishConnection(tc, credentialFn, tc.Insecure, record)
+	m, err := EstablishConnection(tc, credentialFn, tc.Insecure, record)
+	if err != nil {
+		return nil, err
+	}
+
+	m.SetAsset(assetInfo)
+
+	return m, nil
 }
 
 func OpenAssetConnections(assetInfo *asset.Asset, credentialFn func(cred *vault.Credential) (*vault.Credential, error), record bool) ([]*motor.Motor, error) {
@@ -93,6 +100,7 @@ func OpenAssetConnections(assetInfo *asset.Asset, credentialFn func(cred *vault.
 			return nil, err
 		}
 
+		m.SetAsset(assetInfo)
 		connections = append(connections, m)
 	}
 	return connections, nil

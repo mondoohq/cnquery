@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/events"
@@ -58,6 +59,7 @@ type Motor struct {
 	l sync.Mutex
 
 	Transport   transports.Transport
+	asset       *asset.Asset
 	detector    *platform.Detector
 	watcher     transports.Watcher
 	isRecording bool
@@ -156,4 +158,21 @@ func (m *Motor) IsLocalTransport() bool {
 		return false
 	}
 	return true
+}
+
+// SetAsset sets the asset that this Motor was created for
+func (m *Motor) SetAsset(a *asset.Asset) {
+	m.l.Lock()
+	defer m.l.Unlock()
+
+	m.asset = a
+}
+
+// GetAsset returns the asset that this motor was created for.
+// The caller must check that the return value is not nil before
+// using
+func (m *Motor) GetAsset() *asset.Asset {
+	m.l.Lock()
+	defer m.l.Unlock()
+	return m.asset
 }

@@ -65,8 +65,9 @@ func (m *lumiMondooAsset) id() (string, error) {
 }
 
 func (m *lumiMondooAsset) GetPlatformIDs() ([]interface{}, error) {
-	// The mondoo asset resource is created and populated when the lumi
-	// runtime is initialized. The correct values are thus already injected
-	// into the runtime and we cannot calculate the value
-	return nil, errors.New("unimplemented")
+	asset := m.Runtime.Motor.GetAsset()
+	if asset == nil {
+		return nil, errors.New("unimplemented")
+	}
+	return strSliceToInterface(asset.PlatformIds), nil
 }
