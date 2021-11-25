@@ -6,10 +6,12 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
-
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/yum"
+	"go.mondoo.io/mondoo/stringx"
 )
+
+var supportedPlatforms = []string{"amazonlinux"}
 
 func (y *lumiYum) id() (string, error) {
 	return "yum", nil
@@ -21,7 +23,7 @@ func (y *lumiYum) GetRepos() ([]interface{}, error) {
 		return nil, err
 	}
 
-	if !pf.IsFamily("redhat") {
+	if !pf.IsFamily("redhat") && !stringx.Contains(supportedPlatforms, pf.Name) {
 		return nil, errors.New("yum.vars is only supported on redhat-based platforms")
 	}
 
