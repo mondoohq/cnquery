@@ -27,6 +27,7 @@ enum CredentialType {
   bearer = 4;
   credentials_query = 5;
   json = 6;
+  aws_ec2_instance_connect = 7;
 }
 
 enum SecretEncoding {

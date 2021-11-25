@@ -1,23 +1,25 @@
 package ssh
 
 import (
+	"context"
 	"encoding/pem"
-	"errors"
 	"fmt"
 	"net"
 	"os"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/vault"
-
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/ssh/awsinstanceconnect"
+	"go.mondoo.io/mondoo/motor/vault"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 )
 
-func sshClientConnection(cc *transports.TransportConfig, hostKeyCallback ssh.HostKeyCallback) (*ssh.Client, error) {
-	authMethods, err := authMethods(cc)
+func sshClientConnection(tc *transports.TransportConfig, hostKeyCallback ssh.HostKeyCallback) (*ssh.Client, error) {
+	authMethods, err := authMethods(tc)
 	if err != nil {
 		return nil, err
 	}
@@ -29,9 +31,9 @@ func sshClientConnection(cc *transports.TransportConfig, hostKeyCallback ssh.Hos
 
 	// TODO: hack: we want to establish a proper connection per configured connection so that we could use multiple users
 	user := ""
-	for i := range cc.Credentials {
-		if cc.Credentials[i].User != "" {
-			user = cc.Credentials[i].User
+	for i := range tc.Credentials {
+		if tc.Credentials[i].User != "" {
+			user = tc.Credentials[i].User
 		}
 	}
 
@@ -41,10 +43,10 @@ func sshClientConnection(cc *transports.TransportConfig, hostKeyCallback ssh.Hos
 		HostKeyCallback: hostKeyCallback,
 	}
 
-	return ssh.Dial("tcp", fmt.Sprintf("%s:%s", cc.Host, cc.Port), sshConfig)
+	return ssh.Dial("tcp", fmt.Sprintf("%s:%s", tc.Host, tc.Port), sshConfig)
 }
 
-func authPrivateKeyWithPassphrase(pemBytes []byte, password string) (ssh.Signer, error) {
+func authPrivateKeyWithPassphrase(pemBytes []byte, passphrase []byte) (ssh.Signer, error) {
 	log.Debug().Msg("enabled ssh private key authentication")
 
 	// check if the key is encrypted
@@ -57,7 +59,7 @@ func authPrivateKeyWithPassphrase(pemBytes []byte, password string) (ssh.Signer,
 	var err error
 	if strings.Contains(block.Headers["Proc-Type"], "ENCRYPTED") {
 		// we may want to support to parse password protected encrypted key
-		signer, err = ssh.ParsePrivateKeyWithPassphrase(pemBytes, []byte(password))
+		signer, err = ssh.ParsePrivateKeyWithPassphrase(pemBytes, passphrase)
 		if err != nil {
 			return nil, err
 		}
@@ -117,7 +119,7 @@ func authMethods(tc *transports.TransportConfig) ([]ssh.AuthMethod, error) {
 		switch credential.Type {
 		case vault.CredentialType_private_key:
 			log.Debug().Msg("enabled ssh private key authentication")
-			priv, err := authPrivateKeyWithPassphrase(credential.Secret, credential.Password)
+			priv, err := authPrivateKeyWithPassphrase(credential.Secret, []byte(credential.Password))
 			if err != nil {
 				log.Debug().Err(err).Msg("could not read private key")
 			} else {
@@ -130,6 +132,24 @@ func authMethods(tc *transports.TransportConfig) ([]ssh.AuthMethod, error) {
 		case vault.CredentialType_ssh_agent:
 			log.Debug().Msg("enabled ssh agent authentication")
 			useAgentAuth()
+		case vault.CredentialType_aws_ec2_instance_connect:
+			cfg, err := config.LoadDefaultConfig(context.Background())
+			if err != nil {
+				return nil, err
+			}
+
+			eic := awsinstanceconnect.New(cfg)
+			creds, err := eic.GenerateCredentials(tc.Host, credential.User)
+			if err != nil {
+				return nil, err
+			}
+			tc.Host = creds.PublicDnsName // TODO: we may want support for private dns later
+
+			priv, err := authPrivateKeyWithPassphrase(creds.KeyPair.PrivateKey, creds.KeyPair.Passphrase)
+			if err != nil {
+				return nil, errors.Wrap(err, "could not read generated private key")
+			}
+			signers = append(signers, priv)
 		default:
 			return nil, errors.New("unsupported authentication mechanism for ssh: " + credential.Type.String())
 		}
