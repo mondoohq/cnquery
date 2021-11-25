@@ -98,7 +98,7 @@ message AssessmentItem {
   Primitive actual = 5;
   string operation = 6;
   string error = 7;
-  bool comparable = 8;
+  bool is_assertion = 8;
   string template = 20;
   repeated Primitive data = 21;
 }
@@ -106,6 +106,6 @@ message AssessmentItem {
 message Assessment {
   string checksum = 1;
   bool success = 2;
-  bool comparable = 3;
+  bool is_assertion = 3;
   repeated AssessmentItem results = 4;
 }
