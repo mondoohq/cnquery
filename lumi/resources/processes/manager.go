@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/transports/ssh"
 )
 
 type OSProcess struct {
@@ -30,8 +31,15 @@ func ResolveManager(motor *motor.Motor) (OSProcessManager, error) {
 		return nil, err
 	}
 
+	// procfs over ssh is super slow, lets deactivate until we have a faster approach
+	disableProcFs := false
+	switch motor.Transport.(type) {
+	case *ssh.SSHTransport:
+		disableProcFs = true
+	}
+
 	switch {
-	case platform.IsFamily("linux"):
+	case platform.IsFamily("linux") && !disableProcFs:
 		pm = &LinuxProcManager{motor: motor}
 	case platform.IsFamily("unix"):
 		pm = &UnixProcessManager{motor: motor, platform: platform}
