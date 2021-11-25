@@ -474,6 +474,19 @@ func TestAmazon2LinuxDetector(t *testing.T) {
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
 
+func TestAmazon2022LinuxDetector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-amzn-2022.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	di, err := detector.Platform()
+	require.NoError(t, err)
+
+	assert.Equal(t, "amazonlinux", di.Name, "os name should be identified")
+	assert.Equal(t, "Amazon Linux", di.Title, "os title should be identified")
+	assert.Equal(t, "2022", di.Release, "os version should be identified")
+	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
 func TestScientificLinuxDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-scientific.toml")
 	assert.Nil(t, err, "was able to create the transport")
