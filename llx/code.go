@@ -91,7 +91,7 @@ func (c *Chunk) isStatic() bool {
 }
 
 // ComparableLabel takes any arbitrary label and returns the
-// operation as a printable string and true if it fits, otherwise "" and false.
+// operation as a printable string and true if it is a comparable, otherwise "" and false.
 func ComparableLabel(label string) (string, bool) {
 	if label == "" {
 		return "", false
@@ -186,6 +186,7 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, ref int32, lookup func(
 		res.Error = checksumRes.Data.Error.Error()
 	}
 
+	// explicit assessments
 	if assertion, ok := bundle.Assertions[checksum]; ok {
 		if assertion.DecodeBlock {
 			sum := assertion.Checksums[0]
@@ -232,6 +233,7 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, ref int32, lookup func(
 
 		res.Data = data
 		res.Template = assertion.Template
+		res.IsAssertion = true
 		return &res
 	}
 
@@ -267,6 +269,8 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, ref int32, lookup func(
 		return &res
 	}
 
+	// FIXME: support child operations inside of block calls "{}" / "${}"
+
 	if label, found := ComparableLabel(chunk.Id); found {
 		res.Operation = label
 	} else {
@@ -274,7 +278,7 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, ref int32, lookup func(
 		return &res
 	}
 
-	res.Comparable = true
+	res.IsAssertion = true
 
 	// at this point we have a comparable
 	// so 2 jobs: check the left, check the right. if it's static, ignore. if not, add
@@ -414,9 +418,14 @@ func Results2AssessmentLookup(bundle *CodeBundle, f func(s string) (*RawResult, 
 		if !cur.Success {
 			res.Success = false
 		}
-		if cur.Comparable {
-			res.Comparable = true
+
+		if cur.IsAssertion {
+			res.IsAssertion = true
 		}
+	}
+
+	if !res.IsAssertion {
+		return nil
 	}
 
 	return &res
