@@ -37,7 +37,7 @@ type OSServiceManager interface {
 	List() ([]*Service, error)
 }
 
-var amazonlinux1version = regexp.MustCompile(`^20\d\d`)
+var amazonlinux1version = regexp.MustCompile(`^201\d`)
 
 func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 	var osm OSServiceManager
