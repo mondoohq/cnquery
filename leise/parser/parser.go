@@ -193,13 +193,13 @@ func (p *parser) nextToken() error {
 func (p *parser) parseComment() {
 	// we only need the comment's body
 	if p.token.Value[0] == '#' {
-		if p.token.Value[1] == ' ' {
+		if len(p.token.Value) != 1 && p.token.Value[1] == ' ' {
 			p.comments.WriteString(strings.TrimRight(p.token.Value[2:], " \t"))
 		} else {
 			p.comments.WriteString(strings.TrimRight(p.token.Value[1:], " \t"))
 		}
 	} else {
-		if p.token.Value[2] == ' ' {
+		if len(p.token.Value) != 2 && p.token.Value[2] == ' ' {
 			p.comments.WriteString(strings.TrimRight(p.token.Value[3:], " \t"))
 		} else {
 			p.comments.WriteString(strings.TrimRight(p.token.Value[2:], " \t"))

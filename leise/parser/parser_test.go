@@ -285,6 +285,9 @@ func TestParser_ParseValues(t *testing.T) {
 
 func TestParser_Comments(t *testing.T) {
 	runMultiTest(t, []multiTest{
+		// empty comments
+		{"#", []*Expression(nil)},
+		{"//", []*Expression(nil)},
 		// call chain with many newlines
 		{"// 1\nsshd\n// 2\n\t.\n// 3\nconfig // 4", []*Expression{
 			{Operand: &Operand{
