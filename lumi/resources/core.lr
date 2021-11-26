@@ -396,6 +396,8 @@ sshd.config {
   macs(params) []string
   // Key Exchange Algorithms configured for this SSH server
   kexs(params) []string
+  // Host Keys configured for this SSH server
+  hostkeys(params) []string
 }
 
 // Package on the platform or OS
