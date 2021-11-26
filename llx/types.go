@@ -3,7 +3,6 @@ package llx
 import (
 	"encoding/base64"
 	"encoding/binary"
-	"fmt"
 
 	"go.mondoo.io/mondoo/types"
 	"golang.org/x/crypto/blake2b"
@@ -29,8 +28,8 @@ func (p *Primitive) TypeString(stack *Code) string {
 	return p.typeString(types.Type(p.Type), stack)
 }
 
-// Type for the dereferenced type of this chunk
-// Finds the real type after looking at either the primitive or function
+// Type of this chunk, by looking at either the primitive or function.
+// The type is not be dereferenced! (i.e. ref's remain)
 func (c *Chunk) Type(stack *Code) types.Type {
 	// call: primitive
 	if c.Call == Chunk_PRIMITIVE {
@@ -45,6 +44,23 @@ func (c *Chunk) Type(stack *Code) types.Type {
 	// call: property
 	if c.Primitive != nil {
 		return types.Type(c.Primitive.Type)
+	}
+
+	return types.Any
+}
+
+// DereferencedType of this chunk, resolved if it is a reference to anything.
+func (c *Chunk) DereferencedType(stack *Code) types.Type {
+	if c.Call == Chunk_PRIMITIVE {
+		return c.Primitive.dereferenceType(types.Type(c.Primitive.Type), stack)
+	}
+
+	if c.Function != nil {
+		return types.Type(c.Function.Type)
+	}
+
+	if c.Primitive != nil {
+		return c.Primitive.dereferenceType(types.Type(c.Primitive.Type), stack)
 	}
 
 	return types.Any
@@ -136,7 +152,6 @@ func (p *Primitive) dereferenceType(typ types.Type, stack *Code) types.Type {
 	switch typ.Underlying() {
 	case types.Ref:
 		idx := bytes2int(p.Value)
-		fmt.Printf("ref; %d %#v", idx, stack.Code)
 		ref := stack.Code[idx-1]
 		return ref.Primitive.dereferenceType(ref.Type(stack), stack)
 	case types.ArrayLike:
