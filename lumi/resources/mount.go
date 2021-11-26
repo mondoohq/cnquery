@@ -1,9 +1,11 @@
 package resources
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/mount"
 )
 
@@ -53,4 +55,41 @@ func (m *lumiMount) GetList() ([]interface{}, error) {
 
 func (m *lumiMountPoint) id() (string, error) {
 	return m.Path()
+}
+
+func (p *lumiMountPoint) init(args *lumi.Args) (*lumi.Args, MountPoint, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	pathRaw := (*args)["path"]
+	if pathRaw == nil {
+		return args, nil, nil
+	}
+
+	path, ok := pathRaw.(string)
+	if !ok {
+		return args, nil, nil
+	}
+
+	obj, err := p.Runtime.CreateResource("mount")
+	if err != nil {
+		return nil, nil, err
+	}
+	mount := obj.(Mount)
+
+	res, err := mount.List()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for i := range res {
+		mp := res[i].(MountPoint)
+		lumiMountPointPath, _ := mp.Path()
+		if lumiMountPointPath == path {
+			return nil, mp, nil
+		}
+	}
+
+	return nil, nil, errors.New("mount.point " + path + " does not exist")
 }
