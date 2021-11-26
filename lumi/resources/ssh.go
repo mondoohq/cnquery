@@ -6,10 +6,10 @@ package resources
 
 import (
 	"errors"
-	"go.mondoo.io/mondoo/lumi/resources/sshd"
 	"strings"
 
 	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/lumi/resources/sshd"
 )
 
 func (s *lumiSshd) id() (string, error) {
@@ -119,4 +119,13 @@ func (s *lumiSshdConfig) GetKexs(params map[string]interface{}) ([]interface{}, 
 	}
 
 	return s.parseConfigEntrySlice(rawkexs)
+}
+
+func (s *lumiSshdConfig) GetHostkeys(params map[string]interface{}) ([]interface{}, error) {
+	rawHostKeys, ok := params["HostKey"]
+	if !ok {
+		return nil, nil
+	}
+
+	return s.parseConfigEntrySlice(rawHostKeys)
 }
