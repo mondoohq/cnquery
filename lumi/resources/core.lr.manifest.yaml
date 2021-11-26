@@ -207,9 +207,18 @@ resources:
   aws.cloudwatch.loggroup.name: 5.15.0
   aws.cloudwatch.metric: 5.15.0
   aws.cloudwatch.metric.alarms: 5.15.0
+  aws.cloudwatch.metric.datapoint: latest
+  aws.cloudwatch.metric.datapoint.maximum: latest
+  aws.cloudwatch.metric.datapoint.timestamp: latest
+  aws.cloudwatch.metric.datapoint.unit: latest
+  aws.cloudwatch.metric.dimensions: latest
   aws.cloudwatch.metric.name: 5.15.0
   aws.cloudwatch.metric.namespace: 5.15.0
   aws.cloudwatch.metric.region: 5.15.0
+  aws.cloudwatch.metric.statistics: latest
+  aws.cloudwatch.metricdimensions: latest
+  aws.cloudwatch.metricdimensions.name: latest
+  aws.cloudwatch.metricdimensions.value: latest
   aws.cloudwatch.metrics: 5.15.0
   aws.cloudwatch.metricsalarm: 5.15.0
   aws.cloudwatch.metricsalarm.actions: 5.15.0
@@ -222,6 +231,10 @@ resources:
   aws.cloudwatch.metricsalarm.region: 5.15.0
   aws.cloudwatch.metricsalarm.state: 5.15.0
   aws.cloudwatch.metricsalarm.stateReason: 5.15.0
+  aws.cloudwatch.metricstatistics: latest
+  aws.cloudwatch.metricstatistics.datapoints: latest
+  aws.cloudwatch.metricstatistics.id: latest
+  aws.cloudwatch.metricstatistics.label: latest
   aws.codebuild: 5.15.0
   aws.codebuild.project: 5.15.0
   aws.codebuild.project.arn: 5.15.0
@@ -1064,6 +1077,7 @@ resources:
   certificate.extensions: 5.15.0
   certificate.fingerprints: 5.15.0
   certificate.isCA: 5.15.0
+  certificate.isRevoked: latest
   certificate.issuer: 5.15.0
   certificate.issuingCertificateUrl: 5.15.0
   certificate.keyUsage: 5.15.0
@@ -1072,6 +1086,7 @@ resources:
   certificate.ocspServer: 5.15.0
   certificate.pem: 5.15.0
   certificate.policyIdentifier: 5.15.0
+  certificate.revokedAt: latest
   certificate.serial: 5.15.0
   certificate.signature: 5.15.0
   certificate.signingAlgorithm: 5.15.0
@@ -1851,6 +1866,7 @@ resources:
   platform.exploits.cvss: 5.15.0
   platform.exploits.stats: 5.15.0
   platform.family: 5.15.0
+  platform.fqdn: latest
   platform.kind: 5.15.0
   platform.name: 5.15.0
   platform.release: 5.15.0
@@ -1953,10 +1969,12 @@ resources:
   terraform: 5.15.0
   terraform.block: 5.15.0
   terraform.block.arguments: 5.15.0
+  terraform.block.attributes: latest
   terraform.block.blocks: 5.15.0
   terraform.block.end: 5.15.0
   terraform.block.labels: 5.15.0
   terraform.block.nameLabel: 5.15.0
+  terraform.block.snippet: latest
   terraform.block.start: 5.15.0
   terraform.block.type: 5.15.0
   terraform.blocks: 5.15.0
@@ -1992,6 +2010,7 @@ resources:
   tls: 5.15.0
   tls.certificates: 5.15.0
   tls.ciphers: 5.15.0
+  tls.domainName: latest
   tls.params: 5.15.0
   tls.socket: 5.15.0
   tls.versions: 5.15.0
