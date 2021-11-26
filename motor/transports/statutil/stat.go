@@ -113,12 +113,17 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 	// NOTE: handling the exit code here does not work for all cases
 	// sometimes stat returns something like: failed to get security context of '/etc/ssh/sshd_config': No data available
 	// Therefore we continue after this command and try to parse the result and focus on making the parsing more robust
-	cmd, err = s.commandRunner.RunCommand(sb.String())
+	command := sb.String()
+	cmd, err = s.commandRunner.RunCommand(command)
 
 	// we get stderr content in cases where we could not gather the security context via failed to get security context of
 	// it could also include: No such file or directory
 	if err != nil {
-		log.Debug().Err(err).Send()
+		log.Debug().Str("path", path).Str("command", command).Err(err).Send()
+	}
+
+	if cmd == nil {
+		return nil, errors.New("could not parse file stat: " + path)
 	}
 
 	data, err := ioutil.ReadAll(cmd.Stdout)
@@ -128,11 +133,11 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 
 	statsData := strings.Split(string(data), "\n")
 	if len(statsData) != 7 {
-		log.Error().Str("name", name).Msg("could not parse file stat information")
-		// TODO: we may need to parse the returing error to better distingush between a real error and file not found
+		log.Debug().Str("path", path).Msg("could not parse file stat information")
+		// TODO: we may need to parse the returning error to better distinguish between a real error and file not found
 		// if we are going to check for file not found, we probably run into the issue that the error message is returned in
 		// multiple languages
-		return nil, errors.New("could not parse file stat: " + name)
+		return nil, errors.New("could not parse file stat: " + path)
 	}
 
 	size, err := strconv.Atoi(statsData[0])
@@ -245,14 +250,14 @@ func (s *statHelper) unix(name string) (os.FileInfo, error) {
 }
 
 const (
-	S_IFMT  = 0170000
-	S_IFBLK = 060000
-	S_IFCHR = 020000
-	S_IFDIR = 040000
+	S_IFMT  = 0o170000
+	S_IFBLK = 0o60000
+	S_IFCHR = 0o20000
+	S_IFDIR = 0o40000
 	S_IFIFO = 10000
-	S_ISUID = 04000
-	S_ISGID = 02000
-	S_ISVTX = 01000
+	S_ISUID = 0o4000
+	S_ISGID = 0o2000
+	S_ISVTX = 0o1000
 )
 
 func toFileMode(mask uint64) os.FileMode {
