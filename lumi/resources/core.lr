@@ -2094,7 +2094,53 @@ private aws.cloudwatch.metric {
   region string
   // list of cloudwatch metric alarms for the metric
   alarms() []aws.cloudwatch.metricsalarm
+  // dimensions that apply to the metric
+  dimensions []aws.cloudwatch.metricdimension
+  // statistics for the metric
+  statistics() aws.cloudwatch.metricstatistics 
 }
+
+// AWS Cloudwatch Metric Dimension
+aws.cloudwatch.metricdimension {
+  // Name of the dimension
+  name string
+  // Value of the dimension
+  value string
+}
+
+// AWS Cloudwatch Metric Statistics
+aws.cloudwatch.metricstatistics {
+  init(namespace string, region string, name string)
+  // Namesace for the metric
+  namespace string
+  // Name for the metric
+  name string
+  // region for the metrics
+  region string
+  // Label for the statistics
+  label string
+  // Datapoints for the statistic over the last 24 hours in hour intervals
+  datapoints []aws.cloudwatch.metric.datapoint
+}
+
+// AWS Cloudwatch Metric Datapoint
+aws.cloudwatch.metric.datapoint {
+  // unique identifier for the datapoint
+  id string
+  // Timestamp of the metric datapoint
+  timestamp time
+  // Maximum value for the statistic
+  maximum float
+  // Minimum value for the statistic
+  minimum float
+  // Average value for the statistic
+  average float
+  // Sum value for the statistic
+  sum float
+  // Unit of the statistic
+  unit string
+}
+
 
 // AWS CloudWatch Log Groups
 private aws.cloudwatch.loggroup {

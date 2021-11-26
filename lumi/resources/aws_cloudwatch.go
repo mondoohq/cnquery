@@ -2,10 +2,15 @@ package resources
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/json"
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/cockroachdb/errors"
@@ -64,10 +69,24 @@ func (t *lumiAwsCloudwatch) getMetrics(at *aws_transport.Transport) []*jobpool.J
 					return nil, err
 				}
 				for _, metric := range metrics.Metrics {
+					dimensions := []interface{}{}
+					for _, d := range metric.Dimensions {
+						lumiDimension, err := t.Runtime.CreateResource("aws.cloudwatch.metricdimension",
+							"name", toString(d.Name),
+							"value", toString(d.Value),
+						)
+						if err != nil {
+							return nil, err
+						}
+						dimensions = append(dimensions, lumiDimension)
+					}
+
 					lumiMetric, err := t.Runtime.CreateResource("aws.cloudwatch.metric",
+						// "id", regionVal+"/"+toString(metric.Namespace)+"/"+toString(metric.MetricName),
 						"name", toString(metric.MetricName),
 						"namespace", toString(metric.Namespace),
 						"region", regionVal,
+						"dimensions", dimensions,
 					)
 					if err != nil {
 						return nil, err
@@ -85,6 +104,301 @@ func (t *lumiAwsCloudwatch) getMetrics(at *aws_transport.Transport) []*jobpool.J
 	}
 	return tasks
 }
+
+func (t *lumiAwsCloudwatchMetricdimension) id() (string, error) {
+	name, err := t.Name()
+	if err != nil {
+		return "", err
+	}
+	val, err := t.Value()
+	if err != nil {
+		return "", err
+	}
+	return name + "/" + val, nil
+}
+
+func (t *lumiAwsCloudwatchMetricstatistics) id() (string, error) {
+	region, err := t.Region()
+	if err != nil {
+		return "", err
+	}
+	namespace, err := t.Namespace()
+	if err != nil {
+		return "", err
+	}
+	name, err := t.Name()
+	if err != nil {
+		return "", err
+	}
+	label, err := t.Label()
+	if err != nil {
+		return "", err
+	}
+	return namespace + "/" + name + "/" + region + "/" + label, nil
+}
+
+// allow the user to query for a specific namespace metric in a specific region
+func (p *lumiAwsCloudwatchMetric) init(args *lumi.Args) (*lumi.Args, AwsCloudwatchMetric, error) {
+	if len(*args) > 3 {
+		return args, nil, nil
+	}
+
+	namespaceRaw := (*args)["namespace"]
+	if namespaceRaw == nil {
+		return args, nil, nil
+	}
+
+	namespace, ok := namespaceRaw.(string)
+	if !ok {
+		return args, nil, nil
+	}
+
+	nameRaw := (*args)["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+
+	name, ok := nameRaw.(string)
+	if !ok {
+		return args, nil, nil
+	}
+
+	regionRaw := (*args)["region"]
+	if namespaceRaw == nil {
+		return args, nil, nil
+	}
+
+	region, ok := regionRaw.(string)
+	if !ok {
+		return args, nil, nil
+	}
+	at, err := awstransport(p.Runtime.Motor.Transport)
+	if err != nil {
+		return args, nil, err
+	}
+	svc := at.Cloudwatch(region)
+	ctx := context.Background()
+
+	params := &cloudwatch.ListMetricsInput{
+		Namespace:  &namespace,
+		MetricName: &name,
+	}
+	metrics, err := svc.ListMetrics(ctx, params)
+	if err != nil {
+		return args, nil, err
+	}
+	if len(metrics.Metrics) == 0 {
+		return nil, nil, errors.New("could not find metric " + namespace + " " + name + " in region " + region)
+	}
+	if len(metrics.Metrics) > 1 {
+		return nil, nil, errors.New("more than one metric found for " + namespace + " " + name + " in region " + region)
+	}
+	dimensions := []interface{}{}
+
+	metric := metrics.Metrics[0]
+	for _, d := range metric.Dimensions {
+		lumiDimension, err := p.Runtime.CreateResource("aws.cloudwatch.metricdimension",
+			"name", toString(d.Name),
+			"value", toString(d.Value),
+		)
+		if err != nil {
+			return args, nil, err
+		}
+		dimensions = append(dimensions, lumiDimension)
+	}
+
+	(*args)["name"] = name
+	(*args)["namespace"] = namespace
+	(*args)["region"] = region
+	(*args)["dimensions"] = dimensions
+
+	return args, nil, nil
+}
+
+// allow the user to query for a specific namespace metric in a specific region
+func (p *lumiAwsCloudwatchMetricstatistics) init(args *lumi.Args) (*lumi.Args, AwsCloudwatchMetricstatistics, error) {
+	if len(*args) > 3 {
+		return args, nil, nil
+	}
+
+	namespaceRaw := (*args)["namespace"]
+	if namespaceRaw == nil {
+		return args, nil, nil
+	}
+
+	namespace, ok := namespaceRaw.(string)
+	if !ok {
+		return args, nil, nil
+	}
+
+	nameRaw := (*args)["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+
+	name, ok := nameRaw.(string)
+	if !ok {
+		return args, nil, nil
+	}
+
+	regionRaw := (*args)["region"]
+	if namespaceRaw == nil {
+		return args, nil, nil
+	}
+
+	region, ok := regionRaw.(string)
+	if !ok {
+		return args, nil, nil
+	}
+	at, err := awstransport(p.Runtime.Motor.Transport)
+	if err != nil {
+		return args, nil, err
+	}
+	svc := at.Cloudwatch(region)
+	ctx := context.Background()
+
+	now := time.Now()
+	dayAgo := time.Now().Add(-24 * time.Hour)
+	params := &cloudwatch.GetMetricStatisticsInput{
+		MetricName: &name,
+		Namespace:  &namespace,
+		StartTime:  &dayAgo,
+		EndTime:    &now,
+		Period:     aws.Int32(3600),
+		Statistics: []types.Statistic{types.StatisticSum, types.StatisticAverage, types.StatisticMaximum, types.StatisticMinimum},
+	}
+	// no pagination required
+	statsResp, err := svc.GetMetricStatistics(ctx, params)
+	if err != nil {
+		return args, nil, err
+	}
+	datapoints := []interface{}{}
+	for _, datapoint := range statsResp.Datapoints {
+		lumiDatapoint, err := p.Runtime.CreateResource("aws.cloudwatch.metric.datapoint",
+			"timestamp", datapoint.Timestamp,
+			"maximum", toFloat64(datapoint.Maximum),
+			"minimum", toFloat64(datapoint.Minimum),
+			"average", toFloat64(datapoint.Average),
+			"sum", toFloat64(datapoint.Sum),
+			"unit", string(datapoint.Unit),
+		)
+		if err != nil {
+			return args, nil, err
+		}
+		datapoints = append(datapoints, lumiDatapoint)
+	}
+
+	if err != nil {
+		return args, nil, err
+	}
+
+	(*args)["label"] = toString(statsResp.Label)
+	(*args)["datapoints"] = datapoints
+	(*args)["name"] = name
+	(*args)["namespace"] = namespace
+	(*args)["region"] = region
+	return args, nil, nil
+}
+
+func (t *lumiAwsCloudwatchMetric) GetStatistics() (interface{}, error) {
+	metricName, err := t.Name()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse metric name")
+	}
+	namespace, err := t.Namespace()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse metric namespace")
+	}
+	dimensions, err := t.Dimensions()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse metric dimensions")
+	}
+	regionVal, err := t.Region()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse metric region")
+	}
+
+	at, err := awstransport(t.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	svc := at.Cloudwatch(regionVal)
+	ctx := context.Background()
+
+	now := time.Now()
+	dayAgo := time.Now().Add(-24 * time.Hour)
+	typedDimensions := make([]types.Dimension, len(dimensions))
+	for i, d := range dimensions {
+		dimension := d.(*lumiAwsCloudwatchMetricdimension)
+		name, err := dimension.Name()
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to parse metric dimension name")
+		}
+		val, err := dimension.Value()
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to parse metric dimension value")
+		}
+		typedDimensions[i].Name = &name
+		typedDimensions[i].Value = &val
+	}
+	params := &cloudwatch.GetMetricStatisticsInput{
+		MetricName: &metricName,
+		Namespace:  &namespace,
+		Dimensions: typedDimensions,
+		StartTime:  &dayAgo,
+		EndTime:    &now,
+		Period:     aws.Int32(3600),
+		Statistics: []types.Statistic{types.StatisticSum, types.StatisticAverage, types.StatisticMaximum, types.StatisticMinimum},
+	}
+	// no pagination required
+	statsResp, err := svc.GetMetricStatistics(ctx, params)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not gather aws cloudwatch stats")
+	}
+	datapoints := []interface{}{}
+	for _, datapoint := range statsResp.Datapoints {
+		lumiDatapoint, err := t.Runtime.CreateResource("aws.cloudwatch.metric.datapoint",
+			"id", formatDatapointId(datapoint),
+			"timestamp", datapoint.Timestamp,
+			"maximum", toFloat64(datapoint.Maximum),
+			"minimum", toFloat64(datapoint.Minimum),
+			"average", toFloat64(datapoint.Average),
+			"sum", toFloat64(datapoint.Sum),
+			"unit", string(datapoint.Unit),
+		)
+		if err != nil {
+			return nil, err
+		}
+		datapoints = append(datapoints, lumiDatapoint)
+	}
+	lumiStat, err := t.Runtime.CreateResource("aws.cloudwatch.metricstatistics",
+		"label", toString(statsResp.Label),
+		"datapoints", datapoints,
+		"name", metricName,
+		"namespace", namespace,
+		"region", regionVal,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return lumiStat, nil
+}
+
+func (t *lumiAwsCloudwatchMetricDatapoint) id() (string, error) {
+	return t.Id()
+}
+
+func formatDatapointId(d types.Datapoint) string {
+	byteConfig, err := json.Marshal(d)
+	if err != nil {
+		return ""
+	}
+	h := sha256.New()
+	h.Write(byteConfig)
+	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
 func (t *lumiAwsCloudwatchMetric) GetAlarms() ([]interface{}, error) {
 	metricName, err := t.Name()
 	if err != nil {
@@ -431,6 +745,7 @@ func (t *lumiAwsCloudwatchLoggroup) GetMetricsFilters() ([]interface{}, error) {
 			lumiCloudwatchMetrics := []interface{}{}
 			for _, mt := range m.MetricTransformations {
 				lumiAwsMetric, err := t.Runtime.CreateResource("aws.cloudwatch.metric",
+					"id", region+"/"+toString(mt.MetricNamespace)+"/"+toString(mt.MetricName),
 					"name", toString(mt.MetricName),
 					"namespace", toString(mt.MetricNamespace),
 					"region", region,
@@ -472,15 +787,14 @@ func (t *lumiAwsCloudwatchMetric) id() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	name, err := t.Name()
-	if err != nil {
-		return "", err
-	}
 	namespace, err := t.Namespace()
 	if err != nil {
 		return "", err
 	}
-
+	name, err := t.Name()
+	if err != nil {
+		return "", err
+	}
 	return region + "/" + namespace + "/" + name, nil
 }
 
