@@ -895,6 +895,7 @@ mount {
 
 // Unix Mountpoint
 mount.point {
+  init(path string)
   // Device
   device string
   // Path
