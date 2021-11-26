@@ -376,14 +376,15 @@ func _dictWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, invert
 			}()
 
 			if resList != nil {
+				data := &RawData{
+					Type:  bind.Type,
+					Value: resList,
+				}
 				c.cache.Store(ref, &stepCache{
-					Result: &RawData{
-						Type:  bind.Type,
-						Value: resList,
-					},
+					Result:   data,
 					IsStatic: false,
 				})
-				c.triggerChain(ref)
+				c.triggerChain(ref, data)
 			}
 		})
 		if err != nil {

@@ -85,20 +85,26 @@ func _resourceWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, in
 				}
 
 				resResource, err := c.runtime.CreateResourceWithID(lumiResource.Name, f.Id, args...)
+				var data *RawData
 				if err != nil {
-					c.cache.Store(ref, &stepCache{Result: &RawData{
+					data = &RawData{
 						Error: errors.New("Failed to create filter result resource: " + err.Error()),
-					}})
-				} else {
+					}
 					c.cache.Store(ref, &stepCache{
-						Result: &RawData{
-							Type:  bind.Type,
-							Value: resResource,
-						},
+						Result: data,
+					})
+				} else {
+					data = &RawData{
+						Type:  bind.Type,
+						Value: resResource,
+					}
+					c.cache.Store(ref, &stepCache{
+						Result:   data,
 						IsStatic: false,
 					})
 				}
-				c.triggerChain(ref)
+
+				c.triggerChain(ref, data)
 			}
 		})
 		if err != nil {

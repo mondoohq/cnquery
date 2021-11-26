@@ -161,15 +161,16 @@ func arrayBlockList(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 				// We can wait until we get done to collect all results
 				// TODO: what if one result is an error but the rest are ok?
 				// The current state will put the overall query into error state if one block is in error
+				data := &RawData{
+					Type:  arrayBlockType,
+					Value: allResults,
+					Error: anyError,
+				}
 				c.cache.Store(ref, &stepCache{
-					Result: &RawData{
-						Type:  arrayBlockType,
-						Value: allResults,
-						Error: anyError,
-					},
+					Result:   data,
 					IsStatic: true,
 				})
-				c.triggerChain(ref)
+				c.triggerChain(ref, data)
 			}
 		})
 		if err != nil {
@@ -294,15 +295,15 @@ func _arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, inver
 			}()
 
 			if resList != nil {
+				data := &RawData{
+					Type:  bind.Type,
+					Value: resList,
+				}
 				c.cache.Store(ref, &stepCache{
-					Result: &RawData{
-						Type:  bind.Type,
-						Value: resList,
-					},
+					Result:   data,
 					IsStatic: false,
 				})
-
-				c.triggerChain(ref)
+				c.triggerChain(ref, data)
 			}
 		})
 		if err != nil {
@@ -462,14 +463,15 @@ func arrayFieldDuplicates(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int
 
 				equalFunc, ok := types.Equal[filteredList[0].Type]
 				if !ok {
+					data := &RawData{
+						Type:  items.Type,
+						Error: errors.New("cannot extract duplicates from array, field must be a basic type"),
+					}
 					c.cache.Store(ref, &stepCache{
-						Result: &RawData{
-							Type:  items.Type,
-							Error: errors.New("cannot extract duplicates from array, field must be a basic type"),
-						},
+						Result:   data,
 						IsStatic: false,
 					})
-					c.triggerChain(ref)
+					c.triggerChain(ref, data)
 					return
 				}
 
@@ -517,14 +519,15 @@ func arrayFieldDuplicates(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int
 					resList = append(resList, list[idx])
 				}
 
+				data := &RawData{
+					Type:  bind.Type,
+					Value: resList,
+				}
 				c.cache.Store(ref, &stepCache{
-					Result: &RawData{
-						Type:  bind.Type,
-						Value: resList,
-					},
+					Result:   data,
 					IsStatic: false,
 				})
-				c.triggerChain(ref)
+				c.triggerChain(ref, data)
 			}
 		})
 		if err != nil {
