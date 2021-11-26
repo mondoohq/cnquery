@@ -45,4 +45,11 @@ func TestResource_SSHD(t *testing.T) {
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, []interface{}{"curve25519-sha256@libssh.org", "diffie-hellman-group-exchange-sha256"}, res[0].Data.Value)
 	})
+
+	t.Run("parse hostKeys", func(t *testing.T) {
+		res := testQuery(t, "sshd.config.hostkeys")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, []interface{}{"/etc/ssh/ssh_host_rsa_key", "/etc/ssh/ssh_host_ecdsa_key", "/etc/ssh/ssh_host_ed25519_key"}, res[0].Data.Value)
+	})
 }
