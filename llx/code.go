@@ -137,6 +137,11 @@ func (l *Code) RefDatapoints(ref int32) []int32 {
 		return nil
 	}
 
+	switch chunk.Id {
+	case "$all", "$one", "$any", "$none":
+		return []int32{ref - 1}
+	}
+
 	if _, ok := ComparableLabel(chunk.Id); !ok {
 		return nil
 	}
@@ -266,6 +271,27 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, ref int32, lookup func(
 
 	if chunk.Id == "" {
 		res.Error = "chunk has unknown identifier"
+		return &res
+	}
+
+	switch chunk.Id {
+	case "$one", "$all", "$none", "$any":
+		res.IsAssertion = true
+		res.Operation = chunk.Id[1:]
+
+		if !truthy {
+			listRef := chunk.Function.Binding
+			list, ok := lookup(bundle.Code.Checksums[listRef])
+			if !ok {
+				res.Error = "cannot find value for assessment (" + res.Operation + ")"
+				return &res
+			}
+
+			res.Actual = list.Result().Data
+		} else {
+			res.Actual = BoolPrimitive(true)
+		}
+
 		return &res
 	}
 
