@@ -274,7 +274,7 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, ref int3
 			c.cache.Store(ref, &stepCache{
 				Result: res.Data,
 			})
-			c.triggerChain(ref)
+			c.triggerChain(ref, res.Data)
 			return
 		}
 
@@ -296,15 +296,16 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, ref int3
 				}
 			}
 
+			data := &RawData{
+				Type:  types.Block,
+				Value: blockResult,
+				Error: anyError,
+			}
 			c.cache.Store(ref, &stepCache{
-				Result: &RawData{
-					Type:  types.Block,
-					Value: blockResult,
-					Error: anyError,
-				},
+				Result:   data,
 				IsStatic: true,
 			})
-			c.triggerChain(ref)
+			c.triggerChain(ref, data)
 		}
 	})
 
@@ -527,7 +528,13 @@ func (c *LeiseExecutor) runChain(start int32) {
 // unlike runChain this will not execute the ref chunk, but rather
 // try to move to the next called chunk - or if it's not available
 // handle the result
-func (c *LeiseExecutor) triggerChain(ref int32) {
+func (c *LeiseExecutor) triggerChain(ref int32, data *RawData) {
+	// before we do anything else, we may have to provide the value from
+	// this callback point
+	if codeID, ok := c.callbackPoints[ref]; ok {
+		c.callback(&RawResult{Data: data, CodeID: codeID})
+	}
+
 	nxt, ok := c.calls.Load(ref)
 	if ok {
 		if len(nxt) == 0 {
