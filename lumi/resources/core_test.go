@@ -109,10 +109,6 @@ func testWindowsQuery(t *testing.T, query string) []*llx.RawResult {
 	return testQueryWithExecutor(t, mockExecutor("./testdata/windows.toml"), query, nil)
 }
 
-func testQueryLocal(t *testing.T, query string) []*llx.RawResult {
-	return testQueryWithExecutor(t, linuxMockExecutor(), query, nil)
-}
-
 func testResultsErrors(t *testing.T, r []*llx.RawResult) bool {
 	var found bool
 	for i := range r {
@@ -201,7 +197,7 @@ func runSimpleTests(t *testing.T, tests []simpleTest) {
 	for i := range tests {
 		cur := tests[i]
 		t.Run(cur.code, func(t *testing.T) {
-			res := testQueryLocal(t, cur.code)
+			res := testQuery(t, cur.code)
 			assert.NotEmpty(t, res)
 
 			if len(res) <= cur.resultIndex {
@@ -760,7 +756,7 @@ func duration(i int64) *time.Time {
 func TestFuzzyTime(t *testing.T) {
 	code := "time.now.unix"
 	t.Run(code, func(t *testing.T) {
-		res := testQueryLocal(t, code)
+		res := testQuery(t, code)
 		now := time.Now().Unix()
 		assert.NotEmpty(t, res)
 
