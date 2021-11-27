@@ -26,9 +26,13 @@ func TestResource_Mount(t *testing.T) {
 		assert.Equal(t, "overlay", res[0].Data.Value)
 	})
 
-	t.Run("mount point", func(t *testing.T) {
-		res := testQuery(t, "mount.point(\"/dev\")")
+	t.Run("check mount point resource", func(t *testing.T) {
+		res := testQuery(t, "mount.point(\"/dev\").mounted")
 		assert.NotEmpty(t, res)
-		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, true, res[0].Data.Value)
+
+		res = testQuery(t, "mount.point(\"/notthere\").mounted")
+		assert.NotEmpty(t, res)
+		assert.Equal(t, false, res[0].Data.Value)
 	})
 }
