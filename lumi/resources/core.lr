@@ -904,6 +904,8 @@ mount.point {
   fstype string
   // Mount Options
   options map[string]string
+  // Flag whether the mount point is mounted
+  mounted bool
 }
 
 // Shadowed Password File

@@ -1,7 +1,6 @@
 package resources
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/rs/zerolog/log"
@@ -41,6 +40,7 @@ func (m *lumiMount) GetList() ([]interface{}, error) {
 			"path", osMount.MountPoint,
 			"fstype", osMount.FSType,
 			"options", opts,
+			"mounted", true,
 		)
 		if err != nil {
 			return nil, err
@@ -91,5 +91,12 @@ func (p *lumiMountPoint) init(args *lumi.Args) (*lumi.Args, MountPoint, error) {
 		}
 	}
 
-	return nil, nil, errors.New("mount.point " + path + " does not exist")
+	// if the mount point cannot be found, we init it as an empty mount.point
+	(*args)["device"] = ""
+	(*args)["path"] = path
+	(*args)["fstype"] = ""
+	(*args)["options"] = map[string]interface{}{}
+	(*args)["mounted"] = false
+
+	return args, nil, nil
 }
