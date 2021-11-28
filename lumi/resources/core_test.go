@@ -331,25 +331,25 @@ func TestCore_If(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"if ( mondoo.version != null ) { 123 }",
-			1,
+			2,
 			map[string]interface{}{
 				"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
 			},
 		},
 		{
 			"if ( mondoo.version == null ) { 123 }",
-			1, nil,
+			2, nil,
 		},
 		{
 			"if ( mondoo.version != null ) { 123 } else { 456 }",
-			1,
+			2,
 			map[string]interface{}{
 				"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
 			},
 		},
 		{
 			"if ( mondoo.version == null ) { 123 } else { 456 }",
-			1,
+			2,
 			map[string]interface{}{
 				"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
 			},
@@ -840,7 +840,7 @@ func TestTime_Methods(t *testing.T) {
 		},
 		{
 			"time.now != Never",
-			2, true,
+			3, true,
 		},
 		{
 			"time.now - Never",
@@ -1127,7 +1127,7 @@ func TestResource_Any(t *testing.T) {
 		},
 		{
 			"users.where(uid < 100).any(uid < 50)",
-			1, true,
+			2, true,
 		},
 	})
 }
@@ -1136,11 +1136,11 @@ func TestResource_One(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"users.one(uid == 0)",
-			1, true,
+			2, true,
 		},
 		{
 			"users.where(uid < 100).one(uid == 0)",
-			1, true,
+			2, true,
 		},
 	})
 }
@@ -1149,11 +1149,11 @@ func TestResource_None(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"users.none(uid == 99999)",
-			1, true,
+			2, true,
 		},
 		{
 			"users.where(uid < 100).none(uid == 1000)",
-			1, true,
+			2, true,
 		},
 	})
 }

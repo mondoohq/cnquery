@@ -323,6 +323,10 @@ func arrayWhereNot(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 }
 
 func arrayAll(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (list is null)")}, 0, nil
+	}
+
 	filteredList := bind.Value.([]interface{})
 
 	if len(filteredList) != 0 {
@@ -332,6 +336,10 @@ func arrayAll(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDat
 }
 
 func arrayNone(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (list is null)")}, 0, nil
+	}
+
 	filteredList := bind.Value.([]interface{})
 
 	if len(filteredList) != 0 {
@@ -341,6 +349,10 @@ func arrayNone(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDa
 }
 
 func arrayAny(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (list is null)")}, 0, nil
+	}
+
 	filteredList := bind.Value.([]interface{})
 
 	if len(filteredList) == 0 {
@@ -350,6 +362,10 @@ func arrayAny(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDat
 }
 
 func arrayOne(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (list is null)")}, 0, nil
+	}
+
 	filteredList := bind.Value.([]interface{})
 
 	if len(filteredList) != 1 {
