@@ -1,7 +1,10 @@
 package terraform
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"io/ioutil"
+	"path/filepath"
 
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/hcl/v2"
@@ -11,8 +14,10 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
 )
 
-var _ transports.Transport = (*Transport)(nil)
-var _ transports.TransportPlatformIdentifier = (*Transport)(nil)
+var (
+	_ transports.Transport                   = (*Transport)(nil)
+	_ transports.TransportPlatformIdentifier = (*Transport)(nil)
+)
 
 func New(tc *transports.TransportConfig) (*Transport, error) {
 	if tc.Options == nil || tc.Options["path"] == "" {
@@ -37,7 +42,16 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 
 	modulesManifest, err := ParseTerraformModuleManifest(path)
 
+	absPath, _ := filepath.Abs(path)
+	h := sha256.New()
+	h.Write([]byte(absPath))
+	hash := hex.EncodeToString(h.Sum(nil))
+
+	platformID := "//platformid.api.mondoo.app/runtime/terraform/hash/" + hash
+
 	return &Transport{
+		platformID:      platformID,
+		path:            path,
 		parsed:          parsed,
 		tfVars:          tfVars,
 		modulesManifest: modulesManifest,
@@ -48,6 +62,8 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 // - https://www.terraform.io/docs/language/syntax/configuration.html
 // - https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md
 type Transport struct {
+	platformID      string
+	path            string
 	parsed          *hclparse.Parser
 	tfVars          map[string]*hcl.Attribute
 	modulesManifest *ModuleManifest
@@ -97,7 +113,6 @@ func (t *Transport) ModulesManifest() *ModuleManifest {
 	return t.modulesManifest
 }
 
-// TODO: we need to fix that
 func (t *Transport) Identifier() (string, error) {
-	return "terraform", nil
+	return t.platformID, nil
 }

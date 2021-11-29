@@ -31,6 +31,7 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/ms365"
 	"go.mondoo.io/mondoo/motor/discovery/standard"
 	"go.mondoo.io/mondoo/motor/discovery/tar"
+	"go.mondoo.io/mondoo/motor/discovery/terraform"
 	"go.mondoo.io/mondoo/motor/discovery/vagrant"
 	"go.mondoo.io/mondoo/motor/discovery/vsphere"
 	"go.mondoo.io/mondoo/motor/transports"
@@ -73,7 +74,7 @@ func init() {
 		transports.SCHEME_GITHUB:             &standard.Resolver{},
 		transports.SCHEME_AWS_EC2_EBS:        &ebs.Resolver{},
 		transports.SCHEME_GITLAB:             &standard.Resolver{},
-		transports.SCHEME_TERRAFORM:          &standard.Resolver{},
+		transports.SCHEME_TERRAFORM:          &terraform.Resolver{},
 	}
 }
 
