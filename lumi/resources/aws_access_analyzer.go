@@ -67,6 +67,7 @@ func (a *lumiAwsAccessAnalyzer) getAnalyzers(at *aws_transport.Transport) []*job
 						"name", toString(analyzer.Name),
 						"status", string(analyzer.Status),
 						"type", string(analyzer.Type),
+						"tags", mapTagsToLumiMapTags(analyzer.Tags),
 					)
 					if err != nil {
 						return nil, err
@@ -83,4 +84,16 @@ func (a *lumiAwsAccessAnalyzer) getAnalyzers(at *aws_transport.Transport) []*job
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func mapTagsToLumiMapTags(tags map[string]string) map[string]interface{} {
+	tagsMap := make(map[string]interface{})
+
+	if len(tags) > 0 {
+		for k, v := range tags {
+			tagsMap[k] = v
+		}
+	}
+
+	return tagsMap
 }

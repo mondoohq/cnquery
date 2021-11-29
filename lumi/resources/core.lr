@@ -1535,6 +1535,8 @@ aws.accessanalyzer.analyzer {
   status string
   // type of analyzer (ACCOUNT or ORGANIZATION)
   type string
+  // tags for the Analyzer
+  tags map[string]string
 }
 
 // AWS account resource
@@ -1566,6 +1568,8 @@ aws.efs.filesystem {
   backupPolicy() dict
   // region in which the filesystem exists
   region string
+  // tags for the filesystem
+  tags map[string]string
 }
 
 // AWS service to create and manage permissions for users and groups
@@ -1777,6 +1781,8 @@ aws.sagemaker.notebookinstance {
   details() aws.sagemaker.notebookinstance.details
   // region where the notebook instance exists
   region string
+  // tags for the notebook instance
+  tags map[string]string
 }
 
 aws.sagemaker.notebookinstance.details {
@@ -1797,6 +1803,8 @@ aws.sagemaker.endpoint {
   config() dict
   // region where the endpoint exists
   region string
+  // tags for the endpoint
+  tags map[string]string
 }
 
 // AWS SNS
@@ -1845,6 +1853,8 @@ aws.es.domain {
   endpoint string
   // region where the domain exists
   region string
+  // tags for the domain
+  tags map[string]string
 }
 
 // AWS Certificate Manager resource for assessing the configuration of AWS Certificate Manager
@@ -1891,6 +1901,8 @@ aws.autoscaling.group {
   loadBalancerNames []string
   // health check type used by the group (ELB|EC2)
   healthCheckType string
+  // tags for the asg
+  tags map[string]string
 }
 
 // AWS Elastic Load Balancing
@@ -1937,6 +1949,8 @@ aws.codebuild.project {
   region string
   // source used for the build project
   source dict
+  // tags for the project
+  tags map[string]string
 }
 
 // Amazon GuardDuty for threat detection
@@ -1987,6 +2001,8 @@ aws.secretsmanager.secret {
   rotationEnabled bool
   // name of the secret
   name string
+  // tags for the secret
+  tags map[string]string
 }
 
 // AWS EMR for large data processing
@@ -2011,6 +2027,8 @@ aws.emr.cluster {
   masterInstances() []dict
   // emr cluster id
   id string
+  // tags for the cluster
+  tags map[string]string
 }
 
 // AWS CloudWatch provides observability of AWS resources and applications
@@ -2270,6 +2288,8 @@ aws.dynamodb.globaltable {
   name string
   // list of replica settings for the table
   replicaSettings() []dict
+  // tags for the table
+  tags map[string]string
 }
 
 // AWS DynamoDB Table
@@ -2288,6 +2308,8 @@ aws.dynamodb.table {
   provisionedThroughput dict
   // continuous backups and point in time recovery settings for the table
   continuousBackups() dict
+  // tags for the table
+  tags map[string]string
 }
 
 // AWS RDS for operating and scaling relational dbs
@@ -2310,6 +2332,8 @@ aws.rds.dbcluster {
   members []aws.rds.dbinstance
   // list of snapshots for the cluster
   snapshots() []aws.rds.snapshot
+  // tags for the db cluster
+  tags map[string]string
 }
 
 // AWS RDS Snapshot
@@ -2328,6 +2352,8 @@ aws.rds.snapshot {
   region string
   // true if snapshot if for cluster
   isClusterSnapshot bool
+  // tags for the snapshot
+  tags map[string]string
 }
 
 // AWS RDS Database Instance
@@ -2356,6 +2382,8 @@ aws.rds.dbinstance {
   id string
   // arn of the CloudWatch log stream that receives the enhanced monitoring metrics data
   enhancedMonitoringResourceArn string
+  // tags for the db instance
+  tags map[string]string
 }
 
 // Amazon ElastiCache in-memory data store
@@ -2396,6 +2424,8 @@ aws.redshift.cluster {
   region string
   // list of cluster parameter group names
   clusterParameterGroupNames []string
+  // tags for the cluster
+  tags map[string]string
 }
 
 // AWS Database Migration Service
@@ -2425,6 +2455,8 @@ aws.apigateway.restapi {
   stages() []aws.apigateway.stage
   // region where the rest api exists
   region string
+  // tags for the rest api
+  tags map[string]string
 }
 
 // Amazon API Gateway REST API resource provides an object representing an individual stage configured on an API Gateway 
@@ -2465,6 +2497,8 @@ aws.lambda.function {
   vpcConfig dict
   // region where the function exists
   region string
+  // tags for the function
+  tags map[string]string
 }
 
 // Amazon EC2
@@ -2557,6 +2591,8 @@ aws.ec2.snapshot {
   volumeId string
   // time when the snapshot was initiated
   startTime time
+  // tags for the snapshot
+  tags map[string]string
 }
 
 // AWS EC2 Volume
@@ -2667,6 +2703,8 @@ aws.vpc {
   flowLogs() []aws.vpc.flowlog
   // list of route tables for the vpc
   routeTables() []aws.vpc.routetable
+  // tags on the vpc
+  tags map[string]string
 }
 
 // Amazon Virtual Private Cloud Flow Log
@@ -2679,6 +2717,8 @@ aws.vpc.flowlog {
   region string
   // status of the flowlog
   status string
+  // tags on the flowlog
+  tags map[string]string
 }
 
 // Amazon Virtual Private Cloud Route Table

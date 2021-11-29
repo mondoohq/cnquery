@@ -1050,6 +1050,7 @@ func (s *lumiAwsEc2) getSnapshots(at *aws_transport.Transport) []*jobpool.Job {
 						"region", regionVal,
 						"volumeId", toString(snapshot.VolumeId),
 						"startTime", snapshot.StartTime,
+						"tags", ec2TagsToMap(snapshot.Tags),
 					)
 					if err != nil {
 						return nil, err

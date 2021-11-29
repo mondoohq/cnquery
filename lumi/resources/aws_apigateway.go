@@ -76,6 +76,7 @@ func (a *lumiAwsApigateway) getRestApis(at *aws_transport.Transport) []*jobpool.
 						"description", toString(restApi.Description),
 						"createdDate", restApi.CreatedDate,
 						"region", regionVal,
+						"tags", mapTagsToLumiMapTags(restApi.Tags),
 					)
 					if err != nil {
 						return nil, err

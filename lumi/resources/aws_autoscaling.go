@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
@@ -70,6 +71,7 @@ func (a *lumiAwsAutoscaling) getGroups(at *aws_transport.Transport) []*jobpool.J
 						"name", toString(group.AutoScalingGroupName),
 						"loadBalancerNames", lbNames,
 						"healthCheckType", toString(group.HealthCheckType),
+						"tags", group.Tags,
 					)
 					if err != nil {
 						return nil, err
@@ -86,4 +88,17 @@ func (a *lumiAwsAutoscaling) getGroups(at *aws_transport.Transport) []*jobpool.J
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func autoscalingTagsToMap(tags []types.TagDescription) map[string]interface{} {
+	tagsMap := make(map[string]interface{})
+
+	if len(tags) > 0 {
+		for i := range tags {
+			tag := tags[i]
+			tagsMap[toString(tag.Key)] = toString(tag.Value)
+		}
+	}
+
+	return tagsMap
 }

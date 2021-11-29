@@ -131,6 +131,7 @@ resources:
   aws.accessanalyzer.analyzer.arn: 5.15.0
   aws.accessanalyzer.analyzer.name: 5.15.0
   aws.accessanalyzer.analyzer.status: 5.15.0
+  aws.accessanalyzer.analyzer.tags: latest
   aws.accessanalyzer.analyzer.type: 5.15.0
   aws.account: 5.15.0
   aws.account.aliases: 5.15.0
@@ -145,6 +146,7 @@ resources:
   aws.acm.certificate.notBefore: 5.15.0
   aws.acm.certificate.status: 5.15.0
   aws.acm.certificate.subject: 5.15.0
+  aws.acm.certificate.tags: latest
   aws.acm.certificates: 5.15.0
   aws.apigateway: 5.15.0
   aws.apigateway.restApis: 5.15.0
@@ -156,6 +158,7 @@ resources:
   aws.apigateway.restapi.name: 5.15.0
   aws.apigateway.restapi.region: 5.15.0
   aws.apigateway.restapi.stages: 5.15.0
+  aws.apigateway.restapi.tags: latest
   aws.apigateway.stage: 5.15.0
   aws.apigateway.stage.arn: 5.15.0
   aws.apigateway.stage.deploymentId: 5.15.0
@@ -169,6 +172,7 @@ resources:
   aws.autoscaling.group.healthCheckType: 5.15.0
   aws.autoscaling.group.loadBalancerNames: 5.15.0
   aws.autoscaling.group.name: 5.15.0
+  aws.autoscaling.group.tags: latest
   aws.autoscaling.groups: 5.15.0
   aws.cloudtrail: 5.15.0
   aws.cloudtrail.trail: 5.15.0
@@ -186,6 +190,7 @@ resources:
   aws.cloudtrail.trail.s3bucket: 5.15.0
   aws.cloudtrail.trail.snsTopicARN: 5.15.0
   aws.cloudtrail.trail.status: 5.15.0
+  aws.cloudtrail.trail.tags: latest
   aws.cloudtrail.trails: 5.15.0
   aws.cloudwatch: 5.15.0
   aws.cloudwatch.alarms: 5.15.0
@@ -225,6 +230,7 @@ resources:
   aws.codebuild.project.name: 5.15.0
   aws.codebuild.project.region: 5.15.0
   aws.codebuild.project.source: 5.15.0
+  aws.codebuild.project.tags: latest
   aws.codebuild.projects: 5.15.0
   aws.config: 5.15.0
   aws.config.recorder: 5.15.0
@@ -250,6 +256,7 @@ resources:
   aws.dynamodb.globaltable.arn: 5.15.0
   aws.dynamodb.globaltable.name: 5.15.0
   aws.dynamodb.globaltable.replicaSettings: 5.15.0
+  aws.dynamodb.globaltable.tags: latest
   aws.dynamodb.limit: 5.15.0
   aws.dynamodb.limit.accountMaxRead: 5.15.0
   aws.dynamodb.limit.accountMaxWrite: 5.15.0
@@ -266,6 +273,7 @@ resources:
   aws.dynamodb.table.provisionedThroughput: 5.15.0
   aws.dynamodb.table.region: 5.15.0
   aws.dynamodb.table.sseDescription: 5.15.0
+  aws.dynamodb.table.tags: latest
   aws.dynamodb.tables: 5.15.0
   aws.ec2: 5.15.0
   aws.ec2.ebsEncryptionByDefault: 5.15.0
@@ -377,6 +385,7 @@ resources:
   aws.efs.filesystem.kmsKey: 5.15.0
   aws.efs.filesystem.name: 5.15.0
   aws.efs.filesystem.region: 5.15.0
+  aws.efs.filesystem.tags: latest
   aws.efs.filesystems: 5.15.0
   aws.elasticache: 5.15.0
   aws.elasticache.clusters: 5.15.0
@@ -390,6 +399,7 @@ resources:
   aws.elb.loadbalancer.listenerDescriptions: 5.15.0
   aws.elb.loadbalancer.name: 5.15.0
   aws.elb.loadbalancer.scheme: 5.15.0
+  aws.elb.loadbalancer.tags: latest
   aws.emr: 5.15.0
   aws.emr.cluster: 5.15.0
   aws.emr.cluster.arn: 5.15.0
@@ -399,6 +409,7 @@ resources:
   aws.emr.cluster.normalizedInstanceHours: 5.15.0
   aws.emr.cluster.outpostArn: 5.15.0
   aws.emr.cluster.status: 5.15.0
+  aws.emr.cluster.tags: latest
   aws.emr.clusters: 5.15.0
   aws.es: 5.15.0
   aws.es.domain: 5.15.0
@@ -408,6 +419,7 @@ resources:
   aws.es.domain.name: 5.15.0
   aws.es.domain.nodeToNodeEncryptionEnabled: 5.15.0
   aws.es.domain.region: 5.15.0
+  aws.es.domain.tags: latest
   aws.es.domains: 5.15.0
   aws.guardduty: 5.15.0
   aws.guardduty.detector: 5.15.0
@@ -415,6 +427,7 @@ resources:
   aws.guardduty.detector.id: 5.15.0
   aws.guardduty.detector.region: 5.15.0
   aws.guardduty.detector.status: 5.15.0
+  aws.guardduty.detector.tags: latest
   aws.guardduty.detector.unarchivedFindings: 5.15.0
   aws.guardduty.detectors: 5.15.0
   aws.iam: 5.15.0
@@ -443,6 +456,7 @@ resources:
   aws.iam.policy.isAttachable: 5.15.0
   aws.iam.policy.name: 5.15.0
   aws.iam.policy.scope: 5.15.0
+  aws.iam.policy.tags: latest
   aws.iam.policy.updateDate: 5.15.0
   aws.iam.policy.versions: 5.15.0
   aws.iam.policyversion: 5.15.0
@@ -508,6 +522,7 @@ resources:
   aws.kms.key.keyRotationEnabled: 5.15.0
   aws.kms.key.metadata: 5.15.0
   aws.kms.key.region: 5.15.0
+  aws.kms.key.tags: latest
   aws.kms.keys: 5.15.0
   aws.lambda: 5.15.0
   aws.lambda.function: 5.15.0
@@ -517,6 +532,7 @@ resources:
   aws.lambda.function.name: 5.15.0
   aws.lambda.function.policy: 5.15.0
   aws.lambda.function.region: 5.15.0
+  aws.lambda.function.tags: latest
   aws.lambda.function.vpcConfig: 5.15.0
   aws.lambda.functions: 5.15.0
   aws.rds: 5.15.0
@@ -528,6 +544,7 @@ resources:
   aws.rds.dbcluster.members: 5.15.0
   aws.rds.dbcluster.region: 5.15.0
   aws.rds.dbcluster.snapshots: 5.15.0
+  aws.rds.dbcluster.tags: latest
   aws.rds.dbinstance: 5.15.0
   aws.rds.dbinstance.arn: 5.15.0
   aws.rds.dbinstance.backupRetentionPeriod: 5.15.0
@@ -541,6 +558,7 @@ resources:
   aws.rds.dbinstance.region: 5.15.0
   aws.rds.dbinstance.snapshots: 5.15.0
   aws.rds.dbinstance.storageEncrypted: 5.15.0
+  aws.rds.dbinstance.tags: latest
   aws.rds.snapshot: 5.15.0
   aws.rds.snapshot.arn: 5.15.0
   aws.rds.snapshot.attributes: 5.15.0
@@ -548,6 +566,7 @@ resources:
   aws.rds.snapshot.id: 5.15.0
   aws.rds.snapshot.isClusterSnapshot: 5.15.0
   aws.rds.snapshot.region: 5.15.0
+  aws.rds.snapshot.tags: latest
   aws.rds.snapshot.type: 5.15.0
   aws.redshift: 5.15.0
   aws.redshift.cluster: 5.15.0
@@ -563,6 +582,7 @@ resources:
   aws.redshift.cluster.preferredMaintenanceWindow: 5.15.0
   aws.redshift.cluster.publiclyAccessible: 5.15.0
   aws.redshift.cluster.region: 5.15.0
+  aws.redshift.cluster.tags: latest
   aws.redshift.clusters: 5.15.0
   aws.regions: 5.15.0
   aws.s3: 5.15.0
@@ -610,6 +630,7 @@ resources:
   aws.sagemaker.endpoint.config: 5.15.0
   aws.sagemaker.endpoint.name: 5.15.0
   aws.sagemaker.endpoint.region: 5.15.0
+  aws.sagemaker.endpoint.tags: latest
   aws.sagemaker.endpoints: 5.15.0
   aws.sagemaker.notebookInstances: 5.15.0
   aws.sagemaker.notebookinstance: 5.15.0
@@ -620,26 +641,31 @@ resources:
   aws.sagemaker.notebookinstance.details.kmsKey: 5.15.0
   aws.sagemaker.notebookinstance.name: 5.15.0
   aws.sagemaker.notebookinstance.region: 5.15.0
+  aws.sagemaker.notebookinstance.tags: latest
   aws.secretsmanager: 5.15.0
   aws.secretsmanager.secret: 5.15.0
   aws.secretsmanager.secret.arn: 5.15.0
   aws.secretsmanager.secret.name: 5.15.0
   aws.secretsmanager.secret.rotationEnabled: 5.15.0
+  aws.secretsmanager.secret.tags: latest
   aws.secretsmanager.secrets: 5.15.0
   aws.securityhub: 5.15.0
   aws.securityhub.hub: 5.15.0
   aws.securityhub.hub.arn: 5.15.0
   aws.securityhub.hub.subscribedAt: 5.15.0
+  aws.securityhub.hub.tags: latest
   aws.securityhub.hubs: 5.15.0
   aws.sns: 5.15.0
   aws.sns.subscription: 5.15.0
   aws.sns.subscription.arn: 5.15.0
   aws.sns.subscription.protocol: 5.15.0
+  aws.sns.subscription.tags: latest
   aws.sns.topic: 5.15.0
   aws.sns.topic.arn: 5.15.0
   aws.sns.topic.attributes: 5.15.0
   aws.sns.topic.region: 5.15.0
   aws.sns.topic.subscriptions: 5.15.0
+  aws.sns.topic.tags: latest
   aws.sns.topics: 5.15.0
   aws.vpc: 5.15.0
   aws.vpc.arn: 5.15.0
@@ -1566,6 +1592,7 @@ resources:
   mount.point: 5.15.0
   mount.point.device: 5.15.0
   mount.point.fstype: 5.15.0
+  mount.point.mounted: latest
   mount.point.options: 5.15.0
   mount.point.path: 5.15.0
   ms365.exchangeonline: 5.15.0
@@ -1919,6 +1946,7 @@ resources:
   sshd.config.ciphers: 5.15.0
   sshd.config.content: 5.15.0
   sshd.config.file: 5.15.0
+  sshd.config.hostkeys: latest
   sshd.config.kexs: 5.15.0
   sshd.config.macs: 5.15.0
   sshd.config.params: 5.15.0

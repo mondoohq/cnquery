@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
@@ -65,6 +66,7 @@ func (e *lumiAwsSecretsmanager) getSecrets(at *aws_transport.Transport) []*jobpo
 						"arn", toString(secret.ARN),
 						"name", toString(secret.Name),
 						"rotationEnabled", secret.RotationEnabled,
+						"tags", secretTagsToMap(secret.Tags),
 					)
 					if err != nil {
 						return nil, err
@@ -81,4 +83,17 @@ func (e *lumiAwsSecretsmanager) getSecrets(at *aws_transport.Transport) []*jobpo
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func secretTagsToMap(tags []types.Tag) map[string]interface{} {
+	tagsMap := make(map[string]interface{})
+
+	if len(tags) > 0 {
+		for i := range tags {
+			tag := tags[i]
+			tagsMap[toString(tag.Key)] = toString(tag.Value)
+		}
+	}
+
+	return tagsMap
 }

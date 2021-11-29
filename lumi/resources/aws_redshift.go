@@ -83,6 +83,7 @@ func (r *lumiAwsRedshift) getClusters(at *aws_transport.Transport) []*jobpool.Jo
 						"automatedSnapshotRetentionPeriod", int64(cluster.AutomatedSnapshotRetentionPeriod),
 						"publiclyAccessible", cluster.PubliclyAccessible,
 						"clusterParameterGroupNames", names,
+						"tags", redshiftTagsToMap(cluster.Tags),
 					)
 					if err != nil {
 						return nil, err
@@ -99,6 +100,19 @@ func (r *lumiAwsRedshift) getClusters(at *aws_transport.Transport) []*jobpool.Jo
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func redshiftTagsToMap(tags []types.Tag) map[string]interface{} {
+	tagsMap := make(map[string]interface{})
+
+	if len(tags) > 0 {
+		for i := range tags {
+			tag := tags[i]
+			tagsMap[toString(tag.Key)] = toString(tag.Value)
+		}
+	}
+
+	return tagsMap
 }
 
 func (r *lumiAwsRedshiftCluster) id() (string, error) {

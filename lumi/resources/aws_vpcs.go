@@ -90,6 +90,7 @@ func (s *lumiAws) getVpcs(at *aws_transport.Transport) []*jobpool.Job {
 						"state", string(v.State),
 						"isDefault", v.IsDefault,
 						"region", regionVal,
+						"tags", ec2TagsToMap(v.Tags),
 					)
 					if err != nil {
 						log.Error().Msg(err.Error())
@@ -140,6 +141,7 @@ func (s *lumiAwsVpc) GetFlowLogs() ([]interface{}, error) {
 				"vpc", vpc,
 				"region", region,
 				"status", toString(flowLog.FlowLogStatus),
+				"tags", ec2TagsToMap(flowLog.Tags),
 			)
 			if err != nil {
 				return nil, err

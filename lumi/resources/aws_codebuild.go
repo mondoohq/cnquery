@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
+	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
@@ -121,5 +122,19 @@ func (c *lumiAwsCodebuildProject) init(args *lumi.Args) (*lumi.Args, AwsCodebuil
 	(*args)["description"] = toString(project.Description)
 	(*args)["environment"] = jsonEnv
 	(*args)["source"] = jsonSource
+	(*args)["tags"] = cbTagsToMap(project.Tags)
 	return args, nil, nil
+}
+
+func cbTagsToMap(tags []types.Tag) map[string]interface{} {
+	tagsMap := make(map[string]interface{})
+
+	if len(tags) > 0 {
+		for i := range tags {
+			tag := tags[i]
+			tagsMap[toString(tag.Key)] = toString(tag.Value)
+		}
+	}
+
+	return tagsMap
 }
