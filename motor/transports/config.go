@@ -56,7 +56,7 @@ func (conn *TransportConfig) ToUrl() string {
 	case TransportBackend_CONNECTION_CONTAINER_REGISTRY:
 		return SCHEME_CONTAINER_REGISTRY + "://" + conn.Host + conn.Path
 	case TransportBackend_CONNECTION_LOCAL_OS:
-		return SCHEME_LOCAL + "://"
+		return SCHEME_LOCAL
 	case TransportBackend_CONNECTION_WINRM:
 		return SCHEME_WINRM + "://" + conn.Host
 	case TransportBackend_CONNECTION_AWS_SSM_RUN_COMMAND:
@@ -72,25 +72,27 @@ func (conn *TransportConfig) ToUrl() string {
 	case TransportBackend_CONNECTION_ARISTAEOS:
 		return SCHEME_ARISTA + "://" + conn.Host
 	case TransportBackend_CONNECTION_AWS:
-		return SCHEME_AWS + "://"
+		return SCHEME_AWS
 	case TransportBackend_CONNECTION_AZURE:
-		return SCHEME_AZURE + "://"
+		return SCHEME_AZURE
 	case TransportBackend_CONNECTION_MS365:
-		return SCHEME_MS365 + "://"
+		return SCHEME_MS365
 	case TransportBackend_CONNECTION_IPMI:
-		return SCHEME_IPMI + "://"
+		return SCHEME_IPMI
 	case TransportBackend_CONNECTION_FS:
-		return SCHEME_FS + "://"
+		return SCHEME_FS
 	case TransportBackend_CONNECTION_EQUINIX_METAL:
-		return SCHEME_EQUINIX + "://"
+		return SCHEME_EQUINIX
 	case TransportBackend_CONNECTION_K8S:
-		return SCHEME_K8S + "://"
+		return SCHEME_K8S
 	case TransportBackend_CONNECTION_GITHUB:
 		return SCHEME_GITHUB
 	case TransportBackend_CONNECTION_GCP:
-		return SCHEME_GCP + "://"
+		return SCHEME_GCP
 	case TransportBackend_CONNECTION_AWS_EC2_EBS:
-		return SCHEME_AWS_EC2_EBS + "://"
+		return SCHEME_AWS_EC2_EBS
+	case TransportBackend_CONNECTION_TERRAFORM:
+		return SCHEME_TERRAFORM
 	default:
 		log.Warn().Str("backend", conn.Backend.String()).Msg("cannot render backend config")
 		return ""
