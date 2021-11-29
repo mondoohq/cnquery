@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/service/efs"
+	"github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
@@ -69,6 +70,7 @@ func (e *lumiAwsEfs) getFilesystems(at *aws_transport.Transport) []*jobpool.Job 
 						"name", toString(fs.Name),
 						"encrypted", toBool(fs.Encrypted),
 						"region", regionVal,
+						"tags", efsTagsToMap(fs.Tags),
 					}
 					// add kms key if there is one
 					if fs.KmsKeyId != nil {
@@ -97,6 +99,19 @@ func (e *lumiAwsEfs) getFilesystems(at *aws_transport.Transport) []*jobpool.Job 
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func efsTagsToMap(tags []types.Tag) map[string]interface{} {
+	tagsMap := make(map[string]interface{})
+
+	if len(tags) > 0 {
+		for i := range tags {
+			tag := tags[i]
+			tagsMap[toString(tag.Key)] = toString(tag.Value)
+		}
+	}
+
+	return tagsMap
 }
 
 func (e *lumiAwsEfsFilesystem) GetKmsKey() (interface{}, error) {

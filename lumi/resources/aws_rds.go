@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
@@ -80,6 +81,7 @@ func (d *lumiAwsRds) getDbInstances(at *aws_transport.Transport) []*jobpool.Job 
 						"multiAZ", dbInstance.MultiAZ,
 						"id", toString(dbInstance.DBInstanceIdentifier),
 						"deletionProtection", dbInstance.DeletionProtection,
+						"tags", rdsTagsToMap(dbInstance.TagList),
 					)
 					if err != nil {
 						return nil, err
@@ -96,6 +98,19 @@ func (d *lumiAwsRds) getDbInstances(at *aws_transport.Transport) []*jobpool.Job 
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func rdsTagsToMap(tags []types.Tag) map[string]interface{} {
+	tagsMap := make(map[string]interface{})
+
+	if len(tags) > 0 {
+		for i := range tags {
+			tag := tags[i]
+			tagsMap[toString(tag.Key)] = toString(tag.Value)
+		}
+	}
+
+	return tagsMap
 }
 
 func (d *lumiAwsRds) GetDbClusters() ([]interface{}, error) {
