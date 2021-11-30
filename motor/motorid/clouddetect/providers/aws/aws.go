@@ -11,24 +11,29 @@ import (
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
-const (
-	awsIdentifierFileLinux = "/sys/class/dmi/id/product_version"
-)
+func readValue(t transports.Transport, fPath string) string {
+	content, err := afero.ReadFile(t.FS(), fPath)
+	if err != nil {
+		log.Debug().Err(err).Msgf("unable to read %s", fPath)
+		return ""
+	}
+	return string(content)
+}
 
 func Detect(t transports.Transport, p *platform.Platform) string {
-	productVersion := ""
+	var values []string
 	if p.IsFamily("linux") {
-		// Fetching the product version from the smbios manager is slow
+		// Fetching the data from the smbios manager is slow for some transports
 		// because it iterates through files we don't need to check. This
 		// is an optimzation for our sshfs. Also, be aware that on linux,
 		// you may not have access to all the smbios things under /sys, so
-		// you want to make sure to only check the product_version file
-		content, err := afero.ReadFile(t.FS(), awsIdentifierFileLinux)
-		if err != nil {
-			log.Debug().Err(err).Msgf("unable to read %s", awsIdentifierFileLinux)
-			return ""
+		// you want to make sure to only check the files we actually look at
+
+		values = []string{
+			readValue(t, "/sys/class/dmi/id/product_version"),
+			readValue(t, "/sys/class/dmi/id/bios_vendor"),
 		}
-		productVersion = string(content)
+
 	} else {
 		mgr, err := smbios.ResolveManager(t, p)
 		if err != nil {
@@ -39,24 +44,29 @@ func Detect(t transports.Transport, p *platform.Platform) string {
 			log.Debug().Err(err).Msg("failed to query smbios")
 			return ""
 		}
-		productVersion = info.SysInfo.Version
+		values = []string{
+			info.SysInfo.Version,
+			info.BIOS.Vendor,
+		}
 	}
 
-	if strings.Contains(productVersion, "amazon") {
-		mdsvc, err := awsec2.Resolve(t, p)
-		if err != nil {
-			log.Debug().Err(err).Msg("failed to get metadata resolver")
-			return ""
+	for _, v := range values {
+		if strings.Contains(strings.ToLower(v), "amazon") {
+			mdsvc, err := awsec2.Resolve(t, p)
+			if err != nil {
+				log.Debug().Err(err).Msg("failed to get metadata resolver")
+				return ""
+			}
+			id, err := mdsvc.InstanceID()
+			if err != nil {
+				log.Debug().Err(err).
+					Str("transport", t.Kind().String()).
+					Strs("platform", p.GetFamily()).
+					Msg("failed to get aws platform id")
+				return ""
+			}
+			return id
 		}
-		id, err := mdsvc.InstanceID()
-		if err != nil {
-			log.Debug().Err(err).
-				Str("transport", t.Kind().String()).
-				Strs("platform", p.GetFamily()).
-				Msg("failed to get aws platform id")
-			return ""
-		}
-		return id
 	}
 
 	return ""

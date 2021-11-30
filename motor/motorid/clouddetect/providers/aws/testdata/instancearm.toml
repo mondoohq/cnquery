@@ -1,0 +1,57 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "4.9.125-linuxkit"
+
+[files."/etc/redhat-release"]
+content = "Red Hat Enterprise Linux Server release 7.2 (Maipo)"
+
+[files."/sys/class/dmi/id/product_version"]
+  path = "/sys/class/dmi/id/product_version"
+  enoent = false
+  content = " "
+  [files."/sys/class/dmi/id/product_version".stat]
+    mode = 292
+    time = 2021-11-15T13:16:57Z
+    isdir = false
+    uid = 0
+    gid = 0
+    size = 0
+
+[files."/sys/class/dmi/id/bios_vendor"]
+  path = "/sys/class/dmi/id/bios_vendor"
+  enoent = false
+  content = "Amazon EC2"
+  [files."/sys/class/dmi/id/bios_vendor".stat]
+    mode = 292
+    time = 2021-11-15T13:16:57Z
+    isdir = false
+    uid = 0
+    gid = 0
+    size = 0
+
+[commands."curl http://169.254.169.254/latest/dynamic/instance-identity/document"]
+stdout = """
+{
+  "devpayProductCodes" : null,
+  "marketplaceProductCodes" : [ "1abc2defghijklm3nopqrs4tu" ], 
+  "availabilityZone" : "us-west-2b",
+  "privateIp" : "10.158.112.84",
+  "version" : "2017-09-30",
+  "instanceId" : "i-1234567890abcdef0",
+  "billingProducts" : null,
+  "instanceType" : "t2.micro",
+  "accountId" : "123456789012",
+  "imageId" : "ami-5fb8c835",
+  "pendingTime" : "2016-11-19T16:32:11Z",
+  "architecture" : "x86_64",
+  "kernelId" : null,
+  "ramdiskId" : null,
+  "region" : "us-west-2"
+}
+"""
+
