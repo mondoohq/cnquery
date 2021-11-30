@@ -924,13 +924,13 @@ shadow.entry {
   // Date of last password change
   lastchanged time
   // Minimum password age
-  mindays string
+  mindays int
   // Maximum password age
-  maxdays string
+  maxdays int
   // Password warning period
-  warndays string
+  warndays int
   // Password inactivity period
-  inactivedays string
+  inactivedays int
   // Account expiration date
   expirydates string
   // Reserved field
