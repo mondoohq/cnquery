@@ -11,12 +11,29 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
+	motoraws "go.mondoo.io/mondoo/motor/discovery/aws"
 )
 
-func (t *Ec2EbsTransport) Setup() (bool, error) {
+func (t *Ec2EbsTransport) Validate(ctx context.Context) (bool, *types.Instance) {
+	i := t.target.instance
+	log.Info().Interface("instance", i).Msg("validate state")
+	// use region from instance for aws config
+	cfgCopy := t.config.Copy()
+	cfgCopy.Region = i.Region
+	ec2svc := ec2.NewFromConfig(cfgCopy)
+	resp, err := ec2svc.DescribeInstances(ctx, &ec2.DescribeInstancesInput{InstanceIds: []string{i.Id}})
+	if err != nil {
+		return false, nil
+	}
+	if !motoraws.InstanceIsInRunningOrStoppedState(resp.Reservations[0].Instances[0].State) {
+		return false, nil
+	}
+	return true, &resp.Reservations[0].Instances[0]
+}
+
+func (t *Ec2EbsTransport) Setup(ctx context.Context, instanceinfo *types.Instance) (bool, error) {
 	var err error
-	ctx := context.Background()
-	v, err := t.GetVolumeIdForInstance(ctx, t.target.instance)
+	v, err := t.GetVolumeIdForInstance(ctx, instanceinfo)
 	if err != nil {
 		return false, err
 	}
@@ -43,24 +60,13 @@ func (t *Ec2EbsTransport) Setup() (bool, error) {
 	return t.AttachVolumeToInstance(ctx, volId)
 }
 
-func (t *Ec2EbsTransport) GetVolumeIdForInstance(ctx context.Context, i *InstanceId) (VolumeId, error) {
+func (t *Ec2EbsTransport) GetVolumeIdForInstance(ctx context.Context, instanceinfo *types.Instance) (VolumeId, error) {
+	i := t.target.instance
 	log.Info().Interface("instance", i).Msg("find volume id")
-	// use region from instance for aws config
-	cfgCopy := t.config.Copy()
-	cfgCopy.Region = i.Region
-	ec2svc := ec2.NewFromConfig(cfgCopy)
-	resp, err := ec2svc.DescribeInstances(ctx, &ec2.DescribeInstancesInput{InstanceIds: []string{i.Id}})
-	if err != nil {
-		return VolumeId{}, err
-	}
 
-	if len(resp.Reservations) == 1 {
-		if len(resp.Reservations[0].Instances) == 1 {
-			if len(resp.Reservations[0].Instances[0].BlockDeviceMappings) == 1 {
-				volId := resp.Reservations[0].Instances[0].BlockDeviceMappings[0].Ebs.VolumeId
-				return VolumeId{Id: *volId, Region: i.Region, Account: i.Account}, nil
-			}
-		}
+	if len(instanceinfo.BlockDeviceMappings) == 1 {
+		volId := instanceinfo.BlockDeviceMappings[0].Ebs.VolumeId
+		return VolumeId{Id: *volId, Region: i.Region, Account: i.Account}, nil
 	}
 	return VolumeId{}, errors.New("no volume id found for instance")
 }

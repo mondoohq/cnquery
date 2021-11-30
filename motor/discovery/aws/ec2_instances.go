@@ -238,3 +238,8 @@ func mapEc2InstanceStateCode(state *types.InstanceState) asset.State {
 		return asset.State_STATE_UNKNOWN
 	}
 }
+
+func InstanceIsInRunningOrStoppedState(state *types.InstanceState) bool {
+	// instance state 16 == running, 80 == stopped
+	return state.Code == 16 || state.Code == 80
+}
