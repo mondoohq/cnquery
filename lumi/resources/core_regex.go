@@ -1,5 +1,7 @@
 package resources
 
+import "regexp"
+
 func (p *lumiRegex) id() (string, error) {
 	return "time", nil
 }
@@ -35,6 +37,8 @@ func (p *lumiRegex) GetUrl() (string, error) {
 const reLDHLabel = "([0-9][a-zA-Z]|[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]|[a-zA-Z][0-9]|[a-zA-Z]{1,2})"
 const reUrlDomain = reLDHLabel + "(\\." + reLDHLabel + ")+"
 const reNoTldHostname = reLDHLabel + "(\\." + reLDHLabel + ")*"
+
+var rexUrlDomain = regexp.MustCompile(reUrlDomain)
 
 // const reDomainLabel = "... needs work"
 

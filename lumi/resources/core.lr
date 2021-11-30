@@ -517,8 +517,10 @@ tls {
   init(target string)
   // Socket of this connection
   socket socket
+  // An optional domain name which will be tested
+  domainName string
   // Params is a list of all parameters for this TLS/SSL connection
-  params(socket) dict
+  params(socket, domainName) dict
   // Version of TLS/SSL that is being used
   versions(params) []string
   // Ciphers supported by a given TLS/SSL connection

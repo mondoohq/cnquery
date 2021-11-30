@@ -30,16 +30,23 @@ func (s *lumiTls) init(args *lumi.Args) (*lumi.Args, Tls, error) {
 			port = int64(rawPort)
 		}
 
+		address := m[1]
+		domainName := ""
+		if rexUrlDomain.MatchString(address) {
+			domainName = address
+		}
+
 		socket, err := s.Runtime.CreateResource("socket",
 			"protocol", proto,
 			"port", port,
-			"address", m[1],
+			"address", address,
 		)
 		if err != nil {
 			return nil, nil, err
 		}
 
 		(*args)["socket"] = socket
+		(*args)["domainName"] = domainName
 		delete(*args, "target")
 	}
 
@@ -55,7 +62,7 @@ func (s *lumiTls) id() (string, error) {
 	return "tls+" + socket.LumiResource().Id, nil
 }
 
-func (s *lumiTls) GetParams(socket Socket) (map[string]interface{}, error) {
+func (s *lumiTls) GetParams(socket Socket, domainName string) (map[string]interface{}, error) {
 	host, err := socket.Address()
 	if err != nil {
 		return nil, err
@@ -71,7 +78,7 @@ func (s *lumiTls) GetParams(socket Socket) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	tester := tlsshake.New(proto, host, int(port))
+	tester := tlsshake.New(proto, domainName, host, int(port))
 	if err := tester.Test(); err != nil {
 		return nil, err
 	}

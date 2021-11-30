@@ -24,10 +24,11 @@ var TLS_VERSIONS = []string{"ssl3", "tls1.0", "tls1.1", "tls1.2", "tls1.3"}
 // session of tests. We re-use it to avoid duplicate requests and optimize
 // the overall test run.
 type Tester struct {
-	Findings Findings
-	sync     sync.Mutex
-	proto    string
-	target   string
+	Findings   Findings
+	sync       sync.Mutex
+	proto      string
+	target     string
+	domainName string
 }
 
 // Findings tracks the current state of tested components and their findings
@@ -41,7 +42,7 @@ type Findings struct {
 // New creates a new tester object for the given target (via proto, host, port)
 // - the proto, host, and port are used to construct the target for net.Dial
 //   example: proto="tcp", host="mondoo.io", port=443
-func New(proto string, host string, port int) *Tester {
+func New(proto string, domainName string, host string, port int) *Tester {
 	target := host + ":" + strconv.Itoa(port)
 
 	return &Tester{
@@ -49,8 +50,9 @@ func New(proto string, host string, port int) *Tester {
 			Versions: map[string]bool{},
 			Ciphers:  map[string]bool{},
 		},
-		proto:  proto,
-		target: target,
+		proto:      proto,
+		target:     target,
+		domainName: domainName,
 	}
 }
 
@@ -113,7 +115,7 @@ func (s *Tester) testTLS(proto string, target string, version string) (int, erro
 		return true
 	}
 
-	msg, cipherCount, err := helloTLSMsg(version, ciphersFilter)
+	msg, cipherCount, err := s.helloTLSMsg(version, ciphersFilter)
 	if err != nil {
 		return 0, err
 	}
@@ -418,10 +420,27 @@ func cipherNames(version string, filter func(cipher string) bool) []string {
 	}
 }
 
-func helloTLSMsg(version string, ciphersFilter func(cipher string) bool) ([]byte, int, error) {
+func (s *Tester) helloTLSMsg(version string, ciphersFilter func(cipher string) bool) ([]byte, int, error) {
 	var ciphers []byte
 	var cipherCount int
-	var extensions []byte
+
+	var extensions bytes.Buffer
+
+	if version != "ssl3" {
+		// SNI
+		if s.domainName != "" {
+			l := len(s.domainName)
+			extensions.WriteString("\x00\x00")   // type of this extension
+			extensions.Write(int2bytes(l + 5))   // length of extension
+			extensions.Write(int2bytes(l + 3))   // server name list length
+			extensions.WriteByte('\x00')         // name type: host name
+			extensions.Write(int2bytes(l))       // name length
+			extensions.WriteString(s.domainName) // name
+		}
+
+		// add signature_algorithms
+		extensions.WriteString("\x00\x0d\x00\x14\x00\x12\x04\x03\x08\x04\x04\x01\x05\x03\x08\x05\x05\x01\x08\x06\x06\x01\x02\x01")
+	}
 
 	switch version {
 	case "ssl3":
@@ -436,17 +455,12 @@ func helloTLSMsg(version string, ciphersFilter func(cipher string) bool) ([]byte
 		ciphers = append(org, tls...)
 		cipherCount = n1 + n2
 
-		var ext bytes.Buffer
 		// add heartbeat
-		ext.WriteString("\x00\x0f\x00\x01\x01")
-		// add signature_algorithms
-		ext.WriteString("\x00\x0d\x00\x14\x00\x12\x04\x03\x08\x04\x04\x01\x05\x03\x08\x05\x05\x01\x08\x06\x06\x01\x02\x01")
+		extensions.WriteString("\x00\x0f\x00\x01\x01")
 		// add ec_points_format
-		ext.WriteString("\x00\x0b\x00\x02\x01\x00")
+		extensions.WriteString("\x00\x0b\x00\x02\x01\x00")
 		// add elliptic_curve
-		ext.WriteString("\x00\x0a\x00\x0a\x00\x08\xfa\xfa\x00\x1d\x00\x17\x00\x18")
-
-		extensions = ext.Bytes()
+		extensions.WriteString("\x00\x0a\x00\x0a\x00\x08\xfa\xfa\x00\x1d\x00\x17\x00\x18")
 
 	case "tls1.3":
 		org, n1 := filterCipherMsg(TLS10_CIPHERS, ciphersFilter)
@@ -456,13 +470,10 @@ func helloTLSMsg(version string, ciphersFilter func(cipher string) bool) ([]byte
 		ciphers = append(ciphers, tls13...)
 		cipherCount = n1 + n2 + n3
 
-		var ext bytes.Buffer
 		// TLSv1.3 Supported Versions extension
-		ext.WriteString("\x00\x2b\x00\x03\x02\x03\x04")
-		// add signature_algorithms
-		ext.WriteString("\x00\x0d\x00\x14\x00\x12\x04\x03\x08\x04\x04\x01\x05\x03\x08\x05\x05\x01\x08\x06\x06\x01\x02\x01")
+		extensions.WriteString("\x00\x2b\x00\x03\x02\x03\x04")
 		// add supported groups extension
-		ext.WriteString("\x00\x0a\x00\x08\x00\x06\x00\x1d\x00\x17\x00\x18")
+		extensions.WriteString("\x00\x0a\x00\x08\x00\x06\x00\x1d\x00\x17\x00\x18")
 
 		// This is a pre-generated public/private key pair using the x25519 curve:
 		// It was generated from the command line with:
@@ -479,15 +490,14 @@ func helloTLSMsg(version string, ciphersFilter func(cipher string) bool) ([]byte
 		//     cd:7e
 
 		publicKey := "\xe7\x08\x71\x36\xd0\x81\xe0\x16\x19\x3a\xcb\x67\xca\xb8\x28\xd9\x45\x92\x16\xff\x36\x63\x0d\x0d\x5a\x3d\x9d\x47\xce\x3e\xcd\x7e"
-		ext.WriteString("\x00\x33\x00\x26\x00\x24\x00\x1d\x00\x20")
-		ext.WriteString(publicKey)
-		extensions = ext.Bytes()
+		extensions.WriteString("\x00\x33\x00\x26\x00\x24\x00\x1d\x00\x20")
+		extensions.WriteString(publicKey)
 
 	default:
 		return nil, 0, errors.New("unsupported TLS/SSL version: " + version)
 	}
 
-	return constructTLSHello(version, ciphers, extensions), cipherCount, nil
+	return constructTLSHello(version, ciphers, extensions.Bytes()), cipherCount, nil
 }
 
 func int1byte(i int) []byte {
