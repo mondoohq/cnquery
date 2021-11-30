@@ -1,6 +1,10 @@
 package resources
 
 import (
+	"errors"
+	"math"
+	"strconv"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/resources/shadow"
 )
@@ -9,6 +13,18 @@ const defaultShadowConfig = "/etc/shadow"
 
 func (s *lumiShadow) id() (string, error) {
 	return defaultShadowConfig, nil
+}
+
+func parseInt(s string, dflt int64, msg string) (int64, error) {
+	if s == "" {
+		return dflt, nil
+	}
+
+	res, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return 0, errors.New("failed to parse " + msg + " as a number, it is '" + s + "'")
+	}
+	return res, nil
 }
 
 func (s *lumiShadow) GetList() ([]interface{}, error) {
@@ -27,14 +43,34 @@ func (s *lumiShadow) GetList() ([]interface{}, error) {
 	for i := range entries {
 		entry := entries[i]
 
+		maxdays, err := parseInt(entry.MaxDays, math.MaxInt64, "MaxDays")
+		if err != nil {
+			return nil, err
+		}
+
+		mindays, err := parseInt(entry.MinDays, -1, "MinDays")
+		if err != nil {
+			return nil, err
+		}
+
+		warndays, err := parseInt(entry.WarnDays, -1, "WarnDays")
+		if err != nil {
+			return nil, err
+		}
+
+		inactivedays, err := parseInt(entry.InactiveDays, math.MaxInt64, "InactiveDays")
+		if err != nil {
+			return nil, err
+		}
+
 		shadowEntry, err := s.Runtime.CreateResource("shadow.entry",
 			"user", entry.User,
 			"password", entry.Password,
 			"lastchanged", entry.LastChanged,
-			"mindays", entry.MinDays,
-			"maxdays", entry.MaxDays,
-			"warndays", entry.WarnDays,
-			"inactivedays", entry.InactiveDays,
+			"mindays", mindays,
+			"maxdays", maxdays,
+			"warndays", warndays,
+			"inactivedays", inactivedays,
 			"expirydates", entry.ExpiryDates,
 			"reserved", entry.Reserved,
 		)
