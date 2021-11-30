@@ -193,6 +193,8 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, ref int32, lookup func(
 
 	// explicit assessments
 	if assertion, ok := bundle.Assertions[checksum]; ok {
+		res.IsAssertion = true
+
 		if assertion.DecodeBlock {
 			sum := assertion.Checksums[0]
 			raw, ok := lookup(sum)
@@ -238,7 +240,6 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, ref int32, lookup func(
 
 		res.Data = data
 		res.Template = assertion.Template
-		res.IsAssertion = true
 		return &res
 	}
 
