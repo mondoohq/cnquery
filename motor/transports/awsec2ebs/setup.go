@@ -9,12 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/smithy-go"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	motoraws "go.mondoo.io/mondoo/motor/discovery/aws"
 )
 
-func (t *Ec2EbsTransport) Validate(ctx context.Context) (bool, *types.Instance) {
+func (t *Ec2EbsTransport) Validate(ctx context.Context) (bool, *types.Instance, error) {
 	i := t.target.instance
 	log.Info().Interface("instance", i).Msg("validate state")
 	// use region from instance for aws config
@@ -23,12 +24,12 @@ func (t *Ec2EbsTransport) Validate(ctx context.Context) (bool, *types.Instance) 
 	ec2svc := ec2.NewFromConfig(cfgCopy)
 	resp, err := ec2svc.DescribeInstances(ctx, &ec2.DescribeInstancesInput{InstanceIds: []string{i.Id}})
 	if err != nil {
-		return false, nil
+		return false, nil, err
 	}
 	if !motoraws.InstanceIsInRunningOrStoppedState(resp.Reservations[0].Instances[0].State) {
-		return false, nil
+		return false, nil, nil
 	}
-	return true, &resp.Reservations[0].Instances[0]
+	return true, &resp.Reservations[0].Instances[0], nil
 }
 
 func (t *Ec2EbsTransport) Setup(ctx context.Context, instanceinfo *types.Instance) (bool, error) {
@@ -99,8 +100,14 @@ func (t *Ec2EbsTransport) FindRecentSnapshotForVolume(ctx context.Context, v Vol
 			for snapState != types.SnapshotStateCompleted {
 				log.Info().Interface("state", snapState).Msg("waiting for snapshot copy completion; sleeping 10 seconds")
 				time.Sleep(10 * time.Second)
-				snaps, err := t.scannerRegionEc2svc.DescribeSnapshots(ctx, &ec2.DescribeSnapshotsInput{SnapshotIds: []string{s.Id}})
+				snaps, err := ec2svc.DescribeSnapshots(ctx, &ec2.DescribeSnapshotsInput{SnapshotIds: []string{s.Id}})
 				if err != nil {
+					var ae smithy.APIError
+					if errors.As(err, &ae) {
+						if ae.ErrorCode() == "InvalidSnapshot.NotFound" {
+							return false, SnapshotId{}, nil
+						}
+					}
 					return false, SnapshotId{}, err
 				}
 				snapState = snaps.Snapshots[0].State
