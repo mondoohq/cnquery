@@ -64,8 +64,15 @@ func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
 		shell:               shell,
 	}
 
-	// 3. setup
-	ok, err := t.Setup()
+	ctx := context.Background()
+	// 3. validate
+	ok, instanceinfo := t.Validate(ctx)
+	if !ok {
+		log.Warn().Interface("instance-state", instanceinfo.State).Msg("instance not in valid state")
+		return t, nil
+	}
+	// 4. setup
+	ok, err = t.Setup(ctx, instanceinfo)
 	if err != nil {
 		return t, err
 	}
@@ -73,7 +80,7 @@ func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
 		return t, errors.New("something went wrong; unable to complete setup for ebs volume scan")
 	}
 
-	// 4. mount
+	// 5. mount
 	err = t.Mount()
 	if err != nil {
 		t.Close()
