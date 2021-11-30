@@ -21,9 +21,9 @@ func TestParseParseEc2PlatformId(t *testing.T) {
 }
 
 func TestIsInstanceInGoodState(t *testing.T) {
-	require.False(t, aws.InstanceIsInGoodState(&types.InstanceState{Code: 48}))
-	require.True(t, aws.InstanceIsInGoodState(&types.InstanceState{Code: 16}))
-	require.True(t, aws.InstanceIsInGoodState(&types.InstanceState{Code: 80}))
-	require.False(t, aws.InstanceIsInGoodState(&types.InstanceState{Code: 32}))
-	require.False(t, aws.InstanceIsInGoodState(&types.InstanceState{Code: 0}))
+	require.False(t, aws.InstanceIsInRunningOrStoppedState(&types.InstanceState{Code: 48}))
+	require.True(t, aws.InstanceIsInRunningOrStoppedState(&types.InstanceState{Code: 16}))
+	require.True(t, aws.InstanceIsInRunningOrStoppedState(&types.InstanceState{Code: 80}))
+	require.False(t, aws.InstanceIsInRunningOrStoppedState(&types.InstanceState{Code: 32}))
+	require.False(t, aws.InstanceIsInRunningOrStoppedState(&types.InstanceState{Code: 0}))
 }

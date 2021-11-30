@@ -66,10 +66,13 @@ func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
 
 	ctx := context.Background()
 	// 3. validate
-	ok, instanceinfo := t.Validate(ctx)
+	ok, instanceinfo, err := t.Validate(ctx)
+	if err != nil {
+		return t, err
+	}
 	if !ok {
-		log.Warn().Interface("instance-state", instanceinfo.State).Msg("instance not in valid state")
-		return t, nil
+		log.Error().Interface("instance-state", instanceinfo.State).Msg("instance not in valid state; must be running or stopped")
+		return t, errors.New("instance not in valid state; must be running or stopped")
 	}
 	// 4. setup
 	ok, err = t.Setup(ctx, instanceinfo)
