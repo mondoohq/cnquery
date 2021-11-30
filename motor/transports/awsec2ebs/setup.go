@@ -56,8 +56,10 @@ func (t *Ec2EbsTransport) GetVolumeIdForInstance(ctx context.Context, i *Instanc
 
 	if len(resp.Reservations) == 1 {
 		if len(resp.Reservations[0].Instances) == 1 {
-			volId := resp.Reservations[0].Instances[0].BlockDeviceMappings[0].Ebs.VolumeId
-			return VolumeId{Id: *volId, Region: i.Region, Account: i.Account}, nil
+			if len(resp.Reservations[0].Instances[0].BlockDeviceMappings) == 1 {
+				volId := resp.Reservations[0].Instances[0].BlockDeviceMappings[0].Ebs.VolumeId
+				return VolumeId{Id: *volId, Region: i.Region, Account: i.Account}, nil
+			}
 		}
 	}
 	return VolumeId{}, errors.New("no volume id found for instance")
