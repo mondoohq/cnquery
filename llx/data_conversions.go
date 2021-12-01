@@ -3,6 +3,7 @@ package llx
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"reflect"
 	"strconv"
 	"time"
@@ -132,32 +133,64 @@ func nil2result(value interface{}, typ types.Type) (*Primitive, error) {
 	return NilPrimitive, nil
 }
 
+func errInvalidConversion(value interface{}, expectedType types.Type) error {
+	return fmt.Errorf("could not convert %T to %s", value, expectedType.Label())
+}
+
 func bool2result(value interface{}, typ types.Type) (*Primitive, error) {
-	return BoolPrimitive(value.(bool)), nil
+	v, ok := value.(bool)
+	if !ok {
+		return nil, errInvalidConversion(value, typ)
+	}
+	return BoolPrimitive(v), nil
 }
 
 func ref2result(value interface{}, typ types.Type) (*Primitive, error) {
-	return RefPrimitive(value.(int32)), nil
+	v, ok := value.(int32)
+	if !ok {
+		return nil, errInvalidConversion(value, typ)
+	}
+	return RefPrimitive(v), nil
 }
 
 func int2result(value interface{}, typ types.Type) (*Primitive, error) {
-	return IntPrimitive(value.(int64)), nil
+	v, ok := value.(int64)
+	if !ok {
+		return nil, errInvalidConversion(value, typ)
+	}
+	return IntPrimitive(v), nil
 }
 
 func float2result(value interface{}, typ types.Type) (*Primitive, error) {
-	return FloatPrimitive(value.(float64)), nil
+	v, ok := value.(float64)
+	if !ok {
+		return nil, errInvalidConversion(value, typ)
+	}
+	return FloatPrimitive(v), nil
 }
 
 func string2result(value interface{}, typ types.Type) (*Primitive, error) {
-	return StringPrimitive(value.(string)), nil
+	v, ok := value.(string)
+	if !ok {
+		return nil, errInvalidConversion(value, typ)
+	}
+	return StringPrimitive(v), nil
 }
 
 func regex2result(value interface{}, typ types.Type) (*Primitive, error) {
-	return RegexPrimitive(value.(string)), nil
+	v, ok := value.(string)
+	if !ok {
+		return nil, errInvalidConversion(value, typ)
+	}
+	return RegexPrimitive(v), nil
 }
 
 func time2result(value interface{}, typ types.Type) (*Primitive, error) {
-	return TimePrimitive(value.(*time.Time)), nil
+	v, ok := value.(*time.Time)
+	if !ok {
+		return nil, errInvalidConversion(value, typ)
+	}
+	return TimePrimitive(v), nil
 }
 
 func dict2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -179,25 +212,38 @@ func dict2result(value interface{}, typ types.Type) (*Primitive, error) {
 }
 
 func score2result(value interface{}, typ types.Type) (*Primitive, error) {
+	v, ok := value.([]byte)
+	if !ok {
+		return nil, errInvalidConversion(value, typ)
+	}
 	return &Primitive{
 		Type:  string(types.Score),
-		Value: value.([]byte),
+		Value: v,
 	}, nil
 }
 
 func block2result(value interface{}, typ types.Type) (*Primitive, error) {
-	m := value.(map[string]interface{})
+	m, ok := value.(map[string]interface{})
+	if !ok {
+		return nil, errInvalidConversion(value, typ)
+	}
 	res := make(map[string]*Primitive)
 
 	for k, v := range m {
-		raw := v.(*RawData)
+		raw, ok := v.(*RawData)
+		if !ok {
+			return nil, errInvalidConversion(value, typ)
+		}
 		res[k] = raw.Result().Data
 	}
 	return &Primitive{Type: string(typ), Map: res}, nil
 }
 
 func array2result(value interface{}, typ types.Type) (*Primitive, error) {
-	arr := value.([]interface{})
+	arr, ok := value.([]interface{})
+	if !ok {
+		return nil, errInvalidConversion(value, typ)
+	}
 	res := make([]*Primitive, len(arr))
 	ct := typ.Child()
 	var err error
@@ -211,7 +257,10 @@ func array2result(value interface{}, typ types.Type) (*Primitive, error) {
 }
 
 func stringmap2result(value interface{}, typ types.Type) (*Primitive, error) {
-	m := value.(map[string]interface{})
+	m, ok := value.(map[string]interface{})
+	if !ok {
+		return nil, errInvalidConversion(value, typ)
+	}
 	res := make(map[string]*Primitive)
 	ct := typ.Child()
 	var err error
@@ -225,7 +274,10 @@ func stringmap2result(value interface{}, typ types.Type) (*Primitive, error) {
 }
 
 func intmap2result(value interface{}, typ types.Type) (*Primitive, error) {
-	m := value.(map[int32]interface{})
+	m, ok := value.(map[int32]interface{})
+	if !ok {
+		return nil, errInvalidConversion(value, typ)
+	}
 	res := make(map[string]*Primitive)
 	ct := typ.Child()
 	var err error
@@ -250,13 +302,20 @@ func map2result(value interface{}, typ types.Type) (*Primitive, error) {
 }
 
 func resource2result(value interface{}, typ types.Type) (*Primitive, error) {
-	m := value.(lumi.ResourceType)
+	m, ok := value.(lumi.ResourceType)
+	if !ok {
+		return nil, errInvalidConversion(value, typ)
+	}
 	r := m.LumiResource()
 	return &Primitive{Type: string(typ), Value: []byte(r.Id)}, nil
 }
 
 func function2result(value interface{}, typ types.Type) (*Primitive, error) {
-	return FunctionPrimitive(value.(int32)), nil
+	v, ok := value.(int32)
+	if !ok {
+		return nil, errInvalidConversion(value, typ)
+	}
+	return FunctionPrimitive(v), nil
 }
 
 func raw2primitive(value interface{}, typ types.Type) (*Primitive, error) {
@@ -310,6 +369,58 @@ func (r *RawData) Result() *Result {
 	}
 }
 
+func (r *RawData) CastResult(t types.Type) (*Result, error) {
+	errorMsg := ""
+
+	// In case we encounter an error we need to still construct the result object
+	// with the type information so it can be processed by the server
+	if r.Error != nil {
+		errorMsg = r.Error.Error()
+	}
+
+	// Allow any type to take on nil values
+	if r.Value == nil {
+		return &Result{
+			Data:  &Primitive{Type: string(t)},
+			Error: errorMsg,
+		}, nil
+	}
+
+	if t == types.Bool {
+		truthy, castable := r.IsTruthy()
+		if !castable {
+			return nil, fmt.Errorf("cannot cast from %s to %s", r.Type.Label(), t.Label())
+		}
+		return &Result{
+			Data:  BoolPrimitive(truthy),
+			Error: errorMsg,
+		}, nil
+	}
+
+	data, err := raw2primitive(r.Value, t)
+	if err != nil {
+		return nil, err
+	}
+	return &Result{
+		Data:  data,
+		Error: errorMsg,
+	}, nil
+
+}
+
+func (r *RawResult) CastResult(t types.Type) *Result {
+	res, err := r.Data.CastResult(t)
+	if err != nil {
+		return &Result{
+			CodeId: r.CodeID,
+			Data:   &Primitive{Type: string(t)},
+			Error:  err.Error(),
+		}
+	}
+	res.CodeId = r.CodeID
+	return res
+}
+
 // Result converts the raw result into a proto-compliant data structure that
 // can be sent over the wire. See RawData.Result()
 func (r *RawResult) Result() *Result {
@@ -325,7 +436,11 @@ func (r *Result) RawResult() *RawResult {
 
 	data := &RawData{}
 	if r.Data != nil {
-		data = r.Data.RawData()
+		if r.Data.IsNil() {
+			data.Type = types.Nil
+		} else {
+			data = r.Data.RawData()
+		}
 	}
 	if len(r.Error) > 0 {
 		data.Error = errors.New(r.Error)

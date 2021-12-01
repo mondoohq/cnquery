@@ -295,3 +295,9 @@ func (p *Primitive) Size() int {
 
 	return len(p.Value)
 }
+
+// IsNil returns true if a primitive is nil. A primitive is nil if it's type is nil,
+// or if it has no associated value
+func (p *Primitive) IsNil() bool {
+	return p.Type == string(types.Nil) || (p.Value == nil && p.Map == nil && p.Array == nil)
+}
