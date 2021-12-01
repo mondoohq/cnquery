@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/types"
 )
 
@@ -32,7 +33,11 @@ func TestResultConversion(t *testing.T) {
 		result := rawData.Result()
 		rawResult := result.RawResult()
 		reResult := rawResult.Result()
-		assert.Equal(t, result, reResult)
+
+		assert.Equal(t, result.GetData().GetType(), reResult.GetData().GetType())
+		assert.Equal(t, result.GetData().GetArray(), reResult.GetData().GetArray())
+		assert.Equal(t, result.GetData().GetMap(), reResult.GetData().GetMap())
+		assert.Equal(t, result.GetData().GetValue(), reResult.GetData().GetValue())
 	}
 }
 
@@ -85,4 +90,107 @@ func TestResourceConversion(t *testing.T) {
 	convertedRawResult := rawResult.Result().RawResult()
 	assert.Equal(t, rawResult.Data.Type, convertedRawResult.Data.Type)
 	assert.Equal(t, rawResult.Data.Value, convertedRawResult.Data.Value)
+}
+
+func TestCastResult(t *testing.T) {
+	t.Run("to bool", func(t *testing.T) {
+		t.Run("from block truthy", func(t *testing.T) {
+			rawData := &RawData{
+				Type: types.Block,
+				Value: map[string]interface{}{
+					"yUHOZ/pJzgQ3FLcnKAPphE4TgWqFptqPWA8GYl4e5Dqg0/YzQWcDml2cbrTEj3nj1rm0azm9povOYMRjTgSvZg==": &RawData{
+						Type:  types.String,
+						Value: "8.2.2004",
+					},
+				},
+			}
+			rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
+			casted := rawResult.CastResult(types.Bool).RawResult()
+			require.NoError(t, casted.Data.Error)
+			require.Equal(t, types.Bool, casted.Data.Type)
+			require.Equal(t, true, casted.Data.Value)
+		})
+
+		t.Run("from block not truthy", func(t *testing.T) {
+			rawData := &RawData{
+				Type: types.Block,
+				Value: map[string]interface{}{
+					"yUHOZ/pJzgQ3FLcnKAPphE4TgWqFptqPWA8GYl4e5Dqg0/YzQWcDml2cbrTEj3nj1rm0azm9povOYMRjTgSvZg==": &RawData{
+						Type:  types.String,
+						Value: "",
+					},
+				},
+			}
+			rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
+			casted := rawResult.CastResult(types.Bool).RawResult()
+			require.NoError(t, casted.Data.Error)
+			require.Equal(t, types.Bool, casted.Data.Type)
+			require.Equal(t, false, casted.Data.Value)
+		})
+
+		t.Run("from string truthy", func(t *testing.T) {
+			rawData := &RawData{
+				Type:  types.String,
+				Value: "asdf",
+			}
+			rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
+			casted := rawResult.CastResult(types.Bool).RawResult()
+			require.NoError(t, casted.Data.Error)
+			require.Equal(t, types.Bool, casted.Data.Type)
+			require.Equal(t, true, casted.Data.Value)
+		})
+
+		t.Run("from string not truthy", func(t *testing.T) {
+			rawData := &RawData{
+				Type:  types.String,
+				Value: "",
+			}
+			rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
+			casted := rawResult.CastResult(types.Bool).RawResult()
+			require.NoError(t, casted.Data.Error)
+			require.Equal(t, types.Bool, casted.Data.Type)
+			require.Equal(t, false, casted.Data.Value)
+		})
+	})
+
+	t.Run("from null", func(t *testing.T) {
+		testCases := []struct {
+			Type types.Type
+		}{
+			{
+				Type: types.String,
+			},
+			{
+				Type: types.Int,
+			},
+			{
+				Type: types.Float,
+			},
+			{
+				Type: types.Block,
+			},
+			{
+				Type: types.Array(types.String),
+			},
+			{
+				Type: types.Map(types.String, types.String),
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.Type.Label(), func(t *testing.T) {
+				rawData := &RawData{
+					Type: types.Nil,
+				}
+				rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
+				casted := rawResult.CastResult(tc.Type)
+				// converting back to RawResult loses the type. This note
+				// is just calling out the way things are, not the way things
+				// have to be
+				require.Empty(t, casted.Error)
+				require.Equal(t, tc.Type.Label(), types.Type(casted.Data.Type).Label())
+				require.True(t, casted.Data.IsNil())
+			})
+		}
+	})
 }

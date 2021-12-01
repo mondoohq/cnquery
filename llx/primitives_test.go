@@ -70,3 +70,44 @@ func TestPrimitiveFunction(t *testing.T) {
 	}
 	assert.Equal(t, a, FunctionPrimitive(123))
 }
+
+func TestPrimitiveNil(t *testing.T) {
+	t.Run("nil type", func(t *testing.T) {
+		p := &Primitive{
+			Type: string(types.Nil),
+		}
+		assert.True(t, p.IsNil())
+	})
+
+	t.Run("string without value is nil", func(t *testing.T) {
+		p := &Primitive{
+			Type: string(types.String),
+		}
+		assert.True(t, p.IsNil())
+	})
+
+	t.Run("string with value is not nil", func(t *testing.T) {
+		p := StringPrimitive("hi")
+		assert.False(t, p.IsNil())
+	})
+
+	t.Run("map type without value is nil", func(t *testing.T) {
+		p := MapPrimitive(nil, types.Int)
+		assert.True(t, p.IsNil())
+	})
+
+	t.Run("map type with empty value is not nil", func(t *testing.T) {
+		p := MapPrimitive(map[string]*Primitive{}, types.Int)
+		assert.False(t, p.IsNil())
+	})
+
+	t.Run("array type without value is nil", func(t *testing.T) {
+		p := ArrayPrimitive(nil, types.Int)
+		assert.True(t, p.IsNil())
+	})
+
+	t.Run("array type with empty value is not nil", func(t *testing.T) {
+		p := ArrayPrimitive([]*Primitive{}, types.Int)
+		assert.False(t, p.IsNil())
+	})
+}

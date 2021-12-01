@@ -446,7 +446,8 @@ func Results2AssessmentLookup(bundle *CodeBundle, f func(s string) (*RawResult, 
 			res.Success = false
 		}
 
-		if cur.IsAssertion {
+		// We don't want to lose errors
+		if cur.IsAssertion || cur.Error != "" {
 			res.IsAssertion = true
 		}
 	}
