@@ -139,15 +139,36 @@ func (e *Expression) processChildOperators() error {
 			return errors.New("missing operand in child block")
 		}
 
+		if v.Value != nil {
+			for j := range v.Value.Array {
+				if err := v.Value.Array[j].ProcessOperators(); err != nil {
+					return err
+				}
+			}
+
+			for _, vv := range v.Value.Map {
+				if err := vv.ProcessOperators(); err != nil {
+					return err
+				}
+			}
+		}
+
 		for fi := range v.Block {
-			v.Block[fi].ProcessOperators()
+			if err := v.Block[fi].ProcessOperators(); err != nil {
+				return err
+			}
 		}
 
 		for fi := range v.Calls {
-			v.Calls[fi].Accessor.ProcessOperators()
-			f := v.Calls[fi].Function
-			for ffi := range f {
-				f[ffi].Value.ProcessOperators()
+			if err := v.Calls[fi].Accessor.ProcessOperators(); err != nil {
+				return err
+			}
+
+			args := v.Calls[fi].Function
+			for ffi := range args {
+				if err := args[ffi].Value.ProcessOperators(); err != nil {
+					return err
+				}
 			}
 		}
 	}
