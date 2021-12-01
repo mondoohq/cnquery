@@ -458,6 +458,11 @@ func TestCore_Vars(t *testing.T) {
 			"a = 1; b = a + 2; return b",
 			0, int64(3),
 		},
+		{
+			"a = 1; b = [a + 2]; return b",
+			0,
+			[]interface{}{int64(3)},
+		},
 	})
 }
 
