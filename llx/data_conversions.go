@@ -397,7 +397,10 @@ func pblock2raw(p *Primitive) *RawData {
 }
 
 func parray2raw(p *Primitive) *RawData {
-	// FIXME: needs handover for referenced values...
+	// Note: We don't hand over the compiler here. Reason is that if you have
+	// primitives that have refs in them, you should properly resolve them
+	// during the execution of the code. This function is really only applicable
+	// much later when you try to just get to the values of the returned data.
 	d, _, err := args2resourceargs(nil, 0, p.Array)
 	return &RawData{Value: d, Error: err, Type: types.Type(p.Type)}
 }

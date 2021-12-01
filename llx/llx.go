@@ -403,18 +403,10 @@ func (c *LeiseExecutor) runFunction(chunk *Chunk, ref int32) (*RawData, int32, e
 	return c.runBoundFunction(res.Result, chunk, ref)
 }
 
-func (c *LeiseExecutor) runPrimitive(primitive *Primitive, ref int32) (*RawData, int32, error) {
-	if types.Type(primitive.Type) == types.Ref {
-		return c.resolveValue(primitive, ref)
-	}
-
-	return primitive.RawData(), 0, nil
-}
-
 func (c *LeiseExecutor) runChunk(chunk *Chunk, ref int32) (*RawData, int32, error) {
 	switch chunk.Call {
 	case Chunk_PRIMITIVE:
-		res, dref, err := c.runPrimitive(chunk.Primitive, ref)
+		res, dref, err := c.resolveValue(chunk.Primitive, ref)
 		if res != nil {
 			c.cache.Store(ref, &stepCache{Result: res})
 		} else if err != nil {
@@ -433,7 +425,7 @@ func (c *LeiseExecutor) runChunk(chunk *Chunk, ref int32) (*RawData, int32, erro
 			return nil, 0, errors.New("cannot find property '" + chunk.Id + "'")
 		}
 
-		res, dref, err := c.runPrimitive(property, ref)
+		res, dref, err := c.resolveValue(property, ref)
 		if dref != 0 || err != nil {
 			return res, dref, err
 		}
