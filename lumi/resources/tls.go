@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/cockroachdb/errors"
+	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/tlsshake"
 )
@@ -113,11 +114,26 @@ func (s *lumiTls) GetParams(socket Socket, domainName string) (map[string]interf
 	for i := range findings.Certificates {
 		cert := findings.Certificates[i]
 
+		var isRevoked interface{}
+		var revokedAt interface{}
+		revocation, ok := findings.Revocations[string(cert.Signature)]
+		if ok {
+			if revocation == nil {
+				isRevoked = false
+				revokedAt = &llx.NeverFutureTime
+			} else {
+				isRevoked = true
+				revokedAt = &revocation.At
+			}
+		}
+
 		raw, err := s.Runtime.CreateResource("certificate",
 			"pem", "",
 			// NOTE: if we do not set the hash here, it will generate the cache content before we can store it
 			// we are using the hashs for the id, therefore it is required during creation
 			"fingerprints", certFingerprints(cert),
+			"isRevoked", isRevoked,
+			"revokedAt", revokedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -126,6 +142,7 @@ func (s *lumiTls) GetParams(socket Socket, domainName string) (map[string]interf
 		// store parsed object with resource
 		lumiCert := raw.(Certificate)
 		lumiCert.LumiResource().Cache.Store("_cert", &lumi.CacheEntry{Data: cert})
+
 		certs = append(certs, lumiCert)
 	}
 	res["certificates"] = certs
