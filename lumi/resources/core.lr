@@ -1069,6 +1069,10 @@ certificate {
   ocspServer() []string
   // Issuing Certificate Url
   issuingCertificateUrl() []string
+  // Identifies if this certificate has been revoked
+  isRevoked() bool
+  // The time at which this certificate was revoked
+  revokedAt() time
 }
 
 // Private Key Resource

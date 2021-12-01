@@ -383,6 +383,14 @@ func (s *lumiCertificate) GetIssuingCertificateUrl() ([]interface{}, error) {
 	return strSliceToInterface(cert.IssuingCertificateURL), nil
 }
 
+func (s *lumiCertificate) GetIsRevoked() (bool, error) {
+	return false, errors.New("unknown revocation status")
+}
+
+func (s *lumiCertificate) GetRevokedAt() (*time.Time, error) {
+	return nil, nil
+}
+
 func (r *lumiPkixName) id() (string, error) {
 	return r.Id()
 }

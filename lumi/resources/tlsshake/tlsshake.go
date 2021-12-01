@@ -11,11 +11,14 @@ import (
 	"io"
 	"math/rand"
 	"net"
+	"net/http"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/ocsp"
 )
 
 var TLS_VERSIONS = []string{"ssl3", "tls1.0", "tls1.1", "tls1.2", "tls1.3"}
@@ -37,6 +40,13 @@ type Findings struct {
 	Ciphers      map[string]bool
 	Errors       []string
 	Certificates []*x509.Certificate
+	Revocations  map[string]*revocation
+}
+
+type revocation struct {
+	At     time.Time
+	Via    string
+	Reason int
 }
 
 // New creates a new tester object for the given target (via proto, host, port)
@@ -47,8 +57,9 @@ func New(proto string, domainName string, host string, port int) *Tester {
 
 	return &Tester{
 		Findings: Findings{
-			Versions: map[string]bool{},
-			Ciphers:  map[string]bool{},
+			Versions:    map[string]bool{},
+			Ciphers:     map[string]bool{},
+			Revocations: map[string]*revocation{},
 		},
 		proto:      proto,
 		target:     target,
@@ -279,6 +290,13 @@ func (s *Tester) parseCertificate(data []byte) error {
 	s.Findings.Certificates = certs
 	s.sync.Unlock()
 
+	for i := 0; i+1 < len(certs); i++ {
+		err := s.ocspRequest(certs[i], certs[i+1])
+		if err != nil {
+			s.addError(err.Error())
+		}
+	}
+
 	return nil
 }
 
@@ -498,6 +516,55 @@ func (s *Tester) helloTLSMsg(version string, ciphersFilter func(cipher string) b
 	}
 
 	return constructTLSHello(version, ciphers, extensions.Bytes()), cipherCount, nil
+}
+
+// OCSP:
+// https://datatracker.ietf.org/doc/html/rfc6960
+// https://datatracker.ietf.org/doc/html/rfc2560
+
+func (s *Tester) ocspRequest(cert *x509.Certificate, issuer *x509.Certificate) error {
+	if len(cert.OCSPServer) == 0 {
+		return errors.New("no OCSP server specified for revocation check, skipping it")
+	}
+
+	server := cert.OCSPServer[0]
+
+	req, err := ocsp.CreateRequest(cert, issuer, &ocsp.RequestOptions{})
+	if err != nil {
+		return errors.Wrap(err, "failed to create OCSP request")
+	}
+
+	reqBody := bytes.NewBuffer(req)
+	res, err := http.Post(server, "application/ocsp-request", reqBody)
+	if err != nil {
+		return errors.Wrap(err, "failed to post OCSP request")
+	}
+
+	if res.StatusCode != 200 {
+		return errors.New("OCSP request returned " + res.Status)
+	}
+	resp, err := io.ReadAll(res.Body)
+	if err != nil {
+		return errors.Wrap(err, "failed to read OCSP response")
+	}
+	ocspRes, err := ocsp.ParseResponseForCert(resp, cert, issuer)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse OCSP response")
+	}
+
+	s.sync.Lock()
+	if ocspRes.RevokedAt.IsZero() {
+		s.Findings.Revocations[string(cert.Signature)] = nil
+	} else {
+		s.Findings.Revocations[string(cert.Signature)] = &revocation{
+			At:     ocspRes.RevokedAt,
+			Via:    server,
+			Reason: ocspRes.RevocationReason,
+		}
+	}
+	s.sync.Unlock()
+
+	return nil
 }
 
 func int1byte(i int) []byte {
