@@ -145,7 +145,7 @@ func arrayBlockList(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 		//Execution errors aren't returned by runFunctionBlock, some are in the results
 		// Collect any errors from results and add them to the rawData
 		// Effect: The query will show error instead
-		err := c.runFunctionBlock(bind, fun, func(res *RawResult) {
+		err := c.runFunctionBlock([]*RawData{bind}, fun, func(res *RawResult) {
 			blockResult[res.CodeID] = res.Data
 
 			if len(blockResult) == len(fun.Entrypoints) && !finished {
@@ -186,7 +186,7 @@ func arrayBlock(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 	if !types.Type(prim.Type).IsFunction() {
 		return nil, 0, errors.New("called block with wrong function type")
 	}
-	return c.runBlock(bind, prim, ref)
+	return c.runBlock(bind, prim, chunk.Function.Args[1:], ref)
 }
 
 func arrayLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -263,7 +263,7 @@ func _arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, inver
 	l := sync.Mutex{}
 	for it := range list {
 		i := it
-		err := c.runFunctionBlock(&RawData{Type: ct, Value: list[i]}, f, func(res *RawResult) {
+		err := c.runFunctionBlock([]*RawData{&RawData{Type: ct, Value: list[i]}}, f, func(res *RawResult) {
 			resList := func() []interface{} {
 				l.Lock()
 				defer l.Unlock()
@@ -464,7 +464,7 @@ func arrayFieldDuplicates(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int
 	finishedResults := 0
 	for i := range list {
 		//Function block resolves field value of resource
-		err := c.runFunctionBlock(&RawData{Type: ct, Value: list[i]}, f, func(res *RawResult) {
+		err := c.runFunctionBlock([]*RawData{&RawData{Type: ct, Value: list[i]}}, f, func(res *RawResult) {
 			_, ok := filteredList[i]
 			if !ok {
 				finishedResults++

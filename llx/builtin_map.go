@@ -65,7 +65,7 @@ func mapLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDa
 }
 
 func mapBlockCall(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return c.runBlock(bind, chunk.Function.Args[0], ref)
+	return c.runBlock(bind, chunk.Function.Args[0], nil, ref)
 }
 
 func mapKeys(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
@@ -207,7 +207,7 @@ func dictBlockCall(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	case []interface{}:
 		return arrayBlockList(c, bind, chunk, ref)
 	default:
-		return c.runBlock(bind, chunk.Function.Args[0], ref)
+		return c.runBlock(bind, chunk.Function.Args[0], nil, ref)
 	}
 }
 
@@ -345,7 +345,7 @@ func _dictWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, invert
 	l := sync.Mutex{}
 	for it := range list {
 		i := it
-		err := c.runFunctionBlock(&RawData{Type: ct, Value: list[i]}, f, func(res *RawResult) {
+		err := c.runFunctionBlock([]*RawData{{Type: ct, Value: list[i]}}, f, func(res *RawResult) {
 			resList := func() []interface{} {
 				l.Lock()
 				defer l.Unlock()

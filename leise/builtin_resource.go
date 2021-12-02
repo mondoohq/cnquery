@@ -221,6 +221,7 @@ func compileResourceAll(c *compiler, typ types.Type, ref int32, id string, call 
 	if err != nil {
 		return types.Nil, err
 	}
+	whereRef := c.Result.Code.ChunkIndex()
 
 	listType, err := compileResourceDefault(c, typ, c.Result.Code.ChunkIndex(), "list", nil)
 	if err != nil {
@@ -228,7 +229,7 @@ func compileResourceAll(c *compiler, typ types.Type, ref int32, id string, call 
 	}
 	listRef := c.Result.Code.ChunkIndex()
 
-	if err := compileListAssertionMsg(c, listType, listRef, listRef); err != nil {
+	if err := compileListAssertionMsg(c, listType, whereRef-1, listRef, listRef); err != nil {
 		return types.Nil, err
 	}
 
@@ -261,7 +262,7 @@ func compileResourceAny(c *compiler, typ types.Type, ref int32, id string, call 
 	}
 	listRef := c.Result.Code.ChunkIndex()
 
-	if err := compileListAssertionMsg(c, listType, whereRef-1, listRef); err != nil {
+	if err := compileListAssertionMsg(c, listType, whereRef-1, whereRef-1, listRef); err != nil {
 		return types.Nil, err
 	}
 
@@ -286,6 +287,7 @@ func compileResourceOne(c *compiler, typ types.Type, ref int32, id string, call 
 	if err != nil {
 		return types.Nil, err
 	}
+	whereRef := c.Result.Code.ChunkIndex()
 
 	listType, err := compileResourceDefault(c, typ, c.Result.Code.ChunkIndex(), "list", nil)
 	if err != nil {
@@ -293,7 +295,7 @@ func compileResourceOne(c *compiler, typ types.Type, ref int32, id string, call 
 	}
 	listRef := c.Result.Code.ChunkIndex()
 
-	if err := compileListAssertionMsg(c, listType, listRef, listRef); err != nil {
+	if err := compileListAssertionMsg(c, listType, whereRef-1, listRef, listRef); err != nil {
 		return types.Nil, err
 	}
 
@@ -318,6 +320,7 @@ func compileResourceNone(c *compiler, typ types.Type, ref int32, id string, call
 	if err != nil {
 		return types.Nil, err
 	}
+	whereRef := c.Result.Code.ChunkIndex()
 
 	listType, err := compileResourceDefault(c, typ, c.Result.Code.ChunkIndex(), "list", nil)
 	if err != nil {
@@ -325,7 +328,7 @@ func compileResourceNone(c *compiler, typ types.Type, ref int32, id string, call
 	}
 	listRef := c.Result.Code.ChunkIndex()
 
-	if err := compileListAssertionMsg(c, listType, listRef, listRef); err != nil {
+	if err := compileListAssertionMsg(c, listType, whereRef-1, listRef, listRef); err != nil {
 		return types.Nil, err
 	}
 

@@ -611,7 +611,7 @@ func init() {
 			"$whereNot": {f: resourceWhereNot},
 			"length":    {f: resourceLength},
 			"{}": {f: func(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-				return c.runBlock(bind, chunk.Function.Args[0], ref)
+				return c.runBlock(bind, chunk.Function.Args[0], nil, ref)
 			}},
 			// TODO: [#32] unique builtin fields that need a long-term support in LR
 			string(types.Resource("parse") + ".date"): {f: resourceDate},
