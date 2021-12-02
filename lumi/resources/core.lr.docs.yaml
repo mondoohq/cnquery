@@ -84,7 +84,7 @@ resources:
   aws:
     docs:
       desc: |
-        The AWS Resource is used to query AWS accounts and the services and resources within them. The `aws` resource returns a list of enabled regions within the AWS account, as well as a list of `aws.vpc` objects representing all VPCs configured across all enabled regions.
+        The `aws` can be used to assess the configuration of AWS accounts. It provides the `aws.regions` field for returning a list of enabled AWS regions in the account, and the `aws.vpcs` field which provides a list of VPCs configured within the account.
     platform:
       name:
       - aws
@@ -92,7 +92,7 @@ resources:
       - query: aws.regions
         title: List all enabled regions within the AWS account
       - query: aws.vpcs
-        title: List of `aws.vpc` objects for all VPCs across all enabled regions
+        title: List of `aws.vpc` resources for all VPCs across all enabled regions
       - query: |
           aws.vpcs {
             arn 
@@ -103,12 +103,9 @@ resources:
             flowLogs
             routeTables
           }
-        title: List of `aws.vpc` objects for all VPCs across all enabled regions and the values for specified fields
+        title: List of `aws.vpc` resources for all VPCs across all enabled regions and the values for specified fields
       - query: |
-          aws.vpcs
-            .all(
-              flowLogs.any(status == "ACTIVE")
-            )
+          aws.vpcs.all( flowLogs.any(status == "ACTIVE") )
         title: Ensure VPC flow logging is enabled in all VPCs
     refs:
     - title: 'AWS Documentation: Managing AWS Regions'
@@ -118,13 +115,26 @@ resources:
   aws.accessAnalyzer:
     docs:
       desc: |
-        The `aws.accessAnalyzer` resource returns a list of `aws.accessAnalyzer.analyzer` objects representing all of the AWS IAM Access Analyzers configured across the AWS account.
+        The `aws.accessAnalyzer` resource returns a list of `aws.accessAnalyzer.analyzer` resources representing all of the AWS IAM Access Analyzers configured across the AWS account.
     platform:
       name:
       - aws
     snippets:
       - query: aws.accessAnalyzer.analyzers 
-        title: "Return a list of `aws.accessAnalyzer.analyzer` objects representing all of the AWS IAM Access Analyzers configured across the AWS account"
+        title: Return a list of `aws.accessAnalyzer.analyzer` resources representing all of the AWS IAM Access Analyzers configured across the AWS account
+      - query: |
+          aws.accessAnalyzer.analyzers { 
+            arn 
+            name 
+            status 
+            type 
+          }
+        title: Return a list of `aws.accessAnalyzer.analyzer` resources and the value for specified fields
+      - query: |
+          aws.accessAnalyzer.analyzers.all(
+            status == "ACTIVE"
+          )
+        title: Ensure that IAM Access analyzer is enabled for all regions 
     refs:
     - title: "Using AWS IAM Access Analyzer"
       url: https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html
@@ -132,7 +142,7 @@ resources:
     platform:
       docs:
         desc: |
-          AWS Access Analyzer resource provides an object representing an individual AWS IAM Access Analyzer configuration. See `aws.accessAnalyzer` resource documentation for more information and usage. 
+          AWS Access Analyzer resource provides fields representing an individual AWS IAM Access Analyzer configuration. See `aws.accessAnalyzer` resource documentation for more information and usage. 
       name:
       - aws
   aws.account:
@@ -143,30 +153,34 @@ resources:
       name:
       - aws
     snippets:
-      - query: aws.account { id aliases }
+      - query: |
+          aws.account { 
+            id 
+            aliases 
+          }
         title: "Return the account id (number) and any configured account aliases"
   aws.acm:
     docs:
       desc:
-        The `aws.acm` resource can be used to assess the configuration of the AWS Certificates Manager service within the account. This resource returns a list of `aws.acm.certificate` objects for all ACM certificates found within the account.
+        The `aws.acm` resource can be used to assess the configuration of the AWS Certificates Manager service within the account. This resource returns a list of `aws.acm.certificate` resources for all ACM certificates found within the account.
     platform:
       name:
       - aws
     snippets:
       - query: aws.acm.certificates
-        title: Return a list of `aws.acm.certificates` within the AWS account
+        title: Return a list of `aws.acm.certificate` resources within the AWS account
       - query: |
           aws.acm.certificates {
-          arn
-          notBefore
-          notAfter 
-          createdAt
-          domainName
-          status
-          subject
-          certificate() 
+            arn
+            notBefore
+            notAfter 
+            createdAt
+            domainName
+            status
+            subject
+            certificate() 
           }
-        title: Return a list of `aws.acm.certificates` within the AWS account along with values for specified fields
+        title: Return a list of `aws.acm.certificate` resources within the AWS account along with values for specified fields
       - query: |
           aws.acm.certificates.
             where( status != /PENDING_VALIDATION/ ).
@@ -180,7 +194,7 @@ resources:
   aws.acm.certificate:
     docs:
       desc: |
-        The `aws.acm.certificate` resource provides an object representing an individual AWS ACM certificate. For usage see the `aws.acm` documentation.
+        The `aws.acm.certificate` resource provides fields for assessing the configuration of AWS ACM certificates. For usage see the `aws.acm` resource documentation.
     platform:
       name:
       - aws
@@ -193,7 +207,7 @@ resources:
       - aws
     snippets:
       - query: aws.apigateway.restApis
-        title: Return a list of `aws.apigateway.restapi` objects for all REST APIs configured with the account across all enabled regions
+        title: Return a list of `aws.apigateway.restapi` resources for all REST APIs configured with the account across all enabled regions
       - query: |
           aws.apigateway.restApis {
             createdDate
@@ -204,7 +218,7 @@ resources:
             id
             name
           }
-        title: Return a list of `aws.apigateway.restapi` objects for all REST APIs configured with the account across all enabled regions and the value for specified fields
+        title: Return a list of `aws.apigateway.restapi` resources for all REST APIs configured with the account across all enabled regions and the value for specified fields
       - query: |
           aws.apigateway.restApis.all(stages.all(
             methodSettings['CachingEnabled'] == true && 
@@ -224,14 +238,14 @@ resources:
   aws.apigateway.restapi:
     docs:
       desc: |
-        The `aws.apigateway.restapi` resource provides an object representing an individual REST API configured within the AWS account. For usage see the `aws.apigateway` resource documentation.
+        The `aws.apigateway.restapi` resource provides fields representing an individual REST API configured within the AWS account. For usage see the `aws.apigateway` resource documentation.
     platform:
       name:
       - aws
   aws.apigateway.stage:
     docs:
       desc: |
-        The `aws.apigateway.stage` resource provides an object representing an individual stage configured on a REST API. For usage see the `aws.apigateway` resource documentation.
+        The `aws.apigateway.stage` resource provides fields representing an individual stage configured on a REST API. For usage see the `aws.apigateway` resource documentation.
     platform:
       name:
       - aws
@@ -243,249 +257,839 @@ resources:
           }
         title: Return a list of AWS API Gateway REST APIs configured across all enabled regions in the AWS account and the values for the arn and stages
   aws.autoscaling:
+    docs:
+      desc: |
+        The `aws.autoscaling` resource can be used to assess the configuration of AWS auto scaling groups within an AWS account. This resource provides the the `.groups` field which returns a list of `aws.autoscaling.group` resources representing all auto scaling groups configured across all enabled regions across the account.      
     platform:
       name:
       - aws
+    snippets:
+      - query: |
+          aws.autoscaling.groups { 
+            arn 
+            healthCheckType 
+            loadBalancerNames 
+            name 
+          }
+        title: Return a list of `aws.autoscaling.group` resources representing all auto scaling groups configured across all enabled regions across the account and the value for specified fields
+      - query: |
+          aws.autoscaling.groups.where(loadBalancerNames.length > 0) { 
+            healthCheckType == "ELB" 
+          }
+        title: Checks that all autoscaling groups assoc with a load balancer use health checks
+    refs:
+      - title: Security in Amazon EC2 Auto Scaling
+        url: https://docs.aws.amazon.com/autoscaling/ec2/userguide/security.html
+      - title: Compliance validation for Amazon EC2 Auto Scaling
+        url: https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-compliance.html
   aws.autoscaling.group:
+    docs:
+      desc: |
+        The `aws.autoscaling.group` resource provides fields representing an individual AWS auto scaling group within the account. For usage see the `aws.autoscaling` resource documentation.
     platform:
       name:
       - aws
   aws.cloudtrail:
+    docs:
+      desc: |
+        The `aws.cloudtrail` resource can be used to assess the configuration of AWS CloudTrails deployed within an AWS account. The resource provides the `.trails` field which creates a list of `aws.cloudtrail.trail` resources representing all CloudTrails configured across every enabled region.
+    snippets:
+      - query: |
+          aws.cloudtrail.trails {
+            arn
+            name
+            kmsKey
+            isMultiRegionTrail
+            isOrganizationTrail
+            logFileValidationEnabled
+            includeGlobalServiceEvents
+            s3bucket
+            snsTopicARN
+            status
+            logGroup
+            cloudWatchLogsRoleArn
+            eventSelectors
+            region
+          }
+        title: Return a list of `aws.cloudtrail.trail` resources representing all AWS Cloud Trails configured across all enabled regions and the values for specified fields
+      - query: |
+          aws.cloudtrail.trails.any( 
+            isMultiRegionTrail && status['IsLogging'] 
+          )
+    refs:
+      - title: Security best practices in AWS CloudTrail
+        url: https://docs.aws.amazon.com/awscloudtrail/latest/userguide/best-practices-security.html
     platform:
       name:
       - aws
   aws.cloudtrail.trail:
+    docs:
+      desc: |
+        The `aws.cloudtrail.trail` object represents an individual AWS CloudTrail configured within an account. For usage see the `aws.cloudtrail` resource.
     platform:
       name:
       - aws
   aws.cloudwatch:
+    docs:
+      desc: |
+        The `aws.cloudwatch` resource is used to assess the configuration of the AWS CloudWatch service.
+    snippets:
+      - query: aws.cloudwatch.logGroups
+        title: Return a list of `aws.cloudwatch.loggroup` resources representing individual CloudWatch log groups configured across all enabled regions 
+      - query: aws.cloudwatch.metrics
+        title: Return a list of `aws.cloudwatch.metric` resources representing individual CloudWatch metrics configured across all enabled regions 
+      - query: |
+          aws.cloudwatch.alarms.all(
+            actions.length > 0 == true &&
+            insufficientDataActions.length > 0 == props.cloudwatchAlarmInsufficientDataActionRequired &&
+            okActions.length > 0 == props.cloudwatchAlarmOkActionRequired
+          )
+        title: Checks that all cloudwatch alarms have at least one action enabled
     platform:
       name:
       - aws
   aws.cloudwatch.loggroup:
+    docs:
+      desc: |
+        The `aws.cloudwatch.loggroup` object represents an individual AWS CloudWatch log group configured within an account. For usage see the `aws.cloudwatch` resource.
     platform:
       name:
       - aws
   aws.cloudwatch.loggroup.metricsfilter:
+    docs:
+      desc: |
+        The `aws.cloudwatch.metricsfilter` object represents an individual AWS CloudWatch metrics filter configured within an account. For usage see the `aws.cloudwatch` resource.
     platform:
       name:
       - aws
   aws.cloudwatch.metric:
+    docs:
+      desc: |
+        The `aws.cloudwatch.metric` object represents an individual AWS CloudWatch metric configured within an account. For usage see the `aws.cloudwatch` resource.
     platform:
       name:
       - aws
   aws.cloudwatch.metricsalarm:
+    docs:
+      desc: |
+        The `aws.cloudwatch.metricsalarm` object represents an individual AWS CloudWatch metric alarm configured within an account. For usage see the `aws.cloudwatch` resource.
     platform:
       name:
       - aws
   aws.codebuild:
+    docs:
+      desc: |
+        The `aws.codebuild` resource is used to assess the configuration of the AWS CodeBuild service and the projects within. 
+    snippets:
+      - query: |
+          aws.codebuild.projects {
+            arn
+            description
+            name
+            environment
+            region
+            source
+          }
+        title: Return a list of `aws.codebuild.project` resources representing all AWS CodeBuild projects configured across all enabled regions within the account and the values for specified fields
+      - query: |
+          aws.codebuild.projects { 
+            environment ['EnvironmentVariables'].where(_['Name'] == "AWS_ACCESS_KEY_ID") { _['Type'] != "PLAINTEXT"}
+            environment ['EnvironmentVariables'].where(_['Name'] == "AWS_SECRET_ACCESS_KEY") { _['Type'] != "PLAINTEXT"} 
+          }
+        title: Checks that all projects containing env variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not in plaintext
+      - query: |
+          aws.codebuild.projects.where( source['Type'] == "BITBUCKET" || source['Type'] == "GITHUB" ) { 
+            source['Auth']['Type'] == "OAUTH"
+          }
+        title: Checks that all projects using github or bitbucket as the source use oauth
+    refs:
+      title: Security in AWS CodeBuild
+      url: https://docs.aws.amazon.com/codebuild/latest/userguide/security.html
     platform:
       name:
       - aws
   aws.codebuild.project:
+    docs:
+      desc: |
+        The `aws.codebuild.project` resource provides fields representing an individual AWS CodeBuild project configured within the account. For usage see the `aws.codebuild` documentation.
     platform:
       name:
       - aws
   aws.config:
+    docs:
+      desc: |
+        The `aws.config` resource is used to assess the configuration of the AWS Config service. The resource provides the `.recorders` field which returns a list of `aws.config.recorder` resources representing all AWS Config recorders configured across all enabled regions, as well as the `.rules` field which returns a list of `aws.config.rule` resources representing all AWS Config rules configured across all enabled regions in the account.
     platform:
       name:
       - aws
+    snippets:
+      - query: |
+          aws.config.rules {
+            arn 
+            state 
+            source
+          }
+        title: Return a list of `aws.config.rule` resources representing AWS Config rules configured across all enabled regions and the value for specified fields
+      - query: |
+          aws.config.recorders {
+            name 
+            roleArn 
+            allSupported 
+            includeGlobalResourceTypes 
+            recording 
+            lastStatus 
+            region 
+          }
+        title: Return a list of AWS Config recorders configured across all enabled regions and the value for specified fields
+      - query: |
+          aws.config.recorders.any(allSupported == true && includeGlobalResourceTypes == true)
+          aws.config.recorders.where(allSupported == true && includeGlobalResourceTypes == true).all(
+            recording == true && lastStatus == "SUCCESS"
+          )
+        title: Ensure AWS Config is enabled in all regions
+    refs:
+      - title: Security in AWS Config
+        url: https://docs.aws.amazon.com/config/latest/developerguide/security.html
+      - title: AWS Config best practices
+        url: https://aws.amazon.com/blogs/mt/aws-config-best-practices/
   aws.config.recorder:
+    docs:
+      desc: |
+        The `aws.config.recorder` resource provides fields representing an individual AWS Config recorder configured within an account. For usage see the `aws.config` resource documentation. 
     platform:
       name:
       - aws
   aws.config.rule:
+    docs:
+      desc: |
+        The `aws.config.rule` resource provides fields representing an individual AWS Config rule configured within an account. For usage see the `aws.config` resource documentation. 
     platform:
       name:
       - aws
   aws.dms:
+    docs:
+      desc: |
+        The `aws.dms` resource is used to assess the configuration of the AWS Database Migration service.
     platform:
       name:
       - aws
+    snippets:
+      - query: aws.dms.replicationInstances
+        title: Return a list of AWS Database Migration service replication instances
+      - query: |
+          aws.dms.replicationInstances.none(
+            _['PubliclyAccessible'] == true
+          )
+        title: Checks whether AWS Database Migration Service replication instances are public
+    refs:
+      title: Security in AWS Database Migration Service
+      url: https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.html
   aws.dynamodb:
+    docs:
+      desc: |
+        The `aws.dynamodb` resource can be used to assess the configuration of the AWS DynamoDB.
     platform:
       name:
       - aws
+    snippets:
+      - query: |
+          aws.dynamodb.tables {
+            arn 
+            name 
+            region 
+            backups 
+            sseDescription 
+            provisionedThroughput 
+            continuousBackups 
+          }
+        title: Return a list of `aws.dynamodb.table` resources and the values for specified fields
+      - query: |
+          aws.dynamodb.limits {
+            arn 
+            region 
+            accountMaxRead 
+            accountMaxWrite 
+            tableMaxRead
+            tableMaxWrite 
+          }
+        title: Return a list of `aws.dynamodb.limit` resources and the values for specified fields
+      - query: |
+          aws.dynamodb.globaltables {
+            arn 
+            name 
+            replicaSettings 
+          }
+        title: Return a list of `aws.dynamodb.globaltable` resources and the value for specified fields
+      - query: | 
+          aws.dynamodb.tables.all( 
+            sseDescription['SSEType'] == 'KMS' && sseDescription['Status'] == 'ENABLED'
+          )
+        title: Checks that all DynamoDB tables are encrypted with AWS Key Management Service (KMS)
+    refs:
+      title: Security and Compliance in Amazon DynamoDB
+      url: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/security.html
   aws.dynamodb.globaltable:
+    docs:
+      desc: |
+        The `aws.dynamodb.globaltable` resource provides fields representing a DynamoDB Global Table. For usage see `aws.dynamodb` resource documentation.
     platform:
       name:
       - aws
   aws.dynamodb.limit:
+    docs:
+      desc: |
+        The `aws.dynamodb.limit` resource provides fields representing a DynamoDB limit configuration. For usage see `aws.dynamodb` resource documentation.
     platform:
       name:
       - aws
   aws.dynamodb.table:
+    docs:
+      desc: |
+        The `aws.dynamodb.table` resource provides fields representing a DynamoDB Table. For usage see `aws.dynamodb` resource documentation.
     platform:
       name:
       - aws
   aws.ec2:
+    docs:
+      desc: |
+        The `aws.ec2` resource can be used to assess the configuration of AWS EC2 instances.
     platform:
       name:
       - aws
+    snippets:
+      - query: |
+          aws.ec2.instances {
+            arn
+            instanceId 
+            detailedMonitoring 
+            region 
+            publicIp 
+            ssm 
+            vpc 
+            httpTokens 
+            patchState 
+            state 
+            deviceMappings 
+            securityGroups
+            publicDnsName 
+            instanceStatus
+            stateReason 
+            stateTransitionReason 
+            ebsOptimized 
+            instanceType 
+            tags 
+            image
+            launchTime 
+          }
+        title: Return a list of all EC2 instances across all enabled regions in the account and the value for specified fields
+      - query: |
+          aws.ec2.securityGroups {
+            arn
+            region
+            vpc
+            id
+          }
+        title: Return a list of security groups across every enabled region and the value for specified fields
+      - query: |
+          aws.ec2.volumes {
+            arn
+            region 
+          }
+        title: Return a list of all EBS volumes along with the associated ARN and the region the volume exists in
+      - query: |
+          aws.ec2.securityGroups.where(name == "default") {
+            ipPermissions.all(ipRanges.length == 0 && ipv6Ranges.length == 0 && fromPort == 0 && toPort == 0)
+            ipPermissionsEgress.all(ipRanges.length == 0 && ipv6Ranges.length == 0 && fromPort == 0 && toPort == 0)
+          }
+        title: Ensure the default security group of every VPC restricts all traffic
+    refs:
+      - title: Security in Amazon EC2
+        url: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-security.html
+      - title: Security in Amazon Virtual Private Cloud 
+        url: https://docs.aws.amazon.com/vpc/latest/userguide/security.html
   aws.ec2.image:
+    docs:
+      desc: |
+        The `aws.ec2.image` resource provides fields for assessing AMIs within an account. For usage see `aws.ec2` resource.
     platform:
       name:
       - aws
   aws.ec2.instance:
+    docs:
+      desc: |
+        The `aws.ec2.instance` resource provides fields for assessing the configuration of EC2 instances within an account. For usage see `aws.ec2` resource.
     platform:
       name:
       - aws
   aws.ec2.instance.device:
+    docs:
+      desc: |
+        The `aws.ec2.instance.device` resource provides fields for assessing the configuration of devices attached to EC2 instances within an account. For usage see `aws.ec2` resource.
     platform:
       name:
       - aws
   aws.ec2.internetgateway:
+    docs:
+      desc: |
+        The `aws.ec2.internetgateway` resource provides fields for assessing the configuration of internet gateways within an AWS account. For usage see `aws.ec2` resource.
     platform:
       name:
       - aws
   aws.ec2.networkacl:
+    docs:
+      desc: |
+        The `aws.ec2.networkacl` resource provides fields for assessing the configuration of VPC network ACLs within an AWS account. For usage see `aws.ec2` resource.
     platform:
       name:
       - aws
   aws.ec2.networkacl.entry:
+    docs:
+      desc: |
+        The `aws.ec2.networkacl.entry` resource provides fields for assessing the configuration of network ACL entries within an AWS account. For usage see `aws.ec2` resource.
     platform:
       name:
       - aws
   aws.ec2.networkacl.entry.portrange:
+    docs:
+      desc: |
+        The `aws.ec2.networkacl.portrange` resource provides fields for assessing the port range configuration of network ACL entries within an AWS account. For usage see `aws.ec2` resource.
     platform:
       name:
       - aws
   aws.ec2.securitygroup:
+    docs:
+      desc: |
+        The `aws.ec2.securitygroup` resource provides fields for assessing the configuration of security groups within an AWS account. For usage see `aws.ec2` resource.
     platform:
       name:
       - aws
   aws.ec2.securitygroup.ippermission:
+    docs:
+      desc: |
+        The `aws.ec2.securitygroup.ippermission` resource provides fields for assessing the configuration of ip permissions for security groups within an AWS account. For usage see `aws.ec2` resource.
     platform:
       name:
       - aws
   aws.ec2.snapshot:
+    docs:
+      desc: |
+        The `aws.ec2.snapshot` resource provides fields for assessing the configuration of EBS snapshots within an AWS account. For usage see `aws.ec2` resource.
     platform:
       name:
       - aws
   aws.ec2.vgwtelemetry:
+    docs:
+      desc: |
+        The `aws.ec2.vgwtelemetry` resource provides fields for assessing the configuration of telemetry for VPN tunnels within an AWS account. For usage see `aws.ec2` resource.
     platform:
       name:
       - aws
   aws.ec2.volume:
+    docs:
+      desc: |
+        The `aws.ec2.volume` resource provides fields for assessing the configuration of EBS volumes within an AWS account. For usage see `aws.ec2` resource.
     platform:
       name:
       - aws
   aws.ec2.vpnconnection:
+    docs:
+      desc: |
+        The `aws.ec2.vpnconnection` resource provides fields for assessing the configuration of VPN connections within an AWS account. For usage see `aws.ec2` resource.
     platform:
       name:
       - aws
   aws.efs:
+    docs:
+      desc: |
+        The `aws.efs` resource can be used to assess the configuration of Amazon Elastic File System deployments.
     platform:
       name:
       - aws
+    snippets:
+      - query: |
+          aws.efs.filesystems {
+            name
+            id
+            arn
+            encrypted
+            kmsKey
+            backupPolicy
+            region
+          }
+        title: Return a list of `aws.efs.filesystem` resources representing any EFS deployments across all enabled regions in the account
+      - query: |
+          aws.efs.filesystems.all(
+            encrypted == true && kmsKey.arn == /^arn:aws:kms:.*/ 
+          )
+        title: Checks whether all EFS systems are configured to encrypt file data using KMS
+    refs:
+      - title: Security in Amazon EFS
+        url: https://docs.aws.amazon.com/efs/latest/ug/security-considerations.html
   aws.efs.filesystem:
+    docs:
+      desc: |
+        The `aws.efs.filesystem` resource provides fields for assessing the configuration of individual EFS deployments. For usage see the `aws.efs` resource documentation. 
     platform:
       name:
       - aws
   aws.elasticache:
+    docs:
+      desc: |
+        The `aws.elasticache` resource can be used to assess the configuration of Amazon ElastiCache. 
     platform:
       name:
       - aws
+    snippets:
+      - query: |
+          aws.elasticache.clusters.all(
+            _['SnapshotRetentionLimit'] > _['SnapshotRetentionPeriod']
+          )
+        title: Checks if the ElastiCache Redis clusters have automatic backup turned on
+    refs:
+      - title: Security in Amazon ElastiCache
+        url: https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/redis-security.html
   aws.elb:
+    docs:
+      desc: |
+        The `aws.elb` resource can be used to assess the configuration of Amazon Elastic Load Balancers within an AWS account.
     platform:
       name:
       - aws
+    snippets:
+      - query: |
+          aws.elb.loadbalancers {
+            arn
+            dnsName
+            listenerDescriptions
+            name
+            scheme
+            attributes
+          }
+        title: Return a list of all application, gateway, and network Elastic Load Balancers deployed across every enabled region and the values for specified fields
+      - query: |
+          aws.elb.classicLoadBalancers {
+            arn
+            dnsName
+            listenerDescriptions
+            name
+            scheme
+            attributes
+          }
+        title: Return a list of all classic Elastic Load Balancers deployed across every enabled region and the values for specified fields
+      - query: |
+          aws.elb.loadBalancers.all( listenerDescriptions.any ( 
+            _['Protocol'] == "HTTPS" || _['Protocol'] == "SSL" ) 
+          )
+        title: Checks whether HTTP to HTTPS redirection is configured on all application load balancer http listeners
+      - query: |
+          aws.elb.classicLoadBalancers.all( listenerDescriptions.any ( 
+            _['Listener']['Protocol'] == "HTTPS" || _['Listener']['Protocol'] == "SSL" ) 
+          )
+        title: Checks that all Classic Load Balancers use SSL certificates provided by AWS Cert Mgr
+    refs:
+      - title: Security in Elastic Load Balancing
+        url: https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/security.html
   aws.elb.loadbalancer:
+    docs:
+      desc: |
+        The `aws.elb.loadbalancer` resource provides fields for assessing the configuration of individual classic, application, gateway, and network Amazon Elastic Load Balancers. For usage see the `aws.elb` documentation.
     platform:
       name:
       - aws
   aws.emr:
+    docs:
+      desc: |
+        The `aws.emr` resource can be used to assess the configuration of Amazon EMR clusters. This resource provides a list of `aws.emr.cluster` resources representing EMR clusters deployed across all enabled regions.
     platform:
       name:
       - aws
+    snippets:
+      - query: |
+          aws.emr.clusters {
+            arn
+            name
+            normalizedInstanceHours
+            outpostArn
+            status
+            masterInstances
+            id
+          }
+        title: Return a list of EMR clusters deployed across all enabled regions and the value for specified fields
+      - query: |
+          aws.emr.clusters.all(
+            masterInstances { _['PublicIpAddress'] == null }
+          )
+        title: Checks whether EMR cluster master nodes have public ips
+    refs:
+      - title: Security in Amazon EMR
+        url: https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-security.html
   aws.emr.cluster:
+    docs:
+      desc: |
+        The `aws.emr.cluster` resource provides fields for assessing the configuration of individual Amazon EMR clusters. For usage see the `aws.emr` resource documentation.
     platform:
       name:
       - aws
   aws.es:
+    docs:
+      desc: |
+        The `aws.es` resource can be used to assess the configuration of Amazon ElasticSearch domains. This resource provides a list of `aws.es.domain` resources representing ElasticSearch domains deployed across all enabled regions.
     platform:
       name:
       - aws
+    snippet: 
+      - query: |
+          aws.es.domains {
+            arn
+            encryptionAtRestEnabled
+            nodeToNodeEncryptionEnabled
+            name
+            endpoint
+            region
+          }
+        title: Return a list of AWS ElasticSearch domains deployed across all enabled regions and the values for specified fields
+      - query: |
+          aws.es.domains.all( encryptionAtRestEnabled == true )
+        title: Checks that all ES domains have encryption at rest configuration enabled
+      - query: |
+          aws.es.domains.all( nodeToNodeEncryptionEnabled == true )
+        title: Checks that all ES nodes are encrypted end to end
+    refs:
+      - title: Amazon Security Blog on ElasticSearch
+        url: https://aws.amazon.com/blogs/security/tag/amazon-elasticsearch-service/
   aws.es.domain:
+    docs:
+      desc: |
+        The `aws.es.domain` provides fields for assessing the configuration of individual Amazon ElasticSearch domains. For usage see the `aws.es` resource documentation
     platform:
       name:
       - aws
   aws.guardduty:
+    docs:
+      desc: |
+        The `aws.guardduty` resource can be used to assess the configuration of the AWS GuardDuty service. The resource provides a list of `aws.guardduty.dectector` resources representing GuardDuty Detectors deployed across all enabled regions.
     platform:
       name:
       - aws
+    snippets:
+      - query: |
+          aws.guardduty.detectors {
+            id
+            region
+            status
+            findingPublishingFrequency
+            unarchivedFindings
+          }
+        title: Return a list of Amazon GuardDuty Detectors along with the values for specified fields
+      - query: |
+          aws.guardduty.detectors.all( status == "ENABLED" )
+        title:  Checks that guardduty is enabled in all regions
+    refs:
+      - title: Security in Amazon GuardDuty
+        url: https://docs.aws.amazon.com/guardduty/latest/ug/security.html
   aws.guardduty.detector:
+    docs:
+      desc: |
+        The `aws.guardduty.dectector` provides fields for assessing the configuration of individual Amazon GuardDuty Detectors. For usage see the `aws.guardduty` resource documentation
     platform:
       name:
       - aws
   aws.iam:
+    docs:
+      desc: |
+        The `aws.iam` resource can be used to assess the configuration of the AWS IAM service. The resource provides a list of `aws.iam.user` resources representing GuardDuty Detectors deployed across all enabled regions.
     platform:
       name:
       - aws
+    snippets:
+      - query: |
+          aws.iam.users {
+            users
+            roles
+            groups
+            policies
+            attachedPolicies
+            accountSummary
+            virtualMfaDevices
+            serverCertificates
+          }
+        title: Return a list of `aws.iam.user` resources representing IAM users in the account and specified fields
+      - query: |
+          aws.iam.credentialReport.where(mfaActive == false) { 
+            user { 
+              arn 
+              name 
+              groups 
+            }
+          }
+        title: Return a list of users that do not have MFA configured along with the ARN, name, and associated IAM Groups
+      - query: |
+          aws.iam.credentialReport.
+            where(
+              passwordEnabled &&
+              accessKey1Active &&
+              userCreationTime < time.today
+            ).
+            all(
+              accessKey1LastUsedDate != null
+            ) 
+        title: Do not setup access keys during initial user setup for all IAM users that have a console password
+    refs:
+      - title: Security in IAM and AWS STS
+        url: https://docs.aws.amazon.com/IAM/latest/UserGuide/security.html
   aws.iam.group:
+    docs:
+      desc: |
+        The `aws.iam.group` provides fields for assessing the configuration of IAM Groups. For usage see the `aws.iam` resource documentation.
     platform:
       name:
       - aws
   aws.iam.policy:
+    docs:
+      desc: |
+        The `aws.iam.policy` provides fields for assessing the configuration of individual IAM Policies. For usage see the `aws.iam` resource documentation.
     platform:
       name:
       - aws
   aws.iam.policyversion:
+    docs:
+      desc: |
+        The `aws.iam.policyversion` provides fields for assessing the metadata for IAM Policy versions. For usage see the `aws.iam` resource documentation.
     platform:
       name:
       - aws
   aws.iam.role:
+    docs:
+      desc: |
+        The `aws.iam.role` provides fields for assessing the configuration of individual IAM Roles. For usage see the `aws.iam` resource documentation.
     platform:
       name:
       - aws
   aws.iam.user:
+    docs:
+      desc: |
+        The `aws.iam.user` provides fields for assessing the configuration of individual IAM users. For usage see the `aws.iam` resource documentation.
     platform:
       name:
       - aws
   aws.iam.usercredentialreportentry:
+    docs:
+      desc: |
+        The `aws.iam.credentialreportentry` provides fields for assessing the metadata for individual IAM Credential Report entries. For usage see the `aws.iam` resource documentation.
     platform:
       name:
       - aws
   aws.iam.virtualmfadevice:
+    docs:
+      desc: |
+        The `aws.iam.virtualmfadevice` provides fields for assessing the metadata for individual virtual MFA devices associated with IAM users. For usage see the `aws.iam` resource documentation.
     platform:
       name:
       - aws
   aws.kms:
+    docs:
+      desc: |
+        The `aws.kms` resource can be used to assess the configuration of AWS KMS keys. 
     platform:
       name:
       - aws
+    snippets:
+      - query: |
+          aws.kms.keys.where( metadata['KeyState'] == "Enabled" ).all( keyRotationEnabled == true )
+        title: Ensure rotation for customer created CMKs is enabled
   aws.kms.key:
+    docs:
+      desc: |
+        The `aws.kms.key` provides fields for assessing the configuration of individual KMS keys. For usage see the `aws.kms` resource documentation.
     platform:
       name:
       - aws
   aws.lambda:
+    docs:
+      desc: |
+        The `aws.lambda` resource can be used to assess the configuration of AWS Lambda. 
     platform:
       name:
       - aws
   aws.lambda.function:
+    docs:
+      desc: |
+        The `aws.lambda.function` provides fields for assessing the configuration of individual AWS Lambda functions. For usage see the `aws.lambda` resource documentation.
     platform:
       name:
       - aws
   aws.rds:
+    docs:
+      desc: |
+        The `aws.rds` resource can be used to assess the configuration of AWS RDS deployments. The resource returns lists of `aws.rds.dbcluster`, `aws.rds.dbinstance`, and `aws.rds.snapshot` resources, each with fields for assessing the configuration of those assets.
     platform:
       name:
       - aws
+    snippets:
+      - query: aws.rds.dbInstances.all(snapshots.length > 0)
+        title: Checks whether RDS DB instances have backups enabled
+      - query: aws.rds.dbInstances.all(multiAZ == true)
+        title: Checks whether high availability is enabled for all rds instances
+      - query: aws.rds.dbClusters { snapshots.where( encrypted == false) } { arn region id }
+        title: Return a list of RDS Clusters across all regions where snapshots are not encrypted and return the `arn` `region` and `id` for the cluster
+    refs:
+      - title: Security in Amazon RDS
+        url: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.html  
   aws.rds.dbcluster:
+    docs:
+      desc: |
+        The `aws.rds.dbcluster` provides fields for assessing the configuration of AWS RDS Clusters.
     platform:
       name:
       - aws
   aws.rds.dbinstance:
+    docs:
+      desc: |
+        The `aws.rds.dbinstance` fields for assessing the configuration of RDS instances. For usage see the `aws.rds` resource documentation.
     platform:
       name:
       - aws
   aws.rds.snapshot:
+    docs:
+      desc: |
+        The `aws.rds.snapshot` fields for assessing the configuration of RDS snapshots. For usage see the `aws.rds` resource documentation.
     platform:
       name:
       - aws
   aws.redshift:
+    docs:
+      desc: |
+        The `aws.redshift` resource can be used to assess the configuration of AWS RedShift deployments. The resource returns lists of `aws.rds.dbcluster`, `aws.rds.dbinstance`, and `aws.rds.snapshot` resources, each with fields for assessing the configuration of those assets.
     platform:
       name:
       - aws
+    snippets:
+      - query: |
+          aws.redshift.clusters {
+            arn
+            encrypted
+            nodeType
+            allowVersionUpgrade
+            preferredMaintenanceWindow
+            automatedSnapshotRetentionPeriod
+            publiclyAccessible
+            parameters
+            logging
+            name
+            region
+            clusterParameterGroupNames
+          }
+        title: Return a list of Amazon RedShift clusters deployed across all enabled regions and the values for specified fields
+      - query: |
+          aws.redshift.clusters.where( encrypted == false ) {
+            arn
+            region
+            name
+          }
+        title: Return a list of RedShift clusters that are not encrypted and the values for the `arn` `region` and `name` fields
+    refs:
+      - title: Amazon Redshift security overview
+        url: https://docs.aws.amazon.com/redshift/latest/dg/c_security-overview.html
   aws.redshift.cluster:
     platform:
       name:
@@ -497,6 +1101,47 @@ resources:
     platform:
       name:
       - aws
+    snippets:
+      - query: |
+          aws.s3.buckets {
+            arn
+            name
+            policy
+            tags
+            acl
+            owner
+            public
+            cors
+            location
+            versioning
+            logging
+            staticWebsiteHosting
+            defaultLock
+            replication
+            encryption
+            publicAccessBlock
+            exists
+          }
+        title: Return a list of AWS S3 buckets and the value for specified fields
+      - query: |
+          aws.s3.buckets.where( public == true ) {
+            arn
+            name
+            location
+            tags
+            publicAccessBlock 
+          }
+        title: Return a list of AWS S3 buckets that are public and return the values for the `arn` `name` `location` `tags` and `publicAccessBlock`
+      - query: |
+          aws.s3.buckets.all( 
+            replication['Rules'] { _['Status'] == "Enabled" }
+          )
+        title: Checks whether S3 buckets have cross-region replication enabled
+      - query: |
+          aws.s3.buckets.all( 
+            encryption['Rules'] { _['ApplyServerSideEncryptionByDefault']['KMSMasterKeyID'] == /^arn:aws:kms:.*/}
+          )
+        title: Checks that all buckets are encrypted with kms
     refs:
     - title: Amazon S3 Product Page
       url: https://aws.amazon.com/s3/
@@ -505,7 +1150,7 @@ resources:
   aws.s3.bucket:
     docs:
       desc: |
-        Buckets and objects are AWS resources, and Amazon S3 provides APIs for you to manage them
+        The `aws.s3.bucket` resource provides fields for assessing the configuration of AWS S3 buckets. For usage see the `aws.s3` resource documentation.
     platform:
       name:
       - aws
