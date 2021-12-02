@@ -752,11 +752,9 @@ func (s *lumiAwsEc2Instance) GetSsm() (interface{}, error) {
 	}
 	svc := at.Ssm(region)
 	ctx := context.Background()
-	resourceTypeFilter := "ResourceType"
 	instanceIdFilter := "InstanceIds"
 	params := &ssm.DescribeInstanceInformationInput{
 		Filters: []ssmtypes.InstanceInformationStringFilter{
-			{Key: &resourceTypeFilter, Values: []string{"ManagedInstance"}},
 			{Key: &instanceIdFilter, Values: []string{instanceId}},
 		},
 	}
