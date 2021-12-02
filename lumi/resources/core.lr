@@ -135,6 +135,8 @@ platform {
   release string
   // Build version of the platform (optional)
   build string
+  // Fully qualified domain name (optional)
+  fqdn string
   // Architecture this OS is running on
   arch string
   // Kind of this platform (API, code, image, package, etc)

@@ -2,12 +2,13 @@ package resources
 
 import (
 	"errors"
-	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/vadvisor"
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/motor/transports/network"
+	"go.mondoo.io/mondoo/vadvisor"
 	"go.mondoo.io/mondoo/vadvisor/sources/eol"
 )
 
@@ -21,6 +22,12 @@ func (s *lumiPlatform) init(args *lumi.Args) (*lumi.Args, Platform, error) {
 		(*args)["build"] = platform.Build
 		(*args)["kind"] = platform.Kind.Name()
 		(*args)["runtimeEnv"] = platform.Runtime
+
+		if transport, ok := s.Runtime.Motor.Transport.(*network.Transport); ok {
+			(*args)["fqdn"] = transport.FQDN
+		} else {
+			(*args)["fqdn"] = ""
+		}
 
 		families := []interface{}{}
 		for _, f := range platform.Family {
