@@ -316,6 +316,10 @@ func compileArrayAll(c *compiler, typ types.Type, ref int32, id string, call *pa
 	}
 	listRef := c.Result.GetCode().ChunkIndex()
 
+	if err := compileListAssertionMsg(c, typ, listRef, listRef); err != nil {
+		return types.Nil, err
+	}
+
 	c.Result.Code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   "$all",
@@ -337,6 +341,10 @@ func compileArrayAny(c *compiler, typ types.Type, ref int32, id string, call *pa
 		return types.Nil, err
 	}
 	listRef := c.Result.GetCode().ChunkIndex()
+
+	if err := compileListAssertionMsg(c, typ, ref, listRef); err != nil {
+		return types.Nil, err
+	}
 
 	c.Result.Code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
@@ -360,6 +368,10 @@ func compileArrayOne(c *compiler, typ types.Type, ref int32, id string, call *pa
 	}
 	listRef := c.Result.GetCode().ChunkIndex()
 
+	if err := compileListAssertionMsg(c, typ, listRef, listRef); err != nil {
+		return types.Nil, err
+	}
+
 	c.Result.Code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   "$one",
@@ -381,6 +393,10 @@ func compileArrayNone(c *compiler, typ types.Type, ref int32, id string, call *p
 		return types.Nil, err
 	}
 	listRef := c.Result.GetCode().ChunkIndex()
+
+	if err := compileListAssertionMsg(c, typ, listRef, listRef); err != nil {
+		return types.Nil, err
+	}
 
 	c.Result.Code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
