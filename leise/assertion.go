@@ -182,7 +182,7 @@ func compileAssertionMsg(msg string, c *compiler) (*llx.AssertionMessage, error)
 	return &res, nil
 }
 
-func compileListAssertionMsg(c *compiler, typ types.Type, failedRef int32, assertionRef int32) error {
+func compileListAssertionMsg(c *compiler, typ types.Type, allRef int32, failedRef int32, assertionRef int32) error {
 	// assertions
 	msg := extractMsgTag(c.comment)
 	if msg == "" {
@@ -191,19 +191,26 @@ func compileListAssertionMsg(c *compiler, typ types.Type, failedRef int32, asser
 
 	blockCompiler := c.newBlockCompiler(&llx.Code{
 		Id:         "binding",
-		Parameters: 1,
+		Parameters: 2,
 		Checksums: map[int32]string{
 			// we must provide the first chunk, which is a reference to the caller
 			// and which will always be number 1
 			1: c.Result.Code.Checksums[c.Result.Code.ChunkIndex()-1],
+			2: c.Result.Code.Checksums[allRef],
 		},
 		Code: []*llx.Chunk{
 			{
 				Call:      llx.Chunk_PRIMITIVE,
 				Primitive: &llx.Primitive{Type: string(typ)},
 			},
+			{
+				Call:      llx.Chunk_PRIMITIVE,
+				Primitive: &llx.Primitive{Type: string(typ)},
+			},
 		},
 	}, &binding{Type: types.Type(typ), Ref: 1})
+
+	blockCompiler.vars["$expected"] = variable{ref: 2, typ: typ}
 
 	assertionMsg, err := compileAssertionMsg(msg, &blockCompiler)
 	if err != nil {
@@ -227,7 +234,7 @@ func compileListAssertionMsg(c *compiler, typ types.Type, failedRef int32, asser
 			Function: &llx.Function{
 				Type:    string(types.Block),
 				Binding: failedRef,
-				Args:    []*llx.Primitive{llx.FunctionPrimitive(fref)},
+				Args:    []*llx.Primitive{llx.FunctionPrimitive(fref), llx.RefPrimitive(allRef)},
 			},
 		})
 

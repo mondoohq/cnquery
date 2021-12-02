@@ -50,7 +50,7 @@ func ifCall(c *LeiseExecutor, f *Function, ref int32) (*RawData, int32, error) {
 		}
 
 		if truthy, _ := res.IsTruthy(); truthy {
-			res, dref, err = c.runBlock(nil, f.Args[idx+1], ref)
+			res, dref, err = c.runBlock(nil, f.Args[idx+1], nil, ref)
 			return res, dref, err
 		}
 
@@ -58,7 +58,7 @@ func ifCall(c *LeiseExecutor, f *Function, ref int32) (*RawData, int32, error) {
 	}
 
 	if idx < max {
-		res, dref, err := c.runBlock(nil, f.Args[idx], ref)
+		res, dref, err := c.runBlock(nil, f.Args[idx], nil, ref)
 		return res, dref, err
 	}
 
@@ -101,7 +101,7 @@ func switchCall(c *LeiseExecutor, f *Function, ref int32) (*RawData, int32, erro
 		}
 
 		if truthy, _ := res.IsTruthy(); truthy {
-			res, dref, err = c.runBlock(bind, f.Args[idx+1], ref)
+			res, dref, err = c.runBlock(bind, f.Args[idx+1], nil, ref)
 			return res, dref, err
 		}
 
@@ -109,7 +109,7 @@ func switchCall(c *LeiseExecutor, f *Function, ref int32) (*RawData, int32, erro
 	}
 
 	if defaultCaseIdx != -1 {
-		res, dref, err := c.runBlock(nil, f.Args[defaultCaseIdx+1], ref)
+		res, dref, err := c.runBlock(nil, f.Args[defaultCaseIdx+1], nil, ref)
 		return res, dref, err
 	}
 

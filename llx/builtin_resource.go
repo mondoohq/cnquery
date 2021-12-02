@@ -39,7 +39,7 @@ func _resourceWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, in
 	l := sync.Mutex{}
 	for it := range list {
 		i := it
-		err := c.runFunctionBlock(&RawData{Type: ct, Value: list[i]}, f, func(res *RawResult) {
+		err := c.runFunctionBlock([]*RawData{&RawData{Type: ct, Value: list[i]}}, f, func(res *RawResult) {
 			resList := func() []interface{} {
 				l.Lock()
 				defer l.Unlock()

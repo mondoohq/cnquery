@@ -229,16 +229,16 @@ func (c *LeiseExecutor) registerPrimitive(val *Primitive) {
 	// TODO: not yet implemented?
 }
 
-func (c *LeiseExecutor) runFunctionBlock(bind *RawData, code *Code, cb ResultCallback) error {
+func (c *LeiseExecutor) runFunctionBlock(args []*RawData, code *Code, cb ResultCallback) error {
 	executor, err := NewExecutor(code, c.runtime, c.props, cb)
 	if err != nil {
 		return err
 	}
 	c.blockExecutors = append(c.blockExecutors, executor)
 
-	if bind != nil {
-		executor.cache.Store(1, &stepCache{
-			Result:   bind,
+	for i := range args {
+		executor.cache.Store(int32(i+1), &stepCache{
+			Result:   args[i],
 			IsStatic: true,
 		})
 	}
@@ -247,7 +247,7 @@ func (c *LeiseExecutor) runFunctionBlock(bind *RawData, code *Code, cb ResultCal
 	return nil
 }
 
-func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, ref int32) (*RawData, int32, error) {
+func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*Primitive, ref int32) (*RawData, int32, error) {
 
 	if bind != nil && bind.Value == nil && bind.Type != types.Nil {
 		return &RawData{Type: bind.Type, Value: nil}, 0, nil
@@ -268,8 +268,20 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, ref int3
 
 	blockResult := map[string]interface{}{}
 
+	fargs := []*RawData{}
+	if bind != nil {
+		fargs = append(fargs, bind)
+	}
+	for i := range args {
+		a, b, c := c.resolveValue(args[i], ref)
+		if c != nil || b != 0 {
+			return a, b, c
+		}
+		fargs = append(fargs, a)
+	}
+
 	var anyError error
-	err := c.runFunctionBlock(bind, fun, func(res *RawResult) {
+	err := c.runFunctionBlock(fargs, fun, func(res *RawResult) {
 		if fun.SingleValue {
 			c.cache.Store(ref, &stepCache{
 				Result: res.Data,

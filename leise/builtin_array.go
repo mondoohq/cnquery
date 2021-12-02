@@ -316,7 +316,7 @@ func compileArrayAll(c *compiler, typ types.Type, ref int32, id string, call *pa
 	}
 	listRef := c.Result.GetCode().ChunkIndex()
 
-	if err := compileListAssertionMsg(c, typ, listRef, listRef); err != nil {
+	if err := compileListAssertionMsg(c, typ, ref, listRef, listRef); err != nil {
 		return types.Nil, err
 	}
 
@@ -342,7 +342,7 @@ func compileArrayAny(c *compiler, typ types.Type, ref int32, id string, call *pa
 	}
 	listRef := c.Result.GetCode().ChunkIndex()
 
-	if err := compileListAssertionMsg(c, typ, ref, listRef); err != nil {
+	if err := compileListAssertionMsg(c, typ, ref, ref, listRef); err != nil {
 		return types.Nil, err
 	}
 
@@ -368,7 +368,7 @@ func compileArrayOne(c *compiler, typ types.Type, ref int32, id string, call *pa
 	}
 	listRef := c.Result.GetCode().ChunkIndex()
 
-	if err := compileListAssertionMsg(c, typ, listRef, listRef); err != nil {
+	if err := compileListAssertionMsg(c, typ, ref, listRef, listRef); err != nil {
 		return types.Nil, err
 	}
 
@@ -394,7 +394,7 @@ func compileArrayNone(c *compiler, typ types.Type, ref int32, id string, call *p
 	}
 	listRef := c.Result.GetCode().ChunkIndex()
 
-	if err := compileListAssertionMsg(c, typ, listRef, listRef); err != nil {
+	if err := compileListAssertionMsg(c, typ, ref, listRef, listRef); err != nil {
 		return types.Nil, err
 	}
 

@@ -76,9 +76,6 @@ func createLabel(code *llx.Code, ref int32, labels *llx.Labels, schema *lumi.Sch
 		}
 	case "{}", "${}":
 		res = parentLabel
-		if len(chunk.Function.Args) != 1 {
-			panic("don't know how to extract label data from more than one arg!")
-		}
 
 		fref := chunk.Function.Args[0]
 		if !types.Type(fref.Type).IsFunction() {
