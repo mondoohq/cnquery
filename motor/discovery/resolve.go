@@ -29,6 +29,7 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/local"
 	"go.mondoo.io/mondoo/motor/discovery/mock"
 	"go.mondoo.io/mondoo/motor/discovery/ms365"
+	"go.mondoo.io/mondoo/motor/discovery/network"
 	"go.mondoo.io/mondoo/motor/discovery/standard"
 	"go.mondoo.io/mondoo/motor/discovery/tar"
 	"go.mondoo.io/mondoo/motor/discovery/terraform"
@@ -75,6 +76,7 @@ func init() {
 		transports.SCHEME_AWS_EC2_EBS:        &ebs.Resolver{},
 		transports.SCHEME_GITLAB:             &standard.Resolver{},
 		transports.SCHEME_TERRAFORM:          &terraform.Resolver{},
+		transports.SCHEME_TLS:                &network.Resolver{},
 	}
 }
 
