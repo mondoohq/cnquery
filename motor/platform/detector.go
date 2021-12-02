@@ -4,6 +4,7 @@ import (
 	"errors"
 	"runtime"
 
+	"go.mondoo.io/mondoo/motor/transports/network"
 	"go.mondoo.io/mondoo/motor/transports/terraform"
 
 	"go.mondoo.io/mondoo/motor/transports"
@@ -156,6 +157,14 @@ func (d *Detector) Platform() (*Platform, error) {
 			Title:   "Terraform",
 			Kind:    transports.Kind_KIND_API,
 			Runtime: "",
+		}, nil
+	case *network.Transport:
+		return &Platform{
+			Name:    pt.Scheme,
+			Title:   "Network API",
+			Kind:    transports.Kind_KIND_API,
+			Family:  pt.Family,
+			Runtime: "", // Not sure what we want to set here?
 		}, nil
 	default:
 		var resolved bool

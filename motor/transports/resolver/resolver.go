@@ -3,6 +3,7 @@ package resolver
 import (
 	"fmt"
 
+	"go.mondoo.io/mondoo/motor/transports/network"
 	"go.mondoo.io/mondoo/motor/transports/terraform"
 
 	"go.mondoo.io/mondoo/motor/vault"
@@ -296,6 +297,15 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		}
 	case transports.TransportBackend_CONNECTION_TERRAFORM:
 		trans, err := terraform.New(tc)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(trans)
+		if err != nil {
+			return nil, err
+		}
+	case transports.TransportBackend_CONNECTION_TLS:
+		trans, err := network.New(tc)
 		if err != nil {
 			return nil, err
 		}

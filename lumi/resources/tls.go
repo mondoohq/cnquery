@@ -8,11 +8,24 @@ import (
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/tlsshake"
+	"go.mondoo.io/mondoo/motor/transports/network"
 )
 
 var reTarget = regexp.MustCompile("([^/:]+?)(:\\d+)?$")
 
 func (s *lumiTls) init(args *lumi.Args) (*lumi.Args, Tls, error) {
+
+	var fqdn string
+	var port int64
+
+	if transport, ok := s.Runtime.Motor.Transport.(*network.Transport); ok {
+		fqdn = transport.FQDN
+		port = int64(transport.Port)
+		if port == 0 {
+			port = 443
+		}
+	}
+
 	if _target, ok := (*args)["target"]; ok {
 		target := _target.(string)
 		m := reTarget.FindStringSubmatch(target)
@@ -49,6 +62,19 @@ func (s *lumiTls) init(args *lumi.Args) (*lumi.Args, Tls, error) {
 		(*args)["socket"] = socket
 		(*args)["domainName"] = domainName
 		delete(*args, "target")
+
+	} else {
+		socket, err := s.Runtime.CreateResource("socket",
+			"protocol", "tcp",
+			"port", port,
+			"address", fqdn,
+		)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		(*args)["socket"] = socket
+		(*args)["domainName"] = fqdn
 	}
 
 	return args, nil, nil
