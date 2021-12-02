@@ -108,10 +108,10 @@ resources:
           aws.vpcs.all( flowLogs.any(status == "ACTIVE") )
         title: Ensure VPC flow logging is enabled in all VPCs
     refs:
-    - title: 'AWS Documentation: Managing AWS Regions'
-      url: https://docs.aws.amazon.com/general/latest/gr/rande-manage.html
-    - title: 'AWS Documentation: Security in Amazon Virtual Private Cloud'
-      url: https://docs.aws.amazon.com/vpc/latest/userguide/security.html
+      - title: 'AWS Documentation: Managing AWS Regions'
+        url: https://docs.aws.amazon.com/general/latest/gr/rande-manage.html
+      - title: 'AWS Documentation: Security in Amazon Virtual Private Cloud'
+        url: https://docs.aws.amazon.com/vpc/latest/userguide/security.html
   aws.accessAnalyzer:
     docs:
       desc: |
@@ -136,8 +136,8 @@ resources:
           )
         title: Ensure that IAM Access analyzer is enabled for all regions 
     refs:
-    - title: "Using AWS IAM Access Analyzer"
-      url: https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html
+      - title: "Using AWS IAM Access Analyzer"
+        url: https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html
   aws.accessanalyzer.analyzer:
     platform:
       docs:
@@ -403,8 +403,8 @@ resources:
           }
         title: Checks that all projects using github or bitbucket as the source use oauth
     refs:
-      title: Security in AWS CodeBuild
-      url: https://docs.aws.amazon.com/codebuild/latest/userguide/security.html
+      - title: Security in AWS CodeBuild
+        url: https://docs.aws.amazon.com/codebuild/latest/userguide/security.html
     platform:
       name:
       - aws
@@ -482,8 +482,8 @@ resources:
           )
         title: Checks whether AWS Database Migration Service replication instances are public
     refs:
-      title: Security in AWS Database Migration Service
-      url: https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.html
+      - title: Security in AWS Database Migration Service
+        url: https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.html
   aws.dynamodb:
     docs:
       desc: |
@@ -526,8 +526,8 @@ resources:
           )
         title: Checks that all DynamoDB tables are encrypted with AWS Key Management Service (KMS)
     refs:
-      title: Security and Compliance in Amazon DynamoDB
-      url: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/security.html
+      - title: Security and Compliance in Amazon DynamoDB
+        url: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/security.html
   aws.dynamodb.globaltable:
     docs:
       desc: |
