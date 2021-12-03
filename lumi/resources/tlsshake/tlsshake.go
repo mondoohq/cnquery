@@ -38,6 +38,7 @@ type Tester struct {
 type Findings struct {
 	Versions     map[string]bool
 	Ciphers      map[string]bool
+	Extensions   map[string]bool
 	Errors       []string
 	Certificates []*x509.Certificate
 	Revocations  map[string]*revocation
@@ -59,6 +60,7 @@ func New(proto string, domainName string, host string, port int) *Tester {
 		Findings: Findings{
 			Versions:    map[string]bool{},
 			Ciphers:     map[string]bool{},
+			Extensions:  map[string]bool{},
 			Revocations: map[string]*revocation{},
 		},
 		proto:      proto,
@@ -225,8 +227,12 @@ func (s *Tester) parseServerHello(data []byte, version string, ciphersFilter fun
 	// compression method (which should be set to null)
 	idx += 1
 
-	allExtLen := bytes2int(data[idx : idx+2])
-	idx += 2
+	// no extensions found
+	var allExtLen int
+	if len(data) >= idx+2 {
+		allExtLen = bytes2int(data[idx : idx+2])
+		idx += 2
+	}
 
 	for allExtLen > 0 && idx < len(data) {
 		extType := string(data[idx : idx+2])
@@ -236,9 +242,15 @@ func (s *Tester) parseServerHello(data []byte, version string, ciphersFilter fun
 		allExtLen -= 4 + extLen
 		idx += 4 + extLen
 
-		if extType == "\x00\x2b" && extData == "\x03\x04" {
-			version = "tls1.3"
-			break
+		switch extType {
+		case EXTENSION_SupportedVersions:
+			if v, ok := VERSIONS_LOOKUP[extData]; ok {
+				version = v
+			} else {
+				s.Findings.Errors = append(s.Findings.Errors, "Failed to parse supported_versions extension: '"+extData+"'")
+			}
+		case EXTENSION_RenegotiationInfo:
+			s.Findings.Extensions["renegotiation_info"] = true
 		}
 	}
 
@@ -382,9 +394,12 @@ func (s *Tester) parseHello(conn net.Conn, version string, ciphersFilter func(ci
 			done = handshakeDone
 
 		case CONTENT_TYPE_ChangeCipherSpec:
-			// We don't care about other cipher strategies. We get what we need from
-			// the handshake for now.
-			//
+			// One way this is sent is when we request the renegotiation info. I'm not
+			// sure why this is not just sent as an empty renegotiation_info in the
+			// server header field, but here we are.
+			// Currently based on: https://datatracker.ietf.org/doc/html/rfc5746
+			s.Findings.Extensions["renegotiation_info"] = true
+
 			// This also means we are done with this stream, since it signals that we
 			// are no longer looking at a handshake.
 			done = true
@@ -438,6 +453,24 @@ func cipherNames(version string, filter func(cipher string) bool) []string {
 	}
 }
 
+func writeExtension(buf bytes.Buffer, typ string, body []byte) {
+	buf.WriteString(typ)
+	buf.Write(int2bytes(len(body)))
+	buf.Write(body)
+}
+
+func sniMsg(domainName string) []byte {
+	l := len(domainName)
+	var res bytes.Buffer
+
+	res.Write(int2bytes(l + 3)) // server name list length
+	res.WriteByte('\x00')       // name type: host name
+	res.Write(int2bytes(l))     // name length
+	res.WriteString(domainName) // name
+
+	return res.Bytes()
+}
+
 func (s *Tester) helloTLSMsg(version string, ciphersFilter func(cipher string) bool) ([]byte, int, error) {
 	var ciphers []byte
 	var cipherCount int
@@ -447,17 +480,19 @@ func (s *Tester) helloTLSMsg(version string, ciphersFilter func(cipher string) b
 	if version != "ssl3" {
 		// SNI
 		if s.domainName != "" {
-			l := len(s.domainName)
-			extensions.WriteString("\x00\x00")   // type of this extension
-			extensions.Write(int2bytes(l + 5))   // length of extension
-			extensions.Write(int2bytes(l + 3))   // server name list length
-			extensions.WriteByte('\x00')         // name type: host name
-			extensions.Write(int2bytes(l))       // name length
-			extensions.WriteString(s.domainName) // name
+			writeExtension(extensions, EXTENSION_ServerName, sniMsg(s.domainName))
 		}
 
 		// add signature_algorithms
 		extensions.WriteString("\x00\x0d\x00\x14\x00\x12\x04\x03\x08\x04\x04\x01\x05\x03\x08\x05\x05\x01\x08\x06\x06\x01\x02\x01")
+	}
+
+	if version == "tls1.2" || version == "tls1.3" {
+		// Renegotiation info
+		// https://datatracker.ietf.org/doc/html/rfc5746
+		// - we leave the body empty, we only need a response to the request
+		// - the body has 1 byte containing the length of the extension (which is 0)
+		writeExtension(extensions, EXTENSION_RenegotiationInfo, []byte("\x00"))
 	}
 
 	switch version {
@@ -714,6 +749,10 @@ const (
 	HANDSHAKE_TYPE_CertificateVerify  byte = '\x0f'
 	HANDSHAKE_TYPE_ClientKeyExchange  byte = '\x10'
 	HANDSHAKE_TYPE_Finished           byte = '\x14'
+
+	EXTENSION_ServerName        string = "\x00\x00"
+	EXTENSION_SupportedVersions string = "\x00\x2b"
+	EXTENSION_RenegotiationInfo string = "\xff\x01"
 )
 
 // https://tools.ietf.org/html/rfc5246#appendix-A.3
@@ -752,411 +791,4 @@ var ALERT_DESCRIPTIONS = map[byte]string{
 	'\x73': "UNKNOWN_PSK_IDENTITY",
 	'\x74': "CERTIFICATE_REQUIRED",
 	'\x78': "NO_APPLICATION_PROTOCOL",
-}
-
-var SSL2_CIPHERS = map[string]string{
-	"\x01\x00\x80": "SSL_CK_RC4_128_WITH_MD5",
-	"\x02\x00\x80": "SSL_CK_RC4_128_EXPORT40_WITH_MD5",
-	"\x03\x00\x80": "SSL_CK_RC2_128_CBC_WITH_MD5",
-	"\x04\x00\x80": "SSL_CK_RC2_128_CBC_EXPORT40_WITH_MD5",
-	"\x05\x00\x80": "SSL_CK_IDEA_128_CBC_WITH_MD5",
-	"\x06\x00\x40": "SSL_CK_DES_64_CBC_WITH_MD5",
-	"\x07\x00\xC0": "SSL_CK_DES_192_EDE3_CBC_WITH_MD5",
-	"\x08\x00\x80": "SSL_CK_RC4_64_WITH_MD5",
-}
-
-var SSL_FIPS_CIPHERS = map[string]string{
-	"\xFE\xFE": "SSL_RSA_FIPS_WITH_DES_CBC_SHA",
-	"\xFE\xFF": "SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA",
-	"\xFF\xE0": "SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA",
-	"\xFF\xE1": "SSL_RSA_FIPS_WITH_DES_CBC_SHA",
-}
-
-// https://datatracker.ietf.org/doc/html/rfc6101#appendix-A.6
-var SSL3_CIPHERS = map[string]string{
-	"\x00\x00": "SSL_NULL_WITH_NULL_NULL",
-	"\x00\x01": "SSL_RSA_WITH_NULL_MD5",
-	"\x00\x02": "SSL_RSA_WITH_NULL_SHA",
-	"\x00\x03": "SSL_RSA_EXPORT_WITH_RC4_40_MD5",
-	"\x00\x04": "SSL_RSA_WITH_RC4_128_MD5",
-	"\x00\x05": "SSL_RSA_WITH_RC4_128_SHA",
-	"\x00\x06": "SSL_RSA_EXPORT_WITH_RC2_CBC_40_MD5",
-	"\x00\x07": "SSL_RSA_WITH_IDEA_CBC_SHA",
-	"\x00\x08": "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA",
-	"\x00\x09": "SSL_RSA_WITH_DES_CBC_SHA",
-	"\x00\x0A": "SSL_RSA_WITH_3DES_EDE_CBC_SHA",
-	"\x00\x0B": "SSL_DH_DSS_EXPORT_WITH_DES40_CBC_SHA",
-	"\x00\x0C": "SSL_DH_DSS_WITH_DES_CBC_SHA",
-	"\x00\x0D": "SSL_DH_DSS_WITH_3DES_EDE_CBC_SHA",
-	"\x00\x0E": "SSL_DH_RSA_EXPORT_WITH_DES40_CBC_SHA",
-	"\x00\x0F": "SSL_DH_RSA_WITH_DES_CBC_SHA",
-	"\x00\x10": "SSL_DH_RSA_WITH_3DES_EDE_CBC_SHA",
-	"\x00\x11": "SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA",
-	"\x00\x12": "SSL_DHE_DSS_WITH_DES_CBC_SHA",
-	"\x00\x13": "SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA",
-	"\x00\x14": "SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA",
-	"\x00\x15": "SSL_DHE_RSA_WITH_DES_CBC_SHA",
-	"\x00\x16": "SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA",
-	"\x00\x17": "SSL_DH_anon_EXPORT_WITH_RC4_40_MD5",
-	"\x00\x18": "SSL_DH_anon_WITH_RC4_128_MD5",
-	"\x00\x19": "SSL_DH_anon_EXPORT_WITH_DES40_CBC_SHA",
-	"\x00\x1A": "SSL_DH_anon_WITH_DES_CBC_SHA",
-	"\x00\x1B": "SSL_DH_anon_WITH_3DES_EDE_CBC_SHA",
-	// TODO: we may want to add back the FORTEZZA ciphers?
-}
-
-// TLS 1.2 https://datatracker.ietf.org/doc/html/rfc5246
-
-var TLS10_CIPHERS = map[string]string{
-	"\x00\x00": "TLS_NULL_WITH_NULL_NULL",
-	"\x00\x01": "TLS_RSA_WITH_NULL_MD5",
-	"\x00\x02": "TLS_RSA_WITH_NULL_SHA",
-	"\x00\x03": "TLS_RSA_EXPORT_WITH_RC4_40_MD5",
-	"\x00\x04": "TLS_RSA_WITH_RC4_128_MD5",
-	"\x00\x05": "TLS_RSA_WITH_RC4_128_SHA",
-	"\x00\x06": "TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5",
-	"\x00\x07": "TLS_RSA_WITH_IDEA_CBC_SHA",
-	"\x00\x08": "TLS_RSA_EXPORT_WITH_DES40_CBC_SHA",
-	"\x00\x09": "TLS_RSA_WITH_DES_CBC_SHA",
-	"\x00\x0A": "TLS_RSA_WITH_3DES_EDE_CBC_SHA",
-	"\x00\x0B": "TLS_DH_DSS_EXPORT_WITH_DES40_CBC_SHA",
-	"\x00\x0C": "TLS_DH_DSS_WITH_DES_CBC_SHA",
-	"\x00\x0D": "TLS_DH_DSS_WITH_3DES_EDE_CBC_SHA",
-	"\x00\x0E": "TLS_DH_RSA_EXPORT_WITH_DES40_CBC_SHA",
-	"\x00\x0F": "TLS_DH_RSA_WITH_DES_CBC_SHA",
-	"\x00\x10": "TLS_DH_RSA_WITH_3DES_EDE_CBC_SHA",
-	"\x00\x11": "TLS_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA",
-	"\x00\x12": "TLS_DHE_DSS_WITH_DES_CBC_SHA",
-	"\x00\x13": "TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA",
-	"\x00\x14": "TLS_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA",
-	"\x00\x15": "TLS_DHE_RSA_WITH_DES_CBC_SHA",
-	"\x00\x16": "TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA",
-	"\x00\x17": "TLS_DH_anon_EXPORT_WITH_RC4_40_MD5",
-	"\x00\x18": "TLS_DH_anon_WITH_RC4_128_MD5",
-	"\x00\x19": "TLS_DH_anon_EXPORT_WITH_DES40_CBC_SHA",
-	"\x00\x1A": "TLS_DH_anon_WITH_DES_CBC_SHA",
-	"\x00\x1B": "TLS_DH_anon_WITH_3DES_EDE_CBC_SHA",
-	"\x00\x1E": "TLS_KRB5_WITH_DES_CBC_SHA",
-	"\x00\x1F": "TLS_KRB5_WITH_3DES_EDE_CBC_SHA",
-	"\x00\x20": "TLS_KRB5_WITH_RC4_128_SHA",
-	"\x00\x21": "TLS_KRB5_WITH_IDEA_CBC_SHA",
-	"\x00\x22": "TLS_KRB5_WITH_DES_CBC_MD5",
-	"\x00\x23": "TLS_KRB5_WITH_3DES_EDE_CBC_MD5",
-	"\x00\x24": "TLS_KRB5_WITH_RC4_128_MD5",
-	"\x00\x25": "TLS_KRB5_WITH_IDEA_CBC_MD5",
-	"\x00\x26": "TLS_KRB5_EXPORT_WITH_DES_CBC_40_SHA",
-	"\x00\x27": "TLS_KRB5_EXPORT_WITH_RC2_CBC_40_SHA",
-	"\x00\x28": "TLS_KRB5_EXPORT_WITH_RC4_40_SHA",
-	"\x00\x29": "TLS_KRB5_EXPORT_WITH_DES_CBC_40_MD5",
-	"\x00\x2A": "TLS_KRB5_EXPORT_WITH_RC2_CBC_40_MD5",
-	"\x00\x2B": "TLS_KRB5_EXPORT_WITH_RC4_40_MD5",
-	"\x00\x2C": "TLS_PSK_WITH_NULL_SHA",
-	"\x00\x2D": "TLS_DHE_PSK_WITH_NULL_SHA",
-	"\x00\x2E": "TLS_RSA_PSK_WITH_NULL_SHA",
-	"\x00\x2F": "TLS_RSA_WITH_AES_128_CBC_SHA",
-	"\x00\x30": "TLS_DH_DSS_WITH_AES_128_CBC_SHA",
-	"\x00\x31": "TLS_DH_RSA_WITH_AES_128_CBC_SHA",
-	"\x00\x32": "TLS_DHE_DSS_WITH_AES_128_CBC_SHA",
-	"\x00\x33": "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",
-	"\x00\x34": "TLS_DH_anon_WITH_AES_128_CBC_SHA",
-	"\x00\x35": "TLS_RSA_WITH_AES_256_CBC_SHA",
-	"\x00\x36": "TLS_DH_DSS_WITH_AES_256_CBC_SHA",
-	"\x00\x37": "TLS_DH_RSA_WITH_AES_256_CBC_SHA",
-	"\x00\x38": "TLS_DHE_DSS_WITH_AES_256_CBC_SHA",
-	"\x00\x39": "TLS_DHE_RSA_WITH_AES_256_CBC_SHA",
-	"\x00\x3A": "TLS_DH_anon_WITH_AES_256_CBC_SHA",
-	"\x00\x3B": "TLS_RSA_WITH_NULL_SHA256",
-	"\x00\x3C": "TLS_RSA_WITH_AES_128_CBC_SHA256",
-	"\x00\x3D": "TLS_RSA_WITH_AES_256_CBC_SHA256",
-	"\x00\x3E": "TLS_DH_DSS_WITH_AES_128_CBC_SHA256",
-	"\x00\x3F": "TLS_DH_RSA_WITH_AES_128_CBC_SHA256",
-	"\x00\x40": "TLS_DHE_DSS_WITH_AES_128_CBC_SHA256",
-	"\x00\x41": "TLS_RSA_WITH_CAMELLIA_128_CBC_SHA",
-	"\x00\x42": "TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA",
-	"\x00\x43": "TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA",
-	"\x00\x44": "TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA",
-	"\x00\x45": "TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA",
-	"\x00\x46": "TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA",
-	"\x00\x60": "TLS_RSA_EXPORT1024_WITH_RC4_56_MD5",
-	"\x00\x61": "TLS_RSA_EXPORT1024_WITH_RC2_56_MD5",
-	"\x00\x62": "TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA",
-	"\x00\x63": "TLS_DHE_DSS_EXPORT1024_WITH_DES_CBC_SHA",
-	"\x00\x64": "TLS_RSA_EXPORT1024_WITH_RC4_56_SHA",
-	"\x00\x65": "TLS_DHE_DSS_EXPORT1024_WITH_RC4_56_SHA",
-	"\x00\x66": "TLS_DHE_DSS_WITH_RC4_128_SHA",
-	"\x00\x67": "TLS_DHE_RSA_WITH_AES_128_CBC_SHA256",
-	"\x00\x68": "TLS_DH_DSS_WITH_AES_256_CBC_SHA256",
-	"\x00\x69": "TLS_DH_RSA_WITH_AES_256_CBC_SHA256",
-	"\x00\x6A": "TLS_DHE_DSS_WITH_AES_256_CBC_SHA256",
-	"\x00\x6B": "TLS_DHE_RSA_WITH_AES_256_CBC_SHA256",
-	"\x00\x6C": "TLS_DH_anon_WITH_AES_128_CBC_SHA256",
-	"\x00\x6D": "TLS_DH_anon_WITH_AES_256_CBC_SHA256",
-	"\x00\x80": "TLS_GOSTR341094_WITH_28147_CNT_IMIT",
-	"\x00\x81": "TLS_GOSTR341001_WITH_28147_CNT_IMIT",
-	"\x00\x82": "TLS_GOSTR341094_WITH_NULL_GOSTR3411",
-	"\x00\x83": "TLS_GOSTR341001_WITH_NULL_GOSTR3411",
-	"\x00\x84": "TLS_RSA_WITH_CAMELLIA_256_CBC_SHA",
-	"\x00\x85": "TLS_DH_DSS_WITH_CAMELLIA_256_CBC_SHA",
-	"\x00\x86": "TLS_DH_RSA_WITH_CAMELLIA_256_CBC_SHA",
-	"\x00\x87": "TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA",
-	"\x00\x88": "TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA",
-	"\x00\x89": "TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA",
-	"\x00\x8A": "TLS_PSK_WITH_RC4_128_SHA",
-	"\x00\x8B": "TLS_PSK_WITH_3DES_EDE_CBC_SHA",
-	"\x00\x8C": "TLS_PSK_WITH_AES_128_CBC_SHA",
-	"\x00\x8D": "TLS_PSK_WITH_AES_256_CBC_SHA",
-	"\x00\x8E": "TLS_DHE_PSK_WITH_RC4_128_SHA",
-	"\x00\x8F": "TLS_DHE_PSK_WITH_3DES_EDE_CBC_SHA",
-	"\x00\x90": "TLS_DHE_PSK_WITH_AES_128_CBC_SHA",
-	"\x00\x91": "TLS_DHE_PSK_WITH_AES_256_CBC_SHA",
-	"\x00\x92": "TLS_RSA_PSK_WITH_RC4_128_SHA",
-	"\x00\x93": "TLS_RSA_PSK_WITH_3DES_EDE_CBC_SHA",
-	"\x00\x94": "TLS_RSA_PSK_WITH_AES_128_CBC_SHA",
-	"\x00\x95": "TLS_RSA_PSK_WITH_AES_256_CBC_SHA",
-	"\x00\x96": "TLS_RSA_WITH_SEED_CBC_SHA",
-	"\x00\x97": "TLS_DH_DSS_WITH_SEED_CBC_SHA",
-	"\x00\x98": "TLS_DH_RSA_WITH_SEED_CBC_SHA",
-	"\x00\x99": "TLS_DHE_DSS_WITH_SEED_CBC_SHA",
-	"\x00\x9A": "TLS_DHE_RSA_WITH_SEED_CBC_SHA",
-	"\x00\x9B": "TLS_DH_anon_WITH_SEED_CBC_SHA",
-	"\x00\x9C": "TLS_RSA_WITH_AES_128_GCM_SHA256",
-	"\x00\x9D": "TLS_RSA_WITH_AES_256_GCM_SHA384",
-	"\x00\x9E": "TLS_DHE_RSA_WITH_AES_128_GCM_SHA256",
-	"\x00\x9F": "TLS_DHE_RSA_WITH_AES_256_GCM_SHA384",
-	"\x00\xA0": "TLS_DH_RSA_WITH_AES_128_GCM_SHA256",
-	"\x00\xA1": "TLS_DH_RSA_WITH_AES_256_GCM_SHA384",
-	"\x00\xA2": "TLS_DHE_DSS_WITH_AES_128_GCM_SHA256",
-	"\x00\xA3": "TLS_DHE_DSS_WITH_AES_256_GCM_SHA384",
-	"\x00\xA4": "TLS_DH_DSS_WITH_AES_128_GCM_SHA256",
-	"\x00\xA5": "TLS_DH_DSS_WITH_AES_256_GCM_SHA384",
-	"\x00\xA6": "TLS_DH_anon_WITH_AES_128_GCM_SHA256",
-	"\x00\xA7": "TLS_DH_anon_WITH_AES_256_GCM_SHA384",
-	"\x00\xA8": "TLS_PSK_WITH_AES_128_GCM_SHA256",
-	"\x00\xA9": "TLS_PSK_WITH_AES_256_GCM_SHA384",
-	"\x00\xAA": "TLS_DHE_PSK_WITH_AES_128_GCM_SHA256",
-	"\x00\xAB": "TLS_DHE_PSK_WITH_AES_256_GCM_SHA384",
-	"\x00\xAC": "TLS_RSA_PSK_WITH_AES_128_GCM_SHA256",
-	"\x00\xAD": "TLS_RSA_PSK_WITH_AES_256_GCM_SHA384",
-	"\x00\xAE": "TLS_PSK_WITH_AES_128_CBC_SHA256",
-	"\x00\xAF": "TLS_PSK_WITH_AES_256_CBC_SHA384",
-	"\x00\xB0": "TLS_PSK_WITH_NULL_SHA256",
-	"\x00\xB1": "TLS_PSK_WITH_NULL_SHA384",
-	"\x00\xB2": "TLS_DHE_PSK_WITH_AES_128_CBC_SHA256",
-	"\x00\xB3": "TLS_DHE_PSK_WITH_AES_256_CBC_SHA384",
-	"\x00\xB4": "TLS_DHE_PSK_WITH_NULL_SHA256",
-	"\x00\xB5": "TLS_DHE_PSK_WITH_NULL_SHA384",
-	"\x00\xB6": "TLS_RSA_PSK_WITH_AES_128_CBC_SHA256",
-	"\x00\xB7": "TLS_RSA_PSK_WITH_AES_256_CBC_SHA384",
-	"\x00\xB8": "TLS_RSA_PSK_WITH_NULL_SHA256",
-	"\x00\xB9": "TLS_RSA_PSK_WITH_NULL_SHA384",
-	"\x00\xBA": "TLS_RSA_WITH_CAMELLIA_128_CBC_SHA256",
-	"\x00\xBB": "TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA256",
-	"\x00\xBC": "TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA256",
-	"\x00\xBD": "TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA256",
-	"\x00\xBE": "TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA256",
-	"\x00\xBF": "TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA256",
-	"\x00\xC0": "TLS_RSA_WITH_CAMELLIA_256_CBC_SHA256",
-	"\x00\xC1": "TLS_DH_DSS_WITH_CAMELLIA_256_CBC_SHA256",
-	"\x00\xC2": "TLS_DH_RSA_WITH_CAMELLIA_256_CBC_SHA256",
-	"\x00\xC3": "TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA256",
-	"\x00\xC4": "TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA256",
-	"\x00\xC5": "TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA256",
-	"\x00\xFF": "TLS_EMPTY_RENEGOTIATION_INFO_SCSV",
-}
-
-var TLS13_CIPHERS = map[string]string{
-	// See https://tools.ietf.org/html/rfc8446#appendix-B.4
-	"\x13\x01": "TLS_AES_128_GCM_SHA256",
-	"\x13\x02": "TLS_AES_256_GCM_SHA384",
-	"\x13\x03": "TLS_CHACHA20_POLY1305_SHA256",
-	"\x13\x04": "TLS_AES_128_CCM_SHA256",
-	"\x13\x05": "TLS_AES_128_CCM_8_SHA256",
-}
-
-var TLS_CIPHERS = map[string]string{
-	"\xC0\x01": "TLS_ECDH_ECDSA_WITH_NULL_SHA",
-	"\xC0\x02": "TLS_ECDH_ECDSA_WITH_RC4_128_SHA",
-	"\xC0\x03": "TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA",
-	"\xC0\x04": "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA",
-	"\xC0\x05": "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA",
-	"\xC0\x06": "TLS_ECDHE_ECDSA_WITH_NULL_SHA",
-	"\xC0\x07": "TLS_ECDHE_ECDSA_WITH_RC4_128_SHA",
-	"\xC0\x08": "TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA",
-	"\xC0\x09": "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
-	"\xC0\x0A": "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
-	"\xC0\x0B": "TLS_ECDH_RSA_WITH_NULL_SHA",
-	"\xC0\x0C": "TLS_ECDH_RSA_WITH_RC4_128_SHA",
-	"\xC0\x0D": "TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA",
-	"\xC0\x0E": "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA",
-	"\xC0\x0F": "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA",
-	"\xC0\x10": "TLS_ECDHE_RSA_WITH_NULL_SHA",
-	"\xC0\x11": "TLS_ECDHE_RSA_WITH_RC4_128_SHA",
-	"\xC0\x12": "TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA",
-	"\xC0\x13": "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
-	"\xC0\x14": "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
-	"\xC0\x15": "TLS_ECDH_anon_WITH_NULL_SHA",
-	"\xC0\x16": "TLS_ECDH_anon_WITH_RC4_128_SHA",
-	"\xC0\x17": "TLS_ECDH_anon_WITH_3DES_EDE_CBC_SHA",
-	"\xC0\x18": "TLS_ECDH_anon_WITH_AES_128_CBC_SHA",
-	"\xC0\x19": "TLS_ECDH_anon_WITH_AES_256_CBC_SHA",
-	"\xC0\x1A": "TLS_SRP_SHA_WITH_3DES_EDE_CBC_SHA",
-	"\xC0\x1B": "TLS_SRP_SHA_RSA_WITH_3DES_EDE_CBC_SHA",
-	"\xC0\x1C": "TLS_SRP_SHA_DSS_WITH_3DES_EDE_CBC_SHA",
-	"\xC0\x1D": "TLS_SRP_SHA_WITH_AES_128_CBC_SHA",
-	"\xC0\x1E": "TLS_SRP_SHA_RSA_WITH_AES_128_CBC_SHA",
-	"\xC0\x1F": "TLS_SRP_SHA_DSS_WITH_AES_128_CBC_SHA",
-	"\xC0\x20": "TLS_SRP_SHA_WITH_AES_256_CBC_SHA",
-	"\xC0\x21": "TLS_SRP_SHA_RSA_WITH_AES_256_CBC_SHA",
-	"\xC0\x22": "TLS_SRP_SHA_DSS_WITH_AES_256_CBC_SHA",
-	"\xC0\x23": "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
-	"\xC0\x24": "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",
-	"\xC0\x25": "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256",
-	"\xC0\x26": "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384",
-	"\xC0\x27": "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",
-	"\xC0\x28": "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",
-	"\xC0\x29": "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256",
-	"\xC0\x2A": "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384",
-	"\xC0\x2B": "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
-	"\xC0\x2C": "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
-	"\xC0\x2D": "TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256",
-	"\xC0\x2E": "TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384",
-	"\xC0\x2F": "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
-	"\xC0\x30": "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
-	"\xC0\x31": "TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256",
-	"\xC0\x32": "TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384",
-	"\xC0\x33": "TLS_ECDHE_PSK_WITH_RC4_128_SHA",
-	"\xC0\x34": "TLS_ECDHE_PSK_WITH_3DES_EDE_CBC_SHA",
-	"\xC0\x35": "TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA",
-	"\xC0\x36": "TLS_ECDHE_PSK_WITH_AES_256_CBC_SHA",
-	"\xC0\x37": "TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256",
-	"\xC0\x38": "TLS_ECDHE_PSK_WITH_AES_256_CBC_SHA384",
-	"\xC0\x39": "TLS_ECDHE_PSK_WITH_NULL_SHA",
-	"\xC0\x3A": "TLS_ECDHE_PSK_WITH_NULL_SHA256",
-	"\xC0\x3B": "TLS_ECDHE_PSK_WITH_NULL_SHA384",
-	"\xC0\x3C": "TLS_RSA_WITH_ARIA_128_CBC_SHA256",
-	"\xC0\x3D": "TLS_RSA_WITH_ARIA_256_CBC_SHA384",
-	"\xC0\x3E": "TLS_DH_DSS_WITH_ARIA_128_CBC_SHA256",
-	"\xC0\x3F": "TLS_DH_DSS_WITH_ARIA_256_CBC_SHA384",
-	"\xC0\x40": "TLS_DH_RSA_WITH_ARIA_128_CBC_SHA256",
-	"\xC0\x41": "TLS_DH_RSA_WITH_ARIA_256_CBC_SHA384",
-	"\xC0\x42": "TLS_DHE_DSS_WITH_ARIA_128_CBC_SHA256",
-	"\xC0\x43": "TLS_DHE_DSS_WITH_ARIA_256_CBC_SHA384",
-	"\xC0\x44": "TLS_DHE_RSA_WITH_ARIA_128_CBC_SHA256",
-	"\xC0\x45": "TLS_DHE_RSA_WITH_ARIA_256_CBC_SHA384",
-	"\xC0\x46": "TLS_DH_anon_WITH_ARIA_128_CBC_SHA256",
-	"\xC0\x47": "TLS_DH_anon_WITH_ARIA_256_CBC_SHA384",
-	"\xC0\x48": "TLS_ECDHE_ECDSA_WITH_ARIA_128_CBC_SHA256",
-	"\xC0\x49": "TLS_ECDHE_ECDSA_WITH_ARIA_256_CBC_SHA384",
-	"\xC0\x4A": "TLS_ECDH_ECDSA_WITH_ARIA_128_CBC_SHA256",
-	"\xC0\x4B": "TLS_ECDH_ECDSA_WITH_ARIA_256_CBC_SHA384",
-	"\xC0\x4C": "TLS_ECDHE_RSA_WITH_ARIA_128_CBC_SHA256",
-	"\xC0\x4D": "TLS_ECDHE_RSA_WITH_ARIA_256_CBC_SHA384",
-	"\xC0\x4E": "TLS_ECDH_RSA_WITH_ARIA_128_CBC_SHA256",
-	"\xC0\x4F": "TLS_ECDH_RSA_WITH_ARIA_256_CBC_SHA384",
-	"\xC0\x50": "TLS_RSA_WITH_ARIA_128_GCM_SHA256",
-	"\xC0\x51": "TLS_RSA_WITH_ARIA_256_GCM_SHA384",
-	"\xC0\x52": "TLS_DHE_RSA_WITH_ARIA_128_GCM_SHA256",
-	"\xC0\x53": "TLS_DHE_RSA_WITH_ARIA_256_GCM_SHA384",
-	"\xC0\x54": "TLS_DH_RSA_WITH_ARIA_128_GCM_SHA256",
-	"\xC0\x55": "TLS_DH_RSA_WITH_ARIA_256_GCM_SHA384",
-	"\xC0\x56": "TLS_DHE_DSS_WITH_ARIA_128_GCM_SHA256",
-	"\xC0\x57": "TLS_DHE_DSS_WITH_ARIA_256_GCM_SHA384",
-	"\xC0\x58": "TLS_DH_DSS_WITH_ARIA_128_GCM_SHA256",
-	"\xC0\x59": "TLS_DH_DSS_WITH_ARIA_256_GCM_SHA384",
-	"\xC0\x5A": "TLS_DH_anon_WITH_ARIA_128_GCM_SHA256",
-	"\xC0\x5B": "TLS_DH_anon_WITH_ARIA_256_GCM_SHA384",
-	"\xC0\x5C": "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256",
-	"\xC0\x5D": "TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384",
-	"\xC0\x5E": "TLS_ECDH_ECDSA_WITH_ARIA_128_GCM_SHA256",
-	"\xC0\x5F": "TLS_ECDH_ECDSA_WITH_ARIA_256_GCM_SHA384",
-	"\xC0\x60": "TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256",
-	"\xC0\x61": "TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384",
-	"\xC0\x62": "TLS_ECDH_RSA_WITH_ARIA_128_GCM_SHA256",
-	"\xC0\x63": "TLS_ECDH_RSA_WITH_ARIA_256_GCM_SHA384",
-	"\xC0\x64": "TLS_PSK_WITH_ARIA_128_CBC_SHA256",
-	"\xC0\x65": "TLS_PSK_WITH_ARIA_256_CBC_SHA384",
-	"\xC0\x66": "TLS_DHE_PSK_WITH_ARIA_128_CBC_SHA256",
-	"\xC0\x67": "TLS_DHE_PSK_WITH_ARIA_256_CBC_SHA384",
-	"\xC0\x68": "TLS_RSA_PSK_WITH_ARIA_128_CBC_SHA256",
-	"\xC0\x69": "TLS_RSA_PSK_WITH_ARIA_256_CBC_SHA384",
-	"\xC0\x6A": "TLS_PSK_WITH_ARIA_128_GCM_SHA256",
-	"\xC0\x6B": "TLS_PSK_WITH_ARIA_256_GCM_SHA384",
-	"\xC0\x6C": "TLS_DHE_PSK_WITH_ARIA_128_GCM_SHA256",
-	"\xC0\x6D": "TLS_DHE_PSK_WITH_ARIA_256_GCM_SHA384",
-	"\xC0\x6E": "TLS_RSA_PSK_WITH_ARIA_128_GCM_SHA256",
-	"\xC0\x6F": "TLS_RSA_PSK_WITH_ARIA_256_GCM_SHA384",
-	"\xC0\x70": "TLS_ECDHE_PSK_WITH_ARIA_128_CBC_SHA256",
-	"\xC0\x71": "TLS_ECDHE_PSK_WITH_ARIA_256_CBC_SHA384",
-	"\xC0\x72": "TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_CBC_SHA256",
-	"\xC0\x73": "TLS_ECDHE_ECDSA_WITH_CAMELLIA_256_CBC_SHA384",
-	"\xC0\x74": "TLS_ECDH_ECDSA_WITH_CAMELLIA_128_CBC_SHA256",
-	"\xC0\x75": "TLS_ECDH_ECDSA_WITH_CAMELLIA_256_CBC_SHA384",
-	"\xC0\x76": "TLS_ECDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256",
-	"\xC0\x77": "TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384",
-	"\xC0\x78": "TLS_ECDH_RSA_WITH_CAMELLIA_128_CBC_SHA256",
-	"\xC0\x79": "TLS_ECDH_RSA_WITH_CAMELLIA_256_CBC_SHA384",
-	"\xC0\x7A": "TLS_RSA_WITH_CAMELLIA_128_GCM_SHA256",
-	"\xC0\x7B": "TLS_RSA_WITH_CAMELLIA_256_GCM_SHA384",
-	"\xC0\x7C": "TLS_DHE_RSA_WITH_CAMELLIA_128_GCM_SHA256",
-	"\xC0\x7D": "TLS_DHE_RSA_WITH_CAMELLIA_256_GCM_SHA384",
-	"\xC0\x7E": "TLS_DH_RSA_WITH_CAMELLIA_128_GCM_SHA256",
-	"\xC0\x7F": "TLS_DH_RSA_WITH_CAMELLIA_256_GCM_SHA384",
-	"\xC0\x80": "TLS_DHE_DSS_WITH_CAMELLIA_128_GCM_SHA256",
-	"\xC0\x81": "TLS_DHE_DSS_WITH_CAMELLIA_256_GCM_SHA384",
-	"\xC0\x82": "TLS_DH_DSS_WITH_CAMELLIA_128_GCM_SHA256",
-	"\xC0\x83": "TLS_DH_DSS_WITH_CAMELLIA_256_GCM_SHA384",
-	"\xC0\x84": "TLS_DH_anon_WITH_CAMELLIA_128_GCM_SHA256",
-	"\xC0\x85": "TLS_DH_anon_WITH_CAMELLIA_256_GCM_SHA384",
-	"\xC0\x86": "TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_GCM_SHA256",
-	"\xC0\x87": "TLS_ECDHE_ECDSA_WITH_CAMELLIA_256_GCM_SHA384",
-	"\xC0\x88": "TLS_ECDH_ECDSA_WITH_CAMELLIA_128_GCM_SHA256",
-	"\xC0\x89": "TLS_ECDH_ECDSA_WITH_CAMELLIA_256_GCM_SHA384",
-	"\xC0\x8A": "TLS_ECDHE_RSA_WITH_CAMELLIA_128_GCM_SHA256",
-	"\xC0\x8B": "TLS_ECDHE_RSA_WITH_CAMELLIA_256_GCM_SHA384",
-	"\xC0\x8C": "TLS_ECDH_RSA_WITH_CAMELLIA_128_GCM_SHA256",
-	"\xC0\x8D": "TLS_ECDH_RSA_WITH_CAMELLIA_256_GCM_SHA384",
-	"\xC0\x8E": "TLS_PSK_WITH_CAMELLIA_128_GCM_SHA256",
-	"\xC0\x8F": "TLS_PSK_WITH_CAMELLIA_256_GCM_SHA384",
-	"\xC0\x90": "TLS_DHE_PSK_WITH_CAMELLIA_128_GCM_SHA256",
-	"\xC0\x91": "TLS_DHE_PSK_WITH_CAMELLIA_256_GCM_SHA384",
-	"\xC0\x92": "TLS_RSA_PSK_WITH_CAMELLIA_128_GCM_SHA256",
-	"\xC0\x93": "TLS_RSA_PSK_WITH_CAMELLIA_256_GCM_SHA384",
-	"\xC0\x94": "TLS_PSK_WITH_CAMELLIA_128_CBC_SHA256",
-	"\xC0\x95": "TLS_PSK_WITH_CAMELLIA_256_CBC_SHA384",
-	"\xC0\x96": "TLS_DHE_PSK_WITH_CAMELLIA_128_CBC_SHA256",
-	"\xC0\x97": "TLS_DHE_PSK_WITH_CAMELLIA_256_CBC_SHA384",
-	"\xC0\x98": "TLS_RSA_PSK_WITH_CAMELLIA_128_CBC_SHA256",
-	"\xC0\x99": "TLS_RSA_PSK_WITH_CAMELLIA_256_CBC_SHA384",
-	"\xC0\x9A": "TLS_ECDHE_PSK_WITH_CAMELLIA_128_CBC_SHA256",
-	"\xC0\x9B": "TLS_ECDHE_PSK_WITH_CAMELLIA_256_CBC_SHA384",
-	"\xC0\x9C": "TLS_RSA_WITH_AES_128_CCM",
-	"\xC0\x9D": "TLS_RSA_WITH_AES_256_CCM",
-	"\xC0\x9E": "TLS_DHE_RSA_WITH_AES_128_CCM",
-	"\xC0\x9F": "TLS_DHE_RSA_WITH_AES_256_CCM",
-	"\xC0\xA0": "TLS_RSA_WITH_AES_128_CCM_8",
-	"\xC0\xA1": "TLS_RSA_WITH_AES_256_CCM_8",
-	"\xC0\xA2": "TLS_DHE_RSA_WITH_AES_128_CCM_8",
-	"\xC0\xA3": "TLS_DHE_RSA_WITH_AES_256_CCM_8",
-	"\xC0\xA4": "TLS_PSK_WITH_AES_128_CCM",
-	"\xC0\xA5": "TLS_PSK_WITH_AES_256_CCM",
-	"\xC0\xA6": "TLS_DHE_PSK_WITH_AES_128_CCM",
-	"\xC0\xA7": "TLS_DHE_PSK_WITH_AES_256_CCM",
-	"\xC0\xA8": "TLS_PSK_WITH_AES_128_CCM_8",
-	"\xC0\xA9": "TLS_PSK_WITH_AES_256_CCM_8",
-	"\xC0\xAA": "TLS_PSK_DHE_WITH_AES_128_CCM_8",
-	"\xC0\xAB": "TLS_PSK_DHE_WITH_AES_256_CCM_8",
-	"\xC0\xAC": "TLS_ECDHE_ECDSA_WITH_AES_128_CCM",
-	"\xC0\xAD": "TLS_ECDHE_ECDSA_WITH_AES_256_CCM",
-	"\xC0\xAE": "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8",
-	"\xC0\xAF": "TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8",
-	"\xCC\xA8": "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305",
-	"\xCC\xA9": "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305",
-	"\xCC\xAA": "TLS_DHE_RSA_WITH_CHACHA20_POLY1305",
-	"\xCC\xAB": "TLS_PSK_WITH_CHACHA20_POLY1305",
-	"\xCC\xAC": "TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305",
-	"\xCC\xAD": "TLS_DHE_PSK_WITH_CHACHA20_POLY1305",
-	"\xCC\xAE": "TLS_RSA_PSK_WITH_CHACHA20_POLY1305",
-	"\xCC\x13": "OLD_TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
-	"\xCC\x14": "OLD_TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256",
-	"\xCC\x15": "OLD_TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
 }
