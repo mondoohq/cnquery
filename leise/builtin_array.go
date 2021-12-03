@@ -412,3 +412,52 @@ func compileArrayNone(c *compiler, typ types.Type, ref int32, id string, call *p
 
 	return types.Bool, nil
 }
+
+func compileArrayMap(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
+	if call == nil {
+		return types.Nil, errors.New("missing filter argument for calling '" + id + "'")
+	}
+	if len(call.Function) > 1 {
+		return types.Nil, errors.New("too many arguments when calling '" + id + "', only 1 is supported")
+	}
+
+	// if the map function is called without arguments, we don't have to do anything
+	// so we just return the caller type as no additional step in the compiler is necessary
+	if len(call.Function) == 0 {
+		return typ, nil
+	}
+
+	arg := call.Function[0]
+	if arg.Name != "" {
+		return types.Nil, errors.New("called '" + id + "' with a named parameter, which is not supported")
+	}
+
+	functionRef, _, err := c.blockExpressions([]*parser.Expression{arg.Value}, typ)
+	if err != nil {
+		return types.Nil, err
+	}
+	if functionRef == 0 {
+		return types.Nil, errors.New("called '" + id + "' without a function block")
+	}
+	argExpectation := llx.FunctionPrimitive(functionRef)
+
+	f := c.Result.Code.Functions[functionRef-1]
+	if len(f.Entrypoints) != 1 {
+		return types.Nil, errors.New("called '" + id + "' with a bad function block, you can only return 1 value")
+	}
+	mappedType := f.Code[f.Entrypoints[0]-1].Type(c.Result.Code)
+
+	c.Result.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   id,
+		Function: &llx.Function{
+			Type:    string(types.Array(mappedType)),
+			Binding: ref,
+			Args: []*llx.Primitive{
+				llx.RefPrimitive(ref),
+				argExpectation,
+			},
+		},
+	})
+	return types.Array(mappedType), nil
+}

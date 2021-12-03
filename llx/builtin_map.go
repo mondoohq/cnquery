@@ -467,6 +467,86 @@ func dictOne(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData
 	return BoolTrue, 0, nil
 }
 
+func dictMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	// map(array, function)
+	itemsRef := chunk.Function.Args[0]
+	items, rref, err := c.resolveValue(itemsRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	if items.Value == nil {
+		return &RawData{Type: items.Type}, 0, nil
+	}
+
+	list, ok := items.Value.([]interface{})
+	if !ok {
+		return nil, 0, errors.New("failed to call dict.map on a non-list value")
+	}
+
+	if len(list) == 0 {
+		return items, 0, nil
+	}
+
+	arg1 := chunk.Function.Args[1]
+	fref, ok := arg1.Ref()
+	if !ok {
+		return nil, 0, errors.New("Failed to retrieve function reference of 'map' call")
+	}
+
+	f := c.code.Functions[fref-1]
+	ct := items.Type.Child()
+	mappedType := types.Unset
+	resMap := map[int]interface{}{}
+	finishedResults := 0
+	l := sync.Mutex{}
+	for it := range list {
+		i := it
+		err := c.runFunctionBlock([]*RawData{{Type: ct, Value: list[i]}}, f, func(res *RawResult) {
+			resList := func() []interface{} {
+				l.Lock()
+				defer l.Unlock()
+
+				_, ok := resMap[i]
+				if !ok {
+					finishedResults++
+					resMap[i] = res.Data.Value
+					mappedType = res.Data.Type
+				}
+
+				if finishedResults == len(list) {
+					resList := []interface{}{}
+					for j := 0; j < len(resMap); j++ {
+						k := resMap[j]
+						if k != nil {
+							resList = append(resList, k)
+						}
+					}
+					return resList
+				}
+				return nil
+			}()
+
+			if resList != nil {
+				data := &RawData{
+					Type:  types.Array(mappedType),
+					Value: resList,
+				}
+				c.cache.Store(ref, &stepCache{
+					Result:   data,
+					IsStatic: false,
+				})
+				c.triggerChain(ref, data)
+			}
+		})
+		if err != nil {
+			return nil, 0, err
+		}
+	}
+
+	return nil, 0, nil
+}
+
 func anyContainsString(an interface{}, s string) bool {
 	if an == nil {
 		return false

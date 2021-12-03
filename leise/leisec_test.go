@@ -1328,7 +1328,7 @@ func TestSuggestions(t *testing.T) {
 		},
 		{
 			// list resource with empty field call
-			"users.", []string{"all", "any", "contains", "length", "list", "none", "one", "where"},
+			"users.", []string{"all", "any", "contains", "length", "list", "map", "none", "one", "where"},
 			errors.New("missing field accessor at <source>:1:7"),
 		},
 		{
