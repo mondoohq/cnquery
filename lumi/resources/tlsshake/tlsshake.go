@@ -394,12 +394,6 @@ func (s *Tester) parseHello(conn net.Conn, version string, ciphersFilter func(ci
 			done = handshakeDone
 
 		case CONTENT_TYPE_ChangeCipherSpec:
-			// One way this is sent is when we request the renegotiation info. I'm not
-			// sure why this is not just sent as an empty renegotiation_info in the
-			// server header field, but here we are.
-			// Currently based on: https://datatracker.ietf.org/doc/html/rfc5746
-			s.Findings.Extensions["renegotiation_info"] = true
-
 			// This also means we are done with this stream, since it signals that we
 			// are no longer looking at a handshake.
 			done = true
@@ -770,18 +764,19 @@ var ALERT_DESCRIPTIONS = map[byte]string{
 	'\x2B': "UNSUPPORTED_CERTIFICATE",
 	'\x2C': "CERTIFICATE_REVOKED",
 	'\x2D': "CERTIFICATE_EXPIRED",
-	// '\x2D': "CERTIFICATE_UNKNOWN",
-	'\x2E': "ILLEGAL_PARAMETER",
-	'\x2F': "UNKNOWN_CA",
-	'\x30': "ACCESS_DENIED",
-	'\x31': "DECODE_ERROR",
-	'\x32': "DECRYPT_ERROR",
+	'\x2E': "CERTIFICATE_UNKNOWN",
+	'\x2F': "ILLEGAL_PARAMETER",
+	'\x30': "UNKNOWN_CA",
+	'\x31': "ACCESS_DENIED",
+	'\x32': "DECODE_ERROR",
+	'\x33': "DECRYPT_ERROR",
 	'\x3C': "EXPORT_RESTRICTION_RESERVED",
 	'\x46': "PROTOCOL_VERSION",
 	'\x47': "INSUFFICIENT_SECURITY",
 	'\x50': "INTERNAL_ERROR",
+	'\x56': "INAPPROPRIATE_FALLBACK",
 	'\x5A': "USER_CANCELED",
-	'\x64': "NO_RENEGOTIATION",
+	'\x64': "NO_RENEGOTIATION_RESERVED",
 	'\x6D': "MISSING_EXTENSION",
 	'\x6E': "UNSUPPORTED_EXTENSION",
 	'\x6F': "CERTIFICATE_UNOBTAINABLE_RESERVED",
