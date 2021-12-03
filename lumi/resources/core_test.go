@@ -969,23 +969,27 @@ func TestArray(t *testing.T) {
 		},
 		{
 			"[1,2,3].contains(_ >= 2)",
-			1, true,
+			2, true,
 		},
 		{
 			"[1,2,3].all(_ < 9)",
-			1, true,
+			2, true,
 		},
 		{
 			"[1,2,3].any(_ > 1)",
-			1, true,
+			2, true,
 		},
 		{
 			"[1,2,3].one(_ == 2)",
-			1, true,
+			2, true,
 		},
 		{
 			"[1,2,3].none(_ == 4)",
-			1, true,
+			2, true,
+		},
+		{
+			"[[0,1],[1,2]].map(_[1])",
+			2, []interface{}{int64(1), int64(2)},
 		},
 		{
 			"[0].where(_ > 0).where(_ > 0)",
@@ -1172,6 +1176,15 @@ func TestResource_None(t *testing.T) {
 	})
 }
 
+func TestResource_Map(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"users.map(name)",
+			2, []interface{}([]interface{}{"root", "chris", "christopher", "chris", "bin"}),
+		},
+	})
+}
+
 func TestResource_duplicateFields(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
@@ -1209,19 +1222,23 @@ func TestDict_Methods(t *testing.T) {
 		},
 		{
 			p + "params['string-array'].one(_ == 'a')",
-			1, true,
+			2, true,
 		},
 		{
 			p + "params['string-array'].all(_ != 'z')",
-			1, true,
+			2, true,
 		},
 		{
 			p + "params['string-array'].any(_ != 'a')",
-			1, true,
+			2, true,
 		},
 		{
 			p + "params['does_not_exist'].any(_ != 'a')",
-			1, nil,
+			2, nil,
+		},
+		{
+			p + "params['f'].map(_['ff'])",
+			2, []interface{}{float64(3)},
 		},
 		{
 			p + "params { _['1'] == _['1.0'] }",

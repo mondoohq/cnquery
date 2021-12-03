@@ -171,6 +171,68 @@ func compileResourceWhere(c *compiler, typ types.Type, ref int32, id string, cal
 	return typ, nil
 }
 
+func compileResourceMap(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
+	resource, err := listResource(c, typ)
+	if err != nil {
+		return types.Nil, errors.New("failed to compile " + id + ": " + err.Error())
+	}
+
+	if call == nil {
+		return types.Nil, errors.New("missing filter argument for calling '" + id + "'")
+	}
+	if len(call.Function) > 1 {
+		return types.Nil, errors.New("too many arguments when calling '" + id + "', only 1 is supported")
+	}
+
+	// if the where function is called without arguments, we don't have to do anything
+	// so we just return the caller type as no additional step in the compiler is necessary
+	if len(call.Function) == 0 {
+		return typ, nil
+	}
+
+	arg := call.Function[0]
+	if arg.Name != "" {
+		return types.Nil, errors.New("called '" + id + "' function with a named parameter, which is not supported")
+	}
+
+	functionRef, _, err := c.blockExpressions([]*parser.Expression{arg.Value}, types.Array(types.Type(resource.ListType)))
+	if err != nil {
+		return types.Nil, err
+	}
+	if functionRef == 0 {
+		return types.Nil, errors.New("called '" + id + "' clause without a function block")
+	}
+
+	f := c.Result.Code.Functions[functionRef-1]
+	if len(f.Entrypoints) != 1 {
+		return types.Nil, errors.New("called '" + id + "' with a bad function block, you can only return 1 value")
+	}
+	mappedType := f.Code[f.Entrypoints[0]-1].Type(c.Result.Code)
+
+	resourceRef := c.Result.Code.ChunkIndex()
+
+	listType, err := compileResourceDefault(c, typ, ref, "list", nil)
+	if err != nil {
+		return listType, err
+	}
+	listRef := c.Result.Code.ChunkIndex()
+
+	c.Result.Code.AddChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   id,
+		Function: &llx.Function{
+			Type:    string(types.Array(mappedType)),
+			Binding: resourceRef,
+			Args: []*llx.Primitive{
+				llx.RefPrimitive(listRef),
+				llx.FunctionPrimitive(functionRef),
+			},
+		},
+	})
+
+	return types.Array(mappedType), nil
+}
+
 func compileResourceContains(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
 	// resource.where
 	_, err := compileResourceWhere(c, typ, ref, "where", call)

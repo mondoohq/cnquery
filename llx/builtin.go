@@ -480,6 +480,7 @@ func init() {
 			"$none":                           {f: dictNone},
 			"$any":                            {f: dictAny},
 			"$one":                            {f: dictOne},
+			"map":                             {f: dictMap},
 			string("contains" + types.String): {f: dictContainsString, Label: "contains"},
 			string("contains" + types.Array(types.String)): {f: dictContainsArrayString, Label: "contains"},
 			string("find"): {f: dictFind, Label: "find"},
@@ -500,6 +501,7 @@ func init() {
 			"$none":           {f: arrayNone},
 			"$any":            {f: arrayAny},
 			"$one":            {f: arrayOne},
+			"map":             {f: arrayMap},
 			"duplicates":      {f: arrayDuplicates},
 			"fieldDuplicates": {f: arrayFieldDuplicates},
 			"unique":          {f: arrayUnique},
@@ -609,6 +611,7 @@ func init() {
 			// fields
 			"where":     {f: resourceWhere},
 			"$whereNot": {f: resourceWhereNot},
+			"map":       {f: resourceMap},
 			"length":    {f: resourceLength},
 			"{}": {f: func(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 				return c.runBlock(bind, chunk.Function.Args[0], nil, ref)
