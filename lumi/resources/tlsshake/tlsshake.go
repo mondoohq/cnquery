@@ -23,6 +23,26 @@ import (
 
 var TLS_VERSIONS = []string{"ssl3", "tls1.0", "tls1.1", "tls1.2", "tls1.3"}
 
+// ScanConfig allows to tune the TLS scanner
+type ScanConfig struct {
+	Versions                  []string
+	SNIsupported              bool
+	FakeSNI                   bool
+	SecureClientRenegotiation bool
+
+	// internal scan fields that users don't configure
+	version       string
+	ciphersFilter func(string) bool
+}
+
+func DefaultScanConfig() ScanConfig {
+	return ScanConfig{
+		SNIsupported:              true,
+		FakeSNI:                   true,
+		SecureClientRenegotiation: true,
+	}
+}
+
 // Tester is the test runner and results object for any findings done in a
 // session of tests. We re-use it to avoid duplicate requests and optimize
 // the overall test run.
@@ -36,12 +56,13 @@ type Tester struct {
 
 // Findings tracks the current state of tested components and their findings
 type Findings struct {
-	Versions     map[string]bool
-	Ciphers      map[string]bool
-	Extensions   map[string]bool
-	Errors       []string
-	Certificates []*x509.Certificate
-	Revocations  map[string]*revocation
+	Versions           map[string]bool
+	Ciphers            map[string]bool
+	Extensions         map[string]bool
+	Errors             []string
+	Certificates       []*x509.Certificate
+	NonSNIcertificates []*x509.Certificate
+	Revocations        map[string]*revocation
 }
 
 type revocation struct {
@@ -69,26 +90,50 @@ func New(proto string, domainName string, host string, port int) *Tester {
 	}
 }
 
-// Test runs the TLS/SSL probes for all given versions
+// Test runs the TLS/SSL probes for a given scan configuration
 // - versions may contain any supported pre-defined TLS/SSL versions
 //   with a complete list found in TLS_VERSIONS. Leave empty to test all.
-func (s *Tester) Test(versions ...string) error {
-	if len(versions) == 0 {
-		versions = TLS_VERSIONS
+func (s *Tester) Test(conf ScanConfig) error {
+	if len(conf.Versions) == 0 {
+		conf.Versions = TLS_VERSIONS
 	}
 
 	workers := sync.WaitGroup{}
 	var errs error
 
-	for i := range versions {
-		version := versions[i]
+	remainingCiphers := func(cipher string) bool {
+		s.sync.Lock()
+		defer s.sync.Unlock()
+		if v, ok := s.Findings.Ciphers[cipher]; ok && v {
+			return false
+		}
+		return true
+	}
+	supportedCiphers := func(cipher string) bool {
+		s.sync.Lock()
+		defer s.sync.Unlock()
+		if v, ok := s.Findings.Ciphers[cipher]; ok && v {
+			return true
+		}
+		return false
+	}
+
+	for i := range conf.Versions {
+		version := conf.Versions[i]
 
 		workers.Add(1)
 		go func() {
 			defer workers.Done()
 
+			// we don't activate any of the additioinal tests in the beginning
+			// let's find out if we work on this version of TLS/SSL
+			curConf := &ScanConfig{
+				version:       version,
+				ciphersFilter: remainingCiphers,
+			}
+
 			for {
-				remaining, err := s.testTLS(s.proto, s.target, version)
+				remaining, err := s.testTLS(s.proto, s.target, curConf)
 				if err != nil {
 					s.sync.Lock()
 					errs = multierror.Append(errs, err)
@@ -98,6 +143,27 @@ func (s *Tester) Test(versions ...string) error {
 
 				if remaining <= 0 {
 					break
+				}
+			}
+
+			if version == "tls1.2" || version == "tls1.3" {
+				if conf.SNIsupported || conf.SecureClientRenegotiation {
+					curConf = &ScanConfig{
+						version:                   version,
+						ciphersFilter:             supportedCiphers,
+						SNIsupported:              conf.SNIsupported,
+						SecureClientRenegotiation: conf.SecureClientRenegotiation,
+					}
+					s.testTLS(s.proto, s.target, curConf)
+				}
+
+				if conf.FakeSNI {
+					curConf = &ScanConfig{
+						version:       version,
+						ciphersFilter: supportedCiphers,
+						FakeSNI:       conf.FakeSNI,
+					}
+					s.testTLS(s.proto, s.target, curConf)
 				}
 			}
 		}()
@@ -112,23 +178,14 @@ func (s *Tester) Test(versions ...string) error {
 // results in the Tester.
 // Returns the number of remaining ciphers to test (if so desired)
 // and any potential error
-func (s *Tester) testTLS(proto string, target string, version string) (int, error) {
+func (s *Tester) testTLS(proto string, target string, conf *ScanConfig) (int, error) {
 	conn, err := net.Dial(proto, target)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to connect to target")
 	}
 	defer conn.Close()
 
-	ciphersFilter := func(cipher string) bool {
-		s.sync.Lock()
-		defer s.sync.Unlock()
-		if v, ok := s.Findings.Ciphers[cipher]; ok && v {
-			return false
-		}
-		return true
-	}
-
-	msg, cipherCount, err := s.helloTLSMsg(version, ciphersFilter)
+	msg, cipherCount, err := s.helloTLSMsg(conf)
 	if err != nil {
 		return 0, err
 	}
@@ -138,7 +195,7 @@ func (s *Tester) testTLS(proto string, target string, version string) (int, erro
 		return 0, errors.Wrap(err, "failed to send TLS hello")
 	}
 
-	success, err := s.parseHello(conn, version, ciphersFilter)
+	success, err := s.parseHello(conn, conf)
 	if err != nil || !success {
 		return 0, err
 	}
@@ -152,7 +209,7 @@ func (s *Tester) addError(msg string) {
 	s.sync.Unlock()
 }
 
-func (s *Tester) parseAlert(data []byte, version string, ciphersFilter func(cipher string) bool) error {
+func (s *Tester) parseAlert(data []byte, conf *ScanConfig) error {
 	var severity string
 	switch data[0] {
 	case '\x01':
@@ -172,11 +229,11 @@ func (s *Tester) parseAlert(data []byte, version string, ciphersFilter func(ciph
 	case "PROTOCOL_VERSION":
 		// here we know the TLS version is not supported
 		s.sync.Lock()
-		s.Findings.Versions[version] = false
+		s.Findings.Versions[conf.version] = false
 		s.sync.Unlock()
 
 	case "HANDSHAKE_FAILURE":
-		if version == "ssl3" {
+		if conf.version == "ssl3" {
 			// Note: it's a little fuzzy here, since we don't know if the protocol
 			// version is unsupported or just its ciphers. So we check if we found
 			// it previously and if so, don't add it to the list of unsupported
@@ -188,7 +245,7 @@ func (s *Tester) parseAlert(data []byte, version string, ciphersFilter func(ciph
 			}
 		}
 
-		names := cipherNames(version, ciphersFilter)
+		names := cipherNames(conf.version, conf.ciphersFilter)
 		for i := range names {
 			name := names[i]
 			if _, ok := s.Findings.Ciphers[name]; !ok {
@@ -199,13 +256,13 @@ func (s *Tester) parseAlert(data []byte, version string, ciphersFilter func(ciph
 		}
 
 	default:
-		s.addError("failed to connect via " + version + ": " + severity + " - " + description)
+		s.addError("failed to connect via " + conf.version + ": " + severity + " - " + description)
 	}
 
 	return nil
 }
 
-func (s *Tester) parseServerHello(data []byte, version string, ciphersFilter func(cipher string) bool) error {
+func (s *Tester) parseServerHello(data []byte, version string, conf *ScanConfig) error {
 	idx := 0
 
 	idx += 2 + 32
@@ -268,7 +325,7 @@ func (s *Tester) parseServerHello(data []byte, version string, ciphersFilter fun
 	return nil
 }
 
-func (s *Tester) parseCertificate(data []byte) error {
+func (s *Tester) parseCertificate(data []byte, conf *ScanConfig) error {
 	certsLen := bytes3int(data[0:3])
 	if len(data) < certsLen+3 {
 		return errors.New("malformed certificate response, too little data read from stream to parse certificate")
@@ -299,7 +356,26 @@ func (s *Tester) parseCertificate(data []byte) error {
 	// This may not be true and in case it isn't improve this code to carefully
 	// write new certificates and manage separate certificate chains
 	s.sync.Lock()
-	s.Findings.Certificates = certs
+	if conf.SNIsupported {
+		// by default we collect with SNI enabled. If the test is set to test SNI,
+		// we actually test the exact opposite, ie what do we get without SNI.
+		// Thus, we collect the non-sni certificates here
+		s.Findings.NonSNIcertificates = certs
+
+		if len(certs) != 0 && len(s.Findings.Certificates) != 0 {
+			if !bytes.Equal(certs[0].Raw, s.Findings.Certificates[0].Raw) {
+				s.Findings.Extensions["server_name"] = true
+			}
+		}
+	} else if conf.FakeSNI {
+		if len(certs) != 0 && len(s.Findings.NonSNIcertificates) != 0 {
+			if bytes.Equal(certs[0].Raw, s.Findings.NonSNIcertificates[0].Raw) {
+				s.Findings.Extensions["fake_server_name"] = true
+			}
+		}
+	} else {
+		s.Findings.Certificates = certs
+	}
 	s.sync.Unlock()
 
 	for i := 0; i+1 < len(certs); i++ {
@@ -318,17 +394,16 @@ func (s *Tester) parseCertificate(data []byte) error {
 //   If we do, we might as well be done at this stage, no need to read more
 // - There are a few other responses that also signal that we are done
 //   processing handshake responses, like ServerHelloDone or Finished
-func (s *Tester) parseHandshake(data []byte, version string, ciphersFilter func(cipher string) bool) (bool, error) {
+func (s *Tester) parseHandshake(data []byte, version string, conf *ScanConfig) (bool, error) {
 	handshakeType := data[0]
 	handshakeLen := bytes3int(data[1:4])
 
 	switch handshakeType {
 	case HANDSHAKE_TYPE_ServerHello:
-		err := s.parseServerHello(data[4:4+handshakeLen], version, ciphersFilter)
-		done := len(s.Findings.Certificates) != 0
-		return done, err
+		err := s.parseServerHello(data[4:4+handshakeLen], version, conf)
+		return false, err
 	case HANDSHAKE_TYPE_Certificate:
-		return true, s.parseCertificate(data[4 : 4+handshakeLen])
+		return true, s.parseCertificate(data[4:4+handshakeLen], conf)
 	case HANDSHAKE_TYPE_ServerKeyExchange:
 		return false, nil
 	case HANDSHAKE_TYPE_ServerHelloDone:
@@ -344,7 +419,7 @@ func (s *Tester) parseHandshake(data []byte, version string, ciphersFilter func(
 
 // returns:
 //   true if the handshake was successful, false otherwise
-func (s *Tester) parseHello(conn net.Conn, version string, ciphersFilter func(cipher string) bool) (bool, error) {
+func (s *Tester) parseHello(conn net.Conn, conf *ScanConfig) (bool, error) {
 	reader := bufio.NewReader(conn)
 	header := make([]byte, 5)
 	var success bool
@@ -381,12 +456,12 @@ func (s *Tester) parseHello(conn net.Conn, version string, ciphersFilter func(ci
 			// Do not grab the version here, instead use the pre-provided
 			// There is a nice edge-case in TLS1.3 which is handled further down,
 			// but not required here since we are dealing with an error
-			if err := s.parseAlert(msg, version, ciphersFilter); err != nil {
+			if err := s.parseAlert(msg, conf); err != nil {
 				return false, err
 			}
 
 		case CONTENT_TYPE_Handshake:
-			handshakeDone, err := s.parseHandshake(msg, headerVersion, ciphersFilter)
+			handshakeDone, err := s.parseHandshake(msg, headerVersion, conf)
 			if err != nil {
 				return false, err
 			}
@@ -447,7 +522,7 @@ func cipherNames(version string, filter func(cipher string) bool) []string {
 	}
 }
 
-func writeExtension(buf bytes.Buffer, typ string, body []byte) {
+func writeExtension(buf *bytes.Buffer, typ string, body []byte) {
 	buf.WriteString(typ)
 	buf.Write(int2bytes(len(body)))
 	buf.Write(body)
@@ -465,40 +540,50 @@ func sniMsg(domainName string) []byte {
 	return res.Bytes()
 }
 
-func (s *Tester) helloTLSMsg(version string, ciphersFilter func(cipher string) bool) ([]byte, int, error) {
+func (s *Tester) helloTLSMsg(conf *ScanConfig) ([]byte, int, error) {
 	var ciphers []byte
 	var cipherCount int
 
 	var extensions bytes.Buffer
 
-	if version != "ssl3" {
-		// SNI
-		if s.domainName != "" {
-			writeExtension(extensions, EXTENSION_ServerName, sniMsg(s.domainName))
+	if conf.version != "ssl3" {
+		domainName := s.domainName
+		if conf.SNIsupported {
+			// don't write an SNI and see if we get a different certificates
+			domainName = ""
+		} else if conf.FakeSNI {
+			// give it a fake name
+			domainName = strconv.FormatUint(rand.Uint64(), 10) + ".com"
+		}
+
+		if domainName != "" {
+			writeExtension(&extensions, EXTENSION_ServerName, sniMsg(domainName))
 		}
 
 		// add signature_algorithms
 		extensions.WriteString("\x00\x0d\x00\x14\x00\x12\x04\x03\x08\x04\x04\x01\x05\x03\x08\x05\x05\x01\x08\x06\x06\x01\x02\x01")
 	}
 
-	if version == "tls1.2" || version == "tls1.3" {
+	if conf.version == "tls1.2" || conf.version == "tls1.3" {
 		// Renegotiation info
 		// https://datatracker.ietf.org/doc/html/rfc5746
 		// - we leave the body empty, we only need a response to the request
 		// - the body has 1 byte containing the length of the extension (which is 0)
-		writeExtension(extensions, EXTENSION_RenegotiationInfo, []byte("\x00"))
+		if conf.SecureClientRenegotiation {
+			writeExtension(&extensions, EXTENSION_RenegotiationInfo, []byte("\x00"))
+		}
 	}
 
-	switch version {
+	switch conf.version {
 	case "ssl3":
-		regular, n1 := filterCipherMsg(SSL3_CIPHERS, ciphersFilter)
-		fips, n2 := filterCipherMsg(SSL_FIPS_CIPHERS, ciphersFilter)
+		regular, n1 := filterCipherMsg(SSL3_CIPHERS, conf.ciphersFilter)
+		fips, n2 := filterCipherMsg(SSL_FIPS_CIPHERS, conf.ciphersFilter)
 		ciphers = append(regular, fips...)
 		cipherCount = n1 + n2
 
 	case "tls1.0", "tls1.1", "tls1.2":
-		org, n1 := filterCipherMsg(TLS10_CIPHERS, ciphersFilter)
-		tls, n2 := filterCipherMsg(TLS_CIPHERS, ciphersFilter)
+		org, n1 := filterCipherMsg(TLS10_CIPHERS, conf.ciphersFilter)
+		tls, n2 := filterCipherMsg(TLS_CIPHERS, conf.ciphersFilter)
 		ciphers = append(org, tls...)
 		cipherCount = n1 + n2
 
@@ -510,9 +595,9 @@ func (s *Tester) helloTLSMsg(version string, ciphersFilter func(cipher string) b
 		extensions.WriteString("\x00\x0a\x00\x0a\x00\x08\xfa\xfa\x00\x1d\x00\x17\x00\x18")
 
 	case "tls1.3":
-		org, n1 := filterCipherMsg(TLS10_CIPHERS, ciphersFilter)
-		tls, n2 := filterCipherMsg(TLS_CIPHERS, ciphersFilter)
-		tls13, n3 := filterCipherMsg(TLS13_CIPHERS, ciphersFilter)
+		org, n1 := filterCipherMsg(TLS10_CIPHERS, conf.ciphersFilter)
+		tls, n2 := filterCipherMsg(TLS_CIPHERS, conf.ciphersFilter)
+		tls13, n3 := filterCipherMsg(TLS13_CIPHERS, conf.ciphersFilter)
 		ciphers = append(org, tls...)
 		ciphers = append(ciphers, tls13...)
 		cipherCount = n1 + n2 + n3
@@ -541,10 +626,10 @@ func (s *Tester) helloTLSMsg(version string, ciphersFilter func(cipher string) b
 		extensions.WriteString(publicKey)
 
 	default:
-		return nil, 0, errors.New("unsupported TLS/SSL version: " + version)
+		return nil, 0, errors.New("unsupported TLS/SSL version: " + conf.version)
 	}
 
-	return constructTLSHello(version, ciphers, extensions.Bytes()), cipherCount, nil
+	return constructTLSHello(conf.version, ciphers, extensions.Bytes()), cipherCount, nil
 }
 
 // OCSP:

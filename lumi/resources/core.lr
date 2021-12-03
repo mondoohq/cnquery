@@ -531,6 +531,8 @@ tls {
   extensions(params) []string
   // Certificates provided in this TLS/SSL connection
   certificates(params) []certificate
+  // Certificates provided without server name indication (SNI)
+  nonSniCertificates(params) []certificate
 }
 
 dns {
