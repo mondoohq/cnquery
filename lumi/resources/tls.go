@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"crypto/x509"
 	"regexp"
 	"strconv"
 
@@ -89,6 +90,47 @@ func (s *lumiTls) id() (string, error) {
 	return "tls+" + socket.LumiResource().Id, nil
 }
 
+func parseCertificates(runtime *lumi.Runtime, findings *tlsshake.Findings, certificates []*x509.Certificate) ([]interface{}, error) {
+	var res []interface{}
+
+	for i := range certificates {
+		cert := certificates[i]
+
+		var isRevoked interface{}
+		var revokedAt interface{}
+		revocation, ok := findings.Revocations[string(cert.Signature)]
+		if ok {
+			if revocation == nil {
+				isRevoked = false
+				revokedAt = &llx.NeverFutureTime
+			} else {
+				isRevoked = true
+				revokedAt = &revocation.At
+			}
+		}
+
+		raw, err := runtime.CreateResource("certificate",
+			"pem", "",
+			// NOTE: if we do not set the hash here, it will generate the cache content before we can store it
+			// we are using the hashs for the id, therefore it is required during creation
+			"fingerprints", certFingerprints(cert),
+			"isRevoked", isRevoked,
+			"revokedAt", revokedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// store parsed object with resource
+		lumiCert := raw.(Certificate)
+		lumiCert.LumiResource().Cache.Store("_cert", &lumi.CacheEntry{Data: cert})
+
+		res = append(res, lumiCert)
+	}
+
+	return res, nil
+}
+
 func (s *lumiTls) GetParams(socket Socket, domainName string) (map[string]interface{}, error) {
 	host, err := socket.Address()
 	if err != nil {
@@ -106,7 +148,7 @@ func (s *lumiTls) GetParams(socket Socket, domainName string) (map[string]interf
 	}
 
 	tester := tlsshake.New(proto, domainName, host, int(port))
-	if err := tester.Test(); err != nil {
+	if err := tester.Test(tlsshake.DefaultScanConfig()); err != nil {
 		return nil, err
 	}
 
@@ -138,42 +180,15 @@ func (s *lumiTls) GetParams(socket Socket, domainName string) (map[string]interf
 	}
 
 	// Create certificates
-	certs := []interface{}{}
-	for i := range findings.Certificates {
-		cert := findings.Certificates[i]
-
-		var isRevoked interface{}
-		var revokedAt interface{}
-		revocation, ok := findings.Revocations[string(cert.Signature)]
-		if ok {
-			if revocation == nil {
-				isRevoked = false
-				revokedAt = &llx.NeverFutureTime
-			} else {
-				isRevoked = true
-				revokedAt = &revocation.At
-			}
-		}
-
-		raw, err := s.Runtime.CreateResource("certificate",
-			"pem", "",
-			// NOTE: if we do not set the hash here, it will generate the cache content before we can store it
-			// we are using the hashs for the id, therefore it is required during creation
-			"fingerprints", certFingerprints(cert),
-			"isRevoked", isRevoked,
-			"revokedAt", revokedAt,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		// store parsed object with resource
-		lumiCert := raw.(Certificate)
-		lumiCert.LumiResource().Cache.Store("_cert", &lumi.CacheEntry{Data: cert})
-
-		certs = append(certs, lumiCert)
+	res["certificates"], err = parseCertificates(s.Runtime, &findings, findings.Certificates)
+	if err != nil {
+		return nil, err
 	}
-	res["certificates"] = certs
+
+	res["non-sni-certificates"], err = parseCertificates(s.Runtime, &findings, findings.NonSNIcertificates)
+	if err != nil {
+		return nil, err
+	}
 
 	return res, nil
 }
@@ -231,6 +246,15 @@ func (s *lumiTls) GetExtensions(params map[string]interface{}) ([]interface{}, e
 
 func (s *lumiTls) GetCertificates(params map[string]interface{}) ([]interface{}, error) {
 	raw, ok := params["certificates"]
+	if !ok {
+		return []interface{}{}, nil
+	}
+
+	return raw.([]interface{}), nil
+}
+
+func (s *lumiTls) GetNonSniCertificates(params map[string]interface{}) ([]interface{}, error) {
+	raw, ok := params["non-sni-certificates"]
 	if !ok {
 		return []interface{}{}, nil
 	}
