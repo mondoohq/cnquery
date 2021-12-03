@@ -93,6 +93,8 @@ func (conn *TransportConfig) ToUrl() string {
 		return SCHEME_AWS_EC2_EBS
 	case TransportBackend_CONNECTION_TERRAFORM:
 		return SCHEME_TERRAFORM
+	case TransportBackend_CONNECTION_TLS:
+		return SCHEME_TLS + "://" + conn.Host
 	default:
 		log.Warn().Str("backend", conn.Backend.String()).Msg("cannot render backend config")
 		return ""
