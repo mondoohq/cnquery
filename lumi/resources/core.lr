@@ -527,6 +527,8 @@ tls {
   versions(params) []string
   // Ciphers supported by a given TLS/SSL connection
   ciphers(params) []string
+  // Extensions supported by this TLS/SSL connection
+  extensions(params) []string
   // Certificates provided in this TLS/SSL connection
   certificates(params) []certificate
 }

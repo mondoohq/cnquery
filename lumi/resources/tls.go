@@ -125,8 +125,9 @@ func (s *lumiTls) GetParams(socket Socket, domainName string) (map[string]interf
 	}
 
 	maps := map[string]map[string]bool{
-		"versions": findings.Versions,
-		"ciphers":  findings.Ciphers,
+		"versions":   findings.Versions,
+		"ciphers":    findings.Ciphers,
+		"extensions": findings.Extensions,
 	}
 	for field, data := range maps {
 		v := make(map[string]interface{}, len(data))
@@ -136,6 +137,7 @@ func (s *lumiTls) GetParams(socket Socket, domainName string) (map[string]interf
 		res[field] = v
 	}
 
+	// Create certificates
 	certs := []interface{}{}
 	for i := range findings.Certificates {
 		cert := findings.Certificates[i]
@@ -195,6 +197,23 @@ func (s *lumiTls) GetVersions(params map[string]interface{}) ([]interface{}, err
 
 func (s *lumiTls) GetCiphers(params map[string]interface{}) ([]interface{}, error) {
 	raw, ok := params["ciphers"]
+	if !ok {
+		return []interface{}{}, nil
+	}
+
+	data := raw.(map[string]interface{})
+	res := []interface{}{}
+	for k, v := range data {
+		if v.(bool) {
+			res = append(res, k)
+		}
+	}
+
+	return res, nil
+}
+
+func (s *lumiTls) GetExtensions(params map[string]interface{}) ([]interface{}, error) {
+	raw, ok := params["extensions"]
 	if !ok {
 		return []interface{}{}, nil
 	}
