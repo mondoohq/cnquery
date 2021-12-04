@@ -1,8 +1,6 @@
 package transports
 
 import (
-	"errors"
-	"strconv"
 	"strings"
 
 	"go.mondoo.io/mondoo/stringx"
@@ -16,22 +14,6 @@ func (conn *TransportConfig) Clone() *TransportConfig {
 		return nil
 	}
 	return proto.Clone(conn).(*TransportConfig)
-}
-
-// returns the port number if parsable
-func (c *TransportConfig) IntPort() (int, error) {
-	var port int
-	var err error
-
-	// try to extract port
-	if len(c.Port) > 0 {
-		portInt, err := strconv.ParseInt(c.Port, 10, 32)
-		if err != nil {
-			return port, errors.New("invalid port " + c.Port)
-		}
-		port = int(portInt)
-	}
-	return port, err
 }
 
 func (conn *TransportConfig) ToUrl() string {
@@ -93,8 +75,11 @@ func (conn *TransportConfig) ToUrl() string {
 		return SCHEME_AWS_EC2_EBS
 	case TransportBackend_CONNECTION_TERRAFORM:
 		return SCHEME_TERRAFORM
-	case TransportBackend_CONNECTION_TLS:
-		return SCHEME_TLS + "://" + conn.Host
+	case TransportBackend_CONNECTION_HOST:
+		if _, ok := conn.Options["tls"]; ok {
+			return SCHEME_TLS + "://" + conn.Host
+		}
+		return SCHEME_HOST + "://" + conn.Host
 	default:
 		log.Warn().Str("backend", conn.Backend.String()).Msg("cannot render backend config")
 		return ""

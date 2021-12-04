@@ -304,7 +304,7 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		if err != nil {
 			return nil, err
 		}
-	case transports.TransportBackend_CONNECTION_TLS:
+	case transports.TransportBackend_CONNECTION_HOST:
 		trans, err := network.New(tc)
 		if err != nil {
 			return nil, err

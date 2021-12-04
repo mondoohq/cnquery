@@ -43,7 +43,7 @@ func sshClientConnection(tc *transports.TransportConfig, hostKeyCallback ssh.Hos
 		HostKeyCallback: hostKeyCallback,
 	}
 
-	return ssh.Dial("tcp", fmt.Sprintf("%s:%s", tc.Host, tc.Port), sshConfig)
+	return ssh.Dial("tcp", fmt.Sprintf("%s:%d", tc.Host, tc.Port), sshConfig)
 }
 
 func authPrivateKeyWithPassphrase(pemBytes []byte, passphrase []byte) (ssh.Signer, error) {

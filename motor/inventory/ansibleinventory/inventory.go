@@ -12,7 +12,7 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/transports"
 
-	"go.mondoo.io/mondoo/motor/inventory/v1"
+	v1 "go.mondoo.io/mondoo/motor/inventory/v1"
 
 	"github.com/mitchellh/mapstructure"
 	"sigs.k8s.io/yaml"
@@ -240,10 +240,14 @@ func ansibleBackend(connection string) transports.TransportBackend {
 func ansibleConnections(host *Host) []*transports.TransportConfig {
 	backend := ansibleBackend(host.Connection)
 
+	// in the case where the port is 0, we will fallback to default ports (eg 22)
+	// further down in the execution chain
+	port, _ := strconv.Atoi(host.Port)
+
 	res := &transports.TransportConfig{
 		Backend: backend,
 		Host:    host.Host,
-		Port:    host.Port,
+		Port:    int32(port),
 		Sudo: &transports.Sudo{
 			Active: host.Become,
 		},

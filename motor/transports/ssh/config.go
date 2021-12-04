@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/kevinburke/ssh_config"
@@ -47,7 +48,12 @@ func ReadSSHConfig(cc *transports.TransportConfig) *transports.TransportConfig {
 		user, _ := cfg.Get(host, "User")
 		port, err := cfg.Get(host, "Port")
 		if err == nil {
-			cc.Port = port
+			portNum, err := strconv.Atoi(port)
+			if err != nil {
+				log.Debug().Err(err).Str("file", sshUserConfigPath).Str("port", port).Msg("could not parse ssh port")
+			} else {
+				cc.Port = int32(portNum)
+			}
 		}
 
 		entry, err := cfg.Get(host, "IdentityFile")
@@ -82,11 +88,6 @@ func ReadSSHConfig(cc *transports.TransportConfig) *transports.TransportConfig {
 func VerifyConfig(endpoint *transports.TransportConfig) error {
 	if endpoint.Backend != transports.TransportBackend_CONNECTION_SSH {
 		return errors.New("only ssh backend for ssh transport supported")
-	}
-
-	_, err := endpoint.IntPort()
-	if err != nil {
-		return errors.New("port is not a valid number " + endpoint.Port)
 	}
 
 	return nil

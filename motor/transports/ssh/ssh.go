@@ -69,7 +69,9 @@ func (t *SSHTransport) Connect() error {
 	cc := t.ConnectionConfig
 
 	// we always want to ensure we use the default port if nothing was specified
-	ApplyDefaultPort(cc)
+	if cc.Port == 0 {
+		cc.Port = 22
+	}
 
 	// load known hosts and track the fingerprint of the ssh server for later identification
 	knownHostsCallback, err := KnownHostsCallback()
@@ -93,13 +95,13 @@ func (t *SSHTransport) Connect() error {
 	// establish connection
 	conn, err := sshClientConnection(cc, hostkeyCallback)
 	if err != nil {
-		log.Debug().Err(err).Str("transport", "ssh").Str("host", cc.Host).Str("port", cc.Port).Bool("insecure", cc.Insecure).Msg("could not establish ssh session")
+		log.Debug().Err(err).Str("transport", "ssh").Str("host", cc.Host).Int32("port", cc.Port).Bool("insecure", cc.Insecure).Msg("could not establish ssh session")
 		return err
 	}
 	t.SSHClient = conn
 	t.HostKey = hostkey
 	t.serverVersion = string(conn.ServerVersion())
-	log.Debug().Str("transport", "ssh").Str("host", cc.Host).Str("port", cc.Port).Str("server", t.serverVersion).Msg("ssh session established")
+	log.Debug().Str("transport", "ssh").Str("host", cc.Host).Int32("port", cc.Port).Str("server", t.serverVersion).Msg("ssh session established")
 	return nil
 }
 

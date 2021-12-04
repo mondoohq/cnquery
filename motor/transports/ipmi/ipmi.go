@@ -19,12 +19,7 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 		return nil, errors.New("backend is not supported for ipmi transport")
 	}
 
-	port, err := tc.IntPort()
-	if err != nil {
-		return nil, errors.New("port is not a valid number " + tc.Port)
-	}
-
-	// fallback to default port 623
+	port := tc.Port
 	if port == 0 {
 		port = 623
 	}

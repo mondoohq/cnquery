@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/url"
+	"strconv"
 
 	"github.com/spf13/afero"
 	"github.com/vmware/govmomi"
@@ -15,10 +16,10 @@ import (
 var _ transports.Transport = (*Transport)(nil)
 var _ transports.TransportPlatformIdentifier = (*Transport)(nil)
 
-func VSphereConnectionURL(hostname string, port string, user string, password string) (*url.URL, error) {
+func VSphereConnectionURL(hostname string, port int32, user string, password string) (*url.URL, error) {
 	host := hostname
-	if len(port) > 0 {
-		host = hostname + ":" + port
+	if port > 0 {
+		host = hostname + ":" + strconv.Itoa(int(port))
 	}
 
 	u, err := url.Parse("https://" + host + "/sdk")

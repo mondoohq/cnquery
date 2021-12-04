@@ -76,6 +76,7 @@ func init() {
 		transports.SCHEME_AWS_EC2_EBS:        &ebs.Resolver{},
 		transports.SCHEME_GITLAB:             &standard.Resolver{},
 		transports.SCHEME_TERRAFORM:          &terraform.Resolver{},
+		transports.SCHEME_HOST:               &network.Resolver{},
 		transports.SCHEME_TLS:                &network.Resolver{},
 	}
 }

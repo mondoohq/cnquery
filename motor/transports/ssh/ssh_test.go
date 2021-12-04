@@ -22,14 +22,3 @@ func TestSSHAuthError(t *testing.T) {
 			// local testing without ssh agent
 			err.Error() == "no authentication method defined")
 }
-
-func TestSSHDefaultPort(t *testing.T) {
-	endpoint := &transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_SSH, Host: "example.local"}
-	err := ssh.VerifyConfig(endpoint)
-	assert.Nil(t, err)
-
-	endpoint = ssh.ApplyDefaultPort(endpoint)
-
-	// if no port is provided, it needs to be 22
-	assert.Equal(t, "22", endpoint.Port)
-}

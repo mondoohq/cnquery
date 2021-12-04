@@ -18,7 +18,7 @@ import (
 type Connection struct {
 	Path      string
 	Hostname  string
-	Port      int
+	Port      int32
 	Username  string
 	Password  string
 	Interface string
@@ -38,7 +38,7 @@ func NewIpmiClient(c *Connection) (*IpmiClient, error) {
 	tc := &ipmiTransport.Connection{
 		Hostname:  c.Hostname,
 		Path:      c.Path,
-		Port:      c.Port,
+		Port:      int(c.Port),
 		Username:  c.Username,
 		Password:  c.Password,
 		Interface: c.Interface,
