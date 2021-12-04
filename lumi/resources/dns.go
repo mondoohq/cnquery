@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"go.mondoo.io/mondoo/motor/transports/network"
+
 	"go.mondoo.io/mondoo/lumi"
 
 	"github.com/miekg/dns"
@@ -16,6 +18,21 @@ import (
 func (d *lumiDns) id() (string, error) {
 	id, _ := d.Fqdn()
 	return "dns/" + id, nil
+}
+
+func (d *lumiDns) init(args *lumi.Args) (*lumi.Args, Dns, error) {
+	_, ok := (*args)["fqdn"]
+	if !ok {
+		var fqdn string
+
+		if transport, ok := d.Runtime.Motor.Transport.(*network.Transport); ok {
+			fqdn = transport.FQDN
+		}
+
+		(*args)["fqdn"] = fqdn
+	}
+
+	return args, nil, nil
 }
 
 func (d *lumiDns) GetParams() (interface{}, error) {
