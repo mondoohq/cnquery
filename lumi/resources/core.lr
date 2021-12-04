@@ -535,6 +535,19 @@ tls {
   nonSniCertificates(params) []certificate
 }
 
+domainName {
+  init(fqdn string)
+  fqdn string
+  // effectiveTLDPlusOne returns the effective top level domain plus one more label
+  effectiveTLDPlusOne string
+  // Top-Level Domain
+  tld string
+  // Flag indicates if the TLD is ICANN managed
+  tldIcannManaged bool
+  // Domain Labels
+  labels []string
+}
+
 dns {
   init(fqdn string)
   fqdn string

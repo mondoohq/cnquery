@@ -7,13 +7,40 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/transports/network"
-
-	"go.mondoo.io/mondoo/lumi"
-
 	"github.com/miekg/dns"
+	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/dnsshake"
+	"go.mondoo.io/mondoo/lumi/resources/domain"
+	"go.mondoo.io/mondoo/motor/transports/network"
 )
+
+func (d *lumiDomainName) id() (string, error) {
+	id, _ := d.Fqdn()
+	return "domainName/" + id, nil
+}
+
+func (d *lumiDomainName) init(args *lumi.Args) (*lumi.Args, DomainName, error) {
+	fqdn, ok := (*args)["fqdn"]
+	if !ok {
+		if transport, ok := d.Runtime.Motor.Transport.(*network.Transport); ok {
+			fqdn = transport.FQDN
+		}
+
+		(*args)["fqdn"] = fqdn
+	}
+
+	dn, err := domain.Parse(fqdn.(string))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["effectiveTLDPlusOne"] = dn.EffectiveTLDPlusOne
+	(*args)["tld"] = dn.TLD
+	(*args)["tldIcannManaged"] = dn.IcannManagedTLD
+	(*args)["labels"] = strSliceToInterface(dn.Labels)
+
+	return args, nil, nil
+}
 
 func (d *lumiDns) id() (string, error) {
 	id, _ := d.Fqdn()
