@@ -21,14 +21,9 @@ func VerifyConfig(endpoint *transports.TransportConfig) (*winrm.Endpoint, error)
 		return nil, errors.New("only winrm backend for winrm transport supported")
 	}
 
-	p, err := endpoint.IntPort()
-	if err != nil {
-		return nil, errors.New("port is not a valid number " + endpoint.Port)
-	}
-
 	winrmEndpoint := &winrm.Endpoint{
 		Host:     endpoint.Host,
-		Port:     p,
+		Port:     int(endpoint.Port),
 		Insecure: endpoint.Insecure,
 		HTTPS:    true,
 		Timeout:  time.Duration(0),

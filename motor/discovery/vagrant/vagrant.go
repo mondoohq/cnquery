@@ -1,7 +1,6 @@
 package vagrant
 
 import (
-	"strconv"
 	"strings"
 
 	"github.com/cockroachdb/errors"
@@ -126,7 +125,7 @@ func newVagrantAsset(sshConfig *VagrantVmSSHConfig, rootTransportConfig *transpo
 		Host:     sshConfig.HostName,
 		Insecure: strings.ToLower(sshConfig.StrictHostKeyChecking) == "no",
 
-		Port: strconv.Itoa(sshConfig.Port),
+		Port: int32(sshConfig.Port),
 		Sudo: rootTransportConfig.Sudo,
 	}
 

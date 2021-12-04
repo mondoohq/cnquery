@@ -1,6 +1,7 @@
 package resources_test
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -18,10 +19,13 @@ func vsphereTestQuery(t *testing.T, query string) []*llx.RawResult {
 	require.NoError(t, err)
 	defer vs.Close()
 
+	port, err := strconv.Atoi(vs.Server.URL.Port())
+	require.NoError(t, err)
+
 	trans, err := vsphere.New(&transports.TransportConfig{
 		Backend:  transports.TransportBackend_CONNECTION_VSPHERE,
 		Host:     vs.Server.URL.Hostname(),
-		Port:     vs.Server.URL.Port(),
+		Port:     int32(port),
 		Insecure: true, // allows self-signed certificates
 		Credentials: []*vault.Credential{
 			{

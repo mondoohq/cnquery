@@ -1,8 +1,6 @@
 package arista
 
 import (
-	"strconv"
-
 	"github.com/aristanetworks/goeapi"
 	"github.com/cockroachdb/errors"
 	"github.com/spf13/afero"
@@ -15,13 +13,9 @@ var _ transports.Transport = (*Transport)(nil)
 var _ transports.TransportPlatformIdentifier = (*Transport)(nil)
 
 func New(tc *transports.TransportConfig) (*Transport, error) {
-	port := goeapi.UseDefaultPortNum
-	if len(tc.Port) > 0 {
-		p, err := strconv.Atoi(tc.Port)
-		if err != nil {
-			return nil, errors.Wrap(err, "could not parse port")
-		}
-		port = p
+	port := tc.Port
+	if port == 0 {
+		port = goeapi.UseDefaultPortNum
 	}
 
 	if len(tc.Credentials) == 0 {
@@ -38,7 +32,7 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 	// the goeapi is always running in insecure mode since it does not verify the server
 	// setup which allows potential man-in-the-middle attacks, consider opening a PR
 	// https://github.com/aristanetworks/goeapi/blob/7944bcedaf212bb60e5f9baaf471469f49113f47/eapilib.go#L527
-	node, err := goeapi.Connect("https", tc.Host, c.User, string(c.Secret), port)
+	node, err := goeapi.Connect("https", tc.Host, c.User, string(c.Secret), int(port))
 	if err != nil {
 		return nil, err
 	}

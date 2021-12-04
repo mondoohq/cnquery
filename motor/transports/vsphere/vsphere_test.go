@@ -1,6 +1,7 @@
 package vsphere
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,10 +16,14 @@ func TestVSphereTransport(t *testing.T) {
 	require.NoError(t, err)
 	defer vs.Close()
 
+	port := vs.Server.URL.Port()
+	portNum, err := strconv.Atoi(port)
+	require.NoError(t, err)
+
 	trans, err := New(&transports.TransportConfig{
 		Backend:  transports.TransportBackend_CONNECTION_VSPHERE,
 		Host:     vs.Server.URL.Hostname(),
-		Port:     vs.Server.URL.Port(),
+		Port:     int32(portNum),
 		Insecure: true, // allows self-signed certificates
 		Credentials: []*vault.Credential{
 			{

@@ -1,9 +1,7 @@
 package network
 
 import (
-	"net/url"
 	"strconv"
-	"strings"
 
 	"github.com/cockroachdb/errors"
 	"github.com/spf13/afero"
@@ -13,44 +11,23 @@ import (
 
 type Transport struct {
 	FQDN   string
-	Port   int
+	Port   int32
 	Scheme string
 	Family []string
 }
 
 func New(conf *transports.TransportConfig) (*Transport, error) {
-	url, err := url.Parse(conf.Host)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse target URL")
+	family := []string{"network"}
+	if _, ok := conf.Options["tls"]; ok {
+		family = append(family, "tls")
 	}
 
-	// TODO: Processing the family here needs a bit more work. It is unclear
-	// where this will evolve for now, so let's keep watching it.
-	// So far we know:
-	// - all of them are in the `api` family (also their kind is set this way)
-	// - multiple families on one service are possible (eg: http, tls, tcp)
-	res := &Transport{
-		Scheme: url.Scheme,
-		Family: strings.Split(url.Scheme, "+"),
-	}
-	// TODO: detect tcp, udp, unix
-	res.Family = append(res.Family, "api")
-
-	hostBits := strings.Split(url.Host, ":")
-	switch len(hostBits) {
-	case 1:
-		res.FQDN = hostBits[0]
-	case 2:
-		res.FQDN = hostBits[0]
-		res.Port, err = strconv.Atoi(hostBits[1])
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to parse port in target URL")
-		}
-	default:
-		return nil, errors.New("malformed target URL, host cannot be parsed")
-	}
-
-	return res, nil
+	return &Transport{
+		FQDN:   conf.Host,
+		Port:   conf.Port,
+		Scheme: conf.Options["scheme"],
+		Family: family,
+	}, nil
 }
 
 func (t *Transport) Identifier() (string, error) {
@@ -61,7 +38,7 @@ func (t *Transport) URI() string {
 	if t.Port == 0 {
 		return t.Scheme + "://" + t.FQDN
 	}
-	return t.Scheme + "://" + t.FQDN + ":" + strconv.Itoa(t.Port)
+	return t.Scheme + "://" + t.FQDN + ":" + strconv.Itoa(int(t.Port))
 }
 
 func (t *Transport) Supports(mode string) bool {
