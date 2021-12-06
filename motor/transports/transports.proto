@@ -51,6 +51,7 @@ enum Kind {
   KIND_PROCESS = 7;
   KIND_API = 8;
   KIND_BARE_METAL = 9;
+  KIND_NETWORK = 10;
 }
 
 message TransportConfig {

@@ -72,8 +72,8 @@ func (d *Detector) Platform() (*Platform, error) {
 			Title:   "Arista EOS",
 			Arch:    v.Architecture,
 			Release: v.Version,
-			Kind:    d.transport.Kind(),
-			Runtime: d.transport.Runtime(),
+			Kind:    pt.Kind(),
+			Runtime: pt.Runtime(),
 		}, nil
 	case *aws.Transport:
 		return &Platform{
@@ -107,8 +107,8 @@ func (d *Detector) Platform() (*Platform, error) {
 		return &Platform{
 			Name:    "ipmi",
 			Title:   "Ipmi",
-			Kind:    d.transport.Kind(),
-			Runtime: d.transport.Runtime(),
+			Kind:    pt.Kind(),
+			Runtime: pt.Runtime(),
 		}, nil
 	case *equinix.Transport:
 		return &Platform{
@@ -162,9 +162,9 @@ func (d *Detector) Platform() (*Platform, error) {
 		return &Platform{
 			Name:    pt.Scheme,
 			Title:   "Network API",
-			Kind:    transports.Kind_KIND_API,
+			Kind:    pt.Kind(),
 			Family:  pt.Family,
-			Runtime: "", // Not sure what we want to set here?
+			Runtime: pt.Runtime(), // Not sure what we want to set here?
 		}, nil
 	default:
 		var resolved bool
