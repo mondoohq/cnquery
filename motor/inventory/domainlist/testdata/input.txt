@@ -1,0 +1,8 @@
+example.com:443
+
+my-example.com:4443
+sub.example.com:8443
+my-example.com:8443
+
+# this is a comment
+anotherdomain.com
