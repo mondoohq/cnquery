@@ -10,10 +10,11 @@ import (
 )
 
 type Transport struct {
-	FQDN   string
-	Port   int32
-	Scheme string
-	Family []string
+	FQDN    string
+	Port    int32
+	Scheme  string
+	Family  []string
+	Options map[string]string
 }
 
 func New(conf *transports.TransportConfig) (*Transport, error) {
@@ -23,15 +24,25 @@ func New(conf *transports.TransportConfig) (*Transport, error) {
 	}
 
 	return &Transport{
-		FQDN:   conf.Host,
-		Port:   conf.Port,
-		Scheme: conf.Options["scheme"],
-		Family: family,
+		FQDN:    conf.Host,
+		Port:    conf.Port,
+		Scheme:  conf.Options["scheme"],
+		Family:  family,
+		Options: conf.Options,
 	}, nil
 }
 
 func (t *Transport) Identifier() (string, error) {
-	return t.URI(), nil
+	host := t.FQDN
+	if t.Port != 0 {
+		host = t.FQDN + ":" + strconv.Itoa(int(t.Port))
+	}
+
+	if _, ok := t.Options["tls"]; ok {
+		return "//platformid.api.mondoo.app/runtime/network/tls/" + host, nil
+	} else {
+		return "//platformid.api.mondoo.app/runtime/network/host/" + host, nil
+	}
 }
 
 func (t *Transport) URI() string {
@@ -71,7 +82,7 @@ func (t *Transport) Capabilities() transports.Capabilities {
 }
 
 func (t *Transport) Kind() transports.Kind {
-	return transports.Kind_KIND_API
+	return transports.Kind_KIND_NETWORK
 }
 
 func (t *Transport) PlatformIdDetectors() []transports.PlatformIdDetector {

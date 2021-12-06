@@ -20,6 +20,8 @@ func (x Kind) Name() string {
 		return "api"
 	case Kind_KIND_BARE_METAL:
 		return "baremetal"
+	case Kind_KIND_NETWORK:
+		return "network"
 	case Kind_KIND_UNKNOWN:
 		fallthrough
 	default:
