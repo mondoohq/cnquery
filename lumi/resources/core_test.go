@@ -1034,6 +1034,10 @@ func TestArray(t *testing.T) {
 			0,
 			[]interface{}{int64(1), int64(1)},
 		},
+		{
+			"['a','b'] != /c/",
+			0, true,
+		},
 	})
 }
 
