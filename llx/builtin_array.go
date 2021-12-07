@@ -770,6 +770,10 @@ func compileArrayOpArray(op string) func(types.Type, types.Type) (string, error)
 			return op, nil
 		}
 
+		if right == types.Nil {
+			return op + string(types.Nil), nil
+		}
+
 		return "", errors.New("don't know how to compile " + left.Label() + " " + op + " " + right.Label())
 	}
 }
@@ -893,6 +897,28 @@ func stringarrayNotStringarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, re
 }
 
 // []T -- T
+
+func arrayCmpNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return BoolTrue, 0, nil
+	}
+	v := bind.Value.([]interface{})
+	if v == nil {
+		return BoolTrue, 0, nil
+	}
+	return BoolFalse, 0, nil
+}
+
+func arrayNotNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return BoolFalse, 0, nil
+	}
+	v := bind.Value.([]interface{})
+	if v == nil {
+		return BoolFalse, 0, nil
+	}
+	return BoolTrue, 0, nil
+}
 
 func boolarrayCmpBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
