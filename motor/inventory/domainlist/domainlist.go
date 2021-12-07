@@ -48,6 +48,12 @@ func (in *Inventory) ToV1Inventory() *v1.Inventory {
 
 	for i := range in.Hosts {
 		host := in.Hosts[i]
+		name := host
+
+		// prefix with host to ensure the connection parsing works as expected
+		if !strings.Contains(host, "//") {
+			host = "host://" + host
+		}
 
 		tc, err := r.ParseConnectionURL(host, "", "")
 		if err != nil {
@@ -55,7 +61,7 @@ func (in *Inventory) ToV1Inventory() *v1.Inventory {
 		}
 
 		out.Spec.Assets = append(out.Spec.Assets, &asset.Asset{
-			Name:        host,
+			Name:        name,
 			Connections: []*transports.TransportConfig{tc},
 		})
 	}
