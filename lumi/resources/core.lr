@@ -1543,7 +1543,7 @@ aws.accessAnalyzer {
 }
 
 // AWS Access Analyzer resource provides an object representing an individual AWS IAM Access Analyzer configuration
-aws.accessanalyzer.analyzer {
+private aws.accessanalyzer.analyzer {
   // ARN for the analyzer
   arn string
   // name for the analyzer
@@ -1570,7 +1570,7 @@ aws.efs {
   filesystems() []aws.efs.filesystem
 }
 
-aws.efs.filesystem {
+private aws.efs.filesystem {
   // name of the filesystem
   name string
   // id of the filesystem
@@ -1772,7 +1772,7 @@ aws.iam.group {
 }
 
 // AWS IAM Virtual MFA Device
-aws.iam.virtualmfadevice {
+private aws.iam.virtualmfadevice {
   // serial number for the mfa device
   serialNumber string
   // time when the mfa device was enabled
@@ -1789,7 +1789,7 @@ aws.sagemaker {
   notebookInstances() []aws.sagemaker.notebookinstance
 }
 
-aws.sagemaker.notebookinstance {
+private aws.sagemaker.notebookinstance {
   // ARN for the notebook instance
   arn string
   // name of the notebook instance
@@ -1802,7 +1802,7 @@ aws.sagemaker.notebookinstance {
   tags map[string]string
 }
 
-aws.sagemaker.notebookinstance.details {
+private aws.sagemaker.notebookinstance.details {
   // ARN for the notebook instance
   arn string
   // KMS key used to encrypt data
@@ -1811,7 +1811,7 @@ aws.sagemaker.notebookinstance.details {
   directInternetAccess string
 }
 
-aws.sagemaker.endpoint {
+private aws.sagemaker.endpoint {
   // ARN for the endpoint
   arn string
   // name of the endpoint
@@ -1831,7 +1831,7 @@ aws.sns {
 }
 
 // AWS SNS Topic
-aws.sns.topic {
+private aws.sns.topic {
   // SNS topic ARN
   arn string
   // region where the sns topic exists
@@ -1843,7 +1843,7 @@ aws.sns.topic {
 }
 
 // AWS SNS Subscription
-aws.sns.subscription {
+private aws.sns.subscription {
   // ARN of the subscription
   arn string
   // protocol value for the subscription
@@ -1857,7 +1857,7 @@ aws.es {
 }
 
 // Amazon Elasticsearch Service
-aws.es.domain {
+private aws.es.domain {
   // ARN for the elasticsearch domain
   arn string
   // denotes whether encryption at rest is enabled
@@ -1881,7 +1881,7 @@ aws.acm {
 }
 
 // AWS Certificate Manager Certificate resource provides an object representing an individual ACM certificate
-aws.acm.certificate {
+private aws.acm.certificate {
   // ARN for the certificate
   arn string
   // time before which the certificate is not valid
@@ -1909,7 +1909,7 @@ aws.autoscaling {
 }
 
 // AWS Auto Scaling Group
-aws.autoscaling.group {
+private aws.autoscaling.group {
   // arn for the autoscaling group
   arn string
   // name of the group
@@ -1931,7 +1931,7 @@ aws.elb {
 }
 
 // AWS Elastic Load Balancing Load Balancer
-aws.elb.loadbalancer {
+private aws.elb.loadbalancer {
   // ARN for the load balancer
   arn string
   // dns name for the load balancer
@@ -1953,7 +1953,7 @@ aws.codebuild {
 }
 
 // AWS Codebuild Project
-aws.codebuild.project {
+private aws.codebuild.project {
   // ARN for the project
   arn string
   // description of the project
@@ -1977,7 +1977,7 @@ aws.guardduty {
 }
 
 // Amazon GuardDuty Detector
-aws.guardduty.detector {
+private aws.guardduty.detector {
   // unique id for the detector
   id string
   // region for the detector
@@ -1997,7 +1997,7 @@ aws.securityhub {
 }
 
 // AWS Security Hub
-aws.securityhub.hub {
+private aws.securityhub.hub {
   // ARN for the security hub
   arn string
   // date and time when the hub was enabled
@@ -2011,7 +2011,7 @@ aws.secretsmanager {
 }
 
 // Secret in AWS Secrets Manager
-aws.secretsmanager.secret {
+private aws.secretsmanager.secret {
   // ARN for the secret
   arn string
   // denotes whether rotation is enabled for the secret
@@ -2029,7 +2029,7 @@ aws.emr {
 }
 
 // Amazon EMR Cluster
-aws.emr.cluster {
+private aws.emr.cluster {
   // ARN for the cluster
   arn string
   // name of the cluster
@@ -2059,7 +2059,7 @@ aws.cloudwatch {
 }
 
 // AWS CloudWatch Alarms
-aws.cloudwatch.metricsalarm {
+private aws.cloudwatch.metricsalarm {
   // arn for the metric alarm
   arn string
   // metric name associated with the alarm
@@ -2083,7 +2083,7 @@ aws.cloudwatch.metricsalarm {
 }
 
 // AWS CloudWatch Metric
-aws.cloudwatch.metric {
+private aws.cloudwatch.metric {
   // name of the metric
   name string
   // namespace for the metric
@@ -2095,7 +2095,7 @@ aws.cloudwatch.metric {
 }
 
 // AWS CloudWatch Log Groups
-aws.cloudwatch.loggroup {
+private aws.cloudwatch.loggroup {
   // ARN of the log group
   arn string
   // name of the log group
@@ -2107,7 +2107,7 @@ aws.cloudwatch.loggroup {
 }
 
 // AWS CloudWatch Log Group Metrics Filter
-aws.cloudwatch.loggroup.metricsfilter {
+private aws.cloudwatch.loggroup.metricsfilter {
   // unique id for the metric
   id string
   // filter name associated with metric
@@ -2125,7 +2125,7 @@ aws.cloudtrail {
 }
 
 // AWS Cloudtrail Trail
-aws.cloudtrail.trail {
+private aws.cloudtrail.trail {
   // ARN of the trail
   arn string
   // name of the trail
@@ -2163,7 +2163,7 @@ aws.kms {
 }
 
 // AWS KMS Key
-aws.kms.key {
+private aws.kms.key {
   // unique identifier for the key
   id string
   // arn of the key
@@ -2190,7 +2190,7 @@ aws.s3control {
 }
 
 // AWS S3 Bucket
-aws.s3.bucket {
+private aws.s3.bucket {
   // arn of the bucket
   arn string
   // name of the bucket
@@ -2228,7 +2228,7 @@ aws.s3.bucket {
 }
 
 // AWS S3 Bucket Grant
-aws.s3.bucket.grant {
+private aws.s3.bucket.grant {
   // id of the bucket grant
   id string
   // name for the bucket grant
@@ -2240,7 +2240,7 @@ aws.s3.bucket.grant {
 }
 
 // AWS S3 Bucket CORS Rule
-aws.s3.bucket.corsrule {
+private aws.s3.bucket.corsrule {
   // name of the rule
   name string
   // list of allowed headers
@@ -2256,7 +2256,7 @@ aws.s3.bucket.corsrule {
 }
 
 // AWS S3 Bucket Policy
-aws.s3.bucket.policy {
+private aws.s3.bucket.policy {
   // name for the policy
   name string
   // document for the policy
@@ -2282,7 +2282,7 @@ aws.dynamodb {
 }
 
 // AWS DynamoDB Limits
-aws.dynamodb.limit {
+private aws.dynamodb.limit {
   // ARN representing the account + region where the limit applies 
   arn string
   // region where the limits apply
@@ -2298,7 +2298,7 @@ aws.dynamodb.limit {
 }
 
 // AWS DynamoDB Global Table
-aws.dynamodb.globaltable {
+private aws.dynamodb.globaltable {
   // ARN for the global table
   arn string
   // table name
@@ -2310,7 +2310,7 @@ aws.dynamodb.globaltable {
 }
 
 // AWS DynamoDB Table
-aws.dynamodb.table {
+private aws.dynamodb.table {
   // ARN for the table
   arn string
   // table name
@@ -2338,7 +2338,7 @@ aws.rds {
 }
 
 // AWS RDS Cluster
-aws.rds.dbcluster {
+private aws.rds.dbcluster {
   // ARN for the db cluster
   arn string
   // region where the db cluster exists
@@ -2354,7 +2354,7 @@ aws.rds.dbcluster {
 }
 
 // AWS RDS Snapshot
-aws.rds.snapshot {
+private aws.rds.snapshot {
   // ARN of the snapshot
   arn string
   // id of the snapshot
@@ -2374,7 +2374,7 @@ aws.rds.snapshot {
 }
 
 // AWS RDS Database Instance
-aws.rds.dbinstance {
+private aws.rds.dbinstance {
   // ARN for the db instance
   arn string
   // name of the db instance
@@ -2416,7 +2416,7 @@ aws.redshift {
 }
 
 // AWS Redshift Cluster
-aws.redshift.cluster {
+private aws.redshift.cluster {
   // ARN for the cluster
   arn string
   // denotes whether or not the cluster is encrypted
@@ -2457,7 +2457,7 @@ aws.apigateway {
 }
 
 // Amazon API Gateway REST API resource provides an object representing an individual configured API Gateway REST API
-aws.apigateway.restapi {
+private aws.apigateway.restapi {
   // ARN for the rest api
   arn string
   // unique id for the rest api
@@ -2477,7 +2477,7 @@ aws.apigateway.restapi {
 }
 
 // Amazon API Gateway REST API resource provides an object representing an individual stage configured on an API Gateway 
-aws.apigateway.stage {
+private aws.apigateway.stage {
   // ARN for the rest api stage
   arn string
   // name for the stage
@@ -2499,7 +2499,7 @@ aws.lambda {
 }
 
 // AWS Lambda Function
-aws.lambda.function {
+private aws.lambda.function {
   // arn of the function
   arn string
   // name of the function
@@ -2538,7 +2538,7 @@ aws.ec2 {
   networkAcls() []aws.ec2.networkacl
 }
 
-aws.ec2.networkacl {
+private aws.ec2.networkacl {
   // ARN for the network ACL
   arn string
   // ID for the network ACL 
@@ -2549,7 +2549,7 @@ aws.ec2.networkacl {
   entries() []aws.ec2.networkacl.entry
 }
 
-aws.ec2.networkacl.entry {
+private aws.ec2.networkacl.entry {
   // denotes whether this is an entry for egress rules
   egress bool
   // allow or deny
@@ -2560,17 +2560,17 @@ aws.ec2.networkacl.entry {
   id string
 }
 
- aws.ec2.networkacl.entry.portrange {
-   // starting port for port range
-   from int
-   // ending port for port range
-   to int
-   // id for the entry port range
-   id string
- }
+private aws.ec2.networkacl.entry.portrange {
+  // starting port for port range
+  from int
+  // ending port for port range
+  to int
+  // id for the entry port range
+  id string
+}
 
 // Amazon EC2 VPN Connection
-aws.ec2.vpnconnection {
+private aws.ec2.vpnconnection {
   // ARN for the vpn connection
   arn string
   // list of telemetry data for the vpn
@@ -2578,14 +2578,14 @@ aws.ec2.vpnconnection {
 }
 
 // Amazon EC2 VPN Telemetry for a VPN tunnel.
-aws.ec2.vgwtelemetry {
+private aws.ec2.vgwtelemetry {
   outsideIpAddress string
   status string
   statusMessage string
 }
 
 // Amazon EC2 internet gateway for use with a VPC
-aws.ec2.internetgateway {
+private aws.ec2.internetgateway {
   // ARN for the gateway
   arn string
   // id for the gateway
@@ -2595,7 +2595,7 @@ aws.ec2.internetgateway {
 }
 
 // AWS EC2 Snapshot
-aws.ec2.snapshot {
+private aws.ec2.snapshot {
   // arn for the snapshot
   arn string
   // id for the snapshot
@@ -2613,7 +2613,7 @@ aws.ec2.snapshot {
 }
 
 // AWS EC2 Volume
-aws.ec2.volume {
+private aws.ec2.volume {
   // ARN for the ec2 volume
   arn string
   // id of the ec2 volume
@@ -2633,7 +2633,7 @@ aws.ec2.volume {
 }
 
 // AWS EC2 Instance
-aws.ec2.instance {
+private aws.ec2.instance {
   // arn for the instance
   arn string
   // instance id for the instance
@@ -2679,7 +2679,7 @@ aws.ec2.instance {
 }
 
 // AWS EC2 Image
-aws.ec2.image {
+private aws.ec2.image {
   // ARN for the AMI
   arn string
   // id of the image
@@ -2693,7 +2693,7 @@ aws.ec2.image {
 }
 
 // AWS EC2 Instance Device
-aws.ec2.instance.device {
+private aws.ec2.instance.device {
   // boolean to denote whether volume should be deleted on instance termination
   deleteOnTermination bool
   // status of the device
@@ -2705,7 +2705,7 @@ aws.ec2.instance.device {
 }
 
 // AWS VPC resource
-aws.vpc {
+private aws.vpc {
   // arn of the vpc
   arn string
   // id of the vpc
@@ -2725,7 +2725,7 @@ aws.vpc {
 }
 
 // Amazon Virtual Private Cloud Flow Log
-aws.vpc.flowlog {
+private aws.vpc.flowlog {
   // unique id of the flowlog
   id string
   // vpc the flowlog exists in
@@ -2747,7 +2747,7 @@ aws.vpc.routetable {
 }
 
 // AWS EC2 Security Group
-aws.ec2.securitygroup {
+private aws.ec2.securitygroup {
   // security group arn
   arn string
   // security group id
@@ -2771,7 +2771,7 @@ aws.ec2.securitygroup {
 }
 
 // AWS EC2 Security Group IP Permission
-aws.ec2.securitygroup.ippermission {
+private aws.ec2.securitygroup.ippermission {
   // unique id for the ip permission
   id string
   // start of port range for tcp/udp protocols
@@ -2795,7 +2795,7 @@ aws.config {
 }
 
 // AWS Config Rule
-aws.config.rule {
+private aws.config.rule {
   // ARN for the config rule
   arn string
   // state of the rule
@@ -2805,7 +2805,7 @@ aws.config.rule {
 }
 
 // AWS Config Recorder
-aws.config.recorder {
+private aws.config.recorder {
   // name of the recorder
   name string
   // arn of the IAM role used to describe the AWS resources associated with the account
