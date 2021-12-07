@@ -766,7 +766,11 @@ func compileArrayOpArray(op string) func(types.Type, types.Type) (string, error)
 			return name, nil
 		}
 
-		return op, nil
+		if right.IsArray() {
+			return op, nil
+		}
+
+		return "", errors.New("don't know how to compile " + left.Label() + " " + op + " " + right.Label())
 	}
 }
 

@@ -214,7 +214,7 @@ func compileComparable(c *compiler, id string, call *parser.Call, res *llx.CodeB
 	}
 
 	if h.Compiler != nil {
-		name, err = h.Compiler(left.Type(res.Code), types.Type(right.Type))
+		name, err = h.Compiler(left.Type(res.Code), types.Type(rt))
 		if err != nil {
 			return types.Nil, err
 		}
