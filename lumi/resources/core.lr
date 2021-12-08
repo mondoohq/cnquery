@@ -1092,6 +1092,8 @@ certificate {
   isRevoked() bool
   // The time at which this certificate was revoked
   revokedAt() time
+  // Indicates if the certificate is valid by checking its chain
+  isVerified() bool
 }
 
 // Private Key Resource
