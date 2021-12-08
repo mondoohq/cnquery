@@ -17,7 +17,8 @@ var goCmd = &cobra.Command{
 	Long:  `parse an LR file and convert it to go, saving it in the same location with the suffix .go`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		raw, err := ioutil.ReadFile(args[0])
+		file := args[0]
+		raw, err := ioutil.ReadFile(file)
 		if err != nil {
 			log.Error().Err(err)
 			return
