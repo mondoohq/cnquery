@@ -73,6 +73,7 @@ message CodeBundle {
   map<string,string> props = 5; // name + type
   string version = 20;
   map<string,AssertionMessage> assertions = 21;
+  string min_mondoo_version = 22;
 }
 
 message Result {

@@ -6,12 +6,14 @@ import (
 	"sort"
 	"strconv"
 
+	vrs "github.com/hashicorp/go-version"
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo"
 	"go.mondoo.io/mondoo/leise/parser"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/lumi/resources"
 	"go.mondoo.io/mondoo/types"
 )
 
@@ -696,6 +698,9 @@ func (c *compiler) compileBoundIdentifier(id string, binding *binding, call *par
 			if call != nil && len(call.Function) > 0 {
 				return true, types.Nil, errors.New("cannot call resource field with arguments yet")
 			}
+
+			c.Result.MinMondooVersion = getMinMondooVersion(c.Result.MinMondooVersion, typ.ResourceName(), id)
+
 			c.Result.Code.AddChunk(&llx.Chunk{
 				Call: llx.Chunk_FUNCTION,
 				Id:   id,
@@ -741,6 +746,8 @@ func (c *compiler) compileResource(id string, calls []*parser.Call) (bool, []*pa
 		call = calls[0]
 		calls = calls[1:]
 	}
+
+	c.Result.MinMondooVersion = getMinMondooVersion(c.Result.MinMondooVersion, id, "")
 
 	typ, err := c.addResource(id, resource, call)
 	return true, calls, typ, err
@@ -1271,7 +1278,6 @@ func (c *compiler) CompileParsed(ast *parser.AST) error {
 
 	c.Result.Code.UpdateID()
 	c.updateEntrypoints()
-
 	return nil
 }
 
@@ -1350,8 +1356,9 @@ func CompileAST(ast *parser.AST, schema *lumi.Schema, props map[string]*llx.Prim
 			Labels: &llx.Labels{
 				Labels: map[string]string{},
 			},
-			Props:   map[string]string{},
-			Version: mondoo.ApiVersion(),
+			Props:            map[string]string{},
+			Version:          mondoo.ApiVersion(),
+			MinMondooVersion: "",
 		},
 		vars:       map[string]variable{},
 		parent:     nil,
@@ -1409,4 +1416,28 @@ func MustCompile(input string, schema *lumi.Schema, props map[string]*llx.Primit
 		log.Fatal().Err(err).Msg("Failed to compile")
 	}
 	return res
+}
+
+func getMinMondooVersion(current string, resource string, field string) string {
+	rd := resources.ResourceDocs.Resources[resource]
+	var minverDocs string
+	if rd != nil {
+		minverDocs = rd.MinMondooVersion
+		if field != "" {
+			f := rd.Fields[field]
+			if f != nil && f.MinMondooVersion != "" {
+				minverDocs = f.MinMondooVersion
+			}
+		}
+		if current != "" {
+			//If the field has a newer version requirement than the current code bundle
+			//then update the version requirement to the newest version required.
+			docMin, err := vrs.NewVersion(minverDocs)
+			curMin, err1 := vrs.NewVersion(current)
+			if docMin != nil && err == nil && err1 == nil && docMin.LessThan(curMin) {
+				return current
+			}
+		}
+	}
+	return minverDocs
 }

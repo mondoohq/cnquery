@@ -16,10 +16,13 @@ import (
 
 func init() {
 	docsYamlCmd.Flags().String("docs-file", "", "optional file path to write content to a file")
+	docsYamlCmd.Flags().String("version", defaultVersion, "optional version to mark resource, default is latest")
 	docsCmd.AddCommand(docsYamlCmd)
 	docsCmd.AddCommand(docsGoCmd)
 	rootCmd.AddCommand(docsCmd)
 }
+
+const defaultVersion = "latest"
 
 var docsCmd = &cobra.Command{
 	Use: "docs",
@@ -53,13 +56,24 @@ var docsYamlCmd = &cobra.Command{
 			log.Fatal().Err(err).Msg("invalid argument for `file`")
 		}
 
+		version, err := cmd.Flags().GetString("version")
+		if err != nil {
+			log.Fatal().Err(err).Msg("invalid argument for `version`")
+		}
+
 		d := docs.LrDocs{
 			Resources: map[string]*docs.LrDocsEntry{},
 		}
 
+		fields := map[string][]*lr.Field{}
+		isPrivate := map[string]bool{}
 		for i := range res.Resources {
 			id := res.Resources[i].ID
+			isPrivate[id] = res.Resources[i].IsPrivate
 			d.Resources[id] = nil
+			if res.Resources[i].Body != nil {
+				fields[id] = res.Resources[i].Body.Fields
+			}
 		}
 
 		// default behaviour is to output the result on cli
@@ -95,9 +109,12 @@ var docsYamlCmd = &cobra.Command{
 			}
 		}
 
-		// ensure default values are set
+		// ensure default values and fields are set
 		for k := range d.Resources {
-			d.Resources[k] = ensureDefaults(k, d.Resources[k])
+			d.Resources[k] = ensureDefaults(k, d.Resources[k], version)
+			mergeFields(version, d.Resources[k], fields[k])
+			//Merge in other doc fields from core.lr
+			d.Resources[k].IsPrivate = isPrivate[k]
 		}
 
 		// generate content
@@ -129,20 +146,65 @@ var platformMapping = map[string][]string{
 	"terraform": {"terraform"},
 }
 
-func ensureDefaults(id string, entry *docs.LrDocsEntry) *docs.LrDocsEntry {
+func ensureDefaults(id string, entry *docs.LrDocsEntry, version string) *docs.LrDocsEntry {
 	for k := range platformMapping {
+		if entry == nil {
+			entry = &docs.LrDocsEntry{}
+		}
+		if entry.MinMondooVersion == "" {
+			entry.MinMondooVersion = version
+		} else if entry.MinMondooVersion == defaultVersion && version != defaultVersion {
+			//Update to specified version if previously set to default
+			entry.MinMondooVersion = version
+		}
 		if strings.HasPrefix(id, k) {
-			if entry == nil {
-				entry = &docs.LrDocsEntry{}
-			}
-
 			entry.Platform = &docs.LrDocsPlatform{
 				Name: platformMapping[k],
 			}
 		}
 	}
-
 	return entry
+}
+
+func mergeFields(version string, entry *docs.LrDocsEntry, fields []*lr.Field) {
+	if entry == nil && len(fields) > 0 {
+		entry = &docs.LrDocsEntry{}
+		entry.Fields = map[string]*docs.LrDocsField{}
+	} else if entry == nil {
+		return
+	} else if entry.Fields == nil {
+		entry.Fields = map[string]*docs.LrDocsField{}
+	}
+	docFields := entry.Fields
+	for _, f := range fields {
+		if docFields[f.ID] == nil {
+			fDoc := &docs.LrDocsField{
+				MinMondooVersion: version,
+			}
+			entry.Fields[f.ID] = fDoc
+		} else if entry.Fields[f.ID].MinMondooVersion == "latest" && version != "latest" {
+			entry.Fields[f.ID].MinMondooVersion = version
+		}
+		//Scrub field version if same as resource
+		if entry.Fields[f.ID].MinMondooVersion == entry.MinMondooVersion {
+			entry.Fields[f.ID].MinMondooVersion = ""
+		}
+	}
+}
+
+func extractComments(raw []string) (string, string) {
+	if len(raw) == 0 {
+		return "", ""
+	}
+
+	for i := range raw {
+		raw[i] = strings.Trim(raw[i][2:], " \t\n")
+	}
+
+	title, rest := raw[0], raw[1:]
+	desc := strings.Join(rest, " ")
+
+	return title, desc
 }
 
 var docsGoCmd = &cobra.Command{

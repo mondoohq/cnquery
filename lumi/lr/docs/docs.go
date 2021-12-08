@@ -36,15 +36,25 @@ type LrDocsEntry struct {
 	// default maturity is public if nothing is provided
 	Maturity string `json:"maturity,omitempty"`
 	// this is just an indicator, we may want to replace this with native lumi resource platform information
-	Platform  *LrDocsPlatform      `json:"platform,omitempty"`
-	Docs      *LrDocsDocumentation `json:"docs,omitempty"`
-	Resources []LrDocsRefs         `json:"resources ,omitempty"`
-	Refs      []LrDocsRefs         `json:"refs,omitempty"`
-	Snippets  []LrDocsSnippet      `json:"snippets,omitempty"`
+	Platform         *LrDocsPlatform         `json:"platform,omitempty"`
+	Docs             *LrDocsDocumentation    `json:"docs,omitempty"`
+	Resources        []LrDocsRefs            `json:"resources,omitempty"`
+	Fields           map[string]*LrDocsField `json:"fields,omitEmpty"`
+	Refs             []LrDocsRefs            `json:"refs,omitempty"`
+	Snippets         []LrDocsSnippet         `json:"snippets,omitempty"`
+	IsPrivate        bool                    `json:"is_private,omitempty"`
+	MinMondooVersion string                  `json:"min_mondoo_version,omitempty"`
 }
 
 func (d LrDocsEntry) MarshalGo() string {
 	var sb strings.Builder
+
+	isPrivate := "false"
+	if d.IsPrivate {
+		isPrivate = "true"
+	}
+	sb.WriteString("IsPrivate: " + isPrivate + ",\n")
+	sb.WriteString("MinMondooVersion: " + strconv.Quote(d.MinMondooVersion) + ",\n")
 
 	if d.Maturity != "" {
 		sb.WriteString("Maturity: " + strconv.Quote(d.Maturity) + ",\n")
@@ -60,6 +70,19 @@ func (d LrDocsEntry) MarshalGo() string {
 		sb.WriteString(fmt.Sprintf(`Docs: &docs.LrDocsDocumentation{
 			%s
 		},`, d.Docs.MarshalGo()))
+	}
+
+	if len(d.Fields) > 0 {
+		sb.WriteString("Fields: map[string]*docs.LrDocsField{\n")
+		for k, v := range d.Fields {
+			if d.MinMondooVersion != "" && v.MinMondooVersion == "" {
+				v.MinMondooVersion = d.MinMondooVersion
+			}
+			sb.WriteString(`"` + k + `"` + ": {\n")
+			sb.WriteString(v.MarshalGo())
+			sb.WriteString("},\n")
+		}
+		sb.WriteString("},")
 	}
 
 	if len(d.Resources) > 0 {
@@ -126,6 +149,10 @@ type LrDocsRefs struct {
 	Url   string `json:"url,omitempty"`
 }
 
+type LrDocsField struct {
+	MinMondooVersion string `json:"min_mondoo_version,omitempty"`
+}
+
 func (d LrDocsRefs) MarshalGo() string {
 	var sb strings.Builder
 	sb.WriteString("Title: " + strconv.Quote(d.Title) + ",\n")
@@ -142,5 +169,11 @@ func (d LrDocsSnippet) MarshalGo() string {
 	var sb strings.Builder
 	sb.WriteString("Title: " + strconv.Quote(d.Title) + ",\n")
 	sb.WriteString("Query: " + strconv.Quote(d.Query) + ",\n")
+	return sb.String()
+}
+
+func (d LrDocsField) MarshalGo() string {
+	var sb strings.Builder
+	sb.WriteString("MinMondooVersion: " + strconv.Quote(d.MinMondooVersion) + ",\n")
 	return sb.String()
 }

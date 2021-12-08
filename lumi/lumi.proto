@@ -32,6 +32,7 @@ message ResourceInfo {
   string title = 22;
   string desc = 23;
   bool private = 24;
+  string min_mondoo_version = 25;
 }
 
 message Field {
@@ -42,4 +43,5 @@ message Field {
   string title = 20;
   string desc = 21;
   bool private = 22;
+  string min_mondoo_version = 23;
 }
