@@ -391,6 +391,10 @@ func (s *lumiCertificate) GetRevokedAt() (*time.Time, error) {
 	return nil, nil
 }
 
+func (s *lumiCertificate) GetIsVerified() (bool, error) {
+	return false, nil
+}
+
 func (r *lumiPkixName) id() (string, error) {
 	return r.Id()
 }

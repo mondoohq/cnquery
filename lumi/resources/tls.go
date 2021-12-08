@@ -90,8 +90,28 @@ func (s *lumiTls) id() (string, error) {
 	return "tls+" + socket.LumiResource().Id, nil
 }
 
-func parseCertificates(runtime *lumi.Runtime, findings *tlsshake.Findings, certificates []*x509.Certificate) ([]interface{}, error) {
-	var res []interface{}
+func parseCertificates(runtime *lumi.Runtime, domainName string, findings *tlsshake.Findings, certificates []*x509.Certificate) ([]interface{}, error) {
+	res := make([]interface{}, len(certificates))
+
+	verified := false
+	if len(certificates) != 0 {
+		intermediates := x509.NewCertPool()
+		for i := 1; i < len(certificates); i++ {
+			intermediates.AddCert(certificates[i])
+		}
+
+		verifyCerts, err := certificates[0].Verify(x509.VerifyOptions{
+			DNSName:       domainName,
+			Intermediates: intermediates,
+		})
+		if err != nil {
+			findings.Errors = append(findings.Errors, "Failed to verify certificate chain for "+certificates[0].Subject.String())
+		}
+
+		if len(verifyCerts) != 0 {
+			verified = verifyCerts[0][0].Equal(certificates[0])
+		}
+	}
 
 	for i := range certificates {
 		cert := certificates[i]
@@ -116,6 +136,7 @@ func parseCertificates(runtime *lumi.Runtime, findings *tlsshake.Findings, certi
 			"fingerprints", certFingerprints(cert),
 			"isRevoked", isRevoked,
 			"revokedAt", revokedAt,
+			"isVerified", verified,
 		)
 		if err != nil {
 			return nil, err
@@ -125,7 +146,7 @@ func parseCertificates(runtime *lumi.Runtime, findings *tlsshake.Findings, certi
 		lumiCert := raw.(Certificate)
 		lumiCert.LumiResource().Cache.Store("_cert", &lumi.CacheEntry{Data: cert})
 
-		res = append(res, lumiCert)
+		res[i] = lumiCert
 	}
 
 	return res, nil
@@ -180,12 +201,12 @@ func (s *lumiTls) GetParams(socket Socket, domainName string) (map[string]interf
 	}
 
 	// Create certificates
-	res["certificates"], err = parseCertificates(s.Runtime, &findings, findings.Certificates)
+	res["certificates"], err = parseCertificates(s.Runtime, domainName, &findings, findings.Certificates)
 	if err != nil {
 		return nil, err
 	}
 
-	res["non-sni-certificates"], err = parseCertificates(s.Runtime, &findings, findings.NonSNIcertificates)
+	res["non-sni-certificates"], err = parseCertificates(s.Runtime, domainName, &findings, findings.NonSNIcertificates)
 	if err != nil {
 		return nil, err
 	}
