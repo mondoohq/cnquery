@@ -245,14 +245,11 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, ref int32, lookup func(
 
 	chunk := l.Code[ref-1]
 
-	if chunk.Id == "if" && chunk.Function != nil && len(chunk.Function.Args) != 0 {
-		var ok bool
-		ref, ok = chunk.Function.Args[0].Ref()
-		if !ok {
-			// TODO: we might want to add error-handling around this case, even if it's rare
-			return nil
-		}
-		chunk = l.Code[ref-1]
+	if chunk.Id == "if" {
+		// Our current assessment structure cannot handle nesting very well
+		// We return nil here for now. Our result printing has good enough
+		// information to convey this nesting and what exactly went wrong
+		return nil
 	}
 
 	if chunk.Call == Chunk_PRIMITIVE {
