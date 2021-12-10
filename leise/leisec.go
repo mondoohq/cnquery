@@ -258,8 +258,15 @@ func (c *compiler) compileIfBlock(expressions []*parser.Expression, chunk *llx.C
 	chunk.Function.Args = append(chunk.Function.Args, llx.FunctionPrimitive(c.Result.Code.FunctionsIndex()))
 
 	if len(blockCompiler.Result.Code.Code) != 0 {
-		last := blockCompiler.Result.Code.Code[blockCompiler.Result.Code.ChunkIndex()-1]
-		t, ok := types.Enforce(types.Type(chunk.Function.Type), last.Type(code))
+		var typeToEnforce types.Type
+		if blockCompiler.Result.Code.SingleValue || c.Result.Code.SingleValue {
+			last := blockCompiler.Result.Code.Code[blockCompiler.Result.Code.ChunkIndex()-1]
+			typeToEnforce = last.Type(code)
+		} else {
+			typeToEnforce = types.Block
+		}
+
+		t, ok := types.Enforce(types.Type(chunk.Function.Type), typeToEnforce)
 		if !ok {
 			return types.Nil, errors.New("mismatched return type for child block of if-function; make sure all return types are the same")
 		}

@@ -533,7 +533,7 @@ func TestCompiler_If(t *testing.T) {
 		}, res.Code.Code[2])
 
 		assertFunction(t, "if", &llx.Function{
-			Type:    string(types.Int),
+			Type:    string(types.Block),
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(3),
@@ -551,7 +551,7 @@ func TestCompiler_If(t *testing.T) {
 		assertFunction(t, "mondoo", nil, res.Code.Code[0])
 
 		assertFunction(t, "if", &llx.Function{
-			Type:    string(types.Int),
+			Type:    string(types.Block),
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(1),
@@ -573,7 +573,7 @@ func TestCompiler_If(t *testing.T) {
 		assertFunction(t, "mondoo", nil, res.Code.Code[0])
 
 		assertFunction(t, "if", &llx.Function{
-			Type:    string(types.Int),
+			Type:    string(types.Block),
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.RefPrimitive(1),
