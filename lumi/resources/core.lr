@@ -297,6 +297,8 @@ file {
   user() user
   // Ownership information about the group
   group() group
+  // Denotes whether the path is empty
+  empty() bool
 }
 
 // Access permissions for a given file

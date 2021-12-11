@@ -107,6 +107,14 @@ func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
 	return "", lumi.NotReadyError{}
 }
 
+func (s *lumiFile) GetEmpty() (bool, error) {
+	path, _ := s.Path()
+
+	fs := s.Runtime.Motor.Transport.FS()
+	afs := &afero.Afero{Fs: fs}
+	return afs.IsEmpty(path)
+}
+
 func (s *lumiFile) GetExists() (bool, error) {
 	// TODO: we need to tell motor to watch this for us
 	path, _ := s.Path()
