@@ -359,7 +359,7 @@ pam.conf {
   files() []file
   // The raw PAM configuration (across all files)
   content(files) string
-  // A list of services that are configured via PAM - deprecated
+  // Deprecated: A list of services that are configured via PAM
   services(files) map[string][]string
   // A list of services with parsed entries that are configured via PAM
   entries(files) map[string][]pam.conf.serviceEntry
@@ -1314,7 +1314,7 @@ esxi.service {
   label string
   // Flag indicating whether the service is required and cannot be disabled
   required bool
-  // Deprecated. This flag is unimplemented and will always be set to false
+  // Deprecated: This flag is unimplemented and will always be set to false
   uninstallable bool
   // Flag indicating whether the service is currently running
   running bool
@@ -3867,8 +3867,10 @@ yum.repo {
   baseurl []string
   // indicator when the repository will expire
   expire string
-  // location of the repo configuration file
+  // Deprecated: location of the repo configuration file, use file.path
   filename string
+  // file of the repo configuration file
+  file file
   // revision for this repository
   revision string
   // packages in repository
