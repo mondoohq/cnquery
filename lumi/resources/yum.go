@@ -43,6 +43,11 @@ func (y *lumiYum) GetRepos() ([]interface{}, error) {
 
 	lumiRepos := make([]interface{}, len(repos))
 	for i, repo := range repos {
+		f, err := y.Runtime.CreateResource("file", "path", repo.Filename)
+		if err != nil {
+			return nil, err
+		}
+
 		lumiRepo, err := y.Runtime.CreateResource("yum.repo",
 			"id", repo.Id,
 			"name", repo.Name,
@@ -50,6 +55,7 @@ func (y *lumiYum) GetRepos() ([]interface{}, error) {
 			"baseurl", sliceInterface(repo.Baseurl),
 			"expire", repo.Expire,
 			"filename", repo.Filename,
+			"file", f,
 			"revision", repo.Revision,
 			"pkgs", repo.Pkgs,
 			"size", repo.Size,
