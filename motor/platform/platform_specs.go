@@ -236,6 +236,7 @@ var rhel = &PlatformResolver{
 	},
 }
 
+// The CentOS platform resolver finds CentOS and CentOS-like platforms alike alma and rocky
 var centos = &PlatformResolver{
 	Name:      "centos",
 	IsFamiliy: false,
@@ -244,6 +245,11 @@ var centos = &PlatformResolver{
 		if strings.Contains(di.Title, "CentOS") || di.Name == "centos" {
 			di.Name = "centos"
 			return true, nil
+		}
+
+		// adapt the name for rocky to align it with amazonlinux, almalinux etc.
+		if di.Name == "rocky" {
+			di.Name = "rockylinux"
 		}
 
 		// NOTE: CentOS 5 does not have /etc/centos-release
