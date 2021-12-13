@@ -175,6 +175,19 @@ func TestAlmaLinux8OSDetector(t *testing.T) {
 	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
 
+func TestRocky8OSDetector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-rocky8.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	di, err := detector.Platform()
+	require.NoError(t, err)
+
+	assert.Equal(t, "rockylinux", di.Name, "os name should be identified")
+	assert.Equal(t, "Rocky Linux", di.Title, "os title should be identified")
+	assert.Equal(t, "8.5", di.Release, "os version should be identified")
+	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
+}
+
 func TestUbuntu1204Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-ubuntu1204.toml")
 	assert.Nil(t, err, "was able to create the transport")
