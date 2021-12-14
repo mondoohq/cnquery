@@ -61,6 +61,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 				Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
 				Runtime: transports.RUNTIME_DOCKER_IMAGE,
 			},
+			State: asset.State_STATE_ONLINE,
 		}
 
 		// determine platform identifier
@@ -143,6 +144,8 @@ func (k *Resolver) container(tc *transports.TransportConfig, ded *dockerEngineDi
 			Kind:    transports.Kind_KIND_CONTAINER,
 			Runtime: transports.RUNTIME_DOCKER_CONTAINER,
 		},
+		State:  asset.State_STATE_ONLINE,
+		Labels: ci.Labels,
 	}, nil
 }
 
@@ -160,8 +163,11 @@ func (k *Resolver) images(tc *transports.TransportConfig, ded *dockerEngineDisco
 					Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
 					Runtime: transports.RUNTIME_DOCKER_IMAGE,
 				},
+				State:  asset.State_STATE_ONLINE,
+				Labels: ii.Labels,
 			}}, nil
 		}
+
 	}
 
 	// otherwise try to fetch the image from upstream
