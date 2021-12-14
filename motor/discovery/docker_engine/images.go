@@ -64,21 +64,22 @@ func (e *dockerEngineDiscovery) ListImages() ([]*asset.Asset, error) {
 					Host:    dImg.ID,
 				},
 			},
-			State:  asset.State_STATE_ONLINE,
-			Labels: make(map[string]string),
+			State: asset.State_STATE_ONLINE,
 		}
 
-		for key := range dImg.Labels {
-			asset.Labels[key] = dImg.Labels[key]
-		}
-
+		// update labels
 		labels := map[string]string{}
+		for key := range dImg.Labels {
+			labels[key] = dImg.Labels[key]
+		}
+
 		labels["mondoo.app/image-id"] = dImg.ID
 		// project/repo:5e664d0e,gcr.io/project/repo:5e664d0e
 		labels["docker.io/tags"] = strings.Join(dImg.RepoTags, ",")
 		// gcr.io/project/repo@sha256:5248...2bee
 		labels["docker.io/digests"] = strings.Join(dImg.RepoDigests, ",")
 		asset.Labels = labels
+
 		imgs[i] = asset
 	}
 
