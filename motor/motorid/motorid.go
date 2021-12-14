@@ -18,11 +18,16 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 )
 
-func GatherIDs(t transports.Transport, p *platform.Platform, idDetectors []transports.PlatformIdDetector) ([]string, error) {
+type AssetMetadata struct {
+	Name string
+}
+
+func GatherIDs(t transports.Transport, p *platform.Platform, idDetectors []transports.PlatformIdDetector) ([]string, AssetMetadata, error) {
 	if len(idDetectors) == 0 {
 		idDetectors = t.PlatformIdDetectors()
 	}
 
+	var assetMetadata AssetMetadata
 	var ids []string
 	for i := range idDetectors {
 		idDetector := idDetectors[i]
@@ -32,20 +37,29 @@ func GatherIDs(t transports.Transport, p *platform.Platform, idDetectors []trans
 			log.Debug().Err(err).Str("detector", string(idDetector)).Msg("could not determine platform id")
 			continue
 		}
-
 		if len(id) > 0 {
 			ids = append(ids, id)
 		}
+		assetMetadata = gatherAssetMetadataForPlatformId(id)
 	}
 
 	// if we found zero platform ids something went wrong
 	if len(ids) == 0 {
-		return nil, errors.New("could not determine a platform identifier")
+		return nil, assetMetadata, errors.New("could not determine a platform identifier")
 	}
 
 	log.Debug().Interface("id-detector", idDetectors).Strs("platform-ids", ids).Msg("detected platform ids")
 
-	return ids, nil
+	return ids, assetMetadata, nil
+}
+
+func gatherAssetMetadataForPlatformId(id string) AssetMetadata {
+	var assetMetadata AssetMetadata
+	if awsec2.IsValidMondooInstanceId(id) {
+		structId, _ := awsec2.ParseMondooInstanceID(id)
+		assetMetadata.Name = structId.Id
+	}
+	return assetMetadata
 }
 
 func GatherID(t transports.Transport, p *platform.Platform, idDetector transports.PlatformIdDetector) (string, error) {

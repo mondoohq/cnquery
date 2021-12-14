@@ -156,11 +156,15 @@ func newVagrantAsset(sshConfig *VagrantVmSSHConfig, rootTransportConfig *transpo
 		return nil, err
 	}
 
-	platformIds, err := motorid.GatherIDs(m.Transport, p, nil)
+	platformIds, assetMetadata, err := motorid.GatherIDs(m.Transport, p, nil)
 	if err != nil {
 		return nil, err
 	}
 	assetInfo.PlatformIds = platformIds
+	if assetMetadata.Name != "" {
+		assetInfo.Name = assetMetadata.Name
+	}
+
 	log.Debug().Strs("identifier", assetInfo.PlatformIds).Msg("motor connection")
 
 	return assetInfo, nil

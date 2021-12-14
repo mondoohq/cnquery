@@ -47,11 +47,14 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 		assetInfo.Platform = p
 	}
 
-	platformIds, err := motorid.GatherIDs(m.Transport, p, userIdDetectors)
+	platformIds, assetMetadata, err := motorid.GatherIDs(m.Transport, p, userIdDetectors)
 	if err != nil {
 		return nil, err
 	}
 	assetInfo.PlatformIds = platformIds
+	if assetMetadata.Name != "" {
+		assetInfo.Name = assetMetadata.Name
+	}
 
 	// use hostname as asset name
 	if p != nil && assetInfo.Name == "" {
