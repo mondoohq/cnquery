@@ -65,11 +65,15 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 			"vsphere.vmware.com/uuid": info.InstanceUuid,
 		},
 	}
-	platformIds, err := motorid.GatherIDs(m.Transport, pf, nil)
+	platformIds, assetMetadata, err := motorid.GatherIDs(m.Transport, pf, nil)
 	if err != nil {
 		return nil, err
 	}
 	assetInfo.PlatformIds = platformIds
+	if assetMetadata.Name != "" {
+		assetInfo.Name = assetMetadata.Name
+	}
+
 	log.Debug().Strs("identifier", assetInfo.PlatformIds).Msg("motor connection")
 
 	resolved = append(resolved, assetInfo)
