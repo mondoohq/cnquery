@@ -194,3 +194,65 @@ func TestCastResult(t *testing.T) {
 		}
 	})
 }
+
+func TestResultFromNilConversion(t *testing.T) {
+	t.Run("basic types", func(t *testing.T) {
+		tests := []*Primitive{
+			{
+				Type: string(types.Bool),
+			},
+			{
+				Type: string(types.Int),
+			},
+			{
+				Type: string(types.Float),
+			},
+			{
+				Type: string(types.String),
+			},
+			NilPrimitive,
+			{
+				Type: string(types.Time),
+			},
+		}
+
+		for i := range tests {
+			rawData := tests[i].RawData()
+			result := rawData.Result()
+
+			assert.Equal(t, tests[i].Type, result.GetData().GetType())
+			assert.Nil(t, result.GetData().GetValue())
+		}
+	})
+
+	// We have code that assumes this types return empty types instead
+	// of nil types. This should be made more consistent, but I'm putting
+	// these tests here to make sure other things are not broken
+	t.Run("container types", func(t *testing.T) {
+		t.Run("map", func(t *testing.T) {
+			p := &Primitive{
+				Type: string(types.Map(types.String, types.Int)),
+			}
+			rawData := p.RawData()
+			result := rawData.Result()
+
+			assert.Equal(t, p.Type, result.GetData().GetType())
+
+			assert.NotNil(t, result.GetData().GetMap())
+			assert.Empty(t, result.GetData().GetMap())
+		})
+		t.Run("array", func(t *testing.T) {
+			p := &Primitive{
+				Type: string(types.Array(types.String)),
+			}
+			rawData := p.RawData()
+			result := rawData.Result()
+
+			assert.Equal(t, p.Type, result.GetData().GetType())
+
+			assert.NotNil(t, result.GetData().GetArray())
+			assert.Empty(t, result.GetData().GetArray())
+		})
+	})
+
+}

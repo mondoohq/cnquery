@@ -460,30 +460,65 @@ func pnil2raw(p *Primitive) *RawData {
 }
 
 func pbool2raw(p *Primitive) *RawData {
+	if p.IsNil() {
+		return &RawData{
+			Type: types.Type(p.Type),
+		}
+	}
 	return BoolData(bytes2bool(p.Value))
 }
 
 func pref2raw(p *Primitive) *RawData {
+	if p.IsNil() {
+		return &RawData{
+			Type: types.Type(p.Type),
+		}
+	}
 	return RefData(int32(bytes2int(p.Value)))
 }
 
 func pint2raw(p *Primitive) *RawData {
+	if p.IsNil() {
+		return &RawData{
+			Type: types.Type(p.Type),
+		}
+	}
 	return IntData(bytes2int(p.Value))
 }
 
 func pfloat2raw(p *Primitive) *RawData {
+	if p.IsNil() {
+		return &RawData{
+			Type: types.Type(p.Type),
+		}
+	}
 	return FloatData(bytes2float(p.Value))
 }
 
 func pstring2raw(p *Primitive) *RawData {
+	if p.IsNil() {
+		return &RawData{
+			Type: types.Type(p.Type),
+		}
+	}
 	return StringData(string(p.Value))
 }
 
 func pregex2raw(p *Primitive) *RawData {
+	if p.IsNil() {
+		return &RawData{
+			Type: types.Type(p.Type),
+		}
+	}
 	return RegexData(string(p.Value))
 }
 
 func ptime2raw(p *Primitive) *RawData {
+	if p.IsNil() {
+		return &RawData{
+			Type: types.Type(p.Type),
+		}
+	}
 	return TimeData(bytes2time(p.Value))
 }
 
