@@ -21,9 +21,10 @@ func New(cfg aws.Config) *generator {
 }
 
 type InstanceCredentials struct {
-	KeyPair        *keypair.SSH
-	PublicDnsName  string
-	PrivateDnsName string
+	KeyPair         *keypair.SSH
+	PublicDnsName   string
+	PrivateDnsName  string
+	PublicIpAddress string
 }
 
 func (c *generator) GenerateCredentials(instanceID string, user string) (*InstanceCredentials, error) {
@@ -64,9 +65,21 @@ func (c *generator) GenerateCredentials(instanceID string, user string) (*Instan
 		return nil, err
 	}
 
-	return &InstanceCredentials{
-		KeyPair:        sshkeypair,
-		PublicDnsName:  *instance.PublicDnsName,
-		PrivateDnsName: *instance.PrivateDnsName,
-	}, nil
+	ic := &InstanceCredentials{
+		KeyPair: sshkeypair,
+	}
+
+	if instance.PublicDnsName != nil {
+		ic.PublicDnsName = *instance.PublicDnsName
+	}
+
+	if instance.PrivateDnsName != nil {
+		ic.PrivateDnsName = *instance.PrivateDnsName
+	}
+
+	if instance.PublicIpAddress != nil {
+		ic.PublicIpAddress = *instance.PublicIpAddress
+	}
+
+	return ic, nil
 }
