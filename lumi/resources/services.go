@@ -190,14 +190,16 @@ func (p *lumiServices) GetList() ([]interface{}, error) {
 	// find suitable service manager
 	osm, err := services.ResolveManager(p.Runtime.Motor)
 	if osm == nil || err != nil {
-		log.Warn().Err(err).Msg("lumi[services]> could not retrieve services list")
+		// there are valid cases where this error is happening, eg. you run a service query in
+		// asset filters for non-supported transports
+		log.Debug().Err(err).Msg("lumi[services]> could not retrieve services list")
 		return nil, errors.New("cannot find service manager")
 	}
 
 	// retrieve all system services
 	services, err := osm.List()
 	if err != nil {
-		log.Warn().Err(err).Msg("lumi[services]> could not retrieve service list")
+		log.Debug().Err(err).Msg("lumi[services]> could not retrieve service list")
 		return nil, errors.New("could not retrieve service list")
 	}
 	log.Debug().Int("services", len(services)).Msg("lumi[services]> running services")
