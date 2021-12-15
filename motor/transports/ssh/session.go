@@ -143,7 +143,7 @@ func authMethods(tc *transports.TransportConfig) ([]ssh.AuthMethod, error) {
 			if err != nil {
 				return nil, err
 			}
-			tc.Host = creds.PublicDnsName // TODO: we may want support for private dns later
+			tc.Host = creds.PublicIpAddress
 
 			priv, err := authPrivateKeyWithPassphrase(creds.KeyPair.PrivateKey, creds.KeyPair.Passphrase)
 			if err != nil {
