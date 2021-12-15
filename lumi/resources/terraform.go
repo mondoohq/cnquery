@@ -384,6 +384,16 @@ func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) interface{} {
 			}
 		}
 		return results
+	case *hclsyntax.TemplateWrapExpr:
+		results := []interface{}{}
+		res := getCtyValue(t.Wrapped, ctx)
+		switch v := res.(type) {
+		case []interface{}:
+			results = append(results, v...)
+		default:
+			results = append(results, v)
+		}
+		return results
 	default:
 		log.Warn().Msgf("unknown type %T", t)
 		return nil
