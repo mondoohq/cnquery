@@ -298,7 +298,16 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, ref int32, lookup func(
 	if label, found := ComparableLabel(chunk.Id); found {
 		res.Operation = label
 	} else {
-		res.Actual = checksumRes.Result().Data
+		cRes := checksumRes.Result()
+
+		if checksumRes.Data.Type != types.Bool {
+			res.Actual = cRes.Data
+		} else {
+			res.Operation = "=="
+			res.Expected = BoolPrimitive(true)
+			res.Actual = cRes.Data
+			res.IsAssertion = true
+		}
 		return &res
 	}
 
