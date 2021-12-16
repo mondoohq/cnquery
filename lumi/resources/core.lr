@@ -2451,6 +2451,16 @@ private aws.rds.dbinstance {
   enhancedMonitoringResourceArn string
   // tags for the db instance
   tags map[string]string
+  // name of the compute and memory capacity class of the DB instance
+  dbInstanceClass string
+  // user-supplied unique key that identifies a DB instance
+  dbInstanceIdentifier string
+  // name of the database engine for this DB instance
+  engine string
+  // list of VPC security group elements that the DB instance belongs to
+  securityGroups []aws.ec2.securitygroup
+  // current state of this database
+  status string
 }
 
 // Amazon ElastiCache in-memory data store
