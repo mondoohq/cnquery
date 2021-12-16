@@ -1,0 +1,3 @@
+[Unit]
+Description=Masked service
+Wants=not-enabled.service

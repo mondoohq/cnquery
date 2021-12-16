@@ -1,10 +1,11 @@
-package services_test
+package services
 
 import (
 	"testing"
 
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/lumi/resources/services"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
@@ -20,7 +21,7 @@ func TestParseServiceSystemDUnitFiles(t *testing.T) {
 	}
 	assert.Nil(t, err)
 
-	m, err := services.ParseServiceSystemDUnitFiles(c.Stdout)
+	m, err := ParseServiceSystemDUnitFiles(c.Stdout)
 	assert.Nil(t, err)
 	assert.Equal(t, 102, len(m), "detected the right amount of services")
 
@@ -39,4 +40,69 @@ func TestParseServiceSystemDUnitFiles(t *testing.T) {
 	// check for masked element
 	assert.Equal(t, "nfs-server", m[30].Name, "service name detected")
 	assert.Equal(t, true, m[30].Masked, "service is masked")
+}
+
+func TestSystemdFS(t *testing.T) {
+	s := SystemdFSServiceManager{
+		Fs: afero.NewBasePathFs(afero.NewReadOnlyFs(afero.NewOsFs()), "testdata/systemd"),
+	}
+
+	services, err := s.List()
+	require.NoError(t, err)
+	servicesMap := map[string]*Service{}
+	for _, svc := range services {
+		servicesMap[svc.Name] = svc
+	}
+
+	assert.NotContains(t, servicesMap, "default")
+	assert.NotContains(t, servicesMap, "default.target")
+	assert.NotContains(t, servicesMap, "not-enabled")
+	assert.Contains(t, servicesMap, "aliased")
+	assert.Equal(t, &Service{
+		Name:        "aliased",
+		Type:        "service",
+		Description: "Aliased Service",
+		State:       ServiceUnknown,
+		Installed:   true,
+		Enabled:     true,
+	}, servicesMap["aliased"])
+	assert.Contains(t, servicesMap, "aliased-wants")
+	assert.Contains(t, servicesMap, "aliased-requires")
+	assert.Contains(t, servicesMap, "aliased-missing")
+	assert.Equal(t, &Service{
+		Name:      "aliased-missing",
+		Type:      "service",
+		State:     ServiceUnknown,
+		Installed: false,
+		Enabled:   false,
+	}, servicesMap["aliased-missing"])
+	assert.Contains(t, servicesMap, "intermediate-dep-want")
+	assert.Contains(t, servicesMap, "intermediate-dep-require")
+	assert.Contains(t, servicesMap, "masked")
+	assert.Equal(t, &Service{
+		Name:      "masked",
+		Type:      "service",
+		State:     ServiceUnknown,
+		Installed: true,
+		Enabled:   true,
+		Masked:    true,
+	}, servicesMap["masked"])
+	assert.Contains(t, servicesMap, "implicit-socket")
+	assert.Equal(t, &Service{
+		Name:        "implicit-socket",
+		Type:        "service",
+		Description: "Implicit Socket Service",
+		State:       ServiceUnknown,
+		Installed:   true,
+		Enabled:     true,
+	}, servicesMap["implicit-socket"])
+	assert.Contains(t, servicesMap, "explicit-socket-service")
+	assert.Equal(t, &Service{
+		Name:        "explicit-socket-service",
+		Type:        "service",
+		Description: "Explicit Socket Service",
+		State:       ServiceUnknown,
+		Installed:   true,
+		Enabled:     true,
+	}, servicesMap["explicit-socket-service"])
 }
