@@ -427,8 +427,8 @@ func (l *Code) returnValues(bundle *CodeBundle, lookup func(s string) (*RawResul
 // Results2Assessment converts a list of raw results into an assessment for the query
 func Results2Assessment(bundle *CodeBundle, results map[string]*RawResult) *Assessment {
 	return Results2AssessmentLookup(bundle, func(s string) (*RawResult, bool) {
-		r, ok := results[s]
-		return r, ok
+		r := results[s]
+		return r, r != nil
 	})
 }
 
