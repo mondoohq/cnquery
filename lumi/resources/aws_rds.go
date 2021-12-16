@@ -48,6 +48,10 @@ func (d *lumiAwsRds) getDbInstances(at *aws_transport.Transport) []*jobpool.Job 
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
+	account, err := at.Account()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
 
 	for _, region := range regions {
 		regionVal := region
@@ -69,6 +73,18 @@ func (d *lumiAwsRds) getDbInstances(at *aws_transport.Transport) []*jobpool.Job 
 					for _, logExport := range dbInstance.EnabledCloudwatchLogsExports {
 						stringSliceInterface = append(stringSliceInterface, logExport)
 					}
+					sgs := []interface{}{}
+					for i := range dbInstance.VpcSecurityGroups {
+						// NOTE: this will create the resource and determine the data in its init method
+						lumiSg, err := d.Runtime.CreateResource("aws.ec2.securitygroup",
+							"arn", fmt.Sprintf(securityGroupArnPattern, regionVal, account.ID, toString(dbInstance.VpcSecurityGroups[i].VpcSecurityGroupId)),
+						)
+						if err != nil {
+							return nil, err
+						}
+						sgs = append(sgs, lumiSg)
+					}
+
 					lumiDBInstance, err := d.Runtime.CreateResource("aws.rds.dbinstance",
 						"arn", toString(dbInstance.DBInstanceArn),
 						"name", toString(dbInstance.DBName),
@@ -82,6 +98,11 @@ func (d *lumiAwsRds) getDbInstances(at *aws_transport.Transport) []*jobpool.Job 
 						"id", toString(dbInstance.DBInstanceIdentifier),
 						"deletionProtection", dbInstance.DeletionProtection,
 						"tags", rdsTagsToMap(dbInstance.TagList),
+						"dbInstanceClass", toString(dbInstance.DBInstanceClass),
+						"dbInstanceIdentifier", toString(dbInstance.DBInstanceIdentifier),
+						"engine", toString(dbInstance.Engine),
+						"securityGroups", sgs,
+						"status", toString(dbInstance.DBInstanceStatus),
 					)
 					if err != nil {
 						return nil, err
@@ -307,6 +328,7 @@ func (d *lumiAwsRdsDbinstance) GetSnapshots() ([]interface{}, error) {
 				"region", region,
 				"encrypted", snapshot.Encrypted,
 				"isClusterSnapshot", false,
+				"tags", rdsTagsToMap(snapshot.TagList),
 			)
 			if err != nil {
 				return nil, err
