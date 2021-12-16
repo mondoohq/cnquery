@@ -196,10 +196,13 @@ func (p *lumiAwsS3Bucket) GetTags() (map[string]interface{}, error) {
 		Bucket: &bucketname,
 	})
 	if err != nil {
-		var notFoundErr *types.NotFound
-		if errors.As(err, &notFoundErr) {
-			return nil, nil
+		var apiErr smithy.APIError
+		if errors.As(err, &apiErr) {
+			if apiErr.ErrorCode() == "NoSuchTagSet" {
+				return nil, nil
+			}
 		}
+
 		return nil, err
 	}
 
