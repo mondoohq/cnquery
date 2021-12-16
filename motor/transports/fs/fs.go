@@ -102,6 +102,10 @@ func (t *MountedFs) LstatIfPossible(name string) (os.FileInfo, bool, error) {
 	return fi, true, err
 }
 
+func (t *MountedFs) ReadlinkIfPossible(name string) (string, error) {
+	return os.Readlink(name)
+}
+
 func (t *MountedFs) Chown(name string, uid, gid int) error {
 	return notSupported
 }

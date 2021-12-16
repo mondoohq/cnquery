@@ -49,15 +49,15 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 
 	switch {
 	case pf.IsFamily("arch"): // arch family
-		osm = &SystemDServiceManager{motor: motor}
+		osm = ResolveSystemdServiceManager(motor)
 	case pf.Name == "amazonlinux":
 		if amazonlinux1version.MatchString(pf.Release) {
 			osm = &UpstartServiceManager{SysVServiceManager{motor: motor}}
 		} else {
-			osm = &SystemDServiceManager{motor: motor}
+			osm = ResolveSystemdServiceManager(motor)
 		}
 	case pf.Name == "photon":
-		osm = &SystemDServiceManager{motor: motor}
+		osm = ResolveSystemdServiceManager(motor)
 	// NOTE: we need to check fedora before rhel family, since its also rhel family
 	case pf.Name == "fedora":
 		rv := platform.ParseOsVersion(pf.Release)
@@ -70,7 +70,7 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 			// upstart is only used since fedora 11 but we do not support those older versions
 			osm = &UpstartServiceManager{SysVServiceManager{motor: motor}}
 		} else {
-			osm = &SystemDServiceManager{motor: motor}
+			osm = ResolveSystemdServiceManager(motor)
 		}
 	case pf.IsFamily("redhat"):
 		rv := platform.ParseOsVersion(pf.Release)
@@ -81,7 +81,7 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		if v < 7 {
 			osm = &UpstartServiceManager{SysVServiceManager{motor: motor}}
 		} else {
-			osm = &SystemDServiceManager{motor: motor}
+			osm = ResolveSystemdServiceManager(motor)
 		}
 	case pf.Name == "ubuntu" || pf.Name == "linuxmint":
 		rv := platform.ParseOsVersion(pf.Release)
@@ -93,7 +93,7 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		if v < 15 {
 			osm = &UpstartServiceManager{SysVServiceManager{motor: motor}}
 		} else {
-			osm = &SystemDServiceManager{motor: motor}
+			osm = ResolveSystemdServiceManager(motor)
 		}
 	case pf.Name == "debian":
 		rv := platform.ParseOsVersion(pf.Release)
@@ -105,10 +105,10 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		if v < 7 {
 			osm = &SysVServiceManager{motor: motor}
 		} else {
-			osm = &SystemDServiceManager{motor: motor}
+			osm = ResolveSystemdServiceManager(motor)
 		}
 	case pf.Name == "suse-microos": // it is suse family but uses a different version scheme
-		osm = &SystemDServiceManager{motor: motor}
+		osm = ResolveSystemdServiceManager(motor)
 	case pf.IsFamily("suse"):
 		rv := platform.ParseOsVersion(pf.Release)
 		v, err := rv.MajorAtoi()
@@ -120,7 +120,7 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		if v < 12 {
 			osm = &SysVServiceManager{motor: motor}
 		} else {
-			osm = &SystemDServiceManager{motor: motor}
+			osm = ResolveSystemdServiceManager(motor)
 		}
 	case pf.IsFamily("darwin"): // "macos", "darwin"
 		osm = &LaunchDServiceManager{motor: motor}

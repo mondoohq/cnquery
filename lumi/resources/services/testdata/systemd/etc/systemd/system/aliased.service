@@ -1,0 +1,4 @@
+[Unit]
+Description=Aliased Service
+Wants=aliased-wants.service aliased-missing.service
+Requires=aliased-requires.service
