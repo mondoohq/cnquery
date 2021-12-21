@@ -365,8 +365,8 @@ func (p *lumiAwsS3Bucket) GetOwner() (map[string]interface{}, error) {
 	}
 
 	res := map[string]interface{}{}
-	res["id"] = acl.Owner.ID
-	res["name"] = acl.Owner.DisplayName
+	res["id"] = toString(acl.Owner.ID)
+	res["name"] = toString(acl.Owner.DisplayName)
 
 	return res, nil
 }
@@ -469,11 +469,11 @@ func (p *lumiAwsS3Bucket) GetLogging() (map[string]interface{}, error) {
 
 	if logging != nil && logging.LoggingEnabled != nil {
 		if logging.LoggingEnabled.TargetPrefix != nil {
-			res["TargetPrefix"] = *logging.LoggingEnabled.TargetPrefix
+			res["TargetPrefix"] = toString(logging.LoggingEnabled.TargetPrefix)
 		}
 
 		if logging.LoggingEnabled.TargetBucket != nil {
-			res["TargetBucket"] = *logging.LoggingEnabled.TargetBucket
+			res["TargetBucket"] = toString(logging.LoggingEnabled.TargetBucket)
 		}
 
 		// it is becoming a more complex object similar to aws.s3.bucket.grant
