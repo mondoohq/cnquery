@@ -11,10 +11,11 @@ import (
 )
 
 type InstanceId struct {
-	Id      string
-	Region  string
-	Account string
-	Zone    string
+	Id             string
+	Region         string
+	Account        string
+	Zone           string
+	MarketplaceImg bool
 }
 
 func NewInstanceId(account string, region string, id string) (*InstanceId, error) {

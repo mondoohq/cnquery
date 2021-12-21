@@ -77,7 +77,9 @@ func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
 
 	// 4. setup
 	// check if we got the no setup override option
-	if tc.Options[NoSetup] != "true" {
+	if tc.Options[NoSetup] == "true" {
+		log.Info().Msg("skipping setup step")
+	} else {
 		ok, err = t.Setup(ctx, instanceinfo)
 		if err != nil {
 			return t, err
