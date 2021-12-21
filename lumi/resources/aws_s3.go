@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/smithy-go"
+	"github.com/aws/smithy-go/transport/http"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/awspolicy"
@@ -139,22 +140,11 @@ func (p *lumiAwsS3Bucket) GetPolicy() (interface{}, error) {
 	policy, err := svc.GetBucketPolicy(ctx, &s3.GetBucketPolicyInput{
 		Bucket: &bucketname,
 	})
-	var res interface{}
+
 	if err != nil {
-		var ae smithy.APIError
-		if errors.As(err, &ae) {
-			if ae.ErrorCode() == "NoSuchBucketPolicy" {
-				return res, nil
-			}
-		}
-		return nil, err
-	}
-	if err != nil {
-		var notFoundErr *types.NotFound
-		if errors.As(err, &notFoundErr) {
+		if isNotFoundForS3(err) {
 			return nil, nil
 		}
-		log.Error().Err(err).Msg("could not retrieve bucket policy")
 		return nil, err
 	}
 
@@ -344,8 +334,7 @@ func (p *lumiAwsS3Bucket) GetPublicAccessBlock() (interface{}, error) {
 		Bucket: &bucketname,
 	})
 	if err != nil {
-		var notFoundErr *types.NotFound
-		if errors.As(err, &notFoundErr) {
+		if isNotFoundForS3(err) {
 			return nil, nil
 		}
 		return nil, err
@@ -413,8 +402,7 @@ func (p *lumiAwsS3Bucket) GetCors() ([]interface{}, error) {
 	})
 
 	if err != nil {
-		var notFoundErr *types.NotFound
-		if errors.As(err, &notFoundErr) {
+		if isNotFoundForS3(err) {
 			return nil, nil
 		}
 		return nil, err
@@ -542,8 +530,7 @@ func (p *lumiAwsS3Bucket) GetReplication() (interface{}, error) {
 		Bucket: &bucketname,
 	})
 	if err != nil {
-		var notFoundErr *types.NotFound
-		if errors.As(err, &notFoundErr) {
+		if isNotFoundForS3(err) {
 			return nil, nil
 		}
 		return nil, err
@@ -608,8 +595,7 @@ func (p *lumiAwsS3Bucket) GetDefaultLock() (string, error) {
 		Bucket: &bucketname,
 	})
 	if err != nil {
-		var notFoundErr *types.NotFound
-		if errors.As(err, &notFoundErr) {
+		if isNotFoundForS3(err) {
 			return "", nil
 		}
 		return "", err
@@ -640,6 +626,9 @@ func (p *lumiAwsS3Bucket) GetStaticWebsiteHosting() (map[string]interface{}, err
 		Bucket: &bucketname,
 	})
 	if err != nil {
+		if isNotFoundForS3(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -711,4 +700,23 @@ func (p *lumiAwsS3BucketPolicy) GetStatements() ([]interface{}, error) {
 		return nil, err
 	}
 	return jsonToDictSlice(policy.Statements)
+}
+
+func isNotFoundForS3(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	var respErr *http.ResponseError
+	var notFoundErr *types.NotFound
+
+	if errors.As(err, &notFoundErr) {
+		return true
+	} else if errors.As(err, &respErr) {
+		if respErr.HTTPStatusCode() == 404 {
+			return true
+		}
+	}
+
+	return false
 }
