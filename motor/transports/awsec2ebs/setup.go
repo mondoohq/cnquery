@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/smithy-go"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -65,11 +65,26 @@ func (t *Ec2EbsTransport) GetVolumeIdForInstance(ctx context.Context, instancein
 	i := t.target.instance
 	log.Info().Interface("instance", i).Msg("find volume id")
 
-	if len(instanceinfo.BlockDeviceMappings) == 1 {
-		volId := instanceinfo.BlockDeviceMappings[0].Ebs.VolumeId
-		return VolumeId{Id: *volId, Region: i.Region, Account: i.Account}, nil
+	volID := GetVolumeIdForInstance(instanceinfo)
+	if GetVolumeIdForInstance(instanceinfo) != nil {
+		return VolumeId{Id: *volID, Region: i.Region, Account: i.Account}, nil
 	}
 	return VolumeId{}, errors.New("no volume id found for instance")
+}
+
+func GetVolumeIdForInstance(instanceinfo *types.Instance) *string {
+	if len(instanceinfo.BlockDeviceMappings) == 1 {
+		return instanceinfo.BlockDeviceMappings[0].Ebs.VolumeId
+	}
+	if len(instanceinfo.BlockDeviceMappings) > 1 {
+		for bi := range instanceinfo.BlockDeviceMappings {
+			// todo: revisit this. this works for the standard ec2 instance setup, but no guarantees outside of that..
+			if *instanceinfo.BlockDeviceMappings[bi].DeviceName == "xvda" { // xvda is the root volume
+				return instanceinfo.BlockDeviceMappings[bi].Ebs.VolumeId
+			}
+		}
+	}
+	return nil
 }
 
 func (t *Ec2EbsTransport) FindRecentSnapshotForVolume(ctx context.Context, v VolumeId) (bool, SnapshotId, error) {
@@ -124,10 +139,19 @@ func (t *Ec2EbsTransport) CreateSnapshotFromVolume(ctx context.Context, v Volume
 	// use region from volume for aws config
 	cfgCopy := t.config.Copy()
 	cfgCopy.Region = v.Region
-	ec2svc := ec2.NewFromConfig(cfgCopy)
-	res, err := ec2svc.CreateSnapshot(ctx, &ec2.CreateSnapshotInput{VolumeId: &v.Id, TagSpecifications: resourceTags(types.ResourceTypeSnapshot, t.target.instance.Id)})
+	snapId, err := CreateSnapshotFromVolume(ctx, cfgCopy, v.Id, resourceTags(types.ResourceTypeSnapshot, t.target.instance.Id))
 	if err != nil {
 		return SnapshotId{}, err
+	}
+
+	return SnapshotId{Id: *snapId, Region: v.Region, Account: v.Account}, nil
+}
+
+func CreateSnapshotFromVolume(ctx context.Context, cfg aws.Config, volID string, tags []types.TagSpecification) (*string, error) {
+	ec2svc := ec2.NewFromConfig(cfg)
+	res, err := ec2svc.CreateSnapshot(ctx, &ec2.CreateSnapshotInput{VolumeId: &volID, TagSpecifications: tags})
+	if err != nil {
+		return nil, err
 	}
 
 	/*
@@ -144,11 +168,11 @@ func (t *Ec2EbsTransport) CreateSnapshotFromVolume(ctx context.Context, v Volume
 		time.Sleep(10 * time.Second)
 		snaps, err := ec2svc.DescribeSnapshots(ctx, &ec2.DescribeSnapshotsInput{SnapshotIds: []string{*res.SnapshotId}})
 		if err != nil {
-			return SnapshotId{}, err
+			return nil, err
 		}
 		snapProgress = *snaps.Snapshots[0].Progress
 	}
-	return SnapshotId{Id: *res.SnapshotId, Region: v.Region, Account: v.Account}, nil
+	return res.SnapshotId, nil
 }
 
 func (t *Ec2EbsTransport) CopySnapshotToRegion(ctx context.Context, snapshot SnapshotId) (SnapshotId, error) {
