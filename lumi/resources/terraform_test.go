@@ -48,4 +48,11 @@ func TestResource_Terraform(t *testing.T) {
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, string("2012-10-17"), res[0].Data.Value)
 	})
+
+	t.Run("terraform providers", func(t *testing.T) {
+		res := terraformTestQuery(t, "terraform.resources.where( nameLabel  == 'google_compute_instance')[0].arguments['metadata']")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, map[string]interface{}{"enable-oslogin": true}, res[0].Data.Value)
+	})
 }
