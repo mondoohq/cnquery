@@ -1941,6 +1941,27 @@ func stringContainsString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int
 	return BoolData(ok), 0, nil
 }
 
+func stringContainsInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
+	argRef := chunk.Function.Args[0]
+	arg, rref, err := c.resolveValue(argRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	if arg.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
+	val := strconv.FormatInt(arg.Value.(int64), 10)
+
+	ok := strings.Contains(bind.Value.(string), val)
+	return BoolData(ok), 0, nil
+}
+
 func stringContainsArrayString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
 		return BoolFalse, 0, nil
@@ -1961,6 +1982,35 @@ func stringContainsArrayString(c *LeiseExecutor, bind *RawData, chunk *Chunk, re
 	for i := range arr {
 		v := arr[i].(string)
 		ok = strings.Contains(bind.Value.(string), v)
+		if ok {
+			return BoolData(ok), 0, nil
+		}
+	}
+
+	return BoolData(false), 0, nil
+}
+
+func stringContainsArrayInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	if bind.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
+	argRef := chunk.Function.Args[0]
+	arg, rref, err := c.resolveValue(argRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	if arg.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
+	var ok bool
+	arr := arg.Value.([]interface{})
+	for i := range arr {
+		v := arr[i].(int64)
+		val := strconv.FormatInt(v, 10)
+		ok = strings.Contains(bind.Value.(string), val)
 		if ok {
 			return BoolData(ok), 0, nil
 		}

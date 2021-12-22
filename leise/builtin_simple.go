@@ -40,7 +40,17 @@ func compileStringContains(c *compiler, typ types.Type, ref int32, id string, ca
 			},
 		})
 		return types.Bool, nil
-
+	case types.Int:
+		c.Result.Code.AddChunk(&llx.Chunk{
+			Call: llx.Chunk_FUNCTION,
+			Id:   "contains" + string(types.Int),
+			Function: &llx.Function{
+				Type:    string(types.Bool),
+				Binding: ref,
+				Args:    []*llx.Primitive{val},
+			},
+		})
+		return types.Bool, nil
 	case types.Array(types.String):
 		c.Result.Code.AddChunk(&llx.Chunk{
 			Call: llx.Chunk_FUNCTION,
@@ -52,7 +62,17 @@ func compileStringContains(c *compiler, typ types.Type, ref int32, id string, ca
 			},
 		})
 		return types.Bool, nil
-
+	case types.Array(types.Int):
+		c.Result.Code.AddChunk(&llx.Chunk{
+			Call: llx.Chunk_FUNCTION,
+			Id:   "contains" + string(types.Array(types.Int)),
+			Function: &llx.Function{
+				Type:    string(types.Bool),
+				Binding: ref,
+				Args:    []*llx.Primitive{val},
+			},
+		})
+		return types.Bool, nil
 	default:
 		return types.Nil, errors.New("cannot find #string.contains with this type " + types.Type(val.Type).Label())
 	}

@@ -301,6 +301,8 @@ func init() {
 			// fields
 			string("contains" + types.String):              {f: stringContainsString, Label: "contains"},
 			string("contains" + types.Array(types.String)): {f: stringContainsArrayString, Label: "contains"},
+			string("contains" + types.Int):                 {f: stringContainsInt, Label: "contains"},
+			string("contains" + types.Array(types.Int)):    {f: stringContainsArrayInt, Label: "contains"},
 			string("find"):      {f: stringFind, Label: "find"},
 			string("camelcase"): {f: stringCamelcase, Label: "camelcase"},
 			string("downcase"):  {f: stringDowncase, Label: "downcase"},
@@ -483,6 +485,8 @@ func init() {
 			"map":                             {f: dictMap},
 			string("contains" + types.String): {f: dictContainsString, Label: "contains"},
 			string("contains" + types.Array(types.String)): {f: dictContainsArrayString, Label: "contains"},
+			string("contains" + types.Int):                 {f: dictContainsInt, Label: "contains"},
+			string("contains" + types.Array(types.Int)):    {f: dictContainsArrayInt, Label: "contains"},
 			string("find"): {f: dictFind, Label: "find"},
 			// NOTE: the following functions are internal ONLY!
 			// We have not yet decided if and how these may be exposed to users
