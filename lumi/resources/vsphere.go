@@ -160,9 +160,14 @@ func vsphereHosts(client *vsphere.Client, runtime *lumi.Runtime, vhosts []*objec
 			return nil, err
 		}
 
+		var name string
+		if hostInfo != nil {
+			name = hostInfo.Name
+		}
+
 		lumiHost, err := runtime.CreateResource("vsphere.host",
 			"moid", h.Reference().Encode(),
-			"name", hostInfo.Name,
+			"name", name,
 			"properties", props,
 			"inventoryPath", h.InventoryPath,
 		)
@@ -428,7 +433,8 @@ func (v *lumiVsphereHost) GetVmknics() ([]interface{}, error) {
 	}
 
 	lumiVmknics := make([]interface{}, len(vmknics))
-	for i, entry := range vmknics {
+	for i := range vmknics {
+		entry := vmknics[i]
 		lumiVswitch, err := v.Runtime.CreateResource("vsphere.vmknic",
 			"name", entry.Properties["Name"],
 			"properties", entry.Properties,
@@ -456,7 +462,8 @@ func (v *lumiVsphereHost) GetPackages() ([]interface{}, error) {
 	}
 
 	lumiPackages := make([]interface{}, len(vibs))
-	for i, vib := range vibs {
+	for i := range vibs {
+		vib := vibs[i]
 
 		// parse timestamps in format "2020-07-16"
 		format := "2006-01-02"
@@ -621,6 +628,10 @@ func (v *lumiVsphereHost) GetTimezone() (interface{}, error) {
 		return nil, err
 	}
 
+	if datetimeinfo == nil {
+		return nil, errors.New("vsphere does not return HostDateTimeSystem timezone information")
+	}
+
 	lumiTimezone, err := v.Runtime.CreateResource("esxi.timezone",
 		"key", datetimeinfo.TimeZone.Key,
 		"name", datetimeinfo.TimeZone.Name,
@@ -655,10 +666,18 @@ func (v *lumiVsphereHost) GetNtp() (interface{}, error) {
 		return nil, err
 	}
 
+	var server []interface{}
+	var config []interface{}
+
+	if datetimeinfo != nil && datetimeinfo.NtpConfig != nil {
+		server = sliceInterface(datetimeinfo.NtpConfig.Server)
+		config = sliceInterface(datetimeinfo.NtpConfig.ConfigFile)
+	}
+
 	lumiNtpConfig, err := v.Runtime.CreateResource("esxi.ntpconfig",
 		"id", "ntp "+host.InventoryPath,
-		"server", sliceInterface(datetimeinfo.NtpConfig.Server),
-		"config", sliceInterface(datetimeinfo.NtpConfig.ConfigFile),
+		"server", server,
+		"config", config,
 	)
 	if err != nil {
 		return nil, err
@@ -708,9 +727,14 @@ func (v *lumiVsphereDatacenter) GetVms() ([]interface{}, error) {
 			return nil, err
 		}
 
+		var name string
+		if vmInfo != nil && vmInfo.Config != nil {
+			name = vmInfo.Config.Name
+		}
+
 		lumiVm, err := v.Runtime.CreateResource("vsphere.vm",
 			"moid", vm.Reference().Encode(),
-			"name", vmInfo.Config.Name,
+			"name", name,
 			"properties", props,
 			"inventoryPath", vm.InventoryPath,
 		)
@@ -815,9 +839,14 @@ func (v *lumiEsxi) GetHost() (interface{}, error) {
 		return nil, err
 	}
 
+	var name string
+	if hostInfo != nil {
+		name = hostInfo.Name
+	}
+
 	lumiHost, err := v.Runtime.CreateResource("vsphere.host",
 		"moid", h.Reference().Encode(),
-		"name", hostInfo.Name,
+		"name", name,
 		"properties", props,
 		"inventoryPath", h.InventoryPath,
 	)
@@ -868,9 +897,14 @@ func (v *lumiEsxi) GetVm() (interface{}, error) {
 		return nil, err
 	}
 
+	var name string
+	if vmInfo != nil && vmInfo.Config != nil {
+		name = vmInfo.Config.Name
+	}
+
 	lumiVm, err := v.Runtime.CreateResource("vsphere.vm",
 		"moid", vm.Reference().Encode(),
-		"name", vmInfo.Config.Name,
+		"name", name,
 		"properties", props,
 		"inventoryPath", vm.InventoryPath,
 	)
