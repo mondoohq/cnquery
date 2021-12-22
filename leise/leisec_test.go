@@ -1147,6 +1147,19 @@ func TestCompiler_ContainsWithResource(t *testing.T) {
 	})
 }
 
+func TestCompiler_StringContainsWithInt(t *testing.T) {
+	compile(t, "'hello123'.contains(23)", func(res *llx.CodeBundle) {
+		assertPrimitive(t, llx.StringPrimitive("hello123"), res.Code.Code[0])
+		assertFunction(t, "contains"+string(types.Int), &llx.Function{
+			Type:    string(types.Bool),
+			Binding: 1,
+			Args:    []*llx.Primitive{llx.IntPrimitive(23)},
+		}, res.Code.Code[1])
+
+		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
+	})
+}
+
 func TestCompiler_CallWithResource(t *testing.T) {
 	compile(t, "users.list { file(home) }", func(res *llx.CodeBundle) {
 		assertFunction(t, "users", nil, res.Code.Code[0])

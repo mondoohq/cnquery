@@ -582,10 +582,36 @@ func dictContainsString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32
 	return BoolData(ok), 0, nil
 }
 
+func dictContainsInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	argRef := chunk.Function.Args[0]
+	arg, rref, err := c.resolveValue(argRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	if arg.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
+	val := strconv.FormatInt(arg.Value.(int64), 10)
+
+	ok := anyContainsString(bind.Value, val)
+	return BoolData(ok), 0, nil
+}
+
 func dictContainsArrayString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	switch bind.Value.(type) {
 	case string:
 		return stringContainsArrayString(c, bind, chunk, ref)
+	default:
+		return nil, 0, errors.New("dict value does not support field `contains`")
+	}
+}
+
+func dictContainsArrayInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	switch bind.Value.(type) {
+	case string:
+		return stringContainsArrayInt(c, bind, chunk, ref)
 	default:
 		return nil, 0, errors.New("dict value does not support field `contains`")
 	}

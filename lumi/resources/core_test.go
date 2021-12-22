@@ -690,6 +690,22 @@ func TestString_Methods(t *testing.T) {
 			0, false,
 		},
 		{
+			"'hello'.contains(23)",
+			0, false,
+		},
+		{
+			"'hello123'.contains(23)",
+			0, true,
+		},
+		{
+			"'hello123'.contains([5,6,7])",
+			0, false,
+		},
+		{
+			"'hello123'.contains([5,1,7])",
+			0, true,
+		},
+		{
 			"'oh-hello-world!'.camelcase",
 			0, "ohHelloWorld!",
 		},
