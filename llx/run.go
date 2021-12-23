@@ -16,6 +16,15 @@ func Run(code *Code, runtime *lumi.Runtime, props map[string]*Primitive, callbac
 	return x, nil
 }
 
+func NoRun(code *Code, runerr error, runtime *lumi.Runtime, props map[string]*Primitive, callback ResultCallback) (*LeiseExecutor, error) {
+	x, err := NewExecutor(code, runtime, props, callback)
+	if err != nil {
+		return nil, err
+	}
+	x.NoRun(runerr)
+	return x, nil
+}
+
 // RunOnce the code that was provided and call the callback
 func RunOnce(code *Code, runtime *lumi.Runtime, props map[string]*Primitive, callback func(one *RawResult, isDone bool)) error {
 	cnt := 0
