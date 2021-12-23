@@ -194,6 +194,15 @@ func (c *LeiseExecutor) Run() {
 	}
 }
 
+// NoRun returns error for all callbacks and don't run code
+func (c *LeiseExecutor) NoRun(err error) {
+	for ref := range c.callbackPoints {
+		if codeID, ok := c.callbackPoints[ref]; ok {
+			c.callback(errorResult(err, codeID))
+		}
+	}
+}
+
 // Unregister an execution chain from receiving any further updates
 func (c *LeiseExecutor) Unregister() error {
 	log.Trace().Str("id", c.id).Msg("exec> unregister")
