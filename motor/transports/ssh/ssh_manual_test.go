@@ -30,8 +30,33 @@ func TestEc2InstanceConnect(t *testing.T) {
 	err := ssh.VerifyConfig(endpoint)
 	assert.Nil(t, err)
 
-	endpoint = ssh.ApplyDefaultPort(endpoint)
-
 	_, err = ssh.New(endpoint)
 	require.NoError(t, err)
+}
+
+func TestSudoConnect(t *testing.T) {
+	endpoint := &transports.TransportConfig{
+		Backend: transports.TransportBackend_CONNECTION_SSH,
+		Host:    "192.168.178.26",
+		Credentials: []*vault.Credential{{
+			Type:   vault.CredentialType_password,
+			User:   "chris",
+			Secret: []byte("password1!"),
+		}},
+		Sudo: &transports.Sudo{
+			Active: true,
+		},
+		Insecure: true,
+	}
+
+	conn, err := ssh.New(endpoint)
+	require.NoError(t, err)
+	defer conn.Close()
+
+	err = conn.VerifyConnection()
+	require.NoError(t, err)
+
+	fi, err := conn.FS().Stat("/etc/os-release")
+	require.NoError(t, err)
+	assert.NotNil(t, fi)
 }

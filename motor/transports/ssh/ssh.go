@@ -1,8 +1,10 @@
 package ssh
 
 import (
+	"io/ioutil"
 	"net"
 	"os"
+	"strings"
 
 	"github.com/cockroachdb/errors"
 	rawsftp "github.com/pkg/sftp"
@@ -32,12 +34,6 @@ func New(tc *transports.TransportConfig) (*SSHTransport, error) {
 		activateScp = true
 	}
 
-	var s cmd.Wrapper
-	if tc.Sudo != nil && tc.Sudo.Active {
-		log.Debug().Msg("activated sudo for ssh connection")
-		s = cmd.NewSudo()
-	}
-
 	if tc.Insecure {
 		log.Debug().Msg("user allowed insecure ssh connection")
 	}
@@ -45,12 +41,39 @@ func New(tc *transports.TransportConfig) (*SSHTransport, error) {
 	t := &SSHTransport{
 		ConnectionConfig: tc,
 		UseScpFilesystem: activateScp,
-		Sudo:             s,
 		kind:             tc.Kind,
 		runtime:          tc.Runtime,
 	}
 	err = t.Connect()
-	return t, err
+	if err != nil {
+		return nil, err
+	}
+
+	var s cmd.Wrapper
+	// check uid of user and disable sudo if uid is 0
+	if tc.Sudo != nil && tc.Sudo.Active {
+		// the id command may not be available, eg. if ssh is used with windows
+		out, _ := t.RunCommand("id -u")
+		stdout, _ := ioutil.ReadAll(out.Stdout)
+		// just check for the explicit positive case, otherwise just activate sudo
+		// we check sudo in VerifyConnection
+		if string(stdout) != "0" {
+			// configure sudo
+			log.Debug().Msg("activated sudo for ssh connection")
+			s = cmd.NewSudo()
+		}
+	}
+	t.Sudo = s
+
+	// verify connection
+	vErr := t.VerifyConnection()
+	// NOTE: for now we do not enforce connection verification to ensure we cover edge-cases
+	// TODO: in following minor version bumps, we want to enforce this behavior to ensure proper scans
+	if vErr != nil {
+		log.Warn().Err(vErr).Send()
+	}
+
+	return t, nil
 }
 
 type SSHTransport struct {
@@ -105,6 +128,41 @@ func (t *SSHTransport) Connect() error {
 	return nil
 }
 
+func (t *SSHTransport) VerifyConnection() error {
+	var out *transports.Command
+	var err error
+
+	if t.Sudo != nil {
+		// Wrap sudo command, to see proper error messages. We set /dev/null to disable stdin
+		command := "sh -c '" + t.Sudo.Build("echo") + " < /dev/null'"
+		out, err = t.runRawCommand(command)
+	} else {
+		out, err = t.runRawCommand("echo")
+		if err != nil {
+			return err
+		}
+	}
+
+	if out.ExitStatus == 0 {
+		return nil
+	}
+
+	stderr, _ := ioutil.ReadAll(out.Stderr)
+	errMsg := string(stderr)
+
+	// sample messages are:
+	// sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper
+	// sudo: a password is required
+	switch {
+	case strings.Contains(errMsg, "not found"):
+		return errors.New("sudo command is missing on target")
+	case strings.Contains(errMsg, "a password is required"):
+		return errors.New("could not establish connection: sudo password is not supported yet, configure password-less sudo")
+	default:
+		return errors.New("could not establish connection: " + errMsg)
+	}
+}
+
 func (t *SSHTransport) Reconnect() error {
 	// ensure the connections is going to be closed
 	if t.SSHClient != nil {
@@ -113,14 +171,17 @@ func (t *SSHTransport) Reconnect() error {
 	return t.Connect()
 }
 
+func (t *SSHTransport) runRawCommand(command string) (*transports.Command, error) {
+	log.Debug().Str("command", command).Str("transport", "ssh").Msg("run command")
+	c := &Command{SSHTransport: t}
+	return c.Exec(command)
+}
+
 func (t *SSHTransport) RunCommand(command string) (*transports.Command, error) {
 	if t.Sudo != nil {
 		command = t.Sudo.Build(command)
 	}
-
-	log.Debug().Str("command", command).Str("transport", "ssh").Msg("run command")
-	c := &Command{SSHTransport: t}
-	return c.Exec(command)
+	return t.runRawCommand(command)
 }
 
 func (t *SSHTransport) FS() afero.Fs {
