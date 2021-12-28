@@ -1674,15 +1674,25 @@ resources:
     fields:
       arn: {}
       backupRetentionPeriod: {}
+      dbInstanceClass:
+        min_mondoo_version: 5.19.1
+      dbInstanceIdentifier:
+        min_mondoo_version: 5.19.1
       deletionProtection: {}
       enabledCloudwatchLogsExports: {}
+      engine:
+        min_mondoo_version: 5.19.1
       enhancedMonitoringResourceArn: {}
       id: {}
       multiAZ: {}
       name: {}
       publiclyAccessible: {}
       region: {}
+      securityGroups:
+        min_mondoo_version: 5.19.1
       snapshots: {}
+      status:
+        min_mondoo_version: 5.19.1
       storageEncrypted: {}
       tags: {}
     is_private: true
@@ -2927,6 +2937,8 @@ resources:
       basename: {}
       content: {}
       dirname: {}
+      empty:
+        min_mondoo_version: 5.18.0
       exists: {}
       group: {}
       path: {}
@@ -4431,6 +4443,8 @@ resources:
       baseurl: {}
       enabled: {}
       expire: {}
+      file:
+        min_mondoo_version: 5.18.0
       filename: {}
       id: {}
       mirrors: {}
