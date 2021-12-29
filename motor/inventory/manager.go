@@ -166,7 +166,12 @@ func (im *inventoryManager) GetCredential(cred *vault.Credential) (*vault.Creden
 		return nil, vault.NotFoundError
 	}
 
-	log.Debug().Str("secret-id", cred.SecretId).Msg("fetch secret from vault")
+	info, _ := v.About(context.Background(), &vault.Empty{})
+	var name string
+	if info != nil {
+		name = info.Name
+	}
+	log.Debug().Str("secret-id", cred.SecretId).Str("vault", name).Msg("fetch secret from vault")
 	// TODO: do we need to provide the encoding from outside or inside?
 	secret, err := v.Get(context.Background(), &vault.SecretID{
 		Key: cred.SecretId,

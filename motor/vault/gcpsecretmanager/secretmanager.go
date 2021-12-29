@@ -25,6 +25,10 @@ type Vault struct {
 	projectID string
 }
 
+func (v *Vault) About(context.Context, *vault.Empty) (*vault.VaultInfo, error) {
+	return &vault.VaultInfo{Name: "GCP Secret Manager: " + v.projectID}, nil
+}
+
 // Dial gets a Vault client.
 func (v *Vault) client(ctx context.Context) (*secretmanager.Client, error) {
 	client, err := secretmanager.NewClient(ctx)

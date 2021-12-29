@@ -15,6 +15,7 @@ message Secret {
 }
 
 service Vault {
+  rpc About(Empty) returns (VaultInfo);
   rpc Get(SecretID) returns (Secret);
   rpc Set(Secret) returns (SecretID);
 }
@@ -35,6 +36,12 @@ enum SecretEncoding {
   encoding_json = 1;
   encoding_proto = 2;
   encoding_binary = 3;
+}
+
+message Empty {}
+
+message VaultInfo {
+  string name = 1;
 }
 
 // Credential holds authentication information

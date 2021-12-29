@@ -31,6 +31,10 @@ type Vault struct {
 	APIConfig api.Config
 }
 
+func (v *Vault) About(context.Context, *vault.Empty) (*vault.VaultInfo, error) {
+	return &vault.VaultInfo{Name: "Hashicorp Vault"}, nil
+}
+
 // Dial gets a Vault client.
 func (v *Vault) client() (*api.Client, error) {
 	c, err := api.NewClient(&v.APIConfig)

@@ -25,6 +25,10 @@ type Vault struct {
 	cfg aws.Config
 }
 
+func (v *Vault) About(context.Context, *vault.Empty) (*vault.VaultInfo, error) {
+	return &vault.VaultInfo{Name: "AWS Parameter Store"}, nil
+}
+
 // arn:aws:ssm:us-east-2:123456789012:parameter/prod-*
 func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, error) {
 	// create the client

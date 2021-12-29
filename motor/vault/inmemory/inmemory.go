@@ -31,6 +31,10 @@ type inmemoryVault struct {
 	secrets map[string]*vault.Secret
 }
 
+func (v *inmemoryVault) About(context.Context, *vault.Empty) (*vault.VaultInfo, error) {
+	return &vault.VaultInfo{Name: "In-Memory Vault"}, nil
+}
+
 func (v *inmemoryVault) Set(ctx context.Context, secret *vault.Secret) (*vault.SecretID, error) {
 	if secret == nil {
 		return nil, errors.New("secret is empty")

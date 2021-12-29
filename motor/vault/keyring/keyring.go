@@ -55,6 +55,10 @@ type Vault struct {
 	filePasswordFunc func(s string) (string, error)
 }
 
+func (v *Vault) About(context.Context, *vault.Empty) (*vault.VaultInfo, error) {
+	return &vault.VaultInfo{Name: "Keyring Vault: " + v.ServiceName}, nil
+}
+
 func (v *Vault) open() (keyring.Keyring, error) {
 	return keyring.Open(keyring.Config{
 		ServiceName:      v.ServiceName,
