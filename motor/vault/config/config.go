@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/cockroachdb/errors"
@@ -11,7 +12,28 @@ import (
 	"go.mondoo.io/mondoo/motor/vault/gcpsecretmanager"
 	"go.mondoo.io/mondoo/motor/vault/hashivault"
 	"go.mondoo.io/mondoo/motor/vault/keyring"
+	"go.mondoo.io/mondoo/stringx"
 )
+
+const (
+	Vault_Hashicorp          string = "hashicorp-vault"
+	Vault_EncryptedFile      string = "encrypted-file"
+	Vault_Keyring            string = "keyring"
+	Vault_GCPSecretsManager  string = "gcp-secret-manager"
+	Vault_AWSSecretsManager  string = "aws-secrets-manager"
+	Vault_AWSParameterStore  string = "aws-parameter-store"
+	Vault_LinuxKernelKeyring string = "linux-kernel-keyring"
+)
+
+var SupportedVaultTypes = []string{
+	Vault_Hashicorp,
+	Vault_EncryptedFile,
+	Vault_Keyring,
+	Vault_GCPSecretsManager,
+	Vault_AWSSecretsManager,
+	Vault_AWSParameterStore,
+	Vault_LinuxKernelKeyring,
+}
 
 type VaultConfiguration struct {
 	Name      string            `json:"name,omitempty"`
@@ -19,14 +41,12 @@ type VaultConfiguration struct {
 	Options   map[string]string `json:"options,omitempty" `
 }
 
-const (
-	Vault_Hashicorp         string = "hashicorp-vault"
-	Vault_EncryptedFile     string = "encrypted-file"
-	Vault_Keyring           string = "keyring"
-	Vault_GCPSecretsManager string = "gcp-secret-manager"
-	Vault_AWSSecretsManager string = "aws-secrets-manager"
-	Vault_AWSParameterStore string = "aws-parameter-store"
-)
+func (vc VaultConfiguration) Validate() error {
+	if !stringx.Contains(SupportedVaultTypes, vc.VaultType) {
+		return errors.Errorf("unsupported vault type: %s, use one of: %s", vc.VaultType, strings.Join(SupportedVaultTypes, ","))
+	}
+	return nil
+}
 
 func New(vCfg VaultConfiguration) (vault.Vault, error) {
 	var vault vault.Vault
@@ -43,6 +63,9 @@ func New(vCfg VaultConfiguration) (vault.Vault, error) {
 	case Vault_Keyring:
 		keyRingName := vCfg.Options["name"]
 		vault = keyring.New(keyRingName)
+	case Vault_LinuxKernelKeyring:
+		keyRingName := vCfg.Options["name"]
+		vault = keyring.NewLinuxKernelKeyring(keyRingName)
 	case Vault_GCPSecretsManager:
 		projectID := vCfg.Options["project-id"]
 		vault = gcpsecretmanager.New(projectID)
