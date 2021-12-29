@@ -23,6 +23,10 @@ type Vault struct {
 	cfg aws.Config
 }
 
+func (v *Vault) About(context.Context, *vault.Empty) (*vault.VaultInfo, error) {
+	return &vault.VaultInfo{Name: "AWS Secrets Manager"}, nil
+}
+
 func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, error) {
 	// create the client
 	parsedArn, err := arn.Parse(id.Key)

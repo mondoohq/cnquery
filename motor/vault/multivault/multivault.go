@@ -5,9 +5,7 @@ import (
 	"errors"
 
 	"go.mondoo.io/mondoo/falcon/codes"
-
 	"go.mondoo.io/mondoo/falcon/status"
-
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
@@ -24,6 +22,10 @@ func New(vaults ...vault.Vault) *multiVault {
 
 type multiVault struct {
 	vaults []vault.Vault
+}
+
+func (v *multiVault) About(context.Context, *vault.Empty) (*vault.VaultInfo, error) {
+	return &vault.VaultInfo{Name: "Multi Vault"}, nil
 }
 
 func (m *multiVault) Set(ctx context.Context, secret *vault.Secret) (*vault.SecretID, error) {

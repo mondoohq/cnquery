@@ -39,6 +39,10 @@ func init() {
 	}, vault.SecretEncoding_encoding_proto)
 }
 
+func (v *Vault) About(context.Context, *vault.Empty) (*vault.VaultInfo, error) {
+	return &vault.VaultInfo{Name: "Mock Vault"}, nil
+}
+
 func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, error) {
 	log.Debug().Msgf("getting cred from mock vault %s", id.Key)
 	switch id.Key {
