@@ -103,6 +103,19 @@ func TestParseSshInventory(t *testing.T) {
 	assert.Equal(t, vault.CredentialType_private_key, inventory.Spec.Credentials[a.Connections[0].Credentials[0].SecretId].Type)
 }
 
+func TestParseVaultInventory(t *testing.T) {
+	inventory, err := InventoryFromFile("./testdata/vault_inventory.yml")
+	require.NoError(t, err)
+
+	// extract credentials into credential section
+	err = inventory.PreProcess()
+	require.NoError(t, err)
+
+	// ensure that all assets have a valid secret reference
+	err = inventory.Validate()
+	require.NoError(t, err)
+}
+
 func findAsset(assets []*asset.Asset, id string) *asset.Asset {
 	for i := range assets {
 		a := assets[i]

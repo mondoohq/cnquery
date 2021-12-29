@@ -127,13 +127,23 @@ func (im *inventoryManager) loadInventory(inventory *v1.Inventory) error {
 	}
 
 	if inventory.Spec.Vault != nil {
-		v, err := config.New(config.VaultConfiguration{
-			Name:      inventory.Spec.Vault.Name,
-			VaultType: inventory.Spec.Vault.Type,
-			Options:   inventory.Spec.Vault.Options,
-		})
-		if err != nil {
-			return err
+		var v vault.Vault
+		// when the type is not provided but a name was given, then look up in our internal vault configuration
+		if inventory.Spec.Vault.Name != "" && inventory.Spec.Vault.Type == "" {
+			v, err = config.GetConfiguredVault(inventory.Spec.Vault.Name)
+			if err != nil {
+				return err
+			}
+		} else {
+			// instantiate with full vault config
+			v, err = config.New(config.VaultConfiguration{
+				Name:      inventory.Spec.Vault.Name,
+				VaultType: inventory.Spec.Vault.Type,
+				Options:   inventory.Spec.Vault.Options,
+			})
+			if err != nil {
+				return err
+			}
 		}
 		im.vault = v
 	}

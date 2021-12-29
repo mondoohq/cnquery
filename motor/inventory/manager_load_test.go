@@ -70,3 +70,12 @@ func TestAwsInventoryLoader(t *testing.T) {
 		}
 	}
 }
+
+func TestVaultInventoryLoader(t *testing.T) {
+	// load inventory with vault name, it will throw an error since vault is not configured fully
+	inventory, err := v1.InventoryFromFile("./v1/testdata/vault_inventory.yml")
+	require.NoError(t, err)
+
+	_, err = New(WithInventory(inventory))
+	require.Error(t, err)
+}
