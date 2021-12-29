@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/cockroachdb/errors"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/vault"
 	"go.mondoo.io/mondoo/motor/vault/awsparameterstore"
 	"go.mondoo.io/mondoo/motor/vault/awssecretsmanager"
@@ -37,8 +38,8 @@ var SupportedVaultTypes = []string{
 
 type VaultConfiguration struct {
 	Name      string            `json:"name,omitempty"`
-	VaultType string            `json:"type,omitempty" `
-	Options   map[string]string `json:"options,omitempty" `
+	VaultType string            `json:"type,omitempty"`
+	Options   map[string]string `json:"options,omitempty"`
 }
 
 func (vc VaultConfiguration) Validate() error {
@@ -49,6 +50,7 @@ func (vc VaultConfiguration) Validate() error {
 }
 
 func New(vCfg VaultConfiguration) (vault.Vault, error) {
+	log.Debug().Str("vault-name", vCfg.Name).Str("vault-type", vCfg.VaultType).Msg("initialize new vault")
 	var vault vault.Vault
 	switch vCfg.VaultType {
 	case Vault_Hashicorp:
@@ -83,7 +85,7 @@ func New(vCfg VaultConfiguration) (vault.Vault, error) {
 		}
 		vault = awsparameterstore.New(cfg)
 	default:
-		return nil, errors.New("the vault type is unknown: " + vCfg.VaultType)
+		return nil, errors.Errorf("could not connect to vault: %s (%s)", vCfg.Name, vCfg.VaultType)
 	}
 	return vault, nil
 }

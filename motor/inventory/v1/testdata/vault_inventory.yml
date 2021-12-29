@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Inventory
+metadata:
+  name: mondoo-ssh-inventory
+  labels:
+    environment: production
+spec:
+  assets:
+    - id: linux-with-password
+      connections:
+        - host: 192.168.178.20
+          backend: ssh
+          sudo:
+            active: true
+          credentials:
+            - secret_id: 1234
+  vault:
+    name: sample-vault
