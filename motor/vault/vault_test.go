@@ -14,6 +14,7 @@ func TestSecretCredentialConversion(t *testing.T) {
 		User:     "username",
 		Password: "pass1",
 	}
+	cred.PreProcess()
 
 	secret, err := NewSecret(cred, SecretEncoding_encoding_proto)
 	require.NoError(t, err)
