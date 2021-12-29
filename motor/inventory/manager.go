@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"go.mondoo.io/mondoo/motor/vault/config"
-
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/logger"
 	"go.mondoo.io/mondoo/motor/asset"
@@ -13,6 +11,7 @@ import (
 	"go.mondoo.io/mondoo/motor/inventory/credentialquery"
 	"go.mondoo.io/mondoo/motor/inventory/v1"
 	"go.mondoo.io/mondoo/motor/vault"
+	"go.mondoo.io/mondoo/motor/vault/config"
 	"go.mondoo.io/mondoo/motor/vault/inmemory"
 	"go.mondoo.io/mondoo/motor/vault/multivault"
 )

@@ -8,6 +8,25 @@ import (
 	"strings"
 )
 
+// PreProcess converts a more user-friendly configuration into a standard secrets form:
+// eg. { user: "chris", password: "pwd"} will be converted to { type: "password", user: "chris", secret: "<byte pwd>"}
+func (cred *Credential) PreProcess() {
+	// load private key pem into secret
+	if cred.PrivateKey != "" {
+		cred.Secret = []byte(cred.PrivateKey)
+		cred.PrivateKey = ""
+		cred.Type = CredentialType_private_key
+	}
+
+	// NOTE: it is possible that private keys hold an additional password, therefore we only
+	// copy the password into the secret when the credential type is password
+	if (cred.Type == CredentialType_undefined || cred.Type == CredentialType_password) && cred.Password != "" {
+		cred.Secret = []byte(cred.Password)
+		cred.Password = ""
+		cred.Type = CredentialType_password
+	}
+}
+
 // UnmarshalJSON parses either an int or a string representation of
 // CredentialType into the struct
 func (s *CredentialType) UnmarshalJSON(data []byte) error {

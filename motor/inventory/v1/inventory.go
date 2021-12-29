@@ -118,19 +118,7 @@ func (p *Inventory) PreProcess() error {
 
 		// ensure the secret id is correct
 		cred.SecretId = k
-
-		// load private key pem into secret
-		if cred.PrivateKey != "" {
-			cred.Secret = []byte(cred.PrivateKey)
-			cred.PrivateKey = ""
-		}
-
-		// NOTE: it is possible that private keys hold an additional password, therefore we only
-		// copy the password into the secret when the credential type is password
-		if cred.Type == vault.CredentialType_password && cred.Password != "" {
-			cred.Secret = []byte(cred.Password)
-			cred.Password = ""
-		}
+		cred.PreProcess()
 
 		// TODO: we may want to load it but we probably need
 		// a local file watcher to detect changes
@@ -159,6 +147,7 @@ func (p *Inventory) PreProcess() error {
 				return errors.New("cannot read credential: " + path)
 			}
 			cred.Secret = data
+			cred.Type = vault.CredentialType_private_key
 		}
 	}
 	return nil

@@ -30,7 +30,7 @@ func (x *Secret) Credential() (*Credential, error) {
 		err = json.Unmarshal(x.Data, &cred)
 	case SecretEncoding_encoding_binary:
 		cred = Credential{
-			// if binary is used, it needs to be overwriten from outside
+			// if binary is used, it needs to be over-written from outside
 			Secret: x.Data,
 		}
 	default:
@@ -42,6 +42,8 @@ func (x *Secret) Credential() (*Credential, error) {
 	}
 
 	cred.SecretId = x.Key
+	cred.PreProcess()
+
 	return &cred, nil
 }
 
