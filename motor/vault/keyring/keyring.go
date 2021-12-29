@@ -48,11 +48,22 @@ func NewEncryptedFile(path string, serviceName string, password string) *Vault {
 	}
 }
 
+func NewLinuxKernelKeyring(serviceName string) *Vault {
+	return &Vault{
+		ServiceName: serviceName,
+		allowedBackends: []keyring.BackendType{
+			keyring.KeyCtlBackend,
+		},
+		keyctlscope: "user",
+	}
+}
+
 type Vault struct {
 	ServiceName      string
 	allowedBackends  []keyring.BackendType
 	fileDir          string
 	filePasswordFunc func(s string) (string, error)
+	keyctlscope      string
 }
 
 func (v *Vault) About(context.Context, *vault.Empty) (*vault.VaultInfo, error) {
@@ -65,6 +76,7 @@ func (v *Vault) open() (keyring.Keyring, error) {
 		AllowedBackends:  v.allowedBackends,
 		FileDir:          v.fileDir,
 		FilePasswordFunc: v.filePasswordFunc,
+		KeyCtlScope:      v.keyctlscope,
 	})
 }
 
@@ -74,8 +86,8 @@ func (v *Vault) Set(ctx context.Context, cred *vault.Secret) (*vault.SecretID, e
 		return nil, err
 	}
 
-	if cred.Encoding != vault.SecretEncoding_encoding_binary && cred.Encoding != vault.SecretEncoding_encoding_undefined {
-		return nil, errors.New("only binary encoding is supported")
+	if cred.Encoding != vault.SecretEncoding_encoding_json && cred.Encoding != vault.SecretEncoding_encoding_undefined {
+		return nil, errors.New("only json encoding is supported")
 	}
 
 	// TODO: store data as json encoding
@@ -91,6 +103,10 @@ func (v *Vault) Set(ctx context.Context, cred *vault.Secret) (*vault.SecretID, e
 }
 
 func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, error) {
+	if id == nil {
+		return nil, errors.New("id cannot be nil")
+	}
+	log.Debug().Str("id", id.Key).Msg("get secret from keyring")
 	ring, err := v.open()
 	if err != nil {
 		return nil, err
@@ -106,6 +122,6 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 		Key:      i.Key,
 		Label:    i.Label,
 		Data:     i.Data,
-		Encoding: vault.SecretEncoding_encoding_binary,
+		Encoding: vault.SecretEncoding_encoding_json,
 	}, nil
 }
