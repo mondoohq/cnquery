@@ -87,12 +87,21 @@ func ResolveAsset(root *asset.Asset, cfn common.CredentialFn, sfn common.QuerySe
 	// if the asset is missing a secret, we try to add this for the asset
 	common.EnrichAssetWithSecrets(root, sfn)
 
+	assetFallbackName := func(a *asset.Asset, c *transports.TransportConfig) {
+		// set the asset name to the config name. This is only required for error cases where the discovery
+		// is not successful
+		if root.Name == "" {
+			root.Name = c.Host
+		}
+	}
+
 	for i := range root.Connections {
 		tc := root.Connections[i]
 
 		resolverId := tc.Backend.Scheme()
 		r, ok := resolver[resolverId]
 		if !ok {
+			assetFallbackName(root, tc)
 			return nil, errors.New("unsupported backend: " + resolverId)
 		}
 
@@ -113,6 +122,7 @@ func ResolveAsset(root *asset.Asset, cfn common.CredentialFn, sfn common.QuerySe
 		// resolve assets
 		resolvedAssets, err := r.Resolve(tc, cfn, sfn, userIdDetectors...)
 		if err != nil {
+			assetFallbackName(root, tc)
 			return nil, err
 		}
 
