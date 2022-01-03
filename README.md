@@ -49,6 +49,6 @@ We love emojis in our commits. These are their meanings:
 
 ## Legal
 
-- **Copyright:** 2018-2021, Mondoo Inc, proprietary
+- **Copyright:** 2018-2022, Mondoo Inc, proprietary
 - **Authors:** Christoph Hartmann, Dominik Richter
 
