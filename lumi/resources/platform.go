@@ -55,7 +55,7 @@ func (p *lumiPlatformEol) init(args *lumi.Args) (*lumi.Args, PlatformEol, error)
 		return nil, nil, err
 	}
 
-	// gather system infomation
+	// gather system information
 	platform := obj.(Platform)
 
 	name, _ := platform.Name()
@@ -68,12 +68,12 @@ func (p *lumiPlatformEol) init(args *lumi.Args) (*lumi.Args, PlatformEol, error)
 		Arch:    arch,
 	})
 
+	log.Debug().Str("name", name).Str("release", release).Msg("search for eol information")
 	if platformEolInfo == nil {
 		return nil, nil, errors.New("no platform eol information available")
 	}
 
 	var eolDate *time.Time
-
 	if platformEolInfo.EolDate != "" {
 		parsedEolDate, err := time.Parse(time.RFC3339, platformEolInfo.EolDate)
 		if err != nil {
