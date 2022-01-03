@@ -40,7 +40,7 @@ func vsphereTestQuery(t *testing.T, query string) []*llx.RawResult {
 	m, err := motor.New(trans)
 	require.NoError(t, err)
 
-	executor := initExecutor(m)
+	executor := initExecutionContext(m)
 	return testQueryWithExecutor(t, executor, query, nil)
 }
 

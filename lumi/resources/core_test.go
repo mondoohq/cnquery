@@ -1,7 +1,9 @@
 package resources_test
 
 import (
+	"errors"
 	"math"
+	"sort"
 	"strconv"
 	"testing"
 	"time"
@@ -16,6 +18,7 @@ import (
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/transports/local"
 	"go.mondoo.io/mondoo/motor/transports/mock"
+	"go.mondoo.io/mondoo/policy"
 	"go.mondoo.io/mondoo/policy/executor"
 )
 
@@ -32,45 +35,73 @@ func mockTransport(filepath string) (*motor.Motor, error) {
 	return motor.New(trans)
 }
 
-func initExecutor(motor *motor.Motor) *executor.Executor {
+type executionContext struct {
+	schema  *lumi.Schema
+	runtime *lumi.Runtime
+}
+
+func initExecutionContext(motor *motor.Motor) executionContext {
 	registry := lumi.NewRegistry()
 	resources.Init(registry)
 
 	runtime := lumi.NewRuntime(registry, motor)
 
-	executor := executor.New(registry.Schema(), runtime)
-
-	return executor
+	return executionContext{
+		schema:  registry.Schema(),
+		runtime: runtime,
+	}
 }
 
-func testQueryWithExecutor(t *testing.T, executor *executor.Executor, query string, props map[string]*llx.Primitive) []*llx.RawResult {
-	var results []*llx.RawResult
-	executor.AddWatcher("test", func(res *llx.RawResult) {
-		results = append(results, res)
-	})
-	defer executor.RemoveWatcher("test")
-
-	bundle, err := leise.Compile(query, executor.Schema(), props)
+func testQueryWithExecutor(t *testing.T, execCtx executionContext, query string, props map[string]*llx.Primitive) []*llx.RawResult {
+	bundle, err := leise.Compile(query, execCtx.schema, props)
 	if err != nil {
 		t.Fatal("failed to compile code: " + err.Error())
 	}
 	err = leise.Invariants.Check(bundle)
 	require.NoError(t, err)
 
-	err = executor.AddCodeBundle(bundle, props)
-	if err != nil {
-		t.Fatal("failed to add code to executor: " + err.Error())
-	}
-	defer executor.RemoveCode(bundle.Code.Id, query)
+	score, resultMap, err := executor.ExecuteQuery(execCtx.schema, execCtx.runtime, bundle, props)
+	require.NoError(t, err)
 
-	if executor.WaitForResults(2*time.Second) == false {
-		t.Fatal("ran into timeout on testing query " + query)
+	results := make([]*llx.RawResult, 0, len(resultMap)+1)
+	i := 0
+
+	refs := make([]int, 0, len(bundle.Code.Checksums))
+	for _, datapointArr := range [][]int32{bundle.Code.Datapoints, bundle.Code.Entrypoints} {
+		for _, v := range datapointArr {
+			refs = append(refs, int(v))
+		}
 	}
+	sort.Ints(refs)
+
+	for _, ref := range refs {
+		checksum := bundle.Code.Checksums[int32(ref)]
+		if d, ok := resultMap[checksum]; ok {
+			results = append(results, d)
+			i++
+		}
+	}
+
+	success := score.Value == 100
+	queryResult := &llx.RawResult{
+		CodeID: score.QrId,
+	}
+	if score.Type == policy.ScoreType_Result {
+		queryResult.Data = llx.BoolData(success)
+	} else if score.Type == policy.ScoreType_Error {
+		queryResult.Data = &llx.RawData{
+			Error: errors.New(score.Message),
+		}
+	} else if score.Type == policy.ScoreType_Skip {
+		queryResult.Data = llx.NilData
+	}
+
+	results = append(results, queryResult)
 
 	return results
 }
 
-func localExecutor() *executor.Executor {
+func localExecutor() executionContext {
 	transport, err := local.New()
 	if err != nil {
 		panic(err.Error())
@@ -81,21 +112,19 @@ func localExecutor() *executor.Executor {
 		panic(err.Error())
 	}
 
-	executor := initExecutor(m)
-	return executor
+	return initExecutionContext(m)
 }
 
-func mockExecutor(path string) *executor.Executor {
+func mockExecutor(path string) executionContext {
 	m, err := mockTransport(path)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	executor := initExecutor(m)
-	return executor
+	return initExecutionContext(m)
 }
 
-func linuxMockExecutor() *executor.Executor {
+func linuxMockExecutor() executionContext {
 	const linuxMockFile = "./testdata/arch.toml"
 	return mockExecutor(linuxMockFile)
 }
@@ -120,72 +149,6 @@ func testResultsErrors(t *testing.T, r []*llx.RawResult) bool {
 	return found
 }
 
-// StableTestRepetitions specifies the repetitions used in testing
-// to see if queries are deterministic
-var StableTestRepetitions = 5
-
-func stableResults(t *testing.T, query string) map[string]*llx.RawResult {
-	executor := linuxMockExecutor()
-
-	results := make([]map[string]*llx.RawResult, StableTestRepetitions)
-
-	for i := 0; i < StableTestRepetitions; i++ {
-		results[i] = map[string]*llx.RawResult{}
-		watcherID := "test"
-
-		executor.AddWatcher(watcherID, func(res *llx.RawResult) {
-			results[i][res.CodeID] = res
-		})
-
-		bundle, err := executor.AddCode(query, nil)
-		if err != nil {
-			t.Fatal("failed to add code to executor: " + err.Error())
-			return nil
-		}
-		if executor.WaitForResults(2*time.Second) == false {
-			t.Fatal("ran into timeout on testing query " + query)
-			return nil
-		}
-
-		executor.RemoveWatcher(watcherID)
-		executor.RemoveCode(bundle.Code.Id, query)
-	}
-
-	first := results[0]
-	for i := 1; i < StableTestRepetitions; i++ {
-		next := results[i]
-		for id, firstRes := range first {
-			nextRes := next[id]
-
-			if firstRes == nil {
-				t.Fatalf("received nil as the result for query '%s' codeID '%s'", query, id)
-				return nil
-			}
-
-			if nextRes == nil {
-				t.Fatalf("received nil as the result for query '%s' codeID '%s'", query, id)
-				return nil
-			}
-
-			firstData := firstRes.Data
-			nextData := nextRes.Data
-			if firstData.Value == nextData.Value && firstData.Error == nextData.Error {
-				continue
-			}
-
-			if firstData.Value != nextData.Value {
-				t.Errorf("unstable result for '%s'\n  first = %v\n  next = %v\n", query, firstData.Value, nextData.Value)
-			}
-			if firstData.Error != nextData.Error {
-				t.Errorf("unstable result error for '%s'\n  error1 = %v\n  error2 = %v\n", query, firstData.Error, nextData.Error)
-			}
-			break
-		}
-	}
-
-	return results[0]
-}
-
 type simpleTest struct {
 	code        string
 	resultIndex int
@@ -204,7 +167,6 @@ func runSimpleTests(t *testing.T, tests []simpleTest) {
 				return
 			}
 
-			assert.NotNil(t, res[cur.resultIndex].Result().Error)
 			assert.Equal(t, cur.expectation, res[cur.resultIndex].Data.Value)
 		})
 	}
@@ -222,52 +184,34 @@ func runSimpleErrorTests(t *testing.T, tests []simpleTest) {
 	}
 }
 
-// func TestStableCore(t *testing.T) {
-// 	res := stableResults(t, "mondoo.version")
-// 	for _, v := range res {
-// 		assert.Equal(t, "unstable", v.Data.Value)
-// 	}
-// }
-
-func testTimeout(t *testing.T, codes ...string) {
+func testErrornous(t *testing.T, codes ...string) {
 	executor := linuxMockExecutor()
 
 	for i := range codes {
 		code := codes[i]
 		t.Run(code, func(t *testing.T) {
-			res, err := executor.AddCode(code, nil)
-			if err != nil {
-				t.Error("failed to compile: " + err.Error())
-				return
-			}
-			defer executor.RemoveCode(res.Code.Id, code)
-
-			timeoutTime := 5
-			if !executor.WaitForResults(time.Duration(timeoutTime) * time.Second) {
-				t.Error("ran into timeout after ", timeoutTime, " seconds")
-				return
-			}
+			testQueryWithExecutor(t, executor, code, nil)
 		})
 	}
 }
 
 func TestErroneousLlxChains(t *testing.T) {
-	testTimeout(t, `file("/etc/crontab") {
+	testErrornous(t, `file("/etc/crontab") {
 		permissions.group_readable == false
 		permissions.group_writeable == false
 		permissions.group_executable == false
 	}`)
 
-	testTimeout(t,
+	testErrornous(t,
 		`file("/etc/profile").content.contains("umask 027") || file("/etc/bashrc").content.contains("umask 027")`,
 		`file("/etc/profile").content.contains("umask 027") || file("/etc/bashrc").content.contains("umask 027")`,
 	)
 
-	testTimeout(t,
+	testErrornous(t,
 		`ntp.conf { settings.contains("a") settings.contains("b") }`,
 	)
 
-	testTimeout(t,
+	testErrornous(t,
 		`user(name: 'i_definitely_dont_exist').authorizedkeys`,
 	)
 }
@@ -330,25 +274,25 @@ func TestCore_If(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"if ( mondoo.version != null ) { 123 }",
-			2,
+			1,
 			map[string]interface{}{
 				"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
 			},
 		},
 		{
 			"if ( mondoo.version == null ) { 123 }",
-			2, nil,
+			1, nil,
 		},
 		{
 			"if ( mondoo.version != null ) { 123 } else { 456 }",
-			2,
+			1,
 			map[string]interface{}{
 				"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
 			},
 		},
 		{
 			"if ( mondoo.version == null ) { 123 } else { 456 }",
-			2,
+			1,
 			map[string]interface{}{
 				"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
 			},
@@ -390,7 +334,7 @@ func TestCore_If(t *testing.T) {
 		},
 		{
 			"if(platform.family.contains('arch'))",
-			0, nil,
+			1, nil,
 		},
 		{
 			// This test comes out from an issue we had where return was not
@@ -1003,7 +947,7 @@ func TestArray(t *testing.T) {
 		},
 		{
 			"[[0,1],[1,2]].map(_[1])",
-			2,
+			0,
 			[]interface{}{int64(1), int64(2)},
 		},
 		{
@@ -1209,7 +1153,7 @@ func TestResource_Map(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"users.map(name)",
-			2, []interface{}([]interface{}{"root", "chris", "christopher", "chris", "bin"}),
+			0, []interface{}([]interface{}{"root", "chris", "christopher", "chris", "bin"}),
 		},
 	})
 }
@@ -1218,7 +1162,7 @@ func TestResource_duplicateFields(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
 			"users.list.duplicates(uid) { uid }",
-			2,
+			0,
 			[]interface{}{
 				map[string]interface{}{"sYZO9ps0Y4tx2p0TkrAn73WTQx83QIQu70uPtNukYNnVAzaer3Pf6xe7vAplB+cAgPbteXzizlUioUMnNJr5sg==": &llx.RawData{
 					Type:  "\x05",
@@ -1267,7 +1211,7 @@ func TestDict_Methods(t *testing.T) {
 		},
 		{
 			p + "params['f'].map(_['ff'])",
-			2,
+			0,
 			[]interface{}{float64(3)},
 		},
 		{
