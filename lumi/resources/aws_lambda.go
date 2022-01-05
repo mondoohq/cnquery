@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	"github.com/aws/smithy-go/transport/http"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
@@ -69,12 +69,20 @@ func (l *lumiAwsLambda) getFunctions(at *aws_transport.Transport) []*jobpool.Job
 					if function.DeadLetterConfig != nil {
 						dlqTarget = toString(function.DeadLetterConfig.TargetArn)
 					}
+					tags := make(map[string]interface{})
+					tagsResp, err := svc.ListTags(ctx, &lambda.ListTagsInput{Resource: function.FunctionArn})
+					if err == nil {
+						for k, v := range tagsResp.Tags {
+							tags[k] = v
+						}
+					}
 					lumiFunc, err := l.Runtime.CreateResource("aws.lambda.function",
 						"arn", toString(function.FunctionArn),
 						"name", toString(function.FunctionName),
 						"dlqTargetArn", dlqTarget,
 						"vpcConfig", vpcConfigJson,
 						"region", regionVal,
+						"tags", tags,
 					)
 					if err != nil {
 						return nil, err
@@ -139,9 +147,11 @@ func (l *lumiAwsLambdaFunction) GetPolicy() (interface{}, error) {
 
 	// no pagination required
 	functionPolicy, err := svc.GetPolicy(ctx, &lambda.GetPolicyInput{FunctionName: &funcArn})
-	var notFoundErr *types.ResourceNotFoundException
-	if err != nil && errors.As(err, &notFoundErr) {
-		return nil, nil
+	var respErr *http.ResponseError
+	if err != nil && errors.As(err, &respErr) {
+		if respErr.HTTPStatusCode() == 404 {
+			return nil, nil
+		}
 	} else if err != nil {
 		return nil, err
 	}
