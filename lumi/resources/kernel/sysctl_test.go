@@ -5,12 +5,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestSysctlDebian(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/debian.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/debian.toml")
 	require.NoError(t, err)
 
 	c, err := mock.RunCommand("/sbin/sysctl -a")
@@ -24,7 +23,7 @@ func TestSysctlDebian(t *testing.T) {
 }
 
 func TestSysctlMacos(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/osx.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/osx.toml")
 	require.NoError(t, err)
 
 	c, err := mock.RunCommand("sysctl -a")
@@ -38,7 +37,7 @@ func TestSysctlMacos(t *testing.T) {
 }
 
 func TestSysctlFreebsd(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/freebsd12.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/freebsd12.toml")
 	require.NoError(t, err)
 
 	c, err := mock.RunCommand("sysctl -a")

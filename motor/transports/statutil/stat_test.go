@@ -15,7 +15,7 @@ import (
 
 func TestLinuxStatCmd(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/linux.toml")
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: filepath})
+	trans, err := mock.NewFromTomlFile(filepath)
 	require.NoError(t, err)
 
 	statHelper := New(trans)
@@ -38,12 +38,11 @@ func TestLinuxStatCmd(t *testing.T) {
 	mode = fi.Mode()
 	assert.NotZero(t, mode&fs.ModeSetuid)
 	assert.Zero(t, mode&fs.ModeSetgid)
-
 }
 
 func TestOpenbsdStatCmd(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/openbsd.toml")
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: filepath})
+	trans, err := mock.NewFromTomlFile(filepath)
 	require.NoError(t, err)
 
 	statHelper := New(trans)
@@ -63,48 +62,47 @@ func TestOpenbsdStatCmd(t *testing.T) {
 
 func TestToFileMode(t *testing.T) {
 	t.Run("directory and setgid", func(t *testing.T) {
-		m := toFileMode(0040000 | 0002000 | 0755)
+		m := toFileMode(0o040000 | 0o002000 | 0o755)
 		assert.True(t, m.IsDir())
 		assert.True(t, (m&fs.ModeSetgid) > 0)
 		assert.False(t, (m&fs.ModeSetuid) > 0)
 		assert.False(t, (m&fs.ModeSticky) > 0)
-		assert.Equal(t, fs.FileMode(0755), (m & 0777))
+		assert.Equal(t, fs.FileMode(0o755), (m & 0o777))
 	})
 
 	t.Run("directory and setuid", func(t *testing.T) {
-		m := toFileMode(0040000 | 0004000 | 0755)
+		m := toFileMode(0o040000 | 0o004000 | 0o755)
 		assert.True(t, m.IsDir())
 		assert.False(t, (m&fs.ModeSetgid) > 0)
 		assert.True(t, (m&fs.ModeSetuid) > 0)
 		assert.False(t, (m&fs.ModeSticky) > 0)
-		assert.Equal(t, fs.FileMode(0755), (m & 0777))
+		assert.Equal(t, fs.FileMode(0o755), (m & 0o777))
 	})
 
 	t.Run("directory and setuid and sticky", func(t *testing.T) {
-		m := toFileMode(0040000 | 0004000 | 0001000 | 0755)
+		m := toFileMode(0o040000 | 0o004000 | 0o001000 | 0o755)
 		assert.True(t, m.IsDir())
 		assert.False(t, (m&fs.ModeSetgid) > 0)
 		assert.True(t, (m&fs.ModeSetuid) > 0)
 		assert.True(t, (m&fs.ModeSticky) > 0)
-		assert.Equal(t, fs.FileMode(0755), (m & 0777))
+		assert.Equal(t, fs.FileMode(0o755), (m & 0o777))
 	})
 
 	t.Run("file and setuid", func(t *testing.T) {
-		m := toFileMode(0170000 | 0100000 | 0004000 | 0755)
+		m := toFileMode(0o170000 | 0o100000 | 0o004000 | 0o755)
 		assert.False(t, m.IsDir())
 		assert.False(t, (m&fs.ModeSetgid) > 0)
 		assert.True(t, (m&fs.ModeSetuid) > 0)
 		assert.False(t, (m&fs.ModeSticky) > 0)
-		assert.Equal(t, fs.FileMode(0755), (m & 0777))
+		assert.Equal(t, fs.FileMode(0o755), (m & 0o777))
 	})
 
 	t.Run("file and setuid and setgid", func(t *testing.T) {
-		m := toFileMode(0170000 | 0100000 | 0004000 | 0002000 | 0755)
+		m := toFileMode(0o170000 | 0o100000 | 0o004000 | 0o002000 | 0o755)
 		assert.False(t, m.IsDir())
 		assert.True(t, (m&fs.ModeSetgid) > 0)
 		assert.True(t, (m&fs.ModeSetuid) > 0)
 		assert.False(t, (m&fs.ModeSticky) > 0)
-		assert.Equal(t, fs.FileMode(0755), (m & 0777))
+		assert.Equal(t, fs.FileMode(0o755), (m & 0o777))
 	})
-
 }

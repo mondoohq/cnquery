@@ -5,12 +5,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/lumi/resources/packages"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestAlpineApkdbParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/packages_apk.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/packages_apk.toml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,7 +79,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 }
 
 func TestApkUpdateParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/updates_apk.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/updates_apk.toml")
 	if err != nil {
 		t.Fatal(err)
 	}

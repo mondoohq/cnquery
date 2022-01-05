@@ -5,12 +5,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/lumi/resources/services"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestParseServiceLaunchD(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/osx.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/osx.toml")
 	if err != nil {
 		t.Fatal(err)
 	}

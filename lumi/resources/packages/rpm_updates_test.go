@@ -4,12 +4,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestRpmUpdateParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/updates_rpm.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/updates_rpm.toml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +34,7 @@ func TestRpmUpdateParser(t *testing.T) {
 }
 
 func TestZypperUpdateParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/updates_zypper.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/updates_zypper.toml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,7 +59,7 @@ func TestZypperUpdateParser(t *testing.T) {
 
 // SUSE OS updates
 func TestZypperPatchParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/updates_zypper.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/updates_zypper.toml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -76,5 +75,4 @@ func TestZypperPatchParser(t *testing.T) {
 
 	assert.Equal(t, "openSUSE-2018-397", m[0].Name, "update name detected")
 	assert.Equal(t, "moderate", m[0].Severity, "severity version detected")
-
 }

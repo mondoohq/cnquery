@@ -5,13 +5,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestParseProcCpuX64(t *testing.T) {
-	path := "./testdata/cpu-info-x64.toml"
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: path})
+	trans, err := mock.NewFromTomlFile("./testdata/cpu-info-x64.toml")
 	require.NoError(t, err)
 
 	f, err := trans.FS().Open("/proc/cpuinfo")
@@ -69,8 +67,7 @@ func TestParseProcCpuX64(t *testing.T) {
 }
 
 func TestParseProcCpuArm(t *testing.T) {
-	path := "./testdata/cpu-info-aarch64.toml"
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: path})
+	trans, err := mock.NewFromTomlFile("./testdata/cpu-info-aarch64.toml")
 	require.NoError(t, err)
 
 	f, err := trans.FS().Open("/proc/cpuinfo")

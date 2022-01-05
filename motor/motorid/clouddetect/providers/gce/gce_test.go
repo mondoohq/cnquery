@@ -6,12 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestDetectLinuxInstance(t *testing.T) {
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/instance_linux.toml"})
+	trans, err := mock.NewFromTomlFile("./testdata/instance_linux.toml")
 	require.NoError(t, err)
 
 	m, err := motor.New(trans)
@@ -25,7 +24,7 @@ func TestDetectLinuxInstance(t *testing.T) {
 }
 
 func TestDetectWindowsInstance(t *testing.T) {
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/instance_windows.toml"})
+	trans, err := mock.NewFromTomlFile("./testdata/instance_windows.toml")
 	require.NoError(t, err)
 
 	m, err := motor.New(trans)
@@ -39,7 +38,7 @@ func TestDetectWindowsInstance(t *testing.T) {
 }
 
 func TestNoMatch(t *testing.T) {
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/aws_instance.toml"})
+	trans, err := mock.NewFromTomlFile("./testdata/aws_instance.toml")
 	require.NoError(t, err)
 
 	m, err := motor.New(trans)

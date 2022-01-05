@@ -6,12 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestManagerCentos(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/centos.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/centos.toml")
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -57,7 +56,7 @@ func TestManagerCentos(t *testing.T) {
 }
 
 func TestManagerMacos(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/macos.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/macos.toml")
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -103,7 +102,7 @@ func TestManagerMacos(t *testing.T) {
 }
 
 func TestManagerWindows(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/windows.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/windows.toml")
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)

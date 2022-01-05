@@ -6,12 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestParseSysvServices(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/amzn1.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/amzn1.toml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -26,7 +25,7 @@ func TestParseSysvServices(t *testing.T) {
 }
 
 func TestParseSysvServicesRunlevel(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/amzn1.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/amzn1.toml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -44,7 +43,7 @@ func TestParseSysvServicesRunlevel(t *testing.T) {
 }
 
 func TestParseSysvServicesRunning(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/amzn1.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/amzn1.toml")
 	if err != nil {
 		t.Fatal(err)
 	}

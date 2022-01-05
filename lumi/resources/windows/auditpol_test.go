@@ -6,12 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/lumi/resources/windows"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestParseAuditpol(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/auditpol.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/auditpol.toml")
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("auditpol /get /category:* /r")
@@ -32,7 +31,6 @@ func TestParseAuditpol(t *testing.T) {
 	}
 	found := findPol(auditpol, "Kernel Object")
 	assert.Equal(t, expected, found)
-
 }
 
 func findPol(auditpol []windows.AuditpolEntry, subcategory string) *windows.AuditpolEntry {

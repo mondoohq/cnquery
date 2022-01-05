@@ -5,12 +5,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/lumi/resources/groups"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestParseLinuxEtcGroups(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/debian.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/debian.toml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,7 +38,7 @@ func TestParseLinuxEtcGroups(t *testing.T) {
 }
 
 func TestParseFreebsd12EtcGroups(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/freebsd12.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/freebsd12.toml")
 	if err != nil {
 		t.Fatal(err)
 	}

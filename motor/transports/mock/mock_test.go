@@ -15,7 +15,7 @@ import (
 
 func TestMockCommand(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/mock.toml")
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: filepath})
+	trans, err := mock.NewFromTomlFile(filepath)
 	assert.Equal(t, nil, err, "should create mock without error")
 
 	cmd, err := trans.RunCommand("ls /")
@@ -34,8 +34,8 @@ func TestMockCommandWithHostname(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/mock.toml")
 	trans, err := mock.NewFromToml(&transports.TransportConfig{
 		Backend: transports.TransportBackend_CONNECTION_MOCK,
-		Path:    filepath,
 		Options: map[string]string{
+			"path":     filepath,
 			"hostname": "foobear",
 		},
 	})
@@ -54,7 +54,7 @@ func TestMockCommandWithHostname(t *testing.T) {
 
 func TestMockFile(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/mock.toml")
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: filepath})
+	trans, err := mock.NewFromTomlFile(filepath)
 	assert.Equal(t, nil, err, "should create mock without error")
 
 	f, err := trans.FS().Open("/etc/ssh/sshd_config")
@@ -87,5 +87,4 @@ func TestMockFile(t *testing.T) {
 	md5, err := fsutil.Md5(f)
 	assert.Equal(t, "c18b98e3ae04f26e62ed52a3d76db5e9", md5, "md5 output should be correct")
 	assert.Nil(t, err, "should execute without error")
-
 }

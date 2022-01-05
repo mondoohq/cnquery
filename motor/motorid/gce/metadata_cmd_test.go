@@ -7,12 +7,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/motorid/gce"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestCommandProviderLinux(t *testing.T) {
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/metadata_linux.toml"})
+	trans, err := mock.NewFromTomlFile("./testdata/metadata_linux.toml")
 	require.NoError(t, err)
 
 	m, err := motor.New(trans)
@@ -28,7 +27,7 @@ func TestCommandProviderLinux(t *testing.T) {
 }
 
 func TestCommandProviderWindows(t *testing.T) {
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/metadata_windows.toml"})
+	trans, err := mock.NewFromTomlFile("./testdata/metadata_windows.toml")
 	require.NoError(t, err)
 
 	m, err := motor.New(trans)

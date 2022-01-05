@@ -5,12 +5,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/lumi/resources/processes"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestLinuxPSProcessParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/debian.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/debian.toml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,7 +33,7 @@ func TestLinuxPSProcessParser(t *testing.T) {
 }
 
 func TestOSxPSProcessParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/osx.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/osx.toml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,7 +57,7 @@ func TestOSxPSProcessParser(t *testing.T) {
 }
 
 func TestUnixPSProcessParser(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/freebsd12.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/freebsd12.toml")
 	if err != nil {
 		t.Fatal(err)
 	}

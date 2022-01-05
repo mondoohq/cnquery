@@ -5,12 +5,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestGuidWindows(t *testing.T) {
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/guid_windows.toml"})
+	trans, err := mock.NewFromTomlFile("./testdata/guid_windows.toml")
 	require.NoError(t, err)
 
 	lid := WinIdProvider{Transport: trans}

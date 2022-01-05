@@ -7,12 +7,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/lumi/resources/services"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestManagerDebian(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/debian.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/debian.toml")
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -27,7 +26,7 @@ func TestManagerDebian(t *testing.T) {
 
 func TestManagerAmzn1(t *testing.T) {
 	// tests fallback to upstart service
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/amzn1.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/amzn1.toml")
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -42,7 +41,7 @@ func TestManagerAmzn1(t *testing.T) {
 
 func TestManagerCentos6(t *testing.T) {
 	// tests fallback to upstart service
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/centos6.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/centos6.toml")
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -57,7 +56,7 @@ func TestManagerCentos6(t *testing.T) {
 
 func TestManagerUbuntu1404(t *testing.T) {
 	// tests fallback to upstart service
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/ubuntu1404.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/ubuntu1404.toml")
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -72,7 +71,7 @@ func TestManagerUbuntu1404(t *testing.T) {
 
 func TestManagerOpensuse13(t *testing.T) {
 	// tests fallback to upstart service
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/opensuse13.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/opensuse13.toml")
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -86,7 +85,7 @@ func TestManagerOpensuse13(t *testing.T) {
 }
 
 func TestManagerMacos(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/osx.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/osx.toml")
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -100,7 +99,7 @@ func TestManagerMacos(t *testing.T) {
 }
 
 func TestManagerFreebsd(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/freebsd12.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/freebsd12.toml")
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -114,7 +113,7 @@ func TestManagerFreebsd(t *testing.T) {
 }
 
 func TestManagerDragonflybsd5(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/dragonfly5.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/dragonfly5.toml")
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -128,7 +127,7 @@ func TestManagerDragonflybsd5(t *testing.T) {
 }
 
 func TestManagerOpenBsd6(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/openbsd6.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/openbsd6.toml")
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -142,7 +141,7 @@ func TestManagerOpenBsd6(t *testing.T) {
 }
 
 func TestManagerWindows(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/windows2019.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/windows2019.toml")
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)

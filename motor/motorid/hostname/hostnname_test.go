@@ -7,12 +7,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/motorid/hostname"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestHostnameLinuxEtcHostname(t *testing.T) {
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/hostname_arch.toml"})
+	trans, err := mock.NewFromTomlFile("./testdata/hostname_arch.toml")
 	require.NoError(t, err)
 
 	m, err := motor.New(trans)
@@ -28,7 +27,7 @@ func TestHostnameLinuxEtcHostname(t *testing.T) {
 }
 
 func TestHostnameLinux(t *testing.T) {
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/hostname_linux.toml"})
+	trans, err := mock.NewFromTomlFile("./testdata/hostname_linux.toml")
 	require.NoError(t, err)
 
 	m, err := motor.New(trans)
@@ -44,7 +43,8 @@ func TestHostnameLinux(t *testing.T) {
 }
 
 func TestHostnameWindows(t *testing.T) {
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/hostname_windows.toml"})
+	trans, err := mock.NewFromTomlFile("./testdata/hostname_windows.toml")
+
 	require.NoError(t, err)
 
 	m, err := motor.New(trans)
@@ -60,7 +60,7 @@ func TestHostnameWindows(t *testing.T) {
 }
 
 func TestHostnameMacos(t *testing.T) {
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/hostname_macos.toml"})
+	trans, err := mock.NewFromTomlFile("./testdata/hostname_macos.toml")
 	require.NoError(t, err)
 
 	m, err := motor.New(trans)
