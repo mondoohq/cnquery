@@ -12,10 +12,7 @@ import (
 )
 
 func TestSystemSetup(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{
-		Backend: transports.TransportBackend_CONNECTION_MOCK,
-		Path:    "./testdata/systemsetup.toml",
-	})
+	mock, err := mock.NewFromTomlFile("./testdata/systemsetup.toml")
 	require.NoError(t, err)
 
 	so := SystemSetupCmdOutput{}

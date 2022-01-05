@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
@@ -60,7 +59,7 @@ Repo-filename: /etc/yum.repos.d/CentOS-Media.repo
 }
 
 func TestYumRepoRhel7(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/yum_rhel7.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/yum_rhel7.toml")
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -79,7 +78,7 @@ func TestYumRepoRhel7(t *testing.T) {
 }
 
 func TestYumRepoRhel8(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/yum_rhel8.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/yum_rhel8.toml")
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)

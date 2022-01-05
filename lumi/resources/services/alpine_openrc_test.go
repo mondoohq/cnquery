@@ -6,12 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestManagerAlpineImage(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/alpine-image.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/alpine-image.toml")
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
@@ -38,11 +37,10 @@ func TestManagerAlpineImage(t *testing.T) {
 		Installed: true,
 		Type:      "openrc",
 	})
-
 }
 
 func TestManagerAlpineContainer(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/alpine-container.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/alpine-container.toml")
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)

@@ -7,12 +7,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/lumi/resources/shadow"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestParseShadow(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/debian.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/debian.toml")
 	require.NoError(t, err)
 
 	f, err := mock.FS().Open("/etc/shadow")
@@ -25,7 +24,7 @@ func TestParseShadow(t *testing.T) {
 	assert.Equal(t, 27, len(shadowEntries))
 
 	// 18368 days + jan 1 1970 = 2020-04-16 00:00:00 +0000 UTC
-	date := time.Date(2020, 04, 16, 0, 0, 0, 0, time.UTC)
+	date := time.Date(2020, 0o4, 16, 0, 0, 0, 0, time.UTC)
 	expected := &shadow.ShadowEntry{
 		User:         "chris",
 		Password:     "*",
@@ -39,7 +38,6 @@ func TestParseShadow(t *testing.T) {
 	}
 	found := findUser(shadowEntries, "chris")
 	assert.Equal(t, expected, found)
-
 }
 
 func findUser(shadowEntries []shadow.ShadowEntry, user string) *shadow.ShadowEntry {

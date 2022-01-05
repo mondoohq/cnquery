@@ -14,7 +14,6 @@ import (
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/local"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 	"go.mondoo.io/mondoo/policy/executor"
@@ -24,13 +23,13 @@ func init() {
 	logger.InitTestEnv()
 }
 
-func mockTransport(path string) (*motor.Motor, error) {
-	transport, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: path})
+func mockTransport(filepath string) (*motor.Motor, error) {
+	trans, err := mock.NewFromTomlFile(filepath)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	return motor.New(transport)
+	return motor.New(trans)
 }
 
 func initExecutor(motor *motor.Motor) *executor.Executor {
@@ -799,7 +798,6 @@ func TestFuzzyTime(t *testing.T) {
 		between := min <= valInt && valInt <= max
 		assert.Equal(t, true, between)
 	})
-
 }
 
 func TestTime_Methods(t *testing.T) {
@@ -1005,7 +1003,8 @@ func TestArray(t *testing.T) {
 		},
 		{
 			"[[0,1],[1,2]].map(_[1])",
-			2, []interface{}{int64(1), int64(2)},
+			2,
+			[]interface{}{int64(1), int64(2)},
 		},
 		{
 			"[0].where(_ > 0).where(_ > 0)",
@@ -1258,7 +1257,8 @@ func TestDict_Methods(t *testing.T) {
 		},
 		{
 			p + "params['f'].map(_['ff'])",
-			2, []interface{}{float64(3)},
+			2,
+			[]interface{}{float64(3)},
 		},
 		{
 			p + "params { _['1'] == _['1.0'] }",

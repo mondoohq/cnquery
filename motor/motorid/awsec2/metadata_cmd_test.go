@@ -8,12 +8,11 @@ import (
 
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestEC2RoleProviderInstanceIdentityUnix(t *testing.T) {
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/instance-identity_document_linux.toml"})
+	trans, err := mock.NewFromTomlFile("./testdata/instance-identity_document_linux.toml")
 	require.NoError(t, err)
 
 	m, err := motor.New(trans)
@@ -29,7 +28,7 @@ func TestEC2RoleProviderInstanceIdentityUnix(t *testing.T) {
 }
 
 func TestEC2RoleProviderInstanceIdentityWindows(t *testing.T) {
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/instance-identity_document_windows.toml"})
+	trans, err := mock.NewFromTomlFile("./testdata/instance-identity_document_windows.toml")
 	require.NoError(t, err)
 
 	m, err := motor.New(trans)

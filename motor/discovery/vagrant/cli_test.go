@@ -6,12 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/discovery/vagrant"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestVagrantSshConfigParsing(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/vagrant.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/vagrant.toml")
 	require.NoError(t, err)
 
 	cmd, err := mock.RunCommand("vagrant ssh-config debian10")
@@ -28,7 +27,7 @@ func TestVagrantSshConfigParsing(t *testing.T) {
 }
 
 func TestVagrantStatusParsing(t *testing.T) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/vagrant.toml"})
+	mock, err := mock.NewFromTomlFile("./testdata/vagrant.toml")
 	require.NoError(t, err)
 
 	cmd, err := mock.RunCommand("vagrant status")

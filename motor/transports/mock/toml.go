@@ -111,3 +111,13 @@ func NewFromToml(tc *transports.TransportConfig) (*Transport, error) {
 
 	return transport, nil
 }
+
+// NewTestMockTransport is a sugar method to simplify writing tests with the mock backend
+func NewFromTomlFile(filepath string) (*Transport, error) {
+	return NewFromToml(&transports.TransportConfig{
+		Backend: transports.TransportBackend_CONNECTION_MOCK,
+		Options: map[string]string{
+			"path": filepath,
+		},
+	})
+}

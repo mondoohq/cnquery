@@ -7,12 +7,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestDetectInstance(t *testing.T) {
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/instance.toml"})
+	trans, err := mock.NewFromTomlFile("./testdata/instance.toml")
 	require.NoError(t, err)
 
 	m, err := motor.New(trans)
@@ -26,7 +25,7 @@ func TestDetectInstance(t *testing.T) {
 }
 
 func TestDetectInstanceArm(t *testing.T) {
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/instancearm.toml"})
+	trans, err := mock.NewFromTomlFile("./testdata/instancearm.toml")
 	require.NoError(t, err)
 
 	m, err := motor.New(trans)
@@ -40,7 +39,7 @@ func TestDetectInstanceArm(t *testing.T) {
 }
 
 func TestDetectNotInstance(t *testing.T) {
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: "./testdata/notinstance.toml"})
+	trans, err := mock.NewFromTomlFile("./testdata/notinstance.toml")
 	require.NoError(t, err)
 
 	m, err := motor.New(trans)

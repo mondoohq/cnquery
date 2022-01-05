@@ -8,13 +8,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
 func TestGlobCommand(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/mock.toml")
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: filepath})
+	trans, err := mock.NewFromTomlFile(filepath)
 	assert.Equal(t, nil, err, "should create mock without error")
 
 	filesystem := trans.Fs
@@ -27,7 +26,7 @@ func TestGlobCommand(t *testing.T) {
 
 func TestLoadFile(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/mock.toml")
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: filepath})
+	trans, err := mock.NewFromTomlFile(filepath)
 	assert.Equal(t, nil, err, "should create mock without error")
 
 	f, err := trans.FS().Open("/etc/os-release")
@@ -41,7 +40,7 @@ func TestLoadFile(t *testing.T) {
 
 func TestReadDirnames(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/mock.toml")
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: filepath})
+	trans, err := mock.NewFromTomlFile(filepath)
 	require.NoError(t, err)
 
 	dir, err := trans.FS().Open("/sys/class/dmi/id")
@@ -61,7 +60,7 @@ func TestReadDirnames(t *testing.T) {
 func TestConcurrent(t *testing.T) {
 	wg := sync.WaitGroup{}
 	filepath, _ := filepath.Abs("./testdata/mock.toml")
-	trans, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: filepath})
+	trans, err := mock.NewFromTomlFile(filepath)
 	require.NoError(t, err)
 
 	for i := 0; i < 100; i++ {
@@ -90,5 +89,4 @@ func TestConcurrent(t *testing.T) {
 		}()
 	}
 	wg.Wait()
-
 }

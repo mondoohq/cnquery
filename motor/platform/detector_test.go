@@ -6,12 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
-func newDetector(path string) (*platform.Detector, error) {
-	mock, err := mock.NewFromToml(&transports.TransportConfig{Backend: transports.TransportBackend_CONNECTION_MOCK, Path: path})
+func newDetector(filepath string) (*platform.Detector, error) {
+	mock, err := mock.NewFromTomlFile(filepath)
 	if err != nil {
 		return nil, err
 	}
