@@ -12,8 +12,9 @@ import (
 
 // Data holds the mocked data entries
 type TomlData struct {
-	Commands map[string]*Command      `toml:"commands"`
-	Files    map[string]*MockFileData `toml:"files"`
+	TransportInfo TransportInfo            `toml:"transport_info"`
+	Commands      map[string]*Command      `toml:"commands"`
+	Files         map[string]*MockFileData `toml:"files"`
 }
 
 func Parse(data string) (*TomlData, error) {
@@ -41,18 +42,6 @@ func Parse(data string) (*TomlData, error) {
 	return tomlContent, nil
 }
 
-func Load(mock *Transport, data string) error {
-	tomlData, err := Parse(data)
-	if err != nil {
-		return err
-	}
-
-	// copy references
-	mock.Commands = tomlData.Commands
-	mock.Fs.Files = tomlData.Files
-	return nil
-}
-
 func LoadFile(mock *Transport, path string) error {
 	log.Debug().Str("path", path).Msg("mock> load toml into mock backend")
 
@@ -64,11 +53,25 @@ func LoadFile(mock *Transport, path string) error {
 	return Load(mock, string(data))
 }
 
+func Load(mock *Transport, data string) error {
+	tomlData, err := Parse(data)
+	if err != nil {
+		return err
+	}
+
+	// copy references
+	mock.Commands = tomlData.Commands
+	mock.Fs.Files = tomlData.Files
+	mock.TransportInfo = tomlData.TransportInfo
+	return nil
+}
+
 // Export returns a struct that can be used to export toml
 func Export(mock *Transport) (*TomlData, error) {
 	tomlData := &TomlData{}
 	tomlData.Commands = mock.Commands
 	tomlData.Files = mock.Fs.Files
+	tomlData.TransportInfo = mock.TransportInfo
 	return tomlData, nil
 }
 
