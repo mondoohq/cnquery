@@ -2799,7 +2799,7 @@ private aws.vpc.flowlog {
 }
 
 // Amazon Virtual Private Cloud Route Table
-aws.vpc.routetable {
+private aws.vpc.routetable {
   // unique id of the route table
   id string
   // a list of route descriptions
