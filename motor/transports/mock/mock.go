@@ -8,14 +8,30 @@ import (
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
+var _ transports.Transport = (*Transport)(nil)
+
 type Command struct {
+	PlatformID string `toml:"platform_id"`
 	Command    string `toml:"command"`
 	Stdout     string `toml:"stdout"`
 	Stderr     string `toml:"stderr"`
 	ExitStatus int    `toml:"exit_status"`
 }
 
-var _ transports.Transport = (*Transport)(nil)
+type TransportInfo struct {
+	ID           string                  `toml:"id"`
+	Capabilities []transports.Capability `toml:"capabilities"`
+	Kind         transports.Kind         `toml:"kind"`
+	Runtime      string                  `toml:"runtime"`
+}
+
+// Transport holds the transport layer that runs on virtual data only
+type Transport struct {
+	TransportInfo TransportInfo
+	Commands      map[string]*Command
+	Missing       map[string]map[string]bool
+	Fs            *mockFS
+}
 
 // New creates a new Transport.
 func New() (*Transport, error) {
@@ -28,15 +44,6 @@ func New() (*Transport, error) {
 	mt.Missing["file"] = make(map[string]bool)
 	mt.Missing["command"] = make(map[string]bool)
 	return mt, nil
-}
-
-// Transport holds the transport layer that runs on virtual data only
-type Transport struct {
-	Commands map[string]*Command
-	Missing  map[string]map[string]bool
-	Fs       *mockFS
-	kind     transports.Kind
-	runtime  string
 }
 
 // RunCommand returns the results of a command found in the nock registry
@@ -135,15 +142,28 @@ func (t *Transport) Capabilities() transports.Capabilities {
 // }
 
 func (t *Transport) Kind() transports.Kind {
-	return t.kind
+	return t.TransportInfo.Kind
 }
 
 func (t *Transport) Runtime() string {
-	return t.runtime
+	return t.TransportInfo.Runtime
 }
 
 func (t *Transport) PlatformIdDetectors() []transports.PlatformIdDetector {
-	return []transports.PlatformIdDetector{
+	detectors := []transports.PlatformIdDetector{
 		transports.HostnameDetector,
 	}
+
+	if t.TransportInfo.ID != "" {
+		detectors = append(detectors, transports.TransportPlatformIdentifierDetector)
+	}
+
+	return detectors
+}
+
+func (t *Transport) Identifier() (string, error) {
+	if t.TransportInfo.ID == "" {
+		return "", errors.New("the transportid detector is not supported for transport")
+	}
+	return t.TransportInfo.ID, nil
 }

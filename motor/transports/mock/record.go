@@ -3,6 +3,7 @@ package mock
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"io/ioutil"
 	"os"
 	"time"
@@ -28,6 +29,10 @@ func NewRecordTransport(trans transports.Transport) (*RecordTransport, error) {
 		mock:    mock,
 		observe: trans,
 	}
+
+	// always run identifier here to collect the identifier that is only available via the transport
+	// we do not care about the output here, we only want to make sure its being tracked
+	recordWrapper.Identifier()
 
 	return recordWrapper, nil
 }
@@ -116,7 +121,9 @@ func (t *RecordTransport) FileInfo(name string) (transports.FileInfoDetails, err
 }
 
 func (t *RecordTransport) Capabilities() transports.Capabilities {
-	return t.observe.Capabilities()
+	caps := t.observe.Capabilities()
+	t.mock.TransportInfo.Capabilities = caps
+	return caps
 }
 
 func (t *RecordTransport) Close() {
@@ -124,11 +131,28 @@ func (t *RecordTransport) Close() {
 }
 
 func (t *RecordTransport) Kind() transports.Kind {
-	return t.observe.Kind()
+	k := t.observe.Kind()
+	t.mock.TransportInfo.Kind = k
+	return k
 }
 
 func (t *RecordTransport) Runtime() string {
-	return t.observe.Runtime()
+	runtime := t.observe.Runtime()
+	t.mock.TransportInfo.Runtime = runtime
+	return runtime
+}
+
+func (t *RecordTransport) Identifier() (string, error) {
+	identifiable, ok := t.observe.(transports.TransportPlatformIdentifier)
+	if !ok {
+		return "", errors.New("the transportid detector is not supported for transport")
+	}
+
+	id, err := identifiable.Identifier()
+	if err == nil {
+		t.mock.TransportInfo.ID = id
+	}
+	return id, err
 }
 
 func (t *RecordTransport) PlatformIdDetectors() []transports.PlatformIdDetector {
