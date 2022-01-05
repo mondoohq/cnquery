@@ -85,22 +85,27 @@ func ExportData(mock *Transport) ([]byte, error) {
 }
 
 // New returns a mock backend and loads the toml file by default
-func NewFromToml(endpoint *transports.TransportConfig) (*Transport, error) {
+func NewFromToml(tc *transports.TransportConfig) (*Transport, error) {
+	if tc.Options == nil || tc.Options["path"] == "" {
+		return nil, errors.New("path is required")
+	}
+
+	path := tc.Options["path"]
+
 	transport, err := New()
 	if err != nil {
 		return nil, err
 	}
 
-	if endpoint != nil && len(endpoint.Path) > 0 {
-		err := LoadFile(transport, endpoint.Path)
-		if err != nil {
-			log.Error().Err(err).Str("toml", endpoint.Path).Msg("mock> could not load toml data")
-			return nil, err
-		}
-		if endpoint.Options != nil && endpoint.Options["hostname"] != "" {
-			transport.Commands[hashCmd("hostname")] = &Command{
-				Stdout: endpoint.Options["hostname"],
-			}
+	err = LoadFile(transport, path)
+	if err != nil {
+		log.Error().Err(err).Str("toml", path).Msg("mock> could not load toml data")
+		return nil, err
+	}
+
+	if tc.Options["hostname"] != "" {
+		transport.Commands[hashCmd("hostname")] = &Command{
+			Stdout: tc.Options["hostname"],
 		}
 	}
 
