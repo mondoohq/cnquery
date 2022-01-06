@@ -74,13 +74,17 @@ func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
 		log.Error().Interface("instance-state", instanceinfo.State).Msg("instance not in valid state; must be running or stopped")
 		return t, errors.New("instance not in valid state; must be running or stopped")
 	}
+
 	// 4. setup
-	ok, err = t.Setup(ctx, instanceinfo)
-	if err != nil {
-		return t, err
-	}
-	if !ok {
-		return t, errors.New("something went wrong; unable to complete setup for ebs volume scan")
+	// check if we got the no setup override option
+	if tc.Options[NoSetup] != "true" {
+		ok, err = t.Setup(ctx, instanceinfo)
+		if err != nil {
+			return t, err
+		}
+		if !ok {
+			return t, errors.New("something went wrong; unable to complete setup for ebs volume scan")
+		}
 	}
 
 	// 5. mount
@@ -103,6 +107,8 @@ func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
 	t.FsTransport = fsTransport
 	return t, nil
 }
+
+const NoSetup = "no-setup"
 
 type Ec2EbsTransport struct {
 	FsTransport         *fs.FsTransport
