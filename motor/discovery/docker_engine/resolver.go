@@ -185,11 +185,12 @@ func (k *Resolver) images(tc *transports.TransportConfig, ded *dockerEngineDisco
 }
 
 func DiscoverDockerEngineAssets(tc *transports.TransportConfig) ([]*asset.Asset, error) {
+	log.Debug().Msg("start discovery for docker engine")
 	// we use generic `container` and `container-images` options to avoid the requirement for the user to know if
 	// the system is using docker or podman locally
 	assetList := []*asset.Asset{}
 
-	// discover running container: container:true
+	// discover running container: container
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryContainerRunning) {
 		ded, err := NewDockerEngineDiscovery()
 		if err != nil {
@@ -204,7 +205,7 @@ func DiscoverDockerEngineAssets(tc *transports.TransportConfig) ([]*asset.Asset,
 		assetList = append(assetList, containerAssets...)
 	}
 
-	// discover container images: container-images:true
+	// discover container images: container-images
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryContainerImages) {
 		ded, err := NewDockerEngineDiscovery()
 		if err != nil {
