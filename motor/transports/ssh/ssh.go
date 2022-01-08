@@ -116,7 +116,7 @@ func (t *SSHTransport) Connect() error {
 	}
 
 	// establish connection
-	conn, err := sshClientConnection(cc, hostkeyCallback)
+	conn, _, err := establishClientConnection(cc, hostkeyCallback)
 	if err != nil {
 		log.Debug().Err(err).Str("transport", "ssh").Str("host", cc.Host).Int32("port", cc.Port).Bool("insecure", cc.Insecure).Msg("could not establish ssh session")
 		return err
@@ -163,11 +163,9 @@ func (t *SSHTransport) VerifyConnection() error {
 	}
 }
 
+// Reconnect closes a possible current connection and re-establishes a new connection
 func (t *SSHTransport) Reconnect() error {
-	// ensure the connections is going to be closed
-	if t.SSHClient != nil {
-		t.SSHClient.Close()
-	}
+	t.Close()
 	return t.Connect()
 }
 

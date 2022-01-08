@@ -37,10 +37,12 @@ const (
 	SCHEME_AWS_EC2_EBS        = "aws-ec2-ebs"
 	SCHEME_GITLAB             = "gitlab"
 	SCHEME_TERRAFORM          = "terraform"
-	// NOTE: its not mapped directly to a transport, its transformed into ssh
+	SCHEME_HOST               = "host"
+	SCHEME_TLS                = "tls"
+
+	// NOTE: its not mapped directly to a transport, it is transformed into ssh
 	SCHEME_AWS_EC2_INSTANCE_CONNECT = "aws-ec2-connect"
-	SCHEME_HOST                     = "host"
-	SCHEME_TLS                      = "tls"
+	SCHEME_AWS_EC2_SSM_SESSION      = "aws-ec2-ssm"
 )
 
 var TransportBackend_scheme = map[TransportBackend]string{
@@ -100,8 +102,9 @@ var TransportBackend_schemevalue = map[string]TransportBackend{
 	SCHEME_AWS_EC2_EBS:              TransportBackend_CONNECTION_AWS_EC2_EBS,
 	SCHEME_GITLAB:                   TransportBackend_CONNECTION_GITLAB,
 	SCHEME_TERRAFORM:                TransportBackend_CONNECTION_TERRAFORM,
-	SCHEME_AWS_EC2_INSTANCE_CONNECT: TransportBackend_CONNECTION_SSH,
 	SCHEME_HOST:                     TransportBackend_CONNECTION_HOST,
+	SCHEME_AWS_EC2_INSTANCE_CONNECT: TransportBackend_CONNECTION_SSH,
+	SCHEME_AWS_EC2_SSM_SESSION:      TransportBackend_CONNECTION_SSH,
 }
 
 func (x TransportBackend) Scheme() string {
