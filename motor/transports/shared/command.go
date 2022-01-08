@@ -17,7 +17,6 @@ type Command struct {
 }
 
 func (c *Command) Exec(usercmd string, args []string) (*transports.Command, error) {
-
 	c.Command.Stats.Start = time.Now()
 
 	var cmd string

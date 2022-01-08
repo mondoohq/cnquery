@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -13,20 +15,21 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/ssh/awsinstanceconnect"
+	"go.mondoo.io/mondoo/motor/transports/ssh/awsssmsession"
 	"go.mondoo.io/mondoo/motor/vault"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 )
 
-func sshClientConnection(tc *transports.TransportConfig, hostKeyCallback ssh.HostKeyCallback) (*ssh.Client, error) {
-	authMethods, err := authMethods(tc)
+func establishClientConnection(tc *transports.TransportConfig, hostKeyCallback ssh.HostKeyCallback) (*ssh.Client, []io.Closer, error) {
+	authMethods, closer, err := prepareConnection(tc)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	log.Debug().Int("methods", len(authMethods)).Msg("discovered ssh auth methods")
 	if len(authMethods) == 0 {
-		return nil, errors.New("no authentication method defined")
+		return nil, nil, errors.New("no authentication method defined")
 	}
 
 	// TODO: hack: we want to establish a proper connection per configured connection so that we could use multiple users
@@ -37,13 +40,12 @@ func sshClientConnection(tc *transports.TransportConfig, hostKeyCallback ssh.Hos
 		}
 	}
 
-	sshConfig := &ssh.ClientConfig{
+	conn, err := ssh.Dial("tcp", fmt.Sprintf("%s:%d", tc.Host, tc.Port), &ssh.ClientConfig{
 		User:            user,
 		Auth:            authMethods,
 		HostKeyCallback: hostKeyCallback,
-	}
-
-	return ssh.Dial("tcp", fmt.Sprintf("%s:%d", tc.Host, tc.Port), sshConfig)
+	})
+	return conn, closer, err
 }
 
 func authPrivateKeyWithPassphrase(pemBytes []byte, passphrase []byte) (ssh.Signer, error) {
@@ -88,8 +90,11 @@ func hasAgentLoadedKey(list []*agent.Key, filename string) bool {
 	return false
 }
 
-func authMethods(tc *transports.TransportConfig) ([]ssh.AuthMethod, error) {
+// prepareConnection determines the auth methods required for a ssh connection and also prepares any other
+// pre-conditions for the connection like tunnelling the connection via AWS SSM session
+func prepareConnection(tc *transports.TransportConfig) ([]ssh.AuthMethod, []io.Closer, error) {
 	auths := []ssh.AuthMethod{}
+	closer := []io.Closer{}
 
 	// only one public auth method is allowed, therefore multiple keys need to be encapsulated into one auth method
 	signers := []ssh.Signer{}
@@ -132,26 +137,95 @@ func authMethods(tc *transports.TransportConfig) ([]ssh.AuthMethod, error) {
 		case vault.CredentialType_ssh_agent:
 			log.Debug().Msg("enabled ssh agent authentication")
 			useAgentAuth()
+		case vault.CredentialType_aws_ec2_ssm_session:
+			// when the user establishes the ssm session we do the following
+			// 1. start websocket connection and start the session-manager-plugin to map the websocket to a local port
+			// 2. create new ssh key via instance connect so that we do not rely on any pre-existing ssh key
+			err := awsssmsession.CheckPlugin()
+			if err != nil {
+				return nil, nil, errors.New("AWS Session Manager plugin is missing. More information at https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html")
+			}
+
+			loadOpts := []func(*config.LoadOptions) error{}
+			if tc.Options != nil && tc.Options["region"] != "" {
+				loadOpts = append(loadOpts, config.WithRegion(tc.Options["region"]))
+			}
+			profile := ""
+			if tc.Options != nil && tc.Options["profile"] != "" {
+				loadOpts = append(loadOpts, config.WithSharedConfigProfile(tc.Options["profile"]))
+				profile = tc.Options["profile"]
+			}
+
+			cfg, err := config.LoadDefaultConfig(context.Background(), loadOpts...)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			// we use ec2 instance connect api to create credentials for an aws instance
+			eic := awsinstanceconnect.New(cfg)
+			creds, err := eic.GenerateCredentials(tc.Host, credential.User)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			// we use ssm session manager to connect to instance via websockets
+			sManager, err := awsssmsession.NewAwsSsmSessionManager(cfg, profile)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			// prepare websocket connection and bind it to a free local port
+			localIp := "localhost"
+			remotePort := "22"
+
+			localPort, err := awsssmsession.GetAvailablePort()
+			if err != nil {
+				return nil, nil, errors.New("could not find an available port to start the ssm proxy")
+			}
+			ssmConn, err := sManager.Dial(tc, strconv.Itoa(localPort), remotePort)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			// update endpoint information for ssh to connect via local ssm proxy
+			// TODO: this has a side-effect, we may need extend the struct to include resolved connection data
+			tc.Host = localIp
+			tc.Port = int32(localPort)
+
+			// NOTE: we need to set insecure so that ssh does not complain about the host key
+			// It is okay do that since the connection is established via aws api itself and it ensures that
+			// the instance id is okay
+			tc.Insecure = true
+
+			// use the generated ssh credentials for authentication
+			priv, err := authPrivateKeyWithPassphrase(creds.KeyPair.PrivateKey, creds.KeyPair.Passphrase)
+			if err != nil {
+				return nil, nil, errors.Wrap(err, "could not read generated private key")
+			}
+			signers = append(signers, priv)
+			closer = append(closer, ssmConn)
 		case vault.CredentialType_aws_ec2_instance_connect:
 			cfg, err := config.LoadDefaultConfig(context.Background())
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 
 			eic := awsinstanceconnect.New(cfg)
 			creds, err := eic.GenerateCredentials(tc.Host, credential.User)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
-			tc.Host = creds.PublicIpAddress
 
 			priv, err := authPrivateKeyWithPassphrase(creds.KeyPair.PrivateKey, creds.KeyPair.Passphrase)
 			if err != nil {
-				return nil, errors.Wrap(err, "could not read generated private key")
+				return nil, nil, errors.Wrap(err, "could not read generated private key")
 			}
 			signers = append(signers, priv)
+
+			// NOTE: this creates a side-effect where the host is overwritten
+			tc.Host = creds.PublicIpAddress
 		default:
-			return nil, errors.New("unsupported authentication mechanism for ssh: " + credential.Type.String())
+			return nil, nil, errors.New("unsupported authentication mechanism for ssh: " + credential.Type.String())
 		}
 	}
 
@@ -163,5 +237,5 @@ func authMethods(tc *transports.TransportConfig) ([]ssh.AuthMethod, error) {
 	if len(signers) > 0 {
 		auths = append(auths, ssh.PublicKeys(signers...))
 	}
-	return auths, nil
+	return auths, closer, nil
 }
