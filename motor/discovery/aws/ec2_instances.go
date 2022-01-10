@@ -243,3 +243,8 @@ func InstanceIsInRunningOrStoppedState(state *types.InstanceState) bool {
 	// instance state 16 == running, 80 == stopped
 	return state.Code == 16 || state.Code == 80
 }
+
+func InstanceIsInRunningState(state *types.InstanceState) bool {
+	// instance state 16 == running
+	return state.Code == 16
+}
