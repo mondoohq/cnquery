@@ -24,6 +24,7 @@ func New() (*LocalTransport, error) {
 
 	return &LocalTransport{
 		shell: shell,
+		fs:    afero.NewOsFs(),
 		// kind:    endpoint.Kind,
 		// runtime: endpoint.Runtime,
 	}, nil
@@ -46,9 +47,6 @@ func (t *LocalTransport) RunCommand(command string) (*transports.Command, error)
 }
 
 func (t *LocalTransport) FS() afero.Fs {
-	if t.fs == nil {
-		t.fs = afero.NewOsFs()
-	}
 	return t.fs
 }
 
