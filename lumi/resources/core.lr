@@ -1844,6 +1844,8 @@ private aws.sns.topic {
   subscriptions() []aws.sns.subscription 
   // attributes for the sns topic, including kms id if any
   attributes() dict
+  // tags for the topic
+  tags map[string]string
 }
 
 // AWS SNS Subscription

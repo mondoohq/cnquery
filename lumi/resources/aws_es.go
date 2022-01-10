@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
+	"github.com/aws/smithy-go/transport/http"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
@@ -94,14 +95,36 @@ func (a *lumiAwsEsDomain) init(args *lumi.Args) (*lumi.Args, AwsEsDomain, error)
 	if err != nil {
 		return nil, nil, err
 	}
-
+	tags, err := getESTags(ctx, svc, domainDetails.DomainStatus.ARN)
+	if err != nil {
+		return nil, nil, err
+	}
 	(*args)["encryptionAtRestEnabled"] = toBool(domainDetails.DomainStatus.EncryptionAtRestOptions.Enabled)
 	(*args)["nodeToNodeEncryptionEnabled"] = toBool(domainDetails.DomainStatus.NodeToNodeEncryptionOptions.Enabled)
 	(*args)["endpoint"] = toString(domainDetails.DomainStatus.Endpoint)
 	(*args)["arn"] = toString(domainDetails.DomainStatus.ARN)
+	(*args)["tags"] = tags
 	return args, nil, nil
 }
 
 func (e *lumiAwsEsDomain) id() (string, error) {
 	return e.Arn()
+}
+
+func getESTags(ctx context.Context, svc *elasticsearchservice.Client, arn *string) (map[string]interface{}, error) {
+	resp, err := svc.ListTags(ctx, &elasticsearchservice.ListTagsInput{ARN: arn})
+	var respErr *http.ResponseError
+	if err != nil {
+		if errors.As(err, &respErr) {
+			if respErr.HTTPStatusCode() == 404 {
+				return nil, nil
+			}
+		}
+		return nil, err
+	}
+	tags := make(map[string]interface{})
+	for _, t := range resp.TagList {
+		tags[*t.Key] = *t.Value
+	}
+	return tags, nil
 }

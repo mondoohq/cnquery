@@ -2,9 +2,11 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/aws/smithy-go/transport/http"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
@@ -64,9 +66,14 @@ func (s *lumiAwsSns) getTopics(at *aws_transport.Transport) []*jobpool.Job {
 					return nil, err
 				}
 				for _, topic := range topics.Topics {
+					tags, err := getSNSTags(ctx, svc, topic.TopicArn)
+					if err != nil {
+						return nil, err
+					}
 					lumiTopic, err := s.Runtime.CreateResource("aws.sns.topic",
 						"arn", toString(topic.TopicArn),
 						"region", regionVal,
+						"tags", tags,
 					)
 					if err != nil {
 						return nil, err
@@ -107,4 +114,22 @@ func (s *lumiAwsSnsTopic) GetAttributes() (interface{}, error) {
 		return nil, err
 	}
 	return jsonToDict(topicAttributes.Attributes)
+}
+
+func getSNSTags(ctx context.Context, svc *sns.Client, arn *string) (map[string]interface{}, error) {
+	resp, err := svc.ListTagsForResource(ctx, &sns.ListTagsForResourceInput{ResourceArn: arn})
+	var respErr *http.ResponseError
+	if err != nil {
+		if errors.As(err, &respErr) {
+			if respErr.HTTPStatusCode() == 404 {
+				return nil, nil
+			}
+		}
+		return nil, err
+	}
+	tags := make(map[string]interface{})
+	for _, t := range resp.Tags {
+		tags[*t.Key] = *t.Value
+	}
+	return tags, nil
 }

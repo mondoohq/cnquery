@@ -13,11 +13,12 @@ func TestCertTagsToMapTags(t *testing.T) {
 		{Key: aws.String("k"), Value: aws.String("v")},
 		{Key: aws.String("key"), Value: aws.String("val")},
 	}
-	assert.Equal(t, certTagsToMapTags(certTags), map[string]string{"k": "v", "key": "val"})
+	assert.Equal(t, certTagsToMapTags(certTags), map[string]interface{}{"k": "v", "key": "val"})
 	certTags = []types.Tag{
 		{Key: aws.String("key"), Value: nil},
 	}
-	assert.Equal(t, certTagsToMapTags(certTags), map[string]string{})
+	m := make(map[string]interface{})
+	assert.Equal(t, certTagsToMapTags(certTags), m)
 	certTags = []types.Tag{}
-	assert.Equal(t, certTagsToMapTags(certTags), map[string]string{})
+	assert.Equal(t, certTagsToMapTags(certTags), m)
 }
