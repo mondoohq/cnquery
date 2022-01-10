@@ -126,8 +126,8 @@ func (a *lumiAwsAcmCertificate) init(args *lumi.Args) (*lumi.Args, AwsAcmCertifi
 	return args, nil, nil
 }
 
-func certTagsToMapTags(tags []types.Tag) map[string]string {
-	mapTags := make(map[string]string)
+func certTagsToMapTags(tags []types.Tag) map[string]interface{} {
+	mapTags := make(map[string]interface{})
 	for i := range tags {
 		if tags[i].Key != nil && tags[i].Value != nil {
 			mapTags[*tags[i].Key] = *tags[i].Value

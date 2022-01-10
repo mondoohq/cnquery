@@ -2,9 +2,11 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	"github.com/aws/smithy-go/transport/http"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
@@ -56,10 +58,15 @@ func (s *lumiAwsSagemaker) getEndpoints(at *aws_transport.Transport) []*jobpool.
 				}
 
 				for _, endpoint := range endpoints.Endpoints {
+					tags, err := getSagemakerTags(ctx, svc, endpoint.EndpointArn)
+					if err != nil {
+						return nil, err
+					}
 					lumiEndpoint, err := s.Runtime.CreateResource("aws.sagemaker.endpoint",
 						"arn", toString(endpoint.EndpointArn),
 						"name", toString(endpoint.EndpointName),
 						"region", regionVal,
+						"tags", tags,
 					)
 					if err != nil {
 						return nil, err
@@ -147,10 +154,15 @@ func (s *lumiAwsSagemaker) getNotebookInstances(at *aws_transport.Transport) []*
 					return nil, err
 				}
 				for _, instance := range notebookInstances.NotebookInstances {
+					tags, err := getSagemakerTags(ctx, svc, instance.NotebookInstanceArn)
+					if err != nil {
+						return nil, err
+					}
 					lumiEndpoint, err := s.Runtime.CreateResource("aws.sagemaker.notebookinstance",
 						"arn", toString(instance.NotebookInstanceArn),
 						"name", toString(instance.NotebookInstanceName),
 						"region", regionVal,
+						"tags", tags,
 					)
 					if err != nil {
 						return nil, err
@@ -216,4 +228,22 @@ func (s *lumiAwsSagemakerNotebookinstance) id() (string, error) {
 
 func (s *lumiAwsSagemakerNotebookinstanceDetails) id() (string, error) {
 	return s.Arn()
+}
+
+func getSagemakerTags(ctx context.Context, svc *sagemaker.Client, arn *string) (map[string]interface{}, error) {
+	resp, err := svc.ListTags(ctx, &sagemaker.ListTagsInput{ResourceArn: arn})
+	var respErr *http.ResponseError
+	if err != nil {
+		if errors.As(err, &respErr) {
+			if respErr.HTTPStatusCode() == 404 {
+				return nil, nil
+			}
+		}
+		return nil, err
+	}
+	tags := make(map[string]interface{})
+	for _, t := range resp.Tags {
+		tags[*t.Key] = *t.Value
+	}
+	return tags, nil
 }
