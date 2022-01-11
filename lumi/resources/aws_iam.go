@@ -637,7 +637,7 @@ func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey1LastUsedService() (st
 }
 
 func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey2Active() (bool, error) {
-	return p.getBoolValue("access_key_1_active")
+	return p.getBoolValue("access_key_2_active")
 }
 
 func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey2LastRotated() (*time.Time, error) {
