@@ -65,8 +65,7 @@ func (t *Ec2EbsTransport) GetVolumeIdForInstance(ctx context.Context, instancein
 	i := t.target.instance
 	log.Info().Interface("instance", i).Msg("find volume id")
 
-	volID := GetVolumeIdForInstance(instanceinfo)
-	if GetVolumeIdForInstance(instanceinfo) != nil {
+	if volID := GetVolumeIdForInstance(instanceinfo); volID != nil {
 		return VolumeId{Id: *volID, Region: i.Region, Account: i.Account}, nil
 	}
 	return VolumeId{}, errors.New("no volume id found for instance")
@@ -78,8 +77,12 @@ func GetVolumeIdForInstance(instanceinfo *types.Instance) *string {
 	}
 	if len(instanceinfo.BlockDeviceMappings) > 1 {
 		for bi := range instanceinfo.BlockDeviceMappings {
+			log.Info().Interface("device", *instanceinfo.BlockDeviceMappings[bi].DeviceName).Msg("found instance block devices")
 			// todo: revisit this. this works for the standard ec2 instance setup, but no guarantees outside of that..
 			if *instanceinfo.BlockDeviceMappings[bi].DeviceName == "xvda" { // xvda is the root volume
+				return instanceinfo.BlockDeviceMappings[bi].Ebs.VolumeId
+			}
+			if *instanceinfo.BlockDeviceMappings[bi].DeviceName == "sda1" {
 				return instanceinfo.BlockDeviceMappings[bi].Ebs.VolumeId
 			}
 		}

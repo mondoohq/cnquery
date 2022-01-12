@@ -51,13 +51,14 @@ func (t *Ec2EbsTransport) GetFsType() (*fsInfo, error) {
 	}
 	for i := range blockEntries.Blockdevices {
 		d := blockEntries.Blockdevices[i]
-		log.Debug().Msgf("found block devices %v", d.Children) // switch to debug
+		log.Debug().Msgf("found block devices %v", d.Children)
 		for i := range d.Children {
 			entry := d.Children[i]
-			if entry.Mountpoint == "" && entry.Uuid != "" && entry.Fstype != "" {
+			if entry.Mountpoint == "" && entry.Uuid != "" && entry.Fstype != "" && entry.Label != "EFI" {
 				devFsName := "/dev/" + entry.Name
 				return &fsInfo{name: devFsName, fstype: entry.Fstype}, nil
 			}
+
 		}
 	}
 	return nil, err
