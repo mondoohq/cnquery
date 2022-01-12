@@ -61,6 +61,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 		Name:        "AWS Account " + info.ID,
 		Platform:    pf,
 		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
+		State:       asset.State_STATE_ONLINE,
 	})
 
 	// filter assets
