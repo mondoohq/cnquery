@@ -1,7 +1,9 @@
 package shared
 
 import (
+	"errors"
 	"io/fs"
+	"os"
 	"regexp"
 	"strings"
 )
@@ -11,6 +13,9 @@ func FindFiles(iofs fs.FS, from string, r *regexp.Regexp, typ string) ([]string,
 	matchedPaths := []string{}
 	err := fs.WalkDir(iofs, from, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
+			if errors.Is(err, os.ErrPermission) {
+				return nil
+			}
 			return err
 		}
 		if matcher.Match(p, d.Type()) {
