@@ -11,21 +11,25 @@ import (
 var _ transports.Transport = (*FsTransport)(nil)
 
 func NewWithClose(endpoint *transports.TransportConfig, closeFN func()) (*FsTransport, error) {
-	log.Info().Str("mountdir", endpoint.Host+endpoint.Path).Msg("load fs")
+	mountDir := endpoint.Host + endpoint.Path
+	log.Info().Str("mountdir", mountDir).Msg("load fs")
 
 	return &FsTransport{
-		MountedDir:   endpoint.Host + endpoint.Path,
+		MountedDir:   mountDir,
 		closeFN:      closeFN,
 		tcPlatformId: endpoint.PlatformId,
+		fs:           NewMountedFs(mountDir),
 	}, nil
 }
 
 func New(endpoint *transports.TransportConfig) (*FsTransport, error) {
-	log.Info().Str("mountdir", endpoint.Host+endpoint.Path).Msg("load fs")
+	mountDir := endpoint.Host + endpoint.Path
+	log.Info().Str("mountdir", mountDir).Msg("load fs")
 
 	return &FsTransport{
-		MountedDir:   endpoint.Host + endpoint.Path,
+		MountedDir:   mountDir,
 		tcPlatformId: endpoint.PlatformId,
+		fs:           NewMountedFs(mountDir),
 	}, nil
 }
 
