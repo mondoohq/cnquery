@@ -134,10 +134,10 @@ func (t *SSHTransport) VerifyConnection() error {
 
 	if t.Sudo != nil {
 		// Wrap sudo command, to see proper error messages. We set /dev/null to disable stdin
-		command := "sh -c '" + t.Sudo.Build("echo") + " < /dev/null'"
+		command := "sh -c '" + t.Sudo.Build("echo 'hi'") + " < /dev/null'"
 		out, err = t.runRawCommand(command)
 	} else {
-		out, err = t.runRawCommand("echo")
+		out, err = t.runRawCommand("echo 'hi'")
 		if err != nil {
 			return err
 		}
