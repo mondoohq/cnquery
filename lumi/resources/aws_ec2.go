@@ -646,6 +646,7 @@ func (i *lumiAwsEc2Image) init(args *lumi.Args) (*lumi.Args, AwsEc2Image, error)
 		(*args)["name"] = toString(image.Name)
 		(*args)["architecture"] = string(image.Architecture)
 		(*args)["ownerId"] = toString(image.OwnerId)
+		(*args)["ownerAlias"] = toString(image.ImageOwnerAlias)
 		return args, nil, nil
 	}
 
@@ -654,6 +655,7 @@ func (i *lumiAwsEc2Image) init(args *lumi.Args) (*lumi.Args, AwsEc2Image, error)
 	(*args)["name"] = ""
 	(*args)["architecture"] = ""
 	(*args)["ownerId"] = ""
+	(*args)["ownerAlias"] = ""
 	return args, nil, nil
 }
 

@@ -2750,6 +2750,8 @@ private aws.ec2.image {
   architecture string
   // AWS account id of the image owner
   ownerId string
+  // Alias for the image owner
+  ownerAlias string
 }
 
 // AWS EC2 Instance Device
