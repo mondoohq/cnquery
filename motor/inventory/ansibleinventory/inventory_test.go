@@ -208,6 +208,27 @@ func TestHostConnectionWinrm(t *testing.T) {
 	}}, hosts)
 }
 
+func TestHostSSHPrivateKey(t *testing.T) {
+	input, err := ioutil.ReadFile("./testdata/ssh_private_key.json")
+	assert.Nil(t, err)
+	assert.True(t, ansibleinventory.IsInventory(input))
+
+	inventory := ansibleinventory.Inventory{}
+	err = inventory.Decode(input)
+	assert.Nil(t, err)
+
+	hosts := inventory.List()
+	assert.Equal(t, 1, len(hosts))
+
+	assert.Equal(t, []*ansibleinventory.Host{{
+		Alias:      "instance1",
+		Host:       "192.168.178.11",
+		User:       "custom-user",
+		Identity:   "/home/custom-user/.ssh/id_rsa",
+		Connection: "ssh",
+	}}, hosts)
+}
+
 func TestInventoryConversion(t *testing.T) {
 	input, err := ioutil.ReadFile("./testdata/inventory.json")
 	assert.Nil(t, err)
@@ -249,6 +270,28 @@ func TestInventoryWithUsernameConversion(t *testing.T) {
 	cred = v1Intentory.Spec.Credentials[secretId]
 	assert.Equal(t, "chris", cred.User)
 	assert.Equal(t, vault.CredentialType_ssh_agent, cred.Type)
+}
+
+func TestTagsAndGroups(t *testing.T) {
+	input, err := ioutil.ReadFile("./testdata/tags_groups.json")
+	assert.Nil(t, err)
+	assert.True(t, ansibleinventory.IsInventory(input))
+
+	inventory := ansibleinventory.Inventory{}
+	err = inventory.Decode(input)
+	assert.Nil(t, err)
+
+	hosts := inventory.List()
+	assert.Equal(t, 1, len(hosts))
+
+	assert.Equal(t, []*ansibleinventory.Host{{
+		Alias:      "instance1",
+		Host:       "192.168.178.11",
+		User:       "custom-user",
+		Identity:   "/home/custom-user/.ssh/id_rsa",
+		Connection: "ssh",
+		Labels:     []string{"ansible_host", "mondoo_agent"},
+	}}, hosts)
 }
 
 func findAsset(assetList []*asset.Asset, name string) *asset.Asset {
