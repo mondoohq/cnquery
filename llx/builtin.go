@@ -585,11 +585,13 @@ func init() {
 			"notEmpty": {f: arrayNotEmpty},
 		},
 		types.MapLike: {
-			"[]":     {f: mapGetIndex},
-			"length": {f: mapLength},
-			"{}":     {f: mapBlockCall},
-			"keys":   {f: mapKeys, Label: "keys"},
-			"values": {f: mapValues, Label: "values"},
+			"[]":        {f: mapGetIndex},
+			"length":    {f: mapLength},
+			"where":     {f: mapWhere},
+			"$whereNot": {f: mapWhereNot},
+			"{}":        {f: mapBlockCall},
+			"keys":      {f: mapKeys, Label: "keys"},
+			"values":    {f: mapValues, Label: "values"},
 			// {}T -- T
 			string("&&" + types.Bool):      {f: chunkEqFalse, Label: "&&"},
 			string("||" + types.Bool):      {f: chunkNeqTrue, Label: "||"},

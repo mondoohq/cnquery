@@ -95,6 +95,7 @@ func init() {
 			"[]":     {typ: childType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
 			"{}":     {typ: blockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"length": {typ: intType, signature: FunctionSignature{}},
+			"where":  {compile: compileMapWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"keys":   {typ: stringArrayType, signature: FunctionSignature{}},
 			"values": {typ: dictArrayType, signature: FunctionSignature{}},
 		},

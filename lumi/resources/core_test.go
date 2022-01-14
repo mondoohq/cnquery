@@ -1069,6 +1069,16 @@ func TestMap(t *testing.T) {
 			map[string]interface{}{"a": int64(123)},
 		},
 		{
+			"{a: 1, b: 2, c: 3}.where(key == 'c')",
+			0,
+			map[string]interface{}{"c": int64(3)},
+		},
+		{
+			"{a: 1, b: 2, c: 3}.where(value < 3)",
+			0,
+			map[string]interface{}{"a": int64(1), "b": int64(2)},
+		},
+		{
 			"sshd.config.params { _['Protocol'] != 1 }",
 			0,
 			map[string]interface{}{
