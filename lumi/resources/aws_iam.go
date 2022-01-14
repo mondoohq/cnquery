@@ -15,6 +15,7 @@ import (
 	"github.com/aws/smithy-go"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/awsiam"
 	"go.mondoo.io/mondoo/lumi/resources/awspolicy"
@@ -602,7 +603,7 @@ func (p *lumiAwsIamUsercredentialreportentry) getTimeValue(key string) (*time.Ti
 	// handle "N/A" and "not_supported" value
 	// some accounts do not support specific values eg. root_account does not support password_last_changed or password_next_rotation
 	if val == "N/A" || val == "not_supported" || val == "no_information" {
-		return nil, nil
+		return &llx.NeverFutureTime, nil
 	}
 
 	// parse iso 8601  "2020-07-15T14:52:00+00:00"
