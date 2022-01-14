@@ -150,6 +150,12 @@ func (t *Ec2EbsTransport) FS() afero.Fs {
 }
 
 func (t *Ec2EbsTransport) Close() {
+	if t.opts != nil {
+		if t.opts[NoSetup] == "true" {
+			log.Debug().Bool("no-setup", true).Msg("skipping close actions")
+			return
+		}
+	}
 	ctx := context.Background()
 	err := t.UnmountVolumeFromInstance()
 	if err != nil {
