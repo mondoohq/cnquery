@@ -104,6 +104,7 @@ type Host struct {
 	Become     bool   // ansible_become
 	Connection string // ansible_connection: ssh, local, docker
 	Groups     []string
+	Labels     []string
 }
 
 // https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html
@@ -124,7 +125,7 @@ func (inventory *Inventory) List(groups ...string) []*Host {
 		})
 	}
 
-	res := []*Host{}
+	hostMap := map[string]*Host{}
 	for i := range list {
 		groupname := list[i]
 		hosts := inventory.Groups[groupname].Hosts
@@ -164,9 +165,28 @@ func (inventory *Inventory) List(groups ...string) []*Host {
 				host.Connection = d.(string)
 			}
 
-			res = append(res, host)
+			if d, ok := meta["tags"]; ok {
+				labels, ok := d.([]interface{})
+				if ok {
+					for i := range labels {
+						key, kok := labels[i].(string)
+						if kok {
+							host.Labels = append(host.Labels, key)
+						}
+					}
+				}
+			}
+
+			hostMap[alias] = host
 		}
 	}
+
+	res := []*Host{}
+
+	for k := range hostMap {
+		res = append(res, hostMap[k])
+	}
+
 	return res
 }
 
@@ -193,10 +213,18 @@ func (i *Inventory) ToV1Inventory() *v1.Inventory {
 			name = host.Alias
 		}
 
-		out.Spec.Assets = append(out.Spec.Assets, &asset.Asset{
+		asset := &asset.Asset{
 			Name:        name,
 			Connections: ansibleConnections(host),
-		})
+			Labels:      map[string]string{},
+		}
+
+		for l := range host.Labels {
+			key := host.Labels[l]
+			asset.Labels[key] = ""
+		}
+
+		out.Spec.Assets = append(out.Spec.Assets, asset)
 	}
 
 	// move credentials out into credentials section
@@ -263,7 +291,15 @@ func ansibleConnections(host *Host) []*transports.TransportConfig {
 		})
 	}
 
-	if backend == transports.TransportBackend_CONNECTION_SSH {
+	if host.Identity != "" {
+		credentials = append(credentials, &vault.Credential{
+			Type:           vault.CredentialType_private_key,
+			PrivateKeyPath: host.Identity,
+		})
+	}
+
+	// fallback to ssh agent as default in case nothing was provided
+	if len(credentials) == 0 && backend == transports.TransportBackend_CONNECTION_SSH {
 		credentials = append(credentials, &vault.Credential{
 			Type: vault.CredentialType_ssh_agent,
 			User: host.User,
