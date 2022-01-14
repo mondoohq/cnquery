@@ -64,6 +64,88 @@ func mapLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDa
 	return IntData(int64(len(arr))), 0, nil
 }
 
+func _mapWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, invert bool) (*RawData, int32, error) {
+	// where(array, function)
+	itemsRef := chunk.Function.Args[0]
+	items, rref, err := c.resolveValue(itemsRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	if items.Value == nil {
+		return &RawData{Type: items.Type}, 0, nil
+	}
+
+	list := items.Value.(map[string]interface{})
+	if len(list) == 0 {
+		return items, 0, nil
+	}
+
+	arg1 := chunk.Function.Args[1]
+	if types.Type(arg1.Type).Underlying() != types.FunctionLike {
+		return nil, 0, errors.New("cannot call 'where' on a map without a filter function")
+	}
+
+	fref, ok := arg1.Ref()
+	if !ok {
+		return nil, 0, errors.New("failed to retrieve function reference of 'where' call")
+	}
+
+	f := c.code.Functions[fref-1]
+	valueType := items.Type.Child()
+	resMap := map[string]interface{}{}
+	found := map[string]struct{}{}
+	finishedResults := 0
+	l := sync.Mutex{}
+	for it := range list {
+		key := it
+		err := c.runFunctionBlock([]*RawData{{Type: types.String, Value: key}, {Type: valueType, Value: list[key]}}, f, func(res *RawResult) {
+			done := func() bool {
+				l.Lock()
+				defer l.Unlock()
+
+				if _, ok := found[key]; ok {
+					return false
+				}
+				found[key] = struct{}{}
+				finishedResults++
+
+				isTruthy, _ := res.Data.IsTruthy()
+				if isTruthy == !invert {
+					resMap[key] = list[key]
+				}
+
+				return finishedResults == len(list)
+			}()
+
+			if done {
+				data := &RawData{
+					Type:  bind.Type,
+					Value: resMap,
+				}
+				c.cache.Store(ref, &stepCache{
+					Result:   data,
+					IsStatic: false,
+				})
+				c.triggerChain(ref, data)
+			}
+		})
+		if err != nil {
+			return nil, 0, err
+		}
+	}
+
+	return nil, 0, nil
+}
+
+func mapWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return _mapWhere(c, bind, chunk, ref, false)
+}
+
+func mapWhereNot(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return _mapWhere(c, bind, chunk, ref, true)
+}
+
 func mapBlockCall(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return c.runBlock(bind, chunk.Function.Args[0], nil, ref)
 }
