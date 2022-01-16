@@ -47,6 +47,7 @@ var macOS = &PlatformResolver{
 		di.Name = "macos"
 		di.Title = sv["ProductName"]
 		di.Release = sv["ProductVersion"]
+		di.Build = sv["ProductBuildVersion"]
 
 		return true, nil
 	},
