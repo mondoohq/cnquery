@@ -294,6 +294,7 @@ func ansibleConnections(host *Host) []*transports.TransportConfig {
 	if host.Identity != "" {
 		credentials = append(credentials, &vault.Credential{
 			Type:           vault.CredentialType_private_key,
+			User:           host.User,
 			PrivateKeyPath: host.Identity,
 		})
 	}

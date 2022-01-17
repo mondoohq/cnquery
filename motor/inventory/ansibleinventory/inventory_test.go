@@ -2,6 +2,7 @@ package ansibleinventory_test
 
 import (
 	"io/ioutil"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -89,6 +90,12 @@ func TestFullInventory(t *testing.T) {
 	assert.Equal(t, []string{"ec2-34-242-192-191.eu-west-1.compute.amazonaws.com"}, inventory.Groups["aws_ec2"].Hosts)
 }
 
+func sortHosts(hosts []*ansibleinventory.Host) {
+	sort.SliceStable(hosts, func(i, j int) bool {
+		return hosts[i].Alias < hosts[j].Alias
+	})
+}
+
 func TestHostExtraction(t *testing.T) {
 	input, err := ioutil.ReadFile("./testdata/ungrouped.json")
 	assert.Nil(t, err)
@@ -113,6 +120,9 @@ func TestHostExtraction(t *testing.T) {
 
 	hosts = inventory.List("workers")
 	assert.Equal(t, 2, len(hosts))
+
+	// ensure order for equality check
+	sortHosts(hosts)
 
 	assert.Equal(t, []*ansibleinventory.Host{{
 		Alias:      "34.244.38.46",
@@ -192,6 +202,9 @@ func TestHostConnectionWinrm(t *testing.T) {
 
 	hosts = inventory.List("win")
 	assert.Equal(t, 2, len(hosts))
+
+	// ensure order for equality check
+	sortHosts(hosts)
 
 	assert.Equal(t, []*ansibleinventory.Host{{
 		Alias:      "172.16.2.5",
@@ -277,11 +290,11 @@ func TestTagsAndGroups(t *testing.T) {
 	assert.Nil(t, err)
 	assert.True(t, ansibleinventory.IsInventory(input))
 
-	inventory := ansibleinventory.Inventory{}
-	err = inventory.Decode(input)
+	ansibleInventory := ansibleinventory.Inventory{}
+	err = ansibleInventory.Decode(input)
 	assert.Nil(t, err)
 
-	hosts := inventory.List()
+	hosts := ansibleInventory.List()
 	assert.Equal(t, 1, len(hosts))
 
 	assert.Equal(t, []*ansibleinventory.Host{{
@@ -292,6 +305,19 @@ func TestTagsAndGroups(t *testing.T) {
 		Connection: "ssh",
 		Labels:     []string{"ansible_host", "mondoo_agent"},
 	}}, hosts)
+
+	// convert to mondoo inventory
+	v1Intentory := ansibleInventory.ToV1Inventory()
+	assert.Equal(t, 1, len(v1Intentory.Spec.Assets))
+
+	a := findAsset(v1Intentory.Spec.Assets, "instance1")
+	assert.NotNil(t, a)
+	assert.Equal(t, "192.168.178.11", a.Connections[0].Host)
+	secretId := a.Connections[0].Credentials[0].SecretId
+	cred := v1Intentory.Spec.Credentials[secretId]
+	assert.Equal(t, "custom-user", cred.User)
+	assert.Equal(t, vault.CredentialType_private_key, cred.Type)
+	assert.Equal(t, "/home/custom-user/.ssh/id_rsa", cred.PrivateKeyPath)
 }
 
 func findAsset(assetList []*asset.Asset, name string) *asset.Asset {
