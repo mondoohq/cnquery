@@ -116,6 +116,14 @@ func TestParseVaultInventory(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestNilPointer(t *testing.T) {
+	inventory, err := InventoryFromFile("./testdata/no_metadata_inventory.yaml")
+	require.NoError(t, err)
+
+	assert.NotNil(t, inventory.Metadata)
+	assert.NotNil(t, inventory.Metadata.Labels)
+}
+
 func findAsset(assets []*asset.Asset, id string) *asset.Asset {
 	for i := range assets {
 		a := assets[i]

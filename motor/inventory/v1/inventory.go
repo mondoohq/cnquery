@@ -22,17 +22,18 @@ const (
 )
 
 func New() *Inventory {
-	return &Inventory{
+	inventory := &Inventory{
 		Metadata: &ObjectMeta{},
 		Spec:     &InventorySpec{},
 	}
+	return inventory
 }
 
 // InventoryFromYAML create an inventory from yaml contents
 func InventoryFromYAML(data []byte) (*Inventory, error) {
-	var res Inventory
-	err := yaml.Unmarshal(data, &res)
-	return &res, err
+	res := New()
+	err := yaml.Unmarshal(data, res)
+	return res, err
 }
 
 // InventoryFromFile loads an inventory from file system
