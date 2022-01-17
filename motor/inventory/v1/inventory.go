@@ -154,6 +154,15 @@ func (p *Inventory) PreProcess() error {
 	return nil
 }
 
+func (p *Inventory) MarkConnectionsInsecure() {
+	for i := range p.Spec.Assets {
+		asset := p.Spec.Assets[i]
+		for j := range asset.Connections {
+			asset.Connections[j].Insecure = true
+		}
+	}
+}
+
 func cleanCred(c *vault.Credential) {
 	c.User = ""
 	c.Type = vault.CredentialType_undefined
