@@ -11,7 +11,7 @@ import (
 )
 
 func TestInventoryLoader(t *testing.T) {
-	inventory, err := v1.InventoryFromFile("./v1/testdata/inventory.yml")
+	inventory, err := v1.InventoryFromFile("./v1/testdata/inventory.yaml")
 	require.NoError(t, err)
 
 	im, err := New(WithInventory(inventory))
@@ -44,7 +44,7 @@ func TestAssetLoader(t *testing.T) {
 }
 
 func TestAwsInventoryLoader(t *testing.T) {
-	inventory, err := v1.InventoryFromFile("./v1/testdata/aws_inventory.yml")
+	inventory, err := v1.InventoryFromFile("./v1/testdata/aws_inventory.yaml")
 	require.NoError(t, err)
 
 	os.Setenv("AWS_PROFILE", "mondoo-dev")
@@ -73,7 +73,7 @@ func TestAwsInventoryLoader(t *testing.T) {
 
 func TestVaultInventoryLoader(t *testing.T) {
 	// load inventory with vault name, it will throw an error since vault is not configured fully
-	inventory, err := v1.InventoryFromFile("./v1/testdata/vault_inventory.yml")
+	inventory, err := v1.InventoryFromFile("./v1/testdata/vault_inventory.yaml")
 	require.NoError(t, err)
 
 	_, err = New(WithInventory(inventory))
