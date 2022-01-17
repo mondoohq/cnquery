@@ -10,7 +10,7 @@ import (
 )
 
 func TestInventoryParser(t *testing.T) {
-	inventory, err := InventoryFromFile("./testdata/inventory.yml")
+	inventory, err := InventoryFromFile("./testdata/inventory.yaml")
 	require.NoError(t, err)
 	require.NotNil(t, inventory)
 
@@ -20,7 +20,7 @@ func TestInventoryParser(t *testing.T) {
 }
 
 func TestPreprocess(t *testing.T) {
-	inventory, err := InventoryFromFile("./testdata/inventory.yml")
+	inventory, err := InventoryFromFile("./testdata/inventory.yaml")
 	require.NoError(t, err)
 
 	// extract credentials into credential section
@@ -41,7 +41,7 @@ func TestPreprocess(t *testing.T) {
 }
 
 func TestParseGCPInventory(t *testing.T) {
-	inventory, err := InventoryFromFile("./testdata/gcp_inventory.yml")
+	inventory, err := InventoryFromFile("./testdata/gcp_inventory.yaml")
 	require.NoError(t, err)
 
 	// extract credentials into credential section
@@ -54,7 +54,7 @@ func TestParseGCPInventory(t *testing.T) {
 }
 
 func TestParseVsphereInventory(t *testing.T) {
-	inventory, err := InventoryFromFile("./testdata/vsphere_inventory.yml")
+	inventory, err := InventoryFromFile("./testdata/vsphere_inventory.yaml")
 	require.NoError(t, err)
 
 	// extract credentials into credential section
@@ -78,7 +78,7 @@ func TestParseVsphereInventory(t *testing.T) {
 }
 
 func TestParseSshInventory(t *testing.T) {
-	inventory, err := InventoryFromFile("./testdata/ssh_inventory.yml")
+	inventory, err := InventoryFromFile("./testdata/ssh_inventory.yaml")
 	require.NoError(t, err)
 
 	// extract credentials into credential section
@@ -104,7 +104,7 @@ func TestParseSshInventory(t *testing.T) {
 }
 
 func TestParseVaultInventory(t *testing.T) {
-	inventory, err := InventoryFromFile("./testdata/vault_inventory.yml")
+	inventory, err := InventoryFromFile("./testdata/vault_inventory.yaml")
 	require.NoError(t, err)
 
 	// extract credentials into credential section

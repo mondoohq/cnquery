@@ -165,7 +165,7 @@ func TestHostConnectionLocal(t *testing.T) {
 
 // yq -y . integrations/ansibleinventory/testdata/local.json
 func TestHostConnectionLocalYaml(t *testing.T) {
-	input, err := ioutil.ReadFile("./testdata/local.yml")
+	input, err := ioutil.ReadFile("./testdata/local.yaml")
 	assert.Nil(t, err)
 	assert.True(t, ansibleinventory.IsInventory(input))
 
