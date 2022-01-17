@@ -124,6 +124,33 @@ func TestNilPointer(t *testing.T) {
 	assert.NotNil(t, inventory.Metadata.Labels)
 }
 
+func TestMarkInsecure(t *testing.T) {
+	inventory, err := InventoryFromFile("./testdata/ssh_inventory.yaml")
+	require.NoError(t, err)
+
+	// extract credentials into credential section
+	err = inventory.PreProcess()
+	require.NoError(t, err)
+
+	// check that all assets have no insecure flag set
+	for i := range inventory.Spec.Assets {
+		a := inventory.Spec.Assets[i]
+		for j := range a.Connections {
+			assert.False(t, a.Connections[j].Insecure, a.Name)
+		}
+	}
+
+	inventory.MarkConnectionsInsecure()
+
+	// check that all connections are marked as insecure
+	for i := range inventory.Spec.Assets {
+		a := inventory.Spec.Assets[i]
+		for j := range a.Connections {
+			assert.True(t, a.Connections[j].Insecure, a.Name)
+		}
+	}
+}
+
 func findAsset(assets []*asset.Asset, id string) *asset.Asset {
 	for i := range assets {
 		a := assets[i]
