@@ -944,6 +944,8 @@ resources:
       arn: {}
       id: {}
       name: {}
+      ownerAlias:
+        min_mondoo_version: 5.22.0
       ownerId: {}
     is_private: true
     min_mondoo_version: 5.15.0
