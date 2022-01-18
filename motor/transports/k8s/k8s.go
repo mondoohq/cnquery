@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"errors"
+	"path/filepath"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -9,23 +10,38 @@ import (
 	api "go.mondoo.io/mondoo/cosmo/resources"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 )
 
-var _ transports.Transport = (*Transport)(nil)
-var _ transports.TransportPlatformIdentifier = (*Transport)(nil)
+var (
+	_ transports.Transport                   = (*Transport)(nil)
+	_ transports.TransportPlatformIdentifier = (*Transport)(nil)
+)
 
 func New(tc *transports.TransportConfig) (*Transport, error) {
 	if tc.Backend != transports.TransportBackend_CONNECTION_K8S {
 		return nil, errors.New("backend is not supported for k8s transport")
 	}
 
-	// TODO: this cf dependency must go
-	var cf *genericclioptions.ConfigFlags
-	cf = genericclioptions.NewConfigFlags(true)
+	var kubeconfig string
+	if home := homedir.HomeDir(); home != "" {
+		kubeconfig = filepath.Join(home, ".kube", "config")
+	}
+
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		return nil, err
+	}
+
+	// enable-client side throttling
+	// avoids the cli warning: Waited for 1.000907542s due to client-side throttling, not priority and fairness
+	config.QPS = 1000
+	config.Burst = 1000
 
 	// initialize api client
-	d, err := api.NewDiscovery(cf)
+	d, err := api.NewDiscovery(config)
 	if err != nil {
 		return nil, err
 	}
@@ -45,9 +61,14 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 }
 
 type Transport struct {
+	config       *rest.Config
 	d            *resources.Discovery
 	opts         map[string]string
 	manifestFile string
+}
+
+func (t *Transport) GetConfig() *rest.Config {
+	return t.config
 }
 
 func (t *Transport) RunCommand(command string) (*transports.Command, error) {

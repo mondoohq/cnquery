@@ -11,8 +11,8 @@ import (
 	"go.mondoo.io/mondoo/motor/transports"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 const dockerPullablePrefix = "docker-pullable://"
@@ -26,19 +26,8 @@ type PodContainerImage struct {
 	Container     *string
 }
 
-func ListPodImages(k8scontext string, namespaceFilter []string, podFilter []string) ([]*asset.Asset, error) {
+func ListPodImages(config *rest.Config, k8scontext string, namespaceFilter []string, podFilter []string) ([]*asset.Asset, error) {
 	ctx := context.Background()
-	var configFlags *genericclioptions.ConfigFlags
-	configFlags = genericclioptions.NewConfigFlags(false)
-
-	if len(k8scontext) > 0 {
-		configFlags.Context = &k8scontext
-	}
-
-	config, err := configFlags.ToRESTConfig()
-	if err != nil {
-		return nil, errors.Wrap(err, "could not read kubectl config")
-	}
 
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
@@ -142,7 +131,7 @@ func toAsset(pod v1.Pod, status v1.ContainerStatus) *asset.Asset {
 		},
 
 		Connections: []*transports.TransportConfig{
-			&transports.TransportConfig{
+			{
 				Backend: transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY,
 				Host:    connection,
 			},

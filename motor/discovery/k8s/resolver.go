@@ -127,7 +127,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryContainerImages) {
 		// fetch pod informaton
 		log.Debug().Str("context", k8sContext).Strs("namespace", namespacesFilter).Strs("namespace", podFilter).Msg("search for pods")
-		assetList, err := ListPodImages(k8sContext, namespacesFilter, podFilter)
+		assetList, err := ListPodImages(trans.GetConfig(), k8sContext, namespacesFilter, podFilter)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s images")
 			return nil, err
