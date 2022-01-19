@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"strings"
 
 	"go.mondoo.io/mondoo/motor/discovery/common"
@@ -56,9 +57,15 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 		return nil, err
 	}
 
+	alias := ""
+	if len(info.Aliases) > 0 {
+		// there can only be one alias
+		alias = info.Aliases[0]
+	}
+
 	resolved = append(resolved, &asset.Asset{
 		PlatformIds: []string{identifier},
-		Name:        "AWS Account " + info.ID,
+		Name:        AssembleIntegrationName(alias, info.ID),
 		Platform:    pf,
 		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
 		State:       asset.State_STATE_ONLINE,
@@ -163,4 +170,11 @@ type Ec2InstancesFilters struct {
 	InstanceIds []string
 	Tags        map[string]string
 	Regions     []string
+}
+
+func AssembleIntegrationName(alias string, id string) string {
+	if alias == "" {
+		return fmt.Sprintf("AWS Account %s", id)
+	}
+	return fmt.Sprintf("AWS Account %s (%s)", alias, id)
 }
