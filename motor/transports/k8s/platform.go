@@ -4,6 +4,8 @@ import (
 	"errors"
 	"os"
 
+	"github.com/rs/zerolog/log"
+
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
 	"k8s.io/apimachinery/pkg/api/meta"
 )
@@ -44,4 +46,30 @@ func (t *Transport) Identifier() (string, error) {
 	}
 
 	return "//platformid.api.mondoo.app/runtime/k8s/uid/" + uid, nil
+}
+
+type ClusterInfo struct {
+	Name string
+}
+
+func (t *Transport) ClusterInfo() (ClusterInfo, error) {
+	res := ClusterInfo{}
+
+	// right now we use the name of the first node to identify the cluster
+	result, err := t.Resources("nodes.v1.", "")
+	if err != nil {
+		return res, err
+	}
+
+	if len(result.RootResources) > 0 {
+		node := result.RootResources[0]
+		obj, err := meta.Accessor(node)
+		if err != nil {
+			log.Error().Err(err).Msg("could not access object attributes")
+			return res, err
+		}
+		res.Name = obj.GetName()
+	}
+
+	return res, nil
 }

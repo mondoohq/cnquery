@@ -89,9 +89,17 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 		return nil, err
 	}
 
+	// the name is still a bit unreliable
+	// see https://github.com/kubernetes/kubernetes/issues/44954
+	name := ""
+	ci, err := trans.ClusterInfo()
+	if err == nil {
+		name = ci.Name
+	}
+
 	resolved = append(resolved, &asset.Asset{
 		PlatformIds: []string{identifier},
-		Name:        "K8S Cluster", // TODO: add more details
+		Name:        "K8S Cluster: " + name,
 		Platform:    pf,
 		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
 	})
