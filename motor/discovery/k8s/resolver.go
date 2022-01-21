@@ -97,10 +97,10 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 	clusterName := ""
 
 	if tc.Options["path"] != "" {
+		// manifest parent directory name
 		dir := path.Dir(tc.Options["path"])
 		absname, _ := filepath.Abs(dir)
 		clusterName = filepath.Base(absname)
-		// manifest parent directory name
 		clusterName = "K8S Manifest " + clusterName
 	} else {
 		// try to parse context from kubectl config

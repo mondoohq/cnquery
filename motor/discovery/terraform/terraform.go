@@ -21,8 +21,14 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 }
 
 func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
+	name := ""
+	if tc.Options["path"] != "" {
+		// manifest parent directory name
+		name = common.ProjectNameFromPath(tc.Options["path"])
+	}
+
 	assetInfo := &asset.Asset{
-		Name:        "Terraform Static Analysis",
+		Name:        "Terraform Static Analysis " + name,
 		Connections: []*transports.TransportConfig{tc},
 		State:       asset.State_STATE_ONLINE,
 		Labels:      map[string]string{},
