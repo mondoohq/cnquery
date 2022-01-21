@@ -1,9 +1,6 @@
 package k8s
 
 import (
-	"path"
-	"path/filepath"
-
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/resources/kubectl"
 	"go.mondoo.io/mondoo/motor"
@@ -98,9 +95,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 
 	if tc.Options["path"] != "" {
 		// manifest parent directory name
-		dir := path.Dir(tc.Options["path"])
-		absname, _ := filepath.Abs(dir)
-		clusterName = filepath.Base(absname)
+		clusterName = common.ProjectNameFromPath(tc.Options["path"])
 		clusterName = "K8S Manifest " + clusterName
 	} else {
 		// try to parse context from kubectl config
