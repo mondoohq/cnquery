@@ -1,8 +1,12 @@
 package k8s
 
 import (
+	"bytes"
 	"context"
+	"io"
+	"io/fs"
 	"os"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -50,21 +54,59 @@ func (t *Transport) Resources(kind string, name string) (*ResourceResult, error)
 	log.Debug().Msg("completed querying resource types")
 
 	if len(t.manifestFile) > 0 {
-		var f *os.File
+		log.Debug().Str("file", t.manifestFile).Msg("load resources from manifest files")
+		var input io.Reader
 
 		// if content is piped
 		if t.manifestFile == "-" {
-			f = os.Stdin
+			input = os.Stdin
 		} else {
 			// return all resources from manifest
-			f, err = os.Open(t.manifestFile)
+			filenames := []string{}
+
+			fi, err := os.Stat(t.manifestFile)
 			if err != nil {
 				return nil, err
 			}
-			defer f.Close()
+
+			if fi.IsDir() {
+				err = filepath.WalkDir(t.manifestFile, func(path string, d fs.DirEntry, err error) error {
+					if err != nil {
+						return err
+					}
+					if path != "." {
+						return nil
+					}
+
+					// only load yaml files for now
+					ext := filepath.Ext(path)
+					if ext == "yaml" || ext == "yml" {
+						filenames = append(filenames, path)
+					} else {
+						log.Debug().Str("file", path).Msg("ignore file")
+					}
+
+					return nil
+				})
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				filenames = append(filenames, t.manifestFile)
+			}
+
+			buf := bytes.NewBuffer(nil)
+			for _, filename := range filenames {
+				f, _ := os.Open(filename) // Error handling elided for brevity.
+				io.Copy(buf, f)           // Error handling elided for brevity.
+				f.Close()
+				buf.WriteString("---")
+			}
+
+			input = buf
 		}
 
-		resourceObjects, err = api.ResourcesFromManifest(f)
+		resourceObjects, err = api.ResourcesFromManifest(input)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not query resource objects")
 		}

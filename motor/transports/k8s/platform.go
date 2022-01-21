@@ -1,12 +1,13 @@
 package k8s
 
 import (
-	"errors"
+	"crypto/sha256"
+	"encoding/hex"
 	"os"
+	"path/filepath"
 
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-
-	"go.mondoo.io/mondoo/motor/transports/fsutil"
 	"k8s.io/apimachinery/pkg/api/meta"
 )
 
@@ -14,16 +15,19 @@ func (t *Transport) Identifier() (string, error) {
 	uid := ""
 
 	if t.manifestFile != "" {
-		f, err := os.Open(t.manifestFile)
+		_, err := os.Stat(t.manifestFile)
 		if err != nil {
-			return "", err
+			return "", errors.Wrap(err, "could not determine platform identifier for "+t.manifestFile)
 		}
-		defer f.Close()
-		hash, err := fsutil.Sha256(f)
+
+		absPath, err := filepath.Abs(t.manifestFile)
 		if err != nil {
-			return "", err
+			return "", errors.Wrap(err, "could not determine platform identifier for "+t.manifestFile)
 		}
-		uid = hash
+
+		h := sha256.New()
+		h.Write([]byte(absPath))
+		return hex.EncodeToString(h.Sum(nil)), nil
 	} else {
 		// we use "kube-system" namespace uid as identifier for the cluster
 		result, err := t.Resources("namespaces", "kube-system")
@@ -36,7 +40,6 @@ func (t *Transport) Identifier() (string, error) {
 		}
 
 		resource := result.RootResources[0]
-
 		obj, err := meta.Accessor(resource)
 		if err != nil {
 			return "", err
