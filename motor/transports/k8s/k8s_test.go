@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/transports"
 )
@@ -22,5 +24,5 @@ func TestKubernetes(t *testing.T) {
 
 	info, err := trans.ClusterInfo()
 	require.NoError(t, err)
-	fmt.Printf("%v", info)
+	assert.Equal(t, "minikube", info.Name)
 }

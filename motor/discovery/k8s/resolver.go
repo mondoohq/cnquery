@@ -1,6 +1,9 @@
 package k8s
 
 import (
+	"path"
+	"path/filepath"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/resources/kubectl"
 	"go.mondoo.io/mondoo/motor"
@@ -91,15 +94,36 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 
 	// the name is still a bit unreliable
 	// see https://github.com/kubernetes/kubernetes/issues/44954
-	name := ""
-	ci, err := trans.ClusterInfo()
-	if err == nil {
-		name = ci.Name
+	clusterName := ""
+
+	if tc.Options["path"] != "" {
+		dir := path.Dir(tc.Options["path"])
+		absname, _ := filepath.Abs(dir)
+		clusterName = filepath.Base(absname)
+		// manifest parent directory name
+		clusterName = "K8S Manifest " + clusterName
+	} else {
+		// try to parse context from kubectl config
+		if clusterName == "" && k8sctlConfig != nil && len(k8sctlConfig.CurrentContext) > 0 {
+			clusterName = k8sctlConfig.CurrentClusterName()
+			log.Info().Str("cluster-name", clusterName).Msg("use cluster name from kube config")
+		}
+
+		// fallback to first node name if we could not gather the name from kubeconfig
+		if clusterName == "" {
+			ci, err := trans.ClusterInfo()
+			if err == nil {
+				clusterName = ci.Name
+				log.Info().Str("cluster-name", clusterName).Msg("use cluster name from node name")
+			}
+		}
+
+		clusterName = "K8S Cluster " + clusterName
 	}
 
 	resolved = append(resolved, &asset.Asset{
 		PlatformIds: []string{identifier},
-		Name:        "K8S Cluster: " + name,
+		Name:        clusterName,
 		Platform:    pf,
 		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
 	})

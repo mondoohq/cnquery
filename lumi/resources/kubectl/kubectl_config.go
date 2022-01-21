@@ -53,6 +53,21 @@ type KubectlConfigUser struct {
 	Token                 string `json:"token,omitempty"`
 }
 
+func (kc *KubectlConfig) CurrentClusterName() string {
+	name := ""
+	for i := range kc.Contexts {
+		if kc.Contexts[i].Name == kc.CurrentContext {
+			if len(kc.Contexts[i].Context.Cluster) > 0 {
+				return kc.Contexts[i].Context.Cluster
+			} else {
+				return name
+			}
+		}
+	}
+
+	return name
+}
+
 // Reads the namespace that is configured via `kubectl config set-context --current --namespace=default`
 func (kc *KubectlConfig) CurrentNamespace() string {
 	defaultNamespace := "default"
