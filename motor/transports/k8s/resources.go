@@ -1,11 +1,11 @@
 package k8s
 
 import (
-	"bytes"
 	"context"
 	"io"
-	"io/fs"
+	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/pkg/errors"
@@ -70,40 +70,37 @@ func (t *Transport) Resources(kind string, name string) (*ResourceResult, error)
 			}
 
 			if fi.IsDir() {
-				err = filepath.WalkDir(t.manifestFile, func(path string, d fs.DirEntry, err error) error {
-					if err != nil {
-						return err
-					}
-					if path != "." {
-						return nil
-					}
-
-					// only load yaml files for now
-					ext := filepath.Ext(path)
-					if ext == "yaml" || ext == "yml" {
-						filenames = append(filenames, path)
-					} else {
-						log.Debug().Str("file", path).Msg("ignore file")
-					}
-
-					return nil
-				})
+				// NOTE: we are not using filepath.WalkDir since we do not net recursive walking
+				files, err := ioutil.ReadDir(t.manifestFile)
 				if err != nil {
 					return nil, err
 				}
+				for i := range files {
+					f := files[i]
+					if f.IsDir() {
+						continue
+					}
+					filename := path.Join(t.manifestFile, f.Name())
+
+					// only load yaml files for now
+					ext := filepath.Ext(filename)
+					if ext == ".yaml" || ext == ".yml" {
+						log.Debug().Str("file", filename).Msg("add file to manifest loading")
+						filenames = append(filenames, filename)
+					} else {
+						log.Debug().Str("file", filename).Msg("ignore file")
+					}
+
+				}
+
 			} else {
 				filenames = append(filenames, t.manifestFile)
 			}
 
-			buf := bytes.NewBuffer(nil)
-			for _, filename := range filenames {
-				f, _ := os.Open(filename) // Error handling elided for brevity.
-				io.Copy(buf, f)           // Error handling elided for brevity.
-				f.Close()
-				buf.WriteString("---")
+			input, err = api.MergeManifestFiles(filenames)
+			if err != nil {
+				return nil, err
 			}
-
-			input = buf
 		}
 
 		resourceObjects, err = api.ResourcesFromManifest(input)
