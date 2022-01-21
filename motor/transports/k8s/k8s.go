@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"errors"
+	"os"
 	"path/filepath"
 
 	"github.com/rs/zerolog/log"
@@ -25,9 +26,15 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 		return nil, errors.New("backend is not supported for k8s transport")
 	}
 
+	// check if the user .kube/config file exists
+	// NOTE: BuildConfigFromFlags falls back to cluster loading when .kube/config string is empty
+	// therefore we want to only change the kubeconfig string when the file really exists
 	var kubeconfig string
 	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = filepath.Join(home, ".kube", "config")
+		kubeconfigpath := filepath.Join(home, ".kube", "config")
+		if _, err := os.Stat(kubeconfigpath); err == nil {
+			kubeconfig = kubeconfigpath
+		}
 	}
 
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
