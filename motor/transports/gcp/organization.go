@@ -5,7 +5,9 @@ import (
 	"errors"
 	"strings"
 
-	"google.golang.org/api/cloudresourcemanager/v1"
+	v1cloudresourcemanager "google.golang.org/api/cloudresourcemanager/v1"
+	"google.golang.org/api/cloudresourcemanager/v3"
+	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 )
 
@@ -19,12 +21,13 @@ func (t *Transport) OrganizationID() (string, error) {
 			return "", err
 		}
 
-		svc, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
+		svc, err := v1cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
 		if err != nil {
 			return "", err
 		}
 
-		ancest, err := svc.Projects.GetAncestry(t.id, &cloudresourcemanager.GetAncestryRequest{}).Do()
+		// TODO: GetAncestry is not available in v3 anymore, we need to find an alternative approach
+		ancest, err := svc.Projects.GetAncestry(t.id, &v1cloudresourcemanager.GetAncestryRequest{}).Do()
 		if err != nil {
 			return "", err
 		}
@@ -35,7 +38,58 @@ func (t *Transport) OrganizationID() (string, error) {
 				return ancestor.ResourceId.Id, nil
 			}
 		}
+	case Organization:
+		return t.id, nil
 	}
 
-	return "", errors.New("could not find the organzation")
+	return "", errors.New("could not find the organization")
+}
+
+func (t *Transport) GetProject(name string) (*cloudresourcemanager.Project, error) {
+	ctx := context.Background()
+
+	client, err := t.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, cloudresourcemanager.CloudPlatformScope, iam.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	svc, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+	return svc.Projects.Get("projects/" + name).Do()
+}
+
+func (t *Transport) GetOrganization(name string) (*cloudresourcemanager.Organization, error) {
+	ctx := context.Background()
+
+	client, err := t.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, cloudresourcemanager.CloudPlatformScope, iam.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	svc, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+	return svc.Organizations.Get("organizations/" + name).Do()
+}
+
+func (t *Transport) GetProjectsForOrganization(org *cloudresourcemanager.Organization) ([]*cloudresourcemanager.Project, error) {
+	ctx := context.Background()
+
+	client, err := t.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	svc, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+	projectResp, err := svc.Projects.List().Parent(org.Name).Do()
+	if err != nil {
+		return nil, err
+	}
+	return projectResp.Projects, nil
 }

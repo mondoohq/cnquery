@@ -16,7 +16,9 @@ var (
 type ResourceType int
 
 const (
-	Project ResourceType = iota
+	Unknown ResourceType = iota
+	Project
+	Organization
 )
 
 func New(tc *transports.TransportConfig) (*Transport, error) {
@@ -24,15 +26,41 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 		return nil, errors.New("backend is not supported for gcp transport")
 	}
 
-	if tc.Options == nil || len(tc.Options["project"]) == 0 {
-		return nil, errors.New("gcp backend requires a project id. please set option `project`")
+	if tc.Options == nil || (tc.Options["project"] == "" && tc.Options["organization"] == "") {
+		return nil, errors.New("gcp backend requires a project id or organization id. please set option `project` or `organization`")
 	}
 
-	return &Transport{
-		resourceType: Project,
-		id:           tc.Options["project"],
+	var resourceType ResourceType
+	var id string
+	if tc.Options["project"] != "" {
+		resourceType = Project
+		id = tc.Options["project"]
+	} else if tc.Options["organization"] != "" {
+		resourceType = Organization
+		id = tc.Options["organization"]
+	}
+
+	t := &Transport{
+		resourceType: resourceType,
+		id:           id,
 		opts:         tc.Options,
-	}, nil
+	}
+
+	// verify that we have access to the organization or project
+	switch resourceType {
+	case Organization:
+		_, err := t.GetOrganization(id)
+		if err != nil {
+			return nil, errors.New("could not find or have no access to organization " + id)
+		}
+	case Project:
+		_, err := t.GetProject(id)
+		if err != nil {
+			return nil, errors.New("could not find or have no access to project " + id)
+		}
+	}
+
+	return t, nil
 }
 
 type Transport struct {
