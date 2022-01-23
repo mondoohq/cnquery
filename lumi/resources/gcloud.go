@@ -161,7 +161,7 @@ func (g *lumiGcloudProject) init(args *lumi.Args) (*lumi.Args, GcloudProject, er
 		return nil, nil, err
 	}
 
-	projectName := gt.ProjectID()
+	projectName := gt.ResourceID()
 	project, err := svc.Projects.Get(projectName).Do()
 	if err != nil {
 		return nil, nil, err
@@ -290,7 +290,7 @@ func (g *lumiGcloudCompute) GetInstances() ([]interface{}, error) {
 		return nil, err
 	}
 
-	projectName := gt.ProjectID()
+	projectName := gt.ResourceID()
 
 	// TODO: iterate over all instances
 	// TODO: harmonize instance list with discovery?, at least borrow the parallel execution
@@ -376,7 +376,7 @@ func (g *lumiGcloudStorage) GetBuckets() ([]interface{}, error) {
 		return nil, err
 	}
 
-	projectID := gt.ProjectID()
+	projectID := gt.ResourceID()
 	buckets, err := storageSvc.Buckets.List(projectID).Do()
 	if err != nil {
 		return nil, err
@@ -530,7 +530,7 @@ func (g *lumiGcloudSql) GetInstances() ([]interface{}, error) {
 		return nil, err
 	}
 
-	projectName := gt.ProjectID()
+	projectName := gt.ResourceID()
 	sqlinstances, err := sqladminSvc.Instances.List(projectName).Do()
 	if err != nil {
 		return nil, err

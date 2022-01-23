@@ -11,7 +11,6 @@ import (
 )
 
 func TestParseGcloudConfig(t *testing.T) {
-
 	data, err := ioutil.ReadFile("./testdata/gcloud_config.json")
 	require.NoError(t, err)
 
