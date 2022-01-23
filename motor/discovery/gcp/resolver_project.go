@@ -11,15 +11,10 @@ import (
 	"google.golang.org/api/compute/v1"
 )
 
-const (
-	DiscoveryAll       = "all"
-	DiscoveryInstances = "instances"
-)
-
 type GcpProjectResolver struct{}
 
 func (k *GcpProjectResolver) Name() string {
-	return "GCP Resolver"
+	return "GCP Project Resolver"
 }
 
 func (r *GcpProjectResolver) AvailableDiscoveryTargets() []string {
@@ -28,6 +23,10 @@ func (r *GcpProjectResolver) AvailableDiscoveryTargets() []string {
 
 func (r *GcpProjectResolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
+
+	if tc == nil || tc.Options["project"] == "" {
+		return resolved, nil
+	}
 
 	trans, err := gcp_transport.New(tc)
 	if err != nil {
