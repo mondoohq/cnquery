@@ -8,8 +8,16 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
 )
 
-var _ transports.Transport = (*Transport)(nil)
-var _ transports.TransportPlatformIdentifier = (*Transport)(nil)
+var (
+	_ transports.Transport                   = (*Transport)(nil)
+	_ transports.TransportPlatformIdentifier = (*Transport)(nil)
+)
+
+type ResourceType int
+
+const (
+	Project ResourceType = iota
+)
 
 func New(tc *transports.TransportConfig) (*Transport, error) {
 	if tc.Backend != transports.TransportBackend_CONNECTION_GCP {
@@ -21,15 +29,16 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 	}
 
 	return &Transport{
-		projectid: tc.Options["project"],
-		opts:      tc.Options,
+		resourceType: Project,
+		id:           tc.Options["project"],
+		opts:         tc.Options,
 	}, nil
 }
 
 type Transport struct {
-	projectid      string
-	organizationId string
-	opts           map[string]string
+	resourceType ResourceType
+	id           string
+	opts         map[string]string
 }
 
 func (t *Transport) RunCommand(command string) (*transports.Command, error) {

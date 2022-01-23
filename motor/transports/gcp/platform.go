@@ -1,9 +1,20 @@
 package gcp
 
+import "errors"
+
 func (t *Transport) Identifier() (string, error) {
-	return "//platformid.api.mondoo.app/runtime/gcp/projects/" + t.projectid, nil
+	switch t.ResourceType() {
+	case Project:
+		return "//platformid.api.mondoo.app/runtime/gcp/projects/" + t.id, nil
+	default:
+		return "", errors.New("unsupported resource type")
+	}
 }
 
-func (t *Transport) ProjectID() string {
-	return t.projectid
+func (t *Transport) ResourceType() ResourceType {
+	return t.resourceType
+}
+
+func (t *Transport) ResourceID() string {
+	return t.id
 }
