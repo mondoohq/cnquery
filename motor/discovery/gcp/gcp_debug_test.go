@@ -25,7 +25,7 @@ func TestGcpDiscovery(t *testing.T) {
 		},
 	}
 
-	r := GcpResolver{}
+	r := GcpProjectResolver{}
 	assets, err := r.Resolve(tc)
 	require.NoError(t, err)
 	assert.True(t, len(assets) > 0)
