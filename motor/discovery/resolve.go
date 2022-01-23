@@ -61,7 +61,7 @@ func init() {
 		transports.SCHEME_TAR:                &tar.Resolver{},
 		transports.SCHEME_K8S:                &k8s.Resolver{},
 		transports.SCHEME_GCR:                &gcp.GcrResolver{},
-		transports.SCHEME_GCP:                &gcp.GcpResolver{},
+		transports.SCHEME_GCP:                &gcp.GcpProjectResolver{},
 		transports.SCHEME_CONTAINER_REGISTRY: &container_registry.Resolver{},
 		transports.SCHEME_AZURE:              &azure.Resolver{},
 		transports.SCHEME_AWS:                &aws.Resolver{},
