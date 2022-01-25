@@ -69,6 +69,8 @@ func (conn *TransportConfig) ToUrl() string {
 		return SCHEME_K8S
 	case TransportBackend_CONNECTION_GITHUB:
 		return SCHEME_GITHUB
+	case TransportBackend_CONNECTION_GITLAB:
+		return SCHEME_GITLAB
 	case TransportBackend_CONNECTION_GCP:
 		return SCHEME_GCP
 	case TransportBackend_CONNECTION_AWS_EC2_EBS:

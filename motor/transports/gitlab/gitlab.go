@@ -10,8 +10,10 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
 )
 
-var _ transports.Transport = (*Transport)(nil)
-var _ transports.TransportPlatformIdentifier = (*Transport)(nil)
+var (
+	_ transports.Transport                   = (*Transport)(nil)
+	_ transports.TransportPlatformIdentifier = (*Transport)(nil)
+)
 
 func New(tc *transports.TransportConfig) (*Transport, error) {
 	token := tc.Options["token"]
@@ -29,7 +31,7 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 	}
 
 	if tc.Options["group"] == "" {
-		return nil, errors.New("you need to provide a group for gitlab transport")
+		return nil, errors.New("you need to provide a group for gitlab")
 	}
 
 	return &Transport{

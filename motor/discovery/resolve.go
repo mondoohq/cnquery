@@ -25,6 +25,7 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/equinix"
 	"go.mondoo.io/mondoo/motor/discovery/gcp"
 	"go.mondoo.io/mondoo/motor/discovery/github"
+	"go.mondoo.io/mondoo/motor/discovery/gitlab"
 	"go.mondoo.io/mondoo/motor/discovery/ipmi"
 	"go.mondoo.io/mondoo/motor/discovery/k8s"
 	"go.mondoo.io/mondoo/motor/discovery/local"
@@ -75,7 +76,7 @@ func init() {
 		transports.SCHEME_EQUINIX:            &equinix.Resolver{},
 		transports.SCHEME_GITHUB:             &github.Resolver{},
 		transports.SCHEME_AWS_EC2_EBS:        &ebs.Resolver{},
-		transports.SCHEME_GITLAB:             &standard.Resolver{},
+		transports.SCHEME_GITLAB:             &gitlab.Resolver{},
 		transports.SCHEME_TERRAFORM:          &terraform.Resolver{},
 		transports.SCHEME_HOST:               &network.Resolver{},
 		transports.SCHEME_TLS:                &network.Resolver{},
