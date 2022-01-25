@@ -2005,6 +2005,8 @@ resources:
       attributes: {}
       region: {}
       subscriptions: {}
+      tags:
+        min_mondoo_version: 5.23.0
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
