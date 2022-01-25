@@ -3,7 +3,6 @@ package gcp
 import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/common"
-	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	gcp_transport "go.mondoo.io/mondoo/motor/transports/gcp"
 )
@@ -30,26 +29,27 @@ func (r *GcpOrgResolver) Resolve(tc *transports.TransportConfig, cfn common.Cred
 		return nil, err
 	}
 
-	identifier, err := trans.Identifier()
-	if err != nil {
-		return nil, err
-	}
+	// TODO: for now we do not add the organization as asset since we need to adapt the polices and queries to distingush
+	// between them. Current resources most likely mix with the org, most gcp requests do not work on org level
 
-	// detect platform info for the asset
-	detector := platform.NewDetector(trans)
-	pf, err := detector.Platform()
-	if err != nil {
-		return nil, err
-	}
-
-	organization := tc.Options["organization"]
-
-	resolved = append(resolved, &asset.Asset{
-		PlatformIds: []string{identifier},
-		Name:        "GCP organization " + organization,
-		Platform:    pf,
-		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
-	})
+	//identifier, err := trans.Identifier()
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//// detect platform info for the asset
+	//detector := platform.NewDetector(trans)
+	//pf, err := detector.Platform()
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//resolved = append(resolved, &asset.Asset{
+	//	PlatformIds: []string{identifier},
+	//	Name:        "GCP organization " + tc.Options["organization"],
+	//	Platform:    pf,
+	//	Connections: []*transports.TransportConfig{tc}, // pass-in the current config
+	//})
 
 	// discover projects
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryProjects) {
@@ -72,12 +72,12 @@ func (r *GcpOrgResolver) Resolve(tc *transports.TransportConfig, cfn common.Cred
 			projectConfig.Options = map[string]string{
 				"project": project.ProjectId,
 			}
-			resolved = append(resolved, &asset.Asset{
-				PlatformIds: []string{identifier},
-				Name:        "GCP project " + project.ProjectId,
-				Platform:    pf,
-				Connections: []*transports.TransportConfig{projectConfig}, // pass-in the current config
-			})
+
+			assets, err := (&GcpProjectResolver{}).Resolve(projectConfig, cfn, sfn, userIdDetectors...)
+			if err != nil {
+				return nil, err
+			}
+			resolved = append(resolved, assets...)
 		}
 	}
 
