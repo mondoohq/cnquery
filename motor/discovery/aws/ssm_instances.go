@@ -201,6 +201,6 @@ func ssmInstanceToAsset(account string, region string, instance types.InstanceIn
 		}
 	}
 	// add AWS metadata labels
-	asset.Labels = addAWSMetadataLabels(asset.Labels, ssmInstanceToBasicInstanceInfo(instance, region))
+	asset.Labels = addAWSMetadataLabels(asset.Labels, ssmInstanceToBasicInstanceInfo(instance, region, account))
 	return asset
 }

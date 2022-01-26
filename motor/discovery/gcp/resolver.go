@@ -83,6 +83,9 @@ func (r *GcpResolver) Resolve(tc *transports.TransportConfig, cfn common.Credent
 		Name:        "GCP project " + project,
 		Platform:    pf,
 		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
+		Labels: map[string]string{
+			common.ParentId: project,
+		},
 	})
 
 	// discover compute instances
