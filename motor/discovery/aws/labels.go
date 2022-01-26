@@ -3,6 +3,7 @@ package aws
 import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"go.mondoo.io/mondoo/motor/discovery/common"
 )
 
 const (
@@ -11,8 +12,6 @@ const (
 	IntegrationMrnLabel string = "mondoo.app/integration-mrn"
 	SSMPingLabel        string = "mondoo.app/ssm-connection"
 	InstanceLabel       string = "mondoo.app/instance"
-	IPLabel             string = "mondoo.app/ip"
-	DNSLabel            string = "mondoo.app/public-dns-name"
 	EBSScanLabel        string = "mondoo.app/ebs-volume-scan"
 	PlatformLabel       string = "mondoo.app/platform"
 	StateLabel          string = "mondoo.app/instance-state"
@@ -24,10 +23,10 @@ func addAWSMetadataLabels(assetLabels map[string]string, instance basicInstanceI
 		assetLabels[InstanceLabel] = *instance.InstanceId
 	}
 	if instance.IPAddress != nil {
-		assetLabels[IPLabel] = *instance.IPAddress
+		assetLabels[common.IPLabel] = *instance.IPAddress
 	}
 	if instance.PublicDnsName != nil {
-		assetLabels[DNSLabel] = *instance.PublicDnsName
+		assetLabels[common.DNSLabel] = *instance.PublicDnsName
 	}
 	if instance.ImageId != nil {
 		assetLabels[ImageIdLabel] = *instance.ImageId
@@ -41,6 +40,9 @@ func addAWSMetadataLabels(assetLabels map[string]string, instance basicInstanceI
 	if instance.State != "" {
 		assetLabels[StateLabel] = instance.State
 	}
+	if instance.AccountId != "" {
+		assetLabels[common.ParentId] = instance.AccountId
+	}
 	return assetLabels
 }
 
@@ -53,19 +55,21 @@ type basicInstanceInfo struct {
 	SSMPingStatus string
 	PlatformType  string
 	State         string
+	AccountId     string
 }
 
-func ssmInstanceToBasicInstanceInfo(instance types.InstanceInformation, region string) basicInstanceInfo {
+func ssmInstanceToBasicInstanceInfo(instance types.InstanceInformation, region string, account string) basicInstanceInfo {
 	return basicInstanceInfo{
 		InstanceId:    instance.InstanceId,
 		IPAddress:     instance.IPAddress,
 		Region:        region,
 		SSMPingStatus: string(instance.PingStatus),
 		PlatformType:  string(instance.PlatformType),
+		AccountId:     account,
 	}
 }
 
-func ec2InstanceToBasicInstanceInfo(instance ec2types.Instance, region string) basicInstanceInfo {
+func ec2InstanceToBasicInstanceInfo(instance ec2types.Instance, region string, account string) basicInstanceInfo {
 	return basicInstanceInfo{
 		InstanceId:    instance.InstanceId,
 		IPAddress:     instance.PublicIpAddress,
@@ -74,5 +78,6 @@ func ec2InstanceToBasicInstanceInfo(instance ec2types.Instance, region string) b
 		ImageId:       instance.ImageId,
 		PlatformType:  string(instance.Platform),
 		State:         string(instance.State.Name),
+		AccountId:     account,
 	}
 }

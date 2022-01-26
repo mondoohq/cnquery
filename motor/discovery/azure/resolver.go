@@ -90,6 +90,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 		Labels: map[string]string{
 			"azure.com/subscription": subscriptionID,
 			"azure.com/tenant":       *subscription.TenantID,
+			common.ParentId:          subscriptionID,
 		},
 	})
 

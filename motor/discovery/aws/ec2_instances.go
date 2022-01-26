@@ -190,7 +190,7 @@ func instanceToAsset(account string, region string, instance types.Instance, ins
 		asset.Labels[k] = v
 	}
 	// add AWS metadata labels
-	asset.Labels = addAWSMetadataLabels(asset.Labels, ec2InstanceToBasicInstanceInfo(instance, region))
+	asset.Labels = addAWSMetadataLabels(asset.Labels, ec2InstanceToBasicInstanceInfo(instance, region, account))
 
 	return asset
 }

@@ -36,8 +36,9 @@ func TestEc2InstanceToBasicInstanceInfo(t *testing.T) {
 		Region:       "us-east-1",
 		PlatformType: "windows",
 		State:        "terminated",
+		AccountId:    "111111111111",
 	}
-	assert.Equal(t, expected, ec2InstanceToBasicInstanceInfo(i, "us-east-1"))
+	assert.Equal(t, expected, ec2InstanceToBasicInstanceInfo(i, "us-east-1", "111111111111"))
 }
 
 func TestSSMInstanceToBasicInstanceInfo(t *testing.T) {
@@ -51,8 +52,9 @@ func TestSSMInstanceToBasicInstanceInfo(t *testing.T) {
 		IPAddress:     aws.String("172.154.32.10"),
 		Region:        "us-east-1",
 		SSMPingStatus: "Online",
+		AccountId:     "999999999999",
 	}
 
-	assert.Equal(t, expected, ssmInstanceToBasicInstanceInfo(i, "us-east-1"))
+	assert.Equal(t, expected, ssmInstanceToBasicInstanceInfo(i, "us-east-1", "999999999999"))
 
 }
