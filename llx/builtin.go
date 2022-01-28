@@ -667,43 +667,19 @@ func runResourceFunction(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int3
 	// ugh something is wrong here.... fix it later
 	rr, ok := bind.Value.(lumi.ResourceType)
 	if !ok {
-		err := fmt.Errorf("cannot cast resource to resource type: %+v", bind.Value)
-		c.cache.Store(ref, &stepCache{
-			Result: &RawData{
-				Type:  types.Unset,
-				Value: nil,
-				Error: err,
-			},
-		})
 		// TODO: can we get rid of this fmt call
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("cannot cast resource to resource type: %+v", bind.Value)
 	}
 
 	info := rr.LumiResource()
 	// resource := c.runtime.Registry.Resources[bind.Type]
 	if info == nil {
-		err := errors.New("cannot retrieve resource from the binding to run the raw function")
-		c.cache.Store(ref, &stepCache{
-			Result: &RawData{
-				Type:  types.Unset,
-				Value: nil,
-				Error: err,
-			},
-		})
-		return nil, 0, err
+		return nil, 0, errors.New("cannot retrieve resource from the binding to run the raw function")
 	}
 
 	resource, ok := c.runtime.Registry.Resources[info.Name]
 	if !ok || resource == nil {
-		err := fmt.Errorf("cannot retrieve resource definition for resource %q", info.Name)
-		c.cache.Store(ref, &stepCache{
-			Result: &RawData{
-				Type:  types.Unset,
-				Value: nil,
-				Error: err,
-			},
-		})
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("cannot retrieve resource definition for resource %q", info.Name)
 	}
 
 	// record this watcher on the executors watcher IDs

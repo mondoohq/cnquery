@@ -53,12 +53,18 @@ func initExecutionContext(motor *motor.Motor) executionContext {
 }
 
 func testQueryWithExecutor(t *testing.T, execCtx executionContext, query string, props map[string]*llx.Primitive) []*llx.RawResult {
+	t.Helper()
 	bundle, err := leise.Compile(query, execCtx.schema, props)
 	if err != nil {
 		t.Fatal("failed to compile code: " + err.Error())
 	}
 	err = leise.Invariants.Check(bundle)
 	require.NoError(t, err)
+	return testCompiledQueryWithExecutor(t, execCtx, bundle, props)
+}
+
+func testCompiledQueryWithExecutor(t *testing.T, execCtx executionContext, bundle *llx.CodeBundle, props map[string]*llx.Primitive) []*llx.RawResult {
+	t.Helper()
 
 	score, resultMap, err := executor.ExecuteQuery(execCtx.schema, execCtx.runtime, bundle, props)
 	require.NoError(t, err)
@@ -1280,4 +1286,16 @@ func TestArrayBlockError(t *testing.T) {
 	}
 	require.NotNil(t, queryResult)
 	require.Error(t, queryResult.Data.Error)
+}
+
+func TestBrokenQueryExecution(t *testing.T) {
+	execCtx := linuxMockExecutor()
+	bundle, err := leise.Compile("'asdf'.contains('asdf') == true", execCtx.schema, nil)
+	require.NoError(t, err)
+	bundle.Code.Code[1].Id = "fakecontains"
+	results := testCompiledQueryWithExecutor(t, execCtx, bundle, nil)
+	require.Len(t, results, 3)
+	require.Error(t, results[0].Data.Error)
+	require.Error(t, results[1].Data.Error)
+	require.Error(t, results[2].Data.Error)
 }
