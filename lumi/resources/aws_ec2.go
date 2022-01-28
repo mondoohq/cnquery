@@ -901,6 +901,7 @@ func (s *lumiAwsEc2) getVolumes(at *aws_transport.Transport) []*jobpool.Job {
 						"tags", ec2TagsToMap(vol.Tags),
 						"availabilityZone", toString(vol.AvailabilityZone),
 						"volumeType", string(vol.VolumeType),
+						"createTime", vol.CreateTime,
 					)
 					if err != nil {
 						return nil, err

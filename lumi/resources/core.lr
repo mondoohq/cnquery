@@ -2692,6 +2692,8 @@ private aws.ec2.volume {
   availabilityZone string
   // EBS volume type (gp2 | gp3 | io1 | io2 | st1 | sc1| standard)
   volumeType string
+  // time the volume was created
+  createTime time
 }
 
 // AWS EC2 Instance
