@@ -79,10 +79,10 @@ func GetVolumeIdForInstance(instanceinfo *types.Instance) *string {
 		for bi := range instanceinfo.BlockDeviceMappings {
 			log.Info().Interface("device", *instanceinfo.BlockDeviceMappings[bi].DeviceName).Msg("found instance block devices")
 			// todo: revisit this. this works for the standard ec2 instance setup, but no guarantees outside of that..
-			if *instanceinfo.BlockDeviceMappings[bi].DeviceName == "xvda" { // xvda is the root volume
+			if strings.Contains(*instanceinfo.BlockDeviceMappings[bi].DeviceName, "xvda") { // xvda is the root volume
 				return instanceinfo.BlockDeviceMappings[bi].Ebs.VolumeId
 			}
-			if *instanceinfo.BlockDeviceMappings[bi].DeviceName == "sda1" {
+			if strings.Contains(*instanceinfo.BlockDeviceMappings[bi].DeviceName, "sda1") {
 				return instanceinfo.BlockDeviceMappings[bi].Ebs.VolumeId
 			}
 		}

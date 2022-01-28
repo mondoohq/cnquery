@@ -82,6 +82,7 @@ func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
 	} else {
 		ok, err = t.Setup(ctx, instanceinfo)
 		if err != nil {
+			t.Close()
 			return t, err
 		}
 		if !ok {
