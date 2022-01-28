@@ -513,6 +513,17 @@ func (c *LeiseExecutor) runChain(start int32) {
 			if codeID, ok := c.callbackPoints[curRef]; ok {
 				c.callback(errorResult(err, codeID))
 			}
+			if _, isNotReadyError := err.(lumi.NotReadyError); !isNotReadyError {
+				if sc, _ := c.cache.Load(curRef); sc == nil {
+					c.cache.Store(curRef, &stepCache{
+						Result: &RawData{
+							Type:  types.Unset,
+							Value: nil,
+							Error: err,
+						},
+					})
+				}
+			}
 		}
 
 		// get the next reference, if we are not directed anywhere
