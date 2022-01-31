@@ -207,8 +207,8 @@ func (c *LeiseExecutor) NoRun(err error) {
 func (c *LeiseExecutor) Unregister() error {
 	log.Trace().Str("id", c.id).Msg("exec> unregister")
 	// clear out the callback, we don't want it to be called now anymore
-	c.callback = func(_ *RawResult) {
-		log.Warn().Str("id", c.id).Msg("exec> Decomissioned callback called on exec.LeiseExecutor")
+	c.callback = func(r *RawResult) {
+		log.Debug().Str("id", c.id).Str("codeID", r.CodeID).Msg("exec> Decomissioned callback called on exec.LeiseExecutor")
 	}
 
 	errorList := []error{}
