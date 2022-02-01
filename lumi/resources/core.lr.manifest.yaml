@@ -1125,6 +1125,8 @@ resources:
       arn: {}
       attachments: {}
       availabilityZone: {}
+      createTime:
+        min_mondoo_version: 5.25.0
       encrypted: {}
       id: {}
       state: {}
