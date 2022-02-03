@@ -225,8 +225,8 @@ func mapEc2InstanceStateCode(state *types.InstanceState) asset.State {
 		return asset.State_STATE_RUNNING
 	case 0:
 		return asset.State_STATE_PENDING
-	case 32:
-		return asset.State_STATE_STOPPING
+	case 32: // 32 is shutting down, which is the step before terminated, assume terminated if we get shutting down
+		return asset.State_STATE_TERMINATED
 	case 64:
 		return asset.State_STATE_STOPPING
 	case 80:
