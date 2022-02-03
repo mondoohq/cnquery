@@ -188,6 +188,11 @@ func (fs recordFS) MkdirAll(path string, perm os.FileMode) error {
 }
 
 func (fs recordFS) Open(name string) (afero.File, error) {
+	// we need to check it here since toml does not allow to have empty names
+	if name == "" {
+		return nil, os.ErrNotExist
+	}
+
 	enonet := false
 	content := []byte{}
 	var fi FileInfo
@@ -261,6 +266,11 @@ func NewMockFileInfo(stat os.FileInfo) FileInfo {
 }
 
 func (fs recordFS) Stat(name string) (os.FileInfo, error) {
+	// we need to check it here since toml does not allow to have empty names
+	if name == "" {
+		return nil, os.ErrNotExist
+	}
+
 	enonet := false
 	stat, err := fs.observe.Stat(name)
 	if err == os.ErrNotExist {
