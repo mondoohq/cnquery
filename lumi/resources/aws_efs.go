@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	"github.com/aws/aws-sdk-go-v2/service/efs/types"
+	"github.com/aws/smithy-go/transport/http"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
@@ -138,7 +139,12 @@ func (e *lumiAwsEfsFilesystem) GetBackupPolicy() (interface{}, error) {
 	backupPolicy, err := svc.DescribeBackupPolicy(ctx, &efs.DescribeBackupPolicyInput{
 		FileSystemId: &id,
 	})
-	if err != nil {
+	var respErr *http.ResponseError
+	if err != nil && errors.As(err, &respErr) {
+		if respErr.HTTPStatusCode() == 404 {
+			return nil, nil
+		}
+	} else if err != nil {
 		return nil, err
 	}
 	res, err := jsonToDict(backupPolicy)
