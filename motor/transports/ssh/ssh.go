@@ -18,7 +18,10 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-var _ transports.Transport = (*SSHTransport)(nil)
+var (
+	_ transports.Transport                   = (*SSHTransport)(nil)
+	_ transports.TransportPlatformIdentifier = (*SSHTransport)(nil)
+)
 
 func New(tc *transports.TransportConfig) (*SSHTransport, error) {
 	tc = ReadSSHConfig(tc)
@@ -286,8 +289,15 @@ func (t *SSHTransport) Runtime() string {
 
 func (t *SSHTransport) PlatformIdDetectors() []transports.PlatformIdDetector {
 	return []transports.PlatformIdDetector{
+		transports.TransportPlatformIdentifierDetector,
 		transports.HostnameDetector,
-		transports.SSHHostKeyDetector,
 		transports.CloudDetector,
 	}
+}
+
+func (t *SSHTransport) Identifier() (string, error) {
+	fingerprint := ssh.FingerprintSHA256(t.HostKey)
+	fingerprint = strings.Replace(fingerprint, ":", "-", 1)
+	identifier := "//platformid.api.mondoo.app/runtime/ssh/hostkey/" + fingerprint
+	return identifier, nil
 }

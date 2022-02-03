@@ -11,14 +11,13 @@ import (
 type PlatformIdDetector string
 
 const (
-	HostnameDetector   PlatformIdDetector = "hostname"
-	MachineIdDetector  PlatformIdDetector = "machineid"
-	SSHHostKeyDetector PlatformIdDetector = "ssh-hostkey"
-	CloudDetector      PlatformIdDetector = "cloud-detect"
-	AWSEc2Detector     PlatformIdDetector = "aws-ec2"
-	// TransportPlatformIdentifierDetector is a detector that gets the plaform id
-	// from the transports Indentifier() method. This requires the
-	// TransportIdentifier inteface be implemented for the transport
+	HostnameDetector  PlatformIdDetector = "hostname"
+	MachineIdDetector PlatformIdDetector = "machineid"
+	CloudDetector     PlatformIdDetector = "cloud-detect"
+	AWSEc2Detector    PlatformIdDetector = "aws-ec2"
+	// TransportPlatformIdentifierDetector is a detector that gets the platform id
+	// from the transports Identifier() method. This requires the
+	// TransportIdentifier interface be implemented for the transport
 	TransportPlatformIdentifierDetector PlatformIdDetector = "transport-platform-id"
 )
 

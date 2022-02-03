@@ -2,11 +2,9 @@ package motorid
 
 import (
 	"fmt"
-	"strings"
-
-	"github.com/rs/zerolog/log"
 
 	"github.com/cockroachdb/errors"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/motor/motorid/clouddetect"
 	"go.mondoo.io/mondoo/motor/motorid/hostname"
@@ -14,8 +12,6 @@ import (
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/mock"
-	"go.mondoo.io/mondoo/motor/transports/ssh"
-	gossh "golang.org/x/crypto/ssh"
 )
 
 type AssetMetadata struct {
@@ -85,17 +81,6 @@ func GatherID(t transports.Transport, p *platform.Platform, idDetector transport
 			identifier = "//platformid.api.mondoo.app/machineid/" + guid
 		}
 		return identifier, hostErr
-	case transports.SSHHostKeyDetector:
-		sshTrans, ok := transport.(*ssh.SSHTransport)
-		if !ok {
-			return "", errors.New("ssh-hostkey id detector is not supported for the transport")
-		}
-		if sshTrans != nil {
-			fingerprint := gossh.FingerprintSHA256(sshTrans.HostKey)
-			fingerprint = strings.Replace(fingerprint, ":", "-", 1)
-			identifier = "//platformid.api.mondoo.app/runtime/ssh/hostkey/" + fingerprint
-		}
-		return identifier, nil
 	case transports.AWSEc2Detector:
 		metadata, err := awsec2.Resolve(transport, p)
 		if err != nil {
