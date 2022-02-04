@@ -246,6 +246,26 @@ func (k *lumiK8s) GetCronjobs() ([]interface{}, error) {
 	})
 }
 
+func (k *lumiK8s) GetSecrets() ([]interface{}, error) {
+	return k8sResourceToLumi(k.Runtime, "secrets.v1.", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+		ts := obj.GetCreationTimestamp()
+
+		manifest, err := jsonToDict(resource)
+		if err != nil {
+			return nil, err
+		}
+
+		return k.Runtime.CreateResource("k8s.secret",
+			"uid", string(obj.GetUID()),
+			"name", obj.GetName(),
+			"namespace", obj.GetNamespace(),
+			"kind", objT.GetKind(),
+			"created", &ts.Time,
+			"manifest", manifest,
+		)
+	})
+}
+
 func (k *lumiK8sApiresource) id() (string, error) {
 	return k.Name()
 }
@@ -385,4 +405,8 @@ func (k *lumiK8sCronjob) id() (string, error) {
 
 func (k *lumiK8sCronjob) GetNamespace() (interface{}, error) {
 	return nil, errors.New("not implemented")
+}
+
+func (k *lumiK8sSecret) id() (string, error) {
+	return k.Uid()
 }

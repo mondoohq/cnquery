@@ -4015,6 +4015,8 @@ k8s {
   jobs() []k8s.job
   // Cluster CronJobs
   cronjobs() []k8s.cronjob
+  // Cluster Secrets
+  secrets() []k8s.secret
   // Cluster Version
   serverVersion() dict
 }
@@ -4166,6 +4168,22 @@ k8s.job {
 
 // Kubernetes Cron Job
 k8s.cronjob {
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+}
+
+// Kubernetes Secret
+k8s.secret {
   // Kubernetes Object UID
   uid string
   // Kubernetes Object Name
