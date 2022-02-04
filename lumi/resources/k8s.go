@@ -131,7 +131,6 @@ func (k *lumiK8s) GetNamespaces() ([]interface{}, error) {
 		return k.Runtime.CreateResource("k8s.namespace",
 			"uid", string(obj.GetUID()),
 			"name", obj.GetName(),
-			"kind", objT.GetKind(),
 			"created", &ts.Time,
 			"manifest", manifest,
 		)
