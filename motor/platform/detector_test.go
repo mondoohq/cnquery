@@ -110,7 +110,7 @@ func TestCoreOSDetector(t *testing.T) {
 }
 
 func TestCentos5Detector(t *testing.T) {
-	detector, err := newDetector("./testdata/detect-centos5.toml")
+	detector, err := newDetector("./testdata/detect-centos-5.toml")
 	assert.Nil(t, err, "was able to create the transport")
 	di, err := detector.Platform()
 	require.NoError(t, err)
@@ -123,7 +123,7 @@ func TestCentos5Detector(t *testing.T) {
 }
 
 func TestCentos6Detector(t *testing.T) {
-	detector, err := newDetector("./testdata/detect-centos6.toml")
+	detector, err := newDetector("./testdata/detect-centos-6.toml")
 	assert.Nil(t, err, "was able to create the transport")
 	di, err := detector.Platform()
 	require.NoError(t, err)
@@ -136,7 +136,7 @@ func TestCentos6Detector(t *testing.T) {
 }
 
 func TestCentos7OSDetector(t *testing.T) {
-	detector, err := newDetector("./testdata/detect-centos7.toml")
+	detector, err := newDetector("./testdata/detect-centos-7.toml")
 	assert.Nil(t, err, "was able to create the transport")
 	di, err := detector.Platform()
 	require.NoError(t, err)
@@ -149,7 +149,7 @@ func TestCentos7OSDetector(t *testing.T) {
 }
 
 func TestCentos8OSDetector(t *testing.T) {
-	detector, err := newDetector("./testdata/detect-centos8.toml")
+	detector, err := newDetector("./testdata/detect-centos-8.toml")
 	assert.Nil(t, err, "was able to create the transport")
 	di, err := detector.Platform()
 	require.NoError(t, err)
@@ -157,6 +157,32 @@ func TestCentos8OSDetector(t *testing.T) {
 	assert.Equal(t, "centos", di.Name, "os name should be identified")
 	assert.Equal(t, "CentOS Linux", di.Title, "os title should be identified")
 	assert.Equal(t, "8.2.2004", di.Release, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
+}
+
+func TestCentos8StreamOSDetector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-centos-8-stream.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	di, err := detector.Platform()
+	require.NoError(t, err)
+
+	assert.Equal(t, "centos", di.Name, "os name should be identified")
+	assert.Equal(t, "CentOS Stream", di.Title, "os title should be identified")
+	assert.Equal(t, "8", di.Release, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
+}
+
+func TestCentos9StreamOSDetector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-centos-9-stream.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	di, err := detector.Platform()
+	require.NoError(t, err)
+
+	assert.Equal(t, "centos", di.Name, "os name should be identified")
+	assert.Equal(t, "CentOS Stream", di.Title, "os title should be identified")
+	assert.Equal(t, "9", di.Release, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
