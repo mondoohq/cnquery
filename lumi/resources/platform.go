@@ -61,14 +61,16 @@ func (p *lumiPlatformEol) init(args *lumi.Args) (*lumi.Args, PlatformEol, error)
 	name, _ := platform.Name()
 	release, _ := platform.Release()
 	arch, _ := platform.Arch()
+	title, _ := platform.Title()
 
 	platformEolInfo := eol.EolInfo(&vadvisor.Platform{
 		Name:    name,
 		Release: release,
 		Arch:    arch,
+		Title:   title,
 	})
 
-	log.Debug().Str("name", name).Str("release", release).Msg("search for eol information")
+	log.Debug().Str("name", name).Str("release", release).Str("title", title).Msg("search for eol information")
 	if platformEolInfo == nil {
 		return nil, nil, errors.New("no platform eol information available")
 	}
