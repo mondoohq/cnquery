@@ -114,6 +114,10 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 		}
 
 		clusterName = "K8S Cluster " + clusterName
+		ns, ok := tc.Options[k8s_transport.OPTION_NAMESPACE]
+		if ok && ns != "" {
+			clusterName += " (Namespace: " + ns + ")"
+		}
 	}
 
 	resolved = append(resolved, &asset.Asset{
@@ -121,6 +125,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 		Name:        clusterName,
 		Platform:    pf,
 		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
+		State:       asset.State_STATE_RUNNING,
 	})
 
 	// discover ec2 instances
