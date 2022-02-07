@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/cockroachdb/errors"
+	"github.com/gosimple/slug"
 	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/api/meta"
 )
@@ -46,9 +47,14 @@ func (t *Transport) Identifier() (string, error) {
 		}
 
 		uid = string(obj.GetUID())
-	}
+		id := "//platformid.api.mondoo.app/runtime/k8s/uid/" + uid
 
-	return "//platformid.api.mondoo.app/runtime/k8s/uid/" + uid, nil
+		if t.opts[OPTION_NAMESPACE] != "" {
+			id += "/namespace/" + slug.Make(t.opts[OPTION_NAMESPACE])
+		}
+
+		return id, nil
+	}
 }
 
 type ClusterInfo struct {

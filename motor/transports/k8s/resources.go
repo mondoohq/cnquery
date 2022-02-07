@@ -37,7 +37,7 @@ type ResourceResult struct {
 
 func (t *Transport) Resources(kind string, name string) (*ResourceResult, error) {
 	ctx := context.Background()
-	ns := t.opts["namespace"]
+	ns := t.opts[OPTION_NAMESPACE]
 	allNs := false
 	if len(ns) == 0 {
 		allNs = true
