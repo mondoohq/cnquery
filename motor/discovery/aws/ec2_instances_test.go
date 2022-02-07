@@ -3,6 +3,7 @@ package aws_test
 import (
 	"testing"
 
+	aws_sdk "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -21,9 +22,9 @@ func TestParseParseEc2PlatformId(t *testing.T) {
 }
 
 func TestIsInstanceInGoodState(t *testing.T) {
-	require.False(t, aws.InstanceIsInRunningOrStoppedState(&types.InstanceState{Code: 48}))
-	require.True(t, aws.InstanceIsInRunningOrStoppedState(&types.InstanceState{Code: 16}))
-	require.True(t, aws.InstanceIsInRunningOrStoppedState(&types.InstanceState{Code: 80}))
-	require.False(t, aws.InstanceIsInRunningOrStoppedState(&types.InstanceState{Code: 32}))
-	require.False(t, aws.InstanceIsInRunningOrStoppedState(&types.InstanceState{Code: 0}))
+	require.False(t, aws.InstanceIsInRunningOrStoppedState(&types.InstanceState{Code: aws_sdk.Int32(48)}))
+	require.True(t, aws.InstanceIsInRunningOrStoppedState(&types.InstanceState{Code: aws_sdk.Int32(16)}))
+	require.True(t, aws.InstanceIsInRunningOrStoppedState(&types.InstanceState{Code: aws_sdk.Int32(80)}))
+	require.False(t, aws.InstanceIsInRunningOrStoppedState(&types.InstanceState{Code: aws_sdk.Int32(32)}))
+	require.False(t, aws.InstanceIsInRunningOrStoppedState(&types.InstanceState{Code: aws_sdk.Int32(0)}))
 }

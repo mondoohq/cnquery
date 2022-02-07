@@ -220,7 +220,7 @@ func mapEc2InstanceStateCode(state *types.InstanceState) asset.State {
 	if state == nil {
 		return asset.State_STATE_UNKNOWN
 	}
-	switch state.Code {
+	switch code := *state.Code; code {
 	case 16:
 		return asset.State_STATE_RUNNING
 	case 0:
@@ -241,10 +241,16 @@ func mapEc2InstanceStateCode(state *types.InstanceState) asset.State {
 
 func InstanceIsInRunningOrStoppedState(state *types.InstanceState) bool {
 	// instance state 16 == running, 80 == stopped
-	return state.Code == 16 || state.Code == 80
+	if state == nil {
+		return false
+	}
+	return *state.Code == 16 || *state.Code == 80
 }
 
 func InstanceIsInRunningState(state *types.InstanceState) bool {
 	// instance state 16 == running
-	return state.Code == 16
+	if state == nil {
+		return false
+	}
+	return *state.Code == 16
 }
