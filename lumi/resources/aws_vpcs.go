@@ -88,7 +88,7 @@ func (s *lumiAws) getVpcs(at *aws_transport.Transport) []*jobpool.Job {
 						"arn", fmt.Sprintf(vpcArnPattern, regionVal, account.ID, toString(v.VpcId)),
 						"id", toString(v.VpcId),
 						"state", string(v.State),
-						"isDefault", v.IsDefault,
+						"isDefault", toBool(v.IsDefault),
 						"region", regionVal,
 						"tags", ec2TagsToMap(v.Tags),
 					)

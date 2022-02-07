@@ -165,13 +165,13 @@ func (s *lumiAwsEc2Networkacl) GetEntries() ([]interface{}, error) {
 		args := []interface{}{
 			"egress", entry.Egress,
 			"ruleAction", string(entry.RuleAction),
-			"id", id + "-" + strconv.Itoa(int(entry.RuleNumber)),
+			"id", id + "-" + strconv.Itoa(toIntFrom32(entry.RuleNumber)),
 		}
 		if entry.PortRange != nil {
 			lumiPortEntry, err := s.Runtime.CreateResource("aws.ec2.networkacl.entry.portrange",
 				"from", entry.PortRange.From,
 				"to", entry.PortRange.To,
-				"id", id+"-"+strconv.Itoa(int(entry.RuleNumber))+"-"+strconv.Itoa(int(entry.PortRange.From)),
+				"id", id+"-"+strconv.Itoa(toIntFrom32(entry.RuleNumber))+"-"+strconv.Itoa(toIntFrom32(entry.PortRange.From)),
 			)
 			if err != nil {
 				return nil, err
@@ -276,11 +276,10 @@ func (s *lumiAwsEc2) getSecurityGroups(at *aws_transport.Transport) []*jobpool.J
 								ipRanges = append(ipRanges, *iprange.CidrIpv6)
 							}
 						}
-
 						lumiSecurityGroupIpPermission, err := s.Runtime.CreateResource("aws.ec2.securitygroup.ippermission",
 							"id", toString(group.GroupId)+"-"+strconv.Itoa(p),
-							"fromPort", int64(permission.FromPort),
-							"toPort", int64(permission.ToPort),
+							"fromPort", toInt64From32(permission.FromPort),
+							"toPort", toInt64From32(permission.ToPort),
 							"ipProtocol", toString(permission.IpProtocol),
 							"ipRanges", ipRanges,
 							"ipv6Ranges", ipv6Ranges,
@@ -393,7 +392,7 @@ func (s *lumiAwsEc2) getEbsEncryptionPerRegion(at *aws_transport.Transport) []*j
 			}
 			structVal := ebsEncryption{
 				region:                 regionVal,
-				ebsEncryptionByDefault: ebsEncryptionRes.EbsEncryptionByDefault,
+				ebsEncryptionByDefault: toBool(ebsEncryptionRes.EbsEncryptionByDefault),
 			}
 			return jobpool.JobResult(structVal), nil
 		}
@@ -533,7 +532,7 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVers
 				device := instance.BlockDeviceMappings[i]
 
 				lumiInstanceDevice, err := s.Runtime.CreateResource("aws.ec2.instance.device",
-					"deleteOnTermination", device.Ebs.DeleteOnTermination,
+					"deleteOnTermination", toBool(device.Ebs.DeleteOnTermination),
 					"status", string(device.Ebs.Status),
 					"volumeId", toString(device.Ebs.VolumeId),
 					"deviceName", toString(device.DeviceName),
@@ -579,7 +578,7 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVers
 				"publicDnsName", toString(instance.PublicDnsName),
 				"stateReason", stateReason,
 				"stateTransitionReason", toString(instance.StateTransitionReason),
-				"ebsOptimized", instance.EbsOptimized,
+				"ebsOptimized", toBool(instance.EbsOptimized),
 				"instanceType", string(instance.InstanceType),
 				"tags", ec2TagsToMap(instance.Tags),
 				"image", lumiImage,
@@ -823,7 +822,7 @@ func (s *lumiAwsEc2Instance) GetInstanceStatus() (interface{}, error) {
 
 	instanceStatus, err := svc.DescribeInstanceStatus(ctx, &ec2.DescribeInstanceStatusInput{
 		InstanceIds:         []string{instanceId},
-		IncludeAllInstances: true,
+		IncludeAllInstances: aws.Bool(true),
 	})
 	if err != nil {
 		return nil, err
@@ -896,7 +895,7 @@ func (s *lumiAwsEc2) getVolumes(at *aws_transport.Transport) []*jobpool.Job {
 						"arn", fmt.Sprintf(volumeArnPattern, region, account.ID, toString(vol.VolumeId)),
 						"id", toString(vol.VolumeId),
 						"attachments", jsonAttachments,
-						"encrypted", vol.Encrypted,
+						"encrypted", toBool(vol.Encrypted),
 						"state", string(vol.State),
 						"tags", ec2TagsToMap(vol.Tags),
 						"availabilityZone", toString(vol.AvailabilityZone),
