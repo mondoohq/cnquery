@@ -3190,6 +3190,8 @@ resources:
       namespaces: {}
       nodes: {}
       pods: {}
+      secrets:
+        min_mondoo_version: 5.26.0
       serverVersion: {}
     min_mondoo_version: 5.15.0
     platform:
@@ -3311,6 +3313,18 @@ resources:
       podSpec: {}
       uid: {}
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - kubernetes
+  k8s.secret:
+    fields:
+      created: {}
+      kind: {}
+      manifest: {}
+      name: {}
+      namespace: {}
+      uid: {}
+    min_mondoo_version: 5.26.0
     platform:
       name:
       - kubernetes
