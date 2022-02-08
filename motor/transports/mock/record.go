@@ -203,19 +203,22 @@ func (fs recordFS) Open(name string) (afero.File, error) {
 	} else if err != nil {
 		return nil, err
 	} else {
-		data, err := ioutil.ReadAll(f)
-		defer f.Close()
-		if err != nil {
-			return nil, err
-		}
-		content = data
-
 		// if recording is active, we also collect stats
 		stat, err := f.Stat()
 		if err == nil {
 			fi = NewMockFileInfo(stat)
 		} else {
 			log.Warn().Err(err).Str("file", name).Msg("could not stat file for recording")
+		}
+
+		// only read the file content if the file is actually a file and not a directory
+		if !fi.IsDir {
+			data, err := ioutil.ReadAll(f)
+			defer f.Close()
+			if err != nil {
+				return nil, err
+			}
+			content = data
 		}
 	}
 
