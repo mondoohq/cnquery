@@ -1265,6 +1265,17 @@ vsphere.vmknic {
   tags []string
 }
 
+// Run a command on ESXi
+esxi.command {
+  init(command string)
+  // vSphere inventory path
+  inventoryPath string
+  // Raw command
+  command string
+  // Command Result
+  result() []dict
+}
+
 // vSphere installation bundle resource
 esxi.vib {
   id string
