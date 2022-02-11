@@ -806,7 +806,7 @@ func (v *lumiEsxi) GetHost() (interface{}, error) {
 		h = hosts[0]
 	} else {
 
-		// check if the the connection was initialized with a specific host
+		// check if the connection was initialized with a specific host
 		identifier, err := vt.Identifier()
 		if err != nil || !vsphere_transport.IsVsphereResourceID(identifier) {
 			return nil, errors.New("esxi resource is only supported for esxi connections or vsphere vm connections")
@@ -866,7 +866,7 @@ func (v *lumiEsxi) GetVm() (interface{}, error) {
 	vClient := vt.Client()
 	cl := vsphere.New(vClient)
 
-	// check if the the connection was initialized with a specific host
+	// check if the connection was initialized with a specific host
 	identifier, err := vt.Identifier()
 	if err != nil || !vsphere_transport.IsVsphereResourceID(identifier) {
 		return nil, errors.New("esxi resource is only supported for esxi connections or vsphere vm connections")
@@ -913,6 +913,101 @@ func (v *lumiEsxi) GetVm() (interface{}, error) {
 	}
 
 	return lumiVm, nil
+}
+
+func (v *lumiEsxiCommand) id() (string, error) {
+	return v.Command()
+}
+
+func (v *lumiEsxiCommand) init(args *lumi.Args) (*lumi.Args, EsxiCommand, error) {
+	t := v.Runtime.Motor.Transport
+	vt, ok := t.(*vsphere_transport.Transport)
+	if !ok {
+		return nil, nil, errors.New("esxi resource is only supported on vsphere transport")
+	}
+
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	// check if the command arg is provided
+	commandRaw := (*args)["command"]
+	if commandRaw == nil {
+		return args, nil, nil
+	}
+
+	// check if the connection was initialized with a specific host
+	identifier, err := vt.Identifier()
+	if err != nil || !vsphere_transport.IsVsphereResourceID(identifier) {
+		return nil, nil, errors.New("could not determine inventoryPath from transport connection")
+	}
+
+	h, err := v.hostSystem(vt, identifier)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["inventoryPath"] = h.InventoryPath
+	return args, nil, nil
+}
+
+func (v *lumiEsxiCommand) hostSystem(vt *vsphere_transport.Transport, identifier string) (*object.HostSystem, error) {
+	var h *object.HostSystem
+	vClient := vt.Client()
+	cl := vsphere.New(vClient)
+
+	// extract type and inventory
+	moid, err := vsphere_transport.ParseVsphereResourceID(identifier)
+	if err != nil {
+		return nil, err
+	}
+
+	if moid.Type != "HostSystem" {
+		return nil, errors.New("esxi resource is not supported for vsphere type " + moid.Type)
+	}
+
+	h, err = cl.HostByMoid(moid)
+	if err != nil {
+		return nil, errors.New("could not find the esxi host via platform id: " + identifier)
+	}
+
+	return h, nil
+}
+
+func (v *lumiEsxiCommand) GetResult() ([]interface{}, error) {
+	t := v.Runtime.Motor.Transport
+	_, ok := t.(*vsphere_transport.Transport)
+	if !ok {
+		return nil, errors.New("esxi resource is not supported on this transport")
+	}
+
+	inventoryPath, err := v.InventoryPath()
+	if err != nil {
+		return nil, err
+	}
+
+	esxiClient, err := esxiClient(v.Runtime.Motor.Transport, inventoryPath)
+	if err != nil {
+		return nil, err
+	}
+
+	cmd, err := v.Command()
+	if err != nil {
+		return nil, err
+	}
+
+	res := []interface{}{}
+
+	resp, err := esxiClient.Command(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range resp {
+		res = append(res, resp[i])
+	}
+
+	return res, nil
 }
 
 func (v *lumiVsphereVswitchStandard) id() (string, error) {

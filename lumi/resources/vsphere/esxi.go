@@ -2,6 +2,7 @@ package vsphere
 
 import (
 	"errors"
+	"regexp"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -80,6 +81,29 @@ func (esxi *Esxi) VswitchStandard() ([]map[string]interface{}, error) {
 	}
 
 	return esxiValuesSliceToDict(res.Values), nil
+}
+
+var doubleSpaceRegex = regexp.MustCompile(`\s+`)
+
+func (esxi *Esxi) Command(command string) ([]map[string]interface{}, error) {
+	e, err := esxcli.NewExecutor(esxi.c.Client, esxi.host)
+	if err != nil {
+		return nil, err
+	}
+
+	sanitizedCommand := doubleSpaceRegex.ReplaceAllString(command, " ")
+	args := strings.Split(sanitizedCommand, " ")
+
+	resp, err := e.Run(args)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(resp.Values) == 0 {
+		return nil, nil
+	}
+
+	return esxiValuesSliceToDict(resp.Values), nil
 }
 
 // (Get-ESXCli).network.vswitch.standard.policy.shaping.get('vSwitch0')
