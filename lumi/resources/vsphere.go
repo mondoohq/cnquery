@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/vmware/govmomi/vim25/mo"
+
 	"github.com/vmware/govmomi/object"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/vsphere"
@@ -39,14 +41,6 @@ func esxiClient(t transports.Transport, path string) (*vsphere.Esxi, error) {
 
 func (v *lumiVsphereLicense) id() (string, error) {
 	return v.Name()
-}
-
-func (v *lumiVsphereVm) id() (string, error) {
-	return v.Moid()
-}
-
-func (v *lumiVsphereHost) id() (string, error) {
-	return v.Moid()
 }
 
 func (v *lumiVsphereVmknic) id() (string, error) {
@@ -278,6 +272,38 @@ func (v *lumiVsphereCluster) GetHosts() ([]interface{}, error) {
 		return nil, err
 	}
 	return vsphereHosts(client, v.Runtime, vhosts)
+}
+
+func (v *lumiVsphereHost) id() (string, error) {
+	return v.Moid()
+}
+
+func (v *lumiVsphereHost) init(args *lumi.Args) (*lumi.Args, VsphereHost, error) {
+	if len(*args) > 0 {
+		return args, nil, nil
+	}
+
+	h, hostInfo, err := esxiHostProperties(v.Runtime)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	props, err := vsphere.HostProperties(hostInfo)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var name string
+	if hostInfo != nil {
+		name = hostInfo.Name
+	}
+
+	(*args)["moid"] = h.Reference().Encode()
+	(*args)["name"] = name
+	(*args)["properties"] = props
+	(*args)["inventoryPath"] = h.InventoryPath
+
+	return args, nil, nil
 }
 
 func (v *lumiVsphereHost) esxiClient() (*vsphere.Esxi, error) {
@@ -748,6 +774,10 @@ func (v *lumiVsphereDatacenter) GetVms() ([]interface{}, error) {
 	return lumiVms, nil
 }
 
+func (v *lumiVsphereVm) id() (string, error) {
+	return v.Moid()
+}
+
 func (v *lumiVsphereVm) GetAdvancedSettings() (map[string]interface{}, error) {
 	client, err := getClientInstance(v.Runtime.Motor.Transport)
 	if err != nil {
@@ -771,11 +801,11 @@ func (v *lumiEsxi) id() (string, error) {
 	return "esxi", nil
 }
 
-func (v *lumiEsxi) GetHost() (interface{}, error) {
-	t := v.Runtime.Motor.Transport
+func esxiHostProperties(runtime *lumi.Runtime) (*object.HostSystem, *mo.HostSystem, error) {
+	t := runtime.Motor.Transport
 	vt, ok := t.(*vsphere_transport.Transport)
 	if !ok {
-		return nil, errors.New("esxi resource is not supported on this transport")
+		return nil, nil, errors.New("esxi resource is not supported on this transport")
 	}
 
 	var h *object.HostSystem
@@ -785,22 +815,22 @@ func (v *lumiEsxi) GetHost() (interface{}, error) {
 		// ESXi connections only have one host
 		dcs, err := cl.ListDatacenters()
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		if len(dcs) != 1 {
-			return nil, errors.New("could not find single esxi datacenter")
+			return nil, nil, errors.New("could not find single esxi datacenter")
 		}
 
 		dc := dcs[0]
 
 		hosts, err := cl.ListHosts(dc, nil)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		if len(hosts) != 1 {
-			return nil, errors.New("could not find single esxi host")
+			return nil, nil, errors.New("could not find single esxi host")
 		}
 
 		h = hosts[0]
@@ -809,27 +839,38 @@ func (v *lumiEsxi) GetHost() (interface{}, error) {
 		// check if the connection was initialized with a specific host
 		identifier, err := vt.Identifier()
 		if err != nil || !vsphere_transport.IsVsphereResourceID(identifier) {
-			return nil, errors.New("esxi resource is only supported for esxi connections or vsphere vm connections")
+			return nil, nil, errors.New("esxi resource is only supported for esxi connections or vsphere vm connections")
 		}
 
 		// extract type and inventory
 		moid, err := vsphere_transport.ParseVsphereResourceID(identifier)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		if moid.Type != "HostSystem" {
-			return nil, errors.New("esxi resource is not supported for vsphere type " + moid.Type)
+			return nil, nil, errors.New("esxi resource is not supported for vsphere type " + moid.Type)
 		}
 
 		h, err = cl.HostByMoid(moid)
 		if err != nil {
-			return nil, errors.New("could not find the esxi host via platform id: " + identifier)
+			return nil, nil, errors.New("could not find the esxi host via platform id: " + identifier)
 		}
 	}
 
 	// todo sync with GetHosts
 	hostInfo, err := vsphere.HostInfo(h)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return h, hostInfo, nil
+}
+
+// GetHost returns the information about the current ESXi host
+// Deprecated: use vsphere.host resource instead
+func (v *lumiEsxi) GetHost() (interface{}, error) {
+	h, hostInfo, err := esxiHostProperties(v.Runtime)
 	if err != nil {
 		return nil, err
 	}
@@ -856,11 +897,11 @@ func (v *lumiEsxi) GetHost() (interface{}, error) {
 	return lumiHost, nil
 }
 
-func (v *lumiEsxi) GetVm() (interface{}, error) {
-	t := v.Runtime.Motor.Transport
+func esxiVmProperties(runtime *lumi.Runtime) (*object.VirtualMachine, *mo.VirtualMachine, error) {
+	t := runtime.Motor.Transport
 	vt, ok := t.(*vsphere_transport.Transport)
 	if !ok {
-		return nil, errors.New("esxi resource is not supported on this transport")
+		return nil, nil, errors.New("esxi resource is not supported on this transport")
 	}
 
 	vClient := vt.Client()
@@ -869,25 +910,34 @@ func (v *lumiEsxi) GetVm() (interface{}, error) {
 	// check if the connection was initialized with a specific host
 	identifier, err := vt.Identifier()
 	if err != nil || !vsphere_transport.IsVsphereResourceID(identifier) {
-		return nil, errors.New("esxi resource is only supported for esxi connections or vsphere vm connections")
+		return nil, nil, errors.New("esxi resource is only supported for esxi connections or vsphere vm connections")
 	}
 
 	// extract type and inventory
 	moid, err := vsphere_transport.ParseVsphereResourceID(identifier)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if moid.Type != "VirtualMachine" {
-		return nil, errors.New("esxi resource is not supported for vsphere type " + moid.Type)
+		return nil, nil, errors.New("esxi resource is not supported for vsphere type " + moid.Type)
 	}
 
 	vm, err := cl.VirtualMachineByMoid(moid)
 	if err != nil {
-		return nil, errors.New("could not find the esxi vm via platform id: " + identifier)
+		return nil, nil, errors.New("could not find the esxi vm via platform id: " + identifier)
 	}
 
 	vmInfo, err := vsphere.VmInfo(vm)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return vm, vmInfo, nil
+}
+
+func (v *lumiEsxi) GetVm() (interface{}, error) {
+	vm, vmInfo, err := esxiVmProperties(v.Runtime)
 	if err != nil {
 		return nil, err
 	}

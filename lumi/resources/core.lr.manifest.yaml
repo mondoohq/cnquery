@@ -2856,6 +2856,9 @@ resources:
       name:
       - equinix
   esxi:
+    docs:
+      desc: |
+        The `exsi.host` and `esxi.vm` resource is deprecated. Please use `vsphere.host` and `vsphere.vm` instead.
     fields:
       host: {}
       vm: {}
@@ -2872,6 +2875,7 @@ resources:
           }
         }
       title: Check that all kernel modules are signed
+    maturity: deprecated
   esxi.kernelmodule:
     fields:
       enabled: {}
