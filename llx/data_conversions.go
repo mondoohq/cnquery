@@ -578,7 +578,7 @@ func pfunction2raw(p *Primitive) *RawData {
 // data that can be used for computations
 func (p *Primitive) RawData() *RawData {
 	// FIXME: This is a stopgap. It points to an underlying problem that exists and needs fixing.
-	if p.Type == "" {
+	if p.GetType() == "" {
 		return &RawData{Error: errors.New("cannot convert primitive with NO type information")}
 	}
 
