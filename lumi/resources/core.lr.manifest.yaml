@@ -2862,6 +2862,7 @@ resources:
     fields:
       host: {}
       vm: {}
+    maturity: deprecated
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -2875,7 +2876,16 @@ resources:
           }
         }
       title: Check that all kernel modules are signed
-    maturity: deprecated
+  esxi.command:
+    fields:
+      command: {}
+      inventoryPath: {}
+      result: {}
+    min_mondoo_version: 5.27.0
+    platform:
+      name:
+      - vmware-esxi
+      - vmware-vsphere
   esxi.kernelmodule:
     fields:
       enabled: {}
