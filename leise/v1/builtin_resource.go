@@ -1,4 +1,4 @@
-package leise
+package v1
 
 import (
 	"strconv"
@@ -10,7 +10,7 @@ import (
 	"go.mondoo.io/mondoo/types"
 )
 
-func compileResourceDefault(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+func compileResourceDefault(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
 	name := typ.ResourceName()
 	resource := c.Schema.Resources[name]
 	if resource == nil {
@@ -20,13 +20,13 @@ func compileResourceDefault(c *compiler, typ types.Type, ref uint64, id string, 
 	// special case that we can optimize: the previous call was a resource
 	// without any call arguments + the combined type is a resource itself
 	// in that case save the outer call and go for the resource directly
-	prevRef := c.tailRef()
-	prev := c.Result.CodeV2.Chunk(prevRef)
+	code := c.Result.DeprecatedV5Code
+	prev := code.LastChunk()
 	if prev.Call == llx.Chunk_FUNCTION && prev.Function == nil {
 		name := prev.Id + "." + id
 		resourceinfo, isResource := c.Schema.Resources[name]
 		if isResource {
-			c.block.PopChunk()
+			code.RemoveLastChunk()
 			return c.addResource(name, resourceinfo, call)
 		}
 	}
@@ -37,13 +37,13 @@ func compileResourceDefault(c *compiler, typ types.Type, ref uint64, id string, 
 		return "", errors.New("cannot find field '" + id + "' in resource " + resource.Name)
 	}
 
-	c.addChunk(&llx.Chunk{
+	code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
-			Type:    fieldinfo.Type,
-			Binding: ref,
+			Type: fieldinfo.Type,
 			// no Args for field calls yet
+			DeprecatedV5Binding: ref,
 		},
 	})
 
@@ -117,7 +117,7 @@ func listResource(c *compiler, typ types.Type) (*lumi.ResourceInfo, error) {
 	return resource, nil
 }
 
-func compileResourceWhere(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+func compileResourceWhere(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
 	resource, err := listResource(c, typ)
 	if err != nil {
 		return types.Nil, errors.New("failed to compile " + id + ": " + err.Error())
@@ -141,46 +141,39 @@ func compileResourceWhere(c *compiler, typ types.Type, ref uint64, id string, ca
 		return types.Nil, errors.New("called '" + id + "' function with a named parameter, which is not supported")
 	}
 
-	blockRef, blockDeps, _, err := c.blockExpressions([]*parser.Expression{arg.Value}, types.Array(types.Type(resource.ListType)))
+	functionRef, _, err := c.blockExpressions([]*parser.Expression{arg.Value}, types.Array(types.Type(resource.ListType)))
 	if err != nil {
 		return types.Nil, err
 	}
-	if blockRef == 0 {
+	if functionRef == 0 {
 		return types.Nil, errors.New("called '" + id + "' clause without a function block")
 	}
 
-	resourceRef := c.tailRef()
+	code := c.Result.DeprecatedV5Code
+	resourceRef := code.ChunkIndex()
 
 	listType, err := compileResourceDefault(c, typ, ref, "list", nil)
 	if err != nil {
 		return listType, err
 	}
-	listRef := c.tailRef()
+	listRef := code.ChunkIndex()
 
-	args := []*llx.Primitive{
-		llx.RefPrimitiveV2(listRef),
-		llx.FunctionPrimitiveV2(blockRef),
-	}
-	for _, v := range blockDeps {
-		if c.isInMyBlock(v) {
-			args = append(args, llx.RefPrimitiveV2(v))
-		}
-	}
-	c.blockDeps = append(c.blockDeps, blockDeps...)
-
-	c.addChunk(&llx.Chunk{
+	code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
-			Type:    string(types.Resource(resource.Name)),
-			Binding: resourceRef,
-			Args:    args,
+			Type:                string(types.Resource(resource.Name)),
+			DeprecatedV5Binding: resourceRef,
+			Args: []*llx.Primitive{
+				llx.RefPrimitiveV1(listRef),
+				llx.FunctionPrimitiveV1(functionRef),
+			},
 		},
 	})
 	return typ, nil
 }
 
-func compileResourceMap(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+func compileResourceMap(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
 	resource, err := listResource(c, typ)
 	if err != nil {
 		return types.Nil, errors.New("failed to compile " + id + ": " + err.Error())
@@ -204,228 +197,232 @@ func compileResourceMap(c *compiler, typ types.Type, ref uint64, id string, call
 		return types.Nil, errors.New("called '" + id + "' function with a named parameter, which is not supported")
 	}
 
-	blockRef, blockDeps, _, err := c.blockExpressions([]*parser.Expression{arg.Value}, types.Array(types.Type(resource.ListType)))
+	functionRef, _, err := c.blockExpressions([]*parser.Expression{arg.Value}, types.Array(types.Type(resource.ListType)))
 	if err != nil {
 		return types.Nil, err
 	}
-	if blockRef == 0 {
+	if functionRef == 0 {
 		return types.Nil, errors.New("called '" + id + "' clause without a function block")
 	}
 
-	mappedType, err := c.blockType(blockRef)
-	if err != nil {
-		return types.Nil, errors.New("called '" + id + "' with a bad function block, types don't match: " + err.Error())
+	code := c.Result.DeprecatedV5Code
+	f := code.Functions[functionRef-1]
+	if len(f.Entrypoints) != 1 {
+		return types.Nil, errors.New("called '" + id + "' with a bad function block, you can only return 1 value")
 	}
+	mappedType := f.Code[f.Entrypoints[0]-1].Type()
 
-	resourceRef := c.tailRef()
+	resourceRef := code.ChunkIndex()
 
 	listType, err := compileResourceDefault(c, typ, ref, "list", nil)
 	if err != nil {
 		return listType, err
 	}
-	listRef := c.tailRef()
+	listRef := code.ChunkIndex()
 
-	args := []*llx.Primitive{
-		llx.RefPrimitiveV2(listRef),
-		llx.FunctionPrimitiveV2(blockRef),
-	}
-	for _, v := range blockDeps {
-		if c.isInMyBlock(v) {
-			args = append(args, llx.RefPrimitiveV2(v))
-		}
-	}
-	c.blockDeps = append(c.blockDeps, blockDeps...)
-
-	c.addChunk(&llx.Chunk{
+	code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
-			Type:    string(types.Array(mappedType)),
-			Binding: resourceRef,
-			Args:    args,
+			Type:                string(types.Array(mappedType)),
+			DeprecatedV5Binding: resourceRef,
+			Args: []*llx.Primitive{
+				llx.RefPrimitiveV1(listRef),
+				llx.FunctionPrimitiveV1(functionRef),
+			},
 		},
 	})
 
 	return types.Array(mappedType), nil
 }
 
-func compileResourceContains(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+func compileResourceContains(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
 	// resource.where
 	_, err := compileResourceWhere(c, typ, ref, "where", call)
 	if err != nil {
 		return types.Nil, err
 	}
-	resourceRef := c.tailRef()
+
+	code := c.Result.DeprecatedV5Code
+	resourceRef := code.ChunkIndex()
 
 	// .list
 	t, err := compileResourceDefault(c, typ, resourceRef, "list", nil)
 	if err != nil {
 		return t, err
 	}
-	listRef := c.tailRef()
+	listRef := code.ChunkIndex()
 
 	// .length
-	c.addChunk(&llx.Chunk{
+	code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   "length",
 		Function: &llx.Function{
-			Type:    string(types.Int),
-			Binding: listRef,
+			Type:                string(types.Int),
+			DeprecatedV5Binding: listRef,
 		},
 	})
 
 	// > 0
-	c.addChunk(&llx.Chunk{
+	code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   string(">" + types.Int),
 		Function: &llx.Function{
-			Type:    string(types.Bool),
-			Binding: c.tailRef(),
+			Type:                string(types.Bool),
+			DeprecatedV5Binding: code.ChunkIndex(),
 			Args: []*llx.Primitive{
 				llx.IntPrimitive(0),
 			},
 		},
 	})
 
-	checksum := c.Result.CodeV2.Checksums[c.tailRef()]
+	checksum := code.Checksums[code.ChunkIndex()]
 	c.Result.Labels.Labels[checksum] = typ.ResourceName() + ".contains()"
 
 	return types.Bool, nil
 }
 
-func compileResourceAll(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+func compileResourceAll(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
 	// resource.$whereNot
 	_, err := compileResourceWhere(c, typ, ref, "$whereNot", call)
 	if err != nil {
 		return types.Nil, err
 	}
-	whereRef := c.tailRef()
 
-	listType, err := compileResourceDefault(c, typ, c.tailRef(), "list", nil)
+	code := c.Result.DeprecatedV5Code
+	whereRef := code.ChunkIndex()
+
+	listType, err := compileResourceDefault(c, typ, code.ChunkIndex(), "list", nil)
 	if err != nil {
 		return listType, err
 	}
-	listRef := c.tailRef()
+	listRef := code.ChunkIndex()
 
 	if err := compileListAssertionMsg(c, listType, whereRef-1, listRef, listRef); err != nil {
 		return types.Nil, err
 	}
 
-	c.addChunk(&llx.Chunk{
+	code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   "$all",
 		Function: &llx.Function{
-			Type:    string(types.Bool),
-			Binding: listRef,
+			Type:                string(types.Bool),
+			DeprecatedV5Binding: listRef,
 		},
 	})
 
-	checksum := c.Result.CodeV2.Checksums[c.tailRef()]
+	checksum := code.Checksums[code.ChunkIndex()]
 	c.Result.Labels.Labels[checksum] = typ.ResourceName() + ".all()"
 
 	return types.Bool, nil
 }
 
-func compileResourceAny(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+func compileResourceAny(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
 	// resource.where
 	_, err := compileResourceWhere(c, typ, ref, "where", call)
 	if err != nil {
 		return types.Nil, err
 	}
-	whereRef := c.tailRef()
+
+	code := c.Result.DeprecatedV5Code
+	whereRef := code.ChunkIndex()
 
 	listType, err := compileResourceDefault(c, typ, whereRef, "list", nil)
 	if err != nil {
 		return listType, err
 	}
-	listRef := c.tailRef()
+	listRef := code.ChunkIndex()
 
 	if err := compileListAssertionMsg(c, listType, whereRef-1, whereRef-1, listRef); err != nil {
 		return types.Nil, err
 	}
 
-	c.addChunk(&llx.Chunk{
+	code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   "$any",
 		Function: &llx.Function{
-			Type:    string(types.Bool),
-			Binding: listRef,
+			Type:                string(types.Bool),
+			DeprecatedV5Binding: listRef,
 		},
 	})
 
-	checksum := c.Result.CodeV2.Checksums[c.tailRef()]
+	checksum := code.Checksums[code.ChunkIndex()]
 	c.Result.Labels.Labels[checksum] = typ.ResourceName() + ".any()"
 
 	return types.Bool, nil
 }
 
-func compileResourceOne(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+func compileResourceOne(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
 	// resource.where
 	_, err := compileResourceWhere(c, typ, ref, "where", call)
 	if err != nil {
 		return types.Nil, err
 	}
-	whereRef := c.tailRef()
 
-	listType, err := compileResourceDefault(c, typ, c.tailRef(), "list", nil)
+	code := c.Result.DeprecatedV5Code
+	whereRef := code.ChunkIndex()
+
+	listType, err := compileResourceDefault(c, typ, code.ChunkIndex(), "list", nil)
 	if err != nil {
 		return listType, err
 	}
-	listRef := c.tailRef()
+	listRef := code.ChunkIndex()
 
 	if err := compileListAssertionMsg(c, listType, whereRef-1, listRef, listRef); err != nil {
 		return types.Nil, err
 	}
 
-	c.addChunk(&llx.Chunk{
+	code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   "$one",
 		Function: &llx.Function{
-			Type:    string(types.Bool),
-			Binding: listRef,
+			Type:                string(types.Bool),
+			DeprecatedV5Binding: listRef,
 		},
 	})
 
-	checksum := c.Result.CodeV2.Checksums[c.tailRef()]
+	checksum := code.Checksums[code.ChunkIndex()]
 	c.Result.Labels.Labels[checksum] = typ.ResourceName() + ".one()"
 
 	return types.Bool, nil
 }
 
-func compileResourceNone(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+func compileResourceNone(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
 	// resource.where
 	_, err := compileResourceWhere(c, typ, ref, "where", call)
 	if err != nil {
 		return types.Nil, err
 	}
-	whereRef := c.tailRef()
 
-	listType, err := compileResourceDefault(c, typ, c.tailRef(), "list", nil)
+	code := c.Result.DeprecatedV5Code
+	whereRef := code.ChunkIndex()
+
+	listType, err := compileResourceDefault(c, typ, code.ChunkIndex(), "list", nil)
 	if err != nil {
 		return listType, err
 	}
-	listRef := c.tailRef()
+	listRef := code.ChunkIndex()
 
 	if err := compileListAssertionMsg(c, listType, whereRef-1, listRef, listRef); err != nil {
 		return types.Nil, err
 	}
 
-	c.addChunk(&llx.Chunk{
+	code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   "$none",
 		Function: &llx.Function{
-			Type:    string(types.Bool),
-			Binding: listRef,
+			Type:                string(types.Bool),
+			DeprecatedV5Binding: listRef,
 		},
 	})
 
-	checksum := c.Result.CodeV2.Checksums[c.tailRef()]
+	checksum := code.Checksums[code.ChunkIndex()]
 	c.Result.Labels.Labels[checksum] = typ.ResourceName() + ".none()"
 
 	return types.Bool, nil
 }
 
-func compileResourceLength(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+func compileResourceLength(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
 	if call != nil && len(call.Function) > 0 {
 		return types.Nil, errors.New("function " + id + " does not take arguments")
 	}
@@ -435,29 +432,30 @@ func compileResourceLength(c *compiler, typ types.Type, ref uint64, id string, c
 		return types.Nil, errors.New("failed to compile " + id + ": " + err.Error())
 	}
 
-	resourceRef := c.tailRef()
+	code := c.Result.DeprecatedV5Code
+	resourceRef := code.ChunkIndex()
 
 	t, err := compileResourceDefault(c, typ, ref, "list", nil)
 	if err != nil {
 		return t, err
 	}
-	listRef := c.tailRef()
+	listRef := code.ChunkIndex()
 
-	c.addChunk(&llx.Chunk{
+	code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
-			Type:    string(types.Int),
-			Binding: resourceRef,
+			Type:                string(types.Int),
+			DeprecatedV5Binding: resourceRef,
 			Args: []*llx.Primitive{
-				llx.RefPrimitiveV2(listRef),
+				llx.RefPrimitiveV1(listRef),
 			},
 		},
 	})
 	return typ, nil
 }
 
-func compileResourceParseDate(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+func compileResourceParseDate(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
 	if call == nil {
 		return types.Nil, errors.New("missing arguments to parse date")
 	}
@@ -484,13 +482,14 @@ func compileResourceParseDate(c *compiler, typ types.Type, ref uint64, id string
 		return types.Nil, errors.New("missing arguments to parse date")
 	}
 
-	c.addChunk(&llx.Chunk{
+	code := c.Result.DeprecatedV5Code
+	code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   functionID,
 		Function: &llx.Function{
-			Type:    string(types.Time),
-			Binding: ref,
-			Args:    rawArgs,
+			Type:                string(types.Time),
+			DeprecatedV5Binding: ref,
+			Args:                rawArgs,
 		},
 	})
 	return types.Time, nil

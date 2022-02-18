@@ -73,7 +73,7 @@ func Set(level string) {
 // verbose and colorful
 func InitTestEnv() {
 	Set("debug")
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, NoColor: true})
 }
 
 // GetEnvLogLevel determines the loglevel from env vars DEBUG or TRACE are set

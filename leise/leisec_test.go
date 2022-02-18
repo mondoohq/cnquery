@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.mondoo.io/mondoo"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/llx/registry"
 	"go.mondoo.io/mondoo/logger"
@@ -14,42 +16,40 @@ import (
 )
 
 var schema = registry.Default.Schema()
+var features = mondoo.Features{byte(mondoo.PiperCode)}
 
 func init() {
 	logger.InitTestEnv()
 }
 
 func compileProps(t *testing.T, s string, props map[string]*llx.Primitive, f func(res *llx.CodeBundle)) {
-	res, err := Compile(s, schema, props)
+	res, err := Compile(s, schema, features, props)
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
 	assert.NoError(t, Invariants.Check(res))
-	if res != nil && res.Code != nil {
+	if res != nil && res.CodeV2 != nil {
 		assert.Nil(t, res.Suggestions)
-		assert.NotEmpty(t, res.Code.Code)
-		if len(res.Code.Code) > 0 {
+		if assert.NotEmpty(t, res.CodeV2.Blocks) {
 			f(res)
 		}
 	}
 }
 
-func compile(t *testing.T, s string, f func(res *llx.CodeBundle)) {
+func compileT(t *testing.T, s string, f func(res *llx.CodeBundle)) {
 	compileProps(t, s, nil, f)
 }
 
 func compileEmpty(t *testing.T, s string, f func(res *llx.CodeBundle)) {
-	res, err := Compile(s, schema, nil)
-	assert.Nil(t, err)
-	assert.NotNil(t, res)
+	res, err := Compile(s, schema, features, nil)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Nil(t, res.Suggestions)
 
-	if res != nil && res.Code != nil {
-		assert.Nil(t, res.Suggestions)
-		f(res)
-	}
+	f(res)
 }
 
 func compileErroneous(t *testing.T, s string, expectedError error, f func(res *llx.CodeBundle)) {
-	res, err := Compile(s, schema, nil)
+	res, err := Compile(s, schema, features, nil)
 
 	if err != nil && expectedError != nil {
 		assert.Equal(t, expectedError.Error(), err.Error())
@@ -88,16 +88,15 @@ func assertProperty(t *testing.T, name string, typ types.Type, chunk *llx.Chunk)
 func TestCompiler_Basics(t *testing.T) {
 	data := []struct {
 		code string
-		res  []*llx.Chunk
 	}{
-		{"", nil},
-		{"// some comment", nil},
-		{"// some comment\n", nil},
+		{""},
+		{"// some comment"},
+		{"// some comment\n"},
 	}
 	for _, v := range data {
 		t.Run(v.code, func(t *testing.T) {
 			compileEmpty(t, v.code, func(res *llx.CodeBundle) {
-				assert.Equal(t, v.res, res.Code.Code)
+				assert.Empty(t, res.CodeV2.Blocks[0].Chunks)
 			})
 		})
 	}
@@ -130,27 +129,27 @@ func TestCompiler_Buggy(t *testing.T) {
 			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
 			{Id: "{}", Call: llx.Chunk_FUNCTION, Function: &llx.Function{
 				Type:    string(types.Block),
-				Binding: 1,
-				Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
+				Binding: (1 << 32) | 1,
+				Args:    []*llx.Primitive{llx.FunctionPrimitiveV2(2 << 32)},
 			}},
 		}, nil},
 		{"# ..\nmondoo { \n# ..\nversion\n# ..\n}\n# ..", []*llx.Chunk{
 			{Call: llx.Chunk_FUNCTION, Id: "mondoo"},
 			{Call: llx.Chunk_FUNCTION, Id: "{}", Function: &llx.Function{
 				Type:    string(types.Block),
-				Binding: 1,
-				Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
+				Binding: (1 << 32) | 1,
+				Args:    []*llx.Primitive{llx.FunctionPrimitiveV2(2 << 32)},
 			}},
 		}, nil},
 		{`users.list[]`, nil, errors.New("missing value inside of `[]` at <source>:1:12")},
 		{`file(not-there)`, nil, errors.New("addResourceCall error: cannot find resource for identifier 'not'")},
 		{`if(true) {`, []*llx.Chunk{
 			{Call: llx.Chunk_FUNCTION, Id: "if", Function: &llx.Function{
-				Type: string(types.Unset),
+				Type: string(types.Block),
 				Args: []*llx.Primitive{
 					llx.BoolPrimitive(true),
-					llx.FunctionPrimitive(1),
-					llx.FunctionPrimitive(2),
+					llx.FunctionPrimitiveV2(2 << 32),
+					llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
 				},
 			}},
 		}, errors.New("missing closing `}` at <source>:1:11")},
@@ -165,8 +164,8 @@ func TestCompiler_Buggy(t *testing.T) {
 	for _, v := range data {
 		t.Run(v.code, func(t *testing.T) {
 			compileErroneous(t, v.code, v.err, func(res *llx.CodeBundle) {
-				if res.Code != nil {
-					assert.Equal(t, v.res, res.Code.Code)
+				if res.CodeV2 != nil {
+					assert.Equal(t, v.res, res.CodeV2.Blocks[0].Chunks)
 				} else {
 					assert.Nil(t, v.res)
 				}
@@ -239,8 +238,8 @@ func TestCompiler_Simple(t *testing.T) {
 	}
 	for _, v := range data {
 		t.Run(v.code, func(t *testing.T) {
-			compile(t, v.code, func(res *llx.CodeBundle) {
-				o := res.Code.Code[0]
+			compileT(t, v.code, func(res *llx.CodeBundle) {
+				o := res.CodeV2.Blocks[0].Chunks[0]
 				assert.Equal(t, llx.Chunk_PRIMITIVE, o.Call)
 				assert.Equal(t, v.res, o.Primitive)
 			})
@@ -250,7 +249,7 @@ func TestCompiler_Simple(t *testing.T) {
 
 // FIXME: this is weirdly failing
 // func TestCompiler_SimpleArrayResource(t *testing.T) {
-// 	res := compile(t, "[mochi, mochi]").Code.Code[2]
+// 	res := compileT(t, "[mochi, mochi]").Code.Code[2]
 // 	assert.Equal(t, llx.Chunk_PRIMITIVE, res.Call)
 // 	assert.Equal(t, []types.Type{types.Type_ARRAY, types.Type_ANY}, res.Primitive.Type)
 // 	assert.Equal(t, []*llx.Primitive{
@@ -276,13 +275,13 @@ func TestCompiler_Comparisons(t *testing.T) {
 			}
 			code := val + " " + op + " " + val
 			t.Run(code, func(t *testing.T) {
-				compile(t, code, func(res *llx.CodeBundle) {
-					o := res.Code.Code[0]
+				compileT(t, code, func(res *llx.CodeBundle) {
+					o := res.CodeV2.Blocks[0].Chunks[0]
 					assert.Equal(t, valres, o.Primitive)
-					o = res.Code.Code[1]
+					o = res.CodeV2.Blocks[0].Chunks[1]
 					assert.Equal(t, llx.Chunk_FUNCTION, o.Call)
 					assert.Equal(t, op+string(valres.Type), o.Id)
-					assert.Equal(t, int32(1), o.Function.Binding)
+					assert.Equal(t, uint64((1<<32)|1), o.Function.Binding)
 					assert.Equal(t, types.Bool, types.Type(o.Function.Type))
 					assert.Equal(t, valres, o.Function.Args[0])
 				})
@@ -307,17 +306,17 @@ func TestCompiler_LogicalOps(t *testing.T) {
 			for val2, valres2 := range vals {
 				code := val1 + " " + op + " " + val2
 				t.Run(code, func(t *testing.T) {
-					compile(t, code, func(res *llx.CodeBundle) {
-						l := res.Code.Code[0]
+					compileT(t, code, func(res *llx.CodeBundle) {
+						l := res.CodeV2.Blocks[0].Chunks[0]
 						assert.Equal(t, valres1, l.Primitive)
 
-						r := res.Code.Code[1]
+						r := res.CodeV2.Blocks[0].Chunks[1]
 						assert.Equal(t, llx.Chunk_FUNCTION, r.Call)
-						assert.Equal(t, int32(1), r.Function.Binding)
+						assert.Equal(t, uint64((1<<32)|1), r.Function.Binding)
 						assert.Equal(t, types.Bool, types.Type(r.Function.Type))
 						assert.Equal(t, valres2, r.Function.Args[0])
 
-						f, err := llx.BuiltinFunction(l.Type(res.Code), r.Id)
+						f, err := llx.BuiltinFunctionV2(l.Type(), r.Id)
 						assert.NoError(t, err, "was able to find builtin function for llx execution")
 						assert.NotNil(t, f, "was able to get non-nil builtin function")
 					})
@@ -340,13 +339,13 @@ func TestCompiler_OperatorPrecedence(t *testing.T) {
 
 	for _, d := range data {
 		t.Run(d.code, func(t *testing.T) {
-			compile(t, d.code, func(res *llx.CodeBundle) {
+			compileT(t, d.code, func(res *llx.CodeBundle) {
 				fmt.Printf("compiled: %#v\n", res)
 
-				o := res.Code.Code[d.idx]
+				o := res.CodeV2.Blocks[0].Chunks[d.idx]
 				assert.Equal(t, d.first, o.Id)
 
-				o = res.Code.Code[d.idx+1]
+				o = res.CodeV2.Blocks[0].Chunks[d.idx+1]
 				assert.Equal(t, d.second, o.Id)
 			})
 		})
@@ -354,13 +353,13 @@ func TestCompiler_OperatorPrecedence(t *testing.T) {
 }
 
 func TestCompiler_Assignment(t *testing.T) {
-	compile(t, "a = 123", func(res *llx.CodeBundle) {
-		assertPrimitive(t, llx.IntPrimitive(123), res.Code.Code[0])
-		assert.Equal(t, []int32{}, res.Code.Entrypoints)
+	compileT(t, "a = 123", func(res *llx.CodeBundle) {
+		assertPrimitive(t, llx.IntPrimitive(123), res.CodeV2.Blocks[0].Chunks[0])
+		assert.Empty(t, res.CodeV2.Entrypoints())
 	})
-	compile(t, "a = 123\na", func(res *llx.CodeBundle) {
-		assertPrimitive(t, llx.RefPrimitive(1), res.Code.Code[1])
-		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
+	compileT(t, "a = 123\na", func(res *llx.CodeBundle) {
+		assertPrimitive(t, llx.RefPrimitiveV2((1<<32)|1), res.CodeV2.Blocks[0].Chunks[1])
+		assert.Equal(t, []uint64{(1 << 32) | 2}, res.CodeV2.Entrypoints())
 	})
 }
 
@@ -368,8 +367,8 @@ func TestCompiler_Props(t *testing.T) {
 	compileProps(t, "props.name", map[string]*llx.Primitive{
 		"name": {Type: string(types.String)},
 	}, func(res *llx.CodeBundle) {
-		assertProperty(t, "name", types.String, res.Code.Code[0])
-		assert.Equal(t, []int32{1}, res.Code.Entrypoints)
+		assertProperty(t, "name", types.String, res.CodeV2.Blocks[0].Chunks[0])
+		assert.Equal(t, []uint64{(1 << 32) | 1}, res.CodeV2.Entrypoints())
 		assert.Equal(t, map[string]string{"name": string(types.String)}, res.Props)
 	})
 
@@ -377,13 +376,13 @@ func TestCompiler_Props(t *testing.T) {
 	compileProps(t, "props.name == 'bob'", map[string]*llx.Primitive{
 		"name": {Type: string(types.String)},
 	}, func(res *llx.CodeBundle) {
-		assertProperty(t, "name", types.String, res.Code.Code[0])
+		assertProperty(t, "name", types.String, res.CodeV2.Blocks[0].Chunks[0])
 		assertFunction(t, "=="+string(types.String), &llx.Function{
 			Type:    string(types.Bool),
-			Binding: 1,
+			Binding: (1 << 32) | 1,
 			Args:    []*llx.Primitive{llx.StringPrimitive("bob")},
-		}, res.Code.Code[1])
-		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
+		}, res.CodeV2.Blocks[0].Chunks[1])
+		assert.Equal(t, []uint64{(1 << 32) | 2}, res.CodeV2.Entrypoints())
 		assert.Equal(t, map[string]string{"name": string(types.String)}, res.Props)
 	})
 
@@ -394,233 +393,258 @@ func TestCompiler_Props(t *testing.T) {
 		compileProps(t, "props.name == 'bob'", map[string]*llx.Primitive{
 			"name": {Type: string(types.String), Value: []byte("yoman")},
 		}, func(res2 *llx.CodeBundle) {
-			assert.Equal(t, res2.Code.Id, res1.Code.Id)
+			assert.Equal(t, res2.CodeV2.Id, res1.CodeV2.Id)
 		})
 	})
 
 	compileProps(t, "props.name == props.name", map[string]*llx.Primitive{
 		"name": {Type: string(types.String)},
 	}, func(res *llx.CodeBundle) {
-		assertProperty(t, "name", types.String, res.Code.Code[0])
-		assertProperty(t, "name", types.String, res.Code.Code[1])
+		assertProperty(t, "name", types.String, res.CodeV2.Blocks[0].Chunks[0])
+		assertProperty(t, "name", types.String, res.CodeV2.Blocks[0].Chunks[1])
 		assertFunction(t, "=="+string(types.String), &llx.Function{
 			Type:    string(types.Bool),
-			Binding: 1,
-			Args:    []*llx.Primitive{llx.RefPrimitive(2)},
-		}, res.Code.Code[2])
-		assert.Equal(t, []int32{3}, res.Code.Entrypoints)
+			Binding: (1 << 32) | 1,
+			Args:    []*llx.Primitive{llx.RefPrimitiveV2((1 << 32) | 2)},
+		}, res.CodeV2.Blocks[0].Chunks[2])
+		assert.Equal(t, []uint64{(1 << 32) | 3}, res.CodeV2.Entrypoints())
 		assert.Equal(t, map[string]string{"name": string(types.String)}, res.Props)
 	})
 }
 
 func TestCompiler_If(t *testing.T) {
-	compile(t, "if ( mondoo ) { return 123 } if ( true ) { return 456 } 789", func(res *llx.CodeBundle) {
-		assertFunction(t, "mondoo", nil, res.Code.Code[0])
+	compileT(t, "if ( mondoo ) { return 123 } if ( true ) { return 456 } 789", func(res *llx.CodeBundle) {
+		assertFunction(t, "mondoo", nil, res.CodeV2.Blocks[0].Chunks[0])
 
 		assertFunction(t, "if", &llx.Function{
 			Type:    string(types.Int),
 			Binding: 0,
 			Args: []*llx.Primitive{
-				llx.RefPrimitive(1),
-				llx.FunctionPrimitive(1),
-				llx.FunctionPrimitive(2),
+				llx.RefPrimitiveV2((1 << 32) | 1),
+				llx.FunctionPrimitiveV2(2 << 32),
+				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
+				llx.FunctionPrimitiveV2(3 << 32),
+				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
 			},
-		}, res.Code.Code[1])
-		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
-		assert.Equal(t, []int32(nil), res.Code.Datapoints)
+		}, res.CodeV2.Blocks[0].Chunks[1])
+		assert.Equal(t, []uint64{(1 << 32) | 2}, res.CodeV2.Entrypoints())
+		assert.Equal(t, []uint64(nil), res.CodeV2.Datapoints())
 
-		assertPrimitive(t, llx.IntPrimitive(123), res.Code.Functions[0].Code[0])
+		assertPrimitive(t, llx.IntPrimitive(123), res.CodeV2.Blocks[1].Chunks[0])
 		assertFunction(t, "return", &llx.Function{
 			Type:    string(types.Int),
 			Binding: 0,
 			Args: []*llx.Primitive{
-				llx.RefPrimitive(1),
+				llx.RefPrimitiveV2((2 << 32) | 1),
 			},
-		}, res.Code.Functions[0].Code[1])
-		assert.Equal(t, []int32{2}, res.Code.Functions[0].Entrypoints)
+		}, res.CodeV2.Blocks[1].Chunks[1])
+		assert.Equal(t, []uint64{(2 << 32) | 2}, res.CodeV2.Blocks[1].Entrypoints)
 
 		assertFunction(t, "if", &llx.Function{
 			Type:    string(types.Int),
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.BoolPrimitive(true),
-				llx.FunctionPrimitive(1),
-				llx.FunctionPrimitive(2),
+				llx.FunctionPrimitiveV2(4 << 32),
+				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
+				llx.FunctionPrimitiveV2(5 << 32),
+				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
 			},
-		}, res.Code.Functions[1].Code[0])
-		assert.Equal(t, []int32{1}, res.Code.Functions[1].Entrypoints)
+		}, res.CodeV2.Blocks[2].Chunks[0])
+		assert.Equal(t, []uint64{(3 << 32) | 1}, res.CodeV2.Blocks[2].Entrypoints)
 
-		assertPrimitive(t, llx.IntPrimitive(456), res.Code.Functions[1].Functions[0].Code[0])
+		assertPrimitive(t, llx.IntPrimitive(456), res.CodeV2.Blocks[3].Chunks[0])
 		assertFunction(t, "return", &llx.Function{
 			Type:    string(types.Int),
 			Binding: 0,
 			Args: []*llx.Primitive{
-				llx.RefPrimitive(1),
+				llx.RefPrimitiveV2((4 << 32) | 1),
 			},
-		}, res.Code.Functions[1].Functions[0].Code[1])
-		assert.Equal(t, []int32{2}, res.Code.Functions[1].Functions[0].Entrypoints)
+		}, res.CodeV2.Blocks[3].Chunks[1])
+		assert.Equal(t, []uint64{(4 << 32) | 2}, res.CodeV2.Blocks[3].Entrypoints)
 
-		assertPrimitive(t, llx.IntPrimitive(789), res.Code.Functions[1].Functions[1].Code[0])
-		assert.Equal(t, []int32{1}, res.Code.Functions[1].Functions[1].Entrypoints)
+		assertPrimitive(t, llx.IntPrimitive(789), res.CodeV2.Blocks[4].Chunks[0])
+		assert.Equal(t, []uint64{(5 << 32) | 1}, res.CodeV2.Blocks[4].Entrypoints)
 	})
 
-	compile(t, "if ( mondoo ) { return 123 } 456", func(res *llx.CodeBundle) {
-		assertFunction(t, "mondoo", nil, res.Code.Code[0])
+	compileT(t, "if ( mondoo ) { return 123 } 456", func(res *llx.CodeBundle) {
+		assertFunction(t, "mondoo", nil, res.CodeV2.Blocks[0].Chunks[0])
 
 		assertFunction(t, "if", &llx.Function{
 			Type:    string(types.Int),
 			Binding: 0,
 			Args: []*llx.Primitive{
-				llx.RefPrimitive(1),
-				llx.FunctionPrimitive(1),
-				llx.FunctionPrimitive(2),
+				llx.RefPrimitiveV2((1 << 32) | 1),
+				llx.FunctionPrimitiveV2(2 << 32),
+				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
+				llx.FunctionPrimitiveV2(3 << 32),
+				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
 			},
-		}, res.Code.Code[1])
-		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
-		assert.Equal(t, []int32(nil), res.Code.Datapoints)
+		}, res.CodeV2.Blocks[0].Chunks[1])
+		assert.Equal(t, []uint64{(1 << 32) | 2}, res.CodeV2.Entrypoints())
+		assert.Equal(t, []uint64(nil), res.CodeV2.Datapoints())
 
-		assertPrimitive(t, llx.IntPrimitive(123), res.Code.Functions[0].Code[0])
+		assertPrimitive(t, llx.IntPrimitive(123), res.CodeV2.Blocks[1].Chunks[0])
 		assertFunction(t, "return", &llx.Function{
 			Type:    string(types.Int),
 			Binding: 0,
 			Args: []*llx.Primitive{
-				llx.RefPrimitive(1),
+				llx.RefPrimitiveV2((2 << 32) | 1),
 			},
-		}, res.Code.Functions[0].Code[1])
-		assert.Equal(t, []int32{2}, res.Code.Functions[0].Entrypoints)
+		}, res.CodeV2.Blocks[1].Chunks[1])
+		assert.Equal(t, []uint64{(2 << 32) | 2}, res.CodeV2.Blocks[1].Entrypoints)
 
-		assertPrimitive(t, llx.IntPrimitive(456), res.Code.Functions[1].Code[0])
-		assert.Equal(t, []int32{1}, res.Code.Functions[1].Entrypoints)
+		assertPrimitive(t, llx.IntPrimitive(456), res.CodeV2.Blocks[2].Chunks[0])
+		assert.Equal(t, []uint64{(3 << 32) | 1}, res.CodeV2.Blocks[2].Entrypoints)
 	})
 
 	// Test empty array with filled array and type-consolidation in the compiler
-	compile(t, "if ( mondoo ) { return [] } return [1,2,3]", func(res *llx.CodeBundle) {
-		assertFunction(t, "mondoo", nil, res.Code.Code[0])
+	compileT(t, "if ( mondoo ) { return [] } return [1,2,3]", func(res *llx.CodeBundle) {
+		assertFunction(t, "mondoo", nil, res.CodeV2.Blocks[0].Chunks[0])
 
 		assertFunction(t, "if", &llx.Function{
 			Type:    string(types.Array(types.Int)),
 			Binding: 0,
 			Args: []*llx.Primitive{
-				llx.RefPrimitive(1),
-				llx.FunctionPrimitive(1),
-				llx.FunctionPrimitive(2),
+				llx.RefPrimitiveV2((1 << 32) | 1),
+				llx.FunctionPrimitiveV2(2 << 32),
+				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
+				llx.FunctionPrimitiveV2(3 << 32),
+				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
 			},
-		}, res.Code.Code[1])
-		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
-		assert.Equal(t, []int32(nil), res.Code.Datapoints)
+		}, res.CodeV2.Blocks[0].Chunks[1])
+		assert.Equal(t, []uint64{(1 << 32) | 2}, res.CodeV2.Entrypoints())
+		assert.Equal(t, []uint64(nil), res.CodeV2.Datapoints())
 
-		assertPrimitive(t, llx.ArrayPrimitive([]*llx.Primitive{}, types.Unset), res.Code.Functions[0].Code[0])
+		assertPrimitive(t, llx.ArrayPrimitive([]*llx.Primitive{}, types.Unset),
+			res.CodeV2.Blocks[1].Chunks[0])
 		assertFunction(t, "return", &llx.Function{
 			Type:    string(types.Array(types.Unset)),
 			Binding: 0,
 			Args: []*llx.Primitive{
-				llx.RefPrimitive(1),
+				llx.RefPrimitiveV2((2 << 32) | 1),
 			},
-		}, res.Code.Functions[0].Code[1])
-		assert.Equal(t, []int32{2}, res.Code.Functions[0].Entrypoints)
+		}, res.CodeV2.Blocks[1].Chunks[1])
+		assert.Equal(t, []uint64{(2 << 32) | 2}, res.CodeV2.Blocks[1].Entrypoints)
 	})
 
-	compile(t, "if ( mondoo.version != null ) { 123 }", func(res *llx.CodeBundle) {
-		assertFunction(t, "mondoo", nil, res.Code.Code[0])
+	compileT(t, "if ( mondoo.version != null ) { 123 }", func(res *llx.CodeBundle) {
+		assertFunction(t, "mondoo", nil, res.CodeV2.Blocks[0].Chunks[0])
 		assertFunction(t, "version", &llx.Function{
 			Type:    string(types.String),
-			Binding: 1,
-		}, res.Code.Code[1])
+			Binding: (1 << 32) | 1,
+		}, res.CodeV2.Blocks[0].Chunks[1])
 		assertFunction(t, "!=\x02", &llx.Function{
 			Type:    string(types.Bool),
-			Binding: 2,
+			Binding: (1 << 32) | 2,
 			Args:    []*llx.Primitive{llx.NilPrimitive},
-		}, res.Code.Code[2])
+		}, res.CodeV2.Blocks[0].Chunks[2])
 
 		assertFunction(t, "if", &llx.Function{
 			Type:    string(types.Block),
 			Binding: 0,
 			Args: []*llx.Primitive{
-				llx.RefPrimitive(3),
-				llx.FunctionPrimitive(1),
+				llx.RefPrimitiveV2((1 << 32) | 3),
+				llx.FunctionPrimitiveV2(2 << 32),
+				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
 			},
-		}, res.Code.Code[3])
-		assert.Equal(t, []int32{4}, res.Code.Entrypoints)
-		assert.Equal(t, []int32{2}, res.Code.Datapoints)
+		}, res.CodeV2.Blocks[0].Chunks[3])
+		assert.Equal(t, []uint64{(1 << 32) | 4}, res.CodeV2.Entrypoints())
+		assert.Equal(t, []uint64{(1 << 32) | 2}, res.CodeV2.Datapoints())
 
-		assertPrimitive(t, llx.IntPrimitive(123), res.Code.Functions[0].Code[0])
-		assert.Equal(t, []int32{1}, res.Code.Functions[0].Entrypoints)
+		assertPrimitive(t, llx.IntPrimitive(123), res.CodeV2.Blocks[1].Chunks[0])
+		assert.Equal(t, []uint64{(2 << 32) | 1}, res.CodeV2.Blocks[1].Entrypoints)
 	})
 
-	compile(t, "if ( mondoo ) { 123 } else { 456 }", func(res *llx.CodeBundle) {
-		assertFunction(t, "mondoo", nil, res.Code.Code[0])
+	compileT(t, "if ( mondoo ) { 123 } else { 456 }", func(res *llx.CodeBundle) {
+		assertFunction(t, "mondoo", nil, res.CodeV2.Blocks[0].Chunks[0])
 
 		assertFunction(t, "if", &llx.Function{
 			Type:    string(types.Block),
 			Binding: 0,
 			Args: []*llx.Primitive{
-				llx.RefPrimitive(1),
-				llx.FunctionPrimitive(1),
-				llx.FunctionPrimitive(2),
+				llx.RefPrimitiveV2((1 << 32) | 1),
+				llx.FunctionPrimitiveV2(2 << 32),
+				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
+				llx.FunctionPrimitiveV2(3 << 32),
+				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
 			},
-		}, res.Code.Code[1])
-		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
-		assert.Equal(t, []int32(nil), res.Code.Datapoints)
+		}, res.CodeV2.Blocks[0].Chunks[1])
+		assert.Equal(t, []uint64{(1 << 32) | 2}, res.CodeV2.Entrypoints())
+		assert.Equal(t, []uint64(nil), res.CodeV2.Datapoints())
 
-		assertPrimitive(t, llx.IntPrimitive(123), res.Code.Functions[0].Code[0])
-		assert.Equal(t, []int32{1}, res.Code.Functions[0].Entrypoints)
+		assertPrimitive(t, llx.IntPrimitive(123), res.CodeV2.Blocks[1].Chunks[0])
+		assert.Equal(t, []uint64{(2 << 32) | 1}, res.CodeV2.Blocks[1].Entrypoints)
 
-		assertPrimitive(t, llx.IntPrimitive(456), res.Code.Functions[1].Code[0])
-		assert.Equal(t, []int32{1}, res.Code.Functions[1].Entrypoints)
+		assertPrimitive(t, llx.IntPrimitive(456), res.CodeV2.Blocks[2].Chunks[0])
+		assert.Equal(t, []uint64{(3 << 32) | 1}, res.CodeV2.Blocks[2].Entrypoints)
 	})
 
-	compile(t, "if ( mondoo ) { 123 } else if ( true ) { 456 } else { 789 }", func(res *llx.CodeBundle) {
-		assertFunction(t, "mondoo", nil, res.Code.Code[0])
+	compileT(t, "if ( mondoo ) { 123 } else if ( true ) { 456 } else { 789 }", func(res *llx.CodeBundle) {
+		assertFunction(t, "mondoo", nil, res.CodeV2.Blocks[0].Chunks[0])
 
 		assertFunction(t, "if", &llx.Function{
 			Type:    string(types.Block),
 			Binding: 0,
 			Args: []*llx.Primitive{
-				llx.RefPrimitive(1),
-				llx.FunctionPrimitive(1),
+				llx.RefPrimitiveV2((1 << 32) | 1),
+				llx.FunctionPrimitiveV2(2 << 32),
+				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
 				llx.BoolPrimitive(true),
-				llx.FunctionPrimitive(2),
-				llx.FunctionPrimitive(3),
+				llx.FunctionPrimitiveV2(3 << 32),
+				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
+				llx.FunctionPrimitiveV2(4 << 32),
+				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
 			},
-		}, res.Code.Code[1])
-		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
-		assert.Equal(t, []int32(nil), res.Code.Datapoints)
+		}, res.CodeV2.Blocks[0].Chunks[1])
+		assert.Equal(t, []uint64{(1 << 32) | 2}, res.CodeV2.Entrypoints())
+		assert.Equal(t, []uint64(nil), res.CodeV2.Datapoints())
 
-		assertPrimitive(t, llx.IntPrimitive(123), res.Code.Functions[0].Code[0])
-		assert.Equal(t, []int32{1}, res.Code.Functions[0].Entrypoints)
+		assertPrimitive(t, llx.IntPrimitive(123), res.CodeV2.Blocks[1].Chunks[0])
+		assert.Equal(t, []uint64{(2 << 32) | 1}, res.CodeV2.Blocks[1].Entrypoints)
 
-		assertPrimitive(t, llx.IntPrimitive(456), res.Code.Functions[1].Code[0])
-		assert.Equal(t, []int32{1}, res.Code.Functions[1].Entrypoints)
+		assertPrimitive(t, llx.IntPrimitive(456), res.CodeV2.Blocks[2].Chunks[0])
+		assert.Equal(t, []uint64{(3 << 32) | 1}, res.CodeV2.Blocks[2].Entrypoints)
 
-		assertPrimitive(t, llx.IntPrimitive(789), res.Code.Functions[2].Code[0])
-		assert.Equal(t, []int32{1}, res.Code.Functions[2].Entrypoints)
+		assertPrimitive(t, llx.IntPrimitive(789), res.CodeV2.Blocks[3].Chunks[0])
+		assert.Equal(t, []uint64{(4 << 32) | 1}, res.CodeV2.Blocks[3].Entrypoints)
 	})
 }
 
 func TestCompiler_Switch(t *testing.T) {
-	compile(t, "switch ( 1 ) { case _ > 0: true; default: false }", func(res *llx.CodeBundle) {
+	compileT(t, "switch ( 1 ) { case _ > 0: true; default: false }", func(res *llx.CodeBundle) {
 		assertFunction(t, "switch", &llx.Function{
 			Type:    string(types.Unset),
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.IntPrimitive(1),
-				llx.RefPrimitive(2),
-				llx.FunctionPrimitive(1),
+				llx.RefPrimitiveV2((1 << 32) | 2),
+				llx.FunctionPrimitiveV2(2 << 32),
+				llx.ArrayPrimitive([]*llx.Primitive{
+					// TODO(jaym): this shouldn't be needed. Its already
+					// a dependency of the switch, and thus implicitly
+					// will already be available for any blocks
+					llx.RefPrimitiveV2((1 << 32) | 1),
+				}, types.Ref),
 				llx.BoolPrimitive(true),
-				llx.FunctionPrimitive(2),
+				llx.FunctionPrimitiveV2(3 << 32),
+				llx.ArrayPrimitive([]*llx.Primitive{
+					// TODO: this shouldn't be needed
+					llx.RefPrimitiveV2((1 << 32) | 1),
+				}, types.Ref),
 			},
-		}, res.Code.Code[2])
-		assert.Equal(t, []int32{3}, res.Code.Entrypoints)
-		assert.Equal(t, []int32(nil), res.Code.Datapoints)
+		}, res.CodeV2.Blocks[0].Chunks[2])
+		assert.Equal(t, []uint64{(1 << 32) | 3}, res.CodeV2.Entrypoints())
+		assert.Empty(t, res.CodeV2.Datapoints())
 	})
 }
 
-//    =======================
-//   👋   ARRAYS and MAPS   🍹
-//    =======================
+// //    =======================
+// //   👋   ARRAYS and MAPS   🍹
+// //    =======================
 
 func TestCompiler_ArrayEmptyWhere(t *testing.T) {
-	compile(t, "[1,2,3].where()", func(res *llx.CodeBundle) {
+	compileT(t, "[1,2,3].where()", func(res *llx.CodeBundle) {
 		assertPrimitive(t, &llx.Primitive{
 			Type: string(types.Array(types.Int)),
 			Array: []*llx.Primitive{
@@ -628,8 +652,8 @@ func TestCompiler_ArrayEmptyWhere(t *testing.T) {
 				llx.IntPrimitive(2),
 				llx.IntPrimitive(3),
 			},
-		}, res.Code.Code[0])
-		assert.Equal(t, 1, len(res.Code.Code))
+		}, res.CodeV2.Blocks[0].Chunks[0])
+		assert.Equal(t, 1, len(res.CodeV2.Blocks[0].Chunks))
 	})
 }
 
@@ -642,10 +666,10 @@ func TestCompiler_ArrayWhereStatic(t *testing.T) {
 				llx.IntPrimitive(2),
 				llx.IntPrimitive(3),
 			},
-		}, res.Code.Code[0])
+		}, res.CodeV2.Blocks[0].Chunks[0])
 	})
 
-	compile(t, "[1,2,3].where(2)", func(res *llx.CodeBundle) {
+	compileT(t, "[1,2,3].where(2)", func(res *llx.CodeBundle) {
 		assertPrimitive(t, &llx.Primitive{
 			Type: string(types.Array(types.Int)),
 			Array: []*llx.Primitive{
@@ -653,23 +677,23 @@ func TestCompiler_ArrayWhereStatic(t *testing.T) {
 				llx.IntPrimitive(2),
 				llx.IntPrimitive(3),
 			},
-		}, res.Code.Code[0])
+		}, res.CodeV2.Blocks[0].Chunks[0])
 
 		assertFunction(t, "where", &llx.Function{
 			Type:    string(types.Array(types.Int)),
-			Binding: 1,
+			Binding: (1 << 32) | 1,
 			Args: []*llx.Primitive{
-				llx.RefPrimitive(1),
-				llx.FunctionPrimitive(1),
+				llx.RefPrimitiveV2((1 << 32) | 1),
+				llx.FunctionPrimitiveV2(2 << 32),
 			},
-		}, res.Code.Code[1])
+		}, res.CodeV2.Blocks[0].Chunks[1])
 
-		assert.Equal(t, 2, len(res.Code.Code))
+		assert.Equal(t, 2, len(res.CodeV2.Blocks[0].Chunks))
 	})
 }
 
 func TestCompiler_ArrayContains(t *testing.T) {
-	compile(t, "[1,2,3].contains(_ == 2)", func(res *llx.CodeBundle) {
+	compileT(t, "[1,2,3].contains(_ == 2)", func(res *llx.CodeBundle) {
 		assertPrimitive(t, &llx.Primitive{
 			Type: string(types.Array(types.Int)),
 			Array: []*llx.Primitive{
@@ -677,33 +701,33 @@ func TestCompiler_ArrayContains(t *testing.T) {
 				llx.IntPrimitive(2),
 				llx.IntPrimitive(3),
 			},
-		}, res.Code.Code[0])
+		}, res.CodeV2.Blocks[0].Chunks[0])
 
 		assertFunction(t, "where", &llx.Function{
 			Type:    string(types.Array(types.Int)),
-			Binding: 1,
+			Binding: (1 << 32) | 1,
 			Args: []*llx.Primitive{
-				llx.RefPrimitive(1),
-				llx.FunctionPrimitive(1),
+				llx.RefPrimitiveV2((1 << 32) | 1),
+				llx.FunctionPrimitiveV2(2 << 32),
 			},
-		}, res.Code.Code[1])
+		}, res.CodeV2.Blocks[0].Chunks[1])
 
 		assertFunction(t, "length", &llx.Function{
 			Type:    string(types.Int),
-			Binding: 2,
-		}, res.Code.Code[2])
+			Binding: (1 << 32) | 2,
+		}, res.CodeV2.Blocks[0].Chunks[2])
 		assertFunction(t, string(">"+types.Int), &llx.Function{
 			Type:    string(types.Bool),
-			Binding: 3,
+			Binding: (1 << 32) | 3,
 			Args:    []*llx.Primitive{llx.IntPrimitive(0)},
-		}, res.Code.Code[3])
+		}, res.CodeV2.Blocks[0].Chunks[3])
 
-		assert.Equal(t, 4, len(res.Code.Code))
+		assert.Equal(t, 4, len(res.CodeV2.Blocks[0].Chunks))
 	})
 }
 
 func TestCompiler_ArrayOne(t *testing.T) {
-	compile(t, "[1,2,3].one(_ == 2)", func(res *llx.CodeBundle) {
+	compileT(t, "[1,2,3].one(_ == 2)", func(res *llx.CodeBundle) {
 		assertPrimitive(t, &llx.Primitive{
 			Type: string(types.Array(types.Int)),
 			Array: []*llx.Primitive{
@@ -711,27 +735,27 @@ func TestCompiler_ArrayOne(t *testing.T) {
 				llx.IntPrimitive(2),
 				llx.IntPrimitive(3),
 			},
-		}, res.Code.Code[0])
+		}, res.CodeV2.Blocks[0].Chunks[0])
 
 		assertFunction(t, "where", &llx.Function{
 			Type:    string(types.Array(types.Int)),
-			Binding: 1,
+			Binding: (1 << 32) | 1,
 			Args: []*llx.Primitive{
-				llx.RefPrimitive(1),
-				llx.FunctionPrimitive(1),
+				llx.RefPrimitiveV2((1 << 32) | 1),
+				llx.FunctionPrimitiveV2(2 << 32),
 			},
-		}, res.Code.Code[1])
+		}, res.CodeV2.Blocks[0].Chunks[1])
 
 		assertFunction(t, "$one", &llx.Function{
 			Type:    string(types.Bool),
-			Binding: 2,
-		}, res.Code.Code[2])
-		assert.Equal(t, 3, len(res.Code.Code))
+			Binding: (1 << 32) | 2,
+		}, res.CodeV2.Blocks[0].Chunks[2])
+		assert.Equal(t, 3, len(res.CodeV2.Blocks[0].Chunks))
 	})
 }
 
 func TestCompiler_ArrayAll(t *testing.T) {
-	compile(t, "[1,2,3].all(_ < 9)", func(res *llx.CodeBundle) {
+	compileT(t, "[1,2,3].all(_ < 9)", func(res *llx.CodeBundle) {
 		assertPrimitive(t, &llx.Primitive{
 			Type: string(types.Array(types.Int)),
 			Array: []*llx.Primitive{
@@ -739,23 +763,23 @@ func TestCompiler_ArrayAll(t *testing.T) {
 				llx.IntPrimitive(2),
 				llx.IntPrimitive(3),
 			},
-		}, res.Code.Code[0])
+		}, res.CodeV2.Blocks[0].Chunks[0])
 
 		assertFunction(t, "$whereNot", &llx.Function{
 			Type:    string(types.Array(types.Int)),
-			Binding: 1,
+			Binding: (1 << 32) | 1,
 			Args: []*llx.Primitive{
-				llx.RefPrimitive(1),
-				llx.FunctionPrimitive(1),
+				llx.RefPrimitiveV2((1 << 32) | 1),
+				llx.FunctionPrimitiveV2(2 << 32),
 			},
-		}, res.Code.Code[1])
+		}, res.CodeV2.Blocks[0].Chunks[1])
 
 		assertFunction(t, "$all", &llx.Function{
 			Type:    string(types.Bool),
-			Binding: 2,
-		}, res.Code.Code[2])
+			Binding: (1 << 32) | 2,
+		}, res.CodeV2.Blocks[0].Chunks[2])
 
-		assert.Equal(t, 3, len(res.Code.Code))
+		assert.Equal(t, 3, len(res.CodeV2.Blocks[0].Chunks))
 	})
 }
 
@@ -764,172 +788,174 @@ func TestCompiler_ArrayAll(t *testing.T) {
 //    =================
 
 func TestCompiler_Resource(t *testing.T) {
-	compile(t, "sshd", func(res *llx.CodeBundle) {
-		assertFunction(t, "sshd", nil, res.Code.Code[0])
+	compileT(t, "sshd", func(res *llx.CodeBundle) {
+		assertFunction(t, "sshd", nil, res.CodeV2.Blocks[0].Chunks[0])
 	})
 }
 
 func TestCompiler_Resource_versioning(t *testing.T) {
-	compile(t, "sshd", func(res *llx.CodeBundle) {
+	compileT(t, "sshd", func(res *llx.CodeBundle) {
 		assert.Equal(t, "5.15.0", res.MinMondooVersion)
 	})
 }
 
 func TestCompiler_Resource_versioning2(t *testing.T) {
-	compile(t, "aws.acm.certificate.tags", func(res *llx.CodeBundle) {
+	compileT(t, "aws.acm.certificate.tags", func(res *llx.CodeBundle) {
 		assert.Equal(t, "5.16.0", res.MinMondooVersion)
 	})
 }
 
 func TestCompiler_ResourceWithCall(t *testing.T) {
-	compile(t, "sshd()", func(res *llx.CodeBundle) {
-		assertFunction(t, "sshd", nil, res.Code.Code[0])
+	compileT(t, "sshd()", func(res *llx.CodeBundle) {
+		assertFunction(t, "sshd", nil, res.CodeV2.Blocks[0].Chunks[0])
 	})
 }
 
 func TestCompiler_LongResource(t *testing.T) {
-	compile(t, "sshd.config", func(res *llx.CodeBundle) {
-		assertFunction(t, "sshd.config", nil, res.Code.Code[0])
+	compileT(t, "sshd.config", func(res *llx.CodeBundle) {
+		assertFunction(t, "sshd.config", nil, res.CodeV2.Blocks[0].Chunks[0])
 	})
 }
 
 func TestCompiler_ResourceMap(t *testing.T) {
-	compile(t, "sshd.config.params", func(res *llx.CodeBundle) {
-		assertFunction(t, "sshd.config", nil, res.Code.Code[0])
+	compileT(t, "sshd.config.params", func(res *llx.CodeBundle) {
+		assertFunction(t, "sshd.config", nil, res.CodeV2.Blocks[0].Chunks[0])
 		assert.Equal(t, "5.15.0", res.MinMondooVersion)
 		assertFunction(t, "params", &llx.Function{
 			Type:    string(types.Map(types.String, types.String)),
-			Binding: 1,
-		}, res.Code.Code[1])
+			Binding: (1 << 32) | 1,
+		}, res.CodeV2.Blocks[0].Chunks[1])
 	})
 }
 
 func TestCompiler_ResourceMapLength(t *testing.T) {
-	compile(t, "sshd.config.params.length", func(res *llx.CodeBundle) {
+	compileT(t, "sshd.config.params.length", func(res *llx.CodeBundle) {
 		assertFunction(t, "length", &llx.Function{
 			Type:    string(types.Int),
-			Binding: 2,
-		}, res.Code.Code[2])
+			Binding: (1 << 32) | 2,
+		}, res.CodeV2.Blocks[0].Chunks[2])
 	})
 }
 
 func TestCompiler_ResourceArrayAccessor(t *testing.T) {
-	compile(t, "packages.list[123]", func(res *llx.CodeBundle) {
+	compileT(t, "packages.list[123]", func(res *llx.CodeBundle) {
 		assertFunction(t, "[]", &llx.Function{
-			Binding: 2,
+			Binding: (1 << 32) | 2,
 			Args:    []*llx.Primitive{llx.IntPrimitive(123)},
 			Type:    string(types.Resource("package")),
-		}, res.Code.Code[2])
+		}, res.CodeV2.Blocks[0].Chunks[2])
 	})
 }
 
 func TestCompiler_ResourceArrayLength(t *testing.T) {
-	compile(t, "packages.list.length", func(res *llx.CodeBundle) {
+	compileT(t, "packages.list.length", func(res *llx.CodeBundle) {
 		assertFunction(t, "length", &llx.Function{
-			Binding: 2,
+			Binding: (1 << 32) | 2,
 			Type:    string(types.Int),
-		}, res.Code.Code[2])
+		}, res.CodeV2.Blocks[0].Chunks[2])
 	})
 }
 
 func TestCompiler_ResourceArrayImplicitLength(t *testing.T) {
-	compile(t, "packages.length", func(res *llx.CodeBundle) {
+	compileT(t, "packages.length", func(res *llx.CodeBundle) {
 		assertFunction(t, "list", &llx.Function{
-			Binding: 1,
+			Binding: (1 << 32) | 1,
 			Type:    string(types.Array(types.Resource("package"))),
-		}, res.Code.Code[1])
+		}, res.CodeV2.Blocks[0].Chunks[1])
 		assertFunction(t, "length", &llx.Function{
-			Binding: 1,
-			Args:    []*llx.Primitive{llx.RefPrimitive(2)},
+			Binding: (1 << 32) | 1,
+			Args:    []*llx.Primitive{llx.RefPrimitiveV2((1 << 32) | 2)},
 			Type:    string(types.Int),
-		}, res.Code.Code[2])
+		}, res.CodeV2.Blocks[0].Chunks[2])
 	})
 }
 
 func TestCompiler_ResourceFieldGlob(t *testing.T) {
-	compile(t, "pam.conf { * }", func(res *llx.CodeBundle) {
-		assertFunction(t, "pam.conf", nil, res.Code.Code[0])
+	compileT(t, "pam.conf { * }", func(res *llx.CodeBundle) {
+		assertFunction(t, "pam.conf", nil, res.CodeV2.Blocks[0].Chunks[0])
 		assertFunction(t, "{}", &llx.Function{
 			Type:    string(types.Block),
-			Binding: 1,
-			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
-		}, res.Code.Code[1])
-		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
+			Binding: (1 << 32) | 1,
+			Args:    []*llx.Primitive{llx.FunctionPrimitiveV2(2 << 32)},
+		}, res.CodeV2.Blocks[0].Chunks[1])
+		assert.Equal(t, []uint64{(1 << 32) | 2}, res.CodeV2.Entrypoints())
 
 		assertPrimitive(t, &llx.Primitive{
 			Type: string(types.Resource("pam.conf")),
-		}, res.Code.Functions[0].Code[0])
+		}, res.CodeV2.Blocks[1].Chunks[0])
 		assertFunction(t, "content", &llx.Function{
 			Type:    string(types.String),
-			Binding: 1,
-		}, res.Code.Functions[0].Code[1])
+			Binding: (2 << 32) | 1,
+		}, res.CodeV2.Blocks[1].Chunks[1])
 		assertFunction(t, "entries", &llx.Function{
 			Type:    string(types.Map(types.String, types.Array(types.Resource("pam.conf.serviceEntry")))),
-			Binding: 1,
-		}, res.Code.Functions[0].Code[2])
+			Binding: (2 << 32) | 1,
+		}, res.CodeV2.Blocks[1].Chunks[2])
 		assertFunction(t, "files", &llx.Function{
 			Type:    string(types.Array(types.Resource("file"))),
-			Binding: 1,
-		}, res.Code.Functions[0].Code[3])
+			Binding: (2 << 32) | 1,
+		}, res.CodeV2.Blocks[1].Chunks[3])
 		assertFunction(t, "services", &llx.Function{
 			Type:    string(types.Map(types.String, types.Array(types.String))),
-			Binding: 1,
-		}, res.Code.Functions[0].Code[4])
-		assert.Equal(t, []int32{2, 3, 4, 5}, res.Code.Functions[0].Entrypoints)
+			Binding: (2 << 32) | 1,
+		}, res.CodeV2.Blocks[1].Chunks[4])
+		assert.Equal(t, []uint64{(2 << 32) | 2, (2 << 32) | 3, (2 << 32) | 4, (2 << 32) | 5},
+			res.CodeV2.Blocks[1].Entrypoints)
 	})
 }
 
 func TestCompiler_ArrayResourceFieldGlob(t *testing.T) {
-	compile(t, "groups.list { * }", func(res *llx.CodeBundle) {
-		assertFunction(t, "groups", nil, res.Code.Code[0])
+	compileT(t, "groups.list { * }", func(res *llx.CodeBundle) {
+		assertFunction(t, "groups", nil, res.CodeV2.Blocks[0].Chunks[0])
 		assertFunction(t, "list", &llx.Function{
 			Type:    string(types.Array(types.Resource("group"))),
-			Binding: 1,
-		}, res.Code.Code[1])
+			Binding: (1 << 32) | 1,
+		}, res.CodeV2.Blocks[0].Chunks[1])
 		assertFunction(t, "{}", &llx.Function{
 			Type:    string(types.Array(types.Block)),
-			Binding: 2,
-			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
-		}, res.Code.Code[2])
-		assert.Equal(t, []int32{3}, res.Code.Entrypoints)
+			Binding: (1 << 32) | 2,
+			Args:    []*llx.Primitive{llx.FunctionPrimitiveV2(2 << 32)},
+		}, res.CodeV2.Blocks[0].Chunks[2])
+		assert.Equal(t, []uint64{(1 << 32) | 3}, res.CodeV2.Entrypoints())
 
 		assertPrimitive(t, &llx.Primitive{
 			Type: string(types.Resource("group")),
-		}, res.Code.Functions[0].Code[0])
+		}, res.CodeV2.Blocks[1].Chunks[0])
 		assertFunction(t, "gid", &llx.Function{
 			Type:    string(types.Int),
-			Binding: 1,
-		}, res.Code.Functions[0].Code[1])
+			Binding: (2 << 32) | 1,
+		}, res.CodeV2.Blocks[1].Chunks[1])
 		assertFunction(t, "members", &llx.Function{
 			Type:    string(types.Array(types.Resource("user"))),
-			Binding: 1,
-		}, res.Code.Functions[0].Code[2])
+			Binding: (2 << 32) | 1,
+		}, res.CodeV2.Blocks[1].Chunks[2])
 		assertFunction(t, "name", &llx.Function{
 			Type:    string(types.String),
-			Binding: 1,
-		}, res.Code.Functions[0].Code[3])
+			Binding: (2 << 32) | 1,
+		}, res.CodeV2.Blocks[1].Chunks[3])
 		assertFunction(t, "sid", &llx.Function{
 			Type:    string(types.String),
-			Binding: 1,
-		}, res.Code.Functions[0].Code[4])
-		assert.Equal(t, []int32{2, 3, 4, 5}, res.Code.Functions[0].Entrypoints)
+			Binding: (2 << 32) | 1,
+		}, res.CodeV2.Blocks[1].Chunks[4])
+		assert.Equal(t, []uint64{(2 << 32) | 2, (2 << 32) | 3, (2 << 32) | 4, (2 << 32) | 5},
+			res.CodeV2.Blocks[1].Entrypoints)
 	})
 }
 
 func TestCompiler_ResourceFieldArrayAccessor(t *testing.T) {
-	compile(t, "sshd.config.params[\"Protocol\"]", func(res *llx.CodeBundle) {
+	compileT(t, "sshd.config.params[\"Protocol\"]", func(res *llx.CodeBundle) {
 		assertFunction(t, "[]", &llx.Function{
 			Type:    string(types.String),
-			Binding: 2,
+			Binding: (1 << 32) | 2,
 			Args: []*llx.Primitive{
 				llx.StringPrimitive("Protocol"),
 			},
-		}, res.Code.Code[2])
+		}, res.CodeV2.Blocks[0].Chunks[2])
 	})
 }
 
 func TestCompiler_ResourceWithUnnamedArgs(t *testing.T) {
-	compile(t, "file(\"/path\")", func(res *llx.CodeBundle) {
+	compileT(t, "file(\"/path\")", func(res *llx.CodeBundle) {
 		assertFunction(t, "file", &llx.Function{
 			Type:    string(types.Resource("file")),
 			Binding: 0,
@@ -937,12 +963,12 @@ func TestCompiler_ResourceWithUnnamedArgs(t *testing.T) {
 				llx.StringPrimitive("path"),
 				llx.StringPrimitive("/path"),
 			},
-		}, res.Code.Code[0])
+		}, res.CodeV2.Blocks[0].Chunks[0])
 	})
 }
 
 func TestCompiler_ResourceWithNamedArgs(t *testing.T) {
-	compile(t, "file(path: \"/path\")", func(res *llx.CodeBundle) {
+	compileT(t, "file(path: \"/path\")", func(res *llx.CodeBundle) {
 		assertFunction(t, "file", &llx.Function{
 			Type:    string(types.Resource("file")),
 			Binding: 0,
@@ -950,12 +976,12 @@ func TestCompiler_ResourceWithNamedArgs(t *testing.T) {
 				llx.StringPrimitive("path"),
 				llx.StringPrimitive("/path"),
 			},
-		}, res.Code.Code[0])
+		}, res.CodeV2.Blocks[0].Chunks[0])
 	})
 }
 
 func TestCompiler_LongResourceWithUnnamedArgs(t *testing.T) {
-	compile(t, "sshd.config(\"/path\")", func(res *llx.CodeBundle) {
+	compileT(t, "sshd.config(\"/path\")", func(res *llx.CodeBundle) {
 		assertFunction(t, "sshd.config", &llx.Function{
 			Type:    string(types.Resource("sshd.config")),
 			Binding: 0,
@@ -963,16 +989,16 @@ func TestCompiler_LongResourceWithUnnamedArgs(t *testing.T) {
 				llx.StringPrimitive("path"),
 				llx.StringPrimitive("/path"),
 			},
-		}, res.Code.Code[0])
+		}, res.CodeV2.Blocks[0].Chunks[0])
 	})
 }
 
 func TestCompiler_ExpectSimplest(t *testing.T) {
-	compile(t, "expect(true)", func(res *llx.CodeBundle) {
-		f := res.Code.Code[0]
+	compileT(t, "expect(true)", func(res *llx.CodeBundle) {
+		f := res.CodeV2.Blocks[0].Chunks[0]
 		assert.Equal(t, llx.Chunk_FUNCTION, f.Call)
 		assert.Equal(t, "expect", f.Id)
-		assert.Equal(t, []int32{1}, res.Code.Entrypoints)
+		assert.Equal(t, []uint64{(1 << 32) | 1}, res.CodeV2.Entrypoints())
 		assert.Equal(t, &llx.Function{
 			Type:    string(types.Bool),
 			Binding: 0,
@@ -982,312 +1008,313 @@ func TestCompiler_ExpectSimplest(t *testing.T) {
 }
 
 func TestCompiler_ExpectEq(t *testing.T) {
-	compile(t, "expect(1 == \"1\")", func(res *llx.CodeBundle) {
-		cmp := res.Code.Code[1]
+	compileT(t, "expect(1 == \"1\")", func(res *llx.CodeBundle) {
+		cmp := res.CodeV2.Blocks[0].Chunks[1]
 		assert.Equal(t, llx.Chunk_FUNCTION, cmp.Call)
-		assert.Equal(t, []int32{3}, res.Code.Entrypoints)
+		assert.Equal(t, []uint64{(1 << 32) | 3}, res.CodeV2.Entrypoints())
 		assert.Equal(t, string("=="+types.String), cmp.Id)
 		assert.Equal(t, &llx.Function{
 			Type:    string(types.Bool),
-			Binding: 1,
+			Binding: (1 << 32) | 1,
 			Args: []*llx.Primitive{
 				llx.StringPrimitive("1"),
 			},
 		}, cmp.Function)
 
-		f := res.Code.Code[2]
+		f := res.CodeV2.Blocks[0].Chunks[2]
 		assert.Equal(t, llx.Chunk_FUNCTION, f.Call)
 		assert.Equal(t, "expect", f.Id)
 		assert.Equal(t, &llx.Function{
 			Type:    string(types.Bool),
 			Binding: 0,
-			Args:    []*llx.Primitive{llx.RefPrimitive(2)},
+			Args:    []*llx.Primitive{llx.RefPrimitiveV2((1 << 32) | 2)},
 		}, f.Function)
 	})
 }
 
 func TestCompiler_EmptyBlock(t *testing.T) {
-	compile(t, "mondoo { }", func(res *llx.CodeBundle) {
-		assertFunction(t, "mondoo", nil, res.Code.Code[0])
-		assert.Equal(t, 1, len(res.Code.Code))
-		assert.Nil(t, res.Code.Functions)
+	compileT(t, "mondoo { }", func(res *llx.CodeBundle) {
+		assertFunction(t, "mondoo", nil, res.CodeV2.Blocks[0].Chunks[0])
+		assert.Equal(t, 1, len(res.CodeV2.Blocks[0].Chunks))
+		assert.Len(t, res.CodeV2.Blocks, 1)
 	})
 }
 
 func TestCompiler_Block(t *testing.T) {
-	compile(t, "mondoo { version build }", func(res *llx.CodeBundle) {
-		assertFunction(t, "mondoo", nil, res.Code.Code[0])
+	compileT(t, "mondoo { version build }", func(res *llx.CodeBundle) {
+		assertFunction(t, "mondoo", nil, res.CodeV2.Blocks[0].Chunks[0])
 		assertFunction(t, "{}", &llx.Function{
 			Type:    string(types.Block),
-			Binding: 1,
-			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
-		}, res.Code.Code[1])
-		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
+			Binding: (1 << 32) | 1,
+			Args:    []*llx.Primitive{llx.FunctionPrimitiveV2(2 << 32)},
+		}, res.CodeV2.Blocks[0].Chunks[1])
+		assert.Equal(t, []uint64{(1 << 32) | 2}, res.CodeV2.Entrypoints())
 
 		assertPrimitive(t, &llx.Primitive{
 			Type: string(types.Resource("mondoo")),
-		}, res.Code.Functions[0].Code[0])
+		}, res.CodeV2.Blocks[1].Chunks[0])
 		assertFunction(t, "version", &llx.Function{
 			Type:    string(types.String),
-			Binding: 1,
-		}, res.Code.Functions[0].Code[1])
+			Binding: (2 << 32) | 1,
+		}, res.CodeV2.Blocks[1].Chunks[1])
 		assertFunction(t, "build", &llx.Function{
 			Type:    string(types.String),
-			Binding: 1,
-		}, res.Code.Functions[0].Code[2])
-		assert.Equal(t, []int32{2, 3}, res.Code.Functions[0].Entrypoints)
+			Binding: (2 << 32) | 1,
+		}, res.CodeV2.Blocks[1].Chunks[2])
+		assert.Equal(t, []uint64{(2 << 32) | 2, (2 << 32) | 3}, res.CodeV2.Blocks[1].Entrypoints)
 	})
 }
 
 func TestCompiler_BlockWithSelf(t *testing.T) {
-	compile(t, "mondoo { _.version }", func(res *llx.CodeBundle) {
-		assertFunction(t, "mondoo", nil, res.Code.Code[0])
+	compileT(t, "mondoo { _.version }", func(res *llx.CodeBundle) {
+		assertFunction(t, "mondoo", nil, res.CodeV2.Blocks[0].Chunks[0])
 		assertFunction(t, "{}", &llx.Function{
 			Type:    string(types.Block),
-			Binding: 1,
-			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
-		}, res.Code.Code[1])
-		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
+			Binding: (1 << 32) | 1,
+			Args:    []*llx.Primitive{llx.FunctionPrimitiveV2(2 << 32)},
+		}, res.CodeV2.Blocks[0].Chunks[1])
+		assert.Equal(t, []uint64{(1 << 32) | 2}, res.CodeV2.Entrypoints())
 
 		assertPrimitive(t, &llx.Primitive{
 			Type: string(types.Resource("mondoo")),
-		}, res.Code.Functions[0].Code[0])
+		}, res.CodeV2.Blocks[1].Chunks[0])
 		assertFunction(t, "version", &llx.Function{
 			Type:    string(types.String),
-			Binding: 1,
-		}, res.Code.Functions[0].Code[1])
-		assert.Equal(t, []int32{2}, res.Code.Functions[0].Entrypoints)
+			Binding: (2 << 32) | 1,
+		}, res.CodeV2.Blocks[1].Chunks[1])
+		assert.Equal(t, []uint64{(2 << 32) | 2}, res.CodeV2.Blocks[1].Entrypoints)
 	})
 
-	compile(t, "sshd.config.params { _['A'] != _['B'] }", func(res *llx.CodeBundle) {
-		assertFunction(t, "sshd.config", nil, res.Code.Code[0])
+	compileT(t, "sshd.config.params { _['A'] != _['B'] }", func(res *llx.CodeBundle) {
+		assertFunction(t, "sshd.config", nil, res.CodeV2.Blocks[0].Chunks[0])
 		assertFunction(t, "params", &llx.Function{
 			Type:    string(types.Map(types.String, types.String)),
-			Binding: 1,
-		}, res.Code.Code[1])
+			Binding: (1 << 32) | 1,
+		}, res.CodeV2.Blocks[0].Chunks[1])
 		assertFunction(t, "{}", &llx.Function{
 			Type:    string(types.Block),
-			Binding: 2,
-			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
-		}, res.Code.Code[2])
-		assert.Equal(t, []int32{3}, res.Code.Entrypoints)
+			Binding: (1 << 32) | 2,
+			Args:    []*llx.Primitive{llx.FunctionPrimitiveV2(2 << 32)},
+		}, res.CodeV2.Blocks[0].Chunks[2])
+		assert.Equal(t, []uint64{(1 << 32) | 3}, res.CodeV2.Entrypoints())
 
 		assertPrimitive(t, &llx.Primitive{
 			Type: string(types.Map(types.String, types.String)),
-		}, res.Code.Functions[0].Code[0])
+		}, res.CodeV2.Blocks[1].Chunks[0])
 		assertFunction(t, "[]", &llx.Function{
 			Type:    string(types.String),
-			Binding: 1,
+			Binding: (2 << 32) | 1,
 			Args:    []*llx.Primitive{llx.StringPrimitive("A")},
-		}, res.Code.Functions[0].Code[1])
+		}, res.CodeV2.Blocks[1].Chunks[1])
 		assertFunction(t, "[]", &llx.Function{
 			Type:    string(types.String),
-			Binding: 1,
+			Binding: (2 << 32) | 1,
 			Args:    []*llx.Primitive{llx.StringPrimitive("B")},
-		}, res.Code.Functions[0].Code[2])
+		}, res.CodeV2.Blocks[1].Chunks[2])
 		assertFunction(t, string("!="+types.String), &llx.Function{
 			Type:    string(types.Bool),
-			Binding: 2,
-			Args:    []*llx.Primitive{llx.RefPrimitive(3)},
-		}, res.Code.Functions[0].Code[3])
-		assert.Equal(t, []int32{4}, res.Code.Functions[0].Entrypoints)
+			Binding: (2 << 32) | 2,
+			Args:    []*llx.Primitive{llx.RefPrimitiveV2((2 << 32) | 3)},
+		}, res.CodeV2.Blocks[1].Chunks[3])
+		assert.Equal(t, []uint64{(2 << 32) | 4}, res.CodeV2.Blocks[1].Entrypoints)
 	})
 
-	compile(t, "\"alice\\nbob\".lines { _ != \"alice\" && _ != \"bob\" }", func(res *llx.CodeBundle) {
-		assertPrimitive(t, llx.StringPrimitive("alice\nbob"), res.Code.Code[0])
+	compileT(t, "\"alice\\nbob\".lines { _ != \"alice\" && _ != \"bob\" }", func(res *llx.CodeBundle) {
+		assertPrimitive(t, llx.StringPrimitive("alice\nbob"), res.CodeV2.Blocks[0].Chunks[0])
 		assertFunction(t, "lines", &llx.Function{
 			Type:    string(types.Array(types.String)),
-			Binding: 1,
-		}, res.Code.Code[1])
+			Binding: (1 << 32) | 1,
+		}, res.CodeV2.Blocks[0].Chunks[1])
 		assertFunction(t, "{}", &llx.Function{
 			Type:    string(types.Array(types.Block)),
-			Binding: 2,
-			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
-		}, res.Code.Code[2])
-		assert.Equal(t, []int32{3}, res.Code.Entrypoints)
+			Binding: (1 << 32) | 2,
+			Args:    []*llx.Primitive{llx.FunctionPrimitiveV2(2 << 32)},
+		}, res.CodeV2.Blocks[0].Chunks[2])
+		assert.Equal(t, []uint64{(1 << 32) | 3}, res.CodeV2.Entrypoints())
 
 		assertPrimitive(t, &llx.Primitive{
 			Type: string(types.String),
-		}, res.Code.Functions[0].Code[0])
+		}, res.CodeV2.Blocks[1].Chunks[0])
 		assertFunction(t, string("!="+types.String), &llx.Function{
 			Type:    string(types.Bool),
-			Binding: 1,
+			Binding: (2 << 32) | 1,
 			Args:    []*llx.Primitive{llx.StringPrimitive("alice")},
-		}, res.Code.Functions[0].Code[1])
+		}, res.CodeV2.Blocks[1].Chunks[1])
 		assertFunction(t, string("!="+types.String), &llx.Function{
 			Type:    string(types.Bool),
-			Binding: 1,
+			Binding: (2 << 32) | 1,
 			Args:    []*llx.Primitive{llx.StringPrimitive("bob")},
-		}, res.Code.Functions[0].Code[2])
+		}, res.CodeV2.Blocks[1].Chunks[2])
 		assertFunction(t, string("&&"+types.Bool), &llx.Function{
 			Type:    string(types.Bool),
-			Binding: 2,
-			Args:    []*llx.Primitive{llx.RefPrimitive(3)},
-		}, res.Code.Functions[0].Code[3])
-		assert.Equal(t, []int32{4}, res.Code.Functions[0].Entrypoints)
+			Binding: (2 << 32) | 2,
+			Args:    []*llx.Primitive{llx.RefPrimitiveV2((2 << 32) | 3)},
+		}, res.CodeV2.Blocks[1].Chunks[3])
+		assert.Equal(t, []uint64{(2 << 32) | 4}, res.CodeV2.Blocks[1].Entrypoints)
 	})
 
 }
 
 func TestCompiler_ContainsWithResource(t *testing.T) {
-	compile(t, "'hello'.contains(platform.family)", func(res *llx.CodeBundle) {
-		assertPrimitive(t, llx.StringPrimitive("hello"), res.Code.Code[0])
-		assertFunction(t, "platform", nil, res.Code.Code[1])
+	compileT(t, "'hello'.contains(platform.family)", func(res *llx.CodeBundle) {
+		assertPrimitive(t, llx.StringPrimitive("hello"), res.CodeV2.Blocks[0].Chunks[0])
+		assertFunction(t, "platform", nil, res.CodeV2.Blocks[0].Chunks[1])
 		assertFunction(t, "family", &llx.Function{
 			Type:    string(types.Array(types.String)),
-			Binding: 2,
-		}, res.Code.Code[2])
+			Binding: (1 << 32) | 2,
+		}, res.CodeV2.Blocks[0].Chunks[2])
 		assertFunction(t, "contains"+string(types.Array(types.String)), &llx.Function{
 			Type:    string(types.Bool),
-			Binding: 1,
-			Args:    []*llx.Primitive{llx.RefPrimitive(3)},
-		}, res.Code.Code[3])
+			Binding: (1 << 32) | 1,
+			Args:    []*llx.Primitive{llx.RefPrimitiveV2((1 << 32) | 3)},
+		}, res.CodeV2.Blocks[0].Chunks[3])
 
-		assert.Equal(t, []int32{4}, res.Code.Entrypoints)
+		assert.Equal(t, []uint64{(1 << 32) | 4}, res.CodeV2.Entrypoints())
 	})
 }
 
 func TestCompiler_StringContainsWithInt(t *testing.T) {
-	compile(t, "'hello123'.contains(23)", func(res *llx.CodeBundle) {
-		assertPrimitive(t, llx.StringPrimitive("hello123"), res.Code.Code[0])
+	compileT(t, "'hello123'.contains(23)", func(res *llx.CodeBundle) {
+		assertPrimitive(t, llx.StringPrimitive("hello123"), res.CodeV2.Blocks[0].Chunks[0])
 		assertFunction(t, "contains"+string(types.Int), &llx.Function{
 			Type:    string(types.Bool),
-			Binding: 1,
+			Binding: (1 << 32) | 1,
 			Args:    []*llx.Primitive{llx.IntPrimitive(23)},
-		}, res.Code.Code[1])
+		}, res.CodeV2.Blocks[0].Chunks[1])
 
-		assert.Equal(t, []int32{2}, res.Code.Entrypoints)
+		assert.Equal(t, []uint64{(1 << 32) | 2}, res.CodeV2.Entrypoints())
 	})
 }
 
 func TestCompiler_CallWithResource(t *testing.T) {
-	compile(t, "users.list { file(home) }", func(res *llx.CodeBundle) {
-		assertFunction(t, "users", nil, res.Code.Code[0])
+	compileT(t, "users.list { file(home) }", func(res *llx.CodeBundle) {
+		assertFunction(t, "users", nil, res.CodeV2.Blocks[0].Chunks[0])
 		assertFunction(t, "list", &llx.Function{
 			Type:    string(types.Array(types.Resource("user"))),
-			Binding: 1,
-		}, res.Code.Code[1])
+			Binding: (1 << 32) | 1,
+		}, res.CodeV2.Blocks[0].Chunks[1])
 		assertFunction(t, "{}", &llx.Function{
 			Type:    string(types.Array(types.Block)),
-			Binding: 2,
-			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
-		}, res.Code.Code[2])
-		assert.Equal(t, 3, len(res.Code.Code))
+			Binding: (1 << 32) | 2,
+			Args:    []*llx.Primitive{llx.FunctionPrimitiveV2(2 << 32)},
+		}, res.CodeV2.Blocks[0].Chunks[2])
+		assert.Equal(t, 3, len(res.CodeV2.Blocks[0].Chunks))
 
 		assertPrimitive(t, &llx.Primitive{
 			Type: string(types.Resource("user")),
-		}, res.Code.Functions[0].Code[0])
+		}, res.CodeV2.Blocks[1].Chunks[0])
 		assertFunction(t, "home", &llx.Function{
 			Type:    string(types.String),
-			Binding: 1,
-		}, res.Code.Functions[0].Code[1])
+			Binding: (2 << 32) | 1,
+		}, res.CodeV2.Blocks[1].Chunks[1])
 		assertFunction(t, "file", &llx.Function{
 			Type:    string(types.Resource("file")),
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.StringPrimitive("path"),
-				llx.RefPrimitive(2),
+				llx.RefPrimitiveV2((2 << 32) | 2),
 			},
-		}, res.Code.Functions[0].Code[2])
+		}, res.CodeV2.Blocks[1].Chunks[2])
+		assert.EqualValues(t, 1, res.CodeV2.Blocks[1].Parameters)
 	})
 }
 
 func TestCompiler_List(t *testing.T) {
-	compile(t, "packages.list { name }", func(res *llx.CodeBundle) {
-		assertFunction(t, "packages", nil, res.Code.Code[0])
+	compileT(t, "packages.list { name }", func(res *llx.CodeBundle) {
+		assertFunction(t, "packages", nil, res.CodeV2.Blocks[0].Chunks[0])
 		assertFunction(t, "list", &llx.Function{
 			Type:    string(types.Array(types.Resource("package"))),
-			Binding: 1,
-		}, res.Code.Code[1])
+			Binding: (1 << 32) | 1,
+		}, res.CodeV2.Blocks[0].Chunks[1])
 		assertFunction(t, "{}", &llx.Function{
 			Type:    string(types.Array(types.Block)),
-			Binding: 2,
-			Args:    []*llx.Primitive{llx.FunctionPrimitive(1)},
-		}, res.Code.Code[2])
-		assert.Equal(t, 3, len(res.Code.Code))
+			Binding: (1 << 32) | 2,
+			Args:    []*llx.Primitive{llx.FunctionPrimitiveV2(2 << 32)},
+		}, res.CodeV2.Blocks[0].Chunks[2])
+		assert.Equal(t, 3, len(res.CodeV2.Blocks[0].Chunks))
 
 		assertPrimitive(t, &llx.Primitive{
 			Type: string(types.Resource("package")),
-		}, res.Code.Functions[0].Code[0])
+		}, res.CodeV2.Blocks[1].Chunks[0])
 		assertFunction(t, "name", &llx.Function{
 			Type:    string(types.String),
-			Binding: 1,
-		}, res.Code.Functions[0].Code[1])
-		assert.Equal(t, []int32{2}, res.Code.Functions[0].Entrypoints)
+			Binding: (2 << 32) | 1,
+		}, res.CodeV2.Blocks[1].Chunks[1])
+		assert.Equal(t, []uint64{(2 << 32) | 2}, res.CodeV2.Blocks[1].Entrypoints)
 	})
 }
 
 func TestCompiler_ResourceEmptyWhere(t *testing.T) {
-	compile(t, "packages.where()", func(res *llx.CodeBundle) {
-		assertFunction(t, "packages", nil, res.Code.Code[0])
-		assert.Equal(t, 1, len(res.Code.Code))
+	compileT(t, "packages.where()", func(res *llx.CodeBundle) {
+		assertFunction(t, "packages", nil, res.CodeV2.Blocks[0].Chunks[0])
+		assert.Equal(t, 1, len(res.CodeV2.Blocks[0].Chunks))
 	})
 }
 
 func TestCompiler_ResourceWhere(t *testing.T) {
-	compile(t, "packages.where(outdated)", func(res *llx.CodeBundle) {
-		assertFunction(t, "packages", nil, res.Code.Code[0])
+	compileT(t, "packages.where(outdated)", func(res *llx.CodeBundle) {
+		assertFunction(t, "packages", nil, res.CodeV2.Blocks[0].Chunks[0])
 		assertFunction(t, "list", &llx.Function{
 			Type:    string(types.Array(types.Resource("package"))),
-			Binding: 1,
-		}, res.Code.Code[1])
+			Binding: (1 << 32) | 1,
+		}, res.CodeV2.Blocks[0].Chunks[1])
 		assertFunction(t, "where", &llx.Function{
 			Type:    string(types.Resource("packages")),
-			Binding: 1,
+			Binding: (1 << 32) | 1,
 			Args: []*llx.Primitive{
-				llx.RefPrimitive(2),
-				llx.FunctionPrimitive(1),
+				llx.RefPrimitiveV2((1 << 32) | 2),
+				llx.FunctionPrimitiveV2(2 << 32),
 			},
-		}, res.Code.Code[2])
+		}, res.CodeV2.Blocks[0].Chunks[2])
 
 		assertPrimitive(t, &llx.Primitive{
 			Type: string(types.Resource("package")),
-		}, res.Code.Functions[0].Code[0])
+		}, res.CodeV2.Blocks[1].Chunks[0])
 		assertFunction(t, "outdated", &llx.Function{
 			Type:    string(types.Bool),
-			Binding: 1,
-		}, res.Code.Functions[0].Code[1])
-		assert.Equal(t, []int32{2}, res.Code.Functions[0].Entrypoints)
+			Binding: (2 << 32) | 1,
+		}, res.CodeV2.Blocks[1].Chunks[1])
+		assert.Equal(t, []uint64{(2 << 32) | 2}, res.CodeV2.Blocks[1].Entrypoints)
 	})
 }
 
 func TestCompiler_ResourceContains(t *testing.T) {
-	compile(t, "packages.contains(outdated)", func(res *llx.CodeBundle) {
-		assertFunction(t, "packages", nil, res.Code.Code[0])
+	compileT(t, "packages.contains(outdated)", func(res *llx.CodeBundle) {
+		assertFunction(t, "packages", nil, res.CodeV2.Blocks[0].Chunks[0])
 		assertFunction(t, "list", &llx.Function{
 			Type:    string(types.Array(types.Resource("package"))),
-			Binding: 1,
-		}, res.Code.Code[1])
+			Binding: (1 << 32) | 1,
+		}, res.CodeV2.Blocks[0].Chunks[1])
 		assertFunction(t, "where", &llx.Function{
 			Type:    string(types.Resource("packages")),
-			Binding: 1,
+			Binding: (1 << 32) | 1,
 			Args: []*llx.Primitive{
-				llx.RefPrimitive(2),
-				llx.FunctionPrimitive(1),
+				llx.RefPrimitiveV2((1 << 32) | 2),
+				llx.FunctionPrimitiveV2(2 << 32),
 			},
-		}, res.Code.Code[2])
+		}, res.CodeV2.Blocks[0].Chunks[2])
 		assertFunction(t, "list", &llx.Function{
 			Type:    string(types.Array(types.Resource("package"))),
-			Binding: 3,
-		}, res.Code.Code[3])
+			Binding: (1 << 32) | 3,
+		}, res.CodeV2.Blocks[0].Chunks[3])
 		assertFunction(t, "length", &llx.Function{
 			Type:    string(types.Int),
-			Binding: 4,
-		}, res.Code.Code[4])
+			Binding: (1 << 32) | 4,
+		}, res.CodeV2.Blocks[0].Chunks[4])
 		assertFunction(t, string(">"+types.Int), &llx.Function{
 			Type:    string(types.Bool),
-			Binding: 5,
+			Binding: (1 << 32) | 5,
 			Args:    []*llx.Primitive{llx.IntPrimitive(0)},
-		}, res.Code.Code[5])
+		}, res.CodeV2.Blocks[0].Chunks[5])
 
 		assertPrimitive(t, &llx.Primitive{
 			Type: string(types.Resource("package")),
-		}, res.Code.Functions[0].Code[0])
+		}, res.CodeV2.Blocks[1].Chunks[0])
 		assertFunction(t, "outdated", &llx.Function{
 			Type:    string(types.Bool),
-			Binding: 1,
-		}, res.Code.Functions[0].Code[1])
-		assert.Equal(t, []int32{2}, res.Code.Functions[0].Entrypoints)
+			Binding: (2 << 32) | 1,
+		}, res.CodeV2.Blocks[1].Chunks[1])
+		assert.Equal(t, []uint64{(2 << 32) | 2}, res.CodeV2.Blocks[1].Entrypoints)
 	})
 }
 
@@ -1317,18 +1344,31 @@ func TestChecksums(t *testing.T) {
 				"if (true) { 2 }",
 				"if (true) { 3 }",
 			},
+			{
+				"mondoo { version == 'a'}",
+				"mondoo { version == 'b' version == 'a'}",
+			},
 		}
 
 		for i := range dupes {
 			t.Run(dupes[i].qa+" != "+dupes[i].qb, func(t *testing.T) {
-				a, err := Compile(dupes[i].qa, schema, nil)
+				a, err := Compile(dupes[i].qa, schema, features, nil)
 				assert.NoError(t, err)
-				b, err := Compile(dupes[i].qb, schema, nil)
+				b, err := Compile(dupes[i].qb, schema, features, nil)
 				assert.NoError(t, err)
-				assert.NotEqual(t, a.Code.Id, b.Code.Id)
+				assert.NotEqual(t, a.CodeV2.Id, b.CodeV2.Id)
 			})
 		}
 	})
+}
+
+func TestChecksums_block(t *testing.T) {
+	a, err := Compile("mondoo { version == 'a'}", schema, features, nil)
+	assert.NoError(t, err)
+	b, err := Compile("mondoo { version == 'b' version == 'a'}", schema, features, nil)
+	assert.NoError(t, err)
+	// make sure the checksum for the block calls are different
+	assert.NotEqual(t, a.CodeV2.Checksums[4294967298], b.CodeV2.Checksums[4294967298])
 }
 
 func TestSuggestions(t *testing.T) {
@@ -1382,8 +1422,8 @@ func TestSuggestions(t *testing.T) {
 	for i := range tests {
 		cur := tests[i]
 		t.Run(cur.code, func(t *testing.T) {
-			res, err := Compile(cur.code, schema, nil)
-			assert.Nil(t, res.Code.Entrypoints)
+			res, err := Compile(cur.code, schema, features, nil)
+			assert.Empty(t, res.CodeV2.Entrypoints())
 			assert.Equal(t, cur.err, err)
 
 			suggestions := make([]string, len(res.Suggestions))
@@ -1398,44 +1438,44 @@ func TestSuggestions(t *testing.T) {
 
 func TestCompiler_Error(t *testing.T) {
 	t.Run("unknown term", func(t *testing.T) {
-		_, err := Compile("sshd.config.params == enabled", schema, nil)
+		_, err := Compile("sshd.config.params == enabled", schema, features, nil)
 		// assert.Nil(t, res)
 		assert.EqualError(t, err, "failed to compile: cannot find resource for identifier 'enabled'")
 	})
 }
 
 func TestCompiler_Multiline(t *testing.T) {
-	compile(t, "1 < 2\n2 != 3", func(res *llx.CodeBundle) {
-		assert.Equal(t, 4, len(res.Code.Code))
+	compileT(t, "1 < 2\n2 != 3", func(res *llx.CodeBundle) {
+		assert.Equal(t, 4, len(res.CodeV2.Blocks[0].Chunks))
 	})
 }
 
 func TestCompiler_Entrypoints(t *testing.T) {
 	tests := []struct {
 		code        string
-		datapoints  []int32
-		entrypoints []int32
+		datapoints  []uint64
+		entrypoints []uint64
 	}{
 		{
 			"1",
-			[]int32(nil), []int32{1},
+			[]uint64(nil), []uint64{(1 << 32) | 1},
 		},
 		{
 			"mondoo.version == 1",
-			[]int32{2}, []int32{3},
+			[]uint64{(1 << 32) | 2}, []uint64{(1 << 32) | 3},
 		},
 		{
 			"mondoo.version == mondoo.build",
-			[]int32{2, 4}, []int32{5},
+			[]uint64{(1 << 32) | 2, (1 << 32) | 4}, []uint64{(1 << 32) | 5},
 		},
 	}
 
 	for i := range tests {
 		test := tests[i]
 		t.Run(test.code, func(t *testing.T) {
-			compile(t, test.code, func(res *llx.CodeBundle) {
-				assert.Equal(t, test.entrypoints, res.Code.Entrypoints)
-				assert.Equal(t, test.datapoints, res.Code.Datapoints)
+			compileT(t, test.code, func(res *llx.CodeBundle) {
+				assert.Equal(t, test.entrypoints, res.CodeV2.Entrypoints())
+				assert.Equal(t, test.datapoints, res.CodeV2.Datapoints())
 			})
 		})
 	}

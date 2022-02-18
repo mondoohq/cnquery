@@ -21,7 +21,7 @@ func TestResource_Processes(t *testing.T) {
 		assert.Equal(t, int64(1), res[0].Data.Value)
 	})
 
-	t.Run("test a specific process entry with filter", func(t *testing.T) {
+	t.Run("test a specific process entry with filter v1", func(t *testing.T) {
 		res := testQuery(t, "processes{ pid command }.list[0]")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)

@@ -14,8 +14,8 @@ import (
 
 // run an operation that returns true/false on a bind data vs a chunk call.
 // Unlike boolOp we don't check if either side is nil
-func rawboolOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(*RawData, *RawData) bool) (*RawData, int32, error) {
-	v, dref, err := c.resolveValue(chunk.Function.Args[0], ref)
+func rawboolOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, f func(*RawData, *RawData) bool) (*RawData, uint64, error) {
+	v, dref, err := e.resolveValue(chunk.Function.Args[0], ref)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -28,8 +28,8 @@ func rawboolOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(
 // run an operation that returns true/false on a bind data vs a chunk call.
 // Unlike boolOp we don't check if either side is nil. It inverts the
 // returned boolean from the child function.
-func rawboolNotOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(*RawData, *RawData) bool) (*RawData, int32, error) {
-	v, dref, err := c.resolveValue(chunk.Function.Args[0], ref)
+func rawboolNotOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, f func(*RawData, *RawData) bool) (*RawData, uint64, error) {
+	v, dref, err := e.resolveValue(chunk.Function.Args[0], ref)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -43,8 +43,8 @@ func rawboolNotOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f fu
 // this includes handling for the case where either side is nil, i.e.
 // - if both sides are nil we return true
 // - if either side is nil but not the other we return false
-func boolOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(interface{}, interface{}) bool) (*RawData, int32, error) {
-	v, dref, err := c.resolveValue(chunk.Function.Args[0], ref)
+func boolOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, f func(interface{}, interface{}) bool) (*RawData, uint64, error) {
+	v, dref, err := e.resolveValue(chunk.Function.Args[0], ref)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -64,12 +64,12 @@ func boolOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(int
 
 // boolOrOp behaves like boolOp, but checks if the left argument is true first
 // (and stop if it is). Only then proceeds to check the right argument.
-func boolOrOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, fLeft func(interface{}) bool, fRight func(interface{}) bool) (*RawData, int32, error) {
+func boolOrOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, fLeft func(interface{}) bool, fRight func(interface{}) bool) (*RawData, uint64, error) {
 	if bind.Value != nil && fLeft(bind.Value) {
 		return BoolData(true), 0, nil
 	}
 
-	v, dref, err := c.resolveValue(chunk.Function.Args[0], ref)
+	v, dref, err := e.resolveValue(chunk.Function.Args[0], ref)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -89,12 +89,12 @@ func boolOrOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, fLeft fu
 
 // boolAndOp behaves like boolOp, but checks if the left argument is false first
 // (and stop if it is). Only then proceeds to check the right argument.
-func boolAndOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, fLeft func(interface{}) bool, fRight func(interface{}) bool) (*RawData, int32, error) {
+func boolAndOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, fLeft func(interface{}) bool, fRight func(interface{}) bool) (*RawData, uint64, error) {
 	if bind.Value != nil && !fLeft(bind.Value) {
 		return BoolData(false), 0, nil
 	}
 
-	v, dref, err := c.resolveValue(chunk.Function.Args[0], ref)
+	v, dref, err := e.resolveValue(chunk.Function.Args[0], ref)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -111,8 +111,8 @@ func boolAndOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, fLeft f
 	return BoolData(fRight(v.Value)), 0, nil
 }
 
-func boolNotOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(interface{}, interface{}) bool) (*RawData, int32, error) {
-	v, dref, err := c.resolveValue(chunk.Function.Args[0], ref)
+func boolNotOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, f func(interface{}, interface{}) bool) (*RawData, uint64, error) {
+	v, dref, err := e.resolveValue(chunk.Function.Args[0], ref)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -130,8 +130,8 @@ func boolNotOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, f func(
 	return BoolData(!f(bind.Value, v.Value)), 0, nil
 }
 
-func dataOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, typ types.Type, f func(interface{}, interface{}) *RawData) (*RawData, int32, error) {
-	v, dref, err := c.resolveValue(chunk.Function.Args[0], ref)
+func dataOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, typ types.Type, f func(interface{}, interface{}) *RawData) (*RawData, uint64, error) {
+	v, dref, err := e.resolveValue(chunk.Function.Args[0], ref)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -149,12 +149,12 @@ func dataOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, typ types.
 	return f(bind.Value, v.Value), 0, nil
 }
 
-func nonNilDataOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, typ types.Type, f func(interface{}, interface{}) *RawData) (*RawData, int32, error) {
+func nonNilDataOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, typ types.Type, f func(interface{}, interface{}) *RawData) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: typ, Error: errors.New("left side of operation is null")}, 0, nil
 	}
 
-	v, dref, err := c.resolveValue(chunk.Function.Args[0], ref)
+	v, dref, err := e.resolveValue(chunk.Function.Args[0], ref)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -172,26 +172,26 @@ func nonNilDataOp(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, typ 
 // for equality and inequality checks that are pre-determined
 // we need to catch the case where both values end up nil
 
-func chunkEqTrue(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(a interface{}, b interface{}) bool {
+func chunkEqTrueV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, func(a interface{}, b interface{}) bool {
 		return true
 	})
 }
 
-func chunkEqFalse(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, func(a interface{}, b interface{}) bool {
+func chunkEqFalseV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, func(a interface{}, b interface{}) bool {
 		return false
 	})
 }
 
-func chunkNeqFalse(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, func(a interface{}, b interface{}) bool {
+func chunkNeqFalseV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, func(a interface{}, b interface{}) bool {
 		return true
 	})
 }
 
-func chunkNeqTrue(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, func(a interface{}, b interface{}) bool {
+func chunkNeqTrueV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, func(a interface{}, b interface{}) bool {
 		return false
 	})
 }
@@ -277,99 +277,99 @@ func opFloatCmpRegex(left interface{}, right interface{}) bool {
 // same operator types
 // ==   !=
 
-func boolCmpBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opBoolCmpBool)
+func boolCmpBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opBoolCmpBool)
 }
 
-func boolNotBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opBoolCmpBool)
+func boolNotBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opBoolCmpBool)
 }
 
-func intCmpInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opIntCmpInt)
+func intCmpIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opIntCmpInt)
 }
 
-func intNotInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opIntCmpInt)
+func intNotIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opIntCmpInt)
 }
 
-func floatCmpFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opFloatCmpFloat)
+func floatCmpFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opFloatCmpFloat)
 }
 
-func floatNotFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opFloatCmpFloat)
+func floatNotFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opFloatCmpFloat)
 }
 
-func stringCmpString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringCmpString)
+func stringCmpStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringCmpString)
 }
 
-func stringNotString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opStringCmpString)
+func stringNotStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opStringCmpString)
 }
 
-func timeCmpTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opTimeCmpTime)
+func timeCmpTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opTimeCmpTime)
 }
 
-func timeNotTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opTimeCmpTime)
+func timeNotTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opTimeCmpTime)
 }
 
 // int arithmetic
 
-func intPlusInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Int, func(left interface{}, right interface{}) *RawData {
+func intPlusIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Int, func(left interface{}, right interface{}) *RawData {
 		res := left.(int64) + right.(int64)
 		return IntData(res)
 	})
 }
 
-func intMinusInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Int, func(left interface{}, right interface{}) *RawData {
+func intMinusIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Int, func(left interface{}, right interface{}) *RawData {
 		res := left.(int64) - right.(int64)
 		return IntData(res)
 	})
 }
 
-func intTimesInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Int, func(left interface{}, right interface{}) *RawData {
+func intTimesIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Int, func(left interface{}, right interface{}) *RawData {
 		res := left.(int64) * right.(int64)
 		return IntData(res)
 	})
 }
 
-func intDividedInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Int, func(left interface{}, right interface{}) *RawData {
+func intDividedIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Int, func(left interface{}, right interface{}) *RawData {
 		res := left.(int64) / right.(int64)
 		return IntData(res)
 	})
 }
 
-func intPlusFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+func intPlusFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := float64(left.(int64)) + right.(float64)
 		return FloatData(res)
 	})
 }
 
-func intMinusFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+func intMinusFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := float64(left.(int64)) - right.(float64)
 		return FloatData(res)
 	})
 }
 
-func intTimesFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+func intTimesFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := float64(left.(int64)) * right.(float64)
 		return FloatData(res)
 	})
 }
 
-func intDividedFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+func intDividedFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := float64(left.(int64)) / right.(float64)
 		return FloatData(res)
 	})
@@ -377,57 +377,57 @@ func intDividedFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (
 
 // float arithmetic
 
-func floatPlusInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+func floatPlusIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := left.(float64) + float64(right.(int64))
 		return FloatData(res)
 	})
 }
 
-func floatMinusInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+func floatMinusIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := left.(float64) - float64(right.(int64))
 		return FloatData(res)
 	})
 }
 
-func floatTimesInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+func floatTimesIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := left.(float64) * float64(right.(int64))
 		return FloatData(res)
 	})
 }
 
-func floatDividedInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+func floatDividedIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := left.(float64) / float64(right.(int64))
 		return FloatData(res)
 	})
 }
 
-func floatPlusFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+func floatPlusFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := left.(float64) + right.(float64)
 		return FloatData(res)
 	})
 }
 
-func floatMinusFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+func floatMinusFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := left.(float64) - right.(float64)
 		return FloatData(res)
 	})
 }
 
-func floatTimesFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+func floatTimesFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := left.(float64) * right.(float64)
 		return FloatData(res)
 	})
 }
 
-func floatDividedFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
+func floatDividedFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Float, func(left interface{}, right interface{}) *RawData {
 		res := left.(float64) / right.(float64)
 		return FloatData(res)
 	})
@@ -444,20 +444,20 @@ func opFloatCmpInt(left interface{}, right interface{}) bool {
 	return left.(float64) == float64(right.(int64))
 }
 
-func intCmpFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opIntCmpFloat)
+func intCmpFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opIntCmpFloat)
 }
 
-func intNotFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opIntCmpFloat)
+func intNotFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opIntCmpFloat)
 }
 
-func floatCmpInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opFloatCmpInt)
+func floatCmpIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opFloatCmpInt)
 }
 
-func floatNotInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opFloatCmpInt)
+func floatNotIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opFloatCmpInt)
 }
 
 // string vs other types
@@ -471,20 +471,20 @@ func opNilCmpString(left interface{}, right interface{}) bool {
 	return right == nil
 }
 
-func stringCmpNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringCmpNil)
+func stringCmpNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringCmpNil)
 }
 
-func stringNotNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opStringCmpNil)
+func stringNotNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opStringCmpNil)
 }
 
-func nilCmpString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opNilCmpString)
+func nilCmpStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opNilCmpString)
 }
 
-func nilNotString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opNilCmpString)
+func nilNotStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opNilCmpString)
 }
 
 // string ==/!= bool
@@ -503,111 +503,111 @@ func opBoolCmpString(left interface{}, right interface{}) bool {
 	return right.(string) == "false"
 }
 
-func stringCmpBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringCmpBool)
+func stringCmpBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringCmpBool)
 }
 
-func stringNotBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opStringCmpBool)
+func stringNotBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opStringCmpBool)
 }
 
-func boolCmpString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opBoolCmpString)
+func boolCmpStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opBoolCmpString)
 }
 
-func boolNotString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opBoolCmpString)
+func boolNotStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opBoolCmpString)
 }
 
 // string ==/!= int
 
-func stringCmpInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringCmpInt)
+func stringCmpIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringCmpInt)
 }
 
-func stringNotInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opStringCmpInt)
+func stringNotIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opStringCmpInt)
 }
 
-func intCmpString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opIntCmpString)
+func intCmpStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opIntCmpString)
 }
 
-func intNotString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opIntCmpString)
+func intNotStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opIntCmpString)
 }
 
 // string ==/!= float
 
-func stringCmpFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringCmpFloat)
+func stringCmpFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringCmpFloat)
 }
 
-func stringNotFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opStringCmpFloat)
+func stringNotFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opStringCmpFloat)
 }
 
-func floatCmpString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opFloatCmpString)
+func floatCmpStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opFloatCmpString)
 }
 
-func floatNotString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opFloatCmpString)
+func floatNotStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opFloatCmpString)
 }
 
 // string ==/!= regex
 
-func stringCmpRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringCmpRegex)
+func stringCmpRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringCmpRegex)
 }
 
-func stringNotRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opStringCmpRegex)
+func stringNotRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opStringCmpRegex)
 }
 
-func regexCmpString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opRegexCmpString)
+func regexCmpStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opRegexCmpString)
 }
 
-func regexNotString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opRegexCmpString)
+func regexNotStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opRegexCmpString)
 }
 
 // regex vs other types
 // int ==/!= regex
 
-func intCmpRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opIntCmpRegex)
+func intCmpRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opIntCmpRegex)
 }
 
-func intNotRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opIntCmpRegex)
+func intNotRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opIntCmpRegex)
 }
 
-func regexCmpInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opRegexCmpInt)
+func regexCmpIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opRegexCmpInt)
 }
 
-func regexNotInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opRegexCmpInt)
+func regexNotIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opRegexCmpInt)
 }
 
 // float ==/!= regex
 
-func floatCmpRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opFloatCmpRegex)
+func floatCmpRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opFloatCmpRegex)
 }
 
-func floatNotRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opFloatCmpRegex)
+func floatNotRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opFloatCmpRegex)
 }
 
-func regexCmpFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opRegexCmpFloat)
+func regexCmpFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opRegexCmpFloat)
 }
 
-func regexNotFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opRegexCmpFloat)
+func regexNotFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opRegexCmpFloat)
 }
 
 // null vs other types
@@ -621,20 +621,20 @@ func opNilCmpBool(left interface{}, right interface{}) bool {
 	return right == nil
 }
 
-func boolCmpNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opBoolCmpNil)
+func boolCmpNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opBoolCmpNil)
 }
 
-func boolNotNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opBoolCmpNil)
+func boolNotNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opBoolCmpNil)
 }
 
-func nilCmpBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opNilCmpBool)
+func nilCmpBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opNilCmpBool)
 }
 
-func nilNotBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opNilCmpBool)
+func nilNotBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opNilCmpBool)
 }
 
 // int ==/!= nil
@@ -647,20 +647,20 @@ func opNilCmpInt(left interface{}, right interface{}) bool {
 	return right == nil
 }
 
-func intCmpNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opIntCmpNil)
+func intCmpNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opIntCmpNil)
 }
 
-func intNotNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opIntCmpNil)
+func intNotNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opIntCmpNil)
 }
 
-func nilCmpInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opNilCmpInt)
+func nilCmpIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opNilCmpInt)
 }
 
-func nilNotInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opNilCmpInt)
+func nilNotIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opNilCmpInt)
 }
 
 // float ==/!= nil
@@ -673,20 +673,20 @@ func opNilCmpFloat(left interface{}, right interface{}) bool {
 	return right == nil
 }
 
-func floatCmpNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opFloatCmpNil)
+func floatCmpNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opFloatCmpNil)
 }
 
-func floatNotNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opFloatCmpNil)
+func floatNotNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opFloatCmpNil)
 }
 
-func nilCmpFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opNilCmpFloat)
+func nilCmpFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opNilCmpFloat)
 }
 
-func nilNotFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolNotOp(c, bind, chunk, ref, opNilCmpFloat)
+func nilNotFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolNotOpV2(e, bind, chunk, ref, opNilCmpFloat)
 }
 
 // time ==/!= nil
@@ -699,104 +699,104 @@ func opNilCmpTime(left *RawData, right *RawData) bool {
 	return right.Value == nil || right.Value.(*time.Time) == nil
 }
 
-func timeCmpNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, opTimeCmpNil)
+func timeCmpNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, opTimeCmpNil)
 }
 
-func timeNotNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, opTimeCmpNil)
+func timeNotNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, opTimeCmpNil)
 }
 
-func nilCmpTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, opNilCmpTime)
+func nilCmpTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, opNilCmpTime)
 }
 
-func nilNotTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, opNilCmpTime)
+func nilNotTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, opNilCmpTime)
 }
 
 // string </>/<=/>= string
 
-func stringLTString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func stringLTStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		return BoolData(left.(string) < right.(string))
 	})
 }
 
-func stringLTEString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func stringLTEStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		return BoolData(left.(string) <= right.(string))
 	})
 }
 
-func stringGTString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func stringGTStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		return BoolData(left.(string) > right.(string))
 	})
 }
 
-func stringGTEString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func stringGTEStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		return BoolData(left.(string) >= right.(string))
 	})
 }
 
 // int </>/<=/>= int
 
-func intLTInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func intLTIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		return BoolData(left.(int64) < right.(int64))
 	})
 }
 
-func intLTEInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func intLTEIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		return BoolData(left.(int64) <= right.(int64))
 	})
 }
 
-func intGTInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func intGTIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		return BoolData(left.(int64) > right.(int64))
 	})
 }
 
-func intGTEInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func intGTEIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		return BoolData(left.(int64) >= right.(int64))
 	})
 }
 
 // float </>/<=/>= float
 
-func floatLTFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func floatLTFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		return BoolData(left.(float64) < right.(float64))
 	})
 }
 
-func floatLTEFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func floatLTEFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		return BoolData(left.(float64) <= right.(float64))
 	})
 }
 
-func floatGTFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func floatGTFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		return BoolData(left.(float64) > right.(float64))
 	})
 }
 
-func floatGTEFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func floatGTEFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		return BoolData(left.(float64) >= right.(float64))
 	})
 }
 
 // time </>/<=/>= time
 
-func timeLTTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func timeLTTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		l := left.(*time.Time)
 		if l == nil {
 			return &RawData{Type: types.Bool, Error: errors.New("left side of operation is null")}
@@ -810,8 +810,8 @@ func timeLTTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 	})
 }
 
-func timeLTETime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func timeLTETimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		l := left.(*time.Time)
 		if l == nil {
 			return &RawData{Type: types.Bool, Error: errors.New("left side of operation is null")}
@@ -825,8 +825,8 @@ func timeLTETime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	})
 }
 
-func timeGTTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func timeGTTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		l := left.(*time.Time)
 		if l == nil {
 			return &RawData{Type: types.Bool, Error: errors.New("left side of operation is null")}
@@ -840,8 +840,8 @@ func timeGTTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 	})
 }
 
-func timeGTETime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func timeGTETimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		l := left.(*time.Time)
 		if l == nil {
 			return &RawData{Type: types.Bool, Error: errors.New("left side of operation is null")}
@@ -857,8 +857,8 @@ func timeGTETime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 
 // time arithmetic
 
-func timeMinusTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+func timeMinusTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		l := left.(*time.Time)
 		r := right.(*time.Time)
 		if l == nil || r == nil {
@@ -920,82 +920,82 @@ func opTimeTimesFloat(left interface{}, right interface{}) *RawData {
 	return TimeData(res)
 }
 
-func timeTimesInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, opTimeTimesInt)
+func timeTimesIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Time, opTimeTimesInt)
 }
 
-func intTimesTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+func intTimesTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		return opTimeTimesInt(right, left)
 	})
 }
 
-func timeTimesFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, opTimeTimesFloat)
+func timeTimesFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Time, opTimeTimesFloat)
 }
 
-func floatTimesTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+func floatTimesTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		return opTimeTimesFloat(right, left)
 	})
 }
 
 // int </>/<=/>= float
 
-func intLTFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func intLTFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		return BoolData(float64(left.(int64)) < right.(float64))
 	})
 }
 
-func intLTEFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func intLTEFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		return BoolData(float64(left.(int64)) <= right.(float64))
 	})
 }
 
-func intGTFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func intGTFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		return BoolData(float64(left.(int64)) > right.(float64))
 	})
 }
 
-func intGTEFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func intGTEFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		return BoolData(float64(left.(int64)) >= right.(float64))
 	})
 }
 
 // float </>/<=/>= int
 
-func floatLTInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func floatLTIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		return BoolData(left.(float64) < float64(right.(int64)))
 	})
 }
 
-func floatLTEInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func floatLTEIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		return BoolData(left.(float64) <= float64(right.(int64)))
 	})
 }
 
-func floatGTInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func floatGTIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		return BoolData(left.(float64) > float64(right.(int64)))
 	})
 }
 
-func floatGTEInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func floatGTEIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		return BoolData(left.(float64) >= float64(right.(int64)))
 	})
 }
 
 // float </>/<=/>= string
 
-func floatLTString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func floatLTStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseFloat(right.(string), 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1004,8 +1004,8 @@ func floatLTString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	})
 }
 
-func floatLTEString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func floatLTEStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseFloat(right.(string), 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1014,8 +1014,8 @@ func floatLTEString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 	})
 }
 
-func floatGTString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func floatGTStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseFloat(right.(string), 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1024,8 +1024,8 @@ func floatGTString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	})
 }
 
-func floatGTEString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func floatGTEStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseFloat(right.(string), 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1036,8 +1036,8 @@ func floatGTEString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 
 // string </>/<=/>= float
 
-func stringLTFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func stringLTFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseFloat(left.(string), 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1046,8 +1046,8 @@ func stringLTFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	})
 }
 
-func stringLTEFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func stringLTEFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseFloat(left.(string), 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1056,8 +1056,8 @@ func stringLTEFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 	})
 }
 
-func stringGTFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func stringGTFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseFloat(left.(string), 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1066,8 +1066,8 @@ func stringGTFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	})
 }
 
-func stringGTEFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func stringGTEFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseFloat(left.(string), 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1078,8 +1078,8 @@ func stringGTEFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 
 // int </>/<=/>= string
 
-func intLTString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func intLTStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(right.(string), 10, 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1088,8 +1088,8 @@ func intLTString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	})
 }
 
-func intLTEString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func intLTEStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(right.(string), 10, 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1098,8 +1098,8 @@ func intLTEString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 	})
 }
 
-func intGTString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func intGTStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(right.(string), 10, 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1108,8 +1108,8 @@ func intGTString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	})
 }
 
-func intGTEString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func intGTEStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(right.(string), 10, 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1120,8 +1120,8 @@ func intGTEString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 
 // string </>/<=/>= int
 
-func stringLTInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func stringLTIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(left.(string), 10, 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1130,8 +1130,8 @@ func stringLTInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	})
 }
 
-func stringLTEInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func stringLTEIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(left.(string), 10, 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1140,8 +1140,8 @@ func stringLTEInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 	})
 }
 
-func stringGTInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func stringGTIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(left.(string), 10, 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1150,8 +1150,8 @@ func stringGTInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	})
 }
 
-func stringGTEInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return nonNilDataOp(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
+func stringGTEIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(left.(string), 10, 64)
 		if err != nil {
 			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
@@ -1190,134 +1190,134 @@ func truthyMap(val interface{}) bool {
 	return true
 }
 
-func boolAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolAndOp(c, bind, chunk, ref, truthyBool, truthyBool)
+func boolAndBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolAndOpV2(e, bind, chunk, ref, truthyBool, truthyBool)
 }
 
-func boolOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOrOp(c, bind, chunk, ref, truthyBool, truthyBool)
+func boolOrBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOrOpV2(e, bind, chunk, ref, truthyBool, truthyBool)
 }
 
-func intAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolAndOp(c, bind, chunk, ref, truthyInt, truthyInt)
+func intAndIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolAndOpV2(e, bind, chunk, ref, truthyInt, truthyInt)
 }
 
-func intOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOrOp(c, bind, chunk, ref, truthyInt, truthyInt)
+func intOrIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOrOpV2(e, bind, chunk, ref, truthyInt, truthyInt)
 }
 
-func floatAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolAndOp(c, bind, chunk, ref, truthyFloat, truthyFloat)
+func floatAndFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolAndOpV2(e, bind, chunk, ref, truthyFloat, truthyFloat)
 }
 
-func floatOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOrOp(c, bind, chunk, ref, truthyFloat, truthyFloat)
+func floatOrFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOrOpV2(e, bind, chunk, ref, truthyFloat, truthyFloat)
 }
 
-func stringAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolAndOp(c, bind, chunk, ref, truthyString, truthyString)
+func stringAndStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolAndOpV2(e, bind, chunk, ref, truthyString, truthyString)
 }
 
-func stringOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOrOp(c, bind, chunk, ref, truthyString, truthyString)
+func stringOrStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOrOpV2(e, bind, chunk, ref, truthyString, truthyString)
 }
 
-func regexAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolAndOp(c, bind, chunk, ref, truthyString, truthyString)
+func regexAndRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolAndOpV2(e, bind, chunk, ref, truthyString, truthyString)
 }
 
-func regexOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOrOp(c, bind, chunk, ref, truthyString, truthyString)
+func regexOrRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOrOpV2(e, bind, chunk, ref, truthyString, truthyString)
 }
 
-func arrayAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolAndOp(c, bind, chunk, ref, truthyArray, truthyArray)
+func arrayAndArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolAndOpV2(e, bind, chunk, ref, truthyArray, truthyArray)
 }
 
-func arrayOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOrOp(c, bind, chunk, ref, truthyArray, truthyArray)
+func arrayOrArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOrOpV2(e, bind, chunk, ref, truthyArray, truthyArray)
 }
 
 // bool &&/|| T
 
-func boolAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolAndOp(c, bind, chunk, ref, truthyBool, truthyInt)
+func boolAndIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolAndOpV2(e, bind, chunk, ref, truthyBool, truthyInt)
 }
 
-func boolOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOrOp(c, bind, chunk, ref, truthyBool, truthyInt)
+func boolOrIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOrOpV2(e, bind, chunk, ref, truthyBool, truthyInt)
 }
 
-func intAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolAndOp(c, bind, chunk, ref, truthyInt, truthyBool)
+func intAndBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolAndOpV2(e, bind, chunk, ref, truthyInt, truthyBool)
 }
 
-func intOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOrOp(c, bind, chunk, ref, truthyInt, truthyBool)
+func intOrBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOrOpV2(e, bind, chunk, ref, truthyInt, truthyBool)
 }
 
-func boolAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolAndOp(c, bind, chunk, ref, truthyBool, truthyFloat)
+func boolAndFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolAndOpV2(e, bind, chunk, ref, truthyBool, truthyFloat)
 }
 
-func boolOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOrOp(c, bind, chunk, ref, truthyBool, truthyFloat)
+func boolOrFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOrOpV2(e, bind, chunk, ref, truthyBool, truthyFloat)
 }
 
-func floatAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolAndOp(c, bind, chunk, ref, truthyFloat, truthyBool)
+func floatAndBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolAndOpV2(e, bind, chunk, ref, truthyFloat, truthyBool)
 }
 
-func floatOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOrOp(c, bind, chunk, ref, truthyFloat, truthyBool)
+func floatOrBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOrOpV2(e, bind, chunk, ref, truthyFloat, truthyBool)
 }
 
-func boolAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolAndOp(c, bind, chunk, ref, truthyBool, truthyString)
+func boolAndStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolAndOpV2(e, bind, chunk, ref, truthyBool, truthyString)
 }
 
-func boolOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOrOp(c, bind, chunk, ref, truthyBool, truthyString)
+func boolOrStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOrOpV2(e, bind, chunk, ref, truthyBool, truthyString)
 }
 
-func stringAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolAndOp(c, bind, chunk, ref, truthyString, truthyBool)
+func stringAndBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolAndOpV2(e, bind, chunk, ref, truthyString, truthyBool)
 }
 
-func stringOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOrOp(c, bind, chunk, ref, truthyString, truthyBool)
+func stringOrBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOrOpV2(e, bind, chunk, ref, truthyString, truthyBool)
 }
 
-func boolAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolAndOp(c, bind, chunk, ref, truthyBool, truthyString)
+func boolAndRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolAndOpV2(e, bind, chunk, ref, truthyBool, truthyString)
 }
 
-func boolOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOrOp(c, bind, chunk, ref, truthyBool, truthyString)
+func boolOrRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOrOpV2(e, bind, chunk, ref, truthyBool, truthyString)
 }
 
-func regexAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolAndOp(c, bind, chunk, ref, truthyString, truthyBool)
+func regexAndBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolAndOpV2(e, bind, chunk, ref, truthyString, truthyBool)
 }
 
-func regexOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOrOp(c, bind, chunk, ref, truthyString, truthyBool)
+func regexOrBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOrOpV2(e, bind, chunk, ref, truthyString, truthyBool)
 }
 
-func boolAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolAndOp(c, bind, chunk, ref, truthyBool, truthyArray)
+func boolAndArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolAndOpV2(e, bind, chunk, ref, truthyBool, truthyArray)
 }
 
-func boolOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOrOp(c, bind, chunk, ref, truthyBool, truthyArray)
+func boolOrArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOrOpV2(e, bind, chunk, ref, truthyBool, truthyArray)
 }
 
-func arrayAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolAndOp(c, bind, chunk, ref, truthyArray, truthyBool)
+func arrayAndBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolAndOpV2(e, bind, chunk, ref, truthyArray, truthyBool)
 }
 
-func arrayOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOrOp(c, bind, chunk, ref, truthyArray, truthyBool)
+func arrayOrBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOrOpV2(e, bind, chunk, ref, truthyArray, truthyBool)
 }
 
 func opBoolAndMap(left interface{}, right interface{}) bool {
@@ -1336,20 +1336,20 @@ func opMapOrBool(left interface{}, right interface{}) bool {
 	return right.(bool) || (len(left.([]interface{})) != 0)
 }
 
-func boolAndMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opBoolAndMap)
+func boolAndMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opBoolAndMap)
 }
 
-func boolOrMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opBoolOrMap)
+func boolOrMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opBoolOrMap)
 }
 
-func mapAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opMapAndBool)
+func mapAndBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opMapAndBool)
 }
 
-func mapOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opMapOrBool)
+func mapOrBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opMapOrBool)
 }
 
 // int &&/|| T
@@ -1370,20 +1370,20 @@ func opFloatOrInt(left interface{}, right interface{}) bool {
 	return (right.(int64) != 0) || (left.(float64) != 0)
 }
 
-func intAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opIntAndFloat)
+func intAndFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opIntAndFloat)
 }
 
-func intOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opIntOrFloat)
+func intOrFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opIntOrFloat)
 }
 
-func floatAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opFloatAndInt)
+func floatAndIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opFloatAndInt)
 }
 
-func floatOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opFloatOrInt)
+func floatOrIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opFloatOrInt)
 }
 
 func opIntAndString(left interface{}, right interface{}) bool {
@@ -1402,36 +1402,36 @@ func opStringOrInt(left interface{}, right interface{}) bool {
 	return (right.(int64) != 0) || (left.(string) != "")
 }
 
-func intAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opIntAndString)
+func intAndStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opIntAndString)
 }
 
-func intOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opIntOrString)
+func intOrStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opIntOrString)
 }
 
-func stringAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringAndInt)
+func stringAndIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringAndInt)
 }
 
-func stringOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringOrInt)
+func stringOrIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringOrInt)
 }
 
-func intAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opIntAndString)
+func intAndRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opIntAndString)
 }
 
-func intOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opIntOrString)
+func intOrRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opIntOrString)
 }
 
-func regexAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringAndInt)
+func regexAndIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringAndInt)
 }
 
-func regexOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringOrInt)
+func regexOrIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringOrInt)
 }
 
 func opIntAndArray(left interface{}, right interface{}) bool {
@@ -1450,20 +1450,20 @@ func opArrayOrInt(left interface{}, right interface{}) bool {
 	return (right.(int64) != 0) || (len(left.([]interface{})) != 0)
 }
 
-func intAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opIntAndArray)
+func intAndArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opIntAndArray)
 }
 
-func intOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opIntOrArray)
+func intOrArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opIntOrArray)
 }
 
-func arrayAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opArrayAndInt)
+func arrayAndIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opArrayAndInt)
 }
 
-func arrayOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opArrayOrInt)
+func arrayOrIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opArrayOrInt)
 }
 
 func opIntAndMap(left interface{}, right interface{}) bool {
@@ -1482,20 +1482,20 @@ func opMapOrInt(left interface{}, right interface{}) bool {
 	return (right.(int64) != 0) || (len(left.(map[string]interface{})) != 0)
 }
 
-func intAndMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opIntAndMap)
+func intAndMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opIntAndMap)
 }
 
-func intOrMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opIntOrMap)
+func intOrMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opIntOrMap)
 }
 
-func mapAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opMapAndInt)
+func mapAndIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opMapAndInt)
 }
 
-func mapOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opMapOrInt)
+func mapOrIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opMapOrInt)
 }
 
 // float &&/|| T
@@ -1516,36 +1516,36 @@ func opStringOrFloat(left interface{}, right interface{}) bool {
 	return (right.(float64) != 0) || (left.(string) != "")
 }
 
-func floatAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opFloatAndString)
+func floatAndStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opFloatAndString)
 }
 
-func floatOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opFloatOrString)
+func floatOrStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opFloatOrString)
 }
 
-func stringAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringAndFloat)
+func stringAndFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringAndFloat)
 }
 
-func stringOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringOrFloat)
+func stringOrFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringOrFloat)
 }
 
-func floatAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opFloatAndString)
+func floatAndRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opFloatAndString)
 }
 
-func floatOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opFloatOrString)
+func floatOrRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opFloatOrString)
 }
 
-func regexAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringAndFloat)
+func regexAndFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringAndFloat)
 }
 
-func regexOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringOrFloat)
+func regexOrFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringOrFloat)
 }
 
 func opFloatAndArray(left interface{}, right interface{}) bool {
@@ -1564,20 +1564,20 @@ func opArrayOrFloat(left interface{}, right interface{}) bool {
 	return (right.(float64) != 0) || (len(left.([]interface{})) != 0)
 }
 
-func floatAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opFloatAndArray)
+func floatAndArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opFloatAndArray)
 }
 
-func floatOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opFloatOrArray)
+func floatOrArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opFloatOrArray)
 }
 
-func arrayAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opArrayAndFloat)
+func arrayAndFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opArrayAndFloat)
 }
 
-func arrayOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opArrayOrFloat)
+func arrayOrFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opArrayOrFloat)
 }
 
 func opFloatAndMap(left interface{}, right interface{}) bool {
@@ -1596,38 +1596,38 @@ func opMapOrFloat(left interface{}, right interface{}) bool {
 	return (right.(float64) != 0) || (len(left.(map[string]interface{})) != 0)
 }
 
-func floatAndMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opFloatAndMap)
+func floatAndMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opFloatAndMap)
 }
 
-func floatOrMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opFloatOrMap)
+func floatOrMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opFloatOrMap)
 }
 
-func mapAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opMapAndFloat)
+func mapAndFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opMapAndFloat)
 }
 
-func mapOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opMapOrFloat)
+func mapOrFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opMapOrFloat)
 }
 
 // string &&/|| T
 
-func stringAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolAndOp(c, bind, chunk, ref, truthyString, truthyString)
+func stringAndRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolAndOpV2(e, bind, chunk, ref, truthyString, truthyString)
 }
 
-func stringOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOrOp(c, bind, chunk, ref, truthyString, truthyString)
+func stringOrRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOrOpV2(e, bind, chunk, ref, truthyString, truthyString)
 }
 
-func regexAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolAndOp(c, bind, chunk, ref, truthyString, truthyString)
+func regexAndStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolAndOpV2(e, bind, chunk, ref, truthyString, truthyString)
 }
 
-func regexOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOrOp(c, bind, chunk, ref, truthyString, truthyString)
+func regexOrStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOrOpV2(e, bind, chunk, ref, truthyString, truthyString)
 }
 
 func opStringAndArray(left interface{}, right interface{}) bool {
@@ -1646,20 +1646,20 @@ func opArrayOrString(left interface{}, right interface{}) bool {
 	return (right.(float64) != 0) || (len(left.([]interface{})) != 0)
 }
 
-func stringAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringAndArray)
+func stringAndArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringAndArray)
 }
 
-func stringOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringOrArray)
+func stringOrArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringOrArray)
 }
 
-func arrayAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opArrayAndString)
+func arrayAndStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opArrayAndString)
 }
 
-func arrayOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opArrayOrString)
+func arrayOrStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opArrayOrString)
 }
 
 func opStringAndMap(left interface{}, right interface{}) bool {
@@ -1678,26 +1678,26 @@ func opMapOrString(left interface{}, right interface{}) bool {
 	return (right.(float64) != 0) || (len(left.(map[string]interface{})) != 0)
 }
 
-func stringAndMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringAndMap)
+func stringAndMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringAndMap)
 }
 
-func stringOrMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringOrMap)
+func stringOrMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringOrMap)
 }
 
-func mapAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opMapAndString)
+func mapAndStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opMapAndString)
 }
 
-func mapOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opMapOrString)
+func mapOrStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opMapOrString)
 }
 
 // string + T
 
-func stringPlusString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return dataOp(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+func stringPlusStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		l := left.(string)
 		r := right.(string)
 
@@ -1707,38 +1707,38 @@ func stringPlusString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) 
 
 // regex &&/|| array
 
-func regexAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringAndArray)
+func regexAndArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringAndArray)
 }
 
-func regexOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringOrArray)
+func regexOrArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringOrArray)
 }
 
-func arrayAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opArrayAndString)
+func arrayAndRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opArrayAndString)
 }
 
-func arrayOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opArrayOrString)
+func arrayOrRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opArrayOrString)
 }
 
 // regex &&/|| map
 
-func regexAndMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringAndMap)
+func regexAndMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringAndMap)
 }
 
-func regexOrMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringOrMap)
+func regexOrMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringOrMap)
 }
 
-func mapAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opMapAndString)
+func mapAndRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opMapAndString)
 }
 
-func mapOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opMapOrString)
+func mapOrRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opMapOrString)
 }
 
 // time &&/|| T
@@ -1752,19 +1752,19 @@ func opTimeAndBool(left interface{}, right interface{}) bool {
 	return right.(bool)
 }
 
-func boolAndTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opBoolAndTime)
+func boolAndTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opBoolAndTime)
 }
 
-func boolOrTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func boolOrTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return BoolTrue, 0, nil
 }
 
-func timeAndBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opTimeAndBool)
+func timeAndBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opTimeAndBool)
 }
 
-func timeOrBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func timeOrBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return BoolTrue, 0, nil
 }
 
@@ -1776,19 +1776,19 @@ func opTimeAndInt(left interface{}, right interface{}) bool {
 	return right.(int64) != 0
 }
 
-func intAndTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opIntAndTime)
+func intAndTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opIntAndTime)
 }
 
-func intOrTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func intOrTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return BoolTrue, 0, nil
 }
 
-func timeAndInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opTimeAndInt)
+func timeAndIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opTimeAndInt)
 }
 
-func timeOrInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func timeOrIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return BoolTrue, 0, nil
 }
 
@@ -1800,19 +1800,19 @@ func opTimeAndFloat(left interface{}, right interface{}) bool {
 	return right.(float64) != 0
 }
 
-func floatAndTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opFloatAndTime)
+func floatAndTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opFloatAndTime)
 }
 
-func floatOrTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func floatOrTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return BoolTrue, 0, nil
 }
 
-func timeAndFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opTimeAndFloat)
+func timeAndFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opTimeAndFloat)
 }
 
-func timeOrFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func timeOrFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return BoolTrue, 0, nil
 }
 
@@ -1824,19 +1824,19 @@ func opTimeAndString(left interface{}, right interface{}) bool {
 	return right.(string) != ""
 }
 
-func stringAndTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opStringAndTime)
+func stringAndTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opStringAndTime)
 }
 
-func stringOrTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func stringOrTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return BoolTrue, 0, nil
 }
 
-func timeAndString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opTimeAndString)
+func timeAndStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opTimeAndString)
 }
 
-func timeOrString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func timeOrStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return BoolTrue, 0, nil
 }
 
@@ -1848,27 +1848,27 @@ func opTimeAndRegex(left interface{}, right interface{}) bool {
 	return right.(string) != ""
 }
 
-func regexAndTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opRegexAndTime)
+func regexAndTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opRegexAndTime)
 }
 
-func regexOrTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func regexOrTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return BoolTrue, 0, nil
 }
 
-func timeAndRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opTimeAndRegex)
+func timeAndRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opTimeAndRegex)
 }
 
-func timeOrRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func timeOrRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return BoolTrue, 0, nil
 }
 
-func timeAndTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func timeAndTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return BoolTrue, 0, nil
 }
 
-func timeOrTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func timeOrTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return BoolTrue, 0, nil
 }
 
@@ -1880,19 +1880,19 @@ func opArrayAndTime(left interface{}, right interface{}) bool {
 	return len(left.([]interface{})) != 0
 }
 
-func timeAndArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opTimeAndArray)
+func timeAndArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opTimeAndArray)
 }
 
-func timeOrArray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func timeOrArrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return BoolTrue, 0, nil
 }
 
-func arrayAndTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opArrayAndTime)
+func arrayAndTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opArrayAndTime)
 }
 
-func arrayOrTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayOrTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return BoolTrue, 0, nil
 }
 
@@ -1904,31 +1904,31 @@ func opMapAndTime(left interface{}, right interface{}) bool {
 	return len(left.(map[string]interface{})) != 0
 }
 
-func timeAndMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opTimeAndMap)
+func timeAndMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opTimeAndMap)
 }
 
-func timeOrMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func timeOrMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return BoolTrue, 0, nil
 }
 
-func mapAndTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return boolOp(c, bind, chunk, ref, opMapAndTime)
+func mapAndTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return boolOpV2(e, bind, chunk, ref, opMapAndTime)
 }
 
-func mapOrTime(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func mapOrTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return BoolTrue, 0, nil
 }
 
 // string methods
 
-func stringContainsString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func stringContainsStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return BoolFalse, 0, nil
 	}
 
 	argRef := chunk.Function.Args[0]
-	arg, rref, err := c.resolveValue(argRef, ref)
+	arg, rref, err := e.resolveValue(argRef, ref)
 	if err != nil || rref > 0 {
 		return nil, rref, err
 	}
@@ -1941,13 +1941,13 @@ func stringContainsString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int
 	return BoolData(ok), 0, nil
 }
 
-func stringContainsInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func stringContainsIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return BoolFalse, 0, nil
 	}
 
 	argRef := chunk.Function.Args[0]
-	arg, rref, err := c.resolveValue(argRef, ref)
+	arg, rref, err := e.resolveValue(argRef, ref)
 	if err != nil || rref > 0 {
 		return nil, rref, err
 	}
@@ -1962,13 +1962,13 @@ func stringContainsInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32)
 	return BoolData(ok), 0, nil
 }
 
-func stringContainsArrayString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func stringContainsArrayStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return BoolFalse, 0, nil
 	}
 
 	argRef := chunk.Function.Args[0]
-	arg, rref, err := c.resolveValue(argRef, ref)
+	arg, rref, err := e.resolveValue(argRef, ref)
 	if err != nil || rref > 0 {
 		return nil, rref, err
 	}
@@ -1990,13 +1990,13 @@ func stringContainsArrayString(c *LeiseExecutor, bind *RawData, chunk *Chunk, re
 	return BoolData(false), 0, nil
 }
 
-func stringContainsArrayInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func stringContainsArrayIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return BoolFalse, 0, nil
 	}
 
 	argRef := chunk.Function.Args[0]
-	arg, rref, err := c.resolveValue(argRef, ref)
+	arg, rref, err := e.resolveValue(argRef, ref)
 	if err != nil || rref > 0 {
 		return nil, rref, err
 	}
@@ -2019,13 +2019,13 @@ func stringContainsArrayInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref i
 	return BoolData(false), 0, nil
 }
 
-func stringFind(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func stringFindV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return ArrayData([]interface{}{}, types.String), 0, nil
 	}
 
 	argRef := chunk.Function.Args[0]
-	arg, rref, err := c.resolveValue(argRef, ref)
+	arg, rref, err := e.resolveValue(argRef, ref)
 	if err != nil || rref > 0 {
 		return nil, rref, err
 	}
@@ -2049,7 +2049,7 @@ func stringFind(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 	return ArrayData(res, types.String), 0, nil
 }
 
-func stringDowncase(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func stringDowncaseV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type}, 0, nil
 	}
@@ -2060,7 +2060,7 @@ func stringDowncase(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 
 var camelCaseRe = regexp.MustCompile(`([[:punct:]]|\s)+[\p{L}]`)
 
-func stringCamelcase(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func stringCamelcaseV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type}, 0, nil
 	}
@@ -2085,7 +2085,7 @@ func stringCamelcase(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (
 	return StringData(res), 0, nil
 }
 
-func stringUpcase(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func stringUpcaseV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type}, 0, nil
 	}
@@ -2094,7 +2094,7 @@ func stringUpcase(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 	return StringData(res), 0, nil
 }
 
-func stringLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func stringLengthV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: types.Int}, 0, nil
 	}
@@ -2103,7 +2103,7 @@ func stringLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Ra
 	return IntData(int64(l)), 0, nil
 }
 
-func stringLines(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func stringLinesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: types.Array(types.String)}, 0, nil
 	}
@@ -2118,13 +2118,13 @@ func stringLines(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return ArrayData(res, types.String), 0, nil
 }
 
-func stringSplit(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func stringSplitV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: types.Array(types.String)}, 0, nil
 	}
 
 	argRef := chunk.Function.Args[0]
-	arg, rref, err := c.resolveValue(argRef, ref)
+	arg, rref, err := e.resolveValue(argRef, ref)
 	if err != nil || rref > 0 {
 		return nil, rref, err
 	}
@@ -2146,7 +2146,7 @@ func stringSplit(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return ArrayData(res, types.String), 0, nil
 }
 
-func stringTrim(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func stringTrimV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type}, 0, nil
 	}
@@ -2155,7 +2155,7 @@ func stringTrim(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawD
 
 	if len(chunk.Function.Args) != 0 {
 		argRef := chunk.Function.Args[0]
-		arg, rref, err := c.resolveValue(argRef, ref)
+		arg, rref, err := e.resolveValue(argRef, ref)
 		if err != nil || rref > 0 {
 			return nil, rref, err
 		}
@@ -2191,7 +2191,7 @@ func DurationToTime(i int64) time.Time {
 	return time.Unix(i+zeroTimeOffset, 0)
 }
 
-func timeSeconds(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func timeSecondsV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	t := bind.Value.(*time.Time)
 	if t == nil {
 		return &RawData{Type: types.Array(types.Time)}, 0, nil
@@ -2208,7 +2208,7 @@ func timeSeconds(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return IntData(int64(raw)), 0, nil
 }
 
-func timeMinutes(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func timeMinutesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	t := bind.Value.(*time.Time)
 	if t == nil {
 		return &RawData{Type: types.Array(types.Time)}, 0, nil
@@ -2225,7 +2225,7 @@ func timeMinutes(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return IntData(int64(raw)), 0, nil
 }
 
-func timeHours(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func timeHoursV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	t := bind.Value.(*time.Time)
 	if t == nil {
 		return &RawData{Type: types.Array(types.Time)}, 0, nil
@@ -2242,7 +2242,7 @@ func timeHours(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDa
 	return IntData(int64(raw)), 0, nil
 }
 
-func timeDays(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func timeDaysV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	t := bind.Value.(*time.Time)
 	if t == nil {
 		return &RawData{Type: types.Array(types.Time)}, 0, nil
@@ -2259,7 +2259,7 @@ func timeDays(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDat
 	return IntData(int64(raw)), 0, nil
 }
 
-func timeUnix(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func timeUnixV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	t := bind.Value.(*time.Time)
 	if t == nil {
 		return &RawData{Type: types.Array(types.Time)}, 0, nil

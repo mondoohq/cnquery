@@ -352,7 +352,15 @@ func ScoreData(r interface{}) *RawData {
 }
 
 // RefData creates a rawdata struct from a go ref
-func RefData(v int32) *RawData {
+func RefDataV1(v int32) *RawData {
+	return &RawData{
+		Type:  types.Ref,
+		Value: v,
+	}
+}
+
+// RefData creates a rawdata struct from a go ref
+func RefDataV2(v uint64) *RawData {
 	return &RawData{
 		Type:  types.Ref,
 		Value: v,

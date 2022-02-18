@@ -8,7 +8,7 @@ import (
 	"go.mondoo.io/mondoo/types"
 )
 
-func compileMapWhere(c *compiler, typ types.Type, ref int32, id string, call *parser.Call) (types.Type, error) {
+func compileMapWhere(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
 	if call == nil {
 		return types.Nil, errors.New("missing filter argument for calling '" + id + "'")
 	}
@@ -29,33 +29,41 @@ func compileMapWhere(c *compiler, typ types.Type, ref int32, id string, call *pa
 
 	keyType := typ.Key()
 	valueType := typ.Child()
-	bindingChecksum := c.Result.Code.Checksums[c.Result.Code.ChunkIndex()]
+	bindingChecksum := c.Result.CodeV2.Checksums[c.tailRef()]
 
-	blockCompiler := c.newBlockCompiler(&llx.Code{
-		Id:         "binding",
-		Parameters: 2,
-		Checksums: map[int32]string{
-			// we must provide the first chunk, which is a reference to the caller
-			// and which will always be number 1
-			// Additionally we are setting the second checksum here as well as a place-
-			// holder for the second value.
-			1: bindingChecksum,
-			2: bindingChecksum,
-		},
-		Code: []*llx.Chunk{
-			{
-				Call:      llx.Chunk_PRIMITIVE,
-				Primitive: &llx.Primitive{Type: string(keyType)},
-			},
-			{
-				Call:      llx.Chunk_PRIMITIVE,
-				Primitive: &llx.Primitive{Type: string(valueType)},
-			},
-		},
-	}, &binding{Type: types.Type(typ), Ref: 1})
+	blockCompiler := c.newBlockCompiler(&variable{
+		typ: typ,
+		ref: ref,
+	})
 
-	blockCompiler.vars["key"] = variable{ref: 1, typ: keyType}
-	blockCompiler.vars["value"] = variable{ref: 2, typ: valueType}
+	blockCompiler.addArgumentPlaceholder(keyType, bindingChecksum)
+	blockCompiler.vars.add("key", variable{ref: blockCompiler.tailRef(), typ: keyType})
+
+	blockCompiler.addArgumentPlaceholder(valueType, bindingChecksum)
+	blockCompiler.vars.add("value", variable{ref: blockCompiler.tailRef(), typ: valueType})
+
+	// 	&llx.Code{
+	// 	Id:         "binding",
+	// 	Parameters: 2,
+	// 	Checksums: map[int32]string{
+	// 		// we must provide the first chunk, which is a reference to the caller
+	// 		// and which will always be number 1
+	// 		// Additionally we are setting the second checksum here as well as a place-
+	// 		// holder for the second value.
+	// 		1: bindingChecksum,
+	// 		2: bindingChecksum,
+	// 	},
+	// 	Code: []*llx.Chunk{
+	// 		{
+	// 			Call:      llx.Chunk_PRIMITIVE,
+	// 			Primitive: &llx.Primitive{Type: string(keyType)},
+	// 		},
+	// 		{
+	// 			Call:      llx.Chunk_PRIMITIVE,
+	// 			Primitive: &llx.Primitive{Type: string(valueType)},
+	// 		},
+	// 	},
+	// }, &binding{Type: types.Type(typ), Ref: 1})
 
 	err := blockCompiler.compileExpressions([]*parser.Expression{arg.Value})
 	c.Result.Suggestions = append(c.Result.Suggestions, blockCompiler.Result.Suggestions...)
@@ -63,22 +71,26 @@ func compileMapWhere(c *compiler, typ types.Type, ref int32, id string, call *pa
 		return typ, err
 	}
 
-	code := blockCompiler.Result.Code
-	code.UpdateID()
-	c.Result.Code.Functions = append(c.Result.Code.Functions, code)
-	functionRef := c.Result.Code.FunctionsIndex()
-	argExpectation := llx.FunctionPrimitive(functionRef)
+	argExpectation := llx.FunctionPrimitiveV2(blockCompiler.blockRef)
 
-	c.Result.Code.AddChunk(&llx.Chunk{
+	args := []*llx.Primitive{
+		llx.RefPrimitiveV2(ref),
+		argExpectation,
+	}
+	for _, v := range blockCompiler.blockDeps {
+		if c.isInMyBlock(v) {
+			args = append(args, llx.RefPrimitiveV2(v))
+		}
+	}
+	c.blockDeps = append(c.blockDeps, blockCompiler.blockDeps...)
+
+	c.addChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
 			Type:    string(typ),
 			Binding: ref,
-			Args: []*llx.Primitive{
-				llx.RefPrimitive(ref),
-				argExpectation,
-			},
+			Args:    args,
 		},
 	})
 	return typ, nil

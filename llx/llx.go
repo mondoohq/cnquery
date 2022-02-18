@@ -24,6 +24,7 @@ var emptyFunction = Function{}
 type RawResult struct {
 	Data   *RawData
 	CodeID string
+	Ref    uint64
 }
 
 type stepCache struct {
@@ -34,19 +35,19 @@ type stepCache struct {
 // Calls is a map connecting call-refs with each other
 type Calls struct {
 	locker sync.Mutex
-	calls  map[int32][]int32
+	calls  map[uint64][]uint64
 }
 
 // Store a new call connection.
 // Returns true if this connection already exists.
 // Returns false if this is a new connection.
-func (c *Calls) Store(k int32, v int32) bool {
+func (c *Calls) Store(k uint64, v uint64) bool {
 	c.locker.Lock()
 	defer c.locker.Unlock()
 
 	calls, ok := c.calls[k]
 	if !ok {
-		calls = []int32{}
+		calls = []uint64{}
 	} else {
 		for k := range calls {
 			if calls[k] == v {
@@ -61,7 +62,7 @@ func (c *Calls) Store(k int32, v int32) bool {
 }
 
 // Load a call connection
-func (c *Calls) Load(k int32) ([]int32, bool) {
+func (c *Calls) Load(k uint64) ([]uint64, bool) {
 	c.locker.Lock()
 	v, ok := c.calls[k]
 	c.locker.Unlock()
@@ -72,10 +73,10 @@ func (c *Calls) Load(k int32) ([]int32, bool) {
 type Cache struct{ sync.Map }
 
 // Store a new call connection
-func (c *Cache) Store(k int32, v *stepCache) { c.Map.Store(k, v) }
+func (c *Cache) Store(k uint64, v *stepCache) { c.Map.Store(k, v) }
 
 // Load a call connection
-func (c *Cache) Load(k int32) (*stepCache, bool) {
+func (c *Cache) Load(k uint64) (*stepCache, bool) {
 	res, ok := c.Map.Load(k)
 	if res == nil {
 		return nil, ok
@@ -83,24 +84,32 @@ func (c *Cache) Load(k int32) (*stepCache, bool) {
 	return res.(*stepCache), ok
 }
 
-// LeiseExecutor is the runtime of a leise/llx codestructure
-type LeiseExecutor struct {
+type blockExecutor struct {
 	id             string
-	watcherIds     *types.StringSet
-	blockExecutors []*LeiseExecutor
-	runtime        *lumi.Runtime
-	code           *Code
-	entrypoints    map[int32]struct{}
-	callbackPoints map[int32]string
+	blockRef       uint64
+	entrypoints    map[uint64]struct{}
 	callback       ResultCallback
+	callbackPoints map[uint64]string
 	cache          *Cache
 	stepTracker    *Cache
 	calls          *Calls
-	starts         []int32
+	block          *Block
+	parent         *blockExecutor
+	ctx            *LeiseExecutorV2
+	watcherIds     *types.StringSet
+}
+
+// LeiseExecutor is the runtime of a leise/llx codestructure
+type LeiseExecutorV2 struct {
+	id             string
+	blockExecutors []*blockExecutor
+	runtime        *lumi.Runtime
+	code           *CodeV2
+	starts         []uint64
 	props          map[string]*Primitive
 }
 
-func (c *LeiseExecutor) watcherUID(ref int32) string {
+func (c *blockExecutor) watcherUID(ref uint64) string {
 	return c.id + "\x00" + strconv.FormatInt(int64(ref), 10)
 }
 
@@ -120,34 +129,62 @@ func errorResultMsg(msg string, codeID string) *RawResult {
 
 // NewExecutor will create a code runner from code, running in a runtime, calling
 // callback whenever we get a result
-func NewExecutor(code *Code, runtime *lumi.Runtime, props map[string]*Primitive, callback ResultCallback) (*LeiseExecutor, error) {
+func NewExecutorV2(code *CodeV2, runtime *lumi.Runtime, props map[string]*Primitive, callback ResultCallback) (*LeiseExecutorV2, error) {
 	if runtime == nil {
 		return nil, errors.New("cannot exec leise without a runtime")
 	}
 
 	if code == nil {
-		return nil, errors.New("cannot RunChunky without code")
+		return nil, errors.New("cannot run executor without code")
 	}
 
-	res := &LeiseExecutor{
+	res := &LeiseExecutorV2{
 		id:             uuid.Must(uuid.NewV4()).String(),
 		runtime:        runtime,
-		entrypoints:    make(map[int32]struct{}),
-		callbackPoints: make(map[int32]string),
 		code:           code,
+		props:          props,
+		blockExecutors: []*blockExecutor{},
+	}
+
+	exec, err := res._newBlockExecutor(1<<32, callback, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res.blockExecutors = append(res.blockExecutors, exec)
+
+	return res, nil
+}
+
+func (c *LeiseExecutorV2) _newBlockExecutor(blockRef uint64, callback ResultCallback, parent *blockExecutor) (*blockExecutor, error) {
+	block := c.code.Block(blockRef)
+
+	if block == nil {
+		return nil, errors.New("cannot find block " + strconv.FormatUint(blockRef, 10))
+	}
+
+	callbackPoints := map[uint64]string{}
+
+	res := &blockExecutor{
+		id:             uuid.Must(uuid.NewV4()).String() + "/" + strconv.FormatUint(blockRef>>32, 10),
+		blockRef:       blockRef,
 		callback:       callback,
+		callbackPoints: callbackPoints,
 		cache:          &Cache{},
 		stepTracker:    &Cache{},
 		calls: &Calls{
 			locker: sync.Mutex{},
-			calls:  map[int32][]int32{},
+			calls:  map[uint64][]uint64{},
 		},
-		watcherIds: &types.StringSet{},
-		props:      props,
+		block:       block,
+		ctx:         c,
+		parent:      parent,
+		watcherIds:  &types.StringSet{},
+		entrypoints: map[uint64]struct{}{},
 	}
 
-	for _, ref := range code.Entrypoints {
-		id := code.Checksums[ref]
+	for _, ref := range block.Entrypoints {
+		id := c.code.Checksums[ref]
 		if id == "" {
 			return nil, errors.New("llx.executor> cannot execute with invalid ref ID in entrypoint")
 		}
@@ -158,8 +195,8 @@ func NewExecutor(code *Code, runtime *lumi.Runtime, props map[string]*Primitive,
 		res.callbackPoints[ref] = id
 	}
 
-	for _, ref := range code.Datapoints {
-		id := code.Checksums[ref]
+	for _, ref := range block.Datapoints {
+		id := c.code.Checksums[ref]
 		if id == "" {
 			return nil, errors.New("llx.executor> cannot execute with invalid ref ID in datapoint")
 		}
@@ -169,19 +206,99 @@ func NewExecutor(code *Code, runtime *lumi.Runtime, props map[string]*Primitive,
 		res.callbackPoints[ref] = id
 	}
 
-	if len(res.callbackPoints) == 0 {
-		return nil, errors.New("llx.executor> no callback points found")
-	}
-
 	return res, nil
 }
 
-// Run code with a runtime and return results
-func (c *LeiseExecutor) Run() {
+// NoRun returns error for all callbacks and don't run code
+func (c *LeiseExecutorV2) NoRun(err error) {
+	callback := c.blockExecutors[0].callback
+
+	for ref := range c.blockExecutors[0].callbackPoints {
+		if codeID, ok := c.blockExecutors[0].callbackPoints[ref]; ok {
+			callback(errorResult(err, codeID))
+		}
+	}
+}
+
+func (c *LeiseExecutorV2) Unregister() error {
+	log.Trace().Str("id", c.id).Msg("exec> unregister")
+
+	var errs []error
+	for i := range c.blockExecutors {
+		be := c.blockExecutors[i]
+		errs = append(errs, be.unregister()...)
+	}
+
+	if len(errs) > 0 {
+		return errors.New("multiple errors unregistering")
+	}
+
+	return nil
+}
+
+// Run a given set of code
+func (c *LeiseExecutorV2) Run() error {
+	if len(c.blockExecutors) == 0 {
+		return errors.New("cannot find initial block executor for running this code")
+	}
+
+	core := c.blockExecutors[0]
+	core.run()
+	return nil
+}
+
+func (b *blockExecutor) newBlockExecutor(blockRef uint64, callback ResultCallback) (*blockExecutor, error) {
+	return b.ctx._newBlockExecutor(blockRef, callback, b)
+}
+
+func (e *blockExecutor) unregister() []error {
+	var errs []error
+
+	e.watcherIds.Range(func(key string) bool {
+		if err := e.ctx.runtime.Unregister(key); err != nil {
+			log.Error().Err(err).Msg("exec> unregister error")
+			errs = append(errs, err)
+		}
+		return true
+	})
+
+	return errs
+}
+
+func (b *blockExecutor) isInMyBlock(ref uint64) bool {
+	return (ref >> 32) == (b.blockRef >> 32)
+}
+
+func (b *blockExecutor) mustLookup(ref uint64) *RawData {
+	d, _, err := b.parent.lookupValue(ref)
+	if err != nil {
+		panic(err)
+	}
+	if d == nil {
+		panic("did not lookup datapoint")
+	}
+	return d
+}
+
+// run code with a runtime and return results
+func (b *blockExecutor) run() {
+	for ref, codeID := range b.callbackPoints {
+		if !b.isInMyBlock(ref) {
+			v := b.mustLookup(ref)
+			b.callback(&RawResult{
+				CodeID: codeID,
+				Data:   v,
+			})
+		}
+	}
 	// work down all entrypoints
-	refs := make([]int32, len(c.callbackPoints))
+	refs := make([]uint64, len(b.block.Entrypoints)+len(b.block.Datapoints))
 	i := 0
-	for ref := range c.callbackPoints {
+	for _, ref := range b.block.Entrypoints {
+		refs[i] = ref
+		i++
+	}
+	for _, ref := range b.block.Datapoints {
 		refs[i] = ref
 		i++
 	}
@@ -189,78 +306,49 @@ func (c *LeiseExecutor) Run() {
 
 	for _, ref := range refs {
 		// if this entrypoint is already connected, don't add it again
-		if _, ok := c.stepTracker.Load(ref); ok {
+		if _, ok := b.stepTracker.Load(ref); ok {
 			continue
 		}
 
-		log.Trace().Int32("entrypoint", ref).Str("exec-ID", c.id).Msg("exec.Run>")
-		c.runChain(ref)
+		log.Trace().Uint64("entrypoint", ref).Str("exec-ID", b.ctx.id).Msg("exec.Run>")
+		b.runChain(ref)
 	}
 }
 
-// NoRun returns error for all callbacks and don't run code
-func (c *LeiseExecutor) NoRun(err error) {
-	for ref := range c.callbackPoints {
-		if codeID, ok := c.callbackPoints[ref]; ok {
-			c.callback(errorResult(err, codeID))
+func (b *blockExecutor) ensureArgsResolved(args []*Primitive, ref uint64) (uint64, error) {
+	for _, arg := range args {
+		_, dref, err := b.resolveValue(arg, ref)
+		if dref != 0 || err != nil {
+			return dref, err
 		}
 	}
+	return 0, nil
 }
 
-// Unregister an execution chain from receiving any further updates
-func (c *LeiseExecutor) Unregister() error {
-	log.Trace().Str("id", c.id).Msg("exec> unregister")
-	// clear out the callback, we don't want it to be called now anymore
-	c.callback = func(r *RawResult) {
-		log.Debug().Str("id", c.id).Str("codeID", r.CodeID).Msg("exec> Decomissioned callback called on exec.LeiseExecutor")
-	}
-
-	errorList := []error{}
-
-	for idx := range c.blockExecutors {
-		if err := c.blockExecutors[idx].Unregister(); err != nil {
-			log.Error().Err(err).Msg("exec> block unregister error")
-			errorList = append(errorList, err)
-		}
-	}
-
-	c.watcherIds.Range(func(key string) bool {
-		if err := c.runtime.Unregister(key); err != nil {
-			log.Error().Err(err).Msg("exec> unregister error")
-			errorList = append(errorList, err)
-		}
-		return true
-	})
-
-	if len(errorList) > 0 {
-		return errors.New("multiple errors unregistering")
-	}
-	return nil
-}
-
-func (c *LeiseExecutor) registerPrimitive(val *Primitive) {
-	// TODO: not yet implemented?
-}
-
-func (c *LeiseExecutor) runFunctionBlock(args []*RawData, code *Code, cb ResultCallback) error {
-	executor, err := NewExecutor(code, c.runtime, c.props, cb)
+func (b *blockExecutor) runFunctionBlock(args []*RawData, blockRef uint64, cb ResultCallback) error {
+	executor, err := b.newBlockExecutor(blockRef, cb)
 	if err != nil {
 		return err
 	}
-	c.blockExecutors = append(c.blockExecutors, executor)
 
-	for i := range args {
-		executor.cache.Store(int32(i+1), &stepCache{
+	b.ctx.blockExecutors = append(b.ctx.blockExecutors, executor)
+
+	if len(args) < int(executor.block.Parameters) {
+		panic("not enough arguments")
+	}
+
+	for i := int32(0); i < executor.block.Parameters; i++ {
+		executor.cache.Store(blockRef|uint64(i+1), &stepCache{
 			Result:   args[i],
 			IsStatic: true,
 		})
 	}
 
-	executor.Run()
+	executor.run()
 	return nil
 }
 
-func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*Primitive, ref int32) (*RawData, int32, error) {
+func (b *blockExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*Primitive, ref uint64) (*RawData, uint64, error) {
 
 	if bind != nil && bind.Value == nil && bind.Type != types.Nil {
 		return &RawData{Type: bind.Type, Value: nil}, 0, nil
@@ -270,12 +358,13 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*
 	if !typ.IsFunction() {
 		return nil, 0, errors.New("called block with wrong function type")
 	}
-	fref, ok := functionRef.Ref()
+	fref, ok := functionRef.RefV2()
 	if !ok {
 		return nil, 0, errors.New("cannot retrieve function reference on block call")
 	}
-	fun := c.code.Functions[fref-1]
-	if fun == nil {
+
+	block := b.ctx.code.Block(fref)
+	if block == nil {
 		return nil, 0, errors.New("block function is nil")
 	}
 
@@ -286,7 +375,7 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*
 		fargs = append(fargs, bind)
 	}
 	for i := range args {
-		a, b, c := c.resolveValue(args[i], ref)
+		a, b, c := b.resolveValue(args[i], ref)
 		if c != nil || b != 0 {
 			return a, b, c
 		}
@@ -294,12 +383,12 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*
 	}
 
 	var anyError error
-	err := c.runFunctionBlock(fargs, fun, func(res *RawResult) {
-		if fun.SingleValue {
-			c.cache.Store(ref, &stepCache{
+	err := b.runFunctionBlock(fargs, fref, func(res *RawResult) {
+		if block.SingleValue {
+			b.cache.Store(ref, &stepCache{
 				Result: res.Data,
 			})
-			c.triggerChain(ref, res.Data)
+			b.triggerChain(ref, res.Data)
 			return
 		}
 
@@ -307,7 +396,7 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*
 			anyError = multierror.Append(anyError, res.Data.Error)
 		}
 		blockResult[res.CodeID] = res.Data
-		expectedCnt := len(fun.Entrypoints) + len(fun.Datapoints)
+		expectedCnt := len(block.Entrypoints) + len(block.Datapoints)
 		if len(blockResult) == expectedCnt {
 			if bind != nil && bind.Type.IsResource() {
 				rr, ok := bind.Value.(lumi.ResourceType)
@@ -326,24 +415,24 @@ func (c *LeiseExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*
 				Value: blockResult,
 				Error: anyError,
 			}
-			c.cache.Store(ref, &stepCache{
+			b.cache.Store(ref, &stepCache{
 				Result:   data,
 				IsStatic: true,
 			})
-			c.triggerChain(ref, data)
+			b.triggerChain(ref, data)
 		}
 	})
 
 	return nil, 0, err
 }
 
-func (c *LeiseExecutor) createResource(name string, f *Function, ref int32) (*RawData, int32, error) {
-	args, rref, err := args2resourceargs(c, ref, f.Args)
+func (b *blockExecutor) createResource(name string, f *Function, ref uint64) (*RawData, uint64, error) {
+	args, rref, err := args2resourceargsV2(b, ref, f.Args)
 	if err != nil || rref != 0 {
 		return nil, rref, err
 	}
 
-	resource, err := c.runtime.CreateResource(name, args...)
+	resource, err := b.ctx.runtime.CreateResource(name, args...)
 	if err != nil {
 		// in case it's not something that requires later loading, store the error
 		// so that consecutive steps can retrieve it cached
@@ -356,7 +445,7 @@ func (c *LeiseExecutor) createResource(name string, f *Function, ref int32) (*Ra
 				},
 				IsStatic: true,
 			}
-			c.cache.Store(ref, &res)
+			b.cache.Store(ref, &res)
 		}
 
 		return nil, 0, err
@@ -369,33 +458,36 @@ func (c *LeiseExecutor) createResource(name string, f *Function, ref int32) (*Ra
 		},
 		IsStatic: true,
 	}
-	c.cache.Store(ref, &res)
+	b.cache.Store(ref, &res)
 	return res.Result, 0, nil
 }
 
-func (c *LeiseExecutor) runGlobalFunction(chunk *Chunk, f *Function, ref int32) (*RawData, int32, error) {
-	h, ok := handleGlobal(chunk.Id)
+func (b *blockExecutor) runGlobalFunction(chunk *Chunk, f *Function, ref uint64) (*RawData, uint64, error) {
+	h, ok := handleGlobalV2(chunk.Id)
 	if ok {
 		if h == nil {
 			return nil, 0, errors.New("found function " + chunk.Id + " but no handler. this should not happen and points to an implementation error")
 		}
 
-		res, dref, err := h(c, f, ref)
+		res, dref, err := h(b, f, ref)
 		log.Trace().Msgf("exec> global: %s %+v = %#v", chunk.Id, f.Args, res)
 		if res != nil {
-			c.cache.Store(ref, &stepCache{Result: res})
+			b.cache.Store(ref, &stepCache{Result: res})
 		}
 		return res, dref, err
 	}
 
-	return c.createResource(chunk.Id, f, ref)
+	return b.createResource(chunk.Id, f, ref)
 }
 
 // connect references, calling `dst` if `src` is updated
-func (c *LeiseExecutor) connectRef(src int32, dst int32) (*RawData, int32, error) {
+func (b *blockExecutor) connectRef(src uint64, dst uint64) (*RawData, uint64, error) {
+	if !b.isInMyBlock(src) || !b.isInMyBlock(dst) {
+		panic("cannot connect refs across block boundaries")
+	}
 	// connect the ref. If it is already connected, someone else already made this
 	// call, so we don't have to follow up anymore
-	if exists := c.calls.Store(src, dst); exists {
+	if exists := b.calls.Store(src, dst); exists {
 		return nil, 0, nil
 	}
 
@@ -403,7 +495,7 @@ func (c *LeiseExecutor) connectRef(src int32, dst int32) (*RawData, int32, error
 	return nil, src, nil
 }
 
-func (c *LeiseExecutor) runFunction(chunk *Chunk, ref int32) (*RawData, int32, error) {
+func (e *blockExecutor) runFunction(chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	f := chunk.Function
 	if f == nil {
 		f = &emptyFunction
@@ -411,50 +503,50 @@ func (c *LeiseExecutor) runFunction(chunk *Chunk, ref int32) (*RawData, int32, e
 
 	// global functions, for now only resources
 	if f.Binding == 0 {
-		return c.runGlobalFunction(chunk, f, ref)
+		return e.runGlobalFunction(chunk, f, ref)
 	}
 
 	// check if the bound value exists, otherwise connect it
-	res, ok := c.cache.Load(f.Binding)
-	if !ok {
-		return c.connectRef(f.Binding, ref)
+	res, dref, err := e.resolveRef(f.Binding, ref)
+	if res == nil {
+		return res, dref, err
 	}
 
-	if res.Result.Error != nil {
-		c.cache.Store(ref, &stepCache{Result: res.Result})
-		return nil, 0, res.Result.Error
+	if res.Error != nil {
+		e.cache.Store(ref, &stepCache{Result: res})
+		return nil, 0, res.Error
 	}
 
-	return c.runBoundFunction(res.Result, chunk, ref)
+	return e.runBoundFunction(res, chunk, ref)
 }
 
-func (c *LeiseExecutor) runChunk(chunk *Chunk, ref int32) (*RawData, int32, error) {
+func (e *blockExecutor) runChunk(chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	switch chunk.Call {
 	case Chunk_PRIMITIVE:
-		res, dref, err := c.resolveValue(chunk.Primitive, ref)
+		res, dref, err := e.resolveValue(chunk.Primitive, ref)
 		if res != nil {
-			c.cache.Store(ref, &stepCache{Result: res})
+			e.cache.Store(ref, &stepCache{Result: res})
 		} else if err != nil {
-			c.cache.Store(ref, &stepCache{Result: &RawData{
+			e.cache.Store(ref, &stepCache{Result: &RawData{
 				Error: err,
 			}})
 		}
 
 		return res, dref, err
 	case Chunk_FUNCTION:
-		return c.runFunction(chunk, ref)
+		return e.runFunction(chunk, ref)
 
 	case Chunk_PROPERTY:
-		property, ok := c.props[chunk.Id]
+		property, ok := e.ctx.props[chunk.Id]
 		if !ok {
 			return nil, 0, errors.New("cannot find property '" + chunk.Id + "'")
 		}
 
-		res, dref, err := c.resolveValue(property, ref)
+		res, dref, err := e.resolveValue(property, ref)
 		if dref != 0 || err != nil {
 			return res, dref, err
 		}
-		c.cache.Store(ref, &stepCache{Result: res})
+		e.cache.Store(ref, &stepCache{Result: res})
 		return res, dref, err
 
 	default:
@@ -462,28 +554,28 @@ func (c *LeiseExecutor) runChunk(chunk *Chunk, ref int32) (*RawData, int32, erro
 	}
 }
 
-func (c *LeiseExecutor) runRef(ref int32) (*RawData, int32, error) {
-	chunk := c.code.Code[ref-1]
+func (e *blockExecutor) runRef(ref uint64) (*RawData, uint64, error) {
+	chunk := e.ctx.code.Chunk(ref)
 	if chunk == nil {
 		return nil, 0, errors.New("Called a chunk that doesn't exist, ref = " + strconv.FormatInt(int64(ref), 10))
 	}
-	return c.runChunk(chunk, ref)
+	return e.runChunk(chunk, ref)
 }
 
 // runChain starting at a ref of the code, follow it down and report
 // jever result it has at the end of its execution. this will register
 // async callbacks against referenced chunks too
-func (c *LeiseExecutor) runChain(start int32) {
+func (e *blockExecutor) runChain(start uint64) {
 	var res *RawData
 	var err error
 	nextRef := start
-	var curRef int32
-	var remaining []int32
+	var curRef uint64
+	var remaining []uint64
 
 	for nextRef != 0 {
 		curRef = nextRef
-		c.stepTracker.Store(curRef, nil)
-		// log.Trace().Int32("ref", curRef).Msg("exec> run chain")
+		e.stepTracker.Store(curRef, nil)
+		// log.Trace().Uint64("ref", curRef).Msg("exec> run chain")
 
 		// Try to load the result from cache if it already exists. This was added
 		// so that blocks that are called on top of a binding, where the results
@@ -493,13 +585,13 @@ func (c *LeiseExecutor) runChain(start int32) {
 		// the correct value.
 		// This may be optimized in a way that we don't have to check loading it
 		// on every call.
-		cached, ok := c.cache.Load(curRef)
+		cached, ok := e.cache.Load(curRef)
 		if ok {
 			res = cached.Result
 			nextRef = 0
 			err = nil
 		} else {
-			res, nextRef, err = c.runRef(curRef)
+			res, nextRef, err = e.runRef(curRef)
 		}
 
 		// stop this chain of execution, if it didn't return anything
@@ -510,16 +602,16 @@ func (c *LeiseExecutor) runChain(start int32) {
 
 		// if this is a result for a callback (entry- or datapoint) send it
 		if res != nil {
-			if codeID, ok := c.callbackPoints[curRef]; ok {
-				c.callback(&RawResult{Data: res, CodeID: codeID})
+			if codeID, ok := e.callbackPoints[curRef]; ok {
+				e.callback(&RawResult{Data: res, CodeID: codeID})
 			}
 		} else if err != nil {
-			if codeID, ok := c.callbackPoints[curRef]; ok {
-				c.callback(errorResult(err, codeID))
+			if codeID, ok := e.callbackPoints[curRef]; ok {
+				e.callback(errorResult(err, codeID))
 			}
 			if _, isNotReadyError := err.(lumi.NotReadyError); !isNotReadyError {
-				if sc, _ := c.cache.Load(curRef); sc == nil {
-					c.cache.Store(curRef, &stepCache{
+				if sc, _ := e.cache.Load(curRef); sc == nil {
+					e.cache.Store(curRef, &stepCache{
 						Result: &RawData{
 							Type:  types.Unset,
 							Value: nil,
@@ -534,7 +626,7 @@ func (c *LeiseExecutor) runChain(start int32) {
 		if nextRef == 0 {
 			// note: if the call cannot be retrieved it will use the
 			// zero value, which is 0 in this case; i.e. if !ok => ref = 0
-			nextRefs, _ := c.calls.Load(curRef)
+			nextRefs, _ := e.calls.Load(curRef)
 			cnt := len(nextRefs)
 			if cnt != 0 {
 				nextRef = nextRefs[0]
@@ -556,41 +648,41 @@ func (c *LeiseExecutor) runChain(start int32) {
 // unlike runChain this will not execute the ref chunk, but rather
 // try to move to the next called chunk - or if it's not available
 // handle the result
-func (c *LeiseExecutor) triggerChain(ref int32, data *RawData) {
+func (e *blockExecutor) triggerChain(ref uint64, data *RawData) {
 	// before we do anything else, we may have to provide the value from
 	// this callback point
-	if codeID, ok := c.callbackPoints[ref]; ok {
-		c.callback(&RawResult{Data: data, CodeID: codeID})
+	if codeID, ok := e.callbackPoints[ref]; ok {
+		e.callback(&RawResult{Data: data, CodeID: codeID})
 	}
 
-	nxt, ok := c.calls.Load(ref)
+	nxt, ok := e.calls.Load(ref)
 	if ok {
 		if len(nxt) == 0 {
 			panic("internal state error: cannot trigger next call on chain because it points to a zero ref")
 		}
 		for i := range nxt {
-			c.runChain(nxt[i])
+			e.runChain(nxt[i])
 		}
 		return
 	}
 
-	codeID := c.callbackPoints[ref]
-	res, ok := c.cache.Load(ref)
+	codeID := e.callbackPoints[ref]
+	res, ok := e.cache.Load(ref)
 	if !ok {
-		c.callback(errorResultMsg("exec> cannot find results to chunk reference "+strconv.FormatInt(int64(ref), 10), codeID))
+		e.callback(errorResultMsg("exec> cannot find results to chunk reference "+strconv.FormatInt(int64(ref), 10), codeID))
 		return
 	}
 
-	log.Trace().Int32("ref", ref).Msgf("exec> trigger callback")
-	c.callback(&RawResult{Data: res.Result, CodeID: codeID})
+	log.Trace().Uint64("ref", ref).Msgf("exec> trigger callback")
+	e.callback(&RawResult{Data: res.Result, CodeID: codeID})
 }
 
-func (c *LeiseExecutor) triggerChainError(ref int32, err error) {
+func (e *blockExecutor) triggerChainError(ref uint64, err error) {
 	cur := ref
-	var remaining []int32
+	var remaining []uint64
 	for cur > 0 {
-		if codeID, ok := c.callbackPoints[cur]; ok {
-			c.callback(&RawResult{
+		if codeID, ok := e.callbackPoints[cur]; ok {
+			e.callback(&RawResult{
 				Data: &RawData{
 					Error: err,
 				},
@@ -598,7 +690,7 @@ func (c *LeiseExecutor) triggerChainError(ref int32, err error) {
 			})
 		}
 
-		nxt, ok := c.calls.Load(cur)
+		nxt, ok := e.calls.Load(cur)
 		if !ok {
 			if len(remaining) == 0 {
 				break
