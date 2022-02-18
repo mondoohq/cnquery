@@ -2,14 +2,18 @@ package resources_test
 
 import (
 	"errors"
+	"fmt"
 	"math"
+	"os"
 	"sort"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.io/mondoo"
 	"go.mondoo.io/mondoo/leise"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/logger"
@@ -22,8 +26,45 @@ import (
 	"go.mondoo.io/mondoo/policy/executor"
 )
 
+var features mondoo.Features
+
 func init() {
 	logger.InitTestEnv()
+	features = getEnvFeatures()
+}
+
+func getEnvFeatures() mondoo.Features {
+	env := os.Getenv("FEATURES")
+	if env == "" {
+		return mondoo.Features{}
+	}
+
+	arr := strings.Split(env, ",")
+	var fts mondoo.Features
+	for i := range arr {
+		v, ok := mondoo.FeaturesValue[arr[i]]
+		if ok {
+			fmt.Println("--> activate feature: " + arr[i])
+			fts = append(features, byte(v))
+		} else {
+			panic("cannot find requested feature: " + arr[i])
+		}
+	}
+	return fts
+}
+
+func onlyV1(t *testing.T) {
+	t.Helper()
+	if features.IsActive(mondoo.PiperCode) {
+		t.SkipNow()
+	}
+}
+
+func onlyPiper(t *testing.T) {
+	t.Helper()
+	if !features.IsActive(mondoo.PiperCode) {
+		t.SkipNow()
+	}
 }
 
 func mockTransport(filepath string) (*motor.Motor, error) {
@@ -54,7 +95,7 @@ func initExecutionContext(motor *motor.Motor) executionContext {
 
 func testQueryWithExecutor(t *testing.T, execCtx executionContext, query string, props map[string]*llx.Primitive) []*llx.RawResult {
 	t.Helper()
-	bundle, err := leise.Compile(query, execCtx.schema, props)
+	bundle, err := leise.Compile(query, execCtx.schema, features, props)
 	if err != nil {
 		t.Fatal("failed to compile code: " + err.Error())
 	}
@@ -66,25 +107,48 @@ func testQueryWithExecutor(t *testing.T, execCtx executionContext, query string,
 func testCompiledQueryWithExecutor(t *testing.T, execCtx executionContext, bundle *llx.CodeBundle, props map[string]*llx.Primitive) []*llx.RawResult {
 	t.Helper()
 
-	score, resultMap, err := executor.ExecuteQuery(execCtx.schema, execCtx.runtime, bundle, props)
+	score, resultMap, err := executor.ExecuteQuery(execCtx.schema, execCtx.runtime, bundle, props, features)
 	require.NoError(t, err)
 
 	results := make([]*llx.RawResult, 0, len(resultMap)+1)
 	i := 0
 
-	refs := make([]int, 0, len(bundle.Code.Checksums))
-	for _, datapointArr := range [][]int32{bundle.Code.Datapoints, bundle.Code.Entrypoints} {
-		for _, v := range datapointArr {
-			refs = append(refs, int(v))
+	if features.IsActive(mondoo.PiperCode) {
+		refs := make([]uint64, 0, len(bundle.CodeV2.Checksums))
+		for _, datapointArr := range [][]uint64{bundle.CodeV2.Datapoints(), bundle.CodeV2.Entrypoints()} {
+			for _, v := range datapointArr {
+				refs = append(refs, v)
+			}
 		}
-	}
-	sort.Ints(refs)
 
-	for _, ref := range refs {
-		checksum := bundle.Code.Checksums[int32(ref)]
-		if d, ok := resultMap[checksum]; ok {
-			results = append(results, d)
-			i++
+		sort.Slice(refs, func(i, j int) bool {
+			return refs[i] < refs[j]
+		})
+
+		for _, ref := range refs {
+			checksum := bundle.CodeV2.Checksums[ref]
+			if d, ok := resultMap[checksum]; ok {
+				results = append(results, d)
+				i++
+			}
+		}
+
+	} else {
+		refs := make([]int, 0, len(bundle.DeprecatedV5Code.Checksums))
+		for _, datapointArr := range [][]int32{bundle.DeprecatedV5Code.Datapoints, bundle.DeprecatedV5Code.Entrypoints} {
+			for _, v := range datapointArr {
+				refs = append(refs, int(v))
+			}
+		}
+
+		sort.Ints(refs)
+
+		for _, ref := range refs {
+			checksum := bundle.DeprecatedV5Code.Checksums[int32(ref)]
+			if d, ok := resultMap[checksum]; ok {
+				results = append(results, d)
+				i++
+			}
 		}
 	}
 
@@ -279,43 +343,8 @@ func TestCore_Props(t *testing.T) {
 func TestCore_If(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
-			"if ( mondoo.version != null ) { 123 }",
-			1,
-			map[string]interface{}{
-				"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
-			},
-		},
-		{
 			"if ( mondoo.version == null ) { 123 }",
 			1, nil,
-		},
-		{
-			"if ( mondoo.version != null ) { 123 } else { 456 }",
-			1,
-			map[string]interface{}{
-				"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
-			},
-		},
-		{
-			"if ( mondoo.version == null ) { 123 } else { 456 }",
-			1,
-			map[string]interface{}{
-				"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
-			},
-		},
-		{
-			"if (false) { 123 } else if (true) { 456 } else { 789 }",
-			0,
-			map[string]interface{}{
-				"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
-			},
-		},
-		{
-			"if (false) { 123 } else if (false) { 456 } else { 789 }",
-			0,
-			map[string]interface{}{
-				"Oy5SF8NbUtxaBwvZPpsnd0K21CY+fvC44FSd2QpgvIL689658Na52udy7qF2+hHjczk35TAstDtFZq7JIHNCmg==": llx.IntData(789),
-			},
 		},
 		{
 			"if (true) { return 123 } return 456",
@@ -347,13 +376,48 @@ func TestCore_If(t *testing.T) {
 			// generating a single entrypoint, causing the first reported
 			// value to be used as the return value.
 			`
-				if (true) { 
+				if (true) {
 					// file has content so should return true
 					a = file('/etc/ssh/sshd_config').content != ''
 					b = false
 					return a || b
 				}
 			`, 0, true,
+		},
+		{
+			"if ( mondoo.version != null ) { 123 }",
+			1,
+			map[string]interface{}{
+				"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
+			},
+		},
+		{
+			"if ( mondoo.version != null ) { 123 } else { 456 }",
+			1,
+			map[string]interface{}{
+				"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
+			},
+		},
+		{
+			"if ( mondoo.version == null ) { 123 } else { 456 }",
+			1,
+			map[string]interface{}{
+				"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
+			},
+		},
+		{
+			"if (false) { 123 } else if (true) { 456 } else { 789 }",
+			0,
+			map[string]interface{}{
+				"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
+			},
+		},
+		{
+			"if (false) { 123 } else if (false) { 456 } else { 789 }",
+			0,
+			map[string]interface{}{
+				"Oy5SF8NbUtxaBwvZPpsnd0K21CY+fvC44FSd2QpgvIL689658Na52udy7qF2+hHjczk35TAstDtFZq7JIHNCmg==": llx.IntData(789),
+			},
 		},
 	})
 }
@@ -1029,13 +1093,6 @@ func TestMap(t *testing.T) {
 			map[string]interface{}{"a": int64(1), "b": int64(2)},
 		},
 		{
-			"sshd.config.params { _['Protocol'] != 1 }",
-			0,
-			map[string]interface{}{
-				"TZsaWUkFbzR9WTfufqRaHuWJa/W4MQsYsrTli6w8DGQnSLYumOg7kduA17NEX/4y5xBfYQMvPIVBRThyB3LsJg==": llx.BoolTrue,
-			},
-		},
-		{
 			"sshd.config.params.length",
 			0, int64(46),
 		},
@@ -1047,24 +1104,18 @@ func TestMap(t *testing.T) {
 			"sshd.config.params.values.length",
 			0, int64(46),
 		},
+		{
+			"sshd.config.params { _['Protocol'] != 1 }",
+			0,
+			map[string]interface{}{
+				"TZsaWUkFbzR9WTfufqRaHuWJa/W4MQsYsrTli6w8DGQnSLYumOg7kduA17NEX/4y5xBfYQMvPIVBRThyB3LsJg==": llx.BoolTrue,
+			},
+		},
 	})
 }
 
 func TestResource_Filters(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
-		{
-			`users.where(name == 'root').list {
-				uid == 0
-				gid == 0
-			}`,
-			0,
-			[]interface{}{
-				map[string]interface{}{
-					"BamDDGp87sNG0hVjpmEAPEjF6fZmdA6j3nDinlgr/y5xK3KaLgulyscoeEEaEASm2RkRXifnWj3ZbF0OZBF6XA==": llx.BoolTrue,
-					"ytOUfV4UyOjY0C6HKzQ8GcA/hshrh2ahRySNG41RbFt3TNNf+6gBuHvs2hGTNDPUZR/oN8WH0QFIYYm/Vj3pGQ==": llx.BoolTrue,
-				},
-			},
-		},
 		{
 			"users.where(name == 'root').length",
 			0, int64(1),
@@ -1086,6 +1137,44 @@ func TestResource_Filters(t *testing.T) {
 		{
 			"os.rootCertificates.where(  subject.commonName == '' ).length",
 			0, int64(0),
+		},
+	})
+}
+
+func TestResource_Filters_v1(t *testing.T) {
+	onlyV1(t)
+	runSimpleTests(t, []simpleTest{
+		{
+			`users.where(name == 'root').list {
+				uid == 0
+				gid == 0
+			}`,
+			0,
+			[]interface{}{
+				map[string]interface{}{
+					"BamDDGp87sNG0hVjpmEAPEjF6fZmdA6j3nDinlgr/y5xK3KaLgulyscoeEEaEASm2RkRXifnWj3ZbF0OZBF6XA==": llx.BoolTrue,
+					"ytOUfV4UyOjY0C6HKzQ8GcA/hshrh2ahRySNG41RbFt3TNNf+6gBuHvs2hGTNDPUZR/oN8WH0QFIYYm/Vj3pGQ==": llx.BoolTrue,
+				},
+			},
+		},
+	})
+}
+
+func TestResource_Filters_piper(t *testing.T) {
+	onlyPiper(t)
+	runSimpleTests(t, []simpleTest{
+		{
+			`users.where(name == 'root').list {
+				uid == 0
+				gid == 0
+			}`,
+			0,
+			[]interface{}{
+				map[string]interface{}{
+					"BamDDGp87sNG0hVjpmEAPEjF6fZmdA6j3nDinlgr/y5xK3KaLgulyscoeEEaEASm2RkRXifnWj3ZbF0OZBF6XA==": llx.BoolTrue,
+					"ytOUfV4UyOjY0C6HKzQ8GcA/hshrh2ahRySNG41RbFt3TNNf+6gBuHvs2hGTNDPUZR/oN8WH0QFIYYm/Vj3pGQ==": llx.BoolTrue,
+				},
+			},
 		},
 	})
 }
@@ -1164,7 +1253,32 @@ func TestResource_Map(t *testing.T) {
 	})
 }
 
-func TestResource_duplicateFields(t *testing.T) {
+func TestResource_duplicateFields_v1(t *testing.T) {
+	onlyV1(t)
+
+	runSimpleTests(t, []simpleTest{
+		{
+			"users.list.duplicates(uid) { uid }",
+			0,
+			[]interface{}{
+				map[string]interface{}{"sYZO9ps0Y4tx2p0TkrAn73WTQx83QIQu70uPtNukYNnVAzaer3Pf6xe7vAplB+cAgPbteXzizlUioUMnNJr5sg==": &llx.RawData{
+					Type:  "\x05",
+					Value: int64(1000),
+					Error: nil,
+				}},
+				map[string]interface{}{"sYZO9ps0Y4tx2p0TkrAn73WTQx83QIQu70uPtNukYNnVAzaer3Pf6xe7vAplB+cAgPbteXzizlUioUMnNJr5sg==": &llx.RawData{
+					Type:  "\x05",
+					Value: int64(1000),
+					Error: nil,
+				}},
+			},
+		},
+	})
+}
+
+func TestResource_duplicateFields_piper(t *testing.T) {
+	onlyPiper(t)
+
 	runSimpleTests(t, []simpleTest{
 		{
 			"users.list.duplicates(uid) { uid }",
@@ -1277,22 +1391,20 @@ func TestDict_Methods(t *testing.T) {
 func TestArrayBlockError(t *testing.T) {
 	res := testQuery(t, "users.list { file(_.name + 'doesnotexist').content }")
 	assert.NotEmpty(t, res)
-	var queryResult *llx.RawResult
-	for _, r := range res {
-		if r.CodeID == "A9pn4sYRrgg=" {
-			queryResult = r
-			break
-		}
-	}
+	queryResult := res[len(res)-1]
 	require.NotNil(t, queryResult)
 	require.Error(t, queryResult.Data.Error)
 }
 
 func TestBrokenQueryExecution(t *testing.T) {
 	execCtx := linuxMockExecutor()
-	bundle, err := leise.Compile("'asdf'.contains('asdf') == true", execCtx.schema, nil)
+	bundle, err := leise.Compile("'asdf'.contains('asdf') == true", execCtx.schema, features, nil)
 	require.NoError(t, err)
-	bundle.Code.Code[1].Id = "fakecontains"
+	if features.IsActive(mondoo.PiperCode) {
+		bundle.CodeV2.Blocks[0].Chunks[1].Id = "fakecontains"
+	} else {
+		bundle.DeprecatedV5Code.Code[1].Id = "fakecontains"
+	}
 	results := testCompiledQueryWithExecutor(t, execCtx, bundle, nil)
 	require.Len(t, results, 3)
 	require.Error(t, results[0].Data.Error)

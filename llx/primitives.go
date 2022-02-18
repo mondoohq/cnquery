@@ -131,7 +131,15 @@ func CvssScorePrimitive(vector string) *Primitive {
 }
 
 // RefPrimitive creates a primitive from an int value
-func RefPrimitive(v int32) *Primitive {
+func RefPrimitiveV1(v int32) *Primitive {
+	return &Primitive{
+		Type:  string(types.Ref),
+		Value: int2bytes(int64(v)),
+	}
+}
+
+// RefPrimitive creates a primitive from an int value
+func RefPrimitiveV2(v uint64) *Primitive {
 	return &Primitive{
 		Type:  string(types.Ref),
 		Value: int2bytes(int64(v)),
@@ -155,7 +163,16 @@ func MapPrimitive(v map[string]*Primitive, childType types.Type) *Primitive {
 }
 
 // FunctionPrimitive points to a function in the call stack
-func FunctionPrimitive(v int32) *Primitive {
+func FunctionPrimitiveV1(v int32) *Primitive {
+	return &Primitive{
+		// TODO: function signature
+		Type:  string(types.Function(0, nil)),
+		Value: int2bytes(int64(v)),
+	}
+}
+
+// FunctionPrimitive points to a function in the call stack
+func FunctionPrimitiveV2(v uint64) *Primitive {
 	return &Primitive{
 		// TODO: function signature
 		Type:  string(types.Function(0, nil)),
@@ -164,7 +181,7 @@ func FunctionPrimitive(v int32) *Primitive {
 }
 
 // Ref will return the ref value unless this is not a ref type
-func (p *Primitive) Ref() (int32, bool) {
+func (p *Primitive) RefV1() (int32, bool) {
 	typ := types.Type(p.Type)
 	if typ != types.Ref && typ.Underlying() != types.FunctionLike {
 		return 0, false
@@ -172,8 +189,94 @@ func (p *Primitive) Ref() (int32, bool) {
 	return int32(bytes2int(p.Value)), true
 }
 
+// Ref will return the ref value unless this is not a ref type
+func (p *Primitive) RefV2() (uint64, bool) {
+	typ := types.Type(p.Type)
+	if typ != types.Ref && typ.Underlying() != types.FunctionLike {
+		return 0, false
+	}
+	return uint64(bytes2int(p.Value)), true
+}
+
 // Label returns a printable label for this primitive
-func (p *Primitive) Label(code *Code) string {
+func (p *Primitive) LabelV1(code *CodeV1) string {
+	switch types.Type(p.Type).Underlying() {
+	case types.Any:
+		return string(p.Value)
+	case types.Ref:
+		return "<ref>"
+	case types.Nil:
+		return "null"
+	case types.Bool:
+		if len(p.Value) == 0 {
+			return "null"
+		}
+		if bytes2bool(p.Value) {
+			return "true"
+		}
+		return "false"
+	case types.Int:
+		if len(p.Value) == 0 {
+			return "null"
+		}
+		data := bytes2int(p.Value)
+		if data == math.MaxInt64 {
+			return "Infinity"
+		}
+		if data == math.MinInt64 {
+			return "-Infinity"
+		}
+		return fmt.Sprintf("%d", data)
+	case types.Float:
+		if len(p.Value) == 0 {
+			return "null"
+		}
+		data := bytes2float(p.Value)
+		if math.IsInf(data, 1) {
+			return "Infinity"
+		}
+		if math.IsInf(data, -1) {
+			return "-Infinity"
+		}
+		return fmt.Sprintf("%f", data)
+	case types.String:
+		if len(p.Value) == 0 {
+			return "null"
+		}
+		return PrettyPrintString(string(p.Value))
+	case types.Regex:
+		if len(p.Value) == 0 {
+			return "null"
+		}
+		return fmt.Sprintf("/%s/", string(p.Value))
+	case types.Time:
+		return "<...>"
+	case types.Dict:
+		return "<...>"
+	case types.Score:
+		return ScoreString(p.Value)
+	case types.ArrayLike:
+		if len(p.Array) == 0 {
+			return "[]"
+		}
+		return "[..]"
+
+	case types.MapLike:
+		if len(p.Map) == 0 {
+			return "{}"
+		}
+		return "{..}"
+
+	case types.ResourceLike:
+		return ""
+
+	default:
+		return ""
+	}
+}
+
+// Label returns a printable label for this primitive
+func (p *Primitive) LabelV2(code *CodeV2) string {
 	switch types.Type(p.Type).Underlying() {
 	case types.Any:
 		return string(p.Value)

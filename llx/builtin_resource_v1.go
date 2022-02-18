@@ -2,7 +2,6 @@ package llx
 
 import (
 	"errors"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -12,12 +11,12 @@ import (
 )
 
 // resourceFunctions are all the shared handlers for resource calls
-var resourceFunctionsV2 map[string]chunkHandlerV2
+var resourceFunctionsV1 map[string]chunkHandlerV1
 
-func _resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, invert bool) (*RawData, uint64, error) {
+func _resourceWhereV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32, invert bool) (*RawData, int32, error) {
 	// where(resource.list, function)
 	itemsRef := chunk.Function.Args[0]
-	items, rref, err := e.resolveValue(itemsRef, ref)
+	items, rref, err := c.resolveValue(itemsRef, ref)
 	if err != nil || rref > 0 {
 		return nil, rref, err
 	}
@@ -29,25 +28,19 @@ func _resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64,
 	resource := bind.Value.(lumi.ResourceType)
 
 	arg1 := chunk.Function.Args[1]
-	blockRef, ok := arg1.RefV2()
+	fref, ok := arg1.RefV2()
 	if !ok {
 		return nil, 0, errors.New("Failed to retrieve function reference of 'where' call")
 	}
 
-	dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)
-	if dref != 0 || err != nil {
-		return nil, dref, err
-	}
-
-	blockId := e.ctx.code.Id + strconv.FormatUint(blockRef>>32, 10)
-
+	f := c.code.Functions[fref-1]
 	ct := items.Type.Child()
 	filteredList := map[int]interface{}{}
 	finishedResults := 0
 	l := sync.Mutex{}
 	for it := range list {
 		i := it
-		err := e.runFunctionBlock([]*RawData{&RawData{Type: ct, Value: list[i]}}, blockRef, func(res *RawResult) {
+		err := c.runFunctionBlock([]*RawData{&RawData{Type: ct, Value: list[i]}}, f, func(res *RawResult) {
 			resList := func() []interface{} {
 				l.Lock()
 				defer l.Unlock()
@@ -82,7 +75,7 @@ func _resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64,
 				lumiResource := resource.LumiResource()
 				resourceInfo := lumiResource.Runtime.Registry.Resources[lumiResource.Name]
 				args := []interface{}{
-					"list", resList, "__id", blockId,
+					"list", resList, "__id", f.Id,
 				}
 				for k, v := range resourceInfo.Fields {
 					if k != "list" && v.Mandatory {
@@ -92,13 +85,13 @@ func _resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64,
 					}
 				}
 
-				resResource, err := e.ctx.runtime.CreateResourceWithID(lumiResource.Name, blockId, args...)
+				resResource, err := c.runtime.CreateResourceWithID(lumiResource.Name, f.Id, args...)
 				var data *RawData
 				if err != nil {
 					data = &RawData{
 						Error: errors.New("Failed to create filter result resource: " + err.Error()),
 					}
-					e.cache.Store(ref, &stepCache{
+					c.cache.Store(ref, &stepCache{
 						Result: data,
 					})
 				} else {
@@ -106,13 +99,13 @@ func _resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64,
 						Type:  bind.Type,
 						Value: resResource,
 					}
-					e.cache.Store(ref, &stepCache{
+					c.cache.Store(ref, &stepCache{
 						Result:   data,
 						IsStatic: false,
 					})
 				}
 
-				e.triggerChain(ref, data)
+				c.triggerChain(ref, data)
 			}
 		})
 		if err != nil {
@@ -123,18 +116,18 @@ func _resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64,
 	return nil, 0, nil
 }
 
-func resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return _resourceWhereV2(e, bind, chunk, ref, false)
+func resourceWhereV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return _resourceWhereV1(c, bind, chunk, ref, false)
 }
 
-func resourceWhereNotV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return _resourceWhereV2(e, bind, chunk, ref, true)
+func resourceWhereNotV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	return _resourceWhereV1(c, bind, chunk, ref, true)
 }
 
-func resourceMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+func resourceMapV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	// map(resource.list, function)
 	itemsRef := chunk.Function.Args[0]
-	items, rref, err := e.resolveValue(itemsRef, ref)
+	items, rref, err := c.resolveValue(itemsRef, ref)
 	if err != nil || rref > 0 {
 		return nil, rref, err
 	}
@@ -149,11 +142,7 @@ func resourceMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 		return nil, 0, errors.New("Failed to retrieve function reference of 'map' call")
 	}
 
-	dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)
-	if dref != 0 || err != nil {
-		return nil, dref, err
-	}
-
+	f := c.code.Functions[fref-1]
 	ct := items.Type.Child()
 	mappedType := types.Unset
 	resMap := map[int]interface{}{}
@@ -161,7 +150,7 @@ func resourceMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	l := sync.Mutex{}
 	for it := range list {
 		i := it
-		err := e.runFunctionBlock([]*RawData{{Type: ct, Value: list[i]}}, fref, func(res *RawResult) {
+		err := c.runFunctionBlock([]*RawData{{Type: ct, Value: list[i]}}, f, func(res *RawResult) {
 			resList := func() []interface{} {
 				l.Lock()
 				defer l.Unlock()
@@ -192,11 +181,11 @@ func resourceMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 					Value: resList,
 				}
 
-				e.cache.Store(ref, &stepCache{
+				c.cache.Store(ref, &stepCache{
 					Result: data,
 				})
 
-				e.triggerChain(ref, data)
+				c.triggerChain(ref, data)
 			}
 		})
 		if err != nil {
@@ -207,10 +196,10 @@ func resourceMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	return nil, 0, nil
 }
 
-func resourceLengthV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+func resourceLengthV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	// length(resource.list)
 	itemsRef := chunk.Function.Args[0]
-	items, rref, err := e.resolveValue(itemsRef, ref)
+	items, rref, err := c.resolveValue(itemsRef, ref)
 	if err != nil || rref > 0 {
 		return nil, rref, err
 	}
@@ -219,20 +208,8 @@ func resourceLengthV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 	return IntData(int64(len(list))), 0, nil
 }
 
-var timeFormats = map[string]string{
-	"ansic":    time.ANSIC,
-	"rfc822":   time.RFC822,
-	"rfc822z":  time.RFC822Z,
-	"rfc850":   time.RFC850,
-	"rfc1123":  time.RFC1123,
-	"rfc1123z": time.RFC1123Z,
-	"rfc3339":  time.RFC3339,
-	"kitchen":  time.Kitchen,
-	"stamp":    time.Stamp,
-}
-
-func resourceDateV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	args, rref, err := args2resourceargsV2(e, ref, chunk.Function.Args)
+func resourceDateV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+	args, rref, err := args2resourceargsV1(c, ref, chunk.Function.Args)
 	if err != nil || rref != 0 {
 		return nil, rref, err
 	}

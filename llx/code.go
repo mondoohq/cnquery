@@ -1,131 +1,174 @@
 package llx
 
 import (
+	"sort"
+
 	"go.mondoo.io/mondoo/checksums"
 	"go.mondoo.io/mondoo/types"
 )
 
-// AddChunk to the list of chunks
-func (l *Code) AddChunk(c *Chunk) {
-	l.Checksums[l.ChunkIndex()+1] = c.Checksum(l)
-	l.Code = append(l.Code, c)
+func (x *CodeBundle) IsV2() bool {
+	return x.CodeV2 != nil
 }
 
-// RefreshChunkChecksum if something changed about it
-func (l *Code) RefreshChunkChecksum(c *Chunk) {
-	var ref int32 = -1
-
-	for i := len(l.Code) - 1; i >= 0; i-- {
-		if l.Code[i] == c {
-			ref = int32(i)
-			break
-		}
-	}
-
-	if ref != -1 {
-		l.Checksums[ref+1] = c.Checksum(l)
-	}
+func (b *Block) ChunkIndex() uint32 {
+	return uint32(len(b.Chunks))
 }
 
-// RemoveLastChunk from the current code
-func (l *Code) RemoveLastChunk() {
-	l.Code = l.Code[:len(l.Code)-1]
+func absRef(blockRef uint64, relRef uint32) uint64 {
+	return (blockRef & 0xFFFFFFFF00000000) | uint64(relRef)
 }
 
-// ChunkIndex is the index of the last chunk that was added
-func (l *Code) ChunkIndex() int32 {
-	return int32(len(l.Code))
-}
-
-func (l *Code) FunctionsIndex() int32 {
-	return int32(len(l.Functions))
+func (b *Block) TailRef(blockRef uint64) uint64 {
+	return absRef(blockRef, b.ChunkIndex())
 }
 
 // LastChunk is the last chunk in the list or nil
-func (l *Code) LastChunk() *Chunk {
-	tl := len(l.Code)
-	if tl == 0 {
+func (b *Block) LastChunk() *Chunk {
+	max := len(b.Chunks)
+	if max == 0 {
 		return nil
 	}
-	return l.Code[tl-1]
+	return b.Chunks[max-1]
+}
+
+// AddChunk to the list of chunks
+func (b *Block) AddChunk(code *CodeV2, blockRef uint64, c *Chunk) {
+	nuRef := b.TailRef(blockRef) + 1
+	code.Checksums[nuRef] = c.ChecksumV2(blockRef, code)
+	b.Chunks = append(b.Chunks, c)
+}
+
+func (b *Block) AddArgumentPlaceholder(code *CodeV2, blockRef uint64, typ types.Type, checksum string) {
+	b.AddChunk(code, blockRef, &Chunk{
+		Call:      Chunk_PRIMITIVE,
+		Primitive: &Primitive{Type: string(typ)},
+	})
+	code.Checksums[b.TailRef(blockRef)] = checksum
+	b.Parameters++
+}
+
+// PopChunk removes the last chunk from the block and returns it
+func (b *Block) PopChunk() *Chunk {
+	if len(b.Chunks) == 0 {
+		return nil
+	}
+
+	max := len(b.Chunks)
+	last := b.Chunks[max-1]
+	b.Chunks = b.Chunks[:max-1]
+	return last
+}
+
+// ChunkIndex is the index of the last chunk that was added
+func (l *CodeV2) TailRef(blockRef uint64) uint64 {
+	return l.Block(blockRef).TailRef(blockRef)
+}
+
+// Retrieve a chunk for the given ref
+func (l *CodeV2) Chunk(ref uint64) *Chunk {
+	return l.Block(ref).Chunks[uint32(ref)-1]
+}
+
+// Retrieve a block for the given ref
+func (l *CodeV2) Block(ref uint64) *Block {
+	return l.Blocks[uint32(ref>>32)-1]
+}
+
+// AddBlock adds a new block at the end of this code and returns its ref
+func (l *CodeV2) AddBlock() (*Block, uint64) {
+	block := &Block{}
+	l.Blocks = append(l.Blocks, block)
+	return block, uint64(len(l.Blocks)) << 32
+}
+
+func (c *CodeV2) Entrypoints() []uint64 {
+	if len(c.Blocks) == 0 {
+		return []uint64{}
+	}
+
+	return c.Blocks[0].Entrypoints
+}
+
+func (c *CodeV2) Datapoints() []uint64 {
+	if len(c.Blocks) == 0 {
+		return []uint64{}
+	}
+
+	return c.Blocks[0].Datapoints
+}
+
+// DereferencedBlockType returns the type of a block, which is a specific
+// type if it is a single-value block
+func (l *CodeV2) DereferencedBlockType(b *Block) types.Type {
+	if len(b.Entrypoints) != 1 {
+		return types.Block
+	}
+
+	ep := b.Entrypoints[0]
+	chunk := b.Chunks[(ep-1)&0xFFFFFFFF]
+	return chunk.DereferencedTypeV2(l)
+}
+
+func (block *Block) checksum(l *CodeV2) string {
+	c := checksums.New
+	for i := range block.Entrypoints {
+		c = c.Add(l.Checksums[block.Entrypoints[i]])
+	}
+	return c.String()
 }
 
 // checksum from this code
-func (l *Code) checksum() string {
+func (l *CodeV2) checksum() string {
 	checksum := checksums.New
-	for i := range l.Entrypoints {
-		checksum = checksum.Add(l.Checksums[l.Entrypoints[i]])
+
+	for i := range l.Blocks {
+		checksum = checksum.Add(l.Blocks[i].checksum(l))
 	}
-	if len(l.Entrypoints) == 0 {
-		checksum = checksum.Add(l.Checksums[l.ChunkIndex()])
+
+	assertionRefs := make([]uint64, 0, len(l.Assertions))
+	for k := range l.Assertions {
+		assertionRefs = append(assertionRefs, k)
 	}
+	sort.Slice(assertionRefs, func(i, j int) bool { return assertionRefs[i] < assertionRefs[j] })
+	for _, ref := range assertionRefs {
+		checksum = checksum.Add(l.Checksums[ref])
+	}
+
+	if len(l.Blocks) == 0 || len(l.Blocks[0].Entrypoints) == 0 {
+		// Why do we even handle this case? Because at this point we still have
+		// all raw entrypoints, which may get shuffled around in the step after this.
+		// This also means entrypoints aren't sanitized. We may not have any.
+		//
+		// TODO: review this behavior!
+		// We may want to do the entrypoint handling earlier.
+		//panic("received a code without any entrypoints")
+	}
+
 	return checksum.String()
 }
 
 // UpdateID of the piece of code
-func (l *Code) UpdateID() {
+func (l *CodeV2) UpdateID() {
 	l.Id = l.checksum()
-}
-
-var comparableOperations = map[string]struct{}{
-	"==": {},
-	"!=": {},
-	">":  {},
-	"<":  {},
-	">=": {},
-	"<=": {},
-	"&&": {},
-	"||": {},
-}
-
-func (c *Chunk) isStatic() bool {
-	if c.Call != Chunk_PRIMITIVE {
-		return false
-	}
-
-	if types.Type(c.Primitive.Type) == types.Ref {
-		return false
-	}
-
-	return true
-}
-
-// ComparableLabel takes any arbitrary label and returns the
-// operation as a printable string and true if it is a comparable, otherwise "" and false.
-func ComparableLabel(label string) (string, bool) {
-	if label == "" {
-		return "", false
-	}
-
-	x := label[0:1]
-	if _, ok := comparableOperations[x]; ok {
-		return x, true
-	}
-
-	x = label[0:2]
-	if _, ok := comparableOperations[x]; ok {
-		return x, true
-	}
-
-	return "", false
 }
 
 // RefDatapoints returns the additional datapoints that inform a ref.
 // Typically used when writing tests and providing additional data when the test fails.
-func (l *Code) RefDatapoints(ref int32) []int32 {
+func (l *CodeV2) RefDatapoints(ref uint64) []uint64 {
 	if assertion, ok := l.Assertions[ref]; ok {
-		return assertion.Datapoint
+		return assertion.Refs
 	}
 
-	chunk := l.Code[ref-1]
+	chunk := l.Chunk(ref)
 
 	if chunk.Id == "if" && chunk.Function != nil && len(chunk.Function.Args) != 0 {
 		var ok bool
-		ref, ok = chunk.Function.Args[0].Ref()
+		ref, ok = chunk.Function.Args[0].RefV2()
 		if !ok {
 			return nil
 		}
-		chunk = l.Code[ref-1]
+		chunk = l.Chunk(ref)
 	}
 
 	if chunk.Id == "" {
@@ -139,20 +182,20 @@ func (l *Code) RefDatapoints(ref int32) []int32 {
 
 	switch chunk.Id {
 	case "$all", "$one", "$any", "$none":
-		return []int32{ref - 1}
+		return []uint64{ref - 1}
 	}
 
 	if _, ok := ComparableLabel(chunk.Id); !ok {
 		return nil
 	}
 
-	var res []int32
+	var res []uint64
 
 	// at this point we have a comparable
 	// so 2 jobs: check the left, check the right. if it's static, ignore. if not, add
 	left := chunk.Function.Binding
 	if left != 0 {
-		leftChunk := l.Code[left-1]
+		leftChunk := l.Chunk(left)
 		if leftChunk != nil && !leftChunk.isStatic() {
 			res = append(res, left)
 		}
@@ -161,7 +204,7 @@ func (l *Code) RefDatapoints(ref int32) []int32 {
 	if len(chunk.Function.Args) != 0 {
 		rightPrim := chunk.Function.Args[0]
 		if rightPrim != nil && types.Type(rightPrim.Type) == types.Ref {
-			right, ok := rightPrim.Ref()
+			right, ok := rightPrim.RefV2()
 			if ok {
 				res = append(res, right)
 			}
@@ -171,8 +214,109 @@ func (l *Code) RefDatapoints(ref int32) []int32 {
 	return res
 }
 
-func (l *Code) entrypoint2assessment(bundle *CodeBundle, ref int32, lookup func(s string) (*RawResult, bool)) *AssessmentItem {
-	checksum := bundle.Code.Checksums[ref]
+func (l *CodeV2) refValues(bundle *CodeBundle, ref uint64, lookup func(s string) (*RawResult, bool)) []*RawResult {
+	checksum := l.Checksums[ref]
+	checksumRes, ok := lookup(checksum)
+	if ok {
+		return []*RawResult{checksumRes}
+	}
+
+	chunk := l.Chunk(ref)
+
+	if chunk.Id == "if" && chunk.Function != nil && len(chunk.Function.Args) != 0 {
+		// FIXME: we should be checking for the result of the if-condition and then proceed
+		// with whatever result is applicable; not poke at possible results
+
+		// function arguments are functions refs to:
+		// [1] = the first condition, [2] = the second condition
+		fref, ok := chunk.Function.Args[1].RefV2()
+		if ok {
+			if part, ok := lookup(l.Checksums[fref]); ok {
+				return []*RawResult{part}
+			}
+		}
+
+		fref, ok = chunk.Function.Args[2].RefV2()
+		if ok {
+			if part, ok := lookup(l.Checksums[fref]); ok {
+				return []*RawResult{part}
+			}
+		}
+	}
+
+	return nil
+}
+
+func (l *CodeV2) returnValues(bundle *CodeBundle, lookup func(s string) (*RawResult, bool)) []*RawResult {
+	var res []*RawResult
+
+	if len(l.Blocks) == 0 {
+		return res
+	}
+	block := l.Blocks[0]
+
+	for i := range block.Entrypoints {
+		ep := block.Entrypoints[i]
+		cur := l.refValues(bundle, ep, lookup)
+		if cur != nil {
+			res = append(res, cur...)
+		}
+	}
+
+	return res
+}
+
+func ReturnValuesV2(bundle *CodeBundle, f func(s string) (*RawResult, bool)) []*RawResult {
+	return bundle.CodeV2.returnValues(bundle, f)
+}
+
+// Results2Assessment converts a list of raw results into an assessment for the query
+func Results2AssessmentV2(bundle *CodeBundle, results map[string]*RawResult) *Assessment {
+	return Results2AssessmentLookupV2(bundle, func(s string) (*RawResult, bool) {
+		r := results[s]
+		return r, r != nil
+	})
+}
+
+// Results2AssessmentLookup creates an assessment for a bundle using a lookup hook to get all results
+func Results2AssessmentLookupV2(bundle *CodeBundle, f func(s string) (*RawResult, bool)) *Assessment {
+	code := bundle.CodeV2
+
+	res := Assessment{
+		Success:  true,
+		Checksum: code.Id,
+	}
+	res.Success = true
+
+	entrypoints := code.Entrypoints()
+	for i := range entrypoints {
+		ep := entrypoints[i]
+		cur := code.entrypoint2assessment(bundle, ep, f)
+		if cur == nil {
+			continue
+		}
+
+		res.Results = append(res.Results, cur)
+		if !cur.Success {
+			res.Success = false
+		}
+
+		// We don't want to lose errors
+		if cur.IsAssertion || cur.Error != "" {
+			res.IsAssertion = true
+		}
+	}
+
+	if !res.IsAssertion {
+		return nil
+	}
+
+	return &res
+}
+
+func (l *CodeV2) entrypoint2assessment(bundle *CodeBundle, ref uint64, lookup func(s string) (*RawResult, bool)) *AssessmentItem {
+	code := bundle.CodeV2
+	checksum := code.Checksums[ref]
 
 	checksumRes, ok := lookup(checksum)
 	if !ok {
@@ -243,7 +387,7 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, ref int32, lookup func(
 		return &res
 	}
 
-	chunk := l.Code[ref-1]
+	chunk := l.Chunk(ref)
 
 	if chunk.Id == "if" {
 		// Our current assessment structure cannot handle nesting very well
@@ -279,7 +423,7 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, ref int32, lookup func(
 
 		if !truthy {
 			listRef := chunk.Function.Binding
-			list, ok := lookup(bundle.Code.Checksums[listRef])
+			list, ok := lookup(code.Checksums[listRef])
 			if !ok {
 				res.Error = "cannot find value for assessment (" + res.Operation + ")"
 				return &res
@@ -317,7 +461,7 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, ref int32, lookup func(
 	// so 2 jobs: check the left, check the right. if it's static, ignore. if not, add
 	left := chunk.Function.Binding
 	if left != 0 {
-		leftChunk := l.Code[left-1]
+		leftChunk := l.Chunk(left)
 		if leftChunk == nil {
 			res.Actual = &Primitive{
 				Type:  string(types.Any),
@@ -328,7 +472,7 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, ref int32, lookup func(
 		if leftChunk.isStatic() {
 			res.Actual = leftChunk.Primitive
 		} else {
-			leftSum := bundle.Code.Checksums[left]
+			leftSum := code.Checksums[left]
 			leftRes, ok := lookup(leftSum)
 			if !ok {
 				res.Actual = nil
@@ -353,14 +497,14 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, ref int32, lookup func(
 	if types.Type(rightPrim.Type) != types.Ref {
 		res.Expected = rightPrim
 	} else {
-		right, ok := rightPrim.Ref()
+		right, ok := rightPrim.RefV2()
 		if !ok {
 			res.Expected = &Primitive{
 				Type:  string(types.Any),
 				Value: []byte("< unknown actual value >"),
 			}
 		} else {
-			rightSum := bundle.Code.Checksums[right]
+			rightSum := code.Checksums[right]
 			rightRes, ok := lookup(rightSum)
 			if !ok {
 				res.Expected = nil
@@ -373,98 +517,15 @@ func (l *Code) entrypoint2assessment(bundle *CodeBundle, ref int32, lookup func(
 	return &res
 }
 
-func (l *Code) refValues(bundle *CodeBundle, ref int32, lookup func(s string) (*RawResult, bool)) []*RawResult {
-	checksum := l.Checksums[ref]
-	checksumRes, ok := lookup(checksum)
-	if ok {
-		return []*RawResult{checksumRes}
+func Results2Assessment(bundle *CodeBundle, results map[string]*RawResult, useV2Code bool) *Assessment {
+	if useV2Code {
+		return Results2AssessmentLookupV2(bundle, func(s string) (*RawResult, bool) {
+			r := results[s]
+			return r, r != nil
+		})
 	}
-
-	chunk := l.Code[ref-1]
-
-	if chunk.Id == "if" && chunk.Function != nil && len(chunk.Function.Args) != 0 {
-		// FIXME: we should be checking for the result of the if-condition and then proceed
-		// with whatever result is applicable; not poke at possible results
-
-		// function arguments are functions refs to:
-		// [1] = the first conditino, [2] = the second condition
-		fref, ok := chunk.Function.Args[1].Ref()
-		if ok {
-			fun := l.Functions[fref-1]
-			part := fun.returnValues(bundle, lookup)
-			if len(part) != 0 {
-				return part
-			}
-		}
-
-		fref, ok = chunk.Function.Args[2].Ref()
-		if ok {
-			fun := l.Functions[fref-1]
-			part := fun.returnValues(bundle, lookup)
-			if len(part) != 0 {
-				return part
-			}
-		}
-	}
-
-	return nil
-}
-
-func (l *Code) returnValues(bundle *CodeBundle, lookup func(s string) (*RawResult, bool)) []*RawResult {
-	var res []*RawResult
-
-	for i := range l.Entrypoints {
-		ep := l.Entrypoints[i]
-		cur := l.refValues(bundle, ep, lookup)
-		if cur != nil {
-			res = append(res, cur...)
-		}
-	}
-
-	return res
-}
-
-// Results2Assessment converts a list of raw results into an assessment for the query
-func Results2Assessment(bundle *CodeBundle, results map[string]*RawResult) *Assessment {
-	return Results2AssessmentLookup(bundle, func(s string) (*RawResult, bool) {
+	return Results2AssessmentLookupV1(bundle, func(s string) (*RawResult, bool) {
 		r := results[s]
 		return r, r != nil
 	})
-}
-
-// Results2AssessmentLookup creates an assessment for a bundle using a lookup hook to get all results
-func Results2AssessmentLookup(bundle *CodeBundle, f func(s string) (*RawResult, bool)) *Assessment {
-	res := Assessment{
-		Success:  true,
-		Checksum: bundle.Code.Id,
-	}
-	res.Success = true
-
-	for i := range bundle.Code.Entrypoints {
-		ep := bundle.Code.Entrypoints[i]
-		cur := bundle.Code.entrypoint2assessment(bundle, ep, f)
-		if cur == nil {
-			continue
-		}
-
-		res.Results = append(res.Results, cur)
-		if !cur.Success {
-			res.Success = false
-		}
-
-		// We don't want to lose errors
-		if cur.IsAssertion || cur.Error != "" {
-			res.IsAssertion = true
-		}
-	}
-
-	if !res.IsAssertion {
-		return nil
-	}
-
-	return &res
-}
-
-func ReturnValues(bundle *CodeBundle, f func(s string) (*RawResult, bool)) []*RawResult {
-	return bundle.Code.returnValues(bundle, f)
 }

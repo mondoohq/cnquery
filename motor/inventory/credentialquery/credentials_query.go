@@ -6,6 +6,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/mitchellh/mapstructure"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/vault"
@@ -26,7 +27,7 @@ func NewCredentialQueryRunner(credentialQuery string) (*CredentialQueryRunner, e
 		return nil, err
 	}
 
-	mqlExecutor := mql.New(rt)
+	mqlExecutor := mql.New(rt, mondoo.DefaultFeatures)
 
 	// just empty props to ensure we can compile
 	props := map[string]*llx.Primitive{
@@ -37,7 +38,7 @@ func NewCredentialQueryRunner(credentialQuery string) (*CredentialQueryRunner, e
 	}
 
 	// test query to see if it compiles well
-	_, err = mql.Exec(credentialQuery, rt, props)
+	_, err = mql.Exec(credentialQuery, rt, nil, props)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not compile the secret metadata function")
 	}

@@ -24,7 +24,6 @@ func init() {
 		types.Unset:        unset2result,
 		types.Nil:          nil2result,
 		types.Bool:         bool2result,
-		types.Ref:          ref2result,
 		types.Int:          int2result,
 		types.Float:        float2result,
 		types.String:       string2result,
@@ -43,7 +42,6 @@ func init() {
 		types.Unset:        punset2raw,
 		types.Nil:          pnil2raw,
 		types.Bool:         pbool2raw,
-		types.Ref:          pref2raw,
 		types.Int:          pint2raw,
 		types.Float:        pfloat2raw,
 		types.String:       pstring2raw,
@@ -51,11 +49,12 @@ func init() {
 		types.Time:         ptime2raw,
 		types.Dict:         pdict2raw,
 		types.Score:        pscore2raw,
-		types.Block:        pblock2raw,
+		types.Block:        pblock2rawV2,
 		types.ArrayLike:    parray2raw,
 		types.MapLike:      pmap2raw,
 		types.ResourceLike: presource2raw,
 		types.FunctionLike: pfunction2raw,
+		types.Ref:          pref2raw,
 	}
 }
 
@@ -100,7 +99,7 @@ func dict2primitive(value interface{}) (*Primitive, error) {
 	}
 }
 
-func primitive2dict(p *Primitive) (interface{}, error) {
+func primitive2dictV2(p *Primitive) (interface{}, error) {
 	switch types.Type(p.Type).Underlying() {
 	case types.Nil:
 		return nil, nil
@@ -113,10 +112,10 @@ func primitive2dict(p *Primitive) (interface{}, error) {
 	case types.String:
 		return string(p.Value), nil
 	case types.ArrayLike:
-		d, _, err := args2resourceargs(nil, 0, p.Array)
+		d, _, err := args2resourceargsV2(nil, 0, p.Array)
 		return d, err
 	case types.MapLike:
-		m, err := primitive2map(p.Map)
+		m, err := primitive2mapV2(p.Map)
 		return m, err
 	default:
 		hexType := make([]byte, hex.EncodedLen(len(p.Type)))
@@ -145,12 +144,12 @@ func bool2result(value interface{}, typ types.Type) (*Primitive, error) {
 	return BoolPrimitive(v), nil
 }
 
-func ref2result(value interface{}, typ types.Type) (*Primitive, error) {
-	v, ok := value.(int32)
+func ref2resultV2(value interface{}, typ types.Type) (*Primitive, error) {
+	v, ok := value.(uint64)
 	if !ok {
 		return nil, errInvalidConversion(value, typ)
 	}
-	return RefPrimitive(v), nil
+	return RefPrimitiveV2(v), nil
 }
 
 func int2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -311,11 +310,19 @@ func resource2result(value interface{}, typ types.Type) (*Primitive, error) {
 }
 
 func function2result(value interface{}, typ types.Type) (*Primitive, error) {
-	v, ok := value.(int32)
-	if !ok {
-		return nil, errInvalidConversion(value, typ)
+	v, ok := value.(uint64)
+	if ok {
+		return FunctionPrimitiveV2(v), nil
 	}
-	return FunctionPrimitive(v), nil
+
+	// FIXME: DEPRECATED replace/remove in v7.0 vv
+	v1, ok := value.(int32)
+	if ok {
+		return FunctionPrimitiveV1(v1), nil
+	}
+	// ^^
+
+	return nil, errInvalidConversion(value, typ)
 }
 
 func raw2primitive(value interface{}, typ types.Type) (*Primitive, error) {
@@ -423,13 +430,15 @@ func (r *RawResult) CastResult(t types.Type) *Result {
 
 // Result converts the raw result into a proto-compliant data structure that
 // can be sent over the wire. See RawData.Result()
+// FIXME: DEPRECATED replace/merge in v7.0 vv
+// we only introduced the difference between V2/V1 when transitioning the code
 func (r *RawResult) Result() *Result {
 	res := r.Data.Result()
 	res.CodeId = r.CodeID
 	return res
 }
 
-func (r *Result) RawResult() *RawResult {
+func (r *Result) RawResultV2() *RawResult {
 	if r == nil {
 		return nil
 	}
@@ -466,15 +475,6 @@ func pbool2raw(p *Primitive) *RawData {
 		}
 	}
 	return BoolData(bytes2bool(p.Value))
-}
-
-func pref2raw(p *Primitive) *RawData {
-	if p.IsNil() {
-		return &RawData{
-			Type: types.Type(p.Type),
-		}
-	}
-	return RefData(int32(bytes2int(p.Value)))
 }
 
 func pint2raw(p *Primitive) *RawData {
@@ -533,7 +533,7 @@ func pdict2raw(p *Primitive) *RawData {
 		return &RawData{Error: err, Type: types.Dict}
 	}
 
-	raw, err := primitive2dict(&res)
+	raw, err := primitive2dictV2(&res)
 	return &RawData{Error: err, Type: types.Dict, Value: raw}
 }
 
@@ -541,8 +541,8 @@ func pscore2raw(p *Primitive) *RawData {
 	return &RawData{Value: p.Value, Error: nil, Type: types.Score}
 }
 
-func pblock2raw(p *Primitive) *RawData {
-	d, err := primitive2rawdataMap(p.Map)
+func pblock2rawV2(p *Primitive) *RawData {
+	d, err := primitive2rawdataMapV2(p.Map)
 	return &RawData{Value: d, Error: err, Type: types.Type(p.Type)}
 }
 
@@ -551,12 +551,12 @@ func parray2raw(p *Primitive) *RawData {
 	// primitives that have refs in them, you should properly resolve them
 	// during the execution of the code. This function is really only applicable
 	// much later when you try to just get to the values of the returned data.
-	d, _, err := args2resourceargs(nil, 0, p.Array)
+	d, _, err := args2resourceargsV2(nil, 0, p.Array)
 	return &RawData{Value: d, Error: err, Type: types.Type(p.Type)}
 }
 
 func pmap2raw(p *Primitive) *RawData {
-	d, err := primitive2map(p.Map)
+	d, err := primitive2mapV2(p.Map)
 	return &RawData{Value: d, Error: err, Type: types.Type(p.Type)}
 }
 
@@ -571,26 +571,24 @@ func presource2raw(p *Primitive) *RawData {
 }
 
 func pfunction2raw(p *Primitive) *RawData {
-	return &RawData{Value: int32(bytes2int(p.Value)), Type: types.Type(p.Type)}
+	rv := bytes2int(p.Value)
+	if rv>>32 != 0 {
+		return &RawData{Value: uint64(bytes2int(p.Value)), Type: types.Type(p.Type)}
+	} else {
+		return &RawData{Value: int32(bytes2int(p.Value)), Type: types.Type(p.Type)}
+	}
 }
 
-// RawData converts the primitive into the internal go-representation of the
-// data that can be used for computations
-func (p *Primitive) RawData() *RawData {
-	// FIXME: This is a stopgap. It points to an underlying problem that exists and needs fixing.
-	if p.GetType() == "" {
-		return &RawData{Error: errors.New("cannot convert primitive with NO type information")}
+func pref2raw(p *Primitive) *RawData {
+	rv := bytes2int(p.Value)
+	if rv>>32 != 0 {
+		return &RawData{Value: uint64(bytes2int(p.Value)), Type: types.Type(p.Type)}
+	} else {
+		return &RawData{Value: int32(bytes2int(p.Value)), Type: types.Type(p.Type)}
 	}
-
-	typ := types.Type(p.Type)
-	c, ok := primitiveConverters[typ.Underlying()]
-	if !ok {
-		return &RawData{Error: errors.New("cannot convert primitive to value for primitive type " + typ.Label())}
-	}
-	return c(p)
 }
 
-func args2resourceargs(c *LeiseExecutor, ref int32, args []*Primitive) ([]interface{}, int32, error) {
+func args2resourceargsV2(b *blockExecutor, ref uint64, args []*Primitive) ([]interface{}, uint64, error) {
 	if args == nil {
 		return []interface{}{}, 0, nil
 	}
@@ -600,9 +598,9 @@ func args2resourceargs(c *LeiseExecutor, ref int32, args []*Primitive) ([]interf
 		var cur *RawData
 
 		if types.Type(args[i].Type) == types.Ref {
-			var rref int32
+			var rref uint64
 			var err error
-			cur, rref, err = c.resolveValue(args[i], ref)
+			cur, rref, err = b.resolveValue(args[i], ref)
 			if rref > 0 || err != nil {
 				return nil, rref, err
 			}
@@ -620,7 +618,7 @@ func args2resourceargs(c *LeiseExecutor, ref int32, args []*Primitive) ([]interf
 	return res, 0, nil
 }
 
-func primitive2map(m map[string]*Primitive) (map[string]interface{}, error) {
+func primitive2mapV2(m map[string]*Primitive) (map[string]interface{}, error) {
 	if m == nil {
 		return map[string]interface{}{}, nil
 	}
@@ -640,7 +638,7 @@ func primitive2map(m map[string]*Primitive) (map[string]interface{}, error) {
 	return res, nil
 }
 
-func primitive2rawdataMap(m map[string]*Primitive) (map[string]interface{}, error) {
+func primitive2rawdataMapV2(m map[string]*Primitive) (map[string]interface{}, error) {
 	if m == nil {
 		return map[string]interface{}{}, nil
 	}
@@ -660,25 +658,61 @@ func primitive2rawdataMap(m map[string]*Primitive) (map[string]interface{}, erro
 	return res, nil
 }
 
+// RawData converts the primitive into the internal go-representation of the
+// data that can be used for computations
+func (p *Primitive) RawData() *RawData {
+	// FIXME: This is a stopgap. It points to an underlying problem that exists and needs fixing.
+	if p.GetType() == "" {
+		return &RawData{Error: errors.New("cannot convert primitive with NO type information")}
+	}
+
+	typ := types.Type(p.Type)
+	c, ok := primitiveConverters[typ.Underlying()]
+	if !ok {
+		return &RawData{Error: errors.New("cannot convert primitive to value for primitive type " + typ.Label())}
+	}
+	return c(p)
+}
+
+func (b *blockExecutor) lookupValue(ref uint64) (*RawData, uint64, error) {
+	if b == nil {
+		panic("value not computed")
+	}
+
+	res, ok := b.cache.Load(ref)
+	if !ok {
+		return b.parent.lookupValue(ref)
+	}
+	return res.Result, 0, res.Result.Error
+}
+
+func (b *blockExecutor) resolveRef(srcRef uint64, ref uint64) (*RawData, uint64, error) {
+	if !b.isInMyBlock(srcRef) {
+		// the value is provided by a parent
+		return b.parent.lookupValue(srcRef)
+	} else {
+		// check if the reference exists; if not connect it
+		res, ok := b.cache.Load(srcRef)
+		if !ok {
+			return b.connectRef(srcRef, ref)
+		}
+		return res.Result, 0, res.Result.Error
+	}
+}
+
 // returns the resolved argument if it's a ref; otherwise just the argument
 // returns the reference if something else needs executing before it can be computed
 // returns an error otherwise
-func (c *LeiseExecutor) resolveValue(arg *Primitive, ref int32) (*RawData, int32, error) {
+func (b *blockExecutor) resolveValue(arg *Primitive, ref uint64) (*RawData, uint64, error) {
 	typ := types.Type(arg.Type)
 	switch typ.Underlying() {
 	case types.Ref:
-		srcRef := int32(bytes2int(arg.Value))
-		// check if the reference exists; if not connect it
-		res, ok := c.cache.Load(srcRef)
-		if !ok {
-			return c.connectRef(srcRef, ref)
-		}
-		return res.Result, 0, res.Result.Error
-
+		srcRef := uint64(bytes2int(arg.Value))
+		return b.resolveRef(srcRef, ref)
 	case types.ArrayLike:
 		res := make([]interface{}, len(arg.Array))
 		for i := range arg.Array {
-			c, ref, err := c.resolveValue(arg.Array[i], ref)
+			c, ref, err := b.resolveValue(arg.Array[i], ref)
 			if ref != 0 || err != nil {
 				return nil, ref, err
 			}

@@ -1,4 +1,4 @@
-package leise
+package v1
 
 import (
 	"errors"
@@ -12,8 +12,22 @@ import (
 	"go.mondoo.io/mondoo/types"
 )
 
-func createLabel(code *llx.CodeV2, ref uint64, labels *llx.Labels, schema *lumi.Schema) (string, error) {
-	chunk := code.Chunk(ref)
+func createArgLabel(arg *llx.Primitive, code *llx.CodeV1, labels *llx.Labels, schema *lumi.Schema) error {
+	if !types.Type(arg.Type).IsFunction() {
+		return nil
+	}
+
+	ref, ok := arg.RefV1()
+	if !ok {
+		return errors.New("cannot get function reference")
+	}
+
+	function := code.Functions[ref-1]
+	return UpdateLabels(function, labels, schema)
+}
+
+func createLabel(code *llx.CodeV1, ref int32, labels *llx.Labels, schema *lumi.Schema) (string, error) {
+	chunk := code.Code[ref-1]
 
 	if chunk.Call == llx.Chunk_PRIMITIVE {
 		return "", nil
@@ -26,14 +40,14 @@ func createLabel(code *llx.CodeV2, ref uint64, labels *llx.Labels, schema *lumi.
 
 	// TODO: workaround to get past the builtin global call
 	// this needs proper handling for global calls
-	if chunk.Function.Binding == 0 && id != "if" {
+	if chunk.Function.DeprecatedV5Binding == 0 && id != "if" {
 		return id, nil
 	}
 
 	var parentLabel string
-	var err error
-	if chunk.Function.Binding != 0 {
-		parentLabel, err = createLabel(code, chunk.Function.Binding, labels, schema)
+	if chunk.Function.DeprecatedV5Binding != 0 {
+		var err error
+		parentLabel, err = createLabel(code, chunk.Function.DeprecatedV5Binding, labels, schema)
 		if err != nil {
 			return "", err
 		}
@@ -62,11 +76,46 @@ func createLabel(code *llx.CodeV2, ref uint64, labels *llx.Labels, schema *lumi.
 		}
 	case "{}", "${}":
 		res = parentLabel
+
+		fref := chunk.Function.Args[0]
+		if !types.Type(fref.Type).IsFunction() {
+			panic("don't know how to extract label data when argument is not a function: " + types.Type(fref.Type).Label())
+		}
+
+		ref, ok := fref.RefV1()
+		if !ok {
+			panic("cannot find function reference for data extraction")
+		}
+
+		function := code.Functions[ref-1]
+		err := UpdateLabels(function, labels, schema)
+		if err != nil {
+			return "", err
+		}
+
 	case "if":
 		res = "if"
+
+		var i int
+		max := len(chunk.Function.Args)
+		for i+1 < max {
+			arg := chunk.Function.Args[i+1]
+			if err := createArgLabel(arg, code, labels, schema); err != nil {
+				return "", err
+			}
+			i += 2
+		}
+
+		if i < max {
+			arg := chunk.Function.Args[i]
+			if err := createArgLabel(arg, code, labels, schema); err != nil {
+				return "", err
+			}
+		}
+
 	default:
 		if label, ok := llx.ComparableLabel(id); ok {
-			arg := chunk.Function.Args[0].LabelV2(code)
+			arg := chunk.Function.Args[0].LabelV1(code)
 			res = parentLabel + " " + label + " " + arg
 		} else if parentLabel == "" {
 			res = id
@@ -92,35 +141,24 @@ func stripCtlAndExtFromUnicode(str string) string {
 }
 
 // UpdateLabels for the given code under the schema
-func UpdateLabels(code *llx.CodeV2, labels *llx.Labels, schema *lumi.Schema) error {
+func UpdateLabels(code *llx.CodeV1, labels *llx.Labels, schema *lumi.Schema) error {
 	if code == nil {
 		return errors.New("cannot create labels without code")
 	}
 
-	for i := range code.Blocks {
-		err := updateLabels(code, code.Blocks[i], labels, schema)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func updateLabels(code *llx.CodeV2, block *llx.Block, labels *llx.Labels, schema *lumi.Schema) error {
-	datapoints := block.Datapoints
+	datapoints := code.Datapoints
 
 	// We don't want assertions to become labels. Their data should not be printed
 	// regularly but instead be processed through the assertion itself
 	if code.Assertions != nil {
-		assertionPoints := map[uint64]struct{}{}
+		assertionPoints := map[int32]struct{}{}
 		for _, assertion := range code.Assertions {
-			for j := range assertion.Refs {
-				assertionPoints[assertion.Refs[j]] = struct{}{}
+			for j := range assertion.DeprecatedV5Datapoint {
+				assertionPoints[assertion.DeprecatedV5Datapoint[j]] = struct{}{}
 			}
 		}
 
-		filtered := []uint64{}
+		filtered := []int32{}
 		for i := range datapoints {
 			ref := datapoints[i]
 			if _, ok := assertionPoints[ref]; ok {
@@ -131,7 +169,7 @@ func updateLabels(code *llx.CodeV2, block *llx.Block, labels *llx.Labels, schema
 		datapoints = filtered
 	}
 
-	labelrefs := append(block.Entrypoints, datapoints...)
+	labelrefs := append(code.Entrypoints, datapoints...)
 
 	var err error
 	for _, entrypoint := range labelrefs {
@@ -157,6 +195,7 @@ func updateLabels(code *llx.CodeV2, block *llx.Block, labels *llx.Labels, schema
 			if !assertion.DecodeBlock {
 				continue
 			}
+
 			for i := 0; i < len(assertion.Checksums); i++ {
 				delete(labels.Labels, assertion.Checksums[i])
 			}

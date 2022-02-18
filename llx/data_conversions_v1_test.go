@@ -31,7 +31,7 @@ func TestResultConversion(t *testing.T) {
 	for i := range tests {
 		rawData := tests[i].RawData()
 		result := rawData.Result()
-		rawResult := result.RawResult()
+		rawResult := result.RawResultV2()
 		reResult := rawResult.Result()
 
 		assert.Equal(t, result.GetData().GetType(), reResult.GetData().GetType())
@@ -47,7 +47,7 @@ func TestErrorConversion(t *testing.T) {
 	rawData.Error = errors.New("cannot do x")
 	rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
 
-	convertedRawResult := rawResult.Result().RawResult()
+	convertedRawResult := rawResult.Result().RawResultV2()
 	assert.Equal(t, rawResult.Data.Type, convertedRawResult.Data.Type)
 	assert.Equal(t, rawResult.Data.Value, convertedRawResult.Data.Value)
 	assert.Equal(t, rawResult.Data.Error, convertedRawResult.Data.Error)
@@ -61,7 +61,7 @@ func TestDictConversion(t *testing.T) {
 	}
 	rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
 
-	convertedRawResult := rawResult.Result().RawResult()
+	convertedRawResult := rawResult.Result().RawResultV2()
 	assert.Equal(t, rawResult.Data.Type, convertedRawResult.Data.Type)
 	assert.Equal(t, rawResult.Data.Value, convertedRawResult.Data.Value)
 }
@@ -87,7 +87,7 @@ func TestResourceConversion(t *testing.T) {
 	}
 	rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
 
-	convertedRawResult := rawResult.Result().RawResult()
+	convertedRawResult := rawResult.Result().RawResultV2()
 	assert.Equal(t, rawResult.Data.Type, convertedRawResult.Data.Type)
 	assert.Equal(t, rawResult.Data.Value, convertedRawResult.Data.Value)
 }
@@ -105,7 +105,7 @@ func TestCastResult(t *testing.T) {
 				},
 			}
 			rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
-			casted := rawResult.CastResult(types.Bool).RawResult()
+			casted := rawResult.CastResult(types.Bool).RawResultV2()
 			require.NoError(t, casted.Data.Error)
 			require.Equal(t, types.Bool, casted.Data.Type)
 			require.Equal(t, true, casted.Data.Value)
@@ -122,7 +122,7 @@ func TestCastResult(t *testing.T) {
 				},
 			}
 			rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
-			casted := rawResult.CastResult(types.Bool).RawResult()
+			casted := rawResult.CastResult(types.Bool).RawResultV2()
 			require.NoError(t, casted.Data.Error)
 			require.Equal(t, types.Bool, casted.Data.Type)
 			require.Equal(t, false, casted.Data.Value)
@@ -134,7 +134,7 @@ func TestCastResult(t *testing.T) {
 				Value: "asdf",
 			}
 			rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
-			casted := rawResult.CastResult(types.Bool).RawResult()
+			casted := rawResult.CastResult(types.Bool).RawResultV2()
 			require.NoError(t, casted.Data.Error)
 			require.Equal(t, types.Bool, casted.Data.Type)
 			require.Equal(t, true, casted.Data.Value)
@@ -146,7 +146,7 @@ func TestCastResult(t *testing.T) {
 				Value: "",
 			}
 			rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
-			casted := rawResult.CastResult(types.Bool).RawResult()
+			casted := rawResult.CastResult(types.Bool).RawResultV2()
 			require.NoError(t, casted.Data.Error)
 			require.Equal(t, types.Bool, casted.Data.Type)
 			require.Equal(t, false, casted.Data.Value)

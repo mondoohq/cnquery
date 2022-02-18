@@ -1,4 +1,4 @@
-package leise
+package v1
 
 import (
 	"fmt"
@@ -24,7 +24,7 @@ type InvariantFailed struct {
 }
 
 func (e InvariantFailed) Error() string {
-	return fmt.Sprintf("Invariant %q failed: Source => \n%+v", e.ShortName, e.Source)
+	return fmt.Sprintf("Invariant %q failed: Source => \n%s", e.ShortName, e.Source)
 }
 
 type InvariantList []Invariant
@@ -45,17 +45,6 @@ func (l InvariantList) Check(cb *llx.CodeBundle) error {
 
 var Invariants = InvariantList{
 	{
-		ShortName:   "code is not nil",
-		Description: `Make sure any compiled code is never just nil`,
-		Checker: func(cb *llx.CodeBundle) bool {
-			if cb.IsV2() {
-				return cb.CodeV2 != nil
-			} else {
-				return cb.DeprecatedV5Code != nil
-			}
-		},
-	},
-	{
 		ShortName: "return-entrypoints-singular",
 		Description: `
 			The return statement indicates that the following expression
@@ -74,30 +63,12 @@ var Invariants = InvariantList{
 			"https://gitlab.com/mondoolabs/mondoo/-/issues/716",
 		},
 		Checker: func(cb *llx.CodeBundle) bool {
-			if cb.IsV2() {
-				return checkReturnEntrypointsV2(cb.CodeV2)
-			} else {
-				return checkReturnEntrypointsV1(cb.DeprecatedV5Code)
-			}
+			return checkReturnEntrypoints(cb.DeprecatedV5Code)
 		},
 	},
 }
 
-func checkReturnEntrypointsV2(code *llx.CodeV2) bool {
-	for i := range code.Blocks {
-		block := code.Blocks[i]
-
-		if block.SingleValue {
-			if len(code.Entrypoints())+len(code.Datapoints()) != 1 {
-				return false
-			}
-		}
-	}
-
-	return true
-}
-
-func checkReturnEntrypointsV1(code *llx.CodeV1) bool {
+func checkReturnEntrypoints(code *llx.CodeV1) bool {
 	if code.SingleValue {
 		if len(code.Entrypoints)+len(code.Datapoints) != 1 {
 			return false
@@ -105,7 +76,7 @@ func checkReturnEntrypointsV1(code *llx.CodeV1) bool {
 	}
 
 	for _, c := range code.Functions {
-		if checkReturnEntrypointsV1(c) == false {
+		if checkReturnEntrypoints(c) == false {
 			return false
 		}
 	}

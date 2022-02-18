@@ -1,4 +1,4 @@
-package leise
+package v1
 
 import (
 	"errors"
@@ -12,7 +12,7 @@ import (
 type compileHandler struct {
 	typ       func(types.Type) types.Type
 	signature FunctionSignature
-	compile   func(*compiler, types.Type, uint64, string, *parser.Call) (types.Type, error)
+	compile   func(*compiler, types.Type, int32, string, *parser.Call) (types.Type, error)
 }
 
 var (

@@ -12,9 +12,9 @@ import (
 var arrayBlockType = types.Array(types.Block)
 
 // arrayFunctions are all the handlers for builtin array methods
-var arrayFunctions map[string]chunkHandler
+var arrayFunctions map[string]chunkHandlerV2
 
-func arrayGetFirstIndex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayGetFirstIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type[1:]}, 0, nil
 	}
@@ -34,7 +34,7 @@ func arrayGetFirstIndex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32
 	}, 0, nil
 }
 
-func arrayGetLastIndex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayGetLastIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type[1:]}, 0, nil
 	}
@@ -54,7 +54,7 @@ func arrayGetLastIndex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32)
 	}, 0, nil
 }
 
-func arrayGetIndex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type[1:]}, 0, nil
 	}
@@ -96,7 +96,7 @@ func arrayGetIndex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	}, 0, nil
 }
 
-func arrayBlockList(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayBlockListV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type[1:]}, 0, nil
 	}
@@ -114,13 +114,18 @@ func arrayBlockList(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 	if !types.Type(prim.Type).IsFunction() {
 		return nil, 0, errors.New("called block with wrong function type")
 	}
-	fref, ok := prim.Ref()
+	fref, ok := prim.RefV2()
 	if !ok {
 		return nil, 0, errors.New("cannot retrieve function reference on block call")
 	}
-	fun := c.code.Functions[fref-1]
-	if fun == nil {
+	block := e.ctx.code.Block(fref)
+	if block == nil {
 		return nil, 0, errors.New("block function is nil")
+	}
+
+	dref, err := e.ensureArgsResolved(chunk.Function.Args[1:], ref)
+	if dref != 0 || err != nil {
+		return nil, dref, err
 	}
 
 	// pre-init everything to avoid concurrency issues with long list
@@ -145,10 +150,10 @@ func arrayBlockList(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 		//Execution errors aren't returned by runFunctionBlock, some are in the results
 		// Collect any errors from results and add them to the rawData
 		// Effect: The query will show error instead
-		err := c.runFunctionBlock([]*RawData{bind}, fun, func(res *RawResult) {
+		err := e.runFunctionBlock([]*RawData{bind}, fref, func(res *RawResult) {
 			blockResult[res.CodeID] = res.Data
 
-			if len(blockResult) == len(fun.Entrypoints) && !finished {
+			if len(blockResult) == len(block.Entrypoints) && !finished {
 				if res.Data.Error != nil {
 					anyError = multierror.Append(anyError, res.Data.Error)
 				}
@@ -166,11 +171,11 @@ func arrayBlockList(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 					Value: allResults,
 					Error: anyError,
 				}
-				c.cache.Store(ref, &stepCache{
+				e.cache.Store(ref, &stepCache{
 					Result:   data,
 					IsStatic: true,
 				})
-				c.triggerChain(ref, data)
+				e.triggerChain(ref, data)
 			}
 		})
 		if err != nil {
@@ -181,15 +186,15 @@ func arrayBlockList(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*
 	return nil, 0, nil
 }
 
-func arrayBlock(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayBlockV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	prim := chunk.Function.Args[0]
 	if !types.Type(prim.Type).IsFunction() {
 		return nil, 0, errors.New("called block with wrong function type")
 	}
-	return c.runBlock(bind, prim, chunk.Function.Args[1:], ref)
+	return e.runBlock(bind, prim, chunk.Function.Args[1:], ref)
 }
 
-func arrayLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayLengthV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: types.Int, Error: bind.Error}, 0, nil
 	}
@@ -201,7 +206,7 @@ func arrayLength(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return IntData(int64(len(arr))), 0, nil
 }
 
-func arrayNotEmpty(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayNotEmptyV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return BoolFalse, 0, nil
 	}
@@ -217,10 +222,10 @@ func arrayNotEmpty(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*R
 	return BoolTrue, 0, nil
 }
 
-func _arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, invert bool) (*RawData, int32, error) {
+func _arrayWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, invert bool) (*RawData, uint64, error) {
 	// where(array, function)
 	itemsRef := chunk.Function.Args[0]
-	items, rref, err := c.resolveValue(itemsRef, ref)
+	items, rref, err := e.resolveValue(itemsRef, ref)
 	if err != nil || rref > 0 {
 		return nil, rref, err
 	}
@@ -251,19 +256,23 @@ func _arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, inver
 		}, 0, nil
 	}
 
-	fref, ok := arg1.Ref()
+	fref, ok := arg1.RefV2()
 	if !ok {
 		return nil, 0, errors.New("Failed to retrieve function reference of 'where' call")
 	}
 
-	f := c.code.Functions[fref-1]
+	dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)
+	if dref != 0 || err != nil {
+		return nil, dref, err
+	}
+
 	ct := items.Type.Child()
 	filteredList := map[int]interface{}{}
 	finishedResults := 0
 	l := sync.Mutex{}
 	for it := range list {
 		i := it
-		err := c.runFunctionBlock([]*RawData{&RawData{Type: ct, Value: list[i]}}, f, func(res *RawResult) {
+		err := e.runFunctionBlock([]*RawData{&RawData{Type: ct, Value: list[i]}}, fref, func(res *RawResult) {
 			resList := func() []interface{} {
 				l.Lock()
 				defer l.Unlock()
@@ -299,11 +308,11 @@ func _arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, inver
 					Type:  bind.Type,
 					Value: resList,
 				}
-				c.cache.Store(ref, &stepCache{
+				e.cache.Store(ref, &stepCache{
 					Result:   data,
 					IsStatic: false,
 				})
-				c.triggerChain(ref, data)
+				e.triggerChain(ref, data)
 			}
 		})
 		if err != nil {
@@ -314,15 +323,15 @@ func _arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32, inver
 	return nil, 0, nil
 }
 
-func arrayWhere(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return _arrayWhere(c, bind, chunk, ref, false)
+func arrayWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return _arrayWhereV2(e, bind, chunk, ref, false)
 }
 
-func arrayWhereNot(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return _arrayWhere(c, bind, chunk, ref, true)
+func arrayWhereNotV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return _arrayWhereV2(e, bind, chunk, ref, true)
 }
 
-func arrayAll(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayAllV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (list is null)")}, 0, nil
 	}
@@ -335,7 +344,7 @@ func arrayAll(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDat
 	return BoolTrue, 0, nil
 }
 
-func arrayNone(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayNoneV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (list is null)")}, 0, nil
 	}
@@ -348,7 +357,7 @@ func arrayNone(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDa
 	return BoolTrue, 0, nil
 }
 
-func arrayAny(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayAnyV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (list is null)")}, 0, nil
 	}
@@ -361,7 +370,7 @@ func arrayAny(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDat
 	return BoolTrue, 0, nil
 }
 
-func arrayOne(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayOneV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (list is null)")}, 0, nil
 	}
@@ -374,10 +383,10 @@ func arrayOne(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDat
 	return BoolTrue, 0, nil
 }
 
-func arrayMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	// map(array, function)
 	itemsRef := chunk.Function.Args[0]
-	items, rref, err := c.resolveValue(itemsRef, ref)
+	items, rref, err := e.resolveValue(itemsRef, ref)
 	if err != nil || rref > 0 {
 		return nil, rref, err
 	}
@@ -392,12 +401,16 @@ func arrayMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDat
 	}
 
 	arg1 := chunk.Function.Args[1]
-	fref, ok := arg1.Ref()
+	fref, ok := arg1.RefV2()
 	if !ok {
 		return nil, 0, errors.New("Failed to retrieve function reference of 'map' call")
 	}
 
-	f := c.code.Functions[fref-1]
+	dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)
+	if dref != 0 || err != nil {
+		return nil, dref, err
+	}
+
 	ct := items.Type.Child()
 	mappedType := types.Unset
 	resMap := map[int]interface{}{}
@@ -405,7 +418,7 @@ func arrayMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDat
 	l := sync.Mutex{}
 	for it := range list {
 		i := it
-		err := c.runFunctionBlock([]*RawData{{Type: ct, Value: list[i]}}, f, func(res *RawResult) {
+		err := e.runFunctionBlock([]*RawData{{Type: ct, Value: list[i]}}, fref, func(res *RawResult) {
 			resList := func() []interface{} {
 				l.Lock()
 				defer l.Unlock()
@@ -436,11 +449,11 @@ func arrayMap(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawDat
 					Type:  types.Array(mappedType),
 					Value: resList,
 				}
-				c.cache.Store(ref, &stepCache{
+				e.cache.Store(ref, &stepCache{
 					Result:   data,
 					IsStatic: false,
 				})
-				c.triggerChain(ref, data)
+				e.triggerChain(ref, data)
 			}
 		})
 		if err != nil {
@@ -508,10 +521,10 @@ func detectDupes(array interface{}, typ types.Type) ([]interface{}, []interface{
 // Takes an array of resources and a field, identify duplicates of that field value
 // Result list is every resource that has duplicates
 // (there will be at least resources 2 if there is a duplicate field value)
-func arrayFieldDuplicates(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayFieldDuplicatesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	// where(array, function)
 	itemsRef := chunk.Function.Args[0]
-	items, rref, err := c.resolveValue(itemsRef, ref)
+	items, rref, err := e.resolveValue(itemsRef, ref)
 	if err != nil || rref > 0 {
 		return nil, rref, err
 	}
@@ -530,18 +543,22 @@ func arrayFieldDuplicates(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int
 		return nil, 0, errors.New("Expected resource field, unable to get field value from " + types.Type(arg1.Type).Label())
 	}
 
-	fref, ok := arg1.Ref()
+	fref, ok := arg1.RefV2()
 	if !ok {
 		return nil, 0, errors.New("Failed to retrieve function reference of 'field duplicates' call")
 	}
 
-	f := c.code.Functions[fref-1]
+	dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)
+	if dref != 0 || err != nil {
+		return nil, dref, err
+	}
+
 	ct := items.Type.Child()
 	filteredList := map[int]*RawData{}
 	finishedResults := 0
 	for i := range list {
 		//Function block resolves field value of resource
-		err := c.runFunctionBlock([]*RawData{&RawData{Type: ct, Value: list[i]}}, f, func(res *RawResult) {
+		err := e.runFunctionBlock([]*RawData{&RawData{Type: ct, Value: list[i]}}, fref, func(res *RawResult) {
 			_, ok := filteredList[i]
 			if !ok {
 				finishedResults++
@@ -560,11 +577,11 @@ func arrayFieldDuplicates(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int
 						Type:  items.Type,
 						Error: errors.New("cannot extract duplicates from array, field must be a basic type"),
 					}
-					c.cache.Store(ref, &stepCache{
+					e.cache.Store(ref, &stepCache{
 						Result:   data,
 						IsStatic: false,
 					})
-					c.triggerChain(ref, data)
+					e.triggerChain(ref, data)
 					return
 				}
 
@@ -616,11 +633,11 @@ func arrayFieldDuplicates(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int
 					Type:  bind.Type,
 					Value: resList,
 				}
-				c.cache.Store(ref, &stepCache{
+				e.cache.Store(ref, &stepCache{
 					Result:   data,
 					IsStatic: false,
 				})
-				c.triggerChain(ref, data)
+				e.triggerChain(ref, data)
 			}
 		})
 		if err != nil {
@@ -631,7 +648,7 @@ func arrayFieldDuplicates(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int
 	return nil, 0, nil
 }
 
-func arrayDuplicates(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayDuplicatesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type, Error: bind.Error}, 0, nil
 	}
@@ -644,7 +661,7 @@ func arrayDuplicates(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (
 	return &RawData{Type: bind.Type, Value: dupes}, 0, nil
 }
 
-func arrayUnique(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayUniqueV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type, Error: bind.Error}, 0, nil
 	}
@@ -657,7 +674,7 @@ func arrayUnique(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return &RawData{Type: bind.Type, Value: unique}, 0, nil
 }
 
-func arrayDifference(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayDifferenceV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type, Error: bind.Error}, 0, nil
 	}
@@ -673,7 +690,7 @@ func arrayDifference(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (
 	// ^^ TODO
 
 	argRef := args[0]
-	arg, rref, err := c.resolveValue(argRef, ref)
+	arg, rref, err := e.resolveValue(argRef, ref)
 	if err != nil || rref > 0 {
 		return nil, rref, err
 	}
@@ -711,7 +728,7 @@ func arrayDifference(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (
 	return &RawData{Type: bind.Type, Value: res}, 0, nil
 }
 
-func arrayContainsNone(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayContainsNoneV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type, Error: bind.Error}, 0, nil
 	}
@@ -727,7 +744,7 @@ func arrayContainsNone(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32)
 	// ^^ TODO
 
 	argRef := args[0]
-	arg, rref, err := c.resolveValue(argRef, ref)
+	arg, rref, err := e.resolveValue(argRef, ref)
 	if err != nil || rref > 0 {
 		return nil, rref, err
 	}
@@ -761,7 +778,7 @@ func arrayContainsNone(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32)
 func compileArrayOpArray(op string) func(types.Type, types.Type) (string, error) {
 	return func(left types.Type, right types.Type) (string, error) {
 		name := string(left.Child()) + op + string(right)
-		af := BuiltinFunctions[types.ArrayLike]
+		af := BuiltinFunctionsV2[types.ArrayLike]
 		if _, ok := af[name]; ok {
 			return name, nil
 		}
@@ -781,7 +798,7 @@ func compileArrayOpArray(op string) func(types.Type, types.Type) (string, error)
 func compileLogicalArrayOp(underlying types.Type, op string) func(types.Type, types.Type) (string, error) {
 	return func(left types.Type, right types.Type) (string, error) {
 		name := string(types.Any) + op + string(right.Underlying())
-		af := BuiltinFunctions[underlying]
+		af := BuiltinFunctionsV2[underlying]
 		if _, ok := af[name]; ok {
 			return name, nil
 		}
@@ -836,69 +853,69 @@ func tArrayCmp(left *RawData, right *RawData) func(interface{}, interface{}) boo
 	}
 }
 
-func tarrayCmpTarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func tarrayCmpTarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrays(left, right, tArrayCmp(left, right))
 	})
 }
 
-func tarrayNotTarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func tarrayNotTarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrays(left, right, tArrayCmp(left, right))
 	})
 }
 
-func boolarrayCmpBoolarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func boolarrayCmpBoolarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrays(left, right, opBoolCmpBool)
 	})
 }
 
-func intarrayCmpIntarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func intarrayCmpIntarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrays(left, right, opIntCmpInt)
 	})
 }
 
-func floatarrayCmpFloatarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func floatarrayCmpFloatarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrays(left, right, opFloatCmpFloat)
 	})
 }
 
-func stringarrayCmpStringarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func stringarrayCmpStringarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrays(left, right, opStringCmpString)
 	})
 }
 
-func boolarrayNotBoolarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func boolarrayNotBoolarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrays(left, right, opBoolCmpBool)
 	})
 }
 
-func intarrayNotIntarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func intarrayNotIntarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrays(left, right, opIntCmpInt)
 	})
 }
 
-func floatarrayNotFloatarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func floatarrayNotFloatarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrays(left, right, opFloatCmpFloat)
 	})
 }
 
-func stringarrayNotStringarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func stringarrayNotStringarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrays(left, right, opStringCmpString)
 	})
 }
 
 // []T -- T
 
-func arrayCmpNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayCmpNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return BoolTrue, 0, nil
 	}
@@ -909,7 +926,7 @@ func arrayCmpNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return BoolFalse, 0, nil
 }
 
-func arrayNotNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayNotNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return BoolFalse, 0, nil
 	}
@@ -920,376 +937,376 @@ func arrayNotNil(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return BoolTrue, 0, nil
 }
 
-func boolarrayCmpBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func boolarrayCmpBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opBoolCmpBool)
 	})
 }
 
-func boolarrayNotBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func boolarrayNotBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opBoolCmpBool)
 	})
 }
 
-func intarrayCmpInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func intarrayCmpIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opIntCmpInt)
 	})
 }
 
-func intarrayNotInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func intarrayNotIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opIntCmpInt)
 	})
 }
 
-func floatarrayCmpFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func floatarrayCmpFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opFloatCmpFloat)
 	})
 }
 
-func floatarrayNotFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func floatarrayNotFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opFloatCmpFloat)
 	})
 }
 
-func stringarrayCmpString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func stringarrayCmpStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opStringCmpString)
 	})
 }
 
-func stringarrayNotString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func stringarrayNotStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opStringCmpString)
 	})
 }
 
 // T -- []T
 
-func boolCmpBoolarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func boolCmpBoolarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opBoolCmpBool)
 	})
 }
 
-func boolNotBoolarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func boolNotBoolarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opBoolCmpBool)
 	})
 }
 
-func intCmpIntarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func intCmpIntarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opIntCmpInt)
 	})
 }
 
-func intNotIntarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func intNotIntarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opIntCmpInt)
 	})
 }
 
-func floatCmpFloatarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func floatCmpFloatarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opFloatCmpFloat)
 	})
 }
 
-func floatNotFloatarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func floatNotFloatarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opFloatCmpFloat)
 	})
 }
 
-func stringCmpStringarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func stringCmpStringarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opStringCmpString)
 	})
 }
 
-func stringNotStringarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func stringNotStringarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opStringCmpString)
 	})
 }
 
 // int/float -- []T
 
-func intCmpFloatarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func intCmpFloatarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opFloatCmpInt)
 	})
 }
 
-func intNotFloatarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func intNotFloatarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opFloatCmpInt)
 	})
 }
 
-func floatCmpIntarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func floatCmpIntarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opIntCmpFloat)
 	})
 }
 
-func floatNotIntarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func floatNotIntarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opIntCmpFloat)
 	})
 }
 
-func intarrayCmpFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func intarrayCmpFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opIntCmpFloat)
 	})
 }
 
-func intarrayNotFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func intarrayNotFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opIntCmpFloat)
 	})
 }
 
-func floatarrayCmpInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func floatarrayCmpIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opFloatCmpInt)
 	})
 }
 
-func floatarrayNotInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func floatarrayNotIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opFloatCmpInt)
 	})
 }
 
 // string -- []T
 
-func stringCmpBoolarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func stringCmpBoolarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opBoolCmpString)
 	})
 }
 
-func stringNotBoolarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func stringNotBoolarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opBoolCmpString)
 	})
 }
 
-func boolarrayCmpString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func boolarrayCmpStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opBoolCmpString)
 	})
 }
 
-func boolarrayNotString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func boolarrayNotStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opBoolCmpString)
 	})
 }
 
-func stringCmpIntarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func stringCmpIntarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opIntCmpString)
 	})
 }
 
-func stringNotIntarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func stringNotIntarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opIntCmpString)
 	})
 }
 
-func intarrayCmpString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func intarrayCmpStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opIntCmpString)
 	})
 }
 
-func intarrayNotString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func intarrayNotStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opIntCmpString)
 	})
 }
 
-func stringCmpFloatarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func stringCmpFloatarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opFloatCmpString)
 	})
 }
 
-func stringNotFloatarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func stringNotFloatarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opFloatCmpString)
 	})
 }
 
-func floatarrayCmpString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func floatarrayCmpStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opFloatCmpString)
 	})
 }
 
-func floatarrayNotString(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func floatarrayNotStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opFloatCmpString)
 	})
 }
 
 // bool -- []string
 
-func boolCmpStringarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func boolCmpStringarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opStringCmpBool)
 	})
 }
 
-func boolNotStringarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func boolNotStringarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opStringCmpBool)
 	})
 }
 
-func stringarrayCmpBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func stringarrayCmpBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opStringCmpBool)
 	})
 }
 
-func stringarrayNotBool(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func stringarrayNotBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opStringCmpBool)
 	})
 }
 
 // int -- []string
 
-func intCmpStringarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func intCmpStringarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opStringCmpInt)
 	})
 }
 
-func intNotStringarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func intNotStringarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opStringCmpInt)
 	})
 }
 
-func stringarrayCmpInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func stringarrayCmpIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opStringCmpInt)
 	})
 }
 
-func stringarrayNotInt(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func stringarrayNotIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opStringCmpInt)
 	})
 }
 
 // float -- []string
 
-func floatCmpStringarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func floatCmpStringarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opStringCmpFloat)
 	})
 }
 
-func floatNotStringarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func floatNotStringarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opStringCmpFloat)
 	})
 }
 
-func stringarrayCmpFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func stringarrayCmpFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opStringCmpFloat)
 	})
 }
 
-func stringarrayNotFloat(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func stringarrayNotFloatV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opStringCmpFloat)
 	})
 }
 
 // regex -- []T
 
-func regexCmpStringarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func regexCmpStringarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opStringCmpRegex)
 	})
 }
 
-func regexNotStringarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func regexNotStringarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opStringCmpRegex)
 	})
 }
 
-func stringarrayCmpRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func stringarrayCmpRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opStringCmpRegex)
 	})
 }
 
-func stringarrayNotRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func stringarrayNotRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opStringCmpRegex)
 	})
 }
 
-func regexCmpIntarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func regexCmpIntarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opIntCmpRegex)
 	})
 }
 
-func regexNotIntarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func regexNotIntarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opIntCmpRegex)
 	})
 }
 
-func intarrayCmpRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func intarrayCmpRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opIntCmpRegex)
 	})
 }
 
-func intarrayNotRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func intarrayNotRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opIntCmpRegex)
 	})
 }
 
-func regexCmpFloatarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func regexCmpFloatarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opFloatCmpRegex)
 	})
 }
 
-func regexNotFloatarray(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func regexNotFloatarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(right, left, opFloatCmpRegex)
 	})
 }
 
-func floatarrayCmpRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func floatarrayCmpRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opFloatCmpRegex)
 	})
 }
 
-func floatarrayNotRegex(c *LeiseExecutor, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
-	return rawboolNotOp(c, bind, chunk, ref, func(left *RawData, right *RawData) bool {
+func floatarrayNotRegexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opFloatCmpRegex)
 	})
 }
