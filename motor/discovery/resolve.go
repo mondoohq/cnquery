@@ -143,6 +143,15 @@ func ResolveAsset(root *asset.Asset, cfn common.CredentialFn, sfn common.QuerySe
 				assetObj.Labels[k] = v
 			}
 
+			// copy over annotations from root
+			if assetObj.Annotations == nil {
+				assetObj.Annotations = map[string]string{}
+			}
+
+			for k, v := range root.Annotations {
+				assetObj.Annotations[k] = v
+			}
+
 			resolved = append(resolved, assetObj)
 		}
 	}
