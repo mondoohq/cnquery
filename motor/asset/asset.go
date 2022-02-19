@@ -2,6 +2,7 @@ package asset
 
 import (
 	fmt "fmt"
+
 	"github.com/rs/zerolog/log"
 )
 
@@ -58,6 +59,17 @@ func (a *Asset) AddLabels(labels map[string]string) {
 	// copy labels
 	for k := range labels {
 		a.Labels[k] = labels[k]
+	}
+}
+
+func (a *Asset) AddAnnotations(annotations map[string]string) {
+	if a.Annotations == nil {
+		a.Annotations = map[string]string{}
+	}
+
+	// copy annotations
+	for k := range annotations {
+		a.Annotations[k] = annotations[k]
 	}
 }
 
