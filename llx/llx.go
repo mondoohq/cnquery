@@ -169,6 +169,10 @@ func NewExecutor(code *Code, runtime *lumi.Runtime, props map[string]*Primitive,
 		res.callbackPoints[ref] = id
 	}
 
+	if len(res.callbackPoints) == 0 {
+		return nil, errors.New("llx.executor> no callback points found")
+	}
+
 	return res, nil
 }
 
