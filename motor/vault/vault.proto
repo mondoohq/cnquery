@@ -65,3 +65,20 @@ message Credential {
   // secret
   string private_key_path = 23;
 }
+
+enum VaultType {
+  None = 0;
+  KeyRing = 1;
+  LinuxKernelKeyring = 2;
+  EncryptedFile = 3;
+  HashiCorp = 4;
+  GCPSecretsManager = 5;
+  AWSSecretsManager = 6;
+  AWSParameterStore = 7;
+}
+
+message VaultConfiguration {
+  string name = 1;
+  VaultType type = 2;
+  map <string, string> options = 3;
+}
