@@ -135,11 +135,16 @@ func (im *inventoryManager) loadInventory(inventory *v1.Inventory) error {
 				return err
 			}
 		} else {
+			t, err := vault.NewVaultType(inventory.Spec.Vault.Type)
+			if err != nil {
+				return err
+			}
+
 			// instantiate with full vault config
-			v, err = config.New(config.VaultConfiguration{
-				Name:      inventory.Spec.Vault.Name,
-				VaultType: inventory.Spec.Vault.Type,
-				Options:   inventory.Spec.Vault.Options,
+			v, err = config.New(vault.VaultConfiguration{
+				Name:    inventory.Spec.Vault.Name,
+				Type:    t,
+				Options: inventory.Spec.Vault.Options,
 			})
 			if err != nil {
 				return err
