@@ -141,7 +141,7 @@ func (im *inventoryManager) loadInventory(inventory *v1.Inventory) error {
 			}
 
 			// instantiate with full vault config
-			v, err = config.New(vault.VaultConfiguration{
+			v, err = config.New(&vault.VaultConfiguration{
 				Name:    inventory.Spec.Vault.Name,
 				Type:    t,
 				Options: inventory.Spec.Vault.Options,

@@ -21,7 +21,10 @@ const (
 	VaultConfigStoreKey  = "user-vaults"
 )
 
-func New(vCfg vault.VaultConfiguration) (vault.Vault, error) {
+func New(vCfg *vault.VaultConfiguration) (vault.Vault, error) {
+	if vCfg == nil {
+		return nil, errors.New("vault configuration cannot be empty")
+	}
 	log.Debug().Str("vault-name", vCfg.Name).Str("vault-type", vCfg.Type.String()).Msg("initialize new vault")
 	var v vault.Vault
 	switch vCfg.Type {
@@ -99,7 +102,7 @@ func GetConfiguredVault(vaultName string) (vault.Vault, error) {
 	}
 
 	log.Debug().Str("vault-name", vCfg.Name).Str("vault-type", vCfg.Type.String()).Msg("found vault config")
-	return New(vCfg)
+	return New(&vCfg)
 }
 
 // ClientVaultConfig is the structured type where we store the client configuration for
