@@ -44,12 +44,7 @@ func WithInventory(inventory *v1.Inventory) Option {
 // passes a list of asset into the Inventory Manager
 func WithAssets(assetList []*asset.Asset) Option {
 	return func(im *inventoryManager) error {
-		inventory := &v1.Inventory{
-			Spec: &v1.InventorySpec{
-				Assets: assetList,
-			},
-		}
-		return im.loadInventory(inventory)
+		return im.loadInventory(v1.New(v1.WithAssets(assetList...)))
 	}
 }
 

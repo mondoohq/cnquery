@@ -4,13 +4,10 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"go.mondoo.io/mondoo/motor/vault"
-
-	motor_asset "go.mondoo.io/mondoo/motor/asset"
-
 	"github.com/cockroachdb/errors"
-
 	"github.com/segmentio/ksuid"
+	asset "go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/vault"
 	"google.golang.org/protobuf/proto"
 	"sigs.k8s.io/yaml"
 )
@@ -21,11 +18,25 @@ const (
 	InventoryFilePath = "mondoo.app/source-file"
 )
 
-func New() *Inventory {
+type Option func(*Inventory)
+
+// passes a list of asset into the Inventory Manager
+func WithAssets(assetList ...*asset.Asset) Option {
+	return func(inventory *Inventory) {
+		inventory.AddAssets(assetList...)
+	}
+}
+
+func New(opts ...Option) *Inventory {
 	inventory := &Inventory{
 		Metadata: &ObjectMeta{},
 		Spec:     &InventorySpec{},
 	}
+
+	for _, option := range opts {
+		option(inventory)
+	}
+
 	return inventory
 }
 
@@ -204,7 +215,10 @@ func (p *Inventory) Validate() error {
 	return nil
 }
 
-func (p *Inventory) AddAssets(assetList ...*motor_asset.Asset) {
+func (p *Inventory) AddAssets(assetList ...*asset.Asset) {
+	if p.Spec == nil {
+		p.Spec = &InventorySpec{}
+	}
 	for i := range assetList {
 		p.Spec.Assets = append(p.Spec.Assets, assetList[i])
 	}
