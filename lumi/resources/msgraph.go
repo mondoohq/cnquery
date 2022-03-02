@@ -16,6 +16,7 @@ import (
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/settings"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/users"
 	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/lumi/resources/msgraphconv"
 	"go.mondoo.io/mondoo/motor/transports"
 	ms365_transport "go.mondoo.io/mondoo/motor/transports/ms365"
 )
@@ -47,7 +48,7 @@ func (m *lumiMsgraphBeta) GetSettings() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return jsonToDictSlice(settings)
+	return jsonToDictSlice(msgraphconv.NewDirectorySettings(settings.GetValue()))
 }
 
 func (m *lumiMsgraphBetaOrganization) id() (string, error) {
@@ -80,8 +81,8 @@ func (m *lumiMsgraphBeta) GetOrganizations() ([]interface{}, error) {
 	for i := range orgs {
 		org := orgs[i]
 
-		assignedPlans, _ := jsonToDictSlice(org.GetAssignedPlans())
-		verifiedDomains, _ := jsonToDictSlice(org.GetVerifiedDomains())
+		assignedPlans, _ := jsonToDictSlice(msgraphconv.NewAssignedPlans(org.GetAssignedPlans()))
+		verifiedDomains, _ := jsonToDictSlice(msgraphconv.NewVerifiedDomains(org.GetVerifiedDomains()))
 
 		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.organization",
 			"id", toString(org.GetId()),
@@ -607,7 +608,7 @@ func (m *lumiMsgraphBetaRolemanagement) GetRoleDefinitions() (interface{}, error
 	for i := range roles {
 		role := roles[i]
 
-		rolePermissions, _ := jsonToDictSlice(role.GetRolePermissions())
+		rolePermissions, _ := jsonToDictSlice(msgraphconv.NewUnifiedRolePermissions(role.GetRolePermissions()))
 
 		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.rolemanagement.roledefinition",
 			"id", toString(role.GetId()),
