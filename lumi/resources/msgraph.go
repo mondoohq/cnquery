@@ -1,11 +1,20 @@
 package resources
 
 import (
-	"context"
 	"errors"
 	"strings"
 
-	msgraphbeta "github.com/yaegashi/msgraph.go/beta"
+	"github.com/microsoftgraph/msgraph-beta-sdk-go/applications"
+	"github.com/microsoftgraph/msgraph-beta-sdk-go/devicemanagement/devicecompliancepolicies"
+	"github.com/microsoftgraph/msgraph-beta-sdk-go/devicemanagement/deviceconfigurations"
+	"github.com/microsoftgraph/msgraph-beta-sdk-go/domains"
+	"github.com/microsoftgraph/msgraph-beta-sdk-go/models/microsoft/graph"
+	"github.com/microsoftgraph/msgraph-beta-sdk-go/organization"
+	"github.com/microsoftgraph/msgraph-beta-sdk-go/rolemanagement/directory/roleassignments"
+	"github.com/microsoftgraph/msgraph-beta-sdk-go/rolemanagement/directory/roledefinitions"
+	"github.com/microsoftgraph/msgraph-beta-sdk-go/security/securescores"
+	"github.com/microsoftgraph/msgraph-beta-sdk-go/settings"
+	"github.com/microsoftgraph/msgraph-beta-sdk-go/users"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/transports"
 	ms365_transport "go.mondoo.io/mondoo/motor/transports/ms365"
@@ -34,8 +43,7 @@ func (m *lumiMsgraphBeta) GetSettings() ([]interface{}, error) {
 		return nil, err
 	}
 
-	ctx := context.Background()
-	settings, err := graphBetaClient.Settings().Request().Get(ctx)
+	settings, err := graphBetaClient.Settings().Get(&settings.SettingsRequestBuilderGetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -62,24 +70,24 @@ func (m *lumiMsgraphBeta) GetOrganizations() ([]interface{}, error) {
 		return nil, err
 	}
 
-	ctx := context.Background()
-	orgs, err := graphBetaClient.Organization().Request().Get(ctx)
+	resp, err := graphBetaClient.Organization().Get(&organization.OrganizationRequestBuilderGetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	res := []interface{}{}
+	orgs := resp.GetValue()
 	for i := range orgs {
 		org := orgs[i]
 
-		assignedPlans, _ := jsonToDictSlice(org.AssignedPlans)
-		verifiedDomains, _ := jsonToDictSlice(org.VerifiedDomains)
+		assignedPlans, _ := jsonToDictSlice(org.GetAssignedPlans())
+		verifiedDomains, _ := jsonToDictSlice(org.GetVerifiedDomains())
 
 		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.organization",
-			"id", toString(org.ID),
+			"id", toString(org.GetId()),
 			"assignedPlans", assignedPlans,
-			"createdDateTime", org.CreatedDateTime,
-			"displayName", toString(org.DisplayName),
+			"createdDateTime", org.GetCreatedDateTime(),
+			"displayName", toString(org.GetDisplayName()),
 			"verifiedDomains", verifiedDomains,
 		)
 		if err != nil {
@@ -111,39 +119,39 @@ func (m *lumiMsgraphBeta) GetUsers() ([]interface{}, error) {
 		return nil, err
 	}
 
-	ctx := context.Background()
-	users, err := graphBetaClient.Users().Request().Get(ctx)
+	resp, err := graphBetaClient.Users().Get(&users.UsersRequestBuilderGetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	res := []interface{}{}
+	users := resp.GetValue()
 	for i := range users {
 		user := users[i]
 
-		settings, _ := jsonToDict(user.Settings)
+		settings, _ := jsonToDict(user.GetSettings())
 		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.user",
-			"id", toString(user.ID),
-			"accountEnabled", toBool(user.AccountEnabled),
-			"city", toString(user.City),
-			"companyName", toString(user.CompanyName),
-			"country", toString(user.Country),
-			"createdDateTime", user.CreatedDateTime,
-			"department", toString(user.Department),
-			"displayName", toString(user.DisplayName),
-			"employeeId", toString(user.EmployeeID),
-			"givenName", toString(user.GivenName),
-			"jobTitle", toString(user.JobTitle),
-			"mail", toString(user.Mail),
-			"mobilePhone", toString(user.MobilePhone),
-			"otherMails", strSliceToInterface(user.OtherMails),
-			"officeLocation", toString(user.OfficeLocation),
-			"postalCode", toString(user.PostalCode),
-			"state", toString(user.State),
-			"streetAddress", toString(user.StreetAddress),
-			"surname", toString(user.Surname),
-			"userPrincipalName", toString(user.UserPrincipalName),
-			"userType", toString(user.UserType),
+			"id", toString(user.GetId()),
+			"accountEnabled", toBool(user.GetAccountEnabled()),
+			"city", toString(user.GetCity()),
+			"companyName", toString(user.GetCompanyName()),
+			"country", toString(user.GetCountry()),
+			"createdDateTime", user.GetCreatedDateTime(),
+			"department", toString(user.GetDepartment()),
+			"displayName", toString(user.GetDisplayName()),
+			"employeeId", toString(user.GetEmployeeId()),
+			"givenName", toString(user.GetGivenName()),
+			"jobTitle", toString(user.GetJobTitle()),
+			"mail", toString(user.GetMail()),
+			"mobilePhone", toString(user.GetMobilePhone()),
+			"otherMails", strSliceToInterface(user.GetOtherMails()),
+			"officeLocation", toString(user.GetOfficeLocation()),
+			"postalCode", toString(user.GetPostalCode()),
+			"state", toString(user.GetState()),
+			"streetAddress", toString(user.GetStreetAddress()),
+			"surname", toString(user.GetSurname()),
+			"userPrincipalName", toString(user.GetUserPrincipalName()),
+			"userType", toString(user.GetUserType()),
 			"settings", settings,
 		)
 		if err != nil {
@@ -175,28 +183,28 @@ func (m *lumiMsgraphBeta) GetDomains() ([]interface{}, error) {
 		return nil, err
 	}
 
-	ctx := context.Background()
-	domains, err := graphBetaClient.Domains().Request().Get(ctx)
+	resp, err := graphBetaClient.Domains().Get(&domains.DomainsRequestBuilderGetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	res := []interface{}{}
+	domains := resp.GetValue()
 	for i := range domains {
 		domain := domains[i]
 
 		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.domain",
-			"id", toString(domain.ID),
-			"authenticationType", toString(domain.AuthenticationType),
-			"availabilityStatus", toString(domain.AvailabilityStatus),
-			"isAdminManaged", toBool(domain.IsAdminManaged),
-			"isDefault", toBool(domain.IsDefault),
-			"isInitial", toBool(domain.IsInitial),
-			"isRoot", toBool(domain.IsRoot),
-			"isVerified", toBool(domain.IsVerified),
-			"passwordNotificationWindowInDays", toInt(domain.PasswordNotificationWindowInDays),
-			"passwordValidityPeriodInDays", toInt(domain.PasswordValidityPeriodInDays),
-			"supportedServices", sliceInterface(domain.SupportedServices),
+			"id", toString(domain.GetId()),
+			"authenticationType", toString(domain.GetAuthenticationType()),
+			"availabilityStatus", toString(domain.GetAvailabilityStatus()),
+			"isAdminManaged", toBool(domain.GetIsAdminManaged()),
+			"isDefault", toBool(domain.GetIsDefault()),
+			"isInitial", toBool(domain.GetIsInitial()),
+			"isRoot", toBool(domain.GetIsRoot()),
+			"isVerified", toBool(domain.GetIsVerified()),
+			"passwordNotificationWindowInDays", toInt64From32(domain.GetPasswordNotificationWindowInDays()),
+			"passwordValidityPeriodInDays", toInt64From32(domain.GetPasswordValidityPeriodInDays()),
+			"supportedServices", sliceInterface(domain.GetSupportedServices()),
 		)
 		if err != nil {
 			return nil, err
@@ -232,25 +240,25 @@ func (m *lumiMsgraphBetaDomain) GetServiceConfigurationRecords() ([]interface{},
 		return nil, err
 	}
 
-	ctx := context.Background()
-	records, err := graphBetaClient.Domains().ID(id).ServiceConfigurationRecords().Request().Get(ctx)
+	resp, err := graphBetaClient.DomainsById(id).ServiceConfigurationRecords().Get(nil)
 	if err != nil {
 		return nil, err
 	}
 
 	res := []interface{}{}
+	records := resp.GetValue()
 	for i := range records {
 		record := records[i]
 
-		properties, _ := jsonToDict(record.AdditionalData)
+		properties, _ := jsonToDict(record.GetAdditionalData())
 
 		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.domaindnsrecord",
-			"id", toString(record.ID),
-			"isOptional", toBool(record.IsOptional),
-			"label", toString(record.Label),
-			"recordType", toString(record.RecordType),
-			"supportedService", toString(record.SupportedService),
-			"ttl", toInt(record.TTL),
+			"id", toString(record.GetId()),
+			"isOptional", toBool(record.GetIsOptional()),
+			"label", toString(record.GetLabel()),
+			"recordType", toString(record.GetRecordType()),
+			"supportedService", toString(record.GetSupportedService()),
+			"ttl", toInt64From32(record.GetTtl()),
 			"properties", properties,
 		)
 		if err != nil {
@@ -282,24 +290,24 @@ func (m *lumiMsgraphBeta) GetApplications() ([]interface{}, error) {
 		return nil, err
 	}
 
-	ctx := context.Background()
-	apps, err := graphBetaClient.Applications().Request().Get(ctx)
+	resp, err := graphBetaClient.Applications().Get(&applications.ApplicationsRequestBuilderGetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	res := []interface{}{}
+	apps := resp.GetValue()
 	for i := range apps {
 		app := apps[i]
 
 		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.application",
-			"id", toString(app.ID),
-			"appId", toString(app.AppID),
-			"createdDateTime", app.CreatedDateTime,
-			"identifierUris", strSliceToInterface(app.IdentifierUris),
-			"displayName", toString(app.DisplayName),
-			"publisherDomain", toString(app.PublisherDomain),
-			"signInAudience", toString(app.SignInAudience),
+			"id", toString(app.GetId()),
+			"appId", toString(app.GetAppId()),
+			"createdDateTime", app.GetCreatedDateTime(),
+			"identifierUris", strSliceToInterface(app.GetIdentifierUris()),
+			"displayName", toString(app.GetDisplayName()),
+			"publisherDomain", toString(app.GetPublisherDomain()),
+			"signInAudience", toString(app.GetSignInAudience()),
 		)
 		if err != nil {
 			return nil, err
@@ -331,11 +339,11 @@ func (m *lumiMsgraphBetaUser) GetSettings() (interface{}, error) {
 		return nil, err
 	}
 
-	ctx := context.Background()
-	userSettings, err := graphBetaClient.Users().ID(id).Settings().Request().Get(ctx)
+	userSettings, err := graphBetaClient.UsersById(id).Settings().Get(nil)
 	if err != nil {
 		return nil, err
 	}
+
 	return jsonToDict(userSettings)
 }
 
@@ -343,10 +351,11 @@ func (m *lumiMsgraphBetaSecurity) id() (string, error) {
 	return "msgraph.beta.security", nil
 }
 
-func msSecureScoreToLumi(runtime *lumi.Runtime, score msgraphbeta.SecureScore) (interface{}, error) {
+func msSecureScoreToLumi(runtime *lumi.Runtime, score graph.SecureScore) (interface{}, error) {
 	averageComparativeScores := []interface{}{}
-	for j := range score.AverageComparativeScores {
-		entry, err := jsonToDict(score.AverageComparativeScores[j])
+	graphAverageComparativeScores := score.GetAverageComparativeScores()
+	for j := range graphAverageComparativeScores {
+		entry, err := jsonToDict(graphAverageComparativeScores[j])
 		if err != nil {
 			return nil, err
 		}
@@ -354,30 +363,31 @@ func msSecureScoreToLumi(runtime *lumi.Runtime, score msgraphbeta.SecureScore) (
 	}
 
 	controlScores := []interface{}{}
-	for j := range score.ControlScores {
-		entry, err := jsonToDict(score.ControlScores[j])
+	graphControlScores := score.GetControlScores()
+	for j := range graphControlScores {
+		entry, err := jsonToDict(graphControlScores[j])
 		if err != nil {
 			return nil, err
 		}
 		controlScores = append(controlScores, entry)
 	}
 
-	vendorInformation, err := jsonToDict(score.VendorInformation)
+	vendorInformation, err := jsonToDict(score.GetVendorInformation())
 	if err != nil {
 		return nil, err
 	}
 
 	lumiResource, err := runtime.CreateResource("msgraph.beta.security.securityscore",
-		"id", toString(score.ID),
-		"activeUserCount", toInt(score.ActiveUserCount),
+		"id", toString(score.GetId()),
+		"activeUserCount", toInt64From32(score.GetActiveUserCount()),
 		"averageComparativeScores", averageComparativeScores,
-		"azureTenantId", toString(score.AzureTenantID),
+		"azureTenantId", toString(score.GetAzureTenantId()),
 		"controlScores", controlScores,
-		"createdDateTime", score.CreatedDateTime,
-		"currentScore", toFloat64(score.CurrentScore),
-		"enabledServices", strSliceToInterface(score.EnabledServices),
-		"licensedUserCount", toInt(score.LicensedUserCount),
-		"maxScore", toFloat64(score.MaxScore),
+		"createdDateTime", score.GetCreatedDateTime(),
+		"currentScore", toFloat64(score.GetCurrentScore()),
+		"enabledServices", strSliceToInterface(score.GetEnabledServices()),
+		"licensedUserCount", toInt64From32(score.GetLicensedUserCount()),
+		"maxScore", toFloat64(score.GetMaxScore()),
 		"vendorInformation", vendorInformation,
 	)
 	if err != nil {
@@ -402,12 +412,12 @@ func (m *lumiMsgraphBetaSecurity) GetLatestSecureScores() (interface{}, error) {
 		return nil, err
 	}
 
-	ctx := context.Background()
-	scores, err := graphBetaClient.Security().SecureScores().Request().Get(ctx)
+	resp, err := graphBetaClient.Security().SecureScores().Get(&securescores.SecureScoresRequestBuilderGetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
+	scores := resp.GetValue()
 	if len(scores) == 0 {
 		return nil, errors.New("could not retrieve any score")
 	}
@@ -415,7 +425,7 @@ func (m *lumiMsgraphBetaSecurity) GetLatestSecureScores() (interface{}, error) {
 	latestScore := scores[0]
 	for i := range scores {
 		score := scores[i]
-		if score.CreatedDateTime != nil && (latestScore.CreatedDateTime == nil || score.CreatedDateTime.Before(*latestScore.CreatedDateTime)) {
+		if score.GetCreatedDateTime() != nil && (latestScore.GetCreatedDateTime() == nil || score.GetCreatedDateTime().Before(*latestScore.GetCreatedDateTime())) {
 			latestScore = score
 		}
 	}
@@ -440,13 +450,13 @@ func (m *lumiMsgraphBetaSecurity) GetSecureScores() ([]interface{}, error) {
 		return nil, err
 	}
 
-	ctx := context.Background()
-	scores, err := graphBetaClient.Security().SecureScores().Request().Get(ctx)
+	resp, err := graphBetaClient.Security().SecureScores().Get(&securescores.SecureScoresRequestBuilderGetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	res := []interface{}{}
+	scores := resp.GetValue()
 	for i := range scores {
 		score := scores[i]
 		lumiResource, err := msSecureScoreToLumi(m.Runtime, score)
@@ -483,18 +493,14 @@ func (m *lumiMsgraphBetaPolicies) GetAuthorizationPolicy() (interface{}, error) 
 		return nil, err
 	}
 
-	ctx := context.Background()
-	policy, err := graphBetaClient.Policies().ID("authorizationPolicy").Request().Get(ctx)
+	resp, err := graphBetaClient.Policies().AuthorizationPolicy().Get(nil)
 	if err != nil {
 		return nil, err
 	}
 
-	additionalDataRaw, ok := policy.AdditionalData["value"]
-	if ok {
-		additonalDataSlice, ok := additionalDataRaw.([]interface{})
-		if ok && len(additonalDataSlice) > 0 {
-			return jsonToDict(additonalDataSlice[0])
-		}
+	policy := resp.GetValue()
+	if len(policy) > 0 {
+		return jsonToDict(policy)
 	}
 	return nil, nil
 }
@@ -515,12 +521,11 @@ func (m *lumiMsgraphBetaPolicies) GetIdentitySecurityDefaultsEnforcementPolicy()
 		return nil, err
 	}
 
-	ctx := context.Background()
-	policy, err := graphBetaClient.Policies().ID("identitySecurityDefaultsEnforcementPolicy").Request().Get(ctx)
+	policy, err := graphBetaClient.Policies().IdentitySecurityDefaultsEnforcementPolicy().Get(nil)
 	if err != nil {
 		return nil, err
 	}
-	return jsonToDict(policy.AdditionalData)
+	return jsonToDict(policy.GetAdditionalData())
 }
 
 // https://docs.microsoft.com/en-us/graph/api/adminconsentrequestpolicy-get?view=graph-rest-beta
@@ -540,12 +545,11 @@ func (m *lumiMsgraphBetaPolicies) GetAdminConsentRequestPolicy() (interface{}, e
 		return nil, err
 	}
 
-	ctx := context.Background()
-	policy, err := graphBetaClient.Policies().ID("adminConsentRequestPolicy").Request().Get(ctx)
+	resp, err := graphBetaClient.Policies().AdminConsentRequestPolicy().Get(nil)
 	if err != nil {
 		return nil, err
 	}
-	return jsonToDict(policy.AdditionalData)
+	return jsonToDict(resp.GetAdditionalData())
 }
 
 // https://docs.microsoft.com/en-us/azure/active-directory/manage-apps/configure-user-consent?tabs=azure-powershell
@@ -566,12 +570,11 @@ func (m *lumiMsgraphBetaPolicies) GetPermissionGrantPolicies() (interface{}, err
 		return nil, err
 	}
 
-	ctx := context.Background()
-	policy, err := graphBetaClient.Policies().ID("permissionGrantPolicies").Request().Get(ctx)
+	resp, err := graphBetaClient.Policies().PermissionGrantPolicies().Get(nil)
 	if err != nil {
 		return nil, err
 	}
-	return jsonToDictSlice(policy.AdditionalData["value"])
+	return jsonToDictSlice(resp.GetValue())
 }
 
 func (m *lumiMsgraphBetaRolemanagement) id() (string, error) {
@@ -594,27 +597,27 @@ func (m *lumiMsgraphBetaRolemanagement) GetRoleDefinitions() (interface{}, error
 		return nil, err
 	}
 
-	ctx := context.Background()
-	roles, err := graphBetaClient.RoleManagement().Directory().RoleDefinitions().Request().Get(ctx)
+	resp, err := graphBetaClient.RoleManagement().Directory().RoleDefinitions().Get(&roledefinitions.RoleDefinitionsRequestBuilderGetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	res := []interface{}{}
+	roles := resp.GetValue()
 	for i := range roles {
 		role := roles[i]
 
-		rolePermissions, _ := jsonToDictSlice(role.RolePermissions)
+		rolePermissions, _ := jsonToDictSlice(role.GetRolePermissions())
 
 		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.rolemanagement.roledefinition",
-			"id", toString(role.ID),
-			"description", toString(role.Description),
-			"displayName", toString(role.DisplayName),
-			"isBuiltIn", toBool(role.IsBuiltIn),
-			"isEnabled", toBool(role.IsEnabled),
+			"id", toString(role.GetId()),
+			"description", toString(role.GetDescription()),
+			"displayName", toString(role.GetDisplayName()),
+			"isBuiltIn", toBool(role.GetIsBuiltIn()),
+			"isEnabled", toBool(role.GetIsEnabled()),
 			"rolePermissions", rolePermissions,
-			"templateId", toString(role.TemplateID),
-			"version", toString(role.Version),
+			"templateId", toString(role.GetTemplateId()),
+			"version", toString(role.GetVersion()),
 		)
 		if err != nil {
 			return nil, err
@@ -649,12 +652,16 @@ func (m *lumiMsgraphBetaRolemanagementRoledefinition) GetAssignments() ([]interf
 	if err != nil {
 		return nil, err
 	}
+	filter := "roleDefinitionId eq '" + roleDefinitionID + "'"
 
-	ctx := context.Background()
-	r := graphBetaClient.RoleManagement().Directory().RoleAssignments().Request()
-	r.Filter("roleDefinitionId eq '" + roleDefinitionID + "'")
-	r.Expand("principal")
-	roleAssignments, err := r.Get(ctx)
+	resp, err := graphBetaClient.RoleManagement().Directory().RoleAssignments().Get(&roleassignments.RoleAssignmentsRequestBuilderGetOptions{
+		Q: &roleassignments.RoleAssignmentsRequestBuilderGetQueryParameters{
+			Filter: &filter,
+			Expand: []string{"principal"},
+		},
+	})
+
+	roleAssignments := resp.GetValue()
 	if err != nil {
 		return nil, err
 	}
@@ -662,13 +669,11 @@ func (m *lumiMsgraphBetaRolemanagementRoledefinition) GetAssignments() ([]interf
 	res := []interface{}{}
 	for i := range roleAssignments {
 		roleAssignment := roleAssignments[i]
-
-		principal, _ := jsonToDict(roleAssignment.Principal)
-
+		principal, _ := jsonToDict(roleAssignment.GetPrincipal())
 		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.rolemanagement.roleassignment",
-			"id", toString(roleAssignment.ID),
-			"roleDefinitionId", toString(roleAssignment.RoleDefinitionID),
-			"principalId", toString(roleAssignment.PrincipalID),
+			"id", toString(roleAssignment.GetId()),
+			"roleDefinitionId", toString(roleAssignment.GetRoleDefinitionId()),
+			"principalId", toString(roleAssignment.GetPrincipalId()),
 			"principal", principal,
 		)
 		if err != nil {
@@ -704,27 +709,25 @@ func (m *lumiMsgraphBetaDevicemanagement) GetDeviceConfigurations() ([]interface
 		return nil, err
 	}
 
-	ctx := context.Background()
-	configurations, err := graphBetaClient.DeviceManagement().DeviceConfigurations().Request().Get(ctx)
+	resp, err := graphBetaClient.DeviceManagement().DeviceConfigurations().Get(&deviceconfigurations.DeviceConfigurationsRequestBuilderGetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	res := []interface{}{}
+	configurations := resp.GetValue()
 	for i := range configurations {
 		configuration := configurations[i]
-
-		properties, _ := jsonToDict(configuration.AdditionalData)
-
+		properties, _ := jsonToDict(configuration.GetAdditionalData())
 		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.devicemanagement.deviceconfiguration",
-			"id", toString(configuration.ID),
-			"lastModifiedDateTime", configuration.LastModifiedDateTime,
-			"roleScopeTagIds", sliceInterface(configuration.RoleScopeTagIDs),
-			"supportsScopeTags", toBool(configuration.SupportsScopeTags),
-			"createdDateTime", configuration.CreatedDateTime,
-			"description", toString(configuration.Description),
-			"displayName", toString(configuration.DisplayName),
-			"version", toInt(configuration.Version),
+			"id", toString(configuration.GetId()),
+			"lastModifiedDateTime", configuration.GetLastModifiedDateTime(),
+			"roleScopeTagIds", sliceInterface(configuration.GetRoleScopeTagIds()),
+			"supportsScopeTags", toBool(configuration.GetSupportsScopeTags()),
+			"createdDateTime", configuration.GetCreatedDateTime(),
+			"description", toString(configuration.GetDescription()),
+			"displayName", toString(configuration.GetDisplayName()),
+			"version", toInt64From32(configuration.GetVersion()),
 			"properties", properties,
 		)
 		if err != nil {
@@ -752,29 +755,31 @@ func (m *lumiMsgraphBetaDevicemanagement) GetDeviceCompliancePolicies() ([]inter
 		return nil, err
 	}
 
-	ctx := context.Background()
-	r := graphBetaClient.DeviceManagement().DeviceCompliancePolicies().Request()
-	r.Expand("assignments")
-	compliancePolicies, err := r.Get(ctx)
+	resp, err := graphBetaClient.DeviceManagement().DeviceCompliancePolicies().Get(&devicecompliancepolicies.DeviceCompliancePoliciesRequestBuilderGetOptions{
+		Q: &devicecompliancepolicies.DeviceCompliancePoliciesRequestBuilderGetQueryParameters{
+			Expand: []string{"assignments"},
+		},
+	})
 	if err != nil {
 		return nil, err
 	}
 
+	compliancePolicies := resp.GetValue()
 	res := []interface{}{}
 	for i := range compliancePolicies {
 		compliancePolicy := compliancePolicies[i]
 
-		properties, _ := jsonToDict(compliancePolicy.AdditionalData)
-		assignments, _ := jsonToDictSlice(compliancePolicy.Assignments)
+		properties, _ := jsonToDict(compliancePolicy.GetAdditionalData())
+		assignments, _ := jsonToDictSlice(compliancePolicy.GetAssignments())
 
 		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.devicemanagement.devicecompliancepolicy",
-			"id", toString(compliancePolicy.ID),
-			"createdDateTime", compliancePolicy.CreatedDateTime,
-			"description", toString(compliancePolicy.Description),
-			"displayName", toString(compliancePolicy.DisplayName),
-			"lastModifiedDateTime", compliancePolicy.LastModifiedDateTime,
-			"roleScopeTagIds", sliceInterface(compliancePolicy.RoleScopeTagIDs),
-			"version", toInt(compliancePolicy.Version),
+			"id", toString(compliancePolicy.GetId()),
+			"createdDateTime", compliancePolicy.GetCreatedDateTime(),
+			"description", toString(compliancePolicy.GetDescription()),
+			"displayName", toString(compliancePolicy.GetDisplayName()),
+			"lastModifiedDateTime", compliancePolicy.GetLastModifiedDateTime(),
+			"roleScopeTagIds", sliceInterface(compliancePolicy.GetRoleScopeTagIds()),
+			"version", toInt64From32(compliancePolicy.GetVersion()),
 			"properties", properties,
 			"assignments", assignments,
 		)

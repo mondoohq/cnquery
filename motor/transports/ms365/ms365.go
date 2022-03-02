@@ -1,33 +1,26 @@
 package ms365
 
 import (
-	"context"
-	"encoding/json"
 	"sync"
 
-	"go.mondoo.io/mondoo/motor/vault"
-
-	ms356_resources "go.mondoo.io/mondoo/lumi/resources/ms365"
-
 	"github.com/cockroachdb/errors"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/rs/zerolog/log"
-	"github.com/yaegashi/msgraph.go/msauth"
-
 	"github.com/spf13/afero"
+	ms356_resources "go.mondoo.io/mondoo/lumi/resources/ms365"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
+	"go.mondoo.io/mondoo/motor/vault"
 )
 
 const (
-	OptionTenantID     = "tenantId"
-	OptionClientID     = "clientId"
-	OptionClientSecret = "clientSecret"
-	OptionDataReport   = "mondoo-ms365-datareport"
+	OptionTenantID   = "tenantId"
+	OptionClientID   = "clientId"
+	OptionDataReport = "mondoo-ms365-datareport"
 )
 
-var _ transports.Transport = (*Transport)(nil)
-var _ transports.TransportPlatformIdentifier = (*Transport)(nil)
+var (
+	_ transports.Transport                   = (*Transport)(nil)
+	_ transports.TransportPlatformIdentifier = (*Transport)(nil)
+)
 
 // New create a new Microsoft 365 transport
 //
@@ -78,25 +71,12 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 		return nil, errors.New("ms365 backend requires a tenantID")
 	}
 
-	claims, err := t.TokenClaims()
-	if err != nil {
-		return nil, err
-	}
-
-	// cache roles from token
-	rolesMap := map[string]struct{}{}
-	for i := range claims.Roles {
-		rolesMap[claims.Roles[i]] = struct{}{}
-	}
-	t.rolesMap = rolesMap
-
-	if len(rolesMap) == 0 {
-		log.Warn().Msg("your credentials do not include any permissions. please ensure you are using application permissions.")
-	}
-
-	data, err := json.Marshal(claims)
-	if err == nil {
-		log.Debug().Str("claims", string(data)).Msg("connect to microsoft 365")
+	// map the roles that we request
+	// TODO: check that actual credentials include permissions, this is included in the tokens
+	t.rolesMap = map[string]struct{}{}
+	for i := range DefaultRoles {
+		r := DefaultRoles[i]
+		t.rolesMap[r] = struct{}{}
 	}
 
 	return t, nil
@@ -111,28 +91,6 @@ type Transport struct {
 	powershellDataReportFile    string
 	ms365PowershellReport       *ms356_resources.Microsoft365Report
 	ms365PowershellReportLoader sync.Mutex
-}
-
-func (t *Transport) TokenClaims() (*MicrosoftIdTokenClaims, error) {
-	ctx := context.Background()
-	m := msauth.NewManager()
-	ts, err := m.ClientCredentialsGrant(ctx, t.tenantID, t.clientID, t.clientSecret, DefaultMSGraphScopes)
-	if err != nil {
-		return nil, err
-	}
-
-	token, err := ts.Token()
-	if err != nil {
-		return nil, err
-	}
-
-	claims := &MicrosoftIdTokenClaims{}
-	p := jwt.Parser{}
-	_, _, err = p.ParseUnverified(token.AccessToken, claims)
-	if err != nil {
-		return nil, err
-	}
-	return claims, nil
 }
 
 func (t *Transport) MissingRoles(checkRoles ...string) []string {

@@ -10,8 +10,10 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
 )
 
-var _ transports.Transport = (*Transport)(nil)
-var _ transports.TransportPlatformIdentifier = (*Transport)(nil)
+var (
+	_ transports.Transport                   = (*Transport)(nil)
+	_ transports.TransportPlatformIdentifier = (*Transport)(nil)
+)
 
 func New(tc *transports.TransportConfig) (*Transport, error) {
 	if tc.Backend != transports.TransportBackend_CONNECTION_AZURE {
