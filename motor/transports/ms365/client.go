@@ -1,46 +1,83 @@
 package ms365
 
 import (
-	"context"
-	"net/http"
-
-	msgraph "github.com/yaegashi/msgraph.go/beta"
-	msgraphbeta "github.com/yaegashi/msgraph.go/beta"
-	"github.com/yaegashi/msgraph.go/msauth"
-	"golang.org/x/oauth2"
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/cockroachdb/errors"
+	a "github.com/microsoft/kiota/authentication/go/azure"
+	msgraphbetasdk "github.com/microsoftgraph/msgraph-beta-sdk-go"
+	msgraphsdk "github.com/microsoftgraph/msgraph-sdk-go"
 )
 
-var DefaultMSGraphScopes = []string{msauth.DefaultMSGraphScope}
+const DefaultMSGraphScope = "https://graph.microsoft.com/.default"
 
-func (t *Transport) GraphClient() (*msgraph.GraphServiceRequestBuilder, error) {
-	httpClient, err := t.httpClient()
+var (
+	DefaultMSGraphScopes = []string{DefaultMSGraphScope}
+	DefaultRoles         = []string{
+		"Application.Read.All",
+		"AuditLog.Read.All",
+		"Calendars.Read",
+		"Device.Read.All",
+		"DeviceManagementApps.Read.All",
+		"DeviceManagementConfiguration.Read.All",
+		"DeviceManagementManagedDevices.Read.All",
+		"DeviceManagementRBAC.Read.All",
+		"DeviceManagementServiceConfig.Read.All",
+		"Directory.Read.All",
+		"Domain.Read.All",
+		"IdentityProvider.Read.All",
+		"IdentityRiskEvent.Read.All",
+		"IdentityRiskyUser.Read.All",
+		"InformationProtectionPolicy.Read.All",
+		"MailboxSettings.Read",
+		"Organization.Read.All",
+		"OrgContact.Read.All",
+		"Policy.Read.All",
+		"Policy.Read.ConditionalAccess",
+		"Policy.Read.PermissionGrant",
+		"RoleManagement.Read.All",
+		"SecurityActions.Read.All",
+		"SecurityEvents.Read.All",
+		"TeamsApp.Read.All",
+		"TeamSettings.Read.All",
+		"ThreatAssessment.Read.All",
+		"ThreatIndicators.Read.All",
+		"User.Read.All",
+	}
+)
+
+func (t *Transport) auth() (*a.AzureIdentityAuthenticationProvider, error) {
+	cred, err := azidentity.NewClientSecretCredential(t.tenantID, t.clientID, t.clientSecret, &azidentity.ClientSecretCredentialOptions{})
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating credentials")
+	}
+
+	return a.NewAzureIdentityAuthenticationProviderWithScopes(cred, DefaultMSGraphScopes)
+}
+
+func (t *Transport) GraphClient() (*msgraphsdk.GraphServiceClient, error) {
+	auth, err := t.auth()
+	if err != nil {
+		return nil, errors.Wrap(err, "authentication provider error")
+	}
+
+	adapter, err := msgraphsdk.NewGraphRequestAdapter(auth)
 	if err != nil {
 		return nil, err
 	}
-
-	graphClient := msgraph.NewClient(httpClient)
+	graphClient := msgraphsdk.NewGraphServiceClient(adapter)
 	return graphClient, nil
 }
 
-func (t *Transport) GraphBetaClient() (*msgraphbeta.GraphServiceRequestBuilder, error) {
-	httpClient, err := t.httpClient()
+func (t *Transport) GraphBetaClient() (*msgraphbetasdk.GraphServiceClient, error) {
+	auth, err := t.auth()
+	if err != nil {
+		return nil, errors.Wrap(err, "authentication provider error")
+	}
+
+	adapter, err := msgraphsdk.NewGraphRequestAdapter(auth)
 	if err != nil {
 		return nil, err
 	}
-
-	graphBetaClient := msgraphbeta.NewClient(httpClient)
+	graphBetaClient := msgraphbetasdk.NewGraphServiceClient(adapter)
 	return graphBetaClient, nil
-}
-
-// httpClient prepares the agent client with oauth2 bearer token
-func (t *Transport) httpClient() (*http.Client, error) {
-	ctx := context.Background()
-	m := msauth.NewManager()
-	ts, err := m.ClientCredentialsGrant(ctx, t.tenantID, t.clientID, t.clientSecret, DefaultMSGraphScopes)
-	if err != nil {
-		return nil, err
-	}
-
-	httpClient := oauth2.NewClient(ctx, ts)
-	return httpClient, nil
 }
