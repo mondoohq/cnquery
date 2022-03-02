@@ -119,7 +119,7 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*asset.Asset, error) {
 
 	// fetch all instances in resource group
 	vmClient := c.AzureClient.VirtualMachinesClient()
-	res, err := vmClient.ListAll(ctx, "")
+	res, err := vmClient.ListAll(ctx, "", "")
 	if err != nil {
 		return nil, err
 	}
