@@ -94,7 +94,7 @@ func (a *lumiAzurermCompute) GetVms() ([]interface{}, error) {
 	vmClient := compute.NewVirtualMachinesClient(subscriptionID)
 	vmClient.Authorizer = authorizer
 
-	virtualMachines, err := vmClient.ListAll(ctx, "")
+	virtualMachines, err := vmClient.ListAll(ctx, "", "")
 	if err != nil {
 		return nil, err
 	}
