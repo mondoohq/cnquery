@@ -251,6 +251,7 @@ func (m *lumiMsgraphBetaDomain) GetServiceConfigurationRecords() ([]interface{},
 	for i := range records {
 		record := records[i]
 
+		// TODO: do not return additional data, it is used to gather the text
 		properties, _ := jsonToDict(record.GetAdditionalData())
 
 		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.domaindnsrecord",
@@ -345,7 +346,7 @@ func (m *lumiMsgraphBetaUser) GetSettings() (interface{}, error) {
 		return nil, err
 	}
 
-	return jsonToDict(userSettings)
+	return jsonToDict(msgraphconv.NewUserSettings(userSettings))
 }
 
 func (m *lumiMsgraphBetaSecurity) id() (string, error) {
@@ -356,7 +357,7 @@ func msSecureScoreToLumi(runtime *lumi.Runtime, score graph.SecureScore) (interf
 	averageComparativeScores := []interface{}{}
 	graphAverageComparativeScores := score.GetAverageComparativeScores()
 	for j := range graphAverageComparativeScores {
-		entry, err := jsonToDict(graphAverageComparativeScores[j])
+		entry, err := jsonToDict(msgraphconv.NewAverageComparativeScore(graphAverageComparativeScores[j]))
 		if err != nil {
 			return nil, err
 		}
@@ -366,14 +367,14 @@ func msSecureScoreToLumi(runtime *lumi.Runtime, score graph.SecureScore) (interf
 	controlScores := []interface{}{}
 	graphControlScores := score.GetControlScores()
 	for j := range graphControlScores {
-		entry, err := jsonToDict(graphControlScores[j])
+		entry, err := jsonToDict(msgraphconv.NewControlScore(graphControlScores[j]))
 		if err != nil {
 			return nil, err
 		}
 		controlScores = append(controlScores, entry)
 	}
 
-	vendorInformation, err := jsonToDict(score.GetVendorInformation())
+	vendorInformation, err := jsonToDict(msgraphconv.NewSecurityVendorInformation(score.GetVendorInformation()))
 	if err != nil {
 		return nil, err
 	}
@@ -499,9 +500,10 @@ func (m *lumiMsgraphBetaPolicies) GetAuthorizationPolicy() (interface{}, error) 
 		return nil, err
 	}
 
-	policy := resp.GetValue()
-	if len(policy) > 0 {
-		return jsonToDict(policy)
+	policies := resp.GetValue()
+	if len(policies) > 0 {
+		// TODO: we need to change the lumi resource to return more than one
+		return jsonToDict(msgraphconv.NewAuthorizationPolicy(policies[0]))
 	}
 	return nil, nil
 }
@@ -526,7 +528,8 @@ func (m *lumiMsgraphBetaPolicies) GetIdentitySecurityDefaultsEnforcementPolicy()
 	if err != nil {
 		return nil, err
 	}
-	return jsonToDict(policy.GetAdditionalData())
+
+	return jsonToDict(msgraphconv.NewIdentitySecurityDefaultsEnforcementPolicy(policy))
 }
 
 // https://docs.microsoft.com/en-us/graph/api/adminconsentrequestpolicy-get?view=graph-rest-beta
@@ -546,11 +549,11 @@ func (m *lumiMsgraphBetaPolicies) GetAdminConsentRequestPolicy() (interface{}, e
 		return nil, err
 	}
 
-	resp, err := graphBetaClient.Policies().AdminConsentRequestPolicy().Get(nil)
+	policy, err := graphBetaClient.Policies().AdminConsentRequestPolicy().Get(nil)
 	if err != nil {
 		return nil, err
 	}
-	return jsonToDict(resp.GetAdditionalData())
+	return jsonToDict(msgraphconv.NewAdminConsentRequestPolicy(policy))
 }
 
 // https://docs.microsoft.com/en-us/azure/active-directory/manage-apps/configure-user-consent?tabs=azure-powershell
@@ -575,7 +578,7 @@ func (m *lumiMsgraphBetaPolicies) GetPermissionGrantPolicies() (interface{}, err
 	if err != nil {
 		return nil, err
 	}
-	return jsonToDictSlice(resp.GetValue())
+	return jsonToDictSlice(msgraphconv.NewPermissionGrantPolicys(resp.GetValue()))
 }
 
 func (m *lumiMsgraphBetaRolemanagement) id() (string, error) {
@@ -670,7 +673,7 @@ func (m *lumiMsgraphBetaRolemanagementRoledefinition) GetAssignments() ([]interf
 	res := []interface{}{}
 	for i := range roleAssignments {
 		roleAssignment := roleAssignments[i]
-		principal, _ := jsonToDict(roleAssignment.GetPrincipal())
+		principal, _ := jsonToDict(msgraphconv.NewDirectoryPricipal(roleAssignment.GetPrincipal()))
 		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.rolemanagement.roleassignment",
 			"id", toString(roleAssignment.GetId()),
 			"roleDefinitionId", toString(roleAssignment.GetRoleDefinitionId()),
@@ -719,6 +722,7 @@ func (m *lumiMsgraphBetaDevicemanagement) GetDeviceConfigurations() ([]interface
 	configurations := resp.GetValue()
 	for i := range configurations {
 		configuration := configurations[i]
+		// TODO: do not return additional data
 		properties, _ := jsonToDict(configuration.GetAdditionalData())
 		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.devicemanagement.deviceconfiguration",
 			"id", toString(configuration.GetId()),
@@ -770,8 +774,10 @@ func (m *lumiMsgraphBetaDevicemanagement) GetDeviceCompliancePolicies() ([]inter
 	for i := range compliancePolicies {
 		compliancePolicy := compliancePolicies[i]
 
+		// TODO: revisit if we really need to expose the additional data
+		// expose the struct better
 		properties, _ := jsonToDict(compliancePolicy.GetAdditionalData())
-		assignments, _ := jsonToDictSlice(compliancePolicy.GetAssignments())
+		assignments, _ := jsonToDictSlice(msgraphconv.NewDeviceCompliancePolicyAssignments(compliancePolicy.GetAssignments()))
 
 		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.devicemanagement.devicecompliancepolicy",
 			"id", toString(compliancePolicy.GetId()),
