@@ -5,7 +5,6 @@ import (
 	"github.com/cockroachdb/errors"
 	a "github.com/microsoft/kiota/authentication/go/azure"
 	msgraphbetasdk "github.com/microsoftgraph/msgraph-beta-sdk-go"
-	msgraphsdk "github.com/microsoftgraph/msgraph-sdk-go"
 )
 
 const DefaultMSGraphScope = "https://graph.microsoft.com/.default"
@@ -54,27 +53,13 @@ func (t *Transport) auth() (*a.AzureIdentityAuthenticationProvider, error) {
 	return a.NewAzureIdentityAuthenticationProviderWithScopes(cred, DefaultMSGraphScopes)
 }
 
-func (t *Transport) GraphClient() (*msgraphsdk.GraphServiceClient, error) {
-	auth, err := t.auth()
-	if err != nil {
-		return nil, errors.Wrap(err, "authentication provider error")
-	}
-
-	adapter, err := msgraphsdk.NewGraphRequestAdapter(auth)
-	if err != nil {
-		return nil, err
-	}
-	graphClient := msgraphsdk.NewGraphServiceClient(adapter)
-	return graphClient, nil
-}
-
 func (t *Transport) GraphBetaClient() (*msgraphbetasdk.GraphServiceClient, error) {
 	auth, err := t.auth()
 	if err != nil {
 		return nil, errors.Wrap(err, "authentication provider error")
 	}
 
-	adapter, err := msgraphsdk.NewGraphRequestAdapter(auth)
+	adapter, err := msgraphbetasdk.NewGraphRequestAdapter(auth)
 	if err != nil {
 		return nil, err
 	}
