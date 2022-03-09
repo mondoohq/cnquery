@@ -3354,6 +3354,10 @@ resources:
       title: List all kernel modules
     - query: kernel.modules.where( loaded == true ) { name }
       title: List all loaded kernel modules
+    - query: kernel { info }
+      title: List all information from running kernel
+    - query: kernel { info['version'] }
+      title: List version from running kernel
   kernel.module:
     fields:
       loaded: {}
