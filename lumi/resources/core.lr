@@ -4197,6 +4197,12 @@ k8s.cronjob {
 k8s.secret {
   // Kubernetes Object UID
   uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
   // Kubernetes Object Name
   name string
   // Kubernetes Object Namespace
@@ -4207,6 +4213,10 @@ k8s.secret {
   created time
   // Full resource manifest
   manifest dict
+  // secret type
+  type string
+  // secret certificates
+  certificates() []certificate
 }
 
 // Organization represents a GitHub organization account
