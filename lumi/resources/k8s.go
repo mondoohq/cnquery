@@ -1,7 +1,11 @@
 package resources
 
 import (
+	"bytes"
 	"errors"
+
+	"go.mondoo.io/mondoo/lumi/resources/certificates"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/cosmo/resources"
@@ -255,14 +259,26 @@ func (k *lumiK8s) GetSecrets() ([]interface{}, error) {
 			return nil, err
 		}
 
-		return k.Runtime.CreateResource("k8s.secret",
+		s, ok := resource.(*corev1.Secret)
+		if !ok {
+			return nil, errors.New("not a k8s secret")
+		}
+
+		r, err := k.Runtime.CreateResource("k8s.secret",
 			"uid", string(obj.GetUID()),
+			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
 			"namespace", obj.GetNamespace(),
 			"kind", objT.GetKind(),
 			"created", &ts.Time,
 			"manifest", manifest,
+			"type", string(s.Type),
 		)
+		if err != nil {
+			return nil, err
+		}
+		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		return r, nil
 	})
 }
 
@@ -409,4 +425,68 @@ func (k *lumiK8sCronjob) GetNamespace() (interface{}, error) {
 
 func (k *lumiK8sSecret) id() (string, error) {
 	return k.Uid()
+}
+
+func (k *lumiK8sSecret) GetAnnotations() (interface{}, error) {
+	entry, ok := k.LumiResource().Cache.Load("_resource")
+	if !ok {
+		return nil, errors.New("cannot get resource from cache")
+	}
+
+	resource, ok := entry.Data.(runtime.Object)
+	if !ok {
+		return nil, errors.New("cannot get resource from cache")
+	}
+	obj, err := meta.Accessor(resource)
+	if err != nil {
+		return nil, err
+	}
+
+	return mapTagsToLumiMapTags(obj.GetAnnotations()), nil
+}
+
+func (k *lumiK8sSecret) GetLabels() (interface{}, error) {
+	entry, ok := k.LumiResource().Cache.Load("_resource")
+	if !ok {
+		return nil, errors.New("cannot get resource from cache")
+	}
+
+	resource, ok := entry.Data.(runtime.Object)
+	if !ok {
+		return nil, errors.New("cannot get resource from cache")
+	}
+	obj, err := meta.Accessor(resource)
+	if err != nil {
+		return nil, err
+	}
+
+	return mapTagsToLumiMapTags(obj.GetLabels()), nil
+}
+
+func (k *lumiK8sSecret) GetCertificates() (interface{}, error) {
+	entry, ok := k.LumiResource().Cache.Load("_resource")
+	if !ok {
+		return nil, errors.New("cannot get resource from cache")
+	}
+
+	secret, ok := entry.Data.(*corev1.Secret)
+	if !ok {
+		return nil, errors.New("cannot get resource from cache")
+	}
+
+	if secret.Type != corev1.SecretTypeTLS {
+		// this is not an error, it just does not contain a certificate
+		return nil, nil
+	}
+
+	certRawData, ok := secret.Data["tls.crt"]
+	if !ok {
+		return nil, errors.New("could not find the 'tls.crt' key")
+	}
+	certs, err := certificates.ParseCertFromPEM(bytes.NewReader(certRawData))
+	if err != nil {
+		return nil, err
+	}
+
+	return certificatesToLumiCertificates(k.Runtime, certs)
 }
