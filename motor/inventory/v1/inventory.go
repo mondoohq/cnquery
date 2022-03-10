@@ -94,7 +94,7 @@ func (p *Inventory) PreProcess() error {
 			c := asset.Connections[j]
 			for k := range c.Credentials {
 				cred := c.Credentials[k]
-				if cred.SecretId != "" {
+				if cred != nil && cred.SecretId != "" {
 					// clean credentials
 					// if a secret id with content is provided, we discard the content and always prefer the secret id
 					cleanSecrets(cred)
