@@ -4044,7 +4044,7 @@ k8s.apiresource {
   group string
   // preferred version of the resource
   version string
-  // kind for the resource
+  // Kubernetes Object Type
   kind string
   // list of suggested short names of the resource
   shortNames []string
@@ -4054,8 +4054,17 @@ k8s.apiresource {
 
 // Kubernetes Node
 k8s.node {
+  // Kubernetes Object UID
   uid string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // plural name of the resource
   name string
+  // Kubernetes Object Type
   kind string
 }
 
@@ -4075,14 +4084,16 @@ k8s.namespace {
 k8s.pod {
   // Kubernetes Object UID
   uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
   // Kubernetes Object Name
   name string
   // Kubernetes Object Namespace
   namespace string
-  // Kubernetes Object Labels
-  labels map[string]string
-  // Kubernetes Object Annotations
-  annotations map[string]string
   // Kubernetes Object Version
   apiVersion string
   // Kubernetes Object Type
@@ -4095,6 +4106,7 @@ k8s.pod {
   podSpec dict
   // Contained Containers
   containers() []k8s.container
+  // Node the pod runs on
   node() k8s.node
 }
 
@@ -4133,6 +4145,12 @@ k8s.container {
 k8s.deployment {
   // Kubernetes Object UID
   uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
   // Kubernetes Object Name
   name string
   // Kubernetes Object Namespace
@@ -4149,6 +4167,12 @@ k8s.deployment {
 k8s.daemonset {
   // Kubernetes Object UID
   uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
   // Kubernetes Object Name
   name string
   // Kubernetes Object Namespace
@@ -4165,6 +4189,12 @@ k8s.daemonset {
 k8s.job {
   // Kubernetes Object UID
   uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
   // Kubernetes Object Name
   name string
   // Kubernetes Object Namespace
@@ -4181,6 +4211,12 @@ k8s.job {
 k8s.cronjob {
   // Kubernetes Object UID
   uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
   // Kubernetes Object Name
   name string
   // Kubernetes Object Namespace
