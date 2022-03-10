@@ -7,7 +7,7 @@
           "zone": "us-central1-a"
         },
         "core": {
-          "account": "chris@mondoo.io",
+          "account": "chris@mondoo.com",
           "disable_usage_reporting": "True",
           "project": "mondoo-abc-12345"
         },
