@@ -1,9 +1,10 @@
 package resources
 
 import (
-	"errors"
 	"strings"
 
+	"github.com/cockroachdb/errors"
+	msgraphbetasdk "github.com/microsoftgraph/msgraph-beta-sdk-go"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/applications"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/devicemanagement/devicecompliancepolicies"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/devicemanagement/deviceconfigurations"
@@ -39,7 +40,7 @@ func (m *lumiMsgraphBeta) GetSettings() ([]interface{}, error) {
 		return nil, err
 	}
 
-	graphBetaClient, err := mt.GraphBetaClient()
+	graphBetaClient, err := graphBetaClient(mt)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +67,7 @@ func (m *lumiMsgraphBeta) GetOrganizations() ([]interface{}, error) {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := mt.GraphBetaClient()
+	graphBetaClient, err := graphBetaClient(mt)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +116,7 @@ func (m *lumiMsgraphBeta) GetUsers() ([]interface{}, error) {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := mt.GraphBetaClient()
+	graphBetaClient, err := graphBetaClient(mt)
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +180,7 @@ func (m *lumiMsgraphBeta) GetDomains() ([]interface{}, error) {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := mt.GraphBetaClient()
+	graphBetaClient, err := graphBetaClient(mt)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +237,7 @@ func (m *lumiMsgraphBetaDomain) GetServiceConfigurationRecords() ([]interface{},
 		return nil, err
 	}
 
-	graphBetaClient, err := mt.GraphBetaClient()
+	graphBetaClient, err := graphBetaClient(mt)
 	if err != nil {
 		return nil, err
 	}
@@ -287,7 +288,7 @@ func (m *lumiMsgraphBeta) GetApplications() ([]interface{}, error) {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := mt.GraphBetaClient()
+	graphBetaClient, err := graphBetaClient(mt)
 	if err != nil {
 		return nil, err
 	}
@@ -336,7 +337,7 @@ func (m *lumiMsgraphBetaUser) GetSettings() (interface{}, error) {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := mt.GraphBetaClient()
+	graphBetaClient, err := graphBetaClient(mt)
 	if err != nil {
 		return nil, err
 	}
@@ -409,7 +410,7 @@ func (m *lumiMsgraphBetaSecurity) GetLatestSecureScores() (interface{}, error) {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := mt.GraphBetaClient()
+	graphBetaClient, err := graphBetaClient(mt)
 	if err != nil {
 		return nil, err
 	}
@@ -447,7 +448,7 @@ func (m *lumiMsgraphBetaSecurity) GetSecureScores() ([]interface{}, error) {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := mt.GraphBetaClient()
+	graphBetaClient, err := graphBetaClient(mt)
 	if err != nil {
 		return nil, err
 	}
@@ -490,7 +491,7 @@ func (m *lumiMsgraphBetaPolicies) GetAuthorizationPolicy() (interface{}, error) 
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := mt.GraphBetaClient()
+	graphBetaClient, err := graphBetaClient(mt)
 	if err != nil {
 		return nil, err
 	}
@@ -519,7 +520,7 @@ func (m *lumiMsgraphBetaPolicies) GetIdentitySecurityDefaultsEnforcementPolicy()
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := mt.GraphBetaClient()
+	graphBetaClient, err := graphBetaClient(mt)
 	if err != nil {
 		return nil, err
 	}
@@ -544,7 +545,7 @@ func (m *lumiMsgraphBetaPolicies) GetAdminConsentRequestPolicy() (interface{}, e
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := mt.GraphBetaClient()
+	graphBetaClient, err := graphBetaClient(mt)
 	if err != nil {
 		return nil, err
 	}
@@ -569,7 +570,7 @@ func (m *lumiMsgraphBetaPolicies) GetPermissionGrantPolicies() (interface{}, err
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := mt.GraphBetaClient()
+	graphBetaClient, err := graphBetaClient(mt)
 	if err != nil {
 		return nil, err
 	}
@@ -596,7 +597,7 @@ func (m *lumiMsgraphBetaRolemanagement) GetRoleDefinitions() (interface{}, error
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := mt.GraphBetaClient()
+	graphBetaClient, err := graphBetaClient(mt)
 	if err != nil {
 		return nil, err
 	}
@@ -647,7 +648,7 @@ func (m *lumiMsgraphBetaRolemanagementRoledefinition) GetAssignments() ([]interf
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := mt.GraphBetaClient()
+	graphBetaClient, err := graphBetaClient(mt)
 	if err != nil {
 		return nil, err
 	}
@@ -708,7 +709,7 @@ func (m *lumiMsgraphBetaDevicemanagement) GetDeviceConfigurations() ([]interface
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := mt.GraphBetaClient()
+	graphBetaClient, err := graphBetaClient(mt)
 	if err != nil {
 		return nil, err
 	}
@@ -755,7 +756,7 @@ func (m *lumiMsgraphBetaDevicemanagement) GetDeviceCompliancePolicies() ([]inter
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := mt.GraphBetaClient()
+	graphBetaClient, err := graphBetaClient(mt)
 	if err != nil {
 		return nil, err
 	}
@@ -805,4 +806,18 @@ func (m *lumiMsgraphBetaDevicemanagementDeviceconfiguration) id() (string, error
 
 func (m *lumiMsgraphBetaDevicemanagementDevicecompliancepolicy) id() (string, error) {
 	return m.Id()
+}
+
+func graphBetaClient(t *ms365_transport.Transport) (*msgraphbetasdk.GraphServiceClient, error) {
+	auth, err := t.Auth()
+	if err != nil {
+		return nil, errors.Wrap(err, "authentication provider error")
+	}
+
+	adapter, err := msgraphbetasdk.NewGraphRequestAdapter(auth)
+	if err != nil {
+		return nil, err
+	}
+	graphBetaClient := msgraphbetasdk.NewGraphServiceClient(adapter)
+	return graphBetaClient, nil
 }

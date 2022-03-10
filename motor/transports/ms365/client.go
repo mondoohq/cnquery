@@ -4,7 +4,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/cockroachdb/errors"
 	a "github.com/microsoft/kiota/authentication/go/azure"
-	msgraphbetasdk "github.com/microsoftgraph/msgraph-beta-sdk-go"
 )
 
 const DefaultMSGraphScope = "https://graph.microsoft.com/.default"
@@ -44,25 +43,11 @@ var (
 	}
 )
 
-func (t *Transport) auth() (*a.AzureIdentityAuthenticationProvider, error) {
+func (t *Transport) Auth() (*a.AzureIdentityAuthenticationProvider, error) {
 	cred, err := azidentity.NewClientSecretCredential(t.tenantID, t.clientID, t.clientSecret, &azidentity.ClientSecretCredentialOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating credentials")
 	}
 
 	return a.NewAzureIdentityAuthenticationProviderWithScopes(cred, DefaultMSGraphScopes)
-}
-
-func (t *Transport) GraphBetaClient() (*msgraphbetasdk.GraphServiceClient, error) {
-	auth, err := t.auth()
-	if err != nil {
-		return nil, errors.Wrap(err, "authentication provider error")
-	}
-
-	adapter, err := msgraphbetasdk.NewGraphRequestAdapter(auth)
-	if err != nil {
-		return nil, err
-	}
-	graphBetaClient := msgraphbetasdk.NewGraphServiceClient(adapter)
-	return graphBetaClient, nil
 }
