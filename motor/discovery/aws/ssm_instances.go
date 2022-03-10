@@ -191,7 +191,7 @@ func ssmInstanceToAsset(account string, region string, instance types.InstanceIn
 		for j := range tagresp.Tags {
 			tag := tagresp.Tags[j]
 			if tag.Key != nil {
-				key := *tag.Key
+				key := ImportedFromAWSTagKeyPrefix + *tag.Key
 				value := ""
 				if tag.Value != nil {
 					value = *tag.Value
