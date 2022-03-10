@@ -130,7 +130,7 @@ Repo-revision: 1599740051
 Repo-updated : Thu Sep 10 12:14:13 2020
 Repo-pkgs    : 2
 Repo-size    : 55 M
-Repo-baseurl : https://releases.mondoo.io/rpm/x86_64/
+Repo-baseurl : https://releases.mondoo.com/rpm/x86_64/
 Repo-expire  : 21600 second(s) (last: Sun Sep 13 15:06:45 2020)
   Filter     : read-only:present
 Repo-filename: /etc/yum.repos.d/mondoo.repo
