@@ -177,7 +177,7 @@ func instanceToAsset(account string, region string, instance types.Instance, ins
 	for k := range instance.Tags {
 		tag := instance.Tags[k]
 		if tag.Key != nil {
-			key := *tag.Key
+			key := ImportedFromAWSTagKeyPrefix + *tag.Key
 			value := ""
 			if tag.Value != nil {
 				value = *tag.Value

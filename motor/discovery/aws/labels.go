@@ -6,6 +6,8 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/common"
 )
 
+const ImportedFromAWSTagKeyPrefix = "aws.tag/"
+
 const (
 	ImageIdLabel        string = "mondoo.app/ami-id"
 	RegionLabel         string = "mondoo.app/region"
