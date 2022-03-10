@@ -4,14 +4,13 @@ import (
 	"bytes"
 	"errors"
 
-	"go.mondoo.io/mondoo/lumi/resources/certificates"
-	corev1 "k8s.io/api/core/v1"
-
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/cosmo/resources"
 	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/lumi/resources/certificates"
 	"go.mondoo.io/mondoo/motor/transports"
 	k8s_transport "go.mondoo.io/mondoo/motor/transports/k8s"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -23,6 +22,36 @@ func k8stransport(t transports.Transport) (*k8s_transport.Transport, error) {
 		return nil, errors.New("k8s resource is not supported on this transport")
 	}
 	return at, nil
+}
+
+func k8sMetaObject(lumiResource *lumi.Resource) (metav1.Object, error) {
+	entry, ok := lumiResource.Cache.Load("_resource")
+	if !ok {
+		return nil, errors.New("cannot get resource from cache")
+	}
+
+	obj, ok := entry.Data.(runtime.Object)
+	if !ok {
+		return nil, errors.New("cannot get resource from cache")
+	}
+
+	return meta.Accessor(obj)
+}
+
+func k8sAnnotations(lumiResource *lumi.Resource) (interface{}, error) {
+	objM, err := k8sMetaObject(lumiResource)
+	if err != nil {
+		return nil, err
+	}
+	return mapTagsToLumiMapTags(objM.GetAnnotations()), nil
+}
+
+func k8sLabels(lumiResource *lumi.Resource) (interface{}, error) {
+	objM, err := k8sMetaObject(lumiResource)
+	if err != nil {
+		return nil, err
+	}
+	return mapTagsToLumiMapTags(objM.GetLabels()), nil
 }
 
 func (k *lumiK8s) id() (string, error) {
@@ -115,11 +144,17 @@ func k8sResourceToLumi(r *lumi.Runtime, kind string, fn resourceConvertFn) ([]in
 
 func (k *lumiK8s) GetNodes() ([]interface{}, error) {
 	return k8sResourceToLumi(k.Runtime, "nodes.v1.", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
-		return k.Runtime.CreateResource("k8s.node",
+		r, err := k.Runtime.CreateResource("k8s.node",
 			"uid", string(obj.GetUID()),
+			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
 			"kind", objT.GetKind(),
 		)
+		if err != nil {
+			return nil, err
+		}
+		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		return r, nil
 	})
 }
 
@@ -155,8 +190,9 @@ func (k *lumiK8s) GetPods() ([]interface{}, error) {
 			return nil, err
 		}
 
-		return k.Runtime.CreateResource("k8s.pod",
+		r, err := k.Runtime.CreateResource("k8s.pod",
 			"uid", string(obj.GetUID()),
+			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
 			"namespace", obj.GetNamespace(),
 			"labels", strMapToInterface(obj.GetLabels()),
@@ -167,6 +203,11 @@ func (k *lumiK8s) GetPods() ([]interface{}, error) {
 			"podSpec", podSpec,
 			"manifest", manifest,
 		)
+		if err != nil {
+			return nil, err
+		}
+		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		return r, nil
 	})
 }
 
@@ -179,14 +220,20 @@ func (k *lumiK8s) GetDeployments() ([]interface{}, error) {
 			return nil, err
 		}
 
-		return k.Runtime.CreateResource("k8s.deployment",
+		r, err := k.Runtime.CreateResource("k8s.deployment",
 			"uid", string(obj.GetUID()),
+			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
 			"namespace", obj.GetNamespace(),
 			"kind", objT.GetKind(),
 			"created", &ts.Time,
 			"manifest", manifest,
 		)
+		if err != nil {
+			return nil, err
+		}
+		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		return r, nil
 	})
 }
 
@@ -199,14 +246,20 @@ func (k *lumiK8s) GetDaemonsets() ([]interface{}, error) {
 			return nil, err
 		}
 
-		return k.Runtime.CreateResource("k8s.daemonset",
+		r, err := k.Runtime.CreateResource("k8s.daemonset",
 			"uid", string(obj.GetUID()),
+			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
 			"namespace", obj.GetNamespace(),
 			"kind", objT.GetKind(),
 			"created", &ts.Time,
 			"manifest", manifest,
 		)
+		if err != nil {
+			return nil, err
+		}
+		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		return r, nil
 	})
 }
 
@@ -219,14 +272,20 @@ func (k *lumiK8s) GetJobs() ([]interface{}, error) {
 			return nil, err
 		}
 
-		return k.Runtime.CreateResource("k8s.job",
+		r, err := k.Runtime.CreateResource("k8s.job",
 			"uid", string(obj.GetUID()),
+			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
 			"namespace", obj.GetNamespace(),
 			"kind", objT.GetKind(),
 			"created", &ts.Time,
 			"manifest", manifest,
 		)
+		if err != nil {
+			return nil, err
+		}
+		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		return r, nil
 	})
 }
 
@@ -239,14 +298,20 @@ func (k *lumiK8s) GetCronjobs() ([]interface{}, error) {
 			return nil, err
 		}
 
-		return k.Runtime.CreateResource("k8s.cronjob",
+		r, err := k.Runtime.CreateResource("k8s.cronjob",
 			"uid", string(obj.GetUID()),
+			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
 			"namespace", obj.GetNamespace(),
 			"kind", objT.GetKind(),
 			"created", &ts.Time,
 			"manifest", manifest,
 		)
+		if err != nil {
+			return nil, err
+		}
+		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		return r, nil
 	})
 }
 
@@ -288,6 +353,14 @@ func (k *lumiK8sApiresource) id() (string, error) {
 
 func (k *lumiK8sNode) id() (string, error) {
 	return k.Uid()
+}
+
+func (k *lumiK8sNode) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.LumiResource())
+}
+
+func (k *lumiK8sNode) GetLabels() (interface{}, error) {
+	return k8sLabels(k.LumiResource())
 }
 
 func (k *lumiK8sNamespace) id() (string, error) {
@@ -383,6 +456,14 @@ func (k *lumiK8sPod) GetNamespace() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
+func (k *lumiK8sPod) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.LumiResource())
+}
+
+func (k *lumiK8sPod) GetLabels() (interface{}, error) {
+	return k8sLabels(k.LumiResource())
+}
+
 func (k *lumiK8sPod) GetNode() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }
@@ -399,12 +480,28 @@ func (k *lumiK8sDeployment) GetNamespace() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
+func (k *lumiK8sDeployment) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.LumiResource())
+}
+
+func (k *lumiK8sDeployment) GetLabels() (interface{}, error) {
+	return k8sLabels(k.LumiResource())
+}
+
 func (k *lumiK8sDaemonset) id() (string, error) {
 	return k.Uid()
 }
 
 func (k *lumiK8sDaemonset) GetNamespace() (interface{}, error) {
 	return nil, errors.New("not implemented")
+}
+
+func (k *lumiK8sDaemonset) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.LumiResource())
+}
+
+func (k *lumiK8sDaemonset) GetLabels() (interface{}, error) {
+	return k8sLabels(k.LumiResource())
 }
 
 func (k *lumiK8sJob) id() (string, error) {
@@ -415,6 +512,14 @@ func (k *lumiK8sJob) GetNamespace() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
+func (k *lumiK8sJob) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.LumiResource())
+}
+
+func (k *lumiK8sJob) GetLabels() (interface{}, error) {
+	return k8sLabels(k.LumiResource())
+}
+
 func (k *lumiK8sCronjob) id() (string, error) {
 	return k.Uid()
 }
@@ -423,44 +528,24 @@ func (k *lumiK8sCronjob) GetNamespace() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
+func (k *lumiK8sCronjob) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.LumiResource())
+}
+
+func (k *lumiK8sCronjob) GetLabels() (interface{}, error) {
+	return k8sLabels(k.LumiResource())
+}
+
 func (k *lumiK8sSecret) id() (string, error) {
 	return k.Uid()
 }
 
 func (k *lumiK8sSecret) GetAnnotations() (interface{}, error) {
-	entry, ok := k.LumiResource().Cache.Load("_resource")
-	if !ok {
-		return nil, errors.New("cannot get resource from cache")
-	}
-
-	resource, ok := entry.Data.(runtime.Object)
-	if !ok {
-		return nil, errors.New("cannot get resource from cache")
-	}
-	obj, err := meta.Accessor(resource)
-	if err != nil {
-		return nil, err
-	}
-
-	return mapTagsToLumiMapTags(obj.GetAnnotations()), nil
+	return k8sAnnotations(k.LumiResource())
 }
 
 func (k *lumiK8sSecret) GetLabels() (interface{}, error) {
-	entry, ok := k.LumiResource().Cache.Load("_resource")
-	if !ok {
-		return nil, errors.New("cannot get resource from cache")
-	}
-
-	resource, ok := entry.Data.(runtime.Object)
-	if !ok {
-		return nil, errors.New("cannot get resource from cache")
-	}
-	obj, err := meta.Accessor(resource)
-	if err != nil {
-		return nil, err
-	}
-
-	return mapTagsToLumiMapTags(obj.GetLabels()), nil
+	return k8sLabels(k.LumiResource())
 }
 
 func (k *lumiK8sSecret) GetCertificates() (interface{}, error) {
