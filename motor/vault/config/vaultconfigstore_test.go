@@ -12,7 +12,7 @@ import (
 func TestVaultConfiguration(t *testing.T) {
 	vCfgs := ClientVaultConfig{}
 
-	vCfgs.Set("vault1cfg-key", VaultConfiguration{
+	vCfgs.Set("vault1cfg-key", vault.VaultConfiguration{
 		Name: "vault1cfg-name",
 	})
 
@@ -20,7 +20,7 @@ func TestVaultConfiguration(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "vault1cfg-name", cfg.Name)
 
-	vCfgs.Set("vault1cfg-key", VaultConfiguration{
+	vCfgs.Set("vault1cfg-key", vault.VaultConfiguration{
 		Name: "vault1cfg-name2",
 	})
 
