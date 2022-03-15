@@ -151,6 +151,17 @@ func TestMarkInsecure(t *testing.T) {
 	}
 }
 
+func TestIdempotentPreProcess(t *testing.T) {
+	v1inventory, err := InventoryFromFile("./testdata/k8s_mount.yaml")
+	require.NoError(t, err)
+
+	err = v1inventory.PreProcess()
+	require.NoError(t, err)
+
+	err = v1inventory.PreProcess()
+	require.NoError(t, err)
+}
+
 func findAsset(assets []*asset.Asset, id string) *asset.Asset {
 	for i := range assets {
 		a := assets[i]

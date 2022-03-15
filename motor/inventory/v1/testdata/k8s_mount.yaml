@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Inventory
+metadata:
+  name: mondoo-k8s-inventory
+  labels:
+    environment: production
+spec:
+  assets:
+    - id: host
+      connections:
+        - host: /mnt/host
+          backend: fs

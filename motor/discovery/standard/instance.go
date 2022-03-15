@@ -32,7 +32,9 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 			log.Debug().Err(err).Msg("could not determine credential for asset")
 			return nil, err
 		}
-		assetInfo.Connections[0].Credentials = append(assetInfo.Connections[0].Credentials, cred)
+		if cred != nil {
+			assetInfo.Connections[0].Credentials = append(assetInfo.Connections[0].Credentials, cred)
+		}
 	}
 
 	m, err := resolver.NewMotorConnection(tc, cfn)
