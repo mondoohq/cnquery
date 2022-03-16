@@ -27,12 +27,12 @@ func TestLoadManifestFile(t *testing.T) {
 }
 
 func TestLoadManifestDir(t *testing.T) {
-	input, err := resources.MergeManifestFiles([]string{"./testdata/appsv1.deployment.yaml", "./testdata/configmap.yaml"})
+	input, err := resources.MergeManifestFiles([]string{"./testdata/appsv1.deployment.yaml", "./testdata/configmap.yaml", "./testdata/appsv1.daemonset.yaml"})
 	require.NoError(t, err)
 
 	list, err := resources.ResourcesFromManifest(input)
 	require.NoError(t, err)
-	assert.Equal(t, 2, len(list))
+	assert.Equal(t, 3, len(list))
 
 	resource := list[0]
 	deployment := resource.(*appsv1.Deployment)
@@ -41,4 +41,8 @@ func TestLoadManifestDir(t *testing.T) {
 	resource = list[1]
 	configmap := resource.(*coresv1.ConfigMap)
 	assert.Equal(t, "mondoo-daemonset-config", configmap.Name)
+
+	resource = list[2]
+	daemonset := resource.(*appsv1.DaemonSet)
+	assert.Equal(t, "mondoo-daemonset", daemonset.Name)
 }

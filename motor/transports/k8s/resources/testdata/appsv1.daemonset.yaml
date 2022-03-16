@@ -1,0 +1,49 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: mondoo-daemonset
+
+spec:
+  selector:
+    matchLabels:
+      name: mondoo-daemonset
+  template:
+    metadata:
+      labels:
+        name: mondoo-daemonset
+    spec:
+      tolerations:
+        # this toleration is to have the daemonset runnable on master nodes
+        # remove it if your masters can't run pods
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+      containers:
+        - name: mondoo-agent
+          image: docker.io/mondoolabs/mondoo:latest
+          command: ["mondoo", "serve", "--config", "/etc/opt/mondoo/mondoo.yml"]
+          volumeMounts:
+            - name: root
+              mountPath: /mnt/host/
+              readOnly: true
+            - name: config
+              mountPath: /etc/opt/mondoo/
+              readOnly: true
+          env:
+            - name: DEBUG
+              value: "false"
+            - name: MONDOO_PROCFS
+              value: "on"
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: root
+          hostPath:
+            path: "/"
+        - name: config
+          configMap:
+            name: mondoo-daemonset-config
+            items:
+              - key: config
+                path: mondoo.yml
+              - key: inventory
+                path: inventory.yml

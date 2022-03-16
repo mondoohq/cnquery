@@ -4,16 +4,17 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"sync"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/discovery/cached/disk"
 	"k8s.io/client-go/discovery/cached/memory"
 	"k8s.io/client-go/dynamic"
 	_ "k8s.io/client-go/plugin/pkg/client/auth" // https://github.com/kubernetes/client-go/issues/242
@@ -31,15 +32,24 @@ func NewDiscovery(restConfig *rest.Config) (*Discovery, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to construct dynamic client")
 	}
-	dClient, err := discovery.NewDiscoveryClientForConfig(restConfig)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to construct discovery client")
+
+	var cachedClient discovery.CachedDiscoveryInterface
+	if os.Getenv("DEBUG") == "1" {
+		cachedClient, err = disk.NewCachedDiscoveryClientForConfig(restConfig, ".cache/k8s", "", time.Hour)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to construct discovery client")
+		}
+	} else {
+		dClient, err := discovery.NewDiscoveryClientForConfig(restConfig)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to construct discovery client")
+		}
+		cachedClient = memory.NewMemCacheClient(dClient)
 	}
-	cachedClient := memory.NewMemCacheClient(dClient)
 
 	// Always request fresh data from the server
 	cachedClient.Invalidate()
-	serverVersion, err := dClient.ServerVersion()
+	serverVersion, err := cachedClient.ServerVersion()
 	if err != nil {
 		return nil, err
 	}
@@ -65,29 +75,7 @@ func (d *Discovery) SupportedResourceTypes() (*ApiResourceIndex, error) {
 	}
 	log.Debug().Msgf("found %d api resource types", len(resList))
 
-	ri := NewApiResourceIndex()
-	for _, group := range resList {
-		log.Debug().Msgf("iterating over group %s/%s (%d api resources types)", group.GroupVersion, group.APIVersion, len(group.APIResources))
-		gv, err := schema.ParseGroupVersion(group.GroupVersion)
-		if err != nil {
-			return nil, errors.Wrapf(err, "%q cannot be parsed into groupversion", group.GroupVersion)
-		}
-
-		for _, apiRes := range group.APIResources {
-			log.Debug().Msgf("api=%s namespaced=%v", apiRes.Name, apiRes.Namespaced)
-			if !contains(apiRes.Verbs, "list") {
-				log.Debug().Msgf("api resource type (%s) is missing required verb 'list', skipping: %v", apiRes.Name, apiRes.Verbs)
-				continue
-			}
-			v := ApiResource{
-				GroupVersion: gv,
-				Resource:     apiRes,
-			}
-			ri.Add(v)
-		}
-	}
-	log.Debug().Msgf("found %d api resource types", len(ri.Resources()))
-	return ri, nil
+	return ResourceIndex(resList)
 }
 
 func (d *Discovery) GetAllResources(ctx context.Context, resTypes *ApiResourceIndex, ns string, allNs bool) ([]runtime.Object, error) {
@@ -162,18 +150,6 @@ func (d *Discovery) GetKindResources(ctx context.Context, apiRes ApiResource, ns
 	return out, nil
 }
 
-func (d *Discovery) FilterResource(resourceTypes *ApiResourceIndex, resourceObjects []runtime.Object, kind string, name string) (*ApiResource, []runtime.Object, error) {
-	// look up resource type for kind
-	resType, err := resourceTypes.Lookup(kind)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// filter root resources
-	roots := filterResource(resourceObjects, resType.Resource.Kind, name)
-	return resType, roots, nil
-}
-
 func contains(v []string, s string) bool {
 	for _, vv := range v {
 		if vv == s {
@@ -181,26 +157,4 @@ func contains(v []string, s string) bool {
 		}
 	}
 	return false
-}
-
-func filterResource(resources []runtime.Object, kind string, name string) []runtime.Object {
-	filtered := []runtime.Object{}
-
-	for i := range resources {
-		res := resources[i]
-		o, err := meta.Accessor(res)
-		if err != nil {
-			log.Error().Err(err).Msgf("could not filter resource")
-			continue
-		}
-
-		if res.GetObjectKind().GroupVersionKind().Kind == kind {
-			if len(name) > 0 && o.GetName() == name {
-				filtered = append(filtered, res)
-			} else if len(name) == 0 {
-				filtered = append(filtered, res)
-			}
-		}
-	}
-	return filtered
 }

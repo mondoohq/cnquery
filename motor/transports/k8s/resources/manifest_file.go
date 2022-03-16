@@ -3,9 +3,12 @@ package resources
 import (
 	"bufio"
 	"bytes"
+	"embed"
+	_ "embed"
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -14,9 +17,11 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1beta1 "k8s.io/api/extensions/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	k8sRuntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/client-go/kubernetes/scheme"
 )
 
 var (
@@ -41,16 +46,78 @@ func MergeManifestFiles(filenames []string) (io.Reader, error) {
 	return buf, nil
 }
 
-func ResourcesFromManifest(r io.Reader) ([]k8sRuntime.Object, error) {
+func ClientSchema() *runtime.Scheme {
 	scheme := runtime.NewScheme()
 	// TODO: we need to add more core resources here
 	appsv1.AddToScheme(scheme)
 	corev1.AddToScheme(scheme)
 	v1beta1.AddToScheme(scheme)
 	batchv1.AddToScheme(scheme)
+
+	return scheme
+}
+
+func ClientGroups(scheme *runtime.Scheme) (*metav1.APIGroupList, error) {
+	vgk := scheme.AllKnownTypes()
+
+	alreadyIncluded := map[string]struct{}{}
+	groups := []metav1.APIGroup{}
+	for k := range vgk {
+		// if group is already added, ignore followup kinds for that group
+		_, ok := alreadyIncluded[k.GroupVersion().String()]
+		if ok {
+			continue
+		}
+
+		alreadyIncluded[k.GroupVersion().String()] = struct{}{}
+
+		groups = append(groups,
+			metav1.APIGroup{
+				Name: k.GroupVersion().Group,
+				Versions: []metav1.GroupVersionForDiscovery{
+					{
+						GroupVersion: k.GroupVersion().String(),
+						Version:      k.GroupVersion().Version,
+					},
+				},
+			})
+	}
+
+	return &metav1.APIGroupList{
+		Groups: groups,
+	}, nil
+}
+
+//go:embed serverresources/*
+var serverresources embed.FS
+
+// CachedServerResources mimics the CachedServerResources call from the dynamic client but based on a manifest file
+func CachedServerResources() ([]*metav1.APIResourceList, error) {
+	arl := []*metav1.APIResourceList{}
+	dir := "serverresources"
+	entries, err := serverresources.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	for i := range entries {
+		fs := entries[i]
+		cachedBytes, err := serverresources.ReadFile(filepath.Join(dir, fs.Name()))
+		if err != nil {
+			return nil, err
+		}
+		cachedResources := &metav1.APIResourceList{}
+		if err := runtime.DecodeInto(scheme.Codecs.UniversalDecoder(), cachedBytes, cachedResources); err == nil {
+			arl = append(arl, cachedResources)
+		}
+	}
+
+	return arl, nil
+}
+
+func ResourcesFromManifest(r io.Reader) ([]k8sRuntime.Object, error) {
+	scheme := ClientSchema()
 	codecs := serializer.NewCodecFactory(scheme)
 	decoder := codecs.UniversalDeserializer()
-
 	decodedObjects := []k8sRuntime.Object{}
 	rawData, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -74,11 +141,12 @@ func ResourcesFromManifest(r io.Reader) ([]k8sRuntime.Object, error) {
 			decodedObjects = append(decodedObjects, obj)
 		} else {
 			if !PureCommentManifest([]byte(b)) {
-				return decodedObjects, errors.Wrap(err, "content is not a valid kubernetes manifest")
+				return nil, errors.Wrap(err, "content is not a valid kubernetes manifest")
 			}
 		}
 	}
-	return decodedObjects, nil
+
+	return decodedObjects, err
 }
 
 // Checks if the manifest is only composed of comments
