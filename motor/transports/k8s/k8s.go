@@ -7,10 +7,9 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/cosmo/resources"
-	api "go.mondoo.io/mondoo/cosmo/resources"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
+	"go.mondoo.io/mondoo/motor/transports/k8s/resources"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
@@ -62,7 +61,7 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 	config.Burst = 1000
 
 	// initialize api client
-	d, err := api.NewDiscovery(config)
+	d, err := resources.NewDiscovery(config)
 	if err != nil {
 		return nil, err
 	}
