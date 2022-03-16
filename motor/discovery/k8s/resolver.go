@@ -94,9 +94,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 	clusterName := ""
 
 	if tc.Options["path"] != "" {
-		// manifest parent directory name
-		clusterName = common.ProjectNameFromPath(tc.Options["path"])
-		clusterName = "K8S Manifest " + clusterName
+		clusterName, _ = trans.Name()
 	} else {
 		// try to parse context from kubectl config
 		if clusterName == "" && k8sctlConfig != nil && len(k8sctlConfig.CurrentContext) > 0 {
@@ -106,9 +104,9 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 
 		// fallback to first node name if we could not gather the name from kubeconfig
 		if clusterName == "" {
-			ci, err := trans.ClusterInfo()
+			name, err := trans.Name()
 			if err == nil {
-				clusterName = ci.Name
+				clusterName = name
 				log.Info().Str("cluster-name", clusterName).Msg("use cluster name from node name")
 			}
 		}

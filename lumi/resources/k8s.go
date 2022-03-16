@@ -73,7 +73,7 @@ func (k *lumiK8s) GetApiResources() ([]interface{}, error) {
 		return nil, err
 	}
 
-	resources, err := kt.SupportedResources()
+	resources, err := kt.SupportedResourceTypes()
 	if err != nil {
 		return nil, err
 	}
