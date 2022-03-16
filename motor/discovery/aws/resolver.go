@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/discovery/common"
-
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
@@ -30,7 +29,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryInstances, DiscoverySSM}
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// add aws api as asset

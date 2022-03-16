@@ -3,11 +3,11 @@ package azure
 import (
 	"context"
 
-	"go.mondoo.io/mondoo/motor/discovery/common"
-
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/discovery/common"
+	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	azure_transport "go.mondoo.io/mondoo/motor/transports/azure"
@@ -28,7 +28,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryInstances}
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	subscriptionID := tc.Options["subscriptionID"]
@@ -113,7 +113,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 
 			log.Debug().Str("name", a.Name).Msg("resolved azure compute instance")
 			// find the secret reference for the asset
-			common.EnrichAssetWithSecrets(a, sfn)
+			credentials.EnrichAssetWithSecrets(a, sfn)
 
 			for i := range a.Connections {
 				a.Connections[i].Insecure = tc.Insecure

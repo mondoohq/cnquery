@@ -5,6 +5,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/common"
+	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	gcp_transport "go.mondoo.io/mondoo/motor/transports/gcp"
@@ -21,7 +22,7 @@ func (r *GcpProjectResolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryInstances}
 }
 
-func (r *GcpProjectResolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *GcpProjectResolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	if tc == nil || tc.Options["project"] == "" {
@@ -78,7 +79,7 @@ func (r *GcpProjectResolver) Resolve(tc *transports.TransportConfig, cfn common.
 			log.Debug().Str("name", a.Name).Msg("resolved gcp compute instance")
 
 			// find the secret reference for the asset
-			common.EnrichAssetWithSecrets(a, sfn)
+			credentials.EnrichAssetWithSecrets(a, sfn)
 
 			resolved = append(resolved, a)
 		}

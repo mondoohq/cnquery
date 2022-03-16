@@ -3,16 +3,13 @@ package vsphere
 import (
 	"errors"
 
-	"go.mondoo.io/mondoo/motor/vault"
-
 	"github.com/rs/zerolog/log"
-
-	"go.mondoo.io/mondoo/motor/transports/vmwareguestapi"
-
 	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/discovery/common"
+	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/resolver"
+	"go.mondoo.io/mondoo/motor/transports/vmwareguestapi"
+	"go.mondoo.io/mondoo/motor/vault"
 )
 
 type VMGuestResolver struct{}
@@ -25,7 +22,7 @@ func (r *VMGuestResolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (k *VMGuestResolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
+func (k *VMGuestResolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// we leverage the vpshere transport to establish a connection
@@ -81,7 +78,7 @@ func (k *VMGuestResolver) Resolve(tc *transports.TransportConfig, cfn common.Cre
 	}
 }
 
-func EnrichVsphereToolsConnWithSecrets(a *asset.Asset, cfn common.CredentialFn, sfn common.QuerySecretFn) {
+func EnrichVsphereToolsConnWithSecrets(a *asset.Asset, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn) {
 	// search secret for vm
 	// NOTE: we do not use `common.EnrichAssetWithSecrets(a, sfn)` here since vmware requires two secrets at the same time
 	for j := range a.Connections {
