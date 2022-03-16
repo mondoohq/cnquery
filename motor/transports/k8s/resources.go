@@ -10,7 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	api "go.mondoo.io/mondoo/cosmo/resources"
+	"go.mondoo.io/mondoo/motor/transports/k8s/resources"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/version"
 )
@@ -20,7 +20,7 @@ func (t *Transport) ServerVersion() *version.Info {
 }
 
 // discover api and resources that have a list method
-func (t *Transport) SupportedResources() (*api.ApiResourceIndex, error) {
+func (t *Transport) SupportedResources() (*resources.ApiResourceIndex, error) {
 	// TODO: this should likely be cached
 	return t.d.SupportedResourceTypes()
 }
@@ -28,7 +28,7 @@ func (t *Transport) SupportedResources() (*api.ApiResourceIndex, error) {
 type ResourceResult struct {
 	Name          string
 	Kind          string
-	ResourceType  *api.ApiResource // resource type that matched kind
+	ResourceType  *resources.ApiResource // resource type that matched kind
 	AllResources  []runtime.Object
 	RootResources []runtime.Object
 	Namespace     string
@@ -97,13 +97,13 @@ func (t *Transport) Resources(kind string, name string) (*ResourceResult, error)
 				filenames = append(filenames, t.manifestFile)
 			}
 
-			input, err = api.MergeManifestFiles(filenames)
+			input, err = resources.MergeManifestFiles(filenames)
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		resourceObjects, err = api.ResourcesFromManifest(input)
+		resourceObjects, err = resources.ResourcesFromManifest(input)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not query resource objects")
 		}

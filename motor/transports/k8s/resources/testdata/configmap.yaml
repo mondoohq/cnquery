@@ -1,0 +1,35 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mondoo-daemonset-config
+data:
+  config: |
+    mrn: //agents.api.mondoo.app/spaces/test-infallible-taussig-796596/serviceaccounts/1u20vCfgWqaxOjGmWFFCH4qi2se
+    space_mrn: //captain.api.mondoo.app/spaces/test-infallible-taussig-796596
+    private_key: |
+      -----BEGIN PRIVATE KEY-----
+      MIG2AgEAMBAGByqGSM49AgEGBSuBBAAiBIGeMIGbAgEBBDB4SxLzF7ZQvD0dxoWa
+      ...
+      pJLAp0cuKBUrUNpOQ62qaQ9F17/r6/TBejq6FaYkok7og+MkQVr8gos=
+      -----END PRIVATE KEY-----
+    certificate: |
+      -----BEGIN CERTIFICATE-----
+      MIICfDCCAgGgAwIBAgIRAKqQ9zkDA/rIBj96r4g+qJswCgYIKoZIzj0EAwMwSTFH
+      ...
+      Rc3OFH5K0IWA0yDdL5QVoQ==
+      -----END CERTIFICATE-----
+    api_endpoint: https://api.mondoo.app
+  inventory: |
+    apiVersion: v1
+    kind: Inventory
+    metadata:
+      name: mondoo-k8s-inventory
+      labels:
+        environment: production
+    spec:
+      assets:
+        - id: host
+          connections:
+            - host: /mnt/host
+              backend: fs

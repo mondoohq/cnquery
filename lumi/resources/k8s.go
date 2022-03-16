@@ -5,11 +5,11 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/cosmo/resources"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/certificates"
 	"go.mondoo.io/mondoo/motor/transports"
 	k8s_transport "go.mondoo.io/mondoo/motor/transports/k8s"
+	"go.mondoo.io/mondoo/motor/transports/k8s/resources"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
