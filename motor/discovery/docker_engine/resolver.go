@@ -3,7 +3,7 @@ package docker_engine
 import (
 	"os"
 
-	"go.mondoo.io/mondoo/motor/discovery/common"
+	"go.mondoo.io/mondoo/motor/discovery/credentials"
 
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -31,7 +31,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryContainerRunning, DiscoveryContainerImages}
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
 	if tc == nil {
 		return nil, errors.New("no transport configuration found")
 	}
@@ -149,7 +149,7 @@ func (k *Resolver) container(tc *transports.TransportConfig, ded *dockerEngineDi
 	}, nil
 }
 
-func (k *Resolver) images(tc *transports.TransportConfig, ded *dockerEngineDiscovery, cfn common.CredentialFn, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
+func (k *Resolver) images(tc *transports.TransportConfig, ded *dockerEngineDiscovery, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn) ([]*asset.Asset, error) {
 	// if we have a docker engine available, try to fetch it from there
 	if ded != nil {
 		ii, err := ded.ImageInfo(tc.Host)

@@ -1,4 +1,4 @@
-package common
+package credentials
 
 import (
 	"github.com/rs/zerolog/log"

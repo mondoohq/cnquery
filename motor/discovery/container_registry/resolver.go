@@ -3,13 +3,14 @@ package container_registry
 import (
 	"errors"
 
+	"go.mondoo.io/mondoo/motor/discovery/credentials"
+
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/logger"
 	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/vault"
 )
@@ -29,7 +30,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	imageFetcher := NewContainerRegistry()
@@ -100,7 +101,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn common.Credential
 	return resolved, nil
 }
 
-func AuthOption(credentials []*vault.Credential, cfn common.CredentialFn) []remote.Option {
+func AuthOption(credentials []*vault.Credential, cfn credentials.CredentialFn) []remote.Option {
 	remoteOpts := []remote.Option{}
 	for i := range credentials {
 		cred := credentials[i]
