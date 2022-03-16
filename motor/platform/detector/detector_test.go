@@ -1,4 +1,4 @@
-package platform_test
+package detector_test
 
 import (
 	"testing"
@@ -6,15 +6,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/platform/detector"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
-func newDetector(filepath string) (*platform.Detector, error) {
+func newDetector(filepath string) (*detector.Detector, error) {
 	mock, err := mock.NewFromTomlFile(filepath)
 	if err != nil {
 		return nil, err
 	}
-	detector := platform.NewDetector(mock)
+	detector := detector.New(mock)
 	return detector, nil
 }
 

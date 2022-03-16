@@ -1,12 +1,10 @@
-package platform
+package detector
 
 import (
 	"errors"
 	"runtime"
 
-	"go.mondoo.io/mondoo/motor/transports/network"
-	"go.mondoo.io/mondoo/motor/transports/terraform"
-
+	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/arista"
 	"go.mondoo.io/mondoo/motor/transports/aws"
@@ -19,10 +17,12 @@ import (
 	k8s_transport "go.mondoo.io/mondoo/motor/transports/k8s"
 	"go.mondoo.io/mondoo/motor/transports/local"
 	"go.mondoo.io/mondoo/motor/transports/ms365"
+	"go.mondoo.io/mondoo/motor/transports/network"
+	"go.mondoo.io/mondoo/motor/transports/terraform"
 	"go.mondoo.io/mondoo/motor/transports/vsphere"
 )
 
-func NewDetector(t transports.Transport) *Detector {
+func New(t transports.Transport) *Detector {
 	return &Detector{
 		transport: t,
 	}
@@ -30,20 +30,20 @@ func NewDetector(t transports.Transport) *Detector {
 
 type Detector struct {
 	transport transports.Transport
-	cache     *Platform
+	cache     *platform.Platform
 }
 
-func (d *Detector) resolveOS() (*Platform, bool) {
+func (d *Detector) resolveOS() (*platform.Platform, bool) {
 	// NOTE: on windows, powershell calls are expensive therefore we want to shortcut the detection mechanism
 	_, ok := d.transport.(*local.LocalTransport)
 	if ok && runtime.GOOS == "windows" {
-		return windowsFamily.Resolve(d.transport)
+		return platform.WindowsFamily.Resolve(d.transport)
 	} else {
-		return operatingSystems.Resolve(d.transport)
+		return platform.OperatingSystems.Resolve(d.transport)
 	}
 }
 
-func (d *Detector) Platform() (*Platform, error) {
+func (d *Detector) Platform() (*platform.Platform, error) {
 	if d.transport == nil {
 		return nil, errors.New("cannot detect platform without a transport")
 	}
@@ -53,21 +53,21 @@ func (d *Detector) Platform() (*Platform, error) {
 		return d.cache, nil
 	}
 
-	var pi *Platform
+	var pi *platform.Platform
 	switch pt := d.transport.(type) {
 	case *vsphere.Transport:
 		identifier, err := pt.Identifier()
 		if err != nil {
 			return nil, err
 		}
-		return VspherePlatform(pt, identifier)
+		return platform.VspherePlatform(pt, identifier)
 	case *arista.Transport:
 		v, err := pt.GetVersion()
 		if err != nil {
 			return nil, errors.New("cannot determine arista version")
 		}
 
-		return &Platform{
+		return &platform.Platform{
 			Name:    "arista-eos",
 			Title:   "Arista EOS",
 			Arch:    v.Architecture,
@@ -76,90 +76,72 @@ func (d *Detector) Platform() (*Platform, error) {
 			Runtime: pt.Runtime(),
 		}, nil
 	case *aws.Transport:
-		return &Platform{
+		return &platform.Platform{
 			Name:    "aws",
 			Title:   "Amazon Web Services",
 			Kind:    transports.Kind_KIND_API,
 			Runtime: transports.RUNTIME_AWS,
 		}, nil
 	case *gcp.Transport:
-		return &Platform{
+		return &platform.Platform{
 			Name:    "gcp",
 			Title:   "Google Cloud Platform",
 			Kind:    transports.Kind_KIND_API,
 			Runtime: transports.RUNTIME_GCP,
 		}, nil
 	case *azure.Transport:
-		return &Platform{
+		return &platform.Platform{
 			Name:    "azure",
 			Title:   "Microsoft Azure",
 			Kind:    transports.Kind_KIND_API,
 			Runtime: transports.RUNTIME_AZ,
 		}, nil
 	case *ms365.Transport:
-		return &Platform{
+		return &platform.Platform{
 			Name:    "microsoft365",
 			Title:   "Microsoft 365",
 			Kind:    transports.Kind_KIND_API,
 			Runtime: transports.RUNTIME_MICROSOFT_GRAPH,
 		}, nil
 	case *ipmi.Transport:
-		return &Platform{
+		return &platform.Platform{
 			Name:    "ipmi",
 			Title:   "Ipmi",
 			Kind:    pt.Kind(),
 			Runtime: pt.Runtime(),
 		}, nil
 	case *equinix.Transport:
-		return &Platform{
+		return &platform.Platform{
 			Name:    "equinix",
 			Title:   "Equinix Metal",
 			Kind:    transports.Kind_KIND_API,
 			Runtime: transports.RUNTIME_EQUINIX_METAL,
 		}, nil
 	case *k8s_transport.Transport:
-		release := ""
-		build := ""
-		arch := ""
-		sv := pt.ServerVersion()
-		if sv != nil {
-			release = sv.GitVersion
-			build = sv.BuildDate
-			arch = sv.Platform
-		}
-
-		return &Platform{
-			Name:    "kubernetes",
-			Title:   "Kubernetes Cluster",
-			Release: release,
-			Build:   build,
-			Arch:    arch,
-			Kind:    transports.Kind_KIND_API,
-			Runtime: transports.RUNTIME_KUBERNETES,
-		}, nil
+		return pt.PlatformInfo(), nil
 	case *github.Transport:
-		return &Platform{
+		return &platform.Platform{
 			Name:    "github",
 			Title:   "Github",
 			Kind:    transports.Kind_KIND_API,
 			Runtime: transports.RUNTIME_GITHUB,
 		}, nil
 	case *gitlab.Transport:
-		return &Platform{
+		return &platform.Platform{
 			Name:    "gitlab",
 			Title:   "Gitlab",
 			Kind:    transports.Kind_KIND_API,
 			Runtime: transports.RUNTIME_GITLAB,
 		}, nil
 	case *terraform.Transport:
-		return &Platform{
+		return &platform.Platform{
 			Name:    "terraform",
 			Title:   "Terraform",
 			Kind:    transports.Kind_KIND_API,
 			Runtime: "",
 		}, nil
 	case *network.Transport:
-		return &Platform{
+		return &platform.Platform{
 			Name:    pt.Scheme,
 			Title:   "Network API",
 			Kind:    pt.Kind(),

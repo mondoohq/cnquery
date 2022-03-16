@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/platform/detector"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/events"
 	"go.mondoo.io/mondoo/motor/transports/local"
@@ -26,7 +27,7 @@ func WithRecoding(record bool) MotorOption {
 // powershell calls are pretty expensive and slow
 var (
 	localTransportLock     = &sync.Mutex{}
-	localTransportDetector *platform.Detector
+	localTransportDetector *detector.Detector
 )
 
 func New(trans transports.Transport, motorOpts ...MotorOption) (*Motor, error) {
@@ -44,12 +45,12 @@ func New(trans transports.Transport, motorOpts ...MotorOption) (*Motor, error) {
 	if ok && !m.isRecording {
 		localTransportLock.Lock()
 		if localTransportDetector == nil {
-			localTransportDetector = platform.NewDetector(m.Transport)
+			localTransportDetector = detector.New(m.Transport)
 		}
 		m.detector = localTransportDetector
 		localTransportLock.Unlock()
 	} else {
-		m.detector = platform.NewDetector(m.Transport)
+		m.detector = detector.New(m.Transport)
 	}
 
 	return m, nil
@@ -60,7 +61,7 @@ type Motor struct {
 
 	Transport   transports.Transport
 	asset       *asset.Asset
-	detector    *platform.Detector
+	detector    *detector.Detector
 	watcher     transports.Watcher
 	isRecording bool
 }

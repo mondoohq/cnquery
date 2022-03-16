@@ -993,7 +993,7 @@ var esxFamily = &PlatformResolver{
 	},
 }
 
-var windowsFamily = &PlatformResolver{
+var WindowsFamily = &PlatformResolver{
 	Name:      FAMILY_WINDOWS,
 	IsFamiliy: true,
 	Children:  []*PlatformResolver{windows},
@@ -1012,10 +1012,10 @@ var unknownOperatingSystem = &PlatformResolver{
 	},
 }
 
-var operatingSystems = &PlatformResolver{
+var OperatingSystems = &PlatformResolver{
 	Name:      "os",
 	IsFamiliy: true,
-	Children:  []*PlatformResolver{unixFamily, windowsFamily, esxFamily, unknownOperatingSystem},
+	Children:  []*PlatformResolver{unixFamily, WindowsFamily, esxFamily, unknownOperatingSystem},
 	Detect: func(p *PlatformResolver, di *Platform, t transports.Transport) (bool, error) {
 		return true, nil
 	},

@@ -12,7 +12,7 @@ func (p *Platform) IsFamily(family string) bool {
 }
 
 // map that is organized by platform name, to quickly determine its families
-var osTree = platfromPartens(operatingSystems)
+var osTree = platfromPartens(OperatingSystems)
 
 func platfromPartens(r *PlatformResolver) map[string][]string {
 	return traverseFamily(r, []string{})

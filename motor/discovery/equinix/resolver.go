@@ -3,7 +3,7 @@ package equinix
 import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
-	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/platform/detector"
 	"go.mondoo.io/mondoo/motor/transports"
 	equinix_transport "go.mondoo.io/mondoo/motor/transports/equinix"
 )
@@ -34,7 +34,7 @@ func (r *Resolver) Resolve(t *transports.TransportConfig, cfn credentials.Creden
 	}
 
 	// detect platform info for the asset
-	detector := platform.NewDetector(trans)
+	detector := detector.New(trans)
 	pf, err := detector.Platform()
 	if err != nil {
 		return nil, err
