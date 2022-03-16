@@ -6,7 +6,7 @@ import (
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
-	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/platform/detector"
 	"go.mondoo.io/mondoo/motor/transports"
 	k8s_transport "go.mondoo.io/mondoo/motor/transports/k8s"
 	"go.mondoo.io/mondoo/motor/transports/local"
@@ -83,7 +83,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 	}
 
 	// detect platform info for the asset
-	detector := platform.NewDetector(trans)
+	detector := detector.New(trans)
 	pf, err := detector.Platform()
 	if err != nil {
 		return nil, err
