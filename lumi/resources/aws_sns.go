@@ -5,8 +5,10 @@ import (
 	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/smithy-go/transport/http"
+	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
 )
@@ -42,6 +44,37 @@ func (s *lumiAwsSns) GetTopics() ([]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func (s *lumiAwsSnsTopic) init(args *lumi.Args) (*lumi.Args, AwsSnsTopic, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if (*args)["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch sns topic")
+	}
+	arnVal := (*args)["arn"].(string)
+	arn, err := arn.Parse(arnVal)
+	if err != nil {
+		return nil, nil, nil
+	}
+	at, err := awstransport(s.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, nil, err
+	}
+	svc := at.Sns(arn.Region)
+	ctx := context.Background()
+
+	tags, err := getSNSTags(ctx, svc, &arnVal)
+	if err != nil {
+		return nil, nil, err
+	}
+	(*args)["arn"] = arnVal
+	(*args)["region"] = arn.Region
+	(*args)["tags"] = tags
+	return args, nil, nil
+
 }
 func (s *lumiAwsSns) getTopics(at *aws_transport.Transport) []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
