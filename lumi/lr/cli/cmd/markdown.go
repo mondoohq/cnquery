@@ -282,7 +282,7 @@ func anchore(name string) string {
 }
 
 func mdRef(name string) string {
-	return strings.ToLower(name)
+	return strings.ToLower(name) + ".md"
 }
 
 func renderLrType(t lr.Type, resourceHrefMap map[string]bool) string {
