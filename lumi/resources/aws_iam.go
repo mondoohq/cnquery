@@ -1055,7 +1055,7 @@ type attachedEntities struct {
 func (u *lumiAwsIamPolicy) listAttachedEntities(arn string) (attachedEntities, error) {
 	c, ok := u.Cache.Load("_attachedentities")
 	if ok {
-		log.Info().Msg("use attached entities from cache")
+		log.Debug().Msg("use attached entities from cache")
 		return c.Data.(attachedEntities), nil
 	}
 	var res attachedEntities
