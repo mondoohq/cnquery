@@ -20,11 +20,32 @@ func (f *FlagSet) ParseCommand(cmd string) error {
 	if cmd == "" {
 		return errors.New("no command provided")
 	}
-	args, err := shellquote.Split(cmd)
+	words, err := shellquote.Split(cmd)
 	if err != nil {
 		return err
 	}
-	return f.Parse(args[1:])
+	args := words[1:]
+
+	// NOTE: it is impossible to do flag parsing correct without having the context of the binary
+	// - `--name=x` is pretty clear where name is the key and x is the value
+	//  `--name x` here name is the key, but x could be the value or an arg, if name is a boolean flag x will not be the value
+	//
+	// Therefore we work with the assumption that if `--arg` is followed by a flag without `-` prefix, we count this as a value
+	preparedArgs := []string{}
+	n := len(args)
+	for i := 0; i < n; i++ {
+		key := args[i]
+		if strings.HasPrefix(key, "-") {
+			if i+1 < n && !strings.HasPrefix(args[i+1], "-") {
+				preparedArgs = append(preparedArgs, key+"="+args[i+1])
+				i++
+				continue
+			}
+		}
+		preparedArgs = append(preparedArgs, key)
+	}
+
+	return f.Parse(preparedArgs)
 }
 
 func (f *FlagSet) Parse(args []string) error {
@@ -55,7 +76,9 @@ func (f *FlagSet) parseOneArg() (bool, error) {
 	s := f.args[0]
 
 	if len(s) < 2 || s[0] != '-' {
-		return false, nil
+		f.args = f.args[1:]
+		f.actual[s] = ""
+		return true, nil
 	}
 	numMinuses := 1
 	if s[1] == '-' {
