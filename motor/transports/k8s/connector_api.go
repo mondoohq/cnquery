@@ -28,10 +28,18 @@ func NewApiConnector(namespace string) (*ApiConnector, error) {
 	// NOTE: BuildConfigFromFlags falls back to cluster loading when .kube/config string is empty
 	// therefore we want to only change the kubeconfig string when the file really exists
 	var kubeconfig string
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfigpath := filepath.Join(home, ".kube", "config")
-		if _, err := os.Stat(kubeconfigpath); err == nil {
-			kubeconfig = kubeconfigpath
+
+	// use KUBECONFIG as default
+	// https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/#set-the-kubeconfig-environment-variable
+	kubeconfig = os.Getenv("KUBECONFIG")
+
+	// if no config is set, try to load the default kubeconfig path if nothing was provided
+	if kubeconfig == "" {
+		if home := homedir.HomeDir(); home != "" {
+			kubeconfigpath := filepath.Join(home, ".kube", "config")
+			if _, err := os.Stat(kubeconfigpath); err == nil {
+				kubeconfig = kubeconfigpath
+			}
 		}
 	}
 
