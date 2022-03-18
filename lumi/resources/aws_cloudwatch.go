@@ -82,7 +82,6 @@ func (t *lumiAwsCloudwatch) getMetrics(at *aws_transport.Transport) []*jobpool.J
 					}
 
 					lumiMetric, err := t.Runtime.CreateResource("aws.cloudwatch.metric",
-						// "id", regionVal+"/"+toString(metric.Namespace)+"/"+toString(metric.MetricName),
 						"name", toString(metric.MetricName),
 						"namespace", toString(metric.Namespace),
 						"region", regionVal,
@@ -139,7 +138,7 @@ func (t *lumiAwsCloudwatchMetricstatistics) id() (string, error) {
 
 // allow the user to query for a specific namespace metric in a specific region
 func (p *lumiAwsCloudwatchMetric) init(args *lumi.Args) (*lumi.Args, AwsCloudwatchMetric, error) {
-	if len(*args) > 3 {
+	if len(*args) > 2 {
 		return args, nil, nil
 	}
 
@@ -177,6 +176,7 @@ func (p *lumiAwsCloudwatchMetric) init(args *lumi.Args) (*lumi.Args, AwsCloudwat
 		return args, nil, err
 	}
 	svc := at.Cloudwatch(region)
+
 	ctx := context.Background()
 
 	params := &cloudwatch.ListMetricsInput{
@@ -188,7 +188,7 @@ func (p *lumiAwsCloudwatchMetric) init(args *lumi.Args) (*lumi.Args, AwsCloudwat
 		return args, nil, err
 	}
 	if len(metrics.Metrics) == 0 {
-		return nil, nil, errors.New("could not find metric " + namespace + " " + name + " in region " + region)
+		return nil, nil, nil
 	}
 	if len(metrics.Metrics) > 1 {
 		return nil, nil, errors.New("more than one metric found for " + namespace + " " + name + " in region " + region)
@@ -213,6 +213,56 @@ func (p *lumiAwsCloudwatchMetric) init(args *lumi.Args) (*lumi.Args, AwsCloudwat
 	(*args)["dimensions"] = dimensions
 
 	return args, nil, nil
+}
+func (p *lumiAwsCloudwatchMetric) GetDimensions() ([]interface{}, error) {
+	name, err := p.Name()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse metric name")
+	}
+	namespace, err := p.Namespace()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse metric namespace")
+	}
+	regionVal, err := p.Region()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse metric region")
+	}
+
+	at, err := awstransport(p.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	svc := at.Cloudwatch(regionVal)
+	ctx := context.Background()
+
+	params := &cloudwatch.ListMetricsInput{
+		Namespace:  &namespace,
+		MetricName: &name,
+	}
+	metrics, err := svc.ListMetrics(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+	if len(metrics.Metrics) == 0 {
+		return nil, nil
+	}
+	if len(metrics.Metrics) > 1 {
+		return nil, errors.New("more than one metric found for " + namespace + " " + name + " in region " + regionVal)
+	}
+	dimensions := []interface{}{}
+
+	metric := metrics.Metrics[0]
+	for _, d := range metric.Dimensions {
+		lumiDimension, err := p.Runtime.CreateResource("aws.cloudwatch.metricdimension",
+			"name", toString(d.Name),
+			"value", toString(d.Value),
+		)
+		if err != nil {
+			return nil, err
+		}
+		dimensions = append(dimensions, lumiDimension)
+	}
+	return dimensions, nil
 }
 
 // allow the user to query for a specific namespace metric in a specific region
@@ -745,7 +795,6 @@ func (t *lumiAwsCloudwatchLoggroup) GetMetricsFilters() ([]interface{}, error) {
 			lumiCloudwatchMetrics := []interface{}{}
 			for _, mt := range m.MetricTransformations {
 				lumiAwsMetric, err := t.Runtime.CreateResource("aws.cloudwatch.metric",
-					"id", region+"/"+toString(mt.MetricNamespace)+"/"+toString(mt.MetricName),
 					"name", toString(mt.MetricName),
 					"namespace", toString(mt.MetricNamespace),
 					"region", region,

@@ -2110,7 +2110,7 @@ private aws.cloudwatch.metric {
   // list of cloudwatch metric alarms for the metric
   alarms() []aws.cloudwatch.metricsalarm
   // dimensions that apply to the metric
-  dimensions []aws.cloudwatch.metricdimension
+  dimensions() []aws.cloudwatch.metricdimension
   // statistics for the metric
   statistics() aws.cloudwatch.metricstatistics 
 }
@@ -2139,7 +2139,7 @@ aws.cloudwatch.metricstatistics {
 }
 
 // AWS Cloudwatch Metric Datapoint
-aws.cloudwatch.metric.datapoint {
+private aws.cloudwatch.metric.datapoint {
   // unique identifier for the datapoint
   id string
   // Timestamp of the metric datapoint
