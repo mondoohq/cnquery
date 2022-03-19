@@ -8,6 +8,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/lumi/resources/certificates"
 	"go.mondoo.io/mondoo/lumi/resources/tlsshake"
 	"go.mondoo.io/mondoo/motor/transports/network"
 )
@@ -15,7 +16,6 @@ import (
 var reTarget = regexp.MustCompile("([^/:]+?)(:\\d+)?$")
 
 func (s *lumiTls) init(args *lumi.Args) (*lumi.Args, Tls, error) {
-
 	var fqdn string
 	var port int64
 
@@ -90,31 +90,31 @@ func (s *lumiTls) id() (string, error) {
 	return "tls+" + socket.LumiResource().Id, nil
 }
 
-func parseCertificates(runtime *lumi.Runtime, domainName string, findings *tlsshake.Findings, certificates []*x509.Certificate) ([]interface{}, error) {
-	res := make([]interface{}, len(certificates))
+func parseCertificates(runtime *lumi.Runtime, domainName string, findings *tlsshake.Findings, certificateList []*x509.Certificate) ([]interface{}, error) {
+	res := make([]interface{}, len(certificateList))
 
 	verified := false
-	if len(certificates) != 0 {
+	if len(certificateList) != 0 {
 		intermediates := x509.NewCertPool()
-		for i := 1; i < len(certificates); i++ {
-			intermediates.AddCert(certificates[i])
+		for i := 1; i < len(certificateList); i++ {
+			intermediates.AddCert(certificateList[i])
 		}
 
-		verifyCerts, err := certificates[0].Verify(x509.VerifyOptions{
+		verifyCerts, err := certificateList[0].Verify(x509.VerifyOptions{
 			DNSName:       domainName,
 			Intermediates: intermediates,
 		})
 		if err != nil {
-			findings.Errors = append(findings.Errors, "Failed to verify certificate chain for "+certificates[0].Subject.String())
+			findings.Errors = append(findings.Errors, "Failed to verify certificate chain for "+certificateList[0].Subject.String())
 		}
 
 		if len(verifyCerts) != 0 {
-			verified = verifyCerts[0][0].Equal(certificates[0])
+			verified = verifyCerts[0][0].Equal(certificateList[0])
 		}
 	}
 
-	for i := range certificates {
-		cert := certificates[i]
+	for i := range certificateList {
+		cert := certificateList[i]
 
 		var isRevoked interface{}
 		var revokedAt interface{}
@@ -129,8 +129,13 @@ func parseCertificates(runtime *lumi.Runtime, domainName string, findings *tlssh
 			}
 		}
 
+		certdata, err := certificates.EncodeCertAsPEM(cert)
+		if err != nil {
+			return nil, err
+		}
+
 		raw, err := runtime.CreateResource("certificate",
-			"pem", "",
+			"pem", string(certdata),
 			// NOTE: if we do not set the hash here, it will generate the cache content before we can store it
 			// we are using the hashs for the id, therefore it is required during creation
 			"fingerprints", certFingerprints(cert),
