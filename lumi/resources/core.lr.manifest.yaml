@@ -3894,6 +3894,11 @@ resources:
       file: {}
       params: {}
     min_mondoo_version: 5.15.0
+    snippets:
+      - query: "parse.json(content: '{ \"a\": \"b\"  }').params"
+        title: Parse JSON from string content
+      - query: parse.json("/path/to/test.json").params
+        title: Parse JSON from file
   parse.plist:
     fields:
       content: {}
