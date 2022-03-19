@@ -440,6 +440,60 @@ func (k *lumiK8sPod) id() (string, error) {
 	return k.Uid()
 }
 
+func (p *lumiK8sPod) init(args *lumi.Args) (*lumi.Args, K8sPod, error) {
+	// pass-through if all args are already provided
+	if len(*args) == 0 || len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	// search for existing resources if uid or name/namespace is provided
+	obj, err := p.Runtime.CreateResource("k8s")
+	if err != nil {
+		return nil, nil, err
+	}
+	k8sResource := obj.(K8s)
+
+	secrets, err := k8sResource.Pods()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var matchFn func(configMap K8sPod) bool
+
+	uidRaw := (*args)["uid"]
+	if uidRaw != nil {
+		matchFn = func(configMap K8sPod) bool {
+			uid, _ := configMap.Uid()
+			if uid == uidRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	nameRaw := (*args)["name"]
+	namespaceRaw := (*args)["namespace"]
+	if nameRaw != nil && namespaceRaw != nil {
+		matchFn = func(configMap K8sPod) bool {
+			name, _ := configMap.Name()
+			namespace, _ := configMap.Namespace()
+			if name == nameRaw.(string) && namespace == namespaceRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	for i := range secrets {
+		configMap := secrets[i].(K8sPod)
+		if matchFn(configMap) {
+			return nil, configMap, nil
+		}
+	}
+
+	return args, nil, nil
+}
+
 func (k *lumiK8sPod) GetContainers() ([]interface{}, error) {
 	uid, err := k.Uid()
 	if err != nil {
@@ -545,6 +599,60 @@ func (k *lumiK8sDeployment) id() (string, error) {
 	return k.Uid()
 }
 
+func (p *lumiK8sDeployment) init(args *lumi.Args) (*lumi.Args, K8sDeployment, error) {
+	// pass-through if all args are already provided
+	if len(*args) == 0 || len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	// search for existing resources if uid or name/namespace is provided
+	obj, err := p.Runtime.CreateResource("k8s")
+	if err != nil {
+		return nil, nil, err
+	}
+	k8sResource := obj.(K8s)
+
+	secrets, err := k8sResource.Deployments()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var matchFn func(configMap K8sDeployment) bool
+
+	uidRaw := (*args)["uid"]
+	if uidRaw != nil {
+		matchFn = func(configMap K8sDeployment) bool {
+			uid, _ := configMap.Uid()
+			if uid == uidRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	nameRaw := (*args)["name"]
+	namespaceRaw := (*args)["namespace"]
+	if nameRaw != nil && namespaceRaw != nil {
+		matchFn = func(configMap K8sDeployment) bool {
+			name, _ := configMap.Name()
+			namespace, _ := configMap.Namespace()
+			if name == nameRaw.(string) && namespace == namespaceRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	for i := range secrets {
+		configMap := secrets[i].(K8sDeployment)
+		if matchFn(configMap) {
+			return nil, configMap, nil
+		}
+	}
+
+	return args, nil, nil
+}
+
 func (k *lumiK8sDeployment) GetNamespace() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }
@@ -559,6 +667,60 @@ func (k *lumiK8sDeployment) GetLabels() (interface{}, error) {
 
 func (k *lumiK8sDaemonset) id() (string, error) {
 	return k.Uid()
+}
+
+func (p *lumiK8sDaemonset) init(args *lumi.Args) (*lumi.Args, K8sDaemonset, error) {
+	// pass-through if all args are already provided
+	if len(*args) == 0 || len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	// search for existing resources if uid or name/namespace is provided
+	obj, err := p.Runtime.CreateResource("k8s")
+	if err != nil {
+		return nil, nil, err
+	}
+	k8sResource := obj.(K8s)
+
+	secrets, err := k8sResource.Daemonsets()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var matchFn func(configMap K8sDaemonset) bool
+
+	uidRaw := (*args)["uid"]
+	if uidRaw != nil {
+		matchFn = func(configMap K8sDaemonset) bool {
+			uid, _ := configMap.Uid()
+			if uid == uidRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	nameRaw := (*args)["name"]
+	namespaceRaw := (*args)["namespace"]
+	if nameRaw != nil && namespaceRaw != nil {
+		matchFn = func(configMap K8sDaemonset) bool {
+			name, _ := configMap.Name()
+			namespace, _ := configMap.Namespace()
+			if name == nameRaw.(string) && namespace == namespaceRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	for i := range secrets {
+		configMap := secrets[i].(K8sDaemonset)
+		if matchFn(configMap) {
+			return nil, configMap, nil
+		}
+	}
+
+	return args, nil, nil
 }
 
 func (k *lumiK8sDaemonset) GetNamespace() (interface{}, error) {
@@ -577,6 +739,60 @@ func (k *lumiK8sJob) id() (string, error) {
 	return k.Uid()
 }
 
+func (p *lumiK8sJob) init(args *lumi.Args) (*lumi.Args, K8sJob, error) {
+	// pass-through if all args are already provided
+	if len(*args) == 0 || len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	// search for existing resources if uid or name/namespace is provided
+	obj, err := p.Runtime.CreateResource("k8s")
+	if err != nil {
+		return nil, nil, err
+	}
+	k8sResource := obj.(K8s)
+
+	secrets, err := k8sResource.Jobs()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var matchFn func(configMap K8sJob) bool
+
+	uidRaw := (*args)["uid"]
+	if uidRaw != nil {
+		matchFn = func(configMap K8sJob) bool {
+			uid, _ := configMap.Uid()
+			if uid == uidRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	nameRaw := (*args)["name"]
+	namespaceRaw := (*args)["namespace"]
+	if nameRaw != nil && namespaceRaw != nil {
+		matchFn = func(configMap K8sJob) bool {
+			name, _ := configMap.Name()
+			namespace, _ := configMap.Namespace()
+			if name == nameRaw.(string) && namespace == namespaceRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	for i := range secrets {
+		configMap := secrets[i].(K8sJob)
+		if matchFn(configMap) {
+			return nil, configMap, nil
+		}
+	}
+
+	return args, nil, nil
+}
+
 func (k *lumiK8sJob) GetNamespace() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }
@@ -593,6 +809,60 @@ func (k *lumiK8sCronjob) id() (string, error) {
 	return k.Uid()
 }
 
+func (p *lumiK8sCronjob) init(args *lumi.Args) (*lumi.Args, K8sCronjob, error) {
+	// pass-through if all args are already provided
+	if len(*args) == 0 || len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	// search for existing resources if uid or name/namespace is provided
+	obj, err := p.Runtime.CreateResource("k8s")
+	if err != nil {
+		return nil, nil, err
+	}
+	k8sResource := obj.(K8s)
+
+	secrets, err := k8sResource.Cronjobs()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var matchFn func(configMap K8sCronjob) bool
+
+	uidRaw := (*args)["uid"]
+	if uidRaw != nil {
+		matchFn = func(configMap K8sCronjob) bool {
+			uid, _ := configMap.Uid()
+			if uid == uidRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	nameRaw := (*args)["name"]
+	namespaceRaw := (*args)["namespace"]
+	if nameRaw != nil && namespaceRaw != nil {
+		matchFn = func(configMap K8sCronjob) bool {
+			name, _ := configMap.Name()
+			namespace, _ := configMap.Namespace()
+			if name == nameRaw.(string) && namespace == namespaceRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	for i := range secrets {
+		configMap := secrets[i].(K8sCronjob)
+		if matchFn(configMap) {
+			return nil, configMap, nil
+		}
+	}
+
+	return args, nil, nil
+}
+
 func (k *lumiK8sCronjob) GetNamespace() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }
@@ -607,6 +877,60 @@ func (k *lumiK8sCronjob) GetLabels() (interface{}, error) {
 
 func (k *lumiK8sSecret) id() (string, error) {
 	return k.Uid()
+}
+
+func (p *lumiK8sSecret) init(args *lumi.Args) (*lumi.Args, K8sSecret, error) {
+	// pass-through if all args are already provided
+	if len(*args) == 0 || len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	// search for existing resources if uid or name/namespace is provided
+	obj, err := p.Runtime.CreateResource("k8s")
+	if err != nil {
+		return nil, nil, err
+	}
+	k8sResource := obj.(K8s)
+
+	secrets, err := k8sResource.Secrets()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var matchFn func(configMap K8sSecret) bool
+
+	uidRaw := (*args)["uid"]
+	if uidRaw != nil {
+		matchFn = func(configMap K8sSecret) bool {
+			uid, _ := configMap.Uid()
+			if uid == uidRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	nameRaw := (*args)["name"]
+	namespaceRaw := (*args)["namespace"]
+	if nameRaw != nil && namespaceRaw != nil {
+		matchFn = func(configMap K8sSecret) bool {
+			name, _ := configMap.Name()
+			namespace, _ := configMap.Namespace()
+			if name == nameRaw.(string) && namespace == namespaceRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	for i := range secrets {
+		configMap := secrets[i].(K8sSecret)
+		if matchFn(configMap) {
+			return nil, configMap, nil
+		}
+	}
+
+	return args, nil, nil
 }
 
 func (k *lumiK8sSecret) GetAnnotations() (interface{}, error) {
@@ -659,6 +983,60 @@ func (k *lumiK8sPodsecuritypolicy) GetLabels() (interface{}, error) {
 
 func (k *lumiK8sConfigmap) id() (string, error) {
 	return k.Uid()
+}
+
+func (p *lumiK8sConfigmap) init(args *lumi.Args) (*lumi.Args, K8sConfigmap, error) {
+	// pass-through if all args are already provided
+	if len(*args) == 0 || len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	// search for existing resources if uid or name/namespace is provided
+	obj, err := p.Runtime.CreateResource("k8s")
+	if err != nil {
+		return nil, nil, err
+	}
+	k8sResource := obj.(K8s)
+
+	configMaps, err := k8sResource.Configmaps()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var matchFn func(configMap K8sConfigmap) bool
+
+	uidRaw := (*args)["uid"]
+	if uidRaw != nil {
+		matchFn = func(configMap K8sConfigmap) bool {
+			uid, _ := configMap.Uid()
+			if uid == uidRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	nameRaw := (*args)["name"]
+	namespaceRaw := (*args)["namespace"]
+	if nameRaw != nil && namespaceRaw != nil {
+		matchFn = func(configMap K8sConfigmap) bool {
+			name, _ := configMap.Name()
+			namespace, _ := configMap.Namespace()
+			if name == nameRaw.(string) && namespace == namespaceRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	for i := range configMaps {
+		configMap := configMaps[i].(K8sConfigmap)
+		if matchFn(configMap) {
+			return nil, configMap, nil
+		}
+	}
+
+	return args, nil, nil
 }
 
 func (k *lumiK8sConfigmap) GetAnnotations() (interface{}, error) {
