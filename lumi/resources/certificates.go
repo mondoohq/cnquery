@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/checksums"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/certificates"
@@ -29,6 +30,17 @@ func (s *lumiParseCertificates) init(args *lumi.Args) (*lumi.Args, Authorizedkey
 			return nil, nil, err
 		}
 		(*args)["file"] = f
+	} else if x, ok := (*args)["content"]; ok {
+		content := x.(string)
+		virtualPath := "in-memory://" + checksums.New.Add(content).String()
+		f, err := s.Runtime.CreateResource("file", "path", virtualPath, "content", content, "exists", true)
+		if err != nil {
+			return nil, nil, err
+		}
+		(*args)["file"] = f
+		(*args)["path"] = virtualPath
+	} else {
+		return nil, nil, errors.New("missing 'path' or 'content' for parse.json initialization")
 	}
 
 	return args, nil, nil
