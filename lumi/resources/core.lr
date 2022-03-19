@@ -4571,3 +4571,11 @@ terraform.module {
   //  Path to the directory where the module is stored
   dir string
 }
+
+// Terraform Settings
+terraform.settings {
+  // Settings Block
+  block terraform.block
+  // Provider Requirements
+  requiredProviders dict
+}
