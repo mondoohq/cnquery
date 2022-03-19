@@ -4032,6 +4032,8 @@ k8s {
   serverVersion() dict
   // Kubernetes PodSecurityPolicy's
   podSecurityPolicies() []k8s.podsecuritypolicy
+  // Config Maps
+  configmaps() []k8s.configmap
 }
 
 // Kubernetes API Resources
@@ -4277,6 +4279,30 @@ k8s.podsecuritypolicy {
   manifest dict
   // Policy Spec
   spec dict
+}
+
+// Kubernetes Secret
+k8s.configmap {
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Configuration data
+  data map[string]string
 }
 
 // Organization represents a GitHub organization account
