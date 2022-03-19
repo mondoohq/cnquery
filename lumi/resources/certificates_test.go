@@ -118,6 +118,45 @@ func TestResource_ParseCertificates(t *testing.T) {
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, []interface{}{}, res[0].Data.Value)
 	})
+
+	t.Run("test certificate loading from content", func(t *testing.T) {
+		cert := `-----BEGIN CERTIFICATE-----
+MIIFWDCCBECgAwIBAgIQaMJ5PP8vl9sQAAAAAAEvHjANBgkqhkiG9w0BAQsFADBG
+MQswCQYDVQQGEwJVUzEiMCAGA1UEChMZR29vZ2xlIFRydXN0IFNlcnZpY2VzIExM
+QzETMBEGA1UEAxMKR1RTIENBIDFENDAeFw0yMjAyMDYwOTI3MzJaFw0yMjA1MDcw
+OTI3MzFaMBUxEzARBgNVBAMTCm1vbmRvby5jb20wggEiMA0GCSqGSIb3DQEBAQUA
+A4IBDwAwggEKAoIBAQC4oVPC4ORJlZt/FEfrJ4g8gCBPKW0m9rH/e4J78jZTrsye
+7w7tXFY7ZeHGQizEsJtfpsipwsldTOoCygDKWI/7xnx9AKe79wRfZecijV11s5MN
+TfSlNSgaKZ5DAha8oVszAmPDxD6dDWqMPGL0XHw86aaBimnrh48930qBFwoKyf5I
+cWCz77McF0PYNk57VDMB7BVIlthEvVmrSp9zloHOa78LoiexPOTHQSjAZTvnUiMn
+EMRL3J9ZFYyshw56oE9hR3getBvlpwOKpS+5MSorOI5/ZSApn6ZF8c0F5IJVlTNR
+T3ffKYz02Y4Rz348cgZkpo8t8Gp5/5OYoxjBRm81AgMBAAGjggJxMIICbTAOBgNV
+HQ8BAf8EBAMCBaAwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADAd
+BgNVHQ4EFgQU5TBHEo55zzpw6/s3QckdsaprbtYwHwYDVR0jBBgwFoAUJeIYDrJX
+kZQq5dRdhpCD3lOzuJIweAYIKwYBBQUHAQEEbDBqMDUGCCsGAQUFBzABhilodHRw
+Oi8vb2NzcC5wa2kuZ29vZy9zL2d0czFkNC9za0xzTXRrWUpUczAxBggrBgEFBQcw
+AoYlaHR0cDovL3BraS5nb29nL3JlcG8vY2VydHMvZ3RzMWQ0LmRlcjAVBgNVHREE
+DjAMggptb25kb28uY29tMCEGA1UdIAQaMBgwCAYGZ4EMAQIBMAwGCisGAQQB1nkC
+BQMwPAYDVR0fBDUwMzAxoC+gLYYraHR0cDovL2NybHMucGtpLmdvb2cvZ3RzMWQ0
+L0VVQzBtUTR5TVBjLmNybDCCAQQGCisGAQQB1nkCBAIEgfUEgfIA8AB2AFGjsPX9
+AXmcVm24N3iPDKR6zBsny/eeiEKaDf7UiwXlAAABfs6aMmoAAAQDAEcwRQIhAMy2
+aufiYVITPFDElL1aWVMTo0rBEmQ520rXbTcfzI4JAiAawIFvNix2Vp3Ybuk7doHp
+q/sICyNRt+Zrz/wNNfziegB2AEalVet1+pEgMLWiiWn0830RLEF0vv1JuIWr8vxw
+/m1HAAABfs6aMoMAAAQDAEcwRQIhAJXJReJyMJskegnWDmfq0ovGZ90A7c9lYebj
+7jfJyGGlAiABVuFTV0/jxdAV5XNOyUxN3Y3qhdeSfVM/82qPTub26zANBgkqhkiG
+9w0BAQsFAAOCAQEAagCxD1/ctRgSA96MLhIKAey6CHmkECgGb4B+liuO1PwG+Ft9
+x4KigQjZ193+z7aSb6CSxIEzUyDfGTMqmER1MOmN5wJhzw7pnZ0VXDLePcTJPqtA
+q5uRwWdrXRKsoXPbizcs25btZNgcswHLOzNYxCT5Qf9pprxTcMoIlROFF6WT0wxq
+pmYrmQ+eJ9Ny8Fi6ovMWlUch4qg3bcj6QQ0FZ3zPX/6kI9FXGvJ+4rL/WE3Ouc+b
+XjazfGmfrd3uVevgxgkfeMsKtKgHCpr7f0qpqgko9F5De68JZg+lV/ganyOxKi5M
+ym+AS505m2l07i2SYbM82nyP74qYD3b3QmrZSQ==
+-----END CERTIFICATE-----`
+
+		res := testQuery(t, "parse.certificates(content: '"+cert+"').list[0].issuer.commonName")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, "GTS CA 1D4", res[0].Data.Value)
+	})
 }
 
 func TestResource_OSRootCertificates(t *testing.T) {
