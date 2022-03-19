@@ -62,4 +62,11 @@ func TestResource_Terraform(t *testing.T) {
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, map[string]interface{}{"enable-oslogin": true}, res[0].Data.Value)
 	})
+
+	t.Run("terraform settings", func(t *testing.T) {
+		res := terraformTestQuery(t, "terraform.settings.requiredProviders['aws']['version']")
+		require.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, "~> 3.74", res[0].Data.Value)
+	})
 }

@@ -110,8 +110,8 @@ func (g *lumiTerraform) GetBlocks() ([]interface{}, error) {
 	return lumiHclBlocks, nil
 }
 
-func (g *lumiTerraform) filterBlockByType(filterType string) ([]interface{}, error) {
-	t, err := terraformtransport(g.Runtime.Motor.Transport)
+func filterBlockByType(runtime *lumi.Runtime, filterType string) ([]interface{}, error) {
+	t, err := terraformtransport(runtime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (g *lumiTerraform) filterBlockByType(filterType string) ([]interface{}, err
 	var lumiHclBlocks []interface{}
 	for k := range files {
 		f := files[k]
-		blocks, err := listHclBlocks(g.Runtime, f.Body, f)
+		blocks, err := listHclBlocks(runtime, f.Body, f)
 		if err != nil {
 			return nil, err
 		}
@@ -141,23 +141,23 @@ func (g *lumiTerraform) filterBlockByType(filterType string) ([]interface{}, err
 }
 
 func (g *lumiTerraform) GetProviders() ([]interface{}, error) {
-	return g.filterBlockByType("provider")
+	return filterBlockByType(g.Runtime, "provider")
 }
 
 func (g *lumiTerraform) GetDatasources() ([]interface{}, error) {
-	return g.filterBlockByType("data")
+	return filterBlockByType(g.Runtime, "data")
 }
 
 func (g *lumiTerraform) GetResources() ([]interface{}, error) {
-	return g.filterBlockByType("resource")
+	return filterBlockByType(g.Runtime, "resource")
 }
 
 func (g *lumiTerraform) GetVariables() ([]interface{}, error) {
-	return g.filterBlockByType("variable")
+	return filterBlockByType(g.Runtime, "variable")
 }
 
 func (g *lumiTerraform) GetOutputs() ([]interface{}, error) {
-	return g.filterBlockByType("output")
+	return filterBlockByType(g.Runtime, "output")
 }
 
 func extractHclCodeSnippet(file *hcl.File, fileRange hcl.Range) string {
@@ -516,4 +516,61 @@ func (g *lumiTerraformModule) id() (string, error) {
 	k, _ := g.Key()
 	v, _ := g.Version()
 	return "terraform.module/key/" + k + "/version/" + v, nil
+}
+
+func (g *lumiTerraformSettings) id() (string, error) {
+	return "terraform.settings", nil
+}
+
+func (s *lumiTerraformSettings) init(args *lumi.Args) (*lumi.Args, TerraformSettings, error) {
+	blocks, err := filterBlockByType(s.Runtime, "terraform")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if len(blocks) != 1 {
+		return nil, nil, errors.New("no `terraform` settings block found")
+	}
+
+	settingsBlock := blocks[0].(TerraformBlock)
+	(*args)["block"] = settingsBlock
+	(*args)["requiredProviders"] = map[string]interface{}{}
+
+	hclBlock, found := settingsBlock.LumiResource().Cache.Load("_hclblock")
+	if found {
+		hb := hclBlock.Data.(*hcl.Block)
+		requireProviderBlock := getBlockByName(hb, "required_providers")
+		if requireProviderBlock != nil {
+			attributes, _ := requireProviderBlock.Body.JustAttributes()
+			dict, err := hclResolvedAttributesToDict(attributes)
+			if err != nil {
+				return nil, nil, err
+			}
+			(*args)["requiredProviders"] = dict
+		}
+	}
+
+	return args, nil, nil
+}
+
+func getBlockByName(hb *hcl.Block, name string) *hcl.Block {
+	rawBody := hb.Body
+	switch body := rawBody.(type) {
+	case *hclsyntax.Body:
+		for i := range body.Blocks {
+			b := body.Blocks[i].AsHCLBlock()
+			if b.Type == name {
+				return b
+			}
+		}
+	case hcl.Body:
+		content, _, _ := body.PartialContent(terraform.TerraformSchema_0_12)
+		for i := range content.Blocks {
+			b := content.Blocks[i]
+			if b.Type == name {
+				return b
+			}
+		}
+	}
+	return nil
 }
