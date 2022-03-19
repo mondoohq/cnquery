@@ -384,6 +384,38 @@ func (k *lumiK8s) GetPodSecurityPolicies() ([]interface{}, error) {
 	})
 }
 
+func (k *lumiK8s) GetConfigmaps() ([]interface{}, error) {
+	return k8sResourceToLumi(k.Runtime, "configmaps", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+		ts := obj.GetCreationTimestamp()
+
+		manifest, err := jsonToDict(resource)
+		if err != nil {
+			return nil, err
+		}
+
+		cm, ok := resource.(*corev1.ConfigMap)
+		if !ok {
+			return nil, errors.New("not a k8s configmap")
+		}
+
+		r, err := k.Runtime.CreateResource("k8s.configmap",
+			"uid", string(obj.GetUID()),
+			"resourceVersion", obj.GetResourceVersion(),
+			"name", obj.GetName(),
+			"namespace", obj.GetNamespace(),
+			"kind", objT.GetKind(),
+			"created", &ts.Time,
+			"manifest", manifest,
+			"data", strMapToInterface(cm.Data),
+		)
+		if err != nil {
+			return nil, err
+		}
+		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		return r, nil
+	})
+}
+
 func (k *lumiK8sApiresource) id() (string, error) {
 	return k.Name()
 }
@@ -622,5 +654,17 @@ func (k *lumiK8sPodsecuritypolicy) GetAnnotations() (interface{}, error) {
 }
 
 func (k *lumiK8sPodsecuritypolicy) GetLabels() (interface{}, error) {
+	return k8sLabels(k.LumiResource())
+}
+
+func (k *lumiK8sConfigmap) id() (string, error) {
+	return k.Uid()
+}
+
+func (k *lumiK8sConfigmap) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.LumiResource())
+}
+
+func (k *lumiK8sConfigmap) GetLabels() (interface{}, error) {
 	return k8sLabels(k.LumiResource())
 }
