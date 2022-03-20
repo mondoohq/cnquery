@@ -4114,13 +4114,41 @@ k8s.pod {
   node() k8s.node
 }
 
+// Container Image
+container.image {
+  // Fully-qualified reference name
+  name string
+  // Identifier of type-specific portion of the image reference
+  identifier string
+  // Identifier Type `tag` or `digest`
+  identifierType string
+  // Repository used for Container Image
+  repository() container.repository
+}
+
+// Container Registry Repository
+container.repository {
+  // Container Registry Repository Name
+  name string
+  // URL Scheme
+  scheme string
+  // Container Registry Repository URL
+  fullName string
+  // Container Registry URL
+  registry string
+}
+
 // single application container
 k8s.container {
   uid string
   // Name of the container
   name string
-  // Docker image name
+  // Container image name
+  imageName string
+  // deprecated, use imageName
   image string
+  // Container image
+  containerImage() container.image
   // Entrypoint array
   command []string
   // Arguments to the entrypoint

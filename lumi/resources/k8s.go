@@ -554,7 +554,8 @@ func (k *lumiK8sPod) GetContainers() ([]interface{}, error) {
 		lumiContainer, err := k.Runtime.CreateResource("k8s.container",
 			"uid", uid+"/"+c.Name, // container names are unique within a pod
 			"name", c.Name,
-			"image", c.Image,
+			"imageName", c.Image,
+			"image", c.Image, // deprecated, will be replaced with the containerImage going forward
 			"command", strSliceToInterface(c.Command),
 			"args", strSliceToInterface(c.Args),
 			"resources", resources,
@@ -593,6 +594,15 @@ func (k *lumiK8sPod) GetNode() (interface{}, error) {
 
 func (k *lumiK8sContainer) id() (string, error) {
 	return k.Uid()
+}
+
+func (k *lumiK8sContainer) GetContainerImage() (interface{}, error) {
+	containerImageName, err := k.Name()
+	if err != nil {
+		return nil, err
+	}
+
+	return newLumiContainerImage(k.Runtime, containerImageName)
 }
 
 func (k *lumiK8sDeployment) id() (string, error) {
