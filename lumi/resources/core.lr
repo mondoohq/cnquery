@@ -4030,6 +4030,8 @@ k8s {
   secrets() []k8s.secret
   // Cluster Version
   serverVersion() dict
+  // Kubernetes PodSecurityPolicy's
+  podSecurityPolicies() []k8s.podsecuritypolicy
 }
 
 // Kubernetes API Resources
@@ -4253,6 +4255,28 @@ k8s.secret {
   type string
   // secret certificates
   certificates() []certificate
+}
+
+// Kubernetes PodSecurityPolicy (deprecated as of Kubernetes v1.21)
+k8s.podsecuritypolicy {
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Policy Spec
+  spec dict
 }
 
 // Organization represents a GitHub organization account
