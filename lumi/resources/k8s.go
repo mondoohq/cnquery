@@ -13,6 +13,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	rbacauthorizationv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -482,6 +483,214 @@ func (k *lumiK8s) GetNetworkPolicies() ([]interface{}, error) {
 			"created", &ts.Time,
 			"manifest", manifest,
 			"spec", spec,
+		)
+		if err != nil {
+			return nil, err
+		}
+		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		return r, nil
+	})
+}
+
+func (k *lumiK8s) GetServiceaccounts() ([]interface{}, error) {
+	return k8sResourceToLumi(k.Runtime, "serviceaccounts", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+		ts := obj.GetCreationTimestamp()
+
+		manifest, err := jsonToDict(resource)
+		if err != nil {
+			return nil, err
+		}
+
+		serviceAccount, ok := resource.(*corev1.ServiceAccount)
+		if !ok {
+			return nil, errors.New("not a k8s service account")
+		}
+
+		secrets, err := jsonToDictSlice(serviceAccount.Secrets)
+		if err != nil {
+			return nil, err
+		}
+
+		imagePullSecrets, err := jsonToDictSlice(serviceAccount.ImagePullSecrets)
+		if err != nil {
+			return nil, err
+		}
+
+		r, err := k.Runtime.CreateResource("k8s.serviceaccount",
+			"uid", string(obj.GetUID()),
+			"resourceVersion", obj.GetResourceVersion(),
+			"name", obj.GetName(),
+			"namespace", obj.GetNamespace(),
+			"kind", objT.GetKind(),
+			"created", &ts.Time,
+			"manifest", manifest,
+			"secrets", secrets,
+			"imagePullSecrets", imagePullSecrets,
+			"automountServiceAccountToken", toBool(serviceAccount.AutomountServiceAccountToken),
+		)
+		if err != nil {
+			return nil, err
+		}
+		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		return r, nil
+	})
+}
+
+func (k *lumiK8s) GetClusterroles() ([]interface{}, error) {
+	return k8sResourceToLumi(k.Runtime, "clusterroles", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+		ts := obj.GetCreationTimestamp()
+
+		manifest, err := jsonToDict(resource)
+		if err != nil {
+			return nil, err
+		}
+
+		clusterRole, ok := resource.(*rbacauthorizationv1.ClusterRole)
+		if !ok {
+			return nil, errors.New("not a k8s rbac cluster role")
+		}
+
+		rules, err := jsonToDictSlice(clusterRole.Rules)
+		if err != nil {
+			return nil, err
+		}
+
+		aggregationRule, err := jsonToDict(clusterRole.AggregationRule)
+		if err != nil {
+			return nil, err
+		}
+
+		r, err := k.Runtime.CreateResource("k8s.rbac.clusterrole",
+			"uid", string(obj.GetUID()),
+			"resourceVersion", obj.GetResourceVersion(),
+			"name", obj.GetName(),
+			"kind", objT.GetKind(),
+			"created", &ts.Time,
+			"manifest", manifest,
+			"rules", rules,
+			"aggregationRule", aggregationRule,
+		)
+		if err != nil {
+			return nil, err
+		}
+		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		return r, nil
+	})
+}
+
+func (k *lumiK8s) GetRoles() ([]interface{}, error) {
+	return k8sResourceToLumi(k.Runtime, "roles", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+		ts := obj.GetCreationTimestamp()
+
+		manifest, err := jsonToDict(resource)
+		if err != nil {
+			return nil, err
+		}
+
+		clusterRole, ok := resource.(*rbacauthorizationv1.Role)
+		if !ok {
+			return nil, errors.New("not a k8s rbac role")
+		}
+
+		rules, err := jsonToDictSlice(clusterRole.Rules)
+		if err != nil {
+			return nil, err
+		}
+
+		r, err := k.Runtime.CreateResource("k8s.rbac.role",
+			"uid", string(obj.GetUID()),
+			"resourceVersion", obj.GetResourceVersion(),
+			"name", obj.GetName(),
+			"namespace", obj.GetNamespace(),
+			"kind", objT.GetKind(),
+			"created", &ts.Time,
+			"manifest", manifest,
+			"rules", rules,
+		)
+		if err != nil {
+			return nil, err
+		}
+		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		return r, nil
+	})
+}
+
+func (k *lumiK8s) GetClusterrolebindings() ([]interface{}, error) {
+	return k8sResourceToLumi(k.Runtime, "clusterrolebindings", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+		ts := obj.GetCreationTimestamp()
+
+		manifest, err := jsonToDict(resource)
+		if err != nil {
+			return nil, err
+		}
+
+		clusterRole, ok := resource.(*rbacauthorizationv1.ClusterRoleBinding)
+		if !ok {
+			return nil, errors.New("not a k8s cluster role binding")
+		}
+
+		subjects, err := jsonToDictSlice(clusterRole.Subjects)
+		if err != nil {
+			return nil, err
+		}
+
+		roleRef, err := jsonToDict(clusterRole.RoleRef)
+		if err != nil {
+			return nil, err
+		}
+
+		r, err := k.Runtime.CreateResource("k8s.rbac.clusterrolebinding",
+			"uid", string(obj.GetUID()),
+			"resourceVersion", obj.GetResourceVersion(),
+			"name", obj.GetName(),
+			"kind", objT.GetKind(),
+			"created", &ts.Time,
+			"manifest", manifest,
+			"subjects", subjects,
+			"roleRef", roleRef,
+		)
+		if err != nil {
+			return nil, err
+		}
+		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		return r, nil
+	})
+}
+
+func (k *lumiK8s) GetRolebindings() ([]interface{}, error) {
+	return k8sResourceToLumi(k.Runtime, "rolebinding", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+		ts := obj.GetCreationTimestamp()
+
+		manifest, err := jsonToDict(resource)
+		if err != nil {
+			return nil, err
+		}
+
+		clusterRole, ok := resource.(*rbacauthorizationv1.RoleBinding)
+		if !ok {
+			return nil, errors.New("not a k8s role binding")
+		}
+
+		subjects, err := jsonToDictSlice(clusterRole.Subjects)
+		if err != nil {
+			return nil, err
+		}
+
+		roleRef, err := jsonToDict(clusterRole.RoleRef)
+		if err != nil {
+			return nil, err
+		}
+
+		r, err := k.Runtime.CreateResource("k8s.rbac.rolebinding",
+			"uid", string(obj.GetUID()),
+			"resourceVersion", obj.GetResourceVersion(),
+			"name", obj.GetName(),
+			"namespace", obj.GetNamespace(),
+			"kind", objT.GetKind(),
+			"created", &ts.Time,
+			"manifest", manifest,
+			"subjects", subjects,
+			"roleRef", roleRef,
 		)
 		if err != nil {
 			return nil, err
@@ -1153,5 +1362,65 @@ func (k *lumiK8sNetworkpolicy) GetAnnotations() (interface{}, error) {
 }
 
 func (k *lumiK8sNetworkpolicy) GetLabels() (interface{}, error) {
+	return k8sLabels(k.LumiResource())
+}
+
+func (k *lumiK8sServiceaccount) id() (string, error) {
+	return k.Uid()
+}
+
+func (k *lumiK8sServiceaccount) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.LumiResource())
+}
+
+func (k *lumiK8sServiceaccount) GetLabels() (interface{}, error) {
+	return k8sLabels(k.LumiResource())
+}
+
+func (k *lumiK8sRbacClusterrole) id() (string, error) {
+	return k.Uid()
+}
+
+func (k *lumiK8sRbacClusterrole) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.LumiResource())
+}
+
+func (k *lumiK8sRbacClusterrole) GetLabels() (interface{}, error) {
+	return k8sLabels(k.LumiResource())
+}
+
+func (k *lumiK8sRbacRole) id() (string, error) {
+	return k.Uid()
+}
+
+func (k *lumiK8sRbacRole) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.LumiResource())
+}
+
+func (k *lumiK8sRbacRole) GetLabels() (interface{}, error) {
+	return k8sLabels(k.LumiResource())
+}
+
+func (k *lumiK8sRbacClusterrolebinding) id() (string, error) {
+	return k.Uid()
+}
+
+func (k *lumiK8sRbacClusterrolebinding) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.LumiResource())
+}
+
+func (k *lumiK8sRbacClusterrolebinding) GetLabels() (interface{}, error) {
+	return k8sLabels(k.LumiResource())
+}
+
+func (k *lumiK8sRbacRolebinding) id() (string, error) {
+	return k.Uid()
+}
+
+func (k *lumiK8sRbacRolebinding) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.LumiResource())
+}
+
+func (k *lumiK8sRbacRolebinding) GetLabels() (interface{}, error) {
 	return k8sLabels(k.LumiResource())
 }
