@@ -4034,6 +4034,10 @@ k8s {
   podSecurityPolicies() []k8s.podsecuritypolicy
   // Config Maps
   configmaps() []k8s.configmap
+  // Kubernetes Services
+  services() []k8s.service
+  // Kubernetes Network Polices
+  networkPolicies() []k8s.networkpolicy
 }
 
 // Kubernetes API Resources
@@ -4331,6 +4335,54 @@ k8s.configmap {
   manifest dict
   // Configuration data
   data map[string]string
+}
+
+// Kubernetes Service
+k8s.service {
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Service Spec
+  spec dict
+}
+
+// Kubernetes Network Policy
+k8s.networkpolicy {
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Network Policy Spec
+  spec dict
 }
 
 // Organization represents a GitHub organization account
