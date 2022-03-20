@@ -11,6 +11,7 @@ import (
 	k8s_transport "go.mondoo.io/mondoo/motor/transports/k8s"
 	"go.mondoo.io/mondoo/motor/transports/k8s/resources"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -384,6 +385,43 @@ func (k *lumiK8s) GetPodSecurityPolicies() ([]interface{}, error) {
 	})
 }
 
+func (k *lumiK8s) GetServices() ([]interface{}, error) {
+	return k8sResourceToLumi(k.Runtime, "services", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+		ts := obj.GetCreationTimestamp()
+
+		manifest, err := jsonToDict(resource)
+		if err != nil {
+			return nil, err
+		}
+
+		srv, ok := resource.(*corev1.Service)
+		if !ok {
+			return nil, errors.New("not a k8s service")
+		}
+
+		spec, err := jsonToDict(srv.Spec)
+		if err != nil {
+			return nil, err
+		}
+
+		r, err := k.Runtime.CreateResource("k8s.service",
+			"uid", string(obj.GetUID()),
+			"resourceVersion", obj.GetResourceVersion(),
+			"name", obj.GetName(),
+			"namespace", obj.GetNamespace(),
+			"kind", objT.GetKind(),
+			"created", &ts.Time,
+			"manifest", manifest,
+			"spec", spec,
+		)
+		if err != nil {
+			return nil, err
+		}
+		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		return r, nil
+	})
+}
+
 func (k *lumiK8s) GetConfigmaps() ([]interface{}, error) {
 	return k8sResourceToLumi(k.Runtime, "configmaps", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
@@ -407,6 +445,43 @@ func (k *lumiK8s) GetConfigmaps() ([]interface{}, error) {
 			"created", &ts.Time,
 			"manifest", manifest,
 			"data", strMapToInterface(cm.Data),
+		)
+		if err != nil {
+			return nil, err
+		}
+		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		return r, nil
+	})
+}
+
+func (k *lumiK8s) GetNetworkPolicies() ([]interface{}, error) {
+	return k8sResourceToLumi(k.Runtime, "networkpolicies", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+		ts := obj.GetCreationTimestamp()
+
+		manifest, err := jsonToDict(resource)
+		if err != nil {
+			return nil, err
+		}
+
+		networkPolicies, ok := resource.(*networkingv1.NetworkPolicy)
+		if !ok {
+			return nil, errors.New("not a k8s psp")
+		}
+
+		spec, err := jsonToDict(networkPolicies.Spec)
+		if err != nil {
+			return nil, err
+		}
+
+		r, err := k.Runtime.CreateResource("k8s.networkpolicy",
+			"uid", string(obj.GetUID()),
+			"resourceVersion", obj.GetResourceVersion(),
+			"name", obj.GetName(),
+			"namespace", obj.GetNamespace(),
+			"kind", objT.GetKind(),
+			"created", &ts.Time,
+			"manifest", manifest,
+			"spec", spec,
 		)
 		if err != nil {
 			return nil, err
@@ -1054,5 +1129,29 @@ func (k *lumiK8sConfigmap) GetAnnotations() (interface{}, error) {
 }
 
 func (k *lumiK8sConfigmap) GetLabels() (interface{}, error) {
+	return k8sLabels(k.LumiResource())
+}
+
+func (k *lumiK8sService) id() (string, error) {
+	return k.Uid()
+}
+
+func (k *lumiK8sService) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.LumiResource())
+}
+
+func (k *lumiK8sService) GetLabels() (interface{}, error) {
+	return k8sLabels(k.LumiResource())
+}
+
+func (k *lumiK8sNetworkpolicy) id() (string, error) {
+	return k.Uid()
+}
+
+func (k *lumiK8sNetworkpolicy) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.LumiResource())
+}
+
+func (k *lumiK8sNetworkpolicy) GetLabels() (interface{}, error) {
 	return k8sLabels(k.LumiResource())
 }
