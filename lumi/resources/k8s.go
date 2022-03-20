@@ -11,6 +11,7 @@ import (
 	k8s_transport "go.mondoo.io/mondoo/motor/transports/k8s"
 	"go.mondoo.io/mondoo/motor/transports/k8s/resources"
 	corev1 "k8s.io/api/core/v1"
+	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -347,6 +348,42 @@ func (k *lumiK8s) GetSecrets() ([]interface{}, error) {
 	})
 }
 
+func (k *lumiK8s) GetPodSecurityPolicies() ([]interface{}, error) {
+	return k8sResourceToLumi(k.Runtime, "podsecuritypolicies", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+		ts := obj.GetCreationTimestamp()
+
+		manifest, err := jsonToDict(resource)
+		if err != nil {
+			return nil, err
+		}
+
+		psp, ok := resource.(*policyv1beta1.PodSecurityPolicy)
+		if !ok {
+			return nil, errors.New("not a k8s psp")
+		}
+
+		spec, err := jsonToDict(psp.Spec)
+		if err != nil {
+			return nil, err
+		}
+
+		r, err := k.Runtime.CreateResource("k8s.podsecuritypolicy",
+			"uid", string(obj.GetUID()),
+			"resourceVersion", obj.GetResourceVersion(),
+			"name", obj.GetName(),
+			"kind", objT.GetKind(),
+			"created", &ts.Time,
+			"manifest", manifest,
+			"spec", spec,
+		)
+		if err != nil {
+			return nil, err
+		}
+		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		return r, nil
+	})
+}
+
 func (k *lumiK8sApiresource) id() (string, error) {
 	return k.Name()
 }
@@ -574,4 +611,16 @@ func (k *lumiK8sSecret) GetCertificates() (interface{}, error) {
 	}
 
 	return certificatesToLumiCertificates(k.Runtime, certs)
+}
+
+func (k *lumiK8sPodsecuritypolicy) id() (string, error) {
+	return k.Uid()
+}
+
+func (k *lumiK8sPodsecuritypolicy) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.LumiResource())
+}
+
+func (k *lumiK8sPodsecuritypolicy) GetLabels() (interface{}, error) {
+	return k8sLabels(k.LumiResource())
 }
