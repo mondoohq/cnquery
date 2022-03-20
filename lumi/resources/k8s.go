@@ -1345,6 +1345,60 @@ func (k *lumiK8sService) id() (string, error) {
 	return k.Uid()
 }
 
+func (p *lumiK8sService) init(args *lumi.Args) (*lumi.Args, K8sService, error) {
+	// pass-through if all args are already provided
+	if len(*args) == 0 || len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	// search for existing resources if uid or name/namespace is provided
+	obj, err := p.Runtime.CreateResource("k8s")
+	if err != nil {
+		return nil, nil, err
+	}
+	k8sResource := obj.(K8s)
+
+	services, err := k8sResource.Services()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var matchFn func(entry K8sService) bool
+
+	uidRaw := (*args)["uid"]
+	if uidRaw != nil {
+		matchFn = func(service K8sService) bool {
+			uid, _ := service.Uid()
+			if uid == uidRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	nameRaw := (*args)["name"]
+	namespaceRaw := (*args)["namespace"]
+	if nameRaw != nil && namespaceRaw != nil {
+		matchFn = func(entry K8sService) bool {
+			name, _ := entry.Name()
+			namespace, _ := entry.Namespace()
+			if name == nameRaw.(string) && namespace == namespaceRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	for i := range services {
+		service := services[i].(K8sService)
+		if matchFn(service) {
+			return nil, service, nil
+		}
+	}
+
+	return args, nil, nil
+}
+
 func (k *lumiK8sService) GetAnnotations() (interface{}, error) {
 	return k8sAnnotations(k.LumiResource())
 }
@@ -1355,6 +1409,60 @@ func (k *lumiK8sService) GetLabels() (interface{}, error) {
 
 func (k *lumiK8sNetworkpolicy) id() (string, error) {
 	return k.Uid()
+}
+
+func (p *lumiK8sNetworkpolicy) init(args *lumi.Args) (*lumi.Args, K8sNetworkpolicy, error) {
+	// pass-through if all args are already provided
+	if len(*args) == 0 || len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	// search for existing resources if uid or name/namespace is provided
+	obj, err := p.Runtime.CreateResource("k8s")
+	if err != nil {
+		return nil, nil, err
+	}
+	k8sResource := obj.(K8s)
+
+	policies, err := k8sResource.NetworkPolicies()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var matchFn func(entry K8sNetworkpolicy) bool
+
+	uidRaw := (*args)["uid"]
+	if uidRaw != nil {
+		matchFn = func(service K8sNetworkpolicy) bool {
+			uid, _ := service.Uid()
+			if uid == uidRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	nameRaw := (*args)["name"]
+	namespaceRaw := (*args)["namespace"]
+	if nameRaw != nil && namespaceRaw != nil {
+		matchFn = func(entry K8sNetworkpolicy) bool {
+			name, _ := entry.Name()
+			namespace, _ := entry.Namespace()
+			if name == nameRaw.(string) && namespace == namespaceRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	for i := range policies {
+		policy := policies[i].(K8sService)
+		if matchFn(policy) {
+			return nil, policy, nil
+		}
+	}
+
+	return args, nil, nil
 }
 
 func (k *lumiK8sNetworkpolicy) GetAnnotations() (interface{}, error) {
@@ -1369,6 +1477,60 @@ func (k *lumiK8sServiceaccount) id() (string, error) {
 	return k.Uid()
 }
 
+func (p *lumiK8sServiceaccount) init(args *lumi.Args) (*lumi.Args, K8sServiceaccount, error) {
+	// pass-through if all args are already provided
+	if len(*args) == 0 || len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	// search for existing resources if uid or name/namespace is provided
+	obj, err := p.Runtime.CreateResource("k8s")
+	if err != nil {
+		return nil, nil, err
+	}
+	k8sResource := obj.(K8s)
+
+	serviceAccounts, err := k8sResource.Serviceaccounts()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var matchFn func(entry K8sServiceaccount) bool
+
+	uidRaw := (*args)["uid"]
+	if uidRaw != nil {
+		matchFn = func(service K8sServiceaccount) bool {
+			uid, _ := service.Uid()
+			if uid == uidRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	nameRaw := (*args)["name"]
+	namespaceRaw := (*args)["namespace"]
+	if nameRaw != nil && namespaceRaw != nil {
+		matchFn = func(entry K8sServiceaccount) bool {
+			name, _ := entry.Name()
+			namespace, _ := entry.Namespace()
+			if name == nameRaw.(string) && namespace == namespaceRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	for i := range serviceAccounts {
+		entry := serviceAccounts[i].(K8sServiceaccount)
+		if matchFn(entry) {
+			return nil, entry, nil
+		}
+	}
+
+	return args, nil, nil
+}
+
 func (k *lumiK8sServiceaccount) GetAnnotations() (interface{}, error) {
 	return k8sAnnotations(k.LumiResource())
 }
@@ -1379,6 +1541,58 @@ func (k *lumiK8sServiceaccount) GetLabels() (interface{}, error) {
 
 func (k *lumiK8sRbacClusterrole) id() (string, error) {
 	return k.Uid()
+}
+
+func (p *lumiK8sRbacClusterrole) init(args *lumi.Args) (*lumi.Args, K8sRbacClusterrole, error) {
+	// pass-through if all args are already provided
+	if len(*args) == 0 || len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	// search for existing resources if uid or name/namespace is provided
+	obj, err := p.Runtime.CreateResource("k8s")
+	if err != nil {
+		return nil, nil, err
+	}
+	k8sResource := obj.(K8s)
+
+	clusterRoles, err := k8sResource.Clusterroles()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var matchFn func(entry K8sRbacClusterrole) bool
+
+	uidRaw := (*args)["uid"]
+	if uidRaw != nil {
+		matchFn = func(service K8sRbacClusterrole) bool {
+			uid, _ := service.Uid()
+			if uid == uidRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	nameRaw := (*args)["name"]
+	if nameRaw != nil {
+		matchFn = func(entry K8sRbacClusterrole) bool {
+			name, _ := entry.Name()
+			if name == nameRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	for i := range clusterRoles {
+		entry := clusterRoles[i].(K8sRbacClusterrole)
+		if matchFn(entry) {
+			return nil, entry, nil
+		}
+	}
+
+	return args, nil, nil
 }
 
 func (k *lumiK8sRbacClusterrole) GetAnnotations() (interface{}, error) {
@@ -1393,6 +1607,60 @@ func (k *lumiK8sRbacRole) id() (string, error) {
 	return k.Uid()
 }
 
+func (p *lumiK8sRbacRole) init(args *lumi.Args) (*lumi.Args, K8sRbacRole, error) {
+	// pass-through if all args are already provided
+	if len(*args) == 0 || len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	// search for existing resources if uid or name/namespace is provided
+	obj, err := p.Runtime.CreateResource("k8s")
+	if err != nil {
+		return nil, nil, err
+	}
+	k8sResource := obj.(K8s)
+
+	roles, err := k8sResource.Roles()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var matchFn func(entry K8sRbacRole) bool
+
+	uidRaw := (*args)["uid"]
+	if uidRaw != nil {
+		matchFn = func(service K8sRbacRole) bool {
+			uid, _ := service.Uid()
+			if uid == uidRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	nameRaw := (*args)["name"]
+	namespaceRaw := (*args)["namespace"]
+	if nameRaw != nil && namespaceRaw != nil {
+		matchFn = func(entry K8sRbacRole) bool {
+			name, _ := entry.Name()
+			namespace, _ := entry.Namespace()
+			if name == nameRaw.(string) && namespace == namespaceRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	for i := range roles {
+		entry := roles[i].(K8sRbacRole)
+		if matchFn(entry) {
+			return nil, entry, nil
+		}
+	}
+
+	return args, nil, nil
+}
+
 func (k *lumiK8sRbacRole) GetAnnotations() (interface{}, error) {
 	return k8sAnnotations(k.LumiResource())
 }
@@ -1405,6 +1673,58 @@ func (k *lumiK8sRbacClusterrolebinding) id() (string, error) {
 	return k.Uid()
 }
 
+func (p *lumiK8sRbacClusterrolebinding) init(args *lumi.Args) (*lumi.Args, K8sRbacClusterrolebinding, error) {
+	// pass-through if all args are already provided
+	if len(*args) == 0 || len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	// search for existing resources if uid or name/namespace is provided
+	obj, err := p.Runtime.CreateResource("k8s")
+	if err != nil {
+		return nil, nil, err
+	}
+	k8sResource := obj.(K8s)
+
+	roleBindings, err := k8sResource.Clusterrolebindings()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var matchFn func(entry K8sRbacClusterrolebinding) bool
+
+	uidRaw := (*args)["uid"]
+	if uidRaw != nil {
+		matchFn = func(service K8sRbacClusterrolebinding) bool {
+			uid, _ := service.Uid()
+			if uid == uidRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	nameRaw := (*args)["name"]
+	if nameRaw != nil {
+		matchFn = func(entry K8sRbacClusterrolebinding) bool {
+			name, _ := entry.Name()
+			if name == nameRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	for i := range roleBindings {
+		entry := roleBindings[i].(K8sRbacClusterrolebinding)
+		if matchFn(entry) {
+			return nil, entry, nil
+		}
+	}
+
+	return args, nil, nil
+}
+
 func (k *lumiK8sRbacClusterrolebinding) GetAnnotations() (interface{}, error) {
 	return k8sAnnotations(k.LumiResource())
 }
@@ -1415,6 +1735,60 @@ func (k *lumiK8sRbacClusterrolebinding) GetLabels() (interface{}, error) {
 
 func (k *lumiK8sRbacRolebinding) id() (string, error) {
 	return k.Uid()
+}
+
+func (p *lumiK8sRbacRolebinding) init(args *lumi.Args) (*lumi.Args, K8sRbacRolebinding, error) {
+	// pass-through if all args are already provided
+	if len(*args) == 0 || len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	// search for existing resources if uid or name/namespace is provided
+	obj, err := p.Runtime.CreateResource("k8s")
+	if err != nil {
+		return nil, nil, err
+	}
+	k8sResource := obj.(K8s)
+
+	roleBindings, err := k8sResource.Rolebindings()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var matchFn func(entry K8sRbacRolebinding) bool
+
+	uidRaw := (*args)["uid"]
+	if uidRaw != nil {
+		matchFn = func(service K8sRbacRolebinding) bool {
+			uid, _ := service.Uid()
+			if uid == uidRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	nameRaw := (*args)["name"]
+	namespaceRaw := (*args)["namespace"]
+	if nameRaw != nil && namespaceRaw != nil {
+		matchFn = func(entry K8sRbacRolebinding) bool {
+			name, _ := entry.Name()
+			namespace, _ := entry.Namespace()
+			if name == nameRaw.(string) && namespace == namespaceRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	for i := range roleBindings {
+		entry := roleBindings[i].(K8sRbacRolebinding)
+		if matchFn(entry) {
+			return nil, entry, nil
+		}
+	}
+
+	return args, nil, nil
 }
 
 func (k *lumiK8sRbacRolebinding) GetAnnotations() (interface{}, error) {
