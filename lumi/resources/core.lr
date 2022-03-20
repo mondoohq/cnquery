@@ -4038,6 +4038,16 @@ k8s {
   services() []k8s.service
   // Kubernetes Network Polices
   networkPolicies() []k8s.networkpolicy
+  // Kubernetes Service Accounts
+  serviceaccounts() []k8s.serviceaccount
+  // Kubernetes RBAC Cluster Roles
+  clusterroles() []k8s.rbac.clusterrole
+  // Kubernetes RBAC Roles
+  roles() []k8s.rbac.role
+  // Kubernetes RBAC Cluster Role Bindings
+  clusterrolebindings() []k8s.rbac.clusterrolebinding
+  // Kubernetes RBAC Role Bindings
+  rolebindings() []k8s.rbac.rolebinding
 }
 
 // Kubernetes API Resources
@@ -4383,6 +4393,132 @@ k8s.networkpolicy {
   manifest dict
   // Network Policy Spec
   spec dict
+}
+
+// Kubernetes Service Account
+k8s.serviceaccount {
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Secrets is the list of secrets allowed to be used by pods running using this ServiceAccount
+  secrets []dict
+  // ImagePullSecrets is a list of references to secrets in the same namespace to use for pulling any images
+  imagePullSecrets []dict
+  // AutomountServiceAccountToken indicates whether pods running as this service account should have an API token automatically mounted
+  automountServiceAccountToken bool
+}
+
+// Kubernetes Cluster Role
+k8s.rbac.clusterrole {
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Cluster Role Rules
+  rules []dict
+  // Cluster Role Aggregation Rule
+  aggregationRule dict
+}
+
+// Kubernetes Role
+k8s.rbac.role {
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Cluster Role Rules
+  rules []dict
+}
+
+// Kubernetes Role
+k8s.rbac.clusterrolebinding {
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Subjects holds references to the objects the role applies to
+  subjects []dict
+  // RoleRef can only reference a ClusterRole in the global namespace
+  roleRef dict
+}
+
+// Kubernetes Role Binding
+k8s.rbac.rolebinding {
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Subjects holds references to the objects the role applies to
+  subjects []dict
+  // RoleRef can only reference a ClusterRole in the global namespace
+  roleRef dict
 }
 
 // Organization represents a GitHub organization account
