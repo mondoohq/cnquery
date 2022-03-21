@@ -4586,6 +4586,44 @@ github.organization {
   members_can_create_pages bool
   members_can_create_public_pages bool
   members_can_create_private_pages bool
+
+  owners() []github.user
+  members() []github.user
+  repositories() []github.repository
+  installations() []github.installation
+}
+
+private github.user {
+  id int
+  login string
+  name string
+  email string
+  bio string
+  createdAt time
+  updatedAt time
+  suspendedAt time
+}
+
+private github.repository {
+  id int
+  name string
+  fullName string
+  description string
+  homepage string
+  createdAt time
+  updatedAt time
+  archived bool
+  disabled bool
+  private bool
+  visibility string
+}
+
+private github.installation {
+  id int
+  appId int
+  appSlug string
+  createdAt time
+  updatedAt time
 }
 
 // UUIDs based on RFC 4122 and DCE 1.1

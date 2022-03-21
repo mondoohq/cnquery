@@ -6,20 +6,26 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/google/go-github/v37/github"
+	"github.com/google/go-github/v43/github"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
 	"golang.org/x/oauth2"
 )
 
-var _ transports.Transport = (*Transport)(nil)
-var _ transports.TransportPlatformIdentifier = (*Transport)(nil)
+var (
+	_ transports.Transport                   = (*Transport)(nil)
+	_ transports.TransportPlatformIdentifier = (*Transport)(nil)
+)
 
 func New(tc *transports.TransportConfig) (*Transport, error) {
 	token := tc.Options["token"]
 	if token == "" {
 		token = os.Getenv("GITHUB_TOKEN")
+	}
+
+	if token == "" {
+		return nil, errors.New("a valid github token is required, pass --option token=<yourtoken> or set GITHUB_TOKEN")
 	}
 
 	var oauthClient *http.Client
