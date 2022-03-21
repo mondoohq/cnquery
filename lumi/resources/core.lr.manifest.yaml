@@ -1198,6 +1198,33 @@ resources:
     platform:
       name:
       - aws
+  aws.eks:
+    fields:
+      clusters: {}
+    min_mondoo_version: 5.31.0
+    platform:
+      name:
+      - aws
+  aws.eks.cluster:
+    fields:
+      arn: {}
+      createdAt: {}
+      encryptionConfig: {}
+      endpoint: {}
+      logging: {}
+      name: {}
+      networkConfig: {}
+      platformVersion: {}
+      region: {}
+      resourcesVpcConfig: {}
+      status: {}
+      tags: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: 5.31.0
+    platform:
+      name:
+      - aws
   aws.elasticache:
     docs:
       desc: "The `aws.elasticache` resource can be used to assess the configuration
@@ -2692,6 +2719,20 @@ resources:
       stderr: {}
       stdout: {}
     min_mondoo_version: 5.15.0
+  container.image:
+    fields:
+      identifier: {}
+      identifierType: {}
+      name: {}
+      repository: {}
+    min_mondoo_version: 5.31.0
+  container.repository:
+    fields:
+      fullName: {}
+      name: {}
+      registry: {}
+      scheme: {}
+    min_mondoo_version: 5.31.0
   dns:
     fields:
       dkim: {}
@@ -3090,6 +3131,15 @@ resources:
       storageClass: {}
       updated: {}
     min_mondoo_version: 5.15.0
+  github.installation:
+    fields:
+      appId: {}
+      appSlug: {}
+      createdAt: {}
+      id: {}
+      updatedAt: {}
+    is_private: true
+    min_mondoo_version: 5.31.0
   github.organization:
     fields:
       billing_email: {}
@@ -3102,9 +3152,13 @@ resources:
       disk_usage: {}
       email: {}
       id: {}
+      installations:
+        min_mondoo_version: 5.31.0
       is_verified: {}
       location: {}
       login: {}
+      members:
+        min_mondoo_version: 5.31.0
       members_can_create_internal_repositories: {}
       members_can_create_pages: {}
       members_can_create_private_pages: {}
@@ -3115,14 +3169,45 @@ resources:
       name: {}
       node_id: {}
       owned_private_repos: {}
+      owners:
+        min_mondoo_version: 5.31.0
       plan: {}
       private_gists: {}
+      repositories:
+        min_mondoo_version: 5.31.0
       total_private_repos: {}
       twitter_username: {}
       two_factor_requirement_enabled: {}
       updated_at: {}
     maturity: experimental
     min_mondoo_version: 5.15.0
+  github.repository:
+    fields:
+      archived: {}
+      createdAt: {}
+      description: {}
+      disabled: {}
+      fullName: {}
+      homepage: {}
+      id: {}
+      name: {}
+      private: {}
+      updatedAt: {}
+      visibility: {}
+    is_private: true
+    min_mondoo_version: 5.31.0
+  github.user:
+    fields:
+      bio: {}
+      createdAt: {}
+      email: {}
+      id: {}
+      login: {}
+      name: {}
+      suspendedAt: {}
+      updatedAt: {}
+    is_private: true
+    min_mondoo_version: 5.31.0
   gitlab.group:
     fields:
       description: {}
@@ -3197,19 +3282,41 @@ resources:
   k8s:
     fields:
       apiResources: {}
+      clusterrolebindings:
+        min_mondoo_version: 5.31.0
+      clusterroles:
+        min_mondoo_version: 5.31.0
+      configmaps:
+        min_mondoo_version: 5.31.0
       cronjobs: {}
       daemonsets: {}
       deployments: {}
       jobs: {}
       namespaces: {}
+      networkPolicies:
+        min_mondoo_version: 5.31.0
       nodes: {}
+      podSecurityPolicies:
+        min_mondoo_version: 5.31.0
       pods: {}
+      rolebindings:
+        min_mondoo_version: 5.31.0
+      roles:
+        min_mondoo_version: 5.31.0
       secrets:
         min_mondoo_version: 5.26.0
       serverVersion: {}
+      serviceaccounts:
+        min_mondoo_version: 5.31.0
+      services:
+        min_mondoo_version: 5.31.0
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - kubernetes
     snippets:
-    - query: k8s.pods { containers.where(securityContext["privileged"] == true) name }
+    - query: k8s.pods { containers.where(securityContext["privileged"] == true) name
+        }
       title: List kubernetes pods with privileged containers
     - query: k8s.pods.all( namespace != "default")
       title: Check if the default namespace is used
@@ -3225,9 +3332,6 @@ resources:
       title: Query pod security policies
     - query: k8s.networkPolicies { name manifest }
       title: Query network policies
-    platform:
-      name:
-      - kubernetes
   k8s.apiresource:
     fields:
       categories: {}
@@ -3242,11 +3346,31 @@ resources:
     platform:
       name:
       - kubernetes
+  k8s.configmap:
+    fields:
+      annotations: {}
+      created: {}
+      data: {}
+      kind: {}
+      labels: {}
+      manifest: {}
+      name: {}
+      namespace: {}
+      resourceVersion: {}
+      uid: {}
+    min_mondoo_version: 5.31.0
+    platform:
+      name:
+      - kubernetes
   k8s.container:
     fields:
       args: {}
       command: {}
+      containerImage:
+        min_mondoo_version: 5.31.0
       image: {}
+      imageName:
+        min_mondoo_version: 5.31.0
       imagePullPolicy: {}
       livenessProbe: {}
       name: {}
@@ -3344,6 +3468,22 @@ resources:
     platform:
       name:
       - kubernetes
+  k8s.networkpolicy:
+    fields:
+      annotations: {}
+      created: {}
+      kind: {}
+      labels: {}
+      manifest: {}
+      name: {}
+      namespace: {}
+      resourceVersion: {}
+      spec: {}
+      uid: {}
+    min_mondoo_version: 5.31.0
+    platform:
+      name:
+      - kubernetes
   k8s.node:
     fields:
       annotations:
@@ -3379,6 +3519,86 @@ resources:
     platform:
       name:
       - kubernetes
+  k8s.podsecuritypolicy:
+    fields:
+      annotations: {}
+      created: {}
+      kind: {}
+      labels: {}
+      manifest: {}
+      name: {}
+      resourceVersion: {}
+      spec: {}
+      uid: {}
+    min_mondoo_version: 5.31.0
+    platform:
+      name:
+      - kubernetes
+  k8s.rbac.clusterrole:
+    fields:
+      aggregationRule: {}
+      annotations: {}
+      created: {}
+      kind: {}
+      labels: {}
+      manifest: {}
+      name: {}
+      resourceVersion: {}
+      rules: {}
+      uid: {}
+    min_mondoo_version: 5.31.0
+    platform:
+      name:
+      - kubernetes
+  k8s.rbac.clusterrolebinding:
+    fields:
+      annotations: {}
+      created: {}
+      kind: {}
+      labels: {}
+      manifest: {}
+      name: {}
+      resourceVersion: {}
+      roleRef: {}
+      subjects: {}
+      uid: {}
+    min_mondoo_version: 5.31.0
+    platform:
+      name:
+      - kubernetes
+  k8s.rbac.role:
+    fields:
+      annotations: {}
+      created: {}
+      kind: {}
+      labels: {}
+      manifest: {}
+      name: {}
+      namespace: {}
+      resourceVersion: {}
+      rules: {}
+      uid: {}
+    min_mondoo_version: 5.31.0
+    platform:
+      name:
+      - kubernetes
+  k8s.rbac.rolebinding:
+    fields:
+      annotations: {}
+      created: {}
+      kind: {}
+      labels: {}
+      manifest: {}
+      name: {}
+      namespace: {}
+      resourceVersion: {}
+      roleRef: {}
+      subjects: {}
+      uid: {}
+    min_mondoo_version: 5.31.0
+    platform:
+      name:
+      - kubernetes
   k8s.secret:
     fields:
       annotations:
@@ -3398,6 +3618,40 @@ resources:
         min_mondoo_version: 5.29.2
       uid: {}
     min_mondoo_version: 5.26.0
+    platform:
+      name:
+      - kubernetes
+  k8s.service:
+    fields:
+      annotations: {}
+      created: {}
+      kind: {}
+      labels: {}
+      manifest: {}
+      name: {}
+      namespace: {}
+      resourceVersion: {}
+      spec: {}
+      uid: {}
+    min_mondoo_version: 5.31.0
+    platform:
+      name:
+      - kubernetes
+  k8s.serviceaccount:
+    fields:
+      annotations: {}
+      automountServiceAccountToken: {}
+      created: {}
+      imagePullSecrets: {}
+      kind: {}
+      labels: {}
+      manifest: {}
+      name: {}
+      namespace: {}
+      resourceVersion: {}
+      secrets: {}
+      uid: {}
+    min_mondoo_version: 5.31.0
     platform:
       name:
       - kubernetes
@@ -3898,10 +4152,10 @@ resources:
       path: {}
     min_mondoo_version: 5.15.0
     snippets:
-      - query: "parse.certificates('/etc/ssl/cert.pem').list { issuer.dn }"
-        title: Parse Certificates from target file system
-      - query: "parse.certificates(content: 'PEM CONTENT').list { issuer.dn }"
-        title: Parse Certificates from content
+    - query: parse.certificates('/etc/ssl/cert.pem').list { issuer.dn }
+      title: Parse Certificates from target file system
+    - query: 'parse.certificates(content: ''PEM CONTENT'').list { issuer.dn }'
+      title: Parse Certificates from content
   parse.ini:
     fields:
       content: {}
@@ -3917,10 +4171,10 @@ resources:
       params: {}
     min_mondoo_version: 5.15.0
     snippets:
-      - query: "parse.json(content: '{ \"a\": \"b\"  }').params"
-        title: Parse JSON from string content
-      - query: parse.json("/path/to/test.json").params
-        title: Parse JSON from file
+    - query: 'parse.json(content: ''{ "a": "b"  }'').params'
+      title: Parse JSON from string content
+    - query: parse.json("/path/to/test.json").params
+      title: Parse JSON from file
   parse.plist:
     fields:
       content: {}
@@ -4229,6 +4483,14 @@ resources:
     snippets:
     - query: terraform.modules { key version source}
       title: Display all loaded Terraform modules
+  terraform.settings:
+    fields:
+      block: {}
+      requiredProviders: {}
+    min_mondoo_version: 5.31.0
+    platform:
+      name:
+      - terraform
   time:
     fields:
       day: {}
