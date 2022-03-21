@@ -59,7 +59,7 @@ regex {
   ipv4() regex
   // Matches IPv6 addresses
   ipv6() regex
-  // Matches URL addressess (HTTP/HTTPS)
+  // Matches URL addresses (HTTP/HTTPS)
   url() regex
   // Matches email addresses
   email() regex
@@ -1458,7 +1458,7 @@ arista.eos.interface {
   interfaceCounters dict
   // Interface membership
   interfaceMembership string
-  // Interface statisctics
+  // Interface statistics
   interfaceStatistics dict
   // Interface status
   interfaceStatus string
@@ -1579,7 +1579,7 @@ aws.account {
   aliases() []string
 }
 
-// AWS cloud service for encypted file storage
+// AWS cloud service for encrypted file storage
 aws.efs {
   // a list of filesystems managed by the service
   filesystems() []aws.efs.filesystem
@@ -1875,11 +1875,11 @@ aws.es {
 
 // Amazon Elasticsearch Service
 private aws.es.domain {
-  // ARN for the elasticsearch domain
+  // ARN for the Elasticsearch domain
   arn string
   // denotes whether encryption at rest is enabled
   encryptionAtRestEnabled bool
-  // denoted whether node to ndoe encryption is enabled
+  // denoted whether node to node encryption is enabled
   nodeToNodeEncryptionEnabled bool
   // name of the es domain
   name string
@@ -2126,7 +2126,7 @@ aws.cloudwatch.metricdimension {
 // AWS Cloudwatch Metric Statistics
 aws.cloudwatch.metricstatistics {
   init(namespace string, region string, name string)
-  // Namesace for the metric
+  // Namespace for the metric
   namespace string
   // Name for the metric
   name string
@@ -2721,7 +2721,7 @@ private aws.ec2.instance {
   publicIp string
   // Amazon Systems Manager information for the instance
   ssm() dict
-  // vpc associated with the intance
+  // vpc associated with the instance
   vpc() aws.vpc
   // a value of optional for http tokens denotes imdsv1 server compatibility; required is imdsv2
   httpTokens string
@@ -2831,7 +2831,7 @@ private aws.ec2.securitygroup {
   id string
   // name of the security group
   name string
-  // description of the secuirty group
+  // description of the security group
   description string
   // a map of tags associated with the security group
   tags map[string]string
