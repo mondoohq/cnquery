@@ -2899,6 +2899,39 @@ private aws.config.recorder {
   region string
 }
 
+aws.eks {
+  clusters() []aws.eks.cluster
+}
+
+private aws.eks.cluster {
+  // name of the cluster
+  name string
+  // arn of the cluster
+  arn string
+  // region for the cluster
+  region string
+  // a map of tags associated with the cluster
+  tags map[string]string
+  // The endpoint of Kubernetes API server
+  endpoint string
+  // Kubernetes server version
+  version string
+  // Amazon EKS cluster version
+  platformVersion string
+  // Cluster Status
+  status string
+  // Encryption configuration for the cluster
+  encryptionConfig []dict
+  // Cluster logging configuration
+  logging dict
+  // Kubernetes network configuration
+  networkConfig dict
+  //  VPC configuration
+  resourcesVpcConfig dict
+  // Cluster creation timestamp
+  createdAt time
+}
+
 // GCP Cloud organization
 gcloud.organization {
   id() string
