@@ -1388,7 +1388,7 @@ resources:
   aws.guardduty:
     docs:
       desc: |
-        The `aws.guardduty` resource can be used to assess the configuration of the AWS GuardDuty service. The resource provides a list of `aws.guardduty.dectector` resources representing GuardDuty Detectors deployed across all enabled regions.
+        The `aws.guardduty` resource can be used to assess the configuration of the AWS GuardDuty service. The resource provides a list of `aws.guardduty.detector` resources representing GuardDuty Detectors deployed across all enabled regions.
     fields:
       detectors: {}
     min_mondoo_version: 5.15.0
