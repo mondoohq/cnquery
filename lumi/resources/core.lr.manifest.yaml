@@ -3208,6 +3208,23 @@ resources:
         min_mondoo_version: 5.26.0
       serverVersion: {}
     min_mondoo_version: 5.15.0
+    snippets:
+    - query: k8s.pods { containers.where(securityContext["privileged"] == true) name }
+      title: List kubernetes pods with privileged containers
+    - query: k8s.pods.all( namespace != "default")
+      title: Check if the default namespace is used
+    - query: k8s.serviceaccounts { name namespace secrets  }
+      title: Query services accounts
+    - query: k8s.roles { name namespace rules  }
+      title: Query RBAC cluster roles
+    - query: k8s.rolebindings { name namespace subjects  }
+      title: Query RBAC role bindings
+    - query: k8s.clusterrolebindings { name subjects  }
+      title: Query RBAC cluster role bindings
+    - query: k8s.podSecurityPolicies { name manifest }
+      title: Query pod security policies
+    - query: k8s.networkPolicies { name manifest }
+      title: Query network policies
     platform:
       name:
       - kubernetes
