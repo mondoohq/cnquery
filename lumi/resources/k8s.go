@@ -881,7 +881,7 @@ func (k *lumiK8sContainer) id() (string, error) {
 }
 
 func (k *lumiK8sContainer) GetContainerImage() (interface{}, error) {
-	containerImageName, err := k.Name()
+	containerImageName, err := k.ImageName()
 	if err != nil {
 		return nil, err
 	}
