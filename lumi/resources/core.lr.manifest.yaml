@@ -23,7 +23,7 @@ resources:
     - query: arista.eos.interfaces { name mtu bandwidth status }
       title: Display EOS interfaces
     - query: arista.eos.interfaces.where ( status['linkStatus'] == "connected") {  name
-        mtu bandwidth stauts}
+        mtu bandwidth status}
       title: Display all connected EOS interfaces
     - query: arista.eos.hostname
       title: EOS Hostname
