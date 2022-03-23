@@ -103,7 +103,6 @@ func (p *lumiProcess) GetCommand() (string, error) {
 }
 
 func (p *lumiProcess) GetFlags() (map[string]interface{}, error) {
-
 	cmd, err := p.Command()
 	if err != nil {
 		return nil, err
@@ -168,7 +167,7 @@ func (p *lumiProcesses) GetList() ([]interface{}, error) {
 	// find suitable package manager
 	opm, err := processes.ResolveManager(p.Runtime.Motor)
 	if opm == nil || err != nil {
-		log.Warn().Err(err).Msg("lumi[processes]> could not retrieve process resolver")
+		log.Debug().Err(err).Msg("lumi[processes]> could not retrieve process resolver")
 		return nil, errors.New("cannot find process manager")
 	}
 
