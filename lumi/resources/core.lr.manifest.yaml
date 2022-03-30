@@ -626,6 +626,7 @@ resources:
       sum: {}
       timestamp: {}
       unit: {}
+    is_private: true
     min_mondoo_version: 5.17.1
     platform:
       name:
