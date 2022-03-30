@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
@@ -252,12 +253,17 @@ func (d *lumiAwsDynamodb) getTables(at *aws_transport.Transport) []*jobpool.Job 
 				if err != nil {
 					return nil, err
 				}
+				tags, err := svc.ListTagsOfResource(ctx, &dynamodb.ListTagsOfResourceInput{ResourceArn: table.Table.TableArn})
+				if err != nil {
+					return nil, err
+				}
 				lumiTable, err := d.Runtime.CreateResource("aws.dynamodb.table",
 					"arn", fmt.Sprintf(dynamoTableArnPattern, regionVal, account.ID, tableName),
 					"name", tableName,
 					"region", regionVal,
 					"sseDescription", sseDict,
 					"provisionedThroughput", throughputDict,
+					"tags", dynamoDBTagsToMap(tags.Tags),
 				)
 				if err != nil {
 					return nil, err
@@ -269,6 +275,19 @@ func (d *lumiAwsDynamodb) getTables(at *aws_transport.Transport) []*jobpool.Job 
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func dynamoDBTagsToMap(tags []types.Tag) map[string]interface{} {
+	tagsMap := make(map[string]interface{})
+
+	if len(tags) > 0 {
+		for i := range tags {
+			tag := tags[i]
+			tagsMap[toString(tag.Key)] = toString(tag.Value)
+		}
+	}
+
+	return tagsMap
 }
 
 func (d *lumiAwsDynamodbGlobaltable) GetReplicaSettings() ([]interface{}, error) {
