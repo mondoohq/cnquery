@@ -250,17 +250,46 @@ func newVolumeAttachmentLoc() string {
 	return "/dev/xvd" + string(c)
 }
 
+func AttachVolume(ctx context.Context, ec2svc *ec2.Client, location string, volID string, instanceID string) (string, types.VolumeAttachmentState, error) {
+	res, err := ec2svc.AttachVolume(ctx, &ec2.AttachVolumeInput{
+		Device: aws.String(location), VolumeId: &volID,
+		InstanceId: &instanceID,
+	})
+	if err != nil {
+		var ae smithy.APIError
+		if errors.As(err, &ae) {
+			if ae.ErrorCode() != "InvalidParameterValue" {
+				// we don't want to return the err if it's invalid parameter value
+				return location, "", err
+			}
+		}
+		// if invalid, it could be something else is using that space, try to mount to diff location
+		newlocation := newVolumeAttachmentLoc()
+		if location != newlocation {
+			location = newlocation
+		} else {
+			location = newVolumeAttachmentLoc() // we shouldnt have gotten the same one the first go round, but it is randomized, so there is a possibility. try again in that case.
+		}
+		res, err = ec2svc.AttachVolume(ctx, &ec2.AttachVolumeInput{
+			Device: aws.String(location), VolumeId: &volID,
+			InstanceId: &instanceID,
+		})
+		if err != nil {
+			return location, "", err
+		}
+	}
+	return location, res.State, nil
+}
+
 func (t *Ec2EbsTransport) AttachVolumeToInstance(ctx context.Context, volume VolumeId) (bool, error) {
 	log.Info().Msg("attach volume")
 	t.tmpInfo.volumeAttachmentLoc = newVolumeAttachmentLoc()
 	ready := false
-	res, err := t.scannerRegionEc2svc.AttachVolume(ctx, &ec2.AttachVolumeInput{
-		Device: aws.String(t.tmpInfo.volumeAttachmentLoc), VolumeId: &volume.Id,
-		InstanceId: &t.scannerInstance.Id,
-	})
+	location, state, err := AttachVolume(ctx, t.scannerRegionEc2svc, newVolumeAttachmentLoc(), volume.Id, t.scannerInstance.Id)
 	if err != nil {
 		return ready, err
 	}
+	t.tmpInfo.volumeAttachmentLoc = location
 
 	/*
 		NOTE: re: encrypted volumes
@@ -269,7 +298,7 @@ func (t *Ec2EbsTransport) AttachVolumeToInstance(ctx context.Context, volume Vol
 	*/
 
 	// here we have the attachment state
-	if res.State != types.VolumeAttachmentStateAttached {
+	if state != types.VolumeAttachmentStateAttached {
 		var volState types.VolumeState
 		for volState != types.VolumeStateInUse {
 			time.Sleep(10 * time.Second)
