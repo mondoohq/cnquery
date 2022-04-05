@@ -20,7 +20,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: mondoo-agent
-          image: docker.io/mondoolabs/mondoo:latest
+          image: docker.io/mondoo/client:latest
           command: ["mondoo", "serve", "--config", "/etc/opt/mondoo/mondoo.yml"]
           volumeMounts:
             - name: root
