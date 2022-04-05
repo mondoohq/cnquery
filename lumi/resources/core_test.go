@@ -594,9 +594,9 @@ func TestRegex_Methods(t *testing.T) {
 			[]interface{}{"one+1@sum.me.rs"},
 		},
 		{
-			"'Urls: http://mondoo.io/welcome'.find( regex.url )",
+			"'Urls: http://mondoo.com/welcome'.find( regex.url )",
 			0,
-			[]interface{}{"http://mondoo.io/welcome"},
+			[]interface{}{"http://mondoo.com/welcome"},
 		},
 		{
 			"'mac 01:23:45:67:89:ab attack'.find(regex.mac)",

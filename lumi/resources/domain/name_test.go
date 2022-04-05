@@ -44,19 +44,19 @@ func TestDomainName(t *testing.T) {
 			IcannManagedTLD:     false,
 			Labels:              []string{"hello", "notpublicsuffix"},
 		},
-		"https://mondoo.io": {
-			Host:                "mondoo.io",
-			EffectiveTLDPlusOne: "mondoo.io",
-			TLD:                 "io",
+		"https://mondoo.com": {
+			Host:                "mondoo.com",
+			EffectiveTLDPlusOne: "mondoo.com",
+			TLD:                 "com",
 			IcannManagedTLD:     true,
-			Labels:              []string{"mondoo", "io"},
+			Labels:              []string{"mondoo", "com"},
 		},
-		"mondoo.io": {
-			Host:                "mondoo.io",
-			EffectiveTLDPlusOne: "mondoo.io",
-			TLD:                 "io",
+		"mondoo.com": {
+			Host:                "mondoo.com",
+			EffectiveTLDPlusOne: "mondoo.com",
+			TLD:                 "com",
 			IcannManagedTLD:     true,
-			Labels:              []string{"mondoo", "io"},
+			Labels:              []string{"mondoo", "com"},
 		},
 	}
 	for k, expected := range tests {
