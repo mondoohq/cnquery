@@ -232,6 +232,7 @@ func (d *lumiAwsRds) getDbClusters(at *aws_transport.Transport) []*jobpool.Job {
 						"region", regionVal,
 						"id", toString(cluster.DBClusterIdentifier),
 						"members", lumiRdsDbInstances,
+						"tags", rdsTagsToMap(cluster.TagList),
 					)
 					if err != nil {
 						return nil, err
