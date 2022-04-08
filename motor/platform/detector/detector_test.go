@@ -279,6 +279,19 @@ func TestUbuntu2004Detector(t *testing.T) {
 	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
 }
 
+func TestUbuntu2204Detector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-ubuntu2204.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	di, err := detector.Platform()
+	require.NoError(t, err)
+
+	assert.Equal(t, "ubuntu", di.Name, "os name should be identified")
+	assert.Equal(t, "Ubuntu", di.Title, "os title should be identified")
+	assert.Equal(t, "22.04", di.Release, "os version should be identified")
+	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
+}
+
 func TestWindriver7Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-windriver7.toml")
 	assert.Nil(t, err, "was able to create the transport")
