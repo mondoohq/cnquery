@@ -29,7 +29,7 @@ func ParseDpkgPackages(input io.Reader) ([]Package, error) {
 		if pkg.Name != "" && pkg.Version != "" {
 			pkgs = append(pkgs, pkg)
 		} else {
-			log.Debug().Msg("ignored apk package since information is missing")
+			log.Debug().Msg("ignored deb packages since information is missing")
 		}
 	}
 
