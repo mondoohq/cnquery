@@ -19,7 +19,7 @@ data:
       ...
       Rc3OFH5K0IWA0yDdL5QVoQ==
       -----END CERTIFICATE-----
-    api_endpoint: https://api.mondoo.app
+    api_endpoint: https://us.api.mondoo.com
   inventory: |
     apiVersion: v1
     kind: Inventory
