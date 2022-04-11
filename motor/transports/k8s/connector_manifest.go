@@ -10,6 +10,8 @@ import (
 	"path"
 	"path/filepath"
 
+	k8sRuntime "k8s.io/apimachinery/pkg/runtime"
+
 	"k8s.io/apimachinery/pkg/version"
 
 	"go.mondoo.io/mondoo/motor/platform"
@@ -21,16 +23,40 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/k8s/resources"
 )
 
-func NewManifestConnector(manifestFile string, namespace string) *ManifestConnector {
-	return &ManifestConnector{
-		manifestFile: manifestFile,
-		namespace:    namespace,
+type Option func(*ManifestConnector)
+
+func WithNamespace(namespace string) Option {
+	return func(connector *ManifestConnector) {
+		connector.namespace = namespace
 	}
+}
+
+func WithManifestFile(filename string) Option {
+	return func(connector *ManifestConnector) {
+		connector.manifestFile = filename
+	}
+}
+
+func WithRuntimeObjects(objects []k8sRuntime.Object) Option {
+	return func(connector *ManifestConnector) {
+		connector.objects = objects
+	}
+}
+
+func NewManifestConnector(opts ...Option) *ManifestConnector {
+	mc := &ManifestConnector{}
+
+	for _, option := range opts {
+		option(mc)
+	}
+
+	return mc
 }
 
 type ManifestConnector struct {
 	manifestFile string
 	namespace    string
+	objects      []k8sRuntime.Object
 }
 
 func (mc *ManifestConnector) Identifier() (string, error) {
@@ -108,20 +134,36 @@ func (mc *ManifestConnector) loadManifestFile(manifestFile string) ([]byte, erro
 	return ioutil.ReadAll(input)
 }
 
+func (mc *ManifestConnector) load() ([]k8sRuntime.Object, error) {
+	res := []k8sRuntime.Object{}
+	if mc.manifestFile != "" {
+		log.Debug().Str("file", mc.manifestFile).Msg("load resources from manifest files")
+		input, err := mc.loadManifestFile(mc.manifestFile)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not load manifest")
+		}
+		objects, err := resources.ResourcesFromManifest(bytes.NewReader(input))
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, objects...)
+	}
+
+	if len(mc.objects) > 0 {
+		res = append(res, mc.objects...)
+	}
+
+	return res, nil
+}
+
 func (mc *ManifestConnector) Resources(kind string, name string) (*ResourceResult, error) {
 	ns := mc.namespace
 	allNs := false
-	if len(ns) == 0 {
+	if ns == "" {
 		allNs = true
 	}
 
-	log.Debug().Str("file", mc.manifestFile).Msg("load resources from manifest files")
-	input, err := mc.loadManifestFile(mc.manifestFile)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not load manifest")
-	}
-
-	resourceObjects, err := resources.ResourcesFromManifest(bytes.NewReader(input))
+	resourceObjects, err := mc.load()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not query resource objects")
 	}

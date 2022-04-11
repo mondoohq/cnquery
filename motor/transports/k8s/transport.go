@@ -33,7 +33,7 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 
 	manifestFile, manifestDefined := tc.Options[OPTION_MANIFEST]
 	if manifestDefined {
-		connector = NewManifestConnector(manifestFile, tc.Options[OPTION_NAMESPACE])
+		connector = NewManifestConnector(WithManifestFile(manifestFile), WithNamespace(tc.Options[OPTION_NAMESPACE]))
 	} else {
 		var err error
 		connector, err = NewApiConnector(tc.Options[OPTION_NAMESPACE])
