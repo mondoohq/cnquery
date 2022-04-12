@@ -71,6 +71,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 	if fingerprint.Name != "" {
 		assetObj.Name = fingerprint.Name
 	}
+	assetInfo.Labels = assetMetadata.Labels
 
 	log.Debug().Strs("identifier", assetObj.PlatformIds).Msg("motor connection")
 

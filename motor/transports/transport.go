@@ -14,6 +14,7 @@ const (
 	HostnameDetector  PlatformIdDetector = "hostname"
 	MachineIdDetector PlatformIdDetector = "machine-id"
 	CloudDetector     PlatformIdDetector = "cloud-detect"
+	CICDDetector      PlatformIdDetector = "cicd-detect"
 	AWSEc2Detector    PlatformIdDetector = "aws-ec2"
 	SshHostKey        PlatformIdDetector = "ssh-host-key"
 	// TransportPlatformIdentifierDetector is a detector that gets the platform id
