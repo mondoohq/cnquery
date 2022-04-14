@@ -115,7 +115,25 @@ func (t *SSHTransport) Connect() error {
 			return nil
 		}
 
-		return knownHostsCallback(hostname, remote, key)
+		// knownhost.New returns a ssh.CertChecker which does not work with all ssh.HostKey types
+		// especially the newer edcsa keys (ssh.curve25519sha256) are not well supported.
+		// https://github.com/golang/crypto/blob/master/ssh/knownhosts/knownhosts.go#L417-L436
+		// creates the CertChecker which requires an instance of Certificate
+		// https://github.com/golang/crypto/blob/master/ssh/certs.go#L326-L348
+		// https://github.com/golang/crypto/blob/master/ssh/keys.go#L271-L283
+		// therefore it is best to skip the checking for now since it forces users to set the insecure flag otherwise
+		// TODO: implement custom host-key checking for normal public keys as well
+		_, ok := key.(*ssh.Certificate)
+		if !ok {
+			log.Debug().Msg("skip hostkey check the hostkey since the algo is not supported yet")
+			return nil
+		}
+
+		err := knownHostsCallback(hostname, remote, key)
+		if err != nil {
+			log.Debug().Err(err).Str("hostname", hostname).Str("ip", remote.String()).Msg("check known host")
+		}
+		return err
 	}
 
 	// establish connection

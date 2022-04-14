@@ -31,6 +31,7 @@ func KnownHostsCallback() (ssh.HostKeyCallback, error) {
 	for i := range files {
 		_, err := os.Stat(files[i])
 		if err == nil {
+			log.Debug().Str("file", files[i]).Msg("load ssh known_hosts file")
 			existentKnownHosts = append(existentKnownHosts, files[i])
 		}
 	}

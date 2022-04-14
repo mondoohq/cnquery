@@ -49,8 +49,6 @@ func establishClientConnection(tc *transports.TransportConfig, hostKeyCallback s
 }
 
 func authPrivateKeyWithPassphrase(pemBytes []byte, passphrase []byte) (ssh.Signer, error) {
-	log.Debug().Msg("enabled ssh private key authentication")
-
 	// check if the key is encrypted
 	block, _ := pem.Decode(pemBytes)
 	if block == nil {
@@ -102,7 +100,7 @@ func prepareConnection(tc *transports.TransportConfig) ([]ssh.AuthMethod, []io.C
 	// enable ssh agent auth
 	useAgentAuth := func() {
 		if sshAgentConn, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK")); err == nil {
-			log.Debug().Str("socket", os.Getenv("SSH_AUTH_SOCK")).Msg("enabled ssh agent authentication")
+			log.Debug().Str("socket", os.Getenv("SSH_AUTH_SOCK")).Msg("ssh agent socket found")
 			sshAgentClient := agent.NewClient(sshAgentConn)
 			sshAgentSigners, err := sshAgentClient.Signers()
 			if err == nil && len(sshAgentSigners) == 0 {
