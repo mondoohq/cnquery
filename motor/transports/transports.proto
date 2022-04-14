@@ -67,9 +67,9 @@ message TransportConfig {
   // credentials available for this transport configuration
   repeated mondoo.motor.vault.v1.Credential credentials = 11;
 
-  bool Insecure = 8;  // disable ssl/tls checks
-  Sudo Sudo = 21;
-  bool Record = 22;
+  bool insecure = 8;  // disable ssl/tls checks
+  Sudo sudo = 21;
+  bool record = 22;
 
   map<string,string> options = 23;
 
