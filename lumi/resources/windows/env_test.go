@@ -4,16 +4,16 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestParseEnv(t *testing.T) {
-	data, err := os.Open("./testdata/env.json")
-	if err != nil {
-		t.Fatal(err)
-	}
+	r, err := os.Open("./testdata/env.json")
+	require.NoError(t, err)
 
-	items, err := ParseEnv(data)
+	items, err := ParseEnv(r)
 	assert.Nil(t, err)
 	assert.Equal(t, 9, len(items))
 

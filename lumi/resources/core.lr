@@ -3909,6 +3909,34 @@ windows.firewall.rule {
   policyStoreSourceType int
 }
 
+windows.bitlocker {
+  volumes() []windows.bitlocker.volume
+}
+
+windows.bitlocker.volume {
+  // unique identifier for the volume
+  deviceID string
+  // drive letter of the volume
+  driveLetter string
+  // indicates the status of the encryption or decryption on the volume
+  conversionStatus dict
+  // encryption algorithm and key size used on the volume
+  encryptionMethod dict
+  // indicates whether the contents of the volume are accessible from Windows
+  // 0 = full contents of the volume are accessible
+  // 1 = all or a portion of the contents of the volume are not accessible
+  lockStatus int
+  // persistent identifier for the volume on this system
+  persistentVolumeID string
+  // status of the volume, whether or not BitLocker is protecting the volume
+  // 0 = Protection Off
+  // 1 = Protection On
+  // 2 = Protection Unknown
+  protectionStatus dict
+  // BitLocker Full Volume Encryption metadata version of the volume
+  version dict
+}
+
 // Yum package manager resource
 yum {
   // variables defined built-in in Yum configuration files (/etc/yum.conf and all .repo files in the /etc/yum.repos.d/)
