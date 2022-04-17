@@ -4,16 +4,16 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWindowsRegistryKeyItemParser(t *testing.T) {
-	data, err := os.Open("./testdata/registrykey.json")
-	if err != nil {
-		t.Fatal(err)
-	}
+	r, err := os.Open("./testdata/registrykey.json")
+	require.NoError(t, err)
 
-	items, err := ParseRegistryKeyItems(data)
+	items, err := ParseRegistryKeyItems(r)
 	assert.Nil(t, err)
 	assert.Equal(t, 10, len(items))
 	assert.Equal(t, "ConsentPromptBehaviorAdmin", items[0].Key)
@@ -23,12 +23,10 @@ func TestWindowsRegistryKeyItemParser(t *testing.T) {
 }
 
 func TestWindowsRegistryKeyChildParser(t *testing.T) {
-	data, err := os.Open("./testdata/registrykey-children.json")
-	if err != nil {
-		t.Fatal(err)
-	}
+	r, err := os.Open("./testdata/registrykey-children.json")
+	require.NoError(t, err)
 
-	items, err := ParseRegistryKeyChildren(data)
+	items, err := ParseRegistryKeyChildren(r)
 	assert.Nil(t, err)
 	assert.Equal(t, 5, len(items))
 }

@@ -5,15 +5,14 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWindowsComputerInfo(t *testing.T) {
-	data, err := os.Open("./testdata/computer-info.json")
-	if err != nil {
-		t.Fatal(err)
-	}
+	r, err := os.Open("./testdata/computer-info.json")
+	require.NoError(t, err)
 
-	items, err := ParseComputerInfo(data)
+	items, err := ParseComputerInfo(r)
 	assert.Nil(t, err)
 	assert.Equal(t, 43, len(items))
 }

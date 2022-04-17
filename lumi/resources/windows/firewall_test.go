@@ -5,37 +5,32 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWindowsFirewallSettings(t *testing.T) {
-	data, err := os.Open("./testdata/firewall-settings.json")
-	if err != nil {
-		t.Fatal(err)
-	}
+	r, err := os.Open("./testdata/firewall-settings.json")
+	require.NoError(t, err)
 
-	settings, err := ParseWindowsFirewallSettings(data)
+	settings, err := ParseWindowsFirewallSettings(r)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(65535), settings.ActiveProfile)
 }
 
 func TestWindowsFirewallProfiles(t *testing.T) {
-	data, err := os.Open("./testdata/firewall-profiles.json")
-	if err != nil {
-		t.Fatal(err)
-	}
+	r, err := os.Open("./testdata/firewall-profiles.json")
+	require.NoError(t, err)
 
-	items, err := ParseWindowsFirewallProfiles(data)
+	items, err := ParseWindowsFirewallProfiles(r)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(items))
 }
 
 func TestWindowsFirewallRules(t *testing.T) {
-	data, err := os.Open("./testdata/firewall-rules.json")
-	if err != nil {
-		t.Fatal(err)
-	}
+	r, err := os.Open("./testdata/firewall-rules.json")
+	require.NoError(t, err)
 
-	items, err := ParseWindowsFirewallRules(data)
+	items, err := ParseWindowsFirewallRules(r)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(items))
 }
