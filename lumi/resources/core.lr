@@ -3937,6 +3937,17 @@ windows.bitlocker.volume {
   version dict
 }
 
+// Returns the health for windows security provider
+windows.security.health {
+  firewall dict
+  autoUpdate dict
+  antiVirus dict
+  antiSpyware dict
+  internetSettings dict
+  uac dict
+  securityCenterService dict
+}
+
 // Yum package manager resource
 yum {
   // variables defined built-in in Yum configuration files (/etc/yum.conf and all .repo files in the /etc/yum.repos.d/)
