@@ -5,6 +5,43 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/windows"
 )
 
+func (w *lumiWindowsSecurity) id() (string, error) {
+	return "windows.security", nil
+}
+
+func (w *lumiWindowsSecurity) GetProducts() ([]interface{}, error) {
+	products, err := windows.GetSecurityProducts(w.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	res := []interface{}{}
+	for i := range products {
+		p := products[i]
+
+		lumiProduct, err := w.Runtime.CreateResource("windows.security.product",
+			"type", p.Type,
+			"guid", p.Guid,
+			"name", p.Name,
+			"state", p.State,
+			"productState", p.ProductStatus,
+			"signatureState", p.SignatureStatus,
+			"timestamp", &p.Timestamp,
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, lumiProduct)
+	}
+
+	return res, nil
+}
+
+func (w *lumiWindowsSecurityProduct) id() (string, error) {
+	guid, _ := w.Guid()
+	return "windows.security.product/" + guid, nil
+}
+
 func (w *lumiWindowsSecurityHealth) id() (string, error) {
 	return "windows.security.health", nil
 }

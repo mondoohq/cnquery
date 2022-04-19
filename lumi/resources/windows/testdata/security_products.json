@@ -1,0 +1,37 @@
+{
+  "firewall": [],
+  "antiVirus": [
+    {
+      "CimClass": {
+        "CimSuperClassName": null,
+        "CimSuperClass": null,
+        "CimClassProperties": "displayName instanceGuid pathToSignedProductExe pathToSignedReportingExe productState timestamp",
+        "CimClassQualifiers": "",
+        "CimClassMethods": "",
+        "CimSystemProperties": "Microsoft.Management.Infrastructure.CimSystemProperties"
+      },
+      "CimInstanceProperties": [
+        "displayName = \"Windows Defender\"",
+        "instanceGuid = \"{D68DDC3A-831F-4fae-9E44-DA132C1ACF46}\"",
+        "pathToSignedProductExe = \"windowsdefender://\"",
+        "pathToSignedReportingExe = \"%ProgramFiles%\\Windows Defender\\MsMpeng...",
+        "productState = 397568",
+        "timestamp = \"Mon, 18 Apr 2022 08:05:47 GMT\""
+      ],
+      "CimSystemProperties": {
+        "Namespace": "ROOT/SecurityCenter2",
+        "ServerName": "DESKTOP-UNQ536A",
+        "ClassName": "AntiVirusProduct",
+        "Path": null
+      },
+      "displayName": "Windows Defender",
+      "instanceGuid": "{D68DDC3A-831F-4fae-9E44-DA132C1ACF46}",
+      "pathToSignedProductExe": "windowsdefender://",
+      "pathToSignedReportingExe": "%ProgramFiles%\\Windows Defender\\MsMpeng.exe",
+      "productState": 397568,
+      "timestamp": "Mon, 18 Apr 2022 08:05:47 GMT",
+      "PSComputerName": null
+    }
+  ],
+  "antiSpyware": []
+}
