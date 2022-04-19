@@ -4724,6 +4724,21 @@ resources:
     snippets:
     - query: windows.computerInfo['WindowsInstallationType'] == 'Server Core'
       title: Check the OS Edition
+  windows.bitlocker:
+    fields:
+      volumes: {}
+    min_mondoo_version: 5.35.0
+  windows.bitlocker.volume:
+    fields:
+      conversionStatus: {}
+      deviceID: {}
+      driveLetter: {}
+      encryptionMethod: {}
+      lockStatus: {}
+      persistentVolumeID: {}
+      protectionStatus: {}
+      version: {}
+    min_mondoo_version: 5.35.0
   windows.feature:
     fields:
       description: {}
@@ -4798,6 +4813,31 @@ resources:
       installedBy: {}
       installedOn: {}
     min_mondoo_version: 5.15.0
+  windows.security:
+    fields:
+      products: {}
+    min_mondoo_version: 5.35.0
+  windows.security.health:
+    fields:
+      antiSpyware: {}
+      antiVirus: {}
+      autoUpdate: {}
+      firewall: {}
+      internetSettings: {}
+      securityCenterService: {}
+      uac: {}
+    min_mondoo_version: 5.35.0
+  windows.security.product:
+    fields:
+      guid: {}
+      name: {}
+      productState: {}
+      signatureState: {}
+      state: {}
+      timestamp: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 5.35.0
   yaml.path:
     fields:
       filepath: {}
