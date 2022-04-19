@@ -3937,6 +3937,20 @@ windows.bitlocker.volume {
   version dict
 }
 
+windows.security {
+  products() []windows.security.product
+}
+
+private windows.security.product {
+  type string
+  guid string
+  name string
+  state int
+  productState string
+  signatureState string
+  timestamp time
+}
+
 // Returns the health for windows security provider
 windows.security.health {
   firewall dict
