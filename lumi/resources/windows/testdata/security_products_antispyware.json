@@ -1,0 +1,194 @@
+{
+  "firewall": [
+    {
+      "CimClass": {
+        "CimSuperClassName": null,
+        "CimSuperClass": null,
+        "CimClassProperties": "displayName instanceGuid pathToSignedProductExe pathToSignedReportingExe productState timestamp",
+        "CimClassQualifiers": "",
+        "CimClassMethods": "",
+        "CimSystemProperties": "Microsoft.Management.Infrastructure.CimSystemProperties"
+      },
+      "CimInstanceProperties": [
+        "displayName = \"Sophos Intercept X\"",
+        "instanceGuid = \"{CED48E50-06A2-04C7-9EBC-5D08015D8994}\"",
+        "pathToSignedProductExe = \"C:\\Program Files\\Sophos\\Endpoint Defens...",
+        "pathToSignedReportingExe = \"C:\\Program Files\\Sophos\\Endpoint Defens...",
+        "productState = 266240",
+        "timestamp = \"Fri, 22 Apr 2022 07:56:39 GMT\""
+      ],
+      "CimSystemProperties": {
+        "Namespace": "ROOT/SecurityCenter2",
+        "ServerName": "S28GBWLTP00988",
+        "ClassName": "FirewallProduct",
+        "Path": null
+      },
+      "displayName": "Sophos Intercept X",
+      "instanceGuid": "{CED48E50-06A2-04C7-9EBC-5D08015D8994}",
+      "pathToSignedProductExe": "C:\\Program Files\\Sophos\\Endpoint Defense\\SEDcli.exe",
+      "pathToSignedReportingExe": "C:\\Program Files\\Sophos\\Endpoint Defense\\SEDService.exe",
+      "productState": 266240,
+      "timestamp": "Fri, 22 Apr 2022 07:56:39 GMT",
+      "PSComputerName": null
+    }
+  ],
+  "antiVirus": [
+    {
+      "CimClass": {
+        "CimSuperClassName": null,
+        "CimSuperClass": null,
+        "CimClassProperties": "displayName instanceGuid pathToSignedProductExe pathToSignedReportingExe productState timestamp",
+        "CimClassQualifiers": "",
+        "CimClassMethods": "",
+        "CimSystemProperties": "Microsoft.Management.Infrastructure.CimSystemProperties"
+      },
+      "CimInstanceProperties": [
+        "displayName = \"Sophos Anti-Virus\"",
+        "instanceGuid = \"{8E0623B8-CF1C-DFFE-CEA3-AA41BDA4B8EE}\"",
+        "pathToSignedProductExe = \"C:\\Program Files (x86)\\Sophos\\Sophos An...",
+        "pathToSignedReportingExe = \"C:\\Program Files (x86)\\Sophos\\Sophos An...",
+        "productState = 331776",
+        "timestamp = \"Tue, 02 Nov 2021 15:42:21 GMT\""
+      ],
+      "CimSystemProperties": {
+        "Namespace": "ROOT/SecurityCenter2",
+        "ServerName": "S28GBWLTP00988",
+        "ClassName": "AntiVirusProduct",
+        "Path": null
+      },
+      "displayName": "Sophos Anti-Virus",
+      "instanceGuid": "{8E0623B8-CF1C-DFFE-CEA3-AA41BDA4B8EE}",
+      "pathToSignedProductExe": "C:\\Program Files (x86)\\Sophos\\Sophos Anti-Virus\\WSCClient.exe",
+      "pathToSignedReportingExe": "C:\\Program Files (x86)\\Sophos\\Sophos Anti-Virus\\WSCClient.exe",
+      "productState": 331776,
+      "timestamp": "Tue, 02 Nov 2021 15:42:21 GMT",
+      "PSComputerName": null
+    },
+    {
+      "CimClass": {
+        "CimSuperClassName": null,
+        "CimSuperClass": null,
+        "CimClassProperties": "displayName instanceGuid pathToSignedProductExe pathToSignedReportingExe productState timestamp",
+        "CimClassQualifiers": "",
+        "CimClassMethods": "",
+        "CimSystemProperties": "Microsoft.Management.Infrastructure.CimSystemProperties"
+      },
+      "CimInstanceProperties": [
+        "displayName = \"Windows Defender\"",
+        "instanceGuid = \"{D68DDC3A-831F-4fae-9E44-DA132C1ACF46}\"",
+        "pathToSignedProductExe = \"windowsdefender://\"",
+        "pathToSignedReportingExe = \"%ProgramFiles%\\Windows Defender\\MsMpeng...",
+        "productState = 393472",
+        "timestamp = \"Sun, 14 Nov 2021 12:09:12 GMT\""
+      ],
+      "CimSystemProperties": {
+        "Namespace": "ROOT/SecurityCenter2",
+        "ServerName": "S28GBWLTP00988",
+        "ClassName": "AntiVirusProduct",
+        "Path": null
+      },
+      "displayName": "Windows Defender",
+      "instanceGuid": "{D68DDC3A-831F-4fae-9E44-DA132C1ACF46}",
+      "pathToSignedProductExe": "windowsdefender://",
+      "pathToSignedReportingExe": "%ProgramFiles%\\Windows Defender\\MsMpeng.exe",
+      "productState": 393472,
+      "timestamp": "Sun, 14 Nov 2021 12:09:12 GMT",
+      "PSComputerName": null
+    },
+    {
+      "CimClass": {
+        "CimSuperClassName": null,
+        "CimSuperClass": null,
+        "CimClassProperties": "displayName instanceGuid pathToSignedProductExe pathToSignedReportingExe productState timestamp",
+        "CimClassQualifiers": "",
+        "CimClassMethods": "",
+        "CimSystemProperties": "Microsoft.Management.Infrastructure.CimSystemProperties"
+      },
+      "CimInstanceProperties": [
+        "displayName = \"Sophos Intercept X\"",
+        "instanceGuid = \"{F6EF0F75-4CCD-059F-B5E3-F43DFF8ECEEF}\"",
+        "pathToSignedProductExe = \"C:\\Program Files\\Sophos\\Endpoint Defens...",
+        "pathToSignedReportingExe = \"C:\\Program Files\\Sophos\\Endpoint Defens...",
+        "productState = 266240",
+        "timestamp = \"Fri, 22 Apr 2022 07:56:39 GMT\""
+      ],
+      "CimSystemProperties": {
+        "Namespace": "ROOT/SecurityCenter2",
+        "ServerName": "S28GBWLTP00988",
+        "ClassName": "AntiVirusProduct",
+        "Path": null
+      },
+      "displayName": "Sophos Intercept X",
+      "instanceGuid": "{F6EF0F75-4CCD-059F-B5E3-F43DFF8ECEEF}",
+      "pathToSignedProductExe": "C:\\Program Files\\Sophos\\Endpoint Defense\\SEDcli.exe",
+      "pathToSignedReportingExe": "C:\\Program Files\\Sophos\\Endpoint Defense\\SEDService.exe",
+      "productState": 266240,
+      "timestamp": "Fri, 22 Apr 2022 07:56:39 GMT",
+      "PSComputerName": null
+    }
+  ],
+  "antiSpyware": [
+    {
+      "CimClass": {
+        "CimSuperClassName": null,
+        "CimSuperClass": null,
+        "CimClassProperties": "displayName instanceGuid pathToSignedProductExe pathToSignedReportingExe productState timestamp",
+        "CimClassQualifiers": "",
+        "CimClassMethods": "",
+        "CimSystemProperties": "Microsoft.Management.Infrastructure.CimSystemProperties"
+      },
+      "CimInstanceProperties": [
+        "displayName = \"ESET Security\"",
+        "instanceGuid = \"{577C8ED3-C22B-48D4-E5E0-298D0463E6CD}\"",
+        "pathToSignedProductExe = \"C:\\Program Files\\ESET\\ESET Security\\ecm...",
+        "pathToSignedReportingExe = \"C:\\Program Files\\ESET\\ESET Security\\ekr...",
+        "productState = 266240",
+        "timestamp = \"Fri, 13 Sep 2019 08:03:30 GMT\""
+      ],
+      "CimSystemProperties": {
+        "Namespace": "ROOT/SecurityCenter2",
+        "ServerName": "S28GBWLTP00988",
+        "ClassName": "AntiSpywareProduct",
+        "Path": null
+      },
+      "displayName": "ESET Security",
+      "instanceGuid": "{577C8ED3-C22B-48D4-E5E0-298D0463E6CD}",
+      "pathToSignedProductExe": "C:\\Program Files\\ESET\\ESET Security\\ecmds.exe",
+      "pathToSignedReportingExe": "C:\\Program Files\\ESET\\ESET Security\\ekrn.exe",
+      "productState": 266240,
+      "timestamp": "Fri, 13 Sep 2019 08:03:30 GMT",
+      "PSComputerName": null
+    },
+    {
+      "CimClass": {
+        "CimSuperClassName": null,
+        "CimSuperClass": null,
+        "CimClassProperties": "displayName instanceGuid pathToSignedProductExe pathToSignedReportingExe productState timestamp",
+        "CimClassQualifiers": "",
+        "CimClassMethods": "",
+        "CimSystemProperties": "Microsoft.Management.Infrastructure.CimSystemProperties"
+      },
+      "CimInstanceProperties": [
+        "displayName = \"Windows Defender\"",
+        "instanceGuid = \"{D68DDC3A-831F-4fae-9E44-DA132C1ACF46}\"",
+        "pathToSignedProductExe = \"windowsdefender://\"",
+        "pathToSignedReportingExe = \"%ProgramFiles%\\Windows Defender\\MsMpeng...",
+        "productState = 393472",
+        "timestamp = \"Fri, 05 Apr 2019 16:26:27 GMT\""
+      ],
+      "CimSystemProperties": {
+        "Namespace": "ROOT/SecurityCenter2",
+        "ServerName": "S28GBWLTP00988",
+        "ClassName": "AntiSpywareProduct",
+        "Path": null
+      },
+      "displayName": "Windows Defender",
+      "instanceGuid": "{D68DDC3A-831F-4fae-9E44-DA132C1ACF46}",
+      "pathToSignedProductExe": "windowsdefender://",
+      "pathToSignedReportingExe": "%ProgramFiles%\\Windows Defender\\MsMpeng.exe",
+      "productState": 393472,
+      "timestamp": "Fri, 05 Apr 2019 16:26:27 GMT",
+      "PSComputerName": null
+    }
+  ]
+}
