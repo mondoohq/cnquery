@@ -204,7 +204,7 @@ func ParseWindowsSecurityProducts(r io.Reader) ([]securityProduct, error) {
 	}
 
 	for i := range psSecProducts.AntiSpyware {
-		p := psSecProducts.Firewall[i]
+		p := psSecProducts.AntiSpyware[i]
 
 		res = append(res, securityProduct{
 			Type:               "antispyware",
