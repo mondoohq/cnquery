@@ -62,7 +62,6 @@ func (se *lumiPamConfServiceEntry) id() (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	s, err := se.Service()
 	if err != nil {
 		return "", err
@@ -71,8 +70,16 @@ func (se *lumiPamConfServiceEntry) id() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	lnstr := strconv.FormatInt(ln, 10)
-	id := s + ptype + mod + lnstr
+
+	id := s + "/" + lnstr + "/" + ptype
+
+	// for include mod is empty
+	if mod != "" {
+		id += "/" + mod
+	}
+
 	return id, nil
 }
 
@@ -265,29 +272,29 @@ func (s *lumiPamConf) GetEntries(files []interface{}) (map[string]interface{}, e
 		for i := range lines {
 			line = lines[i]
 
-			if idx := strings.Index(line, "#"); idx >= 0 {
-				line = line[0:idx]
+			entry, err := pam.ParseLine(line)
+			if err != nil {
+				return nil, err
 			}
-			line = strings.Trim(line, " \t\r")
 
-			if line != "" {
-				entry, err := pam.ParseLine(line)
-				if err != nil {
-					return nil, err
-				}
-				pamEntry, err := s.Runtime.CreateResource("pam.conf.serviceEntry",
-					"service", basename,
-					"lineNumber", int64(i), //Used for ID
-					"pamType", entry.PamType,
-					"control", entry.Control,
-					"module", entry.Module,
-					"options", entry.Options,
-				)
-				if err != nil {
-					return nil, err
-				}
-				settings = append(settings, pamEntry.(PamConfServiceEntry))
+			// empty lines parse as empty object
+			if entry == nil {
+				continue
 			}
+
+			pamEntry, err := s.Runtime.CreateResource("pam.conf.serviceEntry",
+				"service", basename,
+				"lineNumber", int64(i), // Used for ID
+				"pamType", entry.PamType,
+				"control", entry.Control,
+				"module", entry.Module,
+				"options", entry.Options,
+			)
+			if err != nil {
+				return nil, err
+			}
+			settings = append(settings, pamEntry.(PamConfServiceEntry))
+
 		}
 
 		services[basename] = settings
