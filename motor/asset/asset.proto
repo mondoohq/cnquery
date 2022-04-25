@@ -59,6 +59,6 @@ message Asset {
   // platform id detection mechanisms
   repeated string id_detector = 31;
 
-  bool is_ephemeral = 32;
+  bool is_cicd = 32;
 
 }
