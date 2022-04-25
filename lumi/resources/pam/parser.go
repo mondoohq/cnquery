@@ -13,18 +13,40 @@ type PamLine struct {
 }
 
 func ParseLine(line string) (*PamLine, error) {
+	line = StripComments(line)
+
+	if line == "" {
+		return nil, nil
+	}
+
 	fields := strings.Fields(line)
+
+	options := []interface{}{}
+
+	// check if we have @include
+	if len(fields) == 2 && fields[0] == "@include" {
+		return &PamLine{
+			PamType: fields[0],
+			Control: fields[1],
+			Module:  "",
+			Options: options,
+		}, nil
+	}
+
 	if len(fields) < 3 {
 		return &PamLine{}, fmt.Errorf("Invalid pam entry" + line)
 	}
+
+	// parse modules
+
 	pamType := fields[0]
 	control := fields[1]
-	//Control can either be one word or several contained in [] backets
+	// Control can either be one word or several contained in [] backets
 	if control[0] == '[' && control[len(control)-1] != ']' {
 		return complicatedParse(fields)
 	}
 	module := fields[2]
-	options := []interface{}{}
+
 	if len(fields) >= 3 {
 		for _, f := range fields[3:] {
 			options = append(options, f)
@@ -69,6 +91,10 @@ func complicatedParse(fields []string) (*PamLine, error) {
 	return pl, nil
 }
 
-func ToGenericArray(arr ...interface{}) []interface{} {
-	return arr
+func StripComments(line string) string {
+	if idx := strings.Index(line, "#"); idx >= 0 {
+		line = line[0:idx]
+	}
+	line = strings.Trim(line, " \t\r")
+	return line
 }
