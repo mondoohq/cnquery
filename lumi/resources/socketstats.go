@@ -12,6 +12,9 @@ func (f *lumiSocketstats) id() (string, error) {
 
 func (f *lumiSocketstats) GetOpenPorts() ([]interface{}, error) {
 	cmd, err := f.Runtime.Motor.Transport.RunCommand("ss -4tuln")
+	if err != nil {
+		return nil, err
+	}
 	data, err := ioutil.ReadAll(cmd.Stdout)
 	if err != nil {
 		return nil, err
