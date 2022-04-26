@@ -2754,7 +2754,7 @@ private aws.ec2.instance {
   // private IP address for the instance
   privateIp string
   // private DNS name for the instance
-  privateDns string
+  privateDnsName string
 }
 
 // AWS EC2 Image
