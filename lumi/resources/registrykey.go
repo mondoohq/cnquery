@@ -35,7 +35,7 @@ func (k *lumiRegistrykey) GetExists() (bool, error) {
 		stderr, err := cmd.Stderr()
 		// this would be an expected error and would ensure that we do not throw an error on windows systems
 		// TODO: revist how this is handled for non-english systems
-		if err == nil && strings.Contains(stderr, "because it does not exist") {
+		if err == nil && strings.Contains(stderr, "does not exist") {
 			return false, nil
 		}
 
@@ -169,8 +169,9 @@ func (p *lumiRegistrykeyProperty) init(args *lumi.Args) (*lumi.Args, Registrykey
 	}
 
 	// set default values
-	(*args)["value"] = ""
 	(*args)["exists"] = false
+	// NOTE: we do not set a value here so that lumi throws an error when a user try to gather the data for a
+	// non-existing key
 
 	// path exists
 	if exists {
@@ -192,11 +193,11 @@ func (p *lumiRegistrykeyProperty) init(args *lumi.Args) (*lumi.Args, Registrykey
 }
 
 func (p *lumiRegistrykeyProperty) GetExists() (bool, error) {
-	// NOTE: will not be called since its set in the constructor
-	return false, errors.New("not implemented")
+	// NOTE: will not be called since it will always be set in init
+	return false, errors.New("could not determine if the property exists")
 }
 
 func (p *lumiRegistrykeyProperty) GetValue() (string, error) {
-	// NOTE: will not be called since its set in the constructor
-	return "", errors.New("not implemented")
+	// NOTE: if we reach here the value has not been set in init, therefore we return an error
+	return "", errors.New("requested property does not exist")
 }
