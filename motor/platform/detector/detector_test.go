@@ -289,6 +289,18 @@ func TestUbuntu2204Detector(t *testing.T) {
 	assert.Equal(t, "Ubuntu", di.Title, "os title should be identified")
 	assert.Equal(t, "22.04", di.Release, "os version should be identified")
 	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
+}
+
+func TestPoposDetector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-popos.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	di, err := detector.Platform()
+	require.NoError(t, err)
+
+	assert.Equal(t, "pop", di.Name, "os name should be identified")
+	assert.Equal(t, "Pop!_OS", di.Title, "os title should be identified")
+	assert.Equal(t, "20.04", di.Release, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
 }
 
