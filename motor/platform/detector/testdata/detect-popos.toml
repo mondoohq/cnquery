@@ -1,0 +1,33 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "5.10.76-linuxkit"
+
+[files."/etc/os-release"]
+content = """
+NAME="Pop!_OS"
+VERSION="20.04 LTS"
+ID=pop
+ID_LIKE="ubuntu debian"
+PRETTY_NAME="Pop!_OS 20.04 LTS"
+VERSION_ID="20.04"
+HOME_URL="https://pop.system76.com"
+SUPPORT_URL="https://support.system76.com"
+BUG_REPORT_URL="https://github.com/pop-os/pop/issues"
+PRIVACY_POLICY_URL="https://system76.com/privacy"
+VERSION_CODENAME=focal
+UBUNTU_CODENAME=focal
+LOGO=distributor-logo-pop-os
+"""
+
+[files."/etc/lsb-release"]
+content = """
+DISTRIB_ID=Pop
+DISTRIB_RELEASE=20.04
+DISTRIB_CODENAME=focal
+DISTRIB_DESCRIPTION="Pop!_OS 20.04 LTS"
+"""
