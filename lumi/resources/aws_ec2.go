@@ -584,7 +584,7 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVers
 				"image", lumiImage,
 				"launchTime", instance.LaunchTime,
 				"privateIp", toString(instance.PrivateIpAddress),
-				"privateDns", toString(instance.PrivateDnsName),
+				"privateDnsName", toString(instance.PrivateDnsName),
 			}
 
 			// add vpc if there is one
