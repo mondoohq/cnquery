@@ -20,7 +20,7 @@ var detectors = []detectorFunc{
 	gce.Detect,
 }
 
-func Detect(t transports.Transport, p *platform.Platform) (string, map[string]string) {
+func Detect(t transports.Transport, p *platform.Platform) string {
 	wg := sync.WaitGroup{}
 	wg.Add(len(detectors))
 
@@ -45,11 +45,11 @@ func Detect(t transports.Transport, p *platform.Platform) (string, map[string]st
 	}
 
 	if len(platformIds) == 0 {
-		return "", nil
+		return ""
 	} else if len(platformIds) > 1 {
 		log.Error().Strs("detected", platformIds).Msg("multiple cloud platform ids detected")
-		return "", nil
+		return ""
 	}
 
-	return platformIds[0], nil
+	return platformIds[0]
 }

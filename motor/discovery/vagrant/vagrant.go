@@ -164,7 +164,6 @@ func newVagrantAsset(sshConfig *VagrantVmSSHConfig, rootTransportConfig *transpo
 	if fingerprint.Name != "" {
 		assetObj.Name = fingerprint.Name
 	}
-	assetInfo.Labels = assetMetadata.Labels
 
 	log.Debug().Strs("identifier", assetObj.PlatformIds).Msg("motor connection")
 

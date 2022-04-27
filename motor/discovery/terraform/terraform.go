@@ -61,7 +61,6 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 	if fingerprint.Name != "" {
 		assetObj.Name = fingerprint.Name
 	}
-	assetInfo.Labels = assetMetadata.Labels
 
 	return []*asset.Asset{assetObj}, nil
 }
