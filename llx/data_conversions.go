@@ -597,7 +597,7 @@ func args2resourceargsV2(b *blockExecutor, ref uint64, args []*Primitive) ([]int
 	for i := range args {
 		var cur *RawData
 
-		if types.Type(args[i].Type) == types.Ref {
+		if b != nil && types.Type(args[i].Type) == types.Ref {
 			var rref uint64
 			var err error
 			cur, rref, err = b.resolveValue(args[i], ref)
