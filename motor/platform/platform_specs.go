@@ -632,8 +632,12 @@ var windows = &PlatformResolver{
 		// FIXME: we need to ask wmic cpu get architecture
 		di.Arch = data.OSArchitecture
 
-		// optional: try to get the ubr number (win 10 + 2019)
+		if di.Labels == nil {
+			di.Labels = map[string]string{}
+		}
+		di.Labels["windows.mondoo.com/product-type"] = data.ProductType
 
+		// optional: try to get the ubr number (win 10 + 2019)
 		current, err := win.GetWindowsOSBuild(t)
 		if err == nil && current.UBR > 0 {
 			di.Build = strconv.Itoa(current.UBR)

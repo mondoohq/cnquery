@@ -15,6 +15,11 @@ import (
 func (s *lumiPlatform) init(args *lumi.Args) (*lumi.Args, Platform, error) {
 	platform, err := s.Runtime.Motor.Platform()
 	if err == nil {
+		labels := map[string]interface{}{}
+		for k := range platform.Labels {
+			labels[k] = platform.Labels[k]
+		}
+
 		(*args)["name"] = platform.Name
 		(*args)["title"] = platform.Title
 		(*args)["arch"] = platform.Arch
@@ -22,6 +27,7 @@ func (s *lumiPlatform) init(args *lumi.Args) (*lumi.Args, Platform, error) {
 		(*args)["build"] = platform.Build
 		(*args)["kind"] = platform.Kind.Name()
 		(*args)["runtimeEnv"] = platform.Runtime
+		(*args)["labels"] = labels
 
 		if transport, ok := s.Runtime.Motor.Transport.(*network.Transport); ok {
 			(*args)["fqdn"] = transport.FQDN

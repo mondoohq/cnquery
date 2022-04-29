@@ -15,4 +15,5 @@ message Platform {
 
   mondoo.motor.transports.v1.Kind kind = 20;
   string runtime = 21;
+  map<string, string> labels = 22;
 }
