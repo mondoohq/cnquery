@@ -7,10 +7,61 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports/network"
 	"go.mondoo.io/mondoo/vadvisor"
 	"go.mondoo.io/mondoo/vadvisor/sources/eol"
 )
+
+// convertLumiPlatform2ApiPlatform converts the lumi.Platform to
+// a *vadvisor.Platform object for API communication
+func convertLumiPlatform2ApiPlatform(pf Platform) *platform.Platform {
+	if pf == nil {
+		return nil
+	}
+
+	name, _ := pf.Name()
+	release, _ := pf.Release()
+	build, _ := pf.Build()
+	arch, _ := pf.Arch()
+	title, _ := pf.Title()
+	labels, _ := pf.Labels()
+
+	pfLabels := map[string]string{}
+	for k := range labels {
+		v := labels[k]
+		val, ok := v.(string)
+		if ok {
+			pfLabels[k] = val
+		}
+	}
+
+	return &platform.Platform{
+		Name:    name,
+		Release: release,
+		Build:   build,
+		Arch:    arch,
+		Title:   title,
+		Labels:  pfLabels,
+	}
+}
+
+// convertPlatform2VulnPlatform converts the motor platform.Platform to the
+// platform object we use for vulnerability data
+// TODO: we need to harmonize the platform objects
+func convertPlatform2VulnPlatform(pf *platform.Platform) *vadvisor.Platform {
+	if pf == nil {
+		return nil
+	}
+	return &vadvisor.Platform{
+		Name:    pf.Name,
+		Release: pf.Release,
+		Build:   pf.Build,
+		Arch:    pf.Arch,
+		Title:   pf.Title,
+		Labels:  pf.Labels,
+	}
+}
 
 func (s *lumiPlatform) init(args *lumi.Args) (*lumi.Args, Platform, error) {
 	platform, err := s.Runtime.Motor.Platform()
@@ -62,32 +113,11 @@ func (p *lumiPlatformEol) init(args *lumi.Args) (*lumi.Args, PlatformEol, error)
 	}
 
 	// gather system information
-	platform := obj.(Platform)
+	pf := obj.(Platform)
+	eolPlatform := convertPlatform2VulnPlatform(convertLumiPlatform2ApiPlatform(pf))
+	platformEolInfo := eol.EolInfo(eolPlatform)
 
-	name, _ := platform.Name()
-	release, _ := platform.Release()
-	arch, _ := platform.Arch()
-	title, _ := platform.Title()
-	labels, _ := platform.Labels()
-
-	pfLabels := map[string]string{}
-	for k := range labels {
-		v := labels[k]
-		val, ok := v.(string)
-		if ok {
-			pfLabels[k] = val
-		}
-	}
-
-	platformEolInfo := eol.EolInfo(&vadvisor.Platform{
-		Name:    name,
-		Release: release,
-		Arch:    arch,
-		Title:   title,
-		Labels:  pfLabels,
-	})
-
-	log.Debug().Str("name", name).Str("release", release).Str("title", title).Msg("search for eol information")
+	log.Debug().Str("name", eolPlatform.Name).Str("release", eolPlatform.Release).Str("title", eolPlatform.Title).Msg("search for eol information")
 	if platformEolInfo == nil {
 		return nil, nil, errors.New("no platform eol information available")
 	}

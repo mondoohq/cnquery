@@ -12,7 +12,6 @@ import (
 	"go.mondoo.io/mondoo/vadvisor"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/nexus/assets"
 	"go.mondoo.io/mondoo/vadvisor/client"
@@ -33,11 +32,7 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 	}
 
 	lumiPlatform := obj.(Platform)
-
-	name, _ := lumiPlatform.Name()
-	release, _ := lumiPlatform.Release()
-	arch, _ := lumiPlatform.Arch()
-	build, _ := lumiPlatform.Build()
+	platformObj := convertLumiPlatform2ApiPlatform(lumiPlatform)
 
 	// check if the data is cached
 	// NOTE: we cache it in the platform resource, so that platform.advisories, platform.cves and
@@ -59,12 +54,7 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 		// NOTE: asset mrn may not be available in incognito mode and will be an empty string then
 		Mrn:      r.UpstreamConfig.AssetMrn,
 		SpaceMrn: r.UpstreamConfig.SpaceMrn,
-		Platform: &platform.Platform{
-			Name:    name,
-			Release: release,
-			Arch:    arch,
-			Build:   build,
-		},
+		Platform: platformObj,
 	}
 
 	apiPackages := []*vadvisor.Package{}
@@ -117,12 +107,7 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 	}
 
 	scanjob := &vadvisor.AnalyseAssetRequest{
-		Platform: &vadvisor.Platform{
-			Name:    name,
-			Release: release,
-			Arch:    arch,
-			Build:   build,
-		},
+		Platform:      convertPlatform2VulnPlatform(platformObj),
 		Packages:      apiPackages,
 		KernelVersion: kernelVersion,
 	}
