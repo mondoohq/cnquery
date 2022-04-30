@@ -68,12 +68,23 @@ func (p *lumiPlatformEol) init(args *lumi.Args) (*lumi.Args, PlatformEol, error)
 	release, _ := platform.Release()
 	arch, _ := platform.Arch()
 	title, _ := platform.Title()
+	labels, _ := platform.Labels()
+
+	pfLabels := map[string]string{}
+	for k := range labels {
+		v := labels[k]
+		val, ok := v.(string)
+		if ok {
+			pfLabels[k] = val
+		}
+	}
 
 	platformEolInfo := eol.EolInfo(&vadvisor.Platform{
 		Name:    name,
 		Release: release,
 		Arch:    arch,
 		Title:   title,
+		Labels:  pfLabels,
 	})
 
 	log.Debug().Str("name", name).Str("release", release).Str("title", title).Msg("search for eol information")
