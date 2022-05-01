@@ -64,21 +64,21 @@ pkg://solaris/compress/p7zip@9.20.1,5.11-0.175.1.0.0.24.0:20120904T170605Z   i--
 	p = packages.Package{
 		Name:    "archiver/gnu-tar",
 		Version: "1.26",
-		Format:  "ips",
+		Format:  packages.SolarisPkgFormat,
 	}
 	assert.Contains(t, m, p, "pkg detected")
 
 	p = packages.Package{
 		Name:    "compress/bzip2",
 		Version: "1.0.6",
-		Format:  "ips",
+		Format:  packages.SolarisPkgFormat,
 	}
 	assert.Contains(t, m, p, "pkg detected")
 
 	p = packages.Package{
 		Name:    "compress/p7zip",
 		Version: "9.20.1",
-		Format:  "ips",
+		Format:  packages.SolarisPkgFormat,
 	}
 	assert.Contains(t, m, p, "pkg detected")
 }
@@ -101,7 +101,7 @@ func TestSolarisManager(t *testing.T) {
 	p := packages.Package{
 		Name:    "compress/p7zip",
 		Version: "9.20.1",
-		Format:  "ips",
+		Format:  packages.SolarisPkgFormat,
 	}
 	assert.Contains(t, pkgList, p, "pkg detected")
 }

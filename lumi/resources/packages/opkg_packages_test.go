@@ -26,21 +26,21 @@ firewall - 2016-11-29-1`
 	p = packages.Package{
 		Name:    "busybox",
 		Version: "1.24.2-1",
-		Format:  "opkg",
+		Format:  packages.OpkgPkgFormat,
 	}
 	assert.Contains(t, m, p, "pkg detected")
 
 	p = packages.Package{
 		Name:    "dnsmasq",
 		Version: "2.78-1",
-		Format:  "opkg",
+		Format:  packages.OpkgPkgFormat,
 	}
 	assert.Contains(t, m, p, "pkg detected")
 
 	p = packages.Package{
 		Name:    "firewall",
 		Version: "2016-11-29-1",
-		Format:  "opkg",
+		Format:  packages.OpkgPkgFormat,
 	}
 	assert.Contains(t, m, p, "pkg detected")
 }

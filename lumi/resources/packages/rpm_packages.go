@@ -20,9 +20,11 @@ import (
 	"go.mondoo.io/mondoo/motor/platform"
 )
 
-var (
-	RPM_REGEX = regexp.MustCompile(`^([\w-+]*)\s(\d*|\(none\)):([\w\d-+.:]+)\s([\w\d]*|\(none\))\s(.*)$`)
+const (
+	RpmPkgFormat = "rpm"
 )
+
+var RPM_REGEX = regexp.MustCompile(`^([\w-+]*)\s(\d*|\(none\)):([\w\d-+.:]+)\s([\w\d]*|\(none\))\s(.*)$`)
 
 // ParseRpmPackages parses output from:
 // rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\n'
@@ -52,7 +54,7 @@ func ParseRpmPackages(input io.Reader) []Package {
 				Version:     version,
 				Arch:        arch,
 				Description: m[5],
-				Format:      "rpm",
+				Format:      RpmPkgFormat,
 			})
 		}
 	}
@@ -76,7 +78,7 @@ func (rpm *RpmPkgManager) Name() string {
 }
 
 func (rpm *RpmPkgManager) Format() string {
-	return "rpm"
+	return RpmPkgFormat
 }
 
 // determine if we running against a static image, where we cannot execute the rpm command
@@ -148,7 +150,6 @@ func (rpm *RpmPkgManager) queryFormat() string {
 }
 
 func (rpm *RpmPkgManager) runtimeList() ([]Package, error) {
-
 	command := fmt.Sprintf("rpm -qa --queryformat '%s'", rpm.queryFormat())
 	cmd, err := rpm.motor.Transport.RunCommand(command)
 	if err != nil {
@@ -281,7 +282,7 @@ func (rpm *RpmPkgManager) staticAvailable() (map[string]PackageUpdate, error) {
 	return map[string]PackageUpdate{}, nil
 }
 
-// Suse, overwrites the Centos handler
+// SusePkgManager overwrites the normal RPM handler
 type SusePkgManager struct {
 	RpmPkgManager
 }

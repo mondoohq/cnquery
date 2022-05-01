@@ -29,6 +29,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 		Arch:        "x86_64",
 		Description: "the musl c library (libc) implementation",
 		Origin:      "musl",
+		Format:      packages.AlpinePkgFormat,
 	}
 	assert.Contains(t, m, p, "musl detected")
 
@@ -38,6 +39,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 		Arch:        "x86_64",
 		Description: "libressl libcrypto library",
 		Origin:      "libressl",
+		Format:      packages.AlpinePkgFormat,
 	}
 	assert.Contains(t, m, p, "libcrypto detected")
 
@@ -47,6 +49,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 		Arch:        "x86_64",
 		Description: "libressl libssl library",
 		Origin:      "libressl",
+		Format:      packages.AlpinePkgFormat,
 	}
 	assert.Contains(t, m, p, "libssl detected")
 
@@ -56,6 +59,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 		Arch:        "x86_64",
 		Description: "Alpine Package Keeper - package manager for alpine",
 		Origin:      "apk-tools",
+		Format:      packages.AlpinePkgFormat,
 	}
 	assert.Contains(t, m, p, "apk-tools detected")
 
@@ -65,6 +69,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 		Arch:        "x86_64",
 		Description: "Size optimized toolbox of many common UNIX utilities",
 		Origin:      "busybox",
+		Format:      packages.AlpinePkgFormat,
 	}
 	assert.Contains(t, m, p, "apk-tools detected")
 
@@ -74,6 +79,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 		Arch:        "x86_64",
 		Description: "Alpine base dir structure and init scripts",
 		Origin:      "alpine-baselayout",
+		Format:      packages.AlpinePkgFormat,
 	}
 	assert.Contains(t, m, p, "apk-tools detected")
 }

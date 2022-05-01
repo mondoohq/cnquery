@@ -13,6 +13,10 @@ import (
 	"go.mondoo.io/mondoo/motor"
 )
 
+const (
+	DpkgPkgFormat = "deb"
+)
+
 var (
 	DPKG_REGEX        = regexp.MustCompile(`^(.+):\s(.+)$`)
 	DPKG_ORIGIN_REGEX = regexp.MustCompile(`^\s*([^\(]*)(?:\((.*)\))?\s*$`)
@@ -34,7 +38,7 @@ func ParseDpkgPackages(input io.Reader) ([]Package, error) {
 	}
 
 	scanner := bufio.NewScanner(input)
-	pkg := Package{Format: "deb"}
+	pkg := Package{Format: DpkgPkgFormat}
 	state := STATE_RESET
 	var key string
 	for scanner.Scan() {
@@ -43,7 +47,7 @@ func ParseDpkgPackages(input io.Reader) ([]Package, error) {
 		// reset package definition once we reach a newline
 		if len(line) == 0 {
 			add(pkg)
-			pkg = Package{Format: "deb"}
+			pkg = Package{Format: DpkgPkgFormat}
 		}
 
 		m := DPKG_REGEX.FindStringSubmatch(line)
@@ -84,9 +88,7 @@ func ParseDpkgPackages(input io.Reader) ([]Package, error) {
 	return pkgs, nil
 }
 
-var (
-	DPKG_UPDATE_REGEX = regexp.MustCompile(`^Inst\s([a-zA-Z0-9.\-_]+)\s\[([a-zA-Z0-9.\-\+]+)\]\s\(([a-zA-Z0-9.\-\+]+)\s*(.*)\)(.*)$`)
-)
+var DPKG_UPDATE_REGEX = regexp.MustCompile(`^Inst\s([a-zA-Z0-9.\-_]+)\s\[([a-zA-Z0-9.\-\+]+)\]\s\(([a-zA-Z0-9.\-\+]+)\s*(.*)\)(.*)$`)
 
 func ParseDpkgUpdates(input io.Reader) (map[string]PackageUpdate, error) {
 	pkgs := map[string]PackageUpdate{}
@@ -115,7 +117,7 @@ func (dpm *DebPkgManager) Name() string {
 }
 
 func (dpm *DebPkgManager) Format() string {
-	return "deb"
+	return DpkgPkgFormat
 }
 
 func (dpm *DebPkgManager) List() ([]Package, error) {

@@ -73,37 +73,6 @@ func ParseZypperUpdates(input io.Reader) (map[string]PackageUpdate, error) {
 	return pkgs, nil
 }
 
-// for Suse, patches are operating system patches that are composed of multiple package updates
-func ParseZypperPatches(input io.Reader) ([]OperatingSystemUpdate, error) {
-	zypper, err := parseZypper(input)
-	if err != nil {
-		return nil, err
-	}
-
-	var updates []OperatingSystemUpdate
-	// filter for kind patch
-	for _, u := range zypper.Updates {
-		if u.Kind != "patch" {
-			continue
-		}
-
-		restart := false
-		if u.Restart == "true" {
-			restart = true
-		}
-
-		updates = append(updates, OperatingSystemUpdate{
-			Name:        u.Name,
-			Severity:    u.Severity,
-			Restart:     restart,
-			Category:    u.Category,
-			Description: u.Description,
-		})
-	}
-
-	return updates, nil
-}
-
 func parseZypper(input io.Reader) (*zypper, error) {
 	content, err := ioutil.ReadAll(input)
 	if err != nil {
