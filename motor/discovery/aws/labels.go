@@ -9,14 +9,14 @@ import (
 const ImportedFromAWSTagKeyPrefix = "aws.tag/"
 
 const (
-	ImageIdLabel        string = "mondoo.app/ami-id"
-	RegionLabel         string = "mondoo.app/region"
-	IntegrationMrnLabel string = "mondoo.app/integration-mrn"
-	SSMPingLabel        string = "mondoo.app/ssm-connection"
-	InstanceLabel       string = "mondoo.app/instance"
-	EBSScanLabel        string = "mondoo.app/ebs-volume-scan"
-	PlatformLabel       string = "mondoo.app/platform"
-	StateLabel          string = "mondoo.app/instance-state"
+	ImageIdLabel        string = "mondoo.com/ami-id"
+	RegionLabel         string = "mondoo.com/region"
+	IntegrationMrnLabel string = "mondoo.com/integration-mrn"
+	SSMPingLabel        string = "mondoo.com/ssm-connection"
+	InstanceLabel       string = "mondoo.com/instance"
+	EBSScanLabel        string = "mondoo.com/ebs-volume-scan"
+	PlatformLabel       string = "mondoo.com/platform"
+	StateLabel          string = "mondoo.com`/instance-state"
 )
 
 func addAWSMetadataLabels(assetLabels map[string]string, instance basicInstanceInfo) map[string]string {

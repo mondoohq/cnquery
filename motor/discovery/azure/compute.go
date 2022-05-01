@@ -190,11 +190,11 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*asset.Asset, error) {
 		}
 
 		// fetch azure specific metadata
-		asset.Labels["azure.mondoo.app/subscription"] = res.SubscriptionID
-		asset.Labels["azure.mondoo.app/resourcegroup"] = res.ResourceGroup
-		asset.Labels["azure.mondoo.app/computername"] = *instance.OsProfile.ComputerName
-		asset.Labels["mondoo.app/region"] = *instance.Location
-		asset.Labels["mondoo.app/instance"] = *instance.VMID
+		asset.Labels["azure.mondoo.com/subscription"] = res.SubscriptionID
+		asset.Labels["azure.mondoo.com/resourcegroup"] = res.ResourceGroup
+		asset.Labels["azure.mondoo.com/computername"] = *instance.OsProfile.ComputerName
+		asset.Labels["mondoo.com/region"] = *instance.Location
+		asset.Labels["mondoo.com/instance"] = *instance.VMID
 
 		assetList = append(assetList, asset)
 	}
