@@ -1,7 +1,10 @@
 package asset
 
 import (
+	"encoding/json"
+	"errors"
 	fmt "fmt"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 )
@@ -103,4 +106,29 @@ func NewState(state string) State {
 		log.Debug().Str("state", state).Msg("unknown asset state")
 		return State_STATE_UNKNOWN
 	}
+}
+
+var AssetCategory_schemevalue = map[string]AssetCategory{
+	"fleet": AssetCategory_CATEGORY_FLEET,
+	"cicd":  AssetCategory_CATEGORY_CICD,
+}
+
+// UnmarshalJSON parses either an int or a string representation of
+// CredentialType into the struct
+func (s *AssetCategory) UnmarshalJSON(data []byte) error {
+	// check if we have a number
+	var code int32
+	err := json.Unmarshal(data, &code)
+	if err == nil {
+		*s = AssetCategory(code)
+	} else {
+		var name string
+		err = json.Unmarshal(data, &name)
+		code, ok := AssetCategory_schemevalue[strings.TrimSpace(name)]
+		if !ok {
+			return errors.New("unknown backend value: " + string(data))
+		}
+		*s = code
+	}
+	return nil
 }

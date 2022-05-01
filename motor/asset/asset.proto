@@ -28,6 +28,11 @@ enum State {
   STATE_DELETED = 11;
 }
 
+enum AssetCategory {
+  CATEGORY_FLEET = 0;
+  CATEGORY_CICD = 1;
+}
+
 message Asset {
   string id = 1;
   string mrn = 2;
@@ -59,6 +64,6 @@ message Asset {
   // platform id detection mechanisms
   repeated string id_detector = 31;
 
-  bool is_cicd = 32;
-
+  // indicator is this is a fleet asset or a CI/CD run
+  AssetCategory category = 32;
 }
