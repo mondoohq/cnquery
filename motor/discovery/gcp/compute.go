@@ -174,9 +174,9 @@ func (a *Compute) instancesPerZone(svc *compute.Service, project string, zone st
 		}
 
 		// fetch gcp specific metadata
-		asset.Labels["gcp.mondoo.app/project"] = project
-		asset.Labels["mondoo.app/region"] = zone
-		asset.Labels["mondoo.app/instance"] = strconv.FormatUint(uint64(instance.Id), 10)
+		asset.Labels["gcp.mondoo.com/project"] = project
+		asset.Labels["mondoo.com/region"] = zone
+		asset.Labels["mondoo.com/instance"] = strconv.FormatUint(uint64(instance.Id), 10)
 
 		instances[i] = asset
 	}

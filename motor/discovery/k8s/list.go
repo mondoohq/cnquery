@@ -145,11 +145,11 @@ func toAsset(pod v1.Pod, status v1.ContainerStatus) *asset.Asset {
 	}
 
 	// fetch k8s specific metadata
-	asset.Labels["k8s.mondoo.app/name"] = pod.Name
-	asset.Labels["k8s.mondoo.app/namespace"] = pod.Namespace
-	asset.Labels["k8s.mondoo.app/cluster-name"] = pod.ClusterName
-	asset.Labels["k8s.mondoo.app/status/name"] = status.Name
-	asset.Labels["k8s.mondoo.app/status/image"] = status.Image
+	asset.Labels["k8s.mondoo.com/name"] = pod.Name
+	asset.Labels["k8s.mondoo.com/namespace"] = pod.Namespace
+	asset.Labels["k8s.mondoo.com/cluster-name"] = pod.ClusterName
+	asset.Labels["k8s.mondoo.com/status/name"] = status.Name
+	asset.Labels["k8s.mondoo.com/status/image"] = status.Image
 	asset.Labels["docker.io/tags"] = tagName
 	return asset
 }

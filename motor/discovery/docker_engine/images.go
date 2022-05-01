@@ -73,7 +73,7 @@ func (e *dockerEngineDiscovery) ListImages() ([]*asset.Asset, error) {
 			labels[key] = dImg.Labels[key]
 		}
 
-		labels["mondoo.app/image-id"] = dImg.ID
+		labels["mondoo.com/image-id"] = dImg.ID
 		// project/repo:5e664d0e,gcr.io/project/repo:5e664d0e
 		labels["docker.io/tags"] = strings.Join(dImg.RepoTags, ",")
 		// gcr.io/project/repo@sha256:5248...2bee

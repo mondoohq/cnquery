@@ -2,7 +2,7 @@ package common
 
 // shared labels
 const (
-	IPLabel  string = "mondoo.app/ip"
-	DNSLabel string = "mondoo.app/public-dns-name"
-	ParentId string = "mondoo.app/parent-id"
+	IPLabel  string = "mondoo.com/ip"
+	DNSLabel string = "mondoo.com/public-dns-name"
+	ParentId string = "mondoo.com/parent-id"
 )
