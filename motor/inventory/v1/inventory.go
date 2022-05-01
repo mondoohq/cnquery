@@ -224,6 +224,27 @@ func (p *Inventory) AddAssets(assetList ...*asset.Asset) {
 	}
 }
 
+func (p *Inventory) ApplyLabels(labels map[string]string) {
+	for i := range p.Spec.Assets {
+		a := p.Spec.Assets[i]
+
+		if a.Labels == nil {
+			a.Labels = map[string]string{}
+		}
+
+		for k := range labels {
+			a.Labels[k] = labels[k]
+		}
+	}
+}
+
+func (p *Inventory) ApplyCategory(category asset.AssetCategory) {
+	for i := range p.Spec.Assets {
+		a := p.Spec.Assets[i]
+		a.Category = category
+	}
+}
+
 // isValidCredentialRef ensures an asset credential is defined properly
 // The implementation assumes the credentials have been offloaded to the
 // credential map before via PreProcess

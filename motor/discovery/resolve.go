@@ -151,7 +151,7 @@ func ResolveAsset(root *asset.Asset, cfn credentials.CredentialFn, sfn credentia
 			for k, v := range root.Annotations {
 				assetObj.Annotations[k] = v
 			}
-			assetObj.IsCicd = root.IsCicd
+			assetObj.Category = root.Category
 
 			resolved = append(resolved, assetObj)
 		}
