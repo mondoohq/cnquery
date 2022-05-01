@@ -11,6 +11,10 @@ import (
 	plist "howett.net/plist"
 )
 
+const (
+	MacosPkgFormat = "macos"
+)
+
 // parse macos system version property list
 func ParseMacOSPackages(input io.Reader) ([]Package, error) {
 	var r io.ReadSeeker
@@ -49,6 +53,7 @@ func ParseMacOSPackages(input io.Reader) ([]Package, error) {
 	for i, entry := range data[0].Items {
 		pkgs[i].Name = entry.Name
 		pkgs[i].Version = entry.Version
+		pkgs[i].Format = MacosPkgFormat
 	}
 
 	return pkgs, nil
@@ -64,7 +69,7 @@ func (mpm *MacOSPkgManager) Name() string {
 }
 
 func (mpm *MacOSPkgManager) Format() string {
-	return "macos"
+	return MacosPkgFormat
 }
 
 func (mpm *MacOSPkgManager) List() ([]Package, error) {

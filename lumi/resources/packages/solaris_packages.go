@@ -9,6 +9,10 @@ import (
 	"go.mondoo.io/mondoo/motor"
 )
 
+const (
+	SolarisPkgFormat = "ips"
+)
+
 var (
 	SOLARIS_PKG_REGEX  = regexp.MustCompile(`^(.*)\s+([\w\-]+)$`)
 	SOLARIS_FMRI_REGEX = regexp.MustCompile(`^pkg:\/\/([\w]+)/(.*)@(.*),(.*):(.*)$`)
@@ -31,7 +35,6 @@ type SolarisPackage struct {
 // Branch version: 0.174
 // Package timestamp: 20110128T0635Z
 func ParseSolarisFmri(frmi string) (*SolarisPackage, error) {
-
 	m := SOLARIS_FMRI_REGEX.FindStringSubmatch(frmi)
 	if len(m) != 6 {
 		return nil, fmt.Errorf("could not parse solaris package name: %s", frmi)
@@ -44,7 +47,6 @@ func ParseSolarisFmri(frmi string) (*SolarisPackage, error) {
 		Branch:    m[4],
 		Timestamp: m[5],
 	}, nil
-
 }
 
 // parse solaris package list
@@ -63,7 +65,7 @@ func ParseSolarisPackages(input io.Reader) []Package {
 				pkgs = append(pkgs, Package{
 					Name:    spkg.Name,
 					Version: spkg.Version,
-					Format:  "ips",
+					Format:  SolarisPkgFormat,
 				})
 			}
 		}
@@ -80,7 +82,7 @@ func (s *SolarisPkgManager) Name() string {
 }
 
 func (script *SolarisPkgManager) Format() string {
-	return "ips"
+	return SolarisPkgFormat
 }
 
 func (s *SolarisPkgManager) List() ([]Package, error) {

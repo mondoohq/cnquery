@@ -200,7 +200,7 @@ func (p *lumiOs) GetUpdates() ([]interface{}, error) {
 			"severity", update.Severity,
 			"category", update.Category,
 			"restart", update.Restart,
-			"format", um.Format(),
+			"format", update.Format,
 		)
 		if err != nil {
 			return nil, err

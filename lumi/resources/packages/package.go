@@ -29,4 +29,5 @@ type OperatingSystemUpdate struct {
 	Severity    string `json:"severity"`
 	Category    string `json:"category"`
 	Restart     bool   `json:"restart"`
+	Format      string `json:"format"`
 }

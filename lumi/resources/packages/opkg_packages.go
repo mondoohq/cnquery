@@ -9,9 +9,11 @@ import (
 	"go.mondoo.io/mondoo/motor"
 )
 
-var (
-	OPKG_REGEX = regexp.MustCompile(`^([\w\d\-]+)\s-\s([\w\d\-\.]+)$`)
+const (
+	OpkgPkgFormat = "opkg"
 )
+
+var OPKG_REGEX = regexp.MustCompile(`^([\w\d\-]+)\s-\s([\w\d\-\.]+)$`)
 
 // parse opkg package list
 func ParseOpkgPackages(input io.Reader) []Package {
@@ -24,7 +26,7 @@ func ParseOpkgPackages(input io.Reader) []Package {
 			pkgs = append(pkgs, Package{
 				Name:    m[1],
 				Version: m[2],
-				Format:  "opkg",
+				Format:  OpkgPkgFormat,
 			})
 		}
 	}
@@ -40,7 +42,7 @@ func (opkg *OpkgPkgManager) Name() string {
 }
 
 func (opkg *OpkgPkgManager) Format() string {
-	return "opkg"
+	return OpkgPkgFormat
 }
 
 func (opkg *OpkgPkgManager) List() ([]Package, error) {

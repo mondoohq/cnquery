@@ -11,9 +11,7 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/packages"
 )
 
-var (
-	PKG_IDENTIFIER = regexp.MustCompile(`^(.*):\/\/(.*)\/(.*)\/(.*)$`)
-)
+var PKG_IDENTIFIER = regexp.MustCompile(`^(.*):\/\/(.*)\/(.*)\/(.*)$`)
 
 func (p *lumiPackage) init(args *lumi.Args) (*lumi.Args, Package, error) {
 	if len(*args) > 2 {
@@ -99,7 +97,6 @@ func (p *lumiPackages) id() (string, error) {
 }
 
 func (p *lumiPackages) GetList() ([]interface{}, error) {
-
 	// find suitable package manager
 	pm, err := packages.ResolveSystemPkgManager(p.Runtime.Motor)
 	if pm == nil || err != nil {
@@ -149,7 +146,7 @@ func (p *lumiPackages) GetList() ([]interface{}, error) {
 			"arch", osPkg.Arch,
 			"status", osPkg.Status,
 			"description", osPkg.Description,
-			"format", pm.Format(),
+			"format", osPkg.Format,
 			"installed", true,
 			"origin", osPkg.Origin,
 		)

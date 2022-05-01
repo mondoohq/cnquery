@@ -7,14 +7,12 @@ import (
 
 type OperatingSystemPkgManager interface {
 	Name() string
-	Format() string
 	List() ([]Package, error)
 	Available() (map[string]PackageUpdate, error)
 }
 
 type OperatingSystemUpdateManager interface {
 	Name() string
-	Format() string
 	List() ([]OperatingSystemUpdate, error)
 }
 

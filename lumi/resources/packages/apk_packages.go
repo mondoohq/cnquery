@@ -4,16 +4,17 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-
 	"regexp"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor"
 )
 
-var (
-	APK_REGEX = regexp.MustCompile(`^([A-Za-z]):(.*)$`)
+const (
+	AlpinePkgFormat = "apk"
 )
+
+var APK_REGEX = regexp.MustCompile(`^([A-Za-z]):(.*)$`)
 
 // ParseApkDbPackages parses the database of the apk package manager located in
 // `/lib/apk/db/installed`
@@ -31,6 +32,8 @@ func ParseApkDbPackages(input io.Reader) []Package {
 		} else {
 			pkg.Version = pkgEpoch + ":" + pkgVersion
 		}
+
+		pkg.Format = AlpinePkgFormat
 
 		// do sanitization checks to ensure we have minimal information
 		if pkg.Name != "" && pkg.Version != "" {
@@ -117,7 +120,7 @@ func (apm *AlpinePkgManager) Name() string {
 }
 
 func (apm *AlpinePkgManager) Format() string {
-	return "apk"
+	return AlpinePkgFormat
 }
 
 func (apm *AlpinePkgManager) List() ([]Package, error) {

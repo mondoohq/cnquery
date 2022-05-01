@@ -10,9 +10,11 @@ import (
 	"go.mondoo.io/mondoo/motor"
 )
 
-var (
-	PACMAN_REGEX = regexp.MustCompile(`^([\w-]*)\s([\w\d-+.:]+)$`)
+const (
+	PacmanPkgFormat = "pacman"
 )
+
+var PACMAN_REGEX = regexp.MustCompile(`^([\w-]*)\s([\w\d-+.:]+)$`)
 
 func ParsePacmanPackages(input io.Reader) []Package {
 	pkgs := []Package{}
@@ -24,7 +26,7 @@ func ParsePacmanPackages(input io.Reader) []Package {
 			pkgs = append(pkgs, Package{
 				Name:    m[1],
 				Version: m[2],
-				Format:  "apk",
+				Format:  PacmanPkgFormat,
 			})
 		}
 	}
@@ -41,7 +43,7 @@ func (ppm *PacmanPkgManager) Name() string {
 }
 
 func (ppm *PacmanPkgManager) Format() string {
-	return "pacman"
+	return PacmanPkgFormat
 }
 
 func (ppm *PacmanPkgManager) List() ([]Package, error) {

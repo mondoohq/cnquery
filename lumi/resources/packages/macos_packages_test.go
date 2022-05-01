@@ -25,7 +25,9 @@ func TestMacOsXPackageParser(t *testing.T) {
 
 	assert.Equal(t, "Preview", m[0].Name, "pkg name detected")
 	assert.Equal(t, "10.0", m[0].Version, "pkg version detected")
+	assert.Equal(t, packages.MacosPkgFormat, m[0].Format, "pkg format detected")
 
 	assert.Equal(t, "Contacts", m[1].Name, "pkg name detected")
 	assert.Equal(t, "11.0", m[1].Version, "pkg version detected")
+	assert.Equal(t, packages.MacosPkgFormat, m[0].Format, "pkg format detected")
 }

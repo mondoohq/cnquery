@@ -25,21 +25,21 @@ zziplib 0.13.67-1`
 	p = packages.Package{
 		Name:    "qpdfview",
 		Version: "0.4.17beta1-4.1",
-		Format:  "apk",
+		Format:  packages.PacmanPkgFormat,
 	}
 	assert.Contains(t, m, p, "pkg detected")
 
 	p = packages.Package{
 		Name:    "vertex-maia-themes",
 		Version: "20171114-1",
-		Format:  "apk",
+		Format:  packages.PacmanPkgFormat,
 	}
 	assert.Contains(t, m, p, "pkg detected")
 
 	p = packages.Package{
 		Name:    "xfce4-pulseaudio-plugin",
 		Version: "0.3.2.r13.g553691a-1",
-		Format:  "apk",
+		Format:  packages.PacmanPkgFormat,
 	}
 	assert.Contains(t, m, p, "pkg detected")
 }
@@ -59,7 +59,7 @@ argon2 20190702-2`
 	p = packages.Package{
 		Name:    "acl",
 		Version: "2.2.53-2",
-		Format:  "apk",
+		Format:  packages.PacmanPkgFormat,
 	}
 	assert.Contains(t, m, p, "pkg detected")
 }
