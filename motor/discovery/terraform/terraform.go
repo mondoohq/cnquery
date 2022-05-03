@@ -28,7 +28,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 		name = common.ProjectNameFromPath(tc.Options["path"])
 	}
 
-	assetInfo := &asset.Asset{
+	assetObj := &asset.Asset{
 		Name:        "Terraform Static Analysis " + name,
 		Connections: []*transports.TransportConfig{tc},
 		State:       asset.State_STATE_ONLINE,
@@ -38,7 +38,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 	path, ok := tc.Options["path"]
 	if ok {
 		absPath, _ := filepath.Abs(path)
-		assetInfo.Labels["path"] = absPath
+		assetObj.Labels["path"] = absPath
 	}
 
 	m, err := resolver.NewMotorConnection(tc, cfn)
@@ -50,17 +50,17 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 	// determine platform information
 	p, err := m.Platform()
 	if err == nil {
-		assetInfo.Platform = p
+		assetObj.Platform = p
 	}
 
-	platformIds, assetMetadata, err := motorid.GatherIDs(m.Transport, p, userIdDetectors)
+	fingerprint, err := motorid.IdentifyPlatform(m.Transport, p, userIdDetectors)
 	if err != nil {
 		return nil, err
 	}
-	assetInfo.PlatformIds = platformIds
-	if assetMetadata.Name != "" {
-		assetInfo.Name = assetMetadata.Name
+	assetObj.PlatformIds = fingerprint.PlatformIDs
+	if fingerprint.Name != "" {
+		assetObj.Name = fingerprint.Name
 	}
 
-	return []*asset.Asset{assetInfo}, nil
+	return []*asset.Asset{assetObj}, nil
 }

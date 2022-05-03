@@ -21,19 +21,17 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 }
 
 func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
-	assetInfo := &asset.Asset{
+	assetObj := &asset.Asset{
 		State:       asset.State_STATE_ONLINE,
 		Connections: []*transports.TransportConfig{tc},
 	}
 
 	// use hostname as name if asset name was not explicitly provided
-	if assetInfo.Name == "" {
-		assetInfo.Name = tc.Host
+	if assetObj.Name == "" {
+		assetObj.Name = tc.Host
 	}
 
-	assetInfo.Connections = []*transports.TransportConfig{tc}
-
-	assetInfo.Platform = &platform.Platform{
+	assetObj.Platform = &platform.Platform{
 		Kind: transports.Kind_KIND_BARE_METAL,
 	}
 
@@ -46,25 +44,25 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 	// determine platform information
 	p, err := m.Platform()
 	if err == nil {
-		assetInfo.Platform = p
+		assetObj.Platform = p
 	}
 
-	platformIds, assetMetadata, err := motorid.GatherIDs(m.Transport, p, userIdDetectors)
+	fingerprint, err := motorid.IdentifyPlatform(m.Transport, p, userIdDetectors)
 	if err != nil {
 		return nil, err
 	}
-	assetInfo.PlatformIds = platformIds
-	if assetMetadata.Name != "" {
-		assetInfo.Name = assetMetadata.Name
+	assetObj.PlatformIds = fingerprint.PlatformIDs
+	if fingerprint.Name != "" {
+		assetObj.Name = fingerprint.Name
 	}
 
 	// use hostname as asset name
-	if p != nil && assetInfo.Name == "" {
+	if p != nil && assetObj.Name == "" {
 		// retrieve hostname
 		hostname, err := hostname.Hostname(m.Transport, p)
 		if err == nil && len(hostname) > 0 {
-			assetInfo.Name = hostname
+			assetObj.Name = hostname
 		}
 	}
-	return []*asset.Asset{assetInfo}, nil
+	return []*asset.Asset{assetObj}, nil
 }

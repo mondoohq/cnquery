@@ -314,8 +314,12 @@ func (t *SSHTransport) PlatformIdDetectors() []transports.PlatformIdDetector {
 }
 
 func (t *SSHTransport) Identifier() (string, error) {
-	fingerprint := ssh.FingerprintSHA256(t.HostKey)
+	return PlatformIdentifier(t.HostKey), nil
+}
+
+func PlatformIdentifier(publicKey ssh.PublicKey) string {
+	fingerprint := ssh.FingerprintSHA256(publicKey)
 	fingerprint = strings.Replace(fingerprint, ":", "-", 1)
 	identifier := "//platformid.api.mondoo.app/runtime/ssh/hostkey/" + fingerprint
-	return identifier, nil
+	return identifier
 }

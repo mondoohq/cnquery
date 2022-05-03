@@ -54,7 +54,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 
 	// add asset for the api itself
 	info := trans.Info()
-	assetInfo := &asset.Asset{
+	assetObj := &asset.Asset{
 		Name:        fmt.Sprintf("%s (%s)", tc.Host, info.Name),
 		Platform:    pf,
 		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
@@ -63,18 +63,18 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 			"vsphere.vmware.com/uuid": info.InstanceUuid,
 		},
 	}
-	platformIds, assetMetadata, err := motorid.GatherIDs(m.Transport, pf, nil)
+	fingerprint, err := motorid.IdentifyPlatform(m.Transport, pf, nil)
 	if err != nil {
 		return nil, err
 	}
-	assetInfo.PlatformIds = platformIds
-	if assetMetadata.Name != "" {
-		assetInfo.Name = assetMetadata.Name
+	assetObj.PlatformIds = fingerprint.PlatformIDs
+	if fingerprint.Name != "" {
+		assetObj.Name = fingerprint.Name
 	}
 
-	log.Debug().Strs("identifier", assetInfo.PlatformIds).Msg("motor connection")
+	log.Debug().Strs("identifier", assetObj.PlatformIds).Msg("motor connection")
 
-	resolved = append(resolved, assetInfo)
+	resolved = append(resolved, assetObj)
 
 	client := trans.Client()
 	discoveryClient := New(client)

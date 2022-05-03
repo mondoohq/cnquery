@@ -21,19 +21,19 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 }
 
 func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
-	assetInfo := &asset.Asset{
+	assetObj := &asset.Asset{
 		Connections: []*transports.TransportConfig{tc},
 		State:       asset.State_STATE_ONLINE,
 	}
 
-	if len(assetInfo.Connections[0].Credentials) == 0 {
-		cred, err := sfn(assetInfo)
+	if len(assetObj.Connections[0].Credentials) == 0 {
+		cred, err := sfn(assetObj)
 		if err != nil {
 			log.Debug().Err(err).Msg("could not determine credential for asset")
 			return nil, err
 		}
 		if cred != nil {
-			assetInfo.Connections[0].Credentials = append(assetInfo.Connections[0].Credentials, cred)
+			assetObj.Connections[0].Credentials = append(assetObj.Connections[0].Credentials, cred)
 		}
 	}
 
@@ -46,31 +46,31 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 	// determine platform information
 	p, err := m.Platform()
 	if err == nil {
-		assetInfo.Platform = p
+		assetObj.Platform = p
 	}
 
-	platformIds, assetMetadata, err := motorid.GatherIDs(m.Transport, p, userIdDetectors)
+	fingerprint, err := motorid.IdentifyPlatform(m.Transport, p, userIdDetectors)
 	if err != nil {
 		return nil, err
 	}
-	assetInfo.PlatformIds = platformIds
-	if assetMetadata.Name != "" {
-		assetInfo.Name = assetMetadata.Name
+	assetObj.PlatformIds = fingerprint.PlatformIDs
+	if fingerprint.Name != "" {
+		assetObj.Name = fingerprint.Name
 	}
 
 	// use hostname as asset name
-	if p != nil && assetInfo.Name == "" {
+	if p != nil && assetObj.Name == "" {
 		// retrieve hostname
 		hostname, err := hostname.Hostname(m.Transport, p)
 		if err == nil && len(hostname) > 0 {
-			assetInfo.Name = hostname
+			assetObj.Name = hostname
 		}
 	}
 
 	// use hostname as name if asset name was not explicitly provided
-	if assetInfo.Name == "" {
-		assetInfo.Name = tc.Host
+	if assetObj.Name == "" {
+		assetObj.Name = tc.Host
 	}
 
-	return []*asset.Asset{assetInfo}, nil
+	return []*asset.Asset{assetObj}, nil
 }
