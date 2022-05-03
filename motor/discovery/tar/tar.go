@@ -20,7 +20,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 }
 
 func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
-	assetInfo := &asset.Asset{
+	assetObj := &asset.Asset{
 		Connections: []*transports.TransportConfig{tc},
 		State:       asset.State_STATE_ONLINE,
 	}
@@ -34,24 +34,25 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 	// determine platform information
 	p, err := m.Platform()
 	if err == nil {
-		assetInfo.Platform = p
+		assetObj.Platform = p
 	}
 
-	platformIds, assetMetadata, err := motorid.GatherIDs(m.Transport, p, userIdDetectors)
+	fingerprint, err := motorid.IdentifyPlatform(m.Transport, p, userIdDetectors)
 	if err != nil {
 		return nil, err
 	}
-	assetInfo.PlatformIds = platformIds
-	if assetMetadata.Name != "" {
-		assetInfo.Name = assetMetadata.Name
+
+	assetObj.PlatformIds = fingerprint.PlatformIDs
+	if assetObj.Name != "" {
+		assetObj.Name = fingerprint.Name
 	}
 
-	log.Debug().Strs("identifier", assetInfo.PlatformIds).Msg("motor connection")
+	log.Debug().Strs("identifier", assetObj.PlatformIds).Msg("motor connection")
 
 	// use hostname as name if asset name was not explicitly provided
-	if assetInfo.Name == "" && tc.Options["path"] != "" {
-		assetInfo.Name = tc.Options["path"]
+	if assetObj.Name == "" && tc.Options["path"] != "" {
+		assetObj.Name = tc.Options["path"]
 	}
 
-	return []*asset.Asset{assetInfo}, nil
+	return []*asset.Asset{assetObj}, nil
 }

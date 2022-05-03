@@ -136,7 +136,7 @@ func newVagrantAsset(sshConfig *VagrantVmSSHConfig, rootTransportConfig *transpo
 	}
 	cc.AddCredential(credential)
 
-	assetInfo := &asset.Asset{
+	assetObj := &asset.Asset{
 		Name:        sshConfig.Host,
 		PlatformIds: []string{},
 		Connections: []*transports.TransportConfig{cc},
@@ -156,16 +156,16 @@ func newVagrantAsset(sshConfig *VagrantVmSSHConfig, rootTransportConfig *transpo
 		return nil, err
 	}
 
-	platformIds, assetMetadata, err := motorid.GatherIDs(m.Transport, p, nil)
+	fingerprint, err := motorid.IdentifyPlatform(m.Transport, p, nil)
 	if err != nil {
 		return nil, err
 	}
-	assetInfo.PlatformIds = platformIds
-	if assetMetadata.Name != "" {
-		assetInfo.Name = assetMetadata.Name
+	assetObj.PlatformIds = fingerprint.PlatformIDs
+	if fingerprint.Name != "" {
+		assetObj.Name = fingerprint.Name
 	}
 
-	log.Debug().Strs("identifier", assetInfo.PlatformIds).Msg("motor connection")
+	log.Debug().Strs("identifier", assetObj.PlatformIds).Msg("motor connection")
 
-	return assetInfo, nil
+	return assetObj, nil
 }
