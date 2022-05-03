@@ -969,6 +969,10 @@ resources:
       instanceType: {}
       launchTime: {}
       patchState: {}
+      privateDnsName:
+        min_mondoo_version: 5.37.0
+      privateIp:
+        min_mondoo_version: 5.37.0
       publicDnsName: {}
       publicIp: {}
       region: {}
@@ -4217,6 +4221,8 @@ resources:
       family: {}
       fqdn: {}
       kind: {}
+      labels:
+        min_mondoo_version: 5.37.0
       name: {}
       release: {}
       runtimeEnv: {}
