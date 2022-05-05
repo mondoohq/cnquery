@@ -209,7 +209,7 @@ func (c *LeiseExecutorV1) Unregister() error {
 }
 
 func (c *LeiseExecutorV1) runFunctionBlock(args []*RawData, code *CodeV1, cb ResultCallback) error {
-	executor, err := NewExecutorV1(code, c.runtime, c.props, cb)
+	executor, err := NewExecutorV1(code, c.runtime, c.props, reportOnceSync(cb))
 	if err != nil {
 		return err
 	}
