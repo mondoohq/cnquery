@@ -325,8 +325,21 @@ func (b *blockExecutor) ensureArgsResolved(args []*Primitive, ref uint64) (uint6
 	return 0, nil
 }
 
+func reportOnceSync(cb ResultCallback) ResultCallback {
+	lock := sync.Mutex{}
+	m := map[string]struct{}{}
+	return func(rr *RawResult) {
+		lock.Lock()
+		defer lock.Unlock()
+		if _, exist := m[rr.CodeID]; !exist {
+			m[rr.CodeID] = struct{}{}
+			cb(rr)
+		}
+	}
+}
+
 func (b *blockExecutor) runFunctionBlock(args []*RawData, blockRef uint64, cb ResultCallback) error {
-	executor, err := b.newBlockExecutor(blockRef, cb)
+	executor, err := b.newBlockExecutor(blockRef, reportOnceSync(cb))
 	if err != nil {
 		return err
 	}
