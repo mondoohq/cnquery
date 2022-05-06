@@ -16,7 +16,7 @@ const (
 	InstanceLabel       string = "mondoo.com/instance"
 	EBSScanLabel        string = "mondoo.com/ebs-volume-scan"
 	PlatformLabel       string = "mondoo.com/platform"
-	StateLabel          string = "mondoo.com`/instance-state"
+	StateLabel          string = "mondoo.com/instance-state"
 )
 
 func addAWSMetadataLabels(assetLabels map[string]string, instance basicInstanceInfo) map[string]string {
