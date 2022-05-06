@@ -208,6 +208,108 @@ func (c *LeiseExecutorV1) Unregister() error {
 	return nil
 }
 
+type arrayBlockCallResults struct {
+	lock                 sync.Mutex
+	results              []*RawData
+	errors               []error
+	waiting              []int
+	code                 *CodeV1
+	unfinishedBlockCalls int
+	onComplete           func([]*RawData, []error)
+	codepoints           map[string]struct{}
+}
+
+func newArrayBlockCallResults(expectedBlockCalls int, excludeDatapoints bool, code *CodeV1, onComplete func([]*RawData, []error)) *arrayBlockCallResults {
+	results := make([]*RawData, expectedBlockCalls)
+	waiting := make([]int, expectedBlockCalls)
+
+	codepoints := map[string]struct{}{}
+	for _, ep := range code.Entrypoints {
+		checksum := code.Checksums[ep]
+		codepoints[checksum] = struct{}{}
+	}
+
+	if !excludeDatapoints {
+		for _, dp := range code.Datapoints {
+			checksum := code.Checksums[dp]
+			codepoints[checksum] = struct{}{}
+		}
+	}
+
+	expectedCodepoints := len(codepoints)
+	for i := range waiting {
+		waiting[i] = expectedCodepoints
+	}
+
+	for i := range results {
+		results[i] = &RawData{
+			Type:  types.Block,
+			Value: map[string]interface{}{},
+		}
+	}
+
+	return &arrayBlockCallResults{
+		lock:                 sync.Mutex{},
+		results:              results,
+		waiting:              waiting,
+		code:                 code,
+		unfinishedBlockCalls: expectedBlockCalls,
+		onComplete:           onComplete,
+		codepoints:           codepoints,
+	}
+}
+
+func (a *arrayBlockCallResults) update(i int, res *RawResult) {
+	a.lock.Lock()
+	defer a.lock.Unlock()
+
+	if a.unfinishedBlockCalls == 0 {
+		return
+	}
+
+	if _, isEntrypoint := a.codepoints[res.CodeID]; !isEntrypoint {
+		return
+	}
+
+	m := a.results[i].Value.(map[string]interface{})
+	if _, exist := m[res.CodeID]; !exist {
+		m[res.CodeID] = res.Data
+		if res.Data.Error != nil {
+			a.errors = append(a.errors, res.Data.Error)
+		}
+		a.waiting[i]--
+		if a.waiting[i] == 0 {
+			a.unfinishedBlockCalls--
+		}
+		if a.unfinishedBlockCalls == 0 {
+			a.onComplete(a.results, a.errors)
+
+			// a.onComplete must only be called once. Its better if we crash
+			// than call it twice
+			a.onComplete = nil
+		}
+	}
+}
+
+func (c *LeiseExecutorV1) runFunctionBlocks(argList [][]*RawData, excludeDatapoints bool, code *CodeV1,
+	onComplete func([]*RawData, []error)) error {
+
+	callResults := newArrayBlockCallResults(len(argList), excludeDatapoints, code, onComplete)
+
+	for idx := range argList {
+		i := idx
+		args := argList[i]
+		err := c.runFunctionBlock(args, code, func(rr *RawResult) {
+			callResults.update(i, rr)
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (c *LeiseExecutorV1) runFunctionBlock(args []*RawData, code *CodeV1, cb ResultCallback) error {
 	executor, err := NewExecutorV1(code, c.runtime, c.props, reportOnceSync(cb))
 	if err != nil {
@@ -245,8 +347,6 @@ func (c *LeiseExecutorV1) runBlock(bind *RawData, functionRef *Primitive, args [
 		return nil, 0, errors.New("block function is nil")
 	}
 
-	blockResult := map[string]interface{}{}
-
 	fargs := []*RawData{}
 	if bind != nil {
 		fargs = append(fargs, bind)
@@ -259,45 +359,50 @@ func (c *LeiseExecutorV1) runBlock(bind *RawData, functionRef *Primitive, args [
 		fargs = append(fargs, a)
 	}
 
-	var anyError error
-	err := c.runFunctionBlock(fargs, fun, func(res *RawResult) {
-		if fun.SingleValue {
-			c.cache.Store(ref, &stepCache{
-				Result: res.Data,
-			})
-			c.triggerChain(ref, res.Data)
-			return
+	err := c.runFunctionBlocks([][]*RawData{fargs}, false, fun, func(results []*RawData, errs []error) {
+		var anyError error
+		blockResult := map[string]interface{}{}
+		if len(errs) > 0 {
+			anyError = multierror.Append(anyError, errs...)
+		}
+		if len(results) > 0 {
+			resMap := results[0].Value.(map[string]interface{})
+			if fun.SingleValue {
+				res := resMap[fun.Checksums[fun.Entrypoints[0]]].(*RawData)
+				c.cache.Store(ref, &stepCache{
+					Result: res,
+				})
+				c.triggerChain(ref, res)
+				return
+			}
+
+			for k, v := range resMap {
+				blockResult[k] = v
+			}
 		}
 
-		if _, exists := blockResult[res.CodeID]; !exists && res.Data.Error != nil {
-			anyError = multierror.Append(anyError, res.Data.Error)
-		}
-		blockResult[res.CodeID] = res.Data
-		expectedCnt := len(fun.Entrypoints) + len(fun.Datapoints)
-		if len(blockResult) == expectedCnt {
-			if bind != nil && bind.Type.IsResource() {
-				rr, ok := bind.Value.(lumi.ResourceType)
-				if !ok {
-					log.Warn().Msg("cannot cast resource to resource type")
-				} else {
-					blockResult["_"] = &RawData{
-						Type:  bind.Type,
-						Value: rr,
-					}
+		if bind != nil && bind.Type.IsResource() {
+			rr, ok := bind.Value.(lumi.ResourceType)
+			if !ok {
+				log.Warn().Msg("cannot cast resource to resource type")
+			} else {
+				blockResult["_"] = &RawData{
+					Type:  bind.Type,
+					Value: rr,
 				}
 			}
-
-			data := &RawData{
-				Type:  types.Block,
-				Value: blockResult,
-				Error: anyError,
-			}
-			c.cache.Store(ref, &stepCache{
-				Result:   data,
-				IsStatic: true,
-			})
-			c.triggerChain(ref, data)
 		}
+
+		data := &RawData{
+			Type:  types.Block,
+			Value: blockResult,
+			Error: anyError,
+		}
+		c.cache.Store(ref, &stepCache{
+			Result:   data,
+			IsStatic: true,
+		})
+		c.triggerChain(ref, data)
 	})
 
 	return nil, 0, err
