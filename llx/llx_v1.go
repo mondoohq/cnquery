@@ -242,7 +242,7 @@ func (a arrayBlockCallResult) isTruthy() bool {
 	return isT
 }
 
-type arrayBlockCallResults struct {
+type arrayBlockCallResultsV1 struct {
 	lock                 sync.Mutex
 	results              []arrayBlockCallResult
 	errors               []error
@@ -255,7 +255,7 @@ type arrayBlockCallResults struct {
 	datapoints           map[string]struct{}
 }
 
-func newArrayBlockCallResults(expectedBlockCalls int, code *CodeV1, onComplete func([]arrayBlockCallResult, []error)) *arrayBlockCallResults {
+func newArrayBlockCallResultsV1(expectedBlockCalls int, code *CodeV1, onComplete func([]arrayBlockCallResult, []error)) *arrayBlockCallResultsV1 {
 	results := make([]arrayBlockCallResult, expectedBlockCalls)
 	waiting := make([]int, expectedBlockCalls)
 
@@ -286,7 +286,7 @@ func newArrayBlockCallResults(expectedBlockCalls int, code *CodeV1, onComplete f
 		}
 	}
 
-	return &arrayBlockCallResults{
+	return &arrayBlockCallResultsV1{
 		lock:                 sync.Mutex{},
 		results:              results,
 		waiting:              waiting,
@@ -299,7 +299,7 @@ func newArrayBlockCallResults(expectedBlockCalls int, code *CodeV1, onComplete f
 	}
 }
 
-func (a *arrayBlockCallResults) update(i int, res *RawResult) {
+func (a *arrayBlockCallResultsV1) update(i int, res *RawResult) {
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
@@ -341,7 +341,7 @@ func (a *arrayBlockCallResults) update(i int, res *RawResult) {
 func (c *LeiseExecutorV1) runFunctionBlocks(argList [][]*RawData, code *CodeV1,
 	onComplete func([]arrayBlockCallResult, []error)) error {
 
-	callResults := newArrayBlockCallResults(len(argList), code, onComplete)
+	callResults := newArrayBlockCallResultsV1(len(argList), code, onComplete)
 
 	for idx := range argList {
 		i := idx
