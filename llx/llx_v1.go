@@ -208,32 +208,70 @@ func (c *LeiseExecutorV1) Unregister() error {
 	return nil
 }
 
+type arrayBlockCallResult struct {
+	entrypoints map[string]interface{}
+	datapoints  map[string]interface{}
+}
+
+func (a arrayBlockCallResult) toRawData() *RawData {
+	v := make(map[string]interface{}, len(a.entrypoints)+len(a.datapoints))
+	for checksum, res := range a.entrypoints {
+		v[checksum] = res
+	}
+
+	for checksum, res := range a.datapoints {
+		v[checksum] = res
+	}
+
+	return &RawData{
+		Type:  types.Block,
+		Value: v,
+	}
+}
+
+func (a arrayBlockCallResult) isTruthy() bool {
+	v := make(map[string]interface{}, len(a.entrypoints))
+	for checksum, res := range a.entrypoints {
+		v[checksum] = res
+	}
+	rd := &RawData{
+		Type:  types.Block,
+		Value: v,
+	}
+	isT, _ := rd.IsTruthy()
+	return isT
+}
+
 type arrayBlockCallResults struct {
 	lock                 sync.Mutex
-	results              []*RawData
+	results              []arrayBlockCallResult
 	errors               []error
 	waiting              []int
 	code                 *CodeV1
 	unfinishedBlockCalls int
-	onComplete           func([]*RawData, []error)
+	onComplete           func([]arrayBlockCallResult, []error)
 	codepoints           map[string]struct{}
+	entrypoints          map[string]struct{}
+	datapoints           map[string]struct{}
 }
 
-func newArrayBlockCallResults(expectedBlockCalls int, excludeDatapoints bool, code *CodeV1, onComplete func([]*RawData, []error)) *arrayBlockCallResults {
-	results := make([]*RawData, expectedBlockCalls)
+func newArrayBlockCallResults(expectedBlockCalls int, code *CodeV1, onComplete func([]arrayBlockCallResult, []error)) *arrayBlockCallResults {
+	results := make([]arrayBlockCallResult, expectedBlockCalls)
 	waiting := make([]int, expectedBlockCalls)
 
 	codepoints := map[string]struct{}{}
+	entrypoints := map[string]struct{}{}
 	for _, ep := range code.Entrypoints {
 		checksum := code.Checksums[ep]
 		codepoints[checksum] = struct{}{}
+		entrypoints[checksum] = struct{}{}
 	}
 
-	if !excludeDatapoints {
-		for _, dp := range code.Datapoints {
-			checksum := code.Checksums[dp]
-			codepoints[checksum] = struct{}{}
-		}
+	datapoints := map[string]struct{}{}
+	for _, dp := range code.Datapoints {
+		checksum := code.Checksums[dp]
+		codepoints[checksum] = struct{}{}
+		datapoints[checksum] = struct{}{}
 	}
 
 	expectedCodepoints := len(codepoints)
@@ -242,9 +280,9 @@ func newArrayBlockCallResults(expectedBlockCalls int, excludeDatapoints bool, co
 	}
 
 	for i := range results {
-		results[i] = &RawData{
-			Type:  types.Block,
-			Value: map[string]interface{}{},
+		results[i] = arrayBlockCallResult{
+			entrypoints: map[string]interface{}{},
+			datapoints:  map[string]interface{}{},
 		}
 	}
 
@@ -256,6 +294,8 @@ func newArrayBlockCallResults(expectedBlockCalls int, excludeDatapoints bool, co
 		unfinishedBlockCalls: expectedBlockCalls,
 		onComplete:           onComplete,
 		codepoints:           codepoints,
+		entrypoints:          entrypoints,
+		datapoints:           datapoints,
 	}
 }
 
@@ -267,11 +307,16 @@ func (a *arrayBlockCallResults) update(i int, res *RawResult) {
 		return
 	}
 
-	if _, isEntrypoint := a.codepoints[res.CodeID]; !isEntrypoint {
+	var m map[string]interface{}
+
+	if _, isEntrypoint := a.entrypoints[res.CodeID]; isEntrypoint {
+		m = a.results[i].entrypoints
+	} else if _, isDatapoint := a.datapoints[res.CodeID]; isDatapoint {
+		m = a.results[i].datapoints
+	} else {
 		return
 	}
 
-	m := a.results[i].Value.(map[string]interface{})
 	if _, exist := m[res.CodeID]; !exist {
 		m[res.CodeID] = res.Data
 		if res.Data.Error != nil {
@@ -291,10 +336,10 @@ func (a *arrayBlockCallResults) update(i int, res *RawResult) {
 	}
 }
 
-func (c *LeiseExecutorV1) runFunctionBlocks(argList [][]*RawData, excludeDatapoints bool, code *CodeV1,
-	onComplete func([]*RawData, []error)) error {
+func (c *LeiseExecutorV1) runFunctionBlocks(argList [][]*RawData, code *CodeV1,
+	onComplete func([]arrayBlockCallResult, []error)) error {
 
-	callResults := newArrayBlockCallResults(len(argList), excludeDatapoints, code, onComplete)
+	callResults := newArrayBlockCallResults(len(argList), code, onComplete)
 
 	for idx := range argList {
 		i := idx
@@ -359,16 +404,15 @@ func (c *LeiseExecutorV1) runBlock(bind *RawData, functionRef *Primitive, args [
 		fargs = append(fargs, a)
 	}
 
-	err := c.runFunctionBlocks([][]*RawData{fargs}, false, fun, func(results []*RawData, errs []error) {
+	err := c.runFunctionBlocks([][]*RawData{fargs}, fun, func(results []arrayBlockCallResult, errs []error) {
 		var anyError error
 		blockResult := map[string]interface{}{}
 		if len(errs) > 0 {
 			anyError = multierror.Append(anyError, errs...)
 		}
 		if len(results) > 0 {
-			resMap := results[0].Value.(map[string]interface{})
 			if fun.SingleValue {
-				res := resMap[fun.Checksums[fun.Entrypoints[0]]].(*RawData)
+				res := results[0].entrypoints[fun.Checksums[fun.Entrypoints[0]]].(*RawData)
 				c.cache.Store(ref, &stepCache{
 					Result: res,
 				})
@@ -376,7 +420,10 @@ func (c *LeiseExecutorV1) runBlock(bind *RawData, functionRef *Primitive, args [
 				return
 			}
 
-			for k, v := range resMap {
+			for k, v := range results[0].entrypoints {
+				blockResult[k] = v
+			}
+			for k, v := range results[0].datapoints {
 				blockResult[k] = v
 			}
 		}

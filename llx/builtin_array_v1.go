@@ -130,12 +130,12 @@ func arrayBlockListV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32
 		}
 	}
 
-	err := c.runFunctionBlocks(argList, false, fun, func(results []*RawData, errors []error) {
+	err := c.runFunctionBlocks(argList, fun, func(results []arrayBlockCallResult, errors []error) {
 		var anyError error
 		allResults := make([]interface{}, len(arr))
 
 		for i, rd := range results {
-			allResults[i] = rd.Value
+			allResults[i] = rd.toRawData().Value
 		}
 		if len(errors) > 0 {
 			// This is quite heavy handed. If any of the block calls have an error, the whole
@@ -253,10 +253,10 @@ func _arrayWhereV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32, i
 		}
 	}
 
-	err = c.runFunctionBlocks(argsList, true, f, func(results []*RawData, errors []error) {
+	err = c.runFunctionBlocks(argsList, f, func(results []arrayBlockCallResult, errors []error) {
 		resList := []interface{}{}
-		for i, rd := range results {
-			isTruthy, _ := rd.IsTruthy()
+		for i, res := range results {
+			isTruthy := res.isTruthy()
 			if isTruthy == !invert {
 				resList = append(resList, list[i])
 			}
@@ -378,19 +378,16 @@ func arrayMapV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*Ra
 			},
 		}
 	}
-	err = c.runFunctionBlocks(argsList, true, f, func(results []*RawData, errors []error) {
+	err = c.runFunctionBlocks(argsList, f, func(results []arrayBlockCallResult, errors []error) {
 		mappedType := types.Unset
 		resList := []interface{}{}
 		epChecksum := f.Checksums[f.Entrypoints[0]]
 
-		for _, rd := range results {
-			if rd.Error == nil {
-				blockVals := rd.Value.(map[string]interface{})
-				if _, ok := blockVals[epChecksum]; ok {
-					epVal := blockVals[epChecksum].(*RawData)
-					mappedType = epVal.Type
-					resList = append(resList, epVal.Value)
-				}
+		for _, res := range results {
+			if epValIface, ok := res.entrypoints[epChecksum]; ok {
+				epVal := epValIface.(*RawData)
+				mappedType = epVal.Type
+				resList = append(resList, epVal.Value)
 			}
 		}
 
@@ -454,18 +451,18 @@ func arrayFieldDuplicatesV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref
 		}
 	}
 
-	err = c.runFunctionBlocks(argsList, true, f, func(results []*RawData, err []error) {
+	err = c.runFunctionBlocks(argsList, f, func(results []arrayBlockCallResult, err []error) {
 		epChecksum := f.Checksums[f.Entrypoints[0]]
 		filteredList := map[int]*RawData{}
 
-		for i, rd := range results {
+		for i, res := range results {
+			rd := res.toRawData()
 			if rd.Error != nil {
 				filteredList[i] = &RawData{
 					Error: rd.Error,
 				}
 			} else {
-				blockVals := rd.Value.(map[string]interface{})
-				epVal := blockVals[epChecksum].(*RawData)
+				epVal := res.entrypoints[epChecksum].(*RawData)
 				filteredList[i] = epVal
 			}
 		}
