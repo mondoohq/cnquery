@@ -303,37 +303,39 @@ func (a *arrayBlockCallResults) update(i int, res *RawResult) {
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
-	if a.unfinishedBlockCalls == 0 {
+	_, isEntrypoint := a.entrypoints[res.CodeID]
+	_, isDatapoint := a.datapoints[res.CodeID]
+
+	if !(isEntrypoint || isDatapoint) {
 		return
 	}
 
-	var m map[string]interface{}
+	_, hasEntrypointResult := a.results[i].entrypoints[res.CodeID]
+	_, hasDatapointResult := a.results[i].datapoints[res.CodeID]
 
-	if _, isEntrypoint := a.entrypoints[res.CodeID]; isEntrypoint {
-		m = a.results[i].entrypoints
-	} else if _, isDatapoint := a.datapoints[res.CodeID]; isDatapoint {
-		m = a.results[i].datapoints
-	} else {
-		return
-	}
-
-	if _, exist := m[res.CodeID]; !exist {
-		m[res.CodeID] = res.Data
-		if res.Data.Error != nil {
-			a.errors = append(a.errors, res.Data.Error)
-		}
+	if !(hasEntrypointResult || hasDatapointResult) {
 		a.waiting[i]--
 		if a.waiting[i] == 0 {
 			a.unfinishedBlockCalls--
 		}
-		if a.unfinishedBlockCalls == 0 {
-			a.onComplete(a.results, a.errors)
-
-			// a.onComplete must only be called once. Its better if we crash
-			// than call it twice
-			a.onComplete = nil
-		}
 	}
+
+	if isEntrypoint {
+		a.results[i].entrypoints[res.CodeID] = res.Data
+	}
+
+	if isDatapoint {
+		a.results[i].datapoints[res.CodeID] = res.Data
+	}
+
+	if res.Data.Error != nil {
+		a.errors = append(a.errors, res.Data.Error)
+	}
+
+	if a.unfinishedBlockCalls == 0 {
+		a.onComplete(a.results, a.errors)
+	}
+
 }
 
 func (c *LeiseExecutorV1) runFunctionBlocks(argList [][]*RawData, code *CodeV1,
@@ -356,7 +358,7 @@ func (c *LeiseExecutorV1) runFunctionBlocks(argList [][]*RawData, code *CodeV1,
 }
 
 func (c *LeiseExecutorV1) runFunctionBlock(args []*RawData, code *CodeV1, cb ResultCallback) error {
-	executor, err := NewExecutorV1(code, c.runtime, c.props, reportOnceSync(cb))
+	executor, err := NewExecutorV1(code, c.runtime, c.props, reportSync(cb))
 	if err != nil {
 		return err
 	}
