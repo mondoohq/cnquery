@@ -45,11 +45,11 @@ func _resourceWhereV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32
 		}
 	}
 
-	err = c.runFunctionBlocks(argsList, true, f, func(results []*RawData, errs []error) {
+	err = c.runFunctionBlocks(argsList, f, func(results []arrayBlockCallResult, errs []error) {
 		resList := []interface{}{}
 
-		for i, rd := range results {
-			isTruthy, _ := rd.IsTruthy()
+		for i, res := range results {
+			isTruthy := res.isTruthy()
 			if isTruthy == !invert {
 				resList = append(resList, list[i])
 			}
@@ -138,19 +138,16 @@ func resourceMapV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (
 		}
 	}
 
-	err = c.runFunctionBlocks(argsList, true, f, func(results []*RawData, errors []error) {
+	err = c.runFunctionBlocks(argsList, f, func(results []arrayBlockCallResult, errs []error) {
 		mappedType := types.Unset
 		resList := []interface{}{}
 		epChecksum := f.Checksums[f.Entrypoints[0]]
 
-		for _, rd := range results {
-			if rd.Error == nil {
-				blockVals := rd.Value.(map[string]interface{})
-				if _, ok := blockVals[epChecksum]; ok {
-					epVal := blockVals[epChecksum].(*RawData)
-					mappedType = epVal.Type
-					resList = append(resList, epVal.Value)
-				}
+		for _, res := range results {
+			if epValIface, ok := res.entrypoints[epChecksum]; ok {
+				epVal := epValIface.(*RawData)
+				mappedType = epVal.Type
+				resList = append(resList, epVal.Value)
 			}
 		}
 
