@@ -77,6 +77,7 @@ type LeiseExecutorV1 struct {
 	entrypoints    map[int32]struct{}
 	callbackPoints map[int32]string
 	callback       ResultCallback
+	unregisterFunc func()
 	cache          *CacheV1
 	stepTracker    *CacheV1
 	calls          *CallsV1
@@ -86,6 +87,23 @@ type LeiseExecutorV1 struct {
 
 func (c *LeiseExecutorV1) watcherUID(ref int32) string {
 	return c.id + "\x00" + strconv.FormatInt(int64(ref), 10)
+}
+
+func unregistrableCallback(cb ResultCallback) (ResultCallback, func()) {
+	locker := sync.RWMutex{}
+	unregistered := false
+	wrapped := func(rr *RawResult) {
+		locker.RLock()
+		defer locker.RUnlock()
+		if !unregistered {
+			cb(rr)
+		}
+	}
+	return wrapped, func() {
+		locker.Lock()
+		defer locker.Unlock()
+		unregistered = true
+	}
 }
 
 // NewExecutor will create a code runner from code, running in a runtime, calling
@@ -99,13 +117,16 @@ func NewExecutorV1(code *CodeV1, runtime *lumi.Runtime, props map[string]*Primit
 		return nil, errors.New("cannot RunChunky without code")
 	}
 
+	wrappedCallback, unregisterFunc := unregistrableCallback(callback)
+
 	res := &LeiseExecutorV1{
 		id:             uuid.Must(uuid.NewV4()).String(),
 		runtime:        runtime,
 		entrypoints:    make(map[int32]struct{}),
 		callbackPoints: make(map[int32]string),
 		code:           code,
-		callback:       callback,
+		callback:       wrappedCallback,
+		unregisterFunc: unregisterFunc,
 		cache:          &CacheV1{},
 		stepTracker:    &CacheV1{},
 		calls: &CallsV1{
@@ -180,10 +201,8 @@ func (c *LeiseExecutorV1) NoRun(err error) {
 // Unregister an execution chain from receiving any further updates
 func (c *LeiseExecutorV1) Unregister() error {
 	log.Trace().Str("id", c.id).Msg("exec> unregister")
-	// clear out the callback, we don't want it to be called now anymore
-	c.callback = func(r *RawResult) {
-		log.Debug().Str("id", c.id).Str("codeID", r.CodeID).Msg("exec> Decomissioned callback called on exec.LeiseExecutorV1")
-	}
+
+	c.unregisterFunc()
 
 	errorList := []error{}
 
