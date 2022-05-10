@@ -334,6 +334,71 @@ func reportSync(cb ResultCallback) ResultCallback {
 	}
 }
 
+func newArrayBlockCallResultsV2(expectedBlockCalls int, code *CodeV2, blockRef uint64, onComplete func([]arrayBlockCallResult, []error)) *arrayBlockCallResults {
+	results := make([]arrayBlockCallResult, expectedBlockCalls)
+	waiting := make([]int, expectedBlockCalls)
+
+	codepoints := map[string]struct{}{}
+	entrypoints := map[string]struct{}{}
+
+	b := code.Block(blockRef)
+
+	for _, ep := range b.Entrypoints {
+		checksum := code.Checksums[ep]
+		codepoints[checksum] = struct{}{}
+		entrypoints[checksum] = struct{}{}
+	}
+
+	datapoints := map[string]struct{}{}
+	for _, dp := range b.Datapoints {
+		checksum := code.Checksums[dp]
+		codepoints[checksum] = struct{}{}
+		datapoints[checksum] = struct{}{}
+	}
+
+	expectedCodepoints := len(codepoints)
+	for i := range waiting {
+		waiting[i] = expectedCodepoints
+	}
+
+	for i := range results {
+		results[i] = arrayBlockCallResult{
+			entrypoints: map[string]interface{}{},
+			datapoints:  map[string]interface{}{},
+		}
+	}
+
+	return &arrayBlockCallResults{
+		lock:                 sync.Mutex{},
+		results:              results,
+		waiting:              waiting,
+		unfinishedBlockCalls: expectedBlockCalls,
+		onComplete:           onComplete,
+		codepoints:           codepoints,
+		entrypoints:          entrypoints,
+		datapoints:           datapoints,
+	}
+}
+
+func (c *blockExecutor) runFunctionBlocks(argList [][]*RawData, blockRef uint64,
+	onComplete func([]arrayBlockCallResult, []error)) error {
+
+	callResults := newArrayBlockCallResultsV2(len(argList), c.ctx.code, blockRef, onComplete)
+
+	for idx := range argList {
+		i := idx
+		args := argList[i]
+		err := c.runFunctionBlock(args, blockRef, func(rr *RawResult) {
+			callResults.update(i, rr)
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (b *blockExecutor) runFunctionBlock(args []*RawData, blockRef uint64, cb ResultCallback) error {
 	executor, err := b.newBlockExecutor(blockRef, reportSync(cb))
 	if err != nil {
@@ -377,8 +442,6 @@ func (b *blockExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*
 		return nil, 0, errors.New("block function is nil")
 	}
 
-	blockResult := map[string]interface{}{}
-
 	fargs := []*RawData{}
 	if bind != nil {
 		fargs = append(fargs, bind)
@@ -391,45 +454,53 @@ func (b *blockExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*
 		fargs = append(fargs, a)
 	}
 
-	var anyError error
-	err := b.runFunctionBlock(fargs, fref, func(res *RawResult) {
-		if block.SingleValue {
-			b.cache.Store(ref, &stepCache{
-				Result: res.Data,
-			})
-			b.triggerChain(ref, res.Data)
-			return
+	err := b.runFunctionBlocks([][]*RawData{fargs}, fref, func(results []arrayBlockCallResult, errs []error) {
+		var anyError error
+		blockResult := map[string]interface{}{}
+		if len(errs) > 0 {
+			anyError = multierror.Append(anyError, errs...)
+		}
+		if len(results) > 0 {
+			fun := b.ctx.code.Block(fref)
+			if fun.SingleValue {
+				res := results[0].entrypoints[b.ctx.code.Checksums[fun.Entrypoints[0]]].(*RawData)
+				b.cache.Store(ref, &stepCache{
+					Result: res,
+				})
+				b.triggerChain(ref, res)
+				return
+			}
+
+			for k, v := range results[0].entrypoints {
+				blockResult[k] = v
+			}
+			for k, v := range results[0].datapoints {
+				blockResult[k] = v
+			}
 		}
 
-		if _, exists := blockResult[res.CodeID]; !exists && res.Data.Error != nil {
-			anyError = multierror.Append(anyError, res.Data.Error)
-		}
-		blockResult[res.CodeID] = res.Data
-		expectedCnt := len(block.Entrypoints) + len(block.Datapoints)
-		if len(blockResult) == expectedCnt {
-			if bind != nil && bind.Type.IsResource() {
-				rr, ok := bind.Value.(lumi.ResourceType)
-				if !ok {
-					log.Warn().Msg("cannot cast resource to resource type")
-				} else {
-					blockResult["_"] = &RawData{
-						Type:  bind.Type,
-						Value: rr,
-					}
+		if bind != nil && bind.Type.IsResource() {
+			rr, ok := bind.Value.(lumi.ResourceType)
+			if !ok {
+				log.Warn().Msg("cannot cast resource to resource type")
+			} else {
+				blockResult["_"] = &RawData{
+					Type:  bind.Type,
+					Value: rr,
 				}
 			}
-
-			data := &RawData{
-				Type:  types.Block,
-				Value: blockResult,
-				Error: anyError,
-			}
-			b.cache.Store(ref, &stepCache{
-				Result:   data,
-				IsStatic: true,
-			})
-			b.triggerChain(ref, data)
 		}
+
+		data := &RawData{
+			Type:  types.Block,
+			Value: blockResult,
+			Error: anyError,
+		}
+		b.cache.Store(ref, &stepCache{
+			Result:   data,
+			IsStatic: true,
+		})
+		b.triggerChain(ref, data)
 	})
 
 	return nil, 0, err

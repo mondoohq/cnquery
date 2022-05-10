@@ -97,46 +97,45 @@ func _mapWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, inve
 	}
 
 	valueType := items.Type.Child()
-	resMap := map[string]interface{}{}
-	found := map[string]struct{}{}
-	finishedResults := 0
-	l := sync.Mutex{}
-	for it := range list {
-		key := it
-		err := e.runFunctionBlock([]*RawData{{Type: types.String, Value: key}, {Type: valueType, Value: list[key]}}, fref, func(res *RawResult) {
-			done := func() bool {
-				l.Lock()
-				defer l.Unlock()
 
-				if _, ok := found[key]; ok {
-					return false
-				}
-				found[key] = struct{}{}
-				finishedResults++
-
-				isTruthy, _ := res.Data.IsTruthy()
-				if isTruthy == !invert {
-					resMap[key] = list[key]
-				}
-
-				return finishedResults == len(list)
-			}()
-
-			if done {
-				data := &RawData{
-					Type:  bind.Type,
-					Value: resMap,
-				}
-				e.cache.Store(ref, &stepCache{
-					Result:   data,
-					IsStatic: false,
-				})
-				e.triggerChain(ref, data)
-			}
-		})
-		if err != nil {
-			return nil, 0, err
+	argsList := make([][]*RawData, len(list))
+	i := 0
+	for key, value := range list {
+		argsList[i] = []*RawData{
+			{
+				Type:  types.String,
+				Value: key,
+			},
+			{
+				Type:  valueType,
+				Value: value,
+			},
 		}
+		i++
+	}
+
+	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
+		resMap := map[string]interface{}{}
+		for i, res := range results {
+
+			if res.isTruthy() == !invert {
+				key := argsList[i][0].Value.(string)
+				resMap[key] = list[key]
+			}
+		}
+		data := &RawData{
+			Type:  bind.Type,
+			Value: resMap,
+		}
+		e.cache.Store(ref, &stepCache{
+			Result:   data,
+			IsStatic: false,
+		})
+		e.triggerChain(ref, data)
+	})
+
+	if err != nil {
+		return nil, 0, err
 	}
 
 	return nil, 0, nil
