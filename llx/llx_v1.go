@@ -242,12 +242,11 @@ func (a arrayBlockCallResult) isTruthy() bool {
 	return isT
 }
 
-type arrayBlockCallResultsV1 struct {
+type arrayBlockCallResults struct {
 	lock                 sync.Mutex
 	results              []arrayBlockCallResult
 	errors               []error
 	waiting              []int
-	code                 *CodeV1
 	unfinishedBlockCalls int
 	onComplete           func([]arrayBlockCallResult, []error)
 	codepoints           map[string]struct{}
@@ -255,7 +254,7 @@ type arrayBlockCallResultsV1 struct {
 	datapoints           map[string]struct{}
 }
 
-func newArrayBlockCallResultsV1(expectedBlockCalls int, code *CodeV1, onComplete func([]arrayBlockCallResult, []error)) *arrayBlockCallResultsV1 {
+func newArrayBlockCallResultsV1(expectedBlockCalls int, code *CodeV1, onComplete func([]arrayBlockCallResult, []error)) *arrayBlockCallResults {
 	results := make([]arrayBlockCallResult, expectedBlockCalls)
 	waiting := make([]int, expectedBlockCalls)
 
@@ -286,11 +285,10 @@ func newArrayBlockCallResultsV1(expectedBlockCalls int, code *CodeV1, onComplete
 		}
 	}
 
-	return &arrayBlockCallResultsV1{
+	return &arrayBlockCallResults{
 		lock:                 sync.Mutex{},
 		results:              results,
 		waiting:              waiting,
-		code:                 code,
 		unfinishedBlockCalls: expectedBlockCalls,
 		onComplete:           onComplete,
 		codepoints:           codepoints,
@@ -299,7 +297,7 @@ func newArrayBlockCallResultsV1(expectedBlockCalls int, code *CodeV1, onComplete
 	}
 }
 
-func (a *arrayBlockCallResultsV1) update(i int, res *RawResult) {
+func (a *arrayBlockCallResults) update(i int, res *RawResult) {
 	a.lock.Lock()
 	defer a.lock.Unlock()
 

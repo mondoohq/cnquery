@@ -3,7 +3,6 @@ package llx
 import (
 	"errors"
 	"strconv"
-	"sync"
 
 	"github.com/hashicorp/go-multierror"
 	"go.mondoo.io/mondoo/types"
@@ -128,59 +127,44 @@ func arrayBlockListV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 		return nil, dref, err
 	}
 
-	// pre-init everything to avoid concurrency issues with long list
-	allResults := make([]interface{}, len(arr))
-	for idx := range arr {
-		blockResult := map[string]interface{}{}
-		allResults[idx] = blockResult
+	argList := make([][]*RawData, len(arr))
+	for i := range arr {
+		argList[i] = []*RawData{
+			{
+				Type:  bind.Type.Child(),
+				Value: arr[i],
+			},
+		}
 	}
 
-	finishedBlocks := 0
+	err = e.runFunctionBlocks(argList, fref, func(results []arrayBlockCallResult, errs []error) {
+		var anyError error
+		allResults := make([]interface{}, len(arr))
 
-	var anyError error
-	for idx := range arr {
-		blockResult := allResults[idx].(map[string]interface{})
-
-		bind := &RawData{
-			Type:  bind.Type.Child(),
-			Value: arr[idx],
+		for i, rd := range results {
+			allResults[i] = rd.toRawData().Value
 		}
-
-		finished := false
-		//Execution errors aren't returned by runFunctionBlock, some are in the results
-		// Collect any errors from results and add them to the rawData
-		// Effect: The query will show error instead
-		err := e.runFunctionBlock([]*RawData{bind}, fref, func(res *RawResult) {
-			blockResult[res.CodeID] = res.Data
-
-			if len(blockResult) == len(block.Entrypoints) && !finished {
-				if res.Data.Error != nil {
-					anyError = multierror.Append(anyError, res.Data.Error)
-				}
-
-				finishedBlocks++
-				finished = true
-			}
-
-			if finishedBlocks >= len(arr) {
-				// We can wait until we get done to collect all results
-				// TODO: what if one result is an error but the rest are ok?
-				// The current state will put the overall query into error state if one block is in error
-				data := &RawData{
-					Type:  arrayBlockType,
-					Value: allResults,
-					Error: anyError,
-				}
-				e.cache.Store(ref, &stepCache{
-					Result:   data,
-					IsStatic: true,
-				})
-				e.triggerChain(ref, data)
-			}
+		if len(errs) > 0 {
+			// This is quite heavy handed. If any of the block calls have an error, the whole
+			// thing becomes errored. If we don't do this, then we can have more fine grained
+			// errors. For example, if only one item in the list has errors, the block for that
+			// item will have an entrypoint with an error
+			anyError = multierror.Append(nil, errs...)
+		}
+		data := &RawData{
+			Type:  arrayBlockType,
+			Value: allResults,
+			Error: anyError,
+		}
+		e.cache.Store(ref, &stepCache{
+			Result:   data,
+			IsStatic: true,
 		})
-		if err != nil {
-			return nil, 0, err
-		}
+		e.triggerChain(ref, data)
+	})
+
+	if err != nil {
+		return nil, 0, err
 	}
 
 	return nil, 0, nil
@@ -267,57 +251,38 @@ func _arrayWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, in
 	}
 
 	ct := items.Type.Child()
-	filteredList := map[int]interface{}{}
-	finishedResults := 0
-	l := sync.Mutex{}
-	for it := range list {
-		i := it
-		err := e.runFunctionBlock([]*RawData{&RawData{Type: ct, Value: list[i]}}, fref, func(res *RawResult) {
-			resList := func() []interface{} {
-				l.Lock()
-				defer l.Unlock()
 
-				_, ok := filteredList[i]
-				if !ok {
-					finishedResults++
-				}
-
-				isTruthy, _ := res.Data.IsTruthy()
-				if isTruthy == !invert {
-					filteredList[i] = list[i]
-				} else {
-					filteredList[i] = nil
-				}
-
-				if finishedResults == len(list) {
-					resList := []interface{}{}
-					for j := 0; j < len(filteredList); j++ {
-						k := filteredList[j]
-						if k != nil {
-							resList = append(resList, k)
-						}
-					}
-					return resList
-				}
-
-				return nil
-			}()
-
-			if resList != nil {
-				data := &RawData{
-					Type:  bind.Type,
-					Value: resList,
-				}
-				e.cache.Store(ref, &stepCache{
-					Result:   data,
-					IsStatic: false,
-				})
-				e.triggerChain(ref, data)
-			}
-		})
-		if err != nil {
-			return nil, 0, err
+	argsList := make([][]*RawData, len(list))
+	for i := range list {
+		argsList[i] = []*RawData{
+			{
+				Type:  ct,
+				Value: list[i],
+			},
 		}
+	}
+	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errors []error) {
+		resList := []interface{}{}
+		for i, res := range results {
+			isTruthy := res.isTruthy()
+			if isTruthy == !invert {
+				resList = append(resList, list[i])
+			}
+		}
+
+		data := &RawData{
+			Type:  bind.Type,
+			Value: resList,
+		}
+		e.cache.Store(ref, &stepCache{
+			Result:   data,
+			IsStatic: false,
+		})
+		e.triggerChain(ref, data)
+	})
+
+	if err != nil {
+		return nil, 0, err
 	}
 
 	return nil, 0, nil
@@ -412,53 +377,45 @@ func arrayMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 	}
 
 	ct := items.Type.Child()
-	mappedType := types.Unset
-	resMap := map[int]interface{}{}
-	finishedResults := 0
-	l := sync.Mutex{}
-	for it := range list {
-		i := it
-		err := e.runFunctionBlock([]*RawData{{Type: ct, Value: list[i]}}, fref, func(res *RawResult) {
-			resList := func() []interface{} {
-				l.Lock()
-				defer l.Unlock()
 
-				_, ok := resMap[i]
-				if !ok {
-					finishedResults++
-					resMap[i] = res.Data.Value
-					mappedType = res.Data.Type
-				}
-
-				if finishedResults == len(list) {
-					resList := []interface{}{}
-					for j := 0; j < len(resMap); j++ {
-						k := resMap[j]
-						if k != nil {
-							resList = append(resList, k)
-						}
-					}
-					return resList
-				}
-
-				return nil
-			}()
-
-			if resList != nil {
-				data := &RawData{
-					Type:  types.Array(mappedType),
-					Value: resList,
-				}
-				e.cache.Store(ref, &stepCache{
-					Result:   data,
-					IsStatic: false,
-				})
-				e.triggerChain(ref, data)
-			}
-		})
-		if err != nil {
-			return nil, 0, err
+	argsList := make([][]*RawData, len(list))
+	for i := range list {
+		argsList[i] = []*RawData{
+			{
+				Type:  ct,
+				Value: list[i],
+			},
 		}
+	}
+
+	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
+		mappedType := types.Unset
+		resList := []interface{}{}
+		f := e.ctx.code.Block(fref)
+
+		epChecksum := e.ctx.code.Checksums[f.Entrypoints[0]]
+
+		for _, res := range results {
+			if epValIface, ok := res.entrypoints[epChecksum]; ok {
+				epVal := epValIface.(*RawData)
+				mappedType = epVal.Type
+				resList = append(resList, epVal.Value)
+			}
+		}
+
+		data := &RawData{
+			Type:  types.Array(mappedType),
+			Value: resList,
+		}
+		e.cache.Store(ref, &stepCache{
+			Result:   data,
+			IsStatic: false,
+		})
+		e.triggerChain(ref, data)
+	})
+
+	if err != nil {
+		return nil, 0, err
 	}
 
 	return nil, 0, nil
@@ -554,95 +511,107 @@ func arrayFieldDuplicatesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref u
 	}
 
 	ct := items.Type.Child()
-	filteredList := map[int]*RawData{}
-	finishedResults := 0
+
+	argsList := make([][]*RawData, len(list))
 	for i := range list {
-		//Function block resolves field value of resource
-		err := e.runFunctionBlock([]*RawData{&RawData{Type: ct, Value: list[i]}}, fref, func(res *RawResult) {
-			_, ok := filteredList[i]
-			if !ok {
-				finishedResults++
+		argsList[i] = []*RawData{
+			{
+				Type:  ct,
+				Value: list[i],
+			},
+		}
+	}
+
+	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
+		f := e.ctx.code.Block(fref)
+		epChecksum := e.ctx.code.Checksums[f.Entrypoints[0]]
+		filteredList := map[int]*RawData{}
+
+		for i, res := range results {
+			rd := res.toRawData()
+			if rd.Error != nil {
+				filteredList[i] = &RawData{
+					Error: rd.Error,
+				}
+			} else {
+				epVal := res.entrypoints[epChecksum].(*RawData)
+				filteredList[i] = epVal
 			}
+		}
 
-			filteredList[i] = res.Data
+		resList := []interface{}{}
 
-			//Once we have fun the function block (extracting field value) and collected all of the results
-			//we can check them for duplicates
-			if finishedResults == len(list) {
-				resList := []interface{}{}
+		equalFunc, ok := types.Equal[filteredList[0].Type]
+		if !ok {
+			data := &RawData{
+				Type:  items.Type,
+				Error: errors.New("cannot extract duplicates from array, field must be a basic type"),
+			}
+			e.cache.Store(ref, &stepCache{
+				Result:   data,
+				IsStatic: false,
+			})
+			e.triggerChain(ref, data)
+			return
+		}
 
-				equalFunc, ok := types.Equal[filteredList[0].Type]
-				if !ok {
-					data := &RawData{
-						Type:  items.Type,
-						Error: errors.New("cannot extract duplicates from array, field must be a basic type"),
-					}
-					e.cache.Store(ref, &stepCache{
-						Result:   data,
-						IsStatic: false,
-					})
-					e.triggerChain(ref, data)
-					return
-				}
+		arr := make([]*RawData, len(list))
+		for k, v := range filteredList {
+			arr[k] = v
+		}
 
-				arr := make([]*RawData, len(list))
-				for k, v := range filteredList {
-					arr[k] = v
-				}
+		//to track values of fields
+		existing := make(map[int]interface{})
+		//to track index of duplicate resources
+		duplicateIndices := []int{}
+		var found bool
+		var added bool
+		for i := 0; i < len(arr); i++ {
+			left := arr[i].Value
 
-				//to track values of fields
-				existing := make(map[int]interface{})
-				//to track index of duplicate resources
-				duplicateIndices := []int{}
-				var found bool
-				var added bool
-				for i := 0; i < len(arr); i++ {
-					left := arr[i].Value
-
-					for j, v := range existing {
-						if equalFunc(left, v) {
-							found = true
-							//Track the index so that we can get the whole resource
-							duplicateIndices = append(duplicateIndices, i)
-							//check if j was already added to our list of indices
-							for di := range duplicateIndices {
-								if j == duplicateIndices[di] {
-									added = true
-								}
-							}
-							if added == false {
-								duplicateIndices = append(duplicateIndices, j)
-							}
-							break
+			for j, v := range existing {
+				if equalFunc(left, v) {
+					found = true
+					//Track the index so that we can get the whole resource
+					duplicateIndices = append(duplicateIndices, i)
+					//check if j was already added to our list of indices
+					for di := range duplicateIndices {
+						if j == duplicateIndices[di] {
+							added = true
 						}
 					}
-
-					//value not found so we add it to list of things to check for dupes
-					if !found {
-						existing[i] = left
+					if added == false {
+						duplicateIndices = append(duplicateIndices, j)
 					}
+					break
 				}
-
-				//Once we collect duplicate indices, make a list of resources
-				for i := range duplicateIndices {
-					idx := duplicateIndices[i]
-					resList = append(resList, list[idx])
-				}
-
-				data := &RawData{
-					Type:  bind.Type,
-					Value: resList,
-				}
-				e.cache.Store(ref, &stepCache{
-					Result:   data,
-					IsStatic: false,
-				})
-				e.triggerChain(ref, data)
 			}
-		})
-		if err != nil {
-			return nil, 0, err
+
+			//value not found so we add it to list of things to check for dupes
+			if !found {
+				existing[i] = left
+			}
 		}
+
+		//Once we collect duplicate indices, make a list of resources
+		for i := range duplicateIndices {
+			idx := duplicateIndices[i]
+			resList = append(resList, list[idx])
+		}
+
+		data := &RawData{
+			Type:  bind.Type,
+			Value: resList,
+		}
+		e.cache.Store(ref, &stepCache{
+			Result:   data,
+			IsStatic: false,
+		})
+		e.triggerChain(ref, data)
+	})
+
+	if err != nil {
+		return nil, 0, err
 	}
 
 	return nil, 0, nil

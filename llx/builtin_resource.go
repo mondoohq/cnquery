@@ -4,7 +4,6 @@ import (
 	"errors"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"go.mondoo.io/mondoo/lumi"
@@ -42,82 +41,67 @@ func _resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64,
 	blockId := e.ctx.code.Id + strconv.FormatUint(blockRef>>32, 10)
 
 	ct := items.Type.Child()
-	filteredList := map[int]interface{}{}
-	finishedResults := 0
-	l := sync.Mutex{}
-	for it := range list {
-		i := it
-		err := e.runFunctionBlock([]*RawData{&RawData{Type: ct, Value: list[i]}}, blockRef, func(res *RawResult) {
-			resList := func() []interface{} {
-				l.Lock()
-				defer l.Unlock()
 
-				_, ok := filteredList[i]
-				if !ok {
-					finishedResults++
-				}
-
-				isTruthy, _ := res.Data.IsTruthy()
-				if isTruthy == !invert {
-					filteredList[i] = list[i]
-				} else {
-					filteredList[i] = nil
-				}
-
-				if finishedResults == len(list) {
-					resList := []interface{}{}
-					for j := 0; j < len(filteredList); j++ {
-						k := filteredList[j]
-						if k != nil {
-							resList = append(resList, k)
-						}
-					}
-					return resList
-				}
-				return nil
-			}()
-
-			if resList != nil {
-				// get all mandatory args
-				lumiResource := resource.LumiResource()
-				resourceInfo := lumiResource.Runtime.Registry.Resources[lumiResource.Name]
-				args := []interface{}{
-					"list", resList, "__id", blockId,
-				}
-				for k, v := range resourceInfo.Fields {
-					if k != "list" && v.Mandatory {
-						if v, err := resource.Field(k); err == nil {
-							args = append(args, k, v)
-						}
-					}
-				}
-
-				resResource, err := e.ctx.runtime.CreateResourceWithID(lumiResource.Name, blockId, args...)
-				var data *RawData
-				if err != nil {
-					data = &RawData{
-						Error: errors.New("Failed to create filter result resource: " + err.Error()),
-					}
-					e.cache.Store(ref, &stepCache{
-						Result: data,
-					})
-				} else {
-					data = &RawData{
-						Type:  bind.Type,
-						Value: resResource,
-					}
-					e.cache.Store(ref, &stepCache{
-						Result:   data,
-						IsStatic: false,
-					})
-				}
-
-				e.triggerChain(ref, data)
-			}
-		})
-		if err != nil {
-			return nil, 0, err
+	argsList := make([][]*RawData, len(list))
+	for i := range list {
+		argsList[i] = []*RawData{
+			{
+				Type:  ct,
+				Value: list[i],
+			},
 		}
+	}
+
+	err = e.runFunctionBlocks(argsList, blockRef, func(results []arrayBlockCallResult, errs []error) {
+		resList := []interface{}{}
+
+		for i, res := range results {
+			isTruthy := res.isTruthy()
+			if isTruthy == !invert {
+				resList = append(resList, list[i])
+			}
+		}
+
+		// get all mandatory args
+		lumiResource := resource.LumiResource()
+		resourceInfo := lumiResource.Runtime.Registry.Resources[lumiResource.Name]
+
+		args := []interface{}{
+			"list", resList, "__id", blockId,
+		}
+		for k, v := range resourceInfo.Fields {
+			if k != "list" && v.Mandatory {
+				if v, err := resource.Field(k); err == nil {
+					args = append(args, k, v)
+				}
+			}
+		}
+
+		resResource, err := e.ctx.runtime.CreateResourceWithID(lumiResource.Name, blockId, args...)
+		var data *RawData
+		if err != nil {
+			data = &RawData{
+				Error: errors.New("Failed to create filter result resource: " + err.Error()),
+			}
+			e.cache.Store(ref, &stepCache{
+				Result: data,
+			})
+		} else {
+			data = &RawData{
+				Type:  bind.Type,
+				Value: resResource,
+			}
+			e.cache.Store(ref, &stepCache{
+				Result:   data,
+				IsStatic: false,
+			})
+		}
+
+		e.triggerChain(ref, data)
+	})
+
+	if err != nil {
+		return nil, 0, err
 	}
 
 	return nil, 0, nil
@@ -155,53 +139,45 @@ func resourceMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	}
 
 	ct := items.Type.Child()
-	mappedType := types.Unset
-	resMap := map[int]interface{}{}
-	finishedResults := 0
-	l := sync.Mutex{}
-	for it := range list {
-		i := it
-		err := e.runFunctionBlock([]*RawData{{Type: ct, Value: list[i]}}, fref, func(res *RawResult) {
-			resList := func() []interface{} {
-				l.Lock()
-				defer l.Unlock()
 
-				_, ok := resMap[i]
-				if !ok {
-					finishedResults++
-					resMap[i] = res.Data.Value
-					mappedType = res.Data.Type
-				}
-
-				if finishedResults == len(list) {
-					resList := []interface{}{}
-					for j := 0; j < len(resMap); j++ {
-						k := resMap[j]
-						if k != nil {
-							resList = append(resList, k)
-						}
-					}
-					return resList
-				}
-				return nil
-			}()
-
-			if resList != nil {
-				data := &RawData{
-					Type:  types.Array(mappedType),
-					Value: resList,
-				}
-
-				e.cache.Store(ref, &stepCache{
-					Result: data,
-				})
-
-				e.triggerChain(ref, data)
-			}
-		})
-		if err != nil {
-			return nil, 0, err
+	argsList := make([][]*RawData, len(list))
+	for i := range list {
+		argsList[i] = []*RawData{
+			{
+				Type:  ct,
+				Value: list[i],
+			},
 		}
+	}
+
+	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
+		mappedType := types.Unset
+		resList := []interface{}{}
+		f := e.ctx.code.Block(fref)
+		epChecksum := e.ctx.code.Checksums[f.Entrypoints[0]]
+
+		for _, res := range results {
+			if epValIface, ok := res.entrypoints[epChecksum]; ok {
+				epVal := epValIface.(*RawData)
+				mappedType = epVal.Type
+				resList = append(resList, epVal.Value)
+			}
+		}
+
+		data := &RawData{
+			Type:  types.Array(mappedType),
+			Value: resList,
+		}
+
+		e.cache.Store(ref, &stepCache{
+			Result: data,
+		})
+
+		e.triggerChain(ref, data)
+	})
+
+	if err != nil {
+		return nil, 0, err
 	}
 
 	return nil, 0, nil
