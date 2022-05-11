@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strconv"
 	"sync"
+	"sync/atomic"
 
 	uuid "github.com/gofrs/uuid"
 	"github.com/hashicorp/go-multierror"
@@ -90,19 +91,19 @@ func (c *LeiseExecutorV1) watcherUID(ref int32) string {
 }
 
 func unregistrableCallback(cb ResultCallback) (ResultCallback, func()) {
-	locker := sync.RWMutex{}
-	unregistered := false
+	// This function uses an atomic bool because there exists some code that
+	// calls unregister from inside its callback. Using a mutex could cause
+	// a deadlock in such a cause (unless the lock is unlocked before the cb is
+	// called)
+	var unregistered int32
 	wrapped := func(rr *RawResult) {
-		locker.RLock()
-		defer locker.RUnlock()
-		if !unregistered {
+		loadedVal := atomic.LoadInt32(&unregistered)
+		if loadedVal == 0 {
 			cb(rr)
 		}
 	}
 	return wrapped, func() {
-		locker.Lock()
-		defer locker.Unlock()
-		unregistered = true
+		atomic.StoreInt32(&unregistered, 1)
 	}
 }
 
