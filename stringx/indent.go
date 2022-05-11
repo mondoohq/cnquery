@@ -2,6 +2,7 @@ package stringx
 
 import (
 	"bufio"
+	"strconv"
 	"strings"
 )
 
@@ -19,4 +20,15 @@ func Indent(indent int, message string) string {
 		sb.WriteString("\n")
 	}
 	return sb.String()
+}
+
+func MaxLines(lines int, message string) string {
+	res := strings.Split(message, "\n")
+	if len(res) <= lines {
+		return message
+	}
+
+	n := len(res) - lines
+
+	return strings.Join(res[:lines], "\n") + "\n... " + strconv.Itoa(n) + " more lines ..."
 }

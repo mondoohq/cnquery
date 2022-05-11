@@ -11,6 +11,32 @@ func (x *CodeBundle) IsV2() bool {
 	return x.CodeV2 != nil
 }
 
+func (x *CodeBundle) FilterResults(results map[string]*RawResult) map[string]*RawResult {
+	filteredResults := map[string]*RawResult{}
+
+	if x.IsV2() {
+		for i := range x.CodeV2.Checksums {
+			checksum := x.CodeV2.Checksums[i]
+
+			res := results[checksum]
+			if res != nil {
+				filteredResults[checksum] = res
+			}
+		}
+	} else {
+		for i := range x.DeprecatedV5Code.Checksums {
+			checksum := x.DeprecatedV5Code.Checksums[i]
+
+			res := results[checksum]
+			if res != nil {
+				filteredResults[checksum] = res
+			}
+		}
+	}
+
+	return filteredResults
+}
+
 func (b *Block) ChunkIndex() uint32 {
 	return uint32(len(b.Chunks))
 }
