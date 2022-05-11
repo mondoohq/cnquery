@@ -58,6 +58,11 @@ func float2json(f float64) string {
 	return strconv.FormatFloat(f, 'g', -1, 64)
 }
 
+// Takes care of escaping the given string
+func string2json(s string) string {
+	return fmt.Sprintf("%#v", s)
+}
+
 func label(ref string, bundle *CodeBundle, isResource bool) string {
 	if bundle == nil {
 		return "<unknown>"
@@ -99,7 +104,8 @@ func refMapJSON(typ types.Type, data map[string]interface{}, codeID string, bund
 	for i, k := range keys {
 		v := data[k]
 		label := label(k, bundle, true)
-		buf.WriteString("\"" + label + "\":")
+		buf.WriteString(string2json(label))
+		buf.WriteString(":")
 
 		val := v.(*RawData)
 		if val.Error != nil {
@@ -136,7 +142,7 @@ func rawDictJSON(typ types.Type, raw interface{}, buf *bytes.Buffer) error {
 		return nil
 
 	case string:
-		buf.WriteString(PrettyPrintString(data))
+		buf.WriteString(string2json(data))
 		return nil
 
 	case time.Time:
@@ -329,11 +335,11 @@ func rawDataJSON(typ types.Type, data interface{}, codeID string, bundle *CodeBu
 		return nil
 
 	case types.String:
-		buf.WriteString(PrettyPrintString(data.(string)))
+		buf.WriteString(string2json(data.(string)))
 		return nil
 
 	case types.Regex:
-		raw := PrettyPrintString(data.(string))
+		raw := string2json(data.(string))
 		buf.WriteByte(raw[0])
 		buf.WriteByte('/')
 		buf.WriteString(raw[1 : len(raw)-1])
@@ -386,7 +392,7 @@ func rawDataJSON(typ types.Type, data interface{}, codeID string, bundle *CodeBu
 			idline += " id = " + i.Id
 		}
 
-		buf.WriteString(PrettyPrintString(idline))
+		buf.WriteString(string2json(idline))
 		return nil
 
 	default:
