@@ -101,12 +101,15 @@ type blockExecutor struct {
 
 // LeiseExecutor is the runtime of a leise/llx codestructure
 type LeiseExecutorV2 struct {
-	id             string
+	id      string
+	runtime *lumi.Runtime
+	code    *CodeV2
+	starts  []uint64
+	props   map[string]*Primitive
+
+	lock           sync.Mutex
 	blockExecutors []*blockExecutor
-	runtime        *lumi.Runtime
-	code           *CodeV2
-	starts         []uint64
-	props          map[string]*Primitive
+	unregistered   bool
 }
 
 func (c *blockExecutor) watcherUID(ref uint64) string {
@@ -220,8 +223,24 @@ func (c *LeiseExecutorV2) NoRun(err error) {
 	}
 }
 
+func (c *LeiseExecutorV2) addBlockExecutor(be *blockExecutor) bool {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	if c.unregistered {
+		return false
+	}
+	c.blockExecutors = append(c.blockExecutors, be)
+	return true
+}
+
 func (c *LeiseExecutorV2) Unregister() error {
 	log.Trace().Str("id", c.id).Msg("exec> unregister")
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	if c.unregistered {
+		return nil
+	}
+	c.unregistered = true
 
 	var errs []error
 	for i := range c.blockExecutors {
@@ -405,7 +424,7 @@ func (b *blockExecutor) runFunctionBlock(args []*RawData, blockRef uint64, cb Re
 		return err
 	}
 
-	b.ctx.blockExecutors = append(b.ctx.blockExecutors, executor)
+	b.ctx.addBlockExecutor(executor)
 
 	if len(args) < int(executor.block.Parameters) {
 		panic("not enough arguments")
