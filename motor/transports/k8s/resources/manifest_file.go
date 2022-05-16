@@ -17,6 +17,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1beta1 "k8s.io/api/extensions/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -55,7 +56,7 @@ func ClientSchema() *runtime.Scheme {
 	v1beta1.AddToScheme(scheme)
 	batchv1.AddToScheme(scheme)
 	policyv1beta1.AddToScheme(scheme)
-
+	networkingv1.AddToScheme(scheme)
 	return scheme
 }
 
