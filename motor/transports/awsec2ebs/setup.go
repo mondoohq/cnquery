@@ -289,6 +289,7 @@ func (t *Ec2EbsTransport) AttachVolumeToInstance(ctx context.Context, volume Vol
 	if err != nil {
 		return ready, err
 	}
+	log.Debug().Str("location", location).Msg("attach volume to")
 	t.tmpInfo.volumeAttachmentLoc = location
 
 	/*
