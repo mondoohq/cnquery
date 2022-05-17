@@ -13,7 +13,7 @@ func (t *Ec2EbsTransport) Mount() error {
 	if err != nil {
 		return err
 	}
-	fsInfo, err := t.GetFsType()
+	fsInfo, err := t.GetFsInfo()
 	if err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func (t *Ec2EbsTransport) CreateScanDir() error {
 	return nil
 }
 
-func (t *Ec2EbsTransport) GetFsType() (*fsInfo, error) {
+func (t *Ec2EbsTransport) GetFsInfo() (*fsInfo, error) {
 	log.Info().Msg("get fs type")
 	cmd, err := t.RunCommand("sudo lsblk -f --json") // replace with mql query once version with lsblk resource is released
 	if err != nil {
