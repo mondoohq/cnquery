@@ -216,6 +216,7 @@ func (im *inventoryManager) GetCredential(cred *vault.Credential) (*vault.Creden
 // The credential will only include the reference to the secret and not include the actual secret
 func (im *inventoryManager) QuerySecretId(a *asset.Asset) (*vault.Credential, error) {
 	if im.credentialQueryRunner == nil {
+		log.Debug().Msg("no credential query set")
 		return nil, nil
 	}
 
