@@ -7,14 +7,14 @@ import (
 	"time"
 
 	"github.com/mitchellh/mapstructure"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/logger"
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/vadvisor"
-
-	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/nexus/assets"
+	"go.mondoo.io/mondoo/vadvisor"
 	"go.mondoo.io/mondoo/vadvisor/client"
+	"go.mondoo.io/mondoo/vadvisor/specs/cvss"
 )
 
 // fetches the vulnerability report and returns the full report
@@ -151,9 +151,9 @@ func getAdvisoryReport(r *lumi.Runtime) (*vadvisor.VulnReport, error) {
 }
 
 func (c *lumiAuditCvss) id() (string, error) {
-	// TODO: use c.Vector() once we have the data available
 	score, _ := c.Score()
-	return "cvss/" + strconv.FormatFloat(score, 'f', 2, 64), nil
+	vector, _ := c.Vector()
+	return "cvss/" + strconv.FormatFloat(score, 'f', 2, 64) + "/vector/" + vector, nil
 }
 
 func (c *lumiAuditAdvisory) id() (string, error) {
@@ -191,9 +191,16 @@ func (a *lumiPlatformAdvisories) GetList() ([]interface{}, error) {
 	for i := range report.Advisories {
 		advisory := report.Advisories[i]
 
+		var worstScore *cvss.Cvss
+		if advisory.WorstScore != nil {
+			worstScore = advisory.WorstScore
+		} else {
+			worstScore = &cvss.Cvss{Score: 0.0, Vector: ""}
+		}
+
 		cvssScore, err := a.Runtime.CreateResource("audit.cvss",
-			"score", float64(advisory.Score)/10,
-			"vector", "", // TODO: we need to extend the report to include the vector in the report
+			"score", float64(worstScore.Score),
+			"vector", worstScore.Vector,
 		)
 		if err != nil {
 			return nil, err
@@ -264,9 +271,16 @@ func (a *lumiPlatformCves) GetList() ([]interface{}, error) {
 	for i := range cveList {
 		cve := cveList[i]
 
+		var worstScore *cvss.Cvss
+		if cve.WorstScore != nil {
+			worstScore = cve.WorstScore
+		} else {
+			worstScore = &cvss.Cvss{Score: 0.0, Vector: ""}
+		}
+
 		cvssScore, err := a.Runtime.CreateResource("audit.cvss",
-			"score", float64(cve.Score)/10,
-			"vector", "", // TODO: we need to extend the report to include the vector in the report
+			"score", float64(worstScore.Score),
+			"vector", worstScore.Vector,
 		)
 		if err != nil {
 			return nil, err
