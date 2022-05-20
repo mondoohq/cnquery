@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/transports/awsec2ebs/custommount"
 )
@@ -16,6 +17,9 @@ func (t *Ec2EbsTransport) Mount() error {
 	fsInfo, err := t.GetFsInfo()
 	if err != nil {
 		return err
+	}
+	if fsInfo == nil {
+		return errors.New("unable to find fs")
 	}
 	err = t.MountVolume(fsInfo)
 	if err != nil {
@@ -53,13 +57,20 @@ func (t *Ec2EbsTransport) GetFsInfo() (*fsInfo, error) {
 		d := blockEntries.Blockdevices[i]
 		log.Debug().Msgf("found block device %s with children %v", d.Name, d.Children)
 		fullDevName := "/dev/" + d.Name
-		if t.tmpInfo.volumeAttachmentLoc == fullDevName {
-			for i := range d.Children {
-				entry := d.Children[i]
-				if entry.Mountpoint == "" && entry.Uuid != "" && entry.Fstype != "" && entry.Label != "EFI" {
-					devFsName := "/dev/" + entry.Name
-					return &fsInfo{name: devFsName, fstype: entry.Fstype}, nil
-				}
+		// if the no_setup option is used, t.tmpInfo.volumeAttachmentLoc will be blank.
+		// in those cases, it's expected that the only volume on the instance is the target one
+		if t.opts[NoSetup] != "true" {
+			log.Debug().Msg("checking that the volume name matches the expected one")
+			// t.tmpInfo.volumeAttachmentLoc needs to match the name, otherwise move on to the next one
+			if t.tmpInfo.volumeAttachmentLoc != fullDevName {
+				continue
+			}
+		}
+		for i := range d.Children {
+			entry := d.Children[i]
+			if entry.Uuid != "" && entry.Fstype != "" && entry.Label != "EFI" {
+				devFsName := "/dev/" + entry.Name
+				return &fsInfo{name: devFsName, fstype: entry.Fstype}, nil
 			}
 		}
 	}
