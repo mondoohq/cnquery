@@ -3,7 +3,7 @@ package ms365
 import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/cockroachdb/errors"
-	a "github.com/microsoft/kiota/authentication/go/azure"
+	a "github.com/microsoft/kiota-authentication-azure-go"
 )
 
 const DefaultMSGraphScope = "https://graph.microsoft.com/.default"

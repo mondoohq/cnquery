@@ -5,17 +5,9 @@ import (
 
 	"github.com/cockroachdb/errors"
 	msgraphbetasdk "github.com/microsoftgraph/msgraph-beta-sdk-go"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/applications"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/devicemanagement/devicecompliancepolicies"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/devicemanagement/deviceconfigurations"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/domains"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/models/microsoft/graph"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/organization"
+	"github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/rolemanagement/directory/roleassignments"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/rolemanagement/directory/roledefinitions"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/security/securescores"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/settings"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/users"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/msgraphconv"
 	"go.mondoo.io/mondoo/motor/transports"
@@ -45,7 +37,7 @@ func (m *lumiMsgraphBeta) GetSettings() ([]interface{}, error) {
 		return nil, err
 	}
 
-	settings, err := graphBetaClient.Settings().Get(&settings.SettingsRequestBuilderGetOptions{})
+	settings, err := graphBetaClient.Settings().Get()
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +64,7 @@ func (m *lumiMsgraphBeta) GetOrganizations() ([]interface{}, error) {
 		return nil, err
 	}
 
-	resp, err := graphBetaClient.Organization().Get(&organization.OrganizationRequestBuilderGetOptions{})
+	resp, err := graphBetaClient.Organization().Get()
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +113,7 @@ func (m *lumiMsgraphBeta) GetUsers() ([]interface{}, error) {
 		return nil, err
 	}
 
-	resp, err := graphBetaClient.Users().Get(&users.UsersRequestBuilderGetOptions{})
+	resp, err := graphBetaClient.Users().Get()
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +177,7 @@ func (m *lumiMsgraphBeta) GetDomains() ([]interface{}, error) {
 		return nil, err
 	}
 
-	resp, err := graphBetaClient.Domains().Get(&domains.DomainsRequestBuilderGetOptions{})
+	resp, err := graphBetaClient.Domains().Get()
 	if err != nil {
 		return nil, err
 	}
@@ -242,7 +234,7 @@ func (m *lumiMsgraphBetaDomain) GetServiceConfigurationRecords() ([]interface{},
 		return nil, err
 	}
 
-	resp, err := graphBetaClient.DomainsById(id).ServiceConfigurationRecords().Get(nil)
+	resp, err := graphBetaClient.DomainsById(id).ServiceConfigurationRecords().Get()
 	if err != nil {
 		return nil, err
 	}
@@ -293,7 +285,7 @@ func (m *lumiMsgraphBeta) GetApplications() ([]interface{}, error) {
 		return nil, err
 	}
 
-	resp, err := graphBetaClient.Applications().Get(&applications.ApplicationsRequestBuilderGetOptions{})
+	resp, err := graphBetaClient.Applications().Get()
 	if err != nil {
 		return nil, err
 	}
@@ -342,7 +334,7 @@ func (m *lumiMsgraphBetaUser) GetSettings() (interface{}, error) {
 		return nil, err
 	}
 
-	userSettings, err := graphBetaClient.UsersById(id).Settings().Get(nil)
+	userSettings, err := graphBetaClient.UsersById(id).Settings().Get()
 	if err != nil {
 		return nil, err
 	}
@@ -354,7 +346,10 @@ func (m *lumiMsgraphBetaSecurity) id() (string, error) {
 	return "msgraph.beta.security", nil
 }
 
-func msSecureScoreToLumi(runtime *lumi.Runtime, score graph.SecureScore) (interface{}, error) {
+func msSecureScoreToLumi(runtime *lumi.Runtime, score models.SecureScoreable) (interface{}, error) {
+	if score == nil {
+		return nil, nil
+	}
 	averageComparativeScores := []interface{}{}
 	graphAverageComparativeScores := score.GetAverageComparativeScores()
 	for j := range graphAverageComparativeScores {
@@ -415,7 +410,7 @@ func (m *lumiMsgraphBetaSecurity) GetLatestSecureScores() (interface{}, error) {
 		return nil, err
 	}
 
-	resp, err := graphBetaClient.Security().SecureScores().Get(&securescores.SecureScoresRequestBuilderGetOptions{})
+	resp, err := graphBetaClient.Security().SecureScores().Get()
 	if err != nil {
 		return nil, err
 	}
@@ -453,7 +448,7 @@ func (m *lumiMsgraphBetaSecurity) GetSecureScores() ([]interface{}, error) {
 		return nil, err
 	}
 
-	resp, err := graphBetaClient.Security().SecureScores().Get(&securescores.SecureScoresRequestBuilderGetOptions{})
+	resp, err := graphBetaClient.Security().SecureScores().Get()
 	if err != nil {
 		return nil, err
 	}
@@ -496,7 +491,7 @@ func (m *lumiMsgraphBetaPolicies) GetAuthorizationPolicy() (interface{}, error) 
 		return nil, err
 	}
 
-	resp, err := graphBetaClient.Policies().AuthorizationPolicy().Get(nil)
+	resp, err := graphBetaClient.Policies().AuthorizationPolicy().Get()
 	if err != nil {
 		return nil, err
 	}
@@ -525,7 +520,7 @@ func (m *lumiMsgraphBetaPolicies) GetIdentitySecurityDefaultsEnforcementPolicy()
 		return nil, err
 	}
 
-	policy, err := graphBetaClient.Policies().IdentitySecurityDefaultsEnforcementPolicy().Get(nil)
+	policy, err := graphBetaClient.Policies().IdentitySecurityDefaultsEnforcementPolicy().Get()
 	if err != nil {
 		return nil, err
 	}
@@ -550,7 +545,7 @@ func (m *lumiMsgraphBetaPolicies) GetAdminConsentRequestPolicy() (interface{}, e
 		return nil, err
 	}
 
-	policy, err := graphBetaClient.Policies().AdminConsentRequestPolicy().Get(nil)
+	policy, err := graphBetaClient.Policies().AdminConsentRequestPolicy().Get()
 	if err != nil {
 		return nil, err
 	}
@@ -575,7 +570,7 @@ func (m *lumiMsgraphBetaPolicies) GetPermissionGrantPolicies() (interface{}, err
 		return nil, err
 	}
 
-	resp, err := graphBetaClient.Policies().PermissionGrantPolicies().Get(nil)
+	resp, err := graphBetaClient.Policies().PermissionGrantPolicies().Get()
 	if err != nil {
 		return nil, err
 	}
@@ -602,7 +597,7 @@ func (m *lumiMsgraphBetaRolemanagement) GetRoleDefinitions() (interface{}, error
 		return nil, err
 	}
 
-	resp, err := graphBetaClient.RoleManagement().Directory().RoleDefinitions().Get(&roledefinitions.RoleDefinitionsRequestBuilderGetOptions{})
+	resp, err := graphBetaClient.RoleManagement().Directory().RoleDefinitions().Get()
 	if err != nil {
 		return nil, err
 	}
@@ -659,12 +654,13 @@ func (m *lumiMsgraphBetaRolemanagementRoledefinition) GetAssignments() ([]interf
 	}
 	filter := "roleDefinitionId eq '" + roleDefinitionID + "'"
 
-	resp, err := graphBetaClient.RoleManagement().Directory().RoleAssignments().Get(&roleassignments.RoleAssignmentsRequestBuilderGetOptions{
-		Q: &roleassignments.RoleAssignmentsRequestBuilderGetQueryParameters{
-			Filter: &filter,
-			Expand: []string{"principal"},
-		},
-	})
+	resp, err := graphBetaClient.RoleManagement().Directory().RoleAssignments().
+		GetWithRequestConfigurationAndResponseHandler(&roleassignments.RoleAssignmentsRequestBuilderGetRequestConfiguration{
+			QueryParameters: &roleassignments.RoleAssignmentsRequestBuilderGetQueryParameters{
+				Filter: &filter,
+				Expand: []string{"principal"},
+			},
+		}, nil)
 
 	roleAssignments := resp.GetValue()
 	if err != nil {
@@ -714,7 +710,7 @@ func (m *lumiMsgraphBetaDevicemanagement) GetDeviceConfigurations() ([]interface
 		return nil, err
 	}
 
-	resp, err := graphBetaClient.DeviceManagement().DeviceConfigurations().Get(&deviceconfigurations.DeviceConfigurationsRequestBuilderGetOptions{})
+	resp, err := graphBetaClient.DeviceManagement().DeviceConfigurations().Get()
 	if err != nil {
 		return nil, err
 	}
@@ -761,11 +757,12 @@ func (m *lumiMsgraphBetaDevicemanagement) GetDeviceCompliancePolicies() ([]inter
 		return nil, err
 	}
 
-	resp, err := graphBetaClient.DeviceManagement().DeviceCompliancePolicies().Get(&devicecompliancepolicies.DeviceCompliancePoliciesRequestBuilderGetOptions{
-		Q: &devicecompliancepolicies.DeviceCompliancePoliciesRequestBuilderGetQueryParameters{
-			Expand: []string{"assignments"},
-		},
-	})
+	resp, err := graphBetaClient.DeviceManagement().DeviceCompliancePolicies().
+		GetWithRequestConfigurationAndResponseHandler(&devicecompliancepolicies.DeviceCompliancePoliciesRequestBuilderGetRequestConfiguration{
+			QueryParameters: &devicecompliancepolicies.DeviceCompliancePoliciesRequestBuilderGetQueryParameters{
+				Expand: []string{"assignments"},
+			},
+		}, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/models/microsoft/graph"
+	"github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 )
 
 func toString(s *string) string {
@@ -32,7 +32,7 @@ type AssignedPlan struct {
 	ServicePlanId    string     `json:"servicePlanId"`
 }
 
-func NewAssignedPlans(p []graph.AssignedPlan) []AssignedPlan {
+func NewAssignedPlans(p []models.AssignedPlanable) []AssignedPlan {
 	res := []AssignedPlan{}
 	for i := range p {
 		res = append(res, NewAssignedPlan(p[i]))
@@ -40,7 +40,7 @@ func NewAssignedPlans(p []graph.AssignedPlan) []AssignedPlan {
 	return res
 }
 
-func NewAssignedPlan(p graph.AssignedPlan) AssignedPlan {
+func NewAssignedPlan(p models.AssignedPlanable) AssignedPlan {
 	return AssignedPlan{
 		AssignedDateTime: p.GetAssignedDateTime(),
 		CapabilityStatus: toString(p.GetCapabilityStatus()),
@@ -57,7 +57,7 @@ type VerifiedDomain struct {
 	Type         string `json:"type"`
 }
 
-func NewVerifiedDomains(p []graph.VerifiedDomain) []VerifiedDomain {
+func NewVerifiedDomains(p []models.VerifiedDomainable) []VerifiedDomain {
 	res := []VerifiedDomain{}
 	for i := range p {
 		res = append(res, NewVerifiedDomain(p[i]))
@@ -65,7 +65,7 @@ func NewVerifiedDomains(p []graph.VerifiedDomain) []VerifiedDomain {
 	return res
 }
 
-func NewVerifiedDomain(p graph.VerifiedDomain) VerifiedDomain {
+func NewVerifiedDomain(p models.VerifiedDomainable) VerifiedDomain {
 	return VerifiedDomain{
 		Capabilities: toString(p.GetCapabilities()),
 		IsDefault:    toBool(p.GetIsDefault()),
@@ -81,7 +81,7 @@ type UnifiedRolePermission struct {
 	ExcludedResourceActions []string `json:"excludedResourceActions"`
 }
 
-func NewUnifiedRolePermissions(p []graph.UnifiedRolePermission) []UnifiedRolePermission {
+func NewUnifiedRolePermissions(p []models.UnifiedRolePermissionable) []UnifiedRolePermission {
 	res := []UnifiedRolePermission{}
 	for i := range p {
 		res = append(res, NewUnifiedRolePermission(p[i]))
@@ -89,7 +89,7 @@ func NewUnifiedRolePermissions(p []graph.UnifiedRolePermission) []UnifiedRolePer
 	return res
 }
 
-func NewUnifiedRolePermission(p graph.UnifiedRolePermission) UnifiedRolePermission {
+func NewUnifiedRolePermission(p models.UnifiedRolePermissionable) UnifiedRolePermission {
 	return UnifiedRolePermission{
 		AllowedResourceActions:  p.GetAllowedResourceActions(),
 		Condition:               toString(p.GetCondition()),
@@ -108,7 +108,7 @@ type SettingValue struct {
 	Value string `json:"value"`
 }
 
-func NewDirectorySettings(p []graph.DirectorySetting) []DirectorySetting {
+func NewDirectorySettings(p []models.DirectorySettingable) []DirectorySetting {
 	res := []DirectorySetting{}
 	for i := range p {
 		res = append(res, NewDirectorySetting(p[i]))
@@ -116,7 +116,7 @@ func NewDirectorySettings(p []graph.DirectorySetting) []DirectorySetting {
 	return res
 }
 
-func NewDirectorySetting(p graph.DirectorySetting) DirectorySetting {
+func NewDirectorySetting(p models.DirectorySettingable) DirectorySetting {
 	values := []SettingValue{}
 	entries := p.GetValues()
 	for i := range entries {
@@ -144,7 +144,7 @@ type DirectoryObject struct {
 	DeletedDateTime *time.Time `json:"deletedDateTime"`
 }
 
-func NewDirectoryPricipal(p *graph.DirectoryObject) *DirectoryObject {
+func NewDirectoryPricipal(p models.DirectoryObjectable) *DirectoryObject {
 	if p == nil {
 		return nil
 	}
@@ -174,7 +174,7 @@ func (a AllowInvitesFrom) MarshalJSON() ([]byte, error) {
 	return json.Marshal(a.String())
 }
 
-func NewAllowInvitesFrom(a *graph.AllowInvitesFrom) *AllowInvitesFrom {
+func NewAllowInvitesFrom(a *models.AllowInvitesFrom) *AllowInvitesFrom {
 	if a == nil {
 		return nil
 	}
@@ -188,7 +188,7 @@ type DefaultUserRoleOverride struct {
 	RolePermissions []UnifiedRolePermission `json:"rolePermissions"`
 }
 
-func NewDefaultUserRoleOverride(a graph.DefaultUserRoleOverride) DefaultUserRoleOverride {
+func NewDefaultUserRoleOverride(a models.DefaultUserRoleOverrideable) DefaultUserRoleOverride {
 	return DefaultUserRoleOverride{
 		Entity: Entity{
 			Id: a.GetId(),
@@ -198,7 +198,7 @@ func NewDefaultUserRoleOverride(a graph.DefaultUserRoleOverride) DefaultUserRole
 	}
 }
 
-func NewDefaultUserRoleOverrides(a []graph.DefaultUserRoleOverride) []DefaultUserRoleOverride {
+func NewDefaultUserRoleOverrides(a []models.DefaultUserRoleOverrideable) []DefaultUserRoleOverride {
 	res := []DefaultUserRoleOverride{}
 	for i := range a {
 		res = append(res, NewDefaultUserRoleOverride(a[i]))
@@ -215,7 +215,7 @@ type DefaultUserRolePermissions struct {
 	AllowedToReadOtherUsers *bool `json:"allowedToReadOtherUsers"`
 }
 
-func NewDefaultUserRolePermissions(a *graph.DefaultUserRolePermissions) *DefaultUserRolePermissions {
+func NewDefaultUserRolePermissions(a models.DefaultUserRolePermissionsable) *DefaultUserRolePermissions {
 	if a == nil {
 		return nil
 	}
@@ -250,16 +250,19 @@ type AuthorizationPolicy struct {
 	PermissionGrantPolicyIdsAssignedToDefaultUserRole []string `json:"permissionGrantPolicyIdsAssignedToDefaultUserRole"`
 }
 
-func NewAuthorizationPolicys(policies []graph.AuthorizationPolicy) []AuthorizationPolicy {
-	res := []AuthorizationPolicy{}
+func NewAuthorizationPolicys(policies []models.AuthorizationPolicyable) []*AuthorizationPolicy {
+	res := []*AuthorizationPolicy{}
 	for i := range policies {
 		res = append(res, NewAuthorizationPolicy(policies[i]))
 	}
 	return res
 }
 
-func NewAuthorizationPolicy(p graph.AuthorizationPolicy) AuthorizationPolicy {
-	return AuthorizationPolicy{
+func NewAuthorizationPolicy(p models.AuthorizationPolicyable) *AuthorizationPolicy {
+	if p == nil {
+		return nil
+	}
+	return &AuthorizationPolicy{
 		AllowedToSignUpEmailBasedSubscriptions:            p.GetAllowedToSignUpEmailBasedSubscriptions(),
 		AllowedToUseSSPR:                                  p.GetAllowedToUseSSPR(),
 		AllowEmailVerifiedUsersToJoinOrganization:         p.GetAllowEmailVerifiedUsersToJoinOrganization(),
@@ -280,8 +283,11 @@ type AverageComparativeScore struct {
 	Basis *string `json:"basis"`
 }
 
-func NewAverageComparativeScore(p graph.AverageComparativeScore) AverageComparativeScore {
-	return AverageComparativeScore{
+func NewAverageComparativeScore(p models.AverageComparativeScoreable) *AverageComparativeScore {
+	if p == nil {
+		return nil
+	}
+	return &AverageComparativeScore{
 		AverageScore: p.GetAverageScore(),
 		Basis:        p.GetBasis(),
 	}
@@ -298,8 +304,11 @@ type ControlScore struct {
 	Score *float64 `json:"score"`
 }
 
-func NewControlScore(p graph.ControlScore) ControlScore {
-	return ControlScore{
+func NewControlScore(p models.ControlScoreable) *ControlScore {
+	if p == nil {
+		return nil
+	}
+	return &ControlScore{
 		ControlCategory: p.GetControlCategory(),
 		ControlName:     p.GetControlName(),
 		Description:     p.GetDescription(),
@@ -318,7 +327,7 @@ type SecurityVendorInformation struct {
 	Vendor *string `json:"vendor"`
 }
 
-func NewSecurityVendorInformation(p *graph.SecurityVendorInformation) *SecurityVendorInformation {
+func NewSecurityVendorInformation(p models.SecurityVendorInformationable) *SecurityVendorInformation {
 	if p == nil {
 		return nil
 	}
@@ -336,7 +345,7 @@ type IdentitySecurityDefaultsEnforcementPolicy struct {
 	IsEnabled *bool `json:"isEnabled"`
 }
 
-func NewIdentitySecurityDefaultsEnforcementPolicy(p *graph.IdentitySecurityDefaultsEnforcementPolicy) *IdentitySecurityDefaultsEnforcementPolicy {
+func NewIdentitySecurityDefaultsEnforcementPolicy(p models.IdentitySecurityDefaultsEnforcementPolicyable) *IdentitySecurityDefaultsEnforcementPolicy {
 	if p == nil {
 		return nil
 	}
@@ -354,7 +363,7 @@ type ContactMergeSuggestions struct {
 	IsEnabled *bool `json:"isEnabled"`
 }
 
-func NewContactMergeSuggestions(p *graph.ContactMergeSuggestions) *ContactMergeSuggestions {
+func NewContactMergeSuggestions(p models.ContactMergeSuggestionsable) *ContactMergeSuggestions {
 	if p == nil {
 		return nil
 	}
@@ -373,7 +382,7 @@ type UserInsightsSettings struct {
 	IsEnabled *bool `json:"isEnabled"`
 }
 
-func NewUserInsightsSettings(p *graph.UserInsightsSettings) *UserInsightsSettings {
+func NewUserInsightsSettings(p models.UserInsightsSettingsable) *UserInsightsSettings {
 	if p == nil {
 		return nil
 	}
@@ -393,7 +402,7 @@ type LocaleInfo struct {
 	Locale *string `json:"locale"`
 }
 
-func NewLocalInfo(p *graph.LocaleInfo) *LocaleInfo {
+func NewLocalInfo(p models.LocaleInfoable) *LocaleInfo {
 	if p == nil {
 		return nil
 	}
@@ -403,10 +412,10 @@ func NewLocalInfo(p *graph.LocaleInfo) *LocaleInfo {
 	}
 }
 
-func NewLocalInfoList(policies []graph.LocaleInfo) []LocaleInfo {
+func NewLocalInfoList(policies []models.LocaleInfoable) []LocaleInfo {
 	res := []LocaleInfo{}
 	for i := range policies {
-		res = append(res, *NewLocalInfo(&policies[i]))
+		res = append(res, *NewLocalInfo(policies[i]))
 	}
 	return res
 }
@@ -428,7 +437,7 @@ type RegionalFormatOverrides struct {
 	TimeZone *string `json:"timeZone"`
 }
 
-func NewRegionalFormatOverrides(p *graph.RegionalFormatOverrides) *RegionalFormatOverrides {
+func NewRegionalFormatOverrides(p models.RegionalFormatOverridesable) *RegionalFormatOverrides {
 	if p == nil {
 		return nil
 	}
@@ -452,7 +461,7 @@ type TranslationLanguageOverride struct {
 	TranslationBehavior *TranslationBehavior `json:"translationBehavior"`
 }
 
-func NewTranslationLanguageOverride(p graph.TranslationLanguageOverride) TranslationLanguageOverride {
+func NewTranslationLanguageOverride(p models.TranslationLanguageOverrideable) TranslationLanguageOverride {
 	var tb *TranslationBehavior
 	if p.GetTranslationBehavior() != nil {
 		v := TranslationBehavior(*p.GetTranslationBehavior())
@@ -464,7 +473,7 @@ func NewTranslationLanguageOverride(p graph.TranslationLanguageOverride) Transla
 	}
 }
 
-func NewTranslationLanguageOverrideList(entries []graph.TranslationLanguageOverride) []TranslationLanguageOverride {
+func NewTranslationLanguageOverrideList(entries []models.TranslationLanguageOverrideable) []TranslationLanguageOverride {
 	res := []TranslationLanguageOverride{}
 	for i := range entries {
 		res = append(res, NewTranslationLanguageOverride(entries[i]))
@@ -481,7 +490,7 @@ type TranslationPreferences struct {
 	UntranslatedLanguages []string `json:"untranslatedLanguages"`
 }
 
-func NewTranslationPreferences(p *graph.TranslationPreferences) *TranslationPreferences {
+func NewTranslationPreferences(p models.TranslationPreferencesable) *TranslationPreferences {
 	if p == nil {
 		return nil
 	}
@@ -517,7 +526,7 @@ type RegionalAndLanguageSettings struct {
 	TranslationPreferences *TranslationPreferences `json:"translationPreferences"`
 }
 
-func NewRegionalAndLanguageSettings(p *graph.RegionalAndLanguageSettings) *RegionalAndLanguageSettings {
+func NewRegionalAndLanguageSettings(p models.RegionalAndLanguageSettingsable) *RegionalAndLanguageSettings {
 	if p == nil {
 		return nil
 	}
@@ -543,7 +552,7 @@ type Identity struct {
 	Id *string `json:"id"`
 }
 
-func NewIdentity(p *graph.Identity) *Identity {
+func NewIdentity(p models.Identityable) *Identity {
 	if p == nil {
 		return nil
 	}
@@ -562,7 +571,7 @@ type IdentitySet struct {
 	User *Identity `json:"user"`
 }
 
-func NewIdentitySet(p *graph.IdentitySet) *IdentitySet {
+func NewIdentitySet(p models.IdentitySetable) *IdentitySet {
 	if p == nil {
 		return nil
 	}
@@ -628,14 +637,14 @@ func ParseTimeOnly(s string) *time.Time {
 	return &timeValue
 }
 
-func NewTimeRange(p graph.TimeRange) TimeRange {
+func NewTimeRange(p models.TimeRangeable) TimeRange {
 	return TimeRange{
 		EndTime:   ParseTimeOnly(p.GetEndTime().String()),
 		StartTime: ParseTimeOnly(p.GetStartTime().String()),
 	}
 }
 
-func NewTimeRangeList(entries []graph.TimeRange) []TimeRange {
+func NewTimeRangeList(entries []models.TimeRangeable) []TimeRange {
 	res := []TimeRange{}
 	for i := range entries {
 		res = append(res, NewTimeRange(entries[i]))
@@ -649,11 +658,11 @@ type (
 	WeekIndex int
 )
 
-func NewDayOfWeek(p graph.DayOfWeek) DayOfWeek {
+func NewDayOfWeek(p models.DayOfWeek) DayOfWeek {
 	return DayOfWeek(p)
 }
 
-func NewDayOfWeekList(entries []graph.DayOfWeek) []DayOfWeek {
+func NewDayOfWeekList(entries []models.DayOfWeek) []DayOfWeek {
 	res := []DayOfWeek{}
 	for i := range entries {
 		res = append(res, NewDayOfWeek(entries[i]))
@@ -680,7 +689,7 @@ type RecurrencePattern struct {
 	Type *RecurrencePatternType `json:"type"`
 }
 
-func NewRecurrencePattern(p *graph.RecurrencePattern) *RecurrencePattern {
+func NewRecurrencePattern(p models.RecurrencePatternable) *RecurrencePattern {
 	if p == nil {
 		return nil
 	}
@@ -743,7 +752,7 @@ func ParseDateOnly(s string) *time.Time {
 	return &timeValue
 }
 
-func NewRecurrenceRange(p *graph.RecurrenceRange) *RecurrenceRange {
+func NewRecurrenceRange(p models.RecurrenceRangeable) *RecurrenceRange {
 	if p == nil {
 		return nil
 	}
@@ -780,7 +789,7 @@ type PatternedRecurrence struct {
 	Range *RecurrenceRange `json:"range"`
 }
 
-func NewPatternedRecurrence(p *graph.PatternedRecurrence) *PatternedRecurrence {
+func NewPatternedRecurrence(p models.PatternedRecurrenceable) *PatternedRecurrence {
 	if p == nil {
 		return nil
 	}
@@ -800,7 +809,7 @@ type ShiftAvailability struct {
 	TimeZone *string `json:"timeZone"`
 }
 
-func NewShiftAvailability(p graph.ShiftAvailability) ShiftAvailability {
+func NewShiftAvailability(p models.ShiftAvailabilityable) ShiftAvailability {
 	return ShiftAvailability{
 		Recurrence: NewPatternedRecurrence(p.GetRecurrence()),
 		TimeSlots:  NewTimeRangeList(p.GetTimeSlots()),
@@ -808,7 +817,7 @@ func NewShiftAvailability(p graph.ShiftAvailability) ShiftAvailability {
 	}
 }
 
-func NewShiftAvailabilityList(entries []graph.ShiftAvailability) []ShiftAvailability {
+func NewShiftAvailabilityList(entries []models.ShiftAvailabilityable) []ShiftAvailability {
 	res := []ShiftAvailability{}
 	for i := range entries {
 		res = append(res, NewShiftAvailability(entries[i]))
@@ -822,7 +831,7 @@ type ShiftPreferences struct {
 	Availability []ShiftAvailability `json:"availability"`
 }
 
-func NewShiftPreferences(p *graph.ShiftPreferences) *ShiftPreferences {
+func NewShiftPreferences(p models.ShiftPreferencesable) *ShiftPreferences {
 	return &ShiftPreferences{
 		ChangeTrackedEntity: ChangeTrackedEntity{
 			Entity: Entity{
@@ -853,7 +862,7 @@ type UserSettings struct {
 	ShiftPreferences *ShiftPreferences `json:"shiftPreferences"`
 }
 
-func NewUserSettings(p *graph.UserSettings) *UserSettings {
+func NewUserSettings(p models.UserSettingsable) *UserSettings {
 	if p == nil {
 		return nil
 	}
@@ -882,7 +891,7 @@ type DeviceAndAppManagementAssignmentTarget struct {
 	DeviceAndAppManagementAssignmentFilterType *DeviceAndAppManagementAssignmentFilterType `json:"deviceAndAppManagementAssignmentFilterType"`
 }
 
-func NewDeviceAndAppManagementAssignmentTarget(p *graph.DeviceAndAppManagementAssignmentTarget) *DeviceAndAppManagementAssignmentTarget {
+func NewDeviceAndAppManagementAssignmentTarget(p models.DeviceAndAppManagementAssignmentTargetable) *DeviceAndAppManagementAssignmentTarget {
 	var filterType *DeviceAndAppManagementAssignmentFilterType
 	if p.GetDeviceAndAppManagementAssignmentFilterType() != nil {
 		t := DeviceAndAppManagementAssignmentFilterType(*p.GetDeviceAndAppManagementAssignmentFilterType())
@@ -904,14 +913,17 @@ type DeviceCompliancePolicyAssignment struct {
 	Target *DeviceAndAppManagementAssignmentTarget `json:"target"`
 }
 
-func NewDeviceCompliancePolicyAssignment(p graph.DeviceCompliancePolicyAssignment) DeviceCompliancePolicyAssignment {
+func NewDeviceCompliancePolicyAssignment(p models.DeviceCompliancePolicyAssignmentable) *DeviceCompliancePolicyAssignment {
+	if p == nil {
+		return nil
+	}
 	var source *DeviceAndAppManagementAssignmentSource
 	if p.GetSource() != nil {
 		s := DeviceAndAppManagementAssignmentSource(*p.GetSource())
 		source = &s
 	}
 
-	return DeviceCompliancePolicyAssignment{
+	return &DeviceCompliancePolicyAssignment{
 		Entity: Entity{
 			Id: p.GetId(),
 		},
@@ -921,8 +933,8 @@ func NewDeviceCompliancePolicyAssignment(p graph.DeviceCompliancePolicyAssignmen
 	}
 }
 
-func NewDeviceCompliancePolicyAssignments(entries []graph.DeviceCompliancePolicyAssignment) []DeviceCompliancePolicyAssignment {
-	res := []DeviceCompliancePolicyAssignment{}
+func NewDeviceCompliancePolicyAssignments(entries []models.DeviceCompliancePolicyAssignmentable) []*DeviceCompliancePolicyAssignment {
+	res := []*DeviceCompliancePolicyAssignment{}
 	for i := range entries {
 		res = append(res, NewDeviceCompliancePolicyAssignment(entries[i]))
 	}
@@ -953,7 +965,7 @@ type PermissionGrantConditionSet struct {
 	ResourceApplication *string `json:"resourceApplication"`
 }
 
-func NewPermissionGrantConditionSet(p graph.PermissionGrantConditionSet) PermissionGrantConditionSet {
+func NewPermissionGrantConditionSet(p models.PermissionGrantConditionSetable) PermissionGrantConditionSet {
 	t := PermissionType(*p.GetPermissionType())
 
 	return PermissionGrantConditionSet{
@@ -972,7 +984,7 @@ func NewPermissionGrantConditionSet(p graph.PermissionGrantConditionSet) Permiss
 	}
 }
 
-func NewPermissionGrantConditionSets(set []graph.PermissionGrantConditionSet) []PermissionGrantConditionSet {
+func NewPermissionGrantConditionSets(set []models.PermissionGrantConditionSetable) []PermissionGrantConditionSet {
 	res := []PermissionGrantConditionSet{}
 	for i := range set {
 		res = append(res, NewPermissionGrantConditionSet(set[i]))
@@ -988,8 +1000,11 @@ type PermissionGrantPolicy struct {
 	Includes []PermissionGrantConditionSet `json:"includes"`
 }
 
-func NewPermissionGrantPolicy(p graph.PermissionGrantPolicy) PermissionGrantPolicy {
-	return PermissionGrantPolicy{
+func NewPermissionGrantPolicy(p models.PermissionGrantPolicyable) *PermissionGrantPolicy {
+	if p == nil {
+		return nil
+	}
+	return &PermissionGrantPolicy{
 		PolicyBase: PolicyBase{
 			DirectoryObject: DirectoryObject{
 				Entity: Entity{
@@ -1005,8 +1020,8 @@ func NewPermissionGrantPolicy(p graph.PermissionGrantPolicy) PermissionGrantPoli
 	}
 }
 
-func NewPermissionGrantPolicys(policies []graph.PermissionGrantPolicy) []PermissionGrantPolicy {
-	res := []PermissionGrantPolicy{}
+func NewPermissionGrantPolicys(policies []models.PermissionGrantPolicyable) []*PermissionGrantPolicy {
+	res := []*PermissionGrantPolicy{}
 	for i := range policies {
 		res = append(res, NewPermissionGrantPolicy(policies[i]))
 	}
@@ -1028,7 +1043,7 @@ type AccessReviewReviewerScope struct {
 	QueryType *string `json:"queryType"`
 }
 
-func NewAccessReviewReviewerScope(p graph.AccessReviewReviewerScope) AccessReviewReviewerScope {
+func NewAccessReviewReviewerScope(p models.AccessReviewReviewerScopeable) AccessReviewReviewerScope {
 	return AccessReviewReviewerScope{
 		Query:     p.GetQuery(),
 		QueryRoot: p.GetQueryRoot(),
@@ -1036,7 +1051,7 @@ func NewAccessReviewReviewerScope(p graph.AccessReviewReviewerScope) AccessRevie
 	}
 }
 
-func NewAccessReviewReviewerScopes(policies []graph.AccessReviewReviewerScope) []AccessReviewReviewerScope {
+func NewAccessReviewReviewerScopes(policies []models.AccessReviewReviewerScopeable) []AccessReviewReviewerScope {
 	res := []AccessReviewReviewerScope{}
 	for i := range policies {
 		res = append(res, NewAccessReviewReviewerScope(policies[i]))
@@ -1060,7 +1075,7 @@ type AdminConsentRequestPolicy struct {
 	Version *int32 `json:"version"`
 }
 
-func NewAdminConsentRequestPolicy(p *graph.AdminConsentRequestPolicy) *AdminConsentRequestPolicy {
+func NewAdminConsentRequestPolicy(p models.AdminConsentRequestPolicyable) *AdminConsentRequestPolicy {
 	if p != nil {
 		return nil
 	}
