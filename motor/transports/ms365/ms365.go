@@ -40,31 +40,25 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 		return nil, errors.New("backend is not supported for ms365 transport")
 	}
 
-	if len(tc.Credentials) != 1 {
+	if len(tc.Credentials) != 1 || tc.Credentials[0] == nil {
 		return nil, errors.New("ms365 backend requires a credentials file, pass json via -i option")
-	}
-
-	cred := tc.Credentials[0]
-
-	// we only support private key authentication for ms 365
-	clientSecret := ""
-	switch cred.Type {
-	case vault.CredentialType_private_key:
-		return nil, errors.New("certificate authentication is not implemented yet")
-	case vault.CredentialType_password:
-		clientSecret = string(cred.Secret)
-	default:
-		return nil, errors.New("invalid secret configuration for ms365 transport: " + cred.Type.String())
 	}
 
 	t := &Transport{
 		tenantID: tc.Options[OptionTenantID],
 		clientID: tc.Options[OptionClientID],
-		// TODO: we want to support secret and certificate authentication
-		clientSecret: clientSecret,
 		// TODO: we want to remove the data report with a proper implementation
 		powershellDataReportFile: tc.Options[OptionDataReport],
 		opts:                     tc.Options,
+		cred:                     tc.Credentials[0],
+	}
+
+	// we only support private key authentication and client secret for ms 365
+	switch t.cred.Type {
+	case vault.CredentialType_pkcs12:
+	case vault.CredentialType_password:
+	default:
+		return nil, errors.New("invalid secret configuration for ms365 transport: " + t.cred.Type.String())
 	}
 
 	if len(t.tenantID) == 0 {
@@ -85,7 +79,7 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 type Transport struct {
 	tenantID                    string
 	clientID                    string
-	clientSecret                string
+	cred                        *vault.Credential
 	opts                        map[string]string
 	rolesMap                    map[string]struct{}
 	powershellDataReportFile    string
