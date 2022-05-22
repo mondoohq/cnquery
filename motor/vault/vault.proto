@@ -30,6 +30,7 @@ enum CredentialType {
   json = 6;
   aws_ec2_instance_connect = 7;
   aws_ec2_ssm_session = 8;
+  pkcs12 = 9;
 }
 
 enum SecretEncoding {
