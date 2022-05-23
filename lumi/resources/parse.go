@@ -163,19 +163,16 @@ func (s *lumiParseJson) GetContent(file File) (string, error) {
 	return file.Content()
 }
 
-func (s *lumiParseJson) GetParams(content string) (map[string]interface{}, error) {
-	res := make(map[string](interface{}))
-
+func (s *lumiParseJson) GetParams(content string) (interface{}, error) {
 	if content == "" {
 		return nil, nil
 	}
 
-	err := json.Unmarshal([]byte(content), &res)
-	if err != nil {
+	resSlice := []interface{}{}
+	if err := json.Unmarshal([]byte(content), &resSlice); err != nil {
 		return nil, err
 	}
-
-	return res, nil
+	return resSlice, nil
 }
 
 func (s *lumiParseYaml) init(args *lumi.Args) (*lumi.Args, ParseJson, error) {
