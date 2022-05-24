@@ -7,9 +7,11 @@ import (
 	"os"
 
 	"github.com/google/go-github/v43/github"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
+	"go.mondoo.io/mondoo/motor/vault"
 	"golang.org/x/oauth2"
 )
 
@@ -19,13 +21,28 @@ var (
 )
 
 func New(tc *transports.TransportConfig) (*Transport, error) {
+	// check if the token was provided by the option. This way is deprecated since it does not pass the token as secret
 	token := tc.Options["token"]
+
+	// if no token was provided, lets read the env variable
 	if token == "" {
 		token = os.Getenv("GITHUB_TOKEN")
 	}
 
+	// if a secret was provided, it always overrides the env variable since it has precedence
+	if len(tc.Credentials) > 0 {
+		for i := range tc.Credentials {
+			cred := tc.Credentials[i]
+			if cred.Type == vault.CredentialType_password {
+				token = string(cred.Secret)
+			} else {
+				log.Warn().Str("credential-type", cred.Type.String()).Msg("unsupported credential type for GitHub transport")
+			}
+		}
+	}
+
 	if token == "" {
-		return nil, errors.New("a valid github token is required, pass --option token=<yourtoken> or set GITHUB_TOKEN")
+		return nil, errors.New("a valid GitHub token is required, pass --token '<yourtoken>' or set GITHUB_TOKEN environment variable")
 	}
 
 	var oauthClient *http.Client
@@ -51,11 +68,11 @@ type Transport struct {
 }
 
 func (t *Transport) RunCommand(command string) (*transports.Command, error) {
-	return nil, errors.New("github does not implement RunCommand")
+	return nil, errors.New("GitHub does not implement RunCommand")
 }
 
 func (t *Transport) FileInfo(path string) (transports.FileInfoDetails, error) {
-	return transports.FileInfoDetails{}, errors.New("github does not implement FileInfo")
+	return transports.FileInfoDetails{}, errors.New("GitHub does not implement FileInfo")
 }
 
 func (t *Transport) FS() afero.Fs {

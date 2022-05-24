@@ -56,10 +56,10 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 
 	// we clone the config here, and replace all credential references with the real references
 	// the clone is important so that credentials are not leaked outside of the function
-	clonedConfig := proto.Clone(tc).(*transports.TransportConfig)
+	resolvedConfig := proto.Clone(tc).(*transports.TransportConfig)
 	resolvedCredentials := []*vault.Credential{}
-	for i := range clonedConfig.Credentials {
-		credential := clonedConfig.Credentials[i]
+	for i := range resolvedConfig.Credentials {
+		credential := resolvedConfig.Credentials[i]
 		if credential.SecretId != "" && credentialFn != nil {
 			resolvedCredential, err := credentialFn(credential)
 			if err != nil {
@@ -70,13 +70,13 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		}
 		resolvedCredentials = append(resolvedCredentials, credential)
 	}
-	clonedConfig.Credentials = resolvedCredentials
+	resolvedConfig.Credentials = resolvedCredentials
 
 	// establish connection
-	switch clonedConfig.Backend {
+	switch resolvedConfig.Backend {
 	case transports.TransportBackend_CONNECTION_MOCK:
 		log.Debug().Msg("connection> load mock transport")
-		trans, err := mock.NewFromToml(clonedConfig)
+		trans, err := mock.NewFromToml(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -92,76 +92,76 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 			return nil, err
 		}
 
-		m, err = motor.New(trans, motor.WithRecoding(clonedConfig.Record))
+		m, err = motor.New(trans, motor.WithRecoding(resolvedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
 	case transports.TransportBackend_CONNECTION_TAR:
 		log.Debug().Msg("connection> load tar transport")
-		trans, err := tar.New(clonedConfig)
+		trans, err := tar.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
 
-		m, err = motor.New(trans, motor.WithRecoding(clonedConfig.Record))
+		m, err = motor.New(trans, motor.WithRecoding(resolvedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
 	case transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY:
 		log.Debug().Msg("connection> load container registry transport")
-		trans, err := container.NewContainerRegistryImage(clonedConfig)
+		trans, err := container.NewContainerRegistryImage(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans, motor.WithRecoding(clonedConfig.Record))
+		m, err = motor.New(trans, motor.WithRecoding(resolvedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
 	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER:
 		log.Debug().Msg("connection> load docker engine container transport")
-		trans, err := container.NewDockerEngineContainer(clonedConfig)
+		trans, err := container.NewDockerEngineContainer(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans, motor.WithRecoding(clonedConfig.Record))
+		m, err = motor.New(trans, motor.WithRecoding(resolvedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
 	case transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE:
 		log.Debug().Msg("connection> load docker engine image transport")
-		trans, err := container.NewDockerEngineImage(clonedConfig)
+		trans, err := container.NewDockerEngineImage(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans, motor.WithRecoding(clonedConfig.Record))
+		m, err = motor.New(trans, motor.WithRecoding(resolvedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
 	case transports.TransportBackend_CONNECTION_SSH:
 		log.Debug().Msg("connection> load ssh transport")
-		trans, err := ssh.New(clonedConfig)
+		trans, err := ssh.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
 
-		m, err = motor.New(trans, motor.WithRecoding(clonedConfig.Record))
+		m, err = motor.New(trans, motor.WithRecoding(resolvedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
 	case transports.TransportBackend_CONNECTION_WINRM:
 		log.Debug().Msg("connection> load winrm transport")
-		trans, err := winrm.New(clonedConfig)
+		trans, err := winrm.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
 
-		m, err = motor.New(trans, motor.WithRecoding(clonedConfig.Record))
+		m, err = motor.New(trans, motor.WithRecoding(resolvedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
 	case transports.TransportBackend_CONNECTION_VSPHERE:
 		log.Debug().Msg("connection> load vsphere transport")
-		trans, err := vsphere.New(clonedConfig)
+		trans, err := vsphere.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -172,7 +172,7 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		}
 	case transports.TransportBackend_CONNECTION_ARISTAEOS:
 		log.Debug().Msg("connection> load arista eos transport")
-		trans, err := arista.New(clonedConfig)
+		trans, err := arista.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -182,7 +182,7 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		}
 	case transports.TransportBackend_CONNECTION_AWS:
 		log.Debug().Msg("connection> load aws transport")
-		trans, err := aws_transport.New(clonedConfig, aws_transport.TransportOptions(clonedConfig.Options)...)
+		trans, err := aws_transport.New(resolvedConfig, aws_transport.TransportOptions(resolvedConfig.Options)...)
 		if err != nil {
 			return nil, err
 		}
@@ -192,7 +192,7 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		}
 	case transports.TransportBackend_CONNECTION_GCP:
 		log.Debug().Msg("connection> load gcp transport")
-		trans, err := gcp.New(clonedConfig)
+		trans, err := gcp.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -202,7 +202,7 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		}
 	case transports.TransportBackend_CONNECTION_AZURE:
 		log.Debug().Msg("connection> load azure transport")
-		trans, err := azure.New(clonedConfig)
+		trans, err := azure.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -212,7 +212,7 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		}
 	case transports.TransportBackend_CONNECTION_MS365:
 		log.Debug().Msg("connection> load microsoft 365 transport")
-		trans, err := ms365.New(clonedConfig)
+		trans, err := ms365.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -222,7 +222,7 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 		}
 	case transports.TransportBackend_CONNECTION_IPMI:
 		log.Debug().Msg("connection> load ipmi transport")
-		trans, err := ipmi.New(clonedConfig)
+		trans, err := ipmi.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -231,25 +231,25 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 			return nil, err
 		}
 	case transports.TransportBackend_CONNECTION_VSPHERE_VM:
-		trans, err := vmwareguestapi.New(clonedConfig)
+		trans, err := vmwareguestapi.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans, motor.WithRecoding(clonedConfig.Record))
+		m, err = motor.New(trans, motor.WithRecoding(resolvedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
 	case transports.TransportBackend_CONNECTION_FS:
-		trans, err := fs.New(clonedConfig)
+		trans, err := fs.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans, motor.WithRecoding(clonedConfig.Record))
+		m, err = motor.New(trans, motor.WithRecoding(resolvedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
 	case transports.TransportBackend_CONNECTION_EQUINIX_METAL:
-		trans, err := equinix.New(clonedConfig)
+		trans, err := equinix.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -258,7 +258,7 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 			return nil, err
 		}
 	case transports.TransportBackend_CONNECTION_K8S:
-		trans, err := k8s_transport.New(clonedConfig)
+		trans, err := k8s_transport.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -267,7 +267,7 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 			return nil, err
 		}
 	case transports.TransportBackend_CONNECTION_GITHUB:
-		trans, err := github.New(tc)
+		trans, err := github.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -314,7 +314,7 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 			return nil, err
 		}
 	default:
-		return nil, fmt.Errorf("connection> unsupported backend '%s'", clonedConfig.Backend)
+		return nil, fmt.Errorf("connection> unsupported backend '%s'", resolvedConfig.Backend)
 	}
 
 	return m, nil
