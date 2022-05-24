@@ -168,11 +168,11 @@ func (s *lumiParseJson) GetParams(content string) (interface{}, error) {
 		return nil, nil
 	}
 
-	resSlice := []interface{}{}
-	if err := json.Unmarshal([]byte(content), &resSlice); err != nil {
+	var res interface{}
+	if err := json.Unmarshal([]byte(content), &res); err != nil {
 		return nil, err
 	}
-	return resSlice, nil
+	return res, nil
 }
 
 func (s *lumiParseYaml) init(args *lumi.Args) (*lumi.Args, ParseJson, error) {
