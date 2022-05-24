@@ -276,7 +276,7 @@ func NewMotorConnection(tc *transports.TransportConfig, credentialFn func(cred *
 			return nil, err
 		}
 	case transports.TransportBackend_CONNECTION_GITLAB:
-		trans, err := gitlab.New(tc)
+		trans, err := gitlab.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
