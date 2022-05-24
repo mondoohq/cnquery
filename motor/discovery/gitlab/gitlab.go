@@ -21,7 +21,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 }
 
 func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
-	// establish connection to Gitlab
+	// establish connection to GitLab
 	m, err := resolver.NewMotorConnection(tc, cfn)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 
 	return []*asset.Asset{{
 		PlatformIds: []string{identifier},
-		Name:        "Gitlab Group " + name,
+		Name:        "GitLab Group " + name,
 		Platform:    pf,
 		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
 		State:       asset.State_STATE_ONLINE,
