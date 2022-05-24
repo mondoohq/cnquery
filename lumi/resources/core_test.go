@@ -237,7 +237,9 @@ func runSimpleTests(t *testing.T, tests []simpleTest) {
 				return
 			}
 
-			assert.Equal(t, cur.expectation, res[cur.resultIndex].Data.Value)
+			data := res[cur.resultIndex].Data
+			require.NoError(t, data.Error)
+			assert.Equal(t, cur.expectation, data.Value)
 		})
 	}
 }
@@ -289,8 +291,8 @@ func TestErroneousLlxChains(t *testing.T) {
 func TestResource_InitWithResource(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
-			"command(platform.name).stdout",
-			0, "",
+			"file(platform.name).exists",
+			0, false,
 		},
 		{
 			"'linux'.contains(platform.family)",
@@ -368,10 +370,6 @@ func TestCore_If(t *testing.T) {
 			0, int64(789),
 		},
 		{
-			"if(platform.family.contains('arch'))",
-			1, nil,
-		},
-		{
 			// This test comes out from an issue we had where return was not
 			// generating a single entrypoint, causing the first reported
 			// value to be used as the return value.
@@ -418,6 +416,14 @@ func TestCore_If(t *testing.T) {
 			map[string]interface{}{
 				"Oy5SF8NbUtxaBwvZPpsnd0K21CY+fvC44FSd2QpgvIL689658Na52udy7qF2+hHjczk35TAstDtFZq7JIHNCmg==": llx.IntData(789),
 			},
+		},
+	})
+
+	runSimpleErrorTests(t, []simpleTest{
+		// if-conditions need to be called with a bloc
+		{
+			"if(platform.family.contains('arch'))",
+			1, "Called if with 1 arguments, expected at least 2",
 		},
 	})
 }
@@ -1299,7 +1305,7 @@ func TestResource_duplicateFields_piper(t *testing.T) {
 	})
 }
 
-func TestDict_Methods(t *testing.T) {
+func TestDict_Methods_Map(t *testing.T) {
 	p := "parse.json('/dummy.json')."
 
 	expectedTime, err := time.Parse(time.RFC3339, "2016-01-28T23:02:24Z")
@@ -1384,6 +1390,50 @@ func TestDict_Methods(t *testing.T) {
 		{
 			p + "params['yo'] > 3",
 			2, "left side of operation is null",
+		},
+	})
+}
+
+func TestDict_Methods_Array(t *testing.T) {
+	p := "parse.json('/dummy.array.json')."
+
+	runSimpleTests(t, []simpleTest{
+		{
+			p + "params[0]",
+			0, float64(1),
+		},
+		{
+			p + "params[1]",
+			0, "hi",
+		},
+		{
+			p + "params[2]",
+			0, map[string]interface{}{"ll": float64(0)},
+		},
+	})
+}
+
+func TestDict_Methods_OtherJson(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"parse.json('/dummy.number.json').params",
+			0, float64(1.23),
+		},
+		{
+			"parse.json('/dummy.string.json').params",
+			0, "hi",
+		},
+		{
+			"parse.json('/dummy.true.json').params",
+			0, true,
+		},
+		{
+			"parse.json('/dummy.false.json').params",
+			0, false,
+		},
+		{
+			"parse.json('/dummy.null.json').params",
+			0, nil,
 		},
 	})
 }

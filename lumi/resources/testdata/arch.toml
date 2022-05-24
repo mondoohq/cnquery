@@ -569,6 +569,26 @@ content="""
 }
 """
 
+[files."/dummy.array.json"]
+content="""
+[1,"hi",{"ll": 0}]
+"""
+
+[files."/dummy.true.json"]
+content="""true"""
+
+[files."/dummy.false.json"]
+content="""false"""
+
+[files."/dummy.number.json"]
+content="""1.23"""
+
+[files."/dummy.string.json"]
+content="""\"hi\""""
+
+[files."/dummy.null.json"]
+content="""null"""
+
 [files."/dummy.plist"]
 content="""
 <?xml version="1.0" encoding="UTF-8"?>
