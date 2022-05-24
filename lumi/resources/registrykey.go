@@ -34,12 +34,12 @@ func (k *lumiRegistrykey) GetExists() (bool, error) {
 	if exitcode != 0 {
 		stderr, err := cmd.Stderr()
 		// this would be an expected error and would ensure that we do not throw an error on windows systems
-		// TODO: revist how this is handled for non-english systems
-		if err == nil && strings.Contains(stderr, "does not exist") {
+		// TODO: revisit how this is handled for non-english systems
+		if err == nil && (strings.Contains(stderr, "not exist") || strings.Contains(stderr, "ObjectNotFound")) {
 			return false, nil
 		}
 
-		return false, errors.New("could to retrieve registry key")
+		return false, errors.New("could not retrieve registry key")
 	}
 	return true, nil
 }
