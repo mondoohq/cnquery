@@ -22,7 +22,7 @@ if ($reg -eq $null) {
 $properties = @()
 $reg.Property | ForEach-Object {
     $fetchKeyValue = $_
-    if ("(default)".Equals($key)) { $fetchKeyValue = '' }
+    if ("(default)".Equals($_)) { $fetchKeyValue = '' }
     $entry = New-Object psobject -Property @{
       "key" = $_
       "value" = New-Object psobject -Property @{
