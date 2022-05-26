@@ -700,6 +700,56 @@ func (k *lumiK8s) GetRolebindings() ([]interface{}, error) {
 	})
 }
 
+func (k *lumiK8s) GetCustomresources() ([]interface{}, error) {
+	kt, err := k8stransport(k.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := kt.Resources("CustomResourceDefinition", "")
+	if err != nil {
+		return nil, err
+	}
+
+	resp := []interface{}{}
+	for i := range result.RootResources {
+		resource := result.RootResources[i]
+		//resource.
+		obj, err := meta.Accessor(resource)
+		if err != nil {
+			log.Error().Err(err).Msg("could not access object attributes")
+			return nil, err
+		}
+
+		lumiResources, err := k8sResourceToLumi(k.Runtime, obj.GetName(), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+			ts := obj.GetCreationTimestamp()
+
+			manifest, err := jsonToDict(resource)
+			if err != nil {
+				return nil, err
+			}
+
+			r, err := k.Runtime.CreateResource(obj.GetName(),
+				"uid", string(obj.GetUID()),
+				"resourceVersion", obj.GetResourceVersion(),
+				"name", obj.GetName(),
+				"namespace", obj.GetNamespace(),
+				"kind", objT.GetKind(),
+				"created", &ts.Time,
+				"manifest", manifest,
+			)
+			if err != nil {
+				return nil, err
+			}
+			r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resp})
+			return r, nil
+		})
+
+		resp = append(resp, lumiResources...)
+	}
+	return resp, nil
+}
+
 func (k *lumiK8sApiresource) id() (string, error) {
 	return k.Name()
 }
@@ -718,6 +768,18 @@ func (k *lumiK8sNode) GetLabels() (interface{}, error) {
 
 func (k *lumiK8sNamespace) id() (string, error) {
 	return k.Uid()
+}
+
+func (k *lumiK8sCustomresource) id() (string, error) {
+	return k.Uid()
+}
+
+func (k *lumiK8sCustomresource) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.LumiResource())
+}
+
+func (k *lumiK8sCustomresource) GetLabels() (interface{}, error) {
+	return k8sLabels(k.LumiResource())
 }
 
 func (k *lumiK8sPod) id() (string, error) {
