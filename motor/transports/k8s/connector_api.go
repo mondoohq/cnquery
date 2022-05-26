@@ -155,6 +155,12 @@ func (ac *ApiConnector) Resources(kind string, name string) (*ResourceResult, er
 	}
 	log.Debug().Msg("completed querying resource types")
 
+	for _, r := range resTypes.Resources() {
+		if r.Resource.Kind == "mondooauditconfigs.k8s.mondoo.com" {
+			log.Debug().Msg("fetch all resource objects")
+		}
+	}
+
 	// return all resources for specified resource tpyes and namespace
 	log.Debug().Msg("fetch all resource objects")
 	resourceObjects, err := ac.d.GetAllResources(ctx, resTypes, ns, allNs)
