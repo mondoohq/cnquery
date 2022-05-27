@@ -1,3 +1,6 @@
+//go:build debugtest
+// +build debugtest
+
 package k8s
 
 import (
@@ -22,7 +25,7 @@ func TestKubernetes(t *testing.T) {
 	require.NoError(t, err)
 	fmt.Println(id)
 
-	res, err := trans.Resources("mondooauditconfig", "")
+	res, err := trans.Resources("daemonsets", "")
 	require.NoError(t, err)
 	fmt.Println(res)
 

@@ -13,26 +13,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func ToCoreV1Pod(resource runtime.Object) (*corev1.Pod, error) {
-	pod, ok := resource.(*corev1.Pod)
-	if !ok {
-		return nil, errors.New("could not convert to corev1.Pod")
-	}
-	return pod, nil
-}
-
-func ToAppsV1Deployment(resource runtime.Object) (*appsv1.Deployment, error) {
-	deployment, ok := resource.(*appsv1.Deployment)
-	if !ok {
-		return nil, errors.New("could not convert to corev1.Pod")
-	}
-	return deployment, nil
-}
-
-func GetPodSpec(resource runtime.Object) *corev1.PodSpec {
+func GetPodSpec(obj runtime.Object) (*corev1.PodSpec, error) {
 	var podSpec *corev1.PodSpec
-
-	switch x := resource.(type) {
+	switch x := obj.(type) {
 	case *batchv1beta1.CronJob:
 		podSpec = &x.Spec.JobTemplate.Spec.Template.Spec
 	case *appsv1.DaemonSet:
@@ -58,17 +41,20 @@ func GetPodSpec(resource runtime.Object) *corev1.PodSpec {
 	case *appsv1beta1.StatefulSet:
 		podSpec = &x.Spec.Template.Spec
 	}
-	return podSpec
+	return podSpec, nil
 }
 
-func GetContainers(resource runtime.Object) []corev1.Container {
-	podSpec := GetPodSpec(resource)
+func GetContainers(resource runtime.Object) ([]corev1.Container, error) {
+	podSpec, err := GetPodSpec(resource)
+	if err != nil {
+		return nil, err
+	}
 	containers := []corev1.Container{}
 	if podSpec != nil {
 		containers = append(containers, podSpec.InitContainers...)
 		containers = append(containers, podSpec.Containers...)
 	}
-	return containers
+	return containers, nil
 }
 
 func FindByUid(resources []runtime.Object, uid string) (runtime.Object, error) {

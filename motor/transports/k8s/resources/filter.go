@@ -30,10 +30,6 @@ func filterResource(resources []runtime.Object, kind string, name string) []runt
 			continue
 		}
 
-		if o.GetName() == "mondooauditconfigs.k8s.mondoo.com" {
-			log.Info().Msg("test")
-		}
-
 		if res.GetObjectKind().GroupVersionKind().Kind == kind {
 			if len(name) > 0 && o.GetName() == name {
 				filtered = append(filtered, res)
