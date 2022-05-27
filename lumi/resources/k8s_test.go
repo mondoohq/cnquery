@@ -16,7 +16,7 @@ func k8sTestQuery(t *testing.T, query string) []*llx.RawResult {
 	trans, err := k8s.New(&transports.TransportConfig{
 		Backend: transports.TransportBackend_CONNECTION_K8S,
 		Options: map[string]string{
-			//"path": "./testdata/k8s",
+			"path": "./testdata/k8s",
 		},
 	})
 	require.NoError(t, err)
@@ -30,7 +30,7 @@ func k8sTestQuery(t *testing.T, query string) []*llx.RawResult {
 
 func TestResource_k8s(t *testing.T) {
 	t.Run("k8s pod security policies", func(t *testing.T) {
-		res := k8sTestQuery(t, "k8s.customresrouces")
+		res := k8sTestQuery(t, "k8s.podSecurityPolicies[0].name")
 		require.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, string("example"), res[0].Data.Value)

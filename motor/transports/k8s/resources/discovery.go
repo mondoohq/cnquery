@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"sync"
@@ -135,12 +134,7 @@ func (d *Discovery) GetKindResources(ctx context.Context, apiRes ApiResource, ns
 			break
 		}
 
-		objects, err := UnstructuredListToObjectList(resp.Items)
-		if err != nil {
-			return nil, fmt.Errorf("could not parse resources for %s: %w", apiRes.GroupVersionResource(), err)
-		}
-
-		out = append(out, objects...)
+		out = append(out, UnstructuredListToObjectList(resp.Items)...)
 
 		next = resp.GetContinue()
 		if next == "" {

@@ -1,55 +1,30 @@
 package resources
 
 import (
-	"github.com/rs/zerolog/log"
-	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/kubectl/pkg/scheme"
 )
 
-func init() {
-	apiextv1.AddToScheme(scheme.Scheme)
-}
-
-func UnstructuredToObject(obj *unstructured.Unstructured) (runtime.Object, error) {
-	json, err := runtime.Encode(unstructured.UnstructuredJSONScheme, obj)
-	if err != nil {
-		return nil, err
-	}
-
-	// UniversalDecoder call must specify parameter versions; otherwise it will decode to internal versions.
-	decoder := scheme.Codecs.UniversalDecoder(scheme.Scheme.PrioritizedVersionsAllGroups()...)
-	return runtime.Decode(decoder, json)
-}
-
-var skipResources = []string{"APIService", "CustomResourceDefinition"}
-
-func skip(name string) bool {
-	for i := range skipResources {
-		if skipResources[i] == name {
-			return true
-		}
-	}
-	return false
-}
-
-func UnstructuredListToObjectList(list []unstructured.Unstructured) ([]runtime.Object, error) {
-	out := []runtime.Object{}
+func UnstructuredListToObjectList(list []unstructured.Unstructured) []runtime.Object {
+	var objs []runtime.Object
 	for i := range list {
-
-		unstructured := list[i]
-
-		if skip(unstructured.GetName()) {
-			continue
-		}
-
-		d, err := UnstructuredToObject(&unstructured)
-		if err != nil {
-			log.Debug().Err(err).Str("name", unstructured.GetName()).Msg("error during conversion")
-			continue
-		}
-		out = append(out, d)
+		objs = append(objs, ConvertToK8sObject(list[i]))
 	}
-	return out, nil
+	return objs
+}
+
+// ConvertToK8sObject converts an unstructured object to a Kubernetes runtime object if the schema
+// recognizes it. If the object is not registered in the schema it will remain unstructured.
+func ConvertToK8sObject(r unstructured.Unstructured) runtime.Object {
+	// Get a struct with the correct type of object
+	obj, err := ClientSchema().New(r.GroupVersionKind())
+	if err != nil {
+		return &r
+	}
+
+	// Convert the unstructured struct to the real object
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(r.Object, obj); err != nil {
+		return &r
+	}
+	return obj
 }

@@ -188,7 +188,12 @@ func (k *lumiK8s) GetPods() ([]interface{}, error) {
 			return nil, err
 		}
 
-		podSpec, err := jsonToDict(resources.GetPodSpec(resource))
+		podSpec, err := resources.GetPodSpec(resource)
+		if err != nil {
+			return nil, err
+		}
+
+		podSpecDict, err := jsonToDict(podSpec)
 		if err != nil {
 			return nil, err
 		}
@@ -203,7 +208,7 @@ func (k *lumiK8s) GetPods() ([]interface{}, error) {
 			"apiVersion", objT.GetAPIVersion(),
 			"kind", objT.GetKind(),
 			"created", &ts.Time,
-			"podSpec", podSpec,
+			"podSpec", podSpecDict,
 			"manifest", manifest,
 		)
 		if err != nil {
@@ -361,7 +366,7 @@ func (k *lumiK8s) GetPodSecurityPolicies() ([]interface{}, error) {
 
 		psp, ok := resource.(*policyv1beta1.PodSecurityPolicy)
 		if !ok {
-			return nil, errors.New("not a k8s psp")
+			return nil, errors.New("not a k8s podsecuritypolicy")
 		}
 
 		spec, err := jsonToDict(psp.Spec)
@@ -466,7 +471,7 @@ func (k *lumiK8s) GetNetworkPolicies() ([]interface{}, error) {
 
 		networkPolicies, ok := resource.(*networkingv1.NetworkPolicy)
 		if !ok {
-			return nil, errors.New("not a k8s psp")
+			return nil, errors.New("not a k8s networkpolicy")
 		}
 
 		spec, err := jsonToDict(networkPolicies.Spec)
@@ -503,7 +508,7 @@ func (k *lumiK8s) GetServiceaccounts() ([]interface{}, error) {
 
 		serviceAccount, ok := resource.(*corev1.ServiceAccount)
 		if !ok {
-			return nil, errors.New("not a k8s service account")
+			return nil, errors.New("not a k8s serviceaccount")
 		}
 
 		secrets, err := jsonToDictSlice(serviceAccount.Secrets)
@@ -547,7 +552,7 @@ func (k *lumiK8s) GetClusterroles() ([]interface{}, error) {
 
 		clusterRole, ok := resource.(*rbacauthorizationv1.ClusterRole)
 		if !ok {
-			return nil, errors.New("not a k8s rbac cluster role")
+			return nil, errors.New("not a k8s clusterrole")
 		}
 
 		rules, err := jsonToDictSlice(clusterRole.Rules)
@@ -589,7 +594,7 @@ func (k *lumiK8s) GetRoles() ([]interface{}, error) {
 
 		clusterRole, ok := resource.(*rbacauthorizationv1.Role)
 		if !ok {
-			return nil, errors.New("not a k8s rbac role")
+			return nil, errors.New("not a k8s role")
 		}
 
 		rules, err := jsonToDictSlice(clusterRole.Rules)
@@ -624,17 +629,17 @@ func (k *lumiK8s) GetClusterrolebindings() ([]interface{}, error) {
 			return nil, err
 		}
 
-		clusterRole, ok := resource.(*rbacauthorizationv1.ClusterRoleBinding)
+		clusterRoleBinding, ok := resource.(*rbacauthorizationv1.ClusterRoleBinding)
 		if !ok {
-			return nil, errors.New("not a k8s cluster role binding")
+			return nil, errors.New("not a k8s clusterrolebinding")
 		}
 
-		subjects, err := jsonToDictSlice(clusterRole.Subjects)
+		subjects, err := jsonToDictSlice(clusterRoleBinding.Subjects)
 		if err != nil {
 			return nil, err
 		}
 
-		roleRef, err := jsonToDict(clusterRole.RoleRef)
+		roleRef, err := jsonToDict(clusterRoleBinding.RoleRef)
 		if err != nil {
 			return nil, err
 		}
@@ -666,17 +671,17 @@ func (k *lumiK8s) GetRolebindings() ([]interface{}, error) {
 			return nil, err
 		}
 
-		clusterRole, ok := resource.(*rbacauthorizationv1.RoleBinding)
+		roleBinding, ok := resource.(*rbacauthorizationv1.RoleBinding)
 		if !ok {
-			return nil, errors.New("not a k8s role binding")
+			return nil, errors.New("not a k8s rolebinding")
 		}
 
-		subjects, err := jsonToDictSlice(clusterRole.Subjects)
+		subjects, err := jsonToDictSlice(roleBinding.Subjects)
 		if err != nil {
 			return nil, err
 		}
 
-		roleRef, err := jsonToDict(clusterRole.RoleRef)
+		roleRef, err := jsonToDict(roleBinding.RoleRef)
 		if err != nil {
 			return nil, err
 		}
@@ -714,22 +719,24 @@ func (k *lumiK8s) GetCustomresources() ([]interface{}, error) {
 	resp := []interface{}{}
 	for i := range result.RootResources {
 		resource := result.RootResources[i]
+
 		//resource.
-		obj, err := meta.Accessor(resource)
+		crd, err := meta.Accessor(resource)
 		if err != nil {
 			log.Error().Err(err).Msg("could not access object attributes")
 			return nil, err
 		}
 
-		lumiResources, err := k8sResourceToLumi(k.Runtime, obj.GetName(), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+		lumiResources, err := k8sResourceToLumi(k.Runtime, crd.GetName(), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 			ts := obj.GetCreationTimestamp()
 
 			manifest, err := jsonToDict(resource)
 			if err != nil {
+				log.Error().Err(err).Msg("couldn't convert resource to json dict")
 				return nil, err
 			}
 
-			r, err := k.Runtime.CreateResource(obj.GetName(),
+			r, err := k.Runtime.CreateResource("k8s.customresource",
 				"uid", string(obj.GetUID()),
 				"resourceVersion", obj.GetResourceVersion(),
 				"name", obj.GetName(),
@@ -739,12 +746,12 @@ func (k *lumiK8s) GetCustomresources() ([]interface{}, error) {
 				"manifest", manifest,
 			)
 			if err != nil {
+				log.Error().Err(err).Msg("couldn't create resource")
 				return nil, err
 			}
 			r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resp})
 			return r, nil
 		})
-
 		resp = append(resp, lumiResources...)
 	}
 	return resp, nil
@@ -862,7 +869,10 @@ func (k *lumiK8sPod) GetContainers() ([]interface{}, error) {
 	}
 
 	resp := []interface{}{}
-	containers := resources.GetContainers(obj)
+	containers, err := resources.GetContainers(obj)
+	if err != nil {
+		return nil, err
+	}
 	for i := range containers {
 
 		c := containers[i]
