@@ -82,6 +82,7 @@ func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
 	} else {
 		ok, err = t.Setup(ctx, instanceinfo)
 		if err != nil {
+			log.Error().Err(err).Msg("unable to complete setup step")
 			t.Close()
 			return t, err
 		}
@@ -93,6 +94,7 @@ func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
 	// 5. mount
 	err = t.Mount()
 	if err != nil {
+		log.Error().Err(err).Msg("unable to complete mount step")
 		t.Close()
 		return t, err
 	}

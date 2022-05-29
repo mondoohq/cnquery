@@ -12,6 +12,6 @@ import (
 func TestNewVolumeAttachmentLoc(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 	loc1 := newVolumeAttachmentLoc()
-	require.Equal(t, len(loc1), 9)
-	require.Equal(t, strings.HasPrefix(loc1, "/dev/xvd"), true)
+	require.Equal(t, len(loc1), 8)
+	require.Equal(t, strings.HasPrefix(loc1, "/dev/sd"), true)
 }
