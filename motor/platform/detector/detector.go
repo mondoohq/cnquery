@@ -106,7 +106,7 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 	case *ipmi.Transport:
 		return &platform.Platform{
 			Name:    "ipmi",
-			Title:   "Ipmi",
+			Title:   "IPMI",
 			Kind:    pt.Kind(),
 			Runtime: pt.Runtime(),
 		}, nil
@@ -122,14 +122,14 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 	case *github.Transport:
 		return &platform.Platform{
 			Name:    "github",
-			Title:   "Github",
+			Title:   "GitHub",
 			Kind:    transports.Kind_KIND_API,
 			Runtime: transports.RUNTIME_GITHUB,
 		}, nil
 	case *gitlab.Transport:
 		return &platform.Platform{
 			Name:    "gitlab",
-			Title:   "Gitlab",
+			Title:   "GitLab",
 			Kind:    transports.Kind_KIND_API,
 			Runtime: transports.RUNTIME_GITLAB,
 		}, nil
