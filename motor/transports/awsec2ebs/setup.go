@@ -247,7 +247,8 @@ func newVolumeAttachmentLoc() string {
 	chars := []rune("bcdefghijklmnopqrstuvwxyz") // a is reserved for the root volume
 	randomIndex := rand.Intn(len(chars))
 	c := chars[randomIndex]
-	return "/dev/xvd" + string(c)
+	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html
+	return "/dev/sd" + string(c)
 }
 
 func AttachVolume(ctx context.Context, ec2svc *ec2.Client, location string, volID string, instanceID string) (string, types.VolumeAttachmentState, error) {
@@ -256,6 +257,7 @@ func AttachVolume(ctx context.Context, ec2svc *ec2.Client, location string, volI
 		InstanceId: &instanceID,
 	})
 	if err != nil {
+		log.Error().Err(err).Str("volume", volID).Msg("attach volume err")
 		var ae smithy.APIError
 		if errors.As(err, &ae) {
 			if ae.ErrorCode() != "InvalidParameterValue" {
@@ -271,26 +273,31 @@ func AttachVolume(ctx context.Context, ec2svc *ec2.Client, location string, volI
 			location = newVolumeAttachmentLoc() // we shouldnt have gotten the same one the first go round, but it is randomized, so there is a possibility. try again in that case.
 		}
 		res, err = ec2svc.AttachVolume(ctx, &ec2.AttachVolumeInput{
-			Device: aws.String(location), VolumeId: &volID,
+			Device: aws.String(location), VolumeId: &volID, // warning: there is no guarantee that aws will place the volume at this location
 			InstanceId: &instanceID,
 		})
 		if err != nil {
+			log.Error().Err(err).Str("volume", volID).Msg("attach volume err")
 			return location, "", err
 		}
+	}
+	if res.Device != nil {
+		log.Debug().Str("location", *res.Device).Msg("attached volume")
+		location = *res.Device
 	}
 	return location, res.State, nil
 }
 
 func (t *Ec2EbsTransport) AttachVolumeToInstance(ctx context.Context, volume VolumeId) (bool, error) {
-	log.Info().Msg("attach volume")
+	log.Info().Str("volume id", volume.Id).Msg("attach volume")
 	t.tmpInfo.volumeAttachmentLoc = newVolumeAttachmentLoc()
 	ready := false
 	location, state, err := AttachVolume(ctx, t.scannerRegionEc2svc, newVolumeAttachmentLoc(), volume.Id, t.scannerInstance.Id)
 	if err != nil {
 		return ready, err
 	}
-	log.Debug().Str("location", location).Msg("attach volume to")
-	t.tmpInfo.volumeAttachmentLoc = location
+	t.tmpInfo.volumeAttachmentLoc = location // warning: there is no guarantee from AWS that the device will be placed therev
+	log.Debug().Str("location", location).Msg("target volume")
 
 	/*
 		NOTE: re: encrypted volumes
