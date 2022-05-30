@@ -24,7 +24,7 @@ func (y *lumiYum) GetRepos() ([]interface{}, error) {
 	}
 
 	if !pf.IsFamily("redhat") && !stringx.Contains(supportedPlatforms, pf.Name) {
-		return nil, errors.New("yum.vars is only supported on redhat-based platforms")
+		return nil, errors.New("yum.repos is only supported on redhat-based platforms")
 	}
 
 	cmd, err := y.Runtime.Motor.Transport.RunCommand("yum -v repolist all")
@@ -78,12 +78,16 @@ func (y *lumiYum) GetVars() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	if !pf.IsFamily("redhat") {
+	if !pf.IsFamily("redhat") && !stringx.Contains(supportedPlatforms, pf.Name) {
 		return nil, errors.New("yum.vars is only supported on redhat-based platforms")
 	}
 
-	// use dnf script
-	script := yum.Rhel8VarsCommand
+	// use dnf script as default
+	script := fmt.Sprintf(yum.DnfVarsCommand, yum.PythonRhel)
+	if !pf.IsFamily("redhat") {
+		// eg. amazon linux does not ship with /usr/libexec/platform-python
+		script = fmt.Sprintf(yum.DnfVarsCommand, yum.Python3)
+	}
 
 	// fallback for older versions like 6 and 7 version to use yum script
 	if rhel67release.MatchString(pf.Release) {
