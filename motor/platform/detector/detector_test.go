@@ -20,7 +20,7 @@ func newDetector(filepath string) (*detector.Detector, error) {
 }
 
 func TestRhel6OSDetector(t *testing.T) {
-	detector, err := newDetector("./testdata/detect-rhel6.toml")
+	detector, err := newDetector("./testdata/detect-rhel-6.toml")
 	assert.Nil(t, err, "was able to create the transport")
 	di, err := detector.Platform()
 	require.NoError(t, err)
@@ -33,7 +33,7 @@ func TestRhel6OSDetector(t *testing.T) {
 }
 
 func TestRhel7OSDetector(t *testing.T) {
-	detector, err := newDetector("./testdata/detect-rhel7.toml")
+	detector, err := newDetector("./testdata/detect-rhel-7.toml")
 	assert.Nil(t, err, "was able to create the transport")
 	di, err := detector.Platform()
 	require.NoError(t, err)
@@ -46,7 +46,7 @@ func TestRhel7OSDetector(t *testing.T) {
 }
 
 func TestRhel7SLESOSDetector(t *testing.T) {
-	detector, err := newDetector("./testdata/detect-rhel7-sles.toml")
+	detector, err := newDetector("./testdata/detect-rhel-7-sles.toml")
 	assert.Nil(t, err, "was able to create the transport")
 	di, err := detector.Platform()
 	require.NoError(t, err)
@@ -59,7 +59,7 @@ func TestRhel7SLESOSDetector(t *testing.T) {
 }
 
 func TestRhel8OSDetector(t *testing.T) {
-	detector, err := newDetector("./testdata/detect-rhel8.toml")
+	detector, err := newDetector("./testdata/detect-rhel-8.toml")
 	assert.Nil(t, err, "was able to create the transport")
 	di, err := detector.Platform()
 	require.NoError(t, err)
@@ -68,6 +68,19 @@ func TestRhel8OSDetector(t *testing.T) {
 	assert.Equal(t, "Red Hat Enterprise Linux", di.Title, "os title should be identified")
 	assert.Equal(t, "8.0", di.Release, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
+}
+
+func TestRhel9OSDetector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-rhel-9.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	di, err := detector.Platform()
+	require.NoError(t, err)
+
+	assert.Equal(t, "redhat", di.Name, "os name should be identified")
+	assert.Equal(t, "Red Hat Enterprise Linux", di.Title, "os title should be identified")
+	assert.Equal(t, "9.0", di.Release, "os version should be identified")
+	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
 
@@ -189,7 +202,7 @@ func TestCentos9StreamOSDetector(t *testing.T) {
 }
 
 func TestAlmaLinux8OSDetector(t *testing.T) {
-	detector, err := newDetector("./testdata/detect-almalinux.toml")
+	detector, err := newDetector("./testdata/detect-almalinux-8.toml")
 	assert.Nil(t, err, "was able to create the transport")
 	di, err := detector.Platform()
 	require.NoError(t, err)
@@ -201,8 +214,21 @@ func TestAlmaLinux8OSDetector(t *testing.T) {
 	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
 
+func TestAlmaLinux9OSDetector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-almalinux-9.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	di, err := detector.Platform()
+	require.NoError(t, err)
+
+	assert.Equal(t, "almalinux", di.Name, "os name should be identified")
+	assert.Equal(t, "AlmaLinux", di.Title, "os title should be identified")
+	assert.Equal(t, "9.0", di.Release, "os version should be identified")
+	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
+}
+
 func TestRocky8OSDetector(t *testing.T) {
-	detector, err := newDetector("./testdata/detect-rocky8.toml")
+	detector, err := newDetector("./testdata/detect-rocky-8.toml")
 	assert.Nil(t, err, "was able to create the transport")
 	di, err := detector.Platform()
 	require.NoError(t, err)
@@ -526,7 +552,7 @@ func TestAmazon1LinuxDetector(t *testing.T) {
 }
 
 func TestAmazon2LinuxDetector(t *testing.T) {
-	detector, err := newDetector("./testdata/detect-amzn2.toml")
+	detector, err := newDetector("./testdata/detect-amzn-2.toml")
 	assert.Nil(t, err, "was able to create the transport")
 	di, err := detector.Platform()
 	require.NoError(t, err)
