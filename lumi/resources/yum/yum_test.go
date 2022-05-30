@@ -1,6 +1,7 @@
 package yum
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -89,7 +90,7 @@ func TestYumRepoRhel8(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 17, len(repos))
 
-	cmd, err = m.Transport.RunCommand(Rhel8VarsCommand)
+	cmd, err = m.Transport.RunCommand(fmt.Sprintf(DnfVarsCommand, PythonRhel))
 	require.NoError(t, err)
 	vars, err := ParseVariables(cmd.Stdout)
 	require.NoError(t, err)

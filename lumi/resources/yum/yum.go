@@ -24,7 +24,9 @@ import (
 
 const (
 	RhelYumRepoListCommand = "yum -v repolist all"
-	Rhel8VarsCommand       = "/usr/libexec/platform-python -c 'import dnf, json; db = dnf.dnf.Base(); print(json.dumps(db.conf.substitutions))'"
+	DnfVarsCommand         = "%s -c 'import dnf, json; db = dnf.dnf.Base(); print(json.dumps(db.conf.substitutions))'"
+	PythonRhel             = "/usr/libexec/platform-python"
+	Python3                = "python3"
 	Rhel6VarsCommand       = "python -c 'import yum, json; yb = yum.YumBase(); print json.dumps(yb.conf.yumvar)'"
 )
 
@@ -43,8 +45,10 @@ type YumRepo struct {
 	Filter   string
 }
 
-var yumrepoline = regexp.MustCompile(`^\s*([^:\s]*)(?:\s)*:\s(.*)$`)
-var yumbaseurl = regexp.MustCompile(`^(.*?)(?:\(.*\))*$`)
+var (
+	yumrepoline = regexp.MustCompile(`^\s*([^:\s]*)(?:\s)*:\s(.*)$`)
+	yumbaseurl  = regexp.MustCompile(`^(.*?)(?:\(.*\))*$`)
+)
 
 const (
 	Id       = "Repo-id"
