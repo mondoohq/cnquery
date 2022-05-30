@@ -1,0 +1,34 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "aarch64"
+
+[commands."uname -r"]
+stdout = "5.10.104-linuxkit"
+
+[files."/etc/redhat-release"]
+content = "AlmaLinux release 9.0 Beta (Emerald Puma)"
+
+[files."/etc/almalinux-release"]
+content = "AlmaLinux release 9.0 Beta (Emerald Puma)"
+
+[files."/etc/os-release"]
+content = """
+NAME="AlmaLinux"
+VERSION="9.0 Beta (Emerald Puma)"
+ID="almalinux"
+ID_LIKE="rhel centos fedora"
+VERSION_ID="9.0"
+PLATFORM_ID="platform:el9"
+PRETTY_NAME="AlmaLinux 9.0 Beta (Emerald Puma)"
+ANSI_COLOR="0;34"
+LOGO="fedora-logo-icon"
+CPE_NAME="cpe:/o:almalinux:almalinux:9::baseos"
+HOME_URL="https://almalinux.org/"
+BUG_REPORT_URL="https://bugs.almalinux.org/"
+REDHAT_SUPPORT_PRODUCT="AlmaLinux"
+REDHAT_SUPPORT_PRODUCT_VERSION="9.0 Beta"
+ALMALINUX_MANTISBT_PROJECT="AlmaLinux-9"
+ALMALINUX_MANTISBT_PROJECT_VERSION="9.0"
+"""

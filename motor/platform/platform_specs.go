@@ -8,6 +8,7 @@ import (
 
 	"github.com/gosimple/slug"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	win "go.mondoo.io/mondoo/motor/platform/windows"
 	"go.mondoo.io/mondoo/motor/transports"
 )
@@ -215,6 +216,7 @@ var popos = &PlatformResolver{
 	},
 }
 
+// rhel PlatformResolver only detects redhat and no derivatives
 var rhel = &PlatformResolver{
 	Name:      "redhat",
 	IsFamiliy: false,
@@ -248,7 +250,7 @@ var rhel = &PlatformResolver{
 	},
 }
 
-// The CentOS platform resolver finds CentOS and CentOS-like platforms alike alma and rocky
+// The centos platform resolver finds CentOS and CentOS-like platforms alike alma and rocky
 var centos = &PlatformResolver{
 	Name:      "centos",
 	IsFamiliy: false,
@@ -264,16 +266,17 @@ var centos = &PlatformResolver{
 			di.Name = "rockylinux"
 		}
 
+		// newer alma linux do not have /etc/centos-release, check for alma linux
+		afs := &afero.Afero{Fs: t.FS()}
+		if di.Name == "almalinux" {
+			if ok, err := afs.Exists("/etc/almalinux-release"); err == nil && ok {
+				return true, nil
+			}
+		}
+
 		// NOTE: CentOS 5 does not have /etc/centos-release
 		// fallback to /etc/centos-release file
-		f, err := t.FS().Open("/etc/centos-release")
-		if err != nil {
-			return false, nil
-		}
-		defer f.Close()
-
-		c, err := ioutil.ReadAll(f)
-		if err != nil || len(c) == 0 {
+		if ok, err := afs.Exists("/etc/centos-release"); err != nil || !ok {
 			return false, nil
 		}
 
@@ -714,7 +717,7 @@ var bsdFamily = &PlatformResolver{
 var redhatFamily = &PlatformResolver{
 	Name:      "redhat",
 	IsFamiliy: true,
-	// NOTE: oracle pretents to be redhat with /etc/redhat-release and Red Hat Linux, therefore we
+	// NOTE: oracle pretends to be redhat with /etc/redhat-release and Red Hat Linux, therefore we
 	// want to check that platform before redhat
 	Children: []*PlatformResolver{oracle, rhel, centos, fedora, scientific},
 	Detect: func(p *PlatformResolver, di *Platform, t transports.Transport) (bool, error) {
