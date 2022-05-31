@@ -65,7 +65,7 @@ func TestVSphere(t *testing.T) {
 		cluster := clusters[0]
 		props, err := client.ClusterProperties(cluster)
 		require.NoError(t, err)
-		fmt.Printf("%v", props)
+		fmt.Printf("%v\n", props)
 
 		hosts, err = client.ListHosts(dc, cluster)
 		require.NoError(t, err)

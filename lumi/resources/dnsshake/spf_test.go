@@ -12,15 +12,15 @@ func TestSpfAst(t *testing.T) {
 	spf := NewSpf()
 	ast, err := spf.Parse("v=spf1")
 	require.NoError(t, err)
-	fmt.Printf("%v", ast)
+	fmt.Printf("%v\n", ast)
 
 	ast, err = spf.Parse("v=spf1 mx/30 mx:example.org/30 -all")
 	require.NoError(t, err)
-	fmt.Printf("%v", ast)
+	fmt.Printf("%v\n", ast)
 
 	ast, err = spf.Parse("v=spf1 mx -all exp=explain._spf.%{d}")
 	require.NoError(t, err)
-	fmt.Printf("%v", ast)
+	fmt.Printf("%v\n", ast)
 }
 
 // TestSpfAstParser tests the examples from https://datatracker.ietf.org/doc/html/rfc7208#appendix-A.1
