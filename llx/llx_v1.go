@@ -228,52 +228,6 @@ func (c *LeiseExecutorV1) Unregister() error {
 	return nil
 }
 
-type arrayBlockCallResult struct {
-	entrypoints map[string]interface{}
-	datapoints  map[string]interface{}
-}
-
-func (a arrayBlockCallResult) toRawData() *RawData {
-	v := make(map[string]interface{}, len(a.entrypoints)+len(a.datapoints))
-	for checksum, res := range a.entrypoints {
-		v[checksum] = res
-	}
-
-	for checksum, res := range a.datapoints {
-		v[checksum] = res
-	}
-
-	return &RawData{
-		Type:  types.Block,
-		Value: v,
-	}
-}
-
-func (a arrayBlockCallResult) isTruthy() bool {
-	v := make(map[string]interface{}, len(a.entrypoints))
-	for checksum, res := range a.entrypoints {
-		v[checksum] = res
-	}
-	rd := &RawData{
-		Type:  types.Block,
-		Value: v,
-	}
-	isT, _ := rd.IsTruthy()
-	return isT
-}
-
-type arrayBlockCallResults struct {
-	lock                 sync.Mutex
-	results              []arrayBlockCallResult
-	errors               []error
-	waiting              []int
-	unfinishedBlockCalls int
-	onComplete           func([]arrayBlockCallResult, []error)
-	codepoints           map[string]struct{}
-	entrypoints          map[string]struct{}
-	datapoints           map[string]struct{}
-}
-
 func newArrayBlockCallResultsV1(expectedBlockCalls int, code *CodeV1, onComplete func([]arrayBlockCallResult, []error)) *arrayBlockCallResults {
 	results := make([]arrayBlockCallResult, expectedBlockCalls)
 	waiting := make([]int, expectedBlockCalls)
@@ -311,49 +265,9 @@ func newArrayBlockCallResultsV1(expectedBlockCalls int, code *CodeV1, onComplete
 		waiting:              waiting,
 		unfinishedBlockCalls: expectedBlockCalls,
 		onComplete:           onComplete,
-		codepoints:           codepoints,
 		entrypoints:          entrypoints,
 		datapoints:           datapoints,
 	}
-}
-
-func (a *arrayBlockCallResults) update(i int, res *RawResult) {
-	a.lock.Lock()
-	defer a.lock.Unlock()
-
-	_, isEntrypoint := a.entrypoints[res.CodeID]
-	_, isDatapoint := a.datapoints[res.CodeID]
-
-	if !(isEntrypoint || isDatapoint) {
-		return
-	}
-
-	_, hasEntrypointResult := a.results[i].entrypoints[res.CodeID]
-	_, hasDatapointResult := a.results[i].datapoints[res.CodeID]
-
-	if !(hasEntrypointResult || hasDatapointResult) {
-		a.waiting[i]--
-		if a.waiting[i] == 0 {
-			a.unfinishedBlockCalls--
-		}
-	}
-
-	if isEntrypoint {
-		a.results[i].entrypoints[res.CodeID] = res.Data
-	}
-
-	if isDatapoint {
-		a.results[i].datapoints[res.CodeID] = res.Data
-	}
-
-	if res.Data.Error != nil {
-		a.errors = append(a.errors, res.Data.Error)
-	}
-
-	if a.unfinishedBlockCalls == 0 {
-		a.onComplete(a.results, a.errors)
-	}
-
 }
 
 func (c *LeiseExecutorV1) runFunctionBlocks(argList [][]*RawData, code *CodeV1,

@@ -353,6 +353,91 @@ func reportSync(cb ResultCallback) ResultCallback {
 	}
 }
 
+type arrayBlockCallResults struct {
+	lock                 sync.Mutex
+	results              []arrayBlockCallResult
+	errors               []error
+	waiting              []int
+	unfinishedBlockCalls int
+	onComplete           func([]arrayBlockCallResult, []error)
+	entrypoints          map[string]struct{}
+	datapoints           map[string]struct{}
+}
+
+type arrayBlockCallResult struct {
+	entrypoints map[string]interface{}
+	datapoints  map[string]interface{}
+}
+
+func (a arrayBlockCallResult) toRawData() *RawData {
+	v := make(map[string]interface{}, len(a.entrypoints)+len(a.datapoints))
+	for checksum, res := range a.entrypoints {
+		v[checksum] = res
+	}
+
+	for checksum, res := range a.datapoints {
+		v[checksum] = res
+	}
+
+	return &RawData{
+		Type:  types.Block,
+		Value: v,
+	}
+}
+
+func (a arrayBlockCallResult) isTruthy() bool {
+	for _, res := range a.entrypoints {
+		rd := &RawData{
+			Type:  types.Any,
+			Value: res,
+		}
+		isT, _ := rd.IsTruthy()
+		if !isT {
+			return false
+		}
+	}
+	return true
+}
+
+func (a *arrayBlockCallResults) update(i int, res *RawResult) {
+	a.lock.Lock()
+	defer a.lock.Unlock()
+
+	_, isEntrypoint := a.entrypoints[res.CodeID]
+	_, isDatapoint := a.datapoints[res.CodeID]
+
+	if !(isEntrypoint || isDatapoint) {
+		return
+	}
+
+	_, hasEntrypointResult := a.results[i].entrypoints[res.CodeID]
+	_, hasDatapointResult := a.results[i].datapoints[res.CodeID]
+
+	if !(hasEntrypointResult || hasDatapointResult) {
+		a.waiting[i]--
+		if a.waiting[i] == 0 {
+			a.unfinishedBlockCalls--
+		}
+	}
+
+	if isEntrypoint {
+		a.results[i].entrypoints[res.CodeID] = res.Data
+	}
+
+	if isDatapoint {
+		a.results[i].datapoints[res.CodeID] = res.Data
+	}
+
+	if res.Data.Error != nil {
+		a.errors = append(a.errors, res.Data.Error)
+	}
+
+	if a.unfinishedBlockCalls == 0 {
+		a.onComplete(a.results, a.errors)
+	}
+
+}
+
 func newArrayBlockCallResultsV2(expectedBlockCalls int, code *CodeV2, blockRef uint64, onComplete func([]arrayBlockCallResult, []error)) *arrayBlockCallResults {
 	results := make([]arrayBlockCallResult, expectedBlockCalls)
 	waiting := make([]int, expectedBlockCalls)
@@ -393,7 +478,6 @@ func newArrayBlockCallResultsV2(expectedBlockCalls int, code *CodeV2, blockRef u
 		waiting:              waiting,
 		unfinishedBlockCalls: expectedBlockCalls,
 		onComplete:           onComplete,
-		codepoints:           codepoints,
 		entrypoints:          entrypoints,
 		datapoints:           datapoints,
 	}
