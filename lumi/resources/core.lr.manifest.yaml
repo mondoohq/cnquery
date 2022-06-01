@@ -3294,6 +3294,8 @@ resources:
       configmaps:
         min_mondoo_version: 5.31.0
       cronjobs: {}
+      customresources:
+        min_mondoo_version: 6.1.0
       daemonsets: {}
       deployments: {}
       jobs: {}
@@ -3406,6 +3408,21 @@ resources:
         min_mondoo_version: 5.29.2
       uid: {}
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - kubernetes
+  k8s.customresource:
+    fields:
+      annotations: {}
+      created: {}
+      kind: {}
+      labels: {}
+      manifest: {}
+      name: {}
+      namespace: {}
+      resourceVersion: {}
+      uid: {}
+    min_mondoo_version: 6.1.0
     platform:
       name:
       - kubernetes
