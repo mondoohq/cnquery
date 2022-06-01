@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -310,6 +311,20 @@ func (s *SystemdFSServiceManager) findUnit(unitName string) (*unitInfo, error) {
 // description is pulled from the Description key of the Unit section
 // orderings are pulled from the Before and After keys of the Unit section
 func (s *SystemdFSServiceManager) readUnit(unitPath string, uInfo *unitInfo) error {
+	// First resolve the symlink in case the unitPath is actually a symlink.
+	if lr, ok := s.Fs.(afero.LinkReader); ok {
+		linkPath, err := lr.ReadlinkIfPossible(unitPath)
+		if err == nil {
+			// If the linkPath is not absolute, use the folder of unitPath and append the
+			// filename.
+			if !filepath.IsAbs(linkPath) {
+				folder := filepath.Dir(unitPath)
+				linkPath = filepath.Join(folder, linkPath)
+			}
+			unitPath = linkPath
+		}
+	}
+
 	f, err := s.Fs.Open(unitPath)
 	if err != nil {
 		return err

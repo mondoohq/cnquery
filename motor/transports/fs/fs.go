@@ -103,7 +103,8 @@ func (t *MountedFs) LstatIfPossible(name string) (os.FileInfo, bool, error) {
 }
 
 func (t *MountedFs) ReadlinkIfPossible(name string) (string, error) {
-	return os.Readlink(name)
+	mountedPath := t.getPath(name)
+	return os.Readlink(mountedPath)
 }
 
 func (t *MountedFs) Chown(name string, uid, gid int) error {
