@@ -34,3 +34,59 @@ func ParseMondooInstanceID(path string) (*MondooInstanceId, error) {
 func IsValidMondooInstanceId(path string) bool {
 	return VALID_MONDOO_INSTANCE_ID.MatchString(path)
 }
+
+// aws://ec2/v1/accounts/{account}/regions/{region}/volumes/{volumeid}
+func MondooVolumeID(account string, region string, volumeid string) string {
+	return "//platformid.api.mondoo.app/runtime/aws/ec2/v1/accounts/" + account + "/regions/" + region + "/volumes/" + volumeid
+}
+
+type MondooVolumeId struct {
+	Account string
+	Region  string
+	Id      string
+}
+
+var VALID_MONDOO_VOLUME_ID = regexp.MustCompile(`^//platformid.api.mondoo.app/runtime/aws/ec2/v1/accounts/\d{12}/regions\/(us(-gov)?|ap|ca|cn|eu|sa)-(central|(north|south)?(east|west)?)-\d\/volumes\/.+$`)
+
+func ParseMondooVolumeID(path string) (*MondooVolumeId, error) {
+	if !IsValidMondooVolumeId(path) {
+		return nil, errors.New("invalid mondoo aws ec2 volume id")
+	}
+	keyValues := strings.Split(path, "/")
+	if len(keyValues) != 13 {
+		return nil, errors.New("invalid volume id")
+	}
+	return &MondooVolumeId{Account: keyValues[8], Region: keyValues[10], Id: keyValues[12]}, nil
+}
+
+func IsValidMondooVolumeId(path string) bool {
+	return VALID_MONDOO_VOLUME_ID.MatchString(path)
+}
+
+// aws://ec2/v1/accounts/{account}/regions/{region}/snapshots/{snapshotid}
+func MondooSnapshotID(account string, region string, snapshotid string) string {
+	return "//platformid.api.mondoo.app/runtime/aws/ec2/v1/accounts/" + account + "/regions/" + region + "/snapshots/" + snapshotid
+}
+
+type MondooSnapshotId struct {
+	Account string
+	Region  string
+	Id      string
+}
+
+var VALID_MONDOO_SNAPSHOT_ID = regexp.MustCompile(`^//platformid.api.mondoo.app/runtime/aws/ec2/v1/accounts/\d{12}/regions\/(us(-gov)?|ap|ca|cn|eu|sa)-(central|(north|south)?(east|west)?)-\d\/snapshots\/.+$`)
+
+func ParseMondooSnapshotID(path string) (*MondooSnapshotId, error) {
+	if !IsValidMondooSnapshotId(path) {
+		return nil, errors.New("invalid mondoo aws ec2 snapshot id")
+	}
+	keyValues := strings.Split(path, "/")
+	if len(keyValues) != 13 {
+		return nil, errors.New("invalid snapshot id")
+	}
+	return &MondooSnapshotId{Account: keyValues[8], Region: keyValues[10], Id: keyValues[12]}, nil
+}
+
+func IsValidMondooSnapshotId(path string) bool {
+	return VALID_MONDOO_INSTANCE_ID.MatchString(path)
+}

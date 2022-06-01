@@ -54,9 +54,10 @@ type SnapshotId struct {
 }
 
 type VolumeId struct {
-	Id      string
-	Region  string
-	Account string
+	Id          string
+	Region      string
+	Account     string
+	IsAvailable bool
 }
 
 func resourceTags(resourceType types.ResourceType, instanceId string) []types.TagSpecification {
@@ -68,4 +69,36 @@ func resourceTags(resourceType types.ResourceType, instanceId string) []types.Ta
 			},
 		},
 	}
+}
+
+const (
+	EBSTargetInstance = "instance"
+	EBSTargetVolume   = "volume"
+	EBSTargetSnapshot = "snapshot"
+)
+
+type EbsTransportTarget struct {
+	Account string
+	Region  string
+	Id      string
+	Type    string
+}
+
+func ParseEbsTransportUrl(path string) (*EbsTransportTarget, error) {
+	keyValues := strings.Split(path, "/")
+	if len(keyValues) != 6 {
+		return nil, errors.New("invalid id. expected account/<id>/region/<region-val>/{instance, volume, or snapshot}/<id>")
+	}
+
+	var itemType string
+	switch keyValues[4] {
+	case "volume":
+		itemType = EBSTargetVolume
+	case "snapshot":
+		itemType = EBSTargetSnapshot
+	default:
+		itemType = EBSTargetInstance
+	}
+
+	return &EbsTransportTarget{Account: keyValues[1], Region: keyValues[3], Id: keyValues[5], Type: itemType}, nil
 }
