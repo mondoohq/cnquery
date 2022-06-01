@@ -15,24 +15,98 @@ import (
 	motoraws "go.mondoo.io/mondoo/motor/discovery/aws"
 )
 
-func (t *Ec2EbsTransport) Validate(ctx context.Context) (bool, *types.Instance, error) {
-	i := t.target.instance
-	log.Info().Interface("instance", i).Msg("validate state")
-	// use region from instance for aws config
-	cfgCopy := t.config.Copy()
-	cfgCopy.Region = i.Region
-	ec2svc := ec2.NewFromConfig(cfgCopy)
-	resp, err := ec2svc.DescribeInstances(ctx, &ec2.DescribeInstancesInput{InstanceIds: []string{i.Id}})
-	if err != nil {
-		return false, nil, err
+func (t *Ec2EbsTransport) Validate(ctx context.Context) (*types.Instance, *VolumeId, *SnapshotId, error) {
+	target := t.target
+	switch t.targetType {
+	case EBSTargetInstance:
+		log.Info().Interface("instance", target).Msg("validate state")
+		resp, err := t.targetRegionEc2svc.DescribeInstances(ctx, &ec2.DescribeInstancesInput{InstanceIds: []string{target.Id}})
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		if !motoraws.InstanceIsInRunningOrStoppedState(resp.Reservations[0].Instances[0].State) {
+			return nil, nil, nil, errors.New("instance must be in running or stopped state")
+		}
+		return &resp.Reservations[0].Instances[0], nil, nil, nil
+	case EBSTargetVolume:
+		log.Info().Interface("volume", target).Msg("validate exists")
+		vols, err := t.targetRegionEc2svc.DescribeVolumes(ctx, &ec2.DescribeVolumesInput{VolumeIds: []string{target.Id}})
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		if len(vols.Volumes) > 0 {
+			vol := vols.Volumes[0]
+			if vol.State != types.VolumeStateAvailable {
+				// we can still scan it, it just means we have to do the whole snapshot/create volume dance
+				log.Warn().Msg("volume specified is not in available state")
+				return nil, &VolumeId{Id: t.target.Id, Account: t.target.AccountId, Region: t.target.Region, IsAvailable: false}, nil, nil
+			}
+			return nil, &VolumeId{Id: t.target.Id, Account: t.target.AccountId, Region: t.target.Region, IsAvailable: true}, nil, nil
+		}
+	case EBSTargetSnapshot:
+		log.Info().Interface("snapshot", target).Msg("validate exists")
+		snaps, err := t.targetRegionEc2svc.DescribeSnapshots(ctx, &ec2.DescribeSnapshotsInput{SnapshotIds: []string{target.Id}})
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		if len(snaps.Snapshots) > 0 {
+			return nil, nil, &SnapshotId{Id: t.target.Id, Account: t.target.AccountId, Region: t.target.Region}, nil
+		}
+	default:
+		return nil, nil, nil, errors.New("cannot validate; unrecognized ebs target")
 	}
-	if !motoraws.InstanceIsInRunningOrStoppedState(resp.Reservations[0].Instances[0].State) {
-		return false, nil, nil
-	}
-	return true, &resp.Reservations[0].Instances[0], nil
+	return nil, nil, nil, errors.New("cannot validate; unrecognized ebs target")
 }
 
-func (t *Ec2EbsTransport) Setup(ctx context.Context, instanceinfo *types.Instance) (bool, error) {
+func (t *Ec2EbsTransport) SetupForTargetVolume(ctx context.Context, volume VolumeId) (bool, error) {
+	log.Debug().Interface("volume", volume).Msg("setup for target volume")
+	if !volume.IsAvailable {
+		return t.SetupForTargetVolumeUnavailable(ctx, volume)
+	}
+	t.tmpInfo.scanVolumeId = &volume
+	return t.AttachVolumeToInstance(ctx, volume)
+}
+
+func (t *Ec2EbsTransport) SetupForTargetVolumeUnavailable(ctx context.Context, volume VolumeId) (bool, error) {
+	found, snapId, err := t.FindRecentSnapshotForVolume(ctx, volume)
+	if err != nil {
+		// only log the error here, this is not a blocker
+		log.Error().Err(err).Msg("unable to find recent snapshot for volume")
+	}
+	if !found {
+		snapId, err = t.CreateSnapshotFromVolume(ctx, volume)
+		if err != nil {
+			return false, err
+		}
+	}
+	snapId, err = t.CopySnapshotToRegion(ctx, snapId)
+	if err != nil {
+		return false, err
+	}
+	volId, err := t.CreateVolumeFromSnapshot(ctx, snapId)
+	if err != nil {
+		return false, err
+	}
+	t.tmpInfo.scanVolumeId = &volId
+	return t.AttachVolumeToInstance(ctx, volId)
+}
+
+func (t *Ec2EbsTransport) SetupForTargetSnapshot(ctx context.Context, snapshot SnapshotId) (bool, error) {
+	log.Debug().Interface("snapshot", snapshot).Msg("setup for target snapshot")
+	snapId, err := t.CopySnapshotToRegion(ctx, snapshot)
+	if err != nil {
+		return false, err
+	}
+	volId, err := t.CreateVolumeFromSnapshot(ctx, snapId)
+	if err != nil {
+		return false, err
+	}
+	t.tmpInfo.scanVolumeId = &volId
+	return t.AttachVolumeToInstance(ctx, volId)
+}
+
+func (t *Ec2EbsTransport) SetupForTargetInstance(ctx context.Context, instanceinfo *types.Instance) (bool, error) {
+	log.Debug().Str("instance id", *instanceinfo.InstanceId).Msg("setup for target instance")
 	var err error
 	v, err := t.GetVolumeIdForInstance(ctx, instanceinfo)
 	if err != nil {
@@ -62,11 +136,11 @@ func (t *Ec2EbsTransport) Setup(ctx context.Context, instanceinfo *types.Instanc
 }
 
 func (t *Ec2EbsTransport) GetVolumeIdForInstance(ctx context.Context, instanceinfo *types.Instance) (VolumeId, error) {
-	i := t.target.instance
+	i := t.target
 	log.Info().Interface("instance", i).Msg("find volume id")
 
 	if volID := GetVolumeIdForInstance(instanceinfo); volID != nil {
-		return VolumeId{Id: *volID, Region: i.Region, Account: i.Account}, nil
+		return VolumeId{Id: *volID, Region: i.Region, Account: i.AccountId}, nil
 	}
 	return VolumeId{}, errors.New("no volume id found for instance")
 }
@@ -92,14 +166,7 @@ func GetVolumeIdForInstance(instanceinfo *types.Instance) *string {
 
 func (t *Ec2EbsTransport) FindRecentSnapshotForVolume(ctx context.Context, v VolumeId) (bool, SnapshotId, error) {
 	log.Info().Msg("find recent snapshot")
-	// todo: use mql query for this
-	// aws.ec2.snapshots.where(volumeId == v.Id) { id startTime < time.now - 8*time.hour}
-	// return true, SnapshotId{Id: "snap-06bdec45af7e648c5", Region: "us-east-1", Account: "185972265011"} // i-09aafd4819fc62703
-	// checking in scanner region
-	cfgCopy := t.config.Copy()
-	cfgCopy.Region = v.Region
-	ec2svc := ec2.NewFromConfig(cfgCopy)
-	res, err := ec2svc.DescribeSnapshots(ctx,
+	res, err := t.scannerRegionEc2svc.DescribeSnapshots(ctx,
 		&ec2.DescribeSnapshotsInput{Filters: []types.Filter{
 			{Name: aws.String("volume-id"), Values: []string{v.Id}},
 		}})
@@ -118,7 +185,7 @@ func (t *Ec2EbsTransport) FindRecentSnapshotForVolume(ctx context.Context, v Vol
 			for snapState != types.SnapshotStateCompleted {
 				log.Info().Interface("state", snapState).Msg("waiting for snapshot copy completion; sleeping 10 seconds")
 				time.Sleep(10 * time.Second)
-				snaps, err := ec2svc.DescribeSnapshots(ctx, &ec2.DescribeSnapshotsInput{SnapshotIds: []string{s.Id}})
+				snaps, err := t.scannerRegionEc2svc.DescribeSnapshots(ctx, &ec2.DescribeSnapshotsInput{SnapshotIds: []string{s.Id}})
 				if err != nil {
 					var ae smithy.APIError
 					if errors.As(err, &ae) {
@@ -142,7 +209,7 @@ func (t *Ec2EbsTransport) CreateSnapshotFromVolume(ctx context.Context, v Volume
 	// use region from volume for aws config
 	cfgCopy := t.config.Copy()
 	cfgCopy.Region = v.Region
-	snapId, err := CreateSnapshotFromVolume(ctx, cfgCopy, v.Id, resourceTags(types.ResourceTypeSnapshot, t.target.instance.Id))
+	snapId, err := CreateSnapshotFromVolume(ctx, cfgCopy, v.Id, resourceTags(types.ResourceTypeSnapshot, t.target.Id))
 	if err != nil {
 		return SnapshotId{}, err
 	}
@@ -187,7 +254,7 @@ func (t *Ec2EbsTransport) CopySnapshotToRegion(ctx context.Context, snapshot Sna
 	var newSnapshot SnapshotId
 	log.Info().Msg("copy snapshot")
 	// snapshot the volume
-	res, err := t.scannerRegionEc2svc.CopySnapshot(ctx, &ec2.CopySnapshotInput{SourceRegion: &snapshot.Region, SourceSnapshotId: &snapshot.Id, TagSpecifications: resourceTags(types.ResourceTypeSnapshot, t.target.instance.Id)})
+	res, err := t.scannerRegionEc2svc.CopySnapshot(ctx, &ec2.CopySnapshotInput{SourceRegion: &snapshot.Region, SourceSnapshotId: &snapshot.Id, TagSpecifications: resourceTags(types.ResourceTypeSnapshot, t.target.Id)})
 	if err != nil {
 		return newSnapshot, err
 	}
@@ -217,7 +284,7 @@ func (t *Ec2EbsTransport) CreateVolumeFromSnapshot(ctx context.Context, snapshot
 	out, err := t.scannerRegionEc2svc.CreateVolume(ctx, &ec2.CreateVolumeInput{
 		SnapshotId:        &snapshot.Id,
 		AvailabilityZone:  &t.scannerInstance.Zone,
-		TagSpecifications: resourceTags(types.ResourceTypeVolume, t.target.instance.Id),
+		TagSpecifications: resourceTags(types.ResourceTypeVolume, t.target.Id),
 	})
 	if err != nil {
 		return vol, err

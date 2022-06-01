@@ -38,49 +38,64 @@ func New(tc *transports.TransportConfig) (*Ec2EbsTransport, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "could not load instance info: aws-ec2-ebs transport only valid on ec2 instances")
 	}
+	// ec2 client for the scanner region
 	cfg.Region = i.Region
-	svc := ec2.NewFromConfig(cfg)
+	scannerSvc := ec2.NewFromConfig(cfg)
+
+	// ec2 client for the target region
+	cfgCopy := cfg.Copy()
+	cfgCopy.Region = tc.Options["region"]
+	targetSvc := ec2.NewFromConfig(cfgCopy)
 
 	shell := []string{"sh", "-c"}
-
-	ti := &InstanceId{
-		Account: tc.Options["account"],
-		Region:  tc.Options["region"],
-		Id:      tc.Options["id"],
-	}
 
 	// 2. create transport
 	t := &Ec2EbsTransport{
 		config: cfg,
 		opts:   tc.Options,
-		target: targetInfo{instance: ti, platformId: tc.PlatformId},
+		target: TargetInfo{
+			PlatformId: tc.PlatformId,
+			AccountId:  tc.Options["account"],
+			Region:     tc.Options["region"],
+			Id:         tc.Options["id"],
+		},
+		targetType: tc.Options["type"],
 		scannerInstance: &InstanceId{
 			Id:      i.InstanceID,
 			Region:  i.Region,
 			Account: i.AccountID,
 			Zone:    i.AvailabilityZone,
 		},
-		scannerRegionEc2svc: svc,
+		targetRegionEc2svc:  targetSvc,
+		scannerRegionEc2svc: scannerSvc,
 		shell:               shell,
 	}
+	log.Debug().Interface("info", t.target).Str("type", t.targetType).Msg("target")
 
 	ctx := context.Background()
 	// 3. validate
-	ok, instanceinfo, err := t.Validate(ctx)
+	instanceinfo, volumeid, snapshotid, err := t.Validate(ctx)
 	if err != nil {
-		return t, err
-	}
-	if !ok {
-		log.Error().Interface("instance-state", instanceinfo.State).Msg("instance not in valid state; must be running or stopped")
-		return t, errors.New("instance not in valid state; must be running or stopped")
+		return t, errors.Wrap(err, "unable to validate")
 	}
 
 	// 4. setup
-	// check if we got the no setup override option
+	// check if we got the no setup override option. this implies the target volume is already attached to the instance
+	// this is used in cases where we need to test a snapshot created from a public marketplace image. the volume gets attached to a brand
+	// new instance, and then that instance is started and we scan the attached fs
 	if tc.Options[NoSetup] == "true" {
 		log.Info().Msg("skipping setup step")
 	} else {
-		ok, err = t.Setup(ctx, instanceinfo)
+		var ok bool
+		var err error
+		switch t.targetType {
+		case EBSTargetInstance:
+			ok, err = t.SetupForTargetInstance(ctx, instanceinfo)
+		case EBSTargetVolume:
+			ok, err = t.SetupForTargetVolume(ctx, *volumeid)
+		case EBSTargetSnapshot:
+			ok, err = t.SetupForTargetSnapshot(ctx, *snapshotid)
+		}
 		if err != nil {
 			log.Error().Err(err).Msg("unable to complete setup step")
 			t.Close()
@@ -118,17 +133,21 @@ const NoSetup = "no-setup"
 type Ec2EbsTransport struct {
 	FsTransport         *fs.FsTransport
 	scannerRegionEc2svc *ec2.Client
+	targetRegionEc2svc  *ec2.Client
 	config              aws.Config
 	opts                map[string]string
 	shell               []string
 	scannerInstance     *InstanceId // the instance the transport is running on
 	tmpInfo             tmpInfo
-	target              targetInfo // info about the target instance
+	target              TargetInfo // info about the target
+	targetType          string     // the type of object we're targeting (instance, volume, snapshot)
 }
 
-type targetInfo struct {
-	platformId string
-	instance   *InstanceId
+type TargetInfo struct {
+	PlatformId string
+	AccountId  string
+	Region     string
+	Id         string
 }
 
 type tmpInfo struct {
@@ -156,8 +175,7 @@ func (t *Ec2EbsTransport) FS() afero.Fs {
 
 func (t *Ec2EbsTransport) Close() {
 	if t.opts != nil {
-		if t.opts[NoSetup] == "true" {
-			log.Debug().Bool("no-setup", true).Msg("skipping close actions")
+		if t.opts[NoSetup] == "true" || t.targetType == EBSTargetSnapshot {
 			return
 		}
 	}
@@ -211,5 +229,24 @@ func RawInstanceInfo(cfg aws.Config) (*imds.InstanceIdentityDocument, error) {
 }
 
 func (t *Ec2EbsTransport) Identifier() (string, error) {
-	return t.target.platformId, nil
+	return t.target.PlatformId, nil
+}
+
+func GetRawInstanceInfo(profile string) (*imds.InstanceIdentityDocument, error) {
+	ctx := context.Background()
+	var cfg aws.Config
+	var err error
+	if profile == "" {
+		cfg, err = config.LoadDefaultConfig(ctx)
+	} else {
+		cfg, err = config.LoadDefaultConfig(ctx, config.WithSharedConfigProfile(profile))
+	}
+	if err != nil {
+		return nil, errors.Wrap(err, "could not load aws configuration")
+	}
+	i, err := RawInstanceInfo(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not load instance info: aws-ec2-ebs transport only valid on ec2 instances")
+	}
+	return i, nil
 }

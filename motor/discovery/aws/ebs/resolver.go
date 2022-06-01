@@ -20,10 +20,11 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
 	tc.Backend = transports.TransportBackend_CONNECTION_AWS_EC2_EBS
 	assetInfo := &asset.Asset{
+		Name:        tc.Options["id"],
 		Connections: []*transports.TransportConfig{tc},
 		State:       asset.State_STATE_ONLINE,
 		PlatformIds: []string{tc.PlatformId},
-		Labels:      map[string]string{aws.EBSScanLabel: "true"},
+		Labels:      map[string]string{aws.EBSScanLabel: "true", aws.RegionLabel: tc.Options["region"], "mondoo.com/item-type": tc.Options["type"]},
 	}
 
 	return []*asset.Asset{assetInfo}, nil
