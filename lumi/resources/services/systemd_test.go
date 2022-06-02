@@ -3,9 +3,9 @@ package services
 import (
 	"testing"
 
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.io/mondoo/motor/transports/fs"
 	"go.mondoo.io/mondoo/motor/transports/mock"
 )
 
@@ -43,7 +43,7 @@ func TestParseServiceSystemDUnitFiles(t *testing.T) {
 
 func TestSystemdFS(t *testing.T) {
 	s := SystemdFSServiceManager{
-		Fs: afero.NewBasePathFs(afero.NewReadOnlyFs(afero.NewOsFs()), "testdata/systemd"),
+		Fs: fs.NewMountedFs("testdata/systemd"),
 	}
 
 	services, err := s.List()
@@ -104,4 +104,27 @@ func TestSystemdFS(t *testing.T) {
 		Installed:   true,
 		Enabled:     true,
 	}, servicesMap["explicit-socket-service"])
+
+	// Relative path symlink
+	assert.Contains(t, servicesMap, "display-manager")
+	assert.Equal(t, &Service{
+		Name:      "display-manager",
+		Type:      "service",
+		State:     ServiceUnknown,
+		Installed: false,
+		Enabled:   false,
+		Masked:    false,
+	}, servicesMap["display-manager"])
+
+	// Absolute path symlink
+	assert.Contains(t, servicesMap, "sshd")
+	assert.Equal(t, &Service{
+		Name:        "sshd",
+		Description: "OpenBSD Secure Shell server",
+		Type:        "service",
+		State:       ServiceUnknown,
+		Installed:   true,
+		Enabled:     true,
+		Masked:      false,
+	}, servicesMap["sshd"])
 }
