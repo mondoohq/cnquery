@@ -315,11 +315,11 @@ func (s *SystemdFSServiceManager) readUnit(unitPath string, uInfo *unitInfo) err
 	if lr, ok := s.Fs.(afero.LinkReader); ok {
 		linkPath, err := lr.ReadlinkIfPossible(unitPath)
 		if err == nil {
-			// If the linkPath is not absolute, use the folder of unitPath and append the
+			// If the linkPath is not absolute, use the directory of unitPath and append the
 			// filename.
 			if !filepath.IsAbs(linkPath) {
-				folder := filepath.Dir(unitPath)
-				linkPath = filepath.Join(folder, linkPath)
+				directory := filepath.Dir(unitPath)
+				linkPath = filepath.Join(directory, linkPath)
 			}
 			unitPath = linkPath
 		}
