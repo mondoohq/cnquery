@@ -10,17 +10,15 @@ import (
 	"path"
 	"path/filepath"
 
-	k8sRuntime "k8s.io/apimachinery/pkg/runtime"
-
-	"k8s.io/apimachinery/pkg/version"
-
-	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
-
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/discovery/common"
+	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/k8s/resources"
+	v1 "k8s.io/api/core/v1"
+	k8sRuntime "k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/version"
 )
 
 type Option func(*ManifestConnector)
@@ -208,4 +206,12 @@ func (ac *ManifestConnector) ServerVersion() *version.Info {
 
 func (ac *ManifestConnector) SupportedResourceTypes() (*resources.ApiResourceIndex, error) {
 	return resources.NewApiResourceIndex(), nil
+}
+
+func (ac *ManifestConnector) Namespaces() (*v1.NamespaceList, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (ac *ManifestConnector) Pods(namespace v1.Namespace) (*v1.PodList, error) {
+	return nil, errors.New("not implemented")
 }

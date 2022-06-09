@@ -3,6 +3,7 @@ package k8s
 import (
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports/k8s/resources"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/version"
 )
@@ -14,6 +15,8 @@ type Connector interface {
 	PlatformInfo() *platform.Platform
 	ServerVersion() *version.Info
 	SupportedResourceTypes() (*resources.ApiResourceIndex, error)
+	Namespaces() (*v1.NamespaceList, error)
+	Pods(namespace v1.Namespace) (*v1.PodList, error)
 }
 
 type ResourceResult struct {

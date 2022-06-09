@@ -1,40 +1,23 @@
 package k8s
 
 import (
-	"context"
 	"strings"
 
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/k8s"
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
 const dockerPullablePrefix = "docker-pullable://"
 
-type PodContainerImage struct {
-	Image         string
-	ResolvedImage string
-	Namespace     string
-	Pod           string
-	InitContainer *string
-	Container     *string
-}
-
-func ListPodImages(config *rest.Config, k8scontext string, namespaceFilter []string, podFilter []string) ([]*asset.Asset, error) {
-	ctx := context.Background()
-
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not create kubernetes clientset")
-	}
-
-	namespaces, err := clientset.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+func ListPodImages(transport *k8s.Transport, namespaceFilter []string, podFilter []string) ([]*asset.Asset, error) {
+	log.Info().Msg("list pods")
+	namespaces, err := transport.Connector().Namespaces()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
 	}
@@ -43,10 +26,11 @@ func ListPodImages(config *rest.Config, k8scontext string, namespaceFilter []str
 	for i := range namespaces.Items {
 		namespace := namespaces.Items[i]
 		if !isIncluded(namespace.Name, namespaceFilter) {
+			log.Info().Str("namespace", namespace.Name).Strs("filter", namespaceFilter).Msg("namespace not included")
 			continue
 		}
 
-		pods, err := clientset.CoreV1().Pods(namespace.Name).List(ctx, metav1.ListOptions{})
+		pods, err := transport.Connector().Pods(namespace)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to list pods")
 		}

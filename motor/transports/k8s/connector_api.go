@@ -5,15 +5,18 @@ import (
 	"os"
 	"path/filepath"
 
-	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
-
 	"github.com/cockroachdb/errors"
 	"github.com/gosimple/slug"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/k8s/resources"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/version"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 )
@@ -62,12 +65,14 @@ func NewApiConnector(namespace string) (*ApiConnector, error) {
 
 	return &ApiConnector{
 		namespace: namespace,
+		config:    config,
 		d:         d,
 	}, nil
 }
 
 type ApiConnector struct {
 	d         *resources.Discovery
+	config    *rest.Config
 	namespace string
 }
 
@@ -198,4 +203,23 @@ func (ac *ApiConnector) PlatformInfo() *platform.Platform {
 		Kind:    transports.Kind_KIND_API,
 		Runtime: transports.RUNTIME_KUBERNETES,
 	}
+}
+
+func (ac *ApiConnector) Namespaces() (*v1.NamespaceList, error) {
+	ctx := context.Background()
+	clientset, err := kubernetes.NewForConfig(ac.config)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not create kubernetes clientset")
+	}
+
+	return clientset.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+}
+
+func (ac *ApiConnector) Pods(namespace v1.Namespace) (*v1.PodList, error) {
+	ctx := context.Background()
+	clientset, err := kubernetes.NewForConfig(ac.config)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not create kubernetes clientset")
+	}
+	return clientset.CoreV1().Pods(namespace.Name).List(ctx, metav1.ListOptions{})
 }
