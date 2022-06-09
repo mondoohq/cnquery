@@ -44,21 +44,16 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 		}
 	}
 
-	k8sContext := tc.Options["context"]
-	if len(k8sContext) == 0 {
-		// try to parse context from kubectl
-		if k8sctlConfig != nil && len(k8sctlConfig.CurrentContext) > 0 {
-			k8sContext = k8sctlConfig.CurrentContext
-		}
-	}
-
-	namespace := tc.Options["namespace"]
-	if len(namespace) > 0 {
-		namespacesFilter = append(namespacesFilter, namespace)
-	} else {
-		// try parse the current kubectl namespace
-		if k8sctlConfig != nil && len(k8sctlConfig.CurrentNamespace()) > 0 {
-			namespacesFilter = append(namespacesFilter, k8sctlConfig.CurrentNamespace())
+	allNamespaces := tc.Options["all-namespaces"]
+	if allNamespaces != "true" {
+		namespace := tc.Options["namespace"]
+		if len(namespace) > 0 {
+			namespacesFilter = append(namespacesFilter, namespace)
+		} else {
+			// try parse the current kubectl namespace
+			if k8sctlConfig != nil && len(k8sctlConfig.CurrentNamespace()) > 0 {
+				namespacesFilter = append(namespacesFilter, k8sctlConfig.CurrentNamespace())
+			}
 		}
 	}
 
@@ -126,11 +121,11 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 		State:       asset.State_STATE_RUNNING,
 	})
 
-	// discover ec2 instances
+	// discover k8s pods
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryContainerImages) {
-		// fetch pod informaton
-		log.Debug().Str("context", k8sContext).Strs("namespace", namespacesFilter).Strs("namespace", podFilter).Msg("search for pods")
-		assetList, err := ListPodImages(trans.GetConfig(), k8sContext, namespacesFilter, podFilter)
+		// fetch pod information
+		log.Debug().Strs("namespace", namespacesFilter).Strs("namespace", podFilter).Msg("search for pods")
+		assetList, err := ListPodImages(trans, namespacesFilter, podFilter)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s images")
 			return nil, err

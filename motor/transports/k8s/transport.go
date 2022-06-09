@@ -6,8 +6,6 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
-
-	"k8s.io/client-go/rest"
 )
 
 var (
@@ -49,14 +47,12 @@ func New(tc *transports.TransportConfig) (*Transport, error) {
 }
 
 type Transport struct {
-	config *rest.Config
-
 	opts      map[string]string
 	connector Connector
 }
 
-func (t *Transport) GetConfig() *rest.Config {
-	return t.config
+func (t *Transport) Connector() Connector {
+	return t.connector
 }
 
 func (t *Transport) RunCommand(command string) (*transports.Command, error) {
