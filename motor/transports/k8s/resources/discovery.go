@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/discovery/cached/disk"
@@ -53,7 +54,31 @@ func NewDiscovery(restConfig *rest.Config) (*Discovery, error) {
 		return nil, err
 	}
 
+	var mu sync.Mutex
+	cache := make(map[schema.GroupVersionResource][]runtime.Object)
+	resTypes, err := supportedResourceTypes(cachedClient)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	var wg sync.WaitGroup
+	for _, r := range resTypes.Resources() {
+		wg.Add(1)
+		go func(r ApiResource) {
+			defer wg.Done()
+			objs, _ := getKindResources(ctx, dynClient, r, "", true) // Load the resource for all namespaces
+			mu.Lock()
+			cache[r.GroupVersionResource()] = objs
+			mu.Unlock()
+		}(r)
+	}
+
+	wg.Wait()
+	log.Info().Msg("warmed up k8s resources cache")
+
 	return &Discovery{
+		resCache:        cache,
 		discoveryClient: cachedClient,
 		dynClient:       dynClient,
 		ServerVersion:   serverVersion,
@@ -61,20 +86,14 @@ func NewDiscovery(restConfig *rest.Config) (*Discovery, error) {
 }
 
 type Discovery struct {
+	resCache        map[schema.GroupVersionResource][]runtime.Object
 	dynClient       dynamic.Interface
 	discoveryClient discovery.CachedDiscoveryInterface
 	ServerVersion   *version.Info
 }
 
 func (d *Discovery) SupportedResourceTypes() (*ApiResourceIndex, error) {
-	log.Debug().Msg("query api resource types")
-	resList, err := d.discoveryClient.ServerPreferredResources()
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to fetch api resource types from kubernetes")
-	}
-	log.Debug().Msgf("found %d api resource types", len(resList))
-
-	return ResourceIndex(resList)
+	return supportedResourceTypes(d.discoveryClient)
 }
 
 func (d *Discovery) GetAllResources(ctx context.Context, resTypes *ApiResourceIndex, ns string, allNs bool) ([]runtime.Object, error) {
@@ -111,7 +130,28 @@ func (d *Discovery) GetAllResources(ctx context.Context, resTypes *ApiResourceIn
 }
 
 func (d *Discovery) GetKindResources(ctx context.Context, apiRes ApiResource, ns string, allNs bool) ([]runtime.Object, error) {
-	client := d.dynClient
+	objs, ok := d.resCache[apiRes.GroupVersionResource()]
+	if !ok {
+		log.Debug().Msgf("couldn't load %s from cache. Attempting new retrieval...", apiRes.GroupVersionResource())
+		return getKindResources(ctx, d.dynClient, apiRes, ns, allNs)
+	}
+
+	log.Debug().Msgf("loaded %s from cache", apiRes.GroupVersionResource())
+	return objs, nil
+}
+
+func supportedResourceTypes(discoveryClient discovery.CachedDiscoveryInterface) (*ApiResourceIndex, error) {
+	log.Debug().Msg("query api resource types")
+	resList, err := discoveryClient.ServerPreferredResources()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to fetch api resource types from kubernetes")
+	}
+	log.Debug().Msgf("found %d api resource types", len(resList))
+
+	return ResourceIndex(resList)
+}
+
+func getKindResources(ctx context.Context, client dynamic.Interface, apiRes ApiResource, ns string, allNs bool) ([]runtime.Object, error) {
 	var out []runtime.Object
 
 	var next string
