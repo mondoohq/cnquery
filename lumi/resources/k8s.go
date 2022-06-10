@@ -16,6 +16,7 @@ import (
 	rbacauthorizationv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -853,20 +854,12 @@ func (k *lumiK8sPod) GetContainers() ([]interface{}, error) {
 		return nil, err
 	}
 
-	kt, err := k8stransport(k.Runtime.Motor.Transport)
+	manifest, err := k.Manifest()
 	if err != nil {
 		return nil, err
 	}
-
-	result, err := kt.Resources("pods.v1.", "")
-	if err != nil {
-		return nil, err
-	}
-
-	obj, err := resources.FindByUid(result.AllResources, uid)
-	if err != nil {
-		return nil, err
-	}
+	unstr := unstructured.Unstructured{Object: manifest}
+	obj := resources.ConvertToK8sObject(unstr)
 
 	resp := []interface{}{}
 	containers, err := resources.GetContainers(obj)

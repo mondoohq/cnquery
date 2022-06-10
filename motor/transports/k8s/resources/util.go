@@ -1,6 +1,8 @@
 package resources
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	appsv1 "k8s.io/api/apps/v1"
@@ -40,6 +42,8 @@ func GetPodSpec(obj runtime.Object) (*corev1.PodSpec, error) {
 		podSpec = &x.Spec.Template.Spec
 	case *appsv1beta1.StatefulSet:
 		podSpec = &x.Spec.Template.Spec
+	default:
+		return nil, fmt.Errorf("object type %v is not supported", x)
 	}
 	return podSpec, nil
 }
