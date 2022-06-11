@@ -4,11 +4,11 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
-	msgraphbetasdk "github.com/microsoftgraph/msgraph-beta-sdk-go"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/devicemanagement/devicecompliancepolicies"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/rolemanagement/directory/roleassignments"
 	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/lumi/resources/msgraphclient"
 	"go.mondoo.io/mondoo/lumi/resources/msgraphconv"
 	"go.mondoo.io/mondoo/motor/transports"
 	ms365_transport "go.mondoo.io/mondoo/motor/transports/ms365"
@@ -805,16 +805,24 @@ func (m *lumiMsgraphBetaDevicemanagementDevicecompliancepolicy) id() (string, er
 	return m.Id()
 }
 
-func graphBetaClient(t *ms365_transport.Transport) (*msgraphbetasdk.GraphServiceClient, error) {
+func graphBetaAdapter(t *ms365_transport.Transport) (*msgraphclient.GraphRequestAdapter, error) {
 	auth, err := t.Auth()
 	if err != nil {
 		return nil, errors.Wrap(err, "authentication provider error")
 	}
 
-	adapter, err := msgraphbetasdk.NewGraphRequestAdapter(auth)
+	adapter, err := msgraphclient.NewGraphRequestAdapter(auth)
 	if err != nil {
 		return nil, err
 	}
-	graphBetaClient := msgraphbetasdk.NewGraphServiceClient(adapter)
+	return adapter, nil
+}
+
+func graphBetaClient(t *ms365_transport.Transport) (*msgraphclient.GraphServiceClient, error) {
+	adapter, err := graphBetaAdapter(t)
+	if err != nil {
+		return nil, err
+	}
+	graphBetaClient := msgraphclient.NewGraphServiceClient(adapter)
 	return graphBetaClient, nil
 }
