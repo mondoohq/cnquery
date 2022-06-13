@@ -9,6 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -54,6 +55,8 @@ func NewDiscovery(restConfig *rest.Config) (*Discovery, error) {
 		return nil, err
 	}
 
+	log.Info().Msg("retrieving all k8s resources")
+
 	var mu sync.Mutex
 	cache := make(map[schema.GroupVersionResource][]runtime.Object)
 	resTypes, err := supportedResourceTypes(cachedClient)
@@ -75,7 +78,7 @@ func NewDiscovery(restConfig *rest.Config) (*Discovery, error) {
 	}
 
 	wg.Wait()
-	log.Info().Msg("warmed up k8s resources cache")
+	log.Debug().Msg("warmed up k8s resources cache")
 
 	return &Discovery{
 		resCache:        cache,
@@ -134,6 +137,21 @@ func (d *Discovery) GetKindResources(ctx context.Context, apiRes ApiResource, ns
 	if !ok {
 		log.Debug().Msgf("couldn't load %s from cache. Attempting new retrieval...", apiRes.GroupVersionResource())
 		return getKindResources(ctx, d.dynClient, apiRes, ns, allNs)
+	}
+
+	// If the resource is namespaced and there is ns filter provided, we filter the cached slice.
+	if apiRes.Resource.Namespaced && !allNs && ns != "" {
+		var filtered []runtime.Object
+		for _, o := range objs {
+			obj, err := meta.Accessor(o)
+
+			// There should be no errors here as we already know the list contains API objects but just for the sake
+			// of not crashing, make sure there is no error.
+			if err == nil && obj.GetNamespace() == ns {
+				filtered = append(filtered, o)
+			}
+		}
+		objs = filtered // Replace the slice to be returned with the slice filtered on namespace
 	}
 
 	log.Debug().Msgf("loaded %s from cache", apiRes.GroupVersionResource())
