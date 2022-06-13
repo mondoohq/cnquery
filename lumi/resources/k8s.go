@@ -854,6 +854,8 @@ func (k *lumiK8sPod) GetContainers() ([]interface{}, error) {
 		return nil, err
 	}
 
+	// At this point we already have the cached Pod manifest. We can parse it to retrieve the
+	// containers for the pod.
 	manifest, err := k.Manifest()
 	if err != nil {
 		return nil, err
