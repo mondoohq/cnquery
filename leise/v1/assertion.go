@@ -270,7 +270,7 @@ func compileListAssertionMsg(c *compiler, typ types.Type, allRef int32, failedRe
 
 // UpdateAssertions in a bundle and remove all intermediate assertion objects
 func UpdateAssertions(bundle *llx.CodeBundle) error {
-	bundle.Assertions = map[string]*llx.AssertionMessage{}
+	bundle.DeprecatedV5Assertions = map[string]*llx.AssertionMessage{}
 	return updateCodeAssertions(bundle, bundle.DeprecatedV5Code)
 }
 
@@ -293,7 +293,7 @@ func updateCodeAssertions(bundle *llx.CodeBundle, code *llx.CodeV1) error {
 			assert.DeprecatedV5Datapoint = nil
 		}
 
-		bundle.Assertions[sum] = assert
+		bundle.DeprecatedV5Assertions[sum] = assert
 	}
 	code.Assertions = nil
 
