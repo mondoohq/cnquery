@@ -193,7 +193,7 @@ func (l *CodeV1) entrypoint2assessment(bundle *CodeBundle, ref int32, lookup fun
 	}
 
 	// explicit assessments
-	if assertion, ok := bundle.Assertions[checksum]; ok {
+	if assertion, ok := bundle.DeprecatedV5Assertions[checksum]; ok {
 		res.IsAssertion = true
 
 		if assertion.DecodeBlock {

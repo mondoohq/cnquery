@@ -93,6 +93,7 @@ message Documentation {
 message CodeBundle {
   // DEPRECATED: remove in v7.0 vv
   CodeV1 deprecated_v5_code = 1;
+  map<string,AssertionMessage> deprecated_v5_assertions = 21;
   // --------------------------------------------------------------------------
   CodeV2 code_v2 = 6;
   repeated Documentation suggestions = 2;
@@ -100,8 +101,8 @@ message CodeBundle {
   Labels labels = 4;
   map<string,string> props = 5; // name + type
   string version = 20;
-  map<string,AssertionMessage> assertions = 21;
   string min_mondoo_version = 22;
+  map<string,AssertionMessage> assertions = 23;
 }
 
 message Result {
