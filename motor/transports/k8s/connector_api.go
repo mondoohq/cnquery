@@ -83,11 +83,11 @@ func (ac *ApiConnector) Identifier() (string, error) {
 		return "", err
 	}
 
-	if len(result.RootResources) != 1 {
+	if len(result.Resources) != 1 {
 		return "", errors.New("could not identify the k8s cluster")
 	}
 
-	resource := result.RootResources[0]
+	resource := result.Resources[0]
 	obj, err := meta.Accessor(resource)
 	if err != nil {
 		return "", err
@@ -124,8 +124,8 @@ func (ac *ApiConnector) ClusterInfo() (ClusterInfo, error) {
 		return res, err
 	}
 
-	if len(result.RootResources) > 0 {
-		node := result.RootResources[0]
+	if len(result.Resources) > 0 {
+		node := result.Resources[0]
 		obj, err := meta.Accessor(node)
 		if err != nil {
 			log.Error().Err(err).Msg("could not access object attributes")
@@ -160,25 +160,30 @@ func (ac *ApiConnector) Resources(kind string, name string) (*ResourceResult, er
 	}
 	log.Debug().Msg("completed querying resource types")
 
-	// return all resources for specified resource tpyes and namespace
-	log.Debug().Msg("fetch all resource objects")
-	resourceObjects, err := ac.d.GetAllResources(ctx, resTypes, ns, allNs)
+	resType, err := resTypes.Lookup(kind)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not query resource objects")
+		return nil, err
 	}
-	log.Debug().Msgf("found %d resource objects", len(resourceObjects))
 
-	// find root nodes
-	resType, rootResources, err := resources.FilterResource(resTypes, resourceObjects, kind, name)
+	log.Debug().Msgf("fetch all %s resources", kind)
+	objs, err := ac.d.GetKindResources(ctx, *resType, ns, allNs)
+	if err != nil {
+		return nil, err
+	}
+	log.Debug().Msgf("found %d resource objects", len(objs))
+
+	objs, err = resources.FilterResource(resType, objs, name)
+	if err != nil {
+		return nil, err
+	}
 
 	return &ResourceResult{
-		Name:          name,
-		Kind:          kind,
-		ResourceType:  resType,
-		AllResources:  resourceObjects,
-		RootResources: rootResources,
-		Namespace:     ns,
-		AllNs:         allNs,
+		Name:         name,
+		Kind:         kind,
+		ResourceType: resType,
+		Resources:    objs,
+		Namespace:    ns,
+		AllNs:        allNs,
 	}, err
 }
 
