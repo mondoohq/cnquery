@@ -6,16 +6,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func FilterResource(resourceTypes *ApiResourceIndex, resourceObjects []runtime.Object, kind string, name string) (*ApiResource, []runtime.Object, error) {
-	// look up resource type for kind
-	resType, err := resourceTypes.Lookup(kind)
-	if err != nil {
-		return nil, nil, err
-	}
-
+func FilterResource(resType *ApiResource, resourceObjects []runtime.Object, name string) ([]runtime.Object, error) {
 	// filter root resources
 	roots := filterResource(resourceObjects, resType.Resource.Kind, name)
-	return resType, roots, nil
+	return roots, nil
 }
 
 func filterResource(resources []runtime.Object, kind string, name string) []runtime.Object {

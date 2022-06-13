@@ -188,16 +188,20 @@ func (mc *ManifestConnector) Resources(kind string, name string) (*ResourceResul
 		return nil, err
 	}
 
-	resType, rootResources, err := resources.FilterResource(resTypes, resourceObjects, kind, name)
+	resType, err := resTypes.Lookup(kind)
+	if err != nil {
+		return nil, err
+	}
+
+	resources, err := resources.FilterResource(resType, resourceObjects, name)
 
 	return &ResourceResult{
-		Name:          name,
-		Kind:          kind,
-		ResourceType:  resType,
-		AllResources:  resourceObjects,
-		RootResources: rootResources,
-		Namespace:     ns,
-		AllNs:         allNs,
+		Name:         name,
+		Kind:         kind,
+		ResourceType: resType,
+		Resources:    resources,
+		Namespace:    ns,
+		AllNs:        allNs,
 	}, err
 }
 
@@ -266,8 +270,8 @@ func (mc *ManifestConnector) Pods(namespace v1.Namespace) (*v1.PodList, error) {
 
 	list := &v1.PodList{}
 
-	for i := range result.RootResources {
-		r := result.RootResources[i]
+	for i := range result.Resources {
+		r := result.Resources[i]
 
 		pod, ok := r.(*v1.Pod)
 		if !ok {

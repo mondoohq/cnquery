@@ -121,8 +121,8 @@ func k8sResourceToLumi(r *lumi.Runtime, kind string, fn resourceConvertFn) ([]in
 	}
 
 	resp := []interface{}{}
-	for i := range result.RootResources {
-		resource := result.RootResources[i]
+	for i := range result.Resources {
+		resource := result.Resources[i]
 
 		obj, err := meta.Accessor(resource)
 		if err != nil {
@@ -718,8 +718,8 @@ func (k *lumiK8s) GetCustomresources() ([]interface{}, error) {
 	}
 
 	resp := []interface{}{}
-	for i := range result.RootResources {
-		resource := result.RootResources[i]
+	for i := range result.Resources {
+		resource := result.Resources[i]
 
 		//resource.
 		crd, err := meta.Accessor(resource)

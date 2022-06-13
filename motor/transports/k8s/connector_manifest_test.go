@@ -18,7 +18,7 @@ func TestManifestDeployment(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "centos", res.Name)
 	assert.Equal(t, "deployment", res.Kind)
-	assert.Equal(t, 1, len(res.RootResources))
+	assert.Equal(t, 1, len(res.Resources))
 }
 
 func TestManifestInmemory(t *testing.T) {
@@ -35,7 +35,7 @@ func TestManifestInmemory(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "centos", res.Name)
 	assert.Equal(t, "deployment", res.Kind)
-	assert.Equal(t, 1, len(res.RootResources))
+	assert.Equal(t, 1, len(res.Resources))
 }
 
 func TestManifestPod(t *testing.T) {
