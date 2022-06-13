@@ -1,6 +1,8 @@
 package llx
 
 import (
+	"sort"
+
 	"go.mondoo.io/mondoo/checksums"
 	"go.mondoo.io/mondoo/types"
 )
@@ -58,6 +60,14 @@ func (l *CodeV1) checksum() string {
 	}
 	if len(l.Entrypoints) == 0 {
 		checksum = checksum.Add(l.Checksums[l.ChunkIndex()])
+	}
+	assertionRefs := make([]int32, 0, len(l.Assertions))
+	for k := range l.Assertions {
+		assertionRefs = append(assertionRefs, k)
+	}
+	sort.Slice(assertionRefs, func(i, j int) bool { return assertionRefs[i] < assertionRefs[j] })
+	for _, ref := range assertionRefs {
+		checksum = checksum.Add(l.Checksums[ref])
 	}
 	return checksum.String()
 }
