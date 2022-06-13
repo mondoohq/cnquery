@@ -30,7 +30,6 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 	namespacesFilter := []string{}
-	podFilter := []string{}
 
 	var k8sctlConfig *kubectl.KubectlConfig
 	localTransport, err := local.New()
@@ -57,12 +56,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 		}
 	}
 
-	pod := tc.Options["pod"]
-	if len(pod) > 0 {
-		podFilter = append(podFilter, pod)
-	}
-
-	log.Debug().Strs("podFilter", podFilter).Strs("namespaceFilter", namespacesFilter).Msg("resolve k8s assets")
+	log.Debug().Strs("namespaceFilter", namespacesFilter).Msg("resolve k8s assets")
 
 	// add k8s api
 	// add aws api as asset
@@ -124,8 +118,8 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 	// discover k8s pods
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryContainerImages) {
 		// fetch pod information
-		log.Debug().Strs("namespace", namespacesFilter).Strs("namespace", podFilter).Msg("search for pods")
-		assetList, err := ListPodImages(trans, namespacesFilter, podFilter)
+		log.Debug().Strs("namespace", namespacesFilter).Msg("search for pods")
+		assetList, err := ListPodImages(trans, namespacesFilter)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s images")
 			return nil, err

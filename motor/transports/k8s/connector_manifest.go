@@ -17,6 +17,8 @@ import (
 	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/k8s/resources"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sRuntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/version"
 )
@@ -154,6 +156,26 @@ func (mc *ManifestConnector) load() ([]k8sRuntime.Object, error) {
 	return res, nil
 }
 
+func (mc *ManifestConnector) resourceIndex() ([]k8sRuntime.Object, *resources.ApiResourceIndex, error) {
+	resourceObjects, err := mc.load()
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "could not query resource objects")
+	}
+	log.Debug().Msgf("found %d resource objects", len(resourceObjects))
+
+	// find root nodes
+	resList, err := resources.CachedServerResources()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	resTypes, err := resources.ResourceIndex(resList)
+	if err != nil {
+		return nil, nil, err
+	}
+	return resourceObjects, resTypes, nil
+}
+
 func (mc *ManifestConnector) Resources(kind string, name string) (*ResourceResult, error) {
 	ns := mc.namespace
 	allNs := false
@@ -161,19 +183,7 @@ func (mc *ManifestConnector) Resources(kind string, name string) (*ResourceResul
 		allNs = true
 	}
 
-	resourceObjects, err := mc.load()
-	if err != nil {
-		return nil, errors.Wrap(err, "could not query resource objects")
-	}
-	log.Debug().Msgf("found %d resource objects", len(resourceObjects))
-
-	// find root nodes
-	resList, err := resources.CachedServerResources()
-	if err != nil {
-		return nil, err
-	}
-
-	resTypes, err := resources.ResourceIndex(resList)
+	resourceObjects, resTypes, err := mc.resourceIndex()
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +201,7 @@ func (mc *ManifestConnector) Resources(kind string, name string) (*ResourceResul
 	}, err
 }
 
-func (ac *ManifestConnector) PlatformInfo() *platform.Platform {
+func (mc *ManifestConnector) PlatformInfo() *platform.Platform {
 	return &platform.Platform{
 		Name:    "kubernetes",
 		Title:   "Kubernetes Manifest",
@@ -200,18 +210,72 @@ func (ac *ManifestConnector) PlatformInfo() *platform.Platform {
 	}
 }
 
-func (ac *ManifestConnector) ServerVersion() *version.Info {
+func (mc *ManifestConnector) ServerVersion() *version.Info {
 	return nil
 }
 
-func (ac *ManifestConnector) SupportedResourceTypes() (*resources.ApiResourceIndex, error) {
+func (mc *ManifestConnector) SupportedResourceTypes() (*resources.ApiResourceIndex, error) {
 	return resources.NewApiResourceIndex(), nil
 }
 
-func (ac *ManifestConnector) Namespaces() (*v1.NamespaceList, error) {
-	return nil, errors.New("not implemented")
+// Namespaces iterates over all file-based manifests and extracts all namespaces used
+func (mc *ManifestConnector) Namespaces() (*v1.NamespaceList, error) {
+	// iterate over all resources and extract all the namespaces
+	resourceObjects, _, err := mc.resourceIndex()
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debug().Msgf("found %d resource objects", len(resourceObjects))
+
+	namespaceMap := map[string]struct{}{}
+	for i := range resourceObjects {
+		res := resourceObjects[i]
+		o, err := meta.Accessor(res)
+		if err != nil {
+			return nil, err
+		}
+
+		namespaceMap[o.GetNamespace()] = struct{}{}
+	}
+
+	list := v1.NamespaceList{
+		Items: []v1.Namespace{},
+	}
+
+	// NOTE: this only does the minimal required for our current implementation
+	// going forward we may need a bit more information
+	for k := range namespaceMap {
+		list.Items = append(list.Items, v1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: k,
+			},
+		})
+	}
+
+	return &list, nil
 }
 
-func (ac *ManifestConnector) Pods(namespace v1.Namespace) (*v1.PodList, error) {
-	return nil, errors.New("not implemented")
+func (mc *ManifestConnector) Pods(namespace v1.Namespace) (*v1.PodList, error) {
+	// iterate over all resources and extract the pods
+
+	result, err := mc.Resources("pods.v1.", "")
+	if err != nil {
+		return nil, err
+	}
+
+	list := &v1.PodList{}
+
+	for i := range result.RootResources {
+		r := result.RootResources[i]
+
+		pod, ok := r.(*v1.Pod)
+		if !ok {
+			log.Warn().Msg("could not convert k8s resource to pod")
+			continue
+		}
+		list.Items = append(list.Items, *pod)
+	}
+
+	return list, nil
 }

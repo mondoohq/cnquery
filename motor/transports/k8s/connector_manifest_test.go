@@ -10,7 +10,7 @@ import (
 	"go.mondoo.io/mondoo/motor/transports/k8s/resources"
 )
 
-func TestFileLoad(t *testing.T) {
+func TestManifestDeployment(t *testing.T) {
 	manifestFile := "./resources/testdata/appsv1.deployment.yaml"
 	connector := NewManifestConnector(WithManifestFile(manifestFile))
 	require.NotNil(t, connector)
@@ -21,7 +21,7 @@ func TestFileLoad(t *testing.T) {
 	assert.Equal(t, 1, len(res.RootResources))
 }
 
-func TestInmemory(t *testing.T) {
+func TestManifestInmemory(t *testing.T) {
 	manifestFile := "./resources/testdata/appsv1.deployment.yaml"
 	data, err := os.ReadFile(manifestFile)
 	require.NoError(t, err)
@@ -36,4 +36,18 @@ func TestInmemory(t *testing.T) {
 	assert.Equal(t, "centos", res.Name)
 	assert.Equal(t, "deployment", res.Kind)
 	assert.Equal(t, 1, len(res.RootResources))
+}
+
+func TestManifestPod(t *testing.T) {
+	manifestFile := "./resources/testdata/appsv1.pod.yaml"
+	connector := NewManifestConnector(WithManifestFile(manifestFile))
+	require.NotNil(t, connector)
+
+	namespaces, err := connector.Namespaces()
+	require.NoError(t, err)
+	assert.Equal(t, 1, len(namespaces.Items))
+
+	pods, err := connector.Pods(namespaces.Items[0])
+	require.NoError(t, err)
+	assert.Equal(t, 1, len(pods.Items))
 }
