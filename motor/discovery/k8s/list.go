@@ -3,20 +3,20 @@ package k8s
 import (
 	"strings"
 
-	"github.com/cockroachdb/errors"
 	"github.com/google/go-containerregistry/pkg/name"
+
+	"go.mondoo.io/mondoo/motor/discovery/container_registry"
+
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
 	"go.mondoo.io/mondoo/motor/transports/k8s"
 	v1 "k8s.io/api/core/v1"
 )
 
 const dockerPullablePrefix = "docker-pullable://"
 
-func ListPodImages(transport *k8s.Transport, namespaceFilter []string, podFilter []string) ([]*asset.Asset, error) {
-	log.Info().Msg("list pods")
+func ListPodImages(transport *k8s.Transport, namespaceFilter []string) ([]*asset.Asset, error) {
 	namespaces, err := transport.Connector().Namespaces()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
@@ -36,21 +36,11 @@ func ListPodImages(transport *k8s.Transport, namespaceFilter []string, podFilter
 		}
 
 		for j := range pods.Items {
-			pod := pods.Items[j]
-
-			if !isIncluded(pod.Name, podFilter) {
-				continue
+			assets, err := resolvePodAssets(pods.Items[j])
+			if err != nil {
+				return nil, err
 			}
-
-			for ics := range pod.Status.InitContainerStatuses {
-				containerStatus := pod.Status.InitContainerStatuses[ics]
-				runningImages = append(runningImages, toAsset(pod, containerStatus))
-			}
-
-			for cs := range pod.Status.ContainerStatuses {
-				containerStatus := pod.Status.ContainerStatuses[cs]
-				runningImages = append(runningImages, toAsset(pod, containerStatus))
-			}
+			runningImages = append(runningImages, assets...)
 		}
 	}
 
@@ -71,92 +61,104 @@ func isIncluded(value string, included []string) bool {
 	return false
 }
 
-// TODO: should we ignore pods with CreateContainerError
-func toAsset(pod v1.Pod, status v1.ContainerStatus) *asset.Asset {
-	resolvedImage := status.ImageID
+func resolvePodAssets(pod v1.Pod) ([]*asset.Asset, error) {
+	resolved := []*asset.Asset{}
+
+	// it is best to read the image from the container status since it is resolved
+	// and more accurate, for static file scan we also need to fall-back to pure spec
+	// since the status will not be set
+	for ics := range pod.Status.InitContainerStatuses {
+		containerStatus := pod.Status.InitContainerStatuses[ics]
+		image, resolvedImage := resolveContainerImageFromStatus(containerStatus)
+		a, err := newPodImageAsset(image, resolvedImage)
+		if err != nil {
+			return nil, err
+		}
+		resolved = append(resolved, a)
+	}
+
+	// fall-back to spec
+	if len(pod.Spec.InitContainers) > 0 && len(pod.Status.InitContainerStatuses) == 0 {
+		for i := range pod.Spec.InitContainers {
+			initContainer := pod.Spec.InitContainers[i]
+			image, resolvedImage := resolveContainerImage(initContainer)
+			a, err := newPodImageAsset(image, resolvedImage)
+			if err != nil {
+				return nil, err
+			}
+			resolved = append(resolved, a)
+		}
+	}
+
+	for cs := range pod.Status.ContainerStatuses {
+		containerStatus := pod.Status.ContainerStatuses[cs]
+		image, resolvedImage := resolveContainerImageFromStatus(containerStatus)
+		a, err := newPodImageAsset(image, resolvedImage)
+		if err != nil {
+			return nil, err
+		}
+		resolved = append(resolved, a)
+	}
+
+	// fall-back to spec
+	if len(pod.Spec.Containers) > 0 && len(pod.Status.ContainerStatuses) == 0 {
+		for i := range pod.Spec.Containers {
+			container := pod.Spec.Containers[i]
+			image, resolvedImage := resolveContainerImage(container)
+			a, err := newPodImageAsset(image, resolvedImage)
+			if err != nil {
+				return nil, err
+			}
+			resolved = append(resolved, a)
+		}
+	}
+
+	return resolved, nil
+}
+
+func resolveContainerImage(container v1.Container) (string, string) {
+	image := container.Image
+	return image, image
+}
+
+func resolveContainerImageFromStatus(containerStatus v1.ContainerStatus) (string, string) {
+	image := containerStatus.Image
+	resolvedImage := containerStatus.ImageID
 	if strings.HasPrefix(resolvedImage, dockerPullablePrefix) {
 		resolvedImage = strings.TrimPrefix(resolvedImage, dockerPullablePrefix)
 	}
 
-	connection := resolvedImage
-	// parentRef := ""
-
 	// stopped pods may not include the resolved image
 	if len(resolvedImage) == 0 {
-		connection = status.Image
+		resolvedImage = containerStatus.Image
 	}
 
-	// // parse resolved image to extract the digest
-	// if len(resolvedImage) > 0 {
-	// 	digest, err := name.NewDigest(resolvedImage, name.WeakValidation)
-	// 	if err == nil {
-	// 		parentRef = docker.MondooContainerImageID(digest.DigestStr())
-	// 	}
-	// }
+	return image, resolvedImage
+}
+
+func newPodImageAsset(image string, resolvedImage string) (*asset.Asset, error) {
+	ccresolver := container_registry.NewContainerRegistryResolver()
+
+	ref, err := name.ParseReference(resolvedImage, name.WeakValidation)
+	if err != nil {
+		return nil, err
+	}
+	a, err := ccresolver.GetImage(ref, nil)
+	if err != nil {
+		return nil, err
+	}
 
 	// parse image name to extract tags
 	tagName := ""
-	if len(status.Image) > 0 {
-		tag, err := name.NewTag(resolvedImage, name.WeakValidation)
+	if len(image) > 0 {
+		tag, err := name.NewTag(image, name.WeakValidation)
 		if err == nil {
 			tagName = tag.TagStr()
 		}
 	}
-
-	asset := &asset.Asset{
-		Name: pod.Name,
-
-		PlatformIds: []string{MondooKubernetesPodID(string(pod.UID))},
-		// ParentPlatformID: parentRef,
-
-		Platform: &platform.Platform{
-			Kind:    transports.Kind_KIND_CONTAINER,
-			Runtime: transports.RUNTIME_KUBERNETES,
-		},
-
-		Connections: []*transports.TransportConfig{
-			{
-				Backend: transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY,
-				Host:    connection,
-			},
-		},
-		State:  mapPodStatus(pod.Status),
-		Labels: make(map[string]string),
+	if a.Labels == nil {
+		a.Labels = map[string]string{}
 	}
-
-	for key := range pod.Annotations {
-		asset.Labels[key] = pod.Annotations[key]
-	}
-
-	// fetch k8s specific metadata
-	asset.Labels["k8s.mondoo.com/name"] = pod.Name
-	asset.Labels["k8s.mondoo.com/namespace"] = pod.Namespace
-	asset.Labels["k8s.mondoo.com/cluster-name"] = pod.ClusterName
-	asset.Labels["k8s.mondoo.com/status/name"] = status.Name
-	asset.Labels["k8s.mondoo.com/status/image"] = status.Image
-	asset.Labels["docker.io/tags"] = tagName
-	return asset
-}
-
-func mapPodStatus(status v1.PodStatus) asset.State {
-	switch status.Phase {
-	case v1.PodPending:
-		return asset.State_STATE_PENDING
-	case v1.PodFailed:
-		return asset.State_STATE_ERROR
-	case v1.PodRunning:
-		return asset.State_STATE_RUNNING
-	case v1.PodSucceeded:
-		return asset.State_STATE_PENDING
-	case v1.PodUnknown:
-		return asset.State_STATE_UNKNOWN
-	default:
-		return asset.State_STATE_UNKNOWN
-	}
-}
-
-// TODO: find a method to uniquely identify a kubernetes cluster
-// see https://github.com/kubernetes/kubernetes/issues/77487, kubesystem uid
-func MondooKubernetesPodID(podId string) string {
-	return "//platformid.api.mondoo.app/runtime/kubernetes/pod/" + podId
+	a.Labels["docker.io/tags"] = tagName
+	return a, nil
 }

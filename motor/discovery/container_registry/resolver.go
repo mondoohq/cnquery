@@ -33,7 +33,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
-	imageFetcher := NewContainerRegistry()
+	imageFetcher := NewContainerRegistryResolver()
 	// to support self-signed certs
 	imageFetcher.Insecure = tc.Insecure
 

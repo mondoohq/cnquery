@@ -21,7 +21,7 @@ import (
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
-func NewContainerRegistry() *DockerRegistryImages {
+func NewContainerRegistryResolver() *DockerRegistryImages {
 	return &DockerRegistryImages{}
 }
 

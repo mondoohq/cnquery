@@ -24,7 +24,7 @@ func TestDockerRegistry(t *testing.T) {
 		// t.Fatal(fmt.Errorf("registries must be valid RFC 3986 URI authorities: %s", name))
 	}
 
-	// r := docker.NewContainerRegistry()
+	// r := docker.NewContainerRegistryResolver()
 	// assets, err := r.List(name)
 	// require.NoError(t, err)
 	// assert.True(t, len(assets) > 0)
