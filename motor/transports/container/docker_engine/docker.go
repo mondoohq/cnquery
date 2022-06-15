@@ -54,6 +54,14 @@ type Transport struct {
 	runtime string
 }
 
+func (t *Transport) DockerClient() *client.Client {
+	return t.dockerClient
+}
+
+func (t *Transport) ContainerId() string {
+	return t.container
+}
+
 func (t *Transport) Identifier() (string, error) {
 	return t.PlatformIdentifier, nil
 }
