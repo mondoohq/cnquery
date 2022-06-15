@@ -39,6 +39,8 @@ func ResolveManager(motor *motor.Motor) (OSProcessManager, error) {
 	}
 
 	switch {
+	case platform.Runtime == "docker container":
+		pm = &DockerTopManager{motor: motor}
 	case platform.IsFamily("linux") && !disableProcFs:
 		pm = &LinuxProcManager{motor: motor}
 	case platform.IsFamily("unix"):
