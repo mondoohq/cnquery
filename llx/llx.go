@@ -371,12 +371,18 @@ type arrayBlockCallResult struct {
 
 func (a arrayBlockCallResult) toRawData() *RawData {
 	v := make(map[string]interface{}, len(a.entrypoints)+len(a.datapoints))
+
 	for checksum, res := range a.entrypoints {
 		v[checksum] = res
 	}
 
 	for checksum, res := range a.datapoints {
 		v[checksum] = res
+	}
+
+	v["__t"] = &RawData{
+		Type:  types.Bool,
+		Value: a.isTruthy(),
 	}
 
 	return &RawData{
@@ -559,7 +565,6 @@ func (b *blockExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*
 
 	err := b.runFunctionBlocks([][]*RawData{fargs}, fref, func(results []arrayBlockCallResult, errs []error) {
 		var anyError error
-		blockResult := map[string]interface{}{}
 		if len(errs) > 0 {
 			anyError = multierror.Append(anyError, errs...)
 		}
@@ -573,14 +578,11 @@ func (b *blockExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*
 				b.triggerChain(ref, res)
 				return
 			}
-
-			for k, v := range results[0].entrypoints {
-				blockResult[k] = v
-			}
-			for k, v := range results[0].datapoints {
-				blockResult[k] = v
-			}
 		}
+
+		data := results[0].toRawData()
+		data.Error = anyError
+		blockResult := data.Value.(map[string]interface{})
 
 		if bind != nil && bind.Type.IsResource() {
 			rr, ok := bind.Value.(lumi.ResourceType)
@@ -594,11 +596,6 @@ func (b *blockExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*
 			}
 		}
 
-		data := &RawData{
-			Type:  types.Block,
-			Value: blockResult,
-			Error: anyError,
-		}
 		b.cache.Store(ref, &stepCache{
 			Result:   data,
 			IsStatic: true,
