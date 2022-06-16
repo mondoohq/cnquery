@@ -211,12 +211,10 @@ func isTruthy(data interface{}, typ types.Type) (bool, bool) {
 		m := data.(map[string]interface{})
 		if m != nil {
 			if bif, ok := m["__t"]; ok {
-				return bif.(*RawData).IsTruthy()
-			} else {
-				// TODO: delete this
-				panic("didn't get all the cases")
+				if rd, ok := bif.(*RawData); ok {
+					return rd.IsTruthy()
+				}
 			}
-
 			for _, v := range m {
 				t1, f1 := isTruthy(v, types.Any)
 				if f1 {

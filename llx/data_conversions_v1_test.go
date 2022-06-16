@@ -94,38 +94,80 @@ func TestResourceConversion(t *testing.T) {
 
 func TestCastResult(t *testing.T) {
 	t.Run("to bool", func(t *testing.T) {
-		t.Run("from block truthy", func(t *testing.T) {
-			rawData := &RawData{
-				Type: types.Block,
-				Value: map[string]interface{}{
-					"yUHOZ/pJzgQ3FLcnKAPphE4TgWqFptqPWA8GYl4e5Dqg0/YzQWcDml2cbrTEj3nj1rm0azm9povOYMRjTgSvZg==": &RawData{
-						Type:  types.String,
-						Value: "8.2.2004",
+		t.Run("from legacy block", func(t *testing.T) {
+			// Previously, blocks did not specify a __t field, which says
+			// if the block is truthy based only on the evaluation of of
+			// the entrypoints. Allow falling back
+			t.Run("from block truthy", func(t *testing.T) {
+				rawData := &RawData{
+					Type: types.Block,
+					Value: map[string]interface{}{
+						"yUHOZ/pJzgQ3FLcnKAPphE4TgWqFptqPWA8GYl4e5Dqg0/YzQWcDml2cbrTEj3nj1rm0azm9povOYMRjTgSvZg==": &RawData{
+							Type:  types.String,
+							Value: "8.2.2004",
+						},
 					},
-				},
-			}
-			rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
-			casted := rawResult.CastResult(types.Bool).RawResultV2()
-			require.NoError(t, casted.Data.Error)
-			require.Equal(t, types.Bool, casted.Data.Type)
-			require.Equal(t, true, casted.Data.Value)
-		})
+				}
+				rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
+				casted := rawResult.CastResult(types.Bool).RawResultV2()
+				require.NoError(t, casted.Data.Error)
+				require.Equal(t, types.Bool, casted.Data.Type)
+				require.Equal(t, true, casted.Data.Value)
+			})
 
-		t.Run("from block not truthy", func(t *testing.T) {
-			rawData := &RawData{
-				Type: types.Block,
-				Value: map[string]interface{}{
-					"yUHOZ/pJzgQ3FLcnKAPphE4TgWqFptqPWA8GYl4e5Dqg0/YzQWcDml2cbrTEj3nj1rm0azm9povOYMRjTgSvZg==": &RawData{
-						Type:  types.String,
-						Value: "",
+			t.Run("from block not truthy", func(t *testing.T) {
+				rawData := &RawData{
+					Type: types.Block,
+					Value: map[string]interface{}{
+						"yUHOZ/pJzgQ3FLcnKAPphE4TgWqFptqPWA8GYl4e5Dqg0/YzQWcDml2cbrTEj3nj1rm0azm9povOYMRjTgSvZg==": &RawData{
+							Type:  types.String,
+							Value: "",
+						},
 					},
-				},
-			}
-			rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
-			casted := rawResult.CastResult(types.Bool).RawResultV2()
-			require.NoError(t, casted.Data.Error)
-			require.Equal(t, types.Bool, casted.Data.Type)
-			require.Equal(t, false, casted.Data.Value)
+				}
+				rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
+				casted := rawResult.CastResult(types.Bool).RawResultV2()
+				require.NoError(t, casted.Data.Error)
+				require.Equal(t, types.Bool, casted.Data.Type)
+				require.Equal(t, false, casted.Data.Value)
+			})
+		})
+		t.Run("from block with __t", func(t *testing.T) {
+			t.Run("from block not truthy", func(t *testing.T) {
+				rawData := &RawData{
+					Type: types.Block,
+					Value: map[string]interface{}{
+						"__t": BoolFalse,
+						"yUHOZ/pJzgQ3FLcnKAPphE4TgWqFptqPWA8GYl4e5Dqg0/YzQWcDml2cbrTEj3nj1rm0azm9povOYMRjTgSvZg==": &RawData{
+							Type:  types.String,
+							Value: "8.2.2004",
+						},
+					},
+				}
+				rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
+				casted := rawResult.CastResult(types.Bool).RawResultV2()
+				require.NoError(t, casted.Data.Error)
+				require.Equal(t, types.Bool, casted.Data.Type)
+				require.Equal(t, false, casted.Data.Value)
+			})
+
+			t.Run("from block truthy", func(t *testing.T) {
+				rawData := &RawData{
+					Type: types.Block,
+					Value: map[string]interface{}{
+						"__t": BoolTrue,
+						"yUHOZ/pJzgQ3FLcnKAPphE4TgWqFptqPWA8GYl4e5Dqg0/YzQWcDml2cbrTEj3nj1rm0azm9povOYMRjTgSvZg==": &RawData{
+							Type:  types.String,
+							Value: "",
+						},
+					},
+				}
+				rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
+				casted := rawResult.CastResult(types.Bool).RawResultV2()
+				require.NoError(t, casted.Data.Error)
+				require.Equal(t, types.Bool, casted.Data.Type)
+				require.Equal(t, true, casted.Data.Value)
+			})
 		})
 
 		t.Run("from string truthy", func(t *testing.T) {

@@ -967,9 +967,9 @@ func TestArray(t *testing.T) {
 			"[1,2,3] { _ == 2 }",
 			0,
 			[]interface{}{
-				map[string]interface{}{"OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolFalse},
-				map[string]interface{}{"OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolTrue},
-				map[string]interface{}{"OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolFalse},
+				map[string]interface{}{"__t": llx.BoolFalse, "OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolFalse},
+				map[string]interface{}{"__t": llx.BoolTrue, "OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolTrue},
+				map[string]interface{}{"__t": llx.BoolFalse, "OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolFalse},
 			},
 		},
 		{
@@ -1120,6 +1120,7 @@ func TestMap(t *testing.T) {
 			"sshd.config.params { _['Protocol'] != 1 }",
 			0,
 			map[string]interface{}{
+				"__t": llx.BoolTrue,
 				"TZsaWUkFbzR9WTfufqRaHuWJa/W4MQsYsrTli6w8DGQnSLYumOg7kduA17NEX/4y5xBfYQMvPIVBRThyB3LsJg==": llx.BoolTrue,
 			},
 		},
@@ -1164,6 +1165,7 @@ func TestResource_Filters_v1(t *testing.T) {
 			0,
 			[]interface{}{
 				map[string]interface{}{
+					"__t": llx.BoolTrue,
 					"BamDDGp87sNG0hVjpmEAPEjF6fZmdA6j3nDinlgr/y5xK3KaLgulyscoeEEaEASm2RkRXifnWj3ZbF0OZBF6XA==": llx.BoolTrue,
 					"ytOUfV4UyOjY0C6HKzQ8GcA/hshrh2ahRySNG41RbFt3TNNf+6gBuHvs2hGTNDPUZR/oN8WH0QFIYYm/Vj3pGQ==": llx.BoolTrue,
 				},
@@ -1183,6 +1185,7 @@ func TestResource_Filters_piper(t *testing.T) {
 			0,
 			[]interface{}{
 				map[string]interface{}{
+					"__t": llx.BoolTrue,
 					"BamDDGp87sNG0hVjpmEAPEjF6fZmdA6j3nDinlgr/y5xK3KaLgulyscoeEEaEASm2RkRXifnWj3ZbF0OZBF6XA==": llx.BoolTrue,
 					"ytOUfV4UyOjY0C6HKzQ8GcA/hshrh2ahRySNG41RbFt3TNNf+6gBuHvs2hGTNDPUZR/oN8WH0QFIYYm/Vj3pGQ==": llx.BoolTrue,
 				},
@@ -1273,16 +1276,20 @@ func TestResource_duplicateFields_v1(t *testing.T) {
 			"users.list.duplicates(uid) { uid }",
 			0,
 			[]interface{}{
-				map[string]interface{}{"sYZO9ps0Y4tx2p0TkrAn73WTQx83QIQu70uPtNukYNnVAzaer3Pf6xe7vAplB+cAgPbteXzizlUioUMnNJr5sg==": &llx.RawData{
-					Type:  "\x05",
-					Value: int64(1000),
-					Error: nil,
-				}},
-				map[string]interface{}{"sYZO9ps0Y4tx2p0TkrAn73WTQx83QIQu70uPtNukYNnVAzaer3Pf6xe7vAplB+cAgPbteXzizlUioUMnNJr5sg==": &llx.RawData{
-					Type:  "\x05",
-					Value: int64(1000),
-					Error: nil,
-				}},
+				map[string]interface{}{
+					"__t": llx.BoolTrue,
+					"sYZO9ps0Y4tx2p0TkrAn73WTQx83QIQu70uPtNukYNnVAzaer3Pf6xe7vAplB+cAgPbteXzizlUioUMnNJr5sg==": &llx.RawData{
+						Type:  "\x05",
+						Value: int64(1000),
+						Error: nil,
+					}},
+				map[string]interface{}{
+					"__t": llx.BoolTrue,
+					"sYZO9ps0Y4tx2p0TkrAn73WTQx83QIQu70uPtNukYNnVAzaer3Pf6xe7vAplB+cAgPbteXzizlUioUMnNJr5sg==": &llx.RawData{
+						Type:  "\x05",
+						Value: int64(1000),
+						Error: nil,
+					}},
 			},
 		},
 	})
@@ -1296,16 +1303,20 @@ func TestResource_duplicateFields_piper(t *testing.T) {
 			"users.list.duplicates(uid) { uid }",
 			0,
 			[]interface{}{
-				map[string]interface{}{"sYZO9ps0Y4tx2p0TkrAn73WTQx83QIQu70uPtNukYNnVAzaer3Pf6xe7vAplB+cAgPbteXzizlUioUMnNJr5sg==": &llx.RawData{
-					Type:  "\x05",
-					Value: int64(1000),
-					Error: nil,
-				}},
-				map[string]interface{}{"sYZO9ps0Y4tx2p0TkrAn73WTQx83QIQu70uPtNukYNnVAzaer3Pf6xe7vAplB+cAgPbteXzizlUioUMnNJr5sg==": &llx.RawData{
-					Type:  "\x05",
-					Value: int64(1000),
-					Error: nil,
-				}},
+				map[string]interface{}{
+					"__t": llx.BoolTrue,
+					"sYZO9ps0Y4tx2p0TkrAn73WTQx83QIQu70uPtNukYNnVAzaer3Pf6xe7vAplB+cAgPbteXzizlUioUMnNJr5sg==": &llx.RawData{
+						Type:  "\x05",
+						Value: int64(1000),
+						Error: nil,
+					}},
+				map[string]interface{}{
+					"__t": llx.BoolTrue,
+					"sYZO9ps0Y4tx2p0TkrAn73WTQx83QIQu70uPtNukYNnVAzaer3Pf6xe7vAplB+cAgPbteXzizlUioUMnNJr5sg==": &llx.RawData{
+						Type:  "\x05",
+						Value: int64(1000),
+						Error: nil,
+					}},
 			},
 		},
 	})
