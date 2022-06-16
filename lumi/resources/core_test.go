@@ -36,7 +36,7 @@ func init() {
 func getEnvFeatures() mondoo.Features {
 	env := os.Getenv("FEATURES")
 	if env == "" {
-		return mondoo.Features{}
+		return mondoo.Features{byte(mondoo.PiperCode)}
 	}
 
 	arr := strings.Split(env, ",")
@@ -226,6 +226,7 @@ type simpleTest struct {
 }
 
 func runSimpleTests(t *testing.T, tests []simpleTest) {
+	t.Helper()
 	for i := range tests {
 		cur := tests[i]
 		t.Run(cur.code, func(t *testing.T) {
@@ -386,6 +387,7 @@ func TestCore_If(t *testing.T) {
 			"if ( mondoo.version != null ) { 123 }",
 			1,
 			map[string]interface{}{
+				"__t": llx.BoolData(true),
 				"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
 			},
 		},
@@ -393,6 +395,7 @@ func TestCore_If(t *testing.T) {
 			"if ( mondoo.version != null ) { 123 } else { 456 }",
 			1,
 			map[string]interface{}{
+				"__t": llx.BoolData(true),
 				"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
 			},
 		},
@@ -400,6 +403,7 @@ func TestCore_If(t *testing.T) {
 			"if ( mondoo.version == null ) { 123 } else { 456 }",
 			1,
 			map[string]interface{}{
+				"__t": llx.BoolData(true),
 				"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
 			},
 		},
@@ -407,6 +411,7 @@ func TestCore_If(t *testing.T) {
 			"if (false) { 123 } else if (true) { 456 } else { 789 }",
 			0,
 			map[string]interface{}{
+				"__t": llx.BoolData(true),
 				"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
 			},
 		},
@@ -414,6 +419,7 @@ func TestCore_If(t *testing.T) {
 			"if (false) { 123 } else if (false) { 456 } else { 789 }",
 			0,
 			map[string]interface{}{
+				"__t": llx.BoolData(true),
 				"Oy5SF8NbUtxaBwvZPpsnd0K21CY+fvC44FSd2QpgvIL689658Na52udy7qF2+hHjczk35TAstDtFZq7JIHNCmg==": llx.IntData(789),
 			},
 		},
@@ -423,7 +429,7 @@ func TestCore_If(t *testing.T) {
 		// if-conditions need to be called with a bloc
 		{
 			"if(platform.family.contains('arch'))",
-			1, "Called if with 1 arguments, expected at least 2",
+			1, "Called if with 1 arguments, expected at least 3",
 		},
 	})
 }
