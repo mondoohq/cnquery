@@ -340,7 +340,6 @@ func (c *LeiseExecutorV1) runBlock(bind *RawData, functionRef *Primitive, args [
 
 	err := c.runFunctionBlocks([][]*RawData{fargs}, fun, func(results []arrayBlockCallResult, errs []error) {
 		var anyError error
-		blockResult := map[string]interface{}{}
 		if len(errs) > 0 {
 			anyError = multierror.Append(anyError, errs...)
 		}
@@ -353,14 +352,11 @@ func (c *LeiseExecutorV1) runBlock(bind *RawData, functionRef *Primitive, args [
 				c.triggerChain(ref, res)
 				return
 			}
-
-			for k, v := range results[0].entrypoints {
-				blockResult[k] = v
-			}
-			for k, v := range results[0].datapoints {
-				blockResult[k] = v
-			}
 		}
+
+		data := results[0].toRawData()
+		data.Error = anyError
+		blockResult := data.Value.(map[string]interface{})
 
 		if bind != nil && bind.Type.IsResource() {
 			rr, ok := bind.Value.(lumi.ResourceType)
@@ -374,11 +370,6 @@ func (c *LeiseExecutorV1) runBlock(bind *RawData, functionRef *Primitive, args [
 			}
 		}
 
-		data := &RawData{
-			Type:  types.Block,
-			Value: blockResult,
-			Error: anyError,
-		}
 		c.cache.Store(ref, &stepCache{
 			Result:   data,
 			IsStatic: true,
