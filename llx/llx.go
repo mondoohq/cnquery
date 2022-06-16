@@ -397,8 +397,8 @@ func (a arrayBlockCallResult) isTruthy() bool {
 			Type:  types.Any,
 			Value: res,
 		}
-		isT, _ := rd.IsTruthy()
-		if !isT {
+		isT, isValid := rd.IsTruthy()
+		if isValid && !isT {
 			return false
 		}
 	}
