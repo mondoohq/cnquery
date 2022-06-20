@@ -223,7 +223,7 @@ func (mc *ManifestConnector) SupportedResourceTypes() (*resources.ApiResourceInd
 }
 
 // Namespaces iterates over all file-based manifests and extracts all namespaces used
-func (mc *ManifestConnector) Namespaces() (*v1.NamespaceList, error) {
+func (mc *ManifestConnector) Namespaces() ([]v1.Namespace, error) {
 	// iterate over all resources and extract all the namespaces
 	resourceObjects, _, err := mc.resourceIndex()
 	if err != nil {
@@ -243,24 +243,22 @@ func (mc *ManifestConnector) Namespaces() (*v1.NamespaceList, error) {
 		namespaceMap[o.GetNamespace()] = struct{}{}
 	}
 
-	list := v1.NamespaceList{
-		Items: []v1.Namespace{},
-	}
+	var nss []v1.Namespace
 
 	// NOTE: this only does the minimal required for our current implementation
 	// going forward we may need a bit more information
 	for k := range namespaceMap {
-		list.Items = append(list.Items, v1.Namespace{
+		nss = append(nss, v1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: k,
 			},
 		})
 	}
 
-	return &list, nil
+	return nss, nil
 }
 
-func (mc *ManifestConnector) Pods(namespace v1.Namespace) (*v1.PodList, error) {
+func (mc *ManifestConnector) Pods(namespace v1.Namespace) ([]v1.Pod, error) {
 	// iterate over all resources and extract the pods
 
 	result, err := mc.Resources("pods.v1.", "")
@@ -268,8 +266,7 @@ func (mc *ManifestConnector) Pods(namespace v1.Namespace) (*v1.PodList, error) {
 		return nil, err
 	}
 
-	list := &v1.PodList{}
-
+	var pods []v1.Pod
 	for i := range result.Resources {
 		r := result.Resources[i]
 
@@ -278,8 +275,8 @@ func (mc *ManifestConnector) Pods(namespace v1.Namespace) (*v1.PodList, error) {
 			log.Warn().Msg("could not convert k8s resource to pod")
 			continue
 		}
-		list.Items = append(list.Items, *pod)
+		pods = append(pods, *pod)
 	}
 
-	return list, nil
+	return pods, nil
 }

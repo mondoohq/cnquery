@@ -63,10 +63,16 @@ func NewApiConnector(namespace string) (*ApiConnector, error) {
 	}
 	log.Debug().Msg("loaded kubeconfig successfully")
 
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not create kubernetes clientset")
+	}
+
 	return &ApiConnector{
 		namespace: namespace,
 		config:    config,
 		d:         d,
+		clientset: clientset,
 	}, nil
 }
 
@@ -74,6 +80,7 @@ type ApiConnector struct {
 	d         *resources.Discovery
 	config    *rest.Config
 	namespace string
+	clientset *kubernetes.Clientset
 }
 
 func (ac *ApiConnector) Identifier() (string, error) {
@@ -210,21 +217,20 @@ func (ac *ApiConnector) PlatformInfo() *platform.Platform {
 	}
 }
 
-func (ac *ApiConnector) Namespaces() (*v1.NamespaceList, error) {
+func (ac *ApiConnector) Namespaces() ([]v1.Namespace, error) {
 	ctx := context.Background()
-	clientset, err := kubernetes.NewForConfig(ac.config)
+	list, err := ac.clientset.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 	if err != nil {
-		return nil, errors.Wrap(err, "could not create kubernetes clientset")
+		return nil, err
 	}
-
-	return clientset.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+	return list.Items, err
 }
 
-func (ac *ApiConnector) Pods(namespace v1.Namespace) (*v1.PodList, error) {
+func (ac *ApiConnector) Pods(namespace v1.Namespace) ([]v1.Pod, error) {
 	ctx := context.Background()
-	clientset, err := kubernetes.NewForConfig(ac.config)
+	list, err := ac.clientset.CoreV1().Pods(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
-		return nil, errors.Wrap(err, "could not create kubernetes clientset")
+		return nil, err
 	}
-	return clientset.CoreV1().Pods(namespace.Name).List(ctx, metav1.ListOptions{})
+	return list.Items, err
 }

@@ -8,6 +8,8 @@ import (
 	"k8s.io/apimachinery/pkg/version"
 )
 
+//go:generate mockgen -source=./connector.go -destination=./fake/connector_generated.go -package=fake
+
 type Connector interface {
 	Name() (string, error)
 	Identifier() (string, error)
@@ -18,8 +20,8 @@ type Connector interface {
 	PlatformInfo() *platform.Platform
 	ServerVersion() *version.Info
 	SupportedResourceTypes() (*resources.ApiResourceIndex, error)
-	Namespaces() (*v1.NamespaceList, error)
-	Pods(namespace v1.Namespace) (*v1.PodList, error)
+	Namespaces() ([]v1.Namespace, error)
+	Pods(namespace v1.Namespace) ([]v1.Pod, error)
 }
 
 type ResourceResult struct {
