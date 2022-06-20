@@ -117,7 +117,7 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 			Kind:    transports.Kind_KIND_API,
 			Runtime: transports.RUNTIME_EQUINIX_METAL,
 		}, nil
-	case *k8s_transport.Transport:
+	case k8s_transport.Transport:
 		return pt.PlatformInfo(), nil
 	case *github.Transport:
 		return &platform.Platform{

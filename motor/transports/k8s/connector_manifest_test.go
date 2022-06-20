@@ -45,9 +45,9 @@ func TestManifestPod(t *testing.T) {
 
 	namespaces, err := connector.Namespaces()
 	require.NoError(t, err)
-	assert.Equal(t, 1, len(namespaces.Items))
+	assert.Equal(t, 1, len(namespaces))
 
-	pods, err := connector.Pods(namespaces.Items[0])
+	pods, err := connector.Pods(namespaces[0])
 	require.NoError(t, err)
-	assert.Equal(t, 1, len(pods.Items))
+	assert.Equal(t, 1, len(pods))
 }

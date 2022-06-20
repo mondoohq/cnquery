@@ -20,8 +20,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func k8stransport(t transports.Transport) (*k8s_transport.Transport, error) {
-	at, ok := t.(*k8s_transport.Transport)
+func k8stransport(t transports.Transport) (k8s_transport.Transport, error) {
+	at, ok := t.(k8s_transport.Transport)
 	if !ok {
 		return nil, errors.New("k8s resource is not supported on this transport")
 	}
