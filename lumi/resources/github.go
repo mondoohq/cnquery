@@ -213,6 +213,7 @@ func (g *lumiGithubOrganization) GetRepositories() ([]interface{}, error) {
 			"allowSquashMerge", toBool(repo.AllowSquashMerge),
 			"hasIssues", toBool(repo.HasIssues),
 			"organizationName", orgLogin,
+			"defaultBranchName", toString(repo.DefaultBranch),
 		)
 		if err != nil {
 			return nil, err
@@ -404,7 +405,57 @@ func (g *lumiGithubUser) init(args *lumi.Args) (*lumi.Args, GithubUser, error) {
 		suspendedAt = &user.SuspendedAt.Time
 	}
 	(*args)["suspendedAt"] = suspendedAt
-
+	(*args)["company"] = toString(user.Company)
 	return args, nil, nil
+}
 
+func (g *lumiGithubRepository) GetBranches() ([]interface{}, error) {
+	gt, err := githubtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	repoName, err := g.Name()
+	if err != nil {
+		return nil, err
+	}
+	orgName, err := g.OrganizationName()
+	if err != nil {
+		return nil, err
+	}
+	branches, _, err := gt.Client().Repositories.ListBranches(context.TODO(), orgName, repoName, &github.BranchListOptions{})
+	if err != nil {
+		log.Error().Err(err).Msg("unable to pull branches list")
+		if strings.Contains(err.Error(), "404") {
+			return nil, nil
+		}
+		return nil, err
+	}
+	res := []interface{}{}
+	for i := range branches {
+		branch := branches[i]
+		lumiCommit, err := g.Runtime.CreateResource("github.commit",
+			"sha", toString(branch.Commit.SHA),
+		)
+		if err != nil {
+			return nil, err
+		}
+		lumiBranch, err := g.Runtime.CreateResource("github.branch",
+			"name", toString(branch.Name),
+			"protected", toBool(branch.Protected),
+			"commit", lumiCommit,
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, lumiBranch)
+	}
+	return res, nil
+}
+
+func (g *lumiGithubBranch) id() (string, error) {
+	return g.Name()
+}
+
+func (g *lumiGithubCommit) id() (string, error) {
+	return g.Sha()
 }

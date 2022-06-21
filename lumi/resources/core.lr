@@ -4685,6 +4685,7 @@ private github.user {
   createdAt time
   updatedAt time
   suspendedAt time
+  company string
 }
 
 private github.repository {
@@ -4707,6 +4708,18 @@ private github.repository {
   hasIssues bool
   organizationName string
   openMergeRequests() []github.mergeRequest
+  branches() []github.branch
+  defaultBranchName string
+}
+
+private github.branch {
+  name string
+  protected bool
+  commit github.commit
+}
+
+private github.commit {
+ sha string
 }
 
 private github.mergeRequest {
