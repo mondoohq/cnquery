@@ -113,12 +113,6 @@ func (g *lumiGithubOrganization) GetMembers() ([]interface{}, error) {
 		r, err := g.Runtime.CreateResource("github.user",
 			"id", id,
 			"login", toString(member.Login),
-			"name", toString(member.Name),
-			"email", toString(member.Email),
-			"bio", toString(member.Bio),
-			"createdAt", githubTimestamp(member.CreatedAt),
-			"updatedAt", githubTimestamp(member.UpdatedAt),
-			"suspendedAt", githubTimestamp(member.SuspendedAt),
 		)
 		if err != nil {
 			return nil, err
@@ -324,6 +318,25 @@ func (g *lumiGithubRepository) GetOpenMergeRequests() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
+		owner, err := g.Runtime.CreateResource("github.user",
+			"id", toInt64(pr.User.ID),
+			"login", toString(pr.User.Login),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		assigneesRes := []interface{}{}
+		for i := range pr.Assignees {
+			assignee, err := g.Runtime.CreateResource("github.user",
+				"id", toInt64(pr.Assignees[i].ID),
+				"login", toString(pr.Assignees[i].Login),
+			)
+			if err != nil {
+				return nil, err
+			}
+			assigneesRes = append(assigneesRes, assignee)
+		}
 
 		r, err := g.Runtime.CreateResource("github.mergeRequest",
 			"id", toInt64(pr.ID),
@@ -331,8 +344,9 @@ func (g *lumiGithubRepository) GetOpenMergeRequests() ([]interface{}, error) {
 			"labels", labels,
 			"createdAt", pr.CreatedAt,
 			"title", toString(pr.Title),
+			"owner", owner,
+			"assignees", assigneesRes,
 		)
-
 		if err != nil {
 			return nil, err
 		}
@@ -348,4 +362,49 @@ func (g *lumiGithubMergeRequest) id() (string, error) {
 		return "", err
 	}
 	return strconv.FormatInt(id, 10), nil
+}
+
+func (g *lumiGithubUser) init(args *lumi.Args) (*lumi.Args, GithubUser, error) {
+	if len(*args) > 3 {
+		return args, nil, nil
+	}
+
+	if (*args)["login"] == nil {
+		return nil, nil, errors.New("login required to fetch github user")
+	}
+	userLogin := (*args)["login"].(string)
+
+	gt, err := githubtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	user, _, err := gt.Client().Users.Get(context.Background(), userLogin)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["id"] = (*args)["id"]
+	(*args)["login"] = toString(user.Login)
+	(*args)["name"] = toString(user.Name)
+	(*args)["email"] = toString(user.Email)
+	(*args)["bio"] = toString(user.Bio)
+	createdAt := &time.Time{}
+	if user.CreatedAt != nil {
+		createdAt = &user.CreatedAt.Time
+	}
+	(*args)["createdAt"] = createdAt
+	updatedAt := &time.Time{}
+	if user.UpdatedAt != nil {
+		updatedAt = &user.UpdatedAt.Time
+	}
+	(*args)["updatedAt"] = updatedAt
+	suspendedAt := &time.Time{}
+	if user.SuspendedAt != nil {
+		suspendedAt = &user.SuspendedAt.Time
+	}
+	(*args)["suspendedAt"] = suspendedAt
+
+	return args, nil, nil
+
 }
