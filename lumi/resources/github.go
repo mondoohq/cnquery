@@ -3,10 +3,12 @@ package resources
 import (
 	"context"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v43/github"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/transports"
 	gh_transport "go.mondoo.io/mondoo/motor/transports/github"
@@ -210,6 +212,13 @@ func (g *lumiGithubOrganization) GetRepositories() ([]interface{}, error) {
 			"disabled", toBool(repo.Disabled),
 			"private", toBool(repo.Private),
 			"visibility", toString(repo.Visibility),
+			"allowAutoMerge", toBool(repo.AllowAutoMerge),
+			"allowForking", toBool(repo.AllowForking),
+			"allowMergeCommit", toBool(repo.AllowMergeCommit),
+			"allowRebaseMerge", toBool(repo.AllowRebaseMerge),
+			"allowSquashMerge", toBool(repo.AllowSquashMerge),
+			"hasIssues", toBool(repo.HasIssues),
+			"organizationName", orgLogin,
 		)
 		if err != nil {
 			return nil, err
@@ -278,6 +287,62 @@ func (g *lumiGithubRepository) id() (string, error) {
 }
 
 func (g *lumiGithubInstallation) id() (string, error) {
+	id, err := g.Id()
+	if err != nil {
+		return "", err
+	}
+	return strconv.FormatInt(id, 10), nil
+}
+
+func (g *lumiGithubRepository) GetOpenMergeRequests() ([]interface{}, error) {
+	gt, err := githubtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	repoName, err := g.Name()
+	if err != nil {
+		return nil, err
+	}
+	orgName, err := g.OrganizationName()
+	if err != nil {
+		return nil, err
+	}
+	pulls, _, err := gt.Client().PullRequests.List(context.TODO(), orgName, repoName, &github.PullRequestListOptions{State: "open"})
+	if err != nil {
+		log.Error().Err(err).Msg("unable to pull merge requests list")
+		if strings.Contains(err.Error(), "404") {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	res := []interface{}{}
+	for i := range pulls {
+		pr := pulls[i]
+
+		labels, err := jsonToDictSlice(pr.Labels)
+		if err != nil {
+			return nil, err
+		}
+
+		r, err := g.Runtime.CreateResource("github.mergeRequest",
+			"id", toInt64(pr.ID),
+			"state", toString(pr.State),
+			"labels", labels,
+			"createdAt", pr.CreatedAt,
+			"title", toString(pr.Title),
+		)
+
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+
+	return res, nil
+}
+
+func (g *lumiGithubMergeRequest) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err

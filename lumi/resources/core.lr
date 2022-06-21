@@ -4699,6 +4699,22 @@ private github.repository {
   disabled bool
   private bool
   visibility string
+  allowAutoMerge bool
+  allowForking bool
+  allowMergeCommit bool
+  allowRebaseMerge bool
+  allowSquashMerge bool
+  hasIssues bool
+  organizationName string
+  openMergeRequests() []github.mergeRequest
+}
+
+private github.mergeRequest {
+  id int
+  state string
+  createdAt time 
+  labels []dict
+  title string
 }
 
 private github.installation {
