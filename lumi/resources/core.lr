@@ -4715,6 +4715,8 @@ private github.mergeRequest {
   createdAt time 
   labels []dict
   title string
+  owner github.user
+  assignees []github.user
 }
 
 private github.installation {
