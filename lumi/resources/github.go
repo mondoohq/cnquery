@@ -95,7 +95,6 @@ func (g *lumiGithubOrganization) GetMembers() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	members, _, err := gt.Client().Organizations.ListMembers(context.Background(), orgLogin, nil)
 	if err != nil {
 		return nil, err
@@ -105,13 +104,8 @@ func (g *lumiGithubOrganization) GetMembers() ([]interface{}, error) {
 	for i := range members {
 		member := members[i]
 
-		var id int64
-		if member.ID != nil {
-			id = *member.ID
-		}
-
 		r, err := g.Runtime.CreateResource("github.user",
-			"id", id,
+			"id", toInt64(member.ID),
 			"login", toString(member.Login),
 		)
 		if err != nil {
@@ -457,5 +451,114 @@ func (g *lumiGithubBranch) id() (string, error) {
 }
 
 func (g *lumiGithubCommit) id() (string, error) {
+	return g.Sha()
+}
+
+func (g *lumiGithubRepository) GetCommits() ([]interface{}, error) {
+	gt, err := githubtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	repoName, err := g.Name()
+	if err != nil {
+		return nil, err
+	}
+	orgName, err := g.OrganizationName()
+	if err != nil {
+		return nil, err
+	}
+	commits, _, err := gt.Client().Repositories.ListCommits(context.TODO(), orgName, repoName, &github.CommitsListOptions{})
+	if err != nil {
+		log.Error().Err(err).Msg("unable to get commits list")
+		if strings.Contains(err.Error(), "404") {
+			return nil, nil
+		}
+		return nil, err
+	}
+	res := []interface{}{}
+	for i := range commits {
+		lumiCommit, err := g.Runtime.CreateResource("github.commit",
+			"sha", toString(commits[i].Commit.SHA),
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, lumiCommit)
+	}
+	return res, nil
+}
+
+func (g *lumiGithubRepository) GetContributors() ([]interface{}, error) {
+	gt, err := githubtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	repoName, err := g.Name()
+	if err != nil {
+		return nil, err
+	}
+	orgName, err := g.OrganizationName()
+	if err != nil {
+		return nil, err
+	}
+	contributors, _, err := gt.Client().Repositories.ListContributors(context.TODO(), orgName, repoName, &github.ListContributorsOptions{})
+	if err != nil {
+		log.Error().Err(err).Msg("unable to get contributors list")
+		if strings.Contains(err.Error(), "404") {
+			return nil, nil
+		}
+		return nil, err
+	}
+	res := []interface{}{}
+	for i := range contributors {
+		lumiUser, err := g.Runtime.CreateResource("github.user",
+			"id", toInt64(contributors[i].ID),
+			"login", toString(contributors[i].Login),
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, lumiUser)
+	}
+	return res, nil
+}
+func (g *lumiGithubRepository) GetFiles() ([]interface{}, error) {
+	gt, err := githubtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	repoName, err := g.Name()
+	if err != nil {
+		return nil, err
+	}
+	orgName, err := g.OrganizationName()
+	if err != nil {
+		return nil, err
+	}
+	_, dirContent, _, err := gt.Client().Repositories.GetContents(context.TODO(), orgName, repoName, "", &github.RepositoryContentGetOptions{})
+	if err != nil {
+		log.Error().Err(err).Msg("unable to get contents list")
+		if strings.Contains(err.Error(), "404") {
+			return nil, nil
+		}
+		return nil, err
+	}
+	res := []interface{}{}
+	for i := range dirContent {
+		lumiFile, err := g.Runtime.CreateResource("github.file",
+			"path", toString(dirContent[i].Path),
+			"type", toString(dirContent[i].Type),
+			"sha", toString(dirContent[i].SHA),
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, lumiFile)
+
+	}
+	return res, nil
+}
+
+func (g *lumiGithubFile) id() (string, error) {
 	return g.Sha()
 }

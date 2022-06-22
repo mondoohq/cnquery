@@ -4710,6 +4710,14 @@ private github.repository {
   openMergeRequests() []github.mergeRequest
   branches() []github.branch
   defaultBranchName string
+  commits() []github.commit 
+  contributors() []github.user
+  files() []github.file
+}
+private github.file {
+  path string
+  type string
+  sha string
 }
 
 private github.branch {
@@ -4719,7 +4727,7 @@ private github.branch {
 }
 
 private github.commit {
- sha string
+  sha string
 }
 
 private github.mergeRequest {
