@@ -437,6 +437,8 @@ func (g *lumiGithubRepository) GetBranches() ([]interface{}, error) {
 			"name", toString(branch.Name),
 			"protected", toBool(branch.Protected),
 			"commit", lumiCommit,
+			"organizationName", orgName,
+			"repoName", repoName,
 		)
 		if err != nil {
 			return nil, err
@@ -444,6 +446,79 @@ func (g *lumiGithubRepository) GetBranches() ([]interface{}, error) {
 		res = append(res, lumiBranch)
 	}
 	return res, nil
+}
+
+func (g *lumiGithubBranch) GetProtectionRules() (interface{}, error) {
+	gt, err := githubtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	orgName, err := g.OrganizationName()
+	if err != nil {
+		return nil, err
+	}
+	repoName, err := g.RepoName()
+	if err != nil {
+		return nil, err
+	}
+	branchName, err := g.Name()
+	if err != nil {
+		return nil, err
+	}
+	branchProtection, _, err := gt.Client().Repositories.GetBranchProtection(context.TODO(), orgName, repoName, branchName)
+	if err != nil {
+		log.Debug().Err(err).Msg("unable to get branch protection. note this can only be accessed by admin users")
+		return nil, nil
+	}
+	rsc, err := jsonToDict(branchProtection.RequiredStatusChecks)
+	if err != nil {
+		return nil, err
+	}
+	rprr, err := jsonToDict(branchProtection.RequiredPullRequestReviews)
+	if err != nil {
+		return nil, err
+	}
+	ea, err := jsonToDict(branchProtection.EnforceAdmins)
+	if err != nil {
+		return nil, err
+	}
+	r, err := jsonToDict(branchProtection.Restrictions)
+	if err != nil {
+		return nil, err
+	}
+	rlh, err := jsonToDict(branchProtection.RequireLinearHistory)
+	if err != nil {
+		return nil, err
+	}
+	afp, err := jsonToDict(branchProtection.AllowForcePushes)
+	if err != nil {
+		return nil, err
+	}
+	ad, err := jsonToDict(branchProtection.AllowDeletions)
+	if err != nil {
+		return nil, err
+	}
+	rcr, err := jsonToDict(branchProtection.RequiredConversationResolution)
+	if err != nil {
+		return nil, err
+	}
+	lumiBranchProtection, err := g.Runtime.CreateResource("github.branchprotection",
+		"requiredStatusChecks", rsc,
+		"requiredPullRequestReviews", rprr,
+		"enforceAdmins", ea,
+		"restrictions", r,
+		"requireLinearHistory", rlh,
+		"allowForcePushes", afp,
+		"allowDeletions", ad,
+		"requiredConversationResolution", rcr,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return lumiBranchProtection, nil
+}
+func (g *lumiGithubBranchprotection) id() (string, error) {
+	return g.BranchName()
 }
 
 func (g *lumiGithubBranch) id() (string, error) {
