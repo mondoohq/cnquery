@@ -4713,6 +4713,7 @@ private github.repository {
   commits() []github.commit 
   contributors() []github.user
   files() []github.file
+  releases() []github.release
 }
 private github.file {
   path string
@@ -4725,10 +4726,17 @@ private github.file {
   content() string
 }
 
+private github.release {
+  url string
+  name string
+  tagName string
+  preRelease bool
+}
+
 private github.branch {
   name string
   protected bool
-  commit github.commit
+  headCommit github.commit
   organizationName string
   repoName string
   protectionRules() github.branchprotection
@@ -4747,17 +4755,35 @@ private github.branchprotection {
 }
 
 private github.commit {
-  sha string
+  url string
+  author github.user
+  committer github.user
+  message string
+  signatureVerification dict
+  organizationName string
+  repoName string
 }
 
 private github.mergeRequest {
   id int
+  number int
   state string
   createdAt time 
   labels []dict
   title string
   owner github.user
   assignees []github.user
+  commits() []github.commit
+  reviews() []github.review
+  organizationName string
+  repoName string
+}
+
+private github.review {
+  url string
+  state string
+  authorAssociation string
+  user github.user
 }
 
 private github.installation {
