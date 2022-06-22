@@ -4718,6 +4718,11 @@ private github.file {
   path string
   type string
   sha string
+  isBinary bool
+  files() []github.file
+  organizationName string
+  repoName string
+  content() string
 }
 
 private github.branch {
