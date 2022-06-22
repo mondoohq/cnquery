@@ -620,10 +620,20 @@ func (g *lumiGithubRepository) GetFiles() ([]interface{}, error) {
 	}
 	res := []interface{}{}
 	for i := range dirContent {
+		isBinary := false
+		if toString(dirContent[i].Type) == "file" {
+			file := strings.Split(toString(dirContent[i].Path), ".")
+			if len(file) == 2 {
+				isBinary = binaryFileTypes[file[1]]
+			}
+		}
 		lumiFile, err := g.Runtime.CreateResource("github.file",
 			"path", toString(dirContent[i].Path),
 			"type", toString(dirContent[i].Type),
 			"sha", toString(dirContent[i].SHA),
+			"isBinary", isBinary,
+			"organizationName", orgName,
+			"repoName", repoName,
 		)
 		if err != nil {
 			return nil, err
@@ -634,6 +644,129 @@ func (g *lumiGithubRepository) GetFiles() ([]interface{}, error) {
 	return res, nil
 }
 
+func (g *lumiGithubFile) GetFiles() ([]interface{}, error) {
+	fileType, err := g.Type()
+	if err != nil {
+		return nil, err
+	}
+	if fileType != "dir" {
+		return nil, nil
+	}
+	gt, err := githubtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	repoName, err := g.RepoName()
+	if err != nil {
+		return nil, err
+	}
+	orgName, err := g.OrganizationName()
+	if err != nil {
+		return nil, err
+	}
+	path, err := g.Path()
+	if err != nil {
+		return nil, err
+	}
+	_, dirContent, _, err := gt.Client().Repositories.GetContents(context.TODO(), orgName, repoName, path, &github.RepositoryContentGetOptions{})
+	if err != nil {
+		log.Error().Err(err).Msg("unable to get contents list")
+		if strings.Contains(err.Error(), "404") {
+			return nil, nil
+		}
+		return nil, err
+	}
+	res := []interface{}{}
+	for i := range dirContent {
+		isBinary := false
+		if toString(dirContent[i].Type) == "file" {
+			file := strings.Split(toString(dirContent[i].Path), ".")
+			if len(file) == 2 {
+				isBinary = binaryFileTypes[file[1]]
+			}
+		}
+		lumiFile, err := g.Runtime.CreateResource("github.file",
+			"path", toString(dirContent[i].Path),
+			"type", toString(dirContent[i].Type),
+			"sha", toString(dirContent[i].SHA),
+			"isBinary", isBinary,
+			"organizationName", orgName,
+			"repoName", repoName,
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, lumiFile)
+
+	}
+	return res, nil
+
+}
+
+func (g *lumiGithubFile) GetContent() (string, error) {
+	fileType, err := g.Type()
+	if err != nil {
+		return "", err
+	}
+	if fileType == "dir" {
+		return "", nil
+	}
+	gt, err := githubtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return "", err
+	}
+	repoName, err := g.RepoName()
+	if err != nil {
+		return "", err
+	}
+	orgName, err := g.OrganizationName()
+	if err != nil {
+		return "", err
+	}
+	path, err := g.Path()
+	if err != nil {
+		return "", err
+	}
+	fileContent, _, _, err := gt.Client().Repositories.GetContents(context.TODO(), orgName, repoName, path, &github.RepositoryContentGetOptions{})
+	if err != nil {
+		log.Error().Err(err).Msg("unable to get contents list")
+		if strings.Contains(err.Error(), "404") {
+			return "", nil
+		}
+		return "", err
+	}
+
+	return fileContent.GetContent()
+
+}
+
 func (g *lumiGithubFile) id() (string, error) {
 	return g.Sha()
+}
+
+var binaryFileTypes = map[string]bool{
+	"crx":    true,
+	"deb":    true,
+	"dex":    true,
+	"dey":    true,
+	"elf":    true,
+	"o":      true,
+	"so":     true,
+	"iso":    true,
+	"class":  true,
+	"jar":    true,
+	"bundle": true,
+	"dylib":  true,
+	"lib":    true,
+	"msi":    true,
+	"dll":    true,
+	"drv":    true,
+	"efi":    true,
+	"exe":    true,
+	"ocx":    true,
+	"pyc":    true,
+	"pyo":    true,
+	"par":    true,
+	"rpm":    true,
+	"whl":    true,
 }
