@@ -153,6 +153,7 @@ func (g *lumiGithubOrganization) GetOwners() ([]interface{}, error) {
 			"createdAt", githubTimestamp(member.CreatedAt),
 			"updatedAt", githubTimestamp(member.UpdatedAt),
 			"suspendedAt", githubTimestamp(member.SuspendedAt),
+			"company", toString(member.Company),
 		)
 		if err != nil {
 			return nil, err
@@ -231,6 +232,9 @@ func (g *lumiGithubOrganization) GetInstallations() ([]interface{}, error) {
 
 	apps, _, err := gt.Client().Organizations.ListInstallations(context.Background(), orgLogin, &github.ListOptions{})
 	if err != nil {
+		if strings.Contains(err.Error(), "404") {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -335,12 +339,15 @@ func (g *lumiGithubRepository) GetOpenMergeRequests() ([]interface{}, error) {
 
 		r, err := g.Runtime.CreateResource("github.mergeRequest",
 			"id", toInt64(pr.ID),
+			"number", toInt(pr.Number),
 			"state", toString(pr.State),
 			"labels", labels,
 			"createdAt", pr.CreatedAt,
 			"title", toString(pr.Title),
 			"owner", owner,
 			"assignees", assigneesRes,
+			"organizationName", orgName,
+			"repoName", repoName,
 		)
 		if err != nil {
 			return nil, err
@@ -427,16 +434,45 @@ func (g *lumiGithubRepository) GetBranches() ([]interface{}, error) {
 	res := []interface{}{}
 	for i := range branches {
 		branch := branches[i]
-		lumiCommit, err := g.Runtime.CreateResource("github.commit",
-			"sha", toString(branch.Commit.SHA),
-		)
-		if err != nil {
-			return nil, err
+		rc := branch.Commit
+		var author interface{}
+		if rc.Author != nil {
+			author, err = g.Runtime.CreateResource("github.user", "id", toInt64(rc.Author.ID), "login", toString(rc.Author.Login))
+			if err != nil {
+				return nil, err
+			}
+		}
+		var committer interface{}
+		if rc.Committer != nil {
+			committer, err = g.Runtime.CreateResource("github.user", "id", toInt64(rc.Committer.ID), "login", toString(rc.Author.Login))
+			if err != nil {
+				return nil, err
+			}
+		}
+		var lumiCommit interface{}
+		c := rc.Commit
+		if c != nil {
+			signatureDict, err := jsonToDict(c.GetVerification())
+			if err != nil {
+				return nil, err
+			}
+			lumiCommit, err = g.Runtime.CreateResource("github.commit",
+				"url", c.GetURL(),
+				"author", author,
+				"committer", committer,
+				"message", c.GetMessage(),
+				"signatureVerification", signatureDict,
+				"organizationName", orgName,
+				"repoName", repoName,
+			)
+			if err != nil {
+				return nil, err
+			}
 		}
 		lumiBranch, err := g.Runtime.CreateResource("github.branch",
 			"name", toString(branch.Name),
 			"protected", toBool(branch.Protected),
-			"commit", lumiCommit,
+			"headCommit", lumiCommit,
 			"organizationName", orgName,
 			"repoName", repoName,
 		)
@@ -526,7 +562,7 @@ func (g *lumiGithubBranch) id() (string, error) {
 }
 
 func (g *lumiGithubCommit) id() (string, error) {
-	return g.Sha()
+	return g.Url()
 }
 
 func (g *lumiGithubRepository) GetCommits() ([]interface{}, error) {
@@ -552,8 +588,146 @@ func (g *lumiGithubRepository) GetCommits() ([]interface{}, error) {
 	}
 	res := []interface{}{}
 	for i := range commits {
+		rc := commits[i]
+		var author interface{}
+		if rc.Author != nil {
+			author, err = g.Runtime.CreateResource("github.user", "id", toInt64(rc.Author.ID), "login", toString(rc.Author.Login))
+			if err != nil {
+				return nil, err
+			}
+		}
+		var committer interface{}
+		if rc.Committer != nil {
+			committer, err = g.Runtime.CreateResource("github.user", "id", toInt64(rc.Committer.ID), "login", toString(rc.Author.Login))
+			if err != nil {
+				return nil, err
+			}
+		}
+		c := rc.Commit
+		signatureDict, err := jsonToDict(c.GetVerification())
+		if err != nil {
+			return nil, err
+		}
 		lumiCommit, err := g.Runtime.CreateResource("github.commit",
-			"sha", toString(commits[i].Commit.SHA),
+			"url", toString(c.URL),
+			"author", author,
+			"committer", committer,
+			"message", toString(c.Message),
+			"signatureVerification", signatureDict,
+			"organizationName", orgName,
+			"repoName", repoName,
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, lumiCommit)
+	}
+	return res, nil
+}
+func (g *lumiGithubMergeRequest) GetReviews() ([]interface{}, error) {
+	gt, err := githubtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	repoName, err := g.RepoName()
+	if err != nil {
+		return nil, err
+	}
+	orgName, err := g.OrganizationName()
+	if err != nil {
+		return nil, err
+	}
+	prID, err := g.Number()
+	if err != nil {
+		return nil, err
+	}
+	reviews, _, err := gt.Client().PullRequests.ListReviews(context.TODO(), orgName, repoName, int(prID), &github.ListOptions{})
+	if err != nil {
+		log.Error().Err(err).Msg("unable to get reviews list")
+		if strings.Contains(err.Error(), "404") {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	res := []interface{}{}
+	for i := range reviews {
+		r := reviews[i]
+		user, err := g.Runtime.CreateResource("github.user", "id", toInt64(r.User.ID), "login", toString(r.User.Login))
+		if err != nil {
+			log.Debug().Err(err).Msg("unable to create github user")
+		}
+		lumiReview, err := g.Runtime.CreateResource("github.review",
+			"url", toString(r.HTMLURL),
+			"state", toString(r.State),
+			"authorAssociation", toString(r.AuthorAssociation),
+			"user", user,
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, lumiReview)
+	}
+
+	return res, nil
+}
+
+func (g *lumiGithubMergeRequest) GetCommits() ([]interface{}, error) {
+	gt, err := githubtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	repoName, err := g.RepoName()
+	if err != nil {
+		return nil, err
+	}
+	orgName, err := g.OrganizationName()
+	if err != nil {
+		return nil, err
+	}
+	prID, err := g.Number()
+	if err != nil {
+		return nil, err
+	}
+	commits, _, err := gt.Client().PullRequests.ListCommits(context.TODO(), orgName, repoName, int(prID), &github.ListOptions{})
+	if err != nil {
+		log.Error().Err(err).Msg("unable to get commits list")
+		if strings.Contains(err.Error(), "404") {
+			return nil, nil
+		}
+		return nil, err
+	}
+	res := []interface{}{}
+	for i := range commits {
+		rc := commits[i]
+		var author interface{}
+		if rc.Author != nil {
+			author, err = g.Runtime.CreateResource("github.user", "id", toInt64(rc.Author.ID), "login", toString(rc.Author.Login))
+			if err != nil {
+				log.Debug().Err(err).Msg("unable to create github user")
+			}
+		}
+		var committer interface{}
+		if rc.Committer != nil {
+			committer, err = g.Runtime.CreateResource("github.user", "id", toInt64(rc.Committer.ID), "login", toString(rc.Committer.Login))
+			if err != nil {
+				log.Debug().Err(err).Msg("unable to create github user")
+			}
+		}
+		c := rc.Commit
+		signatureDict, err := jsonToDict(c.GetVerification())
+		if err != nil {
+			return nil, err
+		}
+
+		lumiCommit, err := g.Runtime.CreateResource("github.commit",
+			"url", toString(c.URL),
+			"author", author,
+			"committer", committer,
+			"message", toString(c.Message),
+			"signatureVerification", signatureDict,
+			"organizationName", orgName,
+			"repoName", repoName,
 		)
 		if err != nil {
 			return nil, err
@@ -596,6 +770,53 @@ func (g *lumiGithubRepository) GetContributors() ([]interface{}, error) {
 		res = append(res, lumiUser)
 	}
 	return res, nil
+}
+func (g *lumiGithubRepository) GetReleases() ([]interface{}, error) {
+	gt, err := githubtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	repoName, err := g.Name()
+	if err != nil {
+		return nil, err
+	}
+	orgName, err := g.OrganizationName()
+	if err != nil {
+		return nil, err
+	}
+	releases, _, err := gt.Client().Repositories.ListReleases(context.TODO(), orgName, repoName, &github.ListOptions{})
+	if err != nil {
+		log.Error().Err(err).Msg("unable to get contents list")
+		if strings.Contains(err.Error(), "404") {
+			return nil, nil
+		}
+		return nil, err
+	}
+	res := []interface{}{}
+	for i := range releases {
+		r := releases[i]
+		lumiUser, err := g.Runtime.CreateResource("github.release",
+			"url", toString(r.HTMLURL),
+			"name", toString(r.Name),
+			"tagName", toString(r.TagName),
+			"preRelease", toBool(r.Prerelease),
+		)
+
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, lumiUser)
+	}
+
+	return res, nil
+}
+
+func (g *lumiGithubReview) id() (string, error) {
+	return g.Url()
+}
+
+func (g *lumiGithubRelease) id() (string, error) {
+	return g.Url()
 }
 func (g *lumiGithubRepository) GetFiles() ([]interface{}, error) {
 	gt, err := githubtransport(g.Runtime.Motor.Transport)
