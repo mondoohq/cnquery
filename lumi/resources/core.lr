@@ -4724,6 +4724,21 @@ private github.branch {
   name string
   protected bool
   commit github.commit
+  organizationName string
+  repoName string
+  protectionRules() github.branchprotection
+}
+
+private github.branchprotection {
+  branchName string
+  requiredStatusChecks dict 
+  requiredPullRequestReviews dict
+  enforceAdmins dict 
+  restrictions dict
+  requireLinearHistory dict
+  allowForcePushes dict
+  allowDeletions dict
+  requiredConversationResolution dict
 }
 
 private github.commit {
