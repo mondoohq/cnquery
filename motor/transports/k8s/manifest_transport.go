@@ -46,7 +46,6 @@ func WithRuntimeObjects(objects []k8sRuntime.Object) Option {
 	}
 }
 
-// TODO: set opts
 func newManifestTransport(opts ...Option) Transport {
 	t := &manifestTransport{}
 
@@ -58,7 +57,6 @@ func newManifestTransport(opts ...Option) Transport {
 }
 
 type manifestTransport struct {
-	opts         map[string]string
 	manifestFile string
 	namespace    string
 	objects      []runtime.Object
@@ -80,10 +78,6 @@ func (t *manifestTransport) Close() {}
 
 func (t *manifestTransport) Capabilities() transports.Capabilities {
 	return transports.Capabilities{}
-}
-
-func (t *manifestTransport) Options() map[string]string {
-	return t.opts
 }
 
 func (t *manifestTransport) PlatformInfo() *platform.Platform {

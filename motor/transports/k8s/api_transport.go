@@ -5,9 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pkg/errors"
-
 	"github.com/gosimple/slug"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/platform"
@@ -24,7 +23,6 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
-// TODO: set opts
 func newApiTransport(namespace string) (Transport, error) {
 	// check if the user .kube/config file exists
 	// NOTE: BuildConfigFromFlags falls back to cluster loading when .kube/config string is empty
@@ -76,7 +74,6 @@ func newApiTransport(namespace string) (Transport, error) {
 }
 
 type apiTransport struct {
-	opts      map[string]string
 	d         *resources.Discovery
 	config    *rest.Config
 	namespace string
@@ -99,10 +96,6 @@ func (t *apiTransport) Close() {}
 
 func (t *apiTransport) Capabilities() transports.Capabilities {
 	return transports.Capabilities{}
-}
-
-func (t *apiTransport) Options() map[string]string {
-	return t.opts
 }
 
 func (t *apiTransport) Kind() transports.Kind {

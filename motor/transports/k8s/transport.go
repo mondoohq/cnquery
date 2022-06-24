@@ -16,8 +16,7 @@ const (
 	OPTION_NAMESPACE = "namespace"
 )
 
-//go:generate mockgen -source=./transport.go -destination=./fake/transport_generated.go -package=fake
-
+// go run github.com/golang/mock/mockgen -source=./transport.go -destination=./mock_transport.go -package=k8s
 type Transport interface {
 	transports.Transport
 	transports.TransportPlatformIdentifier
