@@ -12,9 +12,9 @@ import (
 
 func TestManifestDeployment(t *testing.T) {
 	manifestFile := "./resources/testdata/appsv1.deployment.yaml"
-	connector := NewManifestConnector(WithManifestFile(manifestFile))
-	require.NotNil(t, connector)
-	res, err := connector.Resources("deployment", "centos")
+	transport := newManifestTransport(WithManifestFile(manifestFile))
+	require.NotNil(t, transport)
+	res, err := transport.Resources("deployment", "centos")
 	require.NoError(t, err)
 	assert.Equal(t, "centos", res.Name)
 	assert.Equal(t, "deployment", res.Kind)
@@ -29,9 +29,9 @@ func TestManifestInmemory(t *testing.T) {
 	objects, err := resources.ResourcesFromManifest(bytes.NewReader(data))
 	require.NoError(t, err)
 
-	connector := NewManifestConnector(WithRuntimeObjects(objects))
-	require.NotNil(t, connector)
-	res, err := connector.Resources("deployment", "centos")
+	transport := newManifestTransport(WithRuntimeObjects(objects))
+	require.NotNil(t, transport)
+	res, err := transport.Resources("deployment", "centos")
 	require.NoError(t, err)
 	assert.Equal(t, "centos", res.Name)
 	assert.Equal(t, "deployment", res.Kind)
@@ -40,14 +40,14 @@ func TestManifestInmemory(t *testing.T) {
 
 func TestManifestPod(t *testing.T) {
 	manifestFile := "./resources/testdata/appsv1.pod.yaml"
-	connector := NewManifestConnector(WithManifestFile(manifestFile))
-	require.NotNil(t, connector)
+	transport := newManifestTransport(WithManifestFile(manifestFile))
+	require.NotNil(t, transport)
 
-	namespaces, err := connector.Namespaces()
+	namespaces, err := transport.Namespaces()
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(namespaces))
 
-	pods, err := connector.Pods(namespaces[0])
+	pods, err := transport.Pods(namespaces[0])
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(pods))
 }

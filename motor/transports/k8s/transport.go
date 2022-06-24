@@ -3,99 +3,66 @@ package k8s
 import (
 	"errors"
 
-	"github.com/spf13/afero"
 	platform "go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/fsutil"
 	"go.mondoo.io/mondoo/motor/transports/k8s/resources"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/version"
 )
-
-type Transport interface {
-	transports.Transport
-	transports.TransportPlatformIdentifier
-	Name() (string, error)
-	PlatformInfo() *platform.Platform
-	Connector() Connector
-	Resources(kind string, name string) (*ResourceResult, error)
-	ServerVersion() *version.Info
-	SupportedResourceTypes() (*resources.ApiResourceIndex, error)
-}
 
 const (
 	OPTION_MANIFEST  = "path"
 	OPTION_NAMESPACE = "namespace"
 )
 
+//go:generate mockgen -source=./transport.go -destination=./fake/transport_generated.go -package=fake
+
+type Transport interface {
+	transports.Transport
+	transports.TransportPlatformIdentifier
+	Name() (string, error)
+	PlatformInfo() *platform.Platform
+
+	// Resources returns the resources that match the provided kind and name. If not kind and name
+	// are provided, then all cluster resources are returned.
+	Resources(kind string, name string) (*ResourceResult, error)
+	ServerVersion() *version.Info
+	SupportedResourceTypes() (*resources.ApiResourceIndex, error)
+
+	Identifier() (string, error)
+	Namespaces() ([]v1.Namespace, error)
+	Pods(namespace v1.Namespace) ([]v1.Pod, error)
+}
+
+type ClusterInfo struct {
+	Name string
+}
+
+type ResourceResult struct {
+	Name         string
+	Kind         string
+	ResourceType *resources.ApiResource // resource type that matched kind
+
+	// Resources the resources that match the name, kind and namespace
+	Resources []runtime.Object
+	Namespace string
+	AllNs     bool
+}
+
 // New initializes the k8s transport and loads a configuration.
 // Supported options are:
 // - namespace: limits the resources to a specific namespace
 // - path: use a manifest file instead of live API
 func New(tc *transports.TransportConfig) (Transport, error) {
-	var connector Connector
-
 	if tc.Backend != transports.TransportBackend_CONNECTION_K8S {
 		return nil, errors.New("backend is not supported for k8s transport")
 	}
 
 	manifestFile, manifestDefined := tc.Options[OPTION_MANIFEST]
 	if manifestDefined {
-		connector = NewManifestConnector(WithManifestFile(manifestFile), WithNamespace(tc.Options[OPTION_NAMESPACE]))
-	} else {
-		var err error
-		connector, err = NewApiConnector(tc.Options[OPTION_NAMESPACE])
-		if err != nil {
-			return nil, err
-		}
+		return newManifestTransport(WithManifestFile(manifestFile), WithNamespace(tc.Options[OPTION_NAMESPACE])), nil
 	}
 
-	return &transport{
-		connector: connector,
-		opts:      tc.Options,
-	}, nil
-}
-
-type transport struct {
-	opts      map[string]string
-	connector Connector
-}
-
-func (t *transport) Connector() Connector {
-	return t.connector
-}
-
-func (t *transport) RunCommand(command string) (*transports.Command, error) {
-	return nil, errors.New("k8s does not implement RunCommand")
-}
-
-func (t *transport) FileInfo(path string) (transports.FileInfoDetails, error) {
-	return transports.FileInfoDetails{}, errors.New("k8s does not implement FileInfo")
-}
-
-func (t *transport) FS() afero.Fs {
-	return &fsutil.NoFs{}
-}
-
-func (t *transport) Close() {}
-
-func (t *transport) Capabilities() transports.Capabilities {
-	return transports.Capabilities{}
-}
-
-func (t *transport) Options() map[string]string {
-	return t.opts
-}
-
-func (t *transport) Kind() transports.Kind {
-	return transports.Kind_KIND_API
-}
-
-func (t *transport) Runtime() string {
-	return transports.RUNTIME_KUBERNETES
-}
-
-func (t *transport) PlatformIdDetectors() []transports.PlatformIdDetector {
-	return []transports.PlatformIdDetector{
-		transports.TransportPlatformIdentifierDetector,
-	}
+	return newApiTransport(tc.Options[OPTION_NAMESPACE])
 }

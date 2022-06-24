@@ -5,11 +5,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/cockroachdb/errors"
+	"github.com/pkg/errors"
+
 	"github.com/gosimple/slug"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/fsutil"
 	"go.mondoo.io/mondoo/motor/transports/k8s/resources"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -21,12 +24,8 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
-// KubeConfig
-// - $HOME/.kube/config
-// Service Account
-// - /var/run/secrets/kubernetes.io/serviceaccount/token
-// - /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-func NewApiConnector(namespace string) (*ApiConnector, error) {
+// TODO: set opts
+func newApiTransport(namespace string) (Transport, error) {
 	// check if the user .kube/config file exists
 	// NOTE: BuildConfigFromFlags falls back to cluster loading when .kube/config string is empty
 	// therefore we want to only change the kubeconfig string when the file really exists
@@ -68,7 +67,7 @@ func NewApiConnector(namespace string) (*ApiConnector, error) {
 		return nil, errors.Wrap(err, "could not create kubernetes clientset")
 	}
 
-	return &ApiConnector{
+	return &apiTransport{
 		namespace: namespace,
 		config:    config,
 		d:         d,
@@ -76,16 +75,53 @@ func NewApiConnector(namespace string) (*ApiConnector, error) {
 	}, nil
 }
 
-type ApiConnector struct {
+type apiTransport struct {
+	opts      map[string]string
 	d         *resources.Discovery
 	config    *rest.Config
 	namespace string
 	clientset *kubernetes.Clientset
 }
 
-func (ac *ApiConnector) Identifier() (string, error) {
+func (t *apiTransport) RunCommand(command string) (*transports.Command, error) {
+	return nil, errors.New("k8s does not implement RunCommand")
+}
+
+func (t *apiTransport) FileInfo(path string) (transports.FileInfoDetails, error) {
+	return transports.FileInfoDetails{}, errors.New("k8s does not implement FileInfo")
+}
+
+func (t *apiTransport) FS() afero.Fs {
+	return &fsutil.NoFs{}
+}
+
+func (t *apiTransport) Close() {}
+
+func (t *apiTransport) Capabilities() transports.Capabilities {
+	return transports.Capabilities{}
+}
+
+func (t *apiTransport) Options() map[string]string {
+	return t.opts
+}
+
+func (t *apiTransport) Kind() transports.Kind {
+	return transports.Kind_KIND_API
+}
+
+func (t *apiTransport) Runtime() string {
+	return transports.RUNTIME_KUBERNETES
+}
+
+func (t *apiTransport) PlatformIdDetectors() []transports.PlatformIdDetector {
+	return []transports.PlatformIdDetector{
+		transports.TransportPlatformIdentifierDetector,
+	}
+}
+
+func (t *apiTransport) Identifier() (string, error) {
 	// we use "kube-system" namespace uid as identifier for the cluster
-	result, err := ac.Resources("namespaces", "kube-system")
+	result, err := t.Resources("namespaces", "kube-system")
 	if err != nil {
 		return "", err
 	}
@@ -103,65 +139,57 @@ func (ac *ApiConnector) Identifier() (string, error) {
 	uid := string(obj.GetUID())
 	id := "//platformid.api.mondoo.app/runtime/k8s/uid/" + uid
 
-	if ac.namespace != "" {
-		id += "/namespace/" + slug.Make(ac.namespace)
+	if t.namespace != "" {
+		id += "/namespace/" + slug.Make(t.namespace)
 	}
 
 	return id, nil
 }
 
-func (ac *ApiConnector) Name() (string, error) {
-	ci, err := ac.ClusterInfo()
+func (t *apiTransport) Name() (string, error) {
+	ci, err := t.ClusterInfo()
 	if err != nil {
 		return "", err
 	}
 	return ci.Name, nil
 }
 
-type ClusterInfo struct {
-	Name string
-}
-
-func (ac *ApiConnector) ClusterInfo() (ClusterInfo, error) {
+func (t *apiTransport) ClusterInfo() (ClusterInfo, error) {
+	ctx := context.Background()
 	res := ClusterInfo{}
 
 	// right now we use the name of the first node to identify the cluster
-	result, err := ac.Resources("nodes.v1.", "")
+	result, err := t.clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return res, err
 	}
 
-	if len(result.Resources) > 0 {
-		node := result.Resources[0]
-		obj, err := meta.Accessor(node)
-		if err != nil {
-			log.Error().Err(err).Msg("could not access object attributes")
-			return res, err
-		}
-		res.Name = obj.GetName()
+	if len(result.Items) > 0 {
+		node := result.Items[0]
+		res.Name = node.GetName()
 	}
 
 	return res, nil
 }
 
-func (ac *ApiConnector) ServerVersion() *version.Info {
-	return ac.d.ServerVersion
+func (t *apiTransport) ServerVersion() *version.Info {
+	return t.d.ServerVersion
 }
 
-func (ac *ApiConnector) SupportedResourceTypes() (*resources.ApiResourceIndex, error) {
-	return ac.d.SupportedResourceTypes()
+func (t *apiTransport) SupportedResourceTypes() (*resources.ApiResourceIndex, error) {
+	return t.d.SupportedResourceTypes()
 }
 
-func (ac *ApiConnector) Resources(kind string, name string) (*ResourceResult, error) {
+func (t *apiTransport) Resources(kind string, name string) (*ResourceResult, error) {
 	ctx := context.Background()
-	ns := ac.namespace
+	ns := t.namespace
 	allNs := false
 	if len(ns) == 0 {
 		allNs = true
 	}
 
 	// discover api and resources that have a list method
-	resTypes, err := ac.d.SupportedResourceTypes()
+	resTypes, err := t.d.SupportedResourceTypes()
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +201,7 @@ func (ac *ApiConnector) Resources(kind string, name string) (*ResourceResult, er
 	}
 
 	log.Debug().Msgf("fetch all %s resources", kind)
-	objs, err := ac.d.GetKindResources(ctx, *resType, ns, allNs)
+	objs, err := t.d.GetKindResources(ctx, *resType, ns, allNs)
 	if err != nil {
 		return nil, err
 	}
@@ -194,12 +222,12 @@ func (ac *ApiConnector) Resources(kind string, name string) (*ResourceResult, er
 	}, err
 }
 
-func (ac *ApiConnector) PlatformInfo() *platform.Platform {
+func (t *apiTransport) PlatformInfo() *platform.Platform {
 	release := ""
 	build := ""
 	arch := ""
 
-	sv := ac.ServerVersion()
+	sv := t.ServerVersion()
 	if sv != nil {
 		release = sv.GitVersion
 		build = sv.BuildDate
@@ -217,18 +245,18 @@ func (ac *ApiConnector) PlatformInfo() *platform.Platform {
 	}
 }
 
-func (ac *ApiConnector) Namespaces() ([]v1.Namespace, error) {
+func (t *apiTransport) Namespaces() ([]v1.Namespace, error) {
 	ctx := context.Background()
-	list, err := ac.clientset.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+	list, err := t.clientset.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 	return list.Items, err
 }
 
-func (ac *ApiConnector) Pods(namespace v1.Namespace) ([]v1.Pod, error) {
+func (t *apiTransport) Pods(namespace v1.Namespace) ([]v1.Pod, error) {
 	ctx := context.Background()
-	list, err := ac.clientset.CoreV1().Pods(namespace.Name).List(ctx, metav1.ListOptions{})
+	list, err := t.clientset.CoreV1().Pods(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
