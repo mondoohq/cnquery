@@ -7,7 +7,7 @@ import (
 
 	"go.mondoo.io/mondoo/motor/discovery/container_registry"
 
-	"github.com/cockroachdb/errors"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/transports/k8s"
@@ -24,7 +24,8 @@ func ListPodImages(transport k8s.Transport, namespaceFilter []string) ([]*asset.
 		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
 	}
 
-	runningImages := make(map[string]*asset.Asset)
+	// Grab the unique container images in the cluster.
+	runningImages := make(map[string]containerImage)
 	for i := range namespaces {
 		namespace := namespaces[i]
 		if !isIncluded(namespace.Name, namespaceFilter) {
@@ -38,99 +39,74 @@ func ListPodImages(transport k8s.Transport, namespaceFilter []string) ([]*asset.
 		}
 
 		for j := range pods {
-			assets, err := resolvePodAssets(pods[j])
-			if err != nil {
-				return nil, err
-			}
-
-			// We want only unique container images, therefore make sure we store them using their image URL
-			// which is based on the container digest
-			for _, a := range assets {
-				runningImages[a.Labels["docker.io/imageUrl"]] = a
-			}
+			podImages := uniqueImagesForPod(pods[j])
+			runningImages = mergeMaps(runningImages, podImages)
 		}
 	}
 
-	var imagesList []*asset.Asset
-	for _, a := range runningImages {
-		imagesList = append(imagesList, a)
-	}
-
-	return imagesList, nil
-}
-
-func isIncluded(value string, included []string) bool {
-	if len(included) == 0 {
-		return true
-	}
-
-	for _, ex := range included {
-		if strings.EqualFold(ex, value) {
-			return true
+	// Convert the container images to assets.
+	assets := make(map[string]*asset.Asset)
+	for _, i := range runningImages {
+		a, err := newPodImageAsset(i.image, i.resolvedImage)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to convert container image to asset")
+			continue
 		}
+
+		// It is still possible to have unique images at this point. There might be
+		// multiple image tags that actually point to the same digest. If we are scanning
+		// a manifest, where there is no container status, we can only know that the 2 images
+		// are identical after we resolve them with the container registry.
+		assets[a.Labels["docker.io/digest"]] = a
 	}
 
-	return false
+	return mapValuesToSlice(assets), nil
 }
 
-func resolvePodAssets(pod v1.Pod) ([]*asset.Asset, error) {
-	resolved := []*asset.Asset{}
+// uniqueImagesForPod returns the unique container images for a pod. Images are compared based on their digest
+// if that is available in the pod status. If there is no pod status set, the container image tag is used.
+func uniqueImagesForPod(pod v1.Pod) map[string]containerImage {
+	imagesSet := make(map[string]containerImage)
 
 	// it is best to read the image from the container status since it is resolved
 	// and more accurate, for static file scan we also need to fall-back to pure spec
 	// since the status will not be set
-	for ics := range pod.Status.InitContainerStatuses {
-		containerStatus := pod.Status.InitContainerStatuses[ics]
-		image, resolvedImage := resolveContainerImageFromStatus(containerStatus)
-		a, err := newPodImageAsset(image, resolvedImage)
-		if err != nil {
-			return nil, err
-		}
-		resolved = append(resolved, a)
-	}
+	imagesSet = mergeMaps(imagesSet, resolveUniqueContainerImagesFromStatus(pod.Status.InitContainerStatuses))
 
 	// fall-back to spec
 	if len(pod.Spec.InitContainers) > 0 && len(pod.Status.InitContainerStatuses) == 0 {
-		for i := range pod.Spec.InitContainers {
-			initContainer := pod.Spec.InitContainers[i]
-			image, resolvedImage := resolveContainerImage(initContainer)
-			a, err := newPodImageAsset(image, resolvedImage)
-			if err != nil {
-				return nil, err
-			}
-			resolved = append(resolved, a)
-		}
+		imagesSet = mergeMaps(imagesSet, resolveUniqueContainerImages(pod.Spec.InitContainers))
 	}
 
-	for cs := range pod.Status.ContainerStatuses {
-		containerStatus := pod.Status.ContainerStatuses[cs]
-		image, resolvedImage := resolveContainerImageFromStatus(containerStatus)
-		a, err := newPodImageAsset(image, resolvedImage)
-		if err != nil {
-			return nil, err
-		}
-		resolved = append(resolved, a)
-	}
+	imagesSet = mergeMaps(imagesSet, resolveUniqueContainerImagesFromStatus(pod.Status.ContainerStatuses))
 
 	// fall-back to spec
 	if len(pod.Spec.Containers) > 0 && len(pod.Status.ContainerStatuses) == 0 {
-		for i := range pod.Spec.Containers {
-			container := pod.Spec.Containers[i]
-			image, resolvedImage := resolveContainerImage(container)
-			a, err := newPodImageAsset(image, resolvedImage)
-			if err != nil {
-				return nil, err
-			}
-			resolved = append(resolved, a)
-		}
+		imagesSet = mergeMaps(imagesSet, resolveUniqueContainerImages(pod.Spec.Containers))
 	}
-
-	return resolved, nil
+	return imagesSet
 }
 
-func resolveContainerImage(container v1.Container) (string, string) {
-	image := container.Image
-	return image, image
+type containerImage struct {
+	image         string
+	resolvedImage string
+}
+
+func resolveUniqueContainerImages(cs []v1.Container) map[string]containerImage {
+	imagesSet := make(map[string]containerImage)
+	for _, c := range cs {
+		imagesSet[c.Image] = containerImage{image: c.Image, resolvedImage: c.Image}
+	}
+	return imagesSet
+}
+
+func resolveUniqueContainerImagesFromStatus(cs []v1.ContainerStatus) map[string]containerImage {
+	imagesSet := make(map[string]containerImage)
+	for _, c := range cs {
+		image, resolvedImage := resolveContainerImageFromStatus(c)
+		imagesSet[resolvedImage] = containerImage{image: image, resolvedImage: resolvedImage}
+	}
+	return imagesSet
 }
 
 func resolveContainerImageFromStatus(containerStatus v1.ContainerStatus) (string, string) {
@@ -173,4 +149,36 @@ func newPodImageAsset(image string, resolvedImage string) (*asset.Asset, error) 
 	}
 	a.Labels["docker.io/tags"] = tagName
 	return a, nil
+}
+
+func isIncluded(value string, included []string) bool {
+	if len(included) == 0 {
+		return true
+	}
+
+	for _, ex := range included {
+		if strings.EqualFold(ex, value) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// mapValuesToSlice returns a slice with the values of the map
+func mapValuesToSlice[K comparable, V any](m map[K]V) []V {
+	var slice []V
+	for _, v := range m {
+		slice = append(slice, v)
+	}
+	return slice
+}
+
+// mergeMaps merges 2 maps. If there are duplicate keys the values from m2 will override
+// the values from m1.
+func mergeMaps[K comparable, V any](m1 map[K]V, m2 map[K]V) map[K]V {
+	for k, v := range m2 {
+		m1[k] = v
+	}
+	return m1
 }

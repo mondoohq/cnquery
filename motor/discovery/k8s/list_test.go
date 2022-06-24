@@ -8,7 +8,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/transports/k8s/fake"
+	"go.mondoo.io/mondoo/motor/transports/k8s"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,7 +18,7 @@ func TestListPodImage(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	transport := fake.NewMockTransport(mockCtrl)
+	transport := k8s.NewMockTransport(mockCtrl)
 
 	// Seed namespaces
 	nss := []corev1.Namespace{
@@ -92,7 +92,7 @@ func TestListPodImage_FromStatus(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	transport := fake.NewMockTransport(mockCtrl)
+	transport := k8s.NewMockTransport(mockCtrl)
 
 	// Seed namespaces
 	nss := []corev1.Namespace{

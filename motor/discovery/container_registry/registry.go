@@ -198,7 +198,6 @@ func (a *DockerRegistryImages) toAsset(ref name.Reference, creds []*vault.Creden
 
 	// store digest
 	asset.Labels["docker.io/digest"] = imgDigest
-	asset.Labels["docker.io/imageUrl"] = imageUrl
 	log.Debug().Strs("platform-ids", asset.PlatformIds).Msg("asset platform ids")
 	return asset, nil
 }
