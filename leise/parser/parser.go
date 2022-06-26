@@ -64,6 +64,9 @@ func init() {
 type ErrIncomplete struct {
 	missing string
 	pos     lexer.Position
+	// Indent is a hint for how far we are indented given
+	// strict formatting and using only tabs
+	Indent int
 }
 
 func (e *ErrIncomplete) Error() string {
@@ -162,6 +165,9 @@ type parser struct {
 	nextTokens []lexer.Token
 	lex        lexer.Lexer
 	comments   bytes.Buffer
+	// indent indicates optimal indentation given strict formatting
+	// and using only tabs
+	indent int
 }
 
 // expected generates an error string based on the expected type/field
@@ -533,6 +539,7 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 			p.nextToken()
 
 		case "(":
+			p.indent++
 			p.nextToken()
 			args := []*Arg{}
 
@@ -553,15 +560,17 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 
 			if p.token.Value != ")" {
 				if p.token.EOF() {
-					return nil, false, &ErrIncomplete{missing: "closing ')'", pos: p.token.Pos}
+					return nil, false, &ErrIncomplete{missing: "closing ')'", pos: p.token.Pos, Indent: p.indent}
 				}
 				return nil, false, &ErrIncorrect{expected: "closing ')'", got: p.token.Value, pos: p.token.Pos}
 			}
 
+			p.indent--
 			res.Calls = append(res.Calls, &Call{Function: args})
 			p.nextToken()
 
 		case "[":
+			p.indent++
 			p.nextToken()
 
 			exp, err := p.parseExpression()
@@ -574,16 +583,19 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 
 			if p.token.Value != "]" {
 				if p.token.EOF() {
-					return nil, false, &ErrIncomplete{missing: "closing ']'", pos: p.token.Pos}
+					return nil, false, &ErrIncomplete{missing: "closing ']'", pos: p.token.Pos, Indent: p.indent}
 				}
 				return nil, false, &ErrIncorrect{expected: "closing ']'", got: p.token.Value, pos: p.token.Pos}
 			}
+
+			p.indent--
 			res.Calls = append(res.Calls, &Call{
 				Accessor: exp,
 			})
 			p.nextToken()
 
 		case "{":
+			p.indent++
 			if res.Value.Ident != nil && *res.Value.Ident == "switch" {
 				p.nextToken()
 
@@ -670,11 +682,12 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 
 			if p.token.Value != "}" {
 				if p.token.EOF() {
-					return nil, false, &ErrIncomplete{missing: "closing '}'", pos: p.token.Pos}
+					return nil, false, &ErrIncomplete{missing: "closing '}'", pos: p.token.Pos, Indent: p.indent}
 				}
 				return nil, false, &ErrIncorrect{expected: "closing '}'", got: p.token.Value, pos: p.token.Pos}
 			}
 
+			p.indent--
 			p.nextToken()
 
 		default:
