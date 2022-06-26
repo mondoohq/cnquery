@@ -153,7 +153,7 @@ func TestCompiler_Buggy(t *testing.T) {
 					llx.FunctionPrimitiveV1(2),
 				},
 			}},
-		}, errors.New("missing closing `}` at <source>:1:11")},
+		}, errors.New("incomplete query, missing closing '}' at <source>:1:11")},
 		{`parse.date`, []*llx.Chunk{
 			{Id: "parse", Call: llx.Chunk_FUNCTION},
 		}, errors.New("missing arguments to parse date")},
@@ -1379,12 +1379,12 @@ func TestSuggestions(t *testing.T) {
 		{
 			// resource with empty field call
 			"sshd.", []string{"config"},
-			errors.New("missing field accessor at <source>:1:6"),
+			errors.New("incomplete query, missing identifier after '.' at <source>:1:6"),
 		},
 		{
 			// list resource with empty field call
 			"users.", []string{"all", "any", "contains", "length", "list", "map", "none", "one", "where"},
-			errors.New("missing field accessor at <source>:1:7"),
+			errors.New("incomplete query, missing identifier after '.' at <source>:1:7"),
 		},
 		{
 			// resource with partial field call
@@ -1413,7 +1413,7 @@ func TestSuggestions(t *testing.T) {
 		t.Run(cur.code, func(t *testing.T) {
 			res, err := Compile(cur.code, schema, nil)
 			assert.Nil(t, res.DeprecatedV5Code.Entrypoints)
-			assert.Equal(t, cur.err, err)
+			assert.Equal(t, cur.err.Error(), err.Error())
 
 			suggestions := make([]string, len(res.Suggestions))
 			for i := range res.Suggestions {

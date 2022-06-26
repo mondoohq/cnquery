@@ -526,13 +526,14 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 
 			// everything else must be an identifier
 			if p.token.Type != Ident {
-				if p.token.EOF() {
-					p.indent++
-					return nil, false, &ErrIncomplete{missing: "identifier after '.'", pos: p.token.Pos, Indent: p.indent}
-				}
-
 				v := "."
 				res.Calls = append(res.Calls, &Call{Ident: &v})
+
+				if p.token.EOF() {
+					p.indent++
+					return &res, false, &ErrIncomplete{missing: "identifier after '.'", pos: p.token.Pos, Indent: p.indent}
+				}
+
 				return &res, false, p.errorMsg("missing field accessor")
 			}
 
@@ -582,9 +583,6 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 			if err != nil {
 				return nil, false, err
 			}
-			if exp == nil {
-				return nil, false, p.errorMsg("missing value inside of `[]`")
-			}
 
 			if p.token.Value != "]" {
 				if p.token.EOF() {
@@ -594,6 +592,9 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 			}
 
 			p.indent--
+			if exp == nil {
+				return nil, false, p.errorMsg("missing value inside of `[]`")
+			}
 			res.Calls = append(res.Calls, &Call{
 				Accessor: exp,
 			})
@@ -687,9 +688,9 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 
 			if p.token.Value != "}" {
 				if p.token.EOF() {
-					return nil, false, &ErrIncomplete{missing: "closing '}'", pos: p.token.Pos, Indent: p.indent}
+					return &res, false, &ErrIncomplete{missing: "closing '}'", pos: p.token.Pos, Indent: p.indent}
 				}
-				return nil, false, &ErrIncorrect{expected: "closing '}'", got: p.token.Value, pos: p.token.Pos}
+				return &res, false, &ErrIncorrect{expected: "closing '}'", got: p.token.Value, pos: p.token.Pos}
 			}
 
 			p.indent--
