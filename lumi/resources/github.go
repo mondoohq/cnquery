@@ -33,6 +33,10 @@ func (g *lumiGithubOrganization) id() (string, error) {
 	return "github.organization", nil
 }
 
+func (g *lumiGithub) id() (string, error) {
+	return "github", nil
+}
+
 func (g *lumiGithubOrganization) init(args *lumi.Args) (*lumi.Args, GithubOrganization, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
@@ -164,6 +168,84 @@ func (g *lumiGithubOrganization) GetOwners() ([]interface{}, error) {
 	return res, nil
 }
 
+func (g *lumiGithub) GetRepositories() ([]interface{}, error) {
+	gt, err := githubtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := gt.User()
+	if err != nil {
+		return nil, err
+	}
+
+	repos, _, err := gt.Client().Repositories.List(context.Background(), user.GetLogin(), &github.RepositoryListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []interface{}{}
+	for i := range repos {
+		repo := repos[i]
+
+		var id int64
+		if repo.ID != nil {
+			id = *repo.ID
+		}
+
+		owner, err := g.Runtime.CreateResource("github.user",
+			"id", repo.GetOwner().GetID(),
+			"login", repo.GetOwner().GetLogin(),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		r, err := g.Runtime.CreateResource("github.repository",
+			"id", id,
+			"name", toString(repo.Name),
+			"fullName", toString(repo.FullName),
+			"description", toString(repo.Description),
+			"homepage", toString(repo.Homepage),
+			"createdAt", githubTimestamp(repo.CreatedAt),
+			"updatedAt", githubTimestamp(repo.UpdatedAt),
+			"archived", toBool(repo.Archived),
+			"disabled", toBool(repo.Disabled),
+			"private", toBool(repo.Private),
+			"visibility", toString(repo.Visibility),
+			"allowAutoMerge", toBool(repo.AllowAutoMerge),
+			"allowForking", toBool(repo.AllowForking),
+			"allowMergeCommit", toBool(repo.AllowMergeCommit),
+			"allowRebaseMerge", toBool(repo.AllowRebaseMerge),
+			"allowSquashMerge", toBool(repo.AllowSquashMerge),
+			"hasIssues", toBool(repo.HasIssues),
+			"organizationName", "",
+			"defaultBranchName", toString(repo.DefaultBranch),
+			"owner", owner,
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+
+	return res, nil
+}
+
+func (g *lumiGithub) GetUser() (interface{}, error) {
+	gt, err := githubtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	user, err := gt.User()
+	if err != nil {
+		return nil, err
+	}
+	var x interface{}
+	x = user
+	return x, nil
+}
+
 func (g *lumiGithubOrganization) GetRepositories() ([]interface{}, error) {
 	gt, err := githubtransport(g.Runtime.Motor.Transport)
 	if err != nil {
@@ -189,6 +271,14 @@ func (g *lumiGithubOrganization) GetRepositories() ([]interface{}, error) {
 			id = *repo.ID
 		}
 
+		owner, err := g.Runtime.CreateResource("github.user",
+			"id", repo.GetOwner().GetID(),
+			"login", repo.GetOwner().GetLogin(),
+		)
+		if err != nil {
+			return nil, err
+		}
+
 		r, err := g.Runtime.CreateResource("github.repository",
 			"id", id,
 			"name", toString(repo.Name),
@@ -209,6 +299,7 @@ func (g *lumiGithubOrganization) GetRepositories() ([]interface{}, error) {
 			"hasIssues", toBool(repo.HasIssues),
 			"organizationName", orgLogin,
 			"defaultBranchName", toString(repo.DefaultBranch),
+			"owner", owner,
 		)
 		if err != nil {
 			return nil, err
@@ -300,7 +391,15 @@ func (g *lumiGithubRepository) GetOpenMergeRequests() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	pulls, _, err := gt.Client().PullRequests.List(context.TODO(), orgName, repoName, &github.PullRequestListOptions{State: "open"})
+	ownerName, err := g.Owner()
+	if err != nil {
+		return nil, err
+	}
+	ownerLogin, err := ownerName.Login()
+	if err != nil {
+		return nil, err
+	}
+	pulls, _, err := gt.Client().PullRequests.List(context.TODO(), ownerLogin, repoName, &github.PullRequestListOptions{State: "open"})
 	if err != nil {
 		log.Error().Err(err).Msg("unable to pull merge requests list")
 		if strings.Contains(err.Error(), "404") {
@@ -366,6 +465,74 @@ func (g *lumiGithubMergeRequest) id() (string, error) {
 	return strconv.FormatInt(id, 10), nil
 }
 
+func (g *lumiGithubRepository) init(args *lumi.Args) (*lumi.Args, GithubRepository, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+	gt, err := githubtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	user, err := gt.User()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	userLogin := user.GetLogin()
+
+	if x, ok := (*args)["name"]; ok {
+		path, ok := x.(string)
+		if !ok {
+			return nil, nil, errors.New("Wrong type for 'path' in github.repository initialization, it must be a string")
+		}
+		paths := strings.Split(path, "/")
+		if len(paths) == 1 {
+			path = paths[0]
+		} else if len(paths) == 2 {
+			userLogin = paths[0]
+			path = paths[1]
+		} else {
+			return nil, nil, errors.New("unexpected value for path. should be owner/reponame or reponame")
+		}
+		repo, _, err := gt.Client().Repositories.Get(context.Background(), userLogin, path)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		owner, err := g.Runtime.CreateResource("github.user",
+			"id", repo.GetOwner().GetID(),
+			"login", repo.GetOwner().GetLogin(),
+		)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		(*args)["id"] = toInt64(repo.ID)
+		(*args)["name"] = toString(repo.Name)
+		(*args)["fullName"] = toString(repo.FullName)
+		(*args)["description"] = toString(repo.Description)
+		(*args)["homepage"] = toString(repo.Homepage)
+		(*args)["createdAt"] = githubTimestamp(repo.CreatedAt)
+		(*args)["updatedAt"] = githubTimestamp(repo.UpdatedAt)
+		(*args)["archived"] = toBool(repo.Archived)
+		(*args)["disabled"] = toBool(repo.Disabled)
+		(*args)["private"] = toBool(repo.Private)
+		(*args)["visibility"] = toString(repo.Visibility)
+		(*args)["allowAutoMerge"] = toBool(repo.AllowAutoMerge)
+		(*args)["allowForking"] = toBool(repo.AllowForking)
+		(*args)["allowMergeCommit"] = toBool(repo.AllowMergeCommit)
+		(*args)["allowRebaseMerge"] = toBool(repo.AllowRebaseMerge)
+		(*args)["allowSquashMerge"] = toBool(repo.AllowSquashMerge)
+		(*args)["hasIssues"] = toBool(repo.HasIssues)
+		(*args)["organizationName"] = ""
+		(*args)["defaultBranchName"] = toString(repo.DefaultBranch)
+		(*args)["owner"] = owner
+	}
+
+	return args, nil, nil
+}
+
 func (g *lumiGithubUser) init(args *lumi.Args) (*lumi.Args, GithubUser, error) {
 	if len(*args) > 3 {
 		return args, nil, nil
@@ -423,7 +590,15 @@ func (g *lumiGithubRepository) GetBranches() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	branches, _, err := gt.Client().Repositories.ListBranches(context.TODO(), orgName, repoName, &github.BranchListOptions{})
+	ownerName, err := g.Owner()
+	if err != nil {
+		return nil, err
+	}
+	ownerLogin, err := ownerName.Login()
+	if err != nil {
+		return nil, err
+	}
+	branches, _, err := gt.Client().Repositories.ListBranches(context.TODO(), ownerLogin, repoName, &github.BranchListOptions{})
 	if err != nil {
 		log.Error().Err(err).Msg("unable to pull branches list")
 		if strings.Contains(err.Error(), "404") {
@@ -578,7 +753,15 @@ func (g *lumiGithubRepository) GetCommits() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	commits, _, err := gt.Client().Repositories.ListCommits(context.TODO(), orgName, repoName, &github.CommitsListOptions{})
+	ownerName, err := g.Owner()
+	if err != nil {
+		return nil, err
+	}
+	ownerLogin, err := ownerName.Login()
+	if err != nil {
+		return nil, err
+	}
+	commits, _, err := gt.Client().Repositories.ListCommits(context.TODO(), ownerLogin, repoName, &github.CommitsListOptions{})
 	if err != nil {
 		log.Error().Err(err).Msg("unable to get commits list")
 		if strings.Contains(err.Error(), "404") {
@@ -598,7 +781,7 @@ func (g *lumiGithubRepository) GetCommits() ([]interface{}, error) {
 		}
 		var committer interface{}
 		if rc.Committer != nil {
-			committer, err = g.Runtime.CreateResource("github.user", "id", toInt64(rc.Committer.ID), "login", toString(rc.Author.Login))
+			committer, err = g.Runtime.CreateResource("github.user", "id", toInt64(rc.Committer.ID), "login", toString(rc.Committer.Login))
 			if err != nil {
 				return nil, err
 			}
@@ -746,11 +929,15 @@ func (g *lumiGithubRepository) GetContributors() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	orgName, err := g.OrganizationName()
+	ownerName, err := g.Owner()
 	if err != nil {
 		return nil, err
 	}
-	contributors, _, err := gt.Client().Repositories.ListContributors(context.TODO(), orgName, repoName, &github.ListContributorsOptions{})
+	ownerLogin, err := ownerName.Login()
+	if err != nil {
+		return nil, err
+	}
+	contributors, _, err := gt.Client().Repositories.ListContributors(context.TODO(), ownerLogin, repoName, &github.ListContributorsOptions{})
 	if err != nil {
 		log.Error().Err(err).Msg("unable to get contributors list")
 		if strings.Contains(err.Error(), "404") {
@@ -780,11 +967,15 @@ func (g *lumiGithubRepository) GetReleases() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	orgName, err := g.OrganizationName()
+	ownerName, err := g.Owner()
 	if err != nil {
 		return nil, err
 	}
-	releases, _, err := gt.Client().Repositories.ListReleases(context.TODO(), orgName, repoName, &github.ListOptions{})
+	ownerLogin, err := ownerName.Login()
+	if err != nil {
+		return nil, err
+	}
+	releases, _, err := gt.Client().Repositories.ListReleases(context.TODO(), ownerLogin, repoName, &github.ListOptions{})
 	if err != nil {
 		log.Error().Err(err).Msg("unable to get contents list")
 		if strings.Contains(err.Error(), "404") {
@@ -831,7 +1022,15 @@ func (g *lumiGithubRepository) GetFiles() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, dirContent, _, err := gt.Client().Repositories.GetContents(context.TODO(), orgName, repoName, "", &github.RepositoryContentGetOptions{})
+	ownerName, err := g.Owner()
+	if err != nil {
+		return nil, err
+	}
+	ownerLogin, err := ownerName.Login()
+	if err != nil {
+		return nil, err
+	}
+	_, dirContent, _, err := gt.Client().Repositories.GetContents(context.TODO(), ownerLogin, repoName, "", &github.RepositoryContentGetOptions{})
 	if err != nil {
 		log.Error().Err(err).Msg("unable to get contents list")
 		if strings.Contains(err.Error(), "404") {

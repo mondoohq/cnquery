@@ -4637,6 +4637,11 @@ k8s.customresource {
   manifest dict
 }
 
+github {
+  repositories() []github.repository
+  user() github.user
+}
+
 // Organization represents a GitHub organization account
 github.organization {
   login string
@@ -4688,7 +4693,8 @@ private github.user {
   company string
 }
 
-private github.repository {
+github.repository {
+  init(name string)
   id int
   name string
   fullName string
@@ -4714,6 +4720,7 @@ private github.repository {
   contributors() []github.user
   files() []github.file
   releases() []github.release
+  owner github.user
 }
 private github.file {
   path string

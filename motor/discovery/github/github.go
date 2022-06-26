@@ -45,11 +45,15 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 
 	name := ""
 	org, err := trans.Organization()
-	if err != nil {
-		return nil, err
-	}
-	if org != nil && org.Name != nil {
+	if err == nil && org != nil && org.Name != nil {
 		name = *org.Name
+	} else {
+		user, err := trans.User()
+		if err != nil {
+			return nil, err
+		}
+		name = user.GetLogin()
+
 	}
 
 	return []*asset.Asset{{
