@@ -60,6 +60,28 @@ func init() {
 	}
 }
 
+// ErrIncomplete points to an incomplete query.
+type ErrIncomplete struct {
+	missing string
+	pos     lexer.Position
+}
+
+func (e *ErrIncomplete) Error() string {
+	return "incomplete query, missing " + e.missing + " at " + e.pos.String()
+}
+
+// ErrIncorrect indicates an incorrect symbol was found in a query.
+// For example: when users close an opening '(' with a ']'
+type ErrIncorrect struct {
+	expected string
+	got      string
+	pos      lexer.Position
+}
+
+func (e *ErrIncorrect) Error() string {
+	return "expected " + e.expected + ", got '" + e.got + "' at " + e.pos.String()
+}
+
 var (
 	blockCall string = "{}"
 )
@@ -530,7 +552,10 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 			}
 
 			if p.token.Value != ")" {
-				return nil, false, p.errorMsg("missing closing `)` while parsing function")
+				if p.token.EOF() {
+					return nil, false, &ErrIncomplete{missing: "closing ')'", pos: p.token.Pos}
+				}
+				return nil, false, &ErrIncorrect{expected: "closing ')'", got: p.token.Value, pos: p.token.Pos}
 			}
 
 			res.Calls = append(res.Calls, &Call{Function: args})
@@ -548,7 +573,10 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 			}
 
 			if p.token.Value != "]" {
-				return nil, false, p.errorMsg("missing closing `]`")
+				if p.token.EOF() {
+					return nil, false, &ErrIncomplete{missing: "closing ']'", pos: p.token.Pos}
+				}
+				return nil, false, &ErrIncorrect{expected: "closing ']'", got: p.token.Value, pos: p.token.Pos}
 			}
 			res.Calls = append(res.Calls, &Call{
 				Accessor: exp,
@@ -641,7 +669,10 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 			res.Block = block
 
 			if p.token.Value != "}" {
-				return &res, false, p.errorMsg("missing closing `}`")
+				if p.token.EOF() {
+					return nil, false, &ErrIncomplete{missing: "closing '}'", pos: p.token.Pos}
+				}
+				return nil, false, &ErrIncorrect{expected: "closing '}'", got: p.token.Value, pos: p.token.Pos}
 			}
 
 			p.nextToken()
