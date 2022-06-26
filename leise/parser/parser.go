@@ -526,6 +526,11 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 
 			// everything else must be an identifier
 			if p.token.Type != Ident {
+				if p.token.EOF() {
+					p.indent++
+					return nil, false, &ErrIncomplete{missing: "identifier after '.'", pos: p.token.Pos, Indent: p.indent}
+				}
+
 				v := "."
 				res.Calls = append(res.Calls, &Call{Ident: &v})
 				return &res, false, p.errorMsg("missing field accessor")
