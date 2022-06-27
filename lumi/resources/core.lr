@@ -4694,7 +4694,7 @@ private github.user {
 }
 
 github.repository {
-  init(name string)
+  init(name string) // can only be used when logged in to github as a user
   id int
   name string
   fullName string
@@ -4747,10 +4747,11 @@ private github.branch {
   organizationName string
   repoName string
   protectionRules() github.branchprotection
+  owner github.user
 }
 
 private github.branchprotection {
-  branchName string
+  id string
   requiredStatusChecks dict 
   requiredPullRequestReviews dict
   enforceAdmins dict 
