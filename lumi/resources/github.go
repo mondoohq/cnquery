@@ -650,6 +650,7 @@ func (g *lumiGithubRepository) GetBranches() ([]interface{}, error) {
 			"headCommit", lumiCommit,
 			"organizationName", orgName,
 			"repoName", repoName,
+			"owner", ownerName,
 		)
 		if err != nil {
 			return nil, err
@@ -664,10 +665,6 @@ func (g *lumiGithubBranch) GetProtectionRules() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	orgName, err := g.OrganizationName()
-	if err != nil {
-		return nil, err
-	}
 	repoName, err := g.RepoName()
 	if err != nil {
 		return nil, err
@@ -676,10 +673,14 @@ func (g *lumiGithubBranch) GetProtectionRules() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	branchProtection, _, err := gt.Client().Repositories.GetBranchProtection(context.TODO(), orgName, repoName, branchName)
+	ownerName, err := g.Name()
 	if err != nil {
-		log.Debug().Err(err).Msg("unable to get branch protection. note this can only be accessed by admin users")
-		return nil, nil
+		return nil, err
+	}
+	branchProtection, _, err := gt.Client().Repositories.GetBranchProtection(context.TODO(), ownerName, repoName, branchName)
+	if err != nil {
+		log.Debug().Err(err).Msg("note: branch protection can only be accessed by admin users")
+		return nil, err
 	}
 	rsc, err := jsonToDict(branchProtection.RequiredStatusChecks)
 	if err != nil {
@@ -722,6 +723,7 @@ func (g *lumiGithubBranch) GetProtectionRules() (interface{}, error) {
 		"allowForcePushes", afp,
 		"allowDeletions", ad,
 		"requiredConversationResolution", rcr,
+		"id", repoName+"/"+branchName,
 	)
 	if err != nil {
 		return nil, err
@@ -729,14 +731,23 @@ func (g *lumiGithubBranch) GetProtectionRules() (interface{}, error) {
 	return lumiBranchProtection, nil
 }
 func (g *lumiGithubBranchprotection) id() (string, error) {
-	return g.BranchName()
+	return g.Id()
 }
 
 func (g *lumiGithubBranch) id() (string, error) {
-	return g.Name()
+	branchName, err := g.Name()
+	if err != nil {
+		return "", err
+	}
+	repoName, err := g.RepoName()
+	if err != nil {
+		return "", err
+	}
+	return repoName + "/" + branchName, nil
 }
 
 func (g *lumiGithubCommit) id() (string, error) {
+	// the url is unique, e.g. "https://api.github.com/repos/vjeffrey/victoria-website/git/commits/7730d2707fdb6422f335fddc944ab169d45f3aa5"
 	return g.Url()
 }
 
@@ -836,9 +847,12 @@ func (g *lumiGithubMergeRequest) GetReviews() ([]interface{}, error) {
 	res := []interface{}{}
 	for i := range reviews {
 		r := reviews[i]
-		user, err := g.Runtime.CreateResource("github.user", "id", toInt64(r.User.ID), "login", toString(r.User.Login))
-		if err != nil {
-			log.Debug().Err(err).Msg("unable to create github user")
+		var user interface{}
+		if r.User != nil {
+			user, err = g.Runtime.CreateResource("github.user", "id", toInt64(r.User.ID), "login", toString(r.User.Login))
+			if err != nil {
+				return nil, err
+			}
 		}
 		lumiReview, err := g.Runtime.CreateResource("github.review",
 			"url", toString(r.HTMLURL),
@@ -887,14 +901,14 @@ func (g *lumiGithubMergeRequest) GetCommits() ([]interface{}, error) {
 		if rc.Author != nil {
 			author, err = g.Runtime.CreateResource("github.user", "id", toInt64(rc.Author.ID), "login", toString(rc.Author.Login))
 			if err != nil {
-				log.Debug().Err(err).Msg("unable to create github user")
+				return nil, err
 			}
 		}
 		var committer interface{}
 		if rc.Committer != nil {
 			committer, err = g.Runtime.CreateResource("github.user", "id", toInt64(rc.Committer.ID), "login", toString(rc.Committer.Login))
 			if err != nil {
-				log.Debug().Err(err).Msg("unable to create github user")
+				return nil, err
 			}
 		}
 		c := rc.Commit
@@ -1156,12 +1170,32 @@ func (g *lumiGithubFile) GetContent() (string, error) {
 		return "", err
 	}
 
-	return fileContent.GetContent()
-
+	content, err := fileContent.GetContent()
+	if err != nil {
+		if strings.Contains(err.Error(), "unsupported content encoding: none") {
+			// TODO: i'm unclear why this error happens. the function checks for bas64 encoding and empty string encoding. if it's neither, it returns this error.
+			// the error blocks the rest of the output, so we log it instead
+			log.Error().Msgf("unable to get content for path %v", path)
+			return "", nil
+		}
+	}
+	return content, nil
 }
 
 func (g *lumiGithubFile) id() (string, error) {
-	return g.Sha()
+	r, err := g.RepoName()
+	if err != nil {
+		return "", err
+	}
+	p, err := g.Path()
+	if err != nil {
+		return "", err
+	}
+	s, err := g.Sha()
+	if err != nil {
+		return "", err
+	}
+	return r + "/" + p + "/" + s, nil
 }
 
 var binaryFileTypes = map[string]bool{
