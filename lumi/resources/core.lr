@@ -139,15 +139,15 @@ platform {
   fqdn string
   // Architecture this OS is running on
   arch string
-  // Kind of this platform (API, code, image, package, etc)
+  // Kind of platform (API, code, image, package, etc)
   kind string
   // Contextual information about the runtime (bare-metal, cloud, container, etc)
   // TODO: rename to runtime (it conflicts with built-in runtime) 
   runtimeEnv string
-  // optional platform information
+  // Optional platform information
   labels map[string]string
 
-  // full advisory & vulnerability report
+  // Full advisory & vulnerability report
   vulnerabilityReport() dict
 }
 
