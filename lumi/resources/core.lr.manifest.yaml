@@ -3136,6 +3136,58 @@ resources:
       storageClass: {}
       updated: {}
     min_mondoo_version: 5.15.0
+  github:
+    fields:
+      repositories: {}
+      user: {}
+    min_mondoo_version: 6.4.0
+  github.branch:
+    fields:
+      headCommit: {}
+      name: {}
+      organizationName: {}
+      owner: {}
+      protected: {}
+      protectionRules: {}
+      repoName: {}
+    is_private: true
+    min_mondoo_version: 6.4.0
+  github.branchprotection:
+    fields:
+      allowDeletions: {}
+      allowForcePushes: {}
+      enforceAdmins: {}
+      id: {}
+      requireLinearHistory: {}
+      requiredConversationResolution: {}
+      requiredPullRequestReviews: {}
+      requiredStatusChecks: {}
+      restrictions: {}
+    is_private: true
+    min_mondoo_version: 6.4.0
+  github.commit:
+    fields:
+      author: {}
+      committer: {}
+      message: {}
+      organizationName: {}
+      repoName: {}
+      signatureVerification: {}
+      url: {}
+    is_private: true
+    min_mondoo_version: 6.4.0
+  github.file:
+    fields:
+      content: {}
+      files: {}
+      isBinary: {}
+      organizationName: {}
+      path: {}
+      repoName: {}
+      sha: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 6.4.0
   github.installation:
     fields:
       appId: {}
@@ -3145,6 +3197,22 @@ resources:
       updatedAt: {}
     is_private: true
     min_mondoo_version: 5.31.0
+  github.mergeRequest:
+    fields:
+      assignees: {}
+      commits: {}
+      createdAt: {}
+      id: {}
+      labels: {}
+      number: {}
+      organizationName: {}
+      owner: {}
+      repoName: {}
+      reviews: {}
+      state: {}
+      title: {}
+    is_private: true
+    min_mondoo_version: 6.4.0
   github.organization:
     fields:
       billing_email: {}
@@ -3186,24 +3254,71 @@ resources:
       updated_at: {}
     maturity: experimental
     min_mondoo_version: 5.15.0
+  github.release:
+    fields:
+      name: {}
+      preRelease: {}
+      tagName: {}
+      url: {}
+    is_private: true
+    min_mondoo_version: 6.4.0
   github.repository:
     fields:
+      allowAutoMerge:
+        min_mondoo_version: 6.4.0
+      allowForking:
+        min_mondoo_version: 6.4.0
+      allowMergeCommit:
+        min_mondoo_version: 6.4.0
+      allowRebaseMerge:
+        min_mondoo_version: 6.4.0
+      allowSquashMerge:
+        min_mondoo_version: 6.4.0
       archived: {}
+      branches:
+        min_mondoo_version: 6.4.0
+      commits:
+        min_mondoo_version: 6.4.0
+      contributors:
+        min_mondoo_version: 6.4.0
       createdAt: {}
+      defaultBranchName:
+        min_mondoo_version: 6.4.0
       description: {}
       disabled: {}
+      files:
+        min_mondoo_version: 6.4.0
       fullName: {}
+      hasIssues:
+        min_mondoo_version: 6.4.0
       homepage: {}
       id: {}
       name: {}
+      openMergeRequests:
+        min_mondoo_version: 6.4.0
+      organizationName:
+        min_mondoo_version: 6.4.0
+      owner:
+        min_mondoo_version: 6.4.0
       private: {}
+      releases:
+        min_mondoo_version: 6.4.0
       updatedAt: {}
       visibility: {}
-    is_private: true
     min_mondoo_version: 5.31.0
+  github.review:
+    fields:
+      authorAssociation: {}
+      state: {}
+      url: {}
+      user: {}
+    is_private: true
+    min_mondoo_version: 6.4.0
   github.user:
     fields:
       bio: {}
+      company:
+        min_mondoo_version: 6.4.0
       createdAt: {}
       email: {}
       id: {}
