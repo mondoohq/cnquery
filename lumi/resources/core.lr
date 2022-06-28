@@ -153,7 +153,7 @@ platform {
 
 // hardware virtualization information
 platform.virtualization {
-  // indicates if the target is a container or container image
+  // Indicates if the target is a container or container image
   isContainer() bool
 }
 
@@ -172,7 +172,7 @@ platform.advisories {
   []audit.advisory
   // Worst CVSS score for all advisories
   cvss() audit.cvss
-  // returns statistical information: total, critical, high, medium, low, none, unknown
+  // Statistical information: total, critical, high, medium, low, none, unknown
   stats() dict
 }
 
@@ -181,7 +181,7 @@ platform.cves {
   []audit.cve
   // Worst CVSS score for all cves
   cvss() audit.cvss
-  // returns statistical information: total, critical, high, medium, low, none, unknown
+  // Statistical information: total, critical, high, medium, low, none, unknown
   stats() dict
 }
 
@@ -190,7 +190,7 @@ platform.exploits {
   []audit.exploit
   // Worst CVSS score for all exploits
   cvss() audit.cvss
-  // returns statistical information: total, critical, high, medium, low, none, unknown
+  // Statistical information: total, critical, high, medium, low, none, unknown
   stats() dict
 }
 
@@ -370,9 +370,9 @@ pam.conf {
 }
 
 private pam.conf.serviceEntry {
-  //Service file that entry is from
+  // Service file that entry is from
   service string
-  //Line number in service file - used for ID
+  // Line number in service file - used for ID
   lineNumber int 
   // Type for pam entry, ie auth, password etc
   pamType string
@@ -1109,11 +1109,11 @@ privatekey {
 
 // VMware vSphere resource
 vsphere {
-  // system information including the name, type, version, and build number
+  // System information including the name, type, version, and build number
   about() dict
-  // configured licenses
+  // Configured licenses
   licenses() []vsphere.license
-  // list of available datacenter
+  // List of available datacenter
   datacenters() []vsphere.datacenter
 }
 
@@ -1187,7 +1187,7 @@ vsphere.host {
   packages() []esxi.vib
   // Host-level VIB acceptance level
   acceptanceLevel() string
-  // kernel modules (drivers) on ESXi
+  // Kernel modules (drivers) on ESXi
   kernelModules() []esxi.kernelmodule
   // ESXi host advanced settings
   advancedSettings() map[string]string
@@ -1247,7 +1247,7 @@ vsphere.vmnic {
   name string
   // NIC properties
   properties dict
-  // generic configuration of a network device
+  // Generic configuration of a network device
   details() dict
   // NIC pause parameters
   pauseParams dict
@@ -1263,7 +1263,7 @@ vsphere.vmknic {
   ipv4 []dict
   // IPv6 information
   ipv6 []dict
-  // network interface tag
+  // Network interface tag
   tags []string
 }
 
@@ -3793,44 +3793,44 @@ windows {
 // Windows hotfix resource
 windows.hotfix {
   init(hotfixId string)
-  // hotfix id
+  // Hotfix id
   hotfixId string
-  // type of hotfix eg. `Update` or `Security Update`
+  // Type of hotfix eg. `Update` or `Security Update`
   description string
-  // reference to knowledge base
+  // Reference to knowledge base
   caption string
-  // date the hotfix was installed on
+  // Date the hotfix was installed on
   installedOn time
-  // user that installed the hotfix
+  // User that installed the hotfix
   installedBy string
 }
 
 // Windows feature resource
 windows.feature {
   init(name string)
-  // feature full path 
+  // Feature full path 
   path string
-  // command IDs of role, role service, or feature
+  // Command IDs of role, role service, or feature
   name string
-  // feature name
+  // Feature name
   displayName string
-  // feature description
+  // Feature description
   description string
-  // flag indicates whether the feature is installed
+  // Flag indicates whether the feature is installed
   installed bool
-  // feature installation state
+  // Feature installation state
   installState int
 }
 
 // Windows firewall resource
 windows.firewall {
-  // global firewall settings
+  // Global firewall settings
   settings() dict
 
-  // settings that apply to the per-profile configurations of the Windows Firewall with Advanced Security
+  // Settings that apply to the per-profile configurations of the Windows Firewall with Advanced Security
   profiles() []windows.firewall.profile
 
-  // firewall rules
+  // Firewall rules
   rules() []windows.firewall.rule
 }
 
@@ -3838,80 +3838,80 @@ windows.firewall {
 // https://docs.microsoft.com/en-us/previous-versions/windows/desktop/wfascimprov/msft-netfirewallprofile
 windows.firewall.profile {
   instanceID string
-  // name of the profile
+  // Name of the profile
   name string
-  // whether the firewall is enabled on this profile
+  // Whether the firewall is enabled on this profile
   enabled int
-  // default action for inbound traffic
+  // Default action for inbound traffic
   defaultInboundAction int
-  // default action for outbound traffic
+  // Default action for outbound traffic
   defaultOutboundAction int
-  // if this is true, administrators will be able to create firewall rules which allow unsolicited inbound traffic to be accepted if this is false, such rules will be ignored
+  // If this is true, administrators will be able to create firewall rules which allow unsolicited inbound traffic to be accepted if this is false, such rules will be ignored
   allowInboundRules int
-  // determines whether local firewall rules should be merged into the effective policy along with group policy settings
+  // Determines whether local firewall rules should be merged into the effective policy along with group policy settings
   allowLocalFirewallRules int
-  // determines whether local IPsec rules should be merged into the effective policy along with rules from group policy
+  // Determines whether local IPsec rules should be merged into the effective policy along with rules from group policy
   allowLocalIPsecRules int
-  // whether to respect user allowed applications created in the legacy firewall
+  // Whether to respect user allowed applications created in the legacy firewall
   allowUserApps int
-  // whether to respect globally opened ports created in the legacy firewall
+  // Whether to respect globally opened ports created in the legacy firewall
   allowUserPorts int
-  // whether to allow unicast responses to multicast traffic
+  // Whether to allow unicast responses to multicast traffic
   allowUnicastResponseToMulticast int
-  // if true, users will be notified when an application listens on a port that is close
+  // If true, users will be notified when an application listens on a port that is close
   notifyOnListen int
-  // whether to use stealth mode for IPsec-protected traffic
+  // Whether to use stealth mode for IPsec-protected traffic
   enableStealthModeForIPsec int
-  // maximum size the log file can reach before being rotated
+  // Maximum size the log file can reach before being rotated
   logMaxSizeKilobytes int
-  // whether to log allowed packets
+  // Whether to log allowed packets
   logAllowed int
-  // whether to log blocked traffic
+  // Whether to log blocked traffic
   logBlocked int
-  // whether to log an event when rules are ignored
+  // Whether to log an event when rules are ignored
   logIgnored int
-  // lfilename in which to store the firewall log
+  // Filename in which to store the firewall log
   logFileName string
 }
 
 // windows firewall rule entry
 // https://docs.microsoft.com/en-us/previous-versions/windows/desktop/wfascimprov/msft-netfirewallrule
 windows.firewall.rule {
-  // a string that uniquely identifies this instance within the PolicyStore
+  // A string that uniquely identifies this instance within the PolicyStore
   instanceID string
-  // name of the rule
+  // Name of the rule
   name string
-  // localized name of this rule
+  // Localized name of this rule
   displayName string
-  // brief description of the rule
+  // Brief description of the rule
   description string
-  // the group that this rule belongs to
+  // The group that this rule belongs to
   displayGroup string
-  // indicates whether this rule is administratively enabled or disabled
+  // Indicates whether this rule is administratively enabled or disabled
   // values: enabled (1), disabled (2)
   enabled int
-  // specifies which direction of traffic to match with this rule
+  // Specifies which direction of traffic to match with this rule
   // values: inbound (1), outbound (2)
   direction int
-  // specifies the action to take on traffic that matches this rule
+  // Specifies the action to take on traffic that matches this rule
   action int
-  // specifies how this firewall rule will handle edge traversal cases
+  // Specifies how this firewall rule will handle edge traversal cases
   // values: block (0), allow (1), defer to user (2), defer to app (3)
   edgeTraversalPolicy int
-  // whether to group UDP packets into conversations based upon the local address, local port, and remote port
+  // Whether to group UDP packets into conversations based upon the local address, local port, and remote port
   looseSourceMapping bool
-  // whether to group UDP packets into conversations based only upon the local address and port
+  // Whether to group UDP packets into conversations based only upon the local address and port
   localOnlyMapping bool
   // PrimaryStatus provides a high level status value
   // values: unknown (0), ok (1), degraded (2), error (3)
   primaryStatus int
-  // detailed status of the rule
+  // Detailed status of the rule
   status string
-  // if this object is retrieved from the ActiveStore
+  // If this object is retrieved from the ActiveStore
   enforcementStatus string
-  // contains the path to the policy store where this rule originally came from
+  // Contains the path to the policy store where this rule originally came from
   policyStoreSource string
-  // describes the type of policy store where this rule originally came from
+  // Describes the type of policy store where this rule originally came from
   policyStoreSourceType int
 }
 
@@ -3920,21 +3920,21 @@ windows.bitlocker {
 }
 
 windows.bitlocker.volume {
-  // unique identifier for the volume
+  // Unique identifier for the volume
   deviceID string
-  // drive letter of the volume
+  // Drive letter of the volume
   driveLetter string
-  // indicates the status of the encryption or decryption on the volume
+  // Indicates the status of the encryption or decryption on the volume
   conversionStatus dict
-  // encryption algorithm and key size used on the volume
+  // Encryption algorithm and key size used on the volume
   encryptionMethod dict
-  // indicates whether the contents of the volume are accessible from Windows
+  // Indicates whether the contents of the volume are accessible from Windows
   // 0 = full contents of the volume are accessible
   // 1 = all or a portion of the contents of the volume are not accessible
   lockStatus int
-  // persistent identifier for the volume on this system
+  // Persistent identifier for the volume on this system
   persistentVolumeID string
-  // status of the volume, whether or not BitLocker is protecting the volume
+  // Status of the volume, whether or not BitLocker is protecting the volume
   // 0 = Protection Off
   // 1 = Protection On
   // 2 = Protection Unknown
@@ -4805,7 +4805,7 @@ private github.installation {
 // UUIDs based on RFC 4122 and DCE 1.1
 uuid {
   init(value string)
-  // canonical string representation xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  // Canonical string representation xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
   value string
   // URN returns the RFC 2141 URN form of uuid
   urn() string
@@ -4990,7 +4990,7 @@ gitlab.project {
 terraform {
   // Access to individual files including .tf and .tf.json files
   files() []terraform.file
-  // Returns the attributes defined in .tfvars and .tfvars.json
+  // The attributes defined in .tfvars and .tfvars.json
   tfvars() dict
   // List all referenced terraform modules
   modules() []terraform.module
