@@ -49,6 +49,12 @@ func NewContainerRegistryImage(tc *transports.TransportConfig) (ContainerTranspo
 		transport.PlatformIdentifier = identifier
 		transport.Metadata.Name = containerid.ShortContainerImageID(hash.String())
 
+		// set the platform architecture using the image configuration
+		imgConfig, err := img.ConfigFile()
+		if err == nil {
+			transport.PlatformArchitecture = imgConfig.Architecture
+		}
+
 		return transport, err
 	}
 	log.Debug().Str("image", tc.Host).Msg("Could not detect a valid repository url")

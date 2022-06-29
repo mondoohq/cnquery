@@ -23,11 +23,18 @@ func (p *PlatformResolver) Resolve(t transports.Transport) (*Platform, bool) {
 	// start recursive platform resolution
 	pi, resolved := p.resolvePlatform(di, t)
 
-	// if we have a docker image, we should fallback to the scratch operating system
-	_, ok := t.(*tar.Transport)
-	if resolved && len(pi.Name) == 0 && ok {
-		di.Name = "scratch"
-		return di, true
+	// if we have a container image use the architecture specified in the transport as it is resolved
+	// using the container image properties
+	tarTransport, ok := t.(*tar.Transport)
+	if resolved && ok {
+		pi.Arch = tarTransport.PlatformArchitecture
+
+		// if the platform name is not set, we should fallback to the scratch operating system
+		if len(pi.Name) == 0 {
+			di.Name = "scratch"
+			di.Arch = tarTransport.PlatformArchitecture
+			return di, true
+		}
 	}
 
 	log.Debug().Str("platform", pi.Name).Strs("family", pi.Family).Msg("platform> detected os")
