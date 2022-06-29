@@ -21,8 +21,10 @@ import (
 
 const OPTION_FILE = "file"
 
-var _ transports.Transport = (*Transport)(nil)
-var _ transports.TransportPlatformIdentifier = (*Transport)(nil)
+var (
+	_ transports.Transport                   = (*Transport)(nil)
+	_ transports.TransportPlatformIdentifier = (*Transport)(nil)
+)
 
 func New(endpoint *transports.TransportConfig) (*Transport, error) {
 	return NewWithClose(endpoint, nil)
@@ -130,9 +132,10 @@ type Transport struct {
 	Fs      *FS
 	CloseFN func()
 	// fields are exposed since the tar backend is re-used for the docker backend
-	PlatformKind       transports.Kind
-	PlatformRuntime    string
-	PlatformIdentifier string
+	PlatformKind         transports.Kind
+	PlatformRuntime      string
+	PlatformIdentifier   string
+	PlatformArchitecture string
 	// optional metadata to store additional information
 	Metadata struct {
 		Name   string
