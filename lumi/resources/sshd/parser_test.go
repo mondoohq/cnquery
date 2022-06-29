@@ -72,4 +72,39 @@ func TestParser(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, SshdLine{key: "key", args: "arg1"}, line)
 	})
+
+	t.Run("arg with unit minute", func(t *testing.T) {
+		text := []rune("LoginGraceTime=1m")
+		line, err := ParseLine(text)
+		require.NoError(t, err)
+		require.Equal(t, SshdLine{key: "LoginGraceTime", args: "60"}, line)
+	})
+
+	t.Run("arg with unit second", func(t *testing.T) {
+		text := []rune("LoginGraceTime=42s")
+		line, err := ParseLine(text)
+		require.NoError(t, err)
+		require.Equal(t, SshdLine{key: "LoginGraceTime", args: "42"}, line)
+	})
+
+	t.Run("arg with unit hour", func(t *testing.T) {
+		text := []rune("LoginGraceTime=2h")
+		line, err := ParseLine(text)
+		require.NoError(t, err)
+		require.Equal(t, SshdLine{key: "LoginGraceTime", args: "7200"}, line)
+	})
+
+	t.Run("arg with complex duration", func(t *testing.T) {
+		text := []rune("LoginGraceTime=2h10m42s")
+		line, err := ParseLine(text)
+		require.NoError(t, err)
+		require.Equal(t, SshdLine{key: "LoginGraceTime", args: "7842"}, line)
+	})
+
+	t.Run("arg with complex duration, but non-matching key", func(t *testing.T) {
+		text := []rune("key=2h10m42s")
+		line, err := ParseLine(text)
+		require.NoError(t, err)
+		require.Equal(t, SshdLine{key: "key", args: "2h10m42s"}, line)
+	})
 }
