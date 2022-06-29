@@ -2551,7 +2551,7 @@ private aws.apigateway.restapi {
   tags map[string]string
 }
 
-// Amazon API Gateway REST API resource provides an object representing an individual stage configured on an API Gateway 
+// Amazon API Gateway REST API resource provides an object representing an individual stage configured on an API Gateway
 private aws.apigateway.stage {
   // ARN for the rest api stage
   arn string
