@@ -23,6 +23,7 @@ func TestSSHParser(t *testing.T) {
 	// check result for multiple host-keys
 	assert.Equal(t, "/etc/ssh/ssh_host_rsa_key,/etc/ssh/ssh_host_ecdsa_key,/etc/ssh/ssh_host_ed25519_key", sshParams["HostKey"])
 	assert.Equal(t, "yes", sshParams["X11Forwarding"])
+	assert.Equal(t, "60", sshParams["LoginGraceTime"])
 }
 
 func TestSSHParseCaseInsensitive(t *testing.T) {

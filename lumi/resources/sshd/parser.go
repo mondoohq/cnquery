@@ -2,12 +2,19 @@ package sshd
 
 import (
 	"errors"
+	"fmt"
 	"strings"
+	"time"
 )
 
 type SshdLine struct {
 	key  string
 	args string
+}
+
+var keysWithTimeValue = map[string]int{
+	"ClientAliveInterval": 1,
+	"LoginGraceTime":      1,
 }
 
 // ParseLine parses a single line of the sshd_config file
@@ -28,6 +35,13 @@ func ParseLine(s []rune) (SshdLine, error) {
 	l.args, s, err = parseArgs(s)
 	if err != nil {
 		return l, err
+	}
+
+	if _, ok := keysWithTimeValue[l.key]; ok {
+		duration, err := time.ParseDuration(l.args)
+		if err == nil {
+			l.args = fmt.Sprintf("%.0f", duration.Seconds())
+		}
 	}
 
 	return l, nil
