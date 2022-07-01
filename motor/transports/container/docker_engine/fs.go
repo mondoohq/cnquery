@@ -3,16 +3,19 @@ package docker_engine
 import (
 	"errors"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/client"
 	"github.com/spf13/afero"
+	"go.mondoo.io/mondoo/motor/transports/ssh/cat"
 )
 
 type FS struct {
 	Container    string
 	dockerClient *client.Client
 	Transport    *Transport
+	catFS        *cat.Fs
 }
 
 func (fs *FS) Name() string {
@@ -31,8 +34,26 @@ func (fs *FS) MkdirAll(path string, perm os.FileMode) error {
 	return errors.New("mkdirall not implemented")
 }
 
+func isDockerClientSupported(path string) bool {
+	// This is incomplete. There are other things that are
+	// unsupported like tmpfs and paths the user mounted
+	// in the container.
+	// See https://docs.docker.com/engine/reference/commandline/cp/#corner-cases
+	unsupported := []string{"/proc", "/dev", "/sys"}
+	for _, v := range unsupported {
+		if v == path || strings.HasPrefix(path, v) {
+			return false
+		}
+	}
+	return true
+}
+
 func (fs *FS) Open(name string) (afero.File, error) {
-	return FileOpen(fs.dockerClient, name, fs.Container, fs.Transport)
+	if isDockerClientSupported(name) {
+		return FileOpen(fs.dockerClient, name, fs.Container, fs.Transport)
+	} else {
+		return fs.catFS.Open(name)
+	}
 }
 
 func (fs *FS) OpenFile(name string, flag int, perm os.FileMode) (afero.File, error) {
@@ -52,7 +73,7 @@ func (fs *FS) Rename(oldname, newname string) error {
 }
 
 func (fs *FS) Stat(name string) (os.FileInfo, error) {
-	f, err := FileOpen(fs.dockerClient, name, fs.Container, fs.Transport)
+	f, err := fs.Open(name)
 	if err != nil {
 		return nil, err
 	}

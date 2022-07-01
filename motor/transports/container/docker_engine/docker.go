@@ -8,10 +8,13 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/transports/ssh/cat"
 )
 
-var _ transports.Transport = (*Transport)(nil)
-var _ transports.TransportPlatformIdentifier = (*Transport)(nil)
+var (
+	_ transports.Transport                   = (*Transport)(nil)
+	_ transports.TransportPlatformIdentifier = (*Transport)(nil)
+)
 
 func New(container string) (*Transport, error) {
 	// TODO: harmonize docker client establishment with docker engine discovery
@@ -30,12 +33,19 @@ func New(container string) (*Transport, error) {
 		return nil, errors.New("container " + data.ID + " is not running")
 	}
 
-	return &Transport{
+	t := &Transport{
 		dockerClient: dockerClient,
 		container:    container,
 		kind:         transports.Kind_KIND_CONTAINER,
 		runtime:      transports.RUNTIME_DOCKER_CONTAINER,
-	}, nil
+	}
+	t.Fs = &FS{
+		dockerClient: t.dockerClient,
+		Container:    t.container,
+		Transport:    t,
+		catFS:        cat.New(t),
+	}
+	return t, nil
 }
 
 type Transport struct {
@@ -82,13 +92,6 @@ func (t *Transport) RunCommand(command string) (*transports.Command, error) {
 }
 
 func (t *Transport) FS() afero.Fs {
-	if t.Fs == nil {
-		t.Fs = &FS{
-			dockerClient: t.dockerClient,
-			Container:    t.container,
-			Transport:    t,
-		}
-	}
 	return t.Fs
 }
 
