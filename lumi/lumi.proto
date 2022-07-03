@@ -17,6 +17,7 @@ message ResourceID {
 message TypedArg {
   string name = 1;
   string type = 2;
+  bool optional = 3;
 }
 
 message Init {

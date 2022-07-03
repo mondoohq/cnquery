@@ -389,7 +389,7 @@ sshd {}
 
 // SSH server configuration
 sshd.config {
-  init(path string)
+  init(path? string)
   // File of this SSH server configuration
   file() file
   // Raw content of this SSH server config
