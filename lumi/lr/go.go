@@ -247,6 +247,7 @@ func (b *goBuilder) goInitInfo(r *Resource) error {
 	if len(r.Body.Inits) == 1 {
 		args := []string{}
 		i := r.Body.Inits[0]
+		isOptional := false
 		for _, arg := range i.Args {
 			typ := arg.Type.mondooType()
 			if typ == "NO_TYPE_DETECTED" {
@@ -261,7 +262,14 @@ func (b *goBuilder) goInitInfo(r *Resource) error {
 				}
 			}
 
-			args = append(args, `				&lumi.TypedArg{Name: "`+arg.ID+`", Type: string(`+typ+`)},
+			var optional string
+			if arg.Optional {
+				optional = ", Optional: true"
+				isOptional = true
+			} else if isOptional {
+				return errors.New("A required argument cannot follow an optional argument. Found in init function of " + r.ID)
+			}
+			args = append(args, `				&lumi.TypedArg{Name: "`+arg.ID+`", Type: string(`+typ+`)`+optional+`},
 `)
 		}
 		init = `&lumi.Init{Args: []*lumi.TypedArg{

@@ -89,8 +89,9 @@ type Init struct {
 // TypedArg is an argument with a type
 // nolint: govet
 type TypedArg struct {
-	ID   string `@Ident`
-	Type Type   ` @@`
+	ID       string `@Ident`
+	Optional bool   `@'?'?`
+	Type     Type   ` @@`
 }
 
 // Field definition of a resource

@@ -113,11 +113,11 @@ func TestParse(t *testing.T) {
 	})
 
 	t.Run("resource with init, with args", func(t *testing.T) {
-		parse(t, "name {\ninit(one int, two string)\n}", func(res *LR) {
+		parse(t, "name {\ninit(one int, two? string)\n}", func(res *LR) {
 			f := []*Init{
 				{Args: []TypedArg{
 					{ID: "one", Type: Type{SimpleType: &SimpleType{"int"}}},
-					{ID: "two", Type: Type{SimpleType: &SimpleType{"string"}}},
+					{ID: "two", Type: Type{SimpleType: &SimpleType{"string"}}, Optional: true},
 				}},
 			}
 			assert.Equal(t, "name", res.Resources[0].ID)
@@ -169,11 +169,13 @@ func TestParse(t *testing.T) {
 			}
 			f := []*Field{
 				{ID: "field", Type: Type{MapType: &MapType{Key: SimpleType{"string"}, Value: Type{SimpleType: &SimpleType{"int"}}}}},
-				{ID: "call",
+				{
+					ID:   "call",
 					Type: Type{ListType: &ListType{Type: Type{SimpleType: &SimpleType{"int"}}}},
 					Args: &FieldArgs{
 						List: []SimpleType{{"resource.field"}},
-					}},
+					},
+				},
 			}
 			assert.Equal(t, "name.no", res.Resources[0].ID)
 			assert.Equal(t, true, res.Resources[0].IsPrivate)
