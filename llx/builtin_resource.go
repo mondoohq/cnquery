@@ -70,7 +70,7 @@ func _resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64,
 			"list", resList, "__id", blockId,
 		}
 		for k, v := range resourceInfo.Fields {
-			if k != "list" && v.Mandatory {
+			if k != "list" && v.IsMandatory {
 				if v, err := resource.Field(k); err == nil {
 					args = append(args, k, v)
 				}

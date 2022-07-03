@@ -433,8 +433,9 @@ func (l *CodeV2) entrypoint2assessment(bundle *CodeBundle, ref uint64, lookup fu
 	}
 
 	if chunk.Function == nil {
-		res.Error = "chunk function cannot be nil"
-		return &res
+		// this only happens when we have a call chain that resembles a resource
+		// which is used without any init arguments
+		chunk.Function = &Function{Type: string(types.Resource(chunk.Id))}
 	}
 
 	if chunk.Id == "" {
