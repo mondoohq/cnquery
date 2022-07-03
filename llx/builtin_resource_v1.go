@@ -62,7 +62,7 @@ func _resourceWhereV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32
 			"list", resList, "__id", f.Id,
 		}
 		for k, v := range resourceInfo.Fields {
-			if k != "list" && v.Mandatory {
+			if k != "list" && v.IsMandatory {
 				if v, err := resource.Field(k); err == nil {
 					args = append(args, k, v)
 				}

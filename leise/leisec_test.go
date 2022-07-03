@@ -15,8 +15,10 @@ import (
 	"go.mondoo.io/mondoo/types"
 )
 
-var schema = registry.Default.Schema()
-var features = mondoo.Features{byte(mondoo.PiperCode)}
+var (
+	schema   = registry.Default.Schema()
+	features = mondoo.Features{byte(mondoo.PiperCode)}
+)
 
 func init() {
 	logger.InitTestEnv()
@@ -871,6 +873,11 @@ func TestCompiler_ResourceArrayImplicitLength(t *testing.T) {
 }
 
 func TestCompiler_ResourceFieldGlob(t *testing.T) {
+	compileT(t, "mondoo{*}", func(res *llx.CodeBundle) {
+		assertFunction(t, "mondoo", nil, res.CodeV2.Blocks[0].Chunks[0])
+		assertFunction(t, "mondoo.asset", nil, res.CodeV2.Blocks[1].Chunks[1])
+	})
+
 	compileT(t, "pam.conf { * }", func(res *llx.CodeBundle) {
 		assertFunction(t, "pam.conf", nil, res.CodeV2.Blocks[0].Chunks[0])
 		assertFunction(t, "{}", &llx.Function{
@@ -1152,7 +1159,6 @@ func TestCompiler_BlockWithSelf(t *testing.T) {
 		}, res.CodeV2.Blocks[1].Chunks[3])
 		assert.Equal(t, []uint64{(2 << 32) | 4}, res.CodeV2.Blocks[1].Entrypoints)
 	})
-
 }
 
 func TestCompiler_ContainsWithResource(t *testing.T) {
@@ -1378,43 +1384,51 @@ func TestSuggestions(t *testing.T) {
 		err         error
 	}{
 		{
-			"does_not_get_suggestions", []string{},
+			"does_not_get_suggestions",
+			[]string{},
 			errors.New("cannot find resource for identifier 'does_not_get_suggestions'"),
 		},
 		{
 			// resource suggestions
 			// TODO: "msgraph.beta.rolemanagement.roledefinition" shows up because it includes tem`plat`eId
-			"platfo", []string{"msgraph.beta.rolemanagement.roledefinition", "platform", "platform.advisories", "platform.cves", "platform.eol", "platform.exploits", "platform.virtualization"},
+			"platfo",
+			[]string{"msgraph.beta.rolemanagement.roledefinition", "platform", "platform.advisories", "platform.cves", "platform.eol", "platform.exploits", "platform.virtualization"},
 			errors.New("cannot find resource for identifier 'platfo'"),
 		},
 		{
 			// resource with empty field call
-			"sshd.", []string{"config"},
+			"sshd.",
+			[]string{"config"},
 			errors.New("incomplete query, missing identifier after '.' at <source>:1:6"),
 		},
 		{
 			// list resource with empty field call
-			"users.", []string{"all", "any", "contains", "length", "list", "map", "none", "one", "where"},
+			"users.",
+			[]string{"all", "any", "contains", "length", "list", "map", "none", "one", "where"},
 			errors.New("incomplete query, missing identifier after '.' at <source>:1:7"),
 		},
 		{
 			// resource with partial field call
-			"sshd.config.para", []string{"params"},
+			"sshd.config.para",
+			[]string{"params"},
 			errors.New("cannot find field 'para' in sshd.config"),
 		},
 		{
 			// resource with partial field call in block
-			"sshd.config { para }", []string{"params"},
+			"sshd.config { para }",
+			[]string{"params"},
 			errors.New("cannot find field or resource 'para' in block for type 'sshd.config'"),
 		},
 		{
 			// native type function call
-			"sshd.config.params.leng", []string{"length"},
+			"sshd.config.params.leng",
+			[]string{"length"},
 			errors.New("cannot find field 'leng' in map[string]string"),
 		},
 		{
 			// builtin calls
-			"parse.d", []string{"date"},
+			"parse.d",
+			[]string{"date"},
 			errors.New("cannot find field 'd' in parse"),
 		},
 	}
@@ -1458,15 +1472,18 @@ func TestCompiler_Entrypoints(t *testing.T) {
 	}{
 		{
 			"1",
-			[]uint64(nil), []uint64{(1 << 32) | 1},
+			[]uint64(nil),
+			[]uint64{(1 << 32) | 1},
 		},
 		{
 			"mondoo.version == 1",
-			[]uint64{(1 << 32) | 2}, []uint64{(1 << 32) | 3},
+			[]uint64{(1 << 32) | 2},
+			[]uint64{(1 << 32) | 3},
 		},
 		{
 			"mondoo.version == mondoo.build",
-			[]uint64{(1 << 32) | 2, (1 << 32) | 4}, []uint64{(1 << 32) | 5},
+			[]uint64{(1 << 32) | 2, (1 << 32) | 4},
+			[]uint64{(1 << 32) | 5},
 		},
 	}
 

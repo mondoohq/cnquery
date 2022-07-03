@@ -145,7 +145,7 @@ func builtinFunction(typ types.Type, id string) (*compileHandler, error) {
 func publicFieldsInfo(resourceInfo *lumi.ResourceInfo) map[string]llx.Documentation {
 	res := map[string]llx.Documentation{}
 	for k, v := range resourceInfo.Fields {
-		if v.Private {
+		if v.IsPrivate {
 			continue
 		}
 

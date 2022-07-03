@@ -39,10 +39,11 @@ message ResourceInfo {
 message Field {
   string name = 1;
   string type = 2;
-  bool mandatory = 3;
+  bool is_mandatory = 3;
   repeated string refs = 4;
   string title = 20;
   string desc = 21;
-  bool private = 22;
+  bool is_private = 22;
   string min_mondoo_version = 23;
+  bool is_implicit_resource = 24;
 }

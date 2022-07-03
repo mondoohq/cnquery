@@ -214,6 +214,9 @@ func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type
 	// This is a special case which is handled here:
 	if len(expressions) == 1 && (typ.IsResource() || (typ.IsArray() && typ.Child().IsResource())) {
 		x := expressions[0]
+
+		// Special handling for the glob operation on resource fields. It will
+		// try to grab all valid fields and return them.
 		if x.Operand != nil && x.Operand.Value != nil && x.Operand.Value.Ident != nil && *(x.Operand.Value.Ident) == "*" {
 			var fields map[string]llx.Documentation
 			if typ.IsArray() {
@@ -482,7 +485,7 @@ func (c *compiler) compileUnboundBlock(expressions []*parser.Expression, chunk *
 // evaluates the given expressions on a non-array resource
 // and creates a function, whose reference is returned
 func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.Type) (uint64, []uint64, bool, error) {
-	//binding := &variable{ref: c.tailRef(), typ: typ}
+	// binding := &variable{ref: c.tailRef(), typ: typ}
 	ogRef := c.tailRef()
 	blockCompiler := c.newBlockCompiler(nil)
 	blockCompiler.block.AddArgumentPlaceholder(blockCompiler.Result.CodeV2,
@@ -751,6 +754,24 @@ func (c *compiler) compileBoundIdentifier(id string, binding *variable, call *pa
 
 			c.Result.MinMondooVersion = getMinMondooVersion(c.Result.MinMondooVersion, typ.ResourceName(), id)
 
+			// this only happens when we call a field of a bridging resource,
+			// in which case we don't call the field (since there is nothing to do)
+			// and instead we call the resource directly:
+			typ := types.Type(fieldinfo.Type)
+			if fieldinfo.IsImplicitResource {
+				name := typ.ResourceName()
+				c.addChunk(&llx.Chunk{
+					Call: llx.Chunk_FUNCTION,
+					Id:   name,
+				})
+
+				// the new ID is now the full resource call, which is not what the
+				// field is originally labeled when we get it, so we have to fix it
+				checksum := c.Result.CodeV2.Checksums[c.tailRef()]
+				c.Result.Labels.Labels[checksum] = id
+				return true, typ, nil
+			}
+
 			c.addChunk(&llx.Chunk{
 				Call: llx.Chunk_FUNCTION,
 				Id:   id,
@@ -759,7 +780,7 @@ func (c *compiler) compileBoundIdentifier(id string, binding *variable, call *pa
 					Binding: binding.ref,
 				},
 			})
-			return true, types.Type(fieldinfo.Type), nil
+			return true, typ, nil
 		}
 	}
 
@@ -1404,8 +1425,8 @@ func getMinMondooVersion(current string, resource string, field string) string {
 			}
 		}
 		if current != "" {
-			//If the field has a newer version requirement than the current code bundle
-			//then update the version requirement to the newest version required.
+			// If the field has a newer version requirement than the current code bundle
+			// then update the version requirement to the newest version required.
 			docMin, err := vrs.NewVersion(minverDocs)
 			curMin, err1 := vrs.NewVersion(current)
 			if docMin != nil && err == nil && err1 == nil && docMin.LessThan(curMin) {
