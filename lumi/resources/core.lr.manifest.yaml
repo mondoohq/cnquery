@@ -4664,6 +4664,10 @@ resources:
       sshkeys: {}
       uid: {}
     min_mondoo_version: 5.15.0
+    snippets:
+    - query: |
+        user(name: "vagrant") { home uid }
+      title: Display from a specific user their home directory and uid
   users:
     fields: {}
     min_mondoo_version: 5.15.0
