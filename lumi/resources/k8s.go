@@ -272,6 +272,32 @@ func (k *lumiK8s) GetDaemonsets() ([]interface{}, error) {
 	})
 }
 
+func (k *lumiK8s) GetStatefulsets() ([]interface{}, error) {
+	return k8sResourceToLumi(k.Runtime, "statefulsets", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+		ts := obj.GetCreationTimestamp()
+
+		manifest, err := jsonToDict(resource)
+		if err != nil {
+			return nil, err
+		}
+
+		r, err := k.Runtime.CreateResource("k8s.statefulset",
+			"uid", string(obj.GetUID()),
+			"resourceVersion", obj.GetResourceVersion(),
+			"name", obj.GetName(),
+			"namespace", obj.GetNamespace(),
+			"kind", objT.GetKind(),
+			"created", &ts.Time,
+			"manifest", manifest,
+		)
+		if err != nil {
+			return nil, err
+		}
+		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		return r, nil
+	})
+}
+
 func (k *lumiK8s) GetJobs() ([]interface{}, error) {
 	return k8sResourceToLumi(k.Runtime, "jobs", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
@@ -721,7 +747,7 @@ func (k *lumiK8s) GetCustomresources() ([]interface{}, error) {
 	for i := range result.Resources {
 		resource := result.Resources[i]
 
-		//resource.
+		// resource.
 		crd, err := meta.Accessor(resource)
 		if err != nil {
 			log.Error().Err(err).Msg("could not access object attributes")
@@ -1093,6 +1119,22 @@ func (k *lumiK8sDaemonset) GetAnnotations() (interface{}, error) {
 }
 
 func (k *lumiK8sDaemonset) GetLabels() (interface{}, error) {
+	return k8sLabels(k.LumiResource())
+}
+
+func (k *lumiK8sStatefulset) id() (string, error) {
+	return k.Uid()
+}
+
+func (k *lumiK8sStatefulset) GetNamespace() (interface{}, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (k *lumiK8sStatefulset) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.LumiResource())
+}
+
+func (k *lumiK8sStatefulset) GetLabels() (interface{}, error) {
 	return k8sLabels(k.LumiResource())
 }
 

@@ -3412,6 +3412,8 @@ resources:
       customresources:
         min_mondoo_version: 6.1.0
       daemonsets: {}
+      statefulsets:
+        min_mondoo_version: 6.6.0
       deployments: {}
       jobs: {}
       namespaces: {}
@@ -3556,6 +3558,24 @@ resources:
         min_mondoo_version: 5.29.2
       uid: {}
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - kubernetes
+  k8s.statefulset:
+    fields:
+      annotations:
+        min_mondoo_version: 5.29.2
+      created: {}
+      kind: {}
+      labels:
+        min_mondoo_version: 5.29.2
+      manifest: {}
+      name: {}
+      namespace: {}
+      resourceVersion:
+        min_mondoo_version: 5.29.2
+      uid: {}
+    min_mondoo_version: 6.6.0
     platform:
       name:
       - kubernetes
