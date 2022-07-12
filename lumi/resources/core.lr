@@ -4114,6 +4114,8 @@ k8s {
   deployments() []k8s.deployment
   // Cluster DaemonSets
   daemonsets() []k8s.daemonset
+  // Cluster StatefulSets
+  statefulsets() []k8s.statefulset
   // Cluster Jobs
   jobs() []k8s.job
   // Cluster CronJobs
@@ -4305,6 +4307,28 @@ k8s.deployment {
 
 // Kubernetes DaemonSet
 k8s.daemonset {
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+}
+
+// Kubernetes StatefulSet
+k8s.statefulset {
   // Kubernetes Object UID
   uid string
   // Kubernetes Resource Version
