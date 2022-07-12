@@ -118,6 +118,21 @@ func (ri *ApiResourceIndex) Lookup(kind string) (*ApiResource, error) {
 			return &out[0], nil
 		}
 
+	// prevent "Error: ambiguous kind "cronjobs". use one of these as the KIND disambiguate: [cronjobs.v1.batch, cronjobs.v1beta1.batch]"
+	case "cronjob", "cronjobs":
+		// cronjobs should be in batch/v1
+		out := ri.find("cronjobs.v1.batch")
+		if len(out) != 0 {
+			return &out[0], nil
+		}
+
+		// v1beta1 is deprecated since 1.21
+		// https://kubernetes.io/docs/reference/using-api/deprecation-guide/#cronjob-v125
+		out = ri.find("cronjobs.v1beta1.batch")
+		if len(out) != 0 {
+			return &out[0], nil
+		}
+
 	case "deploy", "deployment", "deployments":
 		// deployments should be in apps/v1
 		out := ri.find("deployment.v1.apps")
