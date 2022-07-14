@@ -117,7 +117,10 @@ func resolveContainerImageFromStatus(containerStatus v1.ContainerStatus) (string
 	}
 
 	// stopped pods may not include the resolved image
-	if len(resolvedImage) == 0 {
+	// pods with imagePullPolicy: Never do not have a proper ImageId value as it contains only the
+	// sha but not the repository. If we use that value, it will cause issues later because we will
+	// eventually try to pull an image by providing just the sha without a repo.
+	if len(resolvedImage) == 0 || !strings.Contains(resolvedImage, "@") {
 		resolvedImage = containerStatus.Image
 	}
 
