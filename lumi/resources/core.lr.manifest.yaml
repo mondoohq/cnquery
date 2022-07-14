@@ -4667,13 +4667,13 @@ resources:
     snippets:
     - query: |
         user(name: "vagrant") { home uid }
-      title: Display from a specific user their home directory and uid
+      title: Display a specific user's home directory and UID
   users:
     fields: {}
     min_mondoo_version: 5.15.0
     snippets:
     - query: users.list { uid name }
-      title: Display all users and their uid
+      title: Display all users and their UID
     - query: users.one( name == 'root')
       title: Ensure user exists
     - query: users.none(name == "vagrant")
