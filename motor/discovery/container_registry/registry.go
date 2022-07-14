@@ -13,7 +13,6 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/motorid/containerid"
@@ -132,13 +131,7 @@ func (a *DockerRegistryImages) ListRepository(repoName string) ([]*asset.Asset, 
 	// fetch tags
 	tags, err := remote.List(repo, a.remoteOptions()...)
 	if err != nil {
-		if tErr, ok := err.(*transport.Error); ok {
-			if tErr.StatusCode == http.StatusUnauthorized {
-				return nil, fmt.Errorf("cannot list repo %s due to missing container registry credentials", repo.Name())
-			}
-		}
-
-		return nil, err
+		return nil, handleUnauthorizedError(err, repo.Name())
 	}
 
 	for i := range tags {
@@ -183,7 +176,7 @@ func (a *DockerRegistryImages) toAsset(ref name.Reference, creds []*vault.Creden
 	remoteOpts = append(remoteOpts, opts...)
 	desc, err := remote.Get(ref, remoteOpts...)
 	if err != nil {
-		return nil, err
+		return nil, handleUnauthorizedError(err, ref.Name())
 	}
 	imgDigest := desc.Digest.String()
 	repoName := ref.Context().Name()

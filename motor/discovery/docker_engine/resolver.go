@@ -126,7 +126,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 	}
 
 	// if we reached here, we assume we have a name of an image or container from a registry
-	return nil, errors.New("could not find the container reference")
+	return nil, errors.Wrap(err, "could not find the container reference")
 }
 
 func (k *Resolver) container(tc *transports.TransportConfig, ded *dockerEngineDiscovery) (*asset.Asset, error) {
