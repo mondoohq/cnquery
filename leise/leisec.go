@@ -474,7 +474,13 @@ func (c *compiler) compileSwitchBlock(expressions []*parser.Expression, chunk *l
 func (c *compiler) compileUnboundBlock(expressions []*parser.Expression, chunk *llx.Chunk) (types.Type, error) {
 	switch chunk.Id {
 	case "if":
-		return c.compileIfBlock(expressions, chunk)
+		t, err := c.compileIfBlock(expressions, chunk)
+		if err == nil {
+			code := c.Result.CodeV2
+			code.Checksums[c.tailRef()] = chunk.ChecksumV2(c.blockRef, code)
+		}
+		return t, err
+
 	case "switch":
 		return c.compileSwitchBlock(expressions, chunk)
 	default:
