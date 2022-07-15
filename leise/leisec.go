@@ -1362,11 +1362,13 @@ func (c *compiler) updateEntrypoints() {
 	}
 
 	max := len(c.block.Entrypoints)
-	for i := 0; i < max; i++ {
+	for i := 0; i < max; {
 		ref := c.block.Entrypoints[i]
 		if _, ok := varsByRef[ref]; ok {
 			c.block.Entrypoints[i], c.block.Entrypoints[max-1] = c.block.Entrypoints[max-1], c.block.Entrypoints[i]
 			max--
+		} else {
+			i++
 		}
 	}
 	if max != len(c.block.Entrypoints) {

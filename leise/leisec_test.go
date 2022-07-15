@@ -110,7 +110,6 @@ func TestCompiler_Buggy(t *testing.T) {
 		res  []*llx.Chunk
 		err  error
 	}{
-
 		{`mondoo mondoo`, []*llx.Chunk{
 			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
 			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
@@ -1485,13 +1484,37 @@ func TestCompiler_Entrypoints(t *testing.T) {
 			[]uint64{(1 << 32) | 2, (1 << 32) | 4},
 			[]uint64{(1 << 32) | 5},
 		},
+		{
+			`
+				a = "a"
+				b = "b"
+				a == "a"
+				b == "b"
+				c = "c"
+				c == "c"
+			`,
+			nil,
+			[]uint64{(1 << 32) | 4, (1 << 32) | 6, (1 << 32) | 9},
+		},
+		{
+			`
+				a = "a"
+				b = "b"
+				a == "a"
+				b == "b"
+				c = a == b
+				c == false
+			`,
+			[]uint64{(1 << 32) | 9},
+			[]uint64{(1 << 32) | 4, (1 << 32) | 6, (1 << 32) | 11},
+		},
 	}
 
 	for i := range tests {
 		test := tests[i]
 		t.Run(test.code, func(t *testing.T) {
 			compileT(t, test.code, func(res *llx.CodeBundle) {
-				assert.Equal(t, test.entrypoints, res.CodeV2.Entrypoints())
+				assert.ElementsMatch(t, test.entrypoints, res.CodeV2.Entrypoints())
 				assert.Equal(t, test.datapoints, res.CodeV2.Datapoints())
 			})
 		})
