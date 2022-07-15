@@ -527,7 +527,13 @@ func (a *lumiAzurermWebAppsite) GetStack() (map[string]interface{}, error) {
 		// read runtime from metadata, YES its works completely different than on linux
 		// NOTE: also take care of the runtime version for dotnet. This API and webapp runtime
 		// handling in specific is a complete 💥.
-		stack := metadata["CURRENT_STACK"].(string)
+		stack, ok := metadata["CURRENT_STACK"].(string)
+		if !ok {
+			// This doesn't seem to be consistently set
+			// https://stackoverflow.com/questions/63950946/azure-app-service-get-stack-settings-via-api#comment113188903_63987100
+			// https://github.com/mondoohq/client/issues/157
+			return nil, nil
+		}
 		version := ""
 		switch stack {
 		case "dotnet":
