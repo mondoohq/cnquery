@@ -1581,3 +1581,123 @@ func TestCompiler_Entrypoints(t *testing.T) {
 		})
 	}
 }
+
+func TestCompiler_NestedEntrypoints(t *testing.T) {
+	tests := []struct {
+		code        string
+		datapoints  []uint64
+		entrypoints []uint64
+	}{
+		{
+			`
+				if(true) {
+					a = "a"
+					b = "b"
+					a == b
+				}
+			`,
+			[]uint64{},
+			[]uint64{(1 << 32) | 1, (2 << 32) | 5},
+		},
+		{
+			`
+				switch {
+				case "a" == "a":
+					a = "a"
+					b = "b"
+					a == b;
+				case "b" == "b":
+					x = "x"
+					y = "y"
+					x == y
+				}
+			`,
+			[]uint64{},
+			[]uint64{(1 << 32) | 5, (2 << 32) | 5, (3 << 32) | 5},
+		},
+		{
+			`
+				mondoo {
+					a = "a"
+					b = "b"
+					a == b
+				}
+			`,
+			[]uint64{},
+			[]uint64{(1 << 32) | 2, (2 << 32) | 6},
+		},
+		{
+			`
+				{a: "a"} {
+					x = "x"
+					y = "y"
+					x == y
+				}
+			`,
+			[]uint64{},
+			[]uint64{(1 << 32) | 2, (2 << 32) | 6},
+		},
+		{
+			`
+				[1,2,3] {
+					x = "x"
+					y = "y"
+					x == y
+				}
+			`,
+			[]uint64{},
+			[]uint64{(1 << 32) | 2, (2 << 32) | 6},
+		},
+		{
+			`
+				mondoo {
+					_
+				}
+			`,
+			[]uint64{},
+			[]uint64{(1 << 32) | 2, (2 << 32) | 1},
+		},
+		{
+			`
+				mondoo {
+					a = true
+					a
+				}
+			`,
+			[]uint64{},
+			[]uint64{(1 << 32) | 2, (2 << 32) | 3},
+		},
+		{
+			`
+				if(true) {
+					a = true
+					a
+				}
+			`,
+			[]uint64{},
+			[]uint64{(1 << 32) | 1, (2 << 32) | 2},
+		},
+	}
+
+	for i := range tests {
+		test := tests[i]
+		t.Run(test.code, func(t *testing.T) {
+			compileT(t, test.code, func(res *llx.CodeBundle) {
+				entrypoints, datapoints := allCodepoints(res.CodeV2)
+				assert.ElementsMatch(t, test.entrypoints, entrypoints)
+				assert.ElementsMatch(t, test.datapoints, datapoints)
+			})
+		})
+	}
+}
+
+func allCodepoints(code *llx.CodeV2) ([]uint64, []uint64) {
+	entrypoints := []uint64{}
+	datapoints := []uint64{}
+
+	for _, b := range code.Blocks {
+		entrypoints = append(entrypoints, b.Entrypoints...)
+		datapoints = append(datapoints, b.Datapoints...)
+	}
+	return entrypoints, datapoints
+}
