@@ -90,7 +90,7 @@ func compileAssertionMsg(msg string, c *compiler) (*llx.AssertionMessage, error)
 	template := strings.Builder{}
 	var codes []string
 	var i int
-	var max = len(msg)
+	max := len(msg)
 	textStart := i
 	for ; i < max; i++ {
 		if msg[i] != '$' {

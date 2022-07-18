@@ -293,6 +293,7 @@ func (c *compiler) compileIfBlock(expressions []*parser.Expression, chunk *llx.C
 	if err != nil {
 		return types.Nil, err
 	}
+	blockCompiler.updateEntrypoints(false)
 
 	block := blockCompiler.block
 
@@ -444,6 +445,7 @@ func (c *compiler) compileSwitchBlock(expressions []*parser.Expression, chunk *l
 		if err != nil {
 			return types.Nil, err
 		}
+		blockCompiler.updateEntrypoints(false)
 
 		// TODO(jaym): Discuss with dom: v1 seems to hardcore this as
 		// single valued
@@ -507,6 +509,7 @@ func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.T
 	if err != nil {
 		return 0, nil, false, err
 	}
+	blockCompiler.updateEntrypoints(false)
 
 	return blockCompiler.blockRef, blockCompiler.blockDeps, blockCompiler.standalone, nil
 }
@@ -1357,15 +1360,25 @@ func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 	return nil
 }
 
-func (c *compiler) updateEntrypoints() {
-	code := c.Result.CodeV2
+func (c *compiler) updateEntrypoints(collectRefDatapoints bool) {
+	// BUG (jaym): collectRefDatapoints prevents us from collecting datapoints.
+	// Collecting datapoints for blocks didnt work correctly until 6.7.0.
+	// See https://gitlab.com/mondoolabs/mondoo/-/merge_requests/2639
+	// We can fix this after some time has passed. If we fix it too soon
+	// people will start having their queries fail if a falsy datapoint
+	// is collected.
 
-	// 0. prep: everything that's an entrypoint is a scoringpoint later on
-	datapoints := map[uint64]struct{}{}
+	code := c.Result.CodeV2
 
 	// 1. efficiently remove variable definitions from entrypoints
 	varsByRef := make(map[uint64]variable, c.vars.len())
-	for _, v := range c.vars.vars {
+	for name, v := range c.vars.vars {
+		if name == "_" {
+			// We need to filter this out. It wasn't an assignment declared by the
+			// user. We will re-introduce it conceptually once we tackle context
+			// information for blocks.
+			continue
+		}
 		varsByRef[v.ref] = v
 	}
 
@@ -1394,6 +1407,11 @@ func (c *compiler) updateEntrypoints() {
 		}
 	}
 
+	if !collectRefDatapoints {
+		return
+	}
+
+	datapoints := map[uint64]struct{}{}
 	// 3. resolve operators
 	for ref := range entrypoints {
 		dps := code.RefDatapoints(ref)
@@ -1425,7 +1443,7 @@ func (c *compiler) CompileParsed(ast *parser.AST) error {
 	}
 
 	c.Result.CodeV2.UpdateID()
-	c.updateEntrypoints()
+	c.updateEntrypoints(true)
 	return nil
 }
 
