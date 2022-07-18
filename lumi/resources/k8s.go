@@ -298,6 +298,32 @@ func (k *lumiK8s) GetStatefulsets() ([]interface{}, error) {
 	})
 }
 
+func (k *lumiK8s) GetReplicasets() ([]interface{}, error) {
+	return k8sResourceToLumi(k.Runtime, "replicasets", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+		ts := obj.GetCreationTimestamp()
+
+		manifest, err := jsonToDict(resource)
+		if err != nil {
+			return nil, err
+		}
+
+		r, err := k.Runtime.CreateResource("k8s.replicaset",
+			"uid", string(obj.GetUID()),
+			"resourceVersion", obj.GetResourceVersion(),
+			"name", obj.GetName(),
+			"namespace", obj.GetNamespace(),
+			"kind", objT.GetKind(),
+			"created", &ts.Time,
+			"manifest", manifest,
+		)
+		if err != nil {
+			return nil, err
+		}
+		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		return r, nil
+	})
+}
+
 func (k *lumiK8s) GetJobs() ([]interface{}, error) {
 	return k8sResourceToLumi(k.Runtime, "jobs", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
@@ -1135,6 +1161,22 @@ func (k *lumiK8sStatefulset) GetAnnotations() (interface{}, error) {
 }
 
 func (k *lumiK8sStatefulset) GetLabels() (interface{}, error) {
+	return k8sLabels(k.LumiResource())
+}
+
+func (k *lumiK8sReplicaset) id() (string, error) {
+	return k.Uid()
+}
+
+func (k *lumiK8sReplicaset) GetNamespace() (interface{}, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (k *lumiK8sReplicaset) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.LumiResource())
+}
+
+func (k *lumiK8sReplicaset) GetLabels() (interface{}, error) {
 	return k8sLabels(k.LumiResource())
 }
 
