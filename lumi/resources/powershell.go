@@ -1,11 +1,15 @@
 package resources
 
 import (
+	"bytes"
 	"io/ioutil"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
 	"go.mondoo.io/mondoo/motor/transports"
+	"golang.org/x/net/html/charset"
+	"golang.org/x/text/transform"
 )
 
 // TODO: consider sharing more code with command resource
@@ -41,6 +45,17 @@ func (c *lumiPowershell) execute() (*transports.Command, error) {
 	return executedCmd, nil
 }
 
+func convertToUtf8Encoding(out []byte) (string, error) {
+	enc, name, _ := charset.DetermineEncoding(out, "")
+	log.Trace().Str("encoding", name).Msg("check powershell results charset")
+	r := transform.NewReader(bytes.NewReader(out), enc.NewDecoder())
+	utf8out, err := ioutil.ReadAll(r)
+	if err != nil {
+		return "", err
+	}
+	return string(utf8out), nil
+}
+
 func (c *lumiPowershell) GetStdout() (string, error) {
 	executedCmd, err := c.execute()
 	if err != nil {
@@ -52,7 +67,7 @@ func (c *lumiPowershell) GetStdout() (string, error) {
 		return "", err
 	}
 
-	return string(out), nil
+	return convertToUtf8Encoding(out)
 }
 
 func (c *lumiPowershell) GetStderr() (string, error) {
@@ -66,7 +81,7 @@ func (c *lumiPowershell) GetStderr() (string, error) {
 		return "", err
 	}
 
-	return string(outErr), nil
+	return convertToUtf8Encoding(outErr)
 }
 
 func (c *lumiPowershell) GetExitcode() (int64, error) {
