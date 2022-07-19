@@ -3412,10 +3412,6 @@ resources:
       customresources:
         min_mondoo_version: 6.1.0
       daemonsets: {}
-      statefulsets:
-        min_mondoo_version: 6.7.0
-      repicassets:
-        min_mondoo_version: 6.7.0
       deployments: {}
       jobs: {}
       namespaces: {}
@@ -3425,6 +3421,10 @@ resources:
       podSecurityPolicies:
         min_mondoo_version: 5.31.0
       pods: {}
+      repicassets:
+        min_mondoo_version: 6.7.0
+      replicasets:
+        min_mondoo_version: 6.7.0
       rolebindings:
         min_mondoo_version: 5.31.0
       roles:
@@ -3436,6 +3436,8 @@ resources:
         min_mondoo_version: 5.31.0
       services:
         min_mondoo_version: 5.31.0
+      statefulsets:
+        min_mondoo_version: 6.7.0
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -3560,42 +3562,6 @@ resources:
         min_mondoo_version: 5.29.2
       uid: {}
     min_mondoo_version: 5.15.0
-    platform:
-      name:
-      - kubernetes
-  k8s.statefulset:
-    fields:
-      annotations:
-        min_mondoo_version: 5.29.2
-      created: {}
-      kind: {}
-      labels:
-        min_mondoo_version: 5.29.2
-      manifest: {}
-      name: {}
-      namespace: {}
-      resourceVersion:
-        min_mondoo_version: 5.29.2
-      uid: {}
-    min_mondoo_version: 6.7.0
-    platform:
-      name:
-      - kubernetes
-  k8s.replicaset:
-    fields:
-      annotations:
-        min_mondoo_version: 5.29.2
-      created: {}
-      kind: {}
-      labels:
-        min_mondoo_version: 5.29.2
-      manifest: {}
-      name: {}
-      namespace: {}
-      resourceVersion:
-        min_mondoo_version: 5.29.2
-      uid: {}
-    min_mondoo_version: 6.7.0
     platform:
       name:
       - kubernetes
@@ -3776,6 +3742,24 @@ resources:
     platform:
       name:
       - kubernetes
+  k8s.replicaset:
+    fields:
+      annotations:
+        min_mondoo_version: 5.29.2
+      created: {}
+      kind: {}
+      labels:
+        min_mondoo_version: 5.29.2
+      manifest: {}
+      name: {}
+      namespace: {}
+      resourceVersion:
+        min_mondoo_version: 5.29.2
+      uid: {}
+    min_mondoo_version: 6.7.0
+    platform:
+      name:
+      - kubernetes
   k8s.secret:
     fields:
       annotations:
@@ -3829,6 +3813,24 @@ resources:
       secrets: {}
       uid: {}
     min_mondoo_version: 5.31.0
+    platform:
+      name:
+      - kubernetes
+  k8s.statefulset:
+    fields:
+      annotations:
+        min_mondoo_version: 5.29.2
+      created: {}
+      kind: {}
+      labels:
+        min_mondoo_version: 5.29.2
+      manifest: {}
+      name: {}
+      namespace: {}
+      resourceVersion:
+        min_mondoo_version: 5.29.2
+      uid: {}
+    min_mondoo_version: 6.7.0
     platform:
       name:
       - kubernetes
