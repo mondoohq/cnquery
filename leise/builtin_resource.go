@@ -26,7 +26,7 @@ func compileResourceDefault(c *compiler, typ types.Type, ref uint64, id string, 
 		name := prev.Id + "." + id
 		resourceinfo, isResource := c.Schema.Resources[name]
 		if isResource {
-			c.block.PopChunk()
+			c.popChunk()
 			return c.addResource(name, resourceinfo, call)
 		}
 	}

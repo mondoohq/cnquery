@@ -85,6 +85,10 @@ func (c *compiler) addChunk(chunk *llx.Chunk) {
 	c.block.AddChunk(c.Result.CodeV2, c.blockRef, chunk)
 }
 
+func (c *compiler) popChunk() (prev *llx.Chunk, isEntrypoint bool, isDatapoint bool) {
+	return c.block.PopChunk(c.Result.CodeV2, c.blockRef)
+}
+
 func (c *compiler) addArgumentPlaceholder(typ types.Type, checksum string) {
 	c.block.AddArgumentPlaceholder(c.Result.CodeV2, c.blockRef, typ, checksum)
 }
