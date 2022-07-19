@@ -75,15 +75,32 @@ func (b *Block) AddArgumentPlaceholder(code *CodeV2, blockRef uint64, typ types.
 }
 
 // PopChunk removes the last chunk from the block and returns it
-func (b *Block) PopChunk() *Chunk {
+func (b *Block) PopChunk(code *CodeV2, blockRef uint64) (prev *Chunk, isEntrypoint bool, isDatapoint bool) {
+	prev = nil
+	isEntrypoint = false
+	isDatapoint = false
+
 	if len(b.Chunks) == 0 {
-		return nil
+		return nil, false, false
+	}
+
+	tailRef := b.TailRef(blockRef)
+	delete(code.Checksums, tailRef)
+
+	if len(b.Entrypoints) > 0 && b.Entrypoints[len(b.Entrypoints)-1] == tailRef {
+		isEntrypoint = true
+		b.Entrypoints = b.Entrypoints[:len(b.Entrypoints)-1]
+	}
+
+	if len(b.Datapoints) > 0 && b.Datapoints[len(b.Datapoints)-1] == tailRef {
+		isDatapoint = true
+		b.Datapoints = b.Datapoints[:len(b.Datapoints)-1]
 	}
 
 	max := len(b.Chunks)
 	last := b.Chunks[max-1]
 	b.Chunks = b.Chunks[:max-1]
-	return last
+	return last, isEntrypoint, isDatapoint
 }
 
 // ChunkIndex is the index of the last chunk that was added

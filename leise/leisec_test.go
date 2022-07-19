@@ -1601,6 +1601,41 @@ func TestCompiler_NestedEntrypoints(t *testing.T) {
 		},
 		{
 			`
+				if(true) {
+					a = "a"
+					b = "b"
+					a == b
+				} else {
+					x = "x"
+					y = "y"
+					x == y
+				}
+			`,
+			[]uint64{},
+			[]uint64{(1 << 32) | 1, (2 << 32) | 5, (3 << 32) | 5},
+		},
+		{
+			`
+			  z = "z"
+				if(z == "z") {
+					a = "a"
+					b = "b"
+					a == b
+				} else if (z == "a") {
+					x = "x"
+					y = "y"
+					x == y
+				} else {
+					j = "j"
+					k = "k"
+					j == k
+				}
+			`,
+			[]uint64{},
+			[]uint64{(1 << 32) | 6, (2 << 32) | 5, (3 << 32) | 5, (4 << 32) | 5},
+		},
+		{
+			`
 				switch {
 				case "a" == "a":
 					a = "a"

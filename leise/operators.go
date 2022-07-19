@@ -332,7 +332,7 @@ func compileIf(c *compiler, id string, call *parser.Call) (types.Type, error) {
 		if prev.Id == "if" {
 			// we need to pop off the last "if" chunk as the new condition needs to
 			// be added in front of it
-			c.block.Chunks = c.block.Chunks[0:maxRef]
+			c.popChunk()
 
 			argValue, err := c.compileExpression(arg.Value)
 			if err != nil {
@@ -341,6 +341,9 @@ func compileIf(c *compiler, id string, call *parser.Call) (types.Type, error) {
 
 			// now add back the last chunk and append the newly compiled condition
 			c.addChunk(prev)
+			// We do not need to add it back as an entrypoint here. It happens below
+			// outside this block
+
 			prev.Function.Args = append(prev.Function.Args, argValue)
 
 			c.prevID = "if"
