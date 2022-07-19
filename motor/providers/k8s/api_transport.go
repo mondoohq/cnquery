@@ -328,3 +328,21 @@ func (t *apiTransport) StatefulSet(namespace string, name string) (*appsv1.State
 	}
 	return statefulset, err
 }
+
+func (t *apiTransport) Deployments(namespace v1.Namespace) ([]appsv1.Deployment, error) {
+	ctx := context.Background()
+	list, err := t.clientset.AppsV1().Deployments(namespace.Name).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return list.Items, err
+}
+
+func (t *apiTransport) Deployment(namespace string, name string) (*appsv1.Deployment, error) {
+	ctx := context.Background()
+	deployment, err := t.clientset.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return deployment, err
+}

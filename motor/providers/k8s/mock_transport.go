@@ -97,6 +97,36 @@ func (mr *MockTransportMockRecorder) CronJobs(namespace interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CronJobs", reflect.TypeOf((*MockTransport)(nil).CronJobs), namespace)
 }
 
+// Deployment mocks base method.
+func (m *MockTransport) Deployment(namespace, name string) (*v1.Deployment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Deployment", namespace, name)
+	ret0, _ := ret[0].(*v1.Deployment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Deployment indicates an expected call of Deployment.
+func (mr *MockTransportMockRecorder) Deployment(namespace, name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Deployment", reflect.TypeOf((*MockTransport)(nil).Deployment), namespace, name)
+}
+
+// Deployments mocks base method.
+func (m *MockTransport) Deployments(namespace v11.Namespace) ([]v1.Deployment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Deployments", namespace)
+	ret0, _ := ret[0].([]v1.Deployment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Deployments indicates an expected call of Deployments.
+func (mr *MockTransportMockRecorder) Deployments(namespace interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Deployments", reflect.TypeOf((*MockTransport)(nil).Deployments), namespace)
+}
+
 // FS mocks base method.
 func (m *MockTransport) FS() afero.Fs {
 	m.ctrl.T.Helper()

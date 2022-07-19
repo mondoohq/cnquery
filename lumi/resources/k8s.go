@@ -870,7 +870,7 @@ func (p *lumiK8sPod) init(args *lumi.Args) (*lumi.Args, K8sPod, error) {
 		return nil, nil, err
 	}
 
-	var matchFn func(configMap K8sPod) bool
+	var matchFn func(pod K8sPod) bool
 
 	var uidRaw string
 	if len(*args) == 0 {
@@ -880,12 +880,9 @@ func (p *lumiK8sPod) init(args *lumi.Args) (*lumi.Args, K8sPod, error) {
 	}
 
 	if uidRaw != "" {
-		matchFn = func(configMap K8sPod) bool {
-			uid, _ := configMap.Uid()
-			if uid == uidRaw {
-				return true
-			}
-			return false
+		matchFn = func(pod K8sPod) bool {
+			uid, _ := pod.Uid()
+			return uid == uidRaw
 		}
 	}
 
@@ -902,20 +899,17 @@ func (p *lumiK8sPod) init(args *lumi.Args) (*lumi.Args, K8sPod, error) {
 		namespaceRaw = identifierNamespace
 	}
 	if nameRaw != "" && namespaceRaw != "" {
-		matchFn = func(configMap K8sPod) bool {
-			name, _ := configMap.Name()
-			namespace, _ := configMap.Namespace()
-			if name == nameRaw && namespace == namespaceRaw {
-				return true
-			}
-			return false
+		matchFn = func(pod K8sPod) bool {
+			name, _ := pod.Name()
+			namespace, _ := pod.Namespace()
+			return name == nameRaw && namespace == namespaceRaw
 		}
 	}
 
 	for i := range pods {
-		configMap := pods[i].(K8sPod)
-		if matchFn(configMap) {
-			return nil, configMap, nil
+		pod := pods[i].(K8sPod)
+		if matchFn(pod) {
+			return nil, pod, nil
 		}
 	}
 
@@ -1147,7 +1141,13 @@ func (k *lumiK8sDeployment) id() (string, error) {
 
 func (p *lumiK8sDeployment) init(args *lumi.Args) (*lumi.Args, K8sDeployment, error) {
 	// pass-through if all args are already provided
-	if len(*args) == 0 || len(*args) > 2 {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	// get platform identifier infos
+	identifierUid, identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
+	if err != nil {
 		return args, nil, nil
 	}
 
@@ -1158,41 +1158,51 @@ func (p *lumiK8sDeployment) init(args *lumi.Args) (*lumi.Args, K8sDeployment, er
 	}
 	k8sResource := obj.(K8s)
 
-	secrets, err := k8sResource.Deployments()
+	deployments, err := k8sResource.Deployments()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var matchFn func(configMap K8sDeployment) bool
+	var matchFn func(deployment K8sDeployment) bool
 
-	uidRaw := (*args)["uid"]
-	if uidRaw != nil {
-		matchFn = func(configMap K8sDeployment) bool {
-			uid, _ := configMap.Uid()
-			if uid == uidRaw.(string) {
-				return true
-			}
-			return false
+	var uidRaw string
+	if len(*args) == 0 {
+		uidRaw = identifierUid
+	} else if _, ok := (*args)["uid"]; ok {
+		uidRaw = (*args)["uid"].(string)
+	}
+
+	if uidRaw != "" {
+		matchFn = func(deployment K8sDeployment) bool {
+			uid, _ := deployment.Uid()
+			return uid == uidRaw
 		}
 	}
 
-	nameRaw := (*args)["name"]
-	namespaceRaw := (*args)["namespace"]
-	if nameRaw != nil && namespaceRaw != nil {
-		matchFn = func(configMap K8sDeployment) bool {
-			name, _ := configMap.Name()
-			namespace, _ := configMap.Namespace()
-			if name == nameRaw.(string) && namespace == namespaceRaw.(string) {
-				return true
-			}
-			return false
+	var nameRaw string
+	var namespaceRaw string
+	if _, ok := (*args)["name"]; ok {
+		nameRaw = (*args)["name"].(string)
+	}
+	if _, ok := (*args)["namespace"]; ok {
+		namespaceRaw = (*args)["namespace"].(string)
+	}
+	if nameRaw == "" && namespaceRaw == "" {
+		nameRaw = identifierName
+		namespaceRaw = identifierNamespace
+	}
+	if nameRaw != "" && namespaceRaw != "" {
+		matchFn = func(deployment K8sDeployment) bool {
+			name, _ := deployment.Name()
+			namespace, _ := deployment.Namespace()
+			return name == nameRaw && namespace == namespaceRaw
 		}
 	}
 
-	for i := range secrets {
-		configMap := secrets[i].(K8sDeployment)
-		if matchFn(configMap) {
-			return nil, configMap, nil
+	for i := range deployments {
+		deployment := deployments[i].(K8sDeployment)
+		if matchFn(deployment) {
+			return nil, deployment, nil
 		}
 	}
 
@@ -1481,7 +1491,7 @@ func (p *lumiK8sCronjob) init(args *lumi.Args) (*lumi.Args, K8sCronjob, error) {
 		return nil, nil, err
 	}
 
-	var matchFn func(configMap K8sCronjob) bool
+	var matchFn func(cronjob K8sCronjob) bool
 
 	var uidRaw string
 	if len(*args) == 0 {
@@ -1491,12 +1501,9 @@ func (p *lumiK8sCronjob) init(args *lumi.Args) (*lumi.Args, K8sCronjob, error) {
 	}
 
 	if uidRaw != "" {
-		matchFn = func(configMap K8sCronjob) bool {
-			uid, _ := configMap.Uid()
-			if uid == uidRaw {
-				return true
-			}
-			return false
+		matchFn = func(cronjob K8sCronjob) bool {
+			uid, _ := cronjob.Uid()
+			return uid == uidRaw
 		}
 	}
 
@@ -1513,20 +1520,17 @@ func (p *lumiK8sCronjob) init(args *lumi.Args) (*lumi.Args, K8sCronjob, error) {
 		namespaceRaw = identifierNamespace
 	}
 	if nameRaw != "" && namespaceRaw != "" {
-		matchFn = func(configMap K8sCronjob) bool {
-			name, _ := configMap.Name()
-			namespace, _ := configMap.Namespace()
-			if name == nameRaw && namespace == namespaceRaw {
-				return true
-			}
-			return false
+		matchFn = func(cronjob K8sCronjob) bool {
+			name, _ := cronjob.Name()
+			namespace, _ := cronjob.Namespace()
+			return name == nameRaw && namespace == namespaceRaw
 		}
 	}
 
 	for i := range cronJobs {
-		configMap := cronJobs[i].(K8sCronjob)
-		if matchFn(configMap) {
-			return nil, configMap, nil
+		cronjob := cronJobs[i].(K8sCronjob)
+		if matchFn(cronjob) {
+			return nil, cronjob, nil
 		}
 	}
 
