@@ -237,6 +237,47 @@ func (t *manifestTransport) Pods(namespace v1.Namespace) ([]v1.Pod, error) {
 	return pods, nil
 }
 
+func (t *manifestTransport) Deployment(namespace string, name string) (*appsv1.Deployment, error) {
+	result, err := t.Resources("deployments.appsv1.", name, namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result.Resources) > 1 {
+		return nil, errors.New("multiple deployments found")
+	}
+	foundDeployment, ok := result.Resources[0].(*appsv1.Deployment)
+	if !ok {
+		return nil, errors.New("could not convert k8s resource to deployment")
+	}
+
+	if foundDeployment.Name == "" {
+		return nil, errors.New("deployment not found")
+	}
+	return foundDeployment, nil
+}
+
+func (t *manifestTransport) Deployments(namespace v1.Namespace) ([]appsv1.Deployment, error) {
+	result, err := t.Resources("deployments.v1.apps", "", namespace.GetNamespace())
+	if err != nil {
+		return nil, err
+	}
+
+	var deployments []appsv1.Deployment
+	for i := range result.Resources {
+		r := result.Resources[i]
+
+		deployment, ok := r.(*appsv1.Deployment)
+		if !ok {
+			log.Error().Err(err).Msg("could not convert k8s resource to deployment")
+			return nil, err
+		}
+		deployments = append(deployments, *deployment)
+	}
+
+	return deployments, nil
+}
+
 func (t *manifestTransport) resourceIndex() ([]k8sRuntime.Object, *resources.ApiResourceIndex, error) {
 	resourceObjects, err := t.load()
 	if err != nil {

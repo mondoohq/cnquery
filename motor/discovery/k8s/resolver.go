@@ -17,6 +17,7 @@ const (
 	DiscoveryPods            = "pods"
 	DiscoveryCronJobs        = "cronjobs"
 	DiscoveryStatefulSets    = "statefulsets"
+	DiscoveryDeployments     = "deployments"
 	DiscoveryContainerImages = "container-images"
 )
 
@@ -32,6 +33,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 		DiscoveryPods,
 		DiscoveryCronJobs,
 		DiscoveryStatefulSets,
+		DiscoveryDeployments,
 		DiscoveryContainerImages,
 	}
 }
@@ -133,6 +135,19 @@ func (r *Resolver) Resolve(tc *providers.TransportConfig, cfn credentials.Creden
 // addSeparateAssets Depending on config options it will search for additional assets which should be listed separately.
 func addSeparateAssets(tc *providers.TransportConfig, transport k8s_transport.Transport, namespacesFilter []string, clusterIdentifier string) ([]*asset.Asset, error) {
 	var resolved []*asset.Asset
+
+	// discover deployments
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryDeployments) {
+		// fetch deployment information
+		log.Debug().Strs("namespace", namespacesFilter).Msg("search for deployments")
+		connection := tc.Clone()
+		assetList, err := ListDeployments(transport, connection, clusterIdentifier, namespacesFilter)
+		if err != nil {
+			log.Error().Err(err).Msg("could not fetch k8s deployments")
+			return nil, err
+		}
+		resolved = append(resolved, assetList...)
+	}
 
 	// discover k8s pods
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryPods) {
