@@ -388,6 +388,7 @@ func TestCore_If(t *testing.T) {
 			1,
 			map[string]interface{}{
 				"__t": llx.BoolData(true),
+				"__s": llx.NilData,
 				"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
 			},
 		},
@@ -396,6 +397,7 @@ func TestCore_If(t *testing.T) {
 			1,
 			map[string]interface{}{
 				"__t": llx.BoolData(true),
+				"__s": llx.NilData,
 				"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
 			},
 		},
@@ -404,6 +406,7 @@ func TestCore_If(t *testing.T) {
 			1,
 			map[string]interface{}{
 				"__t": llx.BoolData(true),
+				"__s": llx.NilData,
 				"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
 			},
 		},
@@ -412,6 +415,7 @@ func TestCore_If(t *testing.T) {
 			0,
 			map[string]interface{}{
 				"__t": llx.BoolData(true),
+				"__s": llx.NilData,
 				"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
 			},
 		},
@@ -420,6 +424,7 @@ func TestCore_If(t *testing.T) {
 			0,
 			map[string]interface{}{
 				"__t": llx.BoolData(true),
+				"__s": llx.NilData,
 				"Oy5SF8NbUtxaBwvZPpsnd0K21CY+fvC44FSd2QpgvIL689658Na52udy7qF2+hHjczk35TAstDtFZq7JIHNCmg==": llx.IntData(789),
 			},
 		},
@@ -967,9 +972,9 @@ func TestArray(t *testing.T) {
 			"[1,2,3] { _ == 2 }",
 			0,
 			[]interface{}{
-				map[string]interface{}{"__t": llx.BoolFalse, "OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolFalse},
-				map[string]interface{}{"__t": llx.BoolTrue, "OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolTrue},
-				map[string]interface{}{"__t": llx.BoolFalse, "OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolFalse},
+				map[string]interface{}{"__t": llx.BoolFalse, "__s": llx.BoolFalse, "OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolFalse},
+				map[string]interface{}{"__t": llx.BoolTrue, "__s": llx.BoolTrue, "OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolTrue},
+				map[string]interface{}{"__t": llx.BoolFalse, "__s": llx.BoolFalse, "OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolFalse},
 			},
 		},
 		{
@@ -1121,6 +1126,7 @@ func TestMap(t *testing.T) {
 			0,
 			map[string]interface{}{
 				"__t": llx.BoolTrue,
+				"__s": llx.BoolTrue,
 				"TZsaWUkFbzR9WTfufqRaHuWJa/W4MQsYsrTli6w8DGQnSLYumOg7kduA17NEX/4y5xBfYQMvPIVBRThyB3LsJg==": llx.BoolTrue,
 			},
 		},
@@ -1166,6 +1172,7 @@ func TestResource_Filters_v1(t *testing.T) {
 			[]interface{}{
 				map[string]interface{}{
 					"__t": llx.BoolTrue,
+					"__s": llx.BoolTrue,
 					"BamDDGp87sNG0hVjpmEAPEjF6fZmdA6j3nDinlgr/y5xK3KaLgulyscoeEEaEASm2RkRXifnWj3ZbF0OZBF6XA==": llx.BoolTrue,
 					"ytOUfV4UyOjY0C6HKzQ8GcA/hshrh2ahRySNG41RbFt3TNNf+6gBuHvs2hGTNDPUZR/oN8WH0QFIYYm/Vj3pGQ==": llx.BoolTrue,
 				},
@@ -1186,6 +1193,7 @@ func TestResource_Filters_piper(t *testing.T) {
 			[]interface{}{
 				map[string]interface{}{
 					"__t": llx.BoolTrue,
+					"__s": llx.BoolTrue,
 					"BamDDGp87sNG0hVjpmEAPEjF6fZmdA6j3nDinlgr/y5xK3KaLgulyscoeEEaEASm2RkRXifnWj3ZbF0OZBF6XA==": llx.BoolTrue,
 					"ytOUfV4UyOjY0C6HKzQ8GcA/hshrh2ahRySNG41RbFt3TNNf+6gBuHvs2hGTNDPUZR/oN8WH0QFIYYm/Vj3pGQ==": llx.BoolTrue,
 				},
@@ -1278,6 +1286,7 @@ func TestResource_duplicateFields_v1(t *testing.T) {
 			[]interface{}{
 				map[string]interface{}{
 					"__t": llx.BoolTrue,
+					"__s": llx.NilData,
 					"sYZO9ps0Y4tx2p0TkrAn73WTQx83QIQu70uPtNukYNnVAzaer3Pf6xe7vAplB+cAgPbteXzizlUioUMnNJr5sg==": &llx.RawData{
 						Type:  "\x05",
 						Value: int64(1000),
@@ -1286,6 +1295,7 @@ func TestResource_duplicateFields_v1(t *testing.T) {
 				},
 				map[string]interface{}{
 					"__t": llx.BoolTrue,
+					"__s": llx.NilData,
 					"sYZO9ps0Y4tx2p0TkrAn73WTQx83QIQu70uPtNukYNnVAzaer3Pf6xe7vAplB+cAgPbteXzizlUioUMnNJr5sg==": &llx.RawData{
 						Type:  "\x05",
 						Value: int64(1000),
@@ -1307,6 +1317,7 @@ func TestResource_duplicateFields_piper(t *testing.T) {
 			[]interface{}{
 				map[string]interface{}{
 					"__t": llx.BoolTrue,
+					"__s": llx.NilData,
 					"sYZO9ps0Y4tx2p0TkrAn73WTQx83QIQu70uPtNukYNnVAzaer3Pf6xe7vAplB+cAgPbteXzizlUioUMnNJr5sg==": &llx.RawData{
 						Type:  "\x05",
 						Value: int64(1000),
@@ -1315,6 +1326,7 @@ func TestResource_duplicateFields_piper(t *testing.T) {
 				},
 				map[string]interface{}{
 					"__t": llx.BoolTrue,
+					"__s": llx.NilData,
 					"sYZO9ps0Y4tx2p0TkrAn73WTQx83QIQu70uPtNukYNnVAzaer3Pf6xe7vAplB+cAgPbteXzizlUioUMnNJr5sg==": &llx.RawData{
 						Type:  "\x05",
 						Value: int64(1000),

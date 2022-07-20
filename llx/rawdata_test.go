@@ -76,3 +76,78 @@ func TestTruthy(t *testing.T) {
 		})
 	}
 }
+
+func TestSuccess(t *testing.T) {
+	tests := []struct {
+		data    *RawData
+		success bool
+		valid   bool
+	}{
+		{NilData, false, false},
+		{BoolTrue, true, true},
+		{BoolFalse, false, true},
+		{IntData(0), false, false},
+		{IntData(123), false, false},
+		{FloatData(0), false, false},
+		{FloatData(1.23), false, false},
+		{StringData(""), false, false},
+		{StringData("b"), false, false},
+		{RegexData(""), false, false},
+		{RegexData("r"), false, false},
+		{TimeData(time.Time{}), false, false},
+		{TimeData(now), false, false},
+		{ArrayData([]interface{}{}, types.Any), false, false},
+		{ArrayData([]interface{}{true, false, true}, types.Bool), false, true},
+		{ArrayData([]interface{}{true, true}, types.Bool), true, true},
+		{ResourceData(nil, "something"), false, false},
+		{
+			data: &RawData{
+				Type: types.Block,
+				Value: map[string]interface{}{
+					"__s": BoolData(true),
+				},
+			},
+			success: true,
+			valid:   true,
+		},
+		{
+			data: &RawData{
+				Type: types.Block,
+				Value: map[string]interface{}{
+					"__s": BoolData(false),
+				},
+			},
+			success: false,
+			valid:   true,
+		},
+		{
+			data: &RawData{
+				Type: types.Block,
+				Value: map[string]interface{}{
+					"__s": NilData,
+				},
+			},
+			success: false,
+			valid:   false,
+		},
+		{
+			data: &RawData{
+				Type:  types.Block,
+				Value: map[string]interface{}{},
+			},
+			success: false,
+			valid:   false,
+		},
+		// implicit nil:
+		{&RawData{types.String, nil, nil}, false, false},
+	}
+
+	for i := range tests {
+		o := tests[i]
+		t.Run(o.data.String(), func(t *testing.T) {
+			success, valid := o.data.IsSuccess()
+			assert.Equal(t, o.success, success)
+			assert.Equal(t, o.valid, valid)
+		})
+	}
+}
