@@ -274,6 +274,63 @@ func isTruthy(data interface{}, typ types.Type) (bool, bool) {
 	}
 }
 
+func (r *RawData) IsSuccess() (bool, bool) {
+	if r.Error != nil {
+		return false, false
+	}
+	return isSuccess(r.Value, r.Type)
+}
+
+func isSuccess(data interface{}, typ types.Type) (bool, bool) {
+	if data == nil &&
+		(typ.IsEmpty() || !typ.IsResource()) {
+		return false, false
+	}
+
+	switch typ.Underlying() {
+	case types.Any:
+		if b, ok := data.(bool); ok {
+			return b, true
+		}
+		if d, ok := data.(*RawData); ok {
+			return isSuccess(d.Value, d.Type)
+		}
+		return false, false
+	case types.Bool:
+		return data.(bool), true
+	case types.Block:
+		m := data.(map[string]interface{})
+		if m != nil {
+			if bif, ok := m["__s"]; ok {
+				if rd, ok := bif.(*RawData); ok {
+					return rd.IsSuccess()
+				}
+			}
+			return false, false
+		}
+
+		return false, false
+
+	case types.ArrayLike:
+		arr := data.([]interface{})
+		res := true
+		valid := false
+
+		for i := range arr {
+			t1, f1 := isSuccess(arr[i], typ.Child())
+			if f1 {
+				res = res && t1
+				valid = true
+			}
+		}
+
+		return res && valid, valid
+
+	default:
+		return false, false
+	}
+}
+
 // UnsetData for the unset value
 var UnsetData = &RawData{Type: types.Unset}
 

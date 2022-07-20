@@ -385,6 +385,18 @@ func (a arrayBlockCallResult) toRawData() *RawData {
 		Value: a.isTruthy(),
 	}
 
+	success, ok := a.isSuccess()
+	if ok {
+		v["__s"] = &RawData{
+			Type:  types.Bool,
+			Value: success,
+		}
+	} else {
+		v["__s"] = &RawData{
+			Type: types.Nil,
+		}
+	}
+
 	return &RawData{
 		Type:  types.Block,
 		Value: v,
@@ -403,6 +415,22 @@ func (a arrayBlockCallResult) isTruthy() bool {
 		}
 	}
 	return true
+}
+
+func (a arrayBlockCallResult) isSuccess() (bool, bool) {
+	valid := false
+	for _, res := range a.entrypoints {
+		rd := &RawData{
+			Type:  types.Any,
+			Value: res,
+		}
+		isS, isValid := rd.IsSuccess()
+		if isValid && !isS {
+			return false, true
+		}
+		valid = valid || isValid
+	}
+	return true, valid
 }
 
 func (a *arrayBlockCallResults) update(i int, res *RawResult) {
@@ -489,8 +517,8 @@ func newArrayBlockCallResultsV2(expectedBlockCalls int, code *CodeV2, blockRef u
 }
 
 func (c *blockExecutor) runFunctionBlocks(argList [][]*RawData, blockRef uint64,
-	onComplete func([]arrayBlockCallResult, []error)) error {
-
+	onComplete func([]arrayBlockCallResult, []error),
+) error {
 	callResults := newArrayBlockCallResultsV2(len(argList), c.ctx.code, blockRef, onComplete)
 
 	for idx := range argList {

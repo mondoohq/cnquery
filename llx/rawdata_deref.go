@@ -42,7 +42,7 @@ func dereferenceBlock(data map[string]interface{}, codeID string, bundle *CodeBu
 	res := make(map[string]interface{}, len(data))
 
 	for k := range data {
-		if k == "_" || k == "__t" {
+		if k == "_" || k == "__t" || k == "__s" {
 			continue
 		}
 
