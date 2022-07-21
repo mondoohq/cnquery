@@ -690,6 +690,9 @@ func (g *lumiGithubBranch) GetProtectionRules() (interface{}, error) {
 	branchProtection, _, err := gt.Client().Repositories.GetBranchProtection(context.TODO(), ownerName, repoName, branchName)
 	if err != nil {
 		log.Debug().Err(err).Msg("note: branch protection can only be accessed by admin users")
+		if strings.Contains(err.Error(), "404") {
+			return nil, nil
+		}
 		return nil, err
 	}
 	rsc, err := jsonToDict(branchProtection.RequiredStatusChecks)
