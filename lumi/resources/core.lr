@@ -4796,6 +4796,7 @@ private github.branch {
   repoName string
   protectionRules() github.branchprotection
   owner github.user
+  isDefault bool
 }
 
 private github.branchprotection {

@@ -594,6 +594,10 @@ func (g *lumiGithubRepository) GetBranches() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	repoDefaultBranchName, err := g.DefaultBranchName()
+	if err != nil {
+		return nil, err
+	}
 	ownerLogin, err := ownerName.Login()
 	if err != nil {
 		return nil, err
@@ -644,6 +648,11 @@ func (g *lumiGithubRepository) GetBranches() ([]interface{}, error) {
 				return nil, err
 			}
 		}
+
+		defaultBranch := false
+		if repoDefaultBranchName == toString(branch.Name) {
+			defaultBranch = true
+		}
 		lumiBranch, err := g.Runtime.CreateResource("github.branch",
 			"name", toString(branch.Name),
 			"protected", toBool(branch.Protected),
@@ -651,6 +660,7 @@ func (g *lumiGithubRepository) GetBranches() ([]interface{}, error) {
 			"organizationName", orgName,
 			"repoName", repoName,
 			"owner", ownerName,
+			"isDefault", defaultBranch,
 		)
 		if err != nil {
 			return nil, err
@@ -730,6 +740,7 @@ func (g *lumiGithubBranch) GetProtectionRules() (interface{}, error) {
 	}
 	return lumiBranchProtection, nil
 }
+
 func (g *lumiGithubBranchprotection) id() (string, error) {
 	return g.Id()
 }
@@ -818,6 +829,7 @@ func (g *lumiGithubRepository) GetCommits() ([]interface{}, error) {
 	}
 	return res, nil
 }
+
 func (g *lumiGithubMergeRequest) GetReviews() ([]interface{}, error) {
 	gt, err := githubtransport(g.Runtime.Motor.Transport)
 	if err != nil {
@@ -972,6 +984,7 @@ func (g *lumiGithubRepository) GetContributors() ([]interface{}, error) {
 	}
 	return res, nil
 }
+
 func (g *lumiGithubRepository) GetReleases() ([]interface{}, error) {
 	gt, err := githubtransport(g.Runtime.Motor.Transport)
 	if err != nil {
@@ -991,7 +1004,7 @@ func (g *lumiGithubRepository) GetReleases() ([]interface{}, error) {
 	}
 	releases, _, err := gt.Client().Repositories.ListReleases(context.TODO(), ownerLogin, repoName, &github.ListOptions{})
 	if err != nil {
-		log.Error().Err(err).Msg("unable to get contents list")
+		log.Error().Err(err).Msg("unable to get releases list")
 		if strings.Contains(err.Error(), "404") {
 			return nil, nil
 		}
@@ -1006,7 +1019,6 @@ func (g *lumiGithubRepository) GetReleases() ([]interface{}, error) {
 			"tagName", toString(r.TagName),
 			"preRelease", toBool(r.Prerelease),
 		)
-
 		if err != nil {
 			return nil, err
 		}
@@ -1023,6 +1035,7 @@ func (g *lumiGithubReview) id() (string, error) {
 func (g *lumiGithubRelease) id() (string, error) {
 	return g.Url()
 }
+
 func (g *lumiGithubRepository) GetFiles() ([]interface{}, error) {
 	gt, err := githubtransport(g.Runtime.Motor.Transport)
 	if err != nil {
@@ -1134,7 +1147,6 @@ func (g *lumiGithubFile) GetFiles() ([]interface{}, error) {
 
 	}
 	return res, nil
-
 }
 
 func (g *lumiGithubFile) GetContent() (string, error) {
