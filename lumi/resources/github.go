@@ -55,36 +55,36 @@ func (g *lumiGithubOrganization) init(args *lumi.Args) (*lumi.Args, GithubOrgani
 	(*args)["id"] = toInt64(org.ID)
 	(*args)["name"] = toString(org.Name)
 	(*args)["login"] = toString(org.Login)
-	(*args)["node_id"] = toString(org.NodeID)
+	(*args)["nodeId"] = toString(org.NodeID)
 	(*args)["company"] = toString(org.Company)
 	(*args)["blog"] = toString(org.Blog)
 	(*args)["location"] = toString(org.Location)
 	(*args)["email"] = toString(org.Email)
-	(*args)["twitter_username"] = toString(org.TwitterUsername)
+	(*args)["twitterUsername"] = toString(org.TwitterUsername)
 	(*args)["description"] = toString(org.Description)
-	(*args)["created_at"] = org.CreatedAt
-	(*args)["updated_at"] = org.UpdatedAt
-	(*args)["total_private_repos"] = toInt(org.TotalPrivateRepos)
-	(*args)["owned_private_repos"] = toInt(org.OwnedPrivateRepos)
-	(*args)["private_gists"] = toInt(org.PrivateGists)
-	(*args)["disk_usage"] = toInt(org.DiskUsage)
+	(*args)["createdAt"] = org.CreatedAt
+	(*args)["updatedAt"] = org.UpdatedAt
+	(*args)["totalPrivateRepos"] = toInt(org.TotalPrivateRepos)
+	(*args)["ownedPrivateRepos"] = toInt(org.OwnedPrivateRepos)
+	(*args)["privateGists"] = toInt(org.PrivateGists)
+	(*args)["diskUsage"] = toInt(org.DiskUsage)
 	(*args)["collaborators"] = toInt(org.Collaborators)
-	(*args)["billing_email"] = toString(org.BillingEmail)
+	(*args)["billingEmail"] = toString(org.BillingEmail)
 
 	plan, _ := jsonToDict(org.Plan)
 	(*args)["plan"] = plan
 
-	(*args)["two_factor_requirement_enabled"] = toBool(org.TwoFactorRequirementEnabled)
-	(*args)["is_verified"] = toBool(org.IsVerified)
+	(*args)["twoFactorRequirementEnabled"] = toBool(org.TwoFactorRequirementEnabled)
+	(*args)["isVerified"] = toBool(org.IsVerified)
 
-	(*args)["default_repository_permission"] = toString(org.DefaultRepoPermission)
-	(*args)["members_can_create_repositories"] = toBool(org.MembersCanCreateRepos)
-	(*args)["members_can_create_public_repositories"] = toBool(org.MembersCanCreatePublicRepos)
-	(*args)["members_can_create_private_repositories"] = toBool(org.MembersCanCreatePrivateRepos)
-	(*args)["members_can_create_internal_repositories"] = toBool(org.MembersCanCreateInternalRepos)
-	(*args)["members_can_create_pages"] = toBool(org.MembersCanCreatePages)
-	(*args)["members_can_create_public_pages"] = toBool(org.MembersCanCreatePublicPages)
-	(*args)["members_can_create_private_pages"] = toBool(org.MembersCanCreatePrivateRepos)
+	(*args)["defaultRepositoryPermission"] = toString(org.DefaultRepoPermission)
+	(*args)["membersCanCreateRepositories"] = toBool(org.MembersCanCreateRepos)
+	(*args)["membersCanCreatePublicRepositories"] = toBool(org.MembersCanCreatePublicRepos)
+	(*args)["membersCanCreatePrivateRepositories"] = toBool(org.MembersCanCreatePrivateRepos)
+	(*args)["membersCanCreateInternalRepositories"] = toBool(org.MembersCanCreateInternalRepos)
+	(*args)["membersCanCreatePages"] = toBool(org.MembersCanCreatePages)
+	(*args)["membersCanCreatePublicPages"] = toBool(org.MembersCanCreatePublicPages)
+	(*args)["membersCanCreatePrivatePages"] = toBool(org.MembersCanCreatePrivateRepos)
 
 	return args, nil, nil
 }
@@ -362,7 +362,51 @@ func (g *lumiGithubUser) id() (string, error) {
 	return strconv.FormatInt(id, 10), nil
 }
 
-func (g *lumiGithubRepository) id() (string, error) {
+func (g *lumiGithubUser) init(args *lumi.Args) (*lumi.Args, GithubUser, error) {
+	if len(*args) > 3 {
+		return args, nil, nil
+	}
+
+	if (*args)["login"] == nil {
+		return nil, nil, errors.New("login required to fetch github user")
+	}
+	userLogin := (*args)["login"].(string)
+
+	gt, err := githubtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	user, _, err := gt.Client().Users.Get(context.Background(), userLogin)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["id"] = (*args)["id"]
+	(*args)["login"] = toString(user.Login)
+	(*args)["name"] = toString(user.Name)
+	(*args)["email"] = toString(user.Email)
+	(*args)["bio"] = toString(user.Bio)
+	createdAt := &time.Time{}
+	if user.CreatedAt != nil {
+		createdAt = &user.CreatedAt.Time
+	}
+	(*args)["createdAt"] = createdAt
+	updatedAt := &time.Time{}
+	if user.UpdatedAt != nil {
+		updatedAt = &user.UpdatedAt.Time
+	}
+	(*args)["updatedAt"] = updatedAt
+	suspendedAt := &time.Time{}
+	if user.SuspendedAt != nil {
+		suspendedAt = &user.SuspendedAt.Time
+	}
+	(*args)["suspendedAt"] = suspendedAt
+	(*args)["company"] = toString(user.Company)
+	return args, nil, nil
+}
+
+func (g *lumiGithubCollaborator) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -376,6 +420,118 @@ func (g *lumiGithubInstallation) id() (string, error) {
 		return "", err
 	}
 	return strconv.FormatInt(id, 10), nil
+}
+
+func (g *lumiGithubMergeRequest) id() (string, error) {
+	id, err := g.Id()
+	if err != nil {
+		return "", err
+	}
+	return strconv.FormatInt(id, 10), nil
+}
+
+func (g *lumiGithubBranchprotection) id() (string, error) {
+	return g.Id()
+}
+
+func (g *lumiGithubBranch) id() (string, error) {
+	branchName, err := g.Name()
+	if err != nil {
+		return "", err
+	}
+	repoName, err := g.RepoName()
+	if err != nil {
+		return "", err
+	}
+	return repoName + "/" + branchName, nil
+}
+
+func (g *lumiGithubCommit) id() (string, error) {
+	// the url is unique, e.g. "https://api.github.com/repos/vjeffrey/victoria-website/git/commits/7730d2707fdb6422f335fddc944ab169d45f3aa5"
+	return g.Url()
+}
+
+func (g *lumiGithubReview) id() (string, error) {
+	return g.Url()
+}
+
+func (g *lumiGithubRelease) id() (string, error) {
+	return g.Url()
+}
+
+func (g *lumiGithubRepository) id() (string, error) {
+	id, err := g.Id()
+	if err != nil {
+		return "", err
+	}
+	return strconv.FormatInt(id, 10), nil
+}
+
+func (g *lumiGithubRepository) init(args *lumi.Args) (*lumi.Args, GithubRepository, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+	gt, err := githubtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// userLogin := user.GetLogin()
+	org, err := gt.Organization()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	owner := org.GetLogin()
+	reponame := ""
+	if x, ok := (*args)["name"]; ok {
+		reponame = x.(string)
+	} else {
+		repo, err := gt.Repository()
+		if err != nil {
+			return nil, nil, err
+		}
+		reponame = *repo.Name
+	}
+	// return nil, nil, errors.New("Wrong type for 'path' in github.repository initialization, it must be a string")
+
+	if owner != "" && reponame != "" {
+		repo, _, err := gt.Client().Repositories.Get(context.Background(), owner, reponame)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		owner, err := g.Runtime.CreateResource("github.user",
+			"id", repo.GetOwner().GetID(),
+			"login", repo.GetOwner().GetLogin(),
+		)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		(*args)["id"] = toInt64(repo.ID)
+		(*args)["name"] = toString(repo.Name)
+		(*args)["fullName"] = toString(repo.FullName)
+		(*args)["description"] = toString(repo.Description)
+		(*args)["homepage"] = toString(repo.Homepage)
+		(*args)["createdAt"] = githubTimestamp(repo.CreatedAt)
+		(*args)["updatedAt"] = githubTimestamp(repo.UpdatedAt)
+		(*args)["archived"] = toBool(repo.Archived)
+		(*args)["disabled"] = toBool(repo.Disabled)
+		(*args)["private"] = toBool(repo.Private)
+		(*args)["visibility"] = toString(repo.Visibility)
+		(*args)["allowAutoMerge"] = toBool(repo.AllowAutoMerge)
+		(*args)["allowForking"] = toBool(repo.AllowForking)
+		(*args)["allowMergeCommit"] = toBool(repo.AllowMergeCommit)
+		(*args)["allowRebaseMerge"] = toBool(repo.AllowRebaseMerge)
+		(*args)["allowSquashMerge"] = toBool(repo.AllowSquashMerge)
+		(*args)["hasIssues"] = toBool(repo.HasIssues)
+		(*args)["organizationName"] = ""
+		(*args)["defaultBranchName"] = toString(repo.DefaultBranch)
+		(*args)["owner"] = owner
+	}
+
+	return args, nil, nil
 }
 
 func (g *lumiGithubRepository) GetOpenMergeRequests() ([]interface{}, error) {
@@ -474,28 +630,27 @@ func (g *lumiGithubRepository) init(args *lumi.Args) (*lumi.Args, GithubReposito
 		return nil, nil, err
 	}
 
-	user, err := gt.User()
+	// userLogin := user.GetLogin()
+	org, err := gt.Organization()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	userLogin := user.GetLogin()
-
+	owner := org.GetLogin()
+	reponame := ""
 	if x, ok := (*args)["name"]; ok {
-		path, ok := x.(string)
-		if !ok {
-			return nil, nil, errors.New("Wrong type for 'path' in github.repository initialization, it must be a string")
+		reponame = x.(string)
+	} else {
+		repo, err := gt.Repository()
+		if err != nil {
+			return nil, nil, err
 		}
-		paths := strings.Split(path, "/")
-		if len(paths) == 1 {
-			path = paths[0]
-		} else if len(paths) == 2 {
-			userLogin = paths[0]
-			path = paths[1]
-		} else {
-			return nil, nil, errors.New("unexpected value for path. should be owner/reponame or reponame")
-		}
-		repo, _, err := gt.Client().Repositories.Get(context.Background(), userLogin, path)
+		reponame = *repo.Name
+	}
+	// return nil, nil, errors.New("Wrong type for 'path' in github.repository initialization, it must be a string")
+
+	if owner != "" && reponame != "" {
+		repo, _, err := gt.Client().Repositories.Get(context.Background(), owner, reponame)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -744,27 +899,6 @@ func (g *lumiGithubBranch) GetProtectionRules() (interface{}, error) {
 	return lumiBranchProtection, nil
 }
 
-func (g *lumiGithubBranchprotection) id() (string, error) {
-	return g.Id()
-}
-
-func (g *lumiGithubBranch) id() (string, error) {
-	branchName, err := g.Name()
-	if err != nil {
-		return "", err
-	}
-	repoName, err := g.RepoName()
-	if err != nil {
-		return "", err
-	}
-	return repoName + "/" + branchName, nil
-}
-
-func (g *lumiGithubCommit) id() (string, error) {
-	// the url is unique, e.g. "https://api.github.com/repos/vjeffrey/victoria-website/git/commits/7730d2707fdb6422f335fddc944ab169d45f3aa5"
-	return g.Url()
-}
-
 func (g *lumiGithubRepository) GetCommits() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
 	if err != nil {
@@ -988,6 +1122,60 @@ func (g *lumiGithubRepository) GetContributors() ([]interface{}, error) {
 	return res, nil
 }
 
+func (g *lumiGithubRepository) GetCollaborators() ([]interface{}, error) {
+	gt, err := githubtransport(g.Runtime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	repoName, err := g.Name()
+	if err != nil {
+		return nil, err
+	}
+	ownerName, err := g.Owner()
+	if err != nil {
+		return nil, err
+	}
+	ownerLogin, err := ownerName.Login()
+	if err != nil {
+		return nil, err
+	}
+	contributors, _, err := gt.Client().Repositories.ListCollaborators(context.TODO(), ownerLogin, repoName, &github.ListCollaboratorsOptions{})
+	if err != nil {
+		log.Error().Err(err).Msg("unable to get collaborator list")
+		if strings.Contains(err.Error(), "404") {
+			return nil, nil
+		}
+		return nil, err
+	}
+	res := []interface{}{}
+	for i := range contributors {
+
+		lumiUser, err := g.Runtime.CreateResource("github.user",
+			"id", toInt64(contributors[i].ID),
+			"login", toString(contributors[i].Login),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		permissions := []string{}
+		for k := range contributors[i].Permissions {
+			permissions = append(permissions, k)
+		}
+
+		lumiContributor, err := g.Runtime.CreateResource("github.collaborator",
+			"id", toInt64(contributors[i].ID),
+			"user", lumiUser,
+			"permissions", sliceInterface(permissions),
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, lumiContributor)
+	}
+	return res, nil
+}
+
 func (g *lumiGithubRepository) GetReleases() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
 	if err != nil {
@@ -1031,14 +1219,6 @@ func (g *lumiGithubRepository) GetReleases() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *lumiGithubReview) id() (string, error) {
-	return g.Url()
-}
-
-func (g *lumiGithubRelease) id() (string, error) {
-	return g.Url()
-}
-
 func (g *lumiGithubRepository) GetFiles() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
 	if err != nil {
@@ -1048,15 +1228,12 @@ func (g *lumiGithubRepository) GetFiles() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	orgName, err := g.OrganizationName()
+
+	owner, err := g.Owner()
 	if err != nil {
 		return nil, err
 	}
-	ownerName, err := g.Owner()
-	if err != nil {
-		return nil, err
-	}
-	ownerLogin, err := ownerName.Login()
+	ownerLogin, err := owner.Login()
 	if err != nil {
 		return nil, err
 	}
@@ -1079,10 +1256,11 @@ func (g *lumiGithubRepository) GetFiles() ([]interface{}, error) {
 		}
 		lumiFile, err := g.MotorRuntime.CreateResource("github.file",
 			"path", toString(dirContent[i].Path),
+			"name", toString(dirContent[i].Name),
 			"type", toString(dirContent[i].Type),
 			"sha", toString(dirContent[i].SHA),
 			"isBinary", isBinary,
-			"organizationName", orgName,
+			"organizationName", "orgName",
 			"repoName", repoName,
 		)
 		if err != nil {
@@ -1092,6 +1270,49 @@ func (g *lumiGithubRepository) GetFiles() ([]interface{}, error) {
 
 	}
 	return res, nil
+}
+
+var binaryFileTypes = map[string]bool{
+	"crx":    true,
+	"deb":    true,
+	"dex":    true,
+	"dey":    true,
+	"elf":    true,
+	"o":      true,
+	"so":     true,
+	"iso":    true,
+	"class":  true,
+	"jar":    true,
+	"bundle": true,
+	"dylib":  true,
+	"lib":    true,
+	"msi":    true,
+	"dll":    true,
+	"drv":    true,
+	"efi":    true,
+	"exe":    true,
+	"ocx":    true,
+	"pyc":    true,
+	"pyo":    true,
+	"par":    true,
+	"rpm":    true,
+	"whl":    true,
+}
+
+func (g *lumiGithubFile) id() (string, error) {
+	r, err := g.RepoName()
+	if err != nil {
+		return "", err
+	}
+	p, err := g.Path()
+	if err != nil {
+		return "", err
+	}
+	s, err := g.Sha()
+	if err != nil {
+		return "", err
+	}
+	return r + "/" + p + "/" + s, nil
 }
 
 func (g *lumiGithubFile) GetFiles() ([]interface{}, error) {
@@ -1137,6 +1358,7 @@ func (g *lumiGithubFile) GetFiles() ([]interface{}, error) {
 		}
 		lumiFile, err := g.MotorRuntime.CreateResource("github.file",
 			"path", toString(dirContent[i].Path),
+			"name", toString(dirContent[i].Name),
 			"type", toString(dirContent[i].Type),
 			"sha", toString(dirContent[i].SHA),
 			"isBinary", isBinary,
@@ -1195,47 +1417,4 @@ func (g *lumiGithubFile) GetContent() (string, error) {
 		}
 	}
 	return content, nil
-}
-
-func (g *lumiGithubFile) id() (string, error) {
-	r, err := g.RepoName()
-	if err != nil {
-		return "", err
-	}
-	p, err := g.Path()
-	if err != nil {
-		return "", err
-	}
-	s, err := g.Sha()
-	if err != nil {
-		return "", err
-	}
-	return r + "/" + p + "/" + s, nil
-}
-
-var binaryFileTypes = map[string]bool{
-	"crx":    true,
-	"deb":    true,
-	"dex":    true,
-	"dey":    true,
-	"elf":    true,
-	"o":      true,
-	"so":     true,
-	"iso":    true,
-	"class":  true,
-	"jar":    true,
-	"bundle": true,
-	"dylib":  true,
-	"lib":    true,
-	"msi":    true,
-	"dll":    true,
-	"drv":    true,
-	"efi":    true,
-	"exe":    true,
-	"ocx":    true,
-	"pyc":    true,
-	"pyo":    true,
-	"par":    true,
-	"rpm":    true,
-	"whl":    true,
 }

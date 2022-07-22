@@ -45,15 +45,26 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 
 	name := root.Name
 	if name == "" {
+		owner := ""
 		org, err := trans.Organization()
 		if err == nil && org != nil && org.Name != nil {
-			name = "Github Organization " + *org.Name
+			owner = *org.Name
 		} else {
 			user, err := trans.User()
 			if err != nil {
 				return nil, err
 			}
-			name = "Github User " + user.GetLogin()
+			owner = user.GetLogin()
+		}
+
+		if repo, ok := tc.Options["repository"]; ok {
+			return []*asset.Asset{{
+				PlatformIds: []string{identifier},
+				Name:        "Github Repository " + owner + "/" + repo,
+				Platform:    pf,
+				Connections: []*providers.TransportConfig{tc}, // pass-in the current config
+				State:       asset.State_STATE_ONLINE,
+			}}, nil
 		}
 	}
 
