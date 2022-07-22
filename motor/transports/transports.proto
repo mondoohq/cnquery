@@ -52,6 +52,7 @@ enum Kind {
   KIND_API = 8;
   KIND_BARE_METAL = 9;
   KIND_NETWORK = 10;
+  KIND_K8S_OBJECT = 11;
 }
 
 message TransportConfig {
