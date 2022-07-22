@@ -77,7 +77,9 @@ func (s *lumiPlatform) init(args *lumi.Args) (*lumi.Args, Platform, error) {
 		(*args)["release"] = platform.Release
 		(*args)["build"] = platform.Build
 		(*args)["kind"] = platform.Kind.Name()
+		// FIXME: remove in v8
 		(*args)["runtimeEnv"] = platform.Runtime
+		(*args)["runtimeEnvironment"] = platform.Runtime
 		(*args)["labels"] = labels
 
 		if transport, ok := s.Runtime.Motor.Transport.(*network.Transport); ok {
