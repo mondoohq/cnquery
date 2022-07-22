@@ -3421,8 +3421,6 @@ resources:
       podSecurityPolicies:
         min_mondoo_version: 5.31.0
       pods: {}
-      repicassets:
-        min_mondoo_version: 6.7.0
       replicasets:
         min_mondoo_version: 6.7.0
       rolebindings:
@@ -3443,8 +3441,7 @@ resources:
       name:
       - kubernetes
     snippets:
-    - query: k8s.pods { containers.where(securityContext["privileged"] == true) name
-        }
+    - query: k8s.pods { containers.where(securityContext["privileged"] == true) name }
       title: List kubernetes pods with privileged containers
     - query: k8s.pods.all( namespace != "default")
       title: Check if the default namespace is used
