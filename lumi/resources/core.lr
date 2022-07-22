@@ -142,8 +142,10 @@ platform {
   // Kind of platform (API, code, image, package, etc)
   kind string
   // Contextual information about the runtime (bare-metal, cloud, container, etc)
-  // TODO: rename to runtime (it conflicts with built-in runtime) 
+  // FIXME: remove with v8
   runtimeEnv string
+  // Contextual information about the runtime (bare-metal, cloud, container, etc)
+  runtimeEnvironment string
   // Optional platform information
   labels map[string]string
 

@@ -4386,6 +4386,9 @@ resources:
       streetAddress: {}
     min_mondoo_version: 5.15.0
   platform:
+    docs:
+      desc: |
+        The `platform.runtimeEnv` fields is deprecated. Please use `platform.runtimeEnvironment` instead.
     fields:
       arch: {}
       build: {}
@@ -4397,6 +4400,8 @@ resources:
       name: {}
       release: {}
       runtimeEnv: {}
+      runtimeEnvironment:
+        min_mondoo_version: 6.8.0
       title: {}
       vulnerabilityReport: {}
     min_mondoo_version: 5.15.0
@@ -4425,6 +4430,9 @@ resources:
       stats: {}
     min_mondoo_version: 5.15.0
   platform.virtualization:
+    docs:
+      desc: |
+        The `platform.virtualization.isContainer`is deprecated. Please use `platform.kind` or `platform.runtimeEnvironment` instead.
     fields:
       isContainer: {}
     min_mondoo_version: 5.15.0
