@@ -837,6 +837,10 @@ var linuxFamily = &PlatformResolver{
 		if err == nil {
 			if len(lsb["DISTRIB_ID"]) > 0 {
 				di.Name = strings.ToLower(lsb["DISTRIB_ID"])
+			}
+			if len(lsb["DISTRIB_DESCRIPTION"]) > 0 {
+				di.Title = lsb["DISTRIB_DESCRIPTION"]
+			} else if len(lsb["DISTRIB_ID"]) > 0 {
 				di.Title = lsb["DISTRIB_ID"]
 			}
 			if len(lsb["DISTRIB_RELEASE"]) > 0 {
@@ -857,8 +861,8 @@ var linuxFamily = &PlatformResolver{
 			if len(osr["ID"]) > 0 {
 				di.Name = osr["ID"]
 			}
-			if len(osr["NAME"]) > 0 {
-				di.Title = osr["NAME"]
+			if len(osr["PRETTY_NAME"]) > 0 {
+				di.Title = osr["PRETTY_NAME"]
 			}
 			if len(osr["VERSION_ID"]) > 0 {
 				di.Version = osr["VERSION_ID"]

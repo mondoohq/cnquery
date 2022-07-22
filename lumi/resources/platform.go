@@ -75,7 +75,7 @@ func (s *lumiPlatform) init(args *lumi.Args) (*lumi.Args, Platform, error) {
 		}
 
 		(*args)["name"] = platform.Name
-		(*args)["title"] = platform.Title
+		(*args)["title"] = platform.PrettyTitle()
 		(*args)["arch"] = platform.Arch
 		// FIXME: remove in v8
 		(*args)["release"] = platform.Release
