@@ -4565,7 +4565,7 @@ k8s.serviceaccount {
   automountServiceAccountToken bool
 }
 
-// Kubernetes Cluster Role
+// Kubernetes ClusterRole
 k8s.rbac.clusterrole {
   // Kubernetes Object UID
   uid string
@@ -4613,7 +4613,7 @@ k8s.rbac.role {
   rules []dict
 }
 
-// Kubernetes Role
+// Kubernetes ClusterRoleBinding
 k8s.rbac.clusterrolebinding {
   // Kubernetes Object UID
   uid string
@@ -4637,7 +4637,7 @@ k8s.rbac.clusterrolebinding {
   roleRef dict
 }
 
-// Kubernetes Role Binding
+// Kubernetes RoleBinding
 k8s.rbac.rolebinding {
   // Kubernetes Object UID
   uid string
