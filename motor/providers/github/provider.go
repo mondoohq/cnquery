@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/google/go-github/v43/github"
+	"github.com/google/go-github/v45/github"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/providers"
