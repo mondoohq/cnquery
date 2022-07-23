@@ -4,49 +4,130 @@ import (
 	"context"
 	"errors"
 
+	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/providers"
+
 	"github.com/google/go-github/v45/github"
 )
 
+var (
+	GithubRepoPlatform = &platform.Platform{
+		Name:    "github-repo",
+		Title:   "GitHub Repository",
+		Family:  []string{"github"},
+		Kind:    providers.Kind_KIND_API,
+		Runtime: providers.RUNTIME_GITHUB,
+	}
+	GithubUserPlatform = &platform.Platform{
+		Name:    "github-user",
+		Title:   "GitHub User",
+		Family:  []string{"github"},
+		Kind:    providers.Kind_KIND_API,
+		Runtime: providers.RUNTIME_GITHUB,
+	}
+	GithubOrgPlatform = &platform.Platform{
+		Name:    "github-org",
+		Title:   "GitHub Organization",
+		Family:  []string{"github"},
+		Kind:    providers.Kind_KIND_API,
+		Runtime: providers.RUNTIME_GITHUB,
+	}
+)
+
+func (p *Provider) PlatformInfo() (*platform.Platform, error) {
+	if orgId := p.opts["organization"]; orgId != "" {
+		return GithubOrgPlatform, nil
+	}
+
+	if userId := p.opts["user"]; userId != "" {
+		return GithubUserPlatform, nil
+	}
+
+	_, err := p.Repository()
+	if err == nil {
+		return GithubRepoPlatform, nil
+	}
+
+	return nil, errors.New("could not detect GitHub asset type")
+}
+
+func NewGithubOrgIdentifier(orgId string) string {
+	return "//platformid.api.mondoo.app/runtime/github/organization/" + orgId
+}
+
+func NewGithubUserIdentifier(userId string) string {
+	return "//platformid.api.mondoo.app/runtime/github/user/" + userId
+}
+
+func NewGitubRepoIdentifier(ownerId string, repoId string) string {
+	return "//platformid.api.mondoo.app/runtime/github/owner/" + ownerId + "/repository/" + repoId
+}
+
 func (p *Provider) Identifier() (string, error) {
-	// TODO: if no organization is provided, we need to see this from the user perspective
 	orgId := p.opts["organization"]
 	if orgId != "" {
-		return "//platformid.api.mondoo.app/runtime/github/organization/" + orgId, nil
+		return NewGithubOrgIdentifier(orgId), nil
+	}
+
+	userId := p.opts["user"]
+	if userId != "" {
+		return NewGithubUserIdentifier(userId), nil
 	}
 
 	repoId := p.opts["repository"]
 	if repoId != "" {
-		return "//platformid.api.mondoo.app/runtime/github/repository/" + repoId, nil
+		ownerId := p.opts["owner"]
+		if ownerId == "" {
+			ownerId = p.opts["organization"]
+		}
+		if ownerId == "" {
+			ownerId = p.opts["user"]
+		}
+		return NewGitubRepoIdentifier(ownerId, repoId), nil
 	}
 
-	userId := p.opts["login"]
-	return "//platformid.api.mondoo.app/runtime/github/user/" + userId, nil
+	return "", errors.New("could not identifier GitHub asset")
 }
 
 func (p *Provider) Organization() (*github.Organization, error) {
 	orgId := p.opts["organization"]
+	if orgId == "" {
+		orgId = p.opts["owner"]
+	}
 	if orgId != "" {
 		org, _, err := p.Client().Organizations.Get(context.Background(), orgId)
 		return org, err
 	}
+
 	return nil, errors.New("no organization provided")
 }
 
-func (p *Provider) Repository() (*github.Repository, error) {
-	orgId := p.opts["organization"]
-	repoId := p.opts["repository"]
-	if orgId != "" && repoId != "" {
-		repo, _, err := p.Client().Repositories.Get(context.Background(), orgId, repoId)
-		return repo, err
+func (p *Provider) User() (*github.User, error) {
+	userId := p.opts["user"]
+	if userId == "" {
+		userId = p.opts["owner"]
+	}
+
+	if userId != "" {
+		user, _, err := p.Client().Users.Get(context.Background(), userId)
+		return user, err
 	}
 	return nil, errors.New("no user provided")
 }
 
-func (p *Provider) User() (*github.User, error) {
-	userId := p.opts["login"]
-	if userId != "" {
-		user, _, err := p.Client().Users.Get(context.Background(), userId)
-		return user, err
+func (p *Provider) Repository() (*github.Repository, error) {
+	ownerId := p.opts["owner"]
+	if ownerId == "" {
+		ownerId = p.opts["organization"]
+	}
+	if ownerId == "" {
+		ownerId = p.opts["user"]
+	}
+
+	repoId := p.opts["repository"]
+	if ownerId != "" && repoId != "" {
+		repo, _, err := p.Client().Repositories.Get(context.Background(), ownerId, repoId)
+		return repo, err
 	}
 	return nil, errors.New("no user provided")
 }

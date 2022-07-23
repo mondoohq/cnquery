@@ -121,12 +121,7 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 	case k8s_transport.KubernetesProvider:
 		return pt.PlatformInfo(), nil
 	case *github.Provider:
-		return &platform.Platform{
-			Name:    "github",
-			Title:   "GitHub",
-			Kind:    providers.Kind_KIND_API,
-			Runtime: providers.RUNTIME_GITHUB,
-		}, nil
+		return pt.PlatformInfo()
 	case *gitlab.Provider:
 		return &platform.Platform{
 			Name:    "gitlab",
