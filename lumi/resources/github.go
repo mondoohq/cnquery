@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v43/github"
+	"github.com/google/go-github/v45/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/providers"

@@ -8,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/google/go-github/v43/github"
+	"github.com/google/go-github/v45/github"
 
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/providers"
