@@ -19,7 +19,7 @@ import (
 
 // fetches the vulnerability report and returns the full report
 func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
-	r := p.Runtime
+	r := p.MotorRuntime
 	mcc := r.UpstreamConfig
 	if mcc == nil {
 		return nil, errors.New("mondoo upstream configuration is missing")
@@ -165,12 +165,12 @@ func (a *lumiPlatformAdvisories) id() (string, error) {
 }
 
 func (a *lumiPlatformAdvisories) GetCvss() (interface{}, error) {
-	report, err := getAdvisoryReport(a.Runtime)
+	report, err := getAdvisoryReport(a.MotorRuntime)
 	if err != nil {
 		return nil, err
 	}
 
-	obj, err := a.Runtime.CreateResource("audit.cvss",
+	obj, err := a.MotorRuntime.CreateResource("audit.cvss",
 		"score", float64(report.Stats.Score)/10,
 		"vector", "", // TODO: we need to extend the report to include the vector in the report
 	)
@@ -182,7 +182,7 @@ func (a *lumiPlatformAdvisories) GetCvss() (interface{}, error) {
 }
 
 func (a *lumiPlatformAdvisories) GetList() ([]interface{}, error) {
-	report, err := getAdvisoryReport(a.Runtime)
+	report, err := getAdvisoryReport(a.MotorRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +198,7 @@ func (a *lumiPlatformAdvisories) GetList() ([]interface{}, error) {
 			worstScore = &cvss.Cvss{Score: 0.0, Vector: ""}
 		}
 
-		cvssScore, err := a.Runtime.CreateResource("audit.cvss",
+		cvssScore, err := a.MotorRuntime.CreateResource("audit.cvss",
 			"score", float64(worstScore.Score),
 			"vector", worstScore.Vector,
 		)
@@ -218,7 +218,7 @@ func (a *lumiPlatformAdvisories) GetList() ([]interface{}, error) {
 			modified = &parsedTime
 		}
 
-		lumiAdvisory, err := a.Runtime.CreateResource("audit.advisory",
+		lumiAdvisory, err := a.MotorRuntime.CreateResource("audit.advisory",
 			"id", advisory.ID,
 			"mrn", advisory.Mrn,
 			"title", advisory.Title,
@@ -238,7 +238,7 @@ func (a *lumiPlatformAdvisories) GetList() ([]interface{}, error) {
 }
 
 func (a *lumiPlatformAdvisories) GetStats() (interface{}, error) {
-	report, err := getAdvisoryReport(a.Runtime)
+	report, err := getAdvisoryReport(a.MotorRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -260,7 +260,7 @@ func (a *lumiPlatformCves) id() (string, error) {
 }
 
 func (a *lumiPlatformCves) GetList() ([]interface{}, error) {
-	report, err := getAdvisoryReport(a.Runtime)
+	report, err := getAdvisoryReport(a.MotorRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -278,7 +278,7 @@ func (a *lumiPlatformCves) GetList() ([]interface{}, error) {
 			worstScore = &cvss.Cvss{Score: 0.0, Vector: ""}
 		}
 
-		cvssScore, err := a.Runtime.CreateResource("audit.cvss",
+		cvssScore, err := a.MotorRuntime.CreateResource("audit.cvss",
 			"score", float64(worstScore.Score),
 			"vector", worstScore.Vector,
 		)
@@ -298,7 +298,7 @@ func (a *lumiPlatformCves) GetList() ([]interface{}, error) {
 			modified = &parsedTime
 		}
 
-		lumiCve, err := a.Runtime.CreateResource("audit.cve",
+		lumiCve, err := a.MotorRuntime.CreateResource("audit.cve",
 			"id", cve.ID,
 			"mrn", cve.Mrn,
 			"state", cve.State.String(),
@@ -319,13 +319,13 @@ func (a *lumiPlatformCves) GetList() ([]interface{}, error) {
 }
 
 func (a *lumiPlatformCves) GetCvss() (interface{}, error) {
-	report, err := getAdvisoryReport(a.Runtime)
+	report, err := getAdvisoryReport(a.MotorRuntime)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO: we need to distingush between advisory, cve and exploit cvss
-	obj, err := a.Runtime.CreateResource("audit.cvss",
+	obj, err := a.MotorRuntime.CreateResource("audit.cvss",
 		"score", float64(report.Stats.Score)/10,
 		"vector", "", // TODO: we need to extend the report to include the vector in the report
 	)
@@ -337,7 +337,7 @@ func (a *lumiPlatformCves) GetCvss() (interface{}, error) {
 }
 
 func (a *lumiPlatformCves) GetStats() (interface{}, error) {
-	report, err := getAdvisoryReport(a.Runtime)
+	report, err := getAdvisoryReport(a.MotorRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -359,7 +359,7 @@ func (a *lumiPlatformExploits) id() (string, error) {
 }
 
 func (a *lumiPlatformExploits) GetList() ([]interface{}, error) {
-	report, err := getAdvisoryReport(a.Runtime)
+	report, err := getAdvisoryReport(a.MotorRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -368,7 +368,7 @@ func (a *lumiPlatformExploits) GetList() ([]interface{}, error) {
 	for i := range report.Exploits {
 		exploit := report.Exploits[i]
 
-		cvssScore, err := a.Runtime.CreateResource("audit.cvss",
+		cvssScore, err := a.MotorRuntime.CreateResource("audit.cvss",
 			"score", float64(exploit.Score)/10,
 			"vector", "", // TODO: we need to extend the report to include the vector in the report
 		)
@@ -382,7 +382,7 @@ func (a *lumiPlatformExploits) GetList() ([]interface{}, error) {
 			modified = &parsedTime
 		}
 
-		lumiExploit, err := a.Runtime.CreateResource("audit.exploit",
+		lumiExploit, err := a.MotorRuntime.CreateResource("audit.exploit",
 			"id", exploit.ID,
 			"mrn", exploit.Mrn,
 			"modified", modified,
@@ -399,13 +399,13 @@ func (a *lumiPlatformExploits) GetList() ([]interface{}, error) {
 }
 
 func (a *lumiPlatformExploits) GetCvss() (interface{}, error) {
-	report, err := getAdvisoryReport(a.Runtime)
+	report, err := getAdvisoryReport(a.MotorRuntime)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO: this needs to be the exploit worst score
-	obj, err := a.Runtime.CreateResource("audit.cvss",
+	obj, err := a.MotorRuntime.CreateResource("audit.cvss",
 		"score", float64(report.Stats.Score)/10,
 		"vector", "", // TODO: we need to extend the report to include the vector in the report
 	)
@@ -417,7 +417,7 @@ func (a *lumiPlatformExploits) GetCvss() (interface{}, error) {
 }
 
 func (a *lumiPlatformExploits) GetStats() (interface{}, error) {
-	report, err := getAdvisoryReport(a.Runtime)
+	report, err := getAdvisoryReport(a.MotorRuntime)
 	if err != nil {
 		return nil, err
 	}

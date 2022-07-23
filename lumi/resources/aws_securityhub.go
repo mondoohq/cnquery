@@ -15,7 +15,7 @@ func (s *lumiAwsSecurityhub) id() (string, error) {
 }
 
 func (s *lumiAwsSecurityhub) GetHubs() ([]interface{}, error) {
-	at, err := awstransport(s.Runtime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (s *lumiAwsSecurityhub) GetHubs() ([]interface{}, error) {
 }
 
 func (s *lumiAwsSecurityhub) getHubs(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -46,7 +46,6 @@ func (s *lumiAwsSecurityhub) getHubs(at *aws_transport.Transport) []*jobpool.Job
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-
 			svc := at.Securityhub(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
@@ -58,7 +57,7 @@ func (s *lumiAwsSecurityhub) getHubs(at *aws_transport.Transport) []*jobpool.Job
 				}
 				return nil, err
 			}
-			lumiHub, err := s.Runtime.CreateResource("aws.securityhub.hub",
+			lumiHub, err := s.MotorRuntime.CreateResource("aws.securityhub.hub",
 				"arn", toString(secHub.HubArn),
 				"subscribedAt", toString(secHub.SubscribedAt),
 			)

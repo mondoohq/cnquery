@@ -58,7 +58,7 @@ func (p *lumiMachineBios) init(args *lumi.Args) (*lumi.Args, MachineBios, error)
 		return args, nil, nil
 	}
 
-	biosInfo, err := getbiosinfo(p.Runtime)
+	biosInfo, err := getbiosinfo(p.MotorRuntime)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -83,7 +83,7 @@ func (p *lumiMachineSystem) init(args *lumi.Args) (*lumi.Args, MachineSystem, er
 		return args, nil, nil
 	}
 
-	biosInfo, err := getbiosinfo(p.Runtime)
+	biosInfo, err := getbiosinfo(p.MotorRuntime)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -101,7 +101,6 @@ func (p *lumiMachineSystem) init(args *lumi.Args) (*lumi.Args, MachineSystem, er
 	(*args)["family"] = biosInfo.SysInfo.Familiy
 
 	return args, nil, nil
-
 }
 
 func (m *lumiMachineBaseboard) id() (string, error) {
@@ -113,7 +112,7 @@ func (p *lumiMachineBaseboard) init(args *lumi.Args) (*lumi.Args, MachineBaseboa
 		return args, nil, nil
 	}
 
-	biosInfo, err := getbiosinfo(p.Runtime)
+	biosInfo, err := getbiosinfo(p.MotorRuntime)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -140,7 +139,7 @@ func (p *lumiMachineChassis) init(args *lumi.Args) (*lumi.Args, MachineChassis, 
 		return args, nil, nil
 	}
 
-	biosInfo, err := getbiosinfo(p.Runtime)
+	biosInfo, err := getbiosinfo(p.MotorRuntime)
 	if err != nil {
 		return nil, nil, err
 	}

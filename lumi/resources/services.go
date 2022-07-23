@@ -35,7 +35,7 @@ func (p *lumiService) init(args *lumi.Args) (*lumi.Args, Service, error) {
 		return args, nil, nil
 	}
 
-	obj, err := p.Runtime.CreateResource("services")
+	obj, err := p.MotorRuntime.CreateResource("services")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -134,7 +134,7 @@ func (p *lumiService) GetType() (string, error) {
 
 func (p *lumiService) createCallback(field string) ServiceCallbackTrigger {
 	return func() {
-		err := p.Runtime.Observers.Trigger(p.LumiResource().FieldUID(field))
+		err := p.MotorRuntime.Observers.Trigger(p.LumiResource().FieldUID(field))
 		if err != nil {
 			log.Error().Err(err).Msg("[service]> failed to trigger field '" + field + "'")
 		}
@@ -149,7 +149,7 @@ func (p *lumiService) gatherServiceInfo(fn ServiceCallbackTrigger) error {
 		return err
 	}
 
-	obj, err := p.Runtime.CreateResource("services")
+	obj, err := p.MotorRuntime.CreateResource("services")
 	if err != nil {
 		return err
 	}
@@ -188,7 +188,7 @@ func (p *lumiServices) id() (string, error) {
 
 func (p *lumiServices) GetList() ([]interface{}, error) {
 	// find suitable service manager
-	osm, err := services.ResolveManager(p.Runtime.Motor)
+	osm, err := services.ResolveManager(p.MotorRuntime.Motor)
 	if osm == nil || err != nil {
 		// there are valid cases where this error is happening, eg. you run a service query in
 		// asset filters for non-supported transports
@@ -210,7 +210,7 @@ func (p *lumiServices) GetList() ([]interface{}, error) {
 	for i := range services {
 		srv := services[i]
 
-		lumiSrv, err := p.Runtime.CreateResource("service",
+		lumiSrv, err := p.MotorRuntime.CreateResource("service",
 			"name", srv.Name,
 			"description", srv.Description,
 			"installed", srv.Installed,

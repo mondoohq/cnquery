@@ -14,7 +14,7 @@ func (a *lumiAzurermCompute) id() (string, error) {
 }
 
 func (a *lumiAzurermCompute) GetDisks() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (a *lumiAzurermCompute) GetDisks() ([]interface{}, error) {
 	for i := range disks.Values() {
 		disk := disks.Values()[i]
 
-		lumiAzureDisk, err := diskToLumi(a.Runtime, disk)
+		lumiAzureDisk, err := diskToLumi(a.MotorRuntime, disk)
 		if err != nil {
 			return nil, err
 		}
@@ -77,7 +77,7 @@ func (a *lumiAzurermComputeDisk) id() (string, error) {
 }
 
 func (a *lumiAzurermCompute) GetVms() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (a *lumiAzurermCompute) GetVms() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzureVm, err := a.Runtime.CreateResource("azurerm.compute.vm",
+		lumiAzureVm, err := a.MotorRuntime.CreateResource("azurerm.compute.vm",
 			"id", toString(vm.ID),
 			"name", toString(vm.Name),
 			"location", toString(vm.Location),
@@ -130,7 +130,7 @@ func (a *lumiAzurermComputeVm) id() (string, error) {
 }
 
 func (a *lumiAzurermComputeVm) GetExtensions() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +188,7 @@ func (a *lumiAzurermComputeVm) GetExtensions() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermComputeVm) GetOsDisk() (interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -237,11 +237,11 @@ func (a *lumiAzurermComputeVm) GetOsDisk() (interface{}, error) {
 		return nil, err
 	}
 
-	return diskToLumi(a.Runtime, disk)
+	return diskToLumi(a.MotorRuntime, disk)
 }
 
 func (a *lumiAzurermComputeVm) GetDataDisks() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -296,7 +296,7 @@ func (a *lumiAzurermComputeVm) GetDataDisks() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiDisk, err := diskToLumi(a.Runtime, disk)
+		lumiDisk, err := diskToLumi(a.MotorRuntime, disk)
 		if err != nil {
 			return nil, err
 		}

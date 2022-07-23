@@ -13,8 +13,7 @@ func (s *lumiPorts) id() (string, error) {
 }
 
 func (p *lumiPorts) GetList() ([]interface{}, error) {
-
-	pf, err := p.Runtime.Motor.Platform()
+	pf, err := p.MotorRuntime.Motor.Platform()
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +105,7 @@ func hex2ipv4(s string) (string, error) {
 }
 
 func (p *lumiPorts) users() (map[int64]User, error) {
-	obj, err := p.Runtime.CreateResource("users")
+	obj, err := p.MotorRuntime.CreateResource("users")
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +135,7 @@ func (p *lumiPorts) users() (map[int64]User, error) {
 
 func (p *lumiPorts) processes() (map[int64]Process, error) {
 	// Prerequisites: processes
-	obj, err := p.Runtime.CreateResource("processes")
+	obj, err := p.MotorRuntime.CreateResource("processes")
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +157,7 @@ func (p *lumiPorts) processes() (map[int64]Process, error) {
 // See:
 // - socket/address parsing: https://wiki.christophchamp.com/index.php?title=Unix_sockets
 func (p *lumiPorts) parseProcNet(path string, protocol string, users map[int64]User, processes map[int64]Process) ([]interface{}, error) {
-	motor := p.Runtime.Motor
+	motor := p.MotorRuntime.Motor
 	fs := motor.Transport.FS()
 	stat, err := fs.Stat(path)
 	if err != nil {
@@ -227,7 +226,7 @@ func (p *lumiPorts) parseProcNet(path string, protocol string, users map[int64]U
 		// the process may be nil, eg if the inode is 0
 		process := processes[int64(inode)]
 
-		obj, err := p.Runtime.CreateResource("port",
+		obj, err := p.MotorRuntime.CreateResource("port",
 			"protocol", protocol,
 			"port", int64(port),
 			"address", address,
@@ -248,7 +247,6 @@ func (p *lumiPorts) parseProcNet(path string, protocol string, users map[int64]U
 }
 
 func (p *lumiPorts) listLinux() ([]interface{}, error) {
-
 	users, err := p.users()
 	if err != nil {
 		return nil, err

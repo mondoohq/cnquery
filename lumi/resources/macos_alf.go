@@ -12,7 +12,7 @@ func (m *lumiMacosAlf) id() (string, error) {
 func (s *lumiMacosAlf) init(args *lumi.Args) (*lumi.Args, MacosAlf, error) {
 	// TODO: use s.Runtime.CreateResource("parse.plist", "path", "/Library/Preferences/com.apple.alf.plist") in future
 
-	f, err := s.Runtime.Motor.Transport.FS().Open("/Library/Preferences/com.apple.alf.plist")
+	f, err := s.MotorRuntime.Motor.Transport.FS().Open("/Library/Preferences/com.apple.alf.plist")
 	if err != nil {
 		return nil, nil, err
 	}

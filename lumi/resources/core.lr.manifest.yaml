@@ -4388,7 +4388,7 @@ resources:
   platform:
     docs:
       desc: |
-        The `platform.runtimeEnv` fields is deprecated. Please use `platform.runtimeEnvironment` instead.
+        The `platform.runtimeEnv` fields is deprecated. Please use `platform.runtime` instead.
     fields:
       arch: {}
       build: {}
@@ -4400,7 +4400,7 @@ resources:
       name: {}
       release: {}
       runtimeEnv: {}
-      runtimeEnvironment:
+      runtime:
         min_mondoo_version: 6.8.0
       title: {}
       vulnerabilityReport: {}
@@ -4432,7 +4432,7 @@ resources:
   platform.virtualization:
     docs:
       desc: |
-        The `platform.virtualization.isContainer`is deprecated. Please use `platform.kind` or `platform.runtimeEnvironment` instead.
+        The `platform.virtualization.isContainer`is deprecated. Please use `platform.kind` or `platform.runtime` instead.
     fields:
       isContainer: {}
     min_mondoo_version: 5.15.0

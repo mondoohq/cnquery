@@ -21,7 +21,7 @@ func (k *lumiRegistrykey) GetExists() (bool, error) {
 	}
 
 	script := powershell.Encode(windows.GetRegistryKeyItemScript(path))
-	lumiCmd, err := k.Runtime.CreateResource("command", "command", script)
+	lumiCmd, err := k.MotorRuntime.CreateResource("command", "command", script)
 	if err != nil {
 		log.Error().Err(err).Msg("could not create resource")
 		return false, err
@@ -52,7 +52,7 @@ func (k *lumiRegistrykey) GetProperties() (map[string]interface{}, error) {
 
 	res := map[string]interface{}{}
 	script := powershell.Encode(windows.GetRegistryKeyItemScript(path))
-	lumiCmd, err := k.Runtime.CreateResource("command", "command", script)
+	lumiCmd, err := k.MotorRuntime.CreateResource("command", "command", script)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func (k *lumiRegistrykey) GetChildren() ([]interface{}, error) {
 	}
 
 	script := powershell.Encode(windows.GetRegistryKeyChildItemsScript(path))
-	lumiCmd, err := k.Runtime.CreateResource("command", "command", script)
+	lumiCmd, err := k.MotorRuntime.CreateResource("command", "command", script)
 	if err != nil {
 		return res, err
 	}
@@ -157,7 +157,7 @@ func (p *lumiRegistrykeyProperty) init(args *lumi.Args) (*lumi.Args, Registrykey
 	}
 
 	// create resource here, but do not use it yet
-	obj, err := p.Runtime.CreateResource("registrykey", "path", path)
+	obj, err := p.MotorRuntime.CreateResource("registrykey", "path", path)
 	if err != nil {
 		return nil, nil, err
 	}

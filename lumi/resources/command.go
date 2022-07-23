@@ -13,7 +13,7 @@ func (c *lumiCommand) id() (string, error) {
 }
 
 func (c *lumiCommand) execute() (*transports.Command, error) {
-	if !c.Runtime.Motor.Transport.Capabilities().HasCapability(transports.Capability_RunCommand) {
+	if !c.MotorRuntime.Motor.Transport.Capabilities().HasCapability(transports.Capability_RunCommand) {
 		return nil, errors.New("run command not supported on this transport")
 	}
 	var executedCmd *transports.Command
@@ -34,7 +34,7 @@ func (c *lumiCommand) execute() (*transports.Command, error) {
 	// note: we ignore the error here, because we want to give all results
 	// (stdout/stderr/exitcode) to the user for handling. otherwise the command
 	// resource would be nil and you couldnt do `command('notme').exitcode`
-	executedCmd, err = c.Runtime.Motor.Transport.RunCommand(cmd)
+	executedCmd, err = c.MotorRuntime.Motor.Transport.RunCommand(cmd)
 
 	c.Cache.Store(cmd, &lumi.CacheEntry{Data: executedCmd, Error: err})
 	return executedCmd, err

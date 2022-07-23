@@ -47,7 +47,7 @@ func (ie *lumiIptablesEntry) id() (string, error) {
 
 func (i *lumiIptables) GetOutput() ([]interface{}, error) {
 	ipstats := []interface{}{}
-	cmd, err := i.Runtime.Motor.Transport.RunCommand("iptables -L OUTPUT -v -n -x --line-numbers")
+	cmd, err := i.MotorRuntime.Motor.Transport.RunCommand("iptables -L OUTPUT -v -n -x --line-numbers")
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (i *lumiIptables) GetOutput() ([]interface{}, error) {
 		return nil, err
 	}
 	for _, stat := range stats {
-		entry, err := i.Runtime.CreateResource("iptables.entry",
+		entry, err := i.MotorRuntime.CreateResource("iptables.entry",
 			"lineNumber", stat.LineNumber,
 			"packets", stat.Packets,
 			"bytes", stat.Bytes,
@@ -89,7 +89,7 @@ func (i *lumiIptables) GetOutput() ([]interface{}, error) {
 
 func (i *lumiIptables) GetInput() ([]interface{}, error) {
 	ipstats := []interface{}{}
-	cmd, err := i.Runtime.Motor.Transport.RunCommand("iptables -L INPUT -v -n -x --line-numbers")
+	cmd, err := i.MotorRuntime.Motor.Transport.RunCommand("iptables -L INPUT -v -n -x --line-numbers")
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func (i *lumiIptables) GetInput() ([]interface{}, error) {
 		return nil, err
 	}
 	for _, stat := range stats {
-		entry, err := i.Runtime.CreateResource("iptables.entry",
+		entry, err := i.MotorRuntime.CreateResource("iptables.entry",
 			"lineNumber", stat.LineNumber,
 			"packets", stat.Packets,
 			"bytes", stat.Bytes,
@@ -131,7 +131,7 @@ func (i *lumiIptables) GetInput() ([]interface{}, error) {
 
 func (i *lumiIp6tables) GetOutput() ([]interface{}, error) {
 	ipstats := []interface{}{}
-	cmd, err := i.Runtime.Motor.Transport.RunCommand("ip6tables -L OUTPUT -v -n -x --line-numbers")
+	cmd, err := i.MotorRuntime.Motor.Transport.RunCommand("ip6tables -L OUTPUT -v -n -x --line-numbers")
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +149,7 @@ func (i *lumiIp6tables) GetOutput() ([]interface{}, error) {
 		return nil, err
 	}
 	for _, stat := range stats {
-		entry, err := i.Runtime.CreateResource("iptables.entry",
+		entry, err := i.MotorRuntime.CreateResource("iptables.entry",
 			"lineNumber", stat.LineNumber,
 			"packets", stat.Packets,
 			"bytes", stat.Bytes,
@@ -173,7 +173,7 @@ func (i *lumiIp6tables) GetOutput() ([]interface{}, error) {
 
 func (i *lumiIp6tables) GetInput() ([]interface{}, error) {
 	ipstats := []interface{}{}
-	cmd, err := i.Runtime.Motor.Transport.RunCommand("ip6tables -L INPUT -v -n -x --line-numbers")
+	cmd, err := i.MotorRuntime.Motor.Transport.RunCommand("ip6tables -L INPUT -v -n -x --line-numbers")
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +192,7 @@ func (i *lumiIp6tables) GetInput() ([]interface{}, error) {
 		return nil, err
 	}
 	for _, stat := range stats {
-		entry, err := i.Runtime.CreateResource("iptables.entry",
+		entry, err := i.MotorRuntime.CreateResource("iptables.entry",
 			"lineNumber", stat.LineNumber,
 			"packets", stat.Packets,
 			"bytes", stat.Bytes,
@@ -214,7 +214,7 @@ func (i *lumiIp6tables) GetInput() ([]interface{}, error) {
 	return ipstats, nil
 }
 
-//Credit to github.com/coreos/go-iptables for some of the parsing logic
+// Credit to github.com/coreos/go-iptables for some of the parsing logic
 func getLines(data string) []string {
 	rules := strings.Split(data, "\n")
 
@@ -271,7 +271,7 @@ func ParseStat(lines []string, ipv6 bool) ([]Stat, error) {
 			return entries, fmt.Errorf(err.Error(), "could not parse bytes")
 		}
 		var opts string
-		//combine options if they exist
+		// combine options if they exist
 		if len(fields) > 10 {
 			o := fields[10:]
 			opts = strings.Join(o, " ")

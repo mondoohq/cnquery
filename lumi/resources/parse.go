@@ -27,7 +27,7 @@ func (s *lumiParseIni) init(args *lumi.Args) (*lumi.Args, ParseIni, error) {
 			return nil, nil, errors.New("Wrong type for 'path' in parse.ini initialization, it must be a string")
 		}
 
-		f, err := s.Runtime.CreateResource("file", "path", path)
+		f, err := s.MotorRuntime.CreateResource("file", "path", path)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -63,7 +63,7 @@ func (s *lumiParseIni) GetDelimiter() (string, error) {
 
 func (s *lumiParseIni) GetFile() (File, error) {
 	// TODO: all of this is a placeholder, in case we initialize the ini resource with content instead of a file
-	f, err := s.Runtime.CreateResource("file", "path", "/")
+	f, err := s.MotorRuntime.CreateResource("file", "path", "/")
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (s *lumiParseIni) GetFile() (File, error) {
 func (s *lumiParseIni) GetContent(file File) (string, error) {
 	// TODO: this can be heavily improved once we do it right, since this is constantly
 	// re-registered as the file changes
-	err := s.Runtime.WatchAndCompute(file, "content", s, "content")
+	err := s.MotorRuntime.WatchAndCompute(file, "content", s, "content")
 	if err != nil {
 		return "", err
 	}
@@ -106,7 +106,7 @@ func (s *lumiParseJson) init(args *lumi.Args) (*lumi.Args, ParseJson, error) {
 	if rawPath != nil {
 		path := rawPath.(string)
 
-		f, err := s.Runtime.CreateResource("file", "path", path)
+		f, err := s.MotorRuntime.CreateResource("file", "path", path)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -116,7 +116,7 @@ func (s *lumiParseJson) init(args *lumi.Args) (*lumi.Args, ParseJson, error) {
 	} else if x, ok := (*args)["content"]; ok {
 		content := x.(string)
 		virtualPath := "in-memory://" + checksums.New.Add(content).String()
-		f, err := s.Runtime.CreateResource("file", "path", virtualPath, "content", content, "exists", true)
+		f, err := s.MotorRuntime.CreateResource("file", "path", virtualPath, "content", content, "exists", true)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -145,7 +145,7 @@ func (s *lumiParseJson) id() (string, error) {
 
 func (s *lumiParseJson) GetFile() (File, error) {
 	// TODO: all of this is a placeholder, in case we initialize the ini resource with content instead of a file
-	f, err := s.Runtime.CreateResource("file", "path", "/")
+	f, err := s.MotorRuntime.CreateResource("file", "path", "/")
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +155,7 @@ func (s *lumiParseJson) GetFile() (File, error) {
 func (s *lumiParseJson) GetContent(file File) (string, error) {
 	// TODO: this can be heavily improved once we do it right, since this is constantly
 	// re-registered as the file changes
-	err := s.Runtime.WatchAndCompute(file, "content", s, "content")
+	err := s.MotorRuntime.WatchAndCompute(file, "content", s, "content")
 	if err != nil {
 		return "", err
 	}
@@ -181,7 +181,7 @@ func (s *lumiParseYaml) init(args *lumi.Args) (*lumi.Args, ParseJson, error) {
 	if rawPath != nil {
 		path := rawPath.(string)
 
-		f, err := s.Runtime.CreateResource("file", "path", path)
+		f, err := s.MotorRuntime.CreateResource("file", "path", path)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -191,7 +191,7 @@ func (s *lumiParseYaml) init(args *lumi.Args) (*lumi.Args, ParseJson, error) {
 	} else if x, ok := (*args)["content"]; ok {
 		content := x.(string)
 		virtualPath := "in-memory://" + checksums.New.Add(content).String()
-		f, err := s.Runtime.CreateResource("file", "path", virtualPath, "content", content, "exists", true)
+		f, err := s.MotorRuntime.CreateResource("file", "path", virtualPath, "content", content, "exists", true)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -226,7 +226,7 @@ func (s *lumiParseYaml) GetFile() (File, error) {
 func (s *lumiParseYaml) GetContent(file File) (string, error) {
 	// TODO: this can be heavily improved once we do it right, since this is constantly
 	// re-registered as the file changes
-	err := s.Runtime.WatchAndCompute(file, "content", s, "content")
+	err := s.MotorRuntime.WatchAndCompute(file, "content", s, "content")
 	if err != nil {
 		return "", err
 	}
@@ -256,7 +256,7 @@ func (s *lumiParsePlist) init(args *lumi.Args) (*lumi.Args, ParseJson, error) {
 			return nil, nil, errors.New("wrong type for 'path' in parse.json initialization, it must be a string")
 		}
 
-		f, err := s.Runtime.CreateResource("file", "path", path)
+		f, err := s.MotorRuntime.CreateResource("file", "path", path)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -265,7 +265,7 @@ func (s *lumiParsePlist) init(args *lumi.Args) (*lumi.Args, ParseJson, error) {
 	} else if z, ok := (*args)["content"]; ok {
 		content := z.(string)
 		virtualPath := "in-memory://" + checksums.New.Add(content).String()
-		f, err := s.Runtime.CreateResource("file", "path", virtualPath, "content", content, "exists", true)
+		f, err := s.MotorRuntime.CreateResource("file", "path", virtualPath, "content", content, "exists", true)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -293,7 +293,7 @@ func (s *lumiParsePlist) id() (string, error) {
 
 func (s *lumiParsePlist) GetFile() (File, error) {
 	// TODO: all of this is a placeholder, in case we initialize the plist resource with content instead of a file
-	f, err := s.Runtime.CreateResource("file", "path", "/")
+	f, err := s.MotorRuntime.CreateResource("file", "path", "/")
 	if err != nil {
 		return nil, err
 	}
@@ -303,7 +303,7 @@ func (s *lumiParsePlist) GetFile() (File, error) {
 func (s *lumiParsePlist) GetContent(file File) (string, error) {
 	// TODO: this can be heavily improved once we do it right, since this is constantly
 	// re-registered as the file changes
-	err := s.Runtime.WatchAndCompute(file, "content", s, "content")
+	err := s.MotorRuntime.WatchAndCompute(file, "content", s, "content")
 	if err != nil {
 		return "", err
 	}

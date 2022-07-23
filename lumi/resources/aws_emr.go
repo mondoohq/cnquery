@@ -14,7 +14,7 @@ func (e *lumiAwsEmr) id() (string, error) {
 }
 
 func (e *lumiAwsEmr) GetClusters() ([]interface{}, error) {
-	at, err := awstransport(e.Runtime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (e *lumiAwsEmrCluster) id() (string, error) {
 }
 
 func (e *lumiAwsEmr) getClusters(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -47,7 +47,6 @@ func (e *lumiAwsEmr) getClusters(at *aws_transport.Transport) []*jobpool.Job {
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-
 			svc := at.Emr(regionVal)
 			ctx := context.Background()
 
@@ -64,7 +63,7 @@ func (e *lumiAwsEmr) getClusters(at *aws_transport.Transport) []*jobpool.Job {
 					if err != nil {
 						return nil, err
 					}
-					lumiCluster, err := e.Runtime.CreateResource("aws.emr.cluster",
+					lumiCluster, err := e.MotorRuntime.CreateResource("aws.emr.cluster",
 						"arn", toString(cluster.ClusterArn),
 						"name", toString(cluster.Name),
 						"normalizedInstanceHours", toInt64From32(cluster.NormalizedInstanceHours),
@@ -103,7 +102,7 @@ func (e *lumiAwsEmrCluster) GetMasterInstances() ([]interface{}, error) {
 		return nil, err
 	}
 	res := []types.Instance{}
-	at, err := awstransport(e.Runtime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}

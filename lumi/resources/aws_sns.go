@@ -26,7 +26,7 @@ func (s *lumiAwsSnsSubscription) id() (string, error) {
 }
 
 func (s *lumiAwsSns) GetTopics() ([]interface{}, error) {
-	at, err := awstransport(s.Runtime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (s *lumiAwsSnsTopic) init(args *lumi.Args) (*lumi.Args, AwsSnsTopic, error)
 	if err != nil {
 		return nil, nil, nil
 	}
-	at, err := awstransport(s.Runtime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -74,10 +74,10 @@ func (s *lumiAwsSnsTopic) init(args *lumi.Args) (*lumi.Args, AwsSnsTopic, error)
 	(*args)["region"] = arn.Region
 	(*args)["tags"] = tags
 	return args, nil, nil
-
 }
+
 func (s *lumiAwsSns) getTopics(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -86,7 +86,6 @@ func (s *lumiAwsSns) getTopics(at *aws_transport.Transport) []*jobpool.Job {
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-
 			svc := at.Sns(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
@@ -103,7 +102,7 @@ func (s *lumiAwsSns) getTopics(at *aws_transport.Transport) []*jobpool.Job {
 					if err != nil {
 						return nil, err
 					}
-					lumiTopic, err := s.Runtime.CreateResource("aws.sns.topic",
+					lumiTopic, err := s.MotorRuntime.CreateResource("aws.sns.topic",
 						"arn", toString(topic.TopicArn),
 						"region", regionVal,
 						"tags", tags,
@@ -134,7 +133,7 @@ func (s *lumiAwsSnsTopic) GetAttributes() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(s.Runtime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}

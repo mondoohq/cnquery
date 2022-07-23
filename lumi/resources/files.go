@@ -34,7 +34,7 @@ func (l *lumiFilesFind) init(args *lumi.Args) (*lumi.Args, FilesFind, error) {
 	}
 
 	if (*args)["permissions"] == nil {
-		(*args)["permissions"] = int64(0777)
+		(*args)["permissions"] = int64(0o777)
 	}
 
 	return args, nil, nil
@@ -92,7 +92,7 @@ func (l *lumiFilesFind) id() (string, error) {
 		id.WriteString(" name=" + name)
 	}
 
-	if permissions != 0777 {
+	if permissions != 0o777 {
 		id.WriteString(" permissions=" + octal2string(permissions))
 	}
 
@@ -158,9 +158,9 @@ func (l *lumiFilesFind) GetList() ([]interface{}, error) {
 	}
 
 	var foundFiles []string
-	caps := l.Runtime.Motor.Transport.Capabilities()
+	caps := l.MotorRuntime.Motor.Transport.Capabilities()
 	if caps.HasCapability(transports.Capability_FileSearch) {
-		fs := l.Runtime.Motor.Transport.FS()
+		fs := l.MotorRuntime.Motor.Transport.FS()
 
 		fsSearch, ok := fs.(transports.FileSearch)
 		if !ok {
@@ -194,7 +194,7 @@ func (l *lumiFilesFind) GetList() ([]interface{}, error) {
 			call.WriteString("'")
 		}
 
-		if perm != 0777 {
+		if perm != 0o777 {
 			call.WriteString(" -perm -")
 			call.WriteString(octal2string(perm))
 		}
@@ -204,7 +204,7 @@ func (l *lumiFilesFind) GetList() ([]interface{}, error) {
 			call.WriteString(name)
 		}
 
-		rawCmd, err := l.Runtime.CreateResource("command", "command", call.String())
+		rawCmd, err := l.MotorRuntime.CreateResource("command", "command", call.String())
 		if err != nil {
 			return nil, err
 		}
@@ -224,7 +224,7 @@ func (l *lumiFilesFind) GetList() ([]interface{}, error) {
 	var filepath string
 	for i := range foundFiles {
 		filepath = foundFiles[i]
-		files[i], err = l.Runtime.CreateResource("file", "path", filepath)
+		files[i], err = l.MotorRuntime.CreateResource("file", "path", filepath)
 		if err != nil {
 			return nil, err
 		}

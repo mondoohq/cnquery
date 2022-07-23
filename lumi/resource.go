@@ -18,8 +18,8 @@ func newResourceCls(name string) *ResourceCls {
 
 // Resource instance, tied to a motor runtime
 type Resource struct {
-	Cache   Cache    `json:"data"`
-	Runtime *Runtime `json:"-"`
+	Cache        Cache    `json:"data"`
+	MotorRuntime *Runtime `json:"-"`
 	ResourceID
 }
 

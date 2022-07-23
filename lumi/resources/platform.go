@@ -2,6 +2,7 @@ package resources
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -64,7 +65,7 @@ func convertPlatform2VulnPlatform(pf *platform.Platform) *vadvisor.Platform {
 }
 
 func (s *lumiPlatform) init(args *lumi.Args) (*lumi.Args, Platform, error) {
-	platform, err := s.Runtime.Motor.Platform()
+	platform, err := s.MotorRuntime.Motor.Platform()
 	if err == nil {
 		labels := map[string]interface{}{}
 		for k := range platform.Labels {
@@ -79,10 +80,15 @@ func (s *lumiPlatform) init(args *lumi.Args) (*lumi.Args, Platform, error) {
 		(*args)["kind"] = platform.Kind.Name()
 		// FIXME: remove in v8
 		(*args)["runtimeEnv"] = platform.Runtime
-		(*args)["runtimeEnvironment"] = platform.Runtime
+		// FIXME: With the introduction of v8, we need to go through all the runtime
+		// fields coming out of motor and make sure that they are written as
+		// lowercase with dashes (-) separating them. This is to unify the way
+		// the naming works across everything. See:
+		// https://www.notion.so/mondoo/Asset-Type-e24efab340b54924b068e2d355fe3f31
+		(*args)["runtime"] = strings.ReplaceAll(platform.Runtime, " ", "-")
 		(*args)["labels"] = labels
 
-		if transport, ok := s.Runtime.Motor.Transport.(*network.Transport); ok {
+		if transport, ok := s.MotorRuntime.Motor.Transport.(*network.Transport); ok {
 			(*args)["fqdn"] = transport.FQDN
 		} else {
 			(*args)["fqdn"] = ""
@@ -109,7 +115,7 @@ func (s *lumiPlatformEol) id() (string, error) {
 }
 
 func (p *lumiPlatformEol) init(args *lumi.Args) (*lumi.Args, PlatformEol, error) {
-	obj, err := p.Runtime.CreateResource("platform")
+	obj, err := p.MotorRuntime.CreateResource("platform")
 	if err != nil {
 		return nil, nil, err
 	}

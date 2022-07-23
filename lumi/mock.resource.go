@@ -43,7 +43,7 @@ func (m MockResource) Register(field string) error {
 	if !ok {
 		return errors.New("cannot find field " + field)
 	}
-	return m.StaticResource.Runtime.Observers.Trigger(m.LumiResource().FieldUID(field))
+	return m.StaticResource.MotorRuntime.Observers.Trigger(m.LumiResource().FieldUID(field))
 }
 
 // Compute a field. For mock, all fields are always computed

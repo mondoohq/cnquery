@@ -22,7 +22,7 @@ const (
 )
 
 func (d *lumiAwsRds) GetDbInstances() ([]interface{}, error) {
-	at, err := awstransport(d.Runtime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (d *lumiAwsRds) GetDbInstances() ([]interface{}, error) {
 }
 
 func (d *lumiAwsRds) getDbInstances(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -76,7 +76,7 @@ func (d *lumiAwsRds) getDbInstances(at *aws_transport.Transport) []*jobpool.Job 
 					sgs := []interface{}{}
 					for i := range dbInstance.VpcSecurityGroups {
 						// NOTE: this will create the resource and determine the data in its init method
-						lumiSg, err := d.Runtime.CreateResource("aws.ec2.securitygroup",
+						lumiSg, err := d.MotorRuntime.CreateResource("aws.ec2.securitygroup",
 							"arn", fmt.Sprintf(securityGroupArnPattern, regionVal, account.ID, toString(dbInstance.VpcSecurityGroups[i].VpcSecurityGroupId)),
 						)
 						if err != nil {
@@ -85,7 +85,7 @@ func (d *lumiAwsRds) getDbInstances(at *aws_transport.Transport) []*jobpool.Job 
 						sgs = append(sgs, lumiSg)
 					}
 
-					lumiDBInstance, err := d.Runtime.CreateResource("aws.rds.dbinstance",
+					lumiDBInstance, err := d.MotorRuntime.CreateResource("aws.rds.dbinstance",
 						"arn", toString(dbInstance.DBInstanceArn),
 						"name", toString(dbInstance.DBName),
 						"backupRetentionPeriod", int64(dbInstance.BackupRetentionPeriod),
@@ -135,7 +135,7 @@ func rdsTagsToMap(tags []types.Tag) map[string]interface{} {
 }
 
 func (d *lumiAwsRds) GetDbClusters() ([]interface{}, error) {
-	at, err := awstransport(d.Runtime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ func (p *lumiAwsRdsDbinstance) init(args *lumi.Args) (*lumi.Args, AwsRdsDbinstan
 	}
 
 	// load all rds db instances
-	obj, err := p.Runtime.CreateResource("aws.rds")
+	obj, err := p.MotorRuntime.CreateResource("aws.rds")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -191,7 +191,7 @@ func (p *lumiAwsRdsDbinstance) init(args *lumi.Args) (*lumi.Args, AwsRdsDbinstan
 }
 
 func (d *lumiAwsRds) getDbClusters(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -219,7 +219,7 @@ func (d *lumiAwsRds) getDbClusters(at *aws_transport.Transport) []*jobpool.Job {
 				for _, cluster := range dbClusters.DBClusters {
 					lumiRdsDbInstances := []interface{}{}
 					for _, instance := range cluster.DBClusterMembers {
-						lumiInstance, err := d.Runtime.CreateResource("aws.rds.dbinstance",
+						lumiInstance, err := d.MotorRuntime.CreateResource("aws.rds.dbinstance",
 							"arn", fmt.Sprintf(rdsInstanceArnPattern, regionVal, account.ID, toString(instance.DBInstanceIdentifier)),
 						)
 						if err != nil {
@@ -227,7 +227,7 @@ func (d *lumiAwsRds) getDbClusters(at *aws_transport.Transport) []*jobpool.Job {
 						}
 						lumiRdsDbInstances = append(lumiRdsDbInstances, lumiInstance)
 					}
-					lumiDbCluster, err := d.Runtime.CreateResource("aws.rds.dbcluster",
+					lumiDbCluster, err := d.MotorRuntime.CreateResource("aws.rds.dbcluster",
 						"arn", toString(cluster.DBClusterArn),
 						"region", regionVal,
 						"id", toString(cluster.DBClusterIdentifier),
@@ -251,6 +251,7 @@ func (d *lumiAwsRds) getDbClusters(at *aws_transport.Transport) []*jobpool.Job {
 	}
 	return tasks
 }
+
 func (d *lumiAwsRdsDbcluster) GetSnapshots() ([]interface{}, error) {
 	dbClusterId, err := d.Id()
 	if err != nil {
@@ -260,7 +261,7 @@ func (d *lumiAwsRdsDbcluster) GetSnapshots() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(d.Runtime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -276,7 +277,7 @@ func (d *lumiAwsRdsDbcluster) GetSnapshots() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, snapshot := range snapshots.DBClusterSnapshots {
-			lumiDbSnapshot, err := d.Runtime.CreateResource("aws.rds.snapshot",
+			lumiDbSnapshot, err := d.MotorRuntime.CreateResource("aws.rds.snapshot",
 				"arn", toString(snapshot.DBClusterSnapshotArn),
 				"id", toString(snapshot.DBClusterSnapshotIdentifier),
 				"type", toString(snapshot.SnapshotType),
@@ -306,7 +307,7 @@ func (d *lumiAwsRdsDbinstance) GetSnapshots() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(d.Runtime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -322,7 +323,7 @@ func (d *lumiAwsRdsDbinstance) GetSnapshots() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, snapshot := range snapshots.DBSnapshots {
-			lumiDbSnapshot, err := d.Runtime.CreateResource("aws.rds.snapshot",
+			lumiDbSnapshot, err := d.MotorRuntime.CreateResource("aws.rds.snapshot",
 				"arn", toString(snapshot.DBSnapshotArn),
 				"id", toString(snapshot.DBSnapshotIdentifier),
 				"type", toString(snapshot.SnapshotType),
@@ -369,7 +370,7 @@ func (d *lumiAwsRdsSnapshot) GetAttributes() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(d.Runtime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}

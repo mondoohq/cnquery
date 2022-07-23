@@ -53,7 +53,7 @@ func (u *lumiUser) init(args *lumi.Args) (*lumi.Args, User, error) {
 	// if only uid was provided, lets collect the info for the user
 	if ok && !gok && !uok {
 		// lets do minimal IO in initialize
-		um, err := users.ResolveManager(u.Runtime.Motor)
+		um, err := users.ResolveManager(u.MotorRuntime.Motor)
 		if err != nil {
 			return nil, nil, errors.New("user> cannot find user manager")
 		}
@@ -76,7 +76,7 @@ func (u *lumiUser) init(args *lumi.Args) (*lumi.Args, User, error) {
 
 		// we go a username as an initizator, which eg. is used by the groups resource
 		// lets do minimal IO in initialize
-		um, err := users.ResolveManager(u.Runtime.Motor)
+		um, err := users.ResolveManager(u.MotorRuntime.Motor)
 		if err != nil {
 			return nil, nil, errors.New("user> cannot find user manager")
 		}
@@ -138,7 +138,7 @@ func (u *lumiUsers) id() (string, error) {
 
 func (u *lumiUsers) GetList() ([]interface{}, error) {
 	// find suitable user manager
-	um, err := users.ResolveManager(u.Runtime.Motor)
+	um, err := users.ResolveManager(u.MotorRuntime.Motor)
 	if um == nil || err != nil {
 		log.Warn().Err(err).Msg("lumi[users]> could not retrieve users list")
 		return nil, errors.New("cannot find users manager")
@@ -158,7 +158,7 @@ func (u *lumiUsers) GetList() ([]interface{}, error) {
 	for i := range users {
 		user := users[i]
 
-		lumiUser, err := u.Runtime.CreateResource("user",
+		lumiUser, err := u.MotorRuntime.CreateResource("user",
 			USER_CACHE_USERNAME, user.Name,
 			USER_CACHE_UID, user.Uid,
 			USER_CACHE_GID, user.Gid,
@@ -181,7 +181,7 @@ func (u *lumiUsers) GetList() ([]interface{}, error) {
 
 func (u *lumiUser) GetGroup() (interface{}, error) {
 	gid, err := u.Gid()
-	group, err := u.Runtime.CreateResource("group",
+	group, err := u.MotorRuntime.CreateResource("group",
 		"id", strconv.FormatInt(gid, 10),
 		"gid", gid)
 	// Don't return the error just null

@@ -27,8 +27,9 @@ const (
 func (t *lumiAwsCloudwatch) id() (string, error) {
 	return "aws.cloudwatch", nil
 }
+
 func (t *lumiAwsCloudwatch) GetMetrics() ([]interface{}, error) {
-	at, err := awstransport(t.Runtime.Motor.Transport)
+	at, err := awstransport(t.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -46,8 +47,9 @@ func (t *lumiAwsCloudwatch) GetMetrics() ([]interface{}, error) {
 	}
 	return res, nil
 }
+
 func (t *lumiAwsCloudwatch) getMetrics(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -56,7 +58,6 @@ func (t *lumiAwsCloudwatch) getMetrics(at *aws_transport.Transport) []*jobpool.J
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-
 			svc := at.Cloudwatch(regionVal)
 			ctx := context.Background()
 
@@ -71,7 +72,7 @@ func (t *lumiAwsCloudwatch) getMetrics(at *aws_transport.Transport) []*jobpool.J
 				for _, metric := range metrics.Metrics {
 					dimensions := []interface{}{}
 					for _, d := range metric.Dimensions {
-						lumiDimension, err := t.Runtime.CreateResource("aws.cloudwatch.metricdimension",
+						lumiDimension, err := t.MotorRuntime.CreateResource("aws.cloudwatch.metricdimension",
 							"name", toString(d.Name),
 							"value", toString(d.Value),
 						)
@@ -81,7 +82,7 @@ func (t *lumiAwsCloudwatch) getMetrics(at *aws_transport.Transport) []*jobpool.J
 						dimensions = append(dimensions, lumiDimension)
 					}
 
-					lumiMetric, err := t.Runtime.CreateResource("aws.cloudwatch.metric",
+					lumiMetric, err := t.MotorRuntime.CreateResource("aws.cloudwatch.metric",
 						"name", toString(metric.MetricName),
 						"namespace", toString(metric.Namespace),
 						"region", regionVal,
@@ -171,7 +172,7 @@ func (p *lumiAwsCloudwatchMetric) init(args *lumi.Args) (*lumi.Args, AwsCloudwat
 	if !ok {
 		return args, nil, nil
 	}
-	at, err := awstransport(p.Runtime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return args, nil, err
 	}
@@ -197,7 +198,7 @@ func (p *lumiAwsCloudwatchMetric) init(args *lumi.Args) (*lumi.Args, AwsCloudwat
 
 	metric := metrics.Metrics[0]
 	for _, d := range metric.Dimensions {
-		lumiDimension, err := p.Runtime.CreateResource("aws.cloudwatch.metricdimension",
+		lumiDimension, err := p.MotorRuntime.CreateResource("aws.cloudwatch.metricdimension",
 			"name", toString(d.Name),
 			"value", toString(d.Value),
 		)
@@ -214,6 +215,7 @@ func (p *lumiAwsCloudwatchMetric) init(args *lumi.Args) (*lumi.Args, AwsCloudwat
 
 	return args, nil, nil
 }
+
 func (p *lumiAwsCloudwatchMetric) GetDimensions() ([]interface{}, error) {
 	name, err := p.Name()
 	if err != nil {
@@ -228,7 +230,7 @@ func (p *lumiAwsCloudwatchMetric) GetDimensions() ([]interface{}, error) {
 		return nil, errors.Wrap(err, "unable to parse metric region")
 	}
 
-	at, err := awstransport(p.Runtime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +255,7 @@ func (p *lumiAwsCloudwatchMetric) GetDimensions() ([]interface{}, error) {
 
 	metric := metrics.Metrics[0]
 	for _, d := range metric.Dimensions {
-		lumiDimension, err := p.Runtime.CreateResource("aws.cloudwatch.metricdimension",
+		lumiDimension, err := p.MotorRuntime.CreateResource("aws.cloudwatch.metricdimension",
 			"name", toString(d.Name),
 			"value", toString(d.Value),
 		)
@@ -300,7 +302,7 @@ func (p *lumiAwsCloudwatchMetricstatistics) init(args *lumi.Args) (*lumi.Args, A
 	if !ok {
 		return args, nil, nil
 	}
-	at, err := awstransport(p.Runtime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return args, nil, err
 	}
@@ -324,7 +326,7 @@ func (p *lumiAwsCloudwatchMetricstatistics) init(args *lumi.Args) (*lumi.Args, A
 	}
 	datapoints := []interface{}{}
 	for _, datapoint := range statsResp.Datapoints {
-		lumiDatapoint, err := p.Runtime.CreateResource("aws.cloudwatch.metric.datapoint",
+		lumiDatapoint, err := p.MotorRuntime.CreateResource("aws.cloudwatch.metric.datapoint",
 			"timestamp", datapoint.Timestamp,
 			"maximum", toFloat64(datapoint.Maximum),
 			"minimum", toFloat64(datapoint.Minimum),
@@ -368,7 +370,7 @@ func (t *lumiAwsCloudwatchMetric) GetStatistics() (interface{}, error) {
 		return nil, errors.Wrap(err, "unable to parse metric region")
 	}
 
-	at, err := awstransport(t.Runtime.Motor.Transport)
+	at, err := awstransport(t.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -407,7 +409,7 @@ func (t *lumiAwsCloudwatchMetric) GetStatistics() (interface{}, error) {
 	}
 	datapoints := []interface{}{}
 	for _, datapoint := range statsResp.Datapoints {
-		lumiDatapoint, err := t.Runtime.CreateResource("aws.cloudwatch.metric.datapoint",
+		lumiDatapoint, err := t.MotorRuntime.CreateResource("aws.cloudwatch.metric.datapoint",
 			"id", formatDatapointId(datapoint),
 			"timestamp", datapoint.Timestamp,
 			"maximum", toFloat64(datapoint.Maximum),
@@ -421,7 +423,7 @@ func (t *lumiAwsCloudwatchMetric) GetStatistics() (interface{}, error) {
 		}
 		datapoints = append(datapoints, lumiDatapoint)
 	}
-	lumiStat, err := t.Runtime.CreateResource("aws.cloudwatch.metricstatistics",
+	lumiStat, err := t.MotorRuntime.CreateResource("aws.cloudwatch.metricstatistics",
 		"label", toString(statsResp.Label),
 		"datapoints", datapoints,
 		"name", metricName,
@@ -463,7 +465,7 @@ func (t *lumiAwsCloudwatchMetric) GetAlarms() ([]interface{}, error) {
 		return nil, errors.Wrap(err, "unable to parse metric region")
 	}
 
-	at, err := awstransport(t.Runtime.Motor.Transport)
+	at, err := awstransport(t.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -481,7 +483,7 @@ func (t *lumiAwsCloudwatchMetric) GetAlarms() ([]interface{}, error) {
 	}
 	res := []interface{}{}
 	for _, alarm := range alarmsResp.MetricAlarms {
-		lumiAlarm, err := t.Runtime.CreateResource("aws.cloudwatch.metricsalarm",
+		lumiAlarm, err := t.MotorRuntime.CreateResource("aws.cloudwatch.metricsalarm",
 			"arn", toString(alarm.AlarmArn),
 		)
 		if err != nil {
@@ -493,7 +495,7 @@ func (t *lumiAwsCloudwatchMetric) GetAlarms() ([]interface{}, error) {
 }
 
 func (t *lumiAwsCloudwatch) GetAlarms() ([]interface{}, error) {
-	at, err := awstransport(t.Runtime.Motor.Transport)
+	at, err := awstransport(t.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -511,8 +513,9 @@ func (t *lumiAwsCloudwatch) GetAlarms() ([]interface{}, error) {
 	}
 	return res, nil
 }
+
 func (t *lumiAwsCloudwatch) getAlarms(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -521,7 +524,6 @@ func (t *lumiAwsCloudwatch) getAlarms(at *aws_transport.Transport) []*jobpool.Jo
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-
 			svc := at.Cloudwatch(regionVal)
 			ctx := context.Background()
 
@@ -538,7 +540,7 @@ func (t *lumiAwsCloudwatch) getAlarms(at *aws_transport.Transport) []*jobpool.Jo
 				for _, alarm := range alarms.MetricAlarms {
 					actions := []interface{}{}
 					for _, action := range alarm.AlarmActions {
-						lumiAlarmAction, err := t.Runtime.CreateResource("aws.sns.topic",
+						lumiAlarmAction, err := t.MotorRuntime.CreateResource("aws.sns.topic",
 							"arn", action,
 							"region", regionVal,
 						)
@@ -549,7 +551,7 @@ func (t *lumiAwsCloudwatch) getAlarms(at *aws_transport.Transport) []*jobpool.Jo
 					}
 					insuffActions := []interface{}{}
 					for _, action := range alarm.InsufficientDataActions {
-						lumiInsuffAction, err := t.Runtime.CreateResource("aws.sns.topic",
+						lumiInsuffAction, err := t.MotorRuntime.CreateResource("aws.sns.topic",
 							"arn", action,
 							"region", regionVal,
 						)
@@ -561,7 +563,7 @@ func (t *lumiAwsCloudwatch) getAlarms(at *aws_transport.Transport) []*jobpool.Jo
 
 					okActions := []interface{}{}
 					for _, action := range alarm.OKActions {
-						lumiokAction, err := t.Runtime.CreateResource("aws.sns.topic",
+						lumiokAction, err := t.MotorRuntime.CreateResource("aws.sns.topic",
 							"arn", action,
 							"region", regionVal,
 						)
@@ -571,7 +573,7 @@ func (t *lumiAwsCloudwatch) getAlarms(at *aws_transport.Transport) []*jobpool.Jo
 						okActions = append(okActions, lumiokAction)
 					}
 
-					lumiAlarm, err := t.Runtime.CreateResource("aws.cloudwatch.metricsalarm",
+					lumiAlarm, err := t.MotorRuntime.CreateResource("aws.cloudwatch.metricsalarm",
 						"arn", toString(alarm.AlarmArn),
 						"metricName", toString(alarm.MetricName),
 						"metricNamespace", toString(alarm.Namespace),
@@ -609,7 +611,7 @@ func (t *lumiAwsSnsTopic) GetSubscriptions() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(t.Runtime.Motor.Transport)
+	at, err := awstransport(t.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -629,7 +631,7 @@ func (t *lumiAwsSnsTopic) GetSubscriptions() ([]interface{}, error) {
 			params.NextToken = nextToken
 		}
 		for _, sub := range subsByTopic.Subscriptions {
-			lumiSub, err := t.Runtime.CreateResource("aws.sns.subscription",
+			lumiSub, err := t.MotorRuntime.CreateResource("aws.sns.subscription",
 				"arn", toString(sub.SubscriptionArn),
 				"protocol", toString(sub.Protocol),
 			)
@@ -643,7 +645,7 @@ func (t *lumiAwsSnsTopic) GetSubscriptions() ([]interface{}, error) {
 }
 
 func (t *lumiAwsCloudwatch) GetLogGroups() ([]interface{}, error) {
-	at, err := awstransport(t.Runtime.Motor.Transport)
+	at, err := awstransport(t.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -663,7 +665,7 @@ func (t *lumiAwsCloudwatch) GetLogGroups() ([]interface{}, error) {
 }
 
 func (t *lumiAwsCloudwatch) getLogGroups(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -695,7 +697,7 @@ func (t *lumiAwsCloudwatch) getLogGroups(at *aws_transport.Transport) []*jobpool
 					}
 					// add kms key if there is one
 					if loggroup.KmsKeyId != nil {
-						lumiKeyResource, err := t.Runtime.CreateResource("aws.kms.key",
+						lumiKeyResource, err := t.MotorRuntime.CreateResource("aws.kms.key",
 							"arn", toString(loggroup.KmsKeyId),
 						)
 						if err != nil {
@@ -705,7 +707,7 @@ func (t *lumiAwsCloudwatch) getLogGroups(at *aws_transport.Transport) []*jobpool
 						args = append(args, "kmsKey", lumiKey)
 					}
 
-					lumiLogGroup, err := t.Runtime.CreateResource("aws.cloudwatch.loggroup", args...)
+					lumiLogGroup, err := t.MotorRuntime.CreateResource("aws.cloudwatch.loggroup", args...)
 					if err != nil {
 						return nil, err
 					}
@@ -728,7 +730,7 @@ func (c *lumiAwsCloudwatchLoggroup) init(args *lumi.Args) (*lumi.Args, AwsCloudw
 		return nil, nil, errors.New("arn required to fetch cloudwatch log group")
 	}
 
-	obj, err := c.Runtime.CreateResource("aws.cloudwatch")
+	obj, err := c.MotorRuntime.CreateResource("aws.cloudwatch")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -772,7 +774,7 @@ func (t *lumiAwsCloudwatchLoggroup) GetMetricsFilters() ([]interface{}, error) {
 	groupName := logGroupArn[6]
 	region := logGroupArn[3]
 
-	at, err := awstransport(t.Runtime.Motor.Transport)
+	at, err := awstransport(t.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -794,7 +796,7 @@ func (t *lumiAwsCloudwatchLoggroup) GetMetricsFilters() ([]interface{}, error) {
 		for _, m := range metricsResp.MetricFilters {
 			lumiCloudwatchMetrics := []interface{}{}
 			for _, mt := range m.MetricTransformations {
-				lumiAwsMetric, err := t.Runtime.CreateResource("aws.cloudwatch.metric",
+				lumiAwsMetric, err := t.MotorRuntime.CreateResource("aws.cloudwatch.metric",
 					"name", toString(mt.MetricName),
 					"namespace", toString(mt.MetricNamespace),
 					"region", region,
@@ -804,7 +806,7 @@ func (t *lumiAwsCloudwatchLoggroup) GetMetricsFilters() ([]interface{}, error) {
 				}
 				lumiCloudwatchMetrics = append(lumiCloudwatchMetrics, lumiAwsMetric)
 			}
-			lumiAwsLogGroupMetricFilters, err := t.Runtime.CreateResource("aws.cloudwatch.loggroup.metricsfilter",
+			lumiAwsLogGroupMetricFilters, err := t.MotorRuntime.CreateResource("aws.cloudwatch.loggroup.metricsfilter",
 				"id", groupName+"/"+region+"/"+toString(m.FilterName),
 				"filterName", toString(m.FilterName),
 				"filterPattern", toString(m.FilterPattern),
@@ -857,7 +859,7 @@ func (t *lumiAwsCloudwatchMetricsalarm) init(args *lumi.Args) (*lumi.Args, AwsCl
 	}
 
 	// load all cloudwatch metrics alarm
-	obj, err := t.Runtime.CreateResource("aws.cloudwatch")
+	obj, err := t.MotorRuntime.CreateResource("aws.cloudwatch")
 	if err != nil {
 		return nil, nil, err
 	}

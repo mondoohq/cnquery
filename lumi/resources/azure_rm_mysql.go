@@ -19,7 +19,7 @@ func (a *lumiAzurermMysqlDatabase) id() (string, error) {
 }
 
 func (a *lumiAzurermMysql) GetServers() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (a *lumiAzurermMysql) GetServers() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzureDbServer, err := a.Runtime.CreateResource("azurerm.mysql.server",
+		lumiAzureDbServer, err := a.MotorRuntime.CreateResource("azurerm.mysql.server",
 			"id", toString(dbServer.ID),
 			"name", toString(dbServer.Name),
 			"location", toString(dbServer.Location),
@@ -73,7 +73,7 @@ func (a *lumiAzurermMysql) GetServers() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermMysqlServer) GetConfiguration() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func (a *lumiAzurermMysqlServer) GetConfiguration() ([]interface{}, error) {
 	for i := range list {
 		entry := list[i]
 
-		lumiAzureConfiguration, err := a.Runtime.CreateResource("azurerm.sql.configuration",
+		lumiAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.configuration",
 			"id", toString(entry.ID),
 			"name", toString(entry.Name),
 			"type", toString(entry.Type),
@@ -136,8 +136,9 @@ func (a *lumiAzurermMysqlServer) GetConfiguration() ([]interface{}, error) {
 
 	return res, nil
 }
+
 func (a *lumiAzurermMysqlServer) GetDatabases() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +183,7 @@ func (a *lumiAzurermMysqlServer) GetDatabases() ([]interface{}, error) {
 	for i := range list {
 		entry := list[i]
 
-		lumiAzureDatabase, err := a.Runtime.CreateResource("azurerm.mysql.database",
+		lumiAzureDatabase, err := a.MotorRuntime.CreateResource("azurerm.mysql.database",
 			"id", toString(entry.ID),
 			"name", toString(entry.Name),
 			"type", toString(entry.Type),
@@ -199,7 +200,7 @@ func (a *lumiAzurermMysqlServer) GetDatabases() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermMysqlServer) GetFirewallRules() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +245,7 @@ func (a *lumiAzurermMysqlServer) GetFirewallRules() ([]interface{}, error) {
 	for i := range list {
 		entry := list[i]
 
-		lumiAzureConfiguration, err := a.Runtime.CreateResource("azurerm.sql.firewallrule",
+		lumiAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.firewallrule",
 			"id", toString(entry.ID),
 			"name", toString(entry.Name),
 			"type", toString(entry.Type),

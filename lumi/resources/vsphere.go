@@ -72,7 +72,7 @@ func (v *lumiVsphere) id() (string, error) {
 }
 
 func (v *lumiVsphere) GetAbout() (map[string]interface{}, error) {
-	client, err := getClientInstance(v.Runtime.Motor.Transport)
+	client, err := getClientInstance(v.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (v *lumiVsphere) GetAbout() (map[string]interface{}, error) {
 }
 
 func (v *lumiVsphere) GetDatacenters() ([]interface{}, error) {
-	client, err := getClientInstance(v.Runtime.Motor.Transport)
+	client, err := getClientInstance(v.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (v *lumiVsphere) GetDatacenters() ([]interface{}, error) {
 	// convert datacenter to lumi
 	datacenters := make([]interface{}, len(dcs))
 	for i, dc := range dcs {
-		lumiDc, err := v.Runtime.CreateResource("vsphere.datacenter",
+		lumiDc, err := v.MotorRuntime.CreateResource("vsphere.datacenter",
 			"moid", dc.Reference().Encode(),
 			"name", dc.Name(),
 			"inventoryPath", dc.InventoryPath,
@@ -111,7 +111,7 @@ func (v *lumiVsphere) GetDatacenters() ([]interface{}, error) {
 }
 
 func (v *lumiVsphere) GetLicenses() ([]interface{}, error) {
-	client, err := getClientInstance(v.Runtime.Motor.Transport)
+	client, err := getClientInstance(v.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func (v *lumiVsphere) GetLicenses() ([]interface{}, error) {
 	// convert licenses to lumi
 	licenses := make([]interface{}, len(lcs))
 	for i, l := range lcs {
-		lumiLicense, err := v.Runtime.CreateResource("vsphere.license",
+		lumiLicense, err := v.MotorRuntime.CreateResource("vsphere.license",
 			"name", l.Name,
 			"total", int64(l.Total),
 			"used", int64(l.Used),
@@ -180,7 +180,7 @@ func (v *lumiVsphereDatacenter) id() (string, error) {
 }
 
 func (v *lumiVsphereDatacenter) GetHosts() ([]interface{}, error) {
-	client, err := getClientInstance(v.Runtime.Motor.Transport)
+	client, err := getClientInstance(v.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -199,11 +199,11 @@ func (v *lumiVsphereDatacenter) GetHosts() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return vsphereHosts(client, v.Runtime, vhosts)
+	return vsphereHosts(client, v.MotorRuntime, vhosts)
 }
 
 func (v *lumiVsphereDatacenter) GetClusters() ([]interface{}, error) {
-	client, err := getClientInstance(v.Runtime.Motor.Transport)
+	client, err := getClientInstance(v.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -231,7 +231,7 @@ func (v *lumiVsphereDatacenter) GetClusters() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiCluster, err := v.Runtime.CreateResource("vsphere.cluster",
+		lumiCluster, err := v.MotorRuntime.CreateResource("vsphere.cluster",
 			"moid", c.Reference().Encode(),
 			"name", c.Name(),
 			"properties", props,
@@ -252,7 +252,7 @@ func (v *lumiVsphereCluster) id() (string, error) {
 }
 
 func (v *lumiVsphereCluster) GetHosts() ([]interface{}, error) {
-	client, err := getClientInstance(v.Runtime.Motor.Transport)
+	client, err := getClientInstance(v.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -271,7 +271,7 @@ func (v *lumiVsphereCluster) GetHosts() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return vsphereHosts(client, v.Runtime, vhosts)
+	return vsphereHosts(client, v.MotorRuntime, vhosts)
 }
 
 func (v *lumiVsphereHost) id() (string, error) {
@@ -283,7 +283,7 @@ func (v *lumiVsphereHost) init(args *lumi.Args) (*lumi.Args, VsphereHost, error)
 		return args, nil, nil
 	}
 
-	h, hostInfo, err := esxiHostProperties(v.Runtime)
+	h, hostInfo, err := esxiHostProperties(v.MotorRuntime)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -312,7 +312,7 @@ func (v *lumiVsphereHost) esxiClient() (*vsphere.Esxi, error) {
 		return nil, err
 	}
 
-	return esxiClient(v.Runtime.Motor.Transport, path)
+	return esxiClient(v.MotorRuntime.Motor.Transport, path)
 }
 
 func (v *lumiVsphereHost) GetStandardSwitch() ([]interface{}, error) {
@@ -328,7 +328,7 @@ func (v *lumiVsphereHost) GetStandardSwitch() ([]interface{}, error) {
 
 	lumiVswitches := make([]interface{}, len(vswitches))
 	for i, s := range vswitches {
-		lumiVswitch, err := v.Runtime.CreateResource("vsphere.vswitch.standard",
+		lumiVswitch, err := v.MotorRuntime.CreateResource("vsphere.vswitch.standard",
 			"name", s["Name"],
 			"properties", s,
 		)
@@ -359,7 +359,7 @@ func (v *lumiVsphereHost) GetDistributedSwitch() ([]interface{}, error) {
 
 	lumiVswitches := make([]interface{}, len(vswitches))
 	for i, s := range vswitches {
-		lumiVswitch, err := v.Runtime.CreateResource("vsphere.vswitch.dvs",
+		lumiVswitch, err := v.MotorRuntime.CreateResource("vsphere.vswitch.dvs",
 			"name", s["Name"],
 			"properties", s,
 		)
@@ -404,7 +404,7 @@ func (v *lumiVsphereHost) GetAdapters() ([]interface{}, error) {
 		nicName := a["Name"].(string)
 		pParams := pauseParams[nicName]
 
-		lumiAdapter, err := v.Runtime.CreateResource("vsphere.vmnic",
+		lumiAdapter, err := v.MotorRuntime.CreateResource("vsphere.vmnic",
 			"name", nicName,
 			"properties", a,
 			"pauseParams", pParams,
@@ -431,7 +431,7 @@ func (v *lumiVsphereVmnic) esxiClient() (*vsphere.Esxi, error) {
 		return nil, errors.New("cannot get esxi host inventory path")
 	}
 	inventoryPath := c.Data.(string)
-	return esxiClient(v.Runtime.Motor.Transport, inventoryPath)
+	return esxiClient(v.MotorRuntime.Motor.Transport, inventoryPath)
 }
 
 func (v *lumiVsphereVmnic) GetDetails() (map[string]interface{}, error) {
@@ -461,7 +461,7 @@ func (v *lumiVsphereHost) GetVmknics() ([]interface{}, error) {
 	lumiVmknics := make([]interface{}, len(vmknics))
 	for i := range vmknics {
 		entry := vmknics[i]
-		lumiVswitch, err := v.Runtime.CreateResource("vsphere.vmknic",
+		lumiVswitch, err := v.MotorRuntime.CreateResource("vsphere.vmknic",
 			"name", entry.Properties["Name"],
 			"properties", entry.Properties,
 			"ipv4", entry.Ipv4,
@@ -507,7 +507,7 @@ func (v *lumiVsphereHost) GetPackages() ([]interface{}, error) {
 		}
 		installDate = &parsedInstall
 
-		lumiVib, err := v.Runtime.CreateResource("esxi.vib",
+		lumiVib, err := v.MotorRuntime.CreateResource("esxi.vib",
 			"id", vib.ID,
 			"name", vib.Name,
 			"acceptanceLevel", vib.AcceptanceLevel,
@@ -546,7 +546,7 @@ func (v *lumiVsphereHost) GetKernelModules() ([]interface{}, error) {
 
 	lumiModules := make([]interface{}, len(modules))
 	for i, m := range modules {
-		lumiModule, err := v.Runtime.CreateResource("esxi.kernelmodule",
+		lumiModule, err := v.MotorRuntime.CreateResource("esxi.kernelmodule",
 			"name", m.Module,
 			"modulefile", m.ModuleFile,
 			"version", m.Version,
@@ -568,7 +568,7 @@ func (v *lumiVsphereHost) GetKernelModules() ([]interface{}, error) {
 }
 
 func (v *lumiVsphereHost) GetAdvancedSettings() (map[string]interface{}, error) {
-	client, err := getClientInstance(v.Runtime.Motor.Transport)
+	client, err := getClientInstance(v.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -587,7 +587,7 @@ func (v *lumiVsphereHost) GetAdvancedSettings() (map[string]interface{}, error) 
 }
 
 func (v *lumiVsphereHost) GetServices() ([]interface{}, error) {
-	client, err := getClientInstance(v.Runtime.Motor.Transport)
+	client, err := getClientInstance(v.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -608,7 +608,7 @@ func (v *lumiVsphereHost) GetServices() ([]interface{}, error) {
 	}
 	lumiServices := make([]interface{}, len(services))
 	for i, s := range services {
-		lumiService, err := v.Runtime.CreateResource("esxi.service",
+		lumiService, err := v.MotorRuntime.CreateResource("esxi.service",
 			"key", s.Key,
 			"label", s.Label,
 			"required", s.Required,
@@ -634,7 +634,7 @@ func sliceInterface(slice []string) []interface{} {
 }
 
 func (v *lumiVsphereHost) GetTimezone() (interface{}, error) {
-	client, err := getClientInstance(v.Runtime.Motor.Transport)
+	client, err := getClientInstance(v.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -658,7 +658,7 @@ func (v *lumiVsphereHost) GetTimezone() (interface{}, error) {
 		return nil, errors.New("vsphere does not return HostDateTimeSystem timezone information")
 	}
 
-	lumiTimezone, err := v.Runtime.CreateResource("esxi.timezone",
+	lumiTimezone, err := v.MotorRuntime.CreateResource("esxi.timezone",
 		"key", datetimeinfo.TimeZone.Key,
 		"name", datetimeinfo.TimeZone.Name,
 		"offset", int64(datetimeinfo.TimeZone.GmtOffset),
@@ -672,7 +672,7 @@ func (v *lumiVsphereHost) GetTimezone() (interface{}, error) {
 }
 
 func (v *lumiVsphereHost) GetNtp() (interface{}, error) {
-	client, err := getClientInstance(v.Runtime.Motor.Transport)
+	client, err := getClientInstance(v.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -700,7 +700,7 @@ func (v *lumiVsphereHost) GetNtp() (interface{}, error) {
 		config = sliceInterface(datetimeinfo.NtpConfig.ConfigFile)
 	}
 
-	lumiNtpConfig, err := v.Runtime.CreateResource("esxi.ntpconfig",
+	lumiNtpConfig, err := v.MotorRuntime.CreateResource("esxi.ntpconfig",
 		"id", "ntp "+host.InventoryPath,
 		"server", server,
 		"config", config,
@@ -721,7 +721,7 @@ func (v *lumiVsphereHost) GetSnmp() (map[string]interface{}, error) {
 }
 
 func (v *lumiVsphereDatacenter) GetVms() ([]interface{}, error) {
-	client, err := getClientInstance(v.Runtime.Motor.Transport)
+	client, err := getClientInstance(v.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -758,7 +758,7 @@ func (v *lumiVsphereDatacenter) GetVms() ([]interface{}, error) {
 			name = vmInfo.Config.Name
 		}
 
-		lumiVm, err := v.Runtime.CreateResource("vsphere.vm",
+		lumiVm, err := v.MotorRuntime.CreateResource("vsphere.vm",
 			"moid", vm.Reference().Encode(),
 			"name", name,
 			"properties", props,
@@ -779,7 +779,7 @@ func (v *lumiVsphereVm) id() (string, error) {
 }
 
 func (v *lumiVsphereVm) GetAdvancedSettings() (map[string]interface{}, error) {
-	client, err := getClientInstance(v.Runtime.Motor.Transport)
+	client, err := getClientInstance(v.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -870,7 +870,7 @@ func esxiHostProperties(runtime *lumi.Runtime) (*object.HostSystem, *mo.HostSyst
 // GetHost returns the information about the current ESXi host
 // Deprecated: use vsphere.host resource instead
 func (v *lumiEsxi) GetHost() (interface{}, error) {
-	h, hostInfo, err := esxiHostProperties(v.Runtime)
+	h, hostInfo, err := esxiHostProperties(v.MotorRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -885,7 +885,7 @@ func (v *lumiEsxi) GetHost() (interface{}, error) {
 		name = hostInfo.Name
 	}
 
-	lumiHost, err := v.Runtime.CreateResource("vsphere.host",
+	lumiHost, err := v.MotorRuntime.CreateResource("vsphere.host",
 		"moid", h.Reference().Encode(),
 		"name", name,
 		"properties", props,
@@ -937,7 +937,7 @@ func esxiVmProperties(runtime *lumi.Runtime) (*object.VirtualMachine, *mo.Virtua
 }
 
 func (v *lumiEsxi) GetVm() (interface{}, error) {
-	vm, vmInfo, err := esxiVmProperties(v.Runtime)
+	vm, vmInfo, err := esxiVmProperties(v.MotorRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -952,7 +952,7 @@ func (v *lumiEsxi) GetVm() (interface{}, error) {
 		name = vmInfo.Config.Name
 	}
 
-	lumiVm, err := v.Runtime.CreateResource("vsphere.vm",
+	lumiVm, err := v.MotorRuntime.CreateResource("vsphere.vm",
 		"moid", vm.Reference().Encode(),
 		"name", name,
 		"properties", props,
@@ -970,7 +970,7 @@ func (v *lumiEsxiCommand) id() (string, error) {
 }
 
 func (v *lumiEsxiCommand) init(args *lumi.Args) (*lumi.Args, EsxiCommand, error) {
-	t := v.Runtime.Motor.Transport
+	t := v.MotorRuntime.Motor.Transport
 	vt, ok := t.(*vsphere_transport.Transport)
 	if !ok {
 		return nil, nil, errors.New("esxi resource is only supported on vsphere transport")
@@ -1025,7 +1025,7 @@ func (v *lumiEsxiCommand) hostSystem(vt *vsphere_transport.Transport, identifier
 }
 
 func (v *lumiEsxiCommand) GetResult() ([]interface{}, error) {
-	t := v.Runtime.Motor.Transport
+	t := v.MotorRuntime.Motor.Transport
 	_, ok := t.(*vsphere_transport.Transport)
 	if !ok {
 		return nil, errors.New("esxi resource is not supported on this transport")
@@ -1036,7 +1036,7 @@ func (v *lumiEsxiCommand) GetResult() ([]interface{}, error) {
 		return nil, err
 	}
 
-	esxiClient, err := esxiClient(v.Runtime.Motor.Transport, inventoryPath)
+	esxiClient, err := esxiClient(v.MotorRuntime.Motor.Transport, inventoryPath)
 	if err != nil {
 		return nil, err
 	}
@@ -1070,7 +1070,7 @@ func (v *lumiVsphereVswitchStandard) esxiClient() (*vsphere.Esxi, error) {
 		return nil, errors.New("cannot get esxi host inventory path")
 	}
 	inventoryPath := c.Data.(string)
-	return esxiClient(v.Runtime.Motor.Transport, inventoryPath)
+	return esxiClient(v.MotorRuntime.Motor.Transport, inventoryPath)
 }
 
 func (v *lumiVsphereVswitchStandard) GetFailoverPolicy() (map[string]interface{}, error) {

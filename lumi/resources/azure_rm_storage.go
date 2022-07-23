@@ -15,7 +15,7 @@ func (a *lumiAzurermStorage) id() (string, error) {
 type AzureStorageAccountProperties storage.AccountProperties
 
 func (a *lumiAzurermStorage) GetAccounts() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (a *lumiAzurermStorage) GetAccounts() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzure, err := a.Runtime.CreateResource("azurerm.storage.account",
+		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.storage.account",
 			"id", toString(account.ID),
 			"name", toString(account.Name),
 			"location", toString(account.Location),
@@ -99,7 +99,7 @@ func (a *lumiAzurermStorageAccount) init(args *lumi.Args) (*lumi.Args, AzurermSt
 		return args, nil, nil
 	}
 
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -164,7 +164,7 @@ func (a *lumiAzurermStorageAccount) init(args *lumi.Args) (*lumi.Args, AzurermSt
 }
 
 func (a *lumiAzurermStorageAccount) GetContainers() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +209,7 @@ func (a *lumiAzurermStorageAccount) GetContainers() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzure, err := a.Runtime.CreateResource("azurerm.storage.container",
+		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.storage.container",
 			"id", toString(entry.ID),
 			"name", toString(entry.Name),
 			"etag", toString(entry.Etag),

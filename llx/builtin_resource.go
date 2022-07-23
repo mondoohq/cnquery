@@ -64,7 +64,7 @@ func _resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64,
 
 		// get all mandatory args
 		lumiResource := resource.LumiResource()
-		resourceInfo := lumiResource.Runtime.Registry.Resources[lumiResource.Name]
+		resourceInfo := lumiResource.MotorRuntime.Registry.Resources[lumiResource.Name]
 
 		args := []interface{}{
 			"list", resList, "__id", blockId,

@@ -28,7 +28,7 @@ func (p *lumiPackage) init(args *lumi.Args) (*lumi.Args, Package, error) {
 		return args, nil, nil
 	}
 
-	obj, err := p.Runtime.CreateResource("packages")
+	obj, err := p.MotorRuntime.CreateResource("packages")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -98,7 +98,7 @@ func (p *lumiPackages) id() (string, error) {
 
 func (p *lumiPackages) GetList() ([]interface{}, error) {
 	// find suitable package manager
-	pm, err := packages.ResolveSystemPkgManager(p.Runtime.Motor)
+	pm, err := packages.ResolveSystemPkgManager(p.MotorRuntime.Motor)
 	if pm == nil || err != nil {
 		return nil, fmt.Errorf("could not detect suiteable package manager for platform")
 	}
@@ -138,7 +138,7 @@ func (p *lumiPackages) GetList() ([]interface{}, error) {
 			log.Debug().Str("package", osPkg.Name).Str("available", update.Available).Msg("lumi[packages]> found newer version")
 		}
 
-		pkg, err := p.Runtime.CreateResource("package",
+		pkg, err := p.MotorRuntime.CreateResource("package",
 			"name", osPkg.Name,
 			"version", osPkg.Version,
 			"available", available,

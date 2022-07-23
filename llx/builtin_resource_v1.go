@@ -57,7 +57,7 @@ func _resourceWhereV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32
 
 		// get all mandatory args
 		lumiResource := resource.LumiResource()
-		resourceInfo := lumiResource.Runtime.Registry.Resources[lumiResource.Name]
+		resourceInfo := lumiResource.MotorRuntime.Registry.Resources[lumiResource.Name]
 		args := []interface{}{
 			"list", resList, "__id", f.Id,
 		}

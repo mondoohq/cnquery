@@ -16,7 +16,7 @@ func (a *lumiAzuread) id() (string, error) {
 }
 
 func (a *lumiAzuread) GetUsers() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (a *lumiAzuread) GetUsers() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzureAdUser, err := a.Runtime.CreateResource("azuread.user",
+		lumiAzureAdUser, err := a.MotorRuntime.CreateResource("azuread.user",
 			"id", toString(usr.ObjectID),
 			"displayName", toString(usr.DisplayName),
 			"givenName", toString(usr.GivenName),
@@ -74,7 +74,7 @@ func (a *lumiAzuread) GetUsers() ([]interface{}, error) {
 }
 
 func (a *lumiAzuread) GetGroups() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (a *lumiAzuread) GetGroups() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzureAdGroup, err := a.Runtime.CreateResource("azuread.group",
+		lumiAzureAdGroup, err := a.MotorRuntime.CreateResource("azuread.group",
 			"id", toString(grp.ObjectID),
 			"displayName", toString(grp.DisplayName),
 			"securityEnabled", toBool(grp.SecurityEnabled),
@@ -131,7 +131,7 @@ func (a *lumiAzuread) GetGroups() ([]interface{}, error) {
 }
 
 func (a *lumiAzuread) GetDomains() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +172,7 @@ func (a *lumiAzuread) GetDomains() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzureAdDomain, err := a.Runtime.CreateResource("azuread.domain",
+		lumiAzureAdDomain, err := a.MotorRuntime.CreateResource("azuread.domain",
 			"name", toString(domain.Name),
 			"isVerified", toBool(domain.IsVerified),
 			"isDefault", toBool(domain.IsDefault),

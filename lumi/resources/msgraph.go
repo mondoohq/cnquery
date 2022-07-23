@@ -27,7 +27,7 @@ func (m *lumiMsgraphBeta) id() (string, error) {
 }
 
 func (m *lumiMsgraphBeta) GetSettings() ([]interface{}, error) {
-	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	mt, err := ms365transport(m.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (m *lumiMsgraphBetaOrganization) id() (string, error) {
 }
 
 func (m *lumiMsgraphBeta) GetOrganizations() ([]interface{}, error) {
-	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	mt, err := ms365transport(m.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (m *lumiMsgraphBeta) GetOrganizations() ([]interface{}, error) {
 		assignedPlans, _ := jsonToDictSlice(msgraphconv.NewAssignedPlans(org.GetAssignedPlans()))
 		verifiedDomains, _ := jsonToDictSlice(msgraphconv.NewVerifiedDomains(org.GetVerifiedDomains()))
 
-		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.organization",
+		lumiResource, err := m.MotorRuntime.CreateResource("msgraph.beta.organization",
 			"id", toString(org.GetId()),
 			"assignedPlans", assignedPlans,
 			"createdDateTime", org.GetCreatedDateTime(),
@@ -98,7 +98,7 @@ func (m *lumiMsgraphBetaUser) id() (string, error) {
 }
 
 func (m *lumiMsgraphBeta) GetUsers() ([]interface{}, error) {
-	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	mt, err := ms365transport(m.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func (m *lumiMsgraphBeta) GetUsers() ([]interface{}, error) {
 		user := users[i]
 
 		settings, _ := jsonToDict(user.GetSettings())
-		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.user",
+		lumiResource, err := m.MotorRuntime.CreateResource("msgraph.beta.user",
 			"id", toString(user.GetId()),
 			"accountEnabled", toBool(user.GetAccountEnabled()),
 			"city", toString(user.GetCity()),
@@ -162,7 +162,7 @@ func (m *lumiMsgraphBetaDomain) id() (string, error) {
 }
 
 func (m *lumiMsgraphBeta) GetDomains() ([]interface{}, error) {
-	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	mt, err := ms365transport(m.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -187,7 +187,7 @@ func (m *lumiMsgraphBeta) GetDomains() ([]interface{}, error) {
 	for i := range domains {
 		domain := domains[i]
 
-		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.domain",
+		lumiResource, err := m.MotorRuntime.CreateResource("msgraph.beta.domain",
 			"id", toString(domain.GetId()),
 			"authenticationType", toString(domain.GetAuthenticationType()),
 			"availabilityStatus", toString(domain.GetAvailabilityStatus()),
@@ -214,7 +214,7 @@ func (m *lumiMsgraphBetaDomaindnsrecord) id() (string, error) {
 }
 
 func (m *lumiMsgraphBetaDomain) GetServiceConfigurationRecords() ([]interface{}, error) {
-	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	mt, err := ms365transport(m.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +247,7 @@ func (m *lumiMsgraphBetaDomain) GetServiceConfigurationRecords() ([]interface{},
 		// TODO: do not return additional data, it is used to gather the text
 		properties, _ := jsonToDict(record.GetAdditionalData())
 
-		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.domaindnsrecord",
+		lumiResource, err := m.MotorRuntime.CreateResource("msgraph.beta.domaindnsrecord",
 			"id", toString(record.GetId()),
 			"isOptional", toBool(record.GetIsOptional()),
 			"label", toString(record.GetLabel()),
@@ -270,7 +270,7 @@ func (m *lumiMsgraphBetaApplication) id() (string, error) {
 }
 
 func (m *lumiMsgraphBeta) GetApplications() ([]interface{}, error) {
-	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	mt, err := ms365transport(m.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -295,7 +295,7 @@ func (m *lumiMsgraphBeta) GetApplications() ([]interface{}, error) {
 	for i := range apps {
 		app := apps[i]
 
-		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.application",
+		lumiResource, err := m.MotorRuntime.CreateResource("msgraph.beta.application",
 			"id", toString(app.GetId()),
 			"appId", toString(app.GetAppId()),
 			"createdDateTime", app.GetCreatedDateTime(),
@@ -319,7 +319,7 @@ func (m *lumiMsgraphBetaUser) GetSettings() (interface{}, error) {
 		return nil, err
 	}
 
-	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	mt, err := ms365transport(m.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -395,7 +395,7 @@ func msSecureScoreToLumi(runtime *lumi.Runtime, score models.SecureScoreable) (i
 }
 
 func (m *lumiMsgraphBetaSecurity) GetLatestSecureScores() (interface{}, error) {
-	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	mt, err := ms365transport(m.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -428,12 +428,12 @@ func (m *lumiMsgraphBetaSecurity) GetLatestSecureScores() (interface{}, error) {
 		}
 	}
 
-	return msSecureScoreToLumi(m.Runtime, latestScore)
+	return msSecureScoreToLumi(m.MotorRuntime, latestScore)
 }
 
 // see https://docs.microsoft.com/en-us/graph/api/securescore-get?view=graph-rest-1.0&tabs=http
 func (m *lumiMsgraphBetaSecurity) GetSecureScores() ([]interface{}, error) {
-	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	mt, err := ms365transport(m.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -457,7 +457,7 @@ func (m *lumiMsgraphBetaSecurity) GetSecureScores() ([]interface{}, error) {
 	scores := resp.GetValue()
 	for i := range scores {
 		score := scores[i]
-		lumiResource, err := msSecureScoreToLumi(m.Runtime, score)
+		lumiResource, err := msSecureScoreToLumi(m.MotorRuntime, score)
 		if err != nil {
 			return nil, err
 		}
@@ -476,7 +476,7 @@ func (s *lumiMsgraphBetaPolicies) id() (string, error) {
 }
 
 func (m *lumiMsgraphBetaPolicies) GetAuthorizationPolicy() (interface{}, error) {
-	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	mt, err := ms365transport(m.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -505,7 +505,7 @@ func (m *lumiMsgraphBetaPolicies) GetAuthorizationPolicy() (interface{}, error) 
 }
 
 func (m *lumiMsgraphBetaPolicies) GetIdentitySecurityDefaultsEnforcementPolicy() (interface{}, error) {
-	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	mt, err := ms365transport(m.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -530,7 +530,7 @@ func (m *lumiMsgraphBetaPolicies) GetIdentitySecurityDefaultsEnforcementPolicy()
 
 // https://docs.microsoft.com/en-us/graph/api/adminconsentrequestpolicy-get?view=graph-rest-beta
 func (m *lumiMsgraphBetaPolicies) GetAdminConsentRequestPolicy() (interface{}, error) {
-	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	mt, err := ms365transport(m.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -555,7 +555,7 @@ func (m *lumiMsgraphBetaPolicies) GetAdminConsentRequestPolicy() (interface{}, e
 // https://docs.microsoft.com/en-us/azure/active-directory/manage-apps/configure-user-consent?tabs=azure-powershell
 // https://docs.microsoft.com/en-us/graph/api/permissiongrantpolicy-list?view=graph-rest-1.0&tabs=http
 func (m *lumiMsgraphBetaPolicies) GetPermissionGrantPolicies() (interface{}, error) {
-	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	mt, err := ms365transport(m.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -582,7 +582,7 @@ func (m *lumiMsgraphBetaRolemanagement) id() (string, error) {
 }
 
 func (m *lumiMsgraphBetaRolemanagement) GetRoleDefinitions() (interface{}, error) {
-	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	mt, err := ms365transport(m.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -609,7 +609,7 @@ func (m *lumiMsgraphBetaRolemanagement) GetRoleDefinitions() (interface{}, error
 
 		rolePermissions, _ := jsonToDictSlice(msgraphconv.NewUnifiedRolePermissions(role.GetRolePermissions()))
 
-		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.rolemanagement.roledefinition",
+		lumiResource, err := m.MotorRuntime.CreateResource("msgraph.beta.rolemanagement.roledefinition",
 			"id", toString(role.GetId()),
 			"description", toString(role.GetDescription()),
 			"displayName", toString(role.GetDisplayName()),
@@ -633,7 +633,7 @@ func (m *lumiMsgraphBetaRolemanagementRoledefinition) id() (string, error) {
 }
 
 func (m *lumiMsgraphBetaRolemanagementRoledefinition) GetAssignments() ([]interface{}, error) {
-	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	mt, err := ms365transport(m.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -671,7 +671,7 @@ func (m *lumiMsgraphBetaRolemanagementRoledefinition) GetAssignments() ([]interf
 	for i := range roleAssignments {
 		roleAssignment := roleAssignments[i]
 		principal, _ := jsonToDict(msgraphconv.NewDirectoryPricipal(roleAssignment.GetPrincipal()))
-		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.rolemanagement.roleassignment",
+		lumiResource, err := m.MotorRuntime.CreateResource("msgraph.beta.rolemanagement.roleassignment",
 			"id", toString(roleAssignment.GetId()),
 			"roleDefinitionId", toString(roleAssignment.GetRoleDefinitionId()),
 			"principalId", toString(roleAssignment.GetPrincipalId()),
@@ -695,7 +695,7 @@ func (m *lumiMsgraphBetaDevicemanagement) id() (string, error) {
 }
 
 func (m *lumiMsgraphBetaDevicemanagement) GetDeviceConfigurations() ([]interface{}, error) {
-	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	mt, err := ms365transport(m.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -721,7 +721,7 @@ func (m *lumiMsgraphBetaDevicemanagement) GetDeviceConfigurations() ([]interface
 		configuration := configurations[i]
 		// TODO: do not return additional data
 		properties, _ := jsonToDict(configuration.GetAdditionalData())
-		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.devicemanagement.deviceconfiguration",
+		lumiResource, err := m.MotorRuntime.CreateResource("msgraph.beta.devicemanagement.deviceconfiguration",
 			"id", toString(configuration.GetId()),
 			"lastModifiedDateTime", configuration.GetLastModifiedDateTime(),
 			"roleScopeTagIds", sliceInterface(configuration.GetRoleScopeTagIds()),
@@ -742,7 +742,7 @@ func (m *lumiMsgraphBetaDevicemanagement) GetDeviceConfigurations() ([]interface
 }
 
 func (m *lumiMsgraphBetaDevicemanagement) GetDeviceCompliancePolicies() ([]interface{}, error) {
-	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	mt, err := ms365transport(m.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -777,7 +777,7 @@ func (m *lumiMsgraphBetaDevicemanagement) GetDeviceCompliancePolicies() ([]inter
 		properties, _ := jsonToDict(compliancePolicy.GetAdditionalData())
 		assignments, _ := jsonToDictSlice(msgraphconv.NewDeviceCompliancePolicyAssignments(compliancePolicy.GetAssignments()))
 
-		lumiResource, err := m.Runtime.CreateResource("msgraph.beta.devicemanagement.devicecompliancepolicy",
+		lumiResource, err := m.MotorRuntime.CreateResource("msgraph.beta.devicemanagement.devicecompliancepolicy",
 			"id", toString(compliancePolicy.GetId()),
 			"createdDateTime", compliancePolicy.GetCreatedDateTime(),
 			"description", toString(compliancePolicy.GetDescription()),

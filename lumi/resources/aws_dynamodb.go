@@ -23,7 +23,7 @@ const (
 )
 
 func (d *lumiAwsDynamodb) GetBackups() ([]interface{}, error) {
-	at, err := awstransport(d.Runtime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (d *lumiAwsDynamodb) GetBackups() ([]interface{}, error) {
 }
 
 func (d *lumiAwsDynamodb) getBackups(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -83,7 +83,7 @@ func (d *lumiAwsDynamodbTable) GetBackups() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(d.Runtime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (d *lumiAwsDynamodbTable) GetBackups() ([]interface{}, error) {
 }
 
 func (d *lumiAwsDynamodb) GetLimits() ([]interface{}, error) {
-	at, err := awstransport(d.Runtime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func (d *lumiAwsDynamodb) GetLimits() ([]interface{}, error) {
 }
 
 func (d *lumiAwsDynamodb) getLimits(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -144,7 +144,7 @@ func (d *lumiAwsDynamodb) getLimits(at *aws_transport.Transport) []*jobpool.Job 
 				return nil, errors.Wrap(err, "could not gather aws dynamodb backups")
 			}
 
-			lumiLimits, err := d.Runtime.CreateResource("aws.dynamodb.limit",
+			lumiLimits, err := d.MotorRuntime.CreateResource("aws.dynamodb.limit",
 				"arn", fmt.Sprintf(limitsArn, regionVal, account.ID),
 				"region", regionVal,
 				"accountMaxRead", *limitsResp.AccountMaxReadCapacityUnits,
@@ -163,7 +163,7 @@ func (d *lumiAwsDynamodb) getLimits(at *aws_transport.Transport) []*jobpool.Job 
 }
 
 func (d *lumiAwsDynamodb) GetGlobalTables() ([]interface{}, error) {
-	at, err := awstransport(d.Runtime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func (d *lumiAwsDynamodb) GetGlobalTables() ([]interface{}, error) {
 	}
 	res := []interface{}{}
 	for _, table := range listGlobalTablesResp.GlobalTables {
-		lumiTable, err := d.Runtime.CreateResource("aws.dynamodb.globaltable",
+		lumiTable, err := d.MotorRuntime.CreateResource("aws.dynamodb.globaltable",
 			"arn", fmt.Sprintf(dynamoGlobalTableArnPattern, account.ID, toString(table.GlobalTableName)),
 			"name", toString(table.GlobalTableName),
 		)
@@ -194,7 +194,7 @@ func (d *lumiAwsDynamodb) GetGlobalTables() ([]interface{}, error) {
 }
 
 func (d *lumiAwsDynamodb) GetTables() ([]interface{}, error) {
-	at, err := awstransport(d.Runtime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +215,7 @@ func (d *lumiAwsDynamodb) GetTables() ([]interface{}, error) {
 }
 
 func (d *lumiAwsDynamodb) getTables(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -257,7 +257,7 @@ func (d *lumiAwsDynamodb) getTables(at *aws_transport.Transport) []*jobpool.Job 
 				if err != nil {
 					return nil, err
 				}
-				lumiTable, err := d.Runtime.CreateResource("aws.dynamodb.table",
+				lumiTable, err := d.MotorRuntime.CreateResource("aws.dynamodb.table",
 					"arn", fmt.Sprintf(dynamoTableArnPattern, regionVal, account.ID, tableName),
 					"name", tableName,
 					"region", regionVal,
@@ -295,7 +295,7 @@ func (d *lumiAwsDynamodbGlobaltable) GetReplicaSettings() ([]interface{}, error)
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(d.Runtime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -319,7 +319,7 @@ func (d *lumiAwsDynamodbTable) GetContinuousBackups() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(d.Runtime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}

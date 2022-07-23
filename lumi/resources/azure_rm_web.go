@@ -17,7 +17,7 @@ func (a *lumiAzurermWeb) id() (string, error) {
 }
 
 func (a *lumiAzurermWeb) GetApps() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (a *lumiAzurermWeb) GetApps() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzure, err := a.Runtime.CreateResource("azurerm.web.appsite",
+		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.web.appsite",
 			"id", toString(entry.ID),
 			"name", toString(entry.Name),
 			"location", toString(entry.Location),
@@ -101,7 +101,7 @@ func isPlatformEol(platform string, version string) bool {
 
 // all runtimes that are returned here are not EOL and are supported
 func (a *lumiAzurermWeb) GetAvailableRuntimes() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +235,7 @@ func (a *lumiAzurermWebAppsite) id() (string, error) {
 }
 
 func (a *lumiAzurermWebAppsite) GetConfiguration() (interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -276,7 +276,7 @@ func (a *lumiAzurermWebAppsite) GetConfiguration() (interface{}, error) {
 		return nil, err
 	}
 
-	return a.Runtime.CreateResource("azurerm.web.appsiteconfig",
+	return a.MotorRuntime.CreateResource("azurerm.web.appsiteconfig",
 		"id", toString(entry.ID),
 		"name", toString(entry.Name),
 		"kind", toString(entry.Kind),
@@ -286,7 +286,7 @@ func (a *lumiAzurermWebAppsite) GetConfiguration() (interface{}, error) {
 }
 
 func (a *lumiAzurermWebAppsite) GetAuthenticationSettings() (interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -327,7 +327,7 @@ func (a *lumiAzurermWebAppsite) GetAuthenticationSettings() (interface{}, error)
 		return nil, err
 	}
 
-	return a.Runtime.CreateResource("azurerm.web.appsiteauthsettings",
+	return a.MotorRuntime.CreateResource("azurerm.web.appsiteauthsettings",
 		"id", toString(entry.ID),
 		"name", toString(entry.Name),
 		"kind", toString(entry.Kind),
@@ -337,7 +337,7 @@ func (a *lumiAzurermWebAppsite) GetAuthenticationSettings() (interface{}, error)
 }
 
 func (a *lumiAzurermWebAppsite) GetApplicationSettings() (interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -382,7 +382,7 @@ func (a *lumiAzurermWebAppsite) GetApplicationSettings() (interface{}, error) {
 }
 
 func (a *lumiAzurermWebAppsite) GetMetadata() (interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -427,7 +427,7 @@ func (a *lumiAzurermWebAppsite) GetMetadata() (interface{}, error) {
 }
 
 func (a *lumiAzurermWebAppsite) GetConnectionSettings() (interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -566,7 +566,7 @@ func (a *lumiAzurermWebAppsite) GetStack() (map[string]interface{}, error) {
 	// fetch available runtimes and check if they are included
 	// if they are included, leverage their additional properties
 	// if they are not included they are either eol or custom
-	obj, err := a.Runtime.CreateResource("azurerm.web")
+	obj, err := a.MotorRuntime.CreateResource("azurerm.web")
 	if err != nil {
 		return nil, err
 	}

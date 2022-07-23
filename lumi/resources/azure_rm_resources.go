@@ -7,7 +7,7 @@ import (
 )
 
 func (a *lumiAzurerm) GetResources() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (a *lumiAzurerm) GetResources() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzure, err := a.Runtime.CreateResource("azurerm.resource",
+		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.resource",
 			"id", toString(resource.ID),
 			"name", toString(resource.Name),
 			"kind", toString(resource.Location),

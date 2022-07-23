@@ -15,7 +15,7 @@ func (e *lumiAwsSecretsmanager) id() (string, error) {
 }
 
 func (e *lumiAwsSecretsmanager) GetSecrets() ([]interface{}, error) {
-	at, err := awstransport(e.Runtime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (e *lumiAwsSecretsmanagerSecret) id() (string, error) {
 }
 
 func (e *lumiAwsSecretsmanager) getSecrets(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -48,7 +48,6 @@ func (e *lumiAwsSecretsmanager) getSecrets(at *aws_transport.Transport) []*jobpo
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-
 			svc := at.Secretsmanager(regionVal)
 			ctx := context.Background()
 
@@ -62,7 +61,7 @@ func (e *lumiAwsSecretsmanager) getSecrets(at *aws_transport.Transport) []*jobpo
 					return nil, err
 				}
 				for _, secret := range secrets.SecretList {
-					lumiSecret, err := e.Runtime.CreateResource("aws.secretsmanager.secret",
+					lumiSecret, err := e.MotorRuntime.CreateResource("aws.secretsmanager.secret",
 						"arn", toString(secret.ARN),
 						"name", toString(secret.Name),
 						"rotationEnabled", secret.RotationEnabled,

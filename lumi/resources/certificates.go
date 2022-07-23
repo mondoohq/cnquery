@@ -25,7 +25,7 @@ func (s *lumiParseCertificates) init(args *lumi.Args) (*lumi.Args, Authorizedkey
 			return nil, nil, errors.New("Wrong type for 'path' in authorizedkeys initialization, it must be a string")
 		}
 
-		f, err := s.Runtime.CreateResource("file", "path", path)
+		f, err := s.MotorRuntime.CreateResource("file", "path", path)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -33,7 +33,7 @@ func (s *lumiParseCertificates) init(args *lumi.Args) (*lumi.Args, Authorizedkey
 	} else if x, ok := (*args)["content"]; ok {
 		content := x.(string)
 		virtualPath := "in-memory://" + checksums.New.Add(content).String()
-		f, err := s.Runtime.CreateResource("file", "path", virtualPath, "content", content, "exists", true)
+		f, err := s.MotorRuntime.CreateResource("file", "path", virtualPath, "content", content, "exists", true)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -69,7 +69,7 @@ func (a *lumiParseCertificates) GetFile() (File, error) {
 		return nil, err
 	}
 
-	f, err := a.Runtime.CreateResource("file", "path", path)
+	f, err := a.MotorRuntime.CreateResource("file", "path", path)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (a *lumiParseCertificates) GetFile() (File, error) {
 func (a *lumiParseCertificates) GetContent(file File) (string, error) {
 	// TODO: this can be heavily improved once we do it right, since this is constantly
 	// re-registered as the file changes
-	err := a.Runtime.WatchAndCompute(file, "content", a, "content")
+	err := a.MotorRuntime.WatchAndCompute(file, "content", a, "content")
 	if err != nil {
 		return "", err
 	}
@@ -139,7 +139,7 @@ func (p *lumiParseCertificates) GetList(content string, path string) ([]interfac
 		return nil, err
 	}
 
-	return certificatesToLumiCertificates(p.Runtime, certs)
+	return certificatesToLumiCertificates(p.MotorRuntime, certs)
 }
 
 func certificatesToLumiCertificates(runtime *lumi.Runtime, certs []*x509.Certificate) ([]interface{}, error) {
@@ -245,7 +245,7 @@ func (s *lumiCertificate) GetAuthorityKeyID() (string, error) {
 func (s *lumiCertificate) GetSubject() (interface{}, error) {
 	cert := s.getGoCert()
 	fingerprint := hex.EncodeToString(certificates.Sha256Hash(cert))
-	lumiSubject, err := pkixnameToLumi(s.Runtime, cert.Subject, fingerprint+":subject")
+	lumiSubject, err := pkixnameToLumi(s.MotorRuntime, cert.Subject, fingerprint+":subject")
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +255,7 @@ func (s *lumiCertificate) GetSubject() (interface{}, error) {
 func (s *lumiCertificate) GetIssuer() (interface{}, error) {
 	cert := s.getGoCert()
 	fingerprint := hex.EncodeToString(certificates.Sha256Hash(cert))
-	lumiIssuer, err := pkixnameToLumi(s.Runtime, cert.Issuer, fingerprint+":issuer")
+	lumiIssuer, err := pkixnameToLumi(s.MotorRuntime, cert.Issuer, fingerprint+":issuer")
 	if err != nil {
 		return nil, err
 	}
@@ -351,7 +351,7 @@ func (s *lumiCertificate) GetExtensions() ([]interface{}, error) {
 	fingerprint := hex.EncodeToString(certificates.Sha256Hash(cert))
 	for i := range cert.Extensions {
 		extension := cert.Extensions[i]
-		ext, err := pkixextensionToLumi(s.Runtime, extension, fingerprint+":"+extension.Id.String())
+		ext, err := pkixextensionToLumi(s.MotorRuntime, extension, fingerprint+":"+extension.Id.String())
 		if err != nil {
 			return nil, err
 		}
@@ -420,7 +420,7 @@ func (s *lumiOsRootCertificates) id() (string, error) {
 }
 
 func (s *lumiOsRootCertificates) init(args *lumi.Args) (*lumi.Args, OsRootCertificates, error) {
-	pi, err := s.Runtime.Motor.Platform()
+	pi, err := s.MotorRuntime.Motor.Platform()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -438,14 +438,14 @@ func (s *lumiOsRootCertificates) init(args *lumi.Args) (*lumi.Args, OsRootCertif
 	lumiFiles := []interface{}{}
 	for i := range files {
 		log.Trace().Str("path", files[i]).Msg("os.rootcertificates> check root certificate path")
-		fileInfo, err := s.Runtime.Motor.Transport.FS().Stat(files[i])
+		fileInfo, err := s.MotorRuntime.Motor.Transport.FS().Stat(files[i])
 		if err != nil {
 			log.Trace().Err(err).Str("path", files[i]).Msg("os.rootcertificates> file does not exist")
 			continue
 		}
 		log.Debug().Str("path", files[i]).Msg("os.rootcertificates> found root certificate bundle path")
 		if !fileInfo.IsDir() {
-			f, err := s.Runtime.CreateResource("file", "path", files[i])
+			f, err := s.MotorRuntime.CreateResource("file", "path", files[i])
 			if err != nil {
 				return nil, nil, err
 			}
@@ -470,7 +470,7 @@ func (s *lumiOsRootCertificates) GetContent(files []interface{}) ([]interface{},
 
 		// TODO: this can be heavily improved once we do it right, since this is constantly
 		// re-registered as the file changes
-		err := s.Runtime.WatchAndCompute(file, "content", s, "content")
+		err := s.MotorRuntime.WatchAndCompute(file, "content", s, "content")
 		if err != nil {
 			return nil, err
 		}
@@ -494,5 +494,5 @@ func (s *lumiOsRootCertificates) GetList(content []interface{}) ([]interface{}, 
 		}
 		certificateList = append(certificateList, certs...)
 	}
-	return certificatesToLumiCertificates(s.Runtime, certificateList)
+	return certificatesToLumiCertificates(s.MotorRuntime, certificateList)
 }

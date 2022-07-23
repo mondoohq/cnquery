@@ -14,12 +14,13 @@ import (
 func (a *lumiAwsAccessAnalyzer) id() (string, error) {
 	return "aws.accessAnalyzer", nil
 }
+
 func (e *lumiAwsAccessanalyzerAnalyzer) id() (string, error) {
 	return e.Arn()
 }
 
 func (a *lumiAwsAccessAnalyzer) GetAnalyzers() ([]interface{}, error) {
-	at, err := awstransport(a.Runtime.Motor.Transport)
+	at, err := awstransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +41,7 @@ func (a *lumiAwsAccessAnalyzer) GetAnalyzers() ([]interface{}, error) {
 }
 
 func (a *lumiAwsAccessAnalyzer) getAnalyzers(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -49,7 +50,6 @@ func (a *lumiAwsAccessAnalyzer) getAnalyzers(at *aws_transport.Transport) []*job
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-
 			svc := at.AccessAnalyzer(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
@@ -62,7 +62,7 @@ func (a *lumiAwsAccessAnalyzer) getAnalyzers(at *aws_transport.Transport) []*job
 					return nil, err
 				}
 				for _, analyzer := range analyzers.Analyzers {
-					lumiAnalyzer, err := a.Runtime.CreateResource("aws.accessanalyzer.analyzer",
+					lumiAnalyzer, err := a.MotorRuntime.CreateResource("aws.accessanalyzer.analyzer",
 						"arn", toString(analyzer.Arn),
 						"name", toString(analyzer.Name),
 						"status", string(analyzer.Status),

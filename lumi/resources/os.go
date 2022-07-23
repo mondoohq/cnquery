@@ -27,7 +27,7 @@ func (p *lumiOs) id() (string, error) {
 
 func (p *lumiOs) GetRebootpending() (interface{}, error) {
 	// it is a container image, a reboot is never required
-	switch p.Runtime.Motor.Transport.(type) {
+	switch p.MotorRuntime.Motor.Transport.(type) {
 	case *docker_snapshot.DockerSnapshotTransport:
 		return false, nil
 	case *tar.Transport:
@@ -35,13 +35,13 @@ func (p *lumiOs) GetRebootpending() (interface{}, error) {
 	}
 
 	// check photon
-	pf, err := p.Runtime.Motor.Platform()
+	pf, err := p.MotorRuntime.Motor.Platform()
 	if err != nil {
 		return nil, err
 	}
 	if pf.Name == "photon" {
 		// get installed kernel and check if the found one is running
-		lumiKernel, err := p.Runtime.CreateResource("kernel")
+		lumiKernel, err := p.MotorRuntime.CreateResource("kernel")
 		if err != nil {
 			return nil, err
 		}
@@ -71,7 +71,7 @@ func (p *lumiOs) GetRebootpending() (interface{}, error) {
 
 	// TODO: move more logic into lumi to leverage its cache
 	// try to collect if a reboot is required, fails for static images
-	rb, err := reboot.New(p.Runtime.Motor)
+	rb, err := reboot.New(p.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (p *lumiOs) GetRebootpending() (interface{}, error) {
 }
 
 func (p *lumiOs) getUnixEnv() (map[string]interface{}, error) {
-	rawCmd, err := p.Runtime.CreateResource("command", "command", "env")
+	rawCmd, err := p.MotorRuntime.CreateResource("command", "command", "env")
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func (p *lumiOs) getUnixEnv() (map[string]interface{}, error) {
 }
 
 func (p *lumiOs) getWindowsEnv() (map[string]interface{}, error) {
-	rawCmd, err := p.Runtime.CreateResource("powershell",
+	rawCmd, err := p.MotorRuntime.CreateResource("powershell",
 		"script", "Get-ChildItem Env:* | ConvertTo-Json",
 	)
 	if err != nil {
@@ -121,7 +121,7 @@ func (p *lumiOs) getWindowsEnv() (map[string]interface{}, error) {
 }
 
 func (p *lumiOs) GetEnv() (map[string]interface{}, error) {
-	pf, err := p.Runtime.Motor.Platform()
+	pf, err := p.MotorRuntime.Motor.Platform()
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +156,7 @@ func (p *lumiOs) GetPath() ([]interface{}, error) {
 
 // returns uptime in nanoseconds
 func (p *lumiOs) GetUptime() (*time.Time, error) {
-	uptime, err := uptime.New(p.Runtime.Motor)
+	uptime, err := uptime.New(p.MotorRuntime.Motor)
 	if err != nil {
 		return LumiTime(llx.DurationToTime(0)), err
 	}
@@ -179,7 +179,7 @@ func (p *lumiOsUpdate) id() (string, error) {
 
 func (p *lumiOs) GetUpdates() ([]interface{}, error) {
 	// find suitable system updates
-	um, err := packages.ResolveSystemUpdateManager(p.Runtime.Motor)
+	um, err := packages.ResolveSystemUpdateManager(p.MotorRuntime.Motor)
 	if um == nil || err != nil {
 		return nil, fmt.Errorf("could not detect suiteable update manager for platform")
 	}
@@ -195,7 +195,7 @@ func (p *lumiOs) GetUpdates() ([]interface{}, error) {
 	log.Debug().Int("updates", len(updates)).Msg("lumi[updates]> found system updates")
 	for i, update := range updates {
 
-		lumiOsUpdate, err := p.Runtime.CreateResource("os.update",
+		lumiOsUpdate, err := p.MotorRuntime.CreateResource("os.update",
 			"name", update.Name,
 			"severity", update.Severity,
 			"category", update.Category,
@@ -214,16 +214,16 @@ func (p *lumiOs) GetUpdates() ([]interface{}, error) {
 }
 
 func (s *lumiOs) GetHostname() (string, error) {
-	platform, err := s.Runtime.Motor.Platform()
+	platform, err := s.MotorRuntime.Motor.Platform()
 	if err != nil {
 		return "", errors.New("cannot determine platform uuid")
 	}
 
-	return hostname.Hostname(s.Runtime.Motor.Transport, platform)
+	return hostname.Hostname(s.MotorRuntime.Motor.Transport, platform)
 }
 
 func (p *lumiOs) GetName() (string, error) {
-	pf, err := p.Runtime.Motor.Platform()
+	pf, err := p.MotorRuntime.Motor.Platform()
 	if err != nil {
 		return "", err
 	}
@@ -233,7 +233,7 @@ func (p *lumiOs) GetName() (string, error) {
 	}
 
 	if pf.IsFamily(platform.FAMILY_LINUX) {
-		lf, err := p.Runtime.CreateResource("file", "path", "/etc/machine-info")
+		lf, err := p.MotorRuntime.CreateResource("file", "path", "/etc/machine-info")
 		if err != nil {
 			return "", err
 		}
@@ -248,7 +248,7 @@ func (p *lumiOs) GetName() (string, error) {
 			return "", nil
 		}
 
-		err = p.Runtime.WatchAndCompute(file, "content", p, "name")
+		err = p.MotorRuntime.WatchAndCompute(file, "content", p, "name")
 		if err != nil {
 			return "", err
 		}
@@ -271,7 +271,7 @@ func (p *lumiOs) GetName() (string, error) {
 
 	// return plain hostname, this also happens for linux if no pretty name was found
 	if pf.IsFamily(platform.FAMILY_UNIX) {
-		return hostname.Hostname(p.Runtime.Motor.Transport, pf)
+		return hostname.Hostname(p.MotorRuntime.Motor.Transport, pf)
 	}
 
 	if pf.IsFamily(platform.FAMILY_WINDOWS) {
@@ -286,7 +286,7 @@ func (p *lumiOs) GetName() (string, error) {
 		}
 
 		// fallback to hostname
-		return hostname.Hostname(p.Runtime.Motor.Transport, pf)
+		return hostname.Hostname(p.MotorRuntime.Motor.Transport, pf)
 	}
 
 	return "", errors.New("your platform is not supported by operating system resource")
@@ -294,12 +294,12 @@ func (p *lumiOs) GetName() (string, error) {
 
 // returns the OS native machine UUID/GUID
 func (s *lumiOs) GetMachineid() (string, error) {
-	platform, err := s.Runtime.Motor.Platform()
+	platform, err := s.MotorRuntime.Motor.Platform()
 	if err != nil {
 		return "", errors.New("cannot determine platform uuid")
 	}
 
-	uuidProvider, err := platformid.MachineIDProvider(s.Runtime.Motor.Transport, platform)
+	uuidProvider, err := platformid.MachineIDProvider(s.MotorRuntime.Motor.Transport, platform)
 	if err != nil {
 		return "", errors.Wrap(err, "cannot determine platform uuid")
 	}

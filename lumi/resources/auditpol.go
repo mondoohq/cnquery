@@ -11,7 +11,7 @@ func (p *lumiAuditpol) id() (string, error) {
 }
 
 func (p *lumiAuditpol) GetList() ([]interface{}, error) {
-	cmd, err := p.Runtime.Motor.Transport.RunCommand("auditpol /get /category:* /r")
+	cmd, err := p.MotorRuntime.Motor.Transport.RunCommand("auditpol /get /category:* /r")
 	if err != nil {
 		return nil, fmt.Errorf("could not run auditpol")
 	}
@@ -24,7 +24,7 @@ func (p *lumiAuditpol) GetList() ([]interface{}, error) {
 	auditPolEntries := make([]interface{}, len(entries))
 	for i := range entries {
 		entry := entries[i]
-		lumiAuditpolEntry, err := p.Runtime.CreateResource("auditpol.entry",
+		lumiAuditpolEntry, err := p.MotorRuntime.CreateResource("auditpol.entry",
 			"machinename", entry.MachineName,
 			"policytarget", entry.PolicyTarget,
 			"subcategory", entry.Subcategory,

@@ -18,7 +18,7 @@ func (s *lumiWindows) GetComputerInfo() (map[string]interface{}, error) {
 
 	// encode the powershell command
 	encodedCmd := powershell.Encode(cmd)
-	executedCmd, err := s.Runtime.Motor.Transport.RunCommand(encodedCmd)
+	executedCmd, err := s.MotorRuntime.Motor.Transport.RunCommand(encodedCmd)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (p *lumiWindowsHotfix) init(args *lumi.Args) (*lumi.Args, WindowsHotfix, er
 		return args, nil, nil
 	}
 
-	obj, err := p.Runtime.CreateResource("windows")
+	obj, err := p.MotorRuntime.CreateResource("windows")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -71,7 +71,7 @@ func (p *lumiWindowsHotfix) init(args *lumi.Args) (*lumi.Args, WindowsHotfix, er
 func (w *lumiWindows) GetHotfixes() ([]interface{}, error) {
 	// query hotfixes
 	encodedCmd := powershell.Encode(packages.WINDOWS_QUERY_HOTFIXES)
-	executedCmd, err := w.Runtime.Motor.Transport.RunCommand(encodedCmd)
+	executedCmd, err := w.MotorRuntime.Motor.Transport.RunCommand(encodedCmd)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (w *lumiWindows) GetHotfixes() ([]interface{}, error) {
 	lumiHotFixes := make([]interface{}, len(hotfixes))
 	for i, hf := range hotfixes {
 
-		lumiHotfix, err := w.Runtime.CreateResource("windows.hotfix",
+		lumiHotfix, err := w.MotorRuntime.CreateResource("windows.hotfix",
 			"hotfixId", hf.HotFixId,
 			"caption", hf.Caption,
 			"description", hf.Description,
@@ -121,7 +121,7 @@ func (p *lumiWindowsFeature) init(args *lumi.Args) (*lumi.Args, WindowsFeature, 
 		return args, nil, nil
 	}
 
-	obj, err := p.Runtime.CreateResource("windows")
+	obj, err := p.MotorRuntime.CreateResource("windows")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -147,7 +147,7 @@ func (p *lumiWindowsFeature) init(args *lumi.Args) (*lumi.Args, WindowsFeature, 
 func (w *lumiWindows) GetFeatures() ([]interface{}, error) {
 	// query features
 	encodedCmd := powershell.Encode(windows.QUERY_FEATURES)
-	executedCmd, err := w.Runtime.Motor.Transport.RunCommand(encodedCmd)
+	executedCmd, err := w.MotorRuntime.Motor.Transport.RunCommand(encodedCmd)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func (w *lumiWindows) GetFeatures() ([]interface{}, error) {
 	lumiFeatures := make([]interface{}, len(features))
 	for i, feature := range features {
 
-		lumiFeature, err := w.Runtime.CreateResource("windows.feature",
+		lumiFeature, err := w.MotorRuntime.CreateResource("windows.feature",
 			"path", feature.Path,
 			"name", feature.Name,
 			"displayName", feature.DisplayName,

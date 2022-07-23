@@ -31,7 +31,7 @@ func (s *lumiAwsVpcRoutetable) id() (string, error) {
 }
 
 func (s *lumiAws) GetVpcs() ([]interface{}, error) {
-	at, err := awstransport(s.Runtime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -51,10 +51,10 @@ func (s *lumiAws) GetVpcs() ([]interface{}, error) {
 }
 
 func (s *lumiAws) getVpcs(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}} // return the error
+		return []*jobpool.Job{{Err: err}} // return the error
 	}
 	account, err := at.Account()
 	if err != nil {
@@ -84,7 +84,7 @@ func (s *lumiAws) getVpcs(at *aws_transport.Transport) []*jobpool.Job {
 				for i := range vpcs.Vpcs {
 					v := vpcs.Vpcs[i]
 
-					lumiVpc, err := s.Runtime.CreateResource("aws.vpc",
+					lumiVpc, err := s.MotorRuntime.CreateResource("aws.vpc",
 						"arn", fmt.Sprintf(vpcArnPattern, regionVal, account.ID, toString(v.VpcId)),
 						"id", toString(v.VpcId),
 						"state", string(v.State),
@@ -107,7 +107,7 @@ func (s *lumiAws) getVpcs(at *aws_transport.Transport) []*jobpool.Job {
 }
 
 func (s *lumiAwsVpc) GetFlowLogs() ([]interface{}, error) {
-	at, err := awstransport(s.Runtime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ func (s *lumiAwsVpc) GetFlowLogs() ([]interface{}, error) {
 		}
 
 		for _, flowLog := range flowLogsRes.FlowLogs {
-			lumiFlowLog, err := s.Runtime.CreateResource("aws.vpc.flowlog",
+			lumiFlowLog, err := s.MotorRuntime.CreateResource("aws.vpc.flowlog",
 				"id", toString(flowLog.FlowLogId),
 				"vpc", vpc,
 				"region", region,
@@ -151,6 +151,7 @@ func (s *lumiAwsVpc) GetFlowLogs() ([]interface{}, error) {
 	}
 	return flowLogs, nil
 }
+
 func (p *lumiAwsVpc) init(args *lumi.Args) (*lumi.Args, AwsVpc, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
@@ -161,7 +162,7 @@ func (p *lumiAwsVpc) init(args *lumi.Args) (*lumi.Args, AwsVpc, error) {
 	}
 
 	// load all vpcs
-	obj, err := p.Runtime.CreateResource("aws")
+	obj, err := p.MotorRuntime.CreateResource("aws")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -212,7 +213,7 @@ func (s *lumiAwsVpc) GetRouteTables() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(s.Runtime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +239,7 @@ func (s *lumiAwsVpc) GetRouteTables() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			lumiRouteTable, err := s.Runtime.CreateResource("aws.vpc.routetable",
+			lumiRouteTable, err := s.MotorRuntime.CreateResource("aws.vpc.routetable",
 				"id", toString(routeTable.RouteTableId),
 				"routes", dictRoutes,
 			)

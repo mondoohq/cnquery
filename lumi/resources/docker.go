@@ -15,7 +15,7 @@ func (p *lumiDocker) id() (string, error) {
 }
 
 func (p *lumiDocker) GetImages() ([]interface{}, error) {
-	_, ok := p.Runtime.Motor.Transport.(*local.LocalTransport)
+	_, ok := p.MotorRuntime.Motor.Transport.(*local.LocalTransport)
 	if !ok {
 		return nil, errors.New("docker is not support for this transport")
 	}
@@ -42,7 +42,7 @@ func (p *lumiDocker) GetImages() ([]interface{}, error) {
 			tags = append(tags, dImg.RepoTags[i])
 		}
 
-		lumiDockerImage, err := p.Runtime.CreateResource("docker.image",
+		lumiDockerImage, err := p.MotorRuntime.CreateResource("docker.image",
 			"id", dImg.ID,
 			"size", dImg.Size,
 			"virtualsize", dImg.VirtualSize,
@@ -60,7 +60,7 @@ func (p *lumiDocker) GetImages() ([]interface{}, error) {
 }
 
 func (p *lumiDocker) GetContainers() ([]interface{}, error) {
-	_, ok := p.Runtime.Motor.Transport.(*local.LocalTransport)
+	_, ok := p.MotorRuntime.Motor.Transport.(*local.LocalTransport)
 	if !ok {
 		return nil, errors.New("docker is not support for this transport")
 	}
@@ -87,7 +87,7 @@ func (p *lumiDocker) GetContainers() ([]interface{}, error) {
 			names = append(names, dContainer.Names[i])
 		}
 
-		lumiDockerContainer, err := p.Runtime.CreateResource("docker.container",
+		lumiDockerContainer, err := p.MotorRuntime.CreateResource("docker.container",
 			"id", dContainer.ID,
 			"image", dContainer.Image,
 			"imageid", dContainer.ImageID,

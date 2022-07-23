@@ -12,7 +12,7 @@ func (l *lumiLsblk) id() (string, error) {
 }
 
 func (l *lumiLsblk) GetList() ([]interface{}, error) {
-	cmd, err := l.Runtime.Motor.Transport.RunCommand("lsblk --json --fs")
+	cmd, err := l.MotorRuntime.Motor.Transport.RunCommand("lsblk --json --fs")
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (l *lumiLsblk) GetList() ([]interface{}, error) {
 		for i := range d.Children {
 			entry := d.Children[i]
 			entry.Mountpoints = append(entry.Mountpoints, entry.Mountpoint)
-			lumiLsblkEntry, err := l.Runtime.CreateResource("lsblk.entry",
+			lumiLsblkEntry, err := l.MotorRuntime.CreateResource("lsblk.entry",
 				"name", entry.Name,
 				"fstype", entry.Fstype,
 				"label", entry.Label,

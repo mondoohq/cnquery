@@ -1,11 +1,12 @@
 package resources
 
 import (
+	"time"
+
 	"github.com/cockroachdb/errors"
 	"github.com/packethost/packngo"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/transports"
-	"time"
 
 	equinix_transport "go.mondoo.io/mondoo/motor/transports/equinix"
 )
@@ -33,7 +34,7 @@ func (g *lumiEquinixMetalProject) init(args *lumi.Args) (*lumi.Args, EquinixMeta
 	}
 
 	// fetch the default project from the transport
-	et, err := equinixtransport(g.Runtime.Motor.Transport)
+	et, err := equinixtransport(g.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -64,7 +65,7 @@ func (g *lumiEquinixMetalProject) init(args *lumi.Args) (*lumi.Args, EquinixMeta
 }
 
 func (p *lumiEquinixMetalProject) GetOrganization() (interface{}, error) {
-	et, err := equinixtransport(p.Runtime.Motor.Transport)
+	et, err := equinixtransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +100,7 @@ func (p *lumiEquinixMetalProject) GetOrganization() (interface{}, error) {
 	updated, _ := parseEquinixTime(org.Updated)
 	address, _ := jsonToDict(org.Address)
 
-	return p.Runtime.CreateResource("equinix.metal.organization",
+	return p.MotorRuntime.CreateResource("equinix.metal.organization",
 		"url", org.URL,
 		"id", org.ID,
 		"name", org.Name,
@@ -117,7 +118,7 @@ func (p *lumiEquinixMetalProject) GetOrganization() (interface{}, error) {
 }
 
 func (p *lumiEquinixMetalProject) GetUsers() ([]interface{}, error) {
-	et, err := equinixtransport(p.Runtime.Motor.Transport)
+	et, err := equinixtransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +152,7 @@ func (p *lumiEquinixMetalProject) GetUsers() ([]interface{}, error) {
 		created, _ := parseEquinixTime(fetchedUserData.Created)
 		updated, _ := parseEquinixTime(fetchedUserData.Updated)
 
-		lumiEquinixSshKey, err := p.Runtime.CreateResource("equinix.metal.user",
+		lumiEquinixSshKey, err := p.MotorRuntime.CreateResource("equinix.metal.user",
 			"url", fetchedUserData.URL,
 			"id", fetchedUserData.ID,
 			"firstName", fetchedUserData.FirstName,
@@ -179,8 +180,7 @@ func (p *lumiEquinixMetalProject) GetUsers() ([]interface{}, error) {
 }
 
 func (p *lumiEquinixMetalProject) GetSshKeys() ([]interface{}, error) {
-
-	et, err := equinixtransport(p.Runtime.Motor.Transport)
+	et, err := equinixtransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +202,7 @@ func (p *lumiEquinixMetalProject) GetSshKeys() ([]interface{}, error) {
 		created, _ := parseEquinixTime(key.Created)
 		updated, _ := parseEquinixTime(key.Updated)
 
-		lumiEquinixSshKey, err := p.Runtime.CreateResource("equinix.metal.sshkey",
+		lumiEquinixSshKey, err := p.MotorRuntime.CreateResource("equinix.metal.sshkey",
 			"url", key.URL,
 			"id", key.ID,
 			"label", key.Label,
@@ -221,8 +221,7 @@ func (p *lumiEquinixMetalProject) GetSshKeys() ([]interface{}, error) {
 }
 
 func (p *lumiEquinixMetalProject) GetDevices() ([]interface{}, error) {
-
-	et, err := equinixtransport(p.Runtime.Motor.Transport)
+	et, err := equinixtransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -245,7 +244,7 @@ func (p *lumiEquinixMetalProject) GetDevices() ([]interface{}, error) {
 		updated, _ := parseEquinixTime(device.Updated)
 		os, _ := jsonToDict(device.OS)
 
-		lumiEquinixDevice, err := p.Runtime.CreateResource("equinix.metal.sshkey",
+		lumiEquinixDevice, err := p.MotorRuntime.CreateResource("equinix.metal.sshkey",
 			"url", device.Href,
 			"id", device.ID,
 			"shortID", device.ShortID,

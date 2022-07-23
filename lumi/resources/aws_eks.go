@@ -15,7 +15,7 @@ func (e *lumiAwsEks) id() (string, error) {
 }
 
 func (e *lumiAwsEks) GetClusters() ([]interface{}, error) {
-	at, err := awstransport(e.Runtime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (e *lumiAwsEks) getClusters(at *aws_transport.Transport) []*jobpool.Job {
 					"resourcesVpcConfig", vpcConfig,
 				}
 
-				lumiFilesystem, err := e.Runtime.CreateResource("aws.eks.cluster", args...)
+				lumiFilesystem, err := e.MotorRuntime.CreateResource("aws.eks.cluster", args...)
 				if err != nil {
 					return nil, err
 				}

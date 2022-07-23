@@ -18,7 +18,7 @@ func (a *lumiAzurermKeyvault) id() (string, error) {
 }
 
 func (a *lumiAzurermKeyvault) GetVaults() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (a *lumiAzurermKeyvault) GetVaults() ([]interface{}, error) {
 	for i := range vaults.Values() {
 		entry := vaults.Values()[i]
 
-		lumiAzure, err := a.Runtime.CreateResource("azurerm.keyvault.vault",
+		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.vault",
 			"id", toString(entry.ID),
 			// TODO: temproray
 			"vaultName", toString(entry.Name),
@@ -74,7 +74,7 @@ func (a *lumiAzurermKeyvaultVault) GetVaultUri() (string, error) {
 const azureKeyVaulAudience = "https://vault.azure.net"
 
 func (a *lumiAzurermKeyvaultVault) GetKeys() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func (a *lumiAzurermKeyvaultVault) GetKeys() ([]interface{}, error) {
 	for i := range keys.Values() {
 		entry := keys.Values()[i]
 
-		lumiAzure, err := a.Runtime.CreateResource("azurerm.keyvault.key",
+		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.key",
 			"kid", toString(entry.Kid),
 			"managed", toBool(entry.Managed),
 			"tags", azureTagsToInterface(entry.Tags),
@@ -124,7 +124,7 @@ func (a *lumiAzurermKeyvaultVault) GetKeys() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermKeyvaultVault) GetCertificates() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +157,7 @@ func (a *lumiAzurermKeyvaultVault) GetCertificates() ([]interface{}, error) {
 		// 	return nil, err
 		// }
 
-		lumiAzure, err := a.Runtime.CreateResource("azurerm.keyvault.certificate",
+		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.certificate",
 			"id", toString(entry.ID),
 			"tags", azureTagsToInterface(entry.Tags),
 			// "attributes", attributes,
@@ -179,7 +179,7 @@ func (a *lumiAzurermKeyvaultVault) GetCertificates() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermKeyvaultVault) GetSecrets() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +207,7 @@ func (a *lumiAzurermKeyvaultVault) GetSecrets() ([]interface{}, error) {
 	for i := range secrets.Values() {
 		entry := secrets.Values()[i]
 
-		lumiAzure, err := a.Runtime.CreateResource("azurerm.keyvault.secret",
+		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.secret",
 			"id", toString(entry.ID),
 			"tags", azureTagsToInterface(entry.Tags),
 			"contentType", toString(entry.ContentType),
@@ -228,8 +228,7 @@ func (a *lumiAzurermKeyvaultVault) GetSecrets() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermKeyvaultVault) GetProperties() (map[string]interface{}, error) {
-
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -275,7 +274,7 @@ func (a *lumiAzurermKeyvaultVault) GetDiagnosticSettings() ([]interface{}, error
 	}
 
 	// NOTE diagnostics are fetched in the init of azurerm.monitor.diagnosticsettings
-	return diagnosticsSettings(a.Runtime, id)
+	return diagnosticsSettings(a.MotorRuntime, id)
 }
 
 func (a *lumiAzurermKeyvaultKey) id() (string, error) {
@@ -312,7 +311,7 @@ func (a *lumiAzurermKeyvaultKey) GetVersion() (interface{}, error) {
 }
 
 func (a *lumiAzurermKeyvaultKey) GetVersions() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -358,7 +357,7 @@ func (a *lumiAzurermKeyvaultKey) GetVersions() ([]interface{}, error) {
 	for i := range secrets.Values() {
 		entry := secrets.Values()[i]
 
-		lumiAzure, err := a.Runtime.CreateResource("azurerm.keyvault.key",
+		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.key",
 			"kid", toString(entry.Kid),
 			"tags", azureTagsToInterface(entry.Tags),
 			"managed", toBool(entry.Managed),
@@ -444,7 +443,7 @@ func parseKeyVaultId(url string) (*keyvaultid, error) {
 }
 
 func (a *lumiAzurermKeyvaultCertificate) GetVersions() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -490,7 +489,7 @@ func (a *lumiAzurermKeyvaultCertificate) GetVersions() ([]interface{}, error) {
 	for i := range certificates.Values() {
 		entry := certificates.Values()[i]
 
-		lumiAzure, err := a.Runtime.CreateResource("azurerm.keyvault.certificate",
+		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.certificate",
 			"id", toString(entry.ID),
 			"tags", azureTagsToInterface(entry.Tags),
 			"x5t", toString(entry.X509Thumbprint),
@@ -545,7 +544,7 @@ func (a *lumiAzurermKeyvaultSecret) GetVersion() (interface{}, error) {
 }
 
 func (a *lumiAzurermKeyvaultSecret) GetVersions() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -591,7 +590,7 @@ func (a *lumiAzurermKeyvaultSecret) GetVersions() ([]interface{}, error) {
 	for i := range secrets.Values() {
 		entry := secrets.Values()[i]
 
-		lumiAzure, err := a.Runtime.CreateResource("azurerm.keyvault.secret",
+		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.secret",
 			"id", toString(entry.ID),
 			"tags", azureTagsToInterface(entry.Tags),
 			"contentType", toString(entry.ContentType),

@@ -16,7 +16,7 @@ func (s *lumiAwsSagemaker) id() (string, error) {
 }
 
 func (s *lumiAwsSagemaker) GetEndpoints() ([]interface{}, error) {
-	at, err := awstransport(s.Runtime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -35,8 +35,9 @@ func (s *lumiAwsSagemaker) GetEndpoints() ([]interface{}, error) {
 
 	return res, nil
 }
+
 func (s *lumiAwsSagemaker) getEndpoints(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -62,7 +63,7 @@ func (s *lumiAwsSagemaker) getEndpoints(at *aws_transport.Transport) []*jobpool.
 					if err != nil {
 						return nil, err
 					}
-					lumiEndpoint, err := s.Runtime.CreateResource("aws.sagemaker.endpoint",
+					lumiEndpoint, err := s.MotorRuntime.CreateResource("aws.sagemaker.endpoint",
 						"arn", toString(endpoint.EndpointArn),
 						"name", toString(endpoint.EndpointName),
 						"region", regionVal,
@@ -94,7 +95,7 @@ func (s *lumiAwsSagemakerEndpoint) GetConfig() (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(s.Runtime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +109,7 @@ func (s *lumiAwsSagemakerEndpoint) GetConfig() (map[string]interface{}, error) {
 }
 
 func (s *lumiAwsSagemaker) GetNotebookInstances() ([]interface{}, error) {
-	at, err := awstransport(s.Runtime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -129,8 +130,8 @@ func (s *lumiAwsSagemaker) GetNotebookInstances() ([]interface{}, error) {
 }
 
 func (s *lumiAwsSagemaker) getNotebookInstances(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(s.Runtime.Motor.Transport)
+	tasks := make([]*jobpool.Job, 0)
+	at, err := awstransport(s.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -158,7 +159,7 @@ func (s *lumiAwsSagemaker) getNotebookInstances(at *aws_transport.Transport) []*
 					if err != nil {
 						return nil, err
 					}
-					lumiEndpoint, err := s.Runtime.CreateResource("aws.sagemaker.notebookinstance",
+					lumiEndpoint, err := s.MotorRuntime.CreateResource("aws.sagemaker.notebookinstance",
 						"arn", toString(instance.NotebookInstanceArn),
 						"name", toString(instance.NotebookInstanceName),
 						"region", regionVal,
@@ -190,7 +191,7 @@ func (s *lumiAwsSagemakerNotebookinstance) GetDetails() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(s.Runtime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -200,18 +201,17 @@ func (s *lumiAwsSagemakerNotebookinstance) GetDetails() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	lumiKeyResource, err := s.Runtime.CreateResource("aws.kms.key",
+	lumiKeyResource, err := s.MotorRuntime.CreateResource("aws.kms.key",
 		"arn", toString(instanceDetails.KmsKeyId),
 	)
 	if err != nil {
 		return nil, err
 	}
-	lumiInstanceDetails, err := s.Runtime.CreateResource("aws.sagemaker.notebookinstance.details",
+	lumiInstanceDetails, err := s.MotorRuntime.CreateResource("aws.sagemaker.notebookinstance.details",
 		"arn", toString(instanceDetails.NotebookInstanceArn),
 		"kmsKey", lumiKeyResource,
 		"directInternetAccess", string(instanceDetails.DirectInternetAccess),
 	)
-
 	if err != nil {
 		return nil, err
 	}

@@ -15,7 +15,7 @@ func (d *lumiAwsDms) id() (string, error) {
 }
 
 func (d *lumiAwsDms) GetReplicationInstances() ([]interface{}, error) {
-	at, err := awstransport(d.Runtime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (d *lumiAwsDms) GetReplicationInstances() ([]interface{}, error) {
 }
 
 func (d *lumiAwsDms) getReplicationInstances(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}

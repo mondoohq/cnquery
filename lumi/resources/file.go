@@ -49,7 +49,7 @@ func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
 
 	log.Debug().Msg("[file]> listen to file " + path)
 
-	watcher := s.Runtime.Motor.Watcher()
+	watcher := s.MotorRuntime.Motor.Watcher()
 
 	err := watcher.Subscribe("file", path, func(o transports.Observable) {
 		log.Debug().Str("file", path).Msg("[file]> got observable")
@@ -87,18 +87,17 @@ func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
 			})
 		}
 
-		err := s.Runtime.Observers.Trigger(s.LumiResource().FieldUID("content"))
+		err := s.MotorRuntime.Observers.Trigger(s.LumiResource().FieldUID("content"))
 		if err != nil {
 			log.Error().Err(err).Msg("[file]> failed to trigger content")
 		}
 	})
-
 	// make sure the watcher is established before doing any these remaining steps
 	if err != nil {
 		return "", err
 	}
 
-	s.Runtime.Observers.OnUnwatch(s.FieldUID("content"), func() {
+	s.MotorRuntime.Observers.OnUnwatch(s.FieldUID("content"), func() {
 		s.Cache.Delete("content")
 		log.Debug().Msg("[file]> unwatch")
 		watcher.Unsubscribe("file", path)
@@ -110,7 +109,7 @@ func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
 func (s *lumiFile) GetEmpty() (bool, error) {
 	path, _ := s.Path()
 
-	fs := s.Runtime.Motor.Transport.FS()
+	fs := s.MotorRuntime.Motor.Transport.FS()
 	afs := &afero.Afero{Fs: fs}
 	return afs.IsEmpty(path)
 }
@@ -119,7 +118,7 @@ func (s *lumiFile) GetExists() (bool, error) {
 	// TODO: we need to tell motor to watch this for us
 	path, _ := s.Path()
 
-	fs := s.Runtime.Motor.Transport.FS()
+	fs := s.MotorRuntime.Motor.Transport.FS()
 	afs := &afero.Afero{Fs: fs}
 	return afs.Exists(path)
 }
@@ -152,7 +151,7 @@ func (s *lumiFile) GetUser() (interface{}, error) {
 		return nil, err
 	}
 
-	platform, err := s.Runtime.Motor.Platform()
+	platform, err := s.MotorRuntime.Motor.Platform()
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +165,7 @@ func (s *lumiFile) GetUser() (interface{}, error) {
 	}
 
 	// handle unix
-	fi, err := s.Runtime.Motor.Transport.FileInfo(path)
+	fi, err := s.MotorRuntime.Motor.Transport.FileInfo(path)
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +176,7 @@ func (s *lumiFile) GetUser() (interface{}, error) {
 		return nil, nil
 	}
 
-	lumiUser, err := s.Runtime.CreateResource("user",
+	lumiUser, err := s.MotorRuntime.CreateResource("user",
 		"uid", fi.Uid,
 	)
 	if err != nil {
@@ -192,7 +191,7 @@ func (s *lumiFile) GetGroup() (interface{}, error) {
 		return nil, err
 	}
 
-	platform, err := s.Runtime.Motor.Platform()
+	platform, err := s.MotorRuntime.Motor.Platform()
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +200,7 @@ func (s *lumiFile) GetGroup() (interface{}, error) {
 		return nil, errors.New("group is not supported on windows")
 	}
 
-	fi, err := s.Runtime.Motor.Transport.FileInfo(path)
+	fi, err := s.MotorRuntime.Motor.Transport.FileInfo(path)
 	if err != nil {
 		return nil, err
 	}
@@ -212,7 +211,7 @@ func (s *lumiFile) GetGroup() (interface{}, error) {
 		return nil, nil
 	}
 
-	lumiUser, err := s.Runtime.CreateResource("group",
+	lumiUser, err := s.MotorRuntime.CreateResource("group",
 		"id", strconv.FormatInt(fi.Gid, 10),
 		"gid", fi.Gid,
 	)
@@ -229,15 +228,15 @@ func (s *lumiFile) stat() (FilePermissions, int64, error) {
 		return nil, 0, err
 	}
 
-	fi, err := s.Runtime.Motor.Transport.FileInfo(path)
+	fi, err := s.MotorRuntime.Motor.Transport.FileInfo(path)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	mode := fi.Mode.UnixMode()
 
-	permRaw, err := s.Runtime.CreateResource("file.permissions",
-		"mode", int64(uint32(mode)&07777),
+	permRaw, err := s.MotorRuntime.CreateResource("file.permissions",
+		"mode", int64(uint32(mode)&0o7777),
 		"user_readable", fi.Mode.UserReadable(),
 		"user_writeable", fi.Mode.UserWriteable(),
 		"user_executable", fi.Mode.UserExecutable(),

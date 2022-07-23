@@ -7,7 +7,7 @@ func (s *lumiWindowsBitlocker) id() (string, error) {
 }
 
 func (s *lumiWindowsBitlocker) GetVolumes() ([]interface{}, error) {
-	volumes, err := windows.GetBitLockerVolumes(s.Runtime.Motor.Transport)
+	volumes, err := windows.GetBitLockerVolumes(s.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -21,7 +21,7 @@ func (s *lumiWindowsBitlocker) GetVolumes() ([]interface{}, error) {
 		version, _ := jsonToDict(v.Version)
 		ps, _ := jsonToDict(v.ProtectionStatus)
 
-		volume, err := s.Runtime.CreateResource("windows.bitlocker.volume",
+		volume, err := s.MotorRuntime.CreateResource("windows.bitlocker.volume",
 			"deviceID", v.DeviceID,
 			"driveLetter", v.DriveLetter,
 			"conversionStatus", cs,

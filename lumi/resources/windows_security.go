@@ -10,7 +10,7 @@ func (w *lumiWindowsSecurity) id() (string, error) {
 }
 
 func (w *lumiWindowsSecurity) GetProducts() ([]interface{}, error) {
-	products, err := windows.GetSecurityProducts(w.Runtime.Motor.Transport)
+	products, err := windows.GetSecurityProducts(w.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -19,7 +19,7 @@ func (w *lumiWindowsSecurity) GetProducts() ([]interface{}, error) {
 	for i := range products {
 		p := products[i]
 
-		lumiProduct, err := w.Runtime.CreateResource("windows.security.product",
+		lumiProduct, err := w.MotorRuntime.CreateResource("windows.security.product",
 			"type", p.Type,
 			"guid", p.Guid,
 			"name", p.Name,
@@ -51,7 +51,7 @@ func (p *lumiWindowsSecurityHealth) init(args *lumi.Args) (*lumi.Args, WindowsSe
 		return args, nil, nil
 	}
 
-	health, err := windows.GetSecurityProviderHealth(p.Runtime.Motor.Transport)
+	health, err := windows.GetSecurityProviderHealth(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, nil, err
 	}

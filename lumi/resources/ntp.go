@@ -14,7 +14,7 @@ func (s *lumiNtpConf) init(args *lumi.Args) (*lumi.Args, NtpConf, error) {
 			return nil, nil, errors.New("Wrong type for 'path' in ntp.conf initialization, it must be a string")
 		}
 
-		f, err := s.Runtime.CreateResource("file", "path", path)
+		f, err := s.MotorRuntime.CreateResource("file", "path", path)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -36,7 +36,7 @@ func (s *lumiNtpConf) id() (string, error) {
 }
 
 func (s *lumiNtpConf) GetFile() (File, error) {
-	f, err := s.Runtime.CreateResource("file", "path", defaultNtpConf)
+	f, err := s.MotorRuntime.CreateResource("file", "path", defaultNtpConf)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (s *lumiNtpConf) GetFile() (File, error) {
 func (s *lumiNtpConf) GetContent(file File) (string, error) {
 	// TODO: this can be heavily improved once we do it right, since this is constantly
 	// re-registered as the file changes
-	err := s.Runtime.WatchAndCompute(file, "content", s, "content")
+	err := s.MotorRuntime.WatchAndCompute(file, "content", s, "content")
 	if err != nil {
 		return "", err
 	}

@@ -18,7 +18,7 @@ func (y *lumiYum) id() (string, error) {
 }
 
 func (y *lumiYum) GetRepos() ([]interface{}, error) {
-	pf, err := y.Runtime.Motor.Platform()
+	pf, err := y.MotorRuntime.Motor.Platform()
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +27,7 @@ func (y *lumiYum) GetRepos() ([]interface{}, error) {
 		return nil, errors.New("yum.repos is only supported on redhat-based platforms")
 	}
 
-	cmd, err := y.Runtime.Motor.Transport.RunCommand("yum -v repolist all")
+	cmd, err := y.MotorRuntime.Motor.Transport.RunCommand("yum -v repolist all")
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve yum repo list")
 	}
@@ -43,12 +43,12 @@ func (y *lumiYum) GetRepos() ([]interface{}, error) {
 
 	lumiRepos := make([]interface{}, len(repos))
 	for i, repo := range repos {
-		f, err := y.Runtime.CreateResource("file", "path", repo.Filename)
+		f, err := y.MotorRuntime.CreateResource("file", "path", repo.Filename)
 		if err != nil {
 			return nil, err
 		}
 
-		lumiRepo, err := y.Runtime.CreateResource("yum.repo",
+		lumiRepo, err := y.MotorRuntime.CreateResource("yum.repo",
 			"id", repo.Id,
 			"name", repo.Name,
 			"status", repo.Status,
@@ -73,7 +73,7 @@ func (y *lumiYum) GetRepos() ([]interface{}, error) {
 var rhel67release = regexp.MustCompile(`^[6|7].*$`)
 
 func (y *lumiYum) GetVars() (map[string]interface{}, error) {
-	pf, err := y.Runtime.Motor.Platform()
+	pf, err := y.MotorRuntime.Motor.Platform()
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (y *lumiYum) GetVars() (map[string]interface{}, error) {
 		script = yum.Rhel6VarsCommand
 	}
 
-	cmd, err := y.Runtime.Motor.Transport.RunCommand(script)
+	cmd, err := y.MotorRuntime.Motor.Transport.RunCommand(script)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve yum variables")
 	}
@@ -131,7 +131,7 @@ func (p *lumiYumRepo) init(args *lumi.Args) (*lumi.Args, YumRepo, error) {
 		return args, nil, nil
 	}
 
-	obj, err := p.Runtime.CreateResource("yum")
+	obj, err := p.MotorRuntime.CreateResource("yum")
 	if err != nil {
 		return nil, nil, err
 	}

@@ -19,7 +19,7 @@ func (a *lumiAwsAcm) id() (string, error) {
 }
 
 func (a *lumiAwsAcm) GetCertificates() ([]interface{}, error) {
-	at, err := awstransport(a.Runtime.Motor.Transport)
+	at, err := awstransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (a *lumiAwsAcm) GetCertificates() ([]interface{}, error) {
 }
 
 func (a *lumiAwsAcm) getCertificates(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -49,7 +49,6 @@ func (a *lumiAwsAcm) getCertificates(at *aws_transport.Transport) []*jobpool.Job
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-
 			svc := at.Acm(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
@@ -62,7 +61,7 @@ func (a *lumiAwsAcm) getCertificates(at *aws_transport.Transport) []*jobpool.Job
 					return nil, err
 				}
 				for _, cert := range certs.CertificateSummaryList {
-					lumiCert, err := a.Runtime.CreateResource("aws.acm.certificate",
+					lumiCert, err := a.MotorRuntime.CreateResource("aws.acm.certificate",
 						"arn", toString(cert.CertificateArn),
 					)
 					if err != nil {
@@ -100,7 +99,7 @@ func (a *lumiAwsAcmCertificate) init(args *lumi.Args) (*lumi.Args, AwsAcmCertifi
 	if err != nil {
 		return args, nil, nil
 	}
-	at, err := awstransport(a.Runtime.Motor.Transport)
+	at, err := awstransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -145,7 +144,7 @@ func (a *lumiAwsAcmCertificate) GetCertificate() (interface{}, error) {
 	if err != nil {
 		return false, err
 	}
-	at, err := awstransport(a.Runtime.Motor.Transport)
+	at, err := awstransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +161,7 @@ func (a *lumiAwsAcmCertificate) GetCertificate() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	lumiCerts, err := certificatesToLumiCertificates(a.Runtime, parsedCert)
+	lumiCerts, err := certificatesToLumiCertificates(a.MotorRuntime, parsedCert)
 	if err != nil {
 		return nil, err
 	}

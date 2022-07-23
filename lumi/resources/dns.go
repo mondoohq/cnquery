@@ -22,7 +22,7 @@ func (d *lumiDomainName) id() (string, error) {
 func (d *lumiDomainName) init(args *lumi.Args) (*lumi.Args, DomainName, error) {
 	fqdn, ok := (*args)["fqdn"]
 	if !ok {
-		if transport, ok := d.Runtime.Motor.Transport.(*network.Transport); ok {
+		if transport, ok := d.MotorRuntime.Motor.Transport.(*network.Transport); ok {
 			fqdn = transport.FQDN
 		}
 
@@ -52,7 +52,7 @@ func (d *lumiDns) init(args *lumi.Args) (*lumi.Args, Dns, error) {
 	if !ok {
 		var fqdn string
 
-		if transport, ok := d.Runtime.Motor.Transport.(*network.Transport); ok {
+		if transport, ok := d.MotorRuntime.Motor.Transport.(*network.Transport); ok {
 			fqdn = transport.FQDN
 		}
 
@@ -93,7 +93,7 @@ func (d *lumiDns) GetRecords(params map[string]interface{}) ([]interface{}, erro
 			continue
 		}
 
-		lumiDnsRecord, err := d.Runtime.CreateResource("dns.record",
+		lumiDnsRecord, err := d.MotorRuntime.CreateResource("dns.record",
 			"name", r["name"],
 			"ttl", r["TTL"],
 			"class", r["class"],
@@ -162,7 +162,7 @@ func (d *lumiDns) GetMx(params map[string]interface{}) ([]interface{}, error) {
 
 		switch v := got.(type) {
 		case *dns.MX:
-			mxEntry, err := d.Runtime.CreateResource("dns.mxRecord",
+			mxEntry, err := d.MotorRuntime.CreateResource("dns.mxRecord",
 				"name", name,
 				"preference", int64(v.Preference),
 				"domainName", v.Mx,
@@ -217,7 +217,7 @@ func (d *lumiDns) GetDkim(params map[string]interface{}) ([]interface{}, error) 
 			return nil, err
 		}
 
-		dkimRecord, err := d.Runtime.CreateResource("dns.dkimRecord",
+		dkimRecord, err := d.MotorRuntime.CreateResource("dns.dkimRecord",
 			"domain", name,
 			"dnsTxt", entry,
 			"version", dkimRepr.Version,
