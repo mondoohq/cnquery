@@ -15,7 +15,7 @@ func (t *lumiAwsCloudtrail) id() (string, error) {
 }
 
 func (t *lumiAwsCloudtrail) GetTrails() ([]interface{}, error) {
-	at, err := awstransport(t.Runtime.Motor.Transport)
+	at, err := awstransport(t.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (t *lumiAwsCloudtrail) GetTrails() ([]interface{}, error) {
 }
 
 func (t *lumiAwsCloudtrail) getTrails(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -78,7 +78,7 @@ func (t *lumiAwsCloudtrail) getTrails(at *aws_transport.Transport) []*jobpool.Jo
 
 				// trail.S3BucketName
 				if trail.S3BucketName != nil {
-					lumiAwsS3Bucket, err := t.Runtime.CreateResource("aws.s3.bucket",
+					lumiAwsS3Bucket, err := t.MotorRuntime.CreateResource("aws.s3.bucket",
 						"name", toString(trail.S3BucketName),
 					)
 					if err != nil {
@@ -91,7 +91,7 @@ func (t *lumiAwsCloudtrail) getTrails(at *aws_transport.Transport) []*jobpool.Jo
 
 				// add kms key if there is one
 				if trail.KmsKeyId != nil {
-					lumiKeyResource, err := t.Runtime.CreateResource("aws.kms.key",
+					lumiKeyResource, err := t.MotorRuntime.CreateResource("aws.kms.key",
 						"arn", toString(trail.KmsKeyId),
 					)
 					if err != nil {
@@ -101,7 +101,7 @@ func (t *lumiAwsCloudtrail) getTrails(at *aws_transport.Transport) []*jobpool.Jo
 					args = append(args, "kmsKey", lumiKey)
 				}
 				if trail.CloudWatchLogsLogGroupArn != nil {
-					lumiLoggroup, err := t.Runtime.CreateResource("aws.cloudwatch.loggroup",
+					lumiLoggroup, err := t.MotorRuntime.CreateResource("aws.cloudwatch.loggroup",
 						"arn", toString(trail.CloudWatchLogsLogGroupArn),
 					)
 					if err != nil {
@@ -111,7 +111,7 @@ func (t *lumiAwsCloudtrail) getTrails(at *aws_transport.Transport) []*jobpool.Jo
 					args = append(args, "logGroup", lumiLog)
 				}
 
-				lumiAwsCloudtrailTrail, err := t.Runtime.CreateResource("aws.cloudtrail.trail", args...)
+				lumiAwsCloudtrailTrail, err := t.MotorRuntime.CreateResource("aws.cloudtrail.trail", args...)
 				if err != nil {
 					return nil, err
 				}
@@ -124,6 +124,7 @@ func (t *lumiAwsCloudtrail) getTrails(at *aws_transport.Transport) []*jobpool.Jo
 	}
 	return tasks
 }
+
 func (s *lumiAwsCloudtrailTrail) GetS3bucket() (interface{}, error) {
 	// no s3 bucket on the trail object
 	return nil, nil
@@ -148,7 +149,7 @@ func (t *lumiAwsCloudtrailTrail) GetStatus() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(t.Runtime.Motor.Transport)
+	at, err := awstransport(t.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +178,7 @@ func (t *lumiAwsCloudtrailTrail) GetEventSelectors() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(t.Runtime.Motor.Transport)
+	at, err := awstransport(t.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}

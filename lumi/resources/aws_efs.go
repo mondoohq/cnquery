@@ -21,7 +21,7 @@ func (e *lumiAwsEfsFilesystem) id() (string, error) {
 }
 
 func (e *lumiAwsEfs) GetFilesystems() ([]interface{}, error) {
-	at, err := awstransport(e.Runtime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (e *lumiAwsEfs) GetFilesystems() ([]interface{}, error) {
 }
 
 func (e *lumiAwsEfs) getFilesystems(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}} // return the error
@@ -75,7 +75,7 @@ func (e *lumiAwsEfs) getFilesystems(at *aws_transport.Transport) []*jobpool.Job 
 					}
 					// add kms key if there is one
 					if fs.KmsKeyId != nil {
-						lumiKeyResource, err := e.Runtime.CreateResource("aws.kms.key",
+						lumiKeyResource, err := e.MotorRuntime.CreateResource("aws.kms.key",
 							"arn", toString(fs.KmsKeyId),
 						)
 						if err != nil {
@@ -84,7 +84,7 @@ func (e *lumiAwsEfs) getFilesystems(at *aws_transport.Transport) []*jobpool.Job 
 						lumiKey := lumiKeyResource.(AwsKmsKey)
 						args = append(args, "kmsKey", lumiKey)
 					}
-					lumiFilesystem, err := e.Runtime.CreateResource("aws.efs.filesystem", args...)
+					lumiFilesystem, err := e.MotorRuntime.CreateResource("aws.efs.filesystem", args...)
 					if err != nil {
 						return nil, err
 					}
@@ -129,7 +129,7 @@ func (e *lumiAwsEfsFilesystem) GetBackupPolicy() (interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to parse instance region")
 	}
-	at, err := awstransport(e.Runtime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}

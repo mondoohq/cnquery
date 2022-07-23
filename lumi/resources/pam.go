@@ -85,7 +85,7 @@ func (se *lumiPamConfServiceEntry) id() (string, error) {
 
 func (s *lumiPamConf) getFiles(confPath string) ([]interface{}, error) {
 	// check if the pam.d directory or pam config file exists
-	lumiFile, err := s.Runtime.CreateResource("file", "path", confPath)
+	lumiFile, err := s.MotorRuntime.CreateResource("file", "path", confPath)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (s *lumiPamConf) getFiles(confPath string) ([]interface{}, error) {
 }
 
 func (s *lumiPamConf) getConfDFiles(confD string) ([]interface{}, error) {
-	files, err := s.Runtime.CreateResource("files.find", "from", confD, "type", "file")
+	files, err := s.MotorRuntime.CreateResource("files.find", "from", confD, "type", "file")
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +133,7 @@ func (s *lumiPamConf) GetFiles() ([]interface{}, error) {
 	// check if the pam.d directory exists and is a directory
 	// according to the pam spec, pam prefers the directory if it  exists over the single file config
 	// see http://www.linux-pam.org/Linux-PAM-html/sag-configuration.html
-	lumiFile, err := s.Runtime.CreateResource("file", "path", defaultPamDir)
+	lumiFile, err := s.MotorRuntime.CreateResource("file", "path", defaultPamDir)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func (s *lumiPamConf) GetContent(files []interface{}) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		f, err := s.Runtime.Motor.Transport.FS().Open(path)
+		f, err := s.MotorRuntime.Motor.Transport.FS().Open(path)
 		if err != nil {
 			return "", err
 		}
@@ -194,7 +194,7 @@ func (s *lumiPamConf) GetServices(files []interface{}) (map[string]interface{}, 
 		if err != nil {
 			return nil, err
 		}
-		f, err := s.Runtime.Motor.Transport.FS().Open(path)
+		f, err := s.MotorRuntime.Motor.Transport.FS().Open(path)
 		if err != nil {
 			return nil, err
 		}
@@ -246,7 +246,7 @@ func (s *lumiPamConf) GetEntries(files []interface{}) (map[string]interface{}, e
 		if err != nil {
 			return nil, err
 		}
-		f, err := s.Runtime.Motor.Transport.FS().Open(path)
+		f, err := s.MotorRuntime.Motor.Transport.FS().Open(path)
 		if err != nil {
 			return nil, err
 		}
@@ -282,7 +282,7 @@ func (s *lumiPamConf) GetEntries(files []interface{}) (map[string]interface{}, e
 				continue
 			}
 
-			pamEntry, err := s.Runtime.CreateResource("pam.conf.serviceEntry",
+			pamEntry, err := s.MotorRuntime.CreateResource("pam.conf.serviceEntry",
 				"service", basename,
 				"lineNumber", int64(i), // Used for ID
 				"pamType", entry.PamType,

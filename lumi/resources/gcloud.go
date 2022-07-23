@@ -35,7 +35,7 @@ func (g *lumiGcloudOrganization) init(args *lumi.Args) (*lumi.Args, GcloudOrgani
 		return args, nil, nil
 	}
 
-	gt, err := gcptransport(g.Runtime.Motor.Transport)
+	gt, err := gcptransport(g.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -90,7 +90,7 @@ func (g *lumiGcloudOrganization) GetLifecycleState() (string, error) {
 }
 
 func (g *lumiGcloudOrganization) GetIamPolicy() ([]interface{}, error) {
-	gt, err := gcptransport(g.Runtime.Motor.Transport)
+	gt, err := gcptransport(g.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,7 @@ func (g *lumiGcloudOrganization) GetIamPolicy() ([]interface{}, error) {
 	for i := range orgpolicy.Bindings {
 		b := orgpolicy.Bindings[i]
 
-		lumiServiceaccount, err := g.Runtime.CreateResource("gcloud.resourcemanager.binding",
+		lumiServiceaccount, err := g.MotorRuntime.CreateResource("gcloud.resourcemanager.binding",
 			"id", name+"-"+strconv.Itoa(i),
 			"role", b.Role,
 			"members", strSliceToInterface(b.Members),
@@ -145,7 +145,7 @@ func (g *lumiGcloudProject) init(args *lumi.Args) (*lumi.Args, GcloudProject, er
 		return args, nil, nil
 	}
 
-	gt, err := gcptransport(g.Runtime.Motor.Transport)
+	gt, err := gcptransport(g.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -226,7 +226,7 @@ func (g *lumiGcloudProject) GetIamPolicy() ([]interface{}, error) {
 		return nil, err
 	}
 
-	gt, err := gcptransport(g.Runtime.Motor.Transport)
+	gt, err := gcptransport(g.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -251,7 +251,7 @@ func (g *lumiGcloudProject) GetIamPolicy() ([]interface{}, error) {
 	for i := range policy.Bindings {
 		b := policy.Bindings[i]
 
-		lumiServiceaccount, err := g.Runtime.CreateResource("gcloud.resourcemanager.binding",
+		lumiServiceaccount, err := g.MotorRuntime.CreateResource("gcloud.resourcemanager.binding",
 			"id", projectId+"-"+strconv.Itoa(i),
 			"role", b.Role,
 			"members", strSliceToInterface(b.Members),
@@ -274,7 +274,7 @@ func (g *lumiGcloudCompute) id() (string, error) {
 }
 
 func (g *lumiGcloudCompute) GetInstances() ([]interface{}, error) {
-	gt, err := gcptransport(g.Runtime.Motor.Transport)
+	gt, err := gcptransport(g.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -314,7 +314,7 @@ func (g *lumiGcloudCompute) GetInstances() ([]interface{}, error) {
 		for i := range instance.ServiceAccounts {
 			sa := instance.ServiceAccounts[i]
 
-			lumiServiceaccount, err := g.Runtime.CreateResource("gcloud.compute.serviceaccount",
+			lumiServiceaccount, err := g.MotorRuntime.CreateResource("gcloud.compute.serviceaccount",
 				"email", sa.Email,
 				"scopes", strSliceToInterface(sa.Scopes),
 			)
@@ -324,7 +324,7 @@ func (g *lumiGcloudCompute) GetInstances() ([]interface{}, error) {
 			lumiServiceAccounts = append(lumiServiceAccounts, lumiServiceaccount)
 		}
 
-		lumiInstance, err := g.Runtime.CreateResource("gcloud.compute.instance",
+		lumiInstance, err := g.MotorRuntime.CreateResource("gcloud.compute.instance",
 			"id", strconv.FormatUint(instance.Id, 10),
 			"name", instance.Name,
 			"cpuPlatform", instance.CpuPlatform,
@@ -360,7 +360,7 @@ func (g *lumiGcloudStorage) id() (string, error) {
 }
 
 func (g *lumiGcloudStorage) GetBuckets() ([]interface{}, error) {
-	gt, err := gcptransport(g.Runtime.Motor.Transport)
+	gt, err := gcptransport(g.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -438,7 +438,7 @@ func (g *lumiGcloudStorage) GetBuckets() ([]interface{}, error) {
 			}
 		}
 
-		lumiInstance, err := g.Runtime.CreateResource("gcloud.storage.bucket",
+		lumiInstance, err := g.MotorRuntime.CreateResource("gcloud.storage.bucket",
 			"id", bucket.Id,
 			"name", bucket.Name,
 			"kind", bucket.Kind,
@@ -470,7 +470,7 @@ func (g *lumiGcloudStorageBucket) GetIamPolicy() ([]interface{}, error) {
 		return nil, err
 	}
 
-	gt, err := gcptransport(g.Runtime.Motor.Transport)
+	gt, err := gcptransport(g.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -495,7 +495,7 @@ func (g *lumiGcloudStorageBucket) GetIamPolicy() ([]interface{}, error) {
 	for i := range policy.Bindings {
 		b := policy.Bindings[i]
 
-		lumiServiceaccount, err := g.Runtime.CreateResource("gcloud.resourcemanager.binding",
+		lumiServiceaccount, err := g.MotorRuntime.CreateResource("gcloud.resourcemanager.binding",
 			"id", bucketName+"-"+strconv.Itoa(i),
 			"role", b.Role,
 			"members", strSliceToInterface(b.Members),
@@ -514,7 +514,7 @@ func (g *lumiGcloudSql) id() (string, error) {
 }
 
 func (g *lumiGcloudSql) GetInstances() ([]interface{}, error) {
-	gt, err := gcptransport(g.Runtime.Motor.Transport)
+	gt, err := gcptransport(g.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -579,7 +579,7 @@ func (g *lumiGcloudSql) GetInstances() ([]interface{}, error) {
 			// TODO: handle all other database settings
 		}
 
-		lumiInstance, err := g.Runtime.CreateResource("gcloud.sql.instance",
+		lumiInstance, err := g.MotorRuntime.CreateResource("gcloud.sql.instance",
 			"name", instance.Name,
 			"backendType", instance.BackendType,
 			"connectionName", instance.ConnectionName,

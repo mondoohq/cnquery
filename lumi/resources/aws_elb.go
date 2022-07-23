@@ -19,7 +19,7 @@ func (e *lumiAwsElb) id() (string, error) {
 }
 
 func (e *lumiAwsElb) GetClassicLoadBalancers() ([]interface{}, error) {
-	at, err := awstransport(e.Runtime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (e *lumiAwsElb) GetClassicLoadBalancers() ([]interface{}, error) {
 }
 
 func (e *lumiAwsElb) getClassicLoadBalancers(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -68,7 +68,7 @@ func (e *lumiAwsElb) getClassicLoadBalancers(at *aws_transport.Transport) []*job
 					if err != nil {
 						return nil, err
 					}
-					lumiLb, err := e.Runtime.CreateResource("aws.elb.loadbalancer",
+					lumiLb, err := e.MotorRuntime.CreateResource("aws.elb.loadbalancer",
 						"arn", fmt.Sprintf(elbv1LbArnPattern, regionVal, account.ID, toString(lb.LoadBalancerName)),
 						"listenerDescriptions", jsonListeners,
 						"dnsName", toString(lb.DNSName),
@@ -97,7 +97,7 @@ func (e *lumiAwsElbLoadbalancer) id() (string, error) {
 }
 
 func (e *lumiAwsElb) GetLoadBalancers() ([]interface{}, error) {
-	at, err := awstransport(e.Runtime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func (e *lumiAwsElb) GetLoadBalancers() ([]interface{}, error) {
 }
 
 func (e *lumiAwsElb) getLoadBalancers(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -138,7 +138,7 @@ func (e *lumiAwsElb) getLoadBalancers(at *aws_transport.Transport) []*jobpool.Jo
 					return nil, err
 				}
 				for _, lb := range lbs.LoadBalancers {
-					lumiLb, err := e.Runtime.CreateResource("aws.elb.loadbalancer",
+					lumiLb, err := e.MotorRuntime.CreateResource("aws.elb.loadbalancer",
 						"arn", toString(lb.LoadBalancerArn),
 						"dnsName", toString(lb.DNSName),
 						"name", toString(lb.LoadBalancerName),
@@ -162,7 +162,7 @@ func (e *lumiAwsElb) getLoadBalancers(at *aws_transport.Transport) []*jobpool.Jo
 }
 
 func (e *lumiAwsElbLoadbalancer) GetListenerDescriptions() ([]interface{}, error) {
-	at, err := awstransport(e.Runtime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -181,11 +181,10 @@ func (e *lumiAwsElbLoadbalancer) GetListenerDescriptions() ([]interface{}, error
 		return nil, err
 	}
 	return jsonToDictSlice(listeners.Listeners)
-
 }
 
 func (e *lumiAwsElbLoadbalancer) GetAttributes() ([]interface{}, error) {
-	at, err := awstransport(e.Runtime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}

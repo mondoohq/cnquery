@@ -328,7 +328,7 @@ func goRegisterField(f *Field) string {
 	l := []string{}
 	for _, arg := range f.Args.List {
 		l = append(l, fmt.Sprintf(
-			`		if err = s.Runtime.WatchAndCompute(s, "%s", s, "%s"); err != nil {
+			`		if err = s.MotorRuntime.WatchAndCompute(s, "%s", s, "%s"); err != nil {
 			return err
 		}
 `, arg.Type, f.ID))
@@ -431,7 +431,7 @@ func (b *goBuilder) goFieldAccessor(r *Resource, f *Field) {
 		if !ok {
 			return %s, errors.New("\"%s\" calculated \"%s\" but didnt find its value in cache.")
 		}
-		s.Runtime.Trigger(s, "%s")`,
+		s.MotorRuntime.Trigger(s, "%s")`,
 			f.goName(), f.Type.goZeroValue(),
 			f.ID,
 			f.Type.goZeroValue(), r.ID, f.ID,

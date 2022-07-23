@@ -20,7 +20,7 @@ const (
 )
 
 func (r *lumiAwsRedshift) GetClusters() ([]interface{}, error) {
-	at, err := awstransport(r.Runtime.Motor.Transport)
+	at, err := awstransport(r.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (r *lumiAwsRedshift) GetClusters() ([]interface{}, error) {
 }
 
 func (r *lumiAwsRedshift) getClusters(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 
 	account, err := at.Account()
 	if err != nil {
@@ -72,7 +72,7 @@ func (r *lumiAwsRedshift) getClusters(at *aws_transport.Transport) []*jobpool.Jo
 					for _, group := range cluster.ClusterParameterGroups {
 						names = append(names, toString(group.ParameterGroupName))
 					}
-					lumiDBInstance, err := r.Runtime.CreateResource("aws.redshift.cluster",
+					lumiDBInstance, err := r.MotorRuntime.CreateResource("aws.redshift.cluster",
 						"arn", fmt.Sprintf(redshiftClusterArnPattern, regionVal, account.ID, toString(cluster.ClusterIdentifier)),
 						"name", toString(cluster.ClusterIdentifier),
 						"region", regionVal,
@@ -128,7 +128,7 @@ func (r *lumiAwsRedshiftCluster) GetParameters() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(r.Runtime.Motor.Transport)
+	at, err := awstransport(r.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +156,7 @@ func (r *lumiAwsRedshiftCluster) GetLogging() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(r.Runtime.Motor.Transport)
+	at, err := awstransport(r.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}

@@ -26,7 +26,7 @@ func (p *lumiAwsS3) id() (string, error) {
 }
 
 func (p *lumiAwsS3) GetBuckets() ([]interface{}, error) {
-	at, err := awstransport(p.Runtime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (p *lumiAwsS3) GetBuckets() ([]interface{}, error) {
 	for i := range buckets.Buckets {
 		bucket := buckets.Buckets[i]
 
-		lumiS3Bucket, err := p.Runtime.CreateResource("aws.s3.bucket",
+		lumiS3Bucket, err := p.MotorRuntime.CreateResource("aws.s3.bucket",
 			"name", toString(bucket.Name),
 			"arn", fmt.Sprintf(s3ArnPattern, toString(bucket.Name)),
 			"exists", true,
@@ -78,7 +78,7 @@ func (p *lumiAwsS3Bucket) init(args *lumi.Args) (*lumi.Args, AwsS3Bucket, error)
 	log.Debug().Str("arn", arn).Msg("init s3 bucket with arn")
 
 	// load all s3 buckets
-	obj, err := p.Runtime.CreateResource("aws.s3")
+	obj, err := p.MotorRuntime.CreateResource("aws.s3")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -105,7 +105,7 @@ func (p *lumiAwsS3Bucket) init(args *lumi.Args) (*lumi.Args, AwsS3Bucket, error)
 	splitArn := strings.Split(arn, ":::")
 	name := splitArn[1]
 	log.Debug().Msgf("no bucket found for %s", arn)
-	lumiAwsS3Bucket, err := p.Runtime.CreateResource("aws.s3.bucket",
+	lumiAwsS3Bucket, err := p.MotorRuntime.CreateResource("aws.s3.bucket",
 		"arn", arn,
 		"name", name,
 		"exists", false,
@@ -129,7 +129,7 @@ func (p *lumiAwsS3Bucket) GetPolicy() (interface{}, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.Runtime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +140,6 @@ func (p *lumiAwsS3Bucket) GetPolicy() (interface{}, error) {
 	policy, err := svc.GetBucketPolicy(ctx, &s3.GetBucketPolicyInput{
 		Bucket: &bucketname,
 	})
-
 	if err != nil {
 		if isNotFoundForS3(err) {
 			return nil, nil
@@ -150,7 +149,7 @@ func (p *lumiAwsS3Bucket) GetPolicy() (interface{}, error) {
 
 	if policy != nil && policy.Policy != nil {
 		// create the plicy resource
-		lumiS3BucketPolicy, err := p.Runtime.CreateResource("aws.s3.bucket.policy",
+		lumiS3BucketPolicy, err := p.MotorRuntime.CreateResource("aws.s3.bucket.policy",
 			"name", bucketname,
 			"document", toString(policy.Policy),
 		)
@@ -174,7 +173,7 @@ func (p *lumiAwsS3Bucket) GetTags() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.Runtime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +210,7 @@ func (p *lumiAwsS3Bucket) GetLocation() (string, error) {
 		return "", err
 	}
 
-	at, err := awstransport(p.Runtime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return "", err
 	}
@@ -245,7 +244,7 @@ func (p *lumiAwsS3Bucket) gatherAcl() (*s3.GetBucketAclOutput, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.Runtime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -299,7 +298,7 @@ func (p *lumiAwsS3Bucket) GetAcl() ([]interface{}, error) {
 			id = id + "/" + *grant.Grantee.ID
 		}
 
-		lumiBucketGrant, err := p.Runtime.CreateResource("aws.s3.bucket.grant",
+		lumiBucketGrant, err := p.MotorRuntime.CreateResource("aws.s3.bucket.grant",
 			"id", id,
 			"name", bucketname,
 			"permission", string(grant.Permission),
@@ -322,7 +321,7 @@ func (p *lumiAwsS3Bucket) GetPublicAccessBlock() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(p.Runtime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -389,7 +388,7 @@ func (p *lumiAwsS3Bucket) GetCors() ([]interface{}, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.Runtime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -400,7 +399,6 @@ func (p *lumiAwsS3Bucket) GetCors() ([]interface{}, error) {
 	cors, err := svc.GetBucketCors(ctx, &s3.GetBucketCorsInput{
 		Bucket: &bucketname,
 	})
-
 	if err != nil {
 		if isNotFoundForS3(err) {
 			return nil, nil
@@ -411,7 +409,7 @@ func (p *lumiAwsS3Bucket) GetCors() ([]interface{}, error) {
 	res := []interface{}{}
 	for i := range cors.CORSRules {
 		corsrule := cors.CORSRules[i]
-		lumiBucketCors, err := p.Runtime.CreateResource("aws.s3.bucket.corsrule",
+		lumiBucketCors, err := p.MotorRuntime.CreateResource("aws.s3.bucket.corsrule",
 			"name", bucketname,
 			"allowedHeaders", corsrule.AllowedHeaders,
 			"allowedMethods", corsrule.AllowedMethods,
@@ -438,7 +436,7 @@ func (p *lumiAwsS3Bucket) GetLogging() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.Runtime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -483,7 +481,7 @@ func (p *lumiAwsS3Bucket) GetVersioning() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.Runtime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -518,7 +516,7 @@ func (p *lumiAwsS3Bucket) GetReplication() (interface{}, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.Runtime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -548,7 +546,7 @@ func (p *lumiAwsS3Bucket) GetEncryption() (interface{}, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.Runtime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -583,7 +581,7 @@ func (p *lumiAwsS3Bucket) GetDefaultLock() (string, error) {
 		return "", err
 	}
 
-	at, err := awstransport(p.Runtime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return "", err
 	}
@@ -614,7 +612,7 @@ func (p *lumiAwsS3Bucket) GetStaticWebsiteHosting() (map[string]interface{}, err
 		return nil, err
 	}
 
-	at, err := awstransport(p.Runtime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}

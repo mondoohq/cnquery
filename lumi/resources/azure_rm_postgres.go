@@ -16,7 +16,7 @@ func (a *lumiAzurermPostgresqlDatabase) id() (string, error) {
 }
 
 func (a *lumiAzurermPostgresql) GetServers() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (a *lumiAzurermPostgresql) GetServers() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzureDbServer, err := a.Runtime.CreateResource("azurerm.postgresql.server",
+		lumiAzureDbServer, err := a.MotorRuntime.CreateResource("azurerm.postgresql.server",
 			"id", toString(dbServer.ID),
 			"name", toString(dbServer.Name),
 			"location", toString(dbServer.Location),
@@ -79,7 +79,7 @@ func (a *lumiAzurermPostgresqlServer) id() (string, error) {
 }
 
 func (a *lumiAzurermPostgresqlServer) GetConfiguration() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (a *lumiAzurermPostgresqlServer) GetConfiguration() ([]interface{}, error) 
 	for i := range list {
 		entry := list[i]
 
-		lumiAzureConfiguration, err := a.Runtime.CreateResource("azurerm.sql.configuration",
+		lumiAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.configuration",
 			"id", toString(entry.ID),
 			"name", toString(entry.Name),
 			"type", toString(entry.Type),
@@ -144,7 +144,7 @@ func (a *lumiAzurermPostgresqlServer) GetConfiguration() ([]interface{}, error) 
 }
 
 func (a *lumiAzurermPostgresqlServer) GetDatabases() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +189,7 @@ func (a *lumiAzurermPostgresqlServer) GetDatabases() ([]interface{}, error) {
 	for i := range list {
 		entry := list[i]
 
-		lumiAzureDatabase, err := a.Runtime.CreateResource("azurerm.postgresql.database",
+		lumiAzureDatabase, err := a.MotorRuntime.CreateResource("azurerm.postgresql.database",
 			"id", toString(entry.ID),
 			"name", toString(entry.Name),
 			"type", toString(entry.Type),
@@ -206,8 +206,7 @@ func (a *lumiAzurermPostgresqlServer) GetDatabases() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermPostgresqlServer) GetFirewallRules() ([]interface{}, error) {
-
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -252,7 +251,7 @@ func (a *lumiAzurermPostgresqlServer) GetFirewallRules() ([]interface{}, error) 
 	for i := range list {
 		entry := list[i]
 
-		lumiAzureConfiguration, err := a.Runtime.CreateResource("azurerm.sql.firewallrule",
+		lumiAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.firewallrule",
 			"id", toString(entry.ID),
 			"name", toString(entry.Name),
 			"type", toString(entry.Type),

@@ -25,7 +25,7 @@ func (g *lumiGroup) init(args *lumi.Args) (*lumi.Args, Group, error) {
 	}
 
 	// initialize groups resource
-	obj, err := g.Runtime.CreateResource("groups")
+	obj, err := g.MotorRuntime.CreateResource("groups")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -53,7 +53,6 @@ func (g *lumiGroup) init(args *lumi.Args) (*lumi.Args, Group, error) {
 	(*args)["members"] = ""
 
 	return args, nil, nil
-
 }
 
 func (g *lumiGroup) id() (string, error) {
@@ -81,9 +80,8 @@ func (g *lumiGroup) id() (string, error) {
 }
 
 func (g *lumiGroup) GetMembers() ([]interface{}, error) {
-
 	// get cached users list
-	obj, err := g.Runtime.CreateResource("users")
+	obj, err := g.MotorRuntime.CreateResource("users")
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +118,7 @@ func (g *lumiGroup) GetMembers() ([]interface{}, error) {
 		}
 
 		// if the user cannot be found, we init it as an empty user
-		lumiUser, err := g.Runtime.CreateResource("user",
+		lumiUser, err := g.MotorRuntime.CreateResource("user",
 			"username", username,
 		)
 		if err != nil {
@@ -138,7 +136,7 @@ func (g *lumiGroups) id() (string, error) {
 
 func (g *lumiGroups) GetList() ([]interface{}, error) {
 	// find suitable groups manager
-	gm, err := groups.ResolveManager(g.Runtime.Motor)
+	gm, err := groups.ResolveManager(g.MotorRuntime.Motor)
 	if gm == nil || err != nil {
 		log.Warn().Err(err).Msg("lumi[groups]> could not retrieve groups list")
 		return nil, errors.New("cannot find groups manager")
@@ -159,7 +157,7 @@ func (g *lumiGroups) GetList() ([]interface{}, error) {
 	for i := range groups {
 		group := groups[i]
 
-		lumiGroup, err := g.Runtime.CreateResource("group",
+		lumiGroup, err := g.MotorRuntime.CreateResource("group",
 			"name", group.Name,
 			"gid", group.Gid,
 			"sid", group.Sid,

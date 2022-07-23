@@ -15,7 +15,7 @@ func (e *lumiAwsElasticache) id() (string, error) {
 }
 
 func (e *lumiAwsElasticache) GetClusters() ([]interface{}, error) {
-	at, err := awstransport(e.Runtime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (e *lumiAwsElasticache) GetClusters() ([]interface{}, error) {
 }
 
 func (e *lumiAwsElasticache) getClusters(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}

@@ -9,7 +9,7 @@ func (m *lumiMs365Exchangeonline) id() (string, error) {
 }
 
 func (m *lumiMs365Exchangeonline) init(args *lumi.Args) (*lumi.Args, Ms365Exchangeonline, error) {
-	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	mt, err := ms365transport(m.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -63,7 +63,7 @@ func (m *lumiMs365Sharepointonline) id() (string, error) {
 }
 
 func (m *lumiMs365Sharepointonline) init(args *lumi.Args) (*lumi.Args, Ms365Sharepointonline, error) {
-	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	mt, err := ms365transport(m.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -87,7 +87,7 @@ func (m *lumiMs365Teams) id() (string, error) {
 }
 
 func (m *lumiMs365Teams) init(args *lumi.Args) (*lumi.Args, Ms365Teams, error) {
-	mt, err := ms365transport(m.Runtime.Motor.Transport)
+	mt, err := ms365transport(m.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, nil, err
 	}

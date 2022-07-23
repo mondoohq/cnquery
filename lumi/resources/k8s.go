@@ -63,7 +63,7 @@ func (k *lumiK8s) id() (string, error) {
 }
 
 func (k *lumiK8s) GetServerVersion() (interface{}, error) {
-	kt, err := k8stransport(k.Runtime.Motor.Transport)
+	kt, err := k8stransport(k.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (k *lumiK8s) GetServerVersion() (interface{}, error) {
 }
 
 func (k *lumiK8s) GetApiResources() ([]interface{}, error) {
-	kt, err := k8stransport(k.Runtime.Motor.Transport)
+	kt, err := k8stransport(k.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (k *lumiK8s) GetApiResources() ([]interface{}, error) {
 	for i := range list {
 		entry := list[i]
 
-		lumiK8SResource, err := k.Runtime.CreateResource("k8s.apiresource",
+		lumiK8SResource, err := k.MotorRuntime.CreateResource("k8s.apiresource",
 			"name", entry.Resource.Name,
 			"singularName", entry.Resource.SingularName,
 			"namespaced", entry.Resource.Namespaced,
@@ -147,8 +147,8 @@ func k8sResourceToLumi(r *lumi.Runtime, kind string, fn resourceConvertFn) ([]in
 }
 
 func (k *lumiK8s) GetNodes() ([]interface{}, error) {
-	return k8sResourceToLumi(k.Runtime, "nodes.v1.", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
-		r, err := k.Runtime.CreateResource("k8s.node",
+	return k8sResourceToLumi(k.MotorRuntime, "nodes.v1.", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+		r, err := k.MotorRuntime.CreateResource("k8s.node",
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -163,7 +163,7 @@ func (k *lumiK8s) GetNodes() ([]interface{}, error) {
 }
 
 func (k *lumiK8s) GetNamespaces() ([]interface{}, error) {
-	return k8sResourceToLumi(k.Runtime, "namespaces", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToLumi(k.MotorRuntime, "namespaces", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := jsonToDict(resource)
@@ -171,7 +171,7 @@ func (k *lumiK8s) GetNamespaces() ([]interface{}, error) {
 			return nil, err
 		}
 
-		return k.Runtime.CreateResource("k8s.namespace",
+		return k.MotorRuntime.CreateResource("k8s.namespace",
 			"uid", string(obj.GetUID()),
 			"name", obj.GetName(),
 			"created", &ts.Time,
@@ -181,7 +181,7 @@ func (k *lumiK8s) GetNamespaces() ([]interface{}, error) {
 }
 
 func (k *lumiK8s) GetPods() ([]interface{}, error) {
-	return k8sResourceToLumi(k.Runtime, "pods.v1.", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToLumi(k.MotorRuntime, "pods.v1.", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := jsonToDict(resource)
@@ -199,7 +199,7 @@ func (k *lumiK8s) GetPods() ([]interface{}, error) {
 			return nil, err
 		}
 
-		r, err := k.Runtime.CreateResource("k8s.pod",
+		r, err := k.MotorRuntime.CreateResource("k8s.pod",
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -221,7 +221,7 @@ func (k *lumiK8s) GetPods() ([]interface{}, error) {
 }
 
 func (k *lumiK8s) GetDeployments() ([]interface{}, error) {
-	return k8sResourceToLumi(k.Runtime, "deployments", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToLumi(k.MotorRuntime, "deployments", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := jsonToDict(resource)
@@ -229,7 +229,7 @@ func (k *lumiK8s) GetDeployments() ([]interface{}, error) {
 			return nil, err
 		}
 
-		r, err := k.Runtime.CreateResource("k8s.deployment",
+		r, err := k.MotorRuntime.CreateResource("k8s.deployment",
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -247,7 +247,7 @@ func (k *lumiK8s) GetDeployments() ([]interface{}, error) {
 }
 
 func (k *lumiK8s) GetDaemonsets() ([]interface{}, error) {
-	return k8sResourceToLumi(k.Runtime, "daemonsets", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToLumi(k.MotorRuntime, "daemonsets", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := jsonToDict(resource)
@@ -255,7 +255,7 @@ func (k *lumiK8s) GetDaemonsets() ([]interface{}, error) {
 			return nil, err
 		}
 
-		r, err := k.Runtime.CreateResource("k8s.daemonset",
+		r, err := k.MotorRuntime.CreateResource("k8s.daemonset",
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -273,7 +273,7 @@ func (k *lumiK8s) GetDaemonsets() ([]interface{}, error) {
 }
 
 func (k *lumiK8s) GetStatefulsets() ([]interface{}, error) {
-	return k8sResourceToLumi(k.Runtime, "statefulsets", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToLumi(k.MotorRuntime, "statefulsets", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := jsonToDict(resource)
@@ -281,7 +281,7 @@ func (k *lumiK8s) GetStatefulsets() ([]interface{}, error) {
 			return nil, err
 		}
 
-		r, err := k.Runtime.CreateResource("k8s.statefulset",
+		r, err := k.MotorRuntime.CreateResource("k8s.statefulset",
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -299,7 +299,7 @@ func (k *lumiK8s) GetStatefulsets() ([]interface{}, error) {
 }
 
 func (k *lumiK8s) GetReplicasets() ([]interface{}, error) {
-	return k8sResourceToLumi(k.Runtime, "replicasets", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToLumi(k.MotorRuntime, "replicasets", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := jsonToDict(resource)
@@ -307,7 +307,7 @@ func (k *lumiK8s) GetReplicasets() ([]interface{}, error) {
 			return nil, err
 		}
 
-		r, err := k.Runtime.CreateResource("k8s.replicaset",
+		r, err := k.MotorRuntime.CreateResource("k8s.replicaset",
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -325,7 +325,7 @@ func (k *lumiK8s) GetReplicasets() ([]interface{}, error) {
 }
 
 func (k *lumiK8s) GetJobs() ([]interface{}, error) {
-	return k8sResourceToLumi(k.Runtime, "jobs", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToLumi(k.MotorRuntime, "jobs", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := jsonToDict(resource)
@@ -333,7 +333,7 @@ func (k *lumiK8s) GetJobs() ([]interface{}, error) {
 			return nil, err
 		}
 
-		r, err := k.Runtime.CreateResource("k8s.job",
+		r, err := k.MotorRuntime.CreateResource("k8s.job",
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -351,7 +351,7 @@ func (k *lumiK8s) GetJobs() ([]interface{}, error) {
 }
 
 func (k *lumiK8s) GetCronjobs() ([]interface{}, error) {
-	return k8sResourceToLumi(k.Runtime, "cronjobs", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToLumi(k.MotorRuntime, "cronjobs", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := jsonToDict(resource)
@@ -359,7 +359,7 @@ func (k *lumiK8s) GetCronjobs() ([]interface{}, error) {
 			return nil, err
 		}
 
-		r, err := k.Runtime.CreateResource("k8s.cronjob",
+		r, err := k.MotorRuntime.CreateResource("k8s.cronjob",
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -377,7 +377,7 @@ func (k *lumiK8s) GetCronjobs() ([]interface{}, error) {
 }
 
 func (k *lumiK8s) GetSecrets() ([]interface{}, error) {
-	return k8sResourceToLumi(k.Runtime, "secrets.v1.", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToLumi(k.MotorRuntime, "secrets.v1.", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := jsonToDict(resource)
@@ -390,7 +390,7 @@ func (k *lumiK8s) GetSecrets() ([]interface{}, error) {
 			return nil, errors.New("not a k8s secret")
 		}
 
-		r, err := k.Runtime.CreateResource("k8s.secret",
+		r, err := k.MotorRuntime.CreateResource("k8s.secret",
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -409,7 +409,7 @@ func (k *lumiK8s) GetSecrets() ([]interface{}, error) {
 }
 
 func (k *lumiK8s) GetPodSecurityPolicies() ([]interface{}, error) {
-	return k8sResourceToLumi(k.Runtime, "podsecuritypolicies", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToLumi(k.MotorRuntime, "podsecuritypolicies", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := jsonToDict(resource)
@@ -427,7 +427,7 @@ func (k *lumiK8s) GetPodSecurityPolicies() ([]interface{}, error) {
 			return nil, err
 		}
 
-		r, err := k.Runtime.CreateResource("k8s.podsecuritypolicy",
+		r, err := k.MotorRuntime.CreateResource("k8s.podsecuritypolicy",
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -445,7 +445,7 @@ func (k *lumiK8s) GetPodSecurityPolicies() ([]interface{}, error) {
 }
 
 func (k *lumiK8s) GetServices() ([]interface{}, error) {
-	return k8sResourceToLumi(k.Runtime, "services", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToLumi(k.MotorRuntime, "services", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := jsonToDict(resource)
@@ -463,7 +463,7 @@ func (k *lumiK8s) GetServices() ([]interface{}, error) {
 			return nil, err
 		}
 
-		r, err := k.Runtime.CreateResource("k8s.service",
+		r, err := k.MotorRuntime.CreateResource("k8s.service",
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -482,7 +482,7 @@ func (k *lumiK8s) GetServices() ([]interface{}, error) {
 }
 
 func (k *lumiK8s) GetConfigmaps() ([]interface{}, error) {
-	return k8sResourceToLumi(k.Runtime, "configmaps", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToLumi(k.MotorRuntime, "configmaps", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := jsonToDict(resource)
@@ -495,7 +495,7 @@ func (k *lumiK8s) GetConfigmaps() ([]interface{}, error) {
 			return nil, errors.New("not a k8s configmap")
 		}
 
-		r, err := k.Runtime.CreateResource("k8s.configmap",
+		r, err := k.MotorRuntime.CreateResource("k8s.configmap",
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -514,7 +514,7 @@ func (k *lumiK8s) GetConfigmaps() ([]interface{}, error) {
 }
 
 func (k *lumiK8s) GetNetworkPolicies() ([]interface{}, error) {
-	return k8sResourceToLumi(k.Runtime, "networkpolicies", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToLumi(k.MotorRuntime, "networkpolicies", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := jsonToDict(resource)
@@ -532,7 +532,7 @@ func (k *lumiK8s) GetNetworkPolicies() ([]interface{}, error) {
 			return nil, err
 		}
 
-		r, err := k.Runtime.CreateResource("k8s.networkpolicy",
+		r, err := k.MotorRuntime.CreateResource("k8s.networkpolicy",
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -551,7 +551,7 @@ func (k *lumiK8s) GetNetworkPolicies() ([]interface{}, error) {
 }
 
 func (k *lumiK8s) GetServiceaccounts() ([]interface{}, error) {
-	return k8sResourceToLumi(k.Runtime, "serviceaccounts", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToLumi(k.MotorRuntime, "serviceaccounts", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := jsonToDict(resource)
@@ -574,7 +574,7 @@ func (k *lumiK8s) GetServiceaccounts() ([]interface{}, error) {
 			return nil, err
 		}
 
-		r, err := k.Runtime.CreateResource("k8s.serviceaccount",
+		r, err := k.MotorRuntime.CreateResource("k8s.serviceaccount",
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -595,7 +595,7 @@ func (k *lumiK8s) GetServiceaccounts() ([]interface{}, error) {
 }
 
 func (k *lumiK8s) GetClusterroles() ([]interface{}, error) {
-	return k8sResourceToLumi(k.Runtime, "clusterroles", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToLumi(k.MotorRuntime, "clusterroles", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := jsonToDict(resource)
@@ -618,7 +618,7 @@ func (k *lumiK8s) GetClusterroles() ([]interface{}, error) {
 			return nil, err
 		}
 
-		r, err := k.Runtime.CreateResource("k8s.rbac.clusterrole",
+		r, err := k.MotorRuntime.CreateResource("k8s.rbac.clusterrole",
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -637,7 +637,7 @@ func (k *lumiK8s) GetClusterroles() ([]interface{}, error) {
 }
 
 func (k *lumiK8s) GetRoles() ([]interface{}, error) {
-	return k8sResourceToLumi(k.Runtime, "roles", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToLumi(k.MotorRuntime, "roles", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := jsonToDict(resource)
@@ -655,7 +655,7 @@ func (k *lumiK8s) GetRoles() ([]interface{}, error) {
 			return nil, err
 		}
 
-		r, err := k.Runtime.CreateResource("k8s.rbac.role",
+		r, err := k.MotorRuntime.CreateResource("k8s.rbac.role",
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -674,7 +674,7 @@ func (k *lumiK8s) GetRoles() ([]interface{}, error) {
 }
 
 func (k *lumiK8s) GetClusterrolebindings() ([]interface{}, error) {
-	return k8sResourceToLumi(k.Runtime, "clusterrolebindings", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToLumi(k.MotorRuntime, "clusterrolebindings", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := jsonToDict(resource)
@@ -697,7 +697,7 @@ func (k *lumiK8s) GetClusterrolebindings() ([]interface{}, error) {
 			return nil, err
 		}
 
-		r, err := k.Runtime.CreateResource("k8s.rbac.clusterrolebinding",
+		r, err := k.MotorRuntime.CreateResource("k8s.rbac.clusterrolebinding",
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -716,7 +716,7 @@ func (k *lumiK8s) GetClusterrolebindings() ([]interface{}, error) {
 }
 
 func (k *lumiK8s) GetRolebindings() ([]interface{}, error) {
-	return k8sResourceToLumi(k.Runtime, "rolebinding", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+	return k8sResourceToLumi(k.MotorRuntime, "rolebinding", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := jsonToDict(resource)
@@ -739,7 +739,7 @@ func (k *lumiK8s) GetRolebindings() ([]interface{}, error) {
 			return nil, err
 		}
 
-		r, err := k.Runtime.CreateResource("k8s.rbac.rolebinding",
+		r, err := k.MotorRuntime.CreateResource("k8s.rbac.rolebinding",
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -759,7 +759,7 @@ func (k *lumiK8s) GetRolebindings() ([]interface{}, error) {
 }
 
 func (k *lumiK8s) GetCustomresources() ([]interface{}, error) {
-	kt, err := k8stransport(k.Runtime.Motor.Transport)
+	kt, err := k8stransport(k.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -780,7 +780,7 @@ func (k *lumiK8s) GetCustomresources() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiResources, err := k8sResourceToLumi(k.Runtime, crd.GetName(), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+		lumiResources, err := k8sResourceToLumi(k.MotorRuntime, crd.GetName(), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 			ts := obj.GetCreationTimestamp()
 
 			manifest, err := jsonToDict(resource)
@@ -789,7 +789,7 @@ func (k *lumiK8s) GetCustomresources() ([]interface{}, error) {
 				return nil, err
 			}
 
-			r, err := k.Runtime.CreateResource("k8s.customresource",
+			r, err := k.MotorRuntime.CreateResource("k8s.customresource",
 				"uid", string(obj.GetUID()),
 				"resourceVersion", obj.GetResourceVersion(),
 				"name", obj.GetName(),
@@ -853,7 +853,7 @@ func (p *lumiK8sPod) init(args *lumi.Args) (*lumi.Args, K8sPod, error) {
 	}
 
 	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.Runtime.CreateResource("k8s")
+	obj, err := p.MotorRuntime.CreateResource("k8s")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -954,7 +954,7 @@ func (k *lumiK8sPod) GetContainers() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiContainer, err := k.Runtime.CreateResource("k8s.container",
+		lumiContainer, err := k.MotorRuntime.CreateResource("k8s.container",
 			"uid", uid+"/"+c.Name, // container names are unique within a pod
 			"name", c.Name,
 			"imageName", c.Image,
@@ -1005,7 +1005,7 @@ func (k *lumiK8sContainer) GetContainerImage() (interface{}, error) {
 		return nil, err
 	}
 
-	return newLumiContainerImage(k.Runtime, containerImageName)
+	return newLumiContainerImage(k.MotorRuntime, containerImageName)
 }
 
 func (k *lumiK8sDeployment) id() (string, error) {
@@ -1019,7 +1019,7 @@ func (p *lumiK8sDeployment) init(args *lumi.Args) (*lumi.Args, K8sDeployment, er
 	}
 
 	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.Runtime.CreateResource("k8s")
+	obj, err := p.MotorRuntime.CreateResource("k8s")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1089,7 +1089,7 @@ func (p *lumiK8sDaemonset) init(args *lumi.Args) (*lumi.Args, K8sDaemonset, erro
 	}
 
 	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.Runtime.CreateResource("k8s")
+	obj, err := p.MotorRuntime.CreateResource("k8s")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1191,7 +1191,7 @@ func (p *lumiK8sJob) init(args *lumi.Args) (*lumi.Args, K8sJob, error) {
 	}
 
 	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.Runtime.CreateResource("k8s")
+	obj, err := p.MotorRuntime.CreateResource("k8s")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1261,7 +1261,7 @@ func (p *lumiK8sCronjob) init(args *lumi.Args) (*lumi.Args, K8sCronjob, error) {
 	}
 
 	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.Runtime.CreateResource("k8s")
+	obj, err := p.MotorRuntime.CreateResource("k8s")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1331,7 +1331,7 @@ func (p *lumiK8sSecret) init(args *lumi.Args) (*lumi.Args, K8sSecret, error) {
 	}
 
 	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.Runtime.CreateResource("k8s")
+	obj, err := p.MotorRuntime.CreateResource("k8s")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1411,7 +1411,7 @@ func (k *lumiK8sSecret) GetCertificates() (interface{}, error) {
 		return nil, err
 	}
 
-	return certificatesToLumiCertificates(k.Runtime, certs)
+	return certificatesToLumiCertificates(k.MotorRuntime, certs)
 }
 
 func (k *lumiK8sPodsecuritypolicy) id() (string, error) {
@@ -1437,7 +1437,7 @@ func (p *lumiK8sConfigmap) init(args *lumi.Args) (*lumi.Args, K8sConfigmap, erro
 	}
 
 	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.Runtime.CreateResource("k8s")
+	obj, err := p.MotorRuntime.CreateResource("k8s")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1503,7 +1503,7 @@ func (p *lumiK8sService) init(args *lumi.Args) (*lumi.Args, K8sService, error) {
 	}
 
 	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.Runtime.CreateResource("k8s")
+	obj, err := p.MotorRuntime.CreateResource("k8s")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1569,7 +1569,7 @@ func (p *lumiK8sNetworkpolicy) init(args *lumi.Args) (*lumi.Args, K8sNetworkpoli
 	}
 
 	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.Runtime.CreateResource("k8s")
+	obj, err := p.MotorRuntime.CreateResource("k8s")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1635,7 +1635,7 @@ func (p *lumiK8sServiceaccount) init(args *lumi.Args) (*lumi.Args, K8sServiceacc
 	}
 
 	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.Runtime.CreateResource("k8s")
+	obj, err := p.MotorRuntime.CreateResource("k8s")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1701,7 +1701,7 @@ func (p *lumiK8sRbacClusterrole) init(args *lumi.Args) (*lumi.Args, K8sRbacClust
 	}
 
 	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.Runtime.CreateResource("k8s")
+	obj, err := p.MotorRuntime.CreateResource("k8s")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1765,7 +1765,7 @@ func (p *lumiK8sRbacRole) init(args *lumi.Args) (*lumi.Args, K8sRbacRole, error)
 	}
 
 	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.Runtime.CreateResource("k8s")
+	obj, err := p.MotorRuntime.CreateResource("k8s")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1831,7 +1831,7 @@ func (p *lumiK8sRbacClusterrolebinding) init(args *lumi.Args) (*lumi.Args, K8sRb
 	}
 
 	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.Runtime.CreateResource("k8s")
+	obj, err := p.MotorRuntime.CreateResource("k8s")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1895,7 +1895,7 @@ func (p *lumiK8sRbacRolebinding) init(args *lumi.Args) (*lumi.Args, K8sRbacRoleb
 	}
 
 	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.Runtime.CreateResource("k8s")
+	obj, err := p.MotorRuntime.CreateResource("k8s")
 	if err != nil {
 		return nil, nil, err
 	}

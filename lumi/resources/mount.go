@@ -14,7 +14,7 @@ func (m *lumiMount) id() (string, error) {
 
 func (m *lumiMount) GetList() ([]interface{}, error) {
 	// find suitable mount manager
-	mm, err := mount.ResolveManager(m.Runtime.Motor)
+	mm, err := mount.ResolveManager(m.MotorRuntime.Motor)
 	if mm == nil || err != nil {
 		return nil, fmt.Errorf("could not detect suiteable mount manager for platform")
 	}
@@ -35,7 +35,7 @@ func (m *lumiMount) GetList() ([]interface{}, error) {
 			opts[k] = osMount.Options[k]
 		}
 
-		lumiMountEntry, err := m.Runtime.CreateResource("mount.point",
+		lumiMountEntry, err := m.MotorRuntime.CreateResource("mount.point",
 			"device", osMount.Device,
 			"path", osMount.MountPoint,
 			"fstype", osMount.FSType,
@@ -72,7 +72,7 @@ func (p *lumiMountPoint) init(args *lumi.Args) (*lumi.Args, MountPoint, error) {
 		return args, nil, nil
 	}
 
-	obj, err := p.Runtime.CreateResource("mount")
+	obj, err := p.MotorRuntime.CreateResource("mount")
 	if err != nil {
 		return nil, nil, err
 	}

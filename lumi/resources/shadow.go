@@ -29,7 +29,7 @@ func parseInt(s string, dflt int64, msg string) (int64, error) {
 
 func (s *lumiShadow) GetList() ([]interface{}, error) {
 	// TODO: we may want to create a real mondoo file resource
-	f, err := s.Runtime.Motor.Transport.FS().Open(defaultShadowConfig)
+	f, err := s.MotorRuntime.Motor.Transport.FS().Open(defaultShadowConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (s *lumiShadow) GetList() ([]interface{}, error) {
 			return nil, err
 		}
 
-		shadowEntry, err := s.Runtime.CreateResource("shadow.entry",
+		shadowEntry, err := s.MotorRuntime.CreateResource("shadow.entry",
 			"user", entry.User,
 			"password", entry.Password,
 			"lastchanged", entry.LastChanged,

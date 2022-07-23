@@ -20,7 +20,7 @@ func (w *lumiWindowsFirewallRule) id() (string, error) {
 func (w *lumiWindowsFirewall) GetSettings() (map[string]interface{}, error) {
 	// query firewall profiles
 	encodedCmd := powershell.Encode(windows.FIREWALL_SETTINGS)
-	executedCmd, err := w.Runtime.Motor.Transport.RunCommand(encodedCmd)
+	executedCmd, err := w.MotorRuntime.Motor.Transport.RunCommand(encodedCmd)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (w *lumiWindowsFirewall) GetSettings() (map[string]interface{}, error) {
 func (w *lumiWindowsFirewall) GetProfiles() ([]interface{}, error) {
 	// query firewall profiles
 	encodedCmd := powershell.Encode(windows.FIREWALL_PROFILES)
-	executedCmd, err := w.Runtime.Motor.Transport.RunCommand(encodedCmd)
+	executedCmd, err := w.MotorRuntime.Motor.Transport.RunCommand(encodedCmd)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (w *lumiWindowsFirewall) GetProfiles() ([]interface{}, error) {
 	lumiFwProfiles := make([]interface{}, len(fwProfiles))
 	for i, p := range fwProfiles {
 
-		lumiFwProfile, err := w.Runtime.CreateResource("windows.firewall.profile",
+		lumiFwProfile, err := w.MotorRuntime.CreateResource("windows.firewall.profile",
 			"instanceID", p.InstanceID,
 			"name", p.Name,
 			"enabled", p.Enabled,
@@ -83,7 +83,7 @@ func (w *lumiWindowsFirewall) GetProfiles() ([]interface{}, error) {
 func (w *lumiWindowsFirewall) GetRules() ([]interface{}, error) {
 	// query firewall rules
 	encodedCmd := powershell.Encode(windows.FIREWALL_RULES)
-	executedCmd, err := w.Runtime.Motor.Transport.RunCommand(encodedCmd)
+	executedCmd, err := w.MotorRuntime.Motor.Transport.RunCommand(encodedCmd)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (w *lumiWindowsFirewall) GetRules() ([]interface{}, error) {
 	lumiFwRules := make([]interface{}, len(fwRules))
 	for i, r := range fwRules {
 
-		lumiFwRule, err := w.Runtime.CreateResource("windows.firewall.rule",
+		lumiFwRule, err := w.MotorRuntime.CreateResource("windows.firewall.rule",
 			"instanceID", r.InstanceID,
 			"name", r.Name,
 			"displayName", r.DisplayName,

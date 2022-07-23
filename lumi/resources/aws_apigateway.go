@@ -21,7 +21,7 @@ const (
 )
 
 func (a *lumiAwsApigateway) GetRestApis() ([]interface{}, error) {
-	at, err := awstransport(a.Runtime.Motor.Transport)
+	at, err := awstransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (a *lumiAwsApigateway) GetRestApis() ([]interface{}, error) {
 }
 
 func (a *lumiAwsApigateway) getRestApis(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -69,7 +69,7 @@ func (a *lumiAwsApigateway) getRestApis(at *aws_transport.Transport) []*jobpool.
 				}
 
 				for _, restApi := range restApisResp.Items {
-					lumiRestApi, err := a.Runtime.CreateResource("aws.apigateway.restapi",
+					lumiRestApi, err := a.MotorRuntime.CreateResource("aws.apigateway.restapi",
 						"arn", fmt.Sprintf(apiArnPattern, regionVal, account.ID, toString(restApi.Id)),
 						"id", toString(restApi.Id),
 						"name", toString(restApi.Name),
@@ -104,7 +104,7 @@ func (a *lumiAwsApigatewayRestapi) GetStages() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(a.Runtime.Motor.Transport)
+	at, err := awstransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func (a *lumiAwsApigatewayRestapi) GetStages() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		lumiStage, err := a.Runtime.CreateResource("aws.apigateway.stage",
+		lumiStage, err := a.MotorRuntime.CreateResource("aws.apigateway.stage",
 			"arn", fmt.Sprintf(apiStageArnPattern, region, account.ID, restApiId, toString(stage.StageName)),
 			"name", toString(stage.StageName),
 			"description", toString(stage.Description),

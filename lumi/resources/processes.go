@@ -32,7 +32,7 @@ func (p *lumiProcess) init(args *lumi.Args) (*lumi.Args, Process, error) {
 		}
 
 		// lets do minimal IO in initialize
-		opm, err := processes.ResolveManager(p.Runtime.Motor)
+		opm, err := processes.ResolveManager(p.MotorRuntime.Motor)
 		if err != nil {
 			return nil, nil, errors.New("cannot find process manager")
 		}
@@ -61,7 +61,7 @@ func (p *lumiProcess) GetState() (string, error) {
 	}
 
 	p.gatherProcessInfo(func() {
-		err := p.Runtime.Observers.Trigger(p.LumiResource().FieldUID("state"))
+		err := p.MotorRuntime.Observers.Trigger(p.LumiResource().FieldUID("state"))
 		if err != nil {
 			log.Error().Err(err).Msg("[process]> failed to trigger state")
 		}
@@ -77,7 +77,7 @@ func (p *lumiProcess) GetExecutable() (string, error) {
 	}
 
 	p.gatherProcessInfo(func() {
-		err := p.Runtime.Observers.Trigger(p.LumiResource().FieldUID("executable"))
+		err := p.MotorRuntime.Observers.Trigger(p.LumiResource().FieldUID("executable"))
 		if err != nil {
 			log.Error().Err(err).Msg("[process]> failed to trigger executable")
 		}
@@ -93,7 +93,7 @@ func (p *lumiProcess) GetCommand() (string, error) {
 	}
 
 	p.gatherProcessInfo(func() {
-		err := p.Runtime.Observers.Trigger(p.LumiResource().FieldUID("command"))
+		err := p.MotorRuntime.Observers.Trigger(p.LumiResource().FieldUID("command"))
 		if err != nil {
 			log.Error().Err(err).Msg("[process]> failed to trigger command")
 		}
@@ -130,7 +130,7 @@ func (p *lumiProcess) gatherProcessInfo(fn ProcessCallbackTrigger) error {
 		return errors.New("cannot gather pid")
 	}
 
-	opm, err := processes.ResolveManager(p.Runtime.Motor)
+	opm, err := processes.ResolveManager(p.MotorRuntime.Motor)
 	if err != nil {
 		return errors.New("cannot find process manager")
 	}
@@ -165,7 +165,7 @@ func (p *lumiProcesses) id() (string, error) {
 
 func (p *lumiProcesses) GetList() ([]interface{}, error) {
 	// find suitable package manager
-	opm, err := processes.ResolveManager(p.Runtime.Motor)
+	opm, err := processes.ResolveManager(p.MotorRuntime.Motor)
 	if opm == nil || err != nil {
 		log.Debug().Err(err).Msg("lumi[processes]> could not retrieve process resolver")
 		return nil, errors.New("cannot find process manager")
@@ -186,7 +186,7 @@ func (p *lumiProcesses) GetList() ([]interface{}, error) {
 	for i := range processes {
 		proc := processes[i]
 
-		lumiProcess, err := p.Runtime.CreateResource("process",
+		lumiProcess, err := p.MotorRuntime.CreateResource("process",
 			"pid", proc.Pid,
 			"executable", proc.Executable,
 			"command", proc.Command,

@@ -25,7 +25,7 @@ func (m *lumiMondoo) GetNulllist() ([]interface{}, error) {
 }
 
 func (m *lumiMondoo) GetResources() ([]interface{}, error) {
-	n := m.Runtime.Registry.Names()
+	n := m.MotorRuntime.Registry.Names()
 	sort.Strings(n)
 	res := make([]interface{}, len(n))
 	for i, s := range n {
@@ -53,7 +53,7 @@ func (m *lumiMondoo) GetJobEnvironment() (map[string]interface{}, error) {
 
 func (m *lumiMondoo) GetCapabilities() ([]interface{}, error) {
 	capabilities := []interface{}{}
-	caps := m.Runtime.Motor.Transport.Capabilities()
+	caps := m.MotorRuntime.Motor.Transport.Capabilities()
 	for i := range caps {
 		capabilities = append(capabilities, caps[i].String())
 	}
@@ -65,7 +65,7 @@ func (m *lumiMondooAsset) id() (string, error) {
 }
 
 func (m *lumiMondooAsset) GetPlatformIDs() ([]interface{}, error) {
-	asset := m.Runtime.Motor.GetAsset()
+	asset := m.MotorRuntime.Motor.GetAsset()
 	if asset == nil {
 		return nil, errors.New("unimplemented")
 	}

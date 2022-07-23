@@ -21,7 +21,7 @@ func (u *lumiUser) GetSshkeys() ([]interface{}, error) {
 
 	userSshPath := path.Join(home, ".ssh")
 
-	fs := u.Runtime.Motor.Transport.FS()
+	fs := u.MotorRuntime.Motor.Transport.FS()
 	afutil := afero.Afero{Fs: fs}
 
 	// check if use ssh directory exists
@@ -83,7 +83,7 @@ func (u *lumiUser) GetSshkeys() ([]interface{}, error) {
 		isEncrypted := strings.Contains(content, "ENCRYPTED")
 
 		if isPrivateKey {
-			upk, err := u.Runtime.CreateResource("privatekey",
+			upk, err := u.MotorRuntime.CreateResource("privatekey",
 				"pem", content,
 				"encrypted", isEncrypted,
 				"path", path,

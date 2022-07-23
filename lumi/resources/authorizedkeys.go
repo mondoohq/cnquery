@@ -20,7 +20,7 @@ func (u *lumiUser) GetAuthorizedkeys() (Authorizedkeys, error) {
 
 	// TODO: we may need to handle ".ssh/authorized_keys2" too
 	authorizedKeysPath := path.Join(home, ".ssh", "authorized_keys")
-	ak, err := u.Runtime.CreateResource("authorizedkeys", "path", authorizedKeysPath)
+	ak, err := u.MotorRuntime.CreateResource("authorizedkeys", "path", authorizedKeysPath)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (s *lumiAuthorizedkeys) init(args *lumi.Args) (*lumi.Args, Authorizedkeys, 
 			return nil, nil, errors.New("Wrong type for 'path' in authorizedkeys initialization, it must be a string")
 		}
 
-		f, err := s.Runtime.CreateResource("file", "path", path)
+		f, err := s.MotorRuntime.CreateResource("file", "path", path)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -98,7 +98,7 @@ func (a *lumiAuthorizedkeys) GetFile() (File, error) {
 		return nil, err
 	}
 
-	f, err := a.Runtime.CreateResource("file", "path", path)
+	f, err := a.MotorRuntime.CreateResource("file", "path", path)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func (a *lumiAuthorizedkeys) GetContent(file File) (string, error) {
 
 	// TODO: this can be heavily improved once we do it right, since this is constantly
 	// re-registered as the file changes
-	err = a.Runtime.WatchAndCompute(file, "content", a, "content")
+	err = a.MotorRuntime.WatchAndCompute(file, "content", a, "content")
 	if err != nil {
 		return "", err
 	}
@@ -152,7 +152,7 @@ func (a *lumiAuthorizedkeys) GetList(file File, content string) ([]interface{}, 
 			opts[j] = entry.Options[j]
 		}
 
-		ae, err := a.Runtime.CreateResource("authorizedkeys.entry",
+		ae, err := a.MotorRuntime.CreateResource("authorizedkeys.entry",
 			"line", entry.Line,
 			"type", entry.Key.Type(),
 			"key", entry.Base64Key(),

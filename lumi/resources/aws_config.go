@@ -14,7 +14,7 @@ func (c *lumiAwsConfig) id() (string, error) {
 }
 
 func (c *lumiAwsConfig) GetRecorders() ([]interface{}, error) {
-	at, err := awstransport(c.Runtime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func (c *lumiAwsConfig) GetRecorders() ([]interface{}, error) {
 }
 
 func (c *lumiAwsConfig) getRecorders(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -66,7 +66,7 @@ func (c *lumiAwsConfig) getRecorders(at *aws_transport.Transport) []*jobpool.Job
 					recording = val.recording
 					lastStatus = val.lastStatus
 				}
-				lumiRecorder, err := c.Runtime.CreateResource("aws.config.recorder",
+				lumiRecorder, err := c.MotorRuntime.CreateResource("aws.config.recorder",
 					"name", toString(r.Name),
 					"roleArn", toString(r.RoleARN),
 					"allSupported", r.RecordingGroup.AllSupported,
@@ -125,7 +125,7 @@ func (c *lumiAwsConfigRecorder) id() (string, error) {
 }
 
 func (c *lumiAwsConfig) GetRules() ([]interface{}, error) {
-	at, err := awstransport(c.Runtime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -145,10 +145,10 @@ func (c *lumiAwsConfig) GetRules() ([]interface{}, error) {
 }
 
 func (c *lumiAwsConfig) getRules(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}}
+		return []*jobpool.Job{{Err: err}}
 	}
 
 	for _, region := range regions {
@@ -170,7 +170,7 @@ func (c *lumiAwsConfig) getRules(at *aws_transport.Transport) []*jobpool.Job {
 				if err != nil {
 					return nil, err
 				}
-				lumiRule, err := c.Runtime.CreateResource("aws.config.rule",
+				lumiRule, err := c.MotorRuntime.CreateResource("aws.config.rule",
 					"arn", toString(r.ConfigRuleArn),
 					"state", string(r.ConfigRuleState),
 					"source", jsonSource,

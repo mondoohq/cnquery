@@ -16,7 +16,7 @@ func (e *lumiAwsEs) id() (string, error) {
 }
 
 func (e *lumiAwsEs) GetDomains() ([]interface{}, error) {
-	at, err := awstransport(e.Runtime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (e *lumiAwsEs) GetDomains() ([]interface{}, error) {
 }
 
 func (e *lumiAwsEs) getDomains(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -58,7 +58,7 @@ func (e *lumiAwsEs) getDomains(at *aws_transport.Transport) []*jobpool.Job {
 			for _, domain := range domains.DomainNames {
 				// note: the api returns name and region here, so we just use that.
 				// the arn is not returned until we get to the describe call
-				lumiDomain, err := e.Runtime.CreateResource("aws.es.domain",
+				lumiDomain, err := e.MotorRuntime.CreateResource("aws.es.domain",
 					"name", toString(domain.DomainName),
 					"region", regionVal,
 				)
@@ -85,7 +85,7 @@ func (a *lumiAwsEsDomain) init(args *lumi.Args) (*lumi.Args, AwsEsDomain, error)
 
 	name := (*args)["name"].(string)
 	region := (*args)["region"].(string)
-	at, err := awstransport(a.Runtime.Motor.Transport)
+	at, err := awstransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, nil, err
 	}

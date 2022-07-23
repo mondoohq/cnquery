@@ -23,7 +23,7 @@ func (s *lumiSecpol) policy() (*windows.Secpol, error) {
 
 	encoded := powershell.Encode(windows.SecpolScript)
 
-	cmd, err := s.Runtime.Motor.Transport.RunCommand(encoded)
+	cmd, err := s.MotorRuntime.Motor.Transport.RunCommand(encoded)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not run secpol script")
 	}

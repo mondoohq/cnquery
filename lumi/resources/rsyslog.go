@@ -52,13 +52,13 @@ func (s *lumiRsyslogConf) getFiles(confPath string) ([]interface{}, error) {
 		return nil, errors.New("failed to initialize, path must end in `.conf` so we can find files in `.d` directory")
 	}
 
-	f, err := s.Runtime.CreateResource("file", "path", confPath)
+	f, err := s.MotorRuntime.CreateResource("file", "path", confPath)
 	if err != nil {
 		return nil, err
 	}
 
 	confD := confPath[0:len(confPath)-5] + ".d"
-	files, err := s.Runtime.CreateResource("files.find", "from", confD, "type", "file")
+	files, err := s.MotorRuntime.CreateResource("files.find", "from", confD, "type", "file")
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (s *lumiRsyslogConf) GetContent(files []interface{}) (string, error) {
 	for i := range files {
 		file := files[i].(File)
 
-		err := s.Runtime.WatchAndCompute(file, "content", s, "content")
+		err := s.MotorRuntime.WatchAndCompute(file, "content", s, "content")
 		if err != nil {
 			return "", err
 		}

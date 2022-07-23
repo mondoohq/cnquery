@@ -22,7 +22,7 @@ func (a *lumiIpmi) id() (string, error) {
 }
 
 func (a *lumiIpmi) GetGuid() (string, error) {
-	client, err := getIpmiInstance(a.Runtime.Motor.Transport)
+	client, err := getIpmiInstance(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return "", err
 	}
@@ -35,8 +35,7 @@ func (a *lumiIpmi) GetGuid() (string, error) {
 }
 
 func (a *lumiIpmi) GetDeviceID() (map[string]interface{}, error) {
-
-	client, err := getIpmiInstance(a.Runtime.Motor.Transport)
+	client, err := getIpmiInstance(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -54,8 +53,7 @@ func (a *lumiIpmiChassis) id() (string, error) {
 }
 
 func (a *lumiIpmiChassis) GetStatus() (map[string]interface{}, error) {
-
-	client, err := getIpmiInstance(a.Runtime.Motor.Transport)
+	client, err := getIpmiInstance(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -69,8 +67,7 @@ func (a *lumiIpmiChassis) GetStatus() (map[string]interface{}, error) {
 }
 
 func (a *lumiIpmiChassis) GetSystemBootOptions() (map[string]interface{}, error) {
-
-	client, err := getIpmiInstance(a.Runtime.Motor.Transport)
+	client, err := getIpmiInstance(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}

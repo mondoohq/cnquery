@@ -14,7 +14,7 @@ func (a *lumiAzurermNetwork) id() (string, error) {
 }
 
 func (a *lumiAzurermNetwork) GetInterfaces() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (a *lumiAzurermNetwork) GetInterfaces() ([]interface{}, error) {
 	for i := range ifaces.Values() {
 		iface := ifaces.Values()[i]
 
-		lumiAzure, err := azureIfaceToLumi(a.Runtime, iface)
+		lumiAzure, err := azureIfaceToLumi(a.MotorRuntime, iface)
 		if err != nil {
 			return nil, err
 		}
@@ -65,7 +65,7 @@ func azureIfaceToLumi(runtime *lumi.Runtime, iface network.Interface) (lumi.Reso
 }
 
 func (a *lumiAzurermNetwork) GetSecurityGroups() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (a *lumiAzurermNetwork) GetSecurityGroups() ([]interface{}, error) {
 	for i := range secGroups.Values() {
 		secGroup := secGroups.Values()[i]
 
-		lumiAzure, err := azureSecGroupToLumi(a.Runtime, secGroup)
+		lumiAzure, err := azureSecGroupToLumi(a.MotorRuntime, secGroup)
 		if err != nil {
 			return nil, err
 		}
@@ -102,7 +102,6 @@ func (a *lumiAzurermNetwork) GetSecurityGroups() ([]interface{}, error) {
 type AzureSecurityGroupPropertiesFormat network.SecurityGroupPropertiesFormat
 
 func azureSecGroupToLumi(runtime *lumi.Runtime, secGroup network.SecurityGroup) (lumi.ResourceType, error) {
-
 	var properties map[string]interface{}
 	ifaces := []interface{}{}
 	securityRules := []interface{}{}
@@ -173,7 +172,6 @@ func azureSecGroupToLumi(runtime *lumi.Runtime, secGroup network.SecurityGroup) 
 }
 
 func azureSecurityRuleToLumi(runtime *lumi.Runtime, secRule network.SecurityRule) (lumi.ResourceType, error) {
-
 	properties, err := jsonToDict(secRule.SecurityRulePropertiesFormat)
 	if err != nil {
 		return nil, err
@@ -237,7 +235,7 @@ func (a *lumiAzurermNetworkSecurityrule) id() (string, error) {
 }
 
 func (a *lumiAzurermNetwork) GetWatchers() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -271,7 +269,7 @@ func (a *lumiAzurermNetwork) GetWatchers() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzure, err := a.Runtime.CreateResource("azurerm.network.watcher",
+		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.network.watcher",
 			"id", toString(watcher.ID),
 			"name", toString(watcher.Name),
 			"location", toString(watcher.Location),
@@ -280,7 +278,6 @@ func (a *lumiAzurermNetwork) GetWatchers() ([]interface{}, error) {
 			"etag", toString(watcher.Etag),
 			"properties", properties,
 		)
-
 		if err != nil {
 			return nil, err
 		}

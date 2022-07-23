@@ -19,7 +19,7 @@ func (s *lumiTls) init(args *lumi.Args) (*lumi.Args, Tls, error) {
 	var fqdn string
 	var port int64
 
-	if transport, ok := s.Runtime.Motor.Transport.(*network.Transport); ok {
+	if transport, ok := s.MotorRuntime.Motor.Transport.(*network.Transport); ok {
 		fqdn = transport.FQDN
 		port = int64(transport.Port)
 		if port == 0 {
@@ -51,7 +51,7 @@ func (s *lumiTls) init(args *lumi.Args) (*lumi.Args, Tls, error) {
 			domainName = address
 		}
 
-		socket, err := s.Runtime.CreateResource("socket",
+		socket, err := s.MotorRuntime.CreateResource("socket",
 			"protocol", proto,
 			"port", port,
 			"address", address,
@@ -65,7 +65,7 @@ func (s *lumiTls) init(args *lumi.Args) (*lumi.Args, Tls, error) {
 		delete(*args, "target")
 
 	} else {
-		socket, err := s.Runtime.CreateResource("socket",
+		socket, err := s.MotorRuntime.CreateResource("socket",
 			"protocol", "tcp",
 			"port", port,
 			"address", fqdn,
@@ -206,12 +206,12 @@ func (s *lumiTls) GetParams(socket Socket, domainName string) (map[string]interf
 	}
 
 	// Create certificates
-	res["certificates"], err = parseCertificates(s.Runtime, domainName, &findings, findings.Certificates)
+	res["certificates"], err = parseCertificates(s.MotorRuntime, domainName, &findings, findings.Certificates)
 	if err != nil {
 		return nil, err
 	}
 
-	res["non-sni-certificates"], err = parseCertificates(s.Runtime, domainName, &findings, findings.NonSNIcertificates)
+	res["non-sni-certificates"], err = parseCertificates(s.MotorRuntime, domainName, &findings, findings.NonSNIcertificates)
 	if err != nil {
 		return nil, err
 	}

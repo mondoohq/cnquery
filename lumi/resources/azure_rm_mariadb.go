@@ -19,7 +19,7 @@ func (a *lumiAzurermMariadbDatabase) id() (string, error) {
 }
 
 func (a *lumiAzurermMariadb) GetServers() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (a *lumiAzurermMariadb) GetServers() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzureDbServer, err := a.Runtime.CreateResource("azurerm.mariadb.server",
+		lumiAzureDbServer, err := a.MotorRuntime.CreateResource("azurerm.mariadb.server",
 			"id", toString(dbServer.ID),
 			"name", toString(dbServer.Name),
 			"location", toString(dbServer.Location),
@@ -73,7 +73,7 @@ func (a *lumiAzurermMariadb) GetServers() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermMariadbServer) GetConfiguration() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func (a *lumiAzurermMariadbServer) GetConfiguration() ([]interface{}, error) {
 	for i := range list {
 		entry := list[i]
 
-		lumiAzureConfiguration, err := a.Runtime.CreateResource("azurerm.sql.configuration",
+		lumiAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.configuration",
 			"id", toString(entry.ID),
 			"name", toString(entry.Name),
 			"type", toString(entry.Type),
@@ -138,8 +138,7 @@ func (a *lumiAzurermMariadbServer) GetConfiguration() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermMariadbServer) GetDatabases() ([]interface{}, error) {
-
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +183,7 @@ func (a *lumiAzurermMariadbServer) GetDatabases() ([]interface{}, error) {
 	for i := range list {
 		entry := list[i]
 
-		lumiAzureDatabase, err := a.Runtime.CreateResource("azurerm.mariadb.database",
+		lumiAzureDatabase, err := a.MotorRuntime.CreateResource("azurerm.mariadb.database",
 			"id", toString(entry.ID),
 			"name", toString(entry.Name),
 			"type", toString(entry.Type),
@@ -201,7 +200,7 @@ func (a *lumiAzurermMariadbServer) GetDatabases() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermMariadbServer) GetFirewallRules() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +245,7 @@ func (a *lumiAzurermMariadbServer) GetFirewallRules() ([]interface{}, error) {
 	for i := range list {
 		entry := list[i]
 
-		lumiAzureConfiguration, err := a.Runtime.CreateResource("azurerm.sql.firewallrule",
+		lumiAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.firewallrule",
 			"id", toString(entry.ID),
 			"name", toString(entry.Name),
 			"type", toString(entry.Type),

@@ -26,7 +26,7 @@ func (p *lumiAwsIam) id() (string, error) {
 }
 
 func (c *lumiAwsIam) GetServerCertificates() ([]interface{}, error) {
-	at, err := awstransport(c.Runtime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (c *lumiAwsIam) GetServerCertificates() ([]interface{}, error) {
 }
 
 func (c *lumiAwsIam) GetCredentialReport() ([]interface{}, error) {
-	at, err := awstransport(c.Runtime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ func (c *lumiAwsIam) GetCredentialReport() ([]interface{}, error) {
 
 	res := []interface{}{}
 	for i := range entries {
-		userEntry, err := c.Runtime.CreateResource("aws.iam.usercredentialreportentry",
+		userEntry, err := c.MotorRuntime.CreateResource("aws.iam.usercredentialreportentry",
 			"properties", entries[i],
 		)
 		if err != nil {
@@ -148,7 +148,7 @@ func (c *lumiAwsIam) GetCredentialReport() ([]interface{}, error) {
 }
 
 func (c *lumiAwsIam) GetAccountPasswordPolicy() (map[string]interface{}, error) {
-	at, err := awstransport(c.Runtime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +202,7 @@ func parsePasswordPolicy(passwordPolicy *types.PasswordPolicy) map[string]interf
 }
 
 func (c *lumiAwsIam) GetAccountSummary() (map[string]interface{}, error) {
-	at, err := awstransport(c.Runtime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +225,7 @@ func (c *lumiAwsIam) GetAccountSummary() (map[string]interface{}, error) {
 }
 
 func (c *lumiAwsIam) GetUsers() ([]interface{}, error) {
-	at, err := awstransport(c.Runtime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -277,7 +277,7 @@ func (c *lumiAwsIam) createIamUser(usr *types.User) (lumi.ResourceType, error) {
 		return nil, errors.New("no iam user provided")
 	}
 
-	return c.Runtime.CreateResource("aws.iam.user",
+	return c.MotorRuntime.CreateResource("aws.iam.user",
 		"arn", toString(usr.Arn),
 		"id", toString(usr.UserId),
 		"name", toString(usr.UserName),
@@ -288,7 +288,7 @@ func (c *lumiAwsIam) createIamUser(usr *types.User) (lumi.ResourceType, error) {
 }
 
 func (c *lumiAwsIam) GetVirtualMfaDevices() ([]interface{}, error) {
-	at, err := awstransport(c.Runtime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -315,7 +315,7 @@ func (c *lumiAwsIam) GetVirtualMfaDevices() ([]interface{}, error) {
 			}
 		}
 
-		lumiAwsIamMfaDevice, err := c.Runtime.CreateResource("aws.iam.virtualmfadevice",
+		lumiAwsIamMfaDevice, err := c.MotorRuntime.CreateResource("aws.iam.virtualmfadevice",
 			"serialNumber", toString(device.SerialNumber),
 			"enableDate", device.EnableDate,
 			"user", lumiAwsIamUser,
@@ -336,7 +336,7 @@ func (c *lumiAwsIam) lumiPolicies(policies []types.Policy) ([]interface{}, error
 		policy := policies[i]
 		// NOTE: here we have all the information about the policy already
 		// therefore we pass the information in, so that lumi does not have to resolve it again
-		lumiAwsIamPolicy, err := c.Runtime.CreateResource("aws.iam.policy",
+		lumiAwsIamPolicy, err := c.MotorRuntime.CreateResource("aws.iam.policy",
 			"arn", toString(policy.Arn),
 			"id", toString(policy.PolicyId),
 			"name", toString(policy.PolicyName),
@@ -355,7 +355,7 @@ func (c *lumiAwsIam) lumiPolicies(policies []types.Policy) ([]interface{}, error
 }
 
 func (c *lumiAwsIam) GetAttachedPolicies() ([]interface{}, error) {
-	at, err := awstransport(c.Runtime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -391,7 +391,7 @@ func (c *lumiAwsIam) GetAttachedPolicies() ([]interface{}, error) {
 }
 
 func (c *lumiAwsIam) GetPolicies() ([]interface{}, error) {
-	at, err := awstransport(c.Runtime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -425,7 +425,7 @@ func (c *lumiAwsIam) GetPolicies() ([]interface{}, error) {
 }
 
 func (c *lumiAwsIam) GetRoles() ([]interface{}, error) {
-	at, err := awstransport(c.Runtime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -446,7 +446,7 @@ func (c *lumiAwsIam) GetRoles() ([]interface{}, error) {
 		for i := range rolesResp.Roles {
 			role := rolesResp.Roles[i]
 
-			lumiAwsIamRole, err := c.Runtime.CreateResource("aws.iam.role",
+			lumiAwsIamRole, err := c.MotorRuntime.CreateResource("aws.iam.role",
 				"arn", toString(role.Arn),
 				"id", toString(role.RoleId),
 				"name", toString(role.RoleName),
@@ -471,7 +471,7 @@ func (c *lumiAwsIam) GetRoles() ([]interface{}, error) {
 }
 
 func (c *lumiAwsIam) GetGroups() ([]interface{}, error) {
-	at, err := awstransport(c.Runtime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -492,7 +492,7 @@ func (c *lumiAwsIam) GetGroups() ([]interface{}, error) {
 		for i := range groupsResp.Groups {
 			grp := groupsResp.Groups[i]
 
-			lumiAwsIamGroup, err := c.Runtime.CreateResource("aws.iam.group",
+			lumiAwsIamGroup, err := c.MotorRuntime.CreateResource("aws.iam.group",
 				"arn", toString(grp.Arn),
 				"name", toString(grp.GroupName),
 			)
@@ -696,7 +696,6 @@ func (p *lumiAwsIamUsercredentialreportentry) GetPasswordNextRotation() (*time.T
 }
 
 func (p *lumiAwsIamUsercredentialreportentry) GetUser() (interface{}, error) {
-
 	props, err := p.Properties()
 	if err != nil {
 		return nil, err
@@ -712,7 +711,7 @@ func (p *lumiAwsIamUsercredentialreportentry) GetUser() (interface{}, error) {
 		return nil, nil
 	}
 
-	lumiUser, err := p.Runtime.CreateResource("aws.iam.user",
+	lumiUser, err := p.MotorRuntime.CreateResource("aws.iam.user",
 		"name", props["user"],
 	)
 	if err != nil {
@@ -740,7 +739,7 @@ func (p *lumiAwsIamUser) init(args *lumi.Args) (*lumi.Args, AwsIamUser, error) {
 	}
 
 	// TODO: avoid reloading if all groups have been loaded already
-	at, err := awstransport(p.Runtime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -787,7 +786,7 @@ func (u *lumiAwsIamUser) id() (string, error) {
 }
 
 func (u *lumiAwsIamUser) GetAccessKeys() ([]interface{}, error) {
-	at, err := awstransport(u.Runtime.Motor.Transport)
+	at, err := awstransport(u.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -825,7 +824,7 @@ func (u *lumiAwsIamUser) GetAccessKeys() ([]interface{}, error) {
 }
 
 func (u *lumiAwsIamUser) GetPolicies() ([]interface{}, error) {
-	at, err := awstransport(u.Runtime.Motor.Transport)
+	at, err := awstransport(u.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -862,7 +861,7 @@ func (u *lumiAwsIamUser) GetPolicies() ([]interface{}, error) {
 }
 
 func (u *lumiAwsIamUser) GetAttachedPolicies() ([]interface{}, error) {
-	at, err := awstransport(u.Runtime.Motor.Transport)
+	at, err := awstransport(u.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -889,7 +888,7 @@ func (u *lumiAwsIamUser) GetAttachedPolicies() ([]interface{}, error) {
 		for i := range userAttachedPolicies.AttachedPolicies {
 			attachedPolicy := userAttachedPolicies.AttachedPolicies[i]
 
-			lumiAwsIamPolicy, err := u.Runtime.CreateResource("aws.iam.policy",
+			lumiAwsIamPolicy, err := u.MotorRuntime.CreateResource("aws.iam.policy",
 				"arn", toString(attachedPolicy.PolicyArn),
 			)
 			if err != nil {
@@ -919,7 +918,7 @@ func (u *lumiAwsIamPolicy) loadPolicy(arn string) (*types.Policy, error) {
 	}
 
 	// if its not in the cache, fetch it
-	at, err := awstransport(u.Runtime.Motor.Transport)
+	at, err := awstransport(u.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -1061,7 +1060,7 @@ func (u *lumiAwsIamPolicy) listAttachedEntities(arn string) (attachedEntities, e
 	var res attachedEntities
 
 	// if its not in the cache, fetch it
-	at, err := awstransport(u.Runtime.Motor.Transport)
+	at, err := awstransport(u.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return res, err
 	}
@@ -1100,7 +1099,6 @@ func (u *lumiAwsIamPolicy) listAttachedEntities(arn string) (attachedEntities, e
 	// cache the data
 	u.Cache.Store("_attachedentities", &lumi.CacheEntry{Data: res})
 	return res, nil
-
 }
 
 func (u *lumiAwsIamPolicy) GetAttachedUsers() ([]interface{}, error) {
@@ -1117,7 +1115,7 @@ func (u *lumiAwsIamPolicy) GetAttachedUsers() ([]interface{}, error) {
 	for i := range entities.PolicyUsers {
 		usr := entities.PolicyUsers[i]
 
-		lumiUser, err := u.Runtime.CreateResource("aws.iam.user",
+		lumiUser, err := u.MotorRuntime.CreateResource("aws.iam.user",
 			"name", toString(usr.UserName),
 		)
 		if err != nil {
@@ -1143,7 +1141,7 @@ func (u *lumiAwsIamPolicy) GetAttachedRoles() ([]interface{}, error) {
 	for i := range entities.PolicyRoles {
 		role := entities.PolicyRoles[i]
 
-		lumiUser, err := u.Runtime.CreateResource("aws.iam.role",
+		lumiUser, err := u.MotorRuntime.CreateResource("aws.iam.role",
 			"name", toString(role.RoleName),
 		)
 		if err != nil {
@@ -1169,7 +1167,7 @@ func (u *lumiAwsIamPolicy) GetAttachedGroups() ([]interface{}, error) {
 	for i := range entities.PolicyGroups {
 		group := entities.PolicyGroups[i]
 
-		lumiUser, err := u.Runtime.CreateResource("aws.iam.group",
+		lumiUser, err := u.MotorRuntime.CreateResource("aws.iam.group",
 			"name", toString(group.GroupName),
 		)
 		if err != nil {
@@ -1182,7 +1180,7 @@ func (u *lumiAwsIamPolicy) GetAttachedGroups() ([]interface{}, error) {
 }
 
 func (u *lumiAwsIamPolicy) GetDefaultVersion() (interface{}, error) {
-	at, err := awstransport(u.Runtime.Motor.Transport)
+	at, err := awstransport(u.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -1203,7 +1201,7 @@ func (u *lumiAwsIamPolicy) GetDefaultVersion() (interface{}, error) {
 	for i := range policyVersions.Versions {
 		policyversion := policyVersions.Versions[i]
 		if policyversion.IsDefaultVersion == true {
-			lumiAwsIamPolicyVersion, err := u.Runtime.CreateResource("aws.iam.policyversion",
+			lumiAwsIamPolicyVersion, err := u.MotorRuntime.CreateResource("aws.iam.policyversion",
 				"arn", arn,
 				"versionId", toString(policyversion.VersionId),
 				"isDefaultVersion", policyversion.IsDefaultVersion,
@@ -1219,7 +1217,7 @@ func (u *lumiAwsIamPolicy) GetDefaultVersion() (interface{}, error) {
 }
 
 func (u *lumiAwsIamPolicy) GetVersions() ([]interface{}, error) {
-	at, err := awstransport(u.Runtime.Motor.Transport)
+	at, err := awstransport(u.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -1241,7 +1239,7 @@ func (u *lumiAwsIamPolicy) GetVersions() ([]interface{}, error) {
 	for i := range policyVersions.Versions {
 		policyversion := policyVersions.Versions[i]
 
-		lumiAwsIamPolicyVersion, err := u.Runtime.CreateResource("aws.iam.policyversion",
+		lumiAwsIamPolicyVersion, err := u.MotorRuntime.CreateResource("aws.iam.policyversion",
 			"arn", arn,
 			"versionId", toString(policyversion.VersionId),
 			"isDefaultVersion", policyversion.IsDefaultVersion,
@@ -1272,7 +1270,7 @@ func (u *lumiAwsIamPolicyversion) id() (string, error) {
 }
 
 func (u *lumiAwsIamPolicyversion) GetDocument() (interface{}, error) {
-	at, err := awstransport(u.Runtime.Motor.Transport)
+	at, err := awstransport(u.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return "", err
 	}
@@ -1327,7 +1325,7 @@ func (p *lumiAwsIamRole) init(args *lumi.Args) (*lumi.Args, AwsIamRole, error) {
 	}
 
 	// TODO: avoid reloading if all groups have been loaded already
-	at, err := awstransport(p.Runtime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1383,7 +1381,7 @@ func (p *lumiAwsIamGroup) init(args *lumi.Args) (*lumi.Args, AwsIamGroup, error)
 	}
 
 	// TODO: avoid reloading if all groups have been loaded already
-	at, err := awstransport(p.Runtime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1432,7 +1430,7 @@ func (u *lumiAwsIamGroup) id() (string, error) {
 }
 
 func (u *lumiAwsIamUser) GetGroups() ([]interface{}, error) {
-	at, err := awstransport(u.Runtime.Motor.Transport)
+	at, err := awstransport(u.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}

@@ -32,7 +32,7 @@ func (g *lumiTerraform) id() (string, error) {
 }
 
 func (g *lumiTerraform) GetFiles() ([]interface{}, error) {
-	t, err := terraformtransport(g.Runtime.Motor.Transport)
+	t, err := terraformtransport(g.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (g *lumiTerraform) GetFiles() ([]interface{}, error) {
 	var lumiTerraformFiles []interface{}
 	files := t.Parser().Files()
 	for path := range files {
-		lumiTerraformFile, err := g.Runtime.CreateResource("terraform.file",
+		lumiTerraformFile, err := g.MotorRuntime.CreateResource("terraform.file",
 			"path", path,
 		)
 		if err != nil {
@@ -53,7 +53,7 @@ func (g *lumiTerraform) GetFiles() ([]interface{}, error) {
 }
 
 func (g *lumiTerraform) GetTfvars() (interface{}, error) {
-	t, err := terraformtransport(g.Runtime.Motor.Transport)
+	t, err := terraformtransport(g.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (g *lumiTerraform) GetTfvars() (interface{}, error) {
 }
 
 func (g *lumiTerraform) GetModules() ([]interface{}, error) {
-	t, err := terraformtransport(g.Runtime.Motor.Transport)
+	t, err := terraformtransport(g.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (g *lumiTerraform) GetModules() ([]interface{}, error) {
 	for i := range manifest.Records {
 		record := manifest.Records[i]
 
-		r, err := g.Runtime.CreateResource("terraform.module",
+		r, err := g.MotorRuntime.CreateResource("terraform.module",
 			"key", record.Key,
 			"source", record.SourceAddr,
 			"version", record.Version,
@@ -91,7 +91,7 @@ func (g *lumiTerraform) GetModules() ([]interface{}, error) {
 }
 
 func (g *lumiTerraform) GetBlocks() ([]interface{}, error) {
-	t, err := terraformtransport(g.Runtime.Motor.Transport)
+	t, err := terraformtransport(g.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func (g *lumiTerraform) GetBlocks() ([]interface{}, error) {
 	var lumiHclBlocks []interface{}
 	for k := range files {
 		f := files[k]
-		blocks, err := listHclBlocks(g.Runtime, f.Body, f)
+		blocks, err := listHclBlocks(g.MotorRuntime, f.Body, f)
 		if err != nil {
 			return nil, err
 		}
@@ -141,23 +141,23 @@ func filterBlockByType(runtime *lumi.Runtime, filterType string) ([]interface{},
 }
 
 func (g *lumiTerraform) GetProviders() ([]interface{}, error) {
-	return filterBlockByType(g.Runtime, "provider")
+	return filterBlockByType(g.MotorRuntime, "provider")
 }
 
 func (g *lumiTerraform) GetDatasources() ([]interface{}, error) {
-	return filterBlockByType(g.Runtime, "data")
+	return filterBlockByType(g.MotorRuntime, "data")
 }
 
 func (g *lumiTerraform) GetResources() ([]interface{}, error) {
-	return filterBlockByType(g.Runtime, "resource")
+	return filterBlockByType(g.MotorRuntime, "resource")
 }
 
 func (g *lumiTerraform) GetVariables() ([]interface{}, error) {
-	return filterBlockByType(g.Runtime, "variable")
+	return filterBlockByType(g.MotorRuntime, "variable")
 }
 
 func (g *lumiTerraform) GetOutputs() ([]interface{}, error) {
-	return filterBlockByType(g.Runtime, "output")
+	return filterBlockByType(g.MotorRuntime, "output")
 }
 
 func extractHclCodeSnippet(file *hcl.File, fileRange hcl.Range) string {
@@ -426,7 +426,7 @@ func (g *lumiTerraformBlock) GetBlocks() ([]interface{}, error) {
 	}
 	hclFile := hFile.Data.(*hcl.File)
 
-	return listHclBlocks(g.Runtime, hclBlock.Body, hclFile)
+	return listHclBlocks(g.MotorRuntime, hclBlock.Body, hclFile)
 }
 
 func listHclBlocks(runtime *lumi.Runtime, rawBody interface{}, file *hcl.File) ([]interface{}, error) {
@@ -497,7 +497,7 @@ func (g *lumiTerraformFile) id() (string, error) {
 }
 
 func (g *lumiTerraformFile) GetBlocks() ([]interface{}, error) {
-	t, err := terraformtransport(g.Runtime.Motor.Transport)
+	t, err := terraformtransport(g.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -509,7 +509,7 @@ func (g *lumiTerraformFile) GetBlocks() ([]interface{}, error) {
 
 	files := t.Parser().Files()
 	file := files[p]
-	return listHclBlocks(g.Runtime, file.Body, file)
+	return listHclBlocks(g.MotorRuntime, file.Body, file)
 }
 
 func (g *lumiTerraformModule) id() (string, error) {
@@ -523,7 +523,7 @@ func (g *lumiTerraformSettings) id() (string, error) {
 }
 
 func (s *lumiTerraformSettings) init(args *lumi.Args) (*lumi.Args, TerraformSettings, error) {
-	blocks, err := filterBlockByType(s.Runtime, "terraform")
+	blocks, err := filterBlockByType(s.MotorRuntime, "terraform")
 	if err != nil {
 		return nil, nil, err
 	}

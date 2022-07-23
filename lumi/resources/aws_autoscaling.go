@@ -19,7 +19,7 @@ func (a *lumiAwsAutoscalingGroup) id() (string, error) {
 }
 
 func (a *lumiAwsAutoscaling) GetGroups() ([]interface{}, error) {
-	at, err := awstransport(a.Runtime.Motor.Transport)
+	at, err := awstransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (a *lumiAwsAutoscaling) GetGroups() ([]interface{}, error) {
 }
 
 func (a *lumiAwsAutoscaling) getGroups(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -49,7 +49,6 @@ func (a *lumiAwsAutoscaling) getGroups(at *aws_transport.Transport) []*jobpool.J
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-
 			svc := at.Autoscaling(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
@@ -66,7 +65,7 @@ func (a *lumiAwsAutoscaling) getGroups(at *aws_transport.Transport) []*jobpool.J
 					for _, name := range group.LoadBalancerNames {
 						lbNames = append(lbNames, name)
 					}
-					lumiGroup, err := a.Runtime.CreateResource("aws.autoscaling.group",
+					lumiGroup, err := a.MotorRuntime.CreateResource("aws.autoscaling.group",
 						"arn", toString(group.AutoScalingGroupARN),
 						"name", toString(group.AutoScalingGroupName),
 						"loadBalancerNames", lbNames,

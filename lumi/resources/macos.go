@@ -17,7 +17,7 @@ func (m *lumiMacos) id() (string, error) {
 
 func (m *lumiMacos) GetUserPreferences() (map[string]interface{}, error) {
 	res := map[string]interface{}{}
-	preferences, err := macos.NewPreferences(m.Runtime.Motor.Transport).UserPreferences()
+	preferences, err := macos.NewPreferences(m.MotorRuntime.Motor.Transport).UserPreferences()
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func (m *lumiMacos) GetUserPreferences() (map[string]interface{}, error) {
 
 func (m *lumiMacos) GetUserHostPreferences() (map[string]interface{}, error) {
 	res := map[string]interface{}{}
-	preferences, err := macos.NewPreferences(m.Runtime.Motor.Transport).UserHostPreferences()
+	preferences, err := macos.NewPreferences(m.MotorRuntime.Motor.Transport).UserHostPreferences()
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (m *lumiMacos) GetUserHostPreferences() (map[string]interface{}, error) {
 }
 
 func (m *lumiMacos) GetGlobalAccountPolicies() (map[string]interface{}, error) {
-	cmd, err := m.Runtime.Motor.Transport.RunCommand("pwpolicy -getaccountpolicies")
+	cmd, err := m.MotorRuntime.Motor.Transport.RunCommand("pwpolicy -getaccountpolicies")
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func (m *lumiMacosTimemachine) id() (string, error) {
 // defaults read /Library/Preferences/com.apple.TimeMachine.plist which has FDA
 // see https://developer.apple.com/forums/thread/108348
 func (m *lumiMacosTimemachine) GetPreferences() (map[string]interface{}, error) {
-	cmd, err := m.Runtime.Motor.Transport.RunCommand("defaults read /Library/Preferences/com.apple.TimeMachine.plist")
+	cmd, err := m.MotorRuntime.Motor.Transport.RunCommand("defaults read /Library/Preferences/com.apple.TimeMachine.plist")
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func (m *lumiMacosSystemsetup) id() (string, error) {
 }
 
 func (m *lumiMacosSystemsetup) runCmd(command string) (string, error) {
-	cmd, err := m.Runtime.Motor.Transport.RunCommand(command)
+	cmd, err := m.MotorRuntime.Motor.Transport.RunCommand(command)
 	if err != nil {
 		return "", err
 	}

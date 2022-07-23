@@ -1,18 +1,19 @@
 package resources
 
 import (
+	"strings"
+
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/kernel"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/transports/fsutil"
-	"strings"
 )
 
 func (k *lumiKernel) init(args *lumi.Args) (*lumi.Args, Kernel, error) {
 	// this resource is only supported on linux
-	platform, err := k.Runtime.Motor.Platform()
+	platform, err := k.MotorRuntime.Motor.Platform()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -42,7 +43,7 @@ type KernelVersion struct {
 func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
 	res := []KernelVersion{}
 
-	pf, err := k.Runtime.Motor.Platform()
+	pf, err := k.MotorRuntime.Motor.Platform()
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +59,7 @@ func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
 		runningKernelVersion := kernelInfo["version"].(string)
 
 		// 2. get all packages
-		obj, err := k.Runtime.CreateResource("packages")
+		obj, err := k.MotorRuntime.CreateResource("packages")
 		if err != nil {
 			return nil, err
 		}
@@ -104,7 +105,6 @@ func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
 					})
 				}
 			}
-
 		} else if pf.IsFamily("redhat") || pf.Name == "amazonlinux" {
 			// rpm based systems
 			// kernel version is  "3.10.0-1160.11.1.el7.x86_64"
@@ -161,10 +161,10 @@ func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
 			}
 		} else if pf.IsFamily("suse") {
 			// kernel.info[version] == "4.12.14-122.23-default"
-			//rpm -qa | grep -i kernel
-			//kernel-default-4.12.14-122.23.1.x86_64
-			//kernel-firmware-20190618-5.14.1.noarch
-			//kernel-default-4.12.14-122.60.1.x86_64
+			// rpm -qa | grep -i kernel
+			// kernel-default-4.12.14-122.23.1.x86_64
+			// kernel-firmware-20190618-5.14.1.noarch
+			// kernel-default-4.12.14-122.60.1.x86_64
 			// cat /proc/version
 			// Linux version 4.12.14-122.23-default (geeko@buildhost)
 			filterKernel = func(pkg Package) {
@@ -202,7 +202,7 @@ func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
 
 func (k *lumiKernel) GetInfo() (map[string]interface{}, error) {
 	// find suitable kernel module manager
-	mm, err := kernel.ResolveManager(k.Runtime.Motor)
+	mm, err := kernel.ResolveManager(k.MotorRuntime.Motor)
 	if mm == nil || err != nil {
 		return nil, errors.Wrap(err, "could not detect suiteable kernel module manager for platform")
 	}
@@ -218,7 +218,7 @@ func (k *lumiKernel) GetInfo() (map[string]interface{}, error) {
 
 func (k *lumiKernel) GetParameters() (map[string]interface{}, error) {
 	// find suitable kernel module manager
-	mm, err := kernel.ResolveManager(k.Runtime.Motor)
+	mm, err := kernel.ResolveManager(k.MotorRuntime.Motor)
 	if mm == nil || err != nil {
 		return nil, errors.Wrap(err, "could not detect suiteable kernel module manager for platform")
 	}
@@ -243,7 +243,7 @@ func (k *lumiKernel) getParametersFromProc() (map[string]interface{}, error) {
 	// TODO: consider registration for directory changes
 	sysctlPath := "/proc/sys/"
 
-	fs := k.Runtime.Motor.Transport.FS()
+	fs := k.MotorRuntime.Motor.Transport.FS()
 
 	f, err := fs.Open(sysctlPath)
 	if err != nil {
@@ -273,7 +273,7 @@ func (k *lumiKernel) getParametersFromProc() (map[string]interface{}, error) {
 
 func (k *lumiKernel) GetModules() ([]interface{}, error) {
 	// find suitable kernel module manager
-	mm, err := kernel.ResolveManager(k.Runtime.Motor)
+	mm, err := kernel.ResolveManager(k.MotorRuntime.Motor)
 	if mm == nil || err != nil {
 		return nil, errors.Wrap(err, "could not detect suiteable kernel module manager for platform")
 	}
@@ -290,7 +290,7 @@ func (k *lumiKernel) GetModules() ([]interface{}, error) {
 	namedMap := make(map[string]KernelModule, len(kernelModules))
 	for i, kernelModule := range kernelModules {
 
-		lumiKernelModule, err := k.Runtime.CreateResource("kernel.module",
+		lumiKernelModule, err := k.MotorRuntime.CreateResource("kernel.module",
 			"name", kernelModule.Name,
 			"size", kernelModule.Size,
 			"loaded", true,
@@ -321,7 +321,7 @@ func (k *lumiKernelModule) init(args *lumi.Args) (*lumi.Args, KernelModule, erro
 	}
 	name := nameRaw.(string)
 
-	obj, err := k.Runtime.CreateResource("kernel")
+	obj, err := k.MotorRuntime.CreateResource("kernel")
 	if err != nil {
 		return nil, nil, err
 	}

@@ -50,7 +50,7 @@ func (k *lumiContainerImage) GetRepository() (interface{}, error) {
 		return nil, err
 	}
 
-	return newLumiContainerRepository(k.Runtime, ref.Context())
+	return newLumiContainerRepository(k.MotorRuntime, ref.Context())
 }
 
 func newLumiContainerRepository(runtime *lumi.Runtime, repo name.Repository) (interface{}, error) {

@@ -18,7 +18,7 @@ func (l *lumiAwsLambda) id() (string, error) {
 }
 
 func (l *lumiAwsLambda) GetFunctions() ([]interface{}, error) {
-	at, err := awstransport(l.Runtime.Motor.Transport)
+	at, err := awstransport(l.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (l *lumiAwsLambda) GetFunctions() ([]interface{}, error) {
 }
 
 func (l *lumiAwsLambda) getFunctions(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -76,7 +76,7 @@ func (l *lumiAwsLambda) getFunctions(at *aws_transport.Transport) []*jobpool.Job
 							tags[k] = v
 						}
 					}
-					lumiFunc, err := l.Runtime.CreateResource("aws.lambda.function",
+					lumiFunc, err := l.MotorRuntime.CreateResource("aws.lambda.function",
 						"arn", toString(function.FunctionArn),
 						"name", toString(function.FunctionName),
 						"dlqTargetArn", dlqTarget,
@@ -110,7 +110,7 @@ func (l *lumiAwsLambdaFunction) GetConcurrency() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	at, err := awstransport(l.Runtime.Motor.Transport)
+	at, err := awstransport(l.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return 0, err
 	}
@@ -138,7 +138,7 @@ func (l *lumiAwsLambdaFunction) GetPolicy() (interface{}, error) {
 	if err != nil {
 		return 0, err
 	}
-	at, err := awstransport(l.Runtime.Motor.Transport)
+	at, err := awstransport(l.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}

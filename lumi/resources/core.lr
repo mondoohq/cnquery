@@ -139,18 +139,21 @@ platform {
   fqdn string
   // Architecture this OS is running on
   arch string
-  // Kind of platform (API, code, image, package, etc)
+  // Kind of platform, for example:
+  // api, baremetal, vm, vm-image, container, container-image, network, ...
   kind string
-  // Contextual information about the runtime (bare-metal, cloud, container, etc)
-  // FIXME: remove with v8
-  runtimeEnv string
-  // Contextual information about the runtime (bare-metal, cloud, container, etc)
-  runtimeEnvironment string
+  // Runtime is the specific kind of the platform. Examples include:
+  // docker-container, podman-container, aws-ec2-instance, ...
+  runtime string
   // Optional platform information
   labels map[string]string
 
   // Full advisory & vulnerability report
   vulnerabilityReport() dict
+
+  // FIXME: remove with v8
+  // Contextual information about the runtime (bare-metal, cloud, container, etc)
+  runtimeEnv string
 }
 
 // hardware virtualization information

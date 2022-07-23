@@ -23,7 +23,7 @@ func (s *lumiSshdConfig) init(args *lumi.Args) (*lumi.Args, SshdConfig, error) {
 			return nil, nil, errors.New("Wrong type for 'path' in sshd.config initialization, it must be a string")
 		}
 
-		f, err := s.Runtime.CreateResource("file", "path", path)
+		f, err := s.MotorRuntime.CreateResource("file", "path", path)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -45,7 +45,7 @@ func (s *lumiSshdConfig) id() (string, error) {
 }
 
 func (s *lumiSshdConfig) GetFile() (File, error) {
-	f, err := s.Runtime.CreateResource("file", "path", defaultSshdConfig)
+	f, err := s.MotorRuntime.CreateResource("file", "path", defaultSshdConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (s *lumiSshdConfig) GetFile() (File, error) {
 func (s *lumiSshdConfig) GetContent(file File) (string, error) {
 	// TODO: this can be heavily improved once we do it right, since this is constantly
 	// re-registered as the file changes
-	err := s.Runtime.WatchAndCompute(file, "content", s, "content")
+	err := s.MotorRuntime.WatchAndCompute(file, "content", s, "content")
 	if err != nil {
 		return "", err
 	}

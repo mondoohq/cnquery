@@ -15,8 +15,8 @@ import (
 func (ctx *Runtime) NewResource(name string) *Resource {
 	// initialize resource
 	return &Resource{
-		Runtime:    ctx,
-		ResourceID: ResourceID{Name: name},
+		MotorRuntime: ctx,
+		ResourceID:   ResourceID{Name: name},
 	}
 }
 
@@ -132,7 +132,6 @@ func (ctx *Runtime) createMockResource(name string, cls *ResourceCls) (ResourceT
 
 // CreateResourceWithID creates a new resource instance and force it to have a certain ID
 func (ctx *Runtime) CreateResourceWithID(name string, id string, args ...interface{}) (ResourceType, error) {
-
 	r, ok := ctx.Registry.Resources[name]
 	if !ok {
 		return nil, errors.New("cannot find resource '" + name + "'")

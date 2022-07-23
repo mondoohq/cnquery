@@ -17,7 +17,7 @@ func (g *lumiAwsGuardduty) id() (string, error) {
 }
 
 func (g *lumiAwsGuardduty) GetDetectors() ([]interface{}, error) {
-	at, err := awstransport(g.Runtime.Motor.Transport)
+	at, err := awstransport(g.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (g *lumiAwsGuarddutyDetector) id() (string, error) {
 }
 
 func (g *lumiAwsGuardduty) getDetectors(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -50,7 +50,6 @@ func (g *lumiAwsGuardduty) getDetectors(at *aws_transport.Transport) []*jobpool.
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-
 			svc := at.Guardduty(regionVal)
 			ctx := context.Background()
 
@@ -65,7 +64,7 @@ func (g *lumiAwsGuardduty) getDetectors(at *aws_transport.Transport) []*jobpool.
 				}
 
 				for _, id := range detectors.DetectorIds {
-					lumiCluster, err := g.Runtime.CreateResource("aws.guardduty.detector",
+					lumiCluster, err := g.MotorRuntime.CreateResource("aws.guardduty.detector",
 						"id", id,
 						"region", regionVal,
 					)
@@ -95,7 +94,7 @@ func (g *lumiAwsGuarddutyDetector) GetUnarchivedFindings() ([]interface{}, error
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(g.Runtime.Motor.Transport)
+	at, err := awstransport(g.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +132,7 @@ func (g *lumiAwsGuarddutyDetector) init(args *lumi.Args) (*lumi.Args, AwsGuarddu
 
 	id := (*args)["id"].(string)
 	region := (*args)["region"].(string)
-	at, err := awstransport(g.Runtime.Motor.Transport)
+	at, err := awstransport(g.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, nil, err
 	}

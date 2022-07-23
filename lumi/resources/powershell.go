@@ -36,7 +36,7 @@ func (c *lumiPowershell) execute() (*transports.Command, error) {
 		}
 	}
 
-	executedCmd, err = c.Runtime.Motor.Transport.RunCommand(encodedCmd)
+	executedCmd, err = c.MotorRuntime.Motor.Transport.RunCommand(encodedCmd)
 	if err != nil {
 		return nil, err
 	}

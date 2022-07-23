@@ -12,7 +12,7 @@ func (a *lumiAzurermMonitor) id() (string, error) {
 }
 
 func (a *lumiAzurermMonitor) GetLogProfiles() ([]interface{}, error) {
-	at, err := azuretransport(a.Runtime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (a *lumiAzurermMonitor) GetLogProfiles() ([]interface{}, error) {
 		var lumiAzureStorageAccount interface{}
 		if entry.LogProfileProperties != nil && entry.LogProfileProperties.StorageAccountID != nil {
 			// the resource fetches the data itself
-			lumiAzureStorageAccount, err = a.Runtime.CreateResource("azurerm.storage.account",
+			lumiAzureStorageAccount, err = a.MotorRuntime.CreateResource("azurerm.storage.account",
 				"id", toString(entry.LogProfileProperties.StorageAccountID),
 			)
 			if err != nil {
@@ -57,7 +57,7 @@ func (a *lumiAzurermMonitor) GetLogProfiles() ([]interface{}, error) {
 			}
 		}
 
-		lumiAzure, err := a.Runtime.CreateResource("azurerm.monitor.logprofile",
+		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.monitor.logprofile",
 			"id", toString(entry.ID),
 			"name", toString(entry.Name),
 			"location", toString(entry.Location),

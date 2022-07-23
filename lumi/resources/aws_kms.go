@@ -16,7 +16,7 @@ func (k *lumiAwsKms) id() (string, error) {
 }
 
 func (k *lumiAwsKms) GetKeys() ([]interface{}, error) {
-	at, err := awstransport(k.Runtime.Motor.Transport)
+	at, err := awstransport(k.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -36,10 +36,10 @@ func (k *lumiAwsKms) GetKeys() ([]interface{}, error) {
 }
 
 func (k *lumiAwsKms) getKeys(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
-		return []*jobpool.Job{&jobpool.Job{Err: err}}
+		return []*jobpool.Job{{Err: err}}
 	}
 
 	for _, region := range regions {
@@ -58,7 +58,7 @@ func (k *lumiAwsKms) getKeys(at *aws_transport.Transport) []*jobpool.Job {
 				}
 
 				for _, key := range keyList.Keys {
-					lumiRecorder, err := k.Runtime.CreateResource("aws.kms.key",
+					lumiRecorder, err := k.MotorRuntime.CreateResource("aws.kms.key",
 						"id", toString(key.KeyId),
 						"arn", toString(key.KeyArn),
 						"region", regionVal,
@@ -89,7 +89,7 @@ func (k *lumiAwsKmsKey) GetMetadata() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(k.Runtime.Motor.Transport)
+	at, err := awstransport(k.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (k *lumiAwsKmsKey) GetKeyRotationEnabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	at, err := awstransport(k.Runtime.Motor.Transport)
+	at, err := awstransport(k.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return false, err
 	}
@@ -140,7 +140,7 @@ func (p *lumiAwsKmsKey) init(args *lumi.Args) (*lumi.Args, AwsKmsKey, error) {
 	}
 
 	// load all keys
-	obj, err := p.Runtime.CreateResource("aws.kms")
+	obj, err := p.MotorRuntime.CreateResource("aws.kms")
 	if err != nil {
 		return nil, nil, err
 	}

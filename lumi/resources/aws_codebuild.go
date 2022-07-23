@@ -17,7 +17,7 @@ func (c *lumiAwsCodebuild) id() (string, error) {
 }
 
 func (c *lumiAwsCodebuild) GetProjects() ([]interface{}, error) {
-	at, err := awstransport(c.Runtime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (c *lumiAwsCodebuild) GetProjects() ([]interface{}, error) {
 }
 
 func (t *lumiAwsCodebuild) getProjects(at *aws_transport.Transport) []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -46,7 +46,6 @@ func (t *lumiAwsCodebuild) getProjects(at *aws_transport.Transport) []*jobpool.J
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-
 			svc := at.Codebuild(regionVal)
 			ctx := context.Background()
 
@@ -60,7 +59,7 @@ func (t *lumiAwsCodebuild) getProjects(at *aws_transport.Transport) []*jobpool.J
 				}
 
 				for _, project := range projects.Projects {
-					lumiProject, err := t.Runtime.CreateResource("aws.codebuild.project",
+					lumiProject, err := t.MotorRuntime.CreateResource("aws.codebuild.project",
 						"name", project,
 						"region", regionVal,
 					)
@@ -80,6 +79,7 @@ func (t *lumiAwsCodebuild) getProjects(at *aws_transport.Transport) []*jobpool.J
 	}
 	return tasks
 }
+
 func (c *lumiAwsCodebuildProject) id() (string, error) {
 	return c.Name()
 }
@@ -95,7 +95,7 @@ func (c *lumiAwsCodebuildProject) init(args *lumi.Args) (*lumi.Args, AwsCodebuil
 
 	name := (*args)["name"].(string)
 	region := (*args)["region"].(string)
-	at, err := awstransport(c.Runtime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, nil, err
 	}
