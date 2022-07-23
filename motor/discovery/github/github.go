@@ -1,39 +1,46 @@
 package github
 
 import (
+	"context"
 	"errors"
 
+	"github.com/google/go-github/v45/github"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/providers"
-	github_transport "go.mondoo.io/mondoo/motor/providers/github"
+	github_provider "go.mondoo.io/mondoo/motor/providers/github"
 	"go.mondoo.io/mondoo/motor/providers/resolver"
+)
+
+const (
+	DiscoveryAll        = "all"
+	DiscoveryRepository = "repository"
 )
 
 type Resolver struct{}
 
 func (r *Resolver) Name() string {
-	return "Github Resolver"
+	return "GitHub Resolver"
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{}
+	return []string{DiscoveryAll, DiscoveryRepository}
 }
 
-func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(root *asset.Asset, config *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	// establish connection to GitHub
-	m, err := resolver.NewMotorConnection(tc, cfn)
+	m, err := resolver.NewMotorConnection(config, cfn)
 	if err != nil {
 		return nil, err
 	}
 	defer m.Close()
 
-	trans, ok := m.Transport.(*github_transport.Provider)
+	p, ok := m.Transport.(*github_provider.Provider)
 	if !ok {
 		return nil, errors.New("could not initialize github transport")
 	}
 
-	identifier, err := trans.Identifier()
+	identifier, err := p.Identifier()
 	if err != nil {
 		return nil, err
 	}
@@ -43,36 +50,92 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 		return nil, err
 	}
 
-	name := root.Name
-	if name == "" {
-		owner := ""
-		org, err := trans.Organization()
-		if err == nil && org != nil && org.Name != nil {
-			owner = *org.Name
-		} else {
-			user, err := trans.User()
+	defaultName := root.Name
+	list := []*asset.Asset{}
+
+	switch pf.Name {
+	case "github-repo":
+		name := defaultName
+		if name == "" {
+			repo, _ := p.Repository()
+			if repo != nil && repo.GetOwner() != nil {
+				name = repo.GetOwner().GetLogin() + "/" + repo.GetName()
+			}
+		}
+
+		list = append(list, &asset.Asset{
+			PlatformIds: []string{identifier},
+			Name:        name,
+			Platform:    pf,
+			Connections: []*providers.TransportConfig{config}, // pass-in the current config
+			State:       asset.State_STATE_ONLINE,
+		})
+	case "github-user":
+		name := defaultName
+		if name == "" {
+			user, _ := p.User()
+			if user != nil {
+				name = user.GetName()
+			}
+		}
+
+		list = append(list, &asset.Asset{
+			PlatformIds: []string{identifier},
+			Name:        name,
+			Platform:    pf,
+			Connections: []*providers.TransportConfig{config}, // pass-in the current config
+			State:       asset.State_STATE_ONLINE,
+		})
+	case "github-org":
+		name := defaultName
+		if name == "" {
+			org, _ := p.Organization()
+			if org != nil {
+				name = org.GetName()
+			}
+		}
+		list = append(list, &asset.Asset{
+			PlatformIds: []string{identifier},
+			Name:        name,
+			Platform:    pf,
+			Connections: []*providers.TransportConfig{config}, // pass-in the current config
+			State:       asset.State_STATE_ONLINE,
+		})
+
+		if config.IncludesDiscoveryTarget(DiscoveryAll) || config.IncludesDiscoveryTarget(DiscoveryRepository) {
+			org, err := p.Organization()
 			if err != nil {
 				return nil, err
 			}
-			owner = user.GetLogin()
-		}
 
-		if repo, ok := tc.Options["repository"]; ok {
-			return []*asset.Asset{{
-				PlatformIds: []string{identifier},
-				Name:        "Github Repository " + owner + "/" + repo,
-				Platform:    pf,
-				Connections: []*providers.TransportConfig{tc}, // pass-in the current config
-				State:       asset.State_STATE_ONLINE,
-			}}, nil
+			repos, _, err := p.Client().Repositories.List(context.Background(), org.GetLogin(), &github.RepositoryListOptions{})
+			if err != nil {
+				return nil, err
+			}
+
+			for _, repo := range repos {
+				clonedConfig := config.Clone()
+				if clonedConfig.Options == nil {
+					clonedConfig.Options = map[string]string{}
+				}
+
+				owner := repo.GetOwner().GetLogin()
+				repoName := repo.GetName()
+				clonedConfig.Options["owner"] = owner
+				clonedConfig.Options["repository"] = repoName
+				delete(clonedConfig.Options, "organization")
+				delete(clonedConfig.Options, "user")
+
+				list = append(list, &asset.Asset{
+					PlatformIds: []string{github_provider.NewGitubRepoIdentifier(owner, repoName)},
+					Name:        owner + "/" + repoName,
+					Platform:    github_provider.GithubRepoPlatform,
+					Connections: []*providers.TransportConfig{clonedConfig}, // pass-in the current config
+					State:       asset.State_STATE_ONLINE,
+				})
+			}
 		}
 	}
 
-	return []*asset.Asset{{
-		PlatformIds: []string{identifier},
-		Name:        name,
-		Platform:    pf,
-		Connections: []*providers.TransportConfig{tc}, // pass-in the current config
-		State:       asset.State_STATE_ONLINE,
-	}}, nil
+	return list, nil
 }

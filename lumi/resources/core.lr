@@ -4870,8 +4870,11 @@ github.organization {
 
   owners() []github.user
   members() []github.user
+  teams() []github.team
   repositories() []github.repository
   installations() []github.installation
+  webhooks() []github.webhook
+  packages() []github.package
 }
 
 // GitHub user
@@ -4887,13 +4890,40 @@ private github.user {
   company string
 }
 
-// GitHub repository
+// GitHub team
+private github.team {
+  id int
+  name string
+  description string
+  slug string
+  privacy string
+  defaultPermission string
+  members() []github.user
+  repositories() []github.repository
+  organization github.organization
+}
+
+// GitHub collaborator
 private github.collaborator {
   id int
   user github.user
   permissions []string
 }
 
+// GitHub package
+private github.package {
+  id int
+  name string
+  packageType string
+  owner github.user
+  createdAt time
+  updatedAt time
+  versionCount int
+  visibility string
+  repository() github.repository
+}
+
+// GitHub repository
 github.repository {
   init(name string) // can only be used when logged in to github as a user
   id int
@@ -4923,21 +4953,24 @@ github.repository {
   files() []github.file
   releases() []github.release
   owner github.user
+  webhooks() []github.webhook
+  workflows() []github.workflow
 }
 
 // GitHub repository file
 private github.file {
   path string
+  name string
   type string
   sha string
   isBinary bool
   files() []github.file
-  organizationName string
+  ownerName string
   repoName string
   content() string
 }
 
-// GitHub Release
+// GitHub release
 private github.release {
   url string
   name string
@@ -4945,14 +4978,36 @@ private github.release {
   preRelease bool
 }
 
+// GitHub webhook
+private github.webhook {
+  id int
+  name string
+  url string
+  events []string
+  config dict
+  active bool
+}
+
+// GitHub workflow
+private github.workflow {
+  id int
+  name string
+  path string
+  state string
+  createdAt time
+  updatedAt time
+  file() github.file
+  configuration() dict
+}
+
 // GitHub repository branch
 private github.branch {
   name string
   protected bool
   headCommit github.commit
+  protectionRules() github.branchprotection
   organizationName string
   repoName string
-  protectionRules() github.branchprotection
   owner github.user
   isDefault bool
 }
@@ -4960,25 +5015,61 @@ private github.branch {
 // GitHub repository branch protection
 private github.branchprotection {
   id string
-  requiredStatusChecks dict 
+  // Require status checks to pass before merging
+  requiredStatusChecks dict
+  // Require a pull request before merging
   requiredPullRequestReviews dict
-  enforceAdmins dict 
-  restrictions dict
-  requireLinearHistory dict
-  allowForcePushes dict
-  allowDeletions dict
+  // Require conversation resolution before merging
   requiredConversationResolution dict
+  // Require signed commits
+  requiredSignatures bool
+  // Require linear history
+  requireLinearHistory dict
+  // Include administrators
+  enforceAdmins dict
+  // Restrict who can push to matching branches
+  restrictions dict
+  // Allow force pushes
+  allowForcePushes dict
+  // Allow deletions
+  allowDeletions dict
 }
 
 // GitHub repository commit
 private github.commit {
+  owner string
+  repository string
+  sha string
   url string
   author github.user
   committer github.user
+  commit git.commit
+  stats dict
+}
+
+// Git commit
+private git.commit {
+  sha string
   message string
-  signatureVerification dict
-  organizationName string
-  repoName string
+  author git.commitAuthor
+  committer git.commitAuthor
+  signatureVerification git.gpgSignature
+}
+
+ // Git commit author
+private git.commitAuthor {
+  sha string
+  name string
+  email string
+  date time
+}
+
+private git.gpgSignature {
+  sha string
+  reason string
+  verified bool
+  payload string
+  signature string
 }
 
 // GitHub repository pull request
@@ -5005,6 +5096,7 @@ private github.review {
   user github.user
 }
 
+// GitHub app installation
 private github.installation {
   id int
   appId int
