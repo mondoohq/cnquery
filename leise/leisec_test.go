@@ -154,6 +154,18 @@ func TestCompiler_Buggy(t *testing.T) {
 				},
 			}},
 		}, errors.New("incomplete query, missing closing '}' at <source>:1:11")},
+		{`if(true) { return 1 } else { return 2 } return 3`, []*llx.Chunk{
+			{Call: llx.Chunk_FUNCTION, Id: "if", Function: &llx.Function{
+				Type: string(types.Int),
+				Args: []*llx.Primitive{
+					llx.BoolPrimitive(true),
+					llx.FunctionPrimitiveV2(2 << 32),
+					llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
+					llx.FunctionPrimitiveV2(3 << 32),
+					llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
+				},
+			}},
+		}, errors.New("single valued block followed by expressions")},
 		{`parse.date`, []*llx.Chunk{
 			{Id: "parse", Call: llx.Chunk_FUNCTION},
 		}, errors.New("missing arguments to parse date")},
@@ -414,6 +426,55 @@ func TestCompiler_Props(t *testing.T) {
 }
 
 func TestCompiler_If(t *testing.T) {
+	compileT(t, "if ( true ) { return 1 } else if ( false ) { return 2 } else { return 3 }", func(res *llx.CodeBundle) {
+		assertFunction(t, "if", &llx.Function{
+			Type:    string(types.Int),
+			Binding: 0,
+			Args: []*llx.Primitive{
+				llx.BoolPrimitive(true),
+				llx.FunctionPrimitiveV2(2 << 32),
+				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
+				llx.BoolPrimitive(false),
+				llx.FunctionPrimitiveV2(3 << 32),
+				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
+				llx.FunctionPrimitiveV2(4 << 32),
+				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
+			},
+		}, res.CodeV2.Blocks[0].Chunks[0])
+		assert.Equal(t, []uint64{(1 << 32) | 1}, res.CodeV2.Entrypoints())
+		assert.Equal(t, []uint64(nil), res.CodeV2.Datapoints())
+
+		assertPrimitive(t, llx.IntPrimitive(1), res.CodeV2.Blocks[1].Chunks[0])
+		assertFunction(t, "return", &llx.Function{
+			Type:    string(types.Int),
+			Binding: 0,
+			Args: []*llx.Primitive{
+				llx.RefPrimitiveV2((2 << 32) | 1),
+			},
+		}, res.CodeV2.Blocks[1].Chunks[1])
+		assert.Equal(t, []uint64{(2 << 32) | 2}, res.CodeV2.Blocks[1].Entrypoints)
+
+		assertPrimitive(t, llx.IntPrimitive(2), res.CodeV2.Blocks[2].Chunks[0])
+		assertFunction(t, "return", &llx.Function{
+			Type:    string(types.Int),
+			Binding: 0,
+			Args: []*llx.Primitive{
+				llx.RefPrimitiveV2((3 << 32) | 1),
+			},
+		}, res.CodeV2.Blocks[2].Chunks[1])
+		assert.Equal(t, []uint64{(3 << 32) | 2}, res.CodeV2.Blocks[2].Entrypoints)
+
+		assertPrimitive(t, llx.IntPrimitive(3), res.CodeV2.Blocks[3].Chunks[0])
+		assertFunction(t, "return", &llx.Function{
+			Type:    string(types.Int),
+			Binding: 0,
+			Args: []*llx.Primitive{
+				llx.RefPrimitiveV2((4 << 32) | 1),
+			},
+		}, res.CodeV2.Blocks[3].Chunks[1])
+		assert.Equal(t, []uint64{(4 << 32) | 2}, res.CodeV2.Blocks[3].Entrypoints)
+	})
+
 	compileT(t, "if ( mondoo ) { return 123 } if ( true ) { return 456 } 789", func(res *llx.CodeBundle) {
 		assertFunction(t, "mondoo", nil, res.CodeV2.Blocks[0].Chunks[0])
 

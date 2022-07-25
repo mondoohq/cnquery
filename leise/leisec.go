@@ -1282,6 +1282,23 @@ func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 			ident = *expression.Operand.Value.Ident
 		}
 
+		if prev == "else" && ident != "if" && c.block.SingleValue {
+			// if the previous id is else and its single valued, the following
+			// expressions cannot be executed
+			return errors.New("single valued block followed by expressions")
+		}
+
+		if prev == "if" && ident != "else" && c.block.SingleValue {
+			// all following expressions need to be compiled in a block which is
+			// conditional to this if-statement unless we're already doing
+			// if-else chaining
+
+			c.prevID = "else"
+			rest := expressions[idx:]
+			_, err := c.compileUnboundBlock(rest, c.block.LastChunk())
+			return err
+		}
+
 		if ident == "return" {
 			// A return statement can only be followed by max 1 more expression
 			max := len(expressions)
@@ -1322,15 +1339,6 @@ func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 			c.block.SingleValue = true
 
 			return nil
-		}
-
-		if ident == "if" && c.block.SingleValue {
-			// all following expressions need to be compiled in a block which is
-			// conditional to this if-statement
-			c.prevID = "else"
-			rest := expressions[idx+1:]
-			_, err := c.compileUnboundBlock(rest, c.block.LastChunk())
-			return err
 		}
 
 		l := len(c.block.Entrypoints)
