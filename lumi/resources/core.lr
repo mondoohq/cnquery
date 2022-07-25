@@ -132,7 +132,10 @@ platform {
   // List of platform families that this platform belongs to
   family []string
   // Release version of the platform
+  // deprecated: this field is deprecated in favor of 'version', will be removed in v8
   release string
+  // Version of the platform
+  version string
   // Build version of the platform (optional)
   build string
   // Fully qualified domain name (optional)
@@ -151,8 +154,8 @@ platform {
   // Full advisory & vulnerability report
   vulnerabilityReport() dict
 
-  // FIXME: remove with v8
   // Contextual information about the runtime (bare-metal, cloud, container, etc)
+  // deprecated: this field is deprecated in favor of 'runtime', will be removed in v8
   runtimeEnv string
 }
 

@@ -51,7 +51,7 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 	case pf.IsFamily("arch"): // arch family
 		osm = ResolveSystemdServiceManager(motor)
 	case pf.Name == "amazonlinux":
-		if amazonlinux1version.MatchString(pf.Release) {
+		if amazonlinux1version.MatchString(pf.Version) {
 			osm = &UpstartServiceManager{SysVServiceManager{motor: motor}}
 		} else {
 			osm = ResolveSystemdServiceManager(motor)
@@ -60,10 +60,10 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		osm = ResolveSystemdServiceManager(motor)
 	// NOTE: we need to check fedora before rhel family, since its also rhel family
 	case pf.Name == "fedora":
-		rv := platform.ParseOsVersion(pf.Release)
+		rv := platform.ParseOsVersion(pf.Version)
 		v, err := rv.MajorAtoi()
 		if err != nil {
-			return nil, errors.New("unknown fedora version: " + pf.Release)
+			return nil, errors.New("unknown fedora version: " + pf.Version)
 		}
 
 		if v < 15 {
@@ -73,10 +73,10 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 			osm = ResolveSystemdServiceManager(motor)
 		}
 	case pf.IsFamily("redhat"):
-		rv := platform.ParseOsVersion(pf.Release)
+		rv := platform.ParseOsVersion(pf.Version)
 		v, err := rv.MajorAtoi()
 		if err != nil {
-			return nil, errors.New("unknown redhat version: " + pf.Release)
+			return nil, errors.New("unknown redhat version: " + pf.Version)
 		}
 		if v < 7 {
 			osm = &UpstartServiceManager{SysVServiceManager{motor: motor}}
@@ -84,10 +84,10 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 			osm = ResolveSystemdServiceManager(motor)
 		}
 	case pf.Name == "ubuntu" || pf.Name == "linuxmint" || pf.Name == "pop":
-		rv := platform.ParseOsVersion(pf.Release)
+		rv := platform.ParseOsVersion(pf.Version)
 		v, err := rv.MajorAtoi()
 		if err != nil {
-			return nil, errors.New("unknown ubuntu version: " + pf.Release)
+			return nil, errors.New("unknown ubuntu version: " + pf.Version)
 		}
 
 		if v < 15 {
@@ -96,10 +96,10 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 			osm = ResolveSystemdServiceManager(motor)
 		}
 	case pf.Name == "debian":
-		rv := platform.ParseOsVersion(pf.Release)
+		rv := platform.ParseOsVersion(pf.Version)
 		v, err := rv.MajorAtoi()
 		if err != nil {
-			return nil, errors.New("unknown debian version: " + pf.Release)
+			return nil, errors.New("unknown debian version: " + pf.Version)
 		}
 
 		if v < 7 {
@@ -110,10 +110,10 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 	case pf.Name == "suse-microos": // it is suse family but uses a different version scheme
 		osm = ResolveSystemdServiceManager(motor)
 	case pf.IsFamily("suse"):
-		rv := platform.ParseOsVersion(pf.Release)
+		rv := platform.ParseOsVersion(pf.Version)
 		v, err := rv.MajorAtoi()
 		if err != nil {
-			return nil, errors.New("unknown suse version: " + pf.Release)
+			return nil, errors.New("unknown suse version: " + pf.Version)
 		}
 
 		// NOTE: opensuse-tumbleweed uses version numbers like 20200622

@@ -231,6 +231,7 @@ func (t *apiTransport) PlatformInfo() *platform.Platform {
 		Name:    "kubernetes",
 		Title:   "Kubernetes",
 		Release: release,
+		Version: release,
 		Build:   build,
 		Arch:    arch,
 		Kind:    transports.Kind_KIND_API,

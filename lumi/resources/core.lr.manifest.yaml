@@ -4392,6 +4392,7 @@ resources:
     docs:
       desc: |
         The `platform.runtimeEnv` fields is deprecated. Please use `platform.runtime` instead.
+        The `platform.release` field is deprecated. Please use `platform.version` instead.
     fields:
       arch: {}
       build: {}
@@ -4402,9 +4403,11 @@ resources:
         min_mondoo_version: 5.37.0
       name: {}
       release: {}
-      runtime:
-        min_mondoo_version: 6.8.0
+      version:
+        min_mondoo_version: 6.9.0
       runtimeEnv: {}
+      runtime:
+        min_mondoo_version: 6.9.0
       title: {}
       vulnerabilityReport: {}
     min_mondoo_version: 5.15.0

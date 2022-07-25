@@ -24,5 +24,5 @@ func Resolve(t transports.Transport, p *platform.Platform) (InstanceIdentifier, 
 	if p.IsFamily(platform.FAMILY_UNIX) || p.IsFamily(platform.FAMILY_WINDOWS) {
 		return NewCommandInstanceMetadata(t, p), nil
 	}
-	return nil, errors.New(fmt.Sprintf("azure compute id detector is not supported for your asset: %s %s", p.Name, p.Release))
+	return nil, errors.New(fmt.Sprintf("azure compute id detector is not supported for your asset: %s %s", p.Name, p.Version))
 }

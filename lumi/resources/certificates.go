@@ -431,7 +431,7 @@ func (s *lumiOsRootCertificates) init(args *lumi.Args) (*lumi.Args, OsRootCertif
 	} else if pi.IsFamily(platform.FAMILY_BSD) {
 		files = certificates.BsdCertFiles
 	} else {
-		return nil, nil, errors.New("root certificates are not unsupported on this platform: " + pi.Name + " " + pi.Release)
+		return nil, nil, errors.New("root certificates are not unsupported on this platform: " + pi.Name + " " + pi.Version)
 	}
 
 	// search the first file that exists, it mimics the behavior go is doing

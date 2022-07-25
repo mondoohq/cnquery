@@ -66,7 +66,7 @@ func (sq *CredentialQueryRunner) Run(a *asset.Asset) (*vault.Credential, error) 
 	if a.Platform != nil {
 		platformProps = map[string]interface{}{
 			"name":    a.Platform.Name,
-			"release": a.Platform.Release,
+			"release": a.Platform.Version,
 			"arch":    a.Platform.Arch,
 		}
 	} else {
