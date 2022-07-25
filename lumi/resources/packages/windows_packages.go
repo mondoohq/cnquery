@@ -260,13 +260,12 @@ func (w *WinPkgManager) Format() string {
 
 // returns installed appx packages as well as hot fixes
 func (w *WinPkgManager) List() ([]Package, error) {
-
 	pf, err := w.motor.Platform()
 	if err != nil {
 		return nil, err
 	}
 
-	b, err := windows.Version(pf.Release)
+	b, err := windows.Version(pf.Version)
 	if err != nil {
 		return nil, err
 	}

@@ -23,6 +23,7 @@ func convertLumiPlatform2ApiPlatform(pf Platform) *platform.Platform {
 
 	name, _ := pf.Name()
 	release, _ := pf.Release()
+	version, _ := pf.Version()
 	build, _ := pf.Build()
 	arch, _ := pf.Arch()
 	title, _ := pf.Title()
@@ -40,6 +41,7 @@ func convertLumiPlatform2ApiPlatform(pf Platform) *platform.Platform {
 	return &platform.Platform{
 		Name:    name,
 		Release: release,
+		Version: version,
 		Build:   build,
 		Arch:    arch,
 		Title:   title,
@@ -56,7 +58,7 @@ func convertPlatform2VulnPlatform(pf *platform.Platform) *vadvisor.Platform {
 	}
 	return &vadvisor.Platform{
 		Name:    pf.Name,
-		Release: pf.Release,
+		Release: pf.Version,
 		Build:   pf.Build,
 		Arch:    pf.Arch,
 		Title:   pf.Title,
@@ -75,7 +77,9 @@ func (s *lumiPlatform) init(args *lumi.Args) (*lumi.Args, Platform, error) {
 		(*args)["name"] = platform.Name
 		(*args)["title"] = platform.Title
 		(*args)["arch"] = platform.Arch
+		// FIXME: remove in v8
 		(*args)["release"] = platform.Release
+		(*args)["version"] = platform.Version
 		(*args)["build"] = platform.Build
 		(*args)["kind"] = platform.Kind.Name()
 		// FIXME: remove in v8

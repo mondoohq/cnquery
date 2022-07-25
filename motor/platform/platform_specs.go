@@ -47,7 +47,8 @@ var macOS = &PlatformResolver{
 
 		di.Name = "macos"
 		di.Title = sv["ProductName"]
-		di.Release = sv["ProductVersion"]
+		di.Version = sv["ProductVersion"]
+		di.Release = di.Version
 		di.Build = sv["ProductBuildVersion"]
 
 		return true, nil
@@ -76,7 +77,8 @@ var alpine = &PlatformResolver{
 
 		if osr["PRETTY_NAME"] == "Alpine Linux edge" {
 			di.Name = "alpine"
-			di.Release = "edge"
+			di.Version = "edge"
+			di.Release = di.Version
 			di.Build = osr["VERSION_ID"]
 		}
 
@@ -150,7 +152,8 @@ var debian = &PlatformResolver{
 		}
 
 		di.Title = osr["NAME"]
-		di.Release = strings.TrimSpace(string(c))
+		di.Version = strings.TrimSpace(string(c))
+		di.Release = di.Version
 
 		unamem, err := osrd.unamem()
 		if err == nil {
@@ -446,8 +449,9 @@ var gentoo = &PlatformResolver{
 			if len(di.Title) == 0 {
 				di.Title = name
 			}
-			if len(di.Release) == 0 {
-				di.Release = release
+			if len(di.Version) == 0 {
+				di.Version = release
+				di.Release = di.Version
 			}
 		}
 
@@ -478,7 +482,8 @@ var busybox = &PlatformResolver{
 			if strings.ToLower(title) == "busybox" {
 				di.Name = "busybox"
 				di.Title = title
-				di.Release = release
+				di.Version = release
+				di.Release = di.Version
 				return true, nil
 			}
 		}
@@ -521,7 +526,8 @@ var openwrt = &PlatformResolver{
 				di.Title = lsb["DISTRIB_ID"]
 			}
 			if len(lsb["DISTRIB_RELEASE"]) > 0 {
-				di.Release = lsb["DISTRIB_RELEASE"]
+				di.Version = lsb["DISTRIB_RELEASE"]
+				di.Release = di.Version
 			}
 
 			return true, nil
@@ -553,7 +559,8 @@ var netbsd = &PlatformResolver{
 		osrd := NewOSReleaseDetector(t)
 		r, err := osrd.unamer()
 		if err == nil {
-			di.Release = r
+			di.Version = r
+			di.Release = di.Version
 		}
 
 		return true, nil
@@ -571,7 +578,8 @@ var freebsd = &PlatformResolver{
 		osrd := NewOSReleaseDetector(t)
 		r, err := osrd.unamer()
 		if err == nil {
-			di.Release = r
+			di.Version = r
+			di.Release = di.Version
 		}
 
 		return true, nil
@@ -589,7 +597,8 @@ var openbsd = &PlatformResolver{
 		osrd := NewOSReleaseDetector(t)
 		r, err := osrd.unamer()
 		if err == nil {
-			di.Release = r
+			di.Version = r
+			di.Release = di.Version
 		}
 
 		return true, nil
@@ -608,7 +617,8 @@ var dragonflybsd = &PlatformResolver{
 		osrd := NewOSReleaseDetector(t)
 		r, err := osrd.unamer()
 		if err == nil {
-			di.Release = r
+			di.Version = r
+			di.Release = di.Version
 		}
 
 		return true, nil
@@ -630,7 +640,8 @@ var windows = &PlatformResolver{
 
 		// instead of using windows major.minor.build.ubr we just use build.ubr since
 		// major and minor can be derived from the build version
-		di.Release = data.BuildNumber
+		di.Version = data.BuildNumber
+		di.Release = di.Version
 
 		// FIXME: we need to ask wmic cpu get architecture
 		di.Arch = data.OSArchitecture
@@ -678,7 +689,8 @@ var darwinFamily = &PlatformResolver{
 				di.Title = dsv["ProductName"]
 			}
 			if len(dsv["ProductVersion"]) > 0 {
-				di.Release = dsv["ProductVersion"]
+				di.Version = dsv["ProductVersion"]
+				di.Release = di.Version
 			}
 		} else {
 			// TODO: we know its darwin, but without swversion support
@@ -747,7 +759,8 @@ var redhatFamily = &PlatformResolver{
 			// always override the version from the release file, since it is
 			// more accurate
 			if len(release) > 0 {
-				di.Release = release
+				di.Version = release
+				di.Release = di.Version
 			}
 
 			return true, nil
@@ -827,7 +840,8 @@ var linuxFamily = &PlatformResolver{
 				di.Title = lsb["DISTRIB_ID"]
 			}
 			if len(lsb["DISTRIB_RELEASE"]) > 0 {
-				di.Release = lsb["DISTRIB_RELEASE"]
+				di.Version = lsb["DISTRIB_RELEASE"]
+				di.Release = di.Version
 			}
 
 			detected = true
@@ -847,7 +861,8 @@ var linuxFamily = &PlatformResolver{
 				di.Title = osr["NAME"]
 			}
 			if len(osr["VERSION_ID"]) > 0 {
-				di.Release = osr["VERSION_ID"]
+				di.Version = osr["VERSION_ID"]
+				di.Release = di.Version
 			}
 
 			detected = true
@@ -947,7 +962,8 @@ var solaris = &PlatformResolver{
 		if err == nil {
 			di.Name = r.ID
 			di.Title = r.Title
-			di.Release = r.Release
+			di.Version = r.Release
+			di.Release = di.Version
 		}
 
 		return true, nil
@@ -977,7 +993,8 @@ var esxi = &PlatformResolver{
 			return false, err
 		}
 
-		di.Release = version
+		di.Version = version
+		di.Release = di.Version
 		return true, nil
 	},
 }

@@ -28,5 +28,5 @@ func Resolve(t transports.Transport, p *platform.Platform) (InstanceIdentifier, 
 			return NewCommandInstanceMetadata(t, p), nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("awsec2 id detector is not supported for your asset: %s %s", p.Name, p.Release))
+	return nil, errors.New(fmt.Sprintf("awsec2 id detector is not supported for your asset: %s %s", p.Name, p.Version))
 }
