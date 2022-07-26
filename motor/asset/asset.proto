@@ -34,6 +34,7 @@ enum AssetCategory {
 }
 
 message Asset {
+  reserved 30;
   string id = 1;
   string mrn = 2;
   string name = 3;
@@ -57,9 +58,6 @@ message Asset {
 
   // additional options for that asset
   map<string, string> options = 20;
-
-  // relationships to parent
-  string parent_platform_id = 30;
 
   // platform id detection mechanisms
   repeated string id_detector = 31;
