@@ -3144,6 +3144,8 @@ resources:
   github.branch:
     fields:
       headCommit: {}
+      isDefault:
+        min_mondoo_version: 6.8.0
       name: {}
       organizationName: {}
       owner: {}
@@ -3441,7 +3443,8 @@ resources:
       name:
       - kubernetes
     snippets:
-    - query: k8s.pods { containers.where(securityContext["privileged"] == true) name }
+    - query: k8s.pods { containers.where(securityContext["privileged"] == true) name
+        }
       title: List kubernetes pods with privileged containers
     - query: k8s.pods.all( namespace != "default")
       title: Check if the default namespace is used
@@ -4399,9 +4402,9 @@ resources:
         min_mondoo_version: 5.37.0
       name: {}
       release: {}
-      runtimeEnv: {}
       runtime:
         min_mondoo_version: 6.8.0
+      runtimeEnv: {}
       title: {}
       vulnerabilityReport: {}
     min_mondoo_version: 5.15.0
