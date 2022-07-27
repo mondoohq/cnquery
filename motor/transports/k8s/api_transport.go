@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/gosimple/slug"
 	"github.com/pkg/errors"
@@ -23,7 +24,7 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
-func newApiTransport(namespace string) (Transport, error) {
+func newApiTransport(namespace string, selectedResourceID string) (Transport, error) {
 	// check if the user .kube/config file exists
 	// NOTE: BuildConfigFromFlags falls back to cluster loading when .kube/config string is empty
 	// therefore we want to only change the kubeconfig string when the file really exists
@@ -66,18 +67,20 @@ func newApiTransport(namespace string) (Transport, error) {
 	}
 
 	return &apiTransport{
-		namespace: namespace,
-		config:    config,
-		d:         d,
-		clientset: clientset,
+		namespace:          namespace,
+		config:             config,
+		d:                  d,
+		clientset:          clientset,
+		selectedResourceID: selectedResourceID,
 	}, nil
 }
 
 type apiTransport struct {
-	d         *resources.Discovery
-	config    *rest.Config
-	namespace string
-	clientset *kubernetes.Clientset
+	d                  *resources.Discovery
+	config             *rest.Config
+	namespace          string
+	clientset          *kubernetes.Clientset
+	selectedResourceID string
 }
 
 func (t *apiTransport) RunCommand(command string) (*transports.Command, error) {
@@ -103,7 +106,7 @@ func (t *apiTransport) Kind() transports.Kind {
 }
 
 func (t *apiTransport) Runtime() string {
-	return transports.RUNTIME_KUBERNETES
+	return transports.RUNTIME_KUBERNETES_CLUSTER
 }
 
 func (t *apiTransport) PlatformIdDetectors() []transports.PlatformIdDetector {
@@ -112,7 +115,7 @@ func (t *apiTransport) PlatformIdDetectors() []transports.PlatformIdDetector {
 	}
 }
 
-func (t *apiTransport) Identifier() (string, error) {
+func (t *apiTransport) ID() (string, error) {
 	// we use "kube-system" namespace uid as identifier for the cluster
 	result, err := t.Resources("namespaces", "kube-system")
 	if err != nil {
@@ -130,13 +133,29 @@ func (t *apiTransport) Identifier() (string, error) {
 	}
 
 	uid := string(obj.GetUID())
-	id := "//platformid.api.mondoo.app/runtime/k8s/uid/" + uid
+	return uid, nil
+}
 
+func (t *apiTransport) PlatformIdentifier() (string, error) {
+	if t.selectedResourceID != "" {
+		return t.selectedResourceID, nil
+	}
+
+	uid, err := t.ID()
+	if err != nil {
+		return "", err
+	}
+
+	id := NewPlatformID(uid)
 	if t.namespace != "" {
 		id += "/namespace/" + slug.Make(t.namespace)
 	}
 
 	return id, nil
+}
+
+func (t *apiTransport) Identifier() (string, error) {
+	return t.PlatformIdentifier()
 }
 
 func (t *apiTransport) Name() (string, error) {
@@ -220,6 +239,24 @@ func (t *apiTransport) PlatformInfo() *platform.Platform {
 	build := ""
 	arch := ""
 
+	// check if it is a pod which shares the same connection
+	// log.Info().Str("selected resource", t.selectedResourceID).Msg("check for platform info")
+	platformData := &platform.Platform{
+		Release: "",
+		Build:   "",
+		Arch:    "",
+		Family:  []string{"k8s", "k8s-workload"},
+		Kind:    transports.Kind_KIND_K8S_OBJECT,
+		Runtime: transports.RUNTIME_KUBERNETES_CLUSTER,
+	}
+	switch selected := t.selectedResourceID; {
+	case strings.Contains(selected, "/pods/"):
+		platformData.Name = "k8s-pod"
+		platformData.Title = "Kubernetes Pod"
+		return platformData
+	}
+
+	// cluster
 	sv := t.ServerVersion()
 	if sv != nil {
 		release = sv.GitVersion
@@ -234,8 +271,9 @@ func (t *apiTransport) PlatformInfo() *platform.Platform {
 		Version: release,
 		Build:   build,
 		Arch:    arch,
+		Family:  []string{"kubernetes"},
 		Kind:    transports.Kind_KIND_API,
-		Runtime: transports.RUNTIME_KUBERNETES,
+		Runtime: transports.RUNTIME_KUBERNETES_CLUSTER,
 	}
 }
 
@@ -255,4 +293,13 @@ func (t *apiTransport) Pods(namespace v1.Namespace) ([]v1.Pod, error) {
 		return nil, err
 	}
 	return list.Items, err
+}
+
+func (t *apiTransport) Pod(namespace string, name string) (*v1.Pod, error) {
+	ctx := context.Background()
+	pod, err := t.clientset.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return pod, err
 }

@@ -14,6 +14,7 @@ import (
 
 const (
 	DiscoveryAll             = "all"
+	DiscoverPods             = "pods"
 	DiscoveryContainerImages = "container-images"
 )
 
@@ -24,7 +25,11 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{DiscoveryAll, DiscoveryContainerImages}
+	return []string{
+		DiscoveryAll,
+		DiscoverPods,
+		DiscoveryContainerImages,
+	}
 }
 
 func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -58,15 +63,13 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 
 	log.Debug().Strs("namespaceFilter", namespacesFilter).Msg("resolve k8s assets")
 
-	// add k8s api
 	// add aws api as asset
 	trans, err := k8s_transport.New(tc)
-	// trans, err := aws_transport.New(t, transportOpts...)
 	if err != nil {
 		return nil, err
 	}
 
-	identifier, err := trans.Identifier()
+	clusterIdentifier, err := trans.Identifier()
 	if err != nil {
 		return nil, err
 	}
@@ -108,27 +111,49 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 	}
 
 	resolved = append(resolved, &asset.Asset{
-		PlatformIds: []string{identifier},
+		PlatformIds: []string{clusterIdentifier},
 		Name:        clusterName,
 		Platform:    pf,
 		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
 		State:       asset.State_STATE_RUNNING,
 	})
 
+	additioanlAssets, err := addSeparateAssets(tc, trans, namespacesFilter, clusterIdentifier)
+	if err != nil {
+		return nil, err
+	}
+	resolved = append(resolved, additioanlAssets...)
+
+	return resolved, nil
+}
+
+// addSeparateAssets Depending on config options it will search for additional assets which should be listed separately.
+func addSeparateAssets(tc *transports.TransportConfig, transport k8s_transport.Transport, namespacesFilter []string, clusterIdentifier string) ([]*asset.Asset, error) {
+	var resolved []*asset.Asset
+
 	// discover k8s pods
-	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryContainerImages) {
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoverPods) {
 		// fetch pod information
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for pods")
-		assetList, err := ListPodImages(trans, namespacesFilter)
+		connection := tc.Clone()
+		assetList, err := ListPods(transport, connection, clusterIdentifier, namespacesFilter)
 		if err != nil {
-			log.Error().Err(err).Msg("could not fetch k8s images")
+			log.Error().Err(err).Msg("could not fetch k8s pods")
 			return nil, err
 		}
+		resolved = append(resolved, assetList...)
+	}
 
-		for i := range assetList {
-			log.Debug().Str("name", assetList[i].Name).Str("image", assetList[i].Connections[0].Host).Msg("resolved pod")
-			resolved = append(resolved, assetList[i])
+	// discover k8s pod images
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryContainerImages) {
+		// fetch pod information
+		log.Debug().Strs("namespace", namespacesFilter).Msg("search for pods images")
+		assetList, err := ListPodImages(transport, namespacesFilter)
+		if err != nil {
+			log.Error().Err(err).Msg("could not fetch k8s pods images")
+			return nil, err
 		}
+		resolved = append(resolved, assetList...)
 	}
 	return resolved, nil
 }

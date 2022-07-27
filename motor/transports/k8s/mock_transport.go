@@ -94,6 +94,21 @@ func (mr *MockTransportMockRecorder) FileInfo(path interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FileInfo", reflect.TypeOf((*MockTransport)(nil).FileInfo), path)
 }
 
+// ID mocks base method.
+func (m *MockTransport) ID() (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ID")
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ID indicates an expected call of ID.
+func (mr *MockTransportMockRecorder) ID() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ID", reflect.TypeOf((*MockTransport)(nil).ID))
+}
+
 // Identifier mocks base method.
 func (m *MockTransport) Identifier() (string, error) {
 	m.ctrl.T.Helper()
@@ -167,6 +182,21 @@ func (mr *MockTransportMockRecorder) PlatformIdDetectors() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PlatformIdDetectors", reflect.TypeOf((*MockTransport)(nil).PlatformIdDetectors))
 }
 
+// PlatformIdentifier mocks base method.
+func (m *MockTransport) PlatformIdentifier() (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PlatformIdentifier")
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// PlatformIdentifier indicates an expected call of PlatformIdentifier.
+func (mr *MockTransportMockRecorder) PlatformIdentifier() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PlatformIdentifier", reflect.TypeOf((*MockTransport)(nil).PlatformIdentifier))
+}
+
 // PlatformInfo mocks base method.
 func (m *MockTransport) PlatformInfo() *platform.Platform {
 	m.ctrl.T.Helper()
@@ -179,6 +209,21 @@ func (m *MockTransport) PlatformInfo() *platform.Platform {
 func (mr *MockTransportMockRecorder) PlatformInfo() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PlatformInfo", reflect.TypeOf((*MockTransport)(nil).PlatformInfo))
+}
+
+// Pod mocks base method.
+func (m *MockTransport) Pod(namespace, name string) (*v1.Pod, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Pod", namespace, name)
+	ret0, _ := ret[0].(*v1.Pod)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Pod indicates an expected call of Pod.
+func (mr *MockTransportMockRecorder) Pod(namespace, name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Pod", reflect.TypeOf((*MockTransport)(nil).Pod), namespace, name)
 }
 
 // Pods mocks base method.

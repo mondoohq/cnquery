@@ -29,8 +29,12 @@ type Transport interface {
 	ServerVersion() *version.Info
 	SupportedResourceTypes() (*resources.ApiResourceIndex, error)
 
-	Identifier() (string, error)
+	// ID of the Cluster or Manifest file
+	ID() (string, error)
+	// MRN style platform identifier
+	PlatformIdentifier() (string, error)
 	Namespaces() ([]v1.Namespace, error)
+	Pod(namespace string, name string) (*v1.Pod, error)
 	Pods(namespace v1.Namespace) ([]v1.Pod, error)
 }
 
@@ -63,5 +67,5 @@ func New(tc *transports.TransportConfig) (Transport, error) {
 		return newManifestTransport(WithManifestFile(manifestFile), WithNamespace(tc.Options[OPTION_NAMESPACE])), nil
 	}
 
-	return newApiTransport(tc.Options[OPTION_NAMESPACE])
+	return newApiTransport(tc.Options[OPTION_NAMESPACE], tc.PlatformId)
 }

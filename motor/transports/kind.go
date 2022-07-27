@@ -22,6 +22,8 @@ func (x Kind) Name() string {
 		return "baremetal"
 	case Kind_KIND_NETWORK:
 		return "network"
+	case Kind_KIND_K8S_OBJECT:
+		return "k8s-object"
 	case Kind_KIND_UNKNOWN:
 		fallthrough
 	default:
