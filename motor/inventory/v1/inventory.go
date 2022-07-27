@@ -12,7 +12,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-//go:generate protoc --proto_path=../../../:. --go_out=. --go_opt=paths=source_relative --falcon_out=. --iam-actions_out=. inventory.proto
+//go:generate protoc --proto_path=../../../:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. --iam-actions_out=. inventory.proto
 
 const (
 	InventoryFilePath = "mondoo.app/source-file"

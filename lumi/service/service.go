@@ -1,6 +1,6 @@
 package service
 
-//go:generate protoc --proto_path=../../lumi:. --go_out=. --go_opt=paths=source_relative --falcon_out=. service.proto
+//go:generate protoc --proto_path=../../lumi:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. service.proto
 
 import (
 	context "context"
