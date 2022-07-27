@@ -172,7 +172,7 @@ func (ctx *Runtime) CreateResourceWithID(name string, id string, args ...interfa
 		resResource = ex
 	} else {
 		if err := resResource.Validate(); err != nil {
-			return nil, errors.New("failed to create resource '" + name + "': " + err.Error())
+			return nil, errors.New("failed to validate resource '" + name + "': " + err.Error())
 		}
 		ctx.Set(name, id, res)
 	}

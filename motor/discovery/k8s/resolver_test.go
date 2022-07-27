@@ -22,5 +22,5 @@ func TestManifestResolver(t *testing.T) {
 		},
 	}, nil, nil)
 	require.NoError(t, err)
-	assert.Equal(t, 2, len(assetList))
+	assert.Equal(t, 3, len(assetList))
 }

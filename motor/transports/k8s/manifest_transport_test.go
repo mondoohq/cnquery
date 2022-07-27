@@ -18,6 +18,7 @@ func TestManifestDeployment(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "centos", res.Name)
 	assert.Equal(t, "deployment", res.Kind)
+	assert.Equal(t, "k8s-manifest", transport.PlatformInfo().Runtime)
 	assert.Equal(t, 1, len(res.Resources))
 }
 
@@ -35,6 +36,7 @@ func TestManifestInmemory(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "centos", res.Name)
 	assert.Equal(t, "deployment", res.Kind)
+	assert.Equal(t, "k8s-manifest", transport.PlatformInfo().Runtime)
 	assert.Equal(t, 1, len(res.Resources))
 }
 

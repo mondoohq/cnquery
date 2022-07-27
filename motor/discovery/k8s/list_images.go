@@ -58,6 +58,7 @@ func ListPodImages(transport k8s.Transport, namespaceFilter []string) ([]*asset.
 		// a manifest, where there is no container status, we can only know that the 2 images
 		// are identical after we resolve them with the container registry.
 		assets[a.Labels["docker.io/digest"]] = a
+		log.Debug().Str("name", a.Name).Str("image", a.Connections[0].Host).Msg("resolved pod")
 	}
 
 	return mapValuesToSlice(assets), nil

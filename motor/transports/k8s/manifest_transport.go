@@ -85,7 +85,7 @@ func (t *manifestTransport) PlatformInfo() *platform.Platform {
 		Name:    "kubernetes",
 		Title:   "Kubernetes Manifest",
 		Kind:    transports.Kind_KIND_CODE,
-		Runtime: transports.RUNTIME_KUBERNETES,
+		Runtime: t.Runtime(),
 	}
 }
 
@@ -94,7 +94,7 @@ func (t *manifestTransport) Kind() transports.Kind {
 }
 
 func (t *manifestTransport) Runtime() string {
-	return transports.RUNTIME_KUBERNETES
+	return transports.RUNTIME_KUBERNETES_MANIFEST
 }
 
 func (t *manifestTransport) PlatformIdDetectors() []transports.PlatformIdDetector {
@@ -111,7 +111,7 @@ func (t *manifestTransport) SupportedResourceTypes() (*resources.ApiResourceInde
 	return resources.NewApiResourceIndex(), nil
 }
 
-func (t *manifestTransport) Identifier() (string, error) {
+func (t *manifestTransport) ID() (string, error) {
 	_, err := os.Stat(t.manifestFile)
 	if err != nil {
 		return "", errors.Wrap(err, "could not determine platform identifier for "+t.manifestFile)
@@ -125,6 +125,19 @@ func (t *manifestTransport) Identifier() (string, error) {
 	h := sha256.New()
 	h.Write([]byte(absPath))
 	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
+func (t *manifestTransport) PlatformIdentifier() (string, error) {
+	uid, err := t.ID()
+	if err != nil {
+		return "", err
+	}
+
+	return NewPlatformID(uid), nil
+}
+
+func (t *manifestTransport) Identifier() (string, error) {
+	return t.PlatformIdentifier()
 }
 
 func (t *manifestTransport) Name() (string, error) {
@@ -168,6 +181,33 @@ func (t *manifestTransport) Namespaces() ([]v1.Namespace, error) {
 	}
 
 	return nss, nil
+}
+
+func (t *manifestTransport) Pod(namespace string, name string) (*v1.Pod, error) {
+	result, err := t.Resources("pods.v1.", "")
+	if err != nil {
+		return nil, err
+	}
+
+	foundPod := &v1.Pod{}
+	for i := range result.Resources {
+		r := result.Resources[i]
+
+		pod, ok := r.(*v1.Pod)
+		if !ok {
+			log.Warn().Msg("could not convert k8s resource to pod")
+			continue
+		}
+		if pod.Name == name && pod.Namespace == namespace {
+			foundPod = pod
+			break
+		}
+	}
+
+	if foundPod.Name == "" {
+		return nil, errors.New("pod not found")
+	}
+	return foundPod, nil
 }
 
 func (t *manifestTransport) Pods(namespace v1.Namespace) ([]v1.Pod, error) {

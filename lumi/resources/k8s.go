@@ -3,6 +3,7 @@ package resources
 import (
 	"bytes"
 	"errors"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
@@ -848,29 +849,47 @@ func (k *lumiK8sPod) id() (string, error) {
 
 func (p *lumiK8sPod) init(args *lumi.Args) (*lumi.Args, K8sPod, error) {
 	// pass-through if all args are already provided
-	if len(*args) == 0 || len(*args) > 2 {
+	if len(*args) > 2 {
 		return args, nil, nil
 	}
 
-	// search for existing resources if uid or name/namespace is provided
+	kt, err := k8stransport(p.MotorRuntime.Motor.Transport)
+	if err != nil {
+		return args, nil, err
+	}
+
+	identifier, err := kt.PlatformIdentifier()
+	if err != nil {
+		return nil, nil, err
+	}
+	// get last part of the identifier, the uid of the pod
+	splitIdentifier := strings.Split(identifier, "/")
+	identifierUid := splitIdentifier[len(splitIdentifier)-1]
+
 	obj, err := p.MotorRuntime.CreateResource("k8s")
 	if err != nil {
 		return nil, nil, err
 	}
 	k8sResource := obj.(K8s)
 
-	secrets, err := k8sResource.Pods()
+	pods, err := k8sResource.Pods()
 	if err != nil {
 		return nil, nil, err
 	}
 
 	var matchFn func(configMap K8sPod) bool
 
-	uidRaw := (*args)["uid"]
-	if uidRaw != nil {
+	var uidRaw string
+	if len(*args) == 0 {
+		uidRaw = identifierUid
+	} else if _, ok := (*args)["uid"]; ok {
+		uidRaw = (*args)["uid"].(string)
+	}
+
+	if uidRaw != "" {
 		matchFn = func(configMap K8sPod) bool {
 			uid, _ := configMap.Uid()
-			if uid == uidRaw.(string) {
+			if uid == uidRaw {
 				return true
 			}
 			return false
@@ -890,8 +909,8 @@ func (p *lumiK8sPod) init(args *lumi.Args) (*lumi.Args, K8sPod, error) {
 		}
 	}
 
-	for i := range secrets {
-		configMap := secrets[i].(K8sPod)
+	for i := range pods {
+		configMap := pods[i].(K8sPod)
 		if matchFn(configMap) {
 			return nil, configMap, nil
 		}
