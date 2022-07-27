@@ -1,6 +1,6 @@
 package llx
 
-//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --falcon_out=. llx.proto
+//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. llx.proto
 
 import (
 	"errors"
@@ -441,7 +441,6 @@ func (a *arrayBlockCallResults) update(i int, res *RawResult) {
 	if a.unfinishedBlockCalls == 0 {
 		a.onComplete(a.results, a.errors)
 	}
-
 }
 
 func newArrayBlockCallResultsV2(expectedBlockCalls int, code *CodeV2, blockRef uint64, onComplete func([]arrayBlockCallResult, []error)) *arrayBlockCallResults {
@@ -500,7 +499,6 @@ func (c *blockExecutor) runFunctionBlocks(argList [][]*RawData, blockRef uint64,
 		err := c.runFunctionBlock(args, blockRef, func(rr *RawResult) {
 			callResults.update(i, rr)
 		})
-
 		if err != nil {
 			return err
 		}
@@ -532,7 +530,6 @@ func (b *blockExecutor) runFunctionBlock(args []*RawData, blockRef uint64, cb Re
 }
 
 func (b *blockExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*Primitive, ref uint64) (*RawData, uint64, error) {
-
 	if bind != nil && bind.Value == nil && bind.Type != types.Nil {
 		return &RawData{Type: bind.Type, Value: nil}, 0, nil
 	}

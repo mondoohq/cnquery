@@ -1,6 +1,6 @@
 package llx
 
-//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --falcon_out=. llx.proto
+//go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. llx.proto
 
 import (
 	"errors"
@@ -281,7 +281,6 @@ func (c *LeiseExecutorV1) runFunctionBlocks(argList [][]*RawData, code *CodeV1,
 		err := c.runFunctionBlock(args, code, func(rr *RawResult) {
 			callResults.update(i, rr)
 		})
-
 		if err != nil {
 			return err
 		}
@@ -308,7 +307,6 @@ func (c *LeiseExecutorV1) runFunctionBlock(args []*RawData, code *CodeV1, cb Res
 }
 
 func (c *LeiseExecutorV1) runBlock(bind *RawData, functionRef *Primitive, args []*Primitive, ref int32) (*RawData, int32, error) {
-
 	if bind != nil && bind.Value == nil && bind.Type != types.Nil {
 		return &RawData{Type: bind.Type, Value: nil}, 0, nil
 	}

@@ -6,7 +6,7 @@ import (
 	"go.mondoo.io/mondoo/motor/transports"
 )
 
-//go:generate protoc --proto_path=../../:. --go_out=. --go_opt=paths=source_relative --falcon_out=. --iam-actions_out=. platform.proto
+//go:generate protoc --proto_path=../../:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. --iam-actions_out=. platform.proto
 
 func (p *Platform) IsFamily(family string) bool {
 	for i := range p.Family {
