@@ -1010,8 +1010,39 @@ func (k *lumiK8sPod) GetLabels() (interface{}, error) {
 	return k8sLabels(k.LumiResource())
 }
 
-func (k *lumiK8sPod) GetNode() (interface{}, error) {
-	return nil, errors.New("not implemented")
+func (k *lumiK8sPod) GetNode() (K8sNode, error) {
+	podSpec, err := k.PodSpec()
+	if err != nil {
+		return nil, err
+	}
+
+	obj, err := k.MotorRuntime.CreateResource("k8s")
+	if err != nil {
+		return nil, err
+	}
+	k8sResource := obj.(K8s)
+
+	nodes, err := k8sResource.Nodes()
+	if err != nil {
+		return nil, err
+	}
+
+	matchFn := func(node K8sNode) bool {
+		name, _ := node.Name()
+		if name == podSpec["nodeName"] {
+			return true
+		}
+		return false
+	}
+
+	for i := range nodes {
+		node := nodes[i].(K8sNode)
+		if matchFn(node) {
+			return node, nil
+		}
+	}
+
+	return nil, nil
 }
 
 func (k *lumiK8sContainer) id() (string, error) {
