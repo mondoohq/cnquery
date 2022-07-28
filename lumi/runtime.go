@@ -5,8 +5,9 @@ import (
 	fmt "fmt"
 	"sync"
 
+	"go.mondoo.com/ranger-rpc"
+
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/falcon"
 	"go.mondoo.io/mondoo/motor"
 )
 
@@ -65,7 +66,7 @@ type UpstreamConfig struct {
 	SpaceMrn    string
 	Collector   string
 	ApiEndpoint string
-	Plugins     []falcon.ClientPlugin
+	Plugins     []ranger.ClientPlugin
 	Incognito   bool
 }
 
