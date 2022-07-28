@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
-	"go.mondoo.io/mondoo/falcon/codes"
-	"go.mondoo.io/mondoo/falcon/status"
+	"go.mondoo.com/ranger-rpc/codes"
+	"go.mondoo.com/ranger-rpc/status"
 	"google.golang.org/protobuf/proto"
 )
 
