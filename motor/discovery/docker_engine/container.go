@@ -9,7 +9,7 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/motorid/containerid"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 )
 
 func (e *dockerEngineDiscovery) containerList() ([]types.Container, error) {
@@ -131,12 +131,12 @@ func (e *dockerEngineDiscovery) ListContainer() ([]*asset.Asset, error) {
 			Name:        name,
 			PlatformIds: []string{containerid.MondooContainerID(dContainer.ID)},
 			Platform: &platform.Platform{
-				Kind:    transports.Kind_KIND_CONTAINER,
-				Runtime: transports.RUNTIME_DOCKER_CONTAINER,
+				Kind:    providers.Kind_KIND_CONTAINER,
+				Runtime: providers.RUNTIME_DOCKER_CONTAINER,
 			},
-			Connections: []*transports.TransportConfig{
+			Connections: []*providers.TransportConfig{
 				{
-					Backend: transports.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER,
+					Backend: providers.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER,
 					Host:    dContainer.ID,
 				},
 			},

@@ -4,13 +4,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/k8s"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/k8s"
 	v1 "k8s.io/api/core/v1"
 )
 
 // ListPods list all pods in the cluster.
-func ListPods(transport k8s.Transport, connection *transports.TransportConfig, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
+func ListPods(transport k8s.Transport, connection *providers.TransportConfig, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
 	namespaces, err := transport.Namespaces()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
@@ -42,12 +42,12 @@ func ListPods(transport k8s.Transport, connection *transports.TransportConfig, c
 			"namespace": pod.Namespace,
 			"uid":       string(pod.UID),
 		}
-		podPlatform.Kind = transports.Kind_KIND_K8S_OBJECT
+		podPlatform.Kind = providers.Kind_KIND_K8S_OBJECT
 		asset := &asset.Asset{
 			PlatformIds: []string{k8s.NewPlatformPodId(clusterIdentifier, pod.Namespace, pod.Name, string(pod.UID))},
 			Name:        pod.Namespace + "/" + pod.Name,
 			Platform:    podPlatform,
-			Connections: []*transports.TransportConfig{connection},
+			Connections: []*providers.TransportConfig{connection},
 			State:       asset.State_STATE_ONLINE,
 			Labels:      pod.Labels,
 		}

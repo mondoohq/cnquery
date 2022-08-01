@@ -7,11 +7,11 @@ import (
 	"strings"
 
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 )
 
 type LinuxSmbiosManager struct {
-	t transports.Transport
+	t providers.Transport
 }
 
 func (s *LinuxSmbiosManager) Name() string {

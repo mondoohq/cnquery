@@ -10,7 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 	"go.mondoo.io/mondoo/lumi/resources/awspolicy"
-	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
+	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 )
 
 func (l *lumiAwsLambda) id() (string, error) {

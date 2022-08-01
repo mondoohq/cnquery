@@ -5,18 +5,18 @@ import (
 	"io/ioutil"
 
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 )
 
 func (c *lumiCommand) id() (string, error) {
 	return c.Command()
 }
 
-func (c *lumiCommand) execute() (*transports.Command, error) {
-	if !c.MotorRuntime.Motor.Transport.Capabilities().HasCapability(transports.Capability_RunCommand) {
+func (c *lumiCommand) execute() (*providers.Command, error) {
+	if !c.MotorRuntime.Motor.Transport.Capabilities().HasCapability(providers.Capability_RunCommand) {
 		return nil, errors.New("run command not supported on this transport")
 	}
-	var executedCmd *transports.Command
+	var executedCmd *providers.Command
 
 	cmd, err := c.Command()
 	if err != nil {
@@ -25,7 +25,7 @@ func (c *lumiCommand) execute() (*transports.Command, error) {
 
 	data, ok := c.Cache.Load(cmd)
 	if ok {
-		executedCmd, ok := data.Data.(*transports.Command)
+		executedCmd, ok := data.Data.(*providers.Command)
 		if ok {
 			return executedCmd, data.Error
 		}

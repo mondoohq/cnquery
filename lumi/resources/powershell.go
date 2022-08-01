@@ -7,7 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/transform"
 )
@@ -17,8 +17,8 @@ func (c *lumiPowershell) id() (string, error) {
 	return c.Script()
 }
 
-func (c *lumiPowershell) execute() (*transports.Command, error) {
-	var executedCmd *transports.Command
+func (c *lumiPowershell) execute() (*providers.Command, error) {
+	var executedCmd *providers.Command
 
 	cmd, err := c.Script()
 	if err != nil {
@@ -30,7 +30,7 @@ func (c *lumiPowershell) execute() (*transports.Command, error) {
 
 	data, ok := c.Cache.Load(encodedCmd)
 	if ok {
-		executedCmd, ok := data.Data.(*transports.Command)
+		executedCmd, ok := data.Data.(*providers.Command)
 		if ok {
 			return executedCmd, nil
 		}

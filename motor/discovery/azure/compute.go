@@ -10,8 +10,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
-	azure_transport "go.mondoo.io/mondoo/motor/transports/azure"
+	"go.mondoo.io/mondoo/motor/providers"
+	azure_transport "go.mondoo.io/mondoo/motor/providers/azure"
 )
 
 type AzureClient struct {
@@ -127,7 +127,7 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*asset.Asset, error) {
 	for i := range values {
 		instance := values[i]
 
-		connections := []*transports.TransportConfig{}
+		connections := []*providers.TransportConfig{}
 
 		interfaces := *instance.NetworkProfile.NetworkInterfaces
 		for ni := range interfaces {
@@ -144,8 +144,8 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*asset.Asset, error) {
 
 				if ipResp.IPAddress != nil {
 					ip := *ipResp.IPAddress
-					connections = append(connections, &transports.TransportConfig{
-						Backend: transports.TransportBackend_CONNECTION_SSH,
+					connections = append(connections, &providers.TransportConfig{
+						Backend: providers.TransportBackend_CONNECTION_SSH,
 						Host:    ip,
 						// we do not add credentials here since those may not match the expected state
 						// *instance.OsProfile.AdminUsername
@@ -160,8 +160,8 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*asset.Asset, error) {
 			PlatformIds: []string{MondooAzureInstanceID(*instance.ID)},
 			Name:        *instance.Name,
 			Platform: &platform.Platform{
-				Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
-				Runtime: transports.RUNTIME_AZ_COMPUTE,
+				Kind:    providers.Kind_KIND_VIRTUAL_MACHINE,
+				Runtime: providers.RUNTIME_AZ_COMPUTE,
 			},
 			Connections: connections,
 			// NOTE: this is really not working in azure, see https://github.com/Azure/azure-sdk-for-python/issues/573

@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 	plist "howett.net/plist"
 )
 
@@ -29,7 +29,7 @@ import (
 // results can be compared with dmidecode
 // http://cavaliercoder.com/blog/dmidecode-for-apple-osx.html
 type OSXSmbiosManager struct {
-	t transports.Transport
+	t providers.Transport
 	p *platform.Platform
 }
 

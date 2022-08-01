@@ -9,8 +9,8 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/platform/detector"
-	"go.mondoo.io/mondoo/motor/transports"
-	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
+	"go.mondoo.io/mondoo/motor/providers"
+	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 )
 
 const (
@@ -29,7 +29,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryInstances, DiscoverySSM}
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// add aws api as asset
@@ -66,7 +66,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 		PlatformIds: []string{identifier},
 		Name:        AssembleIntegrationName(alias, info.ID),
 		Platform:    pf,
-		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
+		Connections: []*providers.TransportConfig{tc}, // pass-in the current config
 		State:       asset.State_STATE_ONLINE,
 	})
 

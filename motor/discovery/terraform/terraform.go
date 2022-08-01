@@ -7,8 +7,8 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/motorid"
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/resolver"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/resolver"
 )
 
 type Resolver struct{}
@@ -21,7 +21,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	name := ""
 	if tc.Options["path"] != "" {
 		// manifest parent directory name
@@ -30,7 +30,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 
 	assetObj := &asset.Asset{
 		Name:        "Terraform Static Analysis " + name,
-		Connections: []*transports.TransportConfig{tc},
+		Connections: []*providers.TransportConfig{tc},
 		State:       asset.State_STATE_ONLINE,
 		Labels:      map[string]string{},
 	}

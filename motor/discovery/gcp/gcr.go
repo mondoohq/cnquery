@@ -12,7 +12,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/google"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 	"google.golang.org/api/cloudresourcemanager/v1"
 )
 
@@ -53,13 +53,13 @@ func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*asset.
 				PlatformIds: []string{MondooContainerImageID(digest)},
 				Name:        containerid.ShortContainerImageID(digest),
 				Platform: &platform.Platform{
-					Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
-					Runtime: transports.RUNTIME_GCP_GCR,
+					Kind:    providers.Kind_KIND_CONTAINER_IMAGE,
+					Runtime: providers.RUNTIME_GCP_GCR,
 				},
 
-				Connections: []*transports.TransportConfig{
+				Connections: []*providers.TransportConfig{
 					{
-						Backend: transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY,
+						Backend: providers.TransportBackend_CONNECTION_CONTAINER_REGISTRY,
 						Host:    imageUrl,
 					},
 				},

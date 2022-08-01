@@ -1,15 +1,16 @@
+//go:build windows
 // +build windows
 
 package windows
 
 import (
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/local"
-	"golang.org/x/sys/windows/registry"
 	"runtime"
+
+	"go.mondoo.io/mondoo/motor/providers/local"
+	"golang.org/x/sys/windows/registry"
 )
 
-func GetWindowsOSBuild(t transports.Transport) (*WindowsCurrentVersion, error) {
+func GetWindowsOSBuild(t providers.Transport) (*WindowsCurrentVersion, error) {
 	// if we are running locally on windows, we want to avoid using powershell to be faster
 	_, ok := t.(*local.LocalTransport)
 	if ok && runtime.GOOS == "windows" {

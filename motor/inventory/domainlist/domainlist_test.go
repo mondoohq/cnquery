@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 
 	"github.com/stretchr/testify/require"
 
@@ -25,5 +25,5 @@ func TestParseInventory(t *testing.T) {
 	assert.Equal(t, "example.com:443", out.Spec.Assets[0].Name)
 	assert.Equal(t, "example.com", out.Spec.Assets[0].Connections[0].Host)
 	assert.Equal(t, int32(443), out.Spec.Assets[0].Connections[0].Port)
-	assert.Equal(t, transports.TransportBackend_CONNECTION_HOST, out.Spec.Assets[0].Connections[0].Backend)
+	assert.Equal(t, providers.TransportBackend_CONNECTION_HOST, out.Spec.Assets[0].Connections[0].Backend)
 }

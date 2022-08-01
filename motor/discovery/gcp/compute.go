@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
 )
@@ -127,7 +127,7 @@ func (a *Compute) instancesPerZone(svc *compute.Service, project string, zone st
 	for i := range il.Items {
 		instance := il.Items[i]
 
-		connections := []*transports.TransportConfig{}
+		connections := []*providers.TransportConfig{}
 
 		// TODO: we may want to filter windows instances, use guestOsFeatures to identify the system
 		// "guestOsFeatures": [{
@@ -148,8 +148,8 @@ func (a *Compute) instancesPerZone(svc *compute.Service, project string, zone st
 			for ac := range iface.AccessConfigs {
 				if len(iface.AccessConfigs[ac].NatIP) > 0 {
 					log.Debug().Str("instance", instance.Name).Str("ip", iface.AccessConfigs[ac].NatIP).Msg("found public ip")
-					connections = append(connections, &transports.TransportConfig{
-						Backend:  transports.TransportBackend_CONNECTION_SSH,
+					connections = append(connections, &providers.TransportConfig{
+						Backend:  providers.TransportBackend_CONNECTION_SSH,
 						Host:     iface.AccessConfigs[ac].NatIP,
 						Insecure: a.Insecure,
 					})
@@ -161,8 +161,8 @@ func (a *Compute) instancesPerZone(svc *compute.Service, project string, zone st
 			PlatformIds: []string{MondooGcpInstanceID(project, zone, instance)},
 			Name:        instance.Name,
 			Platform: &platform.Platform{
-				Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
-				Runtime: transports.RUNTIME_GCP_COMPUTE,
+				Kind:    providers.Kind_KIND_VIRTUAL_MACHINE,
+				Runtime: providers.RUNTIME_GCP_COMPUTE,
 			},
 			Connections: connections,
 			State:       mapInstanceState(instance.Status),

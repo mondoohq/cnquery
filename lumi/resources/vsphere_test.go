@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/vsphere"
-	"go.mondoo.io/mondoo/motor/transports/vsphere/vsimulator"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/vsphere"
+	"go.mondoo.io/mondoo/motor/providers/vsphere/vsimulator"
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
@@ -22,8 +22,8 @@ func vsphereTestQuery(t *testing.T, query string) []*llx.RawResult {
 	port, err := strconv.Atoi(vs.Server.URL.Port())
 	require.NoError(t, err)
 
-	trans, err := vsphere.New(&transports.TransportConfig{
-		Backend:  transports.TransportBackend_CONNECTION_VSPHERE,
+	trans, err := vsphere.New(&providers.TransportConfig{
+		Backend:  providers.TransportBackend_CONNECTION_VSPHERE,
 		Host:     vs.Server.URL.Hostname(),
 		Port:     int32(port),
 		Insecure: true, // allows self-signed certificates

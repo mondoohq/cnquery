@@ -7,8 +7,8 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/platform/detector"
-	"go.mondoo.io/mondoo/motor/transports"
-	gcp_transport "go.mondoo.io/mondoo/motor/transports/gcp"
+	"go.mondoo.io/mondoo/motor/providers"
+	gcp_transport "go.mondoo.io/mondoo/motor/providers/gcp"
 	"google.golang.org/api/compute/v1"
 )
 
@@ -22,7 +22,7 @@ func (r *GcpProjectResolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryInstances}
 }
 
-func (r *GcpProjectResolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *GcpProjectResolver) Resolve(tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	if tc == nil || tc.Options["project"] == "" {
@@ -52,7 +52,7 @@ func (r *GcpProjectResolver) Resolve(tc *transports.TransportConfig, cfn credent
 		PlatformIds: []string{identifier},
 		Name:        "GCP project " + project,
 		Platform:    pf,
-		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
+		Connections: []*providers.TransportConfig{tc}, // pass-in the current config
 		Labels: map[string]string{
 			common.ParentId: project,
 		},

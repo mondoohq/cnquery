@@ -5,7 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 )
 
 type instanceMetadata struct {
@@ -20,7 +20,7 @@ type InstanceIdentifier interface {
 	InstanceID() (string, error)
 }
 
-func Resolve(t transports.Transport, p *platform.Platform) (InstanceIdentifier, error) {
+func Resolve(t providers.Transport, p *platform.Platform) (InstanceIdentifier, error) {
 	if p.IsFamily(platform.FAMILY_UNIX) || p.IsFamily(platform.FAMILY_WINDOWS) {
 		return NewCommandInstanceMetadata(t, p), nil
 	}

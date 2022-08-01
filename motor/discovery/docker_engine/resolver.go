@@ -11,8 +11,8 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/container_registry"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/tar"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/tar"
 )
 
 const (
@@ -31,7 +31,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryContainerRunning, DiscoveryContainerImages}
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	if tc == nil {
 		return nil, errors.New("no transport configuration found")
 	}
@@ -39,7 +39,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 	// check if we have a tar as input
 	// detect if the tar is a container image format -> container image
 	// or a container snapshot format -> container snapshot
-	if tc.Backend == transports.TransportBackend_CONNECTION_TAR {
+	if tc.Backend == providers.TransportBackend_CONNECTION_TAR {
 
 		if tc.Options == nil || tc.Options["file"] == "" {
 			return nil, errors.New("could not find the tar file")
@@ -56,10 +56,10 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 		// Tar container can be an image or a snapshot
 		resolvedAsset := &asset.Asset{
 			Name:        filename,
-			Connections: []*transports.TransportConfig{tc},
+			Connections: []*providers.TransportConfig{tc},
 			Platform: &platform.Platform{
-				Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
-				Runtime: transports.RUNTIME_DOCKER_IMAGE,
+				Kind:    providers.Kind_KIND_CONTAINER_IMAGE,
+				Runtime: providers.RUNTIME_DOCKER_IMAGE,
 			},
 			State: asset.State_STATE_ONLINE,
 		}
@@ -78,7 +78,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 	ded, dockerEngErr := NewDockerEngineDiscovery()
 	// we do not fail here, since we pull the image from upstream if its is an image without the need for docker
 
-	if tc.Backend == transports.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER {
+	if tc.Backend == providers.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER {
 		if dockerEngErr != nil {
 			return nil, errors.Wrap(dockerEngErr, "cannot connect to docker engine to fetch the container")
 		}
@@ -90,7 +90,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 		return []*asset.Asset{resolvedAsset}, nil
 	}
 
-	if tc.Backend == transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE {
+	if tc.Backend == providers.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE {
 		// NOTE, we ignore dockerEngErr here since we fallback to pulling the images directly
 		resolvedAssets, err := r.images(tc, ded, cfn, sfn)
 		if err != nil {
@@ -129,39 +129,39 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 	return nil, errors.Wrap(err, "could not find the container reference")
 }
 
-func (k *Resolver) container(tc *transports.TransportConfig, ded *dockerEngineDiscovery) (*asset.Asset, error) {
+func (k *Resolver) container(tc *providers.TransportConfig, ded *dockerEngineDiscovery) (*asset.Asset, error) {
 	ci, err := ded.ContainerInfo(tc.Host)
 	if err != nil {
 		return nil, err
 	}
 
-	tc.Backend = transports.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER
+	tc.Backend = providers.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER
 	return &asset.Asset{
 		Name:        ci.Name,
-		Connections: []*transports.TransportConfig{tc},
+		Connections: []*providers.TransportConfig{tc},
 		PlatformIds: []string{ci.PlatformID},
 		Platform: &platform.Platform{
-			Kind:    transports.Kind_KIND_CONTAINER,
-			Runtime: transports.RUNTIME_DOCKER_CONTAINER,
+			Kind:    providers.Kind_KIND_CONTAINER,
+			Runtime: providers.RUNTIME_DOCKER_CONTAINER,
 		},
 		State:  asset.State_STATE_ONLINE,
 		Labels: ci.Labels,
 	}, nil
 }
 
-func (k *Resolver) images(tc *transports.TransportConfig, ded *dockerEngineDiscovery, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn) ([]*asset.Asset, error) {
+func (k *Resolver) images(tc *providers.TransportConfig, ded *dockerEngineDiscovery, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn) ([]*asset.Asset, error) {
 	// if we have a docker engine available, try to fetch it from there
 	if ded != nil {
 		ii, err := ded.ImageInfo(tc.Host)
 		if err == nil {
-			tc.Backend = transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE
+			tc.Backend = providers.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE
 			return []*asset.Asset{{
 				Name:        ii.Name,
-				Connections: []*transports.TransportConfig{tc},
+				Connections: []*providers.TransportConfig{tc},
 				PlatformIds: []string{ii.PlatformID},
 				Platform: &platform.Platform{
-					Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
-					Runtime: transports.RUNTIME_DOCKER_IMAGE,
+					Kind:    providers.Kind_KIND_CONTAINER_IMAGE,
+					Runtime: providers.RUNTIME_DOCKER_IMAGE,
 				},
 				State:  asset.State_STATE_ONLINE,
 				Labels: ii.Labels,
@@ -184,7 +184,7 @@ func (k *Resolver) images(tc *transports.TransportConfig, ded *dockerEngineDisco
 	return rr.Resolve(tc, cfn, sfn)
 }
 
-func DiscoverDockerEngineAssets(tc *transports.TransportConfig) ([]*asset.Asset, error) {
+func DiscoverDockerEngineAssets(tc *providers.TransportConfig) ([]*asset.Asset, error) {
 	log.Debug().Msg("start discovery for docker engine")
 	// we use generic `container` and `container-images` options to avoid the requirement for the user to know if
 	// the system is using docker or podman locally

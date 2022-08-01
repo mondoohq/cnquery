@@ -4,15 +4,14 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
-
 	"go.mondoo.io/mondoo/motor/motorid/clouddetect/providers/aws"
 	"go.mondoo.io/mondoo/motor/motorid/clouddetect/providers/azure"
 	"go.mondoo.io/mondoo/motor/motorid/clouddetect/providers/gce"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 )
 
-type detectorFunc func(t transports.Transport, p *platform.Platform) string
+type detectorFunc func(t providers.Transport, p *platform.Platform) string
 
 var detectors = []detectorFunc{
 	aws.Detect,
@@ -20,7 +19,7 @@ var detectors = []detectorFunc{
 	gce.Detect,
 }
 
-func Detect(t transports.Transport, p *platform.Platform) string {
+func Detect(t providers.Transport, p *platform.Platform) string {
 	wg := sync.WaitGroup{}
 	wg.Add(len(detectors))
 

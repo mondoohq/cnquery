@@ -1,9 +1,9 @@
 package resources
 
 import (
-	"go.mondoo.io/mondoo/motor/transports/container/docker_engine"
-	"go.mondoo.io/mondoo/motor/transports/container/docker_snapshot"
-	"go.mondoo.io/mondoo/motor/transports/tar"
+	"go.mondoo.io/mondoo/motor/providers/container/docker_engine"
+	"go.mondoo.io/mondoo/motor/providers/container/docker_snapshot"
+	"go.mondoo.io/mondoo/motor/providers/tar"
 )
 
 func (v *lumiPlatformVirtualization) id() (string, error) {

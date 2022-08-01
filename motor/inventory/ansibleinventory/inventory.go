@@ -10,7 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 
 	v1 "go.mondoo.io/mondoo/motor/inventory/v1"
 
@@ -247,36 +247,36 @@ func isValidConnectionType(conn string) bool {
 // ansibleBackend maps an ansible connection to mondoo backend
 // https://docs.ansible.com/ansible/latest/plugins/connection.html
 // quickly get a list of available plugins via `ansible-doc -t connection -l`
-func ansibleBackend(connection string) transports.TransportBackend {
-	var res transports.TransportBackend
+func ansibleBackend(connection string) providers.TransportBackend {
+	var res providers.TransportBackend
 	switch strings.TrimSpace(connection) {
 	case "local":
-		res = transports.TransportBackend_CONNECTION_LOCAL_OS
+		res = providers.TransportBackend_CONNECTION_LOCAL_OS
 	case "ssh":
-		res = transports.TransportBackend_CONNECTION_SSH
+		res = providers.TransportBackend_CONNECTION_SSH
 	case "winrm":
-		res = transports.TransportBackend_CONNECTION_WINRM
+		res = providers.TransportBackend_CONNECTION_WINRM
 	case "docker":
-		res = transports.TransportBackend_CONNECTION_DOCKER
+		res = providers.TransportBackend_CONNECTION_DOCKER
 	default:
 		log.Warn().Str("ansible-connection", connection).Msg("unknown connection, fallback to ssh")
-		res = transports.TransportBackend_CONNECTION_SSH
+		res = providers.TransportBackend_CONNECTION_SSH
 	}
 	return res
 }
 
-func ansibleConnections(host *Host) []*transports.TransportConfig {
+func ansibleConnections(host *Host) []*providers.TransportConfig {
 	backend := ansibleBackend(host.Connection)
 
 	// in the case where the port is 0, we will fallback to default ports (eg 22)
 	// further down in the execution chain
 	port, _ := strconv.Atoi(host.Port)
 
-	res := &transports.TransportConfig{
+	res := &providers.TransportConfig{
 		Backend: backend,
 		Host:    host.Host,
 		Port:    int32(port),
-		Sudo: &transports.Sudo{
+		Sudo: &providers.Sudo{
 			Active: host.Become,
 		},
 	}
@@ -300,7 +300,7 @@ func ansibleConnections(host *Host) []*transports.TransportConfig {
 	}
 
 	// fallback to ssh agent as default in case nothing was provided
-	if len(credentials) == 0 && backend == transports.TransportBackend_CONNECTION_SSH {
+	if len(credentials) == 0 && backend == providers.TransportBackend_CONNECTION_SSH {
 		credentials = append(credentials, &vault.Credential{
 			Type: vault.CredentialType_ssh_agent,
 			User: host.User,
@@ -308,5 +308,5 @@ func ansibleConnections(host *Host) []*transports.TransportConfig {
 	}
 
 	res.Credentials = credentials
-	return []*transports.TransportConfig{res}
+	return []*providers.TransportConfig{res}
 }

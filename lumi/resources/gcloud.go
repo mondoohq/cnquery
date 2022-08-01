@@ -8,8 +8,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/motor/transports"
-	gcp_transport "go.mondoo.io/mondoo/motor/transports/gcp"
+	"go.mondoo.io/mondoo/motor/providers"
+	gcp_transport "go.mondoo.io/mondoo/motor/providers/gcp"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/iam/v1"
@@ -18,7 +18,7 @@ import (
 	"google.golang.org/api/storage/v1"
 )
 
-func gcptransport(t transports.Transport) (*gcp_transport.Transport, error) {
+func gcptransport(t providers.Transport) (*gcp_transport.Transport, error) {
 	gt, ok := t.(*gcp_transport.Transport)
 	if !ok {
 		return nil, errors.New("aws resource is not supported on this transport")

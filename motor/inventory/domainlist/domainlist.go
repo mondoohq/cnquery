@@ -12,7 +12,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/motor/asset"
 	v1 "go.mondoo.io/mondoo/motor/inventory/v1"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 )
 
 func Parse(input io.Reader) (*Inventory, error) {
@@ -62,7 +62,7 @@ func (in *Inventory) ToV1Inventory() *v1.Inventory {
 
 		out.Spec.Assets = append(out.Spec.Assets, &asset.Asset{
 			Name:        name,
-			Connections: []*transports.TransportConfig{tc},
+			Connections: []*providers.TransportConfig{tc},
 		})
 	}
 
@@ -71,7 +71,7 @@ func (in *Inventory) ToV1Inventory() *v1.Inventory {
 
 type networkResolver struct{}
 
-func (r *networkResolver) ParseConnectionURL(fullUrl string, identityFile string, password string) (*transports.TransportConfig, error) {
+func (r *networkResolver) ParseConnectionURL(fullUrl string, identityFile string, password string) (*providers.TransportConfig, error) {
 	url, err := url.Parse(fullUrl)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse target URL")
@@ -82,8 +82,8 @@ func (r *networkResolver) ParseConnectionURL(fullUrl string, identityFile string
 	// So far we know:
 	// - all of them are in the `api` family (also their kind is set this way)
 	// - multiple families on one service are possible (eg: http, tls, tcp)
-	res := transports.TransportConfig{
-		Backend: transports.TransportBackend_CONNECTION_HOST,
+	res := providers.TransportConfig{
+		Backend: providers.TransportBackend_CONNECTION_HOST,
 		Options: map[string]string{"scheme": url.Scheme},
 	}
 

@@ -16,8 +16,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/events"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/events"
 )
 
 func (s *lumiFile) id() (string, error) {
@@ -51,7 +51,7 @@ func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
 
 	watcher := s.MotorRuntime.Motor.Watcher()
 
-	err := watcher.Subscribe("file", path, func(o transports.Observable) {
+	err := watcher.Subscribe("file", path, func(o providers.Observable) {
 		log.Debug().Str("file", path).Msg("[file]> got observable")
 		content := ""
 		f := o.(*events.FileObservable)

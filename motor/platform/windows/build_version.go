@@ -3,12 +3,13 @@ package windows
 import (
 	"encoding/json"
 	"fmt"
-	"go.mondoo.io/mondoo/lumi/resources/powershell"
-	"go.mondoo.io/mondoo/motor/transports"
 	"io"
 	"io/ioutil"
 	"regexp"
 	"strconv"
+
+	"go.mondoo.io/mondoo/lumi/resources/powershell"
+	"go.mondoo.io/mondoo/motor/providers"
 )
 
 var WinBuildVersionRegex = regexp.MustCompile(`^(\d+)(?:\.(\d+)){0,1}`)
@@ -78,7 +79,7 @@ func ParseWinRegistryCurrentVersion(r io.Reader) (*WindowsCurrentVersion, error)
 }
 
 // powershellGetWindowsOSBuild runs a powershell script to retrieve the current version from windows
-func powershellGetWindowsOSBuild(t transports.Transport) (*WindowsCurrentVersion, error) {
+func powershellGetWindowsOSBuild(t providers.Transport) (*WindowsCurrentVersion, error) {
 	pscommand := "Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion' -Name CurrentBuild, UBR, EditionID | ConvertTo-Json"
 	cmd, err := t.RunCommand(powershell.Wrap(pscommand))
 	if err != nil {

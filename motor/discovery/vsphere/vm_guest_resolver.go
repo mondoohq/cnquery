@@ -6,9 +6,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/resolver"
-	"go.mondoo.io/mondoo/motor/transports/vmwareguestapi"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/resolver"
+	"go.mondoo.io/mondoo/motor/providers/vmwareguestapi"
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
@@ -22,7 +22,7 @@ func (r *VMGuestResolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (k *VMGuestResolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
+func (k *VMGuestResolver) Resolve(tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// we leverage the vpshere transport to establish a connection
@@ -67,7 +67,7 @@ func (k *VMGuestResolver) Resolve(tc *transports.TransportConfig, cfn credential
 
 	if len(resolved) == 1 {
 		a := resolved[0]
-		a.Connections = []*transports.TransportConfig{tc}
+		a.Connections = []*providers.TransportConfig{tc}
 
 		// find the secret reference for the asset
 		EnrichVsphereToolsConnWithSecrets(a, cfn, sfn)
@@ -85,7 +85,7 @@ func EnrichVsphereToolsConnWithSecrets(a *asset.Asset, cfn credentials.Credentia
 		conn := a.Connections[j]
 
 		// special handling for vsphere vm config
-		if conn.Backend == transports.TransportBackend_CONNECTION_VSPHERE_VM {
+		if conn.Backend == providers.TransportBackend_CONNECTION_VSPHERE_VM {
 			var creds *vault.Credential
 
 			secretRefCred, err := sfn(a)

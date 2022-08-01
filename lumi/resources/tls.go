@@ -10,7 +10,7 @@ import (
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/certificates"
 	"go.mondoo.io/mondoo/lumi/resources/tlsshake"
-	"go.mondoo.io/mondoo/motor/transports/network"
+	"go.mondoo.io/mondoo/motor/providers/network"
 )
 
 var reTarget = regexp.MustCompile("([^/:]+?)(:\\d+)?$")

@@ -10,11 +10,11 @@ import (
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/msgraphclient"
 	"go.mondoo.io/mondoo/lumi/resources/msgraphconv"
-	"go.mondoo.io/mondoo/motor/transports"
-	ms365_transport "go.mondoo.io/mondoo/motor/transports/ms365"
+	"go.mondoo.io/mondoo/motor/providers"
+	ms365_transport "go.mondoo.io/mondoo/motor/providers/ms365"
 )
 
-func ms365transport(t transports.Transport) (*ms365_transport.Transport, error) {
+func ms365transport(t providers.Transport) (*ms365_transport.Transport, error) {
 	at, ok := t.(*ms365_transport.Transport)
 	if !ok {
 		return nil, errors.New("ms365 resource is not supported on this transport")

@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 
 	"howett.net/plist"
 )
@@ -19,14 +19,14 @@ const (
 	userDomainPreferences        = "defaults export %s -"
 )
 
-func NewPreferences(t transports.Transport) *Preferences {
+func NewPreferences(t providers.Transport) *Preferences {
 	return &Preferences{
 		transport: t,
 	}
 }
 
 type Preferences struct {
-	transport transports.Transport
+	transport providers.Transport
 }
 
 func (p *Preferences) UserPreferences() (map[string]map[string]interface{}, error) {

@@ -2,11 +2,11 @@ package platform
 
 import (
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/tar"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/tar"
 )
 
-type detect func(p *PlatformResolver, di *Platform, t transports.Transport) (bool, error)
+type detect func(p *PlatformResolver, di *Platform, t providers.Transport) (bool, error)
 
 type PlatformResolver struct {
 	Name      string
@@ -15,7 +15,7 @@ type PlatformResolver struct {
 	Detect    detect
 }
 
-func (p *PlatformResolver) Resolve(t transports.Transport) (*Platform, bool) {
+func (p *PlatformResolver) Resolve(t providers.Transport) (*Platform, bool) {
 	// prepare detect info object
 	di := &Platform{}
 	di.Family = make([]string, 0)
@@ -44,7 +44,7 @@ func (p *PlatformResolver) Resolve(t transports.Transport) (*Platform, bool) {
 // Resolve tries to find recursively all
 // platforms until a leaf (operating systems) detect
 // mechanism is returning true
-func (p *PlatformResolver) resolvePlatform(di *Platform, t transports.Transport) (*Platform, bool) {
+func (p *PlatformResolver) resolvePlatform(di *Platform, t providers.Transport) (*Platform, bool) {
 	detected, err := p.Detect(p, di, t)
 	if err != nil {
 		return di, false

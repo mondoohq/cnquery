@@ -12,7 +12,7 @@ import (
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 )
 
 func NewEcrImages(cfg aws.Config) (*EcrImages, error) {
@@ -63,7 +63,7 @@ func (a *EcrImages) getRegions() ([]string, error) {
 }
 
 func (a *EcrImages) getRepositories() []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
+	tasks := make([]*jobpool.Job, 0)
 	ctx := context.Background()
 	// user did not include a region filter, fetch em all
 	regions, err := a.getRegions()
@@ -74,7 +74,6 @@ func (a *EcrImages) getRepositories() []*jobpool.Job {
 	for ri := range regions {
 		region := regions[ri]
 		f := func() (jobpool.JobResult, error) {
-
 			clonedConfig := a.config.Copy()
 			clonedConfig.Region = region
 			svc := ecr.NewFromConfig(clonedConfig)
@@ -101,12 +100,12 @@ func (a *EcrImages) getRepositories() []*jobpool.Job {
 						PlatformIds: []string{MondooContainerImageID(digest)},
 						// Name:         strings.Join(dImg.RepoTags, ","),
 						Platform: &platform.Platform{
-							Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
-							Runtime: transports.RUNTIME_AWS_ECR,
+							Kind:    providers.Kind_KIND_CONTAINER_IMAGE,
+							Runtime: providers.RUNTIME_AWS_ECR,
 						},
-						Connections: []*transports.TransportConfig{
+						Connections: []*providers.TransportConfig{
 							{
-								Backend: transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY,
+								Backend: providers.TransportBackend_CONNECTION_CONTAINER_REGISTRY,
 								Host:    registryURL,
 							},
 						},

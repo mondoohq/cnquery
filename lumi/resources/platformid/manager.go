@@ -2,10 +2,10 @@ package platformid
 
 import (
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 )
 
-func MachineIDProvider(t transports.Transport, p *platform.Platform) (UniquePlatformIDProvider, error) {
+func MachineIDProvider(t providers.Transport, p *platform.Platform) (UniquePlatformIDProvider, error) {
 	var uuidProvider UniquePlatformIDProvider
 	for i := range p.Family {
 		if p.Family[i] == "linux" {

@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/vsphere/vsimulator"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/vsphere/vsimulator"
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
@@ -21,8 +21,8 @@ func TestVsphereResolver(t *testing.T) {
 
 	// start vsphere discover
 	r := Resolver{}
-	assets, err := r.Resolve(&transports.TransportConfig{
-		Backend:  transports.TransportBackend_CONNECTION_VSPHERE,
+	assets, err := r.Resolve(&providers.TransportConfig{
+		Backend:  providers.TransportBackend_CONNECTION_VSPHERE,
 		Host:     vs.Server.URL.Hostname(),
 		Port:     int32(port),
 		Insecure: true, // allows self-signed certificates
@@ -33,7 +33,7 @@ func TestVsphereResolver(t *testing.T) {
 				Secret: []byte(vsimulator.Password),
 			},
 		},
-		Discover: &transports.Discovery{
+		Discover: &providers.Discovery{
 			Targets: []string{"all"},
 		},
 	}, nil, nil)

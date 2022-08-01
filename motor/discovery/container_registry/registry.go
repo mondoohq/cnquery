@@ -17,7 +17,7 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/motorid/containerid"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
@@ -185,12 +185,12 @@ func (a *DockerRegistryImages) toAsset(ref name.Reference, creds []*vault.Creden
 		PlatformIds: []string{containerid.MondooContainerImageID(imgDigest)},
 		Name:        imageUrl,
 		Platform: &platform.Platform{
-			Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
-			Runtime: transports.RUNTIME_DOCKER_REGISTRY,
+			Kind:    providers.Kind_KIND_CONTAINER_IMAGE,
+			Runtime: providers.RUNTIME_DOCKER_REGISTRY,
 		},
-		Connections: []*transports.TransportConfig{
+		Connections: []*providers.TransportConfig{
 			{
-				Backend:     transports.TransportBackend_CONNECTION_CONTAINER_REGISTRY,
+				Backend:     providers.TransportBackend_CONNECTION_CONTAINER_REGISTRY,
 				Host:        imageUrl,
 				Credentials: creds,
 			},

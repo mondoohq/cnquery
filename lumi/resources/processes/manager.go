@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/transports/ssh"
+	"go.mondoo.io/mondoo/motor/providers/ssh"
 )
 
 type OSProcess struct {

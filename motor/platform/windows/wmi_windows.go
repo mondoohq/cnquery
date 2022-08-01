@@ -1,19 +1,20 @@
+//go:build windows
 // +build windows
 
 package windows
 
 import (
 	"errors"
-	"github.com/StackExchange/wmi"
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/local"
 	"runtime"
 	"strconv"
+
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/local"
 )
 
 const wmiOSQuery = "SELECT Name, Caption, Manufacturer, OSArchitecture, Version, BuildNumber, Description, OSType, ProductType, SerialNumber FROM Win32_OperatingSystem"
 
-func GetWmiInformation(t transports.Transport) (*WmicOSInformation, error) {
+func GetWmiInformation(t providers.Transport) (*WmicOSInformation, error) {
 	// if we are running locally on windows, we want to avoid using powershell to be faster
 	_, ok := t.(*local.LocalTransport)
 	if ok && runtime.GOOS == "windows" {
@@ -64,6 +65,7 @@ func toString(s *string) string {
 	}
 	return *s
 }
+
 func intToString(i *int) string {
 	if i == nil {
 		return ""

@@ -20,8 +20,8 @@ import (
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/transports/local"
-	"go.mondoo.io/mondoo/motor/transports/mock"
+	"go.mondoo.io/mondoo/motor/providers/local"
+	"go.mondoo.io/mondoo/motor/providers/mock"
 	"go.mondoo.io/mondoo/policy"
 	"go.mondoo.io/mondoo/policy/executor"
 )
@@ -1282,14 +1282,16 @@ func TestResource_duplicateFields_v1(t *testing.T) {
 						Type:  "\x05",
 						Value: int64(1000),
 						Error: nil,
-					}},
+					},
+				},
 				map[string]interface{}{
 					"__t": llx.BoolTrue,
 					"sYZO9ps0Y4tx2p0TkrAn73WTQx83QIQu70uPtNukYNnVAzaer3Pf6xe7vAplB+cAgPbteXzizlUioUMnNJr5sg==": &llx.RawData{
 						Type:  "\x05",
 						Value: int64(1000),
 						Error: nil,
-					}},
+					},
+				},
 			},
 		},
 	})
@@ -1309,14 +1311,16 @@ func TestResource_duplicateFields_piper(t *testing.T) {
 						Type:  "\x05",
 						Value: int64(1000),
 						Error: nil,
-					}},
+					},
+				},
 				map[string]interface{}{
 					"__t": llx.BoolTrue,
 					"sYZO9ps0Y4tx2p0TkrAn73WTQx83QIQu70uPtNukYNnVAzaer3Pf6xe7vAplB+cAgPbteXzizlUioUMnNJr5sg==": &llx.RawData{
 						Type:  "\x05",
 						Value: int64(1000),
 						Error: nil,
-					}},
+					},
+				},
 			},
 		},
 	})
@@ -1425,7 +1429,8 @@ func TestDict_Methods_Array(t *testing.T) {
 		},
 		{
 			p + "params[2]",
-			0, map[string]interface{}{"ll": float64(0)},
+			0,
+			map[string]interface{}{"ll": float64(0)},
 		},
 	})
 }

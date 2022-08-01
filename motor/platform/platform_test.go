@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 )
 
 func TestFamilyParents(t *testing.T) {
@@ -82,8 +82,8 @@ func TestPrettyTitle(t *testing.T) {
 		{
 			Platform: &Platform{
 				Title:   "Red Hat Enterprise Linux",
-				Runtime: transports.RUNTIME_AWS,
-				Kind:    transports.Kind_KIND_API,
+				Runtime: providers.RUNTIME_AWS,
+				Kind:    providers.Kind_KIND_API,
 				Version: "7",
 			},
 			Expected: "Red Hat Enterprise Linux, Amazon Web Services",
@@ -91,7 +91,7 @@ func TestPrettyTitle(t *testing.T) {
 		{
 			Platform: &Platform{
 				Title:   "Red Hat Enterprise Linux",
-				Kind:    transports.Kind_KIND_API,
+				Kind:    providers.Kind_KIND_API,
 				Version: "7",
 			},
 			Expected: "Red Hat Enterprise Linux, API",
@@ -99,8 +99,8 @@ func TestPrettyTitle(t *testing.T) {
 		{
 			Platform: &Platform{
 				Title:   "Red Hat Enterprise Linux 8",
-				Runtime: transports.RUNTIME_AWS,
-				Kind:    transports.Kind_KIND_API,
+				Runtime: providers.RUNTIME_AWS,
+				Kind:    providers.Kind_KIND_API,
 				Version: "8",
 			},
 			Expected: "Red Hat Enterprise Linux 8, Amazon Web Services",
@@ -108,8 +108,8 @@ func TestPrettyTitle(t *testing.T) {
 		{
 			Platform: &Platform{
 				Title:   "Amazon Web Services 8",
-				Runtime: transports.RUNTIME_AWS,
-				Kind:    transports.Kind_KIND_API,
+				Runtime: providers.RUNTIME_AWS,
+				Kind:    providers.Kind_KIND_API,
 				Version: "8",
 			},
 			Expected: "Amazon Web Services 8",

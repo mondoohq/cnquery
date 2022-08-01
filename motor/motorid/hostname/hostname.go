@@ -2,16 +2,17 @@ package hostname
 
 import (
 	"errors"
-	"github.com/rs/zerolog/log"
-	"github.com/spf13/afero"
 	"io/ioutil"
 	"strings"
 
+	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
+
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 )
 
-func Hostname(t transports.Transport, p *platform.Platform) (string, error) {
+func Hostname(t providers.Transport, p *platform.Platform) (string, error) {
 	var hostname string
 
 	if !p.IsFamily(platform.FAMILY_UNIX) && !p.IsFamily(platform.FAMILY_WINDOWS) {

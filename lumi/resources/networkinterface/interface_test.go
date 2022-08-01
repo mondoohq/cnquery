@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/lumi/resources/networkinterface"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/transports/mock"
+	"go.mondoo.io/mondoo/motor/providers/mock"
 )
 
 // TODO: compare go network interface results with mac/linux parser

@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/platform/detector"
-	"go.mondoo.io/mondoo/motor/transports/mock"
+	"go.mondoo.io/mondoo/motor/providers/mock"
 )
 
 func newDetector(filepath string) (*detector.Detector, error) {

@@ -10,9 +10,9 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/motorid"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/local"
-	"go.mondoo.io/mondoo/motor/transports/resolver"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/local"
+	"go.mondoo.io/mondoo/motor/providers/resolver"
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
@@ -26,7 +26,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (v *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
+func (v *Resolver) Resolve(tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	localTransport, err := local.New()
@@ -114,14 +114,14 @@ func (v *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 	return resolved, nil
 }
 
-func newVagrantAsset(sshConfig *VagrantVmSSHConfig, rootTransportConfig *transports.TransportConfig) (*asset.Asset, error) {
+func newVagrantAsset(sshConfig *VagrantVmSSHConfig, rootTransportConfig *providers.TransportConfig) (*asset.Asset, error) {
 	if sshConfig == nil {
 		return nil, errors.New("missing vagrant ssh config")
 	}
 
-	cc := &transports.TransportConfig{
+	cc := &providers.TransportConfig{
 		// TODO: do we need to support winrm?
-		Backend:  transports.TransportBackend_CONNECTION_SSH,
+		Backend:  providers.TransportBackend_CONNECTION_SSH,
 		Host:     sshConfig.HostName,
 		Insecure: strings.ToLower(sshConfig.StrictHostKeyChecking) == "no",
 
@@ -139,9 +139,9 @@ func newVagrantAsset(sshConfig *VagrantVmSSHConfig, rootTransportConfig *transpo
 	assetObj := &asset.Asset{
 		Name:        sshConfig.Host,
 		PlatformIds: []string{},
-		Connections: []*transports.TransportConfig{cc},
+		Connections: []*providers.TransportConfig{cc},
 		Platform: &platform.Platform{
-			Kind: transports.Kind_KIND_VIRTUAL_MACHINE,
+			Kind: providers.Kind_KIND_VIRTUAL_MACHINE,
 		},
 	}
 

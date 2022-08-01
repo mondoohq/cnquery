@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package platformid
@@ -6,13 +7,11 @@ import (
 	"errors"
 	"runtime"
 
-	"github.com/StackExchange/wmi"
-
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/local"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/local"
 )
 
-func windowsMachineId(t transports.Transport) (string, error) {
+func windowsMachineId(t providers.Transport) (string, error) {
 	// if we are running locally on windows, we want to avoid using powershell to be faster
 	_, ok := t.(*local.LocalTransport)
 	if ok && runtime.GOOS == "windows" {

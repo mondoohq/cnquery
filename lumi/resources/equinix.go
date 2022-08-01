@@ -6,12 +6,12 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/packethost/packngo"
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 
-	equinix_transport "go.mondoo.io/mondoo/motor/transports/equinix"
+	equinix_transport "go.mondoo.io/mondoo/motor/providers/equinix"
 )
 
-func equinixtransport(t transports.Transport) (*equinix_transport.Transport, error) {
+func equinixtransport(t providers.Transport) (*equinix_transport.Transport, error) {
 	at, ok := t.(*equinix_transport.Transport)
 	if !ok {
 		return nil, errors.New("equinix resource is not supported on this transport")

@@ -8,7 +8,7 @@ import (
 
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
-	"go.mondoo.io/mondoo/motor/transports/mock"
+	"go.mondoo.io/mondoo/motor/providers/mock"
 )
 
 func TestEC2RoleProviderInstanceIdentityUnix(t *testing.T) {

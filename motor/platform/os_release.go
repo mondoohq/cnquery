@@ -7,17 +7,17 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 )
 
-func NewOSReleaseDetector(t transports.Transport) *OSReleaseDetector {
+func NewOSReleaseDetector(t providers.Transport) *OSReleaseDetector {
 	return &OSReleaseDetector{
 		Transport: t,
 	}
 }
 
 type OSReleaseDetector struct {
-	Transport transports.Transport
+	Transport providers.Transport
 }
 
 func (d *OSReleaseDetector) command(command string) (string, error) {
@@ -145,7 +145,6 @@ func (v ReleaseVersion) MajorAtoi() (int, error) {
 }
 
 func ParseOsVersion(v string) ReleaseVersion {
-
 	m := majorminor.FindStringSubmatch(v)
 	if len(m) == 0 {
 		return ReleaseVersion{Major: v}

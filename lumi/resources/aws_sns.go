@@ -10,7 +10,7 @@ import (
 	"github.com/aws/smithy-go/transport/http"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
+	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 )
 
 func (s *lumiAwsSns) id() (string, error) {

@@ -9,7 +9,7 @@ import (
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports/network"
+	"go.mondoo.io/mondoo/motor/providers/network"
 	"go.mondoo.io/mondoo/vadvisor"
 	"go.mondoo.io/mondoo/vadvisor/sources/eol"
 )

@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
+	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 )
 
 const (

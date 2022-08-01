@@ -6,8 +6,9 @@ import (
 	"io/ioutil"
 	"time"
 
+	"go.mondoo.io/mondoo/motor/providers"
+
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
-	"go.mondoo.io/mondoo/motor/transports"
 )
 
 // This implementation reads the security products from Windows Desktop Systems
@@ -149,7 +150,7 @@ func parseProductState(state uint32) productState {
 	return res
 }
 
-func GetSecurityProducts(t transports.Transport) ([]securityProduct, error) {
+func GetSecurityProducts(t providers.Transport) ([]securityProduct, error) {
 	c, err := t.RunCommand(powershell.Encode(windowsSecurityProducts))
 	if err != nil {
 		return nil, err

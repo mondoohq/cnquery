@@ -12,8 +12,8 @@ import (
 	"go.mondoo.io/mondoo/motor/motorid/hostname"
 	"go.mondoo.io/mondoo/motor/motorid/machineid"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/mock"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/mock"
 )
 
 type PlatformFingerprint struct {
@@ -23,7 +23,7 @@ type PlatformFingerprint struct {
 	// Labels      map[string]string
 }
 
-func IdentifyPlatform(t transports.Transport, p *platform.Platform, idDetectors []transports.PlatformIdDetector) (*PlatformFingerprint, error) {
+func IdentifyPlatform(t providers.Transport, p *platform.Platform, idDetectors []providers.PlatformIdDetector) (*PlatformFingerprint, error) {
 	if len(idDetectors) == 0 {
 		idDetectors = t.PlatformIdDetectors()
 	}
@@ -70,7 +70,7 @@ func gatherNameForPlatformId(id string) string {
 	return ""
 }
 
-func GatherPlatformIDs(t transports.Transport, p *platform.Platform, idDetector transports.PlatformIdDetector) ([]string, error) {
+func GatherPlatformIDs(t providers.Transport, p *platform.Platform, idDetector providers.PlatformIdDetector) ([]string, error) {
 	transport := t
 	// helper for recoding transport to extract the original transport
 	recT, ok := t.(*mock.RecordTransport)
@@ -80,20 +80,20 @@ func GatherPlatformIDs(t transports.Transport, p *platform.Platform, idDetector 
 
 	var identifier string
 	switch idDetector {
-	case transports.HostnameDetector:
+	case providers.HostnameDetector:
 		// NOTE: we need to be careful with hostname's since they are not required to be unique
 		hostname, hostErr := hostname.Hostname(t, p)
 		if hostErr == nil && len(hostname) > 0 {
 			identifier = "//platformid.api.mondoo.app/hostname/" + hostname
 		}
 		return []string{identifier}, hostErr
-	case transports.MachineIdDetector:
+	case providers.MachineIdDetector:
 		guid, hostErr := machineid.MachineId(t, p)
 		if hostErr == nil && len(guid) > 0 {
 			identifier = "//platformid.api.mondoo.app/machineid/" + guid
 		}
 		return []string{identifier}, hostErr
-	case transports.AWSEc2Detector:
+	case providers.AWSEc2Detector:
 		metadata, err := awsec2.Resolve(transport, p)
 		if err != nil {
 			return nil, err
@@ -104,17 +104,17 @@ func GatherPlatformIDs(t transports.Transport, p *platform.Platform, idDetector 
 		}
 		return []string{identifier}, nil
 
-	case transports.CloudDetector:
+	case providers.CloudDetector:
 		identifier := clouddetect.Detect(t, p)
 		return []string{identifier}, nil
-	case transports.SshHostKey:
+	case providers.SshHostKey:
 		identifier, err := sshhostkey.Detect(t, p)
 		if err != nil {
 			return nil, err
 		}
 		return identifier, err
-	case transports.TransportPlatformIdentifierDetector:
-		identifiable, ok := transport.(transports.TransportPlatformIdentifier)
+	case providers.TransportPlatformIdentifierDetector:
+		identifiable, ok := transport.(providers.TransportPlatformIdentifier)
 		if !ok {
 			return nil, errors.New("the transport-platform-id detector is not supported for transport")
 		}

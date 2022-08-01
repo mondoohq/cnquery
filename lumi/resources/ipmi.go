@@ -4,11 +4,11 @@ import (
 	"errors"
 
 	"go.mondoo.io/mondoo/lumi/resources/ipmi"
-	"go.mondoo.io/mondoo/motor/transports"
-	ipmi_transport "go.mondoo.io/mondoo/motor/transports/ipmi"
+	"go.mondoo.io/mondoo/motor/providers"
+	ipmi_transport "go.mondoo.io/mondoo/motor/providers/ipmi"
 )
 
-func getIpmiInstance(t transports.Transport) (*ipmi.IpmiClient, error) {
+func getIpmiInstance(t providers.Transport) (*ipmi.IpmiClient, error) {
 	it, ok := t.(*ipmi_transport.Transport)
 	if !ok {
 		return nil, errors.New("ipmi resource is not supported on this transport")

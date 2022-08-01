@@ -3,8 +3,8 @@ package gcp
 import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
-	"go.mondoo.io/mondoo/motor/transports"
-	gcp_transport "go.mondoo.io/mondoo/motor/transports/gcp"
+	"go.mondoo.io/mondoo/motor/providers"
+	gcp_transport "go.mondoo.io/mondoo/motor/providers/gcp"
 )
 
 type GcpOrgResolver struct{}
@@ -17,7 +17,7 @@ func (r *GcpOrgResolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryProjects}
 }
 
-func (r *GcpOrgResolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *GcpOrgResolver) Resolve(tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	if tc == nil || tc.Options["organization"] == "" {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/lumi/resources/groups"
-	"go.mondoo.io/mondoo/motor/transports/mock"
+	"go.mondoo.io/mondoo/motor/providers/mock"
 )
 
 func TestParseDscacheutilResult(t *testing.T) {

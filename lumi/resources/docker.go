@@ -7,7 +7,7 @@ import (
 
 	docker_types "github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
-	"go.mondoo.io/mondoo/motor/transports/local"
+	"go.mondoo.io/mondoo/motor/providers/local"
 )
 
 func (p *lumiDocker) id() (string, error) {

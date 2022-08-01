@@ -8,14 +8,14 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/smbios"
 	"go.mondoo.io/mondoo/motor/motorid/gce"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 )
 
 const (
 	gceIdentifierFileLinux = "/sys/class/dmi/id/product_name"
 )
 
-func Detect(t transports.Transport, p *platform.Platform) string {
+func Detect(t providers.Transport, p *platform.Platform) string {
 	productName := ""
 	if p.IsFamily("linux") {
 		// Fetching the product version from the smbios manager is slow

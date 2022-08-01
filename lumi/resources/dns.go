@@ -11,7 +11,7 @@ import (
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/dnsshake"
 	"go.mondoo.io/mondoo/lumi/resources/domain"
-	"go.mondoo.io/mondoo/motor/transports/network"
+	"go.mondoo.io/mondoo/motor/providers/network"
 )
 
 func (d *lumiDomainName) id() (string, error) {

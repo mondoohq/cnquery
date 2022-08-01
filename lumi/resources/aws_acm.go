@@ -11,7 +11,7 @@ import (
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
 	"go.mondoo.io/mondoo/lumi/resources/certificates"
-	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
+	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 )
 
 func (a *lumiAwsAcm) id() (string, error) {

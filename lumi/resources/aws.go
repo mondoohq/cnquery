@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"go.mondoo.io/mondoo/motor/transports"
-	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
+	"go.mondoo.io/mondoo/motor/providers"
+	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 )
 
 func (e *lumiAws) id() (string, error) {
@@ -28,7 +28,7 @@ func (s *lumiAws) GetRegions() ([]interface{}, error) {
 	return res, nil
 }
 
-func awstransport(t transports.Transport) (*aws_transport.Transport, error) {
+func awstransport(t providers.Transport) (*aws_transport.Transport, error) {
 	at, ok := t.(*aws_transport.Transport)
 	if !ok {
 		return nil, errors.New("aws resource is not supported on this transport; please run with -t aws")
