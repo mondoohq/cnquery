@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 )
 
 const smbiosWindowsScript = `
@@ -73,7 +73,7 @@ type smbiosSystemProduct struct {
 // see https://docs.microsoft.com/en-us/windows-hardware/drivers/bringup/sample-powershell-script-to-query-smbios-locally
 // https://docs.microsoft.com/en-us/windows-hardware/drivers/bringup/smbios
 type WindowsSmbiosManager struct {
-	t transports.Transport
+	t providers.Transport
 }
 
 func (s *WindowsSmbiosManager) Name() string {

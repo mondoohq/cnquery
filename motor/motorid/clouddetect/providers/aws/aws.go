@@ -8,10 +8,10 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/smbios"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 )
 
-func readValue(t transports.Transport, fPath string) string {
+func readValue(t providers.Transport, fPath string) string {
 	content, err := afero.ReadFile(t.FS(), fPath)
 	if err != nil {
 		log.Debug().Err(err).Msgf("unable to read %s", fPath)
@@ -20,7 +20,7 @@ func readValue(t transports.Transport, fPath string) string {
 	return string(content)
 }
 
-func Detect(t transports.Transport, p *platform.Platform) string {
+func Detect(t providers.Transport, p *platform.Platform) string {
 	var values []string
 	if p.IsFamily("linux") {
 		// Fetching the data from the smbios manager is slow for some transports
@@ -33,7 +33,6 @@ func Detect(t transports.Transport, p *platform.Platform) string {
 			readValue(t, "/sys/class/dmi/id/product_version"),
 			readValue(t, "/sys/class/dmi/id/bios_vendor"),
 		}
-
 	} else {
 		mgr, err := smbios.ResolveManager(t, p)
 		if err != nil {

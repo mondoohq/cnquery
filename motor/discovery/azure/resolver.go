@@ -9,8 +9,8 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/platform/detector"
-	"go.mondoo.io/mondoo/motor/transports"
-	azure_transport "go.mondoo.io/mondoo/motor/transports/azure"
+	"go.mondoo.io/mondoo/motor/providers"
+	azure_transport "go.mondoo.io/mondoo/motor/providers/azure"
 )
 
 const (
@@ -28,7 +28,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryInstances}
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	subscriptionID := tc.Options["subscriptionID"]
@@ -86,7 +86,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 		PlatformIds: []string{identifier},
 		Name:        "Azure subscription " + name,
 		Platform:    pf,
-		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
+		Connections: []*providers.TransportConfig{tc}, // pass-in the current config
 		Labels: map[string]string{
 			"azure.com/subscription": subscriptionID,
 			"azure.com/tenant":       *subscription.TenantID,

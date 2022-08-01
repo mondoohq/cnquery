@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/transports/container/docker_engine"
+	"go.mondoo.io/mondoo/motor/providers/container/docker_engine"
 )
 
 type DockerTopManager struct {

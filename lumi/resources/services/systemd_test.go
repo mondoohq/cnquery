@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/transports/fs"
-	"go.mondoo.io/mondoo/motor/transports/mock"
+	"go.mondoo.io/mondoo/motor/providers/fs"
+	"go.mondoo.io/mondoo/motor/providers/mock"
 )
 
 func TestParseServiceSystemDUnitFiles(t *testing.T) {

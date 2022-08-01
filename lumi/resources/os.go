@@ -17,8 +17,8 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/windows"
 	"go.mondoo.io/mondoo/motor/motorid/hostname"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports/container/docker_snapshot"
-	"go.mondoo.io/mondoo/motor/transports/tar"
+	"go.mondoo.io/mondoo/motor/providers/container/docker_snapshot"
+	"go.mondoo.io/mondoo/motor/providers/tar"
 )
 
 func (p *lumiOs) id() (string, error) {

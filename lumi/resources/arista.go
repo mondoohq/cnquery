@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	"go.mondoo.io/mondoo/lumi/resources/arista"
-	"go.mondoo.io/mondoo/motor/transports"
-	arista_transport "go.mondoo.io/mondoo/motor/transports/arista"
+	"go.mondoo.io/mondoo/motor/providers"
+	arista_transport "go.mondoo.io/mondoo/motor/providers/arista"
 )
 
-func aristaClientInstance(t transports.Transport) (*arista.Eos, *arista_transport.Transport, error) {
+func aristaClientInstance(t providers.Transport) (*arista.Eos, *arista_transport.Transport, error) {
 	at, ok := t.(*arista_transport.Transport)
 	if !ok {
 		return nil, nil, errors.New("arista.eos resource is not supported on this transport")

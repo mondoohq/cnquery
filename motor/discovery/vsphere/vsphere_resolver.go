@@ -10,9 +10,9 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/motorid"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/resolver"
-	"go.mondoo.io/mondoo/motor/transports/vsphere"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/resolver"
+	"go.mondoo.io/mondoo/motor/providers/vsphere"
 )
 
 const (
@@ -31,7 +31,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryInstances, DiscoveryHostMachines}
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// we leverage the vpshere transport to establish a connection
@@ -57,7 +57,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 	assetObj := &asset.Asset{
 		Name:        fmt.Sprintf("%s (%s)", tc.Host, info.Name),
 		Platform:    pf,
-		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
+		Connections: []*providers.TransportConfig{tc}, // pass-in the current config
 		Labels: map[string]string{
 			"vsphere.vmware.com/name": info.Name,
 			"vsphere.vmware.com/uuid": info.InstanceUuid,

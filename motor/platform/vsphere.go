@@ -3,9 +3,9 @@ package platform
 import (
 	"errors"
 
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/vsphere"
-	vsphere_transport "go.mondoo.io/mondoo/motor/transports/vsphere"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/vsphere"
+	vsphere_transport "go.mondoo.io/mondoo/motor/providers/vsphere"
 )
 
 func VspherePlatform(t *vsphere.Transport, identifier string) (*Platform, error) {
@@ -40,16 +40,16 @@ func VspherePlatform(t *vsphere.Transport, identifier string) (*Platform, error)
 				Release: esxi_version,
 				Version: esxi_version,
 				Build:   esxi_build,
-				Runtime: transports.RUNTIME_VSPHERE_HOSTS,
-				Kind:    transports.Kind_KIND_BARE_METAL,
+				Runtime: providers.RUNTIME_VSPHERE_HOSTS,
+				Kind:    providers.Kind_KIND_BARE_METAL,
 			}, nil
 
 		case "VirtualMachine":
 			// TODO: we should detect more details here
 			// vm
 			return &Platform{
-				Runtime: transports.RUNTIME_VSPHERE_VM,
-				Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
+				Runtime: providers.RUNTIME_VSPHERE_VM,
+				Kind:    providers.Kind_KIND_VIRTUAL_MACHINE,
 			}, nil
 		default:
 			return nil, errors.New("unsupported platform identifier " + identifier)
@@ -63,7 +63,7 @@ func VspherePlatform(t *vsphere.Transport, identifier string) (*Platform, error)
 		Release: info.Version,
 		Version: info.Version,
 		Build:   info.Build,
-		Kind:    transports.Kind_KIND_API,
-		Runtime: transports.RUNTIME_VSPHERE,
+		Kind:    providers.Kind_KIND_API,
+		Runtime: providers.RUNTIME_VSPHERE,
 	}, nil
 }

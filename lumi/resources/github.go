@@ -10,11 +10,11 @@ import (
 	"github.com/google/go-github/v43/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/motor/transports"
-	gh_transport "go.mondoo.io/mondoo/motor/transports/github"
+	"go.mondoo.io/mondoo/motor/providers"
+	gh_transport "go.mondoo.io/mondoo/motor/providers/github"
 )
 
-func githubtransport(t transports.Transport) (*gh_transport.Transport, error) {
+func githubtransport(t providers.Transport) (*gh_transport.Transport, error) {
 	gt, ok := t.(*gh_transport.Transport)
 	if !ok {
 		return nil, errors.New("github resource is not supported on this transport")

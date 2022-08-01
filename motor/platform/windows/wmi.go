@@ -3,12 +3,12 @@ package windows
 import (
 	"encoding/csv"
 	"errors"
-	"go.mondoo.io/mondoo/motor/transports"
 	"io"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/transports/fsutil"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/fsutil"
 )
 
 type WmicOSInformation struct {
@@ -131,7 +131,7 @@ func ParseWinWmicOS(csvData io.Reader) (*WmicOSInformation, error) {
 	}
 }
 
-func powershellGetWmiInformation(t transports.Transport) (*WmicOSInformation, error) {
+func powershellGetWmiInformation(t providers.Transport) (*WmicOSInformation, error) {
 	// wmic is available since Windows Server 2008/Vista
 	command := "wmic os get * /format:csv"
 	cmd, err := t.RunCommand(command)

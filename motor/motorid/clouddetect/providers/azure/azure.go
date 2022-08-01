@@ -8,14 +8,14 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/smbios"
 	"go.mondoo.io/mondoo/motor/motorid/azcompute"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 )
 
 const (
 	azureIdentifierFileLinux = "/sys/class/dmi/id/sys_vendor"
 )
 
-func Detect(t transports.Transport, p *platform.Platform) string {
+func Detect(t providers.Transport, p *platform.Platform) string {
 	sysVendor := ""
 	if p.IsFamily("linux") {
 		// Fetching the product version from the smbios manager is slow

@@ -13,8 +13,8 @@ import (
 	"github.com/vmware/govmomi/vim25/types"
 	"go.mondoo.io/mondoo/lumi/resources/vsphere"
 	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/transports"
-	vsphere_transport "go.mondoo.io/mondoo/motor/transports/vsphere"
+	"go.mondoo.io/mondoo/motor/providers"
+	vsphere_transport "go.mondoo.io/mondoo/motor/providers/vsphere"
 )
 
 func New(client *govmomi.Client) *VSphere {
@@ -118,7 +118,7 @@ func mapHostPowerstateToState(hostPowerState types.HostSystemPowerState) asset.S
 	}
 }
 
-func (v *VSphere) ListVirtualMachines(parentTC *transports.TransportConfig) ([]*asset.Asset, error) {
+func (v *VSphere) ListVirtualMachines(parentTC *providers.TransportConfig) ([]*asset.Asset, error) {
 	instanceUuid, err := v.InstanceUuid()
 	if err != nil {
 		return nil, err
@@ -146,7 +146,7 @@ func (v *VSphere) ListVirtualMachines(parentTC *transports.TransportConfig) ([]*
 	return res, nil
 }
 
-func vmsToAssetList(instanceUuid string, vms []*object.VirtualMachine, parentTC *transports.TransportConfig) ([]*asset.Asset, error) {
+func vmsToAssetList(instanceUuid string, vms []*object.VirtualMachine, parentTC *providers.TransportConfig) ([]*asset.Asset, error) {
 	res := []*asset.Asset{}
 	for i := range vms {
 		vm := vms[i]
@@ -181,9 +181,9 @@ func vmsToAssetList(instanceUuid string, vms []*object.VirtualMachine, parentTC 
 		}
 
 		if guestState == asset.State_STATE_RUNNING {
-			ha.Connections = []*transports.TransportConfig{
+			ha.Connections = []*providers.TransportConfig{
 				{
-					Backend:     transports.TransportBackend_CONNECTION_VSPHERE_VM,
+					Backend:     providers.TransportBackend_CONNECTION_VSPHERE_VM,
 					Host:        parentTC.Host,
 					Insecure:    parentTC.Insecure,
 					Credentials: parentTC.Credentials,

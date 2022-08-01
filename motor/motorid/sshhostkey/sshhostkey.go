@@ -6,12 +6,12 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
-	ssh_transport "go.mondoo.io/mondoo/motor/transports/ssh"
+	"go.mondoo.io/mondoo/motor/providers"
+	ssh_transport "go.mondoo.io/mondoo/motor/providers/ssh"
 	"golang.org/x/crypto/ssh"
 )
 
-func Detect(t transports.Transport, p *platform.Platform) ([]string, error) {
+func Detect(t providers.Transport, p *platform.Platform) ([]string, error) {
 	// if we are using an ssh connection we can read the hostkey from the connection
 	sshTransport, ok := t.(*ssh_transport.SSHTransport)
 	if ok {

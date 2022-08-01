@@ -10,7 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/logger"
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/nexus/assets"
 	"go.mondoo.io/mondoo/vadvisor"
 	"go.mondoo.io/mondoo/vadvisor/client"
@@ -61,7 +61,7 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 	kernelVersion := ""
 
 	// collect pacakges if the platform supports gathering files
-	if r.Motor.HasCapability(transports.Capability_File) {
+	if r.Motor.HasCapability(providers.Capability_File) {
 		obj, err = r.CreateResource("packages")
 		if err != nil {
 			return nil, err

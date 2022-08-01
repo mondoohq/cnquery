@@ -37,14 +37,14 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/terraform"
 	"go.mondoo.io/mondoo/motor/discovery/vagrant"
 	"go.mondoo.io/mondoo/motor/discovery/vsphere"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/stringx"
 )
 
 type Resolver interface {
 	Name() string
-	Resolve(t *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn,
-		userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error)
+	Resolve(t *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn,
+		userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error)
 	AvailableDiscoveryTargets() []string
 }
 
@@ -52,34 +52,34 @@ var resolver map[string]Resolver
 
 func init() {
 	resolver = map[string]Resolver{
-		transports.SCHEME_LOCAL:              &local.Resolver{},
-		transports.SCHEME_WINRM:              &standard.Resolver{},
-		transports.SCHEME_SSH:                &standard.Resolver{},
-		transports.SCHEME_DOCKER:             &docker_engine.Resolver{},
-		transports.SCHEME_DOCKER_IMAGE:       &docker_engine.Resolver{},
-		transports.SCHEME_DOCKER_CONTAINER:   &docker_engine.Resolver{},
-		transports.SCHEME_TAR:                &tar.Resolver{},
-		transports.SCHEME_K8S:                &k8s.Resolver{},
-		transports.SCHEME_GCR:                &gcp.GcrResolver{},
-		transports.SCHEME_GCP:                &gcp.GcpResolver{},
-		transports.SCHEME_CONTAINER_REGISTRY: &container_registry.Resolver{},
-		transports.SCHEME_AZURE:              &azure.Resolver{},
-		transports.SCHEME_AWS:                &aws.Resolver{},
-		transports.SCHEME_VAGRANT:            &vagrant.Resolver{},
-		transports.SCHEME_MOCK:               &mock.Resolver{},
-		transports.SCHEME_VSPHERE:            &vsphere.Resolver{},
-		transports.SCHEME_VSPHERE_VM:         &vsphere.VMGuestResolver{},
-		transports.SCHEME_ARISTA:             &standard.Resolver{},
-		transports.SCHEME_MS365:              &ms365.Resolver{},
-		transports.SCHEME_IPMI:               &ipmi.Resolver{},
-		transports.SCHEME_FS:                 &standard.Resolver{},
-		transports.SCHEME_EQUINIX:            &equinix.Resolver{},
-		transports.SCHEME_GITHUB:             &github.Resolver{},
-		transports.SCHEME_AWS_EC2_EBS:        &ebs.Resolver{},
-		transports.SCHEME_GITLAB:             &gitlab.Resolver{},
-		transports.SCHEME_TERRAFORM:          &terraform.Resolver{},
-		transports.SCHEME_HOST:               &network.Resolver{},
-		transports.SCHEME_TLS:                &network.Resolver{},
+		providers.SCHEME_LOCAL:              &local.Resolver{},
+		providers.SCHEME_WINRM:              &standard.Resolver{},
+		providers.SCHEME_SSH:                &standard.Resolver{},
+		providers.SCHEME_DOCKER:             &docker_engine.Resolver{},
+		providers.SCHEME_DOCKER_IMAGE:       &docker_engine.Resolver{},
+		providers.SCHEME_DOCKER_CONTAINER:   &docker_engine.Resolver{},
+		providers.SCHEME_TAR:                &tar.Resolver{},
+		providers.SCHEME_K8S:                &k8s.Resolver{},
+		providers.SCHEME_GCR:                &gcp.GcrResolver{},
+		providers.SCHEME_GCP:                &gcp.GcpResolver{},
+		providers.SCHEME_CONTAINER_REGISTRY: &container_registry.Resolver{},
+		providers.SCHEME_AZURE:              &azure.Resolver{},
+		providers.SCHEME_AWS:                &aws.Resolver{},
+		providers.SCHEME_VAGRANT:            &vagrant.Resolver{},
+		providers.SCHEME_MOCK:               &mock.Resolver{},
+		providers.SCHEME_VSPHERE:            &vsphere.Resolver{},
+		providers.SCHEME_VSPHERE_VM:         &vsphere.VMGuestResolver{},
+		providers.SCHEME_ARISTA:             &standard.Resolver{},
+		providers.SCHEME_MS365:              &ms365.Resolver{},
+		providers.SCHEME_IPMI:               &ipmi.Resolver{},
+		providers.SCHEME_FS:                 &standard.Resolver{},
+		providers.SCHEME_EQUINIX:            &equinix.Resolver{},
+		providers.SCHEME_GITHUB:             &github.Resolver{},
+		providers.SCHEME_AWS_EC2_EBS:        &ebs.Resolver{},
+		providers.SCHEME_GITLAB:             &gitlab.Resolver{},
+		providers.SCHEME_TERRAFORM:          &terraform.Resolver{},
+		providers.SCHEME_HOST:               &network.Resolver{},
+		providers.SCHEME_TLS:                &network.Resolver{},
 	}
 }
 
@@ -89,7 +89,7 @@ func ResolveAsset(root *asset.Asset, cfn credentials.CredentialFn, sfn credentia
 	// if the asset is missing a secret, we try to add this for the asset
 	credentials.EnrichAssetWithSecrets(root, sfn)
 
-	assetFallbackName := func(a *asset.Asset, c *transports.TransportConfig) {
+	assetFallbackName := func(a *asset.Asset, c *providers.TransportConfig) {
 		// set the asset name to the config name. This is only required for error cases where the discovery
 		// is not successful
 		if root.Name == "" {
@@ -119,7 +119,7 @@ func ResolveAsset(root *asset.Asset, cfn credentials.CredentialFn, sfn credentia
 			}
 		}
 
-		userIdDetectors := transports.ToPlatformIdDetectors(root.IdDetector)
+		userIdDetectors := providers.ToPlatformIdDetectors(root.IdDetector)
 
 		// resolve assets
 		resolvedAssets, err := r.Resolve(tc, cfn, sfn, userIdDetectors...)

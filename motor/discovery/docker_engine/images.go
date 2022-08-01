@@ -8,7 +8,7 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/motorid/containerid"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 )
 
 // be aware that images are prefixed with sha256:, while containers are not
@@ -55,12 +55,12 @@ func (e *dockerEngineDiscovery) ListImages() ([]*asset.Asset, error) {
 			Name:        strings.Join(dImg.RepoTags, ","),
 			PlatformIds: []string{containerid.MondooContainerImageID(digest)},
 			Platform: &platform.Platform{
-				Kind:    transports.Kind_KIND_CONTAINER_IMAGE,
-				Runtime: transports.RUNTIME_DOCKER_IMAGE,
+				Kind:    providers.Kind_KIND_CONTAINER_IMAGE,
+				Runtime: providers.RUNTIME_DOCKER_IMAGE,
 			},
-			Connections: []*transports.TransportConfig{
+			Connections: []*providers.TransportConfig{
 				{
-					Backend: transports.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE,
+					Backend: providers.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE,
 					Host:    dImg.ID,
 				},
 			},

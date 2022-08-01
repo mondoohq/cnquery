@@ -3,18 +3,17 @@ package resources_test
 import (
 	"testing"
 
-	"go.mondoo.io/mondoo/motor/transports/k8s"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/k8s"
 )
 
 func k8sTestQuery(t *testing.T, query string) []*llx.RawResult {
-	trans, err := k8s.New(&transports.TransportConfig{
-		Backend: transports.TransportBackend_CONNECTION_K8S,
+	trans, err := k8s.New(&providers.TransportConfig{
+		Backend: providers.TransportBackend_CONNECTION_K8S,
 		Options: map[string]string{
 			"path": "./testdata/k8s",
 		},

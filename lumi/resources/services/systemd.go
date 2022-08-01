@@ -15,7 +15,7 @@ import (
 	"github.com/coreos/go-systemd/unit"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 )
 
 var (
@@ -25,7 +25,7 @@ var (
 )
 
 func ResolveSystemdServiceManager(m *motor.Motor) OSServiceManager {
-	if !m.Transport.Capabilities().HasCapability(transports.Capability_RunCommand) {
+	if !m.Transport.Capabilities().HasCapability(providers.Capability_RunCommand) {
 		return &SystemdFSServiceManager{Fs: m.Transport.FS()}
 	}
 	return &SystemDServiceManager{motor: m}

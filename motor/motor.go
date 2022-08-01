@@ -7,10 +7,10 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/platform/detector"
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/events"
-	"go.mondoo.io/mondoo/motor/transports/local"
-	"go.mondoo.io/mondoo/motor/transports/mock"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/events"
+	"go.mondoo.io/mondoo/motor/providers/local"
+	"go.mondoo.io/mondoo/motor/providers/mock"
 )
 
 type MotorOption func(m *Motor)
@@ -30,7 +30,7 @@ var (
 	localTransportDetector *detector.Detector
 )
 
-func New(trans transports.Transport, motorOpts ...MotorOption) (*Motor, error) {
+func New(trans providers.Transport, motorOpts ...MotorOption) (*Motor, error) {
 	m := &Motor{
 		Transport: trans,
 	}
@@ -59,10 +59,10 @@ func New(trans transports.Transport, motorOpts ...MotorOption) (*Motor, error) {
 type Motor struct {
 	l sync.Mutex
 
-	Transport   transports.Transport
+	Transport   providers.Transport
 	asset       *asset.Asset
 	detector    *detector.Detector
-	watcher     transports.Watcher
+	watcher     providers.Watcher
 	isRecording bool
 }
 
@@ -72,7 +72,7 @@ func (m *Motor) Platform() (*platform.Platform, error) {
 	return m.detector.Platform()
 }
 
-func (m *Motor) Watcher() transports.Watcher {
+func (m *Motor) Watcher() providers.Watcher {
 	m.l.Lock()
 	defer m.l.Unlock()
 
@@ -137,7 +137,7 @@ func (m *Motor) Close() {
 	}
 }
 
-func (m *Motor) HasCapability(capability transports.Capability) bool {
+func (m *Motor) HasCapability(capability providers.Capability) bool {
 	m.l.Lock()
 	defer m.l.Unlock()
 

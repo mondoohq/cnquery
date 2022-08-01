@@ -5,9 +5,9 @@ import (
 
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
-	"go.mondoo.io/mondoo/motor/transports"
-	gitlab_transport "go.mondoo.io/mondoo/motor/transports/gitlab"
-	"go.mondoo.io/mondoo/motor/transports/resolver"
+	"go.mondoo.io/mondoo/motor/providers"
+	gitlab_transport "go.mondoo.io/mondoo/motor/providers/gitlab"
+	"go.mondoo.io/mondoo/motor/providers/resolver"
 )
 
 type Resolver struct{}
@@ -20,7 +20,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	// establish connection to GitLab
 	m, err := resolver.NewMotorConnection(tc, cfn)
 	if err != nil {
@@ -56,7 +56,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 		PlatformIds: []string{identifier},
 		Name:        "GitLab Group " + name,
 		Platform:    pf,
-		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
+		Connections: []*providers.TransportConfig{tc}, // pass-in the current config
 		State:       asset.State_STATE_ONLINE,
 	}}, nil
 }

@@ -7,13 +7,13 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/terraform"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/terraform"
 )
 
 func terraformTestQuery(t *testing.T, query string) []*llx.RawResult {
-	trans, err := terraform.New(&transports.TransportConfig{
-		Backend: transports.TransportBackend_CONNECTION_TERRAFORM,
+	trans, err := terraform.New(&providers.TransportConfig{
+		Backend: providers.TransportBackend_CONNECTION_TERRAFORM,
 		Options: map[string]string{
 			"path": "./testdata/terraform",
 		},

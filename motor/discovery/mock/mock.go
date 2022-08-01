@@ -6,8 +6,8 @@ import (
 	"go.mondoo.io/mondoo/motor/motorid"
 	"go.mondoo.io/mondoo/motor/motorid/hostname"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/resolver"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/resolver"
 )
 
 type Resolver struct{}
@@ -20,10 +20,10 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	assetObj := &asset.Asset{
 		State:       asset.State_STATE_ONLINE,
-		Connections: []*transports.TransportConfig{tc},
+		Connections: []*providers.TransportConfig{tc},
 	}
 
 	// use hostname as name if asset name was not explicitly provided
@@ -32,7 +32,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 	}
 
 	assetObj.Platform = &platform.Platform{
-		Kind: transports.Kind_KIND_BARE_METAL,
+		Kind: providers.Kind_KIND_BARE_METAL,
 	}
 
 	m, err := resolver.NewMotorConnection(tc, cfn)

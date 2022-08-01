@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
+	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 )
 
 func (g *lumiAwsGuardduty) id() (string, error) {

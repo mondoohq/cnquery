@@ -10,11 +10,11 @@ import (
 	"github.com/vmware/govmomi/object"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/vsphere"
-	"go.mondoo.io/mondoo/motor/transports"
-	vsphere_transport "go.mondoo.io/mondoo/motor/transports/vsphere"
+	"go.mondoo.io/mondoo/motor/providers"
+	vsphere_transport "go.mondoo.io/mondoo/motor/providers/vsphere"
 )
 
-func getClientInstance(t transports.Transport) (*vsphere.Client, error) {
+func getClientInstance(t providers.Transport) (*vsphere.Client, error) {
 	vt, ok := t.(*vsphere_transport.Transport)
 	if !ok {
 		return nil, errors.New("vsphere resource is not supported on this transport")
@@ -24,7 +24,7 @@ func getClientInstance(t transports.Transport) (*vsphere.Client, error) {
 	return cl, nil
 }
 
-func esxiClient(t transports.Transport, path string) (*vsphere.Esxi, error) {
+func esxiClient(t providers.Transport, path string) (*vsphere.Esxi, error) {
 	client, err := getClientInstance(t)
 	if err != nil {
 		return nil, err

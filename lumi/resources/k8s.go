@@ -8,9 +8,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/certificates"
-	"go.mondoo.io/mondoo/motor/transports"
-	k8s_transport "go.mondoo.io/mondoo/motor/transports/k8s"
-	"go.mondoo.io/mondoo/motor/transports/k8s/resources"
+	"go.mondoo.io/mondoo/motor/providers"
+	k8s_transport "go.mondoo.io/mondoo/motor/providers/k8s"
+	"go.mondoo.io/mondoo/motor/providers/k8s/resources"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
@@ -21,7 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func k8stransport(t transports.Transport) (k8s_transport.Transport, error) {
+func k8stransport(t providers.Transport) (k8s_transport.Transport, error) {
 	at, ok := t.(k8s_transport.Transport)
 	if !ok {
 		return nil, errors.New("k8s resource is not supported on this transport")

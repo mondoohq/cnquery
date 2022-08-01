@@ -16,8 +16,8 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
-	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
+	"go.mondoo.io/mondoo/motor/providers"
+	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 )
 
 func NewSSMManagedInstancesDiscovery(cfg aws.Config) (*SSMManagedInstances, error) {
@@ -158,17 +158,16 @@ func mapSmmManagedPingStateCode(pingStatus types.PingStatus) asset.State {
 }
 
 func ssmInstanceToAsset(account string, region string, instance types.InstanceInformation, clonedConfig aws.Config) *asset.Asset {
-
 	asset := &asset.Asset{
 		PlatformIds: []string{awsec2.MondooInstanceID(account, region, *instance.InstanceId)},
 		Name:        *instance.InstanceId,
 		Platform: &platform.Platform{
-			Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
-			Runtime: transports.RUNTIME_AWS_SSM_MANAGED,
+			Kind:    providers.Kind_KIND_VIRTUAL_MACHINE,
+			Runtime: providers.RUNTIME_AWS_SSM_MANAGED,
 		},
 
-		Connections: []*transports.TransportConfig{{
-			Backend: transports.TransportBackend_CONNECTION_AWS_SSM_RUN_COMMAND,
+		Connections: []*providers.TransportConfig{{
+			Backend: providers.TransportBackend_CONNECTION_AWS_SSM_RUN_COMMAND,
 			Host:    *instance.InstanceId,
 		}},
 		State:  mapSmmManagedPingStateCode(instance.PingStatus),

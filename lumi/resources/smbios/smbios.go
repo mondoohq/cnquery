@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 )
 
 type SmBiosInfo struct {
@@ -57,7 +57,7 @@ type SmBiosManager interface {
 	Info() (*SmBiosInfo, error)
 }
 
-func ResolveManager(t transports.Transport, p *platform.Platform) (SmBiosManager, error) {
+func ResolveManager(t providers.Transport, p *platform.Platform) (SmBiosManager, error) {
 	var biosM SmBiosManager
 
 	// check darwin before unix since darwin is also a unix

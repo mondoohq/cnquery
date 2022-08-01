@@ -7,9 +7,9 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/platform/detector"
-	"go.mondoo.io/mondoo/motor/transports"
-	k8s_transport "go.mondoo.io/mondoo/motor/transports/k8s"
-	"go.mondoo.io/mondoo/motor/transports/local"
+	"go.mondoo.io/mondoo/motor/providers"
+	k8s_transport "go.mondoo.io/mondoo/motor/providers/k8s"
+	"go.mondoo.io/mondoo/motor/providers/local"
 )
 
 const (
@@ -32,7 +32,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	}
 }
 
-func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 	namespacesFilter := []string{}
 
@@ -114,7 +114,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 		PlatformIds: []string{clusterIdentifier},
 		Name:        clusterName,
 		Platform:    pf,
-		Connections: []*transports.TransportConfig{tc}, // pass-in the current config
+		Connections: []*providers.TransportConfig{tc}, // pass-in the current config
 		State:       asset.State_STATE_RUNNING,
 	})
 
@@ -128,7 +128,7 @@ func (r *Resolver) Resolve(tc *transports.TransportConfig, cfn credentials.Crede
 }
 
 // addSeparateAssets Depending on config options it will search for additional assets which should be listed separately.
-func addSeparateAssets(tc *transports.TransportConfig, transport k8s_transport.Transport, namespacesFilter []string, clusterIdentifier string) ([]*asset.Asset, error) {
+func addSeparateAssets(tc *providers.TransportConfig, transport k8s_transport.Transport, namespacesFilter []string, clusterIdentifier string) ([]*asset.Asset, error) {
 	var resolved []*asset.Asset
 
 	// discover k8s pods

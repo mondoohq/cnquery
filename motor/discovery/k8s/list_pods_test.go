@@ -6,8 +6,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/k8s"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/k8s"
 
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
@@ -27,8 +27,8 @@ func TestListPods(t *testing.T) {
 		Name:    "k8s-pod",
 		Title:   "Kubernetes Pod",
 		Family:  []string{"k8s", "k8s-workload"},
-		Kind:    transports.Kind_KIND_K8S_OBJECT,
-		Runtime: transports.RUNTIME_KUBERNETES_CLUSTER,
+		Kind:    providers.Kind_KIND_K8S_OBJECT,
+		Runtime: providers.RUNTIME_KUBERNETES_CLUSTER,
 	}
 	// Seed namespaces
 	nss := []corev1.Namespace{
@@ -77,7 +77,7 @@ func TestListPods(t *testing.T) {
 		clusterIdentifier + "/namespace/" + nss[0].Name + "/pods/name/" + pods[1].Name + "/uid/" + string(pods[1].UID),
 	}
 
-	tc := &transports.TransportConfig{}
+	tc := &providers.TransportConfig{}
 	assets, err := ListPods(transport, tc, clusterIdentifier, nil)
 	assert.NoError(t, err)
 

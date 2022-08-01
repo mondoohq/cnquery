@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/transports/container/docker_engine"
+	"go.mondoo.io/mondoo/motor/providers/container/docker_engine"
 )
 
 func TestDockerProcsList(t *testing.T) {

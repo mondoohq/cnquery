@@ -5,19 +5,19 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 )
 
 func TestManifestResolver(t *testing.T) {
 	resolver := &Resolver{}
-	manifestFile := "../../transports/k8s/resources/testdata/appsv1.pod.yaml"
+	manifestFile := "../../providers/k8s/resources/testdata/appsv1.pod.yaml"
 
-	assetList, err := resolver.Resolve(&transports.TransportConfig{
-		Backend: transports.TransportBackend_CONNECTION_K8S,
+	assetList, err := resolver.Resolve(&providers.TransportConfig{
+		Backend: providers.TransportBackend_CONNECTION_K8S,
 		Options: map[string]string{
 			"path": manifestFile,
 		},
-		Discover: &transports.Discovery{
+		Discover: &providers.Discovery{
 			Targets: []string{"all"},
 		},
 	}, nil, nil)

@@ -1,3 +1,4 @@
+//go:build debugtest
 // +build debugtest
 
 package gcp
@@ -7,20 +8,20 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/transports"
-	gcp_transport "go.mondoo.io/mondoo/motor/transports/gcp"
+	"go.mondoo.io/mondoo/motor/providers"
+	gcp_transport "go.mondoo.io/mondoo/motor/providers/gcp"
 )
 
 func TestGcpDiscovery(t *testing.T) {
 	projectid, err := gcp_transport.GetCurrentProject()
 	require.NoError(t, err)
 
-	tc := &transports.TransportConfig{
-		Backend: transports.TransportBackend_CONNECTION_GCP,
+	tc := &providers.TransportConfig{
+		Backend: providers.TransportBackend_CONNECTION_GCP,
 		Options: map[string]string{
 			"project": projectid,
 		},
-		Discover: &transports.Discovery{
+		Discover: &providers.Discovery{
 			Targets: []string{"all"},
 		},
 	}

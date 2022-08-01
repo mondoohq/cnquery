@@ -5,11 +5,11 @@ import (
 	"strconv"
 
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/gitlab"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/gitlab"
 )
 
-func gitlabtransport(t transports.Transport) (*gitlab.Transport, error) {
+func gitlabtransport(t providers.Transport) (*gitlab.Transport, error) {
 	gt, ok := t.(*gitlab.Transport)
 	if !ok {
 		return nil, errors.New("gitlab resource is not supported on this transport")

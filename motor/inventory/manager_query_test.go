@@ -10,7 +10,7 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	v1 "go.mondoo.io/mondoo/motor/inventory/v1"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 	mockvault "go.mondoo.io/mondoo/motor/vault/mock"
 )
 
@@ -28,8 +28,8 @@ func TestSecretManagerPassword(t *testing.T) {
 	assetObj := &asset.Asset{
 		Name:     "asset-name",
 		Platform: &platform.Platform{Name: "ubuntu"},
-		Connections: []*transports.TransportConfig{
-			{Backend: transports.TransportBackend_CONNECTION_SSH, Insecure: true},
+		Connections: []*providers.TransportConfig{
+			{Backend: providers.TransportBackend_CONNECTION_SSH, Insecure: true},
 		},
 	}
 
@@ -59,8 +59,8 @@ func TestSecretManagerPrivateKey(t *testing.T) {
 	assetObj := &asset.Asset{
 		Name:     "asset-name",
 		Platform: &platform.Platform{Name: "ubuntu"},
-		Connections: []*transports.TransportConfig{
-			{Backend: transports.TransportBackend_CONNECTION_SSH, Insecure: true},
+		Connections: []*providers.TransportConfig{
+			{Backend: providers.TransportBackend_CONNECTION_SSH, Insecure: true},
 		},
 	}
 
@@ -90,8 +90,8 @@ func TestSecretManagerBadKey(t *testing.T) {
 	assetObj := &asset.Asset{
 		Name:     "asset-name",
 		Platform: &platform.Platform{Name: "ubuntu"},
-		Connections: []*transports.TransportConfig{
-			{Backend: transports.TransportBackend_CONNECTION_SSH, Insecure: true},
+		Connections: []*providers.TransportConfig{
+			{Backend: providers.TransportBackend_CONNECTION_SSH, Insecure: true},
 		},
 	}
 

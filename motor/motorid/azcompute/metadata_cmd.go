@@ -9,7 +9,7 @@ import (
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
 	"go.mondoo.io/mondoo/motor/discovery/azure"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
+	"go.mondoo.io/mondoo/motor/providers"
 )
 
 const (
@@ -17,7 +17,7 @@ const (
 	metadataIdentityScriptWindows = `Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -URI http://169.254.169.254/metadata/instance?api-version=2021-02-01 -UseBasicParsing | ConvertTo-Json`
 )
 
-func NewCommandInstanceMetadata(t transports.Transport, p *platform.Platform) *CommandInstanceMetadata {
+func NewCommandInstanceMetadata(t providers.Transport, p *platform.Platform) *CommandInstanceMetadata {
 	return &CommandInstanceMetadata{
 		transport: t,
 		platform:  p,
@@ -25,7 +25,7 @@ func NewCommandInstanceMetadata(t transports.Transport, p *platform.Platform) *C
 }
 
 type CommandInstanceMetadata struct {
-	transport transports.Transport
+	transport providers.Transport
 	platform  *platform.Platform
 }
 

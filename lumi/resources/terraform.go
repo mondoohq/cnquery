@@ -15,11 +15,11 @@ import (
 	"github.com/zclconf/go-cty/cty/function"
 	"github.com/zclconf/go-cty/cty/function/stdlib"
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/terraform"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/terraform"
 )
 
-func terraformtransport(t transports.Transport) (*terraform.Transport, error) {
+func terraformtransport(t providers.Transport) (*terraform.Transport, error) {
 	gt, ok := t.(*terraform.Transport)
 	if !ok {
 		return nil, errors.New("terraform resource is not supported on this transport")

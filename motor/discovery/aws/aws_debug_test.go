@@ -1,3 +1,4 @@
+//go:build debugtest
 // +build debugtest
 
 package aws
@@ -7,13 +8,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/transports"
-	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
+	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 )
 
 func TestEC2Discovery(t *testing.T) {
-	tc := &transports.TransportConfig{
-		Backend: transports.TransportBackend_CONNECTION_AWS,
+	tc := &providers.TransportConfig{
+		Backend: providers.TransportBackend_CONNECTION_AWS,
 		Options: map[string]string{
 			"profile": "mondoo-demo",
 			"region":  "us-east-1",

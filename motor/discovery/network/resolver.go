@@ -4,8 +4,8 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/platform/detector"
-	"go.mondoo.io/mondoo/motor/transports"
-	network_transport "go.mondoo.io/mondoo/motor/transports/network"
+	"go.mondoo.io/mondoo/motor/providers"
+	network_transport "go.mondoo.io/mondoo/motor/providers/network"
 )
 
 type Resolver struct{}
@@ -22,7 +22,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll}
 }
 
-func (r *Resolver) Resolve(conf *transports.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...transports.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(conf *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	transport, err := network_transport.New(conf)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func (r *Resolver) Resolve(conf *transports.TransportConfig, cfn credentials.Cre
 		PlatformIds: []string{platformID},
 		Platform:    platform,
 		Name:        conf.Host,
-		Connections: []*transports.TransportConfig{conf},
+		Connections: []*providers.TransportConfig{conf},
 		// FIXME: We don't really know at this point if it is online... need to
 		// check first
 		State: asset.State_STATE_ONLINE,

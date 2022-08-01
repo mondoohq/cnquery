@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/mock"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/mock"
 )
 
 func TestSystemSetup(t *testing.T) {
@@ -37,7 +37,7 @@ func TestSystemSetup(t *testing.T) {
 	assert.Equal(t, "No", so.ParseDisableKeyboardWhenEnclosureLockIsEngaged(mustRunCmd(mock, "systemsetup -getdisablekeyboardwhenenclosurelockisengaged")))
 }
 
-func mustRunCmd(t transports.Transport, command string) string {
+func mustRunCmd(t providers.Transport, command string) string {
 	cmd, err := t.RunCommand(command)
 	if err != nil {
 		panic(err)

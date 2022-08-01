@@ -5,31 +5,31 @@ import (
 	"runtime"
 
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
-	"go.mondoo.io/mondoo/motor/transports/arista"
-	"go.mondoo.io/mondoo/motor/transports/aws"
-	"go.mondoo.io/mondoo/motor/transports/azure"
-	"go.mondoo.io/mondoo/motor/transports/equinix"
-	"go.mondoo.io/mondoo/motor/transports/gcp"
-	"go.mondoo.io/mondoo/motor/transports/github"
-	"go.mondoo.io/mondoo/motor/transports/gitlab"
-	ipmi "go.mondoo.io/mondoo/motor/transports/ipmi"
-	k8s_transport "go.mondoo.io/mondoo/motor/transports/k8s"
-	"go.mondoo.io/mondoo/motor/transports/local"
-	"go.mondoo.io/mondoo/motor/transports/ms365"
-	"go.mondoo.io/mondoo/motor/transports/network"
-	"go.mondoo.io/mondoo/motor/transports/terraform"
-	"go.mondoo.io/mondoo/motor/transports/vsphere"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/arista"
+	"go.mondoo.io/mondoo/motor/providers/aws"
+	"go.mondoo.io/mondoo/motor/providers/azure"
+	"go.mondoo.io/mondoo/motor/providers/equinix"
+	"go.mondoo.io/mondoo/motor/providers/gcp"
+	"go.mondoo.io/mondoo/motor/providers/github"
+	"go.mondoo.io/mondoo/motor/providers/gitlab"
+	ipmi "go.mondoo.io/mondoo/motor/providers/ipmi"
+	k8s_transport "go.mondoo.io/mondoo/motor/providers/k8s"
+	"go.mondoo.io/mondoo/motor/providers/local"
+	"go.mondoo.io/mondoo/motor/providers/ms365"
+	"go.mondoo.io/mondoo/motor/providers/network"
+	"go.mondoo.io/mondoo/motor/providers/terraform"
+	"go.mondoo.io/mondoo/motor/providers/vsphere"
 )
 
-func New(t transports.Transport) *Detector {
+func New(t providers.Transport) *Detector {
 	return &Detector{
 		transport: t,
 	}
 }
 
 type Detector struct {
-	transport transports.Transport
+	transport providers.Transport
 	cache     *platform.Platform
 }
 
@@ -80,29 +80,29 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 		return &platform.Platform{
 			Name:    "aws",
 			Title:   "Amazon Web Services",
-			Kind:    transports.Kind_KIND_API,
-			Runtime: transports.RUNTIME_AWS,
+			Kind:    providers.Kind_KIND_API,
+			Runtime: providers.RUNTIME_AWS,
 		}, nil
 	case *gcp.Transport:
 		return &platform.Platform{
 			Name:    "gcp",
 			Title:   "Google Cloud Platform",
-			Kind:    transports.Kind_KIND_API,
-			Runtime: transports.RUNTIME_GCP,
+			Kind:    providers.Kind_KIND_API,
+			Runtime: providers.RUNTIME_GCP,
 		}, nil
 	case *azure.Transport:
 		return &platform.Platform{
 			Name:    "azure",
 			Title:   "Microsoft Azure",
-			Kind:    transports.Kind_KIND_API,
-			Runtime: transports.RUNTIME_AZ,
+			Kind:    providers.Kind_KIND_API,
+			Runtime: providers.RUNTIME_AZ,
 		}, nil
 	case *ms365.Transport:
 		return &platform.Platform{
 			Name:    "microsoft365",
 			Title:   "Microsoft 365",
-			Kind:    transports.Kind_KIND_API,
-			Runtime: transports.RUNTIME_MICROSOFT_GRAPH,
+			Kind:    providers.Kind_KIND_API,
+			Runtime: providers.RUNTIME_MICROSOFT_GRAPH,
 		}, nil
 	case *ipmi.Transport:
 		return &platform.Platform{
@@ -115,8 +115,8 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 		return &platform.Platform{
 			Name:    "equinix",
 			Title:   "Equinix Metal",
-			Kind:    transports.Kind_KIND_API,
-			Runtime: transports.RUNTIME_EQUINIX_METAL,
+			Kind:    providers.Kind_KIND_API,
+			Runtime: providers.RUNTIME_EQUINIX_METAL,
 		}, nil
 	case k8s_transport.Transport:
 		return pt.PlatformInfo(), nil
@@ -124,21 +124,21 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 		return &platform.Platform{
 			Name:    "github",
 			Title:   "GitHub",
-			Kind:    transports.Kind_KIND_API,
-			Runtime: transports.RUNTIME_GITHUB,
+			Kind:    providers.Kind_KIND_API,
+			Runtime: providers.RUNTIME_GITHUB,
 		}, nil
 	case *gitlab.Transport:
 		return &platform.Platform{
 			Name:    "gitlab",
 			Title:   "GitLab",
-			Kind:    transports.Kind_KIND_API,
-			Runtime: transports.RUNTIME_GITLAB,
+			Kind:    providers.Kind_KIND_API,
+			Runtime: providers.RUNTIME_GITLAB,
 		}, nil
 	case *terraform.Transport:
 		return &platform.Platform{
 			Name:    "terraform",
 			Title:   "Terraform",
-			Kind:    transports.Kind_KIND_API,
+			Kind:    providers.Kind_KIND_API,
 			Runtime: "",
 		}, nil
 	case *network.Transport:

@@ -15,8 +15,8 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/transports"
-	aws_transport "go.mondoo.io/mondoo/motor/transports/aws"
+	"go.mondoo.io/mondoo/motor/providers"
+	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 
 	"github.com/rs/zerolog/log"
 )
@@ -152,24 +152,24 @@ func (ec2i *Ec2Instances) List() ([]*asset.Asset, error) {
 func instanceToAsset(account string, region string, instance types.Instance, insecure bool, passInLabels map[string]string) *asset.Asset {
 	asset := &asset.Asset{
 		PlatformIds: []string{awsec2.MondooInstanceID(account, region, *instance.InstanceId)},
-		Connections: []*transports.TransportConfig{},
+		Connections: []*providers.TransportConfig{},
 		Labels:      make(map[string]string),
 		IdDetector:  []string{"awsec2"},
 		Name:        *instance.InstanceId,
 		Platform: &platform.Platform{
-			Kind:    transports.Kind_KIND_VIRTUAL_MACHINE,
-			Runtime: transports.RUNTIME_AWS_EC2,
+			Kind:    providers.Kind_KIND_VIRTUAL_MACHINE,
+			Runtime: providers.RUNTIME_AWS_EC2,
 		},
 		State: mapEc2InstanceStateCode(instance.State),
 	}
 
 	// if there is a public ip, we assume ssh is an option
 	if instance.PublicIpAddress != nil {
-		asset.Connections = append(asset.Connections, &transports.TransportConfig{
-			Backend:  transports.TransportBackend_CONNECTION_SSH,
+		asset.Connections = append(asset.Connections, &providers.TransportConfig{
+			Backend:  providers.TransportBackend_CONNECTION_SSH,
 			Host:     *instance.PublicIpAddress,
 			Insecure: insecure,
-			Runtime:  transports.RUNTIME_AWS_EC2,
+			Runtime:  providers.RUNTIME_AWS_EC2,
 		})
 	}
 

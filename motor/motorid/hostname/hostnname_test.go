@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/motorid/hostname"
-	"go.mondoo.io/mondoo/motor/transports/mock"
+	"go.mondoo.io/mondoo/motor/providers/mock"
 )
 
 func TestHostnameLinuxEtcHostname(t *testing.T) {
