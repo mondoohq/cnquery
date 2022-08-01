@@ -6,13 +6,13 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func FilterResource(resType *ApiResource, resourceObjects []runtime.Object, name string) ([]runtime.Object, error) {
+func FilterResource(resType *ApiResource, resourceObjects []runtime.Object, name string, namespace string) ([]runtime.Object, error) {
 	// filter root resources
-	roots := filterResource(resourceObjects, resType.Resource.Kind, name)
+	roots := filterResource(resourceObjects, resType.Resource.Kind, name, namespace)
 	return roots, nil
 }
 
-func filterResource(resources []runtime.Object, kind string, name string) []runtime.Object {
+func filterResource(resources []runtime.Object, kind string, name string, namespace string) []runtime.Object {
 	filtered := []runtime.Object{}
 
 	for i := range resources {
@@ -25,6 +25,9 @@ func filterResource(resources []runtime.Object, kind string, name string) []runt
 		}
 
 		if res.GetObjectKind().GroupVersionKind().Kind == kind {
+			if len(namespace) > 0 && o.GetNamespace() != namespace {
+				continue
+			}
 			if len(name) > 0 && o.GetName() == name {
 				filtered = append(filtered, res)
 			} else if len(name) == 0 {

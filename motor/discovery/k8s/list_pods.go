@@ -35,18 +35,18 @@ func ListPods(transport k8s.Transport, connection *providers.TransportConfig, cl
 	assets := []*asset.Asset{}
 	for i := range pods {
 		pod := pods[i]
-		podPlatform := transport.PlatformInfo()
-		podPlatform.Version = pod.APIVersion
-		podPlatform.Build = pod.ResourceVersion
-		podPlatform.Labels = map[string]string{
+		platformData := transport.PlatformInfo()
+		platformData.Version = pod.APIVersion
+		platformData.Build = pod.ResourceVersion
+		platformData.Labels = map[string]string{
 			"namespace": pod.Namespace,
 			"uid":       string(pod.UID),
 		}
-		podPlatform.Kind = providers.Kind_KIND_K8S_OBJECT
+		platformData.Kind = providers.Kind_KIND_K8S_OBJECT
 		asset := &asset.Asset{
-			PlatformIds: []string{k8s.NewPlatformPodId(clusterIdentifier, pod.Namespace, pod.Name, string(pod.UID))},
+			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "pods", pod.Namespace, pod.Name, string(pod.UID))},
 			Name:        pod.Namespace + "/" + pod.Name,
-			Platform:    podPlatform,
+			Platform:    platformData,
 			Connections: []*providers.TransportConfig{connection},
 			State:       asset.State_STATE_ONLINE,
 			Labels:      pod.Labels,

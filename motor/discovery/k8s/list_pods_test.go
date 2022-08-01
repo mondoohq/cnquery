@@ -21,9 +21,6 @@ func TestListPods(t *testing.T) {
 	transport := k8s.NewMockTransport(mockCtrl)
 
 	podPlatform := &platform.Platform{
-		Release: "",
-		Build:   "",
-		Arch:    "",
 		Name:    "k8s-pod",
 		Title:   "Kubernetes Pod",
 		Family:  []string{"k8s", "k8s-workload"},

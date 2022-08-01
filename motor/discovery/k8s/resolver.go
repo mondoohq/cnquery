@@ -14,7 +14,8 @@ import (
 
 const (
 	DiscoveryAll             = "all"
-	DiscoverPods             = "pods"
+	DiscoveryPods            = "pods"
+	DiscoveryCronJobs        = "cronjobs"
 	DiscoveryContainerImages = "container-images"
 )
 
@@ -27,7 +28,8 @@ func (r *Resolver) Name() string {
 func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{
 		DiscoveryAll,
-		DiscoverPods,
+		DiscoveryPods,
+		DiscoveryCronJobs,
 		DiscoveryContainerImages,
 	}
 }
@@ -63,7 +65,6 @@ func (r *Resolver) Resolve(tc *providers.TransportConfig, cfn credentials.Creden
 
 	log.Debug().Strs("namespaceFilter", namespacesFilter).Msg("resolve k8s assets")
 
-	// add aws api as asset
 	trans, err := k8s_transport.New(tc)
 	if err != nil {
 		return nil, err
@@ -132,7 +133,7 @@ func addSeparateAssets(tc *providers.TransportConfig, transport k8s_transport.Tr
 	var resolved []*asset.Asset
 
 	// discover k8s pods
-	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoverPods) {
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryPods) {
 		// fetch pod information
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for pods")
 		connection := tc.Clone()
@@ -155,5 +156,18 @@ func addSeparateAssets(tc *providers.TransportConfig, transport k8s_transport.Tr
 		}
 		resolved = append(resolved, assetList...)
 	}
+
+	// discover cronjobs
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryCronJobs) {
+		log.Debug().Strs("namespace", namespacesFilter).Msg("search for cronjobs")
+		connection := tc.Clone()
+		assetList, err := ListCronJobs(transport, connection, clusterIdentifier, namespacesFilter)
+		if err != nil {
+			log.Error().Err(err).Msg("could not fetch k8s cronjobs")
+			return nil, err
+		}
+		resolved = append(resolved, assetList...)
+	}
+
 	return resolved, nil
 }

@@ -1,11 +1,15 @@
 package k8s
 
+//go:generate  go run github.com/golang/mock/mockgen -source=./transport.go -destination=./mock_transport.go -package=k8s
+
 import (
 	"errors"
+	"strings"
 
 	platform "go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/k8s/resources"
+	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/version"
@@ -16,7 +20,6 @@ const (
 	OPTION_NAMESPACE = "namespace"
 )
 
-// go run github.com/golang/mock/mockgen -source=./transport.go -destination=./mock_transport.go -package=k8s
 type Transport interface {
 	providers.Transport
 	providers.TransportPlatformIdentifier
@@ -25,7 +28,7 @@ type Transport interface {
 
 	// Resources returns the resources that match the provided kind and name. If not kind and name
 	// are provided, then all cluster resources are returned.
-	Resources(kind string, name string) (*ResourceResult, error)
+	Resources(kind string, name string, namespace string) (*ResourceResult, error)
 	ServerVersion() *version.Info
 	SupportedResourceTypes() (*resources.ApiResourceIndex, error)
 
@@ -36,6 +39,8 @@ type Transport interface {
 	Namespaces() ([]v1.Namespace, error)
 	Pod(namespace string, name string) (*v1.Pod, error)
 	Pods(namespace v1.Namespace) ([]v1.Pod, error)
+	CronJob(namespace string, name string) (*batchv1.CronJob, error)
+	CronJobs(namespace v1.Namespace) ([]batchv1.CronJob, error)
 }
 
 type ClusterInfo struct {
@@ -64,8 +69,28 @@ func New(tc *providers.TransportConfig) (Transport, error) {
 
 	manifestFile, manifestDefined := tc.Options[OPTION_MANIFEST]
 	if manifestDefined {
-		return newManifestTransport(WithManifestFile(manifestFile), WithNamespace(tc.Options[OPTION_NAMESPACE])), nil
+		return newManifestTransport(tc.PlatformId, WithManifestFile(manifestFile), WithNamespace(tc.Options[OPTION_NAMESPACE])), nil
 	}
 
 	return newApiTransport(tc.Options[OPTION_NAMESPACE], tc.PlatformId)
+}
+
+func getPlatformInfo(selectedResourceID string, runtime string) *platform.Platform {
+	platformData := &platform.Platform{
+		Family:  []string{"k8s", "k8s-workload"},
+		Kind:    providers.Kind_KIND_K8S_OBJECT,
+		Runtime: runtime,
+	}
+	switch selected := selectedResourceID; {
+	case strings.Contains(selected, "/pods/"):
+		platformData.Name = "k8s-pod"
+		platformData.Title = "Kubernetes Pod"
+		return platformData
+	case strings.Contains(selected, "/cronjobs/"):
+		platformData.Name = "k8s-cronjob"
+		platformData.Title = "Kubernetes CronJob"
+		return platformData
+	}
+
+	return nil
 }

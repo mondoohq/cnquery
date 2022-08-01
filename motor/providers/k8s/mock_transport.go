@@ -10,9 +10,10 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	afero "github.com/spf13/afero"
 	platform "go.mondoo.io/mondoo/motor/platform"
-	transports "go.mondoo.io/mondoo/motor/providers"
+	providers "go.mondoo.io/mondoo/motor/providers"
 	resources "go.mondoo.io/mondoo/motor/providers/k8s/resources"
-	v1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/batch/v1"
+	v10 "k8s.io/api/core/v1"
 	version "k8s.io/apimachinery/pkg/version"
 )
 
@@ -40,10 +41,10 @@ func (m *MockTransport) EXPECT() *MockTransportMockRecorder {
 }
 
 // Capabilities mocks base method.
-func (m *MockTransport) Capabilities() transports.Capabilities {
+func (m *MockTransport) Capabilities() providers.Capabilities {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Capabilities")
-	ret0, _ := ret[0].(transports.Capabilities)
+	ret0, _ := ret[0].(providers.Capabilities)
 	return ret0
 }
 
@@ -65,6 +66,36 @@ func (mr *MockTransportMockRecorder) Close() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockTransport)(nil).Close))
 }
 
+// CronJob mocks base method.
+func (m *MockTransport) CronJob(namespace, name string) (*v1.CronJob, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CronJob", namespace, name)
+	ret0, _ := ret[0].(*v1.CronJob)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CronJob indicates an expected call of CronJob.
+func (mr *MockTransportMockRecorder) CronJob(namespace, name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CronJob", reflect.TypeOf((*MockTransport)(nil).CronJob), namespace, name)
+}
+
+// CronJobs mocks base method.
+func (m *MockTransport) CronJobs(namespace v10.Namespace) ([]v1.CronJob, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CronJobs", namespace)
+	ret0, _ := ret[0].([]v1.CronJob)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CronJobs indicates an expected call of CronJobs.
+func (mr *MockTransportMockRecorder) CronJobs(namespace interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CronJobs", reflect.TypeOf((*MockTransport)(nil).CronJobs), namespace)
+}
+
 // FS mocks base method.
 func (m *MockTransport) FS() afero.Fs {
 	m.ctrl.T.Helper()
@@ -80,10 +111,10 @@ func (mr *MockTransportMockRecorder) FS() *gomock.Call {
 }
 
 // FileInfo mocks base method.
-func (m *MockTransport) FileInfo(path string) (transports.FileInfoDetails, error) {
+func (m *MockTransport) FileInfo(path string) (providers.FileInfoDetails, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FileInfo", path)
-	ret0, _ := ret[0].(transports.FileInfoDetails)
+	ret0, _ := ret[0].(providers.FileInfoDetails)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -125,10 +156,10 @@ func (mr *MockTransportMockRecorder) Identifier() *gomock.Call {
 }
 
 // Kind mocks base method.
-func (m *MockTransport) Kind() transports.Kind {
+func (m *MockTransport) Kind() providers.Kind {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Kind")
-	ret0, _ := ret[0].(transports.Kind)
+	ret0, _ := ret[0].(providers.Kind)
 	return ret0
 }
 
@@ -154,10 +185,10 @@ func (mr *MockTransportMockRecorder) Name() *gomock.Call {
 }
 
 // Namespaces mocks base method.
-func (m *MockTransport) Namespaces() ([]v1.Namespace, error) {
+func (m *MockTransport) Namespaces() ([]v10.Namespace, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Namespaces")
-	ret0, _ := ret[0].([]v1.Namespace)
+	ret0, _ := ret[0].([]v10.Namespace)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -169,10 +200,10 @@ func (mr *MockTransportMockRecorder) Namespaces() *gomock.Call {
 }
 
 // PlatformIdDetectors mocks base method.
-func (m *MockTransport) PlatformIdDetectors() []transports.PlatformIdDetector {
+func (m *MockTransport) PlatformIdDetectors() []providers.PlatformIdDetector {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PlatformIdDetectors")
-	ret0, _ := ret[0].([]transports.PlatformIdDetector)
+	ret0, _ := ret[0].([]providers.PlatformIdDetector)
 	return ret0
 }
 
@@ -212,10 +243,10 @@ func (mr *MockTransportMockRecorder) PlatformInfo() *gomock.Call {
 }
 
 // Pod mocks base method.
-func (m *MockTransport) Pod(namespace, name string) (*v1.Pod, error) {
+func (m *MockTransport) Pod(namespace, name string) (*v10.Pod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Pod", namespace, name)
-	ret0, _ := ret[0].(*v1.Pod)
+	ret0, _ := ret[0].(*v10.Pod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -227,10 +258,10 @@ func (mr *MockTransportMockRecorder) Pod(namespace, name interface{}) *gomock.Ca
 }
 
 // Pods mocks base method.
-func (m *MockTransport) Pods(namespace v1.Namespace) ([]v1.Pod, error) {
+func (m *MockTransport) Pods(namespace v10.Namespace) ([]v10.Pod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Pods", namespace)
-	ret0, _ := ret[0].([]v1.Pod)
+	ret0, _ := ret[0].([]v10.Pod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -242,25 +273,25 @@ func (mr *MockTransportMockRecorder) Pods(namespace interface{}) *gomock.Call {
 }
 
 // Resources mocks base method.
-func (m *MockTransport) Resources(kind, name string) (*ResourceResult, error) {
+func (m *MockTransport) Resources(kind, name, namespace string) (*ResourceResult, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Resources", kind, name)
+	ret := m.ctrl.Call(m, "Resources", kind, name, namespace)
 	ret0, _ := ret[0].(*ResourceResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Resources indicates an expected call of Resources.
-func (mr *MockTransportMockRecorder) Resources(kind, name interface{}) *gomock.Call {
+func (mr *MockTransportMockRecorder) Resources(kind, name, namespace interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Resources", reflect.TypeOf((*MockTransport)(nil).Resources), kind, name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Resources", reflect.TypeOf((*MockTransport)(nil).Resources), kind, name, namespace)
 }
 
 // RunCommand mocks base method.
-func (m *MockTransport) RunCommand(command string) (*transports.Command, error) {
+func (m *MockTransport) RunCommand(command string) (*providers.Command, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RunCommand", command)
-	ret0, _ := ret[0].(*transports.Command)
+	ret0, _ := ret[0].(*providers.Command)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

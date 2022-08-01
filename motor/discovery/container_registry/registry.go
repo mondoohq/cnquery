@@ -185,6 +185,8 @@ func (a *DockerRegistryImages) toAsset(ref name.Reference, creds []*vault.Creden
 		PlatformIds: []string{containerid.MondooContainerImageID(imgDigest)},
 		Name:        imageUrl,
 		Platform: &platform.Platform{
+			Name:    "docker-image",
+			Title:   "Docker Image",
 			Kind:    providers.Kind_KIND_CONTAINER_IMAGE,
 			Runtime: providers.RUNTIME_DOCKER_REGISTRY,
 		},

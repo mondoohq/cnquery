@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/gosimple/slug"
 	"github.com/pkg/errors"
@@ -14,6 +13,7 @@ import (
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/fsutil"
 	"go.mondoo.io/mondoo/motor/providers/k8s/resources"
+	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -117,7 +117,7 @@ func (t *apiTransport) PlatformIdDetectors() []providers.PlatformIdDetector {
 
 func (t *apiTransport) ID() (string, error) {
 	// we use "kube-system" namespace uid as identifier for the cluster
-	result, err := t.Resources("namespaces", "kube-system")
+	result, err := t.Resources("namespaces", "kube-system", "")
 	if err != nil {
 		return "", err
 	}
@@ -192,7 +192,7 @@ func (t *apiTransport) SupportedResourceTypes() (*resources.ApiResourceIndex, er
 	return t.d.SupportedResourceTypes()
 }
 
-func (t *apiTransport) Resources(kind string, name string) (*ResourceResult, error) {
+func (t *apiTransport) Resources(kind string, name string, namespace string) (*ResourceResult, error) {
 	ctx := context.Background()
 	ns := t.namespace
 	allNs := false
@@ -219,7 +219,7 @@ func (t *apiTransport) Resources(kind string, name string) (*ResourceResult, err
 	}
 	log.Debug().Msgf("found %d resource objects", len(objs))
 
-	objs, err = resources.FilterResource(resType, objs, name)
+	objs, err = resources.FilterResource(resType, objs, name, namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -239,20 +239,8 @@ func (t *apiTransport) PlatformInfo() *platform.Platform {
 	build := ""
 	arch := ""
 
-	// check if it is a pod which shares the same connection
-	// log.Info().Str("selected resource", t.selectedResourceID).Msg("check for platform info")
-	platformData := &platform.Platform{
-		Release: "",
-		Build:   "",
-		Arch:    "",
-		Family:  []string{"k8s", "k8s-workload"},
-		Kind:    providers.Kind_KIND_K8S_OBJECT,
-		Runtime: providers.RUNTIME_KUBERNETES_CLUSTER,
-	}
-	switch selected := t.selectedResourceID; {
-	case strings.Contains(selected, "/pods/"):
-		platformData.Name = "k8s-pod"
-		platformData.Title = "Kubernetes Pod"
+	platformData := getPlatformInfo(t.selectedResourceID, t.Runtime())
+	if platformData != nil {
 		return platformData
 	}
 
@@ -302,4 +290,22 @@ func (t *apiTransport) Pod(namespace string, name string) (*v1.Pod, error) {
 		return nil, err
 	}
 	return pod, err
+}
+
+func (t *apiTransport) CronJobs(namespace v1.Namespace) ([]batchv1.CronJob, error) {
+	ctx := context.Background()
+	list, err := t.clientset.BatchV1().CronJobs(namespace.Name).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return list.Items, err
+}
+
+func (t *apiTransport) CronJob(namespace string, name string) (*batchv1.CronJob, error) {
+	ctx := context.Background()
+	cronjob, err := t.clientset.BatchV1().CronJobs(namespace).Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return cronjob, err
 }
