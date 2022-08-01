@@ -18,6 +18,7 @@ import (
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/fsutil"
 	"go.mondoo.io/mondoo/motor/providers/k8s/resources"
+	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,20 +47,22 @@ func WithRuntimeObjects(objects []k8sRuntime.Object) Option {
 	}
 }
 
-func newManifestTransport(opts ...Option) Transport {
+func newManifestTransport(selectedResourceID string, opts ...Option) Transport {
 	t := &manifestTransport{}
 
 	for _, option := range opts {
 		option(t)
 	}
 
+	t.selectedResourceID = selectedResourceID
 	return t
 }
 
 type manifestTransport struct {
-	manifestFile string
-	namespace    string
-	objects      []runtime.Object
+	manifestFile       string
+	namespace          string
+	objects            []runtime.Object
+	selectedResourceID string
 }
 
 func (t *manifestTransport) RunCommand(command string) (*providers.Command, error) {
@@ -81,6 +84,11 @@ func (t *manifestTransport) Capabilities() providers.Capabilities {
 }
 
 func (t *manifestTransport) PlatformInfo() *platform.Platform {
+	platformData := getPlatformInfo(t.selectedResourceID, t.Runtime())
+	if platformData != nil {
+		return platformData
+	}
+
 	return &platform.Platform{
 		Name:    "kubernetes",
 		Title:   "Kubernetes Manifest",
@@ -128,6 +136,10 @@ func (t *manifestTransport) ID() (string, error) {
 }
 
 func (t *manifestTransport) PlatformIdentifier() (string, error) {
+	if t.selectedResourceID != "" {
+		return t.selectedResourceID, nil
+	}
+
 	uid, err := t.ID()
 	if err != nil {
 		return "", err
@@ -184,24 +196,17 @@ func (t *manifestTransport) Namespaces() ([]v1.Namespace, error) {
 }
 
 func (t *manifestTransport) Pod(namespace string, name string) (*v1.Pod, error) {
-	result, err := t.Resources("pods.v1.", "")
+	result, err := t.Resources("pods.v1.", name, namespace)
 	if err != nil {
 		return nil, err
 	}
 
-	foundPod := &v1.Pod{}
-	for i := range result.Resources {
-		r := result.Resources[i]
-
-		pod, ok := r.(*v1.Pod)
-		if !ok {
-			log.Warn().Msg("could not convert k8s resource to pod")
-			continue
-		}
-		if pod.Name == name && pod.Namespace == namespace {
-			foundPod = pod
-			break
-		}
+	if len(result.Resources) > 1 {
+		return nil, errors.New("multiple pods found")
+	}
+	foundPod, ok := result.Resources[0].(*v1.Pod)
+	if !ok {
+		return nil, errors.New("could not convert k8s resource to pod")
 	}
 
 	if foundPod.Name == "" {
@@ -211,9 +216,7 @@ func (t *manifestTransport) Pod(namespace string, name string) (*v1.Pod, error) 
 }
 
 func (t *manifestTransport) Pods(namespace v1.Namespace) ([]v1.Pod, error) {
-	// iterate over all resources and extract the pods
-
-	result, err := t.Resources("pods.v1.", "")
+	result, err := t.Resources("pods.v1.", "", namespace.GetNamespace())
 	if err != nil {
 		return nil, err
 	}
@@ -253,8 +256,13 @@ func (t *manifestTransport) resourceIndex() ([]k8sRuntime.Object, *resources.Api
 	return resourceObjects, resTypes, nil
 }
 
-func (t *manifestTransport) Resources(kind string, name string) (*ResourceResult, error) {
-	ns := t.namespace
+func (t *manifestTransport) Resources(kind string, name string, namespace string) (*ResourceResult, error) {
+	var ns string
+	if namespace == "" {
+		ns = t.namespace
+	} else {
+		ns = namespace
+	}
 	allNs := false
 	if ns == "" {
 		allNs = true
@@ -270,7 +278,7 @@ func (t *manifestTransport) Resources(kind string, name string) (*ResourceResult
 		return nil, err
 	}
 
-	resources, err := resources.FilterResource(resType, resourceObjects, name)
+	resources, err := resources.FilterResource(resType, resourceObjects, name, namespace)
 
 	return &ResourceResult{
 		Name:         name,
@@ -354,4 +362,45 @@ func (t *manifestTransport) loadManifestFile(manifestFile string) ([]byte, error
 	}
 
 	return ioutil.ReadAll(input)
+}
+
+func (t *manifestTransport) CronJob(namespace string, name string) (*batchv1.CronJob, error) {
+	result, err := t.Resources("cronjobs.v1.batch", name, namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result.Resources) > 1 {
+		return nil, errors.New("multiple cronjobs found")
+	}
+	foundCronJob, ok := result.Resources[0].(*batchv1.CronJob)
+	if !ok {
+		return nil, errors.New("could not convert k8s resource to cronjob")
+	}
+
+	if foundCronJob.Name == "" {
+		return nil, errors.New("cronjob not found")
+	}
+	return foundCronJob, nil
+}
+
+func (t *manifestTransport) CronJobs(namespace v1.Namespace) ([]batchv1.CronJob, error) {
+	result, err := t.Resources("cronjobs.v1.batch", "", namespace.GetNamespace())
+	if err != nil {
+		return nil, err
+	}
+
+	var cronJobs []batchv1.CronJob
+	for i := range result.Resources {
+		r := result.Resources[i]
+
+		cronJob, ok := r.(*batchv1.CronJob)
+		if !ok {
+			log.Warn().Msg("could not convert k8s resource to cronjob")
+			continue
+		}
+		cronJobs = append(cronJobs, *cronJob)
+	}
+
+	return cronJobs, nil
 }
