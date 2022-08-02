@@ -569,3 +569,46 @@ func (t *manifestTransport) ReplicaSets(namespace v1.Namespace) ([]appsv1.Replic
 
 	return replicaSets, nil
 }
+
+func (t *manifestTransport) DaemonSet(namespace string, name string) (*appsv1.DaemonSet, error) {
+	result, err := t.Resources("daemonsets.appsv1.", name, namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result.Resources) > 1 {
+		return nil, errors.New("multiple daemonsets found")
+	}
+	foundDaemonSet, ok := result.Resources[0].(*appsv1.DaemonSet)
+	if !ok {
+		return nil, errors.New("could not convert k8s resource to daemonset")
+	}
+
+	if foundDaemonSet.Name == "" {
+		return nil, errors.New("daemonset not found")
+	}
+	return foundDaemonSet, nil
+}
+
+func (t *manifestTransport) DaemonSets(namespace v1.Namespace) ([]appsv1.DaemonSet, error) {
+	// iterate over all resources and extract the daemonsets
+
+	result, err := t.Resources("daemonsets.v1.apps", "", namespace.GetNamespace())
+	if err != nil {
+		return nil, err
+	}
+
+	var daemonsets []appsv1.DaemonSet
+	for i := range result.Resources {
+		r := result.Resources[i]
+
+		daemonset, ok := r.(*appsv1.DaemonSet)
+		if !ok {
+			log.Error().Err(err).Msg("could not convert k8s resource to daemonset")
+			return nil, err
+		}
+		daemonsets = append(daemonsets, *daemonset)
+	}
+
+	return daemonsets, nil
+}

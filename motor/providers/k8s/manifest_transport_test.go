@@ -104,3 +104,15 @@ func TestManifestReplicaSet(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(pods))
 }
+
+func TestManifestDaemonSet(t *testing.T) {
+	manifestFile := "./resources/testdata/appsv1.daemonset.yaml"
+	transport := newManifestTransport("", WithManifestFile(manifestFile))
+	require.NotNil(t, transport)
+	res, err := transport.Resources("daemonset", "mondoo-daemonset", "default")
+	require.NoError(t, err)
+	assert.Equal(t, "mondoo-daemonset", res.Name)
+	assert.Equal(t, "daemonset", res.Kind)
+	assert.Equal(t, "k8s-manifest", transport.PlatformInfo().Runtime)
+	assert.Equal(t, 1, len(res.Resources))
+}

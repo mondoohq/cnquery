@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: mondoo-daemonset
-
+  namespace: default
 spec:
   selector:
     matchLabels:

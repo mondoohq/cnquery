@@ -168,3 +168,26 @@ func TestManifestResolverReplicaSetDiscovery(t *testing.T) {
 	assert.Contains(t, assetList[1].Platform.Family, "k8s")
 	assert.Equal(t, "k8s-replicaset", assetList[1].Platform.Name)
 }
+
+func TestManifestResolverDaemonSetDiscovery(t *testing.T) {
+	resolver := &Resolver{}
+	manifestFile := "../../providers/k8s/resources/testdata/appsv1.daemonset.yaml"
+
+	assetList, err := resolver.Resolve(&providers.TransportConfig{
+		PlatformId: "//platform/k8s/uid/123/namespace/mondoo-operator/daemonsets/name/mondoo-daemonset/uid/",
+		Backend:    providers.TransportBackend_CONNECTION_K8S,
+		Options: map[string]string{
+			"path": manifestFile,
+		},
+		Discover: &providers.Discovery{
+			Targets: []string{"daemonsets"},
+		},
+	}, nil, nil)
+	require.NoError(t, err)
+	// When this check fails locally, check your kubeconfig.
+	// context has to reference the default namespace
+	assert.Equal(t, 2, len(assetList))
+	assert.Contains(t, assetList[1].Platform.Family, "k8s-workload")
+	assert.Contains(t, assetList[1].Platform.Family, "k8s")
+	assert.Equal(t, "k8s-daemonset", assetList[1].Platform.Name)
+}

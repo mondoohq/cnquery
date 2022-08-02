@@ -97,6 +97,36 @@ func (mr *MockTransportMockRecorder) CronJobs(namespace interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CronJobs", reflect.TypeOf((*MockTransport)(nil).CronJobs), namespace)
 }
 
+// DaemonSet mocks base method.
+func (m *MockTransport) DaemonSet(namespace, name string) (*v1.DaemonSet, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DaemonSet", namespace, name)
+	ret0, _ := ret[0].(*v1.DaemonSet)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DaemonSet indicates an expected call of DaemonSet.
+func (mr *MockTransportMockRecorder) DaemonSet(namespace, name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DaemonSet", reflect.TypeOf((*MockTransport)(nil).DaemonSet), namespace, name)
+}
+
+// DaemonSets mocks base method.
+func (m *MockTransport) DaemonSets(namespace v11.Namespace) ([]v1.DaemonSet, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DaemonSets", namespace)
+	ret0, _ := ret[0].([]v1.DaemonSet)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DaemonSets indicates an expected call of DaemonSets.
+func (mr *MockTransportMockRecorder) DaemonSets(namespace interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DaemonSets", reflect.TypeOf((*MockTransport)(nil).DaemonSets), namespace)
+}
+
 // Deployment mocks base method.
 func (m *MockTransport) Deployment(namespace, name string) (*v1.Deployment, error) {
 	m.ctrl.T.Helper()
@@ -187,10 +217,10 @@ func (mr *MockTransportMockRecorder) Identifier() *gomock.Call {
 }
 
 // Job mocks base method.
-func (m *MockTransport) Job(namespace, name string) (*v1.Job, error) {
+func (m *MockTransport) Job(namespace, name string) (*v10.Job, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Job", namespace, name)
-	ret0, _ := ret[0].(*v1.Job)
+	ret0, _ := ret[0].(*v10.Job)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -202,10 +232,10 @@ func (mr *MockTransportMockRecorder) Job(namespace, name interface{}) *gomock.Ca
 }
 
 // Jobs mocks base method.
-func (m *MockTransport) Jobs(namespace v10.Namespace) ([]v1.Job, error) {
+func (m *MockTransport) Jobs(namespace v11.Namespace) ([]v10.Job, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Jobs", namespace)
-	ret0, _ := ret[0].([]v1.Job)
+	ret0, _ := ret[0].([]v10.Job)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

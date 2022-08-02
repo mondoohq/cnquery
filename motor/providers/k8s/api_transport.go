@@ -382,3 +382,21 @@ func (t *apiTransport) ReplicaSet(namespace string, name string) (*appsv1.Replic
 	}
 	return replicaset, err
 }
+
+func (t *apiTransport) DaemonSets(namespace v1.Namespace) ([]appsv1.DaemonSet, error) {
+	ctx := context.Background()
+	list, err := t.clientset.AppsV1().DaemonSets(namespace.Name).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return list.Items, err
+}
+
+func (t *apiTransport) DaemonSet(namespace string, name string) (*appsv1.DaemonSet, error) {
+	ctx := context.Background()
+	daemonset, err := t.clientset.AppsV1().DaemonSets(namespace).Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return daemonset, err
+}
