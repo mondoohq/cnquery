@@ -4403,12 +4403,12 @@ resources:
         min_mondoo_version: 5.37.0
       name: {}
       release: {}
-      version:
-        min_mondoo_version: 6.9.0
-      runtimeEnv: {}
       runtime:
         min_mondoo_version: 6.9.0
+      runtimeEnv: {}
       title: {}
+      version:
+        min_mondoo_version: 6.9.0
       vulnerabilityReport: {}
     min_mondoo_version: 5.15.0
     snippets:
