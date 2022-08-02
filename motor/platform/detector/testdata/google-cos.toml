@@ -1,0 +1,23 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "5.10.123+"
+
+[files."/etc/os-release"]
+content = """
+NAME="Container-Optimized OS"
+ID=cos
+PRETTY_NAME="Container-Optimized OS from Google"
+HOME_URL="https://cloud.google.com/container-optimized-os/docs"
+BUG_REPORT_URL="https://cloud.google.com/container-optimized-os/docs/resources/support-policy#contact_us"
+GOOGLE_METRICS_PRODUCT_ID=26
+KERNEL_COMMIT_ID=6cdd454e81caa2f38222ca86cfa20061b7345e10
+GOOGLE_CRASH_ID=Lakitu
+VERSION=97
+VERSION_ID=97
+BUILD_ID=16919.103.16
+"""

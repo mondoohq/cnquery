@@ -869,6 +869,10 @@ var linuxFamily = &PlatformResolver{
 				di.Release = di.Version
 			}
 
+			if len(osr["BUILD_ID"]) > 0 {
+				di.Build = osr["BUILD_ID"]
+			}
+
 			detected = true
 		}
 
