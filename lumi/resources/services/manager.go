@@ -132,6 +132,8 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		osm = &WindowsServiceManager{motor: motor}
 	case pf.Name == "alpine":
 		osm = &AlpineOpenrcServiceManager{motor: motor}
+	case pf.Name == "cos":
+		osm = ResolveSystemdServiceManager(motor)
 	}
 
 	if osm == nil {
