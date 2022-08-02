@@ -48,6 +48,8 @@ func ResolveSystemPkgManager(motor *motor.Motor) (OperatingSystemPkgManager, err
 		pm = &OpkgPkgManager{motor: motor}
 	case pf.Name == "solaris":
 		pm = &SolarisPkgManager{motor: motor}
+	case pf.Name == "cos":
+		pm = &CosPkgManager{motor: motor}
 	default:
 		return nil, errors.New("could not detect suitable package manager for platform: " + pf.Name)
 	}
