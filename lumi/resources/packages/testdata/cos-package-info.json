@@ -1,0 +1,22 @@
+{
+  "installedPackages": [
+    {
+      "category": "dev-lang",
+      "name": "python-exec",
+      "version": "16919.103.16",
+      "ebuild_version": "2.0.1-r1"
+    },
+    {
+      "category": "sys-libs",
+      "name": "zlib",
+      "version": "16919.103.16",
+      "ebuild_version": "1.2.11-r4"
+    },
+    {
+      "category": "sys-apps",
+      "name": "baselayout",
+      "version": "16919.103.16",
+      "ebuild_version": "2.2-r1"
+    }
+  ]
+}
