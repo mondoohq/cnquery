@@ -50,6 +50,8 @@ type Transport interface {
 	Jobs(namespace v1.Namespace) ([]batchv1.Job, error)
 	ReplicaSet(namespace string, name string) (*appsv1.ReplicaSet, error)
 	ReplicaSets(namespace v1.Namespace) ([]appsv1.ReplicaSet, error)
+	DaemonSet(namespace string, name string) (*appsv1.DaemonSet, error)
+	DaemonSets(namespace v1.Namespace) ([]appsv1.DaemonSet, error)
 }
 
 type ClusterInfo struct {
@@ -114,6 +116,10 @@ func getPlatformInfo(selectedResourceID string, runtime string) *platform.Platfo
 	case strings.Contains(selected, "/replicasets/"):
 		platformData.Name = "k8s-replicaset"
 		platformData.Title = "Kubernetes ReplicaSet"
+		return platformData
+	case strings.Contains(selected, "/daemonsets/"):
+		platformData.Name = "k8s-daemonset"
+		platformData.Title = "Kubernetes DaemonSet"
 		return platformData
 	}
 

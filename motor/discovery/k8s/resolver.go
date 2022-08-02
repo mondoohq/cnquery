@@ -20,6 +20,7 @@ const (
 	DiscoveryStatefulSets    = "statefulsets"
 	DiscoveryDeployments     = "deployments"
 	DiscoveryReplicaSets     = "replicasets"
+	DiscoveryDaemonSets      = "daemonsets"
 	DiscoveryContainerImages = "container-images"
 )
 
@@ -38,6 +39,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 		DiscoveryStatefulSets,
 		DiscoveryDeployments,
 		DiscoveryReplicaSets,
+		DiscoveryDaemonSets,
 		DiscoveryContainerImages,
 	}
 }
@@ -161,6 +163,18 @@ func addSeparateAssets(tc *providers.TransportConfig, transport k8s_transport.Tr
 		assetList, err := ListPods(transport, connection, clusterIdentifier, namespacesFilter)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s pods")
+			return nil, err
+		}
+		resolved = append(resolved, assetList...)
+	}
+
+	// discovery k8s daemonsets
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryDaemonSets) {
+		log.Debug().Strs("namespace", namespacesFilter).Msg("search for daemonsets")
+		connection := tc.Clone()
+		assetList, err := ListDaemonSets(transport, connection, clusterIdentifier, namespacesFilter)
+		if err != nil {
+			log.Error().Err(err).Msg("could not fetch k8s daemonsets")
 			return nil, err
 		}
 		resolved = append(resolved, assetList...)

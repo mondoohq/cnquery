@@ -1227,7 +1227,13 @@ func (k *lumiK8sDaemonset) id() (string, error) {
 
 func (p *lumiK8sDaemonset) init(args *lumi.Args) (*lumi.Args, K8sDaemonset, error) {
 	// pass-through if all args are already provided
-	if len(*args) == 0 || len(*args) > 2 {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	// get platform identifier infos
+	identifierUid, identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
+	if err != nil {
 		return args, nil, nil
 	}
 
@@ -1238,41 +1244,51 @@ func (p *lumiK8sDaemonset) init(args *lumi.Args) (*lumi.Args, K8sDaemonset, erro
 	}
 	k8sResource := obj.(K8s)
 
-	secrets, err := k8sResource.Daemonsets()
+	daemonsets, err := k8sResource.Daemonsets()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var matchFn func(configMap K8sDaemonset) bool
+	var matchFn func(daemonset K8sDaemonset) bool
 
-	uidRaw := (*args)["uid"]
-	if uidRaw != nil {
-		matchFn = func(configMap K8sDaemonset) bool {
-			uid, _ := configMap.Uid()
-			if uid == uidRaw.(string) {
-				return true
-			}
-			return false
+	var uidRaw string
+	if len(*args) == 0 {
+		uidRaw = identifierUid
+	} else if _, ok := (*args)["uid"]; ok {
+		uidRaw = (*args)["uid"].(string)
+	}
+
+	if uidRaw != "" {
+		matchFn = func(daemonset K8sDaemonset) bool {
+			uid, _ := daemonset.Uid()
+			return uid == uidRaw
 		}
 	}
 
-	nameRaw := (*args)["name"]
-	namespaceRaw := (*args)["namespace"]
-	if nameRaw != nil && namespaceRaw != nil {
-		matchFn = func(configMap K8sDaemonset) bool {
-			name, _ := configMap.Name()
-			namespace, _ := configMap.Namespace()
-			if name == nameRaw.(string) && namespace == namespaceRaw.(string) {
-				return true
-			}
-			return false
+	var nameRaw string
+	var namespaceRaw string
+	if _, ok := (*args)["name"]; ok {
+		nameRaw = (*args)["name"].(string)
+	}
+	if _, ok := (*args)["namespace"]; ok {
+		namespaceRaw = (*args)["namespace"].(string)
+	}
+	if nameRaw == "" && namespaceRaw == "" {
+		nameRaw = identifierName
+		namespaceRaw = identifierNamespace
+	}
+	if nameRaw != "" && namespaceRaw != "" {
+		matchFn = func(daemonset K8sDaemonset) bool {
+			name, _ := daemonset.Name()
+			namespace, _ := daemonset.Namespace()
+			return name == nameRaw && namespace == namespaceRaw
 		}
 	}
 
-	for i := range secrets {
-		configMap := secrets[i].(K8sDaemonset)
-		if matchFn(configMap) {
-			return nil, configMap, nil
+	for i := range daemonsets {
+		daemonset := daemonsets[i].(K8sDaemonset)
+		if matchFn(daemonset) {
+			return nil, daemonset, nil
 		}
 	}
 
