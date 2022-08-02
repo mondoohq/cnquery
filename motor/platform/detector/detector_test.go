@@ -888,6 +888,20 @@ func TestMint20Detector(t *testing.T) {
 	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
 }
 
+func TestGoogleCOSDetector(t *testing.T) {
+	detector, err := newDetector("./testdata/google-cos.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	di, err := detector.Platform()
+	require.NoError(t, err)
+
+	assert.Equal(t, "cos", di.Name, "os name should be identified")
+	assert.Equal(t, "Container-Optimized OS from Google", di.Title, "os title should be identified")
+	assert.Equal(t, "97", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, "16919.103.16", di.Build, "os build should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
 func TestFamilies(t *testing.T) {
 	di := &platform.Platform{}
 	di.Family = []string{"unix", "bsd", "darwin"}
