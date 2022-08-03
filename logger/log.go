@@ -49,6 +49,10 @@ func CliCompactLogger(out io.Writer) {
 	log.Logger = NewConsoleWriter(out, true)
 }
 
+func StandardZerologLogger() {
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
+}
+
 // Set will set up the logger
 func Set(level string) {
 	switch level {
