@@ -100,6 +100,11 @@ func (p *Platform) PrettyTitle() string {
 			runtimeNiceName = "Virtual Machine Image"
 		}
 	}
+	// e.g. ", Kubernetes Cluster" and also "Kubernetes, Kubernetes Cluster" do not look nice, so prevent them
+	if prettyTitle == "" || strings.Contains(runtimeNiceName, prettyTitle) {
+		return runtimeNiceName
+	}
+
 	// do not add runtime name when the title is already obvious, e.g. "Network API, Network"
 	if !strings.Contains(prettyTitle, runtimeNiceName) {
 		prettyTitle += ", " + runtimeNiceName
