@@ -7,6 +7,7 @@ import (
 	"errors"
 	"runtime"
 
+	wmi "github.com/StackExchange/wmi"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/local"
 )
