@@ -48,7 +48,7 @@ func GetPodSpec(obj runtime.Object) (*corev1.PodSpec, error) {
 	return podSpec, nil
 }
 
-func GetContainers(resource runtime.Object) ([]corev1.Container, error) {
+func GetInitContainers(resource runtime.Object) ([]corev1.Container, error) {
 	podSpec, err := GetPodSpec(resource)
 	if err != nil {
 		return nil, err
@@ -56,6 +56,17 @@ func GetContainers(resource runtime.Object) ([]corev1.Container, error) {
 	containers := []corev1.Container{}
 	if podSpec != nil {
 		containers = append(containers, podSpec.InitContainers...)
+	}
+	return containers, nil
+}
+
+func GetContainers(resource runtime.Object) ([]corev1.Container, error) {
+	podSpec, err := GetPodSpec(resource)
+	if err != nil {
+		return nil, err
+	}
+	containers := []corev1.Container{}
+	if podSpec != nil {
 		containers = append(containers, podSpec.Containers...)
 	}
 	return containers, nil
