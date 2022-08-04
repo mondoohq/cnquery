@@ -6,6 +6,7 @@ package windows
 import (
 	"runtime"
 
+	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/local"
 	"golang.org/x/sys/windows/registry"
 )
