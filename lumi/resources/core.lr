@@ -4228,6 +4228,8 @@ k8s.pod {
   manifest dict
   // PodSpec is a description of a pod
   podSpec dict
+  // Init containers
+  initContainers() []k8s.initContainer
   // Contained Containers
   containers() []k8s.container
   // Node the pod runs on
@@ -4259,7 +4261,7 @@ container.repository {
 }
 
 // single application container
-k8s.container {
+private k8s.container {
   uid string
   // Name of the container
   name string
@@ -4283,6 +4285,37 @@ k8s.container {
   livenessProbe dict
   // Periodic probe of container service readiness
   readinessProbe dict
+  // Image pull policy, One of Always, Never, IfNotPresent
+  imagePullPolicy string
+  // Security options the pod should run with
+  securityContext dict
+  // Container's working directory
+  workingDir string
+  // Whether this container should allocate a TTY for itself
+  tty bool
+}
+
+// k8s init container
+private k8s.initContainer {
+  uid string
+  // Name of the container
+  name string
+  // Container image name
+  imageName string
+  // deprecated, use imageName
+  image string
+  // Container image
+  containerImage() container.image
+  // Entrypoint array
+  command []string
+  // Arguments to the entrypoint
+  args []string
+  // Compute Resources required by this container
+  resources dict
+  // Pod volumes to mount into the container's filesystem
+  volumeMounts []dict
+  // volumeDevices is the list of block devices to be used by the container
+  volumeDevices []dict
   // Image pull policy, One of Always, Never, IfNotPresent
   imagePullPolicy string
   // Security options the pod should run with

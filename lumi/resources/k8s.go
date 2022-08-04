@@ -919,6 +919,73 @@ func (p *lumiK8sPod) init(args *lumi.Args) (*lumi.Args, K8sPod, error) {
 	return args, nil, nil
 }
 
+func (k *lumiK8sPod) GetInitContainers() ([]interface{}, error) {
+	uid, err := k.Uid()
+	if err != nil {
+		return nil, err
+	}
+
+	// At this point we already have the cached Pod manifest. We can parse it to retrieve the
+	// containers for the pod.
+	manifest, err := k.Manifest()
+	if err != nil {
+		return nil, err
+	}
+	unstr := unstructured.Unstructured{Object: manifest}
+	obj := resources.ConvertToK8sObject(unstr)
+
+	resp := []interface{}{}
+	containers, err := resources.GetInitContainers(obj)
+	if err != nil {
+		return nil, err
+	}
+	for i := range containers {
+
+		c := containers[i]
+
+		secContext, err := jsonToDict(c.SecurityContext)
+		if err != nil {
+			return nil, err
+		}
+
+		resources, err := jsonToDict(c.Resources)
+		if err != nil {
+			return nil, err
+		}
+
+		volumeMounts, err := jsonToDictSlice(c.VolumeMounts)
+		if err != nil {
+			return nil, err
+		}
+
+		volumeDevices, err := jsonToDictSlice(c.VolumeDevices)
+		if err != nil {
+			return nil, err
+		}
+
+		lumiContainer, err := k.MotorRuntime.CreateResource("k8s.initContainer",
+			"uid", uid+"/"+c.Name, // container names are unique within a pod
+			"name", c.Name,
+			"imageName", c.Image,
+			"image", c.Image, // deprecated, will be replaced with the containerImage going forward
+			"command", strSliceToInterface(c.Command),
+			"args", strSliceToInterface(c.Args),
+			"resources", resources,
+			"volumeMounts", volumeMounts,
+			"volumeDevices", volumeDevices,
+			"imagePullPolicy", string(c.ImagePullPolicy),
+			"securityContext", secContext,
+			"workingDir", c.WorkingDir,
+			"tty", c.TTY,
+		)
+		if err != nil {
+			return nil, err
+		}
+		resp = append(resp, lumiContainer)
+	}
+	return resp, nil
+}
+
 func (k *lumiK8sPod) GetContainers() ([]interface{}, error) {
 	uid, err := k.Uid()
 	if err != nil {
@@ -1043,6 +1110,19 @@ func (k *lumiK8sPod) GetNode() (K8sNode, error) {
 	}
 
 	return nil, nil
+}
+
+func (k *lumiK8sInitContainer) id() (string, error) {
+	return k.Uid()
+}
+
+func (k *lumiK8sInitContainer) GetContainerImage() (interface{}, error) {
+	containerImageName, err := k.ImageName()
+	if err != nil {
+		return nil, err
+	}
+
+	return newLumiContainerImage(k.MotorRuntime, containerImageName)
 }
 
 func (k *lumiK8sContainer) id() (string, error) {
