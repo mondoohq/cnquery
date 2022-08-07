@@ -1,4 +1,4 @@
-// Provide contextual info about the mondoo client and environment
+// Provide contextual info about Mondoo Client and environment
 mondoo {
   // Version of mondoo the client is running
   version() string
@@ -13,7 +13,7 @@ mondoo {
   nulllist() []string
 }
 
-// Returns EOL information from the mondoo EOL service
+// Returns platform EOL date information
 mondoo.eol {
   // Product Name
   product string
@@ -23,7 +23,7 @@ mondoo.eol {
   date() time
 }
 
-// information about the asset
+// Mondoo asset information
 mondoo.asset {
   // Platform Identifier
   platformIDs() []string
@@ -101,7 +101,7 @@ parse.json {
   params(content) dict
 }
 
-// Parse Plist files
+// Parse plist files
 parse.plist {
   init(path string)
   // File that is being parsed
@@ -175,7 +175,7 @@ platform.eol {
   date time
 }
 
-// Returns all Platform/Package advisories
+// Returns all platform/package advisories
 platform.advisories {
   []audit.advisory
   // Worst CVSS score for all advisories
@@ -184,7 +184,7 @@ platform.advisories {
   stats() dict
 }
 
-// Returns all Platform/Package cves
+// Returns all platform/package cves
 platform.cves {
   []audit.cve
   // Worst CVSS score for all cves
@@ -193,7 +193,7 @@ platform.cves {
   stats() dict
 }
 
-// Returns all Platform/Package exploits
+// Returns all platform/package exploits
 platform.exploits {
   []audit.exploit
   // Worst CVSS score for all exploits
@@ -210,7 +210,7 @@ private audit.cvss {
   vector  string
 }
 
-// Platform/Package advisory
+// Platform/package advisory
 private audit.advisory {
   // Advisory ID
   id          string
@@ -248,7 +248,7 @@ private audit.cve {
   worstScore    audit.cvss
 }
 
-// Exploit Information
+// Exploit information
 private audit.exploit {
   // CVE ID
   id        string
@@ -273,7 +273,7 @@ command {
   exitcode() int
 }
 
-// Results of running a powershell script on the system
+// Results of running a PowerShell script on the system
 powershell {
   init(script string)
   // Raw contents of the script
@@ -450,7 +450,7 @@ packages {
   []package
 }
 
-// Kernel information for this OS
+// System kernel information
 kernel {
   // Active kernel information
   info() dict
@@ -462,7 +462,7 @@ kernel {
   installed() []dict
 }
 
-// Kernel module information
+// System kernel module information
 kernel.module {
   init(name string)
 
@@ -491,7 +491,7 @@ ntp.conf {
   fudge(settings) []string
 }
 
-// TCP/IP ports on the system
+// TCP/IP port on the system
 port {
   // Protocol of this port
   protocol string
@@ -511,6 +511,7 @@ port {
   remotePort int
 }
 
+// TCP/IP ports on the system
 ports {
   []port
   // All listening ports
@@ -527,6 +528,7 @@ socket {
   address string
 }
 
+// TLS
 tls {
   init(target string)
   // Socket of this connection
@@ -547,6 +549,7 @@ tls {
   nonSniCertificates(params) []certificate
 }
 
+// Domain name
 domainName {
   init(fqdn string)
   fqdn string
@@ -560,6 +563,7 @@ domainName {
   labels []string
 }
 
+// DNS resource
 dns {
   init(fqdn string)
   fqdn string
@@ -573,6 +577,7 @@ dns {
   dkim(params) []dns.dkimRecord
 }
 
+// DNS record
 dns.record {
   // DNS name
   name string
@@ -586,13 +591,14 @@ dns.record {
   rdata []string
 }
 
+// DNS MX record
 dns.mxRecord {
   name string
   preference int
   domainName string
 }
 
-// DKIM Public Key Representation as defined in RFC 6376
+// DKIM public key representation as defined in RFC 6376
 dns.dkimRecord {
   // DNS Text Representation
   dnsTxt string
@@ -629,7 +635,7 @@ rsyslog.conf {
 
 machine {}
 
-// SMBIOS BIOS Information
+// SMBIOS BIOS information
 machine.bios {
   // BIOS vendor
   vendor string
@@ -639,7 +645,7 @@ machine.bios {
   releaseDate string
 }
 
-// SMBIOS System Information
+// SMBIOS system information
 machine.system {
   // Manufacturer
   manufacturer string
@@ -657,7 +663,7 @@ machine.system {
   family string
 }
 
-// SMBIOS Baseboard (or Module) Information 
+// SMBIOS baseboard (or module) information 
 machine.baseboard {
   // Manufacturer
   manufacturer string
@@ -671,7 +677,7 @@ machine.baseboard {
   assetTag string
 }
 
-// SMBIOS System Enclosure or Chassis
+// SMBIOS system enclosure or chassis
 machine.chassis {
   // Manufacturer
   manufacturer string
@@ -683,7 +689,7 @@ machine.chassis {
   assetTag string
 }
 
-// Operating System information
+// Operating system information
 os {
   // Pretty Hostname on Linux / Device name on Windows
   name() string
@@ -703,7 +709,7 @@ os {
   machineid() string
 }
 
-// Operating System update information
+// Operating system update information
 os.update {
   // Name of the update
   name string
@@ -717,7 +723,7 @@ os.update {
   format string
 }
 
-// Operating System root certificates
+// Operating system root certificates
 os.rootCertificates {
   []certificate(content)
   // List of files that define these certificates
@@ -816,7 +822,7 @@ groups {
   []group
 }
 
-// Docker Host resource
+// Docker host resource
 docker {
   // List all Docker images
   images() []docker.image
@@ -879,7 +885,7 @@ auditpol.entry {
   exclusionsetting string
 }
 
-// Windows Local Security Policy
+// Windows local security policy
 secpol {
   // System Access
   systemaccess() map[string]string
@@ -902,12 +908,12 @@ logindefs {
   params(content) map[string]string
 }
 
-// Unix List Block devices
+// Unix list block devices
 lsblk {
   []lsblk.entry
 }
 
-// Unix BlockDevice
+// Unix block device
 lsblk.entry {
   // Device name
   name string
@@ -926,7 +932,7 @@ mount {
   []mount.point
 }
 
-// Unix Mountpoint
+// Unix mount point
 mount.point {
   init(path string)
   // Device
@@ -946,7 +952,7 @@ shadow {
   []shadow.entry
 }
 
-// Shadowed Password File Entry
+// Shadowed password file entry
 shadow.entry {
   // User
   user string
@@ -968,7 +974,7 @@ shadow.entry {
   reserved string
 }
 
-// Windows Registry Key
+// Windows registry key
 registrykey {
   init(path string)
   path string
@@ -977,7 +983,7 @@ registrykey {
   children() []string
 }
 
-// Windows Registry Key Property
+// Windows registry key property
 registrykey.property {
   init(path string, name string)
   path string
@@ -992,7 +998,7 @@ yaml.path {
   result() string
 }
 
-// List of Authorized Keys
+// List of SSH Authorized Keys
 authorizedkeys {
   []authorizedkeys.entry(file, content)
   init(path string)
@@ -1001,7 +1007,7 @@ authorizedkeys {
   content(file) string
 }
 
-// Authorized Keys Entry
+// SSH authorized keys entry
 authorizedkeys.entry {
   line int
   type string
@@ -1020,7 +1026,7 @@ parse.certificates {
   content(file) string
 }
 
-// x509 Certificate PKIX Name
+// x509 certificate PKIX name
 pkix.name {
   id string
   // Distinguished Name Qualifier
@@ -1046,7 +1052,7 @@ pkix.name {
   extraNames map[string]string
 }
 
-// x509 Certificate PKIX Extension
+// x509 certificate PKIX extension
 pkix.extension {
   // Extension Identifier
   identifier string
@@ -1056,7 +1062,7 @@ pkix.extension {
   value string
 }
 
-// x509 Certificate Resource
+// x509 certificate resource
 certificate {
   // PEM content
   pem string
@@ -1555,15 +1561,15 @@ arista.eos.spt.mstInterface {
 
 // AWS Resource
 aws {
-  // list of `aws.vpc` objects representing all VPCs in the account across all enabled regions
+  // List of `aws.vpc` objects representing all VPCs in the account across all enabled regions
   vpcs() []aws.vpc
-  // list of all enabled regions in the account
+  // List of all enabled regions in the account
   regions() []string
 }
 
 // AWS Access Analyzer resource for assessing the configuration of AWS IAM Access Analyzer
 aws.accessAnalyzer {
-  // list of `aws.accessanalyzer.analyzer` objects for all AWS Access Analyzers configured within the account 
+  // List of `aws.accessanalyzer.analyzer` objects for all AWS Access Analyzers configured within the account 
   analyzers() []aws.accessanalyzer.analyzer
 }
 
@@ -1589,12 +1595,13 @@ aws.account {
   aliases() []string
 }
 
-// AWS cloud service for encrypted file storage
+// AWS Elastic File System (EFS) Service
 aws.efs {
   // a list of filesystems managed by the service
   filesystems() []aws.efs.filesystem
 }
 
+// AWS Elastic File System (EFS) Filesystem
 private aws.efs.filesystem {
   // name of the filesystem
   name string
@@ -1616,15 +1623,15 @@ private aws.efs.filesystem {
 
 // AWS service to create and manage permissions for users and groups
 aws.iam {
-  // list of iam users in the account
+  // List of iam users in the account
   users() []aws.iam.user
-  // list of iam roles in the account
+  // List of iam roles in the account
   roles() []aws.iam.role
-  // list of iam groups in the account
+  // List of iam groups in the account
   groups() []aws.iam.group
-  // list of iam policies in the account
+  // List of iam policies in the account
   policies() []aws.iam.policy
-  // list of iam policies attached to a user, role, or group
+  // List of iam policies attached to a user, role, or group
   attachedPolicies() []aws.iam.policy
   // iam credential report
   credentialReport() []aws.iam.usercredentialreportentry
@@ -1632,9 +1639,9 @@ aws.iam {
   accountPasswordPolicy() dict
   // iam account summary
   accountSummary() map[string]int
-  // list of virtual mfs devices associated with the account
+  // List of virtual mfs devices associated with the account
   virtualMfaDevices() []aws.iam.virtualmfadevice
-  // list of server certificates stored in IAM
+  // List of server certificates stored in IAM
   serverCertificates() []dict
 }
 
@@ -1710,13 +1717,13 @@ aws.iam.user {
   passwordLastUsed time
   // tags for the iam user
   tags map[string]string
-  // list of inline policies attached to the user
+  // List of inline policies attached to the user
   policies() []string
-  // list of managed policies attached to the user
+  // List of managed policies attached to the user
   attachedPolicies() []aws.iam.policy
-  // list of group ARNs that the user belongs to
+  // List of group ARNs that the user belongs to
   groups() []string
-  // list of access keys metadata associated with the user
+  // List of access keys metadata associated with the user
   accessKeys() []dict
 }
 
@@ -1739,16 +1746,16 @@ aws.iam.policy {
   updateDate() time
   // scope of the policy
   scope() string
-  // list of versions for the policy
+  // List of versions for the policy
   versions() []aws.iam.policyversion
   // default version of the policy
   defaultVersion() aws.iam.policyversion
 
-  // list of users attached to the policy
+  // List of users attached to the policy
   attachedUsers() []aws.iam.user
-  // list of roles attached to the policy
+  // List of roles attached to the policy
   attachedRoles() []aws.iam.role
-  // list of groups attached to the policy
+  // List of groups attached to the policy
   attachedGroups() []aws.iam.group
 }
 
@@ -1792,7 +1799,7 @@ aws.iam.group {
   name string
   // time when the group was created
   createDate time
-  // list of usernames that belong to the group
+  // List of usernames that belong to the group
   usernames []string
 }
 
@@ -1808,9 +1815,9 @@ private aws.iam.virtualmfadevice {
 
 // AWS service for machine learning
 aws.sagemaker {
-  // list of sagemaker endpoints
+  // List of sagemaker endpoints
   endpoints() []aws.sagemaker.endpoint
-  // list of sagemaker notebook instances
+  // List of sagemaker notebook instances
   notebookInstances() []aws.sagemaker.notebookinstance
 }
 
@@ -1851,7 +1858,7 @@ private aws.sagemaker.endpoint {
 
 // AWS SNS
 aws.sns {
-  // list of sns topics
+  // List of sns topics
   topics() []aws.sns.topic
 }
 
@@ -1861,7 +1868,7 @@ private aws.sns.topic {
   arn string
   // region where the sns topic exists
   region string
-  // list of subscriptions associated with the topic ARN
+  // List of subscriptions associated with the topic ARN
   subscriptions() []aws.sns.subscription 
   // attributes for the sns topic, including kms id if any
   attributes() dict
@@ -1879,7 +1886,7 @@ private aws.sns.subscription {
 
 // AWS service for a managed ElasticSearch service
 aws.es {
-  // list of ElasticSearch domains
+  // List of ElasticSearch domains
   domains() []aws.es.domain
 }
 
@@ -1903,7 +1910,7 @@ private aws.es.domain {
 
 // AWS Certificate Manager resource for assessing the configuration of AWS Certificate Manager
 aws.acm {
-  // list of `aws.acm.certificate` objects representing ACM certificates configured within the account
+  // List of `aws.acm.certificate` objects representing ACM certificates configured within the account
   certificates() []aws.acm.certificate
 }
 
@@ -1931,7 +1938,7 @@ private aws.acm.certificate {
 
 // AWS Auto Scaling
 aws.autoscaling {
-  // list of autoscaling groups across the account
+  // List of autoscaling groups across the account
   groups() []aws.autoscaling.group
 }
 
@@ -1941,7 +1948,7 @@ private aws.autoscaling.group {
   arn string
   // name of the group
   name string
-  // list of load balancer names associated with the group
+  // List of load balancer names associated with the group
   loadBalancerNames []string
   // health check type used by the group (ELB|EC2)
   healthCheckType string
@@ -1951,9 +1958,9 @@ private aws.autoscaling.group {
 
 // AWS Elastic Load Balancing
 aws.elb {
-  // list of classic load balancers
+  // List of classic load balancers
   classicLoadBalancers() []aws.elb.loadbalancer
-  // list of application, gateway, and network load balancers (elbv2)
+  // List of application, gateway, and network load balancers (elbv2)
   loadBalancers() []aws.elb.loadbalancer
 }
 
@@ -1963,7 +1970,7 @@ private aws.elb.loadbalancer {
   arn string
   // dns name for the load balancer
   dnsName string
-  // list of listener configurations for the load balancer
+  // List of listener configurations for the load balancer
   listenerDescriptions() []dict
   // user specified name for the load balancer
   name string
@@ -1975,7 +1982,7 @@ private aws.elb.loadbalancer {
 
 // AWS CodeBuild for building and testing code
 aws.codebuild {
-  // list of build projects
+  // List of build projects
   projects() []aws.codebuild.project
 }
 
@@ -1999,7 +2006,7 @@ private aws.codebuild.project {
 
 // Amazon GuardDuty for threat detection
 aws.guardduty {
-  // list of guardduty detectors
+  // List of guardduty detectors
   detectors() []aws.guardduty.detector
 }
 
@@ -2013,13 +2020,13 @@ private aws.guardduty.detector {
   status string
   // publishing frequency for the detector
   findingPublishingFrequency string
-  // list of unarchivedFindings found by the detector
+  // List of unarchivedFindings found by the detector
   unarchivedFindings() []dict
 }
 
 // AWS Security Hub service for viewing and managing security alerts
 aws.securityhub {
-  // list of hubs across the account
+  // List of hubs across the account
   hubs() []aws.securityhub.hub
 }
 
@@ -2033,7 +2040,7 @@ private aws.securityhub.hub {
 
 // AWS Secrets Manager for rotating, managing, and retrieving secrets
 aws.secretsmanager {
-  // list of secrets
+  // List of secrets
   secrets() []aws.secretsmanager.secret
 }
 
@@ -2051,7 +2058,7 @@ private aws.secretsmanager.secret {
 
 // AWS EMR for large data processing
 aws.emr {
-  // list of emr clusters
+  // List of emr clusters
   clusters() []aws.emr.cluster
 }
 
@@ -2067,7 +2074,7 @@ private aws.emr.cluster {
   outpostArn string
   // details about the current status of the cluster
   status dict
-  // list of master instances for the cluster
+  // List of master instances for the cluster
   masterInstances() []dict
   // emr cluster id
   id string
@@ -2077,11 +2084,11 @@ private aws.emr.cluster {
 
 // AWS CloudWatch provides observability of AWS resources and applications
 aws.cloudwatch {
-  // list of cloudwatch log groups
+  // List of cloudwatch log groups
   logGroups() []aws.cloudwatch.loggroup
-  // list of cloudwatch alarms
+  // List of cloudwatch alarms
   alarms() []aws.cloudwatch.metricsalarm
-  // list of cloudwatch metrics
+  // List of cloudwatch metrics
   metrics() []aws.cloudwatch.metric
 }
 
@@ -2095,15 +2102,15 @@ private aws.cloudwatch.metricsalarm {
   metricNamespace string
   // region where the alarm exists
   region string
-  // list of alarm actions (sns topic ARNs) associated with the alarm
+  // List of alarm actions (sns topic ARNs) associated with the alarm
   actions []aws.sns.topic
   // state of the alarm
   state string
   // description of the reason for the state
   stateReason string
-  // list of snsTopic ARNs to be triggered for insufficientDataActions
+  // List of snsTopic ARNs to be triggered for insufficientDataActions
   insufficientDataActions []aws.sns.topic
-  // list of snsTopic ARNs to be triggered for okActions
+  // List of snsTopic ARNs to be triggered for okActions
   okActions []aws.sns.topic
   // name of the alarm
   name string
@@ -2117,7 +2124,7 @@ private aws.cloudwatch.metric {
   namespace string
   // region where the metric exists
   region string
-  // list of cloudwatch metric alarms for the metric
+  // List of cloudwatch metric alarms for the metric
   alarms() []aws.cloudwatch.metricsalarm
   // dimensions that apply to the metric
   dimensions() []aws.cloudwatch.metricdimension
@@ -2173,7 +2180,7 @@ private aws.cloudwatch.loggroup {
   arn string
   // name of the log group
   name string
-  // list of metric filters associated with the log group
+  // List of metric filters associated with the log group
   metricsFilters() []aws.cloudwatch.loggroup.metricsfilter
   // KMS key used for log encryption
   kmsKey() aws.kms.key
@@ -2187,7 +2194,7 @@ private aws.cloudwatch.loggroup.metricsfilter {
   filterName string
   // filter pattern associated with the metric
   filterPattern string
-  // list of cloudwatch metrics
+  // List of cloudwatch metrics
   metrics []aws.cloudwatch.metric
 }
 
@@ -2252,7 +2259,7 @@ private aws.kms.key {
 
 // AWS S3 Cloud Object Storage
 aws.s3 {
-  // list of s3 buckets across the account
+  // List of s3 buckets across the account
   buckets() []aws.s3.bucket
 }
 
@@ -2272,13 +2279,13 @@ private aws.s3.bucket {
   policy() aws.s3.bucket.policy
   // tags for the bucket
   tags() map[string]string
-  // list of access control grants associated with the bucket
+  // List of access control grants associated with the bucket
   acl() []aws.s3.bucket.grant
   // owner for the bucket
   owner() map[string]string
   // denotes if bucket is public
   public() bool
-  // list of cors information for the bucket
+  // List of cors information for the bucket
   cors() []aws.s3.bucket.corsrule
   // location of the bucket
   location() string
@@ -2316,13 +2323,13 @@ private aws.s3.bucket.grant {
 private aws.s3.bucket.corsrule {
   // name of the rule
   name string
-  // list of allowed headers
+  // List of allowed headers
   allowedHeaders []string
-  // list of allowed methods (GET, POST, PUT, etc.)
+  // List of allowed methods (GET, POST, PUT, etc.)
   allowedMethods []string
-  // list of origins from which the bucket can be accessed
+  // List of origins from which the bucket can be accessed
   allowedOrigins []string
-  // list of exposed response headers  
+  // List of exposed response headers  
   exposeHeaders []string
   // time in seconds that browser caches preflight response
   maxAgeSeconds int
@@ -2338,19 +2345,19 @@ private aws.s3.bucket.policy {
   version() string
   // unique id for the policy
   id() string
-  // list of statements for the policy
+  // List of statements for the policy
   statements() []dict
 }
 
 // AWS NoSQL database service for scale
 aws.dynamodb {
-  // list of backups for dynamodb
+  // List of backups for dynamodb
   backups() []dict
-  // list of global tables for dynamodb
+  // List of global tables for dynamodb
   globalTables() []aws.dynamodb.globaltable
-  // list of tables for dynamodb
+  // List of tables for dynamodb
   tables() []aws.dynamodb.table
-  // list of dynamodb settings across all regions
+  // List of dynamodb settings across all regions
   limits() []aws.dynamodb.limit
 }
 
@@ -2376,7 +2383,7 @@ private aws.dynamodb.globaltable {
   arn string
   // table name
   name string
-  // list of replica settings for the table
+  // List of replica settings for the table
   replicaSettings() []dict
   // tags for the table
   tags map[string]string
@@ -2404,9 +2411,9 @@ private aws.dynamodb.table {
 
 // AWS RDS for operating and scaling relational dbs
 aws.rds {
-  // list of db instances
+  // List of db instances
   dbInstances() []aws.rds.dbinstance
-  // list of rds db clusters
+  // List of rds db clusters
   dbClusters() []aws.rds.dbcluster
 }
 
@@ -2418,9 +2425,9 @@ private aws.rds.dbcluster {
   region string
   // identifier for the db cluster
   id string
-  // list of db instances that belong to the cluster
+  // List of db instances that belong to the cluster
   members []aws.rds.dbinstance
-  // list of snapshots for the cluster
+  // List of snapshots for the cluster
   snapshots() []aws.rds.snapshot
   // tags for the db cluster
   tags map[string]string
@@ -2454,7 +2461,7 @@ private aws.rds.dbinstance {
   name string
   // number of days for which automated snapshots are retained
   backupRetentionPeriod int
-  // list of snapshots for the db instance
+  // List of snapshots for the db instance
   snapshots() []aws.rds.snapshot
   // denotes whether the instance is encrypted
   storageEncrypted bool
@@ -2462,7 +2469,7 @@ private aws.rds.dbinstance {
   region string
   // denotes whether or not the instance is publicly accessible
   publiclyAccessible bool
-  // list of log types the instance is configured to export to cloudwatch logs
+  // List of log types the instance is configured to export to cloudwatch logs
   enabledCloudwatchLogsExports []string
   // indicates if deletion protection is enabled
   deletionProtection bool
@@ -2480,7 +2487,7 @@ private aws.rds.dbinstance {
   dbInstanceIdentifier string
   // name of the database engine for this DB instance
   engine string
-  // list of VPC security group elements that the DB instance belongs to
+  // List of VPC security group elements that the DB instance belongs to
   securityGroups []aws.ec2.securitygroup
   // current state of this database
   status string
@@ -2488,13 +2495,13 @@ private aws.rds.dbinstance {
 
 // Amazon ElastiCache in-memory data store
 aws.elasticache {
-  // list of clusters
+  // List of clusters
   clusters() []dict
 }
 
 // AWS Redshift for analyzing large amounts of data
 aws.redshift {
-  // list of clusters
+  // List of clusters
   clusters() []aws.redshift.cluster
 }
 
@@ -2522,7 +2529,7 @@ private aws.redshift.cluster {
   name string
   // region where the cluster exists
   region string
-  // list of cluster parameter group names
+  // List of cluster parameter group names
   clusterParameterGroupNames []string
   // tags for the cluster
   tags map[string]string
@@ -2535,7 +2542,7 @@ aws.dms {
 
 // Amazon API Gateway resource for assessing the configuration of the AWS API Gateway service
 aws.apigateway {
-  // list of `aws.apigateway.restapi` objects representing all rest APIs across all enabled regions in the account
+  // List of `aws.apigateway.restapi` objects representing all rest APIs across all enabled regions in the account
   restApis() []aws.apigateway.restapi
 }
 
@@ -2577,7 +2584,7 @@ private aws.apigateway.stage {
 
 // AWS Lambda serverless compute service for running code
 aws.lambda {
-  // list of lambda functions across all regions in the account
+  // List of lambda functions across all regions in the account
   functions() []aws.lambda.function
 }
 
@@ -2609,18 +2616,19 @@ aws.ec2 {
   instances() []aws.ec2.instance
   // map[region]boolean used to denote if ebs encryption is on by default per region
   ebsEncryptionByDefault() map[string]bool
-  // list of volumes across the aws account
+  // List of volumes across the aws account
   volumes() []aws.ec2.volume
-  // list of snapshots across the account
+  // List of snapshots across the account
   snapshots() []aws.ec2.snapshot
-  // list of internet gateways
+  // List of internet gateways
   internetGateways() []aws.ec2.internetgateway
-  // list of vpn connections 
+  // List of vpn connections 
   vpnConnections() []aws.ec2.vpnconnection
-  // list of network ACLs 
+  // List of network ACLs 
   networkAcls() []aws.ec2.networkacl
 }
 
+// AWS EC2 Network ACL
 private aws.ec2.networkacl {
   // ARN for the network ACL
   arn string
@@ -2632,6 +2640,7 @@ private aws.ec2.networkacl {
   entries() []aws.ec2.networkacl.entry
 }
 
+// AWS EC2 Network ACL Entry
 private aws.ec2.networkacl.entry {
   // denotes whether this is an entry for egress rules
   egress bool
@@ -2643,6 +2652,7 @@ private aws.ec2.networkacl.entry {
   id string
 }
 
+// AWS EC2 Network ACL Port Range
 private aws.ec2.networkacl.entry.portrange {
   // starting port for port range
   from int
@@ -2656,7 +2666,7 @@ private aws.ec2.networkacl.entry.portrange {
 private aws.ec2.vpnconnection {
   // ARN for the vpn connection
   arn string
-  // list of telemetry data for the vpn
+  // List of telemetry data for the vpn
   vgwTelemetry []aws.ec2.vgwtelemetry
 }
 
@@ -2809,7 +2819,7 @@ private aws.vpc {
   region string
   // a list of flowlogs for the vpc
   flowLogs() []aws.vpc.flowlog
-  // list of route tables for the vpc
+  // List of route tables for the vpc
   routeTables() []aws.vpc.routetable
   // tags on the vpc
   tags map[string]string
@@ -2879,9 +2889,9 @@ private aws.ec2.securitygroup.ippermission {
 
 // AWS Config
 aws.config {
-  // list of configuration recorders for each region in the account
+  // List of configuration recorders for each region in the account
   recorders() []aws.config.recorder
-  // list of aws config rules
+  // List of aws config rules
   rules() []aws.config.rule
 }
 
@@ -2913,10 +2923,12 @@ private aws.config.recorder {
   region string
 }
 
+// Amazon EKS
 aws.eks {
   clusters() []aws.eks.cluster
 }
 
+// Amazon EKS cluster
 private aws.eks.cluster {
   // name of the cluster
   name string
@@ -3045,7 +3057,7 @@ gcloud.sql.instance {
   settings dict
 }
 
-// Azure AD
+// Azure Active Directory
 azuread {
   users() []azuread.user
   groups() []azuread.group
@@ -3054,7 +3066,7 @@ azuread {
   servicePrincipals() []azuread.serviceprincipal
 }
 
-// Azure AD User
+// Azure Active Directory User
 azuread.user {
   id string
   displayName string
@@ -3069,7 +3081,7 @@ azuread.user {
   properties dict
 }
 
-// Azure AD Group
+// Azure Active Directory Group
 azuread.group {
   id string
   displayName string
@@ -3082,7 +3094,7 @@ azuread.group {
   members() []azuread.user
 }
 
-// Azure AD Domain
+// Azure Active Directory Domain
 azuread.domain {
   name string
   isVerified bool
@@ -3091,12 +3103,12 @@ azuread.domain {
   properties dict
 }
 
-// Azure AD Application
+// Azure Active Directory Application
 azuread.application {
   id string
 }
 
-// Azure AD Service Principal
+// Azure Active Directory Service Principal
 azuread.serviceprincipal {
   id string
 }
@@ -3129,7 +3141,7 @@ azurerm.resource {
 // AzureRM Compute
 azurerm.compute {
   vms() []azurerm.compute.vm
-  // lists all the disks under a subscription
+  // Lists all the disks under a subscription
   disks() []azurerm.compute.disk
 }
 
@@ -3830,7 +3842,7 @@ windows.feature {
   installState int
 }
 
-// Windows firewall resource
+// Windows Firewall resource
 windows.firewall {
   // Global firewall settings
   settings() dict
@@ -3842,7 +3854,7 @@ windows.firewall {
   rules() []windows.firewall.rule
 }
 
-// windows firewall profile entry
+// Windows Firewall profile entry
 // https://docs.microsoft.com/en-us/previous-versions/windows/desktop/wfascimprov/msft-netfirewallprofile
 windows.firewall.profile {
   instanceID string
@@ -3882,7 +3894,7 @@ windows.firewall.profile {
   logFileName string
 }
 
-// windows firewall rule entry
+// Windows Firewall rule entry
 // https://docs.microsoft.com/en-us/previous-versions/windows/desktop/wfascimprov/msft-netfirewallrule
 windows.firewall.rule {
   // A string that uniquely identifies this instance within the PolicyStore
@@ -3923,10 +3935,12 @@ windows.firewall.rule {
   policyStoreSourceType int
 }
 
+// Windows BitLocker
 windows.bitlocker {
   volumes() []windows.bitlocker.volume
 }
 
+// Windows BitLocker volume
 windows.bitlocker.volume {
   // Unique identifier for the volume
   deviceID string
@@ -3965,7 +3979,7 @@ private windows.security.product {
   timestamp time
 }
 
-// Returns the health for windows security provider
+// Returns the health for Windows security provider
 windows.security.health {
   firewall dict
   autoUpdate dict
@@ -3980,7 +3994,7 @@ windows.security.health {
 yum {
   // variables defined built-in in Yum configuration files (/etc/yum.conf and all .repo files in the /etc/yum.repos.d/)
   vars() map[string]string
-  // list of all configured yum repositories
+  // List of all configured yum repositories
   repos() []yum.repo
 }
 
@@ -4030,7 +4044,7 @@ ipmi.chassis {
   systemBootOptions() dict
 }
 
-// Equinix Metal Project
+// Equinix Metal project
 equinix.metal.project {
   id string
   name string
@@ -4044,7 +4058,7 @@ equinix.metal.project {
   devices() []equinix.metal.device
 }
 
-// Equinix Metal Organization
+// Equinix Metal organization
 equinix.metal.organization {
   id string
   name string
@@ -4061,7 +4075,7 @@ equinix.metal.organization {
   url string
 }
 
-// Equinix Metal User
+// Equinix Metal user
 equinix.metal.user {
   id string
   firstName string
@@ -4081,7 +4095,7 @@ equinix.metal.user {
   vpn bool
 }
 
-// Equinix Metal SSH Key
+// Equinix Metal SSH key
 equinix.metal.sshkey {
   id string
   label string
@@ -4092,7 +4106,7 @@ equinix.metal.sshkey {
   url string
 }
 
-// Equinix Metal Device
+// Equinix Metal device
 equinix.metal.device {
   id string
   shortID string
@@ -4108,7 +4122,7 @@ equinix.metal.device {
   os dict
 }
 
-// Kubernetes Cluster
+// Kubernetes cluster
 k8s {
   // Available Resource Types
   apiResources() []k8s.apiresource
@@ -4170,13 +4184,13 @@ k8s.apiresource {
   version string
   // Kubernetes Object Type
   kind string
-  // list of suggested short names of the resource
+  // List of suggested short names of the resource
   shortNames []string
-  // list of the grouped resources
+  // List of the grouped resources
   categories []string
 }
 
-// Kubernetes Node
+// Kubernetes node
 k8s.node {
   // Kubernetes Object UID
   uid string
@@ -4248,7 +4262,7 @@ container.image {
   repository() container.repository
 }
 
-// Container Registry Repository
+// Container registry repository
 container.repository {
   // Container Registry Repository Name
   name string
@@ -4260,7 +4274,7 @@ container.repository {
   registry string
 }
 
-// single application container
+// Kubernetes workload container
 private k8s.container {
   uid string
   // Name of the container
@@ -4295,7 +4309,7 @@ private k8s.container {
   tty bool
 }
 
-// k8s init container
+// Kubernetes Init Container
 private k8s.initContainer {
   uid string
   // Name of the container
@@ -4436,7 +4450,7 @@ k8s.job {
   manifest dict
 }
 
-// Kubernetes Cron Job
+// Kubernetes CronJob
 k8s.cronjob {
   // Kubernetes Object UID
   uid string
@@ -4478,9 +4492,9 @@ k8s.secret {
   created time
   // Full resource manifest
   manifest dict
-  // secret type
+  // Secret type
   type string
-  // secret certificates
+  // Secret certificates
   certificates() []certificate
 }
 
@@ -4506,7 +4520,7 @@ k8s.podsecuritypolicy {
   spec dict
 }
 
-// Kubernetes Secret
+// Kubernetes ConfigMap
 k8s.configmap {
   // Kubernetes Object UID
   uid string
@@ -4726,12 +4740,13 @@ k8s.customresource {
   manifest dict
 }
 
+// GitHub resource
 github {
   repositories() []github.repository
   user() github.user
 }
 
-// Organization represents a GitHub organization account
+// GitHub organization
 github.organization {
   login string
   id int
@@ -4770,6 +4785,7 @@ github.organization {
   installations() []github.installation
 }
 
+// GitHub user
 private github.user {
   id int
   login string
@@ -4782,6 +4798,7 @@ private github.user {
   company string
 }
 
+// GitHub repository
 github.repository {
   init(name string) // can only be used when logged in to github as a user
   id int
@@ -4811,6 +4828,8 @@ github.repository {
   releases() []github.release
   owner github.user
 }
+
+// GitHub repository file
 private github.file {
   path string
   type string
@@ -4822,6 +4841,7 @@ private github.file {
   content() string
 }
 
+// GitHub Release
 private github.release {
   url string
   name string
@@ -4829,6 +4849,7 @@ private github.release {
   preRelease bool
 }
 
+// GitHub repository branch
 private github.branch {
   name string
   protected bool
@@ -4840,6 +4861,7 @@ private github.branch {
   isDefault bool
 }
 
+// GitHub repository branch protection
 private github.branchprotection {
   id string
   requiredStatusChecks dict 
@@ -4852,6 +4874,7 @@ private github.branchprotection {
   requiredConversationResolution dict
 }
 
+// GitHub repository commit
 private github.commit {
   url string
   author github.user
@@ -4862,6 +4885,7 @@ private github.commit {
   repoName string
 }
 
+// GitHub repository pull request
 private github.mergeRequest {
   id int
   number int
@@ -4877,6 +4901,7 @@ private github.mergeRequest {
   repoName string
 }
 
+// GitHub repository review
 private github.review {
   url string
   state string
@@ -5106,7 +5131,7 @@ terraform.file {
   blocks() []terraform.block
 }
 
-// Position of the terraform configuration block in file
+// Position of the Terraform configuration block in file
 terraform.fileposition {
   // File path to Terraform configuration file
   path string
