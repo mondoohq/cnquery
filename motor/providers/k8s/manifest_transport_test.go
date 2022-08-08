@@ -65,3 +65,15 @@ func TestManifestPod(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(pods))
 }
+
+func TestManifestStatefulSet(t *testing.T) {
+	manifestFile := "./resources/testdata/appsv1.statefulset.yaml"
+	transport := newManifestTransport("", WithManifestFile(manifestFile))
+	require.NotNil(t, transport)
+	res, err := transport.Resources("statefulset", "mondoo-statefulset", "default")
+	require.NoError(t, err)
+	assert.Equal(t, "mondoo-statefulset", res.Name)
+	assert.Equal(t, "statefulset", res.Kind)
+	assert.Equal(t, "k8s-manifest", transport.PlatformInfo().Runtime)
+	assert.Equal(t, 1, len(res.Resources))
+}

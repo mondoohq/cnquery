@@ -98,3 +98,26 @@ func TestManifestResolverWrongDiscovery(t *testing.T) {
 	// context has to reference the default namespace
 	assert.Equalf(t, 1, len(assetList), "discovering pods in a cronjob manifest should only result in the manifest")
 }
+
+func TestManifestResolverStatefulSetDiscovery(t *testing.T) {
+	resolver := &Resolver{}
+	manifestFile := "../../providers/k8s/resources/testdata/appsv1.statefulset.yaml"
+
+	assetList, err := resolver.Resolve(&providers.TransportConfig{
+		PlatformId: "//platform/k8s/uid/123/namespace/default/statefulsets/name/mondoo-statefulset/uid/",
+		Backend:    providers.TransportBackend_CONNECTION_K8S,
+		Options: map[string]string{
+			"path": manifestFile,
+		},
+		Discover: &providers.Discovery{
+			Targets: []string{"statefulsets"},
+		},
+	}, nil, nil)
+	require.NoError(t, err)
+	// When this check fails locally, check your kubeconfig.
+	// context has to reference the default namespace
+	assert.Equal(t, 2, len(assetList))
+	assert.Contains(t, assetList[1].Platform.Family, "k8s-workload")
+	assert.Contains(t, assetList[1].Platform.Family, "k8s")
+	assert.Equal(t, "k8s-statefulset", assetList[1].Platform.Name)
+}

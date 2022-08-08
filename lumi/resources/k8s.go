@@ -1285,6 +1285,76 @@ func (k *lumiK8sStatefulset) id() (string, error) {
 	return k.Uid()
 }
 
+func (p *lumiK8sStatefulset) init(args *lumi.Args) (*lumi.Args, K8sStatefulset, error) {
+	// pass-through if all args are already provided
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	// get platform identifier infos
+	identifierUid, identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
+	if err != nil {
+		return args, nil, nil
+	}
+
+	// search for existing resources if uid or name/namespace is provided
+	obj, err := p.MotorRuntime.CreateResource("k8s")
+	if err != nil {
+		return nil, nil, err
+	}
+	k8sResource := obj.(K8s)
+
+	statefulSets, err := k8sResource.Statefulsets()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var matchFn func(statefulset K8sStatefulset) bool
+
+	var uidRaw string
+	if len(*args) == 0 {
+		uidRaw = identifierUid
+	} else if _, ok := (*args)["uid"]; ok {
+		uidRaw = (*args)["uid"].(string)
+	}
+
+	if uidRaw != "" {
+		matchFn = func(statefulset K8sStatefulset) bool {
+			uid, _ := statefulset.Uid()
+			return uid == uidRaw
+		}
+	}
+
+	var nameRaw string
+	var namespaceRaw string
+	if _, ok := (*args)["name"]; ok {
+		nameRaw = (*args)["name"].(string)
+	}
+	if _, ok := (*args)["namespace"]; ok {
+		namespaceRaw = (*args)["namespace"].(string)
+	}
+	if nameRaw == "" && namespaceRaw == "" {
+		nameRaw = identifierName
+		namespaceRaw = identifierNamespace
+	}
+	if nameRaw != "" && namespaceRaw != "" {
+		matchFn = func(statefulset K8sStatefulset) bool {
+			name, _ := statefulset.Name()
+			namespace, _ := statefulset.Namespace()
+			return name == nameRaw && namespace == namespaceRaw
+		}
+	}
+
+	for i := range statefulSets {
+		statefulset := statefulSets[i].(K8sStatefulset)
+		if matchFn(statefulset) {
+			return nil, statefulset, nil
+		}
+	}
+
+	return args, nil, nil
+}
+
 func (k *lumiK8sStatefulset) GetNamespace() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }

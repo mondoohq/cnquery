@@ -18,6 +18,7 @@ import (
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/fsutil"
 	"go.mondoo.io/mondoo/motor/providers/k8s/resources"
+	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -403,4 +404,45 @@ func (t *manifestTransport) CronJobs(namespace v1.Namespace) ([]batchv1.CronJob,
 	}
 
 	return cronJobs, nil
+}
+
+func (t *manifestTransport) StatefulSet(namespace string, name string) (*appsv1.StatefulSet, error) {
+	result, err := t.Resources("statefulsets.v1.apps", name, namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result.Resources) > 1 {
+		return nil, errors.New("multiple statefulsets found")
+	}
+	foundStatefulSet, ok := result.Resources[0].(*appsv1.StatefulSet)
+	if !ok {
+		return nil, errors.New("could not convert k8s resource to statefulset")
+	}
+
+	if foundStatefulSet.Name == "" {
+		return nil, errors.New("statefulset not found")
+	}
+	return foundStatefulSet, nil
+}
+
+func (t *manifestTransport) StatefulSets(namespace v1.Namespace) ([]appsv1.StatefulSet, error) {
+	result, err := t.Resources("statefulsets.v1.apps", "", namespace.GetNamespace())
+	if err != nil {
+		return nil, err
+	}
+
+	var statefulSets []appsv1.StatefulSet
+	for i := range result.Resources {
+		r := result.Resources[i]
+
+		statefulSet, ok := r.(*appsv1.StatefulSet)
+		if !ok {
+			log.Warn().Msg("could not convert k8s resource to statefulset")
+			continue
+		}
+		statefulSets = append(statefulSets, *statefulSet)
+	}
+
+	return statefulSets, nil
 }
