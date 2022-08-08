@@ -18,9 +18,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *Resolver) Resolve(t *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
-	resolved := []*asset.Asset{}
-
+func (r *Resolver) Resolve(root *asset.Asset, t *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	trans, err := ipmi_transport.New(t)
 	if err != nil {
 		return nil, err
@@ -38,14 +36,18 @@ func (r *Resolver) Resolve(t *providers.TransportConfig, cfn credentials.Credent
 		return nil, err
 	}
 
-	resolved = append(resolved, &asset.Asset{
+	resolved := &asset.Asset{
 		PlatformIds: []string{identifier},
-		// TODO: consider using the ipmi vendor id and product id
-		Name:        "IPMI device " + trans.Guid(),
+		Name:        root.Name,
 		Platform:    pf,
 		Connections: []*providers.TransportConfig{t}, // pass-in the current config
 		Labels:      map[string]string{},
-	})
+	}
 
-	return resolved, nil
+	// TODO: consider using the ipmi vendor id and product id
+	if resolved.Name == "" {
+		resolved.Name = "IPMI device " + trans.Guid()
+	}
+
+	return []*asset.Asset{resolved}, nil
 }

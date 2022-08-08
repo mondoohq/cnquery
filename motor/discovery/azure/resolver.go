@@ -28,7 +28,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryInstances}
 }
 
-func (r *Resolver) Resolve(tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	subscriptionID := tc.Options["subscriptionID"]
@@ -77,14 +77,18 @@ func (r *Resolver) Resolve(tc *providers.TransportConfig, cfn credentials.Creden
 		return nil, err
 	}
 
-	name := subscriptionID
-	if subscription.DisplayName != nil {
-		name = *subscription.DisplayName
+	name := root.Name
+	if name == "" {
+		subName := subscriptionID
+		if subscription.DisplayName != nil {
+			subName = *subscription.DisplayName
+		}
+		name = "Azure subscription " + subName
 	}
 
 	resolved = append(resolved, &asset.Asset{
 		PlatformIds: []string{identifier},
-		Name:        "Azure subscription " + name,
+		Name:        name,
 		Platform:    pf,
 		Connections: []*providers.TransportConfig{tc}, // pass-in the current config
 		Labels: map[string]string{

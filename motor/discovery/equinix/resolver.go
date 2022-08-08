@@ -18,7 +18,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *Resolver) Resolve(t *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(root *asset.Asset, t *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// add aws api as asset
@@ -40,9 +40,14 @@ func (r *Resolver) Resolve(t *providers.TransportConfig, cfn credentials.Credent
 		return nil, err
 	}
 
+	name := root.Name
+	if name == "" {
+		name = "Equinix Account" // TODO: we need to relate this to something
+	}
+
 	resolved = append(resolved, &asset.Asset{
 		PlatformIds: []string{identifier},
-		Name:        "Equinix Account", // TODO: we need to relate this to something
+		Name:        name,
 		Platform:    pf,
 		Connections: []*providers.TransportConfig{t}, // pass-in the current config
 	})
