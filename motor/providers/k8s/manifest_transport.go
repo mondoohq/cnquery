@@ -528,3 +528,44 @@ func (t *manifestTransport) Jobs(namespace v1.Namespace) ([]batchv1.Job, error) 
 
 	return jobs, nil
 }
+
+func (t *manifestTransport) ReplicaSet(namespace string, name string) (*appsv1.ReplicaSet, error) {
+	result, err := t.Resources("replicasets.v1.apps", name, namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result.Resources) > 1 {
+		return nil, errors.New("multiple replicasets found")
+	}
+	foundReplicaSet, ok := result.Resources[0].(*appsv1.ReplicaSet)
+	if !ok {
+		return nil, errors.New("could not convert k8s resource to replicaset")
+	}
+
+	if foundReplicaSet.Name == "" {
+		return nil, errors.New("replicaset not found")
+	}
+	return foundReplicaSet, nil
+}
+
+func (t *manifestTransport) ReplicaSets(namespace v1.Namespace) ([]appsv1.ReplicaSet, error) {
+	result, err := t.Resources("replicasets.v1.apps", "", namespace.GetNamespace())
+	if err != nil {
+		return nil, err
+	}
+
+	var replicaSets []appsv1.ReplicaSet
+	for i := range result.Resources {
+		r := result.Resources[i]
+
+		replicaSet, ok := r.(*appsv1.ReplicaSet)
+		if !ok {
+			log.Warn().Msg("could not convert k8s resource to replicaset")
+			continue
+		}
+		replicaSets = append(replicaSets, *replicaSet)
+	}
+
+	return replicaSets, nil
+}

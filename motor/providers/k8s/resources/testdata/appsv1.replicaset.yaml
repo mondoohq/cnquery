@@ -1,0 +1,19 @@
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: mondoo-replicaset
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      name: mondoo-replicaset
+  template:
+    metadata:
+      labels:
+        name: mondoo-replicaset
+    spec:
+      containers:
+        - name: mondoo-agent
+          image: docker.io/mondoo/client:latest
+          command: ["mondoo", "serve", "--config", "/etc/opt/mondoo/mondoo.yml"]

@@ -364,3 +364,21 @@ func (t *apiTransport) Job(namespace string, name string) (*batchv1.Job, error) 
 	}
 	return job, err
 }
+
+func (t *apiTransport) ReplicaSets(namespace v1.Namespace) ([]appsv1.ReplicaSet, error) {
+	ctx := context.Background()
+	list, err := t.clientset.AppsV1().ReplicaSets(namespace.Name).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return list.Items, err
+}
+
+func (t *apiTransport) ReplicaSet(namespace string, name string) (*appsv1.ReplicaSet, error) {
+	ctx := context.Background()
+	replicaset, err := t.clientset.AppsV1().ReplicaSets(namespace).Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return replicaset, err
+}

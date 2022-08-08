@@ -1381,6 +1381,76 @@ func (k *lumiK8sReplicaset) id() (string, error) {
 	return k.Uid()
 }
 
+func (p *lumiK8sReplicaset) init(args *lumi.Args) (*lumi.Args, K8sReplicaset, error) {
+	// pass-through if all args are already provided
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	// get platform identifier infos
+	identifierUid, identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
+	if err != nil {
+		return args, nil, nil
+	}
+
+	// search for existing resources if uid or name/namespace is provided
+	obj, err := p.MotorRuntime.CreateResource("k8s")
+	if err != nil {
+		return nil, nil, err
+	}
+	k8sResource := obj.(K8s)
+
+	replicaSets, err := k8sResource.Replicasets()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var matchFn func(replicaset K8sReplicaset) bool
+
+	var uidRaw string
+	if len(*args) == 0 {
+		uidRaw = identifierUid
+	} else if _, ok := (*args)["uid"]; ok {
+		uidRaw = (*args)["uid"].(string)
+	}
+
+	if uidRaw != "" {
+		matchFn = func(replicaset K8sReplicaset) bool {
+			uid, _ := replicaset.Uid()
+			return uid == uidRaw
+		}
+	}
+
+	var nameRaw string
+	var namespaceRaw string
+	if _, ok := (*args)["name"]; ok {
+		nameRaw = (*args)["name"].(string)
+	}
+	if _, ok := (*args)["namespace"]; ok {
+		namespaceRaw = (*args)["namespace"].(string)
+	}
+	if nameRaw == "" && namespaceRaw == "" {
+		nameRaw = identifierName
+		namespaceRaw = identifierNamespace
+	}
+	if nameRaw != "" && namespaceRaw != "" {
+		matchFn = func(replicaset K8sReplicaset) bool {
+			name, _ := replicaset.Name()
+			namespace, _ := replicaset.Namespace()
+			return name == nameRaw && namespace == namespaceRaw
+		}
+	}
+
+	for i := range replicaSets {
+		replicaset := replicaSets[i].(K8sReplicaset)
+		if matchFn(replicaset) {
+			return nil, replicaset, nil
+		}
+	}
+
+	return args, nil, nil
+}
+
 func (k *lumiK8sReplicaset) GetNamespace() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }

@@ -19,6 +19,7 @@ const (
 	DiscoveryCronJobs        = "cronjobs"
 	DiscoveryStatefulSets    = "statefulsets"
 	DiscoveryDeployments     = "deployments"
+	DiscoveryReplicaSets     = "replicasets"
 	DiscoveryContainerImages = "container-images"
 )
 
@@ -36,6 +37,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 		DiscoveryCronJobs,
 		DiscoveryStatefulSets,
 		DiscoveryDeployments,
+		DiscoveryReplicaSets,
 		DiscoveryContainerImages,
 	}
 }
@@ -207,6 +209,18 @@ func addSeparateAssets(tc *providers.TransportConfig, transport k8s_transport.Tr
 		assetList, err := ListJobs(transport, connection, clusterIdentifier, namespacesFilter)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s jobs")
+			return nil, err
+		}
+		resolved = append(resolved, assetList...)
+	}
+
+	// discover replicasets
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryReplicaSets) {
+		log.Debug().Strs("namespace", namespacesFilter).Msg("search for replicasets")
+		connection := tc.Clone()
+		assetList, err := ListReplicaSets(transport, connection, clusterIdentifier, namespacesFilter)
+		if err != nil {
+			log.Error().Err(err).Msg("could not fetch k8s replicasets")
 			return nil, err
 		}
 		resolved = append(resolved, assetList...)
