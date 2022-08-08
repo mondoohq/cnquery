@@ -1399,7 +1399,13 @@ func (k *lumiK8sJob) id() (string, error) {
 
 func (p *lumiK8sJob) init(args *lumi.Args) (*lumi.Args, K8sJob, error) {
 	// pass-through if all args are already provided
-	if len(*args) == 0 || len(*args) > 2 {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	// get platform identifier infos
+	identifierUid, identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
+	if err != nil {
 		return args, nil, nil
 	}
 
@@ -1410,41 +1416,51 @@ func (p *lumiK8sJob) init(args *lumi.Args) (*lumi.Args, K8sJob, error) {
 	}
 	k8sResource := obj.(K8s)
 
-	secrets, err := k8sResource.Jobs()
+	jobs, err := k8sResource.Jobs()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var matchFn func(configMap K8sJob) bool
+	var matchFn func(job K8sJob) bool
 
-	uidRaw := (*args)["uid"]
-	if uidRaw != nil {
-		matchFn = func(configMap K8sJob) bool {
-			uid, _ := configMap.Uid()
-			if uid == uidRaw.(string) {
-				return true
-			}
-			return false
+	var uidRaw string
+	if len(*args) == 0 {
+		uidRaw = identifierUid
+	} else if _, ok := (*args)["uid"]; ok {
+		uidRaw = (*args)["uid"].(string)
+	}
+
+	if uidRaw != "" {
+		matchFn = func(job K8sJob) bool {
+			uid, _ := job.Uid()
+			return uid == uidRaw
 		}
 	}
 
-	nameRaw := (*args)["name"]
-	namespaceRaw := (*args)["namespace"]
-	if nameRaw != nil && namespaceRaw != nil {
-		matchFn = func(configMap K8sJob) bool {
-			name, _ := configMap.Name()
-			namespace, _ := configMap.Namespace()
-			if name == nameRaw.(string) && namespace == namespaceRaw.(string) {
-				return true
-			}
-			return false
+	var nameRaw string
+	var namespaceRaw string
+	if _, ok := (*args)["name"]; ok {
+		nameRaw = (*args)["name"].(string)
+	}
+	if _, ok := (*args)["namespace"]; ok {
+		namespaceRaw = (*args)["namespace"].(string)
+	}
+	if nameRaw == "" && namespaceRaw == "" {
+		nameRaw = identifierName
+		namespaceRaw = identifierNamespace
+	}
+	if nameRaw != "" && namespaceRaw != "" {
+		matchFn = func(job K8sJob) bool {
+			name, _ := job.Name()
+			namespace, _ := job.Namespace()
+			return name == nameRaw && namespace == namespaceRaw
 		}
 	}
 
-	for i := range secrets {
-		configMap := secrets[i].(K8sJob)
-		if matchFn(configMap) {
-			return nil, configMap, nil
+	for i := range jobs {
+		job := jobs[i].(K8sJob)
+		if matchFn(job) {
+			return nil, job, nil
 		}
 	}
 

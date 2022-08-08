@@ -487,3 +487,44 @@ func (t *manifestTransport) StatefulSets(namespace v1.Namespace) ([]appsv1.State
 
 	return statefulSets, nil
 }
+
+func (t *manifestTransport) Job(namespace string, name string) (*batchv1.Job, error) {
+	result, err := t.Resources("jobs.v1.batch", name, namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result.Resources) > 1 {
+		return nil, errors.New("multiple jobs found")
+	}
+	foundJob, ok := result.Resources[0].(*batchv1.Job)
+	if !ok {
+		return nil, errors.New("could not convert k8s resource to job")
+	}
+
+	if foundJob.Name == "" {
+		return nil, errors.New("job not found")
+	}
+	return foundJob, nil
+}
+
+func (t *manifestTransport) Jobs(namespace v1.Namespace) ([]batchv1.Job, error) {
+	result, err := t.Resources("jobs.v1.batch", "", namespace.GetNamespace())
+	if err != nil {
+		return nil, err
+	}
+
+	var jobs []batchv1.Job
+	for i := range result.Resources {
+		r := result.Resources[i]
+
+		job, ok := r.(*batchv1.Job)
+		if !ok {
+			log.Warn().Msg("could not convert k8s resource to job")
+			continue
+		}
+		jobs = append(jobs, *job)
+	}
+
+	return jobs, nil
+}

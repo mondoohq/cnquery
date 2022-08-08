@@ -186,6 +186,36 @@ func (mr *MockTransportMockRecorder) Identifier() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Identifier", reflect.TypeOf((*MockTransport)(nil).Identifier))
 }
 
+// Job mocks base method.
+func (m *MockTransport) Job(namespace, name string) (*v1.Job, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Job", namespace, name)
+	ret0, _ := ret[0].(*v1.Job)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Job indicates an expected call of Job.
+func (mr *MockTransportMockRecorder) Job(namespace, name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Job", reflect.TypeOf((*MockTransport)(nil).Job), namespace, name)
+}
+
+// Jobs mocks base method.
+func (m *MockTransport) Jobs(namespace v10.Namespace) ([]v1.Job, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Jobs", namespace)
+	ret0, _ := ret[0].([]v1.Job)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Jobs indicates an expected call of Jobs.
+func (mr *MockTransportMockRecorder) Jobs(namespace interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Jobs", reflect.TypeOf((*MockTransport)(nil).Jobs), namespace)
+}
+
 // Kind mocks base method.
 func (m *MockTransport) Kind() providers.Kind {
 	m.ctrl.T.Helper()

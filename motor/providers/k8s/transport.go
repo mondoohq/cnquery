@@ -46,6 +46,8 @@ type Transport interface {
 	StatefulSets(namespace v1.Namespace) ([]appsv1.StatefulSet, error)
 	Deployment(namespace string, name string) (*appsv1.Deployment, error)
 	Deployments(namespace v1.Namespace) ([]appsv1.Deployment, error)
+	Job(namespace string, name string) (*batchv1.Job, error)
+	Jobs(namespace v1.Namespace) ([]batchv1.Job, error)
 }
 
 type ClusterInfo struct {
@@ -102,6 +104,10 @@ func getPlatformInfo(selectedResourceID string, runtime string) *platform.Platfo
 	case strings.Contains(selected, "/deployments/"):
 		platformData.Name = "k8s-deployment"
 		platformData.Title = "Kubernetes Deployment"
+		return platformData
+	case strings.Contains(selected, "/jobs/"):
+		platformData.Name = "k8s-job"
+		platformData.Title = "Kubernetes Job"
 		return platformData
 	}
 
