@@ -333,6 +333,36 @@ func (mr *MockTransportMockRecorder) Pods(namespace interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Pods", reflect.TypeOf((*MockTransport)(nil).Pods), namespace)
 }
 
+// ReplicaSet mocks base method.
+func (m *MockTransport) ReplicaSet(namespace, name string) (*v1.ReplicaSet, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReplicaSet", namespace, name)
+	ret0, _ := ret[0].(*v1.ReplicaSet)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ReplicaSet indicates an expected call of ReplicaSet.
+func (mr *MockTransportMockRecorder) ReplicaSet(namespace, name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplicaSet", reflect.TypeOf((*MockTransport)(nil).ReplicaSet), namespace, name)
+}
+
+// ReplicaSets mocks base method.
+func (m *MockTransport) ReplicaSets(namespace v11.Namespace) ([]v1.ReplicaSet, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReplicaSets", namespace)
+	ret0, _ := ret[0].([]v1.ReplicaSet)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ReplicaSets indicates an expected call of ReplicaSets.
+func (mr *MockTransportMockRecorder) ReplicaSets(namespace interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplicaSets", reflect.TypeOf((*MockTransport)(nil).ReplicaSets), namespace)
+}
+
 // Resources mocks base method.
 func (m *MockTransport) Resources(kind, name, namespace string) (*ResourceResult, error) {
 	m.ctrl.T.Helper()

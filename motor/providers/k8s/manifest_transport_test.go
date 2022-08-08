@@ -90,3 +90,17 @@ func TestManifestJob(t *testing.T) {
 	assert.Equal(t, "k8s-manifest", transport.PlatformInfo().Runtime)
 	assert.Equal(t, 1, len(res.Resources))
 }
+
+func TestManifestReplicaSet(t *testing.T) {
+	manifestFile := "./resources/testdata/appsv1.replicaset.yaml"
+	transport := newManifestTransport("", WithManifestFile(manifestFile))
+	require.NotNil(t, transport)
+
+	namespaces, err := transport.Namespaces()
+	require.NoError(t, err)
+	assert.Equal(t, 1, len(namespaces))
+
+	pods, err := transport.ReplicaSets(namespaces[0])
+	require.NoError(t, err)
+	assert.Equal(t, 1, len(pods))
+}
