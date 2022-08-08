@@ -1,0 +1,61 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app: mondoo-k8s-scan
+    mondoo_cr: mondoo-client
+    scan: k8s
+  name: mondoo-client-k8s-scan
+  namespace: mondoo-operator
+spec:
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: mondoo-k8s-scan
+        mondoo_cr: mondoo-client
+        scan: k8s
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - args:
+        - k8s-scan
+        - --scan-api-url
+        - http://mondoo-client-scan-api.mondoo-operator.svc:8080
+        - --token-file-path
+        - /etc/scanapi/token
+        command:
+        - /mondoo-operator
+        env:
+        - name: FEATURE_DISCOVER_PODS
+          value: "1"
+        image: ghcr.io/mondoohq/mondoo-operator:sha256-09b166ea2ad4d9276f80680eaf9fcf9c453365aa.sig
+        imagePullPolicy: IfNotPresent
+        name: mondoo-k8s-scan
+        resources:
+          limits:
+            cpu: 100m
+            memory: 100Mi
+          requests:
+            cpu: 50m
+            memory: 20Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/scanapi
+          name: token
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: OnFailure
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: token
+        secret:
+          defaultMode: 292
+          secretName: mondoo-client-scan-api-token

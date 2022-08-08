@@ -346,3 +346,21 @@ func (t *apiTransport) Deployment(namespace string, name string) (*appsv1.Deploy
 	}
 	return deployment, err
 }
+
+func (t *apiTransport) Jobs(namespace v1.Namespace) ([]batchv1.Job, error) {
+	ctx := context.Background()
+	list, err := t.clientset.BatchV1().Jobs(namespace.Name).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return list.Items, err
+}
+
+func (t *apiTransport) Job(namespace string, name string) (*batchv1.Job, error) {
+	ctx := context.Background()
+	job, err := t.clientset.BatchV1().Jobs(namespace).Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return job, err
+}

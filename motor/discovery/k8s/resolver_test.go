@@ -121,3 +121,27 @@ func TestManifestResolverStatefulSetDiscovery(t *testing.T) {
 	assert.Contains(t, assetList[1].Platform.Family, "k8s")
 	assert.Equal(t, "k8s-statefulset", assetList[1].Platform.Name)
 }
+
+func TestManifestResolverJobDiscovery(t *testing.T) {
+	resolver := &Resolver{}
+	manifestFile := "../../providers/k8s/resources/testdata/batchv1.job.yaml"
+
+	assetList, err := resolver.Resolve(&providers.TransportConfig{
+		PlatformId: "//platform/k8s/uid/123/namespace/mondoo-operator/jobs/name/mondoo-client-k8s-scan/uid/",
+		Backend:    providers.TransportBackend_CONNECTION_K8S,
+		Options: map[string]string{
+			"path":      manifestFile,
+			"namespace": "mondoo-operator",
+		},
+		Discover: &providers.Discovery{
+			Targets: []string{"jobs"},
+		},
+	}, nil, nil)
+	require.NoError(t, err)
+	// When this check fails locally, check your kubeconfig.
+	// context has to reference the default namespace
+	assert.Equal(t, 2, len(assetList))
+	assert.Contains(t, assetList[1].Platform.Family, "k8s-workload")
+	assert.Contains(t, assetList[1].Platform.Family, "k8s")
+	assert.Equal(t, "k8s-job", assetList[1].Platform.Name)
+}

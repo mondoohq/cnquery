@@ -15,6 +15,7 @@ import (
 const (
 	DiscoveryAll             = "all"
 	DiscoveryPods            = "pods"
+	DiscoveryJobs            = "jobs"
 	DiscoveryCronJobs        = "cronjobs"
 	DiscoveryStatefulSets    = "statefulsets"
 	DiscoveryDeployments     = "deployments"
@@ -31,6 +32,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{
 		DiscoveryAll,
 		DiscoveryPods,
+		DiscoveryJobs,
 		DiscoveryCronJobs,
 		DiscoveryStatefulSets,
 		DiscoveryDeployments,
@@ -193,6 +195,18 @@ func addSeparateAssets(tc *providers.TransportConfig, transport k8s_transport.Tr
 		assetList, err := ListStatefulSets(transport, connection, clusterIdentifier, namespacesFilter)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s statefulsets")
+			return nil, err
+		}
+		resolved = append(resolved, assetList...)
+	}
+
+	// discover jobs
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryJobs) {
+		log.Debug().Strs("namespace", namespacesFilter).Msg("search for jobs")
+		connection := tc.Clone()
+		assetList, err := ListJobs(transport, connection, clusterIdentifier, namespacesFilter)
+		if err != nil {
+			log.Error().Err(err).Msg("could not fetch k8s jobs")
 			return nil, err
 		}
 		resolved = append(resolved, assetList...)

@@ -78,3 +78,15 @@ func TestManifestStatefulSet(t *testing.T) {
 	assert.Equal(t, "k8s-manifest", transport.PlatformInfo().Runtime)
 	assert.Equal(t, 1, len(res.Resources))
 }
+
+func TestManifestJob(t *testing.T) {
+	manifestFile := "./resources/testdata/batchv1.job.yaml"
+	transport := newManifestTransport("", WithManifestFile(manifestFile))
+	require.NotNil(t, transport)
+	res, err := transport.Resources("job", "mondoo-client-k8s-scan", "mondoo-operator")
+	require.NoError(t, err)
+	assert.Equal(t, "mondoo-client-k8s-scan", res.Name)
+	assert.Equal(t, "job", res.Kind)
+	assert.Equal(t, "k8s-manifest", transport.PlatformInfo().Runtime)
+	assert.Equal(t, 1, len(res.Resources))
+}
