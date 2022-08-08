@@ -13,6 +13,7 @@ import (
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/fsutil"
 	"go.mondoo.io/mondoo/motor/providers/k8s/resources"
+	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -308,4 +309,22 @@ func (t *apiTransport) CronJob(namespace string, name string) (*batchv1.CronJob,
 		return nil, err
 	}
 	return cronjob, err
+}
+
+func (t *apiTransport) StatefulSets(namespace v1.Namespace) ([]appsv1.StatefulSet, error) {
+	ctx := context.Background()
+	list, err := t.clientset.AppsV1().StatefulSets(namespace.Name).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return list.Items, err
+}
+
+func (t *apiTransport) StatefulSet(namespace string, name string) (*appsv1.StatefulSet, error) {
+	ctx := context.Background()
+	statefulset, err := t.clientset.AppsV1().StatefulSets(namespace).Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return statefulset, err
 }

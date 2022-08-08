@@ -1,0 +1,35 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mondoo-statefulset
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      name: mondoo-statefulset
+  template:
+    metadata:
+      labels:
+        name: mondoo-statefulset
+    spec:
+      tolerations:
+      containers:
+        - name: nginx
+          image: k8s.gcr.io/nginx-slim:0.8
+          ports:
+          - containerPort: 80
+            name: web
+          volumeMounts:
+          - name: www
+            mountPath: /usr/share/nginx/html
+      terminationGracePeriodSeconds: 30
+      volumeClaimTemplates:
+      - metadata:
+          name: www
+        spec:
+          accessModes: [ "ReadWriteOnce" ]
+          storageClassName: "my-storage-class"
+          resources:
+            requests:
+              storage: 1Gi

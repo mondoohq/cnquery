@@ -12,8 +12,9 @@ import (
 	platform "go.mondoo.io/mondoo/motor/platform"
 	providers "go.mondoo.io/mondoo/motor/providers"
 	resources "go.mondoo.io/mondoo/motor/providers/k8s/resources"
-	v1 "k8s.io/api/batch/v1"
-	v10 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/apps/v1"
+	v10 "k8s.io/api/batch/v1"
+	v11 "k8s.io/api/core/v1"
 	version "k8s.io/apimachinery/pkg/version"
 )
 
@@ -67,10 +68,10 @@ func (mr *MockTransportMockRecorder) Close() *gomock.Call {
 }
 
 // CronJob mocks base method.
-func (m *MockTransport) CronJob(namespace, name string) (*v1.CronJob, error) {
+func (m *MockTransport) CronJob(namespace, name string) (*v10.CronJob, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CronJob", namespace, name)
-	ret0, _ := ret[0].(*v1.CronJob)
+	ret0, _ := ret[0].(*v10.CronJob)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -82,10 +83,10 @@ func (mr *MockTransportMockRecorder) CronJob(namespace, name interface{}) *gomoc
 }
 
 // CronJobs mocks base method.
-func (m *MockTransport) CronJobs(namespace v10.Namespace) ([]v1.CronJob, error) {
+func (m *MockTransport) CronJobs(namespace v11.Namespace) ([]v10.CronJob, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CronJobs", namespace)
-	ret0, _ := ret[0].([]v1.CronJob)
+	ret0, _ := ret[0].([]v10.CronJob)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -185,10 +186,10 @@ func (mr *MockTransportMockRecorder) Name() *gomock.Call {
 }
 
 // Namespaces mocks base method.
-func (m *MockTransport) Namespaces() ([]v10.Namespace, error) {
+func (m *MockTransport) Namespaces() ([]v11.Namespace, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Namespaces")
-	ret0, _ := ret[0].([]v10.Namespace)
+	ret0, _ := ret[0].([]v11.Namespace)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -243,10 +244,10 @@ func (mr *MockTransportMockRecorder) PlatformInfo() *gomock.Call {
 }
 
 // Pod mocks base method.
-func (m *MockTransport) Pod(namespace, name string) (*v10.Pod, error) {
+func (m *MockTransport) Pod(namespace, name string) (*v11.Pod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Pod", namespace, name)
-	ret0, _ := ret[0].(*v10.Pod)
+	ret0, _ := ret[0].(*v11.Pod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -258,10 +259,10 @@ func (mr *MockTransportMockRecorder) Pod(namespace, name interface{}) *gomock.Ca
 }
 
 // Pods mocks base method.
-func (m *MockTransport) Pods(namespace v10.Namespace) ([]v10.Pod, error) {
+func (m *MockTransport) Pods(namespace v11.Namespace) ([]v11.Pod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Pods", namespace)
-	ret0, _ := ret[0].([]v10.Pod)
+	ret0, _ := ret[0].([]v11.Pod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -328,6 +329,36 @@ func (m *MockTransport) ServerVersion() *version.Info {
 func (mr *MockTransportMockRecorder) ServerVersion() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ServerVersion", reflect.TypeOf((*MockTransport)(nil).ServerVersion))
+}
+
+// StatefulSet mocks base method.
+func (m *MockTransport) StatefulSet(namespace, name string) (*v1.StatefulSet, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StatefulSet", namespace, name)
+	ret0, _ := ret[0].(*v1.StatefulSet)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StatefulSet indicates an expected call of StatefulSet.
+func (mr *MockTransportMockRecorder) StatefulSet(namespace, name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StatefulSet", reflect.TypeOf((*MockTransport)(nil).StatefulSet), namespace, name)
+}
+
+// StatefulSets mocks base method.
+func (m *MockTransport) StatefulSets(namespace v11.Namespace) ([]v1.StatefulSet, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StatefulSets", namespace)
+	ret0, _ := ret[0].([]v1.StatefulSet)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StatefulSets indicates an expected call of StatefulSets.
+func (mr *MockTransportMockRecorder) StatefulSets(namespace interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StatefulSets", reflect.TypeOf((*MockTransport)(nil).StatefulSets), namespace)
 }
 
 // SupportedResourceTypes mocks base method.

@@ -9,6 +9,7 @@ import (
 	platform "go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/k8s/resources"
+	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -41,6 +42,8 @@ type Transport interface {
 	Pods(namespace v1.Namespace) ([]v1.Pod, error)
 	CronJob(namespace string, name string) (*batchv1.CronJob, error)
 	CronJobs(namespace v1.Namespace) ([]batchv1.CronJob, error)
+	StatefulSet(namespace string, name string) (*appsv1.StatefulSet, error)
+	StatefulSets(namespace v1.Namespace) ([]appsv1.StatefulSet, error)
 }
 
 type ClusterInfo struct {
@@ -89,6 +92,10 @@ func getPlatformInfo(selectedResourceID string, runtime string) *platform.Platfo
 	case strings.Contains(selected, "/cronjobs/"):
 		platformData.Name = "k8s-cronjob"
 		platformData.Title = "Kubernetes CronJob"
+		return platformData
+	case strings.Contains(selected, "/statefulsets/"):
+		platformData.Name = "k8s-statefulset"
+		platformData.Title = "Kubernetes StatefulSet"
 		return platformData
 	}
 
