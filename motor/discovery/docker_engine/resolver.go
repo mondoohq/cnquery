@@ -31,7 +31,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryContainerRunning, DiscoveryContainerImages}
 }
 
-func (r *Resolver) Resolve(tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	if tc == nil {
 		return nil, errors.New("no transport configuration found")
 	}
@@ -82,7 +82,7 @@ func (r *Resolver) Resolve(tc *providers.TransportConfig, cfn credentials.Creden
 		if dockerEngErr != nil {
 			return nil, errors.Wrap(dockerEngErr, "cannot connect to docker engine to fetch the container")
 		}
-		resolvedAsset, err := r.container(tc, ded)
+		resolvedAsset, err := r.container(root, tc, ded)
 		if err != nil {
 			return nil, err
 		}
@@ -92,7 +92,7 @@ func (r *Resolver) Resolve(tc *providers.TransportConfig, cfn credentials.Creden
 
 	if tc.Backend == providers.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE {
 		// NOTE, we ignore dockerEngErr here since we fallback to pulling the images directly
-		resolvedAssets, err := r.images(tc, ded, cfn, sfn)
+		resolvedAssets, err := r.images(root, tc, ded, cfn, sfn)
 		if err != nil {
 			return nil, err
 		}
@@ -114,13 +114,13 @@ func (r *Resolver) Resolve(tc *providers.TransportConfig, cfn credentials.Creden
 	log.Debug().Str("docker", tc.Host).Msg("try to resolve the container or image source")
 
 	if dockerEngErr == nil {
-		containerAsset, err := r.container(tc, ded)
+		containerAsset, err := r.container(root, tc, ded)
 		if err == nil {
 			return []*asset.Asset{containerAsset}, nil
 		}
 	}
 
-	containerImageAssets, err := r.images(tc, ded, cfn, sfn)
+	containerImageAssets, err := r.images(root, tc, ded, cfn, sfn)
 	if err == nil {
 		return containerImageAssets, nil
 	}
@@ -129,7 +129,7 @@ func (r *Resolver) Resolve(tc *providers.TransportConfig, cfn credentials.Creden
 	return nil, errors.Wrap(err, "could not find the container reference")
 }
 
-func (k *Resolver) container(tc *providers.TransportConfig, ded *dockerEngineDiscovery) (*asset.Asset, error) {
+func (k *Resolver) container(root *asset.Asset, tc *providers.TransportConfig, ded *dockerEngineDiscovery) (*asset.Asset, error) {
 	ci, err := ded.ContainerInfo(tc.Host)
 	if err != nil {
 		return nil, err
@@ -149,7 +149,7 @@ func (k *Resolver) container(tc *providers.TransportConfig, ded *dockerEngineDis
 	}, nil
 }
 
-func (k *Resolver) images(tc *providers.TransportConfig, ded *dockerEngineDiscovery, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn) ([]*asset.Asset, error) {
+func (k *Resolver) images(root *asset.Asset, tc *providers.TransportConfig, ded *dockerEngineDiscovery, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn) ([]*asset.Asset, error) {
 	// if we have a docker engine available, try to fetch it from there
 	if ded != nil {
 		ii, err := ded.ImageInfo(tc.Host)
@@ -181,7 +181,7 @@ func (k *Resolver) images(tc *providers.TransportConfig, ded *dockerEngineDiscov
 	rr := container_registry.Resolver{
 		NoStrictValidation: true,
 	}
-	return rr.Resolve(tc, cfn, sfn)
+	return rr.Resolve(root, tc, cfn, sfn)
 }
 
 func DiscoverDockerEngineAssets(tc *providers.TransportConfig) ([]*asset.Asset, error) {

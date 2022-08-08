@@ -43,7 +43,7 @@ import (
 
 type Resolver interface {
 	Name() string
-	Resolve(t *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn,
+	Resolve(root *asset.Asset, t *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn,
 		userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error)
 	AvailableDiscoveryTargets() []string
 }
@@ -122,7 +122,7 @@ func ResolveAsset(root *asset.Asset, cfn credentials.CredentialFn, sfn credentia
 		userIdDetectors := providers.ToPlatformIdDetectors(root.IdDetector)
 
 		// resolve assets
-		resolvedAssets, err := r.Resolve(tc, cfn, sfn, userIdDetectors...)
+		resolvedAssets, err := r.Resolve(root, tc, cfn, sfn, userIdDetectors...)
 		if err != nil {
 			assetFallbackName(root, tc)
 			return nil, err
