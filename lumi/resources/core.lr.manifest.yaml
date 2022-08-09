@@ -445,9 +445,9 @@ resources:
     docs:
       desc: "The `aws.autoscaling` resource can be used to assess the configuration
         of AWS auto scaling groups within an AWS account. This resource provides the
-        the `.groups` field which returns a list of `aws.autoscaling.group` resources
+        `.groups` field which returns a list of `aws.autoscaling.group` resources
         representing all auto scaling groups configured across all enabled regions
-        across the account.      \n"
+        across the account.\n"
     fields:
       groups: {}
     min_mondoo_version: 5.15.0
