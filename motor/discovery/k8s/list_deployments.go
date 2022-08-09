@@ -52,6 +52,13 @@ func ListDeployments(transport k8s.Transport, connection *providers.TransportCon
 			State:       asset.State_STATE_ONLINE,
 			Labels:      deployment.Labels,
 		}
+		if asset.Labels == nil {
+			asset.Labels = map[string]string{
+				"namespace": deployment.Namespace,
+			}
+		} else {
+			asset.Labels["namespace"] = deployment.Namespace
+		}
 		log.Debug().Str("name", deployment.Name).Str("connection", asset.Connections[0].Host).Msg("resolved deployment")
 
 		assets = append(assets, asset)

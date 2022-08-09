@@ -51,6 +51,13 @@ func ListReplicaSets(transport k8s.Transport, connection *providers.TransportCon
 			State:       asset.State_STATE_ONLINE,
 			Labels:      replicaSet.Labels,
 		}
+		if asset.Labels == nil {
+			asset.Labels = map[string]string{
+				"namespace": replicaSet.Namespace,
+			}
+		} else {
+			asset.Labels["namespace"] = replicaSet.Namespace
+		}
 		log.Debug().Str("name", replicaSet.Name).Str("connection", asset.Connections[0].Host).Msg("resolved replicaset")
 
 		assets = append(assets, asset)

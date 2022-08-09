@@ -52,6 +52,13 @@ func ListJobs(transport k8s.Transport, connection *providers.TransportConfig, cl
 			State:       asset.State_STATE_ONLINE,
 			Labels:      job.Labels,
 		}
+		if asset.Labels == nil {
+			asset.Labels = map[string]string{
+				"namespace": job.Namespace,
+			}
+		} else {
+			asset.Labels["namespace"] = job.Namespace
+		}
 		log.Debug().Str("name", job.Name).Str("connection", asset.Connections[0].Host).Msg("resolved Job")
 
 		assets = append(assets, asset)

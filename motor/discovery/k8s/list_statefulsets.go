@@ -52,6 +52,13 @@ func ListStatefulSets(transport k8s.Transport, connection *providers.TransportCo
 			State:       asset.State_STATE_ONLINE,
 			Labels:      statefulSet.Labels,
 		}
+		if asset.Labels == nil {
+			asset.Labels = map[string]string{
+				"namespace": statefulSet.Namespace,
+			}
+		} else {
+			asset.Labels["namespace"] = statefulSet.Namespace
+		}
 		log.Debug().Str("name", statefulSet.Name).Str("connection", asset.Connections[0].Host).Msg("resolved StatefulSet")
 
 		assets = append(assets, asset)

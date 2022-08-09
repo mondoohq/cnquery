@@ -51,6 +51,13 @@ func ListPods(transport k8s.Transport, connection *providers.TransportConfig, cl
 			State:       asset.State_STATE_ONLINE,
 			Labels:      pod.Labels,
 		}
+		if asset.Labels == nil {
+			asset.Labels = map[string]string{
+				"namespace": pod.Namespace,
+			}
+		} else {
+			asset.Labels["namespace"] = pod.Namespace
+		}
 		log.Debug().Str("name", pod.Name).Str("connection", asset.Connections[0].Host).Msg("resolved pod")
 
 		assets = append(assets, asset)
