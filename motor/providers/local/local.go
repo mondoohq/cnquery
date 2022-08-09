@@ -1,17 +1,24 @@
 package local
 
 import (
+	"io/ioutil"
 	"runtime"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/cmd"
 	"go.mondoo.io/mondoo/motor/providers/shared"
+	"go.mondoo.io/mondoo/motor/providers/ssh/cat"
 )
 
 var _ providers.Transport = (*LocalTransport)(nil)
 
 func New() (*LocalTransport, error) {
+	return NewWithConfig(&providers.TransportConfig{})
+}
+
+func NewWithConfig(tc *providers.TransportConfig) (*LocalTransport, error) {
 	// expect unix shell by default
 	shell := []string{"sh", "-c"}
 
@@ -21,23 +28,43 @@ func New() (*LocalTransport, error) {
 		shell = []string{"powershell", "-c"}
 	}
 
-	return &LocalTransport{
+	t := &LocalTransport{
 		shell: shell,
-		fs:    afero.NewOsFs(),
 		// kind:    endpoint.Kind,
 		// runtime: endpoint.Runtime,
-	}, nil
+	}
+
+	var s cmd.Wrapper
+	if tc != nil && tc.Sudo != nil && tc.Sudo.Active {
+		// the id command may not be available, eg. if ssh is used with windows
+		out, _ := t.RunCommand("id -u")
+		stdout, _ := ioutil.ReadAll(out.Stdout)
+		// just check for the explicit positive case, otherwise just activate sudo
+		// we check sudo in VerifyConnection
+		if string(stdout) != "0" {
+			// configure sudo
+			log.Debug().Msg("activated sudo for local connection")
+			s = cmd.NewSudo()
+		}
+	}
+	t.Sudo = s
+
+	return t, nil
 }
 
 type LocalTransport struct {
 	shell   []string
 	fs      afero.Fs
+	Sudo    cmd.Wrapper
 	kind    providers.Kind
 	runtime string
 }
 
 func (t *LocalTransport) RunCommand(command string) (*providers.Command, error) {
 	log.Debug().Msgf("local> run command %s", command)
+	if t.Sudo != nil {
+		command = t.Sudo.Build(command)
+	}
 	c := &shared.Command{Shell: t.shell}
 	args := []string{}
 
@@ -46,6 +73,16 @@ func (t *LocalTransport) RunCommand(command string) (*providers.Command, error) 
 }
 
 func (t *LocalTransport) FS() afero.Fs {
+	if t.fs != nil {
+		return t.fs
+	}
+
+	if t.Sudo != nil {
+		t.fs = cat.New(t)
+		return t.fs
+	}
+
+	t.fs = afero.NewOsFs()
 	return t.fs
 }
 

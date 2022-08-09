@@ -85,7 +85,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		}
 	case providers.TransportBackend_CONNECTION_LOCAL_OS:
 		log.Debug().Msg("connection> load local transport")
-		trans, err := local.New()
+		trans, err := local.NewWithConfig(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
