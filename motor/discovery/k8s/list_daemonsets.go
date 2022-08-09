@@ -45,7 +45,7 @@ func ListDaemonSets(transport k8s.Transport, connection *providers.TransportConf
 		}
 		podPlatform.Kind = providers.Kind_KIND_K8S_OBJECT
 		asset := &asset.Asset{
-			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "daemonsets", daemonset.Namespace, daemonset.Name, string(daemonset.UID))},
+			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "daemonsets", daemonset.Namespace, daemonset.Name)},
 			Name:        daemonset.Namespace + "/" + daemonset.Name,
 			Platform:    podPlatform,
 			Connections: []*providers.TransportConfig{connection},

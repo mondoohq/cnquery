@@ -4192,6 +4192,7 @@ k8s.apiresource {
 
 // Kubernetes node
 k8s.node {
+  id string
   // Kubernetes Object UID
   uid string
   // Kubernetes Labels
@@ -4208,6 +4209,7 @@ k8s.node {
 
 // Kubernetes Namespace
 k8s.namespace {
+  id string
   // Kubernetes Object UID
   uid string
   // Kubernetes Object Name
@@ -4220,6 +4222,7 @@ k8s.namespace {
 
 // Kubernetes Pod
 k8s.pod {
+  id string
   // Kubernetes Object UID
   uid string
   // Kubernetes Resource Version
@@ -4342,6 +4345,7 @@ private k8s.initContainer {
 
 // Kubernetes Deployment
 k8s.deployment {
+  id string
   // Kubernetes Object UID
   uid string
   // Kubernetes Resource Version
@@ -4364,6 +4368,7 @@ k8s.deployment {
 
 // Kubernetes DaemonSet
 k8s.daemonset {
+  id string
   // Kubernetes Object UID
   uid string
   // Kubernetes Resource Version
@@ -4386,6 +4391,7 @@ k8s.daemonset {
 
 // Kubernetes StatefulSet
 k8s.statefulset {
+  id string
   // Kubernetes Object UID
   uid string
   // Kubernetes Resource Version
@@ -4408,6 +4414,7 @@ k8s.statefulset {
 
 // Kubernetes ReplicaSet
 k8s.replicaset {
+  id string
   // Kubernetes Object UID
   uid string
   // Kubernetes Resource Version
@@ -4430,6 +4437,7 @@ k8s.replicaset {
 
 // Kubernetes Job
 k8s.job {
+  id string
   // Kubernetes Object UID
   uid string
   // Kubernetes Resource Version
@@ -4452,6 +4460,7 @@ k8s.job {
 
 // Kubernetes CronJob
 k8s.cronjob {
+  id string
   // Kubernetes Object UID
   uid string
   // Kubernetes Resource Version
@@ -4474,6 +4483,7 @@ k8s.cronjob {
 
 // Kubernetes Secret
 k8s.secret {
+  id string
   // Kubernetes Object UID
   uid string
   // Kubernetes Resource Version
@@ -4500,6 +4510,7 @@ k8s.secret {
 
 // Kubernetes PodSecurityPolicy (deprecated as of Kubernetes v1.21)
 k8s.podsecuritypolicy {
+  id string
   // Kubernetes Object UID
   uid string
   // Kubernetes Resource Version
@@ -4522,6 +4533,7 @@ k8s.podsecuritypolicy {
 
 // Kubernetes ConfigMap
 k8s.configmap {
+  id string
   // Kubernetes Object UID
   uid string
   // Kubernetes Resource Version
@@ -4546,6 +4558,7 @@ k8s.configmap {
 
 // Kubernetes Service
 k8s.service {
+  id string
   // Kubernetes Object UID
   uid string
   // Kubernetes Resource Version
@@ -4570,6 +4583,7 @@ k8s.service {
 
 // Kubernetes Network Policy
 k8s.networkpolicy {
+  id string
   // Kubernetes Object UID
   uid string
   // Kubernetes Resource Version
@@ -4594,6 +4608,7 @@ k8s.networkpolicy {
 
 // Kubernetes Service Account
 k8s.serviceaccount {
+  id string
   // Kubernetes Object UID
   uid string
   // Kubernetes Resource Version
@@ -4622,6 +4637,7 @@ k8s.serviceaccount {
 
 // Kubernetes ClusterRole
 k8s.rbac.clusterrole {
+  id string
   // Kubernetes Object UID
   uid string
   // Kubernetes Resource Version
@@ -4646,6 +4662,7 @@ k8s.rbac.clusterrole {
 
 // Kubernetes Role
 k8s.rbac.role {
+  id string
   // Kubernetes Object UID
   uid string
   // Kubernetes Resource Version
@@ -4670,6 +4687,7 @@ k8s.rbac.role {
 
 // Kubernetes ClusterRoleBinding
 k8s.rbac.clusterrolebinding {
+  id string
   // Kubernetes Object UID
   uid string
   // Kubernetes Resource Version
@@ -4694,6 +4712,7 @@ k8s.rbac.clusterrolebinding {
 
 // Kubernetes RoleBinding
 k8s.rbac.rolebinding {
+  id string
   // Kubernetes Object UID
   uid string
   // Kubernetes Resource Version
@@ -4720,6 +4739,7 @@ k8s.rbac.rolebinding {
 
 // Kubernetes CustomResource
 k8s.customresource {
+  id string
   // Kubernetes Object UID
   uid string
   // Kubernetes Resource Version

@@ -70,8 +70,8 @@ func TestListPods(t *testing.T) {
 	clusterIdentifier := "//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc"
 
 	expectedAssetPlatformIds := []string{
-		clusterIdentifier + "/namespace/" + nss[0].Name + "/pods/name/" + pods[0].Name + "/uid/" + string(pods[0].UID),
-		clusterIdentifier + "/namespace/" + nss[0].Name + "/pods/name/" + pods[1].Name + "/uid/" + string(pods[1].UID),
+		clusterIdentifier + "/namespace/" + nss[0].Name + "/pods/name/" + pods[0].Name,
+		clusterIdentifier + "/namespace/" + nss[0].Name + "/pods/name/" + pods[1].Name,
 	}
 
 	tc := &providers.TransportConfig{}

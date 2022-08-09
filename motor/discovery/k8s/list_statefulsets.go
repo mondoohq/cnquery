@@ -45,7 +45,7 @@ func ListStatefulSets(transport k8s.Transport, connection *providers.TransportCo
 		}
 		platformData.Kind = providers.Kind_KIND_K8S_OBJECT
 		asset := &asset.Asset{
-			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "statefulsets", statefulSet.Namespace, statefulSet.Name, string(statefulSet.UID))},
+			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "statefulsets", statefulSet.Namespace, statefulSet.Name)},
 			Name:        statefulSet.Namespace + "/" + statefulSet.Name,
 			Platform:    platformData,
 			Connections: []*providers.TransportConfig{connection},

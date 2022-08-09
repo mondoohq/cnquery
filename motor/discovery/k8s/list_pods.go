@@ -44,7 +44,7 @@ func ListPods(transport k8s.Transport, connection *providers.TransportConfig, cl
 		}
 		platformData.Kind = providers.Kind_KIND_K8S_OBJECT
 		asset := &asset.Asset{
-			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "pods", pod.Namespace, pod.Name, string(pod.UID))},
+			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "pods", pod.Namespace, pod.Name)},
 			Name:        pod.Namespace + "/" + pod.Name,
 			Platform:    platformData,
 			Connections: []*providers.TransportConfig{connection},

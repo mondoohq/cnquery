@@ -3,6 +3,7 @@ package resources
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -150,6 +151,7 @@ func k8sResourceToLumi(r *lumi.Runtime, kind string, fn resourceConvertFn) ([]in
 func (k *lumiK8s) GetNodes() ([]interface{}, error) {
 	return k8sResourceToLumi(k.MotorRuntime, "nodes.v1.", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		r, err := k.MotorRuntime.CreateResource("k8s.node",
+			"id", objIdFromK8sObj(obj, objT),
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -173,6 +175,7 @@ func (k *lumiK8s) GetNamespaces() ([]interface{}, error) {
 		}
 
 		return k.MotorRuntime.CreateResource("k8s.namespace",
+			"id", objIdFromK8sObj(obj, objT),
 			"uid", string(obj.GetUID()),
 			"name", obj.GetName(),
 			"created", &ts.Time,
@@ -201,6 +204,7 @@ func (k *lumiK8s) GetPods() ([]interface{}, error) {
 		}
 
 		r, err := k.MotorRuntime.CreateResource("k8s.pod",
+			"id", objIdFromK8sObj(obj, objT),
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -231,6 +235,7 @@ func (k *lumiK8s) GetDeployments() ([]interface{}, error) {
 		}
 
 		r, err := k.MotorRuntime.CreateResource("k8s.deployment",
+			"id", objIdFromK8sObj(obj, objT),
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -257,6 +262,7 @@ func (k *lumiK8s) GetDaemonsets() ([]interface{}, error) {
 		}
 
 		r, err := k.MotorRuntime.CreateResource("k8s.daemonset",
+			"id", objIdFromK8sObj(obj, objT),
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -283,6 +289,7 @@ func (k *lumiK8s) GetStatefulsets() ([]interface{}, error) {
 		}
 
 		r, err := k.MotorRuntime.CreateResource("k8s.statefulset",
+			"id", objIdFromK8sObj(obj, objT),
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -309,6 +316,7 @@ func (k *lumiK8s) GetReplicasets() ([]interface{}, error) {
 		}
 
 		r, err := k.MotorRuntime.CreateResource("k8s.replicaset",
+			"id", objIdFromK8sObj(obj, objT),
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -335,6 +343,7 @@ func (k *lumiK8s) GetJobs() ([]interface{}, error) {
 		}
 
 		r, err := k.MotorRuntime.CreateResource("k8s.job",
+			"id", objIdFromK8sObj(obj, objT),
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -361,6 +370,7 @@ func (k *lumiK8s) GetCronjobs() ([]interface{}, error) {
 		}
 
 		r, err := k.MotorRuntime.CreateResource("k8s.cronjob",
+			"id", objIdFromK8sObj(obj, objT),
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -392,6 +402,7 @@ func (k *lumiK8s) GetSecrets() ([]interface{}, error) {
 		}
 
 		r, err := k.MotorRuntime.CreateResource("k8s.secret",
+			"id", objIdFromK8sObj(obj, objT),
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -429,6 +440,7 @@ func (k *lumiK8s) GetPodSecurityPolicies() ([]interface{}, error) {
 		}
 
 		r, err := k.MotorRuntime.CreateResource("k8s.podsecuritypolicy",
+			"id", objIdFromK8sObj(obj, objT),
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -465,6 +477,7 @@ func (k *lumiK8s) GetServices() ([]interface{}, error) {
 		}
 
 		r, err := k.MotorRuntime.CreateResource("k8s.service",
+			"id", objIdFromK8sObj(obj, objT),
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -497,6 +510,7 @@ func (k *lumiK8s) GetConfigmaps() ([]interface{}, error) {
 		}
 
 		r, err := k.MotorRuntime.CreateResource("k8s.configmap",
+			"id", objIdFromK8sObj(obj, objT),
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -534,6 +548,7 @@ func (k *lumiK8s) GetNetworkPolicies() ([]interface{}, error) {
 		}
 
 		r, err := k.MotorRuntime.CreateResource("k8s.networkpolicy",
+			"id", objIdFromK8sObj(obj, objT),
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -576,6 +591,7 @@ func (k *lumiK8s) GetServiceaccounts() ([]interface{}, error) {
 		}
 
 		r, err := k.MotorRuntime.CreateResource("k8s.serviceaccount",
+			"id", objIdFromK8sObj(obj, objT),
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -620,6 +636,7 @@ func (k *lumiK8s) GetClusterroles() ([]interface{}, error) {
 		}
 
 		r, err := k.MotorRuntime.CreateResource("k8s.rbac.clusterrole",
+			"id", objIdFromK8sObj(obj, objT),
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -657,6 +674,7 @@ func (k *lumiK8s) GetRoles() ([]interface{}, error) {
 		}
 
 		r, err := k.MotorRuntime.CreateResource("k8s.rbac.role",
+			"id", objIdFromK8sObj(obj, objT),
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -699,6 +717,7 @@ func (k *lumiK8s) GetClusterrolebindings() ([]interface{}, error) {
 		}
 
 		r, err := k.MotorRuntime.CreateResource("k8s.rbac.clusterrolebinding",
+			"id", objIdFromK8sObj(obj, objT),
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -741,6 +760,7 @@ func (k *lumiK8s) GetRolebindings() ([]interface{}, error) {
 		}
 
 		r, err := k.MotorRuntime.CreateResource("k8s.rbac.rolebinding",
+			"id", objIdFromK8sObj(obj, objT),
 			"uid", string(obj.GetUID()),
 			"resourceVersion", obj.GetResourceVersion(),
 			"name", obj.GetName(),
@@ -791,6 +811,7 @@ func (k *lumiK8s) GetCustomresources() ([]interface{}, error) {
 			}
 
 			r, err := k.MotorRuntime.CreateResource("k8s.customresource",
+				"id", objIdFromK8sObj(obj, objT),
 				"uid", string(obj.GetUID()),
 				"resourceVersion", obj.GetResourceVersion(),
 				"name", obj.GetName(),
@@ -816,7 +837,7 @@ func (k *lumiK8sApiresource) id() (string, error) {
 }
 
 func (k *lumiK8sNode) id() (string, error) {
-	return k.Uid()
+	return k.Id()
 }
 
 func (k *lumiK8sNode) GetAnnotations() (interface{}, error) {
@@ -828,11 +849,11 @@ func (k *lumiK8sNode) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sNamespace) id() (string, error) {
-	return k.Uid()
+	return k.Id()
 }
 
 func (k *lumiK8sCustomresource) id() (string, error) {
-	return k.Uid()
+	return k.Id()
 }
 
 func (k *lumiK8sCustomresource) GetAnnotations() (interface{}, error) {
@@ -844,7 +865,7 @@ func (k *lumiK8sCustomresource) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sPod) id() (string, error) {
-	return k.Uid()
+	return k.Id()
 }
 
 func (p *lumiK8sPod) init(args *lumi.Args) (*lumi.Args, K8sPod, error) {
@@ -854,7 +875,7 @@ func (p *lumiK8sPod) init(args *lumi.Args) (*lumi.Args, K8sPod, error) {
 	}
 
 	// get platform identifier infos
-	identifierUid, identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
+	identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return args, nil, nil
 	}
@@ -873,15 +894,13 @@ func (p *lumiK8sPod) init(args *lumi.Args) (*lumi.Args, K8sPod, error) {
 	var matchFn func(pod K8sPod) bool
 
 	var uidRaw string
-	if len(*args) == 0 {
-		uidRaw = identifierUid
-	} else if _, ok := (*args)["uid"]; ok {
-		uidRaw = (*args)["uid"].(string)
+	if _, ok := (*args)["id"]; ok {
+		uidRaw = (*args)["id"].(string)
 	}
 
 	if uidRaw != "" {
 		matchFn = func(pod K8sPod) bool {
-			uid, _ := pod.Uid()
+			uid, _ := pod.Id()
 			return uid == uidRaw
 		}
 	}
@@ -917,7 +936,7 @@ func (p *lumiK8sPod) init(args *lumi.Args) (*lumi.Args, K8sPod, error) {
 }
 
 func (k *lumiK8sPod) GetInitContainers() ([]interface{}, error) {
-	uid, err := k.Uid()
+	id, err := objId(k)
 	if err != nil {
 		return nil, err
 	}
@@ -961,7 +980,7 @@ func (k *lumiK8sPod) GetInitContainers() ([]interface{}, error) {
 		}
 
 		lumiContainer, err := k.MotorRuntime.CreateResource("k8s.initContainer",
-			"uid", uid+"/"+c.Name, // container names are unique within a pod
+			"uid", id+"/"+c.Name, // container names are unique within a pod
 			"name", c.Name,
 			"imageName", c.Image,
 			"image", c.Image, // deprecated, will be replaced with the containerImage going forward
@@ -984,7 +1003,7 @@ func (k *lumiK8sPod) GetInitContainers() ([]interface{}, error) {
 }
 
 func (k *lumiK8sPod) GetContainers() ([]interface{}, error) {
-	uid, err := k.Uid()
+	id, err := objId(k)
 	if err != nil {
 		return nil, err
 	}
@@ -1038,7 +1057,7 @@ func (k *lumiK8sPod) GetContainers() ([]interface{}, error) {
 		}
 
 		lumiContainer, err := k.MotorRuntime.CreateResource("k8s.container",
-			"uid", uid+"/"+c.Name, // container names are unique within a pod
+			"uid", id+"/"+c.Name, // container names are unique within a pod
 			"name", c.Name,
 			"imageName", c.Image,
 			"image", c.Image, // deprecated, will be replaced with the containerImage going forward
@@ -1136,7 +1155,7 @@ func (k *lumiK8sContainer) GetContainerImage() (interface{}, error) {
 }
 
 func (k *lumiK8sDeployment) id() (string, error) {
-	return k.Uid()
+	return k.Id()
 }
 
 func (p *lumiK8sDeployment) init(args *lumi.Args) (*lumi.Args, K8sDeployment, error) {
@@ -1146,7 +1165,7 @@ func (p *lumiK8sDeployment) init(args *lumi.Args) (*lumi.Args, K8sDeployment, er
 	}
 
 	// get platform identifier infos
-	identifierUid, identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
+	identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return args, nil, nil
 	}
@@ -1166,15 +1185,13 @@ func (p *lumiK8sDeployment) init(args *lumi.Args) (*lumi.Args, K8sDeployment, er
 	var matchFn func(deployment K8sDeployment) bool
 
 	var uidRaw string
-	if len(*args) == 0 {
-		uidRaw = identifierUid
-	} else if _, ok := (*args)["uid"]; ok {
-		uidRaw = (*args)["uid"].(string)
+	if _, ok := (*args)["id"]; ok {
+		uidRaw = (*args)["id"].(string)
 	}
 
 	if uidRaw != "" {
 		matchFn = func(deployment K8sDeployment) bool {
-			uid, _ := deployment.Uid()
+			uid, _ := deployment.Id()
 			return uid == uidRaw
 		}
 	}
@@ -1222,7 +1239,7 @@ func (k *lumiK8sDeployment) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sDaemonset) id() (string, error) {
-	return k.Uid()
+	return objId(k)
 }
 
 func (p *lumiK8sDaemonset) init(args *lumi.Args) (*lumi.Args, K8sDaemonset, error) {
@@ -1232,7 +1249,7 @@ func (p *lumiK8sDaemonset) init(args *lumi.Args) (*lumi.Args, K8sDaemonset, erro
 	}
 
 	// get platform identifier infos
-	identifierUid, identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
+	identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return args, nil, nil
 	}
@@ -1252,15 +1269,13 @@ func (p *lumiK8sDaemonset) init(args *lumi.Args) (*lumi.Args, K8sDaemonset, erro
 	var matchFn func(daemonset K8sDaemonset) bool
 
 	var uidRaw string
-	if len(*args) == 0 {
-		uidRaw = identifierUid
-	} else if _, ok := (*args)["uid"]; ok {
-		uidRaw = (*args)["uid"].(string)
+	if _, ok := (*args)["id"]; ok {
+		uidRaw = (*args)["id"].(string)
 	}
 
 	if uidRaw != "" {
 		matchFn = func(daemonset K8sDaemonset) bool {
-			uid, _ := daemonset.Uid()
+			uid, _ := daemonset.Id()
 			return uid == uidRaw
 		}
 	}
@@ -1308,7 +1323,7 @@ func (k *lumiK8sDaemonset) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sStatefulset) id() (string, error) {
-	return k.Uid()
+	return k.Id()
 }
 
 func (p *lumiK8sStatefulset) init(args *lumi.Args) (*lumi.Args, K8sStatefulset, error) {
@@ -1318,7 +1333,7 @@ func (p *lumiK8sStatefulset) init(args *lumi.Args) (*lumi.Args, K8sStatefulset, 
 	}
 
 	// get platform identifier infos
-	identifierUid, identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
+	identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return args, nil, nil
 	}
@@ -1338,15 +1353,13 @@ func (p *lumiK8sStatefulset) init(args *lumi.Args) (*lumi.Args, K8sStatefulset, 
 	var matchFn func(statefulset K8sStatefulset) bool
 
 	var uidRaw string
-	if len(*args) == 0 {
-		uidRaw = identifierUid
-	} else if _, ok := (*args)["uid"]; ok {
-		uidRaw = (*args)["uid"].(string)
+	if _, ok := (*args)["id"]; ok {
+		uidRaw = (*args)["id"].(string)
 	}
 
 	if uidRaw != "" {
 		matchFn = func(statefulset K8sStatefulset) bool {
-			uid, _ := statefulset.Uid()
+			uid, _ := statefulset.Id()
 			return uid == uidRaw
 		}
 	}
@@ -1394,7 +1407,7 @@ func (k *lumiK8sStatefulset) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sReplicaset) id() (string, error) {
-	return k.Uid()
+	return k.Id()
 }
 
 func (p *lumiK8sReplicaset) init(args *lumi.Args) (*lumi.Args, K8sReplicaset, error) {
@@ -1404,7 +1417,7 @@ func (p *lumiK8sReplicaset) init(args *lumi.Args) (*lumi.Args, K8sReplicaset, er
 	}
 
 	// get platform identifier infos
-	identifierUid, identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
+	identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return args, nil, nil
 	}
@@ -1424,15 +1437,13 @@ func (p *lumiK8sReplicaset) init(args *lumi.Args) (*lumi.Args, K8sReplicaset, er
 	var matchFn func(replicaset K8sReplicaset) bool
 
 	var uidRaw string
-	if len(*args) == 0 {
-		uidRaw = identifierUid
-	} else if _, ok := (*args)["uid"]; ok {
-		uidRaw = (*args)["uid"].(string)
+	if _, ok := (*args)["id"]; ok {
+		uidRaw = (*args)["id"].(string)
 	}
 
 	if uidRaw != "" {
 		matchFn = func(replicaset K8sReplicaset) bool {
-			uid, _ := replicaset.Uid()
+			uid, _ := replicaset.Id()
 			return uid == uidRaw
 		}
 	}
@@ -1480,7 +1491,7 @@ func (k *lumiK8sReplicaset) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sJob) id() (string, error) {
-	return k.Uid()
+	return k.Id()
 }
 
 func (p *lumiK8sJob) init(args *lumi.Args) (*lumi.Args, K8sJob, error) {
@@ -1490,7 +1501,7 @@ func (p *lumiK8sJob) init(args *lumi.Args) (*lumi.Args, K8sJob, error) {
 	}
 
 	// get platform identifier infos
-	identifierUid, identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
+	identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return args, nil, nil
 	}
@@ -1510,15 +1521,13 @@ func (p *lumiK8sJob) init(args *lumi.Args) (*lumi.Args, K8sJob, error) {
 	var matchFn func(job K8sJob) bool
 
 	var uidRaw string
-	if len(*args) == 0 {
-		uidRaw = identifierUid
-	} else if _, ok := (*args)["uid"]; ok {
-		uidRaw = (*args)["uid"].(string)
+	if _, ok := (*args)["id"]; ok {
+		uidRaw = (*args)["id"].(string)
 	}
 
 	if uidRaw != "" {
 		matchFn = func(job K8sJob) bool {
-			uid, _ := job.Uid()
+			uid, _ := job.Id()
 			return uid == uidRaw
 		}
 	}
@@ -1566,7 +1575,7 @@ func (k *lumiK8sJob) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sCronjob) id() (string, error) {
-	return k.Uid()
+	return k.Id()
 }
 
 func (p *lumiK8sCronjob) init(args *lumi.Args) (*lumi.Args, K8sCronjob, error) {
@@ -1576,7 +1585,7 @@ func (p *lumiK8sCronjob) init(args *lumi.Args) (*lumi.Args, K8sCronjob, error) {
 	}
 
 	// get platform identifier infos
-	identifierUid, identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
+	identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return args, nil, nil
 	}
@@ -1596,15 +1605,13 @@ func (p *lumiK8sCronjob) init(args *lumi.Args) (*lumi.Args, K8sCronjob, error) {
 	var matchFn func(cronjob K8sCronjob) bool
 
 	var uidRaw string
-	if len(*args) == 0 {
-		uidRaw = identifierUid
-	} else if _, ok := (*args)["uid"]; ok {
-		uidRaw = (*args)["uid"].(string)
+	if _, ok := (*args)["id"]; ok {
+		uidRaw = (*args)["id"].(string)
 	}
 
 	if uidRaw != "" {
 		matchFn = func(cronjob K8sCronjob) bool {
-			uid, _ := cronjob.Uid()
+			uid, _ := cronjob.Id()
 			return uid == uidRaw
 		}
 	}
@@ -1652,7 +1659,7 @@ func (k *lumiK8sCronjob) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sSecret) id() (string, error) {
-	return k.Uid()
+	return k.Id()
 }
 
 func (p *lumiK8sSecret) init(args *lumi.Args) (*lumi.Args, K8sSecret, error) {
@@ -1675,10 +1682,10 @@ func (p *lumiK8sSecret) init(args *lumi.Args) (*lumi.Args, K8sSecret, error) {
 
 	var matchFn func(configMap K8sSecret) bool
 
-	uidRaw := (*args)["uid"]
+	uidRaw := (*args)["id"]
 	if uidRaw != nil {
 		matchFn = func(configMap K8sSecret) bool {
-			uid, _ := configMap.Uid()
+			uid, _ := configMap.Id()
 			if uid == uidRaw.(string) {
 				return true
 			}
@@ -1746,7 +1753,7 @@ func (k *lumiK8sSecret) GetCertificates() (interface{}, error) {
 }
 
 func (k *lumiK8sPodsecuritypolicy) id() (string, error) {
-	return k.Uid()
+	return k.Id()
 }
 
 func (k *lumiK8sPodsecuritypolicy) GetAnnotations() (interface{}, error) {
@@ -1758,7 +1765,7 @@ func (k *lumiK8sPodsecuritypolicy) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sConfigmap) id() (string, error) {
-	return k.Uid()
+	return k.Id()
 }
 
 func (p *lumiK8sConfigmap) init(args *lumi.Args) (*lumi.Args, K8sConfigmap, error) {
@@ -1781,10 +1788,10 @@ func (p *lumiK8sConfigmap) init(args *lumi.Args) (*lumi.Args, K8sConfigmap, erro
 
 	var matchFn func(configMap K8sConfigmap) bool
 
-	uidRaw := (*args)["uid"]
+	uidRaw := (*args)["id"]
 	if uidRaw != nil {
 		matchFn = func(configMap K8sConfigmap) bool {
-			uid, _ := configMap.Uid()
+			uid, _ := configMap.Id()
 			if uid == uidRaw.(string) {
 				return true
 			}
@@ -1824,7 +1831,7 @@ func (k *lumiK8sConfigmap) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sService) id() (string, error) {
-	return k.Uid()
+	return k.Id()
 }
 
 func (p *lumiK8sService) init(args *lumi.Args) (*lumi.Args, K8sService, error) {
@@ -1847,10 +1854,10 @@ func (p *lumiK8sService) init(args *lumi.Args) (*lumi.Args, K8sService, error) {
 
 	var matchFn func(entry K8sService) bool
 
-	uidRaw := (*args)["uid"]
+	uidRaw := (*args)["id"]
 	if uidRaw != nil {
 		matchFn = func(service K8sService) bool {
-			uid, _ := service.Uid()
+			uid, _ := service.Id()
 			if uid == uidRaw.(string) {
 				return true
 			}
@@ -1890,7 +1897,7 @@ func (k *lumiK8sService) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sNetworkpolicy) id() (string, error) {
-	return k.Uid()
+	return k.Id()
 }
 
 func (p *lumiK8sNetworkpolicy) init(args *lumi.Args) (*lumi.Args, K8sNetworkpolicy, error) {
@@ -1913,10 +1920,10 @@ func (p *lumiK8sNetworkpolicy) init(args *lumi.Args) (*lumi.Args, K8sNetworkpoli
 
 	var matchFn func(entry K8sNetworkpolicy) bool
 
-	uidRaw := (*args)["uid"]
+	uidRaw := (*args)["id"]
 	if uidRaw != nil {
 		matchFn = func(service K8sNetworkpolicy) bool {
-			uid, _ := service.Uid()
+			uid, _ := service.Id()
 			if uid == uidRaw.(string) {
 				return true
 			}
@@ -1956,7 +1963,7 @@ func (k *lumiK8sNetworkpolicy) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sServiceaccount) id() (string, error) {
-	return k.Uid()
+	return k.Id()
 }
 
 func (p *lumiK8sServiceaccount) init(args *lumi.Args) (*lumi.Args, K8sServiceaccount, error) {
@@ -1979,10 +1986,10 @@ func (p *lumiK8sServiceaccount) init(args *lumi.Args) (*lumi.Args, K8sServiceacc
 
 	var matchFn func(entry K8sServiceaccount) bool
 
-	uidRaw := (*args)["uid"]
+	uidRaw := (*args)["id"]
 	if uidRaw != nil {
 		matchFn = func(service K8sServiceaccount) bool {
-			uid, _ := service.Uid()
+			uid, _ := service.Id()
 			if uid == uidRaw.(string) {
 				return true
 			}
@@ -2022,7 +2029,7 @@ func (k *lumiK8sServiceaccount) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sRbacClusterrole) id() (string, error) {
-	return k.Uid()
+	return k.Id()
 }
 
 func (p *lumiK8sRbacClusterrole) init(args *lumi.Args) (*lumi.Args, K8sRbacClusterrole, error) {
@@ -2045,10 +2052,10 @@ func (p *lumiK8sRbacClusterrole) init(args *lumi.Args) (*lumi.Args, K8sRbacClust
 
 	var matchFn func(entry K8sRbacClusterrole) bool
 
-	uidRaw := (*args)["uid"]
+	uidRaw := (*args)["id"]
 	if uidRaw != nil {
 		matchFn = func(service K8sRbacClusterrole) bool {
-			uid, _ := service.Uid()
+			uid, _ := service.Id()
 			if uid == uidRaw.(string) {
 				return true
 			}
@@ -2086,7 +2093,7 @@ func (k *lumiK8sRbacClusterrole) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sRbacRole) id() (string, error) {
-	return k.Uid()
+	return k.Id()
 }
 
 func (p *lumiK8sRbacRole) init(args *lumi.Args) (*lumi.Args, K8sRbacRole, error) {
@@ -2109,10 +2116,10 @@ func (p *lumiK8sRbacRole) init(args *lumi.Args) (*lumi.Args, K8sRbacRole, error)
 
 	var matchFn func(entry K8sRbacRole) bool
 
-	uidRaw := (*args)["uid"]
+	uidRaw := (*args)["id"]
 	if uidRaw != nil {
 		matchFn = func(service K8sRbacRole) bool {
-			uid, _ := service.Uid()
+			uid, _ := service.Id()
 			if uid == uidRaw.(string) {
 				return true
 			}
@@ -2152,7 +2159,7 @@ func (k *lumiK8sRbacRole) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sRbacClusterrolebinding) id() (string, error) {
-	return k.Uid()
+	return k.Id()
 }
 
 func (p *lumiK8sRbacClusterrolebinding) init(args *lumi.Args) (*lumi.Args, K8sRbacClusterrolebinding, error) {
@@ -2175,10 +2182,10 @@ func (p *lumiK8sRbacClusterrolebinding) init(args *lumi.Args) (*lumi.Args, K8sRb
 
 	var matchFn func(entry K8sRbacClusterrolebinding) bool
 
-	uidRaw := (*args)["uid"]
+	uidRaw := (*args)["id"]
 	if uidRaw != nil {
 		matchFn = func(service K8sRbacClusterrolebinding) bool {
-			uid, _ := service.Uid()
+			uid, _ := service.Id()
 			if uid == uidRaw.(string) {
 				return true
 			}
@@ -2216,7 +2223,7 @@ func (k *lumiK8sRbacClusterrolebinding) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sRbacRolebinding) id() (string, error) {
-	return k.Uid()
+	return k.Id()
 }
 
 func (p *lumiK8sRbacRolebinding) init(args *lumi.Args) (*lumi.Args, K8sRbacRolebinding, error) {
@@ -2239,10 +2246,10 @@ func (p *lumiK8sRbacRolebinding) init(args *lumi.Args) (*lumi.Args, K8sRbacRoleb
 
 	var matchFn func(entry K8sRbacRolebinding) bool
 
-	uidRaw := (*args)["uid"]
+	uidRaw := (*args)["id"]
 	if uidRaw != nil {
 		matchFn = func(service K8sRbacRolebinding) bool {
-			uid, _ := service.Uid()
+			uid, _ := service.Id()
 			if uid == uidRaw.(string) {
 				return true
 			}
@@ -2281,31 +2288,61 @@ func (k *lumiK8sRbacRolebinding) GetLabels() (interface{}, error) {
 	return k8sLabels(k.LumiResource())
 }
 
-func getPlatformIdentifierElements(transport providers.Transport) (string, string, string, error) {
+func getPlatformIdentifierElements(transport providers.Transport) (string, string, error) {
 	kt, err := k8stransport(transport)
 	if err != nil {
-		return "", "", "", err
+		return "", "", err
 	}
 
 	identifier, err := kt.PlatformIdentifier()
 	if err != nil {
-		return "", "", "", err
+		return "", "", err
 	}
 
-	var identifierUid string
 	var identifierName string
 	var identifierNamespace string
 	splitIdentifier := strings.Split(identifier, "/")
 	arrayLength := len(splitIdentifier)
 	if arrayLength >= 1 {
-		identifierUid = splitIdentifier[arrayLength-1]
+		identifierName = splitIdentifier[arrayLength-1]
 	}
-	if arrayLength >= 3 {
-		identifierName = splitIdentifier[arrayLength-3]
-	}
-	if arrayLength >= 6 {
-		identifierNamespace = splitIdentifier[arrayLength-6]
+	if arrayLength >= 4 {
+		identifierNamespace = splitIdentifier[arrayLength-4]
 	}
 
-	return identifierUid, identifierName, identifierNamespace, nil
+	return identifierName, identifierNamespace, nil
+}
+
+type K8sObject interface {
+	Kind() (string, error)
+	Name() (string, error)
+	Namespace() (string, error)
+}
+
+func objId(o K8sObject) (string, error) {
+	kind, err := o.Kind()
+	if err != nil {
+		return "", err
+	}
+
+	name, err := o.Name()
+	if err != nil {
+		return "", err
+	}
+
+	namespace, err := o.Namespace()
+	if err != nil {
+		return "", err
+	}
+
+	return objIdFromFields(kind, namespace, name), nil
+}
+
+func objIdFromK8sObj(o metav1.Object, objT metav1.Type) string {
+	return objIdFromFields(objT.GetKind(), o.GetNamespace(), o.GetName())
+}
+
+func objIdFromFields(kind, namespace, name string) string {
+	// Kind is usually capitalized. Make it all lower case for readability
+	return fmt.Sprintf("%s:%s:%s", strings.ToLower(kind), namespace, name)
 }
