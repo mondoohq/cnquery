@@ -45,7 +45,7 @@ func ListDeployments(transport k8s.Transport, connection *providers.TransportCon
 		}
 		platformData.Kind = providers.Kind_KIND_K8S_OBJECT
 		asset := &asset.Asset{
-			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "deployments", deployment.Namespace, deployment.Name, string(deployment.UID))},
+			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "deployments", deployment.Namespace, deployment.Name)},
 			Name:        deployment.Namespace + "/" + deployment.Name,
 			Platform:    platformData,
 			Connections: []*providers.TransportConfig{connection},

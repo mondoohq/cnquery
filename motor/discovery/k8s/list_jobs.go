@@ -45,7 +45,7 @@ func ListJobs(transport k8s.Transport, connection *providers.TransportConfig, cl
 		}
 		platformData.Kind = providers.Kind_KIND_K8S_OBJECT
 		asset := &asset.Asset{
-			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "jobs", job.Namespace, job.Name, string(job.UID))},
+			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "jobs", job.Namespace, job.Name)},
 			Name:        job.Namespace + "/" + job.Name,
 			Platform:    platformData,
 			Connections: []*providers.TransportConfig{connection},

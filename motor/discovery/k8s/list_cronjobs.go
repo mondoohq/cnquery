@@ -45,7 +45,7 @@ func ListCronJobs(transport k8s.Transport, connection *providers.TransportConfig
 		}
 		platformData.Kind = providers.Kind_KIND_K8S_OBJECT
 		asset := &asset.Asset{
-			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "cronjobs", cronJob.Namespace, cronJob.Name, string(cronJob.UID))},
+			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "cronjobs", cronJob.Namespace, cronJob.Name)},
 			Name:        cronJob.Namespace + "/" + cronJob.Name,
 			Platform:    platformData,
 			Connections: []*providers.TransportConfig{connection},

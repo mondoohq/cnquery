@@ -44,7 +44,7 @@ func ListReplicaSets(transport k8s.Transport, connection *providers.TransportCon
 		}
 		platformData.Kind = providers.Kind_KIND_K8S_OBJECT
 		asset := &asset.Asset{
-			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "replicasets", replicaSet.Namespace, replicaSet.Name, string(replicaSet.UID))},
+			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "replicasets", replicaSet.Namespace, replicaSet.Name)},
 			Name:        replicaSet.Namespace + "/" + replicaSet.Name,
 			Platform:    platformData,
 			Connections: []*providers.TransportConfig{connection},
