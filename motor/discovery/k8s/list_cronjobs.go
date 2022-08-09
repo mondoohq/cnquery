@@ -52,6 +52,13 @@ func ListCronJobs(transport k8s.Transport, connection *providers.TransportConfig
 			State:       asset.State_STATE_ONLINE,
 			Labels:      cronJob.Labels,
 		}
+		if asset.Labels == nil {
+			asset.Labels = map[string]string{
+				"namespace": cronJob.Namespace,
+			}
+		} else {
+			asset.Labels["namespace"] = cronJob.Namespace
+		}
 		log.Debug().Str("name", cronJob.Name).Str("connection", asset.Connections[0].Host).Msg("resolved CronJob")
 
 		assets = append(assets, asset)
