@@ -4166,7 +4166,7 @@ k8s {
   clusterrolebindings() []k8s.rbac.clusterrolebinding
   // Kubernetes RBAC Role Bindings
   rolebindings() []k8s.rbac.rolebinding
-  // Kubernetes custome resources
+  // Kubernetes custom resources
   customresources() []k8s.customresource
 }
 
