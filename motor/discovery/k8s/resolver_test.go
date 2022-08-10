@@ -13,7 +13,7 @@ func TestManifestResolver(t *testing.T) {
 	manifestFile := "../../providers/k8s/resources/testdata/appsv1.pod.yaml"
 
 	assetList, err := resolver.Resolve(&providers.TransportConfig{
-		PlatformId: "//platform/k8s/uid/123/namespace/default/pods/name/hello-pod/uid/",
+		PlatformId: "//platform/k8s/uid/123/namespace/default/pods/name/hello-pod",
 		Backend:    providers.TransportBackend_CONNECTION_K8S,
 		Options: map[string]string{
 			"path": manifestFile,
@@ -23,12 +23,12 @@ func TestManifestResolver(t *testing.T) {
 		},
 	}, nil, nil)
 	require.NoError(t, err)
-	assert.Equal(t, 3, len(assetList))
+	assert.Equal(t, 4, len(assetList))
 	assert.Equal(t, assetList[1].Platform.Name, "k8s-pod")
 	assert.Contains(t, assetList[1].Platform.Family, "k8s-workload")
 	assert.Contains(t, assetList[1].Platform.Family, "k8s")
-	assert.Equal(t, assetList[2].Platform.Runtime, "docker-registry")
-	assert.Equal(t, assetList[2].Platform.Name, "docker-image")
+	assert.Equal(t, assetList[3].Platform.Runtime, "docker-registry")
+	assert.Equal(t, assetList[3].Platform.Name, "docker-image")
 }
 
 func TestManifestResolverPodDiscovery(t *testing.T) {
@@ -36,7 +36,7 @@ func TestManifestResolverPodDiscovery(t *testing.T) {
 	manifestFile := "../../providers/k8s/resources/testdata/appsv1.pod.yaml"
 
 	assetList, err := resolver.Resolve(&providers.TransportConfig{
-		PlatformId: "//platform/k8s/uid/123/namespace/default/pods/name/hello-pod/uid/",
+		PlatformId: "//platform/k8s/uid/123/namespace/default/pods/name/hello-pod",
 		Backend:    providers.TransportBackend_CONNECTION_K8S,
 		Options: map[string]string{
 			"path": manifestFile,
@@ -48,11 +48,15 @@ func TestManifestResolverPodDiscovery(t *testing.T) {
 	require.NoError(t, err)
 	// When this check fails locally, check your kubeconfig.
 	// context has to reference the default namespace
-	assert.Equal(t, 2, len(assetList))
+	assert.Equal(t, 3, len(assetList))
 	assert.Contains(t, assetList[1].Platform.Family, "k8s-workload")
 	assert.Contains(t, assetList[1].Platform.Family, "k8s")
 	assert.Equal(t, "k8s-manifest", assetList[1].Platform.Runtime)
 	assert.Equal(t, "k8s-pod", assetList[1].Platform.Name)
+	assert.Equal(t, "default/hello-pod", assetList[1].Name)
+	assert.Equal(t, "k8s-manifest", assetList[2].Platform.Runtime)
+	assert.Equal(t, "k8s-pod", assetList[2].Platform.Name)
+	assert.Equal(t, "default/hello-pod-2", assetList[2].Name)
 }
 
 func TestManifestResolverCronJobDiscovery(t *testing.T) {
@@ -60,7 +64,7 @@ func TestManifestResolverCronJobDiscovery(t *testing.T) {
 	manifestFile := "../../providers/k8s/resources/testdata/batchv1.cronjob.yaml"
 
 	assetList, err := resolver.Resolve(&providers.TransportConfig{
-		PlatformId: "//platform/k8s/uid/123/namespace/mondoo-operator/cronjobs/name/mondoo-client-k8s-scan/uid/",
+		PlatformId: "//platform/k8s/uid/123/namespace/mondoo-operator/cronjobs/name/mondoo-client-k8s-scan",
 		Backend:    providers.TransportBackend_CONNECTION_K8S,
 		Options: map[string]string{
 			"path":      manifestFile,
@@ -104,7 +108,7 @@ func TestManifestResolverStatefulSetDiscovery(t *testing.T) {
 	manifestFile := "../../providers/k8s/resources/testdata/appsv1.statefulset.yaml"
 
 	assetList, err := resolver.Resolve(&providers.TransportConfig{
-		PlatformId: "//platform/k8s/uid/123/namespace/default/statefulsets/name/mondoo-statefulset/uid/",
+		PlatformId: "//platform/k8s/uid/123/namespace/default/statefulsets/name/mondoo-statefulset",
 		Backend:    providers.TransportBackend_CONNECTION_K8S,
 		Options: map[string]string{
 			"path": manifestFile,
@@ -127,7 +131,7 @@ func TestManifestResolverJobDiscovery(t *testing.T) {
 	manifestFile := "../../providers/k8s/resources/testdata/batchv1.job.yaml"
 
 	assetList, err := resolver.Resolve(&providers.TransportConfig{
-		PlatformId: "//platform/k8s/uid/123/namespace/mondoo-operator/jobs/name/mondoo-client-k8s-scan/uid/",
+		PlatformId: "//platform/k8s/uid/123/namespace/mondoo-operator/jobs/name/mondoo-client-k8s-scan",
 		Backend:    providers.TransportBackend_CONNECTION_K8S,
 		Options: map[string]string{
 			"path":      manifestFile,
@@ -151,7 +155,7 @@ func TestManifestResolverReplicaSetDiscovery(t *testing.T) {
 	manifestFile := "../../providers/k8s/resources/testdata/appsv1.replicaset.yaml"
 
 	assetList, err := resolver.Resolve(&providers.TransportConfig{
-		PlatformId: "//platform/k8s/uid/123/namespace/default/replicasets/name/mondoo-replicaset/uid/",
+		PlatformId: "//platform/k8s/uid/123/namespace/default/replicasets/name/mondoo-replicaset",
 		Backend:    providers.TransportBackend_CONNECTION_K8S,
 		Options: map[string]string{
 			"path": manifestFile,
@@ -173,8 +177,9 @@ func TestManifestResolverDaemonSetDiscovery(t *testing.T) {
 	resolver := &Resolver{}
 	manifestFile := "../../providers/k8s/resources/testdata/appsv1.daemonset.yaml"
 
+	platformId := "//platform/k8s/uid/123/namespace/default/daemonsets/name/mondoo-daemonset"
 	assetList, err := resolver.Resolve(&providers.TransportConfig{
-		PlatformId: "//platform/k8s/uid/123/namespace/mondoo-operator/daemonsets/name/mondoo-daemonset/uid/",
+		PlatformId: platformId,
 		Backend:    providers.TransportBackend_CONNECTION_K8S,
 		Options: map[string]string{
 			"path": manifestFile,
@@ -190,4 +195,5 @@ func TestManifestResolverDaemonSetDiscovery(t *testing.T) {
 	assert.Contains(t, assetList[1].Platform.Family, "k8s-workload")
 	assert.Contains(t, assetList[1].Platform.Family, "k8s")
 	assert.Equal(t, "k8s-daemonset", assetList[1].Platform.Name)
+	assert.Equal(t, platformId, assetList[1].Connections[0].PlatformId)
 }
