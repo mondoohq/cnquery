@@ -64,7 +64,7 @@ func TestManifestPod(t *testing.T) {
 	pods, err := transport.Pods(namespaces[0])
 	require.NoError(t, err)
 	assert.Equal(t, "k8s-manifest", transport.PlatformInfo().Runtime)
-	assert.Equal(t, 1, len(pods))
+	assert.Equal(t, 2, len(pods))
 }
 
 func TestManifestStatefulSet(t *testing.T) {
