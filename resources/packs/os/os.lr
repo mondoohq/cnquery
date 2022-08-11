@@ -82,8 +82,10 @@ sshd.config {
   init(path? string)
   // File of this SSH server configuration
   file() core.file
+  // A list of lexically sorted files making up the SSH server configuration
+  files() []file
   // Raw content of this SSH server config
-  content(file) string
+  content(files) string
   // Configuration values of this SSH server
   params(content) map[string]string
   // Ciphers configured for this SSH server

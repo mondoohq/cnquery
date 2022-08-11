@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/resources/packs/os"
 	"go.mondoo.io/mondoo/resources/packs/testutils"
 )
@@ -13,7 +14,7 @@ func TestResource_SSHD(t *testing.T) {
 	x.TestSimpleErrors(t, []testutils.SimpleTest{
 		{
 			"sshd.config('1').params['2'] == '3'",
-			0, "file not found: '1' does not exist",
+			0, "failed to create resource 'sshd.config': could not load sshd configuration: 1",
 		},
 	})
 
@@ -34,7 +35,7 @@ func TestResource_SSHD(t *testing.T) {
 		assert.Error(t, res[0].Data.Error)
 	})
 
-	t.Run("specific sshs param", func(t *testing.T) {
+	t.Run("specific sshd param", func(t *testing.T) {
 		res := x.TestQuery(t, "sshd.config.params[\"UsePAM\"]")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
@@ -67,5 +68,39 @@ func TestResource_SSHD(t *testing.T) {
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, []interface{}{"/etc/ssh/ssh_host_rsa_key", "/etc/ssh/ssh_host_ecdsa_key", "/etc/ssh/ssh_host_ed25519_key"}, res[0].Data.Value)
+	})
+}
+
+func TestResource_MultiFileSSHD(t *testing.T) {
+	x := testutils.InitTester(testutils.CustomMock("../testdata/fedora.toml"), os.Registry)
+
+	t.Run("sshd params", func(t *testing.T) {
+		res := x.TestQuery(t, "sshd.config.params")
+		require.NotEmpty(t, res)
+		assert.NoError(t, res[0].Data.Error)
+	})
+
+	t.Run("sshd param only defined in referenced included file", func(t *testing.T) {
+		res := x.TestQuery(t, "sshd.config.ciphers")
+		require.NotEmpty(t, res)
+		assert.Contains(t, res[0].Data.Value, "aes256-gcm@openssh.com")
+	})
+
+	t.Run("sshd param only defined file with relative path", func(t *testing.T) {
+		res := x.TestQuery(t, "sshd.config.params")
+		require.NotEmpty(t, res)
+		data, ok := res[0].Data.Value.(map[string]interface{})
+		require.True(t, ok, "failed to convert resulting values")
+		require.Contains(t, data, "Port", "didn't find 'Port' param set")
+		assert.Equal(t, data["Port"], "35", "expected value from file-by-reference not set")
+	})
+
+	t.Run("sshd param only defined in file inside of directory", func(t *testing.T) {
+		res := x.TestQuery(t, "sshd.config.params")
+		require.NotEmpty(t, res)
+		data, ok := res[0].Data.Value.(map[string]interface{})
+		require.True(t, ok, "failed to convert resulting values")
+		require.Contains(t, data, "MaxSessions", "didn't find 'MaxSessions' param set")
+		assert.Equal(t, data["MaxSessions"], "99", "expected value from file in directory not set")
 	})
 }

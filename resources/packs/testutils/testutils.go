@@ -14,13 +14,13 @@ import (
 	"go.mondoo.io/mondoo"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/logger"
-	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/providers/local"
 	"go.mondoo.io/mondoo/motor/providers/mock"
 	"go.mondoo.io/mondoo/mqlc"
 	"go.mondoo.io/mondoo/policy"
 	"go.mondoo.io/mondoo/policy/executor"
+	"go.mondoo.io/mondoo/resources"
 )
 
 var Features mondoo.Features
@@ -198,6 +198,10 @@ func LinuxMock() *motor.Motor {
 
 func WindowsMock() *motor.Motor {
 	return Mock("../testdata/windows.toml")
+}
+
+func CustomMock(path string) *motor.Motor {
+	return Mock(path)
 }
 
 type SimpleTest struct {
