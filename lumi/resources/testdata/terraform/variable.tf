@@ -1,6 +1,7 @@
 variable "image_id" {
   type        = string
   description = "The id of the machine image (AMI) to use for the server."
+  default     = "ami-0ff8a91507f77f867"
 
   validation {
     condition     = length(var.image_id) > 4 && substr(var.image_id, 0, 4) == "ami-"

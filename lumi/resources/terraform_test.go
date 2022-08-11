@@ -39,7 +39,7 @@ func TestResource_Terraform(t *testing.T) {
 		res := terraformTestQuery(t, "terraform.providers.length")
 		require.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, int64(1), res[0].Data.Value)
+		assert.Equal(t, int64(2), res[0].Data.Value)
 	})
 
 	t.Run("terraform nested blocks", func(t *testing.T) {
