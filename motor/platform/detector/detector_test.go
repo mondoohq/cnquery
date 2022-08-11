@@ -713,7 +713,7 @@ func TestBusyboxLinuxDetector(t *testing.T) {
 
 	assert.Equal(t, "busybox", di.Name, "os name should be identified")
 	assert.Equal(t, "BusyBox", di.Title, "os title should be identified")
-	assert.Equal(t, "v1.28.4", di.Version, "os version should be identified")
+	assert.Equal(t, "v1.34.1", di.Version, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }

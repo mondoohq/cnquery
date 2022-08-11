@@ -1,6 +1,7 @@
 package platform
 
 import (
+	"bytes"
 	"io/ioutil"
 	"regexp"
 	"strconv"
@@ -463,28 +464,46 @@ var busybox = &PlatformResolver{
 	Name:      "busybox",
 	IsFamiliy: false,
 	Detect: func(p *PlatformResolver, di *Platform, t providers.Transport) (bool, error) {
-		command := "ls --help 2>&1 | head -1"
-		cmd, err := t.RunCommand(command)
+		busyboxExists, err := afero.Exists(t.FS(), "/bin/busybox")
+		if !busyboxExists || err != nil {
+			return false, nil
+		}
+
+		// we need to read this file because all others show up as zero size
+		// This fille seems to be the "original"
+		// all others are hardlinks
+		f, err := t.FS().Open("/bin/[")
 		if err != nil {
 			return false, nil
 		}
-		busy_info, err := ioutil.ReadAll(cmd.Stdout)
+		defer f.Close()
+
+		content, err := ioutil.ReadAll(f)
 		if err != nil {
 			return false, err
 		}
 
-		r := regexp.MustCompile(`^\s*(.*)\s(v[\d\.]+)\s*\((.*)\s*$`)
-		m := r.FindStringSubmatch(string(busy_info))
-		if len(m) >= 2 {
-			title := m[1]
-			release := m[2]
+		// strings are \0 terminated
+		rodataByteStrings := bytes.Split(content, []byte("\x00"))
+		if rodataByteStrings == nil {
+			return false, nil
+		}
 
-			if strings.ToLower(title) == "busybox" {
-				di.Name = "busybox"
-				di.Title = title
-				di.Version = release
-				di.Release = di.Version
-				return true, nil
+		r := regexp.MustCompile(`^(.+)\s(v[\d\.]+)\s*\((.*)\).*$`)
+		for _, rodataByteString := range rodataByteStrings {
+			rodataString := string(rodataByteString)
+			m := r.FindStringSubmatch(rodataString)
+			if len(m) >= 2 {
+				title := m[1]
+				release := m[2]
+
+				if strings.ToLower(title) == "busybox" {
+					di.Name = "busybox"
+					di.Title = title
+					di.Version = release
+					di.Release = di.Version
+					return true, nil
+				}
 			}
 		}
 
@@ -889,14 +908,27 @@ var linuxFamily = &PlatformResolver{
 			detected = true
 		}
 
-		// try to read the architecture, we cannot assume this works if we use the tar bakcend where we
+		// BusyBox images do not contain /etc/os-release or /etc/lsb-release, therefore any static analysis
+		// will not be able to detect the system, since the following unamem and unames mechanism is not
+		// available there. Instead the system can be identified by the availability of /bin/busybox
+		// If /bin/busybox is available, we know its a linux system.
+		f, err = t.FS().Open("/bin/busybox")
+		if f != nil {
+			f.Close()
+		}
+
+		if err == nil {
+			detected = true
+		}
+
+		// try to read the architecture, we cannot assume this works if we use the tar backend where we
 		// just load the filesystem, therefore we do not fail here
 		unamem, err := osrd.unamem()
 		if err == nil {
 			di.Arch = unamem
 		}
 
-		// abort if os-release pr lsb config was available, we don't need uname -s then
+		// abort if os-release or lsb config was available, we don't need uname -s then
 		if detected == true {
 			return true, nil
 		}

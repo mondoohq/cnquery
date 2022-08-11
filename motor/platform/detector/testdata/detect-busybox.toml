@@ -9,3 +9,14 @@ stdout = "4.9.125-linuxkit"
 
 [commands."ls --help 2>&1 | head -1"]
 stdout = "BusyBox v1.28.4 (2018-05-22 17:00:17 UTC) multi-call binary."
+
+[files."/bin/busybox"]
+content = ""
+
+# this is part of the /bin/busybox binary in hex, 
+# just the first bytes and later the actual string:
+# 64,0,16,0,15,0,66,117,115,121,66,111,120,32,118,49,46,51,52,46,49,32,40,50,48,50,50,45,48,55,45,50,57,32,48,49,58,51,48,58,51,48,32,85,84,67,41,0
+# the complete file is ~1MB
+# for a complete recording execute: mondoo scan docker image busybox --record
+[files."/bin/["]
+data = [127,69,76,70,2,1,1,0,0,0,0,0,0,0,0,0,2,0,62,0,1,0,0,0,143,26,64,0,0,0,0,0,64,0,0,0,0,0,0,0,32,165,17,0,0,0,0,0,0,0,0,0,64,0,56,0,9,0,64,0,16,0,15,0,66,117,115,121,66,111,120,32,118,49,46,51,52,46,49,32,40,50,48,50,50,45,48,55,45,50,57,32,48,49,58,51,48,58,51,48,32,85,84,67,41,0]
