@@ -3,7 +3,10 @@ resource "aws_instance" "example" {
   instance_type = "t2.micro"
 }
 
-resource "aws_security_group_rule" "my-rule" {
-    type = "ingress"
-    cidr_blocks = ["0.0.0.0/0"]
+resource "aws_security_group_rule" "example" {
+  type              = "ingress"
+  from_port         = 0
+  to_port           = 65535
+  protocol          = "tcp"
+  security_group_id = "sg-123456"
 }

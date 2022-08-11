@@ -19,6 +19,7 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/ms365"
 	"go.mondoo.io/mondoo/motor/providers/network"
 	"go.mondoo.io/mondoo/motor/providers/terraform"
+	"go.mondoo.io/mondoo/motor/providers/tfstate"
 	"go.mondoo.io/mondoo/motor/providers/vsphere"
 )
 
@@ -143,6 +144,13 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 			Kind:    pt.Kind(),
 			Family:  pt.Family,
 			Runtime: pt.Runtime(), // Not sure what we want to set here?
+		}, nil
+	case *tfstate.Provider:
+		return &platform.Platform{
+			Name:    "terraform-state",
+			Title:   "Terraform State",
+			Kind:    providers.Kind_KIND_API,
+			Runtime: "",
 		}, nil
 	default:
 		var resolved bool

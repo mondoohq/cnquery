@@ -82,6 +82,8 @@ func (cfg *Config) ToUrl() string {
 			return ProviderID_TLS + "://" + cfg.Host
 		}
 		return ProviderID_HOST + "://" + cfg.Host
+	case ProviderType_TERRAFORM_STATE:
+		return ProviderID_TERRAFORM_STATE
 	default:
 		log.Warn().Str("provider", cfg.Backend.String()).Msg("cannot render provider name")
 		return ""

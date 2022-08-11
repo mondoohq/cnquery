@@ -35,6 +35,7 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/standard"
 	"go.mondoo.io/mondoo/motor/discovery/tar"
 	"go.mondoo.io/mondoo/motor/discovery/terraform"
+	"go.mondoo.io/mondoo/motor/discovery/tfstate"
 	"go.mondoo.io/mondoo/motor/discovery/vagrant"
 	"go.mondoo.io/mondoo/motor/discovery/vsphere"
 	"go.mondoo.io/mondoo/motor/providers"
@@ -80,6 +81,7 @@ func init() {
 		providers.ProviderID_TERRAFORM:          &terraform.Resolver{},
 		providers.ProviderID_HOST:               &network.Resolver{},
 		providers.ProviderID_TLS:                &network.Resolver{},
+		providers.ProviderID_TERRAFORM_STATE:    &tfstate.Resolver{},
 	}
 }
 
