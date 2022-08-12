@@ -4192,6 +4192,7 @@ k8s.apiresource {
 
 // Kubernetes node
 k8s.node {
+  // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
   uid string
@@ -4209,6 +4210,7 @@ k8s.node {
 
 // Kubernetes Namespace
 k8s.namespace {
+  // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
   uid string
@@ -4222,6 +4224,7 @@ k8s.namespace {
 
 // Kubernetes Pod
 k8s.pod {
+  // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
   uid string
@@ -4345,6 +4348,7 @@ private k8s.initContainer {
 
 // Kubernetes Deployment
 k8s.deployment {
+  // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
   uid string
@@ -4364,10 +4368,17 @@ k8s.deployment {
   created time
   // Full resource manifest
   manifest dict
+  // PodSpec is a description of a pod
+  podSpec dict
+  // Init containers
+  initContainers() []k8s.initContainer
+  // Contained Containers
+  containers() []k8s.container
 }
 
 // Kubernetes DaemonSet
 k8s.daemonset {
+  // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
   uid string
@@ -4387,10 +4398,17 @@ k8s.daemonset {
   created time
   // Full resource manifest
   manifest dict
+  // PodSpec is a description of a pod
+  podSpec dict
+  // Init containers
+  initContainers() []k8s.initContainer
+  // Contained Containers
+  containers() []k8s.container
 }
 
 // Kubernetes StatefulSet
 k8s.statefulset {
+  // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
   uid string
@@ -4410,10 +4428,17 @@ k8s.statefulset {
   created time
   // Full resource manifest
   manifest dict
+  // PodSpec is a description of a pod
+  podSpec dict
+  // Init containers
+  initContainers() []k8s.initContainer
+  // Contained Containers
+  containers() []k8s.container
 }
 
 // Kubernetes ReplicaSet
 k8s.replicaset {
+  // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
   uid string
@@ -4433,10 +4458,17 @@ k8s.replicaset {
   created time
   // Full resource manifest
   manifest dict
+  // PodSpec is a description of a pod
+  podSpec dict
+  // Init containers
+  initContainers() []k8s.initContainer
+  // Contained Containers
+  containers() []k8s.container
 }
 
 // Kubernetes Job
 k8s.job {
+  // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
   uid string
@@ -4456,10 +4488,17 @@ k8s.job {
   created time
   // Full resource manifest
   manifest dict
+  // PodSpec is a description of a pod
+  podSpec dict
+  // Init containers
+  initContainers() []k8s.initContainer
+  // Contained Containers
+  containers() []k8s.container
 }
 
 // Kubernetes CronJob
 k8s.cronjob {
+  // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
   uid string
@@ -4479,10 +4518,17 @@ k8s.cronjob {
   created time
   // Full resource manifest
   manifest dict
+  // PodSpec is a description of a pod
+  podSpec dict
+  // Init containers
+  initContainers() []k8s.initContainer
+  // Contained Containers
+  containers() []k8s.container
 }
 
 // Kubernetes Secret
 k8s.secret {
+  // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
   uid string
@@ -4510,6 +4556,7 @@ k8s.secret {
 
 // Kubernetes PodSecurityPolicy (deprecated as of Kubernetes v1.21)
 k8s.podsecuritypolicy {
+  // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
   uid string
@@ -4533,6 +4580,7 @@ k8s.podsecuritypolicy {
 
 // Kubernetes ConfigMap
 k8s.configmap {
+  // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
   uid string
@@ -4558,6 +4606,7 @@ k8s.configmap {
 
 // Kubernetes Service
 k8s.service {
+  // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
   uid string
@@ -4583,6 +4632,7 @@ k8s.service {
 
 // Kubernetes Network Policy
 k8s.networkpolicy {
+  // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
   uid string
@@ -4608,6 +4658,7 @@ k8s.networkpolicy {
 
 // Kubernetes Service Account
 k8s.serviceaccount {
+  // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
   uid string
@@ -4637,6 +4688,7 @@ k8s.serviceaccount {
 
 // Kubernetes ClusterRole
 k8s.rbac.clusterrole {
+  // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
   uid string
@@ -4662,6 +4714,7 @@ k8s.rbac.clusterrole {
 
 // Kubernetes Role
 k8s.rbac.role {
+  // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
   uid string
@@ -4687,6 +4740,7 @@ k8s.rbac.role {
 
 // Kubernetes ClusterRoleBinding
 k8s.rbac.clusterrolebinding {
+  // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
   uid string
@@ -4712,6 +4766,7 @@ k8s.rbac.clusterrolebinding {
 
 // Kubernetes RoleBinding
 k8s.rbac.rolebinding {
+  // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
   uid string
@@ -4739,6 +4794,7 @@ k8s.rbac.rolebinding {
 
 // Kubernetes CustomResource
 k8s.customresource {
+  // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
   uid string
