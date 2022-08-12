@@ -145,7 +145,7 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*asset.Asset, error) {
 				if ipResp.IPAddress != nil {
 					ip := *ipResp.IPAddress
 					connections = append(connections, &providers.TransportConfig{
-						Backend: providers.TransportBackend_CONNECTION_SSH,
+						Backend: providers.ProviderType_SSH,
 						Host:    ip,
 						// we do not add credentials here since those may not match the expected state
 						// *instance.OsProfile.AdminUsername

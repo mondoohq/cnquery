@@ -19,7 +19,7 @@ func TestEc2InstanceConnect(t *testing.T) {
 	user := "ec2-user"
 
 	endpoint := &providers.TransportConfig{
-		Backend: providers.TransportBackend_CONNECTION_SSH,
+		Backend: providers.ProviderType_SSH,
 		Host:    instanceID,
 		Credentials: []*vault.Credential{{
 			Type: vault.CredentialType_aws_ec2_instance_connect,
@@ -37,7 +37,7 @@ func TestEc2InstanceConnect(t *testing.T) {
 
 func TestSudoConnect(t *testing.T) {
 	endpoint := &providers.TransportConfig{
-		Backend: providers.TransportBackend_CONNECTION_SSH,
+		Backend: providers.ProviderType_SSH,
 		Host:    "192.168.178.26",
 		Credentials: []*vault.Credential{{
 			Type:   vault.CredentialType_password,
@@ -69,7 +69,7 @@ func TestEc2SSMSession(t *testing.T) {
 	region := "us-east-1"
 
 	endpoint := &providers.TransportConfig{
-		Backend: providers.TransportBackend_CONNECTION_SSH,
+		Backend: providers.ProviderType_SSH,
 		Host:    instanceID,
 		Credentials: []*vault.Credential{{
 			Type: vault.CredentialType_aws_ec2_ssm_session,

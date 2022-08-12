@@ -18,14 +18,14 @@ func TestResolverWithAssetName(t *testing.T) {
 					Name: "test",
 					Connections: []*providers.TransportConfig{
 						{
-							Backend: providers.TransportBackend_CONNECTION_LOCAL_OS,
+							Backend: providers.ProviderType_LOCAL_OS,
 						},
 					},
 				},
 				{
 					Connections: []*providers.TransportConfig{
 						{
-							Backend: providers.TransportBackend_CONNECTION_MOCK,
+							Backend: providers.ProviderType_MOCK,
 							Options: map[string]string{
 								"path": "./testdata/mock.toml",
 							},

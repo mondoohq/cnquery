@@ -21,7 +21,7 @@ func TestVSphereTransport(t *testing.T) {
 	require.NoError(t, err)
 
 	trans, err := New(&providers.TransportConfig{
-		Backend:  providers.TransportBackend_CONNECTION_VSPHERE,
+		Backend:  providers.ProviderType_VSPHERE,
 		Host:     vs.Server.URL.Hostname(),
 		Port:     int32(portNum),
 		Insecure: true, // allows self-signed certificates

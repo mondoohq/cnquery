@@ -17,7 +17,7 @@ func TestGcpDiscovery(t *testing.T) {
 	require.NoError(t, err)
 
 	tc := &providers.TransportConfig{
-		Backend: providers.TransportBackend_CONNECTION_GCP,
+		Backend: providers.ProviderType_GCP,
 		Options: map[string]string{
 			"project": projectid,
 		},

@@ -23,7 +23,7 @@ func TestVsphereResolver(t *testing.T) {
 	// start vsphere discover
 	r := Resolver{}
 	assets, err := r.Resolve(&asset.Asset{}, &providers.TransportConfig{
-		Backend:  providers.TransportBackend_CONNECTION_VSPHERE,
+		Backend:  providers.ProviderType_VSPHERE,
 		Host:     vs.Server.URL.Hostname(),
 		Port:     int32(port),
 		Insecure: true, // allows self-signed certificates

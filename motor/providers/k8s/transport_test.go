@@ -16,7 +16,7 @@ import (
 func TestKubernetes(t *testing.T) {
 	os.Setenv("DEBUG", "1")
 	trans, err := New(&providers.TransportConfig{
-		Backend: providers.TransportBackend_CONNECTION_K8S,
+		Backend: providers.ProviderType_K8S,
 	})
 	require.NoError(t, err)
 
@@ -35,7 +35,7 @@ func TestKubernetes(t *testing.T) {
 
 func TestKubernetesManifest(t *testing.T) {
 	trans, err := New(&providers.TransportConfig{
-		Backend: providers.TransportBackend_CONNECTION_K8S,
+		Backend: providers.ProviderType_K8S,
 		Options: map[string]string{
 			OPTION_MANIFEST: "./resources/testdata/appsv1.daemonset.yaml",
 		},

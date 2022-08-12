@@ -14,7 +14,7 @@ var (
 )
 
 func New(tc *providers.TransportConfig) (*Transport, error) {
-	if tc.Backend != providers.TransportBackend_CONNECTION_EQUINIX_METAL {
+	if tc.Backend != providers.ProviderType_EQUINIX_METAL {
 		return nil, errors.New("backend is not supported for equinix transport")
 	}
 

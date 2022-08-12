@@ -47,7 +47,7 @@ func TestHarbor(t *testing.T) {
 		require.NoError(t, err, url)
 
 		// check that we resolved it correctly and we got a specific shasum
-		assert.Equal(t, providers.TransportBackend_CONNECTION_CONTAINER_REGISTRY, a.Connections[0].Backend)
+		assert.Equal(t, providers.ProviderType_CONTAINER_REGISTRY, a.Connections[0].Backend)
 		assert.True(t, strings.HasPrefix(a.Connections[0].Host, "index.docker.io/library/centos"), url)
 		assert.True(t, len(strings.Split(a.Connections[0].Host, "@")) == 2, url)
 	}

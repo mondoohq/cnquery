@@ -64,7 +64,7 @@ func TransportOptions(opts map[string]string) []TransportOption {
 }
 
 func New(tc *providers.TransportConfig, opts ...TransportOption) (*Transport, error) {
-	if tc.Backend != providers.TransportBackend_CONNECTION_AWS {
+	if tc.Backend != providers.ProviderType_AWS {
 		return nil, errors.New("backend is not supported for aws transport")
 	}
 

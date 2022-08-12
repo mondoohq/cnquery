@@ -17,7 +17,7 @@ var (
 )
 
 func New(tc *providers.TransportConfig) (*Transport, error) {
-	if tc == nil || tc.Backend != providers.TransportBackend_CONNECTION_IPMI {
+	if tc == nil || tc.Backend != providers.ProviderType_IPMI {
 		return nil, errors.New("backend is not supported for ipmi transport")
 	}
 

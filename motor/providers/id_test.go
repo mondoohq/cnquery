@@ -16,12 +16,12 @@ func TestBackendParser(t *testing.T) {
 -  tar 
 `
 
-	v := []TransportBackend{}
+	v := []ProviderType{}
 	yaml.Unmarshal([]byte(content), &v)
 
 	assert.Equal(t, 4, len(v))
-	assert.Equal(t, TransportBackend_CONNECTION_SSH, v[0])
-	assert.Equal(t, TransportBackend_CONNECTION_DOCKER, v[1])
-	assert.Equal(t, TransportBackend_CONNECTION_TAR, v[2])
-	assert.Equal(t, TransportBackend_CONNECTION_TAR, v[3])
+	assert.Equal(t, ProviderType_SSH, v[0])
+	assert.Equal(t, ProviderType_DOCKER, v[1])
+	assert.Equal(t, ProviderType_TAR, v[2])
+	assert.Equal(t, ProviderType_TAR, v[3])
 }

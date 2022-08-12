@@ -52,34 +52,34 @@ var resolver map[string]Resolver
 
 func init() {
 	resolver = map[string]Resolver{
-		providers.SCHEME_LOCAL:              &local.Resolver{},
-		providers.SCHEME_WINRM:              &standard.Resolver{},
-		providers.SCHEME_SSH:                &standard.Resolver{},
-		providers.SCHEME_DOCKER:             &docker_engine.Resolver{},
-		providers.SCHEME_DOCKER_IMAGE:       &docker_engine.Resolver{},
-		providers.SCHEME_DOCKER_CONTAINER:   &docker_engine.Resolver{},
-		providers.SCHEME_TAR:                &tar.Resolver{},
-		providers.SCHEME_K8S:                &k8s.Resolver{},
-		providers.SCHEME_GCR:                &gcp.GcrResolver{},
-		providers.SCHEME_GCP:                &gcp.GcpResolver{},
-		providers.SCHEME_CONTAINER_REGISTRY: &container_registry.Resolver{},
-		providers.SCHEME_AZURE:              &azure.Resolver{},
-		providers.SCHEME_AWS:                &aws.Resolver{},
-		providers.SCHEME_VAGRANT:            &vagrant.Resolver{},
-		providers.SCHEME_MOCK:               &mock.Resolver{},
-		providers.SCHEME_VSPHERE:            &vsphere.Resolver{},
-		providers.SCHEME_VSPHERE_VM:         &vsphere.VMGuestResolver{},
-		providers.SCHEME_ARISTA:             &standard.Resolver{},
-		providers.SCHEME_MS365:              &ms365.Resolver{},
-		providers.SCHEME_IPMI:               &ipmi.Resolver{},
-		providers.SCHEME_FS:                 &standard.Resolver{},
-		providers.SCHEME_EQUINIX:            &equinix.Resolver{},
-		providers.SCHEME_GITHUB:             &github.Resolver{},
-		providers.SCHEME_AWS_EC2_EBS:        &ebs.Resolver{},
-		providers.SCHEME_GITLAB:             &gitlab.Resolver{},
-		providers.SCHEME_TERRAFORM:          &terraform.Resolver{},
-		providers.SCHEME_HOST:               &network.Resolver{},
-		providers.SCHEME_TLS:                &network.Resolver{},
+		providers.ProviderID_LOCAL:              &local.Resolver{},
+		providers.ProviderID_WINRM:              &standard.Resolver{},
+		providers.ProviderID_SSH:                &standard.Resolver{},
+		providers.ProviderID_DOCKER:             &docker_engine.Resolver{},
+		providers.ProviderID_DOCKER_IMAGE:       &docker_engine.Resolver{},
+		providers.ProviderID_DOCKER_CONTAINER:   &docker_engine.Resolver{},
+		providers.ProviderID_TAR:                &tar.Resolver{},
+		providers.ProviderID_K8S:                &k8s.Resolver{},
+		providers.ProviderID_GCR:                &gcp.GcrResolver{},
+		providers.ProviderID_GCP:                &gcp.GcpResolver{},
+		providers.ProviderID_CONTAINER_REGISTRY: &container_registry.Resolver{},
+		providers.ProviderID_AZURE:              &azure.Resolver{},
+		providers.ProviderID_AWS:                &aws.Resolver{},
+		providers.ProviderID_VAGRANT:            &vagrant.Resolver{},
+		providers.ProviderID_MOCK:               &mock.Resolver{},
+		providers.ProviderID_VSPHERE:            &vsphere.Resolver{},
+		providers.ProviderID_VSPHERE_VM:         &vsphere.VMGuestResolver{},
+		providers.ProviderID_ARISTA:             &standard.Resolver{},
+		providers.ProviderID_MS365:              &ms365.Resolver{},
+		providers.ProviderID_IPMI:               &ipmi.Resolver{},
+		providers.ProviderID_FS:                 &standard.Resolver{},
+		providers.ProviderID_EQUINIX:            &equinix.Resolver{},
+		providers.ProviderID_GITHUB:             &github.Resolver{},
+		providers.ProviderID_AWS_EC2_EBS:        &ebs.Resolver{},
+		providers.ProviderID_GITLAB:             &gitlab.Resolver{},
+		providers.ProviderID_TERRAFORM:          &terraform.Resolver{},
+		providers.ProviderID_HOST:               &network.Resolver{},
+		providers.ProviderID_TLS:                &network.Resolver{},
 	}
 }
 
@@ -100,7 +100,7 @@ func ResolveAsset(root *asset.Asset, cfn credentials.CredentialFn, sfn credentia
 	for i := range root.Connections {
 		tc := root.Connections[i]
 
-		resolverId := tc.Backend.Scheme()
+		resolverId := tc.Backend.Id()
 		r, ok := resolver[resolverId]
 		if !ok {
 			assetFallbackName(root, tc)

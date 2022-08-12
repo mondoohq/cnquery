@@ -22,7 +22,7 @@ const (
 )
 
 func New(tc *providers.TransportConfig) (*Transport, error) {
-	if tc.Backend != providers.TransportBackend_CONNECTION_GCP {
+	if tc.Backend != providers.ProviderType_GCP {
 		return nil, errors.New("backend is not supported for gcp transport")
 	}
 

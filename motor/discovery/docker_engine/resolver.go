@@ -39,7 +39,7 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 	// check if we have a tar as input
 	// detect if the tar is a container image format -> container image
 	// or a container snapshot format -> container snapshot
-	if tc.Backend == providers.TransportBackend_CONNECTION_TAR {
+	if tc.Backend == providers.ProviderType_TAR {
 
 		if tc.Options == nil || tc.Options["file"] == "" {
 			return nil, errors.New("could not find the tar file")
@@ -78,7 +78,7 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 	ded, dockerEngErr := NewDockerEngineDiscovery()
 	// we do not fail here, since we pull the image from upstream if its is an image without the need for docker
 
-	if tc.Backend == providers.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER {
+	if tc.Backend == providers.ProviderType_DOCKER_ENGINE_CONTAINER {
 		if dockerEngErr != nil {
 			return nil, errors.Wrap(dockerEngErr, "cannot connect to docker engine to fetch the container")
 		}
@@ -90,7 +90,7 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 		return []*asset.Asset{resolvedAsset}, nil
 	}
 
-	if tc.Backend == providers.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE {
+	if tc.Backend == providers.ProviderType_DOCKER_ENGINE_IMAGE {
 		// NOTE, we ignore dockerEngErr here since we fallback to pulling the images directly
 		resolvedAssets, err := r.images(root, tc, ded, cfn, sfn)
 		if err != nil {
@@ -135,7 +135,7 @@ func (k *Resolver) container(root *asset.Asset, tc *providers.TransportConfig, d
 		return nil, err
 	}
 
-	tc.Backend = providers.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER
+	tc.Backend = providers.ProviderType_DOCKER_ENGINE_CONTAINER
 	return &asset.Asset{
 		Name:        ci.Name,
 		Connections: []*providers.TransportConfig{tc},
@@ -154,7 +154,7 @@ func (k *Resolver) images(root *asset.Asset, tc *providers.TransportConfig, ded 
 	if ded != nil {
 		ii, err := ded.ImageInfo(tc.Host)
 		if err == nil {
-			tc.Backend = providers.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE
+			tc.Backend = providers.ProviderType_DOCKER_ENGINE_IMAGE
 			return []*asset.Asset{{
 				Name:        ii.Name,
 				Connections: []*providers.TransportConfig{tc},

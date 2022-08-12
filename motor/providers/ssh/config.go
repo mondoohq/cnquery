@@ -86,7 +86,7 @@ func ReadSSHConfig(cc *providers.TransportConfig) *providers.TransportConfig {
 }
 
 func VerifyConfig(endpoint *providers.TransportConfig) error {
-	if endpoint.Backend != providers.TransportBackend_CONNECTION_SSH {
+	if endpoint.Backend != providers.ProviderType_SSH {
 		return errors.New("only ssh backend for ssh transport supported")
 	}
 

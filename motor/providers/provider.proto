@@ -5,35 +5,35 @@ import "motor/vault/vault.proto";
 package mondoo.motor.transports.v1;
 option go_package = "go.mondoo.io/mondoo/motor/providers";
 
-enum TransportBackend {
-  CONNECTION_LOCAL_OS = 0;
-  CONNECTION_DOCKER_ENGINE_IMAGE = 1;
-  CONNECTION_DOCKER_ENGINE_CONTAINER = 2;
-  CONNECTION_SSH = 3;
-  CONNECTION_WINRM = 4;
-  CONNECTION_AWS_SSM_RUN_COMMAND = 5;
-  CONNECTION_CONTAINER_REGISTRY = 6;
-  CONNECTION_TAR = 7;
-  CONNECTION_MOCK = 8;
-  CONNECTION_VSPHERE = 9;
-  CONNECTION_ARISTAEOS = 10;
+enum ProviderType {
+  LOCAL_OS = 0;
+  DOCKER_ENGINE_IMAGE = 1;
+  DOCKER_ENGINE_CONTAINER = 2;
+  SSH = 3;
+  WINRM = 4;
+  AWS_SSM_RUN_COMMAND = 5;
+  CONTAINER_REGISTRY = 6;
+  TAR = 7;
+  MOCK = 8;
+  VSPHERE = 9;
+  ARISTAEOS = 10;
   reserved 11;
-  CONNECTION_AWS = 12;
-  CONNECTION_GCP = 13;
-  CONNECTION_AZURE = 14;
-  CONNECTION_MS365 = 15;
-  CONNECTION_IPMI = 16;
-  CONNECTION_VSPHERE_VM = 17;
-  CONNECTION_FS = 18;
-  CONNECTION_K8S = 19;
-  CONNECTION_EQUINIX_METAL = 20;
-  CONNECTION_DOCKER = 21; // unspecified if this is a container or image
-  CONNECTION_GITHUB = 22;
-  CONNECTION_VAGRANT = 23;
-  CONNECTION_AWS_EC2_EBS = 24;
-  CONNECTION_GITLAB = 25;
-  CONNECTION_TERRAFORM = 26;
-  CONNECTION_HOST = 27;
+  AWS = 12;
+  GCP = 13;
+  AZURE = 14;
+  MS365 = 15;
+  IPMI = 16;
+  VSPHERE_VM = 17;
+  FS = 18;
+  K8S = 19;
+  EQUINIX_METAL = 20;
+  DOCKER = 21; // unspecified if this is a container or image
+  GITHUB = 22;
+  VAGRANT = 23;
+  AWS_EC2_EBS = 24;
+  GITLAB = 25;
+  TERRAFORM = 26;
+  HOST = 27;
 }
 
 enum Kind {
@@ -58,7 +58,7 @@ enum Kind {
 message TransportConfig {
   reserved 6, 7, 9, 10, 20;
 
-  TransportBackend backend = 1;
+  ProviderType backend = 1;
   string host = 2;
   // Ports are not int by default, eg. docker://centos:latest parses a string as port
   // Therefore it is up to the transport to convert the port to what they need

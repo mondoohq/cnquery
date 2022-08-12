@@ -33,7 +33,7 @@ func VSphereConnectionURL(hostname string, port int32, user string, password str
 }
 
 func New(tc *providers.TransportConfig) (*Transport, error) {
-	if tc.Backend != providers.TransportBackend_CONNECTION_VSPHERE {
+	if tc.Backend != providers.ProviderType_VSPHERE {
 		return nil, errors.New("backend is not supported for vSphere transport")
 	}
 

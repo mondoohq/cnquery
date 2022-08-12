@@ -23,7 +23,7 @@ func vsphereTestQuery(t *testing.T, query string) []*llx.RawResult {
 	require.NoError(t, err)
 
 	trans, err := vsphere.New(&providers.TransportConfig{
-		Backend:  providers.TransportBackend_CONNECTION_VSPHERE,
+		Backend:  providers.ProviderType_VSPHERE,
 		Host:     vs.Server.URL.Hostname(),
 		Port:     int32(port),
 		Insecure: true, // allows self-signed certificates

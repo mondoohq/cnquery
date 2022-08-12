@@ -34,7 +34,7 @@ func WithInsecure() TransportConfigOption {
 	}
 }
 
-func NewTransportConfig(b TransportBackend, opts ...TransportConfigOption) (*TransportConfig, error) {
+func NewProviderConfig(b ProviderType, opts ...TransportConfigOption) (*TransportConfig, error) {
 	t := &TransportConfig{
 		Backend: b,
 	}
@@ -50,7 +50,7 @@ func NewTransportConfig(b TransportBackend, opts ...TransportConfigOption) (*Tra
 	return t, nil
 }
 
-func NewTransportFromUrl(uri string, opts ...TransportConfigOption) (*TransportConfig, string, error) {
+func NewProviderFromUrl(uri string, opts ...TransportConfigOption) (*TransportConfig, string, error) {
 	if uri == "" {
 		return nil, "", errors.New("uri cannot be empty")
 	}
@@ -76,7 +76,7 @@ func NewTransportFromUrl(uri string, opts ...TransportConfigOption) (*TransportC
 		}
 	}
 
-	b, err := MapSchemeBackend(scheme)
+	b, err := GetProviderType(scheme)
 	if err != nil {
 		return nil, "", err
 	}

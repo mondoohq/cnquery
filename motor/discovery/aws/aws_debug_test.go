@@ -13,7 +13,7 @@ import (
 
 func TestEC2Discovery(t *testing.T) {
 	tc := &providers.TransportConfig{
-		Backend: providers.TransportBackend_CONNECTION_AWS,
+		Backend: providers.ProviderType_AWS,
 		Options: map[string]string{
 			"profile": "mondoo-demo",
 			"region":  "us-east-1",

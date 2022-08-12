@@ -18,7 +18,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 }
 
 func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
-	tc.Backend = providers.TransportBackend_CONNECTION_AWS_EC2_EBS
+	tc.Backend = providers.ProviderType_AWS_EC2_EBS
 	assetInfo := &asset.Asset{
 		Name:        tc.Options["id"],
 		Connections: []*providers.TransportConfig{tc},

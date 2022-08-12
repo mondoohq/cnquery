@@ -60,7 +60,7 @@ func (e *dockerEngineDiscovery) ListImages() ([]*asset.Asset, error) {
 			},
 			Connections: []*providers.TransportConfig{
 				{
-					Backend: providers.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE,
+					Backend: providers.ProviderType_DOCKER_ENGINE_IMAGE,
 					Host:    dImg.ID,
 				},
 			},

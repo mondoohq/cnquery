@@ -39,7 +39,7 @@ import (
 var _ providers.Transport = (*Transport)(nil)
 
 func New(tc *providers.TransportConfig) (*Transport, error) {
-	if tc.Backend != providers.TransportBackend_CONNECTION_VSPHERE_VM {
+	if tc.Backend != providers.ProviderType_VSPHERE_VM {
 		return nil, errors.New("backend is not supported for VMware tools transport")
 	}
 

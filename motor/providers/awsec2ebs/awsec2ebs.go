@@ -119,7 +119,7 @@ func New(tc *providers.TransportConfig) (*Ec2EbsTransport, error) {
 	// 5. create and initialize fs transport (nested transport)
 	fsTransport, err := fs.NewWithClose(&providers.TransportConfig{
 		Path:       t.tmpInfo.scanDir,
-		Backend:    providers.TransportBackend_CONNECTION_FS,
+		Backend:    providers.ProviderType_FS,
 		PlatformId: tc.PlatformId,
 		Options:    tc.Options,
 	}, t.Close)

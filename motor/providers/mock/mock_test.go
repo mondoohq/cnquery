@@ -33,7 +33,7 @@ func TestMockCommand(t *testing.T) {
 func TestMockCommandWithHostname(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/mock.toml")
 	trans, err := mock.NewFromToml(&providers.TransportConfig{
-		Backend: providers.TransportBackend_CONNECTION_MOCK,
+		Backend: providers.ProviderType_MOCK,
 		Options: map[string]string{
 			"path":     filepath,
 			"hostname": "foobear",

@@ -28,7 +28,7 @@ func NewFromDockerEngine(containerid string) (*DockerSnapshotTransport, error) {
 	}
 
 	tarTransport, err := tar.NewWithClose(&providers.TransportConfig{
-		Backend: providers.TransportBackend_CONNECTION_TAR,
+		Backend: providers.ProviderType_TAR,
 		Options: map[string]string{
 			tar.OPTION_FILE: f.Name(),
 		},

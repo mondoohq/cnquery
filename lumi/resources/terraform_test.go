@@ -13,7 +13,7 @@ import (
 
 func terraformTestQuery(t *testing.T, query string) []*llx.RawResult {
 	trans, err := terraform.New(&providers.TransportConfig{
-		Backend: providers.TransportBackend_CONNECTION_TERRAFORM,
+		Backend: providers.ProviderType_TERRAFORM,
 		Options: map[string]string{
 			"path": "./testdata/terraform",
 		},
