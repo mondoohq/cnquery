@@ -121,7 +121,7 @@ func newVagrantAsset(sshConfig *VagrantVmSSHConfig, rootTransportConfig *provide
 
 	cc := &providers.TransportConfig{
 		// TODO: do we need to support winrm?
-		Backend:  providers.TransportBackend_CONNECTION_SSH,
+		Backend:  providers.ProviderType_SSH,
 		Host:     sshConfig.HostName,
 		Insecure: strings.ToLower(sshConfig.StrictHostKeyChecking) == "no",
 

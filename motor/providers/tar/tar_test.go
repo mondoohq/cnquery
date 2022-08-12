@@ -32,7 +32,7 @@ func TestTarCommand(t *testing.T) {
 	require.NoError(t, err, "should create tar without error")
 
 	tarTransport, err := tar.New(&providers.TransportConfig{
-		Backend: providers.TransportBackend_CONNECTION_TAR,
+		Backend: providers.ProviderType_TAR,
 		Options: map[string]string{
 			"file": alpineContainerPath,
 		},
@@ -56,7 +56,7 @@ func TestPlatformIdentifier(t *testing.T) {
 	require.NoError(t, err, "should create tar without error")
 
 	m, err := resolver.NewMotorConnection(&providers.TransportConfig{
-		Backend: providers.TransportBackend_CONNECTION_TAR,
+		Backend: providers.ProviderType_TAR,
 		Options: map[string]string{
 			"file": alpineContainerPath,
 		},
@@ -72,7 +72,7 @@ func TestTarSymlinkFile(t *testing.T) {
 	require.NoError(t, err, "should create tar without error")
 
 	tarTransport, err := tar.New(&providers.TransportConfig{
-		Backend: providers.TransportBackend_CONNECTION_TAR,
+		Backend: providers.ProviderType_TAR,
 		Options: map[string]string{
 			"file": alpineContainerPath,
 		},
@@ -104,7 +104,7 @@ func TestTarRelativeSymlinkFileCentos(t *testing.T) {
 	require.NoError(t, err, "should create tar without error")
 
 	tarTransport, err := tar.New(&providers.TransportConfig{
-		Backend: providers.TransportBackend_CONNECTION_TAR,
+		Backend: providers.ProviderType_TAR,
 		Options: map[string]string{
 			"file": centosContainerPath,
 		},
@@ -135,7 +135,7 @@ func TestTarFile(t *testing.T) {
 	require.NoError(t, err, "should create tar without error")
 
 	tarTransport, err := tar.New(&providers.TransportConfig{
-		Backend: providers.TransportBackend_CONNECTION_TAR,
+		Backend: providers.ProviderType_TAR,
 		Options: map[string]string{
 			"file": alpineContainerPath,
 		},
@@ -165,7 +165,7 @@ func TestFilePermissions(t *testing.T) {
 	require.NoError(t, err, "should create tar without error")
 
 	trans, err := tar.New(&providers.TransportConfig{
-		Backend: providers.TransportBackend_CONNECTION_TAR,
+		Backend: providers.ProviderType_TAR,
 		Options: map[string]string{
 			"file": alpineContainerPath,
 		},
@@ -222,7 +222,7 @@ func TestTarFileFind(t *testing.T) {
 	require.NoError(t, err, "should create tar without error")
 
 	trans, err := tar.New(&providers.TransportConfig{
-		Backend: providers.TransportBackend_CONNECTION_TAR,
+		Backend: providers.ProviderType_TAR,
 		Options: map[string]string{
 			"file": alpineContainerPath,
 		},

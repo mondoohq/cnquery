@@ -32,12 +32,12 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var transportDevelopmentStatus = map[providers.TransportBackend]string{
-	providers.TransportBackend_CONNECTION_GITHUB:      "experimental",
-	providers.TransportBackend_CONNECTION_AWS_EC2_EBS: "experimental",
+var transportDevelopmentStatus = map[providers.ProviderType]string{
+	providers.ProviderType_GITHUB:      "experimental",
+	providers.ProviderType_AWS_EC2_EBS: "experimental",
 }
 
-func warnIncompleteFeature(backend providers.TransportBackend) {
+func warnIncompleteFeature(backend providers.ProviderType) {
 	if transportDevelopmentStatus[backend] != "" {
 		log.Warn().Str("feature", backend.String()).Str("status", transportDevelopmentStatus[backend]).Msg("WARNING: you are using an early access feature")
 	}
@@ -72,7 +72,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 
 	// establish connection
 	switch resolvedConfig.Backend {
-	case providers.TransportBackend_CONNECTION_MOCK:
+	case providers.ProviderType_MOCK:
 		log.Debug().Msg("connection> load mock transport")
 		trans, err := mock.NewFromToml(resolvedConfig)
 		if err != nil {
@@ -83,7 +83,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_LOCAL_OS:
+	case providers.ProviderType_LOCAL_OS:
 		log.Debug().Msg("connection> load local transport")
 		trans, err := local.NewWithConfig(resolvedConfig)
 		if err != nil {
@@ -94,7 +94,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_TAR:
+	case providers.ProviderType_TAR:
 		log.Debug().Msg("connection> load tar transport")
 		trans, err := tar.New(resolvedConfig)
 		if err != nil {
@@ -105,7 +105,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_CONTAINER_REGISTRY:
+	case providers.ProviderType_CONTAINER_REGISTRY:
 		log.Debug().Msg("connection> load container registry transport")
 		trans, err := container.NewContainerRegistryImage(resolvedConfig)
 		if err != nil {
@@ -115,7 +115,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_DOCKER_ENGINE_CONTAINER:
+	case providers.ProviderType_DOCKER_ENGINE_CONTAINER:
 		log.Debug().Msg("connection> load docker engine container transport")
 		trans, err := container.NewDockerEngineContainer(resolvedConfig)
 		if err != nil {
@@ -125,7 +125,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_DOCKER_ENGINE_IMAGE:
+	case providers.ProviderType_DOCKER_ENGINE_IMAGE:
 		log.Debug().Msg("connection> load docker engine image transport")
 		trans, err := container.NewDockerEngineImage(resolvedConfig)
 		if err != nil {
@@ -135,7 +135,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_SSH:
+	case providers.ProviderType_SSH:
 		log.Debug().Msg("connection> load ssh transport")
 		trans, err := ssh.New(resolvedConfig)
 		if err != nil {
@@ -146,7 +146,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_WINRM:
+	case providers.ProviderType_WINRM:
 		log.Debug().Msg("connection> load winrm transport")
 		trans, err := winrm.New(resolvedConfig)
 		if err != nil {
@@ -157,7 +157,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_VSPHERE:
+	case providers.ProviderType_VSPHERE:
 		log.Debug().Msg("connection> load vsphere transport")
 		trans, err := vsphere.New(resolvedConfig)
 		if err != nil {
@@ -168,7 +168,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_ARISTAEOS:
+	case providers.ProviderType_ARISTAEOS:
 		log.Debug().Msg("connection> load arista eos transport")
 		trans, err := arista.New(resolvedConfig)
 		if err != nil {
@@ -178,7 +178,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_AWS:
+	case providers.ProviderType_AWS:
 		log.Debug().Msg("connection> load aws transport")
 		trans, err := aws_transport.New(resolvedConfig, aws_transport.TransportOptions(resolvedConfig.Options)...)
 		if err != nil {
@@ -188,7 +188,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_GCP:
+	case providers.ProviderType_GCP:
 		log.Debug().Msg("connection> load gcp transport")
 		trans, err := gcp.New(resolvedConfig)
 		if err != nil {
@@ -198,7 +198,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_AZURE:
+	case providers.ProviderType_AZURE:
 		log.Debug().Msg("connection> load azure transport")
 		trans, err := azure.New(resolvedConfig)
 		if err != nil {
@@ -208,7 +208,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_MS365:
+	case providers.ProviderType_MS365:
 		log.Debug().Msg("connection> load microsoft 365 transport")
 		trans, err := ms365.New(resolvedConfig)
 		if err != nil {
@@ -218,7 +218,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_IPMI:
+	case providers.ProviderType_IPMI:
 		log.Debug().Msg("connection> load ipmi transport")
 		trans, err := ipmi.New(resolvedConfig)
 		if err != nil {
@@ -228,7 +228,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_VSPHERE_VM:
+	case providers.ProviderType_VSPHERE_VM:
 		trans, err := vmwareguestapi.New(resolvedConfig)
 		if err != nil {
 			return nil, err
@@ -237,7 +237,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_FS:
+	case providers.ProviderType_FS:
 		trans, err := fs.New(resolvedConfig)
 		if err != nil {
 			return nil, err
@@ -246,7 +246,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_EQUINIX_METAL:
+	case providers.ProviderType_EQUINIX_METAL:
 		trans, err := equinix.New(resolvedConfig)
 		if err != nil {
 			return nil, err
@@ -255,7 +255,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_K8S:
+	case providers.ProviderType_K8S:
 		trans, err := k8s_transport.New(resolvedConfig)
 		if err != nil {
 			return nil, err
@@ -264,7 +264,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_GITHUB:
+	case providers.ProviderType_GITHUB:
 		trans, err := github.New(resolvedConfig)
 		if err != nil {
 			return nil, err
@@ -273,7 +273,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_GITLAB:
+	case providers.ProviderType_GITLAB:
 		trans, err := gitlab.New(resolvedConfig)
 		if err != nil {
 			return nil, err
@@ -282,7 +282,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_AWS_EC2_EBS:
+	case providers.ProviderType_AWS_EC2_EBS:
 		trans, err := awsec2ebs.New(tc)
 		if err != nil {
 			return nil, err
@@ -293,7 +293,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_TERRAFORM:
+	case providers.ProviderType_TERRAFORM:
 		trans, err := terraform.New(tc)
 		if err != nil {
 			return nil, err
@@ -302,7 +302,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		if err != nil {
 			return nil, err
 		}
-	case providers.TransportBackend_CONNECTION_HOST:
+	case providers.ProviderType_HOST:
 		trans, err := network.New(tc)
 		if err != nil {
 			return nil, err

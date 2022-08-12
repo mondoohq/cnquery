@@ -16,7 +16,7 @@ var (
 )
 
 func New(tc *providers.TransportConfig) (*Transport, error) {
-	if tc.Backend != providers.TransportBackend_CONNECTION_AZURE {
+	if tc.Backend != providers.ProviderType_AZURE {
 		return nil, errors.New("backend is not supported for azure transport")
 	}
 

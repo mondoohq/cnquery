@@ -15,7 +15,7 @@ func TestManifestResolver(t *testing.T) {
 
 	assetList, err := resolver.Resolve(&asset.Asset{}, &providers.TransportConfig{
 		PlatformId: "//platform/k8s/uid/123/namespace/default/pods/name/hello-pod",
-		Backend:    providers.TransportBackend_CONNECTION_K8S,
+		Backend:    providers.ProviderType_K8S,
 		Options: map[string]string{
 			"path": manifestFile,
 		},
@@ -38,7 +38,7 @@ func TestManifestResolverPodDiscovery(t *testing.T) {
 
 	assetList, err := resolver.Resolve(&asset.Asset{}, &providers.TransportConfig{
 		PlatformId: "//platform/k8s/uid/123/namespace/default/pods/name/hello-pod",
-		Backend:    providers.TransportBackend_CONNECTION_K8S,
+		Backend:    providers.ProviderType_K8S,
 		Options: map[string]string{
 			"path": manifestFile,
 		},
@@ -66,7 +66,7 @@ func TestManifestResolverCronJobDiscovery(t *testing.T) {
 
 	assetList, err := resolver.Resolve(&asset.Asset{}, &providers.TransportConfig{
 		PlatformId: "//platform/k8s/uid/123/namespace/mondoo-operator/cronjobs/name/mondoo-client-k8s-scan",
-		Backend:    providers.TransportBackend_CONNECTION_K8S,
+		Backend:    providers.ProviderType_K8S,
 		Options: map[string]string{
 			"path":      manifestFile,
 			"namespace": "mondoo-operator",
@@ -89,7 +89,7 @@ func TestManifestResolverWrongDiscovery(t *testing.T) {
 	manifestFile := "../../providers/k8s/resources/testdata/batchv1.cronjob.yaml"
 
 	assetList, err := resolver.Resolve(&asset.Asset{}, &providers.TransportConfig{
-		Backend: providers.TransportBackend_CONNECTION_K8S,
+		Backend: providers.ProviderType_K8S,
 		Options: map[string]string{
 			"path":      manifestFile,
 			"namespace": "mondoo-operator",
@@ -110,7 +110,7 @@ func TestManifestResolverStatefulSetDiscovery(t *testing.T) {
 
 	assetList, err := resolver.Resolve(&asset.Asset{}, &providers.TransportConfig{
 		PlatformId: "//platform/k8s/uid/123/namespace/default/statefulsets/name/mondoo-statefulset",
-		Backend:    providers.TransportBackend_CONNECTION_K8S,
+		Backend:    providers.ProviderType_K8S,
 		Options: map[string]string{
 			"path": manifestFile,
 		},
@@ -133,7 +133,7 @@ func TestManifestResolverJobDiscovery(t *testing.T) {
 
 	assetList, err := resolver.Resolve(&asset.Asset{}, &providers.TransportConfig{
 		PlatformId: "//platform/k8s/uid/123/namespace/mondoo-operator/jobs/name/mondoo-client-k8s-scan",
-		Backend:    providers.TransportBackend_CONNECTION_K8S,
+		Backend:    providers.ProviderType_K8S,
 		Options: map[string]string{
 			"path":      manifestFile,
 			"namespace": "mondoo-operator",
@@ -157,7 +157,7 @@ func TestManifestResolverReplicaSetDiscovery(t *testing.T) {
 
 	assetList, err := resolver.Resolve(&asset.Asset{}, &providers.TransportConfig{
 		PlatformId: "//platform/k8s/uid/123/namespace/default/replicasets/name/mondoo-replicaset",
-		Backend:    providers.TransportBackend_CONNECTION_K8S,
+		Backend:    providers.ProviderType_K8S,
 		Options: map[string]string{
 			"path": manifestFile,
 		},
@@ -181,7 +181,7 @@ func TestManifestResolverDaemonSetDiscovery(t *testing.T) {
 	platformId := "//platform/k8s/uid/123/namespace/default/daemonsets/name/mondoo-daemonset"
 	assetList, err := resolver.Resolve(&asset.Asset{}, &providers.TransportConfig{
 		PlatformId: platformId,
-		Backend:    providers.TransportBackend_CONNECTION_K8S,
+		Backend:    providers.ProviderType_K8S,
 		Options: map[string]string{
 			"path": manifestFile,
 		},

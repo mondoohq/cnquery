@@ -36,7 +36,7 @@ var (
 // [Authentication and authorization basics for Microsoft Graph](https://docs.microsoft.com/en-us/graph/auth/auth-concepts)
 // [Always check permissions in tokens in an Azure AD protected API](https://joonasw.net/view/always-check-token-permissions-in-aad-protected-api)
 func New(tc *providers.TransportConfig) (*Transport, error) {
-	if tc.Backend != providers.TransportBackend_CONNECTION_MS365 {
+	if tc.Backend != providers.ProviderType_MS365 {
 		return nil, errors.New("backend is not supported for ms365 transport")
 	}
 

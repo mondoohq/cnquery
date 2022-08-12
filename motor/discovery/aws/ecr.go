@@ -105,7 +105,7 @@ func (a *EcrImages) getRepositories() []*jobpool.Job {
 						},
 						Connections: []*providers.TransportConfig{
 							{
-								Backend: providers.TransportBackend_CONNECTION_CONTAINER_REGISTRY,
+								Backend: providers.ProviderType_CONTAINER_REGISTRY,
 								Host:    registryURL,
 							},
 						},

@@ -19,7 +19,7 @@ func EnrichAssetWithSecrets(a *asset.Asset, sfn QuerySecretFn) {
 		conn := a.Connections[j]
 
 		// NOTE: for now we only add credentials for ssh, we may revisit that in the future
-		if len(conn.Credentials) == 0 && conn.Backend == providers.TransportBackend_CONNECTION_SSH {
+		if len(conn.Credentials) == 0 && conn.Backend == providers.ProviderType_SSH {
 			creds, err := sfn(a)
 			if err == nil && creds != nil {
 				conn.Credentials = []*vault.Credential{creds}

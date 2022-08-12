@@ -85,7 +85,7 @@ func EnrichVsphereToolsConnWithSecrets(a *asset.Asset, cfn credentials.Credentia
 		conn := a.Connections[j]
 
 		// special handling for vsphere vm config
-		if conn.Backend == providers.TransportBackend_CONNECTION_VSPHERE_VM {
+		if conn.Backend == providers.ProviderType_VSPHERE_VM {
 			var creds *vault.Credential
 
 			secretRefCred, err := sfn(a)

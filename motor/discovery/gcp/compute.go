@@ -149,7 +149,7 @@ func (a *Compute) instancesPerZone(svc *compute.Service, project string, zone st
 				if len(iface.AccessConfigs[ac].NatIP) > 0 {
 					log.Debug().Str("instance", instance.Name).Str("ip", iface.AccessConfigs[ac].NatIP).Msg("found public ip")
 					connections = append(connections, &providers.TransportConfig{
-						Backend:  providers.TransportBackend_CONNECTION_SSH,
+						Backend:  providers.ProviderType_SSH,
 						Host:     iface.AccessConfigs[ac].NatIP,
 						Insecure: a.Insecure,
 					})

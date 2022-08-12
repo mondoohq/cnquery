@@ -17,7 +17,7 @@ import (
 var _ providers.Transport = (*WinrmTransport)(nil)
 
 func VerifyConfig(endpoint *providers.TransportConfig) (*winrm.Endpoint, error) {
-	if endpoint.Backend != providers.TransportBackend_CONNECTION_WINRM {
+	if endpoint.Backend != providers.ProviderType_WINRM {
 		return nil, errors.New("only winrm backend for winrm transport supported")
 	}
 

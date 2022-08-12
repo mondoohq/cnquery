@@ -167,7 +167,7 @@ func ssmInstanceToAsset(account string, region string, instance types.InstanceIn
 		},
 
 		Connections: []*providers.TransportConfig{{
-			Backend: providers.TransportBackend_CONNECTION_AWS_SSM_RUN_COMMAND,
+			Backend: providers.ProviderType_AWS_SSM_RUN_COMMAND,
 			Host:    *instance.InstanceId,
 		}},
 		State:  mapSmmManagedPingStateCode(instance.PingStatus),

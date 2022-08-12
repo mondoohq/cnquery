@@ -166,7 +166,7 @@ func instanceToAsset(account string, region string, instance types.Instance, ins
 	// if there is a public ip, we assume ssh is an option
 	if instance.PublicIpAddress != nil {
 		asset.Connections = append(asset.Connections, &providers.TransportConfig{
-			Backend:  providers.TransportBackend_CONNECTION_SSH,
+			Backend:  providers.ProviderType_SSH,
 			Host:     *instance.PublicIpAddress,
 			Insecure: insecure,
 			Runtime:  providers.RUNTIME_AWS_EC2,

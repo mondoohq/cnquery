@@ -183,7 +183,7 @@ func vmsToAssetList(instanceUuid string, vms []*object.VirtualMachine, parentTC 
 		if guestState == asset.State_STATE_RUNNING {
 			ha.Connections = []*providers.TransportConfig{
 				{
-					Backend:     providers.TransportBackend_CONNECTION_VSPHERE_VM,
+					Backend:     providers.ProviderType_VSPHERE_VM,
 					Host:        parentTC.Host,
 					Insecure:    parentTC.Insecure,
 					Credentials: parentTC.Credentials,

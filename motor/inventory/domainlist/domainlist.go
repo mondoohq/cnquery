@@ -83,7 +83,7 @@ func (r *networkResolver) ParseConnectionURL(fullUrl string, identityFile string
 	// - all of them are in the `api` family (also their kind is set this way)
 	// - multiple families on one service are possible (eg: http, tls, tcp)
 	res := providers.TransportConfig{
-		Backend: providers.TransportBackend_CONNECTION_HOST,
+		Backend: providers.ProviderType_HOST,
 		Options: map[string]string{"scheme": url.Scheme},
 	}
 

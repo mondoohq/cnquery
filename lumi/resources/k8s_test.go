@@ -13,7 +13,7 @@ import (
 
 func k8sTestQuery(t *testing.T, query string) []*llx.RawResult {
 	trans, err := k8s.New(&providers.TransportConfig{
-		Backend: providers.TransportBackend_CONNECTION_K8S,
+		Backend: providers.ProviderType_K8S,
 		Options: map[string]string{
 			"path": "./testdata/k8s",
 		},

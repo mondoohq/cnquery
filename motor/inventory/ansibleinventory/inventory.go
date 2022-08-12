@@ -247,20 +247,20 @@ func isValidConnectionType(conn string) bool {
 // ansibleBackend maps an ansible connection to mondoo backend
 // https://docs.ansible.com/ansible/latest/plugins/connection.html
 // quickly get a list of available plugins via `ansible-doc -t connection -l`
-func ansibleBackend(connection string) providers.TransportBackend {
-	var res providers.TransportBackend
+func ansibleBackend(connection string) providers.ProviderType {
+	var res providers.ProviderType
 	switch strings.TrimSpace(connection) {
 	case "local":
-		res = providers.TransportBackend_CONNECTION_LOCAL_OS
+		res = providers.ProviderType_LOCAL_OS
 	case "ssh":
-		res = providers.TransportBackend_CONNECTION_SSH
+		res = providers.ProviderType_SSH
 	case "winrm":
-		res = providers.TransportBackend_CONNECTION_WINRM
+		res = providers.ProviderType_WINRM
 	case "docker":
-		res = providers.TransportBackend_CONNECTION_DOCKER
+		res = providers.ProviderType_DOCKER
 	default:
 		log.Warn().Str("ansible-connection", connection).Msg("unknown connection, fallback to ssh")
-		res = providers.TransportBackend_CONNECTION_SSH
+		res = providers.ProviderType_SSH
 	}
 	return res
 }
@@ -300,7 +300,7 @@ func ansibleConnections(host *Host) []*providers.TransportConfig {
 	}
 
 	// fallback to ssh agent as default in case nothing was provided
-	if len(credentials) == 0 && backend == providers.TransportBackend_CONNECTION_SSH {
+	if len(credentials) == 0 && backend == providers.ProviderType_SSH {
 		credentials = append(credentials, &vault.Credential{
 			Type: vault.CredentialType_ssh_agent,
 			User: host.User,

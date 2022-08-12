@@ -14,7 +14,7 @@ import (
 func TestGcpDiscovery(t *testing.T) {
 	orgId := "<insert org id>"
 	tc := &providers.TransportConfig{
-		Backend: providers.TransportBackend_CONNECTION_GCP,
+		Backend: providers.ProviderType_GCP,
 		Options: map[string]string{
 			"organization": orgId,
 		},

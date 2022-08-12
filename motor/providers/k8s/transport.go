@@ -74,7 +74,7 @@ type ResourceResult struct {
 // - namespace: limits the resources to a specific namespace
 // - path: use a manifest file instead of live API
 func New(tc *providers.TransportConfig) (Transport, error) {
-	if tc.Backend != providers.TransportBackend_CONNECTION_K8S {
+	if tc.Backend != providers.ProviderType_K8S {
 		return nil, errors.New("backend is not supported for k8s transport")
 	}
 
