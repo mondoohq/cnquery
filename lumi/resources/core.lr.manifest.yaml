@@ -3533,6 +3533,12 @@ resources:
       resourceVersion:
         min_mondoo_version: 5.29.2
       uid: {}
+      containers:
+        min_mondoo_version: 6.11.0
+      initContainers:
+        min_mondoo_version: 6.11.0
+      podSpec:
+        min_mondoo_version: 6.11.0
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -3570,6 +3576,12 @@ resources:
       resourceVersion:
         min_mondoo_version: 5.29.2
       uid: {}
+      containers:
+        min_mondoo_version: 6.11.0
+      initContainers:
+        min_mondoo_version: 6.11.0
+      podSpec:
+        min_mondoo_version: 6.11.0
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -3590,6 +3602,12 @@ resources:
       resourceVersion:
         min_mondoo_version: 5.29.2
       uid: {}
+      containers:
+        min_mondoo_version: 6.11.0
+      initContainers:
+        min_mondoo_version: 6.11.0
+      podSpec:
+        min_mondoo_version: 6.11.0
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -3631,6 +3649,12 @@ resources:
       resourceVersion:
         min_mondoo_version: 5.29.2
       uid: {}
+      containers:
+        min_mondoo_version: 6.11.0
+      initContainers:
+        min_mondoo_version: 6.11.0
+      podSpec:
+        min_mondoo_version: 6.11.0
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -3812,6 +3836,12 @@ resources:
       resourceVersion:
         min_mondoo_version: 5.29.2
       uid: {}
+      containers:
+        min_mondoo_version: 6.11.0
+      initContainers:
+        min_mondoo_version: 6.11.0
+      podSpec:
+        min_mondoo_version: 6.11.0
     min_mondoo_version: 6.7.0
     platform:
       name:
@@ -3894,6 +3924,12 @@ resources:
       resourceVersion:
         min_mondoo_version: 5.29.2
       uid: {}
+      containers:
+        min_mondoo_version: 6.11.0
+      initContainers:
+        min_mondoo_version: 6.11.0
+      podSpec:
+        min_mondoo_version: 6.11.0
     min_mondoo_version: 6.7.0
     platform:
       name:

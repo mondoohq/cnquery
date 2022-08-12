@@ -8,6 +8,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
+	batchv1 "k8s.io/api/batch/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
@@ -18,6 +19,10 @@ import (
 func GetPodSpec(obj runtime.Object) (*corev1.PodSpec, error) {
 	var podSpec *corev1.PodSpec
 	switch x := obj.(type) {
+	case *batchv1.Job:
+		podSpec = &x.Spec.Template.Spec
+	case *batchv1.CronJob:
+		podSpec = &x.Spec.JobTemplate.Spec.Template.Spec
 	case *batchv1beta1.CronJob:
 		podSpec = &x.Spec.JobTemplate.Spec.Template.Spec
 	case *appsv1.DaemonSet:
