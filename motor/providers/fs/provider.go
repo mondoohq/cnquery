@@ -8,13 +8,13 @@ import (
 	"go.mondoo.io/mondoo/motor/providers"
 )
 
-var _ providers.Transport = (*FsTransport)(nil)
+var _ providers.Transport = (*Provider)(nil)
 
-func NewWithClose(endpoint *providers.TransportConfig, closeFN func()) (*FsTransport, error) {
+func NewWithClose(endpoint *providers.TransportConfig, closeFN func()) (*Provider, error) {
 	mountDir := endpoint.Host + endpoint.Path
 	log.Info().Str("mountdir", mountDir).Msg("load fs")
 
-	return &FsTransport{
+	return &Provider{
 		MountedDir:   mountDir,
 		closeFN:      closeFN,
 		tcPlatformId: endpoint.PlatformId,
@@ -22,18 +22,18 @@ func NewWithClose(endpoint *providers.TransportConfig, closeFN func()) (*FsTrans
 	}, nil
 }
 
-func New(endpoint *providers.TransportConfig) (*FsTransport, error) {
+func New(endpoint *providers.TransportConfig) (*Provider, error) {
 	mountDir := endpoint.Host + endpoint.Path
 	log.Info().Str("mountdir", mountDir).Msg("load fs")
 
-	return &FsTransport{
+	return &Provider{
 		MountedDir:   mountDir,
 		tcPlatformId: endpoint.PlatformId,
 		fs:           NewMountedFs(mountDir),
 	}, nil
 }
 
-type FsTransport struct {
+type Provider struct {
 	MountedDir   string
 	fs           afero.Fs
 	kind         providers.Kind
@@ -42,26 +42,26 @@ type FsTransport struct {
 	closeFN      func()
 }
 
-func (t *FsTransport) RunCommand(command string) (*providers.Command, error) {
-	return nil, errors.New("filesearch transport does not implement RunCommand")
+func (p *Provider) RunCommand(command string) (*providers.Command, error) {
+	return nil, providers.ErrRunCommandNotImplemented
 }
 
-func (t *FsTransport) FS() afero.Fs {
-	if t.fs == nil {
-		t.fs = NewMountedFs(t.MountedDir)
+func (p *Provider) FS() afero.Fs {
+	if p.fs == nil {
+		p.fs = NewMountedFs(p.MountedDir)
 	}
-	return t.fs
+	return p.fs
 }
 
-func (t *FsTransport) FileInfo(path string) (providers.FileInfoDetails, error) {
-	fs := t.FS()
+func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
+	fs := p.FS()
 	afs := &afero.Afero{Fs: fs}
 	stat, err := afs.Stat(path)
 	if err != nil {
 		return providers.FileInfoDetails{}, err
 	}
 
-	uid, gid := t.fileowner(stat)
+	uid, gid := p.fileowner(stat)
 
 	mode := stat.Mode()
 	return providers.FileInfoDetails{
@@ -72,29 +72,29 @@ func (t *FsTransport) FileInfo(path string) (providers.FileInfoDetails, error) {
 	}, nil
 }
 
-func (t *FsTransport) Close() {
-	if t.closeFN != nil {
-		t.closeFN()
+func (p *Provider) Close() {
+	if p.closeFN != nil {
+		p.closeFN()
 	}
 }
 
-func (t *FsTransport) Capabilities() providers.Capabilities {
+func (p *Provider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{
 		providers.Capability_FileSearch,
 		providers.Capability_File,
 	}
 }
 
-func (t *FsTransport) Kind() providers.Kind {
-	return t.kind
+func (p *Provider) Kind() providers.Kind {
+	return p.kind
 }
 
-func (t *FsTransport) Runtime() string {
-	return t.runtime
+func (p *Provider) Runtime() string {
+	return p.runtime
 }
 
-func (t *FsTransport) PlatformIdDetectors() []providers.PlatformIdDetector {
-	if t.tcPlatformId != "" {
+func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
+	if p.tcPlatformId != "" {
 		return []providers.PlatformIdDetector{
 			providers.TransportPlatformIdentifierDetector,
 		}
@@ -104,9 +104,9 @@ func (t *FsTransport) PlatformIdDetectors() []providers.PlatformIdDetector {
 	}
 }
 
-func (t *FsTransport) Identifier() (string, error) {
-	if t.tcPlatformId == "" {
+func (p *Provider) Identifier() (string, error) {
+	if p.tcPlatformId == "" {
 		return "", errors.New("not platform id provided")
 	}
-	return t.tcPlatformId, nil
+	return p.tcPlatformId, nil
 }

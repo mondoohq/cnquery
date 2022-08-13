@@ -20,16 +20,16 @@ import (
 const OPTION_FILE = "file"
 
 var (
-	_ providers.Transport                   = (*Transport)(nil)
-	_ providers.TransportPlatformIdentifier = (*Transport)(nil)
+	_ providers.Transport                   = (*Provider)(nil)
+	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
 )
 
-func New(endpoint *providers.TransportConfig) (*Transport, error) {
+func New(endpoint *providers.TransportConfig) (*Provider, error) {
 	return NewWithClose(endpoint, nil)
 }
 
-// NewWithReader provides a transport from a container image stream
-func NewWithReader(rc io.ReadCloser, close func()) (*Transport, error) {
+// NewWithReader provides a tar provider from a container image stream
+func NewWithReader(rc io.ReadCloser, close func()) (*Provider, error) {
 	// we cache the flattened image locally
 	f, err := cache.RandomFile()
 	if err != nil {
@@ -57,7 +57,7 @@ func NewWithReader(rc io.ReadCloser, close func()) (*Transport, error) {
 	})
 }
 
-func NewWithClose(endpoint *providers.TransportConfig, closeFn func()) (*Transport, error) {
+func NewWithClose(endpoint *providers.TransportConfig, closeFn func()) (*Provider, error) {
 	if endpoint == nil || len(endpoint.Options[OPTION_FILE]) == 0 {
 		return nil, errors.New("endpoint cannot be empty")
 	}
@@ -74,12 +74,12 @@ func NewWithClose(endpoint *providers.TransportConfig, closeFn func()) (*Transpo
 		}
 		identifier = containerid.MondooContainerImageID(hash.String())
 		// if it is a container image, we need to transform the tar first, so that all layers are flattened
-		trans, err := NewWithReader(mutate.Extract(img), closeFn)
+		p, err := NewWithReader(mutate.Extract(img), closeFn)
 		if err != nil {
 			return nil, err
 		}
-		trans.PlatformIdentifier = identifier
-		return trans, nil
+		p.PlatformIdentifier = identifier
+		return p, nil
 	} else {
 		hash, err := fsutil.LocalFileSha256(filename)
 		if err != nil {
@@ -87,21 +87,21 @@ func NewWithClose(endpoint *providers.TransportConfig, closeFn func()) (*Transpo
 		}
 		identifier = "//platformid.api.mondoo.app/runtime/tar/hash/" + hash
 
-		t := &Transport{
+		p := &Provider{
 			Fs:              NewFs(filename),
 			CloseFN:         closeFn,
 			PlatformKind:    endpoint.Kind,
 			PlatformRuntime: endpoint.Runtime,
 		}
 
-		err = t.LoadFile(filename)
+		err = p.LoadFile(filename)
 		if err != nil {
 			log.Error().Err(err).Str("tar", filename).Msg("tar> could not load tar file")
 			return nil, err
 		}
 
-		t.PlatformIdentifier = identifier
-		return t, nil
+		p.PlatformIdentifier = identifier
+		return p, nil
 	}
 }
 
@@ -125,8 +125,8 @@ func PlatformID(filename string) (string, error) {
 	return identifier, nil
 }
 
-// Transport loads tar files and make them available
-type Transport struct {
+// Provider loads tar files and make them available
+type Provider struct {
 	Fs      *FS
 	CloseFN func()
 	// fields are exposed since the tar backend is re-used for the docker backend
@@ -141,30 +141,30 @@ type Transport struct {
 	}
 }
 
-func (t *Transport) Identifier() (string, error) {
-	return t.PlatformIdentifier, nil
+func (p *Provider) Identifier() (string, error) {
+	return p.PlatformIdentifier, nil
 }
 
-func (t *Transport) Labels() map[string]string {
-	return t.Metadata.Labels
+func (p *Provider) Labels() map[string]string {
+	return p.Metadata.Labels
 }
 
-func (t *Transport) PlatformName() string {
+func (t *Provider) PlatformName() string {
 	return t.Metadata.Name
 }
 
-func (m *Transport) RunCommand(command string) (*providers.Command, error) {
+func (p *Provider) RunCommand(command string) (*providers.Command, error) {
 	// TODO: switch to error state
 	res := providers.Command{Command: command, Stdout: &bytes.Buffer{}, Stderr: &bytes.Buffer{}, ExitStatus: -1}
 	return &res, nil
 }
 
-func (t *Transport) FS() afero.Fs {
-	return t.Fs
+func (p *Provider) FS() afero.Fs {
+	return p.Fs
 }
 
-func (t *Transport) FileInfo(path string) (providers.FileInfoDetails, error) {
-	fs := t.FS()
+func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
+	fs := p.FS()
 	afs := &afero.Afero{Fs: fs}
 	stat, err := afs.Stat(path)
 	if err != nil {
@@ -187,20 +187,20 @@ func (t *Transport) FileInfo(path string) (providers.FileInfoDetails, error) {
 	}, nil
 }
 
-func (t *Transport) Close() {
-	if t.CloseFN != nil {
-		t.CloseFN()
+func (p *Provider) Close() {
+	if p.CloseFN != nil {
+		p.CloseFN()
 	}
 }
 
-func (t *Transport) Capabilities() providers.Capabilities {
+func (p *Provider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{
 		providers.Capability_File,
 		providers.Capability_FileSearch,
 	}
 }
 
-func (t *Transport) Load(stream io.Reader) error {
+func (p *Provider) Load(stream io.Reader) error {
 	tr := tar.NewReader(stream)
 	for {
 		h, err := tr.Next()
@@ -213,13 +213,13 @@ func (t *Transport) Load(stream io.Reader) error {
 		}
 
 		path := Abs(h.Name)
-		t.Fs.FileMap[path] = h
+		p.Fs.FileMap[path] = h
 	}
-	log.Debug().Int("files", len(t.Fs.FileMap)).Msg("tar> successfully loaded")
+	log.Debug().Int("files", len(p.Fs.FileMap)).Msg("tar> successfully loaded")
 	return nil
 }
 
-func (t *Transport) LoadFile(path string) error {
+func (p *Provider) LoadFile(path string) error {
 	log.Debug().Str("path", path).Msg("tar> load tar file into backend")
 
 	f, err := os.Open(path)
@@ -227,18 +227,18 @@ func (t *Transport) LoadFile(path string) error {
 		return err
 	}
 	defer f.Close()
-	return t.Load(f)
+	return p.Load(f)
 }
 
-func (t *Transport) Kind() providers.Kind {
-	return t.PlatformKind
+func (p *Provider) Kind() providers.Kind {
+	return p.PlatformKind
 }
 
-func (t *Transport) Runtime() string {
-	return t.PlatformRuntime
+func (p *Provider) Runtime() string {
+	return p.PlatformRuntime
 }
 
-func (t *Transport) PlatformIdDetectors() []providers.PlatformIdDetector {
+func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	return []providers.PlatformIdDetector{
 		providers.TransportPlatformIdentifierDetector,
 	}

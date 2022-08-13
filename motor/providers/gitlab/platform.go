@@ -6,7 +6,7 @@ import (
 	"github.com/xanzy/go-gitlab"
 )
 
-func (t *Transport) Identifier() (string, error) {
+func (t *Provider) Identifier() (string, error) {
 	grp, err := t.Group()
 	if err != nil {
 		return "", err
@@ -15,7 +15,7 @@ func (t *Transport) Identifier() (string, error) {
 	return "//platformid.api.mondoo.app/runtime/gitlab/group/" + strconv.Itoa(grp.ID), nil
 }
 
-func (t *Transport) Group() (*gitlab.Group, error) {
+func (t *Provider) Group() (*gitlab.Group, error) {
 	grp, _, err := t.Client().Groups.GetGroup(t.GroupPath, nil)
 	if err != nil {
 		return nil, err

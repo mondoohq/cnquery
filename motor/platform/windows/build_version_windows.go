@@ -13,7 +13,7 @@ import (
 
 func GetWindowsOSBuild(t providers.Transport) (*WindowsCurrentVersion, error) {
 	// if we are running locally on windows, we want to avoid using powershell to be faster
-	_, ok := t.(*local.LocalTransport)
+	_, ok := t.(*local.Provider)
 	if ok && runtime.GOOS == "windows" {
 		k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows NT\CurrentVersion`, registry.QUERY_VALUE)
 		if err != nil {

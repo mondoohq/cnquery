@@ -289,7 +289,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 		}
 		// TODO (jaym) before merge: The ebs transport is being lost. This
 		// is problematic. It will break the platform id detection being added
-		m, err = motor.New(trans.FsTransport)
+		m, err = motor.New(trans.FsProvider)
 		if err != nil {
 			return nil, err
 		}

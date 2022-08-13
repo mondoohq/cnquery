@@ -33,7 +33,7 @@ func (c *lumiAwsConfig) GetRecorders() ([]interface{}, error) {
 	return res, nil
 }
 
-func (c *lumiAwsConfig) getRecorders(at *aws_transport.Transport) []*jobpool.Job {
+func (c *lumiAwsConfig) getRecorders(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -144,7 +144,7 @@ func (c *lumiAwsConfig) GetRules() ([]interface{}, error) {
 	return res, nil
 }
 
-func (c *lumiAwsConfig) getRules(at *aws_transport.Transport) []*jobpool.Job {
+func (c *lumiAwsConfig) getRules(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {

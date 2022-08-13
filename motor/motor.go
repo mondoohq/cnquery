@@ -41,7 +41,7 @@ func New(trans providers.Transport, motorOpts ...MotorOption) (*Motor, error) {
 
 	// set the detector after the opts have been applied to ensure its going via the recorder
 	// if activated
-	_, ok := m.Transport.(*local.LocalTransport)
+	_, ok := m.Transport.(*local.Provider)
 	if ok && !m.isRecording {
 		localTransportLock.Lock()
 		if localTransportDetector == nil {
@@ -154,7 +154,7 @@ func (m *Motor) IsLocalTransport() bool {
 	m.l.Lock()
 	defer m.l.Unlock()
 
-	_, ok := m.Transport.(*local.LocalTransport)
+	_, ok := m.Transport.(*local.Provider)
 	if !ok {
 		return false
 	}

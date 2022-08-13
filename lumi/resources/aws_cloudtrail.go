@@ -34,7 +34,7 @@ func (t *lumiAwsCloudtrail) GetTrails() ([]interface{}, error) {
 	return res, nil
 }
 
-func (t *lumiAwsCloudtrail) getTrails(at *aws_transport.Transport) []*jobpool.Job {
+func (t *lumiAwsCloudtrail) getTrails(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {

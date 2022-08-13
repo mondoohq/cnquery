@@ -28,9 +28,9 @@ func (p *lumiOs) id() (string, error) {
 func (p *lumiOs) GetRebootpending() (interface{}, error) {
 	// it is a container image, a reboot is never required
 	switch p.MotorRuntime.Motor.Transport.(type) {
-	case *docker_snapshot.DockerSnapshotTransport:
+	case *docker_snapshot.DockerSnapshotProvider:
 		return false, nil
-	case *tar.Transport:
+	case *tar.Provider:
 		return false, nil
 	}
 

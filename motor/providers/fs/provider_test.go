@@ -12,7 +12,7 @@ import (
 )
 
 func TestOsDetection(t *testing.T) {
-	trans := &fs.FsTransport{
+	trans := &fs.Provider{
 		MountedDir: "./testdata/centos8",
 	}
 
@@ -27,7 +27,7 @@ func TestOsDetection(t *testing.T) {
 }
 
 func TestMountedDirectoryFile(t *testing.T) {
-	trans := &fs.FsTransport{
+	trans := &fs.Provider{
 		MountedDir: "./testdata/centos8",
 	}
 
@@ -64,11 +64,11 @@ func TestMountedDirectoryFile(t *testing.T) {
 }
 
 func TestRunCommandReturnsErr(t *testing.T) {
-	trans := &fs.FsTransport{
+	trans := &fs.Provider{
 		MountedDir: "./testdata/centos8",
 	}
 
 	_, err := trans.RunCommand("aa-status")
 	require.Error(t, err)
-	assert.Equal(t, err.Error(), "filesearch transport does not implement RunCommand")
+	assert.Equal(t, "provider does not implement RunCommand", err.Error())
 }

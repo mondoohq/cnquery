@@ -12,13 +12,13 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/ssh/cat"
 )
 
-var _ providers.Transport = (*LocalTransport)(nil)
+var _ providers.Transport = (*Provider)(nil)
 
-func New() (*LocalTransport, error) {
+func New() (*Provider, error) {
 	return NewWithConfig(&providers.TransportConfig{})
 }
 
-func NewWithConfig(tc *providers.TransportConfig) (*LocalTransport, error) {
+func NewWithConfig(tc *providers.TransportConfig) (*Provider, error) {
 	// expect unix shell by default
 	shell := []string{"sh", "-c"}
 
@@ -28,7 +28,7 @@ func NewWithConfig(tc *providers.TransportConfig) (*LocalTransport, error) {
 		shell = []string{"powershell", "-c"}
 	}
 
-	t := &LocalTransport{
+	t := &Provider{
 		shell: shell,
 		// kind:    endpoint.Kind,
 		// runtime: endpoint.Runtime,
@@ -52,7 +52,7 @@ func NewWithConfig(tc *providers.TransportConfig) (*LocalTransport, error) {
 	return t, nil
 }
 
-type LocalTransport struct {
+type Provider struct {
 	shell   []string
 	fs      afero.Fs
 	Sudo    cmd.Wrapper
@@ -60,41 +60,41 @@ type LocalTransport struct {
 	runtime string
 }
 
-func (t *LocalTransport) RunCommand(command string) (*providers.Command, error) {
+func (p *Provider) RunCommand(command string) (*providers.Command, error) {
 	log.Debug().Msgf("local> run command %s", command)
-	if t.Sudo != nil {
-		command = t.Sudo.Build(command)
+	if p.Sudo != nil {
+		command = p.Sudo.Build(command)
 	}
-	c := &shared.Command{Shell: t.shell}
+	c := &shared.Command{Shell: p.shell}
 	args := []string{}
 
 	res, err := c.Exec(command, args)
 	return res, err
 }
 
-func (t *LocalTransport) FS() afero.Fs {
-	if t.fs != nil {
-		return t.fs
+func (p *Provider) FS() afero.Fs {
+	if p.fs != nil {
+		return p.fs
 	}
 
-	if t.Sudo != nil {
-		t.fs = cat.New(t)
-		return t.fs
+	if p.Sudo != nil {
+		p.fs = cat.New(p)
+		return p.fs
 	}
 
-	t.fs = afero.NewOsFs()
-	return t.fs
+	p.fs = afero.NewOsFs()
+	return p.fs
 }
 
-func (t *LocalTransport) FileInfo(path string) (providers.FileInfoDetails, error) {
-	fs := t.FS()
+func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
+	fs := p.FS()
 	afs := &afero.Afero{Fs: fs}
 	stat, err := afs.Stat(path)
 	if err != nil {
 		return providers.FileInfoDetails{}, err
 	}
 
-	uid, gid := t.fileowner(stat)
+	uid, gid := p.fileowner(stat)
 
 	mode := stat.Mode()
 	return providers.FileInfoDetails{
@@ -105,26 +105,26 @@ func (t *LocalTransport) FileInfo(path string) (providers.FileInfoDetails, error
 	}, nil
 }
 
-func (t *LocalTransport) Close() {
+func (p *Provider) Close() {
 	// TODO: we need to close all commands and file handles
 }
 
-func (t *LocalTransport) Capabilities() providers.Capabilities {
+func (p *Provider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{
 		providers.Capability_RunCommand,
 		providers.Capability_File,
 	}
 }
 
-func (t *LocalTransport) Kind() providers.Kind {
-	return t.kind
+func (p *Provider) Kind() providers.Kind {
+	return p.kind
 }
 
-func (t *LocalTransport) Runtime() string {
-	return t.runtime
+func (p *Provider) Runtime() string {
+	return p.runtime
 }
 
-func (t *LocalTransport) PlatformIdDetectors() []providers.PlatformIdDetector {
+func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	return []providers.PlatformIdDetector{
 		providers.HostnameDetector,
 		providers.CloudDetector,

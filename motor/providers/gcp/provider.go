@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	_ providers.Transport                   = (*Transport)(nil)
-	_ providers.TransportPlatformIdentifier = (*Transport)(nil)
+	_ providers.Transport                   = (*Provider)(nil)
+	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
 )
 
 type ResourceType int
@@ -21,13 +21,13 @@ const (
 	Organization
 )
 
-func New(tc *providers.TransportConfig) (*Transport, error) {
+func New(tc *providers.TransportConfig) (*Provider, error) {
 	if tc.Backend != providers.ProviderType_GCP {
-		return nil, errors.New("backend is not supported for gcp transport")
+		return nil, providers.ErrProviderTypeDoesNotMatch
 	}
 
 	if tc.Options == nil || (tc.Options["project"] == "" && tc.Options["organization"] == "") {
-		return nil, errors.New("gcp backend requires a project id or organization id. please set option `project` or `organization`")
+		return nil, errors.New("gcp provider requires a project id or organization id. please set option `project` or `organization`")
 	}
 
 	var resourceType ResourceType
@@ -40,7 +40,7 @@ func New(tc *providers.TransportConfig) (*Transport, error) {
 		id = tc.Options["organization"]
 	}
 
-	t := &Transport{
+	t := &Provider{
 		resourceType: resourceType,
 		id:           id,
 		opts:         tc.Options,
@@ -63,45 +63,45 @@ func New(tc *providers.TransportConfig) (*Transport, error) {
 	return t, nil
 }
 
-type Transport struct {
+type Provider struct {
 	resourceType ResourceType
 	id           string
 	opts         map[string]string
 }
 
-func (t *Transport) RunCommand(command string) (*providers.Command, error) {
-	return nil, errors.New("gcp does not implement RunCommand")
+func (p *Provider) RunCommand(command string) (*providers.Command, error) {
+	return nil, providers.ErrRunCommandNotImplemented
 }
 
-func (t *Transport) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, errors.New("gcp does not implement FileInfo")
+func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
+	return providers.FileInfoDetails{}, providers.ErrFileInfoNotImplemented
 }
 
-func (t *Transport) FS() afero.Fs {
+func (p *Provider) FS() afero.Fs {
 	return &fsutil.NoFs{}
 }
 
-func (t *Transport) Close() {}
+func (p *Provider) Close() {}
 
-func (t *Transport) Capabilities() providers.Capabilities {
+func (p *Provider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{
 		providers.Capability_Gcp,
 	}
 }
 
-func (t *Transport) Options() map[string]string {
-	return t.opts
+func (p *Provider) Options() map[string]string {
+	return p.opts
 }
 
-func (t *Transport) Kind() providers.Kind {
+func (p *Provider) Kind() providers.Kind {
 	return providers.Kind_KIND_API
 }
 
-func (t *Transport) Runtime() string {
+func (p *Provider) Runtime() string {
 	return providers.RUNTIME_AWS
 }
 
-func (t *Transport) PlatformIdDetectors() []providers.PlatformIdDetector {
+func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	return []providers.PlatformIdDetector{
 		providers.TransportPlatformIdentifierDetector,
 	}

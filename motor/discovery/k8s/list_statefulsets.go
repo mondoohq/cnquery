@@ -11,7 +11,7 @@ import (
 )
 
 // ListStatefulSets list all statefulsets in the cluster.
-func ListStatefulSets(transport k8s.Transport, connection *providers.TransportConfig, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
+func ListStatefulSets(transport k8s.KubernetesProvider, connection *providers.TransportConfig, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
 	namespaces, err := transport.Namespaces()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not list kubernetes namespaces")

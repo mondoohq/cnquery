@@ -13,7 +13,7 @@ import (
 
 type Command struct {
 	providers.Command
-	SSHTransport *SSHTransport
+	SSHProvider *Provider
 }
 
 func (c *Command) Exec(command string) (*providers.Command, error) {
@@ -26,19 +26,19 @@ func (c *Command) Exec(command string) (*providers.Command, error) {
 	c.Command.Stdout = stdoutBuffer
 	c.Command.Stderr = stderrBuffer
 
-	if c.SSHTransport.SSHClient == nil {
+	if c.SSHProvider.SSHClient == nil {
 		return nil, errors.New("ssh session not established")
 	}
 
-	session, err := c.SSHTransport.SSHClient.NewSession()
+	session, err := c.SSHProvider.SSHClient.NewSession()
 	if err != nil {
 		log.Debug().Msg("could not open new session, try to re-establish connection")
-		err = c.SSHTransport.Reconnect()
+		err = c.SSHProvider.Reconnect()
 		if err != nil {
 			return nil, err
 		}
 
-		session, err = c.SSHTransport.SSHClient.NewSession()
+		session, err = c.SSHProvider.SSHClient.NewSession()
 		if err != nil {
 			return nil, err
 		}

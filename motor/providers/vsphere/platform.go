@@ -77,7 +77,7 @@ func IsNotFound(err error) bool {
 // Update  : 0
 // Version : 6.7.0
 // see https://kb.vmware.com/s/article/2143832 for version and build number mapping
-func (t *Transport) EsxiVersion(host *object.HostSystem) (*EsxiSystemVersion, error) {
+func (t *Provider) EsxiVersion(host *object.HostSystem) (*EsxiSystemVersion, error) {
 	return EsxiVersion(host)
 }
 
@@ -185,7 +185,7 @@ func InstanceUUID(client *govmomi.Client) (string, error) {
 // https://kb.vmware.com/s/article/1009458
 // /usr/sbin/dmidecode | grep UUID https://communities.vmware.com/thread/420420
 // wmic bios get name,serialnumber,version  https://communities.vmware.com/thread/582729/
-func (t *Transport) Identifier() (string, error) {
+func (t *Provider) Identifier() (string, error) {
 	// a specific resource id was passed into the transport eg. for a esxi host or esxi vm
 	if len(t.selectedPlatformID) > 0 {
 		return t.selectedPlatformID, nil
@@ -202,7 +202,7 @@ func (t *Transport) Identifier() (string, error) {
 }
 
 // Info returns the connection information
-func (t *Transport) Info() types.AboutInfo {
+func (t *Provider) Info() types.AboutInfo {
 	return t.Client().ServiceContent.About
 }
 
@@ -242,7 +242,6 @@ func ParseVsphereResourceID(id string) (types.ManagedObjectReference, error) {
 	}
 
 	return reference, nil
-
 }
 
 func IsVsphereResourceID(mrn string) bool {
@@ -258,12 +257,12 @@ func IsVsphereID(mrn string) bool {
 	return strings.HasPrefix(mrn, "//platformid.api.mondoo.app/runtime/vsphere/instance/")
 }
 
-func (c *Transport) Host(moid types.ManagedObjectReference) (*object.HostSystem, error) {
+func (c *Provider) Host(moid types.ManagedObjectReference) (*object.HostSystem, error) {
 	// TODO: how should we handle the case when the moid does not exist
 	return object.NewHostSystem(c.Client().Client, moid), nil
 }
 
-func (c *Transport) VirtualMachine(moid types.ManagedObjectReference) (*object.VirtualMachine, error) {
+func (c *Provider) VirtualMachine(moid types.ManagedObjectReference) (*object.VirtualMachine, error) {
 	// TODO: how should we handle the case when the moid does not exist
 	return object.NewVirtualMachine(c.Client().Client, moid), nil
 }

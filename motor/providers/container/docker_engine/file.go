@@ -18,7 +18,7 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/fsutil"
 )
 
-func FileOpen(dockerClient *client.Client, path string, container string, transport *Transport) (afero.File, error) {
+func FileOpen(dockerClient *client.Client, path string, container string, transport *Provider) (afero.File, error) {
 	f := &File{
 		path:         path,
 		dockerClient: dockerClient,
@@ -33,7 +33,7 @@ type File struct {
 	path         string
 	container    string
 	dockerClient *client.Client
-	transport    *Transport
+	transport    *Provider
 	reader       *bytes.Reader
 }
 

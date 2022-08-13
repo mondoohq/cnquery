@@ -9,8 +9,8 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/gitlab"
 )
 
-func gitlabtransport(t providers.Transport) (*gitlab.Transport, error) {
-	gt, ok := t.(*gitlab.Transport)
+func gitlabtransport(t providers.Transport) (*gitlab.Provider, error) {
+	gt, ok := t.(*gitlab.Provider)
 	if !ok {
 		return nil, errors.New("gitlab resource is not supported on this transport")
 	}

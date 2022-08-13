@@ -92,7 +92,7 @@ func (s *lumiPlatform) init(args *lumi.Args) (*lumi.Args, Platform, error) {
 		(*args)["runtime"] = strings.ReplaceAll(platform.Runtime, " ", "-")
 		(*args)["labels"] = labels
 
-		if transport, ok := s.MotorRuntime.Motor.Transport.(*network.Transport); ok {
+		if transport, ok := s.MotorRuntime.Motor.Transport.(*network.Provider); ok {
 			(*args)["fqdn"] = transport.FQDN
 		} else {
 			(*args)["fqdn"] = ""

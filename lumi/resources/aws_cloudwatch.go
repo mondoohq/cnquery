@@ -48,7 +48,7 @@ func (t *lumiAwsCloudwatch) GetMetrics() ([]interface{}, error) {
 	return res, nil
 }
 
-func (t *lumiAwsCloudwatch) getMetrics(at *aws_transport.Transport) []*jobpool.Job {
+func (t *lumiAwsCloudwatch) getMetrics(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -514,7 +514,7 @@ func (t *lumiAwsCloudwatch) GetAlarms() ([]interface{}, error) {
 	return res, nil
 }
 
-func (t *lumiAwsCloudwatch) getAlarms(at *aws_transport.Transport) []*jobpool.Job {
+func (t *lumiAwsCloudwatch) getAlarms(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -664,7 +664,7 @@ func (t *lumiAwsCloudwatch) GetLogGroups() ([]interface{}, error) {
 	return res, nil
 }
 
-func (t *lumiAwsCloudwatch) getLogGroups(at *aws_transport.Transport) []*jobpool.Job {
+func (t *lumiAwsCloudwatch) getLogGroups(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {

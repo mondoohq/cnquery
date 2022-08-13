@@ -8,7 +8,7 @@ import (
 	vsphere_transport "go.mondoo.io/mondoo/motor/providers/vsphere"
 )
 
-func VspherePlatform(t *vsphere.Transport, identifier string) (*Platform, error) {
+func VspherePlatform(t *vsphere.Provider, identifier string) (*Platform, error) {
 	if vsphere_transport.IsVsphereResourceID(identifier) {
 		moid, err := vsphere_transport.ParseVsphereResourceID(identifier)
 		if err != nil {

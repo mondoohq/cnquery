@@ -7,7 +7,7 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
-func (t *Transport) Client(scope ...string) (*http.Client, error) {
+func (t *Provider) Client(scope ...string) (*http.Client, error) {
 	return Client(scope...)
 }
 

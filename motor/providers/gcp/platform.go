@@ -2,7 +2,7 @@ package gcp
 
 import "errors"
 
-func (t *Transport) Identifier() (string, error) {
+func (t *Provider) Identifier() (string, error) {
 	switch t.ResourceType() {
 	case Project:
 		return "//platformid.api.mondoo.app/runtime/gcp/projects/" + t.id, nil
@@ -11,10 +11,10 @@ func (t *Transport) Identifier() (string, error) {
 	}
 }
 
-func (t *Transport) ResourceType() ResourceType {
+func (t *Provider) ResourceType() ResourceType {
 	return t.resourceType
 }
 
-func (t *Transport) ResourceID() string {
+func (t *Provider) ResourceID() string {
 	return t.id
 }

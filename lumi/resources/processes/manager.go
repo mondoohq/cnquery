@@ -34,7 +34,7 @@ func ResolveManager(motor *motor.Motor) (OSProcessManager, error) {
 	// procfs over ssh is super slow, lets deactivate until we have a faster approach
 	disableProcFs := false
 	switch motor.Transport.(type) {
-	case *ssh.SSHTransport:
+	case *ssh.Provider:
 		disableProcFs = true
 	}
 

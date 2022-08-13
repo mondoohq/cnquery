@@ -36,7 +36,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (t *Transport) Ec2(region string) *ec2.Client {
+func (t *Provider) Ec2(region string) *ec2.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -60,7 +60,7 @@ func (t *Transport) Ec2(region string) *ec2.Client {
 	return client
 }
 
-func (t *Transport) Iam(region string) *iam.Client {
+func (t *Provider) Iam(region string) *iam.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -84,7 +84,7 @@ func (t *Transport) Iam(region string) *iam.Client {
 	return client
 }
 
-func (t *Transport) S3(region string) *s3.Client {
+func (t *Provider) S3(region string) *s3.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -108,7 +108,7 @@ func (t *Transport) S3(region string) *s3.Client {
 	return client
 }
 
-func (t *Transport) S3Control(region string) *s3control.Client {
+func (t *Provider) S3Control(region string) *s3control.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -132,7 +132,7 @@ func (t *Transport) S3Control(region string) *s3control.Client {
 	return client
 }
 
-func (t *Transport) Cloudtrail(region string) *cloudtrail.Client {
+func (t *Provider) Cloudtrail(region string) *cloudtrail.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -156,7 +156,7 @@ func (t *Transport) Cloudtrail(region string) *cloudtrail.Client {
 	return client
 }
 
-func (t *Transport) ConfigService(region string) *configservice.Client {
+func (t *Provider) ConfigService(region string) *configservice.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -180,7 +180,7 @@ func (t *Transport) ConfigService(region string) *configservice.Client {
 	return client
 }
 
-func (t *Transport) Kms(region string) *kms.Client {
+func (t *Provider) Kms(region string) *kms.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -204,7 +204,7 @@ func (t *Transport) Kms(region string) *kms.Client {
 	return client
 }
 
-func (t *Transport) CloudwatchLogs(region string) *cloudwatchlogs.Client {
+func (t *Provider) CloudwatchLogs(region string) *cloudwatchlogs.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -228,7 +228,7 @@ func (t *Transport) CloudwatchLogs(region string) *cloudwatchlogs.Client {
 	return client
 }
 
-func (t *Transport) Cloudwatch(region string) *cloudwatch.Client {
+func (t *Provider) Cloudwatch(region string) *cloudwatch.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -252,7 +252,7 @@ func (t *Transport) Cloudwatch(region string) *cloudwatch.Client {
 	return client
 }
 
-func (t *Transport) Sns(region string) *sns.Client {
+func (t *Provider) Sns(region string) *sns.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -276,7 +276,7 @@ func (t *Transport) Sns(region string) *sns.Client {
 	return client
 }
 
-func (t *Transport) Ssm(region string) *ssm.Client {
+func (t *Provider) Ssm(region string) *ssm.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -300,7 +300,7 @@ func (t *Transport) Ssm(region string) *ssm.Client {
 	return client
 }
 
-func (t *Transport) Efs(region string) *efs.Client {
+func (t *Provider) Efs(region string) *efs.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -324,7 +324,7 @@ func (t *Transport) Efs(region string) *efs.Client {
 	return client
 }
 
-func (t *Transport) Apigateway(region string) *apigateway.Client {
+func (t *Provider) Apigateway(region string) *apigateway.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -348,7 +348,7 @@ func (t *Transport) Apigateway(region string) *apigateway.Client {
 	return client
 }
 
-func (t *Transport) Lambda(region string) *lambda.Client {
+func (t *Provider) Lambda(region string) *lambda.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -372,7 +372,7 @@ func (t *Transport) Lambda(region string) *lambda.Client {
 	return client
 }
 
-func (t *Transport) Dynamodb(region string) *dynamodb.Client {
+func (t *Provider) Dynamodb(region string) *dynamodb.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -396,7 +396,7 @@ func (t *Transport) Dynamodb(region string) *dynamodb.Client {
 	return client
 }
 
-func (t *Transport) Dms(region string) *databasemigrationservice.Client {
+func (t *Provider) Dms(region string) *databasemigrationservice.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -420,7 +420,7 @@ func (t *Transport) Dms(region string) *databasemigrationservice.Client {
 	return client
 }
 
-func (t *Transport) Rds(region string) *rds.Client {
+func (t *Provider) Rds(region string) *rds.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -444,7 +444,7 @@ func (t *Transport) Rds(region string) *rds.Client {
 	return client
 }
 
-func (t *Transport) Elasticache(region string) *elasticache.Client {
+func (t *Provider) Elasticache(region string) *elasticache.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -468,7 +468,7 @@ func (t *Transport) Elasticache(region string) *elasticache.Client {
 	return client
 }
 
-func (t *Transport) Redshift(region string) *redshift.Client {
+func (t *Provider) Redshift(region string) *redshift.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -492,7 +492,7 @@ func (t *Transport) Redshift(region string) *redshift.Client {
 	return client
 }
 
-func (t *Transport) AccessAnalyzer(region string) *accessanalyzer.Client {
+func (t *Provider) AccessAnalyzer(region string) *accessanalyzer.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -516,7 +516,7 @@ func (t *Transport) AccessAnalyzer(region string) *accessanalyzer.Client {
 	return client
 }
 
-func (t *Transport) Acm(region string) *acm.Client {
+func (t *Provider) Acm(region string) *acm.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -540,7 +540,7 @@ func (t *Transport) Acm(region string) *acm.Client {
 	return client
 }
 
-func (t *Transport) Elb(region string) *elasticloadbalancing.Client {
+func (t *Provider) Elb(region string) *elasticloadbalancing.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -564,7 +564,7 @@ func (t *Transport) Elb(region string) *elasticloadbalancing.Client {
 	return client
 }
 
-func (t *Transport) Elbv2(region string) *elasticloadbalancingv2.Client {
+func (t *Provider) Elbv2(region string) *elasticloadbalancingv2.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -588,7 +588,7 @@ func (t *Transport) Elbv2(region string) *elasticloadbalancingv2.Client {
 	return client
 }
 
-func (t *Transport) Es(region string) *elasticsearchservice.Client {
+func (t *Provider) Es(region string) *elasticsearchservice.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -612,7 +612,7 @@ func (t *Transport) Es(region string) *elasticsearchservice.Client {
 	return client
 }
 
-func (t *Transport) Sagemaker(region string) *sagemaker.Client {
+func (t *Provider) Sagemaker(region string) *sagemaker.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -636,7 +636,7 @@ func (t *Transport) Sagemaker(region string) *sagemaker.Client {
 	return client
 }
 
-func (t *Transport) Autoscaling(region string) *autoscaling.Client {
+func (t *Provider) Autoscaling(region string) *autoscaling.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -660,7 +660,7 @@ func (t *Transport) Autoscaling(region string) *autoscaling.Client {
 	return client
 }
 
-func (t *Transport) Codebuild(region string) *codebuild.Client {
+func (t *Provider) Codebuild(region string) *codebuild.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -684,7 +684,7 @@ func (t *Transport) Codebuild(region string) *codebuild.Client {
 	return client
 }
 
-func (t *Transport) Emr(region string) *emr.Client {
+func (t *Provider) Emr(region string) *emr.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -708,7 +708,7 @@ func (t *Transport) Emr(region string) *emr.Client {
 	return client
 }
 
-func (t *Transport) Guardduty(region string) *guardduty.Client {
+func (t *Provider) Guardduty(region string) *guardduty.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -732,7 +732,7 @@ func (t *Transport) Guardduty(region string) *guardduty.Client {
 	return client
 }
 
-func (t *Transport) Secretsmanager(region string) *secretsmanager.Client {
+func (t *Provider) Secretsmanager(region string) *secretsmanager.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -756,7 +756,7 @@ func (t *Transport) Secretsmanager(region string) *secretsmanager.Client {
 	return client
 }
 
-func (t *Transport) Securityhub(region string) *securityhub.Client {
+func (t *Provider) Securityhub(region string) *securityhub.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region
@@ -780,7 +780,7 @@ func (t *Transport) Securityhub(region string) *securityhub.Client {
 	return client
 }
 
-func (t *Transport) Eks(region string) *eks.Client {
+func (t *Provider) Eks(region string) *eks.Client {
 	// if no region value is sent in, use the configured region
 	if len(region) == 0 {
 		region = t.config.Region

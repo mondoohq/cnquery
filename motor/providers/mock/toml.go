@@ -12,7 +12,7 @@ import (
 
 // Data holds the mocked data entries
 type TomlData struct {
-	TransportInfo TransportInfo            `toml:"transport_info"`
+	TransportInfo MockProviderInfo         `toml:"transport_info"`
 	Commands      map[string]*Command      `toml:"commands"`
 	Files         map[string]*MockFileData `toml:"files"`
 }
@@ -42,7 +42,7 @@ func Parse(data string) (*TomlData, error) {
 	return tomlContent, nil
 }
 
-func LoadFile(mock *Transport, path string) error {
+func LoadFile(mock *Provider, path string) error {
 	log.Debug().Str("path", path).Msg("mock> load toml into mock backend")
 
 	data, err := ioutil.ReadFile(path)
@@ -53,7 +53,7 @@ func LoadFile(mock *Transport, path string) error {
 	return Load(mock, string(data))
 }
 
-func Load(mock *Transport, data string) error {
+func Load(mock *Provider, data string) error {
 	tomlData, err := Parse(data)
 	if err != nil {
 		return err
@@ -67,7 +67,7 @@ func Load(mock *Transport, data string) error {
 }
 
 // Export returns a struct that can be used to export toml
-func Export(mock *Transport) (*TomlData, error) {
+func Export(mock *Provider) (*TomlData, error) {
 	tomlData := &TomlData{}
 	tomlData.Commands = mock.Commands
 	tomlData.Files = mock.Fs.Files
@@ -75,7 +75,7 @@ func Export(mock *Transport) (*TomlData, error) {
 	return tomlData, nil
 }
 
-func ExportData(mock *Transport) ([]byte, error) {
+func ExportData(mock *Provider) ([]byte, error) {
 	data, err := Export(mock)
 	if err != nil {
 		return nil, err
@@ -88,7 +88,7 @@ func ExportData(mock *Transport) ([]byte, error) {
 }
 
 // New returns a mock backend and loads the toml file by default
-func NewFromToml(tc *providers.TransportConfig) (*Transport, error) {
+func NewFromToml(tc *providers.TransportConfig) (*Provider, error) {
 	if tc.Options == nil || tc.Options["path"] == "" {
 		return nil, errors.New("path is required")
 	}
@@ -116,7 +116,7 @@ func NewFromToml(tc *providers.TransportConfig) (*Transport, error) {
 }
 
 // NewTestMockTransport is a sugar method to simplify writing tests with the mock backend
-func NewFromTomlFile(filepath string) (*Transport, error) {
+func NewFromTomlFile(filepath string) (*Provider, error) {
 	return NewFromToml(&providers.TransportConfig{
 		Backend: providers.ProviderType_MOCK,
 		Options: map[string]string{

@@ -14,8 +14,8 @@ import (
 	ms365_transport "go.mondoo.io/mondoo/motor/providers/ms365"
 )
 
-func ms365transport(t providers.Transport) (*ms365_transport.Transport, error) {
-	at, ok := t.(*ms365_transport.Transport)
+func ms365transport(t providers.Transport) (*ms365_transport.Provider, error) {
+	at, ok := t.(*ms365_transport.Provider)
 	if !ok {
 		return nil, errors.New("ms365 resource is not supported on this transport")
 	}
@@ -805,7 +805,7 @@ func (m *lumiMsgraphBetaDevicemanagementDevicecompliancepolicy) id() (string, er
 	return m.Id()
 }
 
-func graphBetaAdapter(t *ms365_transport.Transport) (*msgraphclient.GraphRequestAdapter, error) {
+func graphBetaAdapter(t *ms365_transport.Provider) (*msgraphclient.GraphRequestAdapter, error) {
 	auth, err := t.Auth()
 	if err != nil {
 		return nil, errors.Wrap(err, "authentication provider error")
@@ -818,7 +818,7 @@ func graphBetaAdapter(t *ms365_transport.Transport) (*msgraphclient.GraphRequest
 	return adapter, nil
 }
 
-func graphBetaClient(t *ms365_transport.Transport) (*msgraphclient.GraphServiceClient, error) {
+func graphBetaClient(t *ms365_transport.Provider) (*msgraphclient.GraphServiceClient, error) {
 	adapter, err := graphBetaAdapter(t)
 	if err != nil {
 		return nil, err

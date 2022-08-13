@@ -76,7 +76,7 @@ func (s *lumiAwsSnsTopic) init(args *lumi.Args) (*lumi.Args, AwsSnsTopic, error)
 	return args, nil, nil
 }
 
-func (s *lumiAwsSns) getTopics(at *aws_transport.Transport) []*jobpool.Job {
+func (s *lumiAwsSns) getTopics(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {

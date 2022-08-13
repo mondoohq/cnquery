@@ -1,3 +1,4 @@
+//go:build debugtest
 // +build debugtest
 
 package awsec2ebs
@@ -26,7 +27,7 @@ func awsTestConfig() aws.Config {
 
 func TestFindRecentSnapshot(t *testing.T) {
 	ec2svc := ec2.NewFromConfig(awsTestConfig())
-	e := Ec2EbsTransport{scannerRegionEc2svc: ec2svc}
+	e := Provider{scannerRegionEc2svc: ec2svc}
 	found, _ := e.FindRecentSnapshotForVolume(context.Background(), VolumeId{Id: "vol-0c04d709ea3e59096", Region: "us-east-1", Account: "185972265011"})
 	assert.Equal(t, found, true)
 	// found, _ = e.FindRecentSnapshotForVolume(context.Background(), VolumeId{Id: "vol-0d5df63d656ac4d9c", Region: "us-east-1", Account: "185972265011"})

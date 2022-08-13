@@ -14,7 +14,7 @@ import (
 
 func windowsMachineId(t providers.Transport) (string, error) {
 	// if we are running locally on windows, we want to avoid using powershell to be faster
-	_, ok := t.(*local.LocalTransport)
+	_, ok := t.(*local.Provider)
 	if ok && runtime.GOOS == "windows" {
 
 		// we always get a list or entries

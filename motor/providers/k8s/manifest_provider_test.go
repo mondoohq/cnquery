@@ -12,7 +12,7 @@ import (
 
 func TestManifestDeployment(t *testing.T) {
 	manifestFile := "./resources/testdata/appsv1.deployment.yaml"
-	transport := newManifestTransport("", WithManifestFile(manifestFile))
+	transport := newManifestProvider("", WithManifestFile(manifestFile))
 	require.NotNil(t, transport)
 	res, err := transport.Resources("deployment", "centos", "default")
 	require.NoError(t, err)
@@ -24,7 +24,7 @@ func TestManifestDeployment(t *testing.T) {
 
 func TestManifestCronJob(t *testing.T) {
 	manifestFile := "./resources/testdata/batchv1.cronjob.yaml"
-	transport := newManifestTransport("", WithManifestFile(manifestFile))
+	transport := newManifestProvider("", WithManifestFile(manifestFile))
 	require.NotNil(t, transport)
 	res, err := transport.Resources("cronjob", "mondoo-client-k8s-scan", "mondoo-operator")
 	require.NoError(t, err)
@@ -42,7 +42,7 @@ func TestManifestInmemory(t *testing.T) {
 	objects, err := resources.ResourcesFromManifest(bytes.NewReader(data))
 	require.NoError(t, err)
 
-	transport := newManifestTransport("", WithRuntimeObjects(objects))
+	transport := newManifestProvider("", WithRuntimeObjects(objects))
 	require.NotNil(t, transport)
 	res, err := transport.Resources("deployment", "centos", "default")
 	require.NoError(t, err)
@@ -54,7 +54,7 @@ func TestManifestInmemory(t *testing.T) {
 
 func TestManifestPod(t *testing.T) {
 	manifestFile := "./resources/testdata/appsv1.pod.yaml"
-	transport := newManifestTransport("", WithManifestFile(manifestFile))
+	transport := newManifestProvider("", WithManifestFile(manifestFile))
 	require.NotNil(t, transport)
 
 	namespaces, err := transport.Namespaces()
@@ -69,7 +69,7 @@ func TestManifestPod(t *testing.T) {
 
 func TestManifestStatefulSet(t *testing.T) {
 	manifestFile := "./resources/testdata/appsv1.statefulset.yaml"
-	transport := newManifestTransport("", WithManifestFile(manifestFile))
+	transport := newManifestProvider("", WithManifestFile(manifestFile))
 	require.NotNil(t, transport)
 	res, err := transport.Resources("statefulset", "mondoo-statefulset", "default")
 	require.NoError(t, err)
@@ -81,7 +81,7 @@ func TestManifestStatefulSet(t *testing.T) {
 
 func TestManifestJob(t *testing.T) {
 	manifestFile := "./resources/testdata/batchv1.job.yaml"
-	transport := newManifestTransport("", WithManifestFile(manifestFile))
+	transport := newManifestProvider("", WithManifestFile(manifestFile))
 	require.NotNil(t, transport)
 	res, err := transport.Resources("job", "mondoo-client-k8s-scan", "mondoo-operator")
 	require.NoError(t, err)
@@ -93,7 +93,7 @@ func TestManifestJob(t *testing.T) {
 
 func TestManifestReplicaSet(t *testing.T) {
 	manifestFile := "./resources/testdata/appsv1.replicaset.yaml"
-	transport := newManifestTransport("", WithManifestFile(manifestFile))
+	transport := newManifestProvider("", WithManifestFile(manifestFile))
 	require.NotNil(t, transport)
 
 	namespaces, err := transport.Namespaces()
@@ -107,7 +107,7 @@ func TestManifestReplicaSet(t *testing.T) {
 
 func TestManifestDaemonSet(t *testing.T) {
 	manifestFile := "./resources/testdata/appsv1.daemonset.yaml"
-	transport := newManifestTransport("", WithManifestFile(manifestFile))
+	transport := newManifestProvider("", WithManifestFile(manifestFile))
 	require.NotNil(t, transport)
 	res, err := transport.Resources("daemonset", "mondoo-daemonset", "default")
 	require.NoError(t, err)

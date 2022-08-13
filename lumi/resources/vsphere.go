@@ -15,7 +15,7 @@ import (
 )
 
 func getClientInstance(t providers.Transport) (*vsphere.Client, error) {
-	vt, ok := t.(*vsphere_transport.Transport)
+	vt, ok := t.(*vsphere_transport.Provider)
 	if !ok {
 		return nil, errors.New("vsphere resource is not supported on this transport")
 	}
@@ -803,7 +803,7 @@ func (v *lumiEsxi) id() (string, error) {
 
 func esxiHostProperties(runtime *lumi.Runtime) (*object.HostSystem, *mo.HostSystem, error) {
 	t := runtime.Motor.Transport
-	vt, ok := t.(*vsphere_transport.Transport)
+	vt, ok := t.(*vsphere_transport.Provider)
 	if !ok {
 		return nil, nil, errors.New("esxi resource is not supported on this transport")
 	}
@@ -899,7 +899,7 @@ func (v *lumiEsxi) GetHost() (interface{}, error) {
 
 func esxiVmProperties(runtime *lumi.Runtime) (*object.VirtualMachine, *mo.VirtualMachine, error) {
 	t := runtime.Motor.Transport
-	vt, ok := t.(*vsphere_transport.Transport)
+	vt, ok := t.(*vsphere_transport.Provider)
 	if !ok {
 		return nil, nil, errors.New("esxi resource is not supported on this transport")
 	}
@@ -971,7 +971,7 @@ func (v *lumiEsxiCommand) id() (string, error) {
 
 func (v *lumiEsxiCommand) init(args *lumi.Args) (*lumi.Args, EsxiCommand, error) {
 	t := v.MotorRuntime.Motor.Transport
-	vt, ok := t.(*vsphere_transport.Transport)
+	vt, ok := t.(*vsphere_transport.Provider)
 	if !ok {
 		return nil, nil, errors.New("esxi resource is only supported on vsphere transport")
 	}
@@ -1001,7 +1001,7 @@ func (v *lumiEsxiCommand) init(args *lumi.Args) (*lumi.Args, EsxiCommand, error)
 	return args, nil, nil
 }
 
-func (v *lumiEsxiCommand) hostSystem(vt *vsphere_transport.Transport, identifier string) (*object.HostSystem, error) {
+func (v *lumiEsxiCommand) hostSystem(vt *vsphere_transport.Provider, identifier string) (*object.HostSystem, error) {
 	var h *object.HostSystem
 	vClient := vt.Client()
 	cl := vsphere.New(vClient)
@@ -1026,7 +1026,7 @@ func (v *lumiEsxiCommand) hostSystem(vt *vsphere_transport.Transport, identifier
 
 func (v *lumiEsxiCommand) GetResult() ([]interface{}, error) {
 	t := v.MotorRuntime.Motor.Transport
-	_, ok := t.(*vsphere_transport.Transport)
+	_, ok := t.(*vsphere_transport.Provider)
 	if !ok {
 		return nil, errors.New("esxi resource is not supported on this transport")
 	}

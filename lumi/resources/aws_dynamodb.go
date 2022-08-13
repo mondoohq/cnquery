@@ -43,7 +43,7 @@ func (d *lumiAwsDynamodb) GetBackups() ([]interface{}, error) {
 	return res, nil
 }
 
-func (d *lumiAwsDynamodb) getBackups(at *aws_transport.Transport) []*jobpool.Job {
+func (d *lumiAwsDynamodb) getBackups(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -118,7 +118,7 @@ func (d *lumiAwsDynamodb) GetLimits() ([]interface{}, error) {
 	return res, nil
 }
 
-func (d *lumiAwsDynamodb) getLimits(at *aws_transport.Transport) []*jobpool.Job {
+func (d *lumiAwsDynamodb) getLimits(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 
 	regions, err := at.GetRegions()
@@ -214,7 +214,7 @@ func (d *lumiAwsDynamodb) GetTables() ([]interface{}, error) {
 	return res, nil
 }
 
-func (d *lumiAwsDynamodb) getTables(at *aws_transport.Transport) []*jobpool.Job {
+func (d *lumiAwsDynamodb) getTables(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {

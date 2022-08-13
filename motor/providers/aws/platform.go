@@ -6,12 +6,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 )
 
-func (t *Transport) Identifier() (string, error) {
+func (t *Provider) Identifier() (string, error) {
 	return "//platformid.api.mondoo.app/runtime/aws/accounts/" + t.info.Account, nil
 }
 
 // Info returns the connection information
-func (t *Transport) Info() Info {
+func (t *Provider) Info() Info {
 	return t.info
 }
 
@@ -20,7 +20,7 @@ type Account struct {
 	Aliases []string
 }
 
-func (t *Transport) Account() (Account, error) {
+func (t *Provider) Account() (Account, error) {
 	accountid := t.info.Account
 	ctx := context.Background()
 	res, err := t.Iam("").ListAccountAliases(ctx, &iam.ListAccountAliasesInput{})

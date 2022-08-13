@@ -15,14 +15,14 @@ import (
 )
 
 var (
-	_ providers.Transport                   = (*Transport)(nil)
-	_ providers.TransportPlatformIdentifier = (*Transport)(nil)
+	_ providers.Transport                   = (*Provider)(nil)
+	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
 )
 
-type TransportOption func(chart *Transport)
+type TransportOption func(charp *Provider)
 
 func WithEndpoint(apiEndpoint string) TransportOption {
-	return func(t *Transport) {
+	return func(p *Provider) {
 		localResolverFn := func(service, region string) (aws_sdk.Endpoint, error) {
 			return aws_sdk.Endpoint{
 				URL:               apiEndpoint,
@@ -30,19 +30,19 @@ func WithEndpoint(apiEndpoint string) TransportOption {
 				HostnameImmutable: true,
 			}, nil
 		}
-		t.awsConfigOptions = append(t.awsConfigOptions, config.WithEndpointResolver(aws_sdk.EndpointResolverFunc(localResolverFn)))
+		p.awsConfigOptions = append(p.awsConfigOptions, config.WithEndpointResolver(aws_sdk.EndpointResolverFunc(localResolverFn)))
 	}
 }
 
 func WithRegion(region string) TransportOption {
-	return func(t *Transport) {
-		t.awsConfigOptions = append(t.awsConfigOptions, config.WithRegion(region))
+	return func(p *Provider) {
+		p.awsConfigOptions = append(p.awsConfigOptions, config.WithRegion(region))
 	}
 }
 
 func WithProfile(profile string) TransportOption {
-	return func(t *Transport) {
-		t.awsConfigOptions = append(t.awsConfigOptions, config.WithSharedConfigProfile(profile))
+	return func(p *Provider) {
+		p.awsConfigOptions = append(p.awsConfigOptions, config.WithSharedConfigProfile(profile))
 	}
 }
 
@@ -63,12 +63,12 @@ func TransportOptions(opts map[string]string) []TransportOption {
 	return transportOpts
 }
 
-func New(tc *providers.TransportConfig, opts ...TransportOption) (*Transport, error) {
+func New(tc *providers.TransportConfig, opts ...TransportOption) (*Provider, error) {
 	if tc.Backend != providers.ProviderType_AWS {
-		return nil, errors.New("backend is not supported for aws transport")
+		return nil, providers.ErrProviderTypeDoesNotMatch
 	}
 
-	t := &Transport{
+	t := &Provider{
 		awsConfigOptions: []func(*config.LoadOptions) error{},
 	}
 
@@ -112,7 +112,7 @@ type Info struct {
 	UserId  string
 }
 
-type Transport struct {
+type Provider struct {
 	config             aws_sdk.Config
 	awsConfigOptions   []func(*config.LoadOptions) error
 	selectedPlatformID string
@@ -120,51 +120,51 @@ type Transport struct {
 	cache              Cache
 }
 
-func (t *Transport) RunCommand(command string) (*providers.Command, error) {
-	return nil, errors.New("aws does not implement RunCommand")
+func (p *Provider) RunCommand(command string) (*providers.Command, error) {
+	return nil, providers.ErrRunCommandNotImplemented
 }
 
-func (t *Transport) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, errors.New("aws does not implement FileInfo")
+func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
+	return providers.FileInfoDetails{}, providers.ErrFileInfoNotImplemented
 }
 
-func (t *Transport) FS() afero.Fs {
+func (p *Provider) FS() afero.Fs {
 	return &fsutil.NoFs{}
 }
 
-func (t *Transport) Close() {}
+func (p *Provider) Close() {}
 
-func (t *Transport) Capabilities() providers.Capabilities {
+func (p *Provider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{
 		providers.Capability_AWS,
 	}
 }
 
-func (t *Transport) Config() aws_sdk.Config {
-	return t.config
+func (p *Provider) Config() aws_sdk.Config {
+	return p.config
 }
 
-func (t *Transport) Kind() providers.Kind {
+func (p *Provider) Kind() providers.Kind {
 	return providers.Kind_KIND_API
 }
 
-func (t *Transport) Runtime() string {
+func (p *Provider) Runtime() string {
 	return providers.RUNTIME_AWS
 }
 
-func (t *Transport) PlatformIdDetectors() []providers.PlatformIdDetector {
+func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	return []providers.PlatformIdDetector{
 		providers.TransportPlatformIdentifierDetector,
 	}
 }
 
-func (t *Transport) DefaultRegion() string {
-	return t.config.Region
+func (p *Provider) DefaultRegion() string {
+	return p.config.Region
 }
 
-func (t *Transport) GetRegions() ([]string, error) {
+func (p *Provider) GetRegions() ([]string, error) {
 	// check cache for regions list, return if exists
-	c, ok := t.cache.Load("_regions")
+	c, ok := p.cache.Load("_regions")
 	if ok {
 		log.Debug().Msg("use regions from cache")
 		return c.Data.([]string), nil
@@ -173,7 +173,7 @@ func (t *Transport) GetRegions() ([]string, error) {
 
 	// if no cache, get regions using ec2 client (using the ssm list global regions does not give the same list)
 	regions := []string{}
-	svc := t.Ec2("us-east-1")
+	svc := p.Ec2("us-east-1")
 	ctx := context.Background()
 
 	res, err := svc.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
@@ -183,8 +183,8 @@ func (t *Transport) GetRegions() ([]string, error) {
 	for _, region := range res.Regions {
 		regions = append(regions, *region.RegionName)
 	}
-	// cache the regions as part of the transport object
-	t.cache.Store("_regions", &CacheEntry{Data: regions})
+	// cache the regions as part of the provider instance
+	p.cache.Store("_regions", &CacheEntry{Data: regions})
 	return regions, nil
 }
 

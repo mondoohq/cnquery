@@ -14,7 +14,7 @@ import (
 type FS struct {
 	Container    string
 	dockerClient *client.Client
-	Transport    *Transport
+	Transport    *Provider
 	catFS        *cat.Fs
 }
 

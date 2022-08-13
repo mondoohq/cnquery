@@ -1,6 +1,6 @@
 package arista
 
-func (t *Transport) Identifier() (string, error) {
+func (t *Provider) Identifier() (string, error) {
 	v, err := t.GetVersion()
 	if err != nil {
 		return "", err

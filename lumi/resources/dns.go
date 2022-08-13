@@ -22,7 +22,7 @@ func (d *lumiDomainName) id() (string, error) {
 func (d *lumiDomainName) init(args *lumi.Args) (*lumi.Args, DomainName, error) {
 	fqdn, ok := (*args)["fqdn"]
 	if !ok {
-		if transport, ok := d.MotorRuntime.Motor.Transport.(*network.Transport); ok {
+		if transport, ok := d.MotorRuntime.Motor.Transport.(*network.Provider); ok {
 			fqdn = transport.FQDN
 		}
 
@@ -52,7 +52,7 @@ func (d *lumiDns) init(args *lumi.Args) (*lumi.Args, Dns, error) {
 	if !ok {
 		var fqdn string
 
-		if transport, ok := d.MotorRuntime.Motor.Transport.(*network.Transport); ok {
+		if transport, ok := d.MotorRuntime.Motor.Transport.(*network.Provider); ok {
 			fqdn = transport.FQDN
 		}
 

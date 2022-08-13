@@ -39,7 +39,7 @@ func (a *lumiAwsAcm) GetCertificates() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *lumiAwsAcm) getCertificates(at *aws_transport.Transport) []*jobpool.Job {
+func (a *lumiAwsAcm) getCertificates(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {

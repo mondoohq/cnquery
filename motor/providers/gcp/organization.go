@@ -11,7 +11,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-func (t *Transport) OrganizationID() (string, error) {
+func (t *Provider) OrganizationID() (string, error) {
 	switch t.ResourceType() {
 	case Project:
 		ctx := context.Background()
@@ -45,7 +45,7 @@ func (t *Transport) OrganizationID() (string, error) {
 	return "", errors.New("could not find the organization")
 }
 
-func (t *Transport) GetProject(name string) (*cloudresourcemanager.Project, error) {
+func (t *Provider) GetProject(name string) (*cloudresourcemanager.Project, error) {
 	ctx := context.Background()
 
 	client, err := t.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, cloudresourcemanager.CloudPlatformScope, iam.CloudPlatformScope)
@@ -60,7 +60,7 @@ func (t *Transport) GetProject(name string) (*cloudresourcemanager.Project, erro
 	return svc.Projects.Get("projects/" + name).Do()
 }
 
-func (t *Transport) GetOrganization(name string) (*cloudresourcemanager.Organization, error) {
+func (t *Provider) GetOrganization(name string) (*cloudresourcemanager.Organization, error) {
 	ctx := context.Background()
 
 	client, err := t.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, cloudresourcemanager.CloudPlatformScope, iam.CloudPlatformScope)
@@ -75,7 +75,7 @@ func (t *Transport) GetOrganization(name string) (*cloudresourcemanager.Organiza
 	return svc.Organizations.Get("organizations/" + name).Do()
 }
 
-func (t *Transport) GetProjectsForOrganization(org *cloudresourcemanager.Organization) ([]*cloudresourcemanager.Project, error) {
+func (t *Provider) GetProjectsForOrganization(org *cloudresourcemanager.Organization) ([]*cloudresourcemanager.Project, error) {
 	ctx := context.Background()
 
 	client, err := t.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope)

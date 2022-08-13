@@ -22,8 +22,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func k8stransport(t providers.Transport) (k8s_transport.Transport, error) {
-	at, ok := t.(k8s_transport.Transport)
+func k8stransport(t providers.Transport) (k8s_transport.KubernetesProvider, error) {
+	at, ok := t.(k8s_transport.KubernetesProvider)
 	if !ok {
 		return nil, errors.New("k8s resource is not supported on this transport")
 	}
