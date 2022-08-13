@@ -36,7 +36,7 @@ func (c *lumiAwsCodebuild) GetProjects() ([]interface{}, error) {
 	return res, nil
 }
 
-func (t *lumiAwsCodebuild) getProjects(at *aws_transport.Transport) []*jobpool.Job {
+func (t *lumiAwsCodebuild) getProjects(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {

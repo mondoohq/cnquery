@@ -12,11 +12,11 @@ func (v *lumiPlatformVirtualization) id() (string, error) {
 
 func (v *lumiPlatformVirtualization) GetIsContainer() (bool, error) {
 	switch v.MotorRuntime.Motor.Transport.(type) {
-	case *tar.Transport:
+	case *tar.Provider:
 		return true, nil
-	case *docker_snapshot.DockerSnapshotTransport:
+	case *docker_snapshot.DockerSnapshotProvider:
 		return true, nil
-	case *docker_engine.Transport:
+	case *docker_engine.Provider:
 		return true, nil
 	}
 

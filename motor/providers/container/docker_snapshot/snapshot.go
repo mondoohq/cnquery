@@ -10,12 +10,12 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/tar"
 )
 
-type DockerSnapshotTransport struct {
-	tar.Transport
+type DockerSnapshotProvider struct {
+	tar.Provider
 }
 
 // NewFromDockerEngine creates a snapshot for a docker engine container and opens it
-func NewFromDockerEngine(containerid string) (*DockerSnapshotTransport, error) {
+func NewFromDockerEngine(containerid string) (*DockerSnapshotProvider, error) {
 	// cache container on local disk
 	f, err := cache.RandomFile()
 	if err != nil {
@@ -27,7 +27,7 @@ func NewFromDockerEngine(containerid string) (*DockerSnapshotTransport, error) {
 		return nil, err
 	}
 
-	tarTransport, err := tar.NewWithClose(&providers.TransportConfig{
+	tarProvider, err := tar.NewWithClose(&providers.TransportConfig{
 		Backend: providers.ProviderType_TAR,
 		Options: map[string]string{
 			tar.OPTION_FILE: f.Name(),
@@ -40,7 +40,7 @@ func NewFromDockerEngine(containerid string) (*DockerSnapshotTransport, error) {
 		return nil, err
 	}
 
-	return &DockerSnapshotTransport{Transport: *tarTransport}, nil
+	return &DockerSnapshotProvider{Provider: *tarProvider}, nil
 }
 
 // ExportSnapshot exports a given container from docker engine to a tar file

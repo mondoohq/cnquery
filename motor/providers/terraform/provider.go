@@ -15,11 +15,11 @@ import (
 )
 
 var (
-	_ providers.Transport                   = (*Transport)(nil)
-	_ providers.TransportPlatformIdentifier = (*Transport)(nil)
+	_ providers.Transport                   = (*Provider)(nil)
+	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
 )
 
-func New(tc *providers.TransportConfig) (*Transport, error) {
+func New(tc *providers.TransportConfig) (*Provider, error) {
 	if tc.Options == nil || tc.Options["path"] == "" {
 		return nil, errors.New("path is required")
 	}
@@ -49,7 +49,7 @@ func New(tc *providers.TransportConfig) (*Transport, error) {
 
 	platformID := "//platformid.api.mondoo.app/runtime/terraform/hash/" + hash
 
-	return &Transport{
+	return &Provider{
 		platformID:      platformID,
 		path:            path,
 		parsed:          parsed,
@@ -61,7 +61,7 @@ func New(tc *providers.TransportConfig) (*Transport, error) {
 // References:
 // - https://www.terraform.io/docs/language/syntax/configuration.html
 // - https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md
-type Transport struct {
+type Provider struct {
 	platformID      string
 	path            string
 	parsed          *hclparse.Parser
@@ -69,50 +69,50 @@ type Transport struct {
 	modulesManifest *ModuleManifest
 }
 
-func (t *Transport) RunCommand(command string) (*providers.Command, error) {
-	return nil, errors.New("terraform does not implement RunCommand")
+func (t *Provider) RunCommand(command string) (*providers.Command, error) {
+	return nil, providers.ErrRunCommandNotImplemented
 }
 
-func (t *Transport) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, errors.New("terraform does not implement FileInfo")
+func (t *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
+	return providers.FileInfoDetails{}, providers.ErrFileInfoNotImplemented
 }
 
-func (t *Transport) FS() afero.Fs {
+func (t *Provider) FS() afero.Fs {
 	return &fsutil.NoFs{}
 }
 
-func (t *Transport) Close() {}
+func (t *Provider) Close() {}
 
-func (t *Transport) Capabilities() providers.Capabilities {
+func (t *Provider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{}
 }
 
-func (t *Transport) Kind() providers.Kind {
+func (t *Provider) Kind() providers.Kind {
 	return providers.Kind_KIND_CODE
 }
 
-func (t *Transport) PlatformIdDetectors() []providers.PlatformIdDetector {
+func (t *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	return []providers.PlatformIdDetector{
 		providers.TransportPlatformIdentifierDetector,
 	}
 }
 
-func (t *Transport) Runtime() string {
+func (t *Provider) Runtime() string {
 	return ""
 }
 
-func (t *Transport) Parser() *hclparse.Parser {
+func (t *Provider) Parser() *hclparse.Parser {
 	return t.parsed
 }
 
-func (t *Transport) TfVars() map[string]*hcl.Attribute {
+func (t *Provider) TfVars() map[string]*hcl.Attribute {
 	return t.tfVars
 }
 
-func (t *Transport) ModulesManifest() *ModuleManifest {
+func (t *Provider) ModulesManifest() *ModuleManifest {
 	return t.modulesManifest
 }
 
-func (t *Transport) Identifier() (string, error) {
+func (t *Provider) Identifier() (string, error) {
 	return t.platformID, nil
 }

@@ -36,9 +36,9 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/ssh/cat"
 )
 
-var _ providers.Transport = (*Transport)(nil)
+var _ providers.Transport = (*Provider)(nil)
 
-func New(tc *providers.TransportConfig) (*Transport, error) {
+func New(tc *providers.TransportConfig) (*Provider, error) {
 	if tc.Backend != providers.ProviderType_VSPHERE_VM {
 		return nil, errors.New("backend is not supported for VMware tools transport")
 	}
@@ -46,10 +46,10 @@ func New(tc *providers.TransportConfig) (*Transport, error) {
 	// search for password secret
 	c, err := vault.GetPassword(tc.Credentials)
 	if err != nil {
-		return nil, errors.New("missing password for VMware tools transport")
+		return nil, errors.New("missing password for VMware tools provider")
 	}
 
-	// derive vsphere connection url from Transport Config
+	// derive vsphere connection url from Provider Config
 	vsphereUrl, err := vsphere.VSphereConnectionURL(tc.Host, tc.Port, c.User, string(c.Secret))
 	if err != nil {
 		return nil, err
@@ -109,7 +109,7 @@ func New(tc *providers.TransportConfig) (*Transport, error) {
 		GuestFamily:    types.VirtualMachineGuestOsFamily(family),
 	}
 
-	return &Transport{
+	return &Provider{
 		client: client,
 		pm:     pm,
 		fm:     fm,
@@ -119,7 +119,7 @@ func New(tc *providers.TransportConfig) (*Transport, error) {
 	}, nil
 }
 
-type Transport struct {
+type Provider struct {
 	client *govmomi.Client
 	pm     *guest.ProcessManager
 	fm     *guest.FileManager
@@ -129,11 +129,11 @@ type Transport struct {
 	fs     afero.Fs
 }
 
-func (t *Transport) Client() *govmomi.Client {
+func (t *Provider) Client() *govmomi.Client {
 	return t.client
 }
 
-func (t *Transport) RunCommand(command string) (*providers.Command, error) {
+func (t *Provider) RunCommand(command string) (*providers.Command, error) {
 	log.Debug().Str("command", command).Str("transport", "vmwareguest").Msg("run command")
 	c := &Command{tb: t.tb}
 
@@ -142,7 +142,7 @@ func (t *Transport) RunCommand(command string) (*providers.Command, error) {
 	return cmd, err
 }
 
-func (t *Transport) FileInfo(path string) (providers.FileInfoDetails, error) {
+func (t *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
 	fs := t.FS()
 	afs := &afero.Afero{Fs: fs}
 	stat, err := afs.Stat(path)
@@ -174,7 +174,7 @@ func (t *Transport) FileInfo(path string) (providers.FileInfoDetails, error) {
 	}, nil
 }
 
-func (t *Transport) FS() afero.Fs {
+func (t *Provider) FS() afero.Fs {
 	// if we cached an instance already, return it
 	if t.fs != nil {
 		return t.fs
@@ -191,24 +191,24 @@ func (t *Transport) FS() afero.Fs {
 	return t.fs
 }
 
-func (t *Transport) Close() {}
+func (t *Provider) Close() {}
 
-func (t *Transport) Capabilities() providers.Capabilities {
+func (t *Provider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{
 		providers.Capability_File,
 		providers.Capability_RunCommand,
 	}
 }
 
-func (t *Transport) Kind() providers.Kind {
+func (t *Provider) Kind() providers.Kind {
 	return providers.Kind_KIND_VIRTUAL_MACHINE
 }
 
-func (t *Transport) Runtime() string {
+func (t *Provider) Runtime() string {
 	return providers.RUNTIME_VSPHERE_VM
 }
 
-func (t *Transport) PlatformIdDetectors() []providers.PlatformIdDetector {
+func (t *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	return []providers.PlatformIdDetector{
 		providers.HostnameDetector,
 	}

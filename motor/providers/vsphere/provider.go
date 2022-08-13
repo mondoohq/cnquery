@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	_ providers.Transport                   = (*Transport)(nil)
-	_ providers.TransportPlatformIdentifier = (*Transport)(nil)
+	_ providers.Transport                   = (*Provider)(nil)
+	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
 )
 
 func VSphereConnectionURL(hostname string, port int32, user string, password string) (*url.URL, error) {
@@ -32,7 +32,7 @@ func VSphereConnectionURL(hostname string, port int32, user string, password str
 	return u, nil
 }
 
-func New(tc *providers.TransportConfig) (*Transport, error) {
+func New(tc *providers.TransportConfig) (*Provider, error) {
 	if tc.Backend != providers.ProviderType_VSPHERE {
 		return nil, errors.New("backend is not supported for vSphere transport")
 	}
@@ -43,7 +43,7 @@ func New(tc *providers.TransportConfig) (*Transport, error) {
 		return nil, errors.New("missing password for vSphere transport")
 	}
 
-	// derive vsphere connection url from Transport Config
+	// derive vsphere connection url from Provider Config
 	vsphereUrl, err := VSphereConnectionURL(tc.Host, tc.Port, c.User, string(c.Secret))
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func New(tc *providers.TransportConfig) (*Transport, error) {
 		return nil, err
 	}
 
-	return &Transport{
+	return &Provider{
 		client:             client,
 		kind:               tc.Kind,
 		runtime:            tc.Runtime,
@@ -64,7 +64,7 @@ func New(tc *providers.TransportConfig) (*Transport, error) {
 	}, nil
 }
 
-type Transport struct {
+type Provider struct {
 	client             *govmomi.Client
 	kind               providers.Kind
 	runtime            string
@@ -72,43 +72,43 @@ type Transport struct {
 	selectedPlatformID string
 }
 
-func (t *Transport) RunCommand(command string) (*providers.Command, error) {
-	return nil, errors.New("vsphere does not implement RunCommand")
+func (p *Provider) RunCommand(command string) (*providers.Command, error) {
+	return nil, providers.ErrRunCommandNotImplemented
 }
 
-func (t *Transport) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, errors.New("vsphere does not implement FileInfo")
+func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
+	return providers.FileInfoDetails{}, providers.ErrFileInfoNotImplemented
 }
 
-func (t *Transport) FS() afero.Fs {
+func (p *Provider) FS() afero.Fs {
 	return &fsutil.NoFs{}
 }
 
-func (t *Transport) Close() {}
+func (p *Provider) Close() {}
 
-func (t *Transport) Capabilities() providers.Capabilities {
+func (p *Provider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{
 		providers.Capability_vSphere,
 	}
 }
 
-func (t *Transport) Client() *govmomi.Client {
-	return t.client
+func (p *Provider) Client() *govmomi.Client {
+	return p.client
 }
 
-func (t *Transport) Options() map[string]string {
-	return t.opts
+func (p *Provider) Options() map[string]string {
+	return p.opts
 }
 
-func (t *Transport) Kind() providers.Kind {
-	return t.kind
+func (p *Provider) Kind() providers.Kind {
+	return p.kind
 }
 
-func (t *Transport) Runtime() string {
-	return t.runtime
+func (p *Provider) Runtime() string {
+	return p.runtime
 }
 
-func (t *Transport) PlatformIdDetectors() []providers.PlatformIdDetector {
+func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	return []providers.PlatformIdDetector{
 		providers.TransportPlatformIdentifierDetector,
 	}

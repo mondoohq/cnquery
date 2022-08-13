@@ -39,7 +39,7 @@ func (e *lumiAwsElb) GetClassicLoadBalancers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (e *lumiAwsElb) getClassicLoadBalancers(at *aws_transport.Transport) []*jobpool.Job {
+func (e *lumiAwsElb) getClassicLoadBalancers(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -117,7 +117,7 @@ func (e *lumiAwsElb) GetLoadBalancers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (e *lumiAwsElb) getLoadBalancers(at *aws_transport.Transport) []*jobpool.Job {
+func (e *lumiAwsElb) getLoadBalancers(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {

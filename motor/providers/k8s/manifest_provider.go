@@ -28,28 +28,28 @@ import (
 	"k8s.io/apimachinery/pkg/version"
 )
 
-type Option func(*manifestTransport)
+type Option func(*manifestProvider)
 
 func WithNamespace(namespace string) Option {
-	return func(t *manifestTransport) {
+	return func(t *manifestProvider) {
 		t.namespace = namespace
 	}
 }
 
 func WithManifestFile(filename string) Option {
-	return func(t *manifestTransport) {
+	return func(t *manifestProvider) {
 		t.manifestFile = filename
 	}
 }
 
 func WithRuntimeObjects(objects []k8sRuntime.Object) Option {
-	return func(t *manifestTransport) {
+	return func(t *manifestProvider) {
 		t.objects = objects
 	}
 }
 
-func newManifestTransport(selectedResourceID string, opts ...Option) Transport {
-	t := &manifestTransport{}
+func newManifestProvider(selectedResourceID string, opts ...Option) KubernetesProvider {
+	t := &manifestProvider{}
 
 	for _, option := range opts {
 		option(t)
@@ -59,32 +59,32 @@ func newManifestTransport(selectedResourceID string, opts ...Option) Transport {
 	return t
 }
 
-type manifestTransport struct {
+type manifestProvider struct {
 	manifestFile       string
 	namespace          string
 	objects            []runtime.Object
 	selectedResourceID string
 }
 
-func (t *manifestTransport) RunCommand(command string) (*providers.Command, error) {
+func (t *manifestProvider) RunCommand(command string) (*providers.Command, error) {
 	return nil, errors.New("k8s does not implement RunCommand")
 }
 
-func (t *manifestTransport) FileInfo(path string) (providers.FileInfoDetails, error) {
+func (t *manifestProvider) FileInfo(path string) (providers.FileInfoDetails, error) {
 	return providers.FileInfoDetails{}, errors.New("k8s does not implement FileInfo")
 }
 
-func (t *manifestTransport) FS() afero.Fs {
+func (t *manifestProvider) FS() afero.Fs {
 	return &fsutil.NoFs{}
 }
 
-func (t *manifestTransport) Close() {}
+func (t *manifestProvider) Close() {}
 
-func (t *manifestTransport) Capabilities() providers.Capabilities {
+func (t *manifestProvider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{}
 }
 
-func (t *manifestTransport) PlatformInfo() *platform.Platform {
+func (t *manifestProvider) PlatformInfo() *platform.Platform {
 	platformData := getPlatformInfo(t.selectedResourceID, t.Runtime())
 	if platformData != nil {
 		return platformData
@@ -98,29 +98,29 @@ func (t *manifestTransport) PlatformInfo() *platform.Platform {
 	}
 }
 
-func (t *manifestTransport) Kind() providers.Kind {
+func (t *manifestProvider) Kind() providers.Kind {
 	return providers.Kind_KIND_API
 }
 
-func (t *manifestTransport) Runtime() string {
+func (t *manifestProvider) Runtime() string {
 	return providers.RUNTIME_KUBERNETES_MANIFEST
 }
 
-func (t *manifestTransport) PlatformIdDetectors() []providers.PlatformIdDetector {
+func (t *manifestProvider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	return []providers.PlatformIdDetector{
 		providers.TransportPlatformIdentifierDetector,
 	}
 }
 
-func (t *manifestTransport) ServerVersion() *version.Info {
+func (t *manifestProvider) ServerVersion() *version.Info {
 	return nil
 }
 
-func (t *manifestTransport) SupportedResourceTypes() (*resources.ApiResourceIndex, error) {
+func (t *manifestProvider) SupportedResourceTypes() (*resources.ApiResourceIndex, error) {
 	return resources.NewApiResourceIndex(), nil
 }
 
-func (t *manifestTransport) ID() (string, error) {
+func (t *manifestProvider) ID() (string, error) {
 	_, err := os.Stat(t.manifestFile)
 	if err != nil {
 		return "", errors.Wrap(err, "could not determine platform identifier for "+t.manifestFile)
@@ -136,7 +136,7 @@ func (t *manifestTransport) ID() (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-func (t *manifestTransport) PlatformIdentifier() (string, error) {
+func (t *manifestProvider) PlatformIdentifier() (string, error) {
 	if t.selectedResourceID != "" {
 		return t.selectedResourceID, nil
 	}
@@ -149,11 +149,11 @@ func (t *manifestTransport) PlatformIdentifier() (string, error) {
 	return NewPlatformID(uid), nil
 }
 
-func (t *manifestTransport) Identifier() (string, error) {
+func (t *manifestProvider) Identifier() (string, error) {
 	return t.PlatformIdentifier()
 }
 
-func (t *manifestTransport) Name() (string, error) {
+func (t *manifestProvider) Name() (string, error) {
 	// manifest parent directory name
 	clusterName := common.ProjectNameFromPath(t.manifestFile)
 	clusterName = "K8S Manifest " + clusterName
@@ -161,7 +161,7 @@ func (t *manifestTransport) Name() (string, error) {
 }
 
 // Namespaces iterates over all file-based manifests and extracts all namespaces used
-func (t *manifestTransport) Namespaces() ([]v1.Namespace, error) {
+func (t *manifestProvider) Namespaces() ([]v1.Namespace, error) {
 	// iterate over all resources and extract all the namespaces
 	resourceObjects, _, err := t.resourceIndex()
 	if err != nil {
@@ -196,7 +196,7 @@ func (t *manifestTransport) Namespaces() ([]v1.Namespace, error) {
 	return nss, nil
 }
 
-func (t *manifestTransport) Pod(namespace string, name string) (*v1.Pod, error) {
+func (t *manifestProvider) Pod(namespace string, name string) (*v1.Pod, error) {
 	result, err := t.Resources("pods.v1.", name, namespace)
 	if err != nil {
 		return nil, err
@@ -216,7 +216,7 @@ func (t *manifestTransport) Pod(namespace string, name string) (*v1.Pod, error) 
 	return foundPod, nil
 }
 
-func (t *manifestTransport) Pods(namespace v1.Namespace) ([]v1.Pod, error) {
+func (t *manifestProvider) Pods(namespace v1.Namespace) ([]v1.Pod, error) {
 	result, err := t.Resources("pods.v1.", "", namespace.GetNamespace())
 	if err != nil {
 		return nil, err
@@ -237,7 +237,7 @@ func (t *manifestTransport) Pods(namespace v1.Namespace) ([]v1.Pod, error) {
 	return pods, nil
 }
 
-func (t *manifestTransport) Deployment(namespace string, name string) (*appsv1.Deployment, error) {
+func (t *manifestProvider) Deployment(namespace string, name string) (*appsv1.Deployment, error) {
 	result, err := t.Resources("deployments.appsv1.", name, namespace)
 	if err != nil {
 		return nil, err
@@ -257,7 +257,7 @@ func (t *manifestTransport) Deployment(namespace string, name string) (*appsv1.D
 	return foundDeployment, nil
 }
 
-func (t *manifestTransport) Deployments(namespace v1.Namespace) ([]appsv1.Deployment, error) {
+func (t *manifestProvider) Deployments(namespace v1.Namespace) ([]appsv1.Deployment, error) {
 	result, err := t.Resources("deployments.v1.apps", "", namespace.GetNamespace())
 	if err != nil {
 		return nil, err
@@ -278,7 +278,7 @@ func (t *manifestTransport) Deployments(namespace v1.Namespace) ([]appsv1.Deploy
 	return deployments, nil
 }
 
-func (t *manifestTransport) resourceIndex() ([]k8sRuntime.Object, *resources.ApiResourceIndex, error) {
+func (t *manifestProvider) resourceIndex() ([]k8sRuntime.Object, *resources.ApiResourceIndex, error) {
 	resourceObjects, err := t.load()
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "could not query resource objects")
@@ -298,7 +298,7 @@ func (t *manifestTransport) resourceIndex() ([]k8sRuntime.Object, *resources.Api
 	return resourceObjects, resTypes, nil
 }
 
-func (t *manifestTransport) Resources(kind string, name string, namespace string) (*ResourceResult, error) {
+func (t *manifestProvider) Resources(kind string, name string, namespace string) (*ResourceResult, error) {
 	var ns string
 	if namespace == "" {
 		ns = t.namespace
@@ -332,7 +332,7 @@ func (t *manifestTransport) Resources(kind string, name string, namespace string
 	}, err
 }
 
-func (t *manifestTransport) load() ([]k8sRuntime.Object, error) {
+func (t *manifestProvider) load() ([]k8sRuntime.Object, error) {
 	res := []k8sRuntime.Object{}
 	if t.manifestFile != "" {
 		log.Debug().Str("file", t.manifestFile).Msg("load resources from manifest files")
@@ -354,7 +354,7 @@ func (t *manifestTransport) load() ([]k8sRuntime.Object, error) {
 	return res, nil
 }
 
-func (t *manifestTransport) loadManifestFile(manifestFile string) ([]byte, error) {
+func (t *manifestProvider) loadManifestFile(manifestFile string) ([]byte, error) {
 	var input io.Reader
 
 	// if content is piped
@@ -406,7 +406,7 @@ func (t *manifestTransport) loadManifestFile(manifestFile string) ([]byte, error
 	return ioutil.ReadAll(input)
 }
 
-func (t *manifestTransport) CronJob(namespace string, name string) (*batchv1.CronJob, error) {
+func (t *manifestProvider) CronJob(namespace string, name string) (*batchv1.CronJob, error) {
 	result, err := t.Resources("cronjobs.v1.batch", name, namespace)
 	if err != nil {
 		return nil, err
@@ -426,7 +426,7 @@ func (t *manifestTransport) CronJob(namespace string, name string) (*batchv1.Cro
 	return foundCronJob, nil
 }
 
-func (t *manifestTransport) CronJobs(namespace v1.Namespace) ([]batchv1.CronJob, error) {
+func (t *manifestProvider) CronJobs(namespace v1.Namespace) ([]batchv1.CronJob, error) {
 	result, err := t.Resources("cronjobs.v1.batch", "", namespace.GetNamespace())
 	if err != nil {
 		return nil, err
@@ -447,7 +447,7 @@ func (t *manifestTransport) CronJobs(namespace v1.Namespace) ([]batchv1.CronJob,
 	return cronJobs, nil
 }
 
-func (t *manifestTransport) StatefulSet(namespace string, name string) (*appsv1.StatefulSet, error) {
+func (t *manifestProvider) StatefulSet(namespace string, name string) (*appsv1.StatefulSet, error) {
 	result, err := t.Resources("statefulsets.v1.apps", name, namespace)
 	if err != nil {
 		return nil, err
@@ -467,7 +467,7 @@ func (t *manifestTransport) StatefulSet(namespace string, name string) (*appsv1.
 	return foundStatefulSet, nil
 }
 
-func (t *manifestTransport) StatefulSets(namespace v1.Namespace) ([]appsv1.StatefulSet, error) {
+func (t *manifestProvider) StatefulSets(namespace v1.Namespace) ([]appsv1.StatefulSet, error) {
 	result, err := t.Resources("statefulsets.v1.apps", "", namespace.GetNamespace())
 	if err != nil {
 		return nil, err
@@ -488,7 +488,7 @@ func (t *manifestTransport) StatefulSets(namespace v1.Namespace) ([]appsv1.State
 	return statefulSets, nil
 }
 
-func (t *manifestTransport) Job(namespace string, name string) (*batchv1.Job, error) {
+func (t *manifestProvider) Job(namespace string, name string) (*batchv1.Job, error) {
 	result, err := t.Resources("jobs.v1.batch", name, namespace)
 	if err != nil {
 		return nil, err
@@ -508,7 +508,7 @@ func (t *manifestTransport) Job(namespace string, name string) (*batchv1.Job, er
 	return foundJob, nil
 }
 
-func (t *manifestTransport) Jobs(namespace v1.Namespace) ([]batchv1.Job, error) {
+func (t *manifestProvider) Jobs(namespace v1.Namespace) ([]batchv1.Job, error) {
 	result, err := t.Resources("jobs.v1.batch", "", namespace.GetNamespace())
 	if err != nil {
 		return nil, err
@@ -529,7 +529,7 @@ func (t *manifestTransport) Jobs(namespace v1.Namespace) ([]batchv1.Job, error) 
 	return jobs, nil
 }
 
-func (t *manifestTransport) ReplicaSet(namespace string, name string) (*appsv1.ReplicaSet, error) {
+func (t *manifestProvider) ReplicaSet(namespace string, name string) (*appsv1.ReplicaSet, error) {
 	result, err := t.Resources("replicasets.v1.apps", name, namespace)
 	if err != nil {
 		return nil, err
@@ -549,7 +549,7 @@ func (t *manifestTransport) ReplicaSet(namespace string, name string) (*appsv1.R
 	return foundReplicaSet, nil
 }
 
-func (t *manifestTransport) ReplicaSets(namespace v1.Namespace) ([]appsv1.ReplicaSet, error) {
+func (t *manifestProvider) ReplicaSets(namespace v1.Namespace) ([]appsv1.ReplicaSet, error) {
 	result, err := t.Resources("replicasets.v1.apps", "", namespace.GetNamespace())
 	if err != nil {
 		return nil, err
@@ -570,7 +570,7 @@ func (t *manifestTransport) ReplicaSets(namespace v1.Namespace) ([]appsv1.Replic
 	return replicaSets, nil
 }
 
-func (t *manifestTransport) DaemonSet(namespace string, name string) (*appsv1.DaemonSet, error) {
+func (t *manifestProvider) DaemonSet(namespace string, name string) (*appsv1.DaemonSet, error) {
 	result, err := t.Resources("daemonsets.appsv1.", name, namespace)
 	if err != nil {
 		return nil, err
@@ -590,7 +590,7 @@ func (t *manifestTransport) DaemonSet(namespace string, name string) (*appsv1.Da
 	return foundDaemonSet, nil
 }
 
-func (t *manifestTransport) DaemonSets(namespace v1.Namespace) ([]appsv1.DaemonSet, error) {
+func (t *manifestProvider) DaemonSets(namespace v1.Namespace) ([]appsv1.DaemonSet, error) {
 	// iterate over all resources and extract the daemonsets
 
 	result, err := t.Resources("daemonsets.v1.apps", "", namespace.GetNamespace())

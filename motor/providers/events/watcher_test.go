@@ -117,7 +117,7 @@ func TestFileChangeEvents(t *testing.T) {
 	waitInitialRead.Wait()
 
 	// change file content
-	mt := wt.mock.(*mock.Transport)
+	mt := wt.mock.(*mock.Provider)
 	mt.Fs.Files["/tmp/test"].Content = "newtest"
 	waitFileUpdate.Done()
 

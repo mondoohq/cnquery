@@ -54,7 +54,7 @@ func (s *LinuxMountManager) Name() string {
 func (s *LinuxMountManager) List() ([]MountPoint, error) {
 	// TODO: not working via docker yet
 	// // try /proc
-	// f, err := s.motor.Transport.File("/proc/mount")
+	// f, err := s.motor.Provider.File("/proc/mount")
 	// if err == nil {
 	// 	defer f.Close()
 	// 	return ParseLinuxProcMount(f), nil

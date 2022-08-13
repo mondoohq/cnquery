@@ -30,7 +30,7 @@ func (r *Resolver) Resolve(root *asset.Asset, cc *providers.TransportConfig, cfn
 	}
 	defer m.Close()
 
-	trans, ok := m.Transport.(*ms365_transport.Transport)
+	trans, ok := m.Transport.(*ms365_transport.Provider)
 	if !ok {
 		return nil, errors.New("could not create ms 365 transport")
 	}

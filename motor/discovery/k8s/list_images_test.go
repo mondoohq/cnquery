@@ -18,7 +18,7 @@ func TestListPodImage(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	transport := k8s.NewMockTransport(mockCtrl)
+	transport := k8s.NewMockKubernetesProvider(mockCtrl)
 
 	// Seed namespaces
 	nss := []corev1.Namespace{
@@ -92,7 +92,7 @@ func TestListPodImage_FromStatus(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	transport := k8s.NewMockTransport(mockCtrl)
+	transport := k8s.NewMockKubernetesProvider(mockCtrl)
 
 	// Seed namespaces
 	nss := []corev1.Namespace{

@@ -37,7 +37,7 @@ func (e *lumiAwsElasticache) GetClusters() ([]interface{}, error) {
 	return res, nil
 }
 
-func (e *lumiAwsElasticache) getClusters(at *aws_transport.Transport) []*jobpool.Job {
+func (e *lumiAwsElasticache) getClusters(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {

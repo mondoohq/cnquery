@@ -14,8 +14,8 @@ import (
 	gh_transport "go.mondoo.io/mondoo/motor/providers/github"
 )
 
-func githubtransport(t providers.Transport) (*gh_transport.Transport, error) {
-	gt, ok := t.(*gh_transport.Transport)
+func githubtransport(t providers.Transport) (*gh_transport.Provider, error) {
+	gt, ok := t.(*gh_transport.Provider)
 	if !ok {
 		return nil, errors.New("github resource is not supported on this transport")
 	}

@@ -19,11 +19,11 @@ import (
 )
 
 var (
-	_ providers.Transport                   = (*SSHTransport)(nil)
-	_ providers.TransportPlatformIdentifier = (*SSHTransport)(nil)
+	_ providers.Transport                   = (*Provider)(nil)
+	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
 )
 
-func New(tc *providers.TransportConfig) (*SSHTransport, error) {
+func New(tc *providers.TransportConfig) (*Provider, error) {
 	tc = ReadSSHConfig(tc)
 
 	// ensure all required configs are set
@@ -41,7 +41,7 @@ func New(tc *providers.TransportConfig) (*SSHTransport, error) {
 		log.Debug().Msg("user allowed insecure ssh connection")
 	}
 
-	t := &SSHTransport{
+	t := &Provider{
 		ConnectionConfig: tc,
 		UseScpFilesystem: activateScp,
 		kind:             tc.Kind,
@@ -79,7 +79,7 @@ func New(tc *providers.TransportConfig) (*SSHTransport, error) {
 	return t, nil
 }
 
-type SSHTransport struct {
+type Provider struct {
 	ConnectionConfig *providers.TransportConfig
 	SSHClient        *ssh.Client
 	fs               afero.Fs
@@ -91,7 +91,7 @@ type SSHTransport struct {
 	serverVersion    string
 }
 
-func (t *SSHTransport) Connect() error {
+func (t *Provider) Connect() error {
 	cc := t.ConnectionConfig
 
 	// we always want to ensure we use the default port if nothing was specified
@@ -139,17 +139,17 @@ func (t *SSHTransport) Connect() error {
 	// establish connection
 	conn, _, err := establishClientConnection(cc, hostkeyCallback)
 	if err != nil {
-		log.Debug().Err(err).Str("transport", "ssh").Str("host", cc.Host).Int32("port", cc.Port).Bool("insecure", cc.Insecure).Msg("could not establish ssh session")
+		log.Debug().Err(err).Str("provider", "ssh").Str("host", cc.Host).Int32("port", cc.Port).Bool("insecure", cc.Insecure).Msg("could not establish ssh session")
 		return err
 	}
 	t.SSHClient = conn
 	t.HostKey = hostkey
 	t.serverVersion = string(conn.ServerVersion())
-	log.Debug().Str("transport", "ssh").Str("host", cc.Host).Int32("port", cc.Port).Str("server", t.serverVersion).Msg("ssh session established")
+	log.Debug().Str("provider", "ssh").Str("host", cc.Host).Int32("port", cc.Port).Str("server", t.serverVersion).Msg("ssh session established")
 	return nil
 }
 
-func (t *SSHTransport) VerifyConnection() error {
+func (t *Provider) VerifyConnection() error {
 	var out *providers.Command
 	var err error
 
@@ -185,33 +185,33 @@ func (t *SSHTransport) VerifyConnection() error {
 }
 
 // Reconnect closes a possible current connection and re-establishes a new connection
-func (t *SSHTransport) Reconnect() error {
+func (t *Provider) Reconnect() error {
 	t.Close()
 	return t.Connect()
 }
 
-func (t *SSHTransport) runRawCommand(command string) (*providers.Command, error) {
-	log.Debug().Str("command", command).Str("transport", "ssh").Msg("run command")
-	c := &Command{SSHTransport: t}
+func (p *Provider) runRawCommand(command string) (*providers.Command, error) {
+	log.Debug().Str("command", command).Str("provider", "ssh").Msg("run command")
+	c := &Command{SSHProvider: p}
 	return c.Exec(command)
 }
 
-func (t *SSHTransport) RunCommand(command string) (*providers.Command, error) {
-	if t.Sudo != nil {
-		command = t.Sudo.Build(command)
+func (p *Provider) RunCommand(command string) (*providers.Command, error) {
+	if p.Sudo != nil {
+		command = p.Sudo.Build(command)
 	}
-	return t.runRawCommand(command)
+	return p.runRawCommand(command)
 }
 
-func (t *SSHTransport) FS() afero.Fs {
+func (p *Provider) FS() afero.Fs {
 	// if we cached an instance already, return it
-	if t.fs != nil {
-		return t.fs
+	if p.fs != nil {
+		return p.fs
 	}
 
 	// log the used ssh filesystem backend
 	defer func() {
-		log.Debug().Str("file-transfer", t.fs.Name()).Msg("initialized ssh filesystem")
+		log.Debug().Str("file-transfer", p.fs.Name()).Msg("initialized ssh filesystem")
 	}()
 
 	//// detect cisco network gear, they returns something like SSH-2.0-Cisco-1.25
@@ -223,36 +223,36 @@ func (t *SSHTransport) FS() afero.Fs {
 	//}
 
 	// if any priviledge elevation is used, we have no other chance as to use command-based file transfer
-	if t.Sudo != nil {
-		t.fs = cat.New(t)
-		return t.fs
+	if p.Sudo != nil {
+		p.fs = cat.New(p)
+		return p.fs
 	}
 
 	// we always try to use sftp first (if scp is not user-enforced)
 	// and we also fallback to scp if sftp does not work
-	if !t.UseScpFilesystem {
-		fs, err := sftp.New(t, t.SSHClient)
+	if !p.UseScpFilesystem {
+		fs, err := sftp.New(p, p.SSHClient)
 		if err != nil {
 			log.Info().Msg("use scp instead of sftp")
 			// enable fallback
-			t.UseScpFilesystem = true
+			p.UseScpFilesystem = true
 		} else {
-			t.fs = fs
-			return t.fs
+			p.fs = fs
+			return p.fs
 		}
 	}
 
-	if t.UseScpFilesystem {
-		t.fs = scp.NewFs(t, t.SSHClient)
-		return t.fs
+	if p.UseScpFilesystem {
+		p.fs = scp.NewFs(p, p.SSHClient)
+		return p.fs
 	}
 
 	// always fallback to catfs, slow but it works
-	t.fs = cat.New(t)
-	return t.fs
+	p.fs = cat.New(p)
+	return p.fs
 }
 
-func (t *SSHTransport) FileInfo(path string) (providers.FileInfoDetails, error) {
+func (t *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
 	fs := t.FS()
 	afs := &afero.Afero{Fs: fs}
 	stat, err := afs.Stat(path)
@@ -284,28 +284,28 @@ func (t *SSHTransport) FileInfo(path string) (providers.FileInfoDetails, error) 
 	}, nil
 }
 
-func (t *SSHTransport) Close() {
-	if t.SSHClient != nil {
-		t.SSHClient.Close()
+func (p *Provider) Close() {
+	if p.SSHClient != nil {
+		p.SSHClient.Close()
 	}
 }
 
-func (t *SSHTransport) Capabilities() providers.Capabilities {
+func (p *Provider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{
 		providers.Capability_RunCommand,
 		providers.Capability_File,
 	}
 }
 
-func (t *SSHTransport) Kind() providers.Kind {
-	return t.kind
+func (p *Provider) Kind() providers.Kind {
+	return p.kind
 }
 
-func (t *SSHTransport) Runtime() string {
-	return t.runtime
+func (p *Provider) Runtime() string {
+	return p.runtime
 }
 
-func (t *SSHTransport) PlatformIdDetectors() []providers.PlatformIdDetector {
+func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	return []providers.PlatformIdDetector{
 		providers.TransportPlatformIdentifierDetector,
 		providers.HostnameDetector,
@@ -313,8 +313,8 @@ func (t *SSHTransport) PlatformIdDetectors() []providers.PlatformIdDetector {
 	}
 }
 
-func (t *SSHTransport) Identifier() (string, error) {
-	return PlatformIdentifier(t.HostKey), nil
+func (p *Provider) Identifier() (string, error) {
+	return PlatformIdentifier(p.HostKey), nil
 }
 
 func PlatformIdentifier(publicKey ssh.PublicKey) string {

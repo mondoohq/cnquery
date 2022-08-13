@@ -1,9 +1,8 @@
 package k8s
 
-//go:generate  go run github.com/golang/mock/mockgen -source=./transport.go -destination=./mock_transport.go -package=k8s
+//go:generate  go run github.com/golang/mock/mockgen -source=./provider.go -destination=./mock_provider.go -package=k8s
 
 import (
-	"errors"
 	"strings"
 
 	platform "go.mondoo.io/mondoo/motor/platform"
@@ -21,7 +20,7 @@ const (
 	OPTION_NAMESPACE = "namespace"
 )
 
-type Transport interface {
+type KubernetesProvider interface {
 	providers.Transport
 	providers.TransportPlatformIdentifier
 	Name() (string, error)
@@ -69,21 +68,21 @@ type ResourceResult struct {
 	AllNs     bool
 }
 
-// New initializes the k8s transport and loads a configuration.
+// New initializes the k8s provider and loads a configuration.
 // Supported options are:
 // - namespace: limits the resources to a specific namespace
 // - path: use a manifest file instead of live API
-func New(tc *providers.TransportConfig) (Transport, error) {
+func New(tc *providers.TransportConfig) (KubernetesProvider, error) {
 	if tc.Backend != providers.ProviderType_K8S {
-		return nil, errors.New("backend is not supported for k8s transport")
+		return nil, providers.ErrProviderTypeDoesNotMatch
 	}
 
 	manifestFile, manifestDefined := tc.Options[OPTION_MANIFEST]
 	if manifestDefined {
-		return newManifestTransport(tc.PlatformId, WithManifestFile(manifestFile), WithNamespace(tc.Options[OPTION_NAMESPACE])), nil
+		return newManifestProvider(tc.PlatformId, WithManifestFile(manifestFile), WithNamespace(tc.Options[OPTION_NAMESPACE])), nil
 	}
 
-	return newApiTransport(tc.Options[OPTION_NAMESPACE], tc.PlatformId)
+	return newApiProvider(tc.Options[OPTION_NAMESPACE], tc.PlatformId)
 }
 
 func getPlatformInfo(selectedResourceID string, runtime string) *platform.Platform {

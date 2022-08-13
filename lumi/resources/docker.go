@@ -15,7 +15,7 @@ func (p *lumiDocker) id() (string, error) {
 }
 
 func (p *lumiDocker) GetImages() ([]interface{}, error) {
-	_, ok := p.MotorRuntime.Motor.Transport.(*local.LocalTransport)
+	_, ok := p.MotorRuntime.Motor.Transport.(*local.Provider)
 	if !ok {
 		return nil, errors.New("docker is not support for this transport")
 	}
@@ -60,7 +60,7 @@ func (p *lumiDocker) GetImages() ([]interface{}, error) {
 }
 
 func (p *lumiDocker) GetContainers() ([]interface{}, error) {
-	_, ok := p.MotorRuntime.Motor.Transport.(*local.LocalTransport)
+	_, ok := p.MotorRuntime.Motor.Transport.(*local.Provider)
 	if !ok {
 		return nil, errors.New("docker is not support for this transport")
 	}

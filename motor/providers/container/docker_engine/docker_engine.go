@@ -12,11 +12,11 @@ import (
 )
 
 var (
-	_ providers.Transport                   = (*Transport)(nil)
-	_ providers.TransportPlatformIdentifier = (*Transport)(nil)
+	_ providers.Transport                   = (*Provider)(nil)
+	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
 )
 
-func New(container string) (*Transport, error) {
+func New(container string) (*Provider, error) {
 	// TODO: harmonize docker client establishment with docker engine discovery
 	dockerClient, err := GetDockerClient()
 	if err != nil {
@@ -33,7 +33,7 @@ func New(container string) (*Transport, error) {
 		return nil, errors.New("container " + data.ID + " is not running")
 	}
 
-	t := &Transport{
+	t := &Provider{
 		dockerClient: dockerClient,
 		container:    container,
 		kind:         providers.Kind_KIND_CONTAINER,
@@ -48,7 +48,7 @@ func New(container string) (*Transport, error) {
 	return t, nil
 }
 
-type Transport struct {
+type Provider struct {
 	dockerClient *client.Client
 	container    string
 	Fs           *FS
@@ -64,39 +64,39 @@ type Transport struct {
 	runtime string
 }
 
-func (t *Transport) DockerClient() *client.Client {
-	return t.dockerClient
+func (p *Provider) DockerClient() *client.Client {
+	return p.dockerClient
 }
 
-func (t *Transport) ContainerId() string {
-	return t.container
+func (p *Provider) ContainerId() string {
+	return p.container
 }
 
-func (t *Transport) Identifier() (string, error) {
-	return t.PlatformIdentifier, nil
+func (p *Provider) Identifier() (string, error) {
+	return p.PlatformIdentifier, nil
 }
 
-func (t *Transport) Labels() map[string]string {
-	return t.Metadata.Labels
+func (p *Provider) Labels() map[string]string {
+	return p.Metadata.Labels
 }
 
-func (t *Transport) PlatformName() string {
-	return t.Metadata.Name
+func (p *Provider) PlatformName() string {
+	return p.Metadata.Name
 }
 
-func (t *Transport) RunCommand(command string) (*providers.Command, error) {
+func (p *Provider) RunCommand(command string) (*providers.Command, error) {
 	log.Debug().Str("command", command).Msg("docker> run command")
-	c := &Command{dockerClient: t.dockerClient, Container: t.container}
+	c := &Command{dockerClient: p.dockerClient, Container: p.container}
 	res, err := c.Exec(command)
 	return res, err
 }
 
-func (t *Transport) FS() afero.Fs {
-	return t.Fs
+func (p *Provider) FS() afero.Fs {
+	return p.Fs
 }
 
-func (t *Transport) FileInfo(path string) (providers.FileInfoDetails, error) {
-	fs := t.FS()
+func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
+	fs := p.FS()
 	afs := &afero.Afero{Fs: fs}
 	stat, err := afs.Stat(path)
 	if err != nil {
@@ -115,11 +115,11 @@ func (t *Transport) FileInfo(path string) (providers.FileInfoDetails, error) {
 	}, nil
 }
 
-func (t *Transport) Close() {
-	t.dockerClient.Close()
+func (p *Provider) Close() {
+	p.dockerClient.Close()
 }
 
-func (t *Transport) Capabilities() providers.Capabilities {
+func (p *Provider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{
 		providers.Capability_RunCommand,
 		providers.Capability_File,
@@ -135,15 +135,15 @@ func GetDockerClient() (*client.Client, error) {
 	return cli, nil
 }
 
-func (t *Transport) Kind() providers.Kind {
-	return t.kind
+func (p *Provider) Kind() providers.Kind {
+	return p.kind
 }
 
-func (t *Transport) Runtime() string {
-	return t.runtime
+func (p *Provider) Runtime() string {
+	return p.runtime
 }
 
-func (t *Transport) PlatformIdDetectors() []providers.PlatformIdDetector {
+func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	return []providers.PlatformIdDetector{
 		providers.TransportPlatformIdentifierDetector,
 	}

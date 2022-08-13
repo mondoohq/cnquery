@@ -35,7 +35,7 @@ type Detector struct {
 
 func (d *Detector) resolveOS() (*platform.Platform, bool) {
 	// NOTE: on windows, powershell calls are expensive therefore we want to shortcut the detection mechanism
-	_, ok := d.transport.(*local.LocalTransport)
+	_, ok := d.transport.(*local.Provider)
 	if ok && runtime.GOOS == "windows" {
 		return platform.WindowsFamily.Resolve(d.transport)
 	} else {
@@ -55,13 +55,13 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 
 	var pi *platform.Platform
 	switch pt := d.transport.(type) {
-	case *vsphere.Transport:
+	case *vsphere.Provider:
 		identifier, err := pt.Identifier()
 		if err != nil {
 			return nil, err
 		}
 		return platform.VspherePlatform(pt, identifier)
-	case *arista.Transport:
+	case *arista.Provider:
 		v, err := pt.GetVersion()
 		if err != nil {
 			return nil, errors.New("cannot determine arista version")
@@ -76,72 +76,72 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 			Kind:    pt.Kind(),
 			Runtime: pt.Runtime(),
 		}, nil
-	case *aws.Transport:
+	case *aws.Provider:
 		return &platform.Platform{
 			Name:    "aws",
 			Title:   "Amazon Web Services",
 			Kind:    providers.Kind_KIND_API,
 			Runtime: providers.RUNTIME_AWS,
 		}, nil
-	case *gcp.Transport:
+	case *gcp.Provider:
 		return &platform.Platform{
 			Name:    "gcp",
 			Title:   "Google Cloud Platform",
 			Kind:    providers.Kind_KIND_API,
 			Runtime: providers.RUNTIME_GCP,
 		}, nil
-	case *azure.Transport:
+	case *azure.Provider:
 		return &platform.Platform{
 			Name:    "azure",
 			Title:   "Microsoft Azure",
 			Kind:    providers.Kind_KIND_API,
 			Runtime: providers.RUNTIME_AZ,
 		}, nil
-	case *ms365.Transport:
+	case *ms365.Provider:
 		return &platform.Platform{
 			Name:    "microsoft365",
 			Title:   "Microsoft 365",
 			Kind:    providers.Kind_KIND_API,
 			Runtime: providers.RUNTIME_MICROSOFT_GRAPH,
 		}, nil
-	case *ipmi.Transport:
+	case *ipmi.Provider:
 		return &platform.Platform{
 			Name:    "ipmi",
 			Title:   "IPMI",
 			Kind:    pt.Kind(),
 			Runtime: pt.Runtime(),
 		}, nil
-	case *equinix.Transport:
+	case *equinix.Provider:
 		return &platform.Platform{
 			Name:    "equinix",
 			Title:   "Equinix Metal",
 			Kind:    providers.Kind_KIND_API,
 			Runtime: providers.RUNTIME_EQUINIX_METAL,
 		}, nil
-	case k8s_transport.Transport:
+	case k8s_transport.KubernetesProvider:
 		return pt.PlatformInfo(), nil
-	case *github.Transport:
+	case *github.Provider:
 		return &platform.Platform{
 			Name:    "github",
 			Title:   "GitHub",
 			Kind:    providers.Kind_KIND_API,
 			Runtime: providers.RUNTIME_GITHUB,
 		}, nil
-	case *gitlab.Transport:
+	case *gitlab.Provider:
 		return &platform.Platform{
 			Name:    "gitlab",
 			Title:   "GitLab",
 			Kind:    providers.Kind_KIND_API,
 			Runtime: providers.RUNTIME_GITLAB,
 		}, nil
-	case *terraform.Transport:
+	case *terraform.Provider:
 		return &platform.Platform{
 			Name:    "terraform",
 			Title:   "Terraform",
 			Kind:    providers.Kind_KIND_API,
 			Runtime: "",
 		}, nil
-	case *network.Transport:
+	case *network.Provider:
 		return &platform.Platform{
 			Name:    pt.Scheme,
 			Title:   "Network API",

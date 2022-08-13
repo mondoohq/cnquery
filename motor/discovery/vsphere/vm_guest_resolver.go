@@ -32,7 +32,7 @@ func (k *VMGuestResolver) Resolve(root *asset.Asset, tc *providers.TransportConf
 	}
 	defer m.Close()
 
-	trans, ok := m.Transport.(*vmwareguestapi.Transport)
+	trans, ok := m.Transport.(*vmwareguestapi.Provider)
 	if !ok {
 		return nil, errors.New("could not initialize vsphere guest transport")
 	}

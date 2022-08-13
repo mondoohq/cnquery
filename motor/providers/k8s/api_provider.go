@@ -25,7 +25,7 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
-func newApiTransport(namespace string, selectedResourceID string) (Transport, error) {
+func newApiProvider(namespace string, selectedResourceID string) (KubernetesProvider, error) {
 	// check if the user .kube/config file exists
 	// NOTE: BuildConfigFromFlags falls back to cluster loading when .kube/config string is empty
 	// therefore we want to only change the kubeconfig string when the file really exists
@@ -67,7 +67,7 @@ func newApiTransport(namespace string, selectedResourceID string) (Transport, er
 		return nil, errors.Wrap(err, "could not create kubernetes clientset")
 	}
 
-	return &apiTransport{
+	return &apiProvider{
 		namespace:          namespace,
 		config:             config,
 		d:                  d,
@@ -76,7 +76,7 @@ func newApiTransport(namespace string, selectedResourceID string) (Transport, er
 	}, nil
 }
 
-type apiTransport struct {
+type apiProvider struct {
 	d                  *resources.Discovery
 	config             *rest.Config
 	namespace          string
@@ -84,39 +84,39 @@ type apiTransport struct {
 	selectedResourceID string
 }
 
-func (t *apiTransport) RunCommand(command string) (*providers.Command, error) {
+func (t *apiProvider) RunCommand(command string) (*providers.Command, error) {
 	return nil, errors.New("k8s does not implement RunCommand")
 }
 
-func (t *apiTransport) FileInfo(path string) (providers.FileInfoDetails, error) {
+func (t *apiProvider) FileInfo(path string) (providers.FileInfoDetails, error) {
 	return providers.FileInfoDetails{}, errors.New("k8s does not implement FileInfo")
 }
 
-func (t *apiTransport) FS() afero.Fs {
+func (t *apiProvider) FS() afero.Fs {
 	return &fsutil.NoFs{}
 }
 
-func (t *apiTransport) Close() {}
+func (t *apiProvider) Close() {}
 
-func (t *apiTransport) Capabilities() providers.Capabilities {
+func (t *apiProvider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{}
 }
 
-func (t *apiTransport) Kind() providers.Kind {
+func (t *apiProvider) Kind() providers.Kind {
 	return providers.Kind_KIND_API
 }
 
-func (t *apiTransport) Runtime() string {
+func (t *apiProvider) Runtime() string {
 	return providers.RUNTIME_KUBERNETES_CLUSTER
 }
 
-func (t *apiTransport) PlatformIdDetectors() []providers.PlatformIdDetector {
+func (t *apiProvider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	return []providers.PlatformIdDetector{
 		providers.TransportPlatformIdentifierDetector,
 	}
 }
 
-func (t *apiTransport) ID() (string, error) {
+func (t *apiProvider) ID() (string, error) {
 	// we use "kube-system" namespace uid as identifier for the cluster
 	result, err := t.Resources("namespaces", "kube-system", "")
 	if err != nil {
@@ -137,7 +137,7 @@ func (t *apiTransport) ID() (string, error) {
 	return uid, nil
 }
 
-func (t *apiTransport) PlatformIdentifier() (string, error) {
+func (t *apiProvider) PlatformIdentifier() (string, error) {
 	if t.selectedResourceID != "" {
 		return t.selectedResourceID, nil
 	}
@@ -155,11 +155,11 @@ func (t *apiTransport) PlatformIdentifier() (string, error) {
 	return id, nil
 }
 
-func (t *apiTransport) Identifier() (string, error) {
+func (t *apiProvider) Identifier() (string, error) {
 	return t.PlatformIdentifier()
 }
 
-func (t *apiTransport) Name() (string, error) {
+func (t *apiProvider) Name() (string, error) {
 	ci, err := t.ClusterInfo()
 	if err != nil {
 		return "", err
@@ -167,7 +167,7 @@ func (t *apiTransport) Name() (string, error) {
 	return ci.Name, nil
 }
 
-func (t *apiTransport) ClusterInfo() (ClusterInfo, error) {
+func (t *apiProvider) ClusterInfo() (ClusterInfo, error) {
 	ctx := context.Background()
 	res := ClusterInfo{}
 
@@ -185,15 +185,15 @@ func (t *apiTransport) ClusterInfo() (ClusterInfo, error) {
 	return res, nil
 }
 
-func (t *apiTransport) ServerVersion() *version.Info {
+func (t *apiProvider) ServerVersion() *version.Info {
 	return t.d.ServerVersion
 }
 
-func (t *apiTransport) SupportedResourceTypes() (*resources.ApiResourceIndex, error) {
+func (t *apiProvider) SupportedResourceTypes() (*resources.ApiResourceIndex, error) {
 	return t.d.SupportedResourceTypes()
 }
 
-func (t *apiTransport) Resources(kind string, name string, namespace string) (*ResourceResult, error) {
+func (t *apiProvider) Resources(kind string, name string, namespace string) (*ResourceResult, error) {
 	ctx := context.Background()
 	ns := t.namespace
 	allNs := false
@@ -235,7 +235,7 @@ func (t *apiTransport) Resources(kind string, name string, namespace string) (*R
 	}, err
 }
 
-func (t *apiTransport) PlatformInfo() *platform.Platform {
+func (t *apiProvider) PlatformInfo() *platform.Platform {
 	release := ""
 	build := ""
 	arch := ""
@@ -266,7 +266,7 @@ func (t *apiTransport) PlatformInfo() *platform.Platform {
 	}
 }
 
-func (t *apiTransport) Namespaces() ([]v1.Namespace, error) {
+func (t *apiProvider) Namespaces() ([]v1.Namespace, error) {
 	ctx := context.Background()
 	list, err := t.clientset.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -275,7 +275,7 @@ func (t *apiTransport) Namespaces() ([]v1.Namespace, error) {
 	return list.Items, err
 }
 
-func (t *apiTransport) Pods(namespace v1.Namespace) ([]v1.Pod, error) {
+func (t *apiProvider) Pods(namespace v1.Namespace) ([]v1.Pod, error) {
 	ctx := context.Background()
 	list, err := t.clientset.CoreV1().Pods(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -284,7 +284,7 @@ func (t *apiTransport) Pods(namespace v1.Namespace) ([]v1.Pod, error) {
 	return list.Items, err
 }
 
-func (t *apiTransport) Pod(namespace string, name string) (*v1.Pod, error) {
+func (t *apiProvider) Pod(namespace string, name string) (*v1.Pod, error) {
 	ctx := context.Background()
 	pod, err := t.clientset.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
@@ -293,7 +293,7 @@ func (t *apiTransport) Pod(namespace string, name string) (*v1.Pod, error) {
 	return pod, err
 }
 
-func (t *apiTransport) CronJobs(namespace v1.Namespace) ([]batchv1.CronJob, error) {
+func (t *apiProvider) CronJobs(namespace v1.Namespace) ([]batchv1.CronJob, error) {
 	ctx := context.Background()
 	list, err := t.clientset.BatchV1().CronJobs(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -302,7 +302,7 @@ func (t *apiTransport) CronJobs(namespace v1.Namespace) ([]batchv1.CronJob, erro
 	return list.Items, err
 }
 
-func (t *apiTransport) CronJob(namespace string, name string) (*batchv1.CronJob, error) {
+func (t *apiProvider) CronJob(namespace string, name string) (*batchv1.CronJob, error) {
 	ctx := context.Background()
 	cronjob, err := t.clientset.BatchV1().CronJobs(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
@@ -311,7 +311,7 @@ func (t *apiTransport) CronJob(namespace string, name string) (*batchv1.CronJob,
 	return cronjob, err
 }
 
-func (t *apiTransport) StatefulSets(namespace v1.Namespace) ([]appsv1.StatefulSet, error) {
+func (t *apiProvider) StatefulSets(namespace v1.Namespace) ([]appsv1.StatefulSet, error) {
 	ctx := context.Background()
 	list, err := t.clientset.AppsV1().StatefulSets(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -320,7 +320,7 @@ func (t *apiTransport) StatefulSets(namespace v1.Namespace) ([]appsv1.StatefulSe
 	return list.Items, err
 }
 
-func (t *apiTransport) StatefulSet(namespace string, name string) (*appsv1.StatefulSet, error) {
+func (t *apiProvider) StatefulSet(namespace string, name string) (*appsv1.StatefulSet, error) {
 	ctx := context.Background()
 	statefulset, err := t.clientset.AppsV1().StatefulSets(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
@@ -329,7 +329,7 @@ func (t *apiTransport) StatefulSet(namespace string, name string) (*appsv1.State
 	return statefulset, err
 }
 
-func (t *apiTransport) Deployments(namespace v1.Namespace) ([]appsv1.Deployment, error) {
+func (t *apiProvider) Deployments(namespace v1.Namespace) ([]appsv1.Deployment, error) {
 	ctx := context.Background()
 	list, err := t.clientset.AppsV1().Deployments(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -338,7 +338,7 @@ func (t *apiTransport) Deployments(namespace v1.Namespace) ([]appsv1.Deployment,
 	return list.Items, err
 }
 
-func (t *apiTransport) Deployment(namespace string, name string) (*appsv1.Deployment, error) {
+func (t *apiProvider) Deployment(namespace string, name string) (*appsv1.Deployment, error) {
 	ctx := context.Background()
 	deployment, err := t.clientset.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
@@ -347,7 +347,7 @@ func (t *apiTransport) Deployment(namespace string, name string) (*appsv1.Deploy
 	return deployment, err
 }
 
-func (t *apiTransport) Jobs(namespace v1.Namespace) ([]batchv1.Job, error) {
+func (t *apiProvider) Jobs(namespace v1.Namespace) ([]batchv1.Job, error) {
 	ctx := context.Background()
 	list, err := t.clientset.BatchV1().Jobs(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -356,7 +356,7 @@ func (t *apiTransport) Jobs(namespace v1.Namespace) ([]batchv1.Job, error) {
 	return list.Items, err
 }
 
-func (t *apiTransport) Job(namespace string, name string) (*batchv1.Job, error) {
+func (t *apiProvider) Job(namespace string, name string) (*batchv1.Job, error) {
 	ctx := context.Background()
 	job, err := t.clientset.BatchV1().Jobs(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
@@ -365,7 +365,7 @@ func (t *apiTransport) Job(namespace string, name string) (*batchv1.Job, error) 
 	return job, err
 }
 
-func (t *apiTransport) ReplicaSets(namespace v1.Namespace) ([]appsv1.ReplicaSet, error) {
+func (t *apiProvider) ReplicaSets(namespace v1.Namespace) ([]appsv1.ReplicaSet, error) {
 	ctx := context.Background()
 	list, err := t.clientset.AppsV1().ReplicaSets(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -374,7 +374,7 @@ func (t *apiTransport) ReplicaSets(namespace v1.Namespace) ([]appsv1.ReplicaSet,
 	return list.Items, err
 }
 
-func (t *apiTransport) ReplicaSet(namespace string, name string) (*appsv1.ReplicaSet, error) {
+func (t *apiProvider) ReplicaSet(namespace string, name string) (*appsv1.ReplicaSet, error) {
 	ctx := context.Background()
 	replicaset, err := t.clientset.AppsV1().ReplicaSets(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
@@ -383,7 +383,7 @@ func (t *apiTransport) ReplicaSet(namespace string, name string) (*appsv1.Replic
 	return replicaset, err
 }
 
-func (t *apiTransport) DaemonSets(namespace v1.Namespace) ([]appsv1.DaemonSet, error) {
+func (t *apiProvider) DaemonSets(namespace v1.Namespace) ([]appsv1.DaemonSet, error) {
 	ctx := context.Background()
 	list, err := t.clientset.AppsV1().DaemonSets(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -392,7 +392,7 @@ func (t *apiTransport) DaemonSets(namespace v1.Namespace) ([]appsv1.DaemonSet, e
 	return list.Items, err
 }
 
-func (t *apiTransport) DaemonSet(namespace string, name string) (*appsv1.DaemonSet, error) {
+func (t *apiProvider) DaemonSet(namespace string, name string) (*appsv1.DaemonSet, error) {
 	ctx := context.Background()
 	daemonset, err := t.clientset.AppsV1().DaemonSets(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {

@@ -25,7 +25,7 @@ func (p *PlatformResolver) Resolve(t providers.Transport) (*Platform, bool) {
 
 	// if we have a container image use the architecture specified in the transport as it is resolved
 	// using the container image properties
-	tarTransport, ok := t.(*tar.Transport)
+	tarTransport, ok := t.(*tar.Provider)
 	if resolved && ok {
 		pi.Arch = tarTransport.PlatformArchitecture
 

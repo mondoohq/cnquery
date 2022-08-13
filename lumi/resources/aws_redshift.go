@@ -40,7 +40,7 @@ func (r *lumiAwsRedshift) GetClusters() ([]interface{}, error) {
 	return res, nil
 }
 
-func (r *lumiAwsRedshift) getClusters(at *aws_transport.Transport) []*jobpool.Job {
+func (r *lumiAwsRedshift) getClusters(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 
 	account, err := at.Account()

@@ -36,7 +36,7 @@ func (s *lumiAwsSecurityhub) GetHubs() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsSecurityhub) getHubs(at *aws_transport.Transport) []*jobpool.Job {
+func (s *lumiAwsSecurityhub) getHubs(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {

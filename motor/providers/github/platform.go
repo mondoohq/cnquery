@@ -7,7 +7,7 @@ import (
 	"github.com/google/go-github/v43/github"
 )
 
-func (t *Transport) Identifier() (string, error) {
+func (t *Provider) Identifier() (string, error) {
 	// TODO: if no organization is provided, we need to see this from the user perspective
 	orgId := t.opts["organization"]
 	if orgId == "" {
@@ -17,7 +17,7 @@ func (t *Transport) Identifier() (string, error) {
 	return "//platformid.api.mondoo.app/runtime/github/organization/" + orgId, nil
 }
 
-func (t *Transport) Organization() (*github.Organization, error) {
+func (t *Provider) Organization() (*github.Organization, error) {
 	orgId := t.opts["organization"]
 	if orgId != "" {
 		org, _, err := t.Client().Organizations.Get(context.Background(), orgId)
@@ -26,7 +26,7 @@ func (t *Transport) Organization() (*github.Organization, error) {
 	return nil, errors.New("no organization provided")
 }
 
-func (t *Transport) User() (*github.User, error) {
+func (t *Provider) User() (*github.User, error) {
 	userId := t.opts["login"]
 	if userId != "" {
 		user, _, err := t.Client().Users.Get(context.Background(), userId)

@@ -39,7 +39,7 @@ func (a *lumiAwsAutoscaling) GetGroups() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *lumiAwsAutoscaling) getGroups(at *aws_transport.Transport) []*jobpool.Job {
+func (a *lumiAwsAutoscaling) getGroups(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {

@@ -34,7 +34,7 @@ func (d *lumiAwsDms) GetReplicationInstances() ([]interface{}, error) {
 	return jsonToDictSlice(res)
 }
 
-func (d *lumiAwsDms) getReplicationInstances(at *aws_transport.Transport) []*jobpool.Job {
+func (d *lumiAwsDms) getReplicationInstances(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {

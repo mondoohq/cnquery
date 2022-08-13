@@ -18,7 +18,7 @@ func TestListPods(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	transport := k8s.NewMockTransport(mockCtrl)
+	transport := k8s.NewMockKubernetesProvider(mockCtrl)
 
 	podPlatform := &platform.Platform{
 		Name:    "k8s-pod",

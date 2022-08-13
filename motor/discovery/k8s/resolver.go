@@ -139,7 +139,7 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 }
 
 // addSeparateAssets Depending on config options it will search for additional assets which should be listed separately.
-func addSeparateAssets(tc *providers.TransportConfig, transport k8s_transport.Transport, namespacesFilter []string, clusterIdentifier string) ([]*asset.Asset, error) {
+func addSeparateAssets(tc *providers.TransportConfig, transport k8s_transport.KubernetesProvider, namespacesFilter []string, clusterIdentifier string) ([]*asset.Asset, error) {
 	var resolved []*asset.Asset
 
 	// discover deployments

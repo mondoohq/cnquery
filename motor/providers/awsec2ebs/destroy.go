@@ -12,7 +12,7 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/awsec2ebs/custommount"
 )
 
-func (t *Ec2EbsTransport) UnmountVolumeFromInstance() error {
+func (t *Provider) UnmountVolumeFromInstance() error {
 	log.Info().Msg("unmount volume")
 	if err := custommount.Unmount(t.tmpInfo.scanDir); err != nil {
 		log.Error().Err(err).Msg("failed to unmount dir")
@@ -21,7 +21,7 @@ func (t *Ec2EbsTransport) UnmountVolumeFromInstance() error {
 	return nil
 }
 
-func (t *Ec2EbsTransport) DetachVolumeFromInstance(ctx context.Context, volume *VolumeId) error {
+func (t *Provider) DetachVolumeFromInstance(ctx context.Context, volume *VolumeId) error {
 	log.Info().Msg("detach volume")
 	res, err := t.scannerRegionEc2svc.DetachVolume(ctx, &ec2.DetachVolumeInput{
 		Device: aws.String(t.tmpInfo.volumeAttachmentLoc), VolumeId: &volume.Id,
@@ -47,13 +47,13 @@ func (t *Ec2EbsTransport) DetachVolumeFromInstance(ctx context.Context, volume *
 	return nil
 }
 
-func (t *Ec2EbsTransport) DeleteCreatedVolume(ctx context.Context, volume *VolumeId) error {
+func (t *Provider) DeleteCreatedVolume(ctx context.Context, volume *VolumeId) error {
 	log.Info().Msg("delete created volume")
 	_, err := t.scannerRegionEc2svc.DeleteVolume(ctx, &ec2.DeleteVolumeInput{VolumeId: &volume.Id})
 	return err
 }
 
-func (t *Ec2EbsTransport) RemoveCreatedDir() error {
+func (t *Provider) RemoveCreatedDir() error {
 	log.Info().Msg("remove created dir")
 	return os.RemoveAll(t.tmpInfo.scanDir)
 }

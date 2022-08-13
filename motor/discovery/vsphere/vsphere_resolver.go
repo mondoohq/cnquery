@@ -41,7 +41,7 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 	}
 	defer m.Close()
 
-	trans, ok := m.Transport.(*vsphere.Transport)
+	trans, ok := m.Transport.(*vsphere.Provider)
 	if !ok {
 		return nil, errors.New("could not initialize vsphere transport")
 	}

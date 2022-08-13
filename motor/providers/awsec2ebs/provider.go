@@ -19,11 +19,11 @@ import (
 )
 
 var (
-	_ providers.Transport                   = (*Ec2EbsTransport)(nil)
-	_ providers.TransportPlatformIdentifier = (*Ec2EbsTransport)(nil)
+	_ providers.Transport                   = (*Provider)(nil)
+	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
 )
 
-func New(tc *providers.TransportConfig) (*Ec2EbsTransport, error) {
+func New(tc *providers.TransportConfig) (*Provider, error) {
 	rand.Seed(time.Now().UnixNano())
 
 	// get aws config
@@ -38,7 +38,7 @@ func New(tc *providers.TransportConfig) (*Ec2EbsTransport, error) {
 	}
 	i, err := RawInstanceInfo(cfg)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not load instance info: aws-ec2-ebs transport only valid on ec2 instances")
+		return nil, errors.Wrap(err, "could not load instance info: aws-ec2-ebs provider only valid on ec2 instances")
 	}
 	// ec2 client for the scanner region
 	cfg.Region = i.Region
@@ -51,8 +51,8 @@ func New(tc *providers.TransportConfig) (*Ec2EbsTransport, error) {
 
 	shell := []string{"sh", "-c"}
 
-	// 2. create transport
-	t := &Ec2EbsTransport{
+	// 2. create provider instance
+	t := &Provider{
 		config: cfg,
 		opts:   tc.Options,
 		target: TargetInfo{
@@ -116,8 +116,8 @@ func New(tc *providers.TransportConfig) (*Ec2EbsTransport, error) {
 		return t, err
 	}
 
-	// 5. create and initialize fs transport (nested transport)
-	fsTransport, err := fs.NewWithClose(&providers.TransportConfig{
+	// 5. create and initialize fs provider (we nest it)
+	fsProvider, err := fs.NewWithClose(&providers.TransportConfig{
 		Path:       t.tmpInfo.scanDir,
 		Backend:    providers.ProviderType_FS,
 		PlatformId: tc.PlatformId,
@@ -126,14 +126,14 @@ func New(tc *providers.TransportConfig) (*Ec2EbsTransport, error) {
 	if err != nil {
 		return nil, err
 	}
-	t.FsTransport = fsTransport
+	t.FsProvider = fsProvider
 	return t, nil
 }
 
 const NoSetup = "no-setup"
 
-type Ec2EbsTransport struct {
-	FsTransport         *fs.FsTransport
+type Provider struct {
+	FsProvider          *fs.Provider
 	scannerRegionEc2svc *ec2.Client
 	targetRegionEc2svc  *ec2.Client
 	config              aws.Config
@@ -159,62 +159,62 @@ type tmpInfo struct {
 	volumeAttachmentLoc string    // where we tell AWS to attach the volume; it doesn't necessarily get attached there, but we have to reference this same location when detaching
 }
 
-func (t *Ec2EbsTransport) RunCommand(command string) (*providers.Command, error) {
-	c := shared.Command{Shell: t.shell}
+func (p *Provider) RunCommand(command string) (*providers.Command, error) {
+	c := shared.Command{Shell: p.shell}
 	args := []string{}
 
 	res, err := c.Exec(command, args)
 	return res, err
 }
 
-func (t *Ec2EbsTransport) FileInfo(path string) (providers.FileInfoDetails, error) {
+func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
 	return providers.FileInfoDetails{}, errors.New("FileInfo not implemented")
 }
 
-func (t *Ec2EbsTransport) FS() afero.Fs {
-	return t.FsTransport.FS()
+func (p *Provider) FS() afero.Fs {
+	return p.FsProvider.FS()
 }
 
-func (t *Ec2EbsTransport) Close() {
-	if t.opts != nil {
-		if t.opts[NoSetup] == "true" || t.targetType == EBSTargetSnapshot {
+func (p *Provider) Close() {
+	if p.opts != nil {
+		if p.opts[NoSetup] == "true" || p.targetType == EBSTargetSnapshot {
 			return
 		}
 	}
 	ctx := context.Background()
-	err := t.UnmountVolumeFromInstance()
+	err := p.UnmountVolumeFromInstance()
 	if err != nil {
 		log.Error().Err(err).Msg("unable to unmount volume")
 	}
-	err = t.DetachVolumeFromInstance(ctx, t.tmpInfo.scanVolumeId)
+	err = p.DetachVolumeFromInstance(ctx, p.tmpInfo.scanVolumeId)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to detach volume")
 	}
-	err = t.DeleteCreatedVolume(ctx, t.tmpInfo.scanVolumeId)
+	err = p.DeleteCreatedVolume(ctx, p.tmpInfo.scanVolumeId)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to delete volume")
 	}
-	err = t.RemoveCreatedDir()
+	err = p.RemoveCreatedDir()
 	if err != nil {
 		log.Error().Err(err).Msg("unable to remove dir")
 	}
 }
 
-func (t *Ec2EbsTransport) Capabilities() providers.Capabilities {
+func (p *Provider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{
 		providers.Capability_Aws_Ebs,
 	}
 }
 
-func (t *Ec2EbsTransport) Kind() providers.Kind {
+func (p *Provider) Kind() providers.Kind {
 	return providers.Kind_KIND_API
 }
 
-func (t *Ec2EbsTransport) Runtime() string {
+func (p *Provider) Runtime() string {
 	return providers.RUNTIME_AWS_EC2_EBS
 }
 
-func (t *Ec2EbsTransport) PlatformIdDetectors() []providers.PlatformIdDetector {
+func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	return []providers.PlatformIdDetector{
 		providers.TransportPlatformIdentifierDetector,
 	}
@@ -230,8 +230,8 @@ func RawInstanceInfo(cfg aws.Config) (*imds.InstanceIdentityDocument, error) {
 	return &doc.InstanceIdentityDocument, nil
 }
 
-func (t *Ec2EbsTransport) Identifier() (string, error) {
-	return t.target.PlatformId, nil
+func (p *Provider) Identifier() (string, error) {
+	return p.target.PlatformId, nil
 }
 
 func GetRawInstanceInfo(profile string) (*imds.InstanceIdentityDocument, error) {
@@ -248,7 +248,7 @@ func GetRawInstanceInfo(profile string) (*imds.InstanceIdentityDocument, error) 
 	}
 	i, err := RawInstanceInfo(cfg)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not load instance info: aws-ec2-ebs transport only valid on ec2 instances")
+		return nil, errors.Wrap(err, "could not load instance info: aws-ec2-ebs provider is only valid on ec2 instances")
 	}
 	return i, nil
 }

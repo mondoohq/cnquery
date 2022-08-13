@@ -13,7 +13,7 @@ import (
 
 func Detect(t providers.Transport, p *platform.Platform) ([]string, error) {
 	// if we are using an ssh connection we can read the hostkey from the connection
-	sshTransport, ok := t.(*ssh_transport.SSHTransport)
+	sshTransport, ok := t.(*ssh_transport.Provider)
 	if ok {
 		identifier, err := sshTransport.Identifier()
 		if err != nil {

@@ -10,7 +10,7 @@ import (
 )
 
 // load files from a tar stream
-func Load(m *mock.Transport, stream io.Reader) error {
+func Load(m *mock.Provider, stream io.Reader) error {
 	tr := tar.NewReader(stream)
 	for {
 		h, err := tr.Next()

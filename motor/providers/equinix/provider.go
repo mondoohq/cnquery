@@ -9,19 +9,19 @@ import (
 )
 
 var (
-	_ providers.Transport                   = (*Transport)(nil)
-	_ providers.TransportPlatformIdentifier = (*Transport)(nil)
+	_ providers.Transport                   = (*Provider)(nil)
+	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
 )
 
-func New(tc *providers.TransportConfig) (*Transport, error) {
+func New(tc *providers.TransportConfig) (*Provider, error) {
 	if tc.Backend != providers.ProviderType_EQUINIX_METAL {
-		return nil, errors.New("backend is not supported for equinix transport")
+		return nil, providers.ErrProviderTypeDoesNotMatch
 	}
 
 	projectId := tc.Options["projectID"]
 
 	if tc.Options == nil || len(projectId) == 0 {
-		return nil, errors.New("equinix backend requires an project id")
+		return nil, errors.New("equinix provider requires an project id")
 	}
 
 	c, err := packngo.NewClient()
@@ -51,57 +51,57 @@ func New(tc *providers.TransportConfig) (*Transport, error) {
 		return nil, errors.Wrap(err, "could not find the requested equinix project: "+projectId)
 	}
 
-	return &Transport{
+	return &Provider{
 		client:    c,
 		projectId: projectId,
 		project:   project,
 	}, nil
 }
 
-type Transport struct {
+type Provider struct {
 	client    *packngo.Client
 	projectId string
 	project   *packngo.Project
 }
 
-func (t *Transport) RunCommand(command string) (*providers.Command, error) {
-	return nil, errors.New("equinix does not implement RunCommand")
+func (p *Provider) RunCommand(command string) (*providers.Command, error) {
+	return nil, providers.ErrRunCommandNotImplemented
 }
 
-func (t *Transport) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, errors.New("equinix does not implement FileInfo")
+func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
+	return providers.FileInfoDetails{}, providers.ErrFileInfoNotImplemented
 }
 
-func (t *Transport) FS() afero.Fs {
+func (p *Provider) FS() afero.Fs {
 	return &fsutil.NoFs{}
 }
 
-func (t *Transport) Close() {}
+func (p *Provider) Close() {}
 
-func (t *Transport) Capabilities() providers.Capabilities {
+func (p *Provider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{
 		providers.Capability_Equinix,
 	}
 }
 
-func (t *Transport) Kind() providers.Kind {
+func (p *Provider) Kind() providers.Kind {
 	return providers.Kind_KIND_API
 }
 
-func (t *Transport) Runtime() string {
+func (p *Provider) Runtime() string {
 	return providers.RUNTIME_EQUINIX_METAL
 }
 
-func (t *Transport) PlatformIdDetectors() []providers.PlatformIdDetector {
+func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	return []providers.PlatformIdDetector{
 		providers.TransportPlatformIdentifierDetector,
 	}
 }
 
-func (t *Transport) Client() *packngo.Client {
-	return t.client
+func (p *Provider) Client() *packngo.Client {
+	return p.client
 }
 
-func (t *Transport) Project() *packngo.Project {
-	return t.project
+func (p *Provider) Project() *packngo.Project {
+	return p.project
 }

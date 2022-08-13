@@ -14,7 +14,7 @@ import (
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
-var _ providers.Transport = (*WinrmTransport)(nil)
+var _ providers.Transport = (*Provider)(nil)
 
 func VerifyConfig(endpoint *providers.TransportConfig) (*winrm.Endpoint, error) {
 	if endpoint.Backend != providers.ProviderType_WINRM {
@@ -52,7 +52,7 @@ func DefaultConfig(endpoint *winrm.Endpoint) *winrm.Endpoint {
 }
 
 // New creates a winrm client and establishes a connection to verify the connection
-func New(tc *providers.TransportConfig) (*WinrmTransport, error) {
+func New(tc *providers.TransportConfig) (*Provider, error) {
 	// ensure all required configs are set
 	winrmEndpoint, err := VerifyConfig(tc)
 	if err != nil {
@@ -89,7 +89,7 @@ func New(tc *providers.TransportConfig) (*WinrmTransport, error) {
 	}
 
 	log.Debug().Msg("winrm> connection established")
-	return &WinrmTransport{
+	return &Provider{
 		Endpoint: winrmEndpoint,
 		Client:   client,
 		kind:     tc.Kind,
@@ -97,7 +97,7 @@ func New(tc *providers.TransportConfig) (*WinrmTransport, error) {
 	}, nil
 }
 
-type WinrmTransport struct {
+type Provider struct {
 	Endpoint *winrm.Endpoint
 	Client   *winrm.Client
 	kind     providers.Kind
@@ -105,8 +105,8 @@ type WinrmTransport struct {
 	fs       afero.Fs
 }
 
-func (t *WinrmTransport) RunCommand(command string) (*providers.Command, error) {
-	log.Debug().Str("command", command).Str("transport", "winrm").Msg("winrm> run command")
+func (p *Provider) RunCommand(command string) (*providers.Command, error) {
+	log.Debug().Str("command", command).Str("provider", "winrm").Msg("winrm> run command")
 
 	stdoutBuffer := &bytes.Buffer{}
 	stderrBuffer := &bytes.Buffer{}
@@ -118,7 +118,7 @@ func (t *WinrmTransport) RunCommand(command string) (*providers.Command, error) 
 	}
 
 	// Note: winrm does not return err of the command was executed with a non-zero exit code
-	exitCode, err := t.Client.Run(command, stdoutBuffer, stderrBuffer)
+	exitCode, err := p.Client.Run(command, stdoutBuffer, stderrBuffer)
 	if err != nil {
 		log.Error().Err(err).Str("command", command).Msg("could not execute winrm command")
 		return mcmd, err
@@ -128,8 +128,8 @@ func (t *WinrmTransport) RunCommand(command string) (*providers.Command, error) 
 	return mcmd, nil
 }
 
-func (t *WinrmTransport) FileInfo(path string) (providers.FileInfoDetails, error) {
-	fs := t.FS()
+func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
+	fs := p.FS()
 	afs := &afero.Afero{Fs: fs}
 	stat, err := afs.Stat(path)
 	if err != nil {
@@ -148,33 +148,33 @@ func (t *WinrmTransport) FileInfo(path string) (providers.FileInfoDetails, error
 	}, nil
 }
 
-func (t *WinrmTransport) FS() afero.Fs {
-	if t.fs == nil {
-		t.fs = cat.New(t)
+func (p *Provider) FS() afero.Fs {
+	if p.fs == nil {
+		p.fs = cat.New(p)
 	}
-	return t.fs
+	return p.fs
 }
 
-func (t *WinrmTransport) Close() {
+func (p *Provider) Close() {
 	// nothing to do yet
 }
 
-func (t *WinrmTransport) Capabilities() providers.Capabilities {
+func (p *Provider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{
 		providers.Capability_RunCommand,
 		providers.Capability_File,
 	}
 }
 
-func (t *WinrmTransport) Kind() providers.Kind {
-	return t.kind
+func (p *Provider) Kind() providers.Kind {
+	return p.kind
 }
 
-func (t *WinrmTransport) Runtime() string {
-	return t.runtime
+func (p *Provider) Runtime() string {
+	return p.runtime
 }
 
-func (t *WinrmTransport) PlatformIdDetectors() []providers.PlatformIdDetector {
+func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	return []providers.PlatformIdDetector{
 		providers.HostnameDetector,
 		providers.CloudDetector,

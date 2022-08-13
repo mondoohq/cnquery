@@ -11,8 +11,8 @@ import (
 	equinix_transport "go.mondoo.io/mondoo/motor/providers/equinix"
 )
 
-func equinixtransport(t providers.Transport) (*equinix_transport.Transport, error) {
-	at, ok := t.(*equinix_transport.Transport)
+func equinixtransport(t providers.Transport) (*equinix_transport.Provider, error) {
+	at, ok := t.(*equinix_transport.Provider)
 	if !ok {
 		return nil, errors.New("equinix resource is not supported on this transport")
 	}

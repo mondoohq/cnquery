@@ -36,7 +36,7 @@ func (s *lumiAwsSagemaker) GetEndpoints() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsSagemaker) getEndpoints(at *aws_transport.Transport) []*jobpool.Job {
+func (s *lumiAwsSagemaker) getEndpoints(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -129,7 +129,7 @@ func (s *lumiAwsSagemaker) GetNotebookInstances() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsSagemaker) getNotebookInstances(at *aws_transport.Transport) []*jobpool.Job {
+func (s *lumiAwsSagemaker) getNotebookInstances(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	at, err := awstransport(s.MotorRuntime.Motor.Transport)
 	if err != nil {

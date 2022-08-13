@@ -45,7 +45,7 @@ var (
 	}
 )
 
-func (t *Transport) Auth() (*a.AzureIdentityAuthenticationProvider, error) {
+func (t *Provider) Auth() (*a.AzureIdentityAuthenticationProvider, error) {
 	var credential azcore.TokenCredential
 	var err error
 

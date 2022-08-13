@@ -39,7 +39,7 @@ func NewRecordTransport(trans providers.Transport) (*RecordTransport, error) {
 
 type RecordTransport struct {
 	observe providers.Transport
-	mock    *Transport
+	mock    *Provider
 }
 
 func (t *RecordTransport) Watched() providers.Transport {

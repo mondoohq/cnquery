@@ -10,24 +10,24 @@ import (
 )
 
 var (
-	_ providers.Transport                   = (*Transport)(nil)
-	_ providers.TransportPlatformIdentifier = (*Transport)(nil)
+	_ providers.Transport                   = (*Provider)(nil)
+	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
 )
 
-func New(tc *providers.TransportConfig) (*Transport, error) {
+func New(tc *providers.TransportConfig) (*Provider, error) {
 	port := tc.Port
 	if port == 0 {
 		port = goeapi.UseDefaultPortNum
 	}
 
 	if len(tc.Credentials) == 0 {
-		return nil, errors.New("missing password for arista transport")
+		return nil, errors.New("missing password for arista provider")
 	}
 
 	// search for password secret
 	c, err := vault.GetPassword(tc.Credentials)
 	if err != nil {
-		return nil, errors.New("missing password for arista transport")
+		return nil, errors.New("missing password for arista provider")
 	}
 
 	// NOTE: we explicitly do not support http, since there is no real reason to support http
@@ -39,56 +39,56 @@ func New(tc *providers.TransportConfig) (*Transport, error) {
 		return nil, err
 	}
 
-	return &Transport{
+	return &Provider{
 		node:    node,
 		kind:    tc.Kind,
 		runtime: tc.Runtime,
 	}, nil
 }
 
-type Transport struct {
+type Provider struct {
 	node    *goeapi.Node
 	kind    providers.Kind
 	runtime string
 }
 
-func (t *Transport) RunCommand(command string) (*providers.Command, error) {
-	return nil, errors.New("arista does not implement RunCommand")
+func (p *Provider) RunCommand(command string) (*providers.Command, error) {
+	return nil, errors.New("arista provider does not implement RunCommand")
 }
 
-func (t *Transport) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, errors.New("arista does not implement FileInfo")
+func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
+	return providers.FileInfoDetails{}, errors.New("arista provider does not implement FileInfo")
 }
 
-func (t *Transport) FS() afero.Fs {
+func (p *Provider) FS() afero.Fs {
 	return &fsutil.NoFs{}
 }
 
-func (t *Transport) Close() {}
+func (p *Provider) Close() {}
 
-func (t *Transport) Capabilities() providers.Capabilities {
+func (p *Provider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{
 		providers.Capability_Arista,
 	}
 }
 
-func (t *Transport) Client() *goeapi.Node {
-	return t.node
+func (p *Provider) Client() *goeapi.Node {
+	return p.node
 }
 
-func (t *Transport) Kind() providers.Kind {
-	return t.kind
+func (p *Provider) Kind() providers.Kind {
+	return p.kind
 }
 
-func (t *Transport) Runtime() string {
-	return t.runtime
+func (p *Provider) Runtime() string {
+	return p.runtime
 }
 
-func (t *Transport) GetVersion() (ShowVersion, error) {
-	return GetVersion(t.node)
+func (p *Provider) GetVersion() (ShowVersion, error) {
+	return GetVersion(p.node)
 }
 
-func (t *Transport) PlatformIdDetectors() []providers.PlatformIdDetector {
+func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	return []providers.PlatformIdDetector{
 		providers.TransportPlatformIdentifierDetector,
 	}

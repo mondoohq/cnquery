@@ -10,7 +10,7 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/awsec2ebs/custommount"
 )
 
-func (t *Ec2EbsTransport) Mount() error {
+func (t *Provider) Mount() error {
 	err := t.CreateScanDir()
 	if err != nil {
 		return err
@@ -30,7 +30,7 @@ func (t *Ec2EbsTransport) Mount() error {
 	return err
 }
 
-func (t *Ec2EbsTransport) CreateScanDir() error {
+func (t *Provider) CreateScanDir() error {
 	log.Info().Msg("create tmp scan dir")
 	dir, err := ioutil.TempDir("", "mondooscan")
 	if err != nil {
@@ -41,7 +41,7 @@ func (t *Ec2EbsTransport) CreateScanDir() error {
 	return nil
 }
 
-func (t *Ec2EbsTransport) GetFsInfo() (*fsInfo, error) {
+func (t *Provider) GetFsInfo() (*fsInfo, error) {
 	log.Info().Msg("search for target volume")
 	cmd, err := t.RunCommand("sudo lsblk -f --json") // replace with mql query once version with lsblk resource is released
 	if err != nil {
@@ -167,7 +167,7 @@ func validateBlockEntryValidAndUnmounted(entry blockdevice) bool {
 	return entry.Uuid != "" && entry.Fstype != "" && entry.Label != "EFI" && entry.Mountpoint == ""
 }
 
-func (t *Ec2EbsTransport) MountVolume(fsInfo *fsInfo) error {
+func (t *Provider) MountVolume(fsInfo *fsInfo) error {
 	log.Info().Msg("mount volume")
 	opts := ""
 	if fsInfo.fstype == "xfs" {

@@ -18,13 +18,13 @@ const (
 )
 
 var (
-	_ providers.Transport                   = (*Transport)(nil)
-	_ providers.TransportPlatformIdentifier = (*Transport)(nil)
+	_ providers.Transport                   = (*Provider)(nil)
+	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
 )
 
-// New create a new Microsoft 365 transport
+// New create a new Microsoft 365 provider
 //
-// At this point, this transports only supports application permissions
+// At this point, this provider only supports application permissions
 // because we are not able to get the user consent on cli yet. Seems like
 // Microsoft is working on some Powershell features that may make it happen.
 //
@@ -35,16 +35,16 @@ var (
 // [How to recognize differences between delegated and application permissions](https://docs.microsoft.com/en-us/azure/active-directory/develop/delegated-and-app-perms)
 // [Authentication and authorization basics for Microsoft Graph](https://docs.microsoft.com/en-us/graph/auth/auth-concepts)
 // [Always check permissions in tokens in an Azure AD protected API](https://joonasw.net/view/always-check-token-permissions-in-aad-protected-api)
-func New(tc *providers.TransportConfig) (*Transport, error) {
+func New(tc *providers.TransportConfig) (*Provider, error) {
 	if tc.Backend != providers.ProviderType_MS365 {
-		return nil, errors.New("backend is not supported for ms365 transport")
+		return nil, providers.ErrProviderTypeDoesNotMatch
 	}
 
 	if len(tc.Credentials) != 1 || tc.Credentials[0] == nil {
-		return nil, errors.New("ms365 backend requires a credentials file, pass json via -i option")
+		return nil, errors.New("ms365 provider requires a credentials file, pass json via -i option")
 	}
 
-	t := &Transport{
+	t := &Provider{
 		tenantID: tc.Options[OptionTenantID],
 		clientID: tc.Options[OptionClientID],
 		// TODO: we want to remove the data report with a proper implementation
@@ -58,7 +58,7 @@ func New(tc *providers.TransportConfig) (*Transport, error) {
 	case vault.CredentialType_pkcs12:
 	case vault.CredentialType_password:
 	default:
-		return nil, errors.New("invalid secret configuration for ms365 transport: " + t.cred.Type.String())
+		return nil, errors.New("invalid secret configuration for ms365 provider: " + t.cred.Type.String())
 	}
 
 	if len(t.tenantID) == 0 {
@@ -76,7 +76,7 @@ func New(tc *providers.TransportConfig) (*Transport, error) {
 	return t, nil
 }
 
-type Transport struct {
+type Provider struct {
 	tenantID                    string
 	clientID                    string
 	cred                        *vault.Credential
@@ -87,10 +87,10 @@ type Transport struct {
 	ms365PowershellReportLoader sync.Mutex
 }
 
-func (t *Transport) MissingRoles(checkRoles ...string) []string {
+func (p *Provider) MissingRoles(checkRoles ...string) []string {
 	missing := []string{}
 	for i := range checkRoles {
-		_, ok := t.rolesMap[checkRoles[i]]
+		_, ok := p.rolesMap[checkRoles[i]]
 		if !ok {
 			missing = append(missing, checkRoles[i])
 		}
@@ -98,39 +98,39 @@ func (t *Transport) MissingRoles(checkRoles ...string) []string {
 	return missing
 }
 
-func (t *Transport) RunCommand(command string) (*providers.Command, error) {
-	return nil, errors.New("ms365 does not implement RunCommand")
+func (p *Provider) RunCommand(command string) (*providers.Command, error) {
+	return nil, providers.ErrRunCommandNotImplemented
 }
 
-func (t *Transport) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, errors.New("ms365 does not implement FileInfo")
+func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
+	return providers.FileInfoDetails{}, providers.ErrFileInfoNotImplemented
 }
 
-func (t *Transport) FS() afero.Fs {
+func (p *Provider) FS() afero.Fs {
 	return &fsutil.NoFs{}
 }
 
-func (t *Transport) Close() {}
+func (p *Provider) Close() {}
 
-func (t *Transport) Capabilities() providers.Capabilities {
+func (p *Provider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{
 		providers.Capability_Microsoft365,
 	}
 }
 
-func (t *Transport) Options() map[string]string {
-	return t.opts
+func (p *Provider) Options() map[string]string {
+	return p.opts
 }
 
-func (t *Transport) Kind() providers.Kind {
+func (p *Provider) Kind() providers.Kind {
 	return providers.Kind_KIND_API
 }
 
-func (t *Transport) Runtime() string {
+func (p *Provider) Runtime() string {
 	return providers.RUNTIME_AZ
 }
 
-func (t *Transport) PlatformIdDetectors() []providers.PlatformIdDetector {
+func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	return []providers.PlatformIdDetector{
 		providers.TransportPlatformIdentifierDetector,
 	}

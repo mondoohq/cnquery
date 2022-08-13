@@ -7,8 +7,8 @@ import (
 	azure_transport "go.mondoo.io/mondoo/motor/providers/azure"
 )
 
-func azuretransport(t providers.Transport) (*azure_transport.Transport, error) {
-	at, ok := t.(*azure_transport.Transport)
+func azuretransport(t providers.Transport) (*azure_transport.Provider, error) {
+	at, ok := t.(*azure_transport.Provider)
 	if !ok {
 		return nil, errors.New("azure resource is not supported on this transport")
 	}

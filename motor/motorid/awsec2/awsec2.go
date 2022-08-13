@@ -16,7 +16,7 @@ type InstanceIdentifier interface {
 }
 
 func Resolve(t providers.Transport, p *platform.Platform) (InstanceIdentifier, error) {
-	_, ok := t.(*local.LocalTransport)
+	_, ok := t.(*local.Provider)
 	if ok {
 		cfg, err := config.LoadDefaultConfig(context.Background())
 		if err != nil {

@@ -74,7 +74,7 @@ func (s *lumiAwsEc2) GetNetworkAcls() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getNetworkACLs(at *aws_transport.Transport) []*jobpool.Job {
+func (s *lumiAwsEc2) getNetworkACLs(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 
 	account, err := at.Account()
@@ -221,7 +221,7 @@ func (s *lumiAwsEc2Securitygroup) GetIsAttachedToNetworkInterface() (bool, error
 	return false, nil
 }
 
-func (s *lumiAwsEc2) getSecurityGroups(at *aws_transport.Transport) []*jobpool.Job {
+func (s *lumiAwsEc2) getSecurityGroups(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 
 	account, err := at.Account()
@@ -371,7 +371,7 @@ func (s *lumiAwsEc2) GetEbsEncryptionByDefault() (map[string]interface{}, error)
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getEbsEncryptionPerRegion(at *aws_transport.Transport) []*jobpool.Job {
+func (s *lumiAwsEc2) getEbsEncryptionPerRegion(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 
 	regions, err := at.GetRegions()
@@ -466,7 +466,7 @@ func (s *lumiAwsEc2) getImdsv1Instances(ctx context.Context, svc *ec2.Client, fi
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getInstances(at *aws_transport.Transport) []*jobpool.Job {
+func (s *lumiAwsEc2) getInstances(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -863,7 +863,7 @@ func (s *lumiAwsEc2) GetVolumes() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getVolumes(at *aws_transport.Transport) []*jobpool.Job {
+func (s *lumiAwsEc2) getVolumes(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 
 	regions, err := at.GetRegions()
@@ -950,7 +950,7 @@ func (s *lumiAwsEc2) GetVpnConnections() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getVpnConnections(at *aws_transport.Transport) []*jobpool.Job {
+func (s *lumiAwsEc2) getVpnConnections(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -1021,7 +1021,7 @@ func (s *lumiAwsEc2) GetSnapshots() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getSnapshots(at *aws_transport.Transport) []*jobpool.Job {
+func (s *lumiAwsEc2) getSnapshots(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -1116,7 +1116,7 @@ func (s *lumiAwsEc2) GetInternetGateways() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getInternetGateways(at *aws_transport.Transport) []*jobpool.Job {
+func (s *lumiAwsEc2) getInternetGateways(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	at, err := awstransport(s.MotorRuntime.Motor.Transport)
 	if err != nil {

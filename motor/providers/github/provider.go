@@ -16,11 +16,11 @@ import (
 )
 
 var (
-	_ providers.Transport                   = (*Transport)(nil)
-	_ providers.TransportPlatformIdentifier = (*Transport)(nil)
+	_ providers.Transport                   = (*Provider)(nil)
+	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
 )
 
-func New(tc *providers.TransportConfig) (*Transport, error) {
+func New(tc *providers.TransportConfig) (*Provider, error) {
 	// check if the token was provided by the option. This way is deprecated since it does not pass the token as secret
 	token := tc.Options["token"]
 
@@ -36,7 +36,7 @@ func New(tc *providers.TransportConfig) (*Transport, error) {
 			if cred.Type == vault.CredentialType_password {
 				token = string(cred.Secret)
 			} else {
-				log.Warn().Str("credential-type", cred.Type.String()).Msg("unsupported credential type for GitHub transport")
+				log.Warn().Str("credential-type", cred.Type.String()).Msg("unsupported credential type for GitHub provider")
 			}
 		}
 	}
@@ -56,51 +56,51 @@ func New(tc *providers.TransportConfig) (*Transport, error) {
 
 	client := github.NewClient(oauthClient)
 
-	return &Transport{
+	return &Provider{
 		client: client,
 		opts:   tc.Options,
 	}, nil
 }
 
-type Transport struct {
+type Provider struct {
 	client *github.Client
 	opts   map[string]string
 }
 
-func (t *Transport) RunCommand(command string) (*providers.Command, error) {
-	return nil, errors.New("GitHub does not implement RunCommand")
+func (p *Provider) RunCommand(command string) (*providers.Command, error) {
+	return nil, providers.ErrRunCommandNotImplemented
 }
 
-func (t *Transport) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, errors.New("GitHub does not implement FileInfo")
+func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
+	return providers.FileInfoDetails{}, providers.ErrFileInfoNotImplemented
 }
 
-func (t *Transport) FS() afero.Fs {
+func (p *Provider) FS() afero.Fs {
 	return &fsutil.NoFs{}
 }
 
-func (t *Transport) Close() {}
+func (p *Provider) Close() {}
 
-func (t *Transport) Capabilities() providers.Capabilities {
+func (p *Provider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{
 		providers.Capability_Github,
 	}
 }
 
-func (t *Transport) Kind() providers.Kind {
+func (p *Provider) Kind() providers.Kind {
 	return providers.Kind_KIND_API
 }
 
-func (t *Transport) Runtime() string {
+func (p *Provider) Runtime() string {
 	return ""
 }
 
-func (t *Transport) PlatformIdDetectors() []providers.PlatformIdDetector {
+func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	return []providers.PlatformIdDetector{
 		providers.TransportPlatformIdentifierDetector,
 	}
 }
 
-func (t *Transport) Client() *github.Client {
-	return t.client
+func (p *Provider) Client() *github.Client {
+	return p.client
 }

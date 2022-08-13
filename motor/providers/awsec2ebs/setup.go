@@ -15,7 +15,7 @@ import (
 	motoraws "go.mondoo.io/mondoo/motor/discovery/aws"
 )
 
-func (t *Ec2EbsTransport) Validate(ctx context.Context) (*types.Instance, *VolumeId, *SnapshotId, error) {
+func (t *Provider) Validate(ctx context.Context) (*types.Instance, *VolumeId, *SnapshotId, error) {
 	target := t.target
 	switch t.targetType {
 	case EBSTargetInstance:
@@ -58,7 +58,7 @@ func (t *Ec2EbsTransport) Validate(ctx context.Context) (*types.Instance, *Volum
 	return nil, nil, nil, errors.New("cannot validate; unrecognized ebs target")
 }
 
-func (t *Ec2EbsTransport) SetupForTargetVolume(ctx context.Context, volume VolumeId) (bool, error) {
+func (t *Provider) SetupForTargetVolume(ctx context.Context, volume VolumeId) (bool, error) {
 	log.Debug().Interface("volume", volume).Msg("setup for target volume")
 	if !volume.IsAvailable {
 		return t.SetupForTargetVolumeUnavailable(ctx, volume)
@@ -67,7 +67,7 @@ func (t *Ec2EbsTransport) SetupForTargetVolume(ctx context.Context, volume Volum
 	return t.AttachVolumeToInstance(ctx, volume)
 }
 
-func (t *Ec2EbsTransport) SetupForTargetVolumeUnavailable(ctx context.Context, volume VolumeId) (bool, error) {
+func (t *Provider) SetupForTargetVolumeUnavailable(ctx context.Context, volume VolumeId) (bool, error) {
 	found, snapId, err := t.FindRecentSnapshotForVolume(ctx, volume)
 	if err != nil {
 		// only log the error here, this is not a blocker
@@ -91,7 +91,7 @@ func (t *Ec2EbsTransport) SetupForTargetVolumeUnavailable(ctx context.Context, v
 	return t.AttachVolumeToInstance(ctx, volId)
 }
 
-func (t *Ec2EbsTransport) SetupForTargetSnapshot(ctx context.Context, snapshot SnapshotId) (bool, error) {
+func (t *Provider) SetupForTargetSnapshot(ctx context.Context, snapshot SnapshotId) (bool, error) {
 	log.Debug().Interface("snapshot", snapshot).Msg("setup for target snapshot")
 	snapId, err := t.CopySnapshotToRegion(ctx, snapshot)
 	if err != nil {
@@ -105,7 +105,7 @@ func (t *Ec2EbsTransport) SetupForTargetSnapshot(ctx context.Context, snapshot S
 	return t.AttachVolumeToInstance(ctx, volId)
 }
 
-func (t *Ec2EbsTransport) SetupForTargetInstance(ctx context.Context, instanceinfo *types.Instance) (bool, error) {
+func (t *Provider) SetupForTargetInstance(ctx context.Context, instanceinfo *types.Instance) (bool, error) {
 	log.Debug().Str("instance id", *instanceinfo.InstanceId).Msg("setup for target instance")
 	var err error
 	v, err := t.GetVolumeIdForInstance(ctx, instanceinfo)
@@ -135,7 +135,7 @@ func (t *Ec2EbsTransport) SetupForTargetInstance(ctx context.Context, instancein
 	return t.AttachVolumeToInstance(ctx, volId)
 }
 
-func (t *Ec2EbsTransport) GetVolumeIdForInstance(ctx context.Context, instanceinfo *types.Instance) (VolumeId, error) {
+func (t *Provider) GetVolumeIdForInstance(ctx context.Context, instanceinfo *types.Instance) (VolumeId, error) {
 	i := t.target
 	log.Info().Interface("instance", i).Msg("find volume id")
 
@@ -164,7 +164,7 @@ func GetVolumeIdForInstance(instanceinfo *types.Instance) *string {
 	return nil
 }
 
-func (t *Ec2EbsTransport) FindRecentSnapshotForVolume(ctx context.Context, v VolumeId) (bool, SnapshotId, error) {
+func (t *Provider) FindRecentSnapshotForVolume(ctx context.Context, v VolumeId) (bool, SnapshotId, error) {
 	log.Info().Msg("find recent snapshot")
 	res, err := t.scannerRegionEc2svc.DescribeSnapshots(ctx,
 		&ec2.DescribeSnapshotsInput{Filters: []types.Filter{
@@ -203,7 +203,7 @@ func (t *Ec2EbsTransport) FindRecentSnapshotForVolume(ctx context.Context, v Vol
 	return false, SnapshotId{}, nil
 }
 
-func (t *Ec2EbsTransport) CreateSnapshotFromVolume(ctx context.Context, v VolumeId) (SnapshotId, error) {
+func (t *Provider) CreateSnapshotFromVolume(ctx context.Context, v VolumeId) (SnapshotId, error) {
 	log.Info().Msg("create snapshot")
 	// snapshot the volume
 	// use region from volume for aws config
@@ -245,7 +245,7 @@ func CreateSnapshotFromVolume(ctx context.Context, cfg aws.Config, volID string,
 	return res.SnapshotId, nil
 }
 
-func (t *Ec2EbsTransport) CopySnapshotToRegion(ctx context.Context, snapshot SnapshotId) (SnapshotId, error) {
+func (t *Provider) CopySnapshotToRegion(ctx context.Context, snapshot SnapshotId) (SnapshotId, error) {
 	log.Info().Str("snapshot", snapshot.Region).Str("scanner instance", t.scannerInstance.Region).Msg("checking snapshot region")
 	if snapshot.Region == t.scannerInstance.Region {
 		// we only need to copy the snapshot to the scanner region if it is not already in the same region
@@ -277,7 +277,7 @@ func (t *Ec2EbsTransport) CopySnapshotToRegion(ctx context.Context, snapshot Sna
 	return SnapshotId{Id: *res.SnapshotId, Region: t.config.Region, Account: t.scannerInstance.Account}, nil
 }
 
-func (t *Ec2EbsTransport) CreateVolumeFromSnapshot(ctx context.Context, snapshot SnapshotId) (VolumeId, error) {
+func (t *Provider) CreateVolumeFromSnapshot(ctx context.Context, snapshot SnapshotId) (VolumeId, error) {
 	log.Info().Msg("create volume")
 	var vol VolumeId
 
@@ -355,7 +355,7 @@ func AttachVolume(ctx context.Context, ec2svc *ec2.Client, location string, volI
 	return location, res.State, nil
 }
 
-func (t *Ec2EbsTransport) AttachVolumeToInstance(ctx context.Context, volume VolumeId) (bool, error) {
+func (t *Provider) AttachVolumeToInstance(ctx context.Context, volume VolumeId) (bool, error) {
 	log.Info().Str("volume id", volume.Id).Msg("attach volume")
 	t.tmpInfo.volumeAttachmentLoc = newVolumeAttachmentLoc()
 	ready := false

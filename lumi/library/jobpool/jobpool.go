@@ -31,7 +31,7 @@ in the function that actually calls aws, the return object must be a slice of jo
 
 func (s *lumiAwsEc2) getThingsFromAWS() []*jobpool.Job {
 	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(s.Runtime.Motor.Transport)
+	at, err := awstransport(s.Runtime.Motor.Provider)
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -117,7 +117,6 @@ func (p *Pool) GetErrors() error {
 
 // Run runs all work within the pool and blocks until it's finished.
 func (p *Pool) Run() {
-
 	for i := 0; i < p.concurrency; i++ {
 		go p.work()
 	}

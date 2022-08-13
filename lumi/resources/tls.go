@@ -19,7 +19,7 @@ func (s *lumiTls) init(args *lumi.Args) (*lumi.Args, Tls, error) {
 	var fqdn string
 	var port int64
 
-	if transport, ok := s.MotorRuntime.Motor.Transport.(*network.Transport); ok {
+	if transport, ok := s.MotorRuntime.Motor.Transport.(*network.Provider); ok {
 		fqdn = transport.FQDN
 		port = int64(transport.Port)
 		if port == 0 {

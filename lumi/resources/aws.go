@@ -28,8 +28,8 @@ func (s *lumiAws) GetRegions() ([]interface{}, error) {
 	return res, nil
 }
 
-func awstransport(t providers.Transport) (*aws_transport.Transport, error) {
-	at, ok := t.(*aws_transport.Transport)
+func awstransport(t providers.Transport) (*aws_transport.Provider, error) {
+	at, ok := t.(*aws_transport.Provider)
 	if !ok {
 		return nil, errors.New("aws resource is not supported on this transport; please run with -t aws")
 	}

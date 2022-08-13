@@ -12,7 +12,7 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/tar"
 )
 
-type ContainerTransport interface {
+type ContainerProvider interface {
 	providers.Transport
 	providers.TransportPlatformIdentifier
 	Labels() map[string]string
@@ -20,7 +20,7 @@ type ContainerTransport interface {
 }
 
 // NewContainerRegistryImage loads a container image from a remote registry
-func NewContainerRegistryImage(tc *providers.TransportConfig) (ContainerTransport, error) {
+func NewContainerRegistryImage(tc *providers.TransportConfig) (ContainerProvider, error) {
 	ref, err := name.ParseReference(tc.Host, name.WeakValidation)
 	if err == nil {
 		log.Debug().Str("ref", ref.Name()).Msg("found valid container registry reference")
@@ -61,7 +61,7 @@ func NewContainerRegistryImage(tc *providers.TransportConfig) (ContainerTranspor
 	return nil, err
 }
 
-func NewDockerEngineContainer(tc *providers.TransportConfig) (ContainerTransport, error) {
+func NewDockerEngineContainer(tc *providers.TransportConfig) (ContainerProvider, error) {
 	// could be an image id/name, container id/name or a short reference to an image in docker engine
 	ded, err := docker_discovery.NewDockerEngineDiscovery()
 	if err != nil {
@@ -75,28 +75,28 @@ func NewDockerEngineContainer(tc *providers.TransportConfig) (ContainerTransport
 
 	if ci.Running {
 		log.Debug().Msg("found running container " + ci.ID)
-		transport, err := docker_engine.New(ci.ID)
+		p, err := docker_engine.New(ci.ID)
 		if err != nil {
 			return nil, err
 		}
-		transport.PlatformIdentifier = containerid.MondooContainerID(ci.ID)
-		transport.Metadata.Name = containerid.ShortContainerImageID(ci.ID)
-		transport.Metadata.Labels = ci.Labels
-		return transport, nil
+		p.PlatformIdentifier = containerid.MondooContainerID(ci.ID)
+		p.Metadata.Name = containerid.ShortContainerImageID(ci.ID)
+		p.Metadata.Labels = ci.Labels
+		return p, nil
 	} else {
 		log.Debug().Msg("found stopped container " + ci.ID)
-		transport, err := docker_snapshot.NewFromDockerEngine(ci.ID)
+		p, err := docker_snapshot.NewFromDockerEngine(ci.ID)
 		if err != nil {
 			return nil, err
 		}
-		transport.PlatformIdentifier = containerid.MondooContainerID(ci.ID)
-		transport.Metadata.Name = containerid.ShortContainerImageID(ci.ID)
-		transport.Metadata.Labels = ci.Labels
-		return transport, nil
+		p.PlatformIdentifier = containerid.MondooContainerID(ci.ID)
+		p.Metadata.Name = containerid.ShortContainerImageID(ci.ID)
+		p.Metadata.Labels = ci.Labels
+		return p, nil
 	}
 }
 
-func NewDockerEngineImage(endpoint *providers.TransportConfig) (ContainerTransport, error) {
+func NewDockerEngineImage(endpoint *providers.TransportConfig) (ContainerProvider, error) {
 	// could be an image id/name, container id/name or a short reference to an image in docker engine
 	ded, err := docker_discovery.NewDockerEngineDiscovery()
 	if err != nil {
@@ -120,12 +120,12 @@ func NewDockerEngineImage(endpoint *providers.TransportConfig) (ContainerTranspo
 		identifier = containerid.MondooContainerImageID(hash.String())
 	}
 
-	transport, err := tar.NewWithReader(rc, nil)
+	p, err := tar.NewWithReader(rc, nil)
 	if err != nil {
 		return nil, err
 	}
-	transport.PlatformIdentifier = identifier
-	transport.Metadata.Name = ii.Name
-	transport.Metadata.Labels = ii.Labels
-	return transport, nil
+	p.PlatformIdentifier = identifier
+	p.Metadata.Name = ii.Name
+	p.Metadata.Labels = ii.Labels
+	return p, nil
 }

@@ -19,8 +19,8 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/terraform"
 )
 
-func terraformtransport(t providers.Transport) (*terraform.Transport, error) {
-	gt, ok := t.(*terraform.Transport)
+func terraformtransport(t providers.Transport) (*terraform.Provider, error) {
+	gt, ok := t.(*terraform.Provider)
 	if !ok {
 		return nil, errors.New("terraform resource is not supported on this transport")
 	}

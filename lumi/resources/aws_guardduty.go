@@ -40,7 +40,7 @@ func (g *lumiAwsGuarddutyDetector) id() (string, error) {
 	return g.Id()
 }
 
-func (g *lumiAwsGuardduty) getDetectors(at *aws_transport.Transport) []*jobpool.Job {
+func (g *lumiAwsGuardduty) getDetectors(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
