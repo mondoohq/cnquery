@@ -19,8 +19,11 @@ func TestDetectLinuxInstance(t *testing.T) {
 	p, err := m.Platform()
 	require.NoError(t, err)
 
-	identifier := Detect(provider, p)
+	identifier, relatedIdentifiers := Detect(provider, p)
+
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/gcp/compute/v1/projects/mondoo-dev-262313/zones/us-central1-a/instances/6001244637815193808", identifier)
+	require.Len(t, relatedIdentifiers, 1)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/gcp/projects/mondoo-dev-262313", relatedIdentifiers[0])
 }
 
 func TestDetectWindowsInstance(t *testing.T) {
@@ -33,8 +36,11 @@ func TestDetectWindowsInstance(t *testing.T) {
 	p, err := m.Platform()
 	require.NoError(t, err)
 
-	identifier := Detect(provider, p)
+	identifier, relatedIdentifiers := Detect(provider, p)
+
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/gcp/compute/v1/projects/mondoo-dev-262313/zones/us-central1-a/instances/5275377306317132843", identifier)
+	require.Len(t, relatedIdentifiers, 1)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/gcp/projects/mondoo-dev-262313", relatedIdentifiers[0])
 }
 
 func TestNoMatch(t *testing.T) {
@@ -47,6 +53,8 @@ func TestNoMatch(t *testing.T) {
 	p, err := m.Platform()
 	require.NoError(t, err)
 
-	identifier := Detect(provider, p)
+	identifier, relatedIdentifiers := Detect(provider, p)
+
 	assert.Empty(t, identifier)
+	assert.Empty(t, relatedIdentifiers)
 }

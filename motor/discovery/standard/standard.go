@@ -62,6 +62,13 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		assetObj.Name = fingerprint.Name
 	}
 
+	for _, pf := range fingerprint.RelatedAssets {
+		assetObj.RelatedAssets = append(assetObj.RelatedAssets, &asset.Asset{
+			Name:        pf.Name,
+			PlatformIds: pf.PlatformIDs,
+		})
+	}
+
 	// use hostname as asset name
 	if p != nil && assetObj.Name == "" {
 		osProvider, isOSProvicer := m.Provider.(os.OperatingSystemProvider)

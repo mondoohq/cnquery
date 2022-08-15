@@ -39,7 +39,9 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/tfstate"
 	"go.mondoo.io/mondoo/motor/discovery/vagrant"
 	"go.mondoo.io/mondoo/motor/discovery/vsphere"
+	"go.mondoo.io/mondoo/motor/motorid"
 	"go.mondoo.io/mondoo/motor/providers"
+	pr "go.mondoo.io/mondoo/motor/providers/resolver"
 	"go.mondoo.io/mondoo/stringx"
 )
 
@@ -174,26 +176,109 @@ func ResolveAsset(ctx context.Context, root *asset.Asset, cfn common.CredentialF
 }
 
 type ResolvedAssets struct {
-	Assets []*asset.Asset
-	Errors map[*asset.Asset]error
+	Assets        []*asset.Asset
+	RelatedAssets []*asset.Asset
+	Errors        map[*asset.Asset]error
 }
 
 func ResolveAssets(ctx context.Context, rootAssets []*asset.Asset, cfn common.CredentialFn, sfn common.QuerySecretFn) ResolvedAssets {
 	resolved := []*asset.Asset{}
+	resolvedMap := map[string]struct{}{}
 	errors := map[*asset.Asset]error{}
+	relatedAssets := []*asset.Asset{}
+	platformIdToAssetMap := map[string]*asset.Asset{}
+
 	for i := range rootAssets {
 		asset := rootAssets[i]
 
 		resolverAssets, err := ResolveAsset(ctx, asset, cfn, sfn)
 		if err != nil {
 			errors[asset] = err
+			continue
+		}
+
+		for _, resolvedAsset := range resolverAssets {
+			for _, platformId := range resolvedAsset.PlatformIds {
+				if platformId != "" {
+					platformIdToAssetMap[platformId] = asset
+					resolvedMap[platformId] = struct{}{}
+				}
+			}
+
+			for _, a := range resolvedAsset.RelatedAssets {
+				relatedAssets = append(relatedAssets, a)
+			}
 		}
 
 		resolved = append(resolved, resolverAssets...)
 	}
 
+	resolveRelatedAssets(ctx, relatedAssets, platformIdToAssetMap, cfn)
+
+	neededRelatedAssets := []*asset.Asset{}
+	for _, a := range relatedAssets {
+		found := false
+		for _, platformId := range a.PlatformIds {
+			if _, ok := resolvedMap[platformId]; ok {
+				found = true
+				break
+			}
+		}
+		if found {
+			continue
+		}
+		neededRelatedAssets = append(neededRelatedAssets, a)
+	}
+
 	return ResolvedAssets{
-		Assets: resolved,
-		Errors: errors,
+		Assets:        resolved,
+		RelatedAssets: neededRelatedAssets,
+		Errors:        errors,
+	}
+}
+
+func resolveRelatedAssets(ctx context.Context, relatedAssets []*asset.Asset, platformIdToAssetMap map[string]*asset.Asset, cfn common.CredentialFn) {
+	for _, assetObj := range relatedAssets {
+		if len(assetObj.PlatformIds) > 0 {
+			for _, platformId := range assetObj.PlatformIds {
+				platformIdToAssetMap[platformId] = assetObj
+			}
+			continue
+		}
+		if len(assetObj.Connections) > 0 {
+			tc := assetObj.Connections[0]
+			if tc.PlatformId != "" {
+				assetObj.PlatformIds = []string{tc.PlatformId}
+				platformIdToAssetMap[tc.PlatformId] = assetObj
+				continue
+			}
+
+			func() {
+				m, err := pr.NewMotorConnection(ctx, tc, cfn)
+				if err != nil {
+					log.Warn().Err(err).Msg("could not connect to related asset")
+					return
+				}
+				defer m.Close()
+				p, err := m.Platform()
+				if err != nil {
+					log.Warn().Err(err).Msg("could not get related asset platform")
+					return
+				}
+				fingerprint, err := motorid.IdentifyPlatform(m.Provider, p, m.Provider.PlatformIdDetectors())
+				if err != nil {
+					return
+				}
+
+				assetObj.State = asset.State_STATE_ONLINE
+				assetObj.Name = fingerprint.Name
+				assetObj.PlatformIds = fingerprint.PlatformIDs
+				assetObj.Platform = p
+
+				for _, v := range fingerprint.PlatformIDs {
+					platformIdToAssetMap[v] = assetObj
+				}
+			}()
+		}
 	}
 }

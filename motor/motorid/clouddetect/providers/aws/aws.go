@@ -20,7 +20,7 @@ func readValue(provider os.OperatingSystemProvider, fPath string) string {
 	return string(content)
 }
 
-func Detect(provider os.OperatingSystemProvider, p *platform.Platform) string {
+func Detect(provider os.OperatingSystemProvider, p *platform.Platform) (string, []string) {
 	var values []string
 	if p.IsFamily("linux") {
 		// Fetching the data from the smbios manager is slow for some transports
@@ -36,12 +36,12 @@ func Detect(provider os.OperatingSystemProvider, p *platform.Platform) string {
 	} else {
 		mgr, err := smbios.ResolveManager(provider, p)
 		if err != nil {
-			return ""
+			return "", nil
 		}
 		info, err := mgr.Info()
 		if err != nil {
 			log.Debug().Err(err).Msg("failed to query smbios")
-			return ""
+			return "", nil
 		}
 		values = []string{
 			info.SysInfo.Version,
@@ -54,19 +54,19 @@ func Detect(provider os.OperatingSystemProvider, p *platform.Platform) string {
 			mdsvc, err := awsec2.Resolve(provider, p)
 			if err != nil {
 				log.Debug().Err(err).Msg("failed to get metadata resolver")
-				return ""
+				return "", nil
 			}
-			id, err := mdsvc.InstanceID()
+			id, err := mdsvc.Identify()
 			if err != nil {
 				log.Debug().Err(err).
 					Str("transport", provider.Kind().String()).
 					Strs("platform", p.GetFamily()).
 					Msg("failed to get aws platform id")
-				return ""
+				return "", nil
 			}
-			return id
+			return id.InstanceID, []string{id.AccountID}
 		}
 	}
 
-	return ""
+	return "", nil
 }

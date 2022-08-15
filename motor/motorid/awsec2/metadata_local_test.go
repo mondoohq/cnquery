@@ -47,7 +47,8 @@ func TestEC2RoleProviderInstanceIdentityLocal(t *testing.T) {
 	})
 
 	metadata := awsec2.NewLocal(cfg)
-	mrn, err := metadata.InstanceID()
+	ident, err := metadata.Identify()
 	assert.Nil(t, err)
-	assert.Equal(t, "//platformid.api.mondoo.app/runtime/aws/ec2/v1/accounts/123456789012/regions/us-west-2/instances/i-1234567890abcdef0", mrn)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/aws/ec2/v1/accounts/123456789012/regions/us-west-2/instances/i-1234567890abcdef0", ident.InstanceID)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/aws/accounts/123456789012", ident.AccountID)
 }

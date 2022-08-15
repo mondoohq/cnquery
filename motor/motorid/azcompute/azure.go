@@ -17,8 +17,13 @@ type instanceMetadata struct {
 	} `json:"compute"`
 }
 
+type Identity struct {
+	InstanceID string
+	AccountID  string
+}
+
 type InstanceIdentifier interface {
-	InstanceID() (string, error)
+	Identify() (Identity, error)
 }
 
 func Resolve(provider os.OperatingSystemProvider, pf *platform.Platform) (InstanceIdentifier, error) {

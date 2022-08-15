@@ -29,40 +29,43 @@ type CommandInstanceMetadata struct {
 	platform *platform.Platform
 }
 
-func (m *CommandInstanceMetadata) InstanceID() (string, error) {
+func (m *CommandInstanceMetadata) Identify() (Identity, error) {
 	var instanceDocument string
 	switch {
 	case m.platform.IsFamily(platform.FAMILY_UNIX):
 		cmd, err := m.provider.RunCommand("curl --noproxy '*' -H Metadata:true " + identityUrl)
 		if err != nil {
-			return "", err
+			return Identity{}, err
 		}
 		data, err := ioutil.ReadAll(cmd.Stdout)
 		if err != nil {
-			return "", err
+			return Identity{}, err
 		}
 
 		instanceDocument = strings.TrimSpace(string(data))
 	case m.platform.IsFamily(platform.FAMILY_WINDOWS):
 		cmd, err := m.provider.RunCommand(powershell.Encode(metadataIdentityScriptWindows))
 		if err != nil {
-			return "", err
+			return Identity{}, err
 		}
 		data, err := ioutil.ReadAll(cmd.Stdout)
 		if err != nil {
-			return "", err
+			return Identity{}, err
 		}
 
 		instanceDocument = strings.TrimSpace(string(data))
 	default:
-		return "", errors.New("your platform is not supported by azure metadata identifier resource")
+		return Identity{}, errors.New("your platform is not supported by azure metadata identifier resource")
 	}
 
 	// parse into struct
 	md := instanceMetadata{}
 	if err := json.NewDecoder(strings.NewReader(instanceDocument)).Decode(&md); err != nil {
-		return "", errors.Wrap(err, "failed to decode Azure Instance Metadata")
+		return Identity{}, errors.Wrap(err, "failed to decode Azure Instance Metadata")
 	}
 
-	return azure.MondooAzureInstanceID(md.Compute.ResourceID), nil
+	return Identity{
+		InstanceID: azure.MondooAzureInstanceID(md.Compute.ResourceID),
+		AccountID:  "//platformid.api.mondoo.app/runtime/azure/subscriptions/" + md.Compute.SubscriptionID,
+	}, nil
 }

@@ -21,9 +21,11 @@ func TestCommandProviderLinux(t *testing.T) {
 	require.NoError(t, err)
 
 	metadata := azcompute.NewCommandInstanceMetadata(provider, p)
-	mrn, err := metadata.InstanceID()
+	ident, err := metadata.Identify()
+
 	assert.Nil(t, err)
-	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourceGroups/macikgo-test-may-23/providers/Microsoft.Compute/virtualMachines/examplevmname", mrn)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourceGroups/macikgo-test-may-23/providers/Microsoft.Compute/virtualMachines/examplevmname", ident.InstanceID)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx", ident.AccountID)
 }
 
 func TestCommandProviderWindows(t *testing.T) {
@@ -37,7 +39,9 @@ func TestCommandProviderWindows(t *testing.T) {
 	require.NoError(t, err)
 
 	metadata := azcompute.NewCommandInstanceMetadata(provider, p)
-	mrn, err := metadata.InstanceID()
+	ident, err := metadata.Identify()
+
 	assert.Nil(t, err)
-	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourceGroups/macikgo-test-may-23/providers/Microsoft.Compute/virtualMachines/examplevmname", mrn)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourceGroups/macikgo-test-may-23/providers/Microsoft.Compute/virtualMachines/examplevmname", ident.InstanceID)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx", ident.AccountID)
 }

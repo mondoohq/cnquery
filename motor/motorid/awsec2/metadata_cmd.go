@@ -29,8 +29,24 @@ type CommandInstanceMetadata struct {
 	platform *platform.Platform
 }
 
-func (m *CommandInstanceMetadata) InstanceID() (string, error) {
-	var instanceDocument string
+func (m *CommandInstanceMetadata) Identify() (Identity, error) {
+	instanceDocument, err := m.instanceIdentityDocument()
+	if err != nil {
+		return Identity{}, err
+	}
+
+	// parse into struct
+	doc := imds.InstanceIdentityDocument{}
+	if err := json.NewDecoder(strings.NewReader(instanceDocument)).Decode(&doc); err != nil {
+		return Identity{}, errors.Wrap(err, "failed to decode EC2 instance identity document")
+	}
+	return Identity{
+		InstanceID: MondooInstanceID(doc.AccountID, doc.Region, doc.InstanceID),
+		AccountID:  "//platformid.api.mondoo.app/runtime/aws/accounts/" + doc.AccountID,
+	}, nil
+}
+
+func (m *CommandInstanceMetadata) instanceIdentityDocument() (string, error) {
 	switch {
 	case m.platform.IsFamily(platform.FAMILY_UNIX):
 		cmd, err := m.provider.RunCommand("curl " + identityUrl)
@@ -42,7 +58,7 @@ func (m *CommandInstanceMetadata) InstanceID() (string, error) {
 			return "", err
 		}
 
-		instanceDocument = strings.TrimSpace(string(data))
+		return strings.TrimSpace(string(data)), nil
 	case m.platform.IsFamily(platform.FAMILY_WINDOWS):
 		cmd, err := m.provider.RunCommand(powershell.Encode(metadataIdentityScriptWindows))
 		if err != nil {
@@ -53,16 +69,8 @@ func (m *CommandInstanceMetadata) InstanceID() (string, error) {
 			return "", err
 		}
 
-		instanceDocument = strings.TrimSpace(string(data))
+		return strings.TrimSpace(string(data)), nil
 	default:
 		return "", errors.New("your platform is not supported by aws metadata identifier resource")
 	}
-
-	// parse into struct
-	doc := imds.InstanceIdentityDocument{}
-	if err := json.NewDecoder(strings.NewReader(instanceDocument)).Decode(&doc); err != nil {
-		return "", errors.Wrap(err, "failed to decode EC2 instance identity document")
-	}
-
-	return MondooInstanceID(doc.AccountID, doc.Region, doc.InstanceID), nil
 }

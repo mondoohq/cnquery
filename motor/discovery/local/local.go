@@ -61,6 +61,13 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		assetObj.Name = fingerprint.Name
 	}
 
+	for _, pf := range fingerprint.RelatedAssets {
+		assetObj.RelatedAssets = append(assetObj.RelatedAssets, &asset.Asset{
+			Name:        pf.Name,
+			PlatformIds: pf.PlatformIDs,
+		})
+	}
+
 	// use hostname as asset name
 	if p != nil && assetObj.Name == "" {
 		osProvider, isOSProvicer := m.Provider.(os.OperatingSystemProvider)
@@ -78,6 +85,9 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	engineAssets, err := docker_engine.DiscoverDockerEngineAssets(tc)
 	if err != nil {
 		return nil, err
+	}
+	for _, a := range engineAssets {
+		a.RelatedAssets = append(a.RelatedAssets, assetObj)
 	}
 	assetList = append(assetList, engineAssets...)
 

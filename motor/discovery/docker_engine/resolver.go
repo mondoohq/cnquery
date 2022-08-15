@@ -136,6 +136,19 @@ func (k *Resolver) container(ctx context.Context, root *asset.Asset, pCfg *provi
 	}
 
 	pCfg.Backend = providers.ProviderType_DOCKER_ENGINE_CONTAINER
+
+	// TODO: how do we know we're not connecting to docker over
+	// the network and LOCAL_OS is correct
+	relatedAssets := []*asset.Asset{
+		{
+			Connections: []*providers.Config{
+				{
+					Backend: providers.ProviderType_LOCAL_OS,
+				},
+			},
+		},
+	}
+
 	return &asset.Asset{
 		Name:        ci.Name,
 		Connections: []*providers.Config{pCfg},
@@ -144,8 +157,9 @@ func (k *Resolver) container(ctx context.Context, root *asset.Asset, pCfg *provi
 			Kind:    providers.Kind_KIND_CONTAINER,
 			Runtime: providers.RUNTIME_DOCKER_CONTAINER,
 		},
-		State:  asset.State_STATE_ONLINE,
-		Labels: ci.Labels,
+		State:         asset.State_STATE_ONLINE,
+		Labels:        ci.Labels,
+		RelatedAssets: relatedAssets,
 	}, nil
 }
 
@@ -201,6 +215,7 @@ func DiscoverDockerEngineAssets(pCfg *providers.Config) ([]*asset.Asset, error) 
 		if err != nil {
 			return nil, err
 		}
+
 		log.Info().Int("images", len(containerAssets)).Msg("running container search completed")
 		assetList = append(assetList, containerAssets...)
 	}

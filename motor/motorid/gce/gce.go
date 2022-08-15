@@ -14,8 +14,12 @@ func MondooGcpInstanceID(project string, zone string, instanceID uint64) string 
 	return "//platformid.api.mondoo.app/runtime/gcp/compute/v1/projects/" + project + "/zones/" + zone + "/instances/" + strconv.FormatUint(uint64(instanceID), 10)
 }
 
+type Identity struct {
+	InstanceID string
+	ProjectID  string
+}
 type InstanceIdentifier interface {
-	InstanceID() (string, error)
+	Identify() (Identity, error)
 }
 
 func Resolve(provider os.OperatingSystemProvider, pf *platform.Platform) (InstanceIdentifier, error) {

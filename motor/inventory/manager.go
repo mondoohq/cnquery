@@ -19,6 +19,8 @@ import (
 type InventoryManager interface {
 	// GetAssets returns all assets under management
 	GetAssets() []*asset.Asset
+	// GetRelatedAssets returns a list of assets related to those under management
+	GetRelatedAssets() []*asset.Asset
 	// Resolve will iterate over all assets and try to discover all nested assets. After this operation
 	// GetAssets will return the fully resolved list of assets
 	Resolve(ctx context.Context) map[*asset.Asset]error
@@ -77,7 +79,8 @@ func New(opts ...Option) (*inventoryManager, error) {
 }
 
 type inventoryManager struct {
-	assetList []*asset.Asset
+	assetList     []*asset.Asset
+	relatedAssets []*asset.Asset
 	// optional vault set by user
 	vault vault.Vault
 	// internal vault used to store embedded credentials
@@ -165,6 +168,10 @@ func (im *inventoryManager) GetAssets() []*asset.Asset {
 	return im.assetList
 }
 
+func (im *inventoryManager) GetRelatedAssets() []*asset.Asset {
+	return im.relatedAssets
+}
+
 // GetCredential retrieves the credential from vault via the secret id
 func (im *inventoryManager) GetCredential(cred *vault.Credential) (*vault.Credential, error) {
 	if cred == nil {
@@ -230,6 +237,7 @@ func (im *inventoryManager) Resolve(ctx context.Context) map[*asset.Asset]error 
 
 	// TODO: iterate over all resolved assets and match them with the original list and try to find credentials for each asset
 	im.assetList = resolvedAssets.Assets
+	im.relatedAssets = resolvedAssets.RelatedAssets
 
 	log.Info().Int("resolved-assets", len(im.assetList)).Msg("resolved assets")
 	logger.DebugDumpJSON("inventory-resolved-assets", im.assetList)

@@ -48,7 +48,7 @@ func (m *CommandInstanceMetadata) curl(key string, v interface{}) error {
 	return json.NewDecoder(cmd.Stdout).Decode(v)
 }
 
-func (m *CommandInstanceMetadata) InstanceID() (string, error) {
+func (m *CommandInstanceMetadata) Identify() (Identity, error) {
 	switch {
 	case m.platform.IsFamily(platform.FAMILY_UNIX):
 		var projectID string
@@ -56,28 +56,30 @@ func (m *CommandInstanceMetadata) InstanceID() (string, error) {
 		var zoneInfo string
 
 		if err := m.curl("project/project-id", &projectID); err != nil {
-			return "", err
+			return Identity{}, err
 		}
 
 		if err := m.curl("instance/id", &instanceID); err != nil {
-			return "", err
+			return Identity{}, err
 		}
 
 		if err := m.curl("instance/zone", &zoneInfo); err != nil {
-			return "", err
+			return Identity{}, err
 		}
 
 		zone := zoneInfo[strings.LastIndex(zoneInfo, "/")+1:]
-
-		return MondooGcpInstanceID(projectID, zone, instanceID), nil
+		return Identity{
+			ProjectID:  "//platformid.api.mondoo.app/runtime/gcp/projects/" + projectID,
+			InstanceID: MondooGcpInstanceID(projectID, zone, instanceID),
+		}, nil
 	case m.platform.IsFamily(platform.FAMILY_WINDOWS):
 		cmd, err := m.provider.RunCommand(powershell.Encode(metadataIdentityScriptWindows))
 		if err != nil {
-			return "", err
+			return Identity{}, err
 		}
 		data, err := ioutil.ReadAll(cmd.Stdout)
 		if err != nil {
-			return "", err
+			return Identity{}, err
 		}
 
 		instanceDocument := strings.TrimSpace(string(data))
@@ -89,8 +91,11 @@ func (m *CommandInstanceMetadata) InstanceID() (string, error) {
 		json.Unmarshal([]byte(instanceDocument), &doc)
 		zone := doc.ZoneInfo[strings.LastIndex(doc.ZoneInfo, "/")+1:]
 
-		return MondooGcpInstanceID(doc.ProjectID, zone, doc.InstanceID), nil
+		return Identity{
+			ProjectID:  "//platformid.api.mondoo.app/runtime/gcp/projects/" + doc.ProjectID,
+			InstanceID: MondooGcpInstanceID(doc.ProjectID, zone, doc.InstanceID),
+		}, nil
 	default:
-		return "", errors.New("your platform is not supported by azure metadata identifier resource")
+		return Identity{}, errors.New("your platform is not supported by azure metadata identifier resource")
 	}
 }

@@ -21,9 +21,11 @@ func TestCommandProviderLinux(t *testing.T) {
 	require.NoError(t, err)
 
 	metadata := gce.NewCommandInstanceMetadata(provider, p)
-	mrn, err := metadata.InstanceID()
+	ident, err := metadata.Identify()
+
 	assert.Nil(t, err)
-	assert.Equal(t, "//platformid.api.mondoo.app/runtime/gcp/compute/v1/projects/mondoo-dev-262313/zones/us-central1-a/instances/6001244637815193808", mrn)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/gcp/compute/v1/projects/mondoo-dev-262313/zones/us-central1-a/instances/6001244637815193808", ident.InstanceID)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/gcp/projects/mondoo-dev-262313", ident.ProjectID)
 }
 
 func TestCommandProviderWindows(t *testing.T) {
@@ -37,7 +39,9 @@ func TestCommandProviderWindows(t *testing.T) {
 	require.NoError(t, err)
 
 	metadata := gce.NewCommandInstanceMetadata(provider, p)
-	mrn, err := metadata.InstanceID()
+	ident, err := metadata.Identify()
+
 	assert.Nil(t, err)
-	assert.Equal(t, "//platformid.api.mondoo.app/runtime/gcp/compute/v1/projects/mondoo-dev-262313/zones/us-central1-a/instances/5275377306317132843", mrn)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/gcp/compute/v1/projects/mondoo-dev-262313/zones/us-central1-a/instances/5275377306317132843", ident.InstanceID)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/gcp/projects/mondoo-dev-262313", ident.ProjectID)
 }

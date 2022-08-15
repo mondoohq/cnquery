@@ -18,12 +18,15 @@ type LocalEc2InstanceMetadata struct {
 	config aws.Config
 }
 
-func (m *LocalEc2InstanceMetadata) InstanceID() (string, error) {
+func (m *LocalEc2InstanceMetadata) Identify() (Identity, error) {
 	metadata := imds.NewFromConfig(m.config)
 	ctx := context.Background()
 	doc, err := metadata.GetInstanceIdentityDocument(ctx, &imds.GetInstanceIdentityDocumentInput{})
 	if err != nil {
-		return "", err
+		return Identity{}, err
 	}
-	return MondooInstanceID(doc.AccountID, doc.Region, doc.InstanceID), nil
+	return Identity{
+		InstanceID: MondooInstanceID(doc.AccountID, doc.Region, doc.InstanceID),
+		AccountID:  "//platformid.api.mondoo.app/runtime/aws/accounts/" + doc.AccountID,
+	}, nil
 }

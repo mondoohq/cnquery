@@ -64,4 +64,6 @@ message Asset {
 
   // indicator is this is a fleet asset or a CI/CD run
   AssetCategory category = 32;
+
+  repeated Asset related_assets = 33;
 }
