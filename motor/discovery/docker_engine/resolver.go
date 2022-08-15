@@ -31,21 +31,21 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryContainerRunning, DiscoveryContainerImages}
 }
 
-func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
-	if tc == nil {
+func (r *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+	if pCfg == nil {
 		return nil, errors.New("no transport configuration found")
 	}
 
 	// check if we have a tar as input
 	// detect if the tar is a container image format -> container image
 	// or a container snapshot format -> container snapshot
-	if tc.Backend == providers.ProviderType_TAR {
+	if pCfg.Backend == providers.ProviderType_TAR {
 
-		if tc.Options == nil || tc.Options["file"] == "" {
+		if pCfg.Options == nil || pCfg.Options["file"] == "" {
 			return nil, errors.New("could not find the tar file")
 		}
 
-		filename := tc.Options["file"]
+		filename := pCfg.Options["file"]
 
 		// check if we are pointing to a local tar file
 		_, err := os.Stat(filename)
@@ -56,7 +56,7 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 		// Tar container can be an image or a snapshot
 		resolvedAsset := &asset.Asset{
 			Name:        filename,
-			Connections: []*providers.TransportConfig{tc},
+			Connections: []*providers.Config{pCfg},
 			Platform: &platform.Platform{
 				Kind:    providers.Kind_KIND_CONTAINER_IMAGE,
 				Runtime: providers.RUNTIME_DOCKER_IMAGE,
@@ -78,11 +78,11 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 	ded, dockerEngErr := NewDockerEngineDiscovery()
 	// we do not fail here, since we pull the image from upstream if its is an image without the need for docker
 
-	if tc.Backend == providers.ProviderType_DOCKER_ENGINE_CONTAINER {
+	if pCfg.Backend == providers.ProviderType_DOCKER_ENGINE_CONTAINER {
 		if dockerEngErr != nil {
 			return nil, errors.Wrap(dockerEngErr, "cannot connect to docker engine to fetch the container")
 		}
-		resolvedAsset, err := r.container(root, tc, ded)
+		resolvedAsset, err := r.container(root, pCfg, ded)
 		if err != nil {
 			return nil, err
 		}
@@ -90,9 +90,9 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 		return []*asset.Asset{resolvedAsset}, nil
 	}
 
-	if tc.Backend == providers.ProviderType_DOCKER_ENGINE_IMAGE {
+	if pCfg.Backend == providers.ProviderType_DOCKER_ENGINE_IMAGE {
 		// NOTE, we ignore dockerEngErr here since we fallback to pulling the images directly
-		resolvedAssets, err := r.images(root, tc, ded, cfn, sfn)
+		resolvedAssets, err := r.images(root, pCfg, ded, cfn, sfn)
 		if err != nil {
 			return nil, err
 		}
@@ -100,8 +100,8 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 	}
 
 	// check if we should do a discovery
-	if tc.Host == "" {
-		return DiscoverDockerEngineAssets(tc)
+	if pCfg.Host == "" {
+		return DiscoverDockerEngineAssets(pCfg)
 	}
 
 	// if we are here, the user has not specified the direct target, we need to search for it
@@ -111,16 +111,16 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 	//    check if the container is stopped -> container snapshot
 	// 3. check if we have an image id -> container image
 	// 4. check if we have a descriptor for a registry -> container image
-	log.Debug().Str("docker", tc.Host).Msg("try to resolve the container or image source")
+	log.Debug().Str("docker", pCfg.Host).Msg("try to resolve the container or image source")
 
 	if dockerEngErr == nil {
-		containerAsset, err := r.container(root, tc, ded)
+		containerAsset, err := r.container(root, pCfg, ded)
 		if err == nil {
 			return []*asset.Asset{containerAsset}, nil
 		}
 	}
 
-	containerImageAssets, err := r.images(root, tc, ded, cfn, sfn)
+	containerImageAssets, err := r.images(root, pCfg, ded, cfn, sfn)
 	if err == nil {
 		return containerImageAssets, nil
 	}
@@ -129,16 +129,16 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 	return nil, errors.Wrap(err, "could not find the container reference")
 }
 
-func (k *Resolver) container(root *asset.Asset, tc *providers.TransportConfig, ded *dockerEngineDiscovery) (*asset.Asset, error) {
-	ci, err := ded.ContainerInfo(tc.Host)
+func (k *Resolver) container(root *asset.Asset, pCfg *providers.Config, ded *dockerEngineDiscovery) (*asset.Asset, error) {
+	ci, err := ded.ContainerInfo(pCfg.Host)
 	if err != nil {
 		return nil, err
 	}
 
-	tc.Backend = providers.ProviderType_DOCKER_ENGINE_CONTAINER
+	pCfg.Backend = providers.ProviderType_DOCKER_ENGINE_CONTAINER
 	return &asset.Asset{
 		Name:        ci.Name,
-		Connections: []*providers.TransportConfig{tc},
+		Connections: []*providers.Config{pCfg},
 		PlatformIds: []string{ci.PlatformID},
 		Platform: &platform.Platform{
 			Kind:    providers.Kind_KIND_CONTAINER,
@@ -149,15 +149,15 @@ func (k *Resolver) container(root *asset.Asset, tc *providers.TransportConfig, d
 	}, nil
 }
 
-func (k *Resolver) images(root *asset.Asset, tc *providers.TransportConfig, ded *dockerEngineDiscovery, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn) ([]*asset.Asset, error) {
+func (k *Resolver) images(root *asset.Asset, pCfg *providers.Config, ded *dockerEngineDiscovery, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn) ([]*asset.Asset, error) {
 	// if we have a docker engine available, try to fetch it from there
 	if ded != nil {
-		ii, err := ded.ImageInfo(tc.Host)
+		ii, err := ded.ImageInfo(pCfg.Host)
 		if err == nil {
-			tc.Backend = providers.ProviderType_DOCKER_ENGINE_IMAGE
+			pCfg.Backend = providers.ProviderType_DOCKER_ENGINE_IMAGE
 			return []*asset.Asset{{
 				Name:        ii.Name,
-				Connections: []*providers.TransportConfig{tc},
+				Connections: []*providers.Config{pCfg},
 				PlatformIds: []string{ii.PlatformID},
 				Platform: &platform.Platform{
 					Kind:    providers.Kind_KIND_CONTAINER_IMAGE,
@@ -172,7 +172,7 @@ func (k *Resolver) images(root *asset.Asset, tc *providers.TransportConfig, ded 
 
 	// otherwise try to fetch the image from upstream
 	log.Debug().Msg("try to download the image from docker registry")
-	_, err := name.ParseReference(tc.Host, name.WeakValidation)
+	_, err := name.ParseReference(pCfg.Host, name.WeakValidation)
 	if err != nil {
 		return nil, err
 	}
@@ -181,17 +181,17 @@ func (k *Resolver) images(root *asset.Asset, tc *providers.TransportConfig, ded 
 	rr := container_registry.Resolver{
 		NoStrictValidation: true,
 	}
-	return rr.Resolve(root, tc, cfn, sfn)
+	return rr.Resolve(root, pCfg, cfn, sfn)
 }
 
-func DiscoverDockerEngineAssets(tc *providers.TransportConfig) ([]*asset.Asset, error) {
+func DiscoverDockerEngineAssets(pCfg *providers.Config) ([]*asset.Asset, error) {
 	log.Debug().Msg("start discovery for docker engine")
 	// we use generic `container` and `container-images` options to avoid the requirement for the user to know if
 	// the system is using docker or podman locally
 	assetList := []*asset.Asset{}
 
 	// discover running container: container
-	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryContainerRunning) {
+	if pCfg.IncludesDiscoveryTarget(DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryContainerRunning) {
 		ded, err := NewDockerEngineDiscovery()
 		if err != nil {
 			return nil, err
@@ -206,7 +206,7 @@ func DiscoverDockerEngineAssets(tc *providers.TransportConfig) ([]*asset.Asset, 
 	}
 
 	// discover container images: container-images
-	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryContainerImages) {
+	if pCfg.IncludesDiscoveryTarget(DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryContainerImages) {
 		ded, err := NewDockerEngineDiscovery()
 		if err != nil {
 			return nil, err

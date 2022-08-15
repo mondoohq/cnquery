@@ -265,14 +265,14 @@ func ansibleBackend(connection string) providers.ProviderType {
 	return res
 }
 
-func ansibleConnections(host *Host) []*providers.TransportConfig {
+func ansibleConnections(host *Host) []*providers.Config {
 	backend := ansibleBackend(host.Connection)
 
 	// in the case where the port is 0, we will fallback to default ports (eg 22)
 	// further down in the execution chain
 	port, _ := strconv.Atoi(host.Port)
 
-	res := &providers.TransportConfig{
+	res := &providers.Config{
 		Backend: backend,
 		Host:    host.Host,
 		Port:    int32(port),
@@ -308,5 +308,5 @@ func ansibleConnections(host *Host) []*providers.TransportConfig {
 	}
 
 	res.Credentials = credentials
-	return []*providers.TransportConfig{res}
+	return []*providers.Config{res}
 }

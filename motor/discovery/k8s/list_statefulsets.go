@@ -11,8 +11,8 @@ import (
 )
 
 // ListStatefulSets list all statefulsets in the cluster.
-func ListStatefulSets(transport k8s.KubernetesProvider, connection *providers.TransportConfig, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
-	namespaces, err := transport.Namespaces()
+func ListStatefulSets(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
+	namespaces, err := p.Namespaces()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
 	}
@@ -25,7 +25,7 @@ func ListStatefulSets(transport k8s.KubernetesProvider, connection *providers.Tr
 			continue
 		}
 
-		statefulSetsPerNamespace, err := transport.StatefulSets(namespace)
+		statefulSetsPerNamespace, err := p.StatefulSets(namespace)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to list StatefulSets")
 		}
@@ -36,7 +36,7 @@ func ListStatefulSets(transport k8s.KubernetesProvider, connection *providers.Tr
 	assets := []*asset.Asset{}
 	for i := range statefulSets {
 		statefulSet := statefulSets[i]
-		platformData := transport.PlatformInfo()
+		platformData := p.PlatformInfo()
 		platformData.Version = statefulSet.APIVersion
 		platformData.Build = statefulSet.ResourceVersion
 		platformData.Labels = map[string]string{
@@ -48,7 +48,7 @@ func ListStatefulSets(transport k8s.KubernetesProvider, connection *providers.Tr
 			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "statefulsets", statefulSet.Namespace, statefulSet.Name)},
 			Name:        statefulSet.Namespace + "/" + statefulSet.Name,
 			Platform:    platformData,
-			Connections: []*providers.TransportConfig{connection},
+			Connections: []*providers.Config{connection},
 			State:       asset.State_STATE_ONLINE,
 			Labels:      statefulSet.Labels,
 		}

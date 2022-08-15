@@ -18,7 +18,7 @@ func TestListDeployments(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	transport := k8s.NewMockKubernetesProvider(mockCtrl)
+	p := k8s.NewMockKubernetesProvider(mockCtrl)
 
 	deploymentPlatform := &platform.Platform{
 		Name:    "k8s-deployment",
@@ -31,10 +31,10 @@ func TestListDeployments(t *testing.T) {
 	nss := []corev1.Namespace{
 		{ObjectMeta: metav1.ObjectMeta{Name: "default"}},
 	}
-	transport.EXPECT().Namespaces().Return(nss, nil)
+	p.EXPECT().Namespaces().Return(nss, nil)
 	// called for each Deployment
-	transport.EXPECT().PlatformInfo().Return(deploymentPlatform)
-	transport.EXPECT().PlatformInfo().Return(deploymentPlatform)
+	p.EXPECT().PlatformInfo().Return(deploymentPlatform)
+	p.EXPECT().PlatformInfo().Return(deploymentPlatform)
 
 	// Seed Deployments
 	deployments := []appsv1.Deployment{
@@ -68,7 +68,7 @@ func TestListDeployments(t *testing.T) {
 		},
 	}
 
-	transport.EXPECT().Deployments(nss[0]).Return(deployments, nil)
+	p.EXPECT().Deployments(nss[0]).Return(deployments, nil)
 
 	expectedAssetNames := []string{
 		nss[0].Name + "/" + deployments[0].Name,
@@ -82,8 +82,8 @@ func TestListDeployments(t *testing.T) {
 		clusterIdentifier + "/namespace/" + nss[0].Name + "/deployments/name/" + deployments[1].Name,
 	}
 
-	tc := &providers.TransportConfig{}
-	assets, err := ListDeployments(transport, tc, clusterIdentifier, nil)
+	pCfg := &providers.Config{}
+	assets, err := ListDeployments(p, pCfg, clusterIdentifier, nil)
 	assert.NoError(t, err)
 
 	var assetNames []string

@@ -17,7 +17,7 @@ func (r *GcrResolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *GcrResolver) Resolve(root *asset.Asset, t *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *GcrResolver) Resolve(root *asset.Asset, t *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 	repository := t.Host
 

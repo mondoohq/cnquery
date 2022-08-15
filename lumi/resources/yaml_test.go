@@ -2,7 +2,7 @@ package resources_test
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,7 +21,7 @@ func TestResource_Yaml(t *testing.T) {
 }
 
 func TestJsonPath(t *testing.T) {
-	mContent, err := ioutil.ReadFile("./testdata/pod.yaml")
+	mContent, err := os.ReadFile("./testdata/pod.yaml")
 	require.NoError(t, err)
 
 	// load data

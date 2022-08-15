@@ -22,7 +22,7 @@ func (r *GcpProjectResolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryInstances}
 }
 
-func (r *GcpProjectResolver) Resolve(tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *GcpProjectResolver) Resolve(tc *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	if tc == nil || tc.Options["project"] == "" {
@@ -52,7 +52,7 @@ func (r *GcpProjectResolver) Resolve(tc *providers.TransportConfig, cfn credenti
 		PlatformIds: []string{identifier},
 		Name:        "GCP project " + project,
 		Platform:    pf,
-		Connections: []*providers.TransportConfig{tc}, // pass-in the current config
+		Connections: []*providers.Config{tc}, // pass-in the current config
 		Labels: map[string]string{
 			common.ParentId: project,
 		},

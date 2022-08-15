@@ -152,7 +152,7 @@ func (ec2i *Ec2Instances) List() ([]*asset.Asset, error) {
 func instanceToAsset(account string, region string, instance types.Instance, insecure bool, passInLabels map[string]string) *asset.Asset {
 	asset := &asset.Asset{
 		PlatformIds: []string{awsec2.MondooInstanceID(account, region, *instance.InstanceId)},
-		Connections: []*providers.TransportConfig{},
+		Connections: []*providers.Config{},
 		Labels:      make(map[string]string),
 		IdDetector:  []string{"awsec2"},
 		Name:        *instance.InstanceId,
@@ -165,7 +165,7 @@ func instanceToAsset(account string, region string, instance types.Instance, ins
 
 	// if there is a public ip, we assume ssh is an option
 	if instance.PublicIpAddress != nil {
-		asset.Connections = append(asset.Connections, &providers.TransportConfig{
+		asset.Connections = append(asset.Connections, &providers.Config{
 			Backend:  providers.ProviderType_SSH,
 			Host:     *instance.PublicIpAddress,
 			Insecure: insecure,

@@ -9,7 +9,7 @@ import (
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
-func EstablishConnection(tc *providers.TransportConfig, credentialFn func(cred *vault.Credential) (*vault.Credential, error), insecure bool, record bool) (*motor.Motor, error) {
+func EstablishConnection(tc *providers.Config, credentialFn func(cred *vault.Credential) (*vault.Credential, error), insecure bool, record bool) (*motor.Motor, error) {
 	log.Debug().Str("connection", tc.ToUrl()).Bool("insecure", insecure).Msg("establish connection to asset")
 	// overwrite connection specific insecure with global insecure
 	if insecure {
@@ -34,26 +34,26 @@ func OpenAssetConnection(assetInfo *asset.Asset, credentialFn func(cred *vault.C
 	}
 
 	// TODO: we may want to allow multiple connection trials later
-	tc := assetInfo.Connections[0]
+	pCfg := assetInfo.Connections[0]
 
 	// use connection host as default
 	if assetInfo.Name == "" {
-		assetInfo.Name = tc.Host
+		assetInfo.Name = pCfg.Host
 	}
 
 	// some transports have their own kind/runtime information already
 	// NOTE: going forward we may want to enforce that assets have at least kind and runtime information
 	if assetInfo.Platform != nil {
-		tc.Kind = assetInfo.Platform.Kind
-		tc.Runtime = assetInfo.Platform.Runtime
+		pCfg.Kind = assetInfo.Platform.Kind
+		pCfg.Runtime = assetInfo.Platform.Runtime
 	}
 
 	// parse reference id and restore options
 	if len(assetInfo.PlatformIds) > 0 {
-		tc.PlatformId = assetInfo.PlatformIds[0]
+		pCfg.PlatformId = assetInfo.PlatformIds[0]
 	}
 
-	m, err := EstablishConnection(tc, credentialFn, tc.Insecure, record)
+	m, err := EstablishConnection(pCfg, credentialFn, pCfg.Insecure, record)
 	if err != nil {
 		return nil, err
 	}
@@ -76,26 +76,26 @@ func OpenAssetConnections(assetInfo *asset.Asset, credentialFn func(cred *vault.
 	// TODO: we may want to allow multiple connection trials later
 	connections := []*motor.Motor{}
 	for ci := range assetInfo.Connections {
-		tc := assetInfo.Connections[ci]
+		pCfg := assetInfo.Connections[ci]
 
 		// use connection host as default
 		if assetInfo.Name == "" {
-			assetInfo.Name = tc.Host
+			assetInfo.Name = pCfg.Host
 		}
 
 		// some transports have their own kind/runtime information already
 		// NOTE: going forward we may want to enforce that assets have at least kind and runtime information
 		if assetInfo.Platform != nil {
-			tc.Kind = assetInfo.Platform.Kind
-			tc.Runtime = assetInfo.Platform.Runtime
+			pCfg.Kind = assetInfo.Platform.Kind
+			pCfg.Runtime = assetInfo.Platform.Runtime
 		}
 
 		// parse reference id and restore options
 		if len(assetInfo.PlatformIds) > 0 {
-			tc.PlatformId = assetInfo.PlatformIds[0]
+			pCfg.PlatformId = assetInfo.PlatformIds[0]
 		}
 
-		m, err := EstablishConnection(tc, credentialFn, tc.Insecure, record)
+		m, err := EstablishConnection(pCfg, credentialFn, pCfg.Insecure, record)
 		if err != nil {
 			return nil, err
 		}

@@ -31,11 +31,11 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryInstances, DiscoveryHostMachines}
 }
 
-func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// we leverage the vpshere transport to establish a connection
-	m, err := resolver.NewMotorConnection(tc, cfn)
+	m, err := resolver.NewMotorConnection(pCfg, cfn)
 	if err != nil {
 		return nil, err
 	}
@@ -55,9 +55,9 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 	// add asset for the api itself
 	info := trans.Info()
 	assetObj := &asset.Asset{
-		Name:        fmt.Sprintf("%s (%s)", tc.Host, info.Name),
+		Name:        fmt.Sprintf("%s (%s)", pCfg.Host, info.Name),
 		Platform:    pf,
-		Connections: []*providers.TransportConfig{tc}, // pass-in the current config
+		Connections: []*providers.Config{pCfg}, // pass-in the current config
 		Labels: map[string]string{
 			"vsphere.vmware.com/name": info.Name,
 			"vsphere.vmware.com/uuid": info.InstanceUuid,
@@ -79,7 +79,7 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 	client := trans.Client()
 	discoveryClient := New(client)
 
-	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryHostMachines) {
+	if pCfg.IncludesDiscoveryTarget(DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryHostMachines) {
 		// resolve esxi hosts
 		hosts, err := discoveryClient.ListEsxiHosts()
 		if err != nil {
@@ -89,7 +89,7 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 		// add transport config for each host
 		for i := range hosts {
 			host := hosts[i]
-			ht := tc.Clone()
+			ht := pCfg.Clone()
 			// pass-through "vsphere.vmware.com/reference-type" and "vsphere.vmware.com/inventorypath"
 			ht.Options = host.Annotations
 			host.Connections = append(host.Connections, ht)
@@ -105,9 +105,9 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 		}
 	}
 
-	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {
+	if pCfg.IncludesDiscoveryTarget(DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryInstances) {
 		// resolve vms
-		vms, err := discoveryClient.ListVirtualMachines(tc)
+		vms, err := discoveryClient.ListVirtualMachines(pCfg)
 		if err != nil {
 			return nil, err
 		}
@@ -132,8 +132,8 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 
 	// filter assets
 	discoverFilter := map[string]string{}
-	if tc.Discover != nil {
-		discoverFilter = tc.Discover.Filter
+	if pCfg.Discover != nil {
+		discoverFilter = pCfg.Discover.Filter
 	}
 
 	if namesFilter, ok := discoverFilter["names"]; ok {

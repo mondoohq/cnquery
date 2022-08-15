@@ -10,8 +10,8 @@ import (
 )
 
 // ListPods list all pods in the cluster.
-func ListPods(transport k8s.KubernetesProvider, connection *providers.TransportConfig, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
-	namespaces, err := transport.Namespaces()
+func ListPods(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
+	namespaces, err := p.Namespaces()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
 	}
@@ -24,7 +24,7 @@ func ListPods(transport k8s.KubernetesProvider, connection *providers.TransportC
 			continue
 		}
 
-		podsPerNamespace, err := transport.Pods(namespace)
+		podsPerNamespace, err := p.Pods(namespace)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to list pods")
 		}
@@ -35,7 +35,7 @@ func ListPods(transport k8s.KubernetesProvider, connection *providers.TransportC
 	assets := []*asset.Asset{}
 	for i := range pods {
 		pod := pods[i]
-		platformData := transport.PlatformInfo()
+		platformData := p.PlatformInfo()
 		platformData.Version = pod.APIVersion
 		platformData.Build = pod.ResourceVersion
 		platformData.Labels = map[string]string{
@@ -47,7 +47,7 @@ func ListPods(transport k8s.KubernetesProvider, connection *providers.TransportC
 			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "pods", pod.Namespace, pod.Name)},
 			Name:        pod.Namespace + "/" + pod.Name,
 			Platform:    platformData,
-			Connections: []*providers.TransportConfig{connection},
+			Connections: []*providers.Config{connection},
 			State:       asset.State_STATE_ONLINE,
 			Labels:      pod.Labels,
 		}

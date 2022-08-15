@@ -22,7 +22,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll}
 }
 
-func (r *Resolver) Resolve(root *asset.Asset, conf *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(root *asset.Asset, conf *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	transport, err := network_transport.New(conf)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func (r *Resolver) Resolve(root *asset.Asset, conf *providers.TransportConfig, c
 		PlatformIds: []string{platformID},
 		Platform:    platform,
 		Name:        root.Name,
-		Connections: []*providers.TransportConfig{conf},
+		Connections: []*providers.Config{conf},
 		// FIXME: We don't really know at this point if it is online... need to
 		// check first
 		State: asset.State_STATE_ONLINE,

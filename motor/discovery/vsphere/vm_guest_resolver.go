@@ -22,11 +22,11 @@ func (r *VMGuestResolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (k *VMGuestResolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (k *VMGuestResolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// we leverage the vpshere transport to establish a connection
-	m, err := resolver.NewMotorConnection(tc, cfn)
+	m, err := resolver.NewMotorConnection(pCfg, cfn)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (k *VMGuestResolver) Resolve(root *asset.Asset, tc *providers.TransportConf
 	discoveryClient := New(client)
 
 	// resolve vms
-	vms, err := discoveryClient.ListVirtualMachines(tc)
+	vms, err := discoveryClient.ListVirtualMachines(pCfg)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (k *VMGuestResolver) Resolve(root *asset.Asset, tc *providers.TransportConf
 
 	// filter the vms by inventoryPath
 	inventoryPaths := []string{}
-	inventoryPathFilter, ok := tc.Options["inventoryPath"]
+	inventoryPathFilter, ok := pCfg.Options["inventoryPath"]
 	if ok {
 		inventoryPaths = []string{inventoryPathFilter}
 	}
@@ -67,7 +67,7 @@ func (k *VMGuestResolver) Resolve(root *asset.Asset, tc *providers.TransportConf
 
 	if len(resolved) == 1 {
 		a := resolved[0]
-		a.Connections = []*providers.TransportConfig{tc}
+		a.Connections = []*providers.Config{pCfg}
 
 		// find the secret reference for the asset
 		EnrichVsphereToolsConnWithSecrets(a, cfn, sfn)

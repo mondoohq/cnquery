@@ -19,7 +19,7 @@ func TestListDaemonsets(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	transport := k8s.NewMockKubernetesProvider(mockCtrl)
+	p := k8s.NewMockKubernetesProvider(mockCtrl)
 
 	daemonsetPlatform := &platform.Platform{
 		Name:    "k8s-daemonset",
@@ -32,10 +32,10 @@ func TestListDaemonsets(t *testing.T) {
 	nss := []corev1.Namespace{
 		{ObjectMeta: metav1.ObjectMeta{Name: "default"}},
 	}
-	transport.EXPECT().Namespaces().Return(nss, nil)
+	p.EXPECT().Namespaces().Return(nss, nil)
 	// called for each DaemonSet
-	transport.EXPECT().PlatformInfo().Return(daemonsetPlatform)
-	transport.EXPECT().PlatformInfo().Return(daemonsetPlatform)
+	p.EXPECT().PlatformInfo().Return(daemonsetPlatform)
+	p.EXPECT().PlatformInfo().Return(daemonsetPlatform)
 
 	// Seed DaemonSets
 	daemonsets := []appsv1.DaemonSet{
@@ -69,7 +69,7 @@ func TestListDaemonsets(t *testing.T) {
 		},
 	}
 
-	transport.EXPECT().DaemonSets(nss[0]).Return(daemonsets, nil)
+	p.EXPECT().DaemonSets(nss[0]).Return(daemonsets, nil)
 
 	expectedAssetNames := []string{
 		nss[0].Name + "/" + daemonsets[0].Name,
@@ -83,8 +83,8 @@ func TestListDaemonsets(t *testing.T) {
 		clusterIdentifier + "/namespace/" + nss[0].Name + "/daemonsets/name/" + daemonsets[1].Name,
 	}
 
-	tc := &providers.TransportConfig{}
-	assets, err := ListDaemonSets(transport, tc, clusterIdentifier, nil)
+	pCfg := &providers.Config{}
+	assets, err := ListDaemonSets(p, pCfg, clusterIdentifier, nil)
 	assert.NoError(t, err)
 
 	var assetNames []string

@@ -13,14 +13,14 @@ var (
 	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
 )
 
-func New(tc *providers.TransportConfig) (*Provider, error) {
-	if tc.Backend != providers.ProviderType_EQUINIX_METAL {
+func New(cfg *providers.Config) (*Provider, error) {
+	if cfg.Backend != providers.ProviderType_EQUINIX_METAL {
 		return nil, providers.ErrProviderTypeDoesNotMatch
 	}
 
-	projectId := tc.Options["projectID"]
+	projectId := cfg.Options["projectID"]
 
-	if tc.Options == nil || len(projectId) == 0 {
+	if cfg.Options == nil || len(projectId) == 0 {
 		return nil, errors.New("equinix provider requires an project id")
 	}
 

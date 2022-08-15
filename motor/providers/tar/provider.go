@@ -24,7 +24,7 @@ var (
 	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
 )
 
-func New(endpoint *providers.TransportConfig) (*Provider, error) {
+func New(endpoint *providers.Config) (*Provider, error) {
 	return NewWithClose(endpoint, nil)
 }
 
@@ -45,7 +45,7 @@ func NewWithReader(rc io.ReadCloser, close func()) (*Provider, error) {
 		return nil, err
 	}
 
-	return NewWithClose(&providers.TransportConfig{
+	return NewWithClose(&providers.Config{
 		Kind:    providers.Kind_KIND_CONTAINER_IMAGE,
 		Runtime: providers.RUNTIME_DOCKER_IMAGE,
 		Options: map[string]string{
@@ -57,12 +57,12 @@ func NewWithReader(rc io.ReadCloser, close func()) (*Provider, error) {
 	})
 }
 
-func NewWithClose(endpoint *providers.TransportConfig, closeFn func()) (*Provider, error) {
-	if endpoint == nil || len(endpoint.Options[OPTION_FILE]) == 0 {
+func NewWithClose(pCfg *providers.Config, closeFn func()) (*Provider, error) {
+	if pCfg == nil || len(pCfg.Options[OPTION_FILE]) == 0 {
 		return nil, errors.New("endpoint cannot be empty")
 	}
 
-	filename := endpoint.Options[OPTION_FILE]
+	filename := pCfg.Options[OPTION_FILE]
 	var identifier string
 
 	// try to determine if the tar is a container image
@@ -90,8 +90,8 @@ func NewWithClose(endpoint *providers.TransportConfig, closeFn func()) (*Provide
 		p := &Provider{
 			Fs:              NewFs(filename),
 			CloseFN:         closeFn,
-			PlatformKind:    endpoint.Kind,
-			PlatformRuntime: endpoint.Runtime,
+			PlatformKind:    pCfg.Kind,
+			PlatformRuntime: pCfg.Runtime,
 		}
 
 		err = p.LoadFile(filename)

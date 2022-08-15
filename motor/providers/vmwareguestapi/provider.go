@@ -38,26 +38,26 @@ import (
 
 var _ providers.Transport = (*Provider)(nil)
 
-func New(tc *providers.TransportConfig) (*Provider, error) {
-	if tc.Backend != providers.ProviderType_VSPHERE_VM {
+func New(pCfg *providers.Config) (*Provider, error) {
+	if pCfg.Backend != providers.ProviderType_VSPHERE_VM {
 		return nil, errors.New("backend is not supported for VMware tools transport")
 	}
 
 	// search for password secret
-	c, err := vault.GetPassword(tc.Credentials)
+	c, err := vault.GetPassword(pCfg.Credentials)
 	if err != nil {
 		return nil, errors.New("missing password for VMware tools provider")
 	}
 
 	// derive vsphere connection url from Provider Config
-	vsphereUrl, err := vsphere.VSphereConnectionURL(tc.Host, tc.Port, c.User, string(c.Secret))
+	vsphereUrl, err := vsphere.VSphereConnectionURL(pCfg.Host, pCfg.Port, c.User, string(c.Secret))
 	if err != nil {
 		return nil, err
 	}
 
-	inventoryPath := tc.Options["inventoryPath"]
-	guestuser := tc.Options["guestUser"]
-	guestpassword := tc.Options["guestPassword"]
+	inventoryPath := pCfg.Options["inventoryPath"]
+	guestuser := pCfg.Options["guestUser"]
+	guestpassword := pCfg.Options["guestPassword"]
 
 	// establish vsphere connection
 	ctx := context.Background()
@@ -129,21 +129,21 @@ type Provider struct {
 	fs     afero.Fs
 }
 
-func (t *Provider) Client() *govmomi.Client {
-	return t.client
+func (p *Provider) Client() *govmomi.Client {
+	return p.client
 }
 
-func (t *Provider) RunCommand(command string) (*providers.Command, error) {
+func (p *Provider) RunCommand(command string) (*providers.Command, error) {
 	log.Debug().Str("command", command).Str("transport", "vmwareguest").Msg("run command")
-	c := &Command{tb: t.tb}
+	c := &Command{tb: p.tb}
 
 	cmd, err := c.Exec(command)
 	log.Debug().Err(err).Int("exit", cmd.ExitStatus).Msg("completed command")
 	return cmd, err
 }
 
-func (t *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
-	fs := t.FS()
+func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
+	fs := p.FS()
 	afs := &afero.Afero{Fs: fs}
 	stat, err := afs.Stat(path)
 	if err != nil {
@@ -174,10 +174,10 @@ func (t *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
 	}, nil
 }
 
-func (t *Provider) FS() afero.Fs {
+func (p *Provider) FS() afero.Fs {
 	// if we cached an instance already, return it
-	if t.fs != nil {
-		return t.fs
+	if p.fs != nil {
+		return p.fs
 	}
 
 	// even with PowerCli this is not working therefore we stick to catfs for now
@@ -187,28 +187,28 @@ func (t *Provider) FS() afero.Fs {
 	// 	tb:            t.tb,
 	// 	commandRunner: t,
 	// }
-	t.fs = cat.New(t)
-	return t.fs
+	p.fs = cat.New(p)
+	return p.fs
 }
 
-func (t *Provider) Close() {}
+func (p *Provider) Close() {}
 
-func (t *Provider) Capabilities() providers.Capabilities {
+func (p *Provider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{
 		providers.Capability_File,
 		providers.Capability_RunCommand,
 	}
 }
 
-func (t *Provider) Kind() providers.Kind {
+func (p *Provider) Kind() providers.Kind {
 	return providers.Kind_KIND_VIRTUAL_MACHINE
 }
 
-func (t *Provider) Runtime() string {
+func (p *Provider) Runtime() string {
 	return providers.RUNTIME_VSPHERE_VM
 }
 
-func (t *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
+func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	return []providers.PlatformIdDetector{
 		providers.HostnameDetector,
 	}

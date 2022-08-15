@@ -37,7 +37,7 @@ type AwsSsmSessionManager struct {
 	cfg     aws.Config
 }
 
-func (a *AwsSsmSessionManager) Dial(tc *providers.TransportConfig, localPort string, remotePort string) (*AwsSsmSessionConnection, error) {
+func (a *AwsSsmSessionManager) Dial(tc *providers.Config, localPort string, remotePort string) (*AwsSsmSessionConnection, error) {
 	return NewAwsSsmSessionConnection(a.cfg, a.profile, tc.Host, localPort, remotePort)
 }
 

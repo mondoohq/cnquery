@@ -1,9 +1,9 @@
 package ms365
 
-func (t *Provider) Identifier() (string, error) {
-	return "//platformid.api.mondoo.app/runtime/ms365/tenant/" + t.tenantID, nil
+func (p *Provider) Identifier() (string, error) {
+	return "//platformid.api.mondoo.app/runtime/ms365/tenant/" + p.tenantID, nil
 }
 
-func (t *Provider) TenantID() string {
-	return t.tenantID
+func (p *Provider) TenantID() string {
+	return p.tenantID
 }

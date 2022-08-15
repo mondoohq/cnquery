@@ -11,8 +11,8 @@ import (
 )
 
 // ListJobs list all jobs in the cluster.
-func ListJobs(transport k8s.KubernetesProvider, connection *providers.TransportConfig, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
-	namespaces, err := transport.Namespaces()
+func ListJobs(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
+	namespaces, err := p.Namespaces()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
 	}
@@ -25,7 +25,7 @@ func ListJobs(transport k8s.KubernetesProvider, connection *providers.TransportC
 			continue
 		}
 
-		jobsPerNamespace, err := transport.Jobs(namespace)
+		jobsPerNamespace, err := p.Jobs(namespace)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to list Jobs")
 		}
@@ -36,7 +36,7 @@ func ListJobs(transport k8s.KubernetesProvider, connection *providers.TransportC
 	assets := []*asset.Asset{}
 	for i := range jobs {
 		job := jobs[i]
-		platformData := transport.PlatformInfo()
+		platformData := p.PlatformInfo()
 		platformData.Version = job.APIVersion
 		platformData.Build = job.ResourceVersion
 		platformData.Labels = map[string]string{
@@ -48,7 +48,7 @@ func ListJobs(transport k8s.KubernetesProvider, connection *providers.TransportC
 			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "jobs", job.Namespace, job.Name)},
 			Name:        job.Namespace + "/" + job.Name,
 			Platform:    platformData,
-			Connections: []*providers.TransportConfig{connection},
+			Connections: []*providers.Config{connection},
 			State:       asset.State_STATE_ONLINE,
 			Labels:      job.Labels,
 		}

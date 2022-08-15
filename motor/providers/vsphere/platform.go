@@ -77,7 +77,7 @@ func IsNotFound(err error) bool {
 // Update  : 0
 // Version : 6.7.0
 // see https://kb.vmware.com/s/article/2143832 for version and build number mapping
-func (t *Provider) EsxiVersion(host *object.HostSystem) (*EsxiSystemVersion, error) {
+func (p *Provider) EsxiVersion(host *object.HostSystem) (*EsxiSystemVersion, error) {
 	return EsxiVersion(host)
 }
 
@@ -185,13 +185,13 @@ func InstanceUUID(client *govmomi.Client) (string, error) {
 // https://kb.vmware.com/s/article/1009458
 // /usr/sbin/dmidecode | grep UUID https://communities.vmware.com/thread/420420
 // wmic bios get name,serialnumber,version  https://communities.vmware.com/thread/582729/
-func (t *Provider) Identifier() (string, error) {
+func (p *Provider) Identifier() (string, error) {
 	// a specific resource id was passed into the transport eg. for a esxi host or esxi vm
-	if len(t.selectedPlatformID) > 0 {
-		return t.selectedPlatformID, nil
+	if len(p.selectedPlatformID) > 0 {
+		return p.selectedPlatformID, nil
 	}
 
-	id, err := InstanceUUID(t.Client())
+	id, err := InstanceUUID(p.Client())
 	if err != nil {
 		log.Warn().Err(err).Msg("failed to get vsphere instance uuid")
 		// This error is being ignored

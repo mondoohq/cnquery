@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
@@ -48,6 +49,7 @@ func TestParseGCPInventory(t *testing.T) {
 	err = inventory.PreProcess()
 	require.NoError(t, err)
 
+	assert.Equal(t, providers.ProviderType_GCP, inventory.Spec.Assets[0].Connections[0].Backend)
 	// ensure that all assets have a valid secret reference
 	err = inventory.Validate()
 	require.NoError(t, err)

@@ -16,8 +16,8 @@ func TestGcpDiscovery(t *testing.T) {
 	projectid, err := gcp_transport.GetCurrentProject()
 	require.NoError(t, err)
 
-	tc := &providers.TransportConfig{
-		Backend: providers.ProviderType_GCP,
+	pCfg := &providers.Config{
+		Type: providers.ProviderType_GCP,
 		Options: map[string]string{
 			"project": projectid,
 		},
@@ -27,7 +27,7 @@ func TestGcpDiscovery(t *testing.T) {
 	}
 
 	r := GcpProjectResolver{}
-	assets, err := r.Resolve(tc)
+	assets, err := r.Resolve(pCfg)
 	require.NoError(t, err)
 	assert.True(t, len(assets) > 0)
 }

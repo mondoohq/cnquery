@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"io"
 	"io/ioutil"
 	"os"
 	"time"
@@ -19,43 +20,43 @@ func hashCmd(message string) string {
 	return hex.EncodeToString(hash.Sum(nil))
 }
 
-func NewRecordTransport(trans providers.Transport) (*RecordTransport, error) {
+func NewRecordProvider(p providers.Transport) (*MockRecordProvider, error) {
 	mock, err := New()
 	if err != nil {
 		return nil, err
 	}
 
-	recordWrapper := &RecordTransport{
+	recordWrapper := &MockRecordProvider{
 		mock:    mock,
-		observe: trans,
+		observe: p,
 	}
 
-	// always run identifier here to collect the identifier that is only available via the transport
+	// always run identifier here to collect the identifier that is only available via the provider
 	// we do not care about the output here, we only want to make sure its being tracked
 	recordWrapper.Identifier()
 
 	return recordWrapper, nil
 }
 
-type RecordTransport struct {
+type MockRecordProvider struct {
 	observe providers.Transport
 	mock    *Provider
 }
 
-func (t *RecordTransport) Watched() providers.Transport {
-	return t.observe
+func (p *MockRecordProvider) Watched() providers.Transport {
+	return p.observe
 }
 
-func (t *RecordTransport) Export() (*TomlData, error) {
-	return Export(t.mock)
+func (p *MockRecordProvider) Export() (*TomlData, error) {
+	return Export(p.mock)
 }
 
-func (t *RecordTransport) ExportData() ([]byte, error) {
-	return ExportData(t.mock)
+func (p *MockRecordProvider) ExportData() ([]byte, error) {
+	return ExportData(p.mock)
 }
 
-func (t *RecordTransport) RunCommand(command string) (*providers.Command, error) {
-	cmd, err := t.observe.RunCommand(command)
+func (p *MockRecordProvider) RunCommand(command string) (*providers.Command, error) {
+	cmd, err := p.observe.RunCommand(command)
 	if err != nil {
 		// we do not record errors yet
 		return nil, err
@@ -65,17 +66,17 @@ func (t *RecordTransport) RunCommand(command string) (*providers.Command, error)
 		stdout := ""
 		stderr := ""
 
-		stdoutData, err := ioutil.ReadAll(cmd.Stdout)
+		stdoutData, err := io.ReadAll(cmd.Stdout)
 		if err == nil {
 			stdout = string(stdoutData)
 		}
-		stderrData, err := ioutil.ReadAll(cmd.Stderr)
+		stderrData, err := io.ReadAll(cmd.Stderr)
 		if err == nil {
 			stderr = string(stderrData)
 		}
 
 		// store command
-		t.mock.Commands[hashCmd(command)] = &Command{
+		p.mock.Commands[hashCmd(command)] = &Command{
 			Command:    command,
 			Stdout:     stdout,
 			Stderr:     stderr,
@@ -84,22 +85,22 @@ func (t *RecordTransport) RunCommand(command string) (*providers.Command, error)
 	}
 
 	// read command from mock
-	return t.mock.RunCommand(command)
+	return p.mock.RunCommand(command)
 }
 
-func (t *RecordTransport) FS() afero.Fs {
-	fs := t.observe.FS()
-	return NewRecordFS(fs, t.mock.Fs)
+func (p *MockRecordProvider) FS() afero.Fs {
+	fs := p.observe.FS()
+	return NewRecordFS(fs, p.mock.Fs)
 }
 
-func (t *RecordTransport) FileInfo(name string) (providers.FileInfoDetails, error) {
+func (p *MockRecordProvider) FileInfo(name string) (providers.FileInfoDetails, error) {
 	enonet := false
-	stat, err := t.observe.FileInfo(name)
+	stat, err := p.observe.FileInfo(name)
 	if err == os.ErrNotExist {
 		enonet = true
 	}
 
-	fMock, ok := t.mock.Fs.Files[name]
+	fMock, ok := p.mock.Fs.Files[name]
 	if !ok {
 		fMock = &MockFileData{}
 	}
@@ -115,48 +116,48 @@ func (t *RecordTransport) FileInfo(name string) (providers.FileInfoDetails, erro
 		Gid: stat.Gid,
 	}
 
-	t.mock.Fs.Files[name] = fMock
+	p.mock.Fs.Files[name] = fMock
 
 	return stat, err
 }
 
-func (t *RecordTransport) Capabilities() providers.Capabilities {
-	caps := t.observe.Capabilities()
-	t.mock.TransportInfo.Capabilities = caps
+func (p *MockRecordProvider) Capabilities() providers.Capabilities {
+	caps := p.observe.Capabilities()
+	p.mock.TransportInfo.Capabilities = caps
 	return caps
 }
 
-func (t *RecordTransport) Close() {
-	t.observe.Close()
+func (p *MockRecordProvider) Close() {
+	p.observe.Close()
 }
 
-func (t *RecordTransport) Kind() providers.Kind {
-	k := t.observe.Kind()
-	t.mock.TransportInfo.Kind = k
+func (p *MockRecordProvider) Kind() providers.Kind {
+	k := p.observe.Kind()
+	p.mock.TransportInfo.Kind = k
 	return k
 }
 
-func (t *RecordTransport) Runtime() string {
-	runtime := t.observe.Runtime()
-	t.mock.TransportInfo.Runtime = runtime
+func (p *MockRecordProvider) Runtime() string {
+	runtime := p.observe.Runtime()
+	p.mock.TransportInfo.Runtime = runtime
 	return runtime
 }
 
-func (t *RecordTransport) Identifier() (string, error) {
-	identifiable, ok := t.observe.(providers.TransportPlatformIdentifier)
+func (p *MockRecordProvider) Identifier() (string, error) {
+	identifiable, ok := p.observe.(providers.TransportPlatformIdentifier)
 	if !ok {
 		return "", errors.New("the transportid detector is not supported for transport")
 	}
 
 	id, err := identifiable.Identifier()
 	if err == nil {
-		t.mock.TransportInfo.ID = id
+		p.mock.TransportInfo.ID = id
 	}
 	return id, err
 }
 
-func (t *RecordTransport) PlatformIdDetectors() []providers.PlatformIdDetector {
-	return t.observe.PlatformIdDetectors()
+func (p *MockRecordProvider) PlatformIdDetectors() []providers.PlatformIdDetector {
+	return p.observe.PlatformIdDetectors()
 }
 
 func NewRecordFS(observe afero.Fs, mockfs *mockFS) *recordFS {

@@ -21,7 +21,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(root *asset.Asset, tc *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	name := ""
 	if tc.Options["path"] != "" {
 		// manifest parent directory name
@@ -30,7 +30,7 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 
 	assetObj := &asset.Asset{
 		Name:        root.Name,
-		Connections: []*providers.TransportConfig{tc},
+		Connections: []*providers.Config{tc},
 		State:       asset.State_STATE_ONLINE,
 		Labels:      map[string]string{},
 	}

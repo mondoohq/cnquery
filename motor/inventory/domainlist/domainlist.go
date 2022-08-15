@@ -62,7 +62,7 @@ func (in *Inventory) ToV1Inventory() *v1.Inventory {
 
 		out.Spec.Assets = append(out.Spec.Assets, &asset.Asset{
 			Name:        name,
-			Connections: []*providers.TransportConfig{tc},
+			Connections: []*providers.Config{tc},
 		})
 	}
 
@@ -71,7 +71,7 @@ func (in *Inventory) ToV1Inventory() *v1.Inventory {
 
 type networkResolver struct{}
 
-func (r *networkResolver) ParseConnectionURL(fullUrl string, identityFile string, password string) (*providers.TransportConfig, error) {
+func (r *networkResolver) ParseConnectionURL(fullUrl string, identityFile string, password string) (*providers.Config, error) {
 	url, err := url.Parse(fullUrl)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse target URL")
@@ -82,7 +82,7 @@ func (r *networkResolver) ParseConnectionURL(fullUrl string, identityFile string
 	// So far we know:
 	// - all of them are in the `api` family (also their kind is set this way)
 	// - multiple families on one service are possible (eg: http, tls, tcp)
-	res := providers.TransportConfig{
+	res := providers.Config{
 		Backend: providers.ProviderType_HOST,
 		Options: map[string]string{"scheme": url.Scheme},
 	}

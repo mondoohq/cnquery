@@ -11,8 +11,8 @@ import (
 )
 
 // ListDeployments lits all deployments in the cluster.
-func ListDeployments(transport k8s.KubernetesProvider, connection *providers.TransportConfig, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
-	namespaces, err := transport.Namespaces()
+func ListDeployments(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
+	namespaces, err := p.Namespaces()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
 	}
@@ -25,7 +25,7 @@ func ListDeployments(transport k8s.KubernetesProvider, connection *providers.Tra
 			continue
 		}
 
-		deploymentsPerNamespace, err := transport.Deployments(namespace)
+		deploymentsPerNamespace, err := p.Deployments(namespace)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to list deployments")
 		}
@@ -36,7 +36,7 @@ func ListDeployments(transport k8s.KubernetesProvider, connection *providers.Tra
 	assets := []*asset.Asset{}
 	for i := range deployments {
 		deployment := deployments[i]
-		platformData := transport.PlatformInfo()
+		platformData := p.PlatformInfo()
 		platformData.Version = deployment.APIVersion
 		platformData.Build = deployment.ResourceVersion
 		platformData.Labels = map[string]string{
@@ -48,7 +48,7 @@ func ListDeployments(transport k8s.KubernetesProvider, connection *providers.Tra
 			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "deployments", deployment.Namespace, deployment.Name)},
 			Name:        deployment.Namespace + "/" + deployment.Name,
 			Platform:    platformData,
-			Connections: []*providers.TransportConfig{connection},
+			Connections: []*providers.Config{connection},
 			State:       asset.State_STATE_ONLINE,
 			Labels:      deployment.Labels,
 		}

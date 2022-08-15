@@ -48,7 +48,7 @@ message Asset {
   mondoo.motor.platform.v1.Platform platform = 6;
 
   // key is a lower case string of connection type
-  repeated mondoo.motor.transports.v1.TransportConfig connections = 17;
+  repeated mondoo.motor.providers.v1.Config connections = 17;
 
   // labeled assets can be searched by labels
   map<string, string> labels = 18;

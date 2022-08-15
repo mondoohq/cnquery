@@ -16,7 +16,7 @@ type Provider struct {
 	Options map[string]string
 }
 
-func New(conf *providers.TransportConfig) (*Provider, error) {
+func New(conf *providers.Config) (*Provider, error) {
 	family := []string{"network"}
 	if _, ok := conf.Options["tls"]; ok {
 		family = append(family, "tls")
@@ -31,29 +31,29 @@ func New(conf *providers.TransportConfig) (*Provider, error) {
 	}, nil
 }
 
-func (t *Provider) Identifier() (string, error) {
-	host := t.FQDN
-	if t.Port != 0 {
-		host = t.FQDN + ":" + strconv.Itoa(int(t.Port))
+func (p *Provider) Identifier() (string, error) {
+	host := p.FQDN
+	if p.Port != 0 {
+		host = p.FQDN + ":" + strconv.Itoa(int(p.Port))
 	}
 
-	if _, ok := t.Options["tls"]; ok {
+	if _, ok := p.Options["tls"]; ok {
 		return "//platformid.api.mondoo.app/runtime/network/tls/" + host, nil
 	} else {
 		return "//platformid.api.mondoo.app/runtime/network/host/" + host, nil
 	}
 }
 
-func (t *Provider) URI() string {
-	if t.Port == 0 {
-		return t.Scheme + "://" + t.FQDN
+func (p *Provider) URI() string {
+	if p.Port == 0 {
+		return p.Scheme + "://" + p.FQDN
 	}
-	return t.Scheme + "://" + t.FQDN + ":" + strconv.Itoa(int(t.Port))
+	return p.Scheme + "://" + p.FQDN + ":" + strconv.Itoa(int(p.Port))
 }
 
-func (t *Provider) Supports(mode string) bool {
-	for i := range t.Family {
-		if t.Family[i] == mode {
+func (p *Provider) Supports(mode string) bool {
+	for i := range p.Family {
+		if p.Family[i] == mode {
 			return true
 		}
 	}
@@ -62,32 +62,32 @@ func (t *Provider) Supports(mode string) bool {
 
 // ----------------- other requirements vv -------------------------
 
-func (t *Provider) RunCommand(command string) (*providers.Command, error) {
+func (p *Provider) RunCommand(command string) (*providers.Command, error) {
 	return nil, providers.ErrRunCommandNotImplemented
 }
 
-func (t *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
+func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
 	return providers.FileInfoDetails{}, providers.ErrFileInfoNotImplemented
 }
 
-func (t *Provider) FS() afero.Fs {
+func (p *Provider) FS() afero.Fs {
 	return &fsutil.NoFs{}
 }
 
-func (t *Provider) Close() {}
+func (p *Provider) Close() {}
 
-func (t *Provider) Capabilities() providers.Capabilities {
+func (p *Provider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{}
 }
 
-func (t *Provider) Kind() providers.Kind {
+func (p *Provider) Kind() providers.Kind {
 	return providers.Kind_KIND_NETWORK
 }
 
-func (t *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
+func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	return []providers.PlatformIdDetector{}
 }
 
-func (t *Provider) Runtime() string {
+func (p *Provider) Runtime() string {
 	return ""
 }

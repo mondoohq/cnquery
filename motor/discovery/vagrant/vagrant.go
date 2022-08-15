@@ -26,7 +26,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (v *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (v *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	localTransport, err := local.New()
@@ -51,8 +51,8 @@ func (v *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 	}
 
 	// filter vms if a context was provided
-	if len(tc.Host) > 0 {
-		k := tc.Host
+	if len(pCfg.Host) > 0 {
+		k := pCfg.Host
 		vm, ok := vmStatus[k]
 		if !ok {
 			return nil, errors.New("could not find vagrant host: " + k)
@@ -72,7 +72,7 @@ func (v *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 			return nil, err
 		}
 
-		a, err := newVagrantAsset(vmSshConfig[k], tc)
+		a, err := newVagrantAsset(vmSshConfig[k], pCfg)
 		if err != nil {
 			return nil, err
 		}
@@ -103,7 +103,7 @@ func (v *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 		}
 
 		for i := range vagrantVms {
-			a, err := newVagrantAsset(vagrantVms[i], tc)
+			a, err := newVagrantAsset(vagrantVms[i], pCfg)
 			if err != nil {
 				return nil, err
 			}
@@ -114,12 +114,12 @@ func (v *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 	return resolved, nil
 }
 
-func newVagrantAsset(sshConfig *VagrantVmSSHConfig, rootTransportConfig *providers.TransportConfig) (*asset.Asset, error) {
+func newVagrantAsset(sshConfig *VagrantVmSSHConfig, rootTransportConfig *providers.Config) (*asset.Asset, error) {
 	if sshConfig == nil {
 		return nil, errors.New("missing vagrant ssh config")
 	}
 
-	cc := &providers.TransportConfig{
+	cc := &providers.Config{
 		// TODO: do we need to support winrm?
 		Backend:  providers.ProviderType_SSH,
 		Host:     sshConfig.HostName,
@@ -139,7 +139,7 @@ func newVagrantAsset(sshConfig *VagrantVmSSHConfig, rootTransportConfig *provide
 	assetObj := &asset.Asset{
 		Name:        sshConfig.Host,
 		PlatformIds: []string{},
-		Connections: []*providers.TransportConfig{cc},
+		Connections: []*providers.Config{cc},
 		Platform: &platform.Platform{
 			Kind: providers.Kind_KIND_VIRTUAL_MACHINE,
 		},

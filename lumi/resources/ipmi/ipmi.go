@@ -35,7 +35,7 @@ func NewIpmiClient(c *Connection) (*IpmiClient, error) {
 		return nil, errors.New("no connection details provided")
 	}
 
-	tc := &ipmiTransport.Connection{
+	pCfg := &ipmiTransport.Connection{
 		Hostname:  c.Hostname,
 		Path:      c.Path,
 		Port:      int(c.Port),
@@ -44,16 +44,15 @@ func NewIpmiClient(c *Connection) (*IpmiClient, error) {
 		Interface: c.Interface,
 	}
 
-	t, err := ipmiTransport.NewClient(tc)
+	p, err := ipmiTransport.NewClient(pCfg)
 	if err != nil {
 		return nil, err
 	}
 
 	return &IpmiClient{
 		Connection: c,
-		Client:     t,
+		Client:     p,
 	}, nil
-
 }
 
 type deviceIDReq struct{}
@@ -189,7 +188,6 @@ type ChassisLastPowerEvent struct {
 
 // ChassisStatus - 28.2 Get Chassis Status Command
 func (c *IpmiClient) ChassisStatus() (*ChassisStatus, error) {
-
 	req := &ipmiTransport.Request{
 		ipmiTransport.NetworkFunctionChassis,
 		ipmiTransport.CommandChassisStatus,

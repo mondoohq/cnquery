@@ -16,14 +16,14 @@ func TestResolverWithAssetName(t *testing.T) {
 			Assets: []*asset.Asset{
 				{
 					Name: "test",
-					Connections: []*providers.TransportConfig{
+					Connections: []*providers.Config{
 						{
 							Backend: providers.ProviderType_LOCAL_OS,
 						},
 					},
 				},
 				{
-					Connections: []*providers.TransportConfig{
+					Connections: []*providers.Config{
 						{
 							Backend: providers.ProviderType_MOCK,
 							Options: map[string]string{

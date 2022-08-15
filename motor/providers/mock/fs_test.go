@@ -13,10 +13,10 @@ import (
 
 func TestGlobCommand(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/mock.toml")
-	trans, err := mock.NewFromTomlFile(filepath)
+	p, err := mock.NewFromTomlFile(filepath)
 	assert.Equal(t, nil, err, "should create mock without error")
 
-	filesystem := trans.Fs
+	filesystem := p.Fs
 	matches, err := filesystem.Glob("*ssh/*_config")
 	require.NoError(t, err)
 
@@ -26,10 +26,10 @@ func TestGlobCommand(t *testing.T) {
 
 func TestLoadFile(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/mock.toml")
-	trans, err := mock.NewFromTomlFile(filepath)
+	p, err := mock.NewFromTomlFile(filepath)
 	assert.Equal(t, nil, err, "should create mock without error")
 
-	f, err := trans.FS().Open("/etc/os-release")
+	f, err := p.FS().Open("/etc/os-release")
 	require.NoError(t, err)
 
 	data, err := ioutil.ReadAll(f)
@@ -40,10 +40,10 @@ func TestLoadFile(t *testing.T) {
 
 func TestReadDirnames(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/mock.toml")
-	trans, err := mock.NewFromTomlFile(filepath)
+	p, err := mock.NewFromTomlFile(filepath)
 	require.NoError(t, err)
 
-	dir, err := trans.FS().Open("/sys/class/dmi/id")
+	dir, err := p.FS().Open("/sys/class/dmi/id")
 	require.NoError(t, err)
 	stat, err := dir.Stat()
 	require.NoError(t, err)
@@ -60,7 +60,7 @@ func TestReadDirnames(t *testing.T) {
 func TestConcurrent(t *testing.T) {
 	wg := sync.WaitGroup{}
 	filepath, _ := filepath.Abs("./testdata/mock.toml")
-	trans, err := mock.NewFromTomlFile(filepath)
+	p, err := mock.NewFromTomlFile(filepath)
 	require.NoError(t, err)
 
 	for i := 0; i < 100; i++ {
@@ -74,13 +74,13 @@ func TestConcurrent(t *testing.T) {
 				"/sys/class/dmi/id/bios_vendor",
 			} {
 
-				_, err := trans.FS().Open(f)
+				_, err := p.FS().Open(f)
 				if err != nil {
 					t.Errorf("unexpected error in Open: %v", err)
 					return
 				}
 
-				err = trans.FS().Rename(f, f+".new")
+				err = p.FS().Rename(f, f+".new")
 				if err != nil {
 					t.Errorf("unexpected error in Rename: %v", err)
 					return

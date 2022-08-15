@@ -15,7 +15,7 @@ message Platform {
   string build = 6;
   string version = 7;
 
-  mondoo.motor.transports.v1.Kind kind = 20;
+  mondoo.motor.providers.v1.Kind kind = 20;
   string runtime = 21;
   map<string, string> labels = 22;
 }

@@ -9,13 +9,13 @@ import (
 )
 
 func TestTerraform(t *testing.T) {
-	trans, err := New(&providers.TransportConfig{
+	p, err := New(&providers.Config{
 		Options: map[string]string{
 			"path": "./testdata/",
 		},
 	})
 	require.NoError(t, err)
 
-	files := trans.Parser().Files()
+	files := p.Parser().Files()
 	assert.Equal(t, len(files), 2)
 }

@@ -15,7 +15,7 @@ import (
 // - default port
 // - loads ssh keys from known locations
 // - configures ssh agent authentication
-func ApplyDefaults(cc *providers.TransportConfig, username string, identityFile string, password string) error {
+func ApplyDefaults(cc *providers.Config, username string, identityFile string, password string) error {
 	// set default port for ssh
 	if cc.Port == 0 {
 		cc.Port = 22
@@ -52,7 +52,7 @@ func ApplyDefaults(cc *providers.TransportConfig, username string, identityFile 
 }
 
 // ApplyDefaultIdentities loads user's ssh identifies from ~/.ssh/
-func ApplyDefaultIdentities(cc *providers.TransportConfig, username string, password string) *providers.TransportConfig {
+func ApplyDefaultIdentities(cc *providers.Config, username string, password string) *providers.Config {
 	// ssh config overwrite like: IdentityFile ~/.foo/identity is done in ReadSSHConfig()
 	// fallback to default paths 	~/.ssh/id_rsa and ~/.ssh/id_dsa if they exist
 	home, err := homedir.Dir()

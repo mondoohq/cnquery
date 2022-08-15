@@ -18,11 +18,11 @@ import (
 
 func TestCatFs(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/cat.toml")
-	trans, err := mock.NewFromTomlFile(filepath)
+	p, err := mock.NewFromTomlFile(filepath)
 	require.NoError(t, err)
 
 	cw := &CommandWrapper{
-		commandRunner: trans,
+		commandRunner: p,
 		wrapper:       cmd.NewSudo(),
 	}
 

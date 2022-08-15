@@ -20,7 +20,7 @@ func TestVSphereTransport(t *testing.T) {
 	portNum, err := strconv.Atoi(port)
 	require.NoError(t, err)
 
-	trans, err := New(&providers.TransportConfig{
+	p, err := New(&providers.Config{
 		Backend:  providers.ProviderType_VSPHERE,
 		Host:     vs.Server.URL.Hostname(),
 		Port:     int32(portNum),
@@ -35,6 +35,6 @@ func TestVSphereTransport(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	ver := trans.Client().ServiceContent.About
+	ver := p.Client().ServiceContent.About
 	assert.Equal(t, "6.5", ver.ApiVersion)
 }

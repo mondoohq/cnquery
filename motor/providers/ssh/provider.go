@@ -23,11 +23,11 @@ var (
 	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
 )
 
-func New(tc *providers.TransportConfig) (*Provider, error) {
-	tc = ReadSSHConfig(tc)
+func New(pCfg *providers.Config) (*Provider, error) {
+	pCfg = ReadSSHConfig(pCfg)
 
 	// ensure all required configs are set
-	err := VerifyConfig(tc)
+	err := VerifyConfig(pCfg)
 	if err != nil {
 		return nil, err
 	}
@@ -37,15 +37,15 @@ func New(tc *providers.TransportConfig) (*Provider, error) {
 		activateScp = true
 	}
 
-	if tc.Insecure {
+	if pCfg.Insecure {
 		log.Debug().Msg("user allowed insecure ssh connection")
 	}
 
 	t := &Provider{
-		ConnectionConfig: tc,
+		ConnectionConfig: pCfg,
 		UseScpFilesystem: activateScp,
-		kind:             tc.Kind,
-		runtime:          tc.Runtime,
+		kind:             pCfg.Kind,
+		runtime:          pCfg.Runtime,
 	}
 	err = t.Connect()
 	if err != nil {
@@ -54,7 +54,7 @@ func New(tc *providers.TransportConfig) (*Provider, error) {
 
 	var s cmd.Wrapper
 	// check uid of user and disable sudo if uid is 0
-	if tc.Sudo != nil && tc.Sudo.Active {
+	if pCfg.Sudo != nil && pCfg.Sudo.Active {
 		// the id command may not be available, eg. if ssh is used with windows
 		out, _ := t.RunCommand("id -u")
 		stdout, _ := ioutil.ReadAll(out.Stdout)
@@ -80,7 +80,7 @@ func New(tc *providers.TransportConfig) (*Provider, error) {
 }
 
 type Provider struct {
-	ConnectionConfig *providers.TransportConfig
+	ConnectionConfig *providers.Config
 	SSHClient        *ssh.Client
 	fs               afero.Fs
 	UseScpFilesystem bool
@@ -91,8 +91,8 @@ type Provider struct {
 	serverVersion    string
 }
 
-func (t *Provider) Connect() error {
-	cc := t.ConnectionConfig
+func (p *Provider) Connect() error {
+	cc := p.ConnectionConfig
 
 	// we always want to ensure we use the default port if nothing was specified
 	if cc.Port == 0 {
@@ -142,23 +142,23 @@ func (t *Provider) Connect() error {
 		log.Debug().Err(err).Str("provider", "ssh").Str("host", cc.Host).Int32("port", cc.Port).Bool("insecure", cc.Insecure).Msg("could not establish ssh session")
 		return err
 	}
-	t.SSHClient = conn
-	t.HostKey = hostkey
-	t.serverVersion = string(conn.ServerVersion())
-	log.Debug().Str("provider", "ssh").Str("host", cc.Host).Int32("port", cc.Port).Str("server", t.serverVersion).Msg("ssh session established")
+	p.SSHClient = conn
+	p.HostKey = hostkey
+	p.serverVersion = string(conn.ServerVersion())
+	log.Debug().Str("provider", "ssh").Str("host", cc.Host).Int32("port", cc.Port).Str("server", p.serverVersion).Msg("ssh session established")
 	return nil
 }
 
-func (t *Provider) VerifyConnection() error {
+func (p *Provider) VerifyConnection() error {
 	var out *providers.Command
 	var err error
 
-	if t.Sudo != nil {
+	if p.Sudo != nil {
 		// Wrap sudo command, to see proper error messages. We set /dev/null to disable stdin
-		command := "sh -c '" + t.Sudo.Build("echo 'hi'") + " < /dev/null'"
-		out, err = t.runRawCommand(command)
+		command := "sh -c '" + p.Sudo.Build("echo 'hi'") + " < /dev/null'"
+		out, err = p.runRawCommand(command)
 	} else {
-		out, err = t.runRawCommand("echo 'hi'")
+		out, err = p.runRawCommand("echo 'hi'")
 		if err != nil {
 			return err
 		}
@@ -185,9 +185,9 @@ func (t *Provider) VerifyConnection() error {
 }
 
 // Reconnect closes a possible current connection and re-establishes a new connection
-func (t *Provider) Reconnect() error {
-	t.Close()
-	return t.Connect()
+func (p *Provider) Reconnect() error {
+	p.Close()
+	return p.Connect()
 }
 
 func (p *Provider) runRawCommand(command string) (*providers.Command, error) {
@@ -252,8 +252,8 @@ func (p *Provider) FS() afero.Fs {
 	return p.fs
 }
 
-func (t *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
-	fs := t.FS()
+func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
+	fs := p.FS()
 	afs := &afero.Afero{Fs: fs}
 	stat, err := afs.Stat(path)
 	if err != nil {
@@ -263,7 +263,7 @@ func (t *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
 	uid := int64(-1)
 	gid := int64(-1)
 
-	if t.Sudo != nil || t.UseScpFilesystem {
+	if p.Sudo != nil || p.UseScpFilesystem {
 		if stat, ok := stat.Sys().(*providers.FileInfo); ok {
 			uid = int64(stat.Uid)
 			gid = int64(stat.Gid)

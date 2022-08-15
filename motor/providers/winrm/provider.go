@@ -16,15 +16,15 @@ import (
 
 var _ providers.Transport = (*Provider)(nil)
 
-func VerifyConfig(endpoint *providers.TransportConfig) (*winrm.Endpoint, error) {
-	if endpoint.Backend != providers.ProviderType_WINRM {
+func VerifyConfig(pCfg *providers.Config) (*winrm.Endpoint, error) {
+	if pCfg.Backend != providers.ProviderType_WINRM {
 		return nil, errors.New("only winrm backend for winrm transport supported")
 	}
 
 	winrmEndpoint := &winrm.Endpoint{
-		Host:     endpoint.Host,
-		Port:     int(endpoint.Port),
-		Insecure: endpoint.Insecure,
+		Host:     pCfg.Host,
+		Port:     int(pCfg.Port),
+		Insecure: pCfg.Insecure,
 		HTTPS:    true,
 		Timeout:  time.Duration(0),
 	}
@@ -52,9 +52,9 @@ func DefaultConfig(endpoint *winrm.Endpoint) *winrm.Endpoint {
 }
 
 // New creates a winrm client and establishes a connection to verify the connection
-func New(tc *providers.TransportConfig) (*Provider, error) {
+func New(pCfg *providers.Config) (*Provider, error) {
 	// ensure all required configs are set
-	winrmEndpoint, err := VerifyConfig(tc)
+	winrmEndpoint, err := VerifyConfig(pCfg)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func New(tc *providers.TransportConfig) (*Provider, error) {
 	params.TransportDecorator = func() winrm.Transporter { return &winrm.ClientNTLM{} }
 
 	// search for password secret
-	c, err := vault.GetPassword(tc.Credentials)
+	c, err := vault.GetPassword(pCfg.Credentials)
 	if err != nil {
 		return nil, errors.New("missing password for winrm transport")
 	}
@@ -77,7 +77,7 @@ func New(tc *providers.TransportConfig) (*Provider, error) {
 	}
 
 	// test connection
-	log.Debug().Str("user", c.User).Str("host", tc.Host).Msg("winrm> connecting to remote shell via WinRM")
+	log.Debug().Str("user", c.User).Str("host", pCfg.Host).Msg("winrm> connecting to remote shell via WinRM")
 	shell, err := client.CreateShell()
 	if err != nil {
 		return nil, err
@@ -92,8 +92,8 @@ func New(tc *providers.TransportConfig) (*Provider, error) {
 	return &Provider{
 		Endpoint: winrmEndpoint,
 		Client:   client,
-		kind:     tc.Kind,
-		runtime:  tc.Runtime,
+		kind:     pCfg.Kind,
+		runtime:  pCfg.Runtime,
 	}, nil
 }
 

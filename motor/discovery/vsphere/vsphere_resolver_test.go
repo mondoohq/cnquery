@@ -22,7 +22,7 @@ func TestVsphereResolver(t *testing.T) {
 
 	// start vsphere discover
 	r := Resolver{}
-	assets, err := r.Resolve(&asset.Asset{}, &providers.TransportConfig{
+	assets, err := r.Resolve(&asset.Asset{}, &providers.Config{
 		Backend:  providers.ProviderType_VSPHERE,
 		Host:     vs.Server.URL.Hostname(),
 		Port:     int32(port),

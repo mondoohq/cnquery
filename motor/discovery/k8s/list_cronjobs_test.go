@@ -18,7 +18,7 @@ func TestListCronJobs(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	transport := k8s.NewMockKubernetesProvider(mockCtrl)
+	p := k8s.NewMockKubernetesProvider(mockCtrl)
 
 	cronJobPlatform := &platform.Platform{
 		Name:    "k8s-cronjob",
@@ -32,10 +32,10 @@ func TestListCronJobs(t *testing.T) {
 	nss := []corev1.Namespace{
 		{ObjectMeta: metav1.ObjectMeta{Name: "default"}},
 	}
-	transport.EXPECT().Namespaces().Return(nss, nil)
+	p.EXPECT().Namespaces().Return(nss, nil)
 	// called for each CronJob
-	transport.EXPECT().PlatformInfo().Return(cronJobPlatform)
-	transport.EXPECT().PlatformInfo().Return(cronJobPlatform)
+	p.EXPECT().PlatformInfo().Return(cronJobPlatform)
+	p.EXPECT().PlatformInfo().Return(cronJobPlatform)
 
 	// Seed CronJobs
 	cronjobs := []batchv1.CronJob{
@@ -89,7 +89,7 @@ func TestListCronJobs(t *testing.T) {
 		},
 	}
 
-	transport.EXPECT().CronJobs(nss[0]).Return(cronjobs, nil)
+	p.EXPECT().CronJobs(nss[0]).Return(cronjobs, nil)
 
 	expectedAssetNames := []string{
 		nss[0].Name + "/" + cronjobs[0].Name,
@@ -103,8 +103,8 @@ func TestListCronJobs(t *testing.T) {
 		clusterIdentifier + "/namespace/" + nss[0].Name + "/cronjobs/name/" + cronjobs[1].Name,
 	}
 
-	tc := &providers.TransportConfig{}
-	assets, err := ListCronJobs(transport, tc, clusterIdentifier, nil)
+	pCfg := &providers.Config{}
+	assets, err := ListCronJobs(p, pCfg, clusterIdentifier, nil)
 	assert.NoError(t, err)
 
 	var assetNames []string

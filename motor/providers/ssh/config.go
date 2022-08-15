@@ -1,7 +1,6 @@
 package ssh
 
 import (
-	"errors"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -14,7 +13,7 @@ import (
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
-func ReadSSHConfig(cc *providers.TransportConfig) *providers.TransportConfig {
+func ReadSSHConfig(cc *providers.Config) *providers.Config {
 	host := cc.Host
 
 	home, err := homedir.Dir()
@@ -85,9 +84,9 @@ func ReadSSHConfig(cc *providers.TransportConfig) *providers.TransportConfig {
 	return cc
 }
 
-func VerifyConfig(endpoint *providers.TransportConfig) error {
-	if endpoint.Backend != providers.ProviderType_SSH {
-		return errors.New("only ssh backend for ssh transport supported")
+func VerifyConfig(pCfg *providers.Config) error {
+	if pCfg.Backend != providers.ProviderType_SSH {
+		return providers.ErrProviderTypeDoesNotMatch
 	}
 
 	return nil

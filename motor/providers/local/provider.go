@@ -1,7 +1,7 @@
 package local
 
 import (
-	"io/ioutil"
+	"io"
 	"runtime"
 
 	"github.com/rs/zerolog/log"
@@ -15,10 +15,10 @@ import (
 var _ providers.Transport = (*Provider)(nil)
 
 func New() (*Provider, error) {
-	return NewWithConfig(&providers.TransportConfig{})
+	return NewWithConfig(&providers.Config{})
 }
 
-func NewWithConfig(tc *providers.TransportConfig) (*Provider, error) {
+func NewWithConfig(pCfg *providers.Config) (*Provider, error) {
 	// expect unix shell by default
 	shell := []string{"sh", "-c"}
 
@@ -28,17 +28,17 @@ func NewWithConfig(tc *providers.TransportConfig) (*Provider, error) {
 		shell = []string{"powershell", "-c"}
 	}
 
-	t := &Provider{
+	p := &Provider{
 		shell: shell,
 		// kind:    endpoint.Kind,
 		// runtime: endpoint.Runtime,
 	}
 
 	var s cmd.Wrapper
-	if tc != nil && tc.Sudo != nil && tc.Sudo.Active {
+	if pCfg != nil && pCfg.Sudo != nil && pCfg.Sudo.Active {
 		// the id command may not be available, eg. if ssh is used with windows
-		out, _ := t.RunCommand("id -u")
-		stdout, _ := ioutil.ReadAll(out.Stdout)
+		out, _ := p.RunCommand("id -u")
+		stdout, _ := io.ReadAll(out.Stdout)
 		// just check for the explicit positive case, otherwise just activate sudo
 		// we check sudo in VerifyConnection
 		if string(stdout) != "0" {
@@ -47,9 +47,9 @@ func NewWithConfig(tc *providers.TransportConfig) (*Provider, error) {
 			s = cmd.NewSudo()
 		}
 	}
-	t.Sudo = s
+	p.Sudo = s
 
-	return t, nil
+	return p, nil
 }
 
 type Provider struct {

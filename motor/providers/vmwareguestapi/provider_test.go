@@ -10,8 +10,8 @@ package vmwareguestapi
 // )
 
 // func TestRunCommand(t *testing.T) {
-// 	trans, err := New(&transports.TransportConfig{
-// 		Backend:  transports.TransportBackend_CONNECTION_VSPHERE_VM,
+// 	p, err := New(&transports.TransportConfig{
+// 		Type:  transports.TransportBackend_CONNECTION_VSPHERE_VM,
 // 		Host:     "192.168.178.139",
 // 		User:     "root",
 // 		Password: "password1!",

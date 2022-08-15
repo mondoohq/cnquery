@@ -28,7 +28,7 @@ func TestSecretManagerPassword(t *testing.T) {
 	assetObj := &asset.Asset{
 		Name:     "asset-name",
 		Platform: &platform.Platform{Name: "ubuntu"},
-		Connections: []*providers.TransportConfig{
+		Connections: []*providers.Config{
 			{Backend: providers.ProviderType_SSH, Insecure: true},
 		},
 	}
@@ -59,7 +59,7 @@ func TestSecretManagerPrivateKey(t *testing.T) {
 	assetObj := &asset.Asset{
 		Name:     "asset-name",
 		Platform: &platform.Platform{Name: "ubuntu"},
-		Connections: []*providers.TransportConfig{
+		Connections: []*providers.Config{
 			{Backend: providers.ProviderType_SSH, Insecure: true},
 		},
 	}
@@ -90,7 +90,7 @@ func TestSecretManagerBadKey(t *testing.T) {
 	assetObj := &asset.Asset{
 		Name:     "asset-name",
 		Platform: &platform.Platform{Name: "ubuntu"},
-		Connections: []*providers.TransportConfig{
+		Connections: []*providers.Config{
 			{Backend: providers.ProviderType_SSH, Insecure: true},
 		},
 	}

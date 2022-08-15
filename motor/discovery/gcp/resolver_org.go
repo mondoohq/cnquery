@@ -17,7 +17,7 @@ func (r *GcpOrgResolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryProjects}
 }
 
-func (r *GcpOrgResolver) Resolve(tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *GcpOrgResolver) Resolve(tc *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	if tc == nil || tc.Options["organization"] == "" {

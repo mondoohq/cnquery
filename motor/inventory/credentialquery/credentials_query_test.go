@@ -3,13 +3,10 @@ package credentialquery
 import (
 	"testing"
 
-	"go.mondoo.io/mondoo/motor/vault"
-
-	"go.mondoo.io/mondoo/motor/asset"
-
 	"github.com/stretchr/testify/assert"
-
 	"github.com/stretchr/testify/require"
+	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/vault"
 )
 
 func TestSecretKeySimple(t *testing.T) {
