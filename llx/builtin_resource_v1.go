@@ -12,7 +12,7 @@ import (
 // resourceFunctions are all the shared handlers for resource calls
 var resourceFunctionsV1 map[string]chunkHandlerV1
 
-func _resourceWhereV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32, invert bool) (*RawData, int32, error) {
+func _resourceWhereV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32, invert bool) (*RawData, int32, error) {
 	// where(resource.list, function)
 	itemsRef := chunk.Function.Args[0]
 	items, rref, err := c.resolveValue(itemsRef, ref)
@@ -99,15 +99,15 @@ func _resourceWhereV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32
 	return nil, 0, nil
 }
 
-func resourceWhereV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func resourceWhereV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return _resourceWhereV1(c, bind, chunk, ref, false)
 }
 
-func resourceWhereNotV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func resourceWhereNotV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return _resourceWhereV1(c, bind, chunk, ref, true)
 }
 
-func resourceMapV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func resourceMapV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	// map(resource.list, function)
 	itemsRef := chunk.Function.Args[0]
 	items, rref, err := c.resolveValue(itemsRef, ref)
@@ -170,7 +170,7 @@ func resourceMapV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (
 	return nil, 0, nil
 }
 
-func resourceLengthV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func resourceLengthV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	// length(resource.list)
 	itemsRef := chunk.Function.Args[0]
 	items, rref, err := c.resolveValue(itemsRef, ref)
@@ -182,7 +182,7 @@ func resourceLengthV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32
 	return IntData(int64(len(list))), 0, nil
 }
 
-func resourceDateV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func resourceDateV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	args, rref, err := args2resourceargsV1(c, ref, chunk.Function.Args)
 	if err != nil || rref != 0 {
 		return nil, rref, err

@@ -12,7 +12,7 @@ import (
 
 type chunkHandlerV1 struct {
 	Compiler func(types.Type, types.Type) (string, error)
-	f        func(*LeiseExecutorV1, *RawData, *Chunk, int32) (*RawData, int32, error)
+	f        func(*MQLExecutorV1, *RawData, *Chunk, int32) (*RawData, int32, error)
 	Label    string
 	Typ      types.Type
 }
@@ -621,7 +621,7 @@ func init() {
 			"$whereNot": {f: resourceWhereNotV1},
 			"map":       {f: resourceMapV1},
 			"length":    {f: resourceLengthV1},
-			"{}": {f: func(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+			"{}": {f: func(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 				return c.runBlock(bind, chunk.Function.Args[0], nil, ref)
 			}},
 			// TODO: [#32] unique builtin fields that need a long-term support in LR
@@ -663,7 +663,7 @@ func validateBuiltinFunctionsV1() {
 	panic("missing functions must be added")
 }
 
-func runResourceFunctionV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func runResourceFunctionV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	// ugh something is wrong here.... fix it later
 	rr, ok := bind.Value.(lumi.ResourceType)
 	if !ok {
@@ -753,7 +753,7 @@ func BuiltinFunctionV1(typ types.Type, name string) (*chunkHandlerV1, error) {
 }
 
 // this is called for objects that call a function
-func (c *LeiseExecutorV1) runBoundFunctionV1(bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func (c *MQLExecutorV1) runBoundFunctionV1(bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	log.Trace().Int32("ref", ref).Str("id", chunk.Id).Msg("exec> run bound function")
 
 	fh, err := BuiltinFunctionV1(bind.Type, chunk.Id)

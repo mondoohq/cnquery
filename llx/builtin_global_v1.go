@@ -20,7 +20,7 @@ func handleGlobalV1(op string) (handleFunctionV1, bool) {
 
 // DEFINITIONS
 
-type handleFunctionV1 func(*LeiseExecutorV1, *Function, int32) (*RawData, int32, error)
+type handleFunctionV1 func(*MQLExecutorV1, *Function, int32) (*RawData, int32, error)
 
 var globalFunctionsV1 map[string]handleFunctionV1
 
@@ -36,7 +36,7 @@ func init() {
 	}
 }
 
-func ifCallV1(c *LeiseExecutorV1, f *Function, ref int32) (*RawData, int32, error) {
+func ifCallV1(c *MQLExecutorV1, f *Function, ref int32) (*RawData, int32, error) {
 	if len(f.Args) < 2 {
 		return nil, 0, errors.New("Called if with " + strconv.Itoa(len(f.Args)) + " arguments, expected at least 2")
 	}
@@ -65,7 +65,7 @@ func ifCallV1(c *LeiseExecutorV1, f *Function, ref int32) (*RawData, int32, erro
 	return NilData, 0, nil
 }
 
-func switchCallV1(c *LeiseExecutorV1, f *Function, ref int32) (*RawData, int32, error) {
+func switchCallV1(c *MQLExecutorV1, f *Function, ref int32) (*RawData, int32, error) {
 	// very similar to the if-call above; minor differences:
 	// - we have an optional reference value (which is in the function call)
 	// - default is translated to `true` in its condition; everything else is a function
@@ -116,7 +116,7 @@ func switchCallV1(c *LeiseExecutorV1, f *Function, ref int32) (*RawData, int32, 
 	return NilData, 0, nil
 }
 
-func scoreCallV1(c *LeiseExecutorV1, f *Function, ref int32) (*RawData, int32, error) {
+func scoreCallV1(c *MQLExecutorV1, f *Function, ref int32) (*RawData, int32, error) {
 	if len(f.Args) != 1 {
 		return nil, 0, errors.New("Called `score` with " + strconv.Itoa(len(f.Args)) + " arguments, expected one")
 	}
@@ -145,7 +145,7 @@ func scoreCallV1(c *LeiseExecutorV1, f *Function, ref int32) (*RawData, int32, e
 	return ScoreData(b), 0, nil
 }
 
-func typeofCallV1(c *LeiseExecutorV1, f *Function, ref int32) (*RawData, int32, error) {
+func typeofCallV1(c *MQLExecutorV1, f *Function, ref int32) (*RawData, int32, error) {
 	if len(f.Args) != 1 {
 		return nil, 0, errors.New("Called `typeof` with " + strconv.Itoa(len(f.Args)) + " arguments, expected one")
 	}
@@ -158,7 +158,7 @@ func typeofCallV1(c *LeiseExecutorV1, f *Function, ref int32) (*RawData, int32, 
 	return StringData(res.Type.Label()), 0, nil
 }
 
-func expectV1(c *LeiseExecutorV1, f *Function, ref int32) (*RawData, int32, error) {
+func expectV1(c *MQLExecutorV1, f *Function, ref int32) (*RawData, int32, error) {
 	if len(f.Args) != 1 {
 		return nil, 0, errors.New("Called expect with " + strconv.Itoa(len(f.Args)) + " arguments, expected 1")
 	}
@@ -169,7 +169,7 @@ func expectV1(c *LeiseExecutorV1, f *Function, ref int32) (*RawData, int32, erro
 	return res, dref, err
 }
 
-func blockV1(c *LeiseExecutorV1, f *Function, ref int32) (*RawData, int32, error) {
+func blockV1(c *MQLExecutorV1, f *Function, ref int32) (*RawData, int32, error) {
 	if len(f.Args) != 1 {
 		return nil, 0, errors.New("Called block with " + strconv.Itoa(len(f.Args)) + " arguments, expected 1")
 	}
@@ -181,7 +181,7 @@ func blockV1(c *LeiseExecutorV1, f *Function, ref int32) (*RawData, int32, error
 	// return res, dref, err
 }
 
-func returnCallV1(c *LeiseExecutorV1, f *Function, ref int32) (*RawData, int32, error) {
+func returnCallV1(c *MQLExecutorV1, f *Function, ref int32) (*RawData, int32, error) {
 	arg := f.Args[0]
 	return c.resolveValue(arg, ref)
 }

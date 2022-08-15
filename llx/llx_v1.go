@@ -68,11 +68,11 @@ func (c *CacheV1) Load(k int32) (*stepCache, bool) {
 	return res.(*stepCache), ok
 }
 
-// LeiseExecutor is the runtime of a leise/llx codestructure
-type LeiseExecutorV1 struct {
+// MQLExecutorV1 is the runtime of a MQL codestructure
+type MQLExecutorV1 struct {
 	id             string
 	watcherIds     *types.StringSet
-	blockExecutors []*LeiseExecutorV1
+	blockExecutors []*MQLExecutorV1
 	runtime        *lumi.Runtime
 	code           *CodeV1
 	entrypoints    map[int32]struct{}
@@ -86,7 +86,7 @@ type LeiseExecutorV1 struct {
 	props          map[string]*Primitive
 }
 
-func (c *LeiseExecutorV1) watcherUID(ref int32) string {
+func (c *MQLExecutorV1) watcherUID(ref int32) string {
 	return c.id + "\x00" + strconv.FormatInt(int64(ref), 10)
 }
 
@@ -109,9 +109,9 @@ func unregistrableCallback(cb ResultCallback) (ResultCallback, func()) {
 
 // NewExecutor will create a code runner from code, running in a runtime, calling
 // callback whenever we get a result
-func NewExecutorV1(code *CodeV1, runtime *lumi.Runtime, props map[string]*Primitive, callback ResultCallback) (*LeiseExecutorV1, error) {
+func NewExecutorV1(code *CodeV1, runtime *lumi.Runtime, props map[string]*Primitive, callback ResultCallback) (*MQLExecutorV1, error) {
 	if runtime == nil {
-		return nil, errors.New("cannot exec leise without a runtime")
+		return nil, errors.New("cannot exec MQL without a runtime")
 	}
 
 	if code == nil {
@@ -120,7 +120,7 @@ func NewExecutorV1(code *CodeV1, runtime *lumi.Runtime, props map[string]*Primit
 
 	wrappedCallback, unregisterFunc := unregistrableCallback(callback)
 
-	res := &LeiseExecutorV1{
+	res := &MQLExecutorV1{
 		id:             uuid.Must(uuid.NewV4()).String(),
 		runtime:        runtime,
 		entrypoints:    make(map[int32]struct{}),
@@ -169,7 +169,7 @@ func NewExecutorV1(code *CodeV1, runtime *lumi.Runtime, props map[string]*Primit
 }
 
 // Run code with a runtime and return results
-func (c *LeiseExecutorV1) Run() {
+func (c *MQLExecutorV1) Run() {
 	// work down all entrypoints
 	refs := make([]int32, len(c.callbackPoints))
 	i := 0
@@ -191,7 +191,7 @@ func (c *LeiseExecutorV1) Run() {
 }
 
 // NoRun returns error for all callbacks and don't run code
-func (c *LeiseExecutorV1) NoRun(err error) {
+func (c *MQLExecutorV1) NoRun(err error) {
 	for ref := range c.callbackPoints {
 		if codeID, ok := c.callbackPoints[ref]; ok {
 			c.callback(errorResult(err, codeID))
@@ -200,7 +200,7 @@ func (c *LeiseExecutorV1) NoRun(err error) {
 }
 
 // Unregister an execution chain from receiving any further updates
-func (c *LeiseExecutorV1) Unregister() error {
+func (c *MQLExecutorV1) Unregister() error {
 	log.Trace().Str("id", c.id).Msg("exec> unregister")
 
 	c.unregisterFunc()
@@ -270,9 +270,9 @@ func newArrayBlockCallResultsV1(expectedBlockCalls int, code *CodeV1, onComplete
 	}
 }
 
-func (c *LeiseExecutorV1) runFunctionBlocks(argList [][]*RawData, code *CodeV1,
-	onComplete func([]arrayBlockCallResult, []error)) error {
-
+func (c *MQLExecutorV1) runFunctionBlocks(argList [][]*RawData, code *CodeV1,
+	onComplete func([]arrayBlockCallResult, []error),
+) error {
 	callResults := newArrayBlockCallResultsV1(len(argList), code, onComplete)
 
 	for idx := range argList {
@@ -288,7 +288,7 @@ func (c *LeiseExecutorV1) runFunctionBlocks(argList [][]*RawData, code *CodeV1,
 	return nil
 }
 
-func (c *LeiseExecutorV1) runFunctionBlock(args []*RawData, code *CodeV1, cb ResultCallback) error {
+func (c *MQLExecutorV1) runFunctionBlock(args []*RawData, code *CodeV1, cb ResultCallback) error {
 	executor, err := NewExecutorV1(code, c.runtime, c.props, reportSync(cb))
 	if err != nil {
 		return err
@@ -306,7 +306,7 @@ func (c *LeiseExecutorV1) runFunctionBlock(args []*RawData, code *CodeV1, cb Res
 	return nil
 }
 
-func (c *LeiseExecutorV1) runBlock(bind *RawData, functionRef *Primitive, args []*Primitive, ref int32) (*RawData, int32, error) {
+func (c *MQLExecutorV1) runBlock(bind *RawData, functionRef *Primitive, args []*Primitive, ref int32) (*RawData, int32, error) {
 	if bind != nil && bind.Value == nil && bind.Type != types.Nil {
 		return &RawData{Type: bind.Type, Value: nil}, 0, nil
 	}
@@ -378,7 +378,7 @@ func (c *LeiseExecutorV1) runBlock(bind *RawData, functionRef *Primitive, args [
 	return nil, 0, err
 }
 
-func (c *LeiseExecutorV1) createResource(name string, f *Function, ref int32) (*RawData, int32, error) {
+func (c *MQLExecutorV1) createResource(name string, f *Function, ref int32) (*RawData, int32, error) {
 	args, rref, err := args2resourceargsV1(c, ref, f.Args)
 	if err != nil || rref != 0 {
 		return nil, rref, err
@@ -414,7 +414,7 @@ func (c *LeiseExecutorV1) createResource(name string, f *Function, ref int32) (*
 	return res.Result, 0, nil
 }
 
-func (c *LeiseExecutorV1) runGlobalFunction(chunk *Chunk, f *Function, ref int32) (*RawData, int32, error) {
+func (c *MQLExecutorV1) runGlobalFunction(chunk *Chunk, f *Function, ref int32) (*RawData, int32, error) {
 	h, ok := handleGlobalV1(chunk.Id)
 	if ok {
 		if h == nil {
@@ -433,7 +433,7 @@ func (c *LeiseExecutorV1) runGlobalFunction(chunk *Chunk, f *Function, ref int32
 }
 
 // connect references, calling `dst` if `src` is updated
-func (c *LeiseExecutorV1) connectRef(src int32, dst int32) (*RawData, int32, error) {
+func (c *MQLExecutorV1) connectRef(src int32, dst int32) (*RawData, int32, error) {
 	// connect the ref. If it is already connected, someone else already made this
 	// call, so we don't have to follow up anymore
 	if exists := c.calls.Store(src, dst); exists {
@@ -444,7 +444,7 @@ func (c *LeiseExecutorV1) connectRef(src int32, dst int32) (*RawData, int32, err
 	return nil, src, nil
 }
 
-func (c *LeiseExecutorV1) runFunction(chunk *Chunk, ref int32) (*RawData, int32, error) {
+func (c *MQLExecutorV1) runFunction(chunk *Chunk, ref int32) (*RawData, int32, error) {
 	f := chunk.Function
 	if f == nil {
 		f = &emptyFunction
@@ -469,7 +469,7 @@ func (c *LeiseExecutorV1) runFunction(chunk *Chunk, ref int32) (*RawData, int32,
 	return c.runBoundFunctionV1(res.Result, chunk, ref)
 }
 
-func (c *LeiseExecutorV1) runChunk(chunk *Chunk, ref int32) (*RawData, int32, error) {
+func (c *MQLExecutorV1) runChunk(chunk *Chunk, ref int32) (*RawData, int32, error) {
 	switch chunk.Call {
 	case Chunk_PRIMITIVE:
 		res, dref, err := c.resolveValue(chunk.Primitive, ref)
@@ -503,7 +503,7 @@ func (c *LeiseExecutorV1) runChunk(chunk *Chunk, ref int32) (*RawData, int32, er
 	}
 }
 
-func (c *LeiseExecutorV1) runRef(ref int32) (*RawData, int32, error) {
+func (c *MQLExecutorV1) runRef(ref int32) (*RawData, int32, error) {
 	chunk := c.code.Code[ref-1]
 	if chunk == nil {
 		return nil, 0, errors.New("Called a chunk that doesn't exist, ref = " + strconv.FormatInt(int64(ref), 10))
@@ -514,7 +514,7 @@ func (c *LeiseExecutorV1) runRef(ref int32) (*RawData, int32, error) {
 // runChain starting at a ref of the code, follow it down and report
 // jever result it has at the end of its execution. this will register
 // async callbacks against referenced chunks too
-func (c *LeiseExecutorV1) runChain(start int32) {
+func (c *MQLExecutorV1) runChain(start int32) {
 	var res *RawData
 	var err error
 	nextRef := start
@@ -597,7 +597,7 @@ func (c *LeiseExecutorV1) runChain(start int32) {
 // unlike runChain this will not execute the ref chunk, but rather
 // try to move to the next called chunk - or if it's not available
 // handle the result
-func (c *LeiseExecutorV1) triggerChain(ref int32, data *RawData) {
+func (c *MQLExecutorV1) triggerChain(ref int32, data *RawData) {
 	// before we do anything else, we may have to provide the value from
 	// this callback point
 	if codeID, ok := c.callbackPoints[ref]; ok {
@@ -626,7 +626,7 @@ func (c *LeiseExecutorV1) triggerChain(ref int32, data *RawData) {
 	c.callback(&RawResult{Data: res.Result, CodeID: codeID})
 }
 
-func (c *LeiseExecutorV1) triggerChainError(ref int32, err error) {
+func (c *MQLExecutorV1) triggerChainError(ref int32, err error) {
 	cur := ref
 	var remaining []int32
 	for cur > 0 {

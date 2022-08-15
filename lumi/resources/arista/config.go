@@ -18,7 +18,6 @@ func CountLeadingSpace(line string) int {
 }
 
 func ParseConfig(in io.Reader) map[string]interface{} {
-
 	stack := []map[string]interface{}{}
 	keyStack := []string{}
 
@@ -67,7 +66,7 @@ func ParseConfig(in io.Reader) map[string]interface{} {
 		lastDepth = level
 		lastKey = key
 
-		// TODO: only temporary until we can check for key existence in leise
+		// TODO: only temporary until we can check for key existence in MQL
 		stack[level][key] = true
 	}
 
@@ -75,7 +74,6 @@ func ParseConfig(in io.Reader) map[string]interface{} {
 }
 
 func GetSection(in io.Reader, section string) string {
-
 	keyStack := []string{}
 	keyStack = append(keyStack, "")
 

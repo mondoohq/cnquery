@@ -1,4 +1,4 @@
-package leise
+package mqlc
 
 import (
 	"fmt"

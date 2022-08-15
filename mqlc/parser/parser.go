@@ -11,7 +11,7 @@ import (
 	"github.com/alecthomas/participle/lexer"
 )
 
-var leiseLexer lexer.Definition
+var mqlLexer lexer.Definition
 
 var (
 	Ident    rune
@@ -27,7 +27,7 @@ var (
 var tokenNames map[rune]string
 
 func init() {
-	leiseLexer = lexer.Must(lexer.Regexp(`(\s+)` +
+	mqlLexer = lexer.Must(lexer.Regexp(`(\s+)` +
 		`|(?P<Ident>[a-zA-Z$_][a-zA-Z0-9_]*)` +
 		`|(?P<Float>[-+]?\d*\.\d+([eE][-+]?\d+)?)` +
 		`|(?P<Int>[-+]?\d+([eE][-+]?\d+)?)` +
@@ -38,7 +38,7 @@ func init() {
 		`|(?P<Call>[(){}\[\]])`,
 	))
 
-	syms := leiseLexer.Symbols()
+	syms := mqlLexer.Symbols()
 
 	Ident = syms["Ident"]
 	Float = syms["Float"]
@@ -85,11 +85,9 @@ func (e *ErrIncorrect) Error() string {
 	return "expected " + e.expected + ", got '" + e.got + "' at " + e.pos.String()
 }
 
-var (
-	blockCall string = "{}"
-)
+var blockCall string = "{}"
 
-// Expression at the root of leise
+// Expression at the root of mqlc
 type Expression struct {
 	Operand    *Operand     `json:",omitempty"`
 	Operations []*Operation `json:",omitempty"`
@@ -251,15 +249,17 @@ func (p *parser) rewind(token lexer.Token) {
 	p.token = token
 }
 
-var reUnescape = regexp.MustCompile("\\\\.")
-var unescapeMap = map[string]string{
-	"\\n": "\n",
-	"\\t": "\t",
-	"\\v": "\v",
-	"\\b": "\b",
-	"\\f": "\f",
-	"\\0": "\x00",
-}
+var (
+	reUnescape  = regexp.MustCompile("\\\\.")
+	unescapeMap = map[string]string{
+		"\\n": "\n",
+		"\\t": "\t",
+		"\\v": "\v",
+		"\\b": "\b",
+		"\\f": "\f",
+		"\\0": "\x00",
+	}
+)
 
 func (p *parser) token2string() string {
 	v := p.token.Value
@@ -850,7 +850,7 @@ func (p *parser) parseExpression() (*Expression, error) {
 
 // Parse an input string into an AST
 func Parse(input string) (*AST, error) {
-	lex, err := leiseLexer.Lex(strings.NewReader(input))
+	lex, err := mqlLexer.Lex(strings.NewReader(input))
 	if err != nil {
 		return nil, err
 	}
@@ -895,10 +895,10 @@ func Parse(input string) (*AST, error) {
 	return &res, err
 }
 
-// Lex the input leise string to a list of tokens
+// Lex the input mqlc string to a list of tokens
 func Lex(input string) ([]lexer.Token, error) {
 	res := []lexer.Token{}
-	lex, err := leiseLexer.Lex(strings.NewReader(input))
+	lex, err := mqlLexer.Lex(strings.NewReader(input))
 	if err != nil {
 		return res, err
 	}

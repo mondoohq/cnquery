@@ -7,7 +7,7 @@ import (
 // returns the resolved argument if it's a ref; otherwise just the argument
 // returns the reference if something else needs executing before it can be computed
 // returns an error otherwise
-func (c *LeiseExecutorV1) resolveValue(arg *Primitive, ref int32) (*RawData, int32, error) {
+func (c *MQLExecutorV1) resolveValue(arg *Primitive, ref int32) (*RawData, int32, error) {
 	typ := types.Type(arg.Type)
 	switch typ.Underlying() {
 	case types.Ref:
@@ -40,7 +40,7 @@ func (c *LeiseExecutorV1) resolveValue(arg *Primitive, ref int32) (*RawData, int
 	return v, 0, v.Error
 }
 
-func args2resourceargsV1(c *LeiseExecutorV1, ref int32, args []*Primitive) ([]interface{}, int32, error) {
+func args2resourceargsV1(c *MQLExecutorV1, ref int32, args []*Primitive) ([]interface{}, int32, error) {
 	if args == nil {
 		return []interface{}{}, 0, nil
 	}

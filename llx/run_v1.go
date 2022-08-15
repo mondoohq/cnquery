@@ -7,7 +7,7 @@ import (
 )
 
 // Run a piece of compiled code against a runtime. Just a friendly helper method
-func RunV1(code *CodeV1, runtime *lumi.Runtime, props map[string]*Primitive, callback ResultCallback) (*LeiseExecutorV1, error) {
+func RunV1(code *CodeV1, runtime *lumi.Runtime, props map[string]*Primitive, callback ResultCallback) (*MQLExecutorV1, error) {
 	x, err := NewExecutorV1(code, runtime, props, callback)
 	if err != nil {
 		return nil, err
@@ -16,7 +16,7 @@ func RunV1(code *CodeV1, runtime *lumi.Runtime, props map[string]*Primitive, cal
 	return x, nil
 }
 
-func NoRunV1(code *CodeV1, runerr error, runtime *lumi.Runtime, props map[string]*Primitive, callback ResultCallback) (*LeiseExecutorV1, error) {
+func NoRunV1(code *CodeV1, runerr error, runtime *lumi.Runtime, props map[string]*Primitive, callback ResultCallback) (*MQLExecutorV1, error) {
 	x, err := NewExecutorV1(code, runtime, props, callback)
 	if err != nil {
 		return nil, err
@@ -28,7 +28,7 @@ func NoRunV1(code *CodeV1, runerr error, runtime *lumi.Runtime, props map[string
 // RunOnce the code that was provided and call the callback
 func RunOnceV1(code *CodeV1, runtime *lumi.Runtime, props map[string]*Primitive, callback func(one *RawResult, isDone bool)) error {
 	cnt := 0
-	var executor *LeiseExecutorV1
+	var executor *MQLExecutorV1
 	var err error
 
 	maxCnt := len(code.Entrypoints) + len(code.Datapoints)
@@ -39,7 +39,7 @@ func RunOnceV1(code *CodeV1, runtime *lumi.Runtime, props map[string]*Primitive,
 	// including the closure-based executor is in place before the callback
 	// runs.
 	executor, err = NewExecutorV1(code, runtime, props, func(one *RawResult) {
-		var isDone = false
+		isDone := false
 		cnt++
 
 		if cnt >= maxCnt {

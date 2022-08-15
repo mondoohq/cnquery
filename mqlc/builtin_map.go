@@ -1,9 +1,9 @@
-package leise
+package mqlc
 
 import (
 	"errors"
 
-	"go.mondoo.io/mondoo/leise/parser"
+	"go.mondoo.io/mondoo/mqlc/parser"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/types"
 )

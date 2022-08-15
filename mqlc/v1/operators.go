@@ -1,15 +1,15 @@
-package leise
+package v1
 
 import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/leise/parser"
+	"go.mondoo.io/mondoo/mqlc/parser"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/types"
 )
 
-type fieldCompiler func(*compiler, string, *parser.Call) (types.Type, error)
+type fieldCompiler func(*compiler, string, *parser.Call, *llx.CodeBundle) (types.Type, error)
 
 var operatorsCompilers map[string]fieldCompiler
 
@@ -42,9 +42,30 @@ func init() {
 	}
 }
 
+func resolveType(chunk *llx.Chunk, code *llx.CodeV1) types.Type {
+	var typ types.Type
+	var ref int32
+	if chunk.Function != nil {
+		typ = types.Type(chunk.Function.Type)
+		ref = chunk.Function.DeprecatedV5Binding
+	} else if chunk.Primitive != nil {
+		typ = types.Type(chunk.Primitive.Type)
+		ref, _ = chunk.Primitive.RefV1()
+	} else {
+		// if it compiled and we have a name with an ID that is not a ref then
+		// it's a resource with that id
+		typ = types.Resource(chunk.Id)
+	}
+
+	if typ != types.Ref {
+		return typ
+	}
+	return resolveType(code.Code[ref-1], code)
+}
+
 // compile the operation between two operands A and B
 // examples: A && B, A - B, ...
-func compileABOperation(c *compiler, id string, call *parser.Call) (uint64, *llx.Chunk, *llx.Primitive, *llx.AssertionMessage, error) {
+func compileABOperation(c *compiler, id string, call *parser.Call) (int32, *llx.Chunk, *llx.Primitive, *llx.AssertionMessage, error) {
 	if call == nil {
 		return 0, nil, nil, nil, errors.New("operation needs a function call")
 	}
@@ -65,11 +86,13 @@ func compileABOperation(c *compiler, id string, call *parser.Call) (uint64, *llx
 		return 0, nil, nil, nil, errors.New("calling operations with named arguments is not supported")
 	}
 
+	code := c.Result.DeprecatedV5Code
+
 	leftRef, err := c.compileAndAddExpression(a.Value)
 	if err != nil {
 		return 0, nil, nil, nil, err
 	}
-	left := c.Result.CodeV2.Chunk(leftRef)
+	left := code.Code[leftRef-1]
 
 	right, err := c.compileExpression(b.Value)
 	if err != nil {
@@ -77,7 +100,7 @@ func compileABOperation(c *compiler, id string, call *parser.Call) (uint64, *llx
 	}
 
 	if left == nil {
-		log.Fatal().Msgf("left is nil: %d", leftRef)
+		log.Fatal().Msgf("left is nil: %d %#v", leftRef, code.Code[leftRef-1])
 	}
 
 	comments := extractComments(a.Value) + "\n" + extractComments(b.Value)
@@ -90,20 +113,20 @@ func compileABOperation(c *compiler, id string, call *parser.Call) (uint64, *llx
 	// ref to it in the chunk stack. Since the message tag **may** end up using it,
 	// we have to provide it ref'able. So... bit the bullet (for now... seriously if
 	// we could do this simpler that'd be great)
-	rightRef, ok := right.RefV2()
+	rightRef, ok := right.RefV1()
 	if !ok {
-		c.addChunk(&llx.Chunk{
+		code.AddChunk(&llx.Chunk{
 			Call:      llx.Chunk_PRIMITIVE,
 			Primitive: right,
 		})
-		rightRef = c.tailRef()
+		rightRef = code.ChunkIndex()
 	}
 
 	// these variables are accessible only to comments
-	c.vars.add("$expected", variable{ref: rightRef, typ: types.Type(right.Type)})
-	c.vars.add("$actual", variable{ref: leftRef, typ: left.Type()})
+	c.vars["$expected"] = variable{ref: rightRef, typ: types.Type(right.Type)}
+	c.vars["$actual"] = variable{ref: leftRef, typ: left.Type()}
 	if c.Binding != nil {
-		c.vars.add("$binding", variable{ref: c.Binding.ref, typ: c.Binding.typ})
+		c.vars["$binding"] = variable{ref: c.Binding.Ref, typ: c.Binding.Type}
 	}
 
 	assertionMsg, err := compileAssertionMsg(msg, c)
@@ -113,7 +136,7 @@ func compileABOperation(c *compiler, id string, call *parser.Call) (uint64, *llx
 	return leftRef, left, right, assertionMsg, nil
 }
 
-func compileAssignment(c *compiler, id string, call *parser.Call) (types.Type, error) {
+func compileAssignment(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
 	if call == nil {
 		return types.Nil, errors.New("assignment needs a function call")
 	}
@@ -152,98 +175,103 @@ func compileAssignment(c *compiler, id string, call *parser.Call) (types.Type, e
 		return types.Nil, err
 	}
 
-	c.vars.add(name, variable{
+	code := c.Result.DeprecatedV5Code
+	c.vars[name] = variable{
 		ref: ref,
-		typ: c.Result.CodeV2.Chunk(ref).Type(),
-	})
+		typ: code.Code[ref-1].Type(),
+	}
 
 	return types.Nil, nil
 }
 
-func compileComparable(c *compiler, id string, call *parser.Call) (types.Type, error) {
+func compileComparable(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
 	leftRef, left, right, assertionMsg, err := compileABOperation(c, id, call)
 	if err != nil {
 		return types.Nil, errors.New("failed to compile: " + err.Error())
 	}
 
+	code := res.DeprecatedV5Code
+
 	for left.Type() == types.Ref {
 		var ok bool
-		leftRef, ok = left.Primitive.RefV2()
+		leftRef, ok = left.Primitive.RefV1()
 		if !ok {
 			return types.Nil, errors.New("failed to get reference entry of left operand to " + id + ", this should not happen")
 		}
-		left = c.Result.CodeV2.Chunk(leftRef)
+		left = code.Code[leftRef-1]
 	}
 
 	// find specialized or generalized builtin function
-	lt := left.DereferencedTypeV2(c.Result.CodeV2)
-	rt := (&llx.Chunk{Primitive: right}).DereferencedTypeV2(c.Result.CodeV2)
+	lt := left.DereferencedTypeV1(code)
+	rt := resolveType(&llx.Chunk{Primitive: right}, code)
 
 	name := id + string(rt)
-	h, err := llx.BuiltinFunctionV2(lt, name)
+	h, err := llx.BuiltinFunctionV1(lt, name)
 	if err != nil {
-		h, err = llx.BuiltinFunctionV2(lt, id)
+		h, err = llx.BuiltinFunctionV1(lt, id)
 	}
 	if err != nil {
 		name = id + string(rt.Underlying())
-		h, err = llx.BuiltinFunctionV2(lt, name)
+		h, err = llx.BuiltinFunctionV1(lt, name)
 	}
 	if err != nil {
 		return types.Nil, errors.New("cannot find operator handler: " + lt.Label() + " " + id + " " + types.Type(right.Type).Label())
 	}
 
 	if h.Compiler != nil {
-		name, err = h.Compiler(lt, rt)
+		name, err = h.Compiler(left.Type(), types.Type(rt))
 		if err != nil {
 			return types.Nil, err
 		}
 	}
 
-	c.addChunk(&llx.Chunk{
+	code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   name,
 		Function: &llx.Function{
-			Type:    string(types.Bool),
-			Binding: leftRef,
-			Args:    []*llx.Primitive{right},
+			Type:                string(types.Bool),
+			DeprecatedV5Binding: leftRef,
+			Args:                []*llx.Primitive{right},
 		},
 	})
 
 	if assertionMsg != nil {
-		if c.Result.CodeV2.Assertions == nil {
-			c.Result.CodeV2.Assertions = map[uint64]*llx.AssertionMessage{}
+		if code.Assertions == nil {
+			code.Assertions = map[int32]*llx.AssertionMessage{}
 		}
-		c.Result.CodeV2.Assertions[c.tailRef()] = assertionMsg
+		code.Assertions[code.ChunkIndex()] = assertionMsg
 	}
 
 	return types.Bool, nil
 }
 
-func compileTransformation(c *compiler, id string, call *parser.Call) (types.Type, error) {
+func compileTransformation(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
 	leftRef, left, right, _, err := compileABOperation(c, id, call)
 	if err != nil {
 		return types.Nil, err
 	}
 
+	code := res.DeprecatedV5Code
+
 	// find specialized or generalized builtin function
-	lt := left.DereferencedTypeV2(c.Result.CodeV2)
-	rt := (&llx.Chunk{Primitive: right}).DereferencedTypeV2(c.Result.CodeV2)
+	lt := left.DereferencedTypeV1(code).Underlying()
+	rt := resolveType(&llx.Chunk{Primitive: right}, code)
 
 	name := id + string(rt)
-	h, err := llx.BuiltinFunctionV2(lt, name)
+	h, err := llx.BuiltinFunctionV1(lt, name)
 	if err != nil {
-		h, err = llx.BuiltinFunctionV2(lt, id)
+		h, err = llx.BuiltinFunctionV1(lt, id)
 	}
 	if err != nil {
 		name = id + string(rt.Underlying())
-		h, err = llx.BuiltinFunctionV2(lt, name)
+		h, err = llx.BuiltinFunctionV1(lt, name)
 	}
 	if err != nil {
 		return types.Nil, errors.New("cannot find operator handler: " + lt.Label() + " " + id + " " + types.Type(right.Type).Label())
 	}
 
 	if h.Compiler != nil {
-		name, err = h.Compiler(lt, rt)
+		name, err = h.Compiler(left.Type(), types.Type(right.Type))
 		if err != nil {
 			return types.Nil, err
 		}
@@ -254,28 +282,27 @@ func compileTransformation(c *compiler, id string, call *parser.Call) (types.Typ
 		returnType = lt
 	}
 
-	c.addChunk(&llx.Chunk{
+	code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   name,
 		Function: &llx.Function{
-			Type:    string(returnType),
-			Binding: leftRef,
-			Args:    []*llx.Primitive{right},
+			Type:                string(returnType),
+			DeprecatedV5Binding: leftRef,
+			Args:                []*llx.Primitive{right},
 		},
 	})
 
 	return lt, nil
 }
 
-func (c *compiler) generateEntrypoints(arg *llx.Primitive) error {
-	code := c.Result.CodeV2
-
-	ref, ok := arg.RefV2()
+func generateEntrypoints(arg *llx.Primitive, res *llx.CodeBundle) error {
+	ref, ok := arg.RefV1()
 	if !ok {
 		return nil
 	}
 
-	refobj := code.Chunk(ref)
+	code := res.DeprecatedV5Code
+	refobj := code.Code[ref-1]
 	if refobj == nil {
 		return errors.New("Failed to get code reference on expect call, this shouldn't happen")
 	}
@@ -286,23 +313,24 @@ func (c *compiler) generateEntrypoints(arg *llx.Primitive) error {
 	}
 
 	// if the left argument is not a primitive but a calculated value
-	bind := code.Chunk(reffunc.Binding)
+	bind := code.Code[reffunc.DeprecatedV5Binding-1]
 	if bind.Primitive == nil {
-		c.block.Entrypoints = append(c.block.Entrypoints, reffunc.Binding)
+		code.Entrypoints = append(code.Entrypoints, reffunc.DeprecatedV5Binding)
 	}
 
 	for i := range reffunc.Args {
 		arg := reffunc.Args[i]
-		i, ok := arg.RefV2()
+		i, ok := arg.RefV1()
 		if ok {
-			c.block.Entrypoints = append(c.block.Entrypoints, i)
+			// TODO: int32 vs int64
+			code.Entrypoints = append(code.Entrypoints, int32(i))
 		}
 	}
 	return nil
 }
 
-func compileBlock(c *compiler, id string, call *parser.Call) (types.Type, error) {
-	c.addChunk(&llx.Chunk{
+func compileBlock(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
+	res.DeprecatedV5Code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
@@ -313,7 +341,7 @@ func compileBlock(c *compiler, id string, call *parser.Call) (types.Type, error)
 	return types.Unset, nil
 }
 
-func compileIf(c *compiler, id string, call *parser.Call) (types.Type, error) {
+func compileIf(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
 	if call == nil {
 		return types.Nil, errors.New("need conditional arguments for if-clause")
 	}
@@ -325,14 +353,16 @@ func compileIf(c *compiler, id string, call *parser.Call) (types.Type, error) {
 		return types.Nil, errors.New("called if-clause with a named argument, which is not supported")
 	}
 
+	code := res.DeprecatedV5Code
+
 	// if we are in a chained if-else call (needs previous if-call)
-	if c.prevID == "else" && len(c.block.Chunks) != 0 {
-		maxRef := len(c.block.Chunks) - 1
-		prev := c.block.Chunks[maxRef]
+	if c.prevID == "else" && len(code.Code) != 0 {
+		maxRef := len(code.Code) - 1
+		prev := code.Code[maxRef]
 		if prev.Id == "if" {
 			// we need to pop off the last "if" chunk as the new condition needs to
 			// be added in front of it
-			c.popChunk()
+			code.Code = code.Code[0:maxRef]
 
 			argValue, err := c.compileExpression(arg.Value)
 			if err != nil {
@@ -340,10 +370,7 @@ func compileIf(c *compiler, id string, call *parser.Call) (types.Type, error) {
 			}
 
 			// now add back the last chunk and append the newly compiled condition
-			c.addChunk(prev)
-			// We do not need to add it back as an entrypoint here. It happens below
-			// outside this block
-
+			code.AddChunk(prev)
 			prev.Function.Args = append(prev.Function.Args, argValue)
 
 			c.prevID = "if"
@@ -356,7 +383,7 @@ func compileIf(c *compiler, id string, call *parser.Call) (types.Type, error) {
 		return types.Nil, err
 	}
 
-	c.addChunk(&llx.Chunk{
+	code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
@@ -364,22 +391,23 @@ func compileIf(c *compiler, id string, call *parser.Call) (types.Type, error) {
 			Args: []*llx.Primitive{argValue},
 		},
 	})
-	c.block.Entrypoints = append(c.block.Entrypoints, c.tailRef())
+	code.Entrypoints = append(code.Entrypoints, code.ChunkIndex())
 	c.prevID = "if"
 
 	return types.Nil, nil
 }
 
-func compileElse(c *compiler, id string, call *parser.Call) (types.Type, error) {
+func compileElse(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
 	if call != nil {
 		return types.Nil, errors.New("cannot have conditional arguments for else-clause, use another if-statement")
 	}
 
-	if len(c.block.Chunks) == 0 {
+	code := res.DeprecatedV5Code
+	if len(code.Code) == 0 {
 		return types.Nil, errors.New("can only use else-statement after a preceding if-statement")
 	}
 
-	prev := c.block.Chunks[len(c.block.Chunks)-1]
+	prev := code.Code[len(code.Code)-1]
 	if prev.Id != "if" {
 		return types.Nil, errors.New("can only use else-statement after a preceding if-statement")
 	}
@@ -393,7 +421,7 @@ func compileElse(c *compiler, id string, call *parser.Call) (types.Type, error) 
 	return types.Nil, nil
 }
 
-func compileExpect(c *compiler, id string, call *parser.Call) (types.Type, error) {
+func compileExpect(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
 	if call == nil || len(call.Function) < 1 {
 		return types.Nil, errors.New("missing parameter for '" + id + "', it requires 1")
 	}
@@ -411,12 +439,13 @@ func compileExpect(c *compiler, id string, call *parser.Call) (types.Type, error
 		return types.Nil, err
 	}
 
-	if err = c.generateEntrypoints(argValue); err != nil {
+	if err = generateEntrypoints(argValue, res); err != nil {
 		return types.Nil, err
 	}
 
 	typ := types.Bool
-	c.addChunk(&llx.Chunk{
+	code := res.DeprecatedV5Code
+	code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
@@ -424,12 +453,12 @@ func compileExpect(c *compiler, id string, call *parser.Call) (types.Type, error
 			Args: []*llx.Primitive{argValue},
 		},
 	})
-	c.block.Entrypoints = append(c.block.Entrypoints, c.tailRef())
+	code.Entrypoints = append(code.Entrypoints, code.ChunkIndex())
 
 	return typ, nil
 }
 
-func compileScore(c *compiler, id string, call *parser.Call) (types.Type, error) {
+func compileScore(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
 	if call == nil || len(call.Function) < 1 {
 		return types.Nil, errors.New("missing parameter for '" + id + "', it requires 1")
 	}
@@ -444,7 +473,7 @@ func compileScore(c *compiler, id string, call *parser.Call) (types.Type, error)
 		return types.Nil, err
 	}
 
-	c.addChunk(&llx.Chunk{
+	res.DeprecatedV5Code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   "score",
 		Function: &llx.Function{
@@ -456,7 +485,7 @@ func compileScore(c *compiler, id string, call *parser.Call) (types.Type, error)
 	return types.Score, nil
 }
 
-func compileTypeof(c *compiler, id string, call *parser.Call) (types.Type, error) {
+func compileTypeof(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
 	if call == nil || len(call.Function) < 1 {
 		return types.Nil, errors.New("missing parameter for '" + id + "', it requires 1")
 	}
@@ -471,7 +500,7 @@ func compileTypeof(c *compiler, id string, call *parser.Call) (types.Type, error
 		return types.Nil, err
 	}
 
-	c.addChunk(&llx.Chunk{
+	res.DeprecatedV5Code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   "typeof",
 		Function: &llx.Function{
@@ -483,7 +512,7 @@ func compileTypeof(c *compiler, id string, call *parser.Call) (types.Type, error
 	return types.String, nil
 }
 
-func compileSwitch(c *compiler, id string, call *parser.Call) (types.Type, error) {
+func compileSwitch(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
 	var ref *llx.Primitive
 
 	if call != nil && len(call.Function) != 0 {
@@ -502,7 +531,7 @@ func compileSwitch(c *compiler, id string, call *parser.Call) (types.Type, error
 		ref = &llx.Primitive{Type: string(types.Unset)}
 	}
 
-	c.addChunk(&llx.Chunk{
+	res.DeprecatedV5Code.AddChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
@@ -515,8 +544,8 @@ func compileSwitch(c *compiler, id string, call *parser.Call) (types.Type, error
 	return types.Nil, nil
 }
 
-func compileNever(c *compiler, id string, call *parser.Call) (types.Type, error) {
-	c.addChunk(&llx.Chunk{
+func compileNever(c *compiler, id string, call *parser.Call, res *llx.CodeBundle) (types.Type, error) {
+	res.DeprecatedV5Code.AddChunk(&llx.Chunk{
 		Call:      llx.Chunk_PRIMITIVE,
 		Primitive: llx.NeverFuturePrimitive,
 	})

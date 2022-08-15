@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo"
-	"go.mondoo.io/mondoo/leise"
+	"go.mondoo.io/mondoo/mqlc"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/logger"
 	"go.mondoo.io/mondoo/lumi"
@@ -95,11 +95,11 @@ func initExecutionContext(motor *motor.Motor) executionContext {
 
 func testQueryWithExecutor(t *testing.T, execCtx executionContext, query string, props map[string]*llx.Primitive) []*llx.RawResult {
 	t.Helper()
-	bundle, err := leise.Compile(query, execCtx.schema, features, props)
+	bundle, err := mqlc.Compile(query, execCtx.schema, features, props)
 	if err != nil {
 		t.Fatal("failed to compile code: " + err.Error())
 	}
-	err = leise.Invariants.Check(bundle)
+	err = mqlc.Invariants.Check(bundle)
 	require.NoError(t, err)
 	return testCompiledQueryWithExecutor(t, execCtx, bundle, props)
 }
@@ -1482,7 +1482,7 @@ func TestArrayBlockError(t *testing.T) {
 
 func TestBrokenQueryExecution(t *testing.T) {
 	execCtx := linuxMockExecutor()
-	bundle, err := leise.Compile("'asdf'.contains('asdf') == true", execCtx.schema, features, nil)
+	bundle, err := mqlc.Compile("'asdf'.contains('asdf') == true", execCtx.schema, features, nil)
 	require.NoError(t, err)
 	if features.IsActive(mondoo.PiperCode) {
 		bundle.CodeV2.Blocks[0].Chunks[1].Id = "fakecontains"
