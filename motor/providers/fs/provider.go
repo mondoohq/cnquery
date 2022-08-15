@@ -10,7 +10,7 @@ import (
 
 var _ providers.Transport = (*Provider)(nil)
 
-func NewWithClose(endpoint *providers.TransportConfig, closeFN func()) (*Provider, error) {
+func NewWithClose(endpoint *providers.Config, closeFN func()) (*Provider, error) {
 	mountDir := endpoint.Host + endpoint.Path
 	log.Info().Str("mountdir", mountDir).Msg("load fs")
 
@@ -22,7 +22,7 @@ func NewWithClose(endpoint *providers.TransportConfig, closeFN func()) (*Provide
 	}, nil
 }
 
-func New(endpoint *providers.TransportConfig) (*Provider, error) {
+func New(endpoint *providers.Config) (*Provider, error) {
 	mountDir := endpoint.Host + endpoint.Path
 	log.Info().Str("mountdir", mountDir).Msg("load fs")
 

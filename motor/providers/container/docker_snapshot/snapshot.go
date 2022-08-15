@@ -27,7 +27,7 @@ func NewFromDockerEngine(containerid string) (*DockerSnapshotProvider, error) {
 		return nil, err
 	}
 
-	tarProvider, err := tar.NewWithClose(&providers.TransportConfig{
+	tarProvider, err := tar.NewWithClose(&providers.Config{
 		Backend: providers.ProviderType_TAR,
 		Options: map[string]string{
 			tar.OPTION_FILE: f.Name(),

@@ -1,13 +1,13 @@
 package azure
 
-func (t *Provider) Identifier() (string, error) {
-	return "//platformid.api.mondoo.app/runtime/azure/subscriptions/" + t.subscriptionID, nil
+func (p *Provider) Identifier() (string, error) {
+	return "//platformid.api.mondoo.app/runtime/azure/subscriptions/" + p.subscriptionID, nil
 }
 
-func (t *Provider) SubscriptionID() string {
-	return t.subscriptionID
+func (p *Provider) SubscriptionID() string {
+	return p.subscriptionID
 }
 
-func (t *Provider) TenantID() string {
-	return t.tenantID
+func (p *Provider) TenantID() string {
+	return p.tenantID
 }

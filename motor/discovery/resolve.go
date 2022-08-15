@@ -43,7 +43,7 @@ import (
 
 type Resolver interface {
 	Name() string
-	Resolve(root *asset.Asset, t *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn,
+	Resolve(root *asset.Asset, t *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn,
 		userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error)
 	AvailableDiscoveryTargets() []string
 }
@@ -89,7 +89,7 @@ func ResolveAsset(root *asset.Asset, cfn credentials.CredentialFn, sfn credentia
 	// if the asset is missing a secret, we try to add this for the asset
 	credentials.EnrichAssetWithSecrets(root, sfn)
 
-	assetFallbackName := func(a *asset.Asset, c *providers.TransportConfig) {
+	assetFallbackName := func(a *asset.Asset, c *providers.Config) {
 		// set the asset name to the config name. This is only required for error cases where the discovery
 		// is not successful
 		if root.Name == "" {
@@ -98,21 +98,21 @@ func ResolveAsset(root *asset.Asset, cfn credentials.CredentialFn, sfn credentia
 	}
 
 	for i := range root.Connections {
-		tc := root.Connections[i]
+		pCfg := root.Connections[i]
 
-		resolverId := tc.Backend.Id()
+		resolverId := pCfg.Backend.Id()
 		r, ok := resolver[resolverId]
 		if !ok {
-			assetFallbackName(root, tc)
+			assetFallbackName(root, pCfg)
 			return nil, errors.New("unsupported backend: " + resolverId)
 		}
 
 		log.Debug().Str("resolver-id", resolverId).Str("resolver", r.Name()).Msg("run resolver")
 		// check that all discovery options are supported and show a user warning
 		availableTargets := r.AvailableDiscoveryTargets()
-		if tc.Discover != nil {
-			for i := range tc.Discover.Targets {
-				target := tc.Discover.Targets[i]
+		if pCfg.Discover != nil {
+			for i := range pCfg.Discover.Targets {
+				target := pCfg.Discover.Targets[i]
 				if !stringx.Contains(availableTargets, target) {
 					log.Warn().Str("resolver", r.Name()).Msgf("resolver does not support discovery target '%s', the following are supported: %s", target, strings.Join(availableTargets, ","))
 				}
@@ -122,9 +122,9 @@ func ResolveAsset(root *asset.Asset, cfn credentials.CredentialFn, sfn credentia
 		userIdDetectors := providers.ToPlatformIdDetectors(root.IdDetector)
 
 		// resolve assets
-		resolvedAssets, err := r.Resolve(root, tc, cfn, sfn, userIdDetectors...)
+		resolvedAssets, err := r.Resolve(root, pCfg, cfn, sfn, userIdDetectors...)
 		if err != nil {
-			assetFallbackName(root, tc)
+			assetFallbackName(root, pCfg)
 			return nil, err
 		}
 

@@ -19,7 +19,7 @@ var (
 	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
 )
 
-func New(tc *providers.TransportConfig) (*Provider, error) {
+func New(tc *providers.Config) (*Provider, error) {
 	if tc.Options == nil || tc.Options["path"] == "" {
 		return nil, errors.New("path is required")
 	}

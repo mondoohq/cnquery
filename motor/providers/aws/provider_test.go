@@ -10,17 +10,17 @@ package aws
 
 // func TestAwsTransport(t *testing.T) {
 
-// 	tc := &transports.TransportConfig{
-// 		Backend: transports.TransportBackend_CONNECTION_AWS,
+// 	pCfg := &transports.TransportConfig{
+// 		Type: transports.TransportBackend_CONNECTION_AWS,
 // 		Options: map[string]string{
 // 			"profile": "mondoo-inc",
 // 			"region":  endpoints.UsEast1RegionID,
 // 		},
 // 	}
 
-// 	trans, err := New(tc)
+// 	p, err := New(pCfg)
 // 	require.NoError(t, err)
 
-// 	info, err := trans.Account()
+// 	info, err := p.Account()
 // 	require.NoError(t, err)
 // }

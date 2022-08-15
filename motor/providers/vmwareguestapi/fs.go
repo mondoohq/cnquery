@@ -22,7 +22,7 @@ type VmwareGuestFs struct {
 var notImplementedError = errors.New("not implemented")
 
 func (vfs *VmwareGuestFs) Name() string {
-	return "VmwareGuestfs"
+	return "Vmware GuestFS"
 }
 
 func (vfs *VmwareGuestFs) Create(name string) (afero.File, error) {

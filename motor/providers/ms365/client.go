@@ -45,29 +45,29 @@ var (
 	}
 )
 
-func (t *Provider) Auth() (*a.AzureIdentityAuthenticationProvider, error) {
+func (p *Provider) Auth() (*a.AzureIdentityAuthenticationProvider, error) {
 	var credential azcore.TokenCredential
 	var err error
 
 	// we only support private key authentication for ms 365
-	switch t.cred.Type {
+	switch p.cred.Type {
 	case vault.CredentialType_pkcs12:
-		certs, privateKey, err := azidentity.ParseCertificates(t.cred.Secret, []byte(t.cred.Password))
+		certs, privateKey, err := azidentity.ParseCertificates(p.cred.Secret, []byte(p.cred.Password))
 		if err != nil {
 			return nil, errors.Wrap(err, "could not parse pfx file")
 		}
 
-		credential, err = azidentity.NewClientCertificateCredential(t.tenantID, t.clientID, certs, privateKey, &azidentity.ClientCertificateCredentialOptions{})
+		credential, err = azidentity.NewClientCertificateCredential(p.tenantID, p.clientID, certs, privateKey, &azidentity.ClientCertificateCredentialOptions{})
 		if err != nil {
 			return nil, errors.Wrap(err, "error creating credentials")
 		}
 	case vault.CredentialType_password:
-		credential, err = azidentity.NewClientSecretCredential(t.tenantID, t.clientID, string(t.cred.Secret), &azidentity.ClientSecretCredentialOptions{})
+		credential, err = azidentity.NewClientSecretCredential(p.tenantID, p.clientID, string(p.cred.Secret), &azidentity.ClientSecretCredentialOptions{})
 		if err != nil {
 			return nil, errors.Wrap(err, "error creating credentials")
 		}
 	default:
-		return nil, errors.New("invalid secret configuration for ms365 transport: " + t.cred.Type.String())
+		return nil, errors.New("invalid secret configuration for ms365 transport: " + p.cred.Type.String())
 	}
 
 	return a.NewAzureIdentityAuthenticationProviderWithScopes(credential, DefaultMSGraphScopes)

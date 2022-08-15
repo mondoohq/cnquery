@@ -134,7 +134,7 @@ func (e *dockerEngineDiscovery) ListContainer() ([]*asset.Asset, error) {
 				Kind:    providers.Kind_KIND_CONTAINER,
 				Runtime: providers.RUNTIME_DOCKER_CONTAINER,
 			},
-			Connections: []*providers.TransportConfig{
+			Connections: []*providers.Config{
 				{
 					Backend: providers.ProviderType_DOCKER_ENGINE_CONTAINER,
 					Host:    dContainer.ID,

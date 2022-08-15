@@ -10,7 +10,7 @@ import (
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/certificates"
 	"go.mondoo.io/mondoo/motor/providers"
-	k8s_transport "go.mondoo.io/mondoo/motor/providers/k8s"
+	k8s_provider "go.mondoo.io/mondoo/motor/providers/k8s"
 	"go.mondoo.io/mondoo/motor/providers/k8s/resources"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -22,8 +22,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func k8stransport(t providers.Transport) (k8s_transport.KubernetesProvider, error) {
-	at, ok := t.(k8s_transport.KubernetesProvider)
+func k8sProvider(t providers.Transport) (k8s_provider.KubernetesProvider, error) {
+	at, ok := t.(k8s_provider.KubernetesProvider)
 	if !ok {
 		return nil, errors.New("k8s resource is not supported on this transport")
 	}
@@ -65,7 +65,7 @@ func (k *lumiK8s) id() (string, error) {
 }
 
 func (k *lumiK8s) GetServerVersion() (interface{}, error) {
-	kt, err := k8stransport(k.MotorRuntime.Motor.Transport)
+	kt, err := k8sProvider(k.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (k *lumiK8s) GetServerVersion() (interface{}, error) {
 }
 
 func (k *lumiK8s) GetApiResources() ([]interface{}, error) {
-	kt, err := k8stransport(k.MotorRuntime.Motor.Transport)
+	kt, err := k8sProvider(k.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (k *lumiK8s) GetApiResources() ([]interface{}, error) {
 type resourceConvertFn func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error)
 
 func k8sResourceToLumi(r *lumi.Runtime, kind string, fn resourceConvertFn) ([]interface{}, error) {
-	kt, err := k8stransport(r.Motor.Transport)
+	kt, err := k8sProvider(r.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -846,7 +846,7 @@ func (k *lumiK8s) GetRolebindings() ([]interface{}, error) {
 }
 
 func (k *lumiK8s) GetCustomresources() ([]interface{}, error) {
-	kt, err := k8stransport(k.MotorRuntime.Motor.Transport)
+	kt, err := k8sProvider(k.MotorRuntime.Motor.Transport)
 	if err != nil {
 		return nil, err
 	}
@@ -1372,7 +1372,7 @@ func (k *lumiK8sRbacRolebinding) GetLabels() (interface{}, error) {
 }
 
 func getPlatformIdentifierElements(transport providers.Transport) (string, string, error) {
-	kt, err := k8stransport(transport)
+	kt, err := k8sProvider(transport)
 	if err != nil {
 		return "", "", err
 	}

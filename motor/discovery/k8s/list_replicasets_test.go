@@ -18,7 +18,7 @@ func TestListReplicaSets(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	transport := k8s.NewMockKubernetesProvider(mockCtrl)
+	p := k8s.NewMockKubernetesProvider(mockCtrl)
 
 	replicaSetPlatform := &platform.Platform{
 		Name:    "k8s-replicaset",
@@ -31,10 +31,10 @@ func TestListReplicaSets(t *testing.T) {
 	nss := []corev1.Namespace{
 		{ObjectMeta: metav1.ObjectMeta{Name: "default"}},
 	}
-	transport.EXPECT().Namespaces().Return(nss, nil)
+	p.EXPECT().Namespaces().Return(nss, nil)
 	// called for each ReplicaSet
-	transport.EXPECT().PlatformInfo().Return(replicaSetPlatform)
-	transport.EXPECT().PlatformInfo().Return(replicaSetPlatform)
+	p.EXPECT().PlatformInfo().Return(replicaSetPlatform)
+	p.EXPECT().PlatformInfo().Return(replicaSetPlatform)
 
 	// Seed ReplicaSets
 	replicaSets := []appsv1.ReplicaSet{
@@ -68,7 +68,7 @@ func TestListReplicaSets(t *testing.T) {
 		},
 	}
 
-	transport.EXPECT().ReplicaSets(nss[0]).Return(replicaSets, nil)
+	p.EXPECT().ReplicaSets(nss[0]).Return(replicaSets, nil)
 
 	expectedAssetNames := []string{
 		nss[0].Name + "/" + replicaSets[0].Name,
@@ -82,8 +82,8 @@ func TestListReplicaSets(t *testing.T) {
 		clusterIdentifier + "/namespace/" + nss[0].Name + "/replicasets/name/" + replicaSets[1].Name,
 	}
 
-	tc := &providers.TransportConfig{}
-	assets, err := ListReplicaSets(transport, tc, clusterIdentifier, nil)
+	pCfg := &providers.Config{}
+	assets, err := ListReplicaSets(p, pCfg, clusterIdentifier, nil)
 	assert.NoError(t, err)
 
 	var assetNames []string

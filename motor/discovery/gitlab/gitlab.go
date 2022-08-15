@@ -20,7 +20,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(root *asset.Asset, tc *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	// establish connection to GitLab
 	m, err := resolver.NewMotorConnection(tc, cfn)
 	if err != nil {
@@ -58,7 +58,7 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 		PlatformIds: []string{identifier},
 		Name:        name,
 		Platform:    pf,
-		Connections: []*providers.TransportConfig{tc}, // pass-in the current config
+		Connections: []*providers.Config{tc}, // pass-in the current config
 		State:       asset.State_STATE_ONLINE,
 	}}, nil
 }

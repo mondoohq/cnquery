@@ -15,10 +15,10 @@ import (
 
 func TestLinuxStatCmd(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/linux.toml")
-	trans, err := mock.NewFromTomlFile(filepath)
+	p, err := mock.NewFromTomlFile(filepath)
 	require.NoError(t, err)
 
-	statHelper := New(trans)
+	statHelper := New(p)
 
 	// get file stats
 	fi, err := statHelper.Stat("/etc/ssh/sshd_config")
@@ -42,10 +42,10 @@ func TestLinuxStatCmd(t *testing.T) {
 
 func TestOpenbsdStatCmd(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/openbsd.toml")
-	trans, err := mock.NewFromTomlFile(filepath)
+	p, err := mock.NewFromTomlFile(filepath)
 	require.NoError(t, err)
 
-	statHelper := New(trans)
+	statHelper := New(p)
 
 	// get file stats
 	fi, err := statHelper.Stat("/etc/ssh/sshd_config")

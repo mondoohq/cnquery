@@ -12,10 +12,10 @@ import (
 func TestFileResource(t *testing.T) {
 	path := "/tmp/test_hash"
 
-	trans, err := local.New()
+	p, err := local.New()
 	assert.Nil(t, err)
 
-	fs := trans.FS()
+	fs := p.FS()
 	afutil := afero.Afero{Fs: fs}
 
 	// create the file and set the content

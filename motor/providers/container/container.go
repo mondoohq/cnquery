@@ -20,7 +20,7 @@ type ContainerProvider interface {
 }
 
 // NewContainerRegistryImage loads a container image from a remote registry
-func NewContainerRegistryImage(tc *providers.TransportConfig) (ContainerProvider, error) {
+func NewContainerRegistryImage(tc *providers.Config) (ContainerProvider, error) {
 	ref, err := name.ParseReference(tc.Host, name.WeakValidation)
 	if err == nil {
 		log.Debug().Str("ref", ref.Name()).Msg("found valid container registry reference")
@@ -61,7 +61,7 @@ func NewContainerRegistryImage(tc *providers.TransportConfig) (ContainerProvider
 	return nil, err
 }
 
-func NewDockerEngineContainer(tc *providers.TransportConfig) (ContainerProvider, error) {
+func NewDockerEngineContainer(tc *providers.Config) (ContainerProvider, error) {
 	// could be an image id/name, container id/name or a short reference to an image in docker engine
 	ded, err := docker_discovery.NewDockerEngineDiscovery()
 	if err != nil {
@@ -96,7 +96,7 @@ func NewDockerEngineContainer(tc *providers.TransportConfig) (ContainerProvider,
 	}
 }
 
-func NewDockerEngineImage(endpoint *providers.TransportConfig) (ContainerProvider, error) {
+func NewDockerEngineImage(endpoint *providers.Config) (ContainerProvider, error) {
 	// could be an image id/name, container id/name or a short reference to an image in docker engine
 	ded, err := docker_discovery.NewDockerEngineDiscovery()
 	if err != nil {

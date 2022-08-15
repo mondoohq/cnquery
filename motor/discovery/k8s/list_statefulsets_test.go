@@ -18,7 +18,7 @@ func TestListStatefulSets(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	transport := k8s.NewMockKubernetesProvider(mockCtrl)
+	p := k8s.NewMockKubernetesProvider(mockCtrl)
 
 	statefulSetPlatform := &platform.Platform{
 		Name:    "k8s-statefulset",
@@ -32,10 +32,10 @@ func TestListStatefulSets(t *testing.T) {
 	nss := []corev1.Namespace{
 		{ObjectMeta: metav1.ObjectMeta{Name: "default"}},
 	}
-	transport.EXPECT().Namespaces().Return(nss, nil)
+	p.EXPECT().Namespaces().Return(nss, nil)
 	// called for each StatefulSet
-	transport.EXPECT().PlatformInfo().Return(statefulSetPlatform)
-	transport.EXPECT().PlatformInfo().Return(statefulSetPlatform)
+	p.EXPECT().PlatformInfo().Return(statefulSetPlatform)
+	p.EXPECT().PlatformInfo().Return(statefulSetPlatform)
 
 	// Seed StatefulSets
 	statefulsets := []appsv1.StatefulSet{
@@ -79,7 +79,7 @@ func TestListStatefulSets(t *testing.T) {
 		},
 	}
 
-	transport.EXPECT().StatefulSets(nss[0]).Return(statefulsets, nil)
+	p.EXPECT().StatefulSets(nss[0]).Return(statefulsets, nil)
 
 	expectedAssetNames := []string{
 		nss[0].Name + "/" + statefulsets[0].Name,
@@ -93,8 +93,8 @@ func TestListStatefulSets(t *testing.T) {
 		clusterIdentifier + "/namespace/" + nss[0].Name + "/statefulsets/name/" + statefulsets[1].Name,
 	}
 
-	tc := &providers.TransportConfig{}
-	assets, err := ListStatefulSets(transport, tc, clusterIdentifier, nil)
+	pCfg := &providers.Config{}
+	assets, err := ListStatefulSets(p, pCfg, clusterIdentifier, nil)
 	assert.NoError(t, err)
 
 	var assetNames []string

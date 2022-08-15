@@ -8,7 +8,7 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/platform/detector"
 	"go.mondoo.io/mondoo/motor/providers"
-	k8s_transport "go.mondoo.io/mondoo/motor/providers/k8s"
+	k8s_provider "go.mondoo.io/mondoo/motor/providers/k8s"
 	"go.mondoo.io/mondoo/motor/providers/local"
 )
 
@@ -44,7 +44,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	}
 }
 
-func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(root *asset.Asset, tc *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 	namespacesFilter := []string{}
 
@@ -75,18 +75,18 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 
 	log.Debug().Strs("namespaceFilter", namespacesFilter).Msg("resolve k8s assets")
 
-	trans, err := k8s_transport.New(tc)
+	p, err := k8s_provider.New(tc)
 	if err != nil {
 		return nil, err
 	}
 
-	clusterIdentifier, err := trans.Identifier()
+	clusterIdentifier, err := p.Identifier()
 	if err != nil {
 		return nil, err
 	}
 
 	// detect platform info for the asset
-	detector := detector.New(trans)
+	detector := detector.New(p)
 	pf, err := detector.Platform()
 	if err != nil {
 		return nil, err
@@ -97,7 +97,7 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 	clusterName := ""
 
 	if tc.Options["path"] != "" {
-		clusterName, _ = trans.Name()
+		clusterName, _ = p.Name()
 	} else {
 		// try to parse context from kubectl config
 		if clusterName == "" && k8sctlConfig != nil && len(k8sctlConfig.CurrentContext) > 0 {
@@ -107,7 +107,7 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 
 		// fallback to first node name if we could not gather the name from kubeconfig
 		if clusterName == "" {
-			name, err := trans.Name()
+			name, err := p.Name()
 			if err == nil {
 				clusterName = name
 				log.Info().Str("cluster-name", clusterName).Msg("use cluster name from node name")
@@ -115,7 +115,7 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 		}
 
 		clusterName = "K8S Cluster " + clusterName
-		ns, ok := tc.Options[k8s_transport.OPTION_NAMESPACE]
+		ns, ok := tc.Options[k8s_provider.OPTION_NAMESPACE]
 		if ok && ns != "" {
 			clusterName += " (Namespace: " + ns + ")"
 		}
@@ -125,11 +125,11 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 		PlatformIds: []string{clusterIdentifier},
 		Name:        clusterName,
 		Platform:    pf,
-		Connections: []*providers.TransportConfig{tc}, // pass-in the current config
+		Connections: []*providers.Config{tc}, // pass-in the current config
 		State:       asset.State_STATE_RUNNING,
 	})
 
-	additioanlAssets, err := addSeparateAssets(tc, trans, namespacesFilter, clusterIdentifier)
+	additioanlAssets, err := addSeparateAssets(tc, p, namespacesFilter, clusterIdentifier)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +139,7 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn
 }
 
 // addSeparateAssets Depending on config options it will search for additional assets which should be listed separately.
-func addSeparateAssets(tc *providers.TransportConfig, transport k8s_transport.KubernetesProvider, namespacesFilter []string, clusterIdentifier string) ([]*asset.Asset, error) {
+func addSeparateAssets(tc *providers.Config, p k8s_provider.KubernetesProvider, namespacesFilter []string, clusterIdentifier string) ([]*asset.Asset, error) {
 	var resolved []*asset.Asset
 
 	// discover deployments
@@ -147,7 +147,7 @@ func addSeparateAssets(tc *providers.TransportConfig, transport k8s_transport.Ku
 		// fetch deployment information
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for deployments")
 		connection := tc.Clone()
-		assetList, err := ListDeployments(transport, connection, clusterIdentifier, namespacesFilter)
+		assetList, err := ListDeployments(p, connection, clusterIdentifier, namespacesFilter)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s deployments")
 			return nil, err
@@ -160,7 +160,7 @@ func addSeparateAssets(tc *providers.TransportConfig, transport k8s_transport.Ku
 		// fetch pod information
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for pods")
 		connection := tc.Clone()
-		assetList, err := ListPods(transport, connection, clusterIdentifier, namespacesFilter)
+		assetList, err := ListPods(p, connection, clusterIdentifier, namespacesFilter)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s pods")
 			return nil, err
@@ -172,7 +172,7 @@ func addSeparateAssets(tc *providers.TransportConfig, transport k8s_transport.Ku
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryDaemonSets) {
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for daemonsets")
 		connection := tc.Clone()
-		assetList, err := ListDaemonSets(transport, connection, clusterIdentifier, namespacesFilter)
+		assetList, err := ListDaemonSets(p, connection, clusterIdentifier, namespacesFilter)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s daemonsets")
 			return nil, err
@@ -184,7 +184,7 @@ func addSeparateAssets(tc *providers.TransportConfig, transport k8s_transport.Ku
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryContainerImages) {
 		// fetch pod information
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for pods images")
-		assetList, err := ListPodImages(transport, namespacesFilter)
+		assetList, err := ListPodImages(p, namespacesFilter)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s pods images")
 			return nil, err
@@ -196,7 +196,7 @@ func addSeparateAssets(tc *providers.TransportConfig, transport k8s_transport.Ku
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryCronJobs) {
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for cronjobs")
 		connection := tc.Clone()
-		assetList, err := ListCronJobs(transport, connection, clusterIdentifier, namespacesFilter)
+		assetList, err := ListCronJobs(p, connection, clusterIdentifier, namespacesFilter)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s cronjobs")
 			return nil, err
@@ -208,7 +208,7 @@ func addSeparateAssets(tc *providers.TransportConfig, transport k8s_transport.Ku
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryStatefulSets) {
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for statefulsets")
 		connection := tc.Clone()
-		assetList, err := ListStatefulSets(transport, connection, clusterIdentifier, namespacesFilter)
+		assetList, err := ListStatefulSets(p, connection, clusterIdentifier, namespacesFilter)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s statefulsets")
 			return nil, err
@@ -220,7 +220,7 @@ func addSeparateAssets(tc *providers.TransportConfig, transport k8s_transport.Ku
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryJobs) {
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for jobs")
 		connection := tc.Clone()
-		assetList, err := ListJobs(transport, connection, clusterIdentifier, namespacesFilter)
+		assetList, err := ListJobs(p, connection, clusterIdentifier, namespacesFilter)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s jobs")
 			return nil, err
@@ -232,7 +232,7 @@ func addSeparateAssets(tc *providers.TransportConfig, transport k8s_transport.Ku
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryReplicaSets) {
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for replicasets")
 		connection := tc.Clone()
-		assetList, err := ListReplicaSets(transport, connection, clusterIdentifier, namespacesFilter)
+		assetList, err := ListReplicaSets(p, connection, clusterIdentifier, namespacesFilter)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s replicasets")
 			return nil, err

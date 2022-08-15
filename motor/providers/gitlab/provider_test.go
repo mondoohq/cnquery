@@ -13,7 +13,7 @@ import (
 )
 
 func TestGitlab(t *testing.T) {
-	trans, err := New(&providers.TransportConfig{
+	p, err := New(&providers.Config{
 		Options: map[string]string{
 			"token": "<add-token-here>",
 			"group": "mondoolabs",
@@ -21,7 +21,7 @@ func TestGitlab(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	id, err := trans.Identifier()
+	id, err := p.Identifier()
 	require.NoError(t, err)
 	assert.True(t, strings.HasPrefix(id, "//platformid.api.mondoo.app/runtime/gitlab/group/"))
 }

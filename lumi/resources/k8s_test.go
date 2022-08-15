@@ -12,7 +12,7 @@ import (
 )
 
 func k8sTestQuery(t *testing.T, query string) []*llx.RawResult {
-	trans, err := k8s.New(&providers.TransportConfig{
+	p, err := k8s.New(&providers.Config{
 		Backend: providers.ProviderType_K8S,
 		Options: map[string]string{
 			"path": "./testdata/k8s",
@@ -20,7 +20,7 @@ func k8sTestQuery(t *testing.T, query string) []*llx.RawResult {
 	})
 	require.NoError(t, err)
 
-	m, err := motor.New(trans)
+	m, err := motor.New(p)
 	require.NoError(t, err)
 
 	executor := initExecutionContext(m)

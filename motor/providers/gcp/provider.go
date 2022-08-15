@@ -21,29 +21,29 @@ const (
 	Organization
 )
 
-func New(tc *providers.TransportConfig) (*Provider, error) {
-	if tc.Backend != providers.ProviderType_GCP {
+func New(pCfg *providers.Config) (*Provider, error) {
+	if pCfg.Backend != providers.ProviderType_GCP {
 		return nil, providers.ErrProviderTypeDoesNotMatch
 	}
 
-	if tc.Options == nil || (tc.Options["project"] == "" && tc.Options["organization"] == "") {
+	if pCfg.Options == nil || (pCfg.Options["project"] == "" && pCfg.Options["organization"] == "") {
 		return nil, errors.New("gcp provider requires a project id or organization id. please set option `project` or `organization`")
 	}
 
 	var resourceType ResourceType
 	var id string
-	if tc.Options["project"] != "" {
+	if pCfg.Options["project"] != "" {
 		resourceType = Project
-		id = tc.Options["project"]
-	} else if tc.Options["organization"] != "" {
+		id = pCfg.Options["project"]
+	} else if pCfg.Options["organization"] != "" {
 		resourceType = Organization
-		id = tc.Options["organization"]
+		id = pCfg.Options["organization"]
 	}
 
 	t := &Provider{
 		resourceType: resourceType,
 		id:           id,
-		opts:         tc.Options,
+		opts:         pCfg.Options,
 	}
 
 	// verify that we have access to the organization or project

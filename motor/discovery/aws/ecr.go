@@ -103,7 +103,7 @@ func (a *EcrImages) getRepositories() []*jobpool.Job {
 							Kind:    providers.Kind_KIND_CONTAINER_IMAGE,
 							Runtime: providers.RUNTIME_AWS_ECR,
 						},
-						Connections: []*providers.TransportConfig{
+						Connections: []*providers.Config{
 							{
 								Backend: providers.ProviderType_CONTAINER_REGISTRY,
 								Host:    registryURL,

@@ -21,8 +21,8 @@ import (
 	"golang.org/x/crypto/ssh/agent"
 )
 
-func establishClientConnection(tc *providers.TransportConfig, hostKeyCallback ssh.HostKeyCallback) (*ssh.Client, []io.Closer, error) {
-	authMethods, closer, err := prepareConnection(tc)
+func establishClientConnection(pCfg *providers.Config, hostKeyCallback ssh.HostKeyCallback) (*ssh.Client, []io.Closer, error) {
+	authMethods, closer, err := prepareConnection(pCfg)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -34,13 +34,13 @@ func establishClientConnection(tc *providers.TransportConfig, hostKeyCallback ss
 
 	// TODO: hack: we want to establish a proper connection per configured connection so that we could use multiple users
 	user := ""
-	for i := range tc.Credentials {
-		if tc.Credentials[i].User != "" {
-			user = tc.Credentials[i].User
+	for i := range pCfg.Credentials {
+		if pCfg.Credentials[i].User != "" {
+			user = pCfg.Credentials[i].User
 		}
 	}
 
-	conn, err := ssh.Dial("tcp", fmt.Sprintf("%s:%d", tc.Host, tc.Port), &ssh.ClientConfig{
+	conn, err := ssh.Dial("tcp", fmt.Sprintf("%s:%d", pCfg.Host, pCfg.Port), &ssh.ClientConfig{
 		User:            user,
 		Auth:            authMethods,
 		HostKeyCallback: hostKeyCallback,
@@ -90,7 +90,7 @@ func hasAgentLoadedKey(list []*agent.Key, filename string) bool {
 
 // prepareConnection determines the auth methods required for a ssh connection and also prepares any other
 // pre-conditions for the connection like tunnelling the connection via AWS SSM session
-func prepareConnection(tc *providers.TransportConfig) ([]ssh.AuthMethod, []io.Closer, error) {
+func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, error) {
 	auths := []ssh.AuthMethod{}
 	closer := []io.Closer{}
 
@@ -116,8 +116,8 @@ func prepareConnection(tc *providers.TransportConfig) ([]ssh.AuthMethod, []io.Cl
 	}
 
 	// use key auth, only load if the key was not found in ssh agent
-	for i := range tc.Credentials {
-		credential := tc.Credentials[i]
+	for i := range pCfg.Credentials {
+		credential := pCfg.Credentials[i]
 
 		switch credential.Type {
 		case vault.CredentialType_private_key:
@@ -145,13 +145,13 @@ func prepareConnection(tc *providers.TransportConfig) ([]ssh.AuthMethod, []io.Cl
 			}
 
 			loadOpts := []func(*config.LoadOptions) error{}
-			if tc.Options != nil && tc.Options["region"] != "" {
-				loadOpts = append(loadOpts, config.WithRegion(tc.Options["region"]))
+			if pCfg.Options != nil && pCfg.Options["region"] != "" {
+				loadOpts = append(loadOpts, config.WithRegion(pCfg.Options["region"]))
 			}
 			profile := ""
-			if tc.Options != nil && tc.Options["profile"] != "" {
-				loadOpts = append(loadOpts, config.WithSharedConfigProfile(tc.Options["profile"]))
-				profile = tc.Options["profile"]
+			if pCfg.Options != nil && pCfg.Options["profile"] != "" {
+				loadOpts = append(loadOpts, config.WithSharedConfigProfile(pCfg.Options["profile"]))
+				profile = pCfg.Options["profile"]
 			}
 
 			cfg, err := config.LoadDefaultConfig(context.Background(), loadOpts...)
@@ -161,7 +161,7 @@ func prepareConnection(tc *providers.TransportConfig) ([]ssh.AuthMethod, []io.Cl
 
 			// we use ec2 instance connect api to create credentials for an aws instance
 			eic := awsinstanceconnect.New(cfg)
-			creds, err := eic.GenerateCredentials(tc.Host, credential.User)
+			creds, err := eic.GenerateCredentials(pCfg.Host, credential.User)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -180,20 +180,20 @@ func prepareConnection(tc *providers.TransportConfig) ([]ssh.AuthMethod, []io.Cl
 			if err != nil {
 				return nil, nil, errors.New("could not find an available port to start the ssm proxy")
 			}
-			ssmConn, err := sManager.Dial(tc, strconv.Itoa(localPort), remotePort)
+			ssmConn, err := sManager.Dial(pCfg, strconv.Itoa(localPort), remotePort)
 			if err != nil {
 				return nil, nil, err
 			}
 
 			// update endpoint information for ssh to connect via local ssm proxy
 			// TODO: this has a side-effect, we may need extend the struct to include resolved connection data
-			tc.Host = localIp
-			tc.Port = int32(localPort)
+			pCfg.Host = localIp
+			pCfg.Port = int32(localPort)
 
 			// NOTE: we need to set insecure so that ssh does not complain about the host key
 			// It is okay do that since the connection is established via aws api itself and it ensures that
 			// the instance id is okay
-			tc.Insecure = true
+			pCfg.Insecure = true
 
 			// use the generated ssh credentials for authentication
 			priv, err := authPrivateKeyWithPassphrase(creds.KeyPair.PrivateKey, creds.KeyPair.Passphrase)
@@ -209,7 +209,7 @@ func prepareConnection(tc *providers.TransportConfig) ([]ssh.AuthMethod, []io.Cl
 			}
 
 			eic := awsinstanceconnect.New(cfg)
-			creds, err := eic.GenerateCredentials(tc.Host, credential.User)
+			creds, err := eic.GenerateCredentials(pCfg.Host, credential.User)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -221,14 +221,14 @@ func prepareConnection(tc *providers.TransportConfig) ([]ssh.AuthMethod, []io.Cl
 			signers = append(signers, priv)
 
 			// NOTE: this creates a side-effect where the host is overwritten
-			tc.Host = creds.PublicIpAddress
+			pCfg.Host = creds.PublicIpAddress
 		default:
 			return nil, nil, errors.New("unsupported authentication mechanism for ssh: " + credential.Type.String())
 		}
 	}
 
 	// if no credential was provided, fallback to ssh-agent and ssh-config
-	if len(tc.Credentials) == 0 {
+	if len(pCfg.Credentials) == 0 {
 		useAgentAuth()
 	}
 

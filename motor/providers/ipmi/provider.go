@@ -16,24 +16,24 @@ var (
 	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
 )
 
-func New(tc *providers.TransportConfig) (*Provider, error) {
-	if tc == nil || tc.Backend != providers.ProviderType_IPMI {
+func New(pCfg *providers.Config) (*Provider, error) {
+	if pCfg == nil || pCfg.Backend != providers.ProviderType_IPMI {
 		return nil, providers.ErrProviderTypeDoesNotMatch
 	}
 
-	port := tc.Port
+	port := pCfg.Port
 	if port == 0 {
 		port = 623
 	}
 
 	// search for password secret
-	c, err := vault.GetPassword(tc.Credentials)
+	c, err := vault.GetPassword(pCfg.Credentials)
 	if err != nil {
 		return nil, errors.New("missing password for ipmi provider")
 	}
 
 	client, err := ipmi.NewIpmiClient(&ipmi.Connection{
-		Hostname:  tc.Host,
+		Hostname:  pCfg.Host,
 		Port:      port,
 		Username:  c.User,
 		Password:  string(c.Secret),

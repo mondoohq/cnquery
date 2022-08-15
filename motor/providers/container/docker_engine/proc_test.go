@@ -1,9 +1,9 @@
 package docker_engine
 
 // func TestParseProc(t *testing.T) {
-// 	trans, err := NewRunningContainer(&types.Target{Backend: "docker", Host: "3746fa27e312"})
+// 	p, err := NewRunningContainer(&types.Target{Backend: "docker", Host: "3746fa27e312"})
 
-// 	f, err := trans.File("/proc/sys/kernel")
+// 	f, err := p.File("/proc/sys/kernel")
 // 	if err != nil {
 // 		t.Fatalf("cannot request file %v", err)
 // 	}

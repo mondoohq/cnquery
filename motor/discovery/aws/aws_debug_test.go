@@ -12,18 +12,18 @@ import (
 )
 
 func TestEC2Discovery(t *testing.T) {
-	tc := &providers.TransportConfig{
-		Backend: providers.ProviderType_AWS,
+	pCfg := &providers.Config{
+		Type: providers.ProviderType_AWS,
 		Options: map[string]string{
 			"profile": "mondoo-demo",
 			"region":  "us-east-1",
 		},
 	}
 
-	trans, err := aws_transport.New(tc, aws_transport.TransportOptions(tc.Options)...)
+	p, err := aws_transport.New(pCfg, aws_transport.TransportOptions(pCfg.Options)...)
 	require.NoError(t, err)
 
-	r, err := NewEc2Discovery(trans.Config())
+	r, err := NewEc2Discovery(p.Config())
 	require.NoError(t, err)
 
 	assets, err := r.List()

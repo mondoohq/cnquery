@@ -19,9 +19,9 @@ func TestFileResource(t *testing.T) {
 	path := tmpfile.Name()
 	defer os.Remove(path)
 
-	trans, err := local.New()
+	p, err := local.New()
 	require.NoError(t, err)
-	fs := trans.FS()
+	fs := p.FS()
 	f, err := fs.Open(path)
 	require.NoError(t, err)
 
@@ -56,10 +56,10 @@ func TestFilePermissions666(t *testing.T) {
 	err = os.Chmod(path, 0o666)
 	require.NoError(t, err)
 
-	trans, err := local.New()
+	p, err := local.New()
 	require.NoError(t, err)
 
-	details, err := trans.FileInfo(path)
+	details, err := p.FileInfo(path)
 	require.NoError(t, err)
 	assert.Equal(t, int64(os.Getuid()), details.Uid)
 	assert.Equal(t, int64(os.Getgid()), details.Gid)
@@ -89,17 +89,17 @@ func TestFilePermissions755(t *testing.T) {
 	path := tmpfile.Name()
 	defer os.Remove(path)
 
-	err = ioutil.WriteFile(path, []byte("hello"), 0o755)
+	err = os.WriteFile(path, []byte("hello"), 0o755)
 	require.NoError(t, err)
 
 	// ensure permissions
 	err = os.Chmod(path, 0o755)
 	require.NoError(t, err)
 
-	trans, err := local.New()
+	p, err := local.New()
 	require.NoError(t, err)
 
-	details, err := trans.FileInfo(path)
+	details, err := p.FileInfo(path)
 	require.NoError(t, err)
 	assert.Equal(t, int64(os.Getuid()), details.Uid)
 	assert.Equal(t, int64(os.Getgid()), details.Gid)

@@ -18,14 +18,14 @@ func TestListPodImage(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	transport := k8s.NewMockKubernetesProvider(mockCtrl)
+	p := k8s.NewMockKubernetesProvider(mockCtrl)
 
 	// Seed namespaces
 	nss := []corev1.Namespace{
 		{ObjectMeta: metav1.ObjectMeta{Name: "default"}},
 		{ObjectMeta: metav1.ObjectMeta{Name: "kube-system"}},
 	}
-	transport.EXPECT().Namespaces().Return(nss, nil)
+	p.EXPECT().Namespaces().Return(nss, nil)
 
 	// Seed pods
 	pods1 := []corev1.Pod{
@@ -58,8 +58,8 @@ func TestListPodImage(t *testing.T) {
 			},
 		},
 	}
-	transport.EXPECT().Pods(nss[0]).Return(pods1, nil)
-	transport.EXPECT().Pods(nss[1]).Return(pods2, nil)
+	p.EXPECT().Pods(nss[0]).Return(pods1, nil)
+	p.EXPECT().Pods(nss[1]).Return(pods2, nil)
 
 	// nginx's tags seem to change digests, so resolve it to figure out what is the correct one
 	ref, err := name.ParseReference("nginx:1.22.0-alpine", name.WeakValidation)
@@ -77,7 +77,7 @@ func TestListPodImage(t *testing.T) {
 		"k8s.gcr.io/kube-proxy@sha256:def87f007b49d50693aed83d4703d0e56c69ae286154b1c7a20cd1b3a320cf7c",
 	}
 
-	assets, err := ListPodImages(transport, nil)
+	assets, err := ListPodImages(p, nil)
 	assert.NoError(t, err)
 
 	var assetNames []string
@@ -92,14 +92,14 @@ func TestListPodImage_FromStatus(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	transport := k8s.NewMockKubernetesProvider(mockCtrl)
+	p := k8s.NewMockKubernetesProvider(mockCtrl)
 
 	// Seed namespaces
 	nss := []corev1.Namespace{
 		{ObjectMeta: metav1.ObjectMeta{Name: "default"}},
 		{ObjectMeta: metav1.ObjectMeta{Name: "kube-system"}},
 	}
-	transport.EXPECT().Namespaces().Return(nss, nil)
+	p.EXPECT().Namespaces().Return(nss, nil)
 
 	// Seed pods
 	pods1 := []corev1.Pod{
@@ -170,8 +170,8 @@ func TestListPodImage_FromStatus(t *testing.T) {
 			},
 		},
 	}
-	transport.EXPECT().Pods(nss[0]).Return(pods1, nil)
-	transport.EXPECT().Pods(nss[1]).Return(pods2, nil)
+	p.EXPECT().Pods(nss[0]).Return(pods1, nil)
+	p.EXPECT().Pods(nss[1]).Return(pods2, nil)
 
 	expectedAssetNames := []string{
 		"index.docker.io/library/nginx@sha256:f335d7436887b39393409261603fb248e0c385ec18997d866dd44f7e9b621096",
@@ -179,7 +179,7 @@ func TestListPodImage_FromStatus(t *testing.T) {
 		"k8s.gcr.io/kube-proxy@sha256:def87f007b49d50693aed83d4703d0e56c69ae286154b1c7a20cd1b3a320cf7c",
 	}
 
-	assets, err := ListPodImages(transport, nil)
+	assets, err := ListPodImages(p, nil)
 	assert.NoError(t, err)
 
 	var assetNames []string

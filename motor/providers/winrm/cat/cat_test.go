@@ -13,10 +13,10 @@ import (
 
 func TestCatFs(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/winrm.toml")
-	trans, err := mock.NewFromTomlFile(filepath)
+	p, err := mock.NewFromTomlFile(filepath)
 	require.NoError(t, err)
 
-	catfs := cat.New(trans)
+	catfs := cat.New(p)
 
 	// fetch file content
 	f, err := catfs.Open("C:\\test.txt")

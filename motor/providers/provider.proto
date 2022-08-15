@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "motor/vault/vault.proto";
 
-package mondoo.motor.transports.v1;
+package mondoo.motor.providers.v1;
 option go_package = "go.mondoo.io/mondoo/motor/providers";
 
 enum ProviderType {
@@ -55,7 +55,7 @@ enum Kind {
   KIND_K8S_OBJECT = 11;
 }
 
-message TransportConfig {
+message Config {
   reserved 6, 7, 9, 10, 20;
 
   ProviderType backend = 1;
@@ -92,6 +92,6 @@ message Sudo {
 }
 
 message Discovery {
-    repeated string targets = 1;
-    map<string,string> filter = 2;
+  repeated string targets = 1;
+  map<string,string> filter = 2;
 }

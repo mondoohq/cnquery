@@ -20,7 +20,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *Resolver) Resolve(root *asset.Asset, cc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(root *asset.Asset, cc *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// Note: we use the resolver instead of the direct ms365_transport.New to resolve credentials properly
@@ -50,7 +50,7 @@ func (r *Resolver) Resolve(root *asset.Asset, cc *providers.TransportConfig, cfn
 		PlatformIds: []string{identifier},
 		Name:        "Microsoft 365 tenant " + trans.TenantID(),
 		Platform:    pf,
-		Connections: []*providers.TransportConfig{cc}, // pass-in the current config
+		Connections: []*providers.Config{cc}, // pass-in the current config
 		Labels: map[string]string{
 			"azure.com/tenant": trans.TenantID(),
 		},

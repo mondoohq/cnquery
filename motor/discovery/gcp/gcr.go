@@ -57,7 +57,7 @@ func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*asset.
 					Runtime: providers.RUNTIME_GCP_GCR,
 				},
 
-				Connections: []*providers.TransportConfig{
+				Connections: []*providers.Config{
 					{
 						Backend: providers.ProviderType_CONTAINER_REGISTRY,
 						Host:    imageUrl,

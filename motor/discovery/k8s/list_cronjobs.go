@@ -11,8 +11,8 @@ import (
 )
 
 // ListCronJobs list all cronjobs in the cluster.
-func ListCronJobs(transport k8s.KubernetesProvider, connection *providers.TransportConfig, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
-	namespaces, err := transport.Namespaces()
+func ListCronJobs(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
+	namespaces, err := p.Namespaces()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
 	}
@@ -25,7 +25,7 @@ func ListCronJobs(transport k8s.KubernetesProvider, connection *providers.Transp
 			continue
 		}
 
-		cronJobsPerNamespace, err := transport.CronJobs(namespace)
+		cronJobsPerNamespace, err := p.CronJobs(namespace)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to list CronJobs")
 		}
@@ -36,7 +36,7 @@ func ListCronJobs(transport k8s.KubernetesProvider, connection *providers.Transp
 	assets := []*asset.Asset{}
 	for i := range cronJobs {
 		cronJob := cronJobs[i]
-		platformData := transport.PlatformInfo()
+		platformData := p.PlatformInfo()
 		platformData.Version = cronJob.APIVersion
 		platformData.Build = cronJob.ResourceVersion
 		platformData.Labels = map[string]string{
@@ -48,7 +48,7 @@ func ListCronJobs(transport k8s.KubernetesProvider, connection *providers.Transp
 			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "cronjobs", cronJob.Namespace, cronJob.Name)},
 			Name:        cronJob.Namespace + "/" + cronJob.Name,
 			Platform:    platformData,
-			Connections: []*providers.TransportConfig{connection},
+			Connections: []*providers.Config{connection},
 			State:       asset.State_STATE_ONLINE,
 			Labels:      cronJob.Labels,
 		}

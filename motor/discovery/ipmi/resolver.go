@@ -18,7 +18,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *Resolver) Resolve(root *asset.Asset, t *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(root *asset.Asset, t *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	trans, err := ipmi_transport.New(t)
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (r *Resolver) Resolve(root *asset.Asset, t *providers.TransportConfig, cfn 
 		PlatformIds: []string{identifier},
 		Name:        root.Name,
 		Platform:    pf,
-		Connections: []*providers.TransportConfig{t}, // pass-in the current config
+		Connections: []*providers.Config{t}, // pass-in the current config
 		Labels:      map[string]string{},
 	}
 

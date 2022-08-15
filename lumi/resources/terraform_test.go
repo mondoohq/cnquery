@@ -12,7 +12,7 @@ import (
 )
 
 func terraformTestQuery(t *testing.T, query string) []*llx.RawResult {
-	trans, err := terraform.New(&providers.TransportConfig{
+	p, err := terraform.New(&providers.Config{
 		Backend: providers.ProviderType_TERRAFORM,
 		Options: map[string]string{
 			"path": "./testdata/terraform",
@@ -20,7 +20,7 @@ func terraformTestQuery(t *testing.T, query string) []*llx.RawResult {
 	})
 	require.NoError(t, err)
 
-	m, err := motor.New(trans)
+	m, err := motor.New(p)
 	require.NoError(t, err)
 
 	executor := initExecutionContext(m)

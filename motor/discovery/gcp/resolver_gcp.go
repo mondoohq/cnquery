@@ -19,7 +19,7 @@ func (r *GcpResolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryProjects, DiscoveryInstances}
 }
 
-func (r *GcpResolver) Resolve(root *asset.Asset, tc *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *GcpResolver) Resolve(root *asset.Asset, tc *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	if tc.Options != nil && tc.Options["organization"] != "" {
 		// discover the full organization
 		return (&GcpOrgResolver{}).Resolve(tc, cfn, sfn, userIdDetectors...)

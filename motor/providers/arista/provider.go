@@ -14,18 +14,18 @@ var (
 	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
 )
 
-func New(tc *providers.TransportConfig) (*Provider, error) {
-	port := tc.Port
+func New(pCfg *providers.Config) (*Provider, error) {
+	port := pCfg.Port
 	if port == 0 {
 		port = goeapi.UseDefaultPortNum
 	}
 
-	if len(tc.Credentials) == 0 {
+	if len(pCfg.Credentials) == 0 {
 		return nil, errors.New("missing password for arista provider")
 	}
 
 	// search for password secret
-	c, err := vault.GetPassword(tc.Credentials)
+	c, err := vault.GetPassword(pCfg.Credentials)
 	if err != nil {
 		return nil, errors.New("missing password for arista provider")
 	}
@@ -34,15 +34,15 @@ func New(tc *providers.TransportConfig) (*Provider, error) {
 	// the goeapi is always running in insecure mode since it does not verify the server
 	// setup which allows potential man-in-the-middle attacks, consider opening a PR
 	// https://github.com/aristanetworks/goeapi/blob/7944bcedaf212bb60e5f9baaf471469f49113f47/eapilib.go#L527
-	node, err := goeapi.Connect("https", tc.Host, c.User, string(c.Secret), int(port))
+	node, err := goeapi.Connect("https", pCfg.Host, c.User, string(c.Secret), int(port))
 	if err != nil {
 		return nil, err
 	}
 
 	return &Provider{
 		node:    node,
-		kind:    tc.Kind,
-		runtime: tc.Runtime,
+		kind:    pCfg.Kind,
+		runtime: pCfg.Runtime,
 	}, nil
 }
 

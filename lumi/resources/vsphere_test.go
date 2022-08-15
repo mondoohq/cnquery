@@ -22,7 +22,7 @@ func vsphereTestQuery(t *testing.T, query string) []*llx.RawResult {
 	port, err := strconv.Atoi(vs.Server.URL.Port())
 	require.NoError(t, err)
 
-	trans, err := vsphere.New(&providers.TransportConfig{
+	p, err := vsphere.New(&providers.Config{
 		Backend:  providers.ProviderType_VSPHERE,
 		Host:     vs.Server.URL.Hostname(),
 		Port:     int32(port),
@@ -37,7 +37,7 @@ func vsphereTestQuery(t *testing.T, query string) []*llx.RawResult {
 	})
 	require.NoError(t, err)
 
-	m, err := motor.New(trans)
+	m, err := motor.New(p)
 	require.NoError(t, err)
 
 	executor := initExecutionContext(m)

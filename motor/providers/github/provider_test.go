@@ -16,10 +16,10 @@ import (
 
 func TestGithub(t *testing.T) {
 	os.Setenv("GITHUB_TOKEN", "")
-	trans, err := New(&providers.TransportConfig{})
+	p, err := New(&providers.Config{})
 	require.NoError(t, err)
 
-	client := trans.Client()
+	client := p.Client()
 
 	orgName := "mondoohq"
 	ctx := context.Background()

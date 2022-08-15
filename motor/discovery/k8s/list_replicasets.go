@@ -10,8 +10,8 @@ import (
 )
 
 // ListReplicaSets list all replicaSets in the cluster.
-func ListReplicaSets(transport k8s.KubernetesProvider, connection *providers.TransportConfig, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
-	namespaces, err := transport.Namespaces()
+func ListReplicaSets(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
+	namespaces, err := p.Namespaces()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
 	}
@@ -24,7 +24,7 @@ func ListReplicaSets(transport k8s.KubernetesProvider, connection *providers.Tra
 			continue
 		}
 
-		replicaSetsPerNamespace, err := transport.ReplicaSets(namespace)
+		replicaSetsPerNamespace, err := p.ReplicaSets(namespace)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to list replicasets")
 		}
@@ -35,7 +35,7 @@ func ListReplicaSets(transport k8s.KubernetesProvider, connection *providers.Tra
 	assets := []*asset.Asset{}
 	for i := range replicaSets {
 		replicaSet := replicaSets[i]
-		platformData := transport.PlatformInfo()
+		platformData := p.PlatformInfo()
 		platformData.Version = replicaSet.APIVersion
 		platformData.Build = replicaSet.ResourceVersion
 		platformData.Labels = map[string]string{
@@ -47,7 +47,7 @@ func ListReplicaSets(transport k8s.KubernetesProvider, connection *providers.Tra
 			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "replicasets", replicaSet.Namespace, replicaSet.Name)},
 			Name:        replicaSet.Namespace + "/" + replicaSet.Name,
 			Platform:    platformData,
-			Connections: []*providers.TransportConfig{connection},
+			Connections: []*providers.Config{connection},
 			State:       asset.State_STATE_ONLINE,
 			Labels:      replicaSet.Labels,
 		}

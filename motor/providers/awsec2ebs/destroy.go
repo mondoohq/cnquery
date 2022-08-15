@@ -12,20 +12,20 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/awsec2ebs/custommount"
 )
 
-func (t *Provider) UnmountVolumeFromInstance() error {
+func (p *Provider) UnmountVolumeFromInstance() error {
 	log.Info().Msg("unmount volume")
-	if err := custommount.Unmount(t.tmpInfo.scanDir); err != nil {
+	if err := custommount.Unmount(p.tmpInfo.scanDir); err != nil {
 		log.Error().Err(err).Msg("failed to unmount dir")
 		return err
 	}
 	return nil
 }
 
-func (t *Provider) DetachVolumeFromInstance(ctx context.Context, volume *VolumeId) error {
+func (p *Provider) DetachVolumeFromInstance(ctx context.Context, volume *VolumeId) error {
 	log.Info().Msg("detach volume")
-	res, err := t.scannerRegionEc2svc.DetachVolume(ctx, &ec2.DetachVolumeInput{
-		Device: aws.String(t.tmpInfo.volumeAttachmentLoc), VolumeId: &volume.Id,
-		InstanceId: &t.scannerInstance.Id,
+	res, err := p.scannerRegionEc2svc.DetachVolume(ctx, &ec2.DetachVolumeInput{
+		Device: aws.String(p.tmpInfo.volumeAttachmentLoc), VolumeId: &volume.Id,
+		InstanceId: &p.scannerInstance.Id,
 	})
 	if err != nil {
 		return err
@@ -34,7 +34,7 @@ func (t *Provider) DetachVolumeFromInstance(ctx context.Context, volume *VolumeI
 		var volState types.VolumeState
 		for volState != types.VolumeStateAvailable {
 			time.Sleep(10 * time.Second)
-			resp, err := t.scannerRegionEc2svc.DescribeVolumes(ctx, &ec2.DescribeVolumesInput{VolumeIds: []string{volume.Id}})
+			resp, err := p.scannerRegionEc2svc.DescribeVolumes(ctx, &ec2.DescribeVolumesInput{VolumeIds: []string{volume.Id}})
 			if err != nil {
 				return err
 			}
@@ -47,13 +47,13 @@ func (t *Provider) DetachVolumeFromInstance(ctx context.Context, volume *VolumeI
 	return nil
 }
 
-func (t *Provider) DeleteCreatedVolume(ctx context.Context, volume *VolumeId) error {
+func (p *Provider) DeleteCreatedVolume(ctx context.Context, volume *VolumeId) error {
 	log.Info().Msg("delete created volume")
-	_, err := t.scannerRegionEc2svc.DeleteVolume(ctx, &ec2.DeleteVolumeInput{VolumeId: &volume.Id})
+	_, err := p.scannerRegionEc2svc.DeleteVolume(ctx, &ec2.DeleteVolumeInput{VolumeId: &volume.Id})
 	return err
 }
 
-func (t *Provider) RemoveCreatedDir() error {
+func (p *Provider) RemoveCreatedDir() error {
 	log.Info().Msg("remove created dir")
-	return os.RemoveAll(t.tmpInfo.scanDir)
+	return os.RemoveAll(p.tmpInfo.scanDir)
 }

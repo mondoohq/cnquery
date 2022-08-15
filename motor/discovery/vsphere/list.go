@@ -118,7 +118,7 @@ func mapHostPowerstateToState(hostPowerState types.HostSystemPowerState) asset.S
 	}
 }
 
-func (v *VSphere) ListVirtualMachines(parentTC *providers.TransportConfig) ([]*asset.Asset, error) {
+func (v *VSphere) ListVirtualMachines(parentTC *providers.Config) ([]*asset.Asset, error) {
 	instanceUuid, err := v.InstanceUuid()
 	if err != nil {
 		return nil, err
@@ -146,7 +146,7 @@ func (v *VSphere) ListVirtualMachines(parentTC *providers.TransportConfig) ([]*a
 	return res, nil
 }
 
-func vmsToAssetList(instanceUuid string, vms []*object.VirtualMachine, parentTC *providers.TransportConfig) ([]*asset.Asset, error) {
+func vmsToAssetList(instanceUuid string, vms []*object.VirtualMachine, parentTC *providers.Config) ([]*asset.Asset, error) {
 	res := []*asset.Asset{}
 	for i := range vms {
 		vm := vms[i]
@@ -181,7 +181,7 @@ func vmsToAssetList(instanceUuid string, vms []*object.VirtualMachine, parentTC 
 		}
 
 		if guestState == asset.State_STATE_RUNNING {
-			ha.Connections = []*providers.TransportConfig{
+			ha.Connections = []*providers.Config{
 				{
 					Backend:     providers.ProviderType_VSPHERE_VM,
 					Host:        parentTC.Host,

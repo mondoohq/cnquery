@@ -72,7 +72,7 @@ type ResourceResult struct {
 // Supported options are:
 // - namespace: limits the resources to a specific namespace
 // - path: use a manifest file instead of live API
-func New(tc *providers.TransportConfig) (KubernetesProvider, error) {
+func New(tc *providers.Config) (KubernetesProvider, error) {
 	if tc.Backend != providers.ProviderType_K8S {
 		return nil, providers.ErrProviderTypeDoesNotMatch
 	}

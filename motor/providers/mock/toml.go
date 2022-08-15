@@ -87,8 +87,8 @@ func ExportData(mock *Provider) ([]byte, error) {
 	return buf.Bytes(), err
 }
 
-// New returns a mock backend and loads the toml file by default
-func NewFromToml(tc *providers.TransportConfig) (*Provider, error) {
+// NewFromToml returns a mock provider and loads the toml file by default
+func NewFromToml(tc *providers.Config) (*Provider, error) {
 	if tc.Options == nil || tc.Options["path"] == "" {
 		return nil, errors.New("path is required")
 	}
@@ -115,9 +115,9 @@ func NewFromToml(tc *providers.TransportConfig) (*Provider, error) {
 	return transport, nil
 }
 
-// NewTestMockTransport is a sugar method to simplify writing tests with the mock backend
+// NewFromTomlFile is a sugar method to simplify writing tests with the mock backend
 func NewFromTomlFile(filepath string) (*Provider, error) {
-	return NewFromToml(&providers.TransportConfig{
+	return NewFromToml(&providers.Config{
 		Backend: providers.ProviderType_MOCK,
 		Options: map[string]string{
 			"path": filepath,

@@ -4,11 +4,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
 	"sigs.k8s.io/yaml"
 )
 
-func TestBackendParser(t *testing.T) {
+func TestProviderTypeParser(t *testing.T) {
 	content := `
 - ssh
 - docker

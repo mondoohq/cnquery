@@ -9,50 +9,50 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func (conn *TransportConfig) Clone() *TransportConfig {
-	if conn == nil {
+func (cfg *Config) Clone() *Config {
+	if cfg == nil {
 		return nil
 	}
-	return proto.Clone(conn).(*TransportConfig)
+	return proto.Clone(cfg).(*Config)
 }
 
-func (conn *TransportConfig) ToUrl() string {
-	switch conn.Backend {
+func (cfg *Config) ToUrl() string {
+	switch cfg.Backend {
 	case ProviderType_SSH:
-		return ProviderID_SSH + "://" + conn.Host
+		return ProviderID_SSH + "://" + cfg.Host
 	case ProviderType_DOCKER_ENGINE_CONTAINER:
-		if len(conn.Host) > 12 {
-			return "docker://" + conn.Host[:12]
+		if len(cfg.Host) > 12 {
+			return "docker://" + cfg.Host[:12]
 		}
-		return ProviderID_DOCKER_CONTAINER + "://" + conn.Host
+		return ProviderID_DOCKER_CONTAINER + "://" + cfg.Host
 	case ProviderType_DOCKER_ENGINE_IMAGE:
-		if strings.HasPrefix(conn.Host, "sha256:") {
-			host := strings.Replace(conn.Host, "sha256:", "", -1)
+		if strings.HasPrefix(cfg.Host, "sha256:") {
+			host := strings.Replace(cfg.Host, "sha256:", "", -1)
 			if len(host) > 12 {
 				return "docker://" + host[:12]
 			}
 			return ProviderID_DOCKER_IMAGE + "://" + host
 		}
 		// eg. docker://centos:8
-		return ProviderID_DOCKER_IMAGE + "://" + conn.Host
+		return ProviderID_DOCKER_IMAGE + "://" + cfg.Host
 	case ProviderType_CONTAINER_REGISTRY:
-		return ProviderID_CONTAINER_REGISTRY + "://" + conn.Host + conn.Path
+		return ProviderID_CONTAINER_REGISTRY + "://" + cfg.Host + cfg.Path
 	case ProviderType_LOCAL_OS:
 		return ProviderID_LOCAL
 	case ProviderType_WINRM:
-		return ProviderID_WINRM + "://" + conn.Host
+		return ProviderID_WINRM + "://" + cfg.Host
 	case ProviderType_AWS_SSM_RUN_COMMAND:
-		return "aws-ssm://" + conn.Host
+		return "aws-ssm://" + cfg.Host
 	case ProviderType_TAR:
-		return ProviderID_TAR + "://" + conn.Path
+		return ProviderID_TAR + "://" + cfg.Path
 	case ProviderType_MOCK:
-		return ProviderID_MOCK + "://" + conn.Path
+		return ProviderID_MOCK + "://" + cfg.Path
 	case ProviderType_VSPHERE:
-		return ProviderID_VSPHERE + "://" + conn.Host
+		return ProviderID_VSPHERE + "://" + cfg.Host
 	case ProviderType_VSPHERE_VM:
-		return ProviderID_VSPHERE_VM + "://" + conn.Host
+		return ProviderID_VSPHERE_VM + "://" + cfg.Host
 	case ProviderType_ARISTAEOS:
-		return ProviderID_ARISTA + "://" + conn.Host
+		return ProviderID_ARISTA + "://" + cfg.Host
 	case ProviderType_AWS:
 		return ProviderID_AWS
 	case ProviderType_AZURE:
@@ -78,20 +78,20 @@ func (conn *TransportConfig) ToUrl() string {
 	case ProviderType_TERRAFORM:
 		return ProviderID_TERRAFORM
 	case ProviderType_HOST:
-		if _, ok := conn.Options["tls"]; ok {
-			return ProviderID_TLS + "://" + conn.Host
+		if _, ok := cfg.Options["tls"]; ok {
+			return ProviderID_TLS + "://" + cfg.Host
 		}
-		return ProviderID_HOST + "://" + conn.Host
+		return ProviderID_HOST + "://" + cfg.Host
 	default:
-		log.Warn().Str("provider", conn.Backend.String()).Msg("cannot render provider name")
+		log.Warn().Str("provider", cfg.Backend.String()).Msg("cannot render provider name")
 		return ""
 	}
 }
 
-func (conn *TransportConfig) IncludesDiscoveryTarget(target string) bool {
-	if conn.Discover == nil {
+func (cfg *Config) IncludesDiscoveryTarget(target string) bool {
+	if cfg.Discover == nil {
 		return false
 	}
 
-	return stringx.Contains(conn.Discover.Targets, target)
+	return stringx.Contains(cfg.Discover.Targets, target)
 }

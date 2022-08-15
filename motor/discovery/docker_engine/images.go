@@ -58,7 +58,7 @@ func (e *dockerEngineDiscovery) ListImages() ([]*asset.Asset, error) {
 				Kind:    providers.Kind_KIND_CONTAINER_IMAGE,
 				Runtime: providers.RUNTIME_DOCKER_IMAGE,
 			},
-			Connections: []*providers.TransportConfig{
+			Connections: []*providers.Config{
 				{
 					Backend: providers.ProviderType_DOCKER_ENGINE_IMAGE,
 					Host:    dImg.ID,

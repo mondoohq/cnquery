@@ -11,8 +11,8 @@ import (
 )
 
 // ListDaemonSets list all daemonsets in the cluster.
-func ListDaemonSets(transport k8s.KubernetesProvider, connection *providers.TransportConfig, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
-	namespaces, err := transport.Namespaces()
+func ListDaemonSets(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
+	namespaces, err := p.Namespaces()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
 	}
@@ -25,7 +25,7 @@ func ListDaemonSets(transport k8s.KubernetesProvider, connection *providers.Tran
 			continue
 		}
 
-		daemonsetsPerNamespace, err := transport.DaemonSets(namespace)
+		daemonsetsPerNamespace, err := p.DaemonSets(namespace)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to list daemonsets")
 		}
@@ -36,7 +36,7 @@ func ListDaemonSets(transport k8s.KubernetesProvider, connection *providers.Tran
 	assets := []*asset.Asset{}
 	for i := range daemonsets {
 		daemonset := daemonsets[i]
-		podPlatform := transport.PlatformInfo()
+		podPlatform := p.PlatformInfo()
 		podPlatform.Version = daemonset.APIVersion
 		podPlatform.Build = daemonset.ResourceVersion
 		podPlatform.Labels = map[string]string{
@@ -48,7 +48,7 @@ func ListDaemonSets(transport k8s.KubernetesProvider, connection *providers.Tran
 			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "daemonsets", daemonset.Namespace, daemonset.Name)},
 			Name:        daemonset.Namespace + "/" + daemonset.Name,
 			Platform:    podPlatform,
-			Connections: []*providers.TransportConfig{connection},
+			Connections: []*providers.Config{connection},
 			State:       asset.State_STATE_ONLINE,
 			Labels:      daemonset.Labels,
 		}

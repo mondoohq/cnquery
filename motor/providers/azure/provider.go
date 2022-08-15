@@ -15,23 +15,23 @@ var (
 	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
 )
 
-func New(tc *providers.TransportConfig) (*Provider, error) {
-	if tc.Backend != providers.ProviderType_AZURE {
+func New(cfg *providers.Config) (*Provider, error) {
+	if cfg.Backend != providers.ProviderType_AZURE {
 		return nil, providers.ErrProviderTypeDoesNotMatch
 	}
 
-	if tc.Options == nil || len(tc.Options["subscriptionID"]) == 0 {
+	if cfg.Options == nil || len(cfg.Options["subscriptionID"]) == 0 {
 		return nil, errors.New("azure provider requires a subscriptionID")
 	}
 
-	if tc.Options == nil || len(tc.Options["tenantID"]) == 0 {
+	if cfg.Options == nil || len(cfg.Options["tenantID"]) == 0 {
 		return nil, errors.New("azure provider requires a tenantID")
 	}
 
 	return &Provider{
-		subscriptionID: tc.Options["subscriptionID"],
-		tenantID:       tc.Options["tenantID"],
-		opts:           tc.Options,
+		subscriptionID: cfg.Options["subscriptionID"],
+		tenantID:       cfg.Options["tenantID"],
+		opts:           cfg.Options,
 	}, nil
 }
 

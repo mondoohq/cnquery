@@ -8,13 +8,13 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/ssh"
 )
 
-func TestSSHBackendError(t *testing.T) {
-	_, err := ssh.New(&providers.TransportConfig{Backend: providers.ProviderType_LOCAL_OS, Host: "example.local"})
-	assert.Equal(t, "only ssh backend for ssh transport supported", err.Error())
+func TestSSHProviderError(t *testing.T) {
+	_, err := ssh.New(&providers.Config{Backend: providers.ProviderType_LOCAL_OS, Host: "example.local"})
+	assert.Equal(t, "provider type does not match", err.Error())
 }
 
 func TestSSHAuthError(t *testing.T) {
-	_, err := ssh.New(&providers.TransportConfig{Backend: providers.ProviderType_SSH, Host: "example.local"})
+	_, err := ssh.New(&providers.Config{Backend: providers.ProviderType_SSH, Host: "example.local"})
 
 	assert.True(t,
 		// local testing if ssh agent is available

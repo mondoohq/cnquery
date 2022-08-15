@@ -35,45 +35,45 @@ var (
 // [How to recognize differences between delegated and application permissions](https://docs.microsoft.com/en-us/azure/active-directory/develop/delegated-and-app-perms)
 // [Authentication and authorization basics for Microsoft Graph](https://docs.microsoft.com/en-us/graph/auth/auth-concepts)
 // [Always check permissions in tokens in an Azure AD protected API](https://joonasw.net/view/always-check-token-permissions-in-aad-protected-api)
-func New(tc *providers.TransportConfig) (*Provider, error) {
-	if tc.Backend != providers.ProviderType_MS365 {
+func New(pCfg *providers.Config) (*Provider, error) {
+	if pCfg.Backend != providers.ProviderType_MS365 {
 		return nil, providers.ErrProviderTypeDoesNotMatch
 	}
 
-	if len(tc.Credentials) != 1 || tc.Credentials[0] == nil {
+	if len(pCfg.Credentials) != 1 || pCfg.Credentials[0] == nil {
 		return nil, errors.New("ms365 provider requires a credentials file, pass json via -i option")
 	}
 
-	t := &Provider{
-		tenantID: tc.Options[OptionTenantID],
-		clientID: tc.Options[OptionClientID],
+	p := &Provider{
+		tenantID: pCfg.Options[OptionTenantID],
+		clientID: pCfg.Options[OptionClientID],
 		// TODO: we want to remove the data report with a proper implementation
-		powershellDataReportFile: tc.Options[OptionDataReport],
-		opts:                     tc.Options,
-		cred:                     tc.Credentials[0],
+		powershellDataReportFile: pCfg.Options[OptionDataReport],
+		opts:                     pCfg.Options,
+		cred:                     pCfg.Credentials[0],
 	}
 
 	// we only support private key authentication and client secret for ms 365
-	switch t.cred.Type {
+	switch p.cred.Type {
 	case vault.CredentialType_pkcs12:
 	case vault.CredentialType_password:
 	default:
-		return nil, errors.New("invalid secret configuration for ms365 provider: " + t.cred.Type.String())
+		return nil, errors.New("invalid secret configuration for ms365 provider: " + p.cred.Type.String())
 	}
 
-	if len(t.tenantID) == 0 {
+	if len(p.tenantID) == 0 {
 		return nil, errors.New("ms365 backend requires a tenantID")
 	}
 
 	// map the roles that we request
 	// TODO: check that actual credentials include permissions, this is included in the tokens
-	t.rolesMap = map[string]struct{}{}
+	p.rolesMap = map[string]struct{}{}
 	for i := range DefaultRoles {
 		r := DefaultRoles[i]
-		t.rolesMap[r] = struct{}{}
+		p.rolesMap[r] = struct{}{}
 	}
 
-	return t, nil
+	return p, nil
 }
 
 type Provider struct {

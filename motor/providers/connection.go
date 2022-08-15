@@ -9,17 +9,17 @@ import (
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
-type TransportConfigOption func(t *TransportConfig) error
+type ConfigOption func(t *Config) error
 
-func WithCredential(credential *vault.Credential) TransportConfigOption {
-	return func(cc *TransportConfig) error {
+func WithCredential(credential *vault.Credential) ConfigOption {
+	return func(cc *Config) error {
 		cc.AddCredential(credential)
 		return nil
 	}
 }
 
-func WithSudo() TransportConfigOption {
-	return func(endpoint *TransportConfig) error {
+func WithSudo() ConfigOption {
+	return func(endpoint *Config) error {
 		endpoint.Sudo = &Sudo{
 			Active: true,
 		}
@@ -27,16 +27,16 @@ func WithSudo() TransportConfigOption {
 	}
 }
 
-func WithInsecure() TransportConfigOption {
-	return func(endpoint *TransportConfig) error {
+func WithInsecure() ConfigOption {
+	return func(endpoint *Config) error {
 		endpoint.Insecure = true
 		return nil
 	}
 }
 
-func NewProviderConfig(b ProviderType, opts ...TransportConfigOption) (*TransportConfig, error) {
-	t := &TransportConfig{
-		Backend: b,
+func NewProviderConfig(pt ProviderType, opts ...ConfigOption) (*Config, error) {
+	t := &Config{
+		Backend: pt,
 	}
 
 	var err error
@@ -50,7 +50,7 @@ func NewProviderConfig(b ProviderType, opts ...TransportConfigOption) (*Transpor
 	return t, nil
 }
 
-func NewProviderFromUrl(uri string, opts ...TransportConfigOption) (*TransportConfig, string, error) {
+func NewProviderFromUrl(uri string, opts ...ConfigOption) (*Config, string, error) {
 	if uri == "" {
 		return nil, "", errors.New("uri cannot be empty")
 	}
@@ -76,13 +76,13 @@ func NewProviderFromUrl(uri string, opts ...TransportConfigOption) (*TransportCo
 		}
 	}
 
-	b, err := GetProviderType(scheme)
+	pt, err := GetProviderType(scheme)
 	if err != nil {
 		return nil, "", err
 	}
 
-	t := &TransportConfig{
-		Backend:     b,
+	t := &Config{
+		Backend:     pt,
 		Host:        hostname,
 		Port:        int32(port),
 		Path:        path,
@@ -99,6 +99,6 @@ func NewProviderFromUrl(uri string, opts ...TransportConfigOption) (*TransportCo
 	return t, username, nil
 }
 
-func (cc *TransportConfig) AddCredential(c *vault.Credential) {
+func (cc *Config) AddCredential(c *vault.Credential) {
 	cc.Credentials = append(cc.Credentials, c)
 }

@@ -19,9 +19,9 @@ var (
 	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
 )
 
-type TransportOption func(charp *Provider)
+type ProviderOption func(charp *Provider)
 
-func WithEndpoint(apiEndpoint string) TransportOption {
+func WithEndpoint(apiEndpoint string) ProviderOption {
 	return func(p *Provider) {
 		localResolverFn := func(service, region string) (aws_sdk.Endpoint, error) {
 			return aws_sdk.Endpoint{
@@ -34,21 +34,21 @@ func WithEndpoint(apiEndpoint string) TransportOption {
 	}
 }
 
-func WithRegion(region string) TransportOption {
+func WithRegion(region string) ProviderOption {
 	return func(p *Provider) {
 		p.awsConfigOptions = append(p.awsConfigOptions, config.WithRegion(region))
 	}
 }
 
-func WithProfile(profile string) TransportOption {
+func WithProfile(profile string) ProviderOption {
 	return func(p *Provider) {
 		p.awsConfigOptions = append(p.awsConfigOptions, config.WithSharedConfigProfile(profile))
 	}
 }
 
-func TransportOptions(opts map[string]string) []TransportOption {
+func TransportOptions(opts map[string]string) []ProviderOption {
 	// extract config options
-	transportOpts := []TransportOption{}
+	transportOpts := []ProviderOption{}
 	if apiEndpoint, ok := opts["endpoint-url"]; ok {
 		transportOpts = append(transportOpts, WithEndpoint(apiEndpoint))
 	}
@@ -63,8 +63,8 @@ func TransportOptions(opts map[string]string) []TransportOption {
 	return transportOpts
 }
 
-func New(tc *providers.TransportConfig, opts ...TransportOption) (*Provider, error) {
-	if tc.Backend != providers.ProviderType_AWS {
+func New(pCfg *providers.Config, opts ...ProviderOption) (*Provider, error) {
+	if pCfg.Backend != providers.ProviderType_AWS {
 		return nil, providers.ErrProviderTypeDoesNotMatch
 	}
 

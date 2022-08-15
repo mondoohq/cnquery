@@ -23,7 +23,7 @@ var (
 	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
 )
 
-func New(tc *providers.TransportConfig) (*Provider, error) {
+func New(pCfg *providers.Config) (*Provider, error) {
 	rand.Seed(time.Now().UnixNano())
 
 	// get aws config
@@ -46,7 +46,7 @@ func New(tc *providers.TransportConfig) (*Provider, error) {
 
 	// ec2 client for the target region
 	cfgCopy := cfg.Copy()
-	cfgCopy.Region = tc.Options["region"]
+	cfgCopy.Region = pCfg.Options["region"]
 	targetSvc := ec2.NewFromConfig(cfgCopy)
 
 	shell := []string{"sh", "-c"}
@@ -54,14 +54,14 @@ func New(tc *providers.TransportConfig) (*Provider, error) {
 	// 2. create provider instance
 	t := &Provider{
 		config: cfg,
-		opts:   tc.Options,
+		opts:   pCfg.Options,
 		target: TargetInfo{
-			PlatformId: tc.PlatformId,
-			AccountId:  tc.Options["account"],
-			Region:     tc.Options["region"],
-			Id:         tc.Options["id"],
+			PlatformId: pCfg.PlatformId,
+			AccountId:  pCfg.Options["account"],
+			Region:     pCfg.Options["region"],
+			Id:         pCfg.Options["id"],
 		},
-		targetType: tc.Options["type"],
+		targetType: pCfg.Options["type"],
 		scannerInstance: &InstanceId{
 			Id:      i.InstanceID,
 			Region:  i.Region,
@@ -85,7 +85,7 @@ func New(tc *providers.TransportConfig) (*Provider, error) {
 	// check if we got the no setup override option. this implies the target volume is already attached to the instance
 	// this is used in cases where we need to test a snapshot created from a public marketplace image. the volume gets attached to a brand
 	// new instance, and then that instance is started and we scan the attached fs
-	if tc.Options[NoSetup] == "true" {
+	if pCfg.Options[NoSetup] == "true" {
 		log.Info().Msg("skipping setup step")
 	} else {
 		var ok bool
@@ -117,11 +117,11 @@ func New(tc *providers.TransportConfig) (*Provider, error) {
 	}
 
 	// 5. create and initialize fs provider (we nest it)
-	fsProvider, err := fs.NewWithClose(&providers.TransportConfig{
+	fsProvider, err := fs.NewWithClose(&providers.Config{
 		Path:       t.tmpInfo.scanDir,
 		Backend:    providers.ProviderType_FS,
-		PlatformId: tc.PlatformId,
-		Options:    tc.Options,
+		PlatformId: pCfg.PlatformId,
+		Options:    pCfg.Options,
 	}, t.Close)
 	if err != nil {
 		return nil, err

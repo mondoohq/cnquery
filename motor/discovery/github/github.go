@@ -27,9 +27,9 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryRepository}
 }
 
-func (r *Resolver) Resolve(root *asset.Asset, config *providers.TransportConfig, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	// establish connection to GitHub
-	m, err := resolver.NewMotorConnection(config, cfn)
+	m, err := resolver.NewMotorConnection(pCfg, cfn)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (r *Resolver) Resolve(root *asset.Asset, config *providers.TransportConfig,
 			PlatformIds: []string{identifier},
 			Name:        name,
 			Platform:    pf,
-			Connections: []*providers.TransportConfig{config}, // pass-in the current config
+			Connections: []*providers.Config{pCfg}, // pass-in the current config
 			State:       asset.State_STATE_ONLINE,
 		})
 	case "github-user":
@@ -83,7 +83,7 @@ func (r *Resolver) Resolve(root *asset.Asset, config *providers.TransportConfig,
 			PlatformIds: []string{identifier},
 			Name:        name,
 			Platform:    pf,
-			Connections: []*providers.TransportConfig{config}, // pass-in the current config
+			Connections: []*providers.Config{pCfg}, // pass-in the current config
 			State:       asset.State_STATE_ONLINE,
 		})
 	case "github-org":
@@ -98,11 +98,11 @@ func (r *Resolver) Resolve(root *asset.Asset, config *providers.TransportConfig,
 			PlatformIds: []string{identifier},
 			Name:        name,
 			Platform:    pf,
-			Connections: []*providers.TransportConfig{config}, // pass-in the current config
+			Connections: []*providers.Config{pCfg}, // pass-in the current config
 			State:       asset.State_STATE_ONLINE,
 		})
 
-		if config.IncludesDiscoveryTarget(DiscoveryAll) || config.IncludesDiscoveryTarget(DiscoveryRepository) {
+		if pCfg.IncludesDiscoveryTarget(DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryRepository) {
 			org, err := p.Organization()
 			if err != nil {
 				return nil, err
@@ -114,7 +114,7 @@ func (r *Resolver) Resolve(root *asset.Asset, config *providers.TransportConfig,
 			}
 
 			for _, repo := range repos {
-				clonedConfig := config.Clone()
+				clonedConfig := pCfg.Clone()
 				if clonedConfig.Options == nil {
 					clonedConfig.Options = map[string]string{}
 				}
@@ -130,7 +130,7 @@ func (r *Resolver) Resolve(root *asset.Asset, config *providers.TransportConfig,
 					PlatformIds: []string{github_provider.NewGitubRepoIdentifier(owner, repoName)},
 					Name:        owner + "/" + repoName,
 					Platform:    github_provider.GithubRepoPlatform,
-					Connections: []*providers.TransportConfig{clonedConfig}, // pass-in the current config
+					Connections: []*providers.Config{clonedConfig}, // pass-in the current config
 					State:       asset.State_STATE_ONLINE,
 				})
 			}

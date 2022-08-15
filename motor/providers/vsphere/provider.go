@@ -32,19 +32,19 @@ func VSphereConnectionURL(hostname string, port int32, user string, password str
 	return u, nil
 }
 
-func New(tc *providers.TransportConfig) (*Provider, error) {
-	if tc.Backend != providers.ProviderType_VSPHERE {
+func New(pCfg *providers.Config) (*Provider, error) {
+	if pCfg.Backend != providers.ProviderType_VSPHERE {
 		return nil, errors.New("backend is not supported for vSphere transport")
 	}
 
 	// search for password secret
-	c, err := vault.GetPassword(tc.Credentials)
+	c, err := vault.GetPassword(pCfg.Credentials)
 	if err != nil {
 		return nil, errors.New("missing password for vSphere transport")
 	}
 
 	// derive vsphere connection url from Provider Config
-	vsphereUrl, err := VSphereConnectionURL(tc.Host, tc.Port, c.User, string(c.Secret))
+	vsphereUrl, err := VSphereConnectionURL(pCfg.Host, pCfg.Port, c.User, string(c.Secret))
 	if err != nil {
 		return nil, err
 	}
@@ -57,10 +57,10 @@ func New(tc *providers.TransportConfig) (*Provider, error) {
 
 	return &Provider{
 		client:             client,
-		kind:               tc.Kind,
-		runtime:            tc.Runtime,
-		opts:               tc.Options,
-		selectedPlatformID: tc.PlatformId,
+		kind:               pCfg.Kind,
+		runtime:            pCfg.Runtime,
+		opts:               pCfg.Options,
+		selectedPlatformID: pCfg.PlatformId,
 	}, nil
 }
 

@@ -91,7 +91,7 @@ func (m *Motor) ActivateRecorder() {
 		return
 	}
 
-	mockT, _ := mock.NewRecordTransport(m.Transport)
+	mockT, _ := mock.NewRecordProvider(m.Transport)
 	m.Transport = mockT
 	m.isRecording = true
 }
@@ -109,7 +109,7 @@ func (m *Motor) Recording() []byte {
 	defer m.l.Unlock()
 
 	if m.isRecording {
-		rt := m.Transport.(*mock.RecordTransport)
+		rt := m.Transport.(*mock.MockRecordProvider)
 		data, err := rt.ExportData()
 		if err != nil {
 			log.Error().Err(err).Msg("could not export data")

@@ -17,7 +17,7 @@ var (
 	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
 )
 
-func New(tc *providers.TransportConfig) (*Provider, error) {
+func New(tc *providers.Config) (*Provider, error) {
 	// check if the token was provided by the option. This way is deprecated since it does not pass the token as secret
 	token := tc.Options["token"]
 

@@ -127,7 +127,7 @@ func (a *Compute) instancesPerZone(svc *compute.Service, project string, zone st
 	for i := range il.Items {
 		instance := il.Items[i]
 
-		connections := []*providers.TransportConfig{}
+		connections := []*providers.Config{}
 
 		// TODO: we may want to filter windows instances, use guestOsFeatures to identify the system
 		// "guestOsFeatures": [{
@@ -148,7 +148,7 @@ func (a *Compute) instancesPerZone(svc *compute.Service, project string, zone st
 			for ac := range iface.AccessConfigs {
 				if len(iface.AccessConfigs[ac].NatIP) > 0 {
 					log.Debug().Str("instance", instance.Name).Str("ip", iface.AccessConfigs[ac].NatIP).Msg("found public ip")
-					connections = append(connections, &providers.TransportConfig{
+					connections = append(connections, &providers.Config{
 						Backend:  providers.ProviderType_SSH,
 						Host:     iface.AccessConfigs[ac].NatIP,
 						Insecure: a.Insecure,

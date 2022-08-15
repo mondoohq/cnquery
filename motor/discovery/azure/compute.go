@@ -127,7 +127,7 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*asset.Asset, error) {
 	for i := range values {
 		instance := values[i]
 
-		connections := []*providers.TransportConfig{}
+		connections := []*providers.Config{}
 
 		interfaces := *instance.NetworkProfile.NetworkInterfaces
 		for ni := range interfaces {
@@ -144,7 +144,7 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*asset.Asset, error) {
 
 				if ipResp.IPAddress != nil {
 					ip := *ipResp.IPAddress
-					connections = append(connections, &providers.TransportConfig{
+					connections = append(connections, &providers.Config{
 						Backend: providers.ProviderType_SSH,
 						Host:    ip,
 						// we do not add credentials here since those may not match the expected state

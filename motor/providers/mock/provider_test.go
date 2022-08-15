@@ -15,10 +15,10 @@ import (
 
 func TestMockCommand(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/mock.toml")
-	trans, err := mock.NewFromTomlFile(filepath)
+	p, err := mock.NewFromTomlFile(filepath)
 	assert.Equal(t, nil, err, "should create mock without error")
 
-	cmd, err := trans.RunCommand("ls /")
+	cmd, err := p.RunCommand("ls /")
 	require.NoError(t, err)
 
 	if assert.NotNil(t, cmd) {
@@ -32,7 +32,7 @@ func TestMockCommand(t *testing.T) {
 
 func TestMockCommandWithHostname(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/mock.toml")
-	trans, err := mock.NewFromToml(&providers.TransportConfig{
+	p, err := mock.NewFromToml(&providers.Config{
 		Backend: providers.ProviderType_MOCK,
 		Options: map[string]string{
 			"path":     filepath,
@@ -41,7 +41,7 @@ func TestMockCommandWithHostname(t *testing.T) {
 	})
 	assert.Equal(t, nil, err, "should create mock without error")
 
-	cmd, err := trans.RunCommand("hostname")
+	cmd, err := p.RunCommand("hostname")
 
 	if assert.NotNil(t, cmd) {
 		assert.Equal(t, nil, err, "should execute without error")
@@ -54,19 +54,19 @@ func TestMockCommandWithHostname(t *testing.T) {
 
 func TestMockFile(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/mock.toml")
-	trans, err := mock.NewFromTomlFile(filepath)
+	p, err := mock.NewFromTomlFile(filepath)
 	assert.Equal(t, nil, err, "should create mock without error")
 
-	f, err := trans.FS().Open("/etc/ssh/sshd_config")
+	f, err := p.FS().Open("/etc/ssh/sshd_config")
 	assert.Nil(t, err, "should execute without error")
 	assert.NotNil(t, f)
 	defer f.Close()
 
-	afutil := afero.Afero{Fs: trans.FS()}
+	afutil := afero.Afero{Fs: p.FS()}
 	afutil.Exists(f.Name())
 
-	p := f.Name()
-	assert.Equal(t, "/etc/ssh/sshd_config", p, "path should be correct")
+	path := f.Name()
+	assert.Equal(t, "/etc/ssh/sshd_config", path, "path should be correct")
 
 	stat, err := f.Stat()
 	assert.Equal(t, int64(3218), stat.Size(), "should read file size")

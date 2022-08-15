@@ -73,7 +73,7 @@ func gatherNameForPlatformId(id string) string {
 func GatherPlatformIDs(t providers.Transport, p *platform.Platform, idDetector providers.PlatformIdDetector) ([]string, error) {
 	transport := t
 	// helper for recoding transport to extract the original transport
-	recT, ok := t.(*mock.RecordTransport)
+	recT, ok := t.(*mock.MockRecordProvider)
 	if ok {
 		transport = recT.Watched()
 	}

@@ -7,7 +7,7 @@ import (
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/arista"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/motor/providers/awsec2ebs"
 	"go.mondoo.io/mondoo/motor/providers/azure"
 	"go.mondoo.io/mondoo/motor/providers/container"
@@ -17,7 +17,7 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/github"
 	"go.mondoo.io/mondoo/motor/providers/gitlab"
 	"go.mondoo.io/mondoo/motor/providers/ipmi"
-	k8s_transport "go.mondoo.io/mondoo/motor/providers/k8s"
+	k8s_provider "go.mondoo.io/mondoo/motor/providers/k8s"
 	"go.mondoo.io/mondoo/motor/providers/local"
 	"go.mondoo.io/mondoo/motor/providers/mock"
 	"go.mondoo.io/mondoo/motor/providers/ms365"
@@ -46,7 +46,7 @@ func warnIncompleteFeature(backend providers.ProviderType) {
 // NewMotorConnection establishes a motor connection by using the provided transport configuration
 // By default, it uses the id detector mechanisms provided by the transport. User can overwrite that
 // behaviour by optionally passing id detector identifier
-func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *vault.Credential) (*vault.Credential, error)) (*motor.Motor, error) {
+func NewMotorConnection(tc *providers.Config, credentialFn func(cred *vault.Credential) (*vault.Credential, error)) (*motor.Motor, error) {
 	log.Debug().Msg("establish motor connection")
 	var m *motor.Motor
 
@@ -54,7 +54,7 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 
 	// we clone the config here, and replace all credential references with the real references
 	// the clone is important so that credentials are not leaked outside of the function
-	resolvedConfig := proto.Clone(tc).(*providers.TransportConfig)
+	resolvedConfig := proto.Clone(tc).(*providers.Config)
 	resolvedCredentials := []*vault.Credential{}
 	for i := range resolvedConfig.Credentials {
 		credential := resolvedConfig.Credentials[i]
@@ -74,240 +74,240 @@ func NewMotorConnection(tc *providers.TransportConfig, credentialFn func(cred *v
 	switch resolvedConfig.Backend {
 	case providers.ProviderType_MOCK:
 		log.Debug().Msg("connection> load mock transport")
-		trans, err := mock.NewFromToml(resolvedConfig)
+		p, err := mock.NewFromToml(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
 
-		m, err = motor.New(trans)
+		m, err = motor.New(p)
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_LOCAL_OS:
 		log.Debug().Msg("connection> load local transport")
-		trans, err := local.NewWithConfig(resolvedConfig)
+		p, err := local.NewWithConfig(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
 
-		m, err = motor.New(trans, motor.WithRecoding(resolvedConfig.Record))
+		m, err = motor.New(p, motor.WithRecoding(resolvedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_TAR:
 		log.Debug().Msg("connection> load tar transport")
-		trans, err := tar.New(resolvedConfig)
+		p, err := tar.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
 
-		m, err = motor.New(trans, motor.WithRecoding(resolvedConfig.Record))
+		m, err = motor.New(p, motor.WithRecoding(resolvedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_CONTAINER_REGISTRY:
 		log.Debug().Msg("connection> load container registry transport")
-		trans, err := container.NewContainerRegistryImage(resolvedConfig)
+		p, err := container.NewContainerRegistryImage(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans, motor.WithRecoding(resolvedConfig.Record))
+		m, err = motor.New(p, motor.WithRecoding(resolvedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_DOCKER_ENGINE_CONTAINER:
 		log.Debug().Msg("connection> load docker engine container transport")
-		trans, err := container.NewDockerEngineContainer(resolvedConfig)
+		p, err := container.NewDockerEngineContainer(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans, motor.WithRecoding(resolvedConfig.Record))
+		m, err = motor.New(p, motor.WithRecoding(resolvedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_DOCKER_ENGINE_IMAGE:
 		log.Debug().Msg("connection> load docker engine image transport")
-		trans, err := container.NewDockerEngineImage(resolvedConfig)
+		p, err := container.NewDockerEngineImage(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans, motor.WithRecoding(resolvedConfig.Record))
+		m, err = motor.New(p, motor.WithRecoding(resolvedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_SSH:
 		log.Debug().Msg("connection> load ssh transport")
-		trans, err := ssh.New(resolvedConfig)
+		p, err := ssh.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
 
-		m, err = motor.New(trans, motor.WithRecoding(resolvedConfig.Record))
+		m, err = motor.New(p, motor.WithRecoding(resolvedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_WINRM:
 		log.Debug().Msg("connection> load winrm transport")
-		trans, err := winrm.New(resolvedConfig)
+		p, err := winrm.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
 
-		m, err = motor.New(trans, motor.WithRecoding(resolvedConfig.Record))
+		m, err = motor.New(p, motor.WithRecoding(resolvedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_VSPHERE:
 		log.Debug().Msg("connection> load vsphere transport")
-		trans, err := vsphere.New(resolvedConfig)
+		p, err := vsphere.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
 
-		m, err = motor.New(trans)
+		m, err = motor.New(p)
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_ARISTAEOS:
 		log.Debug().Msg("connection> load arista eos transport")
-		trans, err := arista.New(resolvedConfig)
+		p, err := arista.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans)
+		m, err = motor.New(p)
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_AWS:
 		log.Debug().Msg("connection> load aws transport")
-		trans, err := aws_transport.New(resolvedConfig, aws_transport.TransportOptions(resolvedConfig.Options)...)
+		p, err := aws_provider.New(resolvedConfig, aws_provider.TransportOptions(resolvedConfig.Options)...)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans)
+		m, err = motor.New(p)
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_GCP:
 		log.Debug().Msg("connection> load gcp transport")
-		trans, err := gcp.New(resolvedConfig)
+		p, err := gcp.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans)
+		m, err = motor.New(p)
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_AZURE:
 		log.Debug().Msg("connection> load azure transport")
-		trans, err := azure.New(resolvedConfig)
+		p, err := azure.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans)
+		m, err = motor.New(p)
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_MS365:
 		log.Debug().Msg("connection> load microsoft 365 transport")
-		trans, err := ms365.New(resolvedConfig)
+		p, err := ms365.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans)
+		m, err = motor.New(p)
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_IPMI:
 		log.Debug().Msg("connection> load ipmi transport")
-		trans, err := ipmi.New(resolvedConfig)
+		p, err := ipmi.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans)
+		m, err = motor.New(p)
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_VSPHERE_VM:
-		trans, err := vmwareguestapi.New(resolvedConfig)
+		p, err := vmwareguestapi.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans, motor.WithRecoding(resolvedConfig.Record))
+		m, err = motor.New(p, motor.WithRecoding(resolvedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_FS:
-		trans, err := fs.New(resolvedConfig)
+		p, err := fs.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans, motor.WithRecoding(resolvedConfig.Record))
+		m, err = motor.New(p, motor.WithRecoding(resolvedConfig.Record))
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_EQUINIX_METAL:
-		trans, err := equinix.New(resolvedConfig)
+		p, err := equinix.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans)
+		m, err = motor.New(p)
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_K8S:
-		trans, err := k8s_transport.New(resolvedConfig)
+		p, err := k8s_provider.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans)
+		m, err = motor.New(p)
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_GITHUB:
-		trans, err := github.New(resolvedConfig)
+		p, err := github.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans)
+		m, err = motor.New(p)
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_GITLAB:
-		trans, err := gitlab.New(resolvedConfig)
+		p, err := gitlab.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans)
+		m, err = motor.New(p)
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_AWS_EC2_EBS:
-		trans, err := awsec2ebs.New(tc)
+		p, err := awsec2ebs.New(tc)
 		if err != nil {
 			return nil, err
 		}
 		// TODO (jaym) before merge: The ebs transport is being lost. This
 		// is problematic. It will break the platform id detection being added
-		m, err = motor.New(trans.FsProvider)
+		m, err = motor.New(p.FsProvider)
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_TERRAFORM:
-		trans, err := terraform.New(tc)
+		p, err := terraform.New(tc)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans)
+		m, err = motor.New(p)
 		if err != nil {
 			return nil, err
 		}
 	case providers.ProviderType_HOST:
-		trans, err := network.New(tc)
+		p, err := network.New(tc)
 		if err != nil {
 			return nil, err
 		}
-		m, err = motor.New(trans)
+		m, err = motor.New(p)
 		if err != nil {
 			return nil, err
 		}

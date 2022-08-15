@@ -166,7 +166,7 @@ func ssmInstanceToAsset(account string, region string, instance types.InstanceIn
 			Runtime: providers.RUNTIME_AWS_SSM_MANAGED,
 		},
 
-		Connections: []*providers.TransportConfig{{
+		Connections: []*providers.Config{{
 			Backend: providers.ProviderType_AWS_SSM_RUN_COMMAND,
 			Host:    *instance.InstanceId,
 		}},

@@ -18,9 +18,9 @@ func TestEc2InstanceConnect(t *testing.T) {
 	instanceID := "i-0fed67234fd67e0f2"
 	user := "ec2-user"
 
-	endpoint := &providers.TransportConfig{
-		Backend: providers.ProviderType_SSH,
-		Host:    instanceID,
+	pCfg := &providers.Config{
+		Type: providers.ProviderType_SSH,
+		Host: instanceID,
 		Credentials: []*vault.Credential{{
 			Type: vault.CredentialType_aws_ec2_instance_connect,
 			User: user,
@@ -28,7 +28,7 @@ func TestEc2InstanceConnect(t *testing.T) {
 		Insecure: true,
 	}
 
-	err := ssh.VerifyConfig(endpoint)
+	err := ssh.VerifyConfig(pCfg)
 	assert.Nil(t, err)
 
 	_, err = ssh.New(endpoint)
@@ -36,9 +36,9 @@ func TestEc2InstanceConnect(t *testing.T) {
 }
 
 func TestSudoConnect(t *testing.T) {
-	endpoint := &providers.TransportConfig{
-		Backend: providers.ProviderType_SSH,
-		Host:    "192.168.178.26",
+	pCfg := &providers.Config{
+		Type: providers.ProviderType_SSH,
+		Host: "192.168.178.26",
 		Credentials: []*vault.Credential{{
 			Type:   vault.CredentialType_password,
 			User:   "chris",
@@ -50,14 +50,14 @@ func TestSudoConnect(t *testing.T) {
 		Insecure: true,
 	}
 
-	conn, err := ssh.New(endpoint)
+	p, err := ssh.New(pCfg)
 	require.NoError(t, err)
-	defer conn.Close()
+	defer p.Close()
 
-	err = conn.VerifyConnection()
+	err = p.VerifyConnection()
 	require.NoError(t, err)
 
-	fi, err := conn.FS().Stat("/etc/os-release")
+	fi, err := p.FS().Stat("/etc/os-release")
 	require.NoError(t, err)
 	assert.NotNil(t, fi)
 }
@@ -68,9 +68,9 @@ func TestEc2SSMSession(t *testing.T) {
 	profile := "mondoo-dev"
 	region := "us-east-1"
 
-	endpoint := &providers.TransportConfig{
-		Backend: providers.ProviderType_SSH,
-		Host:    instanceID,
+	pCfg := &providers.Config{
+		Type: providers.ProviderType_SSH,
+		Host: instanceID,
 		Credentials: []*vault.Credential{{
 			Type: vault.CredentialType_aws_ec2_ssm_session,
 			User: user,
@@ -82,18 +82,18 @@ func TestEc2SSMSession(t *testing.T) {
 		},
 	}
 
-	conn, err := ssh.New(endpoint)
+	p, err := ssh.New(pCfg)
 	require.NoError(t, err)
 
-	fi, err := conn.FS().Stat("/etc/os-release")
+	fi, err := p.FS().Stat("/etc/os-release")
 	require.NoError(t, err)
 	assert.NotNil(t, fi)
-	f, err := conn.FS().Open("/etc/os-release")
+	f, err := p.FS().Open("/etc/os-release")
 	require.NoError(t, err)
 	content, err := ioutil.ReadAll(f)
 	require.NoError(t, err)
 	assert.NotEqual(t, "", string(content))
 
 	// close ssh connection
-	conn.Close()
+	p.Close()
 }

@@ -13,8 +13,8 @@ import (
 
 func TestGcpDiscovery(t *testing.T) {
 	orgId := "<insert org id>"
-	tc := &providers.TransportConfig{
-		Backend: providers.ProviderType_GCP,
+	pCfg := &providers.Config{
+		Type: providers.ProviderType_GCP,
 		Options: map[string]string{
 			"organization": orgId,
 		},
@@ -23,9 +23,9 @@ func TestGcpDiscovery(t *testing.T) {
 		},
 	}
 
-	trans, err := New(tc)
+	p, err := New(pCfg)
 	require.NoError(t, err)
-	org, err := trans.GetOrganization(orgId)
+	org, err := p.GetOrganization(orgId)
 	require.NoError(t, err)
 
 	projects, err := trans.GetProjectsForOrganization(org)
