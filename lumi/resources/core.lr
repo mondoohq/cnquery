@@ -1593,6 +1593,19 @@ aws.account {
   id() string
   // Account Aliases
   aliases() []string
+  // Information about the associated organization if any
+  organization() aws.organization
+}
+
+aws.organization {
+  // arn of the organization
+  arn string
+  // specifies the functionality available to org (ALL|CONSOLIDATED_BILLING)
+  featureSet string
+  // id of the org master account
+  masterAccountId string
+  // email owner of the org master account
+  masterAccountEmail string
 }
 
 // AWS Elastic File System (EFS) Service

@@ -1,5 +1,11 @@
 package resources
 
+import (
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/service/organizations"
+)
+
 func (a *lumiAwsAccount) id() (string, error) {
 	id, err := a.Id()
 	if err != nil {
@@ -40,4 +46,28 @@ func (a *lumiAwsAccount) GetAliases() ([]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func (a *lumiAwsAccount) GetOrganization() (interface{}, error) {
+	at, err := awstransport(a.MotorRuntime.Motor.Transport)
+	if err != nil {
+		return nil, nil
+	}
+
+	client := organizations.NewFromConfig(at.Config())
+
+	org, err := client.DescribeOrganization(context.TODO(), &organizations.DescribeOrganizationInput{})
+	if err != nil {
+		return nil, err
+	}
+	return a.MotorRuntime.CreateResource("aws.organization",
+		"arn", toString(org.Organization.Arn),
+		"featureSet", string(org.Organization.FeatureSet),
+		"masterAccountId", toString(org.Organization.MasterAccountId),
+		"masterAccountEmail", toString(org.Organization.MasterAccountEmail),
+	)
+}
+
+func (a *lumiAwsOrganization) id() (string, error) {
+	return a.Arn()
 }
