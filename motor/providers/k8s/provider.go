@@ -3,6 +3,8 @@ package k8s
 //go:generate  go run github.com/golang/mock/mockgen -source=./provider.go -destination=./mock_provider.go -package=k8s
 
 import (
+	"context"
+	"fmt"
 	"strings"
 
 	platform "go.mondoo.io/mondoo/motor/platform"
@@ -72,7 +74,7 @@ type ResourceResult struct {
 // Supported options are:
 // - namespace: limits the resources to a specific namespace
 // - path: use a manifest file instead of live API
-func New(tc *providers.Config) (KubernetesProvider, error) {
+func New(ctx context.Context, tc *providers.Config) (KubernetesProvider, error) {
 	if tc.Backend != providers.ProviderType_K8S {
 		return nil, providers.ErrProviderTypeDoesNotMatch
 	}
@@ -80,6 +82,12 @@ func New(tc *providers.Config) (KubernetesProvider, error) {
 	manifestFile, manifestDefined := tc.Options[OPTION_MANIFEST]
 	if manifestDefined {
 		return newManifestProvider(tc.PlatformId, WithManifestFile(manifestFile), WithNamespace(tc.Options[OPTION_NAMESPACE])), nil
+	}
+
+	// initialize resource cache, so that the same k8s resources can be re-used
+	dCache, ok := resources.GetDiscoveryCache(ctx)
+	if !ok {
+		return nil, fmt.Errorf("context does not have an initialized discovery cache")
 	}
 
 	return newApiProvider(tc.Options[OPTION_NAMESPACE], tc.PlatformId, dCache)

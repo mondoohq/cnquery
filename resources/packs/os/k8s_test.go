@@ -1,6 +1,7 @@
 package os_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -14,7 +15,7 @@ import (
 )
 
 func k8sTestQuery(t *testing.T, query string) []*llx.RawResult {
-	p, err := k8s.New(&providers.Config{
+	p, err := k8s.New(context.Background(), &providers.Config{
 		Backend: providers.ProviderType_K8S,
 		Options: map[string]string{
 			"path": "./k8s/testdata",

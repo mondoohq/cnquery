@@ -1,6 +1,7 @@
 package ms365
 
 import (
+	"context"
 	"errors"
 
 	"go.mondoo.io/mondoo/motor/asset"
@@ -20,11 +21,11 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *Resolver) Resolve(root *asset.Asset, cc *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, cc *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// Note: we use the resolver instead of the direct ms365_transport.New to resolve credentials properly
-	m, err := resolver.NewMotorConnection(cc, cfn)
+	m, err := resolver.NewMotorConnection(ctx, cc, cfn)
 	if err != nil {
 		return nil, err
 	}

@@ -11,6 +11,7 @@ package discovery
 // to retrieve the required information. The inventory manager injects the correct functions upon initialization
 
 import (
+	"context"
 	"strings"
 
 	"github.com/cockroachdb/errors"
@@ -44,9 +45,13 @@ import (
 
 type Resolver interface {
 	Name() string
-	Resolve(root *asset.Asset, t *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn,
+	Resolve(ctx context.Context, root *asset.Asset, t *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn,
 		userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error)
 	AvailableDiscoveryTargets() []string
+}
+
+type ContextInitializer interface {
+	InitCtx(ctx context.Context) context.Context
 }
 
 var resolver map[string]Resolver
@@ -85,7 +90,18 @@ func init() {
 	}
 }
 
-func ResolveAsset(root *asset.Asset, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn) ([]*asset.Asset, error) {
+// InitCtx initializes the context to support all resolvers
+func InitCtx(ctx context.Context) context.Context {
+	initCtx := ctx
+	for _, r := range resolver {
+		if ctxInitializer, ok := r.(ContextInitializer); ok {
+			initCtx = ctxInitializer.InitCtx(initCtx)
+		}
+	}
+	return initCtx
+}
+
+func ResolveAsset(ctx context.Context, root *asset.Asset, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// if the asset is missing a secret, we try to add this for the asset
@@ -124,7 +140,7 @@ func ResolveAsset(root *asset.Asset, cfn credentials.CredentialFn, sfn credentia
 		userIdDetectors := providers.ToPlatformIdDetectors(root.IdDetector)
 
 		// resolve assets
-		resolvedAssets, err := r.Resolve(root, pCfg, cfn, sfn, userIdDetectors...)
+		resolvedAssets, err := r.Resolve(ctx, root, pCfg, cfn, sfn, userIdDetectors...)
 		if err != nil {
 			assetFallbackName(root, pCfg)
 			return nil, err
@@ -166,13 +182,13 @@ type ResolvedAssets struct {
 	Errors map[*asset.Asset]error
 }
 
-func ResolveAssets(rootAssets []*asset.Asset, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn) ResolvedAssets {
+func ResolveAssets(ctx context.Context, rootAssets []*asset.Asset, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn) ResolvedAssets {
 	resolved := []*asset.Asset{}
 	errors := map[*asset.Asset]error{}
 	for i := range rootAssets {
 		asset := rootAssets[i]
 
-		resolverAssets, err := ResolveAsset(asset, cfn, sfn)
+		resolverAssets, err := ResolveAsset(ctx, asset, cfn, sfn)
 		if err != nil {
 			errors[asset] = err
 		}

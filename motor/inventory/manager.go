@@ -9,7 +9,7 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery"
 	"go.mondoo.io/mondoo/motor/inventory/credentialquery"
-	"go.mondoo.io/mondoo/motor/inventory/v1"
+	v1 "go.mondoo.io/mondoo/motor/inventory/v1"
 	"go.mondoo.io/mondoo/motor/vault"
 	"go.mondoo.io/mondoo/motor/vault/config"
 	"go.mondoo.io/mondoo/motor/vault/inmemory"
@@ -21,7 +21,7 @@ type InventoryManager interface {
 	GetAssets() []*asset.Asset
 	// Resolve will iterate over all assets and try to discover all nested assets. After this operation
 	// GetAssets will return the fully resolved list of assets
-	Resolve() map[*asset.Asset]error
+	Resolve(ctx context.Context) map[*asset.Asset]error
 	// GetCredential returns a full credential including the secret from vault
 	GetCredential(*vault.Credential) (*vault.Credential, error)
 	// QuerySecretId runs the credential query to determine the secret id for an asset, the resulting credential
@@ -225,8 +225,8 @@ func (im *inventoryManager) QuerySecretId(a *asset.Asset) (*vault.Credential, er
 	return im.credentialQueryRunner.Run(a)
 }
 
-func (im *inventoryManager) Resolve() map[*asset.Asset]error {
-	resolvedAssets := discovery.ResolveAssets(im.assetList, im.GetCredential, im.QuerySecretId)
+func (im *inventoryManager) Resolve(ctx context.Context) map[*asset.Asset]error {
+	resolvedAssets := discovery.ResolveAssets(ctx, im.assetList, im.GetCredential, im.QuerySecretId)
 
 	// TODO: iterate over all resolved assets and match them with the original list and try to find credentials for each asset
 	im.assetList = resolvedAssets.Assets

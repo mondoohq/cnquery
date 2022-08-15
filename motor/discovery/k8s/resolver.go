@@ -1,12 +1,15 @@
 package k8s
 
 import (
+	"context"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/platform/detector"
 	"go.mondoo.io/mondoo/motor/providers"
-	k8s_provider "go.mondoo.io/mondoo/motor/providers/k8s"
+	"go.mondoo.io/mondoo/motor/providers/k8s"
+	"go.mondoo.io/mondoo/motor/providers/k8s/resources"
 	"go.mondoo.io/mondoo/motor/providers/local"
 	"go.mondoo.io/mondoo/resources/packs/os/kubectl"
 )
@@ -43,7 +46,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	}
 }
 
-func (r *Resolver) Resolve(root *asset.Asset, tc *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 	namespacesFilter := []string{}
 
@@ -71,7 +74,7 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.Config, cfn credenti
 
 	log.Debug().Strs("namespaceFilter", namespacesFilter).Msg("resolve k8s assets")
 
-	p, err := k8s_provider.New(tc)
+	p, err := k8s.New(ctx, tc)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +114,7 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.Config, cfn credenti
 		}
 
 		clusterName = "K8S Cluster " + clusterName
-		ns, ok := tc.Options[k8s_provider.OPTION_NAMESPACE]
+		ns, ok := tc.Options[k8s.OPTION_NAMESPACE]
 		if ok && ns != "" {
 			clusterName += " (Namespace: " + ns + ")"
 		}
@@ -134,8 +137,12 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.Config, cfn credenti
 	return resolved, nil
 }
 
+func (r *Resolver) InitCtx(ctx context.Context) context.Context {
+	return resources.SetDiscoveryCache(ctx, resources.NewDiscoveryCache())
+}
+
 // addSeparateAssets Depending on config options it will search for additional assets which should be listed separately.
-func addSeparateAssets(tc *providers.Config, p k8s_provider.KubernetesProvider, namespacesFilter []string, clusterIdentifier string) ([]*asset.Asset, error) {
+func addSeparateAssets(tc *providers.Config, p k8s.KubernetesProvider, namespacesFilter []string, clusterIdentifier string) ([]*asset.Asset, error) {
 	var resolved []*asset.Asset
 
 	// discover deployments

@@ -1,6 +1,7 @@
 package tfstate
 
 import (
+	"context"
 	"path/filepath"
 
 	"go.mondoo.io/mondoo/motor/asset"
@@ -21,7 +22,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	name := ""
 	if pCfg.Options["path"] != "" {
 		// manifest parent directory name
@@ -45,7 +46,7 @@ func (r *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn creden
 		assetObj.Labels["path"] = absPath
 	}
 
-	m, err := resolver.NewMotorConnection(pCfg, cfn)
+	m, err := resolver.NewMotorConnection(ctx, pCfg, cfn)
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,7 @@
 package tar_test
 
 import (
+	"context"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -54,7 +55,7 @@ func TestPlatformIdentifier(t *testing.T) {
 	err := cacheAlpine()
 	require.NoError(t, err, "should create tar without error")
 
-	m, err := resolver.NewMotorConnection(&providers.Config{
+	m, err := resolver.NewMotorConnection(context.Background(), &providers.Config{
 		Backend: providers.ProviderType_TAR,
 		Options: map[string]string{
 			"file": alpineContainerPath,

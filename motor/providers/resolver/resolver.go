@@ -1,6 +1,7 @@
 package resolver
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/rs/zerolog/log"
@@ -47,7 +48,7 @@ func warnIncompleteFeature(backend providers.ProviderType) {
 // NewMotorConnection establishes a motor connection by using the provided transport configuration
 // By default, it uses the id detector mechanisms provided by the transport. User can overwrite that
 // behaviour by optionally passing id detector identifier
-func NewMotorConnection(tc *providers.Config, credentialFn func(cred *vault.Credential) (*vault.Credential, error)) (*motor.Motor, error) {
+func NewMotorConnection(ctx context.Context, tc *providers.Config, credentialFn func(cred *vault.Credential) (*vault.Credential, error)) (*motor.Motor, error) {
 	log.Debug().Msg("establish motor connection")
 	var m *motor.Motor
 
@@ -257,7 +258,7 @@ func NewMotorConnection(tc *providers.Config, credentialFn func(cred *vault.Cred
 			return nil, err
 		}
 	case providers.ProviderType_K8S:
-		p, err := k8s_provider.New(resolvedConfig)
+		p, err := k8s_provider.New(ctx, resolvedConfig)
 		if err != nil {
 			return nil, err
 		}

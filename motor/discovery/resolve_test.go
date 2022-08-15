@@ -1,6 +1,7 @@
 package discovery_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -36,7 +37,7 @@ func TestResolverWithAssetName(t *testing.T) {
 		},
 	}
 
-	resolved := discovery.ResolveAssets(inventory.Spec.Assets, nil, nil)
+	resolved := discovery.ResolveAssets(context.Background(), inventory.Spec.Assets, nil, nil)
 	assert.Equal(t, 2, len(resolved.Assets))
 	assert.Equal(t, "test", resolved.Assets[0].Name)
 	assert.Equal(t, "testmachine", resolved.Assets[1].Name)

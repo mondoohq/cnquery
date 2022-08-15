@@ -1,6 +1,7 @@
 package vagrant
 
 import (
+	"context"
 	"strings"
 
 	"github.com/cockroachdb/errors"
@@ -25,7 +26,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (v *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (v *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	localProvider, err := local.New()
@@ -67,7 +68,7 @@ func (v *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn creden
 			return nil, err
 		}
 
-		a, err := newVagrantAsset(vmSshConfig[k], pCfg)
+		a, err := newVagrantAsset(ctx, vmSshConfig[k], pCfg)
 		if err != nil {
 			return nil, err
 		}
@@ -98,7 +99,7 @@ func (v *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn creden
 		}
 
 		for i := range vagrantVms {
-			a, err := newVagrantAsset(vagrantVms[i], pCfg)
+			a, err := newVagrantAsset(ctx, vagrantVms[i], pCfg)
 			if err != nil {
 				return nil, err
 			}
@@ -109,7 +110,7 @@ func (v *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn creden
 	return resolved, nil
 }
 
-func newVagrantAsset(sshConfig *VagrantVmSSHConfig, rootTransportConfig *providers.Config) (*asset.Asset, error) {
+func newVagrantAsset(ctx context.Context, sshConfig *VagrantVmSSHConfig, rootTransportConfig *providers.Config) (*asset.Asset, error) {
 	if sshConfig == nil {
 		return nil, errors.New("missing vagrant ssh config")
 	}
@@ -140,7 +141,7 @@ func newVagrantAsset(sshConfig *VagrantVmSSHConfig, rootTransportConfig *provide
 		},
 	}
 
-	m, err := resolver.NewMotorConnection(cc, nil)
+	m, err := resolver.NewMotorConnection(ctx, cc, nil)
 	if err != nil {
 		return nil, err
 	}
