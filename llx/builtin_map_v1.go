@@ -11,7 +11,7 @@ import (
 // mapFunctions are all the handlers for builtin array methods
 var mapFunctionsV1 map[string]chunkHandlerV1
 
-func mapGetIndexV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func mapGetIndexV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type.Child()}, 0, nil
 	}
@@ -51,7 +51,7 @@ func mapGetIndexV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (
 	}, 0, nil
 }
 
-func mapLengthV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func mapLengthV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
 		return &RawData{Type: types.Int}, 0, nil
 	}
@@ -63,7 +63,7 @@ func mapLengthV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*R
 	return IntData(int64(len(arr))), 0, nil
 }
 
-func _mapWhereV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32, invert bool) (*RawData, int32, error) {
+func _mapWhereV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32, invert bool) (*RawData, int32, error) {
 	// where(array, function)
 	itemsRef := chunk.Function.Args[0]
 	items, rref, err := c.resolveValue(itemsRef, ref)
@@ -137,19 +137,19 @@ func _mapWhereV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32, inv
 	return nil, 0, nil
 }
 
-func mapWhereV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func mapWhereV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return _mapWhereV1(c, bind, chunk, ref, false)
 }
 
-func mapWhereNotV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func mapWhereNotV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return _mapWhereV1(c, bind, chunk, ref, true)
 }
 
-func mapBlockCallV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func mapBlockCallV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return c.runBlock(bind, chunk.Function.Args[0], nil, ref)
 }
 
-func mapKeysV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func mapKeysV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
 		return &RawData{
 			Type:  types.Array(types.Dict),
@@ -172,7 +172,7 @@ func mapKeysV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return ArrayData(res, types.String), 0, nil
 }
 
-func mapValuesV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func mapValuesV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
 		return &RawData{
 			Type:  types.Array(types.Dict),
@@ -195,7 +195,7 @@ func mapValuesV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*R
 	return ArrayData(res, types.Dict), 0, nil
 }
 
-func dictGetIndexV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictGetIndexV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type}, 0, nil
 	}
@@ -249,7 +249,7 @@ func dictGetIndexV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) 
 	}
 }
 
-func dictLengthV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictLengthV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type}, 0, nil
 	}
@@ -266,7 +266,7 @@ func dictLengthV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*
 	}
 }
 
-func dictNotEmptyV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictNotEmptyV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
 		return BoolFalse, 0, nil
 	}
@@ -283,7 +283,7 @@ func dictNotEmptyV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) 
 	}
 }
 
-func dictBlockCallV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictBlockCallV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	switch bind.Value.(type) {
 	case []interface{}:
 		return arrayBlockListV1(c, bind, chunk, ref)
@@ -292,7 +292,7 @@ func dictBlockCallV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32)
 	}
 }
 
-func dictCamelcaseV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictCamelcaseV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	_, ok := bind.Value.(string)
 	if !ok {
 		return nil, 0, errors.New("dict value does not support field `downcase`")
@@ -301,7 +301,7 @@ func dictCamelcaseV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32)
 	return stringCamelcaseV1(c, bind, chunk, ref)
 }
 
-func dictDowncaseV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictDowncaseV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	_, ok := bind.Value.(string)
 	if !ok {
 		return nil, 0, errors.New("dict value does not support field `downcase`")
@@ -310,7 +310,7 @@ func dictDowncaseV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) 
 	return stringDowncaseV1(c, bind, chunk, ref)
 }
 
-func dictUpcaseV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictUpcaseV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	_, ok := bind.Value.(string)
 	if !ok {
 		return nil, 0, errors.New("dict value does not support field `upcase`")
@@ -319,7 +319,7 @@ func dictUpcaseV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*
 	return stringUpcaseV1(c, bind, chunk, ref)
 }
 
-func dictLinesV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictLinesV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	_, ok := bind.Value.(string)
 	if !ok {
 		return nil, 0, errors.New("dict value does not support field `lines`")
@@ -328,7 +328,7 @@ func dictLinesV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*R
 	return stringLinesV1(c, bind, chunk, ref)
 }
 
-func dictSplitV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictSplitV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	_, ok := bind.Value.(string)
 	if !ok {
 		return nil, 0, errors.New("dict value does not support field `split`")
@@ -337,7 +337,7 @@ func dictSplitV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*R
 	return stringSplitV1(c, bind, chunk, ref)
 }
 
-func dictTrimV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictTrimV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	_, ok := bind.Value.(string)
 	if !ok {
 		return nil, 0, errors.New("dict value does not support field `trim`")
@@ -346,7 +346,7 @@ func dictTrimV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*Ra
 	return stringTrimV1(c, bind, chunk, ref)
 }
 
-func dictKeysV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictKeysV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
 		return &RawData{
 			Type:  types.Array(types.Dict),
@@ -369,7 +369,7 @@ func dictKeysV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*Ra
 	return ArrayData(res, types.String), 0, nil
 }
 
-func dictValuesV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictValuesV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
 		return &RawData{
 			Type:  types.Array(types.Dict),
@@ -392,7 +392,7 @@ func dictValuesV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*
 	return ArrayData(res, types.Dict), 0, nil
 }
 
-func _dictWhereV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32, inverted bool) (*RawData, int32, error) {
+func _dictWhereV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32, inverted bool) (*RawData, int32, error) {
 	// where(array, function)
 	itemsRef := chunk.Function.Args[0]
 	items, rref, err := c.resolveValue(itemsRef, ref)
@@ -476,15 +476,15 @@ func _dictWhereV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32, in
 	return nil, 0, nil
 }
 
-func dictWhereV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictWhereV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return _dictWhereV1(c, bind, chunk, ref, false)
 }
 
-func dictWhereNotV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictWhereNotV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return _dictWhereV1(c, bind, chunk, ref, true)
 }
 
-func dictAllV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictAllV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
 		return &RawData{Type: types.Bool}, 0, nil
 	}
@@ -500,7 +500,7 @@ func dictAllV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return BoolTrue, 0, nil
 }
 
-func dictNoneV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictNoneV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
 		return &RawData{Type: types.Bool}, 0, nil
 	}
@@ -516,7 +516,7 @@ func dictNoneV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*Ra
 	return BoolTrue, 0, nil
 }
 
-func dictAnyV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictAnyV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
 		return &RawData{Type: types.Bool}, 0, nil
 	}
@@ -532,7 +532,7 @@ func dictAnyV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return BoolTrue, 0, nil
 }
 
-func dictOneV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictOneV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	if bind.Value == nil {
 		return &RawData{Type: types.Bool}, 0, nil
 	}
@@ -548,7 +548,7 @@ func dictOneV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return BoolTrue, 0, nil
 }
 
-func dictMapV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictMapV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	// map(array, function)
 	itemsRef := chunk.Function.Args[0]
 	items, rref, err := c.resolveValue(itemsRef, ref)
@@ -628,7 +628,7 @@ func dictMapV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*Raw
 	return nil, 0, nil
 }
 
-func dictContainsStringV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictContainsStringV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	argRef := chunk.Function.Args[0]
 	arg, rref, err := c.resolveValue(argRef, ref)
 	if err != nil || rref > 0 {
@@ -643,7 +643,7 @@ func dictContainsStringV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref i
 	return BoolData(ok), 0, nil
 }
 
-func dictContainsIntV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictContainsIntV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	argRef := chunk.Function.Args[0]
 	arg, rref, err := c.resolveValue(argRef, ref)
 	if err != nil || rref > 0 {
@@ -660,7 +660,7 @@ func dictContainsIntV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int3
 	return BoolData(ok), 0, nil
 }
 
-func dictContainsArrayStringV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictContainsArrayStringV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	switch bind.Value.(type) {
 	case string:
 		return stringContainsArrayStringV1(c, bind, chunk, ref)
@@ -669,7 +669,7 @@ func dictContainsArrayStringV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, 
 	}
 }
 
-func dictContainsArrayIntV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictContainsArrayIntV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	switch bind.Value.(type) {
 	case string:
 		return stringContainsArrayIntV1(c, bind, chunk, ref)
@@ -678,7 +678,7 @@ func dictContainsArrayIntV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref
 	}
 }
 
-func dictFindV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictFindV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	switch bind.Value.(type) {
 	case string:
 		return stringFindV1(c, bind, chunk, ref)
@@ -689,295 +689,295 @@ func dictFindV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*Ra
 
 // map &&/||
 
-func arrayAndMapV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayAndMapV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opArrayAndMap)
 }
 
-func arrayOrMapV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayOrMapV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opArrayOrMap)
 }
 
-func mapAndArrayV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func mapAndArrayV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opMapAndArray)
 }
 
-func mapOrArrayV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func mapOrArrayV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opMapOrArray)
 }
 
-func mapAndMapV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func mapAndMapV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opMapAndMap)
 }
 
-func mapOrMapV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func mapOrMapV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opMapOrMap)
 }
 
 // dict ==/!= nil
 
-func dictCmpNilV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictCmpNilV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictCmpNil)
 }
 
-func dictNotNilV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictNotNilV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolNotOpV1(c, bind, chunk, ref, opDictCmpNil)
 }
 
-func nilCmpDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func nilCmpDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opNilCmpDict)
 }
 
-func nilNotDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func nilNotDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolNotOpV1(c, bind, chunk, ref, opNilCmpDict)
 }
 
 // dict ==/!= bool
 
-func dictCmpBoolV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictCmpBoolV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictCmpBool)
 }
 
-func dictNotBoolV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictNotBoolV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolNotOpV1(c, bind, chunk, ref, opDictCmpBool)
 }
 
-func boolCmpDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func boolCmpDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opBoolCmpDict)
 }
 
-func boolNotDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func boolNotDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolNotOpV1(c, bind, chunk, ref, opBoolCmpDict)
 }
 
 // dict ==/!= int   (embedded: string + float)
 
-func dictCmpIntV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictCmpIntV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictCmpInt)
 }
 
-func dictNotIntV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictNotIntV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolNotOpV1(c, bind, chunk, ref, opDictCmpInt)
 }
 
-func intCmpDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func intCmpDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opIntCmpDict)
 }
 
-func intNotDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func intNotDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolNotOpV1(c, bind, chunk, ref, opIntCmpDict)
 }
 
 // dict ==/!= float
 
-func dictCmpFloatV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictCmpFloatV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictCmpFloat)
 }
 
-func dictNotFloatV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictNotFloatV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolNotOpV1(c, bind, chunk, ref, opDictCmpFloat)
 }
 
-func floatCmpDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func floatCmpDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opFloatCmpDict)
 }
 
-func floatNotDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func floatNotDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolNotOpV1(c, bind, chunk, ref, opFloatCmpDict)
 }
 
 // dict ==/!= string
 
-func dictCmpStringV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictCmpStringV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictCmpString)
 }
 
-func dictNotStringV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictNotStringV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolNotOpV1(c, bind, chunk, ref, opDictCmpString)
 }
 
-func stringCmpDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func stringCmpDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opStringCmpDict)
 }
 
-func stringNotDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func stringNotDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolNotOpV1(c, bind, chunk, ref, opStringCmpDict)
 }
 
 // dict ==/!= regex
 
-func dictCmpRegexV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictCmpRegexV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictCmpRegex)
 }
 
-func dictNotRegexV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictNotRegexV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolNotOpV1(c, bind, chunk, ref, opDictCmpRegex)
 }
 
-func regexCmpDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func regexCmpDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opRegexCmpDict)
 }
 
-func regexNotDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func regexNotDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolNotOpV1(c, bind, chunk, ref, opRegexCmpDict)
 }
 
 // dict ==/!= arrays
 
-func dictCmpArrayV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictCmpArrayV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictCmpArray)
 }
 
-func dictNotArrayV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictNotArrayV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolNotOpV1(c, bind, chunk, ref, opDictCmpArray)
 }
 
-func dictCmpStringarrayV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictCmpStringarrayV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return rawboolOpV1(c, bind, chunk, ref, opDictCmpStringarray)
 }
 
-func dictNotStringarrayV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictNotStringarrayV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return rawboolNotOpV1(c, bind, chunk, ref, opDictCmpStringarray)
 }
 
-func dictCmpBoolarrayV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictCmpBoolarrayV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return rawboolOpV1(c, bind, chunk, ref, opDictCmpStringarray)
 }
 
-func dictNotBoolarrayV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictNotBoolarrayV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return rawboolNotOpV1(c, bind, chunk, ref, opDictCmpStringarray)
 }
 
-func dictCmpIntarrayV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictCmpIntarrayV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return rawboolOpV1(c, bind, chunk, ref, opDictCmpIntarray)
 }
 
-func dictNotIntarrayV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictNotIntarrayV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return rawboolNotOpV1(c, bind, chunk, ref, opDictCmpIntarray)
 }
 
-func dictCmpFloatarrayV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictCmpFloatarrayV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return rawboolOpV1(c, bind, chunk, ref, opDictCmpFloatarray)
 }
 
-func dictNotFloatarrayV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictNotFloatarrayV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return rawboolNotOpV1(c, bind, chunk, ref, opDictCmpFloatarray)
 }
 
 // dict ==/!= dict
 
-func dictCmpDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictCmpDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictCmpDict)
 }
 
-func dictNotDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictNotDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolNotOpV1(c, bind, chunk, ref, opDictCmpDict)
 }
 
 // dict </>/<=/>= int
 
-func dictLTIntV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictLTIntV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opDictLTInt)
 }
 
-func dictLTEIntV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictLTEIntV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opDictLTEInt)
 }
 
-func dictGTIntV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictGTIntV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opDictGTInt)
 }
 
-func dictGTEIntV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictGTEIntV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opDictGTEInt)
 }
 
-func intLTDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func intLTDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opIntLTDict)
 }
 
-func intLTEDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func intLTEDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opIntLTEDict)
 }
 
-func intGTDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func intGTDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opIntLTEDict)
 }
 
-func intGTEDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func intGTEDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opIntLTDict)
 }
 
 // dict </>/<=/>= float
 
-func dictLTFloatV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictLTFloatV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opDictLTFloat)
 }
 
-func dictLTEFloatV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictLTEFloatV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opDictLTEFloat)
 }
 
-func dictGTFloatV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictGTFloatV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opDictGTFloat)
 }
 
-func dictGTEFloatV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictGTEFloatV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opDictGTEFloat)
 }
 
-func floatLTDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func floatLTDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opFloatLTDict)
 }
 
-func floatLTEDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func floatLTEDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opFloatLTEDict)
 }
 
-func floatGTDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func floatGTDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opFloatGTDict)
 }
 
-func floatGTEDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func floatGTEDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opFloatGTEDict)
 }
 
 // dict </>/<=/>= string
 
-func dictLTStringV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictLTStringV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opDictLTString)
 }
 
-func dictLTEStringV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictLTEStringV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opDictLTEString)
 }
 
-func dictGTStringV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictGTStringV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opDictGTString)
 }
 
-func dictGTEStringV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictGTEStringV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opDictGTEString)
 }
 
-func stringLTDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func stringLTDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opStringLTDict)
 }
 
-func stringLTEDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func stringLTEDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opStringLTEDict)
 }
 
-func stringGTDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func stringGTDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opStringGTDict)
 }
 
-func stringGTEDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func stringGTEDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, opStringGTEDict)
 }
 
 // dict </>/<=/>= dict
 
-func dictLTDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictLTDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		switch x := right.(type) {
 		case int64:
@@ -992,7 +992,7 @@ func dictLTDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*
 	})
 }
 
-func dictLTEDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictLTEDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		switch x := right.(type) {
 		case int64:
@@ -1007,7 +1007,7 @@ func dictLTEDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (
 	})
 }
 
-func dictGTDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictGTDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		switch x := right.(type) {
 		case int64:
@@ -1022,7 +1022,7 @@ func dictGTDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*
 	})
 }
 
-func dictGTEDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictGTEDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return nonNilDataOpV1(c, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		switch x := right.(type) {
 		case int64:
@@ -1041,162 +1041,162 @@ func dictGTEDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (
 
 // ... bool
 
-func boolAndDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func boolAndDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opBoolAndDict)
 }
 
-func boolOrDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func boolOrDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opBoolOrDict)
 }
 
-func dictAndBoolV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictAndBoolV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictAndBool)
 }
 
-func dictOrBoolV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictOrBoolV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictOrBool)
 }
 
 // ... int
 
-func intAndDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func intAndDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opIntAndDict)
 }
 
-func intOrDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func intOrDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opIntOrDict)
 }
 
-func dictAndIntV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictAndIntV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictAndInt)
 }
 
-func dictOrIntV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictOrIntV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictOrInt)
 }
 
 // ... float
 
-func floatAndDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func floatAndDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opFloatAndDict)
 }
 
-func floatOrDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func floatOrDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opFloatOrDict)
 }
 
-func dictAndFloatV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictAndFloatV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictAndFloat)
 }
 
-func dictOrFloatV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictOrFloatV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictOrFloat)
 }
 
 // ... string
 
-func stringAndDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func stringAndDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opStringAndDict)
 }
 
-func stringOrDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func stringOrDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opStringOrDict)
 }
 
-func dictAndStringV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictAndStringV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictAndString)
 }
 
-func dictOrStringV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictOrStringV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictOrString)
 }
 
 // ... regex
 
-func regexAndDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func regexAndDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opRegexAndDict)
 }
 
-func regexOrDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func regexOrDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opRegexOrDict)
 }
 
-func dictAndRegexV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictAndRegexV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictAndRegex)
 }
 
-func dictOrRegexV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictOrRegexV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictOrRegex)
 }
 
 // ... time
 // note: time cannot be falsy
 
-func timeAndDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func timeAndDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opTimeAndDict)
 }
 
-func timeOrDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func timeOrDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opTimeOrDict)
 }
 
-func dictAndTimeV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictAndTimeV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictAndTime)
 }
 
-func dictOrTimeV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictOrTimeV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictOrTime)
 }
 
 // ... dict
 
-func dictAndDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictAndDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictAndDict)
 }
 
-func dictOrDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictOrDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictOrDict)
 }
 
 // ... array
 
-func dictAndArrayV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictAndArrayV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictAndArray)
 }
 
-func dictOrArrayV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictOrArrayV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictOrArray)
 }
 
-func arrayAndDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayAndDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opArrayAndDict)
 }
 
-func arrayOrDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func arrayOrDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opArrayOrDict)
 }
 
 // ... map
 
-func dictAndMapV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictAndMapV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictAndMap)
 }
 
-func dictOrMapV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictOrMapV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opDictOrMap)
 }
 
-func mapAndDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func mapAndDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opMapAndDict)
 }
 
-func mapOrDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func mapOrDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return boolOpV1(c, bind, chunk, ref, opMapOrDict)
 }
 
 // dict + - * /
 
-func dictPlusStringV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictPlusStringV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOpV1(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		r := right.(string)
 
@@ -1213,7 +1213,7 @@ func dictPlusStringV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32
 	})
 }
 
-func stringPlusDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func stringPlusDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOpV1(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		l := left.(string)
 
@@ -1230,7 +1230,7 @@ func stringPlusDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32
 	})
 }
 
-func intPlusDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func intPlusDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOpV1(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		l := left.(int64)
 
@@ -1249,7 +1249,7 @@ func intPlusDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (
 	})
 }
 
-func dictPlusIntV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictPlusIntV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOpV1(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		r := right.(int64)
 
@@ -1268,7 +1268,7 @@ func dictPlusIntV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (
 	})
 }
 
-func floatPlusDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func floatPlusDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOpV1(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		l := left.(float64)
 
@@ -1287,7 +1287,7 @@ func floatPlusDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32)
 	})
 }
 
-func dictPlusFloatV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictPlusFloatV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOpV1(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		r := right.(float64)
 
@@ -1306,7 +1306,7 @@ func dictPlusFloatV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32)
 	})
 }
 
-func intMinusDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func intMinusDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOpV1(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		l := left.(int64)
 
@@ -1325,7 +1325,7 @@ func intMinusDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) 
 	})
 }
 
-func dictMinusIntV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictMinusIntV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOpV1(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		r := right.(int64)
 
@@ -1344,7 +1344,7 @@ func dictMinusIntV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) 
 	})
 }
 
-func floatMinusDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func floatMinusDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOpV1(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		l := left.(float64)
 
@@ -1363,7 +1363,7 @@ func floatMinusDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32
 	})
 }
 
-func dictMinusFloatV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictMinusFloatV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOpV1(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		r := right.(float64)
 
@@ -1382,7 +1382,7 @@ func dictMinusFloatV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32
 	})
 }
 
-func intTimesDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func intTimesDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOpV1(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		l := left.(int64)
 
@@ -1401,7 +1401,7 @@ func intTimesDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) 
 	})
 }
 
-func dictTimesIntV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictTimesIntV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOpV1(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		r := right.(int64)
 
@@ -1420,7 +1420,7 @@ func dictTimesIntV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) 
 	})
 }
 
-func floatTimesDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func floatTimesDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOpV1(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		l := left.(float64)
 
@@ -1439,7 +1439,7 @@ func floatTimesDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32
 	})
 }
 
-func dictTimesFloatV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictTimesFloatV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOpV1(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		r := right.(float64)
 
@@ -1458,7 +1458,7 @@ func dictTimesFloatV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32
 	})
 }
 
-func intDividedDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func intDividedDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOpV1(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		l := left.(int64)
 
@@ -1477,7 +1477,7 @@ func intDividedDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32
 	})
 }
 
-func dictDividedIntV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictDividedIntV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOpV1(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		r := right.(int64)
 
@@ -1496,7 +1496,7 @@ func dictDividedIntV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32
 	})
 }
 
-func floatDividedDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func floatDividedDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOpV1(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		l := left.(float64)
 
@@ -1515,7 +1515,7 @@ func floatDividedDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int
 	})
 }
 
-func dictDividedFloatV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictDividedFloatV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOpV1(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		r := right.(float64)
 
@@ -1534,7 +1534,7 @@ func dictDividedFloatV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int
 	})
 }
 
-func dictTimesTimeV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func dictTimesTimeV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOpV1(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		switch l := left.(type) {
 		case int64:
@@ -1551,7 +1551,7 @@ func dictTimesTimeV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32)
 	})
 }
 
-func timeTimesDictV1(c *LeiseExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
+func timeTimesDictV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	return dataOpV1(c, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
 		switch r := right.(type) {
 		case int64:

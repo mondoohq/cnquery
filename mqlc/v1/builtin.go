@@ -3,7 +3,7 @@ package v1
 import (
 	"errors"
 
-	"go.mondoo.io/mondoo/leise/parser"
+	"go.mondoo.io/mondoo/mqlc/parser"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/types"

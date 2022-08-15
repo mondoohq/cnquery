@@ -1,4 +1,4 @@
-package v1
+package mqlc
 
 import (
 	"errors"
@@ -10,31 +10,62 @@ import (
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo"
-	"go.mondoo.io/mondoo/leise/parser"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources"
+	"go.mondoo.io/mondoo/mqlc/parser"
+	v1 "go.mondoo.io/mondoo/mqlc/v1"
 	"go.mondoo.io/mondoo/types"
 )
 
-type binding struct {
-	Type types.Type
-	Ref  int32
-}
-
 type variable struct {
-	ref int32
+	ref uint64
 	typ types.Type
 }
 
+type varmap struct {
+	blockref uint64
+	parent   *varmap
+	vars     map[string]variable
+}
+
+func newvarmap(blockref uint64, parent *varmap) *varmap {
+	return &varmap{
+		blockref: blockref,
+		parent:   parent,
+		vars:     map[string]variable{},
+	}
+}
+
+func (vm *varmap) lookup(name string) (variable, bool) {
+	if v, ok := vm.vars[name]; ok {
+		return v, true
+	}
+	if vm.parent == nil {
+		return variable{}, false
+	}
+	return vm.parent.lookup(name)
+}
+
+func (vm *varmap) add(name string, v variable) {
+	vm.vars[name] = v
+}
+
+func (vm *varmap) len() int {
+	return len(vm.vars)
+}
+
 type compiler struct {
-	Schema  *lumi.Schema
-	Result  *llx.CodeBundle
-	Binding *binding
-	vars    map[string]variable
-	parent  *compiler
-	props   map[string]*llx.Primitive
-	comment string
+	Schema    *lumi.Schema
+	Result    *llx.CodeBundle
+	Binding   *variable
+	vars      *varmap
+	parent    *compiler
+	block     *llx.Block
+	blockRef  uint64
+	blockDeps []uint64
+	props     map[string]*llx.Primitive
+	comment   string
 
 	// a standalone code is one that doesn't call any of its bindings
 	// examples:
@@ -46,17 +77,48 @@ type compiler struct {
 	prevID string
 }
 
-func (c *compiler) newBlockCompiler(code *llx.CodeV1, binding *binding) compiler {
+func (c *compiler) isInMyBlock(ref uint64) bool {
+	return (ref >> 32) == (c.blockRef >> 32)
+}
+
+func (c *compiler) addChunk(chunk *llx.Chunk) {
+	c.block.AddChunk(c.Result.CodeV2, c.blockRef, chunk)
+}
+
+func (c *compiler) popChunk() (prev *llx.Chunk, isEntrypoint bool, isDatapoint bool) {
+	return c.block.PopChunk(c.Result.CodeV2, c.blockRef)
+}
+
+func (c *compiler) addArgumentPlaceholder(typ types.Type, checksum string) {
+	c.block.AddArgumentPlaceholder(c.Result.CodeV2, c.blockRef, typ, checksum)
+}
+
+func (c *compiler) tailRef() uint64 {
+	return c.block.TailRef(c.blockRef)
+}
+
+// Creates a new block and its accompanying compiler.
+// It carries a set of variables that apply within the scope of this block.
+func (c *compiler) newBlockCompiler(binding *variable) compiler {
+	code := c.Result.CodeV2
+	block, ref := code.AddBlock()
+
+	vars := map[string]variable{}
+	blockDeps := []uint64{}
+	if binding != nil {
+		vars["_"] = *binding
+		blockDeps = append(blockDeps, binding.ref)
+	}
+
 	return compiler{
-		Schema: c.Schema,
-		Result: &llx.CodeBundle{
-			DeprecatedV5Code: code,
-			Labels:           c.Result.Labels,
-			Props:            c.Result.Props,
-		},
+		Schema:     c.Schema,
+		Result:     c.Result,
 		Binding:    binding,
-		vars:       map[string]variable{},
+		blockDeps:  blockDeps,
+		vars:       newvarmap(ref, c.vars),
 		parent:     c,
+		block:      block,
+		blockRef:   ref,
 		props:      c.props,
 		standalone: true,
 	}
@@ -151,11 +213,14 @@ func addFieldSuggestions(fields map[string]llx.Documentation, fieldName string, 
 // }
 
 // compileBlock on a context
-func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type, bindingRef int32) (types.Type, error) {
+func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type, bindingRef uint64) (types.Type, error) {
 	// For resource, users may indicate to query all fields. It also works for list of resources.
 	// This is a special case which is handled here:
 	if len(expressions) == 1 && (typ.IsResource() || (typ.IsArray() && typ.Child().IsResource())) {
 		x := expressions[0]
+
+		// Special handling for the glob operation on resource fields. It will
+		// try to grab all valid fields and return them.
 		if x.Operand != nil && x.Operand.Value != nil && x.Operand.Value.Ident != nil && *(x.Operand.Value.Ident) == "*" {
 			var fields map[string]llx.Documentation
 			if typ.IsArray() {
@@ -184,7 +249,7 @@ func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type
 		}
 	}
 
-	fref, _, err := c.blockExpressions(expressions, typ)
+	fref, blockDeps, _, err := c.blockExpressions(expressions, typ)
 	if err != nil {
 		return types.Nil, err
 	}
@@ -199,16 +264,23 @@ func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type
 		resultType = types.Block
 	}
 
-	chunk := llx.Chunk{
+	args := []*llx.Primitive{llx.FunctionPrimitiveV2(fref)}
+	for _, v := range blockDeps {
+		if c.isInMyBlock(v) {
+			args = append(args, llx.RefPrimitiveV2(v))
+		}
+	}
+	c.blockDeps = append(c.blockDeps, blockDeps...)
+
+	c.addChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   "{}",
 		Function: &llx.Function{
-			Type:                string(resultType),
-			DeprecatedV5Binding: bindingRef,
-			Args:                []*llx.Primitive{llx.FunctionPrimitiveV1(fref)},
+			Type:    string(resultType),
+			Binding: bindingRef,
+			Args:    args,
 		},
-	}
-	c.Result.DeprecatedV5Code.AddChunk(&chunk)
+	})
 
 	return resultType, nil
 }
@@ -220,53 +292,58 @@ func (c *compiler) compileIfBlock(expressions []*parser.Expression, chunk *llx.C
 		c.prevID = ""
 	}
 
-	code := c.Result.DeprecatedV5Code
-
-	blockCompiler := c.newBlockCompiler(&llx.CodeV1{
-		Id:         chunk.Id,
-		Parameters: 0,
-		Checksums:  map[int32]string{},
-		Code:       []*llx.Chunk{},
-	}, nil)
-
+	blockCompiler := c.newBlockCompiler(c.Binding)
 	err := blockCompiler.compileExpressions(expressions)
-	c.Result.Suggestions = append(c.Result.Suggestions, blockCompiler.Result.Suggestions...)
 	if err != nil {
 		return types.Nil, err
 	}
+	blockCompiler.updateEntrypoints(false)
 
-	block := blockCompiler.Result.DeprecatedV5Code
+	block := blockCompiler.block
+
+	// we set this to true, so that we can decide how to handle all following expressions
+	if block.SingleValue {
+		c.block.SingleValue = true
+	}
 
 	// insert a body if we are in standalone mode to return a value
-	if len(block.Code) == 0 && c.standalone {
-		block.AddChunk(&llx.Chunk{
+	if len(block.Chunks) == 0 && c.standalone {
+		blockCompiler.addChunk(&llx.Chunk{
 			Call:      llx.Chunk_PRIMITIVE,
 			Primitive: llx.NilPrimitive,
 		})
-		block.AddChunk(&llx.Chunk{
+		blockCompiler.addChunk(&llx.Chunk{
 			Call: llx.Chunk_FUNCTION,
 			Id:   "return",
 			Function: &llx.Function{
 				Type: string(types.Nil),
-				Args: []*llx.Primitive{llx.RefPrimitiveV1(1)},
+				// FIXME: this is gonna crash on c.Binding == nil
+				Args: []*llx.Primitive{llx.RefPrimitiveV2(blockCompiler.blockRef | 1)},
 			},
 		})
 		block.SingleValue = true
-		block.Entrypoints = []int32{2}
+		block.Entrypoints = []uint64{blockCompiler.blockRef | 2}
 	}
 
-	block.UpdateID()
-	code.Functions = append(code.Functions, block)
+	depArgs := []*llx.Primitive{}
+	for _, v := range blockCompiler.blockDeps {
+		if c.isInMyBlock(v) {
+			depArgs = append(depArgs, llx.RefPrimitiveV2(v))
+		}
+	}
 
 	// the last chunk in this case is the `if` function call
 	chunk.Function.Args = append(chunk.Function.Args,
-		llx.FunctionPrimitiveV1(code.FunctionsIndex()),
+		llx.FunctionPrimitiveV2(blockCompiler.blockRef),
+		llx.ArrayPrimitive(depArgs, types.Ref),
 	)
 
-	if len(block.Code) != 0 {
+	c.blockDeps = append(c.blockDeps, blockCompiler.blockDeps...)
+
+	if len(block.Chunks) != 0 {
 		var typeToEnforce types.Type
-		if block.SingleValue || code.SingleValue {
-			last := block.Code[block.ChunkIndex()-1]
+		if c.block.SingleValue {
+			last := block.LastChunk()
 			typeToEnforce = last.Type()
 		} else {
 			typeToEnforce = types.Block
@@ -279,17 +356,10 @@ func (c *compiler) compileIfBlock(expressions []*parser.Expression, chunk *llx.C
 		chunk.Function.Type = string(t)
 	}
 
-	code.RefreshChunkChecksum(chunk)
-
-	// we set this to true, so that we can decide how to handle all following expressions
-	if block.SingleValue {
-		code.SingleValue = true
-	}
-
 	return types.Nil, nil
 }
 
-func (c *compiler) compileSwitchCase(expression *parser.Expression, bind *binding, chunk *llx.Chunk) error {
+func (c *compiler) compileSwitchCase(expression *parser.Expression, bind *variable, chunk *llx.Chunk) error {
 	// for the default case, we get a nil expression
 	if expression == nil {
 		chunk.Function.Args = append(chunk.Function.Args, llx.BoolPrimitive(true))
@@ -313,47 +383,42 @@ func (c *compiler) compileSwitchCase(expression *parser.Expression, bind *bindin
 func (c *compiler) compileSwitchBlock(expressions []*parser.Expression, chunk *llx.Chunk) (types.Type, error) {
 	// determine if there is a binding
 	// i.e. something inside of those `switch( ?? )` calls
-	var bind *binding
+	var bind *variable
 	arg := chunk.Function.Args[0]
 
 	// we have to pop the switch chunk from the compiler stack, because it needs
 	// to be the last item on the stack. otherwise the last reference (top of stack)
 	// will not be pointing to it and an additional entrypoint will be generated
 
-	code := c.Result.DeprecatedV5Code
-
-	last := len(code.Code) - 1
-	if code.Code[last] != chunk {
+	lastRef := c.block.TailRef(c.blockRef)
+	if c.block.LastChunk() != chunk {
 		return types.Nil, errors.New("failed to compile switch statement, it wasn't on the top of the compile stack")
 	}
-	code.Code = code.Code[:last]
-	checksum := code.Checksums[int32(last+1)]
-	code.Checksums[int32(last+1)] = ""
+
+	c.block.Chunks = c.block.Chunks[:len(c.block.Chunks)-1]
+	c.Result.CodeV2.Checksums[lastRef] = ""
+
 	defer func() {
-		code.Code = append(code.Code, chunk)
-		code.Checksums[code.ChunkIndex()] = checksum
+		c.addChunk(chunk)
 	}()
 
 	if types.Type(arg.Type) != types.Unset {
 		if types.Type(arg.Type) == types.Ref {
-			val, ok := arg.RefV1()
+			val, ok := arg.RefV2()
 			if !ok {
 				return types.Nil, errors.New("could not resolve references of switch argument")
 			}
-			bind = &binding{
-				Type: types.Type(arg.Type),
-				Ref:  val,
+			bind = &variable{
+				typ: types.Type(arg.Type),
+				ref: val,
 			}
 		} else {
-			code.AddChunk(&llx.Chunk{
+			c.addChunk(&llx.Chunk{
 				Call:      llx.Chunk_PRIMITIVE,
 				Primitive: arg,
 			})
-			ref := code.ChunkIndex()
-			bind = &binding{
-				Type: types.Type(arg.Type),
-				Ref:  ref,
-			}
+			ref := c.block.TailRef(c.blockRef)
+			bind = &variable{typ: types.Type(arg.Type), ref: ref}
 		}
 	}
 
@@ -368,52 +433,46 @@ func (c *compiler) compileSwitchBlock(expressions []*parser.Expression, chunk *l
 			return types.Nil, errors.New("missing block expression in calling `case`/`default` statement")
 		}
 
-		blockExp := expressions[i+1]
-		if *blockExp.Operand.Value.Ident != "{}" {
+		block := expressions[i+1]
+		if *block.Operand.Value.Ident != "{}" {
 			return types.Nil, errors.New("expected block inside case/default statement")
 		}
 
-		expressions := blockExp.Operand.Block
+		expressions := block.Operand.Block
 
-		var blockCompiler compiler
-		if bind != nil {
-			blockCompiler = c.newBlockCompiler(&llx.CodeV1{
-				Id:         chunk.Id,
-				Parameters: 1,
-				Checksums: map[int32]string{
-					// we must provide the first chunk, which is a reference to the caller
-					// and which will always be number 1
-					1: code.Checksums[code.ChunkIndex()],
-				},
-				Code: []*llx.Chunk{{
-					Call:      llx.Chunk_PRIMITIVE,
-					Primitive: &llx.Primitive{Type: string(bind.Type)},
-				}},
-				SingleValue: true,
-			}, bind)
-		} else {
-			blockCompiler = c.newBlockCompiler(&llx.CodeV1{
-				Id:          chunk.Id,
-				Parameters:  0,
-				Checksums:   map[int32]string{},
-				Code:        []*llx.Chunk{},
-				SingleValue: true,
-			}, nil)
-		}
+		blockCompiler := c.newBlockCompiler(bind)
+		// TODO(jaym): Discuss with dom: don't understand what
+		// standalone is used for here
+		blockCompiler.standalone = true
 
 		err = blockCompiler.compileExpressions(expressions)
-		c.Result.Suggestions = append(c.Result.Suggestions, blockCompiler.Result.Suggestions...)
 		if err != nil {
 			return types.Nil, err
 		}
+		blockCompiler.updateEntrypoints(false)
 
-		block := blockCompiler.Result.DeprecatedV5Code
-		block.UpdateID()
-		code.Functions = append(code.Functions, block)
-		chunk.Function.Args = append(chunk.Function.Args, llx.FunctionPrimitiveV1(code.FunctionsIndex()))
+		// TODO(jaym): Discuss with dom: v1 seems to hardcore this as
+		// single valued
+		blockCompiler.block.SingleValue = true
+
+		depArgs := []*llx.Primitive{}
+		for _, v := range blockCompiler.blockDeps {
+			if c.isInMyBlock(v) {
+				depArgs = append(depArgs, llx.RefPrimitiveV2(v))
+			}
+		}
+
+		chunk.Function.Args = append(chunk.Function.Args,
+			llx.FunctionPrimitiveV2(blockCompiler.blockRef),
+			llx.ArrayPrimitive(depArgs, types.Ref),
+		)
+
+		c.blockDeps = append(c.blockDeps, blockCompiler.blockDeps...)
+
 	}
 
-	code.RefreshChunkChecksum(chunk)
+	// FIXME: I'm pretty sure we don't need this ...
+	// c.Result.Code.RefreshChunkChecksum(chunk)
 
 	return types.Nil, nil
 }
@@ -421,7 +480,13 @@ func (c *compiler) compileSwitchBlock(expressions []*parser.Expression, chunk *l
 func (c *compiler) compileUnboundBlock(expressions []*parser.Expression, chunk *llx.Chunk) (types.Type, error) {
 	switch chunk.Id {
 	case "if":
-		return c.compileIfBlock(expressions, chunk)
+		t, err := c.compileIfBlock(expressions, chunk)
+		if err == nil {
+			code := c.Result.CodeV2
+			code.Checksums[c.tailRef()] = chunk.ChecksumV2(c.blockRef, code)
+		}
+		return t, err
+
 	case "switch":
 		return c.compileSwitchBlock(expressions, chunk)
 	default:
@@ -431,40 +496,33 @@ func (c *compiler) compileUnboundBlock(expressions []*parser.Expression, chunk *
 
 // evaluates the given expressions on a non-array resource
 // and creates a function, whose reference is returned
-func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.Type) (int32, bool, error) {
-	code := c.Result.DeprecatedV5Code
-
-	blockCompiler := c.newBlockCompiler(&llx.CodeV1{
-		Id:         "binding",
-		Parameters: 1,
-		Checksums: map[int32]string{
-			// we must provide the first chunk, which is a reference to the caller
-			// and which will always be number 1
-			1: code.Checksums[code.ChunkIndex()],
-		},
-		Code: []*llx.Chunk{{
-			Call:      llx.Chunk_PRIMITIVE,
-			Primitive: &llx.Primitive{Type: string(typ)},
-		}},
-	}, &binding{Type: typ, Ref: 1})
+func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.Type) (uint64, []uint64, bool, error) {
+	// binding := &variable{ref: c.tailRef(), typ: typ}
+	ogRef := c.tailRef()
+	blockCompiler := c.newBlockCompiler(nil)
+	blockCompiler.block.AddArgumentPlaceholder(blockCompiler.Result.CodeV2,
+		blockCompiler.blockRef, typ, blockCompiler.Result.CodeV2.Checksums[ogRef])
+	v := variable{
+		ref: blockCompiler.blockRef | 1,
+		typ: typ,
+	}
+	blockCompiler.vars.add("_", v)
+	blockCompiler.Binding = &v
 
 	err := blockCompiler.compileExpressions(expressions)
-	c.Result.Suggestions = append(c.Result.Suggestions, blockCompiler.Result.Suggestions...)
 	if err != nil {
-		return 0, false, err
+		return 0, nil, false, err
 	}
+	blockCompiler.updateEntrypoints(false)
 
-	block := blockCompiler.Result.DeprecatedV5Code
-	block.UpdateID()
-	code.Functions = append(code.Functions, block)
-	return code.FunctionsIndex(), blockCompiler.standalone, nil
+	return blockCompiler.blockRef, blockCompiler.blockDeps, blockCompiler.standalone, nil
 }
 
 // blockExpressions evaluates the given expressions as if called by a block and
 // returns the compiled function reference
-func (c *compiler) blockExpressions(expressions []*parser.Expression, typ types.Type) (int32, bool, error) {
+func (c *compiler) blockExpressions(expressions []*parser.Expression, typ types.Type) (uint64, []uint64, bool, error) {
 	if len(expressions) == 0 {
-		return 0, false, nil
+		return 0, nil, false, nil
 	}
 
 	if typ.IsArray() {
@@ -474,21 +532,21 @@ func (c *compiler) blockExpressions(expressions []*parser.Expression, typ types.
 	return c.blockOnResource(expressions, typ)
 }
 
-// returns the type of the given funciton block references
-// error if the block has multiple entrypoints
-func (c *compiler) functionBlockType(ref int32) (types.Type, error) {
-	functions := c.Result.DeprecatedV5Code.Functions
-	if len(functions) < int(ref) {
-		return types.Nil, errors.New("canot find function block with ref " + strconv.Itoa(int(ref)))
+// Returns the singular return type of the given block.
+// Error if the block has multiple entrypoints (i.e. non singular)
+func (c *compiler) blockType(ref uint64) (types.Type, error) {
+	block := c.Result.CodeV2.Block(ref)
+	if block == nil {
+		return types.Nil, errors.New("cannot find block for block ref " + strconv.Itoa(int(ref>>32)))
 	}
 
-	f := functions[ref-1]
-	if len(f.Entrypoints) != 1 {
-		return types.Nil, errors.New("function block should only return 1 value (got: " + strconv.Itoa(len(f.Entrypoints)) + ")")
+	if len(block.Entrypoints) != 1 {
+		return types.Nil, errors.New("block should only return 1 value (got: " + strconv.Itoa(len(block.Entrypoints)) + ")")
 	}
 
-	ep := f.Entrypoints[0]
-	chunk := f.Code[ep-1]
+	ep := block.Entrypoints[0]
+	chunk := block.Chunks[(ep&0xFFFFFFFF)-1]
+	// TODO: this could be a ref! not sure if we can handle that... maybe dereference?
 	return chunk.Type(), nil
 }
 
@@ -498,13 +556,12 @@ func (c *compiler) dereferenceType(val *llx.Primitive) (types.Type, error) {
 		return valType, nil
 	}
 
-	ref, ok := val.RefV1()
+	ref, ok := val.RefV2()
 	if !ok {
 		return types.Nil, errors.New("found a reference type that doesn't return a reference value")
 	}
 
-	code := c.Result.DeprecatedV5Code
-	chunk := code.Code[ref-1]
+	chunk := c.Result.CodeV2.Chunk(ref)
 	if chunk.Primitive == val {
 		return types.Nil, errors.New("recursive reference connections detected")
 	}
@@ -513,7 +570,7 @@ func (c *compiler) dereferenceType(val *llx.Primitive) (types.Type, error) {
 		return c.dereferenceType(chunk.Primitive)
 	}
 
-	valType = chunk.Type()
+	valType = chunk.DereferencedTypeV2(c.Result.CodeV2)
 	return valType, nil
 }
 
@@ -614,11 +671,9 @@ func (c *compiler) resourceArgs(resource *lumi.ResourceInfo, args []*parser.Arg)
 	return res, nil
 }
 
-func (c *compiler) compileBuiltinFunction(h *compileHandler, id string, binding *binding, call *parser.Call) (types.Type, error) {
-	typ := binding.Type
-
+func (c *compiler) compileBuiltinFunction(h *compileHandler, id string, binding *variable, call *parser.Call) (types.Type, error) {
 	if h.compile != nil {
-		return h.compile(c, typ, binding.Ref, id, call)
+		return h.compile(c, binding.typ, binding.ref, id, call)
 	}
 
 	var args []*llx.Primitive
@@ -640,14 +695,14 @@ func (c *compiler) compileBuiltinFunction(h *compileHandler, id string, binding 
 		return types.Nil, err
 	}
 
-	resType := h.typ(typ)
-	c.Result.DeprecatedV5Code.AddChunk(&llx.Chunk{
+	resType := h.typ(binding.typ)
+	c.addChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
-			Type:                string(resType),
-			DeprecatedV5Binding: binding.Ref,
-			Args:                args,
+			Type:    string(resType),
+			Binding: binding.ref,
+			Args:    args,
 		},
 	})
 	return resType, nil
@@ -695,8 +750,9 @@ func filterEmptyExpressions(expressions []*parser.Expression) []*parser.Expressi
 // compile a bound identifier to its binding
 // example: user { name } , where name is compiled bound to the user
 // it will return false if it cannot bind the identifier
-func (c *compiler) compileBoundIdentifier(id string, binding *binding, call *parser.Call) (bool, types.Type, error) {
-	typ := binding.Type
+func (c *compiler) compileBoundIdentifier(id string, binding *variable, call *parser.Call) (bool, types.Type, error) {
+	typ := binding.typ
+
 	if typ.IsResource() {
 		resource, ok := c.Schema.Resources[typ.ResourceName()]
 		if !ok {
@@ -711,15 +767,33 @@ func (c *compiler) compileBoundIdentifier(id string, binding *binding, call *par
 
 			c.Result.MinMondooVersion = getMinMondooVersion(c.Result.MinMondooVersion, typ.ResourceName(), id)
 
-			c.Result.DeprecatedV5Code.AddChunk(&llx.Chunk{
+			// this only happens when we call a field of a bridging resource,
+			// in which case we don't call the field (since there is nothing to do)
+			// and instead we call the resource directly:
+			typ := types.Type(fieldinfo.Type)
+			if fieldinfo.IsImplicitResource {
+				name := typ.ResourceName()
+				c.addChunk(&llx.Chunk{
+					Call: llx.Chunk_FUNCTION,
+					Id:   name,
+				})
+
+				// the new ID is now the full resource call, which is not what the
+				// field is originally labeled when we get it, so we have to fix it
+				checksum := c.Result.CodeV2.Checksums[c.tailRef()]
+				c.Result.Labels.Labels[checksum] = id
+				return true, typ, nil
+			}
+
+			c.addChunk(&llx.Chunk{
 				Call: llx.Chunk_FUNCTION,
 				Id:   id,
 				Function: &llx.Function{
-					Type:                fieldinfo.Type,
-					DeprecatedV5Binding: binding.Ref,
+					Type:    fieldinfo.Type,
+					Binding: binding.ref,
 				},
 			})
-			return true, types.Type(fieldinfo.Type), nil
+			return true, typ, nil
 		}
 	}
 
@@ -776,7 +850,7 @@ func (c *compiler) addResource(id string, resource *lumi.ResourceInfo, call *par
 		}
 	}
 
-	c.Result.DeprecatedV5Code.AddChunk(&llx.Chunk{
+	c.addChunk(&llx.Chunk{
 		Call:     llx.Chunk_FUNCTION,
 		Id:       id,
 		Function: function,
@@ -789,7 +863,7 @@ func (c *compiler) addResource(id string, resource *lumi.ResourceInfo, call *par
 // 2. global resource: 	sshd, sshd.config
 // 3. bound field: 			user { name }
 // x. called field: 		user.name <= not in this scope
-func (c *compiler) compileIdentifier(id string, callBinding *binding, calls []*parser.Call) ([]*parser.Call, types.Type, error) {
+func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*parser.Call) ([]*parser.Call, types.Type, error) {
 	var call *parser.Call
 	restCalls := calls
 	if len(calls) > 0 && calls[0].Function != nil {
@@ -806,7 +880,7 @@ func (c *compiler) compileIdentifier(id string, callBinding *binding, calls []*p
 			c.standalone = false
 
 			if len(restCalls) == 0 {
-				return restCalls, callBinding.Type, nil
+				return restCalls, callBinding.typ, nil
 			}
 
 			nextCall := restCalls[0]
@@ -832,11 +906,11 @@ func (c *compiler) compileIdentifier(id string, callBinding *binding, calls []*p
 				// turn accessor into a regular function and call that
 				fCall := &parser.Call{Function: []*parser.Arg{{Value: nextCall.Accessor}}}
 				// accessors are aways builtin functions
-				h, _ := builtinFunction(callBinding.Type.Underlying(), "[]")
+				h, _ := builtinFunction(callBinding.typ.Underlying(), "[]")
 				if h == nil {
-					return nil, types.Nil, errors.New("cannot find '[]' function on type " + callBinding.Type.Label())
+					return nil, types.Nil, errors.New("cannot find '[]' function on type " + callBinding.typ.Label())
 				}
-				typ, err = c.compileBuiltinFunction(h, "[]", &binding{Type: callBinding.Type, Ref: callBinding.Ref}, fCall)
+				typ, err = c.compileBuiltinFunction(h, "[]", callBinding, fCall)
 				if err != nil {
 					return nil, types.Nil, err
 				}
@@ -864,15 +938,16 @@ func (c *compiler) compileIdentifier(id string, callBinding *binding, calls []*p
 
 	f := operatorsCompilers[id]
 	if f != nil {
-		typ, err := f(c, id, call, c.Result)
+		typ, err := f(c, id, call)
 		return restCalls, typ, err
 	}
 
-	variable, ok := c.vars[id]
+	variable, ok := c.vars.lookup(id)
 	if ok {
-		c.Result.DeprecatedV5Code.AddChunk(&llx.Chunk{
+		c.blockDeps = append(c.blockDeps, variable.ref)
+		c.addChunk(&llx.Chunk{
 			Call:      llx.Chunk_PRIMITIVE,
-			Primitive: llx.RefPrimitiveV1(variable.ref),
+			Primitive: llx.RefPrimitiveV2(variable.ref),
 		})
 		return restCalls, variable.typ, nil
 	}
@@ -887,8 +962,8 @@ func (c *compiler) compileIdentifier(id string, callBinding *binding, calls []*p
 		addResourceSuggestions(c.Schema.Resources, id, c.Result)
 		return nil, types.Nil, errors.New("cannot find resource for identifier '" + id + "'")
 	}
-	addFieldSuggestions(availableFields(c, callBinding.Type), id, c.Result)
-	return nil, types.Nil, errors.New("cannot find field or resource '" + id + "' in block for type '" + c.Binding.Type.Label() + "'")
+	addFieldSuggestions(availableFields(c, callBinding.typ), id, c.Result)
+	return nil, types.Nil, errors.New("cannot find field or resource '" + id + "' in block for type '" + c.Binding.typ.Label() + "'")
 }
 
 // compileProps handles built-in properties for this code
@@ -925,7 +1000,7 @@ func (c *compiler) compileProps(call *parser.Call, calls []*parser.Call, res *ll
 		return nil, types.Nil, errors.New("cannot find property '" + name + "', please define it first")
 	}
 
-	c.Result.DeprecatedV5Code.AddChunk(&llx.Chunk{
+	c.addChunk(&llx.Chunk{
 		Call: llx.Chunk_PROPERTY,
 		Id:   name,
 		Primitive: &llx.Primitive{
@@ -977,7 +1052,7 @@ func (c *compiler) compileValue(val *parser.Value) (*llx.Primitive, error) {
 		}
 
 		return &llx.Primitive{
-			Type:  string(llx.ArrayTypeV1(arr, c.Result.DeprecatedV5Code)),
+			Type:  string(llx.ArrayTypeV2(arr, c.Result.CodeV2)),
 			Array: arr,
 		}, nil
 	}
@@ -1018,11 +1093,10 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 	var err error
 	var res *llx.Primitive
 	var typ types.Type
-	var ref int32
+	var ref uint64
 
 	calls := operand.Calls
 	c.comment = operand.Comments
-	code := c.Result.DeprecatedV5Code
 
 	// value:        bool | string | regex | number | array | map | ident
 	// so all simple values are compiled into primitives and identifiers
@@ -1035,13 +1109,13 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 		typ = types.Type(res.Type)
 
 		if len(calls) > 0 {
-			code.AddChunk(&llx.Chunk{
+			c.addChunk(&llx.Chunk{
 				Call: llx.Chunk_PRIMITIVE,
 				// no ID for standalone
 				Primitive: res,
 			})
-			ref = code.ChunkIndex()
-			res = llx.RefPrimitiveV1(ref)
+			ref = c.tailRef()
+			res = llx.RefPrimitiveV2(ref)
 		}
 	} else {
 		id := *operand.Value.Ident
@@ -1051,12 +1125,12 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 			return nil, err
 		}
 
-		ref = code.ChunkIndex()
+		ref = c.tailRef()
 		if id == "_" && len(orgcalls) == 0 {
-			ref = c.Binding.Ref
+			ref = c.Binding.ref
 		}
 
-		res = llx.RefPrimitiveV1(ref)
+		res = llx.RefPrimitiveV2(ref)
 	}
 
 	// operand:      value [ call | accessor | '.' ident ]+ [ block ]
@@ -1079,7 +1153,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 			if h == nil {
 				return nil, errors.New("cannot find '[]' function on type " + typ.Label())
 			}
-			typ, err = c.compileBuiltinFunction(h, "[]", &binding{Type: typ, Ref: ref}, fCall)
+			typ, err = c.compileBuiltinFunction(h, "[]", &variable{typ: typ, ref: ref}, fCall)
 			if err != nil {
 				return nil, err
 			}
@@ -1087,8 +1161,8 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 			if call != nil && len(calls) > 0 {
 				calls = calls[1:]
 			}
-			ref = code.ChunkIndex()
-			res = llx.RefPrimitiveV1(ref)
+			ref = c.tailRef()
+			res = llx.RefPrimitiveV2(ref)
 			continue
 		}
 
@@ -1111,7 +1185,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 				call = calls[0]
 			}
 
-			found, resType, err = c.compileBoundIdentifier(id, &binding{Type: typ, Ref: ref}, call)
+			found, resType, err = c.compileBoundIdentifier(id, &variable{typ: typ, ref: ref}, call)
 			if err != nil {
 				return nil, err
 			}
@@ -1124,8 +1198,8 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 			if call != nil && len(calls) > 0 {
 				calls = calls[1:]
 			}
-			ref = code.ChunkIndex()
-			res = llx.RefPrimitiveV1(ref)
+			ref = c.tailRef()
+			res = llx.RefPrimitiveV2(ref)
 
 			continue
 		}
@@ -1136,29 +1210,29 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 	if operand.Block != nil {
 		// for starters, we need the primitive to exist on the stack,
 		// so add it if it's missing
-		if x := code.ChunkIndex(); x == 0 {
+		if x := c.tailRef(); (x & 0xFFFFFFFF) == 0 {
 			val, err := c.compileValue(operand.Value)
 			if err != nil {
 				return nil, err
 			}
-			code.AddChunk(&llx.Chunk{
+			c.addChunk(&llx.Chunk{
 				Call: llx.Chunk_PRIMITIVE,
 				// no ID for standalone
 				Primitive: val,
 			})
-			ref = code.ChunkIndex()
+			ref = c.tailRef()
 		}
 
 		if typ == types.Nil {
-			_, err = c.compileUnboundBlock(operand.Block, code.LastChunk())
+			_, err = c.compileUnboundBlock(operand.Block, c.block.LastChunk())
 		} else {
 			_, err = c.compileBlock(operand.Block, typ, ref)
 		}
 		if err != nil {
 			return nil, err
 		}
-		ref = code.ChunkIndex()
-		res = llx.RefPrimitiveV1(ref)
+		ref = c.tailRef()
+		res = llx.RefPrimitiveV2(ref)
 	}
 
 	return res, nil
@@ -1171,30 +1245,30 @@ func (c *compiler) compileExpression(expression *parser.Expression) (*llx.Primit
 	return c.compileOperand(expression.Operand)
 }
 
-func (c *compiler) compileAndAddExpression(expression *parser.Expression) (int32, error) {
+func (c *compiler) compileAndAddExpression(expression *parser.Expression) (uint64, error) {
 	valc, err := c.compileExpression(expression)
 	if err != nil {
 		return 0, err
 	}
 
 	if types.Type(valc.Type) == types.Ref {
-		ref, _ := valc.RefV1()
+		ref, _ := valc.RefV2()
 		return ref, nil
 		// nothing to do, the last call was added to the compiled chain
 	}
 
-	code := c.Result.DeprecatedV5Code
-	code.AddChunk(&llx.Chunk{
+	c.addChunk(&llx.Chunk{
 		Call: llx.Chunk_PRIMITIVE,
 		// no id for standalone values
 		Primitive: valc,
 	})
 
-	return code.ChunkIndex(), nil
+	return c.tailRef(), nil
 }
 
 func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 	var err error
+	code := c.Result.CodeV2
 
 	// we may have comment-only expressions
 	expressions = filterEmptyExpressions(expressions)
@@ -1215,7 +1289,22 @@ func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 			ident = *expression.Operand.Value.Ident
 		}
 
-		code := c.Result.DeprecatedV5Code
+		if prev == "else" && ident != "if" && c.block.SingleValue {
+			// if the previous id is else and its single valued, the following
+			// expressions cannot be executed
+			return errors.New("single valued block followed by expressions")
+		}
+
+		if prev == "if" && ident != "else" && c.block.SingleValue {
+			// all following expressions need to be compiled in a block which is
+			// conditional to this if-statement unless we're already doing
+			// if-else chaining
+
+			c.prevID = "else"
+			rest := expressions[idx:]
+			_, err := c.compileUnboundBlock(rest, c.block.LastChunk())
+			return err
+		}
 
 		if ident == "return" {
 			// A return statement can only be followed by max 1 more expression
@@ -1228,7 +1317,7 @@ func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 				// nothing else coming after this, return nil
 			}
 
-			code.SingleValue = true
+			c.block.SingleValue = true
 			continue
 		}
 
@@ -1239,41 +1328,33 @@ func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 		}
 
 		if prev == "return" {
-			prevChunk := code.Code[ref-1]
+			prevChunk := code.Chunk(ref)
 
-			code.AddChunk(&llx.Chunk{
+			c.addChunk(&llx.Chunk{
 				Call: llx.Chunk_FUNCTION,
 				Id:   "return",
 				Function: &llx.Function{
-					Type:                string(prevChunk.Type()),
-					DeprecatedV5Binding: 0,
+					Type:    string(prevChunk.Type()),
+					Binding: 0,
 					Args: []*llx.Primitive{
-						llx.RefPrimitiveV1(ref),
+						llx.RefPrimitiveV2(ref),
 					},
 				},
 			})
-			code.Entrypoints = []int32{code.ChunkIndex()}
-			code.SingleValue = true
+
+			c.block.Entrypoints = []uint64{c.block.TailRef(c.blockRef)}
+			c.block.SingleValue = true
 
 			return nil
 		}
 
-		if ident == "if" && code.SingleValue {
-			// all following expressions need to be compiled in a block which is
-			// conditional to this if-statement
-			c.prevID = "else"
-			rest := expressions[idx+1:]
-			_, err := c.compileUnboundBlock(rest, code.LastChunk())
-			return err
-		}
-
-		l := len(code.Entrypoints)
+		l := len(c.block.Entrypoints)
 		// if the last entrypoint already points to this ref, skip it
-		if l != 0 && code.Entrypoints[l-1] == ref {
+		if l != 0 && c.block.Entrypoints[l-1] == ref {
 			continue
 		}
 
-		code.Entrypoints = append(code.Entrypoints, ref)
+		c.block.Entrypoints = append(c.block.Entrypoints, ref)
 
 		if code.Checksums[ref] == "" {
 			return errors.New("failed to compile expression, ref returned empty checksum ID for ref " + strconv.FormatInt(int64(ref), 10))
@@ -1283,53 +1364,58 @@ func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 	return nil
 }
 
-// CompileParsed AST into a leiseC structure
-func (c *compiler) CompileParsed(ast *parser.AST) error {
-	err := c.compileExpressions(ast.Expressions)
-	if err != nil {
-		return err
-	}
+func (c *compiler) updateEntrypoints(collectRefDatapoints bool) {
+	// BUG (jaym): collectRefDatapoints prevents us from collecting datapoints.
+	// Collecting datapoints for blocks didnt work correctly until 6.7.0.
+	// See https://gitlab.com/mondoolabs/mondoo/-/merge_requests/2639
+	// We can fix this after some time has passed. If we fix it too soon
+	// people will start having their queries fail if a falsy datapoint
+	// is collected.
 
-	c.Result.DeprecatedV5Code.UpdateID()
-	c.updateEntrypoints()
-	return nil
-}
+	code := c.Result.CodeV2
 
-func (c *compiler) updateEntrypoints() {
-	code := c.Result.DeprecatedV5Code
-
-	// 0. prep: everything that's an entrypoint is a scoringpoint later on
-	datapoints := map[int32]struct{}{}
-
-	// 1. remove variable definitions from entrypoints
-	varsByRef := make(map[int32]variable, len(c.vars))
-	for _, v := range c.vars {
+	// 1. efficiently remove variable definitions from entrypoints
+	varsByRef := make(map[uint64]variable, c.vars.len())
+	for name, v := range c.vars.vars {
+		if name == "_" {
+			// We need to filter this out. It wasn't an assignment declared by the
+			// user. We will re-introduce it conceptually once we tackle context
+			// information for blocks.
+			continue
+		}
 		varsByRef[v.ref] = v
 	}
 
-	max := len(code.Entrypoints)
-	for i := 0; i < max; i++ {
-		ref := code.Entrypoints[i]
+	max := len(c.block.Entrypoints)
+	for i := 0; i < max; {
+		ref := c.block.Entrypoints[i]
 		if _, ok := varsByRef[ref]; ok {
-			code.Entrypoints[i], code.Entrypoints[max-1] = code.Entrypoints[max-1], code.Entrypoints[i]
+			c.block.Entrypoints[i], c.block.Entrypoints[max-1] = c.block.Entrypoints[max-1], c.block.Entrypoints[i]
 			max--
+		} else {
+			i++
 		}
 	}
-	if max != len(code.Entrypoints) {
-		code.Entrypoints = code.Entrypoints[:max]
+	if max != len(c.block.Entrypoints) {
+		c.block.Entrypoints = c.block.Entrypoints[:max]
 	}
 
 	// 2. potentially clean up all inherited entrypoints
 	// TODO: unclear if this is necessary because the condition may never be met
-	entrypoints := map[int32]struct{}{}
-	for _, ref := range code.Entrypoints {
+	entrypoints := map[uint64]struct{}{}
+	for _, ref := range c.block.Entrypoints {
 		entrypoints[ref] = struct{}{}
-		chunk := code.Code[ref-1]
+		chunk := code.Chunk(ref)
 		if chunk.Function != nil {
-			delete(entrypoints, chunk.Function.DeprecatedV5Binding)
+			delete(entrypoints, chunk.Function.Binding)
 		}
 	}
 
+	if !collectRefDatapoints {
+		return
+	}
+
+	datapoints := map[uint64]struct{}{}
 	// 3. resolve operators
 	for ref := range entrypoints {
 		dps := code.RefDatapoints(ref)
@@ -1341,7 +1427,7 @@ func (c *compiler) updateEntrypoints() {
 	}
 
 	// done
-	res := make([]int32, len(datapoints))
+	res := make([]uint64, len(datapoints))
 	var idx int
 	for ref := range datapoints {
 		res[idx] = ref
@@ -1350,34 +1436,76 @@ func (c *compiler) updateEntrypoints() {
 	sort.Slice(res, func(i, j int) bool {
 		return res[i] < res[j]
 	})
-	code.Datapoints = append(code.Datapoints, res...)
+	c.block.Datapoints = append(c.block.Datapoints, res...)
+}
+
+// CompileParsed AST into an executable structure
+func (c *compiler) CompileParsed(ast *parser.AST) error {
+	err := c.compileExpressions(ast.Expressions)
+	if err != nil {
+		return err
+	}
+
+	c.Result.CodeV2.UpdateID()
+	c.updateEntrypoints(true)
+	return nil
+}
+
+func getMinMondooVersion(current string, resource string, field string) string {
+	rd := resources.ResourceDocs.Resources[resource]
+	var minverDocs string
+	if rd != nil {
+		minverDocs = rd.MinMondooVersion
+		if field != "" {
+			f := rd.Fields[field]
+			if f != nil && f.MinMondooVersion != "" {
+				minverDocs = f.MinMondooVersion
+			}
+		}
+		if current != "" {
+			// If the field has a newer version requirement than the current code bundle
+			// then update the version requirement to the newest version required.
+			docMin, err := vrs.NewVersion(minverDocs)
+			curMin, err1 := vrs.NewVersion(current)
+			if docMin != nil && err == nil && err1 == nil && docMin.LessThan(curMin) {
+				return current
+			}
+		}
+	}
+	return minverDocs
 }
 
 // CompileAST with a schema into a chunky code
 func CompileAST(ast *parser.AST, schema *lumi.Schema, props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
 	if schema == nil {
-		return nil, errors.New("leise> please provide a schema to compile this code")
+		return nil, errors.New("mqlc> please provide a schema to compile this code")
 	}
 
 	if props == nil {
 		props = map[string]*llx.Primitive{}
 	}
 
-	c := compiler{
-		Schema: schema,
-		Result: &llx.CodeBundle{
-			DeprecatedV5Code: &llx.CodeV1{
-				Checksums: map[int32]string{},
-			},
-			Labels: &llx.Labels{
-				Labels: map[string]string{},
-			},
-			Props:            map[string]string{},
-			Version:          mondoo.ApiVersion(),
-			MinMondooVersion: "",
+	codeBundle := &llx.CodeBundle{
+		CodeV2: &llx.CodeV2{
+			Checksums: map[uint64]string{},
+			// we are initializing it with the first block, which is empty
+			Blocks: []*llx.Block{{}},
 		},
-		vars:       map[string]variable{},
+		Labels: &llx.Labels{
+			Labels: map[string]string{},
+		},
+		Props:            map[string]string{},
+		Version:          mondoo.ApiVersion(),
+		MinMondooVersion: "",
+	}
+
+	c := compiler{
+		Schema:     schema,
+		Result:     codeBundle,
+		vars:       newvarmap(1<<32, nil),
 		parent:     nil,
+		blockRef:   1 << 32,
+		block:      codeBundle.CodeV2.Blocks[0],
 		props:      props,
 		standalone: true,
 	}
@@ -1386,8 +1514,8 @@ func CompileAST(ast *parser.AST, schema *lumi.Schema, props map[string]*llx.Prim
 }
 
 // Compile a code piece against a schema into chunky code
-func Compile(input string, schema *lumi.Schema, props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
-	// remove leading whitespace
+func compile(input string, schema *lumi.Schema, props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
+	// remove leading whitespace; we are re-using this later on
 	input = Dedent(input)
 
 	ast, err := parser.Parse(input)
@@ -1408,7 +1536,7 @@ func Compile(input string, schema *lumi.Schema, props map[string]*llx.Primitive)
 		return res, err
 	}
 
-	err = UpdateLabels(res.DeprecatedV5Code, res.Labels, schema)
+	err = UpdateLabels(res.CodeV2, res.Labels, schema)
 	if err != nil {
 		return res, err
 	}
@@ -1425,35 +1553,37 @@ func Compile(input string, schema *lumi.Schema, props map[string]*llx.Primitive)
 	return res, nil
 }
 
+func Compile(input string, schema *lumi.Schema, features mondoo.Features, props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
+	if features.IsActive(mondoo.PiperCode) {
+		res, err := compile(input, schema, props)
+		if err != nil {
+			return res, err
+		}
+
+		if res.CodeV2 == nil || res.CodeV2.Id == "" {
+			return res, errors.New("failed to compile: received an unspecified empty code structure")
+		}
+
+		return res, nil
+	}
+
+	res, err := v1.Compile(input, schema, props)
+	if err != nil {
+		return res, err
+	}
+
+	if res.DeprecatedV5Code == nil || res.DeprecatedV5Code.Id == "" {
+		return res, errors.New("failed to compile: received an unspecified empty code structure (v1)")
+	}
+
+	return res, nil
+}
+
 // MustCompile a code piece that should not fail (otherwise panic)
-func MustCompile(input string, schema *lumi.Schema, props map[string]*llx.Primitive) *llx.CodeBundle {
-	res, err := Compile(input, schema, props)
+func MustCompile(input string, schema *lumi.Schema, features mondoo.Features, props map[string]*llx.Primitive) *llx.CodeBundle {
+	res, err := Compile(input, schema, features, props)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to compile")
 	}
 	return res
-}
-
-func getMinMondooVersion(current string, resource string, field string) string {
-	rd := resources.ResourceDocs.Resources[resource]
-	var minverDocs string
-	if rd != nil {
-		minverDocs = rd.MinMondooVersion
-		if field != "" {
-			f := rd.Fields[field]
-			if f != nil && f.MinMondooVersion != "" {
-				minverDocs = f.MinMondooVersion
-			}
-		}
-		if current != "" {
-			//If the field has a newer version requirement than the current code bundle
-			//then update the version requirement to the newest version required.
-			docMin, err := vrs.NewVersion(minverDocs)
-			curMin, err1 := vrs.NewVersion(current)
-			if docMin != nil && err == nil && err1 == nil && docMin.LessThan(curMin) {
-				return current
-			}
-		}
-	}
-	return minverDocs
 }

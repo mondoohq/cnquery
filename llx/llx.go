@@ -95,12 +95,12 @@ type blockExecutor struct {
 	calls          *Calls
 	block          *Block
 	parent         *blockExecutor
-	ctx            *LeiseExecutorV2
+	ctx            *MQLExecutorV2
 	watcherIds     *types.StringSet
 }
 
-// LeiseExecutor is the runtime of a leise/llx codestructure
-type LeiseExecutorV2 struct {
+// MQLExecutorV2 is the runtime of a MQL codestructure
+type MQLExecutorV2 struct {
 	id      string
 	runtime *lumi.Runtime
 	code    *CodeV2
@@ -132,16 +132,16 @@ func errorResultMsg(msg string, codeID string) *RawResult {
 
 // NewExecutor will create a code runner from code, running in a runtime, calling
 // callback whenever we get a result
-func NewExecutorV2(code *CodeV2, runtime *lumi.Runtime, props map[string]*Primitive, callback ResultCallback) (*LeiseExecutorV2, error) {
+func NewExecutorV2(code *CodeV2, runtime *lumi.Runtime, props map[string]*Primitive, callback ResultCallback) (*MQLExecutorV2, error) {
 	if runtime == nil {
-		return nil, errors.New("cannot exec leise without a runtime")
+		return nil, errors.New("cannot exec MQL without a runtime")
 	}
 
 	if code == nil {
 		return nil, errors.New("cannot run executor without code")
 	}
 
-	res := &LeiseExecutorV2{
+	res := &MQLExecutorV2{
 		id:             uuid.Must(uuid.NewV4()).String(),
 		runtime:        runtime,
 		code:           code,
@@ -159,7 +159,7 @@ func NewExecutorV2(code *CodeV2, runtime *lumi.Runtime, props map[string]*Primit
 	return res, nil
 }
 
-func (c *LeiseExecutorV2) _newBlockExecutor(blockRef uint64, callback ResultCallback, parent *blockExecutor) (*blockExecutor, error) {
+func (c *MQLExecutorV2) _newBlockExecutor(blockRef uint64, callback ResultCallback, parent *blockExecutor) (*blockExecutor, error) {
 	block := c.code.Block(blockRef)
 
 	if block == nil {
@@ -213,7 +213,7 @@ func (c *LeiseExecutorV2) _newBlockExecutor(blockRef uint64, callback ResultCall
 }
 
 // NoRun returns error for all callbacks and don't run code
-func (c *LeiseExecutorV2) NoRun(err error) {
+func (c *MQLExecutorV2) NoRun(err error) {
 	callback := c.blockExecutors[0].callback
 
 	for ref := range c.blockExecutors[0].callbackPoints {
@@ -223,7 +223,7 @@ func (c *LeiseExecutorV2) NoRun(err error) {
 	}
 }
 
-func (c *LeiseExecutorV2) addBlockExecutor(be *blockExecutor) bool {
+func (c *MQLExecutorV2) addBlockExecutor(be *blockExecutor) bool {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	if c.unregistered {
@@ -233,7 +233,7 @@ func (c *LeiseExecutorV2) addBlockExecutor(be *blockExecutor) bool {
 	return true
 }
 
-func (c *LeiseExecutorV2) Unregister() error {
+func (c *MQLExecutorV2) Unregister() error {
 	log.Trace().Str("id", c.id).Msg("exec> unregister")
 	c.lock.Lock()
 	defer c.lock.Unlock()
@@ -256,7 +256,7 @@ func (c *LeiseExecutorV2) Unregister() error {
 }
 
 // Run a given set of code
-func (c *LeiseExecutorV2) Run() error {
+func (c *MQLExecutorV2) Run() error {
 	if len(c.blockExecutors) == 0 {
 		return errors.New("cannot find initial block executor for running this code")
 	}

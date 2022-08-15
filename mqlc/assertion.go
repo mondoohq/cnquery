@@ -1,11 +1,11 @@
-package v1
+package mqlc
 
 import (
 	"errors"
 	"strconv"
 	"strings"
 
-	"go.mondoo.io/mondoo/leise/parser"
+	"go.mondoo.io/mondoo/mqlc/parser"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/types"
 )
@@ -90,7 +90,7 @@ func compileAssertionMsg(msg string, c *compiler) (*llx.AssertionMessage, error)
 	template := strings.Builder{}
 	var codes []string
 	var i int
-	var max = len(msg)
+	max := len(msg)
 	textStart := i
 	for ; i < max; i++ {
 		if msg[i] != '$' {
@@ -175,93 +175,77 @@ func compileAssertionMsg(msg string, c *compiler) (*llx.AssertionMessage, error)
 			return nil, errors.New("failed to compile comment: " + err.Error())
 		}
 
-		res.DeprecatedV5Datapoint = append(res.DeprecatedV5Datapoint, ref)
-		resCode := c.Result.DeprecatedV5Code
-		resCode.Datapoints = append(resCode.Datapoints, ref)
+		res.Refs = append(res.Refs, ref)
+
+		c.block.Datapoints = append(c.block.Datapoints, ref)
 	}
 
 	return &res, nil
 }
 
-func compileListAssertionMsg(c *compiler, typ types.Type, allRef int32, failedRef int32, assertionRef int32) error {
+func compileListAssertionMsg(c *compiler, typ types.Type, allRef uint64, failedRef uint64, assertionRef uint64) error {
 	// assertions
 	msg := extractMsgTag(c.comment)
 	if msg == "" {
 		return nil
 	}
 
-	code := c.Result.DeprecatedV5Code
+	blockCompiler := c.newBlockCompiler(&variable{
+		typ: typ,
+		ref: failedRef,
+	})
 
-	blockCompiler := c.newBlockCompiler(&llx.CodeV1{
-		Id:         "binding",
-		Parameters: 2,
-		Checksums: map[int32]string{
-			// we must provide the first chunk, which is a reference to the caller
-			// and which will always be number 1
-			1: code.Checksums[code.ChunkIndex()-1],
-			2: code.Checksums[allRef],
-		},
-		Code: []*llx.Chunk{
-			{
-				Call:      llx.Chunk_PRIMITIVE,
-				Primitive: &llx.Primitive{Type: string(typ)},
-			},
-			{
-				Call:      llx.Chunk_PRIMITIVE,
-				Primitive: &llx.Primitive{Type: string(typ)},
-			},
-		},
-	}, &binding{Type: types.Type(typ), Ref: 1})
-
-	blockCompiler.vars["$expected"] = variable{ref: 2, typ: typ}
+	blockCompiler.vars.add("$expected", variable{ref: allRef, typ: typ})
 
 	assertionMsg, err := compileAssertionMsg(msg, &blockCompiler)
 	if err != nil {
 		return err
 	}
 	if assertionMsg != nil {
-		if code.Assertions == nil {
-			code.Assertions = map[int32]*llx.AssertionMessage{}
+		if c.Result.CodeV2.Assertions == nil {
+			c.Result.CodeV2.Assertions = make(map[uint64]*llx.AssertionMessage)
 		}
-		code.Assertions[assertionRef+2] = assertionMsg
+		c.Result.CodeV2.Assertions[assertionRef+2] = assertionMsg
 
-		block := blockCompiler.Result.DeprecatedV5Code
-		block.UpdateID()
-		code.Functions = append(code.Functions, block)
-		//return code.FunctionsIndex(), blockCompiler.standalone, nil
-
-		fref := code.FunctionsIndex()
-		code.AddChunk(&llx.Chunk{
+		args := []*llx.Primitive{
+			llx.FunctionPrimitiveV2(blockCompiler.blockRef),
+		}
+		for _, v := range blockCompiler.blockDeps {
+			if c.isInMyBlock(v) {
+				args = append(args, llx.RefPrimitiveV2(v))
+			}
+		}
+		c.blockDeps = append(c.blockDeps, blockCompiler.blockDeps...)
+		c.addChunk(&llx.Chunk{
 			Call: llx.Chunk_FUNCTION,
 			Id:   "${}",
 			Function: &llx.Function{
-				Type:                string(types.Block),
-				DeprecatedV5Binding: failedRef,
-				Args: []*llx.Primitive{
-					llx.FunctionPrimitiveV1(fref), llx.RefPrimitiveV1(allRef),
-				},
+				Type:    string(types.Block),
+				Binding: failedRef,
+				Args:    args,
 			},
 		})
 
 		// since it operators on top of a block, we have to add its
 		// checksum as the first entry in the list. Once the block is received,
 		// all of its child entries are processed for the final result
-		blockRef := code.ChunkIndex()
-		checksum := code.Checksums[blockRef]
-		assertionMsg.Checksums = make([]string, len(assertionMsg.DeprecatedV5Datapoint)+1)
+		blockRef := c.block.TailRef(c.blockRef)
+		checksum := c.Result.CodeV2.Checksums[blockRef]
+		assertionMsg.Checksums = make([]string, len(assertionMsg.Refs)+1)
 		assertionMsg.Checksums[0] = checksum
-		code.Datapoints = append(code.Datapoints, blockRef)
+		c.block.Datapoints = append(c.Result.CodeV2.Blocks[0].Datapoints, blockRef)
 
-		blocksums := blockCompiler.Result.DeprecatedV5Code.Checksums
-		for i := range assertionMsg.DeprecatedV5Datapoint {
-			sum, ok := blocksums[assertionMsg.DeprecatedV5Datapoint[i]]
+		blocksums := blockCompiler.Result.CodeV2.Checksums
+		for i := range assertionMsg.Refs {
+			sum, ok := blocksums[assertionMsg.Refs[i]]
 			if !ok {
 				return errors.New("cannot find checksum for datapoint in @msg tag")
 			}
 
 			assertionMsg.Checksums[i+1] = sum
 		}
-		assertionMsg.DeprecatedV5Datapoint = nil
+		assertionMsg.Refs = nil
+		// panic("Something about blocks decoding...")
 		assertionMsg.DecodeBlock = true
 	}
 
@@ -270,11 +254,11 @@ func compileListAssertionMsg(c *compiler, typ types.Type, allRef int32, failedRe
 
 // UpdateAssertions in a bundle and remove all intermediate assertion objects
 func UpdateAssertions(bundle *llx.CodeBundle) error {
-	bundle.DeprecatedV5Assertions = map[string]*llx.AssertionMessage{}
-	return updateCodeAssertions(bundle, bundle.DeprecatedV5Code)
+	bundle.Assertions = map[string]*llx.AssertionMessage{}
+	return updateCodeAssertions(bundle, bundle.CodeV2)
 }
 
-func updateCodeAssertions(bundle *llx.CodeBundle, code *llx.CodeV1) error {
+func updateCodeAssertions(bundle *llx.CodeBundle, code *llx.CodeV2) error {
 	for ref, assert := range code.Assertions {
 		sum, ok := code.Checksums[ref]
 		if !ok {
@@ -282,27 +266,20 @@ func updateCodeAssertions(bundle *llx.CodeBundle, code *llx.CodeV1) error {
 		}
 
 		if !assert.DecodeBlock {
-			assert.Checksums = make([]string, len(assert.DeprecatedV5Datapoint))
-			for i := range assert.DeprecatedV5Datapoint {
-				datapoint := assert.DeprecatedV5Datapoint[i]
-				assert.Checksums[i], ok = code.Checksums[datapoint]
+			assert.Checksums = make([]string, len(assert.Refs))
+			for i := range assert.Refs {
+				ref := assert.Refs[i]
+				assert.Checksums[i], ok = code.Checksums[ref]
 				if !ok {
-					return errors.New("cannot find reference to datapoint in assertion")
+					return errors.New("cannot find reference to data in assertion")
 				}
 			}
-			assert.DeprecatedV5Datapoint = nil
+			assert.Refs = nil
 		}
 
-		bundle.DeprecatedV5Assertions[sum] = assert
+		bundle.Assertions[sum] = assert
 	}
 	code.Assertions = nil
-
-	for i := range code.Functions {
-		child := code.Functions[i]
-		if err := updateCodeAssertions(bundle, child); err != nil {
-			return err
-		}
-	}
 
 	return nil
 }
