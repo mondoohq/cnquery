@@ -935,216 +935,15 @@ func (k *lumiK8sPod) id() (string, error) {
 }
 
 func (p *lumiK8sPod) init(args *lumi.Args) (*lumi.Args, K8sPod, error) {
-	// pass-through if all args are already provided
-	if len(*args) > 2 {
-		return args, nil, nil
-	}
-
-	// get platform identifier infos
-	identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
-	if err != nil {
-		return args, nil, nil
-	}
-
-	obj, err := p.MotorRuntime.CreateResource("k8s")
-	if err != nil {
-		return nil, nil, err
-	}
-	k8sResource := obj.(K8s)
-
-	pods, err := k8sResource.Pods()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var matchFn func(pod K8sPod) bool
-
-	var uidRaw string
-	if _, ok := (*args)["id"]; ok {
-		uidRaw = (*args)["id"].(string)
-	}
-
-	if uidRaw != "" {
-		matchFn = func(pod K8sPod) bool {
-			uid, _ := pod.Id()
-			return uid == uidRaw
-		}
-	}
-
-	var nameRaw string
-	var namespaceRaw string
-	if _, ok := (*args)["name"]; ok {
-		nameRaw = (*args)["name"].(string)
-	}
-	if _, ok := (*args)["namespace"]; ok {
-		namespaceRaw = (*args)["namespace"].(string)
-	}
-	if nameRaw == "" && namespaceRaw == "" {
-		nameRaw = identifierName
-		namespaceRaw = identifierNamespace
-	}
-	if nameRaw != "" && namespaceRaw != "" {
-		matchFn = func(pod K8sPod) bool {
-			name, _ := pod.Name()
-			namespace, _ := pod.Namespace()
-			return name == nameRaw && namespace == namespaceRaw
-		}
-	}
-
-	for i := range pods {
-		pod := pods[i].(K8sPod)
-		if matchFn(pod) {
-			return nil, pod, nil
-		}
-	}
-
-	return args, nil, nil
+	return initNamespacedResource[K8sPod](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Pods() })
 }
 
 func (k *lumiK8sPod) GetInitContainers() ([]interface{}, error) {
-	id, err := objId(k)
-	if err != nil {
-		return nil, err
-	}
-
-	// At this point we already have the cached Pod manifest. We can parse it to retrieve the
-	// containers for the pod.
-	manifest, err := k.Manifest()
-	if err != nil {
-		return nil, err
-	}
-	unstr := unstructured.Unstructured{Object: manifest}
-	obj := resources.ConvertToK8sObject(unstr)
-
-	resp := []interface{}{}
-	containers, err := resources.GetInitContainers(obj)
-	if err != nil {
-		return nil, err
-	}
-	for i := range containers {
-
-		c := containers[i]
-
-		secContext, err := jsonToDict(c.SecurityContext)
-		if err != nil {
-			return nil, err
-		}
-
-		resources, err := jsonToDict(c.Resources)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeMounts, err := jsonToDictSlice(c.VolumeMounts)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeDevices, err := jsonToDictSlice(c.VolumeDevices)
-		if err != nil {
-			return nil, err
-		}
-
-		lumiContainer, err := k.MotorRuntime.CreateResource("k8s.initContainer",
-			"uid", id+"/"+c.Name, // container names are unique within a pod
-			"name", c.Name,
-			"imageName", c.Image,
-			"image", c.Image, // deprecated, will be replaced with the containerImage going forward
-			"command", strSliceToInterface(c.Command),
-			"args", strSliceToInterface(c.Args),
-			"resources", resources,
-			"volumeMounts", volumeMounts,
-			"volumeDevices", volumeDevices,
-			"imagePullPolicy", string(c.ImagePullPolicy),
-			"securityContext", secContext,
-			"workingDir", c.WorkingDir,
-			"tty", c.TTY,
-		)
-		if err != nil {
-			return nil, err
-		}
-		resp = append(resp, lumiContainer)
-	}
-	return resp, nil
+	return getContainers(k, k.MotorRuntime, InitContainerType)
 }
 
 func (k *lumiK8sPod) GetContainers() ([]interface{}, error) {
-	id, err := objId(k)
-	if err != nil {
-		return nil, err
-	}
-
-	// At this point we already have the cached Pod manifest. We can parse it to retrieve the
-	// containers for the pod.
-	manifest, err := k.Manifest()
-	if err != nil {
-		return nil, err
-	}
-	unstr := unstructured.Unstructured{Object: manifest}
-	obj := resources.ConvertToK8sObject(unstr)
-
-	resp := []interface{}{}
-	containers, err := resources.GetContainers(obj)
-	if err != nil {
-		return nil, err
-	}
-	for i := range containers {
-
-		c := containers[i]
-
-		secContext, err := jsonToDict(c.SecurityContext)
-		if err != nil {
-			return nil, err
-		}
-
-		resources, err := jsonToDict(c.Resources)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeMounts, err := jsonToDictSlice(c.VolumeMounts)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeDevices, err := jsonToDictSlice(c.VolumeDevices)
-		if err != nil {
-			return nil, err
-		}
-
-		livenessProbe, err := jsonToDict(c.LivenessProbe)
-		if err != nil {
-			return nil, err
-		}
-
-		readinessProbe, err := jsonToDict(c.ReadinessProbe)
-		if err != nil {
-			return nil, err
-		}
-
-		lumiContainer, err := k.MotorRuntime.CreateResource("k8s.container",
-			"uid", id+"/"+c.Name, // container names are unique within a pod
-			"name", c.Name,
-			"imageName", c.Image,
-			"image", c.Image, // deprecated, will be replaced with the containerImage going forward
-			"command", strSliceToInterface(c.Command),
-			"args", strSliceToInterface(c.Args),
-			"resources", resources,
-			"volumeMounts", volumeMounts,
-			"volumeDevices", volumeDevices,
-			"livenessProbe", livenessProbe,
-			"readinessProbe", readinessProbe,
-			"imagePullPolicy", string(c.ImagePullPolicy),
-			"securityContext", secContext,
-			"workingDir", c.WorkingDir,
-			"tty", c.TTY,
-		)
-		if err != nil {
-			return nil, err
-		}
-		resp = append(resp, lumiContainer)
-	}
-	return resp, nil
+	return getContainers(k, k.MotorRuntime, ContainerContainerType)
 }
 
 func (k *lumiK8sPod) GetNamespace() (interface{}, error) {
@@ -1225,71 +1024,7 @@ func (k *lumiK8sDeployment) id() (string, error) {
 }
 
 func (p *lumiK8sDeployment) init(args *lumi.Args) (*lumi.Args, K8sDeployment, error) {
-	// pass-through if all args are already provided
-	if len(*args) > 2 {
-		return args, nil, nil
-	}
-
-	// get platform identifier infos
-	identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
-	if err != nil {
-		return args, nil, nil
-	}
-
-	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.MotorRuntime.CreateResource("k8s")
-	if err != nil {
-		return nil, nil, err
-	}
-	k8sResource := obj.(K8s)
-
-	deployments, err := k8sResource.Deployments()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var matchFn func(deployment K8sDeployment) bool
-
-	var uidRaw string
-	if _, ok := (*args)["id"]; ok {
-		uidRaw = (*args)["id"].(string)
-	}
-
-	if uidRaw != "" {
-		matchFn = func(deployment K8sDeployment) bool {
-			uid, _ := deployment.Id()
-			return uid == uidRaw
-		}
-	}
-
-	var nameRaw string
-	var namespaceRaw string
-	if _, ok := (*args)["name"]; ok {
-		nameRaw = (*args)["name"].(string)
-	}
-	if _, ok := (*args)["namespace"]; ok {
-		namespaceRaw = (*args)["namespace"].(string)
-	}
-	if nameRaw == "" && namespaceRaw == "" {
-		nameRaw = identifierName
-		namespaceRaw = identifierNamespace
-	}
-	if nameRaw != "" && namespaceRaw != "" {
-		matchFn = func(deployment K8sDeployment) bool {
-			name, _ := deployment.Name()
-			namespace, _ := deployment.Namespace()
-			return name == nameRaw && namespace == namespaceRaw
-		}
-	}
-
-	for i := range deployments {
-		deployment := deployments[i].(K8sDeployment)
-		if matchFn(deployment) {
-			return nil, deployment, nil
-		}
-	}
-
-	return args, nil, nil
+	return initNamespacedResource[K8sDeployment](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Deployments() })
 }
 
 func (k *lumiK8sDeployment) GetNamespace() (interface{}, error) {
@@ -1305,221 +1040,19 @@ func (k *lumiK8sDeployment) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sDeployment) GetInitContainers() ([]interface{}, error) {
-	id, err := objId(k)
-	if err != nil {
-		return nil, err
-	}
-
-	// At this point we already have the cached Pod manifest. We can parse it to retrieve the
-	// containers for the pod.
-	manifest, err := k.Manifest()
-	if err != nil {
-		return nil, err
-	}
-	unstr := unstructured.Unstructured{Object: manifest}
-	obj := resources.ConvertToK8sObject(unstr)
-
-	resp := []interface{}{}
-	containers, err := resources.GetInitContainers(obj)
-	if err != nil {
-		return nil, err
-	}
-	for i := range containers {
-
-		c := containers[i]
-
-		secContext, err := jsonToDict(c.SecurityContext)
-		if err != nil {
-			return nil, err
-		}
-
-		resources, err := jsonToDict(c.Resources)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeMounts, err := jsonToDictSlice(c.VolumeMounts)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeDevices, err := jsonToDictSlice(c.VolumeDevices)
-		if err != nil {
-			return nil, err
-		}
-
-		lumiContainer, err := k.MotorRuntime.CreateResource("k8s.initContainer",
-			"uid", id+"/"+c.Name, // container names are unique within a pod
-			"name", c.Name,
-			"imageName", c.Image,
-			"image", c.Image, // deprecated, will be replaced with the containerImage going forward
-			"command", strSliceToInterface(c.Command),
-			"args", strSliceToInterface(c.Args),
-			"resources", resources,
-			"volumeMounts", volumeMounts,
-			"volumeDevices", volumeDevices,
-			"imagePullPolicy", string(c.ImagePullPolicy),
-			"securityContext", secContext,
-			"workingDir", c.WorkingDir,
-			"tty", c.TTY,
-		)
-		if err != nil {
-			return nil, err
-		}
-		resp = append(resp, lumiContainer)
-	}
-	return resp, nil
+	return getContainers(k, k.MotorRuntime, InitContainerType)
 }
 
 func (k *lumiK8sDeployment) GetContainers() ([]interface{}, error) {
-	id, err := objId(k)
-	if err != nil {
-		return nil, err
-	}
-
-	// At this point we already have the cached Pod manifest. We can parse it to retrieve the
-	// containers for the pod.
-	manifest, err := k.Manifest()
-	if err != nil {
-		return nil, err
-	}
-	unstr := unstructured.Unstructured{Object: manifest}
-	obj := resources.ConvertToK8sObject(unstr)
-
-	resp := []interface{}{}
-	containers, err := resources.GetContainers(obj)
-	if err != nil {
-		return nil, err
-	}
-	for i := range containers {
-
-		c := containers[i]
-
-		secContext, err := jsonToDict(c.SecurityContext)
-		if err != nil {
-			return nil, err
-		}
-
-		resources, err := jsonToDict(c.Resources)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeMounts, err := jsonToDictSlice(c.VolumeMounts)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeDevices, err := jsonToDictSlice(c.VolumeDevices)
-		if err != nil {
-			return nil, err
-		}
-
-		livenessProbe, err := jsonToDict(c.LivenessProbe)
-		if err != nil {
-			return nil, err
-		}
-
-		readinessProbe, err := jsonToDict(c.ReadinessProbe)
-		if err != nil {
-			return nil, err
-		}
-
-		lumiContainer, err := k.MotorRuntime.CreateResource("k8s.container",
-			"uid", id+"/"+c.Name, // container names are unique within a pod
-			"name", c.Name,
-			"imageName", c.Image,
-			"image", c.Image, // deprecated, will be replaced with the containerImage going forward
-			"command", strSliceToInterface(c.Command),
-			"args", strSliceToInterface(c.Args),
-			"resources", resources,
-			"volumeMounts", volumeMounts,
-			"volumeDevices", volumeDevices,
-			"livenessProbe", livenessProbe,
-			"readinessProbe", readinessProbe,
-			"imagePullPolicy", string(c.ImagePullPolicy),
-			"securityContext", secContext,
-			"workingDir", c.WorkingDir,
-			"tty", c.TTY,
-		)
-		if err != nil {
-			return nil, err
-		}
-		resp = append(resp, lumiContainer)
-	}
-	return resp, nil
+	return getContainers(k, k.MotorRuntime, ContainerContainerType)
 }
 
 func (k *lumiK8sDaemonset) id() (string, error) {
-	return objId(k)
+	return k.Id()
 }
 
 func (p *lumiK8sDaemonset) init(args *lumi.Args) (*lumi.Args, K8sDaemonset, error) {
-	// pass-through if all args are already provided
-	if len(*args) > 2 {
-		return args, nil, nil
-	}
-
-	// get platform identifier infos
-	identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
-	if err != nil {
-		return args, nil, nil
-	}
-
-	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.MotorRuntime.CreateResource("k8s")
-	if err != nil {
-		return nil, nil, err
-	}
-	k8sResource := obj.(K8s)
-
-	daemonsets, err := k8sResource.Daemonsets()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var matchFn func(daemonset K8sDaemonset) bool
-
-	var uidRaw string
-	if _, ok := (*args)["id"]; ok {
-		uidRaw = (*args)["id"].(string)
-	}
-
-	if uidRaw != "" {
-		matchFn = func(daemonset K8sDaemonset) bool {
-			uid, _ := daemonset.Id()
-			return uid == uidRaw
-		}
-	}
-
-	var nameRaw string
-	var namespaceRaw string
-	if _, ok := (*args)["name"]; ok {
-		nameRaw = (*args)["name"].(string)
-	}
-	if _, ok := (*args)["namespace"]; ok {
-		namespaceRaw = (*args)["namespace"].(string)
-	}
-	if nameRaw == "" && namespaceRaw == "" {
-		nameRaw = identifierName
-		namespaceRaw = identifierNamespace
-	}
-	if nameRaw != "" && namespaceRaw != "" {
-		matchFn = func(daemonset K8sDaemonset) bool {
-			name, _ := daemonset.Name()
-			namespace, _ := daemonset.Namespace()
-			return name == nameRaw && namespace == namespaceRaw
-		}
-	}
-
-	for i := range daemonsets {
-		daemonset := daemonsets[i].(K8sDaemonset)
-		if matchFn(daemonset) {
-			return nil, daemonset, nil
-		}
-	}
-
-	return args, nil, nil
+	return initNamespacedResource[K8sDaemonset](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Daemonsets() })
 }
 
 func (k *lumiK8sDaemonset) GetNamespace() (interface{}, error) {
@@ -1535,149 +1068,11 @@ func (k *lumiK8sDaemonset) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sDaemonset) GetInitContainers() ([]interface{}, error) {
-	id, err := objId(k)
-	if err != nil {
-		return nil, err
-	}
-
-	// At this point we already have the cached Pod manifest. We can parse it to retrieve the
-	// containers for the pod.
-	manifest, err := k.Manifest()
-	if err != nil {
-		return nil, err
-	}
-	unstr := unstructured.Unstructured{Object: manifest}
-	obj := resources.ConvertToK8sObject(unstr)
-
-	resp := []interface{}{}
-	containers, err := resources.GetInitContainers(obj)
-	if err != nil {
-		return nil, err
-	}
-	for i := range containers {
-
-		c := containers[i]
-
-		secContext, err := jsonToDict(c.SecurityContext)
-		if err != nil {
-			return nil, err
-		}
-
-		resources, err := jsonToDict(c.Resources)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeMounts, err := jsonToDictSlice(c.VolumeMounts)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeDevices, err := jsonToDictSlice(c.VolumeDevices)
-		if err != nil {
-			return nil, err
-		}
-
-		lumiContainer, err := k.MotorRuntime.CreateResource("k8s.initContainer",
-			"uid", id+"/"+c.Name, // container names are unique within a pod
-			"name", c.Name,
-			"imageName", c.Image,
-			"image", c.Image, // deprecated, will be replaced with the containerImage going forward
-			"command", strSliceToInterface(c.Command),
-			"args", strSliceToInterface(c.Args),
-			"resources", resources,
-			"volumeMounts", volumeMounts,
-			"volumeDevices", volumeDevices,
-			"imagePullPolicy", string(c.ImagePullPolicy),
-			"securityContext", secContext,
-			"workingDir", c.WorkingDir,
-			"tty", c.TTY,
-		)
-		if err != nil {
-			return nil, err
-		}
-		resp = append(resp, lumiContainer)
-	}
-	return resp, nil
+	return getContainers(k, k.MotorRuntime, InitContainerType)
 }
 
 func (k *lumiK8sDaemonset) GetContainers() ([]interface{}, error) {
-	id, err := objId(k)
-	if err != nil {
-		return nil, err
-	}
-
-	// At this point we already have the cached Pod manifest. We can parse it to retrieve the
-	// containers for the pod.
-	manifest, err := k.Manifest()
-	if err != nil {
-		return nil, err
-	}
-	unstr := unstructured.Unstructured{Object: manifest}
-	obj := resources.ConvertToK8sObject(unstr)
-
-	resp := []interface{}{}
-	containers, err := resources.GetContainers(obj)
-	if err != nil {
-		return nil, err
-	}
-	for i := range containers {
-
-		c := containers[i]
-
-		secContext, err := jsonToDict(c.SecurityContext)
-		if err != nil {
-			return nil, err
-		}
-
-		resources, err := jsonToDict(c.Resources)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeMounts, err := jsonToDictSlice(c.VolumeMounts)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeDevices, err := jsonToDictSlice(c.VolumeDevices)
-		if err != nil {
-			return nil, err
-		}
-
-		livenessProbe, err := jsonToDict(c.LivenessProbe)
-		if err != nil {
-			return nil, err
-		}
-
-		readinessProbe, err := jsonToDict(c.ReadinessProbe)
-		if err != nil {
-			return nil, err
-		}
-
-		lumiContainer, err := k.MotorRuntime.CreateResource("k8s.container",
-			"uid", id+"/"+c.Name, // container names are unique within a pod
-			"name", c.Name,
-			"imageName", c.Image,
-			"image", c.Image, // deprecated, will be replaced with the containerImage going forward
-			"command", strSliceToInterface(c.Command),
-			"args", strSliceToInterface(c.Args),
-			"resources", resources,
-			"volumeMounts", volumeMounts,
-			"volumeDevices", volumeDevices,
-			"livenessProbe", livenessProbe,
-			"readinessProbe", readinessProbe,
-			"imagePullPolicy", string(c.ImagePullPolicy),
-			"securityContext", secContext,
-			"workingDir", c.WorkingDir,
-			"tty", c.TTY,
-		)
-		if err != nil {
-			return nil, err
-		}
-		resp = append(resp, lumiContainer)
-	}
-	return resp, nil
+	return getContainers(k, k.MotorRuntime, ContainerContainerType)
 }
 
 func (k *lumiK8sStatefulset) id() (string, error) {
@@ -1685,71 +1080,7 @@ func (k *lumiK8sStatefulset) id() (string, error) {
 }
 
 func (p *lumiK8sStatefulset) init(args *lumi.Args) (*lumi.Args, K8sStatefulset, error) {
-	// pass-through if all args are already provided
-	if len(*args) > 2 {
-		return args, nil, nil
-	}
-
-	// get platform identifier infos
-	identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
-	if err != nil {
-		return args, nil, nil
-	}
-
-	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.MotorRuntime.CreateResource("k8s")
-	if err != nil {
-		return nil, nil, err
-	}
-	k8sResource := obj.(K8s)
-
-	statefulSets, err := k8sResource.Statefulsets()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var matchFn func(statefulset K8sStatefulset) bool
-
-	var uidRaw string
-	if _, ok := (*args)["id"]; ok {
-		uidRaw = (*args)["id"].(string)
-	}
-
-	if uidRaw != "" {
-		matchFn = func(statefulset K8sStatefulset) bool {
-			uid, _ := statefulset.Id()
-			return uid == uidRaw
-		}
-	}
-
-	var nameRaw string
-	var namespaceRaw string
-	if _, ok := (*args)["name"]; ok {
-		nameRaw = (*args)["name"].(string)
-	}
-	if _, ok := (*args)["namespace"]; ok {
-		namespaceRaw = (*args)["namespace"].(string)
-	}
-	if nameRaw == "" && namespaceRaw == "" {
-		nameRaw = identifierName
-		namespaceRaw = identifierNamespace
-	}
-	if nameRaw != "" && namespaceRaw != "" {
-		matchFn = func(statefulset K8sStatefulset) bool {
-			name, _ := statefulset.Name()
-			namespace, _ := statefulset.Namespace()
-			return name == nameRaw && namespace == namespaceRaw
-		}
-	}
-
-	for i := range statefulSets {
-		statefulset := statefulSets[i].(K8sStatefulset)
-		if matchFn(statefulset) {
-			return nil, statefulset, nil
-		}
-	}
-
-	return args, nil, nil
+	return initNamespacedResource[K8sStatefulset](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Statefulsets() })
 }
 
 func (k *lumiK8sStatefulset) GetNamespace() (interface{}, error) {
@@ -1765,149 +1096,11 @@ func (k *lumiK8sStatefulset) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sStatefulset) GetInitContainers() ([]interface{}, error) {
-	id, err := objId(k)
-	if err != nil {
-		return nil, err
-	}
-
-	// At this point we already have the cached Pod manifest. We can parse it to retrieve the
-	// containers for the pod.
-	manifest, err := k.Manifest()
-	if err != nil {
-		return nil, err
-	}
-	unstr := unstructured.Unstructured{Object: manifest}
-	obj := resources.ConvertToK8sObject(unstr)
-
-	resp := []interface{}{}
-	containers, err := resources.GetInitContainers(obj)
-	if err != nil {
-		return nil, err
-	}
-	for i := range containers {
-
-		c := containers[i]
-
-		secContext, err := jsonToDict(c.SecurityContext)
-		if err != nil {
-			return nil, err
-		}
-
-		resources, err := jsonToDict(c.Resources)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeMounts, err := jsonToDictSlice(c.VolumeMounts)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeDevices, err := jsonToDictSlice(c.VolumeDevices)
-		if err != nil {
-			return nil, err
-		}
-
-		lumiContainer, err := k.MotorRuntime.CreateResource("k8s.initContainer",
-			"uid", id+"/"+c.Name, // container names are unique within a pod
-			"name", c.Name,
-			"imageName", c.Image,
-			"image", c.Image, // deprecated, will be replaced with the containerImage going forward
-			"command", strSliceToInterface(c.Command),
-			"args", strSliceToInterface(c.Args),
-			"resources", resources,
-			"volumeMounts", volumeMounts,
-			"volumeDevices", volumeDevices,
-			"imagePullPolicy", string(c.ImagePullPolicy),
-			"securityContext", secContext,
-			"workingDir", c.WorkingDir,
-			"tty", c.TTY,
-		)
-		if err != nil {
-			return nil, err
-		}
-		resp = append(resp, lumiContainer)
-	}
-	return resp, nil
+	return getContainers(k, k.MotorRuntime, InitContainerType)
 }
 
 func (k *lumiK8sStatefulset) GetContainers() ([]interface{}, error) {
-	id, err := objId(k)
-	if err != nil {
-		return nil, err
-	}
-
-	// At this point we already have the cached Pod manifest. We can parse it to retrieve the
-	// containers for the pod.
-	manifest, err := k.Manifest()
-	if err != nil {
-		return nil, err
-	}
-	unstr := unstructured.Unstructured{Object: manifest}
-	obj := resources.ConvertToK8sObject(unstr)
-
-	resp := []interface{}{}
-	containers, err := resources.GetContainers(obj)
-	if err != nil {
-		return nil, err
-	}
-	for i := range containers {
-
-		c := containers[i]
-
-		secContext, err := jsonToDict(c.SecurityContext)
-		if err != nil {
-			return nil, err
-		}
-
-		resources, err := jsonToDict(c.Resources)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeMounts, err := jsonToDictSlice(c.VolumeMounts)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeDevices, err := jsonToDictSlice(c.VolumeDevices)
-		if err != nil {
-			return nil, err
-		}
-
-		livenessProbe, err := jsonToDict(c.LivenessProbe)
-		if err != nil {
-			return nil, err
-		}
-
-		readinessProbe, err := jsonToDict(c.ReadinessProbe)
-		if err != nil {
-			return nil, err
-		}
-
-		lumiContainer, err := k.MotorRuntime.CreateResource("k8s.container",
-			"uid", id+"/"+c.Name, // container names are unique within a pod
-			"name", c.Name,
-			"imageName", c.Image,
-			"image", c.Image, // deprecated, will be replaced with the containerImage going forward
-			"command", strSliceToInterface(c.Command),
-			"args", strSliceToInterface(c.Args),
-			"resources", resources,
-			"volumeMounts", volumeMounts,
-			"volumeDevices", volumeDevices,
-			"livenessProbe", livenessProbe,
-			"readinessProbe", readinessProbe,
-			"imagePullPolicy", string(c.ImagePullPolicy),
-			"securityContext", secContext,
-			"workingDir", c.WorkingDir,
-			"tty", c.TTY,
-		)
-		if err != nil {
-			return nil, err
-		}
-		resp = append(resp, lumiContainer)
-	}
-	return resp, nil
+	return getContainers(k, k.MotorRuntime, ContainerContainerType)
 }
 
 func (k *lumiK8sReplicaset) id() (string, error) {
@@ -1915,71 +1108,7 @@ func (k *lumiK8sReplicaset) id() (string, error) {
 }
 
 func (p *lumiK8sReplicaset) init(args *lumi.Args) (*lumi.Args, K8sReplicaset, error) {
-	// pass-through if all args are already provided
-	if len(*args) > 2 {
-		return args, nil, nil
-	}
-
-	// get platform identifier infos
-	identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
-	if err != nil {
-		return args, nil, nil
-	}
-
-	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.MotorRuntime.CreateResource("k8s")
-	if err != nil {
-		return nil, nil, err
-	}
-	k8sResource := obj.(K8s)
-
-	replicaSets, err := k8sResource.Replicasets()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var matchFn func(replicaset K8sReplicaset) bool
-
-	var uidRaw string
-	if _, ok := (*args)["id"]; ok {
-		uidRaw = (*args)["id"].(string)
-	}
-
-	if uidRaw != "" {
-		matchFn = func(replicaset K8sReplicaset) bool {
-			uid, _ := replicaset.Id()
-			return uid == uidRaw
-		}
-	}
-
-	var nameRaw string
-	var namespaceRaw string
-	if _, ok := (*args)["name"]; ok {
-		nameRaw = (*args)["name"].(string)
-	}
-	if _, ok := (*args)["namespace"]; ok {
-		namespaceRaw = (*args)["namespace"].(string)
-	}
-	if nameRaw == "" && namespaceRaw == "" {
-		nameRaw = identifierName
-		namespaceRaw = identifierNamespace
-	}
-	if nameRaw != "" && namespaceRaw != "" {
-		matchFn = func(replicaset K8sReplicaset) bool {
-			name, _ := replicaset.Name()
-			namespace, _ := replicaset.Namespace()
-			return name == nameRaw && namespace == namespaceRaw
-		}
-	}
-
-	for i := range replicaSets {
-		replicaset := replicaSets[i].(K8sReplicaset)
-		if matchFn(replicaset) {
-			return nil, replicaset, nil
-		}
-	}
-
-	return args, nil, nil
+	return initNamespacedResource[K8sReplicaset](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Replicasets() })
 }
 
 func (k *lumiK8sReplicaset) GetNamespace() (interface{}, error) {
@@ -1995,149 +1124,11 @@ func (k *lumiK8sReplicaset) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sReplicaset) GetInitContainers() ([]interface{}, error) {
-	id, err := objId(k)
-	if err != nil {
-		return nil, err
-	}
-
-	// At this point we already have the cached Pod manifest. We can parse it to retrieve the
-	// containers for the pod.
-	manifest, err := k.Manifest()
-	if err != nil {
-		return nil, err
-	}
-	unstr := unstructured.Unstructured{Object: manifest}
-	obj := resources.ConvertToK8sObject(unstr)
-
-	resp := []interface{}{}
-	containers, err := resources.GetInitContainers(obj)
-	if err != nil {
-		return nil, err
-	}
-	for i := range containers {
-
-		c := containers[i]
-
-		secContext, err := jsonToDict(c.SecurityContext)
-		if err != nil {
-			return nil, err
-		}
-
-		resources, err := jsonToDict(c.Resources)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeMounts, err := jsonToDictSlice(c.VolumeMounts)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeDevices, err := jsonToDictSlice(c.VolumeDevices)
-		if err != nil {
-			return nil, err
-		}
-
-		lumiContainer, err := k.MotorRuntime.CreateResource("k8s.initContainer",
-			"uid", id+"/"+c.Name, // container names are unique within a pod
-			"name", c.Name,
-			"imageName", c.Image,
-			"image", c.Image, // deprecated, will be replaced with the containerImage going forward
-			"command", strSliceToInterface(c.Command),
-			"args", strSliceToInterface(c.Args),
-			"resources", resources,
-			"volumeMounts", volumeMounts,
-			"volumeDevices", volumeDevices,
-			"imagePullPolicy", string(c.ImagePullPolicy),
-			"securityContext", secContext,
-			"workingDir", c.WorkingDir,
-			"tty", c.TTY,
-		)
-		if err != nil {
-			return nil, err
-		}
-		resp = append(resp, lumiContainer)
-	}
-	return resp, nil
+	return getContainers(k, k.MotorRuntime, InitContainerType)
 }
 
 func (k *lumiK8sReplicaset) GetContainers() ([]interface{}, error) {
-	id, err := objId(k)
-	if err != nil {
-		return nil, err
-	}
-
-	// At this point we already have the cached Pod manifest. We can parse it to retrieve the
-	// containers for the pod.
-	manifest, err := k.Manifest()
-	if err != nil {
-		return nil, err
-	}
-	unstr := unstructured.Unstructured{Object: manifest}
-	obj := resources.ConvertToK8sObject(unstr)
-
-	resp := []interface{}{}
-	containers, err := resources.GetContainers(obj)
-	if err != nil {
-		return nil, err
-	}
-	for i := range containers {
-
-		c := containers[i]
-
-		secContext, err := jsonToDict(c.SecurityContext)
-		if err != nil {
-			return nil, err
-		}
-
-		resources, err := jsonToDict(c.Resources)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeMounts, err := jsonToDictSlice(c.VolumeMounts)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeDevices, err := jsonToDictSlice(c.VolumeDevices)
-		if err != nil {
-			return nil, err
-		}
-
-		livenessProbe, err := jsonToDict(c.LivenessProbe)
-		if err != nil {
-			return nil, err
-		}
-
-		readinessProbe, err := jsonToDict(c.ReadinessProbe)
-		if err != nil {
-			return nil, err
-		}
-
-		lumiContainer, err := k.MotorRuntime.CreateResource("k8s.container",
-			"uid", id+"/"+c.Name, // container names are unique within a pod
-			"name", c.Name,
-			"imageName", c.Image,
-			"image", c.Image, // deprecated, will be replaced with the containerImage going forward
-			"command", strSliceToInterface(c.Command),
-			"args", strSliceToInterface(c.Args),
-			"resources", resources,
-			"volumeMounts", volumeMounts,
-			"volumeDevices", volumeDevices,
-			"livenessProbe", livenessProbe,
-			"readinessProbe", readinessProbe,
-			"imagePullPolicy", string(c.ImagePullPolicy),
-			"securityContext", secContext,
-			"workingDir", c.WorkingDir,
-			"tty", c.TTY,
-		)
-		if err != nil {
-			return nil, err
-		}
-		resp = append(resp, lumiContainer)
-	}
-	return resp, nil
+	return getContainers(k, k.MotorRuntime, ContainerContainerType)
 }
 
 func (k *lumiK8sJob) id() (string, error) {
@@ -2145,71 +1136,7 @@ func (k *lumiK8sJob) id() (string, error) {
 }
 
 func (p *lumiK8sJob) init(args *lumi.Args) (*lumi.Args, K8sJob, error) {
-	// pass-through if all args are already provided
-	if len(*args) > 2 {
-		return args, nil, nil
-	}
-
-	// get platform identifier infos
-	identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
-	if err != nil {
-		return args, nil, nil
-	}
-
-	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.MotorRuntime.CreateResource("k8s")
-	if err != nil {
-		return nil, nil, err
-	}
-	k8sResource := obj.(K8s)
-
-	jobs, err := k8sResource.Jobs()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var matchFn func(job K8sJob) bool
-
-	var uidRaw string
-	if _, ok := (*args)["id"]; ok {
-		uidRaw = (*args)["id"].(string)
-	}
-
-	if uidRaw != "" {
-		matchFn = func(job K8sJob) bool {
-			uid, _ := job.Id()
-			return uid == uidRaw
-		}
-	}
-
-	var nameRaw string
-	var namespaceRaw string
-	if _, ok := (*args)["name"]; ok {
-		nameRaw = (*args)["name"].(string)
-	}
-	if _, ok := (*args)["namespace"]; ok {
-		namespaceRaw = (*args)["namespace"].(string)
-	}
-	if nameRaw == "" && namespaceRaw == "" {
-		nameRaw = identifierName
-		namespaceRaw = identifierNamespace
-	}
-	if nameRaw != "" && namespaceRaw != "" {
-		matchFn = func(job K8sJob) bool {
-			name, _ := job.Name()
-			namespace, _ := job.Namespace()
-			return name == nameRaw && namespace == namespaceRaw
-		}
-	}
-
-	for i := range jobs {
-		job := jobs[i].(K8sJob)
-		if matchFn(job) {
-			return nil, job, nil
-		}
-	}
-
-	return args, nil, nil
+	return initNamespacedResource[K8sJob](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Jobs() })
 }
 
 func (k *lumiK8sJob) GetNamespace() (interface{}, error) {
@@ -2225,149 +1152,11 @@ func (k *lumiK8sJob) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sJob) GetInitContainers() ([]interface{}, error) {
-	id, err := objId(k)
-	if err != nil {
-		return nil, err
-	}
-
-	// At this point we already have the cached Pod manifest. We can parse it to retrieve the
-	// containers for the pod.
-	manifest, err := k.Manifest()
-	if err != nil {
-		return nil, err
-	}
-	unstr := unstructured.Unstructured{Object: manifest}
-	obj := resources.ConvertToK8sObject(unstr)
-
-	resp := []interface{}{}
-	containers, err := resources.GetInitContainers(obj)
-	if err != nil {
-		return nil, err
-	}
-	for i := range containers {
-
-		c := containers[i]
-
-		secContext, err := jsonToDict(c.SecurityContext)
-		if err != nil {
-			return nil, err
-		}
-
-		resources, err := jsonToDict(c.Resources)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeMounts, err := jsonToDictSlice(c.VolumeMounts)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeDevices, err := jsonToDictSlice(c.VolumeDevices)
-		if err != nil {
-			return nil, err
-		}
-
-		lumiContainer, err := k.MotorRuntime.CreateResource("k8s.initContainer",
-			"uid", id+"/"+c.Name, // container names are unique within a pod
-			"name", c.Name,
-			"imageName", c.Image,
-			"image", c.Image, // deprecated, will be replaced with the containerImage going forward
-			"command", strSliceToInterface(c.Command),
-			"args", strSliceToInterface(c.Args),
-			"resources", resources,
-			"volumeMounts", volumeMounts,
-			"volumeDevices", volumeDevices,
-			"imagePullPolicy", string(c.ImagePullPolicy),
-			"securityContext", secContext,
-			"workingDir", c.WorkingDir,
-			"tty", c.TTY,
-		)
-		if err != nil {
-			return nil, err
-		}
-		resp = append(resp, lumiContainer)
-	}
-	return resp, nil
+	return getContainers(k, k.MotorRuntime, InitContainerType)
 }
 
 func (k *lumiK8sJob) GetContainers() ([]interface{}, error) {
-	id, err := objId(k)
-	if err != nil {
-		return nil, err
-	}
-
-	// At this point we already have the cached Pod manifest. We can parse it to retrieve the
-	// containers for the pod.
-	manifest, err := k.Manifest()
-	if err != nil {
-		return nil, err
-	}
-	unstr := unstructured.Unstructured{Object: manifest}
-	obj := resources.ConvertToK8sObject(unstr)
-
-	resp := []interface{}{}
-	containers, err := resources.GetContainers(obj)
-	if err != nil {
-		return nil, err
-	}
-	for i := range containers {
-
-		c := containers[i]
-
-		secContext, err := jsonToDict(c.SecurityContext)
-		if err != nil {
-			return nil, err
-		}
-
-		resources, err := jsonToDict(c.Resources)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeMounts, err := jsonToDictSlice(c.VolumeMounts)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeDevices, err := jsonToDictSlice(c.VolumeDevices)
-		if err != nil {
-			return nil, err
-		}
-
-		livenessProbe, err := jsonToDict(c.LivenessProbe)
-		if err != nil {
-			return nil, err
-		}
-
-		readinessProbe, err := jsonToDict(c.ReadinessProbe)
-		if err != nil {
-			return nil, err
-		}
-
-		lumiContainer, err := k.MotorRuntime.CreateResource("k8s.container",
-			"uid", id+"/"+c.Name, // container names are unique within a pod
-			"name", c.Name,
-			"imageName", c.Image,
-			"image", c.Image, // deprecated, will be replaced with the containerImage going forward
-			"command", strSliceToInterface(c.Command),
-			"args", strSliceToInterface(c.Args),
-			"resources", resources,
-			"volumeMounts", volumeMounts,
-			"volumeDevices", volumeDevices,
-			"livenessProbe", livenessProbe,
-			"readinessProbe", readinessProbe,
-			"imagePullPolicy", string(c.ImagePullPolicy),
-			"securityContext", secContext,
-			"workingDir", c.WorkingDir,
-			"tty", c.TTY,
-		)
-		if err != nil {
-			return nil, err
-		}
-		resp = append(resp, lumiContainer)
-	}
-	return resp, nil
+	return getContainers(k, k.MotorRuntime, ContainerContainerType)
 }
 
 func (k *lumiK8sCronjob) id() (string, error) {
@@ -2375,71 +1164,7 @@ func (k *lumiK8sCronjob) id() (string, error) {
 }
 
 func (p *lumiK8sCronjob) init(args *lumi.Args) (*lumi.Args, K8sCronjob, error) {
-	// pass-through if all args are already provided
-	if len(*args) > 2 {
-		return args, nil, nil
-	}
-
-	// get platform identifier infos
-	identifierName, identifierNamespace, err := getPlatformIdentifierElements(p.MotorRuntime.Motor.Transport)
-	if err != nil {
-		return args, nil, nil
-	}
-
-	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.MotorRuntime.CreateResource("k8s")
-	if err != nil {
-		return nil, nil, err
-	}
-	k8sResource := obj.(K8s)
-
-	cronJobs, err := k8sResource.Cronjobs()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var matchFn func(cronjob K8sCronjob) bool
-
-	var uidRaw string
-	if _, ok := (*args)["id"]; ok {
-		uidRaw = (*args)["id"].(string)
-	}
-
-	if uidRaw != "" {
-		matchFn = func(cronjob K8sCronjob) bool {
-			uid, _ := cronjob.Id()
-			return uid == uidRaw
-		}
-	}
-
-	var nameRaw string
-	var namespaceRaw string
-	if _, ok := (*args)["name"]; ok {
-		nameRaw = (*args)["name"].(string)
-	}
-	if _, ok := (*args)["namespace"]; ok {
-		namespaceRaw = (*args)["namespace"].(string)
-	}
-	if nameRaw == "" && namespaceRaw == "" {
-		nameRaw = identifierName
-		namespaceRaw = identifierNamespace
-	}
-	if nameRaw != "" && namespaceRaw != "" {
-		matchFn = func(cronjob K8sCronjob) bool {
-			name, _ := cronjob.Name()
-			namespace, _ := cronjob.Namespace()
-			return name == nameRaw && namespace == namespaceRaw
-		}
-	}
-
-	for i := range cronJobs {
-		cronjob := cronJobs[i].(K8sCronjob)
-		if matchFn(cronjob) {
-			return nil, cronjob, nil
-		}
-	}
-
-	return args, nil, nil
+	return initNamespacedResource[K8sCronjob](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Cronjobs() })
 }
 
 func (k *lumiK8sCronjob) GetNamespace() (interface{}, error) {
@@ -2455,149 +1180,11 @@ func (k *lumiK8sCronjob) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sCronjob) GetInitContainers() ([]interface{}, error) {
-	id, err := objId(k)
-	if err != nil {
-		return nil, err
-	}
-
-	// At this point we already have the cached Pod manifest. We can parse it to retrieve the
-	// containers for the pod.
-	manifest, err := k.Manifest()
-	if err != nil {
-		return nil, err
-	}
-	unstr := unstructured.Unstructured{Object: manifest}
-	obj := resources.ConvertToK8sObject(unstr)
-
-	resp := []interface{}{}
-	containers, err := resources.GetInitContainers(obj)
-	if err != nil {
-		return nil, err
-	}
-	for i := range containers {
-
-		c := containers[i]
-
-		secContext, err := jsonToDict(c.SecurityContext)
-		if err != nil {
-			return nil, err
-		}
-
-		resources, err := jsonToDict(c.Resources)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeMounts, err := jsonToDictSlice(c.VolumeMounts)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeDevices, err := jsonToDictSlice(c.VolumeDevices)
-		if err != nil {
-			return nil, err
-		}
-
-		lumiContainer, err := k.MotorRuntime.CreateResource("k8s.initContainer",
-			"uid", id+"/"+c.Name, // container names are unique within a pod
-			"name", c.Name,
-			"imageName", c.Image,
-			"image", c.Image, // deprecated, will be replaced with the containerImage going forward
-			"command", strSliceToInterface(c.Command),
-			"args", strSliceToInterface(c.Args),
-			"resources", resources,
-			"volumeMounts", volumeMounts,
-			"volumeDevices", volumeDevices,
-			"imagePullPolicy", string(c.ImagePullPolicy),
-			"securityContext", secContext,
-			"workingDir", c.WorkingDir,
-			"tty", c.TTY,
-		)
-		if err != nil {
-			return nil, err
-		}
-		resp = append(resp, lumiContainer)
-	}
-	return resp, nil
+	return getContainers(k, k.MotorRuntime, InitContainerType)
 }
 
 func (k *lumiK8sCronjob) GetContainers() ([]interface{}, error) {
-	id, err := objId(k)
-	if err != nil {
-		return nil, err
-	}
-
-	// At this point we already have the cached Pod manifest. We can parse it to retrieve the
-	// containers for the pod.
-	manifest, err := k.Manifest()
-	if err != nil {
-		return nil, err
-	}
-	unstr := unstructured.Unstructured{Object: manifest}
-	obj := resources.ConvertToK8sObject(unstr)
-
-	resp := []interface{}{}
-	containers, err := resources.GetContainers(obj)
-	if err != nil {
-		return nil, err
-	}
-	for i := range containers {
-
-		c := containers[i]
-
-		secContext, err := jsonToDict(c.SecurityContext)
-		if err != nil {
-			return nil, err
-		}
-
-		resources, err := jsonToDict(c.Resources)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeMounts, err := jsonToDictSlice(c.VolumeMounts)
-		if err != nil {
-			return nil, err
-		}
-
-		volumeDevices, err := jsonToDictSlice(c.VolumeDevices)
-		if err != nil {
-			return nil, err
-		}
-
-		livenessProbe, err := jsonToDict(c.LivenessProbe)
-		if err != nil {
-			return nil, err
-		}
-
-		readinessProbe, err := jsonToDict(c.ReadinessProbe)
-		if err != nil {
-			return nil, err
-		}
-
-		lumiContainer, err := k.MotorRuntime.CreateResource("k8s.container",
-			"uid", id+"/"+c.Name, // container names are unique within a pod
-			"name", c.Name,
-			"imageName", c.Image,
-			"image", c.Image, // deprecated, will be replaced with the containerImage going forward
-			"command", strSliceToInterface(c.Command),
-			"args", strSliceToInterface(c.Args),
-			"resources", resources,
-			"volumeMounts", volumeMounts,
-			"volumeDevices", volumeDevices,
-			"livenessProbe", livenessProbe,
-			"readinessProbe", readinessProbe,
-			"imagePullPolicy", string(c.ImagePullPolicy),
-			"securityContext", secContext,
-			"workingDir", c.WorkingDir,
-			"tty", c.TTY,
-		)
-		if err != nil {
-			return nil, err
-		}
-		resp = append(resp, lumiContainer)
-	}
-	return resp, nil
+	return getContainers(k, k.MotorRuntime, ContainerContainerType)
 }
 
 func (k *lumiK8sSecret) id() (string, error) {
@@ -2605,57 +1192,7 @@ func (k *lumiK8sSecret) id() (string, error) {
 }
 
 func (p *lumiK8sSecret) init(args *lumi.Args) (*lumi.Args, K8sSecret, error) {
-	// pass-through if all args are already provided
-	if len(*args) == 0 || len(*args) > 2 {
-		return args, nil, nil
-	}
-
-	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.MotorRuntime.CreateResource("k8s")
-	if err != nil {
-		return nil, nil, err
-	}
-	k8sResource := obj.(K8s)
-
-	secrets, err := k8sResource.Secrets()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var matchFn func(configMap K8sSecret) bool
-
-	uidRaw := (*args)["id"]
-	if uidRaw != nil {
-		matchFn = func(configMap K8sSecret) bool {
-			uid, _ := configMap.Id()
-			if uid == uidRaw.(string) {
-				return true
-			}
-			return false
-		}
-	}
-
-	nameRaw := (*args)["name"]
-	namespaceRaw := (*args)["namespace"]
-	if nameRaw != nil && namespaceRaw != nil {
-		matchFn = func(configMap K8sSecret) bool {
-			name, _ := configMap.Name()
-			namespace, _ := configMap.Namespace()
-			if name == nameRaw.(string) && namespace == namespaceRaw.(string) {
-				return true
-			}
-			return false
-		}
-	}
-
-	for i := range secrets {
-		configMap := secrets[i].(K8sSecret)
-		if matchFn(configMap) {
-			return nil, configMap, nil
-		}
-	}
-
-	return args, nil, nil
+	return initNamespacedResource[K8sSecret](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Secrets() })
 }
 
 func (k *lumiK8sSecret) GetAnnotations() (interface{}, error) {
@@ -2711,57 +1248,7 @@ func (k *lumiK8sConfigmap) id() (string, error) {
 }
 
 func (p *lumiK8sConfigmap) init(args *lumi.Args) (*lumi.Args, K8sConfigmap, error) {
-	// pass-through if all args are already provided
-	if len(*args) == 0 || len(*args) > 2 {
-		return args, nil, nil
-	}
-
-	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.MotorRuntime.CreateResource("k8s")
-	if err != nil {
-		return nil, nil, err
-	}
-	k8sResource := obj.(K8s)
-
-	configMaps, err := k8sResource.Configmaps()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var matchFn func(configMap K8sConfigmap) bool
-
-	uidRaw := (*args)["id"]
-	if uidRaw != nil {
-		matchFn = func(configMap K8sConfigmap) bool {
-			uid, _ := configMap.Id()
-			if uid == uidRaw.(string) {
-				return true
-			}
-			return false
-		}
-	}
-
-	nameRaw := (*args)["name"]
-	namespaceRaw := (*args)["namespace"]
-	if nameRaw != nil && namespaceRaw != nil {
-		matchFn = func(configMap K8sConfigmap) bool {
-			name, _ := configMap.Name()
-			namespace, _ := configMap.Namespace()
-			if name == nameRaw.(string) && namespace == namespaceRaw.(string) {
-				return true
-			}
-			return false
-		}
-	}
-
-	for i := range configMaps {
-		configMap := configMaps[i].(K8sConfigmap)
-		if matchFn(configMap) {
-			return nil, configMap, nil
-		}
-	}
-
-	return args, nil, nil
+	return initNamespacedResource[K8sConfigmap](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Configmaps() })
 }
 
 func (k *lumiK8sConfigmap) GetAnnotations() (interface{}, error) {
@@ -2777,57 +1264,7 @@ func (k *lumiK8sService) id() (string, error) {
 }
 
 func (p *lumiK8sService) init(args *lumi.Args) (*lumi.Args, K8sService, error) {
-	// pass-through if all args are already provided
-	if len(*args) == 0 || len(*args) > 2 {
-		return args, nil, nil
-	}
-
-	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.MotorRuntime.CreateResource("k8s")
-	if err != nil {
-		return nil, nil, err
-	}
-	k8sResource := obj.(K8s)
-
-	services, err := k8sResource.Services()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var matchFn func(entry K8sService) bool
-
-	uidRaw := (*args)["id"]
-	if uidRaw != nil {
-		matchFn = func(service K8sService) bool {
-			uid, _ := service.Id()
-			if uid == uidRaw.(string) {
-				return true
-			}
-			return false
-		}
-	}
-
-	nameRaw := (*args)["name"]
-	namespaceRaw := (*args)["namespace"]
-	if nameRaw != nil && namespaceRaw != nil {
-		matchFn = func(entry K8sService) bool {
-			name, _ := entry.Name()
-			namespace, _ := entry.Namespace()
-			if name == nameRaw.(string) && namespace == namespaceRaw.(string) {
-				return true
-			}
-			return false
-		}
-	}
-
-	for i := range services {
-		service := services[i].(K8sService)
-		if matchFn(service) {
-			return nil, service, nil
-		}
-	}
-
-	return args, nil, nil
+	return initNamespacedResource[K8sService](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Services() })
 }
 
 func (k *lumiK8sService) GetAnnotations() (interface{}, error) {
@@ -2843,57 +1280,7 @@ func (k *lumiK8sNetworkpolicy) id() (string, error) {
 }
 
 func (p *lumiK8sNetworkpolicy) init(args *lumi.Args) (*lumi.Args, K8sNetworkpolicy, error) {
-	// pass-through if all args are already provided
-	if len(*args) == 0 || len(*args) > 2 {
-		return args, nil, nil
-	}
-
-	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.MotorRuntime.CreateResource("k8s")
-	if err != nil {
-		return nil, nil, err
-	}
-	k8sResource := obj.(K8s)
-
-	policies, err := k8sResource.NetworkPolicies()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var matchFn func(entry K8sNetworkpolicy) bool
-
-	uidRaw := (*args)["id"]
-	if uidRaw != nil {
-		matchFn = func(service K8sNetworkpolicy) bool {
-			uid, _ := service.Id()
-			if uid == uidRaw.(string) {
-				return true
-			}
-			return false
-		}
-	}
-
-	nameRaw := (*args)["name"]
-	namespaceRaw := (*args)["namespace"]
-	if nameRaw != nil && namespaceRaw != nil {
-		matchFn = func(entry K8sNetworkpolicy) bool {
-			name, _ := entry.Name()
-			namespace, _ := entry.Namespace()
-			if name == nameRaw.(string) && namespace == namespaceRaw.(string) {
-				return true
-			}
-			return false
-		}
-	}
-
-	for i := range policies {
-		policy := policies[i].(K8sService)
-		if matchFn(policy) {
-			return nil, policy, nil
-		}
-	}
-
-	return args, nil, nil
+	return initNamespacedResource[K8sNetworkpolicy](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.NetworkPolicies() })
 }
 
 func (k *lumiK8sNetworkpolicy) GetAnnotations() (interface{}, error) {
@@ -2909,57 +1296,7 @@ func (k *lumiK8sServiceaccount) id() (string, error) {
 }
 
 func (p *lumiK8sServiceaccount) init(args *lumi.Args) (*lumi.Args, K8sServiceaccount, error) {
-	// pass-through if all args are already provided
-	if len(*args) == 0 || len(*args) > 2 {
-		return args, nil, nil
-	}
-
-	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.MotorRuntime.CreateResource("k8s")
-	if err != nil {
-		return nil, nil, err
-	}
-	k8sResource := obj.(K8s)
-
-	serviceAccounts, err := k8sResource.Serviceaccounts()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var matchFn func(entry K8sServiceaccount) bool
-
-	uidRaw := (*args)["id"]
-	if uidRaw != nil {
-		matchFn = func(service K8sServiceaccount) bool {
-			uid, _ := service.Id()
-			if uid == uidRaw.(string) {
-				return true
-			}
-			return false
-		}
-	}
-
-	nameRaw := (*args)["name"]
-	namespaceRaw := (*args)["namespace"]
-	if nameRaw != nil && namespaceRaw != nil {
-		matchFn = func(entry K8sServiceaccount) bool {
-			name, _ := entry.Name()
-			namespace, _ := entry.Namespace()
-			if name == nameRaw.(string) && namespace == namespaceRaw.(string) {
-				return true
-			}
-			return false
-		}
-	}
-
-	for i := range serviceAccounts {
-		entry := serviceAccounts[i].(K8sServiceaccount)
-		if matchFn(entry) {
-			return nil, entry, nil
-		}
-	}
-
-	return args, nil, nil
+	return initNamespacedResource[K8sServiceaccount](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Serviceaccounts() })
 }
 
 func (k *lumiK8sServiceaccount) GetAnnotations() (interface{}, error) {
@@ -2975,55 +1312,7 @@ func (k *lumiK8sRbacClusterrole) id() (string, error) {
 }
 
 func (p *lumiK8sRbacClusterrole) init(args *lumi.Args) (*lumi.Args, K8sRbacClusterrole, error) {
-	// pass-through if all args are already provided
-	if len(*args) == 0 || len(*args) > 2 {
-		return args, nil, nil
-	}
-
-	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.MotorRuntime.CreateResource("k8s")
-	if err != nil {
-		return nil, nil, err
-	}
-	k8sResource := obj.(K8s)
-
-	clusterRoles, err := k8sResource.Clusterroles()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var matchFn func(entry K8sRbacClusterrole) bool
-
-	uidRaw := (*args)["id"]
-	if uidRaw != nil {
-		matchFn = func(service K8sRbacClusterrole) bool {
-			uid, _ := service.Id()
-			if uid == uidRaw.(string) {
-				return true
-			}
-			return false
-		}
-	}
-
-	nameRaw := (*args)["name"]
-	if nameRaw != nil {
-		matchFn = func(entry K8sRbacClusterrole) bool {
-			name, _ := entry.Name()
-			if name == nameRaw.(string) {
-				return true
-			}
-			return false
-		}
-	}
-
-	for i := range clusterRoles {
-		entry := clusterRoles[i].(K8sRbacClusterrole)
-		if matchFn(entry) {
-			return nil, entry, nil
-		}
-	}
-
-	return args, nil, nil
+	return initResource[K8sRbacClusterrole](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Clusterroles() })
 }
 
 func (k *lumiK8sRbacClusterrole) GetAnnotations() (interface{}, error) {
@@ -3039,57 +1328,7 @@ func (k *lumiK8sRbacRole) id() (string, error) {
 }
 
 func (p *lumiK8sRbacRole) init(args *lumi.Args) (*lumi.Args, K8sRbacRole, error) {
-	// pass-through if all args are already provided
-	if len(*args) == 0 || len(*args) > 2 {
-		return args, nil, nil
-	}
-
-	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.MotorRuntime.CreateResource("k8s")
-	if err != nil {
-		return nil, nil, err
-	}
-	k8sResource := obj.(K8s)
-
-	roles, err := k8sResource.Roles()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var matchFn func(entry K8sRbacRole) bool
-
-	uidRaw := (*args)["id"]
-	if uidRaw != nil {
-		matchFn = func(service K8sRbacRole) bool {
-			uid, _ := service.Id()
-			if uid == uidRaw.(string) {
-				return true
-			}
-			return false
-		}
-	}
-
-	nameRaw := (*args)["name"]
-	namespaceRaw := (*args)["namespace"]
-	if nameRaw != nil && namespaceRaw != nil {
-		matchFn = func(entry K8sRbacRole) bool {
-			name, _ := entry.Name()
-			namespace, _ := entry.Namespace()
-			if name == nameRaw.(string) && namespace == namespaceRaw.(string) {
-				return true
-			}
-			return false
-		}
-	}
-
-	for i := range roles {
-		entry := roles[i].(K8sRbacRole)
-		if matchFn(entry) {
-			return nil, entry, nil
-		}
-	}
-
-	return args, nil, nil
+	return initNamespacedResource[K8sRbacRole](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Roles() })
 }
 
 func (k *lumiK8sRbacRole) GetAnnotations() (interface{}, error) {
@@ -3105,55 +1344,7 @@ func (k *lumiK8sRbacClusterrolebinding) id() (string, error) {
 }
 
 func (p *lumiK8sRbacClusterrolebinding) init(args *lumi.Args) (*lumi.Args, K8sRbacClusterrolebinding, error) {
-	// pass-through if all args are already provided
-	if len(*args) == 0 || len(*args) > 2 {
-		return args, nil, nil
-	}
-
-	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.MotorRuntime.CreateResource("k8s")
-	if err != nil {
-		return nil, nil, err
-	}
-	k8sResource := obj.(K8s)
-
-	roleBindings, err := k8sResource.Clusterrolebindings()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var matchFn func(entry K8sRbacClusterrolebinding) bool
-
-	uidRaw := (*args)["id"]
-	if uidRaw != nil {
-		matchFn = func(service K8sRbacClusterrolebinding) bool {
-			uid, _ := service.Id()
-			if uid == uidRaw.(string) {
-				return true
-			}
-			return false
-		}
-	}
-
-	nameRaw := (*args)["name"]
-	if nameRaw != nil {
-		matchFn = func(entry K8sRbacClusterrolebinding) bool {
-			name, _ := entry.Name()
-			if name == nameRaw.(string) {
-				return true
-			}
-			return false
-		}
-	}
-
-	for i := range roleBindings {
-		entry := roleBindings[i].(K8sRbacClusterrolebinding)
-		if matchFn(entry) {
-			return nil, entry, nil
-		}
-	}
-
-	return args, nil, nil
+	return initResource[K8sRbacClusterrolebinding](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Clusterrolebindings() })
 }
 
 func (k *lumiK8sRbacClusterrolebinding) GetAnnotations() (interface{}, error) {
@@ -3169,57 +1360,7 @@ func (k *lumiK8sRbacRolebinding) id() (string, error) {
 }
 
 func (p *lumiK8sRbacRolebinding) init(args *lumi.Args) (*lumi.Args, K8sRbacRolebinding, error) {
-	// pass-through if all args are already provided
-	if len(*args) == 0 || len(*args) > 2 {
-		return args, nil, nil
-	}
-
-	// search for existing resources if uid or name/namespace is provided
-	obj, err := p.MotorRuntime.CreateResource("k8s")
-	if err != nil {
-		return nil, nil, err
-	}
-	k8sResource := obj.(K8s)
-
-	roleBindings, err := k8sResource.Rolebindings()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var matchFn func(entry K8sRbacRolebinding) bool
-
-	uidRaw := (*args)["id"]
-	if uidRaw != nil {
-		matchFn = func(service K8sRbacRolebinding) bool {
-			uid, _ := service.Id()
-			if uid == uidRaw.(string) {
-				return true
-			}
-			return false
-		}
-	}
-
-	nameRaw := (*args)["name"]
-	namespaceRaw := (*args)["namespace"]
-	if nameRaw != nil && namespaceRaw != nil {
-		matchFn = func(entry K8sRbacRolebinding) bool {
-			name, _ := entry.Name()
-			namespace, _ := entry.Namespace()
-			if name == nameRaw.(string) && namespace == namespaceRaw.(string) {
-				return true
-			}
-			return false
-		}
-	}
-
-	for i := range roleBindings {
-		entry := roleBindings[i].(K8sRbacRolebinding)
-		if matchFn(entry) {
-			return nil, entry, nil
-		}
-	}
-
-	return args, nil, nil
+	return initNamespacedResource[K8sRbacRolebinding](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Rolebindings() })
 }
 
 func (k *lumiK8sRbacRolebinding) GetAnnotations() (interface{}, error) {
@@ -3255,13 +1396,19 @@ func getPlatformIdentifierElements(transport providers.Transport) (string, strin
 	return identifierName, identifierNamespace, nil
 }
 
-type K8sObject interface {
-	Kind() (string, error)
-	Name() (string, error)
+type K8sNamespacedObject interface {
+	K8sObject
 	Namespace() (string, error)
 }
 
-func objId(o K8sObject) (string, error) {
+type K8sObject interface {
+	Id() (string, error)
+	Kind() (string, error)
+	Name() (string, error)
+	Manifest() (map[string]interface{}, error)
+}
+
+func objId(o K8sNamespacedObject) (string, error) {
 	kind, err := o.Kind()
 	if err != nil {
 		return "", err
@@ -3287,4 +1434,242 @@ func objIdFromK8sObj(o metav1.Object, objT metav1.Type) string {
 func objIdFromFields(kind, namespace, name string) string {
 	// Kind is usually capitalized. Make it all lower case for readability
 	return fmt.Sprintf("%s:%s:%s", strings.ToLower(kind), namespace, name)
+}
+
+func initNamespacedResource[T K8sNamespacedObject](
+	args *lumi.Args, runtime *lumi.Runtime, r func(k8s K8s) ([]interface{}, error),
+) (*lumi.Args, T, error) {
+	// pass-through if all args are already provided
+	if len(*args) > 2 {
+		return args, *new(T), nil
+	}
+
+	// get platform identifier infos
+	identifierName, identifierNamespace, err := getPlatformIdentifierElements(runtime.Motor.Transport)
+	if err != nil {
+		return args, *new(T), nil
+	}
+
+	// search for existing resources if id or name/namespace is provided
+	obj, err := runtime.CreateResource("k8s")
+	if err != nil {
+		return args, *new(T), err
+	}
+	k8sResource := obj.(K8s)
+
+	nsResources, err := r(k8sResource)
+	if err != nil {
+		return args, *new(T), err
+	}
+
+	var matchFn func(nsR T) bool
+
+	var idRaw string
+	if _, ok := (*args)["id"]; ok {
+		idRaw = (*args)["id"].(string)
+	}
+
+	if idRaw != "" {
+		matchFn = func(nsR T) bool {
+			id, _ := nsR.Id()
+			return id == idRaw
+		}
+	}
+
+	var nameRaw string
+	var namespaceRaw string
+	if _, ok := (*args)["name"]; ok {
+		nameRaw = (*args)["name"].(string)
+	}
+	if _, ok := (*args)["namespace"]; ok {
+		namespaceRaw = (*args)["namespace"].(string)
+	}
+	if nameRaw == "" {
+		nameRaw = identifierName
+		namespaceRaw = identifierNamespace
+	}
+	if nameRaw != "" {
+		matchFn = func(nsR T) bool {
+			name, _ := nsR.Name()
+			namespace, _ := nsR.Namespace()
+			return name == nameRaw && namespace == namespaceRaw
+		}
+	}
+
+	for i := range nsResources {
+		nsR := nsResources[i].(T)
+		if matchFn(nsR) {
+			return args, nsR, nil
+		}
+	}
+
+	return args, *new(T), fmt.Errorf("not found")
+}
+
+func initResource[T K8sObject](
+	args *lumi.Args, runtime *lumi.Runtime, r func(k8s K8s) ([]interface{}, error),
+) (*lumi.Args, T, error) {
+	// pass-through if all args are already provided
+	if len(*args) > 1 {
+		return args, *new(T), nil
+	}
+
+	// get platform identifier infos
+	identifierName, _, err := getPlatformIdentifierElements(runtime.Motor.Transport)
+	if err != nil {
+		return args, *new(T), nil
+	}
+
+	// search for existing resources if id or name is provided
+	obj, err := runtime.CreateResource("k8s")
+	if err != nil {
+		return nil, *new(T), err
+	}
+	k8sResource := obj.(K8s)
+
+	resources, err := r(k8sResource)
+	if err != nil {
+		return nil, *new(T), err
+	}
+
+	var matchFn func(entry T) bool
+
+	idRaw := (*args)["id"]
+	if idRaw != nil {
+		matchFn = func(entry T) bool {
+			id, _ := entry.Id()
+			if id == idRaw.(string) {
+				return true
+			}
+			return false
+		}
+	}
+
+	var nameRaw string
+	if _, ok := (*args)["name"]; ok {
+		nameRaw = (*args)["name"].(string)
+	}
+	if nameRaw == "" {
+		nameRaw = identifierName
+	}
+	if nameRaw != "" {
+		matchFn = func(nsR T) bool {
+			name, _ := nsR.Name()
+			return name == nameRaw
+		}
+	}
+
+	for i := range resources {
+		entry := resources[i].(T)
+		if matchFn(entry) {
+			return nil, entry, nil
+		}
+	}
+
+	return nil, *new(T), fmt.Errorf("not found")
+}
+
+type ContainerType string
+
+var (
+	InitContainerType      ContainerType = "init"
+	ContainerContainerType ContainerType = "container"
+)
+
+func getContainers(
+	o K8sNamespacedObject, lumiRuntime *lumi.Runtime, containerType ContainerType,
+) ([]interface{}, error) {
+	var containersFunc func(runtime.Object) ([]corev1.Container, error)
+	resourceType := ""
+	switch containerType {
+	case InitContainerType:
+		containersFunc = resources.GetInitContainers
+		resourceType = "k8s.initContainer"
+	case ContainerContainerType:
+		containersFunc = resources.GetContainers
+		resourceType = "k8s.container"
+	default:
+		return nil, fmt.Errorf("unknown container type %s", containerType)
+	}
+
+	id, err := objId(o)
+	if err != nil {
+		return nil, err
+	}
+
+	// At this point we already have the cached manifest. We can parse it to retrieve the
+	// containers for the resource.
+	manifest, err := o.Manifest()
+	if err != nil {
+		return nil, err
+	}
+	unstr := unstructured.Unstructured{Object: manifest}
+	obj := resources.ConvertToK8sObject(unstr)
+
+	resp := []interface{}{}
+	containers, err := containersFunc(obj)
+	if err != nil {
+		return nil, err
+	}
+	for i := range containers {
+
+		c := containers[i]
+
+		secContext, err := jsonToDict(c.SecurityContext)
+		if err != nil {
+			return nil, err
+		}
+
+		resources, err := jsonToDict(c.Resources)
+		if err != nil {
+			return nil, err
+		}
+
+		volumeMounts, err := jsonToDictSlice(c.VolumeMounts)
+		if err != nil {
+			return nil, err
+		}
+
+		volumeDevices, err := jsonToDictSlice(c.VolumeDevices)
+		if err != nil {
+			return nil, err
+		}
+
+		args := []interface{}{
+			"uid", id + "/" + c.Name, // container names are unique within a resource
+			"name", c.Name,
+			"imageName", c.Image,
+			"image", c.Image, // deprecated, will be replaced with the containerImage going forward
+			"command", strSliceToInterface(c.Command),
+			"args", strSliceToInterface(c.Args),
+			"resources", resources,
+			"volumeMounts", volumeMounts,
+			"volumeDevices", volumeDevices,
+			"imagePullPolicy", string(c.ImagePullPolicy),
+			"securityContext", secContext,
+			"workingDir", c.WorkingDir,
+			"tty", c.TTY,
+		}
+
+		if containerType == ContainerContainerType {
+			livenessProbe, err := jsonToDict(c.LivenessProbe)
+			if err != nil {
+				return nil, err
+			}
+
+			readinessProbe, err := jsonToDict(c.ReadinessProbe)
+			if err != nil {
+				return nil, err
+			}
+
+			args = append(args, "livenessProbe", livenessProbe, "readinessProbe", readinessProbe)
+		}
+
+		lumiContainer, err := lumiRuntime.CreateResource(resourceType, args...)
+		if err != nil {
+			return nil, err
+		}
+		resp = append(resp, lumiContainer)
+	}
+	return resp, nil
 }
