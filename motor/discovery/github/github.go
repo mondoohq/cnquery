@@ -27,9 +27,9 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryRepository}
 }
 
-func (r *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	// establish connection to GitHub
-	m, err := resolver.NewMotorConnection(pCfg, cfn)
+	m, err := resolver.NewMotorConnection(ctx, pCfg, cfn)
 	if err != nil {
 		return nil, err
 	}

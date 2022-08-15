@@ -1,19 +1,23 @@
 package k8s
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/k8s/resources"
 )
 
 func TestManifestResolver(t *testing.T) {
 	resolver := &Resolver{}
 	manifestFile := "../../providers/k8s/resources/testdata/appsv1.pod.yaml"
 
-	assetList, err := resolver.Resolve(&asset.Asset{}, &providers.Config{
+	ctx := resources.SetDiscoveryCache(context.Background(), resources.NewDiscoveryCache())
+
+	assetList, err := resolver.Resolve(ctx, &asset.Asset{}, &providers.Config{
 		PlatformId: "//platform/k8s/uid/123/namespace/default/pods/name/hello-pod",
 		Backend:    providers.ProviderType_K8S,
 		Options: map[string]string{
@@ -35,7 +39,9 @@ func TestManifestResolverPodDiscovery(t *testing.T) {
 	resolver := &Resolver{}
 	manifestFile := "../../providers/k8s/resources/testdata/appsv1.pod.yaml"
 
-	assetList, err := resolver.Resolve(&asset.Asset{}, &providers.Config{
+	ctx := resources.SetDiscoveryCache(context.Background(), resources.NewDiscoveryCache())
+
+	assetList, err := resolver.Resolve(ctx, &asset.Asset{}, &providers.Config{
 		PlatformId: "//platform/k8s/uid/123/namespace/default/pods/name/hello-pod",
 		Backend:    providers.ProviderType_K8S,
 		Options: map[string]string{
@@ -63,7 +69,9 @@ func TestManifestResolverCronJobDiscovery(t *testing.T) {
 	resolver := &Resolver{}
 	manifestFile := "../../providers/k8s/resources/testdata/batchv1.cronjob.yaml"
 
-	assetList, err := resolver.Resolve(&asset.Asset{}, &providers.Config{
+	ctx := resources.SetDiscoveryCache(context.Background(), resources.NewDiscoveryCache())
+
+	assetList, err := resolver.Resolve(ctx, &asset.Asset{}, &providers.Config{
 		PlatformId: "//platform/k8s/uid/123/namespace/mondoo-operator/cronjobs/name/mondoo-client-k8s-scan",
 		Backend:    providers.ProviderType_K8S,
 		Options: map[string]string{
@@ -87,7 +95,9 @@ func TestManifestResolverWrongDiscovery(t *testing.T) {
 	resolver := &Resolver{}
 	manifestFile := "../../providers/k8s/resources/testdata/batchv1.cronjob.yaml"
 
-	assetList, err := resolver.Resolve(&asset.Asset{}, &providers.Config{
+	ctx := resources.SetDiscoveryCache(context.Background(), resources.NewDiscoveryCache())
+
+	assetList, err := resolver.Resolve(ctx, &asset.Asset{}, &providers.Config{
 		Backend: providers.ProviderType_K8S,
 		Options: map[string]string{
 			"path":      manifestFile,
@@ -107,7 +117,9 @@ func TestManifestResolverStatefulSetDiscovery(t *testing.T) {
 	resolver := &Resolver{}
 	manifestFile := "../../providers/k8s/resources/testdata/appsv1.statefulset.yaml"
 
-	assetList, err := resolver.Resolve(&asset.Asset{}, &providers.Config{
+	ctx := resources.SetDiscoveryCache(context.Background(), resources.NewDiscoveryCache())
+
+	assetList, err := resolver.Resolve(ctx, &asset.Asset{}, &providers.Config{
 		PlatformId: "//platform/k8s/uid/123/namespace/default/statefulsets/name/mondoo-statefulset",
 		Backend:    providers.ProviderType_K8S,
 		Options: map[string]string{
@@ -130,7 +142,9 @@ func TestManifestResolverJobDiscovery(t *testing.T) {
 	resolver := &Resolver{}
 	manifestFile := "../../providers/k8s/resources/testdata/batchv1.job.yaml"
 
-	assetList, err := resolver.Resolve(&asset.Asset{}, &providers.Config{
+	ctx := resources.SetDiscoveryCache(context.Background(), resources.NewDiscoveryCache())
+
+	assetList, err := resolver.Resolve(ctx, &asset.Asset{}, &providers.Config{
 		PlatformId: "//platform/k8s/uid/123/namespace/mondoo-operator/jobs/name/mondoo-client-k8s-scan",
 		Backend:    providers.ProviderType_K8S,
 		Options: map[string]string{
@@ -154,7 +168,9 @@ func TestManifestResolverReplicaSetDiscovery(t *testing.T) {
 	resolver := &Resolver{}
 	manifestFile := "../../providers/k8s/resources/testdata/appsv1.replicaset.yaml"
 
-	assetList, err := resolver.Resolve(&asset.Asset{}, &providers.Config{
+	ctx := resources.SetDiscoveryCache(context.Background(), resources.NewDiscoveryCache())
+
+	assetList, err := resolver.Resolve(ctx, &asset.Asset{}, &providers.Config{
 		PlatformId: "//platform/k8s/uid/123/namespace/default/replicasets/name/mondoo-replicaset",
 		Backend:    providers.ProviderType_K8S,
 		Options: map[string]string{
@@ -177,8 +193,10 @@ func TestManifestResolverDaemonSetDiscovery(t *testing.T) {
 	resolver := &Resolver{}
 	manifestFile := "../../providers/k8s/resources/testdata/appsv1.daemonset.yaml"
 
+	ctx := resources.SetDiscoveryCache(context.Background(), resources.NewDiscoveryCache())
+
 	platformId := "//platform/k8s/uid/123/namespace/default/daemonsets/name/mondoo-daemonset"
-	assetList, err := resolver.Resolve(&asset.Asset{}, &providers.Config{
+	assetList, err := resolver.Resolve(ctx, &asset.Asset{}, &providers.Config{
 		PlatformId: platformId,
 		Backend:    providers.ProviderType_K8S,
 		Options: map[string]string{

@@ -1,6 +1,7 @@
 package vsphere
 
 import (
+	"context"
 	"strconv"
 	"testing"
 
@@ -22,7 +23,7 @@ func TestVsphereResolver(t *testing.T) {
 
 	// start vsphere discover
 	r := Resolver{}
-	assets, err := r.Resolve(&asset.Asset{}, &providers.Config{
+	assets, err := r.Resolve(context.Background(), &asset.Asset{}, &providers.Config{
 		Backend:  providers.ProviderType_VSPHERE,
 		Host:     vs.Server.URL.Hostname(),
 		Port:     int32(port),

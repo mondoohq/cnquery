@@ -1,6 +1,7 @@
 package vsphere
 
 import (
+	"context"
 	"errors"
 
 	"github.com/rs/zerolog/log"
@@ -22,11 +23,11 @@ func (r *VMGuestResolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (k *VMGuestResolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (k *VMGuestResolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// we leverage the vpshere transport to establish a connection
-	m, err := resolver.NewMotorConnection(pCfg, cfn)
+	m, err := resolver.NewMotorConnection(ctx, pCfg, cfn)
 	if err != nil {
 		return nil, err
 	}

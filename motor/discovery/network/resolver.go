@@ -1,6 +1,8 @@
 package network
 
 import (
+	"context"
+
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/platform/detector"
@@ -22,7 +24,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll}
 }
 
-func (r *Resolver) Resolve(root *asset.Asset, conf *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, conf *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	transport, err := network_transport.New(conf)
 	if err != nil {
 		return nil, err

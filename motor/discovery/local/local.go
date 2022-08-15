@@ -1,6 +1,8 @@
 package local
 
 import (
+	"context"
+
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/discovery/docker_engine"
@@ -22,7 +24,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{docker_engine.DiscoveryAll, docker_engine.DiscoveryContainerRunning, docker_engine.DiscoveryContainerImages}
 }
 
-func (r *Resolver) Resolve(root *asset.Asset, tc *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	assetObj := &asset.Asset{
 		Name:        root.Name,
 		State:       asset.State_STATE_ONLINE,
@@ -34,7 +36,7 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.Config, cfn credenti
 		assetObj.Name = tc.Host
 	}
 
-	m, err := resolver.NewMotorConnection(tc, cfn)
+	m, err := resolver.NewMotorConnection(ctx, tc, cfn)
 	if err != nil {
 		return nil, err
 	}

@@ -1,15 +1,15 @@
 package docker_engine
 
 import (
+	"context"
 	"os"
-
-	"go.mondoo.io/mondoo/motor/discovery/credentials"
 
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/container_registry"
+	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/tar"
@@ -31,7 +31,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryContainerRunning, DiscoveryContainerImages}
 }
 
-func (r *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	if pCfg == nil {
 		return nil, errors.New("no transport configuration found")
 	}
@@ -82,7 +82,7 @@ func (r *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn creden
 		if dockerEngErr != nil {
 			return nil, errors.Wrap(dockerEngErr, "cannot connect to docker engine to fetch the container")
 		}
-		resolvedAsset, err := r.container(root, pCfg, ded)
+		resolvedAsset, err := r.container(ctx, root, pCfg, ded)
 		if err != nil {
 			return nil, err
 		}
@@ -92,7 +92,7 @@ func (r *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn creden
 
 	if pCfg.Backend == providers.ProviderType_DOCKER_ENGINE_IMAGE {
 		// NOTE, we ignore dockerEngErr here since we fallback to pulling the images directly
-		resolvedAssets, err := r.images(root, pCfg, ded, cfn, sfn)
+		resolvedAssets, err := r.images(ctx, root, pCfg, ded, cfn, sfn)
 		if err != nil {
 			return nil, err
 		}
@@ -114,13 +114,13 @@ func (r *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn creden
 	log.Debug().Str("docker", pCfg.Host).Msg("try to resolve the container or image source")
 
 	if dockerEngErr == nil {
-		containerAsset, err := r.container(root, pCfg, ded)
+		containerAsset, err := r.container(ctx, root, pCfg, ded)
 		if err == nil {
 			return []*asset.Asset{containerAsset}, nil
 		}
 	}
 
-	containerImageAssets, err := r.images(root, pCfg, ded, cfn, sfn)
+	containerImageAssets, err := r.images(ctx, root, pCfg, ded, cfn, sfn)
 	if err == nil {
 		return containerImageAssets, nil
 	}
@@ -129,7 +129,7 @@ func (r *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn creden
 	return nil, errors.Wrap(err, "could not find the container reference")
 }
 
-func (k *Resolver) container(root *asset.Asset, pCfg *providers.Config, ded *dockerEngineDiscovery) (*asset.Asset, error) {
+func (k *Resolver) container(ctx context.Context, root *asset.Asset, pCfg *providers.Config, ded *dockerEngineDiscovery) (*asset.Asset, error) {
 	ci, err := ded.ContainerInfo(pCfg.Host)
 	if err != nil {
 		return nil, err
@@ -149,7 +149,7 @@ func (k *Resolver) container(root *asset.Asset, pCfg *providers.Config, ded *doc
 	}, nil
 }
 
-func (k *Resolver) images(root *asset.Asset, pCfg *providers.Config, ded *dockerEngineDiscovery, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn) ([]*asset.Asset, error) {
+func (k *Resolver) images(ctx context.Context, root *asset.Asset, pCfg *providers.Config, ded *dockerEngineDiscovery, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn) ([]*asset.Asset, error) {
 	// if we have a docker engine available, try to fetch it from there
 	if ded != nil {
 		ii, err := ded.ImageInfo(pCfg.Host)
@@ -181,7 +181,7 @@ func (k *Resolver) images(root *asset.Asset, pCfg *providers.Config, ded *docker
 	rr := container_registry.Resolver{
 		NoStrictValidation: true,
 	}
-	return rr.Resolve(root, pCfg, cfn, sfn)
+	return rr.Resolve(ctx, root, pCfg, cfn, sfn)
 }
 
 func DiscoverDockerEngineAssets(pCfg *providers.Config) ([]*asset.Asset, error) {

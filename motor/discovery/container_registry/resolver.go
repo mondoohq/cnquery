@@ -1,6 +1,7 @@
 package container_registry
 
 import (
+	"context"
 	"errors"
 
 	"github.com/google/go-containerregistry/pkg/authn"
@@ -29,7 +30,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{}
 }
 
-func (r *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	imageFetcher := NewContainerRegistryResolver()
