@@ -2362,6 +2362,30 @@ private aws.s3.bucket.policy {
   statements() []dict
 }
 
+// AWS Application Autoscaling
+aws.applicationAutoscaling {
+  init(namespace string)
+  // service namespace to query for application autoscaling
+  namespace string
+  // list of scalable targets belonging to the service namespace
+  scalableTargets() []aws.applicationautoscaling.target
+}
+
+private aws.applicationautoscaling.target {
+  // namespace for the target
+  namespace string
+  // arn of the autoscaling target
+  arn string
+  // scalable dimension for the target
+  scalableDimension string
+  // min capacity set for the autoscaling
+  minCapacity int
+  // max capacity set for the autoscaling
+  maxCapacity int 
+  // suspendedState for the autoscaling target
+  suspendedState dict
+}
+
 // AWS NoSQL database service for scale
 aws.dynamodb {
   // List of backups for dynamodb
