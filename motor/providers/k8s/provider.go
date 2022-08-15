@@ -82,7 +82,7 @@ func New(tc *providers.Config) (KubernetesProvider, error) {
 		return newManifestProvider(tc.PlatformId, WithManifestFile(manifestFile), WithNamespace(tc.Options[OPTION_NAMESPACE])), nil
 	}
 
-	return newApiProvider(tc.Options[OPTION_NAMESPACE], tc.PlatformId)
+	return newApiProvider(tc.Options[OPTION_NAMESPACE], tc.PlatformId, dCache)
 }
 
 func getPlatformInfo(selectedResourceID string, runtime string) *platform.Platform {

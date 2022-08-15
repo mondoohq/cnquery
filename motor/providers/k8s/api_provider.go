@@ -23,7 +23,7 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
-func newApiProvider(namespace string, selectedResourceID string) (KubernetesProvider, error) {
+func newApiProvider(namespace string, selectedResourceID string, dCache *resources.DiscoveryCache) (KubernetesProvider, error) {
 	// check if the user .kube/config file exists
 	// NOTE: BuildConfigFromFlags falls back to cluster loading when .kube/config string is empty
 	// therefore we want to only change the kubeconfig string when the file really exists
@@ -53,8 +53,8 @@ func newApiProvider(namespace string, selectedResourceID string) (KubernetesProv
 	config.QPS = 1000
 	config.Burst = 1000
 
-	// initialize api client
-	d, err := resources.NewDiscovery(config)
+	// initialize api
+	d, err := dCache.Get(config)
 	if err != nil {
 		return nil, err
 	}
