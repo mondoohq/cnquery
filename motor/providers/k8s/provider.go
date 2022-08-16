@@ -86,6 +86,8 @@ func New(tc *providers.Config) (KubernetesProvider, error) {
 }
 
 func getPlatformInfo(selectedResourceID string, runtime string) *platform.Platform {
+	// We need this at two places (discovery and tranport)
+	// Here it is needed for the transport and this is what is shown on the cli
 	platformData := &platform.Platform{
 		Family:  []string{"k8s", "k8s-workload"},
 		Kind:    providers.Kind_KIND_K8S_OBJECT,

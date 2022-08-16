@@ -36,29 +36,11 @@ func ListStatefulSets(p k8s.KubernetesProvider, connection *providers.Config, cl
 	assets := []*asset.Asset{}
 	for i := range statefulSets {
 		statefulSet := statefulSets[i]
-		platformData := p.PlatformInfo()
-		platformData.Version = statefulSet.APIVersion
-		platformData.Build = statefulSet.ResourceVersion
-		platformData.Labels = map[string]string{
-			"namespace": statefulSet.Namespace,
-			"uid":       string(statefulSet.UID),
+		asset, err := createAssetFromObject(&statefulSet, p.Runtime(), connection, clusterIdentifier)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create asset from statefulset")
 		}
-		platformData.Kind = providers.Kind_KIND_K8S_OBJECT
-		asset := &asset.Asset{
-			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "statefulsets", statefulSet.Namespace, statefulSet.Name)},
-			Name:        statefulSet.Namespace + "/" + statefulSet.Name,
-			Platform:    platformData,
-			Connections: []*providers.Config{connection},
-			State:       asset.State_STATE_ONLINE,
-			Labels:      statefulSet.Labels,
-		}
-		if asset.Labels == nil {
-			asset.Labels = map[string]string{
-				"namespace": statefulSet.Namespace,
-			}
-		} else {
-			asset.Labels["namespace"] = statefulSet.Namespace
-		}
+
 		log.Debug().Str("name", statefulSet.Name).Str("connection", asset.Connections[0].Host).Msg("resolved StatefulSet")
 
 		assets = append(assets, asset)

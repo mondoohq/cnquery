@@ -272,6 +272,10 @@ func (t *apiProvider) Namespaces() ([]v1.Namespace, error) {
 	if err != nil {
 		return nil, err
 	}
+	// needed because of https://github.com/kubernetes/client-go/issues/861
+	for i := range list.Items {
+		list.Items[i].SetGroupVersionKind(v1.SchemeGroupVersion.WithKind("Namespace"))
+	}
 	return list.Items, err
 }
 
@@ -280,6 +284,10 @@ func (t *apiProvider) Pods(namespace v1.Namespace) ([]v1.Pod, error) {
 	list, err := t.clientset.CoreV1().Pods(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
+	}
+	// needed because of https://github.com/kubernetes/client-go/issues/861
+	for i := range list.Items {
+		list.Items[i].SetGroupVersionKind(v1.SchemeGroupVersion.WithKind("Pod"))
 	}
 	return list.Items, err
 }
@@ -290,6 +298,8 @@ func (t *apiProvider) Pod(namespace string, name string) (*v1.Pod, error) {
 	if err != nil {
 		return nil, err
 	}
+	// needed because of https://github.com/kubernetes/client-go/issues/861
+	pod.SetGroupVersionKind(v1.SchemeGroupVersion.WithKind("Pod"))
 	return pod, err
 }
 
@@ -298,6 +308,10 @@ func (t *apiProvider) CronJobs(namespace v1.Namespace) ([]batchv1.CronJob, error
 	list, err := t.clientset.BatchV1().CronJobs(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
+	}
+	// needed because of https://github.com/kubernetes/client-go/issues/861
+	for i := range list.Items {
+		list.Items[i].SetGroupVersionKind(batchv1.SchemeGroupVersion.WithKind("CronJob"))
 	}
 	return list.Items, err
 }
@@ -308,6 +322,8 @@ func (t *apiProvider) CronJob(namespace string, name string) (*batchv1.CronJob, 
 	if err != nil {
 		return nil, err
 	}
+	// needed because of https://github.com/kubernetes/client-go/issues/861
+	cronjob.SetGroupVersionKind(batchv1.SchemeGroupVersion.WithKind("CronJob"))
 	return cronjob, err
 }
 
@@ -316,6 +332,10 @@ func (t *apiProvider) StatefulSets(namespace v1.Namespace) ([]appsv1.StatefulSet
 	list, err := t.clientset.AppsV1().StatefulSets(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
+	}
+	// needed because of https://github.com/kubernetes/client-go/issues/861
+	for i := range list.Items {
+		list.Items[i].SetGroupVersionKind(appsv1.SchemeGroupVersion.WithKind("StatefulSet"))
 	}
 	return list.Items, err
 }
@@ -326,6 +346,8 @@ func (t *apiProvider) StatefulSet(namespace string, name string) (*appsv1.Statef
 	if err != nil {
 		return nil, err
 	}
+	// needed because of https://github.com/kubernetes/client-go/issues/861
+	statefulset.SetGroupVersionKind(appsv1.SchemeGroupVersion.WithKind("StatefulSet"))
 	return statefulset, err
 }
 
@@ -334,6 +356,10 @@ func (t *apiProvider) Deployments(namespace v1.Namespace) ([]appsv1.Deployment, 
 	list, err := t.clientset.AppsV1().Deployments(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
+	}
+	// needed because of https://github.com/kubernetes/client-go/issues/861
+	for i := range list.Items {
+		list.Items[i].SetGroupVersionKind(appsv1.SchemeGroupVersion.WithKind("Deployment"))
 	}
 	return list.Items, err
 }
@@ -344,6 +370,8 @@ func (t *apiProvider) Deployment(namespace string, name string) (*appsv1.Deploym
 	if err != nil {
 		return nil, err
 	}
+	// needed because of https://github.com/kubernetes/client-go/issues/861
+	deployment.SetGroupVersionKind(appsv1.SchemeGroupVersion.WithKind("Deployment"))
 	return deployment, err
 }
 
@@ -352,6 +380,10 @@ func (t *apiProvider) Jobs(namespace v1.Namespace) ([]batchv1.Job, error) {
 	list, err := t.clientset.BatchV1().Jobs(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
+	}
+	// needed because of https://github.com/kubernetes/client-go/issues/861
+	for i := range list.Items {
+		list.Items[i].SetGroupVersionKind(batchv1.SchemeGroupVersion.WithKind("Job"))
 	}
 	return list.Items, err
 }
@@ -362,6 +394,8 @@ func (t *apiProvider) Job(namespace string, name string) (*batchv1.Job, error) {
 	if err != nil {
 		return nil, err
 	}
+	// needed because of https://github.com/kubernetes/client-go/issues/861
+	job.SetGroupVersionKind(batchv1.SchemeGroupVersion.WithKind("Job"))
 	return job, err
 }
 
@@ -370,6 +404,10 @@ func (t *apiProvider) ReplicaSets(namespace v1.Namespace) ([]appsv1.ReplicaSet, 
 	list, err := t.clientset.AppsV1().ReplicaSets(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
+	}
+	// needed because of https://github.com/kubernetes/client-go/issues/861
+	for i := range list.Items {
+		list.Items[i].SetGroupVersionKind(appsv1.SchemeGroupVersion.WithKind("ReplicaSet"))
 	}
 	return list.Items, err
 }
@@ -380,6 +418,8 @@ func (t *apiProvider) ReplicaSet(namespace string, name string) (*appsv1.Replica
 	if err != nil {
 		return nil, err
 	}
+	// needed because of https://github.com/kubernetes/client-go/issues/861
+	replicaset.SetGroupVersionKind(appsv1.SchemeGroupVersion.WithKind("ReplicaSet"))
 	return replicaset, err
 }
 
@@ -388,6 +428,10 @@ func (t *apiProvider) DaemonSets(namespace v1.Namespace) ([]appsv1.DaemonSet, er
 	list, err := t.clientset.AppsV1().DaemonSets(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
+	}
+	// needed because of https://github.com/kubernetes/client-go/issues/861
+	for i := range list.Items {
+		list.Items[i].SetGroupVersionKind(appsv1.SchemeGroupVersion.WithKind("DaemonSet"))
 	}
 	return list.Items, err
 }
@@ -398,5 +442,7 @@ func (t *apiProvider) DaemonSet(namespace string, name string) (*appsv1.DaemonSe
 	if err != nil {
 		return nil, err
 	}
+	// needed because of https://github.com/kubernetes/client-go/issues/861
+	daemonset.SetGroupVersionKind(appsv1.SchemeGroupVersion.WithKind("DaemonSet"))
 	return daemonset, err
 }

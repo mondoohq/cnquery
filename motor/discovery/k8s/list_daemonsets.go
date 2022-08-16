@@ -17,7 +17,7 @@ func ListDaemonSets(p k8s.KubernetesProvider, connection *providers.Config, clus
 		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
 	}
 
-	daemonsets := []appsv1.DaemonSet{}
+	daemonSets := []appsv1.DaemonSet{}
 	for i := range namespaces {
 		namespace := namespaces[i]
 		if !isIncluded(namespace.Name, namespaceFilter) {
@@ -25,41 +25,23 @@ func ListDaemonSets(p k8s.KubernetesProvider, connection *providers.Config, clus
 			continue
 		}
 
-		daemonsetsPerNamespace, err := p.DaemonSets(namespace)
+		daemonSetsPerNamespace, err := p.DaemonSets(namespace)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to list daemonsets")
 		}
 
-		daemonsets = append(daemonsets, daemonsetsPerNamespace...)
+		daemonSets = append(daemonSets, daemonSetsPerNamespace...)
 	}
 
 	assets := []*asset.Asset{}
-	for i := range daemonsets {
-		daemonset := daemonsets[i]
-		podPlatform := p.PlatformInfo()
-		podPlatform.Version = daemonset.APIVersion
-		podPlatform.Build = daemonset.ResourceVersion
-		podPlatform.Labels = map[string]string{
-			"namespace": daemonset.Namespace,
-			"uid":       string(daemonset.UID),
+	for i := range daemonSets {
+		daemonSet := daemonSets[i]
+		asset, err := createAssetFromObject(&daemonSet, p.Runtime(), connection, clusterIdentifier)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create asset from daemonset")
 		}
-		podPlatform.Kind = providers.Kind_KIND_K8S_OBJECT
-		asset := &asset.Asset{
-			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "daemonsets", daemonset.Namespace, daemonset.Name)},
-			Name:        daemonset.Namespace + "/" + daemonset.Name,
-			Platform:    podPlatform,
-			Connections: []*providers.Config{connection},
-			State:       asset.State_STATE_ONLINE,
-			Labels:      daemonset.Labels,
-		}
-		if asset.Labels == nil {
-			asset.Labels = map[string]string{
-				"namespace": daemonset.Namespace,
-			}
-		} else {
-			asset.Labels["namespace"] = daemonset.Namespace
-		}
-		log.Debug().Str("name", daemonset.Name).Str("connection", asset.Connections[0].Host).Msg("resolved daemonset")
+
+		log.Debug().Str("name", daemonSet.Name).Str("connection", asset.Connections[0].Host).Msg("resolved daemonset")
 
 		assets = append(assets, asset)
 	}

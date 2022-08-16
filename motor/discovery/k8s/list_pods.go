@@ -35,29 +35,11 @@ func ListPods(p k8s.KubernetesProvider, connection *providers.Config, clusterIde
 	assets := []*asset.Asset{}
 	for i := range pods {
 		pod := pods[i]
-		platformData := p.PlatformInfo()
-		platformData.Version = pod.APIVersion
-		platformData.Build = pod.ResourceVersion
-		platformData.Labels = map[string]string{
-			"namespace": pod.Namespace,
-			"uid":       string(pod.UID),
+		asset, err := createAssetFromObject(&pod, p.Runtime(), connection, clusterIdentifier)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create asset from pod")
 		}
-		platformData.Kind = providers.Kind_KIND_K8S_OBJECT
-		asset := &asset.Asset{
-			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "pods", pod.Namespace, pod.Name)},
-			Name:        pod.Namespace + "/" + pod.Name,
-			Platform:    platformData,
-			Connections: []*providers.Config{connection},
-			State:       asset.State_STATE_ONLINE,
-			Labels:      pod.Labels,
-		}
-		if asset.Labels == nil {
-			asset.Labels = map[string]string{
-				"namespace": pod.Namespace,
-			}
-		} else {
-			asset.Labels["namespace"] = pod.Namespace
-		}
+
 		log.Debug().Str("name", pod.Name).Str("connection", asset.Connections[0].Host).Msg("resolved pod")
 
 		assets = append(assets, asset)

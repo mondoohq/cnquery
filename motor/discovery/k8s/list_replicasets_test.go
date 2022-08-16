@@ -5,7 +5,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/motor/platform"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/k8s"
 
@@ -20,25 +20,22 @@ func TestListReplicaSets(t *testing.T) {
 
 	p := k8s.NewMockKubernetesProvider(mockCtrl)
 
-	replicaSetPlatform := &platform.Platform{
-		Name:    "k8s-replicaset",
-		Title:   "Kubernetes ReplicaSet",
-		Family:  []string{"k8s", "k8s-workload"},
-		Kind:    providers.Kind_KIND_K8S_OBJECT,
-		Runtime: providers.RUNTIME_KUBERNETES_CLUSTER,
-	}
 	// Seed namespaces
 	nss := []corev1.Namespace{
 		{ObjectMeta: metav1.ObjectMeta{Name: "default"}},
 	}
 	p.EXPECT().Namespaces().Return(nss, nil)
 	// called for each ReplicaSet
-	p.EXPECT().PlatformInfo().Return(replicaSetPlatform)
-	p.EXPECT().PlatformInfo().Return(replicaSetPlatform)
+	p.EXPECT().Runtime().Return("k8s-cluster")
+	p.EXPECT().Runtime().Return("k8s-cluster")
 
 	// Seed ReplicaSets
 	replicaSets := []appsv1.ReplicaSet{
 		{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "ReplicaSet",
+				APIVersion: "apps/v1",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "nginx",
 				Namespace: nss[0].Name,
@@ -53,6 +50,10 @@ func TestListReplicaSets(t *testing.T) {
 			},
 		},
 		{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "ReplicaSet",
+				APIVersion: "apps/v1",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "nginx2",
 				Namespace: nss[0].Name,
@@ -84,7 +85,7 @@ func TestListReplicaSets(t *testing.T) {
 
 	pCfg := &providers.Config{}
 	assets, err := ListReplicaSets(p, pCfg, clusterIdentifier, nil)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var assetNames []string
 	for _, a := range assets {
@@ -98,4 +99,8 @@ func TestListReplicaSets(t *testing.T) {
 
 	assert.ElementsMatch(t, expectedAssetNames, assetNames)
 	assert.ElementsMatch(t, expectedAssetPlatformIds, assetPlatformIds)
+	assert.Equal(t, "apps/v1", assets[0].Platform.Version)
+	assert.Equal(t, "k8s-replicaset", assets[0].Platform.Name)
+	assert.ElementsMatch(t, []string{"k8s", "k8s-workload"}, assets[0].Platform.Family)
+	assert.Equal(t, nss[0].Name, assets[0].Labels["namespace"])
 }

@@ -5,7 +5,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/motor/platform"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/k8s"
 
@@ -21,25 +21,22 @@ func TestListDaemonsets(t *testing.T) {
 
 	p := k8s.NewMockKubernetesProvider(mockCtrl)
 
-	daemonsetPlatform := &platform.Platform{
-		Name:    "k8s-daemonset",
-		Title:   "Kubernetes Daemonset",
-		Family:  []string{"k8s", "k8s-workload"},
-		Kind:    providers.Kind_KIND_K8S_OBJECT,
-		Runtime: providers.RUNTIME_KUBERNETES_CLUSTER,
-	}
 	// Seed namespaces
 	nss := []corev1.Namespace{
 		{ObjectMeta: metav1.ObjectMeta{Name: "default"}},
 	}
 	p.EXPECT().Namespaces().Return(nss, nil)
 	// called for each DaemonSet
-	p.EXPECT().PlatformInfo().Return(daemonsetPlatform)
-	p.EXPECT().PlatformInfo().Return(daemonsetPlatform)
+	p.EXPECT().Runtime().Return("k8s-cluster")
+	p.EXPECT().Runtime().Return("k8s-cluster")
 
 	// Seed DaemonSets
 	daemonsets := []appsv1.DaemonSet{
 		{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "DaemonSet",
+				APIVersion: "apps/v1",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "nginx",
 				Namespace: nss[0].Name,
@@ -54,6 +51,10 @@ func TestListDaemonsets(t *testing.T) {
 			},
 		},
 		{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "DaemonSet",
+				APIVersion: "apps/v1",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "nginx2",
 				Namespace: nss[0].Name,
@@ -85,7 +86,7 @@ func TestListDaemonsets(t *testing.T) {
 
 	pCfg := &providers.Config{}
 	assets, err := ListDaemonSets(p, pCfg, clusterIdentifier, nil)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var assetNames []string
 	for _, a := range assets {
@@ -99,4 +100,8 @@ func TestListDaemonsets(t *testing.T) {
 
 	assert.ElementsMatch(t, expectedAssetNames, assetNames)
 	assert.ElementsMatch(t, expectedAssetPlatformIds, assetPlatformIds)
+	assert.Equal(t, "apps/v1", assets[0].Platform.Version)
+	assert.Equal(t, "k8s-daemonset", assets[0].Platform.Name)
+	assert.ElementsMatch(t, []string{"k8s", "k8s-workload"}, assets[0].Platform.Family)
+	assert.Equal(t, nss[0].Name, assets[0].Labels["namespace"])
 }
