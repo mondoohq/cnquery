@@ -2386,6 +2386,42 @@ private aws.applicationautoscaling.target {
   suspendedState dict
 }
 
+// AWS service for managing and automating backups
+aws.backup {
+  // list of vaults for the service
+  vaults() []aws.backup.vault
+}
+
+private aws.backup.vault {
+  // arn of the vault
+  arn string
+  // name of the vault
+  name string
+  // list of recovery points stored in the backup vault
+  recoveryPoints() []aws.backup.vaultRecoveryPoint
+}
+
+private aws.backup.vaultRecoveryPoint {
+  // arn of the recovery point
+  arn string
+  // resource type for the recovery point, e.g. "EFS" or "DynamoDB"
+  resourceType string
+  // information about who created the recovery point
+  createdBy dict
+  // arn of the iam role used to create the recovery point
+  iamRoleArn string
+  // status of the recovery point
+  status string
+  // date the recovery point was created
+  creationDate time
+  // date the recovery point completed
+  completionDate time
+  // arn of the key used to encrypt the recovery point
+  encryptionKeyArn string
+  // true if the recovery point is encrypted
+  isEncrypted bool
+}
+
 // AWS NoSQL database service for scale
 aws.dynamodb {
   // List of backups for dynamodb
