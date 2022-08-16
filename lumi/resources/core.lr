@@ -2663,6 +2663,8 @@ aws.ec2 {
   vpnConnections() []aws.ec2.vpnconnection
   // List of network ACLs 
   networkAcls() []aws.ec2.networkacl
+  // list of keypairs for the account
+  keypairs() []aws.ec2.keypair
 }
 
 // AWS EC2 Network ACL
@@ -2812,6 +2814,23 @@ private aws.ec2.instance {
   privateIp string
   // private DNS name for the instance
   privateDnsName string
+  // keypair associated with the instance
+  keypair aws.ec2.keypair
+}
+
+private aws.ec2.keypair {
+  // arn of the keypair
+  arn string
+  // fingerprint for the keypair
+  fingerprint string
+  // name of the keypair
+  name string
+  // type of key (e.g. RSA)
+  type string
+  // tags for the keypair
+  tags map[string]string
+  // region where the keypair exists
+  region string
 }
 
 // AWS EC2 Image

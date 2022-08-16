@@ -30,6 +30,7 @@ const (
 	vpnConnArnPattern       = "arn:aws:ec2:%s:%s:vpn-connection/%s"
 	networkAclArnPattern    = "arn:aws:ec2:%s:%s:network-acl/%s"
 	imageArnPattern         = "arn:aws:ec2:%s:%s:image/%s"
+	keypairArnPattern       = "arn:aws:ec2:%s:%s:keypair/%s"
 )
 
 func (e *lumiAwsEc2) id() (string, error) {
@@ -324,6 +325,128 @@ func (s *lumiAwsEc2) getSecurityGroups(at *aws_transport.Provider) []*jobpool.Jo
 	return tasks
 }
 
+func (s *lumiAwsEc2) GetKeypairs() ([]interface{}, error) {
+	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	if err != nil {
+		return nil, err
+	}
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(s.getKeypairs(at), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+
+	return res, nil
+}
+
+func (s *lumiAwsEc2Keypair) id() (string, error) {
+	return s.Arn()
+}
+
+func (s *lumiAwsEc2) getKeypairs(at *aws_transport.Provider) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	account, err := at.Account()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	regions, err := at.GetRegions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("calling aws with region %s", regionVal)
+
+			svc := at.Ec2(regionVal)
+			ctx := context.Background()
+			res := []interface{}{}
+
+			params := &ec2.DescribeKeyPairsInput{}
+			keyPairs, err := svc.DescribeKeyPairs(ctx, params)
+			if err != nil {
+				return nil, err
+			}
+
+			for i := range keyPairs.KeyPairs {
+				kp := keyPairs.KeyPairs[i]
+				lumiKeypair, err := s.MotorRuntime.CreateResource("aws.ec2.keypair",
+					"arn", fmt.Sprintf(keypairArnPattern, account.ID, regionVal, toString(kp.KeyPairId)),
+					"fingerprint", toString(kp.KeyFingerprint),
+					"name", toString(kp.KeyName),
+					"type", string(kp.KeyType),
+					"tags", ec2TagsToMap(kp.Tags),
+					"region", regionVal,
+				)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, lumiKeypair)
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (i *lumiAwsEc2Keypair) init(args *lumi.Args) (*lumi.Args, AwsEc2Keypair, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if (*args)["name"] == nil {
+		return nil, nil, errors.New("name required to fetch aws ec2 keypair")
+	}
+	n := (*args)["name"].(string)
+
+	if (*args)["region"] == nil {
+		return nil, nil, errors.New("region required to fetch aws ec2 keypair")
+	}
+	r := (*args)["region"].(string)
+
+	at, err := awstransport(i.MotorRuntime.Motor.Transport)
+	if err != nil {
+		return nil, nil, err
+	}
+	account, err := at.Account()
+	if err != nil {
+		return nil, nil, err
+	}
+	svc := at.Ec2(r)
+	ctx := context.Background()
+	kps, err := svc.DescribeKeyPairs(ctx, &ec2.DescribeKeyPairsInput{KeyNames: []string{n}})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if len(kps.KeyPairs) > 0 {
+		kp := kps.KeyPairs[0]
+		(*args)["fingerprint"] = toString(kp.KeyFingerprint)
+		(*args)["name"] = toString(kp.KeyName)
+		(*args)["type"] = string(kp.KeyType)
+		(*args)["tags"] = ec2TagsToMap(kp.Tags)
+		(*args)["region"] = r
+		(*args)["arn"] = fmt.Sprintf(keypairArnPattern, account.ID, r, toString(kp.KeyPairId))
+		return args, nil, nil
+	}
+
+	(*args)["fingerprint"] = ""
+	(*args)["name"] = n
+	(*args)["type"] = ""
+	(*args)["tags"] = ""
+	(*args)["region"] = r
+	(*args)["arn"] = ""
+	return args, nil, nil
+}
+
 func (s *lumiAwsEc2) GetSecurityGroups() ([]interface{}, error) {
 	at, err := awstransport(s.MotorRuntime.Motor.Transport)
 	if err != nil {
@@ -565,6 +688,14 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVers
 			if err != nil {
 				return nil, err
 			}
+
+			lumiKeyPair, err := s.MotorRuntime.CreateResource("aws.ec2.keypair",
+				"region", regionVal,
+				"name", toString(instance.KeyName),
+			)
+			if err != nil {
+				return nil, err
+			}
 			args := []interface{}{
 				"arn", fmt.Sprintf(ec2InstanceArnPattern, regionVal, account.ID, toString(instance.InstanceId)),
 				"instanceId", toString(instance.InstanceId),
@@ -585,6 +716,7 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVers
 				"launchTime", instance.LaunchTime,
 				"privateIp", toString(instance.PrivateIpAddress),
 				"privateDnsName", toString(instance.PrivateDnsName),
+				"keypair", lumiKeyPair,
 			}
 
 			// add vpc if there is one
