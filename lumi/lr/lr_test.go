@@ -51,10 +51,8 @@ func TestParse(t *testing.T) {
 		}
 		`, func(res *LR) {
 			assert.Equal(t, "name", res.Resources[0].ID)
-			assert.Equal(t, []string{
-				"// resource-docs",
-				"// with multiline",
-			}, res.Resources[0].Comments)
+			assert.Equal(t, "resource-docs", res.Resources[0].title)
+			assert.Equal(t, "with multiline", res.Resources[0].desc)
 
 			f := []*Field{
 				{
@@ -197,10 +195,16 @@ func TestParseCoreLR(t *testing.T) {
 		t.Fatal("failed to compile core.lr: " + err.Error())
 	}
 
-	godata, err := Go(res, NewCollector(path))
+	collector := NewCollector(path)
+	godata, err := Go(res, collector)
 	if err != nil {
 		t.Fatal("failed to go-convert core.lr: " + err.Error())
 	}
-
 	assert.NotEmpty(t, godata)
+
+	schema, err := Schema(res, collector)
+	if err != nil {
+		t.Fatal("failed to generate schema for core.lr: " + err.Error())
+	}
+	assert.NotEmpty(t, schema)
 }

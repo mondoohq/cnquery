@@ -42,6 +42,8 @@ type Resource struct {
 	ID        string         `@Ident { @'.' @Ident }`
 	ListType  *SimplListType `[ '{' [ @@ ]`
 	Body      *ResourceDef   `@@ '}' ]`
+	title     string
+	desc      string
 }
 
 // nolint: govet
@@ -133,6 +135,23 @@ func (l *lrLexer) Symbols() map[string]rune {
 	}
 }
 
+func extractComments(raw []string) (string, string) {
+	if len(raw) == 0 {
+		return "", ""
+	}
+
+	for i := range raw {
+		if raw[i] != "" {
+			raw[i] = strings.Trim(raw[i][2:], " \t\n")
+		}
+	}
+
+	title, rest := raw[0], raw[1:]
+	desc := strings.Join(rest, " ")
+
+	return title, desc
+}
+
 // Parse the input leise string to an AST
 func Parse(input string) (*LR, error) {
 	res := &LR{}
@@ -147,6 +166,10 @@ func Parse(input string) (*LR, error) {
 	// clean up the parsed results
 	for i := range res.Resources {
 		resource := res.Resources[i]
+
+		resource.title, resource.desc = extractComments(resource.Comments)
+		resource.Comments = nil
+
 		if resource.Body == nil {
 			continue
 		}
