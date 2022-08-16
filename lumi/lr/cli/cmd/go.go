@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"fmt"
-	"io/ioutil"
+	"encoding/json"
+	"os"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -18,7 +18,7 @@ var goCmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		file := args[0]
-		raw, err := ioutil.ReadFile(file)
+		raw, err := os.ReadFile(file)
 		if err != nil {
 			log.Error().Err(err)
 			return
@@ -30,23 +30,34 @@ var goCmd = &cobra.Command{
 			return
 		}
 
-		godata, err := lr.Go(res, lr.NewCollector(args[0]))
+		collector := lr.NewCollector(args[0])
+		godata, err := lr.Go(res, collector)
 		if err != nil {
 			log.Error().Err(err).Msg("failed to compile go code")
 		}
 
-		if printStdout {
-			fmt.Println(godata)
-		} else {
-			err = ioutil.WriteFile(args[0]+".go", []byte(godata), 0644)
-			if err != nil {
-				log.Error().Err(err).Msg("failed to write to go file")
-			}
+		err = os.WriteFile(args[0]+".go", []byte(godata), 0o644)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to write to go file")
+		}
+
+		schema, err := lr.Schema(res, collector)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to generate schema")
+		}
+
+		schemaData, err := json.Marshal(schema)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to generate schema json")
+		}
+
+		err = os.WriteFile(args[0]+".json", []byte(schemaData), 0o644)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to write schema json")
 		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(goCmd)
-	goCmd.Flags().BoolVarP(&printStdout, "stdout", "", false, "print generated data to stdout instead of writing to file")
 }

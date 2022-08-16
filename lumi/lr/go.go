@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/types"
 )
 
 type goBuilder struct {
@@ -202,21 +203,6 @@ func (s *` + r.structName() + `) Validate() error {
 `
 }
 
-func extractComments(raw []string) (string, string) {
-	if len(raw) == 0 {
-		return "\"\"", "\"\""
-	}
-
-	for i := range raw {
-		raw[i] = strings.Trim(raw[i][2:], " \t\n")
-	}
-
-	title, rest := raw[0], raw[1:]
-	desc := strings.Join(rest, " ")
-
-	return strconv.Quote(title), strconv.Quote(desc)
-}
-
 func (b *goBuilder) goInitInfo(r *Resource) error {
 	fields := ""
 	fieldsMap := make(map[string]*Field)
@@ -232,11 +218,9 @@ func (b *goBuilder) goInitInfo(r *Resource) error {
 			refs = "[]string{" + strings.Join(arglist, ", ") + "}"
 		}
 
-		title, desc := extractComments(f.Comments)
-
 		fields += fmt.Sprintf(
 			`	fields["%s"] = &lumi.Field{Name: "%s", Type: string(%s), IsMandatory: %t, Refs: %s, Title: %s, Desc: %s}
-`, f.ID, f.ID, f.Type.mondooType(), f.isStatic(), refs, title, desc)
+`, f.ID, f.ID, f.Type.mondooType(), f.isStatic(), refs, strconv.Quote(r.title), strconv.Quote(r.desc))
 	}
 
 	if len(r.Body.Inits) > 1 {
@@ -281,7 +265,6 @@ func (b *goBuilder) goInitInfo(r *Resource) error {
 		listType = `string(types.Resource("` + r.ListType.Type.Type + `"))`
 	}
 
-	title, desc := extractComments(r.Comments)
 	isPrivate := "false"
 	if r.IsPrivate {
 		isPrivate = "true"
@@ -296,8 +279,8 @@ func (s *` + r.structName() + `) initInfo() *lumi.ResourceCls {
 		Init: ` + init + `,
 		Fields: fields,
 		ListType: ` + listType + `,
-		Title: ` + title + `,
-		Desc: ` + desc + `,
+		Title: ` + strconv.Quote(r.title) + `,
+		Desc: ` + strconv.Quote(r.desc) + `,
 		Private: ` + isPrivate + `,
 	}
 	return &lumi.ResourceCls{
@@ -575,7 +558,54 @@ func (f *Field) methodname() string {
 	return strings.Title(f.ID)
 }
 
-// retrieve the mondoo equivalent of the type
+// Retrieve the raw mondoo equivalent type
+func (t *Type) Type() types.Type {
+	if t.SimpleType != nil {
+		return t.SimpleType.typeItems()
+	}
+	if t.ListType != nil {
+		return t.ListType.typeItems()
+	}
+	if t.MapType != nil {
+		return t.MapType.typeItems()
+	}
+	return types.Any
+}
+
+func (t *MapType) typeItems() types.Type {
+	return types.Map(t.Key.typeItems(), t.Value.Type())
+}
+
+func (t *ListType) typeItems() types.Type {
+	return types.Array(t.Type.Type())
+}
+
+func (t *SimpleType) typeItems() types.Type {
+	switch t.Type {
+	case "bool":
+		return types.Bool
+	case "int":
+		return types.Int
+	case "float":
+		return types.Float
+	case "string":
+		return types.String
+	case "regex":
+		return types.Regex
+	case "time":
+		return types.Time
+	case "dict":
+		return types.Dict
+	default:
+		return types.Resource(t.Type)
+	}
+
+	// TODO: check that this type if a proper resource
+	// panic("Cannot convert type '" + t.Type + "' to mondoo type")
+}
+
+// Retrieve the mondoo equivalent of the type. This is a stringified type
+// that can be pushed back into a file.
 func (t *Type) mondooType() string {
 	i := t.mondooTypeItems()
 	if i == "" {
@@ -629,6 +659,8 @@ func (t *SimpleType) mondooTypeItems() string {
 	// panic("Cannot convert type '" + t.Type + "' to mondoo type")
 }
 
+// The go type is the golang-equivalent code type, i.e. the type of the
+// actual objects that are being moved around.
 func (t *Type) goType() string {
 	if t.SimpleType != nil {
 		return t.SimpleType.goType()
