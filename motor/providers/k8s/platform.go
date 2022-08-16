@@ -13,6 +13,7 @@ func NewPlatformWorkloadId(clusterIdentifier, workloadType, namespace, name stri
 	if !strings.Contains(clusterIdentifier, "namespace") {
 		platformIdentifier += "/namespace/" + namespace
 	}
-	platformIdentifier += "/" + workloadType + "/name/" + name
+	// add plural "s"
+	platformIdentifier += "/" + workloadType + "s" + "/name/" + name
 	return platformIdentifier
 }

@@ -5,7 +5,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/motor/platform"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/k8s"
 
@@ -20,26 +20,22 @@ func TestListCronJobs(t *testing.T) {
 
 	p := k8s.NewMockKubernetesProvider(mockCtrl)
 
-	cronJobPlatform := &platform.Platform{
-		Name:    "k8s-cronjob",
-		Title:   "Kubernetes CronJob",
-		Family:  []string{"k8s", "k8s-workload"},
-		Kind:    providers.Kind_KIND_K8S_OBJECT,
-		Runtime: providers.RUNTIME_KUBERNETES_CLUSTER,
-	}
-
 	// Seed namespaces
 	nss := []corev1.Namespace{
 		{ObjectMeta: metav1.ObjectMeta{Name: "default"}},
 	}
 	p.EXPECT().Namespaces().Return(nss, nil)
 	// called for each CronJob
-	p.EXPECT().PlatformInfo().Return(cronJobPlatform)
-	p.EXPECT().PlatformInfo().Return(cronJobPlatform)
+	p.EXPECT().Runtime().Return("k8s-cluster")
+	p.EXPECT().Runtime().Return("k8s-cluster")
 
 	// Seed CronJobs
 	cronjobs := []batchv1.CronJob{
 		{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "CronJob",
+				APIVersion: "batch/v1",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "nginx",
 				Namespace: nss[0].Name,
@@ -64,6 +60,10 @@ func TestListCronJobs(t *testing.T) {
 			},
 		},
 		{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "CronJob",
+				APIVersion: "batch/v1",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "nginx2",
 				Namespace: nss[0].Name,
@@ -105,7 +105,7 @@ func TestListCronJobs(t *testing.T) {
 
 	pCfg := &providers.Config{}
 	assets, err := ListCronJobs(p, pCfg, clusterIdentifier, nil)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var assetNames []string
 	for _, a := range assets {
@@ -119,4 +119,8 @@ func TestListCronJobs(t *testing.T) {
 
 	assert.ElementsMatch(t, expectedAssetNames, assetNames)
 	assert.ElementsMatch(t, expectedAssetPlatformIds, assetPlatformIds)
+	assert.Equal(t, "batch/v1", assets[0].Platform.Version)
+	assert.Equal(t, "k8s-cronjob", assets[0].Platform.Name)
+	assert.ElementsMatch(t, []string{"k8s", "k8s-workload"}, assets[0].Platform.Family)
+	assert.Equal(t, nss[0].Name, assets[0].Labels["namespace"])
 }

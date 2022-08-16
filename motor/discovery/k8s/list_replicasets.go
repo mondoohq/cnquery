@@ -35,29 +35,11 @@ func ListReplicaSets(p k8s.KubernetesProvider, connection *providers.Config, clu
 	assets := []*asset.Asset{}
 	for i := range replicaSets {
 		replicaSet := replicaSets[i]
-		platformData := p.PlatformInfo()
-		platformData.Version = replicaSet.APIVersion
-		platformData.Build = replicaSet.ResourceVersion
-		platformData.Labels = map[string]string{
-			"namespace": replicaSet.Namespace,
-			"uid":       string(replicaSet.UID),
+		asset, err := createAssetFromObject(&replicaSet, p.Runtime(), connection, clusterIdentifier)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create asset from repicaset")
 		}
-		platformData.Kind = providers.Kind_KIND_K8S_OBJECT
-		asset := &asset.Asset{
-			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "replicasets", replicaSet.Namespace, replicaSet.Name)},
-			Name:        replicaSet.Namespace + "/" + replicaSet.Name,
-			Platform:    platformData,
-			Connections: []*providers.Config{connection},
-			State:       asset.State_STATE_ONLINE,
-			Labels:      replicaSet.Labels,
-		}
-		if asset.Labels == nil {
-			asset.Labels = map[string]string{
-				"namespace": replicaSet.Namespace,
-			}
-		} else {
-			asset.Labels["namespace"] = replicaSet.Namespace
-		}
+
 		log.Debug().Str("name", replicaSet.Name).Str("connection", asset.Connections[0].Host).Msg("resolved replicaset")
 
 		assets = append(assets, asset)

@@ -36,29 +36,11 @@ func ListJobs(p k8s.KubernetesProvider, connection *providers.Config, clusterIde
 	assets := []*asset.Asset{}
 	for i := range jobs {
 		job := jobs[i]
-		platformData := p.PlatformInfo()
-		platformData.Version = job.APIVersion
-		platformData.Build = job.ResourceVersion
-		platformData.Labels = map[string]string{
-			"namespace": job.Namespace,
-			"uid":       string(job.UID),
+		asset, err := createAssetFromObject(&job, p.Runtime(), connection, clusterIdentifier)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create asset from job")
 		}
-		platformData.Kind = providers.Kind_KIND_K8S_OBJECT
-		asset := &asset.Asset{
-			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "jobs", job.Namespace, job.Name)},
-			Name:        job.Namespace + "/" + job.Name,
-			Platform:    platformData,
-			Connections: []*providers.Config{connection},
-			State:       asset.State_STATE_ONLINE,
-			Labels:      job.Labels,
-		}
-		if asset.Labels == nil {
-			asset.Labels = map[string]string{
-				"namespace": job.Namespace,
-			}
-		} else {
-			asset.Labels["namespace"] = job.Namespace
-		}
+
 		log.Debug().Str("name", job.Name).Str("connection", asset.Connections[0].Host).Msg("resolved Job")
 
 		assets = append(assets, asset)

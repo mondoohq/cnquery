@@ -36,29 +36,11 @@ func ListCronJobs(p k8s.KubernetesProvider, connection *providers.Config, cluste
 	assets := []*asset.Asset{}
 	for i := range cronJobs {
 		cronJob := cronJobs[i]
-		platformData := p.PlatformInfo()
-		platformData.Version = cronJob.APIVersion
-		platformData.Build = cronJob.ResourceVersion
-		platformData.Labels = map[string]string{
-			"namespace": cronJob.Namespace,
-			"uid":       string(cronJob.UID),
+		asset, err := createAssetFromObject(&cronJob, p.Runtime(), connection, clusterIdentifier)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create asset from cronjob")
 		}
-		platformData.Kind = providers.Kind_KIND_K8S_OBJECT
-		asset := &asset.Asset{
-			PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, "cronjobs", cronJob.Namespace, cronJob.Name)},
-			Name:        cronJob.Namespace + "/" + cronJob.Name,
-			Platform:    platformData,
-			Connections: []*providers.Config{connection},
-			State:       asset.State_STATE_ONLINE,
-			Labels:      cronJob.Labels,
-		}
-		if asset.Labels == nil {
-			asset.Labels = map[string]string{
-				"namespace": cronJob.Namespace,
-			}
-		} else {
-			asset.Labels["namespace"] = cronJob.Namespace
-		}
+
 		log.Debug().Str("name", cronJob.Name).Str("connection", asset.Connections[0].Host).Msg("resolved CronJob")
 
 		assets = append(assets, asset)
