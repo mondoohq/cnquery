@@ -2,7 +2,6 @@ package lr
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -36,7 +35,7 @@ func Go(ast *LR, collector *Collector) (string, error) {
 func (b *goBuilder) goRegistryInit(r []*Resource) {
 	arr := []string{}
 	for i := range r {
-		arr = append(arr, "registry.Add((&"+r[i].structName()+"{}).initInfo())")
+		arr = append(arr, "registry.AddFactory("+strconv.Quote(r[i].ID)+", new"+r[i].interfaceName()+")")
 	}
 	res := strings.Join(arr, "\n")
 
@@ -71,9 +70,6 @@ func (b *goBuilder) goResource(r *Resource) error {
 	b.goInterface(r)
 	b.goStruct(r)
 	b.goFactory(r)
-	if err := b.goInitInfo(r); err != nil {
-		return err
-	}
 	b.goRegister(r)
 	b.goField(r)
 	b.goCompute(r)
@@ -201,96 +197,6 @@ func (s *` + r.structName() + `) Validate() error {
 }
 
 `
-}
-
-func (b *goBuilder) goInitInfo(r *Resource) error {
-	fields := ""
-	fieldsMap := make(map[string]*Field)
-	for _, f := range r.Body.Fields {
-		fieldsMap[f.ID] = f
-		refs := "nil"
-
-		if f.Args != nil && len(f.Args.List) > 0 {
-			arglist := []string{}
-			for _, arg := range f.Args.List {
-				arglist = append(arglist, "\""+arg.Type+"\"")
-			}
-			refs = "[]string{" + strings.Join(arglist, ", ") + "}"
-		}
-
-		fields += fmt.Sprintf(
-			`	fields["%s"] = &lumi.Field{Name: "%s", Type: string(%s), IsMandatory: %t, Refs: %s, Title: %s, Desc: %s}
-`, f.ID, f.ID, f.Type.mondooType(), f.isStatic(), refs, strconv.Quote(r.title), strconv.Quote(r.desc))
-	}
-
-	if len(r.Body.Inits) > 1 {
-		return errors.New("Resource defined more than one init function: " + r.ID)
-	}
-
-	init := "nil"
-	if len(r.Body.Inits) == 1 {
-		args := []string{}
-		i := r.Body.Inits[0]
-		isOptional := false
-		for _, arg := range i.Args {
-			typ := arg.Type.mondooType()
-			if typ == "NO_TYPE_DETECTED" {
-				return errors.New("A field in the init that isnt found in the resource must have a type assigned. FIeld \"" + arg.ID + "\"")
-			}
-
-			ref, ok := fieldsMap[arg.ID]
-			if ok {
-				ftype := ref.Type.mondooType()
-				if typ != ftype {
-					return errors.New("Init field type and resource field type are different: " + r.ID + " field " + arg.ID)
-				}
-			}
-
-			var optional string
-			if arg.Optional {
-				optional = ", Optional: true"
-				isOptional = true
-			} else if isOptional {
-				return errors.New("A required argument cannot follow an optional argument. Found in init function of " + r.ID)
-			}
-			args = append(args, `				&lumi.TypedArg{Name: "`+arg.ID+`", Type: string(`+typ+`)`+optional+`},
-`)
-		}
-		init = `&lumi.Init{Args: []*lumi.TypedArg{
-` + strings.Join(args, "\n") + `}}`
-	}
-
-	listType := "\"\""
-	if r.ListType != nil {
-		listType = `string(types.Resource("` + r.ListType.Type.Type + `"))`
-	}
-
-	isPrivate := "false"
-	if r.IsPrivate {
-		isPrivate = "true"
-	}
-
-	b.data += `// initInfo contains all information needed for the resource registration
-func (s *` + r.structName() + `) initInfo() *lumi.ResourceCls {
-	fields := make(map[string]*lumi.Field)
-` + fields + `
-	info := lumi.ResourceInfo{
-		Name: "` + r.ID + `",
-		Init: ` + init + `,
-		Fields: fields,
-		ListType: ` + listType + `,
-		Title: ` + strconv.Quote(r.title) + `,
-		Desc: ` + strconv.Quote(r.desc) + `,
-		Private: ` + isPrivate + `,
-	}
-	return &lumi.ResourceCls{
-		Factory:      new` + r.interfaceName() + `,
-		ResourceInfo: info,
-	}
-}
-
-`
-	return nil
 }
 
 func goRegisterField(f *Field) string {
@@ -500,7 +406,6 @@ import (
 	"time"
 
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/types"
 	"github.com/rs/zerolog/log"
 )
 

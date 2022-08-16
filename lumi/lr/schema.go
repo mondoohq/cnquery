@@ -35,7 +35,7 @@ func resourceInit(r *Resource, fields map[string]*lumi.Field) (*lumi.Init, error
 	for _, arg := range i.Args {
 		typ := arg.Type.Type()
 		if typ == types.Unset {
-			return nil, errors.New("A field in the init that isnt found in the resource must have a type assigned. FIeld \"" + arg.ID + "\"")
+			return nil, errors.New("A field in the init that isnt found in the resource must have a type assigned. Field \"" + arg.ID + "\"")
 		}
 
 		ref, ok := fields[arg.ID]
@@ -96,6 +96,7 @@ func resourceSchema(r *Resource, collector *Collector) (*lumi.ResourceInfo, erro
 
 	res := &lumi.ResourceInfo{
 		Id:      r.ID,
+		Name:    r.ID,
 		Title:   r.title,
 		Desc:    r.desc,
 		Init:    init,

@@ -14,14 +14,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo"
-	"go.mondoo.io/mondoo/mqlc"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/logger"
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/lumi/resources"
+	"go.mondoo.io/mondoo/lumi/registry"
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/providers/local"
 	"go.mondoo.io/mondoo/motor/providers/mock"
+	"go.mondoo.io/mondoo/mqlc"
 	"go.mondoo.io/mondoo/policy"
 	"go.mondoo.io/mondoo/policy/executor"
 )
@@ -82,13 +82,10 @@ type executionContext struct {
 }
 
 func initExecutionContext(motor *motor.Motor) executionContext {
-	registry := lumi.NewRegistry()
-	resources.Init(registry)
-
-	runtime := lumi.NewRuntime(registry, motor)
+	runtime := lumi.NewRuntime(registry.Default, motor)
 
 	return executionContext{
-		schema:  registry.Schema(),
+		schema:  registry.Default.Schema(),
 		runtime: runtime,
 	}
 }
