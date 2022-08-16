@@ -5,12 +5,12 @@ package registry
 // and this runtime --depends--> lumi + resources + motor
 
 import (
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/lumi/registry/info"
 	"go.mondoo.io/mondoo/lumi/resources"
 )
 
-// Default with core resources
-var Default = lumi.NewRegistry()
+// we import this from Info to fill in all the metadata first
+var Default = info.Default
 
 func init() {
 	resources.Init(Default)

@@ -84,19 +84,38 @@ func (ctx *Registry) ensureResourceChain(name string, isPrivate bool) {
 	}
 }
 
-// Add a new resource with a factory for creating an instance
-func (ctx *Registry) Add(resource *ResourceCls) error {
-	name := resource.Name
-	if name == "" {
-		return errors.New("trying to define a resource without a name")
-	}
-	_, ok := ctx.Resources[name]
-	if ok {
-		return errors.New("resource '" + name + "' is redefined.")
+func (ctx *Registry) AddResourceInfo(info *ResourceInfo) error {
+	name := info.Id
+
+	// NOTE: we do not yet merge resources! So error for now.
+	if _, ok := ctx.Resources[name]; ok {
+		return errors.New("already defined resource " + name + ", we don't support merging yet")
 	}
 
-	ctx.Resources[name] = resource
-	ctx.ensureResourceChain(name, resource.ResourceInfo.Private)
+	if info.Fields == nil {
+		info.Fields = map[string]*Field{}
+	}
+
+	ctx.Resources[name] = &ResourceCls{
+		ResourceInfo: *info,
+	}
+
+	ctx.ensureResourceChain(name, info.Private)
+	return nil
+}
+
+// Add a new resource with a factory for creating an instance
+func (ctx *Registry) AddFactory(name string, factory ResourceFactory) error {
+	if name == "" {
+		return errors.New("trying to add factory for a resource without a name")
+	}
+
+	resource, ok := ctx.Resources[name]
+	if !ok {
+		return errors.New("resource '" + name + "' cannot be found")
+	}
+
+	resource.Factory = factory
 	return nil
 }
 

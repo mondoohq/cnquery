@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/lumi/resources"
+	"go.mondoo.io/mondoo/lumi/registry"
 )
 
 const passwdContent = `root:x:0:0::/root:/bin/bash
@@ -54,10 +54,7 @@ func TestResource_File_Permissions(t *testing.T) {
 	m, err := mockTransport("./testdata/arch.toml")
 	require.NoError(t, err)
 
-	registry := lumi.NewRegistry()
-	resources.Init(registry)
-
-	runtime := lumi.NewRuntime(registry, m)
+	runtime := lumi.NewRuntime(registry.Default, m)
 
 	testCases := []struct {
 		mode            int64
@@ -81,7 +78,7 @@ func TestResource_File_Permissions(t *testing.T) {
 		expectedID string
 	}{
 		{
-			mode:            0755,
+			mode:            0o755,
 			userReadable:    true,
 			userWriteable:   true,
 			userExecutable:  true,
@@ -94,7 +91,7 @@ func TestResource_File_Permissions(t *testing.T) {
 			expectedID: "-rwxr-xr-x",
 		},
 		{
-			mode:            0755,
+			mode:            0o755,
 			userReadable:    true,
 			userWriteable:   true,
 			userExecutable:  true,
@@ -108,7 +105,7 @@ func TestResource_File_Permissions(t *testing.T) {
 			expectedID: "-rwsr-xr-x",
 		},
 		{
-			mode:            0655,
+			mode:            0o655,
 			userReadable:    true,
 			userWriteable:   true,
 			userExecutable:  false,
@@ -122,7 +119,7 @@ func TestResource_File_Permissions(t *testing.T) {
 			expectedID: "-rwSr-xr-x",
 		},
 		{
-			mode:            0755,
+			mode:            0o755,
 			userReadable:    true,
 			userWriteable:   true,
 			userExecutable:  true,
@@ -135,7 +132,7 @@ func TestResource_File_Permissions(t *testing.T) {
 			expectedID: "drwxr-xr-x",
 		},
 		{
-			mode:            0755,
+			mode:            0o755,
 			userReadable:    true,
 			userWriteable:   true,
 			userExecutable:  true,
@@ -149,7 +146,7 @@ func TestResource_File_Permissions(t *testing.T) {
 			expectedID: "drwxr-xr-t",
 		},
 		{
-			mode:            0754,
+			mode:            0o754,
 			userReadable:    true,
 			userWriteable:   true,
 			userExecutable:  true,
@@ -163,7 +160,7 @@ func TestResource_File_Permissions(t *testing.T) {
 			expectedID: "drwxr-xr-T",
 		},
 		{
-			mode:            0755,
+			mode:            0o755,
 			userReadable:    true,
 			userWriteable:   true,
 			userExecutable:  true,
@@ -177,7 +174,7 @@ func TestResource_File_Permissions(t *testing.T) {
 			expectedID:      "-rwxr-sr-x",
 		},
 		{
-			mode:            0754,
+			mode:            0o754,
 			userReadable:    true,
 			userWriteable:   true,
 			userExecutable:  true,
@@ -191,7 +188,7 @@ func TestResource_File_Permissions(t *testing.T) {
 			expectedID: "-rwxr-Sr-x",
 		},
 		{
-			mode:            0755,
+			mode:            0o755,
 			userReadable:    true,
 			userWriteable:   true,
 			userExecutable:  true,
@@ -230,5 +227,4 @@ func TestResource_File_Permissions(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, tc.expectedID, permRaw.LumiResource().Id)
 	}
-
 }

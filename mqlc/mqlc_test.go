@@ -10,13 +10,13 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo"
 	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/llx/registry"
 	"go.mondoo.io/mondoo/logger"
+	"go.mondoo.io/mondoo/lumi/registry/info"
 	"go.mondoo.io/mondoo/types"
 )
 
 var (
-	schema   = registry.Default.Schema()
+	schema   = info.Default.Schema()
 	features = mondoo.Features{byte(mondoo.PiperCode)}
 )
 

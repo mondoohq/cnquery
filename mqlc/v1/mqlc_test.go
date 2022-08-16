@@ -8,12 +8,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/llx/registry"
 	"go.mondoo.io/mondoo/logger"
+	"go.mondoo.io/mondoo/lumi/registry/info"
 	"go.mondoo.io/mondoo/types"
 )
 
-var schema = registry.Default.Schema()
+var schema = info.Default.Schema()
 
 func init() {
 	logger.InitTestEnv()
