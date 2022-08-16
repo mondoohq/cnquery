@@ -304,6 +304,8 @@ resources:
     fields:
       aliases: {}
       id: {}
+      organization:
+        min_mondoo_version: 6.11.0
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -443,11 +445,8 @@ resources:
         regions in the AWS account and the values for the arn and stages
   aws.autoscaling:
     docs:
-      desc: "The `aws.autoscaling` resource can be used to assess the configuration
-        of AWS auto scaling groups within an AWS account. This resource provides the
-        `.groups` field which returns a list of `aws.autoscaling.group` resources
-        representing all auto scaling groups configured across all enabled regions
-        across the account.\n"
+      desc: |
+        The `aws.autoscaling` resource can be used to assess the configuration of AWS auto scaling groups within an AWS account. This resource provides the `.groups` field which returns a list of `aws.autoscaling.group` resources representing all auto scaling groups configured across all enabled regions across the account.
     fields:
       groups: {}
     min_mondoo_version: 5.15.0
@@ -1661,6 +1660,16 @@ resources:
       vpcConfig: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.organization:
+    fields:
+      arn: {}
+      featureSet: {}
+      masterAccountEmail: {}
+      masterAccountId: {}
+    min_mondoo_version: 6.11.0
     platform:
       name:
       - aws
@@ -3136,6 +3145,32 @@ resources:
       storageClass: {}
       updated: {}
     min_mondoo_version: 5.15.0
+  git.commit:
+    fields:
+      author: {}
+      committer: {}
+      message: {}
+      sha: {}
+      signatureVerification: {}
+    is_private: true
+    min_mondoo_version: 6.11.0
+  git.commitAuthor:
+    fields:
+      date: {}
+      email: {}
+      name: {}
+      sha: {}
+    is_private: true
+    min_mondoo_version: 6.11.0
+  git.gpgSignature:
+    fields:
+      payload: {}
+      reason: {}
+      sha: {}
+      signature: {}
+      verified: {}
+    is_private: true
+    min_mondoo_version: 6.11.0
   github:
     fields:
       repositories: {}
@@ -3163,18 +3198,37 @@ resources:
       requireLinearHistory: {}
       requiredConversationResolution: {}
       requiredPullRequestReviews: {}
+      requiredSignatures:
+        min_mondoo_version: 6.11.0
       requiredStatusChecks: {}
       restrictions: {}
     is_private: true
     min_mondoo_version: 6.4.0
+  github.collaborator:
+    fields:
+      id: {}
+      permissions: {}
+      user: {}
+    is_private: true
+    min_mondoo_version: 6.11.0
   github.commit:
     fields:
       author: {}
+      commit:
+        min_mondoo_version: 6.11.0
       committer: {}
       message: {}
       organizationName: {}
+      owner:
+        min_mondoo_version: 6.11.0
       repoName: {}
+      repository:
+        min_mondoo_version: 6.11.0
+      sha:
+        min_mondoo_version: 6.11.0
       signatureVerification: {}
+      stats:
+        min_mondoo_version: 6.11.0
       url: {}
     is_private: true
     min_mondoo_version: 6.4.0
@@ -3183,7 +3237,11 @@ resources:
       content: {}
       files: {}
       isBinary: {}
+      name:
+        min_mondoo_version: 6.11.0
       organizationName: {}
+      ownerName:
+        min_mondoo_version: 6.11.0
       path: {}
       repoName: {}
       sha: {}
@@ -3218,18 +3276,28 @@ resources:
   github.organization:
     fields:
       billing_email: {}
+      billingEmail:
+        min_mondoo_version: 6.11.0
       blog: {}
       collaborators: {}
       company: {}
       created_at: {}
+      createdAt:
+        min_mondoo_version: 6.11.0
       default_repository_permission: {}
+      defaultRepositoryPermission:
+        min_mondoo_version: 6.11.0
       description: {}
       disk_usage: {}
+      diskUsage:
+        min_mondoo_version: 6.11.0
       email: {}
       id: {}
       installations:
         min_mondoo_version: 5.31.0
       is_verified: {}
+      isVerified:
+        min_mondoo_version: 6.11.0
       location: {}
       login: {}
       members:
@@ -3241,21 +3309,68 @@ resources:
       members_can_create_public_pages: {}
       members_can_create_public_repositories: {}
       members_can_create_repositories: {}
+      membersCanCreateInternalRepositories:
+        min_mondoo_version: 6.11.0
+      membersCanCreatePages:
+        min_mondoo_version: 6.11.0
+      membersCanCreatePrivatePages:
+        min_mondoo_version: 6.11.0
+      membersCanCreatePrivateRepositories:
+        min_mondoo_version: 6.11.0
+      membersCanCreatePublicPages:
+        min_mondoo_version: 6.11.0
+      membersCanCreatePublicRepositories:
+        min_mondoo_version: 6.11.0
+      membersCanCreateRepositories:
+        min_mondoo_version: 6.11.0
       name: {}
       node_id: {}
+      nodeId:
+        min_mondoo_version: 6.11.0
       owned_private_repos: {}
+      ownedPrivateRepos:
+        min_mondoo_version: 6.11.0
       owners:
         min_mondoo_version: 5.31.0
+      packages:
+        min_mondoo_version: 6.11.0
       plan: {}
       private_gists: {}
+      privateGists:
+        min_mondoo_version: 6.11.0
       repositories:
         min_mondoo_version: 5.31.0
+      teams:
+        min_mondoo_version: 6.11.0
       total_private_repos: {}
+      totalPrivateRepos:
+        min_mondoo_version: 6.11.0
       twitter_username: {}
+      twitterUsername:
+        min_mondoo_version: 6.11.0
       two_factor_requirement_enabled: {}
+      twoFactorRequirementEnabled:
+        min_mondoo_version: 6.11.0
       updated_at: {}
+      updatedAt:
+        min_mondoo_version: 6.11.0
+      webhooks:
+        min_mondoo_version: 6.11.0
     maturity: experimental
     min_mondoo_version: 5.15.0
+  github.package:
+    fields:
+      createdAt: {}
+      id: {}
+      name: {}
+      owner: {}
+      packageType: {}
+      repository: {}
+      updatedAt: {}
+      versionCount: {}
+      visibility: {}
+    is_private: true
+    min_mondoo_version: 6.11.0
   github.release:
     fields:
       name: {}
@@ -3279,6 +3394,8 @@ resources:
       archived: {}
       branches:
         min_mondoo_version: 6.4.0
+      collaborators:
+        min_mondoo_version: 6.11.0
       commits:
         min_mondoo_version: 6.4.0
       contributors:
@@ -3307,6 +3424,10 @@ resources:
         min_mondoo_version: 6.4.0
       updatedAt: {}
       visibility: {}
+      webhooks:
+        min_mondoo_version: 6.11.0
+      workflows:
+        min_mondoo_version: 6.11.0
     min_mondoo_version: 5.31.0
   github.review:
     fields:
@@ -3316,6 +3437,19 @@ resources:
       user: {}
     is_private: true
     min_mondoo_version: 6.4.0
+  github.team:
+    fields:
+      defaultPermission: {}
+      description: {}
+      id: {}
+      members: {}
+      name: {}
+      organization: {}
+      privacy: {}
+      repositories: {}
+      slug: {}
+    is_private: true
+    min_mondoo_version: 6.11.0
   github.user:
     fields:
       bio: {}
@@ -3330,6 +3464,28 @@ resources:
       updatedAt: {}
     is_private: true
     min_mondoo_version: 5.31.0
+  github.webhook:
+    fields:
+      active: {}
+      config: {}
+      events: {}
+      id: {}
+      name: {}
+      url: {}
+    is_private: true
+    min_mondoo_version: 6.11.0
+  github.workflow:
+    fields:
+      configuration: {}
+      createdAt: {}
+      file: {}
+      id: {}
+      name: {}
+      path: {}
+      state: {}
+      updatedAt: {}
+    is_private: true
+    min_mondoo_version: 6.11.0
   gitlab.group:
     fields:
       description: {}
@@ -3521,24 +3677,24 @@ resources:
     fields:
       annotations:
         min_mondoo_version: 5.29.2
+      containers:
+        min_mondoo_version: 6.11.0
       created: {}
       id:
         min_mondoo_version: 6.10.0
+      initContainers:
+        min_mondoo_version: 6.11.0
       kind: {}
       labels:
         min_mondoo_version: 5.29.2
       manifest: {}
       name: {}
       namespace: {}
+      podSpec:
+        min_mondoo_version: 6.11.0
       resourceVersion:
         min_mondoo_version: 5.29.2
       uid: {}
-      containers:
-        min_mondoo_version: 6.11.0
-      initContainers:
-        min_mondoo_version: 6.11.0
-      podSpec:
-        min_mondoo_version: 6.11.0
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -3564,24 +3720,24 @@ resources:
     fields:
       annotations:
         min_mondoo_version: 5.29.2
+      containers:
+        min_mondoo_version: 6.11.0
       created: {}
       id:
         min_mondoo_version: 6.10.0
+      initContainers:
+        min_mondoo_version: 6.11.0
       kind: {}
       labels:
         min_mondoo_version: 5.29.2
       manifest: {}
       name: {}
       namespace: {}
+      podSpec:
+        min_mondoo_version: 6.11.0
       resourceVersion:
         min_mondoo_version: 5.29.2
       uid: {}
-      containers:
-        min_mondoo_version: 6.11.0
-      initContainers:
-        min_mondoo_version: 6.11.0
-      podSpec:
-        min_mondoo_version: 6.11.0
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -3590,24 +3746,24 @@ resources:
     fields:
       annotations:
         min_mondoo_version: 5.29.2
+      containers:
+        min_mondoo_version: 6.11.0
       created: {}
       id:
         min_mondoo_version: 6.10.0
+      initContainers:
+        min_mondoo_version: 6.11.0
       kind: {}
       labels:
         min_mondoo_version: 5.29.2
       manifest: {}
       name: {}
       namespace: {}
+      podSpec:
+        min_mondoo_version: 6.11.0
       resourceVersion:
         min_mondoo_version: 5.29.2
       uid: {}
-      containers:
-        min_mondoo_version: 6.11.0
-      initContainers:
-        min_mondoo_version: 6.11.0
-      podSpec:
-        min_mondoo_version: 6.11.0
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -3637,24 +3793,24 @@ resources:
     fields:
       annotations:
         min_mondoo_version: 5.29.2
+      containers:
+        min_mondoo_version: 6.11.0
       created: {}
       id:
         min_mondoo_version: 6.10.0
+      initContainers:
+        min_mondoo_version: 6.11.0
       kind: {}
       labels:
         min_mondoo_version: 5.29.2
       manifest: {}
       name: {}
       namespace: {}
+      podSpec:
+        min_mondoo_version: 6.11.0
       resourceVersion:
         min_mondoo_version: 5.29.2
       uid: {}
-      containers:
-        min_mondoo_version: 6.11.0
-      initContainers:
-        min_mondoo_version: 6.11.0
-      podSpec:
-        min_mondoo_version: 6.11.0
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -3824,24 +3980,24 @@ resources:
     fields:
       annotations:
         min_mondoo_version: 5.29.2
+      containers:
+        min_mondoo_version: 6.11.0
       created: {}
       id:
         min_mondoo_version: 6.10.0
+      initContainers:
+        min_mondoo_version: 6.11.0
       kind: {}
       labels:
         min_mondoo_version: 5.29.2
       manifest: {}
       name: {}
       namespace: {}
+      podSpec:
+        min_mondoo_version: 6.11.0
       resourceVersion:
         min_mondoo_version: 5.29.2
       uid: {}
-      containers:
-        min_mondoo_version: 6.11.0
-      initContainers:
-        min_mondoo_version: 6.11.0
-      podSpec:
-        min_mondoo_version: 6.11.0
     min_mondoo_version: 6.7.0
     platform:
       name:
@@ -3912,24 +4068,24 @@ resources:
     fields:
       annotations:
         min_mondoo_version: 5.29.2
+      containers:
+        min_mondoo_version: 6.11.0
       created: {}
       id:
         min_mondoo_version: 6.10.0
+      initContainers:
+        min_mondoo_version: 6.11.0
       kind: {}
       labels:
         min_mondoo_version: 5.29.2
       manifest: {}
       name: {}
       namespace: {}
+      podSpec:
+        min_mondoo_version: 6.11.0
       resourceVersion:
         min_mondoo_version: 5.29.2
       uid: {}
-      containers:
-        min_mondoo_version: 6.11.0
-      initContainers:
-        min_mondoo_version: 6.11.0
-      podSpec:
-        min_mondoo_version: 6.11.0
     min_mondoo_version: 6.7.0
     platform:
       name:
@@ -4783,6 +4939,40 @@ resources:
     platform:
       name:
       - terraform
+  tfstate:
+    fields:
+      formatVersion: {}
+      modules: {}
+      outputs: {}
+      rootModule: {}
+      terraformVersion: {}
+    min_mondoo_version: 6.11.0
+  tfstate.module:
+    fields:
+      address: {}
+      childModules: {}
+      resources: {}
+    min_mondoo_version: 6.11.0
+  tfstate.output:
+    fields:
+      identifier: {}
+      sensitive: {}
+      type: {}
+      value: {}
+    min_mondoo_version: 6.11.0
+  tfstate.resource:
+    fields:
+      address: {}
+      dependsOn: {}
+      deposedKey: {}
+      mode: {}
+      name: {}
+      providerName: {}
+      schemaVersion: {}
+      tainted: {}
+      type: {}
+      values: {}
+    min_mondoo_version: 6.11.0
   time:
     fields:
       day: {}
