@@ -31,7 +31,7 @@ func (s *lumiAwsVpcRoutetable) id() (string, error) {
 }
 
 func (s *lumiAws) GetVpcs() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func (s *lumiAws) getVpcs(at *aws_transport.Provider) []*jobpool.Job {
 }
 
 func (s *lumiAwsVpc) GetFlowLogs() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +213,7 @@ func (s *lumiAwsVpc) GetRouteTables() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

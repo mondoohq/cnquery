@@ -7,8 +7,9 @@ import (
 	"io"
 	"io/ioutil"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor"
 )
 
 const (
@@ -139,7 +140,7 @@ func ParseWindowsProcesses(r io.Reader) ([]WindowsProcess, error) {
 }
 
 type WindowsProcessManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (wpm *WindowsProcessManager) Name() string {
@@ -148,7 +149,7 @@ func (wpm *WindowsProcessManager) Name() string {
 
 func (wpm *WindowsProcessManager) List() ([]*OSProcess, error) {
 	// TODO: wrap in powershell
-	c, err := wpm.motor.Transport.RunCommand(Ps1GetProcess)
+	c, err := wpm.provider.RunCommand(Ps1GetProcess)
 	if err != nil {
 		return nil, fmt.Errorf("processes> could not run command")
 	}

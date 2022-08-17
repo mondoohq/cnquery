@@ -4,6 +4,8 @@ import (
 	"errors"
 	"runtime"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/arista"
@@ -23,29 +25,29 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/vsphere"
 )
 
-func New(t providers.Transport) *Detector {
+func New(p providers.Transport) *Detector {
 	return &Detector{
-		transport: t,
+		provider: p,
 	}
 }
 
 type Detector struct {
-	transport providers.Transport
-	cache     *platform.Platform
+	provider providers.Transport
+	cache    *platform.Platform
 }
 
-func (d *Detector) resolveOS() (*platform.Platform, bool) {
+func (d *Detector) resolveOS(p os.OperatingSystemProvider) (*platform.Platform, bool) {
 	// NOTE: on windows, powershell calls are expensive therefore we want to shortcut the detection mechanism
-	_, ok := d.transport.(*local.Provider)
+	local, ok := p.(*local.Provider)
 	if ok && runtime.GOOS == "windows" {
-		return platform.WindowsFamily.Resolve(d.transport)
+		return platform.WindowsFamily.Resolve(local)
 	} else {
-		return platform.OperatingSystems.Resolve(d.transport)
+		return platform.OperatingSystems.Resolve(p)
 	}
 }
 
 func (d *Detector) Platform() (*platform.Platform, error) {
-	if d.transport == nil {
+	if d.provider == nil {
 		return nil, errors.New("cannot detect platform without a transport")
 	}
 
@@ -55,7 +57,7 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 	}
 
 	var pi *platform.Platform
-	switch pt := d.transport.(type) {
+	switch pt := d.provider.(type) {
 	case *vsphere.Provider:
 		identifier, err := pt.Identifier()
 		if err != nil {
@@ -152,14 +154,16 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 			Kind:    providers.Kind_KIND_API,
 			Runtime: "",
 		}, nil
-	default:
+	case os.OperatingSystemProvider:
 		var resolved bool
-		pi, resolved = d.resolveOS()
+		pi, resolved = d.resolveOS(pt)
 		if !resolved {
 			return nil, errors.New("could not determine operating system")
 		}
-		pi.Kind = d.transport.Kind()
-		pi.Runtime = d.transport.Runtime()
+		pi.Kind = d.provider.Kind()
+		pi.Runtime = d.provider.Runtime()
+	default:
+		return nil, errors.New("could not determine platform")
 	}
 
 	// cache value

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
 const (
@@ -12,7 +12,7 @@ const (
 )
 
 type SuseUpdateManager struct {
-	Motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (sum *SuseUpdateManager) Name() string {
@@ -24,7 +24,7 @@ func (sum *SuseUpdateManager) Format() string {
 }
 
 func (sum *SuseUpdateManager) List() ([]OperatingSystemUpdate, error) {
-	cmd, err := sum.Motor.Transport.RunCommand("zypper --xmlout list-updates -t patch")
+	cmd, err := sum.provider.RunCommand("zypper --xmlout list-updates -t patch")
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}

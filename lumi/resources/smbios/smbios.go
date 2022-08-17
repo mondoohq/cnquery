@@ -3,8 +3,9 @@ package smbios
 import (
 	"errors"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers"
 )
 
 type SmBiosInfo struct {
@@ -57,22 +58,20 @@ type SmBiosManager interface {
 	Info() (*SmBiosInfo, error)
 }
 
-func ResolveManager(t providers.Transport, p *platform.Platform) (SmBiosManager, error) {
+func ResolveManager(provider os.OperatingSystemProvider, pf *platform.Platform) (SmBiosManager, error) {
 	var biosM SmBiosManager
 
 	// check darwin before unix since darwin is also a unix
-	if p.IsFamily("darwin") {
-		biosM = &OSXSmbiosManager{t: t, p: p}
-	} else if p.IsFamily("linux") {
-		biosM = &LinuxSmbiosManager{
-			t: t,
-		}
-	} else if p.IsFamily("windows") {
-		biosM = &WindowsSmbiosManager{t: t}
+	if pf.IsFamily("darwin") {
+		biosM = &OSXSmbiosManager{provider: provider, platform: pf}
+	} else if pf.IsFamily("linux") {
+		biosM = &LinuxSmbiosManager{provider: provider}
+	} else if pf.IsFamily("windows") {
+		biosM = &WindowsSmbiosManager{provider: provider}
 	}
 
 	if biosM == nil {
-		return nil, errors.New("could not detect suitable smbios manager for platform: " + p.Name)
+		return nil, errors.New("could not detect suitable smbios manager for platform: " + pf.Name)
 	}
 
 	return biosM, nil

@@ -8,11 +8,11 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
 type SysVServiceManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (s *SysVServiceManager) Name() string {
@@ -20,7 +20,6 @@ func (s *SysVServiceManager) Name() string {
 }
 
 func (s *SysVServiceManager) List() ([]*Service, error) {
-
 	// 1. gather all services
 	services, err := s.services()
 	if err != nil {
@@ -69,7 +68,7 @@ func (s *SysVServiceManager) List() ([]*Service, error) {
 }
 
 func (s *SysVServiceManager) services() ([]string, error) {
-	c, err := s.motor.Transport.RunCommand("ls -1 /etc/init.d/")
+	c, err := s.provider.RunCommand("ls -1 /etc/init.d/")
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +78,7 @@ func (s *SysVServiceManager) services() ([]string, error) {
 }
 
 func (s *SysVServiceManager) serviceRunLevel() (map[string][]SysVServiceRunlevel, error) {
-	c, _ := s.motor.Transport.RunCommand("find /etc/rc*.d -name 'S*'")
+	c, _ := s.provider.RunCommand("find /etc/rc*.d -name 'S*'")
 	// it may happen that /etc/init.d/rc does not exist, eg on centos 6
 	return ParseSysVRunlevel(c.Stdout)
 }
@@ -91,7 +90,7 @@ func (s *SysVServiceManager) running(services []string) (map[string]bool, error)
 		service := services[i]
 		running := true
 
-		serviceStatusCmd, err := s.motor.Transport.RunCommand(fmt.Sprintf("service %s status", service))
+		serviceStatusCmd, err := s.provider.RunCommand(fmt.Sprintf("service %s status", service))
 		if err != nil || serviceStatusCmd.ExitStatus != 0 {
 			running = false
 		}

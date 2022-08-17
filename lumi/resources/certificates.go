@@ -434,11 +434,16 @@ func (s *lumiOsRootCertificates) init(args *lumi.Args) (*lumi.Args, OsRootCertif
 		return nil, nil, errors.New("root certificates are not unsupported on this platform: " + pi.Name + " " + pi.Version)
 	}
 
+	osProvider, err := osProvider(s.MotorRuntime.Motor)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	// search the first file that exists, it mimics the behavior go is doing
 	lumiFiles := []interface{}{}
 	for i := range files {
 		log.Trace().Str("path", files[i]).Msg("os.rootcertificates> check root certificate path")
-		fileInfo, err := s.MotorRuntime.Motor.Transport.FS().Stat(files[i])
+		fileInfo, err := osProvider.FS().Stat(files[i])
 		if err != nil {
 			log.Trace().Err(err).Str("path", files[i]).Msg("os.rootcertificates> file does not exist")
 			continue

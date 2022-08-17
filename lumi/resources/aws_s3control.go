@@ -14,7 +14,7 @@ func (s *lumiAwsS3control) id() (string, error) {
 }
 
 func (s *lumiAwsS3control) GetAccountPublicAccessBlock() (interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

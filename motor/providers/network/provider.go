@@ -3,9 +3,7 @@ package network
 import (
 	"strconv"
 
-	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 )
 
 type Provider struct {
@@ -61,18 +59,6 @@ func (p *Provider) Supports(mode string) bool {
 }
 
 // ----------------- other requirements vv -------------------------
-
-func (p *Provider) RunCommand(command string) (*providers.Command, error) {
-	return nil, providers.ErrRunCommandNotImplemented
-}
-
-func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, providers.ErrFileInfoNotImplemented
-}
-
-func (p *Provider) FS() afero.Fs {
-	return &fsutil.NoFs{}
-}
 
 func (p *Provider) Close() {}
 

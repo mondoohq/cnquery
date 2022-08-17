@@ -20,20 +20,21 @@ import (
 	"context"
 	"errors"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/guest"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
+	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/ssh/cat"
 	"go.mondoo.io/mondoo/motor/providers/vmwareguestapi/toolbox"
 	"go.mondoo.io/mondoo/motor/providers/vsphere"
 	"go.mondoo.io/mondoo/motor/vault"
-
-	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/ssh/cat"
 )
 
 var _ providers.Transport = (*Provider)(nil)
@@ -133,7 +134,7 @@ func (p *Provider) Client() *govmomi.Client {
 	return p.client
 }
 
-func (p *Provider) RunCommand(command string) (*providers.Command, error) {
+func (p *Provider) RunCommand(command string) (*os.Command, error) {
 	log.Debug().Str("command", command).Str("transport", "vmwareguest").Msg("run command")
 	c := &Command{tb: p.tb}
 
@@ -142,12 +143,12 @@ func (p *Provider) RunCommand(command string) (*providers.Command, error) {
 	return cmd, err
 }
 
-func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
+func (p *Provider) FileInfo(path string) (os.FileInfoDetails, error) {
 	fs := p.FS()
 	afs := &afero.Afero{Fs: fs}
 	stat, err := afs.Stat(path)
 	if err != nil {
-		return providers.FileInfoDetails{}, err
+		return os.FileInfoDetails{}, err
 	}
 
 	uid := int64(-1)
@@ -166,8 +167,8 @@ func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
 	// }
 	mode := stat.Mode()
 
-	return providers.FileInfoDetails{
-		Mode: providers.FileModeDetails{mode},
+	return os.FileInfoDetails{
+		Mode: os.FileModeDetails{mode},
 		Size: stat.Size(),
 		Uid:  uid,
 		Gid:  gid,

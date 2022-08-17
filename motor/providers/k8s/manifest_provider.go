@@ -17,6 +17,7 @@ import (
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/k8s/resources"
+	os_provider "go.mondoo.io/mondoo/motor/providers/os"
 	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
@@ -66,12 +67,12 @@ type manifestProvider struct {
 	selectedResourceID string
 }
 
-func (t *manifestProvider) RunCommand(command string) (*providers.Command, error) {
+func (t *manifestProvider) RunCommand(command string) (*os_provider.Command, error) {
 	return nil, errors.New("k8s does not implement RunCommand")
 }
 
-func (t *manifestProvider) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, errors.New("k8s does not implement FileInfo")
+func (t *manifestProvider) FileInfo(path string) (os_provider.FileInfoDetails, error) {
+	return os_provider.FileInfoDetails{}, errors.New("k8s does not implement FileInfo")
 }
 
 func (t *manifestProvider) FS() afero.Fs {

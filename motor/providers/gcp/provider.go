@@ -3,6 +3,8 @@ package gcp
 import (
 	"errors"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
@@ -69,12 +71,12 @@ type Provider struct {
 	opts         map[string]string
 }
 
-func (p *Provider) RunCommand(command string) (*providers.Command, error) {
+func (p *Provider) RunCommand(command string) (*os.Command, error) {
 	return nil, providers.ErrRunCommandNotImplemented
 }
 
-func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, providers.ErrFileInfoNotImplemented
+func (p *Provider) FileInfo(path string) (os.FileInfoDetails, error) {
+	return os.FileInfoDetails{}, providers.ErrFileInfoNotImplemented
 }
 
 func (p *Provider) FS() afero.Fs {

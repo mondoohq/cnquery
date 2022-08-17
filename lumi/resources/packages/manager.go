@@ -3,6 +3,7 @@ package packages
 import (
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
 type OperatingSystemPkgManager interface {
@@ -25,31 +26,36 @@ func ResolveSystemPkgManager(motor *motor.Motor) (OperatingSystemPkgManager, err
 		return nil, err
 	}
 
+	osProvider, isOSProvider := motor.Provider.(os.OperatingSystemProvider)
+	if !isOSProvider {
+		return nil, errors.New("package manager is not supported for platform: " + pf.Name)
+	}
+
 	switch {
 	case pf.IsFamily("arch"): // arch family
-		pm = &PacmanPkgManager{motor: motor}
+		pm = &PacmanPkgManager{provider: osProvider}
 	case pf.IsFamily("debian"): // debian family
-		pm = &DebPkgManager{motor: motor}
+		pm = &DebPkgManager{provider: osProvider}
 	case pf.Name == "amazonlinux" || pf.Name == "photon" || pf.Name == "wrlinux":
 		fallthrough
 	case pf.IsFamily("redhat"): // rhel family
-		pm = &RpmPkgManager{motor: motor, platform: pf}
+		pm = &RpmPkgManager{provider: osProvider, platform: pf}
 	case pf.IsFamily("suse"): // suse handling
-		pm = &SusePkgManager{RpmPkgManager{motor: motor, platform: pf}}
+		pm = &SusePkgManager{RpmPkgManager{provider: osProvider, platform: pf}}
 	case pf.Name == "alpine": // alpine
-		pm = &AlpinePkgManager{motor: motor}
+		pm = &AlpinePkgManager{provider: osProvider}
 	case pf.Name == "macos": // mac os family
-		pm = &MacOSPkgManager{motor: motor}
+		pm = &MacOSPkgManager{provider: osProvider}
 	case pf.Name == "windows":
-		pm = &WinPkgManager{motor: motor}
+		pm = &WinPkgManager{provider: osProvider, platform: pf}
 	case pf.Name == "scratch" || pf.Name == "coreos":
-		pm = &ScratchPkgManager{motor: motor}
+		pm = &ScratchPkgManager{provider: osProvider}
 	case pf.Name == "openwrt":
-		pm = &OpkgPkgManager{motor: motor}
+		pm = &OpkgPkgManager{provider: osProvider}
 	case pf.Name == "solaris":
-		pm = &SolarisPkgManager{motor: motor}
+		pm = &SolarisPkgManager{provider: osProvider}
 	case pf.Name == "cos":
-		pm = &CosPkgManager{motor: motor}
+		pm = &CosPkgManager{provider: osProvider}
 	default:
 		return nil, errors.New("could not detect suitable package manager for platform: " + pf.Name)
 	}
@@ -62,15 +68,20 @@ func ResolveSystemPkgManager(motor *motor.Motor) (OperatingSystemPkgManager, err
 func ResolveSystemUpdateManager(motor *motor.Motor) (OperatingSystemUpdateManager, error) {
 	var um OperatingSystemUpdateManager
 
-	platform, err := motor.Platform()
+	pf, err := motor.Platform()
 	if err != nil {
 		return nil, err
 	}
 
+	osProvider, isOSProvider := motor.Provider.(os.OperatingSystemProvider)
+	if !isOSProvider {
+		return nil, errors.New("package manager is not supported for platform: " + pf.Name)
+	}
+
 	// TODO: use OS family and select package manager
-	switch platform.Name {
+	switch pf.Name {
 	case "opensuse", "sles", "opensuse-leap", "opensuse-tumbleweed": // suse family
-		um = &SuseUpdateManager{Motor: motor}
+		um = &SuseUpdateManager{provider: osProvider}
 	default:
 		return nil, errors.New("your platform is not supported by os updates resource")
 	}

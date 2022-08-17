@@ -14,11 +14,16 @@ func (s *lumiWindows) id() (string, error) {
 }
 
 func (s *lumiWindows) GetComputerInfo() (map[string]interface{}, error) {
+	osProvider, err := osProvider(s.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
 	cmd := windows.PSGetComputerInfo
 
 	// encode the powershell command
 	encodedCmd := powershell.Encode(cmd)
-	executedCmd, err := s.MotorRuntime.Motor.Transport.RunCommand(encodedCmd)
+	executedCmd, err := osProvider.RunCommand(encodedCmd)
 	if err != nil {
 		return nil, err
 	}
@@ -69,9 +74,14 @@ func (p *lumiWindowsHotfix) init(args *lumi.Args) (*lumi.Args, WindowsHotfix, er
 }
 
 func (w *lumiWindows) GetHotfixes() ([]interface{}, error) {
+	osProvider, err := osProvider(w.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
 	// query hotfixes
 	encodedCmd := powershell.Encode(packages.WINDOWS_QUERY_HOTFIXES)
-	executedCmd, err := w.MotorRuntime.Motor.Transport.RunCommand(encodedCmd)
+	executedCmd, err := osProvider.RunCommand(encodedCmd)
 	if err != nil {
 		return nil, err
 	}
@@ -145,9 +155,14 @@ func (p *lumiWindowsFeature) init(args *lumi.Args) (*lumi.Args, WindowsFeature, 
 }
 
 func (w *lumiWindows) GetFeatures() ([]interface{}, error) {
+	osProvider, err := osProvider(w.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
 	// query features
 	encodedCmd := powershell.Encode(windows.QUERY_FEATURES)
-	executedCmd, err := w.MotorRuntime.Motor.Transport.RunCommand(encodedCmd)
+	executedCmd, err := osProvider.RunCommand(encodedCmd)
 	if err != nil {
 		return nil, err
 	}

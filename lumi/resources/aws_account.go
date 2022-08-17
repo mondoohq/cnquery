@@ -15,7 +15,7 @@ func (a *lumiAwsAccount) id() (string, error) {
 }
 
 func (a *lumiAwsAccount) GetId() (string, error) {
-	at, err := awstransport(a.MotorRuntime.Motor.Transport)
+	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return "", nil
 	}
@@ -29,7 +29,7 @@ func (a *lumiAwsAccount) GetId() (string, error) {
 }
 
 func (a *lumiAwsAccount) GetAliases() ([]interface{}, error) {
-	at, err := awstransport(a.MotorRuntime.Motor.Transport)
+	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil
 	}
@@ -49,7 +49,7 @@ func (a *lumiAwsAccount) GetAliases() ([]interface{}, error) {
 }
 
 func (a *lumiAwsAccount) GetOrganization() (interface{}, error) {
-	at, err := awstransport(a.MotorRuntime.Motor.Transport)
+	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil
 	}

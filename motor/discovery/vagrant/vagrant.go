@@ -5,7 +5,6 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/motorid"
@@ -29,18 +28,14 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 func (v *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
-	localTransport, err := local.New()
-	if err != nil {
-		return nil, err
-	}
-	m, err := motor.New(localTransport)
+	localProvider, err := local.New()
 	if err != nil {
 		return nil, err
 	}
 
 	// we run status first, since vagrant ssh-config does not return a proper state
 	// if in a multi-vm setup not all vms are running
-	cmd, err := m.Transport.RunCommand("vagrant status")
+	cmd, err := localProvider.RunCommand("vagrant status")
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +57,7 @@ func (v *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn creden
 			return nil, errors.New("vm is not ready: " + k)
 		}
 
-		cmd, err := m.Transport.RunCommand("vagrant ssh-config " + k)
+		cmd, err := localProvider.RunCommand("vagrant ssh-config " + k)
 		if err != nil {
 			return nil, err
 		}
@@ -87,7 +82,7 @@ func (v *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn creden
 			}
 
 			log.Debug().Str("vm", k).Msg("gather ssh config")
-			cmd, err := m.Transport.RunCommand("vagrant ssh-config " + k)
+			cmd, err := localProvider.RunCommand("vagrant ssh-config " + k)
 			if err != nil {
 				return nil, err
 			}
@@ -156,7 +151,7 @@ func newVagrantAsset(sshConfig *VagrantVmSSHConfig, rootTransportConfig *provide
 		return nil, err
 	}
 
-	fingerprint, err := motorid.IdentifyPlatform(m.Transport, p, nil)
+	fingerprint, err := motorid.IdentifyPlatform(m.Provider, p, nil)
 	if err != nil {
 		return nil, err
 	}

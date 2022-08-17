@@ -17,7 +17,7 @@ func (g *lumiAwsGuardduty) id() (string, error) {
 }
 
 func (g *lumiAwsGuardduty) GetDetectors() ([]interface{}, error) {
-	at, err := awstransport(g.MotorRuntime.Motor.Transport)
+	at, err := awstransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (g *lumiAwsGuarddutyDetector) GetUnarchivedFindings() ([]interface{}, error
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(g.MotorRuntime.Motor.Transport)
+	at, err := awstransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func (g *lumiAwsGuarddutyDetector) init(args *lumi.Args) (*lumi.Args, AwsGuarddu
 
 	id := (*args)["id"].(string)
 	region := (*args)["region"].(string)
-	at, err := awstransport(g.MotorRuntime.Motor.Transport)
+	at, err := awstransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}

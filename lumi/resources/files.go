@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/providers"
 )
@@ -157,12 +159,17 @@ func (l *lumiFilesFind) GetList() ([]interface{}, error) {
 		return nil, err
 	}
 
-	var foundFiles []string
-	caps := l.MotorRuntime.Motor.Transport.Capabilities()
-	if caps.HasCapability(providers.Capability_FileSearch) {
-		fs := l.MotorRuntime.Motor.Transport.FS()
+	osProvider, err := osProvider(l.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
 
-		fsSearch, ok := fs.(providers.FileSearch)
+	var foundFiles []string
+	caps := l.MotorRuntime.Motor.Provider.Capabilities()
+	if caps.HasCapability(providers.Capability_FileSearch) {
+		fs := osProvider.FS()
+
+		fsSearch, ok := fs.(os.FileSearch)
 		if !ok {
 			return nil, errors.New("find is not supported for your platform")
 		}

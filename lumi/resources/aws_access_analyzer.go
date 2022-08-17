@@ -20,7 +20,7 @@ func (e *lumiAwsAccessanalyzerAnalyzer) id() (string, error) {
 }
 
 func (a *lumiAwsAccessAnalyzer) GetAnalyzers() ([]interface{}, error) {
-	at, err := awstransport(a.MotorRuntime.Motor.Transport)
+	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

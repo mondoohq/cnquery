@@ -15,7 +15,7 @@ func (e *lumiAwsElasticache) id() (string, error) {
 }
 
 func (e *lumiAwsElasticache) GetClusters() ([]interface{}, error) {
-	at, err := awstransport(e.MotorRuntime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

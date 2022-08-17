@@ -4,6 +4,8 @@ import (
 	"errors"
 	"regexp"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/platform"
 )
@@ -47,17 +49,22 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		return nil, err
 	}
 
+	osProvider, isOSProvider := motor.Provider.(os.OperatingSystemProvider)
+	if !isOSProvider {
+		return nil, errors.New("services manager is not supported for platform: " + pf.Name)
+	}
+
 	switch {
 	case pf.IsFamily("arch"): // arch family
-		osm = ResolveSystemdServiceManager(motor)
+		osm = ResolveSystemdServiceManager(osProvider)
 	case pf.Name == "amazonlinux":
 		if amazonlinux1version.MatchString(pf.Version) {
-			osm = &UpstartServiceManager{SysVServiceManager{motor: motor}}
+			osm = &UpstartServiceManager{SysVServiceManager{provider: osProvider}}
 		} else {
-			osm = ResolveSystemdServiceManager(motor)
+			osm = ResolveSystemdServiceManager(osProvider)
 		}
 	case pf.Name == "photon":
-		osm = ResolveSystemdServiceManager(motor)
+		osm = ResolveSystemdServiceManager(osProvider)
 	// NOTE: we need to check fedora before rhel family, since its also rhel family
 	case pf.Name == "fedora":
 		rv := platform.ParseOsVersion(pf.Version)
@@ -68,9 +75,9 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 
 		if v < 15 {
 			// upstart is only used since fedora 11 but we do not support those older versions
-			osm = &UpstartServiceManager{SysVServiceManager{motor: motor}}
+			osm = &UpstartServiceManager{SysVServiceManager{provider: osProvider}}
 		} else {
-			osm = ResolveSystemdServiceManager(motor)
+			osm = ResolveSystemdServiceManager(osProvider)
 		}
 	case pf.IsFamily("redhat"):
 		rv := platform.ParseOsVersion(pf.Version)
@@ -79,9 +86,9 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 			return nil, errors.New("unknown redhat version: " + pf.Version)
 		}
 		if v < 7 {
-			osm = &UpstartServiceManager{SysVServiceManager{motor: motor}}
+			osm = &UpstartServiceManager{SysVServiceManager{provider: osProvider}}
 		} else {
-			osm = ResolveSystemdServiceManager(motor)
+			osm = ResolveSystemdServiceManager(osProvider)
 		}
 	case pf.Name == "ubuntu" || pf.Name == "linuxmint" || pf.Name == "pop":
 		rv := platform.ParseOsVersion(pf.Version)
@@ -91,9 +98,9 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		}
 
 		if v < 15 {
-			osm = &UpstartServiceManager{SysVServiceManager{motor: motor}}
+			osm = &UpstartServiceManager{SysVServiceManager{provider: osProvider}}
 		} else {
-			osm = ResolveSystemdServiceManager(motor)
+			osm = ResolveSystemdServiceManager(osProvider)
 		}
 	case pf.Name == "debian":
 		rv := platform.ParseOsVersion(pf.Version)
@@ -103,12 +110,12 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		}
 
 		if v < 7 {
-			osm = &SysVServiceManager{motor: motor}
+			osm = &SysVServiceManager{provider: osProvider}
 		} else {
-			osm = ResolveSystemdServiceManager(motor)
+			osm = ResolveSystemdServiceManager(osProvider)
 		}
 	case pf.Name == "suse-microos": // it is suse family but uses a different version scheme
-		osm = ResolveSystemdServiceManager(motor)
+		osm = ResolveSystemdServiceManager(osProvider)
 	case pf.IsFamily("suse"):
 		rv := platform.ParseOsVersion(pf.Version)
 		v, err := rv.MajorAtoi()
@@ -118,22 +125,22 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 
 		// NOTE: opensuse-tumbleweed uses version numbers like 20200622
 		if v < 12 {
-			osm = &SysVServiceManager{motor: motor}
+			osm = &SysVServiceManager{provider: osProvider}
 		} else {
-			osm = ResolveSystemdServiceManager(motor)
+			osm = ResolveSystemdServiceManager(osProvider)
 		}
 	case pf.IsFamily("darwin"): // "macos", "darwin"
-		osm = &LaunchDServiceManager{motor: motor}
+		osm = &LaunchDServiceManager{provider: osProvider}
 	case pf.Name == "freebsd" || pf.Name == "dragonflybsd" || pf.Name == "netbsd":
-		osm = &BsdInitServiceManager{motor: motor}
+		osm = &BsdInitServiceManager{provider: osProvider}
 	case pf.Name == "openbsd":
-		osm = &OpenBsdRcctlServiceManager{motor: motor}
+		osm = &OpenBsdRcctlServiceManager{provider: osProvider}
 	case pf.Name == "windows":
-		osm = &WindowsServiceManager{motor: motor}
+		osm = &WindowsServiceManager{provider: osProvider}
 	case pf.Name == "alpine":
-		osm = &AlpineOpenrcServiceManager{motor: motor}
+		osm = &AlpineOpenrcServiceManager{provider: osProvider}
 	case pf.Name == "cos":
-		osm = ResolveSystemdServiceManager(motor)
+		osm = ResolveSystemdServiceManager(osProvider)
 	}
 
 	if osm == nil {

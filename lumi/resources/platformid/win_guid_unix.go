@@ -4,9 +4,9 @@
 package platformid
 
 import (
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
-func windowsMachineId(t providers.Transport) (string, error) {
-	return PowershellWindowsMachineId(t)
+func windowsMachineId(p os.OperatingSystemProvider) (string, error) {
+	return PowershellWindowsMachineId(p)
 }

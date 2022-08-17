@@ -6,9 +6,13 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
-var _ providers.Transport = (*Provider)(nil)
+var (
+	_ providers.Transport        = (*Provider)(nil)
+	_ os.OperatingSystemProvider = (*Provider)(nil)
+)
 
 func NewWithClose(endpoint *providers.Config, closeFN func()) (*Provider, error) {
 	mountDir := endpoint.Host + endpoint.Path
@@ -42,7 +46,7 @@ type Provider struct {
 	closeFN      func()
 }
 
-func (p *Provider) RunCommand(command string) (*providers.Command, error) {
+func (p *Provider) RunCommand(command string) (*os.Command, error) {
 	return nil, providers.ErrRunCommandNotImplemented
 }
 
@@ -53,19 +57,19 @@ func (p *Provider) FS() afero.Fs {
 	return p.fs
 }
 
-func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
+func (p *Provider) FileInfo(path string) (os.FileInfoDetails, error) {
 	fs := p.FS()
 	afs := &afero.Afero{Fs: fs}
 	stat, err := afs.Stat(path)
 	if err != nil {
-		return providers.FileInfoDetails{}, err
+		return os.FileInfoDetails{}, err
 	}
 
 	uid, gid := p.fileowner(stat)
 
 	mode := stat.Mode()
-	return providers.FileInfoDetails{
-		Mode: providers.FileModeDetails{mode},
+	return os.FileInfoDetails{
+		Mode: os.FileModeDetails{mode},
 		Size: stat.Size(),
 		Uid:  uid,
 		Gid:  gid,

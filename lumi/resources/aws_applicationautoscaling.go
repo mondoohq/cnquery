@@ -27,7 +27,7 @@ func (l *lumiAwsApplicationautoscalingTarget) id() (string, error) {
 }
 
 func (a *lumiAwsApplicationAutoscaling) GetScalableTargets() ([]interface{}, error) {
-	at, err := awstransport(a.MotorRuntime.Motor.Transport)
+	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

@@ -46,8 +46,13 @@ func (ie *lumiIptablesEntry) id() (string, error) {
 }
 
 func (i *lumiIptables) GetOutput() ([]interface{}, error) {
+	osProvider, err := osProvider(i.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
 	ipstats := []interface{}{}
-	cmd, err := i.MotorRuntime.Motor.Transport.RunCommand("iptables -L OUTPUT -v -n -x --line-numbers")
+	cmd, err := osProvider.RunCommand("iptables -L OUTPUT -v -n -x --line-numbers")
 	if err != nil {
 		return nil, err
 	}
@@ -88,8 +93,13 @@ func (i *lumiIptables) GetOutput() ([]interface{}, error) {
 }
 
 func (i *lumiIptables) GetInput() ([]interface{}, error) {
+	osProvider, err := osProvider(i.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
 	ipstats := []interface{}{}
-	cmd, err := i.MotorRuntime.Motor.Transport.RunCommand("iptables -L INPUT -v -n -x --line-numbers")
+	cmd, err := osProvider.RunCommand("iptables -L INPUT -v -n -x --line-numbers")
 	if err != nil {
 		return nil, err
 	}
@@ -130,8 +140,13 @@ func (i *lumiIptables) GetInput() ([]interface{}, error) {
 }
 
 func (i *lumiIp6tables) GetOutput() ([]interface{}, error) {
+	osProvider, err := osProvider(i.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
 	ipstats := []interface{}{}
-	cmd, err := i.MotorRuntime.Motor.Transport.RunCommand("ip6tables -L OUTPUT -v -n -x --line-numbers")
+	cmd, err := osProvider.RunCommand("ip6tables -L OUTPUT -v -n -x --line-numbers")
 	if err != nil {
 		return nil, err
 	}
@@ -172,8 +187,13 @@ func (i *lumiIp6tables) GetOutput() ([]interface{}, error) {
 }
 
 func (i *lumiIp6tables) GetInput() ([]interface{}, error) {
+	osProvider, err := osProvider(i.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
 	ipstats := []interface{}{}
-	cmd, err := i.MotorRuntime.Motor.Transport.RunCommand("ip6tables -L INPUT -v -n -x --line-numbers")
+	cmd, err := osProvider.RunCommand("ip6tables -L INPUT -v -n -x --line-numbers")
 	if err != nil {
 		return nil, err
 	}

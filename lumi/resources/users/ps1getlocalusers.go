@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
-	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
 type WindowsSID struct {
@@ -52,7 +52,7 @@ func ParseWindowsLocalUsers(r io.Reader) ([]WindowsLocalUser, error) {
 }
 
 type WindowsUserManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (s *WindowsUserManager) Name() string {
@@ -70,7 +70,7 @@ func (s *WindowsUserManager) User(id string) (*User, error) {
 
 func (s *WindowsUserManager) List() ([]*User, error) {
 	powershellCmd := "Get-LocalUser | ConvertTo-Json"
-	c, err := s.motor.Transport.RunCommand(powershell.Wrap(powershellCmd))
+	c, err := s.provider.RunCommand(powershell.Wrap(powershellCmd))
 	if err != nil {
 		return nil, err
 	}

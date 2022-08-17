@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/providers"
+	os_provider "go.mondoo.io/mondoo/motor/providers/os"
 	"go.mondoo.io/mondoo/motor/providers/os/cmd"
 	"go.mondoo.io/mondoo/motor/providers/ssh/cat"
 	"go.mondoo.io/mondoo/motor/providers/ssh/scp"
@@ -21,6 +22,7 @@ import (
 var (
 	_ providers.Transport                   = (*Provider)(nil)
 	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
+	_ os_provider.OperatingSystemProvider   = (*Provider)(nil)
 )
 
 func New(pCfg *providers.Config) (*Provider, error) {
@@ -150,7 +152,7 @@ func (p *Provider) Connect() error {
 }
 
 func (p *Provider) VerifyConnection() error {
-	var out *providers.Command
+	var out *os_provider.Command
 	var err error
 
 	if p.Sudo != nil {
@@ -190,13 +192,13 @@ func (p *Provider) Reconnect() error {
 	return p.Connect()
 }
 
-func (p *Provider) runRawCommand(command string) (*providers.Command, error) {
+func (p *Provider) runRawCommand(command string) (*os_provider.Command, error) {
 	log.Debug().Str("command", command).Str("provider", "ssh").Msg("run command")
 	c := &Command{SSHProvider: p}
 	return c.Exec(command)
 }
 
-func (p *Provider) RunCommand(command string) (*providers.Command, error) {
+func (p *Provider) RunCommand(command string) (*os_provider.Command, error) {
 	if p.Sudo != nil {
 		command = p.Sudo.Build(command)
 	}
@@ -252,19 +254,19 @@ func (p *Provider) FS() afero.Fs {
 	return p.fs
 }
 
-func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
+func (p *Provider) FileInfo(path string) (os_provider.FileInfoDetails, error) {
 	fs := p.FS()
 	afs := &afero.Afero{Fs: fs}
 	stat, err := afs.Stat(path)
 	if err != nil {
-		return providers.FileInfoDetails{}, err
+		return os_provider.FileInfoDetails{}, err
 	}
 
 	uid := int64(-1)
 	gid := int64(-1)
 
 	if p.Sudo != nil || p.UseScpFilesystem {
-		if stat, ok := stat.Sys().(*providers.FileInfo); ok {
+		if stat, ok := stat.Sys().(*os_provider.FileInfo); ok {
 			uid = int64(stat.Uid)
 			gid = int64(stat.Gid)
 		}
@@ -276,8 +278,8 @@ func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
 	}
 	mode := stat.Mode()
 
-	return providers.FileInfoDetails{
-		Mode: providers.FileModeDetails{mode},
+	return os_provider.FileInfoDetails{
+		Mode: os_provider.FileModeDetails{mode},
 		Size: stat.Size(),
 		Uid:  uid,
 		Gid:  gid,

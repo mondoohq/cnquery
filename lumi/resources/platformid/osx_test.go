@@ -11,10 +11,10 @@ import (
 
 func TestMacOSMachineId(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/osx_test.toml")
-	trans, err := mock.NewFromTomlFile(filepath)
+	provider, err := mock.NewFromTomlFile(filepath)
 	require.NoError(t, err)
 
-	lid := MacOSIdProvider{Transport: trans}
+	lid := MacOSIdProvider{provider: provider}
 	id, err := lid.ID()
 	require.NoError(t, err)
 

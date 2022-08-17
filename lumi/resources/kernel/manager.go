@@ -1,9 +1,11 @@
 package kernel
 
 import (
-	"github.com/cockroachdb/errors"
 	"io/ioutil"
 	"strings"
+
+	"github.com/cockroachdb/errors"
+	"go.mondoo.io/mondoo/motor/providers/os"
 
 	"go.mondoo.io/mondoo/motor"
 )
@@ -36,14 +38,16 @@ func ResolveManager(motor *motor.Motor) (OSKernelManager, error) {
 		return nil, err
 	}
 
+	osProvider, isOSProvider := motor.Provider.(os.OperatingSystemProvider)
+
 	// check darwin before unix since darwin is also a unix
-	if platform.IsFamily("darwin") {
-		kmm = &OSXKernelManager{motor: motor}
-	} else if platform.IsFamily("linux") {
-		kmm = &LinuxKernelManager{motor: motor}
-	} else if platform.Name == "freebsd" {
+	if isOSProvider && platform.IsFamily("darwin") {
+		kmm = &OSXKernelManager{provider: osProvider}
+	} else if isOSProvider && platform.IsFamily("linux") {
+		kmm = &LinuxKernelManager{provider: osProvider}
+	} else if isOSProvider && platform.Name == "freebsd" {
 		// NOTE: kldstat may work on other bsd linux
-		kmm = &FreebsdKernelManager{motor: motor}
+		kmm = &FreebsdKernelManager{provider: osProvider}
 	}
 
 	if kmm == nil {
@@ -54,7 +58,7 @@ func ResolveManager(motor *motor.Motor) (OSKernelManager, error) {
 }
 
 type LinuxKernelManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (s *LinuxKernelManager) Name() string {
@@ -64,7 +68,7 @@ func (s *LinuxKernelManager) Name() string {
 func (s *LinuxKernelManager) Info() (KernelInfo, error) {
 	res := KernelInfo{}
 
-	cmdlineRaw, err := s.motor.Transport.FS().Open("/proc/cmdline")
+	cmdlineRaw, err := s.provider.FS().Open("/proc/cmdline")
 	if err != nil {
 		return res, err
 	}
@@ -78,7 +82,7 @@ func (s *LinuxKernelManager) Info() (KernelInfo, error) {
 	res.Device = args.Device
 	res.Arguments = args.Arguments
 
-	versionRaw, err := s.motor.Transport.FS().Open("/proc/version")
+	versionRaw, err := s.provider.FS().Open("/proc/version")
 	if err != nil {
 		return res, err
 	}
@@ -95,7 +99,7 @@ func (s *LinuxKernelManager) Info() (KernelInfo, error) {
 }
 
 func (s *LinuxKernelManager) Parameters() (map[string]string, error) {
-	cmd, err := s.motor.Transport.RunCommand("/sbin/sysctl -a")
+	cmd, err := s.provider.RunCommand("/sbin/sysctl -a")
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read kernel parameters")
 	}
@@ -105,7 +109,7 @@ func (s *LinuxKernelManager) Parameters() (map[string]string, error) {
 
 func (s *LinuxKernelManager) Modules() ([]*KernelModule, error) {
 	// TODO: use proc in future
-	cmd, err := s.motor.Transport.RunCommand("/sbin/lsmod")
+	cmd, err := s.provider.RunCommand("/sbin/lsmod")
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read kernel modules")
 	}
@@ -114,7 +118,7 @@ func (s *LinuxKernelManager) Modules() ([]*KernelModule, error) {
 }
 
 type OSXKernelManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (s *OSXKernelManager) Name() string {
@@ -122,8 +126,7 @@ func (s *OSXKernelManager) Name() string {
 }
 
 func (s *OSXKernelManager) Info() (KernelInfo, error) {
-
-	cmd, err := s.motor.Transport.RunCommand("uname -r")
+	cmd, err := s.provider.RunCommand("uname -r")
 	if err != nil {
 		return KernelInfo{}, errors.Wrap(err, "could not read kernel parameters")
 	}
@@ -139,7 +142,7 @@ func (s *OSXKernelManager) Info() (KernelInfo, error) {
 }
 
 func (s *OSXKernelManager) Parameters() (map[string]string, error) {
-	cmd, err := s.motor.Transport.RunCommand("sysctl -a")
+	cmd, err := s.provider.RunCommand("sysctl -a")
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read kernel parameters")
 	}
@@ -148,7 +151,7 @@ func (s *OSXKernelManager) Parameters() (map[string]string, error) {
 }
 
 func (s *OSXKernelManager) Modules() ([]*KernelModule, error) {
-	cmd, err := s.motor.Transport.RunCommand("kextstat")
+	cmd, err := s.provider.RunCommand("kextstat")
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read kernel modules")
 	}
@@ -157,7 +160,7 @@ func (s *OSXKernelManager) Modules() ([]*KernelModule, error) {
 }
 
 type FreebsdKernelManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (s *FreebsdKernelManager) Name() string {
@@ -169,7 +172,7 @@ func (s *FreebsdKernelManager) Info() (KernelInfo, error) {
 }
 
 func (s *FreebsdKernelManager) Parameters() (map[string]string, error) {
-	cmd, err := s.motor.Transport.RunCommand("sysctl -a")
+	cmd, err := s.provider.RunCommand("sysctl -a")
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read kernel parameters")
 	}
@@ -178,7 +181,7 @@ func (s *FreebsdKernelManager) Parameters() (map[string]string, error) {
 }
 
 func (s *FreebsdKernelManager) Modules() ([]*KernelModule, error) {
-	cmd, err := s.motor.Transport.RunCommand("kldstat")
+	cmd, err := s.provider.RunCommand("kldstat")
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read kernel modules")
 	}

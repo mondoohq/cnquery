@@ -14,7 +14,7 @@ import (
 	dockertypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/motor/providers"
+	os_provider "go.mondoo.io/mondoo/motor/providers/os"
 	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 )
 
@@ -66,7 +66,7 @@ func (f *File) Stat() (os.FileInfo, error) {
 	}
 	r.Close()
 
-	return &providers.FileInfo{
+	return &os_provider.FileInfo{
 		FMode:    dstat.Mode,
 		FSize:    dstat.Size,
 		FName:    dstat.Name,

@@ -9,9 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 )
 
 var (
@@ -118,18 +116,6 @@ type Provider struct {
 	selectedPlatformID string
 	info               Info
 	cache              Cache
-}
-
-func (p *Provider) RunCommand(command string) (*providers.Command, error) {
-	return nil, providers.ErrRunCommandNotImplemented
-}
-
-func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, providers.ErrFileInfoNotImplemented
-}
-
-func (p *Provider) FS() afero.Fs {
-	return &fsutil.NoFs{}
 }
 
 func (p *Provider) Close() {}

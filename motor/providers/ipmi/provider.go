@@ -4,10 +4,8 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/lumi/resources/ipmi"
 	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
@@ -56,18 +54,6 @@ func New(pCfg *providers.Config) (*Provider, error) {
 type Provider struct {
 	client *ipmi.IpmiClient
 	guid   string
-}
-
-func (p *Provider) RunCommand(command string) (*providers.Command, error) {
-	return nil, providers.ErrRunCommandNotImplemented
-}
-
-func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, providers.ErrFileInfoNotImplemented
-}
-
-func (p *Provider) FS() afero.Fs {
-	return &fsutil.NoFs{}
 }
 
 func (p *Provider) Close() {

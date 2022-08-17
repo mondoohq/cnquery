@@ -2,11 +2,11 @@ package platform
 
 import (
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/os"
 	"go.mondoo.io/mondoo/motor/providers/tar"
 )
 
-type detect func(p *PlatformResolver, di *Platform, t providers.Transport) (bool, error)
+type detect func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error)
 
 type PlatformResolver struct {
 	Name      string
@@ -15,17 +15,17 @@ type PlatformResolver struct {
 	Detect    detect
 }
 
-func (p *PlatformResolver) Resolve(t providers.Transport) (*Platform, bool) {
+func (r *PlatformResolver) Resolve(p os.OperatingSystemProvider) (*Platform, bool) {
 	// prepare detect info object
 	di := &Platform{}
 	di.Family = make([]string, 0)
 
 	// start recursive platform resolution
-	pi, resolved := p.resolvePlatform(di, t)
+	pi, resolved := r.resolvePlatform(di, p)
 
 	// if we have a container image use the architecture specified in the transport as it is resolved
 	// using the container image properties
-	tarTransport, ok := t.(*tar.Provider)
+	tarTransport, ok := p.(*tar.Provider)
 	if resolved && ok {
 		pi.Arch = tarTransport.PlatformArchitecture
 
@@ -44,20 +44,20 @@ func (p *PlatformResolver) Resolve(t providers.Transport) (*Platform, bool) {
 // Resolve tries to find recursively all
 // platforms until a leaf (operating systems) detect
 // mechanism is returning true
-func (p *PlatformResolver) resolvePlatform(di *Platform, t providers.Transport) (*Platform, bool) {
-	detected, err := p.Detect(p, di, t)
+func (r *PlatformResolver) resolvePlatform(pf *Platform, p os.OperatingSystemProvider) (*Platform, bool) {
+	detected, err := r.Detect(r, pf, p)
 	if err != nil {
-		return di, false
+		return pf, false
 	}
 
 	// if detection is true but we have a family
-	if detected == true && p.IsFamiliy == true {
+	if detected == true && r.IsFamiliy == true {
 		// we are a familiy and we may have childs to try
-		for _, c := range p.Children {
-			detected, resolved := c.resolvePlatform(di, t)
+		for _, c := range r.Children {
+			detected, resolved := c.resolvePlatform(pf, p)
 			if resolved {
 				// add family hieracy
-				detected.Family = append(di.Family, p.Name)
+				detected.Family = append(pf.Family, r.Name)
 				return detected, resolved
 			}
 		}
@@ -69,10 +69,10 @@ func (p *PlatformResolver) resolvePlatform(di *Platform, t providers.Transport) 
 	}
 
 	// return if the detect is true and we have a leaf
-	if detected && p.IsFamiliy == false {
-		return di, true
+	if detected && r.IsFamiliy == false {
+		return pf, true
 	}
 
 	// could not find it
-	return di, false
+	return pf, false
 }

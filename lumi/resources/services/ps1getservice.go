@@ -5,8 +5,9 @@ import (
 	"io"
 	"io/ioutil"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
-	"go.mondoo.io/mondoo/motor"
 )
 
 // WindowsService calls powershell Get-Service
@@ -120,7 +121,7 @@ func ParseWindowsService(r io.Reader) ([]*Service, error) {
 }
 
 type WindowsServiceManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (s *WindowsServiceManager) Name() string {
@@ -128,7 +129,7 @@ func (s *WindowsServiceManager) Name() string {
 }
 
 func (s *WindowsServiceManager) List() ([]*Service, error) {
-	c, err := s.motor.Transport.RunCommand(powershell.Wrap("Get-Service | Select-Object -Property Status, Name, DisplayName, StartType | ConvertTo-Json"))
+	c, err := s.provider.RunCommand(powershell.Wrap("Get-Service | Select-Object -Property Status, Name, DisplayName, StartType | ConvertTo-Json"))
 	if err != nil {
 		return nil, err
 	}

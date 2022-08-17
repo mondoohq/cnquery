@@ -9,10 +9,10 @@ import (
 )
 
 func TestGuidWindows(t *testing.T) {
-	trans, err := mock.NewFromTomlFile("./testdata/guid_windows.toml")
+	provider, err := mock.NewFromTomlFile("./testdata/guid_windows.toml")
 	require.NoError(t, err)
 
-	lid := WinIdProvider{Transport: trans}
+	lid := WinIdProvider{provider: provider}
 	id, err := lid.ID()
 	require.NoError(t, err)
 

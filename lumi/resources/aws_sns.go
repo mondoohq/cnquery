@@ -26,7 +26,7 @@ func (s *lumiAwsSnsSubscription) id() (string, error) {
 }
 
 func (s *lumiAwsSns) GetTopics() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (s *lumiAwsSnsTopic) init(args *lumi.Args) (*lumi.Args, AwsSnsTopic, error)
 	if err != nil {
 		return nil, nil, nil
 	}
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -133,7 +133,7 @@ func (s *lumiAwsSnsTopic) GetAttributes() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

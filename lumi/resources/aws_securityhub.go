@@ -15,7 +15,7 @@ func (s *lumiAwsSecurityhub) id() (string, error) {
 }
 
 func (s *lumiAwsSecurityhub) GetHubs() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

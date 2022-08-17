@@ -11,7 +11,12 @@ func (f *lumiSocketstats) id() (string, error) {
 }
 
 func (f *lumiSocketstats) GetOpenPorts() ([]interface{}, error) {
-	cmd, err := f.MotorRuntime.Motor.Transport.RunCommand("ss -4tuln")
+	osProvider, err := osProvider(f.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
+	cmd, err := osProvider.RunCommand("ss -4tuln")
 	if err != nil {
 		return nil, err
 	}

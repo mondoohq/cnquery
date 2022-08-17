@@ -5,14 +5,14 @@ import (
 	"strings"
 
 	"go.mondoo.io/mondoo/lumi/resources/packages"
-	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/os"
 	"go.mondoo.io/mondoo/vadvisor/versions/rpm"
 )
 
 // RpmNewestKernel works on all machines running rpm
 type RpmNewestKernel struct {
-	Motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (s *RpmNewestKernel) Name() string {
@@ -21,12 +21,12 @@ func (s *RpmNewestKernel) Name() string {
 
 func (s *RpmNewestKernel) RebootPending() (bool, error) {
 	// if it is a static asset, no reboot is pending
-	if !s.Motor.HasCapability(providers.Capability_RunCommand) {
+	if !s.provider.Capabilities().HasCapability(providers.Capability_RunCommand) {
 		return false, nil
 	}
 
 	// get installed kernel version
-	installedKernelCmd, err := s.Motor.Transport.RunCommand("rpm -q kernel --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\n'")
+	installedKernelCmd, err := s.provider.RunCommand("rpm -q kernel --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\n'")
 	if err != nil {
 		return false, err
 	}
@@ -38,7 +38,7 @@ func (s *RpmNewestKernel) RebootPending() (bool, error) {
 	}
 
 	// check running kernel version
-	unamerCmd, err := s.Motor.Transport.RunCommand("uname -r")
+	unamerCmd, err := s.provider.RunCommand("uname -r")
 	if err != nil {
 		return false, err
 	}

@@ -3,6 +3,8 @@ package users
 import (
 	"errors"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"go.mondoo.io/mondoo/motor"
 )
 
@@ -27,22 +29,27 @@ type OSUserManager interface {
 func ResolveManager(motor *motor.Motor) (OSUserManager, error) {
 	var um OSUserManager
 
-	platform, err := motor.Platform()
+	pf, err := motor.Platform()
 	if err != nil {
 		return nil, err
 	}
 
+	osProvider, isOSProvider := motor.Provider.(os.OperatingSystemProvider)
+	if !isOSProvider {
+		return nil, errors.New("process manager is not supported for platform: " + pf.Name)
+	}
+
 	// check darwin before unix since darwin is also a unix
-	if platform.IsFamily("darwin") {
-		um = &OSXUserManager{motor: motor}
-	} else if platform.IsFamily("unix") {
-		um = &UnixUserManager{motor: motor}
-	} else if platform.IsFamily("windows") {
-		um = &WindowsUserManager{motor: motor}
+	if pf.IsFamily("darwin") {
+		um = &OSXUserManager{provider: osProvider}
+	} else if pf.IsFamily("unix") {
+		um = &UnixUserManager{provider: osProvider}
+	} else if pf.IsFamily("windows") {
+		um = &WindowsUserManager{provider: osProvider}
 	}
 
 	if um == nil {
-		return nil, errors.New("could not detect suitable group manager for platform: " + platform.Name)
+		return nil, errors.New("could not detect suitable group manager for platform: " + pf.Name)
 	}
 
 	return um, nil

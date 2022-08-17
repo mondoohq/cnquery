@@ -16,7 +16,7 @@ func (k *lumiAwsKms) id() (string, error) {
 }
 
 func (k *lumiAwsKms) GetKeys() ([]interface{}, error) {
-	at, err := awstransport(k.MotorRuntime.Motor.Transport)
+	at, err := awstransport(k.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (k *lumiAwsKmsKey) GetMetadata() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(k.MotorRuntime.Motor.Transport)
+	at, err := awstransport(k.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (k *lumiAwsKmsKey) GetKeyRotationEnabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	at, err := awstransport(k.MotorRuntime.Motor.Transport)
+	at, err := awstransport(k.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return false, err
 	}

@@ -7,7 +7,12 @@ func (s *lumiWindowsBitlocker) id() (string, error) {
 }
 
 func (s *lumiWindowsBitlocker) GetVolumes() ([]interface{}, error) {
-	volumes, err := windows.GetBitLockerVolumes(s.MotorRuntime.Motor.Transport)
+	osProvider, err := osProvider(s.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
+	volumes, err := windows.GetBitLockerVolumes(osProvider)
 	if err != nil {
 		return nil, err
 	}

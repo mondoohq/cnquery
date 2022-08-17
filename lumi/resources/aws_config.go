@@ -14,7 +14,7 @@ func (c *lumiAwsConfig) id() (string, error) {
 }
 
 func (c *lumiAwsConfig) GetRecorders() ([]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func (c *lumiAwsConfigRecorder) id() (string, error) {
 }
 
 func (c *lumiAwsConfig) GetRules() ([]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

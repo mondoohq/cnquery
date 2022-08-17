@@ -26,7 +26,7 @@ func (p *lumiAwsS3) id() (string, error) {
 }
 
 func (p *lumiAwsS3) GetBuckets() ([]interface{}, error) {
-	at, err := awstransport(p.MotorRuntime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,7 @@ func (p *lumiAwsS3Bucket) GetPolicy() (interface{}, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +173,7 @@ func (p *lumiAwsS3Bucket) GetTags() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +210,7 @@ func (p *lumiAwsS3Bucket) GetLocation() (string, error) {
 		return "", err
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return "", err
 	}
@@ -244,7 +244,7 @@ func (p *lumiAwsS3Bucket) gatherAcl() (*s3.GetBucketAclOutput, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -321,7 +321,7 @@ func (p *lumiAwsS3Bucket) GetPublicAccessBlock() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(p.MotorRuntime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -360,8 +360,10 @@ func (p *lumiAwsS3Bucket) GetOwner() (map[string]interface{}, error) {
 }
 
 // see https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html
-const s3AuthenticatedUsersGroup = "http://acs.amazonaws.com/groups/global/AuthenticatedUsers"
-const s3AllUsersGroup = "http://acs.amazonaws.com/groups/global/AllUsers"
+const (
+	s3AuthenticatedUsersGroup = "http://acs.amazonaws.com/groups/global/AuthenticatedUsers"
+	s3AllUsersGroup           = "http://acs.amazonaws.com/groups/global/AllUsers"
+)
 
 func (p *lumiAwsS3Bucket) GetPublic() (bool, error) {
 	acl, err := p.gatherAcl()
@@ -388,7 +390,7 @@ func (p *lumiAwsS3Bucket) GetCors() ([]interface{}, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -436,7 +438,7 @@ func (p *lumiAwsS3Bucket) GetLogging() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -481,7 +483,7 @@ func (p *lumiAwsS3Bucket) GetVersioning() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -516,7 +518,7 @@ func (p *lumiAwsS3Bucket) GetReplication() (interface{}, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -546,7 +548,7 @@ func (p *lumiAwsS3Bucket) GetEncryption() (interface{}, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -581,7 +583,7 @@ func (p *lumiAwsS3Bucket) GetDefaultLock() (string, error) {
 		return "", err
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return "", err
 	}
@@ -612,7 +614,7 @@ func (p *lumiAwsS3Bucket) GetStaticWebsiteHosting() (map[string]interface{}, err
 		return nil, err
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

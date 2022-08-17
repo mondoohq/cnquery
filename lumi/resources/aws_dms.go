@@ -15,7 +15,7 @@ func (d *lumiAwsDms) id() (string, error) {
 }
 
 func (d *lumiAwsDms) GetReplicationInstances() ([]interface{}, error) {
-	at, err := awstransport(d.MotorRuntime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

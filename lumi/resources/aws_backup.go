@@ -24,7 +24,7 @@ func (a *lumiAwsBackupVaultRecoveryPoint) id() (string, error) {
 }
 
 func (a *lumiAwsBackup) GetVaults() ([]interface{}, error) {
-	at, err := awstransport(a.MotorRuntime.Motor.Transport)
+	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (a *lumiAwsBackupVault) GetRecoveryPoints() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(a.MotorRuntime.Motor.Transport)
+	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

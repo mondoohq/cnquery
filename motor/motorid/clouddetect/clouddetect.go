@@ -3,15 +3,16 @@ package clouddetect
 import (
 	"sync"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/motorid/clouddetect/providers/aws"
 	"go.mondoo.io/mondoo/motor/motorid/clouddetect/providers/azure"
 	"go.mondoo.io/mondoo/motor/motorid/clouddetect/providers/gce"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers"
 )
 
-type detectorFunc func(t providers.Transport, p *platform.Platform) string
+type detectorFunc func(provider os.OperatingSystemProvider, pf *platform.Platform) string
 
 var detectors = []detectorFunc{
 	aws.Detect,
@@ -19,7 +20,7 @@ var detectors = []detectorFunc{
 	gce.Detect,
 }
 
-func Detect(t providers.Transport, p *platform.Platform) string {
+func Detect(provider os.OperatingSystemProvider, p *platform.Platform) string {
 	wg := sync.WaitGroup{}
 	wg.Add(len(detectors))
 
@@ -28,7 +29,7 @@ func Detect(t providers.Transport, p *platform.Platform) string {
 		go func(f detectorFunc) {
 			defer wg.Done()
 
-			v := f(t, p)
+			v := f(provider, p)
 			if v != "" {
 				valChan <- v
 			}

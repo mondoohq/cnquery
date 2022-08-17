@@ -10,7 +10,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/motor"
+	os_provider "go.mondoo.io/mondoo/motor/providers/os"
 )
 
 const (
@@ -109,7 +109,7 @@ func ParseDpkgUpdates(input io.Reader) (map[string]PackageUpdate, error) {
 
 // Debian, Ubuntu
 type DebPkgManager struct {
-	motor *motor.Motor
+	provider os_provider.OperatingSystemProvider
 }
 
 func (dpm *DebPkgManager) Name() string {
@@ -121,7 +121,7 @@ func (dpm *DebPkgManager) Format() string {
 }
 
 func (dpm *DebPkgManager) List() ([]Package, error) {
-	fs := dpm.motor.Transport.FS()
+	fs := dpm.provider.FS()
 	dpkgStatusFile := "/var/lib/dpkg/status"
 	dpkgStatusDir := "/var/lib/dpkg/status.d"
 	_, fErr := fs.Stat(dpkgStatusFile)
@@ -137,7 +137,7 @@ func (dpm *DebPkgManager) List() ([]Package, error) {
 	// main pkg file for debian systems
 	if fErr == nil {
 		log.Debug().Str("file", dpkgStatusFile).Msg("parse dpkg status file")
-		fi, err := dpm.motor.Transport.FS().Open(dpkgStatusFile)
+		fi, err := dpm.provider.FS().Open(dpkgStatusFile)
 		if err != nil {
 			return nil, fmt.Errorf("could not read dpkg package list")
 		}
@@ -159,7 +159,7 @@ func (dpm *DebPkgManager) List() ([]Package, error) {
 			}
 
 			log.Debug().Str("path", path).Msg("walk file")
-			fi, err := dpm.motor.Transport.FS().Open(path)
+			fi, err := dpm.provider.FS().Open(path)
 			if err != nil {
 				log.Debug().Err(err).Str("path", path).Msg("could open file")
 				return fmt.Errorf("could not read dpkg package list")
@@ -190,9 +190,9 @@ func (dpm *DebPkgManager) Available() (map[string]PackageUpdate, error) {
 	// readlock() { cat /proc/locks | awk '{print $5}' | grep -v ^0 | xargs -I {1} find /proc/{1}/fd -maxdepth 1 -exec readlink {} \; | grep '^/var/lib/dpkg/lock$'; }
 	// while test -n "$(readlock)"; do sleep 1; done
 	// DEBIAN_FRONTEND=noninteractive apt-get upgrade --dry-run
-	dpm.motor.Transport.RunCommand("DEBIAN_FRONTEND=noninteractive apt-get update >/dev/null 2>&1")
+	dpm.provider.RunCommand("DEBIAN_FRONTEND=noninteractive apt-get update >/dev/null 2>&1")
 
-	cmd, err := dpm.motor.Transport.RunCommand("DEBIAN_FRONTEND=noninteractive apt-get upgrade --dry-run")
+	cmd, err := dpm.provider.RunCommand("DEBIAN_FRONTEND=noninteractive apt-get upgrade --dry-run")
 	if err != nil {
 		log.Debug().Err(err).Msg("lumi[packages]> could not read package updates")
 		return nil, fmt.Errorf("could not read package update list")

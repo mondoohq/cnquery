@@ -9,8 +9,8 @@ import (
 
 	"github.com/kballard/go-shellquote"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
 var (
@@ -48,7 +48,7 @@ func (p ProcessEntry) ToOSProcess() *OSProcess {
 }
 
 func ParseLinuxPsResult(input io.Reader) ([]*ProcessEntry, error) {
-	var processes = []*ProcessEntry{}
+	processes := []*ProcessEntry{}
 	scanner := bufio.NewScanner(input)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -91,7 +91,7 @@ func ParseLinuxPsResult(input io.Reader) ([]*ProcessEntry, error) {
 }
 
 func ParseUnixPsResult(input io.Reader) ([]*ProcessEntry, error) {
-	var processes = []*ProcessEntry{}
+	processes := []*ProcessEntry{}
 	scanner := bufio.NewScanner(input)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -133,7 +133,7 @@ func ParseUnixPsResult(input io.Reader) ([]*ProcessEntry, error) {
 }
 
 type UnixProcessManager struct {
-	motor    *motor.Motor
+	provider os.OperatingSystemProvider
 	platform *platform.Platform
 }
 
@@ -145,7 +145,7 @@ func (upm *UnixProcessManager) List() ([]*OSProcess, error) {
 	var entries []*ProcessEntry
 	// NOTE: improve proc parser instead of supporting multiple ps commands
 	if upm.platform.IsFamily("linux") {
-		c, err := upm.motor.Transport.RunCommand("ps axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command")
+		c, err := upm.provider.RunCommand("ps axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command")
 		if err != nil {
 			return nil, fmt.Errorf("processes> could not run command")
 		}
@@ -157,7 +157,7 @@ func (upm *UnixProcessManager) List() ([]*OSProcess, error) {
 	} else if upm.platform.IsFamily("darwin") {
 		// NOTE: special case on darwin is that the ps axo only shows processes for users with terminals
 		// TODO: the same applies to OpenBSD and may result in missing processes
-		c, err := upm.motor.Transport.RunCommand("ps Axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command")
+		c, err := upm.provider.RunCommand("ps Axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command")
 		if err != nil {
 			return nil, fmt.Errorf("processes> could not run command")
 		}
@@ -169,7 +169,7 @@ func (upm *UnixProcessManager) List() ([]*OSProcess, error) {
 	} else {
 		// TODO: consider using different ps calls for different platforms to determine max information
 		// do not use stime since it is not available on FreeBSD
-		c, err := upm.motor.Transport.RunCommand("ps axo pid,pcpu,pmem,vsz,rss,tty,stat,time,uid,command")
+		c, err := upm.provider.RunCommand("ps axo pid,pcpu,pmem,vsz,rss,tty,stat,time,uid,command")
 		if err != nil {
 			return nil, fmt.Errorf("processes> could not run command")
 		}

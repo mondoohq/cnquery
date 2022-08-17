@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"strconv"
 
-	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"go.mondoo.io/mondoo/motor/providers/container/docker_engine"
 )
 
 type DockerTopManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (lpm *DockerTopManager) Name() string {
@@ -20,7 +21,7 @@ func (lpm *DockerTopManager) Name() string {
 // List lists the processes running in a Docker container. Note that currently this function returns child
 // processes as well.
 func (lpm *DockerTopManager) List() ([]*OSProcess, error) {
-	dockerTrans, ok := lpm.motor.Transport.(*docker_engine.Provider)
+	dockerTrans, ok := lpm.provider.(*docker_engine.Provider)
 	if !ok {
 		return nil, fmt.Errorf("wrong transport type")
 	}

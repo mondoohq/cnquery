@@ -15,7 +15,7 @@ func (t *lumiAwsCloudtrail) id() (string, error) {
 }
 
 func (t *lumiAwsCloudtrail) GetTrails() ([]interface{}, error) {
-	at, err := awstransport(t.MotorRuntime.Motor.Transport)
+	at, err := awstransport(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +149,7 @@ func (t *lumiAwsCloudtrailTrail) GetStatus() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(t.MotorRuntime.Motor.Transport)
+	at, err := awstransport(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +178,7 @@ func (t *lumiAwsCloudtrailTrail) GetEventSelectors() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(t.MotorRuntime.Motor.Transport)
+	at, err := awstransport(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

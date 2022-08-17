@@ -151,6 +151,11 @@ func (s *lumiPamConf) GetFiles() ([]interface{}, error) {
 }
 
 func (s *lumiPamConf) GetContent(files []interface{}) (string, error) {
+	osProvider, err := osProvider(s.MotorRuntime.Motor)
+	if err != nil {
+		return "", err
+	}
+
 	var res strings.Builder
 	var notReadyError error = nil
 
@@ -161,7 +166,7 @@ func (s *lumiPamConf) GetContent(files []interface{}) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		f, err := s.MotorRuntime.Motor.Transport.FS().Open(path)
+		f, err := osProvider.FS().Open(path)
 		if err != nil {
 			return "", err
 		}
@@ -184,6 +189,11 @@ func (s *lumiPamConf) GetContent(files []interface{}) (string, error) {
 }
 
 func (s *lumiPamConf) GetServices(files []interface{}) (map[string]interface{}, error) {
+	osProvider, err := osProvider(s.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
 	contents := map[string]string{}
 	var notReadyError error = nil
 
@@ -194,7 +204,7 @@ func (s *lumiPamConf) GetServices(files []interface{}) (map[string]interface{}, 
 		if err != nil {
 			return nil, err
 		}
-		f, err := s.MotorRuntime.Motor.Transport.FS().Open(path)
+		f, err := osProvider.FS().Open(path)
 		if err != nil {
 			return nil, err
 		}
@@ -236,6 +246,11 @@ func (s *lumiPamConf) GetServices(files []interface{}) (map[string]interface{}, 
 }
 
 func (s *lumiPamConf) GetEntries(files []interface{}) (map[string]interface{}, error) {
+	osProvider, err := osProvider(s.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
 	contents := map[string]string{}
 	var notReadyError error = nil
 
@@ -246,7 +261,7 @@ func (s *lumiPamConf) GetEntries(files []interface{}) (map[string]interface{}, e
 		if err != nil {
 			return nil, err
 		}
-		f, err := s.MotorRuntime.Motor.Transport.FS().Open(path)
+		f, err := osProvider.FS().Open(path)
 		if err != nil {
 			return nil, err
 		}

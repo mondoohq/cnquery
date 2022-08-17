@@ -5,12 +5,12 @@ import (
 	"io"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
 // https://man.openbsd.org/rcctl
 type OpenBsdRcctlServiceManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (s *OpenBsdRcctlServiceManager) Name() string {
@@ -19,25 +19,25 @@ func (s *OpenBsdRcctlServiceManager) Name() string {
 
 func (s *OpenBsdRcctlServiceManager) List() ([]*Service, error) {
 	// fetch individual service states
-	c, err := s.motor.Transport.RunCommand("rcctl ls started")
+	c, err := s.provider.RunCommand("rcctl ls started")
 	if err != nil {
 		return nil, err
 	}
 	started := ParseOpenBsdServiceList(c.Stdout)
 
-	c, err = s.motor.Transport.RunCommand("rcctl ls stopped")
+	c, err = s.provider.RunCommand("rcctl ls stopped")
 	if err != nil {
 		return nil, err
 	}
 	stopped := ParseOpenBsdServiceList(c.Stdout)
 
-	c, err = s.motor.Transport.RunCommand("rcctl ls on")
+	c, err = s.provider.RunCommand("rcctl ls on")
 	if err != nil {
 		return nil, err
 	}
 	enabled := ParseOpenBsdServiceList(c.Stdout)
 
-	c, err = s.motor.Transport.RunCommand("rcctl ls off")
+	c, err = s.provider.RunCommand("rcctl ls off")
 	if err != nil {
 		return nil, err
 	}

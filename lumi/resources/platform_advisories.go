@@ -61,7 +61,7 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 	kernelVersion := ""
 
 	// collect pacakges if the platform supports gathering files
-	if r.Motor.HasCapability(providers.Capability_File) {
+	if r.Motor.Provider.Capabilities().HasCapability(providers.Capability_File) {
 		obj, err = r.CreateResource("packages")
 		if err != nil {
 			return nil, err

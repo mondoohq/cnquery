@@ -53,7 +53,7 @@ func (m *lumiMondoo) GetJobEnvironment() (map[string]interface{}, error) {
 
 func (m *lumiMondoo) GetCapabilities() ([]interface{}, error) {
 	capabilities := []interface{}{}
-	caps := m.MotorRuntime.Motor.Transport.Capabilities()
+	caps := m.MotorRuntime.Motor.Provider.Capabilities()
 	for i := range caps {
 		capabilities = append(capabilities, caps[i].String())
 	}

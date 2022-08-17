@@ -8,11 +8,9 @@ import (
 	"github.com/gosimple/slug"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/k8s/resources"
-	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
@@ -82,18 +80,6 @@ type apiProvider struct {
 	namespace          string
 	clientset          *kubernetes.Clientset
 	selectedResourceID string
-}
-
-func (t *apiProvider) RunCommand(command string) (*providers.Command, error) {
-	return nil, errors.New("k8s does not implement RunCommand")
-}
-
-func (t *apiProvider) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, errors.New("k8s does not implement FileInfo")
-}
-
-func (t *apiProvider) FS() afero.Fs {
-	return &fsutil.NoFs{}
 }
 
 func (t *apiProvider) Close() {}

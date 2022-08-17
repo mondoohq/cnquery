@@ -23,7 +23,7 @@ const (
 )
 
 func (d *lumiAwsDynamodb) GetBackups() ([]interface{}, error) {
-	at, err := awstransport(d.MotorRuntime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +83,7 @@ func (d *lumiAwsDynamodbTable) GetBackups() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(d.MotorRuntime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (d *lumiAwsDynamodbTable) GetBackups() ([]interface{}, error) {
 }
 
 func (d *lumiAwsDynamodb) GetLimits() ([]interface{}, error) {
-	at, err := awstransport(d.MotorRuntime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +163,7 @@ func (d *lumiAwsDynamodb) getLimits(at *aws_transport.Provider) []*jobpool.Job {
 }
 
 func (d *lumiAwsDynamodb) GetGlobalTables() ([]interface{}, error) {
-	at, err := awstransport(d.MotorRuntime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +194,7 @@ func (d *lumiAwsDynamodb) GetGlobalTables() ([]interface{}, error) {
 }
 
 func (d *lumiAwsDynamodb) GetTables() ([]interface{}, error) {
-	at, err := awstransport(d.MotorRuntime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -295,7 +295,7 @@ func (d *lumiAwsDynamodbGlobaltable) GetReplicaSettings() ([]interface{}, error)
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(d.MotorRuntime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -319,7 +319,7 @@ func (d *lumiAwsDynamodbTable) GetContinuousBackups() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(d.MotorRuntime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

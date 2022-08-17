@@ -22,7 +22,7 @@ func (t *lumiTfstate) id() (string, error) {
 }
 
 func (t *lumiTfstate) init(args *lumi.Args) (*lumi.Args, Tfstate, error) {
-	tfstateProvider, err := tfstateProvider(t.MotorRuntime.Motor.Transport)
+	tfstateProvider, err := tfstateProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -39,7 +39,7 @@ func (t *lumiTfstate) init(args *lumi.Args) (*lumi.Args, Tfstate, error) {
 }
 
 func (t *lumiTfstate) GetOutputs() ([]interface{}, error) {
-	provider, err := tfstateProvider(t.MotorRuntime.Motor.Transport)
+	provider, err := tfstateProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (t *lumiTfstate) GetOutputs() ([]interface{}, error) {
 }
 
 func (t *lumiTfstate) GetRootModule() (interface{}, error) {
-	provider, err := tfstateProvider(t.MotorRuntime.Motor.Transport)
+	provider, err := tfstateProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (t *lumiTfstate) GetRootModule() (interface{}, error) {
 }
 
 func (t *lumiTfstate) GetModules() (interface{}, error) {
-	provider, err := tfstateProvider(t.MotorRuntime.Motor.Transport)
+	provider, err := tfstateProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

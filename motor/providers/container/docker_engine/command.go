@@ -9,18 +9,19 @@ import (
 	"io/ioutil"
 	"time"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	docker "github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
-	"go.mondoo.io/mondoo/motor/providers"
 )
 
 type Command struct {
-	providers.Command
+	os.Command
 	Container    string
 	dockerClient *client.Client
 }
 
-func (c *Command) Exec(command string) (*providers.Command, error) {
+func (c *Command) Exec(command string) (*os.Command, error) {
 	c.Command.Command = command
 	c.Command.Stats.Start = time.Now()
 

@@ -28,8 +28,13 @@ func parseInt(s string, dflt int64, msg string) (int64, error) {
 }
 
 func (s *lumiShadow) GetList() ([]interface{}, error) {
+	osProvider, err := osProvider(s.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
 	// TODO: we may want to create a real mondoo file resource
-	f, err := s.MotorRuntime.Motor.Transport.FS().Open(defaultShadowConfig)
+	f, err := osProvider.FS().Open(defaultShadowConfig)
 	if err != nil {
 		return nil, err
 	}

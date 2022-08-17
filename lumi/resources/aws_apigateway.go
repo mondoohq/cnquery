@@ -21,7 +21,7 @@ const (
 )
 
 func (a *lumiAwsApigateway) GetRestApis() ([]interface{}, error) {
-	at, err := awstransport(a.MotorRuntime.Motor.Transport)
+	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func (a *lumiAwsApigatewayRestapi) GetStages() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(a.MotorRuntime.Motor.Transport)
+	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

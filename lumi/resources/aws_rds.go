@@ -22,7 +22,7 @@ const (
 )
 
 func (d *lumiAwsRds) GetDbInstances() ([]interface{}, error) {
-	at, err := awstransport(d.MotorRuntime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +135,7 @@ func rdsTagsToMap(tags []types.Tag) map[string]interface{} {
 }
 
 func (d *lumiAwsRds) GetDbClusters() ([]interface{}, error) {
-	at, err := awstransport(d.MotorRuntime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -261,7 +261,7 @@ func (d *lumiAwsRdsDbcluster) GetSnapshots() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(d.MotorRuntime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -307,7 +307,7 @@ func (d *lumiAwsRdsDbinstance) GetSnapshots() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(d.MotorRuntime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -370,7 +370,7 @@ func (d *lumiAwsRdsSnapshot) GetAttributes() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(d.MotorRuntime.Motor.Transport)
+	at, err := awstransport(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

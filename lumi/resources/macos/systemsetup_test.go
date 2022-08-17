@@ -1,14 +1,13 @@
 package macos
 
 import (
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/mock"
+	os_provider "go.mondoo.io/mondoo/motor/providers/os"
 )
 
 func TestSystemSetup(t *testing.T) {
@@ -37,12 +36,12 @@ func TestSystemSetup(t *testing.T) {
 	assert.Equal(t, "No", so.ParseDisableKeyboardWhenEnclosureLockIsEngaged(mustRunCmd(mock, "systemsetup -getdisablekeyboardwhenenclosurelockisengaged")))
 }
 
-func mustRunCmd(t providers.Transport, command string) string {
+func mustRunCmd(t os_provider.OperatingSystemProvider, command string) string {
 	cmd, err := t.RunCommand(command)
 	if err != nil {
 		panic(err)
 	}
-	data, err := ioutil.ReadAll(cmd.Stdout)
+	data, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
 		panic(err)
 	}

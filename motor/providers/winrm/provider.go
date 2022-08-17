@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/providers"
+	os_provider "go.mondoo.io/mondoo/motor/providers/os"
 	"go.mondoo.io/mondoo/motor/providers/winrm/cat"
 	"go.mondoo.io/mondoo/motor/vault"
 )
@@ -105,13 +106,13 @@ type Provider struct {
 	fs       afero.Fs
 }
 
-func (p *Provider) RunCommand(command string) (*providers.Command, error) {
+func (p *Provider) RunCommand(command string) (*os_provider.Command, error) {
 	log.Debug().Str("command", command).Str("provider", "winrm").Msg("winrm> run command")
 
 	stdoutBuffer := &bytes.Buffer{}
 	stderrBuffer := &bytes.Buffer{}
 
-	mcmd := &providers.Command{
+	mcmd := &os_provider.Command{
 		Command: command,
 		Stdout:  stdoutBuffer,
 		Stderr:  stderrBuffer,
@@ -128,20 +129,20 @@ func (p *Provider) RunCommand(command string) (*providers.Command, error) {
 	return mcmd, nil
 }
 
-func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
+func (p *Provider) FileInfo(path string) (os_provider.FileInfoDetails, error) {
 	fs := p.FS()
 	afs := &afero.Afero{Fs: fs}
 	stat, err := afs.Stat(path)
 	if err != nil {
-		return providers.FileInfoDetails{}, err
+		return os_provider.FileInfoDetails{}, err
 	}
 
 	uid := int64(-1)
 	gid := int64(-1)
 	mode := stat.Mode()
 
-	return providers.FileInfoDetails{
-		Mode: providers.FileModeDetails{mode},
+	return os_provider.FileInfoDetails{
+		Mode: os_provider.FileModeDetails{mode},
 		Size: stat.Size(),
 		Uid:  uid,
 		Gid:  gid,

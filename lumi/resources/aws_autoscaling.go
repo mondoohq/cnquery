@@ -19,7 +19,7 @@ func (a *lumiAwsAutoscalingGroup) id() (string, error) {
 }
 
 func (a *lumiAwsAutoscaling) GetGroups() ([]interface{}, error) {
-	at, err := awstransport(a.MotorRuntime.Motor.Transport)
+	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

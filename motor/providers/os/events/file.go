@@ -4,6 +4,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
 // FileOp describes a set of file operations.
@@ -42,8 +43,8 @@ func (fo *FileObservable) Op() FileOp {
 	return fo.FileOp
 }
 
-func NewFileRunnable(path string) func(m providers.Transport) (providers.Observable, error) {
-	return func(m providers.Transport) (providers.Observable, error) {
+func NewFileRunnable(path string) func(m os.OperatingSystemProvider) (providers.Observable, error) {
+	return func(m os.OperatingSystemProvider) (providers.Observable, error) {
 		fileop := Modify
 		file, err := m.FS().Open(path)
 		// TODO: we may want to distingush further, but it does not make sense to do transport specific error handling here

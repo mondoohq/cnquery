@@ -4,6 +4,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
 type MountPoint struct {
@@ -21,30 +22,35 @@ type OperatingSystemMountManager interface {
 func ResolveManager(motor *motor.Motor) (OperatingSystemMountManager, error) {
 	var mm OperatingSystemMountManager
 
-	platform, err := motor.Platform()
+	pf, err := motor.Platform()
 	if err != nil {
 		return nil, err
 	}
 
-	for i := range platform.Family {
-		if platform.Family[i] == "linux" {
-			mm = &LinuxMountManager{motor: motor}
+	osProvider, isOSProvider := motor.Provider.(os.OperatingSystemProvider)
+	if !isOSProvider {
+		return nil, errors.New("mount manager is not supported for platform: " + pf.Name)
+	}
+
+	for i := range pf.Family {
+		if pf.Family[i] == "linux" {
+			mm = &LinuxMountManager{provider: osProvider}
 			break
-		} else if platform.Family[i] == "unix" {
-			mm = &UnixMountManager{motor: motor}
+		} else if pf.Family[i] == "unix" {
+			mm = &UnixMountManager{provider: osProvider}
 			break
 		}
 	}
 
 	if mm == nil {
-		return nil, errors.New("could not detect suitable mount manager for platform: " + platform.Name)
+		return nil, errors.New("could not detect suitable mount manager for platform: " + pf.Name)
 	}
 
 	return mm, nil
 }
 
 type LinuxMountManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (s *LinuxMountManager) Name() string {
@@ -60,21 +66,21 @@ func (s *LinuxMountManager) List() ([]MountPoint, error) {
 	// 	return ParseLinuxProcMount(f), nil
 	// }
 
-	if s.motor.HasCapability(providers.Capability_RunCommand) {
-		cmd, err := s.motor.Transport.RunCommand("mount")
+	if s.provider.Capabilities().HasCapability(providers.Capability_RunCommand) {
+		cmd, err := s.provider.RunCommand("mount")
 		if err != nil {
 			return nil, errors.Wrap(err, "could not read mounts")
 		}
 		return ParseLinuxMountCmd(cmd.Stdout), nil
-	} else if s.motor.HasCapability(providers.Capability_File) {
-		return mountsFromFSLinux(s.motor.Transport.FS())
+	} else if s.provider.Capabilities().HasCapability(providers.Capability_File) {
+		return mountsFromFSLinux(s.provider.FS())
 	}
 
 	return nil, errors.New("mount not supported for provided transport")
 }
 
 type UnixMountManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (s *UnixMountManager) Name() string {
@@ -82,7 +88,7 @@ func (s *UnixMountManager) Name() string {
 }
 
 func (s *UnixMountManager) List() ([]MountPoint, error) {
-	cmd, err := s.motor.Transport.RunCommand("mount")
+	cmd, err := s.provider.RunCommand("mount")
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read package list")
 	}

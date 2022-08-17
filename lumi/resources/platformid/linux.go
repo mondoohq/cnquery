@@ -4,14 +4,14 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
 // LinuxIdProvider read the following files to extract the machine id
 // "/var/lib/dbus/machine-id" and "/etc/machine-id"
 // TODO: this approach is only reliable for systemd managed machines
 type LinuxIdProvider struct {
-	Transport providers.Transport
+	provider os.OperatingSystemProvider
 }
 
 func (p *LinuxIdProvider) Name() string {
@@ -30,7 +30,7 @@ func (p *LinuxIdProvider) ID() (string, error) {
 }
 
 func (p *LinuxIdProvider) retrieveFile(path string) ([]byte, error) {
-	f, err := p.Transport.FS().Open(path)
+	f, err := p.provider.FS().Open(path)
 	if err != nil {
 		return nil, err
 	}

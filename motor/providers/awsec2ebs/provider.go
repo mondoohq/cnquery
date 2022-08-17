@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"time"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
@@ -20,6 +22,7 @@ import (
 var (
 	_ providers.Transport                   = (*Provider)(nil)
 	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
+	_ os.OperatingSystemProvider            = (*Provider)(nil)
 )
 
 func New(pCfg *providers.Config) (*Provider, error) {
@@ -158,16 +161,16 @@ type tmpInfo struct {
 	volumeAttachmentLoc string    // where we tell AWS to attach the volume; it doesn't necessarily get attached there, but we have to reference this same location when detaching
 }
 
-func (p *Provider) RunCommand(command string) (*providers.Command, error) {
-	c := cmd.Command{Shell: p.shell}
+func (p *Provider) RunCommand(command string) (*os.Command, error) {
+	c := cmd.CommandRunner{Shell: p.shell}
 	args := []string{}
 
 	res, err := c.Exec(command, args)
 	return res, err
 }
 
-func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, errors.New("FileInfo not implemented")
+func (p *Provider) FileInfo(path string) (os.FileInfoDetails, error) {
+	return os.FileInfoDetails{}, errors.New("FileInfo not implemented")
 }
 
 func (p *Provider) FS() afero.Fs {

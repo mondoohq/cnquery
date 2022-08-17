@@ -9,9 +9,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclparse"
-	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 )
 
 var (
@@ -88,18 +86,6 @@ type Provider struct {
 	parsed          *hclparse.Parser
 	tfVars          map[string]*hcl.Attribute
 	modulesManifest *ModuleManifest
-}
-
-func (t *Provider) RunCommand(command string) (*providers.Command, error) {
-	return nil, providers.ErrRunCommandNotImplemented
-}
-
-func (t *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, providers.ErrFileInfoNotImplemented
-}
-
-func (t *Provider) FS() afero.Fs {
-	return &fsutil.NoFs{}
 }
 
 func (t *Provider) Close() {}

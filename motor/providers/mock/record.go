@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/providers"
+	os_provider "go.mondoo.io/mondoo/motor/providers/os"
 )
 
 func hashCmd(message string) string {
@@ -20,7 +21,7 @@ func hashCmd(message string) string {
 	return hex.EncodeToString(hash.Sum(nil))
 }
 
-func NewRecordProvider(p providers.Transport) (*MockRecordProvider, error) {
+func NewRecordProvider(p os_provider.OperatingSystemProvider) (*MockRecordProvider, error) {
 	mock, err := New()
 	if err != nil {
 		return nil, err
@@ -39,11 +40,11 @@ func NewRecordProvider(p providers.Transport) (*MockRecordProvider, error) {
 }
 
 type MockRecordProvider struct {
-	observe providers.Transport
+	observe os_provider.OperatingSystemProvider
 	mock    *Provider
 }
 
-func (p *MockRecordProvider) Watched() providers.Transport {
+func (p *MockRecordProvider) Watched() os_provider.OperatingSystemProvider {
 	return p.observe
 }
 
@@ -55,7 +56,7 @@ func (p *MockRecordProvider) ExportData() ([]byte, error) {
 	return ExportData(p.mock)
 }
 
-func (p *MockRecordProvider) RunCommand(command string) (*providers.Command, error) {
+func (p *MockRecordProvider) RunCommand(command string) (*os_provider.Command, error) {
 	cmd, err := p.observe.RunCommand(command)
 	if err != nil {
 		// we do not record errors yet
@@ -93,7 +94,7 @@ func (p *MockRecordProvider) FS() afero.Fs {
 	return NewRecordFS(fs, p.mock.Fs)
 }
 
-func (p *MockRecordProvider) FileInfo(name string) (providers.FileInfoDetails, error) {
+func (p *MockRecordProvider) FileInfo(name string) (os_provider.FileInfoDetails, error) {
 	enonet := false
 	stat, err := p.observe.FileInfo(name)
 	if err == os.ErrNotExist {

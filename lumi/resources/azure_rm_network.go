@@ -14,7 +14,7 @@ func (a *lumiAzurermNetwork) id() (string, error) {
 }
 
 func (a *lumiAzurermNetwork) GetInterfaces() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func azureIfaceToLumi(runtime *lumi.Runtime, iface network.Interface) (lumi.Reso
 }
 
 func (a *lumiAzurermNetwork) GetSecurityGroups() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +235,7 @@ func (a *lumiAzurermNetworkSecurityrule) id() (string, error) {
 }
 
 func (a *lumiAzurermNetwork) GetWatchers() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

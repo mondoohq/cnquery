@@ -11,10 +11,9 @@ import (
 // Read out all connected sockets
 // we will ignore all FD errors here since we may not have access to everything
 func (lpm *LinuxProcManager) procSocketInods(pid int64, procPidPath string) []int64 {
-	trans := lpm.motor.Transport
 	fdDirPath := filepath.Join(procPidPath, "fd")
 
-	fdDir, err := lpm.motor.Transport.FS().Open(fdDirPath)
+	fdDir, err := lpm.provider.FS().Open(fdDirPath)
 	if err != nil {
 		return nil
 	}
@@ -27,7 +26,7 @@ func (lpm *LinuxProcManager) procSocketInods(pid int64, procPidPath string) []in
 	var res []int64
 	for i := range fds {
 		fdPath := filepath.Join(fdDirPath, fds[i])
-		fdInfo, err := trans.FS().Stat(fdPath)
+		fdInfo, err := lpm.provider.FS().Stat(fdPath)
 		if err != nil {
 			continue
 		}

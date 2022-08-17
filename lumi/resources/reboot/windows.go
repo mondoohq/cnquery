@@ -4,8 +4,9 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
-	"go.mondoo.io/mondoo/motor"
 )
 
 const (
@@ -20,7 +21,7 @@ const (
 // Brian Wilhite powershell implementation:
 // https://github.com/bcwilhite/PendingReboot
 type WinReboot struct {
-	Motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (s *WinReboot) Name() string {
@@ -31,7 +32,7 @@ func (s *WinReboot) RebootPending() (bool, error) {
 	isRebootrequired := false
 
 	// Query the Component Based Servicing Reg Key
-	cmd, err := s.Motor.Transport.RunCommand(powershell.Wrap(WindowsTestComponentServicesReboot))
+	cmd, err := s.provider.RunCommand(powershell.Wrap(WindowsTestComponentServicesReboot))
 	if err != nil {
 		return false, err
 	}
@@ -46,7 +47,7 @@ func (s *WinReboot) RebootPending() (bool, error) {
 	}
 
 	// Query WUAU from the registry
-	cmd, err = s.Motor.Transport.RunCommand(powershell.Wrap(WindowsTestWsusReboot))
+	cmd, err = s.provider.RunCommand(powershell.Wrap(WindowsTestWsusReboot))
 	if err != nil {
 		return false, err
 	}

@@ -38,7 +38,7 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.Config, cfn credenti
 		assetObj.Platform = p
 	}
 
-	fingerprint, err := motorid.IdentifyPlatform(m.Transport, p, userIdDetectors)
+	fingerprint, err := motorid.IdentifyPlatform(m.Provider, p, userIdDetectors)
 	if err != nil {
 		return nil, err
 	}

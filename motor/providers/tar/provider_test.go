@@ -61,7 +61,7 @@ func TestPlatformIdentifier(t *testing.T) {
 		},
 	}, nil)
 	require.NoError(t, err)
-	platformId, err := m.Transport.(providers.TransportPlatformIdentifier).Identifier()
+	platformId, err := m.Provider.(providers.TransportPlatformIdentifier).Identifier()
 	require.NoError(t, err)
 	assert.True(t, len(platformId) > 0)
 }

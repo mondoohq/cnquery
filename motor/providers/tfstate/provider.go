@@ -4,13 +4,10 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"os"
 	"path/filepath"
 
-	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 )
 
 var (
@@ -49,18 +46,6 @@ type Provider struct {
 	platformID string
 	path       string
 	state      *State
-}
-
-func (p *Provider) RunCommand(command string) (*providers.Command, error) {
-	return nil, errors.New("provider does not implement RunCommand")
-}
-
-func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, errors.New("provider does not implement FileInfo")
-}
-
-func (p *Provider) FS() afero.Fs {
-	return &fsutil.NoFs{}
 }
 
 func (p *Provider) Close() {}

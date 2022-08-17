@@ -18,7 +18,7 @@ func (a *lumiAzurermKeyvault) id() (string, error) {
 }
 
 func (a *lumiAzurermKeyvault) GetVaults() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (a *lumiAzurermKeyvaultVault) GetVaultUri() (string, error) {
 const azureKeyVaulAudience = "https://vault.azure.net"
 
 func (a *lumiAzurermKeyvaultVault) GetKeys() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func (a *lumiAzurermKeyvaultVault) GetKeys() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermKeyvaultVault) GetCertificates() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +179,7 @@ func (a *lumiAzurermKeyvaultVault) GetCertificates() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermKeyvaultVault) GetSecrets() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +228,7 @@ func (a *lumiAzurermKeyvaultVault) GetSecrets() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermKeyvaultVault) GetProperties() (map[string]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -311,7 +311,7 @@ func (a *lumiAzurermKeyvaultKey) GetVersion() (interface{}, error) {
 }
 
 func (a *lumiAzurermKeyvaultKey) GetVersions() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -443,7 +443,7 @@ func parseKeyVaultId(url string) (*keyvaultid, error) {
 }
 
 func (a *lumiAzurermKeyvaultCertificate) GetVersions() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -544,7 +544,7 @@ func (a *lumiAzurermKeyvaultSecret) GetVersion() (interface{}, error) {
 }
 
 func (a *lumiAzurermKeyvaultSecret) GetVersions() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

@@ -9,8 +9,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/mock"
+	os_provider "go.mondoo.io/mondoo/motor/providers/os"
 )
 
 func TestLinuxStatCmd(t *testing.T) {
@@ -55,8 +55,8 @@ func TestOpenbsdStatCmd(t *testing.T) {
 	assert.Equal(t, false, fi.IsDir())
 	assert.Equal(t, "-rw-r--r--", fi.Mode().String())
 	assert.Equal(t, time.Unix(1592996018, 0), fi.ModTime())
-	assert.Equal(t, int64(0), fi.Sys().(*providers.FileInfo).Uid)
-	assert.Equal(t, int64(0), fi.Sys().(*providers.FileInfo).Gid)
+	assert.Equal(t, int64(0), fi.Sys().(*os_provider.FileInfo).Uid)
+	assert.Equal(t, int64(0), fi.Sys().(*os_provider.FileInfo).Gid)
 	assert.Equal(t, "sshd_config", fi.Name())
 }
 

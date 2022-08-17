@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/os"
 
 	"howett.net/plist"
 )
@@ -19,14 +19,14 @@ const (
 	userDomainPreferences        = "defaults export %s -"
 )
 
-func NewPreferences(t providers.Transport) *Preferences {
+func NewPreferences(p os.OperatingSystemProvider) *Preferences {
 	return &Preferences{
-		transport: t,
+		provider: p,
 	}
 }
 
 type Preferences struct {
-	transport providers.Transport
+	provider os.OperatingSystemProvider
 }
 
 func (p *Preferences) UserPreferences() (map[string]map[string]interface{}, error) {
@@ -38,7 +38,7 @@ func (p *Preferences) UserHostPreferences() (map[string]map[string]interface{}, 
 }
 
 func (p *Preferences) preferences(domainCmd string, preferencesCmd string) (map[string]map[string]interface{}, error) {
-	c, err := p.transport.RunCommand(domainCmd)
+	c, err := p.provider.RunCommand(domainCmd)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (p *Preferences) preferences(domainCmd string, preferencesCmd string) (map[
 	for i := range domains {
 		domain := domains[i]
 
-		c, err := p.transport.RunCommand(fmt.Sprintf(preferencesCmd, domain))
+		c, err := p.provider.RunCommand(fmt.Sprintf(preferencesCmd, domain))
 		if err != nil {
 			return nil, err
 		}

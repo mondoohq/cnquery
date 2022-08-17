@@ -16,7 +16,7 @@ func (e *lumiAwsEs) id() (string, error) {
 }
 
 func (e *lumiAwsEs) GetDomains() ([]interface{}, error) {
-	at, err := awstransport(e.MotorRuntime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (a *lumiAwsEsDomain) init(args *lumi.Args) (*lumi.Args, AwsEsDomain, error)
 
 	name := (*args)["name"].(string)
 	region := (*args)["region"].(string)
-	at, err := awstransport(a.MotorRuntime.Motor.Transport)
+	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -6,8 +6,9 @@ import (
 	"io"
 	"regexp"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor"
 )
 
 const (
@@ -112,7 +113,7 @@ func ParseApkUpdates(input io.Reader) (map[string]PackageUpdate, error) {
 
 // Arch, Manjaro
 type AlpinePkgManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (apm *AlpinePkgManager) Name() string {
@@ -124,7 +125,7 @@ func (apm *AlpinePkgManager) Format() string {
 }
 
 func (apm *AlpinePkgManager) List() ([]Package, error) {
-	fr, err := apm.motor.Transport.FS().Open("/lib/apk/db/installed")
+	fr, err := apm.provider.FS().Open("/lib/apk/db/installed")
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}
@@ -135,10 +136,10 @@ func (apm *AlpinePkgManager) List() ([]Package, error) {
 
 func (apm *AlpinePkgManager) Available() (map[string]PackageUpdate, error) {
 	// it only works if apk is updated
-	apm.motor.Transport.RunCommand("apk update")
+	apm.provider.RunCommand("apk update")
 
 	// determine package updates
-	cmd, err := apm.motor.Transport.RunCommand("apk version -v -l '<'")
+	cmd, err := apm.provider.RunCommand("apk version -v -l '<'")
 	if err != nil {
 		log.Debug().Err(err).Msg("lumi[packages]> could not read package updates")
 		return nil, fmt.Errorf("could not read package update list")

@@ -7,7 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
 const (
@@ -26,7 +26,7 @@ type cosPackage struct {
 }
 
 type CosPkgManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (cpm *CosPkgManager) Name() string {
@@ -40,7 +40,7 @@ func (cpm *CosPkgManager) Format() string {
 func (cpm *CosPkgManager) List() ([]Package, error) {
 	// added as a feature in cos 85
 	// https://cloud.google.com/container-optimized-os/docs/release-notes/m85#cos-85-13310-1260-1
-	fr, err := cpm.motor.Transport.FS().Open("/etc/cos-package-info.json")
+	fr, err := cpm.provider.FS().Open("/etc/cos-package-info.json")
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}

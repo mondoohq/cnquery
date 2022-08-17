@@ -55,7 +55,7 @@ func (s *lumiAwsEc2Networkacl) id() (string, error) {
 }
 
 func (s *lumiAwsEc2) GetNetworkAcls() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func (s *lumiAwsEc2Networkacl) GetEntries() ([]interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to region")
 	}
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +203,7 @@ func (s *lumiAwsEc2Securitygroup) GetIsAttachedToNetworkInterface() (bool, error
 	if err != nil {
 		return false, errors.Wrap(err, "unable to parse instance id")
 	}
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return false, nil
 	}
@@ -326,7 +326,7 @@ func (s *lumiAwsEc2) getSecurityGroups(at *aws_transport.Provider) []*jobpool.Jo
 }
 
 func (s *lumiAwsEc2) GetKeypairs() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -412,7 +412,7 @@ func (i *lumiAwsEc2Keypair) init(args *lumi.Args) (*lumi.Args, AwsEc2Keypair, er
 	}
 	r := (*args)["region"].(string)
 
-	at, err := awstransport(i.MotorRuntime.Motor.Transport)
+	at, err := awstransport(i.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -448,7 +448,7 @@ func (i *lumiAwsEc2Keypair) init(args *lumi.Args) (*lumi.Args, AwsEc2Keypair, er
 }
 
 func (s *lumiAwsEc2) GetSecurityGroups() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -474,7 +474,7 @@ type ebsEncryption struct {
 }
 
 func (s *lumiAwsEc2) GetEbsEncryptionByDefault() (map[string]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -525,7 +525,7 @@ func (s *lumiAwsEc2) getEbsEncryptionPerRegion(at *aws_transport.Provider) []*jo
 }
 
 func (s *lumiAwsEc2) GetInstances() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -634,7 +634,7 @@ func (s *lumiAwsEc2) getInstances(at *aws_transport.Provider) []*jobpool.Job {
 }
 
 func (s *lumiAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVersion int, regionVal string) ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -761,7 +761,7 @@ func (i *lumiAwsEc2Image) init(args *lumi.Args) (*lumi.Args, AwsEc2Image, error)
 		return nil, nil, nil
 	}
 	resource := strings.Split(arn.Resource, "/")
-	at, err := awstransport(i.MotorRuntime.Motor.Transport)
+	at, err := awstransport(i.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -881,7 +881,7 @@ func (s *lumiAwsEc2Instance) GetSsm() (interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to parse instance region")
 	}
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -914,7 +914,7 @@ func (s *lumiAwsEc2Instance) GetPatchState() (interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to parse instance region")
 	}
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -946,7 +946,7 @@ func (s *lumiAwsEc2Instance) GetInstanceStatus() (interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to parse instance region")
 	}
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -975,7 +975,7 @@ func (s *lumiAwsEc2Instance) GetInstanceStatus() (interface{}, error) {
 }
 
 func (s *lumiAwsEc2) GetVolumes() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1062,7 +1062,7 @@ func (s *lumiAwsEc2Snapshot) id() (string, error) {
 }
 
 func (s *lumiAwsEc2) GetVpnConnections() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1133,7 +1133,7 @@ func (s *lumiAwsEc2) getVpnConnections(at *aws_transport.Provider) []*jobpool.Jo
 }
 
 func (s *lumiAwsEc2) GetSnapshots() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1212,7 +1212,7 @@ func (s *lumiAwsEc2Snapshot) GetCreateVolumePermission() ([]interface{}, error) 
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to parse instance region")
 	}
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1229,7 +1229,7 @@ func (s *lumiAwsEc2Snapshot) GetCreateVolumePermission() ([]interface{}, error) 
 }
 
 func (s *lumiAwsEc2) GetInternetGateways() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1250,7 +1250,7 @@ func (s *lumiAwsEc2) GetInternetGateways() ([]interface{}, error) {
 
 func (s *lumiAwsEc2) getInternetGateways(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}

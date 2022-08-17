@@ -42,8 +42,13 @@ func (l *lumiYamlPath) GetResult() (string, error) {
 		return "", err
 	}
 
+	osProvider, err := osProvider(l.MotorRuntime.Motor)
+	if err != nil {
+		return "", err
+	}
+
 	// TODO: I could not get this running with lumi file resource, the content was never returned
-	f, err := l.MotorRuntime.Motor.Transport.FS().Open(filepath)
+	f, err := osProvider.FS().Open(filepath)
 	if err != nil {
 		return "", err
 	}

@@ -4,6 +4,8 @@ import (
 	"errors"
 	"io/ioutil"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/providers"
 )
@@ -12,11 +14,17 @@ func (c *lumiCommand) id() (string, error) {
 	return c.Command()
 }
 
-func (c *lumiCommand) execute() (*providers.Command, error) {
-	if !c.MotorRuntime.Motor.Transport.Capabilities().HasCapability(providers.Capability_RunCommand) {
+func (c *lumiCommand) execute() (*os.Command, error) {
+	if !c.MotorRuntime.Motor.Provider.Capabilities().HasCapability(providers.Capability_RunCommand) {
 		return nil, errors.New("run command not supported on this transport")
 	}
-	var executedCmd *providers.Command
+
+	osProvider, err := osProvider(c.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
+	var executedCmd *os.Command
 
 	cmd, err := c.Command()
 	if err != nil {
@@ -25,7 +33,7 @@ func (c *lumiCommand) execute() (*providers.Command, error) {
 
 	data, ok := c.Cache.Load(cmd)
 	if ok {
-		executedCmd, ok := data.Data.(*providers.Command)
+		executedCmd, ok := data.Data.(*os.Command)
 		if ok {
 			return executedCmd, data.Error
 		}
@@ -34,7 +42,7 @@ func (c *lumiCommand) execute() (*providers.Command, error) {
 	// note: we ignore the error here, because we want to give all results
 	// (stdout/stderr/exitcode) to the user for handling. otherwise the command
 	// resource would be nil and you couldnt do `command('notme').exitcode`
-	executedCmd, err = c.MotorRuntime.Motor.Transport.RunCommand(cmd)
+	executedCmd, err = osProvider.RunCommand(cmd)
 
 	c.Cache.Store(cmd, &lumi.CacheEntry{Data: executedCmd, Error: err})
 	return executedCmd, err

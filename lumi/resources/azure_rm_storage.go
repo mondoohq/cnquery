@@ -15,7 +15,7 @@ func (a *lumiAzurermStorage) id() (string, error) {
 type AzureStorageAccountProperties storage.AccountProperties
 
 func (a *lumiAzurermStorage) GetAccounts() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (a *lumiAzurermStorageAccount) init(args *lumi.Args) (*lumi.Args, AzurermSt
 		return args, nil, nil
 	}
 
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -164,7 +164,7 @@ func (a *lumiAzurermStorageAccount) init(args *lumi.Args) (*lumi.Args, AzurermSt
 }
 
 func (a *lumiAzurermStorageAccount) GetContainers() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

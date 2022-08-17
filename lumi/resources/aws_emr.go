@@ -14,7 +14,7 @@ func (e *lumiAwsEmr) id() (string, error) {
 }
 
 func (e *lumiAwsEmr) GetClusters() ([]interface{}, error) {
-	at, err := awstransport(e.MotorRuntime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func (e *lumiAwsEmrCluster) GetMasterInstances() ([]interface{}, error) {
 		return nil, err
 	}
 	res := []types.Instance{}
-	at, err := awstransport(e.MotorRuntime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

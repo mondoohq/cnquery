@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"io/ioutil"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
-	"go.mondoo.io/mondoo/motor/providers"
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/transform"
 )
@@ -17,8 +18,13 @@ func (c *lumiPowershell) id() (string, error) {
 	return c.Script()
 }
 
-func (c *lumiPowershell) execute() (*providers.Command, error) {
-	var executedCmd *providers.Command
+func (c *lumiPowershell) execute() (*os.Command, error) {
+	osProvider, err := osProvider(c.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
+	var executedCmd *os.Command
 
 	cmd, err := c.Script()
 	if err != nil {
@@ -30,13 +36,13 @@ func (c *lumiPowershell) execute() (*providers.Command, error) {
 
 	data, ok := c.Cache.Load(encodedCmd)
 	if ok {
-		executedCmd, ok := data.Data.(*providers.Command)
+		executedCmd, ok := data.Data.(*os.Command)
 		if ok {
 			return executedCmd, nil
 		}
 	}
 
-	executedCmd, err = c.MotorRuntime.Motor.Transport.RunCommand(encodedCmd)
+	executedCmd, err = osProvider.RunCommand(encodedCmd)
 	if err != nil {
 		return nil, err
 	}

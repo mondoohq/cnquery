@@ -35,7 +35,7 @@ func (g *lumiGcloudOrganization) init(args *lumi.Args) (*lumi.Args, GcloudOrgani
 		return args, nil, nil
 	}
 
-	gt, err := gcptransport(g.MotorRuntime.Motor.Transport)
+	gt, err := gcptransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -90,7 +90,7 @@ func (g *lumiGcloudOrganization) GetLifecycleState() (string, error) {
 }
 
 func (g *lumiGcloudOrganization) GetIamPolicy() ([]interface{}, error) {
-	gt, err := gcptransport(g.MotorRuntime.Motor.Transport)
+	gt, err := gcptransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +145,7 @@ func (g *lumiGcloudProject) init(args *lumi.Args) (*lumi.Args, GcloudProject, er
 		return args, nil, nil
 	}
 
-	gt, err := gcptransport(g.MotorRuntime.Motor.Transport)
+	gt, err := gcptransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -226,7 +226,7 @@ func (g *lumiGcloudProject) GetIamPolicy() ([]interface{}, error) {
 		return nil, err
 	}
 
-	gt, err := gcptransport(g.MotorRuntime.Motor.Transport)
+	gt, err := gcptransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +274,7 @@ func (g *lumiGcloudCompute) id() (string, error) {
 }
 
 func (g *lumiGcloudCompute) GetInstances() ([]interface{}, error) {
-	gt, err := gcptransport(g.MotorRuntime.Motor.Transport)
+	gt, err := gcptransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -360,7 +360,7 @@ func (g *lumiGcloudStorage) id() (string, error) {
 }
 
 func (g *lumiGcloudStorage) GetBuckets() ([]interface{}, error) {
-	gt, err := gcptransport(g.MotorRuntime.Motor.Transport)
+	gt, err := gcptransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -470,7 +470,7 @@ func (g *lumiGcloudStorageBucket) GetIamPolicy() ([]interface{}, error) {
 		return nil, err
 	}
 
-	gt, err := gcptransport(g.MotorRuntime.Motor.Transport)
+	gt, err := gcptransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -514,7 +514,7 @@ func (g *lumiGcloudSql) id() (string, error) {
 }
 
 func (g *lumiGcloudSql) GetInstances() ([]interface{}, error) {
-	gt, err := gcptransport(g.MotorRuntime.Motor.Transport)
+	gt, err := gcptransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

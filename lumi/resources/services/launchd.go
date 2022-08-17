@@ -5,12 +5,10 @@ import (
 	"io/ioutil"
 	"regexp"
 
-	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
-var (
-	LAUNCHD_REGEX = regexp.MustCompile(`(?m)^\s*([\d-]*)\s+(\d)\s+(.*)$`)
-)
+var LAUNCHD_REGEX = regexp.MustCompile(`(?m)^\s*([\d-]*)\s+(\d)\s+(.*)$`)
 
 // PID: pid of process
 // Status: last know exit code
@@ -38,7 +36,7 @@ func ParseServiceLaunchD(input io.Reader) ([]*Service, error) {
 
 // MacOS is using launchd as default service manager
 type LaunchDServiceManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (s *LaunchDServiceManager) Name() string {
@@ -46,7 +44,7 @@ func (s *LaunchDServiceManager) Name() string {
 }
 
 func (s *LaunchDServiceManager) List() ([]*Service, error) {
-	c, err := s.motor.Transport.RunCommand("launchctl list")
+	c, err := s.provider.RunCommand("launchctl list")
 	if err != nil {
 		return nil, err
 	}

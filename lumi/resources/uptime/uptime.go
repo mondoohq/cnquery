@@ -6,6 +6,7 @@ import (
 
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
 type Uptime interface {
@@ -16,16 +17,21 @@ type Uptime interface {
 func New(motor *motor.Motor) (Uptime, error) {
 	var rebootResource Uptime
 
-	pi, err := motor.Platform()
+	pf, err := motor.Platform()
 	if err != nil {
 		return nil, err
 	}
 
+	osProvider, isOSProvider := motor.Provider.(os.OperatingSystemProvider)
+	if !isOSProvider {
+		return nil, errors.New("update manager is not supported for platform: " + pf.Name)
+	}
+
 	switch {
-	case pi.IsFamily(platform.FAMILY_UNIX):
-		return &Unix{Motor: motor}, nil
-	case pi.IsFamily(platform.FAMILY_WINDOWS):
-		return &Windows{Motor: motor}, nil
+	case pf.IsFamily(platform.FAMILY_UNIX):
+		return &Unix{provider: osProvider}, nil
+	case pf.IsFamily(platform.FAMILY_WINDOWS):
+		return &Windows{provider: osProvider}, nil
 	default:
 		return nil, errors.New("your platform is not supported by reboot resource")
 	}
