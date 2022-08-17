@@ -443,6 +443,27 @@ resources:
     - query: "aws.apigateway.restApis { \n  arn \n  stages \n}\n"
       title: Return a list of AWS API Gateway REST APIs configured across all enabled
         regions in the AWS account and the values for the arn and stages
+  aws.applicationAutoscaling:
+    fields:
+      namespace: {}
+      scalableTargets: {}
+    min_mondoo_version: 6.11.1
+    platform:
+      name:
+      - aws
+  aws.applicationautoscaling.target:
+    fields:
+      arn: {}
+      maxCapacity: {}
+      minCapacity: {}
+      namespace: {}
+      scalableDimension: {}
+      suspendedState: {}
+    is_private: true
+    min_mondoo_version: 6.11.1
+    platform:
+      name:
+      - aws
   aws.autoscaling:
     docs:
       desc: |
