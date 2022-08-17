@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/cmd"
+	"go.mondoo.io/mondoo/motor/providers/os/cmd"
 	"go.mondoo.io/mondoo/motor/providers/ssh/cat"
 	"go.mondoo.io/mondoo/motor/providers/ssh/scp"
 	"go.mondoo.io/mondoo/motor/providers/ssh/sftp"

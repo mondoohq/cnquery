@@ -8,8 +8,8 @@ import (
 
 	scp_client "github.com/hnakamur/go-scp"
 	"github.com/spf13/afero"
+	"go.mondoo.io/mondoo/motor/providers/os/statutil"
 	"go.mondoo.io/mondoo/motor/providers/ssh/cat"
-	"go.mondoo.io/mondoo/motor/providers/statutil"
 	"golang.org/x/crypto/ssh"
 )
 

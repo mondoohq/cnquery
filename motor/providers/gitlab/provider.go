@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/xanzy/go-gitlab"
 	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/fsutil"
+	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 	"go.mondoo.io/mondoo/motor/vault"
 )
 

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/providers/fs"
-	"go.mondoo.io/mondoo/motor/providers/fsutil"
+	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 )
 
 func TestOsDetection(t *testing.T) {

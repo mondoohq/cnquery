@@ -1,4 +1,4 @@
-package shared
+package cmd
 
 import (
 	"io/ioutil"
@@ -8,7 +8,6 @@ import (
 )
 
 func TestCommandResource(t *testing.T) {
-
 	c := &Command{}
 
 	if assert.NotNil(t, c) {

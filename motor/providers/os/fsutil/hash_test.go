@@ -5,8 +5,8 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/motor/providers/fsutil"
 	"go.mondoo.io/mondoo/motor/providers/local"
+	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 )
 
 func TestFileResource(t *testing.T) {

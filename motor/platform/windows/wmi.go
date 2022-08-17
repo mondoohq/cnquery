@@ -8,7 +8,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/fsutil"
+	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 )
 
 type WmicOSInformation struct {

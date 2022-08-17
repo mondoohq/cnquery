@@ -8,9 +8,9 @@ import (
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/platform/detector"
 	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/events"
 	"go.mondoo.io/mondoo/motor/providers/local"
 	"go.mondoo.io/mondoo/motor/providers/mock"
+	"go.mondoo.io/mondoo/motor/providers/os/events"
 )
 
 type MotorOption func(m *Motor)

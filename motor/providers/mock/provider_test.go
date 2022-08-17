@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/fsutil"
 	"go.mondoo.io/mondoo/motor/providers/mock"
+	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 )
 
 func TestMockCommand(t *testing.T) {
