@@ -3,7 +3,7 @@ package terraform
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/cockroachdb/errors"
@@ -25,22 +25,43 @@ func New(tc *providers.Config) (*Provider, error) {
 	}
 
 	path := tc.Options["path"]
-	fileList, err := ioutil.ReadDir(path)
-	if err != nil {
-		return nil, err
+	stat, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return nil, errors.New("path is not a valid file or directory")
 	}
 
-	parsed, err := ParseHclDirectory(path, fileList)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not parse hcl files")
-	}
+	loader := NewHCLFileLoader()
+	tfVars := make(map[string]*hcl.Attribute)
+	var modulesManifest *ModuleManifest
 
-	tfVars, err := ParseTfVars(path, fileList)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not parse tfvars files")
-	}
+	if stat.IsDir() {
+		fileList, err := os.ReadDir(path)
+		if err != nil {
+			return nil, err
+		}
 
-	modulesManifest, err := ParseTerraformModuleManifest(path)
+		err = loader.ParseHclDirectory(path, fileList)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not parse hcl files")
+		}
+
+		err = ReadTfVarsFromDir(path, fileList, tfVars)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not parse tfvars files")
+		}
+
+		modulesManifest, err = ParseTerraformModuleManifest(path)
+	} else {
+		err = loader.ParseHclFile(path)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not parse hcl file")
+		}
+
+		err = ReadTfVarsFromFile(path, tfVars)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not parse tfvars file")
+		}
+	}
 
 	absPath, _ := filepath.Abs(path)
 	h := sha256.New()
@@ -52,7 +73,7 @@ func New(tc *providers.Config) (*Provider, error) {
 	return &Provider{
 		platformID:      platformID,
 		path:            path,
-		parsed:          parsed,
+		parsed:          loader.GetParser(),
 		tfVars:          tfVars,
 		modulesManifest: modulesManifest,
 	}, nil

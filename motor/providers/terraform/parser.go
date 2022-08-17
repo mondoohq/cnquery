@@ -1,8 +1,7 @@
 package terraform
 
 import (
-	"io/fs"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -11,39 +10,87 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 )
 
-func ParseHclDirectory(path string, fileList []fs.FileInfo) (*hclparse.Parser, error) {
-	// parse all files
+func NewHCLFileLoader() *hclFileLoader {
 	hclParser := hclparse.NewParser()
+
+	return &hclFileLoader{
+		hclParser: hclParser,
+	}
+}
+
+type hclFileLoader struct {
+	hclParser *hclparse.Parser
+}
+
+// ParseHclFile parses a single terraform file
+func (h *hclFileLoader) ParseHclFile(filepath string) error {
+	var parseFunc func(filename string) (*hcl.File, hcl.Diagnostics)
+	switch {
+	case strings.HasSuffix(filepath, ".tf"):
+		parseFunc = h.hclParser.ParseHCLFile
+	case strings.HasSuffix(filepath, ".tf.json"):
+		parseFunc = h.hclParser.ParseJSONFile
+	default:
+		return nil
+	}
+
+	_, diag := parseFunc(filepath)
+	if diag != nil && diag.HasErrors() {
+		return diag
+	}
+	return nil
+}
+
+// ParseHclDirectory parses all files in a directory
+func (h *hclFileLoader) ParseHclDirectory(path string, fileList []os.DirEntry) error {
 	for i := range fileList {
 		fi := fileList[i]
 
 		if fi.IsDir() {
-			continue
-		}
-
-		var parseFunc func(filename string) (*hcl.File, hcl.Diagnostics)
-		switch {
-		case strings.HasSuffix(fi.Name(), ".tf"):
-			parseFunc = hclParser.ParseHCLFile
-		case strings.HasSuffix(fi.Name(), ".tf.json"):
-			parseFunc = hclParser.ParseJSONFile
-		default:
 			continue
 		}
 
 		path := filepath.Join(path, fi.Name())
-		_, diag := parseFunc(path)
-		if diag != nil && diag.HasErrors() {
-			return nil, diag
+		err := h.ParseHclFile(path)
+		if err != nil {
+			return err
 		}
 	}
 
-	return hclParser, nil
+	return nil
 }
 
-func ParseTfVars(path string, fileList []fs.FileInfo) (map[string]*hcl.Attribute, error) {
-	terraformVars := make(map[string]*hcl.Attribute)
+func (h *hclFileLoader) GetParser() *hclparse.Parser {
+	return h.hclParser
+}
 
+func ReadTfVarsFromFile(filename string, terraformVars map[string]*hcl.Attribute) error {
+	switch {
+	case strings.HasSuffix(filename, ".tfvars"):
+		fallthrough
+	case strings.HasSuffix(filename, ".tfvars.json"):
+
+		src, err := os.ReadFile(filename)
+		if err != nil {
+			return err
+		}
+
+		// we ignore the diagnositics information here
+		variableFile, _ := hclsyntax.ParseConfig(src, filename, hcl.Pos{Line: 1, Column: 1})
+
+		// NOTE: we ignore the diagnositics info
+		attrs, _ := variableFile.Body.JustAttributes()
+		for k := range attrs {
+			v := attrs[k]
+			terraformVars[k] = v
+		}
+		return nil
+	default:
+		return nil
+	}
+}
+
+func ReadTfVarsFromDir(path string, fileList []os.DirEntry, terraformVars map[string]*hcl.Attribute) error {
 	for i := range fileList {
 		fi := fileList[i]
 
@@ -51,28 +98,11 @@ func ParseTfVars(path string, fileList []fs.FileInfo) (map[string]*hcl.Attribute
 			continue
 		}
 
-		switch {
-		case strings.HasSuffix(fi.Name(), ".tfvars"):
-			fallthrough
-		case strings.HasSuffix(fi.Name(), ".tfvars.json"):
-			filename := filepath.Join(path, fi.Name())
-			src, err := ioutil.ReadFile(filename)
-			if err != nil {
-				return nil, err
-			}
-
-			// we ignore the diagnositics information here
-			variableFile, _ := hclsyntax.ParseConfig(src, filename, hcl.Pos{Line: 1, Column: 1})
-
-			// NOTE: we ignore the diagnositics info
-			attrs, _ := variableFile.Body.JustAttributes()
-			for k := range attrs {
-				v := attrs[k]
-				terraformVars[k] = v
-			}
-		default:
-			continue
+		filename := filepath.Join(path, fi.Name())
+		err := ReadTfVarsFromFile(filename, terraformVars)
+		if err != nil {
+			return err
 		}
 	}
-	return terraformVars, nil
+	return nil
 }
