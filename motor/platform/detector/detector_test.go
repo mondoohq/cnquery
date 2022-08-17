@@ -363,7 +363,7 @@ func TestDebian7Detector(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "debian", di.Name, "os name should be identified")
-	assert.Equal(t, "Debian GNU/Linux", di.Title, "os title should be identified")
+	assert.Equal(t, "Debian GNU/Linux 7 (wheezy)", di.Title, "os title should be identified")
 	assert.Equal(t, "7.11", di.Version, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
@@ -376,7 +376,7 @@ func TestDebian8Detector(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "debian", di.Name, "os name should be identified")
-	assert.Equal(t, "Debian GNU/Linux", di.Title, "os title should be identified")
+	assert.Equal(t, "Debian GNU/Linux 8 (jessie)", di.Title, "os title should be identified")
 	assert.Equal(t, "8.11", di.Version, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
@@ -389,7 +389,7 @@ func TestDebian9Detector(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "debian", di.Name, "os name should be identified")
-	assert.Equal(t, "Debian GNU/Linux", di.Title, "os title should be identified")
+	assert.Equal(t, "Debian GNU/Linux 9 (stretch)", di.Title, "os title should be identified")
 	assert.Equal(t, "9.4", di.Version, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
@@ -402,7 +402,7 @@ func TestDebian10Detector(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "debian", di.Name, "os name should be identified")
-	assert.Equal(t, "Debian GNU/Linux", di.Title, "os title should be identified")
+	assert.Equal(t, "Debian GNU/Linux 10 (buster)", di.Title, "os title should be identified")
 	assert.Equal(t, "10.0", di.Version, "os version should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, di.Family)
