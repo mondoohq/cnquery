@@ -152,7 +152,6 @@ var debian = &PlatformResolver{
 			return false, nil
 		}
 
-		di.Title = osr["NAME"]
 		di.Version = strings.TrimSpace(string(c))
 		di.Release = di.Version
 
