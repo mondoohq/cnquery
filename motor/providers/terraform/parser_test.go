@@ -1,8 +1,10 @@
 package terraform
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
+
+	"github.com/hashicorp/hcl/v2"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -10,20 +12,22 @@ import (
 
 func TestLoadHclBlocks(t *testing.T) {
 	path := "./testdata"
-	fileList, err := ioutil.ReadDir(path)
+	fileList, err := os.ReadDir(path)
 	require.NoError(t, err)
 
-	parsed, err := ParseHclDirectory(path, fileList)
+	loader := NewHCLFileLoader()
+	err = loader.ParseHclDirectory(path, fileList)
 	require.NoError(t, err)
-	assert.Equal(t, 2, len(parsed.Files()))
+	assert.Equal(t, 2, len(loader.GetParser().Files()))
 }
 
 func TestLoadTfvars(t *testing.T) {
 	path := "./testdata"
-	fileList, err := ioutil.ReadDir(path)
+	fileList, err := os.ReadDir(path)
 	require.NoError(t, err)
 
-	variables, err := ParseTfVars(path, fileList)
+	variables := make(map[string]*hcl.Attribute)
+	err = ReadTfVarsFromDir(path, fileList, variables)
 	require.NoError(t, err)
 	assert.Equal(t, 2, len(variables))
 }
