@@ -1273,7 +1273,7 @@ func (g *lumiGithubRepository) GetCommits() ([]interface{}, error) {
 	commits, _, err := gt.Client().Repositories.ListCommits(context.TODO(), ownerLogin, repoName, &github.CommitsListOptions{})
 	if err != nil {
 		log.Error().Err(err).Msg("unable to get commits list")
-		if strings.Contains(err.Error(), "404") {
+		if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "Git Repository is empty") {
 			return nil, nil
 		}
 		return nil, err
