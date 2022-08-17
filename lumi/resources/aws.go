@@ -13,7 +13,7 @@ func (e *lumiAws) id() (string, error) {
 }
 
 func (s *lumiAws) GetRegions() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

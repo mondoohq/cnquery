@@ -18,7 +18,7 @@ func (l *lumiAwsLambda) id() (string, error) {
 }
 
 func (l *lumiAwsLambda) GetFunctions() ([]interface{}, error) {
-	at, err := awstransport(l.MotorRuntime.Motor.Transport)
+	at, err := awstransport(l.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (l *lumiAwsLambdaFunction) GetConcurrency() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	at, err := awstransport(l.MotorRuntime.Motor.Transport)
+	at, err := awstransport(l.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return 0, err
 	}
@@ -138,7 +138,7 @@ func (l *lumiAwsLambdaFunction) GetPolicy() (interface{}, error) {
 	if err != nil {
 		return 0, err
 	}
-	at, err := awstransport(l.MotorRuntime.Motor.Transport)
+	at, err := awstransport(l.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

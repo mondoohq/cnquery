@@ -17,7 +17,7 @@ func (c *lumiAwsCodebuild) id() (string, error) {
 }
 
 func (c *lumiAwsCodebuild) GetProjects() ([]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (c *lumiAwsCodebuildProject) init(args *lumi.Args) (*lumi.Args, AwsCodebuil
 
 	name := (*args)["name"].(string)
 	region := (*args)["region"].(string)
-	at, err := awstransport(c.MotorRuntime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}

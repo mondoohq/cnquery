@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.io/mondoo/motor/providers"
+	os_provider "go.mondoo.io/mondoo/motor/providers/os"
 )
 
 type FileInfo struct {
@@ -63,7 +63,7 @@ func (mf *MockFile) Stat() (os.FileInfo, error) {
 		size = int64(len(mf.data.Content))
 	}
 
-	return &providers.FileInfo{
+	return &os_provider.FileInfo{
 		FName:    filepath.Base(mf.data.Path),
 		FSize:    size,
 		FModTime: mf.data.StatData.ModTime,

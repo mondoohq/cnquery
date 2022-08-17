@@ -35,7 +35,7 @@ func (r *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn creden
 	}
 	defer m.Close()
 
-	p, ok := m.Transport.(*github_provider.Provider)
+	p, ok := m.Provider.(*github_provider.Provider)
 	if !ok {
 		return nil, errors.New("could not initialize github transport")
 	}

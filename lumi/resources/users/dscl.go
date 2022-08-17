@@ -6,13 +6,12 @@ import (
 	"regexp"
 	"strconv"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor"
 )
 
-var (
-	USER_OSX_DSCL_REGEX = regexp.MustCompile(`(?m)^(\S*)\s*(.*)$`)
-)
+var USER_OSX_DSCL_REGEX = regexp.MustCompile(`(?m)^(\S*)\s*(.*)$`)
 
 func ParseDsclListResult(input io.Reader) (map[string]string, error) {
 	content, err := ioutil.ReadAll(input)
@@ -31,11 +30,10 @@ func ParseDsclListResult(input io.Reader) (map[string]string, error) {
 		}
 	}
 	return userMap, nil
-
 }
 
 type OSXUserManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (s *OSXUserManager) Name() string {
@@ -53,9 +51,9 @@ func (s *OSXUserManager) User(id string) (*User, error) {
 
 // To retrieve all user information, we have two options:
 //
-// 1. fetch all users via `dscl . list /Users`
-// 2. iterate over each user and fetch the data via
-//    dscl -q . -read /Users/nobody NFSHomeDirectory PrimaryGroupID RecordName UniqueID UserShell
+//  1. fetch all users via `dscl . list /Users`
+//  2. iterate over each user and fetch the data via
+//     dscl -q . -read /Users/nobody NFSHomeDirectory PrimaryGroupID RecordName UniqueID UserShell
 //
 // This approach is not very effective since it requires O(n), there we use the option to fetch one
 // value per list, which requires us to do 5 calls to fetch all information:
@@ -68,7 +66,7 @@ func (s *OSXUserManager) List() ([]*User, error) {
 	users := make(map[string]*User)
 
 	// fetch all uids first
-	f, err := s.motor.Transport.RunCommand("dscl . -list /Users UniqueID")
+	f, err := s.provider.RunCommand("dscl . -list /Users UniqueID")
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +89,7 @@ func (s *OSXUserManager) List() ([]*User, error) {
 	}
 
 	// fetch shells
-	f, err = s.motor.Transport.RunCommand("dscl . -list /Users UserShell")
+	f, err = s.provider.RunCommand("dscl . -list /Users UserShell")
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +103,7 @@ func (s *OSXUserManager) List() ([]*User, error) {
 	}
 
 	// fetch home
-	f, err = s.motor.Transport.RunCommand("dscl . -list /Users NFSHomeDirectory")
+	f, err = s.provider.RunCommand("dscl . -list /Users NFSHomeDirectory")
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +117,7 @@ func (s *OSXUserManager) List() ([]*User, error) {
 	}
 
 	// fetch usernames
-	f, err = s.motor.Transport.RunCommand("dscl . -list /Users RealName")
+	f, err = s.provider.RunCommand("dscl . -list /Users RealName")
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +131,7 @@ func (s *OSXUserManager) List() ([]*User, error) {
 	}
 
 	// fetch gid
-	f, err = s.motor.Transport.RunCommand("dscl . -list /Users PrimaryGroupID")
+	f, err = s.provider.RunCommand("dscl . -list /Users PrimaryGroupID")
 	if err != nil {
 		return nil, err
 	}

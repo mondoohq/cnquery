@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"time"
 
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/os"
 
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
 )
@@ -150,8 +150,8 @@ func parseProductState(state uint32) productState {
 	return res
 }
 
-func GetSecurityProducts(t providers.Transport) ([]securityProduct, error) {
-	c, err := t.RunCommand(powershell.Encode(windowsSecurityProducts))
+func GetSecurityProducts(p os.OperatingSystemProvider) ([]securityProduct, error) {
+	c, err := p.RunCommand(powershell.Encode(windowsSecurityProducts))
 	if err != nil {
 		return nil, err
 	}

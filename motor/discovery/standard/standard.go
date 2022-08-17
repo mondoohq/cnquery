@@ -7,6 +7,7 @@ import (
 	"go.mondoo.io/mondoo/motor/motorid"
 	"go.mondoo.io/mondoo/motor/motorid/hostname"
 	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/os"
 	"go.mondoo.io/mondoo/motor/providers/resolver"
 )
 
@@ -50,7 +51,7 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.Config, cfn credenti
 		assetObj.Platform = p
 	}
 
-	fingerprint, err := motorid.IdentifyPlatform(m.Transport, p, userIdDetectors)
+	fingerprint, err := motorid.IdentifyPlatform(m.Provider, p, userIdDetectors)
 	if err != nil {
 		return nil, err
 	}
@@ -61,10 +62,13 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.Config, cfn credenti
 
 	// use hostname as asset name
 	if p != nil && assetObj.Name == "" {
-		// retrieve hostname
-		hostname, err := hostname.Hostname(m.Transport, p)
-		if err == nil && len(hostname) > 0 {
-			assetObj.Name = hostname
+		osProvider, isOSProvicer := m.Provider.(os.OperatingSystemProvider)
+		if isOSProvicer {
+			// retrieve hostname
+			hostname, err := hostname.Hostname(osProvider, p)
+			if err == nil && len(hostname) > 0 {
+				assetObj.Name = hostname
+			}
 		}
 	}
 

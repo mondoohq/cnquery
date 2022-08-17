@@ -16,7 +16,7 @@ func (a *lumiAzuread) id() (string, error) {
 }
 
 func (a *lumiAzuread) GetUsers() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (a *lumiAzuread) GetUsers() ([]interface{}, error) {
 }
 
 func (a *lumiAzuread) GetGroups() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func (a *lumiAzuread) GetGroups() ([]interface{}, error) {
 }
 
 func (a *lumiAzuread) GetDomains() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

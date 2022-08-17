@@ -19,7 +19,7 @@ func (a *lumiAzurermMariadbDatabase) id() (string, error) {
 }
 
 func (a *lumiAzurermMariadb) GetServers() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (a *lumiAzurermMariadb) GetServers() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermMariadbServer) GetConfiguration() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +138,7 @@ func (a *lumiAzurermMariadbServer) GetConfiguration() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermMariadbServer) GetDatabases() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -200,7 +200,7 @@ func (a *lumiAzurermMariadbServer) GetDatabases() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermMariadbServer) GetFirewallRules() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

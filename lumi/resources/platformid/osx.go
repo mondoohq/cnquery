@@ -6,14 +6,14 @@ import (
 	"regexp"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
 // MacOSIdProvider read the operating system id by calling
 // "ioreg -rd1 -c IOPlatformExpertDevice" and extracting
 // the IOPlatformUUID
 type MacOSIdProvider struct {
-	Transport providers.Transport
+	provider os.OperatingSystemProvider
 }
 
 func (p *MacOSIdProvider) Name() string {
@@ -23,7 +23,7 @@ func (p *MacOSIdProvider) Name() string {
 var MACOS_ID_REGEX = regexp.MustCompile(`\"IOPlatformUUID\"\s*=\s*\"(.*)\"`)
 
 func (p *MacOSIdProvider) ID() (string, error) {
-	c, err := p.Transport.RunCommand("ioreg -rd1 -c IOPlatformExpertDevice")
+	c, err := p.provider.RunCommand("ioreg -rd1 -c IOPlatformExpertDevice")
 	if err != nil || c.ExitStatus != 0 {
 		return "", err
 	}

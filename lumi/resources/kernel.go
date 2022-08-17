@@ -240,10 +240,15 @@ func (k *lumiKernel) GetParameters() (map[string]interface{}, error) {
 
 // TODO: something is going wrong with proc file fetching, get this back to work
 func (k *lumiKernel) getParametersFromProc() (map[string]interface{}, error) {
+	osProvider, err := osProvider(k.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
 	// TODO: consider registration for directory changes
 	sysctlPath := "/proc/sys/"
 
-	fs := k.MotorRuntime.Motor.Transport.FS()
+	fs := osProvider.FS()
 
 	f, err := fs.Open(sysctlPath)
 	if err != nil {

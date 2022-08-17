@@ -12,6 +12,11 @@ import (
 )
 
 func (u *lumiUser) GetSshkeys() ([]interface{}, error) {
+	osProvider, err := osProvider(u.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
 	res := []interface{}{}
 
 	home, err := u.Home()
@@ -21,7 +26,7 @@ func (u *lumiUser) GetSshkeys() ([]interface{}, error) {
 
 	userSshPath := path.Join(home, ".ssh")
 
-	fs := u.MotorRuntime.Motor.Transport.FS()
+	fs := osProvider.FS()
 	afutil := afero.Afero{Fs: fs}
 
 	// check if use ssh directory exists

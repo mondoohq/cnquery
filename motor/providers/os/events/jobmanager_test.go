@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/providers"
@@ -30,7 +32,7 @@ func TestJobCreation(t *testing.T) {
 		ScheduledFor: time.Now(),
 		Interval:     time.Duration(10 * time.Second),
 		Repeat:       5,
-		Runnable: func(m providers.Transport) (providers.Observable, error) {
+		Runnable: func(m os.OperatingSystemProvider) (providers.Observable, error) {
 			cmd, _ := m.RunCommand("hostname")
 			return &CommandObservable{Result: cmd}, nil
 		},
@@ -62,7 +64,7 @@ func TestJobDeletion(t *testing.T) {
 		ScheduledFor: time.Now(),
 		Interval:     time.Duration(10 * time.Second),
 		Repeat:       5,
-		Runnable: func(m providers.Transport) (providers.Observable, error) {
+		Runnable: func(m os.OperatingSystemProvider) (providers.Observable, error) {
 			cmd, _ := m.RunCommand("hostname")
 			return &CommandObservable{Result: cmd}, nil
 		},
@@ -117,7 +119,7 @@ func TestCommandJob(t *testing.T) {
 		ScheduledFor: time.Now(),
 		Interval:     time.Duration(10 * time.Second),
 		Repeat:       5,
-		Runnable: func(m providers.Transport) (providers.Observable, error) {
+		Runnable: func(m os.OperatingSystemProvider) (providers.Observable, error) {
 			cmd, _ := m.RunCommand("hostname")
 			return &CommandObservable{Result: cmd}, nil
 		},
@@ -151,7 +153,7 @@ func TestFileJob(t *testing.T) {
 		ID:           "file-abc",
 		ScheduledFor: time.Now(),
 		Interval:     time.Duration(10 * time.Second),
-		Runnable: func(m providers.Transport) (providers.Observable, error) {
+		Runnable: func(m os.OperatingSystemProvider) (providers.Observable, error) {
 			file, _ := m.FS().Open(path)
 			return &FileObservable{File: file, FileOp: Modify}, nil
 		},
@@ -185,7 +187,7 @@ func TestScheduleRepeating(t *testing.T) {
 		ScheduledFor: time.Now(),
 		Repeat:       1,
 		Interval:     time.Duration(1),
-		Runnable: func(m providers.Transport) (providers.Observable, error) {
+		Runnable: func(m os.OperatingSystemProvider) (providers.Observable, error) {
 			cmd, _ := m.RunCommand("hostname")
 			return &CommandObservable{Result: cmd}, nil
 		},

@@ -5,8 +5,9 @@ import (
 	"io"
 	"io/ioutil"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
-	"go.mondoo.io/mondoo/motor/providers"
 )
 
 // This implements the Windows Security Center API
@@ -81,8 +82,8 @@ type windowsSecurityHealth struct {
 	SecurityCenterService statusCode
 }
 
-func GetSecurityProviderHealth(t providers.Transport) (*windowsSecurityHealth, error) {
-	c, err := t.RunCommand(powershell.Encode(windowsSecurityHealthScript))
+func GetSecurityProviderHealth(p os.OperatingSystemProvider) (*windowsSecurityHealth, error) {
+	c, err := p.RunCommand(powershell.Encode(windowsSecurityHealthScript))
 	if err != nil {
 		return nil, err
 	}

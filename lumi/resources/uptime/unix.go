@@ -10,12 +10,10 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
-var (
-	UnixUptimeRegex = regexp.MustCompile(`^.*up[\s]*(?:(\d+)\s(day[s]*|min[s]*),)*(?:\s+([\d:]+),\s)*\s*(?:(\d+)\suser[s]*,\s)*\s*load\s+average[s]*:\s+([\d\.]+)[,\s]+([\d\.]+)[,\s]+([\d\.]+)\s*$`)
-)
+var UnixUptimeRegex = regexp.MustCompile(`^.*up[\s]*(?:(\d+)\s(day[s]*|min[s]*),)*(?:\s+([\d:]+),\s)*\s*(?:(\d+)\suser[s]*,\s)*\s*load\s+average[s]*:\s+([\d\.]+)[,\s]+([\d\.]+)[,\s]+([\d\.]+)\s*$`)
 
 type UnixUptimeResult struct {
 	Duration           int64
@@ -111,7 +109,7 @@ func ParseUnixUptime(uptime string) (*UnixUptimeResult, error) {
 }
 
 type Unix struct {
-	Motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (s *Unix) Name() string {
@@ -119,8 +117,7 @@ func (s *Unix) Name() string {
 }
 
 func (s *Unix) Duration() (time.Duration, error) {
-
-	cmd, err := s.Motor.Transport.RunCommand("uptime")
+	cmd, err := s.provider.RunCommand("uptime")
 	if err != nil {
 		return 0, err
 	}

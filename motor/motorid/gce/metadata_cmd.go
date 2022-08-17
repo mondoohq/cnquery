@@ -5,10 +5,11 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/pkg/errors"
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers"
 )
 
 const (
@@ -27,20 +28,20 @@ $doc | ConvertTo-Json
 `
 )
 
-func NewCommandInstanceMetadata(t providers.Transport, p *platform.Platform) *CommandInstanceMetadata {
+func NewCommandInstanceMetadata(provider os.OperatingSystemProvider, platform *platform.Platform) *CommandInstanceMetadata {
 	return &CommandInstanceMetadata{
-		transport: t,
-		platform:  p,
+		provider: provider,
+		platform: platform,
 	}
 }
 
 type CommandInstanceMetadata struct {
-	transport providers.Transport
-	platform  *platform.Platform
+	provider os.OperatingSystemProvider
+	platform *platform.Platform
 }
 
 func (m *CommandInstanceMetadata) curl(key string, v interface{}) error {
-	cmd, err := m.transport.RunCommand("curl --noproxy '*' -H Metadata-Flavor:Google " + metadataSvcURL + key + "?alt=json")
+	cmd, err := m.provider.RunCommand("curl --noproxy '*' -H Metadata-Flavor:Google " + metadataSvcURL + key + "?alt=json")
 	if err != nil {
 		return err
 	}
@@ -71,7 +72,7 @@ func (m *CommandInstanceMetadata) InstanceID() (string, error) {
 
 		return MondooGcpInstanceID(projectID, zone, instanceID), nil
 	case m.platform.IsFamily(platform.FAMILY_WINDOWS):
-		cmd, err := m.transport.RunCommand(powershell.Encode(metadataIdentityScriptWindows))
+		cmd, err := m.provider.RunCommand(powershell.Encode(metadataIdentityScriptWindows))
 		if err != nil {
 			return "", err
 		}

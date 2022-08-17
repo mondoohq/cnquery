@@ -12,7 +12,12 @@ func (l *lumiLsblk) id() (string, error) {
 }
 
 func (l *lumiLsblk) GetList() ([]interface{}, error) {
-	cmd, err := l.MotorRuntime.Motor.Transport.RunCommand("lsblk --json --fs")
+	osProvider, err := osProvider(l.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
+	cmd, err := osProvider.RunCommand("lsblk --json --fs")
 	if err != nil {
 		return nil, err
 	}

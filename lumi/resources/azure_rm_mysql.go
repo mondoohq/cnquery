@@ -19,7 +19,7 @@ func (a *lumiAzurermMysqlDatabase) id() (string, error) {
 }
 
 func (a *lumiAzurermMysql) GetServers() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (a *lumiAzurermMysql) GetServers() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermMysqlServer) GetConfiguration() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +138,7 @@ func (a *lumiAzurermMysqlServer) GetConfiguration() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermMysqlServer) GetDatabases() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -200,7 +200,7 @@ func (a *lumiAzurermMysqlServer) GetDatabases() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermMysqlServer) GetFirewallRules() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

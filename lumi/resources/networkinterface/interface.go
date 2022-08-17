@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 
@@ -19,9 +21,7 @@ import (
 	"go.mondoo.io/mondoo/motor/platform"
 )
 
-var (
-	errNoSuchInterface = errors.New("no such network interface")
-)
+var errNoSuchInterface = errors.New("no such network interface")
 
 // mimics https://golang.org/src/net/interface.go to provide a similar api
 type Interface struct {
@@ -50,24 +50,26 @@ func (r *InterfaceResource) Interfaces() ([]Interface, error) {
 		return nil, err
 	}
 
+	osProvider, isOSProvider := r.motor.Provider.(os.OperatingSystemProvider)
+
 	log.Debug().Strs("families", pi.Family).Msg("check if platform is supported for network interface")
-	if r.motor.IsLocalTransport() {
+	if r.motor.IsLocalProvider() {
 		handler := &GoNativeInterfaceHandler{}
 		return handler.Interfaces()
-	} else if pi.Name == "macos" {
+	} else if isOSProvider && pi.Name == "macos" {
 		handler := &MacOSInterfaceHandler{
-			motor: r.motor,
+			provider: osProvider,
 		}
 		return handler.Interfaces()
-	} else if pi.IsFamily(platform.FAMILY_LINUX) {
+	} else if isOSProvider && pi.IsFamily(platform.FAMILY_LINUX) {
 		log.Debug().Msg("detected linux platform")
 		handler := &LinuxInterfaceHandler{
-			motor: r.motor,
+			provider: osProvider,
 		}
 		return handler.Interfaces()
-	} else if pi.Name == "windows" {
+	} else if isOSProvider && pi.Name == "windows" {
 		handler := &WindowsInterfaceHandler{
-			motor: r.motor,
+			provider: osProvider,
 		}
 		return handler.Interfaces()
 	}
@@ -92,7 +94,6 @@ func (r *InterfaceResource) InterfaceByName(name string) (*Interface, error) {
 type GoNativeInterfaceHandler struct{}
 
 func (i *GoNativeInterfaceHandler) Interfaces() ([]Interface, error) {
-
 	var goInterfaces []net.Interface
 	var err error
 	if goInterfaces, err = net.Interfaces(); err != nil {
@@ -126,13 +127,13 @@ func (i *GoNativeInterfaceHandler) Interfaces() ([]Interface, error) {
 }
 
 type LinuxInterfaceHandler struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (i *LinuxInterfaceHandler) Interfaces() ([]Interface, error) {
 	// TODO: support extracting the information via /sys/class/net/, /proc/net/fib_trie
 	// fetch all network adapter via ip addr show
-	cmd, err := i.motor.Transport.RunCommand("ip -o addr show")
+	cmd, err := i.provider.RunCommand("ip -o addr show")
 	if err != nil {
 		return nil, errors.Wrap(err, "could not fetch macos network adapter")
 	}
@@ -213,12 +214,12 @@ func (i *LinuxInterfaceHandler) ParseIpAddr(r io.Reader) ([]Interface, error) {
 }
 
 type MacOSInterfaceHandler struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (i *MacOSInterfaceHandler) Interfaces() ([]Interface, error) {
 	// fetch all network adapter
-	cmd, err := i.motor.Transport.RunCommand("ifconfig")
+	cmd, err := i.provider.RunCommand("ifconfig")
 	if err != nil {
 		return nil, errors.Wrap(err, "could not fetch macos network adapter")
 	}
@@ -232,7 +233,6 @@ var (
 )
 
 func (i *MacOSInterfaceHandler) ParseMacOS(r io.Reader) ([]Interface, error) {
-
 	interfaces := []Interface{}
 	ifIndex := -1
 	scanner := bufio.NewScanner(r)
@@ -395,12 +395,12 @@ func filterWinIpByInterface(iName string, ips []WindowsNetIp) []net.Addr {
 }
 
 type WindowsInterfaceHandler struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (i *WindowsInterfaceHandler) Interfaces() ([]Interface, error) {
 	// fetch all network adapter
-	cmd, err := i.motor.Transport.RunCommand(powershell.Wrap(WinGetNetAdapter))
+	cmd, err := i.provider.RunCommand(powershell.Wrap(WinGetNetAdapter))
 	if err != nil {
 		return nil, errors.Wrap(err, "could not fetch windows network adapter")
 	}
@@ -410,7 +410,7 @@ func (i *WindowsInterfaceHandler) Interfaces() ([]Interface, error) {
 	}
 
 	// fetch all ip adresses
-	cmd, err = i.motor.Transport.RunCommand(powershell.Wrap(WinGetNetIPAddress))
+	cmd, err = i.provider.RunCommand(powershell.Wrap(WinGetNetIPAddress))
 	if err != nil {
 		return nil, errors.Wrap(err, "could not fetch windows ip adresses")
 	}

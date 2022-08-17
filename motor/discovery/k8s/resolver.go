@@ -3,7 +3,6 @@ package k8s
 import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/resources/kubectl"
-	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/platform/detector"
@@ -49,14 +48,11 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.Config, cfn credenti
 	namespacesFilter := []string{}
 
 	var k8sctlConfig *kubectl.KubectlConfig
-	localTransport, err := local.New()
+	localProvider, err := local.New()
 	if err == nil {
-		m, err := motor.New(localTransport)
-		if err == nil {
-			k8sctlConfig, err = kubectl.LoadKubeConfig(m)
-			if err != nil {
-				return nil, err
-			}
+		k8sctlConfig, err = kubectl.LoadKubeConfig(localProvider)
+		if err != nil {
+			return nil, err
 		}
 	}
 

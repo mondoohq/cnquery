@@ -5,6 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/providers"
 )
@@ -37,7 +39,7 @@ func (c *Subscriptions) Range(f func(string, *WatcherSubscription) bool) {
 }
 
 type Watcher struct {
-	transport     providers.Transport
+	provider      os.OperatingSystemProvider
 	subscriptions *Subscriptions
 	jm            *JobManager
 	SleepDuration time.Duration
@@ -48,10 +50,10 @@ type WatcherSubscription struct {
 	observable func(providers.Observable)
 }
 
-func NewWatcher(transport providers.Transport) *Watcher {
-	w := &Watcher{transport: transport, subscriptions: &Subscriptions{}}
-	w.transport = transport
-	w.jm = NewJobManager(transport)
+func NewWatcher(provider os.OperatingSystemProvider) *Watcher {
+	w := &Watcher{provider: provider, subscriptions: &Subscriptions{}}
+	w.provider = provider
+	w.jm = NewJobManager(provider)
 	w.SleepDuration = time.Duration(10 * time.Second)
 	return w
 }

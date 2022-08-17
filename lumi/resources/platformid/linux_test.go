@@ -11,10 +11,10 @@ import (
 
 func TestLinuxMachineId(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/linux_test.toml")
-	trans, err := mock.NewFromTomlFile(filepath)
+	provider, err := mock.NewFromTomlFile(filepath)
 	require.NoError(t, err)
 
-	lid := LinuxIdProvider{Transport: trans}
+	lid := LinuxIdProvider{provider: provider}
 	id, err := lid.ID()
 	require.NoError(t, err)
 

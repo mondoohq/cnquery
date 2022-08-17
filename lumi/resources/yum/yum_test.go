@@ -7,7 +7,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/providers/mock"
 )
 
@@ -62,16 +61,14 @@ Repo-filename: /etc/yum.repos.d/CentOS-Media.repo
 func TestYumRepoRhel7(t *testing.T) {
 	mock, err := mock.NewFromTomlFile("./testdata/yum_rhel7.toml")
 	require.NoError(t, err)
-	m, err := motor.New(mock)
-	require.NoError(t, err)
 
-	cmd, err := m.Transport.RunCommand(RhelYumRepoListCommand)
+	cmd, err := mock.RunCommand(RhelYumRepoListCommand)
 	require.NoError(t, err)
 	repos, err := ParseRepos(cmd.Stdout)
 	require.NoError(t, err)
 	assert.Equal(t, 15, len(repos))
 
-	cmd, err = m.Transport.RunCommand(Rhel6VarsCommand)
+	cmd, err = mock.RunCommand(Rhel6VarsCommand)
 	require.NoError(t, err)
 	vars, err := ParseVariables(cmd.Stdout)
 	require.NoError(t, err)
@@ -81,16 +78,14 @@ func TestYumRepoRhel7(t *testing.T) {
 func TestYumRepoRhel8(t *testing.T) {
 	mock, err := mock.NewFromTomlFile("./testdata/yum_rhel8.toml")
 	require.NoError(t, err)
-	m, err := motor.New(mock)
-	require.NoError(t, err)
 
-	cmd, err := m.Transport.RunCommand(RhelYumRepoListCommand)
+	cmd, err := mock.RunCommand(RhelYumRepoListCommand)
 	require.NoError(t, err)
 	repos, err := ParseRepos(cmd.Stdout)
 	require.NoError(t, err)
 	assert.Equal(t, 17, len(repos))
 
-	cmd, err = m.Transport.RunCommand(fmt.Sprintf(DnfVarsCommand, PythonRhel))
+	cmd, err = mock.RunCommand(fmt.Sprintf(DnfVarsCommand, PythonRhel))
 	require.NoError(t, err)
 	vars, err := ParseVariables(cmd.Stdout)
 	require.NoError(t, err)

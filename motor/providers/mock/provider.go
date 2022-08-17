@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
 var _ providers.Transport = (*Provider)(nil)
@@ -47,8 +48,8 @@ func New() (*Provider, error) {
 }
 
 // RunCommand returns the results of a command found in the nock registry
-func (p *Provider) RunCommand(command string) (*providers.Command, error) {
-	res := providers.Command{Command: command, Stdout: &bytes.Buffer{}, Stderr: &bytes.Buffer{}}
+func (p *Provider) RunCommand(command string) (*os.Command, error) {
+	res := os.Command{Command: command, Stdout: &bytes.Buffer{}, Stderr: &bytes.Buffer{}}
 
 	// we check both the command and the sha sum
 
@@ -80,25 +81,25 @@ func (p *Provider) FS() afero.Fs {
 	return p.Fs
 }
 
-func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
+func (p *Provider) FileInfo(path string) (os.FileInfoDetails, error) {
 	fs := p.FS()
 	afs := &afero.Afero{Fs: fs}
 	stat, err := afs.Stat(path)
 	if err != nil {
-		return providers.FileInfoDetails{}, err
+		return os.FileInfoDetails{}, err
 	}
 
 	uid := int64(-1)
 	gid := int64(-1)
-	if stat, ok := stat.Sys().(*providers.FileInfo); ok {
+	if stat, ok := stat.Sys().(*os.FileInfo); ok {
 		uid = int64(stat.Uid)
 		gid = int64(stat.Gid)
 	}
 
 	mode := stat.Mode()
 
-	return providers.FileInfoDetails{
-		Mode: providers.FileModeDetails{mode},
+	return os.FileInfoDetails{
+		Mode: os.FileModeDetails{mode},
 		Size: stat.Size(),
 		Uid:  uid,
 		Gid:  gid,

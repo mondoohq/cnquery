@@ -6,17 +6,16 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/os"
 	"golang.org/x/crypto/ssh"
 )
 
 type Command struct {
-	providers.Command
+	os.Command
 	SSHProvider *Provider
 }
 
-func (c *Command) Exec(command string) (*providers.Command, error) {
+func (c *Command) Exec(command string) (*os.Command, error) {
 	c.Command.Command = command
 	c.Command.Stats.Duration = time.Since(c.Command.Stats.Start)
 

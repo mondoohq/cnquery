@@ -15,7 +15,7 @@ func (e *lumiAwsSecretsmanager) id() (string, error) {
 }
 
 func (e *lumiAwsSecretsmanager) GetSecrets() ([]interface{}, error) {
-	at, err := awstransport(e.MotorRuntime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

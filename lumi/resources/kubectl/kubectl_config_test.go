@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/lumi/resources/kubectl"
-	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/providers/mock"
 )
 
@@ -41,10 +40,7 @@ func TestKubectlExecuter(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	m, err := motor.New(mock)
-	require.NoError(t, err)
-
-	config, err := kubectl.LoadKubeConfig(m)
+	config, err := kubectl.LoadKubeConfig(mock)
 	require.NoError(t, err)
 	assert.Equal(t, "Config", config.Kind)
 	assert.Equal(t, "minikube", config.CurrentContext)

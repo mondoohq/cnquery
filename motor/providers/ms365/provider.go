@@ -4,10 +4,8 @@ import (
 	"sync"
 
 	"github.com/cockroachdb/errors"
-	"github.com/spf13/afero"
 	ms356_resources "go.mondoo.io/mondoo/lumi/resources/ms365"
 	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
@@ -96,18 +94,6 @@ func (p *Provider) MissingRoles(checkRoles ...string) []string {
 		}
 	}
 	return missing
-}
-
-func (p *Provider) RunCommand(command string) (*providers.Command, error) {
-	return nil, providers.ErrRunCommandNotImplemented
-}
-
-func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, providers.ErrFileInfoNotImplemented
-}
-
-func (p *Provider) FS() afero.Fs {
-	return &fsutil.NoFs{}
 }
 
 func (p *Provider) Close() {}

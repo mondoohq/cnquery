@@ -16,7 +16,7 @@ func (a *lumiAzurermPostgresqlDatabase) id() (string, error) {
 }
 
 func (a *lumiAzurermPostgresql) GetServers() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (a *lumiAzurermPostgresqlServer) id() (string, error) {
 }
 
 func (a *lumiAzurermPostgresqlServer) GetConfiguration() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func (a *lumiAzurermPostgresqlServer) GetConfiguration() ([]interface{}, error) 
 }
 
 func (a *lumiAzurermPostgresqlServer) GetDatabases() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +206,7 @@ func (a *lumiAzurermPostgresqlServer) GetDatabases() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermPostgresqlServer) GetFirewallRules() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

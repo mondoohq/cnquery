@@ -5,10 +5,8 @@ import (
 	"os"
 
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/afero"
 	"github.com/xanzy/go-gitlab"
 	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
@@ -62,18 +60,6 @@ type Provider struct {
 	client    *gitlab.Client
 	opts      map[string]string
 	GroupPath string
-}
-
-func (p *Provider) RunCommand(command string) (*providers.Command, error) {
-	return nil, providers.ErrRunCommandNotImplemented
-}
-
-func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, providers.ErrFileInfoNotImplemented
-}
-
-func (p *Provider) FS() afero.Fs {
-	return &fsutil.NoFs{}
 }
 
 func (p *Provider) Close() {}

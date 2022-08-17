@@ -28,7 +28,7 @@ func (r *Resolver) Resolve(root *asset.Asset, tc *providers.Config, cfn credenti
 	}
 	defer m.Close()
 
-	trans, ok := m.Transport.(*gitlab_transport.Provider)
+	trans, ok := m.Provider.(*gitlab_transport.Provider)
 	if !ok {
 		return nil, errors.New("could not initialize gitlab transport")
 	}

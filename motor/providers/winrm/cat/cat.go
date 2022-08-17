@@ -10,11 +10,11 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
-	"go.mondoo.io/mondoo/motor/providers"
+	os_provider "go.mondoo.io/mondoo/motor/providers/os"
 )
 
 type CommandRunner interface {
-	RunCommand(command string) (*providers.Command, error)
+	RunCommand(command string) (*os_provider.Command, error)
 }
 
 func New(cmdRunner CommandRunner) *CatFs {

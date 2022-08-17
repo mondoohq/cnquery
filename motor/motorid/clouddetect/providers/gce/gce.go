@@ -3,34 +3,35 @@ package gce
 import (
 	"strings"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/lumi/resources/smbios"
 	"go.mondoo.io/mondoo/motor/motorid/gce"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers"
 )
 
 const (
 	gceIdentifierFileLinux = "/sys/class/dmi/id/product_name"
 )
 
-func Detect(t providers.Transport, p *platform.Platform) string {
+func Detect(provider os.OperatingSystemProvider, pf *platform.Platform) string {
 	productName := ""
-	if p.IsFamily("linux") {
+	if pf.IsFamily("linux") {
 		// Fetching the product version from the smbios manager is slow
 		// because it iterates through files we don't need to check. This
 		// is an optimzation for our sshfs. Also, be aware that on linux,
 		// you may not have access to all the smbios things under /sys, so
 		// you want to make sure to only check the one file
-		content, err := afero.ReadFile(t.FS(), gceIdentifierFileLinux)
+		content, err := afero.ReadFile(provider.FS(), gceIdentifierFileLinux)
 		if err != nil {
 			log.Debug().Err(err).Msgf("unable to read %s", gceIdentifierFileLinux)
 			return ""
 		}
 		productName = string(content)
 	} else {
-		mgr, err := smbios.ResolveManager(t, p)
+		mgr, err := smbios.ResolveManager(provider, pf)
 		if err != nil {
 			return ""
 		}
@@ -43,7 +44,7 @@ func Detect(t providers.Transport, p *platform.Platform) string {
 	}
 
 	if strings.Contains(productName, "Google Compute Engine") {
-		mdsvc, err := gce.Resolve(t, p)
+		mdsvc, err := gce.Resolve(provider, pf)
 		if err != nil {
 			log.Debug().Err(err).Msg("failed to get metadata resolver")
 			return ""
@@ -51,8 +52,8 @@ func Detect(t providers.Transport, p *platform.Platform) string {
 		id, err := mdsvc.InstanceID()
 		if err != nil {
 			log.Debug().Err(err).
-				Str("transport", t.Kind().String()).
-				Strs("platform", p.GetFamily()).
+				Str("transport", provider.Kind().String()).
+				Strs("platform", pf.GetFamily()).
 				Msg("failed to get gce platform id")
 			return ""
 		}

@@ -5,8 +5,9 @@ import (
 	"io"
 	"io/ioutil"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
-	"go.mondoo.io/mondoo/motor"
 )
 
 type WindowsSID struct {
@@ -39,7 +40,7 @@ func ParseWindowsLocalGroups(r io.Reader) ([]WindowsLocalGroup, error) {
 }
 
 type WindowsGroupManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (s *WindowsGroupManager) Name() string {
@@ -57,7 +58,7 @@ func (s *WindowsGroupManager) Group(id string) (*Group, error) {
 
 func (s *WindowsGroupManager) List() ([]*Group, error) {
 	powershellCmd := "Get-LocalGroup | ConvertTo-Json"
-	c, err := s.motor.Transport.RunCommand(powershell.Wrap(powershellCmd))
+	c, err := s.provider.RunCommand(powershell.Wrap(powershellCmd))
 	if err != nil {
 		return nil, err
 	}

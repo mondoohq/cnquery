@@ -5,7 +5,8 @@ import (
 	"io"
 	"io/ioutil"
 
-	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"sigs.k8s.io/yaml"
 )
 
@@ -99,8 +100,8 @@ func ParseKubectlConfig(r io.Reader) (*KubectlConfig, error) {
 	return config, nil
 }
 
-func LoadKubeConfig(m *motor.Motor) (*KubectlConfig, error) {
-	cmd, err := m.Transport.RunCommand("kubectl config view --minify")
+func LoadKubeConfig(provider os.OperatingSystemProvider) (*KubectlConfig, error) {
+	cmd, err := provider.RunCommand("kubectl config view --minify")
 	if err != nil {
 		return nil, err
 	}

@@ -32,7 +32,7 @@ func (g *lumiTerraform) id() (string, error) {
 }
 
 func (g *lumiTerraform) GetFiles() ([]interface{}, error) {
-	t, err := terraformtransport(g.MotorRuntime.Motor.Transport)
+	t, err := terraformtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (g *lumiTerraform) GetFiles() ([]interface{}, error) {
 }
 
 func (g *lumiTerraform) GetTfvars() (interface{}, error) {
-	t, err := terraformtransport(g.MotorRuntime.Motor.Transport)
+	t, err := terraformtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (g *lumiTerraform) GetTfvars() (interface{}, error) {
 }
 
 func (g *lumiTerraform) GetModules() ([]interface{}, error) {
-	t, err := terraformtransport(g.MotorRuntime.Motor.Transport)
+	t, err := terraformtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func (g *lumiTerraform) GetModules() ([]interface{}, error) {
 }
 
 func (g *lumiTerraform) GetBlocks() ([]interface{}, error) {
-	t, err := terraformtransport(g.MotorRuntime.Motor.Transport)
+	t, err := terraformtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func (g *lumiTerraform) GetBlocks() ([]interface{}, error) {
 }
 
 func filterBlockByType(runtime *lumi.Runtime, filterType string) ([]interface{}, error) {
-	t, err := terraformtransport(runtime.Motor.Transport)
+	t, err := terraformtransport(runtime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -497,7 +497,7 @@ func (g *lumiTerraformFile) id() (string, error) {
 }
 
 func (g *lumiTerraformFile) GetBlocks() ([]interface{}, error) {
-	t, err := terraformtransport(g.MotorRuntime.Motor.Transport)
+	t, err := terraformtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

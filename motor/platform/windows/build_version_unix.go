@@ -3,8 +3,10 @@
 
 package windows
 
-import "go.mondoo.io/mondoo/motor/providers"
+import (
+	"go.mondoo.io/mondoo/motor/providers/os"
+)
 
-func GetWindowsOSBuild(t providers.Transport) (*WindowsCurrentVersion, error) {
-	return powershellGetWindowsOSBuild(t)
+func GetWindowsOSBuild(p os.OperatingSystemProvider) (*WindowsCurrentVersion, error) {
+	return powershellGetWindowsOSBuild(p)
 }

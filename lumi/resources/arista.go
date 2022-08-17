@@ -41,7 +41,7 @@ func (v *lumiAristaEosRunningConfig) id() (string, error) {
 }
 
 func (a *lumiAristaEosRunningConfig) GetContent() (string, error) {
-	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Transport)
+	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return "", err
 	}
@@ -58,7 +58,7 @@ func (a *lumiAristaEosRunningConfigSection) id() (string, error) {
 }
 
 func (a *lumiAristaEosRunningConfigSection) GetContent() (string, error) {
-	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Transport)
+	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return "", err
 	}
@@ -75,7 +75,7 @@ func (a *lumiAristaEosRunningConfigSection) GetContent() (string, error) {
 }
 
 func (a *lumiAristaEos) GetSystemConfig() (map[string]interface{}, error) {
-	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Transport)
+	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func (a *lumiAristaEos) GetSystemConfig() (map[string]interface{}, error) {
 }
 
 func (a *lumiAristaEos) GetUsers() ([]interface{}, error) {
-	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Transport)
+	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func (a *lumiAristaEos) GetUsers() ([]interface{}, error) {
 }
 
 func (a *lumiAristaEos) GetRoles() ([]interface{}, error) {
-	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Transport)
+	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +148,7 @@ func (a *lumiAristaEos) GetRoles() ([]interface{}, error) {
 }
 
 func (a *lumiAristaEos) GetNtp() (interface{}, error) {
-	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Transport)
+	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +168,7 @@ func (v *lumiAristaEosNtpSetting) id() (string, error) {
 }
 
 func (a *lumiAristaEos) GetSnmp() (interface{}, error) {
-	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Transport)
+	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +188,7 @@ func (v *lumiAristaEosSnmpSetting) id() (string, error) {
 }
 
 func (a *lumiAristaEosSnmpSetting) GetNotifications() ([]interface{}, error) {
-	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Transport)
+	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +201,7 @@ func (a *lumiAristaEosSnmpSetting) GetNotifications() ([]interface{}, error) {
 }
 
 func (a *lumiAristaEos) GetIpInterfaces() ([]interface{}, error) {
-	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Transport)
+	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +224,7 @@ func (a *lumiAristaEos) GetIpInterfaces() ([]interface{}, error) {
 }
 
 func (a *lumiAristaEos) GetVersion() (map[string]interface{}, error) {
-	_, at, err := aristaClientInstance(a.MotorRuntime.Motor.Transport)
+	_, at, err := aristaClientInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +236,7 @@ func (a *lumiAristaEos) GetVersion() (map[string]interface{}, error) {
 }
 
 func (a *lumiAristaEos) GetHostname() (string, error) {
-	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Transport)
+	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return "", err
 	}
@@ -250,7 +250,7 @@ func (a *lumiAristaEos) GetHostname() (string, error) {
 }
 
 func (a *lumiAristaEos) GetFqdn() (string, error) {
-	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Transport)
+	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return "", err
 	}
@@ -264,7 +264,7 @@ func (a *lumiAristaEos) GetFqdn() (string, error) {
 }
 
 func (a *lumiAristaEos) GetInterfaces() ([]interface{}, error) {
-	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Transport)
+	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -325,7 +325,7 @@ func (a *lumiAristaEosInterface) id() (string, error) {
 }
 
 func (a *lumiAristaEosInterface) GetStatus() (map[string]interface{}, error) {
-	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Transport)
+	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -355,7 +355,7 @@ func (a *lumiAristaEosStp) id() (string, error) {
 var aristaMstInstanceID = regexp.MustCompile(`(\d+)$`)
 
 func (a *lumiAristaEosStp) GetMstInstances() ([]interface{}, error) {
-	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Transport)
+	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -448,7 +448,7 @@ func (a *lumiAristaEosSptMstInterface) id() (string, error) {
 }
 
 func (a *lumiAristaEosSptMstInterface) GetCounters() (map[string]interface{}, error) {
-	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Transport)
+	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -472,7 +472,7 @@ func (a *lumiAristaEosSptMstInterface) GetCounters() (map[string]interface{}, er
 }
 
 func (a *lumiAristaEosSptMstInterface) GetFeatures() (map[string]interface{}, error) {
-	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Transport)
+	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

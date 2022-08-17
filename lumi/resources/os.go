@@ -6,6 +6,10 @@ import (
 	"strings"
 	"time"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
+	"go.mondoo.io/mondoo/motor"
+
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/llx"
@@ -21,13 +25,21 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/tar"
 )
 
+func osProvider(motor *motor.Motor) (os.OperatingSystemProvider, error) {
+	provider, ok := motor.Provider.(os.OperatingSystemProvider)
+	if !ok {
+		return nil, fmt.Errorf("provider is not an operating system provider")
+	}
+	return provider, nil
+}
+
 func (p *lumiOs) id() (string, error) {
 	return "os", nil
 }
 
 func (p *lumiOs) GetRebootpending() (interface{}, error) {
 	// it is a container image, a reboot is never required
-	switch p.MotorRuntime.Motor.Transport.(type) {
+	switch p.MotorRuntime.Motor.Provider.(type) {
 	case *docker_snapshot.DockerSnapshotProvider:
 		return false, nil
 	case *tar.Provider:
@@ -219,7 +231,12 @@ func (s *lumiOs) GetHostname() (string, error) {
 		return "", errors.New("cannot determine platform uuid")
 	}
 
-	return hostname.Hostname(s.MotorRuntime.Motor.Transport, platform)
+	osProvider, err := osProvider(s.MotorRuntime.Motor)
+	if err != nil {
+		return "", err
+	}
+
+	return hostname.Hostname(osProvider, platform)
 }
 
 func (p *lumiOs) GetName() (string, error) {
@@ -230,6 +247,11 @@ func (p *lumiOs) GetName() (string, error) {
 
 	if !pf.IsFamily(platform.FAMILY_UNIX) && !pf.IsFamily(platform.FAMILY_WINDOWS) {
 		return "", errors.New("your platform is not supported by operating system resource")
+	}
+
+	osProvider, err := osProvider(p.MotorRuntime.Motor)
+	if err != nil {
+		return "", err
 	}
 
 	if pf.IsFamily(platform.FAMILY_LINUX) {
@@ -271,7 +293,7 @@ func (p *lumiOs) GetName() (string, error) {
 
 	// return plain hostname, this also happens for linux if no pretty name was found
 	if pf.IsFamily(platform.FAMILY_UNIX) {
-		return hostname.Hostname(p.MotorRuntime.Motor.Transport, pf)
+		return hostname.Hostname(osProvider, pf)
 	}
 
 	if pf.IsFamily(platform.FAMILY_WINDOWS) {
@@ -286,7 +308,7 @@ func (p *lumiOs) GetName() (string, error) {
 		}
 
 		// fallback to hostname
-		return hostname.Hostname(p.MotorRuntime.Motor.Transport, pf)
+		return hostname.Hostname(osProvider, pf)
 	}
 
 	return "", errors.New("your platform is not supported by operating system resource")
@@ -299,7 +321,12 @@ func (s *lumiOs) GetMachineid() (string, error) {
 		return "", errors.New("cannot determine platform uuid")
 	}
 
-	uuidProvider, err := platformid.MachineIDProvider(s.MotorRuntime.Motor.Transport, platform)
+	osProvider, err := osProvider(s.MotorRuntime.Motor)
+	if err != nil {
+		return "", err
+	}
+
+	uuidProvider, err := platformid.MachineIDProvider(osProvider, platform)
 	if err != nil {
 		return "", errors.Wrap(err, "cannot determine platform uuid")
 	}

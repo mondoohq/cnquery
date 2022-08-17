@@ -3,9 +3,7 @@ package arista
 import (
 	"github.com/aristanetworks/goeapi"
 	"github.com/cockroachdb/errors"
-	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
@@ -50,18 +48,6 @@ type Provider struct {
 	node    *goeapi.Node
 	kind    providers.Kind
 	runtime string
-}
-
-func (p *Provider) RunCommand(command string) (*providers.Command, error) {
-	return nil, errors.New("arista provider does not implement RunCommand")
-}
-
-func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, errors.New("arista provider does not implement FileInfo")
-}
-
-func (p *Provider) FS() afero.Fs {
-	return &fsutil.NoFs{}
 }
 
 func (p *Provider) Close() {}

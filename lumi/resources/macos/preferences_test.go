@@ -13,7 +13,7 @@ func TestPreferences(t *testing.T) {
 	require.NoError(t, err)
 
 	prefs := &Preferences{
-		transport: mock,
+		provider: mock,
 	}
 
 	preferences, err := prefs.UserHostPreferences()

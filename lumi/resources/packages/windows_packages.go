@@ -7,10 +7,13 @@ import (
 	"io/ioutil"
 	"time"
 
+	"go.mondoo.io/mondoo/motor/platform"
+
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
-	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/platform/windows"
 )
 
@@ -247,7 +250,8 @@ func HotFixesToPackages(hotfixes []PowershellWinHotFix) []Package {
 }
 
 type WinPkgManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
+	platform *platform.Platform
 }
 
 func (w *WinPkgManager) Name() string {
@@ -260,12 +264,7 @@ func (w *WinPkgManager) Format() string {
 
 // returns installed appx packages as well as hot fixes
 func (w *WinPkgManager) List() ([]Package, error) {
-	pf, err := w.motor.Platform()
-	if err != nil {
-		return nil, err
-	}
-
-	b, err := windows.Version(pf.Version)
+	b, err := windows.Version(w.platform.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +273,7 @@ func (w *WinPkgManager) List() ([]Package, error) {
 
 	// only win 10+ are compatible with app x packages
 	if b.Build > 10240 {
-		cmd, err := w.motor.Transport.RunCommand(powershell.Wrap(WINDOWS_QUERY_APPX_PACKAGES))
+		cmd, err := w.provider.RunCommand(powershell.Wrap(WINDOWS_QUERY_APPX_PACKAGES))
 		if err != nil {
 			return nil, fmt.Errorf("could not read package list")
 		}
@@ -285,7 +284,7 @@ func (w *WinPkgManager) List() ([]Package, error) {
 		pkgs = append(pkgs, appxPkgs...)
 	}
 
-	cmd, err := w.motor.Transport.RunCommand(powershell.Wrap(WINDOWS_QUERY_HOTFIXES))
+	cmd, err := w.provider.RunCommand(powershell.Wrap(WINDOWS_QUERY_HOTFIXES))
 	if err != nil {
 		return nil, errors.Wrap(err, "could not fetch hotfixes")
 	}

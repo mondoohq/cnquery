@@ -7,16 +7,14 @@ import (
 	"strconv"
 	"strings"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor"
 )
 
-var (
-	GROUP_OSX_DSCACHEUTIL_REGEX = regexp.MustCompile(`^(\S+):\s(.*?)$`)
-)
+var GROUP_OSX_DSCACHEUTIL_REGEX = regexp.MustCompile(`^(\S+):\s(.*?)$`)
 
 func ParseDscacheutilResult(input io.Reader) ([]*Group, error) {
-
 	groups := map[string]*Group{}
 
 	add := func(group Group) {
@@ -80,7 +78,7 @@ func ParseDscacheutilResult(input io.Reader) ([]*Group, error) {
 }
 
 type OSXGroupManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (s *OSXGroupManager) Name() string {
@@ -97,7 +95,7 @@ func (s *OSXGroupManager) Group(id string) (*Group, error) {
 }
 
 func (s *OSXGroupManager) List() ([]*Group, error) {
-	c, err := s.motor.Transport.RunCommand("dscacheutil -q group")
+	c, err := s.provider.RunCommand("dscacheutil -q group")
 	if err != nil {
 		return nil, err
 	}

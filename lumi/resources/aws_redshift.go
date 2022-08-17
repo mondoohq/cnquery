@@ -20,7 +20,7 @@ const (
 )
 
 func (r *lumiAwsRedshift) GetClusters() ([]interface{}, error) {
-	at, err := awstransport(r.MotorRuntime.Motor.Transport)
+	at, err := awstransport(r.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (r *lumiAwsRedshiftCluster) GetParameters() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(r.MotorRuntime.Motor.Transport)
+	at, err := awstransport(r.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +156,7 @@ func (r *lumiAwsRedshiftCluster) GetLogging() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(r.MotorRuntime.Motor.Transport)
+	at, err := awstransport(r.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

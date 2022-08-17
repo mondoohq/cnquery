@@ -5,6 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	uuid "github.com/gofrs/uuid"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/providers"
@@ -23,7 +25,7 @@ const (
 type Job struct {
 	ID string
 
-	Runnable func(providers.Transport) (providers.Observable, error)
+	Runnable func(provider os.OperatingSystemProvider) (providers.Observable, error)
 	Callback []func(providers.Observable)
 
 	State        JobState
@@ -76,8 +78,8 @@ func (j *Job) isPending() bool {
 	return j.State == Job_PENDING
 }
 
-func NewJobManager(transport providers.Transport) *JobManager {
-	jm := &JobManager{transport: transport, jobs: &Jobs{}}
+func NewJobManager(provider os.OperatingSystemProvider) *JobManager {
+	jm := &JobManager{provider: provider, jobs: &Jobs{}}
 	jm.jobSelectionMutex = &sync.Mutex{}
 	jm.quit = make(chan chan struct{})
 	jm.Serve()
@@ -125,7 +127,7 @@ func (c *Jobs) Delete(k string) {
 }
 
 type JobManager struct {
-	transport         providers.Transport
+	provider          os.OperatingSystemProvider
 	quit              chan chan struct{}
 	jobSelectionMutex *sync.Mutex
 	jobs              *Jobs
@@ -203,7 +205,7 @@ func (jm *JobManager) Run(job *Job) {
 	job.Metrics.RunAt = time.Now()
 
 	// execute job
-	observable, err := job.Runnable(jm.transport)
+	observable, err := job.Runnable(jm.provider)
 
 	// update metrics
 	job.Metrics.Count = job.Metrics.Count + 1

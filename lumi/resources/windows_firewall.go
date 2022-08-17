@@ -18,9 +18,14 @@ func (w *lumiWindowsFirewallRule) id() (string, error) {
 }
 
 func (w *lumiWindowsFirewall) GetSettings() (map[string]interface{}, error) {
+	osProvider, err := osProvider(w.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
 	// query firewall profiles
 	encodedCmd := powershell.Encode(windows.FIREWALL_SETTINGS)
-	executedCmd, err := w.MotorRuntime.Motor.Transport.RunCommand(encodedCmd)
+	executedCmd, err := osProvider.RunCommand(encodedCmd)
 	if err != nil {
 		return nil, err
 	}
@@ -33,9 +38,14 @@ func (w *lumiWindowsFirewall) GetSettings() (map[string]interface{}, error) {
 }
 
 func (w *lumiWindowsFirewall) GetProfiles() ([]interface{}, error) {
+	osProvider, err := osProvider(w.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
 	// query firewall profiles
 	encodedCmd := powershell.Encode(windows.FIREWALL_PROFILES)
-	executedCmd, err := w.MotorRuntime.Motor.Transport.RunCommand(encodedCmd)
+	executedCmd, err := osProvider.RunCommand(encodedCmd)
 	if err != nil {
 		return nil, err
 	}
@@ -81,9 +91,14 @@ func (w *lumiWindowsFirewall) GetProfiles() ([]interface{}, error) {
 }
 
 func (w *lumiWindowsFirewall) GetRules() ([]interface{}, error) {
+	osProvider, err := osProvider(w.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
 	// query firewall rules
 	encodedCmd := powershell.Encode(windows.FIREWALL_RULES)
-	executedCmd, err := w.MotorRuntime.Motor.Transport.RunCommand(encodedCmd)
+	executedCmd, err := osProvider.RunCommand(encodedCmd)
 	if err != nil {
 		return nil, err
 	}

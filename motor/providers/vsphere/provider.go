@@ -6,10 +6,8 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/spf13/afero"
 	"github.com/vmware/govmomi"
 	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
@@ -70,18 +68,6 @@ type Provider struct {
 	runtime            string
 	opts               map[string]string
 	selectedPlatformID string
-}
-
-func (p *Provider) RunCommand(command string) (*providers.Command, error) {
-	return nil, providers.ErrRunCommandNotImplemented
-}
-
-func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, providers.ErrFileInfoNotImplemented
-}
-
-func (p *Provider) FS() afero.Fs {
-	return &fsutil.NoFs{}
 }
 
 func (p *Provider) Close() {}

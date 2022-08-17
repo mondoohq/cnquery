@@ -16,8 +16,13 @@ func (m *lumiMacos) id() (string, error) {
 }
 
 func (m *lumiMacos) GetUserPreferences() (map[string]interface{}, error) {
+	osProvider, err := osProvider(m.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
 	res := map[string]interface{}{}
-	preferences, err := macos.NewPreferences(m.MotorRuntime.Motor.Transport).UserPreferences()
+	preferences, err := macos.NewPreferences(osProvider).UserPreferences()
 	if err != nil {
 		return nil, err
 	}
@@ -29,8 +34,13 @@ func (m *lumiMacos) GetUserPreferences() (map[string]interface{}, error) {
 }
 
 func (m *lumiMacos) GetUserHostPreferences() (map[string]interface{}, error) {
+	osProvider, err := osProvider(m.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
 	res := map[string]interface{}{}
-	preferences, err := macos.NewPreferences(m.MotorRuntime.Motor.Transport).UserHostPreferences()
+	preferences, err := macos.NewPreferences(osProvider).UserHostPreferences()
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +52,12 @@ func (m *lumiMacos) GetUserHostPreferences() (map[string]interface{}, error) {
 }
 
 func (m *lumiMacos) GetGlobalAccountPolicies() (map[string]interface{}, error) {
-	cmd, err := m.MotorRuntime.Motor.Transport.RunCommand("pwpolicy -getaccountpolicies")
+	osProvider, err := osProvider(m.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
+	cmd, err := osProvider.RunCommand("pwpolicy -getaccountpolicies")
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +83,12 @@ func (m *lumiMacosTimemachine) id() (string, error) {
 // defaults read /Library/Preferences/com.apple.TimeMachine.plist which has FDA
 // see https://developer.apple.com/forums/thread/108348
 func (m *lumiMacosTimemachine) GetPreferences() (map[string]interface{}, error) {
-	cmd, err := m.MotorRuntime.Motor.Transport.RunCommand("defaults read /Library/Preferences/com.apple.TimeMachine.plist")
+	osProvider, err := osProvider(m.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
+	cmd, err := osProvider.RunCommand("defaults read /Library/Preferences/com.apple.TimeMachine.plist")
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +116,12 @@ func (m *lumiMacosSystemsetup) id() (string, error) {
 }
 
 func (m *lumiMacosSystemsetup) runCmd(command string) (string, error) {
-	cmd, err := m.MotorRuntime.Motor.Transport.RunCommand(command)
+	osProvider, err := osProvider(m.MotorRuntime.Motor)
+	if err != nil {
+		return "", err
+	}
+
+	cmd, err := osProvider.RunCommand(command)
 	if err != nil {
 		return "", err
 	}

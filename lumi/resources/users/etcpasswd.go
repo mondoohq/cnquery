@@ -6,8 +6,9 @@ import (
 	"strconv"
 	"strings"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor"
 )
 
 // a good description of this file is available at:
@@ -53,7 +54,7 @@ func ParseEtcPasswd(input io.Reader) ([]*User, error) {
 }
 
 type UnixUserManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (s *UnixUserManager) Name() string {
@@ -70,7 +71,7 @@ func (s *UnixUserManager) User(id string) (*User, error) {
 }
 
 func (s *UnixUserManager) List() ([]*User, error) {
-	f, err := s.motor.Transport.FS().Open("/etc/passwd")
+	f, err := s.provider.FS().Open("/etc/passwd")
 	if err != nil {
 		return nil, err
 	}

@@ -5,11 +5,10 @@ import (
 	"io"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
 func ParseBsdInit(input io.Reader) ([]*Service, error) {
-
 	var services []*Service
 	scanner := bufio.NewScanner(input)
 	for scanner.Scan() {
@@ -26,7 +25,7 @@ func ParseBsdInit(input io.Reader) ([]*Service, error) {
 }
 
 type BsdInitServiceManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (s *BsdInitServiceManager) Name() string {
@@ -34,7 +33,7 @@ func (s *BsdInitServiceManager) Name() string {
 }
 
 func (s *BsdInitServiceManager) List() ([]*Service, error) {
-	c, err := s.motor.Transport.RunCommand("service -e")
+	c, err := s.provider.RunCommand("service -e")
 	if err != nil {
 		return nil, err
 	}

@@ -21,7 +21,7 @@ func (e *lumiAwsEfsFilesystem) id() (string, error) {
 }
 
 func (e *lumiAwsEfs) GetFilesystems() ([]interface{}, error) {
-	at, err := awstransport(e.MotorRuntime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,7 @@ func (e *lumiAwsEfsFilesystem) GetBackupPolicy() (interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to parse instance region")
 	}
-	at, err := awstransport(e.MotorRuntime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

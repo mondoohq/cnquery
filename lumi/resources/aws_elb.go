@@ -19,7 +19,7 @@ func (e *lumiAwsElb) id() (string, error) {
 }
 
 func (e *lumiAwsElb) GetClassicLoadBalancers() ([]interface{}, error) {
-	at, err := awstransport(e.MotorRuntime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (e *lumiAwsElbLoadbalancer) id() (string, error) {
 }
 
 func (e *lumiAwsElb) GetLoadBalancers() ([]interface{}, error) {
-	at, err := awstransport(e.MotorRuntime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func (e *lumiAwsElb) getLoadBalancers(at *aws_transport.Provider) []*jobpool.Job
 }
 
 func (e *lumiAwsElbLoadbalancer) GetListenerDescriptions() ([]interface{}, error) {
-	at, err := awstransport(e.MotorRuntime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +184,7 @@ func (e *lumiAwsElbLoadbalancer) GetListenerDescriptions() ([]interface{}, error
 }
 
 func (e *lumiAwsElbLoadbalancer) GetAttributes() ([]interface{}, error) {
-	at, err := awstransport(e.MotorRuntime.Motor.Transport)
+	at, err := awstransport(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

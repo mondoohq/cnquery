@@ -41,7 +41,7 @@ func (r *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn creden
 	}
 	defer m.Close()
 
-	trans, ok := m.Transport.(*vsphere.Provider)
+	trans, ok := m.Provider.(*vsphere.Provider)
 	if !ok {
 		return nil, errors.New("could not initialize vsphere transport")
 	}
@@ -63,7 +63,7 @@ func (r *Resolver) Resolve(root *asset.Asset, pCfg *providers.Config, cfn creden
 			"vsphere.vmware.com/uuid": info.InstanceUuid,
 		},
 	}
-	fingerprint, err := motorid.IdentifyPlatform(m.Transport, pf, nil)
+	fingerprint, err := motorid.IdentifyPlatform(m.Provider, pf, nil)
 	if err != nil {
 		return nil, err
 	}

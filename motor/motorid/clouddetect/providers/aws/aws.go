@@ -3,16 +3,17 @@ package aws
 import (
 	"strings"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/lumi/resources/smbios"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers"
 )
 
-func readValue(t providers.Transport, fPath string) string {
-	content, err := afero.ReadFile(t.FS(), fPath)
+func readValue(provider os.OperatingSystemProvider, fPath string) string {
+	content, err := afero.ReadFile(provider.FS(), fPath)
 	if err != nil {
 		log.Debug().Err(err).Msgf("unable to read %s", fPath)
 		return ""
@@ -20,7 +21,7 @@ func readValue(t providers.Transport, fPath string) string {
 	return string(content)
 }
 
-func Detect(t providers.Transport, p *platform.Platform) string {
+func Detect(provider os.OperatingSystemProvider, p *platform.Platform) string {
 	var values []string
 	if p.IsFamily("linux") {
 		// Fetching the data from the smbios manager is slow for some transports
@@ -30,11 +31,11 @@ func Detect(t providers.Transport, p *platform.Platform) string {
 		// you want to make sure to only check the files we actually look at
 
 		values = []string{
-			readValue(t, "/sys/class/dmi/id/product_version"),
-			readValue(t, "/sys/class/dmi/id/bios_vendor"),
+			readValue(provider, "/sys/class/dmi/id/product_version"),
+			readValue(provider, "/sys/class/dmi/id/bios_vendor"),
 		}
 	} else {
-		mgr, err := smbios.ResolveManager(t, p)
+		mgr, err := smbios.ResolveManager(provider, p)
 		if err != nil {
 			return ""
 		}
@@ -51,7 +52,7 @@ func Detect(t providers.Transport, p *platform.Platform) string {
 
 	for _, v := range values {
 		if strings.Contains(strings.ToLower(v), "amazon") {
-			mdsvc, err := awsec2.Resolve(t, p)
+			mdsvc, err := awsec2.Resolve(provider, p)
 			if err != nil {
 				log.Debug().Err(err).Msg("failed to get metadata resolver")
 				return ""
@@ -59,7 +60,7 @@ func Detect(t providers.Transport, p *platform.Platform) string {
 			id, err := mdsvc.InstanceID()
 			if err != nil {
 				log.Debug().Err(err).
-					Str("transport", t.Kind().String()).
+					Str("transport", provider.Kind().String()).
 					Strs("platform", p.GetFamily()).
 					Msg("failed to get aws platform id")
 				return ""

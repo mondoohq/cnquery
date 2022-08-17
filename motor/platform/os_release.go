@@ -6,22 +6,23 @@ import (
 	"strconv"
 	"strings"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/providers"
 )
 
-func NewOSReleaseDetector(t providers.Transport) *OSReleaseDetector {
+func NewOSReleaseDetector(p os.OperatingSystemProvider) *OSReleaseDetector {
 	return &OSReleaseDetector{
-		Transport: t,
+		provider: p,
 	}
 }
 
 type OSReleaseDetector struct {
-	Transport providers.Transport
+	provider os.OperatingSystemProvider
 }
 
 func (d *OSReleaseDetector) command(command string) (string, error) {
-	cmd, err := d.Transport.RunCommand(command)
+	cmd, err := d.provider.RunCommand(command)
 	if err != nil {
 		log.Debug().Err(err).Msg("could not execute os release detection command")
 		return "", err
@@ -51,8 +52,7 @@ func (d *OSReleaseDetector) unamem() (string, error) {
 	return d.command("uname -m")
 }
 
-// Linux Helper Methods
-
+// osrelease is reads /etc/os/reelease and parses the file
 // NAME="Ubuntu"
 // VERSION="16.04.3 LTS (Xenial Xerus)"
 // ID=ubuntu
@@ -64,9 +64,8 @@ func (d *OSReleaseDetector) unamem() (string, error) {
 // BUG_REPORT_URL="http://bugs.launchpad.net/ubuntu/"
 // VERSION_CODENAME=xenial
 // UBUNTU_CODENAME=xenial
-
 func (d *OSReleaseDetector) osrelease() (map[string]string, error) {
-	f, err := d.Transport.FS().Open("/etc/os-release")
+	f, err := d.provider.FS().Open("/etc/os-release")
 	if err != nil {
 		return nil, err
 	}
@@ -80,6 +79,7 @@ func (d *OSReleaseDetector) osrelease() (map[string]string, error) {
 	return ParseOsRelease(string(content))
 }
 
+// lsbconfig reads /etc/lsb-release and parses the file
 // DISTRIB_ID=Ubuntu
 // DISTRIB_RELEASE=16.04
 // DISTRIB_CODENAME=xenial
@@ -87,7 +87,7 @@ func (d *OSReleaseDetector) osrelease() (map[string]string, error) {
 // lsb release is not the default on newer systems, but can still be used
 // as a fallback mechanism
 func (d *OSReleaseDetector) lsbconfig() (map[string]string, error) {
-	f, err := d.Transport.FS().Open("/etc/lsb-release")
+	f, err := d.provider.FS().Open("/etc/lsb-release")
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func (d *OSReleaseDetector) darwin_swversion() (map[string]string, error) {
 
 // macosSystemVersion is a specifc identifier for the operating system on macos
 func (d *OSReleaseDetector) macosSystemVersion() (map[string]string, error) {
-	f, err := d.Transport.FS().Open("/System/Library/CoreServices/SystemVersion.plist")
+	f, err := d.provider.FS().Open("/System/Library/CoreServices/SystemVersion.plist")
 	if err != nil {
 		return nil, err
 	}

@@ -109,7 +109,12 @@ func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
 func (s *lumiFile) GetEmpty() (bool, error) {
 	path, _ := s.Path()
 
-	fs := s.MotorRuntime.Motor.Transport.FS()
+	osProvider, err := osProvider(s.MotorRuntime.Motor)
+	if err != nil {
+		return false, err
+	}
+
+	fs := osProvider.FS()
 	afs := &afero.Afero{Fs: fs}
 	return afs.IsEmpty(path)
 }
@@ -118,7 +123,12 @@ func (s *lumiFile) GetExists() (bool, error) {
 	// TODO: we need to tell motor to watch this for us
 	path, _ := s.Path()
 
-	fs := s.MotorRuntime.Motor.Transport.FS()
+	osProvider, err := osProvider(s.MotorRuntime.Motor)
+	if err != nil {
+		return false, err
+	}
+
+	fs := osProvider.FS()
 	afs := &afero.Afero{Fs: fs}
 	return afs.Exists(path)
 }
@@ -156,6 +166,11 @@ func (s *lumiFile) GetUser() (interface{}, error) {
 		return nil, err
 	}
 
+	osProvider, err := osProvider(s.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
 	// special handling for windows
 	// NOTE: on windows an owner can also be a group, therefore we need to be very careful in implementing it here
 	// Probably we are better of in implementing a windows.file resource that deals with specific behavior on windows
@@ -165,7 +180,7 @@ func (s *lumiFile) GetUser() (interface{}, error) {
 	}
 
 	// handle unix
-	fi, err := s.MotorRuntime.Motor.Transport.FileInfo(path)
+	fi, err := osProvider.FileInfo(path)
 	if err != nil {
 		return nil, err
 	}
@@ -196,11 +211,16 @@ func (s *lumiFile) GetGroup() (interface{}, error) {
 		return nil, err
 	}
 
+	osProvider, err := osProvider(s.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
 	if platform.IsFamily("windows") {
 		return nil, errors.New("group is not supported on windows")
 	}
 
-	fi, err := s.MotorRuntime.Motor.Transport.FileInfo(path)
+	fi, err := osProvider.FileInfo(path)
 	if err != nil {
 		return nil, err
 	}
@@ -222,13 +242,18 @@ func (s *lumiFile) GetGroup() (interface{}, error) {
 }
 
 func (s *lumiFile) stat() (FilePermissions, int64, error) {
+	osProvider, err := osProvider(s.MotorRuntime.Motor)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	// TODO: this is a one-off right now, turn it into a watcher
 	path, err := s.Path()
 	if err != nil {
 		return nil, 0, err
 	}
 
-	fi, err := s.MotorRuntime.Motor.Transport.FileInfo(path)
+	fi, err := osProvider.FileInfo(path)
 	if err != nil {
 		return nil, 0, err
 	}

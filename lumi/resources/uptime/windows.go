@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
-	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
 type WindowsUptime struct {
@@ -17,7 +17,6 @@ type WindowsUptime struct {
 // ParseWindowsUptime parses the json output of gcim LastBootUpTime
 // (Get-Date) - (gcim Win32_OperatingSystem).LastBootUpTime | ConvertTo-Json
 func ParseWindowsUptime(uptime string) (time.Duration, error) {
-
 	var winUptime WindowsUptime
 	err := json.Unmarshal([]byte(uptime), &winUptime)
 	if err != nil {
@@ -31,7 +30,7 @@ func ParseWindowsUptime(uptime string) (time.Duration, error) {
 const WindowsUptimeCmd = "(Get-Date) - (gcim Win32_OperatingSystem).LastBootUpTime | ConvertTo-Json"
 
 type Windows struct {
-	Motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (s *Windows) Name() string {
@@ -39,7 +38,7 @@ func (s *Windows) Name() string {
 }
 
 func (s *Windows) Duration() (time.Duration, error) {
-	cmd, err := s.Motor.Transport.RunCommand(powershell.Wrap(WindowsUptimeCmd))
+	cmd, err := s.provider.RunCommand(powershell.Wrap(WindowsUptimeCmd))
 	if err != nil {
 		return 0, err
 	}

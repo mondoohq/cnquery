@@ -19,7 +19,7 @@ func (a *lumiAwsAcm) id() (string, error) {
 }
 
 func (a *lumiAwsAcm) GetCertificates() ([]interface{}, error) {
-	at, err := awstransport(a.MotorRuntime.Motor.Transport)
+	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (a *lumiAwsAcmCertificate) init(args *lumi.Args) (*lumi.Args, AwsAcmCertifi
 	if err != nil {
 		return args, nil, nil
 	}
-	at, err := awstransport(a.MotorRuntime.Motor.Transport)
+	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -144,7 +144,7 @@ func (a *lumiAwsAcmCertificate) GetCertificate() (interface{}, error) {
 	if err != nil {
 		return false, err
 	}
-	at, err := awstransport(a.MotorRuntime.Motor.Transport)
+	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

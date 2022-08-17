@@ -7,16 +7,16 @@ import (
 	"syscall"
 	"time"
 
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
-type Command struct {
-	providers.Command
+type CommandRunner struct {
+	os.Command
 	cmdExecutor *exec.Cmd
 	Shell       []string
 }
 
-func (c *Command) Exec(usercmd string, args []string) (*providers.Command, error) {
+func (c *CommandRunner) Exec(usercmd string, args []string) (*os.Command, error) {
 	c.Command.Stats.Start = time.Now()
 
 	var cmd string

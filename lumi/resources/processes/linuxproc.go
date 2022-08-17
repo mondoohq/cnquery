@@ -4,15 +4,16 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/lumi/resources/procfs"
-	"go.mondoo.io/mondoo/motor"
 )
 
 type LinuxProcManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (lpm *LinuxProcManager) Name() string {
@@ -21,7 +22,7 @@ func (lpm *LinuxProcManager) Name() string {
 
 func (lpm *LinuxProcManager) List() ([]*OSProcess, error) {
 	// get all subdirectories of /proc, filter by nunbers
-	f, err := lpm.motor.Transport.FS().Open("/proc")
+	f, err := lpm.provider.FS().Open("/proc")
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to access /proc")
 	}
@@ -53,14 +54,12 @@ func (lpm *LinuxProcManager) List() ([]*OSProcess, error) {
 
 // check that the pid directory exists
 func (lpm *LinuxProcManager) Exists(pid int64) (bool, error) {
-	trans := lpm.motor.Transport
 	pidPath := filepath.Join("/proc", strconv.FormatInt(pid, 10))
-	afutil := afero.Afero{Fs: trans.FS()}
+	afutil := afero.Afero{Fs: lpm.provider.FS()}
 	return afutil.Exists(pidPath)
 }
 
 func (lpm *LinuxProcManager) Process(pid int64) (*OSProcess, error) {
-	trans := lpm.motor.Transport
 	pidPath := filepath.Join("/proc", strconv.FormatInt(pid, 10))
 
 	exists, err := lpm.Exists(pid)
@@ -72,7 +71,7 @@ func (lpm *LinuxProcManager) Process(pid int64) (*OSProcess, error) {
 	}
 
 	// parse the cmdline
-	cmdlinef, err := trans.FS().Open(filepath.Join(pidPath, "cmdline"))
+	cmdlinef, err := lpm.provider.FS().Open(filepath.Join(pidPath, "cmdline"))
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +82,7 @@ func (lpm *LinuxProcManager) Process(pid int64) (*OSProcess, error) {
 		return nil, err
 	}
 
-	statusf, err := trans.FS().Open(filepath.Join(pidPath, "status"))
+	statusf, err := lpm.provider.FS().Open(filepath.Join(pidPath, "status"))
 	if err != nil {
 		return nil, err
 	}

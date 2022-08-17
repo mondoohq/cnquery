@@ -27,7 +27,12 @@ func (y *lumiYum) GetRepos() ([]interface{}, error) {
 		return nil, errors.New("yum.repos is only supported on redhat-based platforms")
 	}
 
-	cmd, err := y.MotorRuntime.Motor.Transport.RunCommand("yum -v repolist all")
+	osProvider, err := osProvider(y.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
+	cmd, err := osProvider.RunCommand("yum -v repolist all")
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve yum repo list")
 	}
@@ -82,6 +87,11 @@ func (y *lumiYum) GetVars() (map[string]interface{}, error) {
 		return nil, errors.New("yum.vars is only supported on redhat-based platforms")
 	}
 
+	osProvider, err := osProvider(y.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
 	// use dnf script as default
 	script := fmt.Sprintf(yum.DnfVarsCommand, yum.PythonRhel)
 	if !pf.IsFamily("redhat") {
@@ -94,7 +104,7 @@ func (y *lumiYum) GetVars() (map[string]interface{}, error) {
 		script = yum.Rhel6VarsCommand
 	}
 
-	cmd, err := y.MotorRuntime.Motor.Transport.RunCommand(script)
+	cmd, err := osProvider.RunCommand(script)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve yum variables")
 	}

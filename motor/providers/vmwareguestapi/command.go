@@ -7,16 +7,16 @@ import (
 	"os/exec"
 	"time"
 
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/os"
 	"go.mondoo.io/mondoo/motor/providers/vmwareguestapi/toolbox"
 )
 
 type Command struct {
-	providers.Command
+	os.Command
 	tb *toolbox.Client
 }
 
-func (c *Command) Exec(command string) (*providers.Command, error) {
+func (c *Command) Exec(command string) (*os.Command, error) {
 	c.Command.Command = command
 	c.Command.Stats.Duration = time.Since(c.Command.Stats.Start)
 

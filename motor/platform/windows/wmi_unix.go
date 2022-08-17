@@ -4,9 +4,9 @@
 package windows
 
 import (
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
-func GetWmiInformation(t providers.Transport) (*WmicOSInformation, error) {
-	return powershellGetWmiInformation(t)
+func GetWmiInformation(p os.OperatingSystemProvider) (*WmicOSInformation, error) {
+	return powershellGetWmiInformation(p)
 }

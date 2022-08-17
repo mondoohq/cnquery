@@ -7,7 +7,7 @@ import (
 )
 
 func (a *lumiAzurerm) GetResources() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

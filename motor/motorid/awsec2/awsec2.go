@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/local"
 )
 
@@ -15,8 +16,8 @@ type InstanceIdentifier interface {
 	InstanceID() (string, error)
 }
 
-func Resolve(t providers.Transport, p *platform.Platform) (InstanceIdentifier, error) {
-	_, ok := t.(*local.Provider)
+func Resolve(provider os.OperatingSystemProvider, pf *platform.Platform) (InstanceIdentifier, error) {
+	_, ok := provider.(*local.Provider)
 	if ok {
 		cfg, err := config.LoadDefaultConfig(context.Background())
 		if err != nil {
@@ -24,9 +25,9 @@ func Resolve(t providers.Transport, p *platform.Platform) (InstanceIdentifier, e
 		}
 		return NewLocal(cfg), nil
 	} else {
-		if p.IsFamily(platform.FAMILY_UNIX) || p.IsFamily(platform.FAMILY_WINDOWS) {
-			return NewCommandInstanceMetadata(t, p), nil
+		if pf.IsFamily(platform.FAMILY_UNIX) || pf.IsFamily(platform.FAMILY_WINDOWS) {
+			return NewCommandInstanceMetadata(provider, pf), nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("awsec2 id detector is not supported for your asset: %s %s", p.Name, p.Version))
+	return nil, errors.New(fmt.Sprintf("awsec2 id detector is not supported for your asset: %s %s", pf.Name, pf.Version))
 }

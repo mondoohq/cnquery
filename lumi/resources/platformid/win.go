@@ -3,13 +3,13 @@ package platformid
 import (
 	"io/ioutil"
 
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
 const wmiMachineIDQuery = "SELECT UUID FROM Win32_ComputerSystemProduct"
 
-func PowershellWindowsMachineId(t providers.Transport) (string, error) {
-	cmd, err := t.RunCommand("powershell -c \"Get-WmiObject -Query '" + wmiMachineIDQuery + "' | Select-Object -ExpandProperty UUID\"")
+func PowershellWindowsMachineId(p os.OperatingSystemProvider) (string, error) {
+	cmd, err := p.RunCommand("powershell -c \"Get-WmiObject -Query '" + wmiMachineIDQuery + "' | Select-Object -ExpandProperty UUID\"")
 	if err != nil {
 		return "", err
 	}
@@ -22,7 +22,7 @@ func PowershellWindowsMachineId(t providers.Transport) (string, error) {
 }
 
 type WinIdProvider struct {
-	Transport providers.Transport
+	provider os.OperatingSystemProvider
 }
 
 func (p *WinIdProvider) Name() string {
@@ -30,5 +30,5 @@ func (p *WinIdProvider) Name() string {
 }
 
 func (p *WinIdProvider) ID() (string, error) {
-	return windowsMachineId(p.Transport)
+	return windowsMachineId(p.provider)
 }

@@ -157,8 +157,12 @@ func (p *lumiPorts) processes() (map[int64]Process, error) {
 // See:
 // - socket/address parsing: https://wiki.christophchamp.com/index.php?title=Unix_sockets
 func (p *lumiPorts) parseProcNet(path string, protocol string, users map[int64]User, processes map[int64]Process) ([]interface{}, error) {
-	motor := p.MotorRuntime.Motor
-	fs := motor.Transport.FS()
+	osProvider, err := osProvider(p.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
+	fs := osProvider.FS()
 	stat, err := fs.Stat(path)
 	if err != nil {
 		return nil, errors.New("cannot access stat for " + path)

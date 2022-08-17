@@ -5,8 +5,9 @@ import (
 	"io"
 	"io/ioutil"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"go.mondoo.io/mondoo/lumi/resources/powershell"
-	"go.mondoo.io/mondoo/motor/providers"
 )
 
 // https://docs.microsoft.com/en-us/windows/win32/secprov/getconversionstatus-win32-encryptablevolume
@@ -139,8 +140,8 @@ type statusCode struct {
 	Text string `json:"text"`
 }
 
-func GetBitLockerVolumes(t providers.Transport) ([]bitlockerVolumeStatus, error) {
-	c, err := t.RunCommand(powershell.Encode(bitlockerStatusScript))
+func GetBitLockerVolumes(p os.OperatingSystemProvider) ([]bitlockerVolumeStatus, error) {
+	c, err := p.RunCommand(powershell.Encode(bitlockerStatusScript))
 	if err != nil {
 		return nil, err
 	}

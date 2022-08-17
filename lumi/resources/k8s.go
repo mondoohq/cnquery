@@ -65,7 +65,7 @@ func (k *lumiK8s) id() (string, error) {
 }
 
 func (k *lumiK8s) GetServerVersion() (interface{}, error) {
-	kt, err := k8sProvider(k.MotorRuntime.Motor.Transport)
+	kt, err := k8sProvider(k.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (k *lumiK8s) GetServerVersion() (interface{}, error) {
 }
 
 func (k *lumiK8s) GetApiResources() ([]interface{}, error) {
-	kt, err := k8sProvider(k.MotorRuntime.Motor.Transport)
+	kt, err := k8sProvider(k.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (k *lumiK8s) GetApiResources() ([]interface{}, error) {
 type resourceConvertFn func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error)
 
 func k8sResourceToLumi(r *lumi.Runtime, kind string, fn resourceConvertFn) ([]interface{}, error) {
-	kt, err := k8sProvider(r.Motor.Transport)
+	kt, err := k8sProvider(r.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -846,7 +846,7 @@ func (k *lumiK8s) GetRolebindings() ([]interface{}, error) {
 }
 
 func (k *lumiK8s) GetCustomresources() ([]interface{}, error) {
-	kt, err := k8sProvider(k.MotorRuntime.Motor.Transport)
+	kt, err := k8sProvider(k.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1445,7 +1445,7 @@ func initNamespacedResource[T K8sNamespacedObject](
 	}
 
 	// get platform identifier infos
-	identifierName, identifierNamespace, err := getPlatformIdentifierElements(runtime.Motor.Transport)
+	identifierName, identifierNamespace, err := getPlatformIdentifierElements(runtime.Motor.Provider)
 	if err != nil {
 		return args, *new(T), nil
 	}
@@ -1515,7 +1515,7 @@ func initResource[T K8sObject](
 	}
 
 	// get platform identifier infos
-	identifierName, _, err := getPlatformIdentifierElements(runtime.Motor.Transport)
+	identifierName, _, err := getPlatformIdentifierElements(runtime.Motor.Provider)
 	if err != nil {
 		return args, *new(T), nil
 	}

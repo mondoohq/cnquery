@@ -16,7 +16,7 @@ func (s *lumiAwsSagemaker) id() (string, error) {
 }
 
 func (s *lumiAwsSagemaker) GetEndpoints() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (s *lumiAwsSagemakerEndpoint) GetConfig() (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (s *lumiAwsSagemakerEndpoint) GetConfig() (map[string]interface{}, error) {
 }
 
 func (s *lumiAwsSagemaker) GetNotebookInstances() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func (s *lumiAwsSagemaker) GetNotebookInstances() ([]interface{}, error) {
 
 func (s *lumiAwsSagemaker) getNotebookInstances(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -191,7 +191,7 @@ func (s *lumiAwsSagemakerNotebookinstance) GetDetails() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(s.MotorRuntime.Motor.Transport)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

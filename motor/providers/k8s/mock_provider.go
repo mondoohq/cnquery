@@ -8,7 +8,6 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	afero "github.com/spf13/afero"
 	platform "go.mondoo.io/mondoo/motor/platform"
 	providers "go.mondoo.io/mondoo/motor/providers"
 	resources "go.mondoo.io/mondoo/motor/providers/k8s/resources"
@@ -155,35 +154,6 @@ func (m *MockKubernetesProvider) Deployments(namespace v11.Namespace) ([]v1.Depl
 func (mr *MockKubernetesProviderMockRecorder) Deployments(namespace interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Deployments", reflect.TypeOf((*MockKubernetesProvider)(nil).Deployments), namespace)
-}
-
-// FS mocks base method.
-func (m *MockKubernetesProvider) FS() afero.Fs {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FS")
-	ret0, _ := ret[0].(afero.Fs)
-	return ret0
-}
-
-// FS indicates an expected call of FS.
-func (mr *MockKubernetesProviderMockRecorder) FS() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FS", reflect.TypeOf((*MockKubernetesProvider)(nil).FS))
-}
-
-// FileInfo mocks base method.
-func (m *MockKubernetesProvider) FileInfo(path string) (providers.FileInfoDetails, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FileInfo", path)
-	ret0, _ := ret[0].(providers.FileInfoDetails)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FileInfo indicates an expected call of FileInfo.
-func (mr *MockKubernetesProviderMockRecorder) FileInfo(path interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FileInfo", reflect.TypeOf((*MockKubernetesProvider)(nil).FileInfo), path)
 }
 
 // ID mocks base method.
@@ -406,21 +376,6 @@ func (m *MockKubernetesProvider) Resources(kind, name, namespace string) (*Resou
 func (mr *MockKubernetesProviderMockRecorder) Resources(kind, name, namespace interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Resources", reflect.TypeOf((*MockKubernetesProvider)(nil).Resources), kind, name, namespace)
-}
-
-// RunCommand mocks base method.
-func (m *MockKubernetesProvider) RunCommand(command string) (*providers.Command, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RunCommand", command)
-	ret0, _ := ret[0].(*providers.Command)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// RunCommand indicates an expected call of RunCommand.
-func (mr *MockKubernetesProviderMockRecorder) RunCommand(command interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunCommand", reflect.TypeOf((*MockKubernetesProvider)(nil).RunCommand), command)
 }
 
 // Runtime mocks base method.

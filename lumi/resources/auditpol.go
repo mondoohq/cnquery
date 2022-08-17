@@ -11,7 +11,12 @@ func (p *lumiAuditpol) id() (string, error) {
 }
 
 func (p *lumiAuditpol) GetList() ([]interface{}, error) {
-	cmd, err := p.MotorRuntime.Motor.Transport.RunCommand("auditpol /get /category:* /r")
+	osProvider, err := osProvider(p.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
+	cmd, err := osProvider.RunCommand("auditpol /get /category:* /r")
 	if err != nil {
 		return nil, fmt.Errorf("could not run auditpol")
 	}

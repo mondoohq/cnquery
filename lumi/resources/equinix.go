@@ -34,7 +34,7 @@ func (g *lumiEquinixMetalProject) init(args *lumi.Args) (*lumi.Args, EquinixMeta
 	}
 
 	// fetch the default project from the transport
-	et, err := equinixtransport(g.MotorRuntime.Motor.Transport)
+	et, err := equinixtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -65,7 +65,7 @@ func (g *lumiEquinixMetalProject) init(args *lumi.Args) (*lumi.Args, EquinixMeta
 }
 
 func (p *lumiEquinixMetalProject) GetOrganization() (interface{}, error) {
-	et, err := equinixtransport(p.MotorRuntime.Motor.Transport)
+	et, err := equinixtransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func (p *lumiEquinixMetalProject) GetOrganization() (interface{}, error) {
 }
 
 func (p *lumiEquinixMetalProject) GetUsers() ([]interface{}, error) {
-	et, err := equinixtransport(p.MotorRuntime.Motor.Transport)
+	et, err := equinixtransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +180,7 @@ func (p *lumiEquinixMetalProject) GetUsers() ([]interface{}, error) {
 }
 
 func (p *lumiEquinixMetalProject) GetSshKeys() ([]interface{}, error) {
-	et, err := equinixtransport(p.MotorRuntime.Motor.Transport)
+	et, err := equinixtransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +221,7 @@ func (p *lumiEquinixMetalProject) GetSshKeys() ([]interface{}, error) {
 }
 
 func (p *lumiEquinixMetalProject) GetDevices() ([]interface{}, error) {
-	et, err := equinixtransport(p.MotorRuntime.Motor.Transport)
+	et, err := equinixtransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

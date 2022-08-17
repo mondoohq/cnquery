@@ -14,6 +14,7 @@ import (
 	"go.mondoo.io/mondoo/motor/motorid/containerid"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/container/cache"
+	os_provider "go.mondoo.io/mondoo/motor/providers/os"
 	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 )
 
@@ -153,9 +154,9 @@ func (t *Provider) PlatformName() string {
 	return t.Metadata.Name
 }
 
-func (p *Provider) RunCommand(command string) (*providers.Command, error) {
+func (p *Provider) RunCommand(command string) (*os_provider.Command, error) {
 	// TODO: switch to error state
-	res := providers.Command{Command: command, Stdout: &bytes.Buffer{}, Stderr: &bytes.Buffer{}, ExitStatus: -1}
+	res := os_provider.Command{Command: command, Stdout: &bytes.Buffer{}, Stderr: &bytes.Buffer{}, ExitStatus: -1}
 	return &res, nil
 }
 
@@ -163,12 +164,12 @@ func (p *Provider) FS() afero.Fs {
 	return p.Fs
 }
 
-func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
+func (p *Provider) FileInfo(path string) (os_provider.FileInfoDetails, error) {
 	fs := p.FS()
 	afs := &afero.Afero{Fs: fs}
 	stat, err := afs.Stat(path)
 	if err != nil {
-		return providers.FileInfoDetails{}, err
+		return os_provider.FileInfoDetails{}, err
 	}
 
 	uid := int64(-1)
@@ -179,8 +180,8 @@ func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
 	}
 	mode := stat.Mode()
 
-	return providers.FileInfoDetails{
-		Mode: providers.FileModeDetails{mode},
+	return os_provider.FileInfoDetails{
+		Mode: os_provider.FileModeDetails{mode},
 		Size: stat.Size(),
 		Uid:  uid,
 		Gid:  gid,

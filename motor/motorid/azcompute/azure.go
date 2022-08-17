@@ -3,9 +3,10 @@ package azcompute
 import (
 	"fmt"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/pkg/errors"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers"
 )
 
 type instanceMetadata struct {
@@ -20,9 +21,9 @@ type InstanceIdentifier interface {
 	InstanceID() (string, error)
 }
 
-func Resolve(t providers.Transport, p *platform.Platform) (InstanceIdentifier, error) {
-	if p.IsFamily(platform.FAMILY_UNIX) || p.IsFamily(platform.FAMILY_WINDOWS) {
-		return NewCommandInstanceMetadata(t, p), nil
+func Resolve(provider os.OperatingSystemProvider, pf *platform.Platform) (InstanceIdentifier, error) {
+	if pf.IsFamily(platform.FAMILY_UNIX) || pf.IsFamily(platform.FAMILY_WINDOWS) {
+		return NewCommandInstanceMetadata(provider, pf), nil
 	}
-	return nil, errors.New(fmt.Sprintf("azure compute id detector is not supported for your asset: %s %s", p.Name, p.Version))
+	return nil, errors.New(fmt.Sprintf("azure compute id detector is not supported for your asset: %s %s", pf.Name, pf.Version))
 }

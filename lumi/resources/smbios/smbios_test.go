@@ -14,11 +14,10 @@ func TestManagerCentos(t *testing.T) {
 	require.NoError(t, err)
 	m, err := motor.New(mock)
 	require.NoError(t, err)
-
-	p, err := m.Platform()
+	pf, err := m.Platform()
 	require.NoError(t, err)
 
-	mm, err := ResolveManager(m.Transport, p)
+	mm, err := ResolveManager(mock, pf)
 	require.NoError(t, err)
 	biosInfo, err := mm.Info()
 	require.NoError(t, err)
@@ -64,7 +63,7 @@ func TestManagerMacos(t *testing.T) {
 	p, err := m.Platform()
 	require.NoError(t, err)
 
-	mm, err := ResolveManager(m.Transport, p)
+	mm, err := ResolveManager(mock, p)
 	require.NoError(t, err)
 	biosInfo, err := mm.Info()
 	require.NoError(t, err)
@@ -110,7 +109,7 @@ func TestManagerWindows(t *testing.T) {
 	p, err := m.Platform()
 	require.NoError(t, err)
 
-	mm, err := ResolveManager(m.Transport, p)
+	mm, err := ResolveManager(mock, p)
 	require.NoError(t, err)
 	biosInfo, err := mm.Info()
 	require.NoError(t, err)

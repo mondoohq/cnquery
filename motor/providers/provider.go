@@ -2,12 +2,6 @@ package providers
 
 //go:generate protoc --proto_path=../..:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. --iam-actions_out=. provider.proto
 
-import (
-	"regexp"
-
-	"github.com/spf13/afero"
-)
-
 type PlatformIdDetector string
 
 const (
@@ -48,27 +42,18 @@ func ToPlatformIdDetectors(idDetectors []string) []PlatformIdDetector {
 }
 
 type Transport interface {
-	// RunCommand executes a command on the target system
-	RunCommand(command string) (*Command, error)
-	// returns file permissions and ownership
-	FileInfo(path string) (FileInfoDetails, error)
-	// FS provides access to the file system of the target system
-	FS() afero.Fs
-	// Close closes the transport
-	Close()
+	PlatformIdDetectors() []PlatformIdDetector
+
 	// returns if this is a static asset that does not allow run command
 	Capabilities() Capabilities
 
 	Kind() Kind
 	Runtime() string
 
-	PlatformIdDetectors() []PlatformIdDetector
+	// Close closes the transport
+	Close()
 }
 
 type TransportPlatformIdentifier interface {
 	Identifier() (string, error)
-}
-
-type FileSearch interface {
-	Find(from string, r *regexp.Regexp, typ string) ([]string, error)
 }

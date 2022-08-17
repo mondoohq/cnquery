@@ -3,9 +3,7 @@ package equinix
 import (
 	"github.com/cockroachdb/errors"
 	"github.com/packethost/packngo"
-	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 )
 
 var (
@@ -62,18 +60,6 @@ type Provider struct {
 	client    *packngo.Client
 	projectId string
 	project   *packngo.Project
-}
-
-func (p *Provider) RunCommand(command string) (*providers.Command, error) {
-	return nil, providers.ErrRunCommandNotImplemented
-}
-
-func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, providers.ErrFileInfoNotImplemented
-}
-
-func (p *Provider) FS() afero.Fs {
-	return &fsutil.NoFs{}
 }
 
 func (p *Provider) Close() {}

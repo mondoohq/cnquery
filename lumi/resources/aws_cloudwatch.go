@@ -29,7 +29,7 @@ func (t *lumiAwsCloudwatch) id() (string, error) {
 }
 
 func (t *lumiAwsCloudwatch) GetMetrics() ([]interface{}, error) {
-	at, err := awstransport(t.MotorRuntime.Motor.Transport)
+	at, err := awstransport(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +172,7 @@ func (p *lumiAwsCloudwatchMetric) init(args *lumi.Args) (*lumi.Args, AwsCloudwat
 	if !ok {
 		return args, nil, nil
 	}
-	at, err := awstransport(p.MotorRuntime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return args, nil, err
 	}
@@ -230,7 +230,7 @@ func (p *lumiAwsCloudwatchMetric) GetDimensions() ([]interface{}, error) {
 		return nil, errors.Wrap(err, "unable to parse metric region")
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -302,7 +302,7 @@ func (p *lumiAwsCloudwatchMetricstatistics) init(args *lumi.Args) (*lumi.Args, A
 	if !ok {
 		return args, nil, nil
 	}
-	at, err := awstransport(p.MotorRuntime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return args, nil, err
 	}
@@ -370,7 +370,7 @@ func (t *lumiAwsCloudwatchMetric) GetStatistics() (interface{}, error) {
 		return nil, errors.Wrap(err, "unable to parse metric region")
 	}
 
-	at, err := awstransport(t.MotorRuntime.Motor.Transport)
+	at, err := awstransport(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -465,7 +465,7 @@ func (t *lumiAwsCloudwatchMetric) GetAlarms() ([]interface{}, error) {
 		return nil, errors.Wrap(err, "unable to parse metric region")
 	}
 
-	at, err := awstransport(t.MotorRuntime.Motor.Transport)
+	at, err := awstransport(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -495,7 +495,7 @@ func (t *lumiAwsCloudwatchMetric) GetAlarms() ([]interface{}, error) {
 }
 
 func (t *lumiAwsCloudwatch) GetAlarms() ([]interface{}, error) {
-	at, err := awstransport(t.MotorRuntime.Motor.Transport)
+	at, err := awstransport(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -611,7 +611,7 @@ func (t *lumiAwsSnsTopic) GetSubscriptions() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(t.MotorRuntime.Motor.Transport)
+	at, err := awstransport(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -645,7 +645,7 @@ func (t *lumiAwsSnsTopic) GetSubscriptions() ([]interface{}, error) {
 }
 
 func (t *lumiAwsCloudwatch) GetLogGroups() ([]interface{}, error) {
-	at, err := awstransport(t.MotorRuntime.Motor.Transport)
+	at, err := awstransport(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -774,7 +774,7 @@ func (t *lumiAwsCloudwatchLoggroup) GetMetricsFilters() ([]interface{}, error) {
 	groupName := logGroupArn[6]
 	region := logGroupArn[3]
 
-	at, err := awstransport(t.MotorRuntime.Motor.Transport)
+	at, err := awstransport(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

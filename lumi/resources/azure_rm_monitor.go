@@ -12,7 +12,7 @@ func (a *lumiAzurermMonitor) id() (string, error) {
 }
 
 func (a *lumiAzurermMonitor) GetLogProfiles() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (a *lumiAzurermMonitorLogprofile) id() (string, error) {
 
 func diagnosticsSettings(runtime *lumi.Runtime, id string) ([]interface{}, error) {
 	// fetch the details
-	at, err := azuretransport(runtime.Motor.Transport)
+	at, err := azuretransport(runtime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

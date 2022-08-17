@@ -2,21 +2,21 @@ package platformid
 
 import (
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
-func MachineIDProvider(t providers.Transport, p *platform.Platform) (UniquePlatformIDProvider, error) {
+func MachineIDProvider(provider os.OperatingSystemProvider, platform *platform.Platform) (UniquePlatformIDProvider, error) {
 	var uuidProvider UniquePlatformIDProvider
-	for i := range p.Family {
-		if p.Family[i] == "linux" {
-			uuidProvider = &LinuxIdProvider{Transport: t}
+	for i := range platform.Family {
+		if platform.Family[i] == "linux" {
+			uuidProvider = &LinuxIdProvider{provider: provider}
 		}
 	}
 
-	if uuidProvider == nil && p.Name == "macos" {
-		uuidProvider = &MacOSIdProvider{Transport: t}
-	} else if uuidProvider == nil && p.Name == "windows" {
-		uuidProvider = &WinIdProvider{Transport: t}
+	if uuidProvider == nil && platform.Name == "macos" {
+		uuidProvider = &MacOSIdProvider{provider: provider}
+	} else if uuidProvider == nil && platform.Name == "windows" {
+		uuidProvider = &WinIdProvider{provider: provider}
 	}
 
 	return uuidProvider, nil

@@ -29,7 +29,7 @@ func (g *lumiGitlabGroup) init(args *lumi.Args) (*lumi.Args, GitlabGroup, error)
 		return args, nil, nil
 	}
 
-	gt, err := gitlabtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := gitlabtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -52,7 +52,7 @@ func (g *lumiGitlabGroup) init(args *lumi.Args) (*lumi.Args, GitlabGroup, error)
 // GetProjects list all projects that belong to a group
 // see https://docs.gitlab.com/ee/api/projects.html
 func (g *lumiGitlabGroup) GetProjects() ([]interface{}, error) {
-	gt, err := gitlabtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := gitlabtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

@@ -17,7 +17,7 @@ func (a *lumiAzurermWeb) id() (string, error) {
 }
 
 func (a *lumiAzurermWeb) GetApps() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func isPlatformEol(platform string, version string) bool {
 
 // all runtimes that are returned here are not EOL and are supported
 func (a *lumiAzurermWeb) GetAvailableRuntimes() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +235,7 @@ func (a *lumiAzurermWebAppsite) id() (string, error) {
 }
 
 func (a *lumiAzurermWebAppsite) GetConfiguration() (interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -286,7 +286,7 @@ func (a *lumiAzurermWebAppsite) GetConfiguration() (interface{}, error) {
 }
 
 func (a *lumiAzurermWebAppsite) GetAuthenticationSettings() (interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -337,7 +337,7 @@ func (a *lumiAzurermWebAppsite) GetAuthenticationSettings() (interface{}, error)
 }
 
 func (a *lumiAzurermWebAppsite) GetApplicationSettings() (interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -382,7 +382,7 @@ func (a *lumiAzurermWebAppsite) GetApplicationSettings() (interface{}, error) {
 }
 
 func (a *lumiAzurermWebAppsite) GetMetadata() (interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -427,7 +427,7 @@ func (a *lumiAzurermWebAppsite) GetMetadata() (interface{}, error) {
 }
 
 func (a *lumiAzurermWebAppsite) GetConnectionSettings() (interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

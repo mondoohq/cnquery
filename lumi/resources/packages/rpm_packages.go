@@ -13,10 +13,11 @@ import (
 	"strconv"
 	"strings"
 
+	os_provider "go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/platform"
 )
 
@@ -67,7 +68,7 @@ func ParseRpmPackages(input io.Reader) []Package {
 // filesystem to run a local rpm command to extract the data. The static analysis is always slower than using the running
 // one since more data need to copied. Therefore the runtime check should be preferred over the static analysis
 type RpmPkgManager struct {
-	motor         *motor.Motor
+	provider      os_provider.OperatingSystemProvider
 	platform      *platform.Platform
 	staticChecked bool
 	static        bool
@@ -91,7 +92,7 @@ func (rpm *RpmPkgManager) isStaticAnalysis() bool {
 	rpm.static = false
 
 	// check if the rpm command exists, e.g it is not available on tar backend
-	c, err := rpm.motor.Transport.RunCommand("command -v rpm")
+	c, err := rpm.provider.RunCommand("command -v rpm")
 	if err != nil || c.ExitStatus != 0 {
 		log.Debug().Msg("lumi[packages]> fallback to static rpm package manager")
 		rpm.static = true
@@ -135,14 +136,9 @@ func (rpm *RpmPkgManager) queryFormat() string {
 
 	// ATTENTION: EPOCHNUM is only available since later version of rpm in RedHat 6 and Suse 12
 	// we can only expect if for rhel 7+, therefore we need to run an extra test
-	info, err := rpm.motor.Platform()
-	if err != nil {
-		return format
-	}
-
 	// be aware that this method is also used for non-redhat systems like suse
-	i, err := strconv.ParseInt(info.Release, 0, 32)
-	if err == nil && (info.Name == "centos" || info.Name == "redhat") && i >= 7 {
+	i, err := strconv.ParseInt(rpm.platform.Version, 0, 32)
+	if err == nil && (rpm.platform.Name == "centos" || rpm.platform.Name == "redhat") && i >= 7 {
 		format = "%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\\n"
 	}
 
@@ -151,7 +147,7 @@ func (rpm *RpmPkgManager) queryFormat() string {
 
 func (rpm *RpmPkgManager) runtimeList() ([]Package, error) {
 	command := fmt.Sprintf("rpm -qa --queryformat '%s'", rpm.queryFormat())
-	cmd, err := rpm.motor.Transport.RunCommand(command)
+	cmd, err := rpm.provider.RunCommand(command)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read package list")
 	}
@@ -165,7 +161,7 @@ func (rpm *RpmPkgManager) runtimeAvailable() (map[string]PackageUpdate, error) {
 	// print ''.join(["{\"name\":\""+x.name+"\", \"available\":\""+x.evr+"\",\"arch\":\""+x.arch+"\",\"repo\":\""+x.repo.id+"\"}\n" for x in list.updates]);
 	script := "python -c 'import sys;sys.path.insert(0, \"/usr/share/yum-cli\");import cli;list = cli.YumBaseCli().returnPkgLists([\"updates\"]);print \"\".join([ \"{\\\"name\\\":\\\"\"+x.name+\"\\\",\\\"available\\\":\\\"\"+x.evr+\"\\\",\\\"arch\\\":\\\"\"+x.arch+\"\\\",\\\"repo\\\":\\\"\"+x.repo.id+\"\\\"}\\n\" for x in list.updates]);'"
 
-	cmd, err := rpm.motor.Transport.RunCommand(script)
+	cmd, err := rpm.provider.RunCommand(script)
 	if err != nil {
 		log.Debug().Err(err).Msg("lumi[packages]> could not read package updates")
 		return nil, errors.Wrap(err, "could not read package update list")
@@ -181,7 +177,7 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 	log.Debug().Str("path", rpmTmpDir).Msg("cache rpm library locally")
 	defer os.RemoveAll(rpmTmpDir)
 
-	fs := rpm.motor.Transport.FS()
+	fs := rpm.provider.FS()
 	afs := &afero.Afero{Fs: fs}
 
 	// on fedora 33+ sqlite is used already, implement new mechanism here
@@ -288,7 +284,7 @@ type SusePkgManager struct {
 }
 
 func (spm *SusePkgManager) Available() (map[string]PackageUpdate, error) {
-	cmd, err := spm.motor.Transport.RunCommand("zypper --xmlout list-updates")
+	cmd, err := spm.provider.RunCommand("zypper --xmlout list-updates")
 	if err != nil {
 		log.Debug().Err(err).Msg("lumi[packages]> could not read package updates")
 		return nil, fmt.Errorf("could not read package update list")

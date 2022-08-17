@@ -36,7 +36,7 @@ func (g *lumiGithub) id() (string, error) {
 }
 
 func (g *lumiGithub) GetUser() (interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (g *lumiGithub) GetUser() (interface{}, error) {
 }
 
 func (g *lumiGithub) GetRepositories() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func (g *lumiGithubOrganization) init(args *lumi.Args) (*lumi.Args, GithubOrgani
 		return args, nil, nil
 	}
 
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -174,7 +174,7 @@ func (g *lumiGithubOrganization) init(args *lumi.Args) (*lumi.Args, GithubOrgani
 }
 
 func (g *lumiGithubOrganization) GetMembers() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +206,7 @@ func (g *lumiGithubOrganization) GetMembers() ([]interface{}, error) {
 }
 
 func (g *lumiGithubOrganization) GetOwners() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +253,7 @@ func (g *lumiGithubOrganization) GetOwners() ([]interface{}, error) {
 }
 
 func (g *lumiGithubOrganization) GetTeams() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -289,7 +289,7 @@ func (g *lumiGithubOrganization) GetTeams() ([]interface{}, error) {
 }
 
 func (g *lumiGithubOrganization) GetRepositories() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -353,7 +353,7 @@ func (g *lumiGithubOrganization) GetRepositories() ([]interface{}, error) {
 }
 
 func (g *lumiGithubOrganization) GetWebhooks() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -405,7 +405,7 @@ func (g *lumiGithubPackage) id() (string, error) {
 }
 
 func (g *lumiGithubOrganization) GetPackages() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -468,7 +468,7 @@ func (g *lumiGithubOrganization) GetPackages() ([]interface{}, error) {
 }
 
 func (g *lumiGithubPackage) GetRepository() (interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -498,7 +498,7 @@ func (g *lumiGithubPackage) GetRepository() (interface{}, error) {
 }
 
 func (g *lumiGithubOrganization) GetInstallations() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -588,7 +588,7 @@ func newLumiGithubRepository(runtime *lumi.Runtime, repo *github.Repository) (in
 }
 
 func (g *lumiGithubTeam) GetRepositories() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -628,7 +628,7 @@ func (g *lumiGithubTeam) GetRepositories() ([]interface{}, error) {
 }
 
 func (g *lumiGithubTeam) GetMembers() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -688,7 +688,7 @@ func (g *lumiGithubUser) init(args *lumi.Args) (*lumi.Args, GithubUser, error) {
 	}
 	userLogin := (*args)["login"].(string)
 
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -779,7 +779,7 @@ func (g *lumiGithubRepository) init(args *lumi.Args) (*lumi.Args, GithubReposito
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -843,7 +843,7 @@ func (g *lumiGithubRepository) init(args *lumi.Args) (*lumi.Args, GithubReposito
 }
 
 func (g *lumiGithubRepository) GetOpenMergeRequests() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -930,7 +930,7 @@ func (g *lumiGithubMergeRequest) id() (string, error) {
 }
 
 func (g *lumiGithubRepository) GetBranches() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1013,7 +1013,7 @@ type githubRequiredPullRequestReviews struct {
 }
 
 func (g *lumiGithubBranch) GetProtectionRules() (interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1201,7 +1201,7 @@ func newLumiGithubCommit(runtime *lumi.Runtime, rc *github.RepositoryCommit, own
 
 	// if the github author is nil, we have to load the commit again
 	if rc.Author == nil {
-		gt, err := githubtransport(runtime.Motor.Transport)
+		gt, err := githubtransport(runtime.Motor.Provider)
 		if err != nil {
 			return nil, err
 		}
@@ -1250,7 +1250,7 @@ func newLumiGithubCommit(runtime *lumi.Runtime, rc *github.RepositoryCommit, own
 }
 
 func (g *lumiGithubRepository) GetCommits() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1291,7 +1291,7 @@ func (g *lumiGithubRepository) GetCommits() ([]interface{}, error) {
 }
 
 func (g *lumiGithubMergeRequest) GetReviews() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1342,7 +1342,7 @@ func (g *lumiGithubMergeRequest) GetReviews() ([]interface{}, error) {
 }
 
 func (g *lumiGithubMergeRequest) GetCommits() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1380,7 +1380,7 @@ func (g *lumiGithubMergeRequest) GetCommits() ([]interface{}, error) {
 }
 
 func (g *lumiGithubRepository) GetContributors() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1419,7 +1419,7 @@ func (g *lumiGithubRepository) GetContributors() ([]interface{}, error) {
 }
 
 func (g *lumiGithubRepository) GetCollaborators() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1473,7 +1473,7 @@ func (g *lumiGithubRepository) GetCollaborators() ([]interface{}, error) {
 }
 
 func (g *lumiGithubRepository) GetReleases() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1524,7 +1524,7 @@ func (g *lumiGithubWebhook) id() (string, error) {
 }
 
 func (g *lumiGithubRepository) GetWebhooks() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1605,7 +1605,7 @@ func (g *lumiGithubWorkflow) GetConfiguration() (interface{}, error) {
 }
 
 func (g *lumiGithubWorkflow) GetFile() (interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1639,7 +1639,7 @@ func (g *lumiGithubWorkflow) GetFile() (interface{}, error) {
 }
 
 func (g *lumiGithubRepository) GetWorkflows() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1715,7 +1715,7 @@ func newLumiGithubFile(runtime *lumi.Runtime, ownerName string, repoName string,
 }
 
 func (g *lumiGithubRepository) GetFiles() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1803,7 +1803,7 @@ func (g *lumiGithubFile) GetFiles() ([]interface{}, error) {
 	if fileType != "dir" {
 		return nil, nil
 	}
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1862,7 +1862,7 @@ func (g *lumiGithubFile) GetContent() (string, error) {
 	if fileType == "dir" {
 		return "", nil
 	}
-	gt, err := githubtransport(g.MotorRuntime.Motor.Transport)
+	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return "", err
 	}

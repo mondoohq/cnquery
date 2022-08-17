@@ -10,8 +10,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/mock"
+	os_provider "go.mondoo.io/mondoo/motor/providers/os"
 	"go.mondoo.io/mondoo/motor/providers/os/cmd"
 	"go.mondoo.io/mondoo/motor/providers/ssh/cat"
 )
@@ -73,7 +73,7 @@ type CommandWrapper struct {
 	wrapper       cmd.Wrapper
 }
 
-func (cw *CommandWrapper) RunCommand(command string) (*providers.Command, error) {
+func (cw *CommandWrapper) RunCommand(command string) (*os_provider.Command, error) {
 	cmd := cw.wrapper.Build(command)
 	return cw.commandRunner.RunCommand(cmd)
 }

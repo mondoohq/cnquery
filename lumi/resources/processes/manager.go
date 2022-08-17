@@ -3,6 +3,8 @@ package processes
 import (
 	"errors"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/providers/ssh"
 )
@@ -26,29 +28,34 @@ type OSProcessManager interface {
 func ResolveManager(motor *motor.Motor) (OSProcessManager, error) {
 	var pm OSProcessManager
 
-	platform, err := motor.Platform()
+	pf, err := motor.Platform()
 	if err != nil {
 		return nil, err
 	}
 
+	osProvider, isOSProvider := motor.Provider.(os.OperatingSystemProvider)
+	if !isOSProvider {
+		return nil, errors.New("process manager is not supported for platform: " + pf.Name)
+	}
+
 	// procfs over ssh is super slow, lets deactivate until we have a faster approach
 	disableProcFs := false
-	switch motor.Transport.(type) {
+	switch motor.Provider.(type) {
 	case *ssh.Provider:
 		disableProcFs = true
 	}
 
 	switch {
-	case platform.Runtime == "docker container":
-		pm = &DockerTopManager{motor: motor}
-	case platform.IsFamily("linux") && !disableProcFs:
-		pm = &LinuxProcManager{motor: motor}
-	case platform.IsFamily("unix"):
-		pm = &UnixProcessManager{motor: motor, platform: platform}
-	case platform.IsFamily("windows"):
-		pm = &WindowsProcessManager{motor: motor}
+	case pf.Runtime == "docker container":
+		pm = &DockerTopManager{provider: osProvider}
+	case pf.IsFamily("linux") && !disableProcFs:
+		pm = &LinuxProcManager{provider: osProvider}
+	case pf.IsFamily("unix"):
+		pm = &UnixProcessManager{provider: osProvider, platform: pf}
+	case pf.IsFamily("windows"):
+		pm = &WindowsProcessManager{provider: osProvider}
 	default:
-		return nil, errors.New("could not detect suitable process manager for platform: " + platform.Name)
+		return nil, errors.New("could not detect suitable process manager for platform: " + pf.Name)
 	}
 
 	return pm, nil

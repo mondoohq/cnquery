@@ -5,17 +5,18 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers"
 )
 
-func Hostname(t providers.Transport, p *platform.Platform) (string, error) {
+func Hostname(p os.OperatingSystemProvider, pf *platform.Platform) (string, error) {
 	var hostname string
 
-	if !p.IsFamily(platform.FAMILY_UNIX) && !p.IsFamily(platform.FAMILY_WINDOWS) {
+	if !pf.IsFamily(platform.FAMILY_UNIX) && !pf.IsFamily(platform.FAMILY_WINDOWS) {
 		return hostname, errors.New("your platform is not supported by hostname resource")
 	}
 
@@ -25,7 +26,7 @@ func Hostname(t providers.Transport, p *platform.Platform) (string, error) {
 	// windows:
 	// hostname command works more reliable than t.RunCommand("powershell -c \"$env:computername\"")
 	// since it will return a non-zero exit code.
-	cmd, err := t.RunCommand("hostname")
+	cmd, err := p.RunCommand("hostname")
 	if err == nil && cmd.ExitStatus == 0 {
 		data, err := ioutil.ReadAll(cmd.Stdout)
 		if err == nil {
@@ -36,8 +37,8 @@ func Hostname(t providers.Transport, p *platform.Platform) (string, error) {
 	}
 
 	// try to use /etc/hostname since it's also working on static analysis
-	if p.IsFamily(platform.FAMILY_LINUX) {
-		afs := &afero.Afero{Fs: t.FS()}
+	if pf.IsFamily(platform.FAMILY_LINUX) {
+		afs := &afero.Afero{Fs: p.FS()}
 		ok, err := afs.Exists("/etc/hostname")
 		if err == nil && ok {
 			content, err := afs.ReadFile("/etc/hostname")

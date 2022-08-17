@@ -1,9 +1,11 @@
 package packages
 
-import "go.mondoo.io/mondoo/motor"
+import (
+	"go.mondoo.io/mondoo/motor/providers/os"
+)
 
 type ScratchPkgManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (dpm *ScratchPkgManager) Name() string {

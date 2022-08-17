@@ -8,7 +8,7 @@ import (
 )
 
 func TestCommandResource(t *testing.T) {
-	c := &Command{}
+	c := &CommandRunner{}
 
 	if assert.NotNil(t, c) {
 		cmd, err := c.Exec("echo", []string{"test"})

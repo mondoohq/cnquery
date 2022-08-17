@@ -6,7 +6,7 @@ import (
 	"io"
 	"regexp"
 
-	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
 const (
@@ -34,7 +34,7 @@ func ParseOpkgPackages(input io.Reader) []Package {
 }
 
 type OpkgPkgManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (opkg *OpkgPkgManager) Name() string {
@@ -46,7 +46,7 @@ func (opkg *OpkgPkgManager) Format() string {
 }
 
 func (opkg *OpkgPkgManager) List() ([]Package, error) {
-	cmd, err := opkg.motor.Transport.RunCommand("opkg list")
+	cmd, err := opkg.provider.RunCommand("opkg list")
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}

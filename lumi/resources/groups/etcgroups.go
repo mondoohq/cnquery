@@ -6,8 +6,9 @@ import (
 	"strconv"
 	"strings"
 
+	"go.mondoo.io/mondoo/motor/providers/os"
+
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor"
 )
 
 // a good description of this file is available at:
@@ -53,7 +54,7 @@ func ParseEtcGroup(input io.Reader) ([]*Group, error) {
 }
 
 type UnixGroupManager struct {
-	motor *motor.Motor
+	provider os.OperatingSystemProvider
 }
 
 func (s *UnixGroupManager) Name() string {
@@ -70,7 +71,7 @@ func (s *UnixGroupManager) Group(id string) (*Group, error) {
 }
 
 func (s *UnixGroupManager) List() ([]*Group, error) {
-	f, err := s.motor.Transport.FS().Open("/etc/group")
+	f, err := s.provider.FS().Open("/etc/group")
 	if err != nil {
 		return nil, err
 	}

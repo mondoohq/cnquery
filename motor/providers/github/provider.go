@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/providers"
+	os_provider "go.mondoo.io/mondoo/motor/providers/os"
 	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 	"go.mondoo.io/mondoo/motor/vault"
 	"golang.org/x/oauth2"
@@ -18,6 +19,7 @@ import (
 var (
 	_ providers.Transport                   = (*Provider)(nil)
 	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
+	_ os_provider.OperatingSystemProvider   = (*Provider)(nil)
 )
 
 func New(tc *providers.Config) (*Provider, error) {
@@ -67,12 +69,12 @@ type Provider struct {
 	opts   map[string]string
 }
 
-func (p *Provider) RunCommand(command string) (*providers.Command, error) {
+func (p *Provider) RunCommand(command string) (*os_provider.Command, error) {
 	return nil, providers.ErrRunCommandNotImplemented
 }
 
-func (p *Provider) FileInfo(path string) (providers.FileInfoDetails, error) {
-	return providers.FileInfoDetails{}, providers.ErrFileInfoNotImplemented
+func (p *Provider) FileInfo(path string) (os_provider.FileInfoDetails, error) {
+	return os_provider.FileInfoDetails{}, providers.ErrFileInfoNotImplemented
 }
 
 func (p *Provider) FS() afero.Fs {

@@ -26,7 +26,7 @@ func (p *lumiAwsIam) id() (string, error) {
 }
 
 func (c *lumiAwsIam) GetServerCertificates() ([]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (c *lumiAwsIam) GetServerCertificates() ([]interface{}, error) {
 }
 
 func (c *lumiAwsIam) GetCredentialReport() ([]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +148,7 @@ func (c *lumiAwsIam) GetCredentialReport() ([]interface{}, error) {
 }
 
 func (c *lumiAwsIam) GetAccountPasswordPolicy() (map[string]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +202,7 @@ func parsePasswordPolicy(passwordPolicy *types.PasswordPolicy) map[string]interf
 }
 
 func (c *lumiAwsIam) GetAccountSummary() (map[string]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +225,7 @@ func (c *lumiAwsIam) GetAccountSummary() (map[string]interface{}, error) {
 }
 
 func (c *lumiAwsIam) GetUsers() ([]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -288,7 +288,7 @@ func (c *lumiAwsIam) createIamUser(usr *types.User) (lumi.ResourceType, error) {
 }
 
 func (c *lumiAwsIam) GetVirtualMfaDevices() ([]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -355,7 +355,7 @@ func (c *lumiAwsIam) lumiPolicies(policies []types.Policy) ([]interface{}, error
 }
 
 func (c *lumiAwsIam) GetAttachedPolicies() ([]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -391,7 +391,7 @@ func (c *lumiAwsIam) GetAttachedPolicies() ([]interface{}, error) {
 }
 
 func (c *lumiAwsIam) GetPolicies() ([]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -425,7 +425,7 @@ func (c *lumiAwsIam) GetPolicies() ([]interface{}, error) {
 }
 
 func (c *lumiAwsIam) GetRoles() ([]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -471,7 +471,7 @@ func (c *lumiAwsIam) GetRoles() ([]interface{}, error) {
 }
 
 func (c *lumiAwsIam) GetGroups() ([]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Transport)
+	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -739,7 +739,7 @@ func (p *lumiAwsIamUser) init(args *lumi.Args) (*lumi.Args, AwsIamUser, error) {
 	}
 
 	// TODO: avoid reloading if all groups have been loaded already
-	at, err := awstransport(p.MotorRuntime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -786,7 +786,7 @@ func (u *lumiAwsIamUser) id() (string, error) {
 }
 
 func (u *lumiAwsIamUser) GetAccessKeys() ([]interface{}, error) {
-	at, err := awstransport(u.MotorRuntime.Motor.Transport)
+	at, err := awstransport(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -824,7 +824,7 @@ func (u *lumiAwsIamUser) GetAccessKeys() ([]interface{}, error) {
 }
 
 func (u *lumiAwsIamUser) GetPolicies() ([]interface{}, error) {
-	at, err := awstransport(u.MotorRuntime.Motor.Transport)
+	at, err := awstransport(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -861,7 +861,7 @@ func (u *lumiAwsIamUser) GetPolicies() ([]interface{}, error) {
 }
 
 func (u *lumiAwsIamUser) GetAttachedPolicies() ([]interface{}, error) {
-	at, err := awstransport(u.MotorRuntime.Motor.Transport)
+	at, err := awstransport(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -918,7 +918,7 @@ func (u *lumiAwsIamPolicy) loadPolicy(arn string) (*types.Policy, error) {
 	}
 
 	// if its not in the cache, fetch it
-	at, err := awstransport(u.MotorRuntime.Motor.Transport)
+	at, err := awstransport(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1060,7 +1060,7 @@ func (u *lumiAwsIamPolicy) listAttachedEntities(arn string) (attachedEntities, e
 	var res attachedEntities
 
 	// if its not in the cache, fetch it
-	at, err := awstransport(u.MotorRuntime.Motor.Transport)
+	at, err := awstransport(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return res, err
 	}
@@ -1180,7 +1180,7 @@ func (u *lumiAwsIamPolicy) GetAttachedGroups() ([]interface{}, error) {
 }
 
 func (u *lumiAwsIamPolicy) GetDefaultVersion() (interface{}, error) {
-	at, err := awstransport(u.MotorRuntime.Motor.Transport)
+	at, err := awstransport(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1217,7 +1217,7 @@ func (u *lumiAwsIamPolicy) GetDefaultVersion() (interface{}, error) {
 }
 
 func (u *lumiAwsIamPolicy) GetVersions() ([]interface{}, error) {
-	at, err := awstransport(u.MotorRuntime.Motor.Transport)
+	at, err := awstransport(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1270,7 +1270,7 @@ func (u *lumiAwsIamPolicyversion) id() (string, error) {
 }
 
 func (u *lumiAwsIamPolicyversion) GetDocument() (interface{}, error) {
-	at, err := awstransport(u.MotorRuntime.Motor.Transport)
+	at, err := awstransport(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return "", err
 	}
@@ -1325,7 +1325,7 @@ func (p *lumiAwsIamRole) init(args *lumi.Args) (*lumi.Args, AwsIamRole, error) {
 	}
 
 	// TODO: avoid reloading if all groups have been loaded already
-	at, err := awstransport(p.MotorRuntime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1381,7 +1381,7 @@ func (p *lumiAwsIamGroup) init(args *lumi.Args) (*lumi.Args, AwsIamGroup, error)
 	}
 
 	// TODO: avoid reloading if all groups have been loaded already
-	at, err := awstransport(p.MotorRuntime.Motor.Transport)
+	at, err := awstransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1430,7 +1430,7 @@ func (u *lumiAwsIamGroup) id() (string, error) {
 }
 
 func (u *lumiAwsIamUser) GetGroups() ([]interface{}, error) {
-	at, err := awstransport(u.MotorRuntime.Motor.Transport)
+	at, err := awstransport(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

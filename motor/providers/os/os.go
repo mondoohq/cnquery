@@ -1,10 +1,39 @@
-package providers
+package os
 
 import (
+	"io"
 	"io/fs"
 	"os"
+	"regexp"
 	"time"
+
+	"go.mondoo.io/mondoo/motor/providers"
+
+	"github.com/spf13/afero"
 )
+
+type OperatingSystemProvider interface {
+	providers.Transport
+	// RunCommand executes a command on the target system
+	RunCommand(command string) (*Command, error)
+	// returns file permissions and ownership
+	FileInfo(path string) (FileInfoDetails, error)
+	// FS provides access to the file system of the target system
+	FS() afero.Fs
+}
+
+type PerfStats struct {
+	Start    time.Time     `json:"start"`
+	Duration time.Duration `json:"duration"`
+}
+
+type Command struct {
+	Command    string
+	Stats      PerfStats
+	Stdout     io.ReadWriter
+	Stderr     io.ReadWriter
+	ExitStatus int
+}
 
 type FileInfo struct {
 	FName    string
@@ -118,4 +147,8 @@ type FileInfoDetails struct {
 	Mode FileModeDetails
 	Uid  int64
 	Gid  int64
+}
+
+type FileSearch interface {
+	Find(from string, r *regexp.Regexp, typ string) ([]string, error)
 }

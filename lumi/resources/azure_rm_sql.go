@@ -25,7 +25,7 @@ func (a *lumiAzurermSqlServerAdministrator) id() (string, error) {
 }
 
 func (a *lumiAzurermSql) GetServers() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (a *lumiAzurermSqlServer) id() (string, error) {
 }
 
 func (a *lumiAzurermSqlServer) GetDatabases() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +176,7 @@ func (a *lumiAzurermSqlServer) GetDatabases() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermSqlServer) GetFirewallRules() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +238,7 @@ func (a *lumiAzurermSqlServer) GetFirewallRules() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermSqlServer) GetAzureAdAdministrators() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -302,7 +302,7 @@ func (a *lumiAzurermSqlServer) GetAzureAdAdministrators() ([]interface{}, error)
 }
 
 func (a *lumiAzurermSqlServer) GetConnectionPolicy() (map[string]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -341,7 +341,7 @@ func (a *lumiAzurermSqlServer) GetConnectionPolicy() (map[string]interface{}, er
 }
 
 func (a *lumiAzurermSqlServer) GetAuditingPolicy() (map[string]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -380,7 +380,7 @@ func (a *lumiAzurermSqlServer) GetAuditingPolicy() (map[string]interface{}, erro
 }
 
 func (a *lumiAzurermSqlServer) GetSecurityAlertPolicy() (map[string]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -419,7 +419,7 @@ func (a *lumiAzurermSqlServer) GetSecurityAlertPolicy() (map[string]interface{},
 }
 
 func (a *lumiAzurermSqlServer) GetEncryptionProtector() (map[string]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -462,7 +462,7 @@ func (a *lumiAzurermSqlDatabase) id() (string, error) {
 }
 
 func (a *lumiAzurermSqlDatabase) GetUsage() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -538,7 +538,7 @@ func (a *lumiAzurermSqlDatabaseusage) id() (string, error) {
 }
 
 func (a *lumiAzurermSqlDatabase) GetAdvisor() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -601,7 +601,7 @@ func (a *lumiAzurermSqlDatabase) GetAdvisor() ([]interface{}, error) {
 }
 
 func (a *lumiAzurermSqlDatabase) GetThreadDetectionPolicy() (map[string]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -645,7 +645,7 @@ func (a *lumiAzurermSqlDatabase) GetThreadDetectionPolicy() (map[string]interfac
 }
 
 func (a *lumiAzurermSqlDatabase) GetConnectionPolicy() (map[string]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -689,7 +689,7 @@ func (a *lumiAzurermSqlDatabase) GetConnectionPolicy() (map[string]interface{}, 
 }
 
 func (a *lumiAzurermSqlDatabase) GetAuditingPolicy() (map[string]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -733,7 +733,7 @@ func (a *lumiAzurermSqlDatabase) GetAuditingPolicy() (map[string]interface{}, er
 }
 
 func (a *lumiAzurermSqlDatabase) GetTransparentDataEncryption() (map[string]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Transport)
+	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

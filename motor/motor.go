@@ -10,6 +10,7 @@ import (
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/local"
 	"go.mondoo.io/mondoo/motor/providers/mock"
+	"go.mondoo.io/mondoo/motor/providers/os"
 	"go.mondoo.io/mondoo/motor/providers/os/events"
 )
 
@@ -26,13 +27,13 @@ func WithRecoding(record bool) MotorOption {
 // implement special case for local platform to speed things up, this is especially important on windows where
 // powershell calls are pretty expensive and slow
 var (
-	localTransportLock     = &sync.Mutex{}
-	localTransportDetector *detector.Detector
+	localProviderLock     = &sync.Mutex{}
+	localProviderDetector *detector.Detector
 )
 
-func New(trans providers.Transport, motorOpts ...MotorOption) (*Motor, error) {
+func New(provider providers.Transport, motorOpts ...MotorOption) (*Motor, error) {
 	m := &Motor{
-		Transport: trans,
+		Provider: provider,
 	}
 
 	for i := range motorOpts {
@@ -41,16 +42,16 @@ func New(trans providers.Transport, motorOpts ...MotorOption) (*Motor, error) {
 
 	// set the detector after the opts have been applied to ensure its going via the recorder
 	// if activated
-	_, ok := m.Transport.(*local.Provider)
+	_, ok := m.Provider.(*local.Provider)
 	if ok && !m.isRecording {
-		localTransportLock.Lock()
-		if localTransportDetector == nil {
-			localTransportDetector = detector.New(m.Transport)
+		localProviderLock.Lock()
+		if localProviderDetector == nil {
+			localProviderDetector = detector.New(m.Provider)
 		}
-		m.detector = localTransportDetector
-		localTransportLock.Unlock()
+		m.detector = localProviderDetector
+		localProviderLock.Unlock()
 	} else {
-		m.detector = detector.New(m.Transport)
+		m.detector = detector.New(m.Provider)
 	}
 
 	return m, nil
@@ -59,7 +60,7 @@ func New(trans providers.Transport, motorOpts ...MotorOption) (*Motor, error) {
 type Motor struct {
 	l sync.Mutex
 
-	Transport   providers.Transport
+	Provider    providers.Transport
 	asset       *asset.Asset
 	detector    *detector.Detector
 	watcher     providers.Watcher
@@ -76,9 +77,14 @@ func (m *Motor) Watcher() providers.Watcher {
 	m.l.Lock()
 	defer m.l.Unlock()
 
+	osProvider, isOSprovider := m.Provider.(os.OperatingSystemProvider)
+	if !isOSprovider {
+		return nil
+	}
+
 	// create watcher once
 	if m.watcher == nil {
-		m.watcher = events.NewWatcher(m.Transport)
+		m.watcher = events.NewWatcher(osProvider)
 	}
 	return m.watcher
 }
@@ -91,8 +97,13 @@ func (m *Motor) ActivateRecorder() {
 		return
 	}
 
-	mockT, _ := mock.NewRecordProvider(m.Transport)
-	m.Transport = mockT
+	osProvider, isOSprovider := m.Provider.(os.OperatingSystemProvider)
+	if !isOSprovider {
+		return
+	}
+
+	mockT, _ := mock.NewRecordProvider(osProvider)
+	m.Provider = mockT
 	m.isRecording = true
 }
 
@@ -109,7 +120,7 @@ func (m *Motor) Recording() []byte {
 	defer m.l.Unlock()
 
 	if m.isRecording {
-		rt := m.Transport.(*mock.MockRecordProvider)
+		rt := m.Provider.(*mock.MockRecordProvider)
 		data, err := rt.ExportData()
 		if err != nil {
 			log.Error().Err(err).Msg("could not export data")
@@ -127,8 +138,8 @@ func (m *Motor) Close() {
 	m.l.Lock()
 	defer m.l.Unlock()
 
-	if m.Transport != nil {
-		m.Transport.Close()
+	if m.Provider != nil {
+		m.Provider.Close()
 	}
 	if m.watcher != nil {
 		if err := m.watcher.TearDown(); err != nil {
@@ -137,24 +148,11 @@ func (m *Motor) Close() {
 	}
 }
 
-func (m *Motor) HasCapability(capability providers.Capability) bool {
+func (m *Motor) IsLocalProvider() bool {
 	m.l.Lock()
 	defer m.l.Unlock()
 
-	list := m.Transport.Capabilities()
-	for i := range list {
-		if list[i] == capability {
-			return true
-		}
-	}
-	return false
-}
-
-func (m *Motor) IsLocalTransport() bool {
-	m.l.Lock()
-	defer m.l.Unlock()
-
-	_, ok := m.Transport.(*local.Provider)
+	_, ok := m.Provider.(*local.Provider)
 	if !ok {
 		return false
 	}
@@ -165,7 +163,6 @@ func (m *Motor) IsLocalTransport() bool {
 func (m *Motor) SetAsset(a *asset.Asset) {
 	m.l.Lock()
 	defer m.l.Unlock()
-
 	m.asset = a
 }
 
