@@ -29,7 +29,6 @@ func TestManifestResolver(t *testing.T) {
 	assert.Contains(t, assetList[1].Platform.Family, "k8s-workload")
 	assert.Contains(t, assetList[1].Platform.Family, "k8s")
 	assert.Equal(t, assetList[3].Platform.Runtime, "docker-registry")
-	assert.Equal(t, assetList[3].Platform.Name, "docker-image")
 }
 
 func TestManifestResolverPodDiscovery(t *testing.T) {
