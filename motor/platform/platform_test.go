@@ -77,7 +77,7 @@ func TestPrettyTitle(t *testing.T) {
 				Title:   "Kali GNU/Linux Rolling",
 				Version: "2019.4",
 			},
-			Expected: "Kali GNU/Linux Rolling, Unknown",
+			Expected: "Kali GNU/Linux Rolling",
 		},
 		{
 			Platform: &Platform{

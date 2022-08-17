@@ -92,8 +92,6 @@ func (p *Platform) PrettyTitle() string {
 			runtimeNiceName = "Software Package"
 		case providers.Kind_KIND_PROCESS:
 			runtimeNiceName = "Process"
-		case providers.Kind_KIND_UNKNOWN:
-			runtimeNiceName = "Unknown"
 		case providers.Kind_KIND_VIRTUAL_MACHINE:
 			runtimeNiceName = "Virtual Machine"
 		case providers.Kind_KIND_VIRTUAL_MACHINE_IMAGE:
