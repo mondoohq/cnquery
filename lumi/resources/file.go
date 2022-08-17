@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/events"
+	"go.mondoo.io/mondoo/motor/providers/os/events"
 )
 
 func (s *lumiFile) id() (string, error) {

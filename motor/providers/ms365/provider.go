@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/afero"
 	ms356_resources "go.mondoo.io/mondoo/lumi/resources/ms365"
 	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/fsutil"
+	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 	"go.mondoo.io/mondoo/motor/vault"
 )
 

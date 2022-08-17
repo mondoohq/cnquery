@@ -5,17 +5,16 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/cockroachdb/errors"
-	"github.com/rs/zerolog/log"
-
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/cockroachdb/errors"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/fs"
-	"go.mondoo.io/mondoo/motor/providers/shared"
+	"go.mondoo.io/mondoo/motor/providers/os/cmd"
 )
 
 var (
@@ -160,7 +159,7 @@ type tmpInfo struct {
 }
 
 func (p *Provider) RunCommand(command string) (*providers.Command, error) {
-	c := shared.Command{Shell: p.shell}
+	c := cmd.Command{Shell: p.shell}
 	args := []string{}
 
 	res, err := c.Exec(command, args)

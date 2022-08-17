@@ -7,8 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/cmd"
-	"go.mondoo.io/mondoo/motor/providers/shared"
+	"go.mondoo.io/mondoo/motor/providers/os/cmd"
 	"go.mondoo.io/mondoo/motor/providers/ssh/cat"
 )
 
@@ -65,7 +64,7 @@ func (p *Provider) RunCommand(command string) (*providers.Command, error) {
 	if p.Sudo != nil {
 		command = p.Sudo.Build(command)
 	}
-	c := &shared.Command{Shell: p.shell}
+	c := &cmd.Command{Shell: p.shell}
 	args := []string{}
 
 	res, err := c.Exec(command, args)

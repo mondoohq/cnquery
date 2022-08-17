@@ -8,7 +8,7 @@ import (
 	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/lumi/resources/kernel"
 	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers/fsutil"
+	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 )
 
 func (k *lumiKernel) init(args *lumi.Args) (*lumi.Args, Kernel, error) {

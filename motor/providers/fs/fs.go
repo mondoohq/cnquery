@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/motor/providers/shared"
+	"go.mondoo.io/mondoo/motor/providers/os/find"
 )
 
 var notSupported = errors.New("not supported")
@@ -113,5 +113,5 @@ func (t *MountedFs) Chown(name string, uid, gid int) error {
 
 func (t *MountedFs) Find(from string, r *regexp.Regexp, typ string) ([]string, error) {
 	iofs := afero.NewIOFS(t)
-	return shared.FindFiles(iofs, from, r, typ)
+	return find.FindFiles(iofs, from, r, typ)
 }

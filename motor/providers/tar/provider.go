@@ -14,7 +14,7 @@ import (
 	"go.mondoo.io/mondoo/motor/motorid/containerid"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/container/cache"
-	"go.mondoo.io/mondoo/motor/providers/fsutil"
+	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
 )
 
 const OPTION_FILE = "file"

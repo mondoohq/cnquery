@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/spf13/afero"
+	"go.mondoo.io/mondoo/motor/providers/os/statutil"
 	"go.mondoo.io/mondoo/motor/providers/ssh/cat"
-	"go.mondoo.io/mondoo/motor/providers/statutil"
 	"go.mondoo.io/mondoo/motor/providers/vmwareguestapi/toolbox"
 )
 

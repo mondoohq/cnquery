@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/cmd"
 	"go.mondoo.io/mondoo/motor/providers/mock"
+	"go.mondoo.io/mondoo/motor/providers/os/cmd"
 	"go.mondoo.io/mondoo/motor/providers/ssh/cat"
 )
 
