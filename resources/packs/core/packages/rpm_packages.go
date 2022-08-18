@@ -7,7 +7,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -19,6 +18,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.io/mondoo/motor/platform"
+
+	rpmdb "github.com/knqyf263/go-rpmdb/pkg"
 )
 
 const (
@@ -62,7 +63,7 @@ func ParseRpmPackages(input io.Reader) []Package {
 	return pkgs
 }
 
-// RpmPkgManager is the pacakge manager for Redhat, CentOS, Oracle and Suse
+// RpmPkgManager is the package manager for Redhat, CentOS, Oracle, Photon and Suse
 // it support two modes: runtime where the rpm command is available and static analysis for images (e.g. container tar)
 // If the RpmPkgManager is used in static mode, it extracts the rpm database from the system and copies it to the local
 // filesystem to run a local rpm command to extract the data. The static analysis is always slower than using the running
@@ -170,106 +171,75 @@ func (rpm *RpmPkgManager) runtimeAvailable() (map[string]PackageUpdate, error) {
 }
 
 func (rpm *RpmPkgManager) staticList() ([]Package, error) {
-	rpmTmpDir, err := ioutil.TempDir(os.TempDir(), "mondoo-rpmdb")
+	rpmTmpDir, err := os.MkdirTemp(os.TempDir(), "mondoo-rpmdb")
 	if err != nil {
 		return nil, errors.Wrap(err, "could not create local temp directory")
 	}
-	log.Debug().Str("path", rpmTmpDir).Msg("cache rpm library locally")
+	log.Debug().Str("path", rpmTmpDir).Msg("mql[packages]> cache rpm library locally")
 	defer os.RemoveAll(rpmTmpDir)
 
 	fs := rpm.provider.FS()
 	afs := &afero.Afero{Fs: fs}
 
-	// on fedora 33+ sqlite is used already, implement new mechanism here
-	// if it is stable, we can use it for all rhel
-	if rpm.platform != nil && rpm.platform.Name == "fedora" {
-		// /var/lib/rpm/rpmdb.sqlite, rpmdb.sqlite-shm and rpmdb.sqlite-wal need to be copied for Fedora 33+
-		// We copy the whole /var/lib/rpm directory
-		rpmPath := "/var/lib/rpm"
-		ok, err := afs.Exists(rpmPath)
-		if err != nil {
-			return nil, errors.Wrap(err, "rpm directory could not be found")
-		}
-		if !ok {
-			return nil, errors.New("rpm directory could not be found")
-		}
-
-		// list directory and copy the content
-		wErr := afs.Walk(rpmPath, func(path string, info os.FileInfo, fErr error) error {
-			log.Debug().Str("path", path).Str("name", info.Name()).Msg("copy file")
-			f, err := fs.Open(path)
-			if err != nil {
-				return errors.Wrap(err, "could not fetch rpm package list")
-			}
-			fWriter, err := os.Create(filepath.Join(rpmTmpDir, info.Name()))
-			if err != nil {
-				log.Error().Err(err).Msg("mql[packages]> could not create tmp file for rpm database")
-				return errors.Wrap(err, "could not create local temp file")
-			}
-			_, err = io.Copy(fWriter, f)
-			if err != nil {
-				log.Error().Err(err).Msg("mql[packages]> could not copy rpm to tmp file")
-				return fmt.Errorf("could not cache rpm package list")
-			}
-			return nil
-		})
-		if wErr != nil {
-			return nil, errors.Wrap(wErr, "could not fetch rpm package list")
-		}
-	} else {
-		// fetch rpm database file and store it in local tmp file
-		// iterate over file paths to check if one exists
-		files := []string{
-			"/var/lib/rpm/Packages",
-			"/usr/lib/sysimage/rpm/Packages", // used on opensuse container
-		}
-		detectedPath := ""
-		for i := range files {
-			ok, err := afs.Exists(files[i])
-			if err == nil && ok {
-				detectedPath = files[i]
-				break
-			}
-		}
-
-		if len(detectedPath) == 0 {
-			return nil, errors.Wrap(err, "could not find rpm packages location on : "+rpm.platform.Name)
-		}
-
-		f, err := fs.Open(detectedPath)
-		if err != nil {
-			return nil, errors.Wrap(err, "could not fetch rpm package list")
-		}
-		fWriter, err := os.Create(filepath.Join(rpmTmpDir, "Packages"))
-		if err != nil {
-			log.Error().Err(err).Msg("mql[packages]> could not create tmp file for rpm database")
-			return nil, errors.Wrap(err, "could not create local temp file")
-		}
-		_, err = io.Copy(fWriter, f)
-		if err != nil {
-			log.Error().Err(err).Msg("mql[packages]> could not copy rpm to tmp file")
-			return nil, fmt.Errorf("could not cache rpm package list")
+	// fetch rpm database file and store it in local tmp file
+	// iterate over file paths to check if one exists
+	files := []string{
+		"/usr/lib/sysimage/rpm/Packages",     // used on opensuse container
+		"/usr/lib/sysimage/rpm/Packages.db",  // used on SLES bci-base container
+		"/usr/lib/sysimage/rpm/rpmdb.sqlite", // used on fedora 36+ and photon4
+		"/var/lib/rpm/rpmdb.sqlite",          // used on fedora 33-35
+		"/var/lib/rpm/Packages",              // used on fedora 32
+	}
+	var tmpRpmDBFile string
+	var detectedPath string
+	for i := range files {
+		ok, err := afs.Exists(files[i])
+		if err == nil && ok {
+			splitPath := strings.Split(files[i], "/")
+			tmpRpmDBFile = filepath.Join(rpmTmpDir, splitPath[len(splitPath)-1])
+			detectedPath = files[i]
+			break
 		}
 	}
 
-	log.Debug().Str("rpmdb", rpmTmpDir).Msg("cached rpm database locally")
+	if len(detectedPath) == 0 {
+		return nil, errors.Wrap(err, "could not find rpm packages location on : "+rpm.platform.Name)
+	}
+	log.Debug().Str("path", detectedPath).Msg("found rpm packages location")
 
-	// call local rpm tool to extract the packages
-	c := exec.Command("rpm", "--dbpath", rpmTmpDir, "-qa", "--queryformat", rpm.queryFormat())
-
-	stdoutBuffer := bytes.Buffer{}
-	stderrBuffer := bytes.Buffer{}
-
-	c.Stdout = &stdoutBuffer
-	c.Stderr = &stderrBuffer
-
-	err = c.Run()
+	f, err := fs.Open(detectedPath)
 	if err != nil {
-		log.Error().Err(err).Msg("mql[packages]> could not execute rpm locally")
-		return nil, errors.Wrap(err, "could not read package list")
+		return nil, errors.Wrap(err, "could not fetch rpm package list")
+	}
+	defer f.Close()
+	fWriter, err := os.Create(tmpRpmDBFile)
+	if err != nil {
+		log.Error().Err(err).Msg("mql[packages]> could not create tmp file for rpm database")
+		return nil, errors.Wrap(err, "could not create local temp file")
+	}
+	defer fWriter.Close()
+	_, err = io.Copy(fWriter, f)
+	if err != nil {
+		log.Error().Err(err).Msg("mql[packages]> could not copy rpm to tmp file")
+		return nil, fmt.Errorf("could not cache rpm package list")
 	}
 
-	return ParseRpmPackages(&stdoutBuffer), nil
+	log.Debug().Str("rpmdb", rpmTmpDir).Msg("mql[packages]> cached rpm database locally")
+
+	packages := bytes.Buffer{}
+	db, err := rpmdb.Open(tmpRpmDBFile)
+	if err != nil {
+		return nil, err
+	}
+	pkgList, err := db.ListPackages()
+	if err != nil {
+		return nil, err
+	}
+	for _, pkg := range pkgList {
+		packages.WriteString(fmt.Sprintf("%s %d:%s-%s %s %s\n", pkg.Name, pkg.EpochNum(), pkg.Version, pkg.Release, pkg.Arch, pkg.Summary))
+	}
+
+	return ParseRpmPackages(&packages), nil
 }
 
 // TODO: Available() not implemented for RpmFileSystemManager
@@ -284,6 +254,9 @@ type SusePkgManager struct {
 }
 
 func (spm *SusePkgManager) Available() (map[string]PackageUpdate, error) {
+	if spm.isStaticAnalysis() {
+		return spm.staticAvailable()
+	}
 	cmd, err := spm.provider.RunCommand("zypper --xmlout list-updates")
 	if err != nil {
 		log.Debug().Err(err).Msg("mql[packages]> could not read package updates")
