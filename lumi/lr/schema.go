@@ -7,13 +7,13 @@ import (
 	"go.mondoo.io/mondoo/types"
 )
 
-func Schema(ast *LR, collector *Collector) (*lumi.Schema, error) {
+func Schema(ast *LR) (*lumi.Schema, error) {
 	res := &lumi.Schema{
-		Resources: map[string]*lumi.ResourceInfo{},
+		Resources: make(map[string]*lumi.ResourceInfo, len(ast.Resources)),
 	}
 
 	for i := range ast.Resources {
-		x, err := resourceSchema(ast.Resources[i], collector)
+		x, err := resourceSchema(ast.Resources[i], ast)
 		if err != nil {
 			return res, err
 		}
@@ -24,7 +24,7 @@ func Schema(ast *LR, collector *Collector) (*lumi.Schema, error) {
 	return res, nil
 }
 
-func resourceInit(r *Resource, fields map[string]*lumi.Field) (*lumi.Init, error) {
+func resourceInit(r *Resource, fields map[string]*lumi.Field, ast *LR) (*lumi.Init, error) {
 	if len(r.Body.Inits) == 0 {
 		return nil, nil
 	}
@@ -33,7 +33,7 @@ func resourceInit(r *Resource, fields map[string]*lumi.Field) (*lumi.Init, error
 	i := r.Body.Inits[0]
 	isOptional := false
 	for _, arg := range i.Args {
-		typ := arg.Type.Type()
+		typ := arg.Type.Type(ast)
 		if typ == types.Unset {
 			return nil, errors.New("A field in the init that isnt found in the resource must have a type assigned. Field \"" + arg.ID + "\"")
 		}
@@ -62,7 +62,7 @@ func resourceInit(r *Resource, fields map[string]*lumi.Field) (*lumi.Init, error
 	return &lumi.Init{Args: args}, nil
 }
 
-func resourceFields(r *Resource) map[string]*lumi.Field {
+func resourceFields(r *Resource, ast *LR) map[string]*lumi.Field {
 	fields := make(map[string]*lumi.Field)
 
 	for _, f := range r.Body.Fields {
@@ -76,7 +76,7 @@ func resourceFields(r *Resource) map[string]*lumi.Field {
 
 		fields[f.ID] = &lumi.Field{
 			Name:        f.ID,
-			Type:        string(f.Type.Type()),
+			Type:        string(f.Type.Type(ast)),
 			IsMandatory: f.isStatic(),
 			Title:       r.title,
 			Desc:        r.desc,
@@ -87,9 +87,9 @@ func resourceFields(r *Resource) map[string]*lumi.Field {
 	return fields
 }
 
-func resourceSchema(r *Resource, collector *Collector) (*lumi.ResourceInfo, error) {
-	fields := resourceFields(r)
-	init, err := resourceInit(r, fields)
+func resourceSchema(r *Resource, ast *LR) (*lumi.ResourceInfo, error) {
+	fields := resourceFields(r, ast)
+	init, err := resourceInit(r, fields, ast)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func resourceSchema(r *Resource, collector *Collector) (*lumi.ResourceInfo, erro
 	}
 
 	if r.ListType != nil {
-		res.ListType = string(types.Resource(r.ListType.Type.Type))
+		res.ListType = string(r.ListType.Type.typeItems(ast))
 	}
 
 	return res, nil

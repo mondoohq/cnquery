@@ -1,0 +1,1313 @@
+package aws
+
+import (
+	"context"
+	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
+
+	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources/packs/core"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/cockroachdb/errors"
+	"github.com/rs/zerolog/log"
+	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
+)
+
+const (
+	ec2InstanceArnPattern   = "arn:aws:ec2:%s:%s:instance/%s"
+	securityGroupArnPattern = "arn:aws:ec2:%s:%s:security-group/%s"
+	volumeArnPattern        = "arn:aws:ec2:%s:%s:volume/%s"
+	snapshotArnPattern      = "arn:aws:ec2:%s:%s:snapshot/%s"
+	internetGwArnPattern    = "arn:aws:ec2:%s:%s:gateway/%s"
+	vpnConnArnPattern       = "arn:aws:ec2:%s:%s:vpn-connection/%s"
+	networkAclArnPattern    = "arn:aws:ec2:%s:%s:network-acl/%s"
+	imageArnPattern         = "arn:aws:ec2:%s:%s:image/%s"
+	keypairArnPattern       = "arn:aws:ec2:%s:%s:keypair/%s"
+)
+
+func (e *lumiAwsEc2) id() (string, error) {
+	return "aws.ec2", nil
+}
+
+func Ec2TagsToMap(tags []types.Tag) map[string]interface{} {
+	tagsMap := make(map[string]interface{})
+
+	if len(tags) > 0 {
+		for i := range tags {
+			tag := tags[i]
+			tagsMap[core.ToString(tag.Key)] = core.ToString(tag.Value)
+		}
+	}
+
+	return tagsMap
+}
+
+func (s *lumiAwsEc2Networkacl) id() (string, error) {
+	return s.Arn()
+}
+
+func (s *lumiAwsEc2) GetNetworkAcls() ([]interface{}, error) {
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(s.getNetworkACLs(at), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+
+	return res, nil
+}
+
+func (s *lumiAwsEc2) getNetworkACLs(at *aws_transport.Provider) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+
+	account, err := at.Account()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}} // return the error
+	}
+
+	regions, err := at.GetRegions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}} // return the error
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("calling aws with region %s", regionVal)
+
+			svc := at.Ec2(regionVal)
+			ctx := context.Background()
+			res := []interface{}{}
+
+			nextToken := aws.String("no_token_to_start_with")
+			params := &ec2.DescribeNetworkAclsInput{}
+			for nextToken != nil {
+				networkAcls, err := svc.DescribeNetworkAcls(ctx, params)
+				if err != nil {
+					return nil, err
+				}
+				nextToken = networkAcls.NextToken
+				if networkAcls.NextToken != nil {
+					params.NextToken = nextToken
+				}
+
+				for i := range networkAcls.NetworkAcls {
+					acl := networkAcls.NetworkAcls[i]
+					lumiNetworkAcl, err := s.MotorRuntime.CreateResource("aws.ec2.networkacl",
+						"arn", fmt.Sprintf(networkAclArnPattern, regionVal, account.ID, core.ToString(acl.NetworkAclId)),
+						"id", core.ToString(acl.NetworkAclId),
+						"region", regionVal,
+					)
+					if err != nil {
+						return nil, err
+					}
+
+					res = append(res, lumiNetworkAcl)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (s *lumiAwsEc2NetworkaclEntry) id() (string, error) {
+	return s.Id()
+}
+
+func (s *lumiAwsEc2NetworkaclEntryPortrange) id() (string, error) {
+	return s.Id()
+}
+
+func (s *lumiAwsEc2Networkacl) GetEntries() ([]interface{}, error) {
+	id, err := s.Id()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse id")
+	}
+	region, err := s.Region()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to region")
+	}
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	svc := at.Ec2(region)
+	ctx := context.Background()
+	networkacls, err := svc.DescribeNetworkAcls(ctx, &ec2.DescribeNetworkAclsInput{NetworkAclIds: []string{id}})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(networkacls.NetworkAcls) == 0 {
+		return nil, errors.New("aws network acl not found")
+	}
+
+	res := []interface{}{}
+	for _, entry := range networkacls.NetworkAcls[0].Entries {
+		args := []interface{}{
+			"egress", entry.Egress,
+			"ruleAction", string(entry.RuleAction),
+			"id", id + "-" + strconv.Itoa(core.ToIntFrom32(entry.RuleNumber)),
+		}
+		if entry.PortRange != nil {
+			lumiPortEntry, err := s.MotorRuntime.CreateResource("aws.ec2.networkacl.entry.portrange",
+				"from", entry.PortRange.From,
+				"to", entry.PortRange.To,
+				"id", id+"-"+strconv.Itoa(core.ToIntFrom32(entry.RuleNumber))+"-"+strconv.Itoa(core.ToIntFrom32(entry.PortRange.From)),
+			)
+			if err != nil {
+				return nil, err
+			}
+			args = append(args, lumiPortEntry)
+		}
+
+		lumiAclEntry, err := s.MotorRuntime.CreateResource("aws.ec2.networkacl.entry", args...)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, lumiAclEntry)
+	}
+
+	return res, nil
+}
+
+func (s *lumiAwsEc2NetworkaclEntry) GetPortRange() (interface{}, error) {
+	return nil, nil
+}
+
+func (s *lumiAwsEc2Securitygroup) GetIsAttachedToNetworkInterface() (bool, error) {
+	sgId, err := s.Id()
+	if err != nil {
+		return false, errors.Wrap(err, "unable to parse instance id")
+	}
+	region, err := s.Region()
+	if err != nil {
+		return false, errors.Wrap(err, "unable to parse instance id")
+	}
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return false, nil
+	}
+	svc := at.Ec2(region)
+	ctx := context.Background()
+
+	networkinterfaces, err := svc.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{Filters: []types.Filter{
+		{Name: aws.String("group-id"), Values: []string{sgId}},
+	}})
+	if err != nil {
+		return false, err
+	}
+	if len(networkinterfaces.NetworkInterfaces) > 0 {
+		return true, nil
+	}
+	return false, nil
+}
+
+func (s *lumiAwsEc2) getSecurityGroups(at *aws_transport.Provider) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+
+	account, err := at.Account()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}} // return the error
+	}
+
+	regions, err := at.GetRegions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}} // return the error
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("calling aws with region %s", regionVal)
+
+			svc := at.Ec2(regionVal)
+			ctx := context.Background()
+			res := []interface{}{}
+
+			nextToken := aws.String("no_token_to_start_with")
+			params := &ec2.DescribeSecurityGroupsInput{}
+			for nextToken != nil {
+				securityGroups, err := svc.DescribeSecurityGroups(ctx, params)
+				if err != nil {
+					return nil, err
+				}
+				nextToken = securityGroups.NextToken
+				if securityGroups.NextToken != nil {
+					params.NextToken = nextToken
+				}
+
+				for i := range securityGroups.SecurityGroups {
+					group := securityGroups.SecurityGroups[i]
+
+					lumiIpPermissions := []interface{}{}
+					for p := range group.IpPermissions {
+						permission := group.IpPermissions[p]
+
+						ipRanges := []interface{}{}
+						for r := range permission.IpRanges {
+							iprange := permission.IpRanges[r]
+							if iprange.CidrIp != nil {
+								ipRanges = append(ipRanges, *iprange.CidrIp)
+							}
+						}
+
+						ipv6Ranges := []interface{}{}
+						for r := range permission.Ipv6Ranges {
+							iprange := permission.Ipv6Ranges[r]
+							if iprange.CidrIpv6 != nil {
+								ipRanges = append(ipRanges, *iprange.CidrIpv6)
+							}
+						}
+						lumiSecurityGroupIpPermission, err := s.MotorRuntime.CreateResource("aws.ec2.securitygroup.ippermission",
+							"id", core.ToString(group.GroupId)+"-"+strconv.Itoa(p),
+							"fromPort", core.ToInt64From32(permission.FromPort),
+							"toPort", core.ToInt64From32(permission.ToPort),
+							"ipProtocol", core.ToString(permission.IpProtocol),
+							"ipRanges", ipRanges,
+							"ipv6Ranges", ipv6Ranges,
+							// prefixListIds
+							// userIdGroupPairs
+						)
+						if err != nil {
+							return nil, err
+						}
+
+						lumiIpPermissions = append(lumiIpPermissions, lumiSecurityGroupIpPermission)
+					}
+
+					// NOTE: this will create the resource and determine the data in its init method
+					lumiVpc, err := s.MotorRuntime.CreateResource("aws.vpc",
+						"arn", fmt.Sprintf(vpcArnPattern, regionVal, account.ID, core.ToString(group.VpcId)),
+					)
+					if err != nil {
+						return nil, err
+					}
+					lumiS3SecurityGroup, err := s.MotorRuntime.CreateResource("aws.ec2.securitygroup",
+						"arn", fmt.Sprintf(securityGroupArnPattern, regionVal, account.ID, core.ToString(group.GroupId)),
+						"id", core.ToString(group.GroupId),
+						"name", core.ToString(group.GroupName),
+						"description", core.ToString(group.Description),
+						"tags", Ec2TagsToMap(group.Tags),
+						"vpc", lumiVpc,
+						"ipPermissions", lumiIpPermissions,
+						"ipPermissionsEgress", []interface{}{},
+						"region", regionVal,
+					)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, lumiS3SecurityGroup)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (s *lumiAwsEc2) GetKeypairs() ([]interface{}, error) {
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(s.getKeypairs(at), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+
+	return res, nil
+}
+
+func (s *lumiAwsEc2Keypair) id() (string, error) {
+	return s.Arn()
+}
+
+func (s *lumiAwsEc2) getKeypairs(at *aws_transport.Provider) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	account, err := at.Account()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	regions, err := at.GetRegions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("calling aws with region %s", regionVal)
+
+			svc := at.Ec2(regionVal)
+			ctx := context.Background()
+			res := []interface{}{}
+
+			params := &ec2.DescribeKeyPairsInput{}
+			keyPairs, err := svc.DescribeKeyPairs(ctx, params)
+			if err != nil {
+				return nil, err
+			}
+
+			for i := range keyPairs.KeyPairs {
+				kp := keyPairs.KeyPairs[i]
+				lumiKeypair, err := s.MotorRuntime.CreateResource("aws.ec2.keypair",
+					"arn", fmt.Sprintf(keypairArnPattern, account.ID, regionVal, core.ToString(kp.KeyPairId)),
+					"fingerprint", core.ToString(kp.KeyFingerprint),
+					"name", core.ToString(kp.KeyName),
+					"type", string(kp.KeyType),
+					"tags", Ec2TagsToMap(kp.Tags),
+					"region", regionVal,
+				)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, lumiKeypair)
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (i *lumiAwsEc2Keypair) init(args *lumi.Args) (*lumi.Args, AwsEc2Keypair, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if (*args)["name"] == nil {
+		return nil, nil, errors.New("name required to fetch aws ec2 keypair")
+	}
+	n := (*args)["name"].(string)
+
+	if (*args)["region"] == nil {
+		return nil, nil, errors.New("region required to fetch aws ec2 keypair")
+	}
+	r := (*args)["region"].(string)
+
+	at, err := awstransport(i.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, nil, err
+	}
+	account, err := at.Account()
+	if err != nil {
+		return nil, nil, err
+	}
+	svc := at.Ec2(r)
+	ctx := context.Background()
+	kps, err := svc.DescribeKeyPairs(ctx, &ec2.DescribeKeyPairsInput{KeyNames: []string{n}})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if len(kps.KeyPairs) > 0 {
+		kp := kps.KeyPairs[0]
+		(*args)["fingerprint"] = core.ToString(kp.KeyFingerprint)
+		(*args)["name"] = core.ToString(kp.KeyName)
+		(*args)["type"] = string(kp.KeyType)
+		(*args)["tags"] = Ec2TagsToMap(kp.Tags)
+		(*args)["region"] = r
+		(*args)["arn"] = fmt.Sprintf(keypairArnPattern, account.ID, r, core.ToString(kp.KeyPairId))
+		return args, nil, nil
+	}
+
+	(*args)["fingerprint"] = ""
+	(*args)["name"] = n
+	(*args)["type"] = ""
+	(*args)["tags"] = ""
+	(*args)["region"] = r
+	(*args)["arn"] = ""
+	return args, nil, nil
+}
+
+func (s *lumiAwsEc2) GetSecurityGroups() ([]interface{}, error) {
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(s.getSecurityGroups(at), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+
+	return res, nil
+}
+
+type ebsEncryption struct {
+	region                 string
+	ebsEncryptionByDefault bool
+}
+
+func (s *lumiAwsEc2) GetEbsEncryptionByDefault() (map[string]interface{}, error) {
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	res := make(map[string]interface{})
+	poolOfJobs := jobpool.CreatePool(s.getEbsEncryptionPerRegion(at), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		jobResult := poolOfJobs.Jobs[i].Result.(ebsEncryption)
+		res[jobResult.region] = jobResult.ebsEncryptionByDefault
+	}
+	return res, nil
+}
+
+func (s *lumiAwsEc2) getEbsEncryptionPerRegion(at *aws_transport.Provider) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+
+	regions, err := at.GetRegions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}} // return the error
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("calling aws with region %s", regionVal)
+
+			svc := at.Ec2(regionVal)
+			ctx := context.Background()
+
+			ebsEncryptionRes, err := svc.GetEbsEncryptionByDefault(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
+			if err != nil {
+				return nil, err
+			}
+			structVal := ebsEncryption{
+				region:                 regionVal,
+				ebsEncryptionByDefault: core.ToBool(ebsEncryptionRes.EbsEncryptionByDefault),
+			}
+			return jobpool.JobResult(structVal), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (s *lumiAwsEc2) GetInstances() ([]interface{}, error) {
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(s.getInstances(at), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+
+	return res, nil
+}
+
+func (s *lumiAwsEc2) getImdsv2Instances(ctx context.Context, svc *ec2.Client, filterName string) ([]types.Reservation, error) {
+	res := []types.Reservation{}
+	nextToken := aws.String("no_token_to_start_with")
+	params := &ec2.DescribeInstancesInput{
+		Filters: []types.Filter{
+			{Name: &filterName, Values: []string{"required"}},
+		},
+	}
+	for nextToken != nil {
+		instances, err := svc.DescribeInstances(ctx, params)
+		if err != nil {
+			return nil, err
+		}
+		nextToken = instances.NextToken
+		if instances.NextToken != nil {
+			params.NextToken = nextToken
+		}
+		res = append(res, instances.Reservations...)
+	}
+	return res, nil
+}
+
+func (s *lumiAwsEc2) getImdsv1Instances(ctx context.Context, svc *ec2.Client, filterName string) ([]types.Reservation, error) {
+	res := []types.Reservation{}
+	nextToken := aws.String("no_token_to_start_with")
+	params := &ec2.DescribeInstancesInput{
+		Filters: []types.Filter{
+			{Name: &filterName, Values: []string{"optional"}},
+		},
+	}
+	for nextToken != nil {
+		instances, err := svc.DescribeInstances(ctx, params)
+		if err != nil {
+			return nil, err
+		}
+		nextToken = instances.NextToken
+		if instances.NextToken != nil {
+			params.NextToken = nextToken
+		}
+		res = append(res, instances.Reservations...)
+	}
+	return res, nil
+}
+
+func (s *lumiAwsEc2) getInstances(at *aws_transport.Provider) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := at.GetRegions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}} // return the error
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("calling aws with region %s", regionVal)
+
+			svc := at.Ec2(regionVal)
+			ctx := context.Background()
+			var res []interface{}
+
+			// the value for http tokens is not available on api output i've been able to find, so here
+			// we make two calls to get the instances, one with the imdsv1 filter and another with the imdsv2 filter
+			filterName := "metadata-options.http-tokens"
+			imdsv2Instances, err := s.getImdsv2Instances(ctx, svc, filterName)
+			if err != nil {
+				return nil, err
+			}
+			res, err = s.gatherInstanceInfo(imdsv2Instances, 2, regionVal)
+			if err != nil {
+				return nil, err
+			}
+
+			imdsv1Instances, err := s.getImdsv1Instances(ctx, svc, filterName)
+			if err != nil {
+				return nil, err
+			}
+			imdsv1Res, err := s.gatherInstanceInfo(imdsv1Instances, 1, regionVal)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, imdsv1Res...)
+
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (s *lumiAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVersion int, regionVal string) ([]interface{}, error) {
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	account, err := at.Account()
+	if err != nil {
+		return nil, err
+	}
+
+	res := []interface{}{}
+	httpTokens := "required"
+	if imdsvVersion == 1 {
+		httpTokens = "optional"
+	}
+	for _, reservation := range instances {
+		for _, instance := range reservation.Instances {
+			lumiDevices := []interface{}{}
+			for i := range instance.BlockDeviceMappings {
+				device := instance.BlockDeviceMappings[i]
+
+				lumiInstanceDevice, err := s.MotorRuntime.CreateResource("aws.ec2.instance.device",
+					"deleteOnTermination", core.ToBool(device.Ebs.DeleteOnTermination),
+					"status", string(device.Ebs.Status),
+					"volumeId", core.ToString(device.Ebs.VolumeId),
+					"deviceName", core.ToString(device.DeviceName),
+				)
+				if err != nil {
+					return nil, err
+				}
+				lumiDevices = append(lumiDevices, lumiInstanceDevice)
+			}
+			sgs := []interface{}{}
+			for i := range instance.SecurityGroups {
+				// NOTE: this will create the resource and determine the data in its init method
+				lumiSg, err := s.MotorRuntime.CreateResource("aws.ec2.securitygroup",
+					"arn", fmt.Sprintf(securityGroupArnPattern, regionVal, account.ID, core.ToString(instance.SecurityGroups[i].GroupId)),
+				)
+				if err != nil {
+					return nil, err
+				}
+				sgs = append(sgs, lumiSg)
+			}
+
+			stateReason, err := core.JsonToDict(instance.StateReason)
+			if err != nil {
+				return nil, err
+			}
+
+			lumiImage, err := s.MotorRuntime.CreateResource("aws.ec2.image",
+				"arn", fmt.Sprintf(imageArnPattern, regionVal, account.ID, core.ToString(instance.ImageId)),
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			lumiKeyPair, err := s.MotorRuntime.CreateResource("aws.ec2.keypair",
+				"region", regionVal,
+				"name", core.ToString(instance.KeyName),
+			)
+			if err != nil {
+				return nil, err
+			}
+			args := []interface{}{
+				"arn", fmt.Sprintf(ec2InstanceArnPattern, regionVal, account.ID, core.ToString(instance.InstanceId)),
+				"instanceId", core.ToString(instance.InstanceId),
+				"region", regionVal,
+				"publicIp", core.ToString(instance.PublicIpAddress),
+				"detailedMonitoring", string(instance.Monitoring.State),
+				"httpTokens", httpTokens,
+				"state", string(instance.State.Name),
+				"deviceMappings", lumiDevices,
+				"securityGroups", sgs,
+				"publicDnsName", core.ToString(instance.PublicDnsName),
+				"stateReason", stateReason,
+				"stateTransitionReason", core.ToString(instance.StateTransitionReason),
+				"ebsOptimized", core.ToBool(instance.EbsOptimized),
+				"instanceType", string(instance.InstanceType),
+				"tags", Ec2TagsToMap(instance.Tags),
+				"image", lumiImage,
+				"launchTime", instance.LaunchTime,
+				"privateIp", core.ToString(instance.PrivateIpAddress),
+				"privateDnsName", core.ToString(instance.PrivateDnsName),
+				"keypair", lumiKeyPair,
+			}
+
+			// add vpc if there is one
+			if instance.VpcId != nil {
+				// NOTE: this will create the resource and determine the data in its init method
+				lumiVpcResource, err := s.MotorRuntime.CreateResource("aws.vpc",
+					"arn", fmt.Sprintf(vpcArnPattern, regionVal, account.ID, core.ToString(instance.VpcId)),
+				)
+				if err != nil {
+					return nil, err
+				}
+				lumiVpc := lumiVpcResource.(AwsVpc)
+				args = append(args, "vpc", lumiVpc)
+			}
+
+			lumiEc2Instance, err := s.MotorRuntime.CreateResource("aws.ec2.instance", args...)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, lumiEc2Instance)
+		}
+	}
+	return res, nil
+}
+
+func (i *lumiAwsEc2Image) id() (string, error) {
+	return i.Arn()
+}
+
+func (i *lumiAwsEc2Image) init(args *lumi.Args) (*lumi.Args, AwsEc2Image, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if (*args)["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch aws ec2 image")
+	}
+
+	arnVal := (*args)["arn"].(string)
+	arn, err := arn.Parse(arnVal)
+	if err != nil {
+		return nil, nil, nil
+	}
+	resource := strings.Split(arn.Resource, "/")
+	at, err := awstransport(i.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, nil, err
+	}
+	svc := at.Ec2(arn.Region)
+	ctx := context.Background()
+	images, err := svc.DescribeImages(ctx, &ec2.DescribeImagesInput{ImageIds: []string{resource[1]}})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if len(images.Images) > 0 {
+		image := images.Images[0]
+		(*args)["arn"] = arnVal
+		(*args)["id"] = resource[1]
+		(*args)["name"] = core.ToString(image.Name)
+		(*args)["architecture"] = string(image.Architecture)
+		(*args)["ownerId"] = core.ToString(image.OwnerId)
+		(*args)["ownerAlias"] = core.ToString(image.ImageOwnerAlias)
+		return args, nil, nil
+	}
+
+	(*args)["arn"] = arnVal
+	(*args)["id"] = resource[1]
+	(*args)["name"] = ""
+	(*args)["architecture"] = ""
+	(*args)["ownerId"] = ""
+	(*args)["ownerAlias"] = ""
+	return args, nil, nil
+}
+
+func (s *lumiAwsEc2Securitygroup) id() (string, error) {
+	return s.Arn()
+}
+
+func (p *lumiAwsEc2Securitygroup) init(args *lumi.Args) (*lumi.Args, AwsEc2Securitygroup, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if (*args)["arn"] == nil && (*args)["id"] == nil {
+		return nil, nil, errors.New("arn or id required to fetch aws security group")
+	}
+
+	// load all security groups
+	obj, err := p.MotorRuntime.CreateResource("aws.ec2")
+	if err != nil {
+		return nil, nil, err
+	}
+	awsEc2 := obj.(AwsEc2)
+
+	rawResources, err := awsEc2.SecurityGroups()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var match func(secGroup AwsEc2Securitygroup) bool
+
+	if (*args)["arn"] != nil {
+		arnVal := (*args)["arn"].(string)
+		match = func(secGroup AwsEc2Securitygroup) bool {
+			lumiSecArn, err := secGroup.Arn()
+			if err != nil {
+				log.Error().Err(err).Msg("security group is not properly initialized")
+				return false
+			}
+			return lumiSecArn == arnVal
+		}
+	}
+
+	if (*args)["id"] != nil {
+		idVal := (*args)["id"].(string)
+		match = func(secGroup AwsEc2Securitygroup) bool {
+			lumiSecId, err := secGroup.Id()
+			if err != nil {
+				log.Error().Err(err).Msg("security group is not properly initialized")
+				return false
+			}
+			return lumiSecId == idVal
+		}
+	}
+
+	for i := range rawResources {
+		securityGroup := rawResources[i].(AwsEc2Securitygroup)
+		if match(securityGroup) {
+			return args, securityGroup, nil
+		}
+	}
+
+	return nil, nil, errors.New("security group does not exist")
+}
+
+func (s *lumiAwsEc2SecuritygroupIppermission) id() (string, error) {
+	return s.Id()
+}
+
+func (s *lumiAwsEc2InstanceDevice) id() (string, error) {
+	return s.VolumeId()
+}
+
+func (s *lumiAwsEc2Instance) id() (string, error) {
+	return s.Arn()
+}
+
+func (s *lumiAwsEc2Instance) GetVpc() (interface{}, error) {
+	// this indicated that no vpc is attached since we set the value when we construct the resource
+	// we return nil here to make it easier for users to compare:
+	// aws.ec2.instances.where(state != "terminated") { vpc != null }
+	return nil, nil
+}
+
+func (s *lumiAwsEc2Instance) GetSsm() (interface{}, error) {
+	instanceId, err := s.InstanceId()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse instance id")
+	}
+	region, err := s.Region()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse instance region")
+	}
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	svc := at.Ssm(region)
+	ctx := context.Background()
+	instanceIdFilter := "InstanceIds"
+	params := &ssm.DescribeInstanceInformationInput{
+		Filters: []ssmtypes.InstanceInformationStringFilter{
+			{Key: &instanceIdFilter, Values: []string{instanceId}},
+		},
+	}
+	ssmInstanceInfo, err := svc.DescribeInstanceInformation(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+	res, err := core.JsonToDict(ssmInstanceInfo)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (s *lumiAwsEc2Instance) GetPatchState() (interface{}, error) {
+	var res interface{}
+	instanceId, err := s.InstanceId()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse instance id")
+	}
+	region, err := s.Region()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse instance region")
+	}
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	svc := at.Ssm(region)
+	ctx := context.Background()
+
+	ssmPatchInfo, err := svc.DescribeInstancePatchStates(ctx, &ssm.DescribeInstancePatchStatesInput{InstanceIds: []string{instanceId}})
+	if err != nil {
+		return nil, err
+	}
+	if len(ssmPatchInfo.InstancePatchStates) > 0 {
+		if instanceId == core.ToString(ssmPatchInfo.InstancePatchStates[0].InstanceId) {
+			res, err = core.JsonToDict(ssmPatchInfo.InstancePatchStates[0])
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	return res, nil
+}
+
+func (s *lumiAwsEc2Instance) GetInstanceStatus() (interface{}, error) {
+	var res interface{}
+	instanceId, err := s.InstanceId()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse instance id")
+	}
+	region, err := s.Region()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse instance region")
+	}
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.Ec2(region)
+	ctx := context.Background()
+
+	instanceStatus, err := svc.DescribeInstanceStatus(ctx, &ec2.DescribeInstanceStatusInput{
+		InstanceIds:         []string{instanceId},
+		IncludeAllInstances: aws.Bool(true),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(instanceStatus.InstanceStatuses) > 0 {
+		if instanceId == core.ToString(instanceStatus.InstanceStatuses[0].InstanceId) {
+			res, err = core.JsonToDict(instanceStatus.InstanceStatuses[0])
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return res, nil
+}
+
+func (s *lumiAwsEc2) GetVolumes() ([]interface{}, error) {
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(s.getVolumes(at), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+
+	return res, nil
+}
+
+func (s *lumiAwsEc2) getVolumes(at *aws_transport.Provider) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+
+	regions, err := at.GetRegions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	account, err := at.Account()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			svc := at.Ec2(regionVal)
+			ctx := context.Background()
+			res := []interface{}{}
+
+			nextToken := aws.String("no_token_to_start_with")
+			params := &ec2.DescribeVolumesInput{}
+			for nextToken != nil {
+				volumes, err := svc.DescribeVolumes(ctx, params)
+				if err != nil {
+					return nil, err
+				}
+				for _, vol := range volumes.Volumes {
+					jsonAttachments, err := core.JsonToDictSlice(vol.Attachments)
+					if err != nil {
+						return nil, err
+					}
+					lumiVol, err := s.MotorRuntime.CreateResource("aws.ec2.volume",
+						"arn", fmt.Sprintf(volumeArnPattern, region, account.ID, core.ToString(vol.VolumeId)),
+						"id", core.ToString(vol.VolumeId),
+						"attachments", jsonAttachments,
+						"encrypted", core.ToBool(vol.Encrypted),
+						"state", string(vol.State),
+						"tags", Ec2TagsToMap(vol.Tags),
+						"availabilityZone", core.ToString(vol.AvailabilityZone),
+						"volumeType", string(vol.VolumeType),
+						"createTime", vol.CreateTime,
+					)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, lumiVol)
+				}
+				nextToken = volumes.NextToken
+				if volumes.NextToken != nil {
+					params.NextToken = nextToken
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (s *lumiAwsEc2Volume) id() (string, error) {
+	return s.Arn()
+}
+
+func (s *lumiAwsEc2Snapshot) id() (string, error) {
+	return s.Arn()
+}
+
+func (s *lumiAwsEc2) GetVpnConnections() ([]interface{}, error) {
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(s.getVpnConnections(at), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+
+	return res, nil
+}
+
+func (s *lumiAwsEc2) getVpnConnections(at *aws_transport.Provider) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := at.GetRegions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	account, err := at.Account()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			svc := at.Ec2(regionVal)
+			ctx := context.Background()
+			res := []interface{}{}
+
+			vpnConnections, err := svc.DescribeVpnConnections(ctx, &ec2.DescribeVpnConnectionsInput{})
+			if err != nil {
+				return nil, err
+			}
+			for _, vpnConn := range vpnConnections.VpnConnections {
+				lumiVgwT := []interface{}{}
+				for _, vgwT := range vpnConn.VgwTelemetry {
+					lumiVgwTelemetry, err := s.MotorRuntime.CreateResource("aws.ec2.vgwtelemetry",
+						"outsideIpAddress", core.ToString(vgwT.OutsideIpAddress),
+						"status", string(vgwT.Status),
+						"statusMessage", core.ToString(vgwT.StatusMessage),
+					)
+					if err != nil {
+						return nil, err
+					}
+					lumiVgwT = append(lumiVgwT, lumiVgwTelemetry)
+				}
+				lumiVpnConn, err := s.MotorRuntime.CreateResource("aws.ec2.vpnconnection",
+					"arn", fmt.Sprintf(vpnConnArnPattern, regionVal, account.ID, core.ToString(vpnConn.VpnConnectionId)),
+					"vgwTelemetry", lumiVgwT,
+				)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, lumiVpnConn)
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (s *lumiAwsEc2) GetSnapshots() ([]interface{}, error) {
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(s.getSnapshots(at), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+
+	return res, nil
+}
+
+func (s *lumiAwsEc2) getSnapshots(at *aws_transport.Provider) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := at.GetRegions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	account, err := at.Account()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			svc := at.Ec2(regionVal)
+			ctx := context.Background()
+			res := []interface{}{}
+
+			nextToken := aws.String("no_token_to_start_with")
+			params := &ec2.DescribeSnapshotsInput{Filters: []types.Filter{{Name: aws.String("owner-id"), Values: []string{account.ID}}}}
+			for nextToken != nil {
+				snapshots, err := svc.DescribeSnapshots(ctx, params)
+				if err != nil {
+					return nil, err
+				}
+				for _, snapshot := range snapshots.Snapshots {
+					lumiSnap, err := s.MotorRuntime.CreateResource("aws.ec2.snapshot",
+						"arn", fmt.Sprintf(snapshotArnPattern, regionVal, account.ID, core.ToString(snapshot.SnapshotId)),
+						"id", core.ToString(snapshot.SnapshotId),
+						"region", regionVal,
+						"volumeId", core.ToString(snapshot.VolumeId),
+						"startTime", snapshot.StartTime,
+						"tags", Ec2TagsToMap(snapshot.Tags),
+					)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, lumiSnap)
+				}
+				nextToken = snapshots.NextToken
+				if snapshots.NextToken != nil {
+					params.NextToken = nextToken
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (s *lumiAwsEc2Snapshot) GetCreateVolumePermission() ([]interface{}, error) {
+	id, err := s.Id()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse instance id")
+	}
+	region, err := s.Region()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse instance region")
+	}
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := at.Ec2(region)
+	ctx := context.Background()
+
+	attribute, err := svc.DescribeSnapshotAttribute(ctx, &ec2.DescribeSnapshotAttributeInput{SnapshotId: &id, Attribute: types.SnapshotAttributeNameCreateVolumePermission})
+	if err != nil {
+		return nil, err
+	}
+
+	return core.JsonToDictSlice(attribute.CreateVolumePermissions)
+}
+
+func (s *lumiAwsEc2) GetInternetGateways() ([]interface{}, error) {
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(s.getInternetGateways(at), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+	return res, nil
+}
+
+func (s *lumiAwsEc2) getInternetGateways(at *aws_transport.Provider) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	regions, err := at.GetRegions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			svc := at.Ec2(regionVal)
+			ctx := context.Background()
+			params := &ec2.DescribeInternetGatewaysInput{}
+			res := []interface{}{}
+			nextToken := aws.String("no_token_to_start_with")
+			for nextToken != nil {
+				internetGws, err := svc.DescribeInternetGateways(ctx, params)
+				if err != nil {
+					return nil, err
+				}
+				for _, gateway := range internetGws.InternetGateways {
+					jsonAttachments, err := core.JsonToDictSlice(gateway.Attachments)
+					if err != nil {
+						return nil, err
+					}
+					lumiInternetGw, err := s.MotorRuntime.CreateResource("aws.ec2.internetgateway",
+						"arn", fmt.Sprintf(internetGwArnPattern, regionVal, core.ToString(gateway.OwnerId), core.ToString(gateway.InternetGatewayId)),
+						"id", core.ToString(gateway.InternetGatewayId),
+						"attachments", jsonAttachments,
+					)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, lumiInternetGw)
+				}
+
+				nextToken = internetGws.NextToken
+				if internetGws.NextToken != nil {
+					params.NextToken = nextToken
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (s *lumiAwsEc2Internetgateway) id() (string, error) {
+	return s.Arn()
+}
+
+func (s *lumiAwsEc2Vpnconnection) id() (string, error) {
+	return s.Arn()
+}
+
+func (s *lumiAwsEc2Vgwtelemetry) id() (string, error) {
+	return s.OutsideIpAddress()
+}

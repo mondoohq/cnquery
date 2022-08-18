@@ -4,9 +4,9 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi/resources/ipmi"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/vault"
+	"go.mondoo.io/mondoo/resources/packs/core/ipmi"
 )
 
 var (

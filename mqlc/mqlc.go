@@ -12,9 +12,9 @@ import (
 	"go.mondoo.io/mondoo"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/lumi/resources"
 	"go.mondoo.io/mondoo/mqlc/parser"
 	v1 "go.mondoo.io/mondoo/mqlc/v1"
+	"go.mondoo.io/mondoo/resources/packs/all"
 	"go.mondoo.io/mondoo/types"
 )
 
@@ -1452,7 +1452,7 @@ func (c *compiler) CompileParsed(ast *parser.AST) error {
 }
 
 func getMinMondooVersion(current string, resource string, field string) string {
-	rd := resources.ResourceDocs.Resources[resource]
+	rd := all.ResourceDocs.Resources[resource]
 	var minverDocs string
 	if rd != nil {
 		minverDocs = rd.MinMondooVersion

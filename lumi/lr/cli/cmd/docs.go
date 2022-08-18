@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"sort"
 	"strings"
 
@@ -113,7 +114,7 @@ var docsYamlCmd = &cobra.Command{
 		for k := range d.Resources {
 			d.Resources[k] = ensureDefaults(k, d.Resources[k], version)
 			mergeFields(version, d.Resources[k], fields[k])
-			//Merge in other doc fields from core.lr
+			// Merge in other doc fields from core.lr
 			d.Resources[k].IsPrivate = isPrivate[k]
 		}
 
@@ -154,7 +155,7 @@ func ensureDefaults(id string, entry *docs.LrDocsEntry, version string) *docs.Lr
 		if entry.MinMondooVersion == "" {
 			entry.MinMondooVersion = version
 		} else if entry.MinMondooVersion == defaultVersion && version != defaultVersion {
-			//Update to specified version if previously set to default
+			// Update to specified version if previously set to default
 			entry.MinMondooVersion = version
 		}
 		if strings.HasPrefix(id, k) {
@@ -185,7 +186,7 @@ func mergeFields(version string, entry *docs.LrDocsEntry, fields []*lr.Field) {
 		} else if entry.Fields[f.ID].MinMondooVersion == "latest" && version != "latest" {
 			entry.Fields[f.ID].MinMondooVersion = version
 		}
-		//Scrub field version if same as resource
+		// Scrub field version if same as resource
 		if entry.Fields[f.ID].MinMondooVersion == entry.MinMondooVersion {
 			entry.Fields[f.ID].MinMondooVersion = ""
 		}
@@ -213,7 +214,10 @@ var docsGoCmd = &cobra.Command{
 	Long:  `parse an yaml docs file and convert it to go, saving it in the same location with the suffix .go`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		raw, err := ioutil.ReadFile(args[0])
+		file := args[0]
+		packageName := path.Base(path.Dir(file))
+
+		raw, err := ioutil.ReadFile(file)
 		if err != nil {
 			log.Error().Err(err)
 			return
@@ -225,7 +229,7 @@ var docsGoCmd = &cobra.Command{
 			log.Fatal().Err(err).Msg("could not load yaml data")
 		}
 
-		godata := docs.Go(lrDocsData)
+		godata := docs.Go(packageName, lrDocsData)
 
 		if printStdout {
 			fmt.Println(godata)

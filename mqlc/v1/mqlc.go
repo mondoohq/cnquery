@@ -12,8 +12,8 @@ import (
 	"go.mondoo.io/mondoo"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/lumi/resources"
 	"go.mondoo.io/mondoo/mqlc/parser"
+	"go.mondoo.io/mondoo/resources/packs/all"
 	"go.mondoo.io/mondoo/types"
 )
 
@@ -1435,7 +1435,7 @@ func MustCompile(input string, schema *lumi.Schema, props map[string]*llx.Primit
 }
 
 func getMinMondooVersion(current string, resource string, field string) string {
-	rd := resources.ResourceDocs.Resources[resource]
+	rd := all.ResourceDocs.Resources[resource]
 	var minverDocs string
 	if rd != nil {
 		minverDocs = rd.MinMondooVersion

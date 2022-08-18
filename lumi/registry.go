@@ -5,7 +5,9 @@
 package lumi
 
 import (
+	"encoding/json"
 	"errors"
+	"sort"
 	"strings"
 
 	"go.mondoo.io/mondoo/types"
@@ -29,6 +31,13 @@ func NewRegistry() *Registry {
 	}
 }
 
+// Add all resources from another registry to this registry
+func (ctx *Registry) Add(r *Registry) {
+	for k, v := range r.Resources {
+		ctx.Resources[k] = v
+	}
+}
+
 // Clone creates a shallow copy of this registry, which means you can add/remove
 // resources, but don't mess with their underlying configuration
 func (ctx *Registry) Clone() *Registry {
@@ -37,6 +46,32 @@ func (ctx *Registry) Clone() *Registry {
 		res[k] = v
 	}
 	return &Registry{res}
+}
+
+// LoadJson loads a set of resource definitions from JSON into the registry
+func (ctx *Registry) LoadJson(raw []byte) error {
+	schema := Schema{}
+	if err := json.Unmarshal(raw, &schema); err != nil {
+		return errors.New("cannot load embedded core resource schema")
+	}
+
+	// since we establish the resource chain of any missing resources,
+	// it is important to add things in the right order (for now)
+	keys := make([]string, len(schema.Resources))
+	var i int
+	for k := range schema.Resources {
+		keys[i] = k
+		i++
+	}
+
+	sort.Strings(keys)
+	for i := range keys {
+		if err := ctx.AddResourceInfo(schema.Resources[keys[i]]); err != nil {
+			return errors.New("failed to add resource info: " + err.Error())
+		}
+	}
+
+	return nil
 }
 
 // for a given resource name, make sure all parent resources exist

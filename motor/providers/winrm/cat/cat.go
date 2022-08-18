@@ -9,8 +9,8 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/lumi/resources/powershell"
 	os_provider "go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.io/mondoo/resources/packs/os/powershell"
 )
 
 type CommandRunner interface {

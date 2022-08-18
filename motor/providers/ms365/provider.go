@@ -4,9 +4,9 @@ import (
 	"sync"
 
 	"github.com/cockroachdb/errors"
-	ms356_resources "go.mondoo.io/mondoo/lumi/resources/ms365"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/vault"
+	ms356_resources "go.mondoo.io/mondoo/resources/packs/services/ms365"
 )
 
 const (

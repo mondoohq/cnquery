@@ -1,0 +1,1994 @@
+import "../core/core.lr"
+
+option go_package = "go.mondoo.io/mondoo/resources/packs/os"
+
+// Results of running a command on the system
+command {
+  init(command string)
+  // Raw contents of the command
+  command string
+  // Standard output from running the command
+  stdout() string
+  // Standard error output from running the command
+  stderr() string
+  // Exit code the command returned
+  exitcode() int
+}
+
+// Results of running a PowerShell script on the system
+powershell {
+  init(script string)
+  // Raw contents of the script
+  script string
+  // Standard output from running the script
+  stdout() string
+  // Standard error output from running the script
+  stderr() string
+  // Exit code the script returned
+  exitcode() int
+}
+
+// Find files on the system efficiently
+files.find {
+  []core.file
+  // From sets the starting point for the search operation
+  from string
+  // xdev indicates if other devices will be searched
+  xdev() bool
+  // What types of files will be listed (directories, files, devices, etc)
+  type() string
+  // A regular expression for the file search
+  regex() string
+  // What permissions the file matches
+  permissions() int
+  // Search name of the name
+  name() string
+}
+
+// PAM configuration (Pluggable Authentication Module)
+pam.conf {
+  init(path string)
+  // A list of files that make up the PAM configuration
+  files() []core.file
+  // The raw PAM configuration (across all files)
+  content(files) string
+  // Deprecated: A list of services that are configured via PAM
+  services(files) map[string][]string
+  // A list of services with parsed entries that are configured via PAM
+  entries(files) map[string][]pam.conf.serviceEntry
+}
+
+private pam.conf.serviceEntry {
+  // Service file that entry is from
+  service string
+  // Line number in service file - used for ID
+  lineNumber int 
+  // Type for pam entry, ie auth, password etc
+  pamType string
+  // Level of control, ie required, requisite, sufficient
+  control string
+  // PAM module used
+  module string
+  // configuration options for pam service entry
+  options []string
+}
+
+// SSH server resource
+sshd {}
+
+// SSH server configuration
+sshd.config {
+  init(path? string)
+  // File of this SSH server configuration
+  file() core.file
+  // Raw content of this SSH server config
+  content(file) string
+  // Configuration values of this SSH server
+  params(content) map[string]string
+  // Ciphers configured for this SSH server
+  ciphers(params) []string
+  // MACs configured for this SSH server
+  macs(params) []string
+  // Key Exchange Algorithms configured for this SSH server
+  kexs(params) []string
+  // Host Keys configured for this SSH server
+  hostkeys(params) []string
+}
+
+// NTP service configuration
+ntp.conf {
+  init(path string)
+  // File of this NTP service configuration
+  file() core.file
+  // Raw contents of this NTP service configuration
+  content(file) string
+  // List of settings for this NTP service
+  settings(content) []string
+  // List of servers for this NTP service
+  servers(settings) []string
+  // List of access control restrictions for this NTP service
+  restrict(settings) []string
+  // Additional information for clock drivers
+  fudge(settings) []string
+}
+
+// Rsyslog service configuration
+rsyslog.conf {
+  init(path string)
+  // Files that make up this Rsyslog service configuration
+  files() []core.file
+  // Raw contents of this Rsyslog service configuration
+  content(files) string
+  // List of settings for this Rsyslog service
+  settings(content) []string
+}
+
+machine {}
+
+// SMBIOS BIOS information
+machine.bios {
+  // BIOS vendor
+  vendor string
+  // BIOS version
+  version string
+  // BIOS release date
+  releaseDate string
+}
+
+// SMBIOS system information
+machine.system {
+  // Manufacturer
+  manufacturer string
+  // Product Name
+  product string
+  // Version
+  version string
+  // Serial Number
+  serial string
+  // UUID
+  uuid string
+  // SKU Number
+  sku string
+  // Family
+  family string
+}
+
+// SMBIOS baseboard (or module) information 
+machine.baseboard {
+  // Manufacturer
+  manufacturer string
+  // Product
+  product string
+  // Version
+  version string
+  // Serial Number
+  serial string
+  // Asset Tag
+  assetTag string
+}
+
+// SMBIOS system enclosure or chassis
+machine.chassis {
+  // Manufacturer
+  manufacturer string
+  // Version
+  version string
+  // Serial Number
+  serial string
+  // Asset Tag Number
+  assetTag string
+}
+
+// Operating system information
+os {
+  // Pretty Hostname on Linux / Device name on Windows
+  name() string
+  // ENV variable contents
+  env() map[string]string
+  // PATH variable contents
+  path() []string
+  // Current uptime
+  uptime() time
+  // List of available OS updates
+  updates() []os.update
+  // Indicates if a reboot is pending
+  rebootpending() bool
+  // Hostname for this OS
+  hostname() string
+  // Machine ID for this OS
+  machineid() string
+}
+
+// Operating system update information
+os.update {
+  // Name of the update
+  name string
+  // Category of the update
+  category string
+  // Severity of the update
+  severity string
+  // Indicates if a restart is required
+  restart bool
+  // Package format for this update
+  format string
+}
+
+// Operating system root certificates
+os.rootCertificates {
+  []certificate(content)
+  // List of files that define these certificates
+  files() []core.file
+  content(files) []string
+}
+
+// Service on this system
+service {
+  init(name string)
+  // Name of this service
+  name string
+  // Service description
+  description() string
+  // Is it installed?
+  installed() bool
+  // Is it running?
+  running() bool
+  // Is it enabled? (start at boot)
+  enabled() bool
+  // Type information
+  type() string
+  // Is it masked?
+  masked() bool
+}
+
+// Services configured on this system
+services {
+  []service
+}
+
+// Docker host resource
+docker {
+  // List all Docker images
+  images() []docker.image
+  // List all Docker containers
+  containers() []docker.container
+}
+
+// Docker image
+docker.image {
+  // Image ID
+  id string
+  // Image Size
+  size int
+  // Virtual Image Size
+  virtualsize int
+  // Tags
+  tags []string
+  // Labels
+  labels map[string]string
+}
+
+// Docker container
+docker.container {
+  // Container ID
+  id string
+  // Container Command
+  command string
+  // Container Image
+  image string
+  // Image ID
+  imageid string
+  // Container Names
+  names []string
+  // Container State
+  state string
+  // Status Message
+  status string
+  // Labels
+  labels map[string]string
+}
+
+// Windows audit policies
+auditpol {
+  []auditpol.entry
+}
+
+// Windows audit policy
+auditpol.entry {
+  // Machine name
+  machinename string
+  // Policy Target
+  policytarget string
+  // Subcategory
+  subcategory string
+  // Subcategory GUID
+  subcategoryguid string
+  // Inclusive setting
+  inclusionsetting string
+  // Exclusive settings
+  exclusionsetting string
+}
+
+// Windows local security policy
+secpol {
+  // System Access
+  systemaccess() map[string]string
+  // Event Audit
+  eventaudit() map[string]string
+  // Registry Values
+  registryvalues() map[string]string
+  // Privilege Rights
+  privilegerights() map[string][]string
+}
+
+// Shadow password suite configuration
+logindefs {
+  init(path string)
+  // Current configuration file for resource
+  file() core.file
+  // Content of the configuration file
+  content(file) string
+  // Parsed logindef parameter
+  params(content) map[string]string
+}
+
+// Unix list block devices
+lsblk {
+  []lsblk.entry
+}
+
+// Unix block device
+lsblk.entry {
+  // Device name
+  name string
+  // Filesystem Type
+  fstype string
+  // label for the fs
+  label string
+  // uuid for the fs 
+  uuid string
+  // mountpoints for the device
+  mountpoints []string
+}
+
+// Unix Mounted Filesystem
+mount {
+  []mount.point
+}
+
+// Unix mount point
+mount.point {
+  init(path string)
+  // Device
+  device string
+  // Path
+  path string
+  // Filesystem Type
+  fstype string
+  // Mount Options
+  options map[string]string
+  // Flag whether the mount point is mounted
+  mounted bool
+}
+
+// Shadowed Password File
+shadow {
+  []shadow.entry
+}
+
+// Shadowed password file entry
+shadow.entry {
+  // User
+  user string
+  // Password
+  password string
+  // Date of last password change
+  lastchanged time
+  // Minimum password age
+  mindays int
+  // Maximum password age
+  maxdays int
+  // Password warning period
+  warndays int
+  // Password inactivity period
+  inactivedays int
+  // Account expiration date
+  expirydates string
+  // Reserved field
+  reserved string
+}
+
+// Windows registry key
+registrykey {
+  init(path string)
+  path string
+  exists() bool
+  properties() map[string]string
+  children() []string
+}
+
+// Windows registry key property
+registrykey.property {
+  init(path string, name string)
+  path string
+  name string
+  value() string
+  exists() bool
+}
+
+// VMware vSphere resource
+vsphere {
+  // System information including the name, type, version, and build number
+  about() dict
+  // Configured licenses
+  licenses() []vsphere.license
+  // List of available datacenter
+  datacenters() []vsphere.datacenter
+}
+
+// vSphere license information
+vsphere.license {
+  // License name
+  name string
+  // Total licenses
+  total int
+  // Used licenses
+  used int
+}
+
+// VMware ESXi resource
+esxi {
+  // Current Targeted ESXi Host
+  host() vsphere.host
+  // Current Targeted Virtual Machine
+  vm() vsphere.vm
+}
+
+// vSphere datacenter inventory
+vsphere.datacenter {
+  // vSphere managed object ID
+  moid string
+  // vSphere datacenter name
+  name string
+  // vSphere inventory path
+  inventoryPath string
+  // Hosts in datacenter
+  hosts() []vsphere.host
+  // VMs in datacenter
+  vms() []vsphere.vm
+  // Clusters in datacenter
+  clusters() []vsphere.cluster
+}
+
+// vSphere cluster resource
+vsphere.cluster {
+  // vSphere managed object ID
+  moid string
+  // vSphere resource name
+  name string
+  // vSphere inventory path
+  inventoryPath string
+  // Cluster properties
+  properties dict
+  // ESXi hosts running in cluster
+  hosts() []vsphere.host
+}
+
+// vSphere ESXi host resource
+vsphere.host {
+  // vSphere managed object ID
+  moid string
+  // vSphere Resource Name
+  name string
+  // vSphere inventory path
+  inventoryPath string
+  // ESXi properties
+  properties dict
+  // Lists of standard virtual switches
+  standardSwitch() []vsphere.vswitch.standard
+  // Lists of distributed virtual switches
+  distributedSwitch() []vsphere.vswitch.dvs
+  // Lists physical NICs currently installed and loaded on the system
+  adapters() []vsphere.vmnic
+  // Lists of virtual network interface that is used by the VMKernel
+  vmknics() []vsphere.vmknic
+  // Lists all VIBs installed on your ESXi host
+  packages() []esxi.vib
+  // Host-level VIB acceptance level
+  acceptanceLevel() string
+  // Kernel modules (drivers) on ESXi
+  kernelModules() []esxi.kernelmodule
+  // ESXi host advanced settings
+  advancedSettings() map[string]string
+  // List of ESXi management services
+  services() []esxi.service
+  // Host timezone settings
+  timezone() esxi.timezone
+  // Host NTP configuration
+  ntp() esxi.ntpconfig
+  // Host SNMP configuration
+  snmp() map[string]string
+}
+
+// vSphere VM resource
+vsphere.vm {
+  // vSphere managed object ID
+  moid string
+  // vSphere resource name
+  name string
+  // vSphere inventory path
+  inventoryPath string
+  // Virtual machine properties
+  properties dict
+  // Virtual machine advanced properties
+  advancedSettings() map[string]string
+}
+
+// vSphere standard virtual switch 
+vsphere.vswitch.standard {
+  // Virtual switch name
+  name string
+  // Virtual switch properties
+  properties dict
+  // NIC teaming policy
+  failoverPolicy() dict
+  // Security policy
+  securityPolicy() dict
+  // Shaping policy
+  shapingPolicy() dict
+  // List of physical NICs currently configured as uplinks 
+  uplinks() []vsphere.vmnic
+}
+
+// vSphere distributed virtual switch
+vsphere.vswitch.dvs {
+  // Virtual switch name
+  name string
+  // Virtual switch properties
+  properties dict
+  // List of physical NICs currently configured as uplinks 
+  uplinks() []vsphere.vmnic
+}
+
+// vSphere ESXi physical network interface resource
+vsphere.vmnic {
+  // NIC name
+  name string
+  // NIC properties
+  properties dict
+  // Generic configuration of a network device
+  details() dict
+  // NIC pause parameters
+  pauseParams dict
+}
+
+// vSphere ESXi virtual network interface resource
+vsphere.vmknic {
+  // Interface name
+  name string
+  // Interface properties
+  properties dict
+  // IPv4 information
+  ipv4 []dict
+  // IPv6 information
+  ipv6 []dict
+  // Network interface tag
+  tags []string
+}
+
+// Run a command on ESXi
+esxi.command {
+  init(command string)
+  // vSphere inventory path
+  inventoryPath string
+  // Raw command
+  command string
+  // Command Result
+  result() []dict
+}
+
+// vSphere installation bundle resource
+esxi.vib {
+  id string
+  // Bundle name
+  name string
+  // Acceptance level
+  acceptanceLevel string
+  // Creation date
+  creationDate time
+  // Install date
+  installDate time
+  // Bundle status
+  status string
+  // Bundle vendor
+  vendor string
+  // Bundle version
+  version string
+}
+
+// vSphere ESXi kernel module resource
+esxi.kernelmodule {
+  // Module name
+  name string
+  // Module file location
+  modulefile string
+  // Module version
+  version string
+  // Flag if the module is loaded
+  loaded bool
+  // Module license
+  license string
+  // Flag if the module is enabled
+  enabled bool
+  // Module signed status
+  signedStatus string
+  // Module signed digest
+  signatureDigest string
+  // Module signed fingerprint
+  signatureFingerprint string
+  // Module acceptance level
+  vibAcceptanceLevel string
+}
+
+// vSphere ESXi management service resource
+esxi.service {
+  // Brief identifier for the service
+  key string
+  // Display label for the service
+  label string
+  // Flag indicating whether the service is required and cannot be disabled
+  required bool
+  // Deprecated: This flag is unimplemented and will always be set to false
+  uninstallable bool
+  // Flag indicating whether the service is currently running
+  running bool
+  // List of firewall rulesets used by this service
+  ruleset []string
+  // Service activation policy
+  policy string
+}
+
+// vSphere ESXi timezone resource
+esxi.timezone {
+  // Identifier for the time zone
+  key string
+  // Time zone name.
+  name string
+  // Description of the time zone
+  description string
+  // GMT offset
+  offset int
+}
+
+// vSphere ESXi NTP configuration resource
+esxi.ntpconfig {
+  id string
+  // List of time servers, specified as either IP addresses or fully qualified domain names (FQDNs)
+  server []string
+  // Content of ntp.conf host configuration file, split by lines
+  config []string
+}
+
+// Arista EOS resource
+arista.eos {
+  // EOS system configuration
+  systemConfig() map[string]string
+  // IP interfaces
+  ipInterfaces() []arista.eos.ipInterface
+  // Details related to interfaces
+  interfaces() []arista.eos.interface
+  // Software and hardware versions
+  version() dict
+  // The system hostname
+  hostname() string
+  // The systems fqdn
+  fqdn() string
+  // Local user configuration
+  users() []arista.eos.user
+  // All user-defined and built-in roles
+  roles() []arista.eos.role
+  // Details on SNMP operation
+  snmp() arista.eos.snmpSetting
+  // Show NTP status
+  ntp() arista.eos.ntpSetting
+}
+
+// Arista EOS system’s operating configuration
+arista.eos.runningConfig {
+  // returns EOS running-config
+  content() string
+}
+
+// Arista EOS system’s operating configuration for a specific section
+arista.eos.runningConfig.section {
+  // section name
+  name string
+  // returns the section from EOS running-config
+  content() string
+}
+
+// User on the local Arista EOS system
+arista.eos.user {
+  // The name of the user
+  name string
+  // Indicates if the user is able to authenticate without a password
+  privilege string
+  // User's assigned role
+  role string
+  // If the user is not password protected
+  nopassword string
+  // Specifies how the secret is encoded
+  format string
+  // The secret (password) assigned to this user
+  secret string
+  // User's sshkey
+  sshkey string
+}
+
+// Arista EOS role resource
+arista.eos.role {
+  // Name of role
+  name string
+  // Flag for default role
+  default bool
+  // List of rules that restricts access to specified commands
+  rules []dict
+}
+
+// Arista EOS SNMP information resource
+arista.eos.snmpSetting {
+  // SNMP logging status
+  enabled bool
+  // SNMP trap generation information
+  notifications() []dict
+}
+
+// Arista EOS NTP information resource
+arista.eos.ntpSetting {
+  // Status of NTP on the switch
+  status string
+}
+
+// Arista EOS interface resource
+arista.eos.interface {
+  // Interface name, link status, vlan, duplex, speed, and type of the specified interfaces
+  name string
+  // Interface bandwidth
+  bandwidth int
+  // 'burned in' address of the interface
+  burnedInAddress string
+  // Interface description
+  description string
+  // Forwarding mode
+  forwardingModel string
+  // Hardware Name
+  hardware string
+  // Interface address information
+  interfaceAddress []dict
+  // Traffic count information
+  interfaceCounters dict
+  // Interface membership
+  interfaceMembership string
+  // Interface statistics
+  interfaceStatistics dict
+  // Interface status
+  interfaceStatus string
+  // Layer 2 MTU
+  l2Mtu int
+  // Last interface change timestamp
+  lastStatusChangeTimestamp int
+  // Interface protocol status
+  lineProtocolStatus string
+  // MTU
+  mtu int
+  // MAC address of the interface
+  physicalAddress string
+  // Interface link status, vlan, duplex, speed, and type
+  status() dict
+}
+
+// Arista EOS IP interfacea
+arista.eos.ipInterface {
+  // Interface Name
+  name string
+  // IP Address
+  address string
+  // MTU
+  mtu string
+}
+
+// Arista Spanning Tree Protocol (STP) resource
+arista.eos.stp {
+  // Multiple Spanning Tree Protocol (MST) instances
+  mstInstances() []arista.eos.stp.mst
+}
+
+// Arista Multiple Spanning Tree Protocol (MSTP) resource instance
+arista.eos.stp.mst {
+  // MST instance number
+  instanceId string
+  // MST instance name
+  name string
+  // SPT protocol
+  protocol string
+  // Detailed bridge information (Forward Delay, MAC, Priority)
+  bridge dict
+  // Root bridge information
+  rootBridge dict
+  // Regional root bridge information
+  regionalRootBridge dict
+  // interfaces on the specified MST instances
+  interfaces []arista.eos.spt.mstInterface
+}
+
+// Multiple Spanning Tree Protocol (MSTP) information for a specified interface
+arista.eos.spt.mstInterface {
+  id string
+  // MST instance number
+  mstInstanceId string
+  // Name of STP instance
+  name string
+  // Interface priority
+  priority int
+  // Link type
+  linkType string
+  // Interface state
+  state string
+  // Cost value for the interface
+  cost int
+  // Rort role
+  role string
+  // Interface inconsistent features 
+  inconsistentFeatures dict
+  // Port Number
+  portNumber int
+  // Flag if it is an edge port
+  isEdgePort bool
+  // Details about Designated root, Designated bridge and Designated port
+  detail dict
+  // Interface Boundary Type
+  boundaryType string
+  // Number of BPDU transactions on this interface 
+  counters() dict
+  // Interface features: BPDU filter, specifies the BPDU reception rate & link type of the interface
+  features() dict
+}
+
+// Windows-specific resource to get operating system details
+windows {
+  // Gets a consolidated object of system and operating system properties
+  // 
+  // see https://docs.microsoft.com/en-us/dotnet/api/microsoft.powershell.commands.computerinfo?view=powershellsdk-1.1.0 for more information
+  computerInfo() dict
+
+  // Gets the hotfixes that are installed on the computer
+  hotfixes() []windows.hotfix
+
+  // Gets information about Windows Server roles, role services, and features that are available for installation and installed on a specified server.
+  features() []windows.feature
+}
+
+// Windows hotfix resource
+windows.hotfix {
+  init(hotfixId string)
+  // Hotfix id
+  hotfixId string
+  // Type of hotfix eg. `Update` or `Security Update`
+  description string
+  // Reference to knowledge base
+  caption string
+  // Date the hotfix was installed on
+  installedOn time
+  // User that installed the hotfix
+  installedBy string
+}
+
+// Windows feature resource
+windows.feature {
+  init(name string)
+  // Feature full path 
+  path string
+  // Command IDs of role, role service, or feature
+  name string
+  // Feature name
+  displayName string
+  // Feature description
+  description string
+  // Flag indicates whether the feature is installed
+  installed bool
+  // Feature installation state
+  installState int
+}
+
+// Windows Firewall resource
+windows.firewall {
+  // Global firewall settings
+  settings() dict
+
+  // Settings that apply to the per-profile configurations of the Windows Firewall with Advanced Security
+  profiles() []windows.firewall.profile
+
+  // Firewall rules
+  rules() []windows.firewall.rule
+}
+
+// Windows Firewall profile entry
+// https://docs.microsoft.com/en-us/previous-versions/windows/desktop/wfascimprov/msft-netfirewallprofile
+windows.firewall.profile {
+  instanceID string
+  // Name of the profile
+  name string
+  // Whether the firewall is enabled on this profile
+  enabled int
+  // Default action for inbound traffic
+  defaultInboundAction int
+  // Default action for outbound traffic
+  defaultOutboundAction int
+  // If this is true, administrators will be able to create firewall rules which allow unsolicited inbound traffic to be accepted if this is false, such rules will be ignored
+  allowInboundRules int
+  // Determines whether local firewall rules should be merged into the effective policy along with group policy settings
+  allowLocalFirewallRules int
+  // Determines whether local IPsec rules should be merged into the effective policy along with rules from group policy
+  allowLocalIPsecRules int
+  // Whether to respect user allowed applications created in the legacy firewall
+  allowUserApps int
+  // Whether to respect globally opened ports created in the legacy firewall
+  allowUserPorts int
+  // Whether to allow unicast responses to multicast traffic
+  allowUnicastResponseToMulticast int
+  // If true, users will be notified when an application listens on a port that is close
+  notifyOnListen int
+  // Whether to use stealth mode for IPsec-protected traffic
+  enableStealthModeForIPsec int
+  // Maximum size the log file can reach before being rotated
+  logMaxSizeKilobytes int
+  // Whether to log allowed packets
+  logAllowed int
+  // Whether to log blocked traffic
+  logBlocked int
+  // Whether to log an event when rules are ignored
+  logIgnored int
+  // Filename in which to store the firewall log
+  logFileName string
+}
+
+// Windows Firewall rule entry
+// https://docs.microsoft.com/en-us/previous-versions/windows/desktop/wfascimprov/msft-netfirewallrule
+windows.firewall.rule {
+  // A string that uniquely identifies this instance within the PolicyStore
+  instanceID string
+  // Name of the rule
+  name string
+  // Localized name of this rule
+  displayName string
+  // Brief description of the rule
+  description string
+  // The group that this rule belongs to
+  displayGroup string
+  // Indicates whether this rule is administratively enabled or disabled
+  // values: enabled (1), disabled (2)
+  enabled int
+  // Specifies which direction of traffic to match with this rule
+  // values: inbound (1), outbound (2)
+  direction int
+  // Specifies the action to take on traffic that matches this rule
+  action int
+  // Specifies how this firewall rule will handle edge traversal cases
+  // values: block (0), allow (1), defer to user (2), defer to app (3)
+  edgeTraversalPolicy int
+  // Whether to group UDP packets into conversations based upon the local address, local port, and remote port
+  looseSourceMapping bool
+  // Whether to group UDP packets into conversations based only upon the local address and port
+  localOnlyMapping bool
+  // PrimaryStatus provides a high level status value
+  // values: unknown (0), ok (1), degraded (2), error (3)
+  primaryStatus int
+  // Detailed status of the rule
+  status string
+  // If this object is retrieved from the ActiveStore
+  enforcementStatus string
+  // Contains the path to the policy store where this rule originally came from
+  policyStoreSource string
+  // Describes the type of policy store where this rule originally came from
+  policyStoreSourceType int
+}
+
+// Windows BitLocker
+windows.bitlocker {
+  volumes() []windows.bitlocker.volume
+}
+
+// Windows BitLocker volume
+windows.bitlocker.volume {
+  // Unique identifier for the volume
+  deviceID string
+  // Drive letter of the volume
+  driveLetter string
+  // Indicates the status of the encryption or decryption on the volume
+  conversionStatus dict
+  // Encryption algorithm and key size used on the volume
+  encryptionMethod dict
+  // Indicates whether the contents of the volume are accessible from Windows
+  // 0 = full contents of the volume are accessible
+  // 1 = all or a portion of the contents of the volume are not accessible
+  lockStatus int
+  // Persistent identifier for the volume on this system
+  persistentVolumeID string
+  // Status of the volume, whether or not BitLocker is protecting the volume
+  // 0 = Protection Off
+  // 1 = Protection On
+  // 2 = Protection Unknown
+  protectionStatus dict
+  // BitLocker Full Volume Encryption metadata version of the volume
+  version dict
+}
+
+windows.security {
+  products() []windows.security.product
+}
+
+private windows.security.product {
+  type string
+  guid string
+  name string
+  state int
+  productState string
+  signatureState string
+  timestamp time
+}
+
+// Returns the health for Windows security provider
+windows.security.health {
+  firewall dict
+  autoUpdate dict
+  antiVirus dict
+  antiSpyware dict
+  internetSettings dict
+  uac dict
+  securityCenterService dict
+}
+
+// Yum package manager resource
+yum {
+  // variables defined built-in in Yum configuration files (/etc/yum.conf and all .repo files in the /etc/yum.repos.d/)
+  vars() map[string]string
+  // List of all configured yum repositories
+  repos() []yum.repo
+}
+
+// Yum repository resource
+yum.repo {
+  init(id string)
+  id string
+  // human-readable repository name
+  name string
+  // repository status
+  status string
+  // URL where the repodata directory of a repository is located
+  baseurl []string
+  // indicator when the repository will expire
+  expire string
+  // Deprecated: location of the repo configuration file, use file.path
+  filename string
+  // file of the repo configuration file
+  file core.file
+  // revision for this repository
+  revision string
+  // packages in repository
+  pkgs string
+  // file size of this repository
+  size string
+  // mirrors for this repository
+  mirrors string
+  // indicates if this repository is used as package source
+  enabled() bool
+}
+
+// Equinix Metal project
+equinix.metal.project {
+  id string
+  name string
+  organization() equinix.metal.organization
+  createdAt time
+  updatedAt time
+  url string
+  paymentMethod dict
+  users() []equinix.metal.user
+  sshKeys() []equinix.metal.sshkey
+  devices() []equinix.metal.device
+}
+
+// Equinix Metal organization
+equinix.metal.organization {
+  id string
+  name string
+  description string
+  website string
+  twitter string
+  createdAt time
+  updatedAt time
+  address dict
+  taxId string
+  mainPhone string
+  billingPhone string
+  creditAmount float
+  url string
+}
+
+// Equinix Metal user
+equinix.metal.user {
+  id string
+  firstName string
+  lastName string
+  fullName string
+  email string
+  twoFactorAuth string
+  avatarUrl string
+  twitter string
+  facebook string
+  linkedin string
+  createdAt time
+  updatedAt time
+  timezone string
+  phoneNumber string
+  url string
+  vpn bool
+}
+
+// Equinix Metal SSH key
+equinix.metal.sshkey {
+  id string
+  label string
+  key string
+  fingerPrint string
+  createdAt time
+  updatedAt time
+  url string
+}
+
+// Equinix Metal device
+equinix.metal.device {
+  id string
+  shortID string
+  url string
+  hostname string
+  description string
+  state string
+  createdAt time
+  updatedAt time
+  locked bool
+  billingCycle string
+  spotInstance bool
+  os dict
+}
+
+// Kubernetes cluster
+k8s {
+  // Available Resource Types
+  apiResources() []k8s.apiresource
+  // Cluster Nodes
+  nodes() []k8s.node
+  // Cluster Namespaces
+  namespaces() []k8s.namespace
+  // Cluster Pods
+  pods() []k8s.pod
+  // Cluster Deployments
+  deployments() []k8s.deployment
+  // Cluster DaemonSets
+  daemonsets() []k8s.daemonset
+  // Cluster StatefulSets
+  statefulsets() []k8s.statefulset
+  // Cluster ReplicaSets
+  replicasets() []k8s.replicaset
+  // Cluster Jobs
+  jobs() []k8s.job
+  // Cluster CronJobs
+  cronjobs() []k8s.cronjob
+  // Cluster Secrets
+  secrets() []k8s.secret
+  // Cluster Version
+  serverVersion() dict
+  // Kubernetes PodSecurityPolicy's
+  podSecurityPolicies() []k8s.podsecuritypolicy
+  // Config Maps
+  configmaps() []k8s.configmap
+  // Kubernetes Services
+  services() []k8s.service
+  // Kubernetes Network Polices
+  networkPolicies() []k8s.networkpolicy
+  // Kubernetes Service Accounts
+  serviceaccounts() []k8s.serviceaccount
+  // Kubernetes RBAC Cluster Roles
+  clusterroles() []k8s.rbac.clusterrole
+  // Kubernetes RBAC Roles
+  roles() []k8s.rbac.role
+  // Kubernetes RBAC Cluster Role Bindings
+  clusterrolebindings() []k8s.rbac.clusterrolebinding
+  // Kubernetes RBAC Role Bindings
+  rolebindings() []k8s.rbac.rolebinding
+  // Kubernetes custom resources
+  customresources() []k8s.customresource
+}
+
+// Kubernetes API Resources
+k8s.apiresource {
+  // plural name of the resource
+  name string
+  // singular name of the resource
+  singularName string
+  // indicates if a resource is namespaced or not
+  namespaced bool
+  // preferred group of the resource
+  group string
+  // preferred version of the resource
+  version string
+  // Kubernetes Object Type
+  kind string
+  // List of suggested short names of the resource
+  shortNames []string
+  // List of the grouped resources
+  categories []string
+}
+
+// Kubernetes node
+k8s.node {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // plural name of the resource
+  name string
+  // Kubernetes Object Type
+  kind string
+}
+
+// Kubernetes Namespace
+k8s.namespace {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+}
+
+// Kubernetes Pod
+k8s.pod {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Version
+  apiVersion string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // PodSpec is a description of a pod
+  podSpec dict
+  // Init containers
+  initContainers() []k8s.initContainer
+  // Contained Containers
+  containers() []k8s.container
+  // Node the pod runs on
+  node() k8s.node
+}
+
+// Container Image
+container.image {
+  // Fully-qualified reference name
+  name string
+  // Identifier of type-specific portion of the image reference
+  identifier string
+  // Identifier Type `tag` or `digest`
+  identifierType string
+  // Repository used for Container Image
+  repository() container.repository
+}
+
+// Container registry repository
+container.repository {
+  // Container Registry Repository Name
+  name string
+  // URL Scheme
+  scheme string
+  // Container Registry Repository URL
+  fullName string
+  // Container Registry URL
+  registry string
+}
+
+// Kubernetes workload container
+private k8s.container {
+  uid string
+  // Name of the container
+  name string
+  // Container image name
+  imageName string
+  // deprecated, use imageName
+  image string
+  // Container image
+  containerImage() container.image
+  // Entrypoint array
+  command []string
+  // Arguments to the entrypoint
+  args []string
+  // Compute Resources required by this container
+  resources dict
+  // Pod volumes to mount into the container's filesystem
+  volumeMounts []dict
+  // volumeDevices is the list of block devices to be used by the container
+  volumeDevices []dict
+  // Periodic probe of container liveness
+  livenessProbe dict
+  // Periodic probe of container service readiness
+  readinessProbe dict
+  // Image pull policy, One of Always, Never, IfNotPresent
+  imagePullPolicy string
+  // Security options the pod should run with
+  securityContext dict
+  // Container's working directory
+  workingDir string
+  // Whether this container should allocate a TTY for itself
+  tty bool
+}
+
+// Kubernetes Init Container
+private k8s.initContainer {
+  uid string
+  // Name of the container
+  name string
+  // Container image name
+  imageName string
+  // deprecated, use imageName
+  image string
+  // Container image
+  containerImage() container.image
+  // Entrypoint array
+  command []string
+  // Arguments to the entrypoint
+  args []string
+  // Compute Resources required by this container
+  resources dict
+  // Pod volumes to mount into the container's filesystem
+  volumeMounts []dict
+  // volumeDevices is the list of block devices to be used by the container
+  volumeDevices []dict
+  // Image pull policy, One of Always, Never, IfNotPresent
+  imagePullPolicy string
+  // Security options the pod should run with
+  securityContext dict
+  // Container's working directory
+  workingDir string
+  // Whether this container should allocate a TTY for itself
+  tty bool
+}
+
+// Kubernetes Deployment
+k8s.deployment {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // PodSpec is a description of a pod
+  podSpec dict
+  // Init containers
+  initContainers() []k8s.initContainer
+  // Contained Containers
+  containers() []k8s.container
+}
+
+// Kubernetes DaemonSet
+k8s.daemonset {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // PodSpec is a description of a pod
+  podSpec dict
+  // Init containers
+  initContainers() []k8s.initContainer
+  // Contained Containers
+  containers() []k8s.container
+}
+
+// Kubernetes StatefulSet
+k8s.statefulset {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // PodSpec is a description of a pod
+  podSpec dict
+  // Init containers
+  initContainers() []k8s.initContainer
+  // Contained Containers
+  containers() []k8s.container
+}
+
+// Kubernetes ReplicaSet
+k8s.replicaset {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // PodSpec is a description of a pod
+  podSpec dict
+  // Init containers
+  initContainers() []k8s.initContainer
+  // Contained Containers
+  containers() []k8s.container
+}
+
+// Kubernetes Job
+k8s.job {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // PodSpec is a description of a pod
+  podSpec dict
+  // Init containers
+  initContainers() []k8s.initContainer
+  // Contained Containers
+  containers() []k8s.container
+}
+
+// Kubernetes CronJob
+k8s.cronjob {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // PodSpec is a description of a pod
+  podSpec dict
+  // Init containers
+  initContainers() []k8s.initContainer
+  // Contained Containers
+  containers() []k8s.container
+}
+
+// Kubernetes Secret
+k8s.secret {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Secret type
+  type string
+  // Secret certificates
+  certificates() []certificate
+}
+
+// Kubernetes PodSecurityPolicy (deprecated as of Kubernetes v1.21)
+k8s.podsecuritypolicy {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Policy Spec
+  spec dict
+}
+
+// Kubernetes ConfigMap
+k8s.configmap {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Configuration data
+  data map[string]string
+}
+
+// Kubernetes Service
+k8s.service {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Service Spec
+  spec dict
+}
+
+// Kubernetes Network Policy
+k8s.networkpolicy {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Network Policy Spec
+  spec dict
+}
+
+// Kubernetes Service Account
+k8s.serviceaccount {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Secrets is the list of secrets allowed to be used by pods running using this ServiceAccount
+  secrets []dict
+  // ImagePullSecrets is a list of references to secrets in the same namespace to use for pulling any images
+  imagePullSecrets []dict
+  // AutomountServiceAccountToken indicates whether pods running as this service account should have an API token automatically mounted
+  automountServiceAccountToken bool
+}
+
+// Kubernetes ClusterRole
+k8s.rbac.clusterrole {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Cluster Role Rules
+  rules []dict
+  // Cluster Role Aggregation Rule
+  aggregationRule dict
+}
+
+// Kubernetes Role
+k8s.rbac.role {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Cluster Role Rules
+  rules []dict
+}
+
+// Kubernetes ClusterRoleBinding
+k8s.rbac.clusterrolebinding {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Subjects holds references to the objects the role applies to
+  subjects []dict
+  // RoleRef can only reference a ClusterRole in the global namespace
+  roleRef dict
+}
+
+// Kubernetes RoleBinding
+k8s.rbac.rolebinding {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Subjects holds references to the objects the role applies to
+  subjects []dict
+  // RoleRef can only reference a ClusterRole in the global namespace
+  roleRef dict
+}
+
+// Kubernetes CustomResource
+k8s.customresource {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+}
+
+// macOS specific resources
+macos {
+  // macOS user defaults
+  userPreferences() map[string]dict
+  // macOS user defaults for current host
+  userHostPreferences() map[string]dict
+  // macOS global account policies
+  globalAccountPolicies() dict
+}
+
+// macOS application layer firewall (ALF) service
+macos.alf {
+  // Allow downloaded software to receive incoming connections
+  allowDownloadSignedEnabled int
+  // Allow built-in software to receive incoming connections for signed software
+  allowSignedEnabled int
+  // Flag if firewall is unloaded
+  firewallUnload int
+  // Indicates if the firewall is enabled
+  globalState int
+  // Specifies if alf.log is used
+  loggingEnabled int
+  // Specifies logging flags
+  loggingOption int
+  // Stealth mode
+  stealthEnabled int
+  // ALF version
+  version string
+  // Service exceptions
+  expections []dict
+  // Services explicitly allowed to perform networking
+  explicitAuths []string
+  // Applications with exceptions for network blocking
+  applications []dict
+}
+
+// macOS machine settings
+// The resource requires at least "admin" privileges to run
+macos.systemsetup {
+  // Current date
+  date() string
+  // Current time in 24-hour format
+  time() string
+  // Current time zone
+  timeZone() string
+  // Whether network time is on or off
+  usingNetworkTime() string
+  // Configured network time server
+  networkTimeServer() string
+  // Amount of idle time until machine sleeps
+  sleep() []string
+  // Amount of idle time until display sleeps
+  displaySleep() string
+  // Amount of idle time until hard disk sleeps
+  harddiskSleep() string
+  // Whether wake on modem is on or off
+  wakeOnModem() string
+  // Whether wake on network access is on or off
+  wakeOnNetworkAccess() string
+  // Whether restart on power failure is on or off
+  restartPowerFailure() string
+  // Whether restart on freeze is on or off
+  restartFreeze() string
+  // Whether the power button can sleep the computer
+  allowPowerButtonToSleepComputer() string
+  // Whether remote login (SSH) is on or off
+  remoteLogin() string
+  // Whether remote apple events are on or off
+  remoteAppleEvents() string
+  // Computer name
+  computerName() string
+  // Local subnet name
+  localSubnetName() string
+  // Current startup disk
+  startupDisk() string
+  // Number of seconds after which the computer will start up after a power failure
+  waitForStartupAfterPowerFailure() string
+  // Whether or not the keyboard should be disabled when the X Serve enclosure lock is engaged
+  disableKeyboardWhenEnclosureLockIsEngaged() string
+}
+
+// macOS time machine
+macos.timemachine {
+  // macOS Time Machine preferences
+  preferences() dict
+}
+
+// macOS keychains and Security framework
+macos.security {
+  // Deprecated: Authorization policy database
+  authorizationDB() dict
+}
+
+//ipv4 tables
+iptables {
+  //ipv4 input chain stats
+  input() []iptables.entry
+  //ipv4 output chain stats
+  output() []iptables.entry
+}
+
+//ipv6 tables
+ip6tables {
+  //ipv6 input chain stats
+  input() []iptables.entry
+  //ipv6 output chain stats
+  output() []iptables.entry
+}
+
+iptables.entry {
+  //Line number of statistic - used to create id
+  lineNumber int
+  //packets from iptable
+  packets int
+  //This field tells us how large the packet is in octets, including headers and everything.
+  bytes int
+  //If a packet matches the rule, the target specifies what should be done with it.
+  target string
+  //protocol of the next level layer. For example, this may be TCP, UDP or ICMP among others.
+  protocol string
+  //indicates IP options
+  opt string
+  //input
+  in string
+  //output
+  out string
+  //source address field that lets the receiver know where the packet came from.
+  source string
+  //The destination IP address or subnet of the traffic, or anywhere
+  destination string
+  //The options field contains different optional settings within the header,
+  //such as Internet timestamps, SACK or record route options. 
+  options string
+  //input or output - used to create id
+  chain string
+}
+

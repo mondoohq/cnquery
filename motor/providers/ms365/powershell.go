@@ -5,7 +5,7 @@ import (
 	"errors"
 	"os"
 
-	ms356_resources "go.mondoo.io/mondoo/lumi/resources/ms365"
+	ms356_resources "go.mondoo.io/mondoo/resources/packs/services/ms365"
 )
 
 // NOTE: this is a temporary solution and will be replaced with logic that calls powershell directly and

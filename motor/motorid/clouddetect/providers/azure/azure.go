@@ -3,13 +3,12 @@ package azure
 import (
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/lumi/resources/smbios"
 	"go.mondoo.io/mondoo/motor/motorid/azcompute"
 	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.io/mondoo/resources/packs/os/smbios"
 )
 
 const (

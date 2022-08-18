@@ -2,24 +2,33 @@ package lr
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/types"
 )
 
 type goBuilder struct {
-	data      string
-	collector *Collector
+	data       string
+	collector  *Collector
+	ast        *LR
+	errors     error
+	packsInUse map[string]struct{}
 }
 
 // Go produced go code for the LR file
-func Go(ast *LR, collector *Collector) (string, error) {
-	o := goBuilder{collector: collector}
-	o.data += goHeader
+func Go(packageName string, ast *LR, collector *Collector) (string, error) {
+	o := goBuilder{
+		collector:  collector,
+		ast:        ast,
+		packsInUse: map[string]struct{}{},
+	}
+
 	o.goRegistryInit(ast.Resources)
 
 	for i := range ast.Resources {
@@ -29,13 +38,24 @@ func Go(ast *LR, collector *Collector) (string, error) {
 		}
 	}
 
-	return o.data, nil
+	imports := ""
+	for packName := range o.packsInUse {
+		importPath, ok := ast.packPaths[packName]
+		if !ok {
+			return "", errors.New("cannot find import path for pack: " + packName)
+		}
+
+		imports += "\n\t" + strconv.Quote(importPath)
+	}
+
+	header := fmt.Sprintf(goHeader, packageName, imports)
+	return header + o.data, nil
 }
 
 func (b *goBuilder) goRegistryInit(r []*Resource) {
 	arr := []string{}
 	for i := range r {
-		arr = append(arr, "registry.AddFactory("+strconv.Quote(r[i].ID)+", new"+r[i].interfaceName()+")")
+		arr = append(arr, "registry.AddFactory("+strconv.Quote(r[i].ID)+", new"+r[i].interfaceName(b)+")")
 	}
 	res := strings.Join(arr, "\n")
 
@@ -79,7 +99,7 @@ func (b *goBuilder) goResource(r *Resource) error {
 func (b *goBuilder) goInterface(r *Resource) {
 	fields := ""
 	for _, f := range r.Body.Fields {
-		fields += "\t" + f.methodname() + "() (" + f.Type.goType() + ", error)\n"
+		fields += "\t" + f.methodname() + "() (" + f.Type.goType(b) + ", error)\n"
 	}
 
 	b.data += fmt.Sprintf(`// %s resource interface
@@ -91,7 +111,7 @@ type %s interface {
 	Validate() error
 %s}
 
-`, r.interfaceName(), r.interfaceName(), fields)
+`, r.interfaceName(b), r.interfaceName(b), fields)
 }
 
 func (b *goBuilder) goStruct(r *Resource) {
@@ -100,14 +120,14 @@ type %s struct {
 	*lumi.Resource
 }
 
-`, r.structName(), r.ID, r.structName())
+`, r.structName(b), r.ID, r.structName(b))
 
 	b.data += fmt.Sprintf(`// LumiResource to retrieve the underlying resource info
 func (s *%s) LumiResource() *lumi.Resource {
 	return s.Resource
 }
 
-`, r.structName())
+`, r.structName(b))
 }
 
 func (b *goBuilder) goFactory(r *Resource) {
@@ -117,7 +137,7 @@ func (b *goBuilder) goFactory(r *Resource) {
 			if _, ok := val.(%s); !ok {
 				return nil, errors.New("Failed to initialize \"%s\", its \"%s\" argument has the wrong type (expected type \"%s\")")
 			}
-`, f.ID, f.Type.goType(), r.ID, f.ID, f.Type.goType())
+`, f.ID, f.Type.goType(b), r.ID, f.ID, f.Type.goType(b))
 	}
 
 	required := ""
@@ -132,12 +152,12 @@ func (b *goBuilder) goFactory(r *Resource) {
 `, f.ID, r.ID, f.ID)
 	}
 
-	hasInit := b.collector.HasInit(r.structName())
-	log.Debug().Bool("init", hasInit).Msg("dynamic calls for " + r.interfaceName())
+	hasInit := b.collector.HasInit(r.structName(b))
+	log.Debug().Bool("init", hasInit).Msg("dynamic calls for " + r.interfaceName(b))
 
 	initcall := ""
-	if b.collector.HasInit(r.structName()) {
-		initcall = `var existing ` + r.interfaceName() + `
+	if b.collector.HasInit(r.structName(b)) {
+		initcall = `var existing ` + r.interfaceName(b) + `
 	args, existing, err = res.init(args)
 	if err != nil {
 		return nil, err
@@ -150,10 +170,10 @@ func (b *goBuilder) goFactory(r *Resource) {
 	}
 
 	b.data += `// create a new instance of the ` + r.ID + ` resource
-func new` + r.interfaceName() + `(runtime *lumi.Runtime, args *lumi.Args) (interface{}, error) {
+func new` + r.interfaceName(b) + `(runtime *lumi.Runtime, args *lumi.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := ` + r.structName() + `{runtime.NewResource("` + r.ID + `")}
+	res := ` + r.structName(b) + `{runtime.NewResource("` + r.ID + `")}
 	` + initcall + `// assign all named fields
 	var id string
 
@@ -190,7 +210,7 @@ func new` + r.interfaceName() + `(runtime *lumi.Runtime, args *lumi.Args) (inter
 	return &res, nil
 }
 
-func (s *` + r.structName() + `) Validate() error {
+func (s *` + r.structName(b) + `) Validate() error {
 	// required arguments
 ` + required + `
 	return nil
@@ -243,7 +263,7 @@ func (s *%s) Register(name string) error {
 	}
 }
 
-`, r.structName(), r.ID, strings.Join(fields, ""), r.ID)
+`, r.structName(b), r.ID, strings.Join(fields, ""), r.ID)
 }
 
 func (b *goBuilder) goField(r *Resource) {
@@ -262,7 +282,7 @@ func (s *%s) Field(name string) (interface{}, error) {
 	}
 }
 
-`, r.structName(), r.ID, strings.Join(caseField, ""), r.ID)
+`, r.structName(b), r.ID, strings.Join(caseField, ""), r.ID)
 
 	for i := range r.Body.Fields {
 		f := r.Body.Fields[i]
@@ -296,7 +316,7 @@ func (s *%s) Compute(name string) error {
 	}
 }
 
-`, r.structName(), r.ID, strings.Join(caseField, ""), r.ID)
+`, r.structName(b), r.ID, strings.Join(caseField, ""), r.ID)
 
 	for i := range r.Body.Fields {
 		f := r.Body.Fields[i]
@@ -347,11 +367,11 @@ func (s *%s) %s() (%s, error) {
 }
 
 `, f.goName(),
-		r.structName(), f.goName(), f.Type.goType(),
+		r.structName(b), f.goName(), f.Type.goType(b),
 		f.ID, notFound,
 		f.Type.goZeroValue(),
-		f.Type.goType(),
-		f.Type.goZeroValue(), r.ID, f.ID, f.Type.goType())
+		f.Type.goType(b),
+		f.Type.goZeroValue(), r.ID, f.ID, f.Type.goType(b))
 }
 
 func (b *goBuilder) goFieldComputer(r *Resource, f *Field) {
@@ -363,7 +383,7 @@ func (b *goBuilder) goFieldComputer(r *Resource, f *Field) {
 	args := make([]string, len(f.Args.List))
 
 	for i, arg := range f.Args.List {
-		args[i] = "varg" + arg.goType()
+		args[i] = "varg" + arg.goType(b)
 		argGetters += fmt.Sprintf(`	varg%s, err := s.%s()
 	if err != nil {
 		if _, ok := err.(lumi.NotReadyError); ok {
@@ -372,7 +392,7 @@ func (b *goBuilder) goFieldComputer(r *Resource, f *Field) {
 		s.Cache.Store("%s", &lumi.CacheEntry{Valid: true, Error: err, Timestamp: time.Now().Unix()})
 		return nil
 	}
-`, arg.goType(), arg.goType(), f.ID)
+`, arg.goType(b), arg.goType(b), f.ID)
 	}
 
 	// for fields that only compute a default value, only do this once
@@ -394,11 +414,11 @@ func (s *%s) Compute%s() error {
 	return nil
 }
 
-`, f.goName(), r.structName(), f.goName(), argGetters, f.goName(), strings.Join(args, ", "), f.ID)
+`, f.goName(), r.structName(b), f.goName(), argGetters, f.goName(), strings.Join(args, ", "), f.ID)
 }
 
 const goHeader = `// Code generated by lumi. DO NOT EDIT.
-package resources
+package %s
 
 import (
 	"errors"
@@ -406,7 +426,7 @@ import (
 	"time"
 
 	"go.mondoo.io/mondoo/lumi"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"%s
 )
 
 `
@@ -421,8 +441,8 @@ func indent(s string, depth int) string {
 	return space + strings.Replace(s, "\n", "\n"+space, -1)
 }
 
-func (r *Resource) structName() string {
-	return "lumi" + r.interfaceName()
+func (r *Resource) structName(b *goBuilder) string {
+	return "lumi" + r.interfaceName(b)
 }
 
 var reMethodName = regexp.MustCompile("\\.[a-z]")
@@ -431,13 +451,33 @@ func capitalizeDot(in []byte) []byte {
 	return bytes.ToUpper([]byte{in[1]})
 }
 
-func (r *Resource) interfaceName() string {
-	return resource2goname(r.ID)
+func (r *Resource) interfaceName(b *goBuilder) string {
+	return resource2goname(r.ID, b)
 }
 
-func resource2goname(s string) string {
-	cleaned := reMethodName.ReplaceAllFunc([]byte(s), capitalizeDot)
-	return strings.Title(string(cleaned))
+func resource2goname(s string, b *goBuilder) string {
+	pack := strings.SplitN(s, ".", 2)
+	var name string
+	if pack[0] != s {
+		resources, ok := b.ast.imports[pack[0]]
+		if ok {
+			if _, ok := resources[pack[1]]; !ok {
+				b.errors = multierror.Append(b.errors,
+					errors.New("cannot find resource "+pack[1]+" in imported resource pack "+pack[0]))
+			}
+			name = pack[0] + "." + strings.Title(string(
+				reMethodName.ReplaceAllFunc([]byte(pack[1]), capitalizeDot),
+			))
+			b.packsInUse[pack[0]] = struct{}{}
+		}
+	}
+	if name == "" {
+		name = strings.Title(string(
+			reMethodName.ReplaceAllFunc([]byte(s), capitalizeDot),
+		))
+	}
+
+	return name
 }
 
 func (b *ResourceDef) staticFields() []*Field {
@@ -463,29 +503,30 @@ func (f *Field) methodname() string {
 	return strings.Title(f.ID)
 }
 
-// Retrieve the raw mondoo equivalent type
-func (t *Type) Type() types.Type {
+// Retrieve the raw mondoo equivalent type, which can be looked up
+// as a resource.
+func (t *Type) Type(ast *LR) types.Type {
 	if t.SimpleType != nil {
-		return t.SimpleType.typeItems()
+		return t.SimpleType.typeItems(ast)
 	}
 	if t.ListType != nil {
-		return t.ListType.typeItems()
+		return t.ListType.typeItems(ast)
 	}
 	if t.MapType != nil {
-		return t.MapType.typeItems()
+		return t.MapType.typeItems(ast)
 	}
 	return types.Any
 }
 
-func (t *MapType) typeItems() types.Type {
-	return types.Map(t.Key.typeItems(), t.Value.Type())
+func (t *MapType) typeItems(ast *LR) types.Type {
+	return types.Map(t.Key.typeItems(ast), t.Value.Type(ast))
 }
 
-func (t *ListType) typeItems() types.Type {
-	return types.Array(t.Type.Type())
+func (t *ListType) typeItems(ast *LR) types.Type {
+	return types.Array(t.Type.Type(ast))
 }
 
-func (t *SimpleType) typeItems() types.Type {
+func (t *SimpleType) typeItems(ast *LR) types.Type {
 	switch t.Type {
 	case "bool":
 		return types.Bool
@@ -502,15 +543,30 @@ func (t *SimpleType) typeItems() types.Type {
 	case "dict":
 		return types.Dict
 	default:
-		return types.Resource(t.Type)
+		return resourceType(t.Type, ast)
+	}
+}
+
+// Try to build an MQL resource from the given name. It may or may not exist in
+// a pack. If it doesn't exist at all
+func resourceType(name string, ast *LR) types.Type {
+	pack := strings.SplitN(name, ".", 2)
+	if pack[0] != name {
+		resources, ok := ast.imports[pack[0]]
+		if ok {
+			if _, ok := resources[pack[1]]; ok {
+				return types.Resource(pack[1])
+			}
+		}
 	}
 
-	// TODO: check that this type if a proper resource
-	// panic("Cannot convert type '" + t.Type + "' to mondoo type")
+	// TODO: look up resources in the current registry and notify if they are not found
+
+	return types.Resource(name)
 }
 
 // Retrieve the mondoo equivalent of the type. This is a stringified type
-// that can be pushed back into a file.
+// i.e. it can be compiled with the MQL imports
 func (t *Type) mondooType() string {
 	i := t.mondooTypeItems()
 	if i == "" {
@@ -566,23 +622,23 @@ func (t *SimpleType) mondooTypeItems() string {
 
 // The go type is the golang-equivalent code type, i.e. the type of the
 // actual objects that are being moved around.
-func (t *Type) goType() string {
+func (t *Type) goType(b *goBuilder) string {
 	if t.SimpleType != nil {
-		return t.SimpleType.goType()
+		return t.SimpleType.goType(b)
 	}
 	if t.ListType != nil {
 		return t.ListType.goType()
 	}
 	if t.MapType != nil {
-		return t.MapType.goType()
+		return t.MapType.goType(b)
 	}
 	return "NO_TYPE_DETECTED"
 }
 
-func (t *MapType) goType() string {
+func (t *MapType) goType(b *goBuilder) string {
 	// limited to interface{} because we cannot cast as universally
 	// between types yet
-	return "map[" + t.Key.goType() + "]interface{}"
+	return "map[" + t.Key.goType(b) + "]interface{}"
 }
 
 func (t *ListType) goType() string {
@@ -601,14 +657,14 @@ var primitiveTypes = map[string]string{
 	"any":    "interface{}",
 }
 
-func (t *SimpleType) goType() string {
+func (t *SimpleType) goType(b *goBuilder) string {
 	pt, ok := primitiveTypes[t.Type]
 	if ok {
 		return pt
 	}
 
 	// TODO: check if the resource exists
-	return resource2goname(t.Type)
+	return resource2goname(t.Type, b)
 }
 
 func (t *Type) goZeroValue() string {

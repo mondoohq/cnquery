@@ -28,10 +28,28 @@ func (b *Bool) Capture(values []string) error {
 	return nil
 }
 
+type Map map[string]string
+
+func (m *Map) Capture(values []string) error {
+	if len(values) == 0 {
+		return nil
+	}
+
+	if *m == nil {
+		*m = map[string]string{}
+	}
+	(*m)[values[0]] = values[2]
+	return nil
+}
+
 // LR are lumi resources parsed into an AST
 // nolint: govet
 type LR struct {
+	Imports   []string    `{ "import" @String }`
+	Options   Map         `{ "option" @(Ident '=' String) }`
 	Resources []*Resource `{ @@ }`
+	imports   map[string]map[string]struct{}
+	packPaths map[string]string
 }
 
 // Resource in LR

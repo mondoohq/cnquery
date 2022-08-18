@@ -2,13 +2,13 @@ package k8s
 
 import (
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi/resources/kubectl"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/platform/detector"
 	"go.mondoo.io/mondoo/motor/providers"
 	k8s_provider "go.mondoo.io/mondoo/motor/providers/k8s"
 	"go.mondoo.io/mondoo/motor/providers/local"
+	"go.mondoo.io/mondoo/resources/packs/os/kubectl"
 )
 
 const (
