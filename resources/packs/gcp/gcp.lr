@@ -1,0 +1,100 @@
+option go_package = "go.mondoo.io/mondoo/resources/packs/gcp"
+
+// GCP Cloud organization
+gcloud.organization {
+  id() string
+  name() string
+  lifecycleState() string
+  iamPolicy() []gcloud.resourcemanager.binding
+}
+
+// GCP Cloud Project
+gcloud.project {
+  id() string
+  name() string
+  number() string
+  lifecycleState() string
+  createTime() time
+  labels() map[string]string
+  iamPolicy() []gcloud.resourcemanager.binding
+}
+
+// GCP Resource Manager Binding
+gcloud.resourcemanager.binding {
+  id string
+  members []string
+  role string
+}
+
+// GCP Compute
+gcloud.compute {
+  // displays all Google Compute Engine instances in a project
+  instances() []gcloud.compute.instance
+}
+
+// GCP Compute Instances
+gcloud.compute.instance {
+  id string
+  name string
+  cpuPlatform string
+  deletionProtection bool
+  description string
+  hostname string
+  labels map[string]string
+  status string
+  statusMessage string
+  tags []string
+  metadata map[string]string
+  serviceAccounts []gcloud.compute.serviceaccount
+}
+
+// GCP Compute Service Account
+gcloud.compute.serviceaccount {
+  email string
+  scopes []string
+}
+
+// GCP Cloud Storage
+gcloud.storage {
+  // List all buckets
+  buckets() []gcloud.storage.bucket
+}
+
+// GCP Cloud Storage Bucket
+gcloud.storage.bucket {
+  id string
+  name string
+  kind string
+  labels map[string]string
+  location string
+  locationType string
+  projectNumber string
+  storageClass string
+  created time
+  updated time
+  iamPolicy() []gcloud.resourcemanager.binding
+  iamConfiguration dict
+}
+
+// GCP Cloud SQL
+gcloud.sql {
+  instances() []gcloud.sql.instance
+}
+
+// GCP Cloud SQL Instance
+gcloud.sql.instance {
+  name string
+  backendType string
+  connectionName string
+  databaseVersion string
+  gceZone string
+  instanceType string
+  kind string
+  currentDiskSize int
+  maxDiskSize int
+  state string
+  project string
+  region string
+  serviceAccountEmailAddress string
+  settings dict
+}

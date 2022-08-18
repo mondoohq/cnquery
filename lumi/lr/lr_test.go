@@ -183,28 +183,40 @@ func TestParse(t *testing.T) {
 	})
 }
 
-func TestParseCoreLR(t *testing.T) {
-	path := "../resources/core.lr"
-	raw, err := ioutil.ReadFile(path)
-	if err != nil {
-		t.Fatal("failed to load core.lr: " + err.Error())
+func TestParseLR(t *testing.T) {
+	files := []string{
+		"core/core.lr",
+		"os/os.lr",
 	}
 
-	res, err := Parse(string(raw))
-	if err != nil {
-		t.Fatal("failed to compile core.lr: " + err.Error())
-	}
+	for i := range files {
+		lrPath := files[i]
+		absPath := "../../resources/packs/" + lrPath
 
-	collector := NewCollector(path)
-	godata, err := Go(res, collector)
-	if err != nil {
-		t.Fatal("failed to go-convert core.lr: " + err.Error())
-	}
-	assert.NotEmpty(t, godata)
+		t.Run(lrPath, func(t *testing.T) {
+			res, err := Resolve(absPath, func(path string) ([]byte, error) {
+				raw, err := ioutil.ReadFile(path)
+				if err != nil {
+					t.Fatal("failed to load " + path + ":" + err.Error())
+				}
+				return raw, err
+			})
+			if err != nil {
+				t.Fatal("failed to compile " + lrPath + ":" + err.Error())
+			}
 
-	schema, err := Schema(res, collector)
-	if err != nil {
-		t.Fatal("failed to generate schema for core.lr: " + err.Error())
+			collector := NewCollector(absPath)
+			godata, err := Go("resources", res, collector)
+			if err != nil {
+				t.Fatal("failed to go-convert " + lrPath + ":" + err.Error())
+			}
+			assert.NotEmpty(t, godata)
+
+			schema, err := Schema(res)
+			if err != nil {
+				t.Fatal("failed to generate schema for " + lrPath + ":" + err.Error())
+			}
+			assert.NotEmpty(t, schema)
+		})
 	}
-	assert.NotEmpty(t, schema)
 }

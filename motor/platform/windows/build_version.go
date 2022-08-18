@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"strconv"
 
-	"go.mondoo.io/mondoo/lumi/resources/powershell"
 	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.io/mondoo/resources/packs/os/powershell"
 )
 
 var WinBuildVersionRegex = regexp.MustCompile(`^(\d+)(?:\.(\d+)){0,1}`)

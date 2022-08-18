@@ -1,0 +1,538 @@
+option go_package = "go.mondoo.io/mondoo/resources/packs/azure"
+
+// Azure Active Directory
+azuread {
+  users() []azuread.user
+  groups() []azuread.group
+  domains() []azuread.domain
+  applications() []azuread.application
+  servicePrincipals() []azuread.serviceprincipal
+}
+
+// Azure Active Directory User
+azuread.user {
+  id string
+  displayName string
+  givenName string
+  surname string
+  userPrincipalName string
+  accountEnabled bool
+  mailNickname string
+  mail string
+  objectType string
+  userType string
+  properties dict
+}
+
+// Azure Active Directory Group
+azuread.group {
+  id string
+  displayName string
+  securityEnabled bool
+  mailEnabled bool
+  mailNickname string
+  mail string
+  objectType string
+  properties dict
+  members() []azuread.user
+}
+
+// Azure Active Directory Domain
+azuread.domain {
+  name string
+  isVerified bool
+  isDefault bool
+  authenticationType string
+  properties dict
+}
+
+// Azure Active Directory Application
+azuread.application {
+  id string
+}
+
+// Azure Active Directory Service Principal
+azuread.serviceprincipal {
+  id string
+}
+
+// Azure Resource Manager
+azurerm {
+  // Get all the resources in a subscription
+  resources() []azurerm.resource
+}
+
+// AzureRM Resource
+azurerm.resource {
+  id string
+  name string
+  kind string
+  location string
+  tags map[string]string
+  type string
+
+  managedBy string
+  sku dict
+  plan dict
+  identity dict
+
+  provisioningState string
+  createdTime time
+  changedTime time
+}
+
+// AzureRM Compute
+azurerm.compute {
+  vms() []azurerm.compute.vm
+  // Lists all the disks under a subscription
+  disks() []azurerm.compute.disk
+}
+
+// AzureRM Compute VM
+azurerm.compute.vm {
+  id string
+  name string
+  location string
+  tags map[string]string
+  type string
+  properties dict
+  extensions() []dict
+  osDisk() azurerm.compute.disk
+  dataDisks() []azurerm.compute.disk
+}
+
+// AzureRM Disk Resource
+azurerm.compute.disk {
+  // Disk resource id
+  id string
+  // Disk resource name
+  name string
+  // Disk resource location
+  location string
+  // Disk resource tags
+  tags map[string]string
+  // Disk resource type
+  type string
+  // A relative URI containing the ID of the VM that has the disk attached
+  managedBy string
+  // List of relative URIs containing the IDs of the VMs that have the disk attached
+  managedByExtended []string
+  // The logical zone list for disk
+  zones []string
+  // The disk sku name and tier
+  sku dict
+  // Disk resource properties
+  properties dict
+}
+
+// AzureRM Network
+azurerm.network {
+  interfaces() []azurerm.network.interface
+  securityGroups() []azurerm.network.securitygroup
+  watchers() []azurerm.network.watcher
+}
+
+// AzureRM Network Interface
+azurerm.network.interface {
+  id string
+  name string
+  location string
+  tags map[string]string
+  type string
+  etag string
+  properties dict
+  vm() azurerm.compute.vm
+}
+
+// AzureRM Network Security Group
+azurerm.network.securitygroup {
+  id string
+  name string
+  location string
+  tags map[string]string
+  type string
+  etag string
+  properties dict
+  interfaces []azure.network.interface
+  securityRules []azurerm.network.securityrule
+  defaultSecurityRules []azurerm.network.securityrule
+}
+
+// AzureRM Network Security Rule
+azurerm.network.securityrule {
+  id string
+  name string
+  etag string
+  properties dict
+  destinationPortRange []dict
+}
+
+// AzureRM Network Watcher
+azurerm.network.watcher {
+  id string
+  name string
+  location string
+  tags map[string]string
+  type string
+  etag string
+  properties dict
+}
+
+// AzureRM Storage
+azurerm.storage {
+  accounts() []azurerm.storage.account
+}
+
+// AzureRM Storage Account
+azurerm.storage.account {
+  id string
+  name string
+  location string
+  tags map[string]string
+  type string
+  properties dict
+  identity dict
+  sku dict
+  kind string
+  containers() []azurerm.storage.container
+}
+
+// AzureRM Storage Container
+azurerm.storage.container {
+  id string
+  name string
+  type string
+  etag string
+  properties dict
+}
+
+// AzureRM Web
+azurerm.web {
+  apps() []azurerm.web.appsite
+  availableRuntimes() []dict
+}
+
+// AzureRM Web App Site
+azurerm.web.appsite {
+  id string
+  name string
+  kind string
+  location string
+  type string
+  tags map[string]string
+  properties dict
+  identity dict
+
+  configuration() azurerm.web.appsiteconfig
+  authenticationSettings() azurerm.web.appsiteauthsettings
+  metadata() dict
+  applicationSettings() dict
+  connectionSettings() dict
+  stack() dict
+}
+
+// AzureRM AppSite Authentication Settings
+azurerm.web.appsiteauthsettings {
+  id string
+  name string
+  kind string
+  type string
+  properties dict
+}
+
+// AzureRM AppSite Config
+azurerm.web.appsiteconfig {
+  id string
+  name string
+  kind string
+  type string
+  properties dict
+}
+
+// AzureRM SQL
+azurerm.sql {
+  servers() []azurerm.sql.server
+}
+
+// AzureRM Sql Server
+azurerm.sql.server {
+  id string
+  name string
+  location string
+  tags map[string]string
+  type string
+  properties dict
+  databases() []azurerm.sql.database
+  firewallRules() []azurerm.sql.firewallrule
+  azureAdAdministrators() []azurerm.sql.server.administrator
+  connectionPolicy() dict
+  auditingPolicy() dict
+  securityAlertPolicy() dict
+  encryptionProtector() dict
+}
+
+// AzureRM Sql Server Administrator
+azurerm.sql.server.administrator {
+  id string
+  name string
+  type string
+  administratorType string
+  login string
+  sid string
+  tenantId string
+}
+
+// AzureRM Sql Server Database
+azurerm.sql.database {
+  id string
+  name string
+  type string
+  collation string
+  creationDate time
+  containmentState int
+  currentServiceObjectiveId string
+  databaseId string
+  earliestRestoreDate time
+  createMode string
+  sourceDatabaseId string
+  sourceDatabaseDeletionDate time
+  restorePointInTime time
+  recoveryServicesRecoveryPointResourceId string
+  edition string
+  maxSizeBytes string
+  requestedServiceObjectiveId string
+  requestedServiceObjectiveName string
+  serviceLevelObjective string
+  status string
+  elasticPoolName string
+  defaultSecondaryLocation string
+  serviceTierAdvisors dict
+  recommendedIndex dict
+  failoverGroupId string
+  readScale string
+  sampleName string
+  zoneRedundant bool
+
+  transparentDataEncryption() dict
+  advisor() []dict
+  threadDetectionPolicy() dict
+  connectionPolicy() dict
+  auditingPolicy() dict
+  usage() []azurerm.sql.databaseusage
+}
+
+// AzureRM MS Database Usage
+azurerm.sql.databaseusage {
+  id string
+  name string
+  resourceName string
+  displayName string
+  currentValue float
+  limit float
+  unit string
+  nextResetTime time
+}
+
+// AzureRM PostgreSQL
+azurerm.postgresql {
+   servers() []azurerm.postgresql.server
+}
+
+// AzureRM PostgreSQL Server
+azurerm.postgresql.server {
+  id string
+  name string
+  location string
+  tags map[string]string
+  type string
+  properties dict
+  configuration() []azurerm.sql.configuration
+  databases() []azurerm.postgresql.database
+  firewallRules() []azurerm.sql.firewallrule
+}
+
+// AzureRM PostgreSQL Database
+azurerm.postgresql.database {
+  id string
+  name string
+  type string
+  charset string
+  collation string
+}
+
+// AzureRM MySQL
+azurerm.mysql {
+  servers() []azurerm.mysql.server
+}
+
+// AzureRM MySQL Server
+azurerm.mysql.server {
+  id string
+  name string
+  location string
+  tags map[string]string
+  type string
+  properties dict
+  configuration() []azurerm.sql.configuration
+  databases() []azurerm.mysql.database
+  firewallRules() []azurerm.sql.firewallrule
+}
+
+// AzureRM MySQL Database
+azurerm.mysql.database {
+  id string
+  name string
+  type string
+  charset string
+  collation string
+}
+
+// AzureRM MariaDB
+azurerm.mariadb {
+  servers() []azurerm.mariadb.server
+}
+
+// AzureRM MariaDB Server
+azurerm.mariadb.server {
+  id string
+  name string
+  location string
+  tags map[string]string
+  type string
+  properties dict
+  configuration() []azurerm.sql.configuration
+  databases() []azurerm.mariadb.database
+  firewallRules() []azurerm.sql.firewallrule
+}
+
+// AzureRM MariaDB Database
+azurerm.mariadb.database {
+  id string
+  name string
+  type string
+  charset string
+  collation string
+}
+
+// AzureRM SQL Configuration
+azurerm.sql.configuration {
+  id string
+  name string
+  type string
+  value string
+  description string
+  defaultValue string
+  dataType string
+  allowedValues string
+  source string
+}
+
+// AzureRM SQL Firewall Rule
+azurerm.sql.firewallrule {
+  id string
+  name string
+  type string
+  startIpAddress string
+  endIpAddress string
+}
+
+// AzureRM Key Vault
+azurerm.keyvault {
+  vaults() []azurerm.keyvault.vault
+}
+
+// AzureRM Key Vault Vault
+azurerm.keyvault.vault {
+  id string
+  vaultName string
+  type string
+  location string
+  tags map[string]string
+
+  vaultUri() string
+  properties() dict
+
+  keys() []azurerm.keyvault.key
+  certificates() []azurerm.keyvault.certificate
+  secrets() []azurerm.keyvault.secret
+  diagnosticSettings() []azurerm.monitor.diagnosticsetting
+}
+
+// AzureRM Key Vault Key
+azurerm.keyvault.key {
+  kid string
+  tags map[string]string
+  managed bool
+
+  enabled bool
+  notBefore time
+  expires time
+  created time
+  updated time
+  recoveryLevel string
+
+  keyName() string
+  version() string
+  versions() []azurerm.keyvault.key
+}
+
+// AzureRM Key Vault Certificate
+azurerm.keyvault.certificate {
+  id string
+  tags map[string]string
+  x5t string
+
+  enabled bool
+  notBefore time
+  expires time
+  created time
+  updated time
+  recoveryLevel string
+
+  certName() string
+  version() string
+  versions() []azurerm.keyvault.certificate
+}
+
+// AzureRM Key Vault Secret
+azurerm.keyvault.secret {
+  id string
+  tags map[string]string
+  contentType string
+  managed bool
+
+  enabled bool
+  notBefore time
+  expires time
+  created time
+  updated time
+
+  secretName() string
+  version() string
+  versions() []azurerm.keyvault.secret
+}
+
+// AzureRM Monitor
+azurerm.monitor {
+  logProfiles() []azurerm.monitor.logprofile
+}
+
+// AzureRM Monitor Log Profile
+azurerm.monitor.logprofile {
+  id string
+  name string
+  location string
+  type string
+  tags map[string]string
+  properties dict
+  storageAccount azurerm.storage.account
+}
+
+// AzureRM Monitor Diagnostic Setting
+azurerm.monitor.diagnosticsetting {
+  id string
+  name string
+  type string
+  properties dict
+  storageAccount azurerm.storage.account
+}

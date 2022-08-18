@@ -1,0 +1,509 @@
+import "../core/core.lr"
+
+option go_package = "go.mondoo.io/mondoo/resources/packs/services"
+
+// Git commit
+private git.commit {
+  sha string
+  message string
+  author git.commitAuthor
+  committer git.commitAuthor
+  signatureVerification git.gpgSignature
+}
+
+// Git commit author
+private git.commitAuthor {
+  sha string
+  name string
+  email string
+  date time
+}
+
+private git.gpgSignature {
+  sha string
+  reason string
+  verified bool
+  payload string
+  signature string
+}
+
+// GitHub resource
+github {
+  repositories() []github.repository
+  user() github.user
+}
+
+// GitHub organization
+github.organization {
+  login string
+  id int
+  nodeId string
+  name string
+  company string
+  blog string
+  location string
+  email string
+  twitterUsername string
+  description string
+  createdAt time
+  updatedAt time
+  totalPrivateRepos int
+  ownedPrivateRepos int
+  privateGists int
+  diskUsage int
+  collaborators int
+  billingEmail string
+  plan dict
+  twoFactorRequirementEnabled bool
+  isVerified bool
+
+  defaultRepositoryPermission string
+  membersCanCreateRepositories bool
+  membersCanCreatePublicRepositories bool
+  membersCanCreatePrivateRepositories bool
+  membersCanCreateInternalRepositories bool
+  membersCanCreatePages bool
+  membersCanCreatePublicPages bool
+  membersCanCreatePrivatePages bool
+
+  owners() []github.user
+  members() []github.user
+  teams() []github.team
+  repositories() []github.repository
+  installations() []github.installation
+  webhooks() []github.webhook
+  packages() []github.package
+}
+
+// GitHub user
+private github.user {
+  id int
+  login string
+  name string
+  email string
+  bio string
+  createdAt time
+  updatedAt time
+  suspendedAt time
+  company string
+}
+
+// GitHub team
+private github.team {
+  id int
+  name string
+  description string
+  slug string
+  privacy string
+  defaultPermission string
+  members() []github.user
+  repositories() []github.repository
+  organization github.organization
+}
+
+// GitHub collaborator
+private github.collaborator {
+  id int
+  user github.user
+  permissions []string
+}
+
+// GitHub package
+private github.package {
+  id int
+  name string
+  packageType string
+  owner github.user
+  createdAt time
+  updatedAt time
+  versionCount int
+  visibility string
+  repository() github.repository
+}
+
+// GitHub repository
+github.repository {
+  init(name string) // can only be used when logged in to github as a user
+  id int
+  name string
+  fullName string
+  description string
+  homepage string
+  createdAt time
+  updatedAt time
+  archived bool
+  disabled bool
+  private bool
+  visibility string
+  allowAutoMerge bool
+  allowForking bool
+  allowMergeCommit bool
+  allowRebaseMerge bool
+  allowSquashMerge bool
+  hasIssues bool
+  organizationName string
+  openMergeRequests() []github.mergeRequest
+  branches() []github.branch
+  defaultBranchName string
+  commits() []github.commit 
+  contributors() []github.user
+  collaborators() []github.collaborator
+  files() []github.file
+  releases() []github.release
+  owner github.user
+  webhooks() []github.webhook
+  workflows() []github.workflow
+}
+
+// GitHub repository file
+private github.file {
+  path string
+  name string
+  type string
+  sha string
+  isBinary bool
+  files() []github.file
+  ownerName string
+  repoName string
+  content() string
+}
+
+// GitHub release
+private github.release {
+  url string
+  name string
+  tagName string
+  preRelease bool
+}
+
+// GitHub webhook
+private github.webhook {
+  id int
+  name string
+  url string
+  events []string
+  config dict
+  active bool
+}
+
+// GitHub workflow
+private github.workflow {
+  id int
+  name string
+  path string
+  state string
+  createdAt time
+  updatedAt time
+  file() github.file
+  configuration() dict
+}
+
+// GitHub repository branch
+private github.branch {
+  name string
+  protected bool
+  headCommit github.commit
+  protectionRules() github.branchprotection
+  organizationName string
+  repoName string
+  owner github.user
+  isDefault bool
+}
+
+// GitHub repository branch protection
+private github.branchprotection {
+  id string
+  // Require status checks to pass before merging
+  requiredStatusChecks dict
+  // Require a pull request before merging
+  requiredPullRequestReviews dict
+  // Require conversation resolution before merging
+  requiredConversationResolution dict
+  // Require signed commits
+  requiredSignatures bool
+  // Require linear history
+  requireLinearHistory dict
+  // Include administrators
+  enforceAdmins dict
+  // Restrict who can push to matching branches
+  restrictions dict
+  // Allow force pushes
+  allowForcePushes dict
+  // Allow deletions
+  allowDeletions dict
+}
+
+// GitHub repository commit
+private github.commit {
+  owner string
+  repository string
+  sha string
+  url string
+  author github.user
+  committer github.user
+  commit git.commit
+  stats dict
+}
+
+// GitHub repository pull request
+private github.mergeRequest {
+  id int
+  number int
+  state string
+  createdAt time 
+  labels []dict
+  title string
+  owner github.user
+  assignees []github.user
+  commits() []github.commit
+  reviews() []github.review
+  organizationName string
+  repoName string
+}
+
+// GitHub repository review
+private github.review {
+  url string
+  state string
+  authorAssociation string
+  user github.user
+}
+
+// GitHub app installation
+private github.installation {
+  id int
+  appId int
+  appSlug string
+  createdAt time
+  updatedAt time
+}
+
+gitlab.group {
+  id int
+  // The name of the group
+  name string
+  // The path of the group.
+  path string
+  // The group’s description
+  description string
+  // The group’s visibility. Can be private, internal, or public.
+  visibility string
+  // Require all users in this group to setup Two-factor authentication.
+  requireTwoFactorAuthentication bool
+  // List all projects that belong to a group
+  projects() []gitlab.project
+}
+
+gitlab.project {
+  id int
+  // The name of the project.
+  name string
+  // Repository name for project.
+  path string
+  // The project’s description
+  description string
+  // The project's visibility level. Can be private, internal, or public.
+  visibility string
+}
+
+// Microsoft Graph Beta
+msgraph.beta {
+  organizations() []msgraph.beta.organization
+  users() []msgraph.beta.user
+  domains() []msgraph.beta.domain
+  applications() []msgraph.beta.application
+  settings() []dict
+}
+
+// Microsoft Graph Beta Organization
+msgraph.beta.organization {
+  id string
+  assignedPlans []dict
+  createdDateTime time
+  displayName string
+  verifiedDomains []dict
+}
+
+// Microsoft Graph Beta User
+msgraph.beta.user {
+  id string
+  accountEnabled bool
+  city string
+  companyName string
+  country string
+  createdDateTime time
+  department string
+  displayName string
+  employeeId string
+  givenName string
+  jobTitle string
+  mail string
+  mobilePhone string
+  otherMails []string
+  officeLocation string
+  postalCode string
+  state string
+  streetAddress string
+  surname string
+  userPrincipalName string
+  userType string
+  settings() dict
+}
+
+// Microsoft Graph Beta Domain
+msgraph.beta.domain {
+  id string
+  authenticationType string
+  availabilityStatus string
+  isAdminManaged bool
+  isDefault bool
+  isInitial bool
+  isRoot bool
+  isVerified bool
+  passwordNotificationWindowInDays int
+  passwordValidityPeriodInDays int
+  supportedServices []string
+  serviceConfigurationRecords() []msgraph.beta.domaindnsrecord
+}
+
+// Microsoft Graph Beta Domain DNS Record
+msgraph.beta.domaindnsrecord {
+  id string
+  isOptional bool
+  label string
+  recordType string
+  supportedService string
+  ttl int
+  properties dict
+}
+
+// Microsoft Graph Beta Application
+msgraph.beta.application {
+  id string
+  appId string
+  createdDateTime time
+  identifierUris []string
+  displayName string
+  publisherDomain string
+  signInAudience string
+}
+
+// Microsoft Graph Beta Security
+msgraph.beta.security {
+  secureScores() []msgraph.beta.security.securityscore
+  latestSecureScores() msgraph.beta.security.securityscore
+}
+
+// Microsoft Graph Beta Security Score
+msgraph.beta.security.securityscore {
+  id string
+  activeUserCount int
+  averageComparativeScores []dict
+  azureTenantId string
+  controlScores []dict
+  createdDateTime time
+  currentScore float
+  enabledServices []string
+  licensedUserCount int
+  maxScore float
+  vendorInformation dict
+}
+
+// Microsoft Graph Beta Policies
+msgraph.beta.policies {
+  authorizationPolicy() dict
+  identitySecurityDefaultsEnforcementPolicy() dict
+  adminConsentRequestPolicy() dict
+  permissionGrantPolicies() []dict
+}
+
+// Microsoft Graph Beta Role Management
+msgraph.beta.rolemanagement {
+  roleDefinitions() []msgraph.beta.rolemanagement.roledefinition
+}
+
+// Microsoft Graph Beta Role Definition
+msgraph.beta.rolemanagement.roledefinition {
+  id string
+  description string
+  displayName string
+  isBuiltIn bool
+  isEnabled bool
+  rolePermissions []dict
+  templateId string
+  version string
+  assignments() []msgraph.beta.rolemanagement.roleassignment
+}
+
+// Microsoft Graph Beta Role Assignment
+msgraph.beta.rolemanagement.roleassignment {
+  id string
+  roleDefinitionId string
+  principalId string
+  principal dict
+}
+
+// Microsoft Graph Beta Device Management
+msgraph.beta.devicemanagement {
+  deviceConfigurations() []msgraph.beta.devicemanagement.deviceconfiguration
+  deviceCompliancePolicies() []msgraph.beta.devicemanagement.devicecompliancepolicy
+}
+
+// Microsoft Graph Beta Device Configuration
+msgraph.beta.devicemanagement.deviceconfiguration {
+  id string
+  lastModifiedDateTime time
+  roleScopeTagIds []string
+  supportsScopeTags bool
+  createdDateTime time
+  description string
+  displayName string
+  version int
+  properties dict
+}
+
+// Microsoft Graph Beta Device Compliance Policy
+msgraph.beta.devicemanagement.devicecompliancepolicy {
+  id string
+  createdDateTime time
+  description string
+  displayName string
+  lastModifiedDateTime time
+  roleScopeTagIds []string
+  version int
+  properties dict
+  assignments []dict
+}
+
+// Microsoft 365 ExchangeOnline
+ms365.exchangeonline {
+  malwareFilterPolicy []dict
+  hostedOutboundSpamFilterPolicy []dict
+  transportRule []dict
+  remoteDomain []dict
+  safeLinksPolicy []dict
+  safeAttachmentPolicy []dict
+  organizationConfig dict
+  authenticationPolicy []dict
+  antiPhishPolicy []dict
+  dkimSigningConfig []dict
+  owaMailboxPolicy []dict
+  adminAuditLogConfig dict
+  phishFilterPolicy []dict
+  mailbox []dict
+  atpPolicyForO365 []dict
+  sharingPolicy []dict
+  roleAssignmentPolicy []dict
+}
+
+// Microsoft 365 SharepointOnline
+ms365.sharepointonline {
+  spoTenant dict
+  spoTenantSyncClientRestriction dict
+}
+
+// Microsoft 365 Teams
+ms365.teams {
+  csTeamsClientConfiguration dict
+  csOAuthConfiguration []dict
+}

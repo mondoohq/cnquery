@@ -5,13 +5,11 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
-
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/cockroachdb/errors"
-
-	"go.mondoo.io/mondoo/lumi/resources/powershell"
 	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.io/mondoo/resources/packs/os/powershell"
 )
 
 const (

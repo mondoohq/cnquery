@@ -11,12 +11,12 @@ import (
 	"go.mondoo.io/mondoo"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/logger"
-	"go.mondoo.io/mondoo/lumi/registry/info"
+	resource_info "go.mondoo.io/mondoo/resources/packs/os/info"
 	"go.mondoo.io/mondoo/types"
 )
 
 var (
-	schema   = info.Default.Schema()
+	schema   = resource_info.Registry.Schema()
 	features = mondoo.Features{byte(mondoo.PiperCode)}
 )
 
@@ -862,8 +862,8 @@ func TestCompiler_Resource_versioning(t *testing.T) {
 }
 
 func TestCompiler_Resource_versioning2(t *testing.T) {
-	compileT(t, "aws.acm.certificate.tags", func(res *llx.CodeBundle) {
-		assert.Equal(t, "5.16.0", res.MinMondooVersion)
+	compileT(t, "file.empty", func(res *llx.CodeBundle) {
+		assert.Equal(t, "5.18.0", res.MinMondooVersion)
 	})
 }
 
@@ -1452,7 +1452,7 @@ func TestSuggestions(t *testing.T) {
 			// resource suggestions
 			// TODO: "msgraph.beta.rolemanagement.roledefinition" shows up because it includes tem`plat`eId
 			"platfo",
-			[]string{"msgraph.beta.rolemanagement.roledefinition", "platform", "platform.advisories", "platform.cves", "platform.eol", "platform.exploits", "platform.virtualization"},
+			[]string{"platform", "platform.advisories", "platform.cves", "platform.eol", "platform.exploits", "platform.virtualization"},
 			errors.New("cannot find resource for identifier 'platfo'"),
 		},
 		{

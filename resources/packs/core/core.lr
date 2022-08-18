@@ -1,0 +1,896 @@
+option go_package = "go.mondoo.io/mondoo/resources/packs/core"
+
+// Provide contextual info about Mondoo Client and environment
+mondoo {
+  // Version of mondoo the client is running
+  version() string
+  // The build of the mondoo client (e.g. production, development)
+  build() string
+  // All resources supported by the language
+  resources() []string
+  // Returns the agent execution environment
+  jobEnvironment() dict
+  // Transport capabilities
+  capabilities() []string
+  nulllist() []string
+}
+
+// Returns platform EOL date information
+mondoo.eol {
+  // Product Name
+  product string
+  // Product Version
+  version string
+  // End-of-Life date for the product
+  date() time
+}
+
+// Mondoo asset information
+mondoo.asset {
+  // Platform Identifier
+  platformIDs() []string
+}
+
+// File on the system
+file {
+  init(path string)
+  // Location of the file on the system
+  path string
+  // Filename without path prefix of this file
+  basename(path) string
+  // Path to the folder containing this file
+  dirname(path) string
+  // Contents of this file
+  content(path, exists) string
+  // Indicator if this file exists on the system
+  exists() bool
+  // Permissions for this file
+  permissions() file.permissions
+  // Size of this file on disk
+  size() int
+  // Ownership information about the user
+  user() user
+  // Ownership information about the group
+  group() group
+  // Denotes whether the path is empty
+  empty() bool
+}
+
+// Access permissions for a given file
+private file.permissions {
+  // Raw POSIX mode for the permissions
+  mode int
+  // Indicator if this file is readable by its owner
+  user_readable bool
+  // Indicator if this file is writeable by its owner
+  user_writeable bool
+  // Indicator if this file is executable by its owner
+  user_executable bool
+  // Indicator if this file is readable by members of the group
+  group_readable bool
+  // Indicator if this file is writeable by members of the group
+  group_writeable bool
+  // Indicator if this file is executable by members of the group
+  group_executable bool
+  // Indicator if this file is readable by others
+  other_readable bool
+  // Indicator if this file is writeable by others
+  other_writeable bool
+  // Indicator if this file is executable by others
+  other_executable bool
+  // SUID bit indicator
+  suid bool
+  // SGID bit indicator
+  sgid bool
+  // Sticky bit indicator
+  sticky bool
+  // whether the file describes a directory
+  isDirectory bool
+  // whether the file describes a regular file
+  isFile bool
+  // whether the file is a symlink
+  isSymlink bool
+}
+
+// User on this system
+user {
+  // User ID
+  uid int
+  // User's Group ID
+  gid int
+  // User's Security Identifier (Windows)
+  sid string
+  // Name of the user
+  name string
+  // Home folder
+  home string
+  // Default shell configured
+  shell string
+  // Indicates if the user is enabled
+  enabled bool
+  // List of authorized keys
+  authorizedkeys() authorizedkeys
+  // List of SSH keys
+  sshkeys() []privatekey
+  // Group that user is a member of
+  group() group
+}
+
+// Users configured on this system
+users {
+  []user
+}
+
+// List of SSH Authorized Keys
+authorizedkeys {
+  []authorizedkeys.entry(file, content)
+  init(path string)
+  path string
+  file() file
+  content(file) string
+}
+
+// SSH authorized keys entry
+authorizedkeys.entry {
+  line int
+  type string
+  key string
+  label() string
+  options() []string
+  file file
+}
+
+// Group on this system
+group {
+  init(id string)
+  // Group ID
+  gid int
+  // Group's Security Identifier (Windows)
+  sid string
+  // Name of this group
+  name string
+  // Users who are members of this group
+  members() []user
+}
+
+// Groups configured on this system
+groups {
+  []group
+}
+
+// Parse provides common parsers (json, ini, certs, etc)
+parse {
+  // Builtin functions:
+  // Date(value, format) time
+}
+
+// Date and time functions
+time {
+  // The current time on the local system
+  now() time
+  // One second, used for durations
+  second() time
+  // One minute, used for durations
+  minute() time
+  // One hour, used for durations
+  hour() time
+  // One day, used for durations
+  day() time
+  // The current day starting at midnight
+  today() time
+  // The next day starting at midnight
+  tomorrow() time
+}
+
+// Builtin regular expression functions
+regex {
+  // Matches IPv4 addresses
+  ipv4() regex
+  // Matches IPv6 addresses
+  ipv6() regex
+  // Matches URL addresses (HTTP/HTTPS)
+  url() regex
+  // Matches email addresses
+  email() regex
+  // Matches MAC addresses
+  mac() regex
+  // Matches hyphen-deliminated UUIDs
+  uuid() regex
+  // Matches emojis
+  emoji() regex
+  // Matches semantic version numbers
+  semver() regex
+  // Matches credit card numbers
+  creditCard() regex
+}
+
+// Parse INI files
+parse.ini {
+  init(path string, delimiter string)
+  // Symbol that is separating keys and values
+  delimiter() string
+  // File that is being parsed
+  file() file
+  // Raw content of the file that is parsed
+  content(file) string
+  // A map of sections and key-value pairs
+  sections(content, delimiter) map[string]map[string]string
+  // A map of parameters that don't belong to sections
+  params(sections) map[string]string
+}
+
+// Parse JSON files
+parse.json {
+  init(path string)
+  // File that is being parsed
+  file() file
+  // Raw content of the file that is parsed
+  content(file) string
+  // The parsed parameters that are defined in this file
+  params(content) dict
+}
+
+// Parse plist files
+parse.plist {
+  init(path string)
+  // File that is being parsed
+  file() file
+  // Raw content of the file that is parsed
+  content(file) string
+  // The parsed parameters that are defined in this file
+  params(content) dict
+}
+
+// Parse YAML files
+parse.yaml {
+  init(path string)
+  // File that is being parsed
+  file() file
+  // Raw content of the file that is parsed
+  content(file) string
+  // The parsed parameters that are defined in this file
+  params(content) dict
+}
+
+// Common platform information (OS, API, Service)
+platform {
+  // Name of the platform
+  name string
+  // Human-readable name of the platform
+  title string
+  // List of platform families that this platform belongs to
+  family []string
+  // Release version of the platform
+  // deprecated: this field is deprecated in favor of 'version', will be removed in v8
+  release string
+  // Version of the platform
+  version string
+  // Build version of the platform (optional)
+  build string
+  // Fully qualified domain name (optional)
+  fqdn string
+  // Architecture this OS is running on
+  arch string
+  // Kind of platform, for example:
+  // api, baremetal, vm, vm-image, container, container-image, network, ...
+  kind string
+  // Runtime is the specific kind of the platform. Examples include:
+  // docker-container, podman-container, aws-ec2-instance, ...
+  runtime string
+  // Optional platform information
+  labels map[string]string
+
+  // Full advisory & vulnerability report
+  vulnerabilityReport() dict
+
+  // Contextual information about the runtime (bare-metal, cloud, container, etc)
+  // deprecated: this field is deprecated in favor of 'runtime', will be removed in v8
+  runtimeEnv string
+}
+
+// hardware virtualization information
+platform.virtualization {
+  // Indicates if the target is a container or container image
+  isContainer() bool
+}
+
+// information about the platform end-of-life
+platform.eol {
+  // Documentation URL
+  docsUrl string
+  // Product URL
+  productUrl string
+  // End-of-Life date
+  date time
+}
+
+// Returns all platform/package advisories
+platform.advisories {
+  []audit.advisory
+  // Worst CVSS score for all advisories
+  cvss() audit.cvss
+  // Statistical information: total, critical, high, medium, low, none, unknown
+  stats() dict
+}
+
+// Returns all platform/package cves
+platform.cves {
+  []audit.cve
+  // Worst CVSS score for all cves
+  cvss() audit.cvss
+  // Statistical information: total, critical, high, medium, low, none, unknown
+  stats() dict
+}
+
+// Returns all platform/package exploits
+platform.exploits {
+  []audit.exploit
+  // Worst CVSS score for all exploits
+  cvss() audit.cvss
+  // Statistical information: total, critical, high, medium, low, none, unknown
+  stats() dict
+}
+
+// Common Vulnerability Scoring System (CVSS) Score
+private audit.cvss {
+  // CVSS Score ranging from 0.0 to 10.0
+  score   float
+  // CVSS score is also represented as a vector string
+  vector  string
+}
+
+// Platform/package advisory
+private audit.advisory {
+  // Advisory ID
+  id          string
+  // Mondoo Advisory Identifier
+  mrn         string
+  // Advisory Title
+  title       string
+  // Advisory Description
+  description string
+  // Advisory publication date
+  published   time
+  // Last modification date
+  modified    time
+  // Worst CVSS Score of all assigned CVEs
+  worstScore    audit.cvss
+}
+
+// Common Vulnerabilities and Exposures (CVE)
+private audit.cve {
+  // CVE ID
+  id        string
+  // Mondoo CVE Identifier
+  mrn       string
+  // CVE state
+  state     string
+  // Summary Description
+  summary   string
+  // Indicates if the CVE has a CVSS score
+  unscored  bool
+  // publication date
+  published   time
+  // Last modification date
+  modified    time
+  // Worst CVSS Score of all assigned CVEs
+  worstScore    audit.cvss
+}
+
+// Exploit information
+private audit.exploit {
+  // CVE ID
+  id        string
+  // Mondoo CVE Identifier
+  mrn       string
+  // Last modification date
+  modified    time
+  // Worst CVSS Score of all assigned CVEs for this exploit
+  worstScore    audit.cvss
+}
+
+// Process on this system
+process {
+  init(pid int)
+  // PID (process ID)
+  pid int
+  // State of the process (sleeping, running, etc)
+  state() string
+  // Executable that is running this process
+  executable() string
+  // Full command used to run this process
+  command() string
+  // Map of additional flags
+  flags() map[string]string
+}
+
+// Processes available on this system
+processes {
+  []process
+}
+
+// TCP/IP port on the system
+port {
+  // Protocol of this port
+  protocol string
+  // Port number
+  port int
+  // Local address of this port
+  address string
+  // User configured for this port
+  user user
+  // Process that is connected to this port
+  process process
+  // State of this open port
+  state string
+  // Remote address connected to this port
+  remoteAddress string
+  // Remote port connected to this port
+  remotePort int
+}
+
+// TCP/IP ports on the system
+ports {
+  []port
+  // All listening ports
+  listening() []port
+}
+
+// Socket
+socket {
+  // Protocol for this socket
+  protocol string
+  // Port number
+  port int
+  // Target address
+  address string
+}
+
+// TLS
+tls {
+  init(target string)
+  // Socket of this connection
+  socket socket
+  // An optional domain name which will be tested
+  domainName string
+  // Params is a list of all parameters for this TLS/SSL connection
+  params(socket, domainName) dict
+  // Version of TLS/SSL that is being used
+  versions(params) []string
+  // Ciphers supported by a given TLS/SSL connection
+  ciphers(params) []string
+  // Extensions supported by this TLS/SSL connection
+  extensions(params) []string
+  // Certificates provided in this TLS/SSL connection
+  certificates(params) []certificate
+  // Certificates provided without server name indication (SNI)
+  nonSniCertificates(params) []certificate
+}
+
+// Domain name
+domainName {
+  init(fqdn string)
+  fqdn string
+  // effectiveTLDPlusOne returns the effective top level domain plus one more label
+  effectiveTLDPlusOne string
+  // Top-Level Domain
+  tld string
+  // Flag indicates if the TLD is ICANN managed
+  tldIcannManaged bool
+  // Domain Labels
+  labels []string
+}
+
+// DNS resource
+dns {
+  init(fqdn string)
+  fqdn string
+  // Params is a list of all parameters for DNS fqdn
+  params() dict
+  // Successful DNS records
+  records(params) []dns.record
+  // Successful DNS MX records
+  mx(params) []dns.mxRecord
+  // DKIM TXT records
+  dkim(params) []dns.dkimRecord
+}
+
+// DNS record
+dns.record {
+  // DNS name
+  name string
+  // Time-To-Live (TTL) in seconds
+  ttl int
+  // DNS class
+  class string
+  // DNS type
+  type string
+  // Resource Data
+  rdata []string
+}
+
+// DNS MX record
+dns.mxRecord {
+  name string
+  preference int
+  domainName string
+}
+
+// DKIM public key representation as defined in RFC 6376
+dns.dkimRecord {
+  // DNS Text Representation
+  dnsTxt string
+  // DKIM Selector Domain
+  domain string
+  // Version
+  version string
+  // Acceptable Hash Algorithms
+  hashAlgorithms []string
+  // Key Type
+  keyType string
+  // Notes
+  notes string
+  // Public Key Data base64-Encoded
+  publicKeyData string
+  // Service Types
+  serviceTypes []string
+  // Flags
+  flags []string
+  // Verifies if the DKIM entry and public key is valid
+  valid() bool
+}
+
+// TODO: this should be deprecated
+yaml.path {
+  filepath string
+  jsonpath string
+  result() string
+}
+
+// Parse Certificates from files
+parse.certificates {
+  []certificate(content, path)
+  init(path string)
+  path string
+  file() file
+  content(file) string
+}
+
+// x509 certificate PKIX name
+pkix.name {
+  id string
+  // Distinguished Name Qualifier
+  dn string
+  // Serial Number
+  serialNumber string
+  // Common Name
+  commonName string
+  // Country
+  country []string
+  // Organization
+  organization []string
+  // Organizational Unit
+  organizationalUnit []string
+  locality []string
+  // State or Province
+  province []string
+  // Street Address
+  streetAddress []string
+  // Postal Code
+  postalCode []string
+  names      map[string]string
+  extraNames map[string]string
+}
+
+// x509 certificate PKIX extension
+pkix.extension {
+  // Extension Identifier
+  identifier string
+  // Flag for Critical Extension
+  critical bool
+  // Extension Value
+  value string
+}
+
+// x509 certificate resource
+certificate {
+  // PEM content
+  pem string
+  // Certificate Fingerprints
+  fingerprints() map[string]string
+  // Serial Number
+  serial() string
+  // Subject Unique Identifier
+  subjectKeyID() string
+  // Authority Key Identifier
+  authorityKeyID() string
+  // Subject
+  subject() pkix.name
+  // Issuer
+  issuer() pkix.name
+  // Version Number
+  version() int
+  // Validity period Validity period
+  notBefore() time
+  // Validity period Not After
+  notAfter() time
+  // Expiration Duration
+  expiresIn() time
+  // Signature
+  signature() string
+  // Signature Algorithm ID
+  signingAlgorithm() string
+  // Flag if Certificate Authority
+  isCA() bool
+  // Key Usage
+  keyUsage() []string
+  // Extended Key Usage
+  extendedKeyUsage() []string
+  // Extensions
+  extensions() []pkix.extension
+  // Policy Identifier
+  policyIdentifier() []string
+  // CRL Distribution Points
+  crlDistributionPoints() []string
+  // OCSP
+  ocspServer() []string
+  // Issuing Certificate Url
+  issuingCertificateUrl() []string
+  // Identifies if this certificate has been revoked
+  isRevoked() bool
+  // The time at which this certificate was revoked
+  revokedAt() time
+  // Indicates if the certificate is valid by checking its chain
+  isVerified() bool
+}
+
+// Private Key Resource
+privatekey {
+  pem string
+  path() string
+  encrypted() bool
+}
+
+// Intelligent Platform Management Interface (IPMI) resource
+//
+// Provides access to BIOS and UEFI configuration
+ipmi {
+  // retrieve the hardware & firmware revision and sensor and event interface
+  deviceID() dict
+  // GUID (Globally Unique ID) for management controller
+  guid() string
+}
+
+// IPMI system chassis resource
+ipmi.chassis {
+  // high-level status of the system chassis and main power subsystem
+  status() dict
+  // retrieve the system boot options
+  systemBootOptions() dict
+}
+
+// UUIDs based on RFC 4122 and DCE 1.1
+uuid {
+  init(value string)
+  // Canonical string representation xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  value string
+  // URN returns the RFC 2141 URN form of uuid
+  urn() string
+  // Version of uuid
+  version() int
+  // Variant encoded in uuid
+  variant() string
+}
+
+// socket stats from ss command
+socketstats {
+  // Listening non-localhost open ports
+  openPorts() []string
+}
+
+// Terraform Configuration Files
+terraform {
+  // Access to individual files including .tf and .tf.json files
+  files() []terraform.file
+  // The attributes defined in .tfvars and .tfvars.json
+  tfvars() dict
+  // List all referenced terraform modules
+  modules() []terraform.module
+  // Raw HCL blocks
+  blocks() []terraform.block
+  // Provider blocks
+  providers() []terraform.block
+  // Data sources blocks
+  datasources() []terraform.block
+  // All blocks with type resource
+  resources() []terraform.block
+  // Variable blocks
+  variables() []terraform.block
+  // Output blocks
+  outputs() []terraform.block
+}
+
+// Terraform Configuration File represents a .tf or .tf.json file
+terraform.file {
+  // tf or tf.json file
+  path string
+  // All blocks within the file
+  blocks() []terraform.block
+}
+
+// Position of the Terraform configuration block in file
+terraform.fileposition {
+  // File path to Terraform configuration file
+  path string
+  // Line of the block
+  line int
+  // Column of the Block
+  column int
+  byte int
+}
+
+// Terraform Resource Block
+terraform.block {
+  // Resource type
+  type string
+  // Resource Name Label
+  nameLabel() string
+  // Resource Labels
+  labels []string
+  // Block Start Position
+  start terraform.fileposition
+  // Block End Position
+  end terraform.fileposition
+  // Block Arguments
+  arguments() dict
+  // Raw Block Attributes
+  attributes() dict
+  // Child Blocks
+  blocks() []terraform.block
+  // Block Snippet
+  snippet string
+}
+
+// Terraform Module Block
+terraform.module {
+  // Unique identifier for this particular module
+  key string
+  // Source indicates where the modules was loaded from
+  source string
+  // Module Version
+  version string
+  //  Path to the directory where the module is stored
+  dir string
+}
+
+// Terraform Settings
+terraform.settings {
+  // Settings Block
+  block terraform.block
+  // Provider Requirements
+  requiredProviders dict
+}
+
+// Terraform state
+tfstate {
+  // Terraform state format version
+  formatVersion string
+  // Generated by Terraform version
+  terraformVersion string
+  // Output values
+  outputs() []tfstate.output
+  // Root module which consists resources defined in .tf files
+  rootModule() tfstate.module
+  // flat list of all modules
+  modules() []tfstate.module
+}
+
+// Terraform state output values
+tfstate.output {
+  init(identifier string)
+  // Output identifier
+  identifier string
+  // Flag that indicates if the output is sensitive
+  sensitive bool
+  // Output value
+  value() dict
+  // Output value type
+  type() dict
+}
+
+// Terraform state module
+tfstate.module {
+  init(identifier string)
+  // Module identifier address
+  address string
+  // Resources that describe infrastructure objects
+  resources() []tfstate.resource
+  // Child Modules that are being called from this module
+  childModules() []tfstate.module
+}
+
+// Terraform state resource
+tfstate.resource {
+  // Address is the absolute resource address
+  address string
+  // Mode can be "managed" or "data"
+  mode string
+  // Resource type
+  type string
+  // Resource name
+  name string
+  // Terraform provider
+  providerName string
+  // SchemaVersion indicates which version of the resource type schema the "values" property conforms to.
+  schemaVersion int
+  // Attribute values
+  values dict
+  // DependsOn contains a list of the resource's dependencies.
+  dependsOn []string
+  // Tainted is true if the resource is tainted in terraform state.
+  tainted bool
+  // Deposed is set if the resource is deposed in terraform state.
+  deposedKey string
+}
+
+// MOVE OUT LATER
+
+// System kernel information
+kernel {
+  // Active kernel information
+  info() dict
+  // Kernel parameters map
+  parameters() map[string]string
+  // List of kernel modules
+  modules() []kernel.module
+  // Installed Versions
+  installed() []dict
+}
+
+// System kernel module information
+kernel.module {
+  init(name string)
+
+  // Name of the kernel module
+  name string
+  // Size of the kernel module
+  size string
+  // Indicates if this module is loaded
+  loaded bool
+}
+
+// Package on the platform or OS
+package {
+  init(name string)
+
+  // Name of the package
+  name string
+  // Current version of the package
+  version string
+  // Architecture of this package
+  arch string
+  // Epoch of this package
+  epoch string
+
+  // Format of this package (e.g. rpm, deb)
+  format string
+  // Status of this package (e.g. if it is needed)
+  status() string
+  // Package description
+  description string
+
+  // Package Origin (optional)
+  origin() string
+
+  // Available version
+  available string
+  // Indicates if this package is installed
+  installed bool
+  // Indicates if this package is outdated
+  outdated() bool
+}
+
+// List of packages on this system
+packages {
+  []package
+}

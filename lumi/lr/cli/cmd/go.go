@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"os"
+	"path"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -18,20 +19,18 @@ var goCmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		file := args[0]
-		raw, err := os.ReadFile(file)
+		packageName := path.Base(path.Dir(file))
+
+		res, err := lr.Resolve(file, func(path string) ([]byte, error) {
+			return os.ReadFile(path)
+		})
 		if err != nil {
 			log.Error().Err(err)
 			return
 		}
 
-		res, err := lr.Parse(string(raw))
-		if err != nil {
-			log.Error().Err(err).Msg("failed to parse LR code")
-			return
-		}
-
 		collector := lr.NewCollector(args[0])
-		godata, err := lr.Go(res, collector)
+		godata, err := lr.Go(packageName, res, collector)
 		if err != nil {
 			log.Error().Err(err).Msg("failed to compile go code")
 		}
@@ -41,7 +40,7 @@ var goCmd = &cobra.Command{
 			log.Error().Err(err).Msg("failed to write to go file")
 		}
 
-		schema, err := lr.Schema(res, collector)
+		schema, err := lr.Schema(res)
 		if err != nil {
 			log.Error().Err(err).Msg("failed to generate schema")
 		}

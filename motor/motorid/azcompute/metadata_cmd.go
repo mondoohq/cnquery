@@ -5,12 +5,11 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
-
 	"github.com/pkg/errors"
-	"go.mondoo.io/mondoo/lumi/resources/powershell"
 	"go.mondoo.io/mondoo/motor/discovery/azure"
 	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.io/mondoo/resources/packs/os/powershell"
 )
 
 const (
