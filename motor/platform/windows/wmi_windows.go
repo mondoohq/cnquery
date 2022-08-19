@@ -9,15 +9,15 @@ import (
 	"strconv"
 
 	wmi "github.com/StackExchange/wmi"
-	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/local"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
 const wmiOSQuery = "SELECT Name, Caption, Manufacturer, OSArchitecture, Version, BuildNumber, Description, OSType, ProductType, SerialNumber FROM Win32_OperatingSystem"
 
-func GetWmiInformation(t providers.Transport) (*WmicOSInformation, error) {
+func GetWmiInformation(p os.OperatingSystemProvider) (*WmicOSInformation, error) {
 	// if we are running locally on windows, we want to avoid using powershell to be faster
-	_, ok := t.(*local.Provider)
+	_, ok := p.(*local.Provider)
 	if ok && runtime.GOOS == "windows" {
 
 		// we always get a list or entries
@@ -57,7 +57,7 @@ func GetWmiInformation(t providers.Transport) (*WmicOSInformation, error) {
 		}, nil
 	}
 
-	return powershellGetWmiInformation(t)
+	return powershellGetWmiInformation(p)
 }
 
 func toString(s *string) string {

@@ -8,13 +8,13 @@ import (
 	"runtime"
 
 	wmi "github.com/StackExchange/wmi"
-	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/local"
+	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
-func windowsMachineId(t providers.Transport) (string, error) {
+func windowsMachineId(p os.OperatingSystemProvider) (string, error) {
 	// if we are running locally on windows, we want to avoid using powershell to be faster
-	_, ok := t.(*local.Provider)
+	_, ok := p.(*local.Provider)
 	if ok && runtime.GOOS == "windows" {
 
 		// we always get a list or entries
@@ -34,5 +34,5 @@ func windowsMachineId(t providers.Transport) (string, error) {
 
 		return *entries[0].UUID, nil
 	}
-	return PowershellWindowsMachineId(t)
+	return PowershellWindowsMachineId(p)
 }
