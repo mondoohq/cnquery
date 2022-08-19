@@ -1,4 +1,4 @@
-package container
+package auth
 
 import (
 	"github.com/google/go-containerregistry/pkg/authn"

@@ -39,20 +39,21 @@ type KubernetesProvider interface {
 	// MRN style platform identifier
 	PlatformIdentifier() (string, error)
 	Namespaces() ([]v1.Namespace, error)
-	Pod(namespace string, name string) (*v1.Pod, error)
+	Pod(namespace, name string) (*v1.Pod, error)
 	Pods(namespace v1.Namespace) ([]v1.Pod, error)
-	CronJob(namespace string, name string) (*batchv1.CronJob, error)
+	CronJob(namespace, name string) (*batchv1.CronJob, error)
 	CronJobs(namespace v1.Namespace) ([]batchv1.CronJob, error)
-	StatefulSet(namespace string, name string) (*appsv1.StatefulSet, error)
+	StatefulSet(namespace, name string) (*appsv1.StatefulSet, error)
 	StatefulSets(namespace v1.Namespace) ([]appsv1.StatefulSet, error)
-	Deployment(namespace string, name string) (*appsv1.Deployment, error)
+	Deployment(namespace, name string) (*appsv1.Deployment, error)
 	Deployments(namespace v1.Namespace) ([]appsv1.Deployment, error)
-	Job(namespace string, name string) (*batchv1.Job, error)
+	Job(namespace, name string) (*batchv1.Job, error)
 	Jobs(namespace v1.Namespace) ([]batchv1.Job, error)
-	ReplicaSet(namespace string, name string) (*appsv1.ReplicaSet, error)
+	ReplicaSet(namespace, name string) (*appsv1.ReplicaSet, error)
 	ReplicaSets(namespace v1.Namespace) ([]appsv1.ReplicaSet, error)
-	DaemonSet(namespace string, name string) (*appsv1.DaemonSet, error)
+	DaemonSet(namespace, name string) (*appsv1.DaemonSet, error)
 	DaemonSets(namespace v1.Namespace) ([]appsv1.DaemonSet, error)
+	Secret(namespace, name string) (*v1.Secret, error)
 }
 
 type ClusterInfo struct {

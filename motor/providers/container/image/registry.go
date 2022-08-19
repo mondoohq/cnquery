@@ -38,6 +38,29 @@ func WithAuthenticator(auth authn.Authenticator) Option {
 	}
 }
 
+func GetImageDescriptor(ref name.Reference, opts ...Option) (*remote.Descriptor, error) {
+	o := &options{
+		insecure: false,
+	}
+
+	for _, option := range opts {
+		if err := option(o); err != nil {
+			return nil, err
+		}
+	}
+
+	if o.auth == nil {
+		auth, err := authn.DefaultKeychain.Resolve(ref.Context())
+		if err != nil {
+			fmt.Printf("getting creds for %q: %v", ref, err)
+			return nil, err
+		}
+		o.auth = auth
+	}
+
+	return remote.Get(ref, remote.WithAuth(o.auth))
+}
+
 func LoadImageFromRegistry(ref name.Reference, opts ...Option) (v1.Image, io.ReadCloser, error) {
 	o := &options{
 		insecure: false,
