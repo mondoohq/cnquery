@@ -20,78 +20,43 @@ func (p *Platform) IsFamily(family string) bool {
 func (p *Platform) PrettyTitle() string {
 	prettyTitle := p.Title
 
+	// extend the title only for OS and k8s objects
+	if !(p.IsFamily("k8s-workload") || p.IsFamily("os")) {
+		return prettyTitle
+	}
+
 	var runtimeNiceName string
 	runtimeName := p.Runtime
 	if runtimeName != "" {
 		switch runtimeName {
-		case providers.RUNTIME_AWS:
-			runtimeNiceName = "Amazon Web Services"
 		case providers.RUNTIME_AWS_EC2:
 			runtimeNiceName = "AWS EC2 Instance"
-		case providers.RUNTIME_AWS_EC2_EBS:
-			runtimeNiceName = "AWS EC2 EBS Volume"
-		case providers.RUNTIME_AWS_ECR:
-			runtimeNiceName = "AWS Elastic Container Registry"
-		case providers.RUNTIME_AZ:
-			runtimeNiceName = "Microsoft Azure"
 		case providers.RUNTIME_AZ_COMPUTE:
 			runtimeNiceName = "Azure Virtual Machine"
 		case providers.RUNTIME_DOCKER_CONTAINER:
 			runtimeNiceName = "Docker Container"
 		case providers.RUNTIME_DOCKER_IMAGE:
 			runtimeNiceName = "Docker Image"
-		case providers.RUNTIME_DOCKER_REGISTRY:
-			runtimeNiceName = "Docker Container Registry"
-		case providers.RUNTIME_EQUINIX_METAL:
-			runtimeNiceName = "Equinix Metal"
-		case providers.RUNTIME_MICROSOFT_GRAPH:
-			runtimeNiceName = "Microsoft Graph"
-		case providers.RUNTIME_GCP:
-			runtimeNiceName = "Google Cloud Platform"
 		case providers.RUNTIME_GCP_COMPUTE:
 			runtimeNiceName = "GCP Virtual Machine"
-		case providers.RUNTIME_GCP_GCR:
-			runtimeNiceName = "Google Container Registry"
-		case providers.RUNTIME_GITHUB:
-			runtimeNiceName = "GitHub"
-		case providers.RUNTIME_GITLAB:
-			runtimeNiceName = "GitLab"
-		case providers.RUNTIME_KUBERNETES:
-			runtimeNiceName = "Kubernetes"
 		case providers.RUNTIME_KUBERNETES_CLUSTER:
 			runtimeNiceName = "Kubernetes Cluster"
 		case providers.RUNTIME_KUBERNETES_MANIFEST:
 			runtimeNiceName = "Kubernetes Manifest File"
-		case providers.RUNTIME_VSPHERE:
-			runtimeNiceName = "vSphere"
 		case providers.RUNTIME_VSPHERE_HOSTS:
 			runtimeNiceName = "vSphere Host"
 		case providers.RUNTIME_VSPHERE_VM:
 			runtimeNiceName = "vSphere Virtual Machine"
-		default:
-			runtimeNiceName = runtimeName
 		}
 	} else {
 		runtimeKind := p.Kind
 		switch runtimeKind {
-		case providers.Kind_KIND_API:
-			runtimeNiceName = "API"
 		case providers.Kind_KIND_BARE_METAL:
 			runtimeNiceName = "bare metal"
-		case providers.Kind_KIND_CODE:
-			runtimeNiceName = "code"
 		case providers.Kind_KIND_CONTAINER:
 			runtimeNiceName = "Container"
 		case providers.Kind_KIND_CONTAINER_IMAGE:
 			runtimeNiceName = "Container Image"
-		case providers.Kind_KIND_K8S_OBJECT:
-			runtimeNiceName = "Kubernetes Object"
-		case providers.Kind_KIND_NETWORK:
-			runtimeNiceName = "Network"
-		case providers.Kind_KIND_PACKAGE:
-			runtimeNiceName = "Software Package"
-		case providers.Kind_KIND_PROCESS:
-			runtimeNiceName = "Process"
 		case providers.Kind_KIND_VIRTUAL_MACHINE:
 			runtimeNiceName = "Virtual Machine"
 		case providers.Kind_KIND_VIRTUAL_MACHINE_IMAGE:
