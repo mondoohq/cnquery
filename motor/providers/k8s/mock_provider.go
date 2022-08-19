@@ -392,6 +392,21 @@ func (mr *MockKubernetesProviderMockRecorder) Runtime() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Runtime", reflect.TypeOf((*MockKubernetesProvider)(nil).Runtime))
 }
 
+// Secret mocks base method.
+func (m *MockKubernetesProvider) Secret(namespace, name string) (*v11.Secret, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Secret", namespace, name)
+	ret0, _ := ret[0].(*v11.Secret)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Secret indicates an expected call of Secret.
+func (mr *MockKubernetesProviderMockRecorder) Secret(namespace, name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Secret", reflect.TypeOf((*MockKubernetesProvider)(nil).Secret), namespace, name)
+}
+
 // ServerVersion mocks base method.
 func (m *MockKubernetesProvider) ServerVersion() *version.Info {
 	m.ctrl.T.Helper()

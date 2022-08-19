@@ -278,7 +278,7 @@ func (t *apiProvider) Pods(namespace v1.Namespace) ([]v1.Pod, error) {
 	return list.Items, err
 }
 
-func (t *apiProvider) Pod(namespace string, name string) (*v1.Pod, error) {
+func (t *apiProvider) Pod(namespace, name string) (*v1.Pod, error) {
 	ctx := context.Background()
 	pod, err := t.clientset.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
@@ -302,7 +302,7 @@ func (t *apiProvider) CronJobs(namespace v1.Namespace) ([]batchv1.CronJob, error
 	return list.Items, err
 }
 
-func (t *apiProvider) CronJob(namespace string, name string) (*batchv1.CronJob, error) {
+func (t *apiProvider) CronJob(namespace, name string) (*batchv1.CronJob, error) {
 	ctx := context.Background()
 	cronjob, err := t.clientset.BatchV1().CronJobs(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
@@ -326,7 +326,7 @@ func (t *apiProvider) StatefulSets(namespace v1.Namespace) ([]appsv1.StatefulSet
 	return list.Items, err
 }
 
-func (t *apiProvider) StatefulSet(namespace string, name string) (*appsv1.StatefulSet, error) {
+func (t *apiProvider) StatefulSet(namespace, name string) (*appsv1.StatefulSet, error) {
 	ctx := context.Background()
 	statefulset, err := t.clientset.AppsV1().StatefulSets(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
@@ -350,7 +350,7 @@ func (t *apiProvider) Deployments(namespace v1.Namespace) ([]appsv1.Deployment, 
 	return list.Items, err
 }
 
-func (t *apiProvider) Deployment(namespace string, name string) (*appsv1.Deployment, error) {
+func (t *apiProvider) Deployment(namespace, name string) (*appsv1.Deployment, error) {
 	ctx := context.Background()
 	deployment, err := t.clientset.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
@@ -374,7 +374,7 @@ func (t *apiProvider) Jobs(namespace v1.Namespace) ([]batchv1.Job, error) {
 	return list.Items, err
 }
 
-func (t *apiProvider) Job(namespace string, name string) (*batchv1.Job, error) {
+func (t *apiProvider) Job(namespace, name string) (*batchv1.Job, error) {
 	ctx := context.Background()
 	job, err := t.clientset.BatchV1().Jobs(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
@@ -398,7 +398,7 @@ func (t *apiProvider) ReplicaSets(namespace v1.Namespace) ([]appsv1.ReplicaSet, 
 	return list.Items, err
 }
 
-func (t *apiProvider) ReplicaSet(namespace string, name string) (*appsv1.ReplicaSet, error) {
+func (t *apiProvider) ReplicaSet(namespace, name string) (*appsv1.ReplicaSet, error) {
 	ctx := context.Background()
 	replicaset, err := t.clientset.AppsV1().ReplicaSets(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
@@ -422,7 +422,7 @@ func (t *apiProvider) DaemonSets(namespace v1.Namespace) ([]appsv1.DaemonSet, er
 	return list.Items, err
 }
 
-func (t *apiProvider) DaemonSet(namespace string, name string) (*appsv1.DaemonSet, error) {
+func (t *apiProvider) DaemonSet(namespace, name string) (*appsv1.DaemonSet, error) {
 	ctx := context.Background()
 	daemonset, err := t.clientset.AppsV1().DaemonSets(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
@@ -431,4 +431,13 @@ func (t *apiProvider) DaemonSet(namespace string, name string) (*appsv1.DaemonSe
 	// needed because of https://github.com/kubernetes/client-go/issues/861
 	daemonset.SetGroupVersionKind(appsv1.SchemeGroupVersion.WithKind("DaemonSet"))
 	return daemonset, err
+}
+
+func (t *apiProvider) Secret(namespace, name string) (*v1.Secret, error) {
+	ctx := context.Background()
+	secret, err := t.clientset.CoreV1().Secrets(namespace).Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return secret, err
 }

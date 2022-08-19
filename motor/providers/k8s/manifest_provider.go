@@ -613,3 +613,23 @@ func (t *manifestProvider) DaemonSets(namespace v1.Namespace) ([]appsv1.DaemonSe
 
 	return daemonsets, nil
 }
+
+func (t *manifestProvider) Secret(namespace, name string) (*v1.Secret, error) {
+	result, err := t.Resources("secrets.v1.", name, namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result.Resources) > 1 {
+		return nil, errors.New("multiple secrets found")
+	}
+	foundSecret, ok := result.Resources[0].(*v1.Secret)
+	if !ok {
+		return nil, errors.New("could not convert k8s resource to secret")
+	}
+
+	if foundSecret.Name == "" {
+		return nil, errors.New("secret not found")
+	}
+	return foundSecret, nil
+}

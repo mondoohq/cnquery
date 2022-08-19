@@ -6,6 +6,7 @@ import (
 	docker_discovery "go.mondoo.io/mondoo/motor/discovery/docker_engine"
 	"go.mondoo.io/mondoo/motor/motorid/containerid"
 	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/container/auth"
 	"go.mondoo.io/mondoo/motor/providers/container/docker_engine"
 	"go.mondoo.io/mondoo/motor/providers/container/docker_snapshot"
 	"go.mondoo.io/mondoo/motor/providers/container/image"
@@ -26,7 +27,7 @@ func NewContainerRegistryImage(tc *providers.Config) (ContainerProvider, error) 
 		log.Debug().Str("ref", ref.Name()).Msg("found valid container registry reference")
 
 		registryOpts := []image.Option{image.WithInsecure(tc.Insecure)}
-		remoteOpts := AuthOption(tc.Credentials)
+		remoteOpts := auth.AuthOption(tc.Credentials)
 		for i := range remoteOpts {
 			registryOpts = append(registryOpts, remoteOpts[i])
 		}

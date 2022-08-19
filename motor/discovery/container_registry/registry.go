@@ -18,6 +18,8 @@ import (
 	"go.mondoo.io/mondoo/motor/motorid/containerid"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/container/auth"
+	"go.mondoo.io/mondoo/motor/providers/container/image"
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
@@ -172,9 +174,7 @@ func (a *DockerRegistryImages) GetImage(ref name.Reference, creds []*vault.Crede
 }
 
 func (a *DockerRegistryImages) toAsset(ref name.Reference, creds []*vault.Credential, opts ...remote.Option) (*asset.Asset, error) {
-	remoteOpts := a.remoteOptions()
-	remoteOpts = append(remoteOpts, opts...)
-	desc, err := remote.Get(ref, remoteOpts...)
+	desc, err := image.GetImageDescriptor(ref, auth.AuthOption(creds)...)
 	if err != nil {
 		return nil, handleUnauthorizedError(err, ref.Name())
 	}
