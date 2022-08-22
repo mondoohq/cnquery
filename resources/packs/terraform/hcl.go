@@ -1,4 +1,4 @@
-package core
+package terraform
 
 import (
 	"encoding/json"
@@ -17,6 +17,7 @@ import (
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/terraform"
 	"go.mondoo.io/mondoo/resources"
+	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
 func terraformtransport(t providers.Transport) (*terraform.Provider, error) {
@@ -198,7 +199,7 @@ func newMqlHclBlock(runtime *resources.Runtime, block *hcl.Block, file *hcl.File
 
 	r, err := runtime.CreateResource("terraform.block",
 		"type", block.Type,
-		"labels", StrSliceToInterface(block.Labels),
+		"labels", core.StrSliceToInterface(block.Labels),
 		"start", start,
 		"end", end,
 		"snippet", snippet,
