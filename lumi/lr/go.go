@@ -653,7 +653,7 @@ var primitiveTypes = map[string]string{
 	"int":    "int64",
 	"float":  "float64",
 	"time":   "*time.Time",
-	"dict":   "map[string]interface{}",
+	"dict":   "interface{}",
 	"any":    "interface{}",
 }
 

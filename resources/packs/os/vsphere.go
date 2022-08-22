@@ -1116,9 +1116,14 @@ func (v *lumiVsphereVswitchStandard) GetShapingPolicy() (map[string]interface{},
 }
 
 func (v *lumiVsphereVswitchStandard) GetUplinks() ([]interface{}, error) {
-	properties, err := v.Properties()
+	raw, err := v.Properties()
 	if err != nil {
 		return nil, err
+	}
+
+	properties, ok := raw.(map[string]interface{})
+	if !ok {
+		return nil, errors.New("unexpected properties structure for vsphere switch")
 	}
 
 	uplinksRaw := properties["Uplinks"]
@@ -1170,9 +1175,14 @@ func (v *lumiVsphereVswitchDvs) id() (string, error) {
 }
 
 func (v *lumiVsphereVswitchDvs) GetUplinks() ([]interface{}, error) {
-	properties, err := v.Properties()
+	raw, err := v.Properties()
 	if err != nil {
 		return nil, err
+	}
+
+	properties, ok := raw.(map[string]interface{})
+	if !ok {
+		return nil, errors.New("unexpected properties structure for vsphere switch")
 	}
 
 	uplinksRaw := properties["Uplinks"]

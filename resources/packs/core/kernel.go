@@ -51,9 +51,14 @@ func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
 	if pf.IsFamily(platform.FAMILY_LINUX) {
 
 		// 1. gather running kernel information
-		kernelInfo, err := k.Info()
+		kernelInfoRaw, err := k.Info()
 		if err != nil {
 			return nil, errors.New("could not determine kernel version")
+		}
+
+		kernelInfo, ok := kernelInfoRaw.(map[string]interface{})
+		if !ok {
+			return nil, errors.New("no structured kernel information found")
 		}
 
 		runningKernelVersion := kernelInfo["version"].(string)
@@ -200,7 +205,7 @@ func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
 	return JsonToDictSlice(res)
 }
 
-func (k *lumiKernel) GetInfo() (map[string]interface{}, error) {
+func (k *lumiKernel) GetInfo() (interface{}, error) {
 	// find suitable kernel module manager
 	mm, err := kernel.ResolveManager(k.MotorRuntime.Motor)
 	if mm == nil || err != nil {

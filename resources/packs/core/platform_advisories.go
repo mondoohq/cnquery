@@ -16,6 +16,26 @@ import (
 	"go.mondoo.io/mondoo/vadvisor/specs/cvss"
 )
 
+// TODO: generalize this kind of function
+func getKernelVersion(kernel Kernel) string {
+	raw, err := kernel.Info()
+	if err != nil {
+		return ""
+	}
+
+	info, ok := raw.(map[string]interface{})
+	if !ok {
+		return ""
+	}
+
+	val, ok := info["version"]
+	if !ok {
+		return ""
+	}
+
+	return val.(string)
+}
+
 // fetches the vulnerability report and returns the full report
 func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 	r := p.MotorRuntime
@@ -94,14 +114,7 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 		// therefore we ignore the error because its not important, worst case the user sees to many advisories
 		objKernel, err := r.CreateResource("kernel")
 		if err == nil {
-			kernel := objKernel.(Kernel)
-			kernelInfo, err := kernel.Info()
-			if err == nil {
-				val, ok := kernelInfo["version"]
-				if ok {
-					kernelVersion = val.(string)
-				}
-			}
+			kernelVersion = getKernelVersion(objKernel.(Kernel))
 		}
 	}
 

@@ -219,8 +219,13 @@ func (s *lumiTls) GetParams(socket Socket, domainName string) (map[string]interf
 	return res, nil
 }
 
-func (s *lumiTls) GetVersions(params map[string]interface{}) ([]interface{}, error) {
-	raw, ok := params["versions"]
+func (s *lumiTls) GetVersions(params interface{}) ([]interface{}, error) {
+	paramsM, ok := params.(map[string]interface{})
+	if !ok {
+		return []interface{}{}, nil
+	}
+
+	raw, ok := paramsM["versions"]
 	if !ok {
 		return []interface{}{}, nil
 	}
@@ -236,8 +241,13 @@ func (s *lumiTls) GetVersions(params map[string]interface{}) ([]interface{}, err
 	return res, nil
 }
 
-func (s *lumiTls) GetCiphers(params map[string]interface{}) ([]interface{}, error) {
-	raw, ok := params["ciphers"]
+func (s *lumiTls) GetCiphers(params interface{}) ([]interface{}, error) {
+	paramsM, ok := params.(map[string]interface{})
+	if !ok {
+		return []interface{}{}, nil
+	}
+
+	raw, ok := paramsM["ciphers"]
 	if !ok {
 		return []interface{}{}, nil
 	}
@@ -253,8 +263,13 @@ func (s *lumiTls) GetCiphers(params map[string]interface{}) ([]interface{}, erro
 	return res, nil
 }
 
-func (s *lumiTls) GetExtensions(params map[string]interface{}) ([]interface{}, error) {
-	raw, ok := params["extensions"]
+func (s *lumiTls) GetExtensions(params interface{}) ([]interface{}, error) {
+	paramsM, ok := params.(map[string]interface{})
+	if !ok {
+		return []interface{}{}, nil
+	}
+
+	raw, ok := paramsM["extensions"]
 	if !ok {
 		return []interface{}{}, nil
 	}
@@ -270,8 +285,13 @@ func (s *lumiTls) GetExtensions(params map[string]interface{}) ([]interface{}, e
 	return res, nil
 }
 
-func (s *lumiTls) GetCertificates(params map[string]interface{}) ([]interface{}, error) {
-	raw, ok := params["certificates"]
+func (s *lumiTls) GetCertificates(params interface{}) ([]interface{}, error) {
+	paramsM, ok := params.(map[string]interface{})
+	if !ok {
+		return []interface{}{}, nil
+	}
+
+	raw, ok := paramsM["certificates"]
 	if !ok {
 		return []interface{}{}, nil
 	}
@@ -279,8 +299,13 @@ func (s *lumiTls) GetCertificates(params map[string]interface{}) ([]interface{},
 	return raw.([]interface{}), nil
 }
 
-func (s *lumiTls) GetNonSniCertificates(params map[string]interface{}) ([]interface{}, error) {
-	raw, ok := params["non-sni-certificates"]
+func (s *lumiTls) GetNonSniCertificates(params interface{}) ([]interface{}, error) {
+	paramsM, ok := params.(map[string]interface{})
+	if !ok {
+		return []interface{}{}, nil
+	}
+
+	raw, ok := paramsM["non-sni-certificates"]
 	if !ok {
 		return []interface{}{}, nil
 	}

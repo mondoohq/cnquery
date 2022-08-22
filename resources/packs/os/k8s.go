@@ -960,9 +960,14 @@ func (k *lumiK8sPod) GetLabels() (interface{}, error) {
 }
 
 func (k *lumiK8sPod) GetNode() (K8sNode, error) {
-	podSpec, err := k.PodSpec()
+	rawSpec, err := k.PodSpec()
 	if err != nil {
 		return nil, err
+	}
+
+	podSpec, ok := rawSpec.(map[string]interface{})
+	if !ok {
+		return nil, errors.New("invalid pod spec information")
 	}
 
 	obj, err := k.MotorRuntime.CreateResource("k8s")
@@ -1406,7 +1411,7 @@ type K8sObject interface {
 	Id() (string, error)
 	Kind() (string, error)
 	Name() (string, error)
-	Manifest() (map[string]interface{}, error)
+	Manifest() (interface{}, error)
 }
 
 func objId(o K8sNamespacedObject) (string, error) {
@@ -1600,10 +1605,16 @@ func getContainers(
 
 	// At this point we already have the cached manifest. We can parse it to retrieve the
 	// containers for the resource.
-	manifest, err := o.Manifest()
+	manifestRaw, err := o.Manifest()
 	if err != nil {
 		return nil, err
 	}
+
+	manifest, ok := manifestRaw.(map[string]interface{})
+	if !ok {
+		return nil, errors.New("expected manifest to be an object with keys")
+	}
+
 	unstr := unstructured.Unstructured{Object: manifest}
 	obj := resources.ConvertToK8sObject(unstr)
 

@@ -82,11 +82,16 @@ func (d *lumiDns) GetParams() (interface{}, error) {
 }
 
 // GetRecords returns successful dns records
-func (d *lumiDns) GetRecords(params map[string]interface{}) ([]interface{}, error) {
+func (d *lumiDns) GetRecords(params interface{}) ([]interface{}, error) {
+	paramsM, ok := params.(map[string]interface{})
+	if !ok {
+		return []interface{}{}, nil
+	}
+
 	// convert responses to dns types
 	dnsEntries := []interface{}{}
-	for k := range params {
-		r := params[k].(map[string]interface{})
+	for k := range paramsM {
+		r := paramsM[k].(map[string]interface{})
 
 		// filter by successful dns records
 		if r["rCode"] != dns.RcodeToString[dns.RcodeSuccess] {
@@ -117,9 +122,14 @@ func (d *lumiDnsRecord) id() (string, error) {
 	return "dns.record/" + name + "/" + c + "/" + t, nil
 }
 
-func (d *lumiDns) GetMx(params map[string]interface{}) ([]interface{}, error) {
+func (d *lumiDns) GetMx(params interface{}) ([]interface{}, error) {
+	paramsM, ok := params.(map[string]interface{})
+	if !ok {
+		return []interface{}{}, nil
+	}
+
 	mxEntries := []interface{}{}
-	record, ok := params["MX"]
+	record, ok := paramsM["MX"]
 	if !ok {
 		return mxEntries, nil
 	}
@@ -183,10 +193,15 @@ func (d *lumiDnsMxRecord) id() (string, error) {
 	return "dns.mx/" + name + "+" + domainName, err
 }
 
-func (d *lumiDns) GetDkim(params map[string]interface{}) ([]interface{}, error) {
+func (d *lumiDns) GetDkim(params interface{}) ([]interface{}, error) {
+	paramsM, ok := params.(map[string]interface{})
+	if !ok {
+		return []interface{}{}, nil
+	}
+
 	dkimEntries := []interface{}{}
 
-	record, ok := params["TXT"]
+	record, ok := paramsM["TXT"]
 	if !ok {
 		return dkimEntries, nil
 	}
