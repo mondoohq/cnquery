@@ -4,15 +4,15 @@ import (
 	"context"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/2019-03-01/resources/mgmt/insights"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (a *lumiAzurermMonitor) id() (string, error) {
+func (a *mqlAzurermMonitor) id() (string, error) {
 	return "azurerm.monitor", nil
 }
 
-func (a *lumiAzurermMonitor) GetLogProfiles() ([]interface{}, error) {
+func (a *mqlAzurermMonitor) GetLogProfiles() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -47,10 +47,10 @@ func (a *lumiAzurermMonitor) GetLogProfiles() ([]interface{}, error) {
 			return nil, err
 		}
 
-		var lumiAzureStorageAccount interface{}
+		var mqlAzureStorageAccount interface{}
 		if entry.LogProfileProperties != nil && entry.LogProfileProperties.StorageAccountID != nil {
 			// the resource fetches the data itself
-			lumiAzureStorageAccount, err = a.MotorRuntime.CreateResource("azurerm.storage.account",
+			mqlAzureStorageAccount, err = a.MotorRuntime.CreateResource("azurerm.storage.account",
 				"id", core.ToString(entry.LogProfileProperties.StorageAccountID),
 			)
 			if err != nil {
@@ -58,29 +58,29 @@ func (a *lumiAzurermMonitor) GetLogProfiles() ([]interface{}, error) {
 			}
 		}
 
-		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.monitor.logprofile",
+		mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.monitor.logprofile",
 			"id", core.ToString(entry.ID),
 			"name", core.ToString(entry.Name),
 			"location", core.ToString(entry.Location),
 			"type", core.ToString(entry.Type),
 			"tags", azureTagsToInterface(entry.Tags),
 			"properties", properties,
-			"storageAccount", lumiAzureStorageAccount,
+			"storageAccount", mqlAzureStorageAccount,
 		)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzure)
+		res = append(res, mqlAzure)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermMonitorLogprofile) id() (string, error) {
+func (a *mqlAzurermMonitorLogprofile) id() (string, error) {
 	return a.Id()
 }
 
-func diagnosticsSettings(runtime *lumi.Runtime, id string) ([]interface{}, error) {
+func diagnosticsSettings(runtime *resources.Runtime, id string) ([]interface{}, error) {
 	// fetch the details
 	at, err := azuretransport(runtime.Motor.Provider)
 	if err != nil {
@@ -115,10 +115,10 @@ func diagnosticsSettings(runtime *lumi.Runtime, id string) ([]interface{}, error
 			return nil, err
 		}
 
-		var lumiAzureStorageAccount interface{}
+		var mqlAzureStorageAccount interface{}
 		if entry.DiagnosticSettings != nil && entry.DiagnosticSettings.StorageAccountID != nil {
 			// the resource fetches the data itself
-			lumiAzureStorageAccount, err = runtime.CreateResource("azurerm.storage.account",
+			mqlAzureStorageAccount, err = runtime.CreateResource("azurerm.storage.account",
 				"id", core.ToString(entry.DiagnosticSettings.StorageAccountID),
 			)
 			if err != nil {
@@ -126,22 +126,22 @@ func diagnosticsSettings(runtime *lumi.Runtime, id string) ([]interface{}, error
 			}
 		}
 
-		lumiAzure, err := runtime.CreateResource("azurerm.monitor.diagnosticsetting",
+		mqlAzure, err := runtime.CreateResource("azurerm.monitor.diagnosticsetting",
 			"id", core.ToString(entry.ID),
 			"name", core.ToString(entry.Name),
 			"type", core.ToString(entry.Type),
 			"properties", properties,
-			"storageAccount", lumiAzureStorageAccount,
+			"storageAccount", mqlAzureStorageAccount,
 		)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzure)
+		res = append(res, mqlAzure)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermMonitorDiagnosticsetting) id() (string, error) {
+func (a *mqlAzurermMonitorDiagnosticsetting) id() (string, error) {
 	return a.Id()
 }

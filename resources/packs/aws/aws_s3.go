@@ -12,7 +12,7 @@ import (
 	"github.com/aws/smithy-go"
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/aws/awspolicy"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
@@ -21,11 +21,11 @@ const (
 	s3ArnPattern = "arn:aws:s3:::%s"
 )
 
-func (p *lumiAwsS3) id() (string, error) {
+func (p *mqlAwsS3) id() (string, error) {
 	return "aws.s3", nil
 }
 
-func (p *lumiAwsS3) GetBuckets() ([]interface{}, error) {
+func (p *mqlAwsS3) GetBuckets() ([]interface{}, error) {
 	at, err := awstransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func (p *lumiAwsS3) GetBuckets() ([]interface{}, error) {
 	for i := range buckets.Buckets {
 		bucket := buckets.Buckets[i]
 
-		lumiS3Bucket, err := p.MotorRuntime.CreateResource("aws.s3.bucket",
+		mqlS3Bucket, err := p.MotorRuntime.CreateResource("aws.s3.bucket",
 			"name", core.ToString(bucket.Name),
 			"arn", fmt.Sprintf(s3ArnPattern, core.ToString(bucket.Name)),
 			"exists", true,
@@ -51,13 +51,13 @@ func (p *lumiAwsS3) GetBuckets() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiS3Bucket)
+		res = append(res, mqlS3Bucket)
 	}
 
 	return res, nil
 }
 
-func (p *lumiAwsS3Bucket) init(args *lumi.Args) (*lumi.Args, AwsS3Bucket, error) {
+func (p *mqlAwsS3Bucket) init(args *resources.Args) (*resources.Args, AwsS3Bucket, error) {
 	// NOTE: bucket only initializes with arn and name
 	if len(*args) >= 2 {
 		return args, nil, nil
@@ -92,11 +92,11 @@ func (p *lumiAwsS3Bucket) init(args *lumi.Args) (*lumi.Args, AwsS3Bucket, error)
 	// iterate over security groups and find the one with the arn
 	for i := range rawResources {
 		bucket := rawResources[i].(AwsS3Bucket)
-		lumiBucketArn, err := bucket.Arn()
+		mqlBucketArn, err := bucket.Arn()
 		if err != nil {
 			return nil, nil, err
 		}
-		if lumiBucketArn == arn {
+		if mqlBucketArn == arn {
 			return args, bucket, nil
 		}
 	}
@@ -105,20 +105,20 @@ func (p *lumiAwsS3Bucket) init(args *lumi.Args) (*lumi.Args, AwsS3Bucket, error)
 	splitArn := strings.Split(arn, ":::")
 	name := splitArn[1]
 	log.Debug().Msgf("no bucket found for %s", arn)
-	lumiAwsS3Bucket, err := p.MotorRuntime.CreateResource("aws.s3.bucket",
+	mqlAwsS3Bucket, err := p.MotorRuntime.CreateResource("aws.s3.bucket",
 		"arn", arn,
 		"name", name,
 		"exists", false,
 	)
-	return nil, lumiAwsS3Bucket.(AwsS3Bucket), err
+	return nil, mqlAwsS3Bucket.(AwsS3Bucket), err
 }
 
-func (p *lumiAwsS3Bucket) id() (string, error) {
+func (p *mqlAwsS3Bucket) id() (string, error) {
 	// assumes bucket names are globally unique, which they are right now
 	return p.Arn()
 }
 
-func (p *lumiAwsS3Bucket) GetPolicy() (interface{}, error) {
+func (p *mqlAwsS3Bucket) GetPolicy() (interface{}, error) {
 	bucketname, err := p.Name()
 	if err != nil {
 		return nil, err
@@ -149,21 +149,21 @@ func (p *lumiAwsS3Bucket) GetPolicy() (interface{}, error) {
 
 	if policy != nil && policy.Policy != nil {
 		// create the plicy resource
-		lumiS3BucketPolicy, err := p.MotorRuntime.CreateResource("aws.s3.bucket.policy",
+		mqlS3BucketPolicy, err := p.MotorRuntime.CreateResource("aws.s3.bucket.policy",
 			"name", bucketname,
 			"document", core.ToString(policy.Policy),
 		)
 		if err != nil {
 			return nil, err
 		}
-		return lumiS3BucketPolicy, nil
+		return mqlS3BucketPolicy, nil
 	}
 
 	// no bucket policy found, return nil for the policy
 	return nil, nil
 }
 
-func (p *lumiAwsS3Bucket) GetTags() (map[string]interface{}, error) {
+func (p *mqlAwsS3Bucket) GetTags() (map[string]interface{}, error) {
 	bucketname, err := p.Name()
 	if err != nil {
 		return nil, err
@@ -204,7 +204,7 @@ func (p *lumiAwsS3Bucket) GetTags() (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (p *lumiAwsS3Bucket) GetLocation() (string, error) {
+func (p *mqlAwsS3Bucket) GetLocation() (string, error) {
 	bucketname, err := p.Name()
 	if err != nil {
 		return "", err
@@ -234,7 +234,7 @@ func (p *lumiAwsS3Bucket) GetLocation() (string, error) {
 	return region, nil
 }
 
-func (p *lumiAwsS3Bucket) gatherAcl() (*s3.GetBucketAclOutput, error) {
+func (p *mqlAwsS3Bucket) gatherAcl() (*s3.GetBucketAclOutput, error) {
 	bucketname, err := p.Name()
 	if err != nil {
 		return nil, err
@@ -263,7 +263,7 @@ func (p *lumiAwsS3Bucket) gatherAcl() (*s3.GetBucketAclOutput, error) {
 	return acl, nil
 }
 
-func (p *lumiAwsS3Bucket) GetAcl() ([]interface{}, error) {
+func (p *mqlAwsS3Bucket) GetAcl() ([]interface{}, error) {
 	bucketname, err := p.Name()
 	if err != nil {
 		return nil, err
@@ -298,7 +298,7 @@ func (p *lumiAwsS3Bucket) GetAcl() ([]interface{}, error) {
 			id = id + "/" + *grant.Grantee.ID
 		}
 
-		lumiBucketGrant, err := p.MotorRuntime.CreateResource("aws.s3.bucket.grant",
+		mqlBucketGrant, err := p.MotorRuntime.CreateResource("aws.s3.bucket.grant",
 			"id", id,
 			"name", bucketname,
 			"permission", string(grant.Permission),
@@ -307,12 +307,12 @@ func (p *lumiAwsS3Bucket) GetAcl() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiBucketGrant)
+		res = append(res, mqlBucketGrant)
 	}
 	return res, nil
 }
 
-func (p *lumiAwsS3Bucket) GetPublicAccessBlock() (interface{}, error) {
+func (p *mqlAwsS3Bucket) GetPublicAccessBlock() (interface{}, error) {
 	bucketname, err := p.Name()
 	if err != nil {
 		return nil, err
@@ -342,7 +342,7 @@ func (p *lumiAwsS3Bucket) GetPublicAccessBlock() (interface{}, error) {
 	return core.JsonToDict(publicAccessBlock.PublicAccessBlockConfiguration)
 }
 
-func (p *lumiAwsS3Bucket) GetOwner() (map[string]interface{}, error) {
+func (p *mqlAwsS3Bucket) GetOwner() (map[string]interface{}, error) {
 	acl, err := p.gatherAcl()
 	if err != nil {
 		return nil, err
@@ -365,7 +365,7 @@ const (
 	s3AllUsersGroup           = "http://acs.amazonaws.com/groups/global/AllUsers"
 )
 
-func (p *lumiAwsS3Bucket) GetPublic() (bool, error) {
+func (p *mqlAwsS3Bucket) GetPublic() (bool, error) {
 	acl, err := p.gatherAcl()
 	if err != nil {
 		return false, err
@@ -380,7 +380,7 @@ func (p *lumiAwsS3Bucket) GetPublic() (bool, error) {
 	return false, nil
 }
 
-func (p *lumiAwsS3Bucket) GetCors() ([]interface{}, error) {
+func (p *mqlAwsS3Bucket) GetCors() ([]interface{}, error) {
 	bucketname, err := p.Name()
 	if err != nil {
 		return nil, err
@@ -411,7 +411,7 @@ func (p *lumiAwsS3Bucket) GetCors() ([]interface{}, error) {
 	res := []interface{}{}
 	for i := range cors.CORSRules {
 		corsrule := cors.CORSRules[i]
-		lumiBucketCors, err := p.MotorRuntime.CreateResource("aws.s3.bucket.corsrule",
+		mqlBucketCors, err := p.MotorRuntime.CreateResource("aws.s3.bucket.corsrule",
 			"name", bucketname,
 			"allowedHeaders", corsrule.AllowedHeaders,
 			"allowedMethods", corsrule.AllowedMethods,
@@ -422,13 +422,13 @@ func (p *lumiAwsS3Bucket) GetCors() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiBucketCors)
+		res = append(res, mqlBucketCors)
 	}
 
 	return res, nil
 }
 
-func (p *lumiAwsS3Bucket) GetLogging() (map[string]interface{}, error) {
+func (p *mqlAwsS3Bucket) GetLogging() (map[string]interface{}, error) {
 	bucketname, err := p.Name()
 	if err != nil {
 		return nil, err
@@ -473,7 +473,7 @@ func (p *lumiAwsS3Bucket) GetLogging() (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (p *lumiAwsS3Bucket) GetVersioning() (map[string]interface{}, error) {
+func (p *mqlAwsS3Bucket) GetVersioning() (map[string]interface{}, error) {
 	bucketname, err := p.Name()
 	if err != nil {
 		return nil, err
@@ -508,7 +508,7 @@ func (p *lumiAwsS3Bucket) GetVersioning() (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (p *lumiAwsS3Bucket) GetReplication() (interface{}, error) {
+func (p *mqlAwsS3Bucket) GetReplication() (interface{}, error) {
 	bucketname, err := p.Name()
 	if err != nil {
 		return nil, err
@@ -538,7 +538,7 @@ func (p *lumiAwsS3Bucket) GetReplication() (interface{}, error) {
 	return core.JsonToDict(bucketReplication.ReplicationConfiguration)
 }
 
-func (p *lumiAwsS3Bucket) GetEncryption() (interface{}, error) {
+func (p *mqlAwsS3Bucket) GetEncryption() (interface{}, error) {
 	bucketname, err := p.Name()
 	if err != nil {
 		return nil, err
@@ -573,7 +573,7 @@ func (p *lumiAwsS3Bucket) GetEncryption() (interface{}, error) {
 	return core.JsonToDict(encryption.ServerSideEncryptionConfiguration)
 }
 
-func (p *lumiAwsS3Bucket) GetDefaultLock() (string, error) {
+func (p *mqlAwsS3Bucket) GetDefaultLock() (string, error) {
 	bucketname, err := p.Name()
 	if err != nil {
 		return "", err
@@ -604,7 +604,7 @@ func (p *lumiAwsS3Bucket) GetDefaultLock() (string, error) {
 	return string(objectLockConfiguration.ObjectLockConfiguration.ObjectLockEnabled), nil
 }
 
-func (p *lumiAwsS3Bucket) GetStaticWebsiteHosting() (map[string]interface{}, error) {
+func (p *mqlAwsS3Bucket) GetStaticWebsiteHosting() (map[string]interface{}, error) {
 	bucketname, err := p.Name()
 	if err != nil {
 		return nil, err
@@ -647,11 +647,11 @@ func (p *lumiAwsS3Bucket) GetStaticWebsiteHosting() (map[string]interface{}, err
 	return res, nil
 }
 
-func (p *lumiAwsS3BucketGrant) id() (string, error) {
+func (p *mqlAwsS3BucketGrant) id() (string, error) {
 	return p.Id()
 }
 
-func (p *lumiAwsS3BucketCorsrule) id() (string, error) {
+func (p *mqlAwsS3BucketCorsrule) id() (string, error) {
 	name, err := p.Name()
 	if err != nil {
 		return "", err
@@ -659,11 +659,11 @@ func (p *lumiAwsS3BucketCorsrule) id() (string, error) {
 	return "s3.bucket.corsrule " + name, nil
 }
 
-func (p *lumiAwsS3BucketPolicy) id() (string, error) {
+func (p *mqlAwsS3BucketPolicy) id() (string, error) {
 	return p.Name()
 }
 
-func (p *lumiAwsS3BucketPolicy) parsePolicyDocument() (*awspolicy.S3BucketPolicy, error) {
+func (p *mqlAwsS3BucketPolicy) parsePolicyDocument() (*awspolicy.S3BucketPolicy, error) {
 	data, err := p.Document()
 	if err != nil {
 		return nil, err
@@ -678,7 +678,7 @@ func (p *lumiAwsS3BucketPolicy) parsePolicyDocument() (*awspolicy.S3BucketPolicy
 	return &policy, nil
 }
 
-func (p *lumiAwsS3BucketPolicy) GetVersion() (string, error) {
+func (p *mqlAwsS3BucketPolicy) GetVersion() (string, error) {
 	policy, err := p.parsePolicyDocument()
 	if err != nil {
 		return "", err
@@ -686,7 +686,7 @@ func (p *lumiAwsS3BucketPolicy) GetVersion() (string, error) {
 	return policy.Version, nil
 }
 
-func (p *lumiAwsS3BucketPolicy) GetId() (string, error) {
+func (p *mqlAwsS3BucketPolicy) GetId() (string, error) {
 	policy, err := p.parsePolicyDocument()
 	if err != nil {
 		return "", err
@@ -694,7 +694,7 @@ func (p *lumiAwsS3BucketPolicy) GetId() (string, error) {
 	return policy.Id, nil
 }
 
-func (p *lumiAwsS3BucketPolicy) GetStatements() ([]interface{}, error) {
+func (p *mqlAwsS3BucketPolicy) GetStatements() ([]interface{}, error) {
 	policy, err := p.parsePolicyDocument()
 	if err != nil {
 		return nil, err

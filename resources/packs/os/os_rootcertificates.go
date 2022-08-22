@@ -6,17 +6,17 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core"
 	"go.mondoo.io/mondoo/resources/packs/core/certificates"
 )
 
-func (s *lumiOsRootCertificates) id() (string, error) {
+func (s *mqlOsRootCertificates) id() (string, error) {
 	return "osrootcertificates", nil
 }
 
-func (s *lumiOsRootCertificates) init(args *lumi.Args) (*lumi.Args, OsRootCertificates, error) {
+func (s *mqlOsRootCertificates) init(args *resources.Args) (*resources.Args, OsRootCertificates, error) {
 	osProvider, err := osProvider(s.MotorRuntime.Motor)
 	if err != nil {
 		return nil, nil, err
@@ -37,7 +37,7 @@ func (s *lumiOsRootCertificates) init(args *lumi.Args) (*lumi.Args, OsRootCertif
 	}
 
 	// search the first file that exists, it mimics the behavior go is doing
-	lumiFiles := []interface{}{}
+	mqlFiles := []interface{}{}
 	for i := range files {
 		log.Trace().Str("path", files[i]).Msg("os.rootcertificates> check root certificate path")
 		fileInfo, err := osProvider.FS().Stat(files[i])
@@ -51,20 +51,20 @@ func (s *lumiOsRootCertificates) init(args *lumi.Args) (*lumi.Args, OsRootCertif
 			if err != nil {
 				return nil, nil, err
 			}
-			lumiFiles = append(lumiFiles, f.(core.File))
+			mqlFiles = append(mqlFiles, f.(core.File))
 			break
 		}
 	}
 
-	(*args)["files"] = lumiFiles
+	(*args)["files"] = mqlFiles
 	return args, nil, nil
 }
 
-func (s *lumiOsRootCertificates) GetFiles() ([]interface{}, error) {
+func (s *mqlOsRootCertificates) GetFiles() ([]interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (s *lumiOsRootCertificates) GetContent(files []interface{}) ([]interface{}, error) {
+func (s *mqlOsRootCertificates) GetContent(files []interface{}) ([]interface{}, error) {
 	contents := []interface{}{}
 
 	for i := range files {
@@ -87,7 +87,7 @@ func (s *lumiOsRootCertificates) GetContent(files []interface{}) ([]interface{},
 	return contents, nil
 }
 
-func (s *lumiOsRootCertificates) GetList(content []interface{}) ([]interface{}, error) {
+func (s *mqlOsRootCertificates) GetList(content []interface{}) ([]interface{}, error) {
 	certificateList := []*x509.Certificate{}
 	for i := range content {
 		certs, err := certificates.ParseCertFromPEM(strings.NewReader(content[i].(string)))
@@ -96,5 +96,5 @@ func (s *lumiOsRootCertificates) GetList(content []interface{}) ([]interface{}, 
 		}
 		certificateList = append(certificateList, certs...)
 	}
-	return core.CertificatesToLumiCertificates(s.MotorRuntime, certificateList)
+	return core.CertificatesToMqlCertificates(s.MotorRuntime, certificateList)
 }

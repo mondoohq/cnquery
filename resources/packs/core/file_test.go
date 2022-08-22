@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core"
 	"go.mondoo.io/mondoo/resources/packs/testutils"
 )
@@ -48,11 +48,11 @@ func TestResource_File(t *testing.T) {
 
 func TestResource_File_NotExist(t *testing.T) {
 	res := x.TestQuery(t, "file('Nope').content")
-	assert.ErrorIs(t, res[0].Data.Error, lumi.NotFound)
+	assert.ErrorIs(t, res[0].Data.Error, resources.NotFound)
 }
 
 func TestResource_File_Permissions(t *testing.T) {
-	runtime := lumi.NewRuntime(core.Registry, testutils.LinuxMock())
+	runtime := resources.NewRuntime(core.Registry, testutils.LinuxMock())
 
 	testCases := []struct {
 		mode            int64
@@ -223,6 +223,6 @@ func TestResource_File_Permissions(t *testing.T) {
 			"isSymlink", tc.isSymlink,
 		)
 		require.NoError(t, err)
-		require.Equal(t, tc.expectedID, permRaw.LumiResource().Id)
+		require.Equal(t, tc.expectedID, permRaw.MqlResource().Id)
 	}
 }

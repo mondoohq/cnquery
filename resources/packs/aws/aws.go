@@ -17,11 +17,11 @@ func init() {
 	Registry.Add(core.Registry)
 }
 
-func (e *lumiAws) id() (string, error) {
+func (e *mqlAws) id() (string, error) {
 	return "aws", nil
 }
 
-func (s *lumiAws) GetRegions() ([]interface{}, error) {
+func (s *mqlAws) GetRegions() ([]interface{}, error) {
 	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err

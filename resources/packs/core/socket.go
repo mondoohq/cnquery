@@ -2,7 +2,7 @@ package core
 
 import "strconv"
 
-func (s *lumiSocket) id() (string, error) {
+func (s *mqlSocket) id() (string, error) {
 	protocol, err := s.Protocol()
 	if err != nil {
 		return "", err

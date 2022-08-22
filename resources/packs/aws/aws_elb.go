@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
@@ -15,11 +15,11 @@ const (
 	elbv1LbArnPattern = "arn:aws:elasticloadbalancing:%s:%s:loadbalancer/classic/%s"
 )
 
-func (e *lumiAwsElb) id() (string, error) {
+func (e *mqlAwsElb) id() (string, error) {
 	return "aws.elb", nil
 }
 
-func (e *lumiAwsElb) GetClassicLoadBalancers() ([]interface{}, error) {
+func (e *mqlAwsElb) GetClassicLoadBalancers() ([]interface{}, error) {
 	at, err := awstransport(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (e *lumiAwsElb) GetClassicLoadBalancers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (e *lumiAwsElb) getClassicLoadBalancers(at *aws_transport.Provider) []*jobpool.Job {
+func (e *mqlAwsElb) getClassicLoadBalancers(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -69,7 +69,7 @@ func (e *lumiAwsElb) getClassicLoadBalancers(at *aws_transport.Provider) []*jobp
 					if err != nil {
 						return nil, err
 					}
-					lumiLb, err := e.MotorRuntime.CreateResource("aws.elb.loadbalancer",
+					mqlLb, err := e.MotorRuntime.CreateResource("aws.elb.loadbalancer",
 						"arn", fmt.Sprintf(elbv1LbArnPattern, regionVal, account.ID, core.ToString(lb.LoadBalancerName)),
 						"listenerDescriptions", jsonListeners,
 						"dnsName", core.ToString(lb.DNSName),
@@ -79,7 +79,7 @@ func (e *lumiAwsElb) getClassicLoadBalancers(at *aws_transport.Provider) []*jobp
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiLb)
+					res = append(res, mqlLb)
 				}
 				if lbs.NextMarker == nil {
 					break
@@ -93,11 +93,11 @@ func (e *lumiAwsElb) getClassicLoadBalancers(at *aws_transport.Provider) []*jobp
 	return tasks
 }
 
-func (e *lumiAwsElbLoadbalancer) id() (string, error) {
+func (e *mqlAwsElbLoadbalancer) id() (string, error) {
 	return e.Arn()
 }
 
-func (e *lumiAwsElb) GetLoadBalancers() ([]interface{}, error) {
+func (e *mqlAwsElb) GetLoadBalancers() ([]interface{}, error) {
 	at, err := awstransport(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -118,7 +118,7 @@ func (e *lumiAwsElb) GetLoadBalancers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (e *lumiAwsElb) getLoadBalancers(at *aws_transport.Provider) []*jobpool.Job {
+func (e *mqlAwsElb) getLoadBalancers(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -139,7 +139,7 @@ func (e *lumiAwsElb) getLoadBalancers(at *aws_transport.Provider) []*jobpool.Job
 					return nil, err
 				}
 				for _, lb := range lbs.LoadBalancers {
-					lumiLb, err := e.MotorRuntime.CreateResource("aws.elb.loadbalancer",
+					mqlLb, err := e.MotorRuntime.CreateResource("aws.elb.loadbalancer",
 						"arn", core.ToString(lb.LoadBalancerArn),
 						"dnsName", core.ToString(lb.DNSName),
 						"name", core.ToString(lb.LoadBalancerName),
@@ -148,7 +148,7 @@ func (e *lumiAwsElb) getLoadBalancers(at *aws_transport.Provider) []*jobpool.Job
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiLb)
+					res = append(res, mqlLb)
 				}
 				if lbs.NextMarker == nil {
 					break
@@ -162,7 +162,7 @@ func (e *lumiAwsElb) getLoadBalancers(at *aws_transport.Provider) []*jobpool.Job
 	return tasks
 }
 
-func (e *lumiAwsElbLoadbalancer) GetListenerDescriptions() ([]interface{}, error) {
+func (e *mqlAwsElbLoadbalancer) GetListenerDescriptions() ([]interface{}, error) {
 	at, err := awstransport(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -184,7 +184,7 @@ func (e *lumiAwsElbLoadbalancer) GetListenerDescriptions() ([]interface{}, error
 	return core.JsonToDictSlice(listeners.Listeners)
 }
 
-func (e *lumiAwsElbLoadbalancer) GetAttributes() ([]interface{}, error) {
+func (e *mqlAwsElbLoadbalancer) GetAttributes() ([]interface{}, error) {
 	at, err := awstransport(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err

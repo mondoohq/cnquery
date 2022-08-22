@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/os/services"
 )
 
@@ -18,7 +18,7 @@ const (
 	SERVICE_CACHE_MASKED      = "masked"
 )
 
-func (p *lumiService) init(args *lumi.Args) (*lumi.Args, Service, error) {
+func (p *mqlService) init(args *resources.Args) (*resources.Args, Service, error) {
 	// verify that a service with that name exist
 	rawName, ok := (*args)["name"]
 	if !ok {
@@ -46,7 +46,7 @@ func (p *lumiService) init(args *lumi.Args) (*lumi.Args, Service, error) {
 		return nil, nil, err
 	}
 
-	c, ok := services.LumiResource().Cache.Load("_map")
+	c, ok := services.MqlResource().Cache.Load("_map")
 	if !ok {
 		return nil, nil, errors.New("cannot get map of services")
 	}
@@ -68,73 +68,73 @@ func (p *lumiService) init(args *lumi.Args) (*lumi.Args, Service, error) {
 	return args, nil, nil
 }
 
-func (p *lumiService) id() (string, error) {
+func (p *mqlService) id() (string, error) {
 	return p.Name()
 }
 
-func (p *lumiService) GetDescription() (string, error) {
+func (p *mqlService) GetDescription() (string, error) {
 	_, ok := p.Cache.Load(SERVICE_CACHE_DESCRIPTION)
 	if ok {
-		return "", lumi.NotReadyError{}
+		return "", resources.NotReadyError{}
 	}
 
 	p.gatherServiceInfo(p.createCallback(SERVICE_CACHE_DESCRIPTION))
-	return "", lumi.NotReadyError{}
+	return "", resources.NotReadyError{}
 }
 
-func (p *lumiService) GetInstalled() (bool, error) {
+func (p *mqlService) GetInstalled() (bool, error) {
 	_, ok := p.Cache.Load(SERVICE_CACHE_INSTALLED)
 	if ok {
-		return false, lumi.NotReadyError{}
+		return false, resources.NotReadyError{}
 	}
 
 	p.gatherServiceInfo(p.createCallback(SERVICE_CACHE_INSTALLED))
-	return false, lumi.NotReadyError{}
+	return false, resources.NotReadyError{}
 }
 
-func (p *lumiService) GetRunning() (bool, error) {
+func (p *mqlService) GetRunning() (bool, error) {
 	_, ok := p.Cache.Load(SERVICE_CACHE_RUNNING)
 	if ok {
-		return false, lumi.NotReadyError{}
+		return false, resources.NotReadyError{}
 	}
 
 	p.gatherServiceInfo(p.createCallback(SERVICE_CACHE_RUNNING))
-	return false, lumi.NotReadyError{}
+	return false, resources.NotReadyError{}
 }
 
-func (p *lumiService) GetEnabled() (bool, error) {
+func (p *mqlService) GetEnabled() (bool, error) {
 	_, ok := p.Cache.Load(SERVICE_CACHE_ENABLED)
 	if ok {
-		return false, lumi.NotReadyError{}
+		return false, resources.NotReadyError{}
 	}
 
 	p.gatherServiceInfo(p.createCallback(SERVICE_CACHE_ENABLED))
-	return false, lumi.NotReadyError{}
+	return false, resources.NotReadyError{}
 }
 
-func (p *lumiService) GetMasked() (bool, error) {
+func (p *mqlService) GetMasked() (bool, error) {
 	_, ok := p.Cache.Load(SERVICE_CACHE_MASKED)
 	if ok {
-		return false, lumi.NotReadyError{}
+		return false, resources.NotReadyError{}
 	}
 
 	p.gatherServiceInfo(p.createCallback(SERVICE_CACHE_MASKED))
-	return false, lumi.NotReadyError{}
+	return false, resources.NotReadyError{}
 }
 
-func (p *lumiService) GetType() (string, error) {
+func (p *mqlService) GetType() (string, error) {
 	_, ok := p.Cache.Load(SERVICE_CACHE_TYPE)
 	if ok {
-		return "", lumi.NotReadyError{}
+		return "", resources.NotReadyError{}
 	}
 
 	p.gatherServiceInfo(p.createCallback(SERVICE_CACHE_TYPE))
-	return "", lumi.NotReadyError{}
+	return "", resources.NotReadyError{}
 }
 
-func (p *lumiService) createCallback(field string) ServiceCallbackTrigger {
+func (p *mqlService) createCallback(field string) ServiceCallbackTrigger {
 	return func() {
-		err := p.MotorRuntime.Observers.Trigger(p.LumiResource().FieldUID(field))
+		err := p.MotorRuntime.Observers.Trigger(p.MqlResource().FieldUID(field))
 		if err != nil {
 			log.Error().Err(err).Msg("[service]> failed to trigger field '" + field + "'")
 		}
@@ -143,7 +143,7 @@ func (p *lumiService) createCallback(field string) ServiceCallbackTrigger {
 
 type ServiceCallbackTrigger func()
 
-func (p *lumiService) gatherServiceInfo(fn ServiceCallbackTrigger) error {
+func (p *mqlService) gatherServiceInfo(fn ServiceCallbackTrigger) error {
 	name, err := p.Name()
 	if err != nil {
 		return err
@@ -155,7 +155,7 @@ func (p *lumiService) gatherServiceInfo(fn ServiceCallbackTrigger) error {
 	}
 	services := obj.(Services)
 
-	c, ok := services.LumiResource().Cache.Load("_map")
+	c, ok := services.MqlResource().Cache.Load("_map")
 	if !ok {
 		return errors.New("cannot get map of services")
 	}
@@ -166,13 +166,13 @@ func (p *lumiService) gatherServiceInfo(fn ServiceCallbackTrigger) error {
 		return errors.New("service does not exist")
 	}
 
-	p.Cache.Store("name", &lumi.CacheEntry{Data: srv.Name, Valid: true, Timestamp: time.Now().Unix()})
-	p.Cache.Store("description", &lumi.CacheEntry{Data: srv.Description, Valid: true, Timestamp: time.Now().Unix()})
-	p.Cache.Store("installed", &lumi.CacheEntry{Data: srv.Installed, Valid: true, Timestamp: time.Now().Unix()})
-	p.Cache.Store("enabled", &lumi.CacheEntry{Data: srv.Enabled, Valid: true, Timestamp: time.Now().Unix()})
-	p.Cache.Store("masked", &lumi.CacheEntry{Data: srv.Masked, Valid: true, Timestamp: time.Now().Unix()})
-	p.Cache.Store("running", &lumi.CacheEntry{Data: srv.Running, Valid: true, Timestamp: time.Now().Unix()})
-	p.Cache.Store("type", &lumi.CacheEntry{Data: srv.Type, Valid: true, Timestamp: time.Now().Unix()})
+	p.Cache.Store("name", &resources.CacheEntry{Data: srv.Name, Valid: true, Timestamp: time.Now().Unix()})
+	p.Cache.Store("description", &resources.CacheEntry{Data: srv.Description, Valid: true, Timestamp: time.Now().Unix()})
+	p.Cache.Store("installed", &resources.CacheEntry{Data: srv.Installed, Valid: true, Timestamp: time.Now().Unix()})
+	p.Cache.Store("enabled", &resources.CacheEntry{Data: srv.Enabled, Valid: true, Timestamp: time.Now().Unix()})
+	p.Cache.Store("masked", &resources.CacheEntry{Data: srv.Masked, Valid: true, Timestamp: time.Now().Unix()})
+	p.Cache.Store("running", &resources.CacheEntry{Data: srv.Running, Valid: true, Timestamp: time.Now().Unix()})
+	p.Cache.Store("type", &resources.CacheEntry{Data: srv.Type, Valid: true, Timestamp: time.Now().Unix()})
 
 	// call callback trigger
 	if fn != nil {
@@ -182,35 +182,35 @@ func (p *lumiService) gatherServiceInfo(fn ServiceCallbackTrigger) error {
 	return nil
 }
 
-func (p *lumiServices) id() (string, error) {
+func (p *mqlServices) id() (string, error) {
 	return "services", nil
 }
 
-func (p *lumiServices) GetList() ([]interface{}, error) {
+func (p *mqlServices) GetList() ([]interface{}, error) {
 	// find suitable service manager
 	osm, err := services.ResolveManager(p.MotorRuntime.Motor)
 	if osm == nil || err != nil {
 		// there are valid cases where this error is happening, eg. you run a service query in
 		// asset filters for non-supported transports
-		log.Debug().Err(err).Msg("lumi[services]> could not retrieve services list")
+		log.Debug().Err(err).Msg("mql[services]> could not retrieve services list")
 		return nil, errors.New("cannot find service manager")
 	}
 
 	// retrieve all system services
 	services, err := osm.List()
 	if err != nil {
-		log.Debug().Err(err).Msg("lumi[services]> could not retrieve service list")
+		log.Debug().Err(err).Msg("mql[services]> could not retrieve service list")
 		return nil, errors.New("could not retrieve service list")
 	}
-	log.Debug().Int("services", len(services)).Msg("lumi[services]> running services")
+	log.Debug().Int("services", len(services)).Msg("mql[services]> running services")
 
 	// convert to interface{}{}
-	lumiSrvs := []interface{}{}
+	mqlSrvs := []interface{}{}
 	namedMap := map[string]Service{}
 	for i := range services {
 		srv := services[i]
 
-		lumiSrv, err := p.MotorRuntime.CreateResource("service",
+		mqlSrv, err := p.MotorRuntime.CreateResource("service",
 			"name", srv.Name,
 			"description", srv.Description,
 			"installed", srv.Installed,
@@ -223,11 +223,11 @@ func (p *lumiServices) GetList() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiSrvs = append(lumiSrvs, lumiSrv.(Service))
-		namedMap[srv.Name] = lumiSrv.(Service)
+		mqlSrvs = append(mqlSrvs, mqlSrv.(Service))
+		namedMap[srv.Name] = mqlSrv.(Service)
 	}
 
-	p.Cache.Store("_map", &lumi.CacheEntry{Data: namedMap})
+	p.Cache.Store("_map", &resources.CacheEntry{Data: namedMap})
 
-	return lumiSrvs, nil
+	return mqlSrvs, nil
 }

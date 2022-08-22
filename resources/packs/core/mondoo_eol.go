@@ -8,14 +8,14 @@ import (
 	"time"
 )
 
-func (s *lumiMondooEol) id() (string, error) {
+func (s *mqlMondooEol) id() (string, error) {
 	name, _ := s.Product()
 	version, _ := s.Version()
 
 	return "product:" + name + ":" + version, nil
 }
 
-func (p *lumiMondooEol) GetDate() (*time.Time, error) {
+func (p *mqlMondooEol) GetDate() (*time.Time, error) {
 
 	name, _ := p.Product()
 	version, _ := p.Version()

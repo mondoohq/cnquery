@@ -2,10 +2,10 @@ package os
 
 import (
 	"github.com/google/go-containerregistry/pkg/name"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 )
 
-func newLumiContainerImage(runtime *lumi.Runtime, containerImageName string) (interface{}, error) {
+func newMqlContainerImage(runtime *resources.Runtime, containerImageName string) (interface{}, error) {
 	ref, err := name.ParseReference(containerImageName)
 	if err != nil {
 		return nil, err
@@ -35,11 +35,11 @@ func newLumiContainerImage(runtime *lumi.Runtime, containerImageName string) (in
 	return r, nil
 }
 
-func (k *lumiContainerImage) id() (string, error) {
+func (k *mqlContainerImage) id() (string, error) {
 	return k.Name()
 }
 
-func (k *lumiContainerImage) GetRepository() (interface{}, error) {
+func (k *mqlContainerImage) GetRepository() (interface{}, error) {
 	containerImageName, err := k.Name()
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (k *lumiContainerImage) GetRepository() (interface{}, error) {
 	return newLumiContainerRepository(k.MotorRuntime, ref.Context())
 }
 
-func newLumiContainerRepository(runtime *lumi.Runtime, repo name.Repository) (interface{}, error) {
+func newLumiContainerRepository(runtime *resources.Runtime, repo name.Repository) (interface{}, error) {
 	r, err := runtime.CreateResource("container.repository",
 		"name", repo.RepositoryStr(),
 		"scheme", repo.Scheme(),
@@ -67,6 +67,6 @@ func newLumiContainerRepository(runtime *lumi.Runtime, repo name.Repository) (in
 	return r, nil
 }
 
-func (k *lumiContainerRepository) id() (string, error) {
+func (k *mqlContainerRepository) id() (string, error) {
 	return k.FullName()
 }

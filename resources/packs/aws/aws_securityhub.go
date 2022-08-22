@@ -6,16 +6,16 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (s *lumiAwsSecurityhub) id() (string, error) {
+func (s *mqlAwsSecurityhub) id() (string, error) {
 	return "aws.securityhub", nil
 }
 
-func (s *lumiAwsSecurityhub) GetHubs() ([]interface{}, error) {
+func (s *mqlAwsSecurityhub) GetHubs() ([]interface{}, error) {
 	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func (s *lumiAwsSecurityhub) GetHubs() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsSecurityhub) getHubs(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsSecurityhub) getHubs(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -58,14 +58,14 @@ func (s *lumiAwsSecurityhub) getHubs(at *aws_transport.Provider) []*jobpool.Job 
 				}
 				return nil, err
 			}
-			lumiHub, err := s.MotorRuntime.CreateResource("aws.securityhub.hub",
+			mqlHub, err := s.MotorRuntime.CreateResource("aws.securityhub.hub",
 				"arn", core.ToString(secHub.HubArn),
 				"subscribedAt", core.ToString(secHub.SubscribedAt),
 			)
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, lumiHub)
+			res = append(res, mqlHub)
 			return jobpool.JobResult(res), nil
 		}
 		tasks = append(tasks, jobpool.NewJob(f))
@@ -73,6 +73,6 @@ func (s *lumiAwsSecurityhub) getHubs(at *aws_transport.Provider) []*jobpool.Job 
 	return tasks
 }
 
-func (s *lumiAwsSecurityhubHub) id() (string, error) {
+func (s *mqlAwsSecurityhubHub) id() (string, error) {
 	return s.Arn()
 }

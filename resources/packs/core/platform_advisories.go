@@ -8,9 +8,9 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/logger"
-	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/nexus/assets"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/vadvisor"
 	"go.mondoo.io/mondoo/vadvisor/client"
 	"go.mondoo.io/mondoo/vadvisor/specs/cvss"
@@ -37,7 +37,7 @@ func getKernelVersion(kernel Kernel) string {
 }
 
 // fetches the vulnerability report and returns the full report
-func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
+func (p *mqlPlatform) GetVulnerabilityReport() (interface{}, error) {
 	r := p.MotorRuntime
 	mcc := r.UpstreamConfig
 	if mcc == nil {
@@ -50,13 +50,13 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 		return nil, err
 	}
 
-	lumiPlatform := obj.(Platform)
-	platformObj := convertLumiPlatform2ApiPlatform(lumiPlatform)
+	mqlPlatform := obj.(Platform)
+	platformObj := convertMqlPlatform2ApiPlatform(mqlPlatform)
 
 	// check if the data is cached
 	// NOTE: we cache it in the platform resource, so that platform.advisories, platform.cves and
 	// platform.exploits can all share the results
-	cachedReport, ok := lumiPlatform.LumiResource().Cache.Load("_report")
+	cachedReport, ok := mqlPlatform.MqlResource().Cache.Load("_report")
 	if ok {
 		report := cachedReport.Data.(*vadvisor.VulnReport)
 		return report, nil
@@ -87,14 +87,14 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 		}
 		packages := obj.(Packages)
 
-		lumiPkgs, err := packages.List()
+		mqlPkgs, err := packages.List()
 		if err != nil {
 			return nil, err
 		}
 
-		for i := range lumiPkgs {
-			lumiPkg := lumiPkgs[i]
-			pkg := lumiPkg.(Package)
+		for i := range mqlPkgs {
+			mqlPkg := mqlPkgs[i]
+			pkg := mqlPkg.(Package)
 			name, _ := pkg.Name()
 			version, _ := pkg.Version()
 			arch, _ := pkg.Arch()
@@ -135,7 +135,7 @@ func (p *lumiPlatform) GetVulnerabilityReport() (interface{}, error) {
 	return JsonToDict(report)
 }
 
-func getAdvisoryReport(r *lumi.Runtime) (*vadvisor.VulnReport, error) {
+func getAdvisoryReport(r *resources.Runtime) (*vadvisor.VulnReport, error) {
 	obj, err := r.CreateResource("platform")
 	if err != nil {
 		return nil, err
@@ -162,11 +162,11 @@ func getAdvisoryReport(r *lumi.Runtime) (*vadvisor.VulnReport, error) {
 	return &vulnReport, nil
 }
 
-func (a *lumiPlatformAdvisories) id() (string, error) {
+func (a *mqlPlatformAdvisories) id() (string, error) {
 	return "platform.advisories", nil
 }
 
-func (a *lumiPlatformAdvisories) GetCvss() (interface{}, error) {
+func (a *mqlPlatformAdvisories) GetCvss() (interface{}, error) {
 	report, err := getAdvisoryReport(a.MotorRuntime)
 	if err != nil {
 		return nil, err
@@ -183,13 +183,13 @@ func (a *lumiPlatformAdvisories) GetCvss() (interface{}, error) {
 	return obj, nil
 }
 
-func (a *lumiPlatformAdvisories) GetList() ([]interface{}, error) {
+func (a *mqlPlatformAdvisories) GetList() ([]interface{}, error) {
 	report, err := getAdvisoryReport(a.MotorRuntime)
 	if err != nil {
 		return nil, err
 	}
 
-	lumiAdvisories := make([]interface{}, len(report.Advisories))
+	mqlAdvisories := make([]interface{}, len(report.Advisories))
 	for i := range report.Advisories {
 		advisory := report.Advisories[i]
 
@@ -220,7 +220,7 @@ func (a *lumiPlatformAdvisories) GetList() ([]interface{}, error) {
 			modified = &parsedTime
 		}
 
-		lumiAdvisory, err := a.MotorRuntime.CreateResource("audit.advisory",
+		mqlAdvisory, err := a.MotorRuntime.CreateResource("audit.advisory",
 			"id", advisory.ID,
 			"mrn", advisory.Mrn,
 			"title", advisory.Title,
@@ -233,13 +233,13 @@ func (a *lumiPlatformAdvisories) GetList() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAdvisories[i] = lumiAdvisory
+		mqlAdvisories[i] = mqlAdvisory
 	}
 
-	return lumiAdvisories, nil
+	return mqlAdvisories, nil
 }
 
-func (a *lumiPlatformAdvisories) GetStats() (interface{}, error) {
+func (a *mqlPlatformAdvisories) GetStats() (interface{}, error) {
 	report, err := getAdvisoryReport(a.MotorRuntime)
 	if err != nil {
 		return nil, err
@@ -253,11 +253,11 @@ func (a *lumiPlatformAdvisories) GetStats() (interface{}, error) {
 	return dict, nil
 }
 
-func (a *lumiPlatformCves) id() (string, error) {
+func (a *mqlPlatformCves) id() (string, error) {
 	return "platform.cves", nil
 }
 
-func (a *lumiPlatformCves) GetList() ([]interface{}, error) {
+func (a *mqlPlatformCves) GetList() ([]interface{}, error) {
 	report, err := getAdvisoryReport(a.MotorRuntime)
 	if err != nil {
 		return nil, err
@@ -265,7 +265,7 @@ func (a *lumiPlatformCves) GetList() ([]interface{}, error) {
 
 	cveList := report.Cves()
 
-	lumiCves := make([]interface{}, len(cveList))
+	mqlCves := make([]interface{}, len(cveList))
 	for i := range cveList {
 		cve := cveList[i]
 
@@ -296,7 +296,7 @@ func (a *lumiPlatformCves) GetList() ([]interface{}, error) {
 			modified = &parsedTime
 		}
 
-		lumiCve, err := a.MotorRuntime.CreateResource("audit.cve",
+		mqlCve, err := a.MotorRuntime.CreateResource("audit.cve",
 			"id", cve.ID,
 			"mrn", cve.Mrn,
 			"state", cve.State.String(),
@@ -310,13 +310,13 @@ func (a *lumiPlatformCves) GetList() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiCves[i] = lumiCve
+		mqlCves[i] = mqlCve
 	}
 
-	return lumiCves, nil
+	return mqlCves, nil
 }
 
-func (a *lumiPlatformCves) GetCvss() (interface{}, error) {
+func (a *mqlPlatformCves) GetCvss() (interface{}, error) {
 	report, err := getAdvisoryReport(a.MotorRuntime)
 	if err != nil {
 		return nil, err
@@ -334,7 +334,7 @@ func (a *lumiPlatformCves) GetCvss() (interface{}, error) {
 	return obj, nil
 }
 
-func (a *lumiPlatformCves) GetStats() (interface{}, error) {
+func (a *mqlPlatformCves) GetStats() (interface{}, error) {
 	report, err := getAdvisoryReport(a.MotorRuntime)
 	if err != nil {
 		return nil, err
@@ -348,17 +348,17 @@ func (a *lumiPlatformCves) GetStats() (interface{}, error) {
 	return dict, nil
 }
 
-func (a *lumiPlatformExploits) id() (string, error) {
+func (a *mqlPlatformExploits) id() (string, error) {
 	return "platform.exploits", nil
 }
 
-func (a *lumiPlatformExploits) GetList() ([]interface{}, error) {
+func (a *mqlPlatformExploits) GetList() ([]interface{}, error) {
 	report, err := getAdvisoryReport(a.MotorRuntime)
 	if err != nil {
 		return nil, err
 	}
 
-	lumiExploits := make([]interface{}, len(report.Exploits))
+	mqlExploits := make([]interface{}, len(report.Exploits))
 	for i := range report.Exploits {
 		exploit := report.Exploits[i]
 
@@ -376,7 +376,7 @@ func (a *lumiPlatformExploits) GetList() ([]interface{}, error) {
 			modified = &parsedTime
 		}
 
-		lumiExploit, err := a.MotorRuntime.CreateResource("audit.exploit",
+		mqlExploit, err := a.MotorRuntime.CreateResource("audit.exploit",
 			"id", exploit.ID,
 			"mrn", exploit.Mrn,
 			"modified", modified,
@@ -386,13 +386,13 @@ func (a *lumiPlatformExploits) GetList() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiExploits[i] = lumiExploit
+		mqlExploits[i] = mqlExploit
 	}
 
-	return lumiExploits, nil
+	return mqlExploits, nil
 }
 
-func (a *lumiPlatformExploits) GetCvss() (interface{}, error) {
+func (a *mqlPlatformExploits) GetCvss() (interface{}, error) {
 	report, err := getAdvisoryReport(a.MotorRuntime)
 	if err != nil {
 		return nil, err
@@ -410,7 +410,7 @@ func (a *lumiPlatformExploits) GetCvss() (interface{}, error) {
 	return obj, nil
 }
 
-func (a *lumiPlatformExploits) GetStats() (interface{}, error) {
+func (a *mqlPlatformExploits) GetStats() (interface{}, error) {
 	report, err := getAdvisoryReport(a.MotorRuntime)
 	if err != nil {
 		return nil, err

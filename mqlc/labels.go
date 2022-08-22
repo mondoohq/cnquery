@@ -8,11 +8,11 @@ import (
 	"golang.org/x/text/unicode/norm"
 
 	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/types"
 )
 
-func createLabel(code *llx.CodeV2, ref uint64, labels *llx.Labels, schema *lumi.Schema) (string, error) {
+func createLabel(code *llx.CodeV2, ref uint64, labels *llx.Labels, schema *resources.Schema) (string, error) {
 	chunk := code.Chunk(ref)
 
 	if chunk.Call == llx.Chunk_PRIMITIVE {
@@ -92,7 +92,7 @@ func stripCtlAndExtFromUnicode(str string) string {
 }
 
 // UpdateLabels for the given code under the schema
-func UpdateLabels(code *llx.CodeV2, labels *llx.Labels, schema *lumi.Schema) error {
+func UpdateLabels(code *llx.CodeV2, labels *llx.Labels, schema *resources.Schema) error {
 	if code == nil {
 		return errors.New("cannot create labels without code")
 	}
@@ -107,7 +107,7 @@ func UpdateLabels(code *llx.CodeV2, labels *llx.Labels, schema *lumi.Schema) err
 	return nil
 }
 
-func updateLabels(code *llx.CodeV2, block *llx.Block, labels *llx.Labels, schema *lumi.Schema) error {
+func updateLabels(code *llx.CodeV2, block *llx.Block, labels *llx.Labels, schema *resources.Schema) error {
 	datapoints := block.Datapoints
 
 	// We don't want assertions to become labels. Their data should not be printed

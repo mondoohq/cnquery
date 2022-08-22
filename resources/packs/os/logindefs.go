@@ -4,12 +4,12 @@ import (
 	"errors"
 	"strings"
 
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core"
 	"go.mondoo.io/mondoo/resources/packs/os/logindefs"
 )
 
-func (s *lumiLogindefs) init(args *lumi.Args) (*lumi.Args, Logindefs, error) {
+func (s *mqlLogindefs) init(args *resources.Args) (*resources.Args, Logindefs, error) {
 	if x, ok := (*args)["path"]; ok {
 		path, ok := x.(string)
 		if !ok {
@@ -29,7 +29,7 @@ func (s *lumiLogindefs) init(args *lumi.Args) (*lumi.Args, Logindefs, error) {
 
 const defaultLoginDefsConfig = "/etc/login.defs"
 
-func (s *lumiLogindefs) id() (string, error) {
+func (s *mqlLogindefs) id() (string, error) {
 	r, err := s.File()
 	if err != nil {
 		return "", err
@@ -37,7 +37,7 @@ func (s *lumiLogindefs) id() (string, error) {
 	return r.Path()
 }
 
-func (s *lumiLogindefs) GetFile() (core.File, error) {
+func (s *mqlLogindefs) GetFile() (core.File, error) {
 	f, err := s.MotorRuntime.CreateResource("file", "path", defaultLoginDefsConfig)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (s *lumiLogindefs) GetFile() (core.File, error) {
 }
 
 // borrowed from ssh resource
-func (s *lumiLogindefs) GetContent(file core.File) (string, error) {
+func (s *mqlLogindefs) GetContent(file core.File) (string, error) {
 	// TODO: this can be heavily improved once we do it right, since this is constantly
 	// re-registered as the file changes
 	err := s.MotorRuntime.WatchAndCompute(file, "content", s, "content")
@@ -57,7 +57,7 @@ func (s *lumiLogindefs) GetContent(file core.File) (string, error) {
 	return file.Content()
 }
 
-func (s *lumiLogindefs) GetParams(content string) (map[string]interface{}, error) {
+func (s *mqlLogindefs) GetParams(content string) (map[string]interface{}, error) {
 	res := make(map[string]interface{})
 
 	params := logindefs.Parse(strings.NewReader(content))

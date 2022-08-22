@@ -14,9 +14,9 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 	"github.com/zclconf/go-cty/cty/function/stdlib"
-	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/terraform"
+	"go.mondoo.io/mondoo/resources"
 )
 
 func terraformtransport(t providers.Transport) (*terraform.Provider, error) {
@@ -27,32 +27,32 @@ func terraformtransport(t providers.Transport) (*terraform.Provider, error) {
 	return gt, nil
 }
 
-func (g *lumiTerraform) id() (string, error) {
+func (g *mqlTerraform) id() (string, error) {
 	return "terraform", nil
 }
 
-func (g *lumiTerraform) GetFiles() ([]interface{}, error) {
+func (g *mqlTerraform) GetFiles() ([]interface{}, error) {
 	t, err := terraformtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	var lumiTerraformFiles []interface{}
+	var mqlTerraformFiles []interface{}
 	files := t.Parser().Files()
 	for path := range files {
-		lumiTerraformFile, err := g.MotorRuntime.CreateResource("terraform.file",
+		mqlTerraformFile, err := g.MotorRuntime.CreateResource("terraform.file",
 			"path", path,
 		)
 		if err != nil {
 			return nil, err
 		}
-		lumiTerraformFiles = append(lumiTerraformFiles, lumiTerraformFile)
+		mqlTerraformFiles = append(mqlTerraformFiles, mqlTerraformFile)
 	}
 
-	return lumiTerraformFiles, nil
+	return mqlTerraformFiles, nil
 }
 
-func (g *lumiTerraform) GetTfvars() (interface{}, error) {
+func (g *mqlTerraform) GetTfvars() (interface{}, error) {
 	t, err := terraformtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func (g *lumiTerraform) GetTfvars() (interface{}, error) {
 	return hclAttributesToDict(t.TfVars())
 }
 
-func (g *lumiTerraform) GetModules() ([]interface{}, error) {
+func (g *mqlTerraform) GetModules() ([]interface{}, error) {
 	t, err := terraformtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ func (g *lumiTerraform) GetModules() ([]interface{}, error) {
 		return nil, nil
 	}
 
-	var lumiModules []interface{}
+	var mqlModules []interface{}
 	for i := range manifest.Records {
 		record := manifest.Records[i]
 
@@ -84,13 +84,13 @@ func (g *lumiTerraform) GetModules() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		lumiModules = append(lumiModules, r)
+		mqlModules = append(mqlModules, r)
 	}
 
-	return lumiModules, nil
+	return mqlModules, nil
 }
 
-func (g *lumiTerraform) GetBlocks() ([]interface{}, error) {
+func (g *mqlTerraform) GetBlocks() ([]interface{}, error) {
 	t, err := terraformtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -98,19 +98,19 @@ func (g *lumiTerraform) GetBlocks() ([]interface{}, error) {
 
 	files := t.Parser().Files()
 
-	var lumiHclBlocks []interface{}
+	var mqlHclBlocks []interface{}
 	for k := range files {
 		f := files[k]
 		blocks, err := listHclBlocks(g.MotorRuntime, f.Body, f)
 		if err != nil {
 			return nil, err
 		}
-		lumiHclBlocks = append(lumiHclBlocks, blocks...)
+		mqlHclBlocks = append(mqlHclBlocks, blocks...)
 	}
-	return lumiHclBlocks, nil
+	return mqlHclBlocks, nil
 }
 
-func filterBlockByType(runtime *lumi.Runtime, filterType string) ([]interface{}, error) {
+func filterBlockByType(runtime *resources.Runtime, filterType string) ([]interface{}, error) {
 	t, err := terraformtransport(runtime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -118,7 +118,7 @@ func filterBlockByType(runtime *lumi.Runtime, filterType string) ([]interface{},
 
 	files := t.Parser().Files()
 
-	var lumiHclBlocks []interface{}
+	var mqlHclBlocks []interface{}
 	for k := range files {
 		f := files[k]
 		blocks, err := listHclBlocks(runtime, f.Body, f)
@@ -133,30 +133,30 @@ func filterBlockByType(runtime *lumi.Runtime, filterType string) ([]interface{},
 				return nil, err
 			}
 			if blockType == filterType {
-				lumiHclBlocks = append(lumiHclBlocks, b)
+				mqlHclBlocks = append(mqlHclBlocks, b)
 			}
 		}
 	}
-	return lumiHclBlocks, nil
+	return mqlHclBlocks, nil
 }
 
-func (g *lumiTerraform) GetProviders() ([]interface{}, error) {
+func (g *mqlTerraform) GetProviders() ([]interface{}, error) {
 	return filterBlockByType(g.MotorRuntime, "provider")
 }
 
-func (g *lumiTerraform) GetDatasources() ([]interface{}, error) {
+func (g *mqlTerraform) GetDatasources() ([]interface{}, error) {
 	return filterBlockByType(g.MotorRuntime, "data")
 }
 
-func (g *lumiTerraform) GetResources() ([]interface{}, error) {
+func (g *mqlTerraform) GetResources() ([]interface{}, error) {
 	return filterBlockByType(g.MotorRuntime, "resource")
 }
 
-func (g *lumiTerraform) GetVariables() ([]interface{}, error) {
+func (g *mqlTerraform) GetVariables() ([]interface{}, error) {
 	return filterBlockByType(g.MotorRuntime, "variable")
 }
 
-func (g *lumiTerraform) GetOutputs() ([]interface{}, error) {
+func (g *mqlTerraform) GetOutputs() ([]interface{}, error) {
 	return filterBlockByType(g.MotorRuntime, "output")
 }
 
@@ -188,7 +188,7 @@ func extractHclCodeSnippet(file *hcl.File, fileRange hcl.Range) string {
 	return sb.String()
 }
 
-func newLumiHclBlock(runtime *lumi.Runtime, block *hcl.Block, file *hcl.File) (lumi.ResourceType, error) {
+func newMqlHclBlock(runtime *resources.Runtime, block *hcl.Block, file *hcl.File) (resources.ResourceType, error) {
 	start, end, err := newFilePosRange(runtime, block.TypeRange)
 	if err != nil {
 		return nil, err
@@ -205,10 +205,10 @@ func newLumiHclBlock(runtime *lumi.Runtime, block *hcl.Block, file *hcl.File) (l
 	)
 
 	if err == nil {
-		r.LumiResource().Cache.Store("_hclblock", &lumi.CacheEntry{
+		r.MqlResource().Cache.Store("_hclblock", &resources.CacheEntry{
 			Data: block,
 		})
-		r.LumiResource().Cache.Store("_hclfile", &lumi.CacheEntry{
+		r.MqlResource().Cache.Store("_hclfile", &resources.CacheEntry{
 			Data: file,
 		})
 	}
@@ -216,7 +216,7 @@ func newLumiHclBlock(runtime *lumi.Runtime, block *hcl.Block, file *hcl.File) (l
 	return r, err
 }
 
-func (g *lumiTerraformBlock) id() (string, error) {
+func (g *mqlTerraformBlock) id() (string, error) {
 	// NOTE: a hcl block is identified by its filename and position
 	fp, err := g.Start()
 	if err != nil {
@@ -229,7 +229,7 @@ func (g *lumiTerraformBlock) id() (string, error) {
 	return "terraform.block/" + file + "/" + strconv.FormatInt(line, 10) + "/" + strconv.FormatInt(column, 10), nil
 }
 
-func (g *lumiTerraformBlock) GetNameLabel() (interface{}, error) {
+func (g *mqlTerraformBlock) GetNameLabel() (interface{}, error) {
 	labels, err := g.Labels()
 	if err != nil {
 		return nil, err
@@ -243,8 +243,8 @@ func (g *lumiTerraformBlock) GetNameLabel() (interface{}, error) {
 	return labels[0].(string), nil
 }
 
-func (g *lumiTerraformBlock) GetAttributes() (map[string]interface{}, error) {
-	ce, ok := g.LumiResource().Cache.Load("_hclblock")
+func (g *mqlTerraformBlock) GetAttributes() (map[string]interface{}, error) {
+	ce, ok := g.MqlResource().Cache.Load("_hclblock")
 	if !ok {
 		return nil, nil
 	}
@@ -256,8 +256,8 @@ func (g *lumiTerraformBlock) GetAttributes() (map[string]interface{}, error) {
 	return hclAttributesToDict(attributes)
 }
 
-func (g *lumiTerraformBlock) GetArguments() (map[string]interface{}, error) {
-	ce, ok := g.LumiResource().Cache.Load("_hclblock")
+func (g *mqlTerraformBlock) GetArguments() (map[string]interface{}, error) {
+	ce, ok := g.MqlResource().Cache.Load("_hclblock")
 	if !ok {
 		return nil, nil
 	}
@@ -413,14 +413,14 @@ func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) interface{} {
 	return nil
 }
 
-func (g *lumiTerraformBlock) GetBlocks() ([]interface{}, error) {
-	ce, ok := g.LumiResource().Cache.Load("_hclblock")
+func (g *mqlTerraformBlock) GetBlocks() ([]interface{}, error) {
+	ce, ok := g.MqlResource().Cache.Load("_hclblock")
 	if !ok {
 		return nil, nil
 	}
 	hclBlock := ce.Data.(*hcl.Block)
 
-	hFile, ok := g.LumiResource().Cache.Load("_hclfile")
+	hFile, ok := g.MqlResource().Cache.Load("_hclfile")
 	if !ok {
 		return nil, nil
 	}
@@ -429,35 +429,35 @@ func (g *lumiTerraformBlock) GetBlocks() ([]interface{}, error) {
 	return listHclBlocks(g.MotorRuntime, hclBlock.Body, hclFile)
 }
 
-func listHclBlocks(runtime *lumi.Runtime, rawBody interface{}, file *hcl.File) ([]interface{}, error) {
-	var lumiHclBlocks []interface{}
+func listHclBlocks(runtime *resources.Runtime, rawBody interface{}, file *hcl.File) ([]interface{}, error) {
+	var mqlHclBlocks []interface{}
 
 	switch body := rawBody.(type) {
 	case *hclsyntax.Body:
 		for i := range body.Blocks {
-			lumiBlock, err := newLumiHclBlock(runtime, body.Blocks[i].AsHCLBlock(), file)
+			mqlBlock, err := newMqlHclBlock(runtime, body.Blocks[i].AsHCLBlock(), file)
 			if err != nil {
 				return nil, err
 			}
-			lumiHclBlocks = append(lumiHclBlocks, lumiBlock)
+			mqlHclBlocks = append(mqlHclBlocks, mqlBlock)
 		}
 	case hcl.Body:
 		content, _, _ := body.PartialContent(terraform.TerraformSchema_0_12)
 		for i := range content.Blocks {
-			lumiBlock, err := newLumiHclBlock(runtime, content.Blocks[i], file)
+			mqlBlock, err := newMqlHclBlock(runtime, content.Blocks[i], file)
 			if err != nil {
 				return nil, err
 			}
-			lumiHclBlocks = append(lumiHclBlocks, lumiBlock)
+			mqlHclBlocks = append(mqlHclBlocks, mqlBlock)
 		}
 	default:
 		return nil, errors.New("unsupported hcl block type")
 	}
 
-	return lumiHclBlocks, nil
+	return mqlHclBlocks, nil
 }
 
-func newFilePosRange(runtime *lumi.Runtime, r hcl.Range) (lumi.ResourceType, lumi.ResourceType, error) {
+func newFilePosRange(runtime *resources.Runtime, r hcl.Range) (resources.ResourceType, resources.ResourceType, error) {
 	start, err := runtime.CreateResource("terraform.fileposition",
 		"path", r.Filename,
 		"line", int64(r.Start.Line),
@@ -481,14 +481,14 @@ func newFilePosRange(runtime *lumi.Runtime, r hcl.Range) (lumi.ResourceType, lum
 	return start, end, nil
 }
 
-func (p *lumiTerraformFileposition) id() (string, error) {
+func (p *mqlTerraformFileposition) id() (string, error) {
 	path, _ := p.Path()
 	line, _ := p.Line()
 	column, _ := p.Column()
 	return "file.position/" + path + "/" + strconv.FormatInt(line, 10) + "/" + strconv.FormatInt(column, 10), nil
 }
 
-func (g *lumiTerraformFile) id() (string, error) {
+func (g *mqlTerraformFile) id() (string, error) {
 	p, err := g.Path()
 	if err != nil {
 		return "", err
@@ -496,7 +496,7 @@ func (g *lumiTerraformFile) id() (string, error) {
 	return "terraform.file/" + p, nil
 }
 
-func (g *lumiTerraformFile) GetBlocks() ([]interface{}, error) {
+func (g *mqlTerraformFile) GetBlocks() ([]interface{}, error) {
 	t, err := terraformtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -512,17 +512,17 @@ func (g *lumiTerraformFile) GetBlocks() ([]interface{}, error) {
 	return listHclBlocks(g.MotorRuntime, file.Body, file)
 }
 
-func (g *lumiTerraformModule) id() (string, error) {
+func (g *mqlTerraformModule) id() (string, error) {
 	k, _ := g.Key()
 	v, _ := g.Version()
 	return "terraform.module/key/" + k + "/version/" + v, nil
 }
 
-func (g *lumiTerraformSettings) id() (string, error) {
+func (g *mqlTerraformSettings) id() (string, error) {
 	return "terraform.settings", nil
 }
 
-func (s *lumiTerraformSettings) init(args *lumi.Args) (*lumi.Args, TerraformSettings, error) {
+func (s *mqlTerraformSettings) init(args *resources.Args) (*resources.Args, TerraformSettings, error) {
 	blocks, err := filterBlockByType(s.MotorRuntime, "terraform")
 	if err != nil {
 		return nil, nil, err
@@ -536,7 +536,7 @@ func (s *lumiTerraformSettings) init(args *lumi.Args) (*lumi.Args, TerraformSett
 	(*args)["block"] = settingsBlock
 	(*args)["requiredProviders"] = map[string]interface{}{}
 
-	hclBlock, found := settingsBlock.LumiResource().Cache.Load("_hclblock")
+	hclBlock, found := settingsBlock.MqlResource().Cache.Load("_hclblock")
 	if found {
 		hb := hclBlock.Data.(*hcl.Block)
 		requireProviderBlock := getBlockByName(hb, "required_providers")

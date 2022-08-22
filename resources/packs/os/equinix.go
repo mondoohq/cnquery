@@ -5,7 +5,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/packethost/packngo"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/resources/packs/core"
 
@@ -25,11 +25,11 @@ func parseEquinixTime(timestamp string) (time.Time, error) {
 	return time.Parse("2006-01-02T15:04:05Z", timestamp)
 }
 
-func (p *lumiEquinixMetalProject) id() (string, error) {
+func (p *mqlEquinixMetalProject) id() (string, error) {
 	return p.Url()
 }
 
-func (g *lumiEquinixMetalProject) init(args *lumi.Args) (*lumi.Args, EquinixMetalProject, error) {
+func (g *mqlEquinixMetalProject) init(args *resources.Args) (*resources.Args, EquinixMetalProject, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -65,7 +65,7 @@ func (g *lumiEquinixMetalProject) init(args *lumi.Args) (*lumi.Args, EquinixMeta
 	return args, nil, nil
 }
 
-func (p *lumiEquinixMetalProject) GetOrganization() (interface{}, error) {
+func (p *mqlEquinixMetalProject) GetOrganization() (interface{}, error) {
 	et, err := equinixtransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -118,7 +118,7 @@ func (p *lumiEquinixMetalProject) GetOrganization() (interface{}, error) {
 	)
 }
 
-func (p *lumiEquinixMetalProject) GetUsers() ([]interface{}, error) {
+func (p *mqlEquinixMetalProject) GetUsers() ([]interface{}, error) {
 	et, err := equinixtransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -153,7 +153,7 @@ func (p *lumiEquinixMetalProject) GetUsers() ([]interface{}, error) {
 		created, _ := parseEquinixTime(fetchedUserData.Created)
 		updated, _ := parseEquinixTime(fetchedUserData.Updated)
 
-		lumiEquinixSshKey, err := p.MotorRuntime.CreateResource("equinix.metal.user",
+		mqlEquinixSshKey, err := p.MotorRuntime.CreateResource("equinix.metal.user",
 			"url", fetchedUserData.URL,
 			"id", fetchedUserData.ID,
 			"firstName", fetchedUserData.FirstName,
@@ -174,13 +174,13 @@ func (p *lumiEquinixMetalProject) GetUsers() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiEquinixSshKey)
+		res = append(res, mqlEquinixSshKey)
 	}
 
 	return res, nil
 }
 
-func (p *lumiEquinixMetalProject) GetSshKeys() ([]interface{}, error) {
+func (p *mqlEquinixMetalProject) GetSshKeys() ([]interface{}, error) {
 	et, err := equinixtransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -203,7 +203,7 @@ func (p *lumiEquinixMetalProject) GetSshKeys() ([]interface{}, error) {
 		created, _ := parseEquinixTime(key.Created)
 		updated, _ := parseEquinixTime(key.Updated)
 
-		lumiEquinixSshKey, err := p.MotorRuntime.CreateResource("equinix.metal.sshkey",
+		mqlEquinixSshKey, err := p.MotorRuntime.CreateResource("equinix.metal.sshkey",
 			"url", key.URL,
 			"id", key.ID,
 			"label", key.Label,
@@ -215,13 +215,13 @@ func (p *lumiEquinixMetalProject) GetSshKeys() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiEquinixSshKey)
+		res = append(res, mqlEquinixSshKey)
 	}
 
 	return res, nil
 }
 
-func (p *lumiEquinixMetalProject) GetDevices() ([]interface{}, error) {
+func (p *mqlEquinixMetalProject) GetDevices() ([]interface{}, error) {
 	et, err := equinixtransport(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -245,7 +245,7 @@ func (p *lumiEquinixMetalProject) GetDevices() ([]interface{}, error) {
 		updated, _ := parseEquinixTime(device.Updated)
 		os, _ := core.JsonToDict(device.OS)
 
-		lumiEquinixDevice, err := p.MotorRuntime.CreateResource("equinix.metal.sshkey",
+		mqlEquinixDevice, err := p.MotorRuntime.CreateResource("equinix.metal.sshkey",
 			"url", device.Href,
 			"id", device.ID,
 			"shortID", device.ShortID,
@@ -262,24 +262,24 @@ func (p *lumiEquinixMetalProject) GetDevices() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiEquinixDevice)
+		res = append(res, mqlEquinixDevice)
 	}
 
 	return res, nil
 }
 
-func (o *lumiEquinixMetalOrganization) id() (string, error) {
+func (o *mqlEquinixMetalOrganization) id() (string, error) {
 	return o.Url()
 }
 
-func (u *lumiEquinixMetalUser) id() (string, error) {
+func (u *mqlEquinixMetalUser) id() (string, error) {
 	return u.Url()
 }
 
-func (s *lumiEquinixMetalSshkey) id() (string, error) {
+func (s *mqlEquinixMetalSshkey) id() (string, error) {
 	return s.Url()
 }
 
-func (d *lumiEquinixMetalDevice) id() (string, error) {
+func (d *mqlEquinixMetalDevice) id() (string, error) {
 	return d.Url()
 }

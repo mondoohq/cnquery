@@ -8,20 +8,20 @@ import (
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (e *lumiAwsEfs) id() (string, error) {
+func (e *mqlAwsEfs) id() (string, error) {
 	return "aws.efs", nil
 }
 
-func (e *lumiAwsEfsFilesystem) id() (string, error) {
+func (e *mqlAwsEfsFilesystem) id() (string, error) {
 	return e.Arn()
 }
 
-func (e *lumiAwsEfs) GetFilesystems() ([]interface{}, error) {
+func (e *mqlAwsEfs) GetFilesystems() ([]interface{}, error) {
 	at, err := awstransport(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func (e *lumiAwsEfs) GetFilesystems() ([]interface{}, error) {
 	return res, nil
 }
 
-func (e *lumiAwsEfs) getFilesystems(at *aws_transport.Provider) []*jobpool.Job {
+func (e *mqlAwsEfs) getFilesystems(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -76,20 +76,20 @@ func (e *lumiAwsEfs) getFilesystems(at *aws_transport.Provider) []*jobpool.Job {
 					}
 					// add kms key if there is one
 					if fs.KmsKeyId != nil {
-						lumiKeyResource, err := e.MotorRuntime.CreateResource("aws.kms.key",
+						mqlKeyResource, err := e.MotorRuntime.CreateResource("aws.kms.key",
 							"arn", core.ToString(fs.KmsKeyId),
 						)
 						if err != nil {
 							return nil, err
 						}
-						lumiKey := lumiKeyResource.(AwsKmsKey)
-						args = append(args, "kmsKey", lumiKey)
+						mqlKey := mqlKeyResource.(AwsKmsKey)
+						args = append(args, "kmsKey", mqlKey)
 					}
-					lumiFilesystem, err := e.MotorRuntime.CreateResource("aws.efs.filesystem", args...)
+					mqlFilesystem, err := e.MotorRuntime.CreateResource("aws.efs.filesystem", args...)
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiFilesystem)
+					res = append(res, mqlFilesystem)
 				}
 				if describeFileSystemsRes.NextMarker == nil {
 					break
@@ -116,12 +116,12 @@ func efsTagsToMap(tags []types.Tag) map[string]interface{} {
 	return tagsMap
 }
 
-func (e *lumiAwsEfsFilesystem) GetKmsKey() (interface{}, error) {
+func (e *mqlAwsEfsFilesystem) GetKmsKey() (interface{}, error) {
 	// no key id on the log group object
 	return nil, nil
 }
 
-func (e *lumiAwsEfsFilesystem) GetBackupPolicy() (interface{}, error) {
+func (e *mqlAwsEfsFilesystem) GetBackupPolicy() (interface{}, error) {
 	id, err := e.Id()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to parse id")

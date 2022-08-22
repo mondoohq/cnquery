@@ -10,11 +10,11 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/local"
 )
 
-func (p *lumiDocker) id() (string, error) {
+func (p *mqlDocker) id() (string, error) {
 	return "docker", nil
 }
 
-func (p *lumiDocker) GetImages() ([]interface{}, error) {
+func (p *mqlDocker) GetImages() ([]interface{}, error) {
 	_, ok := p.MotorRuntime.Motor.Provider.(*local.Provider)
 	if !ok {
 		return nil, errors.New("docker is not support for this transport")
@@ -42,7 +42,7 @@ func (p *lumiDocker) GetImages() ([]interface{}, error) {
 			tags = append(tags, dImg.RepoTags[i])
 		}
 
-		lumiDockerImage, err := p.MotorRuntime.CreateResource("docker.image",
+		mqlDockerImage, err := p.MotorRuntime.CreateResource("docker.image",
 			"id", dImg.ID,
 			"size", dImg.Size,
 			"virtualsize", dImg.VirtualSize,
@@ -53,13 +53,13 @@ func (p *lumiDocker) GetImages() ([]interface{}, error) {
 			return nil, err
 		}
 
-		imgs[i] = lumiDockerImage.(DockerImage)
+		imgs[i] = mqlDockerImage.(DockerImage)
 	}
 
 	return imgs, nil
 }
 
-func (p *lumiDocker) GetContainers() ([]interface{}, error) {
+func (p *mqlDocker) GetContainers() ([]interface{}, error) {
 	_, ok := p.MotorRuntime.Motor.Provider.(*local.Provider)
 	if !ok {
 		return nil, errors.New("docker is not support for this transport")
@@ -87,7 +87,7 @@ func (p *lumiDocker) GetContainers() ([]interface{}, error) {
 			names = append(names, dContainer.Names[i])
 		}
 
-		lumiDockerContainer, err := p.MotorRuntime.CreateResource("docker.container",
+		mqlDockerContainer, err := p.MotorRuntime.CreateResource("docker.container",
 			"id", dContainer.ID,
 			"image", dContainer.Image,
 			"imageid", dContainer.ImageID,
@@ -101,18 +101,18 @@ func (p *lumiDocker) GetContainers() ([]interface{}, error) {
 			return nil, err
 		}
 
-		container[i] = lumiDockerContainer.(DockerContainer)
+		container[i] = mqlDockerContainer.(DockerContainer)
 	}
 
 	return container, nil
 }
 
-func (p *lumiDockerImage) id() (string, error) {
+func (p *mqlDockerImage) id() (string, error) {
 	id, _ := p.Id()
 	return id, nil
 }
 
-func (p *lumiDockerContainer) id() (string, error) {
+func (p *mqlDockerContainer) id() (string, error) {
 	id, _ := p.Id()
 	return id, nil
 }

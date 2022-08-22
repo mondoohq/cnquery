@@ -11,8 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 
-	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	"go.mondoo.io/mondoo/resources/packs/core"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -34,7 +34,7 @@ const (
 	keypairArnPattern       = "arn:aws:ec2:%s:%s:keypair/%s"
 )
 
-func (e *lumiAwsEc2) id() (string, error) {
+func (e *mqlAwsEc2) id() (string, error) {
 	return "aws.ec2", nil
 }
 
@@ -51,11 +51,11 @@ func Ec2TagsToMap(tags []types.Tag) map[string]interface{} {
 	return tagsMap
 }
 
-func (s *lumiAwsEc2Networkacl) id() (string, error) {
+func (s *mqlAwsEc2Networkacl) id() (string, error) {
 	return s.Arn()
 }
 
-func (s *lumiAwsEc2) GetNetworkAcls() ([]interface{}, error) {
+func (s *mqlAwsEc2) GetNetworkAcls() ([]interface{}, error) {
 	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -76,7 +76,7 @@ func (s *lumiAwsEc2) GetNetworkAcls() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getNetworkACLs(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsEc2) getNetworkACLs(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 
 	account, err := at.Account()
@@ -111,7 +111,7 @@ func (s *lumiAwsEc2) getNetworkACLs(at *aws_transport.Provider) []*jobpool.Job {
 
 				for i := range networkAcls.NetworkAcls {
 					acl := networkAcls.NetworkAcls[i]
-					lumiNetworkAcl, err := s.MotorRuntime.CreateResource("aws.ec2.networkacl",
+					mqlNetworkAcl, err := s.MotorRuntime.CreateResource("aws.ec2.networkacl",
 						"arn", fmt.Sprintf(networkAclArnPattern, regionVal, account.ID, core.ToString(acl.NetworkAclId)),
 						"id", core.ToString(acl.NetworkAclId),
 						"region", regionVal,
@@ -120,7 +120,7 @@ func (s *lumiAwsEc2) getNetworkACLs(at *aws_transport.Provider) []*jobpool.Job {
 						return nil, err
 					}
 
-					res = append(res, lumiNetworkAcl)
+					res = append(res, mqlNetworkAcl)
 				}
 			}
 			return jobpool.JobResult(res), nil
@@ -130,15 +130,15 @@ func (s *lumiAwsEc2) getNetworkACLs(at *aws_transport.Provider) []*jobpool.Job {
 	return tasks
 }
 
-func (s *lumiAwsEc2NetworkaclEntry) id() (string, error) {
+func (s *mqlAwsEc2NetworkaclEntry) id() (string, error) {
 	return s.Id()
 }
 
-func (s *lumiAwsEc2NetworkaclEntryPortrange) id() (string, error) {
+func (s *mqlAwsEc2NetworkaclEntryPortrange) id() (string, error) {
 	return s.Id()
 }
 
-func (s *lumiAwsEc2Networkacl) GetEntries() ([]interface{}, error) {
+func (s *mqlAwsEc2Networkacl) GetEntries() ([]interface{}, error) {
 	id, err := s.Id()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to parse id")
@@ -170,7 +170,7 @@ func (s *lumiAwsEc2Networkacl) GetEntries() ([]interface{}, error) {
 			"id", id + "-" + strconv.Itoa(core.ToIntFrom32(entry.RuleNumber)),
 		}
 		if entry.PortRange != nil {
-			lumiPortEntry, err := s.MotorRuntime.CreateResource("aws.ec2.networkacl.entry.portrange",
+			mqlPortEntry, err := s.MotorRuntime.CreateResource("aws.ec2.networkacl.entry.portrange",
 				"from", entry.PortRange.From,
 				"to", entry.PortRange.To,
 				"id", id+"-"+strconv.Itoa(core.ToIntFrom32(entry.RuleNumber))+"-"+strconv.Itoa(core.ToIntFrom32(entry.PortRange.From)),
@@ -178,24 +178,24 @@ func (s *lumiAwsEc2Networkacl) GetEntries() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			args = append(args, lumiPortEntry)
+			args = append(args, mqlPortEntry)
 		}
 
-		lumiAclEntry, err := s.MotorRuntime.CreateResource("aws.ec2.networkacl.entry", args...)
+		mqlAclEntry, err := s.MotorRuntime.CreateResource("aws.ec2.networkacl.entry", args...)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAclEntry)
+		res = append(res, mqlAclEntry)
 	}
 
 	return res, nil
 }
 
-func (s *lumiAwsEc2NetworkaclEntry) GetPortRange() (interface{}, error) {
+func (s *mqlAwsEc2NetworkaclEntry) GetPortRange() (interface{}, error) {
 	return nil, nil
 }
 
-func (s *lumiAwsEc2Securitygroup) GetIsAttachedToNetworkInterface() (bool, error) {
+func (s *mqlAwsEc2Securitygroup) GetIsAttachedToNetworkInterface() (bool, error) {
 	sgId, err := s.Id()
 	if err != nil {
 		return false, errors.Wrap(err, "unable to parse instance id")
@@ -223,7 +223,7 @@ func (s *lumiAwsEc2Securitygroup) GetIsAttachedToNetworkInterface() (bool, error
 	return false, nil
 }
 
-func (s *lumiAwsEc2) getSecurityGroups(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsEc2) getSecurityGroups(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 
 	account, err := at.Account()
@@ -259,7 +259,7 @@ func (s *lumiAwsEc2) getSecurityGroups(at *aws_transport.Provider) []*jobpool.Jo
 				for i := range securityGroups.SecurityGroups {
 					group := securityGroups.SecurityGroups[i]
 
-					lumiIpPermissions := []interface{}{}
+					mqlIpPermissions := []interface{}{}
 					for p := range group.IpPermissions {
 						permission := group.IpPermissions[p]
 
@@ -278,7 +278,7 @@ func (s *lumiAwsEc2) getSecurityGroups(at *aws_transport.Provider) []*jobpool.Jo
 								ipRanges = append(ipRanges, *iprange.CidrIpv6)
 							}
 						}
-						lumiSecurityGroupIpPermission, err := s.MotorRuntime.CreateResource("aws.ec2.securitygroup.ippermission",
+						mqlSecurityGroupIpPermission, err := s.MotorRuntime.CreateResource("aws.ec2.securitygroup.ippermission",
 							"id", core.ToString(group.GroupId)+"-"+strconv.Itoa(p),
 							"fromPort", core.ToInt64From32(permission.FromPort),
 							"toPort", core.ToInt64From32(permission.ToPort),
@@ -292,31 +292,31 @@ func (s *lumiAwsEc2) getSecurityGroups(at *aws_transport.Provider) []*jobpool.Jo
 							return nil, err
 						}
 
-						lumiIpPermissions = append(lumiIpPermissions, lumiSecurityGroupIpPermission)
+						mqlIpPermissions = append(mqlIpPermissions, mqlSecurityGroupIpPermission)
 					}
 
 					// NOTE: this will create the resource and determine the data in its init method
-					lumiVpc, err := s.MotorRuntime.CreateResource("aws.vpc",
+					mqlVpc, err := s.MotorRuntime.CreateResource("aws.vpc",
 						"arn", fmt.Sprintf(vpcArnPattern, regionVal, account.ID, core.ToString(group.VpcId)),
 					)
 					if err != nil {
 						return nil, err
 					}
-					lumiS3SecurityGroup, err := s.MotorRuntime.CreateResource("aws.ec2.securitygroup",
+					mqlS3SecurityGroup, err := s.MotorRuntime.CreateResource("aws.ec2.securitygroup",
 						"arn", fmt.Sprintf(securityGroupArnPattern, regionVal, account.ID, core.ToString(group.GroupId)),
 						"id", core.ToString(group.GroupId),
 						"name", core.ToString(group.GroupName),
 						"description", core.ToString(group.Description),
 						"tags", Ec2TagsToMap(group.Tags),
-						"vpc", lumiVpc,
-						"ipPermissions", lumiIpPermissions,
+						"vpc", mqlVpc,
+						"ipPermissions", mqlIpPermissions,
 						"ipPermissionsEgress", []interface{}{},
 						"region", regionVal,
 					)
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiS3SecurityGroup)
+					res = append(res, mqlS3SecurityGroup)
 				}
 			}
 			return jobpool.JobResult(res), nil
@@ -326,7 +326,7 @@ func (s *lumiAwsEc2) getSecurityGroups(at *aws_transport.Provider) []*jobpool.Jo
 	return tasks
 }
 
-func (s *lumiAwsEc2) GetKeypairs() ([]interface{}, error) {
+func (s *mqlAwsEc2) GetKeypairs() ([]interface{}, error) {
 	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -347,11 +347,11 @@ func (s *lumiAwsEc2) GetKeypairs() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsEc2Keypair) id() (string, error) {
+func (s *mqlAwsEc2Keypair) id() (string, error) {
 	return s.Arn()
 }
 
-func (s *lumiAwsEc2) getKeypairs(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsEc2) getKeypairs(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	account, err := at.Account()
 	if err != nil {
@@ -378,7 +378,7 @@ func (s *lumiAwsEc2) getKeypairs(at *aws_transport.Provider) []*jobpool.Job {
 
 			for i := range keyPairs.KeyPairs {
 				kp := keyPairs.KeyPairs[i]
-				lumiKeypair, err := s.MotorRuntime.CreateResource("aws.ec2.keypair",
+				mqlKeypair, err := s.MotorRuntime.CreateResource("aws.ec2.keypair",
 					"arn", fmt.Sprintf(keypairArnPattern, account.ID, regionVal, core.ToString(kp.KeyPairId)),
 					"fingerprint", core.ToString(kp.KeyFingerprint),
 					"name", core.ToString(kp.KeyName),
@@ -389,7 +389,7 @@ func (s *lumiAwsEc2) getKeypairs(at *aws_transport.Provider) []*jobpool.Job {
 				if err != nil {
 					return nil, err
 				}
-				res = append(res, lumiKeypair)
+				res = append(res, mqlKeypair)
 			}
 			return jobpool.JobResult(res), nil
 		}
@@ -398,7 +398,7 @@ func (s *lumiAwsEc2) getKeypairs(at *aws_transport.Provider) []*jobpool.Job {
 	return tasks
 }
 
-func (i *lumiAwsEc2Keypair) init(args *lumi.Args) (*lumi.Args, AwsEc2Keypair, error) {
+func (i *mqlAwsEc2Keypair) init(args *resources.Args) (*resources.Args, AwsEc2Keypair, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -448,7 +448,7 @@ func (i *lumiAwsEc2Keypair) init(args *lumi.Args) (*lumi.Args, AwsEc2Keypair, er
 	return args, nil, nil
 }
 
-func (s *lumiAwsEc2) GetSecurityGroups() ([]interface{}, error) {
+func (s *mqlAwsEc2) GetSecurityGroups() ([]interface{}, error) {
 	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -474,7 +474,7 @@ type ebsEncryption struct {
 	ebsEncryptionByDefault bool
 }
 
-func (s *lumiAwsEc2) GetEbsEncryptionByDefault() (map[string]interface{}, error) {
+func (s *mqlAwsEc2) GetEbsEncryptionByDefault() (map[string]interface{}, error) {
 	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -495,7 +495,7 @@ func (s *lumiAwsEc2) GetEbsEncryptionByDefault() (map[string]interface{}, error)
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getEbsEncryptionPerRegion(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsEc2) getEbsEncryptionPerRegion(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 
 	regions, err := at.GetRegions()
@@ -525,7 +525,7 @@ func (s *lumiAwsEc2) getEbsEncryptionPerRegion(at *aws_transport.Provider) []*jo
 	return tasks
 }
 
-func (s *lumiAwsEc2) GetInstances() ([]interface{}, error) {
+func (s *mqlAwsEc2) GetInstances() ([]interface{}, error) {
 	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -546,7 +546,7 @@ func (s *lumiAwsEc2) GetInstances() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getImdsv2Instances(ctx context.Context, svc *ec2.Client, filterName string) ([]types.Reservation, error) {
+func (s *mqlAwsEc2) getImdsv2Instances(ctx context.Context, svc *ec2.Client, filterName string) ([]types.Reservation, error) {
 	res := []types.Reservation{}
 	nextToken := aws.String("no_token_to_start_with")
 	params := &ec2.DescribeInstancesInput{
@@ -568,7 +568,7 @@ func (s *lumiAwsEc2) getImdsv2Instances(ctx context.Context, svc *ec2.Client, fi
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getImdsv1Instances(ctx context.Context, svc *ec2.Client, filterName string) ([]types.Reservation, error) {
+func (s *mqlAwsEc2) getImdsv1Instances(ctx context.Context, svc *ec2.Client, filterName string) ([]types.Reservation, error) {
 	res := []types.Reservation{}
 	nextToken := aws.String("no_token_to_start_with")
 	params := &ec2.DescribeInstancesInput{
@@ -590,7 +590,7 @@ func (s *lumiAwsEc2) getImdsv1Instances(ctx context.Context, svc *ec2.Client, fi
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getInstances(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsEc2) getInstances(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -634,7 +634,7 @@ func (s *lumiAwsEc2) getInstances(at *aws_transport.Provider) []*jobpool.Job {
 	return tasks
 }
 
-func (s *lumiAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVersion int, regionVal string) ([]interface{}, error) {
+func (s *mqlAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVersion int, regionVal string) ([]interface{}, error) {
 	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -651,11 +651,11 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVers
 	}
 	for _, reservation := range instances {
 		for _, instance := range reservation.Instances {
-			lumiDevices := []interface{}{}
+			mqlDevices := []interface{}{}
 			for i := range instance.BlockDeviceMappings {
 				device := instance.BlockDeviceMappings[i]
 
-				lumiInstanceDevice, err := s.MotorRuntime.CreateResource("aws.ec2.instance.device",
+				mqlInstanceDevice, err := s.MotorRuntime.CreateResource("aws.ec2.instance.device",
 					"deleteOnTermination", core.ToBool(device.Ebs.DeleteOnTermination),
 					"status", string(device.Ebs.Status),
 					"volumeId", core.ToString(device.Ebs.VolumeId),
@@ -664,18 +664,18 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVers
 				if err != nil {
 					return nil, err
 				}
-				lumiDevices = append(lumiDevices, lumiInstanceDevice)
+				mqlDevices = append(mqlDevices, mqlInstanceDevice)
 			}
 			sgs := []interface{}{}
 			for i := range instance.SecurityGroups {
 				// NOTE: this will create the resource and determine the data in its init method
-				lumiSg, err := s.MotorRuntime.CreateResource("aws.ec2.securitygroup",
+				mqlSg, err := s.MotorRuntime.CreateResource("aws.ec2.securitygroup",
 					"arn", fmt.Sprintf(securityGroupArnPattern, regionVal, account.ID, core.ToString(instance.SecurityGroups[i].GroupId)),
 				)
 				if err != nil {
 					return nil, err
 				}
-				sgs = append(sgs, lumiSg)
+				sgs = append(sgs, mqlSg)
 			}
 
 			stateReason, err := core.JsonToDict(instance.StateReason)
@@ -683,14 +683,14 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVers
 				return nil, err
 			}
 
-			lumiImage, err := s.MotorRuntime.CreateResource("aws.ec2.image",
+			mqlImage, err := s.MotorRuntime.CreateResource("aws.ec2.image",
 				"arn", fmt.Sprintf(imageArnPattern, regionVal, account.ID, core.ToString(instance.ImageId)),
 			)
 			if err != nil {
 				return nil, err
 			}
 
-			lumiKeyPair, err := s.MotorRuntime.CreateResource("aws.ec2.keypair",
+			mqlKeyPair, err := s.MotorRuntime.CreateResource("aws.ec2.keypair",
 				"region", regionVal,
 				"name", core.ToString(instance.KeyName),
 			)
@@ -705,7 +705,7 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVers
 				"detailedMonitoring", string(instance.Monitoring.State),
 				"httpTokens", httpTokens,
 				"state", string(instance.State.Name),
-				"deviceMappings", lumiDevices,
+				"deviceMappings", mqlDevices,
 				"securityGroups", sgs,
 				"publicDnsName", core.ToString(instance.PublicDnsName),
 				"stateReason", stateReason,
@@ -713,41 +713,41 @@ func (s *lumiAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVers
 				"ebsOptimized", core.ToBool(instance.EbsOptimized),
 				"instanceType", string(instance.InstanceType),
 				"tags", Ec2TagsToMap(instance.Tags),
-				"image", lumiImage,
+				"image", mqlImage,
 				"launchTime", instance.LaunchTime,
 				"privateIp", core.ToString(instance.PrivateIpAddress),
 				"privateDnsName", core.ToString(instance.PrivateDnsName),
-				"keypair", lumiKeyPair,
+				"keypair", mqlKeyPair,
 			}
 
 			// add vpc if there is one
 			if instance.VpcId != nil {
 				// NOTE: this will create the resource and determine the data in its init method
-				lumiVpcResource, err := s.MotorRuntime.CreateResource("aws.vpc",
+				mqlVpcResource, err := s.MotorRuntime.CreateResource("aws.vpc",
 					"arn", fmt.Sprintf(vpcArnPattern, regionVal, account.ID, core.ToString(instance.VpcId)),
 				)
 				if err != nil {
 					return nil, err
 				}
-				lumiVpc := lumiVpcResource.(AwsVpc)
-				args = append(args, "vpc", lumiVpc)
+				mqlVpc := mqlVpcResource.(AwsVpc)
+				args = append(args, "vpc", mqlVpc)
 			}
 
-			lumiEc2Instance, err := s.MotorRuntime.CreateResource("aws.ec2.instance", args...)
+			mqlEc2Instance, err := s.MotorRuntime.CreateResource("aws.ec2.instance", args...)
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, lumiEc2Instance)
+			res = append(res, mqlEc2Instance)
 		}
 	}
 	return res, nil
 }
 
-func (i *lumiAwsEc2Image) id() (string, error) {
+func (i *mqlAwsEc2Image) id() (string, error) {
 	return i.Arn()
 }
 
-func (i *lumiAwsEc2Image) init(args *lumi.Args) (*lumi.Args, AwsEc2Image, error) {
+func (i *mqlAwsEc2Image) init(args *resources.Args) (*resources.Args, AwsEc2Image, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -793,11 +793,11 @@ func (i *lumiAwsEc2Image) init(args *lumi.Args) (*lumi.Args, AwsEc2Image, error)
 	return args, nil, nil
 }
 
-func (s *lumiAwsEc2Securitygroup) id() (string, error) {
+func (s *mqlAwsEc2Securitygroup) id() (string, error) {
 	return s.Arn()
 }
 
-func (p *lumiAwsEc2Securitygroup) init(args *lumi.Args) (*lumi.Args, AwsEc2Securitygroup, error) {
+func (p *mqlAwsEc2Securitygroup) init(args *resources.Args) (*resources.Args, AwsEc2Securitygroup, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -823,24 +823,24 @@ func (p *lumiAwsEc2Securitygroup) init(args *lumi.Args) (*lumi.Args, AwsEc2Secur
 	if (*args)["arn"] != nil {
 		arnVal := (*args)["arn"].(string)
 		match = func(secGroup AwsEc2Securitygroup) bool {
-			lumiSecArn, err := secGroup.Arn()
+			mqlSecArn, err := secGroup.Arn()
 			if err != nil {
 				log.Error().Err(err).Msg("security group is not properly initialized")
 				return false
 			}
-			return lumiSecArn == arnVal
+			return mqlSecArn == arnVal
 		}
 	}
 
 	if (*args)["id"] != nil {
 		idVal := (*args)["id"].(string)
 		match = func(secGroup AwsEc2Securitygroup) bool {
-			lumiSecId, err := secGroup.Id()
+			mqlSecId, err := secGroup.Id()
 			if err != nil {
 				log.Error().Err(err).Msg("security group is not properly initialized")
 				return false
 			}
-			return lumiSecId == idVal
+			return mqlSecId == idVal
 		}
 	}
 
@@ -854,26 +854,26 @@ func (p *lumiAwsEc2Securitygroup) init(args *lumi.Args) (*lumi.Args, AwsEc2Secur
 	return nil, nil, errors.New("security group does not exist")
 }
 
-func (s *lumiAwsEc2SecuritygroupIppermission) id() (string, error) {
+func (s *mqlAwsEc2SecuritygroupIppermission) id() (string, error) {
 	return s.Id()
 }
 
-func (s *lumiAwsEc2InstanceDevice) id() (string, error) {
+func (s *mqlAwsEc2InstanceDevice) id() (string, error) {
 	return s.VolumeId()
 }
 
-func (s *lumiAwsEc2Instance) id() (string, error) {
+func (s *mqlAwsEc2Instance) id() (string, error) {
 	return s.Arn()
 }
 
-func (s *lumiAwsEc2Instance) GetVpc() (interface{}, error) {
+func (s *mqlAwsEc2Instance) GetVpc() (interface{}, error) {
 	// this indicated that no vpc is attached since we set the value when we construct the resource
 	// we return nil here to make it easier for users to compare:
 	// aws.ec2.instances.where(state != "terminated") { vpc != null }
 	return nil, nil
 }
 
-func (s *lumiAwsEc2Instance) GetSsm() (interface{}, error) {
+func (s *mqlAwsEc2Instance) GetSsm() (interface{}, error) {
 	instanceId, err := s.InstanceId()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to parse instance id")
@@ -905,7 +905,7 @@ func (s *lumiAwsEc2Instance) GetSsm() (interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsEc2Instance) GetPatchState() (interface{}, error) {
+func (s *mqlAwsEc2Instance) GetPatchState() (interface{}, error) {
 	var res interface{}
 	instanceId, err := s.InstanceId()
 	if err != nil {
@@ -937,7 +937,7 @@ func (s *lumiAwsEc2Instance) GetPatchState() (interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsEc2Instance) GetInstanceStatus() (interface{}, error) {
+func (s *mqlAwsEc2Instance) GetInstanceStatus() (interface{}, error) {
 	var res interface{}
 	instanceId, err := s.InstanceId()
 	if err != nil {
@@ -975,7 +975,7 @@ func (s *lumiAwsEc2Instance) GetInstanceStatus() (interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsEc2) GetVolumes() ([]interface{}, error) {
+func (s *mqlAwsEc2) GetVolumes() ([]interface{}, error) {
 	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -996,7 +996,7 @@ func (s *lumiAwsEc2) GetVolumes() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getVolumes(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsEc2) getVolumes(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 
 	regions, err := at.GetRegions()
@@ -1026,7 +1026,7 @@ func (s *lumiAwsEc2) getVolumes(at *aws_transport.Provider) []*jobpool.Job {
 					if err != nil {
 						return nil, err
 					}
-					lumiVol, err := s.MotorRuntime.CreateResource("aws.ec2.volume",
+					mqlVol, err := s.MotorRuntime.CreateResource("aws.ec2.volume",
 						"arn", fmt.Sprintf(volumeArnPattern, region, account.ID, core.ToString(vol.VolumeId)),
 						"id", core.ToString(vol.VolumeId),
 						"attachments", jsonAttachments,
@@ -1040,7 +1040,7 @@ func (s *lumiAwsEc2) getVolumes(at *aws_transport.Provider) []*jobpool.Job {
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiVol)
+					res = append(res, mqlVol)
 				}
 				nextToken = volumes.NextToken
 				if volumes.NextToken != nil {
@@ -1054,15 +1054,15 @@ func (s *lumiAwsEc2) getVolumes(at *aws_transport.Provider) []*jobpool.Job {
 	return tasks
 }
 
-func (s *lumiAwsEc2Volume) id() (string, error) {
+func (s *mqlAwsEc2Volume) id() (string, error) {
 	return s.Arn()
 }
 
-func (s *lumiAwsEc2Snapshot) id() (string, error) {
+func (s *mqlAwsEc2Snapshot) id() (string, error) {
 	return s.Arn()
 }
 
-func (s *lumiAwsEc2) GetVpnConnections() ([]interface{}, error) {
+func (s *mqlAwsEc2) GetVpnConnections() ([]interface{}, error) {
 	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -1083,7 +1083,7 @@ func (s *lumiAwsEc2) GetVpnConnections() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getVpnConnections(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsEc2) getVpnConnections(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -1105,9 +1105,9 @@ func (s *lumiAwsEc2) getVpnConnections(at *aws_transport.Provider) []*jobpool.Jo
 				return nil, err
 			}
 			for _, vpnConn := range vpnConnections.VpnConnections {
-				lumiVgwT := []interface{}{}
+				mqlVgwT := []interface{}{}
 				for _, vgwT := range vpnConn.VgwTelemetry {
-					lumiVgwTelemetry, err := s.MotorRuntime.CreateResource("aws.ec2.vgwtelemetry",
+					mqlVgwTelemetry, err := s.MotorRuntime.CreateResource("aws.ec2.vgwtelemetry",
 						"outsideIpAddress", core.ToString(vgwT.OutsideIpAddress),
 						"status", string(vgwT.Status),
 						"statusMessage", core.ToString(vgwT.StatusMessage),
@@ -1115,16 +1115,16 @@ func (s *lumiAwsEc2) getVpnConnections(at *aws_transport.Provider) []*jobpool.Jo
 					if err != nil {
 						return nil, err
 					}
-					lumiVgwT = append(lumiVgwT, lumiVgwTelemetry)
+					mqlVgwT = append(mqlVgwT, mqlVgwTelemetry)
 				}
-				lumiVpnConn, err := s.MotorRuntime.CreateResource("aws.ec2.vpnconnection",
+				mqlVpnConn, err := s.MotorRuntime.CreateResource("aws.ec2.vpnconnection",
 					"arn", fmt.Sprintf(vpnConnArnPattern, regionVal, account.ID, core.ToString(vpnConn.VpnConnectionId)),
-					"vgwTelemetry", lumiVgwT,
+					"vgwTelemetry", mqlVgwT,
 				)
 				if err != nil {
 					return nil, err
 				}
-				res = append(res, lumiVpnConn)
+				res = append(res, mqlVpnConn)
 			}
 			return jobpool.JobResult(res), nil
 		}
@@ -1133,7 +1133,7 @@ func (s *lumiAwsEc2) getVpnConnections(at *aws_transport.Provider) []*jobpool.Jo
 	return tasks
 }
 
-func (s *lumiAwsEc2) GetSnapshots() ([]interface{}, error) {
+func (s *mqlAwsEc2) GetSnapshots() ([]interface{}, error) {
 	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -1154,7 +1154,7 @@ func (s *lumiAwsEc2) GetSnapshots() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getSnapshots(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsEc2) getSnapshots(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -1179,7 +1179,7 @@ func (s *lumiAwsEc2) getSnapshots(at *aws_transport.Provider) []*jobpool.Job {
 					return nil, err
 				}
 				for _, snapshot := range snapshots.Snapshots {
-					lumiSnap, err := s.MotorRuntime.CreateResource("aws.ec2.snapshot",
+					mqlSnap, err := s.MotorRuntime.CreateResource("aws.ec2.snapshot",
 						"arn", fmt.Sprintf(snapshotArnPattern, regionVal, account.ID, core.ToString(snapshot.SnapshotId)),
 						"id", core.ToString(snapshot.SnapshotId),
 						"region", regionVal,
@@ -1190,7 +1190,7 @@ func (s *lumiAwsEc2) getSnapshots(at *aws_transport.Provider) []*jobpool.Job {
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiSnap)
+					res = append(res, mqlSnap)
 				}
 				nextToken = snapshots.NextToken
 				if snapshots.NextToken != nil {
@@ -1204,7 +1204,7 @@ func (s *lumiAwsEc2) getSnapshots(at *aws_transport.Provider) []*jobpool.Job {
 	return tasks
 }
 
-func (s *lumiAwsEc2Snapshot) GetCreateVolumePermission() ([]interface{}, error) {
+func (s *mqlAwsEc2Snapshot) GetCreateVolumePermission() ([]interface{}, error) {
 	id, err := s.Id()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to parse instance id")
@@ -1229,7 +1229,7 @@ func (s *lumiAwsEc2Snapshot) GetCreateVolumePermission() ([]interface{}, error) 
 	return core.JsonToDictSlice(attribute.CreateVolumePermissions)
 }
 
-func (s *lumiAwsEc2) GetInternetGateways() ([]interface{}, error) {
+func (s *mqlAwsEc2) GetInternetGateways() ([]interface{}, error) {
 	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -1249,7 +1249,7 @@ func (s *lumiAwsEc2) GetInternetGateways() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsEc2) getInternetGateways(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsEc2) getInternetGateways(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
@@ -1277,7 +1277,7 @@ func (s *lumiAwsEc2) getInternetGateways(at *aws_transport.Provider) []*jobpool.
 					if err != nil {
 						return nil, err
 					}
-					lumiInternetGw, err := s.MotorRuntime.CreateResource("aws.ec2.internetgateway",
+					mqlInternetGw, err := s.MotorRuntime.CreateResource("aws.ec2.internetgateway",
 						"arn", fmt.Sprintf(internetGwArnPattern, regionVal, core.ToString(gateway.OwnerId), core.ToString(gateway.InternetGatewayId)),
 						"id", core.ToString(gateway.InternetGatewayId),
 						"attachments", jsonAttachments,
@@ -1285,7 +1285,7 @@ func (s *lumiAwsEc2) getInternetGateways(at *aws_transport.Provider) []*jobpool.
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiInternetGw)
+					res = append(res, mqlInternetGw)
 				}
 
 				nextToken = internetGws.NextToken
@@ -1300,14 +1300,14 @@ func (s *lumiAwsEc2) getInternetGateways(at *aws_transport.Provider) []*jobpool.
 	return tasks
 }
 
-func (s *lumiAwsEc2Internetgateway) id() (string, error) {
+func (s *mqlAwsEc2Internetgateway) id() (string, error) {
 	return s.Arn()
 }
 
-func (s *lumiAwsEc2Vpnconnection) id() (string, error) {
+func (s *mqlAwsEc2Vpnconnection) id() (string, error) {
 	return s.Arn()
 }
 
-func (s *lumiAwsEc2Vgwtelemetry) id() (string, error) {
+func (s *mqlAwsEc2Vgwtelemetry) id() (string, error) {
 	return s.OutsideIpAddress()
 }

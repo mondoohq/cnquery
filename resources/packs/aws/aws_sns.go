@@ -8,25 +8,25 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/smithy-go/transport/http"
-	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (s *lumiAwsSns) id() (string, error) {
+func (s *mqlAwsSns) id() (string, error) {
 	return "aws.sns", nil
 }
 
-func (s *lumiAwsSnsTopic) id() (string, error) {
+func (s *mqlAwsSnsTopic) id() (string, error) {
 	return s.Arn()
 }
 
-func (s *lumiAwsSnsSubscription) id() (string, error) {
+func (s *mqlAwsSnsSubscription) id() (string, error) {
 	return s.Arn()
 }
 
-func (s *lumiAwsSns) GetTopics() ([]interface{}, error) {
+func (s *mqlAwsSns) GetTopics() ([]interface{}, error) {
 	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func (s *lumiAwsSns) GetTopics() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsSnsTopic) init(args *lumi.Args) (*lumi.Args, AwsSnsTopic, error) {
+func (s *mqlAwsSnsTopic) init(args *resources.Args) (*resources.Args, AwsSnsTopic, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -77,7 +77,7 @@ func (s *lumiAwsSnsTopic) init(args *lumi.Args) (*lumi.Args, AwsSnsTopic, error)
 	return args, nil, nil
 }
 
-func (s *lumiAwsSns) getTopics(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsSns) getTopics(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -103,7 +103,7 @@ func (s *lumiAwsSns) getTopics(at *aws_transport.Provider) []*jobpool.Job {
 					if err != nil {
 						return nil, err
 					}
-					lumiTopic, err := s.MotorRuntime.CreateResource("aws.sns.topic",
+					mqlTopic, err := s.MotorRuntime.CreateResource("aws.sns.topic",
 						"arn", core.ToString(topic.TopicArn),
 						"region", regionVal,
 						"tags", tags,
@@ -111,7 +111,7 @@ func (s *lumiAwsSns) getTopics(at *aws_transport.Provider) []*jobpool.Job {
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiTopic)
+					res = append(res, mqlTopic)
 				}
 				nextToken = topics.NextToken
 				if topics.NextToken != nil {
@@ -125,7 +125,7 @@ func (s *lumiAwsSns) getTopics(at *aws_transport.Provider) []*jobpool.Job {
 	return tasks
 }
 
-func (s *lumiAwsSnsTopic) GetAttributes() (interface{}, error) {
+func (s *mqlAwsSnsTopic) GetAttributes() (interface{}, error) {
 	arn, err := s.Arn()
 	if err != nil {
 		return false, err

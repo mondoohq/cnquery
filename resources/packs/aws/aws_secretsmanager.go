@@ -6,16 +6,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (e *lumiAwsSecretsmanager) id() (string, error) {
+func (e *mqlAwsSecretsmanager) id() (string, error) {
 	return "aws.secretsmanager", nil
 }
 
-func (e *lumiAwsSecretsmanager) GetSecrets() ([]interface{}, error) {
+func (e *mqlAwsSecretsmanager) GetSecrets() ([]interface{}, error) {
 	at, err := awstransport(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -35,11 +35,11 @@ func (e *lumiAwsSecretsmanager) GetSecrets() ([]interface{}, error) {
 	return res, nil
 }
 
-func (e *lumiAwsSecretsmanagerSecret) id() (string, error) {
+func (e *mqlAwsSecretsmanagerSecret) id() (string, error) {
 	return e.Arn()
 }
 
-func (e *lumiAwsSecretsmanager) getSecrets(at *aws_transport.Provider) []*jobpool.Job {
+func (e *mqlAwsSecretsmanager) getSecrets(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -62,7 +62,7 @@ func (e *lumiAwsSecretsmanager) getSecrets(at *aws_transport.Provider) []*jobpoo
 					return nil, err
 				}
 				for _, secret := range secrets.SecretList {
-					lumiSecret, err := e.MotorRuntime.CreateResource("aws.secretsmanager.secret",
+					mqlSecret, err := e.MotorRuntime.CreateResource("aws.secretsmanager.secret",
 						"arn", core.ToString(secret.ARN),
 						"name", core.ToString(secret.Name),
 						"rotationEnabled", secret.RotationEnabled,
@@ -71,7 +71,7 @@ func (e *lumiAwsSecretsmanager) getSecrets(at *aws_transport.Provider) []*jobpoo
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiSecret)
+					res = append(res, mqlSecret)
 				}
 				nextToken = secrets.NextToken
 				if secrets.NextToken != nil {

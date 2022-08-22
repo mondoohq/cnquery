@@ -10,7 +10,7 @@ import (
 
 // Adding unit tests for regex
 
-var lre = lumiRegex{}
+var lre = mqlRegex{}
 
 func testRegex(t *testing.T, f func() (string, error), matches, fails []string) {
 	r, err := f()

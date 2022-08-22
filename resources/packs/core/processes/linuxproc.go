@@ -42,7 +42,7 @@ func (lpm *LinuxProcManager) List() ([]*OSProcess, error) {
 		// collect process info
 		proc, err := lpm.Process(pid)
 		if err != nil {
-			log.Warn().Err(err).Int64("pid", pid).Msg("lumi[processes]> could not retrieve process information")
+			log.Warn().Err(err).Int64("pid", pid).Msg("mql[processes]> could not retrieve process information")
 			continue
 		}
 

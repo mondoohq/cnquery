@@ -6,17 +6,17 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (k *lumiAwsKms) id() (string, error) {
+func (k *mqlAwsKms) id() (string, error) {
 	return "aws.kms", nil
 }
 
-func (k *lumiAwsKms) GetKeys() ([]interface{}, error) {
+func (k *mqlAwsKms) GetKeys() ([]interface{}, error) {
 	at, err := awstransport(k.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func (k *lumiAwsKms) GetKeys() ([]interface{}, error) {
 	return res, nil
 }
 
-func (k *lumiAwsKms) getKeys(at *aws_transport.Provider) []*jobpool.Job {
+func (k *mqlAwsKms) getKeys(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -59,7 +59,7 @@ func (k *lumiAwsKms) getKeys(at *aws_transport.Provider) []*jobpool.Job {
 				}
 
 				for _, key := range keyList.Keys {
-					lumiRecorder, err := k.MotorRuntime.CreateResource("aws.kms.key",
+					mqlRecorder, err := k.MotorRuntime.CreateResource("aws.kms.key",
 						"id", core.ToString(key.KeyId),
 						"arn", core.ToString(key.KeyArn),
 						"region", regionVal,
@@ -67,7 +67,7 @@ func (k *lumiAwsKms) getKeys(at *aws_transport.Provider) []*jobpool.Job {
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiRecorder)
+					res = append(res, mqlRecorder)
 				}
 				if keyList.Truncated == false {
 					break
@@ -81,7 +81,7 @@ func (k *lumiAwsKms) getKeys(at *aws_transport.Provider) []*jobpool.Job {
 	return tasks
 }
 
-func (k *lumiAwsKmsKey) GetMetadata() (interface{}, error) {
+func (k *mqlAwsKmsKey) GetMetadata() (interface{}, error) {
 	key, err := k.Arn()
 	if err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func (k *lumiAwsKmsKey) GetMetadata() (interface{}, error) {
 	return core.JsonToDict(keyMetadata.KeyMetadata)
 }
 
-func (k *lumiAwsKmsKey) GetKeyRotationEnabled() (bool, error) {
+func (k *mqlAwsKmsKey) GetKeyRotationEnabled() (bool, error) {
 	keyId, err := k.Id()
 	if err != nil {
 		return false, err
@@ -127,11 +127,11 @@ func (k *lumiAwsKmsKey) GetKeyRotationEnabled() (bool, error) {
 	return key.KeyRotationEnabled, nil
 }
 
-func (k *lumiAwsKmsKey) id() (string, error) {
+func (k *mqlAwsKmsKey) id() (string, error) {
 	return k.Arn()
 }
 
-func (p *lumiAwsKmsKey) init(args *lumi.Args) (*lumi.Args, AwsKmsKey, error) {
+func (p *mqlAwsKmsKey) init(args *resources.Args) (*resources.Args, AwsKmsKey, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -155,11 +155,11 @@ func (p *lumiAwsKmsKey) init(args *lumi.Args) (*lumi.Args, AwsKmsKey, error) {
 	arnVal := (*args)["arn"].(string)
 	for i := range rawResources {
 		key := rawResources[i].(AwsKmsKey)
-		lumiKeyArn, err := key.Arn()
+		mqlKeyArn, err := key.Arn()
 		if err != nil {
 			return nil, nil, errors.New("kms key does not exist")
 		}
-		if lumiKeyArn == arnVal {
+		if mqlKeyArn == arnVal {
 			return args, key, nil
 		}
 	}

@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"go.mondoo.io/mondoo/checksums"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core"
 	"go.mondoo.io/mondoo/resources/packs/os/pam"
 )
@@ -17,7 +17,7 @@ const (
 	defaultPamDir  = "/etc/pam.d"
 )
 
-func (s *lumiPamConf) init(args *lumi.Args) (*lumi.Args, PamConf, error) {
+func (s *mqlPamConf) init(args *resources.Args) (*resources.Args, PamConf, error) {
 	if x, ok := (*args)["path"]; ok {
 		path, ok := x.(string)
 		if !ok {
@@ -36,7 +36,7 @@ func (s *lumiPamConf) init(args *lumi.Args) (*lumi.Args, PamConf, error) {
 	return args, nil, nil
 }
 
-func (s *lumiPamConf) id() (string, error) {
+func (s *mqlPamConf) id() (string, error) {
 	files, err := s.Files()
 	if err != nil {
 		return "", err
@@ -54,7 +54,7 @@ func (s *lumiPamConf) id() (string, error) {
 	return checksum.String(), nil
 }
 
-func (se *lumiPamConfServiceEntry) id() (string, error) {
+func (se *mqlPamConfServiceEntry) id() (string, error) {
 	ptype, err := se.PamType()
 	if err != nil {
 		return "", err
@@ -84,13 +84,13 @@ func (se *lumiPamConfServiceEntry) id() (string, error) {
 	return id, nil
 }
 
-func (s *lumiPamConf) getFiles(confPath string) ([]interface{}, error) {
+func (s *mqlPamConf) getFiles(confPath string) ([]interface{}, error) {
 	// check if the pam.d directory or pam config file exists
-	lumiFile, err := s.MotorRuntime.CreateResource("file", "path", confPath)
+	mqlFile, err := s.MotorRuntime.CreateResource("file", "path", confPath)
 	if err != nil {
 		return nil, err
 	}
-	f := lumiFile.(core.File)
+	f := mqlFile.(core.File)
 	exists, err := f.Exists()
 	if err != nil {
 		return nil, err
@@ -115,7 +115,7 @@ func (s *lumiPamConf) getFiles(confPath string) ([]interface{}, error) {
 	}
 }
 
-func (s *lumiPamConf) getConfDFiles(confD string) ([]interface{}, error) {
+func (s *mqlPamConf) getConfDFiles(confD string) ([]interface{}, error) {
 	files, err := s.MotorRuntime.CreateResource("files.find", "from", confD, "type", "file")
 	if err != nil {
 		return nil, err
@@ -130,15 +130,15 @@ func (s *lumiPamConf) getConfDFiles(confD string) ([]interface{}, error) {
 
 // GetFiles is called when the user has not provided a custom path. Otherwise files are set in the init
 // method and this function is never called then since the data is already cached.
-func (s *lumiPamConf) GetFiles() ([]interface{}, error) {
+func (s *mqlPamConf) GetFiles() ([]interface{}, error) {
 	// check if the pam.d directory exists and is a directory
 	// according to the pam spec, pam prefers the directory if it  exists over the single file config
 	// see http://www.linux-pam.org/Linux-PAM-html/sag-configuration.html
-	lumiFile, err := s.MotorRuntime.CreateResource("file", "path", defaultPamDir)
+	mqlFile, err := s.MotorRuntime.CreateResource("file", "path", defaultPamDir)
 	if err != nil {
 		return nil, err
 	}
-	f := lumiFile.(core.File)
+	f := mqlFile.(core.File)
 	exists, err := f.Exists()
 	if err != nil {
 		return nil, err
@@ -151,7 +151,7 @@ func (s *lumiPamConf) GetFiles() ([]interface{}, error) {
 	}
 }
 
-func (s *lumiPamConf) GetContent(files []interface{}) (string, error) {
+func (s *mqlPamConf) GetContent(files []interface{}) (string, error) {
 	osProvider, err := osProvider(s.MotorRuntime.Motor)
 	if err != nil {
 		return "", err
@@ -189,7 +189,7 @@ func (s *lumiPamConf) GetContent(files []interface{}) (string, error) {
 	return res.String(), nil
 }
 
-func (s *lumiPamConf) GetServices(files []interface{}) (map[string]interface{}, error) {
+func (s *mqlPamConf) GetServices(files []interface{}) (map[string]interface{}, error) {
 	osProvider, err := osProvider(s.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
@@ -246,7 +246,7 @@ func (s *lumiPamConf) GetServices(files []interface{}) (map[string]interface{}, 
 	return services, nil
 }
 
-func (s *lumiPamConf) GetEntries(files []interface{}) (map[string]interface{}, error) {
+func (s *mqlPamConf) GetEntries(files []interface{}) (map[string]interface{}, error) {
 	osProvider, err := osProvider(s.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err

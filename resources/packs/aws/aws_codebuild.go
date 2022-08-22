@@ -7,17 +7,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
-	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (c *lumiAwsCodebuild) id() (string, error) {
+func (c *mqlAwsCodebuild) id() (string, error) {
 	return "aws.codebuild", nil
 }
 
-func (c *lumiAwsCodebuild) GetProjects() ([]interface{}, error) {
+func (c *mqlAwsCodebuild) GetProjects() ([]interface{}, error) {
 	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func (c *lumiAwsCodebuild) GetProjects() ([]interface{}, error) {
 	return res, nil
 }
 
-func (t *lumiAwsCodebuild) getProjects(at *aws_transport.Provider) []*jobpool.Job {
+func (t *mqlAwsCodebuild) getProjects(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -60,14 +60,14 @@ func (t *lumiAwsCodebuild) getProjects(at *aws_transport.Provider) []*jobpool.Jo
 				}
 
 				for _, project := range projects.Projects {
-					lumiProject, err := t.MotorRuntime.CreateResource("aws.codebuild.project",
+					mqlProject, err := t.MotorRuntime.CreateResource("aws.codebuild.project",
 						"name", project,
 						"region", regionVal,
 					)
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiProject)
+					res = append(res, mqlProject)
 				}
 				nextToken = projects.NextToken
 				if projects.NextToken != nil {
@@ -81,11 +81,11 @@ func (t *lumiAwsCodebuild) getProjects(at *aws_transport.Provider) []*jobpool.Jo
 	return tasks
 }
 
-func (c *lumiAwsCodebuildProject) id() (string, error) {
+func (c *mqlAwsCodebuildProject) id() (string, error) {
 	return c.Name()
 }
 
-func (c *lumiAwsCodebuildProject) init(args *lumi.Args) (*lumi.Args, AwsCodebuildProject, error) {
+func (c *mqlAwsCodebuildProject) init(args *resources.Args) (*resources.Args, AwsCodebuildProject, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}

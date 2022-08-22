@@ -11,9 +11,9 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v45/github"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/providers"
 	gh_transport "go.mondoo.io/mondoo/motor/providers/github"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -32,11 +32,11 @@ func githubTimestamp(ts *github.Timestamp) *time.Time {
 	return &ts.Time
 }
 
-func (g *lumiGithub) id() (string, error) {
+func (g *mqlGithub) id() (string, error) {
 	return "github", nil
 }
 
-func (g *lumiGithub) GetUser() (interface{}, error) {
+func (g *mqlGithub) GetUser() (interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -50,7 +50,7 @@ func (g *lumiGithub) GetUser() (interface{}, error) {
 	return x, nil
 }
 
-func (g *lumiGithub) GetRepositories() ([]interface{}, error) {
+func (g *mqlGithub) GetRepositories() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -114,7 +114,7 @@ func (g *lumiGithub) GetRepositories() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *lumiGithubOrganization) id() (string, error) {
+func (g *mqlGithubOrganization) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -122,7 +122,7 @@ func (g *lumiGithubOrganization) id() (string, error) {
 	return "github.organization/" + strconv.FormatInt(id, 10), nil
 }
 
-func (g *lumiGithubOrganization) init(args *lumi.Args) (*lumi.Args, GithubOrganization, error) {
+func (g *mqlGithubOrganization) init(args *resources.Args) (*resources.Args, GithubOrganization, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -174,7 +174,7 @@ func (g *lumiGithubOrganization) init(args *lumi.Args) (*lumi.Args, GithubOrgani
 	return args, nil, nil
 }
 
-func (g *lumiGithubOrganization) GetMembers() ([]interface{}, error) {
+func (g *mqlGithubOrganization) GetMembers() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -206,7 +206,7 @@ func (g *lumiGithubOrganization) GetMembers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *lumiGithubOrganization) GetOwners() ([]interface{}, error) {
+func (g *mqlGithubOrganization) GetOwners() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -253,7 +253,7 @@ func (g *lumiGithubOrganization) GetOwners() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *lumiGithubOrganization) GetTeams() ([]interface{}, error) {
+func (g *mqlGithubOrganization) GetTeams() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -289,7 +289,7 @@ func (g *lumiGithubOrganization) GetTeams() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *lumiGithubOrganization) GetRepositories() ([]interface{}, error) {
+func (g *mqlGithubOrganization) GetRepositories() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -353,7 +353,7 @@ func (g *lumiGithubOrganization) GetRepositories() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *lumiGithubOrganization) GetWebhooks() ([]interface{}, error) {
+func (g *mqlGithubOrganization) GetWebhooks() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -379,7 +379,7 @@ func (g *lumiGithubOrganization) GetWebhooks() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiUser, err := g.MotorRuntime.CreateResource("github.webhook",
+		mqlUser, err := g.MotorRuntime.CreateResource("github.webhook",
 			"id", core.ToInt64(h.ID),
 			"name", core.ToString(h.Name),
 			"events", core.StrSliceToInterface(h.Events),
@@ -391,13 +391,13 @@ func (g *lumiGithubOrganization) GetWebhooks() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiUser)
+		res = append(res, mqlUser)
 	}
 
 	return res, nil
 }
 
-func (g *lumiGithubPackage) id() (string, error) {
+func (g *mqlGithubPackage) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -405,7 +405,7 @@ func (g *lumiGithubPackage) id() (string, error) {
 	return "github.package/" + strconv.FormatInt(id, 10), nil
 }
 
-func (g *lumiGithubOrganization) GetPackages() ([]interface{}, error) {
+func (g *mqlGithubOrganization) GetPackages() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -441,7 +441,7 @@ func (g *lumiGithubOrganization) GetPackages() ([]interface{}, error) {
 				return nil, err
 			}
 
-			lumiGhPackage, err := g.MotorRuntime.CreateResource("github.package",
+			mqlGhPackage, err := g.MotorRuntime.CreateResource("github.package",
 				"id", core.ToInt64(p.ID),
 				"name", core.ToString(p.Name),
 				"packageType", core.ToString(p.PackageType),
@@ -454,12 +454,12 @@ func (g *lumiGithubOrganization) GetPackages() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			pkg := lumiGhPackage.(GithubPackage)
+			pkg := mqlGhPackage.(GithubPackage)
 
 			// NOTE: we need to fetch repo separately because the Github repo object is not complete, instead of
 			// call the repo fetching all the time, we make this lazy loading
 			if p.Repository != nil && p.Repository.Name != nil {
-				pkg.LumiResource().Cache.Store("_repository", &lumi.CacheEntry{Data: core.ToString(p.Repository.Name)})
+				pkg.MqlResource().Cache.Store("_repository", &resources.CacheEntry{Data: core.ToString(p.Repository.Name)})
 			}
 			res = append(res, pkg)
 		}
@@ -468,7 +468,7 @@ func (g *lumiGithubOrganization) GetPackages() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *lumiGithubPackage) GetRepository() (interface{}, error) {
+func (g *mqlGithubPackage) GetRepository() (interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -495,10 +495,10 @@ func (g *lumiGithubPackage) GetRepository() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return newLumiGithubRepository(g.MotorRuntime, repo)
+	return newMqlGithubRepository(g.MotorRuntime, repo)
 }
 
-func (g *lumiGithubOrganization) GetInstallations() ([]interface{}, error) {
+func (g *mqlGithubOrganization) GetInstallations() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -542,7 +542,7 @@ func (g *lumiGithubOrganization) GetInstallations() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *lumiGithubTeam) id() (string, error) {
+func (g *mqlGithubTeam) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -550,7 +550,7 @@ func (g *lumiGithubTeam) id() (string, error) {
 	return "github.team/" + strconv.FormatInt(id, 10), nil
 }
 
-func newLumiGithubRepository(runtime *lumi.Runtime, repo *github.Repository) (interface{}, error) {
+func newMqlGithubRepository(runtime *resources.Runtime, repo *github.Repository) (interface{}, error) {
 	var id int64
 	if repo.ID != nil {
 		id = *repo.ID
@@ -588,7 +588,7 @@ func newLumiGithubRepository(runtime *lumi.Runtime, repo *github.Repository) (in
 	)
 }
 
-func (g *lumiGithubTeam) GetRepositories() ([]interface{}, error) {
+func (g *mqlGithubTeam) GetRepositories() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -618,7 +618,7 @@ func (g *lumiGithubTeam) GetRepositories() ([]interface{}, error) {
 	for i := range repos {
 		repo := repos[i]
 
-		r, err := newLumiGithubRepository(g.MotorRuntime, repo)
+		r, err := newMqlGithubRepository(g.MotorRuntime, repo)
 		if err != nil {
 			return nil, err
 		}
@@ -628,7 +628,7 @@ func (g *lumiGithubTeam) GetRepositories() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *lumiGithubTeam) GetMembers() ([]interface{}, error) {
+func (g *mqlGithubTeam) GetMembers() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -671,7 +671,7 @@ func (g *lumiGithubTeam) GetMembers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *lumiGithubUser) id() (string, error) {
+func (g *mqlGithubUser) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -679,7 +679,7 @@ func (g *lumiGithubUser) id() (string, error) {
 	return "github.user/" + strconv.FormatInt(id, 10), nil
 }
 
-func (g *lumiGithubUser) init(args *lumi.Args) (*lumi.Args, GithubUser, error) {
+func (g *mqlGithubUser) init(args *resources.Args) (*resources.Args, GithubUser, error) {
 	if len(*args) > 3 {
 		return args, nil, nil
 	}
@@ -723,7 +723,7 @@ func (g *lumiGithubUser) init(args *lumi.Args) (*lumi.Args, GithubUser, error) {
 	return args, nil, nil
 }
 
-func (g *lumiGithubCollaborator) id() (string, error) {
+func (g *mqlGithubCollaborator) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -731,7 +731,7 @@ func (g *lumiGithubCollaborator) id() (string, error) {
 	return strconv.FormatInt(id, 10), nil
 }
 
-func (g *lumiGithubInstallation) id() (string, error) {
+func (g *mqlGithubInstallation) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -739,11 +739,11 @@ func (g *lumiGithubInstallation) id() (string, error) {
 	return strconv.FormatInt(id, 10), nil
 }
 
-func (g *lumiGithubBranchprotection) id() (string, error) {
+func (g *mqlGithubBranchprotection) id() (string, error) {
 	return g.Id()
 }
 
-func (g *lumiGithubBranch) id() (string, error) {
+func (g *mqlGithubBranch) id() (string, error) {
 	branchName, err := g.Name()
 	if err != nil {
 		return "", err
@@ -755,20 +755,20 @@ func (g *lumiGithubBranch) id() (string, error) {
 	return repoName + "/" + branchName, nil
 }
 
-func (g *lumiGithubCommit) id() (string, error) {
+func (g *mqlGithubCommit) id() (string, error) {
 	// the url is unique, e.g. "https://api.github.com/repos/vjeffrey/victoria-website/git/commits/7730d2707fdb6422f335fddc944ab169d45f3aa5"
 	return g.Url()
 }
 
-func (g *lumiGithubReview) id() (string, error) {
+func (g *mqlGithubReview) id() (string, error) {
 	return g.Url()
 }
 
-func (g *lumiGithubRelease) id() (string, error) {
+func (g *mqlGithubRelease) id() (string, error) {
 	return g.Url()
 }
 
-func (g *lumiGithubRepository) id() (string, error) {
+func (g *mqlGithubRepository) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -776,7 +776,7 @@ func (g *lumiGithubRepository) id() (string, error) {
 	return strconv.FormatInt(id, 10), nil
 }
 
-func (g *lumiGithubRepository) init(args *lumi.Args) (*lumi.Args, GithubRepository, error) {
+func (g *mqlGithubRepository) init(args *resources.Args) (*resources.Args, GithubRepository, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -843,7 +843,7 @@ func (g *lumiGithubRepository) init(args *lumi.Args) (*lumi.Args, GithubReposito
 	return args, nil, nil
 }
 
-func (g *lumiGithubRepository) GetOpenMergeRequests() ([]interface{}, error) {
+func (g *mqlGithubRepository) GetOpenMergeRequests() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -922,7 +922,7 @@ func (g *lumiGithubRepository) GetOpenMergeRequests() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *lumiGithubMergeRequest) id() (string, error) {
+func (g *mqlGithubMergeRequest) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -930,7 +930,7 @@ func (g *lumiGithubMergeRequest) id() (string, error) {
 	return strconv.FormatInt(id, 10), nil
 }
 
-func (g *lumiGithubRepository) GetBranches() ([]interface{}, error) {
+func (g *mqlGithubRepository) GetBranches() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -970,7 +970,7 @@ func (g *lumiGithubRepository) GetBranches() ([]interface{}, error) {
 	for i := range branches {
 		branch := branches[i]
 		rc := branch.Commit
-		lumiCommit, err := newLumiGithubCommit(g.MotorRuntime, rc, ownerLogin, repoName)
+		mqlCommit, err := newMqlGithubCommit(g.MotorRuntime, rc, ownerLogin, repoName)
 		if err != nil {
 			return nil, err
 		}
@@ -980,10 +980,10 @@ func (g *lumiGithubRepository) GetBranches() ([]interface{}, error) {
 			defaultBranch = true
 		}
 
-		lumiBranch, err := g.MotorRuntime.CreateResource("github.branch",
+		mqlBranch, err := g.MotorRuntime.CreateResource("github.branch",
 			"name", branch.GetName(),
 			"protected", branch.GetProtected(),
-			"headCommit", lumiCommit,
+			"headCommit", mqlCommit,
 			"organizationName", orgName,
 			"repoName", repoName,
 			"owner", owner,
@@ -992,7 +992,7 @@ func (g *lumiGithubRepository) GetBranches() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiBranch)
+		res = append(res, mqlBranch)
 	}
 	return res, nil
 }
@@ -1013,7 +1013,7 @@ type githubRequiredPullRequestReviews struct {
 	RequiredApprovingReviewCount int `json:"requiredApprovingReviewCount"`
 }
 
-func (g *lumiGithubBranch) GetProtectionRules() (interface{}, error) {
+func (g *mqlGithubBranch) GetProtectionRules() (interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -1108,7 +1108,7 @@ func (g *lumiGithubBranch) GetProtectionRules() (interface{}, error) {
 		return nil, err
 	}
 
-	lumiBranchProtection, err := g.MotorRuntime.CreateResource("github.branchprotection",
+	mqlBranchProtection, err := g.MotorRuntime.CreateResource("github.branchprotection",
 		"id", repoName+"/"+branchName,
 		"requiredStatusChecks", rsc,
 		"requiredPullRequestReviews", rprr,
@@ -1123,10 +1123,10 @@ func (g *lumiGithubBranch) GetProtectionRules() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return lumiBranchProtection, nil
+	return mqlBranchProtection, nil
 }
 
-func newLumiGithubCommit(runtime *lumi.Runtime, rc *github.RepositoryCommit, owner string, repo string) (interface{}, error) {
+func newMqlGithubCommit(runtime *resources.Runtime, rc *github.RepositoryCommit, owner string, repo string) (interface{}, error) {
 	var githubAuthor interface{}
 	var err error
 
@@ -1163,7 +1163,7 @@ func newLumiGithubCommit(runtime *lumi.Runtime, rc *github.RepositoryCommit, own
 		return nil, err
 	}
 
-	lumiGitCommit, err := newLumiGitCommit(runtime, sha, rc.Commit)
+	mqlGitCommit, err := newMqlGitCommit(runtime, sha, rc.Commit)
 	if err != nil {
 		return nil, err
 	}
@@ -1175,12 +1175,12 @@ func newLumiGithubCommit(runtime *lumi.Runtime, rc *github.RepositoryCommit, own
 		"committer", githubCommitter,
 		"owner", owner,
 		"repository", repo,
-		"commit", lumiGitCommit,
+		"commit", mqlGitCommit,
 		"stats", stats,
 	)
 }
 
-func (g *lumiGithubRepository) GetCommits() ([]interface{}, error) {
+func (g *mqlGithubRepository) GetCommits() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -1212,16 +1212,16 @@ func (g *lumiGithubRepository) GetCommits() ([]interface{}, error) {
 	res := []interface{}{}
 	for i := range commits {
 		rc := commits[i]
-		lumiCommit, err := newLumiGithubCommit(g.MotorRuntime, rc, orgName, repoName)
+		mqlCommit, err := newMqlGithubCommit(g.MotorRuntime, rc, orgName, repoName)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiCommit)
+		res = append(res, mqlCommit)
 	}
 	return res, nil
 }
 
-func (g *lumiGithubMergeRequest) GetReviews() ([]interface{}, error) {
+func (g *mqlGithubMergeRequest) GetReviews() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -1257,7 +1257,7 @@ func (g *lumiGithubMergeRequest) GetReviews() ([]interface{}, error) {
 				return nil, err
 			}
 		}
-		lumiReview, err := g.MotorRuntime.CreateResource("github.review",
+		mqlReview, err := g.MotorRuntime.CreateResource("github.review",
 			"url", core.ToString(r.HTMLURL),
 			"state", core.ToString(r.State),
 			"authorAssociation", core.ToString(r.AuthorAssociation),
@@ -1266,13 +1266,13 @@ func (g *lumiGithubMergeRequest) GetReviews() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiReview)
+		res = append(res, mqlReview)
 	}
 
 	return res, nil
 }
 
-func (g *lumiGithubMergeRequest) GetCommits() ([]interface{}, error) {
+func (g *mqlGithubMergeRequest) GetCommits() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -1301,16 +1301,16 @@ func (g *lumiGithubMergeRequest) GetCommits() ([]interface{}, error) {
 	for i := range commits {
 		rc := commits[i]
 
-		lumiCommit, err := newLumiGithubCommit(g.MotorRuntime, rc, orgName, repoName)
+		mqlCommit, err := newMqlGithubCommit(g.MotorRuntime, rc, orgName, repoName)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiCommit)
+		res = append(res, mqlCommit)
 	}
 	return res, nil
 }
 
-func (g *lumiGithubRepository) GetContributors() ([]interface{}, error) {
+func (g *mqlGithubRepository) GetContributors() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -1337,19 +1337,19 @@ func (g *lumiGithubRepository) GetContributors() ([]interface{}, error) {
 	}
 	res := []interface{}{}
 	for i := range contributors {
-		lumiUser, err := g.MotorRuntime.CreateResource("github.user",
+		mqlUser, err := g.MotorRuntime.CreateResource("github.user",
 			"id", core.ToInt64(contributors[i].ID),
 			"login", core.ToString(contributors[i].Login),
 		)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiUser)
+		res = append(res, mqlUser)
 	}
 	return res, nil
 }
 
-func (g *lumiGithubRepository) GetCollaborators() ([]interface{}, error) {
+func (g *mqlGithubRepository) GetCollaborators() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -1377,7 +1377,7 @@ func (g *lumiGithubRepository) GetCollaborators() ([]interface{}, error) {
 	res := []interface{}{}
 	for i := range contributors {
 
-		lumiUser, err := g.MotorRuntime.CreateResource("github.user",
+		mqlUser, err := g.MotorRuntime.CreateResource("github.user",
 			"id", core.ToInt64(contributors[i].ID),
 			"login", core.ToString(contributors[i].Login),
 		)
@@ -1390,20 +1390,20 @@ func (g *lumiGithubRepository) GetCollaborators() ([]interface{}, error) {
 			permissions = append(permissions, k)
 		}
 
-		lumiContributor, err := g.MotorRuntime.CreateResource("github.collaborator",
+		mqlContributor, err := g.MotorRuntime.CreateResource("github.collaborator",
 			"id", core.ToInt64(contributors[i].ID),
-			"user", lumiUser,
+			"user", mqlUser,
 			"permissions", core.StrSliceToInterface(permissions),
 		)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiContributor)
+		res = append(res, mqlContributor)
 	}
 	return res, nil
 }
 
-func (g *lumiGithubRepository) GetReleases() ([]interface{}, error) {
+func (g *mqlGithubRepository) GetReleases() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -1431,7 +1431,7 @@ func (g *lumiGithubRepository) GetReleases() ([]interface{}, error) {
 	res := []interface{}{}
 	for i := range releases {
 		r := releases[i]
-		lumiUser, err := g.MotorRuntime.CreateResource("github.release",
+		mqlUser, err := g.MotorRuntime.CreateResource("github.release",
 			"url", core.ToString(r.HTMLURL),
 			"name", core.ToString(r.Name),
 			"tagName", core.ToString(r.TagName),
@@ -1440,13 +1440,13 @@ func (g *lumiGithubRepository) GetReleases() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiUser)
+		res = append(res, mqlUser)
 	}
 
 	return res, nil
 }
 
-func (g *lumiGithubWebhook) id() (string, error) {
+func (g *mqlGithubWebhook) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -1454,7 +1454,7 @@ func (g *lumiGithubWebhook) id() (string, error) {
 	return "github.webhook/" + strconv.FormatInt(id, 10), nil
 }
 
-func (g *lumiGithubRepository) GetWebhooks() ([]interface{}, error) {
+func (g *mqlGithubRepository) GetWebhooks() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -1489,7 +1489,7 @@ func (g *lumiGithubRepository) GetWebhooks() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiWebhook, err := g.MotorRuntime.CreateResource("github.webhook",
+		mqlWebhook, err := g.MotorRuntime.CreateResource("github.webhook",
 			"id", core.ToInt64(h.ID),
 			"name", core.ToString(h.Name),
 			"events", core.StrSliceToInterface(h.Events),
@@ -1501,13 +1501,13 @@ func (g *lumiGithubRepository) GetWebhooks() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiWebhook)
+		res = append(res, mqlWebhook)
 	}
 
 	return res, nil
 }
 
-func (g *lumiGithubWorkflow) id() (string, error) {
+func (g *mqlGithubWorkflow) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -1515,7 +1515,7 @@ func (g *lumiGithubWorkflow) id() (string, error) {
 	return "github.workflow/" + strconv.FormatInt(id, 10), nil
 }
 
-func (g *lumiGithubWorkflow) GetConfiguration() (interface{}, error) {
+func (g *mqlGithubWorkflow) GetConfiguration() (interface{}, error) {
 	// TODO: to leverage the runtime, get the file resource, how to define the dependency
 	file, err := g.File()
 	if err != nil {
@@ -1535,7 +1535,7 @@ func (g *lumiGithubWorkflow) GetConfiguration() (interface{}, error) {
 	return core.JsonToDict(data)
 }
 
-func (g *lumiGithubWorkflow) GetFile() (interface{}, error) {
+func (g *mqlGithubWorkflow) GetFile() (interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -1546,7 +1546,7 @@ func (g *lumiGithubWorkflow) GetFile() (interface{}, error) {
 		return nil, err
 	}
 
-	entry, ok := g.LumiResource().Cache.Load("_repositoryFullName")
+	entry, ok := g.MqlResource().Cache.Load("_repositoryFullName")
 	if !ok {
 		return nil, errors.New("unable to get repository name")
 	}
@@ -1566,10 +1566,10 @@ func (g *lumiGithubWorkflow) GetFile() (interface{}, error) {
 		}
 		return nil, err
 	}
-	return newLumiGithubFile(g.MotorRuntime, ownerLogin, repoName, fileContent)
+	return newMqlGithubFile(g.MotorRuntime, ownerLogin, repoName, fileContent)
 }
 
-func (g *lumiGithubRepository) GetWorkflows() ([]interface{}, error) {
+func (g *mqlGithubRepository) GetWorkflows() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -1606,7 +1606,7 @@ func (g *lumiGithubRepository) GetWorkflows() ([]interface{}, error) {
 	for i := range workflows.Workflows {
 		w := workflows.Workflows[i]
 
-		lumiWebhook, err := g.MotorRuntime.CreateResource("github.workflow",
+		mqlWebhook, err := g.MotorRuntime.CreateResource("github.workflow",
 			"id", core.ToInt64(w.ID),
 			"name", core.ToString(w.Name),
 			"path", core.ToString(w.Path),
@@ -1617,8 +1617,8 @@ func (g *lumiGithubRepository) GetWorkflows() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		gw := lumiWebhook.(GithubWorkflow)
-		gw.LumiResource().Cache.Store("_repositoryFullName", &lumi.CacheEntry{
+		gw := mqlWebhook.(GithubWorkflow)
+		gw.MqlResource().Cache.Store("_repositoryFullName", &resources.CacheEntry{
 			Data: fullName,
 		})
 		res = append(res, gw)
@@ -1626,7 +1626,7 @@ func (g *lumiGithubRepository) GetWorkflows() ([]interface{}, error) {
 	return res, nil
 }
 
-func newLumiGithubFile(runtime *lumi.Runtime, ownerName string, repoName string, content *github.RepositoryContent) (interface{}, error) {
+func newMqlGithubFile(runtime *resources.Runtime, ownerName string, repoName string, content *github.RepositoryContent) (interface{}, error) {
 	isBinary := false
 	if core.ToString(content.Type) == "file" {
 		file := strings.Split(core.ToString(content.Path), ".")
@@ -1645,7 +1645,7 @@ func newLumiGithubFile(runtime *lumi.Runtime, ownerName string, repoName string,
 	)
 }
 
-func (g *lumiGithubRepository) GetFiles() ([]interface{}, error) {
+func (g *mqlGithubRepository) GetFiles() ([]interface{}, error) {
 	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -1673,11 +1673,11 @@ func (g *lumiGithubRepository) GetFiles() ([]interface{}, error) {
 	}
 	res := []interface{}{}
 	for i := range dirContent {
-		lumiFile, err := newLumiGithubFile(g.MotorRuntime, ownerLogin, repoName, dirContent[i])
+		mqlFile, err := newMqlGithubFile(g.MotorRuntime, ownerLogin, repoName, dirContent[i])
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiFile)
+		res = append(res, mqlFile)
 
 	}
 	return res, nil
@@ -1710,7 +1710,7 @@ var binaryFileTypes = map[string]bool{
 	"whl":    true,
 }
 
-func (g *lumiGithubFile) id() (string, error) {
+func (g *mqlGithubFile) id() (string, error) {
 	r, err := g.RepoName()
 	if err != nil {
 		return "", err
@@ -1726,7 +1726,7 @@ func (g *lumiGithubFile) id() (string, error) {
 	return r + "/" + p + "/" + s, nil
 }
 
-func (g *lumiGithubFile) GetFiles() ([]interface{}, error) {
+func (g *mqlGithubFile) GetFiles() ([]interface{}, error) {
 	fileType, err := g.Type()
 	if err != nil {
 		return nil, err
@@ -1767,7 +1767,7 @@ func (g *lumiGithubFile) GetFiles() ([]interface{}, error) {
 				isBinary = binaryFileTypes[file[1]]
 			}
 		}
-		lumiFile, err := g.MotorRuntime.CreateResource("github.file",
+		mqlFile, err := g.MotorRuntime.CreateResource("github.file",
 			"path", core.ToString(dirContent[i].Path),
 			"name", core.ToString(dirContent[i].Name),
 			"type", core.ToString(dirContent[i].Type),
@@ -1779,13 +1779,13 @@ func (g *lumiGithubFile) GetFiles() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiFile)
+		res = append(res, mqlFile)
 
 	}
 	return res, nil
 }
 
-func (g *lumiGithubFile) GetContent() (string, error) {
+func (g *mqlGithubFile) GetContent() (string, error) {
 	fileType, err := g.Type()
 	if err != nil {
 		return "", err

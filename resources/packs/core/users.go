@@ -10,7 +10,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core/users"
 )
 
@@ -24,7 +24,7 @@ const (
 	USER_CACHE_ENABLED  = "enabled"
 )
 
-func copyUserDataToLumiArgs(user *users.User, args *lumi.Args) error {
+func copyUserDataToArgs(user *users.User, args *resources.Args) error {
 	(*args)[USER_CACHE_USERNAME] = user.Name
 	(*args)[USER_CACHE_UID] = user.Uid
 	(*args)[USER_CACHE_GID] = user.Gid
@@ -35,7 +35,7 @@ func copyUserDataToLumiArgs(user *users.User, args *lumi.Args) error {
 	return nil
 }
 
-func (u *lumiUser) init(args *lumi.Args) (*lumi.Args, User, error) {
+func (u *mqlUser) init(args *resources.Args) (*resources.Args, User, error) {
 	idValue := ""
 	uidValue, uidOk := (*args)[USER_CACHE_UID]
 	if uidOk {
@@ -71,8 +71,8 @@ func (u *lumiUser) init(args *lumi.Args) (*lumi.Args, User, error) {
 			return nil, nil, err
 		}
 
-		// copy parsed user info to lumi args
-		copyUserDataToLumiArgs(user, args)
+		// copy parsed user info to args
+		copyUserDataToArgs(user, args)
 	} else if uok && !ok {
 		username, ok := usernameValue.(string)
 		if !ok {
@@ -106,14 +106,14 @@ func (u *lumiUser) init(args *lumi.Args) (*lumi.Args, User, error) {
 			return nil, nil, errors.New("user '" + username + "' does not exist")
 		}
 
-		// copy parsed user info to lumi args
-		copyUserDataToLumiArgs(foundUser, args)
+		// copy parsed user info to args
+		copyUserDataToArgs(foundUser, args)
 	}
 
 	return args, nil, nil
 }
 
-func (u *lumiUser) id() (string, error) {
+func (u *mqlUser) id() (string, error) {
 	uid, err := u.Uid()
 	if err != nil {
 		return "", err
@@ -137,33 +137,33 @@ func (u *lumiUser) id() (string, error) {
 	return "user/" + id + "/" + name, nil
 }
 
-func (u *lumiUsers) id() (string, error) {
+func (u *mqlUsers) id() (string, error) {
 	return "users", nil
 }
 
-func (u *lumiUsers) GetList() ([]interface{}, error) {
+func (u *mqlUsers) GetList() ([]interface{}, error) {
 	// find suitable user manager
 	um, err := users.ResolveManager(u.MotorRuntime.Motor)
 	if um == nil || err != nil {
-		log.Warn().Err(err).Msg("lumi[users]> could not retrieve users list")
+		log.Warn().Err(err).Msg("mql[users]> could not retrieve users list")
 		return nil, errors.New("cannot find users manager")
 	}
 
 	// retrieve all system users
 	users, err := um.List()
 	if err != nil {
-		log.Warn().Err(err).Msg("lumi[users]> could not retrieve users list")
+		log.Warn().Err(err).Msg("mql[users]> could not retrieve users list")
 		return nil, errors.New("could not retrieve users list")
 	}
-	log.Debug().Int("users", len(users)).Msg("lumi[users]> found users")
+	log.Debug().Int("users", len(users)).Msg("mql[users]> found users")
 
 	// convert to interface{}{}
-	lumiUsers := []interface{}{}
+	mqlUsers := []interface{}{}
 	namedMap := map[string]User{}
 	for i := range users {
 		user := users[i]
 
-		lumiUser, err := u.MotorRuntime.CreateResource("user",
+		mqlUser, err := u.MotorRuntime.CreateResource("user",
 			USER_CACHE_USERNAME, user.Name,
 			USER_CACHE_UID, user.Uid,
 			USER_CACHE_GID, user.Gid,
@@ -176,15 +176,15 @@ func (u *lumiUsers) GetList() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiUsers = append(lumiUsers, lumiUser.(User))
-		namedMap[user.Name] = lumiUser.(User)
+		mqlUsers = append(mqlUsers, mqlUser.(User))
+		namedMap[user.Name] = mqlUser.(User)
 	}
 
-	u.Cache.Store("_map", &lumi.CacheEntry{Data: namedMap})
-	return lumiUsers, nil
+	u.Cache.Store("_map", &resources.CacheEntry{Data: namedMap})
+	return mqlUsers, nil
 }
 
-func (u *lumiUser) GetGroup() (interface{}, error) {
+func (u *mqlUser) GetGroup() (interface{}, error) {
 	gid, err := u.Gid()
 	group, err := u.MotorRuntime.CreateResource("group",
 		"id", strconv.FormatInt(gid, 10),
@@ -197,7 +197,7 @@ func (u *lumiUser) GetGroup() (interface{}, error) {
 	return group, nil
 }
 
-func (u *lumiUser) GetSshkeys() ([]interface{}, error) {
+func (u *mqlUser) GetSshkeys() ([]interface{}, error) {
 	osProvider, err := osProvider(u.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err

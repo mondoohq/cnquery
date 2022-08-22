@@ -2,7 +2,7 @@ package info
 
 /*
 
-This file contains the metadata for Lumi's default resource registry.
+This file contains the metadata for MQL's default resource registry.
 No implementation code is loaded. It is also a prerequisite to a fully
 functioning registry.
 
@@ -11,7 +11,7 @@ functioning registry.
 import (
 	_ "embed"
 
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	awsInfo "go.mondoo.io/mondoo/resources/packs/aws/info"
 	azureInfo "go.mondoo.io/mondoo/resources/packs/azure/info"
 	coreInfo "go.mondoo.io/mondoo/resources/packs/core/info"
@@ -20,7 +20,7 @@ import (
 	servicesInfo "go.mondoo.io/mondoo/resources/packs/services/info"
 )
 
-var Registry = lumi.NewRegistry()
+var Registry = resources.NewRegistry()
 
 func init() {
 	Registry.Add(coreInfo.Registry)

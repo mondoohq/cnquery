@@ -8,9 +8,9 @@ import (
 	"github.com/vmware/govmomi/vim25/mo"
 
 	"github.com/vmware/govmomi/object"
-	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/providers"
 	vsphere_transport "go.mondoo.io/mondoo/motor/providers/vsphere"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/os/vsphere"
 )
 
@@ -39,39 +39,39 @@ func esxiClient(t providers.Transport, path string) (*vsphere.Esxi, error) {
 	return esxi, nil
 }
 
-func (v *lumiVsphereLicense) id() (string, error) {
+func (v *mqlVsphereLicense) id() (string, error) {
 	return v.Name()
 }
 
-func (v *lumiVsphereVmknic) id() (string, error) {
+func (v *mqlVsphereVmknic) id() (string, error) {
 	return v.Name()
 }
 
-func (v *lumiEsxiVib) id() (string, error) {
+func (v *mqlEsxiVib) id() (string, error) {
 	return v.Id()
 }
 
-func (v *lumiEsxiKernelmodule) id() (string, error) {
+func (v *mqlEsxiKernelmodule) id() (string, error) {
 	return v.Name()
 }
 
-func (v *lumiEsxiService) id() (string, error) {
+func (v *mqlEsxiService) id() (string, error) {
 	return v.Key()
 }
 
-func (v *lumiEsxiTimezone) id() (string, error) {
+func (v *mqlEsxiTimezone) id() (string, error) {
 	return v.Key()
 }
 
-func (v *lumiEsxiNtpconfig) id() (string, error) {
+func (v *mqlEsxiNtpconfig) id() (string, error) {
 	return v.Id()
 }
 
-func (v *lumiVsphere) id() (string, error) {
+func (v *mqlVsphere) id() (string, error) {
 	return "vsphere", nil
 }
 
-func (v *lumiVsphere) GetAbout() (map[string]interface{}, error) {
+func (v *mqlVsphere) GetAbout() (map[string]interface{}, error) {
 	client, err := getClientInstance(v.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func (v *lumiVsphere) GetAbout() (map[string]interface{}, error) {
 	return client.AboutInfo()
 }
 
-func (v *lumiVsphere) GetDatacenters() ([]interface{}, error) {
+func (v *mqlVsphere) GetDatacenters() ([]interface{}, error) {
 	client, err := getClientInstance(v.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -92,10 +92,10 @@ func (v *lumiVsphere) GetDatacenters() ([]interface{}, error) {
 		return nil, err
 	}
 
-	// convert datacenter to lumi
+	// convert datacenter to MQL
 	datacenters := make([]interface{}, len(dcs))
 	for i, dc := range dcs {
-		lumiDc, err := v.MotorRuntime.CreateResource("vsphere.datacenter",
+		mqlDc, err := v.MotorRuntime.CreateResource("vsphere.datacenter",
 			"moid", dc.Reference().Encode(),
 			"name", dc.Name(),
 			"inventoryPath", dc.InventoryPath,
@@ -104,13 +104,13 @@ func (v *lumiVsphere) GetDatacenters() ([]interface{}, error) {
 			return nil, err
 		}
 
-		datacenters[i] = lumiDc
+		datacenters[i] = mqlDc
 	}
 
 	return datacenters, nil
 }
 
-func (v *lumiVsphere) GetLicenses() ([]interface{}, error) {
+func (v *mqlVsphere) GetLicenses() ([]interface{}, error) {
 	client, err := getClientInstance(v.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -122,10 +122,10 @@ func (v *lumiVsphere) GetLicenses() ([]interface{}, error) {
 		return nil, err
 	}
 
-	// convert licenses to lumi
+	// convert licenses to MQL
 	licenses := make([]interface{}, len(lcs))
 	for i, l := range lcs {
-		lumiLicense, err := v.MotorRuntime.CreateResource("vsphere.license",
+		mqlLicense, err := v.MotorRuntime.CreateResource("vsphere.license",
 			"name", l.Name,
 			"total", int64(l.Total),
 			"used", int64(l.Used),
@@ -134,14 +134,14 @@ func (v *lumiVsphere) GetLicenses() ([]interface{}, error) {
 			return nil, err
 		}
 
-		licenses[i] = lumiLicense
+		licenses[i] = mqlLicense
 	}
 
 	return licenses, nil
 }
 
-func vsphereHosts(client *vsphere.Client, runtime *lumi.Runtime, vhosts []*object.HostSystem) ([]interface{}, error) {
-	lumiHosts := make([]interface{}, len(vhosts))
+func vsphereHosts(client *vsphere.Client, runtime *resources.Runtime, vhosts []*object.HostSystem) ([]interface{}, error) {
+	mqlHosts := make([]interface{}, len(vhosts))
 	for i, h := range vhosts {
 
 		hostInfo, err := vsphere.HostInfo(h)
@@ -159,7 +159,7 @@ func vsphereHosts(client *vsphere.Client, runtime *lumi.Runtime, vhosts []*objec
 			name = hostInfo.Name
 		}
 
-		lumiHost, err := runtime.CreateResource("vsphere.host",
+		mqlHost, err := runtime.CreateResource("vsphere.host",
 			"moid", h.Reference().Encode(),
 			"name", name,
 			"properties", props,
@@ -169,17 +169,17 @@ func vsphereHosts(client *vsphere.Client, runtime *lumi.Runtime, vhosts []*objec
 			return nil, err
 		}
 
-		lumiHosts[i] = lumiHost
+		mqlHosts[i] = mqlHost
 	}
 
-	return lumiHosts, nil
+	return mqlHosts, nil
 }
 
-func (v *lumiVsphereDatacenter) id() (string, error) {
+func (v *mqlVsphereDatacenter) id() (string, error) {
 	return v.Moid()
 }
 
-func (v *lumiVsphereDatacenter) GetHosts() ([]interface{}, error) {
+func (v *mqlVsphereDatacenter) GetHosts() ([]interface{}, error) {
 	client, err := getClientInstance(v.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -202,7 +202,7 @@ func (v *lumiVsphereDatacenter) GetHosts() ([]interface{}, error) {
 	return vsphereHosts(client, v.MotorRuntime, vhosts)
 }
 
-func (v *lumiVsphereDatacenter) GetClusters() ([]interface{}, error) {
+func (v *mqlVsphereDatacenter) GetClusters() ([]interface{}, error) {
 	client, err := getClientInstance(v.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -223,7 +223,7 @@ func (v *lumiVsphereDatacenter) GetClusters() ([]interface{}, error) {
 		return nil, err
 	}
 
-	lumiClusters := make([]interface{}, len(vCluster))
+	mqlClusters := make([]interface{}, len(vCluster))
 	for i, c := range vCluster {
 
 		props, err := client.ClusterProperties(c)
@@ -231,7 +231,7 @@ func (v *lumiVsphereDatacenter) GetClusters() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiCluster, err := v.MotorRuntime.CreateResource("vsphere.cluster",
+		mqlCluster, err := v.MotorRuntime.CreateResource("vsphere.cluster",
 			"moid", c.Reference().Encode(),
 			"name", c.Name(),
 			"properties", props,
@@ -241,17 +241,17 @@ func (v *lumiVsphereDatacenter) GetClusters() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiClusters[i] = lumiCluster
+		mqlClusters[i] = mqlCluster
 	}
 
-	return lumiClusters, nil
+	return mqlClusters, nil
 }
 
-func (v *lumiVsphereCluster) id() (string, error) {
+func (v *mqlVsphereCluster) id() (string, error) {
 	return v.Moid()
 }
 
-func (v *lumiVsphereCluster) GetHosts() ([]interface{}, error) {
+func (v *mqlVsphereCluster) GetHosts() ([]interface{}, error) {
 	client, err := getClientInstance(v.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -274,11 +274,11 @@ func (v *lumiVsphereCluster) GetHosts() ([]interface{}, error) {
 	return vsphereHosts(client, v.MotorRuntime, vhosts)
 }
 
-func (v *lumiVsphereHost) id() (string, error) {
+func (v *mqlVsphereHost) id() (string, error) {
 	return v.Moid()
 }
 
-func (v *lumiVsphereHost) init(args *lumi.Args) (*lumi.Args, VsphereHost, error) {
+func (v *mqlVsphereHost) init(args *resources.Args) (*resources.Args, VsphereHost, error) {
 	if len(*args) > 0 {
 		return args, nil, nil
 	}
@@ -306,7 +306,7 @@ func (v *lumiVsphereHost) init(args *lumi.Args) (*lumi.Args, VsphereHost, error)
 	return args, nil, nil
 }
 
-func (v *lumiVsphereHost) esxiClient() (*vsphere.Esxi, error) {
+func (v *mqlVsphereHost) esxiClient() (*vsphere.Esxi, error) {
 	path, err := v.InventoryPath()
 	if err != nil {
 		return nil, err
@@ -315,7 +315,7 @@ func (v *lumiVsphereHost) esxiClient() (*vsphere.Esxi, error) {
 	return esxiClient(v.MotorRuntime.Motor.Provider, path)
 }
 
-func (v *lumiVsphereHost) GetStandardSwitch() ([]interface{}, error) {
+func (v *mqlVsphereHost) GetStandardSwitch() ([]interface{}, error) {
 	esxiClient, err := v.esxiClient()
 	if err != nil {
 		return nil, err
@@ -326,9 +326,9 @@ func (v *lumiVsphereHost) GetStandardSwitch() ([]interface{}, error) {
 		return nil, err
 	}
 
-	lumiVswitches := make([]interface{}, len(vswitches))
+	mqlVswitches := make([]interface{}, len(vswitches))
 	for i, s := range vswitches {
-		lumiVswitch, err := v.MotorRuntime.CreateResource("vsphere.vswitch.standard",
+		mqlVswitch, err := v.MotorRuntime.CreateResource("vsphere.vswitch.standard",
 			"name", s["Name"],
 			"properties", s,
 		)
@@ -337,16 +337,16 @@ func (v *lumiVsphereHost) GetStandardSwitch() ([]interface{}, error) {
 		}
 
 		// store host inventory path, so that sub resources can use that to quickly query more
-		lumiVswitch.LumiResource().Cache.Store("_host_inventory_path", &lumi.CacheEntry{Data: esxiClient.InventoryPath})
-		lumiVswitch.LumiResource().Cache.Store("_parent_resource", &lumi.CacheEntry{Data: v})
+		mqlVswitch.MqlResource().Cache.Store("_host_inventory_path", &resources.CacheEntry{Data: esxiClient.InventoryPath})
+		mqlVswitch.MqlResource().Cache.Store("_parent_resource", &resources.CacheEntry{Data: v})
 
-		lumiVswitches[i] = lumiVswitch
+		mqlVswitches[i] = mqlVswitch
 	}
 
-	return lumiVswitches, nil
+	return mqlVswitches, nil
 }
 
-func (v *lumiVsphereHost) GetDistributedSwitch() ([]interface{}, error) {
+func (v *mqlVsphereHost) GetDistributedSwitch() ([]interface{}, error) {
 	esxiClient, err := v.esxiClient()
 	if err != nil {
 		return nil, err
@@ -357,9 +357,9 @@ func (v *lumiVsphereHost) GetDistributedSwitch() ([]interface{}, error) {
 		return nil, err
 	}
 
-	lumiVswitches := make([]interface{}, len(vswitches))
+	mqlVswitches := make([]interface{}, len(vswitches))
 	for i, s := range vswitches {
-		lumiVswitch, err := v.MotorRuntime.CreateResource("vsphere.vswitch.dvs",
+		mqlVswitch, err := v.MotorRuntime.CreateResource("vsphere.vswitch.dvs",
 			"name", s["Name"],
 			"properties", s,
 		)
@@ -368,16 +368,16 @@ func (v *lumiVsphereHost) GetDistributedSwitch() ([]interface{}, error) {
 		}
 
 		// store host inventory path, so that sub resources can use that to quickly query more
-		lumiVswitch.LumiResource().Cache.Store("_host_inventory_path", &lumi.CacheEntry{Data: esxiClient.InventoryPath})
-		lumiVswitch.LumiResource().Cache.Store("_parent_resource", &lumi.CacheEntry{Data: v})
+		mqlVswitch.MqlResource().Cache.Store("_host_inventory_path", &resources.CacheEntry{Data: esxiClient.InventoryPath})
+		mqlVswitch.MqlResource().Cache.Store("_parent_resource", &resources.CacheEntry{Data: v})
 
-		lumiVswitches[i] = lumiVswitch
+		mqlVswitches[i] = mqlVswitch
 	}
 
-	return lumiVswitches, nil
+	return mqlVswitches, nil
 }
 
-func (v *lumiVsphereHost) GetAdapters() ([]interface{}, error) {
+func (v *mqlVsphereHost) GetAdapters() ([]interface{}, error) {
 	esxiClient, err := v.esxiClient()
 	if err != nil {
 		return nil, err
@@ -399,12 +399,12 @@ func (v *lumiVsphereHost) GetAdapters() ([]interface{}, error) {
 		pauseParams[nicName] = p
 	}
 
-	lumiAdapters := make([]interface{}, len(adapters))
+	mqlAdapters := make([]interface{}, len(adapters))
 	for i, a := range adapters {
 		nicName := a["Name"].(string)
 		pParams := pauseParams[nicName]
 
-		lumiAdapter, err := v.MotorRuntime.CreateResource("vsphere.vmnic",
+		mqlAdapter, err := v.MotorRuntime.CreateResource("vsphere.vmnic",
 			"name", nicName,
 			"properties", a,
 			"pauseParams", pParams,
@@ -414,19 +414,19 @@ func (v *lumiVsphereHost) GetAdapters() ([]interface{}, error) {
 		}
 
 		// store host inventory path, so that sub resources can use that to quickly query more
-		lumiAdapter.LumiResource().Cache.Store("_host_inventory_path", &lumi.CacheEntry{Data: esxiClient.InventoryPath})
-		lumiAdapters[i] = lumiAdapter
+		mqlAdapter.MqlResource().Cache.Store("_host_inventory_path", &resources.CacheEntry{Data: esxiClient.InventoryPath})
+		mqlAdapters[i] = mqlAdapter
 	}
 
-	return lumiAdapters, nil
+	return mqlAdapters, nil
 }
 
-func (v *lumiVsphereVmnic) id() (string, error) {
+func (v *mqlVsphereVmnic) id() (string, error) {
 	return v.Name()
 }
 
-func (v *lumiVsphereVmnic) esxiClient() (*vsphere.Esxi, error) {
-	c, ok := v.LumiResource().Cache.Load("_host_inventory_path")
+func (v *mqlVsphereVmnic) esxiClient() (*vsphere.Esxi, error) {
+	c, ok := v.MqlResource().Cache.Load("_host_inventory_path")
 	if !ok {
 		return nil, errors.New("cannot get esxi host inventory path")
 	}
@@ -434,7 +434,7 @@ func (v *lumiVsphereVmnic) esxiClient() (*vsphere.Esxi, error) {
 	return esxiClient(v.MotorRuntime.Motor.Provider, inventoryPath)
 }
 
-func (v *lumiVsphereVmnic) GetDetails() (map[string]interface{}, error) {
+func (v *mqlVsphereVmnic) GetDetails() (map[string]interface{}, error) {
 	name, err := v.Name()
 	if err != nil {
 		return nil, err
@@ -448,7 +448,7 @@ func (v *lumiVsphereVmnic) GetDetails() (map[string]interface{}, error) {
 	return esxiClient.ListNicDetails(name)
 }
 
-func (v *lumiVsphereHost) GetVmknics() ([]interface{}, error) {
+func (v *mqlVsphereHost) GetVmknics() ([]interface{}, error) {
 	esxiClient, err := v.esxiClient()
 	if err != nil {
 		return nil, err
@@ -458,10 +458,10 @@ func (v *lumiVsphereHost) GetVmknics() ([]interface{}, error) {
 		return nil, err
 	}
 
-	lumiVmknics := make([]interface{}, len(vmknics))
+	mqlVmknics := make([]interface{}, len(vmknics))
 	for i := range vmknics {
 		entry := vmknics[i]
-		lumiVswitch, err := v.MotorRuntime.CreateResource("vsphere.vmknic",
+		mqlVswitch, err := v.MotorRuntime.CreateResource("vsphere.vmknic",
 			"name", entry.Properties["Name"],
 			"properties", entry.Properties,
 			"ipv4", entry.Ipv4,
@@ -471,13 +471,13 @@ func (v *lumiVsphereHost) GetVmknics() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		lumiVmknics[i] = lumiVswitch
+		mqlVmknics[i] = mqlVswitch
 	}
 
-	return lumiVmknics, nil
+	return mqlVmknics, nil
 }
 
-func (v *lumiVsphereHost) GetPackages() ([]interface{}, error) {
+func (v *mqlVsphereHost) GetPackages() ([]interface{}, error) {
 	esxiClient, err := v.esxiClient()
 	if err != nil {
 		return nil, err
@@ -487,7 +487,7 @@ func (v *lumiVsphereHost) GetPackages() ([]interface{}, error) {
 		return nil, err
 	}
 
-	lumiPackages := make([]interface{}, len(vibs))
+	mqlPackages := make([]interface{}, len(vibs))
 	for i := range vibs {
 		vib := vibs[i]
 
@@ -507,7 +507,7 @@ func (v *lumiVsphereHost) GetPackages() ([]interface{}, error) {
 		}
 		installDate = &parsedInstall
 
-		lumiVib, err := v.MotorRuntime.CreateResource("esxi.vib",
+		mqlVib, err := v.MotorRuntime.CreateResource("esxi.vib",
 			"id", vib.ID,
 			"name", vib.Name,
 			"acceptanceLevel", vib.AcceptanceLevel,
@@ -520,13 +520,13 @@ func (v *lumiVsphereHost) GetPackages() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		lumiPackages[i] = lumiVib
+		mqlPackages[i] = mqlVib
 	}
 
-	return lumiPackages, nil
+	return mqlPackages, nil
 }
 
-func (v *lumiVsphereHost) GetAcceptanceLevel() (string, error) {
+func (v *mqlVsphereHost) GetAcceptanceLevel() (string, error) {
 	esxiClient, err := v.esxiClient()
 	if err != nil {
 		return "", err
@@ -534,7 +534,7 @@ func (v *lumiVsphereHost) GetAcceptanceLevel() (string, error) {
 	return esxiClient.SoftwareAcceptance()
 }
 
-func (v *lumiVsphereHost) GetKernelModules() ([]interface{}, error) {
+func (v *mqlVsphereHost) GetKernelModules() ([]interface{}, error) {
 	esxiClient, err := v.esxiClient()
 	if err != nil {
 		return nil, err
@@ -544,9 +544,9 @@ func (v *lumiVsphereHost) GetKernelModules() ([]interface{}, error) {
 		return nil, err
 	}
 
-	lumiModules := make([]interface{}, len(modules))
+	mqlModules := make([]interface{}, len(modules))
 	for i, m := range modules {
-		lumiModule, err := v.MotorRuntime.CreateResource("esxi.kernelmodule",
+		mqlModule, err := v.MotorRuntime.CreateResource("esxi.kernelmodule",
 			"name", m.Module,
 			"modulefile", m.ModuleFile,
 			"version", m.Version,
@@ -561,13 +561,13 @@ func (v *lumiVsphereHost) GetKernelModules() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		lumiModules[i] = lumiModule
+		mqlModules[i] = mqlModule
 	}
 
-	return lumiModules, nil
+	return mqlModules, nil
 }
 
-func (v *lumiVsphereHost) GetAdvancedSettings() (map[string]interface{}, error) {
+func (v *mqlVsphereHost) GetAdvancedSettings() (map[string]interface{}, error) {
 	client, err := getClientInstance(v.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -586,7 +586,7 @@ func (v *lumiVsphereHost) GetAdvancedSettings() (map[string]interface{}, error) 
 	return vsphere.HostOptions(host)
 }
 
-func (v *lumiVsphereHost) GetServices() ([]interface{}, error) {
+func (v *mqlVsphereHost) GetServices() ([]interface{}, error) {
 	client, err := getClientInstance(v.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -606,9 +606,9 @@ func (v *lumiVsphereHost) GetServices() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	lumiServices := make([]interface{}, len(services))
+	mqlServices := make([]interface{}, len(services))
 	for i, s := range services {
-		lumiService, err := v.MotorRuntime.CreateResource("esxi.service",
+		mqlService, err := v.MotorRuntime.CreateResource("esxi.service",
 			"key", s.Key,
 			"label", s.Label,
 			"required", s.Required,
@@ -620,9 +620,9 @@ func (v *lumiVsphereHost) GetServices() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		lumiServices[i] = lumiService
+		mqlServices[i] = mqlService
 	}
-	return lumiServices, nil
+	return mqlServices, nil
 }
 
 func sliceInterface(slice []string) []interface{} {
@@ -633,7 +633,7 @@ func sliceInterface(slice []string) []interface{} {
 	return res
 }
 
-func (v *lumiVsphereHost) GetTimezone() (interface{}, error) {
+func (v *mqlVsphereHost) GetTimezone() (interface{}, error) {
 	client, err := getClientInstance(v.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -658,7 +658,7 @@ func (v *lumiVsphereHost) GetTimezone() (interface{}, error) {
 		return nil, errors.New("vsphere does not return HostDateTimeSystem timezone information")
 	}
 
-	lumiTimezone, err := v.MotorRuntime.CreateResource("esxi.timezone",
+	mqlTimezone, err := v.MotorRuntime.CreateResource("esxi.timezone",
 		"key", datetimeinfo.TimeZone.Key,
 		"name", datetimeinfo.TimeZone.Name,
 		"offset", int64(datetimeinfo.TimeZone.GmtOffset),
@@ -668,10 +668,10 @@ func (v *lumiVsphereHost) GetTimezone() (interface{}, error) {
 		return nil, err
 	}
 
-	return lumiTimezone, nil
+	return mqlTimezone, nil
 }
 
-func (v *lumiVsphereHost) GetNtp() (interface{}, error) {
+func (v *mqlVsphereHost) GetNtp() (interface{}, error) {
 	client, err := getClientInstance(v.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -700,7 +700,7 @@ func (v *lumiVsphereHost) GetNtp() (interface{}, error) {
 		config = sliceInterface(datetimeinfo.NtpConfig.ConfigFile)
 	}
 
-	lumiNtpConfig, err := v.MotorRuntime.CreateResource("esxi.ntpconfig",
+	mqlNtpConfig, err := v.MotorRuntime.CreateResource("esxi.ntpconfig",
 		"id", "ntp "+host.InventoryPath,
 		"server", server,
 		"config", config,
@@ -709,10 +709,10 @@ func (v *lumiVsphereHost) GetNtp() (interface{}, error) {
 		return nil, err
 	}
 
-	return lumiNtpConfig, nil
+	return mqlNtpConfig, nil
 }
 
-func (v *lumiVsphereHost) GetSnmp() (map[string]interface{}, error) {
+func (v *mqlVsphereHost) GetSnmp() (map[string]interface{}, error) {
 	esxiClient, err := v.esxiClient()
 	if err != nil {
 		return nil, err
@@ -720,7 +720,7 @@ func (v *lumiVsphereHost) GetSnmp() (map[string]interface{}, error) {
 	return esxiClient.Snmp()
 }
 
-func (v *lumiVsphereDatacenter) GetVms() ([]interface{}, error) {
+func (v *mqlVsphereDatacenter) GetVms() ([]interface{}, error) {
 	client, err := getClientInstance(v.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -741,7 +741,7 @@ func (v *lumiVsphereDatacenter) GetVms() ([]interface{}, error) {
 		return nil, err
 	}
 
-	lumiVms := make([]interface{}, len(vms))
+	mqlVms := make([]interface{}, len(vms))
 	for i, vm := range vms {
 		vmInfo, err := vsphere.VmInfo(vm)
 		if err != nil {
@@ -758,7 +758,7 @@ func (v *lumiVsphereDatacenter) GetVms() ([]interface{}, error) {
 			name = vmInfo.Config.Name
 		}
 
-		lumiVm, err := v.MotorRuntime.CreateResource("vsphere.vm",
+		mqlVm, err := v.MotorRuntime.CreateResource("vsphere.vm",
 			"moid", vm.Reference().Encode(),
 			"name", name,
 			"properties", props,
@@ -768,17 +768,17 @@ func (v *lumiVsphereDatacenter) GetVms() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiVms[i] = lumiVm
+		mqlVms[i] = mqlVm
 	}
 
-	return lumiVms, nil
+	return mqlVms, nil
 }
 
-func (v *lumiVsphereVm) id() (string, error) {
+func (v *mqlVsphereVm) id() (string, error) {
 	return v.Moid()
 }
 
-func (v *lumiVsphereVm) GetAdvancedSettings() (map[string]interface{}, error) {
+func (v *mqlVsphereVm) GetAdvancedSettings() (map[string]interface{}, error) {
 	client, err := getClientInstance(v.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -797,11 +797,11 @@ func (v *lumiVsphereVm) GetAdvancedSettings() (map[string]interface{}, error) {
 	return vsphere.AdvancedSettings(vm)
 }
 
-func (v *lumiEsxi) id() (string, error) {
+func (v *mqlEsxi) id() (string, error) {
 	return "esxi", nil
 }
 
-func esxiHostProperties(runtime *lumi.Runtime) (*object.HostSystem, *mo.HostSystem, error) {
+func esxiHostProperties(runtime *resources.Runtime) (*object.HostSystem, *mo.HostSystem, error) {
 	t := runtime.Motor.Provider
 	vt, ok := t.(*vsphere_transport.Provider)
 	if !ok {
@@ -869,7 +869,7 @@ func esxiHostProperties(runtime *lumi.Runtime) (*object.HostSystem, *mo.HostSyst
 
 // GetHost returns the information about the current ESXi host
 // Deprecated: use vsphere.host resource instead
-func (v *lumiEsxi) GetHost() (interface{}, error) {
+func (v *mqlEsxi) GetHost() (interface{}, error) {
 	h, hostInfo, err := esxiHostProperties(v.MotorRuntime)
 	if err != nil {
 		return nil, err
@@ -885,7 +885,7 @@ func (v *lumiEsxi) GetHost() (interface{}, error) {
 		name = hostInfo.Name
 	}
 
-	lumiHost, err := v.MotorRuntime.CreateResource("vsphere.host",
+	mqlHost, err := v.MotorRuntime.CreateResource("vsphere.host",
 		"moid", h.Reference().Encode(),
 		"name", name,
 		"properties", props,
@@ -894,10 +894,10 @@ func (v *lumiEsxi) GetHost() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return lumiHost, nil
+	return mqlHost, nil
 }
 
-func esxiVmProperties(runtime *lumi.Runtime) (*object.VirtualMachine, *mo.VirtualMachine, error) {
+func esxiVmProperties(runtime *resources.Runtime) (*object.VirtualMachine, *mo.VirtualMachine, error) {
 	t := runtime.Motor.Provider
 	vt, ok := t.(*vsphere_transport.Provider)
 	if !ok {
@@ -936,7 +936,7 @@ func esxiVmProperties(runtime *lumi.Runtime) (*object.VirtualMachine, *mo.Virtua
 	return vm, vmInfo, nil
 }
 
-func (v *lumiEsxi) GetVm() (interface{}, error) {
+func (v *mqlEsxi) GetVm() (interface{}, error) {
 	vm, vmInfo, err := esxiVmProperties(v.MotorRuntime)
 	if err != nil {
 		return nil, err
@@ -952,7 +952,7 @@ func (v *lumiEsxi) GetVm() (interface{}, error) {
 		name = vmInfo.Config.Name
 	}
 
-	lumiVm, err := v.MotorRuntime.CreateResource("vsphere.vm",
+	mqlVm, err := v.MotorRuntime.CreateResource("vsphere.vm",
 		"moid", vm.Reference().Encode(),
 		"name", name,
 		"properties", props,
@@ -962,14 +962,14 @@ func (v *lumiEsxi) GetVm() (interface{}, error) {
 		return nil, err
 	}
 
-	return lumiVm, nil
+	return mqlVm, nil
 }
 
-func (v *lumiEsxiCommand) id() (string, error) {
+func (v *mqlEsxiCommand) id() (string, error) {
 	return v.Command()
 }
 
-func (v *lumiEsxiCommand) init(args *lumi.Args) (*lumi.Args, EsxiCommand, error) {
+func (v *mqlEsxiCommand) init(args *resources.Args) (*resources.Args, EsxiCommand, error) {
 	t := v.MotorRuntime.Motor.Provider
 	vt, ok := t.(*vsphere_transport.Provider)
 	if !ok {
@@ -1001,7 +1001,7 @@ func (v *lumiEsxiCommand) init(args *lumi.Args) (*lumi.Args, EsxiCommand, error)
 	return args, nil, nil
 }
 
-func (v *lumiEsxiCommand) hostSystem(vt *vsphere_transport.Provider, identifier string) (*object.HostSystem, error) {
+func (v *mqlEsxiCommand) hostSystem(vt *vsphere_transport.Provider, identifier string) (*object.HostSystem, error) {
 	var h *object.HostSystem
 	vClient := vt.Client()
 	cl := vsphere.New(vClient)
@@ -1024,7 +1024,7 @@ func (v *lumiEsxiCommand) hostSystem(vt *vsphere_transport.Provider, identifier 
 	return h, nil
 }
 
-func (v *lumiEsxiCommand) GetResult() ([]interface{}, error) {
+func (v *mqlEsxiCommand) GetResult() ([]interface{}, error) {
 	t := v.MotorRuntime.Motor.Provider
 	_, ok := t.(*vsphere_transport.Provider)
 	if !ok {
@@ -1060,12 +1060,12 @@ func (v *lumiEsxiCommand) GetResult() ([]interface{}, error) {
 	return res, nil
 }
 
-func (v *lumiVsphereVswitchStandard) id() (string, error) {
+func (v *mqlVsphereVswitchStandard) id() (string, error) {
 	return v.Name()
 }
 
-func (v *lumiVsphereVswitchStandard) esxiClient() (*vsphere.Esxi, error) {
-	c, ok := v.LumiResource().Cache.Load("_host_inventory_path")
+func (v *mqlVsphereVswitchStandard) esxiClient() (*vsphere.Esxi, error) {
+	c, ok := v.MqlResource().Cache.Load("_host_inventory_path")
 	if !ok {
 		return nil, errors.New("cannot get esxi host inventory path")
 	}
@@ -1073,7 +1073,7 @@ func (v *lumiVsphereVswitchStandard) esxiClient() (*vsphere.Esxi, error) {
 	return esxiClient(v.MotorRuntime.Motor.Provider, inventoryPath)
 }
 
-func (v *lumiVsphereVswitchStandard) GetFailoverPolicy() (map[string]interface{}, error) {
+func (v *mqlVsphereVswitchStandard) GetFailoverPolicy() (map[string]interface{}, error) {
 	name, err := v.Name()
 	if err != nil {
 		return nil, err
@@ -1087,7 +1087,7 @@ func (v *lumiVsphereVswitchStandard) GetFailoverPolicy() (map[string]interface{}
 	return esxiClient.VswitchStandardFailoverPolicy(name)
 }
 
-func (v *lumiVsphereVswitchStandard) GetSecurityPolicy() (map[string]interface{}, error) {
+func (v *mqlVsphereVswitchStandard) GetSecurityPolicy() (map[string]interface{}, error) {
 	name, err := v.Name()
 	if err != nil {
 		return nil, err
@@ -1101,7 +1101,7 @@ func (v *lumiVsphereVswitchStandard) GetSecurityPolicy() (map[string]interface{}
 	return esxiClient.VswitchStandardSecurityPolicy(name)
 }
 
-func (v *lumiVsphereVswitchStandard) GetShapingPolicy() (map[string]interface{}, error) {
+func (v *mqlVsphereVswitchStandard) GetShapingPolicy() (map[string]interface{}, error) {
 	name, err := v.Name()
 	if err != nil {
 		return nil, err
@@ -1115,7 +1115,7 @@ func (v *lumiVsphereVswitchStandard) GetShapingPolicy() (map[string]interface{},
 	return esxiClient.VswitchStandardShapingPolicy(name)
 }
 
-func (v *lumiVsphereVswitchStandard) GetUplinks() ([]interface{}, error) {
+func (v *mqlVsphereVswitchStandard) GetUplinks() ([]interface{}, error) {
 	raw, err := v.Properties()
 	if err != nil {
 		return nil, err
@@ -1133,7 +1133,7 @@ func (v *lumiVsphereVswitchStandard) GetUplinks() ([]interface{}, error) {
 	}
 
 	// get the esxi.host parent resource
-	c, ok := v.LumiResource().Cache.Load("_parent_resource")
+	c, ok := v.MqlResource().Cache.Load("_parent_resource")
 	if !ok {
 		return nil, errors.New("cannot get esxi host inventory path")
 	}
@@ -1150,7 +1150,7 @@ func findHostAdapter(host VsphereHost, uplinkNames []interface{}) ([]interface{}
 	}
 
 	// gather all adapters on that host so that we can find the adapter by name
-	lumiUplinks := []interface{}{}
+	mqlUplinks := []interface{}{}
 	for i := range adapters {
 		adapter := adapters[i].(VsphereVmnic)
 		for i := range uplinkNames {
@@ -1162,19 +1162,19 @@ func findHostAdapter(host VsphereHost, uplinkNames []interface{}) ([]interface{}
 			}
 
 			if name == uplinkName {
-				lumiUplinks = append(lumiUplinks, adapter)
+				mqlUplinks = append(mqlUplinks, adapter)
 			}
 		}
 	}
 
-	return lumiUplinks, nil
+	return mqlUplinks, nil
 }
 
-func (v *lumiVsphereVswitchDvs) id() (string, error) {
+func (v *mqlVsphereVswitchDvs) id() (string, error) {
 	return v.Name()
 }
 
-func (v *lumiVsphereVswitchDvs) GetUplinks() ([]interface{}, error) {
+func (v *mqlVsphereVswitchDvs) GetUplinks() ([]interface{}, error) {
 	raw, err := v.Properties()
 	if err != nil {
 		return nil, err
@@ -1192,7 +1192,7 @@ func (v *lumiVsphereVswitchDvs) GetUplinks() ([]interface{}, error) {
 	}
 
 	// get the esxi.host parent resource
-	c, ok := v.LumiResource().Cache.Load("_parent_resource")
+	c, ok := v.MqlResource().Cache.Load("_parent_resource")
 	if !ok {
 		return nil, errors.New("cannot get esxi host inventory path")
 	}

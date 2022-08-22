@@ -5,16 +5,16 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (c *lumiAwsConfig) id() (string, error) {
+func (c *mqlAwsConfig) id() (string, error) {
 	return "aws.config", nil
 }
 
-func (c *lumiAwsConfig) GetRecorders() ([]interface{}, error) {
+func (c *mqlAwsConfig) GetRecorders() ([]interface{}, error) {
 	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func (c *lumiAwsConfig) GetRecorders() ([]interface{}, error) {
 	return res, nil
 }
 
-func (c *lumiAwsConfig) getRecorders(at *aws_transport.Provider) []*jobpool.Job {
+func (c *mqlAwsConfig) getRecorders(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -67,7 +67,7 @@ func (c *lumiAwsConfig) getRecorders(at *aws_transport.Provider) []*jobpool.Job 
 					recording = val.recording
 					lastStatus = val.lastStatus
 				}
-				lumiRecorder, err := c.MotorRuntime.CreateResource("aws.config.recorder",
+				mqlRecorder, err := c.MotorRuntime.CreateResource("aws.config.recorder",
 					"name", core.ToString(r.Name),
 					"roleArn", core.ToString(r.RoleARN),
 					"allSupported", r.RecordingGroup.AllSupported,
@@ -79,7 +79,7 @@ func (c *lumiAwsConfig) getRecorders(at *aws_transport.Provider) []*jobpool.Job 
 				if err != nil {
 					return nil, err
 				}
-				res = append(res, lumiRecorder)
+				res = append(res, mqlRecorder)
 			}
 			return jobpool.JobResult(res), nil
 		}
@@ -92,7 +92,7 @@ func getName(name string, region string) string {
 	return name + "/" + region
 }
 
-func (c *lumiAwsConfig) describeConfigRecorderStatus(svc *configservice.Client, regionVal string) (map[string]recorder, error) {
+func (c *mqlAwsConfig) describeConfigRecorderStatus(svc *configservice.Client, regionVal string) (map[string]recorder, error) {
 	statusMap := make(map[string]recorder)
 	ctx := context.Background()
 
@@ -113,7 +113,7 @@ type recorder struct {
 	lastStatus string
 }
 
-func (c *lumiAwsConfigRecorder) id() (string, error) {
+func (c *mqlAwsConfigRecorder) id() (string, error) {
 	name, err := c.Name()
 	if err != nil {
 		return "", err
@@ -125,7 +125,7 @@ func (c *lumiAwsConfigRecorder) id() (string, error) {
 	return getName(name, region), nil
 }
 
-func (c *lumiAwsConfig) GetRules() ([]interface{}, error) {
+func (c *mqlAwsConfig) GetRules() ([]interface{}, error) {
 	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -145,7 +145,7 @@ func (c *lumiAwsConfig) GetRules() ([]interface{}, error) {
 	return res, nil
 }
 
-func (c *lumiAwsConfig) getRules(at *aws_transport.Provider) []*jobpool.Job {
+func (c *mqlAwsConfig) getRules(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -171,7 +171,7 @@ func (c *lumiAwsConfig) getRules(at *aws_transport.Provider) []*jobpool.Job {
 				if err != nil {
 					return nil, err
 				}
-				lumiRule, err := c.MotorRuntime.CreateResource("aws.config.rule",
+				mqlRule, err := c.MotorRuntime.CreateResource("aws.config.rule",
 					"arn", core.ToString(r.ConfigRuleArn),
 					"state", string(r.ConfigRuleState),
 					"source", jsonSource,
@@ -179,7 +179,7 @@ func (c *lumiAwsConfig) getRules(at *aws_transport.Provider) []*jobpool.Job {
 				if err != nil {
 					return nil, err
 				}
-				res = append(res, lumiRule)
+				res = append(res, mqlRule)
 			}
 			return jobpool.JobResult(res), nil
 		}
@@ -188,6 +188,6 @@ func (c *lumiAwsConfig) getRules(at *aws_transport.Provider) []*jobpool.Job {
 	return tasks
 }
 
-func (c *lumiAwsConfigRule) id() (string, error) {
+func (c *mqlAwsConfigRule) id() (string, error) {
 	return c.Arn()
 }

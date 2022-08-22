@@ -1,15 +1,15 @@
 package os
 
 import (
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core/plist"
 )
 
-func (m *lumiMacosAlf) id() (string, error) {
+func (m *mqlMacosAlf) id() (string, error) {
 	return "macos.alf", nil
 }
 
-func (s *lumiMacosAlf) init(args *lumi.Args) (*lumi.Args, MacosAlf, error) {
+func (s *mqlMacosAlf) init(args *resources.Args) (*resources.Args, MacosAlf, error) {
 	// TODO: use s.Runtime.CreateResource("parse.plist", "path", "/Library/Preferences/com.apple.alf.plist") in future
 	osProvider, err := osProvider(s.MotorRuntime.Motor)
 	if err != nil {

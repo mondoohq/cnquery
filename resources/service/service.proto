@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+import "resources.proto";
+
+package mondoo.resources.service;
+option go_package = "go.mondoo.io/mondoo/resources/service";
+
+// MQL service
+service MQL {
+  // returns all available resources
+  rpc ListResources(Empty) returns (ResourceList);
+
+  // returns all resources and fields
+  rpc GetSchema(Empty) returns (mondoo.resources.Schema);
+
+  // returns the list of fields for a given resource
+  // TODO: I am not sure why we need CreateResource and ListFields
+  rpc ListFields(FieldsQuery) returns (Fields);
+
+  // returns informaion about a specific resource
+  rpc CreateResource(ResourceArguments) returns (mondoo.resources.ResourceID);
+
+  // essentially returns the result of a field
+  // this would return either a resource or raw data
+  rpc GetField(FieldArguments) returns (FieldReturn);
+}
+
+message Empty {}
+
+message ResourceList {
+  repeated string resources = 1;
+}
+
+message Fields {
+  map<string, mondoo.resources.Field> fields = 1;
+}
+
+message FieldsQuery {
+  // resource name
+	string name = 1;
+}
+
+message ResourceArguments {
+	string name = 1;
+  map<string, string> named = 2;
+}
+
+message FieldArguments {
+	string name = 1;
+	string id = 2;
+	string field = 3;
+}
+
+message FieldReturn {
+  bytes data = 3;
+}

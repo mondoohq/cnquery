@@ -4,21 +4,18 @@ import (
 	"context"
 	"regexp"
 
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
-
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-
 	"github.com/aws/smithy-go"
 	"github.com/cockroachdb/errors"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/providers"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
-
-	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 )
 
 func NewEc2Discovery(cfg aws.Config) (*Ec2Instances, error) {

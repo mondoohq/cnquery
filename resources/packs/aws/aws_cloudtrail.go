@@ -6,16 +6,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (t *lumiAwsCloudtrail) id() (string, error) {
+func (t *mqlAwsCloudtrail) id() (string, error) {
 	return "aws.cloudtrail", nil
 }
 
-func (t *lumiAwsCloudtrail) GetTrails() ([]interface{}, error) {
+func (t *mqlAwsCloudtrail) GetTrails() ([]interface{}, error) {
 	at, err := awstransport(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func (t *lumiAwsCloudtrail) GetTrails() ([]interface{}, error) {
 	return res, nil
 }
 
-func (t *lumiAwsCloudtrail) getTrails(at *aws_transport.Provider) []*jobpool.Job {
+func (t *mqlAwsCloudtrail) getTrails(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -79,45 +79,45 @@ func (t *lumiAwsCloudtrail) getTrails(at *aws_transport.Provider) []*jobpool.Job
 
 				// trail.S3BucketName
 				if trail.S3BucketName != nil {
-					lumiAwsS3Bucket, err := t.MotorRuntime.CreateResource("aws.s3.bucket",
+					mqlAwsS3Bucket, err := t.MotorRuntime.CreateResource("aws.s3.bucket",
 						"name", core.ToString(trail.S3BucketName),
 					)
 					if err != nil {
 						return nil, err
 					}
-					s3Bucket := lumiAwsS3Bucket.(AwsS3Bucket)
+					s3Bucket := mqlAwsS3Bucket.(AwsS3Bucket)
 					args = append(args, "s3bucket", s3Bucket)
 
 				}
 
 				// add kms key if there is one
 				if trail.KmsKeyId != nil {
-					lumiKeyResource, err := t.MotorRuntime.CreateResource("aws.kms.key",
+					mqlKeyResource, err := t.MotorRuntime.CreateResource("aws.kms.key",
 						"arn", core.ToString(trail.KmsKeyId),
 					)
 					if err != nil {
 						return nil, err
 					}
-					lumiKey := lumiKeyResource.(AwsKmsKey)
-					args = append(args, "kmsKey", lumiKey)
+					mqlKey := mqlKeyResource.(AwsKmsKey)
+					args = append(args, "kmsKey", mqlKey)
 				}
 				if trail.CloudWatchLogsLogGroupArn != nil {
-					lumiLoggroup, err := t.MotorRuntime.CreateResource("aws.cloudwatch.loggroup",
+					mqlLoggroup, err := t.MotorRuntime.CreateResource("aws.cloudwatch.loggroup",
 						"arn", core.ToString(trail.CloudWatchLogsLogGroupArn),
 					)
 					if err != nil {
 						return nil, err
 					}
-					lumiLog := lumiLoggroup.(AwsCloudwatchLoggroup)
-					args = append(args, "logGroup", lumiLog)
+					mqlLog := mqlLoggroup.(AwsCloudwatchLoggroup)
+					args = append(args, "logGroup", mqlLog)
 				}
 
-				lumiAwsCloudtrailTrail, err := t.MotorRuntime.CreateResource("aws.cloudtrail.trail", args...)
+				mqlAwsCloudtrailTrail, err := t.MotorRuntime.CreateResource("aws.cloudtrail.trail", args...)
 				if err != nil {
 					return nil, err
 				}
 
-				res = append(res, lumiAwsCloudtrailTrail)
+				res = append(res, mqlAwsCloudtrailTrail)
 			}
 			return jobpool.JobResult(res), nil
 		}
@@ -126,26 +126,26 @@ func (t *lumiAwsCloudtrail) getTrails(at *aws_transport.Provider) []*jobpool.Job
 	return tasks
 }
 
-func (s *lumiAwsCloudtrailTrail) GetS3bucket() (interface{}, error) {
+func (s *mqlAwsCloudtrailTrail) GetS3bucket() (interface{}, error) {
 	// no s3 bucket on the trail object
 	return nil, nil
 }
 
-func (s *lumiAwsCloudtrailTrail) GetLogGroup() (interface{}, error) {
+func (s *mqlAwsCloudtrailTrail) GetLogGroup() (interface{}, error) {
 	// no log group on the trail object
 	return nil, nil
 }
 
-func (s *lumiAwsCloudtrailTrail) GetKmsKey() (interface{}, error) {
+func (s *mqlAwsCloudtrailTrail) GetKmsKey() (interface{}, error) {
 	// no key id on the trail object
 	return nil, nil
 }
 
-func (t *lumiAwsCloudtrailTrail) id() (string, error) {
+func (t *mqlAwsCloudtrailTrail) id() (string, error) {
 	return t.Arn()
 }
 
-func (t *lumiAwsCloudtrailTrail) GetStatus() (interface{}, error) {
+func (t *mqlAwsCloudtrailTrail) GetStatus() (interface{}, error) {
 	regionValue, err := t.Region()
 	if err != nil {
 		return nil, err
@@ -174,7 +174,7 @@ func (t *lumiAwsCloudtrailTrail) GetStatus() (interface{}, error) {
 	return core.JsonToDict(trailstatus)
 }
 
-func (t *lumiAwsCloudtrailTrail) GetEventSelectors() (interface{}, error) {
+func (t *mqlAwsCloudtrailTrail) GetEventSelectors() (interface{}, error) {
 	regionValue, err := t.Region()
 	if err != nil {
 		return nil, err

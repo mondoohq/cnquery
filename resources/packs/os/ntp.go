@@ -4,11 +4,11 @@ import (
 	"errors"
 	"strings"
 
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (s *lumiNtpConf) init(args *lumi.Args) (*lumi.Args, NtpConf, error) {
+func (s *mqlNtpConf) init(args *resources.Args) (*resources.Args, NtpConf, error) {
 	if x, ok := (*args)["path"]; ok {
 		path, ok := x.(string)
 		if !ok {
@@ -28,7 +28,7 @@ func (s *lumiNtpConf) init(args *lumi.Args) (*lumi.Args, NtpConf, error) {
 
 const defaultNtpConf = "/etc/ntp.conf"
 
-func (s *lumiNtpConf) id() (string, error) {
+func (s *mqlNtpConf) id() (string, error) {
 	r, err := s.File()
 	if err != nil {
 		return "", err
@@ -36,7 +36,7 @@ func (s *lumiNtpConf) id() (string, error) {
 	return r.Path()
 }
 
-func (s *lumiNtpConf) GetFile() (core.File, error) {
+func (s *mqlNtpConf) GetFile() (core.File, error) {
 	f, err := s.MotorRuntime.CreateResource("file", "path", defaultNtpConf)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (s *lumiNtpConf) GetFile() (core.File, error) {
 	return f.(core.File), nil
 }
 
-func (s *lumiNtpConf) GetContent(file core.File) (string, error) {
+func (s *mqlNtpConf) GetContent(file core.File) (string, error) {
 	// TODO: this can be heavily improved once we do it right, since this is constantly
 	// re-registered as the file changes
 	err := s.MotorRuntime.WatchAndCompute(file, "content", s, "content")
@@ -55,7 +55,7 @@ func (s *lumiNtpConf) GetContent(file core.File) (string, error) {
 	return file.Content()
 }
 
-func (s *lumiNtpConf) GetSettings(content string) ([]interface{}, error) {
+func (s *mqlNtpConf) GetSettings(content string) ([]interface{}, error) {
 	lines := strings.Split(content, "\n")
 
 	settings := []interface{}{}
@@ -75,7 +75,7 @@ func (s *lumiNtpConf) GetSettings(content string) ([]interface{}, error) {
 	return settings, nil
 }
 
-func (s *lumiNtpConf) GetServers(settings []interface{}) ([]interface{}, error) {
+func (s *mqlNtpConf) GetServers(settings []interface{}) ([]interface{}, error) {
 	res := []interface{}{}
 	var line string
 	for i := range settings {
@@ -88,7 +88,7 @@ func (s *lumiNtpConf) GetServers(settings []interface{}) ([]interface{}, error) 
 	return res, nil
 }
 
-func (s *lumiNtpConf) GetRestrict(settings []interface{}) ([]interface{}, error) {
+func (s *mqlNtpConf) GetRestrict(settings []interface{}) ([]interface{}, error) {
 	res := []interface{}{}
 	var line string
 	for i := range settings {
@@ -101,7 +101,7 @@ func (s *lumiNtpConf) GetRestrict(settings []interface{}) ([]interface{}, error)
 	return res, nil
 }
 
-func (s *lumiNtpConf) GetFudge(settings []interface{}) ([]interface{}, error) {
+func (s *mqlNtpConf) GetFudge(settings []interface{}) ([]interface{}, error) {
 	res := []interface{}{}
 	var line string
 	for i := range settings {

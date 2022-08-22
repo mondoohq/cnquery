@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/types"
 )
 
@@ -665,13 +665,13 @@ func validateBuiltinFunctionsV1() {
 
 func runResourceFunctionV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref int32) (*RawData, int32, error) {
 	// ugh something is wrong here.... fix it later
-	rr, ok := bind.Value.(lumi.ResourceType)
+	rr, ok := bind.Value.(resources.ResourceType)
 	if !ok {
 		// TODO: can we get rid of this fmt call
 		return nil, 0, fmt.Errorf("cannot cast resource to resource type: %+v", bind.Value)
 	}
 
-	info := rr.LumiResource()
+	info := rr.MqlResource()
 	// resource := c.runtime.Registry.Resources[bind.Type]
 	if info == nil {
 		return nil, 0, errors.New("cannot retrieve resource from the binding to run the raw function")
@@ -710,11 +710,11 @@ func runResourceFunctionV1(c *MQLExecutorV1, bind *RawData, chunk *Chunk, ref in
 		c.triggerChain(ref, data)
 	})
 	if err != nil {
-		if _, ok := err.(lumi.NotReadyError); !ok {
+		if _, ok := err.(resources.NotReadyError); !ok {
 			// TODO: Deduplicate storage between cache and resource storage
 			// This will take some work, but clearly we don't need both
 
-			info.Cache.Store(chunk.Id, &lumi.CacheEntry{
+			info.Cache.Store(chunk.Id, &resources.CacheEntry{
 				Timestamp: time.Now().Unix(),
 				Valid:     true,
 				Error:     err,

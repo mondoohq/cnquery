@@ -11,8 +11,6 @@ import (
 )
 
 // These functions are needed to be located here to avoid dependency cycles
-// since resources --depends--> lumi
-// and this runtime --depends--> lumi + resources + motor
 
 // we import this from Info to fill in all the metadata first
 var Registry = info.Registry

@@ -9,23 +9,23 @@ import (
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (a *lumiAzurermSql) id() (string, error) {
+func (a *mqlAzurermSql) id() (string, error) {
 	return "azurerm.sql", nil
 }
 
-func (a *lumiAzurermSqlConfiguration) id() (string, error) {
+func (a *mqlAzurermSqlConfiguration) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurermSqlFirewallrule) id() (string, error) {
+func (a *mqlAzurermSqlFirewallrule) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurermSqlServerAdministrator) id() (string, error) {
+func (a *mqlAzurermSqlServerAdministrator) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurermSql) GetServers() ([]interface{}, error) {
+func (a *mqlAzurermSql) GetServers() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func (a *lumiAzurermSql) GetServers() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzureDbServer, err := a.MotorRuntime.CreateResource("azurerm.sql.server",
+		mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azurerm.sql.server",
 			"id", core.ToString(dbServer.ID),
 			"name", core.ToString(dbServer.Name),
 			"location", core.ToString(dbServer.Location),
@@ -71,17 +71,17 @@ func (a *lumiAzurermSql) GetServers() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzureDbServer)
+		res = append(res, mqlAzureDbServer)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermSqlServer) id() (string, error) {
+func (a *mqlAzurermSqlServer) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurermSqlServer) GetDatabases() ([]interface{}, error) {
+func (a *mqlAzurermSqlServer) GetDatabases() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -137,7 +137,7 @@ func (a *lumiAzurermSqlServer) GetDatabases() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzureDatabase, err := a.MotorRuntime.CreateResource("azurerm.sql.database",
+		mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azurerm.sql.database",
 			"id", core.ToString(entry.ID),
 			"name", core.ToString(entry.Name),
 			"type", core.ToString(entry.Type),
@@ -170,13 +170,13 @@ func (a *lumiAzurermSqlServer) GetDatabases() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzureDatabase)
+		res = append(res, mqlAzureDatabase)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermSqlServer) GetFirewallRules() ([]interface{}, error) {
+func (a *mqlAzurermSqlServer) GetFirewallRules() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -222,7 +222,7 @@ func (a *lumiAzurermSqlServer) GetFirewallRules() ([]interface{}, error) {
 	for i := range list {
 		entry := list[i]
 
-		lumiAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.firewallrule",
+		mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.firewallrule",
 			"id", core.ToString(entry.ID),
 			"name", core.ToString(entry.Name),
 			"type", core.ToString(entry.Type),
@@ -232,13 +232,13 @@ func (a *lumiAzurermSqlServer) GetFirewallRules() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzureConfiguration)
+		res = append(res, mqlAzureConfiguration)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermSqlServer) GetAzureAdAdministrators() ([]interface{}, error) {
+func (a *mqlAzurermSqlServer) GetAzureAdAdministrators() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -284,7 +284,7 @@ func (a *lumiAzurermSqlServer) GetAzureAdAdministrators() ([]interface{}, error)
 	for i := range list {
 		entry := list[i]
 
-		lumiAzureSqlAdministrator, err := a.MotorRuntime.CreateResource("azurerm.sql.server.administrator",
+		mqlAzureSqlAdministrator, err := a.MotorRuntime.CreateResource("azurerm.sql.server.administrator",
 			"id", core.ToString(entry.ID),
 			"name", core.ToString(entry.Name),
 			"type", core.ToString(entry.Type),
@@ -296,13 +296,13 @@ func (a *lumiAzurermSqlServer) GetAzureAdAdministrators() ([]interface{}, error)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzureSqlAdministrator)
+		res = append(res, mqlAzureSqlAdministrator)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermSqlServer) GetConnectionPolicy() (map[string]interface{}, error) {
+func (a *mqlAzurermSqlServer) GetConnectionPolicy() (map[string]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -341,7 +341,7 @@ func (a *lumiAzurermSqlServer) GetConnectionPolicy() (map[string]interface{}, er
 	return core.JsonToDict(policy)
 }
 
-func (a *lumiAzurermSqlServer) GetAuditingPolicy() (map[string]interface{}, error) {
+func (a *mqlAzurermSqlServer) GetAuditingPolicy() (map[string]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -380,7 +380,7 @@ func (a *lumiAzurermSqlServer) GetAuditingPolicy() (map[string]interface{}, erro
 	return core.JsonToDict(policy.ServerBlobAuditingPolicyProperties)
 }
 
-func (a *lumiAzurermSqlServer) GetSecurityAlertPolicy() (map[string]interface{}, error) {
+func (a *mqlAzurermSqlServer) GetSecurityAlertPolicy() (map[string]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -419,7 +419,7 @@ func (a *lumiAzurermSqlServer) GetSecurityAlertPolicy() (map[string]interface{},
 	return core.JsonToDict(policy.SecurityAlertPolicyProperties)
 }
 
-func (a *lumiAzurermSqlServer) GetEncryptionProtector() (map[string]interface{}, error) {
+func (a *mqlAzurermSqlServer) GetEncryptionProtector() (map[string]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -458,11 +458,11 @@ func (a *lumiAzurermSqlServer) GetEncryptionProtector() (map[string]interface{},
 	return core.JsonToDict(policy.EncryptionProtectorProperties)
 }
 
-func (a *lumiAzurermSqlDatabase) id() (string, error) {
+func (a *mqlAzurermSqlDatabase) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurermSqlDatabase) GetUsage() ([]interface{}, error) {
+func (a *mqlAzurermSqlDatabase) GetUsage() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -514,7 +514,7 @@ func (a *lumiAzurermSqlDatabase) GetUsage() ([]interface{}, error) {
 	for i := range list {
 		entry := list[i]
 
-		lumiAzureSqlUsage, err := a.MotorRuntime.CreateResource("azurerm.sql.databaseusage",
+		mqlAzureSqlUsage, err := a.MotorRuntime.CreateResource("azurerm.sql.databaseusage",
 			"id", id+"/metrics/"+core.ToString(entry.Name),
 			"name", core.ToString(entry.Name),
 			"resourceName", core.ToString(entry.ResourceName),
@@ -525,20 +525,20 @@ func (a *lumiAzurermSqlDatabase) GetUsage() ([]interface{}, error) {
 			"nextResetTime", azureRmTime(entry.NextResetTime),
 		)
 		if err != nil {
-			log.Error().Err(err).Msg("could not create lumi resource")
+			log.Error().Err(err).Msg("could not create MQL resource")
 			return nil, err
 		}
-		res = append(res, lumiAzureSqlUsage)
+		res = append(res, mqlAzureSqlUsage)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermSqlDatabaseusage) id() (string, error) {
+func (a *mqlAzurermSqlDatabaseusage) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurermSqlDatabase) GetAdvisor() ([]interface{}, error) {
+func (a *mqlAzurermSqlDatabase) GetAdvisor() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -601,7 +601,7 @@ func (a *lumiAzurermSqlDatabase) GetAdvisor() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *lumiAzurermSqlDatabase) GetThreadDetectionPolicy() (map[string]interface{}, error) {
+func (a *mqlAzurermSqlDatabase) GetThreadDetectionPolicy() (map[string]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -645,7 +645,7 @@ func (a *lumiAzurermSqlDatabase) GetThreadDetectionPolicy() (map[string]interfac
 	return core.JsonToDict(policy)
 }
 
-func (a *lumiAzurermSqlDatabase) GetConnectionPolicy() (map[string]interface{}, error) {
+func (a *mqlAzurermSqlDatabase) GetConnectionPolicy() (map[string]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -689,7 +689,7 @@ func (a *lumiAzurermSqlDatabase) GetConnectionPolicy() (map[string]interface{}, 
 	return core.JsonToDict(policy)
 }
 
-func (a *lumiAzurermSqlDatabase) GetAuditingPolicy() (map[string]interface{}, error) {
+func (a *mqlAzurermSqlDatabase) GetAuditingPolicy() (map[string]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -733,7 +733,7 @@ func (a *lumiAzurermSqlDatabase) GetAuditingPolicy() (map[string]interface{}, er
 	return core.JsonToDict(policy.DatabaseBlobAuditingPolicyProperties)
 }
 
-func (a *lumiAzurermSqlDatabase) GetTransparentDataEncryption() (map[string]interface{}, error) {
+func (a *mqlAzurermSqlDatabase) GetTransparentDataEncryption() (map[string]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err

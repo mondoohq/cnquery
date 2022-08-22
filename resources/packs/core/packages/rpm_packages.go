@@ -94,7 +94,7 @@ func (rpm *RpmPkgManager) isStaticAnalysis() bool {
 	// check if the rpm command exists, e.g it is not available on tar backend
 	c, err := rpm.provider.RunCommand("command -v rpm")
 	if err != nil || c.ExitStatus != 0 {
-		log.Debug().Msg("lumi[packages]> fallback to static rpm package manager")
+		log.Debug().Msg("mql[packages]> fallback to static rpm package manager")
 		rpm.static = true
 	}
 
@@ -163,7 +163,7 @@ func (rpm *RpmPkgManager) runtimeAvailable() (map[string]PackageUpdate, error) {
 
 	cmd, err := rpm.provider.RunCommand(script)
 	if err != nil {
-		log.Debug().Err(err).Msg("lumi[packages]> could not read package updates")
+		log.Debug().Err(err).Msg("mql[packages]> could not read package updates")
 		return nil, errors.Wrap(err, "could not read package update list")
 	}
 	return ParseRpmUpdates(cmd.Stdout)
@@ -203,12 +203,12 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 			}
 			fWriter, err := os.Create(filepath.Join(rpmTmpDir, info.Name()))
 			if err != nil {
-				log.Error().Err(err).Msg("lumi[packages]> could not create tmp file for rpm database")
+				log.Error().Err(err).Msg("mql[packages]> could not create tmp file for rpm database")
 				return errors.Wrap(err, "could not create local temp file")
 			}
 			_, err = io.Copy(fWriter, f)
 			if err != nil {
-				log.Error().Err(err).Msg("lumi[packages]> could not copy rpm to tmp file")
+				log.Error().Err(err).Msg("mql[packages]> could not copy rpm to tmp file")
 				return fmt.Errorf("could not cache rpm package list")
 			}
 			return nil
@@ -242,12 +242,12 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 		}
 		fWriter, err := os.Create(filepath.Join(rpmTmpDir, "Packages"))
 		if err != nil {
-			log.Error().Err(err).Msg("lumi[packages]> could not create tmp file for rpm database")
+			log.Error().Err(err).Msg("mql[packages]> could not create tmp file for rpm database")
 			return nil, errors.Wrap(err, "could not create local temp file")
 		}
 		_, err = io.Copy(fWriter, f)
 		if err != nil {
-			log.Error().Err(err).Msg("lumi[packages]> could not copy rpm to tmp file")
+			log.Error().Err(err).Msg("mql[packages]> could not copy rpm to tmp file")
 			return nil, fmt.Errorf("could not cache rpm package list")
 		}
 	}
@@ -265,7 +265,7 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 
 	err = c.Run()
 	if err != nil {
-		log.Error().Err(err).Msg("lumi[packages]> could not execute rpm locally")
+		log.Error().Err(err).Msg("mql[packages]> could not execute rpm locally")
 		return nil, errors.Wrap(err, "could not read package list")
 	}
 
@@ -286,7 +286,7 @@ type SusePkgManager struct {
 func (spm *SusePkgManager) Available() (map[string]PackageUpdate, error) {
 	cmd, err := spm.provider.RunCommand("zypper --xmlout list-updates")
 	if err != nil {
-		log.Debug().Err(err).Msg("lumi[packages]> could not read package updates")
+		log.Debug().Err(err).Msg("mql[packages]> could not read package updates")
 		return nil, fmt.Errorf("could not read package update list")
 	}
 	return ParseZypperUpdates(cmd.Stdout)

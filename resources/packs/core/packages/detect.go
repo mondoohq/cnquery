@@ -18,19 +18,19 @@ func Detect(motor *motor.Motor) ([]Package, map[string]PackageUpdate, error) {
 	// retrieve all system packages
 	packages, err := pm.List()
 	if err != nil {
-		log.Debug().Err(err).Msg("lumi[packages]> could not retrieve package list")
+		log.Debug().Err(err).Msg("mql[packages]> could not retrieve package list")
 		return nil, nil, fmt.Errorf("could not retrieve package list for platform")
 	}
-	log.Debug().Int("packages", len(packages)).Msg("lumi[packages]> installed packages")
+	log.Debug().Int("packages", len(packages)).Msg("mql[packages]> installed packages")
 
 	// TODO: do we really need to make this a blocking call, we could update available updates async
 	// we try to retrieve the available updates
 	availableList, err := pm.Available()
 	if err != nil {
-		log.Debug().Err(err).Msg("lumi[packages]> could not retrieve available updates")
+		log.Debug().Err(err).Msg("mql[packages]> could not retrieve available updates")
 		availableList = map[string]PackageUpdate{}
 	}
-	log.Debug().Int("updates", len(availableList)).Msg("lumi[packages]> available updates")
+	log.Debug().Int("updates", len(availableList)).Msg("mql[packages]> available updates")
 
 	return packages, availableList, nil
 }

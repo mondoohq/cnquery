@@ -194,7 +194,7 @@ func (dpm *DebPkgManager) Available() (map[string]PackageUpdate, error) {
 
 	cmd, err := dpm.provider.RunCommand("DEBIAN_FRONTEND=noninteractive apt-get upgrade --dry-run")
 	if err != nil {
-		log.Debug().Err(err).Msg("lumi[packages]> could not read package updates")
+		log.Debug().Err(err).Msg("mql[packages]> could not read package updates")
 		return nil, fmt.Errorf("could not read package update list")
 	}
 	return ParseDpkgUpdates(cmd.Stdout)

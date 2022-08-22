@@ -6,11 +6,11 @@ import (
 	"strings"
 )
 
-func (f *lumiSocketstats) id() (string, error) {
+func (f *mqlSocketstats) id() (string, error) {
 	return "socketstats", nil
 }
 
-func (f *lumiSocketstats) GetOpenPorts() ([]interface{}, error) {
+func (f *mqlSocketstats) GetOpenPorts() ([]interface{}, error) {
 	osProvider, err := osProvider(f.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err

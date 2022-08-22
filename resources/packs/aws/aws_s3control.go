@@ -10,11 +10,11 @@ import (
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (s *lumiAwsS3control) id() (string, error) {
+func (s *mqlAwsS3control) id() (string, error) {
 	return "aws.s3control", nil
 }
 
-func (s *lumiAwsS3control) GetAccountPublicAccessBlock() (interface{}, error) {
+func (s *mqlAwsS3control) GetAccountPublicAccessBlock() (interface{}, error) {
 	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err

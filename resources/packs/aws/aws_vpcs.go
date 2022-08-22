@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
@@ -19,19 +19,19 @@ const (
 	vpcArnPattern = "arn:aws:vpc:%s:%s:id/%s"
 )
 
-func (s *lumiAwsVpc) id() (string, error) {
+func (s *mqlAwsVpc) id() (string, error) {
 	return s.Arn()
 }
 
-func (s *lumiAwsVpcFlowlog) id() (string, error) {
+func (s *mqlAwsVpcFlowlog) id() (string, error) {
 	return s.Id()
 }
 
-func (s *lumiAwsVpcRoutetable) id() (string, error) {
+func (s *mqlAwsVpcRoutetable) id() (string, error) {
 	return s.Id()
 }
 
-func (s *lumiAws) GetVpcs() ([]interface{}, error) {
+func (s *mqlAws) GetVpcs() ([]interface{}, error) {
 	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func (s *lumiAws) GetVpcs() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAws) getVpcs(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAws) getVpcs(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -85,7 +85,7 @@ func (s *lumiAws) getVpcs(at *aws_transport.Provider) []*jobpool.Job {
 				for i := range vpcs.Vpcs {
 					v := vpcs.Vpcs[i]
 
-					lumiVpc, err := s.MotorRuntime.CreateResource("aws.vpc",
+					mqlVpc, err := s.MotorRuntime.CreateResource("aws.vpc",
 						"arn", fmt.Sprintf(vpcArnPattern, regionVal, account.ID, core.ToString(v.VpcId)),
 						"id", core.ToString(v.VpcId),
 						"state", string(v.State),
@@ -97,7 +97,7 @@ func (s *lumiAws) getVpcs(at *aws_transport.Provider) []*jobpool.Job {
 						log.Error().Msg(err.Error())
 						return nil, err
 					}
-					res = append(res, lumiVpc)
+					res = append(res, mqlVpc)
 				}
 			}
 			return jobpool.JobResult(res), nil
@@ -107,7 +107,7 @@ func (s *lumiAws) getVpcs(at *aws_transport.Provider) []*jobpool.Job {
 	return tasks
 }
 
-func (s *lumiAwsVpc) GetFlowLogs() ([]interface{}, error) {
+func (s *mqlAwsVpc) GetFlowLogs() ([]interface{}, error) {
 	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -137,7 +137,7 @@ func (s *lumiAwsVpc) GetFlowLogs() ([]interface{}, error) {
 		}
 
 		for _, flowLog := range flowLogsRes.FlowLogs {
-			lumiFlowLog, err := s.MotorRuntime.CreateResource("aws.vpc.flowlog",
+			mqlFlowLog, err := s.MotorRuntime.CreateResource("aws.vpc.flowlog",
 				"id", core.ToString(flowLog.FlowLogId),
 				"vpc", vpc,
 				"region", region,
@@ -147,13 +147,13 @@ func (s *lumiAwsVpc) GetFlowLogs() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			flowLogs = append(flowLogs, lumiFlowLog)
+			flowLogs = append(flowLogs, mqlFlowLog)
 		}
 	}
 	return flowLogs, nil
 }
 
-func (p *lumiAwsVpc) init(args *lumi.Args) (*lumi.Args, AwsVpc, error) {
+func (p *mqlAwsVpc) init(args *resources.Args) (*resources.Args, AwsVpc, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -179,24 +179,24 @@ func (p *lumiAwsVpc) init(args *lumi.Args) (*lumi.Args, AwsVpc, error) {
 	if (*args)["arn"] != nil {
 		arnVal := (*args)["arn"].(string)
 		match = func(vpc AwsVpc) bool {
-			lumiVpcArn, err := vpc.Arn()
+			mqlVpcArn, err := vpc.Arn()
 			if err != nil {
 				log.Error().Err(err).Msg("vpc is not properly initialized")
 				return false
 			}
-			return lumiVpcArn == arnVal
+			return mqlVpcArn == arnVal
 		}
 	}
 
 	if (*args)["id"] != nil {
 		idVal := (*args)["id"].(string)
 		match = func(vpc AwsVpc) bool {
-			lumiVpcId, err := vpc.Id()
+			mqlVpcId, err := vpc.Id()
 			if err != nil {
 				log.Error().Err(err).Msg("vpc is not properly initialized")
 				return false
 			}
-			return lumiVpcId == idVal
+			return mqlVpcId == idVal
 		}
 	}
 
@@ -209,7 +209,7 @@ func (p *lumiAwsVpc) init(args *lumi.Args) (*lumi.Args, AwsVpc, error) {
 	return nil, nil, errors.New("vpc does not exist")
 }
 
-func (s *lumiAwsVpc) GetRouteTables() ([]interface{}, error) {
+func (s *mqlAwsVpc) GetRouteTables() ([]interface{}, error) {
 	vpcVal, err := s.Id()
 	if err != nil {
 		return nil, err
@@ -240,14 +240,14 @@ func (s *lumiAwsVpc) GetRouteTables() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			lumiRouteTable, err := s.MotorRuntime.CreateResource("aws.vpc.routetable",
+			mqlRouteTable, err := s.MotorRuntime.CreateResource("aws.vpc.routetable",
 				"id", core.ToString(routeTable.RouteTableId),
 				"routes", dictRoutes,
 			)
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, lumiRouteTable)
+			res = append(res, mqlRouteTable)
 		}
 	}
 	return res, nil

@@ -5,7 +5,7 @@ import (
 
 	"go.mondoo.io/mondoo/mqlc/parser"
 	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/types"
 )
 
@@ -142,7 +142,7 @@ func builtinFunction(typ types.Type, id string) (*compileHandler, error) {
 	return nil, errors.New("cannot find function '" + id + "' for type '" + typ.Label() + "' during compile")
 }
 
-func publicFieldsInfo(c *compiler, resourceInfo *lumi.ResourceInfo) map[string]llx.Documentation {
+func publicFieldsInfo(c *compiler, resourceInfo *resources.ResourceInfo) map[string]llx.Documentation {
 	res := map[string]llx.Documentation{}
 	for k, v := range resourceInfo.Fields {
 		if v.IsPrivate {

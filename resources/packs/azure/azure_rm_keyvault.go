@@ -14,11 +14,11 @@ import (
 // see https://github.com/Azure/azure-sdk-for-go/issues/8224
 // type AzureStorageAccountProperties keyvault_vault.KeyPermissions
 
-func (a *lumiAzurermKeyvault) id() (string, error) {
+func (a *mqlAzurermKeyvault) id() (string, error) {
 	return "azure.keyvault", nil
 }
 
-func (a *lumiAzurermKeyvault) GetVaults() ([]interface{}, error) {
+func (a *mqlAzurermKeyvault) GetVaults() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func (a *lumiAzurermKeyvault) GetVaults() ([]interface{}, error) {
 	for i := range vaults.Values() {
 		entry := vaults.Values()[i]
 
-		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.vault",
+		mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.vault",
 			"id", core.ToString(entry.ID),
 			// TODO: temproray
 			"vaultName", core.ToString(entry.Name),
@@ -53,17 +53,17 @@ func (a *lumiAzurermKeyvault) GetVaults() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzure)
+		res = append(res, mqlAzure)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermKeyvaultVault) id() (string, error) {
+func (a *mqlAzurermKeyvaultVault) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurermKeyvaultVault) GetVaultUri() (string, error) {
+func (a *mqlAzurermKeyvaultVault) GetVaultUri() (string, error) {
 	name, err := a.VaultName()
 	if err != nil {
 		return "", err
@@ -74,7 +74,7 @@ func (a *lumiAzurermKeyvaultVault) GetVaultUri() (string, error) {
 
 const azureKeyVaulAudience = "https://vault.azure.net"
 
-func (a *lumiAzurermKeyvaultVault) GetKeys() ([]interface{}, error) {
+func (a *mqlAzurermKeyvaultVault) GetKeys() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -103,7 +103,7 @@ func (a *lumiAzurermKeyvaultVault) GetKeys() ([]interface{}, error) {
 	for i := range keys.Values() {
 		entry := keys.Values()[i]
 
-		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.key",
+		mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.key",
 			"kid", core.ToString(entry.Kid),
 			"managed", core.ToBool(entry.Managed),
 			"tags", azureTagsToInterface(entry.Tags),
@@ -118,13 +118,13 @@ func (a *lumiAzurermKeyvaultVault) GetKeys() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzure)
+		res = append(res, mqlAzure)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermKeyvaultVault) GetCertificates() ([]interface{}, error) {
+func (a *mqlAzurermKeyvaultVault) GetCertificates() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -158,7 +158,7 @@ func (a *lumiAzurermKeyvaultVault) GetCertificates() ([]interface{}, error) {
 		// 	return nil, err
 		// }
 
-		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.certificate",
+		mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.certificate",
 			"id", core.ToString(entry.ID),
 			"tags", azureTagsToInterface(entry.Tags),
 			// "attributes", attributes,
@@ -173,13 +173,13 @@ func (a *lumiAzurermKeyvaultVault) GetCertificates() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzure)
+		res = append(res, mqlAzure)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermKeyvaultVault) GetSecrets() ([]interface{}, error) {
+func (a *mqlAzurermKeyvaultVault) GetSecrets() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -208,7 +208,7 @@ func (a *lumiAzurermKeyvaultVault) GetSecrets() ([]interface{}, error) {
 	for i := range secrets.Values() {
 		entry := secrets.Values()[i]
 
-		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.secret",
+		mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.secret",
 			"id", core.ToString(entry.ID),
 			"tags", azureTagsToInterface(entry.Tags),
 			"contentType", core.ToString(entry.ContentType),
@@ -222,13 +222,13 @@ func (a *lumiAzurermKeyvaultVault) GetSecrets() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzure)
+		res = append(res, mqlAzure)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermKeyvaultVault) GetProperties() (map[string]interface{}, error) {
+func (a *mqlAzurermKeyvaultVault) GetProperties() (map[string]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -267,7 +267,7 @@ func (a *lumiAzurermKeyvaultVault) GetProperties() (map[string]interface{}, erro
 	return core.JsonToDict(vault.Properties)
 }
 
-func (a *lumiAzurermKeyvaultVault) GetDiagnosticSettings() ([]interface{}, error) {
+func (a *mqlAzurermKeyvaultVault) GetDiagnosticSettings() ([]interface{}, error) {
 	// id is a azure resource od
 	id, err := a.Id()
 	if err != nil {
@@ -278,11 +278,11 @@ func (a *lumiAzurermKeyvaultVault) GetDiagnosticSettings() ([]interface{}, error
 	return diagnosticsSettings(a.MotorRuntime, id)
 }
 
-func (a *lumiAzurermKeyvaultKey) id() (string, error) {
+func (a *mqlAzurermKeyvaultKey) id() (string, error) {
 	return a.Kid()
 }
 
-func (a *lumiAzurermKeyvaultKey) GetKeyName() (interface{}, error) {
+func (a *mqlAzurermKeyvaultKey) GetKeyName() (interface{}, error) {
 	// parse id "https://superdupervault.vault.azure.net/keys/sqltestkey"
 	id, err := a.Kid()
 	if err != nil {
@@ -297,7 +297,7 @@ func (a *lumiAzurermKeyvaultKey) GetKeyName() (interface{}, error) {
 	return kvid.Name, nil
 }
 
-func (a *lumiAzurermKeyvaultKey) GetVersion() (interface{}, error) {
+func (a *mqlAzurermKeyvaultKey) GetVersion() (interface{}, error) {
 	id, err := a.Kid()
 	if err != nil {
 		return nil, err
@@ -311,7 +311,7 @@ func (a *lumiAzurermKeyvaultKey) GetVersion() (interface{}, error) {
 	return kvid.Version, nil
 }
 
-func (a *lumiAzurermKeyvaultKey) GetVersions() ([]interface{}, error) {
+func (a *mqlAzurermKeyvaultKey) GetVersions() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -358,7 +358,7 @@ func (a *lumiAzurermKeyvaultKey) GetVersions() ([]interface{}, error) {
 	for i := range secrets.Values() {
 		entry := secrets.Values()[i]
 
-		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.key",
+		mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.key",
 			"kid", core.ToString(entry.Kid),
 			"tags", azureTagsToInterface(entry.Tags),
 			"managed", core.ToBool(entry.Managed),
@@ -373,18 +373,18 @@ func (a *lumiAzurermKeyvaultKey) GetVersions() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzure)
+		res = append(res, mqlAzure)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermKeyvaultCertificate) id() (string, error) {
+func (a *mqlAzurermKeyvaultCertificate) id() (string, error) {
 	return a.Id()
 }
 
-// TODO: switch to name once the issue is solved in lumi
-func (a *lumiAzurermKeyvaultCertificate) GetCertName() (interface{}, error) {
+// TODO: switch to name once the issue is solved in MQL
+func (a *mqlAzurermKeyvaultCertificate) GetCertName() (interface{}, error) {
 	// parse id "https://superdupervault.vault.azure.net/certificates/testcertificate"
 	id, err := a.Id()
 	if err != nil {
@@ -399,7 +399,7 @@ func (a *lumiAzurermKeyvaultCertificate) GetCertName() (interface{}, error) {
 	return kvid.Name, nil
 }
 
-func (a *lumiAzurermKeyvaultCertificate) GetVersion() (interface{}, error) {
+func (a *mqlAzurermKeyvaultCertificate) GetVersion() (interface{}, error) {
 	id, err := a.Id()
 	if err != nil {
 		return nil, err
@@ -413,7 +413,7 @@ func (a *lumiAzurermKeyvaultCertificate) GetVersion() (interface{}, error) {
 	return kvid.Version, nil
 }
 
-func (a *lumiAzurermKeyvaultCertificate) GetX509() (interface{}, error) {
+func (a *mqlAzurermKeyvaultCertificate) GetX509() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
@@ -443,7 +443,7 @@ func parseKeyVaultId(url string) (*keyvaultid, error) {
 	}, nil
 }
 
-func (a *lumiAzurermKeyvaultCertificate) GetVersions() ([]interface{}, error) {
+func (a *mqlAzurermKeyvaultCertificate) GetVersions() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -490,7 +490,7 @@ func (a *lumiAzurermKeyvaultCertificate) GetVersions() ([]interface{}, error) {
 	for i := range certificates.Values() {
 		entry := certificates.Values()[i]
 
-		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.certificate",
+		mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.certificate",
 			"id", core.ToString(entry.ID),
 			"tags", azureTagsToInterface(entry.Tags),
 			"x5t", core.ToString(entry.X509Thumbprint),
@@ -504,18 +504,18 @@ func (a *lumiAzurermKeyvaultCertificate) GetVersions() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzure)
+		res = append(res, mqlAzure)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermKeyvaultSecret) id() (string, error) {
+func (a *mqlAzurermKeyvaultSecret) id() (string, error) {
 	return a.Id()
 }
 
-// TODO: switch to name once the issue is solved in lumi
-func (a *lumiAzurermKeyvaultSecret) GetSecretName() (interface{}, error) {
+// TODO: switch to name once the issue is solved in MQL
+func (a *mqlAzurermKeyvaultSecret) GetSecretName() (interface{}, error) {
 	// parse id "https://superdupervault.vault.azure.net/certificates/testcertificate"
 	id, err := a.Id()
 	if err != nil {
@@ -530,7 +530,7 @@ func (a *lumiAzurermKeyvaultSecret) GetSecretName() (interface{}, error) {
 	return kvid.Name, nil
 }
 
-func (a *lumiAzurermKeyvaultSecret) GetVersion() (interface{}, error) {
+func (a *mqlAzurermKeyvaultSecret) GetVersion() (interface{}, error) {
 	id, err := a.Id()
 	if err != nil {
 		return nil, err
@@ -544,7 +544,7 @@ func (a *lumiAzurermKeyvaultSecret) GetVersion() (interface{}, error) {
 	return kvid.Version, nil
 }
 
-func (a *lumiAzurermKeyvaultSecret) GetVersions() ([]interface{}, error) {
+func (a *mqlAzurermKeyvaultSecret) GetVersions() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -591,7 +591,7 @@ func (a *lumiAzurermKeyvaultSecret) GetVersions() ([]interface{}, error) {
 	for i := range secrets.Values() {
 		entry := secrets.Values()[i]
 
-		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.secret",
+		mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.secret",
 			"id", core.ToString(entry.ID),
 			"tags", azureTagsToInterface(entry.Tags),
 			"contentType", core.ToString(entry.ContentType),
@@ -607,7 +607,7 @@ func (a *lumiAzurermKeyvaultSecret) GetVersions() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzure)
+		res = append(res, mqlAzure)
 	}
 
 	return res, nil

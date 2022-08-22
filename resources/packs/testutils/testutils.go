@@ -14,7 +14,7 @@ import (
 	"go.mondoo.io/mondoo"
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/logger"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/providers/local"
 	"go.mondoo.io/mondoo/motor/providers/mock"
@@ -74,12 +74,12 @@ func mockTransport(filepath string) (*motor.Motor, error) {
 }
 
 type tester struct {
-	runtime *lumi.Runtime
+	runtime *resources.Runtime
 }
 
-func InitTester(motor *motor.Motor, registry *lumi.Registry) *tester {
+func InitTester(motor *motor.Motor, registry *resources.Registry) *tester {
 	return &tester{
-		runtime: lumi.NewRuntime(registry, motor),
+		runtime: resources.NewRuntime(registry, motor),
 	}
 }
 

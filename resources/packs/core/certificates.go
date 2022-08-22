@@ -12,11 +12,11 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/checksums"
 	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core/certificates"
 )
 
-func (s *lumiParseCertificates) init(args *lumi.Args) (*lumi.Args, ParseCertificates, error) {
+func (s *mqlParseCertificates) init(args *resources.Args) (*resources.Args, ParseCertificates, error) {
 	// resolve path to file
 	if x, ok := (*args)["path"]; ok {
 		path, ok := x.(string)
@@ -49,7 +49,7 @@ func certificatesid(path string) string {
 	return "certificates:" + path
 }
 
-func (a *lumiParseCertificates) id() (string, error) {
+func (a *mqlParseCertificates) id() (string, error) {
 	r, err := a.File()
 	if err != nil {
 		return "", err
@@ -62,7 +62,7 @@ func (a *lumiParseCertificates) id() (string, error) {
 	return certificatesid(path), nil
 }
 
-func (a *lumiParseCertificates) GetFile() (File, error) {
+func (a *mqlParseCertificates) GetFile() (File, error) {
 	path, err := a.Path()
 	if err != nil {
 		return nil, err
@@ -75,7 +75,7 @@ func (a *lumiParseCertificates) GetFile() (File, error) {
 	return f.(File), nil
 }
 
-func (a *lumiParseCertificates) GetContent(file File) (string, error) {
+func (a *mqlParseCertificates) GetContent(file File) (string, error) {
 	// TODO: this can be heavily improved once we do it right, since this is constantly
 	// re-registered as the file changes
 	err := a.MotorRuntime.WatchAndCompute(file, "content", a, "content")
@@ -86,7 +86,7 @@ func (a *lumiParseCertificates) GetContent(file File) (string, error) {
 	return file.Content()
 }
 
-func pkixnameToLumi(runtime *lumi.Runtime, name pkix.Name, id string) (PkixName, error) {
+func pkixnameToMql(runtime *resources.Runtime, name pkix.Name, id string) (PkixName, error) {
 	names := map[string]interface{}{}
 	for i := range name.Names {
 		key := name.Names[i].Type.String()
@@ -99,7 +99,7 @@ func pkixnameToLumi(runtime *lumi.Runtime, name pkix.Name, id string) (PkixName,
 		extraNames[key] = fmt.Sprintf("%v", name.ExtraNames[i].Value)
 	}
 
-	lumiPkixName, err := runtime.CreateResource("pkix.name",
+	mqlPkixName, err := runtime.CreateResource("pkix.name",
 		"id", id,
 		"dn", name.String(),
 		"serialNumber", name.SerialNumber,
@@ -117,11 +117,11 @@ func pkixnameToLumi(runtime *lumi.Runtime, name pkix.Name, id string) (PkixName,
 	if err != nil {
 		return nil, err
 	}
-	return lumiPkixName.(PkixName), nil
+	return mqlPkixName.(PkixName), nil
 }
 
-func pkixextensionToLumi(runtime *lumi.Runtime, ext pkix.Extension, id string) (PkixExtension, error) {
-	lumiPkixExt, err := runtime.CreateResource("pkix.extension",
+func pkixextensionToMql(runtime *resources.Runtime, ext pkix.Extension, id string) (PkixExtension, error) {
+	mqlPkixExt, err := runtime.CreateResource("pkix.extension",
 		"identifier", id,
 		"critical", ext.Critical,
 		"value", string(ext.Value),
@@ -129,21 +129,21 @@ func pkixextensionToLumi(runtime *lumi.Runtime, ext pkix.Extension, id string) (
 	if err != nil {
 		return nil, err
 	}
-	return lumiPkixExt.(PkixExtension), nil
+	return mqlPkixExt.(PkixExtension), nil
 }
 
-func (p *lumiParseCertificates) GetList(content string, path string) ([]interface{}, error) {
+func (p *mqlParseCertificates) GetList(content string, path string) ([]interface{}, error) {
 	certs, err := certificates.ParseCertFromPEM(strings.NewReader(content))
 	if err != nil {
 		return nil, err
 	}
 
-	return CertificatesToLumiCertificates(p.MotorRuntime, certs)
+	return CertificatesToMqlCertificates(p.MotorRuntime, certs)
 }
 
-// CertificatesToLumiCertificates takes a collection of x509 certs
-// and converts it into lumi certificate objects
-func CertificatesToLumiCertificates(runtime *lumi.Runtime, certs []*x509.Certificate) ([]interface{}, error) {
+// CertificatesToMqlCertificates takes a collection of x509 certs
+// and converts it into MQL certificate objects
+func CertificatesToMqlCertificates(runtime *resources.Runtime, certs []*x509.Certificate) ([]interface{}, error) {
 	res := []interface{}{}
 	// to create certificate resources
 	for i := range certs {
@@ -158,7 +158,7 @@ func CertificatesToLumiCertificates(runtime *lumi.Runtime, certs []*x509.Certifi
 			return nil, err
 		}
 
-		lumiCert, err := runtime.CreateResource("certificate",
+		mqlCert, err := runtime.CreateResource("certificate",
 			"pem", string(certdata),
 			// NOTE: if we do not set the hash here, it will generate the cache content before we can store it
 			// we are using the hashs for the id, therefore it is required during creation
@@ -168,16 +168,16 @@ func CertificatesToLumiCertificates(runtime *lumi.Runtime, certs []*x509.Certifi
 			return nil, err
 		}
 
-		c := lumiCert.(Certificate)
+		c := mqlCert.(Certificate)
 
 		// store parsed object with resource
-		c.LumiResource().Cache.Store("_cert", &lumi.CacheEntry{Data: cert})
+		c.MqlResource().Cache.Store("_cert", &resources.CacheEntry{Data: cert})
 		res = append(res, c)
 	}
 	return res, nil
 }
 
-func (r *lumiCertificate) id() (string, error) {
+func (r *mqlCertificate) id() (string, error) {
 	fingerprints, err := r.Fingerprints()
 	if err != nil {
 		return "", err
@@ -185,8 +185,8 @@ func (r *lumiCertificate) id() (string, error) {
 	return "certificate:" + fingerprints["sha256"].(string), nil
 }
 
-func (s *lumiCertificate) getGoCert() *x509.Certificate {
-	entry, ok := s.LumiResource().Cache.Load("_cert")
+func (s *mqlCertificate) getGoCert() *x509.Certificate {
+	entry, ok := s.MqlResource().Cache.Load("_cert")
 	if ok {
 		return entry.Data.(*x509.Certificate)
 	}
@@ -208,7 +208,7 @@ func (s *lumiCertificate) getGoCert() *x509.Certificate {
 		log.Error().Msg("pem for cert contains more than one certificate, ignore additional certificates")
 	}
 
-	s.LumiResource().Cache.Store("_cert", &lumi.CacheEntry{Data: cert[0]})
+	s.MqlResource().Cache.Store("_cert", &resources.CacheEntry{Data: cert[0]})
 	return cert[0]
 }
 
@@ -220,70 +220,70 @@ func certFingerprints(cert *x509.Certificate) map[string]interface{} {
 	}
 }
 
-func (s *lumiCertificate) GetFingerprints() (map[string]interface{}, error) {
+func (s *mqlCertificate) GetFingerprints() (map[string]interface{}, error) {
 	cert := s.getGoCert()
 	return certFingerprints(cert), nil
 }
 
-func (s *lumiCertificate) GetSerial() (string, error) {
+func (s *mqlCertificate) GetSerial() (string, error) {
 	cert := s.getGoCert()
 	// TODO: we may want return bytes and leave the printing to runtime
 	return certificates.HexEncodeToHumanString(cert.SerialNumber.Bytes()), nil
 }
 
-func (s *lumiCertificate) GetSubjectKeyID() (string, error) {
+func (s *mqlCertificate) GetSubjectKeyID() (string, error) {
 	cert := s.getGoCert()
 	// TODO: we may want return bytes and leave the printing to runtime
 	return certificates.HexEncodeToHumanString(cert.SubjectKeyId), nil
 }
 
-func (s *lumiCertificate) GetAuthorityKeyID() (string, error) {
+func (s *mqlCertificate) GetAuthorityKeyID() (string, error) {
 	cert := s.getGoCert()
 	// TODO: we may want return bytes and leave the printing to runtime
 	return certificates.HexEncodeToHumanString(cert.AuthorityKeyId), nil
 }
 
-func (s *lumiCertificate) GetSubject() (interface{}, error) {
+func (s *mqlCertificate) GetSubject() (interface{}, error) {
 	cert := s.getGoCert()
 	fingerprint := hex.EncodeToString(certificates.Sha256Hash(cert))
-	lumiSubject, err := pkixnameToLumi(s.MotorRuntime, cert.Subject, fingerprint+":subject")
+	mqlSubject, err := pkixnameToMql(s.MotorRuntime, cert.Subject, fingerprint+":subject")
 	if err != nil {
 		return nil, err
 	}
-	return lumiSubject, nil
+	return mqlSubject, nil
 }
 
-func (s *lumiCertificate) GetIssuer() (interface{}, error) {
+func (s *mqlCertificate) GetIssuer() (interface{}, error) {
 	cert := s.getGoCert()
 	fingerprint := hex.EncodeToString(certificates.Sha256Hash(cert))
-	lumiIssuer, err := pkixnameToLumi(s.MotorRuntime, cert.Issuer, fingerprint+":issuer")
+	mqlIssuer, err := pkixnameToMql(s.MotorRuntime, cert.Issuer, fingerprint+":issuer")
 	if err != nil {
 		return nil, err
 	}
-	return lumiIssuer, nil
+	return mqlIssuer, nil
 }
 
-func (s *lumiCertificate) GetVersion() (int64, error) {
+func (s *mqlCertificate) GetVersion() (int64, error) {
 	cert := s.getGoCert()
 	return int64(cert.Version), nil
 }
 
-func (s *lumiCertificate) GetIsCA() (bool, error) {
+func (s *mqlCertificate) GetIsCA() (bool, error) {
 	cert := s.getGoCert()
 	return cert.IsCA, nil
 }
 
-func (s *lumiCertificate) GetNotBefore() (*time.Time, error) {
+func (s *mqlCertificate) GetNotBefore() (*time.Time, error) {
 	cert := s.getGoCert()
 	return &cert.NotBefore, nil
 }
 
-func (s *lumiCertificate) GetNotAfter() (*time.Time, error) {
+func (s *mqlCertificate) GetNotAfter() (*time.Time, error) {
 	cert := s.getGoCert()
 	return &cert.NotAfter, nil
 }
 
-func (s *lumiCertificate) GetExpiresIn() (*time.Time, error) {
+func (s *mqlCertificate) GetExpiresIn() (*time.Time, error) {
 	cert := s.getGoCert()
 	diff := cert.NotAfter.Unix() - time.Now().Unix()
 	ts := llx.DurationToTime(diff)
@@ -302,7 +302,7 @@ var keyusageNames = map[x509.KeyUsage]string{
 	x509.KeyUsageDecipherOnly:      "DecipherOnly",
 }
 
-func (s *lumiCertificate) GetKeyUsage() ([]interface{}, error) {
+func (s *mqlCertificate) GetKeyUsage() ([]interface{}, error) {
 	res := []interface{}{}
 	cert := s.getGoCert()
 
@@ -332,7 +332,7 @@ var extendendkeyusageNames = map[x509.ExtKeyUsage]string{
 	x509.ExtKeyUsageMicrosoftKernelCodeSigning:     "MicrosoftKernelCodeSigning",
 }
 
-func (s *lumiCertificate) GetExtendedKeyUsage() ([]interface{}, error) {
+func (s *mqlCertificate) GetExtendedKeyUsage() ([]interface{}, error) {
 	res := []interface{}{}
 	cert := s.getGoCert()
 	for i := range cert.ExtKeyUsage {
@@ -346,13 +346,13 @@ func (s *lumiCertificate) GetExtendedKeyUsage() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiCertificate) GetExtensions() ([]interface{}, error) {
+func (s *mqlCertificate) GetExtensions() ([]interface{}, error) {
 	res := []interface{}{}
 	cert := s.getGoCert()
 	fingerprint := hex.EncodeToString(certificates.Sha256Hash(cert))
 	for i := range cert.Extensions {
 		extension := cert.Extensions[i]
-		ext, err := pkixextensionToLumi(s.MotorRuntime, extension, fingerprint+":"+extension.Id.String())
+		ext, err := pkixextensionToMql(s.MotorRuntime, extension, fingerprint+":"+extension.Id.String())
 		if err != nil {
 			return nil, err
 		}
@@ -361,7 +361,7 @@ func (s *lumiCertificate) GetExtensions() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiCertificate) GetPolicyIdentifier() ([]interface{}, error) {
+func (s *mqlCertificate) GetPolicyIdentifier() ([]interface{}, error) {
 	res := []interface{}{}
 	cert := s.getGoCert()
 	for i := range cert.PolicyIdentifiers {
@@ -370,48 +370,48 @@ func (s *lumiCertificate) GetPolicyIdentifier() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiCertificate) GetSigningAlgorithm() (string, error) {
+func (s *mqlCertificate) GetSigningAlgorithm() (string, error) {
 	cert := s.getGoCert()
 	return cert.SignatureAlgorithm.String(), nil
 }
 
-func (s *lumiCertificate) GetSignature() (string, error) {
+func (s *mqlCertificate) GetSignature() (string, error) {
 	cert := s.getGoCert()
 	// TODO: return bytes
 	return hex.EncodeToString(cert.Signature), nil
 }
 
-func (s *lumiCertificate) GetCrlDistributionPoints() ([]interface{}, error) {
+func (s *mqlCertificate) GetCrlDistributionPoints() ([]interface{}, error) {
 	cert := s.getGoCert()
 	return StrSliceToInterface(cert.CRLDistributionPoints), nil
 }
 
-func (s *lumiCertificate) GetOcspServer() ([]interface{}, error) {
+func (s *mqlCertificate) GetOcspServer() ([]interface{}, error) {
 	cert := s.getGoCert()
 	return StrSliceToInterface(cert.OCSPServer), nil
 }
 
-func (s *lumiCertificate) GetIssuingCertificateUrl() ([]interface{}, error) {
+func (s *mqlCertificate) GetIssuingCertificateUrl() ([]interface{}, error) {
 	cert := s.getGoCert()
 	return StrSliceToInterface(cert.IssuingCertificateURL), nil
 }
 
-func (s *lumiCertificate) GetIsRevoked() (bool, error) {
+func (s *mqlCertificate) GetIsRevoked() (bool, error) {
 	return false, errors.New("unknown revocation status")
 }
 
-func (s *lumiCertificate) GetRevokedAt() (*time.Time, error) {
+func (s *mqlCertificate) GetRevokedAt() (*time.Time, error) {
 	return nil, nil
 }
 
-func (s *lumiCertificate) GetIsVerified() (bool, error) {
+func (s *mqlCertificate) GetIsVerified() (bool, error) {
 	return false, nil
 }
 
-func (r *lumiPkixName) id() (string, error) {
+func (r *mqlPkixName) id() (string, error) {
 	return r.Id()
 }
 
-func (r *lumiPkixExtension) id() (string, error) {
+func (r *mqlPkixExtension) id() (string, error) {
 	return r.Identifier()
 }

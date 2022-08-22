@@ -24,15 +24,15 @@ type Stat struct {
 	Options     string
 }
 
-func (i *lumiIptables) id() (string, error) {
+func (i *mqlIptables) id() (string, error) {
 	return "iptables", nil
 }
 
-func (i *lumiIp6tables) id() (string, error) {
+func (i *mqlIp6tables) id() (string, error) {
 	return "ip6tables", nil
 }
 
-func (ie *lumiIptablesEntry) id() (string, error) {
+func (ie *mqlIptablesEntry) id() (string, error) {
 	ln, err := ie.LineNumber()
 	if err != nil {
 		return "", err
@@ -45,7 +45,7 @@ func (ie *lumiIptablesEntry) id() (string, error) {
 	return strconv.FormatInt(ln, 10) + chain, nil
 }
 
-func (i *lumiIptables) GetOutput() ([]interface{}, error) {
+func (i *mqlIptables) GetOutput() ([]interface{}, error) {
 	osProvider, err := osProvider(i.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
@@ -92,7 +92,7 @@ func (i *lumiIptables) GetOutput() ([]interface{}, error) {
 	return ipstats, nil
 }
 
-func (i *lumiIptables) GetInput() ([]interface{}, error) {
+func (i *mqlIptables) GetInput() ([]interface{}, error) {
 	osProvider, err := osProvider(i.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
@@ -139,7 +139,7 @@ func (i *lumiIptables) GetInput() ([]interface{}, error) {
 	return ipstats, nil
 }
 
-func (i *lumiIp6tables) GetOutput() ([]interface{}, error) {
+func (i *mqlIp6tables) GetOutput() ([]interface{}, error) {
 	osProvider, err := osProvider(i.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
@@ -186,7 +186,7 @@ func (i *lumiIp6tables) GetOutput() ([]interface{}, error) {
 	return ipstats, nil
 }
 
-func (i *lumiIp6tables) GetInput() ([]interface{}, error) {
+func (i *mqlIp6tables) GetInput() ([]interface{}, error) {
 	osProvider, err := osProvider(i.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err

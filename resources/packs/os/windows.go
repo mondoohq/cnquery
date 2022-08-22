@@ -3,17 +3,17 @@ package os
 import (
 	"errors"
 
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core/packages"
 	"go.mondoo.io/mondoo/resources/packs/os/powershell"
 	"go.mondoo.io/mondoo/resources/packs/os/windows"
 )
 
-func (s *lumiWindows) id() (string, error) {
+func (s *mqlWindows) id() (string, error) {
 	return "windows", nil
 }
 
-func (s *lumiWindows) GetComputerInfo() (map[string]interface{}, error) {
+func (s *mqlWindows) GetComputerInfo() (map[string]interface{}, error) {
 	osProvider, err := osProvider(s.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
@@ -31,11 +31,11 @@ func (s *lumiWindows) GetComputerInfo() (map[string]interface{}, error) {
 	return windows.ParseComputerInfo(executedCmd.Stdout)
 }
 
-func (wh *lumiWindowsHotfix) id() (string, error) {
+func (wh *mqlWindowsHotfix) id() (string, error) {
 	return wh.HotfixId()
 }
 
-func (p *lumiWindowsHotfix) init(args *lumi.Args) (*lumi.Args, WindowsHotfix, error) {
+func (p *mqlWindowsHotfix) init(args *resources.Args) (*resources.Args, WindowsHotfix, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -73,7 +73,7 @@ func (p *lumiWindowsHotfix) init(args *lumi.Args) (*lumi.Args, WindowsHotfix, er
 	return nil, nil, errors.New("could not find hotfix " + name)
 }
 
-func (w *lumiWindows) GetHotfixes() ([]interface{}, error) {
+func (w *mqlWindows) GetHotfixes() ([]interface{}, error) {
 	osProvider, err := osProvider(w.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
@@ -91,11 +91,11 @@ func (w *lumiWindows) GetHotfixes() ([]interface{}, error) {
 		return nil, err
 	}
 
-	// convert hotfixes to lumi resource
-	lumiHotFixes := make([]interface{}, len(hotfixes))
+	// convert hotfixes to MQL resource
+	mqlHotFixes := make([]interface{}, len(hotfixes))
 	for i, hf := range hotfixes {
 
-		lumiHotfix, err := w.MotorRuntime.CreateResource("windows.hotfix",
+		mqlHotfix, err := w.MotorRuntime.CreateResource("windows.hotfix",
 			"hotfixId", hf.HotFixId,
 			"caption", hf.Caption,
 			"description", hf.Description,
@@ -106,17 +106,17 @@ func (w *lumiWindows) GetHotfixes() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiHotFixes[i] = lumiHotfix.(WindowsHotfix)
+		mqlHotFixes[i] = mqlHotfix.(WindowsHotfix)
 	}
 
-	return lumiHotFixes, nil
+	return mqlHotFixes, nil
 }
 
-func (wh *lumiWindowsFeature) id() (string, error) {
+func (wh *mqlWindowsFeature) id() (string, error) {
 	return wh.Path()
 }
 
-func (p *lumiWindowsFeature) init(args *lumi.Args) (*lumi.Args, WindowsFeature, error) {
+func (p *mqlWindowsFeature) init(args *resources.Args) (*resources.Args, WindowsFeature, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -154,7 +154,7 @@ func (p *lumiWindowsFeature) init(args *lumi.Args) (*lumi.Args, WindowsFeature, 
 	return nil, nil, errors.New("could not find feature " + name)
 }
 
-func (w *lumiWindows) GetFeatures() ([]interface{}, error) {
+func (w *mqlWindows) GetFeatures() ([]interface{}, error) {
 	osProvider, err := osProvider(w.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
@@ -172,11 +172,11 @@ func (w *lumiWindows) GetFeatures() ([]interface{}, error) {
 		return nil, err
 	}
 
-	// convert features to lumi resource
-	lumiFeatures := make([]interface{}, len(features))
+	// convert features to MQL resource
+	mqlFeatures := make([]interface{}, len(features))
 	for i, feature := range features {
 
-		lumiFeature, err := w.MotorRuntime.CreateResource("windows.feature",
+		mqlFeature, err := w.MotorRuntime.CreateResource("windows.feature",
 			"path", feature.Path,
 			"name", feature.Name,
 			"displayName", feature.DisplayName,
@@ -188,8 +188,8 @@ func (w *lumiWindows) GetFeatures() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiFeatures[i] = lumiFeature.(WindowsFeature)
+		mqlFeatures[i] = mqlFeature.(WindowsFeature)
 	}
 
-	return lumiFeatures, nil
+	return mqlFeatures, nil
 }

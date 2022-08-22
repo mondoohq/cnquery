@@ -11,7 +11,7 @@ import (
 
 const defaultShadowConfig = "/etc/shadow"
 
-func (s *lumiShadow) id() (string, error) {
+func (s *mqlShadow) id() (string, error) {
 	return defaultShadowConfig, nil
 }
 
@@ -27,7 +27,7 @@ func parseInt(s string, dflt int64, msg string) (int64, error) {
 	return res, nil
 }
 
-func (s *lumiShadow) GetList() ([]interface{}, error) {
+func (s *mqlShadow) GetList() ([]interface{}, error) {
 	osProvider, err := osProvider(s.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func (s *lumiShadow) GetList() ([]interface{}, error) {
 			"reserved", entry.Reserved,
 		)
 		if err != nil {
-			log.Error().Err(err).Str("shadow_entry", entry.User).Msg("lumi[shadow_entry]> could not create shadow entry resource")
+			log.Error().Err(err).Str("shadow_entry", entry.User).Msg("mql[shadow_entry]> could not create shadow entry resource")
 			return nil, err
 		}
 		shadowEntryResources[i] = shadowEntry.(ShadowEntry)
@@ -89,7 +89,7 @@ func (s *lumiShadow) GetList() ([]interface{}, error) {
 	return shadowEntryResources, nil
 }
 
-func (se *lumiShadowEntry) id() (string, error) {
+func (se *mqlShadowEntry) id() (string, error) {
 	id, _ := se.User()
 	return id, nil
 }

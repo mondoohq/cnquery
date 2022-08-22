@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/types"
 )
 
@@ -456,7 +456,7 @@ func MapIntData(v map[int32]interface{}, typ types.Type) *RawData {
 }
 
 // ResourceData creates a rawdata struct from a resource
-func ResourceData(v lumi.ResourceType, name string) *RawData {
+func ResourceData(v resources.ResourceType, name string) *RawData {
 	return &RawData{
 		Type:  types.Resource(name),
 		Value: v,

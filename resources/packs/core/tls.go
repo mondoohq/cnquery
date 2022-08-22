@@ -7,7 +7,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/motor/providers/network"
 	"go.mondoo.io/mondoo/resources/packs/core/certificates"
 	"go.mondoo.io/mondoo/resources/packs/core/tlsshake"
@@ -15,7 +15,7 @@ import (
 
 var reTarget = regexp.MustCompile("([^/:]+?)(:\\d+)?$")
 
-func (s *lumiTls) init(args *lumi.Args) (*lumi.Args, Tls, error) {
+func (s *mqlTls) init(args *resources.Args) (*resources.Args, Tls, error) {
 	var fqdn string
 	var port int64
 
@@ -81,16 +81,16 @@ func (s *lumiTls) init(args *lumi.Args) (*lumi.Args, Tls, error) {
 	return args, nil, nil
 }
 
-func (s *lumiTls) id() (string, error) {
+func (s *mqlTls) id() (string, error) {
 	socket, err := s.Socket()
 	if err != nil {
 		return "", err
 	}
 
-	return "tls+" + socket.LumiResource().Id, nil
+	return "tls+" + socket.MqlResource().Id, nil
 }
 
-func parseCertificates(runtime *lumi.Runtime, domainName string, findings *tlsshake.Findings, certificateList []*x509.Certificate) ([]interface{}, error) {
+func parseCertificates(runtime *resources.Runtime, domainName string, findings *tlsshake.Findings, certificateList []*x509.Certificate) ([]interface{}, error) {
 	res := make([]interface{}, len(certificateList))
 
 	verified := false
@@ -148,16 +148,16 @@ func parseCertificates(runtime *lumi.Runtime, domainName string, findings *tlssh
 		}
 
 		// store parsed object with resource
-		lumiCert := raw.(Certificate)
-		lumiCert.LumiResource().Cache.Store("_cert", &lumi.CacheEntry{Data: cert})
+		mqlCert := raw.(Certificate)
+		mqlCert.MqlResource().Cache.Store("_cert", &resources.CacheEntry{Data: cert})
 
-		res[i] = lumiCert
+		res[i] = mqlCert
 	}
 
 	return res, nil
 }
 
-func (s *lumiTls) GetParams(socket Socket, domainName string) (map[string]interface{}, error) {
+func (s *mqlTls) GetParams(socket Socket, domainName string) (map[string]interface{}, error) {
 	host, err := socket.Address()
 	if err != nil {
 		return nil, err
@@ -219,7 +219,7 @@ func (s *lumiTls) GetParams(socket Socket, domainName string) (map[string]interf
 	return res, nil
 }
 
-func (s *lumiTls) GetVersions(params interface{}) ([]interface{}, error) {
+func (s *mqlTls) GetVersions(params interface{}) ([]interface{}, error) {
 	paramsM, ok := params.(map[string]interface{})
 	if !ok {
 		return []interface{}{}, nil
@@ -241,7 +241,7 @@ func (s *lumiTls) GetVersions(params interface{}) ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiTls) GetCiphers(params interface{}) ([]interface{}, error) {
+func (s *mqlTls) GetCiphers(params interface{}) ([]interface{}, error) {
 	paramsM, ok := params.(map[string]interface{})
 	if !ok {
 		return []interface{}{}, nil
@@ -263,7 +263,7 @@ func (s *lumiTls) GetCiphers(params interface{}) ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiTls) GetExtensions(params interface{}) ([]interface{}, error) {
+func (s *mqlTls) GetExtensions(params interface{}) ([]interface{}, error) {
 	paramsM, ok := params.(map[string]interface{})
 	if !ok {
 		return []interface{}{}, nil
@@ -285,7 +285,7 @@ func (s *lumiTls) GetExtensions(params interface{}) ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiTls) GetCertificates(params interface{}) ([]interface{}, error) {
+func (s *mqlTls) GetCertificates(params interface{}) ([]interface{}, error) {
 	paramsM, ok := params.(map[string]interface{})
 	if !ok {
 		return []interface{}{}, nil
@@ -299,7 +299,7 @@ func (s *lumiTls) GetCertificates(params interface{}) ([]interface{}, error) {
 	return raw.([]interface{}), nil
 }
 
-func (s *lumiTls) GetNonSniCertificates(params interface{}) ([]interface{}, error) {
+func (s *mqlTls) GetNonSniCertificates(params interface{}) ([]interface{}, error) {
 	paramsM, ok := params.(map[string]interface{})
 	if !ok {
 		return []interface{}{}, nil

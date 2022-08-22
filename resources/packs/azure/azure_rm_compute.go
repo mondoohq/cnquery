@@ -6,15 +6,15 @@ import (
 	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/compute/mgmt/compute"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (a *lumiAzurermCompute) id() (string, error) {
+func (a *mqlAzurermCompute) id() (string, error) {
 	return "azurerm.compute", nil
 }
 
-func (a *lumiAzurermCompute) GetDisks() ([]interface{}, error) {
+func (a *mqlAzurermCompute) GetDisks() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -38,17 +38,17 @@ func (a *lumiAzurermCompute) GetDisks() ([]interface{}, error) {
 	for i := range disks.Values() {
 		disk := disks.Values()[i]
 
-		lumiAzureDisk, err := diskToLumi(a.MotorRuntime, disk)
+		mqlAzureDisk, err := diskToMql(a.MotorRuntime, disk)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzureDisk)
+		res = append(res, mqlAzureDisk)
 	}
 
 	return res, nil
 }
 
-func diskToLumi(runtime *lumi.Runtime, disk compute.Disk) (lumi.ResourceType, error) {
+func diskToMql(runtime *resources.Runtime, disk compute.Disk) (resources.ResourceType, error) {
 	properties, err := core.JsonToDict(disk.DiskProperties)
 	if err != nil {
 		return nil, err
@@ -73,11 +73,11 @@ func diskToLumi(runtime *lumi.Runtime, disk compute.Disk) (lumi.ResourceType, er
 	)
 }
 
-func (a *lumiAzurermComputeDisk) id() (string, error) {
+func (a *mqlAzurermComputeDisk) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurermCompute) GetVms() ([]interface{}, error) {
+func (a *mqlAzurermCompute) GetVms() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -109,7 +109,7 @@ func (a *lumiAzurermCompute) GetVms() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzureVm, err := a.MotorRuntime.CreateResource("azurerm.compute.vm",
+		mqlAzureVm, err := a.MotorRuntime.CreateResource("azurerm.compute.vm",
 			"id", core.ToString(vm.ID),
 			"name", core.ToString(vm.Name),
 			"location", core.ToString(vm.Location),
@@ -120,17 +120,17 @@ func (a *lumiAzurermCompute) GetVms() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzureVm)
+		res = append(res, mqlAzureVm)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermComputeVm) id() (string, error) {
+func (a *mqlAzurermComputeVm) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurermComputeVm) GetExtensions() ([]interface{}, error) {
+func (a *mqlAzurermComputeVm) GetExtensions() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -188,7 +188,7 @@ func (a *lumiAzurermComputeVm) GetExtensions() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *lumiAzurermComputeVm) GetOsDisk() (interface{}, error) {
+func (a *mqlAzurermComputeVm) GetOsDisk() (interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -238,10 +238,10 @@ func (a *lumiAzurermComputeVm) GetOsDisk() (interface{}, error) {
 		return nil, err
 	}
 
-	return diskToLumi(a.MotorRuntime, disk)
+	return diskToMql(a.MotorRuntime, disk)
 }
 
-func (a *lumiAzurermComputeVm) GetDataDisks() ([]interface{}, error) {
+func (a *mqlAzurermComputeVm) GetDataDisks() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -297,12 +297,12 @@ func (a *lumiAzurermComputeVm) GetDataDisks() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiDisk, err := diskToLumi(a.MotorRuntime, disk)
+		mqlDisk, err := diskToMql(a.MotorRuntime, disk)
 		if err != nil {
 			return nil, err
 		}
 
-		res = append(res, lumiDisk)
+		res = append(res, mqlDisk)
 	}
 
 	return res, nil

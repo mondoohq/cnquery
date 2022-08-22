@@ -7,20 +7,20 @@ import (
 	accessanalyzer "github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (a *lumiAwsAccessAnalyzer) id() (string, error) {
+func (a *mqlAwsAccessAnalyzer) id() (string, error) {
 	return "aws.accessAnalyzer", nil
 }
 
-func (e *lumiAwsAccessanalyzerAnalyzer) id() (string, error) {
+func (e *mqlAwsAccessanalyzerAnalyzer) id() (string, error) {
 	return e.Arn()
 }
 
-func (a *lumiAwsAccessAnalyzer) GetAnalyzers() ([]interface{}, error) {
+func (a *mqlAwsAccessAnalyzer) GetAnalyzers() ([]interface{}, error) {
 	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -41,7 +41,7 @@ func (a *lumiAwsAccessAnalyzer) GetAnalyzers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *lumiAwsAccessAnalyzer) getAnalyzers(at *aws_transport.Provider) []*jobpool.Job {
+func (a *mqlAwsAccessAnalyzer) getAnalyzers(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -63,7 +63,7 @@ func (a *lumiAwsAccessAnalyzer) getAnalyzers(at *aws_transport.Provider) []*jobp
 					return nil, err
 				}
 				for _, analyzer := range analyzers.Analyzers {
-					lumiAnalyzer, err := a.MotorRuntime.CreateResource("aws.accessanalyzer.analyzer",
+					mqlAnalyzer, err := a.MotorRuntime.CreateResource("aws.accessanalyzer.analyzer",
 						"arn", core.ToString(analyzer.Arn),
 						"name", core.ToString(analyzer.Name),
 						"status", string(analyzer.Status),
@@ -73,7 +73,7 @@ func (a *lumiAwsAccessAnalyzer) getAnalyzers(at *aws_transport.Provider) []*jobp
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiAnalyzer)
+					res = append(res, mqlAnalyzer)
 				}
 				nextToken = analyzers.NextToken
 				if analyzers.NextToken != nil {

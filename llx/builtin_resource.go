@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/types"
 )
 
@@ -25,7 +25,7 @@ func _resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64,
 		return bind, 0, nil
 	}
 
-	resource := bind.Value.(lumi.ResourceType)
+	resource := bind.Value.(resources.ResourceType)
 
 	arg1 := chunk.Function.Args[1]
 	blockRef, ok := arg1.RefV2()
@@ -63,8 +63,8 @@ func _resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64,
 		}
 
 		// get all mandatory args
-		lumiResource := resource.LumiResource()
-		resourceInfo := lumiResource.MotorRuntime.Registry.Resources[lumiResource.Name]
+		mqlResource := resource.MqlResource()
+		resourceInfo := mqlResource.MotorRuntime.Registry.Resources[mqlResource.Name]
 
 		args := []interface{}{
 			"list", resList, "__id", blockId,
@@ -77,7 +77,7 @@ func _resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64,
 			}
 		}
 
-		resResource, err := e.ctx.runtime.CreateResourceWithID(lumiResource.Name, blockId, args...)
+		resResource, err := e.ctx.runtime.CreateResourceWithID(mqlResource.Name, blockId, args...)
 		var data *RawData
 		if err != nil {
 			data = &RawData{

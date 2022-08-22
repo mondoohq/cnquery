@@ -8,16 +8,20 @@ import (
 	"strconv"
 	"time"
 
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/types"
 	"google.golang.org/protobuf/proto"
 )
 
-type dataConverter func(interface{}, types.Type) (*Primitive, error)
-type primitiveConverter func(*Primitive) *RawData
+type (
+	dataConverter      func(interface{}, types.Type) (*Primitive, error)
+	primitiveConverter func(*Primitive) *RawData
+)
 
-var dataConverters map[types.Type]dataConverter
-var primitiveConverters map[types.Type]primitiveConverter
+var (
+	dataConverters      map[types.Type]dataConverter
+	primitiveConverters map[types.Type]primitiveConverter
+)
 
 func init() {
 	dataConverters = map[types.Type]dataConverter{
@@ -301,11 +305,11 @@ func map2result(value interface{}, typ types.Type) (*Primitive, error) {
 }
 
 func resource2result(value interface{}, typ types.Type) (*Primitive, error) {
-	m, ok := value.(lumi.ResourceType)
+	m, ok := value.(resources.ResourceType)
 	if !ok {
 		return nil, errInvalidConversion(value, typ)
 	}
-	r := m.LumiResource()
+	r := m.MqlResource()
 	return &Primitive{Type: string(typ), Value: []byte(r.Id)}, nil
 }
 
@@ -412,7 +416,6 @@ func (r *RawData) CastResult(t types.Type) (*Result, error) {
 		Data:  data,
 		Error: errorMsg,
 	}, nil
-
 }
 
 func (r *RawResult) CastResult(t types.Type) *Result {
@@ -563,9 +566,9 @@ func pmap2raw(p *Primitive) *RawData {
 func presource2raw(p *Primitive) *RawData {
 	id := string(p.Value)
 
-	return &RawData{Value: lumi.MockResource{
-		StaticResource: &lumi.Resource{
-			ResourceID: lumi.ResourceID{Name: types.Type(p.Type).ResourceName(), Id: id},
+	return &RawData{Value: resources.MockResource{
+		StaticResource: &resources.Resource{
+			ResourceID: resources.ResourceID{Name: types.Type(p.Type).ResourceName(), Id: id},
 		},
 	}, Type: types.Type(p.Type)}
 }

@@ -2,10 +2,10 @@ package services
 
 import (
 	"github.com/google/go-github/v45/github"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 )
 
-func (g *lumiGitGpgSignature) id() (string, error) {
+func (g *mqlGitGpgSignature) id() (string, error) {
 	sha, err := g.Sha()
 	if err != nil {
 		return "", err
@@ -13,7 +13,7 @@ func (g *lumiGitGpgSignature) id() (string, error) {
 	return "git.gpgSignature/" + sha, nil
 }
 
-func newLumiGitGpgSignature(runtime *lumi.Runtime, sha string, a *github.SignatureVerification) (interface{}, error) {
+func newMqlGitGpgSignature(runtime *resources.Runtime, sha string, a *github.SignatureVerification) (interface{}, error) {
 	return runtime.CreateResource("git.gpgSignature",
 		"sha", sha,
 		"reason", a.GetReason(),
@@ -23,7 +23,7 @@ func newLumiGitGpgSignature(runtime *lumi.Runtime, sha string, a *github.Signatu
 	)
 }
 
-func (g *lumiGitCommitAuthor) id() (string, error) {
+func (g *mqlGitCommitAuthor) id() (string, error) {
 	sha, err := g.Sha()
 	if err != nil {
 		return "", err
@@ -31,7 +31,7 @@ func (g *lumiGitCommitAuthor) id() (string, error) {
 	return "git.commitAuthor/" + sha, nil
 }
 
-func newLumiGitAuthor(runtime *lumi.Runtime, sha string, a *github.CommitAuthor) (interface{}, error) {
+func newMqlGitAuthor(runtime *resources.Runtime, sha string, a *github.CommitAuthor) (interface{}, error) {
 	date := a.GetDate()
 	return runtime.CreateResource("git.commitAuthor",
 		"sha", sha,
@@ -41,7 +41,7 @@ func newLumiGitAuthor(runtime *lumi.Runtime, sha string, a *github.CommitAuthor)
 	)
 }
 
-func (g *lumiGitCommit) id() (string, error) {
+func (g *mqlGitCommit) id() (string, error) {
 	sha, err := g.Sha()
 	if err != nil {
 		return "", err
@@ -49,19 +49,19 @@ func (g *lumiGitCommit) id() (string, error) {
 	return "git.commit/" + sha, nil
 }
 
-func newLumiGitCommit(runtime *lumi.Runtime, sha string, c *github.Commit) (interface{}, error) {
+func newMqlGitCommit(runtime *resources.Runtime, sha string, c *github.Commit) (interface{}, error) {
 	// we have to pass-in the sha because the sha is often not set c.GetSHA()
-	author, err := newLumiGitAuthor(runtime, sha, c.GetAuthor())
+	author, err := newMqlGitAuthor(runtime, sha, c.GetAuthor())
 	if err != nil {
 		return nil, err
 	}
 
-	committer, err := newLumiGitAuthor(runtime, sha, c.GetCommitter())
+	committer, err := newMqlGitAuthor(runtime, sha, c.GetCommitter())
 	if err != nil {
 		return nil, err
 	}
 
-	signatureVerification, err := newLumiGitGpgSignature(runtime, sha, c.GetVerification())
+	signatureVerification, err := newMqlGitGpgSignature(runtime, sha, c.GetVerification())
 	if err != nil {
 		return nil, err
 	}

@@ -7,7 +7,7 @@ import (
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (a *lumiAwsAccount) id() (string, error) {
+func (a *mqlAwsAccount) id() (string, error) {
 	id, err := a.Id()
 	if err != nil {
 		return "", err
@@ -15,7 +15,7 @@ func (a *lumiAwsAccount) id() (string, error) {
 	return "aws.account." + id, nil
 }
 
-func (a *lumiAwsAccount) GetId() (string, error) {
+func (a *mqlAwsAccount) GetId() (string, error) {
 	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return "", nil
@@ -29,7 +29,7 @@ func (a *lumiAwsAccount) GetId() (string, error) {
 	return account.ID, nil
 }
 
-func (a *lumiAwsAccount) GetAliases() ([]interface{}, error) {
+func (a *mqlAwsAccount) GetAliases() ([]interface{}, error) {
 	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil
@@ -49,7 +49,7 @@ func (a *lumiAwsAccount) GetAliases() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *lumiAwsAccount) GetOrganization() (interface{}, error) {
+func (a *mqlAwsAccount) GetOrganization() (interface{}, error) {
 	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil
@@ -69,6 +69,6 @@ func (a *lumiAwsAccount) GetOrganization() (interface{}, error) {
 	)
 }
 
-func (a *lumiAwsOrganization) id() (string, error) {
+func (a *mqlAwsOrganization) id() (string, error) {
 	return a.Arn()
 }

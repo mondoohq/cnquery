@@ -16,17 +16,17 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/aws/awsiam"
 	"go.mondoo.io/mondoo/resources/packs/aws/awspolicy"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (p *lumiAwsIam) id() (string, error) {
+func (p *mqlAwsIam) id() (string, error) {
 	return "aws.iam", nil
 }
 
-func (c *lumiAwsIam) GetServerCertificates() ([]interface{}, error) {
+func (c *mqlAwsIam) GetServerCertificates() ([]interface{}, error) {
 	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func (c *lumiAwsIam) GetServerCertificates() ([]interface{}, error) {
 	return res, nil
 }
 
-func (c *lumiAwsIam) GetCredentialReport() ([]interface{}, error) {
+func (c *mqlAwsIam) GetCredentialReport() ([]interface{}, error) {
 	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -148,7 +148,7 @@ func (c *lumiAwsIam) GetCredentialReport() ([]interface{}, error) {
 	return res, nil
 }
 
-func (c *lumiAwsIam) GetAccountPasswordPolicy() (map[string]interface{}, error) {
+func (c *mqlAwsIam) GetAccountPasswordPolicy() (map[string]interface{}, error) {
 	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -202,7 +202,7 @@ func ParsePasswordPolicy(passwordPolicy *types.PasswordPolicy) map[string]interf
 	return res
 }
 
-func (c *lumiAwsIam) GetAccountSummary() (map[string]interface{}, error) {
+func (c *mqlAwsIam) GetAccountSummary() (map[string]interface{}, error) {
 	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -216,7 +216,7 @@ func (c *lumiAwsIam) GetAccountSummary() (map[string]interface{}, error) {
 		return nil, errors.Wrap(err, "could not gather aws iam account-summary")
 	}
 
-	// convert result to lumi
+	// convert result to MQL
 	res := map[string]interface{}{}
 	for k := range resp.SummaryMap {
 		res[k] = int64(resp.SummaryMap[k])
@@ -225,7 +225,7 @@ func (c *lumiAwsIam) GetAccountSummary() (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (c *lumiAwsIam) GetUsers() ([]interface{}, error) {
+func (c *mqlAwsIam) GetUsers() ([]interface{}, error) {
 	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -244,12 +244,12 @@ func (c *lumiAwsIam) GetUsers() ([]interface{}, error) {
 		for i := range usersResp.Users {
 			usr := usersResp.Users[i]
 
-			lumiAwsIamUser, err := c.createIamUser(&usr)
+			mqlAwsIamUser, err := c.createIamUser(&usr)
 			if err != nil {
 				return nil, err
 			}
 
-			res = append(res, lumiAwsIamUser)
+			res = append(res, mqlAwsIamUser)
 		}
 		if usersResp.IsTruncated == false {
 			break
@@ -273,7 +273,7 @@ func iamTagsToMap(tags []types.Tag) map[string]interface{} {
 	return tagsMap
 }
 
-func (c *lumiAwsIam) createIamUser(usr *types.User) (lumi.ResourceType, error) {
+func (c *mqlAwsIam) createIamUser(usr *types.User) (resources.ResourceType, error) {
 	if usr == nil {
 		return nil, errors.New("no iam user provided")
 	}
@@ -288,7 +288,7 @@ func (c *lumiAwsIam) createIamUser(usr *types.User) (lumi.ResourceType, error) {
 	)
 }
 
-func (c *lumiAwsIam) GetVirtualMfaDevices() ([]interface{}, error) {
+func (c *mqlAwsIam) GetVirtualMfaDevices() ([]interface{}, error) {
 	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -307,37 +307,37 @@ func (c *lumiAwsIam) GetVirtualMfaDevices() ([]interface{}, error) {
 	for i := range devicesResp.VirtualMFADevices {
 		device := devicesResp.VirtualMFADevices[i]
 
-		var lumiAwsIamUser lumi.ResourceType
+		var mqlAwsIamUser resources.ResourceType
 		usr := device.User
 		if usr != nil {
-			lumiAwsIamUser, err = c.createIamUser(usr)
+			mqlAwsIamUser, err = c.createIamUser(usr)
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		lumiAwsIamMfaDevice, err := c.MotorRuntime.CreateResource("aws.iam.virtualmfadevice",
+		mqlAwsIamMfaDevice, err := c.MotorRuntime.CreateResource("aws.iam.virtualmfadevice",
 			"serialNumber", core.ToString(device.SerialNumber),
 			"enableDate", device.EnableDate,
-			"user", lumiAwsIamUser,
+			"user", mqlAwsIamUser,
 		)
 		if err != nil {
 			return nil, err
 		}
 
-		res = append(res, lumiAwsIamMfaDevice)
+		res = append(res, mqlAwsIamMfaDevice)
 	}
 
 	return res, nil
 }
 
-func (c *lumiAwsIam) lumiPolicies(policies []types.Policy) ([]interface{}, error) {
+func (c *mqlAwsIam) mqlPolicies(policies []types.Policy) ([]interface{}, error) {
 	res := []interface{}{}
 	for i := range policies {
 		policy := policies[i]
 		// NOTE: here we have all the information about the policy already
-		// therefore we pass the information in, so that lumi does not have to resolve it again
-		lumiAwsIamPolicy, err := c.MotorRuntime.CreateResource("aws.iam.policy",
+		// therefore we pass the information in, so that MQL does not have to resolve it again
+		mqlAwsIamPolicy, err := c.MotorRuntime.CreateResource("aws.iam.policy",
 			"arn", core.ToString(policy.Arn),
 			"id", core.ToString(policy.PolicyId),
 			"name", core.ToString(policy.PolicyName),
@@ -350,12 +350,12 @@ func (c *lumiAwsIam) lumiPolicies(policies []types.Policy) ([]interface{}, error
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAwsIamPolicy)
+		res = append(res, mqlAwsIamPolicy)
 	}
 	return res, nil
 }
 
-func (c *lumiAwsIam) GetAttachedPolicies() ([]interface{}, error) {
+func (c *mqlAwsIam) GetAttachedPolicies() ([]interface{}, error) {
 	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -376,7 +376,7 @@ func (c *lumiAwsIam) GetAttachedPolicies() ([]interface{}, error) {
 			return nil, errors.Wrap(err, "could not gather aws iam policies")
 		}
 
-		policies, err := c.lumiPolicies(policiesResp.Policies)
+		policies, err := c.mqlPolicies(policiesResp.Policies)
 		if err != nil {
 			return nil, err
 		}
@@ -391,7 +391,7 @@ func (c *lumiAwsIam) GetAttachedPolicies() ([]interface{}, error) {
 	return res, nil
 }
 
-func (c *lumiAwsIam) GetPolicies() ([]interface{}, error) {
+func (c *mqlAwsIam) GetPolicies() ([]interface{}, error) {
 	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -410,7 +410,7 @@ func (c *lumiAwsIam) GetPolicies() ([]interface{}, error) {
 			return nil, errors.Wrap(err, "could not gather aws iam policies")
 		}
 
-		policies, err := c.lumiPolicies(policiesResp.Policies)
+		policies, err := c.mqlPolicies(policiesResp.Policies)
 		if err != nil {
 			return nil, err
 		}
@@ -425,7 +425,7 @@ func (c *lumiAwsIam) GetPolicies() ([]interface{}, error) {
 	return res, nil
 }
 
-func (c *lumiAwsIam) GetRoles() ([]interface{}, error) {
+func (c *mqlAwsIam) GetRoles() ([]interface{}, error) {
 	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -447,7 +447,7 @@ func (c *lumiAwsIam) GetRoles() ([]interface{}, error) {
 		for i := range rolesResp.Roles {
 			role := rolesResp.Roles[i]
 
-			lumiAwsIamRole, err := c.MotorRuntime.CreateResource("aws.iam.role",
+			mqlAwsIamRole, err := c.MotorRuntime.CreateResource("aws.iam.role",
 				"arn", core.ToString(role.Arn),
 				"id", core.ToString(role.RoleId),
 				"name", core.ToString(role.RoleName),
@@ -459,7 +459,7 @@ func (c *lumiAwsIam) GetRoles() ([]interface{}, error) {
 				return nil, err
 			}
 
-			res = append(res, lumiAwsIamRole)
+			res = append(res, mqlAwsIamRole)
 		}
 
 		if rolesResp.IsTruncated == false {
@@ -471,7 +471,7 @@ func (c *lumiAwsIam) GetRoles() ([]interface{}, error) {
 	return res, nil
 }
 
-func (c *lumiAwsIam) GetGroups() ([]interface{}, error) {
+func (c *mqlAwsIam) GetGroups() ([]interface{}, error) {
 	at, err := awstransport(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -493,7 +493,7 @@ func (c *lumiAwsIam) GetGroups() ([]interface{}, error) {
 		for i := range groupsResp.Groups {
 			grp := groupsResp.Groups[i]
 
-			lumiAwsIamGroup, err := c.MotorRuntime.CreateResource("aws.iam.group",
+			mqlAwsIamGroup, err := c.MotorRuntime.CreateResource("aws.iam.group",
 				"arn", core.ToString(grp.Arn),
 				"name", core.ToString(grp.GroupName),
 			)
@@ -501,7 +501,7 @@ func (c *lumiAwsIam) GetGroups() ([]interface{}, error) {
 				return nil, err
 			}
 
-			res = append(res, lumiAwsIamGroup)
+			res = append(res, mqlAwsIamGroup)
 		}
 
 		if groupsResp.IsTruncated == false {
@@ -513,7 +513,7 @@ func (c *lumiAwsIam) GetGroups() ([]interface{}, error) {
 	return res, nil
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) id() (string, error) {
+func (p *mqlAwsIamUsercredentialreportentry) id() (string, error) {
 	props, err := p.Properties()
 	if err != nil {
 		return "", err
@@ -524,7 +524,7 @@ func (p *lumiAwsIamUsercredentialreportentry) id() (string, error) {
 	return "aws/iam/credentialreport/" + userid, nil
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetArn() (string, error) {
+func (p *mqlAwsIamUsercredentialreportentry) GetArn() (string, error) {
 	props, err := p.Properties()
 	if err != nil {
 		return "", err
@@ -542,7 +542,7 @@ func (p *lumiAwsIamUsercredentialreportentry) GetArn() (string, error) {
 	return val, nil
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) getBoolValue(key string) (bool, error) {
+func (p *mqlAwsIamUsercredentialreportentry) getBoolValue(key string) (bool, error) {
 	props, err := p.Properties()
 	if err != nil {
 		return false, err
@@ -566,7 +566,7 @@ func (p *lumiAwsIamUsercredentialreportentry) getBoolValue(key string) (bool, er
 	return strconv.ParseBool(val)
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) getStringValue(key string) (string, error) {
+func (p *mqlAwsIamUsercredentialreportentry) getStringValue(key string) (string, error) {
 	props, err := p.Properties()
 	if err != nil {
 		return "", err
@@ -584,7 +584,7 @@ func (p *lumiAwsIamUsercredentialreportentry) getStringValue(key string) (string
 	return val, nil
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) getTimeValue(key string) (*time.Time, error) {
+func (p *mqlAwsIamUsercredentialreportentry) getTimeValue(key string) (*time.Time, error) {
 	props, err := p.Properties()
 	if err != nil {
 		return nil, err
@@ -618,85 +618,85 @@ func (p *lumiAwsIamUsercredentialreportentry) getTimeValue(key string) (*time.Ti
 	return &parsed, nil
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey1Active() (bool, error) {
+func (p *mqlAwsIamUsercredentialreportentry) GetAccessKey1Active() (bool, error) {
 	return p.getBoolValue("access_key_1_active")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey1LastRotated() (*time.Time, error) {
+func (p *mqlAwsIamUsercredentialreportentry) GetAccessKey1LastRotated() (*time.Time, error) {
 	return p.getTimeValue("access_key_1_last_rotated")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey1LastUsedDate() (*time.Time, error) {
+func (p *mqlAwsIamUsercredentialreportentry) GetAccessKey1LastUsedDate() (*time.Time, error) {
 	return p.getTimeValue("access_key_1_last_used_date")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey1LastUsedRegion() (string, error) {
+func (p *mqlAwsIamUsercredentialreportentry) GetAccessKey1LastUsedRegion() (string, error) {
 	return p.getStringValue("access_key_1_last_used_region")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey1LastUsedService() (string, error) {
+func (p *mqlAwsIamUsercredentialreportentry) GetAccessKey1LastUsedService() (string, error) {
 	return p.getStringValue("access_key_1_last_used_service")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey2Active() (bool, error) {
+func (p *mqlAwsIamUsercredentialreportentry) GetAccessKey2Active() (bool, error) {
 	return p.getBoolValue("access_key_2_active")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey2LastRotated() (*time.Time, error) {
+func (p *mqlAwsIamUsercredentialreportentry) GetAccessKey2LastRotated() (*time.Time, error) {
 	return p.getTimeValue("access_key_2_last_rotated")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey2LastUsedDate() (*time.Time, error) {
+func (p *mqlAwsIamUsercredentialreportentry) GetAccessKey2LastUsedDate() (*time.Time, error) {
 	return p.getTimeValue("access_key_2_last_used_date")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey2LastUsedRegion() (string, error) {
+func (p *mqlAwsIamUsercredentialreportentry) GetAccessKey2LastUsedRegion() (string, error) {
 	return p.getStringValue("access_key_2_last_used_region")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetAccessKey2LastUsedService() (string, error) {
+func (p *mqlAwsIamUsercredentialreportentry) GetAccessKey2LastUsedService() (string, error) {
 	return p.getStringValue("access_key_2_last_used_service")
 }
 
 // TODO: update keys
 
-func (p *lumiAwsIamUsercredentialreportentry) GetCert1Active() (bool, error) {
+func (p *mqlAwsIamUsercredentialreportentry) GetCert1Active() (bool, error) {
 	return p.getBoolValue("cert_1_active")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetCert1LastRotated() (*time.Time, error) {
+func (p *mqlAwsIamUsercredentialreportentry) GetCert1LastRotated() (*time.Time, error) {
 	return p.getTimeValue("cert_1_last_rotated")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetCert2Active() (bool, error) {
+func (p *mqlAwsIamUsercredentialreportentry) GetCert2Active() (bool, error) {
 	return p.getBoolValue("cert_2_active")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetCert2LastRotated() (*time.Time, error) {
+func (p *mqlAwsIamUsercredentialreportentry) GetCert2LastRotated() (*time.Time, error) {
 	return p.getTimeValue("cert_2_last_rotated")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetMfaActive() (bool, error) {
+func (p *mqlAwsIamUsercredentialreportentry) GetMfaActive() (bool, error) {
 	return p.getBoolValue("mfa_active")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetPasswordEnabled() (bool, error) {
+func (p *mqlAwsIamUsercredentialreportentry) GetPasswordEnabled() (bool, error) {
 	return p.getBoolValue("password_enabled")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetPasswordLastChanged() (*time.Time, error) {
+func (p *mqlAwsIamUsercredentialreportentry) GetPasswordLastChanged() (*time.Time, error) {
 	return p.getTimeValue("password_last_changed")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetPasswordLastUsed() (*time.Time, error) {
+func (p *mqlAwsIamUsercredentialreportentry) GetPasswordLastUsed() (*time.Time, error) {
 	return p.getTimeValue("password_last_used")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetPasswordNextRotation() (*time.Time, error) {
+func (p *mqlAwsIamUsercredentialreportentry) GetPasswordNextRotation() (*time.Time, error) {
 	return p.getTimeValue("password_next_rotation")
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetUser() (interface{}, error) {
+func (p *mqlAwsIamUsercredentialreportentry) GetUser() (interface{}, error) {
 	props, err := p.Properties()
 	if err != nil {
 		return nil, err
@@ -712,25 +712,25 @@ func (p *lumiAwsIamUsercredentialreportentry) GetUser() (interface{}, error) {
 		return nil, nil
 	}
 
-	lumiUser, err := p.MotorRuntime.CreateResource("aws.iam.user",
+	mqlUser, err := p.MotorRuntime.CreateResource("aws.iam.user",
 		"name", props["user"],
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	return lumiUser, nil
+	return mqlUser, nil
 }
 
-func (p *lumiAwsIamUsercredentialreportentry) GetUserCreationTime() (*time.Time, error) {
+func (p *mqlAwsIamUsercredentialreportentry) GetUserCreationTime() (*time.Time, error) {
 	return p.getTimeValue("user_creation_time")
 }
 
-func (u *lumiAwsIamVirtualmfadevice) id() (string, error) {
+func (u *mqlAwsIamVirtualmfadevice) id() (string, error) {
 	return u.SerialNumber()
 }
 
-func (p *lumiAwsIamUser) init(args *lumi.Args) (*lumi.Args, AwsIamUser, error) {
+func (p *mqlAwsIamUser) init(args *resources.Args) (*resources.Args, AwsIamUser, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -782,11 +782,11 @@ func (p *lumiAwsIamUser) init(args *lumi.Args) (*lumi.Args, AwsIamUser, error) {
 	return args, nil, nil
 }
 
-func (u *lumiAwsIamUser) id() (string, error) {
+func (u *mqlAwsIamUser) id() (string, error) {
 	return u.Arn()
 }
 
-func (u *lumiAwsIamUser) GetAccessKeys() ([]interface{}, error) {
+func (u *mqlAwsIamUser) GetAccessKeys() ([]interface{}, error) {
 	at, err := awstransport(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -824,7 +824,7 @@ func (u *lumiAwsIamUser) GetAccessKeys() ([]interface{}, error) {
 	return res, nil
 }
 
-func (u *lumiAwsIamUser) GetPolicies() ([]interface{}, error) {
+func (u *mqlAwsIamUser) GetPolicies() ([]interface{}, error) {
 	at, err := awstransport(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -861,7 +861,7 @@ func (u *lumiAwsIamUser) GetPolicies() ([]interface{}, error) {
 	return res, nil
 }
 
-func (u *lumiAwsIamUser) GetAttachedPolicies() ([]interface{}, error) {
+func (u *mqlAwsIamUser) GetAttachedPolicies() ([]interface{}, error) {
 	at, err := awstransport(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -889,14 +889,14 @@ func (u *lumiAwsIamUser) GetAttachedPolicies() ([]interface{}, error) {
 		for i := range userAttachedPolicies.AttachedPolicies {
 			attachedPolicy := userAttachedPolicies.AttachedPolicies[i]
 
-			lumiAwsIamPolicy, err := u.MotorRuntime.CreateResource("aws.iam.policy",
+			mqlAwsIamPolicy, err := u.MotorRuntime.CreateResource("aws.iam.policy",
 				"arn", core.ToString(attachedPolicy.PolicyArn),
 			)
 			if err != nil {
 				return nil, err
 			}
 
-			res = append(res, lumiAwsIamPolicy)
+			res = append(res, mqlAwsIamPolicy)
 		}
 		if userAttachedPolicies.IsTruncated == false {
 			break
@@ -907,11 +907,11 @@ func (u *lumiAwsIamUser) GetAttachedPolicies() ([]interface{}, error) {
 	return res, nil
 }
 
-func (u *lumiAwsIamPolicy) id() (string, error) {
+func (u *mqlAwsIamPolicy) id() (string, error) {
 	return u.Arn()
 }
 
-func (u *lumiAwsIamPolicy) loadPolicy(arn string) (*types.Policy, error) {
+func (u *mqlAwsIamPolicy) loadPolicy(arn string) (*types.Policy, error) {
 	c, ok := u.Cache.Load("_policy")
 	if ok {
 		log.Info().Msg("use policy from cache")
@@ -933,11 +933,11 @@ func (u *lumiAwsIamPolicy) loadPolicy(arn string) (*types.Policy, error) {
 	}
 
 	// cache the data
-	u.Cache.Store("_policy", &lumi.CacheEntry{Data: policy.Policy})
+	u.Cache.Store("_policy", &resources.CacheEntry{Data: policy.Policy})
 	return policy.Policy, nil
 }
 
-func (u *lumiAwsIamPolicy) GetId() (string, error) {
+func (u *mqlAwsIamPolicy) GetId() (string, error) {
 	arn, err := u.Arn()
 	if err != nil {
 		return "", err
@@ -950,7 +950,7 @@ func (u *lumiAwsIamPolicy) GetId() (string, error) {
 	return core.ToString(policy.PolicyId), nil
 }
 
-func (u *lumiAwsIamPolicy) GetName() (string, error) {
+func (u *mqlAwsIamPolicy) GetName() (string, error) {
 	arn, err := u.Arn()
 	if err != nil {
 		return "", err
@@ -963,7 +963,7 @@ func (u *lumiAwsIamPolicy) GetName() (string, error) {
 	return core.ToString(policy.PolicyName), nil
 }
 
-func (u *lumiAwsIamPolicy) GetDescription() (string, error) {
+func (u *mqlAwsIamPolicy) GetDescription() (string, error) {
 	arn, err := u.Arn()
 	if err != nil {
 		return "", err
@@ -976,7 +976,7 @@ func (u *lumiAwsIamPolicy) GetDescription() (string, error) {
 	return core.ToString(policy.Description), nil
 }
 
-func (u *lumiAwsIamPolicy) GetIsAttachable() (bool, error) {
+func (u *mqlAwsIamPolicy) GetIsAttachable() (bool, error) {
 	arn, err := u.Arn()
 	if err != nil {
 		return false, err
@@ -989,7 +989,7 @@ func (u *lumiAwsIamPolicy) GetIsAttachable() (bool, error) {
 	return policy.IsAttachable, nil
 }
 
-func (u *lumiAwsIamPolicy) GetAttachmentCount() (int64, error) {
+func (u *mqlAwsIamPolicy) GetAttachmentCount() (int64, error) {
 	arn, err := u.Arn()
 	if err != nil {
 		return int64(0), err
@@ -1002,7 +1002,7 @@ func (u *lumiAwsIamPolicy) GetAttachmentCount() (int64, error) {
 	return core.ToInt64From32(policy.AttachmentCount), nil
 }
 
-func (u *lumiAwsIamPolicy) GetCreateDate() (*time.Time, error) {
+func (u *mqlAwsIamPolicy) GetCreateDate() (*time.Time, error) {
 	arn, err := u.Arn()
 	if err != nil {
 		return nil, err
@@ -1015,7 +1015,7 @@ func (u *lumiAwsIamPolicy) GetCreateDate() (*time.Time, error) {
 	return policy.CreateDate, nil
 }
 
-func (u *lumiAwsIamPolicy) GetUpdateDate() (*time.Time, error) {
+func (u *mqlAwsIamPolicy) GetUpdateDate() (*time.Time, error) {
 	arn, err := u.Arn()
 	if err != nil {
 		return nil, err
@@ -1028,7 +1028,7 @@ func (u *lumiAwsIamPolicy) GetUpdateDate() (*time.Time, error) {
 	return policy.UpdateDate, nil
 }
 
-func (u *lumiAwsIamPolicy) GetScope() (string, error) {
+func (u *mqlAwsIamPolicy) GetScope() (string, error) {
 	arnValue, err := u.Arn()
 	if err != nil {
 		return "", err
@@ -1052,7 +1052,7 @@ type attachedEntities struct {
 	PolicyUsers  []types.PolicyUser
 }
 
-func (u *lumiAwsIamPolicy) listAttachedEntities(arn string) (attachedEntities, error) {
+func (u *mqlAwsIamPolicy) listAttachedEntities(arn string) (attachedEntities, error) {
 	c, ok := u.Cache.Load("_attachedentities")
 	if ok {
 		log.Debug().Msg("use attached entities from cache")
@@ -1098,11 +1098,11 @@ func (u *lumiAwsIamPolicy) listAttachedEntities(arn string) (attachedEntities, e
 	}
 
 	// cache the data
-	u.Cache.Store("_attachedentities", &lumi.CacheEntry{Data: res})
+	u.Cache.Store("_attachedentities", &resources.CacheEntry{Data: res})
 	return res, nil
 }
 
-func (u *lumiAwsIamPolicy) GetAttachedUsers() ([]interface{}, error) {
+func (u *mqlAwsIamPolicy) GetAttachedUsers() ([]interface{}, error) {
 	arn, err := u.Arn()
 	if err != nil {
 		return nil, err
@@ -1116,19 +1116,19 @@ func (u *lumiAwsIamPolicy) GetAttachedUsers() ([]interface{}, error) {
 	for i := range entities.PolicyUsers {
 		usr := entities.PolicyUsers[i]
 
-		lumiUser, err := u.MotorRuntime.CreateResource("aws.iam.user",
+		mqlUser, err := u.MotorRuntime.CreateResource("aws.iam.user",
 			"name", core.ToString(usr.UserName),
 		)
 		if err != nil {
 			return nil, err
 		}
 
-		res = append(res, lumiUser)
+		res = append(res, mqlUser)
 	}
 	return res, nil
 }
 
-func (u *lumiAwsIamPolicy) GetAttachedRoles() ([]interface{}, error) {
+func (u *mqlAwsIamPolicy) GetAttachedRoles() ([]interface{}, error) {
 	arn, err := u.Arn()
 	if err != nil {
 		return nil, err
@@ -1142,19 +1142,19 @@ func (u *lumiAwsIamPolicy) GetAttachedRoles() ([]interface{}, error) {
 	for i := range entities.PolicyRoles {
 		role := entities.PolicyRoles[i]
 
-		lumiUser, err := u.MotorRuntime.CreateResource("aws.iam.role",
+		mqlUser, err := u.MotorRuntime.CreateResource("aws.iam.role",
 			"name", core.ToString(role.RoleName),
 		)
 		if err != nil {
 			return nil, err
 		}
 
-		res = append(res, lumiUser)
+		res = append(res, mqlUser)
 	}
 	return res, nil
 }
 
-func (u *lumiAwsIamPolicy) GetAttachedGroups() ([]interface{}, error) {
+func (u *mqlAwsIamPolicy) GetAttachedGroups() ([]interface{}, error) {
 	arn, err := u.Arn()
 	if err != nil {
 		return nil, err
@@ -1168,19 +1168,19 @@ func (u *lumiAwsIamPolicy) GetAttachedGroups() ([]interface{}, error) {
 	for i := range entities.PolicyGroups {
 		group := entities.PolicyGroups[i]
 
-		lumiUser, err := u.MotorRuntime.CreateResource("aws.iam.group",
+		mqlUser, err := u.MotorRuntime.CreateResource("aws.iam.group",
 			"name", core.ToString(group.GroupName),
 		)
 		if err != nil {
 			return nil, err
 		}
 
-		res = append(res, lumiUser)
+		res = append(res, mqlUser)
 	}
 	return res, nil
 }
 
-func (u *lumiAwsIamPolicy) GetDefaultVersion() (interface{}, error) {
+func (u *mqlAwsIamPolicy) GetDefaultVersion() (interface{}, error) {
 	at, err := awstransport(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -1202,7 +1202,7 @@ func (u *lumiAwsIamPolicy) GetDefaultVersion() (interface{}, error) {
 	for i := range policyVersions.Versions {
 		policyversion := policyVersions.Versions[i]
 		if policyversion.IsDefaultVersion == true {
-			lumiAwsIamPolicyVersion, err := u.MotorRuntime.CreateResource("aws.iam.policyversion",
+			mqlAwsIamPolicyVersion, err := u.MotorRuntime.CreateResource("aws.iam.policyversion",
 				"arn", arn,
 				"versionId", core.ToString(policyversion.VersionId),
 				"isDefaultVersion", policyversion.IsDefaultVersion,
@@ -1211,13 +1211,13 @@ func (u *lumiAwsIamPolicy) GetDefaultVersion() (interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			return lumiAwsIamPolicyVersion, nil
+			return mqlAwsIamPolicyVersion, nil
 		}
 	}
 	return nil, errors.New("unable to find default policy version")
 }
 
-func (u *lumiAwsIamPolicy) GetVersions() ([]interface{}, error) {
+func (u *mqlAwsIamPolicy) GetVersions() ([]interface{}, error) {
 	at, err := awstransport(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -1240,7 +1240,7 @@ func (u *lumiAwsIamPolicy) GetVersions() ([]interface{}, error) {
 	for i := range policyVersions.Versions {
 		policyversion := policyVersions.Versions[i]
 
-		lumiAwsIamPolicyVersion, err := u.MotorRuntime.CreateResource("aws.iam.policyversion",
+		mqlAwsIamPolicyVersion, err := u.MotorRuntime.CreateResource("aws.iam.policyversion",
 			"arn", arn,
 			"versionId", core.ToString(policyversion.VersionId),
 			"isDefaultVersion", policyversion.IsDefaultVersion,
@@ -1250,13 +1250,13 @@ func (u *lumiAwsIamPolicy) GetVersions() ([]interface{}, error) {
 			return nil, err
 		}
 
-		res = append(res, lumiAwsIamPolicyVersion)
+		res = append(res, mqlAwsIamPolicyVersion)
 	}
 
 	return res, nil
 }
 
-func (u *lumiAwsIamPolicyversion) id() (string, error) {
+func (u *mqlAwsIamPolicyversion) id() (string, error) {
 	arn, err := u.Arn()
 	if err != nil {
 		return "", err
@@ -1270,7 +1270,7 @@ func (u *lumiAwsIamPolicyversion) id() (string, error) {
 	return arn + "/" + versionid, nil
 }
 
-func (u *lumiAwsIamPolicyversion) GetDocument() (interface{}, error) {
+func (u *mqlAwsIamPolicyversion) GetDocument() (interface{}, error) {
 	at, err := awstransport(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return "", err
@@ -1316,7 +1316,7 @@ func (u *lumiAwsIamPolicyversion) GetDocument() (interface{}, error) {
 	return dict, nil
 }
 
-func (p *lumiAwsIamRole) init(args *lumi.Args) (*lumi.Args, AwsIamRole, error) {
+func (p *mqlAwsIamRole) init(args *resources.Args) (*resources.Args, AwsIamRole, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -1368,11 +1368,11 @@ func (p *lumiAwsIamRole) init(args *lumi.Args) (*lumi.Args, AwsIamRole, error) {
 	return args, nil, nil
 }
 
-func (u *lumiAwsIamRole) id() (string, error) {
+func (u *mqlAwsIamRole) id() (string, error) {
 	return u.Arn()
 }
 
-func (p *lumiAwsIamGroup) init(args *lumi.Args) (*lumi.Args, AwsIamGroup, error) {
+func (p *mqlAwsIamGroup) init(args *resources.Args) (*resources.Args, AwsIamGroup, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -1426,11 +1426,11 @@ func (p *lumiAwsIamGroup) init(args *lumi.Args) (*lumi.Args, AwsIamGroup, error)
 	return args, nil, nil
 }
 
-func (u *lumiAwsIamGroup) id() (string, error) {
+func (u *mqlAwsIamGroup) id() (string, error) {
 	return u.Arn()
 }
 
-func (u *lumiAwsIamUser) GetGroups() ([]interface{}, error) {
+func (u *mqlAwsIamUser) GetGroups() ([]interface{}, error) {
 	at, err := awstransport(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err

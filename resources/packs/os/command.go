@@ -6,15 +6,15 @@ import (
 
 	"go.mondoo.io/mondoo/motor/providers/os"
 
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/motor/providers"
 )
 
-func (c *lumiCommand) id() (string, error) {
+func (c *mqlCommand) id() (string, error) {
 	return c.Command()
 }
 
-func (c *lumiCommand) execute() (*os.Command, error) {
+func (c *mqlCommand) execute() (*os.Command, error) {
 	if !c.MotorRuntime.Motor.Provider.Capabilities().HasCapability(providers.Capability_RunCommand) {
 		return nil, errors.New("run command not supported on this transport")
 	}
@@ -44,11 +44,11 @@ func (c *lumiCommand) execute() (*os.Command, error) {
 	// resource would be nil and you couldnt do `command('notme').exitcode`
 	executedCmd, err = osProvider.RunCommand(cmd)
 
-	c.Cache.Store(cmd, &lumi.CacheEntry{Data: executedCmd, Error: err})
+	c.Cache.Store(cmd, &resources.CacheEntry{Data: executedCmd, Error: err})
 	return executedCmd, err
 }
 
-func (c *lumiCommand) GetStdout() (string, error) {
+func (c *mqlCommand) GetStdout() (string, error) {
 	executedCmd, err := c.execute()
 	if err != nil {
 		return "", err
@@ -62,7 +62,7 @@ func (c *lumiCommand) GetStdout() (string, error) {
 	return string(out), nil
 }
 
-func (c *lumiCommand) GetStderr() (string, error) {
+func (c *mqlCommand) GetStderr() (string, error) {
 	executedCmd, err := c.execute()
 	if err != nil {
 		return "", err
@@ -76,7 +76,7 @@ func (c *lumiCommand) GetStderr() (string, error) {
 	return string(outErr), nil
 }
 
-func (c *lumiCommand) GetExitcode() (int64, error) {
+func (c *mqlCommand) GetExitcode() (int64, error) {
 	executedCmd, err := c.execute()
 	if err != nil {
 		return 1, err

@@ -12,11 +12,11 @@ import (
 	"go.mondoo.io/mondoo/resources/packs/os/macos"
 )
 
-func (m *lumiMacos) id() (string, error) {
+func (m *mqlMacos) id() (string, error) {
 	return "macos", nil
 }
 
-func (m *lumiMacos) GetUserPreferences() (map[string]interface{}, error) {
+func (m *mqlMacos) GetUserPreferences() (map[string]interface{}, error) {
 	osProvider, err := osProvider(m.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func (m *lumiMacos) GetUserPreferences() (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (m *lumiMacos) GetUserHostPreferences() (map[string]interface{}, error) {
+func (m *mqlMacos) GetUserHostPreferences() (map[string]interface{}, error) {
 	osProvider, err := osProvider(m.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func (m *lumiMacos) GetUserHostPreferences() (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (m *lumiMacos) GetGlobalAccountPolicies() (map[string]interface{}, error) {
+func (m *mqlMacos) GetGlobalAccountPolicies() (map[string]interface{}, error) {
 	osProvider, err := osProvider(m.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ func (m *lumiMacos) GetGlobalAccountPolicies() (map[string]interface{}, error) {
 	return plist.Decode(bytes.NewReader(data))
 }
 
-func (m *lumiMacosTimemachine) id() (string, error) {
+func (m *mqlMacosTimemachine) id() (string, error) {
 	return "macos.timemachine", nil
 }
 
@@ -83,7 +83,7 @@ func (m *lumiMacosTimemachine) id() (string, error) {
 // sudo permissions cannot access the file. Instead we need to call
 // defaults read /Library/Preferences/com.apple.TimeMachine.plist which has FDA
 // see https://developer.apple.com/forums/thread/108348
-func (m *lumiMacosTimemachine) GetPreferences() (map[string]interface{}, error) {
+func (m *mqlMacosTimemachine) GetPreferences() (map[string]interface{}, error) {
 	osProvider, err := osProvider(m.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
@@ -112,11 +112,11 @@ func (m *lumiMacosTimemachine) GetPreferences() (map[string]interface{}, error) 
 	return plist.Decode(bytes.NewReader(buf.Bytes()))
 }
 
-func (m *lumiMacosSystemsetup) id() (string, error) {
+func (m *mqlMacosSystemsetup) id() (string, error) {
 	return "macos.systemsetup", nil
 }
 
-func (m *lumiMacosSystemsetup) runCmd(command string) (string, error) {
+func (m *mqlMacosSystemsetup) runCmd(command string) (string, error) {
 	osProvider, err := osProvider(m.MotorRuntime.Motor)
 	if err != nil {
 		return "", err
@@ -141,110 +141,110 @@ func (m *lumiMacosSystemsetup) runCmd(command string) (string, error) {
 	return string(data), nil
 }
 
-func (m *lumiMacosSystemsetup) GetDate() (string, error) {
+func (m *mqlMacosSystemsetup) GetDate() (string, error) {
 	data, err := m.runCmd("systemsetup -getdate")
 	return macos.SystemSetupCmdOutput{}.ParseDate(data), err
 }
 
-func (m *lumiMacosSystemsetup) GetTime() (string, error) {
+func (m *mqlMacosSystemsetup) GetTime() (string, error) {
 	data, err := m.runCmd("systemsetup -gettime")
 	return macos.SystemSetupCmdOutput{}.ParseTime(data), err
 }
 
-func (m *lumiMacosSystemsetup) GetTimeZone() (string, error) {
+func (m *mqlMacosSystemsetup) GetTimeZone() (string, error) {
 	data, err := m.runCmd("systemsetup -gettimezone")
 	return macos.SystemSetupCmdOutput{}.ParseTimeZone(data), err
 }
 
-func (m *lumiMacosSystemsetup) GetUsingNetworkTime() (string, error) {
+func (m *mqlMacosSystemsetup) GetUsingNetworkTime() (string, error) {
 	data, err := m.runCmd("systemsetup -getusingnetworktime")
 	return macos.SystemSetupCmdOutput{}.ParseUsingNetworktTime(data), err
 }
 
-func (m *lumiMacosSystemsetup) GetNetworkTimeServer() (string, error) {
+func (m *mqlMacosSystemsetup) GetNetworkTimeServer() (string, error) {
 	data, err := m.runCmd("systemsetup -getnetworktimeserver")
 	return macos.SystemSetupCmdOutput{}.ParseNetworkTimeServer(data), err
 }
 
-func (m *lumiMacosSystemsetup) GetSleep() ([]interface{}, error) {
+func (m *mqlMacosSystemsetup) GetSleep() ([]interface{}, error) {
 	data, err := m.runCmd("systemsetup -getsleep")
 	return core.StrSliceToInterface(macos.SystemSetupCmdOutput{}.ParseSleep(data)), err
 }
 
-func (m *lumiMacosSystemsetup) GetDisplaySleep() (string, error) {
+func (m *mqlMacosSystemsetup) GetDisplaySleep() (string, error) {
 	data, err := m.runCmd("systemsetup -getdisplaysleep")
 	return macos.SystemSetupCmdOutput{}.ParseDisplaySleep(data), err
 }
 
-func (m *lumiMacosSystemsetup) GetHarddiskSleep() (string, error) {
+func (m *mqlMacosSystemsetup) GetHarddiskSleep() (string, error) {
 	data, err := m.runCmd("systemsetup -getdisplaysleep")
 	return macos.SystemSetupCmdOutput{}.ParseHardDiskSleep(data), err
 }
 
-func (m *lumiMacosSystemsetup) GetWakeOnModem() (string, error) {
+func (m *mqlMacosSystemsetup) GetWakeOnModem() (string, error) {
 	data, err := m.runCmd("systemsetup -getwakeonmodem")
 	return macos.SystemSetupCmdOutput{}.ParseWakeOnModem(data), err
 }
 
-func (m *lumiMacosSystemsetup) GetWakeOnNetworkAccess() (string, error) {
+func (m *mqlMacosSystemsetup) GetWakeOnNetworkAccess() (string, error) {
 	data, err := m.runCmd("systemsetup -getwakeonnetworkaccess")
 	return macos.SystemSetupCmdOutput{}.ParseWakeOnNetwork(data), err
 }
 
-func (m *lumiMacosSystemsetup) GetRestartPowerFailure() (string, error) {
+func (m *mqlMacosSystemsetup) GetRestartPowerFailure() (string, error) {
 	data, err := m.runCmd("systemsetup -getrestartpowerfailure")
 	return macos.SystemSetupCmdOutput{}.ParseRestartPowerFailure(data), err
 }
 
-func (m *lumiMacosSystemsetup) GetRestartFreeze() (string, error) {
+func (m *mqlMacosSystemsetup) GetRestartFreeze() (string, error) {
 	data, err := m.runCmd("systemsetup -getrestartfreeze")
 	return macos.SystemSetupCmdOutput{}.ParseRestartFreeze(data), err
 }
 
-func (m *lumiMacosSystemsetup) GetAllowPowerButtonToSleepComputer() (string, error) {
+func (m *mqlMacosSystemsetup) GetAllowPowerButtonToSleepComputer() (string, error) {
 	data, err := m.runCmd("systemsetup -getallowpowerbuttontosleepcomputer")
 	return macos.SystemSetupCmdOutput{}.ParseAllowPowerButtonToSleep(data), err
 }
 
-func (m *lumiMacosSystemsetup) GetRemoteLogin() (string, error) {
+func (m *mqlMacosSystemsetup) GetRemoteLogin() (string, error) {
 	data, err := m.runCmd("systemsetup -getremotelogin")
 	return macos.SystemSetupCmdOutput{}.ParseRemoteLogin(data), err
 }
 
-func (m *lumiMacosSystemsetup) GetRemoteAppleEvents() (string, error) {
+func (m *mqlMacosSystemsetup) GetRemoteAppleEvents() (string, error) {
 	data, err := m.runCmd("systemsetup -getremoteappleevents")
 	return macos.SystemSetupCmdOutput{}.ParseRemoteAppleEvents(data), err
 }
 
-func (m *lumiMacosSystemsetup) GetComputerName() (string, error) {
+func (m *mqlMacosSystemsetup) GetComputerName() (string, error) {
 	data, err := m.runCmd("systemsetup -getcomputername")
 	return macos.SystemSetupCmdOutput{}.ParseComputerName(data), err
 }
 
-func (m *lumiMacosSystemsetup) GetLocalSubnetName() (string, error) {
+func (m *mqlMacosSystemsetup) GetLocalSubnetName() (string, error) {
 	data, err := m.runCmd("systemsetup -getlocalsubnetname")
 	return macos.SystemSetupCmdOutput{}.ParseLocalSubnetname(data), err
 }
 
-func (m *lumiMacosSystemsetup) GetStartupDisk() (string, error) {
+func (m *mqlMacosSystemsetup) GetStartupDisk() (string, error) {
 	data, err := m.runCmd("systemsetup -getstartupdisk")
 	return data, err
 }
 
-func (m *lumiMacosSystemsetup) GetWaitForStartupAfterPowerFailure() (string, error) {
+func (m *mqlMacosSystemsetup) GetWaitForStartupAfterPowerFailure() (string, error) {
 	data, err := m.runCmd("systemsetup -getwaitforstartupafterpowerfailure")
 	return macos.SystemSetupCmdOutput{}.ParseWaitForStartupAfterPowerFailure(data), err
 }
 
-func (m *lumiMacosSystemsetup) GetDisableKeyboardWhenEnclosureLockIsEngaged() (string, error) {
+func (m *mqlMacosSystemsetup) GetDisableKeyboardWhenEnclosureLockIsEngaged() (string, error) {
 	data, err := m.runCmd("systemsetup -getdisablekeyboardwhenenclosurelockisengaged")
 	return macos.SystemSetupCmdOutput{}.ParseDisableKeyboardWhenEnclosureLockIsEngaged(data), err
 }
 
-func (m *lumiMacosSecurity) id() (string, error) {
+func (m *mqlMacosSecurity) id() (string, error) {
 	return "macos.security", nil
 }
 
-func (m *lumiMacosSecurity) GetAuthorizationDB() (map[string]interface{}, error) {
+func (m *mqlMacosSecurity) GetAuthorizationDB() (map[string]interface{}, error) {
 	return nil, errors.New("the implementation is deprecated")
 }

@@ -8,15 +8,15 @@ import (
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (a *lumiAzurermPostgresql) id() (string, error) {
+func (a *mqlAzurermPostgresql) id() (string, error) {
 	return "azurerm.postgresql", nil
 }
 
-func (a *lumiAzurermPostgresqlDatabase) id() (string, error) {
+func (a *mqlAzurermPostgresqlDatabase) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurermPostgresql) GetServers() ([]interface{}, error) {
+func (a *mqlAzurermPostgresql) GetServers() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func (a *lumiAzurermPostgresql) GetServers() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzureDbServer, err := a.MotorRuntime.CreateResource("azurerm.postgresql.server",
+		mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azurerm.postgresql.server",
 			"id", core.ToString(dbServer.ID),
 			"name", core.ToString(dbServer.Name),
 			"location", core.ToString(dbServer.Location),
@@ -69,17 +69,17 @@ func (a *lumiAzurermPostgresql) GetServers() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzureDbServer)
+		res = append(res, mqlAzureDbServer)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermPostgresqlServer) id() (string, error) {
+func (a *mqlAzurermPostgresqlServer) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurermPostgresqlServer) GetConfiguration() ([]interface{}, error) {
+func (a *mqlAzurermPostgresqlServer) GetConfiguration() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -124,7 +124,7 @@ func (a *lumiAzurermPostgresqlServer) GetConfiguration() ([]interface{}, error) 
 	for i := range list {
 		entry := list[i]
 
-		lumiAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.configuration",
+		mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.configuration",
 			"id", core.ToString(entry.ID),
 			"name", core.ToString(entry.Name),
 			"type", core.ToString(entry.Type),
@@ -138,13 +138,13 @@ func (a *lumiAzurermPostgresqlServer) GetConfiguration() ([]interface{}, error) 
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzureConfiguration)
+		res = append(res, mqlAzureConfiguration)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermPostgresqlServer) GetDatabases() ([]interface{}, error) {
+func (a *mqlAzurermPostgresqlServer) GetDatabases() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -190,7 +190,7 @@ func (a *lumiAzurermPostgresqlServer) GetDatabases() ([]interface{}, error) {
 	for i := range list {
 		entry := list[i]
 
-		lumiAzureDatabase, err := a.MotorRuntime.CreateResource("azurerm.postgresql.database",
+		mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azurerm.postgresql.database",
 			"id", core.ToString(entry.ID),
 			"name", core.ToString(entry.Name),
 			"type", core.ToString(entry.Type),
@@ -200,13 +200,13 @@ func (a *lumiAzurermPostgresqlServer) GetDatabases() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzureDatabase)
+		res = append(res, mqlAzureDatabase)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermPostgresqlServer) GetFirewallRules() ([]interface{}, error) {
+func (a *mqlAzurermPostgresqlServer) GetFirewallRules() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -252,7 +252,7 @@ func (a *lumiAzurermPostgresqlServer) GetFirewallRules() ([]interface{}, error) 
 	for i := range list {
 		entry := list[i]
 
-		lumiAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.firewallrule",
+		mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.firewallrule",
 			"id", core.ToString(entry.ID),
 			"name", core.ToString(entry.Name),
 			"type", core.ToString(entry.Type),
@@ -262,7 +262,7 @@ func (a *lumiAzurermPostgresqlServer) GetFirewallRules() ([]interface{}, error) 
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzureConfiguration)
+		res = append(res, mqlAzureConfiguration)
 	}
 
 	return res, nil

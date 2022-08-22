@@ -12,11 +12,11 @@ import (
 
 var azureGraphAudience = azure.PublicCloud.ResourceIdentifiers.Graph
 
-func (a *lumiAzuread) id() (string, error) {
+func (a *mqlAzuread) id() (string, error) {
 	return "azuread", nil
 }
 
-func (a *lumiAzuread) GetUsers() ([]interface{}, error) {
+func (a *mqlAzuread) GetUsers() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func (a *lumiAzuread) GetUsers() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzureAdUser, err := a.MotorRuntime.CreateResource("azuread.user",
+		mqlAzureAdUser, err := a.MotorRuntime.CreateResource("azuread.user",
 			"id", core.ToString(usr.ObjectID),
 			"displayName", core.ToString(usr.DisplayName),
 			"givenName", core.ToString(usr.GivenName),
@@ -68,13 +68,13 @@ func (a *lumiAzuread) GetUsers() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzureAdUser)
+		res = append(res, mqlAzureAdUser)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzuread) GetGroups() ([]interface{}, error) {
+func (a *mqlAzuread) GetGroups() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -110,7 +110,7 @@ func (a *lumiAzuread) GetGroups() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzureAdGroup, err := a.MotorRuntime.CreateResource("azuread.group",
+		mqlAzureAdGroup, err := a.MotorRuntime.CreateResource("azuread.group",
 			"id", core.ToString(grp.ObjectID),
 			"displayName", core.ToString(grp.DisplayName),
 			"securityEnabled", core.ToBool(grp.SecurityEnabled),
@@ -125,13 +125,13 @@ func (a *lumiAzuread) GetGroups() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzureAdGroup)
+		res = append(res, mqlAzureAdGroup)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzuread) GetDomains() ([]interface{}, error) {
+func (a *mqlAzuread) GetDomains() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -173,7 +173,7 @@ func (a *lumiAzuread) GetDomains() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzureAdDomain, err := a.MotorRuntime.CreateResource("azuread.domain",
+		mqlAzureAdDomain, err := a.MotorRuntime.CreateResource("azuread.domain",
 			"name", core.ToString(domain.Name),
 			"isVerified", core.ToBool(domain.IsVerified),
 			"isDefault", core.ToBool(domain.IsDefault),
@@ -183,40 +183,40 @@ func (a *lumiAzuread) GetDomains() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzureAdDomain)
+		res = append(res, mqlAzureAdDomain)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzuread) GetApplications() ([]interface{}, error) {
+func (a *mqlAzuread) GetApplications() ([]interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (a *lumiAzuread) GetServicePrincipals() ([]interface{}, error) {
+func (a *mqlAzuread) GetServicePrincipals() ([]interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (a *lumiAzureadUser) id() (string, error) {
+func (a *mqlAzureadUser) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzureadGroup) id() (string, error) {
+func (a *mqlAzureadGroup) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzureadGroup) GetMembers() ([]interface{}, error) {
+func (a *mqlAzureadGroup) GetMembers() ([]interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (a *lumiAzureadDomain) id() (string, error) {
+func (a *mqlAzureadDomain) id() (string, error) {
 	return a.Name()
 }
 
-func (a *lumiAzureadApplication) id() (string, error) {
+func (a *mqlAzureadApplication) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzureadServiceprincipal) id() (string, error) {
+func (a *mqlAzureadServiceprincipal) id() (string, error) {
 	return a.Id()
 }

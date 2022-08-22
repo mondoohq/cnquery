@@ -15,23 +15,23 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/os/events"
 )
 
-func (s *lumiFile) id() (string, error) {
+func (s *mqlFile) id() (string, error) {
 	return s.Path()
 }
 
-func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
+func (s *mqlFile) GetContent(path string, exists bool) (string, error) {
 	if !exists {
 		log.Debug().Str("file", path).Msg("[file]> file does not exist")
 
 		// store the result in cache as we don't expect the file to improve
 		// unless it starts existing
-		resErr := fmt.Errorf("file %w: '%s' does not exist", lumi.NotFound, path)
-		s.Cache.Store("content", &lumi.CacheEntry{
+		resErr := fmt.Errorf("file %w: '%s' does not exist", resources.NotFound, path)
+		s.Cache.Store("content", &resources.CacheEntry{
 			Data:      "",
 			Valid:     true,
 			Error:     resErr,
@@ -44,7 +44,7 @@ func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
 
 	_, ok := s.Cache.Load("content")
 	if ok {
-		return "", lumi.NotReadyError{}
+		return "", resources.NotReadyError{}
 	}
 
 	log.Debug().Msg("[file]> listen to file " + path)
@@ -69,7 +69,7 @@ func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
 			}
 
 			log.Debug().Str("file", path).Msg("[file]> update content")
-			s.Cache.Store("content", &lumi.CacheEntry{
+			s.Cache.Store("content", &resources.CacheEntry{
 				Data:      content,
 				Valid:     true,
 				Timestamp: time.Now().Unix(),
@@ -79,7 +79,7 @@ func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
 
 			log.Debug().Str("file", path).Msg("[file]> file does not exist")
 			resErr := errors.New("file '" + path + "' does not exist: " + f.Error.Error())
-			s.Cache.Store("content", &lumi.CacheEntry{
+			s.Cache.Store("content", &resources.CacheEntry{
 				Data:      "",
 				Valid:     true,
 				Timestamp: time.Now().Unix(),
@@ -87,7 +87,7 @@ func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
 			})
 		}
 
-		err := s.MotorRuntime.Observers.Trigger(s.LumiResource().FieldUID("content"))
+		err := s.MotorRuntime.Observers.Trigger(s.MqlResource().FieldUID("content"))
 		if err != nil {
 			log.Error().Err(err).Msg("[file]> failed to trigger content")
 		}
@@ -103,10 +103,10 @@ func (s *lumiFile) GetContent(path string, exists bool) (string, error) {
 		watcher.Unsubscribe("file", path)
 	})
 
-	return "", lumi.NotReadyError{}
+	return "", resources.NotReadyError{}
 }
 
-func (s *lumiFile) GetEmpty() (bool, error) {
+func (s *mqlFile) GetEmpty() (bool, error) {
 	path, _ := s.Path()
 
 	osProvider, err := osProvider(s.MotorRuntime.Motor)
@@ -119,7 +119,7 @@ func (s *lumiFile) GetEmpty() (bool, error) {
 	return afs.IsEmpty(path)
 }
 
-func (s *lumiFile) GetExists() (bool, error) {
+func (s *mqlFile) GetExists() (bool, error) {
 	// TODO: we need to tell motor to watch this for us
 	path, _ := s.Path()
 
@@ -133,29 +133,29 @@ func (s *lumiFile) GetExists() (bool, error) {
 	return afs.Exists(path)
 }
 
-func (s *lumiFile) GetBasename(fullPath string) (string, error) {
+func (s *mqlFile) GetBasename(fullPath string) (string, error) {
 	return path.Base(fullPath), nil
 }
 
-func (s *lumiFile) GetDirname(fullPath string) (string, error) {
+func (s *mqlFile) GetDirname(fullPath string) (string, error) {
 	return path.Dir(fullPath), nil
 }
 
-func (s *lumiFile) GetPermissions() (FilePermissions, error) {
+func (s *mqlFile) GetPermissions() (FilePermissions, error) {
 	perm, size, err := s.stat()
 	// cache the other computed fields
-	s.Cache.Store("size", &lumi.CacheEntry{Data: size, Valid: true, Timestamp: time.Now().Unix()})
+	s.Cache.Store("size", &resources.CacheEntry{Data: size, Valid: true, Timestamp: time.Now().Unix()})
 	return perm, err
 }
 
-func (s *lumiFile) GetSize() (int64, error) {
+func (s *mqlFile) GetSize() (int64, error) {
 	perm, size, err := s.stat()
 	// cache the other computed fields
-	s.Cache.Store("permissions", &lumi.CacheEntry{Data: perm, Valid: true, Timestamp: time.Now().Unix()})
+	s.Cache.Store("permissions", &resources.CacheEntry{Data: perm, Valid: true, Timestamp: time.Now().Unix()})
 	return size, err
 }
 
-func (s *lumiFile) GetUser() (interface{}, error) {
+func (s *mqlFile) GetUser() (interface{}, error) {
 	path, err := s.Path()
 	if err != nil {
 		return nil, err
@@ -191,16 +191,16 @@ func (s *lumiFile) GetUser() (interface{}, error) {
 		return nil, nil
 	}
 
-	lumiUser, err := s.MotorRuntime.CreateResource("user",
+	mqlUser, err := s.MotorRuntime.CreateResource("user",
 		"uid", fi.Uid,
 	)
 	if err != nil {
 		return nil, err
 	}
-	return lumiUser.(User), nil
+	return mqlUser.(User), nil
 }
 
-func (s *lumiFile) GetGroup() (interface{}, error) {
+func (s *mqlFile) GetGroup() (interface{}, error) {
 	path, err := s.Path()
 	if err != nil {
 		return nil, err
@@ -231,17 +231,17 @@ func (s *lumiFile) GetGroup() (interface{}, error) {
 		return nil, nil
 	}
 
-	lumiUser, err := s.MotorRuntime.CreateResource("group",
+	mqlUser, err := s.MotorRuntime.CreateResource("group",
 		"id", strconv.FormatInt(fi.Gid, 10),
 		"gid", fi.Gid,
 	)
 	if err != nil {
 		return nil, err
 	}
-	return lumiUser.(Group), nil
+	return mqlUser.(Group), nil
 }
 
-func (s *lumiFile) stat() (FilePermissions, int64, error) {
+func (s *mqlFile) stat() (FilePermissions, int64, error) {
 	osProvider, err := osProvider(s.MotorRuntime.Motor)
 	if err != nil {
 		return nil, 0, err
@@ -288,7 +288,7 @@ func (s *lumiFile) stat() (FilePermissions, int64, error) {
 	return perm, size, nil
 }
 
-func (l *lumiFilePermissions) id() (string, error) {
+func (l *mqlFilePermissions) id() (string, error) {
 	res := []byte("----------")
 
 	if d, _ := l.IsDirectory(); d {

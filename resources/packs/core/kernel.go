@@ -5,13 +5,13 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core/kernel"
 )
 
-func (k *lumiKernel) init(args *lumi.Args) (*lumi.Args, Kernel, error) {
+func (k *mqlKernel) init(args *resources.Args) (*resources.Args, Kernel, error) {
 	// this resource is only supported on linux
 	platform, err := k.MotorRuntime.Motor.Platform()
 	if err != nil {
@@ -30,7 +30,7 @@ func (k *lumiKernel) init(args *lumi.Args) (*lumi.Args, Kernel, error) {
 	return args, nil, nil
 }
 
-func (k *lumiKernel) id() (string, error) {
+func (k *mqlKernel) id() (string, error) {
 	return "kernel", nil
 }
 
@@ -40,7 +40,7 @@ type KernelVersion struct {
 	Running bool   `json:"running"`
 }
 
-func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
+func (k *mqlKernel) GetInstalled() ([]interface{}, error) {
 	res := []KernelVersion{}
 
 	pf, err := k.MotorRuntime.Motor.Platform()
@@ -70,7 +70,7 @@ func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
 		}
 		packages := obj.(Packages)
 
-		lumiPkgs, err := packages.List()
+		mqlPkgs, err := packages.List()
 		if err != nil {
 			return nil, err
 		}
@@ -194,9 +194,9 @@ func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
 			}
 		}
 
-		for i := range lumiPkgs {
-			lumiPkg := lumiPkgs[i]
-			pkg := lumiPkg.(Package)
+		for i := range mqlPkgs {
+			mqlPkg := mqlPkgs[i]
+			pkg := mqlPkg.(Package)
 			filterKernel(pkg)
 		}
 	}
@@ -205,7 +205,7 @@ func (k *lumiKernel) GetInstalled() ([]interface{}, error) {
 	return JsonToDictSlice(res)
 }
 
-func (k *lumiKernel) GetInfo() (interface{}, error) {
+func (k *mqlKernel) GetInfo() (interface{}, error) {
 	// find suitable kernel module manager
 	mm, err := kernel.ResolveManager(k.MotorRuntime.Motor)
 	if mm == nil || err != nil {
@@ -221,7 +221,7 @@ func (k *lumiKernel) GetInfo() (interface{}, error) {
 	return JsonToDict(kernelInfo)
 }
 
-func (k *lumiKernel) GetParameters() (map[string]interface{}, error) {
+func (k *mqlKernel) GetParameters() (map[string]interface{}, error) {
 	// find suitable kernel module manager
 	mm, err := kernel.ResolveManager(k.MotorRuntime.Motor)
 	if mm == nil || err != nil {
@@ -244,7 +244,7 @@ func (k *lumiKernel) GetParameters() (map[string]interface{}, error) {
 }
 
 // TODO: something is going wrong with proc file fetching, get this back to work
-func (k *lumiKernel) getParametersFromProc() (map[string]interface{}, error) {
+func (k *mqlKernel) getParametersFromProc() (map[string]interface{}, error) {
 	osProvider, err := osProvider(k.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
@@ -281,7 +281,7 @@ func (k *lumiKernel) getParametersFromProc() (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (k *lumiKernel) GetModules() ([]interface{}, error) {
+func (k *mqlKernel) GetModules() ([]interface{}, error) {
 	// find suitable kernel module manager
 	mm, err := kernel.ResolveManager(k.MotorRuntime.Motor)
 	if mm == nil || err != nil {
@@ -293,14 +293,14 @@ func (k *lumiKernel) GetModules() ([]interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve kernel module list for platform")
 	}
-	log.Debug().Int("modules", len(kernelModules)).Msg("lumi[kernel.modules]> modules")
+	log.Debug().Int("modules", len(kernelModules)).Msg("[kernel.modules]> modules")
 
-	// create lumi kernel module entry resources for each entry
+	// create MQL kernel module entry resources for each entry
 	moduleEntries := make([]interface{}, len(kernelModules))
 	namedMap := make(map[string]KernelModule, len(kernelModules))
 	for i, kernelModule := range kernelModules {
 
-		lumiKernelModule, err := k.MotorRuntime.CreateResource("kernel.module",
+		mqlKernelModule, err := k.MotorRuntime.CreateResource("kernel.module",
 			"name", kernelModule.Name,
 			"size", kernelModule.Size,
 			"loaded", true,
@@ -309,17 +309,17 @@ func (k *lumiKernel) GetModules() ([]interface{}, error) {
 			return nil, err
 		}
 
-		moduleEntries[i] = lumiKernelModule.(KernelModule)
-		namedMap[kernelModule.Name] = lumiKernelModule.(KernelModule)
+		moduleEntries[i] = mqlKernelModule.(KernelModule)
+		namedMap[kernelModule.Name] = mqlKernelModule.(KernelModule)
 	}
 
-	k.Cache.Store("_modules", &lumi.CacheEntry{Data: namedMap})
+	k.Cache.Store("_modules", &resources.CacheEntry{Data: namedMap})
 
 	// return the kernel modules as new entries
 	return moduleEntries, nil
 }
 
-func (k *lumiKernelModule) init(args *lumi.Args) (*lumi.Args, KernelModule, error) {
+func (k *mqlKernelModule) init(args *resources.Args) (*resources.Args, KernelModule, error) {
 	// TODO: look at the args and determine if we init all or ask for listing of all modules
 	if len(*args) > 2 {
 		return args, nil, nil
@@ -342,7 +342,7 @@ func (k *lumiKernelModule) init(args *lumi.Args) (*lumi.Args, KernelModule, erro
 		return nil, nil, err
 	}
 
-	c, ok := kernel.LumiResource().Cache.Load("_modules")
+	c, ok := kernel.MqlResource().Cache.Load("_modules")
 	if !ok {
 		return nil, nil, errors.New("cannot get map of kernel modules")
 	}
@@ -356,7 +356,7 @@ func (k *lumiKernelModule) init(args *lumi.Args) (*lumi.Args, KernelModule, erro
 	item := cmap[name]
 	if item != nil {
 		// TODO: do this instead of duplicating it!
-		// (*args)["id"] = pkg.LumiResource().Id
+		// (*args)["id"] = pkg.MqlResource().Id
 		// Workaround: we fill in the fields we need to make the id() method
 		// generate the same ID
 		(*args)["size"], _ = item.Size()
@@ -366,6 +366,6 @@ func (k *lumiKernelModule) init(args *lumi.Args) (*lumi.Args, KernelModule, erro
 	return args, nil, nil
 }
 
-func (k *lumiKernelModule) id() (string, error) {
+func (k *mqlKernelModule) id() (string, error) {
 	return k.Name()
 }

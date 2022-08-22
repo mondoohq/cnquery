@@ -2,7 +2,7 @@ package core
 
 import "errors"
 
-func (r *lumiPrivatekey) id() (string, error) {
+func (r *mqlPrivatekey) id() (string, error) {
 	// TODO: use path or hash depending on initialization
 	path, err := r.Path()
 	if err != nil {
@@ -12,10 +12,10 @@ func (r *lumiPrivatekey) id() (string, error) {
 	return "privatekey:" + path, nil
 }
 
-func (r *lumiPrivatekey) GetPath() (string, error) {
+func (r *mqlPrivatekey) GetPath() (string, error) {
 	return "", errors.New("not implemented")
 }
 
-func (r *lumiPrivatekey) GetEncrypted() (bool, error) {
+func (r *mqlPrivatekey) GetEncrypted() (bool, error) {
 	return false, errors.New("not implemented")
 }

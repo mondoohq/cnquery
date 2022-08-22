@@ -6,18 +6,18 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/os/yum"
 	"go.mondoo.io/mondoo/stringx"
 )
 
 var supportedPlatforms = []string{"amazonlinux"}
 
-func (y *lumiYum) id() (string, error) {
+func (y *mqlYum) id() (string, error) {
 	return "yum", nil
 }
 
-func (y *lumiYum) GetRepos() ([]interface{}, error) {
+func (y *mqlYum) GetRepos() ([]interface{}, error) {
 	pf, err := y.MotorRuntime.Motor.Platform()
 	if err != nil {
 		return nil, err
@@ -46,14 +46,14 @@ func (y *lumiYum) GetRepos() ([]interface{}, error) {
 		return nil, err
 	}
 
-	lumiRepos := make([]interface{}, len(repos))
+	mqlRepos := make([]interface{}, len(repos))
 	for i, repo := range repos {
 		f, err := y.MotorRuntime.CreateResource("file", "path", repo.Filename)
 		if err != nil {
 			return nil, err
 		}
 
-		lumiRepo, err := y.MotorRuntime.CreateResource("yum.repo",
+		mqlRepo, err := y.MotorRuntime.CreateResource("yum.repo",
 			"id", repo.Id,
 			"name", repo.Name,
 			"status", repo.Status,
@@ -69,15 +69,15 @@ func (y *lumiYum) GetRepos() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		lumiRepos[i] = lumiRepo
+		mqlRepos[i] = mqlRepo
 	}
 
-	return lumiRepos, nil
+	return mqlRepos, nil
 }
 
 var rhel67release = regexp.MustCompile(`^[6|7].*$`)
 
-func (y *lumiYum) GetVars() (map[string]interface{}, error) {
+func (y *mqlYum) GetVars() (map[string]interface{}, error) {
 	pf, err := y.MotorRuntime.Motor.Platform()
 	if err != nil {
 		return nil, err
@@ -122,11 +122,11 @@ func (y *lumiYum) GetVars() (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (y *lumiYumRepo) id() (string, error) {
+func (y *mqlYumRepo) id() (string, error) {
 	return y.Id()
 }
 
-func (p *lumiYumRepo) init(args *lumi.Args) (*lumi.Args, YumRepo, error) {
+func (p *mqlYumRepo) init(args *resources.Args) (*resources.Args, YumRepo, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -164,7 +164,7 @@ func (p *lumiYumRepo) init(args *lumi.Args) (*lumi.Args, YumRepo, error) {
 	return nil, nil, errors.New("could not find yum repo " + name)
 }
 
-func (y *lumiYumRepo) GetEnabled() (bool, error) {
+func (y *mqlYumRepo) GetEnabled() (bool, error) {
 	status, err := y.Status()
 	if err != nil {
 		return false, err

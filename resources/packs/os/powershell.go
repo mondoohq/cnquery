@@ -7,18 +7,18 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/os"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/os/powershell"
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/transform"
 )
 
 // TODO: consider sharing more code with command resource
-func (c *lumiPowershell) id() (string, error) {
+func (c *mqlPowershell) id() (string, error) {
 	return c.Script()
 }
 
-func (c *lumiPowershell) execute() (*os.Command, error) {
+func (c *mqlPowershell) execute() (*os.Command, error) {
 	osProvider, err := osProvider(c.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func (c *lumiPowershell) execute() (*os.Command, error) {
 		return nil, err
 	}
 
-	c.Cache.Store(encodedCmd, &lumi.CacheEntry{Data: executedCmd})
+	c.Cache.Store(encodedCmd, &resources.CacheEntry{Data: executedCmd})
 	return executedCmd, nil
 }
 
@@ -62,7 +62,7 @@ func convertToUtf8Encoding(out []byte) (string, error) {
 	return string(utf8out), nil
 }
 
-func (c *lumiPowershell) GetStdout() (string, error) {
+func (c *mqlPowershell) GetStdout() (string, error) {
 	executedCmd, err := c.execute()
 	if err != nil {
 		return "", err
@@ -76,7 +76,7 @@ func (c *lumiPowershell) GetStdout() (string, error) {
 	return convertToUtf8Encoding(out)
 }
 
-func (c *lumiPowershell) GetStderr() (string, error) {
+func (c *mqlPowershell) GetStderr() (string, error) {
 	executedCmd, err := c.execute()
 	if err != nil {
 		return "", err
@@ -90,7 +90,7 @@ func (c *lumiPowershell) GetStderr() (string, error) {
 	return convertToUtf8Encoding(outErr)
 }
 
-func (c *lumiPowershell) GetExitcode() (int64, error) {
+func (c *mqlPowershell) GetExitcode() (int64, error) {
 	executedCmd, err := c.execute()
 	if err != nil {
 		return 1, err
