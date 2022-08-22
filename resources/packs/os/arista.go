@@ -11,7 +11,7 @@ import (
 	"go.mondoo.io/mondoo/resources/packs/os/arista"
 )
 
-func aristaClientInstance(t providers.Transport) (*arista.Eos, *arista_provider.Provider, error) {
+func aristaClientInstance(t providers.Instance) (*arista.Eos, *arista_provider.Provider, error) {
 	provider, ok := t.(*arista_provider.Provider)
 	if !ok {
 		return nil, nil, errors.New("arista.eos resource is not supported on this transport")

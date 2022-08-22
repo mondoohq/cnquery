@@ -19,7 +19,7 @@ import (
 	"google.golang.org/api/storage/v1"
 )
 
-func gcpProvider(t providers.Transport) (*gcp_provider.Provider, error) {
+func gcpProvider(t providers.Instance) (*gcp_provider.Provider, error) {
 	provider, ok := t.(*gcp_provider.Provider)
 	if !ok {
 		return nil, errors.New("aws resource is not supported on this transport")

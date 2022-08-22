@@ -12,7 +12,7 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/ssh/cat"
 )
 
-var _ providers.Transport = (*Provider)(nil)
+var _ providers.Instance = (*Provider)(nil)
 
 func New() (*Provider, error) {
 	return NewWithConfig(&providers.Config{})

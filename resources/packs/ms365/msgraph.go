@@ -15,7 +15,7 @@ import (
 	"go.mondoo.io/mondoo/resources/packs/ms365/msgraphconv"
 )
 
-func ms365Provider(t providers.Transport) (*ms365_provider.Provider, error) {
+func ms365Provider(t providers.Instance) (*ms365_provider.Provider, error) {
 	at, ok := t.(*ms365_provider.Provider)
 	if !ok {
 		return nil, errors.New("ms365 resource is not supported on this transport")

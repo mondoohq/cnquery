@@ -16,7 +16,7 @@ func init() {
 	Init(Registry)
 }
 
-func gitlabProvider(t providers.Transport) (*provider.Provider, error) {
+func gitlabProvider(t providers.Instance) (*provider.Provider, error) {
 	gt, ok := t.(*provider.Provider)
 	if !ok {
 		return nil, errors.New("gitlab resource is not supported on this transport")

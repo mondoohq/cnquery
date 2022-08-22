@@ -24,7 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func k8sProvider(t providers.Transport) (k8s_provider.KubernetesProvider, error) {
+func k8sProvider(t providers.Instance) (k8s_provider.KubernetesProvider, error) {
 	at, ok := t.(k8s_provider.KubernetesProvider)
 	if !ok {
 		return nil, errors.New("k8s resource is not supported on this transport")
@@ -1378,7 +1378,7 @@ func (k *mqlK8sRbacRolebinding) GetLabels() (interface{}, error) {
 	return k8sLabels(k.MqlResource())
 }
 
-func getPlatformIdentifierElements(transport providers.Transport) (string, string, error) {
+func getPlatformIdentifierElements(transport providers.Instance) (string, string, error) {
 	kt, err := k8sProvider(transport)
 	if err != nil {
 		return "", "", err

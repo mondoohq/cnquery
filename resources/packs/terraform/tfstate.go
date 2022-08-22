@@ -10,7 +10,7 @@ import (
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func tfstateProvider(t providers.Transport) (*tfstate.Provider, error) {
+func tfstateProvider(t providers.Instance) (*tfstate.Provider, error) {
 	gt, ok := t.(*tfstate.Provider)
 	if !ok {
 		return nil, errors.New("terraform resource is not supported on this transport")

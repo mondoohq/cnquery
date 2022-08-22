@@ -41,7 +41,7 @@ func ToPlatformIdDetectors(idDetectors []string) []PlatformIdDetector {
 	return idDetectorsCopy
 }
 
-type Transport interface {
+type Instance interface {
 	PlatformIdDetectors() []PlatformIdDetector
 
 	// returns if this is a static asset that does not allow run command

@@ -21,7 +21,7 @@ import (
 const OPTION_FILE = "file"
 
 var (
-	_ providers.Transport          = (*Provider)(nil)
+	_ providers.Instance           = (*Provider)(nil)
 	_ providers.PlatformIdentifier = (*Provider)(nil)
 )
 

@@ -25,14 +25,14 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/vsphere"
 )
 
-func New(p providers.Transport) *Detector {
+func New(p providers.Instance) *Detector {
 	return &Detector{
 		provider: p,
 	}
 }
 
 type Detector struct {
-	provider providers.Transport
+	provider providers.Instance
 	cache    *platform.Platform
 }
 

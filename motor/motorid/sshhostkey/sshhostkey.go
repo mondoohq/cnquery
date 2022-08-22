@@ -11,7 +11,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func Detect(t providers.Transport, p *platform.Platform) ([]string, error) {
+func Detect(t providers.Instance, p *platform.Platform) ([]string, error) {
 	// if we are using an ssh connection we can read the hostkey from the connection
 	sshTransport, ok := t.(*ssh_transport.Provider)
 	if ok {

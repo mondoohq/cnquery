@@ -8,7 +8,7 @@ import (
 	"go.mondoo.io/mondoo/resources/packs/core/ipmi"
 )
 
-func getIpmiInstance(t providers.Transport) (*ipmi.IpmiClient, error) {
+func getIpmiInstance(t providers.Instance) (*ipmi.IpmiClient, error) {
 	provider, ok := t.(*ipmi_provider.Provider)
 	if !ok {
 		return nil, errors.New("ipmi resource is not supported on this transport")

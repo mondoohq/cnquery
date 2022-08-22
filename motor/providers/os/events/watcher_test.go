@@ -15,7 +15,7 @@ import (
 )
 
 type WatcherTester struct {
-	mock    providers.Transport
+	mock    providers.Instance
 	watcher *Watcher
 }
 

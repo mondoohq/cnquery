@@ -36,7 +36,7 @@ import (
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
-var _ providers.Transport = (*Provider)(nil)
+var _ providers.Instance = (*Provider)(nil)
 
 func New(pCfg *providers.Config) (*Provider, error) {
 	if pCfg.Backend != providers.ProviderType_VSPHERE_VM {

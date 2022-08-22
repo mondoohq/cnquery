@@ -21,7 +21,7 @@ func init() {
 	Init(Registry)
 }
 
-func getClientInstance(t providers.Transport) (*resourceclient.Client, error) {
+func getClientInstance(t providers.Instance) (*resourceclient.Client, error) {
 	vt, ok := t.(*provider.Provider)
 	if !ok {
 		return nil, errors.New("vsphere resource is not supported on this transport")
@@ -31,7 +31,7 @@ func getClientInstance(t providers.Transport) (*resourceclient.Client, error) {
 	return cl, nil
 }
 
-func esxiClient(t providers.Transport, path string) (*resourceclient.Esxi, error) {
+func esxiClient(t providers.Instance, path string) (*resourceclient.Esxi, error) {
 	vClient, err := getClientInstance(t)
 	if err != nil {
 		return nil, err

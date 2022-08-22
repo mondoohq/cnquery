@@ -13,7 +13,7 @@ import (
 )
 
 type OperatingSystemProvider interface {
-	providers.Transport
+	providers.Instance
 	// RunCommand executes a command on the target system
 	RunCommand(command string) (*Command, error)
 	// returns file permissions and ownership
