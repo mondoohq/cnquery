@@ -1,16 +1,23 @@
-package services
+package gitlab
 
 import (
 	"errors"
 	"strconv"
 
-	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/gitlab"
+	provider "go.mondoo.io/mondoo/motor/providers/gitlab"
+	"go.mondoo.io/mondoo/resources"
+	"go.mondoo.io/mondoo/resources/packs/gitlab/info"
 )
 
-func gitlabtransport(t providers.Transport) (*gitlab.Provider, error) {
-	gt, ok := t.(*gitlab.Provider)
+var Registry = info.Registry
+
+func init() {
+	Init(Registry)
+}
+
+func gitlabProvider(t providers.Transport) (*provider.Provider, error) {
+	gt, ok := t.(*provider.Provider)
 	if !ok {
 		return nil, errors.New("gitlab resource is not supported on this transport")
 	}
@@ -29,7 +36,7 @@ func (g *mqlGitlabGroup) init(args *resources.Args) (*resources.Args, GitlabGrou
 		return args, nil, nil
 	}
 
-	gt, err := gitlabtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := gitlabProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -52,7 +59,7 @@ func (g *mqlGitlabGroup) init(args *resources.Args) (*resources.Args, GitlabGrou
 // GetProjects list all projects that belong to a group
 // see https://docs.gitlab.com/ee/api/projects.html
 func (g *mqlGitlabGroup) GetProjects() ([]interface{}, error) {
-	gt, err := gitlabtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := gitlabProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

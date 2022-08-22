@@ -1,4 +1,4 @@
-package services
+package ms365
 
 import (
 	"strings"
@@ -11,8 +11,8 @@ import (
 	ms365_transport "go.mondoo.io/mondoo/motor/providers/ms365"
 	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core"
-	"go.mondoo.io/mondoo/resources/packs/services/msgraphclient"
-	"go.mondoo.io/mondoo/resources/packs/services/msgraphconv"
+	"go.mondoo.io/mondoo/resources/packs/ms365/msgraphclient"
+	"go.mondoo.io/mondoo/resources/packs/ms365/msgraphconv"
 )
 
 func ms365transport(t providers.Transport) (*ms365_transport.Provider, error) {

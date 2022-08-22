@@ -5,8 +5,8 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/ms365/ms365report"
 	"go.mondoo.io/mondoo/motor/vault"
-	ms356_resources "go.mondoo.io/mondoo/resources/packs/services/ms365"
 )
 
 const (
@@ -81,7 +81,7 @@ type Provider struct {
 	opts                        map[string]string
 	rolesMap                    map[string]struct{}
 	powershellDataReportFile    string
-	ms365PowershellReport       *ms356_resources.Microsoft365Report
+	ms365PowershellReport       *ms365report.Microsoft365Report
 	ms365PowershellReportLoader sync.Mutex
 }
 

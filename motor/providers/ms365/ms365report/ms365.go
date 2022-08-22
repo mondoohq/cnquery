@@ -1,4 +1,4 @@
-package ms365
+package ms365report
 
 type ExchangeOnlineReport struct {
 	MalwareFilterPolicy            []interface{} `json:"MalwareFilterPolicy"`

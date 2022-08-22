@@ -1,7 +1,7 @@
 //go:build debugtest
 // +build debugtest
 
-package services_test
+package github_test
 
 import (
 	"testing"

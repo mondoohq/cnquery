@@ -1,0 +1,31 @@
+import "../core/core.lr"
+
+option go_package = "go.mondoo.io/mondoo/resources/packs/gitlab"
+
+gitlab.group {
+  id int
+  // The name of the group
+  name string
+  // The path of the group.
+  path string
+  // The group’s description
+  description string
+  // The group’s visibility. Can be private, internal, or public.
+  visibility string
+  // Require all users in this group to setup Two-factor authentication.
+  requireTwoFactorAuthentication bool
+  // List all projects that belong to a group
+  projects() []gitlab.project
+}
+
+gitlab.project {
+  id int
+  // The name of the project.
+  name string
+  // Repository name for project.
+  path string
+  // The project’s description
+  description string
+  // The project's visibility level. Can be private, internal, or public.
+  visibility string
+}

@@ -1,4 +1,4 @@
-package services
+package github
 
 import (
 	"context"
@@ -6,19 +6,25 @@ import (
 	"strings"
 	"time"
 
-	"sigs.k8s.io/yaml"
-
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v45/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/providers"
-	gh_transport "go.mondoo.io/mondoo/motor/providers/github"
+	provider "go.mondoo.io/mondoo/motor/providers/github"
 	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core"
+	"go.mondoo.io/mondoo/resources/packs/github/info"
+	"sigs.k8s.io/yaml"
 )
 
-func githubtransport(t providers.Transport) (*gh_transport.Provider, error) {
-	gt, ok := t.(*gh_transport.Provider)
+var Registry = info.Registry
+
+func init() {
+	Init(Registry)
+}
+
+func githubProvider(t providers.Transport) (*provider.Provider, error) {
+	gt, ok := t.(*provider.Provider)
 	if !ok {
 		return nil, errors.New("github resource is not supported on this transport")
 	}
@@ -37,7 +43,7 @@ func (g *mqlGithub) id() (string, error) {
 }
 
 func (g *mqlGithub) GetUser() (interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +57,7 @@ func (g *mqlGithub) GetUser() (interface{}, error) {
 }
 
 func (g *mqlGithub) GetRepositories() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +133,7 @@ func (g *mqlGithubOrganization) init(args *resources.Args) (*resources.Args, Git
 		return args, nil, nil
 	}
 
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -175,7 +181,7 @@ func (g *mqlGithubOrganization) init(args *resources.Args) (*resources.Args, Git
 }
 
 func (g *mqlGithubOrganization) GetMembers() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +213,7 @@ func (g *mqlGithubOrganization) GetMembers() ([]interface{}, error) {
 }
 
 func (g *mqlGithubOrganization) GetOwners() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +260,7 @@ func (g *mqlGithubOrganization) GetOwners() ([]interface{}, error) {
 }
 
 func (g *mqlGithubOrganization) GetTeams() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -290,7 +296,7 @@ func (g *mqlGithubOrganization) GetTeams() ([]interface{}, error) {
 }
 
 func (g *mqlGithubOrganization) GetRepositories() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -354,7 +360,7 @@ func (g *mqlGithubOrganization) GetRepositories() ([]interface{}, error) {
 }
 
 func (g *mqlGithubOrganization) GetWebhooks() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -406,7 +412,7 @@ func (g *mqlGithubPackage) id() (string, error) {
 }
 
 func (g *mqlGithubOrganization) GetPackages() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -469,7 +475,7 @@ func (g *mqlGithubOrganization) GetPackages() ([]interface{}, error) {
 }
 
 func (g *mqlGithubPackage) GetRepository() (interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -499,7 +505,7 @@ func (g *mqlGithubPackage) GetRepository() (interface{}, error) {
 }
 
 func (g *mqlGithubOrganization) GetInstallations() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -589,7 +595,7 @@ func newMqlGithubRepository(runtime *resources.Runtime, repo *github.Repository)
 }
 
 func (g *mqlGithubTeam) GetRepositories() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -629,7 +635,7 @@ func (g *mqlGithubTeam) GetRepositories() ([]interface{}, error) {
 }
 
 func (g *mqlGithubTeam) GetMembers() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -689,7 +695,7 @@ func (g *mqlGithubUser) init(args *resources.Args) (*resources.Args, GithubUser,
 	}
 	userLogin := (*args)["login"].(string)
 
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -780,7 +786,7 @@ func (g *mqlGithubRepository) init(args *resources.Args) (*resources.Args, Githu
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -844,7 +850,7 @@ func (g *mqlGithubRepository) init(args *resources.Args) (*resources.Args, Githu
 }
 
 func (g *mqlGithubRepository) GetOpenMergeRequests() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -931,7 +937,7 @@ func (g *mqlGithubMergeRequest) id() (string, error) {
 }
 
 func (g *mqlGithubRepository) GetBranches() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1014,7 +1020,7 @@ type githubRequiredPullRequestReviews struct {
 }
 
 func (g *mqlGithubBranch) GetProtectionRules() (interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1132,7 +1138,7 @@ func newMqlGithubCommit(runtime *resources.Runtime, rc *github.RepositoryCommit,
 
 	// if the github author is nil, we have to load the commit again
 	if rc.Author == nil {
-		gt, err := githubtransport(runtime.Motor.Provider)
+		gt, err := githubProvider(runtime.Motor.Provider)
 		if err != nil {
 			return nil, err
 		}
@@ -1181,7 +1187,7 @@ func newMqlGithubCommit(runtime *resources.Runtime, rc *github.RepositoryCommit,
 }
 
 func (g *mqlGithubRepository) GetCommits() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1222,7 +1228,7 @@ func (g *mqlGithubRepository) GetCommits() ([]interface{}, error) {
 }
 
 func (g *mqlGithubMergeRequest) GetReviews() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1273,7 +1279,7 @@ func (g *mqlGithubMergeRequest) GetReviews() ([]interface{}, error) {
 }
 
 func (g *mqlGithubMergeRequest) GetCommits() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1311,7 +1317,7 @@ func (g *mqlGithubMergeRequest) GetCommits() ([]interface{}, error) {
 }
 
 func (g *mqlGithubRepository) GetContributors() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1350,7 +1356,7 @@ func (g *mqlGithubRepository) GetContributors() ([]interface{}, error) {
 }
 
 func (g *mqlGithubRepository) GetCollaborators() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1404,7 +1410,7 @@ func (g *mqlGithubRepository) GetCollaborators() ([]interface{}, error) {
 }
 
 func (g *mqlGithubRepository) GetReleases() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1455,7 +1461,7 @@ func (g *mqlGithubWebhook) id() (string, error) {
 }
 
 func (g *mqlGithubRepository) GetWebhooks() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1536,7 +1542,7 @@ func (g *mqlGithubWorkflow) GetConfiguration() (interface{}, error) {
 }
 
 func (g *mqlGithubWorkflow) GetFile() (interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1570,7 +1576,7 @@ func (g *mqlGithubWorkflow) GetFile() (interface{}, error) {
 }
 
 func (g *mqlGithubRepository) GetWorkflows() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1646,7 +1652,7 @@ func newMqlGithubFile(runtime *resources.Runtime, ownerName string, repoName str
 }
 
 func (g *mqlGithubRepository) GetFiles() ([]interface{}, error) {
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1734,7 +1740,7 @@ func (g *mqlGithubFile) GetFiles() ([]interface{}, error) {
 	if fileType != "dir" {
 		return nil, nil
 	}
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -1793,7 +1799,7 @@ func (g *mqlGithubFile) GetContent() (string, error) {
 	if fileType == "dir" {
 		return "", nil
 	}
-	gt, err := githubtransport(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return "", err
 	}
