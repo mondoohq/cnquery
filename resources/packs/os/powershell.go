@@ -7,8 +7,8 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/os"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/motor/providers/os/powershell"
 	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/os/powershell"
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/transform"
 )

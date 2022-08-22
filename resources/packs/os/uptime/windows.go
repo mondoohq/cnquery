@@ -6,8 +6,8 @@ import (
 	"io/ioutil"
 	"time"
 
-	"go.mondoo.io/mondoo/resources/packs/os/powershell"
 	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.io/mondoo/motor/providers/os/powershell"
 )
 
 type WindowsUptime struct {

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/resources/packs/os/powershell"
+	"go.mondoo.io/mondoo/motor/providers/os/powershell"
 )
 
 func TestPowershellEncoding(t *testing.T) {

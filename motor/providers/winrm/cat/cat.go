@@ -10,7 +10,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/spf13/afero"
 	os_provider "go.mondoo.io/mondoo/motor/providers/os"
-	"go.mondoo.io/mondoo/resources/packs/os/powershell"
+	"go.mondoo.io/mondoo/motor/providers/os/powershell"
 )
 
 type CommandRunner interface {

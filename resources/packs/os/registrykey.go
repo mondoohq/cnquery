@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/motor/providers/os/powershell"
 	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/os/powershell"
 	"go.mondoo.io/mondoo/resources/packs/os/windows"
 )
 
