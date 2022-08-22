@@ -1,0 +1,673 @@
+import "../os/os.lr"
+
+option go_package = "go.mondoo.io/mondoo/resources/packs/k8s"
+
+// Kubernetes cluster
+k8s {
+  // Available Resource Types
+  apiResources() []k8s.apiresource
+  // Cluster Nodes
+  nodes() []k8s.node
+  // Cluster Namespaces
+  namespaces() []k8s.namespace
+  // Cluster Pods
+  pods() []k8s.pod
+  // Cluster Deployments
+  deployments() []k8s.deployment
+  // Cluster DaemonSets
+  daemonsets() []k8s.daemonset
+  // Cluster StatefulSets
+  statefulsets() []k8s.statefulset
+  // Cluster ReplicaSets
+  replicasets() []k8s.replicaset
+  // Cluster Jobs
+  jobs() []k8s.job
+  // Cluster CronJobs
+  cronjobs() []k8s.cronjob
+  // Cluster Secrets
+  secrets() []k8s.secret
+  // Cluster Version
+  serverVersion() dict
+  // Kubernetes PodSecurityPolicy's
+  podSecurityPolicies() []k8s.podsecuritypolicy
+  // Config Maps
+  configmaps() []k8s.configmap
+  // Kubernetes Services
+  services() []k8s.service
+  // Kubernetes Network Polices
+  networkPolicies() []k8s.networkpolicy
+  // Kubernetes Service Accounts
+  serviceaccounts() []k8s.serviceaccount
+  // Kubernetes RBAC Cluster Roles
+  clusterroles() []k8s.rbac.clusterrole
+  // Kubernetes RBAC Roles
+  roles() []k8s.rbac.role
+  // Kubernetes RBAC Cluster Role Bindings
+  clusterrolebindings() []k8s.rbac.clusterrolebinding
+  // Kubernetes RBAC Role Bindings
+  rolebindings() []k8s.rbac.rolebinding
+  // Kubernetes custom resources
+  customresources() []k8s.customresource
+}
+
+// Kubernetes API Resources
+k8s.apiresource {
+  // plural name of the resource
+  name string
+  // singular name of the resource
+  singularName string
+  // indicates if a resource is namespaced or not
+  namespaced bool
+  // preferred group of the resource
+  group string
+  // preferred version of the resource
+  version string
+  // Kubernetes Object Type
+  kind string
+  // List of suggested short names of the resource
+  shortNames []string
+  // List of the grouped resources
+  categories []string
+}
+
+// Kubernetes node
+k8s.node {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // plural name of the resource
+  name string
+  // Kubernetes Object Type
+  kind string
+}
+
+// Kubernetes Namespace
+k8s.namespace {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+}
+
+// Kubernetes Pod
+k8s.pod {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Version
+  apiVersion string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // PodSpec is a description of a pod
+  podSpec dict
+  // Init containers
+  initContainers() []k8s.initContainer
+  // Contained Containers
+  containers() []k8s.container
+  // Node the pod runs on
+  node() k8s.node
+}
+
+// Kubernetes workload container
+private k8s.container {
+  uid string
+  // Name of the container
+  name string
+  // Container image name
+  imageName string
+  // deprecated, use imageName
+  image string
+  // Container image
+  containerImage() os.container.image
+  // Entrypoint array
+  command []string
+  // Arguments to the entrypoint
+  args []string
+  // Compute Resources required by this container
+  resources dict
+  // Pod volumes to mount into the container's filesystem
+  volumeMounts []dict
+  // volumeDevices is the list of block devices to be used by the container
+  volumeDevices []dict
+  // Periodic probe of container liveness
+  livenessProbe dict
+  // Periodic probe of container service readiness
+  readinessProbe dict
+  // Image pull policy, One of Always, Never, IfNotPresent
+  imagePullPolicy string
+  // Security options the pod should run with
+  securityContext dict
+  // Container's working directory
+  workingDir string
+  // Whether this container should allocate a TTY for itself
+  tty bool
+}
+
+// Kubernetes Init Container
+private k8s.initContainer {
+  uid string
+  // Name of the container
+  name string
+  // Container image name
+  imageName string
+  // deprecated, use imageName
+  image string
+  // Container image
+  containerImage() os.container.image
+  // Entrypoint array
+  command []string
+  // Arguments to the entrypoint
+  args []string
+  // Compute Resources required by this container
+  resources dict
+  // Pod volumes to mount into the container's filesystem
+  volumeMounts []dict
+  // volumeDevices is the list of block devices to be used by the container
+  volumeDevices []dict
+  // Image pull policy, One of Always, Never, IfNotPresent
+  imagePullPolicy string
+  // Security options the pod should run with
+  securityContext dict
+  // Container's working directory
+  workingDir string
+  // Whether this container should allocate a TTY for itself
+  tty bool
+}
+
+// Kubernetes Deployment
+k8s.deployment {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // PodSpec is a description of a pod
+  podSpec dict
+  // Init containers
+  initContainers() []k8s.initContainer
+  // Contained Containers
+  containers() []k8s.container
+}
+
+// Kubernetes DaemonSet
+k8s.daemonset {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // PodSpec is a description of a pod
+  podSpec dict
+  // Init containers
+  initContainers() []k8s.initContainer
+  // Contained Containers
+  containers() []k8s.container
+}
+
+// Kubernetes StatefulSet
+k8s.statefulset {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // PodSpec is a description of a pod
+  podSpec dict
+  // Init containers
+  initContainers() []k8s.initContainer
+  // Contained Containers
+  containers() []k8s.container
+}
+
+// Kubernetes ReplicaSet
+k8s.replicaset {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // PodSpec is a description of a pod
+  podSpec dict
+  // Init containers
+  initContainers() []k8s.initContainer
+  // Contained Containers
+  containers() []k8s.container
+}
+
+// Kubernetes Job
+k8s.job {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // PodSpec is a description of a pod
+  podSpec dict
+  // Init containers
+  initContainers() []k8s.initContainer
+  // Contained Containers
+  containers() []k8s.container
+}
+
+// Kubernetes CronJob
+k8s.cronjob {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // PodSpec is a description of a pod
+  podSpec dict
+  // Init containers
+  initContainers() []k8s.initContainer
+  // Contained Containers
+  containers() []k8s.container
+}
+
+// Kubernetes Secret
+k8s.secret {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Secret type
+  type string
+  // Secret certificates
+  certificates() []certificate
+}
+
+// Kubernetes PodSecurityPolicy (deprecated as of Kubernetes v1.21)
+k8s.podsecuritypolicy {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Policy Spec
+  spec dict
+}
+
+// Kubernetes ConfigMap
+k8s.configmap {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Configuration data
+  data map[string]string
+}
+
+// Kubernetes Service
+k8s.service {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Service Spec
+  spec dict
+}
+
+// Kubernetes Network Policy
+k8s.networkpolicy {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Network Policy Spec
+  spec dict
+}
+
+// Kubernetes Service Account
+k8s.serviceaccount {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Secrets is the list of secrets allowed to be used by pods running using this ServiceAccount
+  secrets []dict
+  // ImagePullSecrets is a list of references to secrets in the same namespace to use for pulling any images
+  imagePullSecrets []dict
+  // AutomountServiceAccountToken indicates whether pods running as this service account should have an API token automatically mounted
+  automountServiceAccountToken bool
+}
+
+// Kubernetes ClusterRole
+k8s.rbac.clusterrole {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Cluster Role Rules
+  rules []dict
+  // Cluster Role Aggregation Rule
+  aggregationRule dict
+}
+
+// Kubernetes Role
+k8s.rbac.role {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Cluster Role Rules
+  rules []dict
+}
+
+// Kubernetes ClusterRoleBinding
+k8s.rbac.clusterrolebinding {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Subjects holds references to the objects the role applies to
+  subjects []dict
+  // RoleRef can only reference a ClusterRole in the global namespace
+  roleRef dict
+}
+
+// Kubernetes RoleBinding
+k8s.rbac.rolebinding {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Subjects holds references to the objects the role applies to
+  subjects []dict
+  // RoleRef can only reference a ClusterRole in the global namespace
+  roleRef dict
+}
+
+// Kubernetes CustomResource
+k8s.customresource {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+}

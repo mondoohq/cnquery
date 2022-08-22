@@ -5,7 +5,7 @@ import (
 	"go.mondoo.io/mondoo/resources"
 )
 
-func newMqlContainerImage(runtime *resources.Runtime, containerImageName string) (interface{}, error) {
+func NewMqlContainerImage(runtime *resources.Runtime, containerImageName string) (interface{}, error) {
 	ref, err := name.ParseReference(containerImageName)
 	if err != nil {
 		return nil, err
