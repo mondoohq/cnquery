@@ -145,7 +145,7 @@ func (p *MockRecordProvider) Runtime() string {
 }
 
 func (p *MockRecordProvider) Identifier() (string, error) {
-	identifiable, ok := p.observe.(providers.TransportPlatformIdentifier)
+	identifiable, ok := p.observe.(providers.PlatformIdentifier)
 	if !ok {
 		return "", errors.New("the transportid detector is not supported for transport")
 	}

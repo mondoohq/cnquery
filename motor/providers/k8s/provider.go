@@ -29,7 +29,7 @@ var (
 
 type KubernetesProvider interface {
 	providers.Transport
-	providers.TransportPlatformIdentifier
+	providers.PlatformIdentifier
 	Name() (string, error)
 	PlatformInfo() *platform.Platform
 

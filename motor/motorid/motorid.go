@@ -115,7 +115,7 @@ func GatherPlatformIDs(provider providers.Transport, pf *platform.Platform, idDe
 		}
 		return identifier, err
 	case idDetector == providers.TransportPlatformIdentifierDetector:
-		identifiable, ok := provider.(providers.TransportPlatformIdentifier)
+		identifiable, ok := provider.(providers.PlatformIdentifier)
 		if !ok {
 			return nil, errors.New("the transport-platform-id detector is not supported for transport")
 		}

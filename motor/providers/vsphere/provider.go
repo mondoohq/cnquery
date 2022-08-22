@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	_ providers.Transport                   = (*Provider)(nil)
-	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
+	_ providers.Transport          = (*Provider)(nil)
+	_ providers.PlatformIdentifier = (*Provider)(nil)
 )
 
 func VSphereConnectionURL(hostname string, port int32, user string, password string) (*url.URL, error) {

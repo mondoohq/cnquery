@@ -54,6 +54,6 @@ type Transport interface {
 	Close()
 }
 
-type TransportPlatformIdentifier interface {
+type PlatformIdentifier interface {
 	Identifier() (string, error)
 }
