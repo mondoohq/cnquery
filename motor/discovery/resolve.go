@@ -22,7 +22,6 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/azure"
 	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/discovery/container_registry"
-	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/discovery/docker_engine"
 	"go.mondoo.io/mondoo/motor/discovery/equinix"
 	"go.mondoo.io/mondoo/motor/discovery/gcp"
@@ -46,7 +45,7 @@ import (
 
 type Resolver interface {
 	Name() string
-	Resolve(ctx context.Context, root *asset.Asset, t *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn,
+	Resolve(ctx context.Context, root *asset.Asset, t *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn,
 		userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error)
 	AvailableDiscoveryTargets() []string
 }
@@ -98,11 +97,11 @@ func InitCtx(ctx context.Context) context.Context {
 	return initCtx
 }
 
-func ResolveAsset(ctx context.Context, root *asset.Asset, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn) ([]*asset.Asset, error) {
+func ResolveAsset(ctx context.Context, root *asset.Asset, cfn common.CredentialFn, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// if the asset is missing a secret, we try to add this for the asset
-	credentials.EnrichAssetWithSecrets(root, sfn)
+	common.EnrichAssetWithSecrets(root, sfn)
 
 	assetFallbackName := func(a *asset.Asset, c *providers.Config) {
 		// set the asset name to the config name. This is only required for error cases where the discovery
@@ -179,7 +178,7 @@ type ResolvedAssets struct {
 	Errors map[*asset.Asset]error
 }
 
-func ResolveAssets(ctx context.Context, rootAssets []*asset.Asset, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn) ResolvedAssets {
+func ResolveAssets(ctx context.Context, rootAssets []*asset.Asset, cfn common.CredentialFn, sfn common.QuerySecretFn) ResolvedAssets {
 	resolved := []*asset.Asset{}
 	errors := map[*asset.Asset]error{}
 	for i := range rootAssets {

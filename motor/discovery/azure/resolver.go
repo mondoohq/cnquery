@@ -7,7 +7,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/common"
-	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/platform/detector"
 	"go.mondoo.io/mondoo/motor/providers"
 	azure_transport "go.mondoo.io/mondoo/motor/providers/azure"
@@ -28,7 +27,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryInstances}
 }
 
-func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	subscriptionID := tc.Options["subscriptionID"]
@@ -117,7 +116,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 
 			log.Debug().Str("name", a.Name).Msg("resolved azure compute instance")
 			// find the secret reference for the asset
-			credentials.EnrichAssetWithSecrets(a, sfn)
+			common.EnrichAssetWithSecrets(a, sfn)
 
 			for i := range a.Connections {
 				a.Connections[i].Insecure = tc.Insecure

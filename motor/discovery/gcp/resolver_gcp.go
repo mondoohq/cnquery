@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/discovery/credentials"
+	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/providers"
 	gcp_transport "go.mondoo.io/mondoo/motor/providers/gcp"
 )
@@ -20,7 +20,7 @@ func (r *GcpResolver) AvailableDiscoveryTargets() []string {
 	return []string{DiscoveryAll, DiscoveryProjects, DiscoveryInstances}
 }
 
-func (r *GcpResolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *GcpResolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	if tc.Options != nil && tc.Options["organization"] != "" {
 		// discover the full organization
 		return (&GcpOrgResolver{}).Resolve(tc, cfn, sfn, userIdDetectors...)
