@@ -503,7 +503,7 @@ func (a *lumiAzurermWebAppsite) GetStack() (map[string]interface{}, error) {
 	}
 
 	// get metadata
-	metadata, err := a.Metadata()
+	metadataRaw, err := a.Metadata()
 	if err != nil {
 		return nil, err
 	}
@@ -525,6 +525,11 @@ func (a *lumiAzurermWebAppsite) GetStack() (map[string]interface{}, error) {
 		runtime.Name = strings.ToLower(fxversion[0])
 		runtime.MinorVersion = strings.ToLower(fxversion[1])
 	} else {
+		metadata, ok := metadataRaw.(map[string]interface{})
+		if !ok {
+			return nil, nil // see behavior below
+		}
+
 		// read runtime from metadata, YES its works completely different than on linux
 		// NOTE: also take care of the runtime version for dotnet. This API and webapp runtime
 		// handling in specific is a complete 💥.
