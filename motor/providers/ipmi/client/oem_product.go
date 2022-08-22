@@ -1,4 +1,4 @@
-package ipmi
+package client
 
 type OemProductID uint16
 

@@ -1,4 +1,4 @@
-package ipmi
+package client
 
 /*
 This code is derived from https://github.com/vmware/goipmi
