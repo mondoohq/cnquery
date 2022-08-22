@@ -1,0 +1,252 @@
+// VMware vSphere resource
+vsphere {
+  // System information including the name, type, version, and build number
+  about() dict
+  // Configured licenses
+  licenses() []vsphere.license
+  // List of available datacenter
+  datacenters() []vsphere.datacenter
+}
+
+// vSphere license information
+vsphere.license {
+  // License name
+  name string
+  // Total licenses
+  total int
+  // Used licenses
+  used int
+}
+
+// VMware ESXi resource
+esxi {
+  // Current Targeted ESXi Host
+  host() vsphere.host
+  // Current Targeted Virtual Machine
+  vm() vsphere.vm
+}
+
+// vSphere datacenter inventory
+vsphere.datacenter {
+  // vSphere managed object ID
+  moid string
+  // vSphere datacenter name
+  name string
+  // vSphere inventory path
+  inventoryPath string
+  // Hosts in datacenter
+  hosts() []vsphere.host
+  // VMs in datacenter
+  vms() []vsphere.vm
+  // Clusters in datacenter
+  clusters() []vsphere.cluster
+}
+
+// vSphere cluster resource
+vsphere.cluster {
+  // vSphere managed object ID
+  moid string
+  // vSphere resource name
+  name string
+  // vSphere inventory path
+  inventoryPath string
+  // Cluster properties
+  properties dict
+  // ESXi hosts running in cluster
+  hosts() []vsphere.host
+}
+
+// vSphere ESXi host resource
+vsphere.host {
+  // vSphere managed object ID
+  moid string
+  // vSphere Resource Name
+  name string
+  // vSphere inventory path
+  inventoryPath string
+  // ESXi properties
+  properties dict
+  // Lists of standard virtual switches
+  standardSwitch() []vsphere.vswitch.standard
+  // Lists of distributed virtual switches
+  distributedSwitch() []vsphere.vswitch.dvs
+  // Lists physical NICs currently installed and loaded on the system
+  adapters() []vsphere.vmnic
+  // Lists of virtual network interface that is used by the VMKernel
+  vmknics() []vsphere.vmknic
+  // Lists all VIBs installed on your ESXi host
+  packages() []esxi.vib
+  // Host-level VIB acceptance level
+  acceptanceLevel() string
+  // Kernel modules (drivers) on ESXi
+  kernelModules() []esxi.kernelmodule
+  // ESXi host advanced settings
+  advancedSettings() map[string]string
+  // List of ESXi management services
+  services() []esxi.service
+  // Host timezone settings
+  timezone() esxi.timezone
+  // Host NTP configuration
+  ntp() esxi.ntpconfig
+  // Host SNMP configuration
+  snmp() map[string]string
+}
+
+// vSphere VM resource
+vsphere.vm {
+  // vSphere managed object ID
+  moid string
+  // vSphere resource name
+  name string
+  // vSphere inventory path
+  inventoryPath string
+  // Virtual machine properties
+  properties dict
+  // Virtual machine advanced properties
+  advancedSettings() map[string]string
+}
+
+// vSphere standard virtual switch
+vsphere.vswitch.standard {
+  // Virtual switch name
+  name string
+  // Virtual switch properties
+  properties dict
+  // NIC teaming policy
+  failoverPolicy() dict
+  // Security policy
+  securityPolicy() dict
+  // Shaping policy
+  shapingPolicy() dict
+  // List of physical NICs currently configured as uplinks
+  uplinks() []vsphere.vmnic
+}
+
+// vSphere distributed virtual switch
+vsphere.vswitch.dvs {
+  // Virtual switch name
+  name string
+  // Virtual switch properties
+  properties dict
+  // List of physical NICs currently configured as uplinks
+  uplinks() []vsphere.vmnic
+}
+
+// vSphere ESXi physical network interface resource
+vsphere.vmnic {
+  // NIC name
+  name string
+  // NIC properties
+  properties dict
+  // Generic configuration of a network device
+  details() dict
+  // NIC pause parameters
+  pauseParams dict
+}
+
+// vSphere ESXi virtual network interface resource
+vsphere.vmknic {
+  // Interface name
+  name string
+  // Interface properties
+  properties dict
+  // IPv4 information
+  ipv4 []dict
+  // IPv6 information
+  ipv6 []dict
+  // Network interface tag
+  tags []string
+}
+
+// Run a command on ESXi
+esxi.command {
+  init(command string)
+  // vSphere inventory path
+  inventoryPath string
+  // Raw command
+  command string
+  // Command Result
+  result() []dict
+}
+
+// vSphere installation bundle resource
+esxi.vib {
+  id string
+  // Bundle name
+  name string
+  // Acceptance level
+  acceptanceLevel string
+  // Creation date
+  creationDate time
+  // Install date
+  installDate time
+  // Bundle status
+  status string
+  // Bundle vendor
+  vendor string
+  // Bundle version
+  version string
+}
+
+// vSphere ESXi kernel module resource
+esxi.kernelmodule {
+  // Module name
+  name string
+  // Module file location
+  modulefile string
+  // Module version
+  version string
+  // Flag if the module is loaded
+  loaded bool
+  // Module license
+  license string
+  // Flag if the module is enabled
+  enabled bool
+  // Module signed status
+  signedStatus string
+  // Module signed digest
+  signatureDigest string
+  // Module signed fingerprint
+  signatureFingerprint string
+  // Module acceptance level
+  vibAcceptanceLevel string
+}
+
+// vSphere ESXi management service resource
+esxi.service {
+  // Brief identifier for the service
+  key string
+  // Display label for the service
+  label string
+  // Flag indicating whether the service is required and cannot be disabled
+  required bool
+  // Deprecated: This flag is unimplemented and will always be set to false
+  uninstallable bool
+  // Flag indicating whether the service is currently running
+  running bool
+  // List of firewall rulesets used by this service
+  ruleset []string
+  // Service activation policy
+  policy string
+}
+
+// vSphere ESXi timezone resource
+esxi.timezone {
+  // Identifier for the time zone
+  key string
+  // Time zone name.
+  name string
+  // Description of the time zone
+  description string
+  // GMT offset
+  offset int
+}
+
+// vSphere ESXi NTP configuration resource
+esxi.ntpconfig {
+  id string
+  // List of time servers, specified as either IP addresses or fully qualified domain names (FQDNs)
+  server []string
+  // Content of ntp.conf host configuration file, split by lines
+  config []string
+}

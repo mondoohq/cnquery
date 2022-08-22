@@ -1,4 +1,4 @@
-package os_test
+package vsphere_test
 
 import (
 	"strconv"
@@ -9,11 +9,11 @@ import (
 	"go.mondoo.io/mondoo/llx"
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/vsphere"
+	provider "go.mondoo.io/mondoo/motor/providers/vsphere"
 	"go.mondoo.io/mondoo/motor/providers/vsphere/vsimulator"
 	"go.mondoo.io/mondoo/motor/vault"
-	"go.mondoo.io/mondoo/resources/packs/os"
 	"go.mondoo.io/mondoo/resources/packs/testutils"
+	pack "go.mondoo.io/mondoo/resources/packs/vsphere"
 )
 
 func vsphereTestQuery(t *testing.T, query string) []*llx.RawResult {
@@ -24,7 +24,7 @@ func vsphereTestQuery(t *testing.T, query string) []*llx.RawResult {
 	port, err := strconv.Atoi(vs.Server.URL.Port())
 	require.NoError(t, err)
 
-	p, err := vsphere.New(&providers.Config{
+	p, err := provider.New(&providers.Config{
 		Backend:  providers.ProviderType_VSPHERE,
 		Host:     vs.Server.URL.Hostname(),
 		Port:     int32(port),
@@ -42,7 +42,7 @@ func vsphereTestQuery(t *testing.T, query string) []*llx.RawResult {
 	m, err := motor.New(p)
 	require.NoError(t, err)
 
-	x := testutils.InitTester(m, os.Registry)
+	x := testutils.InitTester(m, pack.Registry)
 	return x.TestQuery(t, query)
 }
 

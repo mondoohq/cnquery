@@ -1,4 +1,4 @@
-package vsphere
+package resourceclient
 
 import (
 	"encoding/json"
@@ -9,8 +9,10 @@ import (
 
 // camelCase conversion adapted from https://gist.github.com/piersy/b9934790a8892db1a603820c0c23e4a7
 // Regexp definitions
-var keyMatchRegex = regexp.MustCompile(`\"(\w+)\":`)
-var wordBarrierRegex = regexp.MustCompile(`(\w)([A-Z])`)
+var (
+	keyMatchRegex    = regexp.MustCompile(`\"(\w+)\":`)
+	wordBarrierRegex = regexp.MustCompile(`(\w)([A-Z])`)
+)
 
 type camelCaseMarshaller struct {
 	Value interface{}
@@ -38,7 +40,6 @@ func (c camelCaseMarshaller) MarshalJSON() ([]byte, error) {
 // PropertiesToDict converts an interface to a lowerCase json
 // This enables us to avoid reencoding the xml and mo tag for vmware structs
 func PropertiesToDict(value interface{}) (map[string]interface{}, error) {
-
 	// config to dict
 	configDict := map[string]interface{}{}
 	configData, err := json.Marshal(camelCaseMarshaller{value})

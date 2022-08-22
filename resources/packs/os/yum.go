@@ -7,6 +7,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/resources"
+	"go.mondoo.io/mondoo/resources/packs/core"
 	"go.mondoo.io/mondoo/resources/packs/os/yum"
 	"go.mondoo.io/mondoo/stringx"
 )
@@ -57,7 +58,7 @@ func (y *mqlYum) GetRepos() ([]interface{}, error) {
 			"id", repo.Id,
 			"name", repo.Name,
 			"status", repo.Status,
-			"baseurl", sliceInterface(repo.Baseurl),
+			"baseurl", core.StrSliceToInterface(repo.Baseurl),
 			"expire", repo.Expire,
 			"filename", repo.Filename,
 			"file", f,

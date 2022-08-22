@@ -13,8 +13,8 @@ import (
 	"github.com/vmware/govmomi/vim25/types"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/providers"
-	vsphere_transport "go.mondoo.io/mondoo/motor/providers/vsphere"
-	"go.mondoo.io/mondoo/resources/packs/os/vsphere"
+	provider "go.mondoo.io/mondoo/motor/providers/vsphere"
+	"go.mondoo.io/mondoo/resources/packs/vsphere/resourceclient"
 )
 
 func New(client *govmomi.Client) *VSphere {
@@ -28,7 +28,7 @@ type VSphere struct {
 }
 
 func (v *VSphere) InstanceUuid() (string, error) {
-	return vsphere_transport.InstanceUUID(v.Client)
+	return provider.InstanceUUID(v.Client)
 }
 
 func (v *VSphere) ListEsxiHosts() ([]*asset.Asset, error) {
@@ -77,7 +77,7 @@ func hostsToAssetList(instanceUuid string, hosts []*object.HostSystem) ([]*asset
 				"vsphere.vmware.com/moid":          host.Reference().Encode(),
 				"vsphere.vmware.com/inventorypath": host.InventoryPath,
 			},
-			PlatformIds: []string{vsphere_transport.VsphereResourceID(instanceUuid, host.Reference())},
+			PlatformIds: []string{provider.VsphereResourceID(instanceUuid, host.Reference())},
 		}
 
 		// add more information if available
@@ -151,10 +151,10 @@ func vmsToAssetList(instanceUuid string, vms []*object.VirtualMachine, parentTC 
 	for i := range vms {
 		vm := vms[i]
 
-		platformId := vsphere_transport.VsphereResourceID(instanceUuid, vm.Reference())
+		platformId := provider.VsphereResourceID(instanceUuid, vm.Reference())
 		log.Debug().Str("platform-id", platformId).Msg("found vsphere vm")
 
-		vmInfo, err := vsphere.VmInfo(vm)
+		vmInfo, err := resourceclient.VmInfo(vm)
 		if err != nil {
 			return nil, err
 		}
