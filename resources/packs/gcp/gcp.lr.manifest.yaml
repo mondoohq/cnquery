@@ -1,0 +1,88 @@
+resources:
+  gcloud.compute:
+    fields:
+      instances: {}
+    min_mondoo_version: 5.15.0
+  gcloud.compute.instance:
+    fields:
+      cpuPlatform: {}
+      deletionProtection: {}
+      description: {}
+      hostname: {}
+      id: {}
+      labels: {}
+      metadata: {}
+      name: {}
+      serviceAccounts: {}
+      status: {}
+      statusMessage: {}
+      tags: {}
+    min_mondoo_version: 5.15.0
+  gcloud.compute.serviceaccount:
+    fields:
+      email: {}
+      scopes: {}
+    min_mondoo_version: 5.15.0
+  gcloud.organization:
+    fields:
+      iamPolicy: {}
+      id: {}
+      lifecycleState: {}
+      name: {}
+    min_mondoo_version: 5.15.0
+  gcloud.project:
+    fields:
+      createTime: {}
+      iamPolicy: {}
+      id: {}
+      labels: {}
+      lifecycleState: {}
+      name: {}
+      number: {}
+    min_mondoo_version: 5.15.0
+  gcloud.resourcemanager.binding:
+    fields:
+      id: {}
+      members: {}
+      role: {}
+    min_mondoo_version: 5.15.0
+  gcloud.sql:
+    fields:
+      instances: {}
+    min_mondoo_version: 5.15.0
+  gcloud.sql.instance:
+    fields:
+      backendType: {}
+      connectionName: {}
+      currentDiskSize: {}
+      databaseVersion: {}
+      gceZone: {}
+      instanceType: {}
+      kind: {}
+      maxDiskSize: {}
+      name: {}
+      project: {}
+      region: {}
+      serviceAccountEmailAddress: {}
+      settings: {}
+      state: {}
+    min_mondoo_version: 5.15.0
+  gcloud.storage:
+    fields:
+      buckets: {}
+    min_mondoo_version: 5.15.0
+  gcloud.storage.bucket:
+    fields:
+      created: {}
+      iamConfiguration: {}
+      iamPolicy: {}
+      id: {}
+      kind: {}
+      labels: {}
+      location: {}
+      locationType: {}
+      name: {}
+      projectNumber: {}
+      storageClass: {}
+      updated: {}
+    min_mondoo_version: 5.15.0

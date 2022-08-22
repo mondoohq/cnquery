@@ -1,0 +1,748 @@
+resources:
+  arista.eos:
+    fields:
+      fqdn: {}
+      hostname: {}
+      interfaces: {}
+      ipInterfaces: {}
+      ntp: {}
+      roles: {}
+      snmp: {}
+      systemConfig: {}
+      users: {}
+      version: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - arista-eos
+    snippets:
+    - query: arista.eos.version
+      title: Arista EOS Version
+    - query: arista.eos.version['version'] == /18\./
+      title: Verify that Arista EOS Version is 18.x
+    - query: arista.eos.interfaces { name mtu bandwidth status }
+      title: Display EOS interfaces
+    - query: arista.eos.interfaces.where ( status['linkStatus'] == "connected") {  name
+        mtu bandwidth status}
+      title: Display all connected EOS interfaces
+    - query: arista.eos.hostname
+      title: EOS Hostname
+  arista.eos.interface:
+    fields:
+      bandwidth: {}
+      burnedInAddress: {}
+      description: {}
+      forwardingModel: {}
+      hardware: {}
+      interfaceAddress: {}
+      interfaceCounters: {}
+      interfaceMembership: {}
+      interfaceStatistics: {}
+      interfaceStatus: {}
+      l2Mtu: {}
+      lastStatusChangeTimestamp: {}
+      lineProtocolStatus: {}
+      mtu: {}
+      name: {}
+      physicalAddress: {}
+      status: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - arista-eos
+  arista.eos.ipInterface:
+    fields:
+      address: {}
+      mtu: {}
+      name: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - arista-eos
+  arista.eos.ntpSetting:
+    fields:
+      status: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - arista-eos
+  arista.eos.role:
+    fields:
+      default: {}
+      name: {}
+      rules: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - arista-eos
+  arista.eos.runningConfig:
+    fields:
+      content: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - arista-eos
+  arista.eos.runningConfig.section:
+    fields:
+      content: {}
+      name: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - arista-eos
+  arista.eos.snmpSetting:
+    fields:
+      enabled: {}
+      notifications: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - arista-eos
+  arista.eos.spt.mstInterface:
+    fields:
+      boundaryType: {}
+      cost: {}
+      counters: {}
+      detail: {}
+      features: {}
+      id: {}
+      inconsistentFeatures: {}
+      isEdgePort: {}
+      linkType: {}
+      mstInstanceId: {}
+      name: {}
+      portNumber: {}
+      priority: {}
+      role: {}
+      state: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - arista-eos
+    snippets:
+    - query: |
+        arista.eos.stp.mstInstances {
+         protocol == "mstp"
+        }
+      title: Verify the Spanning-Tree Version
+  arista.eos.stp:
+    fields:
+      mstInstances: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - arista-eos
+  arista.eos.stp.mst:
+    fields:
+      bridge: {}
+      instanceId: {}
+      interfaces: {}
+      name: {}
+      protocol: {}
+      regionalRootBridge: {}
+      rootBridge: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - arista-eos
+  arista.eos.user:
+    fields:
+      format: {}
+      name: {}
+      nopassword: {}
+      privilege: {}
+      role: {}
+      secret: {}
+      sshkey: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - arista-eos
+  auditpol:
+    fields: {}
+    min_mondoo_version: 5.15.0
+    snippets:
+    - query: auditpol.list { inclusionsetting exclusionsetting  subcategory }
+      title: List all audit policies
+    - query: |
+        auditpol.where(subcategory == 'Sensitive Privilege Use').list {
+          inclusionsetting == 'Success and Failure'
+        }
+      title: Check a specific auditpol configuration
+  auditpol.entry:
+    fields:
+      exclusionsetting: {}
+      inclusionsetting: {}
+      machinename: {}
+      policytarget: {}
+      subcategory: {}
+      subcategoryguid: {}
+    min_mondoo_version: 5.15.0
+  command:
+    fields:
+      command: {}
+      exitcode: {}
+      stderr: {}
+      stdout: {}
+    min_mondoo_version: 5.15.0
+  container.image:
+    fields:
+      identifier: {}
+      identifierType: {}
+      name: {}
+      repository: {}
+    min_mondoo_version: 5.31.0
+  container.repository:
+    fields:
+      fullName: {}
+      name: {}
+      registry: {}
+      scheme: {}
+    min_mondoo_version: 5.31.0
+  docker:
+    fields:
+      containers: {}
+      images: {}
+    min_mondoo_version: 5.15.0
+  docker.container:
+    fields:
+      command: {}
+      id: {}
+      image: {}
+      imageid: {}
+      labels: {}
+      names: {}
+      state: {}
+      status: {}
+    min_mondoo_version: 5.15.0
+  docker.image:
+    fields:
+      id: {}
+      labels: {}
+      size: {}
+      tags: {}
+      virtualsize: {}
+    min_mondoo_version: 5.15.0
+  equinix.metal.device:
+    fields:
+      billingCycle: {}
+      createdAt: {}
+      description: {}
+      hostname: {}
+      id: {}
+      locked: {}
+      os: {}
+      shortID: {}
+      spotInstance: {}
+      state: {}
+      updatedAt: {}
+      url: {}
+    maturity: experimental
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - equinix
+  equinix.metal.organization:
+    fields:
+      address: {}
+      billingPhone: {}
+      createdAt: {}
+      creditAmount: {}
+      description: {}
+      id: {}
+      mainPhone: {}
+      name: {}
+      taxId: {}
+      twitter: {}
+      updatedAt: {}
+      url: {}
+      website: {}
+    maturity: experimental
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - equinix
+  equinix.metal.project:
+    fields:
+      createdAt: {}
+      devices: {}
+      id: {}
+      name: {}
+      organization: {}
+      paymentMethod: {}
+      sshKeys: {}
+      updatedAt: {}
+      url: {}
+      users: {}
+    maturity: experimental
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - equinix
+  equinix.metal.sshkey:
+    fields:
+      createdAt: {}
+      fingerPrint: {}
+      id: {}
+      key: {}
+      label: {}
+      updatedAt: {}
+      url: {}
+    maturity: experimental
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - equinix
+  equinix.metal.user:
+    fields:
+      avatarUrl: {}
+      createdAt: {}
+      email: {}
+      facebook: {}
+      firstName: {}
+      fullName: {}
+      id: {}
+      lastName: {}
+      linkedin: {}
+      phoneNumber: {}
+      timezone: {}
+      twitter: {}
+      twoFactorAuth: {}
+      updatedAt: {}
+      url: {}
+      vpn: {}
+    maturity: experimental
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - equinix
+  files.find:
+    fields:
+      from: {}
+      name: {}
+      permissions: {}
+      regex: {}
+      type: {}
+      xdev: {}
+    min_mondoo_version: 5.15.0
+  ip6tables:
+    fields:
+      input: {}
+      output: {}
+    min_mondoo_version: 5.15.0
+  iptables:
+    fields:
+      input: {}
+      output: {}
+    min_mondoo_version: 5.15.0
+  iptables.entry:
+    fields:
+      bytes: {}
+      chain: {}
+      destination: {}
+      in: {}
+      lineNumber: {}
+      opt: {}
+      options: {}
+      out: {}
+      packets: {}
+      protocol: {}
+      source: {}
+      target: {}
+    min_mondoo_version: 5.15.0
+  logindefs:
+    fields:
+      content: {}
+      file: {}
+      params: {}
+    min_mondoo_version: 5.15.0
+  lsblk:
+    fields: {}
+    min_mondoo_version: 5.15.0
+  lsblk.entry:
+    fields:
+      fstype: {}
+      label: {}
+      mountpoints: {}
+      name: {}
+      uuid: {}
+    min_mondoo_version: 5.15.0
+  machine:
+    fields: {}
+    min_mondoo_version: 5.15.0
+  machine.baseboard:
+    fields:
+      assetTag: {}
+      manufacturer: {}
+      product: {}
+      serial: {}
+      version: {}
+    min_mondoo_version: 5.15.0
+  machine.bios:
+    fields:
+      releaseDate: {}
+      vendor: {}
+      version: {}
+    min_mondoo_version: 5.15.0
+  machine.chassis:
+    fields:
+      assetTag: {}
+      manufacturer: {}
+      serial: {}
+      version: {}
+    min_mondoo_version: 5.15.0
+  machine.system:
+    fields:
+      family: {}
+      manufacturer: {}
+      product: {}
+      serial: {}
+      sku: {}
+      uuid: {}
+      version: {}
+    min_mondoo_version: 5.15.0
+  macos:
+    fields:
+      globalAccountPolicies: {}
+      userHostPreferences: {}
+      userPreferences: {}
+    min_mondoo_version: 5.15.0
+  macos.alf:
+    fields:
+      allowDownloadSignedEnabled: {}
+      allowSignedEnabled: {}
+      applications: {}
+      expections: {}
+      explicitAuths: {}
+      firewallUnload: {}
+      globalState: {}
+      loggingEnabled: {}
+      loggingOption: {}
+      stealthEnabled: {}
+      version: {}
+    min_mondoo_version: 5.15.0
+  macos.security:
+    fields:
+      authorizationDB: {}
+    min_mondoo_version: 5.15.0
+  macos.systemsetup:
+    fields:
+      allowPowerButtonToSleepComputer: {}
+      computerName: {}
+      date: {}
+      disableKeyboardWhenEnclosureLockIsEngaged: {}
+      displaySleep: {}
+      harddiskSleep: {}
+      localSubnetName: {}
+      networkTimeServer: {}
+      remoteAppleEvents: {}
+      remoteLogin: {}
+      restartFreeze: {}
+      restartPowerFailure: {}
+      sleep: {}
+      startupDisk: {}
+      time: {}
+      timeZone: {}
+      usingNetworkTime: {}
+      waitForStartupAfterPowerFailure: {}
+      wakeOnModem: {}
+      wakeOnNetworkAccess: {}
+    min_mondoo_version: 5.15.0
+  macos.timemachine:
+    fields:
+      preferences: {}
+    min_mondoo_version: 5.15.0
+  mount:
+    fields: {}
+    min_mondoo_version: 5.15.0
+    snippets:
+    - query: mount.list { path device fstype options }
+      title: List all mount points
+    - query: mount.one( path == "/" )
+      title: Ensure the mountpoint exists
+    - query: |
+        mount.where( path == "/" ).list {
+          device == '/dev/mapper/vg00-lv_root'
+          fstype == 'xfs'
+          options['rw'] != null
+          options['relatime'] != null
+          options['seclabel'] != null
+          options['attr2'] != null
+          options['inode64'] != null
+          options['noquota'] != null
+        }
+      title: Check mountpoint configuration
+  mount.point:
+    fields:
+      device: {}
+      fstype: {}
+      mounted: {}
+      options: {}
+      path: {}
+    min_mondoo_version: 5.15.0
+  ntp.conf:
+    fields:
+      content: {}
+      file: {}
+      fudge: {}
+      restrict: {}
+      servers: {}
+      settings: {}
+    min_mondoo_version: 5.15.0
+  pam.conf:
+    fields:
+      content: {}
+      entries: {}
+      files: {}
+      services: {}
+    min_mondoo_version: 5.15.0
+  pam.conf.serviceEntry:
+    fields:
+      control: {}
+      lineNumber: {}
+      module: {}
+      options: {}
+      pamType: {}
+      service: {}
+    is_private: true
+    min_mondoo_version: 5.15.0
+  powershell:
+    fields:
+      exitcode: {}
+      script: {}
+      stderr: {}
+      stdout: {}
+    min_mondoo_version: 5.15.0
+    snippets:
+    - query: |
+        powershell('Get-WmiObject -Class Win32_volume -Filter "DriveType=3"| Select Label') {
+          stdout == /PAGEFILE/
+          stderr == ''
+        }
+      title: Run custom powershell command
+    - query: |
+        powershell('tzutil /g') {
+          stdout.trim == 'GMT Standard Time'
+          stderr == ''
+        }
+      title: Check the timezone
+  registrykey:
+    fields:
+      children: {}
+      exists: {}
+      path: {}
+      properties: {}
+    min_mondoo_version: 5.15.0
+  registrykey.property:
+    fields:
+      exists: {}
+      name: {}
+      path: {}
+      value: {}
+    min_mondoo_version: 5.15.0
+    snippets:
+    - query: |
+        registrykey.property(path: 'HKEY_LOCAL_MACHINE\Software\Policies\Microsoft\Windows\EventLog\System', name: 'MaxSize') {
+          value >= 32768
+        }
+      title: Verify a registry key property
+  rsyslog.conf:
+    fields:
+      content: {}
+      files: {}
+      settings: {}
+    min_mondoo_version: 5.15.0
+  secpol:
+    fields:
+      eventaudit: {}
+      privilegerights: {}
+      registryvalues: {}
+      systemaccess: {}
+    min_mondoo_version: 5.15.0
+    snippets:
+    - query: secpol.privilegerights['SeRemoteShutdownPrivilege'].contains( _ == 'S-1-5-32-544')
+      title: Check that a specific SID is included in the privilege rights
+  service:
+    fields:
+      description: {}
+      enabled: {}
+      installed: {}
+      masked: {}
+      name: {}
+      running: {}
+      type: {}
+    min_mondoo_version: 5.15.0
+  services:
+    fields: {}
+    min_mondoo_version: 5.15.0
+  shadow:
+    fields: {}
+    min_mondoo_version: 5.15.0
+  shadow.entry:
+    fields:
+      expirydates: {}
+      inactivedays: {}
+      lastchanged: {}
+      maxdays: {}
+      mindays: {}
+      password: {}
+      reserved: {}
+      user: {}
+      warndays: {}
+    min_mondoo_version: 5.15.0
+  windows:
+    fields:
+      computerInfo: {}
+      features: {}
+      hotfixes: {}
+    min_mondoo_version: 5.15.0
+    snippets:
+    - query: windows.computerInfo['WindowsInstallationType'] == 'Server Core'
+      title: Check the OS Edition
+  windows.bitlocker:
+    fields:
+      volumes: {}
+    min_mondoo_version: 5.35.0
+  windows.bitlocker.volume:
+    fields:
+      conversionStatus: {}
+      deviceID: {}
+      driveLetter: {}
+      encryptionMethod: {}
+      lockStatus: {}
+      persistentVolumeID: {}
+      protectionStatus: {}
+      version: {}
+    min_mondoo_version: 5.35.0
+  windows.feature:
+    fields:
+      description: {}
+      displayName: {}
+      installState: {}
+      installed: {}
+      name: {}
+      path: {}
+    min_mondoo_version: 5.15.0
+    snippets:
+    - query: windows.feature('SNMP-Service').installed
+      title: Check that a Windows features is installed
+    - query: windows.feature('Windows-Defender').installed == false
+      title: Check that a specific feature is not installed
+  windows.firewall:
+    fields:
+      profiles: {}
+      rules: {}
+      settings: {}
+    min_mondoo_version: 5.15.0
+    snippets:
+    - query: |
+        windows.firewall.rules.where ( displayName == "File and Printer Sharing (Echo Request - ICMPv4-In)") {
+          enabled == 1
+        }
+      title: Check a specific Windows Firewall rule
+  windows.firewall.profile:
+    fields:
+      allowInboundRules: {}
+      allowLocalFirewallRules: {}
+      allowLocalIPsecRules: {}
+      allowUnicastResponseToMulticast: {}
+      allowUserApps: {}
+      allowUserPorts: {}
+      defaultInboundAction: {}
+      defaultOutboundAction: {}
+      enableStealthModeForIPsec: {}
+      enabled: {}
+      instanceID: {}
+      logAllowed: {}
+      logBlocked: {}
+      logFileName: {}
+      logIgnored: {}
+      logMaxSizeKilobytes: {}
+      name: {}
+      notifyOnListen: {}
+    min_mondoo_version: 5.15.0
+  windows.firewall.rule:
+    fields:
+      action: {}
+      description: {}
+      direction: {}
+      displayGroup: {}
+      displayName: {}
+      edgeTraversalPolicy: {}
+      enabled: {}
+      enforcementStatus: {}
+      instanceID: {}
+      localOnlyMapping: {}
+      looseSourceMapping: {}
+      name: {}
+      policyStoreSource: {}
+      policyStoreSourceType: {}
+      primaryStatus: {}
+      status: {}
+    min_mondoo_version: 5.15.0
+  windows.hotfix:
+    fields:
+      caption: {}
+      description: {}
+      hotfixId: {}
+      installedBy: {}
+      installedOn: {}
+    min_mondoo_version: 5.15.0
+  windows.security:
+    fields:
+      products: {}
+    min_mondoo_version: 5.35.0
+  windows.security.health:
+    fields:
+      antiSpyware: {}
+      antiVirus: {}
+      autoUpdate: {}
+      firewall: {}
+      internetSettings: {}
+      securityCenterService: {}
+      uac: {}
+    min_mondoo_version: 5.35.0
+  windows.security.product:
+    fields:
+      guid: {}
+      name: {}
+      productState: {}
+      signatureState: {}
+      state: {}
+      timestamp: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 5.35.0
+  yaml.path:
+    fields:
+      filepath: {}
+      jsonpath: {}
+      result: {}
+    min_mondoo_version: 5.15.0
+  yum:
+    fields:
+      repos: {}
+      vars: {}
+    min_mondoo_version: 5.15.0
+  yum.repo:
+    fields:
+      baseurl: {}
+      enabled: {}
+      expire: {}
+      file:
+        min_mondoo_version: 5.18.0
+      filename: {}
+      id: {}
+      mirrors: {}
+      name: {}
+      pkgs: {}
+      revision: {}
+      size: {}
+      status: {}
+    min_mondoo_version: 5.15.0
+    snippets:
+    - query: |
+        yum.repo('salt-latest') {
+          enabled
+        }
+      title: Check if a yum repo is enabled
