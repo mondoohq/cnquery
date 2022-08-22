@@ -15,7 +15,7 @@ import (
 	"go.mondoo.io/mondoo/motor/vault"
 )
 
-var _ providers.Transport = (*Provider)(nil)
+var _ providers.Instance = (*Provider)(nil)
 
 func VerifyConfig(pCfg *providers.Config) (*winrm.Endpoint, error) {
 	if pCfg.Backend != providers.ProviderType_WINRM {

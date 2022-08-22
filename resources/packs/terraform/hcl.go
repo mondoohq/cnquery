@@ -20,7 +20,7 @@ import (
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func terraformtransport(t providers.Transport) (*terraform.Provider, error) {
+func terraformtransport(t providers.Instance) (*terraform.Provider, error) {
 	gt, ok := t.(*terraform.Provider)
 	if !ok {
 		return nil, errors.New("terraform resource is not supported on this transport")

@@ -31,7 +31,7 @@ var (
 	localProviderDetector *detector.Detector
 )
 
-func New(provider providers.Transport, motorOpts ...MotorOption) (*Motor, error) {
+func New(provider providers.Instance, motorOpts ...MotorOption) (*Motor, error) {
 	m := &Motor{
 		Provider: provider,
 	}
@@ -60,7 +60,7 @@ func New(provider providers.Transport, motorOpts ...MotorOption) (*Motor, error)
 type Motor struct {
 	l sync.Mutex
 
-	Provider    providers.Transport
+	Provider    providers.Instance
 	asset       *asset.Asset
 	detector    *detector.Detector
 	watcher     providers.Watcher

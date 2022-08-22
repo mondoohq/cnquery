@@ -23,12 +23,12 @@ const (
 )
 
 var (
-	_ providers.Transport = (*apiProvider)(nil)
-	_ providers.Transport = (*manifestProvider)(nil)
+	_ providers.Instance = (*apiProvider)(nil)
+	_ providers.Instance = (*manifestProvider)(nil)
 )
 
 type KubernetesProvider interface {
-	providers.Transport
+	providers.Instance
 	providers.PlatformIdentifier
 	Name() (string, error)
 	PlatformInfo() *platform.Platform

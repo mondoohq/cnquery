@@ -11,7 +11,7 @@ import (
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func equinixProvider(t providers.Transport) (*equinix_provider.Provider, error) {
+func equinixProvider(t providers.Instance) (*equinix_provider.Provider, error) {
 	provider, ok := t.(*equinix_provider.Provider)
 	if !ok {
 		return nil, errors.New("equinix resource is not supported on this transport")

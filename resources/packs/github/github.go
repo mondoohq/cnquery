@@ -23,7 +23,7 @@ func init() {
 	Init(Registry)
 }
 
-func githubProvider(t providers.Transport) (*provider.Provider, error) {
+func githubProvider(t providers.Instance) (*provider.Provider, error) {
 	gt, ok := t.(*provider.Provider)
 	if !ok {
 		return nil, errors.New("github resource is not supported on this transport")

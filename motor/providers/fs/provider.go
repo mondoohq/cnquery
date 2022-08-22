@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	_ providers.Transport        = (*Provider)(nil)
+	_ providers.Instance         = (*Provider)(nil)
 	_ os.OperatingSystemProvider = (*Provider)(nil)
 )
 

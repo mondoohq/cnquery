@@ -9,7 +9,7 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/os"
 )
 
-var _ providers.Transport = (*Provider)(nil)
+var _ providers.Instance = (*Provider)(nil)
 
 type Command struct {
 	PlatformID string `toml:"platform_id"`

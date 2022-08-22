@@ -23,7 +23,7 @@ type PlatformFingerprint struct {
 	// Labels      map[string]string
 }
 
-func IdentifyPlatform(t providers.Transport, p *platform.Platform, idDetectors []providers.PlatformIdDetector) (*PlatformFingerprint, error) {
+func IdentifyPlatform(t providers.Instance, p *platform.Platform, idDetectors []providers.PlatformIdDetector) (*PlatformFingerprint, error) {
 	if len(idDetectors) == 0 {
 		idDetectors = t.PlatformIdDetectors()
 	}
@@ -70,7 +70,7 @@ func gatherNameForPlatformId(id string) string {
 	return ""
 }
 
-func GatherPlatformIDs(provider providers.Transport, pf *platform.Platform, idDetector providers.PlatformIdDetector) ([]string, error) {
+func GatherPlatformIDs(provider providers.Instance, pf *platform.Platform, idDetector providers.PlatformIdDetector) ([]string, error) {
 	// helper for recoding transport to extract the original transport
 	recT, ok := provider.(*mock.MockRecordProvider)
 	if ok {
