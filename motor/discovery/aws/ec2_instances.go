@@ -14,7 +14,7 @@ import (
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/providers"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
 )
 
@@ -123,7 +123,7 @@ func (ec2i *Ec2Instances) getInstances(account string, ec2InstancesFilters Ec2In
 }
 
 func (ec2i *Ec2Instances) List() ([]*asset.Asset, error) {
-	identityResp, err := aws_transport.CheckIam(ec2i.config)
+	identityResp, err := aws_provider.CheckIam(ec2i.config)
 	if err != nil {
 		return nil, err
 	}

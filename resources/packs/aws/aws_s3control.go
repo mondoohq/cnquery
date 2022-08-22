@@ -15,17 +15,17 @@ func (s *mqlAwsS3control) id() (string, error) {
 }
 
 func (s *mqlAwsS3control) GetAccountPublicAccessBlock() (interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	account, err := at.Account()
+	account, err := provider.Account()
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.S3Control("")
+	svc := provider.S3Control("")
 	ctx := context.Background()
 
 	publicAccessBlock, err := svc.GetPublicAccessBlock(ctx, &s3control.GetPublicAccessBlockInput{

@@ -15,9 +15,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -30,12 +30,12 @@ func (t *mqlAwsCloudwatch) id() (string, error) {
 }
 
 func (t *mqlAwsCloudwatch) GetMetrics() ([]interface{}, error) {
-	at, err := awstransport(t.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(t.getMetrics(at), 5)
+	poolOfJobs := jobpool.CreatePool(t.getMetrics(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -49,9 +49,9 @@ func (t *mqlAwsCloudwatch) GetMetrics() ([]interface{}, error) {
 	return res, nil
 }
 
-func (t *mqlAwsCloudwatch) getMetrics(at *aws_transport.Provider) []*jobpool.Job {
+func (t *mqlAwsCloudwatch) getMetrics(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -59,7 +59,7 @@ func (t *mqlAwsCloudwatch) getMetrics(at *aws_transport.Provider) []*jobpool.Job
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := at.Cloudwatch(regionVal)
+			svc := provider.Cloudwatch(regionVal)
 			ctx := context.Background()
 
 			res := []interface{}{}
@@ -173,7 +173,7 @@ func (p *mqlAwsCloudwatchMetric) init(args *resources.Args) (*resources.Args, Aw
 	if !ok {
 		return args, nil, nil
 	}
-	at, err := awstransport(p.MotorRuntime.Motor.Provider)
+	at, err := awsProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return args, nil, err
 	}
@@ -231,7 +231,7 @@ func (p *mqlAwsCloudwatchMetric) GetDimensions() ([]interface{}, error) {
 		return nil, errors.Wrap(err, "unable to parse metric region")
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Provider)
+	at, err := awsProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -303,7 +303,7 @@ func (p *mqlAwsCloudwatchMetricstatistics) init(args *resources.Args) (*resource
 	if !ok {
 		return args, nil, nil
 	}
-	at, err := awstransport(p.MotorRuntime.Motor.Provider)
+	at, err := awsProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return args, nil, err
 	}
@@ -371,7 +371,7 @@ func (t *mqlAwsCloudwatchMetric) GetStatistics() (interface{}, error) {
 		return nil, errors.Wrap(err, "unable to parse metric region")
 	}
 
-	at, err := awstransport(t.MotorRuntime.Motor.Provider)
+	at, err := awsProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -466,7 +466,7 @@ func (t *mqlAwsCloudwatchMetric) GetAlarms() ([]interface{}, error) {
 		return nil, errors.Wrap(err, "unable to parse metric region")
 	}
 
-	at, err := awstransport(t.MotorRuntime.Motor.Provider)
+	at, err := awsProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -496,7 +496,7 @@ func (t *mqlAwsCloudwatchMetric) GetAlarms() ([]interface{}, error) {
 }
 
 func (t *mqlAwsCloudwatch) GetAlarms() ([]interface{}, error) {
-	at, err := awstransport(t.MotorRuntime.Motor.Provider)
+	at, err := awsProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -515,9 +515,9 @@ func (t *mqlAwsCloudwatch) GetAlarms() ([]interface{}, error) {
 	return res, nil
 }
 
-func (t *mqlAwsCloudwatch) getAlarms(at *aws_transport.Provider) []*jobpool.Job {
+func (t *mqlAwsCloudwatch) getAlarms(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -525,7 +525,7 @@ func (t *mqlAwsCloudwatch) getAlarms(at *aws_transport.Provider) []*jobpool.Job 
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := at.Cloudwatch(regionVal)
+			svc := provider.Cloudwatch(regionVal)
 			ctx := context.Background()
 
 			res := []interface{}{}
@@ -612,7 +612,7 @@ func (t *mqlAwsSnsTopic) GetSubscriptions() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(t.MotorRuntime.Motor.Provider)
+	at, err := awsProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -646,7 +646,7 @@ func (t *mqlAwsSnsTopic) GetSubscriptions() ([]interface{}, error) {
 }
 
 func (t *mqlAwsCloudwatch) GetLogGroups() ([]interface{}, error) {
-	at, err := awstransport(t.MotorRuntime.Motor.Provider)
+	at, err := awsProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -665,9 +665,9 @@ func (t *mqlAwsCloudwatch) GetLogGroups() ([]interface{}, error) {
 	return res, nil
 }
 
-func (t *mqlAwsCloudwatch) getLogGroups(at *aws_transport.Provider) []*jobpool.Job {
+func (t *mqlAwsCloudwatch) getLogGroups(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -676,7 +676,7 @@ func (t *mqlAwsCloudwatch) getLogGroups(at *aws_transport.Provider) []*jobpool.J
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
-			svc := at.CloudwatchLogs(regionVal)
+			svc := provider.CloudwatchLogs(regionVal)
 			ctx := context.Background()
 
 			nextToken := aws.String("no_token_to_start_with")
@@ -775,7 +775,7 @@ func (t *mqlAwsCloudwatchLoggroup) GetMetricsFilters() ([]interface{}, error) {
 	groupName := logGroupArn[6]
 	region := logGroupArn[3]
 
-	at, err := awstransport(t.MotorRuntime.Motor.Provider)
+	at, err := awsProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

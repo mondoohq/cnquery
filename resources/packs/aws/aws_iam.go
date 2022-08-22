@@ -27,12 +27,12 @@ func (p *mqlAwsIam) id() (string, error) {
 }
 
 func (c *mqlAwsIam) GetServerCertificates() ([]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Iam("")
+	svc := provider.Iam("")
 	ctx := context.Background()
 	var marker *string
 	res := []interface{}{}
@@ -58,12 +58,12 @@ func (c *mqlAwsIam) GetServerCertificates() ([]interface{}, error) {
 }
 
 func (c *mqlAwsIam) GetCredentialReport() ([]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Iam("")
+	svc := provider.Iam("")
 	ctx := context.Background()
 
 	var data []byte
@@ -149,12 +149,12 @@ func (c *mqlAwsIam) GetCredentialReport() ([]interface{}, error) {
 }
 
 func (c *mqlAwsIam) GetAccountPasswordPolicy() (map[string]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Iam("")
+	svc := provider.Iam("")
 	ctx := context.Background()
 
 	resp, err := svc.GetAccountPasswordPolicy(ctx, &iam.GetAccountPasswordPolicyInput{})
@@ -203,12 +203,12 @@ func ParsePasswordPolicy(passwordPolicy *types.PasswordPolicy) map[string]interf
 }
 
 func (c *mqlAwsIam) GetAccountSummary() (map[string]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Iam("")
+	svc := provider.Iam("")
 	ctx := context.Background()
 
 	resp, err := svc.GetAccountSummary(ctx, &iam.GetAccountSummaryInput{})
@@ -226,12 +226,12 @@ func (c *mqlAwsIam) GetAccountSummary() (map[string]interface{}, error) {
 }
 
 func (c *mqlAwsIam) GetUsers() ([]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Iam("")
+	svc := provider.Iam("")
 	ctx := context.Background()
 
 	var marker *string
@@ -289,12 +289,12 @@ func (c *mqlAwsIam) createIamUser(usr *types.User) (resources.ResourceType, erro
 }
 
 func (c *mqlAwsIam) GetVirtualMfaDevices() ([]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Iam("")
+	svc := provider.Iam("")
 	ctx := context.Background()
 
 	devicesResp, err := svc.ListVirtualMFADevices(ctx, &iam.ListVirtualMFADevicesInput{})
@@ -356,12 +356,12 @@ func (c *mqlAwsIam) mqlPolicies(policies []types.Policy) ([]interface{}, error) 
 }
 
 func (c *mqlAwsIam) GetAttachedPolicies() ([]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Iam("")
+	svc := provider.Iam("")
 	ctx := context.Background()
 
 	res := []interface{}{}
@@ -392,12 +392,12 @@ func (c *mqlAwsIam) GetAttachedPolicies() ([]interface{}, error) {
 }
 
 func (c *mqlAwsIam) GetPolicies() ([]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Iam("")
+	svc := provider.Iam("")
 	ctx := context.Background()
 
 	res := []interface{}{}
@@ -426,12 +426,12 @@ func (c *mqlAwsIam) GetPolicies() ([]interface{}, error) {
 }
 
 func (c *mqlAwsIam) GetRoles() ([]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Iam("")
+	svc := provider.Iam("")
 	ctx := context.Background()
 
 	res := []interface{}{}
@@ -472,12 +472,12 @@ func (c *mqlAwsIam) GetRoles() ([]interface{}, error) {
 }
 
 func (c *mqlAwsIam) GetGroups() ([]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Iam("")
+	svc := provider.Iam("")
 	ctx := context.Background()
 
 	res := []interface{}{}
@@ -740,12 +740,12 @@ func (p *mqlAwsIamUser) init(args *resources.Args) (*resources.Args, AwsIamUser,
 	}
 
 	// TODO: avoid reloading if all groups have been loaded already
-	at, err := awstransport(p.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	svc := at.Iam("")
+	svc := provider.Iam("")
 	ctx := context.Background()
 
 	// TODO: handle arn and extract the name
@@ -787,12 +787,12 @@ func (u *mqlAwsIamUser) id() (string, error) {
 }
 
 func (u *mqlAwsIamUser) GetAccessKeys() ([]interface{}, error) {
-	at, err := awstransport(u.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Iam("")
+	svc := provider.Iam("")
 	ctx := context.Background()
 
 	username, err := u.Name()
@@ -825,12 +825,12 @@ func (u *mqlAwsIamUser) GetAccessKeys() ([]interface{}, error) {
 }
 
 func (u *mqlAwsIamUser) GetPolicies() ([]interface{}, error) {
-	at, err := awstransport(u.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Iam("")
+	svc := provider.Iam("")
 	ctx := context.Background()
 
 	username, err := u.Name()
@@ -862,12 +862,12 @@ func (u *mqlAwsIamUser) GetPolicies() ([]interface{}, error) {
 }
 
 func (u *mqlAwsIamUser) GetAttachedPolicies() ([]interface{}, error) {
-	at, err := awstransport(u.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Iam("")
+	svc := provider.Iam("")
 	ctx := context.Background()
 
 	username, err := u.Name()
@@ -919,12 +919,12 @@ func (u *mqlAwsIamPolicy) loadPolicy(arn string) (*types.Policy, error) {
 	}
 
 	// if its not in the cache, fetch it
-	at, err := awstransport(u.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Iam("")
+	svc := provider.Iam("")
 	ctx := context.Background()
 
 	policy, err := svc.GetPolicy(ctx, &iam.GetPolicyInput{PolicyArn: &arn})
@@ -1061,12 +1061,12 @@ func (u *mqlAwsIamPolicy) listAttachedEntities(arn string) (attachedEntities, er
 	var res attachedEntities
 
 	// if its not in the cache, fetch it
-	at, err := awstransport(u.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return res, err
 	}
 
-	svc := at.Iam("")
+	svc := provider.Iam("")
 	ctx := context.Background()
 
 	var marker *string
@@ -1181,12 +1181,12 @@ func (u *mqlAwsIamPolicy) GetAttachedGroups() ([]interface{}, error) {
 }
 
 func (u *mqlAwsIamPolicy) GetDefaultVersion() (interface{}, error) {
-	at, err := awstransport(u.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Iam("")
+	svc := provider.Iam("")
 	ctx := context.Background()
 
 	arn, err := u.Arn()
@@ -1218,12 +1218,12 @@ func (u *mqlAwsIamPolicy) GetDefaultVersion() (interface{}, error) {
 }
 
 func (u *mqlAwsIamPolicy) GetVersions() ([]interface{}, error) {
-	at, err := awstransport(u.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Iam("")
+	svc := provider.Iam("")
 	ctx := context.Background()
 
 	arn, err := u.Arn()
@@ -1271,12 +1271,12 @@ func (u *mqlAwsIamPolicyversion) id() (string, error) {
 }
 
 func (u *mqlAwsIamPolicyversion) GetDocument() (interface{}, error) {
-	at, err := awstransport(u.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return "", err
 	}
 
-	svc := at.Iam("")
+	svc := provider.Iam("")
 	ctx := context.Background()
 
 	arn, err := u.Arn()
@@ -1326,12 +1326,12 @@ func (p *mqlAwsIamRole) init(args *resources.Args) (*resources.Args, AwsIamRole,
 	}
 
 	// TODO: avoid reloading if all groups have been loaded already
-	at, err := awstransport(p.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	svc := at.Iam("")
+	svc := provider.Iam("")
 	ctx := context.Background()
 
 	// TODO: handle arn and extract the name
@@ -1382,12 +1382,12 @@ func (p *mqlAwsIamGroup) init(args *resources.Args) (*resources.Args, AwsIamGrou
 	}
 
 	// TODO: avoid reloading if all groups have been loaded already
-	at, err := awstransport(p.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	svc := at.Iam("")
+	svc := provider.Iam("")
 	ctx := context.Background()
 
 	// TODO: handle arn and extract the name
@@ -1431,12 +1431,12 @@ func (u *mqlAwsIamGroup) id() (string, error) {
 }
 
 func (u *mqlAwsIamUser) GetGroups() ([]interface{}, error) {
-	at, err := awstransport(u.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(u.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Iam("")
+	svc := provider.Iam("")
 	ctx := context.Background()
 
 	username, err := u.Name()

@@ -8,8 +8,8 @@ import (
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -22,12 +22,12 @@ func (e *mqlAwsEfsFilesystem) id() (string, error) {
 }
 
 func (e *mqlAwsEfs) GetFilesystems() ([]interface{}, error) {
-	at, err := awstransport(e.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(e.getFilesystems(at), 5)
+	poolOfJobs := jobpool.CreatePool(e.getFilesystems(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -42,9 +42,9 @@ func (e *mqlAwsEfs) GetFilesystems() ([]interface{}, error) {
 	return res, nil
 }
 
-func (e *mqlAwsEfs) getFilesystems(at *aws_transport.Provider) []*jobpool.Job {
+func (e *mqlAwsEfs) getFilesystems(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}} // return the error
 	}
@@ -53,7 +53,7 @@ func (e *mqlAwsEfs) getFilesystems(at *aws_transport.Provider) []*jobpool.Job {
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
-			svc := at.Efs(regionVal)
+			svc := provider.Efs(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -130,11 +130,11 @@ func (e *mqlAwsEfsFilesystem) GetBackupPolicy() (interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to parse instance region")
 	}
-	at, err := awstransport(e.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
-	svc := at.Efs(region)
+	svc := provider.Efs(region)
 	ctx := context.Background()
 
 	backupPolicy, err := svc.DescribeBackupPolicy(ctx, &efs.DescribeBackupPolicyInput{

@@ -16,7 +16,7 @@ func (a *mqlAwsAccount) id() (string, error) {
 }
 
 func (a *mqlAwsAccount) GetId() (string, error) {
-	at, err := awstransport(a.MotorRuntime.Motor.Provider)
+	at, err := awsProvider(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return "", nil
 	}
@@ -30,7 +30,7 @@ func (a *mqlAwsAccount) GetId() (string, error) {
 }
 
 func (a *mqlAwsAccount) GetAliases() ([]interface{}, error) {
-	at, err := awstransport(a.MotorRuntime.Motor.Provider)
+	at, err := awsProvider(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil
 	}
@@ -50,7 +50,7 @@ func (a *mqlAwsAccount) GetAliases() ([]interface{}, error) {
 }
 
 func (a *mqlAwsAccount) GetOrganization() (interface{}, error) {
-	at, err := awstransport(a.MotorRuntime.Motor.Provider)
+	at, err := awsProvider(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil
 	}

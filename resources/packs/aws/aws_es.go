@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	"github.com/aws/smithy-go/transport/http"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -17,12 +17,12 @@ func (e *mqlAwsEs) id() (string, error) {
 }
 
 func (e *mqlAwsEs) GetDomains() ([]interface{}, error) {
-	at, err := awstransport(e.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(e.getDomains(at), 5)
+	poolOfJobs := jobpool.CreatePool(e.getDomains(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -37,9 +37,9 @@ func (e *mqlAwsEs) GetDomains() ([]interface{}, error) {
 	return res, nil
 }
 
-func (e *mqlAwsEs) getDomains(at *aws_transport.Provider) []*jobpool.Job {
+func (e *mqlAwsEs) getDomains(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -47,7 +47,7 @@ func (e *mqlAwsEs) getDomains(at *aws_transport.Provider) []*jobpool.Job {
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := at.Es(regionVal)
+			svc := provider.Es(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -86,11 +86,11 @@ func (a *mqlAwsEsDomain) init(args *resources.Args) (*resources.Args, AwsEsDomai
 
 	name := (*args)["name"].(string)
 	region := (*args)["region"].(string)
-	at, err := awstransport(a.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
-	svc := at.Es(region)
+	svc := provider.Es(region)
 	ctx := context.Background()
 	domainDetails, err := svc.DescribeElasticsearchDomain(ctx, &elasticsearchservice.DescribeElasticsearchDomainInput{DomainName: &name})
 	if err != nil {

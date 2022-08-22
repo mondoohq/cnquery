@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty/types"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -18,12 +18,12 @@ func (g *mqlAwsGuardduty) id() (string, error) {
 }
 
 func (g *mqlAwsGuardduty) GetDetectors() ([]interface{}, error) {
-	at, err := awstransport(g.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(g.getDetectors(at), 5)
+	poolOfJobs := jobpool.CreatePool(g.getDetectors(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -41,9 +41,9 @@ func (g *mqlAwsGuarddutyDetector) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlAwsGuardduty) getDetectors(at *aws_transport.Provider) []*jobpool.Job {
+func (g *mqlAwsGuardduty) getDetectors(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -51,7 +51,7 @@ func (g *mqlAwsGuardduty) getDetectors(at *aws_transport.Provider) []*jobpool.Jo
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := at.Guardduty(regionVal)
+			svc := provider.Guardduty(regionVal)
 			ctx := context.Background()
 
 			res := []interface{}{}
@@ -95,11 +95,11 @@ func (g *mqlAwsGuarddutyDetector) GetUnarchivedFindings() ([]interface{}, error)
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(g.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
-	svc := at.Guardduty(region)
+	svc := provider.Guardduty(region)
 	ctx := context.Background()
 
 	findings, err := svc.ListFindings(ctx, &guardduty.ListFindingsInput{
@@ -133,11 +133,11 @@ func (g *mqlAwsGuarddutyDetector) init(args *resources.Args) (*resources.Args, A
 
 	id := (*args)["id"].(string)
 	region := (*args)["region"].(string)
-	at, err := awstransport(g.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
-	svc := at.Guardduty(region)
+	svc := provider.Guardduty(region)
 	ctx := context.Background()
 	detector, err := svc.GetDetector(ctx, &guardduty.GetDetectorInput{DetectorId: &id})
 	if err != nil {

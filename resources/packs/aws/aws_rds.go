@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/rs/zerolog/log"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -23,12 +23,12 @@ const (
 )
 
 func (d *mqlAwsRds) GetDbInstances() ([]interface{}, error) {
-	at, err := awstransport(d.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(d.getDbInstances(at), 5)
+	poolOfJobs := jobpool.CreatePool(d.getDbInstances(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -43,13 +43,13 @@ func (d *mqlAwsRds) GetDbInstances() ([]interface{}, error) {
 	return res, nil
 }
 
-func (d *mqlAwsRds) getDbInstances(at *aws_transport.Provider) []*jobpool.Job {
+func (d *mqlAwsRds) getDbInstances(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
-	account, err := at.Account()
+	account, err := provider.Account()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -60,7 +60,7 @@ func (d *mqlAwsRds) getDbInstances(at *aws_transport.Provider) []*jobpool.Job {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
 			res := []interface{}{}
-			svc := at.Rds(regionVal)
+			svc := provider.Rds(regionVal)
 			ctx := context.Background()
 
 			var marker *string
@@ -136,12 +136,12 @@ func rdsTagsToMap(tags []types.Tag) map[string]interface{} {
 }
 
 func (d *mqlAwsRds) GetDbClusters() ([]interface{}, error) {
-	at, err := awstransport(d.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(d.getDbClusters(at), 5)
+	poolOfJobs := jobpool.CreatePool(d.getDbClusters(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -191,13 +191,13 @@ func (p *mqlAwsRdsDbinstance) init(args *resources.Args) (*resources.Args, AwsRd
 	return nil, nil, errors.New("rds db instance does not exist")
 }
 
-func (d *mqlAwsRds) getDbClusters(at *aws_transport.Provider) []*jobpool.Job {
+func (d *mqlAwsRds) getDbClusters(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
-	account, err := at.Account()
+	account, err := provider.Account()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -207,7 +207,7 @@ func (d *mqlAwsRds) getDbClusters(at *aws_transport.Provider) []*jobpool.Job {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
 			res := []interface{}{}
-			svc := at.Rds(regionVal)
+			svc := provider.Rds(regionVal)
 			ctx := context.Background()
 
 			var marker *string
@@ -262,12 +262,12 @@ func (d *mqlAwsRdsDbcluster) GetSnapshots() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(d.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Rds(region)
+	svc := provider.Rds(region)
 	ctx := context.Background()
 	res := []interface{}{}
 
@@ -308,12 +308,12 @@ func (d *mqlAwsRdsDbinstance) GetSnapshots() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(d.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Rds(region)
+	svc := provider.Rds(region)
 	ctx := context.Background()
 	res := []interface{}{}
 
@@ -371,12 +371,12 @@ func (d *mqlAwsRdsSnapshot) GetAttributes() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(d.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Rds(region)
+	svc := provider.Rds(region)
 	ctx := context.Background()
 	if isCluster == true {
 		snapshotAttributes, err := svc.DescribeDBClusterSnapshotAttributes(ctx, &rds.DescribeDBClusterSnapshotAttributesInput{DBClusterSnapshotIdentifier: &snapshotId})

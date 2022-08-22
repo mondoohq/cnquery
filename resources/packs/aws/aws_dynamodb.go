@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -24,12 +24,12 @@ const (
 )
 
 func (d *mqlAwsDynamodb) GetBackups() ([]interface{}, error) {
-	at, err := awstransport(d.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(d.getBackups(at), 5)
+	poolOfJobs := jobpool.CreatePool(d.getBackups(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -44,9 +44,9 @@ func (d *mqlAwsDynamodb) GetBackups() ([]interface{}, error) {
 	return res, nil
 }
 
-func (d *mqlAwsDynamodb) getBackups(at *aws_transport.Provider) []*jobpool.Job {
+func (d *mqlAwsDynamodb) getBackups(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -56,7 +56,7 @@ func (d *mqlAwsDynamodb) getBackups(at *aws_transport.Provider) []*jobpool.Job {
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
-			svc := at.Dynamodb(regionVal)
+			svc := provider.Dynamodb(regionVal)
 			ctx := context.Background()
 
 			// no pagination required
@@ -84,11 +84,11 @@ func (d *mqlAwsDynamodbTable) GetBackups() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(d.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
-	svc := at.Dynamodb(region)
+	svc := provider.Dynamodb(region)
 	ctx := context.Background()
 
 	// no pagination required
@@ -100,12 +100,12 @@ func (d *mqlAwsDynamodbTable) GetBackups() ([]interface{}, error) {
 }
 
 func (d *mqlAwsDynamodb) GetLimits() ([]interface{}, error) {
-	at, err := awstransport(d.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(d.getLimits(at), 5)
+	poolOfJobs := jobpool.CreatePool(d.getLimits(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -119,14 +119,14 @@ func (d *mqlAwsDynamodb) GetLimits() ([]interface{}, error) {
 	return res, nil
 }
 
-func (d *mqlAwsDynamodb) getLimits(at *aws_transport.Provider) []*jobpool.Job {
+func (d *mqlAwsDynamodb) getLimits(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
-	account, err := at.Account()
+	account, err := provider.Account()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -136,7 +136,7 @@ func (d *mqlAwsDynamodb) getLimits(at *aws_transport.Provider) []*jobpool.Job {
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
-			svc := at.Dynamodb(regionVal)
+			svc := provider.Dynamodb(regionVal)
 			ctx := context.Background()
 
 			// no pagination required
@@ -164,15 +164,15 @@ func (d *mqlAwsDynamodb) getLimits(at *aws_transport.Provider) []*jobpool.Job {
 }
 
 func (d *mqlAwsDynamodb) GetGlobalTables() ([]interface{}, error) {
-	at, err := awstransport(d.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
-	account, err := at.Account()
+	account, err := provider.Account()
 	if err != nil {
 		return nil, err
 	}
-	svc := at.Dynamodb("")
+	svc := provider.Dynamodb("")
 	ctx := context.Background()
 
 	// no pagination required
@@ -195,12 +195,12 @@ func (d *mqlAwsDynamodb) GetGlobalTables() ([]interface{}, error) {
 }
 
 func (d *mqlAwsDynamodb) GetTables() ([]interface{}, error) {
-	at, err := awstransport(d.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(d.getTables(at), 5)
+	poolOfJobs := jobpool.CreatePool(d.getTables(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -215,13 +215,13 @@ func (d *mqlAwsDynamodb) GetTables() ([]interface{}, error) {
 	return res, nil
 }
 
-func (d *mqlAwsDynamodb) getTables(at *aws_transport.Provider) []*jobpool.Job {
+func (d *mqlAwsDynamodb) getTables(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
-	account, err := at.Account()
+	account, err := provider.Account()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -231,7 +231,7 @@ func (d *mqlAwsDynamodb) getTables(at *aws_transport.Provider) []*jobpool.Job {
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
-			svc := at.Dynamodb(regionVal)
+			svc := provider.Dynamodb(regionVal)
 			ctx := context.Background()
 
 			// no pagination required
@@ -296,11 +296,11 @@ func (d *mqlAwsDynamodbGlobaltable) GetReplicaSettings() ([]interface{}, error) 
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(d.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
-	svc := at.Dynamodb("")
+	svc := provider.Dynamodb("")
 	ctx := context.Background()
 
 	// no pagination required
@@ -320,11 +320,11 @@ func (d *mqlAwsDynamodbTable) GetContinuousBackups() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(d.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
-	svc := at.Dynamodb(region)
+	svc := provider.Dynamodb(region)
 	ctx := context.Background()
 
 	// no pagination required

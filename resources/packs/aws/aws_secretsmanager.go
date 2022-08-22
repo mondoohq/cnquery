@@ -6,8 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -16,12 +16,12 @@ func (e *mqlAwsSecretsmanager) id() (string, error) {
 }
 
 func (e *mqlAwsSecretsmanager) GetSecrets() ([]interface{}, error) {
-	at, err := awstransport(e.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(e.getSecrets(at), 5)
+	poolOfJobs := jobpool.CreatePool(e.getSecrets(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -39,9 +39,9 @@ func (e *mqlAwsSecretsmanagerSecret) id() (string, error) {
 	return e.Arn()
 }
 
-func (e *mqlAwsSecretsmanager) getSecrets(at *aws_transport.Provider) []*jobpool.Job {
+func (e *mqlAwsSecretsmanager) getSecrets(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -49,7 +49,7 @@ func (e *mqlAwsSecretsmanager) getSecrets(at *aws_transport.Provider) []*jobpool
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := at.Secretsmanager(regionVal)
+			svc := provider.Secretsmanager(regionVal)
 			ctx := context.Background()
 
 			res := []interface{}{}

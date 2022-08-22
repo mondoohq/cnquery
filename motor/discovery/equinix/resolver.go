@@ -7,7 +7,7 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/platform/detector"
 	"go.mondoo.io/mondoo/motor/providers"
-	equinix_transport "go.mondoo.io/mondoo/motor/providers/equinix"
+	equinix_provider "go.mondoo.io/mondoo/motor/providers/equinix"
 )
 
 type Resolver struct{}
@@ -24,19 +24,18 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, t *providers.
 	resolved := []*asset.Asset{}
 
 	// add aws api as asset
-	trans, err := equinix_transport.New(t)
-	// trans, err := aws_transport.New(t, transportOpts...)
+	provider, err := equinix_provider.New(t)
 	if err != nil {
 		return nil, err
 	}
 
-	identifier, err := trans.Identifier() // TODO: this identifier is not unique
+	identifier, err := provider.Identifier() // TODO: this identifier is not unique
 	if err != nil {
 		return nil, err
 	}
 
 	// detect platform info for the asset
-	detector := detector.New(trans)
+	detector := detector.New(provider)
 	pf, err := detector.Platform()
 	if err != nil {
 		return nil, err

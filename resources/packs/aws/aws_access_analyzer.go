@@ -7,8 +7,8 @@ import (
 	accessanalyzer "github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/rs/zerolog/log"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -21,12 +21,12 @@ func (e *mqlAwsAccessanalyzerAnalyzer) id() (string, error) {
 }
 
 func (a *mqlAwsAccessAnalyzer) GetAnalyzers() ([]interface{}, error) {
-	at, err := awstransport(a.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(a.getAnalyzers(at), 5)
+	poolOfJobs := jobpool.CreatePool(a.getAnalyzers(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -41,9 +41,9 @@ func (a *mqlAwsAccessAnalyzer) GetAnalyzers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsAccessAnalyzer) getAnalyzers(at *aws_transport.Provider) []*jobpool.Job {
+func (a *mqlAwsAccessAnalyzer) getAnalyzers(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -51,7 +51,7 @@ func (a *mqlAwsAccessAnalyzer) getAnalyzers(at *aws_transport.Provider) []*jobpo
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := at.AccessAnalyzer(regionVal)
+			svc := provider.AccessAnalyzer(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 			nextToken := aws.String("no_token_to_start_with")

@@ -6,8 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -20,12 +20,12 @@ func (a *mqlAwsAutoscalingGroup) id() (string, error) {
 }
 
 func (a *mqlAwsAutoscaling) GetGroups() ([]interface{}, error) {
-	at, err := awstransport(a.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(a.getGroups(at), 5)
+	poolOfJobs := jobpool.CreatePool(a.getGroups(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -40,9 +40,9 @@ func (a *mqlAwsAutoscaling) GetGroups() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsAutoscaling) getGroups(at *aws_transport.Provider) []*jobpool.Job {
+func (a *mqlAwsAutoscaling) getGroups(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -50,7 +50,7 @@ func (a *mqlAwsAutoscaling) getGroups(at *aws_transport.Provider) []*jobpool.Job
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := at.Autoscaling(regionVal)
+			svc := provider.Autoscaling(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 

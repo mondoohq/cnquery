@@ -26,12 +26,12 @@ func (p *mqlAwsS3) id() (string, error) {
 }
 
 func (p *mqlAwsS3) GetBuckets() ([]interface{}, error) {
-	at, err := awstransport(p.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.S3("")
+	svc := provider.S3("")
 	ctx := context.Background()
 
 	buckets, err := svc.ListBuckets(ctx, &s3.ListBucketsInput{})
@@ -129,12 +129,12 @@ func (p *mqlAwsS3Bucket) GetPolicy() (interface{}, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.S3(location)
+	svc := provider.S3(location)
 	ctx := context.Background()
 
 	policy, err := svc.GetBucketPolicy(ctx, &s3.GetBucketPolicyInput{
@@ -173,12 +173,12 @@ func (p *mqlAwsS3Bucket) GetTags() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.S3(location)
+	svc := provider.S3(location)
 	ctx := context.Background()
 
 	tags, err := svc.GetBucketTagging(ctx, &s3.GetBucketTaggingInput{
@@ -210,7 +210,7 @@ func (p *mqlAwsS3Bucket) GetLocation() (string, error) {
 		return "", err
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Provider)
+	at, err := awsProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return "", err
 	}
@@ -244,12 +244,12 @@ func (p *mqlAwsS3Bucket) gatherAcl() (*s3.GetBucketAclOutput, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.S3(location)
+	svc := provider.S3(location)
 	ctx := context.Background()
 
 	acl, err := svc.GetBucketAcl(ctx, &s3.GetBucketAclInput{
@@ -321,12 +321,12 @@ func (p *mqlAwsS3Bucket) GetPublicAccessBlock() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(p.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.S3(location)
+	svc := provider.S3(location)
 	ctx := context.Background()
 
 	publicAccessBlock, err := svc.GetPublicAccessBlock(ctx, &s3.GetPublicAccessBlockInput{
@@ -390,12 +390,12 @@ func (p *mqlAwsS3Bucket) GetCors() ([]interface{}, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.S3(location)
+	svc := provider.S3(location)
 	ctx := context.Background()
 
 	cors, err := svc.GetBucketCors(ctx, &s3.GetBucketCorsInput{
@@ -438,12 +438,12 @@ func (p *mqlAwsS3Bucket) GetLogging() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.S3(bucketlocation)
+	svc := provider.S3(bucketlocation)
 	ctx := context.Background()
 
 	logging, err := svc.GetBucketLogging(ctx, &s3.GetBucketLoggingInput{
@@ -483,12 +483,12 @@ func (p *mqlAwsS3Bucket) GetVersioning() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.S3(location)
+	svc := provider.S3(location)
 	ctx := context.Background()
 
 	versioning, err := svc.GetBucketVersioning(ctx, &s3.GetBucketVersioningInput{
@@ -518,12 +518,12 @@ func (p *mqlAwsS3Bucket) GetReplication() (interface{}, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.S3(region)
+	svc := provider.S3(region)
 	ctx := context.Background()
 
 	bucketReplication, err := svc.GetBucketReplication(ctx, &s3.GetBucketReplicationInput{
@@ -548,12 +548,12 @@ func (p *mqlAwsS3Bucket) GetEncryption() (interface{}, error) {
 		return nil, err
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.S3(region)
+	svc := provider.S3(region)
 	ctx := context.Background()
 
 	encryption, err := svc.GetBucketEncryption(ctx, &s3.GetBucketEncryptionInput{
@@ -583,12 +583,12 @@ func (p *mqlAwsS3Bucket) GetDefaultLock() (string, error) {
 		return "", err
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return "", err
 	}
 
-	svc := at.S3(region)
+	svc := provider.S3(region)
 	ctx := context.Background()
 
 	objectLockConfiguration, err := svc.GetObjectLockConfiguration(ctx, &s3.GetObjectLockConfigurationInput{
@@ -614,12 +614,12 @@ func (p *mqlAwsS3Bucket) GetStaticWebsiteHosting() (map[string]interface{}, erro
 		return nil, err
 	}
 
-	at, err := awstransport(p.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.S3(location)
+	svc := provider.S3(location)
 	ctx := context.Background()
 
 	website, err := svc.GetBucketWebsite(ctx, &s3.GetBucketWebsiteInput{

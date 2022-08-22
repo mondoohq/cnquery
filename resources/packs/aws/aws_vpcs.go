@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/rs/zerolog/log"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -32,12 +32,12 @@ func (s *mqlAwsVpcRoutetable) id() (string, error) {
 }
 
 func (s *mqlAws) GetVpcs() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getVpcs(at), 5)
+	poolOfJobs := jobpool.CreatePool(s.getVpcs(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -51,13 +51,13 @@ func (s *mqlAws) GetVpcs() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlAws) getVpcs(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAws) getVpcs(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}} // return the error
 	}
-	account, err := at.Account()
+	account, err := provider.Account()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -66,7 +66,7 @@ func (s *mqlAws) getVpcs(at *aws_transport.Provider) []*jobpool.Job {
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
-			svc := at.Ec2(regionVal)
+			svc := provider.Ec2(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -108,7 +108,7 @@ func (s *mqlAws) getVpcs(at *aws_transport.Provider) []*jobpool.Job {
 }
 
 func (s *mqlAwsVpc) GetFlowLogs() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func (s *mqlAwsVpc) GetFlowLogs() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	svc := at.Ec2(region)
+	svc := provider.Ec2(region)
 	ctx := context.Background()
 	flowLogs := []interface{}{}
 	filterKeyVal := "resource-id"
@@ -214,11 +214,11 @@ func (s *mqlAwsVpc) GetRouteTables() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
-	svc := at.Ec2("")
+	svc := provider.Ec2("")
 	ctx := context.Background()
 	res := []interface{}{}
 

@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -22,12 +22,12 @@ const (
 )
 
 func (a *mqlAwsApigateway) GetRestApis() ([]interface{}, error) {
-	at, err := awstransport(a.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(a.getRestApis(at), 5)
+	poolOfJobs := jobpool.CreatePool(a.getRestApis(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -42,13 +42,13 @@ func (a *mqlAwsApigateway) GetRestApis() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsApigateway) getRestApis(at *aws_transport.Provider) []*jobpool.Job {
+func (a *mqlAwsApigateway) getRestApis(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
-	account, err := at.Account()
+	account, err := provider.Account()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -58,7 +58,7 @@ func (a *mqlAwsApigateway) getRestApis(at *aws_transport.Provider) []*jobpool.Jo
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
-			svc := at.Apigateway(regionVal)
+			svc := provider.Apigateway(regionVal)
 			ctx := context.Background()
 
 			res := []interface{}{}
@@ -105,15 +105,15 @@ func (a *mqlAwsApigatewayRestapi) GetStages() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(a.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
-	account, err := at.Account()
+	account, err := provider.Account()
 	if err != nil {
 		return nil, err
 	}
-	svc := at.Apigateway(region)
+	svc := provider.Apigateway(region)
 	ctx := context.Background()
 
 	// no pagination required

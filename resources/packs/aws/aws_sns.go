@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/smithy-go/transport/http"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -27,12 +27,12 @@ func (s *mqlAwsSnsSubscription) id() (string, error) {
 }
 
 func (s *mqlAwsSns) GetTopics() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getTopics(at), 5)
+	poolOfJobs := jobpool.CreatePool(s.getTopics(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -60,11 +60,11 @@ func (s *mqlAwsSnsTopic) init(args *resources.Args) (*resources.Args, AwsSnsTopi
 	if err != nil {
 		return nil, nil, nil
 	}
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
-	svc := at.Sns(arn.Region)
+	svc := provider.Sns(arn.Region)
 	ctx := context.Background()
 
 	tags, err := getSNSTags(ctx, svc, &arnVal)
@@ -77,9 +77,9 @@ func (s *mqlAwsSnsTopic) init(args *resources.Args) (*resources.Args, AwsSnsTopi
 	return args, nil, nil
 }
 
-func (s *mqlAwsSns) getTopics(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsSns) getTopics(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -87,7 +87,7 @@ func (s *mqlAwsSns) getTopics(at *aws_transport.Provider) []*jobpool.Job {
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := at.Sns(regionVal)
+			svc := provider.Sns(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -134,12 +134,12 @@ func (s *mqlAwsSnsTopic) GetAttributes() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Sns(region)
+	svc := provider.Sns(region)
 	ctx := context.Background()
 
 	topicAttributes, err := svc.GetTopicAttributes(ctx, &sns.GetTopicAttributesInput{TopicArn: &arn})
