@@ -1,41 +1,48 @@
-package os
+package vsphere
 
 import (
 	"errors"
 	"reflect"
 	"time"
 
-	"github.com/vmware/govmomi/vim25/mo"
-
 	"github.com/vmware/govmomi/object"
+	"github.com/vmware/govmomi/vim25/mo"
 	"go.mondoo.io/mondoo/motor/providers"
-	vsphere_transport "go.mondoo.io/mondoo/motor/providers/vsphere"
+	provider "go.mondoo.io/mondoo/motor/providers/vsphere"
 	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/os/vsphere"
+	"go.mondoo.io/mondoo/resources/packs/core"
+	"go.mondoo.io/mondoo/resources/packs/vsphere/info"
+	"go.mondoo.io/mondoo/resources/packs/vsphere/resourceclient"
 )
 
-func getClientInstance(t providers.Transport) (*vsphere.Client, error) {
-	vt, ok := t.(*vsphere_transport.Provider)
+var Registry = info.Registry
+
+func init() {
+	Init(Registry)
+}
+
+func getClientInstance(t providers.Transport) (*resourceclient.Client, error) {
+	vt, ok := t.(*provider.Provider)
 	if !ok {
 		return nil, errors.New("vsphere resource is not supported on this transport")
 	}
 
-	cl := vsphere.New(vt.Client())
+	cl := resourceclient.New(vt.Client())
 	return cl, nil
 }
 
-func esxiClient(t providers.Transport, path string) (*vsphere.Esxi, error) {
-	client, err := getClientInstance(t)
+func esxiClient(t providers.Transport, path string) (*resourceclient.Esxi, error) {
+	vClient, err := getClientInstance(t)
 	if err != nil {
 		return nil, err
 	}
 
-	host, err := client.HostByInventoryPath(path)
+	host, err := vClient.HostByInventoryPath(path)
 	if err != nil {
 		return nil, err
 	}
 
-	esxi := vsphere.NewEsxiClient(client.Client, path, host)
+	esxi := resourceclient.NewEsxiClient(vClient.Client, path, host)
 	return esxi, nil
 }
 
@@ -140,16 +147,16 @@ func (v *mqlVsphere) GetLicenses() ([]interface{}, error) {
 	return licenses, nil
 }
 
-func vsphereHosts(client *vsphere.Client, runtime *resources.Runtime, vhosts []*object.HostSystem) ([]interface{}, error) {
+func vsphereHosts(vClient *resourceclient.Client, runtime *resources.Runtime, vhosts []*object.HostSystem) ([]interface{}, error) {
 	mqlHosts := make([]interface{}, len(vhosts))
 	for i, h := range vhosts {
 
-		hostInfo, err := vsphere.HostInfo(h)
+		hostInfo, err := resourceclient.HostInfo(h)
 		if err != nil {
 			return nil, err
 		}
 
-		props, err := vsphere.HostProperties(hostInfo)
+		props, err := resourceclient.HostProperties(hostInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -288,7 +295,7 @@ func (v *mqlVsphereHost) init(args *resources.Args) (*resources.Args, VsphereHos
 		return nil, nil, err
 	}
 
-	props, err := vsphere.HostProperties(hostInfo)
+	props, err := resourceclient.HostProperties(hostInfo)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -306,7 +313,7 @@ func (v *mqlVsphereHost) init(args *resources.Args) (*resources.Args, VsphereHos
 	return args, nil, nil
 }
 
-func (v *mqlVsphereHost) esxiClient() (*vsphere.Esxi, error) {
+func (v *mqlVsphereHost) esxiClient() (*resourceclient.Esxi, error) {
 	path, err := v.InventoryPath()
 	if err != nil {
 		return nil, err
@@ -425,7 +432,7 @@ func (v *mqlVsphereVmnic) id() (string, error) {
 	return v.Name()
 }
 
-func (v *mqlVsphereVmnic) esxiClient() (*vsphere.Esxi, error) {
+func (v *mqlVsphereVmnic) esxiClient() (*resourceclient.Esxi, error) {
 	c, ok := v.MqlResource().Cache.Load("_host_inventory_path")
 	if !ok {
 		return nil, errors.New("cannot get esxi host inventory path")
@@ -466,7 +473,7 @@ func (v *mqlVsphereHost) GetVmknics() ([]interface{}, error) {
 			"properties", entry.Properties,
 			"ipv4", entry.Ipv4,
 			"ipv6", entry.Ipv6,
-			"tags", sliceInterface(entry.Tags),
+			"tags", core.StrSliceToInterface(entry.Tags),
 		)
 		if err != nil {
 			return nil, err
@@ -568,7 +575,7 @@ func (v *mqlVsphereHost) GetKernelModules() ([]interface{}, error) {
 }
 
 func (v *mqlVsphereHost) GetAdvancedSettings() (map[string]interface{}, error) {
-	client, err := getClientInstance(v.MotorRuntime.Motor.Provider)
+	vClient, err := getClientInstance(v.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -578,16 +585,16 @@ func (v *mqlVsphereHost) GetAdvancedSettings() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	host, err := client.HostByInventoryPath(path)
+	host, err := vClient.HostByInventoryPath(path)
 	if err != nil {
 		return nil, err
 	}
 
-	return vsphere.HostOptions(host)
+	return resourceclient.HostOptions(host)
 }
 
 func (v *mqlVsphereHost) GetServices() ([]interface{}, error) {
-	client, err := getClientInstance(v.MotorRuntime.Motor.Provider)
+	vClient, err := getClientInstance(v.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -597,12 +604,12 @@ func (v *mqlVsphereHost) GetServices() ([]interface{}, error) {
 		return nil, err
 	}
 
-	host, err := client.HostByInventoryPath(path)
+	host, err := vClient.HostByInventoryPath(path)
 	if err != nil {
 		return nil, err
 	}
 
-	services, err := vsphere.HostServices(host)
+	services, err := resourceclient.HostServices(host)
 	if err != nil {
 		return nil, err
 	}
@@ -614,7 +621,7 @@ func (v *mqlVsphereHost) GetServices() ([]interface{}, error) {
 			"required", s.Required,
 			"uninstallable", s.Uninstallable,
 			"running", s.Running,
-			"ruleset", sliceInterface(s.Ruleset),
+			"ruleset", core.StrSliceToInterface(s.Ruleset),
 			"policy", s.Policy, // on, off, automatic
 		)
 		if err != nil {
@@ -625,16 +632,8 @@ func (v *mqlVsphereHost) GetServices() ([]interface{}, error) {
 	return mqlServices, nil
 }
 
-func sliceInterface(slice []string) []interface{} {
-	res := make([]interface{}, len(slice))
-	for i := range slice {
-		res[i] = slice[i]
-	}
-	return res
-}
-
 func (v *mqlVsphereHost) GetTimezone() (interface{}, error) {
-	client, err := getClientInstance(v.MotorRuntime.Motor.Provider)
+	vClient, err := getClientInstance(v.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -644,12 +643,12 @@ func (v *mqlVsphereHost) GetTimezone() (interface{}, error) {
 		return nil, err
 	}
 
-	host, err := client.HostByInventoryPath(path)
+	host, err := vClient.HostByInventoryPath(path)
 	if err != nil {
 		return nil, err
 	}
 
-	datetimeinfo, err := vsphere.HostDateTime(host)
+	datetimeinfo, err := resourceclient.HostDateTime(host)
 	if err != nil {
 		return nil, err
 	}
@@ -672,7 +671,7 @@ func (v *mqlVsphereHost) GetTimezone() (interface{}, error) {
 }
 
 func (v *mqlVsphereHost) GetNtp() (interface{}, error) {
-	client, err := getClientInstance(v.MotorRuntime.Motor.Provider)
+	vClient, err := getClientInstance(v.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -682,12 +681,12 @@ func (v *mqlVsphereHost) GetNtp() (interface{}, error) {
 		return nil, err
 	}
 
-	host, err := client.HostByInventoryPath(path)
+	host, err := vClient.HostByInventoryPath(path)
 	if err != nil {
 		return nil, err
 	}
 
-	datetimeinfo, err := vsphere.HostDateTime(host)
+	datetimeinfo, err := resourceclient.HostDateTime(host)
 	if err != nil {
 		return nil, err
 	}
@@ -696,8 +695,8 @@ func (v *mqlVsphereHost) GetNtp() (interface{}, error) {
 	var config []interface{}
 
 	if datetimeinfo != nil && datetimeinfo.NtpConfig != nil {
-		server = sliceInterface(datetimeinfo.NtpConfig.Server)
-		config = sliceInterface(datetimeinfo.NtpConfig.ConfigFile)
+		server = core.StrSliceToInterface(datetimeinfo.NtpConfig.Server)
+		config = core.StrSliceToInterface(datetimeinfo.NtpConfig.ConfigFile)
 	}
 
 	mqlNtpConfig, err := v.MotorRuntime.CreateResource("esxi.ntpconfig",
@@ -721,7 +720,7 @@ func (v *mqlVsphereHost) GetSnmp() (map[string]interface{}, error) {
 }
 
 func (v *mqlVsphereDatacenter) GetVms() ([]interface{}, error) {
-	client, err := getClientInstance(v.MotorRuntime.Motor.Provider)
+	vClient, err := getClientInstance(v.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -731,24 +730,24 @@ func (v *mqlVsphereDatacenter) GetVms() ([]interface{}, error) {
 		return nil, err
 	}
 
-	dc, err := client.Datacenter(path)
+	dc, err := vClient.Datacenter(path)
 	if err != nil {
 		return nil, err
 	}
 
-	vms, err := client.ListVirtualMachines(dc)
+	vms, err := vClient.ListVirtualMachines(dc)
 	if err != nil {
 		return nil, err
 	}
 
 	mqlVms := make([]interface{}, len(vms))
 	for i, vm := range vms {
-		vmInfo, err := vsphere.VmInfo(vm)
+		vmInfo, err := resourceclient.VmInfo(vm)
 		if err != nil {
 			return nil, err
 		}
 
-		props, err := vsphere.VmProperties(vmInfo)
+		props, err := resourceclient.VmProperties(vmInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -779,7 +778,7 @@ func (v *mqlVsphereVm) id() (string, error) {
 }
 
 func (v *mqlVsphereVm) GetAdvancedSettings() (map[string]interface{}, error) {
-	client, err := getClientInstance(v.MotorRuntime.Motor.Provider)
+	vClient, err := getClientInstance(v.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -789,12 +788,12 @@ func (v *mqlVsphereVm) GetAdvancedSettings() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	vm, err := client.VirtualMachineByInventoryPath(path)
+	vm, err := vClient.VirtualMachineByInventoryPath(path)
 	if err != nil {
 		return nil, err
 	}
 
-	return vsphere.AdvancedSettings(vm)
+	return resourceclient.AdvancedSettings(vm)
 }
 
 func (v *mqlEsxi) id() (string, error) {
@@ -803,14 +802,14 @@ func (v *mqlEsxi) id() (string, error) {
 
 func esxiHostProperties(runtime *resources.Runtime) (*object.HostSystem, *mo.HostSystem, error) {
 	t := runtime.Motor.Provider
-	vt, ok := t.(*vsphere_transport.Provider)
+	vt, ok := t.(*provider.Provider)
 	if !ok {
 		return nil, nil, errors.New("esxi resource is not supported on this transport")
 	}
 
 	var h *object.HostSystem
 	vClient := vt.Client()
-	cl := vsphere.New(vClient)
+	cl := resourceclient.New(vClient)
 	if !vClient.IsVC() {
 		// ESXi connections only have one host
 		dcs, err := cl.ListDatacenters()
@@ -838,12 +837,12 @@ func esxiHostProperties(runtime *resources.Runtime) (*object.HostSystem, *mo.Hos
 
 		// check if the connection was initialized with a specific host
 		identifier, err := vt.Identifier()
-		if err != nil || !vsphere_transport.IsVsphereResourceID(identifier) {
+		if err != nil || !provider.IsVsphereResourceID(identifier) {
 			return nil, nil, errors.New("esxi resource is only supported for esxi connections or vsphere vm connections")
 		}
 
 		// extract type and inventory
-		moid, err := vsphere_transport.ParseVsphereResourceID(identifier)
+		moid, err := provider.ParseVsphereResourceID(identifier)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -859,7 +858,7 @@ func esxiHostProperties(runtime *resources.Runtime) (*object.HostSystem, *mo.Hos
 	}
 
 	// todo sync with GetHosts
-	hostInfo, err := vsphere.HostInfo(h)
+	hostInfo, err := resourceclient.HostInfo(h)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -875,7 +874,7 @@ func (v *mqlEsxi) GetHost() (interface{}, error) {
 		return nil, err
 	}
 
-	props, err := vsphere.HostProperties(hostInfo)
+	props, err := resourceclient.HostProperties(hostInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -899,22 +898,22 @@ func (v *mqlEsxi) GetHost() (interface{}, error) {
 
 func esxiVmProperties(runtime *resources.Runtime) (*object.VirtualMachine, *mo.VirtualMachine, error) {
 	t := runtime.Motor.Provider
-	vt, ok := t.(*vsphere_transport.Provider)
+	vt, ok := t.(*provider.Provider)
 	if !ok {
 		return nil, nil, errors.New("esxi resource is not supported on this transport")
 	}
 
 	vClient := vt.Client()
-	cl := vsphere.New(vClient)
+	cl := resourceclient.New(vClient)
 
 	// check if the connection was initialized with a specific host
 	identifier, err := vt.Identifier()
-	if err != nil || !vsphere_transport.IsVsphereResourceID(identifier) {
+	if err != nil || !provider.IsVsphereResourceID(identifier) {
 		return nil, nil, errors.New("esxi resource is only supported for esxi connections or vsphere vm connections")
 	}
 
 	// extract type and inventory
-	moid, err := vsphere_transport.ParseVsphereResourceID(identifier)
+	moid, err := provider.ParseVsphereResourceID(identifier)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -928,7 +927,7 @@ func esxiVmProperties(runtime *resources.Runtime) (*object.VirtualMachine, *mo.V
 		return nil, nil, errors.New("could not find the esxi vm via platform id: " + identifier)
 	}
 
-	vmInfo, err := vsphere.VmInfo(vm)
+	vmInfo, err := resourceclient.VmInfo(vm)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -942,7 +941,7 @@ func (v *mqlEsxi) GetVm() (interface{}, error) {
 		return nil, err
 	}
 
-	props, err := vsphere.VmProperties(vmInfo)
+	props, err := resourceclient.VmProperties(vmInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -971,7 +970,7 @@ func (v *mqlEsxiCommand) id() (string, error) {
 
 func (v *mqlEsxiCommand) init(args *resources.Args) (*resources.Args, EsxiCommand, error) {
 	t := v.MotorRuntime.Motor.Provider
-	vt, ok := t.(*vsphere_transport.Provider)
+	vt, ok := t.(*provider.Provider)
 	if !ok {
 		return nil, nil, errors.New("esxi resource is only supported on vsphere transport")
 	}
@@ -988,7 +987,7 @@ func (v *mqlEsxiCommand) init(args *resources.Args) (*resources.Args, EsxiComman
 
 	// check if the connection was initialized with a specific host
 	identifier, err := vt.Identifier()
-	if err != nil || !vsphere_transport.IsVsphereResourceID(identifier) {
+	if err != nil || !provider.IsVsphereResourceID(identifier) {
 		return nil, nil, errors.New("could not determine inventoryPath from transport connection")
 	}
 
@@ -1001,13 +1000,13 @@ func (v *mqlEsxiCommand) init(args *resources.Args) (*resources.Args, EsxiComman
 	return args, nil, nil
 }
 
-func (v *mqlEsxiCommand) hostSystem(vt *vsphere_transport.Provider, identifier string) (*object.HostSystem, error) {
+func (v *mqlEsxiCommand) hostSystem(vt *provider.Provider, identifier string) (*object.HostSystem, error) {
 	var h *object.HostSystem
 	vClient := vt.Client()
-	cl := vsphere.New(vClient)
+	cl := resourceclient.New(vClient)
 
 	// extract type and inventory
-	moid, err := vsphere_transport.ParseVsphereResourceID(identifier)
+	moid, err := provider.ParseVsphereResourceID(identifier)
 	if err != nil {
 		return nil, err
 	}
@@ -1026,7 +1025,7 @@ func (v *mqlEsxiCommand) hostSystem(vt *vsphere_transport.Provider, identifier s
 
 func (v *mqlEsxiCommand) GetResult() ([]interface{}, error) {
 	t := v.MotorRuntime.Motor.Provider
-	_, ok := t.(*vsphere_transport.Provider)
+	_, ok := t.(*provider.Provider)
 	if !ok {
 		return nil, errors.New("esxi resource is not supported on this transport")
 	}
@@ -1064,7 +1063,7 @@ func (v *mqlVsphereVswitchStandard) id() (string, error) {
 	return v.Name()
 }
 
-func (v *mqlVsphereVswitchStandard) esxiClient() (*vsphere.Esxi, error) {
+func (v *mqlVsphereVswitchStandard) esxiClient() (*resourceclient.Esxi, error) {
 	c, ok := v.MqlResource().Cache.Load("_host_inventory_path")
 	if !ok {
 		return nil, errors.New("cannot get esxi host inventory path")

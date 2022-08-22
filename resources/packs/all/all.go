@@ -12,6 +12,7 @@ import (
 	"go.mondoo.io/mondoo/resources/packs/ms365"
 	"go.mondoo.io/mondoo/resources/packs/os"
 	"go.mondoo.io/mondoo/resources/packs/terraform"
+	"go.mondoo.io/mondoo/resources/packs/vsphere"
 )
 
 // These functions are needed to be located here to avoid dependency cycles
@@ -33,4 +34,5 @@ func init() {
 	Registry.Add(gitlab.Registry)
 	Registry.Add(terraform.Registry)
 	Registry.Add(k8s.Registry)
+	Registry.Add(vsphere.Registry)
 }

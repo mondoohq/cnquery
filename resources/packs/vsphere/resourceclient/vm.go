@@ -1,4 +1,4 @@
-package vsphere
+package resourceclient
 
 import (
 	"context"
