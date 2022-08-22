@@ -20,6 +20,7 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/aws"
 	"go.mondoo.io/mondoo/motor/discovery/aws/ebs"
 	"go.mondoo.io/mondoo/motor/discovery/azure"
+	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/discovery/container_registry"
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/discovery/docker_engine"
@@ -48,10 +49,6 @@ type Resolver interface {
 	Resolve(ctx context.Context, root *asset.Asset, t *providers.Config, cfn credentials.CredentialFn, sfn credentials.QuerySecretFn,
 		userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error)
 	AvailableDiscoveryTargets() []string
-}
-
-type ContextInitializer interface {
-	InitCtx(ctx context.Context) context.Context
 }
 
 var resolver map[string]Resolver
@@ -94,7 +91,7 @@ func init() {
 func InitCtx(ctx context.Context) context.Context {
 	initCtx := ctx
 	for _, r := range resolver {
-		if ctxInitializer, ok := r.(ContextInitializer); ok {
+		if ctxInitializer, ok := r.(common.ContextInitializer); ok {
 			initCtx = ctxInitializer.InitCtx(initCtx)
 		}
 	}

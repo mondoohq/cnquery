@@ -22,6 +22,11 @@ const (
 	OPTION_NAMESPACE = "namespace"
 )
 
+var (
+	_ providers.Transport = (*apiProvider)(nil)
+	_ providers.Transport = (*manifestProvider)(nil)
+)
+
 type KubernetesProvider interface {
 	providers.Transport
 	providers.TransportPlatformIdentifier

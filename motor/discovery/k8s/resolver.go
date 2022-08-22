@@ -5,6 +5,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/discovery/credentials"
 	"go.mondoo.io/mondoo/motor/platform/detector"
 	"go.mondoo.io/mondoo/motor/providers"
@@ -13,6 +14,8 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/local"
 	"go.mondoo.io/mondoo/resources/packs/os/kubectl"
 )
+
+var _ common.ContextInitializer = (*Resolver)(nil)
 
 const (
 	DiscoveryAll             = "all"
