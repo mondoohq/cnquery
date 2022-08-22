@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -11,6 +10,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/lr"
 	"go.mondoo.io/mondoo/resources/lr/docs"
 	"sigs.k8s.io/yaml"
@@ -29,7 +29,7 @@ var markdownCmd = &cobra.Command{
 	Long:  `parse an LR file and generates a markdown file`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		raw, err := ioutil.ReadFile(args[0])
+		raw, err := os.ReadFile(args[0])
 		if err != nil {
 			log.Error().Msg(err.Error())
 			return
@@ -46,11 +46,16 @@ var markdownCmd = &cobra.Command{
 			return
 		}
 
+		schema, err := lr.Schema(res)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to generate schema")
+		}
+
 		var lrDocsData docs.LrDocs
 		docsFilepath, _ := cmd.Flags().GetString("docs-file")
 		_, err = os.Stat(docsFilepath)
 		if err == nil {
-			content, err := ioutil.ReadFile(docsFilepath)
+			content, err := os.ReadFile(docsFilepath)
 			if err != nil {
 				log.Fatal().Err(err).Msg("could not read file " + docsFilepath)
 			}
@@ -58,6 +63,10 @@ var markdownCmd = &cobra.Command{
 			if err != nil {
 				log.Fatal().Err(err).Msg("could not load yaml data")
 			}
+
+			log.Info().Int("resources", len(lrDocsData.Resources)).Msg("loaded docs from " + docsFilepath)
+		} else {
+			log.Info().Msg("no docs file provided")
 		}
 
 		// write optional front-matter
@@ -70,7 +79,7 @@ var markdownCmd = &cobra.Command{
 			}
 
 			log.Info().Msg("load front matter data")
-			content, err := ioutil.ReadFile(frontMatterPath)
+			content, err := os.ReadFile(frontMatterPath)
 			if err != nil {
 				log.Fatal().Err(err).Msg("could not read file " + frontMatterPath)
 			}
@@ -107,11 +116,15 @@ var markdownCmd = &cobra.Command{
 		for i := range res.Resources {
 			resource := res.Resources[i]
 			var docs *docs.LrDocsEntry
+			var ok bool
 			if lrDocsData.Resources != nil {
-				docs = lrDocsData.Resources[resource.ID]
+				docs, ok = lrDocsData.Resources[resource.ID]
+				if !ok {
+					log.Warn().Msg("no docs found for resource " + resource.ID)
+				}
 			}
 
-			err = os.WriteFile(filepath.Join(outputDir, strings.ToLower(resource.ID+".md")), []byte(r.renderResourcePage(resource, docs)), 0o600)
+			err = os.WriteFile(filepath.Join(outputDir, strings.ToLower(resource.ID+".md")), []byte(r.renderResourcePage(resource, schema, docs)), 0o600)
 			if err != nil {
 				log.Fatal().Err(err).Msg("could not write file")
 			}
@@ -154,14 +167,14 @@ func (l *lrSchemaRenderer) renderToc(resources []*lr.Resource, frontMatter strin
 	return builder.String()
 }
 
-func (l *lrSchemaRenderer) renderResourcePage(resource *lr.Resource, docs *docs.LrDocsEntry) string {
+func (l *lrSchemaRenderer) renderResourcePage(resource *lr.Resource, schema *resources.Schema, docs *docs.LrDocsEntry) string {
 	builder := &strings.Builder{}
 
 	builder.WriteString("---\n")
 	builder.WriteString("title: " + resource.ID + "\n")
 	builder.WriteString("sidebar_label: " + resource.ID + "\n")
 
-	headerDesc := strings.Join(sanitizeComments(resource.Comments), " ")
+	headerDesc := strings.Join(sanitizeComments([]string{schema.Resources[resource.ID].Title}), " ")
 	if headerDesc != "" {
 		builder.WriteString("description: " + headerDesc + "\n")
 	}
@@ -191,9 +204,9 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lr.Resource, docs *docs.
 		builder.WriteString("\n\n")
 	}
 
-	if len(resource.Comments) > 0 {
+	if schema.Resources[resource.ID].Title != "" {
 		builder.WriteString("**Description**\n\n")
-		builder.WriteString(strings.Join(sanitizeComments(resource.Comments), "\n"))
+		builder.WriteString(strings.Join(sanitizeComments([]string{schema.Resources[resource.ID].Title}), "\n"))
 		builder.WriteString("\n\n")
 	}
 
