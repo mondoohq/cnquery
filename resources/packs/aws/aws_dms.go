@@ -6,8 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	"github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/rs/zerolog/log"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -16,12 +16,12 @@ func (d *mqlAwsDms) id() (string, error) {
 }
 
 func (d *mqlAwsDms) GetReplicationInstances() ([]interface{}, error) {
-	at, err := awstransport(d.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []types.ReplicationInstance{}
-	poolOfJobs := jobpool.CreatePool(d.getReplicationInstances(at), 5)
+	poolOfJobs := jobpool.CreatePool(d.getReplicationInstances(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -35,9 +35,9 @@ func (d *mqlAwsDms) GetReplicationInstances() ([]interface{}, error) {
 	return core.JsonToDictSlice(res)
 }
 
-func (d *mqlAwsDms) getReplicationInstances(at *aws_transport.Provider) []*jobpool.Job {
+func (d *mqlAwsDms) getReplicationInstances(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -47,7 +47,7 @@ func (d *mqlAwsDms) getReplicationInstances(at *aws_transport.Provider) []*jobpo
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
-			svc := at.Dms(regionVal)
+			svc := provider.Dms(regionVal)
 			ctx := context.Background()
 			replicationInstancesAggregated := []types.ReplicationInstance{}
 

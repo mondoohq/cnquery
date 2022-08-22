@@ -8,8 +8,8 @@ import (
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/aws/awspolicy"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
@@ -19,12 +19,12 @@ func (l *mqlAwsLambda) id() (string, error) {
 }
 
 func (l *mqlAwsLambda) GetFunctions() ([]interface{}, error) {
-	at, err := awstransport(l.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(l.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(l.getFunctions(at), 5)
+	poolOfJobs := jobpool.CreatePool(l.getFunctions(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -39,9 +39,9 @@ func (l *mqlAwsLambda) GetFunctions() ([]interface{}, error) {
 	return res, nil
 }
 
-func (l *mqlAwsLambda) getFunctions(at *aws_transport.Provider) []*jobpool.Job {
+func (l *mqlAwsLambda) getFunctions(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -51,7 +51,7 @@ func (l *mqlAwsLambda) getFunctions(at *aws_transport.Provider) []*jobpool.Job {
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
-			svc := at.Lambda(regionVal)
+			svc := provider.Lambda(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -111,7 +111,7 @@ func (l *mqlAwsLambdaFunction) GetConcurrency() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	at, err := awstransport(l.MotorRuntime.Motor.Provider)
+	at, err := awsProvider(l.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return 0, err
 	}
@@ -139,11 +139,11 @@ func (l *mqlAwsLambdaFunction) GetPolicy() (interface{}, error) {
 	if err != nil {
 		return 0, err
 	}
-	at, err := awstransport(l.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(l.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
-	svc := at.Lambda(region)
+	svc := provider.Lambda(region)
 	ctx := context.Background()
 
 	// no pagination required

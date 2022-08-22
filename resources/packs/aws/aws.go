@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"go.mondoo.io/mondoo/motor/providers"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/aws/info"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
@@ -22,11 +22,11 @@ func (e *mqlAws) id() (string, error) {
 }
 
 func (s *mqlAws) GetRegions() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return nil, err
 	}
@@ -37,12 +37,12 @@ func (s *mqlAws) GetRegions() ([]interface{}, error) {
 	return res, nil
 }
 
-func awstransport(t providers.Transport) (*aws_transport.Provider, error) {
-	at, ok := t.(*aws_transport.Provider)
+func awsProvider(t providers.Transport) (*aws_provider.Provider, error) {
+	provider, ok := t.(*aws_provider.Provider)
 	if !ok {
 		return nil, errors.New("aws resource is not supported on this transport; please run with -t aws")
 	}
-	return at, nil
+	return provider, nil
 }
 
 func GetRegionFromArn(arnVal string) (string, error) {

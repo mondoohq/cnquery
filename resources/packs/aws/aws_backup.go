@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/aws/aws-sdk-go/aws/arn"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -25,12 +25,12 @@ func (a *mqlAwsBackupVaultRecoveryPoint) id() (string, error) {
 }
 
 func (a *mqlAwsBackup) GetVaults() ([]interface{}, error) {
-	at, err := awstransport(a.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(a.getVaults(at), 5)
+	poolOfJobs := jobpool.CreatePool(a.getVaults(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -45,9 +45,9 @@ func (a *mqlAwsBackup) GetVaults() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsBackup) getVaults(at *aws_transport.Provider) []*jobpool.Job {
+func (a *mqlAwsBackup) getVaults(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -55,7 +55,7 @@ func (a *mqlAwsBackup) getVaults(at *aws_transport.Provider) []*jobpool.Job {
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := at.Backup(regionVal)
+			svc := provider.Backup(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -90,7 +90,7 @@ func (a *mqlAwsBackupVault) GetRecoveryPoints() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(a.MotorRuntime.Motor.Provider)
+	at, err := awsProvider(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

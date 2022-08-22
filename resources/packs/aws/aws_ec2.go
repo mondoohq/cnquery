@@ -6,20 +6,18 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
-
+	"github.com/cockroachdb/errors"
+	"github.com/rs/zerolog/log"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
 	"go.mondoo.io/mondoo/resources/packs/core"
-
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/cockroachdb/errors"
-	"github.com/rs/zerolog/log"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 )
 
 const (
@@ -56,12 +54,12 @@ func (s *mqlAwsEc2Networkacl) id() (string, error) {
 }
 
 func (s *mqlAwsEc2) GetNetworkAcls() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getNetworkACLs(at), 5)
+	poolOfJobs := jobpool.CreatePool(s.getNetworkACLs(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -76,15 +74,15 @@ func (s *mqlAwsEc2) GetNetworkAcls() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlAwsEc2) getNetworkACLs(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsEc2) getNetworkACLs(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 
-	account, err := at.Account()
+	account, err := provider.Account()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}} // return the error
 	}
 
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}} // return the error
 	}
@@ -93,7 +91,7 @@ func (s *mqlAwsEc2) getNetworkACLs(at *aws_transport.Provider) []*jobpool.Job {
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
-			svc := at.Ec2(regionVal)
+			svc := provider.Ec2(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -147,7 +145,7 @@ func (s *mqlAwsEc2Networkacl) GetEntries() ([]interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to region")
 	}
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	at, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -204,11 +202,11 @@ func (s *mqlAwsEc2Securitygroup) GetIsAttachedToNetworkInterface() (bool, error)
 	if err != nil {
 		return false, errors.Wrap(err, "unable to parse instance id")
 	}
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return false, nil
 	}
-	svc := at.Ec2(region)
+	svc := provider.Ec2(region)
 	ctx := context.Background()
 
 	networkinterfaces, err := svc.DescribeNetworkInterfaces(ctx, &ec2.DescribeNetworkInterfacesInput{Filters: []types.Filter{
@@ -223,15 +221,15 @@ func (s *mqlAwsEc2Securitygroup) GetIsAttachedToNetworkInterface() (bool, error)
 	return false, nil
 }
 
-func (s *mqlAwsEc2) getSecurityGroups(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsEc2) getSecurityGroups(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 
-	account, err := at.Account()
+	account, err := provider.Account()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}} // return the error
 	}
 
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}} // return the error
 	}
@@ -240,7 +238,7 @@ func (s *mqlAwsEc2) getSecurityGroups(at *aws_transport.Provider) []*jobpool.Job
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
-			svc := at.Ec2(regionVal)
+			svc := provider.Ec2(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -327,12 +325,12 @@ func (s *mqlAwsEc2) getSecurityGroups(at *aws_transport.Provider) []*jobpool.Job
 }
 
 func (s *mqlAwsEc2) GetKeypairs() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getKeypairs(at), 5)
+	poolOfJobs := jobpool.CreatePool(s.getKeypairs(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -351,13 +349,13 @@ func (s *mqlAwsEc2Keypair) id() (string, error) {
 	return s.Arn()
 }
 
-func (s *mqlAwsEc2) getKeypairs(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsEc2) getKeypairs(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	account, err := at.Account()
+	account, err := provider.Account()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -366,7 +364,7 @@ func (s *mqlAwsEc2) getKeypairs(at *aws_transport.Provider) []*jobpool.Job {
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
-			svc := at.Ec2(regionVal)
+			svc := provider.Ec2(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -413,15 +411,15 @@ func (i *mqlAwsEc2Keypair) init(args *resources.Args) (*resources.Args, AwsEc2Ke
 	}
 	r := (*args)["region"].(string)
 
-	at, err := awstransport(i.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(i.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
-	account, err := at.Account()
+	account, err := provider.Account()
 	if err != nil {
 		return nil, nil, err
 	}
-	svc := at.Ec2(r)
+	svc := provider.Ec2(r)
 	ctx := context.Background()
 	kps, err := svc.DescribeKeyPairs(ctx, &ec2.DescribeKeyPairsInput{KeyNames: []string{n}})
 	if err != nil {
@@ -449,12 +447,12 @@ func (i *mqlAwsEc2Keypair) init(args *resources.Args) (*resources.Args, AwsEc2Ke
 }
 
 func (s *mqlAwsEc2) GetSecurityGroups() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getSecurityGroups(at), 5)
+	poolOfJobs := jobpool.CreatePool(s.getSecurityGroups(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -475,12 +473,12 @@ type ebsEncryption struct {
 }
 
 func (s *mqlAwsEc2) GetEbsEncryptionByDefault() (map[string]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := make(map[string]interface{})
-	poolOfJobs := jobpool.CreatePool(s.getEbsEncryptionPerRegion(at), 5)
+	poolOfJobs := jobpool.CreatePool(s.getEbsEncryptionPerRegion(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -495,10 +493,10 @@ func (s *mqlAwsEc2) GetEbsEncryptionByDefault() (map[string]interface{}, error) 
 	return res, nil
 }
 
-func (s *mqlAwsEc2) getEbsEncryptionPerRegion(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsEc2) getEbsEncryptionPerRegion(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}} // return the error
 	}
@@ -507,7 +505,7 @@ func (s *mqlAwsEc2) getEbsEncryptionPerRegion(at *aws_transport.Provider) []*job
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
-			svc := at.Ec2(regionVal)
+			svc := provider.Ec2(regionVal)
 			ctx := context.Background()
 
 			ebsEncryptionRes, err := svc.GetEbsEncryptionByDefault(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
@@ -526,12 +524,12 @@ func (s *mqlAwsEc2) getEbsEncryptionPerRegion(at *aws_transport.Provider) []*job
 }
 
 func (s *mqlAwsEc2) GetInstances() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getInstances(at), 5)
+	poolOfJobs := jobpool.CreatePool(s.getInstances(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -590,9 +588,9 @@ func (s *mqlAwsEc2) getImdsv1Instances(ctx context.Context, svc *ec2.Client, fil
 	return res, nil
 }
 
-func (s *mqlAwsEc2) getInstances(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsEc2) getInstances(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}} // return the error
 	}
@@ -601,7 +599,7 @@ func (s *mqlAwsEc2) getInstances(at *aws_transport.Provider) []*jobpool.Job {
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
-			svc := at.Ec2(regionVal)
+			svc := provider.Ec2(regionVal)
 			ctx := context.Background()
 			var res []interface{}
 
@@ -635,11 +633,11 @@ func (s *mqlAwsEc2) getInstances(at *aws_transport.Provider) []*jobpool.Job {
 }
 
 func (s *mqlAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVersion int, regionVal string) ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
-	account, err := at.Account()
+	account, err := provider.Account()
 	if err != nil {
 		return nil, err
 	}
@@ -762,11 +760,11 @@ func (i *mqlAwsEc2Image) init(args *resources.Args) (*resources.Args, AwsEc2Imag
 		return nil, nil, nil
 	}
 	resource := strings.Split(arn.Resource, "/")
-	at, err := awstransport(i.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(i.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
-	svc := at.Ec2(arn.Region)
+	svc := provider.Ec2(arn.Region)
 	ctx := context.Background()
 	images, err := svc.DescribeImages(ctx, &ec2.DescribeImagesInput{ImageIds: []string{resource[1]}})
 	if err != nil {
@@ -882,11 +880,11 @@ func (s *mqlAwsEc2Instance) GetSsm() (interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to parse instance region")
 	}
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
-	svc := at.Ssm(region)
+	svc := provider.Ssm(region)
 	ctx := context.Background()
 	instanceIdFilter := "InstanceIds"
 	params := &ssm.DescribeInstanceInformationInput{
@@ -915,11 +913,11 @@ func (s *mqlAwsEc2Instance) GetPatchState() (interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to parse instance region")
 	}
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
-	svc := at.Ssm(region)
+	svc := provider.Ssm(region)
 	ctx := context.Background()
 
 	ssmPatchInfo, err := svc.DescribeInstancePatchStates(ctx, &ssm.DescribeInstancePatchStatesInput{InstanceIds: []string{instanceId}})
@@ -947,12 +945,12 @@ func (s *mqlAwsEc2Instance) GetInstanceStatus() (interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to parse instance region")
 	}
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Ec2(region)
+	svc := provider.Ec2(region)
 	ctx := context.Background()
 
 	instanceStatus, err := svc.DescribeInstanceStatus(ctx, &ec2.DescribeInstanceStatusInput{
@@ -976,12 +974,12 @@ func (s *mqlAwsEc2Instance) GetInstanceStatus() (interface{}, error) {
 }
 
 func (s *mqlAwsEc2) GetVolumes() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getVolumes(at), 5)
+	poolOfJobs := jobpool.CreatePool(s.getVolumes(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -996,21 +994,21 @@ func (s *mqlAwsEc2) GetVolumes() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlAwsEc2) getVolumes(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsEc2) getVolumes(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
-	account, err := at.Account()
+	account, err := provider.Account()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := at.Ec2(regionVal)
+			svc := provider.Ec2(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -1063,12 +1061,12 @@ func (s *mqlAwsEc2Snapshot) id() (string, error) {
 }
 
 func (s *mqlAwsEc2) GetVpnConnections() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getVpnConnections(at), 5)
+	poolOfJobs := jobpool.CreatePool(s.getVpnConnections(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -1083,20 +1081,20 @@ func (s *mqlAwsEc2) GetVpnConnections() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlAwsEc2) getVpnConnections(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsEc2) getVpnConnections(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
-	account, err := at.Account()
+	account, err := provider.Account()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := at.Ec2(regionVal)
+			svc := provider.Ec2(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -1134,12 +1132,12 @@ func (s *mqlAwsEc2) getVpnConnections(at *aws_transport.Provider) []*jobpool.Job
 }
 
 func (s *mqlAwsEc2) GetSnapshots() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getSnapshots(at), 5)
+	poolOfJobs := jobpool.CreatePool(s.getSnapshots(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -1154,20 +1152,20 @@ func (s *mqlAwsEc2) GetSnapshots() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlAwsEc2) getSnapshots(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsEc2) getSnapshots(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
-	account, err := at.Account()
+	account, err := provider.Account()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := at.Ec2(regionVal)
+			svc := provider.Ec2(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -1213,12 +1211,12 @@ func (s *mqlAwsEc2Snapshot) GetCreateVolumePermission() ([]interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to parse instance region")
 	}
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Ec2(region)
+	svc := provider.Ec2(region)
 	ctx := context.Background()
 
 	attribute, err := svc.DescribeSnapshotAttribute(ctx, &ec2.DescribeSnapshotAttributeInput{SnapshotId: &id, Attribute: types.SnapshotAttributeNameCreateVolumePermission})
@@ -1230,12 +1228,12 @@ func (s *mqlAwsEc2Snapshot) GetCreateVolumePermission() ([]interface{}, error) {
 }
 
 func (s *mqlAwsEc2) GetInternetGateways() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getInternetGateways(at), 5)
+	poolOfJobs := jobpool.CreatePool(s.getInternetGateways(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -1249,20 +1247,20 @@ func (s *mqlAwsEc2) GetInternetGateways() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlAwsEc2) getInternetGateways(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsEc2) getInternetGateways(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := at.Ec2(regionVal)
+			svc := provider.Ec2(regionVal)
 			ctx := context.Background()
 			params := &ec2.DescribeInternetGatewaysInput{}
 			res := []interface{}{}

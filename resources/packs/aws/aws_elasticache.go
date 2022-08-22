@@ -6,8 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/rs/zerolog/log"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -16,12 +16,12 @@ func (e *mqlAwsElasticache) id() (string, error) {
 }
 
 func (e *mqlAwsElasticache) GetClusters() ([]interface{}, error) {
-	at, err := awstransport(e.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(e.getClusters(at), 5)
+	poolOfJobs := jobpool.CreatePool(e.getClusters(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -38,9 +38,9 @@ func (e *mqlAwsElasticache) GetClusters() ([]interface{}, error) {
 	return res, nil
 }
 
-func (e *mqlAwsElasticache) getClusters(at *aws_transport.Provider) []*jobpool.Job {
+func (e *mqlAwsElasticache) getClusters(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -50,7 +50,7 @@ func (e *mqlAwsElasticache) getClusters(at *aws_transport.Provider) []*jobpool.J
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
-			svc := at.Elasticache(regionVal)
+			svc := provider.Elasticache(regionVal)
 			ctx := context.Background()
 			res := []types.CacheCluster{}
 

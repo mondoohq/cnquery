@@ -5,13 +5,12 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types"
-
 	"github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
+	"github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -28,7 +27,7 @@ func (l *mqlAwsApplicationautoscalingTarget) id() (string, error) {
 }
 
 func (a *mqlAwsApplicationAutoscaling) GetScalableTargets() ([]interface{}, error) {
-	at, err := awstransport(a.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +37,7 @@ func (a *mqlAwsApplicationAutoscaling) GetScalableTargets() ([]interface{}, erro
 	}
 
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(a.getTargets(at, types.ServiceNamespace(namespace)), 5)
+	poolOfJobs := jobpool.CreatePool(a.getTargets(provider, types.ServiceNamespace(namespace)), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -53,14 +52,14 @@ func (a *mqlAwsApplicationAutoscaling) GetScalableTargets() ([]interface{}, erro
 	return res, nil
 }
 
-func (a *mqlAwsApplicationAutoscaling) getTargets(at *aws_transport.Provider, namespace types.ServiceNamespace) []*jobpool.Job {
+func (a *mqlAwsApplicationAutoscaling) getTargets(provider *aws_provider.Provider, namespace types.ServiceNamespace) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
 
-	account, err := at.Account()
+	account, err := provider.Account()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}} // return the error
 	}
@@ -70,7 +69,7 @@ func (a *mqlAwsApplicationAutoscaling) getTargets(at *aws_transport.Provider, na
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
-			svc := at.ApplicationAutoscaling(regionVal)
+			svc := provider.ApplicationAutoscaling(regionVal)
 			ctx := context.Background()
 
 			res := []interface{}{}

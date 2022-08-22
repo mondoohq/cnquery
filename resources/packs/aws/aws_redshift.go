@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	"github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/rs/zerolog/log"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -21,12 +21,12 @@ const (
 )
 
 func (r *mqlAwsRedshift) GetClusters() ([]interface{}, error) {
-	at, err := awstransport(r.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(r.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(r.getClusters(at), 5)
+	poolOfJobs := jobpool.CreatePool(r.getClusters(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -41,14 +41,14 @@ func (r *mqlAwsRedshift) GetClusters() ([]interface{}, error) {
 	return res, nil
 }
 
-func (r *mqlAwsRedshift) getClusters(at *aws_transport.Provider) []*jobpool.Job {
+func (r *mqlAwsRedshift) getClusters(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 
-	account, err := at.Account()
+	account, err := provider.Account()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -58,7 +58,7 @@ func (r *mqlAwsRedshift) getClusters(at *aws_transport.Provider) []*jobpool.Job 
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
-			svc := at.Redshift(regionVal)
+			svc := provider.Redshift(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -129,12 +129,12 @@ func (r *mqlAwsRedshiftCluster) GetParameters() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(r.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(r.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Redshift(region)
+	svc := provider.Redshift(region)
 	ctx := context.Background()
 	res := []types.Parameter{}
 	for _, name := range clusterGroupNames {
@@ -157,12 +157,12 @@ func (r *mqlAwsRedshiftCluster) GetLogging() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(r.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(r.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Redshift(region)
+	svc := provider.Redshift(region)
 	ctx := context.Background()
 
 	params, err := svc.DescribeLoggingStatus(ctx, &redshift.DescribeLoggingStatusInput{ClusterIdentifier: &name})

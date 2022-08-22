@@ -12,12 +12,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
-	"go.mondoo.io/mondoo/resources/library/jobpool"
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/providers"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 )
 
 func NewSSMManagedInstancesDiscovery(cfg aws.Config) (*SSMManagedInstances, error) {
@@ -34,7 +34,7 @@ func (ssmi *SSMManagedInstances) Name() string {
 }
 
 func (ssmi *SSMManagedInstances) List() ([]*asset.Asset, error) {
-	identityResp, err := aws_transport.CheckIam(ssmi.config)
+	identityResp, err := aws_provider.CheckIam(ssmi.config)
 	if err != nil {
 		return nil, err
 	}

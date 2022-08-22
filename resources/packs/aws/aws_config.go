@@ -5,8 +5,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/rs/zerolog/log"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -15,12 +15,12 @@ func (c *mqlAwsConfig) id() (string, error) {
 }
 
 func (c *mqlAwsConfig) GetRecorders() ([]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(c.getRecorders(at), 5)
+	poolOfJobs := jobpool.CreatePool(c.getRecorders(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -34,9 +34,9 @@ func (c *mqlAwsConfig) GetRecorders() ([]interface{}, error) {
 	return res, nil
 }
 
-func (c *mqlAwsConfig) getRecorders(at *aws_transport.Provider) []*jobpool.Job {
+func (c *mqlAwsConfig) getRecorders(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -46,7 +46,7 @@ func (c *mqlAwsConfig) getRecorders(at *aws_transport.Provider) []*jobpool.Job {
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
-			svc := at.ConfigService(regionVal)
+			svc := provider.ConfigService(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -126,12 +126,12 @@ func (c *mqlAwsConfigRecorder) id() (string, error) {
 }
 
 func (c *mqlAwsConfig) GetRules() ([]interface{}, error) {
-	at, err := awstransport(c.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(c.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(c.getRules(at), 5)
+	poolOfJobs := jobpool.CreatePool(c.getRules(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -145,9 +145,9 @@ func (c *mqlAwsConfig) GetRules() ([]interface{}, error) {
 	return res, nil
 }
 
-func (c *mqlAwsConfig) getRules(at *aws_transport.Provider) []*jobpool.Job {
+func (c *mqlAwsConfig) getRules(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -157,7 +157,7 @@ func (c *mqlAwsConfig) getRules(at *aws_transport.Provider) []*jobpool.Job {
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
-			svc := at.ConfigService(regionVal)
+			svc := provider.ConfigService(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 

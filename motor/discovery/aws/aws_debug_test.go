@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 )
 
 func TestEC2Discovery(t *testing.T) {
@@ -20,7 +20,7 @@ func TestEC2Discovery(t *testing.T) {
 		},
 	}
 
-	p, err := aws_transport.New(pCfg, aws_transport.TransportOptions(pCfg.Options)...)
+	p, err := aws_provider.New(pCfg, aws_provider.TransportOptions(pCfg.Options)...)
 	require.NoError(t, err)
 
 	r, err := NewEc2Discovery(p.Config())

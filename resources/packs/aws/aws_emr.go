@@ -5,8 +5,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/emr"
 	"github.com/aws/aws-sdk-go-v2/service/emr/types"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -15,12 +15,12 @@ func (e *mqlAwsEmr) id() (string, error) {
 }
 
 func (e *mqlAwsEmr) GetClusters() ([]interface{}, error) {
-	at, err := awstransport(e.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(e.getClusters(at), 5)
+	poolOfJobs := jobpool.CreatePool(e.getClusters(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -38,9 +38,9 @@ func (e *mqlAwsEmrCluster) id() (string, error) {
 	return e.Arn()
 }
 
-func (e *mqlAwsEmr) getClusters(at *aws_transport.Provider) []*jobpool.Job {
+func (e *mqlAwsEmr) getClusters(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -48,7 +48,7 @@ func (e *mqlAwsEmr) getClusters(at *aws_transport.Provider) []*jobpool.Job {
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := at.Emr(regionVal)
+			svc := provider.Emr(regionVal)
 			ctx := context.Background()
 
 			res := []interface{}{}
@@ -103,7 +103,7 @@ func (e *mqlAwsEmrCluster) GetMasterInstances() ([]interface{}, error) {
 		return nil, err
 	}
 	res := []types.Instance{}
-	at, err := awstransport(e.MotorRuntime.Motor.Provider)
+	at, err := awsProvider(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/rs/zerolog/log"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -17,12 +17,12 @@ func (k *mqlAwsKms) id() (string, error) {
 }
 
 func (k *mqlAwsKms) GetKeys() ([]interface{}, error) {
-	at, err := awstransport(k.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(k.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(k.getKeys(at), 5)
+	poolOfJobs := jobpool.CreatePool(k.getKeys(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -36,9 +36,9 @@ func (k *mqlAwsKms) GetKeys() ([]interface{}, error) {
 	return res, nil
 }
 
-func (k *mqlAwsKms) getKeys(at *aws_transport.Provider) []*jobpool.Job {
+func (k *mqlAwsKms) getKeys(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -48,7 +48,7 @@ func (k *mqlAwsKms) getKeys(at *aws_transport.Provider) []*jobpool.Job {
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
-			svc := at.Kms(regionVal)
+			svc := provider.Kms(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 			var marker *string
@@ -90,11 +90,11 @@ func (k *mqlAwsKmsKey) GetMetadata() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(k.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(k.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
-	svc := at.Kms(region)
+	svc := provider.Kms(region)
 	ctx := context.Background()
 
 	keyMetadata, err := svc.DescribeKey(ctx, &kms.DescribeKeyInput{KeyId: &key})
@@ -113,11 +113,11 @@ func (k *mqlAwsKmsKey) GetKeyRotationEnabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	at, err := awstransport(k.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(k.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return false, err
 	}
-	svc := at.Kms(region)
+	svc := provider.Kms(region)
 	ctx := context.Background()
 
 	key, err := svc.GetKeyRotationStatus(ctx, &kms.GetKeyRotationStatusInput{KeyId: &keyId})

@@ -6,8 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -16,12 +16,12 @@ func (t *mqlAwsCloudtrail) id() (string, error) {
 }
 
 func (t *mqlAwsCloudtrail) GetTrails() ([]interface{}, error) {
-	at, err := awstransport(t.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(t.getTrails(at), 5)
+	poolOfJobs := jobpool.CreatePool(t.getTrails(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -35,9 +35,9 @@ func (t *mqlAwsCloudtrail) GetTrails() ([]interface{}, error) {
 	return res, nil
 }
 
-func (t *mqlAwsCloudtrail) getTrails(at *aws_transport.Provider) []*jobpool.Job {
+func (t *mqlAwsCloudtrail) getTrails(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -46,7 +46,7 @@ func (t *mqlAwsCloudtrail) getTrails(at *aws_transport.Provider) []*jobpool.Job 
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling aws with region %s", regionVal)
 
-			svc := at.Cloudtrail(regionVal)
+			svc := provider.Cloudtrail(regionVal)
 			ctx := context.Background()
 
 			// no pagination required
@@ -150,12 +150,12 @@ func (t *mqlAwsCloudtrailTrail) GetStatus() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(t.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Cloudtrail(regionValue)
+	svc := provider.Cloudtrail(regionValue)
 	ctx := context.Background()
 
 	arnValue, err := t.Arn()
@@ -179,12 +179,12 @@ func (t *mqlAwsCloudtrailTrail) GetEventSelectors() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(t.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := at.Cloudtrail(regionValue)
+	svc := provider.Cloudtrail(regionValue)
 	ctx := context.Background()
 
 	arnValue, err := t.Arn()

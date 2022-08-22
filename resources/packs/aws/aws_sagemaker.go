@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	"github.com/aws/smithy-go/transport/http"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -17,12 +17,12 @@ func (s *mqlAwsSagemaker) id() (string, error) {
 }
 
 func (s *mqlAwsSagemaker) GetEndpoints() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(s.getEndpoints(at), 5)
+	poolOfJobs := jobpool.CreatePool(s.getEndpoints(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -37,9 +37,9 @@ func (s *mqlAwsSagemaker) GetEndpoints() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlAwsSagemaker) getEndpoints(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsSagemaker) getEndpoints(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -47,7 +47,7 @@ func (s *mqlAwsSagemaker) getEndpoints(at *aws_transport.Provider) []*jobpool.Jo
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := at.Sagemaker(regionVal)
+			svc := provider.Sagemaker(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -96,11 +96,11 @@ func (s *mqlAwsSagemakerEndpoint) GetConfig() (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
-	svc := at.Sagemaker(region)
+	svc := provider.Sagemaker(region)
 	ctx := context.Background()
 	config, err := svc.DescribeEndpointConfig(ctx, &sagemaker.DescribeEndpointConfigInput{EndpointConfigName: &name})
 	if err != nil {
@@ -110,7 +110,7 @@ func (s *mqlAwsSagemakerEndpoint) GetConfig() (map[string]interface{}, error) {
 }
 
 func (s *mqlAwsSagemaker) GetNotebookInstances() ([]interface{}, error) {
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	at, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -130,13 +130,13 @@ func (s *mqlAwsSagemaker) GetNotebookInstances() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlAwsSagemaker) getNotebookInstances(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsSagemaker) getNotebookInstances(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -144,7 +144,7 @@ func (s *mqlAwsSagemaker) getNotebookInstances(at *aws_transport.Provider) []*jo
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := at.Sagemaker(regionVal)
+			svc := provider.Sagemaker(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -192,11 +192,11 @@ func (s *mqlAwsSagemakerNotebookinstance) GetDetails() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	at, err := awstransport(s.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
-	svc := at.Sagemaker(region)
+	svc := provider.Sagemaker(region)
 	ctx := context.Background()
 	instanceDetails, err := svc.DescribeNotebookInstance(ctx, &sagemaker.DescribeNotebookInstanceInput{NotebookInstanceName: &name})
 	if err != nil {

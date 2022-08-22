@@ -6,8 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/library/jobpool"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
@@ -20,12 +20,12 @@ func (e *mqlAwsElb) id() (string, error) {
 }
 
 func (e *mqlAwsElb) GetClassicLoadBalancers() ([]interface{}, error) {
-	at, err := awstransport(e.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(e.getClassicLoadBalancers(at), 5)
+	poolOfJobs := jobpool.CreatePool(e.getClassicLoadBalancers(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -40,13 +40,13 @@ func (e *mqlAwsElb) GetClassicLoadBalancers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (e *mqlAwsElb) getClassicLoadBalancers(at *aws_transport.Provider) []*jobpool.Job {
+func (e *mqlAwsElb) getClassicLoadBalancers(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
-	account, err := at.Account()
+	account, err := provider.Account()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -54,7 +54,7 @@ func (e *mqlAwsElb) getClassicLoadBalancers(at *aws_transport.Provider) []*jobpo
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := at.Elb(regionVal)
+			svc := provider.Elb(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -98,12 +98,12 @@ func (e *mqlAwsElbLoadbalancer) id() (string, error) {
 }
 
 func (e *mqlAwsElb) GetLoadBalancers() ([]interface{}, error) {
-	at, err := awstransport(e.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(e.getLoadBalancers(at), 5)
+	poolOfJobs := jobpool.CreatePool(e.getLoadBalancers(provider), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -118,9 +118,9 @@ func (e *mqlAwsElb) GetLoadBalancers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (e *mqlAwsElb) getLoadBalancers(at *aws_transport.Provider) []*jobpool.Job {
+func (e *mqlAwsElb) getLoadBalancers(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := at.GetRegions()
+	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
@@ -128,7 +128,7 @@ func (e *mqlAwsElb) getLoadBalancers(at *aws_transport.Provider) []*jobpool.Job 
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			svc := at.Elbv2(regionVal)
+			svc := provider.Elbv2(regionVal)
 			ctx := context.Background()
 			res := []interface{}{}
 
@@ -163,7 +163,7 @@ func (e *mqlAwsElb) getLoadBalancers(at *aws_transport.Provider) []*jobpool.Job 
 }
 
 func (e *mqlAwsElbLoadbalancer) GetListenerDescriptions() ([]interface{}, error) {
-	at, err := awstransport(e.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +175,7 @@ func (e *mqlAwsElbLoadbalancer) GetListenerDescriptions() ([]interface{}, error)
 	if err != nil {
 		return nil, err
 	}
-	svc := at.Elbv2(region)
+	svc := provider.Elbv2(region)
 	ctx := context.Background()
 	listeners, err := svc.DescribeListeners(ctx, &elasticloadbalancingv2.DescribeListenersInput{LoadBalancerArn: &arn})
 	if err != nil {
@@ -185,7 +185,7 @@ func (e *mqlAwsElbLoadbalancer) GetListenerDescriptions() ([]interface{}, error)
 }
 
 func (e *mqlAwsElbLoadbalancer) GetAttributes() ([]interface{}, error) {
-	at, err := awstransport(e.MotorRuntime.Motor.Provider)
+	provider, err := awsProvider(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +197,7 @@ func (e *mqlAwsElbLoadbalancer) GetAttributes() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	svc := at.Elbv2(region)
+	svc := provider.Elbv2(region)
 	ctx := context.Background()
 	attributes, err := svc.DescribeLoadBalancerAttributes(ctx, &elasticloadbalancingv2.DescribeLoadBalancerAttributesInput{LoadBalancerArn: &arn})
 	if err != nil {

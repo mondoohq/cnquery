@@ -11,7 +11,7 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/platform/detector"
 	"go.mondoo.io/mondoo/motor/providers"
-	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
+	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
 )
 
 const (
@@ -34,7 +34,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	resolved := []*asset.Asset{}
 
 	// add aws api as asset
-	trans, err := aws_transport.New(tc, aws_transport.TransportOptions(tc.Options)...)
+	trans, err := aws_provider.New(tc, aws_provider.TransportOptions(tc.Options)...)
 	if err != nil {
 		return nil, err
 	}
