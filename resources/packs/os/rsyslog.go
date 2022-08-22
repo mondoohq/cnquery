@@ -5,11 +5,11 @@ import (
 	"strings"
 
 	"go.mondoo.io/mondoo/checksums"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (s *lumiRsyslogConf) init(args *lumi.Args) (*lumi.Args, RsyslogConf, error) {
+func (s *mqlRsyslogConf) init(args *resources.Args) (*resources.Args, RsyslogConf, error) {
 	if x, ok := (*args)["path"]; ok {
 		path, ok := x.(string)
 		if !ok {
@@ -30,7 +30,7 @@ func (s *lumiRsyslogConf) init(args *lumi.Args) (*lumi.Args, RsyslogConf, error)
 
 const defaultRsyslogConf = "/etc/rsyslog.conf"
 
-func (s *lumiRsyslogConf) id() (string, error) {
+func (s *mqlRsyslogConf) id() (string, error) {
 	files, err := s.Files()
 	if err != nil {
 		return "", err
@@ -48,7 +48,7 @@ func (s *lumiRsyslogConf) id() (string, error) {
 	return checksum.String(), nil
 }
 
-func (s *lumiRsyslogConf) getFiles(confPath string) ([]interface{}, error) {
+func (s *mqlRsyslogConf) getFiles(confPath string) ([]interface{}, error) {
 	if !strings.HasSuffix(confPath, ".conf") {
 		return nil, errors.New("failed to initialize, path must end in `.conf` so we can find files in `.d` directory")
 	}
@@ -73,11 +73,11 @@ func (s *lumiRsyslogConf) getFiles(confPath string) ([]interface{}, error) {
 	return list, nil
 }
 
-func (s *lumiRsyslogConf) GetFiles() ([]interface{}, error) {
+func (s *mqlRsyslogConf) GetFiles() ([]interface{}, error) {
 	return s.getFiles(defaultRsyslogConf)
 }
 
-func (s *lumiRsyslogConf) GetContent(files []interface{}) (string, error) {
+func (s *mqlRsyslogConf) GetContent(files []interface{}) (string, error) {
 	var res strings.Builder
 	var notReadyError error = nil
 
@@ -93,10 +93,10 @@ func (s *lumiRsyslogConf) GetContent(files []interface{}) (string, error) {
 
 		content, err := file.Content()
 		if err != nil {
-			if errors.Is(err, lumi.NotFound) {
+			if errors.Is(err, resources.NotFound) {
 				continue
 			}
-			notReadyError = lumi.NotReadyError{}
+			notReadyError = resources.NotReadyError{}
 		}
 
 		res.WriteString(content)
@@ -110,7 +110,7 @@ func (s *lumiRsyslogConf) GetContent(files []interface{}) (string, error) {
 	return res.String(), nil
 }
 
-func (s *lumiRsyslogConf) GetSettings(content string) ([]interface{}, error) {
+func (s *mqlRsyslogConf) GetSettings(content string) ([]interface{}, error) {
 	lines := strings.Split(content, "\n")
 
 	settings := []interface{}{}

@@ -8,23 +8,23 @@ import (
 	"go.mondoo.io/mondoo/cli/execruntime"
 )
 
-func (m *lumiMondoo) id() (string, error) {
+func (m *mqlMondoo) id() (string, error) {
 	return "mondoo", nil
 }
 
-func (m *lumiMondoo) GetVersion() (string, error) {
+func (m *mqlMondoo) GetVersion() (string, error) {
 	return mondoo.GetVersion(), nil
 }
 
-func (m *lumiMondoo) GetBuild() (string, error) {
+func (m *mqlMondoo) GetBuild() (string, error) {
 	return mondoo.GetBuild(), nil
 }
 
-func (m *lumiMondoo) GetNulllist() ([]interface{}, error) {
+func (m *mqlMondoo) GetNulllist() ([]interface{}, error) {
 	return nil, nil
 }
 
-func (m *lumiMondoo) GetResources() ([]interface{}, error) {
+func (m *mqlMondoo) GetResources() ([]interface{}, error) {
 	n := m.MotorRuntime.Registry.Names()
 	sort.Strings(n)
 	res := make([]interface{}, len(n))
@@ -39,7 +39,7 @@ type runtimeEnv struct {
 	Name string `json:"name"`
 }
 
-func (m *lumiMondoo) GetJobEnvironment() (map[string]interface{}, error) {
+func (m *mqlMondoo) GetJobEnvironment() (map[string]interface{}, error) {
 	// get the local agent runtime information
 	ciEnv := execruntime.Detect()
 
@@ -51,7 +51,7 @@ func (m *lumiMondoo) GetJobEnvironment() (map[string]interface{}, error) {
 	return JsonToDict(re)
 }
 
-func (m *lumiMondoo) GetCapabilities() ([]interface{}, error) {
+func (m *mqlMondoo) GetCapabilities() ([]interface{}, error) {
 	capabilities := []interface{}{}
 	caps := m.MotorRuntime.Motor.Provider.Capabilities()
 	for i := range caps {
@@ -60,11 +60,11 @@ func (m *lumiMondoo) GetCapabilities() ([]interface{}, error) {
 	return capabilities, nil
 }
 
-func (m *lumiMondooAsset) id() (string, error) {
+func (m *mqlMondooAsset) id() (string, error) {
 	return "mondoo.asset", nil
 }
 
-func (m *lumiMondooAsset) GetPlatformIDs() ([]interface{}, error) {
+func (m *mqlMondooAsset) GetPlatformIDs() ([]interface{}, error) {
 	asset := m.MotorRuntime.Motor.GetAsset()
 	if asset == nil {
 		return nil, errors.New("unimplemented")

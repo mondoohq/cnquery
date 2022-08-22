@@ -7,16 +7,16 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/providers/network"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/vadvisor"
 	"go.mondoo.io/mondoo/vadvisor/sources/eol"
 )
 
-// convertLumiPlatform2ApiPlatform converts the lumi.Platform to
+// convertMqlPlatform2ApiPlatform converts the resources.Platform to
 // a *vadvisor.Platform object for API communication
-func convertLumiPlatform2ApiPlatform(pf Platform) *platform.Platform {
+func convertMqlPlatform2ApiPlatform(pf Platform) *platform.Platform {
 	if pf == nil {
 		return nil
 	}
@@ -66,7 +66,7 @@ func convertPlatform2VulnPlatform(pf *platform.Platform) *vadvisor.Platform {
 	}
 }
 
-func (s *lumiPlatform) init(args *lumi.Args) (*lumi.Args, Platform, error) {
+func (s *mqlPlatform) init(args *resources.Args) (*resources.Args, Platform, error) {
 	platform, err := s.MotorRuntime.Motor.Platform()
 	if err == nil {
 		labels := map[string]interface{}{}
@@ -110,15 +110,15 @@ func (s *lumiPlatform) init(args *lumi.Args) (*lumi.Args, Platform, error) {
 	return args, nil, nil
 }
 
-func (s *lumiPlatform) id() (string, error) {
+func (s *mqlPlatform) id() (string, error) {
 	return "platform", nil
 }
 
-func (s *lumiPlatformEol) id() (string, error) {
+func (s *mqlPlatformEol) id() (string, error) {
 	return "platform.eol", nil
 }
 
-func (p *lumiPlatformEol) init(args *lumi.Args) (*lumi.Args, PlatformEol, error) {
+func (p *mqlPlatformEol) init(args *resources.Args) (*resources.Args, PlatformEol, error) {
 	obj, err := p.MotorRuntime.CreateResource("platform")
 	if err != nil {
 		return nil, nil, err
@@ -126,7 +126,7 @@ func (p *lumiPlatformEol) init(args *lumi.Args) (*lumi.Args, PlatformEol, error)
 
 	// gather system information
 	pf := obj.(Platform)
-	eolPlatform := convertPlatform2VulnPlatform(convertLumiPlatform2ApiPlatform(pf))
+	eolPlatform := convertPlatform2VulnPlatform(convertMqlPlatform2ApiPlatform(pf))
 	platformEolInfo := eol.EolInfo(eolPlatform)
 
 	log.Debug().Str("name", eolPlatform.Name).Str("release", eolPlatform.Release).Str("title", eolPlatform.Title).Msg("search for eol information")

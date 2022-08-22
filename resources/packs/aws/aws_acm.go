@@ -8,18 +8,18 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acm/types"
-	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
+	"go.mondoo.io/mondoo/resources"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	"go.mondoo.io/mondoo/resources/packs/core"
 	"go.mondoo.io/mondoo/resources/packs/core/certificates"
 )
 
-func (a *lumiAwsAcm) id() (string, error) {
+func (a *mqlAwsAcm) id() (string, error) {
 	return "aws.acm", nil
 }
 
-func (a *lumiAwsAcm) GetCertificates() ([]interface{}, error) {
+func (a *mqlAwsAcm) GetCertificates() ([]interface{}, error) {
 	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (a *lumiAwsAcm) GetCertificates() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *lumiAwsAcm) getCertificates(at *aws_transport.Provider) []*jobpool.Job {
+func (a *mqlAwsAcm) getCertificates(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -62,13 +62,13 @@ func (a *lumiAwsAcm) getCertificates(at *aws_transport.Provider) []*jobpool.Job 
 					return nil, err
 				}
 				for _, cert := range certs.CertificateSummaryList {
-					lumiCert, err := a.MotorRuntime.CreateResource("aws.acm.certificate",
+					mqlCert, err := a.MotorRuntime.CreateResource("aws.acm.certificate",
 						"arn", core.ToString(cert.CertificateArn),
 					)
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiCert)
+					res = append(res, mqlCert)
 				}
 				nextToken = certs.NextToken
 				if certs.NextToken != nil {
@@ -82,11 +82,11 @@ func (a *lumiAwsAcm) getCertificates(at *aws_transport.Provider) []*jobpool.Job 
 	return tasks
 }
 
-func (a *lumiAwsAcmCertificate) id() (string, error) {
+func (a *mqlAwsAcmCertificate) id() (string, error) {
 	return a.Arn()
 }
 
-func (a *lumiAwsAcmCertificate) init(args *lumi.Args) (*lumi.Args, AwsAcmCertificate, error) {
+func (a *mqlAwsAcmCertificate) init(args *resources.Args) (*resources.Args, AwsAcmCertificate, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -136,7 +136,7 @@ func CertTagsToMapTags(tags []types.Tag) map[string]interface{} {
 	return mapTags
 }
 
-func (a *lumiAwsAcmCertificate) GetCertificate() (interface{}, error) {
+func (a *mqlAwsAcmCertificate) GetCertificate() (interface{}, error) {
 	certArn, err := a.Arn()
 	if err != nil {
 		return false, err
@@ -162,12 +162,12 @@ func (a *lumiAwsAcmCertificate) GetCertificate() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	lumiCerts, err := core.CertificatesToLumiCertificates(a.MotorRuntime, parsedCert)
+	mqlCerts, err := core.CertificatesToMqlCertificates(a.MotorRuntime, parsedCert)
 	if err != nil {
 		return nil, err
 	}
-	if len(lumiCerts) == 1 {
-		return lumiCerts[0], nil
+	if len(mqlCerts) == 1 {
+		return mqlCerts[0], nil
 	}
 	return nil, nil
 }

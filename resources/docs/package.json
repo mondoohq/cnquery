@@ -1,7 +1,7 @@
 {
-  "name": "lumi-docs",
+  "name": "mql-docs",
   "version": "1.0.0",
-  "description": "lumi resource documentation",
+  "description": "MQL resource documentation",
   "main": "index.js",
   "license": "proprietary",
   "devDependencies": {

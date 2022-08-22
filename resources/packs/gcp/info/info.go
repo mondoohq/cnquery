@@ -5,7 +5,7 @@ package info
 import (
 	_ "embed"
 
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 )
 
 // fyi this is a workaround for paths: https://github.com/golang/go/issues/46056
@@ -14,7 +14,7 @@ import (
 //go:embed gcp.lr.json
 var info []byte
 
-var Registry = lumi.NewRegistry()
+var Registry = resources.NewRegistry()
 
 func init() {
 	if err := Registry.LoadJson(info); err != nil {

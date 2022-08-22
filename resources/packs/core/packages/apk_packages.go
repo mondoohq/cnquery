@@ -141,7 +141,7 @@ func (apm *AlpinePkgManager) Available() (map[string]PackageUpdate, error) {
 	// determine package updates
 	cmd, err := apm.provider.RunCommand("apk version -v -l '<'")
 	if err != nil {
-		log.Debug().Err(err).Msg("lumi[packages]> could not read package updates")
+		log.Debug().Err(err).Msg("mql[packages]> could not read package updates")
 		return nil, fmt.Errorf("could not read package update list")
 	}
 	return ParseApkUpdates(cmd.Stdout)

@@ -4,15 +4,15 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 )
 
-func (u *lumiUuid) id() (string, error) {
+func (u *mqlUuid) id() (string, error) {
 	value, err := u.Value()
 	return "uuid:" + value, err
 }
 
-func (s *lumiUuid) init(args *lumi.Args) (*lumi.Args, Uuid, error) {
+func (s *mqlUuid) init(args *resources.Args) (*resources.Args, Uuid, error) {
 	if x, ok := (*args)["value"]; ok {
 		value, ok := x.(string)
 		if !ok {
@@ -31,7 +31,7 @@ func (s *lumiUuid) init(args *lumi.Args) (*lumi.Args, Uuid, error) {
 	return args, nil, nil
 }
 
-func (u *lumiUuid) getUuid() (uuid.UUID, error) {
+func (u *mqlUuid) getUuid() (uuid.UUID, error) {
 	value, err := u.Value()
 	if err != nil {
 		return uuid.UUID{}, err
@@ -39,17 +39,17 @@ func (u *lumiUuid) getUuid() (uuid.UUID, error) {
 	return uuid.Parse(value)
 }
 
-func (u *lumiUuid) GetUrn() (interface{}, error) {
+func (u *mqlUuid) GetUrn() (interface{}, error) {
 	uid, err := u.getUuid()
 	return uid.URN(), err
 }
 
-func (u *lumiUuid) GetVersion() (interface{}, error) {
+func (u *mqlUuid) GetVersion() (interface{}, error) {
 	uid, err := u.getUuid()
 	return int64(uid.Version()), err
 }
 
-func (u *lumiUuid) GetVariant() (string, error) {
+func (u *mqlUuid) GetVariant() (string, error) {
 	uid, err := u.getUuid()
 	return uid.Variant().String(), err
 }

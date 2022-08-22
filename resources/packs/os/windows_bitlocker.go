@@ -5,11 +5,11 @@ import (
 	"go.mondoo.io/mondoo/resources/packs/os/windows"
 )
 
-func (s *lumiWindowsBitlocker) id() (string, error) {
+func (s *mqlWindowsBitlocker) id() (string, error) {
 	return "windows.bitlocker", nil
 }
 
-func (s *lumiWindowsBitlocker) GetVolumes() ([]interface{}, error) {
+func (s *mqlWindowsBitlocker) GetVolumes() ([]interface{}, error) {
 	osProvider, err := osProvider(s.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func (s *lumiWindowsBitlocker) GetVolumes() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiWindowsBitlockerVolume) id() (string, error) {
+func (s *mqlWindowsBitlockerVolume) id() (string, error) {
 	deviceId, err := s.DeviceID()
 	if err != nil {
 		return "", err

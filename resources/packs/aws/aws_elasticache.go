@@ -6,16 +6,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (e *lumiAwsElasticache) id() (string, error) {
+func (e *mqlAwsElasticache) id() (string, error) {
 	return "aws.elasticache", nil
 }
 
-func (e *lumiAwsElasticache) GetClusters() ([]interface{}, error) {
+func (e *mqlAwsElasticache) GetClusters() ([]interface{}, error) {
 	at, err := awstransport(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func (e *lumiAwsElasticache) GetClusters() ([]interface{}, error) {
 	return res, nil
 }
 
-func (e *lumiAwsElasticache) getClusters(at *aws_transport.Provider) []*jobpool.Job {
+func (e *mqlAwsElasticache) getClusters(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {

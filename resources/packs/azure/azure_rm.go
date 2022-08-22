@@ -8,7 +8,7 @@ import (
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (a *lumiAzurerm) id() (string, error) {
+func (a *mqlAzurerm) id() (string, error) {
 	return "azurerm", nil
 }
 

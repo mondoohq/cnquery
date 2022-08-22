@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 
-	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/tfstate"
+	"go.mondoo.io/mondoo/resources"
 )
 
 func tfstateProvider(t providers.Transport) (*tfstate.Provider, error) {
@@ -17,11 +17,11 @@ func tfstateProvider(t providers.Transport) (*tfstate.Provider, error) {
 	return gt, nil
 }
 
-func (t *lumiTfstate) id() (string, error) {
+func (t *mqlTfstate) id() (string, error) {
 	return "tfstate", nil
 }
 
-func (t *lumiTfstate) init(args *lumi.Args) (*lumi.Args, Tfstate, error) {
+func (t *mqlTfstate) init(args *resources.Args) (*resources.Args, Tfstate, error) {
 	tfstateProvider, err := tfstateProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
@@ -38,7 +38,7 @@ func (t *lumiTfstate) init(args *lumi.Args) (*lumi.Args, Tfstate, error) {
 	return args, nil, nil
 }
 
-func (t *lumiTfstate) GetOutputs() ([]interface{}, error) {
+func (t *mqlTfstate) GetOutputs() ([]interface{}, error) {
 	provider, err := tfstateProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (t *lumiTfstate) GetOutputs() ([]interface{}, error) {
 			return nil, err
 		}
 		// store output in cache
-		r.LumiResource().Cache.Store("_output", &lumi.CacheEntry{Data: output})
+		r.MqlResource().Cache.Store("_output", &resources.CacheEntry{Data: output})
 
 		list = append(list, r)
 	}
@@ -74,7 +74,7 @@ func (t *lumiTfstate) GetOutputs() ([]interface{}, error) {
 	return list, nil
 }
 
-func (t *lumiTfstate) GetRootModule() (interface{}, error) {
+func (t *mqlTfstate) GetRootModule() (interface{}, error) {
 	provider, err := tfstateProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -89,14 +89,14 @@ func (t *lumiTfstate) GetRootModule() (interface{}, error) {
 		return nil, nil
 	}
 
-	r, err := newLumiModule(t.MotorRuntime, state.Values.RootModule)
+	r, err := newMqlModule(t.MotorRuntime, state.Values.RootModule)
 	if err != nil {
 		return nil, err
 	}
 	return r, nil
 }
 
-func (t *lumiTfstate) GetModules() (interface{}, error) {
+func (t *mqlTfstate) GetModules() (interface{}, error) {
 	provider, err := tfstateProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -121,7 +121,7 @@ func (t *lumiTfstate) GetModules() (interface{}, error) {
 	// convert module list to mql resources
 	list := []interface{}{}
 	for i := range moduleList {
-		r, err := newLumiModule(t.MotorRuntime, moduleList[i])
+		r, err := newMqlModule(t.MotorRuntime, moduleList[i])
 		if err != nil {
 			return nil, err
 		}
@@ -131,7 +131,7 @@ func (t *lumiTfstate) GetModules() (interface{}, error) {
 	return list, nil
 }
 
-func (t *lumiTfstateOutput) id() (string, error) {
+func (t *mqlTfstateOutput) id() (string, error) {
 	id, err := t.Identifier()
 	if err != nil {
 		return "", err
@@ -139,7 +139,7 @@ func (t *lumiTfstateOutput) id() (string, error) {
 	return "tfstateoutput/identifier/" + id, nil
 }
 
-func (t *lumiTfstateOutput) init(args *lumi.Args) (*lumi.Args, TfstateOutput, error) {
+func (t *mqlTfstateOutput) init(args *resources.Args) (*resources.Args, TfstateOutput, error) {
 	if len(*args) > 1 {
 		return args, nil, nil
 	}
@@ -171,8 +171,8 @@ func (t *lumiTfstateOutput) init(args *lumi.Args) (*lumi.Args, TfstateOutput, er
 	return args, nil, nil
 }
 
-func (t *lumiTfstateOutput) GetValue() (interface{}, error) {
-	c, ok := t.LumiResource().Cache.Load("_output")
+func (t *mqlTfstateOutput) GetValue() (interface{}, error) {
+	c, ok := t.MqlResource().Cache.Load("_output")
 	if !ok {
 		return nil, errors.New("cannot get output cache")
 	}
@@ -185,8 +185,8 @@ func (t *lumiTfstateOutput) GetValue() (interface{}, error) {
 	return value, nil
 }
 
-func (t *lumiTfstateOutput) GetType() (interface{}, error) {
-	c, ok := t.LumiResource().Cache.Load("_output")
+func (t *mqlTfstateOutput) GetType() (interface{}, error) {
+	c, ok := t.MqlResource().Cache.Load("_output")
 	if !ok {
 		return nil, errors.New("cannot get output cache")
 	}
@@ -199,7 +199,7 @@ func (t *lumiTfstateOutput) GetType() (interface{}, error) {
 	return typ, nil
 }
 
-func (t *lumiTfstateModule) id() (string, error) {
+func (t *mqlTfstateModule) id() (string, error) {
 	address, err := t.Address()
 	if err != nil {
 		return "", err
@@ -213,7 +213,7 @@ func (t *lumiTfstateModule) id() (string, error) {
 	return name, nil
 }
 
-func (t *lumiTfstateModule) init(args *lumi.Args) (*lumi.Args, TfstateModule, error) {
+func (t *mqlTfstateModule) init(args *resources.Args) (*resources.Args, TfstateModule, error) {
 	// check if identifier is there
 	nameRaw := (*args)["address"]
 	if nameRaw != nil {
@@ -247,8 +247,8 @@ func (t *lumiTfstateModule) init(args *lumi.Args) (*lumi.Args, TfstateModule, er
 	return args, nil, nil
 }
 
-func (t *lumiTfstateModule) GetResources() ([]interface{}, error) {
-	c, ok := t.LumiResource().Cache.Load("_module")
+func (t *mqlTfstateModule) GetResources() ([]interface{}, error) {
+	c, ok := t.MqlResource().Cache.Load("_module")
 	if !ok {
 		return nil, errors.New("cannot get module cache")
 	}
@@ -280,7 +280,7 @@ func (t *lumiTfstateModule) GetResources() ([]interface{}, error) {
 	return list, nil
 }
 
-func newLumiModule(runtime *lumi.Runtime, module *tfstate.Module) (lumi.ResourceType, error) {
+func newMqlModule(runtime *resources.Runtime, module *tfstate.Module) (resources.ResourceType, error) {
 	r, err := runtime.CreateResource("tfstate.module",
 		"address", module.Address,
 	)
@@ -288,12 +288,12 @@ func newLumiModule(runtime *lumi.Runtime, module *tfstate.Module) (lumi.Resource
 		return nil, err
 	}
 	// store module in cache
-	r.LumiResource().Cache.Store("_module", &lumi.CacheEntry{Data: module})
+	r.MqlResource().Cache.Store("_module", &resources.CacheEntry{Data: module})
 	return r, nil
 }
 
-func (t *lumiTfstateModule) GetChildModules() ([]interface{}, error) {
-	c, ok := t.LumiResource().Cache.Load("_module")
+func (t *mqlTfstateModule) GetChildModules() ([]interface{}, error) {
+	c, ok := t.MqlResource().Cache.Load("_module")
 	if !ok {
 		return nil, errors.New("cannot get module cache")
 	}
@@ -301,7 +301,7 @@ func (t *lumiTfstateModule) GetChildModules() ([]interface{}, error) {
 
 	var list []interface{}
 	for i := range module.ChildModules {
-		r, err := newLumiModule(t.MotorRuntime, module.ChildModules[i])
+		r, err := newMqlModule(t.MotorRuntime, module.ChildModules[i])
 		if err != nil {
 			return nil, err
 		}
@@ -311,7 +311,7 @@ func (t *lumiTfstateModule) GetChildModules() ([]interface{}, error) {
 	return list, nil
 }
 
-func (t *lumiTfstateResource) id() (string, error) {
+func (t *mqlTfstateResource) id() (string, error) {
 	address, err := t.Address()
 	if err != nil {
 		return "", err

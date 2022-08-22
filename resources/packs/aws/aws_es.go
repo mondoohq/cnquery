@@ -6,17 +6,17 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	"github.com/aws/smithy-go/transport/http"
-	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (e *lumiAwsEs) id() (string, error) {
+func (e *mqlAwsEs) id() (string, error) {
 	return "aws.es", nil
 }
 
-func (e *lumiAwsEs) GetDomains() ([]interface{}, error) {
+func (e *mqlAwsEs) GetDomains() ([]interface{}, error) {
 	at, err := awstransport(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func (e *lumiAwsEs) GetDomains() ([]interface{}, error) {
 	return res, nil
 }
 
-func (e *lumiAwsEs) getDomains(at *aws_transport.Provider) []*jobpool.Job {
+func (e *mqlAwsEs) getDomains(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -59,14 +59,14 @@ func (e *lumiAwsEs) getDomains(at *aws_transport.Provider) []*jobpool.Job {
 			for _, domain := range domains.DomainNames {
 				// note: the api returns name and region here, so we just use that.
 				// the arn is not returned until we get to the describe call
-				lumiDomain, err := e.MotorRuntime.CreateResource("aws.es.domain",
+				mqlDomain, err := e.MotorRuntime.CreateResource("aws.es.domain",
 					"name", core.ToString(domain.DomainName),
 					"region", regionVal,
 				)
 				if err != nil {
 					return nil, err
 				}
-				res = append(res, lumiDomain)
+				res = append(res, mqlDomain)
 			}
 			return jobpool.JobResult(res), nil
 		}
@@ -75,7 +75,7 @@ func (e *lumiAwsEs) getDomains(at *aws_transport.Provider) []*jobpool.Job {
 	return tasks
 }
 
-func (a *lumiAwsEsDomain) init(args *lumi.Args) (*lumi.Args, AwsEsDomain, error) {
+func (a *mqlAwsEsDomain) init(args *resources.Args) (*resources.Args, AwsEsDomain, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -108,7 +108,7 @@ func (a *lumiAwsEsDomain) init(args *lumi.Args) (*lumi.Args, AwsEsDomain, error)
 	return args, nil, nil
 }
 
-func (e *lumiAwsEsDomain) id() (string, error) {
+func (e *mqlAwsEsDomain) id() (string, error) {
 	return e.Arn()
 }
 

@@ -5,16 +5,16 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/emr"
 	"github.com/aws/aws-sdk-go-v2/service/emr/types"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (e *lumiAwsEmr) id() (string, error) {
+func (e *mqlAwsEmr) id() (string, error) {
 	return "aws.emr", nil
 }
 
-func (e *lumiAwsEmr) GetClusters() ([]interface{}, error) {
+func (e *mqlAwsEmr) GetClusters() ([]interface{}, error) {
 	at, err := awstransport(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -34,11 +34,11 @@ func (e *lumiAwsEmr) GetClusters() ([]interface{}, error) {
 	return res, nil
 }
 
-func (e *lumiAwsEmrCluster) id() (string, error) {
+func (e *mqlAwsEmrCluster) id() (string, error) {
 	return e.Arn()
 }
 
-func (e *lumiAwsEmr) getClusters(at *aws_transport.Provider) []*jobpool.Job {
+func (e *mqlAwsEmr) getClusters(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -64,7 +64,7 @@ func (e *lumiAwsEmr) getClusters(at *aws_transport.Provider) []*jobpool.Job {
 					if err != nil {
 						return nil, err
 					}
-					lumiCluster, err := e.MotorRuntime.CreateResource("aws.emr.cluster",
+					mqlCluster, err := e.MotorRuntime.CreateResource("aws.emr.cluster",
 						"arn", core.ToString(cluster.ClusterArn),
 						"name", core.ToString(cluster.Name),
 						"normalizedInstanceHours", core.ToInt64From32(cluster.NormalizedInstanceHours),
@@ -75,7 +75,7 @@ func (e *lumiAwsEmr) getClusters(at *aws_transport.Provider) []*jobpool.Job {
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiCluster)
+					res = append(res, mqlCluster)
 				}
 				if clusters.Marker == nil {
 					break
@@ -89,7 +89,7 @@ func (e *lumiAwsEmr) getClusters(at *aws_transport.Provider) []*jobpool.Job {
 	return tasks
 }
 
-func (e *lumiAwsEmrCluster) GetMasterInstances() ([]interface{}, error) {
+func (e *mqlAwsEmrCluster) GetMasterInstances() ([]interface{}, error) {
 	arn, err := e.Arn()
 	if err != nil {
 		return nil, err

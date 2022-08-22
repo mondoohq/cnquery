@@ -6,19 +6,19 @@ import (
 	"go.mondoo.io/mondoo/resources/packs/os/windows"
 )
 
-func (w *lumiWindowsFirewall) id() (string, error) {
+func (w *mqlWindowsFirewall) id() (string, error) {
 	return "windows.firewall", nil
 }
 
-func (w *lumiWindowsFirewallProfile) id() (string, error) {
+func (w *mqlWindowsFirewallProfile) id() (string, error) {
 	return w.InstanceID()
 }
 
-func (w *lumiWindowsFirewallRule) id() (string, error) {
+func (w *mqlWindowsFirewallRule) id() (string, error) {
 	return w.InstanceID()
 }
 
-func (w *lumiWindowsFirewall) GetSettings() (map[string]interface{}, error) {
+func (w *mqlWindowsFirewall) GetSettings() (map[string]interface{}, error) {
 	osProvider, err := osProvider(w.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func (w *lumiWindowsFirewall) GetSettings() (map[string]interface{}, error) {
 	return core.JsonToDict(fwSettings)
 }
 
-func (w *lumiWindowsFirewall) GetProfiles() ([]interface{}, error) {
+func (w *mqlWindowsFirewall) GetProfiles() ([]interface{}, error) {
 	osProvider, err := osProvider(w.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
@@ -56,11 +56,11 @@ func (w *lumiWindowsFirewall) GetProfiles() ([]interface{}, error) {
 		return nil, err
 	}
 
-	// convert firewall profiles to lumi resource
-	lumiFwProfiles := make([]interface{}, len(fwProfiles))
+	// convert firewall profiles to MQL resource
+	mqlFwProfiles := make([]interface{}, len(fwProfiles))
 	for i, p := range fwProfiles {
 
-		lumiFwProfile, err := w.MotorRuntime.CreateResource("windows.firewall.profile",
+		mqlFwProfile, err := w.MotorRuntime.CreateResource("windows.firewall.profile",
 			"instanceID", p.InstanceID,
 			"name", p.Name,
 			"enabled", p.Enabled,
@@ -85,13 +85,13 @@ func (w *lumiWindowsFirewall) GetProfiles() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiFwProfiles[i] = lumiFwProfile.(WindowsFirewallProfile)
+		mqlFwProfiles[i] = mqlFwProfile.(WindowsFirewallProfile)
 	}
 
-	return lumiFwProfiles, nil
+	return mqlFwProfiles, nil
 }
 
-func (w *lumiWindowsFirewall) GetRules() ([]interface{}, error) {
+func (w *mqlWindowsFirewall) GetRules() ([]interface{}, error) {
 	osProvider, err := osProvider(w.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
@@ -109,11 +109,11 @@ func (w *lumiWindowsFirewall) GetRules() ([]interface{}, error) {
 		return nil, err
 	}
 
-	// convert firewall rules to lumi resource
-	lumiFwRules := make([]interface{}, len(fwRules))
+	// convert firewall rules to MQL resource
+	mqlFwRules := make([]interface{}, len(fwRules))
 	for i, r := range fwRules {
 
-		lumiFwRule, err := w.MotorRuntime.CreateResource("windows.firewall.rule",
+		mqlFwRule, err := w.MotorRuntime.CreateResource("windows.firewall.rule",
 			"instanceID", r.InstanceID,
 			"name", r.Name,
 			"displayName", r.DisplayName,
@@ -135,8 +135,8 @@ func (w *lumiWindowsFirewall) GetRules() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiFwRules[i] = lumiFwRule.(WindowsFirewallRule)
+		mqlFwRules[i] = mqlFwRule.(WindowsFirewallRule)
 	}
 
-	return lumiFwRules, nil
+	return mqlFwRules, nil
 }

@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/types"
 )
 
@@ -385,8 +385,8 @@ func rawDataJSON(typ types.Type, data interface{}, codeID string, bundle *CodeBu
 		return errors.New("unable to marshal map, its type is not supported: " + typ.Label() + ", raw: " + fmt.Sprintf("%#v", data))
 
 	case types.ResourceLike:
-		r := data.(lumi.ResourceType)
-		i := r.LumiResource()
+		r := data.(resources.ResourceType)
+		i := r.MqlResource()
 		idline := i.Name
 		if i.Id != "" {
 			idline += " id = " + i.Id

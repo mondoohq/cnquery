@@ -7,11 +7,11 @@ import (
 	"io/ioutil"
 )
 
-func (l *lumiLsblk) id() (string, error) {
+func (l *mqlLsblk) id() (string, error) {
 	return "lsblk", nil
 }
 
-func (l *lumiLsblk) GetList() ([]interface{}, error) {
+func (l *mqlLsblk) GetList() ([]interface{}, error) {
 	osProvider, err := osProvider(l.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
@@ -34,13 +34,13 @@ func (l *lumiLsblk) GetList() ([]interface{}, error) {
 		return nil, err
 	}
 
-	lumiBlockEntries := []interface{}{}
+	mqlBlockEntries := []interface{}{}
 	for i := range blockEntries.Blockdevices {
 		d := blockEntries.Blockdevices[i]
 		for i := range d.Children {
 			entry := d.Children[i]
 			entry.Mountpoints = append(entry.Mountpoints, entry.Mountpoint)
-			lumiLsblkEntry, err := l.MotorRuntime.CreateResource("lsblk.entry",
+			mqlLsblkEntry, err := l.MotorRuntime.CreateResource("lsblk.entry",
 				"name", entry.Name,
 				"fstype", entry.Fstype,
 				"label", entry.Label,
@@ -50,10 +50,10 @@ func (l *lumiLsblk) GetList() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			lumiBlockEntries = append(lumiBlockEntries, lumiLsblkEntry)
+			mqlBlockEntries = append(mqlBlockEntries, mqlLsblkEntry)
 		}
 	}
-	return lumiBlockEntries, nil
+	return mqlBlockEntries, nil
 }
 
 func parseBlockEntries(data []byte) (blockdevices, error) {
@@ -64,7 +64,7 @@ func parseBlockEntries(data []byte) (blockdevices, error) {
 	return blockEntries, nil
 }
 
-func (l *lumiLsblkEntry) id() (string, error) {
+func (l *mqlLsblkEntry) id() (string, error) {
 	name, err := l.Name()
 	if err != nil {
 		return "", err

@@ -10,12 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (a *lumiAwsApplicationAutoscaling) id() (string, error) {
+func (a *mqlAwsApplicationAutoscaling) id() (string, error) {
 	n, err := a.Namespace()
 	if err != nil {
 		return "", errors.Wrap(err, "namespace required")
@@ -23,11 +23,11 @@ func (a *lumiAwsApplicationAutoscaling) id() (string, error) {
 	return "aws.applicationAutoscaling." + n, nil
 }
 
-func (l *lumiAwsApplicationautoscalingTarget) id() (string, error) {
+func (l *mqlAwsApplicationautoscalingTarget) id() (string, error) {
 	return l.Arn()
 }
 
-func (a *lumiAwsApplicationAutoscaling) GetScalableTargets() ([]interface{}, error) {
+func (a *mqlAwsApplicationAutoscaling) GetScalableTargets() ([]interface{}, error) {
 	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (a *lumiAwsApplicationAutoscaling) GetScalableTargets() ([]interface{}, err
 	return res, nil
 }
 
-func (a *lumiAwsApplicationAutoscaling) getTargets(at *aws_transport.Provider, namespace types.ServiceNamespace) []*jobpool.Job {
+func (a *mqlAwsApplicationAutoscaling) getTargets(at *aws_transport.Provider, namespace types.ServiceNamespace) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -87,7 +87,7 @@ func (a *lumiAwsApplicationAutoscaling) getTargets(at *aws_transport.Provider, n
 					if err != nil {
 						return nil, err
 					}
-					lumiSTarget, err := a.MotorRuntime.CreateResource("aws.applicationautoscaling.target",
+					mqlSTarget, err := a.MotorRuntime.CreateResource("aws.applicationautoscaling.target",
 						"arn", fmt.Sprintf("arn:aws:application-autoscaling:%s:%s:%s/%s", regionVal, account.ID, namespace, core.ToString(target.ResourceId)),
 						"namespace", string(target.ServiceNamespace),
 						"scalableDimension", string(target.ScalableDimension),
@@ -98,7 +98,7 @@ func (a *lumiAwsApplicationAutoscaling) getTargets(at *aws_transport.Provider, n
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiSTarget)
+					res = append(res, mqlSTarget)
 				}
 				nextToken = resp.NextToken
 				if resp.NextToken != nil {

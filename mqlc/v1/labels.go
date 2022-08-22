@@ -8,11 +8,11 @@ import (
 	"golang.org/x/text/unicode/norm"
 
 	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/types"
 )
 
-func createArgLabel(arg *llx.Primitive, code *llx.CodeV1, labels *llx.Labels, schema *lumi.Schema) error {
+func createArgLabel(arg *llx.Primitive, code *llx.CodeV1, labels *llx.Labels, schema *resources.Schema) error {
 	if !types.Type(arg.Type).IsFunction() {
 		return nil
 	}
@@ -26,7 +26,7 @@ func createArgLabel(arg *llx.Primitive, code *llx.CodeV1, labels *llx.Labels, sc
 	return UpdateLabels(function, labels, schema)
 }
 
-func createLabel(code *llx.CodeV1, ref int32, labels *llx.Labels, schema *lumi.Schema) (string, error) {
+func createLabel(code *llx.CodeV1, ref int32, labels *llx.Labels, schema *resources.Schema) (string, error) {
 	chunk := code.Code[ref-1]
 
 	if chunk.Call == llx.Chunk_PRIMITIVE {
@@ -141,7 +141,7 @@ func stripCtlAndExtFromUnicode(str string) string {
 }
 
 // UpdateLabels for the given code under the schema
-func UpdateLabels(code *llx.CodeV1, labels *llx.Labels, schema *lumi.Schema) error {
+func UpdateLabels(code *llx.CodeV1, labels *llx.Labels, schema *resources.Schema) error {
 	if code == nil {
 		return errors.New("cannot create labels without code")
 	}

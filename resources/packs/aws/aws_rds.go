@@ -8,13 +8,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (d *lumiAwsRds) id() (string, error) {
+func (d *mqlAwsRds) id() (string, error) {
 	return "aws.rds", nil
 }
 
@@ -22,7 +22,7 @@ const (
 	rdsInstanceArnPattern = "arn:aws:rds:%s:%s:db:%s"
 )
 
-func (d *lumiAwsRds) GetDbInstances() ([]interface{}, error) {
+func (d *mqlAwsRds) GetDbInstances() ([]interface{}, error) {
 	at, err := awstransport(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func (d *lumiAwsRds) GetDbInstances() ([]interface{}, error) {
 	return res, nil
 }
 
-func (d *lumiAwsRds) getDbInstances(at *aws_transport.Provider) []*jobpool.Job {
+func (d *mqlAwsRds) getDbInstances(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -77,16 +77,16 @@ func (d *lumiAwsRds) getDbInstances(at *aws_transport.Provider) []*jobpool.Job {
 					sgs := []interface{}{}
 					for i := range dbInstance.VpcSecurityGroups {
 						// NOTE: this will create the resource and determine the data in its init method
-						lumiSg, err := d.MotorRuntime.CreateResource("aws.ec2.securitygroup",
+						mqlSg, err := d.MotorRuntime.CreateResource("aws.ec2.securitygroup",
 							"arn", fmt.Sprintf(securityGroupArnPattern, regionVal, account.ID, core.ToString(dbInstance.VpcSecurityGroups[i].VpcSecurityGroupId)),
 						)
 						if err != nil {
 							return nil, err
 						}
-						sgs = append(sgs, lumiSg)
+						sgs = append(sgs, mqlSg)
 					}
 
-					lumiDBInstance, err := d.MotorRuntime.CreateResource("aws.rds.dbinstance",
+					mqlDBInstance, err := d.MotorRuntime.CreateResource("aws.rds.dbinstance",
 						"arn", core.ToString(dbInstance.DBInstanceArn),
 						"name", core.ToString(dbInstance.DBName),
 						"backupRetentionPeriod", int64(dbInstance.BackupRetentionPeriod),
@@ -108,7 +108,7 @@ func (d *lumiAwsRds) getDbInstances(at *aws_transport.Provider) []*jobpool.Job {
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiDBInstance)
+					res = append(res, mqlDBInstance)
 				}
 				if dbInstances.Marker == nil {
 					break
@@ -135,7 +135,7 @@ func rdsTagsToMap(tags []types.Tag) map[string]interface{} {
 	return tagsMap
 }
 
-func (d *lumiAwsRds) GetDbClusters() ([]interface{}, error) {
+func (d *mqlAwsRds) GetDbClusters() ([]interface{}, error) {
 	at, err := awstransport(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -156,7 +156,7 @@ func (d *lumiAwsRds) GetDbClusters() ([]interface{}, error) {
 	return res, nil
 }
 
-func (p *lumiAwsRdsDbinstance) init(args *lumi.Args) (*lumi.Args, AwsRdsDbinstance, error) {
+func (p *mqlAwsRdsDbinstance) init(args *resources.Args) (*resources.Args, AwsRdsDbinstance, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -180,18 +180,18 @@ func (p *lumiAwsRdsDbinstance) init(args *lumi.Args) (*lumi.Args, AwsRdsDbinstan
 	arnVal := (*args)["arn"].(string)
 	for i := range rawResources {
 		dbInstance := rawResources[i].(AwsRdsDbinstance)
-		lumiDbArn, err := dbInstance.Arn()
+		mqlDbArn, err := dbInstance.Arn()
 		if err != nil {
 			return nil, nil, errors.New("rds db instance does not exist")
 		}
-		if lumiDbArn == arnVal {
+		if mqlDbArn == arnVal {
 			return args, dbInstance, nil
 		}
 	}
 	return nil, nil, errors.New("rds db instance does not exist")
 }
 
-func (d *lumiAwsRds) getDbClusters(at *aws_transport.Provider) []*jobpool.Job {
+func (d *mqlAwsRds) getDbClusters(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -218,27 +218,27 @@ func (d *lumiAwsRds) getDbClusters(at *aws_transport.Provider) []*jobpool.Job {
 				}
 
 				for _, cluster := range dbClusters.DBClusters {
-					lumiRdsDbInstances := []interface{}{}
+					mqlRdsDbInstances := []interface{}{}
 					for _, instance := range cluster.DBClusterMembers {
-						lumiInstance, err := d.MotorRuntime.CreateResource("aws.rds.dbinstance",
+						mqlInstance, err := d.MotorRuntime.CreateResource("aws.rds.dbinstance",
 							"arn", fmt.Sprintf(rdsInstanceArnPattern, regionVal, account.ID, core.ToString(instance.DBInstanceIdentifier)),
 						)
 						if err != nil {
 							return nil, err
 						}
-						lumiRdsDbInstances = append(lumiRdsDbInstances, lumiInstance)
+						mqlRdsDbInstances = append(mqlRdsDbInstances, mqlInstance)
 					}
-					lumiDbCluster, err := d.MotorRuntime.CreateResource("aws.rds.dbcluster",
+					mqlDbCluster, err := d.MotorRuntime.CreateResource("aws.rds.dbcluster",
 						"arn", core.ToString(cluster.DBClusterArn),
 						"region", regionVal,
 						"id", core.ToString(cluster.DBClusterIdentifier),
-						"members", lumiRdsDbInstances,
+						"members", mqlRdsDbInstances,
 						"tags", rdsTagsToMap(cluster.TagList),
 					)
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiDbCluster)
+					res = append(res, mqlDbCluster)
 				}
 
 				if dbClusters.Marker == nil {
@@ -253,7 +253,7 @@ func (d *lumiAwsRds) getDbClusters(at *aws_transport.Provider) []*jobpool.Job {
 	return tasks
 }
 
-func (d *lumiAwsRdsDbcluster) GetSnapshots() ([]interface{}, error) {
+func (d *mqlAwsRdsDbcluster) GetSnapshots() ([]interface{}, error) {
 	dbClusterId, err := d.Id()
 	if err != nil {
 		return nil, err
@@ -278,7 +278,7 @@ func (d *lumiAwsRdsDbcluster) GetSnapshots() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, snapshot := range snapshots.DBClusterSnapshots {
-			lumiDbSnapshot, err := d.MotorRuntime.CreateResource("aws.rds.snapshot",
+			mqlDbSnapshot, err := d.MotorRuntime.CreateResource("aws.rds.snapshot",
 				"arn", core.ToString(snapshot.DBClusterSnapshotArn),
 				"id", core.ToString(snapshot.DBClusterSnapshotIdentifier),
 				"type", core.ToString(snapshot.SnapshotType),
@@ -289,7 +289,7 @@ func (d *lumiAwsRdsDbcluster) GetSnapshots() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, lumiDbSnapshot)
+			res = append(res, mqlDbSnapshot)
 		}
 		if snapshots.Marker == nil {
 			break
@@ -299,7 +299,7 @@ func (d *lumiAwsRdsDbcluster) GetSnapshots() ([]interface{}, error) {
 	return res, nil
 }
 
-func (d *lumiAwsRdsDbinstance) GetSnapshots() ([]interface{}, error) {
+func (d *mqlAwsRdsDbinstance) GetSnapshots() ([]interface{}, error) {
 	instanceId, err := d.Id()
 	if err != nil {
 		return nil, err
@@ -324,7 +324,7 @@ func (d *lumiAwsRdsDbinstance) GetSnapshots() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, snapshot := range snapshots.DBSnapshots {
-			lumiDbSnapshot, err := d.MotorRuntime.CreateResource("aws.rds.snapshot",
+			mqlDbSnapshot, err := d.MotorRuntime.CreateResource("aws.rds.snapshot",
 				"arn", core.ToString(snapshot.DBSnapshotArn),
 				"id", core.ToString(snapshot.DBSnapshotIdentifier),
 				"type", core.ToString(snapshot.SnapshotType),
@@ -336,7 +336,7 @@ func (d *lumiAwsRdsDbinstance) GetSnapshots() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, lumiDbSnapshot)
+			res = append(res, mqlDbSnapshot)
 		}
 		if snapshots.Marker == nil {
 			break
@@ -346,19 +346,19 @@ func (d *lumiAwsRdsDbinstance) GetSnapshots() ([]interface{}, error) {
 	return res, nil
 }
 
-func (d *lumiAwsRdsDbinstance) id() (string, error) {
+func (d *mqlAwsRdsDbinstance) id() (string, error) {
 	return d.Arn()
 }
 
-func (d *lumiAwsRdsDbcluster) id() (string, error) {
+func (d *mqlAwsRdsDbcluster) id() (string, error) {
 	return d.Arn()
 }
 
-func (d *lumiAwsRdsSnapshot) id() (string, error) {
+func (d *mqlAwsRdsSnapshot) id() (string, error) {
 	return d.Arn()
 }
 
-func (d *lumiAwsRdsSnapshot) GetAttributes() ([]interface{}, error) {
+func (d *mqlAwsRdsSnapshot) GetAttributes() ([]interface{}, error) {
 	snapshotId, err := d.Id()
 	if err != nil {
 		return nil, err

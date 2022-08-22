@@ -7,11 +7,11 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core/authorizedkeys"
 )
 
-func (u *lumiUser) GetAuthorizedkeys() (Authorizedkeys, error) {
+func (u *mqlUser) GetAuthorizedkeys() (Authorizedkeys, error) {
 	// fmt.Println("determine user authorized key file")
 	home, err := u.Home()
 	if err != nil {
@@ -27,7 +27,7 @@ func (u *lumiUser) GetAuthorizedkeys() (Authorizedkeys, error) {
 	return ak.(Authorizedkeys), nil
 }
 
-func (ake *lumiAuthorizedkeysEntry) id() (string, error) {
+func (ake *mqlAuthorizedkeysEntry) id() (string, error) {
 	file, err := ake.File()
 	if err != nil {
 		return "", err
@@ -47,17 +47,17 @@ func (ake *lumiAuthorizedkeysEntry) id() (string, error) {
 	return path + ":" + strconv.FormatInt(line, 10), nil
 }
 
-func (ake *lumiAuthorizedkeysEntry) GetLabel() (string, error) {
+func (ake *mqlAuthorizedkeysEntry) GetLabel() (string, error) {
 	// NOTE: content can be overridden in constructor only
 	return "", nil
 }
 
-func (ake *lumiAuthorizedkeysEntry) GetOptions() ([]string, error) {
+func (ake *mqlAuthorizedkeysEntry) GetOptions() ([]string, error) {
 	// NOTE: content can be overridden in constructor only
 	return []string{}, nil
 }
 
-func (s *lumiAuthorizedkeys) init(args *lumi.Args) (*lumi.Args, Authorizedkeys, error) {
+func (s *mqlAuthorizedkeys) init(args *resources.Args) (*resources.Args, Authorizedkeys, error) {
 	// resolve path to file
 	if x, ok := (*args)["path"]; ok {
 		path, ok := x.(string)
@@ -79,7 +79,7 @@ func authorizedkeysid(path string) string {
 	return "authorizedkeys:" + path
 }
 
-func (a *lumiAuthorizedkeys) id() (string, error) {
+func (a *mqlAuthorizedkeys) id() (string, error) {
 	r, err := a.File()
 	if err != nil {
 		return "", err
@@ -92,7 +92,7 @@ func (a *lumiAuthorizedkeys) id() (string, error) {
 	return authorizedkeysid(path), nil
 }
 
-func (a *lumiAuthorizedkeys) GetFile() (File, error) {
+func (a *mqlAuthorizedkeys) GetFile() (File, error) {
 	path, err := a.Path()
 	if err != nil {
 		return nil, err
@@ -105,7 +105,7 @@ func (a *lumiAuthorizedkeys) GetFile() (File, error) {
 	return f.(File), nil
 }
 
-func (a *lumiAuthorizedkeys) GetContent(file File) (string, error) {
+func (a *mqlAuthorizedkeys) GetContent(file File) (string, error) {
 	exists, err := file.Exists()
 	if err != nil {
 		return "", err
@@ -125,7 +125,7 @@ func (a *lumiAuthorizedkeys) GetContent(file File) (string, error) {
 	return file.Content()
 }
 
-func (a *lumiAuthorizedkeys) GetList(file File, content string) ([]interface{}, error) {
+func (a *mqlAuthorizedkeys) GetList(file File, content string) ([]interface{}, error) {
 	res := []interface{}{}
 
 	exists, err := file.Exists()

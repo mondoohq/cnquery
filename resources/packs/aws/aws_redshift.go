@@ -7,12 +7,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	"github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (r *lumiAwsRedshift) id() (string, error) {
+func (r *mqlAwsRedshift) id() (string, error) {
 	return "aws.redshift", nil
 }
 
@@ -20,7 +20,7 @@ const (
 	redshiftClusterArnPattern = "arn:aws:redshift:%s:%s:cluster/%s"
 )
 
-func (r *lumiAwsRedshift) GetClusters() ([]interface{}, error) {
+func (r *mqlAwsRedshift) GetClusters() ([]interface{}, error) {
 	at, err := awstransport(r.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -41,7 +41,7 @@ func (r *lumiAwsRedshift) GetClusters() ([]interface{}, error) {
 	return res, nil
 }
 
-func (r *lumiAwsRedshift) getClusters(at *aws_transport.Provider) []*jobpool.Job {
+func (r *mqlAwsRedshift) getClusters(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 
 	account, err := at.Account()
@@ -73,7 +73,7 @@ func (r *lumiAwsRedshift) getClusters(at *aws_transport.Provider) []*jobpool.Job
 					for _, group := range cluster.ClusterParameterGroups {
 						names = append(names, core.ToString(group.ParameterGroupName))
 					}
-					lumiDBInstance, err := r.MotorRuntime.CreateResource("aws.redshift.cluster",
+					mqlDBInstance, err := r.MotorRuntime.CreateResource("aws.redshift.cluster",
 						"arn", fmt.Sprintf(redshiftClusterArnPattern, regionVal, account.ID, core.ToString(cluster.ClusterIdentifier)),
 						"name", core.ToString(cluster.ClusterIdentifier),
 						"region", regionVal,
@@ -89,7 +89,7 @@ func (r *lumiAwsRedshift) getClusters(at *aws_transport.Provider) []*jobpool.Job
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiDBInstance)
+					res = append(res, mqlDBInstance)
 				}
 				if clusters.Marker == nil {
 					break
@@ -116,11 +116,11 @@ func redshiftTagsToMap(tags []types.Tag) map[string]interface{} {
 	return tagsMap
 }
 
-func (r *lumiAwsRedshiftCluster) id() (string, error) {
+func (r *mqlAwsRedshiftCluster) id() (string, error) {
 	return r.Arn()
 }
 
-func (r *lumiAwsRedshiftCluster) GetParameters() ([]interface{}, error) {
+func (r *mqlAwsRedshiftCluster) GetParameters() ([]interface{}, error) {
 	clusterGroupNames, err := r.ClusterParameterGroupNames()
 	if err != nil {
 		return nil, err
@@ -148,7 +148,7 @@ func (r *lumiAwsRedshiftCluster) GetParameters() ([]interface{}, error) {
 	return core.JsonToDictSlice(res)
 }
 
-func (r *lumiAwsRedshiftCluster) GetLogging() (interface{}, error) {
+func (r *mqlAwsRedshiftCluster) GetLogging() (interface{}, error) {
 	name, err := r.Name()
 	if err != nil {
 		return nil, err

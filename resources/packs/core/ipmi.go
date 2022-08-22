@@ -17,11 +17,11 @@ func getIpmiInstance(t providers.Transport) (*ipmi.IpmiClient, error) {
 	return it.Client(), nil
 }
 
-func (a *lumiIpmi) id() (string, error) {
+func (a *mqlIpmi) id() (string, error) {
 	return "ipmi", nil
 }
 
-func (a *lumiIpmi) GetGuid() (string, error) {
+func (a *mqlIpmi) GetGuid() (string, error) {
 	client, err := getIpmiInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return "", err
@@ -34,7 +34,7 @@ func (a *lumiIpmi) GetGuid() (string, error) {
 	return resp.GUID, nil
 }
 
-func (a *lumiIpmi) GetDeviceID() (map[string]interface{}, error) {
+func (a *mqlIpmi) GetDeviceID() (map[string]interface{}, error) {
 	client, err := getIpmiInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -48,11 +48,11 @@ func (a *lumiIpmi) GetDeviceID() (map[string]interface{}, error) {
 	return JsonToDict(resp)
 }
 
-func (a *lumiIpmiChassis) id() (string, error) {
+func (a *mqlIpmiChassis) id() (string, error) {
 	return "ipmi.chassis", nil
 }
 
-func (a *lumiIpmiChassis) GetStatus() (map[string]interface{}, error) {
+func (a *mqlIpmiChassis) GetStatus() (map[string]interface{}, error) {
 	client, err := getIpmiInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (a *lumiIpmiChassis) GetStatus() (map[string]interface{}, error) {
 	return JsonToDict(resp)
 }
 
-func (a *lumiIpmiChassis) GetSystemBootOptions() (map[string]interface{}, error) {
+func (a *mqlIpmiChassis) GetSystemBootOptions() (map[string]interface{}, error) {
 	client, err := getIpmiInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err

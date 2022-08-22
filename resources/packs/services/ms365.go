@@ -1,15 +1,15 @@
 package services
 
 import (
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (m *lumiMs365Exchangeonline) id() (string, error) {
+func (m *mqlMs365Exchangeonline) id() (string, error) {
 	return "ms365.exchangeonline", nil
 }
 
-func (m *lumiMs365Exchangeonline) init(args *lumi.Args) (*lumi.Args, Ms365Exchangeonline, error) {
+func (m *mqlMs365Exchangeonline) init(args *resources.Args) (*resources.Args, Ms365Exchangeonline, error) {
 	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
@@ -59,11 +59,11 @@ func (m *lumiMs365Exchangeonline) init(args *lumi.Args) (*lumi.Args, Ms365Exchan
 	return args, nil, nil
 }
 
-func (m *lumiMs365Sharepointonline) id() (string, error) {
+func (m *mqlMs365Sharepointonline) id() (string, error) {
 	return "ms365.sharepointonline", nil
 }
 
-func (m *lumiMs365Sharepointonline) init(args *lumi.Args) (*lumi.Args, Ms365Sharepointonline, error) {
+func (m *mqlMs365Sharepointonline) init(args *resources.Args) (*resources.Args, Ms365Sharepointonline, error) {
 	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
@@ -83,11 +83,11 @@ func (m *lumiMs365Sharepointonline) init(args *lumi.Args) (*lumi.Args, Ms365Shar
 	return args, nil, nil
 }
 
-func (m *lumiMs365Teams) id() (string, error) {
+func (m *mqlMs365Teams) id() (string, error) {
 	return "ms365.teams", nil
 }
 
-func (m *lumiMs365Teams) init(args *lumi.Args) (*lumi.Args, Ms365Teams, error) {
+func (m *mqlMs365Teams) init(args *resources.Args) (*resources.Args, Ms365Teams, error) {
 	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err

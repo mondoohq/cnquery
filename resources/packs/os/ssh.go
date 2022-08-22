@@ -8,16 +8,16 @@ import (
 	"errors"
 	"strings"
 
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core"
 	"go.mondoo.io/mondoo/resources/packs/os/sshd"
 )
 
-func (s *lumiSshd) id() (string, error) {
+func (s *mqlSshd) id() (string, error) {
 	return "sshd", nil
 }
 
-func (s *lumiSshdConfig) init(args *lumi.Args) (*lumi.Args, SshdConfig, error) {
+func (s *mqlSshdConfig) init(args *resources.Args) (*resources.Args, SshdConfig, error) {
 	if x, ok := (*args)["path"]; ok {
 		path, ok := x.(string)
 		if !ok {
@@ -37,7 +37,7 @@ func (s *lumiSshdConfig) init(args *lumi.Args) (*lumi.Args, SshdConfig, error) {
 
 const defaultSshdConfig = "/etc/ssh/sshd_config"
 
-func (s *lumiSshdConfig) id() (string, error) {
+func (s *mqlSshdConfig) id() (string, error) {
 	r, err := s.File()
 	if err != nil {
 		return "", err
@@ -45,7 +45,7 @@ func (s *lumiSshdConfig) id() (string, error) {
 	return r.Path()
 }
 
-func (s *lumiSshdConfig) GetFile() (core.File, error) {
+func (s *mqlSshdConfig) GetFile() (core.File, error) {
 	f, err := s.MotorRuntime.CreateResource("file", "path", defaultSshdConfig)
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (s *lumiSshdConfig) GetFile() (core.File, error) {
 	return f.(core.File), nil
 }
 
-func (s *lumiSshdConfig) GetContent(file core.File) (string, error) {
+func (s *mqlSshdConfig) GetContent(file core.File) (string, error) {
 	// TODO: this can be heavily improved once we do it right, since this is constantly
 	// re-registered as the file changes
 	err := s.MotorRuntime.WatchAndCompute(file, "content", s, "content")
@@ -64,7 +64,7 @@ func (s *lumiSshdConfig) GetContent(file core.File) (string, error) {
 	return file.Content()
 }
 
-func (s *lumiSshdConfig) GetParams(content string) (map[string]interface{}, error) {
+func (s *mqlSshdConfig) GetParams(content string) (map[string]interface{}, error) {
 	params, err := sshd.Params(content)
 	if err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func (s *lumiSshdConfig) GetParams(content string) (map[string]interface{}, erro
 	return res, nil
 }
 
-func (s *lumiSshdConfig) parseConfigEntrySlice(raw interface{}) ([]interface{}, error) {
+func (s *mqlSshdConfig) parseConfigEntrySlice(raw interface{}) ([]interface{}, error) {
 	strCipher, ok := raw.(string)
 	if !ok {
 		return nil, errors.New("value is not a valid string")
@@ -95,7 +95,7 @@ func (s *lumiSshdConfig) parseConfigEntrySlice(raw interface{}) ([]interface{}, 
 	return res, nil
 }
 
-func (s *lumiSshdConfig) GetCiphers(params map[string]interface{}) ([]interface{}, error) {
+func (s *mqlSshdConfig) GetCiphers(params map[string]interface{}) ([]interface{}, error) {
 	rawCiphers, ok := params["Ciphers"]
 	if !ok {
 		return nil, nil
@@ -104,7 +104,7 @@ func (s *lumiSshdConfig) GetCiphers(params map[string]interface{}) ([]interface{
 	return s.parseConfigEntrySlice(rawCiphers)
 }
 
-func (s *lumiSshdConfig) GetMacs(params map[string]interface{}) ([]interface{}, error) {
+func (s *mqlSshdConfig) GetMacs(params map[string]interface{}) ([]interface{}, error) {
 	rawMacs, ok := params["MACs"]
 	if !ok {
 		return nil, nil
@@ -113,7 +113,7 @@ func (s *lumiSshdConfig) GetMacs(params map[string]interface{}) ([]interface{}, 
 	return s.parseConfigEntrySlice(rawMacs)
 }
 
-func (s *lumiSshdConfig) GetKexs(params map[string]interface{}) ([]interface{}, error) {
+func (s *mqlSshdConfig) GetKexs(params map[string]interface{}) ([]interface{}, error) {
 	rawkexs, ok := params["KexAlgorithms"]
 	if !ok {
 		return nil, nil
@@ -122,7 +122,7 @@ func (s *lumiSshdConfig) GetKexs(params map[string]interface{}) ([]interface{}, 
 	return s.parseConfigEntrySlice(rawkexs)
 }
 
-func (s *lumiSshdConfig) GetHostkeys(params map[string]interface{}) ([]interface{}, error) {
+func (s *mqlSshdConfig) GetHostkeys(params map[string]interface{}) ([]interface{}, error) {
 	rawHostKeys, ok := params["HostKey"]
 	if !ok {
 		return nil, nil

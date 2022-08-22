@@ -8,11 +8,11 @@ import (
 	"strconv"
 )
 
-func (s *lumiPorts) id() (string, error) {
+func (s *mqlPorts) id() (string, error) {
 	return "ports", nil
 }
 
-func (p *lumiPorts) GetList() ([]interface{}, error) {
+func (p *mqlPorts) GetList() ([]interface{}, error) {
 	pf, err := p.MotorRuntime.Motor.Platform()
 	if err != nil {
 		return nil, err
@@ -26,7 +26,7 @@ func (p *lumiPorts) GetList() ([]interface{}, error) {
 	}
 }
 
-func (p *lumiPorts) GetListening() ([]interface{}, error) {
+func (p *mqlPorts) GetListening() ([]interface{}, error) {
 	all, err := p.GetList()
 	if err != nil {
 		return all, err
@@ -104,7 +104,7 @@ func hex2ipv4(s string) (string, error) {
 		strconv.FormatUint(a, 10)), nil
 }
 
-func (p *lumiPorts) users() (map[int64]User, error) {
+func (p *mqlPorts) users() (map[int64]User, error) {
 	obj, err := p.MotorRuntime.CreateResource("users")
 	if err != nil {
 		return nil, err
@@ -116,7 +116,7 @@ func (p *lumiPorts) users() (map[int64]User, error) {
 		return nil, err
 	}
 
-	c, ok := users.LumiResource().Cache.Load("_map")
+	c, ok := users.MqlResource().Cache.Load("_map")
 	if !ok {
 		return nil, errors.New("cannot get map of users")
 	}
@@ -133,7 +133,7 @@ func (p *lumiPorts) users() (map[int64]User, error) {
 	return userUidMap, nil
 }
 
-func (p *lumiPorts) processes() (map[int64]Process, error) {
+func (p *mqlPorts) processes() (map[int64]Process, error) {
 	// Prerequisites: processes
 	obj, err := p.MotorRuntime.CreateResource("processes")
 	if err != nil {
@@ -146,7 +146,7 @@ func (p *lumiPorts) processes() (map[int64]Process, error) {
 		return nil, err
 	}
 
-	c, ok := processes.LumiResource().Cache.Load("_socketsMap")
+	c, ok := processes.MqlResource().Cache.Load("_socketsMap")
 	if !ok {
 		return nil, errors.New("cannot get map of processes (and their sockets)")
 	}
@@ -156,7 +156,7 @@ func (p *lumiPorts) processes() (map[int64]Process, error) {
 
 // See:
 // - socket/address parsing: https://wiki.christophchamp.com/index.php?title=Unix_sockets
-func (p *lumiPorts) parseProcNet(path string, protocol string, users map[int64]User, processes map[int64]Process) ([]interface{}, error) {
+func (p *mqlPorts) parseProcNet(path string, protocol string, users map[int64]User, processes map[int64]Process) ([]interface{}, error) {
 	osProvider, err := osProvider(p.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
@@ -250,7 +250,7 @@ func (p *lumiPorts) parseProcNet(path string, protocol string, users map[int64]U
 	return res, nil
 }
 
-func (p *lumiPorts) listLinux() ([]interface{}, error) {
+func (p *mqlPorts) listLinux() ([]interface{}, error) {
 	users, err := p.users()
 	if err != nil {
 		return nil, err
@@ -274,7 +274,7 @@ func (p *lumiPorts) listLinux() ([]interface{}, error) {
 	return append(tcpPorts, udpPorts...), nil
 }
 
-func (s *lumiPort) id() (string, error) {
+func (s *mqlPort) id() (string, error) {
 	proto, err := s.Protocol()
 	if err != nil {
 		return "", err

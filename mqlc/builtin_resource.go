@@ -6,7 +6,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"go.mondoo.io/mondoo/mqlc/parser"
 	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/types"
 )
 
@@ -105,7 +105,7 @@ func (f *FunctionSignature) Validate(args []*llx.Primitive, c *compiler) error {
 	return nil
 }
 
-func listResource(c *compiler, typ types.Type) (*lumi.ResourceInfo, error) {
+func listResource(c *compiler, typ types.Type) (*resources.ResourceInfo, error) {
 	name := typ.ResourceName()
 	resource := c.Schema.Resources[name]
 	if resource == nil {
@@ -464,8 +464,8 @@ func compileResourceParseDate(c *compiler, typ types.Type, ref uint64, id string
 
 	functionID := string(typ) + "." + id
 
-	init := &lumi.Init{
-		Args: []*lumi.TypedArg{
+	init := &resources.Init{
+		Args: []*resources.TypedArg{
 			{Name: "value", Type: string(types.String)},
 			{Name: "format", Type: string(types.String)},
 		},

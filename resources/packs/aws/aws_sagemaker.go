@@ -7,16 +7,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	"github.com/aws/smithy-go/transport/http"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (s *lumiAwsSagemaker) id() (string, error) {
+func (s *mqlAwsSagemaker) id() (string, error) {
 	return "aws.sagemaker", nil
 }
 
-func (s *lumiAwsSagemaker) GetEndpoints() ([]interface{}, error) {
+func (s *mqlAwsSagemaker) GetEndpoints() ([]interface{}, error) {
 	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func (s *lumiAwsSagemaker) GetEndpoints() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsSagemaker) getEndpoints(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsSagemaker) getEndpoints(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -64,7 +64,7 @@ func (s *lumiAwsSagemaker) getEndpoints(at *aws_transport.Provider) []*jobpool.J
 					if err != nil {
 						return nil, err
 					}
-					lumiEndpoint, err := s.MotorRuntime.CreateResource("aws.sagemaker.endpoint",
+					mqlEndpoint, err := s.MotorRuntime.CreateResource("aws.sagemaker.endpoint",
 						"arn", core.ToString(endpoint.EndpointArn),
 						"name", core.ToString(endpoint.EndpointName),
 						"region", regionVal,
@@ -73,7 +73,7 @@ func (s *lumiAwsSagemaker) getEndpoints(at *aws_transport.Provider) []*jobpool.J
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiEndpoint)
+					res = append(res, mqlEndpoint)
 				}
 				nextToken = endpoints.NextToken
 				if endpoints.NextToken != nil {
@@ -87,7 +87,7 @@ func (s *lumiAwsSagemaker) getEndpoints(at *aws_transport.Provider) []*jobpool.J
 	return tasks
 }
 
-func (s *lumiAwsSagemakerEndpoint) GetConfig() (map[string]interface{}, error) {
+func (s *mqlAwsSagemakerEndpoint) GetConfig() (map[string]interface{}, error) {
 	name, err := s.Name()
 	if err != nil {
 		return nil, err
@@ -109,7 +109,7 @@ func (s *lumiAwsSagemakerEndpoint) GetConfig() (map[string]interface{}, error) {
 	return core.JsonToDict(config)
 }
 
-func (s *lumiAwsSagemaker) GetNotebookInstances() ([]interface{}, error) {
+func (s *mqlAwsSagemaker) GetNotebookInstances() ([]interface{}, error) {
 	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -130,7 +130,7 @@ func (s *lumiAwsSagemaker) GetNotebookInstances() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiAwsSagemaker) getNotebookInstances(at *aws_transport.Provider) []*jobpool.Job {
+func (s *mqlAwsSagemaker) getNotebookInstances(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	at, err := awstransport(s.MotorRuntime.Motor.Provider)
 	if err != nil {
@@ -160,7 +160,7 @@ func (s *lumiAwsSagemaker) getNotebookInstances(at *aws_transport.Provider) []*j
 					if err != nil {
 						return nil, err
 					}
-					lumiEndpoint, err := s.MotorRuntime.CreateResource("aws.sagemaker.notebookinstance",
+					mqlEndpoint, err := s.MotorRuntime.CreateResource("aws.sagemaker.notebookinstance",
 						"arn", core.ToString(instance.NotebookInstanceArn),
 						"name", core.ToString(instance.NotebookInstanceName),
 						"region", regionVal,
@@ -169,7 +169,7 @@ func (s *lumiAwsSagemaker) getNotebookInstances(at *aws_transport.Provider) []*j
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiEndpoint)
+					res = append(res, mqlEndpoint)
 				}
 				nextToken = notebookInstances.NextToken
 				if notebookInstances.NextToken != nil {
@@ -183,7 +183,7 @@ func (s *lumiAwsSagemaker) getNotebookInstances(at *aws_transport.Provider) []*j
 	return tasks
 }
 
-func (s *lumiAwsSagemakerNotebookinstance) GetDetails() (interface{}, error) {
+func (s *mqlAwsSagemakerNotebookinstance) GetDetails() (interface{}, error) {
 	name, err := s.Name()
 	if err != nil {
 		return nil, err
@@ -202,32 +202,32 @@ func (s *lumiAwsSagemakerNotebookinstance) GetDetails() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	lumiKeyResource, err := s.MotorRuntime.CreateResource("aws.kms.key",
+	mqlKeyResource, err := s.MotorRuntime.CreateResource("aws.kms.key",
 		"arn", core.ToString(instanceDetails.KmsKeyId),
 	)
 	if err != nil {
 		return nil, err
 	}
-	lumiInstanceDetails, err := s.MotorRuntime.CreateResource("aws.sagemaker.notebookinstance.details",
+	mqlInstanceDetails, err := s.MotorRuntime.CreateResource("aws.sagemaker.notebookinstance.details",
 		"arn", core.ToString(instanceDetails.NotebookInstanceArn),
-		"kmsKey", lumiKeyResource,
+		"kmsKey", mqlKeyResource,
 		"directInternetAccess", string(instanceDetails.DirectInternetAccess),
 	)
 	if err != nil {
 		return nil, err
 	}
-	return lumiInstanceDetails, nil
+	return mqlInstanceDetails, nil
 }
 
-func (s *lumiAwsSagemakerEndpoint) id() (string, error) {
+func (s *mqlAwsSagemakerEndpoint) id() (string, error) {
 	return s.Arn()
 }
 
-func (s *lumiAwsSagemakerNotebookinstance) id() (string, error) {
+func (s *mqlAwsSagemakerNotebookinstance) id() (string, error) {
 	return s.Arn()
 }
 
-func (s *lumiAwsSagemakerNotebookinstanceDetails) id() (string, error) {
+func (s *mqlAwsSagemakerNotebookinstanceDetails) id() (string, error) {
 	return s.Arn()
 }
 

@@ -5,28 +5,28 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/os/powershell"
 	"go.mondoo.io/mondoo/resources/packs/os/windows"
 )
 
-func (k *lumiRegistrykey) id() (string, error) {
+func (k *mqlRegistrykey) id() (string, error) {
 	return k.Path()
 }
 
-func (k *lumiRegistrykey) GetExists() (bool, error) {
+func (k *mqlRegistrykey) GetExists() (bool, error) {
 	path, err := k.Path()
 	if err != nil {
 		return false, err
 	}
 
 	script := powershell.Encode(windows.GetRegistryKeyItemScript(path))
-	lumiCmd, err := k.MotorRuntime.CreateResource("command", "command", script)
+	mqlCmd, err := k.MotorRuntime.CreateResource("command", "command", script)
 	if err != nil {
 		log.Error().Err(err).Msg("could not create resource")
 		return false, err
 	}
-	cmd := lumiCmd.(Command)
+	cmd := mqlCmd.(Command)
 	exitcode, err := cmd.Exitcode()
 	if err != nil {
 		return false, err
@@ -44,7 +44,7 @@ func (k *lumiRegistrykey) GetExists() (bool, error) {
 	return true, nil
 }
 
-func (k *lumiRegistrykey) GetProperties() (map[string]interface{}, error) {
+func (k *mqlRegistrykey) GetProperties() (map[string]interface{}, error) {
 	path, err := k.Path()
 	if err != nil {
 		return nil, err
@@ -52,11 +52,11 @@ func (k *lumiRegistrykey) GetProperties() (map[string]interface{}, error) {
 
 	res := map[string]interface{}{}
 	script := powershell.Encode(windows.GetRegistryKeyItemScript(path))
-	lumiCmd, err := k.MotorRuntime.CreateResource("command", "command", script)
+	mqlCmd, err := k.MotorRuntime.CreateResource("command", "command", script)
 	if err != nil {
 		return nil, err
 	}
-	cmd := lumiCmd.(Command)
+	cmd := mqlCmd.(Command)
 	exitcode, err := cmd.Exitcode()
 	if err != nil {
 		return nil, err
@@ -82,7 +82,7 @@ func (k *lumiRegistrykey) GetProperties() (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (k *lumiRegistrykey) GetChildren() ([]interface{}, error) {
+func (k *mqlRegistrykey) GetChildren() ([]interface{}, error) {
 	res := []interface{}{}
 
 	path, err := k.Path()
@@ -91,11 +91,11 @@ func (k *lumiRegistrykey) GetChildren() ([]interface{}, error) {
 	}
 
 	script := powershell.Encode(windows.GetRegistryKeyChildItemsScript(path))
-	lumiCmd, err := k.MotorRuntime.CreateResource("command", "command", script)
+	mqlCmd, err := k.MotorRuntime.CreateResource("command", "command", script)
 	if err != nil {
 		return res, err
 	}
-	cmd := lumiCmd.(Command)
+	cmd := mqlCmd.(Command)
 	exitcode, err := cmd.Exitcode()
 	if err != nil {
 		return nil, err
@@ -121,7 +121,7 @@ func (k *lumiRegistrykey) GetChildren() ([]interface{}, error) {
 	return res, nil
 }
 
-func (p *lumiRegistrykeyProperty) id() (string, error) {
+func (p *mqlRegistrykeyProperty) id() (string, error) {
 	path, err := p.Path()
 	if err != nil {
 		return "", err
@@ -135,7 +135,7 @@ func (p *lumiRegistrykeyProperty) id() (string, error) {
 	return path + " - " + name, nil
 }
 
-func (p *lumiRegistrykeyProperty) init(args *lumi.Args) (*lumi.Args, RegistrykeyProperty, error) {
+func (p *mqlRegistrykeyProperty) init(args *resources.Args) (*resources.Args, RegistrykeyProperty, error) {
 	pathRaw := (*args)["path"]
 	if pathRaw == nil {
 		return args, nil, nil
@@ -170,7 +170,7 @@ func (p *lumiRegistrykeyProperty) init(args *lumi.Args) (*lumi.Args, Registrykey
 
 	// set default values
 	(*args)["exists"] = false
-	// NOTE: we do not set a value here so that lumi throws an error when a user try to gather the data for a
+	// NOTE: we do not set a value here so that MQL throws an error when a user try to gather the data for a
 	// non-existing key
 
 	// path exists
@@ -192,12 +192,12 @@ func (p *lumiRegistrykeyProperty) init(args *lumi.Args) (*lumi.Args, Registrykey
 	return args, nil, nil
 }
 
-func (p *lumiRegistrykeyProperty) GetExists() (bool, error) {
+func (p *mqlRegistrykeyProperty) GetExists() (bool, error) {
 	// NOTE: will not be called since it will always be set in init
 	return false, errors.New("could not determine if the property exists")
 }
 
-func (p *lumiRegistrykeyProperty) GetValue() (string, error) {
+func (p *mqlRegistrykeyProperty) GetValue() (string, error) {
 	// NOTE: if we reach here the value has not been set in init, therefore we return an error
 	return "", errors.New("requested property does not exist")
 }

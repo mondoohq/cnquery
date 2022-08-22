@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/motor/providers"
 	gcp_transport "go.mondoo.io/mondoo/motor/providers/gcp"
 	"go.mondoo.io/mondoo/resources/packs/core"
@@ -27,11 +27,11 @@ func gcptransport(t providers.Transport) (*gcp_transport.Provider, error) {
 	return gt, nil
 }
 
-func (g *lumiGcloudOrganization) id() (string, error) {
+func (g *mqlGcloudOrganization) id() (string, error) {
 	return "gcloud.organization", nil
 }
 
-func (g *lumiGcloudOrganization) init(args *lumi.Args) (*lumi.Args, GcloudOrganization, error) {
+func (g *mqlGcloudOrganization) init(args *resources.Args) (*resources.Args, GcloudOrganization, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -72,25 +72,25 @@ func (g *lumiGcloudOrganization) init(args *lumi.Args) (*lumi.Args, GcloudOrgani
 	return args, nil, nil
 }
 
-func (g *lumiGcloudOrganization) GetId() (string, error) {
-	// placeholder to convince lumi that this is an optional field
+func (g *mqlGcloudOrganization) GetId() (string, error) {
+	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")
 }
 
-func (g *lumiGcloudOrganization) GetName() (string, error) {
-	// placeholder to convince lumi that this is an optional field
+func (g *mqlGcloudOrganization) GetName() (string, error) {
+	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")
 }
 
-func (g *lumiGcloudOrganization) GetLifecycleState() (string, error) {
-	// placeholder to convince lumi that this is an optional field
+func (g *mqlGcloudOrganization) GetLifecycleState() (string, error) {
+	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")
 }
 
-func (g *lumiGcloudOrganization) GetIamPolicy() ([]interface{}, error) {
+func (g *mqlGcloudOrganization) GetIamPolicy() ([]interface{}, error) {
 	gt, err := gcptransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -123,7 +123,7 @@ func (g *lumiGcloudOrganization) GetIamPolicy() ([]interface{}, error) {
 	for i := range orgpolicy.Bindings {
 		b := orgpolicy.Bindings[i]
 
-		lumiServiceaccount, err := g.MotorRuntime.CreateResource("gcloud.resourcemanager.binding",
+		mqlServiceaccount, err := g.MotorRuntime.CreateResource("gcloud.resourcemanager.binding",
 			"id", name+"-"+strconv.Itoa(i),
 			"role", b.Role,
 			"members", core.StrSliceToInterface(b.Members),
@@ -131,17 +131,17 @@ func (g *lumiGcloudOrganization) GetIamPolicy() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiServiceaccount)
+		res = append(res, mqlServiceaccount)
 	}
 
 	return res, nil
 }
 
-func (g *lumiGcloudProject) id() (string, error) {
+func (g *mqlGcloudProject) id() (string, error) {
 	return "gcloud.project", nil
 }
 
-func (g *lumiGcloudProject) init(args *lumi.Args) (*lumi.Args, GcloudProject, error) {
+func (g *mqlGcloudProject) init(args *resources.Args) (*resources.Args, GcloudProject, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -185,43 +185,43 @@ func (g *lumiGcloudProject) init(args *lumi.Args) (*lumi.Args, GcloudProject, er
 	return args, nil, nil
 }
 
-func (g *lumiGcloudProject) GetId() (string, error) {
-	// placeholder to convince lumi that this is an optional field
+func (g *mqlGcloudProject) GetId() (string, error) {
+	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")
 }
 
-func (g *lumiGcloudProject) GetName() (string, error) {
-	// placeholder to convince lumi that this is an optional field
+func (g *mqlGcloudProject) GetName() (string, error) {
+	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")
 }
 
-func (g *lumiGcloudProject) GetNumber() (string, error) {
-	// placeholder to convince lumi that this is an optional field
+func (g *mqlGcloudProject) GetNumber() (string, error) {
+	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")
 }
 
-func (g *lumiGcloudProject) GetLifecycleState() (string, error) {
-	// placeholder to convince lumi that this is an optional field
+func (g *mqlGcloudProject) GetLifecycleState() (string, error) {
+	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")
 }
 
-func (g *lumiGcloudProject) GetCreateTime() (string, error) {
-	// placeholder to convince lumi that this is an optional field
+func (g *mqlGcloudProject) GetCreateTime() (string, error) {
+	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")
 }
 
-func (g *lumiGcloudProject) GetLabels() (map[string]interface{}, error) {
-	// placeholder to convince lumi that this is an optional field
+func (g *mqlGcloudProject) GetLabels() (map[string]interface{}, error) {
+	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return nil, errors.New("not implemented")
 }
 
-func (g *lumiGcloudProject) GetIamPolicy() ([]interface{}, error) {
+func (g *mqlGcloudProject) GetIamPolicy() ([]interface{}, error) {
 	projectId, err := g.Id()
 	if err != nil {
 		return nil, err
@@ -252,7 +252,7 @@ func (g *lumiGcloudProject) GetIamPolicy() ([]interface{}, error) {
 	for i := range policy.Bindings {
 		b := policy.Bindings[i]
 
-		lumiServiceaccount, err := g.MotorRuntime.CreateResource("gcloud.resourcemanager.binding",
+		mqlServiceaccount, err := g.MotorRuntime.CreateResource("gcloud.resourcemanager.binding",
 			"id", projectId+"-"+strconv.Itoa(i),
 			"role", b.Role,
 			"members", core.StrSliceToInterface(b.Members),
@@ -260,21 +260,21 @@ func (g *lumiGcloudProject) GetIamPolicy() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiServiceaccount)
+		res = append(res, mqlServiceaccount)
 	}
 
 	return res, nil
 }
 
-func (g *lumiGcloudResourcemanagerBinding) id() (string, error) {
+func (g *mqlGcloudResourcemanagerBinding) id() (string, error) {
 	return g.Id()
 }
 
-func (g *lumiGcloudCompute) id() (string, error) {
+func (g *mqlGcloudCompute) id() (string, error) {
 	return "gcloud.compute", nil
 }
 
-func (g *lumiGcloudCompute) GetInstances() ([]interface{}, error) {
+func (g *mqlGcloudCompute) GetInstances() ([]interface{}, error) {
 	gt, err := gcptransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -311,21 +311,21 @@ func (g *lumiGcloudCompute) GetInstances() ([]interface{}, error) {
 			metadata[item.Key] = core.ToString(item.Value)
 		}
 
-		lumiServiceAccounts := []interface{}{}
+		mqlServiceAccounts := []interface{}{}
 		for i := range instance.ServiceAccounts {
 			sa := instance.ServiceAccounts[i]
 
-			lumiServiceaccount, err := g.MotorRuntime.CreateResource("gcloud.compute.serviceaccount",
+			mqlServiceaccount, err := g.MotorRuntime.CreateResource("gcloud.compute.serviceaccount",
 				"email", sa.Email,
 				"scopes", core.StrSliceToInterface(sa.Scopes),
 			)
 			if err != nil {
 				return nil, err
 			}
-			lumiServiceAccounts = append(lumiServiceAccounts, lumiServiceaccount)
+			mqlServiceAccounts = append(mqlServiceAccounts, mqlServiceaccount)
 		}
 
-		lumiInstance, err := g.MotorRuntime.CreateResource("gcloud.compute.instance",
+		mqlInstance, err := g.MotorRuntime.CreateResource("gcloud.compute.instance",
 			"id", strconv.FormatUint(instance.Id, 10),
 			"name", instance.Name,
 			"cpuPlatform", instance.CpuPlatform,
@@ -337,30 +337,30 @@ func (g *lumiGcloudCompute) GetInstances() ([]interface{}, error) {
 			"statusMessage", instance.StatusMessage,
 			"tags", core.StrSliceToInterface(instance.Tags.Items),
 			"metadata", core.StrMapToInterface(metadata),
-			"serviceAccounts", lumiServiceAccounts,
+			"serviceAccounts", mqlServiceAccounts,
 		)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiInstance)
+		res = append(res, mqlInstance)
 	}
 
 	return res, nil
 }
 
-func (g *lumiGcloudComputeInstance) id() (string, error) {
+func (g *mqlGcloudComputeInstance) id() (string, error) {
 	return g.Id()
 }
 
-func (g *lumiGcloudComputeServiceaccount) id() (string, error) {
+func (g *mqlGcloudComputeServiceaccount) id() (string, error) {
 	return g.Email()
 }
 
-func (g *lumiGcloudStorage) id() (string, error) {
+func (g *mqlGcloudStorage) id() (string, error) {
 	return "gcloud.storage", nil
 }
 
-func (g *lumiGcloudStorage) GetBuckets() ([]interface{}, error) {
+func (g *mqlGcloudStorage) GetBuckets() ([]interface{}, error) {
 	gt, err := gcptransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -439,7 +439,7 @@ func (g *lumiGcloudStorage) GetBuckets() ([]interface{}, error) {
 			}
 		}
 
-		lumiInstance, err := g.MotorRuntime.CreateResource("gcloud.storage.bucket",
+		mqlInstance, err := g.MotorRuntime.CreateResource("gcloud.storage.bucket",
 			"id", bucket.Id,
 			"name", bucket.Name,
 			"kind", bucket.Kind,
@@ -455,17 +455,17 @@ func (g *lumiGcloudStorage) GetBuckets() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiInstance)
+		res = append(res, mqlInstance)
 	}
 
 	return res, nil
 }
 
-func (g *lumiGcloudStorageBucket) id() (string, error) {
+func (g *mqlGcloudStorageBucket) id() (string, error) {
 	return g.Name()
 }
 
-func (g *lumiGcloudStorageBucket) GetIamPolicy() ([]interface{}, error) {
+func (g *mqlGcloudStorageBucket) GetIamPolicy() ([]interface{}, error) {
 	bucketName, err := g.Name()
 	if err != nil {
 		return nil, err
@@ -496,7 +496,7 @@ func (g *lumiGcloudStorageBucket) GetIamPolicy() ([]interface{}, error) {
 	for i := range policy.Bindings {
 		b := policy.Bindings[i]
 
-		lumiServiceaccount, err := g.MotorRuntime.CreateResource("gcloud.resourcemanager.binding",
+		mqlServiceaccount, err := g.MotorRuntime.CreateResource("gcloud.resourcemanager.binding",
 			"id", bucketName+"-"+strconv.Itoa(i),
 			"role", b.Role,
 			"members", core.StrSliceToInterface(b.Members),
@@ -504,17 +504,17 @@ func (g *lumiGcloudStorageBucket) GetIamPolicy() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiServiceaccount)
+		res = append(res, mqlServiceaccount)
 	}
 
 	return res, nil
 }
 
-func (g *lumiGcloudSql) id() (string, error) {
+func (g *mqlGcloudSql) id() (string, error) {
 	return "gcloud.sql", nil
 }
 
-func (g *lumiGcloudSql) GetInstances() ([]interface{}, error) {
+func (g *mqlGcloudSql) GetInstances() ([]interface{}, error) {
 	gt, err := gcptransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -580,7 +580,7 @@ func (g *lumiGcloudSql) GetInstances() ([]interface{}, error) {
 			// TODO: handle all other database settings
 		}
 
-		lumiInstance, err := g.MotorRuntime.CreateResource("gcloud.sql.instance",
+		mqlInstance, err := g.MotorRuntime.CreateResource("gcloud.sql.instance",
 			"name", instance.Name,
 			"backendType", instance.BackendType,
 			"connectionName", instance.ConnectionName,
@@ -600,13 +600,13 @@ func (g *lumiGcloudSql) GetInstances() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiInstance)
+		res = append(res, mqlInstance)
 	}
 
 	return res, nil
 }
 
-func (g *lumiGcloudSqlInstance) id() (string, error) {
+func (g *mqlGcloudSqlInstance) id() (string, error) {
 	// TODO: instances are scoped in project
 	return g.Name()
 }

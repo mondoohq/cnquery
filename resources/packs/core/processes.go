@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core/processes"
 )
 
-func (p *lumiProcess) init(args *lumi.Args) (*lumi.Args, Process, error) {
+func (p *mqlProcess) init(args *resources.Args) (*resources.Args, Process, error) {
 	pidValue, ok := (*args)["pid"]
 
 	// do not try to resolve the process if we already go all parameters
@@ -46,7 +46,7 @@ func (p *lumiProcess) init(args *lumi.Args) (*lumi.Args, Process, error) {
 	return args, nil, nil
 }
 
-func (p *lumiProcess) id() (string, error) {
+func (p *mqlProcess) id() (string, error) {
 	pid, err := p.Pid()
 	if err != nil {
 		return "", err
@@ -54,55 +54,55 @@ func (p *lumiProcess) id() (string, error) {
 	return strconv.FormatInt(pid, 10), nil
 }
 
-func (p *lumiProcess) GetState() (string, error) {
+func (p *mqlProcess) GetState() (string, error) {
 	_, ok := p.Cache.Load("state")
 	if ok {
-		return "", lumi.NotReadyError{}
+		return "", resources.NotReadyError{}
 	}
 
 	p.gatherProcessInfo(func() {
-		err := p.MotorRuntime.Observers.Trigger(p.LumiResource().FieldUID("state"))
+		err := p.MotorRuntime.Observers.Trigger(p.MqlResource().FieldUID("state"))
 		if err != nil {
 			log.Error().Err(err).Msg("[process]> failed to trigger state")
 		}
 	})
 
-	return "", lumi.NotReadyError{}
+	return "", resources.NotReadyError{}
 }
 
-func (p *lumiProcess) GetExecutable() (string, error) {
+func (p *mqlProcess) GetExecutable() (string, error) {
 	_, ok := p.Cache.Load("executable")
 	if ok {
-		return "", lumi.NotReadyError{}
+		return "", resources.NotReadyError{}
 	}
 
 	p.gatherProcessInfo(func() {
-		err := p.MotorRuntime.Observers.Trigger(p.LumiResource().FieldUID("executable"))
+		err := p.MotorRuntime.Observers.Trigger(p.MqlResource().FieldUID("executable"))
 		if err != nil {
 			log.Error().Err(err).Msg("[process]> failed to trigger executable")
 		}
 	})
 
-	return "", lumi.NotReadyError{}
+	return "", resources.NotReadyError{}
 }
 
-func (p *lumiProcess) GetCommand() (string, error) {
+func (p *mqlProcess) GetCommand() (string, error) {
 	_, ok := p.Cache.Load("command")
 	if ok {
-		return "", lumi.NotReadyError{}
+		return "", resources.NotReadyError{}
 	}
 
 	p.gatherProcessInfo(func() {
-		err := p.MotorRuntime.Observers.Trigger(p.LumiResource().FieldUID("command"))
+		err := p.MotorRuntime.Observers.Trigger(p.MqlResource().FieldUID("command"))
 		if err != nil {
 			log.Error().Err(err).Msg("[process]> failed to trigger command")
 		}
 	})
 
-	return "", lumi.NotReadyError{}
+	return "", resources.NotReadyError{}
 }
 
-func (p *lumiProcess) GetFlags() (map[string]interface{}, error) {
+func (p *mqlProcess) GetFlags() (map[string]interface{}, error) {
 	cmd, err := p.Command()
 	if err != nil {
 		return nil, err
@@ -124,7 +124,7 @@ func (p *lumiProcess) GetFlags() (map[string]interface{}, error) {
 
 type ProcessCallbackTrigger func()
 
-func (p *lumiProcess) gatherProcessInfo(fn ProcessCallbackTrigger) error {
+func (p *mqlProcess) gatherProcessInfo(fn ProcessCallbackTrigger) error {
 	pid, err := p.Pid()
 	if err != nil {
 		return errors.New("cannot gather pid")
@@ -146,10 +146,10 @@ func (p *lumiProcess) gatherProcessInfo(fn ProcessCallbackTrigger) error {
 	}
 
 	now := time.Now().Unix()
-	p.Cache.Store("state", &lumi.CacheEntry{Data: process.State, Valid: true, Timestamp: now})
-	p.Cache.Store("executable", &lumi.CacheEntry{Data: process.Executable, Valid: true, Timestamp: now})
-	p.Cache.Store("command", &lumi.CacheEntry{Data: process.Command, Valid: true, Timestamp: now})
-	p.Cache.Store("sockets", &lumi.CacheEntry{Data: sockets, Valid: true, Timestamp: now})
+	p.Cache.Store("state", &resources.CacheEntry{Data: process.State, Valid: true, Timestamp: now})
+	p.Cache.Store("executable", &resources.CacheEntry{Data: process.Executable, Valid: true, Timestamp: now})
+	p.Cache.Store("command", &resources.CacheEntry{Data: process.Command, Valid: true, Timestamp: now})
+	p.Cache.Store("sockets", &resources.CacheEntry{Data: sockets, Valid: true, Timestamp: now})
 
 	// call callback trigger
 	if fn != nil {
@@ -159,25 +159,25 @@ func (p *lumiProcess) gatherProcessInfo(fn ProcessCallbackTrigger) error {
 	return nil
 }
 
-func (p *lumiProcesses) id() (string, error) {
+func (p *mqlProcesses) id() (string, error) {
 	return "processes", nil
 }
 
-func (p *lumiProcesses) GetList() ([]interface{}, error) {
+func (p *mqlProcesses) GetList() ([]interface{}, error) {
 	// find suitable package manager
 	opm, err := processes.ResolveManager(p.MotorRuntime.Motor)
 	if opm == nil || err != nil {
-		log.Debug().Err(err).Msg("lumi[processes]> could not retrieve process resolver")
+		log.Debug().Err(err).Msg("mql[processes]> could not retrieve process resolver")
 		return nil, errors.New("cannot find process manager")
 	}
 
 	// retrieve all system processes
 	processes, err := opm.List()
 	if err != nil {
-		log.Warn().Err(err).Msg("lumi[processes]> could not retrieve process list")
+		log.Warn().Err(err).Msg("mql[processes]> could not retrieve process list")
 		return nil, fmt.Errorf("could not retrieve process list")
 	}
-	log.Debug().Int("processes", len(processes)).Msg("lumi[processes]> running processes")
+	log.Debug().Int("processes", len(processes)).Msg("mql[processes]> running processes")
 
 	procs := make([]interface{}, len(processes))
 	processesMap := make(map[int64]Process, len(processes))
@@ -186,7 +186,7 @@ func (p *lumiProcesses) GetList() ([]interface{}, error) {
 	for i := range processes {
 		proc := processes[i]
 
-		lumiProcess, err := p.MotorRuntime.CreateResource("process",
+		mqlProcess, err := p.MotorRuntime.CreateResource("process",
 			"pid", proc.Pid,
 			"executable", proc.Executable,
 			"command", proc.Command,
@@ -196,7 +196,7 @@ func (p *lumiProcesses) GetList() ([]interface{}, error) {
 			return nil, err
 		}
 
-		process := lumiProcess.(Process)
+		process := mqlProcess.(Process)
 		procs[i] = process
 		processesMap[proc.Pid] = process
 
@@ -205,8 +205,8 @@ func (p *lumiProcesses) GetList() ([]interface{}, error) {
 		}
 	}
 
-	p.Cache.Store("_map", &lumi.CacheEntry{Data: processesMap})
-	p.Cache.Store("_socketsMap", &lumi.CacheEntry{Data: socketsMap})
+	p.Cache.Store("_map", &resources.CacheEntry{Data: processesMap})
+	p.Cache.Store("_socketsMap", &resources.CacheEntry{Data: socketsMap})
 
 	// return the processes as new entries
 	return procs, nil

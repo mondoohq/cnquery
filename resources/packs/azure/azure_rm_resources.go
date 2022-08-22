@@ -7,7 +7,7 @@ import (
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (a *lumiAzurerm) GetResources() ([]interface{}, error) {
+func (a *mqlAzurerm) GetResources() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func (a *lumiAzurerm) GetResources() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.resource",
+		mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.resource",
 			"id", core.ToString(resource.ID),
 			"name", core.ToString(resource.Name),
 			"kind", core.ToString(resource.Location),
@@ -70,12 +70,12 @@ func (a *lumiAzurerm) GetResources() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzure)
+		res = append(res, mqlAzure)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermResource) id() (string, error) {
+func (a *mqlAzurermResource) id() (string, error) {
 	return a.Id()
 }

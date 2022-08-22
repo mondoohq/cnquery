@@ -2,24 +2,24 @@ package core
 
 import "regexp"
 
-func (p *lumiRegex) id() (string, error) {
+func (p *mqlRegex) id() (string, error) {
 	return "time", nil
 }
 
 // A ton of glory goes to:
 // - https://ihateregex.io/expr where many of these regexes come from
 
-func (p *lumiRegex) GetIpv4() (string, error) {
+func (p *mqlRegex) GetIpv4() (string, error) {
 	return "(\\b25[0-5]|\\b2[0-4][0-9]|\\b[01]?[0-9][0-9]?)(\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}", nil
 }
 
-func (p *lumiRegex) GetIpv6() (string, error) {
+func (p *mqlRegex) GetIpv6() (string, error) {
 	// This needs a better approach, possibly using advanced regex features if we can...
 	return "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))", nil
 }
 
 // TODO: needs to be much more precise
-func (p *lumiRegex) GetUrl() (string, error) {
+func (p *mqlRegex) GetUrl() (string, error) {
 	return "https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()!@:%_\\+.~#?&\\/\\/=]*)", nil
 }
 
@@ -42,7 +42,7 @@ var rexUrlDomain = regexp.MustCompile(reUrlDomain)
 
 // const reDomainLabel = "... needs work"
 
-func (p *lumiRegex) GetDomain() (string, error) {
+func (p *mqlRegex) GetDomain() (string, error) {
 	return reUrlDomain, nil
 }
 
@@ -103,19 +103,19 @@ const reEmailDomain = "(" + reNoTldHostname + "|" + reDomainLiteral + ")"
 const reEmail = reEmailLocal + "@" + reEmailDomain
 
 // TODO: this needs serious work! re-use aspects from the domain recognition
-func (p *lumiRegex) GetEmail() (string, error) {
+func (p *mqlRegex) GetEmail() (string, error) {
 	return reEmail, nil
 }
 
-func (p *lumiRegex) GetMac() (string, error) {
+func (p *mqlRegex) GetMac() (string, error) {
 	return "[a-fA-F0-9]{2}(:[a-fA-F0-9]{2}){5}", nil
 }
 
-func (p *lumiRegex) GetUuid() (string, error) {
+func (p *mqlRegex) GetUuid() (string, error) {
 	return "[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}", nil
 }
 
-func (p *lumiRegex) GetEmoji() (string, error) {
+func (p *mqlRegex) GetEmoji() (string, error) {
 	// weather:  02600 ☀  - 027BF ➿
 	// emoji:    1F300 🌀 - 1F6FC 🛼
 	// extras:   1F900 🤀  - 1F9FF 🧿
@@ -123,11 +123,11 @@ func (p *lumiRegex) GetEmoji() (string, error) {
 	return "[☀-➿🌀-🛼🤀-🧿🩰-🫶]", nil
 }
 
-func (p *lumiRegex) GetSemver() (string, error) {
+func (p *mqlRegex) GetSemver() (string, error) {
 	return "(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?", nil
 }
 
-func (p *lumiRegex) GetCreditCard() (string, error) {
+func (p *mqlRegex) GetCreditCard() (string, error) {
 	// For a complete list see:
 	// https://stackoverflow.com/questions/9315647/regex-credit-card-number-tests
 	return "(^|[^0-9])(" +

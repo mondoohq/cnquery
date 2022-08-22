@@ -9,7 +9,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func (l *lumiYamlPath) id() (string, error) {
+func (l *mqlYamlPath) id() (string, error) {
 	filepath, err := l.Filepath()
 	if err != nil {
 		return "", err
@@ -29,7 +29,7 @@ func (l *lumiYamlPath) id() (string, error) {
 	return id.String(), nil
 }
 
-func (l *lumiYamlPath) GetResult() (string, error) {
+func (l *mqlYamlPath) GetResult() (string, error) {
 	// get file content
 	filepath, err := l.Filepath()
 	if err != nil {
@@ -47,7 +47,7 @@ func (l *lumiYamlPath) GetResult() (string, error) {
 		return "", err
 	}
 
-	// TODO: I could not get this running with lumi file resource, the content was never returned
+	// TODO: I could not get this running with MQL file resource, the content was never returned
 	f, err := osProvider.FS().Open(filepath)
 	if err != nil {
 		return "", err
@@ -67,7 +67,7 @@ func (l *lumiYamlPath) GetResult() (string, error) {
 	}
 
 	// parse json path expression
-	j := jsonpath.New("lumiyamlpath")
+	j := jsonpath.New("mqlyamlpath")
 	j.AllowMissingKeys(false)
 	err = j.Parse(jp)
 	if err != nil {

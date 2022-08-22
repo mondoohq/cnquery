@@ -12,7 +12,7 @@ import (
 	uuid "github.com/gofrs/uuid"
 	"github.com/hashicorp/go-multierror"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/types"
 )
 
@@ -73,7 +73,7 @@ type MQLExecutorV1 struct {
 	id             string
 	watcherIds     *types.StringSet
 	blockExecutors []*MQLExecutorV1
-	runtime        *lumi.Runtime
+	runtime        *resources.Runtime
 	code           *CodeV1
 	entrypoints    map[int32]struct{}
 	callbackPoints map[int32]string
@@ -109,7 +109,7 @@ func unregistrableCallback(cb ResultCallback) (ResultCallback, func()) {
 
 // NewExecutor will create a code runner from code, running in a runtime, calling
 // callback whenever we get a result
-func NewExecutorV1(code *CodeV1, runtime *lumi.Runtime, props map[string]*Primitive, callback ResultCallback) (*MQLExecutorV1, error) {
+func NewExecutorV1(code *CodeV1, runtime *resources.Runtime, props map[string]*Primitive, callback ResultCallback) (*MQLExecutorV1, error) {
 	if runtime == nil {
 		return nil, errors.New("cannot exec MQL without a runtime")
 	}
@@ -357,7 +357,7 @@ func (c *MQLExecutorV1) runBlock(bind *RawData, functionRef *Primitive, args []*
 		blockResult := data.Value.(map[string]interface{})
 
 		if bind != nil && bind.Type.IsResource() {
-			rr, ok := bind.Value.(lumi.ResourceType)
+			rr, ok := bind.Value.(resources.ResourceType)
 			if !ok {
 				log.Warn().Msg("cannot cast resource to resource type")
 			} else {
@@ -388,7 +388,7 @@ func (c *MQLExecutorV1) createResource(name string, f *Function, ref int32) (*Ra
 	if err != nil {
 		// in case it's not something that requires later loading, store the error
 		// so that consecutive steps can retrieve it cached
-		if _, ok := err.(lumi.NotReadyError); !ok {
+		if _, ok := err.(resources.NotReadyError); !ok {
 			res := stepCache{
 				Result: &RawData{
 					Type:  types.Resource(name),
@@ -558,7 +558,7 @@ func (c *MQLExecutorV1) runChain(start int32) {
 			if codeID, ok := c.callbackPoints[curRef]; ok {
 				c.callback(errorResult(err, codeID))
 			}
-			if _, isNotReadyError := err.(lumi.NotReadyError); !isNotReadyError {
+			if _, isNotReadyError := err.(resources.NotReadyError); !isNotReadyError {
 				if sc, _ := c.cache.Load(curRef); sc == nil {
 					c.cache.Store(curRef, &stepCache{
 						Result: &RawData{

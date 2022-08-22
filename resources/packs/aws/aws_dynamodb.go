@@ -8,12 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (d *lumiAwsDynamodb) id() (string, error) {
+func (d *mqlAwsDynamodb) id() (string, error) {
 	return "aws.dynamodb", nil
 }
 
@@ -23,7 +23,7 @@ const (
 	dynamoGlobalTableArnPattern = "arn:aws:dynamodb:-:%s:globaltable/%s"
 )
 
-func (d *lumiAwsDynamodb) GetBackups() ([]interface{}, error) {
+func (d *mqlAwsDynamodb) GetBackups() ([]interface{}, error) {
 	at, err := awstransport(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (d *lumiAwsDynamodb) GetBackups() ([]interface{}, error) {
 	return res, nil
 }
 
-func (d *lumiAwsDynamodb) getBackups(at *aws_transport.Provider) []*jobpool.Job {
+func (d *mqlAwsDynamodb) getBackups(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -75,7 +75,7 @@ func (d *lumiAwsDynamodb) getBackups(at *aws_transport.Provider) []*jobpool.Job 
 	return tasks
 }
 
-func (d *lumiAwsDynamodbTable) GetBackups() ([]interface{}, error) {
+func (d *mqlAwsDynamodbTable) GetBackups() ([]interface{}, error) {
 	tableName, err := d.Name()
 	if err != nil {
 		return nil, err
@@ -99,7 +99,7 @@ func (d *lumiAwsDynamodbTable) GetBackups() ([]interface{}, error) {
 	return core.JsonToDictSlice(listBackupsResp.BackupSummaries)
 }
 
-func (d *lumiAwsDynamodb) GetLimits() ([]interface{}, error) {
+func (d *mqlAwsDynamodb) GetLimits() ([]interface{}, error) {
 	at, err := awstransport(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -119,7 +119,7 @@ func (d *lumiAwsDynamodb) GetLimits() ([]interface{}, error) {
 	return res, nil
 }
 
-func (d *lumiAwsDynamodb) getLimits(at *aws_transport.Provider) []*jobpool.Job {
+func (d *mqlAwsDynamodb) getLimits(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 
 	regions, err := at.GetRegions()
@@ -145,7 +145,7 @@ func (d *lumiAwsDynamodb) getLimits(at *aws_transport.Provider) []*jobpool.Job {
 				return nil, errors.Wrap(err, "could not gather aws dynamodb backups")
 			}
 
-			lumiLimits, err := d.MotorRuntime.CreateResource("aws.dynamodb.limit",
+			mqlLimits, err := d.MotorRuntime.CreateResource("aws.dynamodb.limit",
 				"arn", fmt.Sprintf(limitsArn, regionVal, account.ID),
 				"region", regionVal,
 				"accountMaxRead", *limitsResp.AccountMaxReadCapacityUnits,
@@ -156,14 +156,14 @@ func (d *lumiAwsDynamodb) getLimits(at *aws_transport.Provider) []*jobpool.Job {
 			if err != nil {
 				return nil, err
 			}
-			return jobpool.JobResult(lumiLimits), nil
+			return jobpool.JobResult(mqlLimits), nil
 		}
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
 }
 
-func (d *lumiAwsDynamodb) GetGlobalTables() ([]interface{}, error) {
+func (d *mqlAwsDynamodb) GetGlobalTables() ([]interface{}, error) {
 	at, err := awstransport(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -182,19 +182,19 @@ func (d *lumiAwsDynamodb) GetGlobalTables() ([]interface{}, error) {
 	}
 	res := []interface{}{}
 	for _, table := range listGlobalTablesResp.GlobalTables {
-		lumiTable, err := d.MotorRuntime.CreateResource("aws.dynamodb.globaltable",
+		mqlTable, err := d.MotorRuntime.CreateResource("aws.dynamodb.globaltable",
 			"arn", fmt.Sprintf(dynamoGlobalTableArnPattern, account.ID, core.ToString(table.GlobalTableName)),
 			"name", core.ToString(table.GlobalTableName),
 		)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiTable)
+		res = append(res, mqlTable)
 	}
 	return res, nil
 }
 
-func (d *lumiAwsDynamodb) GetTables() ([]interface{}, error) {
+func (d *mqlAwsDynamodb) GetTables() ([]interface{}, error) {
 	at, err := awstransport(d.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -215,7 +215,7 @@ func (d *lumiAwsDynamodb) GetTables() ([]interface{}, error) {
 	return res, nil
 }
 
-func (d *lumiAwsDynamodb) getTables(at *aws_transport.Provider) []*jobpool.Job {
+func (d *mqlAwsDynamodb) getTables(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -258,7 +258,7 @@ func (d *lumiAwsDynamodb) getTables(at *aws_transport.Provider) []*jobpool.Job {
 				if err != nil {
 					return nil, err
 				}
-				lumiTable, err := d.MotorRuntime.CreateResource("aws.dynamodb.table",
+				mqlTable, err := d.MotorRuntime.CreateResource("aws.dynamodb.table",
 					"arn", fmt.Sprintf(dynamoTableArnPattern, regionVal, account.ID, tableName),
 					"name", tableName,
 					"region", regionVal,
@@ -269,7 +269,7 @@ func (d *lumiAwsDynamodb) getTables(at *aws_transport.Provider) []*jobpool.Job {
 				if err != nil {
 					return nil, err
 				}
-				res = append(res, lumiTable)
+				res = append(res, mqlTable)
 			}
 			return jobpool.JobResult(res), nil
 		}
@@ -291,7 +291,7 @@ func dynamoDBTagsToMap(tags []types.Tag) map[string]interface{} {
 	return tagsMap
 }
 
-func (d *lumiAwsDynamodbGlobaltable) GetReplicaSettings() ([]interface{}, error) {
+func (d *mqlAwsDynamodbGlobaltable) GetReplicaSettings() ([]interface{}, error) {
 	tableName, err := d.Name()
 	if err != nil {
 		return nil, err
@@ -311,7 +311,7 @@ func (d *lumiAwsDynamodbGlobaltable) GetReplicaSettings() ([]interface{}, error)
 	return core.JsonToDictSlice(tableSettingsResp.ReplicaSettings)
 }
 
-func (d *lumiAwsDynamodbTable) GetContinuousBackups() (interface{}, error) {
+func (d *mqlAwsDynamodbTable) GetContinuousBackups() (interface{}, error) {
 	tableName, err := d.Name()
 	if err != nil {
 		return nil, err
@@ -335,14 +335,14 @@ func (d *lumiAwsDynamodbTable) GetContinuousBackups() (interface{}, error) {
 	return core.JsonToDict(continuousBackupsResp.ContinuousBackupsDescription)
 }
 
-func (d *lumiAwsDynamodbGlobaltable) id() (string, error) {
+func (d *mqlAwsDynamodbGlobaltable) id() (string, error) {
 	return d.Arn()
 }
 
-func (d *lumiAwsDynamodbTable) id() (string, error) {
+func (d *mqlAwsDynamodbTable) id() (string, error) {
 	return d.Arn()
 }
 
-func (d *lumiAwsDynamodbLimit) id() (string, error) {
+func (d *mqlAwsDynamodbLimit) id() (string, error) {
 	return d.Arn()
 }

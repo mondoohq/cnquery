@@ -11,9 +11,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo"
 	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/mqlc/parser"
 	v1 "go.mondoo.io/mondoo/mqlc/v1"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/all"
 	"go.mondoo.io/mondoo/types"
 )
@@ -56,7 +56,7 @@ func (vm *varmap) len() int {
 }
 
 type compiler struct {
-	Schema    *lumi.Schema
+	Schema    *resources.Schema
 	Result    *llx.CodeBundle
 	Binding   *variable
 	vars      *varmap
@@ -124,20 +124,20 @@ func (c *compiler) newBlockCompiler(binding *variable) compiler {
 	}
 }
 
-func addResourceSuggestions(resources map[string]*lumi.ResourceInfo, name string, res *llx.CodeBundle) {
-	names := make([]string, len(resources))
+func addResourceSuggestions(resourceInfos map[string]*resources.ResourceInfo, name string, res *llx.CodeBundle) {
+	names := make([]string, len(resourceInfos))
 	i := 0
-	for key := range resources {
+	for key := range resourceInfos {
 		names[i] = key
 		i++
 	}
 
 	suggestedNames := fuzzy.Find(name, names)
 	res.Suggestions = make([]*llx.Documentation, len(suggestedNames))
-	var info *lumi.ResourceInfo
+	var info *resources.ResourceInfo
 	for i := range suggestedNames {
 		field := suggestedNames[i]
-		info = resources[field]
+		info = resourceInfos[field]
 		if info != nil {
 			res.Suggestions[i] = &llx.Documentation{
 				Field: field,
@@ -574,7 +574,7 @@ func (c *compiler) dereferenceType(val *llx.Primitive) (types.Type, error) {
 	return valType, nil
 }
 
-func (c *compiler) unnamedArgs(callerLabel string, init *lumi.Init, args []*parser.Arg) ([]*llx.Primitive, error) {
+func (c *compiler) unnamedArgs(callerLabel string, init *resources.Init, args []*parser.Arg) ([]*llx.Primitive, error) {
 	if len(args) > len(init.Args) {
 		return nil, errors.New("Called " + callerLabel +
 			" with too many arguments (expected " + strconv.Itoa(len(init.Args)) +
@@ -624,7 +624,7 @@ func (c *compiler) unnamedArgs(callerLabel string, init *lumi.Init, args []*pars
 	return res, nil
 }
 
-func (c *compiler) unnamedResourceArgs(resource *lumi.ResourceInfo, args []*parser.Arg) ([]*llx.Primitive, error) {
+func (c *compiler) unnamedResourceArgs(resource *resources.ResourceInfo, args []*parser.Arg) ([]*llx.Primitive, error) {
 	if resource.Init == nil {
 		return nil, errors.New("cannot find init call for resource " + resource.Id)
 	}
@@ -636,7 +636,7 @@ func (c *compiler) unnamedResourceArgs(resource *lumi.ResourceInfo, args []*pars
 // primitives that are used as arguments to initialize that resource
 // only works if len(args) > 0 !!
 // only works if args are either ALL named or not named !!
-func (c *compiler) resourceArgs(resource *lumi.ResourceInfo, args []*parser.Arg) ([]*llx.Primitive, error) {
+func (c *compiler) resourceArgs(resource *resources.ResourceInfo, args []*parser.Arg) ([]*llx.Primitive, error) {
 	if args[0].Name == "" {
 		return c.unnamedResourceArgs(resource, args)
 	}
@@ -837,7 +837,7 @@ func (c *compiler) compileResource(id string, calls []*parser.Call) (bool, []*pa
 	return true, calls, typ, err
 }
 
-func (c *compiler) addResource(id string, resource *lumi.ResourceInfo, call *parser.Call) (types.Type, error) {
+func (c *compiler) addResource(id string, resource *resources.ResourceInfo, call *parser.Call) (types.Type, error) {
 	var function *llx.Function
 	var err error
 	typ := types.Resource(id)
@@ -1476,7 +1476,7 @@ func getMinMondooVersion(current string, resource string, field string) string {
 }
 
 // CompileAST with a schema into a chunky code
-func CompileAST(ast *parser.AST, schema *lumi.Schema, props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
+func CompileAST(ast *parser.AST, schema *resources.Schema, props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
 	if schema == nil {
 		return nil, errors.New("mqlc> please provide a schema to compile this code")
 	}
@@ -1514,7 +1514,7 @@ func CompileAST(ast *parser.AST, schema *lumi.Schema, props map[string]*llx.Prim
 }
 
 // Compile a code piece against a schema into chunky code
-func compile(input string, schema *lumi.Schema, props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
+func compile(input string, schema *resources.Schema, props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
 	// remove leading whitespace; we are re-using this later on
 	input = Dedent(input)
 
@@ -1553,7 +1553,7 @@ func compile(input string, schema *lumi.Schema, props map[string]*llx.Primitive)
 	return res, nil
 }
 
-func Compile(input string, schema *lumi.Schema, features mondoo.Features, props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
+func Compile(input string, schema *resources.Schema, features mondoo.Features, props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
 	if features.IsActive(mondoo.PiperCode) {
 		res, err := compile(input, schema, props)
 		if err != nil {
@@ -1580,7 +1580,7 @@ func Compile(input string, schema *lumi.Schema, features mondoo.Features, props 
 }
 
 // MustCompile a code piece that should not fail (otherwise panic)
-func MustCompile(input string, schema *lumi.Schema, features mondoo.Features, props map[string]*llx.Primitive) *llx.CodeBundle {
+func MustCompile(input string, schema *resources.Schema, features mondoo.Features, props map[string]*llx.Primitive) *llx.CodeBundle {
 	res, err := Compile(input, schema, features, props)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to compile")

@@ -7,12 +7,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (a *lumiAwsApigateway) id() (string, error) {
+func (a *mqlAwsApigateway) id() (string, error) {
 	return "aws.apigateway", nil
 }
 
@@ -21,7 +21,7 @@ const (
 	apiStageArnPattern = "arn:aws:apigateway:%s:%s::/apis/%s/stages/%s"
 )
 
-func (a *lumiAwsApigateway) GetRestApis() ([]interface{}, error) {
+func (a *mqlAwsApigateway) GetRestApis() ([]interface{}, error) {
 	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func (a *lumiAwsApigateway) GetRestApis() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *lumiAwsApigateway) getRestApis(at *aws_transport.Provider) []*jobpool.Job {
+func (a *mqlAwsApigateway) getRestApis(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -70,7 +70,7 @@ func (a *lumiAwsApigateway) getRestApis(at *aws_transport.Provider) []*jobpool.J
 				}
 
 				for _, restApi := range restApisResp.Items {
-					lumiRestApi, err := a.MotorRuntime.CreateResource("aws.apigateway.restapi",
+					mqlRestApi, err := a.MotorRuntime.CreateResource("aws.apigateway.restapi",
 						"arn", fmt.Sprintf(apiArnPattern, regionVal, account.ID, core.ToString(restApi.Id)),
 						"id", core.ToString(restApi.Id),
 						"name", core.ToString(restApi.Name),
@@ -82,7 +82,7 @@ func (a *lumiAwsApigateway) getRestApis(at *aws_transport.Provider) []*jobpool.J
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiRestApi)
+					res = append(res, mqlRestApi)
 				}
 				if restApisResp.Position == nil {
 					break
@@ -96,7 +96,7 @@ func (a *lumiAwsApigateway) getRestApis(at *aws_transport.Provider) []*jobpool.J
 	return tasks
 }
 
-func (a *lumiAwsApigatewayRestapi) GetStages() ([]interface{}, error) {
+func (a *mqlAwsApigatewayRestapi) GetStages() ([]interface{}, error) {
 	restApiId, err := a.Id()
 	if err != nil {
 		return nil, err
@@ -127,7 +127,7 @@ func (a *lumiAwsApigatewayRestapi) GetStages() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		lumiStage, err := a.MotorRuntime.CreateResource("aws.apigateway.stage",
+		mqlStage, err := a.MotorRuntime.CreateResource("aws.apigateway.stage",
 			"arn", fmt.Sprintf(apiStageArnPattern, region, account.ID, restApiId, core.ToString(stage.StageName)),
 			"name", core.ToString(stage.StageName),
 			"description", core.ToString(stage.Description),
@@ -138,15 +138,15 @@ func (a *lumiAwsApigatewayRestapi) GetStages() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiStage)
+		res = append(res, mqlStage)
 	}
 	return res, nil
 }
 
-func (l *lumiAwsApigatewayRestapi) id() (string, error) {
+func (l *mqlAwsApigatewayRestapi) id() (string, error) {
 	return l.Arn()
 }
 
-func (l *lumiAwsApigatewayStage) id() (string, error) {
+func (l *mqlAwsApigatewayStage) id() (string, error) {
 	return l.Arn()
 }

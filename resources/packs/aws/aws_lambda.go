@@ -8,17 +8,17 @@ import (
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/aws/awspolicy"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (l *lumiAwsLambda) id() (string, error) {
+func (l *mqlAwsLambda) id() (string, error) {
 	return "aws.lambda", nil
 }
 
-func (l *lumiAwsLambda) GetFunctions() ([]interface{}, error) {
+func (l *mqlAwsLambda) GetFunctions() ([]interface{}, error) {
 	at, err := awstransport(l.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func (l *lumiAwsLambda) GetFunctions() ([]interface{}, error) {
 	return res, nil
 }
 
-func (l *lumiAwsLambda) getFunctions(at *aws_transport.Provider) []*jobpool.Job {
+func (l *mqlAwsLambda) getFunctions(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -77,7 +77,7 @@ func (l *lumiAwsLambda) getFunctions(at *aws_transport.Provider) []*jobpool.Job 
 							tags[k] = v
 						}
 					}
-					lumiFunc, err := l.MotorRuntime.CreateResource("aws.lambda.function",
+					mqlFunc, err := l.MotorRuntime.CreateResource("aws.lambda.function",
 						"arn", core.ToString(function.FunctionArn),
 						"name", core.ToString(function.FunctionName),
 						"dlqTargetArn", dlqTarget,
@@ -88,7 +88,7 @@ func (l *lumiAwsLambda) getFunctions(at *aws_transport.Provider) []*jobpool.Job 
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiFunc)
+					res = append(res, mqlFunc)
 				}
 				if functionsResp.NextMarker == nil {
 					break
@@ -102,7 +102,7 @@ func (l *lumiAwsLambda) getFunctions(at *aws_transport.Provider) []*jobpool.Job 
 	return tasks
 }
 
-func (l *lumiAwsLambdaFunction) GetConcurrency() (int64, error) {
+func (l *mqlAwsLambdaFunction) GetConcurrency() (int64, error) {
 	funcName, err := l.Name()
 	if err != nil {
 		return 0, err
@@ -130,7 +130,7 @@ func (l *lumiAwsLambdaFunction) GetConcurrency() (int64, error) {
 	return 0, nil
 }
 
-func (l *lumiAwsLambdaFunction) GetPolicy() (interface{}, error) {
+func (l *mqlAwsLambdaFunction) GetPolicy() (interface{}, error) {
 	funcArn, err := l.Arn()
 	if err != nil {
 		return nil, err
@@ -168,7 +168,7 @@ func (l *lumiAwsLambdaFunction) GetPolicy() (interface{}, error) {
 	return nil, nil
 }
 
-func (l *lumiAwsLambdaFunction) id() (string, error) {
+func (l *mqlAwsLambdaFunction) id() (string, error) {
 	return l.Arn()
 }
 

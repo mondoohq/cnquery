@@ -6,20 +6,20 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (a *lumiAwsAutoscaling) id() (string, error) {
+func (a *mqlAwsAutoscaling) id() (string, error) {
 	return "aws.autoscaling", nil
 }
 
-func (a *lumiAwsAutoscalingGroup) id() (string, error) {
+func (a *mqlAwsAutoscalingGroup) id() (string, error) {
 	return a.Arn()
 }
 
-func (a *lumiAwsAutoscaling) GetGroups() ([]interface{}, error) {
+func (a *mqlAwsAutoscaling) GetGroups() ([]interface{}, error) {
 	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (a *lumiAwsAutoscaling) GetGroups() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *lumiAwsAutoscaling) getGroups(at *aws_transport.Provider) []*jobpool.Job {
+func (a *mqlAwsAutoscaling) getGroups(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -66,7 +66,7 @@ func (a *lumiAwsAutoscaling) getGroups(at *aws_transport.Provider) []*jobpool.Jo
 					for _, name := range group.LoadBalancerNames {
 						lbNames = append(lbNames, name)
 					}
-					lumiGroup, err := a.MotorRuntime.CreateResource("aws.autoscaling.group",
+					mqlGroup, err := a.MotorRuntime.CreateResource("aws.autoscaling.group",
 						"arn", core.ToString(group.AutoScalingGroupARN),
 						"name", core.ToString(group.AutoScalingGroupName),
 						"loadBalancerNames", lbNames,
@@ -76,7 +76,7 @@ func (a *lumiAwsAutoscaling) getGroups(at *aws_transport.Provider) []*jobpool.Jo
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiGroup)
+					res = append(res, mqlGroup)
 				}
 				nextToken = groups.NextToken
 				if groups.NextToken != nil {

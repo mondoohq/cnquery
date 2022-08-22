@@ -7,19 +7,19 @@ import (
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (a *lumiAzurermMysql) id() (string, error) {
+func (a *mqlAzurermMysql) id() (string, error) {
 	return "azurerm.mysql", nil
 }
 
-func (a *lumiAzurermMysqlServer) id() (string, error) {
+func (a *mqlAzurermMysqlServer) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurermMysqlDatabase) id() (string, error) {
+func (a *mqlAzurermMysqlDatabase) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurermMysql) GetServers() ([]interface{}, error) {
+func (a *mqlAzurermMysql) GetServers() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func (a *lumiAzurermMysql) GetServers() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzureDbServer, err := a.MotorRuntime.CreateResource("azurerm.mysql.server",
+		mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azurerm.mysql.server",
 			"id", core.ToString(dbServer.ID),
 			"name", core.ToString(dbServer.Name),
 			"location", core.ToString(dbServer.Location),
@@ -67,13 +67,13 @@ func (a *lumiAzurermMysql) GetServers() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzureDbServer)
+		res = append(res, mqlAzureDbServer)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermMysqlServer) GetConfiguration() ([]interface{}, error) {
+func (a *mqlAzurermMysqlServer) GetConfiguration() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -118,7 +118,7 @@ func (a *lumiAzurermMysqlServer) GetConfiguration() ([]interface{}, error) {
 	for i := range list {
 		entry := list[i]
 
-		lumiAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.configuration",
+		mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.configuration",
 			"id", core.ToString(entry.ID),
 			"name", core.ToString(entry.Name),
 			"type", core.ToString(entry.Type),
@@ -132,13 +132,13 @@ func (a *lumiAzurermMysqlServer) GetConfiguration() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzureConfiguration)
+		res = append(res, mqlAzureConfiguration)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermMysqlServer) GetDatabases() ([]interface{}, error) {
+func (a *mqlAzurermMysqlServer) GetDatabases() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -184,7 +184,7 @@ func (a *lumiAzurermMysqlServer) GetDatabases() ([]interface{}, error) {
 	for i := range list {
 		entry := list[i]
 
-		lumiAzureDatabase, err := a.MotorRuntime.CreateResource("azurerm.mysql.database",
+		mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azurerm.mysql.database",
 			"id", core.ToString(entry.ID),
 			"name", core.ToString(entry.Name),
 			"type", core.ToString(entry.Type),
@@ -194,13 +194,13 @@ func (a *lumiAzurermMysqlServer) GetDatabases() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzureDatabase)
+		res = append(res, mqlAzureDatabase)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermMysqlServer) GetFirewallRules() ([]interface{}, error) {
+func (a *mqlAzurermMysqlServer) GetFirewallRules() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -246,7 +246,7 @@ func (a *lumiAzurermMysqlServer) GetFirewallRules() ([]interface{}, error) {
 	for i := range list {
 		entry := list[i]
 
-		lumiAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.firewallrule",
+		mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.firewallrule",
 			"id", core.ToString(entry.ID),
 			"name", core.ToString(entry.Name),
 			"type", core.ToString(entry.Type),
@@ -256,7 +256,7 @@ func (a *lumiAzurermMysqlServer) GetFirewallRules() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzureConfiguration)
+		res = append(res, mqlAzureConfiguration)
 	}
 
 	return res, nil

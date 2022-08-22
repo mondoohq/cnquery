@@ -2,16 +2,16 @@ package os
 
 import (
 	"github.com/cockroachdb/errors"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/os/powershell"
 	"go.mondoo.io/mondoo/resources/packs/os/windows"
 )
 
-func (s *lumiSecpol) id() (string, error) {
+func (s *mqlSecpol) id() (string, error) {
 	return "secpol", nil
 }
 
-func (s *lumiSecpol) policy() (*windows.Secpol, error) {
+func (s *mqlSecpol) policy() (*windows.Secpol, error) {
 	var policy *windows.Secpol
 	data, ok := s.Cache.Load("secpol")
 	if ok {
@@ -37,11 +37,11 @@ func (s *lumiSecpol) policy() (*windows.Secpol, error) {
 	if err != nil {
 		return nil, err
 	}
-	s.Cache.Store("secpol", &lumi.CacheEntry{Data: policy})
+	s.Cache.Store("secpol", &resources.CacheEntry{Data: policy})
 	return policy, nil
 }
 
-func (s *lumiSecpol) GetSystemaccess() (map[string]interface{}, error) {
+func (s *mqlSecpol) GetSystemaccess() (map[string]interface{}, error) {
 	policy, err := s.policy()
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (s *lumiSecpol) GetSystemaccess() (map[string]interface{}, error) {
 	return policy.SystemAccess, nil
 }
 
-func (s *lumiSecpol) GetEventaudit() (map[string]interface{}, error) {
+func (s *mqlSecpol) GetEventaudit() (map[string]interface{}, error) {
 	policy, err := s.policy()
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func (s *lumiSecpol) GetEventaudit() (map[string]interface{}, error) {
 	return policy.EventAudit, nil
 }
 
-func (s *lumiSecpol) GetRegistryvalues() (map[string]interface{}, error) {
+func (s *mqlSecpol) GetRegistryvalues() (map[string]interface{}, error) {
 	policy, err := s.policy()
 	if err != nil {
 		return nil, err
@@ -65,7 +65,7 @@ func (s *lumiSecpol) GetRegistryvalues() (map[string]interface{}, error) {
 	return policy.RegistryValues, nil
 }
 
-func (s *lumiSecpol) GetPrivilegerights() (map[string]interface{}, error) {
+func (s *mqlSecpol) GetPrivilegerights() (map[string]interface{}, error) {
 	policy, err := s.policy()
 	if err != nil {
 		return nil, err

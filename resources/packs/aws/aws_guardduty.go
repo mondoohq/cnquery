@@ -7,17 +7,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty/types"
-	"go.mondoo.io/mondoo/lumi"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (g *lumiAwsGuardduty) id() (string, error) {
+func (g *mqlAwsGuardduty) id() (string, error) {
 	return "aws.guardduty", nil
 }
 
-func (g *lumiAwsGuardduty) GetDetectors() ([]interface{}, error) {
+func (g *mqlAwsGuardduty) GetDetectors() ([]interface{}, error) {
 	at, err := awstransport(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -37,11 +37,11 @@ func (g *lumiAwsGuardduty) GetDetectors() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *lumiAwsGuarddutyDetector) id() (string, error) {
+func (g *mqlAwsGuarddutyDetector) id() (string, error) {
 	return g.Id()
 }
 
-func (g *lumiAwsGuardduty) getDetectors(at *aws_transport.Provider) []*jobpool.Job {
+func (g *mqlAwsGuardduty) getDetectors(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -65,14 +65,14 @@ func (g *lumiAwsGuardduty) getDetectors(at *aws_transport.Provider) []*jobpool.J
 				}
 
 				for _, id := range detectors.DetectorIds {
-					lumiCluster, err := g.MotorRuntime.CreateResource("aws.guardduty.detector",
+					mqlCluster, err := g.MotorRuntime.CreateResource("aws.guardduty.detector",
 						"id", id,
 						"region", regionVal,
 					)
 					if err != nil {
 						return nil, err
 					}
-					res = append(res, lumiCluster)
+					res = append(res, mqlCluster)
 				}
 				nextToken = detectors.NextToken
 				if detectors.NextToken != nil {
@@ -86,7 +86,7 @@ func (g *lumiAwsGuardduty) getDetectors(at *aws_transport.Provider) []*jobpool.J
 	return tasks
 }
 
-func (g *lumiAwsGuarddutyDetector) GetUnarchivedFindings() ([]interface{}, error) {
+func (g *mqlAwsGuarddutyDetector) GetUnarchivedFindings() ([]interface{}, error) {
 	id, err := g.Id()
 	if err != nil {
 		return nil, err
@@ -122,7 +122,7 @@ func (g *lumiAwsGuarddutyDetector) GetUnarchivedFindings() ([]interface{}, error
 	return core.JsonToDictSlice(findingDetails.Findings)
 }
 
-func (g *lumiAwsGuarddutyDetector) init(args *lumi.Args) (*lumi.Args, AwsGuarddutyDetector, error) {
+func (g *mqlAwsGuarddutyDetector) init(args *resources.Args) (*resources.Args, AwsGuarddutyDetector, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}

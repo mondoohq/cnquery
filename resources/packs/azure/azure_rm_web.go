@@ -13,11 +13,11 @@ import (
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (a *lumiAzurermWeb) id() (string, error) {
+func (a *mqlAzurermWeb) id() (string, error) {
 	return "azurerm.web", nil
 }
 
-func (a *lumiAzurermWeb) GetApps() ([]interface{}, error) {
+func (a *mqlAzurermWeb) GetApps() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func (a *lumiAzurermWeb) GetApps() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.web.appsite",
+		mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.web.appsite",
 			"id", core.ToString(entry.ID),
 			"name", core.ToString(entry.Name),
 			"location", core.ToString(entry.Location),
@@ -64,7 +64,7 @@ func (a *lumiAzurermWeb) GetApps() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzure)
+		res = append(res, mqlAzure)
 	}
 
 	return res, nil
@@ -101,7 +101,7 @@ func isPlatformEol(platform string, version string) bool {
 }
 
 // all runtimes that are returned here are not EOL and are supported
-func (a *lumiAzurermWeb) GetAvailableRuntimes() ([]interface{}, error) {
+func (a *mqlAzurermWeb) GetAvailableRuntimes() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -117,7 +117,7 @@ func (a *lumiAzurermWeb) GetAvailableRuntimes() ([]interface{}, error) {
 	client.Authorizer = authorizer
 
 	res := []interface{}{}
-	// NOTE: we do not return a lumi resource since stacks do not have their own proper id in azure
+	// NOTE: we do not return a MQL resource since stacks do not have their own proper id in azure
 
 	// fetch all windows stacks
 	// NOTE: 💥 This api is one of the worst I've ever seen and I understand the az client team why they maintain a hardcoded list
@@ -231,11 +231,11 @@ func (a *lumiAzurermWeb) GetAvailableRuntimes() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *lumiAzurermWebAppsite) id() (string, error) {
+func (a *mqlAzurermWebAppsite) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurermWebAppsite) GetConfiguration() (interface{}, error) {
+func (a *mqlAzurermWebAppsite) GetConfiguration() (interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -286,7 +286,7 @@ func (a *lumiAzurermWebAppsite) GetConfiguration() (interface{}, error) {
 	)
 }
 
-func (a *lumiAzurermWebAppsite) GetAuthenticationSettings() (interface{}, error) {
+func (a *mqlAzurermWebAppsite) GetAuthenticationSettings() (interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -337,7 +337,7 @@ func (a *lumiAzurermWebAppsite) GetAuthenticationSettings() (interface{}, error)
 	)
 }
 
-func (a *lumiAzurermWebAppsite) GetApplicationSettings() (interface{}, error) {
+func (a *mqlAzurermWebAppsite) GetApplicationSettings() (interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -382,7 +382,7 @@ func (a *lumiAzurermWebAppsite) GetApplicationSettings() (interface{}, error) {
 	return res, nil
 }
 
-func (a *lumiAzurermWebAppsite) GetMetadata() (interface{}, error) {
+func (a *mqlAzurermWebAppsite) GetMetadata() (interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -427,7 +427,7 @@ func (a *lumiAzurermWebAppsite) GetMetadata() (interface{}, error) {
 	return res, nil
 }
 
-func (a *lumiAzurermWebAppsite) GetConnectionSettings() (interface{}, error) {
+func (a *mqlAzurermWebAppsite) GetConnectionSettings() (interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -478,7 +478,7 @@ func (a *lumiAzurermWebAppsite) GetConnectionSettings() (interface{}, error) {
 	return res, nil
 }
 
-func (a *lumiAzurermWebAppsite) GetStack() (map[string]interface{}, error) {
+func (a *mqlAzurermWebAppsite) GetStack() (map[string]interface{}, error) {
 	config, err := a.Configuration()
 	if err != nil {
 		return nil, err
@@ -609,10 +609,10 @@ func (a *lumiAzurermWebAppsite) GetStack() (map[string]interface{}, error) {
 	return core.JsonToDict(runtime)
 }
 
-func (a *lumiAzurermWebAppsiteconfig) id() (string, error) {
+func (a *mqlAzurermWebAppsiteconfig) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurermWebAppsiteauthsettings) id() (string, error) {
+func (a *mqlAzurermWebAppsiteauthsettings) id() (string, error) {
 	return a.Id()
 }

@@ -6,15 +6,15 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/network/mgmt/network"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (a *lumiAzurermNetwork) id() (string, error) {
+func (a *mqlAzurermNetwork) id() (string, error) {
 	return "azurerm.network", nil
 }
 
-func (a *lumiAzurermNetwork) GetInterfaces() ([]interface{}, error) {
+func (a *mqlAzurermNetwork) GetInterfaces() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -38,17 +38,17 @@ func (a *lumiAzurermNetwork) GetInterfaces() ([]interface{}, error) {
 	for i := range ifaces.Values() {
 		iface := ifaces.Values()[i]
 
-		lumiAzure, err := azureIfaceToLumi(a.MotorRuntime, iface)
+		mqlAzure, err := azureIfaceToMql(a.MotorRuntime, iface)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzure)
+		res = append(res, mqlAzure)
 	}
 
 	return res, nil
 }
 
-func azureIfaceToLumi(runtime *lumi.Runtime, iface network.Interface) (lumi.ResourceType, error) {
+func azureIfaceToMql(runtime *resources.Runtime, iface network.Interface) (resources.ResourceType, error) {
 	properties, err := core.JsonToDict(iface.InterfacePropertiesFormat)
 	if err != nil {
 		return nil, err
@@ -65,7 +65,7 @@ func azureIfaceToLumi(runtime *lumi.Runtime, iface network.Interface) (lumi.Reso
 	)
 }
 
-func (a *lumiAzurermNetwork) GetSecurityGroups() ([]interface{}, error) {
+func (a *mqlAzurermNetwork) GetSecurityGroups() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -89,11 +89,11 @@ func (a *lumiAzurermNetwork) GetSecurityGroups() ([]interface{}, error) {
 	for i := range secGroups.Values() {
 		secGroup := secGroups.Values()[i]
 
-		lumiAzure, err := azureSecGroupToLumi(a.MotorRuntime, secGroup)
+		mqlAzure, err := azureSecGroupToMql(a.MotorRuntime, secGroup)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzure)
+		res = append(res, mqlAzure)
 	}
 
 	return res, nil
@@ -102,7 +102,7 @@ func (a *lumiAzurermNetwork) GetSecurityGroups() ([]interface{}, error) {
 // see https://github.com/Azure/azure-sdk-for-go/issues/8224
 type AzureSecurityGroupPropertiesFormat network.SecurityGroupPropertiesFormat
 
-func azureSecGroupToLumi(runtime *lumi.Runtime, secGroup network.SecurityGroup) (lumi.ResourceType, error) {
+func azureSecGroupToMql(runtime *resources.Runtime, secGroup network.SecurityGroup) (resources.ResourceType, error) {
 	var properties map[string]interface{}
 	ifaces := []interface{}{}
 	securityRules := []interface{}{}
@@ -123,11 +123,11 @@ func azureSecGroupToLumi(runtime *lumi.Runtime, secGroup network.SecurityGroup) 
 			for i := range list {
 				iface := list[i]
 
-				lumiAzure, err := azureIfaceToLumi(runtime, iface)
+				mqlAzure, err := azureIfaceToMql(runtime, iface)
 				if err != nil {
 					return nil, err
 				}
-				ifaces = append(ifaces, lumiAzure)
+				ifaces = append(ifaces, mqlAzure)
 			}
 		}
 
@@ -136,11 +136,11 @@ func azureSecGroupToLumi(runtime *lumi.Runtime, secGroup network.SecurityGroup) 
 			for i := range list {
 				secRule := list[i]
 
-				lumiAzure, err := azureSecurityRuleToLumi(runtime, secRule)
+				mqlAzure, err := azureSecurityRuleToMql(runtime, secRule)
 				if err != nil {
 					return nil, err
 				}
-				securityRules = append(securityRules, lumiAzure)
+				securityRules = append(securityRules, mqlAzure)
 			}
 		}
 
@@ -149,11 +149,11 @@ func azureSecGroupToLumi(runtime *lumi.Runtime, secGroup network.SecurityGroup) 
 			for i := range list {
 				secRule := list[i]
 
-				lumiAzure, err := azureSecurityRuleToLumi(runtime, secRule)
+				mqlAzure, err := azureSecurityRuleToMql(runtime, secRule)
 				if err != nil {
 					return nil, err
 				}
-				defaultSecurityRules = append(defaultSecurityRules, lumiAzure)
+				defaultSecurityRules = append(defaultSecurityRules, mqlAzure)
 			}
 		}
 	}
@@ -172,7 +172,7 @@ func azureSecGroupToLumi(runtime *lumi.Runtime, secGroup network.SecurityGroup) 
 	)
 }
 
-func azureSecurityRuleToLumi(runtime *lumi.Runtime, secRule network.SecurityRule) (lumi.ResourceType, error) {
+func azureSecurityRuleToMql(runtime *resources.Runtime, secRule network.SecurityRule) (resources.ResourceType, error) {
 	properties, err := core.JsonToDict(secRule.SecurityRulePropertiesFormat)
 	if err != nil {
 		return nil, err
@@ -219,23 +219,23 @@ func parseAzureSecurityRulePortRange(portRange string) []AzureSecurityRulePortRa
 	return res
 }
 
-func (a *lumiAzurermNetworkInterface) id() (string, error) {
+func (a *mqlAzurermNetworkInterface) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurermNetworkInterface) GetVm() (interface{}, error) {
+func (a *mqlAzurermNetworkInterface) GetVm() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (a *lumiAzurermNetworkSecuritygroup) id() (string, error) {
+func (a *mqlAzurermNetworkSecuritygroup) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurermNetworkSecurityrule) id() (string, error) {
+func (a *mqlAzurermNetworkSecurityrule) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurermNetwork) GetWatchers() ([]interface{}, error) {
+func (a *mqlAzurermNetwork) GetWatchers() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -270,7 +270,7 @@ func (a *lumiAzurermNetwork) GetWatchers() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.network.watcher",
+		mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.network.watcher",
 			"id", core.ToString(watcher.ID),
 			"name", core.ToString(watcher.Name),
 			"location", core.ToString(watcher.Location),
@@ -282,12 +282,12 @@ func (a *lumiAzurermNetwork) GetWatchers() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzure)
+		res = append(res, mqlAzure)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermNetworkWatcher) id() (string, error) {
+func (a *mqlAzurermNetworkWatcher) id() (string, error) {
 	return a.Id()
 }

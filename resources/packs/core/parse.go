@@ -10,17 +10,17 @@ import (
 	"strings"
 
 	"go.mondoo.io/mondoo/checksums"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core/parsers"
 	"go.mondoo.io/mondoo/resources/packs/core/plist"
 	"sigs.k8s.io/yaml"
 )
 
-func (s *lumiParse) id() (string, error) {
+func (s *mqlParse) id() (string, error) {
 	return "", nil
 }
 
-func (s *lumiParseIni) init(args *lumi.Args) (*lumi.Args, ParseIni, error) {
+func (s *mqlParseIni) init(args *resources.Args) (*resources.Args, ParseIni, error) {
 	if x, ok := (*args)["path"]; ok {
 		path, ok := x.(string)
 		if !ok {
@@ -38,7 +38,7 @@ func (s *lumiParseIni) init(args *lumi.Args) (*lumi.Args, ParseIni, error) {
 	return args, nil, nil
 }
 
-func (s *lumiParseIni) id() (string, error) {
+func (s *mqlParseIni) id() (string, error) {
 	r, err := s.File()
 	if err != nil {
 		return "", err
@@ -57,11 +57,11 @@ func (s *lumiParseIni) id() (string, error) {
 	return path + del, nil
 }
 
-func (s *lumiParseIni) GetDelimiter() (string, error) {
+func (s *mqlParseIni) GetDelimiter() (string, error) {
 	return "=", nil
 }
 
-func (s *lumiParseIni) GetFile() (File, error) {
+func (s *mqlParseIni) GetFile() (File, error) {
 	// TODO: all of this is a placeholder, in case we initialize the ini resource with content instead of a file
 	f, err := s.MotorRuntime.CreateResource("file", "path", "/")
 	if err != nil {
@@ -70,7 +70,7 @@ func (s *lumiParseIni) GetFile() (File, error) {
 	return f.(File), nil
 }
 
-func (s *lumiParseIni) GetContent(file File) (string, error) {
+func (s *mqlParseIni) GetContent(file File) (string, error) {
 	// TODO: this can be heavily improved once we do it right, since this is constantly
 	// re-registered as the file changes
 	err := s.MotorRuntime.WatchAndCompute(file, "content", s, "content")
@@ -81,7 +81,7 @@ func (s *lumiParseIni) GetContent(file File) (string, error) {
 	return file.Content()
 }
 
-func (s *lumiParseIni) GetSections(content string, delimiter string) (map[string]interface{}, error) {
+func (s *mqlParseIni) GetSections(content string, delimiter string) (map[string]interface{}, error) {
 	ini := parsers.ParseIni(content, delimiter)
 
 	res := make(map[string]interface{}, len(ini.Fields))
@@ -92,7 +92,7 @@ func (s *lumiParseIni) GetSections(content string, delimiter string) (map[string
 	return res, nil
 }
 
-func (s *lumiParseIni) GetParams(sections map[string]interface{}) (map[string]interface{}, error) {
+func (s *mqlParseIni) GetParams(sections map[string]interface{}) (map[string]interface{}, error) {
 	res := sections[""]
 	if res == nil {
 		return map[string]interface{}{}, nil
@@ -100,7 +100,7 @@ func (s *lumiParseIni) GetParams(sections map[string]interface{}) (map[string]in
 	return res.(map[string]interface{}), nil
 }
 
-func (s *lumiParseJson) init(args *lumi.Args) (*lumi.Args, ParseJson, error) {
+func (s *mqlParseJson) init(args *resources.Args) (*resources.Args, ParseJson, error) {
 	rawPath := (*args)["path"]
 
 	if rawPath != nil {
@@ -129,7 +129,7 @@ func (s *lumiParseJson) init(args *lumi.Args) (*lumi.Args, ParseJson, error) {
 	return args, nil, nil
 }
 
-func (s *lumiParseJson) id() (string, error) {
+func (s *mqlParseJson) id() (string, error) {
 	r, err := s.File()
 	if err != nil {
 		return "", err
@@ -143,7 +143,7 @@ func (s *lumiParseJson) id() (string, error) {
 	return path, nil
 }
 
-func (s *lumiParseJson) GetFile() (File, error) {
+func (s *mqlParseJson) GetFile() (File, error) {
 	// TODO: all of this is a placeholder, in case we initialize the ini resource with content instead of a file
 	f, err := s.MotorRuntime.CreateResource("file", "path", "/")
 	if err != nil {
@@ -152,7 +152,7 @@ func (s *lumiParseJson) GetFile() (File, error) {
 	return f.(File), nil
 }
 
-func (s *lumiParseJson) GetContent(file File) (string, error) {
+func (s *mqlParseJson) GetContent(file File) (string, error) {
 	// TODO: this can be heavily improved once we do it right, since this is constantly
 	// re-registered as the file changes
 	err := s.MotorRuntime.WatchAndCompute(file, "content", s, "content")
@@ -163,7 +163,7 @@ func (s *lumiParseJson) GetContent(file File) (string, error) {
 	return file.Content()
 }
 
-func (s *lumiParseJson) GetParams(content string) (interface{}, error) {
+func (s *mqlParseJson) GetParams(content string) (interface{}, error) {
 	if content == "" {
 		return nil, nil
 	}
@@ -175,7 +175,7 @@ func (s *lumiParseJson) GetParams(content string) (interface{}, error) {
 	return res, nil
 }
 
-func (s *lumiParseYaml) init(args *lumi.Args) (*lumi.Args, ParseJson, error) {
+func (s *mqlParseYaml) init(args *resources.Args) (*resources.Args, ParseJson, error) {
 	rawPath := (*args)["path"]
 
 	if rawPath != nil {
@@ -201,7 +201,7 @@ func (s *lumiParseYaml) init(args *lumi.Args) (*lumi.Args, ParseJson, error) {
 	return args, nil, nil
 }
 
-func (s *lumiParseYaml) id() (string, error) {
+func (s *mqlParseYaml) id() (string, error) {
 	r, err := s.File()
 	if err != nil {
 		return "", err
@@ -215,12 +215,12 @@ func (s *lumiParseYaml) id() (string, error) {
 	return path, nil
 }
 
-func (s *lumiParseYaml) GetFile() (File, error) {
+func (s *mqlParseYaml) GetFile() (File, error) {
 	// NOTE: this code should never be reached since the file field is initialized via init
 	return nil, errors.New("no file available")
 }
 
-func (s *lumiParseYaml) GetContent(file File) (string, error) {
+func (s *mqlParseYaml) GetContent(file File) (string, error) {
 	// TODO: this can be heavily improved once we do it right, since this is constantly
 	// re-registered as the file changes
 	err := s.MotorRuntime.WatchAndCompute(file, "content", s, "content")
@@ -231,7 +231,7 @@ func (s *lumiParseYaml) GetContent(file File) (string, error) {
 	return file.Content()
 }
 
-func (s *lumiParseYaml) GetParams(content string) (map[string]interface{}, error) {
+func (s *mqlParseYaml) GetParams(content string) (map[string]interface{}, error) {
 	res := make(map[string](interface{}))
 
 	if content == "" {
@@ -246,7 +246,7 @@ func (s *lumiParseYaml) GetParams(content string) (map[string]interface{}, error
 	return res, nil
 }
 
-func (s *lumiParsePlist) init(args *lumi.Args) (*lumi.Args, ParseJson, error) {
+func (s *mqlParsePlist) init(args *resources.Args) (*resources.Args, ParseJson, error) {
 	if x, ok := (*args)["path"]; ok {
 		path, ok := x.(string)
 		if !ok {
@@ -274,7 +274,7 @@ func (s *lumiParsePlist) init(args *lumi.Args) (*lumi.Args, ParseJson, error) {
 	return args, nil, nil
 }
 
-func (s *lumiParsePlist) id() (string, error) {
+func (s *mqlParsePlist) id() (string, error) {
 	r, err := s.File()
 	if err != nil {
 		return "", err
@@ -288,7 +288,7 @@ func (s *lumiParsePlist) id() (string, error) {
 	return path, nil
 }
 
-func (s *lumiParsePlist) GetFile() (File, error) {
+func (s *mqlParsePlist) GetFile() (File, error) {
 	// TODO: all of this is a placeholder, in case we initialize the plist resource with content instead of a file
 	f, err := s.MotorRuntime.CreateResource("file", "path", "/")
 	if err != nil {
@@ -297,7 +297,7 @@ func (s *lumiParsePlist) GetFile() (File, error) {
 	return f.(File), nil
 }
 
-func (s *lumiParsePlist) GetContent(file File) (string, error) {
+func (s *mqlParsePlist) GetContent(file File) (string, error) {
 	// TODO: this can be heavily improved once we do it right, since this is constantly
 	// re-registered as the file changes
 	err := s.MotorRuntime.WatchAndCompute(file, "content", s, "content")
@@ -308,6 +308,6 @@ func (s *lumiParsePlist) GetContent(file File) (string, error) {
 	return file.Content()
 }
 
-func (s *lumiParsePlist) GetParams(content string) (map[string]interface{}, error) {
+func (s *mqlParsePlist) GetParams(content string) (map[string]interface{}, error) {
 	return plist.Decode(strings.NewReader(content))
 }

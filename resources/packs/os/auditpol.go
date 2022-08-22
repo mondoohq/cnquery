@@ -6,11 +6,11 @@ import (
 	"go.mondoo.io/mondoo/resources/packs/os/windows"
 )
 
-func (p *lumiAuditpol) id() (string, error) {
+func (p *mqlAuditpol) id() (string, error) {
 	return "auditpol", nil
 }
 
-func (p *lumiAuditpol) GetList() ([]interface{}, error) {
+func (p *mqlAuditpol) GetList() ([]interface{}, error) {
 	osProvider, err := osProvider(p.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
@@ -29,7 +29,7 @@ func (p *lumiAuditpol) GetList() ([]interface{}, error) {
 	auditPolEntries := make([]interface{}, len(entries))
 	for i := range entries {
 		entry := entries[i]
-		lumiAuditpolEntry, err := p.MotorRuntime.CreateResource("auditpol.entry",
+		mqlAuditpolEntry, err := p.MotorRuntime.CreateResource("auditpol.entry",
 			"machinename", entry.MachineName,
 			"policytarget", entry.PolicyTarget,
 			"subcategory", entry.Subcategory,
@@ -40,12 +40,12 @@ func (p *lumiAuditpol) GetList() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		auditPolEntries[i] = lumiAuditpolEntry.(AuditpolEntry)
+		auditPolEntries[i] = mqlAuditpolEntry.(AuditpolEntry)
 	}
 
 	return auditPolEntries, nil
 }
 
-func (p *lumiAuditpolEntry) id() (string, error) {
+func (p *mqlAuditpolEntry) id() (string, error) {
 	return p.Subcategoryguid()
 }

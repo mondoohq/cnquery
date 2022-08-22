@@ -17,7 +17,7 @@ func osProvider(m *motor.Motor) (os.OperatingSystemProvider, error) {
 	return provider, nil
 }
 
-func LumiTime(t time.Time) *time.Time {
+func MqlTime(t time.Time) *time.Time {
 	return &t
 }
 

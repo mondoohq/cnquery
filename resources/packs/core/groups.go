@@ -5,11 +5,11 @@ import (
 	"strconv"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core/groups"
 )
 
-func (g *lumiGroup) init(args *lumi.Args) (*lumi.Args, Group, error) {
+func (g *mqlGroup) init(args *resources.Args) (*resources.Args, Group, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -36,7 +36,7 @@ func (g *lumiGroup) init(args *lumi.Args) (*lumi.Args, Group, error) {
 		return nil, nil, err
 	}
 
-	c, ok := groups.LumiResource().Cache.Load("_map")
+	c, ok := groups.MqlResource().Cache.Load("_map")
 	if !ok {
 		return nil, nil, errors.New("cannot get map of groups")
 	}
@@ -55,7 +55,7 @@ func (g *lumiGroup) init(args *lumi.Args) (*lumi.Args, Group, error) {
 	return args, nil, nil
 }
 
-func (g *lumiGroup) id() (string, error) {
+func (g *mqlGroup) id() (string, error) {
 	gid, err := g.Gid()
 	if err != nil {
 		return "", err
@@ -79,7 +79,7 @@ func (g *lumiGroup) id() (string, error) {
 	return "group/" + id + "/" + name, nil
 }
 
-func (g *lumiGroup) GetMembers() ([]interface{}, error) {
+func (g *mqlGroup) GetMembers() ([]interface{}, error) {
 	// get cached users list
 	obj, err := g.MotorRuntime.CreateResource("users")
 	if err != nil {
@@ -92,14 +92,14 @@ func (g *lumiGroup) GetMembers() ([]interface{}, error) {
 		return nil, err
 	}
 
-	c, ok := users.LumiResource().Cache.Load("_map")
+	c, ok := users.MqlResource().Cache.Load("_map")
 	if !ok {
 		return nil, errors.New("cannot get map of groups")
 	}
 	cmap := c.Data.(map[string]User)
 
 	// read members for this groups
-	m, ok := g.LumiResource().Cache.Load("_members")
+	m, ok := g.MqlResource().Cache.Load("_members")
 	if !ok {
 		return nil, errors.New("cannot get map of group members")
 	}
@@ -118,46 +118,46 @@ func (g *lumiGroup) GetMembers() ([]interface{}, error) {
 		}
 
 		// if the user cannot be found, we init it as an empty user
-		lumiUser, err := g.MotorRuntime.CreateResource("user",
+		mqlUser, err := g.MotorRuntime.CreateResource("user",
 			"username", username,
 		)
 		if err != nil {
 			return nil, err
 		}
-		members = append(members, lumiUser.(User))
+		members = append(members, mqlUser.(User))
 	}
 
 	return members, nil
 }
 
-func (g *lumiGroups) id() (string, error) {
+func (g *mqlGroups) id() (string, error) {
 	return "groups", nil
 }
 
-func (g *lumiGroups) GetList() ([]interface{}, error) {
+func (g *mqlGroups) GetList() ([]interface{}, error) {
 	// find suitable groups manager
 	gm, err := groups.ResolveManager(g.MotorRuntime.Motor)
 	if gm == nil || err != nil {
-		log.Warn().Err(err).Msg("lumi[groups]> could not retrieve groups list")
+		log.Warn().Err(err).Msg("mql[groups]> could not retrieve groups list")
 		return nil, errors.New("cannot find groups manager")
 	}
 
 	// retrieve all system groups
 	groups, err := gm.List()
 	if err != nil {
-		log.Warn().Err(err).Msg("lumi[groups]> could not retrieve groups list")
+		log.Warn().Err(err).Msg("mql[groups]> could not retrieve groups list")
 		return nil, errors.New("could not retrieve groups list")
 	}
-	log.Debug().Int("groups", len(groups)).Msg("lumi[groups]> found groups")
+	log.Debug().Int("groups", len(groups)).Msg("mql[groups]> found groups")
 
 	// convert to interface{}{}
-	lumiGroups := []interface{}{}
+	mqlGroups := []interface{}{}
 	namedMap := map[string]Group{}
 
 	for i := range groups {
 		group := groups[i]
 
-		lumiGroup, err := g.MotorRuntime.CreateResource("group",
+		mqlGroup, err := g.MotorRuntime.CreateResource("group",
 			"name", group.Name,
 			"gid", group.Gid,
 			"sid", group.Sid,
@@ -167,14 +167,14 @@ func (g *lumiGroups) GetList() ([]interface{}, error) {
 		}
 
 		// store group members into group resources for later access
-		lg := lumiGroup.(Group)
-		lg.LumiResource().Cache.Store("_members", &lumi.CacheEntry{Data: group.Members})
+		lg := mqlGroup.(Group)
+		lg.MqlResource().Cache.Store("_members", &resources.CacheEntry{Data: group.Members})
 
-		lumiGroups = append(lumiGroups, lg)
-		namedMap[group.ID] = lumiGroup.(Group)
+		mqlGroups = append(mqlGroups, lg)
+		namedMap[group.ID] = mqlGroup.(Group)
 	}
 
-	g.Cache.Store("_map", &lumi.CacheEntry{Data: namedMap})
+	g.Cache.Store("_map", &resources.CacheEntry{Data: namedMap})
 
-	return lumiGroups, nil
+	return mqlGroups, nil
 }

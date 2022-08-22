@@ -7,13 +7,13 @@ import (
 	"github.com/cockroachdb/errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core/packages"
 )
 
 var PKG_IDENTIFIER = regexp.MustCompile(`^(.*):\/\/(.*)\/(.*)\/(.*)$`)
 
-func (p *lumiPackage) init(args *lumi.Args) (*lumi.Args, Package, error) {
+func (p *mqlPackage) init(args *resources.Args) (*resources.Args, Package, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -39,7 +39,7 @@ func (p *lumiPackage) init(args *lumi.Args) (*lumi.Args, Package, error) {
 		return nil, nil, err
 	}
 
-	c, ok := packages.LumiResource().Cache.Load("_map")
+	c, ok := packages.MqlResource().Cache.Load("_map")
 	if !ok {
 		return nil, nil, errors.New("cannot get map of packages")
 	}
@@ -68,7 +68,7 @@ func (p *lumiPackage) init(args *lumi.Args) (*lumi.Args, Package, error) {
 // We use identifiers similar to grafeas artifact identifier for packages
 // - deb://name/version/arch
 // - rpm://name/version/arch
-func (p *lumiPackage) id() (string, error) {
+func (p *mqlPackage) id() (string, error) {
 	name, _ := p.Name()
 	version, _ := p.Version()
 	arch, _ := p.Arch()
@@ -76,11 +76,11 @@ func (p *lumiPackage) id() (string, error) {
 	return format + "://" + name + "/" + version + "/" + arch, nil
 }
 
-func (p *lumiPackage) GetStatus() (string, error) {
+func (p *mqlPackage) GetStatus() (string, error) {
 	return "", nil
 }
 
-func (p *lumiPackage) GetOutdated() (bool, error) {
+func (p *mqlPackage) GetOutdated() (bool, error) {
 	av, err := p.Available()
 	if err == nil && len(av) > 0 {
 		return true, nil
@@ -88,15 +88,15 @@ func (p *lumiPackage) GetOutdated() (bool, error) {
 	return false, nil
 }
 
-func (p *lumiPackage) GetOrigin() (string, error) {
+func (p *mqlPackage) GetOrigin() (string, error) {
 	return "", nil
 }
 
-func (p *lumiPackages) id() (string, error) {
+func (p *mqlPackages) id() (string, error) {
 	return "packages", nil
 }
 
-func (p *lumiPackages) GetList() ([]interface{}, error) {
+func (p *mqlPackages) GetList() ([]interface{}, error) {
 	// find suitable package manager
 	pm, err := packages.ResolveSystemPkgManager(p.MotorRuntime.Motor)
 	if pm == nil || err != nil {
@@ -108,16 +108,16 @@ func (p *lumiPackages) GetList() ([]interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve package list for platform")
 	}
-	log.Debug().Int("packages", len(osPkgs)).Msg("lumi[packages]> installed packages")
+	log.Debug().Int("packages", len(osPkgs)).Msg("mql[packages]> installed packages")
 
 	// TODO: do we really need to make this a blocking call, we could update available updates async
 	// we try to retrieve the available updates
 	osAvailablePkgs, err := pm.Available()
 	if err != nil {
-		log.Debug().Err(err).Msg("lumi[packages]> could not retrieve available updates")
+		log.Debug().Err(err).Msg("mql[packages]> could not retrieve available updates")
 		osAvailablePkgs = map[string]packages.PackageUpdate{}
 	}
-	log.Debug().Int("updates", len(osAvailablePkgs)).Msg("lumi[packages]> available updates")
+	log.Debug().Int("updates", len(osAvailablePkgs)).Msg("mql[packages]> available updates")
 
 	// make available updates easily findable
 	// we use packagename-arch as identifier
@@ -126,7 +126,7 @@ func (p *lumiPackages) GetList() ([]interface{}, error) {
 		availableMap[a.Name+"/"+a.Arch] = a
 	}
 
-	// create lumi package os for each package
+	// create MQL package os for each package
 	pkgs := make([]interface{}, len(osPkgs))
 	namedMap := map[string]Package{}
 	for i, osPkg := range osPkgs {
@@ -135,7 +135,7 @@ func (p *lumiPackages) GetList() ([]interface{}, error) {
 		update, ok := availableMap[osPkg.Name+"/"+osPkg.Arch]
 		if ok {
 			available = update.Available
-			log.Debug().Str("package", osPkg.Name).Str("available", update.Available).Msg("lumi[packages]> found newer version")
+			log.Debug().Str("package", osPkg.Name).Str("available", update.Available).Msg("mql[packages]> found newer version")
 		}
 
 		pkg, err := p.MotorRuntime.CreateResource("package",
@@ -158,7 +158,7 @@ func (p *lumiPackages) GetList() ([]interface{}, error) {
 		namedMap[osPkg.Name] = pkg.(Package)
 	}
 
-	p.Cache.Store("_map", &lumi.CacheEntry{Data: namedMap})
+	p.Cache.Store("_map", &resources.CacheEntry{Data: namedMap})
 
 	// return the packages as new entries
 	return pkgs, nil

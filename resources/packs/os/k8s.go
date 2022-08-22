@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/providers"
 	k8s_provider "go.mondoo.io/mondoo/motor/providers/k8s"
-	"go.mondoo.io/mondoo/motor/providers/k8s/resources"
+	k8s_resources "go.mondoo.io/mondoo/motor/providers/k8s/resources"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core"
 	"go.mondoo.io/mondoo/resources/packs/core/certificates"
 	corev1 "k8s.io/api/core/v1"
@@ -31,8 +31,8 @@ func k8sProvider(t providers.Transport) (k8s_provider.KubernetesProvider, error)
 	return at, nil
 }
 
-func k8sMetaObject(lumiResource *lumi.Resource) (metav1.Object, error) {
-	entry, ok := lumiResource.Cache.Load("_resource")
+func k8sMetaObject(mqlResource *resources.Resource) (metav1.Object, error) {
+	entry, ok := mqlResource.Cache.Load("_resource")
 	if !ok {
 		return nil, errors.New("cannot get resource from cache")
 	}
@@ -45,27 +45,27 @@ func k8sMetaObject(lumiResource *lumi.Resource) (metav1.Object, error) {
 	return meta.Accessor(obj)
 }
 
-func k8sAnnotations(lumiResource *lumi.Resource) (interface{}, error) {
-	objM, err := k8sMetaObject(lumiResource)
+func k8sAnnotations(mqlResource *resources.Resource) (interface{}, error) {
+	objM, err := k8sMetaObject(mqlResource)
 	if err != nil {
 		return nil, err
 	}
 	return core.StrMapToInterface(objM.GetAnnotations()), nil
 }
 
-func k8sLabels(lumiResource *lumi.Resource) (interface{}, error) {
-	objM, err := k8sMetaObject(lumiResource)
+func k8sLabels(mqlResource *resources.Resource) (interface{}, error) {
+	objM, err := k8sMetaObject(mqlResource)
 	if err != nil {
 		return nil, err
 	}
 	return core.StrMapToInterface(objM.GetLabels()), nil
 }
 
-func (k *lumiK8s) id() (string, error) {
+func (k *mqlK8s) id() (string, error) {
 	return "k8s", nil
 }
 
-func (k *lumiK8s) GetServerVersion() (interface{}, error) {
+func (k *mqlK8s) GetServerVersion() (interface{}, error) {
 	kt, err := k8sProvider(k.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func (k *lumiK8s) GetServerVersion() (interface{}, error) {
 	return core.JsonToDict(kt.ServerVersion())
 }
 
-func (k *lumiK8s) GetApiResources() ([]interface{}, error) {
+func (k *mqlK8s) GetApiResources() ([]interface{}, error) {
 	kt, err := k8sProvider(k.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -85,13 +85,13 @@ func (k *lumiK8s) GetApiResources() ([]interface{}, error) {
 		return nil, err
 	}
 
-	// convert to lumi resources
+	// convert to MQL resources
 	list := resources.Resources()
 	resp := []interface{}{}
 	for i := range list {
 		entry := list[i]
 
-		lumiK8SResource, err := k.MotorRuntime.CreateResource("k8s.apiresource",
+		mqlK8SResource, err := k.MotorRuntime.CreateResource("k8s.apiresource",
 			"name", entry.Resource.Name,
 			"singularName", entry.Resource.SingularName,
 			"namespaced", entry.Resource.Namespaced,
@@ -104,7 +104,7 @@ func (k *lumiK8s) GetApiResources() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		resp = append(resp, lumiK8SResource)
+		resp = append(resp, mqlK8SResource)
 	}
 
 	return resp, nil
@@ -112,7 +112,7 @@ func (k *lumiK8s) GetApiResources() ([]interface{}, error) {
 
 type resourceConvertFn func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error)
 
-func k8sResourceToLumi(r *lumi.Runtime, kind string, fn resourceConvertFn) ([]interface{}, error) {
+func k8sResourceToMql(r *resources.Runtime, kind string, fn resourceConvertFn) ([]interface{}, error) {
 	kt, err := k8sProvider(r.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -138,19 +138,19 @@ func k8sResourceToLumi(r *lumi.Runtime, kind string, fn resourceConvertFn) ([]in
 			return nil, err
 		}
 
-		lumiK8sResource, err := fn(kind, resource, obj, objT)
+		mqlK8sResource, err := fn(kind, resource, obj, objT)
 		if err != nil {
 			return nil, err
 		}
 
-		resp = append(resp, lumiK8sResource)
+		resp = append(resp, mqlK8sResource)
 	}
 
 	return resp, nil
 }
 
-func (k *lumiK8s) GetNodes() ([]interface{}, error) {
-	return k8sResourceToLumi(k.MotorRuntime, "nodes.v1.", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) GetNodes() ([]interface{}, error) {
+	return k8sResourceToMql(k.MotorRuntime, "nodes.v1.", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		r, err := k.MotorRuntime.CreateResource("k8s.node",
 			"id", objIdFromK8sObj(obj, objT),
 			"uid", string(obj.GetUID()),
@@ -161,13 +161,13 @@ func (k *lumiK8s) GetNodes() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		r.MqlResource().Cache.Store("_resource", &resources.CacheEntry{Data: resource})
 		return r, nil
 	})
 }
 
-func (k *lumiK8s) GetNamespaces() ([]interface{}, error) {
-	return k8sResourceToLumi(k.MotorRuntime, "namespaces", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) GetNamespaces() ([]interface{}, error) {
+	return k8sResourceToMql(k.MotorRuntime, "namespaces", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := core.JsonToDict(resource)
@@ -185,8 +185,8 @@ func (k *lumiK8s) GetNamespaces() ([]interface{}, error) {
 	})
 }
 
-func (k *lumiK8s) GetPods() ([]interface{}, error) {
-	return k8sResourceToLumi(k.MotorRuntime, "pods.v1.", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) GetPods() ([]interface{}, error) {
+	return k8sResourceToMql(k.MotorRuntime, "pods.v1.", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := core.JsonToDict(resource)
@@ -194,7 +194,7 @@ func (k *lumiK8s) GetPods() ([]interface{}, error) {
 			return nil, err
 		}
 
-		podSpec, err := resources.GetPodSpec(resource)
+		podSpec, err := k8s_resources.GetPodSpec(resource)
 		if err != nil {
 			return nil, err
 		}
@@ -221,13 +221,13 @@ func (k *lumiK8s) GetPods() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		r.MqlResource().Cache.Store("_resource", &resources.CacheEntry{Data: resource})
 		return r, nil
 	})
 }
 
-func (k *lumiK8s) GetDeployments() ([]interface{}, error) {
-	return k8sResourceToLumi(k.MotorRuntime, "deployments", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) GetDeployments() ([]interface{}, error) {
+	return k8sResourceToMql(k.MotorRuntime, "deployments", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := core.JsonToDict(resource)
@@ -235,7 +235,7 @@ func (k *lumiK8s) GetDeployments() ([]interface{}, error) {
 			return nil, err
 		}
 
-		podSpec, err := resources.GetPodSpec(resource)
+		podSpec, err := k8s_resources.GetPodSpec(resource)
 		if err != nil {
 			return nil, err
 		}
@@ -259,13 +259,13 @@ func (k *lumiK8s) GetDeployments() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		r.MqlResource().Cache.Store("_resource", &resources.CacheEntry{Data: resource})
 		return r, nil
 	})
 }
 
-func (k *lumiK8s) GetDaemonsets() ([]interface{}, error) {
-	return k8sResourceToLumi(k.MotorRuntime, "daemonsets", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) GetDaemonsets() ([]interface{}, error) {
+	return k8sResourceToMql(k.MotorRuntime, "daemonsets", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := core.JsonToDict(resource)
@@ -273,7 +273,7 @@ func (k *lumiK8s) GetDaemonsets() ([]interface{}, error) {
 			return nil, err
 		}
 
-		podSpec, err := resources.GetPodSpec(resource)
+		podSpec, err := k8s_resources.GetPodSpec(resource)
 		if err != nil {
 			return nil, err
 		}
@@ -297,13 +297,13 @@ func (k *lumiK8s) GetDaemonsets() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		r.MqlResource().Cache.Store("_resource", &resources.CacheEntry{Data: resource})
 		return r, nil
 	})
 }
 
-func (k *lumiK8s) GetStatefulsets() ([]interface{}, error) {
-	return k8sResourceToLumi(k.MotorRuntime, "statefulsets", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) GetStatefulsets() ([]interface{}, error) {
+	return k8sResourceToMql(k.MotorRuntime, "statefulsets", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := core.JsonToDict(resource)
@@ -311,7 +311,7 @@ func (k *lumiK8s) GetStatefulsets() ([]interface{}, error) {
 			return nil, err
 		}
 
-		podSpec, err := resources.GetPodSpec(resource)
+		podSpec, err := k8s_resources.GetPodSpec(resource)
 		if err != nil {
 			return nil, err
 		}
@@ -335,13 +335,13 @@ func (k *lumiK8s) GetStatefulsets() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		r.MqlResource().Cache.Store("_resource", &resources.CacheEntry{Data: resource})
 		return r, nil
 	})
 }
 
-func (k *lumiK8s) GetReplicasets() ([]interface{}, error) {
-	return k8sResourceToLumi(k.MotorRuntime, "replicasets", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) GetReplicasets() ([]interface{}, error) {
+	return k8sResourceToMql(k.MotorRuntime, "replicasets", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := core.JsonToDict(resource)
@@ -349,7 +349,7 @@ func (k *lumiK8s) GetReplicasets() ([]interface{}, error) {
 			return nil, err
 		}
 
-		podSpec, err := resources.GetPodSpec(resource)
+		podSpec, err := k8s_resources.GetPodSpec(resource)
 		if err != nil {
 			return nil, err
 		}
@@ -373,13 +373,13 @@ func (k *lumiK8s) GetReplicasets() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		r.MqlResource().Cache.Store("_resource", &resources.CacheEntry{Data: resource})
 		return r, nil
 	})
 }
 
-func (k *lumiK8s) GetJobs() ([]interface{}, error) {
-	return k8sResourceToLumi(k.MotorRuntime, "jobs", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) GetJobs() ([]interface{}, error) {
+	return k8sResourceToMql(k.MotorRuntime, "jobs", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := core.JsonToDict(resource)
@@ -387,7 +387,7 @@ func (k *lumiK8s) GetJobs() ([]interface{}, error) {
 			return nil, err
 		}
 
-		podSpec, err := resources.GetPodSpec(resource)
+		podSpec, err := k8s_resources.GetPodSpec(resource)
 		if err != nil {
 			return nil, err
 		}
@@ -411,13 +411,13 @@ func (k *lumiK8s) GetJobs() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		r.MqlResource().Cache.Store("_resource", &resources.CacheEntry{Data: resource})
 		return r, nil
 	})
 }
 
-func (k *lumiK8s) GetCronjobs() ([]interface{}, error) {
-	return k8sResourceToLumi(k.MotorRuntime, "cronjobs", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) GetCronjobs() ([]interface{}, error) {
+	return k8sResourceToMql(k.MotorRuntime, "cronjobs", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := core.JsonToDict(resource)
@@ -425,7 +425,7 @@ func (k *lumiK8s) GetCronjobs() ([]interface{}, error) {
 			return nil, err
 		}
 
-		podSpec, err := resources.GetPodSpec(resource)
+		podSpec, err := k8s_resources.GetPodSpec(resource)
 		if err != nil {
 			return nil, err
 		}
@@ -449,13 +449,13 @@ func (k *lumiK8s) GetCronjobs() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		r.MqlResource().Cache.Store("_resource", &resources.CacheEntry{Data: resource})
 		return r, nil
 	})
 }
 
-func (k *lumiK8s) GetSecrets() ([]interface{}, error) {
-	return k8sResourceToLumi(k.MotorRuntime, "secrets.v1.", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) GetSecrets() ([]interface{}, error) {
+	return k8sResourceToMql(k.MotorRuntime, "secrets.v1.", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := core.JsonToDict(resource)
@@ -482,13 +482,13 @@ func (k *lumiK8s) GetSecrets() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		r.MqlResource().Cache.Store("_resource", &resources.CacheEntry{Data: resource})
 		return r, nil
 	})
 }
 
-func (k *lumiK8s) GetPodSecurityPolicies() ([]interface{}, error) {
-	return k8sResourceToLumi(k.MotorRuntime, "podsecuritypolicies", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) GetPodSecurityPolicies() ([]interface{}, error) {
+	return k8sResourceToMql(k.MotorRuntime, "podsecuritypolicies", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := core.JsonToDict(resource)
@@ -519,13 +519,13 @@ func (k *lumiK8s) GetPodSecurityPolicies() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		r.MqlResource().Cache.Store("_resource", &resources.CacheEntry{Data: resource})
 		return r, nil
 	})
 }
 
-func (k *lumiK8s) GetServices() ([]interface{}, error) {
-	return k8sResourceToLumi(k.MotorRuntime, "services", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) GetServices() ([]interface{}, error) {
+	return k8sResourceToMql(k.MotorRuntime, "services", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := core.JsonToDict(resource)
@@ -557,13 +557,13 @@ func (k *lumiK8s) GetServices() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		r.MqlResource().Cache.Store("_resource", &resources.CacheEntry{Data: resource})
 		return r, nil
 	})
 }
 
-func (k *lumiK8s) GetConfigmaps() ([]interface{}, error) {
-	return k8sResourceToLumi(k.MotorRuntime, "configmaps", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) GetConfigmaps() ([]interface{}, error) {
+	return k8sResourceToMql(k.MotorRuntime, "configmaps", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := core.JsonToDict(resource)
@@ -590,13 +590,13 @@ func (k *lumiK8s) GetConfigmaps() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		r.MqlResource().Cache.Store("_resource", &resources.CacheEntry{Data: resource})
 		return r, nil
 	})
 }
 
-func (k *lumiK8s) GetNetworkPolicies() ([]interface{}, error) {
-	return k8sResourceToLumi(k.MotorRuntime, "networkpolicies", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) GetNetworkPolicies() ([]interface{}, error) {
+	return k8sResourceToMql(k.MotorRuntime, "networkpolicies", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := core.JsonToDict(resource)
@@ -628,13 +628,13 @@ func (k *lumiK8s) GetNetworkPolicies() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		r.MqlResource().Cache.Store("_resource", &resources.CacheEntry{Data: resource})
 		return r, nil
 	})
 }
 
-func (k *lumiK8s) GetServiceaccounts() ([]interface{}, error) {
-	return k8sResourceToLumi(k.MotorRuntime, "serviceaccounts", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) GetServiceaccounts() ([]interface{}, error) {
+	return k8sResourceToMql(k.MotorRuntime, "serviceaccounts", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := core.JsonToDict(resource)
@@ -673,13 +673,13 @@ func (k *lumiK8s) GetServiceaccounts() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		r.MqlResource().Cache.Store("_resource", &resources.CacheEntry{Data: resource})
 		return r, nil
 	})
 }
 
-func (k *lumiK8s) GetClusterroles() ([]interface{}, error) {
-	return k8sResourceToLumi(k.MotorRuntime, "clusterroles", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) GetClusterroles() ([]interface{}, error) {
+	return k8sResourceToMql(k.MotorRuntime, "clusterroles", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := core.JsonToDict(resource)
@@ -716,13 +716,13 @@ func (k *lumiK8s) GetClusterroles() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		r.MqlResource().Cache.Store("_resource", &resources.CacheEntry{Data: resource})
 		return r, nil
 	})
 }
 
-func (k *lumiK8s) GetRoles() ([]interface{}, error) {
-	return k8sResourceToLumi(k.MotorRuntime, "roles", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) GetRoles() ([]interface{}, error) {
+	return k8sResourceToMql(k.MotorRuntime, "roles", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := core.JsonToDict(resource)
@@ -754,13 +754,13 @@ func (k *lumiK8s) GetRoles() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		r.MqlResource().Cache.Store("_resource", &resources.CacheEntry{Data: resource})
 		return r, nil
 	})
 }
 
-func (k *lumiK8s) GetClusterrolebindings() ([]interface{}, error) {
-	return k8sResourceToLumi(k.MotorRuntime, "clusterrolebindings", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) GetClusterrolebindings() ([]interface{}, error) {
+	return k8sResourceToMql(k.MotorRuntime, "clusterrolebindings", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := core.JsonToDict(resource)
@@ -797,13 +797,13 @@ func (k *lumiK8s) GetClusterrolebindings() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		r.MqlResource().Cache.Store("_resource", &resources.CacheEntry{Data: resource})
 		return r, nil
 	})
 }
 
-func (k *lumiK8s) GetRolebindings() ([]interface{}, error) {
-	return k8sResourceToLumi(k.MotorRuntime, "rolebinding", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+func (k *mqlK8s) GetRolebindings() ([]interface{}, error) {
+	return k8sResourceToMql(k.MotorRuntime, "rolebinding", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
 		manifest, err := core.JsonToDict(resource)
@@ -841,12 +841,12 @@ func (k *lumiK8s) GetRolebindings() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resource})
+		r.MqlResource().Cache.Store("_resource", &resources.CacheEntry{Data: resource})
 		return r, nil
 	})
 }
 
-func (k *lumiK8s) GetCustomresources() ([]interface{}, error) {
+func (k *mqlK8s) GetCustomresources() ([]interface{}, error) {
 	kt, err := k8sProvider(k.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -868,7 +868,7 @@ func (k *lumiK8s) GetCustomresources() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiResources, err := k8sResourceToLumi(k.MotorRuntime, crd.GetName(), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+		mqlResources, err := k8sResourceToMql(k.MotorRuntime, crd.GetName(), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 			ts := obj.GetCreationTimestamp()
 
 			manifest, err := core.JsonToDict(resource)
@@ -891,75 +891,75 @@ func (k *lumiK8s) GetCustomresources() ([]interface{}, error) {
 				log.Error().Err(err).Msg("couldn't create resource")
 				return nil, err
 			}
-			r.LumiResource().Cache.Store("_resource", &lumi.CacheEntry{Data: resp})
+			r.MqlResource().Cache.Store("_resource", &resources.CacheEntry{Data: resp})
 			return r, nil
 		})
-		resp = append(resp, lumiResources...)
+		resp = append(resp, mqlResources...)
 	}
 	return resp, nil
 }
 
-func (k *lumiK8sApiresource) id() (string, error) {
+func (k *mqlK8sApiresource) id() (string, error) {
 	return k.Name()
 }
 
-func (k *lumiK8sNode) id() (string, error) {
+func (k *mqlK8sNode) id() (string, error) {
 	return k.Id()
 }
 
-func (k *lumiK8sNode) GetAnnotations() (interface{}, error) {
-	return k8sAnnotations(k.LumiResource())
+func (k *mqlK8sNode) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.MqlResource())
 }
 
-func (k *lumiK8sNode) GetLabels() (interface{}, error) {
-	return k8sLabels(k.LumiResource())
+func (k *mqlK8sNode) GetLabels() (interface{}, error) {
+	return k8sLabels(k.MqlResource())
 }
 
-func (k *lumiK8sNamespace) id() (string, error) {
+func (k *mqlK8sNamespace) id() (string, error) {
 	return k.Id()
 }
 
-func (k *lumiK8sCustomresource) id() (string, error) {
+func (k *mqlK8sCustomresource) id() (string, error) {
 	return k.Id()
 }
 
-func (k *lumiK8sCustomresource) GetAnnotations() (interface{}, error) {
-	return k8sAnnotations(k.LumiResource())
+func (k *mqlK8sCustomresource) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.MqlResource())
 }
 
-func (k *lumiK8sCustomresource) GetLabels() (interface{}, error) {
-	return k8sLabels(k.LumiResource())
+func (k *mqlK8sCustomresource) GetLabels() (interface{}, error) {
+	return k8sLabels(k.MqlResource())
 }
 
-func (k *lumiK8sPod) id() (string, error) {
+func (k *mqlK8sPod) id() (string, error) {
 	return k.Id()
 }
 
-func (p *lumiK8sPod) init(args *lumi.Args) (*lumi.Args, K8sPod, error) {
+func (p *mqlK8sPod) init(args *resources.Args) (*resources.Args, K8sPod, error) {
 	return initNamespacedResource[K8sPod](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Pods() })
 }
 
-func (k *lumiK8sPod) GetInitContainers() ([]interface{}, error) {
+func (k *mqlK8sPod) GetInitContainers() ([]interface{}, error) {
 	return getContainers(k, k.MotorRuntime, InitContainerType)
 }
 
-func (k *lumiK8sPod) GetContainers() ([]interface{}, error) {
+func (k *mqlK8sPod) GetContainers() ([]interface{}, error) {
 	return getContainers(k, k.MotorRuntime, ContainerContainerType)
 }
 
-func (k *lumiK8sPod) GetNamespace() (interface{}, error) {
+func (k *mqlK8sPod) GetNamespace() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (k *lumiK8sPod) GetAnnotations() (interface{}, error) {
-	return k8sAnnotations(k.LumiResource())
+func (k *mqlK8sPod) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.MqlResource())
 }
 
-func (k *lumiK8sPod) GetLabels() (interface{}, error) {
-	return k8sLabels(k.LumiResource())
+func (k *mqlK8sPod) GetLabels() (interface{}, error) {
+	return k8sLabels(k.MqlResource())
 }
 
-func (k *lumiK8sPod) GetNode() (K8sNode, error) {
+func (k *mqlK8sPod) GetNode() (K8sNode, error) {
 	rawSpec, err := k.PodSpec()
 	if err != nil {
 		return nil, err
@@ -999,218 +999,218 @@ func (k *lumiK8sPod) GetNode() (K8sNode, error) {
 	return nil, nil
 }
 
-func (k *lumiK8sInitContainer) id() (string, error) {
+func (k *mqlK8sInitContainer) id() (string, error) {
 	return k.Uid()
 }
 
-func (k *lumiK8sInitContainer) GetContainerImage() (interface{}, error) {
+func (k *mqlK8sInitContainer) GetContainerImage() (interface{}, error) {
 	containerImageName, err := k.ImageName()
 	if err != nil {
 		return nil, err
 	}
 
-	return newLumiContainerImage(k.MotorRuntime, containerImageName)
+	return newMqlContainerImage(k.MotorRuntime, containerImageName)
 }
 
-func (k *lumiK8sContainer) id() (string, error) {
+func (k *mqlK8sContainer) id() (string, error) {
 	return k.Uid()
 }
 
-func (k *lumiK8sContainer) GetContainerImage() (interface{}, error) {
+func (k *mqlK8sContainer) GetContainerImage() (interface{}, error) {
 	containerImageName, err := k.ImageName()
 	if err != nil {
 		return nil, err
 	}
 
-	return newLumiContainerImage(k.MotorRuntime, containerImageName)
+	return newMqlContainerImage(k.MotorRuntime, containerImageName)
 }
 
-func (k *lumiK8sDeployment) id() (string, error) {
+func (k *mqlK8sDeployment) id() (string, error) {
 	return k.Id()
 }
 
-func (p *lumiK8sDeployment) init(args *lumi.Args) (*lumi.Args, K8sDeployment, error) {
+func (p *mqlK8sDeployment) init(args *resources.Args) (*resources.Args, K8sDeployment, error) {
 	return initNamespacedResource[K8sDeployment](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Deployments() })
 }
 
-func (k *lumiK8sDeployment) GetNamespace() (interface{}, error) {
+func (k *mqlK8sDeployment) GetNamespace() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (k *lumiK8sDeployment) GetAnnotations() (interface{}, error) {
-	return k8sAnnotations(k.LumiResource())
+func (k *mqlK8sDeployment) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.MqlResource())
 }
 
-func (k *lumiK8sDeployment) GetLabels() (interface{}, error) {
-	return k8sLabels(k.LumiResource())
+func (k *mqlK8sDeployment) GetLabels() (interface{}, error) {
+	return k8sLabels(k.MqlResource())
 }
 
-func (k *lumiK8sDeployment) GetInitContainers() ([]interface{}, error) {
+func (k *mqlK8sDeployment) GetInitContainers() ([]interface{}, error) {
 	return getContainers(k, k.MotorRuntime, InitContainerType)
 }
 
-func (k *lumiK8sDeployment) GetContainers() ([]interface{}, error) {
+func (k *mqlK8sDeployment) GetContainers() ([]interface{}, error) {
 	return getContainers(k, k.MotorRuntime, ContainerContainerType)
 }
 
-func (k *lumiK8sDaemonset) id() (string, error) {
+func (k *mqlK8sDaemonset) id() (string, error) {
 	return k.Id()
 }
 
-func (p *lumiK8sDaemonset) init(args *lumi.Args) (*lumi.Args, K8sDaemonset, error) {
+func (p *mqlK8sDaemonset) init(args *resources.Args) (*resources.Args, K8sDaemonset, error) {
 	return initNamespacedResource[K8sDaemonset](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Daemonsets() })
 }
 
-func (k *lumiK8sDaemonset) GetNamespace() (interface{}, error) {
+func (k *mqlK8sDaemonset) GetNamespace() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (k *lumiK8sDaemonset) GetAnnotations() (interface{}, error) {
-	return k8sAnnotations(k.LumiResource())
+func (k *mqlK8sDaemonset) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.MqlResource())
 }
 
-func (k *lumiK8sDaemonset) GetLabels() (interface{}, error) {
-	return k8sLabels(k.LumiResource())
+func (k *mqlK8sDaemonset) GetLabels() (interface{}, error) {
+	return k8sLabels(k.MqlResource())
 }
 
-func (k *lumiK8sDaemonset) GetInitContainers() ([]interface{}, error) {
+func (k *mqlK8sDaemonset) GetInitContainers() ([]interface{}, error) {
 	return getContainers(k, k.MotorRuntime, InitContainerType)
 }
 
-func (k *lumiK8sDaemonset) GetContainers() ([]interface{}, error) {
+func (k *mqlK8sDaemonset) GetContainers() ([]interface{}, error) {
 	return getContainers(k, k.MotorRuntime, ContainerContainerType)
 }
 
-func (k *lumiK8sStatefulset) id() (string, error) {
+func (k *mqlK8sStatefulset) id() (string, error) {
 	return k.Id()
 }
 
-func (p *lumiK8sStatefulset) init(args *lumi.Args) (*lumi.Args, K8sStatefulset, error) {
+func (p *mqlK8sStatefulset) init(args *resources.Args) (*resources.Args, K8sStatefulset, error) {
 	return initNamespacedResource[K8sStatefulset](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Statefulsets() })
 }
 
-func (k *lumiK8sStatefulset) GetNamespace() (interface{}, error) {
+func (k *mqlK8sStatefulset) GetNamespace() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (k *lumiK8sStatefulset) GetAnnotations() (interface{}, error) {
-	return k8sAnnotations(k.LumiResource())
+func (k *mqlK8sStatefulset) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.MqlResource())
 }
 
-func (k *lumiK8sStatefulset) GetLabels() (interface{}, error) {
-	return k8sLabels(k.LumiResource())
+func (k *mqlK8sStatefulset) GetLabels() (interface{}, error) {
+	return k8sLabels(k.MqlResource())
 }
 
-func (k *lumiK8sStatefulset) GetInitContainers() ([]interface{}, error) {
+func (k *mqlK8sStatefulset) GetInitContainers() ([]interface{}, error) {
 	return getContainers(k, k.MotorRuntime, InitContainerType)
 }
 
-func (k *lumiK8sStatefulset) GetContainers() ([]interface{}, error) {
+func (k *mqlK8sStatefulset) GetContainers() ([]interface{}, error) {
 	return getContainers(k, k.MotorRuntime, ContainerContainerType)
 }
 
-func (k *lumiK8sReplicaset) id() (string, error) {
+func (k *mqlK8sReplicaset) id() (string, error) {
 	return k.Id()
 }
 
-func (p *lumiK8sReplicaset) init(args *lumi.Args) (*lumi.Args, K8sReplicaset, error) {
+func (p *mqlK8sReplicaset) init(args *resources.Args) (*resources.Args, K8sReplicaset, error) {
 	return initNamespacedResource[K8sReplicaset](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Replicasets() })
 }
 
-func (k *lumiK8sReplicaset) GetNamespace() (interface{}, error) {
+func (k *mqlK8sReplicaset) GetNamespace() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (k *lumiK8sReplicaset) GetAnnotations() (interface{}, error) {
-	return k8sAnnotations(k.LumiResource())
+func (k *mqlK8sReplicaset) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.MqlResource())
 }
 
-func (k *lumiK8sReplicaset) GetLabels() (interface{}, error) {
-	return k8sLabels(k.LumiResource())
+func (k *mqlK8sReplicaset) GetLabels() (interface{}, error) {
+	return k8sLabels(k.MqlResource())
 }
 
-func (k *lumiK8sReplicaset) GetInitContainers() ([]interface{}, error) {
+func (k *mqlK8sReplicaset) GetInitContainers() ([]interface{}, error) {
 	return getContainers(k, k.MotorRuntime, InitContainerType)
 }
 
-func (k *lumiK8sReplicaset) GetContainers() ([]interface{}, error) {
+func (k *mqlK8sReplicaset) GetContainers() ([]interface{}, error) {
 	return getContainers(k, k.MotorRuntime, ContainerContainerType)
 }
 
-func (k *lumiK8sJob) id() (string, error) {
+func (k *mqlK8sJob) id() (string, error) {
 	return k.Id()
 }
 
-func (p *lumiK8sJob) init(args *lumi.Args) (*lumi.Args, K8sJob, error) {
+func (p *mqlK8sJob) init(args *resources.Args) (*resources.Args, K8sJob, error) {
 	return initNamespacedResource[K8sJob](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Jobs() })
 }
 
-func (k *lumiK8sJob) GetNamespace() (interface{}, error) {
+func (k *mqlK8sJob) GetNamespace() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (k *lumiK8sJob) GetAnnotations() (interface{}, error) {
-	return k8sAnnotations(k.LumiResource())
+func (k *mqlK8sJob) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.MqlResource())
 }
 
-func (k *lumiK8sJob) GetLabels() (interface{}, error) {
-	return k8sLabels(k.LumiResource())
+func (k *mqlK8sJob) GetLabels() (interface{}, error) {
+	return k8sLabels(k.MqlResource())
 }
 
-func (k *lumiK8sJob) GetInitContainers() ([]interface{}, error) {
+func (k *mqlK8sJob) GetInitContainers() ([]interface{}, error) {
 	return getContainers(k, k.MotorRuntime, InitContainerType)
 }
 
-func (k *lumiK8sJob) GetContainers() ([]interface{}, error) {
+func (k *mqlK8sJob) GetContainers() ([]interface{}, error) {
 	return getContainers(k, k.MotorRuntime, ContainerContainerType)
 }
 
-func (k *lumiK8sCronjob) id() (string, error) {
+func (k *mqlK8sCronjob) id() (string, error) {
 	return k.Id()
 }
 
-func (p *lumiK8sCronjob) init(args *lumi.Args) (*lumi.Args, K8sCronjob, error) {
+func (p *mqlK8sCronjob) init(args *resources.Args) (*resources.Args, K8sCronjob, error) {
 	return initNamespacedResource[K8sCronjob](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Cronjobs() })
 }
 
-func (k *lumiK8sCronjob) GetNamespace() (interface{}, error) {
+func (k *mqlK8sCronjob) GetNamespace() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (k *lumiK8sCronjob) GetAnnotations() (interface{}, error) {
-	return k8sAnnotations(k.LumiResource())
+func (k *mqlK8sCronjob) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.MqlResource())
 }
 
-func (k *lumiK8sCronjob) GetLabels() (interface{}, error) {
-	return k8sLabels(k.LumiResource())
+func (k *mqlK8sCronjob) GetLabels() (interface{}, error) {
+	return k8sLabels(k.MqlResource())
 }
 
-func (k *lumiK8sCronjob) GetInitContainers() ([]interface{}, error) {
+func (k *mqlK8sCronjob) GetInitContainers() ([]interface{}, error) {
 	return getContainers(k, k.MotorRuntime, InitContainerType)
 }
 
-func (k *lumiK8sCronjob) GetContainers() ([]interface{}, error) {
+func (k *mqlK8sCronjob) GetContainers() ([]interface{}, error) {
 	return getContainers(k, k.MotorRuntime, ContainerContainerType)
 }
 
-func (k *lumiK8sSecret) id() (string, error) {
+func (k *mqlK8sSecret) id() (string, error) {
 	return k.Id()
 }
 
-func (p *lumiK8sSecret) init(args *lumi.Args) (*lumi.Args, K8sSecret, error) {
+func (p *mqlK8sSecret) init(args *resources.Args) (*resources.Args, K8sSecret, error) {
 	return initNamespacedResource[K8sSecret](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Secrets() })
 }
 
-func (k *lumiK8sSecret) GetAnnotations() (interface{}, error) {
-	return k8sAnnotations(k.LumiResource())
+func (k *mqlK8sSecret) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.MqlResource())
 }
 
-func (k *lumiK8sSecret) GetLabels() (interface{}, error) {
-	return k8sLabels(k.LumiResource())
+func (k *mqlK8sSecret) GetLabels() (interface{}, error) {
+	return k8sLabels(k.MqlResource())
 }
 
-func (k *lumiK8sSecret) GetCertificates() (interface{}, error) {
-	entry, ok := k.LumiResource().Cache.Load("_resource")
+func (k *mqlK8sSecret) GetCertificates() (interface{}, error) {
+	entry, ok := k.MqlResource().Cache.Load("_resource")
 	if !ok {
 		return nil, errors.New("cannot get resource from cache")
 	}
@@ -1234,147 +1234,147 @@ func (k *lumiK8sSecret) GetCertificates() (interface{}, error) {
 		return nil, err
 	}
 
-	return core.CertificatesToLumiCertificates(k.MotorRuntime, certs)
+	return core.CertificatesToMqlCertificates(k.MotorRuntime, certs)
 }
 
-func (k *lumiK8sPodsecuritypolicy) id() (string, error) {
+func (k *mqlK8sPodsecuritypolicy) id() (string, error) {
 	return k.Id()
 }
 
-func (k *lumiK8sPodsecuritypolicy) GetAnnotations() (interface{}, error) {
-	return k8sAnnotations(k.LumiResource())
+func (k *mqlK8sPodsecuritypolicy) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.MqlResource())
 }
 
-func (k *lumiK8sPodsecuritypolicy) GetLabels() (interface{}, error) {
-	return k8sLabels(k.LumiResource())
+func (k *mqlK8sPodsecuritypolicy) GetLabels() (interface{}, error) {
+	return k8sLabels(k.MqlResource())
 }
 
-func (k *lumiK8sConfigmap) id() (string, error) {
+func (k *mqlK8sConfigmap) id() (string, error) {
 	return k.Id()
 }
 
-func (p *lumiK8sConfigmap) init(args *lumi.Args) (*lumi.Args, K8sConfigmap, error) {
+func (p *mqlK8sConfigmap) init(args *resources.Args) (*resources.Args, K8sConfigmap, error) {
 	return initNamespacedResource[K8sConfigmap](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Configmaps() })
 }
 
-func (k *lumiK8sConfigmap) GetAnnotations() (interface{}, error) {
-	return k8sAnnotations(k.LumiResource())
+func (k *mqlK8sConfigmap) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.MqlResource())
 }
 
-func (k *lumiK8sConfigmap) GetLabels() (interface{}, error) {
-	return k8sLabels(k.LumiResource())
+func (k *mqlK8sConfigmap) GetLabels() (interface{}, error) {
+	return k8sLabels(k.MqlResource())
 }
 
-func (k *lumiK8sService) id() (string, error) {
+func (k *mqlK8sService) id() (string, error) {
 	return k.Id()
 }
 
-func (p *lumiK8sService) init(args *lumi.Args) (*lumi.Args, K8sService, error) {
+func (p *mqlK8sService) init(args *resources.Args) (*resources.Args, K8sService, error) {
 	return initNamespacedResource[K8sService](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Services() })
 }
 
-func (k *lumiK8sService) GetAnnotations() (interface{}, error) {
-	return k8sAnnotations(k.LumiResource())
+func (k *mqlK8sService) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.MqlResource())
 }
 
-func (k *lumiK8sService) GetLabels() (interface{}, error) {
-	return k8sLabels(k.LumiResource())
+func (k *mqlK8sService) GetLabels() (interface{}, error) {
+	return k8sLabels(k.MqlResource())
 }
 
-func (k *lumiK8sNetworkpolicy) id() (string, error) {
+func (k *mqlK8sNetworkpolicy) id() (string, error) {
 	return k.Id()
 }
 
-func (p *lumiK8sNetworkpolicy) init(args *lumi.Args) (*lumi.Args, K8sNetworkpolicy, error) {
+func (p *mqlK8sNetworkpolicy) init(args *resources.Args) (*resources.Args, K8sNetworkpolicy, error) {
 	return initNamespacedResource[K8sNetworkpolicy](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.NetworkPolicies() })
 }
 
-func (k *lumiK8sNetworkpolicy) GetAnnotations() (interface{}, error) {
-	return k8sAnnotations(k.LumiResource())
+func (k *mqlK8sNetworkpolicy) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.MqlResource())
 }
 
-func (k *lumiK8sNetworkpolicy) GetLabels() (interface{}, error) {
-	return k8sLabels(k.LumiResource())
+func (k *mqlK8sNetworkpolicy) GetLabels() (interface{}, error) {
+	return k8sLabels(k.MqlResource())
 }
 
-func (k *lumiK8sServiceaccount) id() (string, error) {
+func (k *mqlK8sServiceaccount) id() (string, error) {
 	return k.Id()
 }
 
-func (p *lumiK8sServiceaccount) init(args *lumi.Args) (*lumi.Args, K8sServiceaccount, error) {
+func (p *mqlK8sServiceaccount) init(args *resources.Args) (*resources.Args, K8sServiceaccount, error) {
 	return initNamespacedResource[K8sServiceaccount](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Serviceaccounts() })
 }
 
-func (k *lumiK8sServiceaccount) GetAnnotations() (interface{}, error) {
-	return k8sAnnotations(k.LumiResource())
+func (k *mqlK8sServiceaccount) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.MqlResource())
 }
 
-func (k *lumiK8sServiceaccount) GetLabels() (interface{}, error) {
-	return k8sLabels(k.LumiResource())
+func (k *mqlK8sServiceaccount) GetLabels() (interface{}, error) {
+	return k8sLabels(k.MqlResource())
 }
 
-func (k *lumiK8sRbacClusterrole) id() (string, error) {
+func (k *mqlK8sRbacClusterrole) id() (string, error) {
 	return k.Id()
 }
 
-func (p *lumiK8sRbacClusterrole) init(args *lumi.Args) (*lumi.Args, K8sRbacClusterrole, error) {
+func (p *mqlK8sRbacClusterrole) init(args *resources.Args) (*resources.Args, K8sRbacClusterrole, error) {
 	return initResource[K8sRbacClusterrole](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Clusterroles() })
 }
 
-func (k *lumiK8sRbacClusterrole) GetAnnotations() (interface{}, error) {
-	return k8sAnnotations(k.LumiResource())
+func (k *mqlK8sRbacClusterrole) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.MqlResource())
 }
 
-func (k *lumiK8sRbacClusterrole) GetLabels() (interface{}, error) {
-	return k8sLabels(k.LumiResource())
+func (k *mqlK8sRbacClusterrole) GetLabels() (interface{}, error) {
+	return k8sLabels(k.MqlResource())
 }
 
-func (k *lumiK8sRbacRole) id() (string, error) {
+func (k *mqlK8sRbacRole) id() (string, error) {
 	return k.Id()
 }
 
-func (p *lumiK8sRbacRole) init(args *lumi.Args) (*lumi.Args, K8sRbacRole, error) {
+func (p *mqlK8sRbacRole) init(args *resources.Args) (*resources.Args, K8sRbacRole, error) {
 	return initNamespacedResource[K8sRbacRole](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Roles() })
 }
 
-func (k *lumiK8sRbacRole) GetAnnotations() (interface{}, error) {
-	return k8sAnnotations(k.LumiResource())
+func (k *mqlK8sRbacRole) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.MqlResource())
 }
 
-func (k *lumiK8sRbacRole) GetLabels() (interface{}, error) {
-	return k8sLabels(k.LumiResource())
+func (k *mqlK8sRbacRole) GetLabels() (interface{}, error) {
+	return k8sLabels(k.MqlResource())
 }
 
-func (k *lumiK8sRbacClusterrolebinding) id() (string, error) {
+func (k *mqlK8sRbacClusterrolebinding) id() (string, error) {
 	return k.Id()
 }
 
-func (p *lumiK8sRbacClusterrolebinding) init(args *lumi.Args) (*lumi.Args, K8sRbacClusterrolebinding, error) {
+func (p *mqlK8sRbacClusterrolebinding) init(args *resources.Args) (*resources.Args, K8sRbacClusterrolebinding, error) {
 	return initResource[K8sRbacClusterrolebinding](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Clusterrolebindings() })
 }
 
-func (k *lumiK8sRbacClusterrolebinding) GetAnnotations() (interface{}, error) {
-	return k8sAnnotations(k.LumiResource())
+func (k *mqlK8sRbacClusterrolebinding) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.MqlResource())
 }
 
-func (k *lumiK8sRbacClusterrolebinding) GetLabels() (interface{}, error) {
-	return k8sLabels(k.LumiResource())
+func (k *mqlK8sRbacClusterrolebinding) GetLabels() (interface{}, error) {
+	return k8sLabels(k.MqlResource())
 }
 
-func (k *lumiK8sRbacRolebinding) id() (string, error) {
+func (k *mqlK8sRbacRolebinding) id() (string, error) {
 	return k.Id()
 }
 
-func (p *lumiK8sRbacRolebinding) init(args *lumi.Args) (*lumi.Args, K8sRbacRolebinding, error) {
+func (p *mqlK8sRbacRolebinding) init(args *resources.Args) (*resources.Args, K8sRbacRolebinding, error) {
 	return initNamespacedResource[K8sRbacRolebinding](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Rolebindings() })
 }
 
-func (k *lumiK8sRbacRolebinding) GetAnnotations() (interface{}, error) {
-	return k8sAnnotations(k.LumiResource())
+func (k *mqlK8sRbacRolebinding) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.MqlResource())
 }
 
-func (k *lumiK8sRbacRolebinding) GetLabels() (interface{}, error) {
-	return k8sLabels(k.LumiResource())
+func (k *mqlK8sRbacRolebinding) GetLabels() (interface{}, error) {
+	return k8sLabels(k.MqlResource())
 }
 
 func getPlatformIdentifierElements(transport providers.Transport) (string, string, error) {
@@ -1443,8 +1443,8 @@ func objIdFromFields(kind, namespace, name string) string {
 }
 
 func initNamespacedResource[T K8sNamespacedObject](
-	args *lumi.Args, runtime *lumi.Runtime, r func(k8s K8s) ([]interface{}, error),
-) (*lumi.Args, T, error) {
+	args *resources.Args, runtime *resources.Runtime, r func(k8s K8s) ([]interface{}, error),
+) (*resources.Args, T, error) {
 	// pass-through if all args are already provided
 	if len(*args) > 2 {
 		return args, *new(T), nil
@@ -1513,8 +1513,8 @@ func initNamespacedResource[T K8sNamespacedObject](
 }
 
 func initResource[T K8sObject](
-	args *lumi.Args, runtime *lumi.Runtime, r func(k8s K8s) ([]interface{}, error),
-) (*lumi.Args, T, error) {
+	args *resources.Args, runtime *resources.Runtime, r func(k8s K8s) ([]interface{}, error),
+) (*resources.Args, T, error) {
 	// pass-through if all args are already provided
 	if len(*args) > 1 {
 		return args, *new(T), nil
@@ -1583,16 +1583,16 @@ var (
 )
 
 func getContainers(
-	o K8sNamespacedObject, lumiRuntime *lumi.Runtime, containerType ContainerType,
+	o K8sNamespacedObject, mqlRuntime *resources.Runtime, containerType ContainerType,
 ) ([]interface{}, error) {
 	var containersFunc func(runtime.Object) ([]corev1.Container, error)
 	resourceType := ""
 	switch containerType {
 	case InitContainerType:
-		containersFunc = resources.GetInitContainers
+		containersFunc = k8s_resources.GetInitContainers
 		resourceType = "k8s.initContainer"
 	case ContainerContainerType:
-		containersFunc = resources.GetContainers
+		containersFunc = k8s_resources.GetContainers
 		resourceType = "k8s.container"
 	default:
 		return nil, fmt.Errorf("unknown container type %s", containerType)
@@ -1616,7 +1616,7 @@ func getContainers(
 	}
 
 	unstr := unstructured.Unstructured{Object: manifest}
-	obj := resources.ConvertToK8sObject(unstr)
+	obj := k8s_resources.ConvertToK8sObject(unstr)
 
 	resp := []interface{}{}
 	containers, err := containersFunc(obj)
@@ -1677,11 +1677,11 @@ func getContainers(
 			args = append(args, "livenessProbe", livenessProbe, "readinessProbe", readinessProbe)
 		}
 
-		lumiContainer, err := lumiRuntime.CreateResource(resourceType, args...)
+		mqlContainer, err := mqlRuntime.CreateResource(resourceType, args...)
 		if err != nil {
 			return nil, err
 		}
-		resp = append(resp, lumiContainer)
+		resp = append(resp, mqlContainer)
 	}
 	return resp, nil
 }

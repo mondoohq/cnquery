@@ -4,18 +4,18 @@ import (
 	"context"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (a *lumiAzurermStorage) id() (string, error) {
+func (a *mqlAzurermStorage) id() (string, error) {
 	return "azurerm.storage", nil
 }
 
 // see https://github.com/Azure/azure-sdk-for-go/issues/8224
 type AzureStorageAccountProperties storage.AccountProperties
 
-func (a *lumiAzurermStorage) GetAccounts() ([]interface{}, error) {
+func (a *mqlAzurermStorage) GetAccounts() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func (a *lumiAzurermStorage) GetAccounts() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.storage.account",
+		mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.storage.account",
 			"id", core.ToString(account.ID),
 			"name", core.ToString(account.Name),
 			"location", core.ToString(account.Location),
@@ -75,17 +75,17 @@ func (a *lumiAzurermStorage) GetAccounts() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzure)
+		res = append(res, mqlAzure)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermStorageAccount) id() (string, error) {
+func (a *mqlAzurermStorageAccount) id() (string, error) {
 	return a.Id()
 }
 
-func (a *lumiAzurermStorageAccount) init(args *lumi.Args) (*lumi.Args, AzurermStorageAccount, error) {
+func (a *mqlAzurermStorageAccount) init(args *resources.Args) (*resources.Args, AzurermStorageAccount, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -164,7 +164,7 @@ func (a *lumiAzurermStorageAccount) init(args *lumi.Args) (*lumi.Args, AzurermSt
 	return args, nil, nil
 }
 
-func (a *lumiAzurermStorageAccount) GetContainers() ([]interface{}, error) {
+func (a *mqlAzurermStorageAccount) GetContainers() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -210,7 +210,7 @@ func (a *lumiAzurermStorageAccount) GetContainers() ([]interface{}, error) {
 			return nil, err
 		}
 
-		lumiAzure, err := a.MotorRuntime.CreateResource("azurerm.storage.container",
+		mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.storage.container",
 			"id", core.ToString(entry.ID),
 			"name", core.ToString(entry.Name),
 			"etag", core.ToString(entry.Etag),
@@ -220,12 +220,12 @@ func (a *lumiAzurermStorageAccount) GetContainers() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, lumiAzure)
+		res = append(res, mqlAzure)
 	}
 
 	return res, nil
 }
 
-func (a *lumiAzurermStorageContainer) id() (string, error) {
+func (a *mqlAzurermStorageContainer) id() (string, error) {
 	return a.Id()
 }

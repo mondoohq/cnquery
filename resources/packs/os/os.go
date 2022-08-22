@@ -40,11 +40,11 @@ func osProvider(motor *motor.Motor) (os.OperatingSystemProvider, error) {
 	return provider, nil
 }
 
-func (p *lumiOs) id() (string, error) {
+func (p *mqlOs) id() (string, error) {
 	return "os", nil
 }
 
-func (p *lumiOs) GetRebootpending() (interface{}, error) {
+func (p *mqlOs) GetRebootpending() (interface{}, error) {
 	// it is a container image, a reboot is never required
 	switch p.MotorRuntime.Motor.Provider.(type) {
 	case *docker_snapshot.DockerSnapshotProvider:
@@ -60,11 +60,11 @@ func (p *lumiOs) GetRebootpending() (interface{}, error) {
 	}
 	if pf.Name == "photon" {
 		// get installed kernel and check if the found one is running
-		lumiKernel, err := p.MotorRuntime.CreateResource("kernel")
+		mqlKernel, err := p.MotorRuntime.CreateResource("kernel")
 		if err != nil {
 			return nil, err
 		}
-		kernel := lumiKernel.(core.Kernel)
+		kernel := mqlKernel.(core.Kernel)
 		kernelInstalled, err := kernel.Installed()
 		if err != nil {
 			return nil, err
@@ -88,7 +88,7 @@ func (p *lumiOs) GetRebootpending() (interface{}, error) {
 		return !kernels[0].Running, nil
 	}
 
-	// TODO: move more logic into lumi to leverage its cache
+	// TODO: move more logic into MQL to leverage its cache
 	// try to collect if a reboot is required, fails for static images
 	rb, err := reboot.New(p.MotorRuntime.Motor)
 	if err != nil {
@@ -97,7 +97,7 @@ func (p *lumiOs) GetRebootpending() (interface{}, error) {
 	return rb.RebootPending()
 }
 
-func (p *lumiOs) getUnixEnv() (map[string]interface{}, error) {
+func (p *mqlOs) getUnixEnv() (map[string]interface{}, error) {
 	rawCmd, err := p.MotorRuntime.CreateResource("command", "command", "env")
 	if err != nil {
 		return nil, err
@@ -122,7 +122,7 @@ func (p *lumiOs) getUnixEnv() (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (p *lumiOs) getWindowsEnv() (map[string]interface{}, error) {
+func (p *mqlOs) getWindowsEnv() (map[string]interface{}, error) {
 	rawCmd, err := p.MotorRuntime.CreateResource("powershell",
 		"script", "Get-ChildItem Env:* | ConvertTo-Json",
 	)
@@ -139,7 +139,7 @@ func (p *lumiOs) getWindowsEnv() (map[string]interface{}, error) {
 	return windows.ParseEnv(strings.NewReader(out))
 }
 
-func (p *lumiOs) GetEnv() (map[string]interface{}, error) {
+func (p *mqlOs) GetEnv() (map[string]interface{}, error) {
 	pf, err := p.MotorRuntime.Motor.Platform()
 	if err != nil {
 		return nil, err
@@ -152,7 +152,7 @@ func (p *lumiOs) GetEnv() (map[string]interface{}, error) {
 	return p.getUnixEnv()
 }
 
-func (p *lumiOs) GetPath() ([]interface{}, error) {
+func (p *mqlOs) GetPath() ([]interface{}, error) {
 	env, err := p.Env()
 	if err != nil {
 		return nil, err
@@ -174,29 +174,29 @@ func (p *lumiOs) GetPath() ([]interface{}, error) {
 }
 
 // returns uptime in nanoseconds
-func (p *lumiOs) GetUptime() (*time.Time, error) {
+func (p *mqlOs) GetUptime() (*time.Time, error) {
 	uptime, err := uptime.New(p.MotorRuntime.Motor)
 	if err != nil {
-		return core.LumiTime(llx.DurationToTime(0)), err
+		return core.MqlTime(llx.DurationToTime(0)), err
 	}
 
 	t, err := uptime.Duration()
 	if err != nil {
-		return core.LumiTime(llx.DurationToTime(0)), err
+		return core.MqlTime(llx.DurationToTime(0)), err
 	}
 
 	// we get nano seconds but duration to time only takes seconds
 	bootTime := time.Now().Add(-t)
 	up := time.Now().Unix() - bootTime.Unix()
-	return core.LumiTime(llx.DurationToTime(up)), nil
+	return core.MqlTime(llx.DurationToTime(up)), nil
 }
 
-func (p *lumiOsUpdate) id() (string, error) {
+func (p *mqlOsUpdate) id() (string, error) {
 	name, _ := p.Name()
 	return name, nil
 }
 
-func (p *lumiOs) GetUpdates() ([]interface{}, error) {
+func (p *mqlOs) GetUpdates() ([]interface{}, error) {
 	// find suitable system updates
 	um, err := packages.ResolveSystemUpdateManager(p.MotorRuntime.Motor)
 	if um == nil || err != nil {
@@ -209,12 +209,12 @@ func (p *lumiOs) GetUpdates() ([]interface{}, error) {
 		return nil, fmt.Errorf("could not retrieve updates list for platform")
 	}
 
-	// create lumi update resources for each update
+	// create MQL update resources for each update
 	osupdates := make([]interface{}, len(updates))
-	log.Debug().Int("updates", len(updates)).Msg("lumi[updates]> found system updates")
+	log.Debug().Int("updates", len(updates)).Msg("mql[updates]> found system updates")
 	for i, update := range updates {
 
-		lumiOsUpdate, err := p.MotorRuntime.CreateResource("os.update",
+		mqlOsUpdate, err := p.MotorRuntime.CreateResource("os.update",
 			"name", update.Name,
 			"severity", update.Severity,
 			"category", update.Category,
@@ -225,14 +225,14 @@ func (p *lumiOs) GetUpdates() ([]interface{}, error) {
 			return nil, err
 		}
 
-		osupdates[i] = lumiOsUpdate.(OsUpdate)
+		osupdates[i] = mqlOsUpdate.(OsUpdate)
 	}
 
 	// return the packages as new entries
 	return osupdates, nil
 }
 
-func (s *lumiOs) GetHostname() (string, error) {
+func (s *mqlOs) GetHostname() (string, error) {
 	platform, err := s.MotorRuntime.Motor.Platform()
 	if err != nil {
 		return "", errors.New("cannot determine platform uuid")
@@ -246,7 +246,7 @@ func (s *lumiOs) GetHostname() (string, error) {
 	return hostname.Hostname(osProvider, platform)
 }
 
-func (p *lumiOs) GetName() (string, error) {
+func (p *mqlOs) GetName() (string, error) {
 	pf, err := p.MotorRuntime.Motor.Platform()
 	if err != nil {
 		return "", err
@@ -322,7 +322,7 @@ func (p *lumiOs) GetName() (string, error) {
 }
 
 // returns the OS native machine UUID/GUID
-func (s *lumiOs) GetMachineid() (string, error) {
+func (s *mqlOs) GetMachineid() (string, error) {
 	platform, err := s.MotorRuntime.Motor.Platform()
 	if err != nil {
 		return "", errors.New("cannot determine platform uuid")

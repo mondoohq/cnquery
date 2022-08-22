@@ -8,18 +8,18 @@ import (
 	"strings"
 
 	"github.com/miekg/dns"
-	"go.mondoo.io/mondoo/lumi"
 	"go.mondoo.io/mondoo/motor/providers/network"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core/dnsshake"
 	"go.mondoo.io/mondoo/resources/packs/core/domain"
 )
 
-func (d *lumiDomainName) id() (string, error) {
+func (d *mqlDomainName) id() (string, error) {
 	id, _ := d.Fqdn()
 	return "domainName/" + id, nil
 }
 
-func (d *lumiDomainName) init(args *lumi.Args) (*lumi.Args, DomainName, error) {
+func (d *mqlDomainName) init(args *resources.Args) (*resources.Args, DomainName, error) {
 	fqdn, ok := (*args)["fqdn"]
 	if !ok {
 		if transport, ok := d.MotorRuntime.Motor.Provider.(*network.Provider); ok {
@@ -42,12 +42,12 @@ func (d *lumiDomainName) init(args *lumi.Args) (*lumi.Args, DomainName, error) {
 	return args, nil, nil
 }
 
-func (d *lumiDns) id() (string, error) {
+func (d *mqlDns) id() (string, error) {
 	id, _ := d.Fqdn()
 	return "dns/" + id, nil
 }
 
-func (d *lumiDns) init(args *lumi.Args) (*lumi.Args, Dns, error) {
+func (d *mqlDns) init(args *resources.Args) (*resources.Args, Dns, error) {
 	_, ok := (*args)["fqdn"]
 	if !ok {
 		var fqdn string
@@ -62,7 +62,7 @@ func (d *lumiDns) init(args *lumi.Args) (*lumi.Args, Dns, error) {
 	return args, nil, nil
 }
 
-func (d *lumiDns) GetParams() (interface{}, error) {
+func (d *mqlDns) GetParams() (interface{}, error) {
 	fqdn, err := d.Fqdn()
 	if err != nil {
 		return nil, err
@@ -82,7 +82,7 @@ func (d *lumiDns) GetParams() (interface{}, error) {
 }
 
 // GetRecords returns successful dns records
-func (d *lumiDns) GetRecords(params interface{}) ([]interface{}, error) {
+func (d *mqlDns) GetRecords(params interface{}) ([]interface{}, error) {
 	paramsM, ok := params.(map[string]interface{})
 	if !ok {
 		return []interface{}{}, nil
@@ -98,7 +98,7 @@ func (d *lumiDns) GetRecords(params interface{}) ([]interface{}, error) {
 			continue
 		}
 
-		lumiDnsRecord, err := d.MotorRuntime.CreateResource("dns.record",
+		mqlDnsRecord, err := d.MotorRuntime.CreateResource("dns.record",
 			"name", r["name"],
 			"ttl", r["TTL"],
 			"class", r["class"],
@@ -109,20 +109,20 @@ func (d *lumiDns) GetRecords(params interface{}) ([]interface{}, error) {
 			return nil, err
 		}
 
-		dnsEntries = append(dnsEntries, lumiDnsRecord.(DnsRecord))
+		dnsEntries = append(dnsEntries, mqlDnsRecord.(DnsRecord))
 	}
 
 	return dnsEntries, nil
 }
 
-func (d *lumiDnsRecord) id() (string, error) {
+func (d *mqlDnsRecord) id() (string, error) {
 	name, _ := d.Name()
 	t, _ := d.Type()
 	c, _ := d.Class()
 	return "dns.record/" + name + "/" + c + "/" + t, nil
 }
 
-func (d *lumiDns) GetMx(params interface{}) ([]interface{}, error) {
+func (d *mqlDns) GetMx(params interface{}) ([]interface{}, error) {
 	paramsM, ok := params.(map[string]interface{})
 	if !ok {
 		return []interface{}{}, nil
@@ -187,13 +187,13 @@ func (d *lumiDns) GetMx(params interface{}) ([]interface{}, error) {
 	return mxEntries, nil
 }
 
-func (d *lumiDnsMxRecord) id() (string, error) {
+func (d *mqlDnsMxRecord) id() (string, error) {
 	name, err := d.Name()
 	domainName, _ := d.DomainName()
 	return "dns.mx/" + name + "+" + domainName, err
 }
 
-func (d *lumiDns) GetDkim(params interface{}) ([]interface{}, error) {
+func (d *mqlDns) GetDkim(params interface{}) ([]interface{}, error) {
 	paramsM, ok := params.(map[string]interface{})
 	if !ok {
 		return []interface{}{}, nil
@@ -246,14 +246,14 @@ func (d *lumiDns) GetDkim(params interface{}) ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		dkimRecord.LumiResource().Cache.Store("_dkim", &lumi.CacheEntry{Data: dkimRepr})
+		dkimRecord.MqlResource().Cache.Store("_dkim", &resources.CacheEntry{Data: dkimRepr})
 		dkimEntries = append(dkimEntries, dkimRecord)
 	}
 
 	return dkimEntries, nil
 }
 
-func (d *lumiDnsDkimRecord) id() (string, error) {
+func (d *mqlDnsDkimRecord) id() (string, error) {
 	name, err := d.Domain()
 	if err != nil {
 		return "", err
@@ -268,8 +268,8 @@ func (d *lumiDnsDkimRecord) id() (string, error) {
 	return "dns.dkim/" + name + "/" + sha256, err
 }
 
-func (d *lumiDnsDkimRecord) GetValid() (bool, error) {
-	entry, ok := d.LumiResource().Cache.Load("_dkim")
+func (d *mqlDnsDkimRecord) GetValid() (bool, error) {
+	entry, ok := d.MqlResource().Cache.Load("_dkim")
 	if !ok {
 		return false, errors.New("could not load dkim data")
 	}

@@ -3,11 +3,11 @@ package llx
 import (
 	"sync"
 
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 )
 
 // Run a piece of compiled code against a runtime. Just a friendly helper method
-func RunV1(code *CodeV1, runtime *lumi.Runtime, props map[string]*Primitive, callback ResultCallback) (*MQLExecutorV1, error) {
+func RunV1(code *CodeV1, runtime *resources.Runtime, props map[string]*Primitive, callback ResultCallback) (*MQLExecutorV1, error) {
 	x, err := NewExecutorV1(code, runtime, props, callback)
 	if err != nil {
 		return nil, err
@@ -16,7 +16,7 @@ func RunV1(code *CodeV1, runtime *lumi.Runtime, props map[string]*Primitive, cal
 	return x, nil
 }
 
-func NoRunV1(code *CodeV1, runerr error, runtime *lumi.Runtime, props map[string]*Primitive, callback ResultCallback) (*MQLExecutorV1, error) {
+func NoRunV1(code *CodeV1, runerr error, runtime *resources.Runtime, props map[string]*Primitive, callback ResultCallback) (*MQLExecutorV1, error) {
 	x, err := NewExecutorV1(code, runtime, props, callback)
 	if err != nil {
 		return nil, err
@@ -26,7 +26,7 @@ func NoRunV1(code *CodeV1, runerr error, runtime *lumi.Runtime, props map[string
 }
 
 // RunOnce the code that was provided and call the callback
-func RunOnceV1(code *CodeV1, runtime *lumi.Runtime, props map[string]*Primitive, callback func(one *RawResult, isDone bool)) error {
+func RunOnceV1(code *CodeV1, runtime *resources.Runtime, props map[string]*Primitive, callback func(one *RawResult, isDone bool)) error {
 	cnt := 0
 	var executor *MQLExecutorV1
 	var err error
@@ -58,7 +58,7 @@ func RunOnceV1(code *CodeV1, runtime *lumi.Runtime, props map[string]*Primitive,
 }
 
 // RunOnceSync will run the code only once and report on the results it gets
-func RunOnceSyncV1(code *CodeV1, runtime *lumi.Runtime, props map[string]*Primitive) ([]*RawResult, error) {
+func RunOnceSyncV1(code *CodeV1, runtime *resources.Runtime, props map[string]*Primitive) ([]*RawResult, error) {
 	res := []*RawResult{}
 
 	var done sync.WaitGroup

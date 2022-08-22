@@ -6,11 +6,11 @@ import (
 	"go.mondoo.io/mondoo/motor/providers/tar"
 )
 
-func (v *lumiPlatformVirtualization) id() (string, error) {
+func (v *mqlPlatformVirtualization) id() (string, error) {
 	return "platform.virtualization", nil
 }
 
-func (v *lumiPlatformVirtualization) GetIsContainer() (bool, error) {
+func (v *mqlPlatformVirtualization) GetIsContainer() (bool, error) {
 	switch v.MotorRuntime.Motor.Provider.(type) {
 	case *tar.Provider:
 		return true, nil

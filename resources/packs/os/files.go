@@ -13,7 +13,7 @@ import (
 
 	"go.mondoo.io/mondoo/motor/providers/os"
 
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/motor/providers"
 )
 
@@ -26,7 +26,7 @@ var findTypes = map[string]string{
 	"link":      "l",
 }
 
-func (l *lumiFilesFind) init(args *lumi.Args) (*lumi.Args, FilesFind, error) {
+func (l *mqlFilesFind) init(args *resources.Args) (*resources.Args, FilesFind, error) {
 	if (*args)["xdev"] == nil {
 		(*args)["xdev"] = false
 	}
@@ -46,7 +46,7 @@ func octal2string(o int64) string {
 	return fmt.Sprintf("%o", o)
 }
 
-func (l *lumiFilesFind) id() (string, error) {
+func (l *mqlFilesFind) id() (string, error) {
 	from, err := l.From()
 	if err != nil {
 		return "", err
@@ -101,27 +101,27 @@ func (l *lumiFilesFind) id() (string, error) {
 	return id.String(), nil
 }
 
-func (l *lumiFilesFind) GetXdev() (bool, error) {
+func (l *mqlFilesFind) GetXdev() (bool, error) {
 	return false, nil
 }
 
-func (l *lumiFilesFind) GetType() (string, error) {
+func (l *mqlFilesFind) GetType() (string, error) {
 	return "", nil
 }
 
-func (l *lumiFilesFind) GetRegex() (string, error) {
+func (l *mqlFilesFind) GetRegex() (string, error) {
 	return "", nil
 }
 
-func (l *lumiFilesFind) GetName() (string, error) {
+func (l *mqlFilesFind) GetName() (string, error) {
 	return "", nil
 }
 
-func (l *lumiFilesFind) GetPermissions() (int64, error) {
+func (l *mqlFilesFind) GetPermissions() (int64, error) {
 	return 0, nil
 }
 
-func (l *lumiFilesFind) GetList() ([]interface{}, error) {
+func (l *mqlFilesFind) GetList() ([]interface{}, error) {
 	path, err := l.From()
 	if err != nil {
 		return nil, err

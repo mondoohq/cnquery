@@ -4,15 +4,15 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/os/mount"
 )
 
-func (m *lumiMount) id() (string, error) {
+func (m *mqlMount) id() (string, error) {
 	return "mount", nil
 }
 
-func (m *lumiMount) GetList() ([]interface{}, error) {
+func (m *mqlMount) GetList() ([]interface{}, error) {
 	// find suitable mount manager
 	mm, err := mount.ResolveManager(m.MotorRuntime.Motor)
 	if mm == nil || err != nil {
@@ -24,9 +24,9 @@ func (m *lumiMount) GetList() ([]interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve mount list for platform")
 	}
-	log.Debug().Int("mounts", len(osMounts)).Msg("lumi[mount]> mounted volumes")
+	log.Debug().Int("mounts", len(osMounts)).Msg("mql[mount]> mounted volumes")
 
-	// create lumi mount entry resources for each mount
+	// create MQL mount entry resources for each mount
 	mountEntries := make([]interface{}, len(osMounts))
 	for i, osMount := range osMounts {
 		// convert options
@@ -35,7 +35,7 @@ func (m *lumiMount) GetList() ([]interface{}, error) {
 			opts[k] = osMount.Options[k]
 		}
 
-		lumiMountEntry, err := m.MotorRuntime.CreateResource("mount.point",
+		mqlMountEntry, err := m.MotorRuntime.CreateResource("mount.point",
 			"device", osMount.Device,
 			"path", osMount.MountPoint,
 			"fstype", osMount.FSType,
@@ -46,18 +46,18 @@ func (m *lumiMount) GetList() ([]interface{}, error) {
 			return nil, err
 		}
 
-		mountEntries[i] = lumiMountEntry.(MountPoint)
+		mountEntries[i] = mqlMountEntry.(MountPoint)
 	}
 
 	// return the mounts as new entries
 	return mountEntries, nil
 }
 
-func (m *lumiMountPoint) id() (string, error) {
+func (m *mqlMountPoint) id() (string, error) {
 	return m.Path()
 }
 
-func (p *lumiMountPoint) init(args *lumi.Args) (*lumi.Args, MountPoint, error) {
+func (p *mqlMountPoint) init(args *resources.Args) (*resources.Args, MountPoint, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -85,8 +85,8 @@ func (p *lumiMountPoint) init(args *lumi.Args) (*lumi.Args, MountPoint, error) {
 
 	for i := range res {
 		mp := res[i].(MountPoint)
-		lumiMountPointPath, _ := mp.Path()
-		if lumiMountPointPath == path {
+		mqlMountPointPath, _ := mp.Path()
+		if mqlMountPointPath == path {
 			return nil, mp, nil
 		}
 	}

@@ -6,16 +6,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (e *lumiAwsEks) id() (string, error) {
+func (e *mqlAwsEks) id() (string, error) {
 	return "aws.eks", nil
 }
 
-func (e *lumiAwsEks) GetClusters() ([]interface{}, error) {
+func (e *mqlAwsEks) GetClusters() ([]interface{}, error) {
 	at, err := awstransport(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func (e *lumiAwsEks) GetClusters() ([]interface{}, error) {
 	return res, nil
 }
 
-func (e *lumiAwsEks) getClusters(at *aws_transport.Provider) []*jobpool.Job {
+func (e *mqlAwsEks) getClusters(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -98,11 +98,11 @@ func (e *lumiAwsEks) getClusters(at *aws_transport.Provider) []*jobpool.Job {
 					"resourcesVpcConfig", vpcConfig,
 				}
 
-				lumiFilesystem, err := e.MotorRuntime.CreateResource("aws.eks.cluster", args...)
+				mqlFilesystem, err := e.MotorRuntime.CreateResource("aws.eks.cluster", args...)
 				if err != nil {
 					return nil, err
 				}
-				res = append(res, lumiFilesystem)
+				res = append(res, mqlFilesystem)
 			}
 
 			return jobpool.JobResult(res), nil
@@ -112,6 +112,6 @@ func (e *lumiAwsEks) getClusters(at *aws_transport.Provider) []*jobpool.Job {
 	return tasks
 }
 
-func (e *lumiAwsEksCluster) id() (string, error) {
+func (e *mqlAwsEksCluster) id() (string, error) {
 	return e.Arn()
 }

@@ -4,16 +4,16 @@ import (
 	"fmt"
 
 	"github.com/cockroachdb/errors"
-	"go.mondoo.io/mondoo/lumi"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/os/smbios"
 )
 
-// we use lumi machine to cache the queries to the os
-func (m *lumiMachine) id() (string, error) {
+// we use MQL machine to cache the queries to the os
+func (m *mqlMachine) id() (string, error) {
 	return "machine", nil
 }
 
-func getbiosinfo(runtime *lumi.Runtime) (*smbios.SmBiosInfo, error) {
+func getbiosinfo(runtime *resources.Runtime) (*smbios.SmBiosInfo, error) {
 	obj, err := runtime.CreateResource("machine")
 	if err != nil {
 		return nil, err
@@ -22,7 +22,7 @@ func getbiosinfo(runtime *lumi.Runtime) (*smbios.SmBiosInfo, error) {
 
 	// check if we already have simething in the cache
 	var biosInfo *smbios.SmBiosInfo
-	c, ok := machine.LumiResource().Cache.Load("_biosInfo")
+	c, ok := machine.MqlResource().Cache.Load("_biosInfo")
 	if ok {
 		biosInfo = c.Data.(*smbios.SmBiosInfo)
 	} else {
@@ -48,17 +48,17 @@ func getbiosinfo(runtime *lumi.Runtime) (*smbios.SmBiosInfo, error) {
 			return nil, errors.Wrap(err, "could not retrieve smbios info for platform")
 		}
 
-		machine.LumiResource().Cache.Store("_biosInfo", &lumi.CacheEntry{Data: biosInfo})
+		machine.MqlResource().Cache.Store("_biosInfo", &resources.CacheEntry{Data: biosInfo})
 	}
 
 	return biosInfo, nil
 }
 
-func (m *lumiMachineBios) id() (string, error) {
+func (m *mqlMachineBios) id() (string, error) {
 	return "machine.bios", nil
 }
 
-func (p *lumiMachineBios) init(args *lumi.Args) (*lumi.Args, MachineBios, error) {
+func (p *mqlMachineBios) init(args *resources.Args) (*resources.Args, MachineBios, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -79,11 +79,11 @@ func (p *lumiMachineBios) init(args *lumi.Args) (*lumi.Args, MachineBios, error)
 	return args, nil, nil
 }
 
-func (m *lumiMachineSystem) id() (string, error) {
+func (m *mqlMachineSystem) id() (string, error) {
 	return "machine.system", nil
 }
 
-func (p *lumiMachineSystem) init(args *lumi.Args) (*lumi.Args, MachineSystem, error) {
+func (p *mqlMachineSystem) init(args *resources.Args) (*resources.Args, MachineSystem, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -108,11 +108,11 @@ func (p *lumiMachineSystem) init(args *lumi.Args) (*lumi.Args, MachineSystem, er
 	return args, nil, nil
 }
 
-func (m *lumiMachineBaseboard) id() (string, error) {
+func (m *mqlMachineBaseboard) id() (string, error) {
 	return "machine.baseboard", nil
 }
 
-func (p *lumiMachineBaseboard) init(args *lumi.Args) (*lumi.Args, MachineBaseboard, error) {
+func (p *mqlMachineBaseboard) init(args *resources.Args) (*resources.Args, MachineBaseboard, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -135,11 +135,11 @@ func (p *lumiMachineBaseboard) init(args *lumi.Args) (*lumi.Args, MachineBaseboa
 	return args, nil, nil
 }
 
-func (m *lumiMachineChassis) id() (string, error) {
+func (m *mqlMachineChassis) id() (string, error) {
 	return "machine.chassis", nil
 }
 
-func (p *lumiMachineChassis) init(args *lumi.Args) (*lumi.Args, MachineChassis, error) {
+func (p *mqlMachineChassis) init(args *resources.Args) (*resources.Args, MachineChassis, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}

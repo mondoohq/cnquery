@@ -7,24 +7,24 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"go.mondoo.io/mondoo/lumi/library/jobpool"
+	"go.mondoo.io/mondoo/resources/library/jobpool"
 	aws_transport "go.mondoo.io/mondoo/motor/providers/aws"
 	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
-func (a *lumiAwsBackup) id() (string, error) {
+func (a *mqlAwsBackup) id() (string, error) {
 	return "aws.backup", nil
 }
 
-func (a *lumiAwsBackupVault) id() (string, error) {
+func (a *mqlAwsBackupVault) id() (string, error) {
 	return a.Arn()
 }
 
-func (a *lumiAwsBackupVaultRecoveryPoint) id() (string, error) {
+func (a *mqlAwsBackupVaultRecoveryPoint) id() (string, error) {
 	return a.Arn()
 }
 
-func (a *lumiAwsBackup) GetVaults() ([]interface{}, error) {
+func (a *mqlAwsBackup) GetVaults() ([]interface{}, error) {
 	at, err := awstransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func (a *lumiAwsBackup) GetVaults() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *lumiAwsBackup) getVaults(at *aws_transport.Provider) []*jobpool.Job {
+func (a *mqlAwsBackup) getVaults(at *aws_transport.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := at.GetRegions()
 	if err != nil {
@@ -64,14 +64,14 @@ func (a *lumiAwsBackup) getVaults(at *aws_transport.Provider) []*jobpool.Job {
 				return nil, err
 			}
 			for _, v := range vaults.BackupVaultList {
-				lumiGroup, err := a.MotorRuntime.CreateResource("aws.backup.vault",
+				mqlGroup, err := a.MotorRuntime.CreateResource("aws.backup.vault",
 					"arn", core.ToString(v.BackupVaultArn),
 					"name", core.ToString(v.BackupVaultName),
 				)
 				if err != nil {
 					return nil, err
 				}
-				res = append(res, lumiGroup)
+				res = append(res, mqlGroup)
 			}
 
 			return jobpool.JobResult(res), nil
@@ -81,7 +81,7 @@ func (a *lumiAwsBackup) getVaults(at *aws_transport.Provider) []*jobpool.Job {
 	return tasks
 }
 
-func (a *lumiAwsBackupVault) GetRecoveryPoints() ([]interface{}, error) {
+func (a *mqlAwsBackupVault) GetRecoveryPoints() ([]interface{}, error) {
 	vArn, err := a.Arn()
 	if err != nil {
 		return nil, err
@@ -115,7 +115,7 @@ func (a *lumiAwsBackupVault) GetRecoveryPoints() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			lumiRP, err := a.MotorRuntime.CreateResource("aws.backup.vaultRecoveryPoint",
+			mqlRP, err := a.MotorRuntime.CreateResource("aws.backup.vaultRecoveryPoint",
 				"arn", core.ToString(rp.RecoveryPointArn),
 				"resourceType", core.ToString(rp.ResourceType),
 				"createdBy", createdBy,
@@ -129,7 +129,7 @@ func (a *lumiAwsBackupVault) GetRecoveryPoints() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, lumiRP)
+			res = append(res, mqlRP)
 		}
 	}
 	return res, nil
