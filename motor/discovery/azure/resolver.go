@@ -9,7 +9,7 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/platform/detector"
 	"go.mondoo.io/mondoo/motor/providers"
-	azure_transport "go.mondoo.io/mondoo/motor/providers/azure"
+	azure_provider "go.mondoo.io/mondoo/motor/providers/azure"
 )
 
 const (
@@ -33,7 +33,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	subscriptionID := tc.Options["subscriptionID"]
 
 	// TODO: for now we only support the azure cli authentication
-	err := azure_transport.IsAzInstalled()
+	err := azure_provider.IsAzInstalled()
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	if len(subscriptionID) == 0 {
 		log.Debug().Msg("no subscription id provided, fallback to azure cli")
 		// read from `az account show --output json`
-		account, err := azure_transport.GetAccount()
+		account, err := azure_provider.GetAccount()
 		if err == nil {
 			subscriptionID = account.ID
 			// NOTE: we ignore the tenant id here since we validate it below
@@ -51,7 +51,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	}
 
 	// Verify the subscription and get the details to ensure we have access
-	subscription, err := azure_transport.VerifySubscription(subscriptionID)
+	subscription, err := azure_provider.VerifySubscription(subscriptionID)
 	if err != nil || subscription.TenantID == nil {
 		return nil, errors.Wrap(err, "could not fetch azure subscription details for: "+subscriptionID)
 	}
@@ -59,18 +59,18 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	// attach tenant to config
 	tc.Options["tenantID"] = *subscription.TenantID
 
-	trans, err := azure_transport.New(tc)
+	provider, err := azure_provider.New(tc)
 	if err != nil {
 		return nil, err
 	}
 
-	identifier, err := trans.Identifier()
+	identifier, err := provider.Identifier()
 	if err != nil {
 		return nil, err
 	}
 
 	// detect platform info for the asset
-	detector := detector.New(trans)
+	detector := detector.New(provider)
 	pf, err := detector.Platform()
 	if err != nil {
 		return nil, err

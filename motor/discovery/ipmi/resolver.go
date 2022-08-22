@@ -7,7 +7,7 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/platform/detector"
 	"go.mondoo.io/mondoo/motor/providers"
-	ipmi_transport "go.mondoo.io/mondoo/motor/providers/ipmi"
+	ipmi_provider "go.mondoo.io/mondoo/motor/providers/ipmi"
 )
 
 type Resolver struct{}
@@ -21,18 +21,18 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, t *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
-	trans, err := ipmi_transport.New(t)
+	provider, err := ipmi_provider.New(t)
 	if err != nil {
 		return nil, err
 	}
 
-	identifier, err := trans.Identifier()
+	identifier, err := provider.Identifier()
 	if err != nil {
 		return nil, err
 	}
 
 	// detect platform info for the asset
-	detector := detector.New(trans)
+	detector := detector.New(provider)
 	pf, err := detector.Platform()
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, t *providers.
 
 	// TODO: consider using the ipmi vendor id and product id
 	if resolved.Name == "" {
-		resolved.Name = "IPMI device " + trans.Guid()
+		resolved.Name = "IPMI device " + provider.Guid()
 	}
 
 	return []*asset.Asset{resolved}, nil

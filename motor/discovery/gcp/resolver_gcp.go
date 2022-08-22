@@ -7,7 +7,7 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/providers"
-	gcp_transport "go.mondoo.io/mondoo/motor/providers/gcp"
+	gcp_provider "go.mondoo.io/mondoo/motor/providers/gcp"
 )
 
 type GcpResolver struct{}
@@ -28,7 +28,7 @@ func (r *GcpResolver) Resolve(ctx context.Context, root *asset.Asset, tc *provid
 		// when the user has not provided a project, check if we got a project or try to determine it
 		if tc.Options == nil || tc.Options["project"] == "" {
 			// try to determine current project
-			projectid, err := gcp_transport.GetCurrentProject()
+			projectid, err := gcp_provider.GetCurrentProject()
 			if err != nil || len(projectid) == 0 {
 				return nil, errors.New("gcp: no project id provided")
 			}

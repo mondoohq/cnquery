@@ -47,10 +47,10 @@ firewall - 2016-11-29-1`
 
 func TestOpkgManager(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/packages_opkg.toml")
-	trans, err := mock.NewFromTomlFile(filepath)
+	provider, err := mock.NewFromTomlFile(filepath)
 	require.NoError(t, err)
 
-	m, err := motor.New(trans)
+	m, err := motor.New(provider)
 	require.NoError(t, err)
 
 	pkgManager, err := packages.ResolveSystemPkgManager(m)
