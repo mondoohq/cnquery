@@ -1,0 +1,534 @@
+resources:
+  k8s:
+    fields:
+      apiResources: {}
+      clusterrolebindings:
+        min_mondoo_version: 5.31.0
+      clusterroles:
+        min_mondoo_version: 5.31.0
+      configmaps:
+        min_mondoo_version: 5.31.0
+      cronjobs: {}
+      customresources:
+        min_mondoo_version: 6.1.0
+      daemonsets: {}
+      deployments: {}
+      jobs: {}
+      namespaces: {}
+      networkPolicies:
+        min_mondoo_version: 5.31.0
+      nodes: {}
+      podSecurityPolicies:
+        min_mondoo_version: 5.31.0
+      pods: {}
+      replicasets:
+        min_mondoo_version: 6.7.0
+      rolebindings:
+        min_mondoo_version: 5.31.0
+      roles:
+        min_mondoo_version: 5.31.0
+      secrets:
+        min_mondoo_version: 5.26.0
+      serverVersion: {}
+      serviceaccounts:
+        min_mondoo_version: 5.31.0
+      services:
+        min_mondoo_version: 5.31.0
+      statefulsets:
+        min_mondoo_version: 6.7.0
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - kubernetes
+    snippets:
+    - query: k8s.pods { containers.where(securityContext["privileged"] == true) name
+        }
+      title: List kubernetes pods with privileged containers
+    - query: k8s.pods.all( namespace != "default")
+      title: Check if the default namespace is used
+    - query: k8s.serviceaccounts { name namespace secrets  }
+      title: Query services accounts
+    - query: k8s.roles { name namespace rules  }
+      title: Query RBAC cluster roles
+    - query: k8s.rolebindings { name namespace subjects  }
+      title: Query RBAC role bindings
+    - query: k8s.clusterrolebindings { name subjects  }
+      title: Query RBAC cluster role bindings
+    - query: k8s.podSecurityPolicies { name manifest }
+      title: Query pod security policies
+    - query: k8s.networkPolicies { name manifest }
+      title: Query network policies
+  k8s.apiresource:
+    fields:
+      categories: {}
+      group: {}
+      kind: {}
+      name: {}
+      namespaced: {}
+      shortNames: {}
+      singularName: {}
+      version: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - kubernetes
+  k8s.configmap:
+    fields:
+      annotations: {}
+      created: {}
+      data: {}
+      id:
+        min_mondoo_version: 6.10.0
+      kind: {}
+      labels: {}
+      manifest: {}
+      name: {}
+      namespace: {}
+      resourceVersion: {}
+      uid: {}
+    min_mondoo_version: 5.31.0
+    platform:
+      name:
+      - kubernetes
+  k8s.container:
+    fields:
+      args: {}
+      command: {}
+      containerImage:
+        min_mondoo_version: 5.31.0
+      image: {}
+      imageName:
+        min_mondoo_version: 5.31.0
+      imagePullPolicy: {}
+      livenessProbe: {}
+      name: {}
+      readinessProbe: {}
+      resources: {}
+      securityContext: {}
+      tty: {}
+      uid: {}
+      volumeDevices: {}
+      volumeMounts: {}
+      workingDir: {}
+    is_private: true
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - kubernetes
+  k8s.cronjob:
+    fields:
+      annotations:
+        min_mondoo_version: 5.29.2
+      containers:
+        min_mondoo_version: 6.11.0
+      created: {}
+      id:
+        min_mondoo_version: 6.10.0
+      initContainers:
+        min_mondoo_version: 6.11.0
+      kind: {}
+      labels:
+        min_mondoo_version: 5.29.2
+      manifest: {}
+      name: {}
+      namespace: {}
+      podSpec:
+        min_mondoo_version: 6.11.0
+      resourceVersion:
+        min_mondoo_version: 5.29.2
+      uid: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - kubernetes
+  k8s.customresource:
+    fields:
+      annotations: {}
+      created: {}
+      id:
+        min_mondoo_version: 6.10.0
+      kind: {}
+      labels: {}
+      manifest: {}
+      name: {}
+      namespace: {}
+      resourceVersion: {}
+      uid: {}
+    min_mondoo_version: 6.1.0
+    platform:
+      name:
+      - kubernetes
+  k8s.daemonset:
+    fields:
+      annotations:
+        min_mondoo_version: 5.29.2
+      containers:
+        min_mondoo_version: 6.11.0
+      created: {}
+      id:
+        min_mondoo_version: 6.10.0
+      initContainers:
+        min_mondoo_version: 6.11.0
+      kind: {}
+      labels:
+        min_mondoo_version: 5.29.2
+      manifest: {}
+      name: {}
+      namespace: {}
+      podSpec:
+        min_mondoo_version: 6.11.0
+      resourceVersion:
+        min_mondoo_version: 5.29.2
+      uid: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - kubernetes
+  k8s.deployment:
+    fields:
+      annotations:
+        min_mondoo_version: 5.29.2
+      containers:
+        min_mondoo_version: 6.11.0
+      created: {}
+      id:
+        min_mondoo_version: 6.10.0
+      initContainers:
+        min_mondoo_version: 6.11.0
+      kind: {}
+      labels:
+        min_mondoo_version: 5.29.2
+      manifest: {}
+      name: {}
+      namespace: {}
+      podSpec:
+        min_mondoo_version: 6.11.0
+      resourceVersion:
+        min_mondoo_version: 5.29.2
+      uid: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - kubernetes
+  k8s.initContainer:
+    fields:
+      args: {}
+      command: {}
+      containerImage: {}
+      image: {}
+      imageName: {}
+      imagePullPolicy: {}
+      name: {}
+      resources: {}
+      securityContext: {}
+      tty: {}
+      uid: {}
+      volumeDevices: {}
+      volumeMounts: {}
+      workingDir: {}
+    is_private: true
+    min_mondoo_version: 6.10.0
+    platform:
+      name:
+      - kubernetes
+  k8s.job:
+    fields:
+      annotations:
+        min_mondoo_version: 5.29.2
+      containers:
+        min_mondoo_version: 6.11.0
+      created: {}
+      id:
+        min_mondoo_version: 6.10.0
+      initContainers:
+        min_mondoo_version: 6.11.0
+      kind: {}
+      labels:
+        min_mondoo_version: 5.29.2
+      manifest: {}
+      name: {}
+      namespace: {}
+      podSpec:
+        min_mondoo_version: 6.11.0
+      resourceVersion:
+        min_mondoo_version: 5.29.2
+      uid: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - kubernetes
+  k8s.namespace:
+    fields:
+      created: {}
+      id:
+        min_mondoo_version: 6.10.0
+      manifest: {}
+      name: {}
+      uid: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - kubernetes
+  k8s.networkpolicy:
+    fields:
+      annotations: {}
+      created: {}
+      id:
+        min_mondoo_version: 6.10.0
+      kind: {}
+      labels: {}
+      manifest: {}
+      name: {}
+      namespace: {}
+      resourceVersion: {}
+      spec: {}
+      uid: {}
+    min_mondoo_version: 5.31.0
+    platform:
+      name:
+      - kubernetes
+  k8s.node:
+    fields:
+      annotations:
+        min_mondoo_version: 5.29.2
+      id:
+        min_mondoo_version: 6.10.0
+      kind: {}
+      labels:
+        min_mondoo_version: 5.29.2
+      name: {}
+      resourceVersion:
+        min_mondoo_version: 5.29.2
+      uid: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - kubernetes
+  k8s.pod:
+    fields:
+      annotations: {}
+      apiVersion: {}
+      containers: {}
+      created: {}
+      id:
+        min_mondoo_version: 6.10.0
+      initContainers:
+        min_mondoo_version: 6.10.0
+      kind: {}
+      labels: {}
+      manifest: {}
+      name: {}
+      namespace: {}
+      node: {}
+      podSpec: {}
+      resourceVersion:
+        min_mondoo_version: 5.29.2
+      uid: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - kubernetes
+  k8s.podsecuritypolicy:
+    fields:
+      annotations: {}
+      created: {}
+      id:
+        min_mondoo_version: 6.10.0
+      kind: {}
+      labels: {}
+      manifest: {}
+      name: {}
+      resourceVersion: {}
+      spec: {}
+      uid: {}
+    min_mondoo_version: 5.31.0
+    platform:
+      name:
+      - kubernetes
+  k8s.rbac.clusterrole:
+    fields:
+      aggregationRule: {}
+      annotations: {}
+      created: {}
+      id:
+        min_mondoo_version: 6.10.0
+      kind: {}
+      labels: {}
+      manifest: {}
+      name: {}
+      resourceVersion: {}
+      rules: {}
+      uid: {}
+    min_mondoo_version: 5.31.0
+    platform:
+      name:
+      - kubernetes
+  k8s.rbac.clusterrolebinding:
+    fields:
+      annotations: {}
+      created: {}
+      id:
+        min_mondoo_version: 6.10.0
+      kind: {}
+      labels: {}
+      manifest: {}
+      name: {}
+      resourceVersion: {}
+      roleRef: {}
+      subjects: {}
+      uid: {}
+    min_mondoo_version: 5.31.0
+    platform:
+      name:
+      - kubernetes
+  k8s.rbac.role:
+    fields:
+      annotations: {}
+      created: {}
+      id:
+        min_mondoo_version: 6.10.0
+      kind: {}
+      labels: {}
+      manifest: {}
+      name: {}
+      namespace: {}
+      resourceVersion: {}
+      rules: {}
+      uid: {}
+    min_mondoo_version: 5.31.0
+    platform:
+      name:
+      - kubernetes
+  k8s.rbac.rolebinding:
+    fields:
+      annotations: {}
+      created: {}
+      id:
+        min_mondoo_version: 6.10.0
+      kind: {}
+      labels: {}
+      manifest: {}
+      name: {}
+      namespace: {}
+      resourceVersion: {}
+      roleRef: {}
+      subjects: {}
+      uid: {}
+    min_mondoo_version: 5.31.0
+    platform:
+      name:
+      - kubernetes
+  k8s.replicaset:
+    fields:
+      annotations:
+        min_mondoo_version: 5.29.2
+      containers:
+        min_mondoo_version: 6.11.0
+      created: {}
+      id:
+        min_mondoo_version: 6.10.0
+      initContainers:
+        min_mondoo_version: 6.11.0
+      kind: {}
+      labels:
+        min_mondoo_version: 5.29.2
+      manifest: {}
+      name: {}
+      namespace: {}
+      podSpec:
+        min_mondoo_version: 6.11.0
+      resourceVersion:
+        min_mondoo_version: 5.29.2
+      uid: {}
+    min_mondoo_version: 6.7.0
+    platform:
+      name:
+      - kubernetes
+  k8s.secret:
+    fields:
+      annotations:
+        min_mondoo_version: 5.29.2
+      certificates:
+        min_mondoo_version: 5.29.2
+      created: {}
+      id:
+        min_mondoo_version: 6.10.0
+      kind: {}
+      labels:
+        min_mondoo_version: 5.29.2
+      manifest: {}
+      name: {}
+      namespace: {}
+      resourceVersion:
+        min_mondoo_version: 5.29.2
+      type:
+        min_mondoo_version: 5.29.2
+      uid: {}
+    min_mondoo_version: 5.26.0
+    platform:
+      name:
+      - kubernetes
+  k8s.service:
+    fields:
+      annotations: {}
+      created: {}
+      id:
+        min_mondoo_version: 6.10.0
+      kind: {}
+      labels: {}
+      manifest: {}
+      name: {}
+      namespace: {}
+      resourceVersion: {}
+      spec: {}
+      uid: {}
+    min_mondoo_version: 5.31.0
+    platform:
+      name:
+      - kubernetes
+  k8s.serviceaccount:
+    fields:
+      annotations: {}
+      automountServiceAccountToken: {}
+      created: {}
+      id:
+        min_mondoo_version: 6.10.0
+      imagePullSecrets: {}
+      kind: {}
+      labels: {}
+      manifest: {}
+      name: {}
+      namespace: {}
+      resourceVersion: {}
+      secrets: {}
+      uid: {}
+    min_mondoo_version: 5.31.0
+    platform:
+      name:
+      - kubernetes
+  k8s.statefulset:
+    fields:
+      annotations:
+        min_mondoo_version: 5.29.2
+      containers:
+        min_mondoo_version: 6.11.0
+      created: {}
+      id:
+        min_mondoo_version: 6.10.0
+      initContainers:
+        min_mondoo_version: 6.11.0
+      kind: {}
+      labels:
+        min_mondoo_version: 5.29.2
+      manifest: {}
+      name: {}
+      namespace: {}
+      podSpec:
+        min_mondoo_version: 6.11.0
+      resourceVersion:
+        min_mondoo_version: 5.29.2
+      uid: {}
+    min_mondoo_version: 6.7.0
+    platform:
+      name:
+      - kubernetes

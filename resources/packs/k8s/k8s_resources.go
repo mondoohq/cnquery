@@ -1,4 +1,4 @@
-package os
+package k8s
 
 import (
 	"bytes"
@@ -13,6 +13,7 @@ import (
 	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core"
 	"go.mondoo.io/mondoo/resources/packs/core/certificates"
+	"go.mondoo.io/mondoo/resources/packs/os"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
@@ -1009,7 +1010,7 @@ func (k *mqlK8sInitContainer) GetContainerImage() (interface{}, error) {
 		return nil, err
 	}
 
-	return newMqlContainerImage(k.MotorRuntime, containerImageName)
+	return os.NewMqlContainerImage(k.MotorRuntime, containerImageName)
 }
 
 func (k *mqlK8sContainer) id() (string, error) {
@@ -1022,7 +1023,7 @@ func (k *mqlK8sContainer) GetContainerImage() (interface{}, error) {
 		return nil, err
 	}
 
-	return newMqlContainerImage(k.MotorRuntime, containerImageName)
+	return os.NewMqlContainerImage(k.MotorRuntime, containerImageName)
 }
 
 func (k *mqlK8sDeployment) id() (string, error) {

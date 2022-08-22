@@ -8,6 +8,7 @@ import (
 	"go.mondoo.io/mondoo/resources/packs/gcp"
 	"go.mondoo.io/mondoo/resources/packs/github"
 	"go.mondoo.io/mondoo/resources/packs/gitlab"
+	"go.mondoo.io/mondoo/resources/packs/k8s"
 	"go.mondoo.io/mondoo/resources/packs/ms365"
 	"go.mondoo.io/mondoo/resources/packs/os"
 	"go.mondoo.io/mondoo/resources/packs/terraform"
@@ -31,4 +32,5 @@ func init() {
 	Registry.Add(github.Registry)
 	Registry.Add(gitlab.Registry)
 	Registry.Add(terraform.Registry)
+	Registry.Add(k8s.Registry)
 }

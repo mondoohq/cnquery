@@ -1,4 +1,4 @@
-package os_test
+package k8s_test
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/k8s"
-	"go.mondoo.io/mondoo/resources/packs/os"
+	k8s_pack "go.mondoo.io/mondoo/resources/packs/k8s"
 	"go.mondoo.io/mondoo/resources/packs/testutils"
 )
 
@@ -18,7 +18,7 @@ func k8sTestQuery(t *testing.T, query string) []*llx.RawResult {
 	p, err := k8s.New(context.Background(), &providers.Config{
 		Backend: providers.ProviderType_K8S,
 		Options: map[string]string{
-			"path": "./k8s/testdata",
+			"path": "./testdata",
 		},
 	})
 	require.NoError(t, err)
@@ -26,7 +26,7 @@ func k8sTestQuery(t *testing.T, query string) []*llx.RawResult {
 	m, err := motor.New(p)
 	require.NoError(t, err)
 
-	x := testutils.InitTester(m, os.Registry)
+	x := testutils.InitTester(m, k8s_pack.Registry)
 	return x.TestQuery(t, query)
 }
 
