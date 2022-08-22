@@ -1,4 +1,4 @@
-package core
+package terraform
 
 import (
 	"encoding/json"
@@ -7,6 +7,7 @@ import (
 	"go.mondoo.io/mondoo/motor/providers"
 	"go.mondoo.io/mondoo/motor/providers/tfstate"
 	"go.mondoo.io/mondoo/resources"
+	"go.mondoo.io/mondoo/resources/packs/core"
 )
 
 func tfstateProvider(t providers.Transport) (*tfstate.Provider, error) {
@@ -17,11 +18,11 @@ func tfstateProvider(t providers.Transport) (*tfstate.Provider, error) {
 	return gt, nil
 }
 
-func (t *mqlTfstate) id() (string, error) {
-	return "tfstate", nil
+func (t *mqlTerraformState) id() (string, error) {
+	return "terraform.state", nil
 }
 
-func (t *mqlTfstate) init(args *resources.Args) (*resources.Args, Tfstate, error) {
+func (t *mqlTerraformState) init(args *resources.Args) (*resources.Args, TerraformState, error) {
 	tfstateProvider, err := tfstateProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
@@ -38,7 +39,7 @@ func (t *mqlTfstate) init(args *resources.Args) (*resources.Args, Tfstate, error
 	return args, nil, nil
 }
 
-func (t *mqlTfstate) GetOutputs() ([]interface{}, error) {
+func (t *mqlTerraformState) GetOutputs() ([]interface{}, error) {
 	provider, err := tfstateProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -58,7 +59,7 @@ func (t *mqlTfstate) GetOutputs() ([]interface{}, error) {
 
 		output := state.Values.Outputs[k]
 
-		r, err := t.MotorRuntime.CreateResource("tfstate.output",
+		r, err := t.MotorRuntime.CreateResource("terraform.state.output",
 			"identifier", k,
 			"sensitive", output.Sensitive,
 		)
@@ -74,7 +75,7 @@ func (t *mqlTfstate) GetOutputs() ([]interface{}, error) {
 	return list, nil
 }
 
-func (t *mqlTfstate) GetRootModule() (interface{}, error) {
+func (t *mqlTerraformState) GetRootModule() (interface{}, error) {
 	provider, err := tfstateProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -96,7 +97,7 @@ func (t *mqlTfstate) GetRootModule() (interface{}, error) {
 	return r, nil
 }
 
-func (t *mqlTfstate) GetModules() (interface{}, error) {
+func (t *mqlTerraformState) GetModules() (interface{}, error) {
 	provider, err := tfstateProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -131,15 +132,15 @@ func (t *mqlTfstate) GetModules() (interface{}, error) {
 	return list, nil
 }
 
-func (t *mqlTfstateOutput) id() (string, error) {
+func (t *mqlTerraformStateOutput) id() (string, error) {
 	id, err := t.Identifier()
 	if err != nil {
 		return "", err
 	}
-	return "tfstateoutput/identifier/" + id, nil
+	return "terraform.state.output/identifier/" + id, nil
 }
 
-func (t *mqlTfstateOutput) init(args *resources.Args) (*resources.Args, TfstateOutput, error) {
+func (t *mqlTerraformStateOutput) init(args *resources.Args) (*resources.Args, TerraformStateOutput, error) {
 	if len(*args) > 1 {
 		return args, nil, nil
 	}
@@ -148,11 +149,11 @@ func (t *mqlTfstateOutput) init(args *resources.Args) (*resources.Args, TfstateO
 	nameRaw := (*args)["identifier"]
 	if nameRaw != nil {
 		name := nameRaw.(string)
-		obj, err := t.MotorRuntime.CreateResource("tfstate")
+		obj, err := t.MotorRuntime.CreateResource("terraform.state")
 		if err != nil {
 			return nil, nil, err
 		}
-		tfstate := obj.(Tfstate)
+		tfstate := obj.(TerraformState)
 
 		outputs, err := tfstate.Outputs()
 		if err != nil {
@@ -160,7 +161,7 @@ func (t *mqlTfstateOutput) init(args *resources.Args) (*resources.Args, TfstateO
 		}
 
 		for i := range outputs {
-			o := outputs[i].(TfstateOutput)
+			o := outputs[i].(TerraformStateOutput)
 			id, _ := o.Identifier()
 			if id == name {
 				return nil, o, nil
@@ -171,7 +172,7 @@ func (t *mqlTfstateOutput) init(args *resources.Args) (*resources.Args, TfstateO
 	return args, nil, nil
 }
 
-func (t *mqlTfstateOutput) GetValue() (interface{}, error) {
+func (t *mqlTerraformStateOutput) GetValue() (interface{}, error) {
 	c, ok := t.MqlResource().Cache.Load("_output")
 	if !ok {
 		return nil, errors.New("cannot get output cache")
@@ -185,7 +186,7 @@ func (t *mqlTfstateOutput) GetValue() (interface{}, error) {
 	return value, nil
 }
 
-func (t *mqlTfstateOutput) GetType() (interface{}, error) {
+func (t mqlTerraformStateOutput) GetType() (interface{}, error) {
 	c, ok := t.MqlResource().Cache.Load("_output")
 	if !ok {
 		return nil, errors.New("cannot get output cache")
@@ -199,13 +200,13 @@ func (t *mqlTfstateOutput) GetType() (interface{}, error) {
 	return typ, nil
 }
 
-func (t *mqlTfstateModule) id() (string, error) {
+func (t *mqlTerraformStateModule) id() (string, error) {
 	address, err := t.Address()
 	if err != nil {
 		return "", err
 	}
 
-	name := "tfmodule"
+	name := "terraform.module"
 	if address != "" {
 		name += "/address/" + address
 	}
@@ -213,7 +214,7 @@ func (t *mqlTfstateModule) id() (string, error) {
 	return name, nil
 }
 
-func (t *mqlTfstateModule) init(args *resources.Args) (*resources.Args, TfstateModule, error) {
+func (t *mqlTerraformStateModule) init(args *resources.Args) (*resources.Args, TerraformStateModule, error) {
 	// check if identifier is there
 	nameRaw := (*args)["address"]
 	if nameRaw != nil {
@@ -223,11 +224,11 @@ func (t *mqlTfstateModule) init(args *resources.Args) (*resources.Args, TfstateM
 	idRaw := (*args)["identifier"]
 	if idRaw != nil {
 		identifier := idRaw.(string)
-		obj, err := t.MotorRuntime.CreateResource("tfstate")
+		obj, err := t.MotorRuntime.CreateResource("terraform.state")
 		if err != nil {
 			return nil, nil, err
 		}
-		tfstate := obj.(Tfstate)
+		tfstate := obj.(TerraformState)
 
 		modules, err := tfstate.Modules()
 		if err != nil {
@@ -235,7 +236,7 @@ func (t *mqlTfstateModule) init(args *resources.Args) (*resources.Args, TfstateM
 		}
 
 		for i := range modules {
-			o := modules[i].(TfstateModule)
+			o := modules[i].(TerraformStateModule)
 			id, _ := o.Address()
 			if id == identifier {
 				return nil, o, nil
@@ -247,7 +248,7 @@ func (t *mqlTfstateModule) init(args *resources.Args) (*resources.Args, TfstateM
 	return args, nil, nil
 }
 
-func (t *mqlTfstateModule) GetResources() ([]interface{}, error) {
+func (t *mqlTerraformStateModule) GetResources() ([]interface{}, error) {
 	c, ok := t.MqlResource().Cache.Load("_module")
 	if !ok {
 		return nil, errors.New("cannot get module cache")
@@ -259,7 +260,7 @@ func (t *mqlTfstateModule) GetResources() ([]interface{}, error) {
 
 		resource := module.Resources[i]
 
-		r, err := t.MotorRuntime.CreateResource("tfstate.resource",
+		r, err := t.MotorRuntime.CreateResource("terraform.state.resource",
 			"address", resource.Address,
 			"name", resource.Name,
 			"mode", resource.Mode,
@@ -267,7 +268,7 @@ func (t *mqlTfstateModule) GetResources() ([]interface{}, error) {
 			"providerName", resource.ProviderName,
 			"schemaVersion", int64(resource.SchemaVersion),
 			"values", resource.AttributeValues,
-			"dependsOn", StrSliceToInterface(resource.DependsOn),
+			"dependsOn", core.StrSliceToInterface(resource.DependsOn),
 			"tainted", resource.Tainted,
 			"deposedKey", resource.DeposedKey,
 		)
@@ -281,7 +282,7 @@ func (t *mqlTfstateModule) GetResources() ([]interface{}, error) {
 }
 
 func newMqlModule(runtime *resources.Runtime, module *tfstate.Module) (resources.ResourceType, error) {
-	r, err := runtime.CreateResource("tfstate.module",
+	r, err := runtime.CreateResource("terraform.state.module",
 		"address", module.Address,
 	)
 	if err != nil {
@@ -292,7 +293,7 @@ func newMqlModule(runtime *resources.Runtime, module *tfstate.Module) (resources
 	return r, nil
 }
 
-func (t *mqlTfstateModule) GetChildModules() ([]interface{}, error) {
+func (t *mqlTerraformStateModule) GetChildModules() ([]interface{}, error) {
 	c, ok := t.MqlResource().Cache.Load("_module")
 	if !ok {
 		return nil, errors.New("cannot get module cache")
@@ -311,13 +312,13 @@ func (t *mqlTfstateModule) GetChildModules() ([]interface{}, error) {
 	return list, nil
 }
 
-func (t *mqlTfstateResource) id() (string, error) {
+func (t *mqlTerraformStateResource) id() (string, error) {
 	address, err := t.Address()
 	if err != nil {
 		return "", err
 	}
 
-	name := "tfstateresource"
+	name := "terraform.state.resource"
 	if address != "" {
 		name += "/address/" + address
 	}

@@ -95,6 +95,10 @@ var markdownCmd = &cobra.Command{
 		}
 
 		// render readme
+		err = os.MkdirAll(outputDir, 0o755)
+		if err != nil {
+			log.Fatal().Err(err).Msg("could not create directory: " + outputDir)
+		}
 		err = os.WriteFile(filepath.Join(outputDir, "resources.md"), []byte(r.renderToc(res.Resources, frontMatter)), 0o600)
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not write file")

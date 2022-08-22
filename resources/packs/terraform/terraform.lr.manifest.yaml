@@ -1,0 +1,122 @@
+resources:
+  terraform:
+    fields:
+      blocks: { }
+      datasources: { }
+      files: { }
+      modules: { }
+      outputs: { }
+      providers: { }
+      resources: { }
+      tfvars: { }
+      variables: { }
+    maturity: experimental
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - terraform
+    snippets:
+      - query: terraform.blocks { nameLabel arguments }
+        title: Display all Terraform blocks and their arguments
+      - query: terraform.datasources { nameLabel arguments }
+        title: Display all data blocks
+      - query: terraform.resources { nameLabel arguments }
+        title: Display all resource blocks
+  terraform.block:
+    fields:
+      arguments: { }
+      attributes: { }
+      blocks: { }
+      end: { }
+      labels: { }
+      nameLabel: { }
+      snippet: { }
+      start: { }
+      type: { }
+    maturity: experimental
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - terraform
+    snippets:
+      - query: terraform.blocks { nameLabel arguments }
+        title: Display all Terraform blocks and their arguments
+  terraform.file:
+    fields:
+      blocks: { }
+      path: { }
+    maturity: experimental
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - terraform
+    snippets:
+      - query: terraform.files { path blocks { nameLabel } }
+        title: Display all files and their blocks
+  terraform.fileposition:
+    fields:
+      byte: { }
+      column: { }
+      line: { }
+      path: { }
+    maturity: experimental
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - terraform
+  terraform.module:
+    fields:
+      dir: { }
+      key: { }
+      source: { }
+      version: { }
+    maturity: experimental
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - terraform
+    snippets:
+      - query: terraform.modules { key version source}
+        title: Display all loaded Terraform modules
+  terraform.settings:
+    fields:
+      block: { }
+      requiredProviders: { }
+    min_mondoo_version: 5.31.0
+    platform:
+      name:
+        - terraform
+  terraform.state:
+    fields:
+      formatVersion: { }
+      modules: { }
+      outputs: { }
+      rootModule: { }
+      terraformVersion: { }
+    min_mondoo_version: 6.11.0
+  terraform.state.module:
+    fields:
+      address: { }
+      childModules: { }
+      resources: { }
+    min_mondoo_version: 6.11.0
+  terraform.state.output:
+    fields:
+      identifier: { }
+      sensitive: { }
+      type: { }
+      value: { }
+    min_mondoo_version: 6.11.0
+  terraform.state.resource:
+    fields:
+      address: { }
+      dependsOn: { }
+      deposedKey: { }
+      mode: { }
+      name: { }
+      providerName: { }
+      schemaVersion: { }
+      tainted: { }
+      type: { }
+      values: { }
+    min_mondoo_version: 6.11.0
