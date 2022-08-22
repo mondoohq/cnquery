@@ -1,4 +1,4 @@
-package services
+package ms365
 
 import (
 	"go.mondoo.io/mondoo/resources"

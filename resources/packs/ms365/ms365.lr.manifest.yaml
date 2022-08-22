@@ -1,0 +1,239 @@
+resources:
+  ms365.exchangeonline:
+    fields:
+      adminAuditLogConfig: {}
+      antiPhishPolicy: {}
+      atpPolicyForO365: {}
+      authenticationPolicy: {}
+      dkimSigningConfig: {}
+      hostedOutboundSpamFilterPolicy: {}
+      mailbox: {}
+      malwareFilterPolicy: {}
+      organizationConfig: {}
+      owaMailboxPolicy: {}
+      phishFilterPolicy: {}
+      remoteDomain: {}
+      roleAssignmentPolicy: {}
+      safeAttachmentPolicy: {}
+      safeLinksPolicy: {}
+      sharingPolicy: {}
+      transportRule: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - microsoft365
+  ms365.sharepointonline:
+    fields:
+      spoTenant: {}
+      spoTenantSyncClientRestriction: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - microsoft365
+  ms365.teams:
+    fields:
+      csOAuthConfiguration: {}
+      csTeamsClientConfiguration: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta:
+    fields:
+      applications: {}
+      domains: {}
+      organizations: {}
+      settings: {}
+      users: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.application:
+    fields:
+      appId: {}
+      createdDateTime: {}
+      displayName: {}
+      id: {}
+      identifierUris: {}
+      publisherDomain: {}
+      signInAudience: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.devicemanagement:
+    fields:
+      deviceCompliancePolicies: {}
+      deviceConfigurations: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.devicemanagement.devicecompliancepolicy:
+    fields:
+      assignments: {}
+      createdDateTime: {}
+      description: {}
+      displayName: {}
+      id: {}
+      lastModifiedDateTime: {}
+      properties: {}
+      roleScopeTagIds: {}
+      version: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.devicemanagement.deviceconfiguration:
+    fields:
+      createdDateTime: {}
+      description: {}
+      displayName: {}
+      id: {}
+      lastModifiedDateTime: {}
+      properties: {}
+      roleScopeTagIds: {}
+      supportsScopeTags: {}
+      version: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.domain:
+    fields:
+      authenticationType: {}
+      availabilityStatus: {}
+      id: {}
+      isAdminManaged: {}
+      isDefault: {}
+      isInitial: {}
+      isRoot: {}
+      isVerified: {}
+      passwordNotificationWindowInDays: {}
+      passwordValidityPeriodInDays: {}
+      serviceConfigurationRecords: {}
+      supportedServices: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.domaindnsrecord:
+    fields:
+      id: {}
+      isOptional: {}
+      label: {}
+      properties: {}
+      recordType: {}
+      supportedService: {}
+      ttl: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.organization:
+    fields:
+      assignedPlans: {}
+      createdDateTime: {}
+      displayName: {}
+      id: {}
+      verifiedDomains: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.policies:
+    fields:
+      adminConsentRequestPolicy: {}
+      authorizationPolicy: {}
+      identitySecurityDefaultsEnforcementPolicy: {}
+      permissionGrantPolicies: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.rolemanagement:
+    fields:
+      roleDefinitions: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.rolemanagement.roleassignment:
+    fields:
+      id: {}
+      principal: {}
+      principalId: {}
+      roleDefinitionId: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.rolemanagement.roledefinition:
+    fields:
+      assignments: {}
+      description: {}
+      displayName: {}
+      id: {}
+      isBuiltIn: {}
+      isEnabled: {}
+      rolePermissions: {}
+      templateId: {}
+      version: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.security:
+    fields:
+      latestSecureScores: {}
+      secureScores: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.security.securityscore:
+    fields:
+      activeUserCount: {}
+      averageComparativeScores: {}
+      azureTenantId: {}
+      controlScores: {}
+      createdDateTime: {}
+      currentScore: {}
+      enabledServices: {}
+      id: {}
+      licensedUserCount: {}
+      maxScore: {}
+      vendorInformation: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - microsoft365
+  msgraph.beta.user:
+    fields:
+      accountEnabled: {}
+      city: {}
+      companyName: {}
+      country: {}
+      createdDateTime: {}
+      department: {}
+      displayName: {}
+      employeeId: {}
+      givenName: {}
+      id: {}
+      jobTitle: {}
+      mail: {}
+      mobilePhone: {}
+      officeLocation: {}
+      otherMails: {}
+      postalCode: {}
+      settings: {}
+      state: {}
+      streetAddress: {}
+      surname: {}
+      userPrincipalName: {}
+      userType: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - microsoft365

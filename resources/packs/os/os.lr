@@ -1,3 +1,4 @@
+
 import "../core/core.lr"
 
 option go_package = "go.mondoo.io/mondoo/resources/packs/os"

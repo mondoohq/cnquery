@@ -1,0 +1,342 @@
+resources:
+  git.commit:
+    fields:
+      author: {}
+      committer: {}
+      message: {}
+      sha: {}
+      signatureVerification: {}
+    is_private: true
+    min_mondoo_version: 6.11.0
+  git.commitAuthor:
+    fields:
+      date: {}
+      email: {}
+      name: {}
+      sha: {}
+    is_private: true
+    min_mondoo_version: 6.11.0
+  git.gpgSignature:
+    fields:
+      payload: {}
+      reason: {}
+      sha: {}
+      signature: {}
+      verified: {}
+    is_private: true
+    min_mondoo_version: 6.11.0
+  github:
+    fields:
+      repositories: {}
+      user: {}
+    min_mondoo_version: 6.4.0
+  github.branch:
+    fields:
+      headCommit: {}
+      isDefault:
+        min_mondoo_version: 6.8.0
+      name: {}
+      organizationName: {}
+      owner: {}
+      protected: {}
+      protectionRules: {}
+      repoName: {}
+    is_private: true
+    min_mondoo_version: 6.4.0
+  github.branchprotection:
+    fields:
+      allowDeletions: {}
+      allowForcePushes: {}
+      enforceAdmins: {}
+      id: {}
+      requireLinearHistory: {}
+      requiredConversationResolution: {}
+      requiredPullRequestReviews: {}
+      requiredSignatures:
+        min_mondoo_version: 6.11.0
+      requiredStatusChecks: {}
+      restrictions: {}
+    is_private: true
+    min_mondoo_version: 6.4.0
+  github.collaborator:
+    fields:
+      id: {}
+      permissions: {}
+      user: {}
+    is_private: true
+    min_mondoo_version: 6.11.0
+  github.commit:
+    fields:
+      author: {}
+      commit:
+        min_mondoo_version: 6.11.0
+      committer: {}
+      message: {}
+      organizationName: {}
+      owner:
+        min_mondoo_version: 6.11.0
+      repoName: {}
+      repository:
+        min_mondoo_version: 6.11.0
+      sha:
+        min_mondoo_version: 6.11.0
+      signatureVerification: {}
+      stats:
+        min_mondoo_version: 6.11.0
+      url: {}
+    is_private: true
+    min_mondoo_version: 6.4.0
+  github.file:
+    fields:
+      content: {}
+      files: {}
+      isBinary: {}
+      name:
+        min_mondoo_version: 6.11.0
+      organizationName: {}
+      ownerName:
+        min_mondoo_version: 6.11.0
+      path: {}
+      repoName: {}
+      sha: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 6.4.0
+  github.installation:
+    fields:
+      appId: {}
+      appSlug: {}
+      createdAt: {}
+      id: {}
+      updatedAt: {}
+    is_private: true
+    min_mondoo_version: 5.31.0
+  github.mergeRequest:
+    fields:
+      assignees: {}
+      commits: {}
+      createdAt: {}
+      id: {}
+      labels: {}
+      number: {}
+      organizationName: {}
+      owner: {}
+      repoName: {}
+      reviews: {}
+      state: {}
+      title: {}
+    is_private: true
+    min_mondoo_version: 6.4.0
+  github.organization:
+    fields:
+      billing_email: {}
+      billingEmail:
+        min_mondoo_version: 6.11.0
+      blog: {}
+      collaborators: {}
+      company: {}
+      created_at: {}
+      createdAt:
+        min_mondoo_version: 6.11.0
+      default_repository_permission: {}
+      defaultRepositoryPermission:
+        min_mondoo_version: 6.11.0
+      description: {}
+      disk_usage: {}
+      diskUsage:
+        min_mondoo_version: 6.11.0
+      email: {}
+      id: {}
+      installations:
+        min_mondoo_version: 5.31.0
+      is_verified: {}
+      isVerified:
+        min_mondoo_version: 6.11.0
+      location: {}
+      login: {}
+      members:
+        min_mondoo_version: 5.31.0
+      members_can_create_internal_repositories: {}
+      members_can_create_pages: {}
+      members_can_create_private_pages: {}
+      members_can_create_private_repositories: {}
+      members_can_create_public_pages: {}
+      members_can_create_public_repositories: {}
+      members_can_create_repositories: {}
+      membersCanCreateInternalRepositories:
+        min_mondoo_version: 6.11.0
+      membersCanCreatePages:
+        min_mondoo_version: 6.11.0
+      membersCanCreatePrivatePages:
+        min_mondoo_version: 6.11.0
+      membersCanCreatePrivateRepositories:
+        min_mondoo_version: 6.11.0
+      membersCanCreatePublicPages:
+        min_mondoo_version: 6.11.0
+      membersCanCreatePublicRepositories:
+        min_mondoo_version: 6.11.0
+      membersCanCreateRepositories:
+        min_mondoo_version: 6.11.0
+      name: {}
+      node_id: {}
+      nodeId:
+        min_mondoo_version: 6.11.0
+      owned_private_repos: {}
+      ownedPrivateRepos:
+        min_mondoo_version: 6.11.0
+      owners:
+        min_mondoo_version: 5.31.0
+      packages:
+        min_mondoo_version: 6.11.0
+      plan: {}
+      private_gists: {}
+      privateGists:
+        min_mondoo_version: 6.11.0
+      repositories:
+        min_mondoo_version: 5.31.0
+      teams:
+        min_mondoo_version: 6.11.0
+      total_private_repos: {}
+      totalPrivateRepos:
+        min_mondoo_version: 6.11.0
+      twitter_username: {}
+      twitterUsername:
+        min_mondoo_version: 6.11.0
+      two_factor_requirement_enabled: {}
+      twoFactorRequirementEnabled:
+        min_mondoo_version: 6.11.0
+      updated_at: {}
+      updatedAt:
+        min_mondoo_version: 6.11.0
+      webhooks:
+        min_mondoo_version: 6.11.0
+    maturity: experimental
+    min_mondoo_version: 5.15.0
+  github.package:
+    fields:
+      createdAt: {}
+      id: {}
+      name: {}
+      owner: {}
+      packageType: {}
+      repository: {}
+      updatedAt: {}
+      versionCount: {}
+      visibility: {}
+    is_private: true
+    min_mondoo_version: 6.11.0
+  github.release:
+    fields:
+      name: {}
+      preRelease: {}
+      tagName: {}
+      url: {}
+    is_private: true
+    min_mondoo_version: 6.4.0
+  github.repository:
+    fields:
+      allowAutoMerge:
+        min_mondoo_version: 6.4.0
+      allowForking:
+        min_mondoo_version: 6.4.0
+      allowMergeCommit:
+        min_mondoo_version: 6.4.0
+      allowRebaseMerge:
+        min_mondoo_version: 6.4.0
+      allowSquashMerge:
+        min_mondoo_version: 6.4.0
+      archived: {}
+      branches:
+        min_mondoo_version: 6.4.0
+      collaborators:
+        min_mondoo_version: 6.11.0
+      commits:
+        min_mondoo_version: 6.4.0
+      contributors:
+        min_mondoo_version: 6.4.0
+      createdAt: {}
+      defaultBranchName:
+        min_mondoo_version: 6.4.0
+      description: {}
+      disabled: {}
+      files:
+        min_mondoo_version: 6.4.0
+      fullName: {}
+      hasIssues:
+        min_mondoo_version: 6.4.0
+      homepage: {}
+      id: {}
+      name: {}
+      openMergeRequests:
+        min_mondoo_version: 6.4.0
+      organizationName:
+        min_mondoo_version: 6.4.0
+      owner:
+        min_mondoo_version: 6.4.0
+      private: {}
+      releases:
+        min_mondoo_version: 6.4.0
+      updatedAt: {}
+      visibility: {}
+      webhooks:
+        min_mondoo_version: 6.11.0
+      workflows:
+        min_mondoo_version: 6.11.0
+    min_mondoo_version: 5.31.0
+  github.review:
+    fields:
+      authorAssociation: {}
+      state: {}
+      url: {}
+      user: {}
+    is_private: true
+    min_mondoo_version: 6.4.0
+  github.team:
+    fields:
+      defaultPermission: {}
+      description: {}
+      id: {}
+      members: {}
+      name: {}
+      organization: {}
+      privacy: {}
+      repositories: {}
+      slug: {}
+    is_private: true
+    min_mondoo_version: 6.11.0
+  github.user:
+    fields:
+      bio: {}
+      company:
+        min_mondoo_version: 6.4.0
+      createdAt: {}
+      email: {}
+      id: {}
+      login: {}
+      name: {}
+      suspendedAt: {}
+      updatedAt: {}
+    is_private: true
+    min_mondoo_version: 5.31.0
+  github.webhook:
+    fields:
+      active: {}
+      config: {}
+      events: {}
+      id: {}
+      name: {}
+      url: {}
+    is_private: true
+    min_mondoo_version: 6.11.0
+  github.workflow:
+    fields:
+      configuration: {}
+      createdAt: {}
+      file: {}
+      id: {}
+      name: {}
+      path: {}
+      state: {}
+      updatedAt: {}
+    is_private: true
+    min_mondoo_version: 6.11.0

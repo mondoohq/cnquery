@@ -5,12 +5,12 @@ import (
 	"errors"
 	"os"
 
-	ms356_resources "go.mondoo.io/mondoo/resources/packs/services/ms365"
+	"go.mondoo.io/mondoo/motor/providers/ms365/ms365report"
 )
 
 // NOTE: this is a temporary solution and will be replaced with logic that calls powershell directly and
 // hopefully provides more flexibility in the future
-func (p *Provider) GetMs365DataReport() (*ms356_resources.Microsoft365Report, error) {
+func (p *Provider) GetMs365DataReport() (*ms365report.Microsoft365Report, error) {
 	p.ms365PowershellReportLoader.Lock()
 	defer p.ms365PowershellReportLoader.Unlock()
 
@@ -28,7 +28,7 @@ func (p *Provider) GetMs365DataReport() (*ms356_resources.Microsoft365Report, er
 		return nil, err
 	}
 
-	p.ms365PowershellReport = &ms356_resources.Microsoft365Report{}
+	p.ms365PowershellReport = &ms365report.Microsoft365Report{}
 	err = json.Unmarshal(data, p.ms365PowershellReport)
 	if err != nil {
 		return nil, err

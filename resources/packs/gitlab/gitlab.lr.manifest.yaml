@@ -1,0 +1,21 @@
+resources:
+  gitlab.group:
+    fields:
+      description: {}
+      id: {}
+      name: {}
+      path: {}
+      projects: {}
+      requireTwoFactorAuthentication: {}
+      visibility: {}
+    maturity: experimental
+    min_mondoo_version: 5.15.0
+  gitlab.project:
+    fields:
+      description: {}
+      id: {}
+      name: {}
+      path: {}
+      visibility: {}
+    maturity: experimental
+    min_mondoo_version: 5.15.0

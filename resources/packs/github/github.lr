@@ -1,0 +1,279 @@
+import "../core/core.lr"
+
+option go_package = "go.mondoo.io/mondoo/resources/packs/github"
+
+// Git commit
+private git.commit {
+  sha string
+  message string
+  author git.commitAuthor
+  committer git.commitAuthor
+  signatureVerification git.gpgSignature
+}
+
+// Git commit author
+private git.commitAuthor {
+  sha string
+  name string
+  email string
+  date time
+}
+
+private git.gpgSignature {
+  sha string
+  reason string
+  verified bool
+  payload string
+  signature string
+}
+
+// GitHub resource
+github {
+  repositories() []github.repository
+  user() github.user
+}
+
+// GitHub organization
+github.organization {
+  login string
+  id int
+  nodeId string
+  name string
+  company string
+  blog string
+  location string
+  email string
+  twitterUsername string
+  description string
+  createdAt time
+  updatedAt time
+  totalPrivateRepos int
+  ownedPrivateRepos int
+  privateGists int
+  diskUsage int
+  collaborators int
+  billingEmail string
+  plan dict
+  twoFactorRequirementEnabled bool
+  isVerified bool
+
+  defaultRepositoryPermission string
+  membersCanCreateRepositories bool
+  membersCanCreatePublicRepositories bool
+  membersCanCreatePrivateRepositories bool
+  membersCanCreateInternalRepositories bool
+  membersCanCreatePages bool
+  membersCanCreatePublicPages bool
+  membersCanCreatePrivatePages bool
+
+  owners() []github.user
+  members() []github.user
+  teams() []github.team
+  repositories() []github.repository
+  installations() []github.installation
+  webhooks() []github.webhook
+  packages() []github.package
+}
+
+// GitHub user
+private github.user {
+  id int
+  login string
+  name string
+  email string
+  bio string
+  createdAt time
+  updatedAt time
+  suspendedAt time
+  company string
+}
+
+// GitHub team
+private github.team {
+  id int
+  name string
+  description string
+  slug string
+  privacy string
+  defaultPermission string
+  members() []github.user
+  repositories() []github.repository
+  organization github.organization
+}
+
+// GitHub collaborator
+private github.collaborator {
+  id int
+  user github.user
+  permissions []string
+}
+
+// GitHub package
+private github.package {
+  id int
+  name string
+  packageType string
+  owner github.user
+  createdAt time
+  updatedAt time
+  versionCount int
+  visibility string
+  repository() github.repository
+}
+
+// GitHub repository
+github.repository {
+  init(name string) // can only be used when logged in to github as a user
+  id int
+  name string
+  fullName string
+  description string
+  homepage string
+  createdAt time
+  updatedAt time
+  archived bool
+  disabled bool
+  private bool
+  visibility string
+  allowAutoMerge bool
+  allowForking bool
+  allowMergeCommit bool
+  allowRebaseMerge bool
+  allowSquashMerge bool
+  hasIssues bool
+  organizationName string
+  openMergeRequests() []github.mergeRequest
+  branches() []github.branch
+  defaultBranchName string
+  commits() []github.commit
+  contributors() []github.user
+  collaborators() []github.collaborator
+  files() []github.file
+  releases() []github.release
+  owner github.user
+  webhooks() []github.webhook
+  workflows() []github.workflow
+}
+
+// GitHub repository file
+private github.file {
+  path string
+  name string
+  type string
+  sha string
+  isBinary bool
+  files() []github.file
+  ownerName string
+  repoName string
+  content() string
+}
+
+// GitHub release
+private github.release {
+  url string
+  name string
+  tagName string
+  preRelease bool
+}
+
+// GitHub webhook
+private github.webhook {
+  id int
+  name string
+  url string
+  events []string
+  config dict
+  active bool
+}
+
+// GitHub workflow
+private github.workflow {
+  id int
+  name string
+  path string
+  state string
+  createdAt time
+  updatedAt time
+  file() github.file
+  configuration() dict
+}
+
+// GitHub repository branch
+private github.branch {
+  name string
+  protected bool
+  headCommit github.commit
+  protectionRules() github.branchprotection
+  organizationName string
+  repoName string
+  owner github.user
+  isDefault bool
+}
+
+// GitHub repository branch protection
+private github.branchprotection {
+  id string
+  // Require status checks to pass before merging
+  requiredStatusChecks dict
+  // Require a pull request before merging
+  requiredPullRequestReviews dict
+  // Require conversation resolution before merging
+  requiredConversationResolution dict
+  // Require signed commits
+  requiredSignatures bool
+  // Require linear history
+  requireLinearHistory dict
+  // Include administrators
+  enforceAdmins dict
+  // Restrict who can push to matching branches
+  restrictions dict
+  // Allow force pushes
+  allowForcePushes dict
+  // Allow deletions
+  allowDeletions dict
+}
+
+// GitHub repository commit
+private github.commit {
+  owner string
+  repository string
+  sha string
+  url string
+  author github.user
+  committer github.user
+  commit git.commit
+  stats dict
+}
+
+// GitHub repository pull request
+private github.mergeRequest {
+  id int
+  number int
+  state string
+  createdAt time
+  labels []dict
+  title string
+  owner github.user
+  assignees []github.user
+  commits() []github.commit
+  reviews() []github.review
+  organizationName string
+  repoName string
+}
+
+// GitHub repository review
+private github.review {
+  url string
+  state string
+  authorAssociation string
+  user github.user
+}
+
+// GitHub app installation
+private github.installation {
+  id int
+  appId int
+  appSlug string
+  createdAt time
+  updatedAt time
+}
