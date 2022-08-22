@@ -10,7 +10,7 @@ func (m *mqlMs365Exchangeonline) id() (string, error) {
 }
 
 func (m *mqlMs365Exchangeonline) init(args *resources.Args) (*resources.Args, Ms365Exchangeonline, error) {
-	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
+	mt, err := ms365Provider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -64,7 +64,7 @@ func (m *mqlMs365Sharepointonline) id() (string, error) {
 }
 
 func (m *mqlMs365Sharepointonline) init(args *resources.Args) (*resources.Args, Ms365Sharepointonline, error) {
-	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
+	mt, err := ms365Provider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -88,7 +88,7 @@ func (m *mqlMs365Teams) id() (string, error) {
 }
 
 func (m *mqlMs365Teams) init(args *resources.Args) (*resources.Args, Ms365Teams, error) {
-	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
+	mt, err := ms365Provider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}

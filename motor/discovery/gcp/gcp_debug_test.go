@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor/providers"
-	gcp_transport "go.mondoo.io/mondoo/motor/providers/gcp"
+	gcp_provider "go.mondoo.io/mondoo/motor/providers/gcp"
 )
 
 func TestGcpDiscovery(t *testing.T) {
-	projectid, err := gcp_transport.GetCurrentProject()
+	projectid, err := gcp_provider.GetCurrentProject()
 	require.NoError(t, err)
 
 	pCfg := &providers.Config{

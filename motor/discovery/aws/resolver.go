@@ -34,25 +34,25 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	resolved := []*asset.Asset{}
 
 	// add aws api as asset
-	trans, err := aws_provider.New(tc, aws_provider.TransportOptions(tc.Options)...)
+	provider, err := aws_provider.New(tc, aws_provider.TransportOptions(tc.Options)...)
 	if err != nil {
 		return nil, err
 	}
 
-	identifier, err := trans.Identifier()
+	identifier, err := provider.Identifier()
 	if err != nil {
 		return nil, err
 	}
 
 	// detect platform info for the asset
-	detector := detector.New(trans)
+	detector := detector.New(provider)
 	pf, err := detector.Platform()
 	if err != nil {
 		return nil, err
 	}
 
 	// add asset for the api itself
-	info, err := trans.Account()
+	info, err := provider.Account()
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoverySSM) {
 		if val := discoverFilter["ssm"]; val == "true" {
 			// create a map to track the platform ids of the ssm instances, to avoid duplication of assets
-			s, err := NewSSMManagedInstancesDiscovery(trans.Config())
+			s, err := NewSSMManagedInstancesDiscovery(provider.Config())
 			if err != nil {
 				return nil, errors.Wrap(err, "could not initialize aws ec2 ssm discovery")
 			}
@@ -105,7 +105,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	}
 	// discover ec2 instances
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {
-		r, err := NewEc2Discovery(trans.Config())
+		r, err := NewEc2Discovery(provider.Config())
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize aws ec2 discovery")
 		}

@@ -4,7 +4,7 @@ import (
 	"go.mondoo.io/mondoo/motor/asset"
 	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/providers"
-	gcp_transport "go.mondoo.io/mondoo/motor/providers/gcp"
+	gcp_provider "go.mondoo.io/mondoo/motor/providers/gcp"
 )
 
 type GcpOrgResolver struct{}
@@ -24,7 +24,7 @@ func (r *GcpOrgResolver) Resolve(tc *providers.Config, cfn common.CredentialFn, 
 		return resolved, nil
 	}
 
-	trans, err := gcp_transport.New(tc)
+	provider, err := gcp_provider.New(tc)
 	if err != nil {
 		return nil, err
 	}
@@ -32,13 +32,13 @@ func (r *GcpOrgResolver) Resolve(tc *providers.Config, cfn common.CredentialFn, 
 	// TODO: for now we do not add the organization as asset since we need to adapt the polices and queries to distingush
 	// between them. Current resources most likely mix with the org, most gcp requests do not work on org level
 
-	//identifier, err := trans.Identifier()
+	//identifier, err := provider.Identifier()
 	//if err != nil {
 	//	return nil, err
 	//}
 	//
 	//// detect platform info for the asset
-	//detector := platform.NewDetector(trans)
+	//detector := platform.NewDetector(provider)
 	//pf, err := detector.Platform()
 	//if err != nil {
 	//	return nil, err
@@ -53,15 +53,15 @@ func (r *GcpOrgResolver) Resolve(tc *providers.Config, cfn common.CredentialFn, 
 
 	// discover projects
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryProjects) {
-		orgId, err := trans.OrganizationID()
+		orgId, err := provider.OrganizationID()
 		if err != nil {
 			return nil, err
 		}
-		org, err := trans.GetOrganization(orgId)
+		org, err := provider.GetOrganization(orgId)
 		if err != nil {
 			return nil, err
 		}
-		projects, err := trans.GetProjectsForOrganization(org)
+		projects, err := provider.GetProjectsForOrganization(org)
 		if err != nil {
 			return nil, err
 		}

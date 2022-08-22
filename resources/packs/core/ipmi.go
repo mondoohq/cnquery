@@ -4,17 +4,17 @@ import (
 	"errors"
 
 	"go.mondoo.io/mondoo/motor/providers"
-	ipmi_transport "go.mondoo.io/mondoo/motor/providers/ipmi"
+	ipmi_provider "go.mondoo.io/mondoo/motor/providers/ipmi"
 	"go.mondoo.io/mondoo/resources/packs/core/ipmi"
 )
 
 func getIpmiInstance(t providers.Transport) (*ipmi.IpmiClient, error) {
-	it, ok := t.(*ipmi_transport.Provider)
+	provider, ok := t.(*ipmi_provider.Provider)
 	if !ok {
 		return nil, errors.New("ipmi resource is not supported on this transport")
 	}
 
-	return it.Client(), nil
+	return provider.Client(), nil
 }
 
 func (a *mqlIpmi) id() (string, error) {

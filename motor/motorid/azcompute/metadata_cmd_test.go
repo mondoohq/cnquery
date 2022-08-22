@@ -11,32 +11,32 @@ import (
 )
 
 func TestCommandProviderLinux(t *testing.T) {
-	trans, err := mock.NewFromTomlFile("./testdata/metadata_linux.toml")
+	provider, err := mock.NewFromTomlFile("./testdata/metadata_linux.toml")
 	require.NoError(t, err)
 
-	m, err := motor.New(trans)
+	m, err := motor.New(provider)
 	require.NoError(t, err)
 
 	p, err := m.Platform()
 	require.NoError(t, err)
 
-	metadata := azcompute.NewCommandInstanceMetadata(trans, p)
+	metadata := azcompute.NewCommandInstanceMetadata(provider, p)
 	mrn, err := metadata.InstanceID()
 	assert.Nil(t, err)
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourceGroups/macikgo-test-may-23/providers/Microsoft.Compute/virtualMachines/examplevmname", mrn)
 }
 
 func TestCommandProviderWindows(t *testing.T) {
-	trans, err := mock.NewFromTomlFile("./testdata/metadata_windows.toml")
+	provider, err := mock.NewFromTomlFile("./testdata/metadata_windows.toml")
 	require.NoError(t, err)
 
-	m, err := motor.New(trans)
+	m, err := motor.New(provider)
 	require.NoError(t, err)
 
 	p, err := m.Platform()
 	require.NoError(t, err)
 
-	metadata := azcompute.NewCommandInstanceMetadata(trans, p)
+	metadata := azcompute.NewCommandInstanceMetadata(provider, p)
 	mrn, err := metadata.InstanceID()
 	assert.Nil(t, err)
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx/resourceGroups/macikgo-test-may-23/providers/Microsoft.Compute/virtualMachines/examplevmname", mrn)

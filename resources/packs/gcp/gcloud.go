@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/motor/providers"
-	gcp_transport "go.mondoo.io/mondoo/motor/providers/gcp"
+	gcp_provider "go.mondoo.io/mondoo/motor/providers/gcp"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
@@ -19,12 +19,12 @@ import (
 	"google.golang.org/api/storage/v1"
 )
 
-func gcptransport(t providers.Transport) (*gcp_transport.Provider, error) {
-	gt, ok := t.(*gcp_transport.Provider)
+func gcpProvider(t providers.Transport) (*gcp_provider.Provider, error) {
+	provider, ok := t.(*gcp_provider.Provider)
 	if !ok {
 		return nil, errors.New("aws resource is not supported on this transport")
 	}
-	return gt, nil
+	return provider, nil
 }
 
 func (g *mqlGcloudOrganization) id() (string, error) {
@@ -36,12 +36,12 @@ func (g *mqlGcloudOrganization) init(args *resources.Args) (*resources.Args, Gcl
 		return args, nil, nil
 	}
 
-	gt, err := gcptransport(g.MotorRuntime.Motor.Provider)
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	client, err := gt.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -53,7 +53,7 @@ func (g *mqlGcloudOrganization) init(args *resources.Args) (*resources.Args, Gcl
 	}
 
 	// determine org from project in transport
-	orgId, err := gt.OrganizationID()
+	orgId, err := provider.OrganizationID()
 	if err != nil {
 		log.Error().Err(err).Msg("could not determine organization id")
 		return nil, nil, err
@@ -91,12 +91,12 @@ func (g *mqlGcloudOrganization) GetLifecycleState() (string, error) {
 }
 
 func (g *mqlGcloudOrganization) GetIamPolicy() ([]interface{}, error) {
-	gt, err := gcptransport(g.MotorRuntime.Motor.Provider)
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := gt.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (g *mqlGcloudOrganization) GetIamPolicy() ([]interface{}, error) {
 	}
 
 	// determine org from project in transport
-	orgId, err := gt.OrganizationID()
+	orgId, err := provider.OrganizationID()
 	if err != nil {
 		return nil, err
 	}
@@ -146,12 +146,12 @@ func (g *mqlGcloudProject) init(args *resources.Args) (*resources.Args, GcloudPr
 		return args, nil, nil
 	}
 
-	gt, err := gcptransport(g.MotorRuntime.Motor.Provider)
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	client, err := gt.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -162,7 +162,7 @@ func (g *mqlGcloudProject) init(args *resources.Args) (*resources.Args, GcloudPr
 		return nil, nil, err
 	}
 
-	projectName := gt.ResourceID()
+	projectName := provider.ResourceID()
 	project, err := svc.Projects.Get(projectName).Do()
 	if err != nil {
 		return nil, nil, err
@@ -227,12 +227,12 @@ func (g *mqlGcloudProject) GetIamPolicy() ([]interface{}, error) {
 		return nil, err
 	}
 
-	gt, err := gcptransport(g.MotorRuntime.Motor.Provider)
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := gt.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
@@ -275,12 +275,12 @@ func (g *mqlGcloudCompute) id() (string, error) {
 }
 
 func (g *mqlGcloudCompute) GetInstances() ([]interface{}, error) {
-	gt, err := gcptransport(g.MotorRuntime.Motor.Provider)
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := gt.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
@@ -291,7 +291,7 @@ func (g *mqlGcloudCompute) GetInstances() ([]interface{}, error) {
 		return nil, err
 	}
 
-	projectName := gt.ResourceID()
+	projectName := provider.ResourceID()
 
 	// TODO: iterate over all instances
 	// TODO: harmonize instance list with discovery?, at least borrow the parallel execution
@@ -361,12 +361,12 @@ func (g *mqlGcloudStorage) id() (string, error) {
 }
 
 func (g *mqlGcloudStorage) GetBuckets() ([]interface{}, error) {
-	gt, err := gcptransport(g.MotorRuntime.Motor.Provider)
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := gt.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, storage.CloudPlatformScope)
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, storage.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
@@ -377,7 +377,7 @@ func (g *mqlGcloudStorage) GetBuckets() ([]interface{}, error) {
 		return nil, err
 	}
 
-	projectID := gt.ResourceID()
+	projectID := provider.ResourceID()
 	buckets, err := storageSvc.Buckets.List(projectID).Do()
 	if err != nil {
 		return nil, err
@@ -471,12 +471,12 @@ func (g *mqlGcloudStorageBucket) GetIamPolicy() ([]interface{}, error) {
 		return nil, err
 	}
 
-	gt, err := gcptransport(g.MotorRuntime.Motor.Provider)
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := gt.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, storage.CloudPlatformScope)
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, storage.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
@@ -515,12 +515,12 @@ func (g *mqlGcloudSql) id() (string, error) {
 }
 
 func (g *mqlGcloudSql) GetInstances() ([]interface{}, error) {
-	gt, err := gcptransport(g.MotorRuntime.Motor.Provider)
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := gt.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, sqladmin.CloudPlatformScope)
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, sqladmin.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
@@ -531,7 +531,7 @@ func (g *mqlGcloudSql) GetInstances() ([]interface{}, error) {
 		return nil, err
 	}
 
-	projectName := gt.ResourceID()
+	projectName := provider.ResourceID()
 	sqlinstances, err := sqladminSvc.Instances.List(projectName).Do()
 	if err != nil {
 		return nil, err

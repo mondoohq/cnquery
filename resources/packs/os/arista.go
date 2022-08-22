@@ -6,19 +6,19 @@ import (
 	"strings"
 
 	"go.mondoo.io/mondoo/motor/providers"
-	arista_transport "go.mondoo.io/mondoo/motor/providers/arista"
+	arista_provider "go.mondoo.io/mondoo/motor/providers/arista"
 	"go.mondoo.io/mondoo/resources/packs/core"
 	"go.mondoo.io/mondoo/resources/packs/os/arista"
 )
 
-func aristaClientInstance(t providers.Transport) (*arista.Eos, *arista_transport.Provider, error) {
-	at, ok := t.(*arista_transport.Provider)
+func aristaClientInstance(t providers.Transport) (*arista.Eos, *arista_provider.Provider, error) {
+	provider, ok := t.(*arista_provider.Provider)
 	if !ok {
 		return nil, nil, errors.New("arista.eos resource is not supported on this transport")
 	}
 
-	eos := arista.NewEos(at.Client())
-	return eos, at, nil
+	eos := arista.NewEos(provider.Client())
+	return eos, provider, nil
 }
 
 func (a *mqlAristaEos) id() (string, error) {
@@ -225,11 +225,11 @@ func (a *mqlAristaEos) GetIpInterfaces() ([]interface{}, error) {
 }
 
 func (a *mqlAristaEos) GetVersion() (map[string]interface{}, error) {
-	_, at, err := aristaClientInstance(a.MotorRuntime.Motor.Provider)
+	_, provider, err := aristaClientInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
-	version, err := at.GetVersion()
+	version, err := provider.GetVersion()
 	if err != nil {
 		return nil, err
 	}

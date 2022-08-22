@@ -7,7 +7,7 @@ import (
 	"go.mondoo.io/mondoo/motor/discovery/common"
 	"go.mondoo.io/mondoo/motor/platform/detector"
 	"go.mondoo.io/mondoo/motor/providers"
-	gcp_transport "go.mondoo.io/mondoo/motor/providers/gcp"
+	gcp_provider "go.mondoo.io/mondoo/motor/providers/gcp"
 	"google.golang.org/api/compute/v1"
 )
 
@@ -28,18 +28,18 @@ func (r *GcpProjectResolver) Resolve(tc *providers.Config, cfn common.Credential
 		return resolved, nil
 	}
 
-	trans, err := gcp_transport.New(tc)
+	provider, err := gcp_provider.New(tc)
 	if err != nil {
 		return nil, err
 	}
 
-	identifier, err := trans.Identifier()
+	identifier, err := provider.Identifier()
 	if err != nil {
 		return nil, err
 	}
 
 	// detect platform info for the asset
-	detector := detector.New(trans)
+	detector := detector.New(provider)
 	pf, err := detector.Platform()
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (r *GcpProjectResolver) Resolve(tc *providers.Config, cfn common.Credential
 
 	// discover compute instances
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {
-		client, err := trans.Client(compute.ComputeReadonlyScope)
+		client, err := provider.Client(compute.ComputeReadonlyScope)
 		if err != nil {
 			return nil, errors.Wrap(err, "use `gcloud auth application-default login` to authenticate locally")
 		}

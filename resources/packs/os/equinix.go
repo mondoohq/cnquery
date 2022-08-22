@@ -5,19 +5,18 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/packethost/packngo"
-	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/motor/providers"
+	equinix_provider "go.mondoo.io/mondoo/motor/providers/equinix"
+	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core"
-
-	equinix_transport "go.mondoo.io/mondoo/motor/providers/equinix"
 )
 
-func equinixtransport(t providers.Transport) (*equinix_transport.Provider, error) {
-	at, ok := t.(*equinix_transport.Provider)
+func equinixProvider(t providers.Transport) (*equinix_provider.Provider, error) {
+	provider, ok := t.(*equinix_provider.Provider)
 	if !ok {
 		return nil, errors.New("equinix resource is not supported on this transport")
 	}
-	return at, nil
+	return provider, nil
 }
 
 // "2021-03-03T11:13:46Z"
@@ -35,7 +34,7 @@ func (g *mqlEquinixMetalProject) init(args *resources.Args) (*resources.Args, Eq
 	}
 
 	// fetch the default project from the transport
-	et, err := equinixtransport(g.MotorRuntime.Motor.Provider)
+	et, err := equinixProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -66,15 +65,15 @@ func (g *mqlEquinixMetalProject) init(args *resources.Args) (*resources.Args, Eq
 }
 
 func (p *mqlEquinixMetalProject) GetOrganization() (interface{}, error) {
-	et, err := equinixtransport(p.MotorRuntime.Motor.Provider)
+	provider, err := equinixProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	c := et.Client()
+	c := provider.Client()
 
 	// NOTE: if we are going to support multiple projects, we need to change this logic
-	project := et.Project()
+	project := provider.Project()
 
 	// we need to list the organization to circumvent the get issue
 	// if we request the project and try to access the org, it only returns the url
@@ -119,15 +118,15 @@ func (p *mqlEquinixMetalProject) GetOrganization() (interface{}, error) {
 }
 
 func (p *mqlEquinixMetalProject) GetUsers() ([]interface{}, error) {
-	et, err := equinixtransport(p.MotorRuntime.Motor.Provider)
+	provider, err := equinixProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	c := et.Client()
+	c := provider.Client()
 
 	// NOTE: if we are going to support multiple projects, we need to change this logic
-	project := et.Project()
+	project := provider.Project()
 
 	// NOTE: circumvent the API, since project user only includes url of the user
 	userMap := map[string]packngo.User{}
@@ -181,15 +180,15 @@ func (p *mqlEquinixMetalProject) GetUsers() ([]interface{}, error) {
 }
 
 func (p *mqlEquinixMetalProject) GetSshKeys() ([]interface{}, error) {
-	et, err := equinixtransport(p.MotorRuntime.Motor.Provider)
+	provider, err := equinixProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	c := et.Client()
+	c := provider.Client()
 
 	// NOTE: if we are going to support multiple projects, we need to change this logic
-	project := et.Project()
+	project := provider.Project()
 
 	keys, _, err := c.SSHKeys.ProjectList(project.ID)
 	if err != nil {
@@ -222,15 +221,15 @@ func (p *mqlEquinixMetalProject) GetSshKeys() ([]interface{}, error) {
 }
 
 func (p *mqlEquinixMetalProject) GetDevices() ([]interface{}, error) {
-	et, err := equinixtransport(p.MotorRuntime.Motor.Provider)
+	provider, err := equinixProvider(p.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	c := et.Client()
+	c := provider.Client()
 
 	// NOTE: if we are going to support multiple projects, we need to change this logic
-	project := et.Project()
+	project := provider.Project()
 
 	devices, _, err := c.Devices.List(project.ID, nil)
 	if err != nil {

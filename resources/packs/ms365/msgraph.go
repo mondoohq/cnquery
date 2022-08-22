@@ -8,15 +8,15 @@ import (
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/rolemanagement/directory/roleassignments"
 	"go.mondoo.io/mondoo/motor/providers"
-	ms365_transport "go.mondoo.io/mondoo/motor/providers/ms365"
+	ms365_provider "go.mondoo.io/mondoo/motor/providers/ms365"
 	"go.mondoo.io/mondoo/resources"
 	"go.mondoo.io/mondoo/resources/packs/core"
 	"go.mondoo.io/mondoo/resources/packs/ms365/msgraphclient"
 	"go.mondoo.io/mondoo/resources/packs/ms365/msgraphconv"
 )
 
-func ms365transport(t providers.Transport) (*ms365_transport.Provider, error) {
-	at, ok := t.(*ms365_transport.Provider)
+func ms365Provider(t providers.Transport) (*ms365_provider.Provider, error) {
+	at, ok := t.(*ms365_provider.Provider)
 	if !ok {
 		return nil, errors.New("ms365 resource is not supported on this transport")
 	}
@@ -28,12 +28,12 @@ func (m *mqlMsgraphBeta) id() (string, error) {
 }
 
 func (m *mqlMsgraphBeta) GetSettings() ([]interface{}, error) {
-	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
+	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	graphBetaClient, err := graphBetaClient(mt)
+	graphBetaClient, err := graphBetaClient(provider)
 	if err != nil {
 		return nil, err
 	}
@@ -50,17 +50,17 @@ func (m *mqlMsgraphBetaOrganization) id() (string, error) {
 }
 
 func (m *mqlMsgraphBeta) GetOrganizations() ([]interface{}, error) {
-	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
+	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	missingPermissions := mt.MissingRoles("Organization.Read.All")
+	missingPermissions := provider.MissingRoles("Organization.Read.All")
 	if len(missingPermissions) > 0 {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(mt)
+	graphBetaClient, err := graphBetaClient(provider)
 	if err != nil {
 		return nil, err
 	}
@@ -99,17 +99,17 @@ func (m *mqlMsgraphBetaUser) id() (string, error) {
 }
 
 func (m *mqlMsgraphBeta) GetUsers() ([]interface{}, error) {
-	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
+	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	missingPermissions := mt.MissingRoles("User.Read.All")
+	missingPermissions := provider.MissingRoles("User.Read.All")
 	if len(missingPermissions) > 0 {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(mt)
+	graphBetaClient, err := graphBetaClient(provider)
 	if err != nil {
 		return nil, err
 	}
@@ -163,17 +163,17 @@ func (m *mqlMsgraphBetaDomain) id() (string, error) {
 }
 
 func (m *mqlMsgraphBeta) GetDomains() ([]interface{}, error) {
-	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
+	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	missingPermissions := mt.MissingRoles("Domain.Read.All")
+	missingPermissions := provider.MissingRoles("Domain.Read.All")
 	if len(missingPermissions) > 0 {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(mt)
+	graphBetaClient, err := graphBetaClient(provider)
 	if err != nil {
 		return nil, err
 	}
@@ -215,12 +215,12 @@ func (m *mqlMsgraphBetaDomaindnsrecord) id() (string, error) {
 }
 
 func (m *mqlMsgraphBetaDomain) GetServiceConfigurationRecords() ([]interface{}, error) {
-	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
+	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	missingPermissions := mt.MissingRoles("Domain.Read.All")
+	missingPermissions := provider.MissingRoles("Domain.Read.All")
 	if len(missingPermissions) > 0 {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
@@ -230,7 +230,7 @@ func (m *mqlMsgraphBetaDomain) GetServiceConfigurationRecords() ([]interface{}, 
 		return nil, err
 	}
 
-	graphBetaClient, err := graphBetaClient(mt)
+	graphBetaClient, err := graphBetaClient(provider)
 	if err != nil {
 		return nil, err
 	}
@@ -271,17 +271,17 @@ func (m *mqlMsgraphBetaApplication) id() (string, error) {
 }
 
 func (m *mqlMsgraphBeta) GetApplications() ([]interface{}, error) {
-	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
+	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	missingPermissions := mt.MissingRoles("Application.Read.All")
+	missingPermissions := provider.MissingRoles("Application.Read.All")
 	if len(missingPermissions) > 0 {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(mt)
+	graphBetaClient, err := graphBetaClient(provider)
 	if err != nil {
 		return nil, err
 	}
@@ -320,17 +320,17 @@ func (m *mqlMsgraphBetaUser) GetSettings() (interface{}, error) {
 		return nil, err
 	}
 
-	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
+	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	missingPermissions := mt.MissingRoles("User.Read.All")
+	missingPermissions := provider.MissingRoles("User.Read.All")
 	if len(missingPermissions) > 0 {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(mt)
+	graphBetaClient, err := graphBetaClient(provider)
 	if err != nil {
 		return nil, err
 	}
@@ -396,17 +396,17 @@ func msSecureScoreToMql(runtime *resources.Runtime, score models.SecureScoreable
 }
 
 func (m *mqlMsgraphBetaSecurity) GetLatestSecureScores() (interface{}, error) {
-	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
+	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	missingPermissions := mt.MissingRoles("SecurityEvents.Read.All")
+	missingPermissions := provider.MissingRoles("SecurityEvents.Read.All")
 	if len(missingPermissions) > 0 {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(mt)
+	graphBetaClient, err := graphBetaClient(provider)
 	if err != nil {
 		return nil, err
 	}
@@ -434,17 +434,17 @@ func (m *mqlMsgraphBetaSecurity) GetLatestSecureScores() (interface{}, error) {
 
 // see https://docs.microsoft.com/en-us/graph/api/securescore-get?view=graph-rest-1.0&tabs=http
 func (m *mqlMsgraphBetaSecurity) GetSecureScores() ([]interface{}, error) {
-	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
+	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	missingPermissions := mt.MissingRoles("SecurityEvents.Read.All")
+	missingPermissions := provider.MissingRoles("SecurityEvents.Read.All")
 	if len(missingPermissions) > 0 {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(mt)
+	graphBetaClient, err := graphBetaClient(provider)
 	if err != nil {
 		return nil, err
 	}
@@ -477,17 +477,17 @@ func (s *mqlMsgraphBetaPolicies) id() (string, error) {
 }
 
 func (m *mqlMsgraphBetaPolicies) GetAuthorizationPolicy() (interface{}, error) {
-	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
+	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	missingPermissions := mt.MissingRoles("Policy.Read.All")
+	missingPermissions := provider.MissingRoles("Policy.Read.All")
 	if len(missingPermissions) > 0 {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(mt)
+	graphBetaClient, err := graphBetaClient(provider)
 	if err != nil {
 		return nil, err
 	}
@@ -506,17 +506,17 @@ func (m *mqlMsgraphBetaPolicies) GetAuthorizationPolicy() (interface{}, error) {
 }
 
 func (m *mqlMsgraphBetaPolicies) GetIdentitySecurityDefaultsEnforcementPolicy() (interface{}, error) {
-	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
+	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	missingPermissions := mt.MissingRoles("Policy.Read.All")
+	missingPermissions := provider.MissingRoles("Policy.Read.All")
 	if len(missingPermissions) > 0 {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(mt)
+	graphBetaClient, err := graphBetaClient(provider)
 	if err != nil {
 		return nil, err
 	}
@@ -531,17 +531,17 @@ func (m *mqlMsgraphBetaPolicies) GetIdentitySecurityDefaultsEnforcementPolicy() 
 
 // https://docs.microsoft.com/en-us/graph/api/adminconsentrequestpolicy-get?view=graph-rest-beta
 func (m *mqlMsgraphBetaPolicies) GetAdminConsentRequestPolicy() (interface{}, error) {
-	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
+	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	missingPermissions := mt.MissingRoles("Policy.Read.All")
+	missingPermissions := provider.MissingRoles("Policy.Read.All")
 	if len(missingPermissions) > 0 {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(mt)
+	graphBetaClient, err := graphBetaClient(provider)
 	if err != nil {
 		return nil, err
 	}
@@ -556,17 +556,17 @@ func (m *mqlMsgraphBetaPolicies) GetAdminConsentRequestPolicy() (interface{}, er
 // https://docs.microsoft.com/en-us/azure/active-directory/manage-apps/configure-user-consent?tabs=azure-powershell
 // https://docs.microsoft.com/en-us/graph/api/permissiongrantpolicy-list?view=graph-rest-1.0&tabs=http
 func (m *mqlMsgraphBetaPolicies) GetPermissionGrantPolicies() (interface{}, error) {
-	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
+	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	missingPermissions := mt.MissingRoles("Policy.Read.All")
+	missingPermissions := provider.MissingRoles("Policy.Read.All")
 	if len(missingPermissions) > 0 {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(mt)
+	graphBetaClient, err := graphBetaClient(provider)
 	if err != nil {
 		return nil, err
 	}
@@ -583,17 +583,17 @@ func (m *mqlMsgraphBetaRolemanagement) id() (string, error) {
 }
 
 func (m *mqlMsgraphBetaRolemanagement) GetRoleDefinitions() (interface{}, error) {
-	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
+	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	missingPermissions := mt.MissingRoles("Directory.Read.All")
+	missingPermissions := provider.MissingRoles("Directory.Read.All")
 	if len(missingPermissions) > 0 {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(mt)
+	graphBetaClient, err := graphBetaClient(provider)
 	if err != nil {
 		return nil, err
 	}
@@ -634,17 +634,17 @@ func (m *mqlMsgraphBetaRolemanagementRoledefinition) id() (string, error) {
 }
 
 func (m *mqlMsgraphBetaRolemanagementRoledefinition) GetAssignments() ([]interface{}, error) {
-	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
+	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	missingPermissions := mt.MissingRoles("Directory.Read.All")
+	missingPermissions := provider.MissingRoles("Directory.Read.All")
 	if len(missingPermissions) > 0 {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(mt)
+	graphBetaClient, err := graphBetaClient(provider)
 	if err != nil {
 		return nil, err
 	}
@@ -696,17 +696,17 @@ func (m *mqlMsgraphBetaDevicemanagement) id() (string, error) {
 }
 
 func (m *mqlMsgraphBetaDevicemanagement) GetDeviceConfigurations() ([]interface{}, error) {
-	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
+	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	missingPermissions := mt.MissingRoles("DeviceManagementConfiguration.Read.All")
+	missingPermissions := provider.MissingRoles("DeviceManagementConfiguration.Read.All")
 	if len(missingPermissions) > 0 {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(mt)
+	graphBetaClient, err := graphBetaClient(provider)
 	if err != nil {
 		return nil, err
 	}
@@ -743,17 +743,17 @@ func (m *mqlMsgraphBetaDevicemanagement) GetDeviceConfigurations() ([]interface{
 }
 
 func (m *mqlMsgraphBetaDevicemanagement) GetDeviceCompliancePolicies() ([]interface{}, error) {
-	mt, err := ms365transport(m.MotorRuntime.Motor.Provider)
+	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	missingPermissions := mt.MissingRoles("DeviceManagementConfiguration.Read.All")
+	missingPermissions := provider.MissingRoles("DeviceManagementConfiguration.Read.All")
 	if len(missingPermissions) > 0 {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(mt)
+	graphBetaClient, err := graphBetaClient(provider)
 	if err != nil {
 		return nil, err
 	}
@@ -806,7 +806,7 @@ func (m *mqlMsgraphBetaDevicemanagementDevicecompliancepolicy) id() (string, err
 	return m.Id()
 }
 
-func graphBetaAdapter(t *ms365_transport.Provider) (*msgraphclient.GraphRequestAdapter, error) {
+func graphBetaAdapter(t *ms365_provider.Provider) (*msgraphclient.GraphRequestAdapter, error) {
 	auth, err := t.Auth()
 	if err != nil {
 		return nil, errors.Wrap(err, "authentication provider error")
@@ -819,7 +819,7 @@ func graphBetaAdapter(t *ms365_transport.Provider) (*msgraphclient.GraphRequestA
 	return adapter, nil
 }
 
-func graphBetaClient(t *ms365_transport.Provider) (*msgraphclient.GraphServiceClient, error) {
+func graphBetaClient(t *ms365_provider.Provider) (*msgraphclient.GraphServiceClient, error) {
 	adapter, err := graphBetaAdapter(t)
 	if err != nil {
 		return nil, err
