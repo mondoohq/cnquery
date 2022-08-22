@@ -1,0 +1,608 @@
+resources:
+  azuread:
+    fields:
+      applications: {}
+      domains: {}
+      groups: {}
+      servicePrincipals: {}
+      users: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azuread.application:
+    fields:
+      id: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azuread.domain:
+    fields:
+      authenticationType: {}
+      isDefault: {}
+      isVerified: {}
+      name: {}
+      properties: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azuread.group:
+    fields:
+      displayName: {}
+      id: {}
+      mail: {}
+      mailEnabled: {}
+      mailNickname: {}
+      members: {}
+      objectType: {}
+      properties: {}
+      securityEnabled: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azuread.serviceprincipal:
+    fields:
+      id: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azuread.user:
+    fields:
+      accountEnabled: {}
+      displayName: {}
+      givenName: {}
+      id: {}
+      mail: {}
+      mailNickname: {}
+      objectType: {}
+      properties: {}
+      surname: {}
+      userPrincipalName: {}
+      userType: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm:
+    fields:
+      resources: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.compute:
+    fields:
+      disks: {}
+      vms: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.compute.disk:
+    fields:
+      id: {}
+      location: {}
+      managedBy: {}
+      managedByExtended: {}
+      name: {}
+      properties: {}
+      sku: {}
+      tags: {}
+      type: {}
+      zones: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.compute.vm:
+    fields:
+      dataDisks: {}
+      extensions: {}
+      id: {}
+      location: {}
+      name: {}
+      osDisk: {}
+      properties: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.keyvault:
+    fields:
+      vaults: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.keyvault.certificate:
+    fields:
+      certName: {}
+      created: {}
+      enabled: {}
+      expires: {}
+      id: {}
+      notBefore: {}
+      recoveryLevel: {}
+      tags: {}
+      updated: {}
+      version: {}
+      versions: {}
+      x5t: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.keyvault.key:
+    fields:
+      created: {}
+      enabled: {}
+      expires: {}
+      keyName: {}
+      kid: {}
+      managed: {}
+      notBefore: {}
+      recoveryLevel: {}
+      tags: {}
+      updated: {}
+      version: {}
+      versions: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.keyvault.secret:
+    fields:
+      contentType: {}
+      created: {}
+      enabled: {}
+      expires: {}
+      id: {}
+      managed: {}
+      notBefore: {}
+      secretName: {}
+      tags: {}
+      updated: {}
+      version: {}
+      versions: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.keyvault.vault:
+    fields:
+      certificates: {}
+      diagnosticSettings: {}
+      id: {}
+      keys: {}
+      location: {}
+      properties: {}
+      secrets: {}
+      tags: {}
+      type: {}
+      vaultName: {}
+      vaultUri: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.mariadb:
+    fields:
+      servers: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.mariadb.database:
+    fields:
+      charset: {}
+      collation: {}
+      id: {}
+      name: {}
+      type: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.mariadb.server:
+    fields:
+      configuration: {}
+      databases: {}
+      firewallRules: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.monitor:
+    fields:
+      logProfiles: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.monitor.diagnosticsetting:
+    fields:
+      id: {}
+      name: {}
+      properties: {}
+      storageAccount: {}
+      type: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.monitor.logprofile:
+    fields:
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      storageAccount: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.mysql:
+    fields:
+      servers: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.mysql.database:
+    fields:
+      charset: {}
+      collation: {}
+      id: {}
+      name: {}
+      type: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.mysql.server:
+    fields:
+      configuration: {}
+      databases: {}
+      firewallRules: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.network:
+    fields:
+      interfaces: {}
+      securityGroups: {}
+      watchers: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.network.interface:
+    fields:
+      etag: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      tags: {}
+      type: {}
+      vm: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.network.securitygroup:
+    fields:
+      defaultSecurityRules: {}
+      etag: {}
+      id: {}
+      interfaces: {}
+      location: {}
+      name: {}
+      properties: {}
+      securityRules: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.network.securityrule:
+    fields:
+      destinationPortRange: {}
+      etag: {}
+      id: {}
+      name: {}
+      properties: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.network.watcher:
+    fields:
+      etag: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.postgresql:
+    fields:
+      servers: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.postgresql.database:
+    fields:
+      charset: {}
+      collation: {}
+      id: {}
+      name: {}
+      type: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.postgresql.server:
+    fields:
+      configuration: {}
+      databases: {}
+      firewallRules: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.resource:
+    fields:
+      changedTime: {}
+      createdTime: {}
+      id: {}
+      identity: {}
+      kind: {}
+      location: {}
+      managedBy: {}
+      name: {}
+      plan: {}
+      provisioningState: {}
+      sku: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.sql:
+    fields:
+      servers: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.sql.configuration:
+    fields:
+      allowedValues: {}
+      dataType: {}
+      defaultValue: {}
+      description: {}
+      id: {}
+      name: {}
+      source: {}
+      type: {}
+      value: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.sql.database:
+    fields:
+      advisor: {}
+      auditingPolicy: {}
+      collation: {}
+      connectionPolicy: {}
+      containmentState: {}
+      createMode: {}
+      creationDate: {}
+      currentServiceObjectiveId: {}
+      databaseId: {}
+      defaultSecondaryLocation: {}
+      earliestRestoreDate: {}
+      edition: {}
+      elasticPoolName: {}
+      failoverGroupId: {}
+      id: {}
+      maxSizeBytes: {}
+      name: {}
+      readScale: {}
+      recommendedIndex: {}
+      recoveryServicesRecoveryPointResourceId: {}
+      requestedServiceObjectiveId: {}
+      requestedServiceObjectiveName: {}
+      restorePointInTime: {}
+      sampleName: {}
+      serviceLevelObjective: {}
+      serviceTierAdvisors: {}
+      sourceDatabaseDeletionDate: {}
+      sourceDatabaseId: {}
+      status: {}
+      threadDetectionPolicy: {}
+      transparentDataEncryption: {}
+      type: {}
+      usage: {}
+      zoneRedundant: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.sql.databaseusage:
+    fields:
+      currentValue: {}
+      displayName: {}
+      id: {}
+      limit: {}
+      name: {}
+      nextResetTime: {}
+      resourceName: {}
+      unit: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.sql.firewallrule:
+    fields:
+      endIpAddress: {}
+      id: {}
+      name: {}
+      startIpAddress: {}
+      type: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.sql.server:
+    fields:
+      auditingPolicy: {}
+      azureAdAdministrators: {}
+      connectionPolicy: {}
+      databases: {}
+      encryptionProtector: {}
+      firewallRules: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      securityAlertPolicy: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.sql.server.administrator:
+    fields:
+      administratorType: {}
+      id: {}
+      login: {}
+      name: {}
+      sid: {}
+      tenantId: {}
+      type: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.storage:
+    fields:
+      accounts: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.storage.account:
+    fields:
+      containers: {}
+      id: {}
+      identity: {}
+      kind: {}
+      location: {}
+      name: {}
+      properties: {}
+      sku: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.storage.container:
+    fields:
+      etag: {}
+      id: {}
+      name: {}
+      properties: {}
+      type: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.web:
+    fields:
+      apps: {}
+      availableRuntimes: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.web.appsite:
+    fields:
+      applicationSettings: {}
+      authenticationSettings: {}
+      configuration: {}
+      connectionSettings: {}
+      id: {}
+      identity: {}
+      kind: {}
+      location: {}
+      metadata: {}
+      name: {}
+      properties: {}
+      stack: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.web.appsiteauthsettings:
+    fields:
+      id: {}
+      kind: {}
+      name: {}
+      properties: {}
+      type: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
+  azurerm.web.appsiteconfig:
+    fields:
+      id: {}
+      kind: {}
+      name: {}
+      properties: {}
+      type: {}
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+        - azure
