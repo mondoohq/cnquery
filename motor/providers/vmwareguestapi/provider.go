@@ -20,8 +20,6 @@ import (
 	"context"
 	"errors"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"github.com/vmware/govmomi"
@@ -31,6 +29,7 @@ import (
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.io/mondoo/motor/providers/os"
 	"go.mondoo.io/mondoo/motor/providers/ssh/cat"
 	"go.mondoo.io/mondoo/motor/providers/vmwareguestapi/toolbox"
 	"go.mondoo.io/mondoo/motor/providers/vsphere"

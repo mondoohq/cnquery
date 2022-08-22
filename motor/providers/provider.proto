@@ -62,11 +62,11 @@ message Config {
   ProviderType backend = 1;
   string host = 2;
   // Ports are not int by default, eg. docker://centos:latest parses a string as port
-  // Therefore it is up to the transport to convert the port to what they need
+  // Therefore it is up to the provider to convert the port to what they need
   int32 port = 3;
   string path = 4;
 
-  // credentials available for this transport configuration
+  // credentials available for this provider configuration
   repeated mondoo.motor.vault.v1.Credential credentials = 11;
 
   bool insecure = 8;  // disable ssl/tls checks

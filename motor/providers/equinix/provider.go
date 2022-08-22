@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	_ providers.Transport                   = (*Provider)(nil)
-	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
+	_ providers.Transport          = (*Provider)(nil)
+	_ providers.PlatformIdentifier = (*Provider)(nil)
 )
 
 func New(cfg *providers.Config) (*Provider, error) {

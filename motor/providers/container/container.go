@@ -15,7 +15,7 @@ import (
 
 type ContainerProvider interface {
 	providers.Transport
-	providers.TransportPlatformIdentifier
+	providers.PlatformIdentifier
 	Labels() map[string]string
 	PlatformName() string
 }

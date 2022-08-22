@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	_ providers.Transport                   = (*Provider)(nil)
-	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
+	_ providers.Transport          = (*Provider)(nil)
+	_ providers.PlatformIdentifier = (*Provider)(nil)
 )
 
 type ProviderOption func(charp *Provider)

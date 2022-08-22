@@ -16,8 +16,8 @@ const (
 )
 
 var (
-	_ providers.Transport                   = (*Provider)(nil)
-	_ providers.TransportPlatformIdentifier = (*Provider)(nil)
+	_ providers.Transport          = (*Provider)(nil)
+	_ providers.PlatformIdentifier = (*Provider)(nil)
 )
 
 // New create a new Microsoft 365 provider
