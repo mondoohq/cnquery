@@ -14,7 +14,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/platform/windows"
-	"go.mondoo.io/mondoo/resources/packs/os/powershell"
+	"go.mondoo.io/mondoo/motor/providers/os/powershell"
 )
 
 // ProcessorArchitecture Enum

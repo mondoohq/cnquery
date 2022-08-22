@@ -1,8 +1,8 @@
 package os
 
 import (
+	"go.mondoo.io/mondoo/motor/providers/os/powershell"
 	"go.mondoo.io/mondoo/resources/packs/core"
-	"go.mondoo.io/mondoo/resources/packs/os/powershell"
 	"go.mondoo.io/mondoo/resources/packs/os/windows"
 )
 

@@ -16,7 +16,7 @@ import (
 	"go.mondoo.io/mondoo/motor"
 	"go.mondoo.io/mondoo/motor/platform"
 	"go.mondoo.io/mondoo/motor/providers/os"
-	"go.mondoo.io/mondoo/resources/packs/os/powershell"
+	"go.mondoo.io/mondoo/motor/providers/os/powershell"
 )
 
 var errNoSuchInterface = errors.New("no such network interface")

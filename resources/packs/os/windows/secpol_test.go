@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/resources/packs/os/powershell"
 	"go.mondoo.io/mondoo/motor/providers/mock"
+	"go.mondoo.io/mondoo/motor/providers/os/powershell"
 )
 
 func TestParseSecpol(t *testing.T) {
