@@ -1,4 +1,4 @@
-package ipmi
+package client
 
 // This test runs against the an IPMI service. For example, an simulator can be used like the openipmi simulator
 // a complete docker container is available at https://github.com/vapor-ware/ipmi-simulator

@@ -5,8 +5,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.io/mondoo/motor/providers"
+	impi_client "go.mondoo.io/mondoo/motor/providers/ipmi/client"
 	"go.mondoo.io/mondoo/motor/vault"
-	"go.mondoo.io/mondoo/resources/packs/core/ipmi"
 )
 
 var (
@@ -30,7 +30,7 @@ func New(pCfg *providers.Config) (*Provider, error) {
 		return nil, errors.New("missing password for ipmi provider")
 	}
 
-	client, err := ipmi.NewIpmiClient(&ipmi.Connection{
+	client, err := impi_client.NewIpmiClient(&impi_client.Connection{
 		Hostname:  pCfg.Host,
 		Port:      port,
 		Username:  c.User,
@@ -52,7 +52,7 @@ func New(pCfg *providers.Config) (*Provider, error) {
 }
 
 type Provider struct {
-	client *ipmi.IpmiClient
+	client *impi_client.IpmiClient
 	guid   string
 }
 
@@ -82,7 +82,7 @@ func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	}
 }
 
-func (p *Provider) Client() *ipmi.IpmiClient {
+func (p *Provider) Client() *impi_client.IpmiClient {
 	return p.client
 }
 

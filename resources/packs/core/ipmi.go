@@ -5,7 +5,7 @@ import (
 
 	"go.mondoo.io/mondoo/motor/providers"
 	ipmi_provider "go.mondoo.io/mondoo/motor/providers/ipmi"
-	"go.mondoo.io/mondoo/resources/packs/core/ipmi"
+	ipmi "go.mondoo.io/mondoo/motor/providers/ipmi/client"
 )
 
 func getIpmiInstance(t providers.Instance) (*ipmi.IpmiClient, error) {

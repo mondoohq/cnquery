@@ -1,4 +1,4 @@
-package ipmi
+package client
 
 // Specifications
 // https://www.intel.com/content/www/us/en/servers/ipmi/ipmi-technical-resources.html
