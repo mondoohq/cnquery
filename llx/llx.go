@@ -209,6 +209,10 @@ func (c *MQLExecutorV2) _newBlockExecutor(blockRef uint64, callback ResultCallba
 		res.callbackPoints[ref] = id
 	}
 
+	if len(res.callbackPoints) == 0 {
+		panic("no callback points")
+	}
+
 	return res, nil
 }
 
@@ -471,7 +475,7 @@ func (a *arrayBlockCallResults) update(i int, res *RawResult) {
 	}
 }
 
-func newArrayBlockCallResultsV2(expectedBlockCalls int, code *CodeV2, blockRef uint64, onComplete func([]arrayBlockCallResult, []error)) *arrayBlockCallResults {
+func newArrayBlockCallResultsV2(expectedBlockCalls int, code *CodeV2, blockRef uint64, onComplete func([]arrayBlockCallResult, []error)) (*arrayBlockCallResults, bool) {
 	results := make([]arrayBlockCallResult, expectedBlockCalls)
 	waiting := make([]int, expectedBlockCalls)
 
@@ -494,8 +498,14 @@ func newArrayBlockCallResultsV2(expectedBlockCalls int, code *CodeV2, blockRef u
 	}
 
 	expectedCodepoints := len(codepoints)
-	for i := range waiting {
-		waiting[i] = expectedCodepoints
+	if expectedCodepoints == 0 {
+		results := make([]arrayBlockCallResult, expectedBlockCalls)
+		onComplete(results, nil)
+		return nil, false
+	} else {
+		for i := range waiting {
+			waiting[i] = expectedCodepoints
+		}
 	}
 
 	for i := range results {
@@ -513,14 +523,16 @@ func newArrayBlockCallResultsV2(expectedBlockCalls int, code *CodeV2, blockRef u
 		onComplete:           onComplete,
 		entrypoints:          entrypoints,
 		datapoints:           datapoints,
-	}
+	}, true
 }
 
 func (c *blockExecutor) runFunctionBlocks(argList [][]*RawData, blockRef uint64,
 	onComplete func([]arrayBlockCallResult, []error),
 ) error {
-	callResults := newArrayBlockCallResultsV2(len(argList), c.ctx.code, blockRef, onComplete)
-
+	callResults, shouldRun := newArrayBlockCallResultsV2(len(argList), c.ctx.code, blockRef, onComplete)
+	if !shouldRun {
+		return nil
+	}
 	for idx := range argList {
 		i := idx
 		args := argList[i]

@@ -747,6 +747,15 @@ func TestArray(t *testing.T) {
 			},
 		},
 		{
+			"[1,2,3] { a = _ }",
+			0,
+			[]interface{}{
+				map[string]interface{}{"__t": llx.BoolTrue, "__s": llx.NilData},
+				map[string]interface{}{"__t": llx.BoolTrue, "__s": llx.NilData},
+				map[string]interface{}{"__t": llx.BoolTrue, "__s": llx.NilData},
+			},
+		},
+		{
 			"[1,2,3].where()",
 			0,
 			[]interface{}{int64(1), int64(2), int64(3)},
