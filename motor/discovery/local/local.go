@@ -61,6 +61,11 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		assetObj.Name = fingerprint.Name
 	}
 
+	if p.Runtime == "" && fingerprint.Runtime != "" {
+		p.Runtime = fingerprint.Runtime
+		p.Kind = fingerprint.Kind
+	}
+
 	for _, pf := range fingerprint.RelatedAssets {
 		assetObj.RelatedAssets = append(assetObj.RelatedAssets, &asset.Asset{
 			Name:        pf.Name,

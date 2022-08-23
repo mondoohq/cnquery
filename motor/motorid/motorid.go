@@ -5,6 +5,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.io/mondoo/motor/discovery/aws"
 	"go.mondoo.io/mondoo/motor/motorid/awsec2"
 	"go.mondoo.io/mondoo/motor/motorid/clouddetect"
 	"go.mondoo.io/mondoo/motor/motorid/hostname"
@@ -19,6 +20,8 @@ import (
 type PlatformFingerprint struct {
 	PlatformIDs []string
 	Name        string
+	Runtime     string
+	Kind        providers.Kind
 	// TODO: add labels detection
 	// Labels      map[string]string
 	RelatedAssets []PlatformFingerprint
@@ -55,6 +58,15 @@ func IdentifyPlatform(t providers.Instance, p *platform.Platform, idDetectors []
 				fingerprint.Name = name
 			}
 		}
+
+		// check whether we can extract runtime and kind information
+		for i := range platformIds {
+			runtime, kind := extractPlatformAndKindFromPlatformId(platformIds[i])
+			if runtime != "" {
+				fingerprint.Runtime = runtime
+				fingerprint.Kind = kind
+			}
+		}
 	}
 
 	// if we found zero platform ids something went wrong
@@ -80,6 +92,13 @@ func gatherNameForPlatformId(id string) string {
 		return structId.Id
 	}
 	return ""
+}
+
+func extractPlatformAndKindFromPlatformId(id string) (string, providers.Kind) {
+	if aws.ParseEc2PlatformID(id) != nil {
+		return providers.RUNTIME_AWS_EC2, providers.Kind_KIND_VIRTUAL_MACHINE
+	}
+	return "", providers.Kind_KIND_UNKNOWN
 }
 
 func GatherPlatformIDs(provider providers.Instance, pf *platform.Platform, idDetector providers.PlatformIdDetector) ([]string, []string, error) {

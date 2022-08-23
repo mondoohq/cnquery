@@ -52,7 +52,7 @@ func (d *OSReleaseDetector) unamem() (string, error) {
 	return d.command("uname -m")
 }
 
-// osrelease is reads /etc/os/reelease and parses the file
+// osrelease reads /etc/os/release and parses the file
 // NAME="Ubuntu"
 // VERSION="16.04.3 LTS (Xenial Xerus)"
 // ID=ubuntu
