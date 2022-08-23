@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: ReplicaSet
 metadata:
-  name: mondoo-replicaset
+  name: mondoo
   namespace: default
 spec:
   selector:

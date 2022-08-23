@@ -5,8 +5,8 @@ metadata:
     app: mondoo-k8s-scan
     mondoo_cr: mondoo-client
     scan: k8s
-  name: mondoo-client-k8s-scan
-  namespace: mondoo-operator
+  name: mondoo
+  namespace: default
 spec:
   template:
     metadata:

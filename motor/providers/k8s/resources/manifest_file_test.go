@@ -12,7 +12,7 @@ import (
 )
 
 func TestLoadManifestFile(t *testing.T) {
-	f, err := os.Open("./testdata/appsv1.deployment.yaml")
+	f, err := os.Open("./testdata/deployment.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -23,11 +23,11 @@ func TestLoadManifestFile(t *testing.T) {
 
 	resource := list[0]
 	deployment := resource.(*appsv1.Deployment)
-	assert.Equal(t, "centos", deployment.Name)
+	assert.Equal(t, "mondoo", deployment.Name)
 }
 
 func TestLoadManifestDir(t *testing.T) {
-	input, err := resources.MergeManifestFiles([]string{"./testdata/appsv1.deployment.yaml", "./testdata/configmap.yaml", "./testdata/appsv1.daemonset.yaml"})
+	input, err := resources.MergeManifestFiles([]string{"./testdata/deployment.yaml", "./testdata/configmap.yaml", "./testdata/daemonset.yaml"})
 	require.NoError(t, err)
 
 	list, err := resources.ResourcesFromManifest(input)
@@ -36,7 +36,7 @@ func TestLoadManifestDir(t *testing.T) {
 
 	resource := list[0]
 	deployment := resource.(*appsv1.Deployment)
-	assert.Equal(t, "centos", deployment.Name)
+	assert.Equal(t, "mondoo", deployment.Name)
 
 	resource = list[1]
 	configmap := resource.(*coresv1.ConfigMap)
@@ -44,5 +44,5 @@ func TestLoadManifestDir(t *testing.T) {
 
 	resource = list[2]
 	daemonset := resource.(*appsv1.DaemonSet)
-	assert.Equal(t, "mondoo-daemonset", daemonset.Name)
+	assert.Equal(t, "mondoo", daemonset.Name)
 }

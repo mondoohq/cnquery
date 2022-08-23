@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: mondoo-daemonset
+  name: mondoo
   namespace: default
 spec:
   selector:

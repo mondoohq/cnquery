@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: hello-pod
+  name: mondoo
   namespace: default
 spec:
   containers:

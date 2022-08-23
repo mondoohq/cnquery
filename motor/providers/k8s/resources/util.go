@@ -47,6 +47,8 @@ func GetPodSpec(obj runtime.Object) (*corev1.PodSpec, error) {
 		podSpec = &x.Spec.Template.Spec
 	case *appsv1beta1.StatefulSet:
 		podSpec = &x.Spec.Template.Spec
+	case *appsv1.ReplicaSet:
+		podSpec = &x.Spec.Template.Spec
 	default:
 		return nil, fmt.Errorf("object type %v is not supported", x)
 	}

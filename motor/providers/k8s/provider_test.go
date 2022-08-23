@@ -37,7 +37,7 @@ func TestKubernetesManifest(t *testing.T) {
 	p, err := New(&providers.Config{
 		Type: providers.ProviderType_K8S,
 		Options: map[string]string{
-			OPTION_MANIFEST: "./resources/testdata/appsv1.daemonset.yaml",
+			OPTION_MANIFEST: "./resources/testdata/daemonset.yaml",
 		},
 	})
 	require.NoError(t, err)

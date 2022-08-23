@@ -14,11 +14,15 @@ import (
 	"go.mondoo.io/mondoo/resources/packs/testutils"
 )
 
+type K8sObjectKindTest struct {
+	kind string
+}
+
 func k8sTestQuery(t *testing.T, query string) []*llx.RawResult {
 	p, err := k8s.New(context.Background(), &providers.Config{
 		Backend: providers.ProviderType_K8S,
 		Options: map[string]string{
-			"path": "./testdata",
+			"path": "../../../motor/providers/k8s/resources/testdata",
 		},
 	})
 	require.NoError(t, err)
@@ -37,4 +41,24 @@ func TestResource_k8s(t *testing.T) {
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, string("example"), res[0].Data.Value)
 	})
+}
+
+func TestSupportedK8sKinds(t *testing.T) {
+	tests := []K8sObjectKindTest{
+		{kind: "cronjob"},
+		{kind: "job"},
+		{kind: "deployment"},
+		{kind: "pod"},
+		{kind: "statefulset"},
+		{kind: "replicaset"},
+		{kind: "daemonset"},
+	}
+	for _, testCase := range tests {
+		t.Run("k8s "+testCase.kind, func(t *testing.T) {
+			res := k8sTestQuery(t, "k8s."+testCase.kind+"(name: \"mondoo\", namespace: \"default\"){ podSpec }")
+			require.NotEmpty(t, res)
+			assert.Empty(t, res[0].Result().Error)
+			assert.NotEmpty(t, res[0].Data.Value)
+		})
+	}
 }

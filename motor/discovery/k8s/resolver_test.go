@@ -13,12 +13,12 @@ import (
 
 func TestManifestResolver(t *testing.T) {
 	resolver := &Resolver{}
-	manifestFile := "../../providers/k8s/resources/testdata/appsv1.pod.yaml"
+	manifestFile := "../../providers/k8s/resources/testdata/pod.yaml"
 
 	ctx := resources.SetDiscoveryCache(context.Background(), resources.NewDiscoveryCache())
 
 	assetList, err := resolver.Resolve(ctx, &asset.Asset{}, &providers.Config{
-		PlatformId: "//platform/k8s/uid/123/namespace/default/pods/name/hello-pod",
+		PlatformId: "//platform/k8s/uid/123/namespace/default/pods/name/mondoo",
 		Backend:    providers.ProviderType_K8S,
 		Options: map[string]string{
 			"path": manifestFile,
@@ -35,14 +35,95 @@ func TestManifestResolver(t *testing.T) {
 	assert.Equal(t, assetList[3].Platform.Runtime, "docker-registry")
 }
 
-func TestManifestResolverPodDiscovery(t *testing.T) {
+func TestManifestResolverDiscoveries(t *testing.T) {
+	testCases := []struct {
+		kind            string
+		discoveryOption string
+		platformName    string
+		numAssets       int
+	}{
+		{
+			kind:            "pod",
+			discoveryOption: "pods",
+			platformName:    "k8s-pod",
+			numAssets:       3,
+		},
+		{
+			kind:            "cronjob",
+			discoveryOption: "cronjobs",
+			platformName:    "k8s-cronjob",
+			numAssets:       2,
+		},
+		{
+			kind:            "job",
+			discoveryOption: "jobs",
+			platformName:    "k8s-job",
+			numAssets:       2,
+		},
+		{
+			kind:            "statefulset",
+			discoveryOption: "statefulsets",
+			platformName:    "k8s-statefulset",
+			numAssets:       2,
+		},
+		{
+			kind:            "daemonset",
+			discoveryOption: "daemonsets",
+			platformName:    "k8s-daemonset",
+			numAssets:       2,
+		},
+		{
+			kind:            "replicaset",
+			discoveryOption: "replicasets",
+			platformName:    "k8s-replicaset",
+			numAssets:       2,
+		},
+		{
+			kind:            "deployment",
+			discoveryOption: "deployments",
+			platformName:    "k8s-deployment",
+			numAssets:       2,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run("discover k8s "+testCase.kind, func(t *testing.T) {
+			resolver := &Resolver{}
+			manifestFile := "../../providers/k8s/resources/testdata/" + testCase.kind + ".yaml"
+
+			ctx := resources.SetDiscoveryCache(context.Background(), resources.NewDiscoveryCache())
+
+			assetList, err := resolver.Resolve(ctx, &asset.Asset{}, &providers.Config{
+				PlatformId: "//platform/k8s/uid/123/namespace/default/" + testCase.discoveryOption + "/name/mondoo",
+				Backend:    providers.ProviderType_K8S,
+				Options: map[string]string{
+					"path": manifestFile,
+				},
+				Discover: &providers.Discovery{
+					Targets: []string{testCase.discoveryOption},
+				},
+			}, nil, nil)
+			require.NoError(t, err)
+			// When this check fails locally, check your kubeconfig.
+			// context has to reference the default namespace
+			assert.Equal(t, testCase.numAssets, len(assetList))
+			assert.Contains(t, assetList[1].Platform.Family, "k8s-workload")
+			assert.Contains(t, assetList[1].Platform.Family, "k8s")
+			assert.Equal(t, "k8s-manifest", assetList[1].Platform.Runtime)
+			assert.Equal(t, testCase.platformName, assetList[1].Platform.Name)
+			assert.Equal(t, "default/mondoo", assetList[1].Name)
+		})
+	}
+}
+
+func TestManifestResolverMultiPodDiscovery(t *testing.T) {
 	resolver := &Resolver{}
-	manifestFile := "../../providers/k8s/resources/testdata/appsv1.pod.yaml"
+	manifestFile := "../../providers/k8s/resources/testdata/pod.yaml"
 
 	ctx := resources.SetDiscoveryCache(context.Background(), resources.NewDiscoveryCache())
 
 	assetList, err := resolver.Resolve(ctx, &asset.Asset{}, &providers.Config{
-		PlatformId: "//platform/k8s/uid/123/namespace/default/pods/name/hello-pod",
+		PlatformId: "//platform/k8s/uid/123/namespace/default/pods/name/mondoo",
 		Backend:    providers.ProviderType_K8S,
 		Options: map[string]string{
 			"path": manifestFile,
@@ -59,41 +140,15 @@ func TestManifestResolverPodDiscovery(t *testing.T) {
 	assert.Contains(t, assetList[1].Platform.Family, "k8s")
 	assert.Equal(t, "k8s-manifest", assetList[1].Platform.Runtime)
 	assert.Equal(t, "k8s-pod", assetList[1].Platform.Name)
-	assert.Equal(t, "default/hello-pod", assetList[1].Name)
+	assert.Equal(t, "default/mondoo", assetList[1].Name)
 	assert.Equal(t, "k8s-manifest", assetList[2].Platform.Runtime)
 	assert.Equal(t, "k8s-pod", assetList[2].Platform.Name)
 	assert.Equal(t, "default/hello-pod-2", assetList[2].Name)
 }
 
-func TestManifestResolverCronJobDiscovery(t *testing.T) {
-	resolver := &Resolver{}
-	manifestFile := "../../providers/k8s/resources/testdata/batchv1.cronjob.yaml"
-
-	ctx := resources.SetDiscoveryCache(context.Background(), resources.NewDiscoveryCache())
-
-	assetList, err := resolver.Resolve(ctx, &asset.Asset{}, &providers.Config{
-		PlatformId: "//platform/k8s/uid/123/namespace/mondoo-operator/cronjobs/name/mondoo-client-k8s-scan",
-		Backend:    providers.ProviderType_K8S,
-		Options: map[string]string{
-			"path":      manifestFile,
-			"namespace": "mondoo-operator",
-		},
-		Discover: &providers.Discovery{
-			Targets: []string{"cronjobs"},
-		},
-	}, nil, nil)
-	require.NoError(t, err)
-	// When this check fails locally, check your kubeconfig.
-	// context has to reference the default namespace
-	assert.Equal(t, 2, len(assetList))
-	assert.Contains(t, assetList[1].Platform.Family, "k8s-workload")
-	assert.Contains(t, assetList[1].Platform.Family, "k8s")
-	assert.Equal(t, "k8s-cronjob", assetList[1].Platform.Name)
-}
-
 func TestManifestResolverWrongDiscovery(t *testing.T) {
 	resolver := &Resolver{}
-	manifestFile := "../../providers/k8s/resources/testdata/batchv1.cronjob.yaml"
+	manifestFile := "../../providers/k8s/resources/testdata/cronjob.yaml"
 
 	ctx := resources.SetDiscoveryCache(context.Background(), resources.NewDiscoveryCache())
 
@@ -101,7 +156,7 @@ func TestManifestResolverWrongDiscovery(t *testing.T) {
 		Backend: providers.ProviderType_K8S,
 		Options: map[string]string{
 			"path":      manifestFile,
-			"namespace": "mondoo-operator",
+			"namespace": "default",
 		},
 		Discover: &providers.Discovery{
 			Targets: []string{"pods"},
@@ -111,107 +166,4 @@ func TestManifestResolverWrongDiscovery(t *testing.T) {
 	// When this check fails locally, check your kubeconfig.
 	// context has to reference the default namespace
 	assert.Equalf(t, 1, len(assetList), "discovering pods in a cronjob manifest should only result in the manifest")
-}
-
-func TestManifestResolverStatefulSetDiscovery(t *testing.T) {
-	resolver := &Resolver{}
-	manifestFile := "../../providers/k8s/resources/testdata/appsv1.statefulset.yaml"
-
-	ctx := resources.SetDiscoveryCache(context.Background(), resources.NewDiscoveryCache())
-
-	assetList, err := resolver.Resolve(ctx, &asset.Asset{}, &providers.Config{
-		PlatformId: "//platform/k8s/uid/123/namespace/default/statefulsets/name/mondoo-statefulset",
-		Backend:    providers.ProviderType_K8S,
-		Options: map[string]string{
-			"path": manifestFile,
-		},
-		Discover: &providers.Discovery{
-			Targets: []string{"statefulsets"},
-		},
-	}, nil, nil)
-	require.NoError(t, err)
-	// When this check fails locally, check your kubeconfig.
-	// context has to reference the default namespace
-	assert.Equal(t, 2, len(assetList))
-	assert.Contains(t, assetList[1].Platform.Family, "k8s-workload")
-	assert.Contains(t, assetList[1].Platform.Family, "k8s")
-	assert.Equal(t, "k8s-statefulset", assetList[1].Platform.Name)
-}
-
-func TestManifestResolverJobDiscovery(t *testing.T) {
-	resolver := &Resolver{}
-	manifestFile := "../../providers/k8s/resources/testdata/batchv1.job.yaml"
-
-	ctx := resources.SetDiscoveryCache(context.Background(), resources.NewDiscoveryCache())
-
-	assetList, err := resolver.Resolve(ctx, &asset.Asset{}, &providers.Config{
-		PlatformId: "//platform/k8s/uid/123/namespace/mondoo-operator/jobs/name/mondoo-client-k8s-scan",
-		Backend:    providers.ProviderType_K8S,
-		Options: map[string]string{
-			"path":      manifestFile,
-			"namespace": "mondoo-operator",
-		},
-		Discover: &providers.Discovery{
-			Targets: []string{"jobs"},
-		},
-	}, nil, nil)
-	require.NoError(t, err)
-	// When this check fails locally, check your kubeconfig.
-	// context has to reference the default namespace
-	assert.Equal(t, 2, len(assetList))
-	assert.Contains(t, assetList[1].Platform.Family, "k8s-workload")
-	assert.Contains(t, assetList[1].Platform.Family, "k8s")
-	assert.Equal(t, "k8s-job", assetList[1].Platform.Name)
-}
-
-func TestManifestResolverReplicaSetDiscovery(t *testing.T) {
-	resolver := &Resolver{}
-	manifestFile := "../../providers/k8s/resources/testdata/appsv1.replicaset.yaml"
-
-	ctx := resources.SetDiscoveryCache(context.Background(), resources.NewDiscoveryCache())
-
-	assetList, err := resolver.Resolve(ctx, &asset.Asset{}, &providers.Config{
-		PlatformId: "//platform/k8s/uid/123/namespace/default/replicasets/name/mondoo-replicaset",
-		Backend:    providers.ProviderType_K8S,
-		Options: map[string]string{
-			"path": manifestFile,
-		},
-		Discover: &providers.Discovery{
-			Targets: []string{"replicasets"},
-		},
-	}, nil, nil)
-	require.NoError(t, err)
-	// When this check fails locally, check your kubeconfig.
-	// context has to reference the default namespace
-	assert.Equal(t, 2, len(assetList))
-	assert.Contains(t, assetList[1].Platform.Family, "k8s-workload")
-	assert.Contains(t, assetList[1].Platform.Family, "k8s")
-	assert.Equal(t, "k8s-replicaset", assetList[1].Platform.Name)
-}
-
-func TestManifestResolverDaemonSetDiscovery(t *testing.T) {
-	resolver := &Resolver{}
-	manifestFile := "../../providers/k8s/resources/testdata/appsv1.daemonset.yaml"
-
-	ctx := resources.SetDiscoveryCache(context.Background(), resources.NewDiscoveryCache())
-
-	platformId := "//platform/k8s/uid/123/namespace/default/daemonsets/name/mondoo-daemonset"
-	assetList, err := resolver.Resolve(ctx, &asset.Asset{}, &providers.Config{
-		PlatformId: platformId,
-		Backend:    providers.ProviderType_K8S,
-		Options: map[string]string{
-			"path": manifestFile,
-		},
-		Discover: &providers.Discovery{
-			Targets: []string{"daemonsets"},
-		},
-	}, nil, nil)
-	require.NoError(t, err)
-	// When this check fails locally, check your kubeconfig.
-	// context has to reference the default namespace
-	assert.Equal(t, 2, len(assetList))
-	assert.Contains(t, assetList[1].Platform.Family, "k8s-workload")
-	assert.Contains(t, assetList[1].Platform.Family, "k8s")
-	assert.Equal(t, "k8s-daemonset", assetList[1].Platform.Name)
-	assert.Equal(t, platformId, assetList[1].Connections[0].PlatformId)
 }
