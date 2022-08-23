@@ -540,7 +540,7 @@ dns.dkimRecord {
   valid() bool
 }
 
-// TODO: this should be deprecated
+// deprecated: do not use anymore
 yaml.path {
   filepath string
   jsonpath string
@@ -687,8 +687,6 @@ socketstats {
   // Listening non-localhost open ports
   openPorts() []string
 }
-
-// MOVE OUT LATER
 
 // System kernel information
 kernel {

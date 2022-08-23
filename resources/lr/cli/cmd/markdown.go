@@ -145,7 +145,7 @@ func (l *lrSchemaRenderer) renderToc(resources []*lr.Resource, frontMatter strin
 	}
 
 	builder.WriteString("# Mondoo Resource Reference\n\n")
-	builder.WriteString("# Table of Content \n\n")
+	builder.WriteString("# Table of Contents\n\n")
 	rows := [][]string{}
 
 	for i := range resources {
@@ -167,6 +167,11 @@ func (l *lrSchemaRenderer) renderToc(resources []*lr.Resource, frontMatter strin
 	return builder.String()
 }
 
+// trimColon removes any : from the string since colons are not allowed in markdown front matter
+func trimColon(s string) string {
+	return strings.ReplaceAll(s, ":", "")
+}
+
 func (l *lrSchemaRenderer) renderResourcePage(resource *lr.Resource, schema *resources.Schema, docs *docs.LrDocsEntry) string {
 	builder := &strings.Builder{}
 
@@ -176,7 +181,7 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lr.Resource, schema *res
 
 	headerDesc := strings.Join(sanitizeComments([]string{schema.Resources[resource.ID].Title}), " ")
 	if headerDesc != "" {
-		builder.WriteString("description: " + headerDesc + "\n")
+		builder.WriteString("description: " + trimColon(headerDesc) + "\n")
 	}
 	builder.WriteString("---\n")
 	builder.WriteString("\n")
