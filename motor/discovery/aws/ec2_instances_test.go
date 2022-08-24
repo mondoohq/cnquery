@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"go.mondoo.io/mondoo/motor/discovery/aws"
+	"go.mondoo.com/cnquery/motor/discovery/aws"
 )
 
 func TestParseParseEc2PlatformId(t *testing.T) {

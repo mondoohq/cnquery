@@ -3,9 +3,9 @@ package platform
 import (
 	"errors"
 
-	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/vsphere"
-	vsphere_transport "go.mondoo.io/mondoo/motor/providers/vsphere"
+	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers/vsphere"
+	vsphere_transport "go.mondoo.com/cnquery/motor/providers/vsphere"
 )
 
 func VspherePlatform(t *vsphere.Provider, identifier string) (*Platform, error) {

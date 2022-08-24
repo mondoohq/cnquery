@@ -4,10 +4,10 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/os"
-	"go.mondoo.io/mondoo/resources/packs/core/packages"
-	"go.mondoo.io/mondoo/vadvisor/versions/rpm"
+	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/resources/packs/core/packages"
+	"go.mondoo.com/cnquery/vadvisor/versions/rpm"
 )
 
 // RpmNewestKernel works on all machines running rpm

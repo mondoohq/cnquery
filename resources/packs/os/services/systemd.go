@@ -14,8 +14,8 @@ import (
 
 	"github.com/coreos/go-systemd/unit"
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/motor/providers"
-	os_provider "go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers"
+	os_provider "go.mondoo.com/cnquery/motor/providers/os"
 )
 
 var (

@@ -1,9 +1,9 @@
 package os
 
 import (
-	"go.mondoo.io/mondoo/motor/providers/os/powershell"
-	"go.mondoo.io/mondoo/resources/packs/core"
-	"go.mondoo.io/mondoo/resources/packs/os/windows"
+	"go.mondoo.com/cnquery/motor/providers/os/powershell"
+	"go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/resources/packs/os/windows"
 )
 
 func (w *mqlWindowsFirewall) id() (string, error) {

@@ -6,14 +6,14 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/discovery/common"
-	"go.mondoo.io/mondoo/motor/motorid"
-	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/local"
-	"go.mondoo.io/mondoo/motor/providers/resolver"
-	"go.mondoo.io/mondoo/motor/vault"
+	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/discovery/common"
+	"go.mondoo.com/cnquery/motor/motorid"
+	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers/local"
+	"go.mondoo.com/cnquery/motor/providers/resolver"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 type Resolver struct{}

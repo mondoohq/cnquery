@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
+	"go.mondoo.com/cnquery/motor/vault"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
-	"go.mondoo.io/mondoo/motor/vault"
 )
 
 // New creates a new vault that can query multiple vaults. It is a

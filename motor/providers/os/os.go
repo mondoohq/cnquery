@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"time"
 
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers"
 
 	"github.com/spf13/afero"
 )

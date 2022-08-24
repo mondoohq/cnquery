@@ -6,7 +6,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/sql/mgmt/sql"
 	preview_sql "github.com/Azure/azure-sdk-for-go/services/preview/sql/mgmt/2017-03-01-preview/sql"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/resources/packs/core"
+	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
 func (a *mqlAzurermSql) id() (string, error) {

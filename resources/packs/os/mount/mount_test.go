@@ -7,8 +7,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/resources/packs/os/mount"
-	"go.mondoo.io/mondoo/motor/providers/mock"
+	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/resources/packs/os/mount"
 )
 
 func TestMountLinuxParser(t *testing.T) {

@@ -6,8 +6,8 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/segmentio/ksuid"
-	asset "go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/vault"
+	asset "go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/vault"
 	"google.golang.org/protobuf/proto"
 	"sigs.k8s.io/yaml"
 )

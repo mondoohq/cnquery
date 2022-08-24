@@ -4,7 +4,7 @@
 package platformid
 
 import (
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os"
 )
 
 func windowsMachineId(p os.OperatingSystemProvider) (string, error) {

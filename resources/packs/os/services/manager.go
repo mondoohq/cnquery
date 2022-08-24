@@ -4,10 +4,10 @@ import (
 	"errors"
 	"regexp"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os"
 
-	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.com/cnquery/motor"
+	"go.mondoo.com/cnquery/motor/platform"
 )
 
 type Service struct {

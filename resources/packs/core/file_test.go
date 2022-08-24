@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/core"
-	"go.mondoo.io/mondoo/resources/packs/testutils"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/resources/packs/testutils"
 )
 
 const passwdContent = `root:x:0:0::/root:/bin/bash

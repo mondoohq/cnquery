@@ -8,13 +8,13 @@ import (
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/google/go-containerregistry/pkg/name"
 
-	"go.mondoo.io/mondoo/motor/discovery/container_registry"
-	"go.mondoo.io/mondoo/motor/vault"
+	"go.mondoo.com/cnquery/motor/discovery/container_registry"
+	"go.mondoo.com/cnquery/motor/vault"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/providers/k8s"
+	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/providers/k8s"
 	v1 "k8s.io/api/core/v1"
 )
 

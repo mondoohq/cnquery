@@ -3,7 +3,7 @@ package providers
 import (
 	"strings"
 
-	"go.mondoo.io/mondoo/stringx"
+	"go.mondoo.com/cnquery/stringx"
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"

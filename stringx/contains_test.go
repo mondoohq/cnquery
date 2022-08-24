@@ -1,10 +1,10 @@
 package stringx_test
 
 import (
-	"go.mondoo.io/mondoo/stringx"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.mondoo.com/cnquery/stringx"
 )
 
 func TestContains(t *testing.T) {

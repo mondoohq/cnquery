@@ -9,10 +9,10 @@ import (
 	"github.com/masterzen/winrm"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/motor/providers"
-	os_provider "go.mondoo.io/mondoo/motor/providers/os"
-	"go.mondoo.io/mondoo/motor/providers/winrm/cat"
-	"go.mondoo.io/mondoo/motor/vault"
+	"go.mondoo.com/cnquery/motor/providers"
+	os_provider "go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/winrm/cat"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 var _ providers.Instance = (*Provider)(nil)

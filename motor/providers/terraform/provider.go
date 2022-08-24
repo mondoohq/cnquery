@@ -9,7 +9,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclparse"
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers"
 )
 
 var (

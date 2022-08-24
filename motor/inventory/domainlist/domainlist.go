@@ -10,9 +10,9 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/cockroachdb/errors"
-	"go.mondoo.io/mondoo/motor/asset"
-	v1 "go.mondoo.io/mondoo/motor/inventory/v1"
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.com/cnquery/motor/asset"
+	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
+	"go.mondoo.com/cnquery/motor/providers"
 )
 
 func Parse(input io.Reader) (*Inventory, error) {

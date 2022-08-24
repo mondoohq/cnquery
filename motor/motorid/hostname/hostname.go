@@ -5,12 +5,12 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 
-	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.com/cnquery/motor/platform"
 )
 
 func Hostname(p os.OperatingSystemProvider, pf *platform.Platform) (string, error) {

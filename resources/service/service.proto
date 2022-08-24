@@ -3,7 +3,7 @@ syntax = "proto3";
 import "resources.proto";
 
 package mondoo.resources.service;
-option go_package = "go.mondoo.io/mondoo/resources/service";
+option go_package = "go.mondoo.com/cnquery/resources/service";
 
 // MQL service
 service MQL {

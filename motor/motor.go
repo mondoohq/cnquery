@@ -4,14 +4,14 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/platform/detector"
-	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/local"
-	"go.mondoo.io/mondoo/motor/providers/mock"
-	"go.mondoo.io/mondoo/motor/providers/os"
-	"go.mondoo.io/mondoo/motor/providers/os/events"
+	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/motor/platform/detector"
+	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers/local"
+	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os/events"
 )
 
 type MotorOption func(m *Motor)

@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/providers/mock"
+	"go.mondoo.com/cnquery/motor/providers/mock"
 )
 
 // load files from a tar stream

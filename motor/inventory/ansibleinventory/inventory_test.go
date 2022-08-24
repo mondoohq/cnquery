@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/inventory/ansibleinventory"
-	"go.mondoo.io/mondoo/motor/vault"
+	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/inventory/ansibleinventory"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 func TestValidInventory(t *testing.T) {

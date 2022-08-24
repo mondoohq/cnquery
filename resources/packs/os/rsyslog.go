@@ -4,9 +4,9 @@ import (
 	"errors"
 	"strings"
 
-	"go.mondoo.io/mondoo/checksums"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/core"
+	"go.mondoo.com/cnquery/checksums"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
 func (s *mqlRsyslogConf) init(args *resources.Args) (*resources.Args, RsyslogConf, error) {

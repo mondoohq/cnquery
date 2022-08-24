@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
+	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
 )
 
 func TestEC2Discovery(t *testing.T) {

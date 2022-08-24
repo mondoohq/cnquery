@@ -1,6 +1,6 @@
 import "../os/os.lr"
 
-option go_package = "go.mondoo.io/mondoo/resources/packs/k8s"
+option go_package = "go.mondoo.com/cnquery/resources/packs/k8s"
 
 // Kubernetes cluster
 k8s {

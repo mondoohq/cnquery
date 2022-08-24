@@ -2,9 +2,10 @@ package php
 
 import (
 	"encoding/json"
-	"go.mondoo.io/mondoo/vadvisor"
 	"io"
 	"io/ioutil"
+
+	"go.mondoo.com/cnquery/vadvisor"
 )
 
 type ComposerPackage struct {

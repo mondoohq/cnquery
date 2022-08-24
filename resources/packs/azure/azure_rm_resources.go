@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/resources/mgmt/resources"
-	"go.mondoo.io/mondoo/resources/packs/core"
+	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
 func (a *mqlAzurerm) GetResources() ([]interface{}, error) {

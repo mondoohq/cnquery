@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/vault"
-	"go.mondoo.io/mondoo/motor/vault/inmemory"
+	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/motor/vault/inmemory"
 )
 
 func TestMultiVault(t *testing.T) {

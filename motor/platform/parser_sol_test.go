@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.com/cnquery/motor/platform"
 )
 
 func TestOpenSolaris2009Release(t *testing.T) {

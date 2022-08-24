@@ -7,7 +7,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/Azure/go-autorest/autorest/azure"
-	"go.mondoo.io/mondoo/resources/packs/core"
+	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
 var azureGraphAudience = azure.PublicCloud.ResourceIdentifiers.Graph

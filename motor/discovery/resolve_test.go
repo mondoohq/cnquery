@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/discovery"
-	v1 "go.mondoo.io/mondoo/motor/inventory/v1"
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/discovery"
+	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
+	"go.mondoo.com/cnquery/motor/providers"
 )
 
 func TestResolverWithAssetName(t *testing.T) {

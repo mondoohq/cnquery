@@ -6,9 +6,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
-	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
-	"go.mondoo.io/mondoo/resources/library/jobpool"
-	"go.mondoo.io/mondoo/resources/packs/core"
+	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
+	"go.mondoo.com/cnquery/resources/library/jobpool"
+	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
 func (a *mqlAwsAutoscaling) id() (string, error) {

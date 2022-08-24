@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/resources/packs/os/shadow"
+	"go.mondoo.com/cnquery/resources/packs/os/shadow"
 )
 
 const defaultShadowConfig = "/etc/shadow"

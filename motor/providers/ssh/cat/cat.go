@@ -7,8 +7,8 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	os_provider "go.mondoo.io/mondoo/motor/providers/os"
-	"go.mondoo.io/mondoo/motor/providers/os/statutil"
+	os_provider "go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os/statutil"
 )
 
 type CommandRunner interface {

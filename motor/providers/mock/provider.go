@@ -5,8 +5,8 @@ import (
 	"errors"
 
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers/os"
 )
 
 var _ providers.Instance = (*Provider)(nil)

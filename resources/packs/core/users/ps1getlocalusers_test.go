@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/resources/packs/core/users"
+	"go.mondoo.com/cnquery/resources/packs/core/users"
 )
 
 func TestWindowsLocalUsersParser(t *testing.T) {

@@ -5,10 +5,10 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/core/kernel"
+	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/motor/providers/os/fsutil"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/core/kernel"
 )
 
 func (k *mqlKernel) init(args *resources.Args) (*resources.Args, Kernel, error) {

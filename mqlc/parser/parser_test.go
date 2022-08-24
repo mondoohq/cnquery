@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/logger"
+	"go.mondoo.com/cnquery/logger"
 )
 
 func init() {

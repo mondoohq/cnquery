@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/providers/mock"
+	"go.mondoo.com/cnquery/motor/providers/mock"
 )
 
 func TestRhelKernelLatest(t *testing.T) {

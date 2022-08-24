@@ -9,13 +9,13 @@ import (
 	vrs "github.com/hashicorp/go-version"
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/mqlc/parser"
+	v1 "go.mondoo.com/cnquery/mqlc/v1"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/all"
+	"go.mondoo.com/cnquery/types"
 	"go.mondoo.io/mondoo"
-	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/mqlc/parser"
-	v1 "go.mondoo.io/mondoo/mqlc/v1"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/all"
-	"go.mondoo.io/mondoo/types"
 )
 
 type variable struct {

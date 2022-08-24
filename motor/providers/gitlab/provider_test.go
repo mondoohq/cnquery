@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers"
 )
 
 func TestGitlab(t *testing.T) {

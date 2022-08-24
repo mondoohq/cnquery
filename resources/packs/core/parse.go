@@ -9,10 +9,10 @@ import (
 	"errors"
 	"strings"
 
-	"go.mondoo.io/mondoo/checksums"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/core/parsers"
-	"go.mondoo.io/mondoo/resources/packs/core/plist"
+	"go.mondoo.com/cnquery/checksums"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/core/parsers"
+	"go.mondoo.com/cnquery/resources/packs/core/plist"
 	"sigs.k8s.io/yaml"
 )
 

@@ -6,8 +6,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/xanzy/go-gitlab"
-	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/vault"
+	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 var (

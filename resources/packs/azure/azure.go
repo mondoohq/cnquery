@@ -3,10 +3,10 @@ package azure
 import (
 	"errors"
 
-	"go.mondoo.io/mondoo/motor/providers"
-	azure_transport "go.mondoo.io/mondoo/motor/providers/azure"
-	"go.mondoo.io/mondoo/resources/packs/azure/info"
-	"go.mondoo.io/mondoo/resources/packs/core"
+	"go.mondoo.com/cnquery/motor/providers"
+	azure_transport "go.mondoo.com/cnquery/motor/providers/azure"
+	"go.mondoo.com/cnquery/resources/packs/azure/info"
+	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
 var Registry = info.Registry

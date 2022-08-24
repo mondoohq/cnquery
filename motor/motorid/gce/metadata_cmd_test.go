@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/motorid/gce"
-	"go.mondoo.io/mondoo/motor/providers/mock"
+	"go.mondoo.com/cnquery/motor"
+	"go.mondoo.com/cnquery/motor/motorid/gce"
+	"go.mondoo.com/cnquery/motor/providers/mock"
 )
 
 func TestCommandProviderLinux(t *testing.T) {

@@ -10,7 +10,7 @@ import (
 	"sort"
 	"strings"
 
-	"go.mondoo.io/mondoo/types"
+	"go.mondoo.com/cnquery/types"
 )
 
 // Args for initializing resources

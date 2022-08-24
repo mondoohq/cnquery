@@ -5,7 +5,7 @@ import (
 
 	uuid "github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/types"
+	"go.mondoo.com/cnquery/types"
 )
 
 func TestCallbacksList(t *testing.T) {

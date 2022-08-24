@@ -4,10 +4,10 @@ import (
 	"errors"
 	"io/ioutil"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os"
 
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/resources"
 )
 
 func (c *mqlCommand) id() (string, error) {

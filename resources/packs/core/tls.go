@@ -6,11 +6,11 @@ import (
 	"strconv"
 
 	"github.com/cockroachdb/errors"
-	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/motor/providers/network"
-	"go.mondoo.io/mondoo/resources/packs/core/certificates"
-	"go.mondoo.io/mondoo/resources/packs/core/tlsshake"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/motor/providers/network"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/core/certificates"
+	"go.mondoo.com/cnquery/resources/packs/core/tlsshake"
 )
 
 var reTarget = regexp.MustCompile("([^/:]+?)(:\\d+)?$")

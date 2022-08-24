@@ -1,12 +1,13 @@
 package npm_test
 
 import (
-	"go.mondoo.io/mondoo/vadvisor"
 	"os"
 	"testing"
 
+	"go.mondoo.com/cnquery/vadvisor"
+
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/resources/packs/os/npm"
+	"go.mondoo.com/cnquery/resources/packs/os/npm"
 )
 
 func TestYarnParser(t *testing.T) {

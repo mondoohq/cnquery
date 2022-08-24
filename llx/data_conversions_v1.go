@@ -1,7 +1,7 @@
 package llx
 
 import (
-	"go.mondoo.io/mondoo/types"
+	"go.mondoo.com/cnquery/types"
 )
 
 // returns the resolved argument if it's a ref; otherwise just the argument

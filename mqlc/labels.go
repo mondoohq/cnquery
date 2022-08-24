@@ -7,9 +7,9 @@ import (
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 
-	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/types"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/types"
 )
 
 func createLabel(code *llx.CodeV2, ref uint64, labels *llx.Labels, schema *resources.Schema) (string, error) {

@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"io/ioutil"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/providers/os/powershell"
-	"go.mondoo.io/mondoo/resources"
+	"go.mondoo.com/cnquery/motor/providers/os/powershell"
+	"go.mondoo.com/cnquery/resources"
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/transform"
 )

@@ -2,9 +2,10 @@ package npm
 
 import (
 	"encoding/json"
-	"go.mondoo.io/mondoo/vadvisor"
 	"io"
 	"io/ioutil"
+
+	"go.mondoo.com/cnquery/vadvisor"
 )
 
 // PackageJson allows parsing the package json file

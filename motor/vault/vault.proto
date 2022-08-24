@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package mondoo.motor.vault.v1;
-option go_package = "go.mondoo.io/mondoo/motor/vault";
+option go_package = "go.mondoo.com/cnquery/motor/vault";
 
 message SecretID {
   string key = 1;

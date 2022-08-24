@@ -3,7 +3,7 @@ syntax = "proto3";
 import "motor/providers/provider.proto";
 
 package mondoo.motor.platform.v1;
-option go_package = "go.mondoo.io/mondoo/motor/platform";
+option go_package = "go.mondoo.com/cnquery/motor/platform";
 
 message Platform {
   string name = 1;

@@ -5,8 +5,8 @@ import (
 	"io"
 	"io/ioutil"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
-	"go.mondoo.io/mondoo/motor/providers/os/powershell"
+	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os/powershell"
 )
 
 // This implements the Windows Security Center API

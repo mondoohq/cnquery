@@ -15,11 +15,11 @@ import (
 	"github.com/aws/smithy-go"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/aws/awsiam"
-	"go.mondoo.io/mondoo/resources/packs/aws/awspolicy"
-	"go.mondoo.io/mondoo/resources/packs/core"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/aws/awsiam"
+	"go.mondoo.com/cnquery/resources/packs/aws/awspolicy"
+	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
 func (p *mqlAwsIam) id() (string, error) {

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/resources/packs/os/uptime"
+	"go.mondoo.com/cnquery/resources/packs/os/uptime"
 )
 
 func TestWindowsUptime(t *testing.T) {

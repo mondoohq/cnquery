@@ -1,8 +1,8 @@
 package ms365
 
 import (
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/core"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
 func (m *mqlMs365Exchangeonline) id() (string, error) {

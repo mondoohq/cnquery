@@ -6,9 +6,9 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/providers/fs"
-	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
+	"go.mondoo.com/cnquery/motor"
+	"go.mondoo.com/cnquery/motor/providers/fs"
+	"go.mondoo.com/cnquery/motor/providers/os/fsutil"
 )
 
 func TestOsDetection(t *testing.T) {

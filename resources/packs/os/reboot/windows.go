@@ -4,9 +4,9 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os"
 
-	"go.mondoo.io/mondoo/motor/providers/os/powershell"
+	"go.mondoo.com/cnquery/motor/providers/os/powershell"
 )
 
 const (

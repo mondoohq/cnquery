@@ -7,8 +7,8 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/providers/mock"
-	"go.mondoo.io/mondoo/motor/providers/os/powershell"
+	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/motor/providers/os/powershell"
 )
 
 func TestWindowsAppxPackagesParser(t *testing.T) {

@@ -5,8 +5,8 @@
 package main
 
 import (
-	"go.mondoo.io/mondoo/logger"
-	"go.mondoo.io/mondoo/resources/lr/cli/cmd"
+	"go.mondoo.com/cnquery/logger"
+	"go.mondoo.com/cnquery/resources/lr/cli/cmd"
 )
 
 func init() {

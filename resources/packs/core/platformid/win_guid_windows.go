@@ -8,8 +8,8 @@ import (
 	"runtime"
 
 	wmi "github.com/StackExchange/wmi"
-	"go.mondoo.io/mondoo/motor/providers/local"
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/local"
+	"go.mondoo.com/cnquery/motor/providers/os"
 )
 
 func windowsMachineId(p os.OperatingSystemProvider) (string, error) {

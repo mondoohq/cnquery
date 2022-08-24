@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/motor/providers/mock"
+	"go.mondoo.com/cnquery/motor/providers/mock"
 )
 
 func TestParseOpenbsdServicesRunning(t *testing.T) {

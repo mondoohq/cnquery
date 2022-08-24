@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/types"
+	"go.mondoo.com/cnquery/types"
 )
 
 func TestResultConversion(t *testing.T) {

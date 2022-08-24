@@ -2,9 +2,9 @@ package machineid
 
 import (
 	"github.com/cockroachdb/errors"
-	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers/os"
-	"go.mondoo.io/mondoo/resources/packs/core/platformid"
+	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/resources/packs/core/platformid"
 )
 
 func MachineId(provider os.OperatingSystemProvider, pf *platform.Platform) (string, error) {

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/vault"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 type ConfigOption func(t *Config) error

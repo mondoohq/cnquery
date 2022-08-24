@@ -8,7 +8,7 @@ import (
 
 	keyvault_vault "github.com/Azure/azure-sdk-for-go/profiles/latest/keyvault/mgmt/keyvault"
 	keyvault7 "github.com/Azure/azure-sdk-for-go/services/keyvault/v7.0/keyvault"
-	"go.mondoo.io/mondoo/resources/packs/core"
+	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
 // see https://github.com/Azure/azure-sdk-for-go/issues/8224

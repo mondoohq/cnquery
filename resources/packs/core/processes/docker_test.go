@@ -12,8 +12,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/providers/container/docker_engine"
+	"go.mondoo.com/cnquery/motor"
+	"go.mondoo.com/cnquery/motor/providers/container/docker_engine"
 )
 
 func TestDockerProcsList(t *testing.T) {

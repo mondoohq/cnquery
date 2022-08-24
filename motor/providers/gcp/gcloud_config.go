@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 
 	"github.com/cockroachdb/errors"
-	"go.mondoo.io/mondoo/motor/providers/local"
+	"go.mondoo.com/cnquery/motor/providers/local"
 )
 
 // https://github.com/golang/oauth2/issues/241

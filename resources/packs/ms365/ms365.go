@@ -1,6 +1,6 @@
 package ms365
 
-import "go.mondoo.io/mondoo/resources/packs/ms365/info"
+import "go.mondoo.com/cnquery/resources/packs/ms365/info"
 
 var Registry = info.Registry
 

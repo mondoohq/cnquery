@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/types"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/types"
 )
 
 type chunkHandlerV1 struct {

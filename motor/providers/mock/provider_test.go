@@ -8,9 +8,9 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/mock"
-	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
+	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/motor/providers/os/fsutil"
 )
 
 func TestMockCommand(t *testing.T) {

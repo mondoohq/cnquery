@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/mock"
+	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers/mock"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

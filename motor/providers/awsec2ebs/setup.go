@@ -12,7 +12,7 @@ import (
 	"github.com/aws/smithy-go"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	motoraws "go.mondoo.io/mondoo/motor/discovery/aws"
+	motoraws "go.mondoo.com/cnquery/motor/discovery/aws"
 )
 
 func (t *Provider) Validate(ctx context.Context) (*types.Instance, *VolumeId, *SnapshotId, error) {

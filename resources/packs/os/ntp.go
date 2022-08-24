@@ -4,8 +4,8 @@ import (
 	"errors"
 	"strings"
 
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/core"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
 func (s *mqlNtpConf) init(args *resources.Args) (*resources.Args, NtpConf, error) {

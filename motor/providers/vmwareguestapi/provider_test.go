@@ -6,7 +6,7 @@ package vmwareguestapi
 
 // 	"github.com/stretchr/testify/assert"
 // 	"github.com/stretchr/testify/require"
-// 	"go.mondoo.io/mondoo/motor/transports"
+// 	"go.mondoo.com/cnquery/motor/transports"
 // )
 
 // func TestRunCommand(t *testing.T) {

@@ -2,7 +2,7 @@ package os
 
 import (
 	"github.com/google/go-containerregistry/pkg/name"
-	"go.mondoo.io/mondoo/resources"
+	"go.mondoo.com/cnquery/resources"
 )
 
 func NewMqlContainerImage(runtime *resources.Runtime, containerImageName string) (interface{}, error) {

@@ -3,10 +3,10 @@ package v1
 import (
 	"errors"
 
-	"go.mondoo.io/mondoo/mqlc/parser"
-	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/types"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/mqlc/parser"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/types"
 )
 
 type compileHandler struct {

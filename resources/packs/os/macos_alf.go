@@ -1,8 +1,8 @@
 package os
 
 import (
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/core/plist"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/core/plist"
 )
 
 func (m *mqlMacosAlf) id() (string, error) {

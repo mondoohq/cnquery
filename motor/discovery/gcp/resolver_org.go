@@ -1,10 +1,10 @@
 package gcp
 
 import (
-	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/discovery/common"
-	"go.mondoo.io/mondoo/motor/providers"
-	gcp_provider "go.mondoo.io/mondoo/motor/providers/gcp"
+	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/discovery/common"
+	"go.mondoo.com/cnquery/motor/providers"
+	gcp_provider "go.mondoo.com/cnquery/motor/providers/gcp"
 )
 
 type GcpOrgResolver struct{}

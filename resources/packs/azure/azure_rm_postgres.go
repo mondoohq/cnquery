@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/postgresql/mgmt/postgresql"
-	"go.mondoo.io/mondoo/resources/packs/core"
+	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
 func (a *mqlAzurermPostgresql) id() (string, error) {

@@ -3,13 +3,13 @@ package clouddetect
 import (
 	"sync"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/motorid/clouddetect/providers/aws"
-	"go.mondoo.io/mondoo/motor/motorid/clouddetect/providers/azure"
-	"go.mondoo.io/mondoo/motor/motorid/clouddetect/providers/gce"
-	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.com/cnquery/motor/motorid/clouddetect/providers/aws"
+	"go.mondoo.com/cnquery/motor/motorid/clouddetect/providers/azure"
+	"go.mondoo.com/cnquery/motor/motorid/clouddetect/providers/gce"
+	"go.mondoo.com/cnquery/motor/platform"
 )
 
 type detectorFunc func(provider os.OperatingSystemProvider, pf *platform.Platform) string

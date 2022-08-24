@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/motor/providers/os/find"
+	"go.mondoo.com/cnquery/motor/providers/os/find"
 )
 
 var notSupported = errors.New("not supported")

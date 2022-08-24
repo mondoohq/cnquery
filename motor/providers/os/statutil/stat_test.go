@@ -9,8 +9,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/providers/mock"
-	os_provider "go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/mock"
+	os_provider "go.mondoo.com/cnquery/motor/providers/os"
 )
 
 func TestLinuxStatCmd(t *testing.T) {

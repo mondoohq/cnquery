@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/cockroachdb/errors"
-	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers/os"
-	"go.mondoo.io/mondoo/motor/providers/os/powershell"
+	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os/powershell"
 )
 
 const (

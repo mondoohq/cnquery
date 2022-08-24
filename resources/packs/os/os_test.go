@@ -3,9 +3,9 @@ package os_test
 import (
 	"testing"
 
-	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/resources/packs/os"
-	"go.mondoo.io/mondoo/resources/packs/testutils"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/resources/packs/os"
+	"go.mondoo.com/cnquery/resources/packs/testutils"
 )
 
 var x = testutils.InitTester(testutils.LinuxMock(), os.Registry)

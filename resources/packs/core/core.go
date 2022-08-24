@@ -1,6 +1,6 @@
 package core
 
-import "go.mondoo.io/mondoo/resources/packs/core/info"
+import "go.mondoo.com/cnquery/resources/packs/core/info"
 
 var Registry = info.Registry
 

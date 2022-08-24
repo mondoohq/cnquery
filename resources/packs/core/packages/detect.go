@@ -2,10 +2,11 @@ package packages
 
 import (
 	"fmt"
-	"go.mondoo.io/mondoo/vadvisor"
+
+	"go.mondoo.com/cnquery/vadvisor"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.com/cnquery/motor"
 )
 
 func Detect(motor *motor.Motor) ([]Package, map[string]PackageUpdate, error) {

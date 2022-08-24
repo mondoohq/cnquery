@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/motor/asset"
+	"go.mondoo.com/cnquery/motor/asset"
 )
 
 func TestAssetHasLabels(t *testing.T) {

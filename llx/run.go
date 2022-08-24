@@ -1,7 +1,7 @@
 package llx
 
 import (
-	"go.mondoo.io/mondoo/resources"
+	"go.mondoo.com/cnquery/resources"
 )
 
 // Run a piece of compiled code against a runtime. Just a friendly helper method

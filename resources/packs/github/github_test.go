@@ -8,10 +8,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/github"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/motor"
+	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers/github"
 )
 
 func githubTestQuery(t *testing.T, query string) []*llx.RawResult {

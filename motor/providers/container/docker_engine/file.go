@@ -14,8 +14,8 @@ import (
 	dockertypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/spf13/afero"
-	os_provider "go.mondoo.io/mondoo/motor/providers/os"
-	"go.mondoo.io/mondoo/motor/providers/os/fsutil"
+	os_provider "go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os/fsutil"
 )
 
 func FileOpen(dockerClient *client.Client, path string, container string, transport *Provider) (afero.File, error) {

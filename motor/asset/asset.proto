@@ -4,7 +4,7 @@ import "motor/platform/platform.proto";
 import "motor/providers/provider.proto";
 
 package mondoo.motor.asset.v1;
-option go_package = "go.mondoo.io/mondoo/motor/asset";
+option go_package = "go.mondoo.com/cnquery/motor/asset";
 
 enum State {
   STATE_UNKNOWN = 0;

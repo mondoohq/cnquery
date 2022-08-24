@@ -5,15 +5,15 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/logger"
-	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/discovery"
-	"go.mondoo.io/mondoo/motor/inventory/credentialquery"
-	v1 "go.mondoo.io/mondoo/motor/inventory/v1"
-	"go.mondoo.io/mondoo/motor/vault"
-	"go.mondoo.io/mondoo/motor/vault/config"
-	"go.mondoo.io/mondoo/motor/vault/inmemory"
-	"go.mondoo.io/mondoo/motor/vault/multivault"
+	"go.mondoo.com/cnquery/logger"
+	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/discovery"
+	"go.mondoo.com/cnquery/motor/inventory/credentialquery"
+	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
+	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/motor/vault/config"
+	"go.mondoo.com/cnquery/motor/vault/inmemory"
+	"go.mondoo.com/cnquery/motor/vault/multivault"
 )
 
 type InventoryManager interface {

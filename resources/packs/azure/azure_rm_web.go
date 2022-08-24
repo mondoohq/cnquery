@@ -10,7 +10,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/web/mgmt/web"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/resources/packs/core"
+	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
 func (a *mqlAzurermWeb) id() (string, error) {

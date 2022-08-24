@@ -3,7 +3,7 @@ package platformid
 import (
 	"io/ioutil"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os"
 )
 
 const wmiMachineIDQuery = "SELECT UUID FROM Win32_ComputerSystemProduct"

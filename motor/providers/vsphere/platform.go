@@ -12,7 +12,7 @@ import (
 	"github.com/vmware/govmomi/govc/host/esxcli"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/types"
-	"go.mondoo.io/mondoo/nexus/mrn"
+	"go.mondoo.com/cnquery/nexus/mrn"
 )
 
 func listDatacenters(c *govmomi.Client) ([]*object.Datacenter, error) {

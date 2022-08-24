@@ -8,9 +8,9 @@ import (
 	"errors"
 	"strings"
 
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/core"
-	"go.mondoo.io/mondoo/resources/packs/os/sshd"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/resources/packs/os/sshd"
 )
 
 func (s *mqlSshd) id() (string, error) {

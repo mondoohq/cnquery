@@ -7,7 +7,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.io/mondoo/resources/lr"
+	"go.mondoo.com/cnquery/resources/lr"
 )
 
 var printStdout = false

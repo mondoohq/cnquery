@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers"
 
 	"github.com/stretchr/testify/require"
 

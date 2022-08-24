@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/inventory/v1"
+	"go.mondoo.com/cnquery/motor/asset"
+	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 )
 
 func TestInventoryLoader(t *testing.T) {

@@ -6,12 +6,12 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/mitchellh/mapstructure"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/mql"
+	"go.mondoo.com/cnquery/types"
 	"go.mondoo.io/mondoo"
-	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/vault"
-	"go.mondoo.io/mondoo/mql"
-	"go.mondoo.io/mondoo/types"
 )
 
 type CredentialQueryResponse struct {

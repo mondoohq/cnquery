@@ -7,9 +7,9 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"go.mondoo.io/mondoo/resources/packs/core"
-	"go.mondoo.io/mondoo/resources/packs/core/plist"
-	"go.mondoo.io/mondoo/resources/packs/os/macos"
+	"go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/resources/packs/core/plist"
+	"go.mondoo.com/cnquery/resources/packs/os/macos"
 )
 
 func (m *mqlMacos) id() (string, error) {

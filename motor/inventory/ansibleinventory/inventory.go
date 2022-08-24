@@ -5,14 +5,14 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/vault"
+	"go.mondoo.com/cnquery/motor/vault"
 
 	"github.com/rs/zerolog/log"
 
-	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/providers"
 
-	v1 "go.mondoo.io/mondoo/motor/inventory/v1"
+	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 
 	"github.com/mitchellh/mapstructure"
 	"sigs.k8s.io/yaml"

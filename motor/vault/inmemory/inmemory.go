@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"go.mondoo.io/mondoo/motor/vault"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 type Option func(*inmemoryVault)

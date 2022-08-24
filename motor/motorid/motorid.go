@@ -5,15 +5,15 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/motorid/awsec2"
-	"go.mondoo.io/mondoo/motor/motorid/clouddetect"
-	"go.mondoo.io/mondoo/motor/motorid/hostname"
-	"go.mondoo.io/mondoo/motor/motorid/machineid"
-	"go.mondoo.io/mondoo/motor/motorid/sshhostkey"
-	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/mock"
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/motorid/awsec2"
+	"go.mondoo.com/cnquery/motor/motorid/clouddetect"
+	"go.mondoo.com/cnquery/motor/motorid/hostname"
+	"go.mondoo.com/cnquery/motor/motorid/machineid"
+	"go.mondoo.com/cnquery/motor/motorid/sshhostkey"
+	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/motor/providers/os"
 )
 
 type PlatformFingerprint struct {

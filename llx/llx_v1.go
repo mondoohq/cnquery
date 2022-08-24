@@ -12,8 +12,8 @@ import (
 	uuid "github.com/gofrs/uuid"
 	"github.com/hashicorp/go-multierror"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/types"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/types"
 )
 
 // CallsV1 is a map connecting call-refs with each other

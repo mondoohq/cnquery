@@ -8,11 +8,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/logger"
+	resource_info "go.mondoo.com/cnquery/resources/packs/os/info"
+	"go.mondoo.com/cnquery/types"
 	"go.mondoo.io/mondoo"
-	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/logger"
-	resource_info "go.mondoo.io/mondoo/resources/packs/os/info"
-	"go.mondoo.io/mondoo/types"
 )
 
 var (

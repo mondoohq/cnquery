@@ -11,15 +11,15 @@ functioning registry.
 import (
 	_ "embed"
 
-	"go.mondoo.io/mondoo/resources"
-	awsInfo "go.mondoo.io/mondoo/resources/packs/aws/info"
-	azureInfo "go.mondoo.io/mondoo/resources/packs/azure/info"
-	coreInfo "go.mondoo.io/mondoo/resources/packs/core/info"
-	gcpInfo "go.mondoo.io/mondoo/resources/packs/gcp/info"
-	githubInfo "go.mondoo.io/mondoo/resources/packs/github/info"
-	gitlabInfo "go.mondoo.io/mondoo/resources/packs/github/info"
-	ms365Info "go.mondoo.io/mondoo/resources/packs/ms365"
-	osInfo "go.mondoo.io/mondoo/resources/packs/os/info"
+	"go.mondoo.com/cnquery/resources"
+	awsInfo "go.mondoo.com/cnquery/resources/packs/aws/info"
+	azureInfo "go.mondoo.com/cnquery/resources/packs/azure/info"
+	coreInfo "go.mondoo.com/cnquery/resources/packs/core/info"
+	gcpInfo "go.mondoo.com/cnquery/resources/packs/gcp/info"
+	githubInfo "go.mondoo.com/cnquery/resources/packs/github/info"
+	gitlabInfo "go.mondoo.com/cnquery/resources/packs/github/info"
+	ms365Info "go.mondoo.com/cnquery/resources/packs/ms365"
+	osInfo "go.mondoo.com/cnquery/resources/packs/os/info"
 )
 
 var Registry = resources.NewRegistry()

@@ -1,6 +1,6 @@
 package terraform
 
-import "go.mondoo.io/mondoo/resources/packs/terraform/info"
+import "go.mondoo.com/cnquery/resources/packs/terraform/info"
 
 var Registry = info.Registry
 

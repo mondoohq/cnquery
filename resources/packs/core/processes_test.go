@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/types"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/types"
 )
 
 func TestResource_Processes(t *testing.T) {

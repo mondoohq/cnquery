@@ -4,10 +4,11 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"go.mondoo.io/mondoo/vadvisor"
 	"io"
 	"regexp"
 	"strings"
+
+	"go.mondoo.com/cnquery/vadvisor"
 
 	"github.com/rs/zerolog/log"
 	"sigs.k8s.io/yaml"

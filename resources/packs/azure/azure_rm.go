@@ -5,7 +5,7 @@ import (
 
 	"github.com/Azure/go-autorest/autorest/date"
 	"github.com/gofrs/uuid"
-	"go.mondoo.io/mondoo/resources/packs/core"
+	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
 func (a *mqlAzurerm) id() (string, error) {

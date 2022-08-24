@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/providers/awsec2ebs/custommount"
+	"go.mondoo.com/cnquery/motor/providers/awsec2ebs/custommount"
 )
 
 func (p *Provider) UnmountVolumeFromInstance() error {

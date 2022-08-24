@@ -7,12 +7,12 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os"
 
 	"github.com/gosimple/slug"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	win "go.mondoo.io/mondoo/motor/platform/windows"
+	win "go.mondoo.com/cnquery/motor/platform/windows"
 )
 
 // often used family names

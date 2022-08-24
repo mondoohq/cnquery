@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/types"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/types"
 )
 
 // RawData is an internal track of raw data that can be cast to the appropriate types
@@ -134,8 +134,10 @@ func (r *RawData) String() string {
 // the first return value gives true/false based on if the data indicates success/failure
 // the second value indicates if we were able to come to a decision based on the data
 // examples:
-//   truthy: true, 123, [true], "string"
-//   falsey: false
+//
+//	truthy: true, 123, [true], "string"
+//	falsey: false
+//
 // if the data includes an error, it is falsey
 func (r *RawData) IsTruthy() (bool, bool) {
 	if r.Error != nil {

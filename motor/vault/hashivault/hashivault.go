@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/vault/api"
-	"go.mondoo.io/mondoo/motor/vault"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 var notImplemented = errors.New("not implemented")

@@ -4,7 +4,7 @@ import "motor/asset/asset.proto";
 import "motor/vault/vault.proto";
 
 package mondoo.motor.inventory.v1;
-option go_package = "go.mondoo.io/mondoo/motor/inventory/v1";
+option go_package = "go.mondoo.com/cnquery/motor/inventory/v1";
 
 // NOTE: the k8s types are apache 2 licenced and copied from
 // https://github.com/kubernetes/apimachinery/blob/master/pkg/apis/meta/v1/generated.proto

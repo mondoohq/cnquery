@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"go.mondoo.io/mondoo/types"
+	"go.mondoo.com/cnquery/types"
 )
 
 func dereferenceDict(raw interface{}) (*RawData, error) {

@@ -1,7 +1,7 @@
 package reboot
 
 import (
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os"
 )
 
 const LinuxRebootFile = "/var/run/reboot-required"

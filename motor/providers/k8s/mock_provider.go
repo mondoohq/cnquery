@@ -8,9 +8,9 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	platform "go.mondoo.io/mondoo/motor/platform"
-	providers "go.mondoo.io/mondoo/motor/providers"
-	resources "go.mondoo.io/mondoo/motor/providers/k8s/resources"
+	platform "go.mondoo.com/cnquery/motor/platform"
+	providers "go.mondoo.com/cnquery/motor/providers"
+	resources "go.mondoo.com/cnquery/motor/providers/k8s/resources"
 	v1 "k8s.io/api/apps/v1"
 	v10 "k8s.io/api/batch/v1"
 	v11 "k8s.io/api/core/v1"

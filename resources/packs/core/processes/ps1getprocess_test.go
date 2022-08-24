@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/resources/packs/core/processes"
+	"go.mondoo.com/cnquery/resources/packs/core/processes"
 )
 
 func TestWindowsServiceParser(t *testing.T) {

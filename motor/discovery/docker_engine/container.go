@@ -6,10 +6,10 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/motorid/containerid"
-	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/motorid/containerid"
+	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/motor/providers"
 )
 
 func (e *dockerEngineDiscovery) containerList() ([]types.Container, error) {

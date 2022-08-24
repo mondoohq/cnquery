@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"github.com/stretchr/testify/assert"
-	aws_pack "go.mondoo.io/mondoo/resources/packs/aws"
+	aws_pack "go.mondoo.com/cnquery/resources/packs/aws"
 )
 
 func TestCertTagsToMapTags(t *testing.T) {

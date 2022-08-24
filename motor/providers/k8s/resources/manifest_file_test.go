@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/providers/k8s/resources"
+	"go.mondoo.com/cnquery/motor/providers/k8s/resources"
 	appsv1 "k8s.io/api/apps/v1"
 	coresv1 "k8s.io/api/core/v1"
 )

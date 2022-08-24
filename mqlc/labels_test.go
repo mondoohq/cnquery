@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.io/mondoo"
-	"go.mondoo.io/mondoo/llx"
 )
 
 func label(t *testing.T, s string, f func(res *llx.Labels)) {

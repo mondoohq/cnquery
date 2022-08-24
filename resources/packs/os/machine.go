@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/cockroachdb/errors"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/os/smbios"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/os/smbios"
 )
 
 // we use MQL machine to cache the queries to the os

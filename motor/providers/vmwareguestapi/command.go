@@ -7,8 +7,8 @@ import (
 	"os/exec"
 	"time"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
-	"go.mondoo.io/mondoo/motor/providers/vmwareguestapi/toolbox"
+	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/vmwareguestapi/toolbox"
 )
 
 type Command struct {

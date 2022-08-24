@@ -8,10 +8,10 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers"
-	azure_transport "go.mondoo.io/mondoo/motor/providers/azure"
+	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/motor/providers"
+	azure_transport "go.mondoo.com/cnquery/motor/providers/azure"
 )
 
 type AzureClient struct {

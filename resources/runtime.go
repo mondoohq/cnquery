@@ -8,7 +8,7 @@ import (
 	"go.mondoo.com/ranger-rpc"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.com/cnquery/motor"
 )
 
 // NewResource creates the base class for a new resource

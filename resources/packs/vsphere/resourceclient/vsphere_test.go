@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/vmware/govmomi"
-	"go.mondoo.io/mondoo/motor/providers/vsphere/vsimulator"
+	"go.mondoo.com/cnquery/motor/providers/vsphere/vsimulator"
 )
 
 func newClient(host string, user string, password string) (*Client, error) {

@@ -3,10 +3,10 @@ package ebs
 import (
 	"context"
 
-	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/discovery/aws"
-	"go.mondoo.io/mondoo/motor/discovery/common"
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/discovery/aws"
+	"go.mondoo.com/cnquery/motor/discovery/common"
+	"go.mondoo.com/cnquery/motor/providers"
 )
 
 type Resolver struct{}

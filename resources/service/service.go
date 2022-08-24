@@ -6,7 +6,7 @@ import (
 	context "context"
 	json "encoding/json"
 
-	"go.mondoo.io/mondoo/resources"
+	"go.mondoo.com/cnquery/resources"
 )
 
 type Server struct {

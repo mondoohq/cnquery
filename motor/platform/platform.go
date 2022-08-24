@@ -3,7 +3,7 @@ package platform
 import (
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers"
 )
 
 //go:generate protoc --proto_path=../../:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. --iam-actions_out=. platform.proto

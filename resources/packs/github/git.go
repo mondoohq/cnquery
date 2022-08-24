@@ -2,7 +2,7 @@ package github
 
 import (
 	"github.com/google/go-github/v45/github"
-	"go.mondoo.io/mondoo/resources"
+	"go.mondoo.com/cnquery/resources"
 )
 
 func (g *mqlGitGpgSignature) id() (string, error) {

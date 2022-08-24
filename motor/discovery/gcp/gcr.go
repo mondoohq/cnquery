@@ -6,13 +6,13 @@ import (
 	"strings"
 	"sync"
 
-	"go.mondoo.io/mondoo/motor/motorid/containerid"
+	"go.mondoo.com/cnquery/motor/motorid/containerid"
 
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/google"
-	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/motor/providers"
 	"google.golang.org/api/cloudresourcemanager/v1"
 )
 

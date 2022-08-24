@@ -1,6 +1,6 @@
 import "../core/core.lr"
 
-option go_package = "go.mondoo.io/mondoo/resources/packs/aws"
+option go_package = "go.mondoo.com/cnquery/resources/packs/aws"
 
 // AWS Resource
 aws {

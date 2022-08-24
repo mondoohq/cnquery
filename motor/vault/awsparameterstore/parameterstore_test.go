@@ -1,3 +1,4 @@
+//go:build debugtest
 // +build debugtest
 
 package awsparameterstore
@@ -10,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/vault"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 func TestAwsParameterStore(t *testing.T) {

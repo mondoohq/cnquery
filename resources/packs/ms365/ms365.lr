@@ -1,6 +1,6 @@
 import "../core/core.lr"
 
-option go_package = "go.mondoo.io/mondoo/resources/packs/ms365"
+option go_package = "go.mondoo.com/cnquery/resources/packs/ms365"
 
 // Microsoft Graph Beta
 msgraph.beta {
