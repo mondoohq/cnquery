@@ -10,6 +10,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/google/uuid"
+	specs "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.io/mondoo/motor"
@@ -50,7 +51,7 @@ func TestDockerProcsList(t *testing.T) {
 	}
 
 	uuid := uuid.New()
-	created, err := dClient.ContainerCreate(ctx, cfg, &container.HostConfig{}, &network.NetworkingConfig{}, uuid.String())
+	created, err := dClient.ContainerCreate(ctx, cfg, &container.HostConfig{}, &network.NetworkingConfig{}, &specs.Platform{}, uuid.String())
 	require.NoError(t, err)
 
 	require.NoError(t, dClient.ContainerStart(ctx, created.ID, types.ContainerStartOptions{}))
