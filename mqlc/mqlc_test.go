@@ -8,16 +8,16 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/logger"
 	resource_info "go.mondoo.com/cnquery/resources/packs/os/info"
 	"go.mondoo.com/cnquery/types"
-	"go.mondoo.io/mondoo"
 )
 
 var (
 	schema   = resource_info.Registry.Schema()
-	features = mondoo.Features{byte(mondoo.PiperCode)}
+	features = cnquery.Features{byte(cnquery.PiperCode)}
 )
 
 func init() {

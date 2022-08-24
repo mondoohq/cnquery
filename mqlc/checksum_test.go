@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo"
+	"go.mondoo.com/cnquery"
 )
 
 func TestIfChecksumming(t *testing.T) {
@@ -82,7 +82,7 @@ func TestIfChecksumming(t *testing.T) {
 	checksums := map[string]struct{}{}
 
 	for _, q := range queries {
-		res, err := Compile(q, schema, mondoo.Features{byte(mondoo.PiperCode)}, nil)
+		res, err := Compile(q, schema, cnquery.Features{byte(cnquery.PiperCode)}, nil)
 		require.Nil(t, err)
 		require.NotNil(t, res)
 		if res == nil {
@@ -141,7 +141,7 @@ func TestSwitchChecksumming(t *testing.T) {
 	checksums := map[string]struct{}{}
 
 	for _, q := range queries {
-		res, err := Compile(q, schema, mondoo.Features{byte(mondoo.PiperCode)}, nil)
+		res, err := Compile(q, schema, cnquery.Features{byte(cnquery.PiperCode)}, nil)
 		require.Nil(t, err)
 		require.NotNil(t, res)
 		if res == nil {

@@ -9,13 +9,13 @@ import (
 	vrs "github.com/hashicorp/go-version"
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/mqlc/parser"
 	v1 "go.mondoo.com/cnquery/mqlc/v1"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/all"
 	"go.mondoo.com/cnquery/types"
-	"go.mondoo.io/mondoo"
 )
 
 type variable struct {
@@ -1553,8 +1553,8 @@ func compile(input string, schema *resources.Schema, props map[string]*llx.Primi
 	return res, nil
 }
 
-func Compile(input string, schema *resources.Schema, features mondoo.Features, props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
-	if features.IsActive(mondoo.PiperCode) {
+func Compile(input string, schema *resources.Schema, features cnquery.Features, props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
+	if features.IsActive(cnquery.PiperCode) {
 		res, err := compile(input, schema, props)
 		if err != nil {
 			return res, err
@@ -1580,7 +1580,7 @@ func Compile(input string, schema *resources.Schema, features mondoo.Features, p
 }
 
 // MustCompile a code piece that should not fail (otherwise panic)
-func MustCompile(input string, schema *resources.Schema, features mondoo.Features, props map[string]*llx.Primitive) *llx.CodeBundle {
+func MustCompile(input string, schema *resources.Schema, features cnquery.Features, props map[string]*llx.Primitive) *llx.CodeBundle {
 	res, err := Compile(input, schema, features, props)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to compile")
