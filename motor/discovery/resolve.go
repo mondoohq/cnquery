@@ -270,6 +270,14 @@ func resolveRelatedAssets(ctx context.Context, relatedAssets []*asset.Asset, pla
 					return
 				}
 
+				if fingerprint.Runtime != "" {
+					p.Runtime = fingerprint.Runtime
+				}
+
+				if fingerprint.Kind != providers.Kind_KIND_UNKNOWN {
+					p.Kind = fingerprint.Kind
+				}
+
 				assetObj.State = asset.State_STATE_ONLINE
 				assetObj.Name = fingerprint.Name
 				assetObj.PlatformIds = fingerprint.PlatformIDs
