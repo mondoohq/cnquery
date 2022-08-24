@@ -9,12 +9,12 @@ import (
 	vrs "github.com/hashicorp/go-version"
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/mqlc/parser"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/all"
 	"go.mondoo.com/cnquery/types"
-	"go.mondoo.io/mondoo"
 )
 
 type binding struct {
@@ -1373,7 +1373,7 @@ func CompileAST(ast *parser.AST, schema *resources.Schema, props map[string]*llx
 				Labels: map[string]string{},
 			},
 			Props:            map[string]string{},
-			Version:          mondoo.ApiVersion(),
+			Version:          cnquery.ApiVersion(),
 			MinMondooVersion: "",
 		},
 		vars:       map[string]variable{},

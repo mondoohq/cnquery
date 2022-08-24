@@ -4,8 +4,8 @@ import (
 	"errors"
 	"sort"
 
+	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/cli/execruntime"
-	"go.mondoo.io/mondoo"
 )
 
 func (m *mqlMondoo) id() (string, error) {
@@ -13,11 +13,11 @@ func (m *mqlMondoo) id() (string, error) {
 }
 
 func (m *mqlMondoo) GetVersion() (string, error) {
-	return mondoo.GetVersion(), nil
+	return cnquery.GetVersion(), nil
 }
 
 func (m *mqlMondoo) GetBuild() (string, error) {
-	return mondoo.GetBuild(), nil
+	return cnquery.GetBuild(), nil
 }
 
 func (m *mqlMondoo) GetNulllist() ([]interface{}, error) {

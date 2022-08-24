@@ -4,12 +4,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.io/mondoo"
 )
 
 func label(t *testing.T, s string, f func(res *llx.Labels)) {
-	res, err := Compile(s, schema, mondoo.Features{byte(mondoo.PiperCode)}, nil)
+	res, err := Compile(s, schema, cnquery.Features{byte(cnquery.PiperCode)}, nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
 	if res == nil {

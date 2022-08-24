@@ -1495,7 +1495,7 @@ func CompileAST(ast *parser.AST, schema *resources.Schema, props map[string]*llx
 			Labels: map[string]string{},
 		},
 		Props:            map[string]string{},
-		Version:          mondoo.ApiVersion(),
+		Version:          cnquery.ApiVersion(),
 		MinMondooVersion: "",
 	}
 

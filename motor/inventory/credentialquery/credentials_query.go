@@ -1,6 +1,7 @@
 package credentialquery
 
 import (
+	"go.mondoo.com/cnquery"
 	"strings"
 
 	"github.com/cockroachdb/errors"
@@ -11,7 +12,6 @@ import (
 	"go.mondoo.com/cnquery/motor/vault"
 	"go.mondoo.com/cnquery/mql"
 	"go.mondoo.com/cnquery/types"
-	"go.mondoo.io/mondoo"
 )
 
 type CredentialQueryResponse struct {
@@ -27,7 +27,7 @@ func NewCredentialQueryRunner(credentialQuery string) (*CredentialQueryRunner, e
 		return nil, err
 	}
 
-	mqlExecutor := mql.New(rt, mondoo.DefaultFeatures)
+	mqlExecutor := mql.New(rt, cnquery.DefaultFeatures)
 
 	// just empty props to ensure we can compile
 	props := map[string]*llx.Primitive{

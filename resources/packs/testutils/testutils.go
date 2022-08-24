@@ -9,8 +9,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tj/assert"
+	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/motor"
@@ -20,26 +21,25 @@ import (
 	"go.mondoo.com/cnquery/policy"
 	"go.mondoo.com/cnquery/policy/executor"
 	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.io/mondoo"
 )
 
-var Features mondoo.Features
+var Features cnquery.Features
 
 func init() {
 	logger.InitTestEnv()
 	Features = getEnvFeatures()
 }
 
-func getEnvFeatures() mondoo.Features {
+func getEnvFeatures() cnquery.Features {
 	env := os.Getenv("FEATURES")
 	if env == "" {
-		return mondoo.Features{byte(mondoo.PiperCode)}
+		return cnquery.Features{byte(cnquery.PiperCode)}
 	}
 
 	arr := strings.Split(env, ",")
-	var fts mondoo.Features
+	var fts cnquery.Features
 	for i := range arr {
-		v, ok := mondoo.FeaturesValue[arr[i]]
+		v, ok := cnquery.FeaturesValue[arr[i]]
 		if ok {
 			fmt.Println("--> activate feature: " + arr[i])
 			fts = append(Features, byte(v))
@@ -52,14 +52,14 @@ func getEnvFeatures() mondoo.Features {
 
 func OnlyV1(t *testing.T) {
 	t.Helper()
-	if Features.IsActive(mondoo.PiperCode) {
+	if Features.IsActive(cnquery.PiperCode) {
 		t.SkipNow()
 	}
 }
 
 func OnlyPiper(t *testing.T) {
 	t.Helper()
-	if !Features.IsActive(mondoo.PiperCode) {
+	if !Features.IsActive(cnquery.PiperCode) {
 		t.SkipNow()
 	}
 }
