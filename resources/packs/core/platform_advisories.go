@@ -9,7 +9,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/nexus/assets"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/vadvisor"
 	"go.mondoo.com/cnquery/vadvisor/client"
@@ -69,13 +68,6 @@ func (p *mqlPlatform) GetVulnerabilityReport() (interface{}, error) {
 		return nil, err
 	}
 
-	asset := &assets.Asset{
-		// NOTE: asset mrn may not be available in incognito mode and will be an empty string then
-		Mrn:      r.UpstreamConfig.AssetMrn,
-		SpaceMrn: r.UpstreamConfig.SpaceMrn,
-		Platform: platformObj,
-	}
-
 	apiPackages := []*vadvisor.Package{}
 	kernelVersion := ""
 
@@ -126,7 +118,7 @@ func (p *mqlPlatform) GetVulnerabilityReport() (interface{}, error) {
 
 	logger.DebugDumpYAML("vuln-scan-job", scanjob)
 
-	log.Debug().Str("asset", asset.Mrn).Bool("incognito", mcc.Incognito).Msg("run advisory scan")
+	log.Debug().Bool("incognito", mcc.Incognito).Msg("run advisory scan")
 	report, err := scannerClient.AnalysePlatform(context.Background(), scanjob)
 	if err != nil {
 		return nil, err
