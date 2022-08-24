@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package mondoo.vuln.cvss.v1;
+option go_package = "go.mondoo.com/cnquery/resources/packs/core/vadvisor/cvss";
+
+message Cvss {
+  string vector = 1;
+  string source = 2;
+  float score = 3;
+}

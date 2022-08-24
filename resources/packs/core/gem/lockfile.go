@@ -7,9 +7,8 @@ import (
 	"regexp"
 	"strings"
 
-	"go.mondoo.com/cnquery/vadvisor"
-
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
 )
 
 var (

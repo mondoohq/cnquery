@@ -5,7 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"go.mondoo.com/cnquery/vadvisor"
+	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
 )
 
 // PackageJson allows parsing the package json file

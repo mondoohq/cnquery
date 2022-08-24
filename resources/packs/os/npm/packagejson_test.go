@@ -4,9 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"go.mondoo.com/cnquery/vadvisor"
-
 	"github.com/stretchr/testify/assert"
+	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
 	"go.mondoo.com/cnquery/resources/packs/os/npm"
 )
 

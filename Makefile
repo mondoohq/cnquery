@@ -118,6 +118,8 @@ lr/docs/markdown: lr/build
 		--docs-file resources/packs/vsphere/vsphere.lr.manifest.yaml \
 		--front-matter-file ../web/docs/templates/mql-resources-front-matter.md \
 		--output ../web/docs/docs/references/mql/vsphere
+	go generate ./resources/packs/core/vadvisor
+	go generate ./resources/packs/core/vadvisor/cvss
 
 .PHONY: resources
 resources: | lr resources/generate resources/test

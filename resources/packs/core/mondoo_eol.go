@@ -1,12 +1,12 @@
 package core
 
 import (
+	"context"
 	"errors"
-	"time"
-
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/vadvisor"
-	"go.mondoo.com/cnquery/vadvisor/sources/eol"
+	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
+	"go.mondoo.com/ranger-rpc"
+	"time"
 )
 
 func (s *mqlMondooEol) id() (string, error) {
@@ -21,10 +21,26 @@ func (p *mqlMondooEol) GetDate() (*time.Time, error) {
 	name, _ := p.Product()
 	version, _ := p.Version()
 
-	platformEolInfo := eol.EolInfo(&vadvisor.Platform{
+	r := p.MotorRuntime
+	mcc := r.UpstreamConfig
+	if mcc == nil {
+		return nil, errors.New("mondoo upstream configuration is missing")
+	}
+
+	// get new advisory report
+	// start scanner client
+	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, ranger.DefaultHttpClient())
+	if err != nil {
+		return nil, err
+	}
+
+	platformEolInfo, err := scannerClient.IsEol(context.Background(), &vadvisor.Platform{
 		Name:    name,
 		Release: version,
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	if platformEolInfo == nil {
 		return nil, errors.New("no platform eol information available")

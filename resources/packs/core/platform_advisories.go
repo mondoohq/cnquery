@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"errors"
+	"net/http"
 	"time"
 
 	"github.com/mitchellh/mapstructure"
@@ -10,9 +11,9 @@ import (
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/vadvisor"
-	"go.mondoo.com/cnquery/vadvisor/client"
-	"go.mondoo.com/cnquery/vadvisor/specs/cvss"
+	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
+	"go.mondoo.com/cnquery/resources/packs/core/vadvisor/cvss"
+	"go.mondoo.com/ranger-rpc"
 )
 
 // TODO: generalize this kind of function
@@ -33,6 +34,18 @@ func getKernelVersion(kernel Kernel) string {
 	}
 
 	return val.(string)
+}
+
+func newAdvisoryScannerHttpClient(mondooapi string, plugins []ranger.ClientPlugin, httpClient *http.Client) (*vadvisor.AdvisoryScannerClient, error) {
+	sa, err := vadvisor.NewAdvisoryScannerClient(mondooapi, httpClient)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range plugins {
+		sa.AddPlugin(plugins[i])
+	}
+	return sa, nil
 }
 
 // fetches the vulnerability report and returns the full report
@@ -63,7 +76,7 @@ func (p *mqlPlatform) GetVulnerabilityReport() (interface{}, error) {
 
 	// get new advisory report
 	// start scanner client
-	scannerClient, err := client.New(mcc.Collector, mcc.ApiEndpoint, mcc.Plugins, false, mcc.Incognito)
+	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, ranger.DefaultHttpClient())
 	if err != nil {
 		return nil, err
 	}
@@ -115,11 +128,10 @@ func (p *mqlPlatform) GetVulnerabilityReport() (interface{}, error) {
 		Packages:      apiPackages,
 		KernelVersion: kernelVersion,
 	}
-
 	logger.DebugDumpYAML("vuln-scan-job", scanjob)
 
 	log.Debug().Bool("incognito", mcc.Incognito).Msg("run advisory scan")
-	report, err := scannerClient.AnalysePlatform(context.Background(), scanjob)
+	report, err := scannerClient.AnalyseAsset(context.Background(), scanjob)
 	if err != nil {
 		return nil, err
 	}
@@ -333,82 +345,6 @@ func (a *mqlPlatformCves) GetStats() (interface{}, error) {
 	}
 
 	dict, err := JsonToDict(report.Stats.Cves)
-	if err != nil {
-		return nil, err
-	}
-
-	return dict, nil
-}
-
-func (a *mqlPlatformExploits) id() (string, error) {
-	return "platform.exploits", nil
-}
-
-func (a *mqlPlatformExploits) GetList() ([]interface{}, error) {
-	report, err := getAdvisoryReport(a.MotorRuntime)
-	if err != nil {
-		return nil, err
-	}
-
-	mqlExploits := make([]interface{}, len(report.Exploits))
-	for i := range report.Exploits {
-		exploit := report.Exploits[i]
-
-		cvssScore, err := a.MotorRuntime.CreateResource("audit.cvss",
-			"score", float64(exploit.Score)/10,
-			"vector", "", // TODO: we need to extend the report to include the vector in the report
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		var modified *time.Time
-		parsedTime, err := time.Parse(time.RFC3339, exploit.Modified)
-		if err == nil {
-			modified = &parsedTime
-		}
-
-		mqlExploit, err := a.MotorRuntime.CreateResource("audit.exploit",
-			"id", exploit.ID,
-			"mrn", exploit.Mrn,
-			"modified", modified,
-			"worstScore", cvssScore,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		mqlExploits[i] = mqlExploit
-	}
-
-	return mqlExploits, nil
-}
-
-func (a *mqlPlatformExploits) GetCvss() (interface{}, error) {
-	report, err := getAdvisoryReport(a.MotorRuntime)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: this needs to be the exploit worst score
-	obj, err := a.MotorRuntime.CreateResource("audit.cvss",
-		"score", float64(report.Stats.Score)/10,
-		"vector", "", // TODO: we need to extend the report to include the vector in the report
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return obj, nil
-}
-
-func (a *mqlPlatformExploits) GetStats() (interface{}, error) {
-	report, err := getAdvisoryReport(a.MotorRuntime)
-	if err != nil {
-		return nil, err
-	}
-
-	dict, err := JsonToDict(report.Stats.Exploits)
 	if err != nil {
 		return nil, err
 	}
