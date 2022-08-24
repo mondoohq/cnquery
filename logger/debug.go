@@ -6,12 +6,12 @@ import (
 	"io/ioutil"
 	"os"
 
-	"sigs.k8s.io/yaml"
-
 	"github.com/hokaccha/go-prettyjson"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo"
+	"sigs.k8s.io/yaml"
 )
+
+var DumpLocal string
 
 // DebugJSON prints a prettified JSON of the data to CLI on debug mode
 func DebugJSON(obj interface{}) {
@@ -43,9 +43,9 @@ func DebugDumpJSON(name string, obj interface{}) {
 		return
 	}
 
-	if mondoo.DumpLocal == "" {
+	if DumpLocal == "" {
 		if val, ok := os.LookupEnv("DEBUG"); ok && (val == "1" || val == "true") {
-			mondoo.DumpLocal = "./mondoo-debug-"
+			DumpLocal = "./mondoo-debug-"
 		} else {
 			return
 		}
@@ -56,7 +56,7 @@ func DebugDumpJSON(name string, obj interface{}) {
 		log.Error().Err(err).Msg("failed to dump JSON")
 	}
 
-	err = ioutil.WriteFile(mondoo.DumpLocal+name+".json", []byte(raw), 0644)
+	err = ioutil.WriteFile(DumpLocal+name+".json", []byte(raw), 0644)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to dump JSON")
 	}
@@ -69,9 +69,9 @@ func DebugDumpYAML(name string, obj interface{}) {
 		return
 	}
 
-	if mondoo.DumpLocal == "" {
+	if DumpLocal == "" {
 		if val, ok := os.LookupEnv("DEBUG"); ok && (val == "1" || val == "true") {
-			mondoo.DumpLocal = "./mondoo-debug-"
+			DumpLocal = "./mondoo-debug-"
 		} else {
 			return
 		}
@@ -82,7 +82,7 @@ func DebugDumpYAML(name string, obj interface{}) {
 		log.Error().Err(err).Msg("failed to dump YAML")
 	}
 
-	err = ioutil.WriteFile(mondoo.DumpLocal+name+".yaml", []byte(raw), 0644)
+	err = ioutil.WriteFile(DumpLocal+name+".yaml", []byte(raw), 0644)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to dump JSON")
 	}
