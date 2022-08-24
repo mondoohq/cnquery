@@ -62,8 +62,11 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		assetObj.Name = fingerprint.Name
 	}
 
-	if p.Runtime == "" && fingerprint.Runtime != "" {
+	if fingerprint.Runtime != "" {
 		p.Runtime = fingerprint.Runtime
+	}
+
+	if fingerprint.Kind != providers.Kind_KIND_UNKNOWN {
 		p.Kind = fingerprint.Kind
 	}
 
