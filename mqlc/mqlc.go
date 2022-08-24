@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strconv"
 
-	vrs "github.com/hashicorp/go-version"
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery"
@@ -14,7 +13,6 @@ import (
 	"go.mondoo.com/cnquery/mqlc/parser"
 	v1 "go.mondoo.com/cnquery/mqlc/v1"
 	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/all"
 	"go.mondoo.com/cnquery/types"
 )
 
@@ -1452,28 +1450,32 @@ func (c *compiler) CompileParsed(ast *parser.AST) error {
 }
 
 func getMinMondooVersion(current string, resource string, field string) string {
-	rd := all.ResourceDocs.Resources[resource]
-	var minverDocs string
-	if rd != nil {
-		minverDocs = rd.MinMondooVersion
-		if field != "" {
-			f := rd.Fields[field]
-			if f != nil && f.MinMondooVersion != "" {
-				minverDocs = f.MinMondooVersion
-			}
-		}
-		if current != "" {
-			// If the field has a newer version requirement than the current code bundle
-			// then update the version requirement to the newest version required.
-			docMin, err := vrs.NewVersion(minverDocs)
-			curMin, err1 := vrs.NewVersion(current)
-			if docMin != nil && err == nil && err1 == nil && docMin.LessThan(curMin) {
-				return current
-			}
-		}
-	}
-	return minverDocs
+	return "0.0.0"
 }
+
+//func getMinMondooVersion(current string, resource string, field string) string {
+//	rd := all.ResourceDocs.Resources[resource]
+//	var minverDocs string
+//	if rd != nil {
+//		minverDocs = rd.MinMondooVersion
+//		if field != "" {
+//			f := rd.Fields[field]
+//			if f != nil && f.MinMondooVersion != "" {
+//				minverDocs = f.MinMondooVersion
+//			}
+//		}
+//		if current != "" {
+//			// If the field has a newer version requirement than the current code bundle
+//			// then update the version requirement to the newest version required.
+//			docMin, err := vrs.NewVersion(minverDocs)
+//			curMin, err1 := vrs.NewVersion(current)
+//			if docMin != nil && err == nil && err1 == nil && docMin.LessThan(curMin) {
+//				return current
+//			}
+//		}
+//	}
+//	return minverDocs
+//}
 
 // CompileAST with a schema into a chunky code
 func CompileAST(ast *parser.AST, schema *resources.Schema, props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
