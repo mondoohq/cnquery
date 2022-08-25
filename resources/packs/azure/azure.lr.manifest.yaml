@@ -9,14 +9,14 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azuread.application:
     fields:
       id: {}
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azuread.domain:
     fields:
       authenticationType: {}
@@ -27,7 +27,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azuread.group:
     fields:
       displayName: {}
@@ -42,14 +42,14 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azuread.serviceprincipal:
     fields:
       id: {}
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azuread.user:
     fields:
       accountEnabled: {}
@@ -66,14 +66,14 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm:
     fields:
       resources: {}
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.compute:
     fields:
       disks: {}
@@ -81,7 +81,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.compute.disk:
     fields:
       id: {}
@@ -97,7 +97,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.compute.vm:
     fields:
       dataDisks: {}
@@ -112,14 +112,14 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.keyvault:
     fields:
       vaults: {}
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.keyvault.certificate:
     fields:
       certName: {}
@@ -137,7 +137,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.keyvault.key:
     fields:
       created: {}
@@ -155,7 +155,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.keyvault.secret:
     fields:
       contentType: {}
@@ -173,7 +173,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.keyvault.vault:
     fields:
       certificates: {}
@@ -190,14 +190,14 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.mariadb:
     fields:
       servers: {}
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.mariadb.database:
     fields:
       charset: {}
@@ -208,7 +208,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.mariadb.server:
     fields:
       configuration: {}
@@ -223,14 +223,14 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.monitor:
     fields:
       logProfiles: {}
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.monitor.diagnosticsetting:
     fields:
       id: {}
@@ -241,7 +241,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.monitor.logprofile:
     fields:
       id: {}
@@ -254,14 +254,14 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.mysql:
     fields:
       servers: {}
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.mysql.database:
     fields:
       charset: {}
@@ -272,7 +272,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.mysql.server:
     fields:
       configuration: {}
@@ -287,7 +287,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.network:
     fields:
       interfaces: {}
@@ -296,7 +296,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.network.interface:
     fields:
       etag: {}
@@ -310,7 +310,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.network.securitygroup:
     fields:
       defaultSecurityRules: {}
@@ -326,7 +326,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.network.securityrule:
     fields:
       destinationPortRange: {}
@@ -337,7 +337,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.network.watcher:
     fields:
       etag: {}
@@ -350,14 +350,14 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.postgresql:
     fields:
       servers: {}
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.postgresql.database:
     fields:
       charset: {}
@@ -368,7 +368,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.postgresql.server:
     fields:
       configuration: {}
@@ -383,7 +383,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.resource:
     fields:
       changedTime: {}
@@ -402,14 +402,14 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.sql:
     fields:
       servers: {}
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.sql.configuration:
     fields:
       allowedValues: {}
@@ -424,7 +424,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.sql.database:
     fields:
       advisor: {}
@@ -464,7 +464,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.sql.databaseusage:
     fields:
       currentValue: {}
@@ -478,7 +478,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.sql.firewallrule:
     fields:
       endIpAddress: {}
@@ -489,7 +489,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.sql.server:
     fields:
       auditingPolicy: {}
@@ -508,7 +508,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.sql.server.administrator:
     fields:
       administratorType: {}
@@ -521,14 +521,14 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.storage:
     fields:
       accounts: {}
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.storage.account:
     fields:
       containers: {}
@@ -544,7 +544,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.storage.container:
     fields:
       etag: {}
@@ -555,7 +555,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.web:
     fields:
       apps: {}
@@ -563,7 +563,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.web.appsite:
     fields:
       applicationSettings: {}
@@ -583,7 +583,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.web.appsiteauthsettings:
     fields:
       id: {}
@@ -594,7 +594,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
   azurerm.web.appsiteconfig:
     fields:
       id: {}
@@ -605,4 +605,4 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - azure
+        - azure
