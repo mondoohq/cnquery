@@ -489,6 +489,38 @@ resources:
       servers: {}
       settings: {}
     min_mondoo_version: 5.15.0
+  os:
+    fields:
+      env: {}
+      hostname: {}
+      machineid: {}
+      name: {}
+      path: {}
+      rebootpending: {}
+      updates: {}
+      uptime: {}
+    min_mondoo_version: 5.15.0
+    snippets:
+    - query: os.env
+      title: Show all environment variables
+    - query: os.env['windir']
+      title: Retrieve a single environment variable
+  os.rootCertificates:
+    fields:
+      content: {}
+      files: {}
+    min_mondoo_version: 5.15.0
+  os.rootcertificates:
+    fields: {}
+    min_mondoo_version: 5.15.0
+  os.update:
+    fields:
+      category: {}
+      format: {}
+      name: {}
+      restart: {}
+      severity: {}
+    min_mondoo_version: 5.15.0
   pam.conf:
     fields:
       content: {}
@@ -590,6 +622,24 @@ resources:
       user: {}
       warndays: {}
     min_mondoo_version: 5.15.0
+  sshd:
+    fields: {}
+    min_mondoo_version: 5.15.0
+  sshd.config:
+    fields:
+      ciphers: {}
+      content: {}
+      file: {}
+      files:
+        min_mondoo_version: 6.12.1
+      hostkeys: {}
+      kexs: {}
+      macs: {}
+      params: {}
+    min_mondoo_version: 5.15.0
+    snippets:
+    - query: sshd.config.params['Banner'] == '/etc/ssh/sshd-banner'
+      title: Check the ssh banner setting
   windows:
     fields:
       computerInfo: {}

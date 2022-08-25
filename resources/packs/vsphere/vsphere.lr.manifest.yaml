@@ -10,16 +10,16 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - vmware-esxi
-        - vmware-vsphere
+      - vmware-esxi
+      - vmware-vsphere
     snippets:
-      - query: |
-          esxi.host {
-            kernelModules {
-              signedStatus == "Signed"
-            }
+    - query: |
+        esxi.host {
+          kernelModules {
+            signedStatus == "Signed"
           }
-        title: Check that all kernel modules are signed
+        }
+      title: Check that all kernel modules are signed
   esxi.command:
     fields:
       command: {}
@@ -28,8 +28,8 @@ resources:
     min_mondoo_version: 5.27.0
     platform:
       name:
-        - vmware-esxi
-        - vmware-vsphere
+      - vmware-esxi
+      - vmware-vsphere
   esxi.kernelmodule:
     fields:
       enabled: {}
@@ -45,8 +45,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - vmware-esxi
-        - vmware-vsphere
+      - vmware-esxi
+      - vmware-vsphere
   esxi.ntpconfig:
     fields:
       config: {}
@@ -55,8 +55,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - vmware-esxi
-        - vmware-vsphere
+      - vmware-esxi
+      - vmware-vsphere
   esxi.service:
     fields:
       key: {}
@@ -69,8 +69,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - vmware-esxi
-        - vmware-vsphere
+      - vmware-esxi
+      - vmware-vsphere
   esxi.timezone:
     fields:
       description: {}
@@ -80,8 +80,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - vmware-esxi
-        - vmware-vsphere
+      - vmware-esxi
+      - vmware-vsphere
   esxi.vib:
     fields:
       acceptanceLevel: {}
@@ -95,8 +95,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - vmware-esxi
-        - vmware-vsphere
+      - vmware-esxi
+      - vmware-vsphere
   vsphere:
     fields:
       about: {}
@@ -105,28 +105,28 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - vmware-esxi
-        - vmware-vsphere
+      - vmware-esxi
+      - vmware-vsphere
     snippets:
-      - query: vsphere.about
-        title: Display Information about the vSphere environment
-      - query: vsphere.datacenters { hosts { moid properties } }
-        title: Display ESXi host moid and properties
-      - query: vsphere.datacenters { hosts { ntp.server } }
-        title: Display NTP server for all ESXi hosts
-      - query: vsphere.datacenters { hosts { ntp.server.any(_ == "10.31.21.2") } }
-        title: Ensure a specific NTP Server is set
-      - query: |
-          vsphere.datacenters {
-            hosts {
-              vmknics.where(tags == "Management") {
-                properties['Enabled'] == true
-                properties['MTU'] == 1500
-                properties['VDSName'] != /(?i)storage/
-              }
+    - query: vsphere.about
+      title: Display Information about the vSphere environment
+    - query: vsphere.datacenters { hosts { moid properties } }
+      title: Display ESXi host moid and properties
+    - query: vsphere.datacenters { hosts { ntp.server } }
+      title: Display NTP server for all ESXi hosts
+    - query: vsphere.datacenters { hosts { ntp.server.any(_ == "10.31.21.2") } }
+      title: Ensure a specific NTP Server is set
+    - query: |
+        vsphere.datacenters {
+          hosts {
+            vmknics.where(tags == "Management") {
+              properties['Enabled'] == true
+              properties['MTU'] == 1500
+              properties['VDSName'] != /(?i)storage/
             }
           }
-        title: Ensure specific VmkNics properties for all management VmkNics
+        }
+      title: Ensure specific VmkNics properties for all management VmkNics
   vsphere.cluster:
     fields:
       hosts: {}
@@ -137,8 +137,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - vmware-esxi
-        - vmware-vsphere
+      - vmware-esxi
+      - vmware-vsphere
   vsphere.datacenter:
     fields:
       clusters: {}
@@ -150,8 +150,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - vmware-esxi
-        - vmware-vsphere
+      - vmware-esxi
+      - vmware-vsphere
   vsphere.host:
     fields:
       acceptanceLevel: {}
@@ -173,29 +173,29 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - vmware-esxi
-        - vmware-vsphere
+      - vmware-esxi
+      - vmware-vsphere
     snippets:
-      - query: |
-          // targeting a single ESXi host
-          esxi.host {
+    - query: |
+        // targeting a single ESXi host
+        esxi.host {
+          acceptanceLevel == 'VMwareCertified' || acceptanceLevel == 'VMwareAccepted' || acceptanceLevel == 'PartnerSupported'
+        }
+
+        // targeting the vSphere API
+        vsphere.datacenters {
+          hosts {
             acceptanceLevel == 'VMwareCertified' || acceptanceLevel == 'VMwareAccepted' || acceptanceLevel == 'PartnerSupported'
           }
-          
-          // targeting the vSphere API
-          vsphere.datacenters {
-            hosts {
-              acceptanceLevel == 'VMwareCertified' || acceptanceLevel == 'VMwareAccepted' || acceptanceLevel == 'PartnerSupported'
-            }
+        }
+      title: Verify the Software AcceptanceLevel for ESXi host
+    - query: |
+        esxi.host {
+          packages {
+            acceptanceLevel == 'VMwareCertified' || acceptanceLevel == 'VMwareAccepted' || acceptanceLevel == 'PartnerSupported'
           }
-        title: Verify the Software AcceptanceLevel for ESXi host
-      - query: |
-          esxi.host {
-            packages {
-              acceptanceLevel == 'VMwareCertified' || acceptanceLevel == 'VMwareAccepted' || acceptanceLevel == 'PartnerSupported'
-            }
-          }
-        title: Verify that each vib is "VMwareCertified" or "VMwareAccepted"
+        }
+      title: Verify that each vib is "VMwareCertified" or "VMwareAccepted"
   vsphere.license:
     fields:
       name: {}
@@ -204,8 +204,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - vmware-esxi
-        - vmware-vsphere
+      - vmware-esxi
+      - vmware-vsphere
   vsphere.vm:
     fields:
       advancedSettings: {}
@@ -216,8 +216,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - vmware-esxi
-        - vmware-vsphere
+      - vmware-esxi
+      - vmware-vsphere
   vsphere.vmknic:
     fields:
       ipv4: {}
@@ -228,8 +228,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - vmware-esxi
-        - vmware-vsphere
+      - vmware-esxi
+      - vmware-vsphere
   vsphere.vmnic:
     fields:
       details: {}
@@ -239,8 +239,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - vmware-esxi
-        - vmware-vsphere
+      - vmware-esxi
+      - vmware-vsphere
   vsphere.vswitch.dvs:
     fields:
       name: {}
@@ -249,8 +249,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - vmware-esxi
-        - vmware-vsphere
+      - vmware-esxi
+      - vmware-vsphere
   vsphere.vswitch.standard:
     fields:
       failoverPolicy: {}
@@ -262,5 +262,5 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - vmware-esxi
-        - vmware-vsphere
+      - vmware-esxi
+      - vmware-vsphere
