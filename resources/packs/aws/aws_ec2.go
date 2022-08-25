@@ -405,7 +405,9 @@ func (i *mqlAwsEc2Keypair) init(args *resources.Args) (*resources.Args, AwsEc2Ke
 		return nil, nil, errors.New("name required to fetch aws ec2 keypair")
 	}
 	n := (*args)["name"].(string)
-
+	if n == "" {
+		return nil, nil, nil
+	}
 	if (*args)["region"] == nil {
 		return nil, nil, errors.New("region required to fetch aws ec2 keypair")
 	}
