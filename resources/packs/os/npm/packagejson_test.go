@@ -1,11 +1,11 @@
 package npm_test
 
 import (
-	"go.mondoo.com/cnquery/vadvisor"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
 	"go.mondoo.com/cnquery/resources/packs/os/npm"
 )
 

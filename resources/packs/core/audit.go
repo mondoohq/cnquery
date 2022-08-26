@@ -15,7 +15,3 @@ func (c *mqlAuditAdvisory) id() (string, error) {
 func (c *mqlAuditCve) id() (string, error) {
 	return c.Mrn()
 }
-
-func (c *mqlAuditExploit) id() (string, error) {
-	return c.Mrn()
-}

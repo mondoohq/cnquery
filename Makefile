@@ -160,6 +160,8 @@ resources: | lr resources/generate resources/test
 resources/generate:
 	go generate ./resources
 	go generate ./resources/service
+	go generate ./resources/packs/core/vadvisor
+	go generate ./resources/packs/core/vadvisor/cvss
 
 resources/test:
 	go test -timeout 5s $(shell go list ./resources/... | grep -v '/vendor/')
@@ -178,4 +180,3 @@ mqlc: | llx mqlc/test
 
 mqlc/test:
 	go test -timeout 5s $(shell go list ./mqlc/... | grep -v '/vendor/')
-

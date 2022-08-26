@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.com/cnquery/resources/packs/core/php"
-	"go.mondoo.com/cnquery/vadvisor"
+	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
 )
 
 func TestComposerLockParser(t *testing.T) {

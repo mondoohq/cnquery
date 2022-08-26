@@ -1,0 +1,183 @@
+syntax = "proto3";
+
+import "vadvisor/cvss/cvss.proto";
+
+package mondoo.vuln.v1;
+option go_package = "go.mondoo.com/cnquery/resources/packs/core/vadvisor";
+
+message Platform {
+  string name = 1;
+  string release = 2;
+  string arch = 3;
+  string title = 4;
+  string build = 6;
+  map<string, string> labels = 22;
+}
+
+message Package {
+  string ID = 6;
+  string name = 1;
+  string version = 2;
+  string arch = 5;
+
+  string description = 20;
+  string format = 23;
+  string origin = 24;
+  string available = 22;
+  string status = 21;
+  string namespace = 25;
+  int32 score = 26;
+  bool affected = 27;
+}
+
+service AdvisoryScanner {
+  rpc AnalyseAsset(AnalyseAssetRequest) returns (VulnReport);
+  rpc IsEol(Platform) returns (PlatformEolInfo);
+}
+
+message AnalyseAssetRequest {
+  Platform platform = 1;
+  repeated Package packages = 2;
+  string kernelVersion = 3;
+}
+
+message VulnReport {
+  Platform platform = 1;
+  repeated Package packages = 2;
+  repeated Advisory advisories = 3;
+  ReportStats stats = 4;
+  string published = 5;
+}
+
+message Advisory {
+  reserved 21;
+
+  string ID = 1;
+  string Mrn = 2;
+  string title = 3;
+  string description = 4;
+
+  repeated Package fixed = 5;
+  repeated Package affected = 6;
+  repeated Reference refs = 7;
+  repeated CVE cves = 20;
+  repeated FixedPlatform fixedPlatforms = 30;
+
+  int32 score = 25;
+  mondoo.vuln.cvss.v1.Cvss worstScore = 31;
+  float vendorscore = 26;
+
+  AdvisoryState state = 27;
+
+  string published = 23;
+  string modified = 24;
+
+  repeated string supersedence = 28;
+  bool unscored = 29;
+}
+
+enum AdvisoryState {
+  RELEASED = 0;
+  PENDING = 1;
+  IGNORED = 2;
+  NOT_AFFECTED = 3;
+}
+
+message Reference {
+  string ID = 1;
+  string url = 2;
+  string source = 3;
+  string title = 4;
+}
+
+message FixedPlatform {
+  string ID = 6;
+  string name = 1;
+  string release = 2;
+  string arch = 3;
+  string namespace = 4;
+  string build = 5;
+  string patchName = 7;
+}
+
+message ReportStats {
+  int32 score = 1;
+  bool  affected = 2;
+  bool  unscored = 3;
+  ReportStatsAdvisories advisories = 16;
+  ReportStatsCves cves = 17;
+  ReportStatsPackages packages = 18;
+  ReportStatsExploits exploits = 19;
+}
+
+message ReportStatsAdvisories {
+  int32 total = 1;
+  int32 critical = 2;
+  int32 high = 3;
+  int32 medium = 4;
+  int32 low = 5;
+  int32 none = 6;
+  int32 unknown = 7;
+}
+
+message ReportStatsCves {
+  int32 total = 1;
+  int32 critical = 2;
+  int32 high = 3;
+  int32 medium = 4;
+  int32 low = 5;
+  int32 none = 6;
+  int32 unknown = 7;
+}
+
+message ReportStatsPackages {
+  int32 total = 1;
+  int32 affected = 2;
+  int32 critical = 3;
+  int32 high = 4;
+  int32 medium = 5;
+  int32 low = 6;
+  int32 none = 7;
+  int32 unknown = 8;
+}
+
+message ReportStatsExploits {
+  int32 total = 1;
+}
+
+message CVE {
+  string ID = 1;
+  string Mrn = 2;
+  string summary = 3;
+
+  float score = 4;
+  mondoo.vuln.cvss.v1.Cvss worstScore = 7;
+
+  bool unscored = 6;
+  CveState state = 5;
+
+  repeated mondoo.vuln.cvss.v1.Cvss cvss = 20;
+
+  string cwe = 21;
+  string published = 22;
+  string modified = 23;
+  string url = 24;
+}
+
+enum CveState {
+  PUBLIC = 0;
+  INVALID = 1;
+  RESERVED = 2;
+  REPLACED_BY = 4;
+  SPLIT_FROM = 5;
+  MERGED_TO = 6;
+  REJECTED = 7;
+}
+
+message PlatformEolInfo {
+  Platform platform = 1;
+  string DocsUrl = 2;
+  string ProductUrl = 3;
+  string ReleaseDate = 4;
+  string EolDate = 5;
+}
