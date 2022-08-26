@@ -7,7 +7,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/resources/packs/core/packages"
-	"go.mondoo.com/cnquery/vadvisor/versions/rpm"
+	"go.mondoo.com/cnquery/resources/packs/core/versions/rpm"
 )
 
 // RpmNewestKernel works on all machines running rpm
