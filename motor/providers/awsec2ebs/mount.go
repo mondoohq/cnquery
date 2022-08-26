@@ -7,7 +7,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/providers/awsec2ebs/custommount"
+	"go.mondoo.com/cnquery/motor/providers/awsec2ebs/custommount"
 )
 
 func (t *Provider) Mount() error {

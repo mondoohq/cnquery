@@ -7,12 +7,12 @@ import (
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/devicemanagement/devicecompliancepolicies"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/rolemanagement/directory/roleassignments"
-	"go.mondoo.io/mondoo/motor/providers"
-	ms365_provider "go.mondoo.io/mondoo/motor/providers/ms365"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/core"
-	"go.mondoo.io/mondoo/resources/packs/ms365/msgraphclient"
-	"go.mondoo.io/mondoo/resources/packs/ms365/msgraphconv"
+	"go.mondoo.com/cnquery/motor/providers"
+	ms365_provider "go.mondoo.com/cnquery/motor/providers/ms365"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/resources/packs/ms365/msgraphclient"
+	"go.mondoo.com/cnquery/resources/packs/ms365/msgraphconv"
 )
 
 func ms365Provider(t providers.Instance) (*ms365_provider.Provider, error) {

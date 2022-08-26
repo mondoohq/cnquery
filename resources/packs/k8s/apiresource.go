@@ -1,6 +1,6 @@
 package k8s
 
-import "go.mondoo.io/mondoo/resources/packs/core"
+import "go.mondoo.com/cnquery/resources/packs/core"
 
 func (k *mqlK8s) GetApiResources() ([]interface{}, error) {
 	kt, err := k8sProvider(k.MotorRuntime.Motor.Provider)

@@ -5,8 +5,8 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/types"
+	"go.mondoo.com/cnquery/motor"
+	"go.mondoo.com/cnquery/types"
 )
 
 // Callback is a function without arguments

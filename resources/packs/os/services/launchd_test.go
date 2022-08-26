@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/resources/packs/os/services"
-	"go.mondoo.io/mondoo/motor/providers/mock"
+	"go.mondoo.com/cnquery/resources/packs/os/services"
+	"go.mondoo.com/cnquery/motor/providers/mock"
 )
 
 func TestParseServiceLaunchD(t *testing.T) {

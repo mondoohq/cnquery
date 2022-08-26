@@ -10,12 +10,12 @@ import (
 	"github.com/aws/smithy-go"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/motorid/awsec2"
-	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers"
-	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
-	"go.mondoo.io/mondoo/resources/library/jobpool"
+	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/motorid/awsec2"
+	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/motor/providers"
+	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
+	"go.mondoo.com/cnquery/resources/library/jobpool"
 )
 
 func NewEc2Discovery(cfg aws.Config) (*Ec2Instances, error) {

@@ -7,12 +7,12 @@ import (
 
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
-	"go.mondoo.io/mondoo/motor/providers"
-	provider "go.mondoo.io/mondoo/motor/providers/vsphere"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/core"
-	"go.mondoo.io/mondoo/resources/packs/vsphere/info"
-	"go.mondoo.io/mondoo/resources/packs/vsphere/resourceclient"
+	"go.mondoo.com/cnquery/motor/providers"
+	provider "go.mondoo.com/cnquery/motor/providers/vsphere"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/resources/packs/vsphere/info"
+	"go.mondoo.com/cnquery/resources/packs/vsphere/resourceclient"
 )
 
 var Registry = info.Registry

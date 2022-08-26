@@ -6,10 +6,10 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/os"
-	"go.mondoo.io/mondoo/motor/providers/os/cmd"
-	"go.mondoo.io/mondoo/motor/providers/ssh/cat"
+	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os/cmd"
+	"go.mondoo.com/cnquery/motor/providers/ssh/cat"
 )
 
 var _ providers.Instance = (*Provider)(nil)

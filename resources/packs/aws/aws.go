@@ -4,10 +4,10 @@ import (
 	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"go.mondoo.io/mondoo/motor/providers"
-	aws_provider "go.mondoo.io/mondoo/motor/providers/aws"
-	"go.mondoo.io/mondoo/resources/packs/aws/info"
-	"go.mondoo.io/mondoo/resources/packs/core"
+	"go.mondoo.com/cnquery/motor/providers"
+	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
+	"go.mondoo.com/cnquery/resources/packs/aws/info"
+	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
 var Registry = info.Registry

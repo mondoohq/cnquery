@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor"
+	"go.mondoo.com/cnquery/motor/providers/os"
 )
 
 func osProvider(m *motor.Motor) (os.OperatingSystemProvider, error) {

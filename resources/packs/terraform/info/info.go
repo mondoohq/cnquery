@@ -5,7 +5,7 @@ package info
 import (
 	_ "embed"
 
-	"go.mondoo.io/mondoo/resources"
+	"go.mondoo.com/cnquery/resources"
 )
 
 // fyi this is a workaround for paths: https://github.com/golang/go/issues/46056

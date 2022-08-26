@@ -1,7 +1,7 @@
 package k8s
 
 import (
-	"go.mondoo.io/mondoo/resources"
+	"go.mondoo.com/cnquery/resources"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )

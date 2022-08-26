@@ -11,16 +11,16 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tj/assert"
-	"go.mondoo.io/mondoo"
-	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/logger"
-	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/providers/local"
-	"go.mondoo.io/mondoo/motor/providers/mock"
-	"go.mondoo.io/mondoo/mqlc"
-	"go.mondoo.io/mondoo/policy"
-	"go.mondoo.io/mondoo/policy/executor"
-	"go.mondoo.io/mondoo/resources"
+	"go.mondoo.com/cnquery"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/logger"
+	"go.mondoo.com/cnquery/motor"
+	"go.mondoo.com/cnquery/motor/providers/local"
+	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/mqlc"
+	"go.mondoo.com/cnquery/policy"
+	"go.mondoo.com/cnquery/policy/executor"
+	"go.mondoo.com/cnquery/resources"
 )
 
 var Features mondoo.Features

@@ -3,7 +3,7 @@ package core_test
 import (
 	"testing"
 
-	"go.mondoo.io/mondoo/resources/packs/testutils"
+	"go.mondoo.com/cnquery/resources/packs/testutils"
 )
 
 func TestUUID(t *testing.T) {

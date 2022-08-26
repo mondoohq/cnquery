@@ -5,7 +5,7 @@ import (
 	"errors"
 	"os"
 
-	"go.mondoo.io/mondoo/motor/providers/ms365/ms365report"
+	"go.mondoo.com/cnquery/motor/providers/ms365/ms365report"
 )
 
 // NOTE: this is a temporary solution and will be replaced with logic that calls powershell directly and

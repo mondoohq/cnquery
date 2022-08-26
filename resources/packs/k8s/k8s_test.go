@@ -6,12 +6,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/k8s"
-	k8s_pack "go.mondoo.io/mondoo/resources/packs/k8s"
-	"go.mondoo.io/mondoo/resources/packs/testutils"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/motor"
+	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers/k8s"
+	k8s_pack "go.mondoo.com/cnquery/resources/packs/k8s"
+	"go.mondoo.com/cnquery/resources/packs/testutils"
 )
 
 type K8sObjectKindTest struct {

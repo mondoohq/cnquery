@@ -4,10 +4,10 @@ import (
 	"errors"
 	"strconv"
 
-	"go.mondoo.io/mondoo/motor/providers"
-	provider "go.mondoo.io/mondoo/motor/providers/gitlab"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/gitlab/info"
+	"go.mondoo.com/cnquery/motor/providers"
+	provider "go.mondoo.com/cnquery/motor/providers/gitlab"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/gitlab/info"
 )
 
 var Registry = info.Registry

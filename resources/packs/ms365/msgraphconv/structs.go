@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/models"
-	"go.mondoo.io/mondoo/resources/packs/core"
+	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
 type AssignedPlan struct {

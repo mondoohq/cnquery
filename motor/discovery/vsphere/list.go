@@ -11,10 +11,10 @@ import (
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
-	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/providers"
-	provider "go.mondoo.io/mondoo/motor/providers/vsphere"
-	"go.mondoo.io/mondoo/resources/packs/vsphere/resourceclient"
+	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/providers"
+	provider "go.mondoo.com/cnquery/motor/providers/vsphere"
+	"go.mondoo.com/cnquery/resources/packs/vsphere/resourceclient"
 )
 
 func New(client *govmomi.Client) *VSphere {

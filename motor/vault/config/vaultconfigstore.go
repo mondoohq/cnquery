@@ -8,12 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/vault"
-	"go.mondoo.io/mondoo/motor/vault/awsparameterstore"
-	"go.mondoo.io/mondoo/motor/vault/awssecretsmanager"
-	"go.mondoo.io/mondoo/motor/vault/gcpsecretmanager"
-	"go.mondoo.io/mondoo/motor/vault/hashivault"
-	"go.mondoo.io/mondoo/motor/vault/keyring"
+	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/motor/vault/awsparameterstore"
+	"go.mondoo.com/cnquery/motor/vault/awssecretsmanager"
+	"go.mondoo.com/cnquery/motor/vault/gcpsecretmanager"
+	"go.mondoo.com/cnquery/motor/vault/hashivault"
+	"go.mondoo.com/cnquery/motor/vault/keyring"
 )
 
 const (

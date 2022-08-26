@@ -10,7 +10,7 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/types"
+	"go.mondoo.com/cnquery/types"
 )
 
 type goBuilder struct {
@@ -425,7 +425,7 @@ import (
 	"fmt"
 	"time"
 
-	"go.mondoo.io/mondoo/resources"
+	"go.mondoo.com/cnquery/resources"
 	"github.com/rs/zerolog/log"%s
 )
 

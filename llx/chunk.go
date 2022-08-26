@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"sort"
 
-	"go.mondoo.io/mondoo/types"
+	"go.mondoo.com/cnquery/types"
 	"golang.org/x/crypto/blake2b"
 )
 

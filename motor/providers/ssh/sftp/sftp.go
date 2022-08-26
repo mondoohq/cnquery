@@ -21,7 +21,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/pkg/sftp"
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/motor/providers/ssh/cat"
+	"go.mondoo.com/cnquery/motor/providers/ssh/cat"
 	"golang.org/x/crypto/ssh"
 )
 

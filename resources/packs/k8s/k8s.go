@@ -1,8 +1,8 @@
 package k8s
 
 import (
-	"go.mondoo.io/mondoo/resources/packs/core"
-	"go.mondoo.io/mondoo/resources/packs/k8s/info"
+	"go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/resources/packs/k8s/info"
 )
 
 var Registry = info.Registry

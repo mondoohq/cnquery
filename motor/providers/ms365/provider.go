@@ -4,9 +4,9 @@ import (
 	"sync"
 
 	"github.com/cockroachdb/errors"
-	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/ms365/ms365report"
-	"go.mondoo.io/mondoo/motor/vault"
+	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers/ms365/ms365report"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 const (

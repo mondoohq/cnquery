@@ -5,10 +5,10 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/motor/motorid/awsec2"
-	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers/os"
-	"go.mondoo.io/mondoo/resources/packs/os/smbios"
+	"go.mondoo.com/cnquery/motor/motorid/awsec2"
+	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/resources/packs/os/smbios"
 )
 
 func readValue(provider os.OperatingSystemProvider, fPath string) string {

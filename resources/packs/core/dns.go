@@ -8,10 +8,10 @@ import (
 	"strings"
 
 	"github.com/miekg/dns"
-	"go.mondoo.io/mondoo/motor/providers/network"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/core/dnsshake"
-	"go.mondoo.io/mondoo/resources/packs/core/domain"
+	"go.mondoo.com/cnquery/motor/providers/network"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/core/dnsshake"
+	"go.mondoo.com/cnquery/resources/packs/core/domain"
 )
 
 func (d *mqlDomainName) id() (string, error) {

@@ -28,12 +28,12 @@ import (
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
-	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/os"
-	"go.mondoo.io/mondoo/motor/providers/ssh/cat"
-	"go.mondoo.io/mondoo/motor/providers/vmwareguestapi/toolbox"
-	"go.mondoo.io/mondoo/motor/providers/vsphere"
-	"go.mondoo.io/mondoo/motor/vault"
+	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/ssh/cat"
+	"go.mondoo.com/cnquery/motor/providers/vmwareguestapi/toolbox"
+	"go.mondoo.com/cnquery/motor/providers/vsphere"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 var _ providers.Instance = (*Provider)(nil)

@@ -2,7 +2,7 @@ package php
 
 import (
 	"encoding/json"
-	"go.mondoo.io/mondoo/vadvisor"
+	"go.mondoo.com/cnquery/vadvisor"
 	"io"
 	"io/ioutil"
 )

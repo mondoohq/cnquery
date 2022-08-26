@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/providers"
-	gcp_provider "go.mondoo.io/mondoo/motor/providers/gcp"
+	"go.mondoo.com/cnquery/motor/providers"
+	gcp_provider "go.mondoo.com/cnquery/motor/providers/gcp"
 )
 
 func TestGcpDiscovery(t *testing.T) {

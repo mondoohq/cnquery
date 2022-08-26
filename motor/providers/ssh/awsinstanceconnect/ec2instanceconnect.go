@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect"
-	"go.mondoo.io/mondoo/motor/providers/ssh/keypair"
+	"go.mondoo.com/cnquery/motor/providers/ssh/keypair"
 )
 
 type generator struct {

@@ -1,18 +1,18 @@
 package all
 
 import (
-	"go.mondoo.io/mondoo/resources/packs/all/info"
-	"go.mondoo.io/mondoo/resources/packs/aws"
-	"go.mondoo.io/mondoo/resources/packs/azure"
-	"go.mondoo.io/mondoo/resources/packs/core"
-	"go.mondoo.io/mondoo/resources/packs/gcp"
-	"go.mondoo.io/mondoo/resources/packs/github"
-	"go.mondoo.io/mondoo/resources/packs/gitlab"
-	"go.mondoo.io/mondoo/resources/packs/k8s"
-	"go.mondoo.io/mondoo/resources/packs/ms365"
-	"go.mondoo.io/mondoo/resources/packs/os"
-	"go.mondoo.io/mondoo/resources/packs/terraform"
-	"go.mondoo.io/mondoo/resources/packs/vsphere"
+	"go.mondoo.com/cnquery/resources/packs/all/info"
+	"go.mondoo.com/cnquery/resources/packs/aws"
+	"go.mondoo.com/cnquery/resources/packs/azure"
+	"go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/resources/packs/gcp"
+	"go.mondoo.com/cnquery/resources/packs/github"
+	"go.mondoo.com/cnquery/resources/packs/gitlab"
+	"go.mondoo.com/cnquery/resources/packs/k8s"
+	"go.mondoo.com/cnquery/resources/packs/ms365"
+	"go.mondoo.com/cnquery/resources/packs/os"
+	"go.mondoo.com/cnquery/resources/packs/terraform"
+	"go.mondoo.com/cnquery/resources/packs/vsphere"
 )
 
 // These functions are needed to be located here to avoid dependency cycles

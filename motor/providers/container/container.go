@@ -3,14 +3,14 @@ package container
 import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/rs/zerolog/log"
-	docker_discovery "go.mondoo.io/mondoo/motor/discovery/docker_engine"
-	"go.mondoo.io/mondoo/motor/motorid/containerid"
-	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/container/auth"
-	"go.mondoo.io/mondoo/motor/providers/container/docker_engine"
-	"go.mondoo.io/mondoo/motor/providers/container/docker_snapshot"
-	"go.mondoo.io/mondoo/motor/providers/container/image"
-	"go.mondoo.io/mondoo/motor/providers/tar"
+	docker_discovery "go.mondoo.com/cnquery/motor/discovery/docker_engine"
+	"go.mondoo.com/cnquery/motor/motorid/containerid"
+	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers/container/auth"
+	"go.mondoo.com/cnquery/motor/providers/container/docker_engine"
+	"go.mondoo.com/cnquery/motor/providers/container/docker_snapshot"
+	"go.mondoo.com/cnquery/motor/providers/container/image"
+	"go.mondoo.com/cnquery/motor/providers/tar"
 )
 
 type ContainerProvider interface {

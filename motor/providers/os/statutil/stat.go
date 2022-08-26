@@ -13,7 +13,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	os_provider "go.mondoo.io/mondoo/motor/providers/os"
+	os_provider "go.mondoo.com/cnquery/motor/providers/os"
 )
 
 type CommandRunner interface {

@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/motor/motorid/awsec2"
+	"go.mondoo.com/cnquery/motor/motorid/awsec2"
 )
 
 func fakeConfig() aws.Config {

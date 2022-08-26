@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"go.mondoo.io/mondoo/vadvisor"
+	"go.mondoo.com/cnquery/vadvisor"
 	"io"
 	"regexp"
 	"strings"

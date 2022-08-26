@@ -5,7 +5,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/cockroachdb/errors"
 	a "github.com/microsoft/kiota-authentication-azure-go"
-	"go.mondoo.io/mondoo/motor/vault"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 const DefaultMSGraphScope = "https://graph.microsoft.com/.default"

@@ -5,9 +5,9 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers"
-	ssh_transport "go.mondoo.io/mondoo/motor/providers/ssh"
+	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/motor/providers"
+	ssh_transport "go.mondoo.com/cnquery/motor/providers/ssh"
 	"golang.org/x/crypto/ssh"
 )
 

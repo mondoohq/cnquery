@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/motor/providers"
 
 	"github.com/google/go-github/v45/github"
 )

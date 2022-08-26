@@ -5,7 +5,7 @@ package aws
 
 // 	"github.com/aws/aws-sdk-go-v2/aws/endpoints"
 // 	"github.com/stretchr/testify/require"
-// 	"go.mondoo.io/mondoo/motor/transports"
+// 	"go.mondoo.com/cnquery/motor/transports"
 // )
 
 // func TestAwsTransport(t *testing.T) {

@@ -5,10 +5,10 @@ import (
 	"regexp"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/providers"
-	arista_provider "go.mondoo.io/mondoo/motor/providers/arista"
-	"go.mondoo.io/mondoo/resources/packs/core"
-	"go.mondoo.io/mondoo/resources/packs/os/arista"
+	"go.mondoo.com/cnquery/motor/providers"
+	arista_provider "go.mondoo.com/cnquery/motor/providers/arista"
+	"go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/resources/packs/os/arista"
 )
 
 func aristaClientInstance(t providers.Instance) (*arista.Eos, *arista_provider.Provider, error) {

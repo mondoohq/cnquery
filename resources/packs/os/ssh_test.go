@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/resources/packs/os"
-	"go.mondoo.io/mondoo/resources/packs/testutils"
+	"go.mondoo.com/cnquery/resources/packs/os"
+	"go.mondoo.com/cnquery/resources/packs/testutils"
 )
 
 func TestResource_SSHD(t *testing.T) {

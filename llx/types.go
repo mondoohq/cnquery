@@ -1,7 +1,7 @@
 package llx
 
 import (
-	"go.mondoo.io/mondoo/types"
+	"go.mondoo.com/cnquery/types"
 )
 
 // Type of this chunk, by looking at either the primitive or function.

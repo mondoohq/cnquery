@@ -3,15 +3,15 @@ package inventory
 import (
 	"testing"
 
-	"go.mondoo.io/mondoo/motor/vault"
+	"go.mondoo.com/cnquery/motor/vault"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/motor/asset"
-	v1 "go.mondoo.io/mondoo/motor/inventory/v1"
-	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers"
-	mockvault "go.mondoo.io/mondoo/motor/vault/mock"
+	"go.mondoo.com/cnquery/motor/asset"
+	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
+	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/motor/providers"
+	mockvault "go.mondoo.com/cnquery/motor/vault/mock"
 )
 
 func TestSecretManagerPassword(t *testing.T) {

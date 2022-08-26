@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/motor/providers/os/statutil"
-	"go.mondoo.io/mondoo/motor/providers/ssh/cat"
-	"go.mondoo.io/mondoo/motor/providers/vmwareguestapi/toolbox"
+	"go.mondoo.com/cnquery/motor/providers/os/statutil"
+	"go.mondoo.com/cnquery/motor/providers/ssh/cat"
+	"go.mondoo.com/cnquery/motor/providers/vmwareguestapi/toolbox"
 )
 
 // NOTE: this is not useable since simple file transfers like

@@ -2,8 +2,8 @@ package platform
 
 import (
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/providers/os"
-	"go.mondoo.io/mondoo/motor/providers/tar"
+	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/tar"
 )
 
 type detect func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error)

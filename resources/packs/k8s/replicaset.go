@@ -3,9 +3,9 @@ package k8s
 import (
 	"errors"
 
-	k8s_resources "go.mondoo.io/mondoo/motor/providers/k8s/resources"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/core"
+	k8s_resources "go.mondoo.com/cnquery/motor/providers/k8s/resources"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/core"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )

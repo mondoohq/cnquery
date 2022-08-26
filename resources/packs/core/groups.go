@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/core/groups"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/core/groups"
 )
 
 func (g *mqlGroup) init(args *resources.Args) (*resources.Args, Group, error) {

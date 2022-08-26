@@ -5,11 +5,11 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/discovery/common"
-	"go.mondoo.io/mondoo/motor/platform/detector"
-	"go.mondoo.io/mondoo/motor/providers"
-	azure_provider "go.mondoo.io/mondoo/motor/providers/azure"
+	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/discovery/common"
+	"go.mondoo.com/cnquery/motor/platform/detector"
+	"go.mondoo.com/cnquery/motor/providers"
+	azure_provider "go.mondoo.com/cnquery/motor/providers/azure"
 )
 
 const (

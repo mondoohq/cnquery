@@ -3,9 +3,9 @@ package groups
 import (
 	"errors"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os"
 
-	"go.mondoo.io/mondoo/motor"
+	"go.mondoo.com/cnquery/motor"
 )
 
 func ResolveManager(motor *motor.Motor) (OSGroupManager, error) {

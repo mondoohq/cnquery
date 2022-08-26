@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"go.mondoo.io/mondoo/types"
+	"go.mondoo.com/cnquery/types"
 )
 
 // mapFunctions are all the handlers for builtin array methods

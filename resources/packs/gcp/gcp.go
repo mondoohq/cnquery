@@ -1,6 +1,6 @@
 package gcp
 
-import "go.mondoo.io/mondoo/resources/packs/gcp/info"
+import "go.mondoo.com/cnquery/resources/packs/gcp/info"
 
 var Registry = info.Registry
 

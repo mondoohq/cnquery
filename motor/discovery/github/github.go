@@ -5,11 +5,11 @@ import (
 	"errors"
 
 	"github.com/google/go-github/v45/github"
-	"go.mondoo.io/mondoo/motor/asset"
-	"go.mondoo.io/mondoo/motor/discovery/common"
-	"go.mondoo.io/mondoo/motor/providers"
-	github_provider "go.mondoo.io/mondoo/motor/providers/github"
-	"go.mondoo.io/mondoo/motor/providers/resolver"
+	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/discovery/common"
+	"go.mondoo.com/cnquery/motor/providers"
+	github_provider "go.mondoo.com/cnquery/motor/providers/github"
+	"go.mondoo.com/cnquery/motor/providers/resolver"
 )
 
 const (

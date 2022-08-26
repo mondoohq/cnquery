@@ -3,7 +3,7 @@ package equinix
 import (
 	"github.com/cockroachdb/errors"
 	"github.com/packethost/packngo"
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers"
 )
 
 var (

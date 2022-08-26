@@ -7,14 +7,14 @@ import (
 	"io/ioutil"
 	"time"
 
-	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.com/cnquery/motor/platform"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/platform/windows"
-	"go.mondoo.io/mondoo/motor/providers/os/powershell"
+	"go.mondoo.com/cnquery/motor/platform/windows"
+	"go.mondoo.com/cnquery/motor/providers/os/powershell"
 )
 
 // ProcessorArchitecture Enum

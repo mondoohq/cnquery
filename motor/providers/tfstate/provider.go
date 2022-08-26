@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers"
 )
 
 var (

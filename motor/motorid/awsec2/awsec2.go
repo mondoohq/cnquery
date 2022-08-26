@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/cockroachdb/errors"
-	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers/local"
+	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/motor/providers/local"
 )
 
 type Identity struct {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/go-multierror"
-	"go.mondoo.io/mondoo/llx"
+	"go.mondoo.com/cnquery/llx"
 )
 
 // An Invariant is a condition that we expect compiled code to hold.

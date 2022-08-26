@@ -3,10 +3,10 @@ package os
 import (
 	"errors"
 
-	"go.mondoo.io/mondoo/motor/providers/os/powershell"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/core/packages"
-	"go.mondoo.io/mondoo/resources/packs/os/windows"
+	"go.mondoo.com/cnquery/motor/providers/os/powershell"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/core/packages"
+	"go.mondoo.com/cnquery/resources/packs/os/windows"
 )
 
 func (s *mqlWindows) id() (string, error) {

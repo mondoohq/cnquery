@@ -7,7 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os"
 )
 
 const (

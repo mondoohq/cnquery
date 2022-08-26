@@ -9,11 +9,11 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v45/github"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/providers"
-	provider "go.mondoo.io/mondoo/motor/providers/github"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/core"
-	"go.mondoo.io/mondoo/resources/packs/github/info"
+	"go.mondoo.com/cnquery/motor/providers"
+	provider "go.mondoo.com/cnquery/motor/providers/github"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/resources/packs/github/info"
 	"sigs.k8s.io/yaml"
 )
 

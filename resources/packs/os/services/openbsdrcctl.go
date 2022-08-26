@@ -5,7 +5,7 @@ import (
 	"io"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os"
 )
 
 // https://man.openbsd.org/rcctl

@@ -4,10 +4,10 @@ import (
 	"context"
 	"os"
 
-	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/container/cache"
-	"go.mondoo.io/mondoo/motor/providers/container/docker_engine"
-	"go.mondoo.io/mondoo/motor/providers/tar"
+	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers/container/cache"
+	"go.mondoo.com/cnquery/motor/providers/container/docker_engine"
+	"go.mondoo.com/cnquery/motor/providers/tar"
 )
 
 type DockerSnapshotProvider struct {

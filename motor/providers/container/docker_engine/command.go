@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 	"time"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os"
 
 	docker "github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"

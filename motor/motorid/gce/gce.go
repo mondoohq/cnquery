@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strconv"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os"
 
 	"github.com/pkg/errors"
-	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.com/cnquery/motor/platform"
 )
 
 func MondooGcpInstanceID(project string, zone string, instanceID uint64) string {

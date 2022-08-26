@@ -1,7 +1,7 @@
 package stringx_test
 
 import (
-	"go.mondoo.io/mondoo/stringx"
+	"go.mondoo.com/cnquery/stringx"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

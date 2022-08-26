@@ -3,9 +3,9 @@ package core
 import (
 	"errors"
 
-	"go.mondoo.io/mondoo/motor/providers"
-	ipmi_provider "go.mondoo.io/mondoo/motor/providers/ipmi"
-	ipmi "go.mondoo.io/mondoo/motor/providers/ipmi/client"
+	"go.mondoo.com/cnquery/motor/providers"
+	ipmi_provider "go.mondoo.com/cnquery/motor/providers/ipmi"
+	ipmi "go.mondoo.com/cnquery/motor/providers/ipmi/client"
 )
 
 func getIpmiInstance(t providers.Instance) (*ipmi.IpmiClient, error) {

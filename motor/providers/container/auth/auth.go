@@ -3,9 +3,9 @@ package auth
 import (
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/logger"
-	"go.mondoo.io/mondoo/motor/providers/container/image"
-	"go.mondoo.io/mondoo/motor/vault"
+	"go.mondoo.com/cnquery/logger"
+	"go.mondoo.com/cnquery/motor/providers/container/image"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 func AuthOption(credentials []*vault.Credential) []image.Option {

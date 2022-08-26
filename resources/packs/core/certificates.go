@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/checksums"
-	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/core/certificates"
+	"go.mondoo.com/cnquery/checksums"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/core/certificates"
 )
 
 func (s *mqlParseCertificates) init(args *resources.Args) (*resources.Args, ParseCertificates, error) {

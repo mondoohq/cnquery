@@ -7,13 +7,13 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/logger"
-	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/nexus/assets"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/vadvisor"
-	"go.mondoo.io/mondoo/vadvisor/client"
-	"go.mondoo.io/mondoo/vadvisor/specs/cvss"
+	"go.mondoo.com/cnquery/logger"
+	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/nexus/assets"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/vadvisor"
+	"go.mondoo.com/cnquery/vadvisor/client"
+	"go.mondoo.com/cnquery/vadvisor/specs/cvss"
 )
 
 // TODO: generalize this kind of function

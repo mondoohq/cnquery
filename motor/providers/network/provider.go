@@ -3,7 +3,7 @@ package network
 import (
 	"strconv"
 
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers"
 )
 
 type Provider struct {

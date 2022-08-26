@@ -9,12 +9,12 @@ import (
 	vrs "github.com/hashicorp/go-version"
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo"
-	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/mqlc/parser"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/all"
-	"go.mondoo.io/mondoo/types"
+	"go.mondoo.com/cnquery"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/mqlc/parser"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/all"
+	"go.mondoo.com/cnquery/types"
 )
 
 type binding struct {

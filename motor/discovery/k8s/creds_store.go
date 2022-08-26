@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/motor/providers/k8s"
+	"go.mondoo.com/cnquery/motor/providers/k8s"
 	v1 "k8s.io/api/core/v1"
 )
 

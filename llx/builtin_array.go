@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/go-multierror"
-	"go.mondoo.io/mondoo/types"
+	"go.mondoo.com/cnquery/types"
 )
 
 var arrayBlockType = types.Array(types.Block)

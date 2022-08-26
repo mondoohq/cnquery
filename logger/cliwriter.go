@@ -3,7 +3,7 @@ package logger
 import (
 	"fmt"
 	"github.com/muesli/termenv"
-	"go.mondoo.io/mondoo/cli/theme/colors"
+	"go.mondoo.com/cnquery/cli/theme/colors"
 	"io"
 	"os"
 	"runtime"

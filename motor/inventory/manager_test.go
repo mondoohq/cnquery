@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	v1 "go.mondoo.io/mondoo/motor/inventory/v1"
+	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 
 	"github.com/stretchr/testify/require"
 )

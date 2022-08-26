@@ -8,7 +8,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/resources/mgmt/subscriptions"
 	"github.com/cockroachdb/errors"
-	"go.mondoo.io/mondoo/motor/providers/local"
+	"go.mondoo.com/cnquery/motor/providers/local"
 )
 
 func IsAzInstalled() error {

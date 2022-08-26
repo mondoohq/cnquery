@@ -12,12 +12,12 @@ import (
 	"strconv"
 	"strings"
 
-	os_provider "go.mondoo.io/mondoo/motor/providers/os"
+	os_provider "go.mondoo.com/cnquery/motor/providers/os"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/motor/platform"
+	"go.mondoo.com/cnquery/motor/platform"
 
 	rpmdb "github.com/knqyf263/go-rpmdb/pkg"
 )

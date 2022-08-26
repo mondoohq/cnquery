@@ -3,7 +3,7 @@ package os
 import (
 	"fmt"
 
-	"go.mondoo.io/mondoo/resources/packs/os/windows"
+	"go.mondoo.com/cnquery/resources/packs/os/windows"
 )
 
 func (p *mqlAuditpol) id() (string, error) {

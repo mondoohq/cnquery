@@ -3,8 +3,8 @@ package lr
 import (
 	"errors"
 
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/types"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/types"
 )
 
 func Schema(ast *LR) (*resources.Schema, error) {

@@ -1,7 +1,7 @@
 package packages
 
 import (
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os"
 )
 
 type ScratchPkgManager struct {

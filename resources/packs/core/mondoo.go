@@ -4,8 +4,8 @@ import (
 	"errors"
 	"sort"
 
-	"go.mondoo.io/mondoo"
-	"go.mondoo.io/mondoo/cli/execruntime"
+	"go.mondoo.com/cnquery"
+	"go.mondoo.com/cnquery/cli/execruntime"
 )
 
 func (m *mqlMondoo) id() (string, error) {

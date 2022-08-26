@@ -7,8 +7,8 @@ import (
 	"strconv"
 
 	"github.com/vmware/govmomi"
-	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/vault"
+	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 var (

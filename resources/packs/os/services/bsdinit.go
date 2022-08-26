@@ -5,7 +5,7 @@ import (
 	"io"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os"
 )
 
 func ParseBsdInit(input io.Reader) ([]*Service, error) {

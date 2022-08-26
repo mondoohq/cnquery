@@ -6,14 +6,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/providers"
-	provider "go.mondoo.io/mondoo/motor/providers/vsphere"
-	"go.mondoo.io/mondoo/motor/providers/vsphere/vsimulator"
-	"go.mondoo.io/mondoo/motor/vault"
-	"go.mondoo.io/mondoo/resources/packs/testutils"
-	pack "go.mondoo.io/mondoo/resources/packs/vsphere"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/motor"
+	"go.mondoo.com/cnquery/motor/providers"
+	provider "go.mondoo.com/cnquery/motor/providers/vsphere"
+	"go.mondoo.com/cnquery/motor/providers/vsphere/vsimulator"
+	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/resources/packs/testutils"
+	pack "go.mondoo.com/cnquery/resources/packs/vsphere"
 )
 
 func vsphereTestQuery(t *testing.T, query string) []*llx.RawResult {

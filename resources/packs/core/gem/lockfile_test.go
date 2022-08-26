@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.io/mondoo/resources/packs/core/gem"
-	"go.mondoo.io/mondoo/vadvisor"
+	"go.mondoo.com/cnquery/resources/packs/core/gem"
+	"go.mondoo.com/cnquery/vadvisor"
 )
 
 func TestGemfileLockParser(t *testing.T) {

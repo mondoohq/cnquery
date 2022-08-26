@@ -11,10 +11,10 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os"
 
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/motor/providers"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/motor/providers"
 )
 
 var findTypes = map[string]string{

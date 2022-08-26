@@ -3,16 +3,16 @@ package terraform_test
 import (
 	"testing"
 
-	"go.mondoo.io/mondoo/motor/providers/tfstate"
-	"go.mondoo.io/mondoo/resources/packs/terraform"
+	"go.mondoo.com/cnquery/motor/providers/tfstate"
+	"go.mondoo.com/cnquery/resources/packs/terraform"
 
 	"github.com/stretchr/testify/require"
-	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/motor"
-	"go.mondoo.io/mondoo/motor/providers"
-	provider "go.mondoo.io/mondoo/motor/providers/terraform"
-	"go.mondoo.io/mondoo/resources/packs/os"
-	"go.mondoo.io/mondoo/resources/packs/testutils"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/motor"
+	"go.mondoo.com/cnquery/motor/providers"
+	provider "go.mondoo.com/cnquery/motor/providers/terraform"
+	"go.mondoo.com/cnquery/resources/packs/os"
+	"go.mondoo.com/cnquery/resources/packs/testutils"
 )
 
 var x = testutils.InitTester(testutils.LinuxMock(), os.Registry)

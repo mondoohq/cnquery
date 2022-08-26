@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/motor/platform"
-	"go.mondoo.io/mondoo/motor/providers/network"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/vadvisor"
-	"go.mondoo.io/mondoo/vadvisor/sources/eol"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/motor/providers/network"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/vadvisor"
+	"go.mondoo.com/cnquery/vadvisor/sources/eol"
 )
 
 // convertMqlPlatform2ApiPlatform converts the resources.Platform to

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"go.mondoo.io/mondoo/motor/providers/container/docker_engine"
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/container/docker_engine"
+	"go.mondoo.com/cnquery/motor/providers/os"
 )
 
 type DockerTopManager struct {

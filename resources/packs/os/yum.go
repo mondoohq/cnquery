@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/core"
-	"go.mondoo.io/mondoo/resources/packs/os/yum"
-	"go.mondoo.io/mondoo/stringx"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/resources/packs/os/yum"
+	"go.mondoo.com/cnquery/stringx"
 )
 
 var supportedPlatforms = []string{"amazonlinux"}

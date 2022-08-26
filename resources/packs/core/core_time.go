@@ -3,7 +3,7 @@ package core
 import (
 	"time"
 
-	"go.mondoo.io/mondoo/llx"
+	"go.mondoo.com/cnquery/llx"
 )
 
 func (p *mqlTime) id() (string, error) {

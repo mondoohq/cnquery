@@ -1,6 +1,6 @@
 package inspector
 
-import "go.mondoo.io/mondoo/resources"
+import "go.mondoo.com/cnquery/resources"
 
 // AnalyzeRuntime observers and their connections
 func AnalyzeRuntime(runtime *resources.Runtime) string {

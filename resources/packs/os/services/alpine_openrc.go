@@ -8,8 +8,8 @@ import (
 	"regexp"
 
 	"github.com/spf13/afero"
-	"go.mondoo.io/mondoo/motor/providers"
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers/os"
 )
 
 type AlpineOpenrcServiceManager struct {

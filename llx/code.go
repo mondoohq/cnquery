@@ -3,8 +3,8 @@ package llx
 import (
 	"sort"
 
-	"go.mondoo.io/mondoo/checksums"
-	"go.mondoo.io/mondoo/types"
+	"go.mondoo.com/cnquery/checksums"
+	"go.mondoo.com/cnquery/types"
 )
 
 func (x *CodeBundle) IsV2() bool {

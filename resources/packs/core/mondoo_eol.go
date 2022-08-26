@@ -2,9 +2,9 @@ package core
 
 import (
 	"errors"
-	"go.mondoo.io/mondoo/llx"
-	"go.mondoo.io/mondoo/vadvisor"
-	"go.mondoo.io/mondoo/vadvisor/sources/eol"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/vadvisor"
+	"go.mondoo.com/cnquery/vadvisor/sources/eol"
 	"time"
 )
 

@@ -5,10 +5,10 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/packethost/packngo"
-	"go.mondoo.io/mondoo/motor/providers"
-	equinix_provider "go.mondoo.io/mondoo/motor/providers/equinix"
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/resources/packs/core"
+	"go.mondoo.com/cnquery/motor/providers"
+	equinix_provider "go.mondoo.com/cnquery/motor/providers/equinix"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
 func equinixProvider(t providers.Instance) (*equinix_provider.Provider, error) {

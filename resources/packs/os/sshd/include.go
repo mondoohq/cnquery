@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/afero"
 
-	"go.mondoo.io/mondoo/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os"
 )
 
 var (

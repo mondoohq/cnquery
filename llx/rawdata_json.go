@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"time"
 
-	"go.mondoo.io/mondoo/resources"
-	"go.mondoo.io/mondoo/types"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/types"
 )
 
 func stringKeys(m map[string]interface{}) []string {
