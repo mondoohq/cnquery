@@ -1,4 +1,4 @@
-option go_package = "go.mondoo.io/mondoo/resources/packs/core"
+option go_package = "go.mondoo.com/cnquery/resources/packs/core"
 
 // Provide contextual info about Mondoo Client and environment
 mondoo {

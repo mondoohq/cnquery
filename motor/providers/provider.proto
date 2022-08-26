@@ -3,7 +3,7 @@ syntax = "proto3";
 import "motor/vault/vault.proto";
 
 package mondoo.motor.providers.v1;
-option go_package = "go.mondoo.io/mondoo/motor/providers";
+option go_package = "go.mondoo.com/cnquery/motor/providers";
 
 enum ProviderType {
   LOCAL_OS = 0;

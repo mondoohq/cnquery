@@ -1,4 +1,4 @@
-option go_package = "go.mondoo.io/mondoo/resources/packs/azure"
+option go_package = "go.mondoo.com/cnquery/resources/packs/azure"
 
 // Azure Active Directory
 azuread {

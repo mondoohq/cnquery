@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package mondoo.resources;
-option go_package = "go.mondoo.io/mondoo/resources";
+option go_package = "go.mondoo.com/cnquery/resources";
 
 // BASIC DATATYPES
 
