@@ -1,7 +1,6 @@
 package testutils
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -17,29 +16,28 @@ import (
 	"go.mondoo.com/cnquery/motor"
 	"go.mondoo.com/cnquery/motor/providers/local"
 	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/mql"
 	"go.mondoo.com/cnquery/mqlc"
-	"go.mondoo.com/cnquery/policy"
-	"go.mondoo.com/cnquery/policy/executor"
 	"go.mondoo.com/cnquery/resources"
 )
 
-var Features mondoo.Features
+var Features cnquery.Features
 
 func init() {
 	logger.InitTestEnv()
 	Features = getEnvFeatures()
 }
 
-func getEnvFeatures() mondoo.Features {
+func getEnvFeatures() cnquery.Features {
 	env := os.Getenv("FEATURES")
 	if env == "" {
-		return mondoo.Features{byte(mondoo.PiperCode)}
+		return cnquery.Features{byte(cnquery.PiperCode)}
 	}
 
 	arr := strings.Split(env, ",")
-	var fts mondoo.Features
+	var fts cnquery.Features
 	for i := range arr {
-		v, ok := mondoo.FeaturesValue[arr[i]]
+		v, ok := cnquery.FeaturesValue[arr[i]]
 		if ok {
 			fmt.Println("--> activate feature: " + arr[i])
 			fts = append(Features, byte(v))
@@ -52,14 +50,14 @@ func getEnvFeatures() mondoo.Features {
 
 func OnlyV1(t *testing.T) {
 	t.Helper()
-	if Features.IsActive(mondoo.PiperCode) {
+	if Features.IsActive(cnquery.PiperCode) {
 		t.SkipNow()
 	}
 }
 
 func OnlyPiper(t *testing.T) {
 	t.Helper()
-	if !Features.IsActive(mondoo.PiperCode) {
+	if !Features.IsActive(cnquery.PiperCode) {
 		t.SkipNow()
 	}
 }
@@ -105,13 +103,13 @@ func (ctx *tester) TestQuery(t *testing.T, query string) []*llx.RawResult {
 func (ctx *tester) TestMqlc(t *testing.T, bundle *llx.CodeBundle, props map[string]*llx.Primitive) []*llx.RawResult {
 	t.Helper()
 
-	score, resultMap, err := executor.ExecuteQuery(ctx.runtime.Registry.Schema(), ctx.runtime, bundle, props, Features)
+	resultMap, err := mql.ExecuteCode(ctx.runtime.Registry.Schema(), ctx.runtime, bundle, props, Features)
 	require.NoError(t, err)
 
 	results := make([]*llx.RawResult, 0, len(resultMap)+1)
 	i := 0
 
-	if Features.IsActive(mondoo.PiperCode) {
+	if Features.IsActive(cnquery.PiperCode) {
 		refs := make([]uint64, 0, len(bundle.CodeV2.Checksums))
 		for _, datapointArr := range [][]uint64{bundle.CodeV2.Datapoints(), bundle.CodeV2.Entrypoints()} {
 			for _, v := range datapointArr {
@@ -149,22 +147,6 @@ func (ctx *tester) TestMqlc(t *testing.T, bundle *llx.CodeBundle, props map[stri
 			}
 		}
 	}
-
-	success := score.Value == 100
-	queryResult := &llx.RawResult{
-		CodeID: score.QrId,
-	}
-	if score.Type == policy.ScoreType_Result {
-		queryResult.Data = llx.BoolData(success)
-	} else if score.Type == policy.ScoreType_Error {
-		queryResult.Data = &llx.RawData{
-			Error: errors.New(score.Message),
-		}
-	} else if score.Type == policy.ScoreType_Skip {
-		queryResult.Data = llx.NilData
-	}
-
-	results = append(results, queryResult)
 
 	return results
 }

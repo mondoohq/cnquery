@@ -1495,7 +1495,7 @@ func CompileAST(ast *parser.AST, schema *resources.Schema, props map[string]*llx
 			Labels: map[string]string{},
 		},
 		Props:            map[string]string{},
-		Version:          mondoo.ApiVersion(),
+		Version:          cnquery.APIVersion(),
 		MinMondooVersion: "",
 	}
 
@@ -1553,8 +1553,8 @@ func compile(input string, schema *resources.Schema, props map[string]*llx.Primi
 	return res, nil
 }
 
-func Compile(input string, schema *resources.Schema, features mondoo.Features, props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
-	if features.IsActive(mondoo.PiperCode) {
+func Compile(input string, schema *resources.Schema, features cnquery.Features, props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
+	if features.IsActive(cnquery.PiperCode) {
 		res, err := compile(input, schema, props)
 		if err != nil {
 			return res, err
@@ -1580,7 +1580,7 @@ func Compile(input string, schema *resources.Schema, features mondoo.Features, p
 }
 
 // MustCompile a code piece that should not fail (otherwise panic)
-func MustCompile(input string, schema *resources.Schema, features mondoo.Features, props map[string]*llx.Primitive) *llx.CodeBundle {
+func MustCompile(input string, schema *resources.Schema, features cnquery.Features, props map[string]*llx.Primitive) *llx.CodeBundle {
 	res, err := Compile(input, schema, features, props)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to compile")

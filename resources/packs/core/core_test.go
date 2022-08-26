@@ -1274,7 +1274,7 @@ func TestBrokenQueryExecution(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock(), core.Registry)
 	bundle, err := x.Compile("'asdf'.contains('asdf') == true")
 	require.NoError(t, err)
-	if testutils.Features.IsActive(mondoo.PiperCode) {
+	if testutils.Features.IsActive(cnquery.PiperCode) {
 		bundle.CodeV2.Blocks[0].Chunks[1].Id = "fakecontains"
 	} else {
 		bundle.DeprecatedV5Code.Code[1].Id = "fakecontains"

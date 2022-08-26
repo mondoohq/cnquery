@@ -10,6 +10,7 @@ import (
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
+	"go.mondoo.com/ranger-rpc"
 )
 
 func (s *mqlPlatformEol) id() (string, error) {

@@ -7,6 +7,7 @@ import (
 
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
+	"go.mondoo.com/ranger-rpc"
 )
 
 func (s *mqlMondooEol) id() (string, error) {
