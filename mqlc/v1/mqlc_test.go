@@ -1373,7 +1373,7 @@ func TestSuggestions(t *testing.T) {
 			// resource suggestions
 			// TODO: "msgraph.beta.rolemanagement.roledefinition" shows up because it includes tem`plat`eId
 			"platfo",
-			[]string{"platform", "platform.advisories", "platform.cves", "platform.eol", "platform.exploits", "platform.virtualization"},
+			[]string{"platform", "platform.advisories", "platform.cves", "platform.eol", "platform.virtualization"},
 			errors.New("cannot find resource for identifier 'platfo'"),
 		},
 		{

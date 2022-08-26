@@ -3,12 +3,12 @@ package gem
 import (
 	"bufio"
 	"errors"
-	"go.mondoo.com/cnquery/vadvisor"
 	"io"
 	"regexp"
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
 )
 
 var (
