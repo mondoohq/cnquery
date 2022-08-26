@@ -20,8 +20,8 @@ ifndef VERSION
 VERSION=${LATEST_VERSION_TAG}+$(shell git rev-list --count HEAD)
 endif
 
-LDFLAGS=-ldflags "-s -w -X go.mondoo.io/mondoo.Version=${VERSION} -X go.mondoo.io/mondoo.Build=${TAG}" # -linkmode external -extldflags=-static
-LDFLAGSDIST=-tags production -ldflags "-s -w -X go.mondoo.io/mondoo.Version=${LATEST_VERSION_TAG} -X go.mondoo.io/mondoo.Build=${TAG} -s -w"
+LDFLAGS=-ldflags "-s -w -X go.mondoo.com/cnquery.Version=${VERSION} -X go.mondoo.com/cnquery.Build=${TAG}" # -linkmode external -extldflags=-static
+LDFLAGSDIST=-tags production -ldflags "-s -w -X go.mondoo.com/cnquery.Version=${LATEST_VERSION_TAG} -X go.mondoo.com/cnquery.Build=${TAG} -s -w"
 
 .PHONY: info/ldflags
 info/ldflags:
@@ -31,8 +31,7 @@ info/ldflags:
 #   🧹 CLEAN   #
 
 clean/proto:
-	find . -not -path './.*' \( -name '*.ranger.go' -or -name '*.pb.go' -or -name '*.actions.go' -or -name '*-packr.go' -or -name '*.swagger.json' \) -dele
-te
+	find . -not -path './.*' \( -name '*.ranger.go' -or -name '*.pb.go' -or -name '*.actions.go' -or -name '*-packr.go' -or -name '*.swagger.json' \) -delete
 
 .PHONY: version
 version:

@@ -1,4 +1,4 @@
-option go_package = "go.mondoo.io/mondoo/resources/packs/gcp"
+option go_package = "go.mondoo.com/cnquery/resources/packs/gcp"
 
 // GCP Cloud organization
 gcloud.organization {

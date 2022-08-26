@@ -1,6 +1,6 @@
 import "../core/core.lr"
 
-option go_package = "go.mondoo.io/mondoo/resources/packs/gitlab"
+option go_package = "go.mondoo.com/cnquery/resources/packs/gitlab"
 
 gitlab.group {
   id int

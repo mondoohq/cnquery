@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package mondoo.llx;
-option go_package = "go.mondoo.io/mondoo/llx";
+option go_package = "go.mondoo.com/cnquery/llx";
 
 message Primitive {
   string type = 1;
