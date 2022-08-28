@@ -37,6 +37,24 @@ clean/proto:
 version:
 	@echo $(VERSION)
 
+
+#   🔨 TOOLS       #
+
+prep: prep/tools
+
+prep/tools/windows:
+	go get github.com/golang/protobuf/proto
+	go get -u gotest.tools/gotestsum
+
+prep/tools:
+	# protobuf tooling
+	command -v protoc-gen-go || go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	command -v protoc-gen-rangerrpc || go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc@latest
+	command -v protoc-gen-rangerrpc-swagger || go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc-swagger@latest
+	# additional helper
+	command -v gotestsum || go install gotest.tools/gotestsum@latest
+
+
 #   🌙 MQL/MOTOR   #
 
 cnquery/generate: clean/proto motor/generate resources/generate llx/generate lr

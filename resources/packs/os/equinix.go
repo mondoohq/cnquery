@@ -152,6 +152,13 @@ func (p *mqlEquinixMetalProject) GetUsers() ([]interface{}, error) {
 		created, _ := parseEquinixTime(fetchedUserData.Created)
 		updated, _ := parseEquinixTime(fetchedUserData.Updated)
 
+		var twitter, facebook, linkedin string
+		if fetchedUserData.SocialAccounts != nil {
+			twitter = fetchedUserData.SocialAccounts.Twitter
+			linkedin = fetchedUserData.SocialAccounts.LinkedIn
+			// TODO: let's update the used fields here, I'm not sure which ones are needed (dom)
+		}
+
 		mqlEquinixSshKey, err := p.MotorRuntime.CreateResource("equinix.metal.user",
 			"url", fetchedUserData.URL,
 			"id", fetchedUserData.ID,
@@ -160,12 +167,11 @@ func (p *mqlEquinixMetalProject) GetUsers() ([]interface{}, error) {
 			"fullName", fetchedUserData.FullName,
 			"email", fetchedUserData.Email,
 			"phoneNumber", fetchedUserData.PhoneNumber,
-			"twitter", fetchedUserData.Twitter,
-			"facebook", fetchedUserData.Facebook,
-			"linkedin", fetchedUserData.LinkedIn,
+			"twitter", twitter,
+			"facebook", facebook,
+			"linkedin", linkedin,
 			"timezone", fetchedUserData.TimeZone,
-			"vpn", fetchedUserData.VPN,
-			"twoFactorAuth", fetchedUserData.TwoFactor,
+			"twoFactorAuth", fetchedUserData.TwoFactorAuth,
 			"avatarUrl", fetchedUserData.AvatarURL,
 			"createdAt", &created,
 			"updatedAt", &updated,

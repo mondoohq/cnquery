@@ -13,6 +13,7 @@ import (
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
 	"go.mondoo.com/cnquery/resources/packs/core/vadvisor/cvss"
+	"go.mondoo.com/ranger-rpc"
 )
 
 // TODO: generalize this kind of function

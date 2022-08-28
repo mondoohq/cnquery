@@ -1,5 +1,7 @@
 package cnquery
 
+import "regexp"
+
 // Version is set via ldflags
 var Version string
 
@@ -35,6 +37,22 @@ func GetVersion() string {
 	return Version
 }
 
+var coreSemverRegex = regexp.MustCompile(`^(\d+.\d+.\d+)`)
+
+// GetCoreVersion returns the semver core (i.e. major.minor.patch)
+func GetCoreVersion() string {
+	v := Version
+
+	if v != "" {
+		v = coreSemverRegex.FindString(v)
+	}
+
+	if v == "" {
+		return "unstable"
+	}
+	return v
+}
+
 // GetBuild returns the git sha of the build
 func GetBuild() string {
 	b := Build
@@ -51,6 +69,22 @@ func GetDate() string {
 		d = "unknown"
 	}
 	return d
+}
+
+var majorVersionRegex = regexp.MustCompile(`^(\d+)`)
+
+// APIVersion is the major version of the version string (e.g. 4)
+func APIVersion() string {
+	v := Version
+
+	if v != "" {
+		v = majorVersionRegex.FindString(v)
+	}
+
+	if v == "" {
+		return "unstable"
+	}
+	return v
 }
 
 // Info on this application with version and build
