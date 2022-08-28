@@ -10,7 +10,6 @@ import (
 
 // fyi this is a workaround for paths: https://github.com/golang/go/issues/46056
 //
-//go:generate cp ../aws.lr.json ./aws.lr.json
 //go:embed aws.lr.json
 var info []byte
 

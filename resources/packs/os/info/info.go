@@ -10,7 +10,6 @@ import (
 
 // fyi this is a workaround for paths: https://github.com/golang/go/issues/46056
 //
-//go:generate cp ../os.lr.json ./os.lr.json
 //go:embed os.lr.json
 var info []byte
 
