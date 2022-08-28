@@ -72,8 +72,8 @@ type revocation struct {
 }
 
 // New creates a new tester object for the given target (via proto, host, port)
-// - the proto, host, and port are used to construct the target for net.Dial
-//   example: proto="tcp", host="mondoo.io", port=443
+//   - the proto, host, and port are used to construct the target for net.Dial
+//     example: proto="tcp", host="mondoo.io", port=443
 func New(proto string, domainName string, host string, port int) *Tester {
 	target := host + ":" + strconv.Itoa(port)
 
@@ -91,8 +91,8 @@ func New(proto string, domainName string, host string, port int) *Tester {
 }
 
 // Test runs the TLS/SSL probes for a given scan configuration
-// - versions may contain any supported pre-defined TLS/SSL versions
-//   with a complete list found in TLS_VERSIONS. Leave empty to test all.
+//   - versions may contain any supported pre-defined TLS/SSL versions
+//     with a complete list found in TLS_VERSIONS. Leave empty to test all.
 func (s *Tester) Test(conf ScanConfig) error {
 	if len(conf.Versions) == 0 {
 		conf.Versions = TLS_VERSIONS
@@ -389,11 +389,11 @@ func (s *Tester) parseCertificate(data []byte, conf *ScanConfig) error {
 }
 
 // returns true if we are done parsing through handshake responses.
-// - If i'ts a ServerHello, it will check if we have certificates.
-//   If we don't, we should read more handshake responses...
-//   If we do, we might as well be done at this stage, no need to read more
-// - There are a few other responses that also signal that we are done
-//   processing handshake responses, like ServerHelloDone or Finished
+//   - If i'ts a ServerHello, it will check if we have certificates.
+//     If we don't, we should read more handshake responses...
+//     If we do, we might as well be done at this stage, no need to read more
+//   - There are a few other responses that also signal that we are done
+//     processing handshake responses, like ServerHelloDone or Finished
 func (s *Tester) parseHandshake(data []byte, version string, conf *ScanConfig) (bool, error) {
 	handshakeType := data[0]
 	handshakeLen := bytes3int(data[1:4])
@@ -418,7 +418,8 @@ func (s *Tester) parseHandshake(data []byte, version string, conf *ScanConfig) (
 }
 
 // returns:
-//   true if the handshake was successful, false otherwise
+//
+//	true if the handshake was successful, false otherwise
 func (s *Tester) parseHello(conn net.Conn, conf *ScanConfig) (bool, error) {
 	reader := bufio.NewReader(conn)
 	header := make([]byte, 5)

@@ -35,9 +35,10 @@ func WithTagsContext(ctx context.Context) context.Context {
 
 // RequestScopedContext returns a context that contains a logger which logs the request ID
 // Given a context, a logger can be retrieved as follows
-//  ctx := RequestScopedContext(context.Background(), "req-id")
-//  log := FromContext(ctx)
-//  log.Debug().Msg("hello")
+//
+//	ctx := RequestScopedContext(context.Background(), "req-id")
+//	log := FromContext(ctx)
+//	log.Debug().Msg("hello")
 func RequestScopedContext(ctx context.Context, reqID string) context.Context {
 	if reqID == "" {
 		// The leading underscore indicates the request id was generated on the

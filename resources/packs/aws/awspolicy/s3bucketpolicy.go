@@ -41,7 +41,7 @@ func (v *S3BucketPolicyStatementValue) Value() []string {
 	return []string(*v)
 }
 
-//  value can be string or []string, convert everything to []string
+// value can be string or []string, convert everything to []string
 func (v *S3BucketPolicyStatementValue) UnmarshalJSON(b []byte) error {
 	var raw interface{}
 	err := json.Unmarshal(b, &raw)

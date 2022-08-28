@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/resources/packs/os/logindefs"
 	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/resources/packs/os/logindefs"
 )
 
 func TestLoginDefsParser(t *testing.T) {

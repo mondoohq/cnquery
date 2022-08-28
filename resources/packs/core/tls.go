@@ -7,8 +7,8 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/motor/providers/network"
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core/certificates"
 	"go.mondoo.com/cnquery/resources/packs/core/tlsshake"
 )

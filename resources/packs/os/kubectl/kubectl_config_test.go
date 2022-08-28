@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/resources/packs/os/kubectl"
 	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/resources/packs/os/kubectl"
 )
 
 func TestKubectlConfigParser(t *testing.T) {
