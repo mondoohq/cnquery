@@ -61,29 +61,18 @@ lr/build:
 	go generate .
 	go build -o lr resources/lr/cli/main.go
 	./lr go resources/packs/core/core.lr
-	go generate ./resources/packs/core/info
 	./lr docs go resources/packs/core/core.lr.manifest.yaml
 	go fmt resources/packs/core/core.lr.manifest.go
 	./lr go resources/packs/os/os.lr
-	go generate ./resources/packs/os/info
 	./lr go resources/packs/aws/aws.lr
-	go generate ./resources/packs/aws/info
 	./lr go resources/packs/azure/azure.lr
-	go generate ./resources/packs/azure/info
 	./lr go resources/packs/gcp/gcp.lr
-	go generate ./resources/packs/gcp/info
 	./lr go resources/packs/ms365/ms365.lr
-	go generate ./resources/packs/ms365/info
 	./lr go resources/packs/github/github.lr
-	go generate ./resources/packs/github/info
 	./lr go resources/packs/gitlab/gitlab.lr
-	go generate ./resources/packs/gitlab/info
 	./lr go resources/packs/terraform/terraform.lr
-	go generate ./resources/packs/terraform/info
 	./lr go resources/packs/k8s/k8s.lr
-	go generate ./resources/packs/k8s/info
 	./lr go resources/packs/vsphere/vsphere.lr
-	go generate ./resources/packs/vsphere/info
 	./lr go resources/mock/mochi.lr
 
 lr/release:
