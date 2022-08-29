@@ -1,0 +1,1 @@
+{"resources":{"gitlab.group":{"maturity":"experimental","fields":{"description":{},"id":{},"name":{},"path":{},"projects":{},"requireTwoFactorAuthentication":{},"visibility":{}},"min_mondoo_version":"5.15.0"},"gitlab.project":{"maturity":"experimental","fields":{"description":{},"id":{},"name":{},"path":{},"visibility":{}},"min_mondoo_version":"5.15.0"}}}
