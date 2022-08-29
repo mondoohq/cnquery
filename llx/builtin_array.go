@@ -145,11 +145,19 @@ func arrayBlockListV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 			allResults[i] = rd.toRawData().Value
 		}
 		if len(errs) > 0 {
+			dedupErrs := []error{}
+			dedupErrsMap := map[string]struct{}{}
+			for _, e := range errs {
+				if _, ok := dedupErrsMap[e.Error()]; !ok {
+					dedupErrs = append(dedupErrs, e)
+					dedupErrsMap[e.Error()] = struct{}{}
+				}
+			}
 			// This is quite heavy handed. If any of the block calls have an error, the whole
 			// thing becomes errored. If we don't do this, then we can have more fine grained
 			// errors. For example, if only one item in the list has errors, the block for that
 			// item will have an entrypoint with an error
-			anyError = multierror.Append(nil, errs...)
+			anyError = multierror.Append(nil, dedupErrs...)
 		}
 		data := &RawData{
 			Type:  arrayBlockType,
