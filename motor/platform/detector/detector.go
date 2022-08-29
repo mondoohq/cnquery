@@ -21,7 +21,6 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/ms365"
 	"go.mondoo.com/cnquery/motor/providers/network"
 	"go.mondoo.com/cnquery/motor/providers/terraform"
-	"go.mondoo.com/cnquery/motor/providers/tfstate"
 	"go.mondoo.com/cnquery/motor/providers/vsphere"
 )
 
@@ -133,12 +132,7 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 			Runtime: providers.RUNTIME_GITLAB,
 		}, nil
 	case *terraform.Provider:
-		return &platform.Platform{
-			Name:    "terraform",
-			Title:   "Terraform",
-			Kind:    providers.Kind_KIND_API,
-			Runtime: "",
-		}, nil
+		return pt.PlatformInfo(), nil
 	case *network.Provider:
 		return &platform.Platform{
 			Name:    pt.Scheme,
@@ -146,13 +140,6 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 			Kind:    pt.Kind(),
 			Family:  pt.Family,
 			Runtime: pt.Runtime(), // Not sure what we want to set here?
-		}, nil
-	case *tfstate.Provider:
-		return &platform.Platform{
-			Name:    "terraform-state",
-			Title:   "Terraform State",
-			Kind:    providers.Kind_KIND_API,
-			Runtime: "",
 		}, nil
 	case os.OperatingSystemProvider:
 		var resolved bool

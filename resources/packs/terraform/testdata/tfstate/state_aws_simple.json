@@ -1,0 +1,166 @@
+{
+  "format_version": "1.0",
+  "terraform_version": "1.2.6",
+  "values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_instance.app_server",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "app_server",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 1,
+          "values": {
+            "ami": "ami-830c94e3",
+            "arn": "arn:aws:ec2:us-west-2:123456789012:instance/i-0208ead4eab8df386",
+            "associate_public_ip_address": true,
+            "availability_zone": "us-west-2b",
+            "capacity_reservation_specification": [
+              {
+                "capacity_reservation_preference": "open",
+                "capacity_reservation_target": []
+              }
+            ],
+            "cpu_core_count": 1,
+            "cpu_threads_per_core": 1,
+            "credit_specification": [
+              {
+                "cpu_credits": "standard"
+              }
+            ],
+            "disable_api_stop": false,
+            "disable_api_termination": false,
+            "ebs_block_device": [],
+            "ebs_optimized": false,
+            "enclave_options": [
+              {
+                "enabled": false
+              }
+            ],
+            "ephemeral_block_device": [],
+            "get_password_data": false,
+            "hibernation": false,
+            "host_id": null,
+            "iam_instance_profile": "",
+            "id": "i-0208ead4eab8df386",
+            "instance_initiated_shutdown_behavior": "stop",
+            "instance_state": "running",
+            "instance_type": "t2.micro",
+            "ipv6_address_count": 0,
+            "ipv6_addresses": [],
+            "key_name": "",
+            "launch_template": [],
+            "maintenance_options": [
+              {
+                "auto_recovery": "default"
+              }
+            ],
+            "metadata_options": [
+              {
+                "http_endpoint": "enabled",
+                "http_put_response_hop_limit": 1,
+                "http_tokens": "optional",
+                "instance_metadata_tags": "disabled"
+              }
+            ],
+            "monitoring": false,
+            "network_interface": [],
+            "outpost_arn": "",
+            "password_data": "",
+            "placement_group": "",
+            "placement_partition_number": null,
+            "primary_network_interface_id": "eni-0c888b6f24c59e23c",
+            "private_dns": "ip-172-31-16-88.us-west-2.compute.internal",
+            "private_dns_name_options": [
+              {
+                "enable_resource_name_dns_a_record": false,
+                "enable_resource_name_dns_aaaa_record": false,
+                "hostname_type": "ip-name"
+              }
+            ],
+            "private_ip": "172.31.16.88",
+            "public_dns": "ec2-54-188-38-61.us-west-2.compute.amazonaws.com",
+            "public_ip": "54.188.38.61",
+            "root_block_device": [
+              {
+                "delete_on_termination": true,
+                "device_name": "/dev/sda1",
+                "encrypted": false,
+                "iops": 0,
+                "kms_key_id": "",
+                "tags": {},
+                "throughput": 0,
+                "volume_id": "vol-03f77b1e3ac235b16",
+                "volume_size": 8,
+                "volume_type": "standard"
+              }
+            ],
+            "secondary_private_ips": [],
+            "security_groups": [
+              "default"
+            ],
+            "source_dest_check": true,
+            "subnet_id": "subnet-9f3796e7",
+            "tags": {
+              "Name": "ExampleAppServerInstance"
+            },
+            "tags_all": {
+              "Name": "ExampleAppServerInstance"
+            },
+            "tenancy": "default",
+            "timeouts": null,
+            "user_data": null,
+            "user_data_base64": null,
+            "user_data_replace_on_change": false,
+            "volume_tags": null,
+            "vpc_security_group_ids": [
+              "sg-9eb71abe"
+            ]
+          },
+          "sensitive_values": {
+            "capacity_reservation_specification": [
+              {
+                "capacity_reservation_target": []
+              }
+            ],
+            "credit_specification": [
+              {}
+            ],
+            "ebs_block_device": [],
+            "enclave_options": [
+              {}
+            ],
+            "ephemeral_block_device": [],
+            "ipv6_addresses": [],
+            "launch_template": [],
+            "maintenance_options": [
+              {}
+            ],
+            "metadata_options": [
+              {}
+            ],
+            "network_interface": [],
+            "private_dns_name_options": [
+              {}
+            ],
+            "root_block_device": [
+              {
+                "tags": {}
+              }
+            ],
+            "secondary_private_ips": [],
+            "security_groups": [
+              false
+            ],
+            "tags": {},
+            "tags_all": {},
+            "vpc_security_group_ids": [
+              false
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

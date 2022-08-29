@@ -1,4 +1,4 @@
-package tfstate
+package terraform
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 )
 
 func TestTfstate(t *testing.T) {
-	data, err := os.ReadFile("testdata/state_simple.json")
+	data, err := os.ReadFile("testdata/aws/state_simple.json")
 	require.NoError(t, err)
 
 	var state State

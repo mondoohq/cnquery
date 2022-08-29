@@ -36,7 +36,6 @@ import (
 	"go.mondoo.com/cnquery/motor/discovery/standard"
 	"go.mondoo.com/cnquery/motor/discovery/tar"
 	"go.mondoo.com/cnquery/motor/discovery/terraform"
-	"go.mondoo.com/cnquery/motor/discovery/tfstate"
 	"go.mondoo.com/cnquery/motor/discovery/vagrant"
 	"go.mondoo.com/cnquery/motor/discovery/vsphere"
 	"go.mondoo.com/cnquery/motor/motorid"
@@ -84,7 +83,6 @@ func init() {
 		providers.ProviderID_TERRAFORM:          &terraform.Resolver{},
 		providers.ProviderID_HOST:               &network.Resolver{},
 		providers.ProviderID_TLS:                &network.Resolver{},
-		providers.ProviderID_TERRAFORM_STATE:    &tfstate.Resolver{},
 	}
 }
 

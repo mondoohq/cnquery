@@ -39,6 +39,10 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		assetObj.Name = "Terraform Static Analysis " + name
 	}
 
+	// we have 3 different asset types for terraform: hcl, plan and state
+	// platform name will differ: terraform, terraform-plan, terraform-state
+	// platform family will be terraform
+
 	path, ok := tc.Options["path"]
 	if ok {
 		absPath, _ := filepath.Abs(path)
