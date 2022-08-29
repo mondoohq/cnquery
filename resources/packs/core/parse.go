@@ -122,8 +122,6 @@ func (s *mqlParseJson) init(args *resources.Args) (*resources.Args, ParseJson, e
 		}
 		(*args)["file"] = f
 
-	} else {
-		return nil, nil, errors.New("missing 'path' or 'content' for parse.json initialization")
 	}
 
 	return args, nil, nil
@@ -267,8 +265,6 @@ func (s *mqlParsePlist) init(args *resources.Args) (*resources.Args, ParseJson, 
 			return nil, nil, err
 		}
 		(*args)["file"] = f
-	} else {
-		return nil, nil, errors.New("missing 'path' argument for parse.json initialization")
 	}
 
 	return args, nil, nil

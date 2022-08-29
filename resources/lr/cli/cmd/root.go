@@ -7,8 +7,10 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path"
 
 	homedir "github.com/mitchellh/go-homedir"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -67,4 +69,15 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
+}
+
+func ensureInfoFolder(filePath string) string {
+	folder := path.Dir(filePath)
+
+	infoFolder := path.Join(folder, "info")
+	if err := os.MkdirAll(infoFolder, 0o755); err != nil {
+		log.Fatal().Err(err).Str("folder", infoFolder).Msg("failed to ensure info folder")
+	}
+
+	return infoFolder
 }

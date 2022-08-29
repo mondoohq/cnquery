@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -19,7 +20,7 @@ func init() {
 	docsYamlCmd.Flags().String("docs-file", "", "optional file path to write content to a file")
 	docsYamlCmd.Flags().String("version", defaultVersion, "optional version to mark resource, default is latest")
 	docsCmd.AddCommand(docsYamlCmd)
-	docsCmd.AddCommand(docsGoCmd)
+	docsCmd.AddCommand(docsJSONCmd)
 	rootCmd.AddCommand(docsCmd)
 }
 
@@ -208,19 +209,17 @@ func extractComments(raw []string) (string, string) {
 	return title, desc
 }
 
-var docsGoCmd = &cobra.Command{
-	Use:   "go",
-	Short: "convert yaml docs file to go",
-	Long:  `parse an yaml docs file and convert it to go, saving it in the same location with the suffix .go`,
+var docsJSONCmd = &cobra.Command{
+	Use:   "json",
+	Short: "convert yaml docs manifest into json",
+	Long:  `convert a yaml-based docs manifest into its json description, ready for loading`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		file := args[0]
-		packageName := path.Base(path.Dir(file))
 
 		raw, err := ioutil.ReadFile(file)
 		if err != nil {
-			log.Error().Err(err)
-			return
+			log.Fatal().Err(err)
 		}
 
 		var lrDocsData docs.LrDocs
@@ -229,16 +228,16 @@ var docsGoCmd = &cobra.Command{
 			log.Fatal().Err(err).Msg("could not load yaml data")
 		}
 
-		godata := docs.Go(packageName, lrDocsData)
+		out, err := json.Marshal(&lrDocsData)
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to convert yaml to json")
+		}
 
-		if printStdout {
-			fmt.Println(godata)
-		} else {
-			filename := strings.TrimSuffix(args[0], ".yaml") + ".go"
-			err = ioutil.WriteFile(filename, []byte(godata), 0o644)
-			if err != nil {
-				log.Error().Err(err).Msg("failed to write to go file")
-			}
+		infoFolder := ensureInfoFolder(file)
+		infoFile := path.Join(infoFolder, strings.TrimSuffix(path.Base(args[0]), ".yaml")+".json")
+		err = os.WriteFile(infoFile, []byte(out), 0o644)
+		if err != nil {
+			log.Fatal().Err(err).Str("path", infoFile).Msg("failed to write to json file")
 		}
 	},
 }

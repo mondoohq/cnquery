@@ -160,19 +160,19 @@ func TestBuilder(t *testing.T) {
 	}
 
 	hasNode(t, ge, "pqep", DatapointNodeType)
-	hasOutEdges(t, ge, "pqep", "propertyquery", CollectionFinisherID)
+	hasOutEdges(t, ge, "pqep", CollectionFinisherID)
 
 	hasNode(t, ge, "checksum1", DatapointNodeType)
 	hasOutEdges(t, ge, "checksum1", "execution_query/query1", CollectionFinisherID)
 
 	hasNode(t, ge, "checksum2", DatapointNodeType)
-	hasOutEdges(t, ge, "checksum2", "query1", CollectionFinisherID)
+	hasOutEdges(t, ge, "checksum2", CollectionFinisherID)
 
 	hasNode(t, ge, "checksum3", DatapointNodeType)
-	hasOutEdges(t, ge, "checksum3", "query2rj", DatapointCollectorID, CollectionFinisherID)
+	hasOutEdges(t, ge, "checksum3", CollectionFinisherID)
 
 	hasNode(t, ge, "checksum4", DatapointNodeType)
-	hasOutEdges(t, ge, "checksum4", "query2", CollectionFinisherID)
+	hasOutEdges(t, ge, "checksum4", CollectionFinisherID)
 
 	hasNode(t, ge, "checksum5", DatapointNodeType)
 	hasOutEdges(t, ge, "checksum5", DatapointCollectorID, CollectionFinisherID)

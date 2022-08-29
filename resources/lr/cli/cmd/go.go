@@ -10,8 +10,6 @@ import (
 	"go.mondoo.com/cnquery/resources/lr"
 )
 
-var printStdout = false
-
 var goCmd = &cobra.Command{
 	Use:   "go",
 	Short: "convert LR file to go",
@@ -19,8 +17,7 @@ var goCmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		file := args[0]
-		folder := path.Dir(file)
-		packageName := path.Base(folder)
+		packageName := path.Base(path.Dir(file))
 
 		res, err := lr.Resolve(file, func(path string) ([]byte, error) {
 			return os.ReadFile(path)
@@ -51,12 +48,8 @@ var goCmd = &cobra.Command{
 			log.Error().Err(err).Msg("failed to generate schema json")
 		}
 
-		infoFolder := path.Join(folder, "info")
-		if err = os.MkdirAll(infoFolder, 0o755); err != nil {
-			log.Fatal().Err(err).Str("folder", infoFolder).Msg("failed to ensure info folder")
-		}
-
-		infoFile := path.Join(infoFolder, args[0]+".json")
+		infoFolder := ensureInfoFolder(file)
+		infoFile := path.Join(infoFolder, path.Base(args[0])+".json")
 		err = os.WriteFile(infoFile, []byte(schemaData), 0o644)
 		if err != nil {
 			log.Error().Err(err).Msg("failed to write schema json")

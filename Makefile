@@ -80,7 +80,7 @@ lr/build:
 	go generate .
 	go build -o lr resources/lr/cli/main.go
 	./lr go resources/packs/core/core.lr
-	./lr docs go resources/packs/core/core.lr.manifest.yaml
+	./lr docs json resources/packs/core/core.lr.manifest.yaml
 	go fmt resources/packs/core/core.lr.manifest.go
 	./lr go resources/packs/os/os.lr
 	./lr go resources/packs/aws/aws.lr

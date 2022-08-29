@@ -24,6 +24,9 @@ import (
 
 var Registry = resources.NewRegistry()
 
+// TODO: migrate the remaining manifests over
+var ResourceDocs = coreInfo.ResourceDocs
+
 func init() {
 	Registry.Add(coreInfo.Registry)
 	Registry.Add(osInfo.Registry)

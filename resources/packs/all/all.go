@@ -20,7 +20,7 @@ import (
 // we import this from Info to fill in all the metadata first
 var (
 	Registry     = info.Registry
-	ResourceDocs = core.ResourceDocs
+	ResourceDocs = info.ResourceDocs
 )
 
 func init() {
