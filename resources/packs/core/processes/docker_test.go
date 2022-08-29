@@ -1,3 +1,6 @@
+//go:build debugtest
+// +build debugtest
+
 package processes
 
 import (
@@ -18,7 +21,7 @@ import (
 )
 
 func TestDockerProcsList(t *testing.T) {
-	image := "docker.io/nginx:stable-alpine"
+	image := "docker.io/nginx:stable"
 	ctx := context.Background()
 	dClient, err := docker_engine.GetDockerClient()
 	assert.NoError(t, err)
@@ -62,10 +65,10 @@ func TestDockerProcsList(t *testing.T) {
 		require.NoError(t, err)
 	}()
 
-	transport, err := docker_engine.New(created.ID)
+	provider, err := docker_engine.New(created.ID)
 	assert.NoError(t, err)
 
-	motor, err := motor.New(transport)
+	motor, err := motor.New(provider)
 	assert.NoError(t, err)
 
 	pMan, err := ResolveManager(motor)

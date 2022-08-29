@@ -20,7 +20,7 @@ func (lpm *LinuxProcManager) Name() string {
 }
 
 func (lpm *LinuxProcManager) List() ([]*OSProcess, error) {
-	// get all subdirectories of /proc, filter by nunbers
+	// get all subdirectories of /proc, filter by numbers
 	f, err := lpm.provider.FS().Open("/proc")
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to access /proc")
