@@ -10,27 +10,6 @@ type LrDocs struct {
 	Resources map[string]*LrDocsEntry `json:"resources,omitempty"`
 }
 
-func (d LrDocs) MarshalGo() string {
-	var sb strings.Builder
-
-	for k := range d.Resources {
-		if d.Resources[k] == nil {
-			continue
-		}
-		sb.WriteString(fmt.Sprintf(`		"%s": {
-			%s
-		},
-`, k, d.Resources[k].MarshalGo()))
-	}
-
-	return fmt.Sprintf(`var ResourceDocs = docs.LrDocs{
-	Resources: map[string]*docs.LrDocsEntry{
-       %s
-	},
-}
-`, sb.String())
-}
-
 type LrDocsEntry struct {
 	// Maturity of the resource: experimental, preview, public, deprecated
 	// default maturity is public if nothing is provided
@@ -44,78 +23,6 @@ type LrDocsEntry struct {
 	Snippets         []LrDocsSnippet         `json:"snippets,omitempty"`
 	IsPrivate        bool                    `json:"is_private,omitempty"`
 	MinMondooVersion string                  `json:"min_mondoo_version,omitempty"`
-}
-
-func (d LrDocsEntry) MarshalGo() string {
-	var sb strings.Builder
-
-	isPrivate := "false"
-	if d.IsPrivate {
-		isPrivate = "true"
-	}
-	sb.WriteString("IsPrivate: " + isPrivate + ",\n")
-	sb.WriteString("MinMondooVersion: " + strconv.Quote(d.MinMondooVersion) + ",\n")
-
-	if d.Maturity != "" {
-		sb.WriteString("Maturity: " + strconv.Quote(d.Maturity) + ",\n")
-	}
-
-	if d.Platform != nil {
-		sb.WriteString(fmt.Sprintf(`Platform: &docs.LrDocsPlatform{
-			%s
-		},`, d.Platform.MarshalGo()))
-	}
-
-	if d.Docs != nil {
-		sb.WriteString(fmt.Sprintf(`Docs: &docs.LrDocsDocumentation{
-			%s
-		},`, d.Docs.MarshalGo()))
-	}
-
-	if len(d.Fields) > 0 {
-		sb.WriteString("Fields: map[string]*docs.LrDocsField{\n")
-		for k, v := range d.Fields {
-			if d.MinMondooVersion != "" && v.MinMondooVersion == "" {
-				v.MinMondooVersion = d.MinMondooVersion
-			}
-			sb.WriteString(`"` + k + `"` + ": {\n")
-			sb.WriteString(v.MarshalGo())
-			sb.WriteString("},\n")
-		}
-		sb.WriteString("},")
-	}
-
-	if len(d.Resources) > 0 {
-		sb.WriteString("Resources: []docs.LrDocsRefs{\n")
-		for i := range d.Resources {
-			sb.WriteString("{\n")
-			sb.WriteString(d.Resources[i].MarshalGo())
-			sb.WriteString("},\n")
-		}
-		sb.WriteString("},")
-	}
-
-	if len(d.Refs) > 0 {
-		sb.WriteString("Refs: []docs.LrDocsRefs{\n")
-		for i := range d.Refs {
-			sb.WriteString("{\n")
-			sb.WriteString(d.Refs[i].MarshalGo())
-			sb.WriteString("},\n")
-		}
-		sb.WriteString("},")
-	}
-
-	if len(d.Snippets) > 0 {
-		sb.WriteString("Snippets: []docs.LrDocsSnippet{\n")
-		for i := range d.Snippets {
-			sb.WriteString("{\n")
-			sb.WriteString(d.Snippets[i].MarshalGo())
-			sb.WriteString("},\n")
-		}
-		sb.WriteString("},")
-	}
-
-	return sb.String()
 }
 
 type LrDocsPlatform struct {
@@ -163,17 +70,4 @@ func (d LrDocsRefs) MarshalGo() string {
 type LrDocsSnippet struct {
 	Title string `json:"title,omitempty"`
 	Query string `json:"query,omitempty"`
-}
-
-func (d LrDocsSnippet) MarshalGo() string {
-	var sb strings.Builder
-	sb.WriteString("Title: " + strconv.Quote(d.Title) + ",\n")
-	sb.WriteString("Query: " + strconv.Quote(d.Query) + ",\n")
-	return sb.String()
-}
-
-func (d LrDocsField) MarshalGo() string {
-	var sb strings.Builder
-	sb.WriteString("MinMondooVersion: " + strconv.Quote(d.MinMondooVersion) + ",\n")
-	return sb.String()
 }
