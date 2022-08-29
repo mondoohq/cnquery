@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/mqlc/parser"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/mqlc/parser"
 	"go.mondoo.com/cnquery/types"
 )
 

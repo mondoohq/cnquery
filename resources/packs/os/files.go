@@ -11,10 +11,9 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
-
-	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/resources"
 )
 
 var findTypes = map[string]string{

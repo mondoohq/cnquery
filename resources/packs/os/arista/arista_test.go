@@ -1,3 +1,4 @@
+//go:build debugtest
 // +build debugtest
 
 package arista

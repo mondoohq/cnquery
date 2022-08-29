@@ -27,7 +27,7 @@ func NewCredentialQueryRunner(credentialQuery string) (*CredentialQueryRunner, e
 		return nil, err
 	}
 
-	mqlExecutor := mql.New(rt, mondoo.DefaultFeatures)
+	mqlExecutor := mql.New(rt, cnquery.DefaultFeatures)
 
 	// just empty props to ensure we can compile
 	props := map[string]*llx.Primitive{

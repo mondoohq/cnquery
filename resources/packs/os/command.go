@@ -6,8 +6,8 @@ import (
 
 	"go.mondoo.com/cnquery/motor/providers/os"
 
-	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/resources"
 )
 
 func (c *mqlCommand) id() (string, error) {

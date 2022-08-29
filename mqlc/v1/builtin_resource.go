@@ -4,8 +4,8 @@ import (
 	"strconv"
 
 	"github.com/cockroachdb/errors"
-	"go.mondoo.com/cnquery/mqlc/parser"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/mqlc/parser"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/types"
 )

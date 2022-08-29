@@ -1,9 +1,10 @@
 package custommount
 
 import (
+	"syscall"
+
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sys/unix"
-	"syscall"
 )
 
 func Mount(attachedFS string, scanDir string, fsType string, opts string) error {

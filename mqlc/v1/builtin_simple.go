@@ -3,8 +3,8 @@ package v1
 import (
 	"errors"
 
-	"go.mondoo.com/cnquery/mqlc/parser"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/mqlc/parser"
 	"go.mondoo.com/cnquery/types"
 )
 

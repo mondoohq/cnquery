@@ -9,10 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/resources/library/jobpool"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/resources/library/jobpool"
 )
 
 func NewEcrImages(cfg aws.Config) (*EcrImages, error) {

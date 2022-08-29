@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/resources/packs/os/uptime"
 	"go.mondoo.com/cnquery/motor"
 	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/resources/packs/os/uptime"
 )
 
 func TestUptimeOnLinux(t *testing.T) {
@@ -21,7 +21,6 @@ func TestUptimeOnLinux(t *testing.T) {
 
 	required, err := ut.Duration()
 	require.NoError(t, err)
-
 	assert.Equal(t, "19m0s", required.String())
 }
 
