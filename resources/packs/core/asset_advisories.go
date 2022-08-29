@@ -8,6 +8,7 @@ import (
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
+	"go.mondoo.com/ranger-rpc"
 )
 
 // fetches the vulnerability report and returns the full report
