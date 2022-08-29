@@ -14,7 +14,7 @@ import (
 type FS struct {
 	Container    string
 	dockerClient *client.Client
-	Transport    *Provider
+	Provider     *Provider
 	catFS        *cat.Fs
 }
 
@@ -50,7 +50,7 @@ func isDockerClientSupported(path string) bool {
 
 func (fs *FS) Open(name string) (afero.File, error) {
 	if isDockerClientSupported(name) {
-		return FileOpen(fs.dockerClient, name, fs.Container, fs.Transport)
+		return FileOpen(fs.dockerClient, name, fs.Container, fs.Provider)
 	} else {
 		return fs.catFS.Open(name)
 	}

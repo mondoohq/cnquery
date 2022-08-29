@@ -43,7 +43,7 @@ func New(container string) (*Provider, error) {
 	t.Fs = &FS{
 		dockerClient: t.dockerClient,
 		Container:    t.container,
-		Transport:    t,
+		Provider:     t,
 		catFS:        cat.New(t),
 	}
 	return t, nil
