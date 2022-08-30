@@ -1,4 +1,4 @@
-package tfstate
+package terraform
 
 import "encoding/json"
 

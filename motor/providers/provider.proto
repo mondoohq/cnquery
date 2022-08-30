@@ -34,7 +34,6 @@ enum ProviderType {
   GITLAB = 25;
   TERRAFORM = 26;
   HOST = 27;
-  TERRAFORM_STATE = 28;
 }
 
 enum Kind {

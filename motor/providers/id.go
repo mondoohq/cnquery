@@ -74,7 +74,6 @@ var ProviderType_id = map[ProviderType]string{
 	ProviderType_GITLAB:                  ProviderID_GITLAB,
 	ProviderType_TERRAFORM:               ProviderID_TERRAFORM,
 	ProviderType_HOST:                    ProviderID_HOST,
-	ProviderType_TERRAFORM_STATE:         ProviderID_TERRAFORM_STATE,
 }
 
 var ProviderType_idvalue = map[string]ProviderType{
@@ -107,7 +106,6 @@ var ProviderType_idvalue = map[string]ProviderType{
 	ProviderID_HOST:                     ProviderType_HOST,
 	ProviderID_AWS_EC2_INSTANCE_CONNECT: ProviderType_SSH,
 	ProviderID_AWS_EC2_SSM_SESSION:      ProviderType_SSH,
-	ProviderID_TERRAFORM_STATE:          ProviderType_TERRAFORM_STATE,
 }
 
 func (x ProviderType) Id() string {

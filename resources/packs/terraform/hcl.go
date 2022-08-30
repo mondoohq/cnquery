@@ -14,26 +14,17 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 	"github.com/zclconf/go-cty/cty/function/stdlib"
-	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/terraform"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
-
-func terraformtransport(t providers.Instance) (*terraform.Provider, error) {
-	gt, ok := t.(*terraform.Provider)
-	if !ok {
-		return nil, errors.New("terraform resource is not supported on this transport")
-	}
-	return gt, nil
-}
 
 func (g *mqlTerraform) id() (string, error) {
 	return "terraform", nil
 }
 
 func (g *mqlTerraform) GetFiles() ([]interface{}, error) {
-	t, err := terraformtransport(g.MotorRuntime.Motor.Provider)
+	t, err := terraformProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +45,7 @@ func (g *mqlTerraform) GetFiles() ([]interface{}, error) {
 }
 
 func (g *mqlTerraform) GetTfvars() (interface{}, error) {
-	t, err := terraformtransport(g.MotorRuntime.Motor.Provider)
+	t, err := terraformProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +53,7 @@ func (g *mqlTerraform) GetTfvars() (interface{}, error) {
 }
 
 func (g *mqlTerraform) GetModules() ([]interface{}, error) {
-	t, err := terraformtransport(g.MotorRuntime.Motor.Provider)
+	t, err := terraformProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +83,7 @@ func (g *mqlTerraform) GetModules() ([]interface{}, error) {
 }
 
 func (g *mqlTerraform) GetBlocks() ([]interface{}, error) {
-	t, err := terraformtransport(g.MotorRuntime.Motor.Provider)
+	t, err := terraformProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +103,7 @@ func (g *mqlTerraform) GetBlocks() ([]interface{}, error) {
 }
 
 func filterBlockByType(runtime *resources.Runtime, filterType string) ([]interface{}, error) {
-	t, err := terraformtransport(runtime.Motor.Provider)
+	t, err := terraformProvider(runtime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -498,7 +489,7 @@ func (g *mqlTerraformFile) id() (string, error) {
 }
 
 func (g *mqlTerraformFile) GetBlocks() ([]interface{}, error) {
-	t, err := terraformtransport(g.MotorRuntime.Motor.Provider)
+	t, err := terraformProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

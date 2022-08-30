@@ -11,7 +11,7 @@ import (
 )
 
 func TestLoadHclBlocks(t *testing.T) {
-	path := "./testdata"
+	path := "./testdata/hcl"
 	fileList, err := os.ReadDir(path)
 	require.NoError(t, err)
 
@@ -22,7 +22,7 @@ func TestLoadHclBlocks(t *testing.T) {
 }
 
 func TestLoadTfvars(t *testing.T) {
-	path := "./testdata"
+	path := "./testdata/hcl"
 	fileList, err := os.ReadDir(path)
 	require.NoError(t, err)
 

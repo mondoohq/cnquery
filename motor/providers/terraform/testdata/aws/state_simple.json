@@ -13,7 +13,7 @@
           "schema_version": 1,
           "values": {
             "ami": "ami-830c94e3",
-            "arn": "arn:aws:ec2:us-west-2:921877552404:instance/i-0208ead4eab8df386",
+            "arn": "arn:aws:ec2:us-west-2:123456789012:instance/i-0208ead4eab8df386",
             "associate_public_ip_address": true,
             "availability_zone": "us-west-2b",
             "capacity_reservation_specification": [

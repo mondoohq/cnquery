@@ -4,26 +4,17 @@ import (
 	"encoding/json"
 	"errors"
 
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/tfstate"
+	"go.mondoo.com/cnquery/motor/providers/terraform"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
-
-func tfstateProvider(t providers.Instance) (*tfstate.Provider, error) {
-	gt, ok := t.(*tfstate.Provider)
-	if !ok {
-		return nil, errors.New("terraform resource is not supported on this transport")
-	}
-	return gt, nil
-}
 
 func (t *mqlTerraformState) id() (string, error) {
 	return "terraform.state", nil
 }
 
 func (t *mqlTerraformState) init(args *resources.Args) (*resources.Args, TerraformState, error) {
-	tfstateProvider, err := tfstateProvider(t.MotorRuntime.Motor.Provider)
+	tfstateProvider, err := terraformProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -40,7 +31,7 @@ func (t *mqlTerraformState) init(args *resources.Args) (*resources.Args, Terrafo
 }
 
 func (t *mqlTerraformState) GetOutputs() ([]interface{}, error) {
-	provider, err := tfstateProvider(t.MotorRuntime.Motor.Provider)
+	provider, err := terraformProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +67,7 @@ func (t *mqlTerraformState) GetOutputs() ([]interface{}, error) {
 }
 
 func (t *mqlTerraformState) GetRootModule() (interface{}, error) {
-	provider, err := tfstateProvider(t.MotorRuntime.Motor.Provider)
+	provider, err := terraformProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +89,7 @@ func (t *mqlTerraformState) GetRootModule() (interface{}, error) {
 }
 
 func (t *mqlTerraformState) GetModules() (interface{}, error) {
-	provider, err := tfstateProvider(t.MotorRuntime.Motor.Provider)
+	provider, err := terraformProvider(t.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -113,9 +104,9 @@ func (t *mqlTerraformState) GetModules() (interface{}, error) {
 	}
 
 	// resolve all tfstate modules
-	moduleList := []*tfstate.Module{}
+	moduleList := []*terraform.Module{}
 	moduleList = append(moduleList, state.Values.RootModule)
-	state.Values.RootModule.WalkChildModules(func(m *tfstate.Module) {
+	state.Values.RootModule.WalkChildModules(func(m *terraform.Module) {
 		moduleList = append(moduleList, m)
 	})
 
@@ -177,7 +168,7 @@ func (t *mqlTerraformStateOutput) GetValue() (interface{}, error) {
 	if !ok {
 		return nil, errors.New("cannot get output cache")
 	}
-	output := c.Data.(*tfstate.Output)
+	output := c.Data.(*terraform.Output)
 
 	var value interface{}
 	if err := json.Unmarshal([]byte(output.Value), &value); err != nil {
@@ -191,7 +182,7 @@ func (t mqlTerraformStateOutput) GetType() (interface{}, error) {
 	if !ok {
 		return nil, errors.New("cannot get output cache")
 	}
-	output := c.Data.(*tfstate.Output)
+	output := c.Data.(*terraform.Output)
 
 	var typ interface{}
 	if err := json.Unmarshal([]byte(output.Type), &typ); err != nil {
@@ -253,7 +244,7 @@ func (t *mqlTerraformStateModule) GetResources() ([]interface{}, error) {
 	if !ok {
 		return nil, errors.New("cannot get module cache")
 	}
-	module := c.Data.(*tfstate.Module)
+	module := c.Data.(*terraform.Module)
 
 	var list []interface{}
 	for i := range module.Resources {
@@ -281,7 +272,7 @@ func (t *mqlTerraformStateModule) GetResources() ([]interface{}, error) {
 	return list, nil
 }
 
-func newMqlModule(runtime *resources.Runtime, module *tfstate.Module) (resources.ResourceType, error) {
+func newMqlModule(runtime *resources.Runtime, module *terraform.Module) (resources.ResourceType, error) {
 	r, err := runtime.CreateResource("terraform.state.module",
 		"address", module.Address,
 	)
@@ -298,7 +289,7 @@ func (t *mqlTerraformStateModule) GetChildModules() ([]interface{}, error) {
 	if !ok {
 		return nil, errors.New("cannot get module cache")
 	}
-	module := c.Data.(*tfstate.Module)
+	module := c.Data.(*terraform.Module)
 
 	var list []interface{}
 	for i := range module.ChildModules {

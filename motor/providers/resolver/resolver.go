@@ -26,7 +26,6 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/ssh"
 	"go.mondoo.com/cnquery/motor/providers/tar"
 	"go.mondoo.com/cnquery/motor/providers/terraform"
-	"go.mondoo.com/cnquery/motor/providers/tfstate"
 	"go.mondoo.com/cnquery/motor/providers/vmwareguestapi"
 	"go.mondoo.com/cnquery/motor/providers/vsphere"
 	"go.mondoo.com/cnquery/motor/providers/winrm"
@@ -310,15 +309,6 @@ func NewMotorConnection(ctx context.Context, tc *providers.Config, credentialFn 
 			return nil, err
 		}
 		m, err = motor.New(p)
-		if err != nil {
-			return nil, err
-		}
-	case providers.ProviderType_TERRAFORM_STATE:
-		provider, err := tfstate.New(tc)
-		if err != nil {
-			return nil, err
-		}
-		m, err = motor.New(provider)
 		if err != nil {
 			return nil, err
 		}

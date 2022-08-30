@@ -11,7 +11,7 @@ import (
 func TestTerraform(t *testing.T) {
 	p, err := New(&providers.Config{
 		Options: map[string]string{
-			"path": "./testdata/",
+			"path": "./testdata/hcl",
 		},
 	})
 	require.NoError(t, err)
