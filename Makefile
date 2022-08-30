@@ -78,6 +78,7 @@ lr: | lr/build lr/test
 lr/build:
 	export GOPRIVATE="github.com/mondoohq"
 	go generate .
+	go generate ./resources/packs/core/vadvisor/cvss
 	go build -o lr resources/lr/cli/main.go
 	./lr go resources/packs/core/core.lr
 	./lr docs json resources/packs/core/core.lr.manifest.yaml
