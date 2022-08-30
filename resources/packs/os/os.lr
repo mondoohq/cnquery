@@ -964,7 +964,7 @@ macos.alf {
   // ALF version
   version string
   // Service exceptions
-  expections []dict
+  exceptions []dict
   // Services explicitly allowed to perform networking
   explicitAuths []string
   // Applications with exceptions for network blocking

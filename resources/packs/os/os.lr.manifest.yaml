@@ -412,7 +412,7 @@ resources:
       allowDownloadSignedEnabled: {}
       allowSignedEnabled: {}
       applications: {}
-      expections: {}
+      exceptions: {}
       explicitAuths: {}
       firewallUnload: {}
       globalState: {}

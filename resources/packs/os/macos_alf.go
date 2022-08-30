@@ -42,7 +42,7 @@ func (s *mqlMacosAlf) init(args *resources.Args) (*resources.Args, MacosAlf, err
 	(*args)["loggingOption"] = int64(alfConfig["loggingoption"].(float64))
 	(*args)["stealthEnabled"] = int64(alfConfig["stealthenabled"].(float64))
 	(*args)["version"] = alfConfig["version"].(string)
-	(*args)["expections"] = alfConfig["exceptions"].([]interface{})
+	(*args)["exceptions"] = alfConfig["exceptions"].([]interface{})
 	(*args)["explicitAuths"] = explicitAuths
 	(*args)["applications"] = alfConfig["applications"].([]interface{})
 
