@@ -31,6 +31,39 @@ mondoo.asset {
   platformIDs() []string
 }
 
+// General asset information
+asset {
+  // Human readable name of the asset
+  name string
+  // All identifiers for this asset
+  ids() []string
+  // Platform for this asset (redhat, windows, k8s-pod)
+  platform string
+  // Kind of platform, for example:
+  // api, baremetal, vm, vm-image, container, container-image, network, ...
+  kind string
+  // Runtime is the specific kind of the platform. Examples include:
+  // docker-container, podman-container, aws-ec2-instance, ...
+  runtime string
+  // Version of the platform
+  version string
+  // Architecture this OS is running on
+  arch string
+  // Human-readable title of the platform (e.g. "RedHat 8, Container")
+  title string
+  // List of platform families that this platform belongs to
+  family []string
+  // Fully qualified domain name (optional)
+  fqdn string
+  // Build version of the platform (optional)
+  build string
+  // Optional platform information
+  labels map[string]string
+
+  // Full advisory & vulnerability report
+  vulnerabilityReport() dict
+}
+
 // File on the system
 file {
   init(path string)

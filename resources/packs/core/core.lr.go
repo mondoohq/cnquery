@@ -15,6 +15,7 @@ func Init(registry *resources.Registry) {
 	registry.AddFactory("mondoo", newMondoo)
 	registry.AddFactory("mondoo.eol", newMondooEol)
 	registry.AddFactory("mondoo.asset", newMondooAsset)
+	registry.AddFactory("asset", newAsset)
 	registry.AddFactory("file", newFile)
 	registry.AddFactory("file.permissions", newFilePermissions)
 	registry.AddFactory("user", newUser)
@@ -787,6 +788,534 @@ func (s *mqlMondooAsset) ComputePlatformIDs() error {
 		return err
 	}
 	s.Cache.Store("platformIDs", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// Asset resource interface
+type Asset interface {
+	MqlResource() (*resources.Resource)
+	Compute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	Name() (string, error)
+	Ids() ([]interface{}, error)
+	Platform() (string, error)
+	Kind() (string, error)
+	Runtime() (string, error)
+	Version() (string, error)
+	Arch() (string, error)
+	Title() (string, error)
+	Family() ([]interface{}, error)
+	Fqdn() (string, error)
+	Build() (string, error)
+	Labels() (map[string]interface{}, error)
+	VulnerabilityReport() (interface{}, error)
+}
+
+// mqlAsset for the asset resource
+type mqlAsset struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlAsset) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the asset resource
+func newAsset(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlAsset{runtime.NewResource("asset")}
+	var existing Asset
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "name":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"asset\", its \"name\" argument has the wrong type (expected type \"string\")")
+			}
+		case "ids":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"asset\", its \"ids\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "platform":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"asset\", its \"platform\" argument has the wrong type (expected type \"string\")")
+			}
+		case "kind":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"asset\", its \"kind\" argument has the wrong type (expected type \"string\")")
+			}
+		case "runtime":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"asset\", its \"runtime\" argument has the wrong type (expected type \"string\")")
+			}
+		case "version":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"asset\", its \"version\" argument has the wrong type (expected type \"string\")")
+			}
+		case "arch":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"asset\", its \"arch\" argument has the wrong type (expected type \"string\")")
+			}
+		case "title":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"asset\", its \"title\" argument has the wrong type (expected type \"string\")")
+			}
+		case "family":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"asset\", its \"family\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "fqdn":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"asset\", its \"fqdn\" argument has the wrong type (expected type \"string\")")
+			}
+		case "build":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"asset\", its \"build\" argument has the wrong type (expected type \"string\")")
+			}
+		case "labels":
+			if _, ok := val.(map[string]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"asset\", its \"labels\" argument has the wrong type (expected type \"map[string]interface{}\")")
+			}
+		case "vulnerabilityReport":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"asset\", its \"vulnerabilityReport\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"asset\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized asset with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlAsset) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("name"); !ok {
+		return errors.New("Initialized \"asset\" resource without a \"name\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("platform"); !ok {
+		return errors.New("Initialized \"asset\" resource without a \"platform\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("kind"); !ok {
+		return errors.New("Initialized \"asset\" resource without a \"kind\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("runtime"); !ok {
+		return errors.New("Initialized \"asset\" resource without a \"runtime\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("version"); !ok {
+		return errors.New("Initialized \"asset\" resource without a \"version\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("arch"); !ok {
+		return errors.New("Initialized \"asset\" resource without a \"arch\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("title"); !ok {
+		return errors.New("Initialized \"asset\" resource without a \"title\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("family"); !ok {
+		return errors.New("Initialized \"asset\" resource without a \"family\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("fqdn"); !ok {
+		return errors.New("Initialized \"asset\" resource without a \"fqdn\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("build"); !ok {
+		return errors.New("Initialized \"asset\" resource without a \"build\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("labels"); !ok {
+		return errors.New("Initialized \"asset\" resource without a \"labels\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlAsset) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[asset].Register")
+	switch name {
+	case "name":
+		return nil
+	case "ids":
+		return nil
+	case "platform":
+		return nil
+	case "kind":
+		return nil
+	case "runtime":
+		return nil
+	case "version":
+		return nil
+	case "arch":
+		return nil
+	case "title":
+		return nil
+	case "family":
+		return nil
+	case "fqdn":
+		return nil
+	case "build":
+		return nil
+	case "labels":
+		return nil
+	case "vulnerabilityReport":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"asset\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlAsset) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[asset].Field")
+	switch name {
+	case "name":
+		return s.Name()
+	case "ids":
+		return s.Ids()
+	case "platform":
+		return s.Platform()
+	case "kind":
+		return s.Kind()
+	case "runtime":
+		return s.Runtime()
+	case "version":
+		return s.Version()
+	case "arch":
+		return s.Arch()
+	case "title":
+		return s.Title()
+	case "family":
+		return s.Family()
+	case "fqdn":
+		return s.Fqdn()
+	case "build":
+		return s.Build()
+	case "labels":
+		return s.Labels()
+	case "vulnerabilityReport":
+		return s.VulnerabilityReport()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"asset\" resource")
+	}
+}
+
+// Name accessor autogenerated
+func (s *mqlAsset) Name() (string, error) {
+	res, ok := s.Cache.Load("name")
+	if !ok || !res.Valid {
+		return "", errors.New("\"asset\" failed: no value provided for static field \"name\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"asset\" failed to cast field \"name\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Ids accessor autogenerated
+func (s *mqlAsset) Ids() ([]interface{}, error) {
+	res, ok := s.Cache.Load("ids")
+	if !ok || !res.Valid {
+		if err := s.ComputeIds(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("ids")
+		if !ok {
+			return nil, errors.New("\"asset\" calculated \"ids\" but didnt find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "ids")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"asset\" failed to cast field \"ids\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Platform accessor autogenerated
+func (s *mqlAsset) Platform() (string, error) {
+	res, ok := s.Cache.Load("platform")
+	if !ok || !res.Valid {
+		return "", errors.New("\"asset\" failed: no value provided for static field \"platform\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"asset\" failed to cast field \"platform\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Kind accessor autogenerated
+func (s *mqlAsset) Kind() (string, error) {
+	res, ok := s.Cache.Load("kind")
+	if !ok || !res.Valid {
+		return "", errors.New("\"asset\" failed: no value provided for static field \"kind\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"asset\" failed to cast field \"kind\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Runtime accessor autogenerated
+func (s *mqlAsset) Runtime() (string, error) {
+	res, ok := s.Cache.Load("runtime")
+	if !ok || !res.Valid {
+		return "", errors.New("\"asset\" failed: no value provided for static field \"runtime\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"asset\" failed to cast field \"runtime\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Version accessor autogenerated
+func (s *mqlAsset) Version() (string, error) {
+	res, ok := s.Cache.Load("version")
+	if !ok || !res.Valid {
+		return "", errors.New("\"asset\" failed: no value provided for static field \"version\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"asset\" failed to cast field \"version\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Arch accessor autogenerated
+func (s *mqlAsset) Arch() (string, error) {
+	res, ok := s.Cache.Load("arch")
+	if !ok || !res.Valid {
+		return "", errors.New("\"asset\" failed: no value provided for static field \"arch\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"asset\" failed to cast field \"arch\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Title accessor autogenerated
+func (s *mqlAsset) Title() (string, error) {
+	res, ok := s.Cache.Load("title")
+	if !ok || !res.Valid {
+		return "", errors.New("\"asset\" failed: no value provided for static field \"title\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"asset\" failed to cast field \"title\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Family accessor autogenerated
+func (s *mqlAsset) Family() ([]interface{}, error) {
+	res, ok := s.Cache.Load("family")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"asset\" failed: no value provided for static field \"family\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"asset\" failed to cast field \"family\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Fqdn accessor autogenerated
+func (s *mqlAsset) Fqdn() (string, error) {
+	res, ok := s.Cache.Load("fqdn")
+	if !ok || !res.Valid {
+		return "", errors.New("\"asset\" failed: no value provided for static field \"fqdn\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"asset\" failed to cast field \"fqdn\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Build accessor autogenerated
+func (s *mqlAsset) Build() (string, error) {
+	res, ok := s.Cache.Load("build")
+	if !ok || !res.Valid {
+		return "", errors.New("\"asset\" failed: no value provided for static field \"build\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"asset\" failed to cast field \"build\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Labels accessor autogenerated
+func (s *mqlAsset) Labels() (map[string]interface{}, error) {
+	res, ok := s.Cache.Load("labels")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"asset\" failed: no value provided for static field \"labels\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"asset\" failed to cast field \"labels\" to the right type (map[string]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// VulnerabilityReport accessor autogenerated
+func (s *mqlAsset) VulnerabilityReport() (interface{}, error) {
+	res, ok := s.Cache.Load("vulnerabilityReport")
+	if !ok || !res.Valid {
+		if err := s.ComputeVulnerabilityReport(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("vulnerabilityReport")
+		if !ok {
+			return nil, errors.New("\"asset\" calculated \"vulnerabilityReport\" but didnt find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "vulnerabilityReport")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"asset\" failed to cast field \"vulnerabilityReport\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlAsset) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[asset].Compute")
+	switch name {
+	case "name":
+		return nil
+	case "ids":
+		return s.ComputeIds()
+	case "platform":
+		return nil
+	case "kind":
+		return nil
+	case "runtime":
+		return nil
+	case "version":
+		return nil
+	case "arch":
+		return nil
+	case "title":
+		return nil
+	case "family":
+		return nil
+	case "fqdn":
+		return nil
+	case "build":
+		return nil
+	case "labels":
+		return nil
+	case "vulnerabilityReport":
+		return s.ComputeVulnerabilityReport()
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"asset\" resource")
+	}
+}
+
+// ComputeIds computer autogenerated
+func (s *mqlAsset) ComputeIds() error {
+	var err error
+	if _, ok := s.Cache.Load("ids"); ok {
+		return nil
+	}
+	vres, err := s.GetIds()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("ids", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeVulnerabilityReport computer autogenerated
+func (s *mqlAsset) ComputeVulnerabilityReport() error {
+	var err error
+	if _, ok := s.Cache.Load("vulnerabilityReport"); ok {
+		return nil
+	}
+	vres, err := s.GetVulnerabilityReport()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("vulnerabilityReport", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
 	return nil
 }
 
