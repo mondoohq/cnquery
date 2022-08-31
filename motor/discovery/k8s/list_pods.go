@@ -10,7 +10,7 @@ import (
 )
 
 // ListPods list all pods in the cluster.
-func ListPods(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
+func ListPods(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string, namespaceFilter []string, od *k8s.PlatformIdOwnershipDirectory) ([]*asset.Asset, error) {
 	namespaces, err := p.Namespaces()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
@@ -35,6 +35,7 @@ func ListPods(p k8s.KubernetesProvider, connection *providers.Config, clusterIde
 	assets := []*asset.Asset{}
 	for i := range pods {
 		pod := pods[i]
+		od.Add(&pod)
 		asset, err := createAssetFromObject(&pod, p.Runtime(), connection, clusterIdentifier)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create asset from pod")

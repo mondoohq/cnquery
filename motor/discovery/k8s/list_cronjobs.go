@@ -11,7 +11,7 @@ import (
 )
 
 // ListCronJobs list all cronjobs in the cluster.
-func ListCronJobs(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
+func ListCronJobs(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string, namespaceFilter []string, od *k8s.PlatformIdOwnershipDirectory) ([]*asset.Asset, error) {
 	namespaces, err := p.Namespaces()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
@@ -36,6 +36,7 @@ func ListCronJobs(p k8s.KubernetesProvider, connection *providers.Config, cluste
 	assets := []*asset.Asset{}
 	for i := range cronJobs {
 		cronJob := cronJobs[i]
+		od.Add(&cronJob)
 		asset, err := createAssetFromObject(&cronJob, p.Runtime(), connection, clusterIdentifier)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create asset from cronjob")

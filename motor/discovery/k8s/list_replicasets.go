@@ -10,7 +10,7 @@ import (
 )
 
 // ListReplicaSets list all replicaSets in the cluster.
-func ListReplicaSets(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
+func ListReplicaSets(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string, namespaceFilter []string, od *k8s.PlatformIdOwnershipDirectory) ([]*asset.Asset, error) {
 	namespaces, err := p.Namespaces()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
@@ -35,6 +35,7 @@ func ListReplicaSets(p k8s.KubernetesProvider, connection *providers.Config, clu
 	assets := []*asset.Asset{}
 	for i := range replicaSets {
 		replicaSet := replicaSets[i]
+		od.Add(&replicaSet)
 		asset, err := createAssetFromObject(&replicaSet, p.Runtime(), connection, clusterIdentifier)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create asset from repicaset")
