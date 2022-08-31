@@ -77,7 +77,9 @@ func TestListPodImage(t *testing.T) {
 		"k8s.gcr.io/kube-proxy@sha256:def87f007b49d50693aed83d4703d0e56c69ae286154b1c7a20cd1b3a320cf7c",
 	}
 
-	assets, err := ListPodImages(p, nil)
+	clusterIdentifier := "//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc"
+	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
+	assets, err := ListPodImages(p, nil, ownershipDir)
 	assert.NoError(t, err)
 
 	var assetNames []string
@@ -179,7 +181,9 @@ func TestListPodImage_FromStatus(t *testing.T) {
 		"k8s.gcr.io/kube-proxy@sha256:def87f007b49d50693aed83d4703d0e56c69ae286154b1c7a20cd1b3a320cf7c",
 	}
 
-	assets, err := ListPodImages(p, nil)
+	clusterIdentifier := "//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc"
+	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
+	assets, err := ListPodImages(p, nil, ownershipDir)
 	assert.NoError(t, err)
 
 	var assetNames []string

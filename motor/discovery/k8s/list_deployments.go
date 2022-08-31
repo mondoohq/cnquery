@@ -11,7 +11,7 @@ import (
 )
 
 // ListDeployments lits all deployments in the cluster.
-func ListDeployments(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
+func ListDeployments(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string, namespaceFilter []string, od *k8s.PlatformIdOwnershipDirectory) ([]*asset.Asset, error) {
 	namespaces, err := p.Namespaces()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
@@ -36,6 +36,7 @@ func ListDeployments(p k8s.KubernetesProvider, connection *providers.Config, clu
 	assets := []*asset.Asset{}
 	for i := range deployments {
 		deployment := deployments[i]
+		od.Add(&deployment)
 		asset, err := createAssetFromObject(&deployment, p.Runtime(), connection, clusterIdentifier)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create asset from deployment")

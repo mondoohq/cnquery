@@ -122,19 +122,31 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 	}
 
-	resolved = append(resolved, &asset.Asset{
+	clusterAsset := &asset.Asset{
 		PlatformIds: []string{clusterIdentifier},
 		Name:        clusterName,
 		Platform:    pf,
 		Connections: []*providers.Config{tc}, // pass-in the current config
 		State:       asset.State_STATE_RUNNING,
-	})
+	}
+	resolved = append(resolved, clusterAsset)
 
-	additioanlAssets, err := addSeparateAssets(tc, p, namespacesFilter, clusterIdentifier)
+	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
+	additionalAssets, err := addSeparateAssets(tc, p, namespacesFilter, clusterIdentifier, ownershipDir)
 	if err != nil {
 		return nil, err
 	}
-	resolved = append(resolved, additioanlAssets...)
+
+	isRelatedFn := func(a *asset.Asset) bool {
+		return a.Platform.GetKind() == providers.Kind_KIND_K8S_OBJECT
+	}
+
+	for _, aa := range additionalAssets {
+		if isRelatedFn(aa) {
+			clusterAsset.RelatedAssets = append(clusterAsset.RelatedAssets, aa)
+		}
+	}
+	resolved = append(resolved, additionalAssets...)
 
 	return resolved, nil
 }
@@ -144,20 +156,20 @@ func (r *Resolver) InitCtx(ctx context.Context) context.Context {
 }
 
 // addSeparateAssets Depending on config options it will search for additional assets which should be listed separately.
-func addSeparateAssets(tc *providers.Config, p k8s.KubernetesProvider, namespacesFilter []string, clusterIdentifier string) ([]*asset.Asset, error) {
-	var resolved []*asset.Asset
+func addSeparateAssets(tc *providers.Config, p k8s.KubernetesProvider, namespacesFilter []string, clusterIdentifier string, od *k8s.PlatformIdOwnershipDirectory) ([]*asset.Asset, error) {
+	resolved := []*asset.Asset{}
 
 	// discover deployments
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryDeployments) {
 		// fetch deployment information
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for deployments")
 		connection := tc.Clone()
-		assetList, err := ListDeployments(p, connection, clusterIdentifier, namespacesFilter)
+		deployments, err := ListDeployments(p, connection, clusterIdentifier, namespacesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s deployments")
 			return nil, err
 		}
-		resolved = append(resolved, assetList...)
+		resolved = append(resolved, deployments...)
 	}
 
 	// discover k8s pods
@@ -165,85 +177,115 @@ func addSeparateAssets(tc *providers.Config, p k8s.KubernetesProvider, namespace
 		// fetch pod information
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for pods")
 		connection := tc.Clone()
-		assetList, err := ListPods(p, connection, clusterIdentifier, namespacesFilter)
+		pods, err := ListPods(p, connection, clusterIdentifier, namespacesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s pods")
 			return nil, err
 		}
-		resolved = append(resolved, assetList...)
+		resolved = append(resolved, pods...)
 	}
 
 	// discovery k8s daemonsets
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryDaemonSets) {
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for daemonsets")
 		connection := tc.Clone()
-		assetList, err := ListDaemonSets(p, connection, clusterIdentifier, namespacesFilter)
+		daemonsets, err := ListDaemonSets(p, connection, clusterIdentifier, namespacesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s daemonsets")
 			return nil, err
 		}
-		resolved = append(resolved, assetList...)
+		resolved = append(resolved, daemonsets...)
 	}
 
 	// discover k8s pod images
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryContainerImages) {
 		// fetch pod information
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for pods images")
-		assetList, err := ListPodImages(p, namespacesFilter)
+		containerimages, err := ListPodImages(p, namespacesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s pods images")
 			return nil, err
 		}
-		resolved = append(resolved, assetList...)
+		resolved = append(resolved, containerimages...)
 	}
 
 	// discover cronjobs
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryCronJobs) {
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for cronjobs")
 		connection := tc.Clone()
-		assetList, err := ListCronJobs(p, connection, clusterIdentifier, namespacesFilter)
+		cronjobs, err := ListCronJobs(p, connection, clusterIdentifier, namespacesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s cronjobs")
 			return nil, err
 		}
-		resolved = append(resolved, assetList...)
+		resolved = append(resolved, cronjobs...)
 	}
 
 	// discover statefulsets
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryStatefulSets) {
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for statefulsets")
 		connection := tc.Clone()
-		assetList, err := ListStatefulSets(p, connection, clusterIdentifier, namespacesFilter)
+		statefulsets, err := ListStatefulSets(p, connection, clusterIdentifier, namespacesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s statefulsets")
 			return nil, err
 		}
-		resolved = append(resolved, assetList...)
+		resolved = append(resolved, statefulsets...)
 	}
 
 	// discover jobs
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryJobs) {
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for jobs")
 		connection := tc.Clone()
-		assetList, err := ListJobs(p, connection, clusterIdentifier, namespacesFilter)
+		jobs, err := ListJobs(p, connection, clusterIdentifier, namespacesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s jobs")
 			return nil, err
 		}
-		resolved = append(resolved, assetList...)
+		resolved = append(resolved, jobs...)
 	}
 
 	// discover replicasets
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryReplicaSets) {
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for replicasets")
 		connection := tc.Clone()
-		assetList, err := ListReplicaSets(p, connection, clusterIdentifier, namespacesFilter)
+		replicasets, err := ListReplicaSets(p, connection, clusterIdentifier, namespacesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s replicasets")
 			return nil, err
 		}
-		resolved = append(resolved, assetList...)
+		resolved = append(resolved, replicasets...)
 	}
 
+	// build a lookup on the k8s uid to look up individual assets to link
+	platformIdToAssetMap := map[string]*asset.Asset{}
+	for _, assetObj := range resolved {
+		for _, platformId := range assetObj.PlatformIds {
+			platformIdToAssetMap[platformId] = assetObj
+		}
+	}
+
+	for id, a := range platformIdToAssetMap {
+		ownedBy := od.OwnedBy(id)
+		for _, ownerPlatformId := range ownedBy {
+			if aa, ok := platformIdToAssetMap[ownerPlatformId]; ok {
+				a.RelatedAssets = append(a.RelatedAssets, aa)
+			} else {
+				// If the owner object is not scanned we can still add an asset as we know most of the information
+				// from the ownerReference field
+				if platformEntry, ok := od.GetKubernetesObjectData(ownerPlatformId); ok {
+					platformData, err := createPlatformData(platformEntry.Kind, providers.RUNTIME_KUBERNETES_CLUSTER)
+					if err != nil {
+						continue
+					}
+					a.RelatedAssets = append(a.RelatedAssets, &asset.Asset{
+						PlatformIds: []string{ownerPlatformId},
+						Platform:    platformData,
+						Name:        platformEntry.Namespace + "/" + platformEntry.Name,
+					})
+				}
+			}
+		}
+	}
 	return resolved, nil
 }

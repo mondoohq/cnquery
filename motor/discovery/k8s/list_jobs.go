@@ -11,7 +11,7 @@ import (
 )
 
 // ListJobs list all jobs in the cluster.
-func ListJobs(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
+func ListJobs(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string, namespaceFilter []string, od *k8s.PlatformIdOwnershipDirectory) ([]*asset.Asset, error) {
 	namespaces, err := p.Namespaces()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
@@ -36,6 +36,7 @@ func ListJobs(p k8s.KubernetesProvider, connection *providers.Config, clusterIde
 	assets := []*asset.Asset{}
 	for i := range jobs {
 		job := jobs[i]
+		od.Add(&job)
 		asset, err := createAssetFromObject(&job, p.Runtime(), connection, clusterIdentifier)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create asset from job")

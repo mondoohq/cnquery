@@ -1,6 +1,7 @@
 package k8s
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -9,6 +10,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/k8s"
 
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -28,6 +30,18 @@ func TestListPods(t *testing.T) {
 	p.EXPECT().Runtime().Return("k8s-cluster")
 	p.EXPECT().Runtime().Return("k8s-cluster")
 
+	parent := appsv1.ReplicaSet{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ReplicaSet",
+			APIVersion: "apps/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "nginx-replicaset",
+			Namespace: nss[0].Name,
+			UID:       "000",
+		},
+	}
+
 	// Seed Pods
 	pods := []corev1.Pod{
 		{
@@ -39,6 +53,14 @@ func TestListPods(t *testing.T) {
 				Name:      "nginx",
 				Namespace: nss[0].Name,
 				UID:       "123",
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: parent.APIVersion,
+						Kind:       parent.Kind,
+						Name:       parent.Name,
+						UID:        parent.UID,
+					},
+				},
 			},
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{{Image: "nginx:1.22.0-alpine"}},
@@ -75,9 +97,14 @@ func TestListPods(t *testing.T) {
 	}
 
 	pCfg := &providers.Config{}
-	assets, err := ListPods(p, pCfg, clusterIdentifier, nil)
+	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
+	assets, err := ListPods(p, pCfg, clusterIdentifier, nil, ownershipDir)
 	require.NoError(t, err)
-
+	require.Equal(t, []string{k8s.NewPlatformWorkloadId(clusterIdentifier,
+		strings.ToLower(parent.Kind),
+		parent.Namespace,
+		parent.Name)},
+		ownershipDir.OwnedBy(expectedAssetPlatformIds[0]))
 	var assetNames []string
 	for _, a := range assets {
 		assetNames = append(assetNames, a.Name)

@@ -11,7 +11,7 @@ import (
 )
 
 // ListDaemonSets list all daemonsets in the cluster.
-func ListDaemonSets(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, error) {
+func ListDaemonSets(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string, namespaceFilter []string, od *k8s.PlatformIdOwnershipDirectory) ([]*asset.Asset, error) {
 	namespaces, err := p.Namespaces()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
@@ -36,6 +36,7 @@ func ListDaemonSets(p k8s.KubernetesProvider, connection *providers.Config, clus
 	assets := []*asset.Asset{}
 	for i := range daemonSets {
 		daemonSet := daemonSets[i]
+		od.Add(&daemonSet)
 		asset, err := createAssetFromObject(&daemonSet, p.Runtime(), connection, clusterIdentifier)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create asset from daemonset")
