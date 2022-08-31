@@ -4,19 +4,30 @@ package info
 
 import (
 	_ "embed"
+	"encoding/json"
 
 	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/lr/docs"
 )
 
-// fyi this is a workaround for paths: https://github.com/golang/go/issues/46056
-//
 //go:embed github.lr.json
 var info []byte
 
+//go:embed github.lr.manifest.json
+var manifest []byte
+
+// Registry contains the resource info necessary for the compiler to work with this pack.
 var Registry = resources.NewRegistry()
+
+// ResourceDocs contains additional resource metadata for the compiler to use.
+var ResourceDocs docs.LrDocs
 
 func init() {
 	if err := Registry.LoadJson(info); err != nil {
+		panic(err.Error())
+	}
+
+	if err := json.Unmarshal(manifest, &ResourceDocs); err != nil {
 		panic(err.Error())
 	}
 }

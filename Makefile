@@ -82,17 +82,26 @@ lr/build:
 	go build -o lr resources/lr/cli/main.go
 	./lr go resources/packs/core/core.lr
 	./lr docs json resources/packs/core/core.lr.manifest.yaml
-	go fmt resources/packs/core/core.lr.manifest.go
 	./lr go resources/packs/os/os.lr
+	./lr docs json resources/packs/os/os.lr.manifest.yaml
 	./lr go resources/packs/aws/aws.lr
+	./lr docs json resources/packs/aws/aws.lr.manifest.yaml
 	./lr go resources/packs/azure/azure.lr
+	./lr docs json resources/packs/azure/azure.lr.manifest.yaml
 	./lr go resources/packs/gcp/gcp.lr
+	./lr docs json resources/packs/gcp/gcp.lr.manifest.yaml
 	./lr go resources/packs/ms365/ms365.lr
+	./lr docs json resources/packs/ms365/ms365.lr.manifest.yaml
 	./lr go resources/packs/github/github.lr
+	./lr docs json resources/packs/github/github.lr.manifest.yaml
 	./lr go resources/packs/gitlab/gitlab.lr
+	./lr docs json resources/packs/gitlab/gitlab.lr.manifest.yaml
 	./lr go resources/packs/terraform/terraform.lr
+	./lr docs json resources/packs/terraform/terraform.lr.manifest.yaml
 	./lr go resources/packs/k8s/k8s.lr
+	./lr docs json resources/packs/k8s/k8s.lr.manifest.yaml
 	./lr go resources/packs/vsphere/vsphere.lr
+	./lr docs json resources/packs/vsphere/vsphere.lr.manifest.yaml
 	./lr go resources/mock/mochi.lr
 
 lr/release:
