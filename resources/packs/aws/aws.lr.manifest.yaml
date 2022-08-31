@@ -1209,7 +1209,7 @@ resources:
   aws.guardduty.detector:
     docs:
       desc: |
-        The `aws.guardduty.dectector` provides fields for assessing the configuration of individual Amazon GuardDuty Detectors. For usage see the `aws.guardduty` resource documentation
+         The `aws.guardduty.detector` provides fields for assessing the configuration of individual Amazon GuardDuty Detectors. For usage see the `aws.guardduty` resource documentation
     fields:
       findingPublishingFrequency: {}
       id: {}
