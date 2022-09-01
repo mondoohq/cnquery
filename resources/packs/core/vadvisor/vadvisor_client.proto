@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "vadvisor/cvss/cvss.proto";
 
-package mondoo.vuln.v1;
+package mondoo.vadvisorclient.v1;
 option go_package = "go.mondoo.com/cnquery/resources/packs/core/vadvisor";
 
 message Platform {
