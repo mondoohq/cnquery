@@ -12,14 +12,18 @@ import (
 	_ "embed"
 
 	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/lr/docs"
 	awsInfo "go.mondoo.com/cnquery/resources/packs/aws/info"
 	azureInfo "go.mondoo.com/cnquery/resources/packs/azure/info"
 	coreInfo "go.mondoo.com/cnquery/resources/packs/core/info"
 	gcpInfo "go.mondoo.com/cnquery/resources/packs/gcp/info"
 	githubInfo "go.mondoo.com/cnquery/resources/packs/github/info"
 	gitlabInfo "go.mondoo.com/cnquery/resources/packs/github/info"
-	ms365Info "go.mondoo.com/cnquery/resources/packs/ms365"
+	k8sInfo "go.mondoo.com/cnquery/resources/packs/k8s/info"
+	ms365Info "go.mondoo.com/cnquery/resources/packs/ms365/info"
 	osInfo "go.mondoo.com/cnquery/resources/packs/os/info"
+	terraformInfo "go.mondoo.com/cnquery/resources/packs/terraform/info"
+	vsphereInfo "go.mondoo.com/cnquery/resources/packs/vsphere/info"
 )
 
 var Registry = resources.NewRegistry()
@@ -36,4 +40,31 @@ func init() {
 	Registry.Add(ms365Info.Registry)
 	Registry.Add(githubInfo.Registry)
 	Registry.Add(gitlabInfo.Registry)
+
+	ResourceDocs = mergeDocs(
+		coreInfo.ResourceDocs,
+		osInfo.ResourceDocs,
+		awsInfo.ResourceDocs,
+		azureInfo.ResourceDocs,
+		gcpInfo.ResourceDocs,
+		ms365Info.ResourceDocs,
+		githubInfo.ResourceDocs,
+		githubInfo.ResourceDocs,
+		gitlabInfo.ResourceDocs,
+		terraformInfo.ResourceDocs,
+		k8sInfo.ResourceDocs,
+		vsphereInfo.ResourceDocs,
+	)
+}
+
+func mergeDocs(rDocs ...docs.LrDocs) docs.LrDocs {
+	d := docs.LrDocs{
+		Resources: make(map[string]*docs.LrDocsEntry),
+	}
+	for _, ld := range rDocs {
+		for k, r := range ld.Resources {
+			d.Resources[k] = r
+		}
+	}
+	return d
 }
