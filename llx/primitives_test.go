@@ -79,11 +79,11 @@ func TestPrimitiveNil(t *testing.T) {
 		assert.True(t, p.IsNil())
 	})
 
-	t.Run("string without value is nil", func(t *testing.T) {
+	t.Run("string without value is an empty string (not nil)", func(t *testing.T) {
 		p := &Primitive{
 			Type: string(types.String),
 		}
-		assert.True(t, p.IsNil())
+		assert.False(t, p.IsNil())
 	})
 
 	t.Run("string with value is not nil", func(t *testing.T) {

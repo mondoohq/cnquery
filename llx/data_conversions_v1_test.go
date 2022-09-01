@@ -200,9 +200,6 @@ func TestCastResult(t *testing.T) {
 			Type types.Type
 		}{
 			{
-				Type: types.String,
-			},
-			{
 				Type: types.Int,
 			},
 			{
@@ -249,9 +246,6 @@ func TestResultFromNilConversion(t *testing.T) {
 			{
 				Type: string(types.Float),
 			},
-			{
-				Type: string(types.String),
-			},
 			NilPrimitive,
 			{
 				Type: string(types.Time),
@@ -264,6 +258,17 @@ func TestResultFromNilConversion(t *testing.T) {
 
 			assert.Equal(t, tests[i].Type, result.GetData().GetType())
 			assert.Nil(t, result.GetData().GetValue())
+		}
+
+		{
+			p := &Primitive{
+				Type: string(types.String),
+			}
+			assert.False(t, p.IsNil())
+			rawData := p.RawData()
+			result := rawData.Result()
+
+			assert.Equal(t, []byte{}, result.GetData().GetValue())
 		}
 	})
 
