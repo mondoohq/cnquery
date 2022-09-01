@@ -167,6 +167,9 @@ func ResolveAsset(ctx context.Context, root *asset.Asset, cfn common.CredentialF
 			}
 			assetObj.Category = root.Category
 
+			// copy over managedBy from root
+			assetObj.ManagedBy = root.GetManagedBy()
+
 			resolved = append(resolved, assetObj)
 		}
 	}

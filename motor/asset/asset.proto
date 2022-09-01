@@ -66,4 +66,6 @@ message Asset {
   AssetCategory category = 32;
 
   repeated Asset related_assets = 33;
+
+  string managed_by = 34;
 }
