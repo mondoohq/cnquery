@@ -43,6 +43,7 @@ type KubernetesProvider interface {
 	ID() (string, error)
 	// MRN style platform identifier
 	PlatformIdentifier() (string, error)
+	Nodes() ([]v1.Node, error)
 	Namespaces() ([]v1.Namespace, error)
 	Pod(namespace, name string) (*v1.Pod, error)
 	Pods(namespace v1.Namespace) ([]v1.Pod, error)

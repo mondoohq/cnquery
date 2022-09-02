@@ -178,6 +178,10 @@ func (t *manifestProvider) Name() (string, error) {
 	return clusterName, nil
 }
 
+func (t *manifestProvider) Nodes() ([]v1.Node, error) {
+	return []v1.Node{}, nil
+}
+
 // Namespaces iterates over all file-based manifests and extracts all namespaces used
 func (t *manifestProvider) Namespaces() ([]v1.Namespace, error) {
 	// iterate over all resources and extract all the namespaces
