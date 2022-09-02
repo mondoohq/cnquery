@@ -8,6 +8,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/pointer"
 )
 
 func (k *mqlK8s) GetServiceaccounts() ([]interface{}, error) {
@@ -32,6 +33,14 @@ func (k *mqlK8s) GetServiceaccounts() ([]interface{}, error) {
 		imagePullSecrets, err := core.JsonToDictSlice(serviceAccount.ImagePullSecrets)
 		if err != nil {
 			return nil, err
+		}
+
+		// Implement k8s default of auto-mounting:
+		// https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#use-the-default-service-account-to-access-the-api-server
+		// As discussed here, this behavior will not change for core/v1:
+		// https://github.com/kubernetes/kubernetes/issues/57601
+		if serviceAccount.AutomountServiceAccountToken == nil && objT.GetAPIVersion() == "v1" {
+			serviceAccount.AutomountServiceAccountToken = pointer.Bool(true)
 		}
 
 		r, err := k.MotorRuntime.CreateResource("k8s.serviceaccount",
