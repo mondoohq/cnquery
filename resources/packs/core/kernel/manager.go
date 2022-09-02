@@ -2,10 +2,13 @@ package kernel
 
 import (
 	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/cockroachdb/errors"
-	"go.mondoo.com/cnquery/motor/providers/os"
+	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
+	pOs "go.mondoo.com/cnquery/motor/providers/os"
 
 	"go.mondoo.com/cnquery/motor"
 )
@@ -38,7 +41,7 @@ func ResolveManager(motor *motor.Motor) (OSKernelManager, error) {
 		return nil, err
 	}
 
-	osProvider, isOSProvider := motor.Provider.(os.OperatingSystemProvider)
+	osProvider, isOSProvider := motor.Provider.(pOs.OperatingSystemProvider)
 
 	// check darwin before unix since darwin is also a unix
 	if isOSProvider && platform.IsFamily("darwin") {
@@ -58,7 +61,7 @@ func ResolveManager(motor *motor.Motor) (OSKernelManager, error) {
 }
 
 type LinuxKernelManager struct {
-	provider os.OperatingSystemProvider
+	provider pOs.OperatingSystemProvider
 }
 
 func (s *LinuxKernelManager) Name() string {
@@ -99,12 +102,28 @@ func (s *LinuxKernelManager) Info() (KernelInfo, error) {
 }
 
 func (s *LinuxKernelManager) Parameters() (map[string]string, error) {
-	cmd, err := s.provider.RunCommand("/sbin/sysctl -a")
-	if err != nil {
-		return nil, errors.Wrap(err, "could not read kernel parameters")
-	}
+	sysctlPath := "/proc/sys/"
 
-	return ParseSysctl(cmd.Stdout, "=")
+	fs := s.provider.FS()
+
+	fsUtil := afero.Afero{Fs: fs}
+	kernelParameters := make(map[string]string)
+	err := fsUtil.Walk(sysctlPath, func(path string, f os.FileInfo, err error) error {
+		if f != nil && !f.IsDir() {
+			content, err := os.ReadFile(path)
+			if err != nil {
+				log.Error().Err(err)
+				return nil
+			}
+			// remove leading sysctl path
+			k := strings.Replace(path, sysctlPath, "", -1)
+			k = strings.Replace(k, "/", ".", -1)
+			kernelParameters[k] = strings.TrimSpace(string(content))
+		}
+		return nil
+	})
+
+	return kernelParameters, err
 }
 
 func (s *LinuxKernelManager) Modules() ([]*KernelModule, error) {
@@ -118,7 +137,7 @@ func (s *LinuxKernelManager) Modules() ([]*KernelModule, error) {
 }
 
 type OSXKernelManager struct {
-	provider os.OperatingSystemProvider
+	provider pOs.OperatingSystemProvider
 }
 
 func (s *OSXKernelManager) Name() string {
@@ -160,7 +179,7 @@ func (s *OSXKernelManager) Modules() ([]*KernelModule, error) {
 }
 
 type FreebsdKernelManager struct {
-	provider os.OperatingSystemProvider
+	provider pOs.OperatingSystemProvider
 }
 
 func (s *FreebsdKernelManager) Name() string {

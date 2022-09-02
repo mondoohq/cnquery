@@ -124,6 +124,21 @@ SUPPORT_URL="https://www.debian.org/support"
 BUG_REPORT_URL="https://bugs.debian.org/"
 """
 
+[files."/proc/sys/net/ipv4/ip_forward"]
+content = """
+1
+"""
+
+[files."/proc/sys/net/ipv4/cipso_cache_bucket_size"]
+content = """
+10
+"""
+
+[files."/proc/sys/net/ipv4/conf/all/accept_local"]
+content = """
+0
+"""
+
 [commands."/sbin/sysctl -a"]
 stdout = """net.ipv4.cipso_cache_bucket_size = 10
 net.ipv4.cipso_cache_enable = 1
