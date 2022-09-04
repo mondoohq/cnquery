@@ -460,6 +460,17 @@ var gentoo = &PlatformResolver{
 	},
 }
 
+var ubios = &PlatformResolver{
+	Name:      "ubios",
+	IsFamiliy: false,
+	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
+		if pf.Name == "ubios" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
 var busybox = &PlatformResolver{
 	Name:      "busybox",
 	IsFamiliy: false,
@@ -843,7 +854,7 @@ var archFamily = &PlatformResolver{
 var linuxFamily = &PlatformResolver{
 	Name:      FAMILY_LINUX,
 	IsFamiliy: true,
-	Children:  []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, amazonlinux, alpine, gentoo, busybox, photon, windriver, openwrt, defaultLinux},
+	Children:  []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, amazonlinux, alpine, gentoo, busybox, photon, windriver, openwrt, ubios, defaultLinux},
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		detected := false
 		osrd := NewOSReleaseDetector(p)

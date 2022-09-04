@@ -902,6 +902,19 @@ func TestGoogleCOSDetector(t *testing.T) {
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
 
+func TestUbiOSDetector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-ubios.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	di, err := detector.Platform()
+	require.NoError(t, err)
+
+	assert.Equal(t, "ubios", di.Name, "os name should be identified")
+	assert.Equal(t, "UbiOS 1.12.24.4315", di.Title, "os title should be identified")
+	assert.Equal(t, "v1.12.24.4315-136ee7c", di.Version, "os version should be identified")
+	assert.Equal(t, "aarch64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
 func TestFamilies(t *testing.T) {
 	di := &platform.Platform{}
 	di.Family = []string{"unix", "bsd", "darwin"}

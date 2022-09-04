@@ -1,0 +1,19 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "aarch64"
+
+[commands."uname -r"]
+stdout = "4.19.152-al-linux-v10.2.0-v1.12.24.4315-136ee7c"
+
+[files."/etc/os-release"]
+content = """
+NAME=UbiOS
+VERSION=UDM.alpinev2.v1.12.24.136ee7c.220623.0827
+ID=ubios
+VERSION_ID=v1.12.24.4315-136ee7c
+PRETTY_NAME="UbiOS 1.12.24.4315"
+BUILD_ID=220623.0827
+VARIANT=UDM.alpinev2
+"""
