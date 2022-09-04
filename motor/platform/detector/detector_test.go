@@ -889,7 +889,7 @@ func TestMint20Detector(t *testing.T) {
 }
 
 func TestGoogleCOSDetector(t *testing.T) {
-	detector, err := newDetector("./testdata/google-cos.toml")
+	detector, err := newDetector("./testdata/detect-google-cos.toml")
 	assert.Nil(t, err, "was able to create the transport")
 	di, err := detector.Platform()
 	require.NoError(t, err)
