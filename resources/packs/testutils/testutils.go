@@ -106,26 +106,34 @@ func (ctx *tester) TestMqlc(t *testing.T, bundle *llx.CodeBundle, props map[stri
 	resultMap, err := mql.ExecuteCode(ctx.runtime.Registry.Schema(), ctx.runtime, bundle, props, Features)
 	require.NoError(t, err)
 
+	lastQueryResult := &llx.RawResult{}
 	results := make([]*llx.RawResult, 0, len(resultMap)+1)
-	i := 0
 
 	if Features.IsActive(cnquery.PiperCode) {
 		refs := make([]uint64, 0, len(bundle.CodeV2.Checksums))
 		for _, datapointArr := range [][]uint64{bundle.CodeV2.Datapoints(), bundle.CodeV2.Entrypoints()} {
-			for _, v := range datapointArr {
-				refs = append(refs, v)
-			}
+			refs = append(refs, datapointArr...)
 		}
 
 		sort.Slice(refs, func(i, j int) bool {
 			return refs[i] < refs[j]
 		})
 
-		for _, ref := range refs {
+		for idx, ref := range refs {
 			checksum := bundle.CodeV2.Checksums[ref]
 			if d, ok := resultMap[checksum]; ok {
 				results = append(results, d)
-				i++
+				if idx+1 == len(refs) {
+					lastQueryResult.CodeID = d.CodeID
+					if d.Data.Error != nil {
+						lastQueryResult.Data = &llx.RawData{
+							Error: d.Data.Error,
+						}
+					} else {
+						success, valid := d.Data.IsSuccess()
+						lastQueryResult.Data = llx.BoolData(success && valid)
+					}
+				}
 			}
 		}
 
@@ -139,15 +147,26 @@ func (ctx *tester) TestMqlc(t *testing.T, bundle *llx.CodeBundle, props map[stri
 
 		sort.Ints(refs)
 
-		for _, ref := range refs {
+		for idx, ref := range refs {
 			checksum := bundle.DeprecatedV5Code.Checksums[int32(ref)]
 			if d, ok := resultMap[checksum]; ok {
 				results = append(results, d)
-				i++
+				if idx+1 == len(refs) {
+					lastQueryResult.CodeID = d.CodeID
+					if d.Data.Error != nil {
+						lastQueryResult.Data = &llx.RawData{
+							Error: d.Data.Error,
+						}
+					} else {
+						valid, success := d.Data.IsSuccess()
+						lastQueryResult.Data = llx.BoolData(valid && success)
+					}
+				}
 			}
 		}
 	}
 
+	results = append(results, lastQueryResult)
 	return results
 }
 
