@@ -406,7 +406,7 @@ func (i *mqlAwsEc2Keypair) init(args *resources.Args) (*resources.Args, AwsEc2Ke
 	}
 	n := (*args)["name"].(string)
 	if n == "" {
-		return nil, nil, nil
+		return nil, nil, errors.New("ec2 keypair name cannot be empty")
 	}
 	if (*args)["region"] == nil {
 		return nil, nil, errors.New("region required to fetch aws ec2 keypair")
@@ -690,13 +690,6 @@ func (s *mqlAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVersi
 				return nil, err
 			}
 
-			mqlKeyPair, err := s.MotorRuntime.CreateResource("aws.ec2.keypair",
-				"region", regionVal,
-				"name", core.ToString(instance.KeyName),
-			)
-			if err != nil {
-				return nil, err
-			}
 			args := []interface{}{
 				"arn", fmt.Sprintf(ec2InstanceArnPattern, regionVal, account.ID, core.ToString(instance.InstanceId)),
 				"instanceId", core.ToString(instance.InstanceId),
@@ -717,7 +710,6 @@ func (s *mqlAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVersi
 				"launchTime", instance.LaunchTime,
 				"privateIp", core.ToString(instance.PrivateIpAddress),
 				"privateDnsName", core.ToString(instance.PrivateDnsName),
-				"keypair", mqlKeyPair,
 			}
 
 			// add vpc if there is one
@@ -731,6 +723,19 @@ func (s *mqlAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVersi
 				}
 				mqlVpc := mqlVpcResource.(AwsVpc)
 				args = append(args, "vpc", mqlVpc)
+			}
+
+			// only add a keypair if the ec2 instance has one attached
+			if instance.KeyName != nil {
+				mqlKeyPair, err := s.MotorRuntime.CreateResource("aws.ec2.keypair",
+					"region", regionVal,
+					"name", core.ToString(instance.KeyName),
+				)
+				if err != nil {
+					return nil, err
+				}
+				mqlKp := mqlKeyPair.(AwsEc2Keypair)
+				args = append(args, "keypair", mqlKp)
 			}
 
 			mqlEc2Instance, err := s.MotorRuntime.CreateResource("aws.ec2.instance", args...)
@@ -870,6 +875,13 @@ func (s *mqlAwsEc2Instance) GetVpc() (interface{}, error) {
 	// this indicated that no vpc is attached since we set the value when we construct the resource
 	// we return nil here to make it easier for users to compare:
 	// aws.ec2.instances.where(state != "terminated") { vpc != null }
+	return nil, nil
+}
+
+func (s *mqlAwsEc2Instance) GetKeypair() (interface{}, error) {
+	// this indicated that no keypair is assigned to the ec2instance since we set the value when we construct the resource
+	// we return nil here to make it easier for users to compare, e.g.:
+	// aws.ec2.instances.where(keypair != null) { instanceId }
 	return nil, nil
 }
 

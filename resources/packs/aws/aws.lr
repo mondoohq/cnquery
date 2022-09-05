@@ -1294,7 +1294,7 @@ private aws.ec2.instance {
   // private DNS name for the instance
   privateDnsName string
   // keypair associated with the instance
-  keypair aws.ec2.keypair
+  keypair() aws.ec2.keypair
 }
 
 private aws.ec2.keypair {
