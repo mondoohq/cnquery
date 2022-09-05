@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/motor/providers/k8s/resources"
 	appsv1 "k8s.io/api/apps/v1"
-	coresv1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 func TestLoadManifestFile(t *testing.T) {
@@ -39,7 +39,7 @@ func TestLoadManifestDir(t *testing.T) {
 	assert.Equal(t, "mondoo", deployment.Name)
 
 	resource = list[1]
-	configmap := resource.(*coresv1.ConfigMap)
+	configmap := resource.(*corev1.ConfigMap)
 	assert.Equal(t, "mondoo-daemonset-config", configmap.Name)
 
 	resource = list[2]
