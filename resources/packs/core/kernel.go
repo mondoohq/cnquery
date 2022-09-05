@@ -6,7 +6,6 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/motor/providers/os/fsutil"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core/kernel"
 )
@@ -230,44 +229,6 @@ func (k *mqlKernel) GetParameters() (map[string]interface{}, error) {
 
 	// retrieve all kernel modules
 	kernelParameters, err := mm.Parameters()
-	if err != nil {
-		return nil, err
-	}
-
-	// copy values to fulfill the interface
-	res := make(map[string]interface{})
-	for key, value := range kernelParameters {
-		res[key] = value
-	}
-
-	return res, nil
-}
-
-// TODO: something is going wrong with proc file fetching, get this back to work
-func (k *mqlKernel) getParametersFromProc() (map[string]interface{}, error) {
-	osProvider, err := osProvider(k.MotorRuntime.Motor)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: consider registration for directory changes
-	sysctlPath := "/proc/sys/"
-
-	fs := osProvider.FS()
-
-	f, err := fs.Open(sysctlPath)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	tarStream, err := fsutil.Tar(fs, f)
-	if err != nil {
-		return nil, err
-	}
-	defer tarStream.Close()
-
-	kernelParameters, err := kernel.ParseLinuxSysctlProc(sysctlPath, tarStream)
 	if err != nil {
 		return nil, err
 	}
