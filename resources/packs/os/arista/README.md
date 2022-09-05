@@ -6,7 +6,6 @@ https://www.arista.com/en/support/software-download
 Arista Go eAPI Library
 https://github.com/aristanetworks/goeapi
 
-
 # Setup VM
 
 https://eos.arista.com/veos-and-virtualbox/
@@ -83,7 +82,6 @@ no enable password
 ```
 
 see https://www.arista.com/en/um-eos/eos-user-security
-
 
 Enter bash mode
 

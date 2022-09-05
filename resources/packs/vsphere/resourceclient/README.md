@@ -1,13 +1,13 @@
 # vSphere Test Setup
 
-# Access direct ESXi CLI
+## Access direct ESXi CLI
 
 If you have direct access to the host, press Alt+F1 to open the log in page on the machine's physical console.
 Provide credentials when prompted. To return to the Direct Console User Interface press Alt-F2.
 
 see https://kb.vmware.com/s/article/2004746
 
-# VCSIM simulator
+## VCSIM simulator
 
 ```bash
 vcsim -l "127.0.0.1:8990"
@@ -35,14 +35,13 @@ UUID:         dbed6e0c-bd88-4ef6-b594-21283e1c677f
 govc cluster.change -drs-enabled -vsan-enabled -vsan-autoclaim DC0_C0 
 ```
 
-
-you can use govc with an ESXi server by setting the credentials properly:
+You can use govc with an ESXi server by setting the credentials properly:
 
 ```bash
 export GOVC_URL='https://root:password1!@192.168.56.102/sdk'
 ```
 
-# Use PowerCLI with simulator
+## Use PowerCLI with simulator
 
 Install [PowerCLI for macOS](https://blogs.vmware.com/PowerCLI/2018/03/installing-powercli-10-0-0-macos.html)
 
@@ -201,4 +200,3 @@ Speed       : 1000
 # get network adapter
 Get-VMHostNetworkAdapter | ConvertTo-JSON
 ```
-

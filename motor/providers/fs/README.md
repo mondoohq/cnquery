@@ -22,6 +22,7 @@ PRETTY_NAME="Buildroot 2020.02.10"
 ```
 
 References
-- https://www.digitalocean.com/community/tutorials/how-to-use-sshfs-to-mount-remote-file-systems-over-ssh
-- https://osxfuse.github.io/
-- https://github.com/osxfuse/sshfs/releases
+
+* https://www.digitalocean.com/community/tutorials/how-to-use-sshfs-to-mount-remote-file-systems-over-ssh
+* https://osxfuse.github.io/
+* https://github.com/osxfuse/sshfs/releases
