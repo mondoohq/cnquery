@@ -21,16 +21,6 @@ func TestManagerDebian(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, 40, len(mounts))
-
-	kernelParams, err := mm.Parameters()
-	require.NoError(t, err)
-
-	expectedParams := map[string]string{
-		"net.ipv4.cipso_cache_bucket_size": "10",
-		"net.ipv4.conf.all.accept_local":   "0",
-		"net.ipv4.ip_forward":              "1",
-	}
-	assert.Equal(t, expectedParams, kernelParams)
 }
 
 func TestManagerCentos(t *testing.T) {
