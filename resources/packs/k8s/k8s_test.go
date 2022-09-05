@@ -62,3 +62,60 @@ func TestSupportedK8sKinds(t *testing.T) {
 		})
 	}
 }
+
+func TestK8sServiceAccountAutomount(t *testing.T) {
+	p, err := k8s.New(context.Background(), &providers.Config{
+		Backend: providers.ProviderType_K8S,
+		Options: map[string]string{
+			"path": "../../../motor/providers/k8s/resources/testdata/serviceaccount-automount.yaml",
+		},
+	})
+	require.NoError(t, err)
+
+	m, err := motor.New(p)
+	require.NoError(t, err)
+
+	x := testutils.InitTester(m, k8s_pack.Registry)
+	res := x.TestQuery(t, "k8s.serviceaccounts[0].automountServiceAccountToken")
+	require.NotEmpty(t, res)
+	assert.Empty(t, res[0].Result().Error)
+	assert.Equal(t, true, res[0].Data.Value)
+}
+
+func TestK8sServiceAccountImplicitAutomount(t *testing.T) {
+	p, err := k8s.New(context.Background(), &providers.Config{
+		Backend: providers.ProviderType_K8S,
+		Options: map[string]string{
+			"path": "../../../motor/providers/k8s/resources/testdata/serviceaccount-implicit-automount.yaml",
+		},
+	})
+	require.NoError(t, err)
+
+	m, err := motor.New(p)
+	require.NoError(t, err)
+
+	x := testutils.InitTester(m, k8s_pack.Registry)
+	res := x.TestQuery(t, "k8s.serviceaccounts[0].automountServiceAccountToken")
+	require.NotEmpty(t, res)
+	assert.Empty(t, res[0].Result().Error)
+	assert.Equal(t, true, res[0].Data.Value)
+}
+
+func TestK8sServiceAccountNoAutomount(t *testing.T) {
+	p, err := k8s.New(context.Background(), &providers.Config{
+		Backend: providers.ProviderType_K8S,
+		Options: map[string]string{
+			"path": "../../../motor/providers/k8s/resources/testdata/serviceaccount-no-automount.yaml",
+		},
+	})
+	require.NoError(t, err)
+
+	m, err := motor.New(p)
+	require.NoError(t, err)
+
+	x := testutils.InitTester(m, k8s_pack.Registry)
+	res := x.TestQuery(t, "k8s.serviceaccounts[0].automountServiceAccountToken")
+	require.NotEmpty(t, res)
+	assert.Empty(t, res[0].Result().Error)
+	assert.Equal(t, false, res[0].Data.Value)
+}
