@@ -180,6 +180,7 @@ func (a *DockerRegistryImages) toAsset(ref name.Reference, creds []*vault.Creden
 	}
 	imgDigest := desc.Digest.String()
 	repoName := ref.Context().Name()
+	imgTag := ref.Context().Tag(ref.Identifier()).Name()
 	imageUrl := repoName + "@" + imgDigest
 	asset := &asset.Asset{
 		PlatformIds: []string{containerid.MondooContainerImageID(imgDigest)},
@@ -199,8 +200,9 @@ func (a *DockerRegistryImages) toAsset(ref name.Reference, creds []*vault.Creden
 		Labels: make(map[string]string),
 	}
 
-	// store digest
+	// store digest and tag
 	asset.Labels["docker.io/digest"] = imgDigest
+	asset.Labels["docker.io/tags"] = imgTag
 	log.Debug().Strs("platform-ids", asset.PlatformIds).Msg("asset platform ids")
 	return asset, nil
 }
