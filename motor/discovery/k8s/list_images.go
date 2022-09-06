@@ -181,7 +181,7 @@ func newPodImageAsset(i containerImage) (*asset.Asset, error) {
 	if len(i.image) > 0 {
 		tag, err := name.NewTag(i.image, name.WeakValidation)
 		if err == nil {
-			tagName = tag.TagStr()
+			tagName = tag.Name()
 		}
 	}
 	if a.Labels == nil {
