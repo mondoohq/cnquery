@@ -3,6 +3,7 @@ package kernel
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/cockroachdb/errors"
@@ -103,17 +104,24 @@ func (s *LinuxKernelManager) Info() (KernelInfo, error) {
 
 func (s *LinuxKernelManager) Parameters() (map[string]string, error) {
 	sysctlPath := "/proc/sys/"
+	cleanedSysctlPath := filepath.Clean(sysctlPath)
 
 	fs := s.provider.FS()
 
 	fsUtil := afero.Afero{Fs: fs}
 	kernelParameters := make(map[string]string)
-	err := fsUtil.Walk(sysctlPath, func(path string, f os.FileInfo, err error) error {
+	err := fsUtil.Walk(cleanedSysctlPath, func(path string, f os.FileInfo, err error) error {
 		if f != nil && !f.IsDir() {
-			content, err := os.ReadFile(path)
+			f, err := s.provider.FS().Open(path)
 			if err != nil {
 				log.Error().Err(err)
-				return nil
+				return err
+			}
+
+			content, err := ioutil.ReadAll(f)
+			if err != nil {
+				log.Error().Err(err)
+				return err
 			}
 			// remove leading sysctl path
 			k := strings.Replace(path, sysctlPath, "", -1)
