@@ -448,6 +448,18 @@ voluntary_ctxt_switches:	5681
 nonvoluntary_ctxt_switches:	116
 """
 
+# /proc/sys/ (with the trailing slash) as a result of the implementation
+# details with how the TOML file contents are represented as files
+# when mocking things up.
+[files."/proc/sys/"]
+stat.isdir = true
+
+[files."/proc/sys/net"]
+stat.isdir = true
+
+[files."/proc/sys/net/ipv4"]
+stat.isdir = true
+
 [files."/proc/sys/net/ipv4/ip_forward"]
 content = "1"
 

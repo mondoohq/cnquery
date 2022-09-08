@@ -4,39 +4,19 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/providers/local"
-	"go.mondoo.com/cnquery/resources/packs/core/info"
-	"go.mondoo.com/cnquery/resources/packs/core/kernel"
-	"go.mondoo.com/cnquery/resources/packs/testutils"
 )
 
 func TestResource_KernelParameters(t *testing.T) {
 	t.Run("kernel parameters", func(t *testing.T) {
-		p, err := local.New()
-		require.NoError(t, err)
+		res := x.TestQuery(t, "kernel.parameters")
+		assert.NotEmpty(t, res)
+	})
 
-		m, err := motor.New(p)
-		require.NoError(t, err)
-
-		tester := testutils.InitTester(m, info.Registry)
-
-		mm, err := kernel.ResolveManager(m)
-		require.NotNil(t, mm)
-		require.NoError(t, err)
-
-		res := tester.TestQuery(t, "kernel.parameters")
+	t.Run("test a specific kernel parameters", func(t *testing.T) {
+		res := x.TestQuery(t, `kernel.parameters["net.ipv4.ip_forward"]`)
 		assert.NotEmpty(t, res)
 
-		params, ok := res[0].Data.Value.(map[string]interface{})
-		require.True(t, ok)
-		mapS := make(map[string]string)
-		for k, v := range params {
-			mapS[k] = v.(string)
-		}
-
-		assert.NotEmpty(t, mapS)
+		assert.Equal(t, "1", res[0].Data.Value)
 	})
 }
 
