@@ -122,7 +122,24 @@ func (t *manifestProvider) SupportedResourceTypes() (*resources.ApiResourceIndex
 }
 
 func (t *manifestProvider) ID() (string, error) {
-	_, err := os.Stat(t.manifestFile)
+	// If we are doing an admission control scan, we have 1 resource in the manifest and it has a UID.
+	// Instead of using the file path to generate the ID, use the resource UID. We do this because for
+	// CI/CD scans, the manifest is stored in a random file. This means we can potentially be scanning
+	// the same resource multiple times but it will result in different assets because of the random
+	// file name.
+	resourceObjects, _, err := t.resourceIndex()
+	if err == nil {
+		if len(resourceObjects) == 1 {
+			o, err := meta.Accessor(resourceObjects[0])
+			if err == nil {
+				if o.GetUID() != "" {
+					return string(o.GetUID()), nil
+				}
+			}
+		}
+	}
+
+	_, err = os.Stat(t.manifestFile)
 	if err != nil {
 		return "", errors.Wrap(err, "could not determine platform identifier for "+t.manifestFile)
 	}
