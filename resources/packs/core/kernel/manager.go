@@ -1,9 +1,10 @@
 package kernel
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
-	"path/filepath"
+	"path"
 	"strings"
 
 	"github.com/cockroachdb/errors"
@@ -104,7 +105,7 @@ func (s *LinuxKernelManager) Info() (KernelInfo, error) {
 
 func (s *LinuxKernelManager) Parameters() (map[string]string, error) {
 	sysctlPath := "/proc/sys/"
-	cleanedSysctlPath := filepath.Clean(sysctlPath)
+	cleanedSysctlPath := path.Clean(sysctlPath)
 
 	fs := s.provider.FS()
 
@@ -118,7 +119,7 @@ func (s *LinuxKernelManager) Parameters() (map[string]string, error) {
 				return err
 			}
 
-			content, err := ioutil.ReadAll(f)
+			content, err := io.ReadAll(f)
 			if err != nil {
 				log.Error().Err(err)
 				return err
