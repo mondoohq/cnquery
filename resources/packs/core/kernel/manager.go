@@ -4,7 +4,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
 	"strings"
 
 	"github.com/cockroachdb/errors"
@@ -14,6 +13,8 @@ import (
 
 	"go.mondoo.com/cnquery/motor"
 )
+
+const sysctlPath = "/proc/sys/"
 
 type KernelInfo struct {
 	Version   string            `json:"version"`
@@ -104,14 +105,11 @@ func (s *LinuxKernelManager) Info() (KernelInfo, error) {
 }
 
 func (s *LinuxKernelManager) Parameters() (map[string]string, error) {
-	sysctlPath := "/proc/sys/"
-	cleanedSysctlPath := path.Clean(sysctlPath)
-
 	fs := s.provider.FS()
 
 	fsUtil := afero.Afero{Fs: fs}
 	kernelParameters := make(map[string]string)
-	err := fsUtil.Walk(cleanedSysctlPath, func(path string, f os.FileInfo, err error) error {
+	err := fsUtil.Walk(sysctlPath, func(path string, f os.FileInfo, err error) error {
 		if f != nil && !f.IsDir() {
 			f, err := s.provider.FS().Open(path)
 			if err != nil {
