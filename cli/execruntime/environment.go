@@ -83,6 +83,7 @@ func (c *RuntimeEnv) Labels() map[string]string {
 	for i := range c.Variables {
 		key := c.Variables[i].Name
 		val := environmentProvider.Getenv(key)
+		log.Debug().Msgf("cicd asset env var> %s : %s", key, val)
 
 		// only store data if a value is set
 		if len(val) > 0 {
