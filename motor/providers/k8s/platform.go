@@ -10,7 +10,7 @@ func NewPlatformWorkloadId(clusterIdentifier, workloadType, namespace, name stri
 	platformIdentifier := clusterIdentifier
 	// when mondoo is called with "--namespace xyz" the cluster identifier already contains the namespace
 	// when called with --all-namespaces, it is missing, but we need it to identify workloads
-	if !strings.Contains(clusterIdentifier, "namespace") {
+	if !strings.Contains(clusterIdentifier, "namespace") && namespace != "" {
 		platformIdentifier += "/namespace/" + namespace
 	}
 	// add plural "s"

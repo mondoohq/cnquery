@@ -252,6 +252,19 @@ func (t *apiProvider) PlatformInfo() *platform.Platform {
 	}
 }
 
+func (t *apiProvider) Nodes() ([]v1.Node, error) {
+	ctx := context.Background()
+	list, err := t.clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	// needed because of https://github.com/kubernetes/client-go/issues/861
+	for i := range list.Items {
+		list.Items[i].SetGroupVersionKind(v1.SchemeGroupVersion.WithKind("Node"))
+	}
+	return list.Items, err
+}
+
 func (t *apiProvider) Namespaces() ([]v1.Namespace, error) {
 	ctx := context.Background()
 	list, err := t.clientset.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})

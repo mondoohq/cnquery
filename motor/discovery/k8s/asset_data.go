@@ -22,6 +22,9 @@ func createPlatformData(objectKind, runtime string) (*platform.Platform, error) 
 	// We need this at two places (discovery and tranport)
 	// Here it is needed for the discovery and this is what ends up in  the database
 	switch objectKind {
+	case "Node":
+		platformData.Name = "k8s-node"
+		platformData.Title = "Kubernetes Node"
 	case "Pod":
 		platformData.Name = "k8s-pod"
 		platformData.Title = "Kubernetes Pod"
@@ -69,23 +72,30 @@ func createAssetFromObject(object runtime.Object, runtime string, connection *pr
 	platformData.Version = objType.GetAPIVersion()
 	platformData.Build = objMeta.GetResourceVersion()
 	platformData.Labels = map[string]string{
-		"namespace": objMeta.GetNamespace(),
-		"uid":       string(objMeta.GetUID()),
+		"uid": string(objMeta.GetUID()),
 	}
+
+	assetLabels := objMeta.GetLabels()
+	if assetLabels == nil {
+		assetLabels = map[string]string{}
+	}
+	ns := objMeta.GetNamespace()
+	var name string
+	if ns != "" {
+		name = ns + "/" + objMeta.GetName()
+		platformData.Labels["namespace"] = ns
+		assetLabels["namespace"] = ns
+	} else {
+		name = objMeta.GetName()
+	}
+
 	asset := &asset.Asset{
 		PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, strings.ToLower(objectKind), objMeta.GetNamespace(), objMeta.GetName())},
-		Name:        objMeta.GetNamespace() + "/" + objMeta.GetName(),
+		Name:        name,
 		Platform:    platformData,
 		Connections: []*providers.Config{connection},
 		State:       asset.State_STATE_ONLINE,
-		Labels:      objMeta.GetLabels(),
-	}
-	if asset.Labels == nil {
-		asset.Labels = map[string]string{
-			"namespace": objMeta.GetNamespace(),
-		}
-	} else {
-		asset.Labels["namespace"] = objMeta.GetNamespace()
+		Labels:      assetLabels,
 	}
 
 	return asset, nil

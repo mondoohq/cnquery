@@ -260,6 +260,21 @@ func (mr *MockKubernetesProviderMockRecorder) Namespaces() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Namespaces", reflect.TypeOf((*MockKubernetesProvider)(nil).Namespaces))
 }
 
+// Nodes mocks base method.
+func (m *MockKubernetesProvider) Nodes() ([]v11.Node, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Nodes")
+	ret0, _ := ret[0].([]v11.Node)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Nodes indicates an expected call of Nodes.
+func (mr *MockKubernetesProviderMockRecorder) Nodes() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Nodes", reflect.TypeOf((*MockKubernetesProvider)(nil).Nodes))
+}
+
 // PlatformIdDetectors mocks base method.
 func (m *MockKubernetesProvider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	m.ctrl.T.Helper()
