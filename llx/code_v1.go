@@ -111,6 +111,9 @@ func ComparableLabel(label string) (string, bool) {
 	if _, ok := comparableOperations[x]; ok {
 		return x, true
 	}
+	if len(label) == 1 {
+		return "", false
+	}
 
 	x = label[0:2]
 	if _, ok := comparableOperations[x]; ok {
