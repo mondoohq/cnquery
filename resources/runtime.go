@@ -9,6 +9,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor"
+	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/providers"
 )
 
 // NewResource creates the base class for a new resource
@@ -72,10 +74,17 @@ type UpstreamConfig struct {
 
 // Runtime of all initialized resources
 type Runtime struct {
+	// Asset represents the asset currently being used
+	Asset *asset.Asset
+	// Motor is how we're connected to that asset. There
+	// can be multiple Runtime objects with the same asset
+	// and different motors. Or The assets could be different
+	// and the motor being the same
+	Motor *motor.Motor
+
 	Registry       *Registry
 	cache          *Cache
 	Observers      *Observers
-	Motor          *motor.Motor
 	UpstreamConfig *UpstreamConfig
 }
 
@@ -184,6 +193,14 @@ func (ctx *Runtime) CreateResourceWithID(name string, id string, args ...interfa
 // CreateResource creates a new resource instance taking its name + args
 func (ctx *Runtime) CreateResource(name string, args ...interface{}) (ResourceType, error) {
 	return ctx.CreateResourceWithID(name, "", args...)
+}
+
+func (ctx *Runtime) CreateResourceWithAssetContext(name string, a *asset.Asset, p providers.Instance, args ...interface{}) (ResourceType, error) {
+	// This function will create the Resource. If the asset "a" and provider "p" match what "ctx"
+	// already holds, we do not need to create a new Rutnime and can attach it directly to the
+	// new resource. Otherwise, a new runtime is created, where the asset and provider are changed.
+	// We probably also need to do something about ctx.UpstreamConfig
+	panic("Unimplemented")
 }
 
 // GetRawResource resource instance by name and id

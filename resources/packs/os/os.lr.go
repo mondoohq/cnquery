@@ -6076,6 +6076,12 @@ func (s *mqlDockerContainer) Field(name string) (interface{}, error) {
 		return s.Status()
 	case "labels":
 		return s.Labels()
+	case "os.any":
+		p, err := s.ProviderFor(name)
+		if err != nil {
+			return nil, err
+		}
+		return s.MotorRuntime.CreateResourceWithAssetContext(name, s.MotorRuntime.Asset, p)
 	default:
 		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"docker.container\" resource")
 	}

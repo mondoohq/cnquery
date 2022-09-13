@@ -3,6 +3,7 @@ package container
 import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/motor/asset"
 	docker_discovery "go.mondoo.com/cnquery/motor/discovery/docker_engine"
 	"go.mondoo.com/cnquery/motor/motorid/containerid"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -129,4 +130,8 @@ func NewDockerEngineImage(endpoint *providers.Config) (ContainerProvider, error)
 	p.Metadata.Name = ii.Name
 	p.Metadata.Labels = ii.Labels
 	return p, nil
+}
+
+type DockerContainerProviderFactory interface {
+	NewDockerContainerProvider(containerId string) (*asset.Asset, ContainerProvider, error)
 }

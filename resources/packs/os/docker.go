@@ -7,6 +7,8 @@ import (
 
 	docker_types "github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers/container"
 	"go.mondoo.com/cnquery/motor/providers/local"
 )
 
@@ -75,7 +77,10 @@ func (p *mqlDocker) GetContainers() ([]interface{}, error) {
 		return nil, err
 	}
 
+	providerFactory := p.MotorRuntime.Motor.Provider.(container.DockerContainerProviderFactory)
+
 	container := make([]interface{}, len(dContainers))
+
 	for i, dContainer := range dContainers {
 		labels := make(map[string]interface{})
 		for key := range dContainer.Labels {
@@ -87,7 +92,13 @@ func (p *mqlDocker) GetContainers() ([]interface{}, error) {
 			names = append(names, dContainer.Names[i])
 		}
 
-		mqlDockerContainer, err := p.MotorRuntime.CreateResource("docker.container",
+		asset, dcp, err := providerFactory.NewDockerContainerProvider(dContainer.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlDockerContainer, err := p.MotorRuntime.CreateResourceWithAssetContext("docker.container",
+			asset, dcp,
 			"id", dContainer.ID,
 			"image", dContainer.Image,
 			"imageid", dContainer.ImageID,
@@ -105,6 +116,19 @@ func (p *mqlDocker) GetContainers() ([]interface{}, error) {
 	}
 
 	return container, nil
+}
+
+func (p *mqlDockerContainer) ProviderFor(resource string) (providers.Instance, error) {
+	// ProviderFor("os.any") will get called if os.any is accessed. This allows us to
+	// defer creating a provider.Instance instance (for example if its expensive) until
+	// it is needed
+	switch resource {
+	case "os.any":
+		// Since we already changed the providers.Instance when creating the container,
+		// and it supports all the things needed by os, we can just return it
+		return p.MotorRuntime.Motor.Provider, nil
+	}
+	return nil, errors.New("no provider")
 }
 
 func (p *mqlDockerImage) id() (string, error) {
