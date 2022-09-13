@@ -10,26 +10,50 @@ import (
 )
 
 // ListReplicaSets list all replicaSets in the cluster.
-func ListReplicaSets(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string, namespaceFilter []string, od *k8s.PlatformIdOwnershipDirectory) ([]*asset.Asset, error) {
-	namespaces, err := p.Namespaces()
-	if err != nil {
-		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
-	}
-
+func ListReplicaSets(
+	p k8s.KubernetesProvider,
+	connection *providers.Config,
+	clusterIdentifier string,
+	namespaceFilter []string,
+	resFilter map[string][]K8sResourceIdentifier,
+	od *k8s.PlatformIdOwnershipDirectory,
+) ([]*asset.Asset, error) {
 	replicaSets := []appsv1.ReplicaSet{}
-	for i := range namespaces {
-		namespace := namespaces[i]
-		if !isIncluded(namespace.Name, namespaceFilter) {
-			log.Info().Str("namespace", namespace.Name).Strs("filter", namespaceFilter).Msg("namespace not included")
-			continue
+
+	if len(resFilter) > 0 {
+		// If there is a resources filter we should only retrieve the replicasets that are in the filter.
+		if len(resFilter["replicaset"]) == 0 {
+			return []*asset.Asset{}, nil
 		}
 
-		replicaSetsPerNamespace, err := p.ReplicaSets(namespace)
+		for _, res := range resFilter["replicaset"] {
+			rs, err := p.ReplicaSet(res.Namespace, res.Name)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to get replicaset %s/%s", res.Namespace, res.Name)
+			}
+
+			replicaSets = append(replicaSets, *rs)
+		}
+	} else {
+		namespaces, err := p.Namespaces()
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to list replicasets")
+			return nil, errors.Wrap(err, "could not list kubernetes namespaces")
 		}
 
-		replicaSets = append(replicaSets, replicaSetsPerNamespace...)
+		for i := range namespaces {
+			namespace := namespaces[i]
+			if !isIncluded(namespace.Name, namespaceFilter) {
+				log.Info().Str("namespace", namespace.Name).Strs("filter", namespaceFilter).Msg("namespace not included")
+				continue
+			}
+
+			replicaSetsPerNamespace, err := p.ReplicaSets(namespace)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to list replicasets")
+			}
+
+			replicaSets = append(replicaSets, replicaSetsPerNamespace...)
+		}
 	}
 
 	assets := []*asset.Asset{}

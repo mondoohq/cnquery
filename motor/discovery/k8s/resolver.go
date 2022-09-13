@@ -230,7 +230,7 @@ func addSeparateAssets(
 		// fetch pod information
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for pods")
 		connection := tc.Clone()
-		pods, err := ListPods(p, connection, clusterIdentifier, namespacesFilter, od)
+		pods, err := ListPods(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s pods")
 			return nil, err
@@ -242,7 +242,7 @@ func addSeparateAssets(
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryDaemonSets) {
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for daemonsets")
 		connection := tc.Clone()
-		daemonsets, err := ListDaemonSets(p, connection, clusterIdentifier, namespacesFilter, od)
+		daemonsets, err := ListDaemonSets(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s daemonsets")
 			return nil, err
@@ -266,7 +266,7 @@ func addSeparateAssets(
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryCronJobs) {
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for cronjobs")
 		connection := tc.Clone()
-		cronjobs, err := ListCronJobs(p, connection, clusterIdentifier, namespacesFilter, od)
+		cronjobs, err := ListCronJobs(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s cronjobs")
 			return nil, err
@@ -278,7 +278,7 @@ func addSeparateAssets(
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryStatefulSets) {
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for statefulsets")
 		connection := tc.Clone()
-		statefulsets, err := ListStatefulSets(p, connection, clusterIdentifier, namespacesFilter, od)
+		statefulsets, err := ListStatefulSets(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s statefulsets")
 			return nil, err
@@ -290,7 +290,7 @@ func addSeparateAssets(
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryJobs) {
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for jobs")
 		connection := tc.Clone()
-		jobs, err := ListJobs(p, connection, clusterIdentifier, namespacesFilter, od)
+		jobs, err := ListJobs(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s jobs")
 			return nil, err
@@ -302,7 +302,7 @@ func addSeparateAssets(
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryReplicaSets) {
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for replicasets")
 		connection := tc.Clone()
-		replicasets, err := ListReplicaSets(p, connection, clusterIdentifier, namespacesFilter, od)
+		replicasets, err := ListReplicaSets(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s replicasets")
 			return nil, err
