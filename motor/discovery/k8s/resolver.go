@@ -2,6 +2,8 @@ package k8s
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
@@ -48,9 +50,16 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	}
 }
 
+type K8sResourceIdentifier struct {
+	Type      string
+	Namespace string
+	Name      string
+}
+
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 	namespacesFilter := []string{}
+	resourcesFilter := make(map[string][]K8sResourceIdentifier)
 
 	var k8sctlConfig *kubectl.KubectlConfig
 	localProvider, err := local.New()
@@ -71,6 +80,32 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 			if k8sctlConfig != nil && len(k8sctlConfig.CurrentNamespace()) > 0 {
 				namespacesFilter = append(namespacesFilter, k8sctlConfig.CurrentNamespace())
 			}
+		}
+	}
+
+	if fOpt, ok := tc.Options["k8s-resources"]; ok {
+		fs := strings.Split(fOpt, ",")
+		for _, f := range fs {
+			ids := strings.Split(strings.TrimSpace(f), ":")
+			resType := ids[0]
+			var ns, name string
+			if _, ok := resourcesFilter[resType]; !ok {
+				resourcesFilter[resType] = []K8sResourceIdentifier{}
+			}
+
+			switch len(ids) {
+			case 3:
+				// Namespaced resources have the format type:ns:name
+				ns = ids[1]
+				name = ids[2]
+			case 2:
+				// Non-namespaced resources have the format type:name
+				name = ids[1]
+			default:
+				return nil, fmt.Errorf("invalid k8s resource filter: %s", f)
+			}
+
+			resourcesFilter[resType] = append(resourcesFilter[resType], K8sResourceIdentifier{Type: resType, Namespace: ns, Name: name})
 		}
 	}
 
@@ -143,7 +178,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		clusterAsset.RelatedAssets = append(clusterAsset.RelatedAssets, nodes...)
 	}
 
-	additionalAssets, err := addSeparateAssets(tc, p, namespacesFilter, clusterIdentifier, ownershipDir)
+	additionalAssets, err := addSeparateAssets(tc, p, namespacesFilter, resourcesFilter, clusterIdentifier, ownershipDir)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +202,14 @@ func (r *Resolver) InitCtx(ctx context.Context) context.Context {
 }
 
 // addSeparateAssets Depending on config options it will search for additional assets which should be listed separately.
-func addSeparateAssets(tc *providers.Config, p k8s.KubernetesProvider, namespacesFilter []string, clusterIdentifier string, od *k8s.PlatformIdOwnershipDirectory) ([]*asset.Asset, error) {
+func addSeparateAssets(
+	tc *providers.Config,
+	p k8s.KubernetesProvider,
+	namespacesFilter []string,
+	resourcesFilter map[string][]K8sResourceIdentifier,
+	clusterIdentifier string,
+	od *k8s.PlatformIdOwnershipDirectory,
+) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// discover deployments
@@ -175,7 +217,7 @@ func addSeparateAssets(tc *providers.Config, p k8s.KubernetesProvider, namespace
 		// fetch deployment information
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for deployments")
 		connection := tc.Clone()
-		deployments, err := ListDeployments(p, connection, clusterIdentifier, namespacesFilter, od)
+		deployments, err := ListDeployments(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s deployments")
 			return nil, err
