@@ -167,3 +167,30 @@ func TestManifestResolverWrongDiscovery(t *testing.T) {
 	// context has to reference the default namespace
 	assert.Equalf(t, 1, len(assetList), "discovering pods in a cronjob manifest should only result in the manifest")
 }
+
+func TestResourceFilter(t *testing.T) {
+	cfg := &providers.Config{
+		Backend: providers.ProviderType_K8S,
+		Options: map[string]string{
+			"k8s-resources": "pod:default:nginx, pod:default:redis, deployment:test:redis, node:node1",
+		},
+	}
+
+	resFilters, err := resourceFilters(cfg)
+	require.NoError(t, err)
+
+	expected := map[string][]K8sResourceIdentifier{
+		"pod": {
+			{Type: "pod", Namespace: "default", Name: "nginx"},
+			{Type: "pod", Namespace: "default", Name: "redis"},
+		},
+		"deployment": {
+			{Type: "deployment", Namespace: "test", Name: "redis"},
+		},
+		"node": {
+			{Type: "node", Namespace: "", Name: "node1"},
+		},
+	}
+
+	assert.Equal(t, expected, resFilters)
+}

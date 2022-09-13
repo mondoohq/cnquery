@@ -107,7 +107,7 @@ func TestListDeployments(t *testing.T) {
 
 	pCfg := &providers.Config{}
 	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
-	assets, err := ListDeployments(p, pCfg, clusterIdentifier, nil, ownershipDir)
+	assets, err := ListDeployments(p, pCfg, clusterIdentifier, nil, make(map[string][]K8sResourceIdentifier), ownershipDir)
 	require.NoError(t, err)
 	require.Equal(t, []string{k8s.NewPlatformWorkloadId(clusterIdentifier,
 		strings.ToLower(parent.Kind),
@@ -131,4 +131,93 @@ func TestListDeployments(t *testing.T) {
 	assert.Equal(t, "k8s-deployment", assets[0].Platform.Name)
 	assert.ElementsMatch(t, []string{"k8s", "k8s-workload"}, assets[0].Platform.Family)
 	assert.Equal(t, nss[0].Name, assets[0].Labels["namespace"])
+}
+
+func TestListDeployments_Filter(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	p := k8s.NewMockKubernetesProvider(mockCtrl)
+
+	// called for each Deployment
+	p.EXPECT().Runtime().Return("k8s-cluster")
+
+	// Seed Deployments
+	deployments := []appsv1.Deployment{
+		{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Deployment",
+				APIVersion: "apps/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "nginx",
+				Namespace: "default",
+				UID:       "123",
+			},
+			Spec: appsv1.DeploymentSpec{
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{{Image: "nginx:1.22.0-alpine"}},
+					},
+				},
+			},
+		},
+		{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Deployment",
+				APIVersion: "apps/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "nginx2",
+				Namespace: "default",
+				UID:       "456",
+			},
+			Spec: appsv1.DeploymentSpec{
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{{Image: "nginx:1.22.0-alpine"}},
+					},
+				},
+			},
+		},
+	}
+
+	p.EXPECT().Deployment(deployments[0].Namespace, deployments[0].Name).Return(&deployments[0], nil)
+
+	expectedAssetNames := []string{
+		deployments[0].Namespace + "/" + deployments[0].Name,
+	}
+
+	clusterIdentifier := "//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc"
+
+	expectedAssetPlatformIds := []string{
+		clusterIdentifier + "/namespace/" + deployments[0].Namespace + "/deployments/name/" + deployments[0].Name,
+	}
+
+	pCfg := &providers.Config{}
+	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
+	resFilter := map[string][]K8sResourceIdentifier{
+		"deployment": {
+			{Type: "deployment", Name: deployments[0].Name, Namespace: deployments[0].Namespace},
+		},
+	}
+	assets, err := ListDeployments(p, pCfg, clusterIdentifier, nil, resFilter, ownershipDir)
+	require.NoError(t, err)
+
+	var assetNames []string
+	for _, a := range assets {
+		assetNames = append(assetNames, a.Name)
+	}
+
+	var assetPlatformIds []string
+	for _, a := range assets {
+		assetPlatformIds = append(assetPlatformIds, a.PlatformIds[0])
+	}
+
+	assert.ElementsMatch(t, expectedAssetNames, assetNames)
+	assert.ElementsMatch(t, expectedAssetPlatformIds, assetPlatformIds)
+	assert.Equal(t, "apps/v1", assets[0].Platform.Version)
+	assert.Equal(t, "k8s-deployment", assets[0].Platform.Name)
+	assert.ElementsMatch(t, []string{"k8s", "k8s-workload"}, assets[0].Platform.Family)
+	assert.Equal(t, deployments[0].Namespace, assets[0].Labels["namespace"])
 }

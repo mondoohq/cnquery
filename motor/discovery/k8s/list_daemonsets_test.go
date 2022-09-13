@@ -115,7 +115,7 @@ func TestListDaemonsets(t *testing.T) {
 
 	pCfg := &providers.Config{}
 	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
-	assets, err := ListDaemonSets(p, pCfg, clusterIdentifier, nil, ownershipDir)
+	assets, err := ListDaemonSets(p, pCfg, clusterIdentifier, nil, make(map[string][]K8sResourceIdentifier), ownershipDir)
 	require.NoError(t, err)
 	require.Equal(t, []string{k8s.NewPlatformWorkloadId(clusterIdentifier,
 		strings.ToLower(parent.Kind),
@@ -139,4 +139,93 @@ func TestListDaemonsets(t *testing.T) {
 	assert.Equal(t, "k8s-daemonset", assets[0].Platform.Name)
 	assert.ElementsMatch(t, []string{"k8s", "k8s-workload"}, assets[0].Platform.Family)
 	assert.Equal(t, nss[0].Name, assets[0].Labels["namespace"])
+}
+
+func TestListDaemonsets_Filter(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	p := k8s.NewMockKubernetesProvider(mockCtrl)
+
+	// called for each DaemonSet
+	p.EXPECT().Runtime().Return("k8s-cluster")
+
+	// Seed DaemonSets
+	daemonsets := []appsv1.DaemonSet{
+		{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "DaemonSet",
+				APIVersion: "apps/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "nginx",
+				Namespace: "default",
+				UID:       "123",
+			},
+			Spec: appsv1.DaemonSetSpec{
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{{Image: "nginx:1.22.0-alpine"}},
+					},
+				},
+			},
+		},
+		{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "DaemonSet",
+				APIVersion: "apps/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "nginx2",
+				Namespace: "default",
+				UID:       "456",
+			},
+			Spec: appsv1.DaemonSetSpec{
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{{Image: "nginx:1.22.0-alpine"}},
+					},
+				},
+			},
+		},
+	}
+
+	p.EXPECT().DaemonSet(daemonsets[0].Namespace, daemonsets[0].Name).Return(&daemonsets[0], nil)
+
+	expectedAssetNames := []string{
+		daemonsets[0].Namespace + "/" + daemonsets[0].Name,
+	}
+
+	clusterIdentifier := "//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc"
+
+	expectedAssetPlatformIds := []string{
+		clusterIdentifier + "/namespace/" + daemonsets[0].Namespace + "/daemonsets/name/" + daemonsets[0].Name,
+	}
+
+	pCfg := &providers.Config{}
+	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
+	resFilter := map[string][]K8sResourceIdentifier{
+		"daemonset": {
+			{Type: "daemonset", Name: daemonsets[0].Name, Namespace: daemonsets[0].Namespace},
+		},
+	}
+	assets, err := ListDaemonSets(p, pCfg, clusterIdentifier, nil, resFilter, ownershipDir)
+	require.NoError(t, err)
+
+	var assetNames []string
+	for _, a := range assets {
+		assetNames = append(assetNames, a.Name)
+	}
+
+	var assetPlatformIds []string
+	for _, a := range assets {
+		assetPlatformIds = append(assetPlatformIds, a.PlatformIds[0])
+	}
+
+	assert.ElementsMatch(t, expectedAssetNames, assetNames)
+	assert.ElementsMatch(t, expectedAssetPlatformIds, assetPlatformIds)
+	assert.Equal(t, "apps/v1", assets[0].Platform.Version)
+	assert.Equal(t, "k8s-daemonset", assets[0].Platform.Name)
+	assert.ElementsMatch(t, []string{"k8s", "k8s-workload"}, assets[0].Platform.Family)
+	assert.Equal(t, daemonsets[0].Namespace, assets[0].Labels["namespace"])
 }

@@ -98,7 +98,7 @@ func TestListPods(t *testing.T) {
 
 	pCfg := &providers.Config{}
 	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
-	assets, err := ListPods(p, pCfg, clusterIdentifier, nil, ownershipDir)
+	assets, err := ListPods(p, pCfg, clusterIdentifier, nil, make(map[string][]K8sResourceIdentifier), ownershipDir)
 	require.NoError(t, err)
 	require.Equal(t, []string{k8s.NewPlatformWorkloadId(clusterIdentifier,
 		strings.ToLower(parent.Kind),
@@ -121,4 +121,84 @@ func TestListPods(t *testing.T) {
 	assert.Equal(t, "k8s-pod", assets[0].Platform.Name)
 	assert.ElementsMatch(t, []string{"k8s", "k8s-workload"}, assets[0].Platform.Family)
 	assert.Equal(t, nss[0].Name, assets[0].Labels["namespace"])
+}
+
+func TestListPods_Filter(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	p := k8s.NewMockKubernetesProvider(mockCtrl)
+
+	// called for each Pod
+	p.EXPECT().Runtime().Return("k8s-cluster")
+
+	// Seed Pods
+	pods := []corev1.Pod{
+		{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Pod",
+				APIVersion: "v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "nginx",
+				Namespace: "default",
+				UID:       "123",
+			},
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{{Image: "nginx:1.22.0-alpine"}},
+			},
+		},
+		{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Pod",
+				APIVersion: "v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "nginx2",
+				Namespace: "default",
+				UID:       "456",
+			},
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{{Image: "nginx:1.22.0-alpine"}},
+			},
+		},
+	}
+
+	p.EXPECT().Pod(pods[0].Namespace, pods[0].Name).Return(&pods[0], nil)
+
+	expectedAssetNames := []string{
+		pods[0].Namespace + "/" + pods[0].Name,
+	}
+
+	clusterIdentifier := "//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc"
+
+	expectedAssetPlatformIds := []string{
+		clusterIdentifier + "/namespace/" + pods[0].Namespace + "/pods/name/" + pods[0].Name,
+	}
+
+	pCfg := &providers.Config{}
+	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
+	resFilter := map[string][]K8sResourceIdentifier{
+		"pod": {
+			{Type: "pod", Name: pods[0].Name, Namespace: pods[0].Namespace},
+		},
+	}
+	assets, err := ListPods(p, pCfg, clusterIdentifier, nil, resFilter, ownershipDir)
+	require.NoError(t, err)
+	var assetNames []string
+	for _, a := range assets {
+		assetNames = append(assetNames, a.Name)
+	}
+
+	var assetPlatformIds []string
+	for _, a := range assets {
+		assetPlatformIds = append(assetPlatformIds, a.PlatformIds[0])
+	}
+
+	assert.ElementsMatch(t, expectedAssetNames, assetNames)
+	assert.ElementsMatch(t, expectedAssetPlatformIds, assetPlatformIds)
+	assert.Equal(t, "v1", assets[0].Platform.Version)
+	assert.Equal(t, "k8s-pod", assets[0].Platform.Name)
+	assert.ElementsMatch(t, []string{"k8s", "k8s-workload"}, assets[0].Platform.Family)
+	assert.Equal(t, pods[0].Namespace, assets[0].Labels["namespace"])
 }
