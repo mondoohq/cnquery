@@ -130,30 +130,35 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 	}
 
-	clusterAsset := &asset.Asset{
-		PlatformIds: []string{clusterIdentifier},
-		Name:        clusterName,
-		Platform:    pf,
-		Connections: []*providers.Config{tc}, // pass-in the current config
-		State:       asset.State_STATE_RUNNING,
-	}
-	resolved = append(resolved, clusterAsset)
-
-	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
-
-	// nodes are only added as related assets because we have no policies to scan them
-	nodes, nodeRelationshipInfos, err := ListNodes(p, tc, clusterIdentifier, namespacesFilter)
-	if err == nil && len(nodes) > 0 {
-		ri := nodeRelationshipInfos[0]
-		if ri.cloudAccountAsset != nil {
-			clusterAsset.RelatedAssets = append(clusterAsset.RelatedAssets, ri.cloudAccountAsset)
-		}
-		clusterAsset.RelatedAssets = append(clusterAsset.RelatedAssets, nodes...)
-	}
-
 	resourcesFilter, err := resourceFilters(tc)
 	if err != nil {
 		return nil, err
+	}
+
+	// Only discover cluster and nodes if there are no resource filters.
+	var clusterAsset *asset.Asset
+	var ownershipDir *k8s.PlatformIdOwnershipDirectory
+	if len(resourcesFilter) == 0 {
+		clusterAsset = &asset.Asset{
+			PlatformIds: []string{clusterIdentifier},
+			Name:        clusterName,
+			Platform:    pf,
+			Connections: []*providers.Config{tc}, // pass-in the current config
+			State:       asset.State_STATE_RUNNING,
+		}
+		resolved = append(resolved, clusterAsset)
+
+		ownershipDir = k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
+
+		// nodes are only added as related assets because we have no policies to scan them
+		nodes, nodeRelationshipInfos, err := ListNodes(p, tc, clusterIdentifier, namespacesFilter)
+		if err == nil && len(nodes) > 0 {
+			ri := nodeRelationshipInfos[0]
+			if ri.cloudAccountAsset != nil {
+				clusterAsset.RelatedAssets = append(clusterAsset.RelatedAssets, ri.cloudAccountAsset)
+			}
+			clusterAsset.RelatedAssets = append(clusterAsset.RelatedAssets, nodes...)
+		}
 	}
 
 	additionalAssets, err := addSeparateAssets(tc, p, namespacesFilter, resourcesFilter, clusterIdentifier, ownershipDir)
@@ -161,13 +166,15 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		return nil, err
 	}
 
-	isRelatedFn := func(a *asset.Asset) bool {
-		return a.Platform.GetKind() == providers.Kind_KIND_K8S_OBJECT
-	}
+	if clusterAsset != nil {
+		isRelatedFn := func(a *asset.Asset) bool {
+			return a.Platform.GetKind() == providers.Kind_KIND_K8S_OBJECT
+		}
 
-	for _, aa := range additionalAssets {
-		if isRelatedFn(aa) {
-			clusterAsset.RelatedAssets = append(clusterAsset.RelatedAssets, aa)
+		for _, aa := range additionalAssets {
+			if isRelatedFn(aa) {
+				clusterAsset.RelatedAssets = append(clusterAsset.RelatedAssets, aa)
+			}
 		}
 	}
 	resolved = append(resolved, additionalAssets...)
@@ -288,32 +295,34 @@ func addSeparateAssets(
 		resolved = append(resolved, replicasets...)
 	}
 
-	// build a lookup on the k8s uid to look up individual assets to link
-	platformIdToAssetMap := map[string]*asset.Asset{}
-	for _, assetObj := range resolved {
-		for _, platformId := range assetObj.PlatformIds {
-			platformIdToAssetMap[platformId] = assetObj
+	if od != nil {
+		// build a lookup on the k8s uid to look up individual assets to link
+		platformIdToAssetMap := map[string]*asset.Asset{}
+		for _, assetObj := range resolved {
+			for _, platformId := range assetObj.PlatformIds {
+				platformIdToAssetMap[platformId] = assetObj
+			}
 		}
-	}
 
-	for id, a := range platformIdToAssetMap {
-		ownedBy := od.OwnedBy(id)
-		for _, ownerPlatformId := range ownedBy {
-			if aa, ok := platformIdToAssetMap[ownerPlatformId]; ok {
-				a.RelatedAssets = append(a.RelatedAssets, aa)
-			} else {
-				// If the owner object is not scanned we can still add an asset as we know most of the information
-				// from the ownerReference field
-				if platformEntry, ok := od.GetKubernetesObjectData(ownerPlatformId); ok {
-					platformData, err := createPlatformData(platformEntry.Kind, providers.RUNTIME_KUBERNETES_CLUSTER)
-					if err != nil {
-						continue
+		for id, a := range platformIdToAssetMap {
+			ownedBy := od.OwnedBy(id)
+			for _, ownerPlatformId := range ownedBy {
+				if aa, ok := platformIdToAssetMap[ownerPlatformId]; ok {
+					a.RelatedAssets = append(a.RelatedAssets, aa)
+				} else {
+					// If the owner object is not scanned we can still add an asset as we know most of the information
+					// from the ownerReference field
+					if platformEntry, ok := od.GetKubernetesObjectData(ownerPlatformId); ok {
+						platformData, err := createPlatformData(platformEntry.Kind, providers.RUNTIME_KUBERNETES_CLUSTER)
+						if err != nil {
+							continue
+						}
+						a.RelatedAssets = append(a.RelatedAssets, &asset.Asset{
+							PlatformIds: []string{ownerPlatformId},
+							Platform:    platformData,
+							Name:        platformEntry.Namespace + "/" + platformEntry.Name,
+						})
 					}
-					a.RelatedAssets = append(a.RelatedAssets, &asset.Asset{
-						PlatformIds: []string{ownerPlatformId},
-						Platform:    platformData,
-						Name:        platformEntry.Namespace + "/" + platformEntry.Name,
-					})
 				}
 			}
 		}

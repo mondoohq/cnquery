@@ -60,7 +60,9 @@ func ListCronJobs(
 	assets := []*asset.Asset{}
 	for i := range cronJobs {
 		cronJob := cronJobs[i]
-		od.Add(&cronJob)
+		if od != nil {
+			od.Add(&cronJob)
+		}
 		asset, err := createAssetFromObject(&cronJob, p.Runtime(), connection, clusterIdentifier)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create asset from cronjob")

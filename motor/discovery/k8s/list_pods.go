@@ -59,7 +59,9 @@ func ListPods(
 	assets := []*asset.Asset{}
 	for i := range pods {
 		pod := pods[i]
-		od.Add(&pod)
+		if od != nil {
+			od.Add(&pod)
+		}
 		asset, err := createAssetFromObject(&pod, p.Runtime(), connection, clusterIdentifier)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create asset from pod")

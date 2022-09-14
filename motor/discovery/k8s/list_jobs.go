@@ -60,7 +60,9 @@ func ListJobs(
 	assets := []*asset.Asset{}
 	for i := range jobs {
 		job := jobs[i]
-		od.Add(&job)
+		if od != nil {
+			od.Add(&job)
+		}
 		asset, err := createAssetFromObject(&job, p.Runtime(), connection, clusterIdentifier)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create asset from job")

@@ -59,7 +59,9 @@ func ListReplicaSets(
 	assets := []*asset.Asset{}
 	for i := range replicaSets {
 		replicaSet := replicaSets[i]
-		od.Add(&replicaSet)
+		if od != nil {
+			od.Add(&replicaSet)
+		}
 		asset, err := createAssetFromObject(&replicaSet, p.Runtime(), connection, clusterIdentifier)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create asset from repicaset")
