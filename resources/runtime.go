@@ -99,7 +99,7 @@ func NewRuntime(registry *Registry, motor *motor.Motor) *Runtime {
 
 	return &Runtime{
 		Registry:  registry,
-		Observers: NewObservers(motor),
+		Observers: NewObservers(),
 		Motor:     motor,
 		cache:     &Cache{},
 	}
@@ -200,7 +200,42 @@ func (ctx *Runtime) CreateResourceWithAssetContext(name string, a *asset.Asset, 
 	// already holds, we do not need to create a new Rutnime and can attach it directly to the
 	// new resource. Otherwise, a new runtime is created, where the asset and provider are changed.
 	// We probably also need to do something about ctx.UpstreamConfig
-	panic("Unimplemented")
+	if p == nil {
+		p = ctx.Motor.Provider
+	}
+	nextCtx := ctx
+	if ctx.Motor.Provider != p || !isSameAsset(ctx.Asset, a) {
+		newCtx := *ctx
+		newCtx.Asset = a
+		if ctx.Motor.Provider != p {
+			m, err := motor.New(p)
+			if err != nil {
+				return nil, err
+			}
+			newCtx.Motor = m
+		}
+		nextCtx = &newCtx
+	}
+	return nextCtx.CreateResourceWithID(name, "", args...)
+}
+
+func isSameAsset(a *asset.Asset, b *asset.Asset) bool {
+	if a == b {
+		return true
+	}
+	if a.GetMrn() == b.GetMrn() {
+		return true
+	}
+	platformIds := map[string]struct{}{}
+	for _, p := range a.GetPlatformIds() {
+		platformIds[p] = struct{}{}
+	}
+	for _, p := range b.GetPlatformIds() {
+		if _, ok := platformIds[p]; ok {
+			return true
+		}
+	}
+	return false
 }
 
 // GetRawResource resource instance by name and id

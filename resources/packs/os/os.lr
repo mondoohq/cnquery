@@ -3,6 +3,10 @@ import "../core/core.lr"
 
 option go_package = "go.mondoo.com/cnquery/resources/packs/os"
 
+os.any {
+    os os
+}
+
 // Results of running a command on the system
 command {
   init(command string)

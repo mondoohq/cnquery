@@ -3,7 +3,9 @@ package os
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
+	"strings"
 
 	docker_types "github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -123,7 +125,7 @@ func (p *mqlDockerContainer) ProviderFor(resource string) (providers.Instance, e
 	// defer creating a provider.Instance instance (for example if its expensive) until
 	// it is needed
 	switch resource {
-	case "os.any":
+	case "os":
 		// Since we already changed the providers.Instance when creating the container,
 		// and it supports all the things needed by os, we can just return it
 		return p.MotorRuntime.Motor.Provider, nil
@@ -146,4 +148,13 @@ func dockerClient() (*client.Client, error) {
 	os.Setenv("DOCKER_API_VERSION", "1.26")
 	// Start new docker container
 	return client.NewClientWithOpts(client.FromEnv)
+}
+
+func (m *mqlOsAny) id() (string, error) {
+	ident := m.MotorRuntime.Asset.GetMrn()
+	if ident == "" {
+		ident = strings.Join(m.MotorRuntime.Asset.GetPlatformIds(), ",")
+	}
+
+	return fmt.Sprintf("os.any(%s)", ident), nil
 }
