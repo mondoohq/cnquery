@@ -517,6 +517,7 @@ func init() {
 			"!=" + string(types.Nil): {f: arrayNotNilV2},
 			"&&":                     {Compiler: compileLogicalArrayOp(types.ArrayLike, "&&")},
 			"||":                     {Compiler: compileLogicalArrayOp(types.ArrayLike, "||")},
+			"+":                      {Compiler: compileArrayOpArray("+"), f: tarrayConcatTarrayV2, Label: "+"},
 			// logical operations []<T> -- K
 			string(types.Any + "&&" + types.Bool):      {f: arrayAndBoolV2, Label: "&&"},
 			string(types.Any + "||" + types.Bool):      {f: arrayOrBoolV2, Label: "||"},

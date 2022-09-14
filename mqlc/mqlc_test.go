@@ -339,6 +339,22 @@ func TestCompiler_LogicalOps(t *testing.T) {
 	}
 }
 
+func TestCompiler_Arithmetics(t *testing.T) {
+	t.Run("concat arrays", func(t *testing.T) {
+		compileT(t, "[1,2] + [3]", func(res *llx.CodeBundle) {
+			require.NotEmpty(t, res.CodeV2)
+			require.NotEmpty(t, res.CodeV2.Blocks)
+			chunks := res.CodeV2.Blocks[0].Chunks
+			require.NotEmpty(t, chunks)
+
+			assert.Equal(t, llx.Chunk_PRIMITIVE, chunks[0].Call)
+			assert.Equal(t, llx.Chunk_FUNCTION, chunks[1].Call)
+			assert.Equal(t, "+", chunks[1].Id)
+			assert.Equal(t, 1, len(chunks[1].Function.Args))
+		})
+	})
+}
+
 func TestCompiler_OperatorPrecedence(t *testing.T) {
 	data := []struct {
 		code   string
