@@ -31,21 +31,25 @@ func compileResourceDefault(c *compiler, typ types.Type, ref uint64, id string, 
 		}
 	}
 
-	fieldinfo := resource.Fields[id]
-	if fieldinfo == nil {
+	fieldPath, fieldinfo, ok := c.findField(resource, id)
+	if !ok {
 		addFieldSuggestions(publicFieldsInfo(c, resource), id, c.Result)
 		return "", errors.New("cannot find field '" + id + "' in resource " + resource.Name)
 	}
 
-	c.addChunk(&llx.Chunk{
-		Call: llx.Chunk_FUNCTION,
-		Id:   id,
-		Function: &llx.Function{
-			Type:    fieldinfo.Type,
-			Binding: ref,
-			// no Args for field calls yet
-		},
-	})
+	lastRef := ref
+	for _, p := range fieldPath {
+		c.addChunk(&llx.Chunk{
+			Call: llx.Chunk_FUNCTION,
+			Id:   p,
+			Function: &llx.Function{
+				Type:    fieldinfo.Type,
+				Binding: lastRef,
+				// no Args for field calls yet
+			},
+		})
+		lastRef = c.tailRef()
+	}
 
 	return types.Type(fieldinfo.Type), nil
 }

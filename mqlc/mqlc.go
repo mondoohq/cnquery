@@ -747,6 +747,35 @@ func filterEmptyExpressions(expressions []*parser.Expression) []*parser.Expressi
 	return res
 }
 
+type fieldPath []string
+
+func (c *compiler) findField(resource *resources.ResourceInfo, fieldName string) (fieldPath, *resources.Field, bool) {
+	fieldInfo, ok := resource.Fields[fieldName]
+	if ok {
+		return fieldPath{fieldName}, fieldInfo, true
+	}
+
+	for _, f := range resource.Fields {
+		if f.IsEmbedded {
+			typ := types.Type(f.Type)
+			nextResource, ok := c.Schema.Resources[typ.ResourceName()]
+			if !ok {
+				continue
+			}
+			childFieldPath, fieldInfo, ok := c.findField(nextResource, fieldName)
+			if ok {
+				fp := make(fieldPath, len(childFieldPath)+1)
+				fp[0] = f.Name
+				for i, n := range childFieldPath {
+					fp[i+1] = n
+				}
+				return fp, fieldInfo, true
+			}
+		}
+	}
+	return nil, nil, false
+}
+
 // compile a bound identifier to its binding
 // example: user { name } , where name is compiled bound to the user
 // it will return false if it cannot bind the identifier
@@ -759,7 +788,7 @@ func (c *compiler) compileBoundIdentifier(id string, binding *variable, call *pa
 			return true, types.Nil, errors.New("cannot find resource that is called by '" + id + "' of type " + typ.Label())
 		}
 
-		fieldinfo, ok := resource.Fields[id]
+		fieldPath, fieldinfo, ok := c.findField(resource, id)
 		if ok {
 			if call != nil && len(call.Function) > 0 {
 				return true, types.Nil, errors.New("cannot call resource field with arguments yet")
@@ -785,14 +814,19 @@ func (c *compiler) compileBoundIdentifier(id string, binding *variable, call *pa
 				return true, typ, nil
 			}
 
-			c.addChunk(&llx.Chunk{
-				Call: llx.Chunk_FUNCTION,
-				Id:   id,
-				Function: &llx.Function{
-					Type:    fieldinfo.Type,
-					Binding: binding.ref,
-				},
-			})
+			lastRef := binding.ref
+			for _, p := range fieldPath {
+				c.addChunk(&llx.Chunk{
+					Call: llx.Chunk_FUNCTION,
+					Id:   p,
+					Function: &llx.Function{
+						Type:    fieldinfo.Type,
+						Binding: lastRef,
+					},
+				})
+				lastRef = c.tailRef()
+			}
+
 			return true, typ, nil
 		}
 	}

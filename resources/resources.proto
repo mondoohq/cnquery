@@ -5,9 +5,7 @@ option go_package = "go.mondoo.com/cnquery/resources";
 
 // BASIC DATATYPES
 
-message Schema {
-  map<string, ResourceInfo> resources = 3;
-}
+message Schema { map<string, ResourceInfo> resources = 3; }
 
 message ResourceID {
   string id = 1;
@@ -20,9 +18,7 @@ message TypedArg {
   bool optional = 3;
 }
 
-message Init {
-  repeated TypedArg args = 1;
-}
+message Init { repeated TypedArg args = 1; }
 
 message ResourceInfo {
   string id = 1;
