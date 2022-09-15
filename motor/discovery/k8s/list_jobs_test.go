@@ -119,7 +119,7 @@ func TestListJobs(t *testing.T) {
 	pCfg := &providers.Config{}
 	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
 	ownershipDir.Add(&parent)
-	assets, err := ListJobs(p, pCfg, clusterIdentifier, nil, ownershipDir)
+	assets, err := ListJobs(p, pCfg, clusterIdentifier, nil, make(map[string][]K8sResourceIdentifier), ownershipDir)
 	require.NoError(t, err)
 	require.Equal(t, []string{k8s.NewPlatformWorkloadId(clusterIdentifier,
 		strings.ToLower(parent.Kind),
@@ -143,4 +143,103 @@ func TestListJobs(t *testing.T) {
 	assert.Equal(t, "k8s-job", assets[0].Platform.Name)
 	assert.ElementsMatch(t, []string{"k8s", "k8s-workload"}, assets[0].Platform.Family)
 	assert.Equal(t, nss[0].Name, assets[0].Labels["namespace"])
+}
+
+func TestListJobs_Filter(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	p := k8s.NewMockKubernetesProvider(mockCtrl)
+
+	// called for each Job
+	p.EXPECT().Runtime().Return("k8s-cluster")
+
+	// Seed Jobs
+	jobs := []batchv1.Job{
+		{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Job",
+				APIVersion: "batch/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "nginx",
+				Namespace: "default",
+				UID:       "123",
+			},
+			Spec: batchv1.JobSpec{
+				Template: corev1.PodTemplateSpec{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: map[string]string{
+							"app": "nginx",
+						},
+					},
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{{Image: "nginx:1.22.0-alpine"}},
+					},
+				},
+			},
+		},
+		{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Job",
+				APIVersion: "batch/v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "nginx2",
+				Namespace: "default",
+				UID:       "456",
+			},
+			Spec: batchv1.JobSpec{
+				Template: corev1.PodTemplateSpec{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: map[string]string{
+							"app": "nginx",
+						},
+					},
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{{Image: "nginx:1.22.0-alpine"}},
+					},
+				},
+			},
+		},
+	}
+
+	p.EXPECT().Job(jobs[0].Namespace, jobs[0].Name).Return(&jobs[0], nil)
+
+	expectedAssetNames := []string{
+		jobs[0].Namespace + "/" + jobs[0].Name,
+	}
+
+	clusterIdentifier := "//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc"
+
+	expectedAssetPlatformIds := []string{
+		clusterIdentifier + "/namespace/" + jobs[0].Namespace + "/jobs/name/" + jobs[0].Name,
+	}
+
+	pCfg := &providers.Config{}
+	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
+	resFilter := map[string][]K8sResourceIdentifier{
+		"job": {
+			{Type: "job", Name: jobs[0].Name, Namespace: jobs[0].Namespace},
+		},
+	}
+	assets, err := ListJobs(p, pCfg, clusterIdentifier, nil, resFilter, ownershipDir)
+	require.NoError(t, err)
+
+	var assetNames []string
+	for _, a := range assets {
+		assetNames = append(assetNames, a.Name)
+	}
+
+	var assetPlatformIds []string
+	for _, a := range assets {
+		assetPlatformIds = append(assetPlatformIds, a.PlatformIds[0])
+	}
+
+	assert.ElementsMatch(t, expectedAssetNames, assetNames)
+	assert.ElementsMatch(t, expectedAssetPlatformIds, assetPlatformIds)
+	assert.Equal(t, "batch/v1", assets[0].Platform.Version)
+	assert.Equal(t, "k8s-job", assets[0].Platform.Name)
+	assert.ElementsMatch(t, []string{"k8s", "k8s-workload"}, assets[0].Platform.Family)
+	assert.Equal(t, jobs[0].Namespace, assets[0].Labels["namespace"])
 }

@@ -11,32 +11,58 @@ import (
 )
 
 // ListDaemonSets list all daemonsets in the cluster.
-func ListDaemonSets(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string, namespaceFilter []string, od *k8s.PlatformIdOwnershipDirectory) ([]*asset.Asset, error) {
-	namespaces, err := p.Namespaces()
-	if err != nil {
-		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
-	}
-
+func ListDaemonSets(
+	p k8s.KubernetesProvider,
+	connection *providers.Config,
+	clusterIdentifier string,
+	namespaceFilter []string,
+	resFilter map[string][]K8sResourceIdentifier,
+	od *k8s.PlatformIdOwnershipDirectory,
+) ([]*asset.Asset, error) {
 	daemonSets := []appsv1.DaemonSet{}
-	for i := range namespaces {
-		namespace := namespaces[i]
-		if !isIncluded(namespace.Name, namespaceFilter) {
-			log.Info().Str("namespace", namespace.Name).Strs("filter", namespaceFilter).Msg("namespace not included")
-			continue
+
+	if len(resFilter) > 0 {
+		// If there is a resources filter we should only retrieve the daemonsets that are in the filter.
+		if len(resFilter["daemonset"]) == 0 {
+			return []*asset.Asset{}, nil
 		}
 
-		daemonSetsPerNamespace, err := p.DaemonSets(namespace)
+		for _, res := range resFilter["daemonset"] {
+			ds, err := p.DaemonSet(res.Namespace, res.Name)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to get daemonset %s/%s", res.Namespace, res.Name)
+			}
+
+			daemonSets = append(daemonSets, *ds)
+		}
+	} else {
+		namespaces, err := p.Namespaces()
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to list daemonsets")
+			return nil, errors.Wrap(err, "could not list kubernetes namespaces")
 		}
 
-		daemonSets = append(daemonSets, daemonSetsPerNamespace...)
+		for i := range namespaces {
+			namespace := namespaces[i]
+			if !isIncluded(namespace.Name, namespaceFilter) {
+				log.Info().Str("namespace", namespace.Name).Strs("filter", namespaceFilter).Msg("namespace not included")
+				continue
+			}
+
+			daemonSetsPerNamespace, err := p.DaemonSets(namespace)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to list daemonsets")
+			}
+
+			daemonSets = append(daemonSets, daemonSetsPerNamespace...)
+		}
 	}
 
 	assets := []*asset.Asset{}
 	for i := range daemonSets {
 		daemonSet := daemonSets[i]
-		od.Add(&daemonSet)
+		if od != nil {
+			od.Add(&daemonSet)
+		}
 		asset, err := createAssetFromObject(&daemonSet, p.Runtime(), connection, clusterIdentifier)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create asset from daemonset")
