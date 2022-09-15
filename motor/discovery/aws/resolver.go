@@ -68,13 +68,14 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		name = AssembleIntegrationName(alias, info.ID)
 	}
 
-	resolved = append(resolved, &asset.Asset{
+	resolvedRoot := &asset.Asset{
 		PlatformIds: []string{identifier},
 		Name:        name,
 		Platform:    pf,
 		Connections: []*providers.Config{tc}, // pass-in the current config
 		State:       asset.State_STATE_ONLINE,
-	})
+	}
+	resolved = append(resolved, resolvedRoot)
 
 	// filter assets
 	discoverFilter := map[string]string{}
@@ -98,6 +99,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 			}
 			log.Debug().Int("instances", len(assetList)).Msg("completed ssm instance search")
 			for i := range assetList {
+				assetList[i].RelatedAssets = append(assetList[i].RelatedAssets, resolvedRoot)
 				log.Debug().Str("name", assetList[i].Name).Msg("resolved ssm instance")
 				instancesPlatformIdsMap[assetList[i].PlatformIds[0]] = assetList[i]
 			}
@@ -120,6 +122,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		log.Debug().Int("instances", len(assetList)).Bool("insecure", r.Insecure).Msg("completed instance search")
 		for i := range assetList {
 			a := assetList[i]
+			a.RelatedAssets = append(a.RelatedAssets, resolvedRoot)
 			log.Debug().Str("name", a.Name).Msg("resolved ec2 instance")
 			id := a.PlatformIds[0]
 			existing, ok := instancesPlatformIdsMap[id]
