@@ -72,6 +72,12 @@ resources:
     platform:
       name:
       - kubernetes
+  k8s.kubelet:
+    fields:
+      configFile: {}
+      process: {}
+      options: {}
+    min_mondoo_version: 6.17.0
   k8s.configmap:
     fields:
       annotations: {}
