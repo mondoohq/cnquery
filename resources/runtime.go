@@ -64,9 +64,6 @@ func (c *Cache) Delete(key string) { c.Map.Delete(key) }
 // to store additional credentials so that resource can use those for
 // their resources.
 type UpstreamConfig struct {
-	AssetMrn    string
-	SpaceMrn    string
-	Collector   string
 	ApiEndpoint string
 	Plugins     []ranger.ClientPlugin
 	Incognito   bool
