@@ -53,7 +53,7 @@ prep/tools:
 	command -v protoc-gen-rangerrpc-swagger || go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc-swagger@latest
 	# additional helper
 	command -v gotestsum || go install gotest.tools/gotestsum@latest
-	command -v golangci-lint || go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	command -v golangci-lint || go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
 
 #   🌙 MQL/MOTOR   #

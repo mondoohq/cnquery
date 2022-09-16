@@ -32,7 +32,7 @@ type VaultClient struct {
 	prefix     string
 }
 
-func NewVaultClient(addr string, client ranger.HTTPClient) (*VaultClient, error) {
+func NewVaultClient(addr string, client ranger.HTTPClient, plugins ...ranger.ClientPlugin) (*VaultClient, error) {
 	base, err := url.Parse(ranger.SanitizeUrl(addr))
 	if err != nil {
 		return nil, err
@@ -43,10 +43,12 @@ func NewVaultClient(addr string, client ranger.HTTPClient) (*VaultClient, error)
 		return nil, err
 	}
 
-	return &VaultClient{
+	serviceClient := &VaultClient{
 		httpclient: client,
 		prefix:     base.ResolveReference(u).String(),
-	}, nil
+	}
+	serviceClient.AddPlugins(plugins...)
+	return serviceClient, nil
 }
 func (c *VaultClient) About(ctx context.Context, in *Empty) (*VaultInfo, error) {
 	out := new(VaultInfo)
