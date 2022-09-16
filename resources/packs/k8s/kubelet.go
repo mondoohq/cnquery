@@ -98,6 +98,11 @@ func (k *mqlK8sKubelet) getOptions(kubeletParameters map[string]interface{}, pat
 		return nil, fmt.Errorf("error applying precedence to KubeletConfig: %v", err)
 	}
 
+	err = parseDeprecatedFlagsIntoConfig(options, kubeletParameters)
+	if err != nil {
+		return nil, fmt.Errorf("error applying precedence for deprecated flags to KubeletConfig: %v", err)
+	}
+
 	return options, nil
 }
 
