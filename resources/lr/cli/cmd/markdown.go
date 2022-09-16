@@ -228,11 +228,12 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lr.Resource, schema *res
 		builder.WriteString("\n\n")
 	}
 
+	inits := resource.GetInitFields()
 	// generate the constructor
-	if len(resource.Body.Inits) > 0 {
+	if len(inits) > 0 {
 		builder.WriteString("**Init**\n\n")
-		for j := range resource.Body.Inits {
-			init := resource.Body.Inits[j]
+		for j := range inits {
+			init := inits[j]
 
 			for a := range init.Args {
 				arg := init.Args[a]
@@ -249,15 +250,23 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lr.Resource, schema *res
 		builder.WriteString("\n\n")
 	}
 
+	basicFields := []*lr.BasicField{}
+	comments := [][]string{}
+	for _, f := range resource.Body.Fields {
+		if f.BasicField != nil {
+			basicFields = append(basicFields, f.BasicField)
+			comments = append(comments, f.Comments)
+		}
+	}
 	// generate the fields markdown table
 	// NOTE: list types may not have any fields
-	if len(resource.Body.Fields) > 0 {
+	if len(basicFields) > 0 {
 		builder.WriteString("**Fields**\n\n")
 		rows := [][]string{}
 
-		for k := range resource.Body.Fields {
-			field := resource.Body.Fields[k]
-			rows = append(rows, []string{field.ID, renderLrType(field.Type, l.resourceHrefMap), strings.Join(sanitizeComments(field.Comments), ", ")})
+		for k := range basicFields {
+			field := basicFields[k]
+			rows = append(rows, []string{field.ID, renderLrType(field.Type, l.resourceHrefMap), strings.Join(sanitizeComments(comments[k]), ", ")})
 		}
 
 		table := tablewriter.NewWriter(builder)

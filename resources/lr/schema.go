@@ -25,12 +25,13 @@ func Schema(ast *LR) (*resources.Schema, error) {
 }
 
 func resourceInit(r *Resource, fields map[string]*resources.Field, ast *LR) (*resources.Init, error) {
-	if len(r.Body.Inits) == 0 {
+	inits := r.GetInitFields()
+	if len(inits) == 0 {
 		return nil, nil
 	}
 
 	args := []*resources.TypedArg{}
-	i := r.Body.Inits[0]
+	i := inits[0]
 	isOptional := false
 	for _, arg := range i.Args {
 		typ := arg.Type.Type(ast)
@@ -66,21 +67,25 @@ func resourceFields(r *Resource, ast *LR) map[string]*resources.Field {
 	fields := make(map[string]*resources.Field)
 
 	for _, f := range r.Body.Fields {
+		if f.BasicField == nil {
+			continue
+		}
 		refs := []string{}
 
-		if f.Args != nil && len(f.Args.List) > 0 {
-			for _, arg := range f.Args.List {
+		if f.BasicField.Args != nil && len(f.BasicField.Args.List) > 0 {
+			for _, arg := range f.BasicField.Args.List {
 				refs = append(refs, "\""+arg.Type+"\"")
 			}
 		}
 
-		fields[f.ID] = &resources.Field{
-			Name:        f.ID,
-			Type:        string(f.Type.Type(ast)),
-			IsMandatory: f.isStatic(),
+		fields[f.BasicField.ID] = &resources.Field{
+			Name:        f.BasicField.ID,
+			Type:        string(f.BasicField.Type.Type(ast)),
+			IsMandatory: f.BasicField.isStatic(),
 			Title:       r.title,
 			Desc:        r.desc,
 			Refs:        refs,
+			IsEmbedded:  f.BasicField.isEmbedded,
 		}
 	}
 

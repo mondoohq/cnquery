@@ -96,11 +96,19 @@ type SimpleType struct {
 // ResourceDef carrying the definition of the resource
 // nolint: govet
 type ResourceDef struct {
-	Inits  []*Init  `{ ( @@ `
-	Fields []*Field `| @@ ) }`
+	Fields []*Field `{ @@ }`
 }
 
-// Init calls
+// ResourceDef carrying the definition of the field
+// nolint: govet
+type Field struct {
+	Comments   []string    `{ @Comment }`
+	Init       *Init       `( @@ `
+	Embeddable *Embeddable `| @@`
+	BasicField *BasicField `| @@ )?`
+}
+
+// Init field definition
 // nolint: govet
 type Init struct {
 	Args []TypedArg `'init' '(' @@ { ',' @@ } ')'`
@@ -114,13 +122,20 @@ type TypedArg struct {
 	Type     Type   ` @@`
 }
 
-// Field definition of a resource
+// Basic field definition of a resource
 // nolint: govet
-type Field struct {
-	Comments []string   `{ @Comment }`
-	ID       string     `@Ident?`
-	Args     *FieldArgs `[ '(' @@ ')' ]`
-	Type     Type       `[ @@ ]`
+type BasicField struct {
+	ID         string     `@Ident?`
+	Args       *FieldArgs `[ '(' @@ ')' ]`
+	Type       Type       `[ @@ ]`
+	isEmbedded bool
+}
+
+// Field definition of a embeddable field resource
+// nolint: govet
+type Embeddable struct {
+	Type  string  `"embed" @Ident { @'.' @Ident }`
+	Alias *string `("as" @Ident)?`
 }
 
 // Args list of arguments
@@ -151,6 +166,16 @@ func (l *lrLexer) Symbols() map[string]rune {
 		"RawString": scanner.RawString,
 		"Comment":   scanner.Comment,
 	}
+}
+
+func (r *Resource) GetInitFields() []*Init {
+	inits := []*Init{}
+	for _, f := range r.Body.Fields {
+		if f.Init != nil {
+			inits = append(inits, f.Init)
+		}
+	}
+	return inits
 }
 
 func extractComments(raw []string) (string, string) {
@@ -199,7 +224,7 @@ func Parse(input string) (*LR, error) {
 		arr := resource.Body.Fields
 		ptr := len(arr)
 		for j := 0; j < ptr; j++ {
-			if arr[j].ID == "" {
+			if arr[j].BasicField == nil && arr[j].Embeddable == nil && arr[j].Init == nil {
 				arr[j], arr[ptr-1] = arr[ptr-1], arr[j]
 				ptr--
 			}

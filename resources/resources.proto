@@ -46,4 +46,5 @@ message Field {
   bool is_private = 22;
   string min_mondoo_version = 23;
   bool is_implicit_resource = 24;
+  bool is_embedded = 25;
 }
