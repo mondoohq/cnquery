@@ -404,6 +404,5 @@ func (p *Primitive) Size() int {
 // bytes field is serialized (for example for an empty string), that field is nil.
 func (p *Primitive) IsNil() bool {
 	return p == nil ||
-		p.Type == string(types.Nil) ||
-		(p.Value == nil && p.Map == nil && p.Array == nil && p.Type != string(types.String))
+		p.Type == string(types.Nil)
 }

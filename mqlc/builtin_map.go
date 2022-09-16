@@ -42,29 +42,6 @@ func compileMapWhere(c *compiler, typ types.Type, ref uint64, id string, call *p
 	blockCompiler.addArgumentPlaceholder(valueType, bindingChecksum)
 	blockCompiler.vars.add("value", variable{ref: blockCompiler.tailRef(), typ: valueType})
 
-	// 	&llx.Code{
-	// 	Id:         "binding",
-	// 	Parameters: 2,
-	// 	Checksums: map[int32]string{
-	// 		// we must provide the first chunk, which is a reference to the caller
-	// 		// and which will always be number 1
-	// 		// Additionally we are setting the second checksum here as well as a place-
-	// 		// holder for the second value.
-	// 		1: bindingChecksum,
-	// 		2: bindingChecksum,
-	// 	},
-	// 	Code: []*llx.Chunk{
-	// 		{
-	// 			Call:      llx.Chunk_PRIMITIVE,
-	// 			Primitive: &llx.Primitive{Type: string(keyType)},
-	// 		},
-	// 		{
-	// 			Call:      llx.Chunk_PRIMITIVE,
-	// 			Primitive: &llx.Primitive{Type: string(valueType)},
-	// 		},
-	// 	},
-	// }, &binding{Type: types.Type(typ), Ref: 1})
-
 	err := blockCompiler.compileExpressions([]*parser.Expression{arg.Value})
 	c.Result.Suggestions = append(c.Result.Suggestions, blockCompiler.Result.Suggestions...)
 	if err != nil {
