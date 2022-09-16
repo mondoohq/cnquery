@@ -461,6 +461,8 @@ stat.isdir = true
 stat.isdir = true
 
 [files."/proc/sys/net/ipv4/ip_forward"]
+stat.isdir=false
+stat.mode=420
 content = "1"
 
 [commands."mount"]
