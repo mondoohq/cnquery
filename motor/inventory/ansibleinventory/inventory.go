@@ -32,6 +32,15 @@ type All struct {
 	Children []string
 }
 
+func Parse(data []byte) (*Inventory, error) {
+	inventory := Inventory{}
+	err := inventory.Decode(data)
+	if err != nil {
+		return nil, err
+	}
+	return &inventory, nil
+}
+
 type Inventory struct {
 	Meta Meta
 	All  All
