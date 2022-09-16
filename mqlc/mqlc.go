@@ -749,10 +749,10 @@ func filterEmptyExpressions(expressions []*parser.Expression) []*parser.Expressi
 
 type fieldPath []string
 
-func (c *compiler) findField(resource *resources.ResourceInfo, fieldName string) (fieldPath, *resources.Field, bool) {
+func (c *compiler) findField(resource *resources.ResourceInfo, fieldName string) (fieldPath, []*resources.Field, bool) {
 	fieldInfo, ok := resource.Fields[fieldName]
 	if ok {
-		return fieldPath{fieldName}, fieldInfo, true
+		return fieldPath{fieldName}, []*resources.Field{fieldInfo}, true
 	}
 
 	for _, f := range resource.Fields {
@@ -762,14 +762,19 @@ func (c *compiler) findField(resource *resources.ResourceInfo, fieldName string)
 			if !ok {
 				continue
 			}
-			childFieldPath, fieldInfo, ok := c.findField(nextResource, fieldName)
+			childFieldPath, childFieldInfos, ok := c.findField(nextResource, fieldName)
 			if ok {
 				fp := make(fieldPath, len(childFieldPath)+1)
+				fieldInfos := make([]*resources.Field, len(childFieldPath)+1)
 				fp[0] = f.Name
+				fieldInfos[0] = f
 				for i, n := range childFieldPath {
 					fp[i+1] = n
 				}
-				return fp, fieldInfo, true
+				for i, f := range childFieldInfos {
+					fieldInfos[i+1] = f
+				}
+				return fp, fieldInfos, true
 			}
 		}
 	}
@@ -788,9 +793,11 @@ func (c *compiler) compileBoundIdentifier(id string, binding *variable, call *pa
 			return true, types.Nil, errors.New("cannot find resource that is called by '" + id + "' of type " + typ.Label())
 		}
 
-		fieldPath, fieldinfo, ok := c.findField(resource, id)
+		fieldPath, fieldinfos, ok := c.findField(resource, id)
 		if ok {
-			if call != nil && len(call.Function) > 0 {
+			fieldinfo := fieldinfos[len(fieldinfos)-1]
+
+			if call != nil && len(call.Function) > 0 && !fieldinfo.IsImplicitResource {
 				return true, types.Nil, errors.New("cannot call resource field with arguments yet")
 			}
 
@@ -802,10 +809,33 @@ func (c *compiler) compileBoundIdentifier(id string, binding *variable, call *pa
 			typ := types.Type(fieldinfo.Type)
 			if fieldinfo.IsImplicitResource {
 				name := typ.ResourceName()
-				c.addChunk(&llx.Chunk{
-					Call: llx.Chunk_FUNCTION,
-					Id:   name,
-				})
+
+				if binding.ref == 0 {
+					c.addChunk(&llx.Chunk{
+						Call: llx.Chunk_FUNCTION,
+						Id:   name,
+					})
+				} else {
+					f := &llx.Function{
+						Type: string(types.Resource(name)),
+						Args: []*llx.Primitive{
+							llx.RefPrimitiveV2(binding.ref),
+						},
+					}
+					if call != nil && len(call.Function) > 0 {
+						args, err := c.resourceArgs(resource, call.Function)
+						if err != nil {
+							return true, types.Nil, err
+						}
+						f.Args = append(f.Args, args...)
+					}
+
+					c.addChunk(&llx.Chunk{
+						Call:     llx.Chunk_FUNCTION,
+						Id:       "createResource",
+						Function: f,
+					})
+				}
 
 				// the new ID is now the full resource call, which is not what the
 				// field is originally labeled when we get it, so we have to fix it

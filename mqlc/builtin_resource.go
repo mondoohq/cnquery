@@ -31,19 +31,19 @@ func compileResourceDefault(c *compiler, typ types.Type, ref uint64, id string, 
 		}
 	}
 
-	fieldPath, fieldinfo, ok := c.findField(resource, id)
+	fieldPath, fieldinfos, ok := c.findField(resource, id)
 	if !ok {
 		addFieldSuggestions(publicFieldsInfo(c, resource), id, c.Result)
 		return "", errors.New("cannot find field '" + id + "' in resource " + resource.Name)
 	}
 
 	lastRef := ref
-	for _, p := range fieldPath {
+	for i, p := range fieldPath {
 		c.addChunk(&llx.Chunk{
 			Call: llx.Chunk_FUNCTION,
 			Id:   p,
 			Function: &llx.Function{
-				Type:    fieldinfo.Type,
+				Type:    fieldinfos[i].Type,
 				Binding: lastRef,
 				// no Args for field calls yet
 			},
@@ -51,7 +51,7 @@ func compileResourceDefault(c *compiler, typ types.Type, ref uint64, id string, 
 		lastRef = c.tailRef()
 	}
 
-	return types.Type(fieldinfo.Type), nil
+	return types.Type(fieldinfos[len(fieldinfos)-1].Type), nil
 }
 
 // FunctionSignature of any function type

@@ -643,13 +643,26 @@ func (b *blockExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*
 	return nil, 0, err
 }
 
-func (b *blockExecutor) createResource(name string, f *Function, ref uint64) (*RawData, uint64, error) {
+type rscIface interface {
+	MqlResource() *resources.Resource
+}
+
+func (b *blockExecutor) createResource(name string, binding uint64, f *Function, ref uint64) (*RawData, uint64, error) {
+	rt := b.ctx.runtime
+	if binding != 0 {
+		res, dref, err := b.resolveRef(binding, ref)
+		if dref != 0 || err != nil {
+			return res, dref, err
+		}
+		mqlResource := res.Value.(rscIface).MqlResource()
+		rt = mqlResource.MotorRuntime
+	}
 	args, rref, err := args2resourceargsV2(b, ref, f.Args)
 	if err != nil || rref != 0 {
 		return nil, rref, err
 	}
 
-	resource, err := b.ctx.runtime.CreateResource(name, args...)
+	resource, err := rt.CreateResource(name, args...)
 	if err != nil {
 		// in case it's not something that requires later loading, store the error
 		// so that consecutive steps can retrieve it cached
@@ -694,7 +707,7 @@ func (b *blockExecutor) runGlobalFunction(chunk *Chunk, f *Function, ref uint64)
 		return res, dref, err
 	}
 
-	return b.createResource(chunk.Id, f, ref)
+	return b.createResource(chunk.Id, 0, f, ref)
 }
 
 // connect references, calling `dst` if `src` is updated
