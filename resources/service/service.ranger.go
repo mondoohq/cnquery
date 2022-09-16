@@ -35,7 +35,7 @@ type MQLClient struct {
 	prefix     string
 }
 
-func NewMQLClient(addr string, client ranger.HTTPClient) (*MQLClient, error) {
+func NewMQLClient(addr string, client ranger.HTTPClient, plugins ...ranger.ClientPlugin) (*MQLClient, error) {
 	base, err := url.Parse(ranger.SanitizeUrl(addr))
 	if err != nil {
 		return nil, err
@@ -46,10 +46,12 @@ func NewMQLClient(addr string, client ranger.HTTPClient) (*MQLClient, error) {
 		return nil, err
 	}
 
-	return &MQLClient{
+	serviceClient := &MQLClient{
 		httpclient: client,
 		prefix:     base.ResolveReference(u).String(),
-	}, nil
+	}
+	serviceClient.AddPlugins(plugins...)
+	return serviceClient, nil
 }
 func (c *MQLClient) ListResources(ctx context.Context, in *Empty) (*ResourceList, error) {
 	out := new(ResourceList)

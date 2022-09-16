@@ -31,7 +31,7 @@ type AdvisoryScannerClient struct {
 	prefix     string
 }
 
-func NewAdvisoryScannerClient(addr string, client ranger.HTTPClient) (*AdvisoryScannerClient, error) {
+func NewAdvisoryScannerClient(addr string, client ranger.HTTPClient, plugins ...ranger.ClientPlugin) (*AdvisoryScannerClient, error) {
 	base, err := url.Parse(ranger.SanitizeUrl(addr))
 	if err != nil {
 		return nil, err
@@ -42,10 +42,12 @@ func NewAdvisoryScannerClient(addr string, client ranger.HTTPClient) (*AdvisoryS
 		return nil, err
 	}
 
-	return &AdvisoryScannerClient{
+	serviceClient := &AdvisoryScannerClient{
 		httpclient: client,
 		prefix:     base.ResolveReference(u).String(),
-	}, nil
+	}
+	serviceClient.AddPlugins(plugins...)
+	return serviceClient, nil
 }
 func (c *AdvisoryScannerClient) AnalyseAsset(ctx context.Context, in *AnalyseAssetRequest) (*VulnReport, error) {
 	out := new(VulnReport)
