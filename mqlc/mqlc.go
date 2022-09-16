@@ -823,7 +823,11 @@ func (c *compiler) compileBoundIdentifier(id string, binding *variable, call *pa
 						},
 					}
 					if call != nil && len(call.Function) > 0 {
-						args, err := c.resourceArgs(resource, call.Function)
+						realResource, ok := c.Schema.Resources[typ.ResourceName()]
+						if !ok {
+							return true, types.Nil, errors.New("could not find resource " + typ.ResourceName())
+						}
+						args, err := c.resourceArgs(realResource, call.Function)
 						if err != nil {
 							return true, types.Nil, err
 						}
