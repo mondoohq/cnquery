@@ -3,10 +3,6 @@ import "../core/core.lr"
 
 option go_package = "go.mondoo.com/cnquery/resources/packs/os"
 
-os.any {
-    os os
-}
-
 // Results of running a command on the system
 command {
   init(command string)
@@ -186,6 +182,39 @@ machine.chassis {
   assetTag string
 }
 
+os.base {
+  // Pretty Hostname on Linux / Device name on Windows
+  name() string
+  // ENV variable contents
+  env() map[string]string
+  // PATH variable contents
+  path() []string
+  // Current uptime
+  uptime() time
+  // List of available OS updates
+  updates() []os.update
+  // Indicates if a reboot is pending
+  rebootpending() bool
+  // Hostname for this OS
+  hostname() string
+
+  groups() core.groups
+  users() core.users
+
+  embed machine
+}
+
+os.base.group {
+    name() string
+}
+
+os.linux {
+    embed os.base as base
+
+    iptables() iptables
+    ip6tables() ip6tables
+}
+
 // Operating system information
 os {
   // Pretty Hostname on Linux / Device name on Windows
@@ -276,6 +305,8 @@ docker.image {
 
 // Docker container
 docker.container {
+  embed os.linux as os
+
   // Container ID
   id string
   // Container Command

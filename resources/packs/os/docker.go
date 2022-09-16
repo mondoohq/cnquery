@@ -3,15 +3,13 @@ package os
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
-	"strings"
 
 	docker_types "github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
-	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/container"
 	"go.mondoo.com/cnquery/motor/providers/local"
+	"go.mondoo.com/cnquery/resources"
 )
 
 func (p *mqlDocker) id() (string, error) {
@@ -120,17 +118,8 @@ func (p *mqlDocker) GetContainers() ([]interface{}, error) {
 	return container, nil
 }
 
-func (p *mqlDockerContainer) ProviderFor(resource string) (providers.Instance, error) {
-	// ProviderFor("os.any") will get called if os.any is accessed. This allows us to
-	// defer creating a provider.Instance instance (for example if its expensive) until
-	// it is needed
-	switch resource {
-	case "os":
-		// Since we already changed the providers.Instance when creating the container,
-		// and it supports all the things needed by os, we can just return it
-		return p.MotorRuntime.Motor.Provider, nil
-	}
-	return nil, errors.New("no provider")
+func (p *mqlDockerContainer) GetOs() (resources.ResourceType, error) {
+	return p.MotorRuntime.CreateResource("os.linux")
 }
 
 func (p *mqlDockerImage) id() (string, error) {
@@ -148,13 +137,4 @@ func dockerClient() (*client.Client, error) {
 	os.Setenv("DOCKER_API_VERSION", "1.26")
 	// Start new docker container
 	return client.NewClientWithOpts(client.FromEnv)
-}
-
-func (m *mqlOsAny) id() (string, error) {
-	ident := m.MotorRuntime.Asset.GetMrn()
-	if ident == "" {
-		ident = strings.Join(m.MotorRuntime.Asset.GetPlatformIds(), ",")
-	}
-
-	return fmt.Sprintf("os.any(%s)", ident), nil
 }
