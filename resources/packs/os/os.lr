@@ -205,7 +205,9 @@ os.base {
 }
 
 os.base.group {
+    init(gid int)
     name() string
+    gid int
 }
 
 os.linux {

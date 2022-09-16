@@ -136,6 +136,11 @@ func (ctx *Registry) AddResourceInfo(info *ResourceInfo) error {
 	}
 
 	ctx.ensureResourceChain(name, info.Private)
+
+	if info.Name == "user" {
+		ctx.Resources["os.base.user"] = ctx.Resources["user"]
+		ctx.ensureResourceChain("os.base.user", info.Private)
+	}
 	return nil
 }
 
