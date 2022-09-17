@@ -62,6 +62,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.27.9
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.13
 	github.com/aws/smithy-go v1.12.1
+	github.com/c-bata/go-prompt v0.2.6
+	github.com/charmbracelet/bubbles v0.14.0
+	github.com/charmbracelet/bubbletea v0.22.1
 	github.com/cockroachdb/errors v1.9.0
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/docker/cli v20.10.17+incompatible
@@ -90,6 +93,7 @@ require (
 	github.com/knqyf263/go-rpmdb v0.0.0-20220719122909-d637bcc36860
 	github.com/lithammer/fuzzysearch v1.1.5
 	github.com/masterzen/winrm v0.0.0-20220513085036-69f69afcd9e9
+	github.com/mattn/go-isatty v0.0.16
 	github.com/microsoft/kiota-abstractions-go v0.8.2
 	github.com/microsoft/kiota-authentication-azure-go v0.3.1
 	github.com/microsoft/kiota-serialization-json-go v0.5.5
@@ -105,12 +109,14 @@ require (
 	github.com/packethost/packngo v0.25.0
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.13.5
+	github.com/pkg/term v1.2.0-beta.2
 	github.com/rs/zerolog v1.27.0
 	github.com/segmentio/fasthash v1.0.3
 	github.com/segmentio/ksuid v1.0.4
 	github.com/sethvargo/go-password v0.2.0
 	github.com/spf13/afero v1.9.2
 	github.com/spf13/cobra v1.5.0
+	github.com/spf13/pflag v1.0.6-0.20201009195203-85dd5c8bc61c
 	github.com/spf13/viper v1.12.0
 	github.com/stretchr/testify v1.8.0
 	github.com/toravir/csd v0.0.0-20200911003203-13ae77ad849c
@@ -171,6 +177,7 @@ require (
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/ashanbrown/forbidigo v1.3.0 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
+	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.18 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.12 // indirect
@@ -193,10 +200,12 @@ require (
 	github.com/cenkalti/backoff/v3 v3.0.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/charithe/durationcheck v0.0.9 // indirect
+	github.com/charmbracelet/lipgloss v0.5.0 // indirect
 	github.com/chavacava/garif v0.0.0-20220630083739-93517212f375 // indirect
 	github.com/cjlapao/common-go v0.0.25 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20211118104740-dabe8e521a4f // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
+	github.com/containerd/console v1.0.3 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.12.0 // indirect
 	github.com/creack/pty v1.1.11 // indirect
 	github.com/curioswitch/go-reassign v0.1.2 // indirect
@@ -325,9 +334,10 @@ require (
 	github.com/matoous/godox v0.0.0-20210227103229-6504466cf951 // indirect
 	github.com/mattn/go-ciede2000 v0.0.0-20170301095244-782e8c62fec3 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mattn/go-sqlite3 v1.14.13 // indirect
+	github.com/mattn/go-tty v0.0.3 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/mbilski/exhaustivestruct v1.2.0 // indirect
 	github.com/mgechev/revive v1.2.3 // indirect
@@ -342,6 +352,9 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/moricho/tparallel v0.2.1 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
+	github.com/muesli/ansi v0.0.0-20211018074035-2e021307bc4b // indirect
+	github.com/muesli/cancelreader v0.2.2 // indirect
+	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nakabonne/nestif v0.3.1 // indirect
 	github.com/nbutton23/zxcvbn-go v0.0.0-20210217022336-fa2cb2858354 // indirect
@@ -386,7 +399,6 @@ require (
 	github.com/sourcegraph/go-diff v0.6.1 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
-	github.com/spf13/pflag v1.0.6-0.20201009195203-85dd5c8bc61c // indirect
 	github.com/ssgreg/nlreturn/v2 v2.2.1 // indirect
 	github.com/stbenjam/no-sprintf-host-port v0.1.1 // indirect
 	github.com/stretchr/objx v0.4.0 // indirect
