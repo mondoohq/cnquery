@@ -25,7 +25,7 @@ LDFLAGSDIST=-tags production -ldflags "-s -w -X go.mondoo.com/cnquery.Version=${
 
 .PHONY: info/ldflags
 info/ldflags:
-	$(info go run ${LDFLAGS} apps/mondoo/mondoo.go)
+	$(info go run ${LDFLAGS} apps/cnquery/cnquery.go)
 	@:
 
 #   🧹 CLEAN   #
@@ -198,6 +198,14 @@ mqlc: | llx mqlc/test
 
 mqlc/test:
 	go test -timeout 5s $(shell go list ./mqlc/... | grep -v '/vendor/')
+
+#   🏗 Binary   #
+
+.PHONY: cnquery/install
+cnquery/install:
+	GOBIN=${GOPATH}/bin go install ${LDFLAGSDIST} apps/cnquery/cnquery.go
+
+#   ⛹🏽‍ Testing   #
 
 test/lint: test/lint/golangci-lint/run
 

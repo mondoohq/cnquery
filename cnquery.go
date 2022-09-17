@@ -1,6 +1,8 @@
 package cnquery
 
-import "regexp"
+import (
+	"regexp"
+)
 
 // Version is set via ldflags
 var Version string
@@ -89,7 +91,7 @@ func APIVersion() string {
 
 // Info on this application with version and build
 func Info() string {
-	return "cnquery " + GetVersion() + " " + GetBuild() + " " + GetDate()
+	return "cnquery " + GetVersion() + " (" + GetBuild() + ", " + GetDate() + ")"
 }
 
 // LatestMQLVersion returns the current version of MQL
