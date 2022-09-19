@@ -1,1 +1,8 @@
 /lr
+dist
+alpine-container.tar
+centos-container.tar
+file1
+id_rsa
+id_rsa.pub
+mondoo-test-secret-key
