@@ -127,5 +127,5 @@ func (k *mqlK8sKubelet) getKubeletProcess() (core.Process, error) {
 			return mqlProcess, nil
 		}
 	}
-	return nil, nil
+	return nil, errors.New("no kubelet process found")
 }
