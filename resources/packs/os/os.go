@@ -691,13 +691,3 @@ func (s *mqlOsLinux) GetIptables() (resources.ResourceType, error) {
 func (s *mqlOsLinux) GetIp6tables() (resources.ResourceType, error) {
 	return s.MotorRuntime.CreateResource("ip6tables")
 }
-
-func (s *mqlOsBaseGroup) GetName() (string, error) {
-	v := strings.Join(s.MotorRuntime.Asset.PlatformIds, ",")
-	return v, nil
-}
-
-func (s *mqlOsBaseGroup) id() (string, error) {
-	v := strings.Join(s.MotorRuntime.Asset.PlatformIds, ",")
-	return v, nil
-}
