@@ -199,11 +199,17 @@ mqlc: | llx mqlc/test
 mqlc/test:
 	go test -timeout 5s $(shell go list ./mqlc/... | grep -v '/vendor/')
 
-#   🏗 Binary   #
+#   🏗 Binary / Build   #
 
 .PHONY: cnquery/install
 cnquery/install:
 	GOBIN=${GOPATH}/bin go install ${LDFLAGSDIST} apps/cnquery/cnquery.go
+
+cnquery/dist/goreleaser/stable:
+	goreleaser release --rm-dist --skip-publish --skip-validate	-f .goreleaser.yml --timeout 120m
+
+cnquery/dist/goreleaser/edge:
+	goreleaser release --rm-dist --skip-publish --skip-validate	-f .goreleaser.yml --timeout 120m --snapshot
 
 #   ⛹🏽‍ Testing   #
 
