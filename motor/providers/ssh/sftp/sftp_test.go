@@ -124,7 +124,7 @@ func RunSftpServer(rootpath string) {
 		},
 	}
 
-	privateBytes, err := ioutil.ReadFile("./test/id_rsa")
+	privateBytes, err := os.ReadFile("./testdata/id_rsa")
 	if err != nil {
 		log.Fatal("Failed to load private key", err)
 	}
@@ -231,14 +231,14 @@ func MakeSSHKeyPair(bits int, pubKeyPath, privateKeyPath string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(pubKeyPath, ssh.MarshalAuthorizedKey(pub), 0655)
+	return os.WriteFile(pubKeyPath, ssh.MarshalAuthorizedKey(pub), 0o655)
 }
 
 func TestSftpCreate(t *testing.T) {
-	os.Mkdir("./test", 0777)
-	MakeSSHKeyPair(1024, "./test/id_rsa.pub", "./test/id_rsa")
+	os.Mkdir("./testdata", 0o777)
+	MakeSSHKeyPair(1024, "./testdata/id_rsa.pub", "./testdata/id_rsa")
 
-	go RunSftpServer("./test/")
+	go RunSftpServer("./testdata/")
 	time.Sleep(5 * time.Second)
 
 	ctx, err := SftpConnect("test", "test", "localhost:2022")
@@ -247,16 +247,16 @@ func TestSftpCreate(t *testing.T) {
 	}
 	defer ctx.Disconnect()
 
-	var fs = Fs{
+	fs := Fs{
 		client: ctx.sftpc,
 	}
 
-	fs.MkdirAll("test/dir1/dir2/dir3", os.FileMode(0777))
-	fs.Mkdir("test/foo", os.FileMode(0000))
-	fs.Chmod("test/foo", os.FileMode(0700))
-	fs.Mkdir("test/bar", os.FileMode(0777))
+	fs.MkdirAll("testdata/dir1/dir2/dir3", os.FileMode(0o777))
+	fs.Mkdir("testdata/foo", os.FileMode(0o000))
+	fs.Chmod("testdata/foo", os.FileMode(0o700))
+	fs.Mkdir("testdata/bar", os.FileMode(0o777))
 
-	file, err := fs.Create("file1")
+	file, err := fs.Create("testdata/file1")
 	if err != nil {
 		t.Error(err)
 	}
@@ -265,7 +265,7 @@ func TestSftpCreate(t *testing.T) {
 	file.Write([]byte("hello "))
 	file.WriteString("world!\n")
 
-	f1, err := fs.Open("file1")
+	f1, err := fs.Open("testdata/file1")
 	if err != nil {
 		log.Fatalf("open: %v", err)
 	}
