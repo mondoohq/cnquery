@@ -60,9 +60,8 @@ func ListDaemonSets(
 	assets := []*asset.Asset{}
 	for i := range daemonSets {
 		daemonSet := daemonSets[i]
-		if od != nil {
-			od.Add(&daemonSet)
-		}
+		od.Add(&daemonSet)
+
 		asset, err := createAssetFromObject(&daemonSet, p.Runtime(), connection, clusterIdentifier)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create asset from daemonset")
