@@ -297,6 +297,11 @@ func (s *Shell) RunOnce(cmd string) (*llx.CodeBundle, map[string]*llx.RawResult,
 		panic(err)
 	}
 
+	// run onClose handler if set
+	if s.onCloseHandler != nil {
+		s.onCloseHandler()
+	}
+
 	return code, results, err
 }
 
