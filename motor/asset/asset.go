@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-//go:generate protoc --proto_path=../../:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. --iam-actions_out=. asset.proto
+//go:generate protoc --proto_path=../../:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. asset.proto
 
 func (a *Asset) HumanName() string {
 	if a == nil {
