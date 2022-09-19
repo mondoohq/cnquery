@@ -402,6 +402,9 @@ func kubernetesProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, 
 			viper.BindPFlag("context", cmd.Flags().Lookup("context"))
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				cmd.Flags().Set("path", args[0])
+			}
 			runFn(cmd, args, providers.ProviderType_K8S, DefaultAssetType)
 		},
 	}

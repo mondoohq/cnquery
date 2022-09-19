@@ -64,9 +64,6 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 	}
 
 	filepath, _ := cmd.Flags().GetString("path")
-	if filepath != "" {
-		optionData["path"] = filepath
-	}
 
 	discoverTargets := []string{}
 	discover, err := cmd.Flags().GetString("discover")
@@ -122,14 +119,15 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		connection.Host = args[0]
 	case providers.ProviderType_TERRAFORM:
 		connection.Backend = providerType
+		connection.Options["path"] = filepath
 		// if the asset type is set, we scan either plan or state
 		switch assetType {
 		case TerraformHclAssetType:
-			parsedAsset.Options["asset-type"] = "hcl"
+			connection.Options["asset-type"] = "hcl"
 		case TerraformPlanAssetType:
-			parsedAsset.Options["asset-type"] = "plan"
+			connection.Options["asset-type"] = "plan"
 		case TerraformStateAssetType:
-			parsedAsset.Options["asset-type"] = "state"
+			connection.Options["asset-type"] = "state"
 		default:
 			log.Fatal().Msg("asset type must be set for terraform")
 		}
@@ -213,37 +211,36 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 	case providers.ProviderType_K8S:
 		connection.Backend = providerType
 
-		if len(args) > 0 {
-			manifestFile := args[0]
-			if _, err := os.Stat(manifestFile); os.IsNotExist(err) {
-				log.Fatal().Msg("Could not find the Kubernetes manifest file. Please specify the correct path.")
+		if filepath != "" {
+			if _, err := os.Stat(filepath); os.IsNotExist(err) {
+				log.Fatal().Str("file", filepath).Msg("Could not find the Kubernetes manifest file. Please specify the correct path.")
 			}
-			parsedAsset.Options["path"] = manifestFile
+			connection.Options["path"] = filepath
 		}
 
 		if namespace, err := cmd.Flags().GetString("namespace"); err != nil {
 			log.Fatal().Err(err).Msg("cannot parse --namespace values")
 		} else if namespace != "" {
-			parsedAsset.Options["namespace"] = namespace
+			connection.Options["namespace"] = namespace
 		}
 
 		if allNamespaces, err := cmd.Flags().GetBool("all-namespaces"); err != nil {
 			log.Fatal().Err(err).Msg("cannot parse --all-namespaces values")
 		} else if allNamespaces == true {
-			parsedAsset.Options["all-namespaces"] = "true"
+			connection.Options["all-namespaces"] = "true"
 		}
 	case providers.ProviderType_AWS:
 		connection.Backend = providerType
 		if profile, err := cmd.Flags().GetString("profile"); err != nil {
 			log.Fatal().Err(err).Msg("cannot parse --profile value")
 		} else if profile != "" {
-			parsedAsset.Options["profile"] = profile
+			connection.Options["profile"] = profile
 		}
 
 		if region, err := cmd.Flags().GetString("region"); err != nil {
 			log.Fatal().Err(err).Msg("cannot parse --region values")
 		} else if region != "" {
-			parsedAsset.Options["region"] = region
+			connection.Options["region"] = region
 		}
 	case providers.ProviderType_AWS_EC2_EBS:
 		assembleAwsEc2EbsConnectionUrl := func(flagAsset *asset.Asset, arg string, targetType string) string {
@@ -303,7 +300,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		if subscription, err := cmd.Flags().GetString("subscription"); err != nil {
 			log.Fatal().Err(err).Msg("cannot parse --subscription value")
 		} else if subscription != "" {
-			parsedAsset.Options["subscriptionID"] = subscription
+			connection.Options["subscriptionID"] = subscription
 		}
 	case providers.ProviderType_GCP:
 		connection.Backend = providerType
@@ -311,13 +308,13 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		if project, err := cmd.Flags().GetString("project"); err != nil {
 			log.Fatal().Err(err).Msg("cannot parse --project value")
 		} else if project != "" {
-			parsedAsset.Options["project"] = project
+			connection.Options["project"] = project
 		}
 
 		if organization, err := cmd.Flags().GetString("organization"); err != nil {
 			log.Fatal().Err(err).Msg("cannot parse --organization value")
 		} else if organization != "" {
-			parsedAsset.Options["organization"] = organization
+			connection.Options["organization"] = organization
 		}
 	case providers.ProviderType_VSPHERE:
 		connection.Backend = providerType
@@ -353,7 +350,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		switch assetType {
 		case GithubOrganizationAssetType:
 			connection.Backend = providerType
-			parsedAsset.Options["organization"] = args[0]
+			connection.Options["organization"] = args[0]
 
 			if x, err := cmd.Flags().GetString("token"); err != nil {
 				log.Fatal().Err(err).Msg("cannot parse --token value")
@@ -375,8 +372,8 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 			owner := paths[0]
 			repo := paths[1]
 
-			parsedAsset.Options["owner"] = owner
-			parsedAsset.Options["repository"] = repo
+			connection.Options["owner"] = owner
+			connection.Options["repository"] = repo
 
 			if x, err := cmd.Flags().GetString("token"); err != nil {
 				log.Fatal().Err(err).Msg("cannot parse --token value")
@@ -389,7 +386,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 			}
 		case GithubUserAssetType:
 			connection.Backend = providerType
-			parsedAsset.Options["user"] = args[0]
+			connection.Options["user"] = args[0]
 
 			if x, err := cmd.Flags().GetString("token"); err != nil {
 				log.Fatal().Err(err).Msg("cannot parse --token value")
@@ -409,7 +406,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		if x, err := cmd.Flags().GetString("group"); err != nil {
 			log.Fatal().Err(err).Msg("cannot parse --group value")
 		} else if x != "" {
-			parsedAsset.Options["group"] = x
+			connection.Options["group"] = x
 		}
 
 		if x, err := cmd.Flags().GetString("token"); err != nil {
@@ -428,14 +425,14 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		if x, err := cmd.Flags().GetString("datareport"); err != nil {
 			log.Fatal().Err(err).Msg("cannot parse --datareport values")
 		} else if x != "" {
-			parsedAsset.Options["mondoo-ms365-datareport"] = x
+			connection.Options["mondoo-ms365-datareport"] = x
 		}
 
 		if tenantId, err := cmd.Flags().GetString("tenant-id"); err == nil {
-			parsedAsset.Options["tenantId"] = tenantId
+			connection.Options["tenantId"] = tenantId
 		}
 		if clientID, err := cmd.Flags().GetString("client-id"); err == nil {
-			parsedAsset.Options["clientId"] = clientID
+			connection.Options["clientId"] = clientID
 		}
 
 		if clientSecret, err := cmd.Flags().GetString("client-secret"); err != nil {
